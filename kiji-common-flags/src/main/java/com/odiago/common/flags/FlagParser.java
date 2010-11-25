@@ -61,7 +61,9 @@ public class FlagParser {
 
   private static void printUsage(Map<String, FlagSpec> flags, PrintStream out) {
     final String FORMAT_STRING = "  --%s=<%s>\n\t%s\n";
-    out.printf(FORMAT_STRING, "help", "boolean", "Display this help message\n");
+    if (!flags.containsKey("help")) {
+      out.printf(FORMAT_STRING, "help", "boolean", "Display this help message\n");
+    }
     for (FlagSpec flag : flags.values()) {
       String usage = flag.getUsage();
       if (!usage.isEmpty()) {
@@ -96,7 +98,7 @@ public class FlagParser {
     Map<String, String> parsedFlags = parseArgs(args, nonFlagArgs);
     Map<String, FlagSpec> declaredFlags = extractFlagDeclarations(obj);
 
-    if (parsedFlags.containsKey("help")) {
+    if (parsedFlags.containsKey("help") && !declaredFlags.containsKey("help")) {
       printUsage(declaredFlags, out);
       return null;
     }

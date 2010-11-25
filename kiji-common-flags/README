@@ -32,3 +32,4 @@ FLAG PARSING
 - Boolean flags may have no value, e.g., "--name" instead of "--name=true".
 - Any flags after " -- " are ignored.
 - If there are duplicate flags, it keeps the last one.
+- A flag named "--help" prints usage info (unless you declare the flag yourself).

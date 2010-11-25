@@ -46,6 +46,11 @@ public class TestFlagParser {
     @Flag(name="myFlag") private String myDuplicateFlag;
   }
 
+  private static class HelpOverride {
+    @Flag public boolean help;
+    @Flag public String foo;
+  }
+
   @Test
   public void testParse() {
     MyFlags myFlags = new MyFlags();
@@ -184,6 +189,19 @@ public class TestFlagParser {
         + "  --flagOneDashBoolean=<boolean>\n\t\n"
         + "  --flagShort=<short>\n\t\n"
         + "  --flagString=<String>\n\t\n"));
+  }
+
+  @Test
+  public void testHelpOverride() {
+    HelpOverride myFlags = new HelpOverride();
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    FlagParser.init(myFlags, new String[] {"--help", "--foo=bar"}, new PrintStream(out));
+
+    // No usage info should have printed, since we declared our own help flag.
+    Assert.assertTrue(out.toString().isEmpty());
+
+    Assert.assertTrue(myFlags.help);
+    Assert.assertTrue(myFlags.foo.equals("bar"));
   }
 
   @Test
