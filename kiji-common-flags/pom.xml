@@ -2,12 +2,12 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.odiago.flags</groupId>
+  <groupId>com.odiago.common</groupId>
   <artifactId>flags</artifactId>
   <version>1.0.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
-  <name>flags</name>
+  <name>common-flags</name>
   <url>http://www.odiago.com</url>
 
   <properties>
@@ -36,4 +36,12 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <distributionManagement>
+    <snapshotRepository>
+      <id>odiago-snapshots</id>
+      <name>Odiago Snapshots</name>
+      <url>scpexe://maven.odiago.com/var/maven/odiago-snapshots/maven2</url>
+    </snapshotRepository>
+  </distributionManagement>
 </project>
