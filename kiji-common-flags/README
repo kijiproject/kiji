@@ -11,15 +11,16 @@ import com.odiago.common.flags;
 
 public class MyApp {
   @Flag(usage="enable the foo feature")
-  private boolean foo = false;
+  public boolean foo = false;
 
   @Flag(name="server", usage="server address")
-  private String serverHostPort = "localhost:8123";
+  public String serverHostPort = "localhost:8123";
 
   public static void main(String[] args) {
-    List<String> nonFlagArgs = FlagParser.init(this, args);
+    MyApp myApp = new MyApp();
+    List<String> nonFlagArgs = FlagParser.init(myApp, args);
 
-    // At this point this.foo and this.serverHostPort have been set according to the flags.
+    // At this point myApp.foo and myApp.serverHostPort have been set according to the flags.
   }
 }
 
