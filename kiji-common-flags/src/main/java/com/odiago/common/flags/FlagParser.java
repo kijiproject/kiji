@@ -60,16 +60,16 @@ public class FlagParser {
   }
 
   private static void printUsage(Map<String, FlagSpec> flags, PrintStream out) {
-    final String FORMAT_STRING = "  --%s=<%s>\n\t%s\n";
+    final String FORMAT_STRING = "  --%s=<%s>\n%s\t(Default=%s)\n\n";
     if (!flags.containsKey("help")) {
-      out.printf(FORMAT_STRING, "help", "boolean", "Display this help message\n");
+      out.printf(FORMAT_STRING, "help", "boolean", "\tDisplay this help message\n", "false");
     }
     for (FlagSpec flag : flags.values()) {
       String usage = flag.getUsage();
       if (!usage.isEmpty()) {
-        usage += "\n";
+        usage = "\t" + usage + "\n";
       }
-      out.printf(FORMAT_STRING, flag.getName(), flag.getTypeName(), usage);
+      out.printf(FORMAT_STRING, flag.getName(), flag.getTypeName(), usage, flag.getDefaultValue());
     }
   }
 

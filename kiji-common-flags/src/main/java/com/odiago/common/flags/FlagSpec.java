@@ -38,6 +38,42 @@ class FlagSpec {
     return mFlag.usage();
   }
 
+  public String getDefaultValue() {
+    try {
+      if (!mField.isAccessible()) {
+        mField.setAccessible(true);
+      }
+      if (mField.getType() == boolean.class) {
+        return Boolean.toString(mField.getBoolean(mObj));
+      }
+      if (mField.getType() == double.class) {
+        return Double.toString(mField.getDouble(mObj));
+      }
+      if (mField.getType() == float.class) {
+        return Float.toString(mField.getFloat(mObj));
+      }
+      if (mField.getType() == int.class) {
+        return Integer.toString(mField.getInt(mObj));
+      }
+      if (mField.getType() == long.class) {
+        return Long.toString(mField.getLong(mObj));
+      }
+      if (mField.getType() == short.class) {
+        return Short.toString(mField.getShort(mObj));
+      }
+      if (mField.getType() == String.class) {
+        String s = (String) mField.get(mObj);
+        if (s != null) {
+          return "\"" + s + "\"";
+        }
+        return "null";
+      }
+      return "";
+    } catch (IllegalAccessException e) {
+      throw new IllegalAccessError(e.getMessage());
+    }
+  }
+
   public void setValue(String value) throws IllegalAccessException {
     if (!mField.isAccessible()) {
       mField.setAccessible(true);

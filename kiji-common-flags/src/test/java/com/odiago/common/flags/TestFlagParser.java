@@ -178,17 +178,18 @@ public class TestFlagParser {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     FlagParser.init(myFlags, new String[] {"--help"}, new PrintStream(out));
     String help = out.toString();
-    Assert.assertTrue(help.equals(
-        "  --help=<boolean>\n\tDisplay this help message\n\n"
-        + "  --flagDefault=<String>\n\t\n"
-        + "  --flagDouble=<double>\n\t\n"
-        + "  --flagFloat=<float>\n\t\n"
-        + "  --flagInt=<int>\n\t\n"
-        + "  --flagLong=<long>\n\t\n"
-        + "  --flagNoValue=<boolean>\n\ta boolean flag\n\n"
-        + "  --flagOneDashBoolean=<boolean>\n\t\n"
-        + "  --flagShort=<short>\n\t\n"
-        + "  --flagString=<String>\n\t\n"));
+    Assert.assertEquals(
+        "  --help=<boolean>\n\tDisplay this help message\n\t(Default=false)\n\n"
+        + "  --flagDefault=<String>\n\t(Default=\"defaultValue\")\n\n"
+        + "  --flagDouble=<double>\n\t(Default=0.0)\n\n"
+        + "  --flagFloat=<float>\n\t(Default=0.0)\n\n"
+        + "  --flagInt=<int>\n\t(Default=0)\n\n"
+        + "  --flagLong=<long>\n\t(Default=0)\n\n"
+        + "  --flagNoValue=<boolean>\n\ta boolean flag\n\t(Default=false)\n\n"
+        + "  --flagOneDashBoolean=<boolean>\n\t(Default=false)\n\n"
+        + "  --flagShort=<short>\n\t(Default=0)\n\n"
+        + "  --flagString=<String>\n\t(Default=null)\n\n",
+        help);
   }
 
   @Test
