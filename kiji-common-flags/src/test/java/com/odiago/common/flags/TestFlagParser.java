@@ -37,6 +37,10 @@ public class TestFlagParser {
     }
   }
 
+  private static class MySubclassedFlags extends MyFlags {
+    @Flag public String flagSubclass;
+  }
+
   private static class UnsupportedTypeFlags {
     @Flag private Object unsupportedFlagType;
   }
@@ -222,5 +226,16 @@ public class TestFlagParser {
 
     // Keeps the last flag value.
     Assert.assertEquals(8, myFlags.flagInt);
+  }
+
+  @Test
+  public void testSubclassedFlags() {
+    // Make sure the subclass inherits its superclass's flags.
+    MySubclassedFlags myFlags = new MySubclassedFlags();
+    Assert.assertNotNull(FlagParser.init(myFlags,
+            new String[] {"--flagInt=7", "--flagSubclass=foo"}));
+
+    Assert.assertEquals(7, myFlags.flagInt);
+    Assert.assertEquals("foo", myFlags.flagSubclass);
   }
 }

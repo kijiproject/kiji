@@ -19,17 +19,20 @@ public class FlagParser {
    */
   private static Map<String, FlagSpec> extractFlagDeclarations(Object obj) {
     Map<String, FlagSpec> flags = new TreeMap<String, FlagSpec>();
-    for (Field field : obj.getClass().getDeclaredFields()) {
-      Flag flag = field.getAnnotation(Flag.class);
-      if (flag != null) {
-        FlagSpec flagSpec = new FlagSpec(field, flag, obj);
-        String flagName = flagSpec.getName();
-        if (flags.containsKey(flagName)) {
-          throw new DuplicateFlagException(flagName);
+    Class<?> clazz = obj.getClass();
+    do {
+      for (Field field : clazz.getDeclaredFields()) {
+        Flag flag = field.getAnnotation(Flag.class);
+        if (flag != null) {
+          FlagSpec flagSpec = new FlagSpec(field, flag, obj);
+          String flagName = flagSpec.getName();
+          if (flags.containsKey(flagName)) {
+            throw new DuplicateFlagException(flagName);
+          }
+          flags.put(flagSpec.getName(), flagSpec);
         }
-        flags.put(flagSpec.getName(), flagSpec);
       }
-    }
+    } while (null != (clazz = clazz.getSuperclass()));
     return flags;
   }
 
