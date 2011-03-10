@@ -25,6 +25,14 @@
           <target>1.6</target>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>2.1</version>
+        <configuration>
+          <pushChanges>false</pushChanges>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 
@@ -43,5 +51,16 @@
       <name>Odiago Snapshots</name>
       <url>scpexe://maven.odiago.com/var/maven/odiago-snapshots/maven2</url>
     </snapshotRepository>
+    <repository>
+      <id>odiago-releases</id>
+      <name>Odiago releases</name>
+      <url>scpexe://maven.odiago.com/var/maven/odiago-releases/maven2</url>
+    </repository>
   </distributionManagement>
+
+  <scm>
+    <connection>scm:git:ssh://git@git.odiago.com/common-flags.git</connection>
+    <url>scm:git:ssh://git@git.odiago.com/common-flags.git</url>
+    <developerConnection>scm:git:ssh://git@git.odiago.com/common-flags.git</developerConnection>
+  </scm>
 </project>
