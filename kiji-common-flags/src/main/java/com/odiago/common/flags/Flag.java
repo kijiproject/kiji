@@ -12,4 +12,5 @@ import java.lang.annotation.Target;
 public @interface Flag {
   String name() default "";
   String usage() default "";
+  boolean hidden() default false;
 }

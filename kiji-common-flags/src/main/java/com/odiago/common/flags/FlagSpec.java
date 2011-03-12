@@ -38,6 +38,10 @@ class FlagSpec {
     return mFlag.usage();
   }
 
+  public boolean isHidden() {
+    return mFlag.hidden();
+  }
+
   public String getDefaultValue() {
     try {
       if (!mField.isAccessible()) {

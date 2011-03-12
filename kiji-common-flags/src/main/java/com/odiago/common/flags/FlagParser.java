@@ -68,6 +68,10 @@ public class FlagParser {
       out.printf(FORMAT_STRING, "help", "boolean", "\tDisplay this help message\n", "false");
     }
     for (FlagSpec flag : flags.values()) {
+      if (flag.isHidden()) {
+        // Don't display usage for hidden flags.
+        continue;
+      }
       String usage = flag.getUsage();
       if (!usage.isEmpty()) {
         usage = "\t" + usage + "\n";
