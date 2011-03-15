@@ -45,16 +45,16 @@
   </dependencies>
 
   <distributionManagement>
-    <snapshotRepository>
-      <id>odiago-snapshots</id>
-      <name>Odiago Snapshots</name>
-      <url>scpexe://maven.odiago.com/var/maven/odiago-snapshots/maven2</url>
-    </snapshotRepository>
     <repository>
-      <id>odiago-releases</id>
-      <name>Odiago releases</name>
-      <url>scpexe://maven.odiago.com/var/maven/odiago-releases/maven2</url>
+      <id>odiago-maven</id>
+      <name>odiago-maven-releases</name>
+      <url>http://maven.odiago.com:8081/artifactory/odiago-releases</url>
     </repository>
+    <snapshotRepository>
+      <id>odiago-maven</id>
+      <name>odiago-maven-snapshots</name>
+      <url>http://maven.odiago.com:8081/artifactory/odiago-snapshots</url>
+    </snapshotRepository>
   </distributionManagement>
 
   <scm>
