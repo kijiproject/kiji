@@ -2,11 +2,11 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.odiago.common</groupId>
-  <artifactId>flags</artifactId>
+  <artifactId>odiago-common-flags</artifactId>
   <version>1.0.2-SNAPSHOT</version>
   <packaging>jar</packaging>
 
-  <name>common-flags</name>
+  <name>odiago-common-flags</name>
   <url>http://www.odiago.com</url>
 
   <properties>
