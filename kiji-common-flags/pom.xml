@@ -62,4 +62,23 @@
     <url>scm:git:ssh://git@git.odiago.com/common-flags.git</url>
     <developerConnection>scm:git:ssh://git@git.odiago.com/common-flags.git</developerConnection>
   </scm>
+
+  <profiles>
+    <profile>
+      <id>repo.odiago.com</id>
+      <distributionManagement>
+        <!-- Public maven repository. -->
+        <repository>
+          <id>repo.odiago.com</id>
+          <name>repo.odiago.com-releases</name>
+          <url>https://repo.odiago.com/artifactory/wibi</url>
+        </repository>
+        <snapshotRepository>
+          <id>repo.odiago.com</id>
+          <name>repo.odiago.com-snapshots</name>
+          <url>https://repo.odiago.com/artifactory/wibi</url>
+        </snapshotRepository>
+      </distributionManagement>
+    </profile>
+  </profiles>
 </project>
