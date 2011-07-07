@@ -13,4 +13,5 @@ public @interface Flag {
   String name() default "";
   String usage() default "";
   boolean hidden() default false;
+  String envVar() default "";
 }

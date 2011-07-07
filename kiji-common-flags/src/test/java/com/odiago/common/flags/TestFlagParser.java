@@ -22,6 +22,11 @@ public class TestFlagParser {
     @Flag public String flagString;
     @Flag public String flagDefault = "defaultValue";
 
+    // These two parameters may be controlled by explicit flags or by the environment.
+    @Flag(name="home", envVar="HOME", hidden=true) public String homeVar = "somedefault";
+    @Flag(name="missing", envVar="MISSING_ENV_VAR_XXXXXXX", hidden=true)
+    public String missingEnv = "missing";
+
     private String notAFlag;
 
     public boolean getFlagNoValue() {
@@ -237,5 +242,24 @@ public class TestFlagParser {
 
     Assert.assertEquals(7, myFlags.flagInt);
     Assert.assertEquals("foo", myFlags.flagSubclass);
+  }
+
+  @Test
+  public void testEnvVarFlags() {
+    MyFlags myFlags = new MyFlags();
+    FlagParser.init(myFlags, new String[] { "--flagInt=7" });
+    Assert.assertTrue(myFlags.homeVar.startsWith("/")); // should be some path.
+
+    myFlags = new MyFlags();
+    FlagParser.init(myFlags, new String[] { "--home=meep" });
+    Assert.assertEquals("meep", myFlags.homeVar);
+
+    myFlags = new MyFlags();
+    FlagParser.init(myFlags, new String[] { "--missing=wombat" });
+    Assert.assertEquals("wombat", myFlags.missingEnv);
+
+    myFlags = new MyFlags();
+    FlagParser.init(myFlags, new String[] { });
+    Assert.assertEquals("missing", myFlags.missingEnv);
   }
 }

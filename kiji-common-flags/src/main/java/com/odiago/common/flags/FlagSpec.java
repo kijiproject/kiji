@@ -42,6 +42,10 @@ class FlagSpec {
     return mFlag.hidden();
   }
 
+  public String getEnvVar() {
+    return mFlag.envVar();
+  }
+
   public String getDefaultValue() {
     try {
       if (!mField.isAccessible()) {

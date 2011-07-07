@@ -125,6 +125,23 @@ public class FlagParser {
       }
     }
 
+    // Use environment variables to set values for flags that can be set from
+    // the environment and weren't explicitly set on the command line.
+    for (Map.Entry<String, FlagSpec> declFlag : declaredFlags.entrySet()) {
+      FlagSpec flag = declFlag.getValue();
+      if (flag.getEnvVar().length() > 0 && !parsedFlags.containsKey(flag.getName())) {
+        String envVal = System.getenv(flag.getEnvVar());
+        if (null != envVal) {
+          // This environment variable was set.
+          try {
+            flag.setValue(envVal);
+          } catch (IllegalAccessException e) {
+            throw new IllegalAccessError(e.getMessage());
+          }
+        }
+      }
+    }
+
     return nonFlagArgs;
   }
 
