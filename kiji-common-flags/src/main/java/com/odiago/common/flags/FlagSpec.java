@@ -1,31 +1,73 @@
-// (c) Copyright 2010 Odiago, Inc.
+/**
+ * Licensed to Odiago, Inc. under one or more contributor license
+ * agreements.  See the NOTICE file distributed with this work for
+ * additional information regarding copyright ownership.  Odiago, Inc.
+ * licenses this file to you under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+ * implied.  See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
 
 package com.odiago.common.flags;
 
 import java.lang.reflect.Field;
 
 /**
- * Everything there is to know about a flag declaration.
+ * Everything there is to know about a flag definition.
  */
 class FlagSpec {
+  /** The Java field that should be assigned to with the flag's value. */
   private Field mField;
+
+  /** The Flag annotation. */
   private Flag mFlag;
+
+  /** The object that contains the flag definition. */
   private Object mObj;
 
+  /**
+   * Creates a new <code>FlagSpec</code> instance.
+   *
+   * @param field The Java field.
+   * @param flag The annotation on the field.
+   * @param obj The object that contains the field.
+   */
   public FlagSpec(Field field, Flag flag, Object obj) {
     mField = field;
     mFlag = flag;
     mObj = obj;
   }
 
+  /**
+   * Gets the name of the flag.
+   *
+   * @return The name of the flag.
+   */
   public String getName() {
     return mFlag.name().isEmpty() ? mField.getName() : mFlag.name();
   }
 
+  /**
+   * Gets the type of the field.
+   *
+   * @return The type of the field.
+   */
   public Class<?> getType() {
     return mField.getType();
   }
 
+  /**
+   * Gets the type of the field a string.
+   *
+   * @return The type of the field.
+   */
   public String getTypeName() {
     Class<?> type = getType();
     if (type == String.class) {
@@ -34,18 +76,38 @@ class FlagSpec {
     return type.toString();
   }
 
+  /**
+   * Get the human-readable usage instructions for the flag.
+   *
+   * @return The human-readable usage.
+   */
   public String getUsage() {
     return mFlag.usage();
   }
 
+  /**
+   * Determines whether the flag should be shown when {@code --help} is provided.
+   *
+   * @return Whether the flag is hidden.
+   */
   public boolean isHidden() {
     return mFlag.hidden();
   }
 
+  /**
+   * Gets the name of the environment variable that should be used as the default value.
+   *
+   * @return The environment variable to use as the default value.
+   */
   public String getEnvVar() {
     return mFlag.envVar();
   }
 
+  /**
+   * Gets the default value for the flag as a string.
+   *
+   * @return The default value as a string.
+   */
   public String getDefaultValue() {
     try {
       if (!mField.isAccessible()) {
@@ -82,6 +144,13 @@ class FlagSpec {
     }
   }
 
+  /**
+   * Assigns the value of the flag to its field.
+   *
+   * @param value The value.
+   *
+   * @throws IllegalAccessException If the field cannot be assigned.
+   */
   public void setValue(String value) throws IllegalAccessException {
     if (!mField.isAccessible()) {
       mField.setAccessible(true);
