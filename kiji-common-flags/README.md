@@ -38,3 +38,8 @@ A simple flag parsing library with an API that works well for the common case.
 To build `target/odiago-common-flags-${project.version}.jar` run:
 
     mvn package
+
+
+### Documentation
+
+* [Java API (Javadoc)](http://wibidata.github.com/odiago-common-flags/1.0.4/apidocs/)
