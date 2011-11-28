@@ -6,7 +6,7 @@ A simple flag parsing library with an API that works well for the common case.
 
 ### Example usage
 
-    import com.odiago.common.flags;
+    import com.odiago.common.flags.*;
 
     public class MyApp {
       @Flag(usage="enable the foo feature")
