@@ -166,4 +166,33 @@ public class TestHadoopConfigurator {
     assertEquals(456L, instance.getLongValue());
     assertEquals("bar", instance.getStringValue());
   }
+
+  /**
+   * A class configured with a variable of incompatible type to be populated.
+   */
+  public static class IncompatibleType extends Configured {
+    @HadoopConf(key="foo")
+    private IncompatibleType mFoo;
+
+    @Override
+    public void setConf(Configuration conf) {
+      super.setConf(conf);
+      HadoopConfigurator.configure(this);
+    }
+  }
+
+  @Test(expected=HadoopConfigurationException.class)
+  public void testIncompatibleType() {
+    Configuration conf = new Configuration();
+    conf.set("foo", "bar");
+    IncompatibleType instance = ReflectionUtils.newInstance(IncompatibleType.class, conf);
+  }
+
+  @Test
+  public void testInvalidValue() {
+    Configuration conf = new Configuration();
+    conf.set("my.int.value", "this-is-not-a-number");
+    MyConfiguredClass instance = ReflectionUtils.newInstance(MyConfiguredClass.class, conf);
+    assertEquals("Should be the default value.", 42, instance.getIntValue());
+  }
 }
