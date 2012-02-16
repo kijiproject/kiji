@@ -39,11 +39,23 @@ public class ConfigurationVariable {
     mAnnotation = annotation;
   }
 
+  /**
+   * Gets the configuration key that should be used to populate the field.
+   *
+   * @return The key that was specified in the HadoopConf annotation.
+   */
   public String getKey() {
     // TODO: What happens if the annotation doesn't specify a key?
     return mAnnotation.key();
   }
 
+  /**
+   * Populates an object's field with the value read from a Configuration instance.
+   *
+   * @param instance The object to populate.
+   * @param conf The configuration to read from.
+   * @throws IllegalAccessException If the field cannot be set on the object.
+   */
   public void setValue(Object instance, Configuration conf) throws IllegalAccessException {
     if (null == conf.get(getKey())) {
       // Nothing set in the configuration, so the field will be left alone.

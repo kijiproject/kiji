@@ -28,7 +28,7 @@ import java.util.List;
  * The entry point for the HadoopConfigurator system.
  *
  * <p>Clients should call {@link
- * HadoopConfigurator#configure(org.apache.hadoop.confConfigurable) within their {@link
+ * HadoopConfigurator#configure(org.apache.hadoop.conf.Configurable)} within their {@link
  * org.apache.hadoop.conf.Configurable#setConf(org.apache.hadoop.conf.Configuration)}
  * method to populate all of their member variables with values read from the {@link
  * org.apache.hadoop.conf.Configuration}.</p>
@@ -37,10 +37,10 @@ import java.util.List;
  *
  * <pre>
  * public class Foo extends Configured {
- *   @HadoopConf(key="foo.value", usage="The foo value"
+ *   {@literal @}HadoopConf(key="foo.value", usage="The foo value")
  *   private String fooValue = "defaultValue";
  *
- *   @Override
+ *   {@literal @}Override
  *   public void setConf(Configuration conf) {
  *     super.setConf(conf);
  *     HadoopConfigurator.configure(this);
@@ -58,9 +58,10 @@ public final class HadoopConfigurator {
    * instance with values from its {@link org.apache.hadoop.conf.Configuration}.
    *
    * @param instance The instance to configure.
-   * @throws HadoopConfigurationException If there is an error.
+   * @throws HadoopConfigurationException If there is an error with the declaration or
+   *     assigning the field.
    */
-  public static void configure(Configurable instance) throws HadoopConfigurationException {
+  public static void configure(Configurable instance) {
     final Configuration conf = instance.getConf();
     if (null == conf) {
       // No configuration to read from.
@@ -79,8 +80,8 @@ public final class HadoopConfigurator {
   }
 
   /**
-   * Extracts the declared Hadoop configuration variables (fields with {@literal
-   * @}HadoopConf annotations) from a class.
+   * Extracts the declared Hadoop configuration variables (fields with
+   * {@literal @}HadoopConf annotations) from a class.
    *
    * @param clazz The class to extract conf variable declarations from.
    * @param includeParentClasses If true, also includes declared variables in the super classes.
@@ -96,7 +97,8 @@ public final class HadoopConfigurator {
           variables.add(new ConfigurationVariable(field, annotation));
         }
       }
-    } while (includeParentClasses && null != (clazz = clazz.getSuperclass()));
+      clazz = clazz.getSuperclass();
+    } while (includeParentClasses && null != clazz);
     return variables;
   }
 }

@@ -15,32 +15,7 @@
  * permissions and limitations under the License.
  */
 
-package com.wibidata.hadoop.configurator;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Target;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Retention;
-
 /**
- * The annotation used on instance (member) variables to tell the HadoopConfigurator
- * system that they should be populated with values from the {@link
- * org.apache.hadoop.conf.Configuration}.
- *
- * @see HadoopConfigurator
+ * The HadoopConfigurator system.
  */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
-public @interface HadoopConf {
-  /**
-   * The key used in the {@link org.apache.hadoop.conf.Configuration} for this variable.
-   *
-   * <p>This field is required.</p>
-   */
-  String key();
-
-  /**
-   * Documents the usage of this configuration variable.
-   */
-  String usage() default "";
-}
+package com.wibidata.hadoop.configurator;
