@@ -34,7 +34,10 @@ public class TestHadoopConfigurator {
     /** The default value for the my.string.value configuration varitable. */
     private static final String DEFAULT_STRING_VALUE = "foo";
 
-    @HadoopConf(key="my.boolean.value")
+    /** The conf key for the boolean value. */
+    private static final String CONF_BOOLEAN_KEY = "my.boolean.value";
+
+    @HadoopConf(key=CONF_BOOLEAN_KEY)
     private boolean mBooleanValue;
 
     @HadoopConf(key="my.float.value")
