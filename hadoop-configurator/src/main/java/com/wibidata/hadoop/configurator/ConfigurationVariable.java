@@ -18,6 +18,8 @@
 package com.wibidata.hadoop.configurator;
 
 import java.lang.reflect.Field;
+import java.util.Collection;
+
 import org.apache.hadoop.conf.Configuration;
 
 /**
@@ -45,7 +47,6 @@ public class ConfigurationVariable {
    * @return The key that was specified in the HadoopConf annotation.
    */
   public String getKey() {
-    // TODO: What happens if the annotation doesn't specify a key?
     return mAnnotation.key();
   }
 
@@ -55,9 +56,15 @@ public class ConfigurationVariable {
    * @param instance The object to populate.
    * @param conf The configuration to read from.
    * @throws IllegalAccessException If the field cannot be set on the object.
+   * @throws HadoopConfigurationException If there is a problem with the annotation definition.
    */
   public void setValue(Object instance, Configuration conf) throws IllegalAccessException {
-    if (null == conf.get(getKey())) {
+    final String key = getKey();
+    if (null == key) {
+      throw new HadoopConfigurationException("Missing 'key' attribute of @HadoopConf on "
+          + instance.getClass().getName() + "." + mField.getName());
+    }
+    if (null == conf.get(key)) {
       // Nothing set in the configuration, so the field will be left alone.
       return;
     }
@@ -67,14 +74,24 @@ public class ConfigurationVariable {
     }
 
     if (boolean.class == mField.getType()) {
-      mField.setBoolean(instance, conf.getBoolean(getKey(), false));
+      mField.setBoolean(instance, conf.getBoolean(key, false));
     } else if (float.class == mField.getType()) {
-      mField.setFloat(instance, conf.getFloat(getKey(), 0.0f));
+      mField.setFloat(instance, conf.getFloat(key, 0.0f));
+    } else if (double.class == mField.getType()) {
+      mField.setDouble(instance, conf.getFloat(key, 0.0f));
     } else if (int.class == mField.getType()) {
-      mField.setInt(instance, conf.getInt(getKey(), 0));
-    } else if (String.class == mField.getType()) {
-      mField.set(instance, conf.get(getKey(), null));
+      mField.setInt(instance, conf.getInt(key, 0));
+    } else if (long.class == mField.getType()) {
+      mField.setLong(instance, conf.getLong(key, 0L));
+    } else if (mField.getType().isAssignableFrom(String.class)) {
+      mField.set(instance, conf.get(key, null));
+    } else if (mField.getType().isAssignableFrom(Collection.class)) {
+      mField.set(instance, conf.getStringCollection(key));
+    } else if (String[].class == mField.getType()) {
+      mField.set(instance, conf.getStrings(key));
+    } else {
+      throw new HadoopConfigurationException("Unsupported field type annotated by @HadoopConf: "
+          + instance.getClass().getName() + "." + mField.getName());
     }
-    // TODO long, short, etc.
   }
 }

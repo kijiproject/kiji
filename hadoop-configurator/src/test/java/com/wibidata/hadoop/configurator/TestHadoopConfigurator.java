@@ -19,6 +19,8 @@ package com.wibidata.hadoop.configurator;
 
 import static org.junit.Assert.*;
 
+import java.util.Collection;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.util.ReflectionUtils;
@@ -32,16 +34,79 @@ public class TestHadoopConfigurator {
     /** The default value for the my.string.value configuration varitable. */
     private static final String DEFAULT_STRING_VALUE = "foo";
 
-    @HadoopConf(key="my.string.value", usage="A string value.")
-    private String mStringValue = DEFAULT_STRING_VALUE;
+    @HadoopConf(key="my.boolean.value")
+    private boolean mBooleanValue;
+
+    @HadoopConf(key="my.float.value")
+    private float mFloatValue;
+
+    @HadoopConf(key="my.double.value")
+    private double mDoubleValue;
 
     @HadoopConf(key="my.int.value", usage="An integer value.")
     private int mIntValue = 42;
+
+    @HadoopConf(key="my.long.value")
+    private long mLongValue;
+
+    @HadoopConf(key="my.string.value", usage="A string value.")
+    private String mStringValue = DEFAULT_STRING_VALUE;
+
+    @HadoopConf(key="my.string.collection")
+    private Collection<String> mStringCollection;
+
+    @HadoopConf(key="my.string.array")
+    private String[] mStringArray;
 
     @Override
     public void setConf(Configuration conf) {
       super.setConf(conf);
       HadoopConfigurator.configure(this);
+    }
+
+    /**
+     * Gets the boolean value.
+     *
+     * @return The boolean value.
+     */
+    public boolean getBooleanValue() {
+      return mBooleanValue;
+    }
+
+    /**
+     * Gets the float value.
+     *
+     * @return The float value.
+     */
+    public float getFloatValue() {
+      return mFloatValue;
+    }
+
+    /**
+     * Gets the double value.
+     *
+     * @return The double value.
+     */
+    public double getDoubleValue() {
+      return mDoubleValue;
+    }
+
+    /**
+     * Gets the integer value.
+     *
+     * @return The integer value.
+     */
+    public int getIntValue() {
+      return mIntValue;
+    }
+
+    /**
+     * Gets the long value.
+     *
+     * @return The long value.
+     */
+    public long getLongValue() {
+      return mLongValue;
     }
 
     /**
@@ -54,12 +119,21 @@ public class TestHadoopConfigurator {
     }
 
     /**
-     * Gets the integer value.
+     * Gets the string collection.
      *
-     * @return The integer value.
+     * @return The string collection.
      */
-    public int getIntValue() {
-      return mIntValue;
+    public Collection<String> getStringCollection() {
+      return mStringCollection;
+    }
+
+    /**
+     * Gets the string array.
+     *
+     * @return The string array.
+     */
+    public String[] getStringArray() {
+      return mStringArray;
     }
   }
 
@@ -75,11 +149,21 @@ public class TestHadoopConfigurator {
   @Test
   public void testConfigure() {
     Configuration conf = new Configuration();
-    conf.set("my.string.value", "bar");
+    conf.setBoolean("my.boolean.value", true);
+    conf.setFloat("my.float.value", 3.1f);
+    conf.setFloat("my.double.value", 1.9f);
     conf.setInt("my.int.value", 12);
+    conf.setLong("my.long.value", 456L);
+    conf.set("my.string.value", "bar");
+    conf.setStrings("my.string.collection", "apple", "banana");
+    conf.setStrings("my.string.array", "red", "green", "blue");
 
     MyConfiguredClass instance = ReflectionUtils.newInstance(MyConfiguredClass.class, conf);
-    assertEquals("bar", instance.getStringValue());
+    assertEquals(true, instance.getBooleanValue());
+    assertEquals(3.1f, instance.getFloatValue(), 1e-6f);
+    assertEquals(1.9, instance.getDoubleValue(), 1e-6);
     assertEquals(12, instance.getIntValue());
+    assertEquals(456L, instance.getLongValue());
+    assertEquals("bar", instance.getStringValue());
   }
 }
