@@ -37,8 +37,8 @@ import java.util.List;
  *
  * <pre>
  * public class Foo extends Configured {
- *   @HadoopConf(key="foo.value", usage="The foo value", defaultValue="")
- *   private String fooValue;
+ *   @HadoopConf(key="foo.value", usage="The foo value"
+ *   private String fooValue = "defaultValue";
  *
  *   @Override
  *   public void setConf(Configuration conf) {
@@ -67,10 +67,11 @@ public final class HadoopConfigurator {
       return;
     }
 
-    final List<ConfigurationVariable> variables = extractDeclaredVariables(instance);
+    final List<ConfigurationVariable> variables =
+        extractDeclaredVariables(instance.getClass(), true);
     for (ConfigurationVariable variable : variables) {
       try {
-        variable.setValue(conf);
+        variable.setValue(instance, conf);
       } catch (IllegalAccessException e) {
         throw new HadoopConfigurationException(e);
       }
@@ -79,22 +80,23 @@ public final class HadoopConfigurator {
 
   /**
    * Extracts the declared Hadoop configuration variables (fields with {@literal
-   * @}HadoopConf annotations) from an object instance.
+   * @}HadoopConf annotations) from a class.
    *
-   * @param instance The object to extract conf variable declarations from.
-   * @return The list of configuration variables declared in the instance or its superclasses.
+   * @param clazz The class to extract conf variable declarations from.
+   * @param includeParentClasses If true, also includes declared variables in the super classes.
+   * @return The list of configuration variables declared.
    */
-  private static List<ConfigurationVariable> extractDeclaredVariables(Object instance) {
+  public static List<ConfigurationVariable> extractDeclaredVariables(
+      Class<?> clazz, boolean includeParentClasses) {
     List<ConfigurationVariable> variables = new ArrayList<ConfigurationVariable>();
-    Class<?> clazz = instance.getClass();
     do {
       for (Field field : clazz.getDeclaredFields()) {
         HadoopConf annotation = field.getAnnotation(HadoopConf.class);
         if (null != annotation) {
-          variables.add(new ConfigurationVariable(field, annotation, instance));
+          variables.add(new ConfigurationVariable(field, annotation));
         }
       }
-    } while (null != (clazz = clazz.getSuperclass()));
+    } while (includeParentClasses && null != (clazz = clazz.getSuperclass()));
     return variables;
   }
 }

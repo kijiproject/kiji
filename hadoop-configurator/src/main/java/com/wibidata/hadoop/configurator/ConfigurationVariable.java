@@ -27,19 +27,16 @@ import org.apache.hadoop.conf.Configuration;
 public class ConfigurationVariable {
   private Field mField;
   private HadoopConf mAnnotation;
-  private Object mInstance;
 
   /**
    * Constructs a ConfigurationVariable instance.
    *
    * @param field The variable that has the annotation on it.
    * @param annotation The annotation on the field.
-   * @param instance The object instance that has the variable declared.
    */
-  public ConfigurationVariable(Field field, HadoopConf annotation, Object instance) {
+  public ConfigurationVariable(Field field, HadoopConf annotation) {
     mField = field;
     mAnnotation = annotation;
-    mInstance = instance;
   }
 
   public String getKey() {
@@ -47,7 +44,7 @@ public class ConfigurationVariable {
     return mAnnotation.key();
   }
 
-  public void setValue(Configuration conf) throws IllegalAccessException {
+  public void setValue(Object instance, Configuration conf) throws IllegalAccessException {
     if (null == conf.get(getKey())) {
       // Nothing set in the configuration, so the field will be left alone.
       return;
@@ -58,13 +55,13 @@ public class ConfigurationVariable {
     }
 
     if (boolean.class == mField.getType()) {
-      mField.setBoolean(mInstance, conf.getBoolean(getKey(), false));
+      mField.setBoolean(instance, conf.getBoolean(getKey(), false));
     } else if (float.class == mField.getType()) {
-      mField.setFloat(mInstance, conf.getFloat(getKey(), 0.0f));
+      mField.setFloat(instance, conf.getFloat(getKey(), 0.0f));
     } else if (int.class == mField.getType()) {
-      mField.setInt(mInstance, conf.getInt(getKey(), 0));
+      mField.setInt(instance, conf.getInt(getKey(), 0));
     } else if (String.class == mField.getType()) {
-      mField.set(mInstance, conf.get(getKey(), null));
+      mField.set(instance, conf.get(getKey(), null));
     }
     // TODO long, short, etc.
   }
