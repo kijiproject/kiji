@@ -200,7 +200,7 @@ public class TestFlagParser {
   public void testPrintUsage() {
     MyFlags myFlags = new MyFlags();
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    FlagParser.init(myFlags, new String[] {"--help"}, new PrintStream(out));
+    FlagParser.init(myFlags, new String[] {"--help"}, new PrintStream(out), false);
     String help = out.toString();
     Assert.assertEquals(
         "  --help=<boolean>\n\tDisplay this help message\n\t(Default=false)\n\n"
@@ -220,7 +220,7 @@ public class TestFlagParser {
   public void testHelpOverride() {
     HelpOverride myFlags = new HelpOverride();
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    FlagParser.init(myFlags, new String[] {"--help", "--foo=bar"}, new PrintStream(out));
+    FlagParser.init(myFlags, new String[] {"--help", "--foo=bar"}, new PrintStream(out), false);
 
     // No usage info should have printed, since we declared our own help flag.
     Assert.assertTrue(out.toString().isEmpty());
@@ -276,5 +276,14 @@ public class TestFlagParser {
     myFlags = new MyFlags();
     FlagParser.init(myFlags, new String[] { });
     Assert.assertEquals("missing", myFlags.missingEnv);
+  }
+
+  @Test
+  public void testIgnoreUnknownFlags() {
+    final MyFlags myFlags = new MyFlags();
+    final List<String> unparsed =
+        FlagParser.init(myFlags, new String[] {"--flagInt=1", "--unknown=x"}, System.out, true);
+    Assert.assertEquals(1, myFlags.flagInt);
+    Assert.assertArrayEquals(new Object[]{"--unknown=x"}, unparsed.toArray());
   }
 }

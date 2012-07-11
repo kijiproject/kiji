@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Provides a static method init(), used to parse flags from a command line.
@@ -58,32 +60,63 @@ public class FlagParser {
     return flags;
   }
 
+  /** Pattern matching a flag argument. */
+  private static final Pattern FLAG_RE = Pattern.compile("^--?([^=]*)(=(.*))?$");
+
+  /** Symbol used to delimit the end of flags to parse. */
+  private static final String END_FLAG_SYMBOL = "--";
+
+  /** Name of implicit help flag name. */
+  private static final String HELP_FLAG_NAME = "help";
+
   /**
    * Parse the flags out of the command line arguments.  The non flag args are put into
    * nonFlagArgs.
    *
    * @param args The arguments to parse.
    * @param nonFlagArgs The remaining non-flag arguments.
+   * @param declaredFlags Declared flag map.
+   * @param ignoreUnknownFlags When set, unknown flags behave like non-flag arguments.
    *
    * @return A map from flag-name to flag-value.
+   *
+   * @throws UnrecognizedFlagException when encountering an unknown flag name while
+   *     ignoreUnknownFlags is not set.
    */
-  private static Map<String, String> parseArgs(String[] args, List<String> nonFlagArgs) {
+  private static Map<String, String> parseArgs(
+      String[] args,
+      List<String> nonFlagArgs,
+      Map<String, FlagSpec> declaredFlags,
+      boolean ignoreUnknownFlags) throws UnrecognizedFlagException {
+
     Map<String, String> parsedFlags = new TreeMap<String, String>();
     boolean ignoreTheRest = false;
     for (String arg : args) {
-      if (arg.startsWith("-") && !ignoreTheRest) {
-        if (arg.equals("--")) {
-          // Ignore any flag-like args after this special symbol.
-          ignoreTheRest = true;
-          break;
-        }
-        String keyVal = arg.startsWith("--") ? arg.substring(2) : arg.substring(1);
-        String[] splitKeyVal = keyVal.split("=", 2);
-        String key = splitKeyVal[0];
-        String value = splitKeyVal.length == 2 ? splitKeyVal[1] : "";
-        parsedFlags.put(key, value);
-      } else {
+      if (ignoreTheRest) {
         nonFlagArgs.add(arg);
+        continue;
+      }
+      if (arg.equals(END_FLAG_SYMBOL)) {
+        // Ignore all arguments after this special symbol:
+        ignoreTheRest = true;
+        continue;
+      }
+      final Matcher matcher = FLAG_RE.matcher(arg);
+      if (!matcher.matches()) {
+        // Non-flag argument:
+        nonFlagArgs.add(arg);
+        continue;
+      }
+      final String flagName = matcher.group(1);
+      final String flagValue = (matcher.group(3) != null) ? matcher.group(3) : "";
+
+      if (declaredFlags.containsKey(flagName) || flagName.equals(HELP_FLAG_NAME)) {
+        parsedFlags.put(flagName, flagValue);
+      } else if (ignoreUnknownFlags) {
+        // Flag argument but unknown flag name:
+        nonFlagArgs.add(arg);
+      } else {
+        throw new UnrecognizedFlagException(flagName);
       }
     }
     return parsedFlags;
@@ -131,26 +164,24 @@ public class FlagParser {
    * @param obj The instance of the class containing flag declarations.
    * @param args The command-line arguments.
    * @param out Where to print usage info if there is a parsing error.
+   * @param ignoreUnknownFlags When set, unknown flags behave like non-flag arguments.
    *
    * @return The non-flag arguments, or null if the flags were not parsed.
    *
    * @throws DuplicateFlagException If there are duplicate flags.
+   * @throws UnrecognizedFlagException When parsing a flag that was not declared.
    */
-  public static List<String> init(Object obj, String[] args, PrintStream out) {
+  public static List<String> init(Object obj, String[] args, PrintStream out,
+      boolean ignoreUnknownFlags) {
+
     List<String> nonFlagArgs = new ArrayList<String>();
-    Map<String, String> parsedFlags = parseArgs(args, nonFlagArgs);
     Map<String, FlagSpec> declaredFlags = extractFlagDeclarations(obj);
+    Map<String, String> parsedFlags =
+        parseArgs(args, nonFlagArgs, declaredFlags, ignoreUnknownFlags);
 
     if (parsedFlags.containsKey("help") && !declaredFlags.containsKey("help")) {
       printUsage(declaredFlags, out);
       return null;
-    }
-
-    // Check for unrecognized flags.
-    for (String flagName : parsedFlags.keySet()) {
-      if (!declaredFlags.containsKey(flagName)) {
-        throw new UnrecognizedFlagException(flagName);
-      }
     }
 
     for (Map.Entry<String, String> flag : parsedFlags.entrySet()) {
@@ -182,10 +213,29 @@ public class FlagParser {
   }
 
   /**
+   * Convenience method for init that throws an exception when encountering unknown flags.
+   *
+   * @param obj The instance of the class containing flag declarations.
+   * @param args The command-line arguments.
+   * @param out Where to print usage info if there is a parsing error.
+   *
+   * @return The non-flag arguments, or null if the flags were not parsed.
+   *
+   * @throws DuplicateFlagException If there are duplicate flags.
+   * @throws UnrecognizedFlagException When parsing a flag that was not declared.
+   */
+  public static List<String> init(Object obj, String[] args, PrintStream out) {
+    return init(obj, args, out, false);
+  }
+
+  /**
    * Convenience method for init that prints usage to stdout.
    *
    * @param obj The object containing the flag definitions.
    * @param args The command-line arguments.
+   *
+   * @throws DuplicateFlagException If there are duplicate flags.
+   * @throws UnrecognizedFlagException When parsing a flag that was not declared.
    */
   public static List<String> init(Object obj, String[] args) {
     return init(obj, args, System.out);
