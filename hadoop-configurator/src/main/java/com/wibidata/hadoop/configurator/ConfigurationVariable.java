@@ -73,25 +73,29 @@ public class ConfigurationVariable {
       mField.setAccessible(true);
     }
 
-    if (boolean.class == mField.getType()) {
-      mField.setBoolean(instance, conf.getBoolean(key, mField.getBoolean(instance)));
-    } else if (float.class == mField.getType()) {
-      mField.setFloat(instance, conf.getFloat(key, mField.getFloat(instance)));
-    } else if (double.class == mField.getType()) {
-      mField.setDouble(instance, conf.getFloat(key, (float) mField.getDouble(instance)));
-    } else if (int.class == mField.getType()) {
-      mField.setInt(instance, conf.getInt(key, mField.getInt(instance)));
-    } else if (long.class == mField.getType()) {
-      mField.setLong(instance, conf.getLong(key, mField.getLong(instance)));
-    } else if (mField.getType().isAssignableFrom(String.class)) {
-      mField.set(instance, conf.get(key, (String) mField.get(instance)));
-    } else if (mField.getType().isAssignableFrom(Collection.class)) {
-      mField.set(instance, conf.getStringCollection(key));
-    } else if (String[].class == mField.getType()) {
-      mField.set(instance, conf.getStrings(key));
-    } else {
-      throw new HadoopConfigurationException("Unsupported field type annotated by @HadoopConf: "
-          + instance.getClass().getName() + "." + mField.getName());
+    try {
+      if (boolean.class == mField.getType()) {
+        mField.setBoolean(instance, conf.getBoolean(key, mField.getBoolean(instance)));
+      } else if (float.class == mField.getType()) {
+        mField.setFloat(instance, conf.getFloat(key, mField.getFloat(instance)));
+      } else if (double.class == mField.getType()) {
+        mField.setDouble(instance, conf.getFloat(key, (float) mField.getDouble(instance)));
+      } else if (int.class == mField.getType()) {
+        mField.setInt(instance, conf.getInt(key, mField.getInt(instance)));
+      } else if (long.class == mField.getType()) {
+        mField.setLong(instance, conf.getLong(key, mField.getLong(instance)));
+      } else if (mField.getType().isAssignableFrom(String.class)) {
+        mField.set(instance, conf.get(key, (String) mField.get(instance)));
+      } else if (mField.getType().isAssignableFrom(Collection.class)) {
+        mField.set(instance, conf.getStringCollection(key));
+      } else if (String[].class == mField.getType()) {
+        mField.set(instance, conf.getStrings(key));
+      } else {
+        throw new HadoopConfigurationException("Unsupported field type annotated by @HadoopConf: "
+            + instance.getClass().getName() + "." + mField.getName());
+      }
+    } catch (NumberFormatException e) {
+      // That's okay. The default value for the field will be kept.
     }
   }
 }

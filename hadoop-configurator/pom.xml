@@ -64,7 +64,7 @@
         <version>2.8</version>
         <configuration>
           <links>
-            <link>http://archive.cloudera.com/cdh/3/hadoop-0.20.2-cdh3u3/api</link>
+            <link>http://archive.cloudera.com/cdh/4/hadoop-2.0.0-cdh4.0.1/api</link>
           </links>
           <reportOutputDirectory>target/apidocs</reportOutputDirectory>
         </configuration>
@@ -89,8 +89,8 @@
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-core</artifactId>
-      <version>0.20.2-cdh3u3</version>
+      <artifactId>hadoop-client</artifactId>
+      <version>2.0.0-mr1-cdh4.0.0</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>
@@ -103,22 +103,22 @@
 
   <distributionManagement>
     <repository>
-      <id>odiago-maven</id>
-      <name>odiago-maven-releases</name>
-      <url>http://maven.odiago.com:8081/artifactory/odiago-releases</url>
+      <id>wibidata-maven</id>
+      <name>wibidata-maven-releases</name>
+      <url>https://maven.wibidata.net/artifactory/wibidata-releases</url>
     </repository>
     <snapshotRepository>
-      <id>odiago-maven</id>
-      <name>odiago-maven-snapshots</name>
-      <url>http://maven.odiago.com:8081/artifactory/odiago-snapshots</url>
+      <id>wibidata-maven</id>
+      <name>wibidata-maven-snapshots</name>
+      <url>https://maven.wibidata.net/artifactory/wibidata-snapshots</url>
     </snapshotRepository>
   </distributionManagement>
 
   <repositories>
     <repository>
-      <id>cloudera-public</id>
-      <name>cloudera-public</name>
-      <url>https://repository.cloudera.com/content/groups/public</url>
+      <id>cloudera-build</id>
+      <name>cloudera-build</name>
+      <url>https://repository.cloudera.com/content/groups/cdh-build</url>
     </repository>
   </repositories>
 
