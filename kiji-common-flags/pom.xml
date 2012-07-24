@@ -20,7 +20,7 @@
 
   <groupId>com.odiago.common</groupId>
   <artifactId>odiago-common-flags</artifactId>
-  <version>1.0.5</version>
+  <version>1.0.6-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>odiago-common-flags</name>
