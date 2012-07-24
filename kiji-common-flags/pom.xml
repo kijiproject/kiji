@@ -24,7 +24,7 @@
   <packaging>jar</packaging>
 
   <name>odiago-common-flags</name>
-  <url>http://www.odiago.com</url>
+  <url>http://www.wibidata.com</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -68,14 +68,14 @@
 
   <distributionManagement>
     <repository>
-      <id>odiago-maven</id>
-      <name>odiago-maven-releases</name>
-      <url>http://maven.odiago.com:8081/artifactory/odiago-releases</url>
+      <id>wibidata-maven</id>
+      <name>wibidata-maven-releases</name>
+      <url>https://maven.wibidata.net/artifactory/wibidata-releases</url>
     </repository>
     <snapshotRepository>
-      <id>odiago-maven</id>
-      <name>odiago-maven-snapshots</name>
-      <url>http://maven.odiago.com:8081/artifactory/odiago-snapshots</url>
+      <id>wibidata-maven</id>
+      <name>wibidata-maven-snapshots</name>
+      <url>https://maven.wibidata.net/artifactory/wibidata-snapshots</url>
     </snapshotRepository>
   </distributionManagement>
 
