@@ -93,15 +93,16 @@ public final class HadoopConfigurator {
 
   /**
    * Populates the instance variables of a {@link org.apache.hadoop.conf.Configurable}
-   * instance with values from its {@link
-   * org.apache.hadoop.conf.Configuration}. Does not include parent classes.
+   * instance with values from its {@link org.apache.hadoop.conf.Configuration}.
+   *
+   * <p>This includes annotations declared in parent classes.</p>
    *
    * @param instance The instance to configure.
    * @throws HadoopConfigurationException If there is an error with the declaration or
    *     assigning the field.
    */
   public static void configure(Configurable instance) {
-    configure(instance, false);
+    configure(instance, true);
   }
 
   /**
