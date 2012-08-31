@@ -38,4 +38,4 @@ To build `target/hadoop-configurator-${project.version}.jar` run:
 
 ### Documentation
 
-* [Java API (Javadoc)](http://wibidata.github.com/hadoop-configurator/1.0.0/apidocs/)
+* [Java API (Javadoc)](http://wibidata.github.com/hadoop-configurator/1.0.1/apidocs/)
