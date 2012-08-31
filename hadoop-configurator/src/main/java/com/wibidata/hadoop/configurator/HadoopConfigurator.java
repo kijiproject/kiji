@@ -59,12 +59,12 @@ public final class HadoopConfigurator {
    * instance with values from its {@link org.apache.hadoop.conf.Configuration}.
    *
    * @param instance The instance to configure.
+   * @param conf The configuration to read from.
    * @param includeParentClasses Whether to include declared variables in super classes.
    * @throws HadoopConfigurationException If there is an error with the declaration or
    *     assigning the field.
    */
-  public static void configure(Configurable instance, boolean includeParentClasses) {
-    final Configuration conf = instance.getConf();
+  public static void configure(Object instance, Configuration conf, boolean includeParentClasses) {
     if (null == conf) {
       // No configuration to read from.
       return;
@@ -89,6 +89,19 @@ public final class HadoopConfigurator {
         throw new HadoopConfigurationException(e);
       }
     }
+  }
+
+  /**
+   * Populates the instance variables of a {@link org.apache.hadoop.conf.Configurable}
+   * instance with values from its {@link org.apache.hadoop.conf.Configuration}.
+   *
+   * @param instance The instance to configure.
+   * @param includeParentClasses Whether to include declared variables in super classes.
+   * @throws HadoopConfigurationException If there is an error with the declaration or
+   *     assigning the field.
+   */
+  public static void configure(Configurable instance, boolean includeParentClasses) {
+    configure(instance, instance.getConf(), includeParentClasses);
   }
 
   /**
