@@ -96,7 +96,7 @@ public class ConfigurationMethod {
         } else if (parameterType.isAssignableFrom(Collection.class)) {
           mMethod.invoke(instance, conf.getStringCollection(key));
         } else if (String[].class == parameterType) {
-          mMethod.invoke(instance, conf.getStrings(key));
+          mMethod.invoke(instance, new Object[] { conf.getStrings(key) });
         } else {
           throw new HadoopConfigurationException(
               "Unsupported method parameter type annotated by @HadoopConf: "
