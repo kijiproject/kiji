@@ -1,7 +1,7 @@
 /**
  * Licensed to WibiData, Inc. under one or more contributor license
  * agreements.  See the NOTICE file distributed with this work for
- * additional information regarding copyright ownership.  Odiago, Inc.
+ * additional information regarding copyright ownership.  WibiData, Inc.
  * licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
@@ -64,8 +64,9 @@ public class ConfigurationVariable {
       throw new HadoopConfigurationException("Missing 'key' attribute of @HadoopConf on "
           + instance.getClass().getName() + "." + mField.getName());
     }
-    if (null == conf.get(key)) {
-      // Nothing set in the configuration, so the field will be left alone.
+    if (null == conf.get(key) && mAnnotation.defaultValue().isEmpty()) {
+      // Nothing set in the configuration, and no default value
+      // specified. Just leave the field alone.
       return;
     }
 
@@ -75,17 +76,17 @@ public class ConfigurationVariable {
 
     try {
       if (boolean.class == mField.getType()) {
-        mField.setBoolean(instance, conf.getBoolean(key, mField.getBoolean(instance)));
+        mField.setBoolean(instance, conf.getBoolean(key, getDefaultBoolean(instance)));
       } else if (float.class == mField.getType()) {
-        mField.setFloat(instance, conf.getFloat(key, mField.getFloat(instance)));
+        mField.setFloat(instance, conf.getFloat(key, getDefaultFloat(instance)));
       } else if (double.class == mField.getType()) {
-        mField.setDouble(instance, conf.getFloat(key, (float) mField.getDouble(instance)));
+        mField.setDouble(instance, conf.getFloat(key, getDefaultDouble(instance)));
       } else if (int.class == mField.getType()) {
-        mField.setInt(instance, conf.getInt(key, mField.getInt(instance)));
+        mField.setInt(instance, conf.getInt(key, getDefaultInt(instance)));
       } else if (long.class == mField.getType()) {
-        mField.setLong(instance, conf.getLong(key, mField.getLong(instance)));
+        mField.setLong(instance, conf.getLong(key, getDefaultLong(instance)));
       } else if (mField.getType().isAssignableFrom(String.class)) {
-        mField.set(instance, conf.get(key, (String) mField.get(instance)));
+        mField.set(instance, conf.get(key, getDefaultString(instance)));
       } else if (mField.getType().isAssignableFrom(Collection.class)) {
         mField.set(instance, conf.getStringCollection(key));
       } else if (String[].class == mField.getType()) {
@@ -97,5 +98,95 @@ public class ConfigurationVariable {
     } catch (NumberFormatException e) {
       // That's okay. The default value for the field will be kept.
     }
+  }
+
+  /**
+   * Gets the default value as a boolean.
+   *
+   * @param instance The object instance.
+   * @return The default boolean value.
+   * @throws IllegalAccessException If the field cannot be read.
+   */
+  private boolean getDefaultBoolean(Object instance) throws IllegalAccessException {
+    String defaultValue = mAnnotation.defaultValue();
+    if (defaultValue.isEmpty()) {
+      return mField.getBoolean(instance);
+    }
+    return Boolean.parseBoolean(defaultValue);
+  }
+
+  /**
+   * Gets the default value as a float.
+   *
+   * @param instance The object instance.
+   * @return The default float value.
+   * @throws IllegalAccessException If the field cannot be read.
+   */
+  private float getDefaultFloat(Object instance) throws IllegalAccessException {
+    String defaultValue = mAnnotation.defaultValue();
+    if (defaultValue.isEmpty()) {
+      return mField.getFloat(instance);
+    }
+    return Float.parseFloat(defaultValue);
+  }
+
+  /**
+   * Gets the default value as a double.
+   *
+   * @param instance The object instance.
+   * @return The default double value.
+   * @throws IllegalAccessException If the field cannot be read.
+   */
+  private float getDefaultDouble(Object instance) throws IllegalAccessException {
+    String defaultValue = mAnnotation.defaultValue();
+    if (defaultValue.isEmpty()) {
+      return (float) mField.getDouble(instance);
+    }
+    return Float.parseFloat(defaultValue);
+  }
+
+  /**
+   * Gets the default value as an int.
+   *
+   * @param instance The object instance.
+   * @return The default int value.
+   * @throws IllegalAccessException If the field cannot be read.
+   */
+  private int getDefaultInt(Object instance) throws IllegalAccessException {
+    String defaultValue = mAnnotation.defaultValue();
+    if (defaultValue.isEmpty()) {
+      return mField.getInt(instance);
+    }
+    return Integer.parseInt(defaultValue);
+  }
+
+  /**
+   * Gets the default value as a long.
+   *
+   * @param instance The object instance.
+   * @return The default long value.
+   * @throws IllegalAccessException If the field cannot be read.
+   */
+  private long getDefaultLong(Object instance) throws IllegalAccessException {
+    String defaultValue = mAnnotation.defaultValue();
+    if (defaultValue.isEmpty()) {
+      return mField.getLong(instance);
+    }
+    return Long.parseLong(defaultValue);
+  }
+
+  /**
+   * Gets the default value as a string.
+   *
+   * @param instance The object instance.
+   * @return The default string value.
+   * @throws IllegalAccessException If the field cannot be read.
+   */
+  private String getDefaultString(Object instance) throws IllegalAccessException {
+    String defaultValue = mAnnotation.defaultValue();
+    if (defaultValue.isEmpty()) {
+      return (String) mField.get(instance);
+    }
+    return defaultValue;
   }
 }

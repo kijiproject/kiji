@@ -1,7 +1,7 @@
 /**
  * Licensed to WibiData, Inc. under one or more contributor license
  * agreements.  See the NOTICE file distributed with this work for
- * additional information regarding copyright ownership.  Odiago, Inc.
+ * additional information regarding copyright ownership.  WibiData, Inc.
  * licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
@@ -49,7 +49,7 @@ public class TestHadoopConfigurator {
     @HadoopConf(key="my.int.value", usage="An integer value.")
     private int mIntValue = 42;
 
-    @HadoopConf(key="my.long.value")
+    @HadoopConf(key="my.long.value", defaultValue="456")
     private long mLongValue;
 
     @HadoopConf(key="my.string.value", usage="A string value.")
@@ -65,6 +65,72 @@ public class TestHadoopConfigurator {
     public void setConf(Configuration conf) {
       super.setConf(conf);
       HadoopConfigurator.configure(this);
+    }
+
+    private boolean mYourBoolean;
+
+    @HadoopConf(key="your.boolean.value", defaultValue="true")
+    public void setYourBoolean(boolean value) {
+      mYourBoolean = value;
+    }
+
+    public boolean getYourBoolean() {
+      return mYourBoolean;
+    }
+
+    private float mYourFloat;
+
+    @HadoopConf(key="your.float.value", defaultValue="1.2")
+    public void setYourFloat(float value) {
+      mYourFloat = value;
+    }
+
+    public float getYourFloat() {
+      return mYourFloat;
+    }
+
+    private double mYourDouble;
+
+    @HadoopConf(key="your.double.value", defaultValue="3.4")
+    public void setYourDouble(double value) {
+      mYourDouble = value;
+    }
+
+    public double getYourDouble() {
+      return mYourDouble;
+    }
+
+    private int mYourInt;
+
+    @HadoopConf(key="your.int.value", defaultValue="123")
+    public void setYourInt(int value) {
+      mYourInt = value;
+    }
+
+    public int getYourInt() {
+      return mYourInt;
+    }
+
+    private long mYourLong;
+
+    @HadoopConf(key="your.long.value", defaultValue="123")
+    public void setYourLong(long value) {
+      mYourLong = value;
+    }
+
+    public long getYourLong() {
+      return mYourLong;
+    }
+
+    private String mYourString;
+
+    @HadoopConf(key="your.string.value", defaultValue="asdf")
+    public void setYourString(String value) {
+      mYourString = value;
+    }
+
+    public String getYourString() {
+      return mYourString;
     }
 
     /**
@@ -156,10 +222,15 @@ public class TestHadoopConfigurator {
     conf.setFloat("my.float.value", 3.1f);
     conf.setFloat("my.double.value", 1.9f);
     conf.setInt("my.int.value", 12);
-    conf.setLong("my.long.value", 456L);
     conf.set("my.string.value", "bar");
     conf.setStrings("my.string.collection", "apple", "banana");
     conf.setStrings("my.string.array", "red", "green", "blue");
+    conf.setBoolean("your.boolean.value", true);
+    conf.setFloat("your.float.value", 1.0f);
+    conf.setFloat("your.double.value", 2.0f);
+    conf.setInt("your.int.value", 1);
+    conf.setLong("your.long.value", 2L);
+    conf.set("your.string.value", "asdf");
 
     MyConfiguredClass instance = ReflectionUtils.newInstance(MyConfiguredClass.class, conf);
     assertEquals(true, instance.getBooleanValue());
@@ -168,6 +239,11 @@ public class TestHadoopConfigurator {
     assertEquals(12, instance.getIntValue());
     assertEquals(456L, instance.getLongValue());
     assertEquals("bar", instance.getStringValue());
+    assertEquals(true, instance.getYourBoolean());
+    assertEquals(1.0f, instance.getYourFloat(), 1e-6f);
+    assertEquals(2.0, instance.getYourDouble(), 1e-6);
+    assertEquals(1, instance.getYourInt());
+    assertEquals(2L, instance.getYourLong());
   }
 
   /**
