@@ -15,10 +15,15 @@ Hadoop](http://hadoop.apache.org) configuration.
       public void setConf(Configuration conf) {
         super.setConf(conf);
         HadoopConfigurator.configure(this);
-        // Now fooValue has been populated with the value of conf.get("foo.value").
+      }
+
+      @HadoopConf(key="bar.value", defaultValue="123")
+      private void setBarValue(int barValue) {
+        // This method is called with the value of conf.get("bar.value") as the parameter.
       }
 
       public void doStuff() {
+        // fooValue has been populated with the value of conf.get("foo.value") automatically.
         System.out.println("foo.value read from configuration: " + fooValue);
       }
     }
