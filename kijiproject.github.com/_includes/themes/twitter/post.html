@@ -13,14 +13,15 @@
       {% elsif page.tags contains 'article' %}
         {% assign pages = site.tags.article %}
       {% endif %}
-      {% assign maxpages = pages | size %}
+      {% capture maxpages %}{{ pages | size }}{% endcapture %}
 
       {% if page.order == 1 %}
         <li class="prev disabled"><a>&larr; Previous</a></li>
       {% else %}
+        {% capture prevOrder %}{{ page.order | minus:1 }}{% endcapture %}
         {% for subpage in pages %}
-          {% assign prevOrder = page.order | minus:1 %}
-          {% if subpage.order == prevOrder %}
+          {% capture curOrder %}{{ subpage.order }}{% endcapture %}
+          {% if curOrder == prevOrder %}
             <li class="prev">
               <a href="{{ BASE_PATH }}{{ subpage.url }}" title="{{ subpage.title }}">
               &larr; Previous
@@ -30,12 +31,14 @@
         {% endfor %}
       {% endif %}
 
-      {% if page.order == maxpages %}
+      {% capture pageOrder %}{{ page.order }}{% endcapture %}
+      {% if pageOrder == maxpages %}
         <li class="next disabled"><a>Next &rarr;</a></li>
       {% else %}
+        {% capture nextOrder %}{{ page.order | plus:1 }}{% endcapture %}
         {% for subpage in pages %}
-          {% assign nextOrder = page.order | plus:1 %}
-          {% if subpage.order == nextOrder %}
+          {% capture curOrder %}{{ subpage.order }}{% endcapture %}
+          {% if curOrder == nextOrder %}
             <li class="next">
               <a href="{{ BASE_PATH }}{{ subpage.url }}" title="{{ subpage.title }}">
               Next &rarr;

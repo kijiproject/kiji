@@ -2,10 +2,10 @@
     <div class="side-toc-inner">
       <h3>{{ title }}</h3>
       <ul>
-        {% assign num_pages = pages | size %}
-        {% for i in (1..num_pages) %}
+        {% for counter in pages %}
+          {% assign index = forloop.index %}
           {% for subpage in pages %}
-            {% if i == subpage.order %}
+            {% if index == subpage.order %}
               <li>
                 {% if subpage.url == page.url %}
                   <b>{{ subpage.title }}</b>
