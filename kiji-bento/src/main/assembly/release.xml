@@ -1,0 +1,131 @@
+<!-- Assembly configuration for the release bundle. -->
+<assembly
+    xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2
+                        http://maven.apache.org/xsd/assembly-1.1.2.xsd">
+  <!--
+    (c) Copyright 2012 WibiData, Inc.
+
+    See the NOTICE file distributed with this work for additional
+    information regarding copyright ownership.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+  -->
+  <id>release</id>
+  <formats>
+    <format>dir</format>
+    <format>tar.gz</format>
+  </formats>
+
+  <includeBaseDirectory>true</includeBaseDirectory>
+
+  <fileSets>
+    <fileSet>
+      <useDefaultExcludes>true</useDefaultExcludes>
+      <outputDirectory></outputDirectory>
+      <directory></directory>
+      <fileMode>0644</fileMode>
+      <includes>
+        <include>NOTICE.txt</include>
+        <include>LICENSE.txt</include>
+        <include>README.md</include>
+        <!-- log4j override to suppress hbase warnings -->
+        <include>conf/log4j.properties</include>
+      </includes>
+      <filtered>true</filtered>
+    </fileSet>
+    <!-- kiji-env.sh script for configuring environment. -->
+    <fileSet>
+      <useDefaultExcludes>true</useDefaultExcludes>
+      <outputDirectory>bin</outputDirectory>
+      <directory>src/main/scripts</directory>
+      <fileMode>0755</fileMode>
+      <excludes>
+        <exclude>*~</exclude>
+        <exclude>*.swp</exclude>
+      </excludes>
+    </fileSet>
+    <fileSet>
+      <!-- kiji-schema -->
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <outputDirectory>.</outputDirectory>
+      <directory>target/prereqs-dir/kiji-schema-${kiji-schema.version}</directory>
+      <excludes>
+        <exclude>bin/**</exclude>
+      </excludes>
+      <filtered>false</filtered>
+      <fileMode>0644</fileMode>
+    </fileSet>
+    <fileSet>
+      <!-- kiji-schema binaries -->
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <outputDirectory>bin</outputDirectory>
+      <directory>target/prereqs-dir/kiji-schema-${kiji-schema.version}/bin</directory>
+      <filtered>false</filtered>
+      <fileMode>0755</fileMode>
+    </fileSet>
+    <fileSet>
+      <!-- kiji-schema-shell -->
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <outputDirectory>schema-shell</outputDirectory>
+      <directory>target/prereqs-dir/kiji-schema-shell-${kiji-schema-shell.version}</directory>
+      <filtered>false</filtered>
+      <excludes>
+        <exclude>bin/**</exclude>
+      </excludes>
+      <fileMode>0644</fileMode>
+    </fileSet>
+    <fileSet>
+      <!-- kiji-schema-shell binaries -->
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <outputDirectory>schema-shell/bin</outputDirectory>
+      <directory>target/prereqs-dir/kiji-schema-shell-${kiji-schema-shell.version}/bin</directory>
+      <filtered>false</filtered>
+      <fileMode>0755</fileMode>
+    </fileSet>
+    <fileSet>
+      <!-- kiji-phonebook examples -->
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <outputDirectory>examples/phonebook</outputDirectory>
+      <directory>target/prereqs-dir/kiji-phonebook-${kiji-phonebook.version}</directory>
+      <filtered>false</filtered>
+      <fileMode>0644</fileMode>
+    </fileSet>
+    <fileSet>
+      <!-- bento-cluster -->
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <outputDirectory>cluster</outputDirectory>
+      <directory>target/prereqs-dir/bento-cluster-${bento-cluster.version}</directory>
+      <filtered>false</filtered>
+      <fileMode>0644</fileMode>
+      <!-- exclude several bin directories (e.g., hadoop's) at once. They are all
+           bulk copied in the next section. -->
+      <excludes>
+        <exclude>**/bin/**</exclude>
+      </excludes>
+    </fileSet>
+    <fileSet>
+      <!-- bento-cluster binaries -->
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <outputDirectory>cluster</outputDirectory>
+      <directory>target/prereqs-dir/bento-cluster-${bento-cluster.version}/</directory>
+      <includes>
+        <include>**/bin/**</include>
+      </includes>
+      <filtered>false</filtered>
+      <fileMode>0755</fileMode>
+    </fileSet>
+  </fileSets>
+
+</assembly>

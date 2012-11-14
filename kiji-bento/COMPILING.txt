@@ -1,0 +1,11 @@
+
+==  Welcome to the Kiji standalone repository ==
+
+This repository assembles a standalone distribution of all Kiji components
+and HBase-in-a-box.
+
+This uses Maven's assembly:single operation in two phases (prepare-package
+and package). The prepare-package operation unpacks all the dependency
+tarballs into target/prereqs-dir. Then in package, it uses the release.xml
+profile to copy fileSets into their final location in the true release
+package.
