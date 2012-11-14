@@ -1,0 +1,144 @@
+/*
+    (c) Copyright 2012 WibiData, Inc.
+
+    See the NOTICE file distributed with this work for additional
+    information regarding copyright ownership.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+*/
+{
+  name : "phonebook",
+  description : "A collection of phone book entries",
+  keys_format : {
+    encoding : "HASH",
+    hash_type : "MD5",
+    hash_size : 16
+  },
+  locality_groups : [ {
+    name : "default",
+    description : "Main locality group",
+    in_memory : false,
+    max_versions : 10,
+    ttl_seconds : 2147483647,
+    compression_type : "NONE",
+    families : [ {
+      name : "info",
+      description : "basic information",
+      columns : [ {
+        name : "firstname",
+        description : "First name",
+        column_schema : {
+          storage : "UID",
+          type : "INLINE",
+          value : '"string"'
+        }
+      }, {
+        name : "lastname",
+        description : "Last name",
+        column_schema : {
+          storage : "UID",
+          type : "INLINE",
+          value : '"string"'
+        }
+      }, {
+        name : "email",
+        description : "Email address",
+        column_schema : {
+          storage : "UID",
+          type : "INLINE",
+          value : '"string"'
+        }
+      }, {
+        name : "telephone",
+        description : "Telephone number",
+        column_schema : {
+          storage : "UID",
+          type : "INLINE",
+          value : '"string"'
+        }
+      }, {
+        name : "address",
+        description : "Street address",
+        column_schema : {
+          storage : "UID",
+          type : "CLASS",
+          value : "org.kiji.examples.phonebook.Address"
+        }
+      } ]
+    }, {
+      name : "derived",
+      description : "Information derived from an individual's address.",
+      columns : [ {
+        name : "addr1",
+        description : "Address line one.",
+        column_schema : {
+          storage : "UID",
+          type : "INLINE",
+          value : '"string"'
+        }
+      }, {
+        name : "apt",
+        description : "Address Apartment number.",
+        column_schema : {
+          storage : "UID",
+          type : "INLINE",
+          value : "[\"string\", \"null\"]"
+        }
+      }, {
+        name : "addr2",
+        description : "Address line two.",
+        column_schema : {
+          storage : "UID",
+          type : "INLINE",
+          value : '"string"'
+        }
+      }, {
+        name : "city",
+        description : "Address city.",
+        column_schema : {
+          storage : "UID",
+          type : "INLINE",
+          value : '"string"'
+        }
+      }, {
+        name : "state",
+        description : "Address state.",
+        column_schema : {
+          storage : "UID",
+          type : "INLINE",
+          value : '"string"'
+        }
+      }, {
+        name : "zip",
+        description : "Address zip code.",
+        column_schema : {
+          storage : "UID",
+          type : "INLINE",
+          value : '"string"'
+        }
+      } ]
+    }, {
+      name : "stats",
+      description : "Statistics about a contact.",
+      columns : [ {
+        name : "talktime",
+        description : "Time spent talking with this person.",
+        column_schema : {
+          storage : "UID",
+          type : "COUNTER"
+        }
+      } ]
+    }]
+  } ],
+  version : "kiji-1.0"
+}

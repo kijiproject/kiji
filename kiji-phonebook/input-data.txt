@@ -1,0 +1,4 @@
+Aaron|Kimball|aaron@wibidata.com|215-555-1234|{"addr1":"375 Alabama St","apt":{"string":"350"},"addr2":null,"city":"San Francisco","state":"CA","zip":94110}
+John|Doe|johndoe@gmail.com|202-555-9876|{"addr1":"1600 Pennsylvania Ave","apt":null,"addr2":null,"city":"Washington","state":"DC","zip":99999}
+Alice|Smith|alice.smith@yahoo.com|415-555-1144|{"addr1":"1 Embarcadero St","apt":{"string":"1000"},"addr2":{"string":"FooCorp, Inc."},"city":"San Francisco","state":"CA","zip":94109}
+Bob|Jones|bobbyj@aol.com|415-555-4161|{"addr1":"321 Main St","apt":null,"addr2":null,"city":"Sometown","state":"CA","zip":93100}
