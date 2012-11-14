@@ -30,7 +30,7 @@ if you want to get started playing with the example code.
 
 The source code for this tutorial can be found in `$KIJI_HOME/examples/phonebook`.
 The source is included along with a Maven project. To get started using Maven,
-consult [Getting started With Maven]({{site.kiji_url}}getting-started-with-maven) or
+consult [Getting started With Maven]({{site.kiji_url}}/get-started-with-maven) or
 the [Apache Maven Homepage](http://maven.apache.org/).
 
 The following tools are required to compile this project:
