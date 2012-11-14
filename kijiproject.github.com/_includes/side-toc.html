@@ -1,0 +1,57 @@
+<div class="side-toc">
+    <div class="side-toc-inner">
+      <h3>{{ title }}</h3>
+      <ul>
+        {% comment %}
+        Below is the most ridiculous code I have ever written in my life. No joke.
+
+        At the beginning of this template, we assume that the 'pages' variable is assigned
+        to the set of pages that should be displayed in this side-bar table-of-contents
+        snippet. Unfortunately, this list of pages is not sorted. Each page has an 'order'
+        property that we want to use for the sort order. It should be as simple as running the
+        pages array through the 'sort filter, like so:
+
+          {% for subpage in pages | sort:order %}
+            ...
+          {% endfor %}
+
+        But that doesn't work because each object in the pages array is not really an
+        object that responds to the 'order' property. The order property is looked up in a
+        magical liquid scope behind the scenes. So we'd be effectively sorting on a
+        property that doesn't exist.
+
+        Luckily, the internet has plenty of inspiration:
+        http://dseifried.wordpress.com/2011/11/25/jekyll-yaml-front-matter-and-the-liquid-templating-system/
+        To get around this, I construct a variable called order_url_title that looks like:
+
+        "^order0~url0@title0^order1~url1@title1^order2~url2@title2"
+
+        Then I remove the leading '^' and split it by '^' symbols to get:
+
+        ["order0~url0@title0", "order1~url1@title1", "order2~url2@title2"]
+
+        When I call sort on this, it gets sorted by the page.order property. Yes. And I
+        can use the 'split', 'first', and 'last' filters to get out what I need from these
+        strings.
+
+        {% endcomment %}
+
+        {% capture order_url_title %}{% for subpage in pages %}^{{ subpage.order | plus:1000 }}~{{ subpage.url }}@{{ subpage.title }}{% endfor %}{% endcapture %}
+        {% assign sorted_pages = order_url_title | remove_first:'^' | split:'^' | sort %}
+
+        {% for subpage in sorted_pages %}
+        {% assign order = subpage | split:'~' | first %}
+        {% assign title = subpage | split:'@' | last %}
+        {% assign url = subpage | split:'~' | last | split:'@' | first %}
+        <li>
+          {% if url == page.url %}
+          <b>{{ title }}</b>
+          {% else %}
+          <a href="{{ BASE_PATH }}{{ url }}">{{ title }}</a>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+</div>
+

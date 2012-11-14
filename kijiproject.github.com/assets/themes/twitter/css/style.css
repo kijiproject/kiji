@@ -1,0 +1,173 @@
+/* Override some defaults */
+body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.navbar .brand {
+  color: #000;
+  font-weight: bold;
+}
+
+.container-fluid {
+  max-width: 970px;
+  margin: auto;
+}
+
+h1 {
+  font-size: 36px;
+}
+
+h2 {
+  font-size: 28px;
+}
+
+h1, h2, h3, h4 {
+  font-weight: normal;
+}
+
+/* Fix the anchor tags because of the fixed top nav */
+h1, h2, h3, h4 {
+  margin-top: -50px;
+  padding-top: 60px;
+}
+
+blockquote p {
+  font-size: 100%;
+}
+
+code {
+  background: none;
+  border: 0;
+  color: #333;
+  padding: 0;
+  font-weight: bold;
+}
+
+pre code {
+  font-weight: normal;
+}
+
+.content {
+  padding-top: 50px;
+}
+
+.boxlink:hover {
+  text-decoration: none;
+}
+
+.boxlink:hover .well {
+  background-color: #fafafa;
+}
+
+.home-box {
+  margin-top: 40px;
+  margin-bottom: 40px;
+}
+
+.home-box .title {
+  margin-left: 60px;
+  font-size: 150%;
+}
+
+.home-box .description {
+  margin-top: 10px;
+  margin-left: 60px;
+  color: #333;
+}
+
+.home-box .well {
+  background-color: #fff;
+  padding-top: 50px;
+  padding-right: 30px;
+}
+
+.large-number {
+  font-size: 500%;
+  font-weight: bold;
+  color: #ddd;
+  margin-bottom: -40px;
+}
+
+/* Side TOC for user guide and articles. */
+.side-toc {
+  margin-top: 20px;
+  padding-left: 20px;
+  position: relative;
+}
+
+.side-toc-inner {
+  position: fixed;
+  border-left: 1px solid #eee;
+  padding-left: 20px;
+}
+
+.side-toc-inner ul {
+  margin: 0;
+  list-style-type: none;
+}
+
+/* Make drop down menus active when hovering. */
+.dropdown:hover .dropdown-menu {
+  display: block;
+  margin-top: -4px;
+}
+
+.userinput {
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+/** Stuff the user needs to type at the terminal. */
+.userinput pre {
+  font-weight: bold;
+  background-color: #eef8ff;
+  margin: 0;
+}
+
+.userinput pre:before {
+  content: "TYPE ME";
+  float: right;
+  margin-right: -30px;
+  font-weight: bold;
+  font-size: 60%;
+  color: #fff;
+  font-family: Arial;
+  background-color: #882222;
+  padding: 0 20px 0 20px;
+  -webkit-transform: rotate(45deg);
+  -moz-transform: rotate(45deg);
+  -o-transform: rotate(45deg);
+  writing-mode: lr-tb;
+}
+
+/* tag_box ======================================================== */
+.tag_box {
+	list-style:none;
+	margin:0;
+	padding:5px 0 ;
+	overflow:hidden;
+}
+.tag_box li {
+	line-height:28px;
+}
+.tag_box.inline li {
+	float:left;
+}
+.tag_box a {
+	padding: 3px 6px;
+	margin: 2px;
+	background: #eee;
+	color:#005F6B;
+	border-radius: 3px;
+	text-decoration:none;
+}
+.tag_box a span{
+	vertical-align:super;
+	font-size:0.8em;
+}
+.tag_box a.active {
+	background:#57A957;
+	border:1px solid #4C964D;
+	color:#FFF;
+}
+

@@ -1,0 +1,8 @@
+# Temporary files used by editors.
+*~
+*.swp
+.#*
+\#*
+
+# Build artifacts.
+_site/

@@ -1,0 +1,61 @@
+<div class="row-fluid">
+  <div class="span8">
+    <div class="page-header">
+      <h1>{{ page.title }}</h1>
+    </div>
+
+    {{ content }}
+
+    <div class="pagination">
+      <ul>
+      {% if page.tags contains 'schema-ug' %}
+        {% assign pages = site.tags.schema-ug %}
+      {% elsif page.tags contains 'article' %}
+        {% assign pages = site.tags.article %}
+      {% endif %}
+      {% assign maxpages = pages | size %}
+
+      {% if page.order == 1 %}
+        <li class="prev disabled"><a>&larr; Previous</a></li>
+      {% else %}
+        {% for subpage in pages %}
+          {% assign prevOrder = page.order | minus:1 %}
+          {% if subpage.order == prevOrder %}
+            <li class="prev">
+              <a href="{{ BASE_PATH }}{{ subpage.url }}" title="{{ subpage.title }}">
+              &larr; Previous
+              </a>
+            </li>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+
+      {% if page.order == maxpages %}
+        <li class="next disabled"><a>Next &rarr;</a></li>
+      {% else %}
+        {% for subpage in pages %}
+          {% assign nextOrder = page.order | plus:1 %}
+          {% if subpage.order == nextOrder %}
+            <li class="next">
+              <a href="{{ BASE_PATH }}{{ subpage.url }}" title="{{ subpage.title }}">
+              Next &rarr;
+              </a>
+            </li>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+      </ul>
+    </div>
+  </div>
+
+  <div class="span4">
+    {% if page.tags contains 'schema-ug' %}
+      {% assign title = 'User Guide' %}
+      {% assign pages = site.tags.schema-ug %}
+    {% elsif page.tags contains 'article' %}
+      {% assign title = 'Phonebook Tutorial'  %}
+      {% assign pages = site.tags.article %}
+    {% endif %}
+    {% include side-toc.html %}
+  </div>
+</div>

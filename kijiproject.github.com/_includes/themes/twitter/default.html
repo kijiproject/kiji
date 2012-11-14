@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>{{ page.title }}</title>
+    {% if page.description %}<meta name="description" content="{{ page.description }}">{% endif %}
+    <meta name="author" content="{{ site.author.name }}">
+    <link href="{{ ASSET_PATH }}/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ ASSET_PATH }}/css/style.css" rel="stylesheet" type="text/css" media="all">
+    <link href="{{ ASSET_PATH }}/css/github.css" rel="stylesheet" type="text/css" media="all">
+  </head>
+
+  <body>
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container-fluid">
+          <a class="brand" href="{{ site.kiji_url }}">{{ site.title }}</a>
+          <ul class="nav">
+            <li>
+              <a href="{{ site.kiji_url }}">The Kiji Project</a>
+            </li>
+            <li>
+              <a href="{{ site.kiji_url }}/features/">Features</a>
+            </li>
+            <li class="dropdown">
+              <a href="{{ site.kiji_url }}/getstarted/">Get Started</a>
+              <ul class="dropdown-menu">
+                <li class="menu-item">
+                  <a href="{{ site.kiji_url }}/getstarted/#Downloads">Downloads</a>
+                </li>
+                <li class="menu-item">
+                  <a href="{{ site.kiji_url }}/getstarted/#Installation">Installation</a>
+                </li>
+                <li class="menu-item">
+                  <a href="{{ site.kiji_url }}/getstarted/#Quick_Start_Guide">Quick Start Guide</a>
+                </li>
+                <li class="menu-item">
+                  <a href="{{ site.kiji_url }}/getstarted/#Maven">Getting Started with Maven</a>
+                </li>
+                <li class="menu-item">
+                  <a href="{{ site.kiji_url }}/getstarted/#Training_Services">
+                    Training & Services
+                  </a>
+                </li>
+              </ul>
+            </li>
+            <li class="dropdown">
+              <a href="{{ site.kiji_url }}/getinvolved">Get Involved</a>
+              <ul class="dropdown-menu">
+                <li class="menu-item">
+                  <a href="{{ site.kiji_url }}/getinvolved/#Mailing_Lists">Mailing Lists</a>
+                </li>
+                <li class="menu-item">
+                  <a href="{{ site.kiji_url }}/getinvolved/#Source_Code">Source Code</a>
+                </li>
+                <li class="menu-item">
+                  <a href="{{ site.kiji_url }}/getinvolved/#Issue_Tracker">Issue Tracking</a>
+                </li>
+                <li class="menu-item">
+                  <a href="{{ site.kiji_url }}/getinvolved/#Contributing_to_Kiji">
+                    Contributing to Kiji
+                  </a>
+                </li>
+              </ul>
+            </li>
+            <li class="dropdown active">
+              <a href="{{ HOME_PATH }}">Documentation</a>
+              <ul class="dropdown-menu">
+                <li class="menu-item">
+                  <a href="{{ site.kiji_url }}/getstarted/#Quick_Start_Guide">Quick Start Guide</a>
+                </li>
+                <li class="menu-item">
+                  <a href="{{ HOME_PATH}}tutorial/phonebook-tutorial">Phonebook Tutorial</a>
+                </li>
+                <li class="menu-item">
+                  <a href="{{ HOME_PATH}}userguide/schema/1.0.0-rc1/kiji-schema-overview">
+                    User Guide
+                  </a>
+                </li>
+                <li class="menu-item">
+                  <a href="{{ HOME_PATH }}apidocs">API Reference</a>
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="{{ site.kiji_url }}/blog/">Blog</a>
+            </li>
+            <li>
+              <a href="{{ site.kiji_url }}/aboutkiji">About Kiji</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="container-fluid">
+      <div class="content">
+        {{ content }}
+      </div>
+
+      <footer>
+        <hr/>
+        <p>&copy; {{ site.title }}</p>
+      </footer>
+    </div>
+
+    {% include JB/analytics %}
+  </body>
+</html>
