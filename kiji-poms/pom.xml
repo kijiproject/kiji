@@ -39,8 +39,8 @@
   </distributionManagement>
 
   <scm>
-    <connection>scm:git:git@github.com/kiji/kiji-poms.git</connection>
-    <url>scm:git:git@github.com/kiji/kiji-poms.git</url>
-    <developerConnection>scm:git:git@github.com/kiji/kiji-poms.git</developerConnection>
+    <connection>scm:git:git@github.com:kijiproject/kiji-poms.git</connection>
+    <url>scm:git:git@github.com:kijiproject/kiji-poms.git</url>
+    <developerConnection>scm:git:git@github.com:kijiproject/kiji-poms.git</developerConnection>
   </scm>
 </project>
