@@ -1,0 +1,6 @@
+*~
+*.swp
+/target
+/build
+.classpath
+.project

@@ -1,0 +1,127 @@
+/**
+ * (c) Copyright 2012 WibiData, Inc.
+ *
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.kiji.schema.shell
+
+import org.kiji.schema.KijiInvalidNameException
+import org.kiji.schema.shell.ddl.DDLCommand
+import org.kiji.schema.shell.ddl.ErrorCommand
+
+/**
+ * An object that processes user input.
+ */
+class InputProcessor {
+
+  val PROMPT_STR = "schema> "
+  val CONTINUE_PROMPT_STR = "     -> "
+
+  /**
+   * Print help message to the output console of the environment.
+   *
+   * @param env the environment that contains the output console.
+   */
+  private def printHelp(env: Environment): Unit = {
+    env.printer.println("""
+    KijiSchema DDL Shell
+
+Allows you to run layout definition language commands to create, modify,
+inspect, and delete Kiji table layouts.
+
+Commands in this terminal operate on the metadata maintained by KijiSchema;
+they do not operate on the data stored in HBase tables themselves.
+
+There are two special commands that may be entered on a line by themselves:
+    help - Prints this help message.
+    quit - Exits the terminal.
+
+All other commands are statements in the layout definition language.
+These commands must be terminated by a ';' character. They may span
+multiple lines if required. e.g.:
+
+  schema> SHOW TABLES;
+  schema> DESCRIBE foo;
+  schema> ALTER TABLE foo SET DESCRIPTION =
+       ->    'A table\'s worth of data';
+
+Keywords are not case sensitive. Table and column names are. You may
+enclose table and column names in 'single quotes' if desired (e.g., if you
+use a keyword as a table name.). Strings like a description string must be
+'single quoted.' You should escape internal single-quote marks with a
+leading backslash, as in the example above.
+
+Please refer to the README.md file distributed with this project for a
+full layout definition language reference.
+""")
+  }
+
+  /**
+   * Request a line of user input, parse it, and execute the command.
+   * If this is an exit/quit call, exit this process.
+   * Otherwise, recursively continue to request the next line of user input.
+   *
+   * @param buf - the input command so far (from previous input lines)
+   * @param env - the current operating environment
+   * @return the final environment.
+   */
+  def processUserInput(buf: StringBuilder, env: Environment): Environment = {
+    val prompt = if (buf.length() > 0) CONTINUE_PROMPT_STR else PROMPT_STR
+    val maybeInput = env.inputSource.readLine(prompt)
+    maybeInput match {
+      case None => { env /* Out of input. Return success. */ }
+      case Some(input) => {
+        if (input == null || (buf.length == 0
+            && (input.equals("exit") || input.equals("quit") || input.equals("exit;")
+            || input.equals("quit;")))) {
+          env
+        } else if (buf.length == 0 && !input.trim.isEmpty && input.trim.charAt(0) == '#') {
+          // Comment line; just ignore it.
+          processUserInput(buf, env)
+        } else if (buf.length == 0 && input.equals("help")) {
+          printHelp(env)
+          processUserInput(new StringBuilder, env)
+        } else if (input.trim().endsWith(";")) {
+          buf.append(input);
+          val parser = new DDLParser(env)
+          try {
+            val parseResult = parser.parseAll(parser.statement, buf.toString())
+            val nextEnv = (
+              try {
+                parseResult.getOrElse(new ErrorCommand(env, parseResult.toString())).exec()
+              } catch { case e: DDLException =>
+                println(e.getMessage())
+                env
+              }
+            )
+            // Continue processing with a new input buffer.
+            processUserInput(new StringBuilder, nextEnv)
+          } catch {
+            case e: KijiInvalidNameException =>
+              println("Invalid identifier: " + e.getMessage())
+              processUserInput(new StringBuilder, env)
+          }
+        } else {
+          // Add the input to the string builder and continue.
+          buf.append(input)
+          buf.append(" ") // Add some whitespace.
+          processUserInput(buf, env)
+        }
+      }
+    }
+  }
+}

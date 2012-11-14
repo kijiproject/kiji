@@ -1,0 +1,11 @@
+
+* ROW KEY FORMAT should support different hash types.
+* `DESCRIBE EXTENDED t` should describe the row key format.
+* Implement: CREATE TABLE .. USING n REGIONS (WITH lg_clause...)
+
+* When 'enabled' is real:
+** support ALTER TABLE ENABLE/DISABLE FAMILY/COLUMN/LOCALITY GROUP for the enabled flag.
+** DESCRIBE should only show enabled data, unless extended is true.
+** DUMP DDL should only dump enabled data, until we can set disabled to true.
+
+* When you start the shell, create the kiji instance if it doesn't already exist.
