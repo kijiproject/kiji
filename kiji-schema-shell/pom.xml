@@ -35,7 +35,7 @@
   <inceptionYear>2012</inceptionYear>
 
   <properties>
-    <kiji-schema.version>1.0.0-rc1-SNAPSHOT</kiji-schema.version>
+    <kiji-schema.version>1.0.0-rc2-SNAPSHOT</kiji-schema.version>
   </properties>
 
   <build>
@@ -124,7 +124,7 @@
     <dependency>
       <groupId>org.kiji.schema</groupId>
       <artifactId>kiji-schema</artifactId>
-      <version>1.0.0-rc2-SNAPSHOT</version>
+      <version>${kiji-schema.version}</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>
