@@ -607,8 +607,8 @@
   </distributionManagement>
 
   <scm>
-    <connection>scm:git:git@github.com:kijiproject/${project.artifactId}.git</connection>
-    <url>scm:git:git@github.com:kijiproject/${project.artifactId}.git</url>
-    <developerConnection>scm:git:git@github.com:kijiproject/${project.artifactId}.git</developerConnection>
+    <connection>scm:git:git@github.com:kijiproject</connection>
+    <url>scm:git:git@github.com:kijiproject</url>
+    <developerConnection>scm:git:git@github.com:kijiproject</developerConnection>
   </scm>
 </project>
