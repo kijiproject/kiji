@@ -1,0 +1,15 @@
+
+==  Welcome to the Kiji pom repository ==
+
+This repository tracks the main parent pom files that are referenced by all
+Kiji projects. These pom files are used to set plugin configurations, common
+dependency versions, etc. for all Kiji projects as well as control release
+management properties.
+
+To change dependency versions, etc.:
+* Make a change in kiji-root-pom/pom.xml.
+* Run "mvn install" in this directory.
+* Update your project's pom (e.g., kiji-schema/pom.xml) to use the
+  latest SNAPSHOT version of kiji-root-pom.
+* Run "mvn compile", etc. in that project.
+

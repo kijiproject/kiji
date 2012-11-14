@@ -1,0 +1,46 @@
+<!-- (c) Copyright 2012, WibiData Inc. -->
+<!-- Kiji poms top-level pom.xml -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>org.kiji.pom</groupId>
+  <artifactId>kiji-poms</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+
+  <name>Kiji build environment</name>
+  <url>http://www.kiji.org</url>
+
+  <modules>
+    <module>kiji-root-pom</module>
+  </modules>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>2.2.2</version>
+      </plugin>
+    </plugins>
+  </build>
+
+  <distributionManagement>
+    <repository>
+      <id>kiji-maven</id>
+      <name>kiji-maven-releases</name>
+      <url>https://repo.wibidata.com/artifactory/kiji-packages</url>
+    </repository>
+    <snapshotRepository>
+      <id>kiji-maven</id>
+      <name>kiji-maven-snapshots</name>
+      <url>https://repo.wibidata.com/artifactory/kiji-packages</url>
+    </snapshotRepository>
+  </distributionManagement>
+
+  <scm>
+    <connection>scm:git:git@github.com/kiji/kiji-poms.git</connection>
+    <url>scm:git:git@github.com/kiji/kiji-poms.git</url>
+    <developerConnection>scm:git:git@github.com/kiji/kiji-poms.git</developerConnection>
+  </scm>
+</project>
