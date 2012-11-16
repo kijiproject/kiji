@@ -55,3 +55,14 @@ http://github.com/mojombo/jekyll. Once Jekyll is installed `jekyll
 current state of the project at http://localhost:4000. Note that the
 pygments highlighting of codeblocks will only work if you have
 pygments installed.
+
+## Contributing Documentation
+
+* Fork the [documentation project](https://github.com/kijiproject/kijiproject.github.com).
+* File a JIRA for the change you want to make on the [DOCS project](http://jira.kiji.org).
+* Create a topic branch: git checkout -b my_fix.
+* Refer to markdown_styleguide.md in the parent directory for more on the syntax.
+* Make your changes.
+* Reference the jira in the commit message (e.g., "DOCS-1: Subscribe buttons to the mailing lists on the website are broken")
+* Push your branch: git push origin my_fix.
+* Use [pull requests](https://help.github.com/articles/using-pull-requests) to contribute your changes once you are done.
