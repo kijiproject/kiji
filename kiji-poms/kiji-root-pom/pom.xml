@@ -581,6 +581,11 @@
       <name>kiji-repos</name>
       <url>https://repo.wibidata.com/artifactory/kiji</url>
     </repository>
+    <repository>
+      <id>kiji-nightly</id>
+      <name>kiji-nightly</name>
+      <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
+    </repository>
   </repositories>
   <pluginRepositories>
     <pluginRepository>
@@ -611,4 +616,22 @@
     <url>scm:git:git@github.com:kijiproject</url>
     <developerConnection>scm:git:git@github.com:kijiproject</developerConnection>
   </scm>
+
+  <profiles>
+    <profile>
+      <id>kiji-nightly</id>
+      <distributionManagement>
+      <repository>
+        <id>kiji-nightly</id>
+        <name>kiji-nightly-releases</name>
+        <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
+      </repository>
+      <snapshotRepository>
+        <id>kiji-nightly</id>
+        <name>kiji-nightly-snapshots</name>
+        <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
+      </snapshotRepository>
+      </distributionManagement>
+    </profile>
+  </profiles>
 </project>
