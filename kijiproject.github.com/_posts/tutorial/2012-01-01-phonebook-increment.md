@@ -1,6 +1,6 @@
 ---
 layout: post
-title : Using Counters
+title : Use Counters
 category: tutorial
 tags: [article]
 order : 7

@@ -21,16 +21,16 @@ example code can be found in the next section of this tutorial,
 
 ### How to Use this Tutorial
 
-* **Links to Javadoc** - Class names link to the relevant Javadoc. For example, checkout
+* **Links to Javadoc** - Class names link to the relevant Javadoc:
 [`EntityId`]({{site.api_url}}EntityId.html).
 
-* **Code Walkthrough** - We provide code snippets in gray boxes with syntax highlighting like so:
+* **Code Walkthrough** - Code snippets are in gray boxes with language specific syntax highlighting:
 
 {% highlight java %}
 System.out.println("Hello Kiji");
 {% endhighlight %}
 
-* **Shell Commands** - the shell commands to run the above code will be in light blue boxes, and the results in grey.
+* **Shell Commands** - Shell commands to run the above code will be in light blue boxes, and the results in grey.
 
 <div class="userinput">
 {% highlight bash %}

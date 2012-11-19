@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Deleting Contacts
+title: Delete Contacts
 category: tutorial
 tags: [article]
 order: 8
