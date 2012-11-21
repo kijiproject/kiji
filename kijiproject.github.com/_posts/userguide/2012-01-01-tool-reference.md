@@ -49,7 +49,7 @@ The format for this parameter is a URI generally formatted as:
 
 The default value for this parameter is `--kiji=kiji://.env/default`, which
 references the KijiSchema instance named "default" and installed on the HBase
-instance identified un the HBase configuration files in `$HBASE_HOME`.
+instance identified in the HBase configuration files in `$HBASE_HOME`.
 
 The URI for KijiSchema instance named "the_instance" and installed on a mini
 HBase cluster running locally on a laptop is
@@ -297,7 +297,7 @@ Exactly one of `--entity-id` or `--entity-hash` must be used.
 Setting Individual Cells: `put`<a name="put"> </a>
 --------------------------------------------------
 
-To aid in the insertion of small datasets, debugging, and testing, the
+To aid in the insertion of small data sets, debugging, and testing, the
 `kiji put` command may be used to insert individual values in a Kiji table.
 
 The following arguments are required:
@@ -315,7 +315,7 @@ The following arguments are optional:
 
 *  `--schema=Avro schema`      - By default, KijiSchema will use the reader schema
    attached to a column in its layout to decode the JSON and encode the binary
-   data for insertion in the table. This argument allows you to use an altername
+   data for insertion in the table. This argument allows you to use an alternate
    writer schema.
 *  `--timestamp=long`          - Specifies a timestamp (in milliseconds since the Epoch) other than "now".
 *  `--kiji=<kiji-uri>`         - Address of the Kiji instance to interact with.

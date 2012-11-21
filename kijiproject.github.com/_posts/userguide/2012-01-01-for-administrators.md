@@ -4,7 +4,7 @@ title: For Administrators
 categories: [userguide, schema, 1.0.0-rc1]
 tags : [schema-ug]
 order : 5
-description: Installation and maitnence of kiji-schema.
+description: Installation and maintenance of kiji-schema.
 ---
 
 In this chapter, you will learn how to install and configure all aspects

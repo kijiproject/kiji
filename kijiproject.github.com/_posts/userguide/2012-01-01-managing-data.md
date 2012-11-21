@@ -330,7 +330,7 @@ protocol KijiTableLayoutRecords {
     /** Locality group name aliases. */
     array<string> aliases = [];
 
-    /** When false, the locality group and its famillies are not visible. */
+    /** When false, the locality group and its families are not visible. */
     boolean enabled = true;
 
     /** User description of the locality group. */
