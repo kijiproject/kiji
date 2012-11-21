@@ -19,7 +19,6 @@
 
 package org.kiji.examples.phonebook;
 
-import java.io.Console;
 import java.io.IOException;
 
 import org.apache.commons.io.IOUtils;
@@ -28,6 +27,7 @@ import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import org.kiji.examples.phonebook.util.ConsolePrompt;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiConfiguration;
@@ -53,7 +53,7 @@ public class AddEntry extends Configured implements Tool {
    */
   @Override
   public int run(String[] args) throws IOException, InterruptedException {
-    final Console console = System.console();
+    final ConsolePrompt console = new ConsolePrompt();
 
     // Interactively prompt the user for the record fields from the console.
     final String first = console.readLine("First name: ");
@@ -111,6 +111,7 @@ public class AddEntry extends Configured implements Tool {
       IOUtils.closeQuietly(writer);
       IOUtils.closeQuietly(table);
       IOUtils.closeQuietly(kiji);
+      IOUtils.closeQuietly(console);
     }
 
     return 0;
