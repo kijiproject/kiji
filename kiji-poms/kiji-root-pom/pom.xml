@@ -633,5 +633,36 @@
       </snapshotRepository>
       </distributionManagement>
     </profile>
+    <profile>
+      <id>fast-findbugs</id>
+      <build>
+        <plugins>
+          <plugin>
+            <!-- projects inheriting from this pom and enabling this plugin
+                 must supply an includeFilter.xml and excludeFilter.xml file.
+            -->
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>findbugs-maven-plugin</artifactId>
+            <version>${findbugs-maven-plugin.version}</version>
+            <configuration>
+              <skip>${skipVerify}</skip>
+              <effort>Min</effort>
+              <threshold>Medium</threshold>
+              <includeFilterFile>${basedir}/src/main/findbugs/includeFilter.xml</includeFilterFile>
+              <excludeFilterFile>${basedir}/src/main/findbugs/excludeFilter.xml</excludeFilterFile>
+              <xmlOutput>true</xmlOutput>
+            </configuration>
+            <executions>
+              <execution>
+                <phase>verify</phase>
+                <goals>
+                  <goal>check</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
 </project>
