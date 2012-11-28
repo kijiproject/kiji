@@ -27,6 +27,7 @@ import org.apache.hadoop.hbase.HBaseConfiguration
 import org.kiji.schema.KijiConfiguration
 import org.kiji.schema.KijiInstaller
 import org.kiji.schema.avro.FamilyDesc
+import org.kiji.schema.impl.DefaultHTableInterfaceFactory
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.shell.input.NullInputSource
 
@@ -213,7 +214,7 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
   def installKiji(instanceName: String): Unit = {
     val kijiConf = new KijiConfiguration(HBaseConfiguration.create(),
         instanceName)
-    new KijiInstaller().install(kijiConf)
+    new KijiInstaller().install(kijiConf, DefaultHTableInterfaceFactory.get())
   }
 
   /**
