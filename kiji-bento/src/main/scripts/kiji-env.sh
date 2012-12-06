@@ -46,7 +46,7 @@
 
 # Get the directory this script is located in, no matter how the script is being
 # run.
-bin="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+bin="$( cd "$( dirname "${BASH_SOURCE:-$0}" )" && pwd )"
 
 # The script is inside a kiji-bento distribution.
 KIJI_HOME="${bin}/.."
