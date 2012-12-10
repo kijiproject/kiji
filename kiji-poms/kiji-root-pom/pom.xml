@@ -51,7 +51,7 @@
 
     <!-- versions for maven plugins -->
     <findbugs-maven-plugin.version>2.5.1</findbugs-maven-plugin.version>
-    <hbase-maven-plugin.version>1.0.7-cdh4</hbase-maven-plugin.version>
+    <hbase-maven-plugin.version>1.0.8-cdh4</hbase-maven-plugin.version>
     <maven-assembly-plugin.version>2.3</maven-assembly-plugin.version>
     <maven-checkstyle-plugin.version>2.9.1</maven-checkstyle-plugin.version>
     <maven-compiler-plugin.version>2.3.2</maven-compiler-plugin.version>
