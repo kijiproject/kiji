@@ -54,7 +54,7 @@ class FakeHBase {
 
   /** Factory for HTableInterface instances. */
   object InterfaceFactory
-      extends org.kiji.testing.fakehtable.HTableInterfaceFactory
+      extends org.kiji.schema.impl.HTableInterfaceFactory
       with org.apache.hadoop.hbase.client.HTableInterfaceFactory {
 
     override def create(conf: Configuration, tableName: String): HTableInterface = {

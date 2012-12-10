@@ -17,14 +17,20 @@
  * limitations under the License.
  */
 
-package org.kiji.testing.fakehtable;
+package org.kiji.schema.impl;
 
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.HTableInterface;
 
-/** Factory for HTableInterface. */
+/**
+ * Factory for HTableInterface.
+ *
+ * This interface is cloned from KijiSchema as a temporary workaround, to allow FakeHBase
+ * to implement it without depending on KijiSchema, and so that KijiSchema may further depend
+ * on FakeHBase.
+ */
 public interface HTableInterfaceFactory {
   /**
   * Creates a new HTableInterface instance.
