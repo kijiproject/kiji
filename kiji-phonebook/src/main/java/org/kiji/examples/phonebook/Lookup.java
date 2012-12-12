@@ -22,14 +22,14 @@ package org.kiji.examples.phonebook;
 import java.io.IOException;
 import java.util.List;
 
-import com.odiago.common.flags.Flag;
-import com.odiago.common.flags.FlagParser;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import org.kiji.common.flags.Flag;
+import org.kiji.common.flags.FlagParser;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiConfiguration;

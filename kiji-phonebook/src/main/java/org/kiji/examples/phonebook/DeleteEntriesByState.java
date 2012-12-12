@@ -23,8 +23,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import com.odiago.common.flags.Flag;
-import com.odiago.common.flags.FlagParser;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.mapreduce.GenericTableMapReduceUtil;
@@ -36,6 +34,8 @@ import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.common.flags.Flag;
+import org.kiji.common.flags.FlagParser;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
