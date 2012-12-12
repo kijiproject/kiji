@@ -40,8 +40,8 @@
     <hamcrest.version>1.1</hamcrest.version>
     <hbase.version>0.92.1-cdh4.1.2</hbase.version>
     <junit.version>4.10</junit.version>
+    <kiji-common-flags.version>1.0.6</kiji-common-flags.version>
     <log4j.version>1.2.16</log4j.version>
-    <odiago-common-flags.version>1.0.5</odiago-common-flags.version>
     <scala.version>2.9.2</scala.version>
     <scala-jline.version>2.9.0-1</scala-jline.version>
     <scalatest.version>1.8</scalatest.version>
@@ -51,7 +51,7 @@
 
     <!-- versions for maven plugins -->
     <findbugs-maven-plugin.version>2.5.1</findbugs-maven-plugin.version>
-    <hbase-maven-plugin.version>1.0.8-cdh4</hbase-maven-plugin.version>
+    <hbase-maven-plugin.version>1.0.9-cdh4</hbase-maven-plugin.version>
     <maven-assembly-plugin.version>2.3</maven-assembly-plugin.version>
     <maven-checkstyle-plugin.version>2.9.1</maven-checkstyle-plugin.version>
     <maven-compiler-plugin.version>2.3.2</maven-compiler-plugin.version>
@@ -252,7 +252,7 @@
         </plugin>
 
         <plugin>
-          <groupId>com.wibidata.maven.plugins</groupId>
+          <groupId>org.kiji.maven.plugins</groupId>
           <artifactId>hbase-maven-plugin</artifactId>
           <version>${hbase-maven-plugin.version}</version>
           <configuration>
@@ -425,9 +425,9 @@
         <scope>compile</scope>
       </dependency>
       <dependency>
-        <groupId>com.odiago.common</groupId>
-        <artifactId>odiago-common-flags</artifactId>
-        <version>${odiago-common-flags.version}</version>
+        <groupId>org.kiji.common</groupId>
+        <artifactId>kiji-common-flags</artifactId>
+        <version>${kiji-common-flags.version}</version>
         <scope>compile</scope>
       </dependency>
       <dependency>
@@ -621,16 +621,16 @@
     <profile>
       <id>kiji-nightly</id>
       <distributionManagement>
-      <repository>
-        <id>kiji-nightly</id>
-        <name>kiji-nightly-releases</name>
-        <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
-      </repository>
-      <snapshotRepository>
-        <id>kiji-nightly</id>
-        <name>kiji-nightly-snapshots</name>
-        <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
-      </snapshotRepository>
+        <repository>
+          <id>kiji-nightly</id>
+          <name>kiji-nightly-releases</name>
+          <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
+        </repository>
+        <snapshotRepository>
+          <id>kiji-nightly</id>
+          <name>kiji-nightly-snapshots</name>
+          <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
+        </snapshotRepository>
       </distributionManagement>
     </profile>
     <profile>
