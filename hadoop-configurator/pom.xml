@@ -18,7 +18,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.wibidata.hadoop</groupId>
+  <groupId>org.kiji.hadoop</groupId>
   <artifactId>hadoop-configurator</artifactId>
   <version>1.0.2-SNAPSHOT</version>
   <packaging>jar</packaging>
@@ -33,7 +33,7 @@
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
 
-    <scm.connection>scm:git:git@github.com:wibidata/hadoop-configurator.git</scm.connection>
+    <scm.connection>scm:git:git@github.com:kijiproject/hadoop-configurator.git</scm.connection>
   </properties>
 
   <build>
@@ -90,10 +90,23 @@
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-client</artifactId>
-      <version>2.0.0-mr1-cdh4.0.0</version>
+      <version>2.0.0-mr1-cdh4.1.2</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>
+
+  <distributionManagement>
+    <repository>
+      <id>kiji-maven</id>
+      <name>kiji-maven-releases</name>
+      <url>https://repo.wibidata.com/artifactory/kiji-packages</url>
+    </repository>
+    <snapshotRepository>
+      <id>kiji-maven</id>
+      <name>kiji-maven-snapshots</name>
+      <url>https://repo.wibidata.com/artifactory/kiji-packages</url>
+    </snapshotRepository>
+  </distributionManagement>
 
   <scm>
     <connection>${scm.connection}</connection>
@@ -101,43 +114,35 @@
     <developerConnection>${scm.connection}</developerConnection>
   </scm>
 
-  <distributionManagement>
-    <repository>
-      <id>wibidata-maven</id>
-      <name>wibidata-maven-releases</name>
-      <url>https://maven.wibidata.net/artifactory/wibidata-releases</url>
-    </repository>
-    <snapshotRepository>
-      <id>wibidata-maven</id>
-      <name>wibidata-maven-snapshots</name>
-      <url>https://maven.wibidata.net/artifactory/wibidata-snapshots</url>
-    </snapshotRepository>
-  </distributionManagement>
-
   <repositories>
     <repository>
-      <id>cloudera-build</id>
-      <name>cloudera-build</name>
-      <url>https://repository.cloudera.com/content/groups/cdh-build</url>
+      <id>kiji-repos</id>
+      <name>kiji-repos</name>
+      <url>https://repo.wibidata.com/artifactory/kiji</url>
+    </repository>
+    <repository>
+      <id>kiji-nightly</id>
+      <name>kiji-nightly</name>
+      <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
     </repository>
   </repositories>
 
   <profiles>
     <profile>
-      <id>repo.odiago.com</id>
+      <id>kiji-nightly</id>
       <distributionManagement>
-        <!-- WibiData maven repository. -->
         <repository>
-          <id>repo.odiago.com</id>
-          <name>repo.odiago.com-releases</name>
-          <url>https://repo.odiago.com/artifactory/wibi</url>
+          <id>kiji-nightly</id>
+          <name>kiji-nightly-releases</name>
+          <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
         </repository>
         <snapshotRepository>
-          <id>repo.odiago.com</id>
-          <name>repo.odiago.com-snapshots</name>
-          <url>https://repo.odiago.com/artifactory/wibi</url>
+          <id>kiji-nightly</id>
+          <name>kiji-nightly-snapshots</name>
+          <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
         </snapshotRepository>
       </distributionManagement>
     </profile>
   </profiles>
+
 </project>

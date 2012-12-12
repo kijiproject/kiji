@@ -15,28 +15,7 @@
  * permissions and limitations under the License.
  */
 
-package com.wibidata.hadoop.configurator;
-
 /**
- * An exception thrown when there is an error populating the member
- * variables of a Configurable instance.
+ * The HadoopConfigurator system.
  */
-public class HadoopConfigurationException extends RuntimeException {
-  /**
-   * Constructs the exception.
-   *
-   * @param message A message.
-   */
-  public HadoopConfigurationException(String message) {
-    super(message);
-  }
-
-  /**
-   * Constructs the exception.
-   *
-   * @param cause The cause.
-   */
-  public HadoopConfigurationException(Throwable cause) {
-    super(cause);
-  }
-}
+package org.kiji.hadoop.configurator;

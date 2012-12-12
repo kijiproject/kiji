@@ -15,7 +15,7 @@
  * permissions and limitations under the License.
  */
 
-package com.wibidata.hadoop.configurator;
+package org.kiji.hadoop.configurator;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Target;
