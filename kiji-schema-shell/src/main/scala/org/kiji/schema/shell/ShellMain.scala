@@ -19,15 +19,14 @@
 
 package org.kiji.schema.shell
 
+import org.kiji.common.flags.Flag
+import org.kiji.common.flags.FlagParser
 import org.kiji.schema.KijiConfiguration
 import org.kiji.schema.shell.ddl.DDLCommand
 import org.kiji.schema.shell.ddl.ErrorCommand
 import org.kiji.schema.shell.input.FileInputSource
 import org.kiji.schema.shell.input.JLineInputSource
 import org.kiji.schema.shell.input.StringInputSource
-
-import com.odiago.common.flags.Flag
-import com.odiago.common.flags.FlagParser
 
 /**
  * An object used to run a Kiji schema shell.
