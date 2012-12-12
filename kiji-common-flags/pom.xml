@@ -20,7 +20,7 @@
 
   <groupId>org.kiji.common</groupId>
   <artifactId>kiji-common-flags</artifactId>
-  <version>1.0.6-SNAPSHOT</version>
+  <version>1.0.6</version>
   <packaging>jar</packaging>
 
   <name>kiji-common-flags</name>
