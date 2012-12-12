@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-   Licensed to Odiago, Inc. under one or more contributor license
+   Licensed to WibiData, Inc. under one or more contributor license
    agreements.  See the NOTICE file distributed with this work for
-   additional information regarding copyright ownership.  Odiago, Inc.
+   additional information regarding copyright ownership.  WibiData, Inc.
    licenses this file to you under the Apache License, Version 2.0
    (the "License"); you may not use this file except in compliance
    with the License.  You may obtain a copy of the License at
@@ -18,13 +18,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.odiago.common</groupId>
-  <artifactId>odiago-common-flags</artifactId>
+  <groupId>org.kiji.common</groupId>
+  <artifactId>kiji-common-flags</artifactId>
   <version>1.0.6-SNAPSHOT</version>
   <packaging>jar</packaging>
 
-  <name>odiago-common-flags</name>
-  <url>http://www.wibidata.com</url>
+  <name>kiji-common-flags</name>
+  <url>http://www.kiji.org</url>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -33,7 +33,7 @@
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
 
-    <scm.connection>scm:git:ssh://git@github.com/wibidata/odiago-common-flags.git</scm.connection>
+    <scm.connection>scm:git:ssh://git@github.com/kijiproject/kiji-common-flags.git</scm.connection>
   </properties>
 
   <build>
@@ -68,14 +68,14 @@
 
   <distributionManagement>
     <repository>
-      <id>wibidata-maven</id>
-      <name>wibidata-maven-releases</name>
-      <url>https://maven.wibidata.net/artifactory/wibidata-releases</url>
+      <id>kiji-maven</id>
+      <name>kiji-maven-releases</name>
+      <url>https://repo.wibidata.com/artifactory/kiji-packages</url>
     </repository>
     <snapshotRepository>
-      <id>wibidata-maven</id>
-      <name>wibidata-maven-snapshots</name>
-      <url>https://maven.wibidata.net/artifactory/wibidata-snapshots</url>
+      <id>kiji-maven</id>
+      <name>kiji-maven-snapshots</name>
+      <url>https://repo.wibidata.com/artifactory/kiji-packages</url>
     </snapshotRepository>
   </distributionManagement>
 
@@ -85,22 +85,35 @@
     <developerConnection>${scm.connection}</developerConnection>
   </scm>
 
+  <repositories>
+    <repository>
+      <id>kiji-repos</id>
+      <name>kiji-repos</name>
+      <url>https://repo.wibidata.com/artifactory/kiji</url>
+    </repository>
+    <repository>
+      <id>kiji-nightly</id>
+      <name>kiji-nightly</name>
+      <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
+    </repository>
+  </repositories>
+
   <profiles>
     <profile>
-      <id>repo.odiago.com</id>
+      <id>kiji-nightly</id>
       <distributionManagement>
-        <!-- Public maven repository. -->
         <repository>
-          <id>repo.odiago.com</id>
-          <name>repo.odiago.com-releases</name>
-          <url>https://repo.odiago.com/artifactory/wibi</url>
+          <id>kiji-nightly</id>
+          <name>kiji-nightly-releases</name>
+          <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
         </repository>
         <snapshotRepository>
-          <id>repo.odiago.com</id>
-          <name>repo.odiago.com-snapshots</name>
-          <url>https://repo.odiago.com/artifactory/wibi</url>
+          <id>kiji-nightly</id>
+          <name>kiji-nightly-snapshots</name>
+          <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
         </snapshotRepository>
       </distributionManagement>
     </profile>
   </profiles>
+
 </project>

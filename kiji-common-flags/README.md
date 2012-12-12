@@ -1,12 +1,12 @@
-odiago-common-flags
-===================
+kiji-common-flags
+=================
 
 A simple flag parsing library with an API that works well for the common case.
 
 
 ### Example usage
 
-    import com.odiago.common.flags.*;
+    import org.kiji.common.flags.*;
 
     public class MyApp {
       @Flag(usage="enable the foo feature")
@@ -35,11 +35,8 @@ A simple flag parsing library with an API that works well for the common case.
 
 ### How to build
 
-To build `target/odiago-common-flags-${project.version}.jar` run:
+To build `target/kiji-common-flags-${project.version}.jar` run:
 
     mvn package
 
 
-### Documentation
-
-* [Java API (Javadoc)](http://wibidata.github.com/odiago-common-flags/1.0.4/apidocs/)

@@ -1,7 +1,7 @@
 /**
- * Licensed to Odiago, Inc. under one or more contributor license
+ * Licensed to WibiData, Inc. under one or more contributor license
  * agreements.  See the NOTICE file distributed with this work for
- * additional information regarding copyright ownership.  Odiago, Inc.
+ * additional information regarding copyright ownership.  WibiData, Inc.
  * licenses this file to you under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
@@ -15,18 +15,13 @@
  * permissions and limitations under the License.
  */
 
-package com.odiago.common.flags;
+package org.kiji.common.flags;
 
 /**
- * Thrown when the Java type of the flag is not supported.
+ * When there are multiple flags declared with the same name.
  */
-public class UnsupportedFlagTypeException extends RuntimeException {
-  /**
-   * Creates a new <code>UnsupportedFlagTypeException</code> instance.
-   *
-   * @param fieldName The Java field name.
-   */
-  public UnsupportedFlagTypeException(String fieldName) {
-    super("The @Flag annotation does not support the type for field " + fieldName);
+public class DuplicateFlagException extends RuntimeException {
+  public DuplicateFlagException(String flagName) {
+    super("Duplicate @Flag declaration: " + flagName);
   }
 }
