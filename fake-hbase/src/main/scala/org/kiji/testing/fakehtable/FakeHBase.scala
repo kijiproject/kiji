@@ -21,7 +21,6 @@ package org.kiji.testing.fakehtable
 
 import java.util.{List => JList}
 import java.util.{TreeMap => JTreeMap}
-
 import scala.collection.JavaConverters._
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.client.HBaseAdmin
@@ -35,12 +34,14 @@ import org.apache.hadoop.hbase.TableNotDisabledException
 import org.apache.hadoop.hbase.TableExistsException
 import net.sf.cglib.proxy.MethodInterceptor
 import net.sf.cglib.proxy.MethodProxy
+import org.kiji.schema.impl.HBaseInterface
 
 // -------------------------------------------------------------------------------------------------
 
 
 /** Fake HBase instance, as a collection of fake HTable instances. */
-class FakeHBase {
+class FakeHBase
+    extends HBaseInterface {
   type Bytes = Array[Byte]
 
   /** Controls whether to automatically create unknown tables or throw a TableNotFoundException. */
@@ -84,6 +85,8 @@ class FakeHBase {
       // Do nothing
     }
   }
+
+  override def getHTableFactory(): org.kiji.schema.impl.HTableInterfaceFactory = InterfaceFactory
 
   // -----------------------------------------------------------------------------------------------
 
@@ -215,5 +218,7 @@ class FakeHBase {
       return Proxy.create(classOf[HBaseAdmin], new PythonProxy(Admin))
     }
   }
+
+  override def getAdmin(): HBaseAdminInterface = Admin
 
 }
