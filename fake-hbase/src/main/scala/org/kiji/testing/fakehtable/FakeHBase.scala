@@ -35,6 +35,7 @@ import org.apache.hadoop.hbase.TableExistsException
 import net.sf.cglib.proxy.MethodInterceptor
 import net.sf.cglib.proxy.MethodProxy
 import org.kiji.schema.impl.HBaseInterface
+import org.kiji.schema.impl.HBaseAdminFactory
 
 // -------------------------------------------------------------------------------------------------
 
@@ -212,13 +213,12 @@ class FakeHBase
   // -----------------------------------------------------------------------------------------------
 
   /** Factory for HBaseAdmin instances. */
-  object AdminFactory {
+  object AdminFactory extends HBaseAdminFactory {
     /** Creates a new HBaseAdmin for this HBase instance. */
-    def create(): HBaseAdmin = {
+    override def create(conf: Configuration): HBaseAdmin = {
       return Proxy.create(classOf[HBaseAdmin], new PythonProxy(Admin))
     }
   }
 
-  override def getAdmin(): HBaseAdminInterface = Admin
-
+  override def getAdminFactory(): HBaseAdminFactory = AdminFactory
 }

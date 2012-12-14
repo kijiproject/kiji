@@ -22,23 +22,20 @@ package org.kiji.schema.impl;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.client.HTableInterface;
+import org.apache.hadoop.hbase.client.HBaseAdmin;
 
 /**
- * Factory for HTableInterface.
+ * Factory for HBaseAdmin.
  *
- * This interface is cloned from KijiSchema as a temporary workaround, to allow FakeHBase
- * to implement it without depending on KijiSchema, and so that KijiSchema may further depend
- * on FakeHBase.
+ * Note: there is no interface for HBaseAdmin :(
  */
-public interface HTableInterfaceFactory {
+public interface HBaseAdminFactory {
   /**
-   * Creates a new HTableInterface instance.
+   * Creates a new HBaseAdmin instance.
    *
    * @param conf Configuration.
-   * @param tableName Table name, as a UTF-8 string.
-   * @return a new HTableInterface for the specified table.
+   * @return a new HBaseAdmin.
    * @throws IOException on I/O error.
    */
-  HTableInterface create(Configuration conf, String tableName) throws IOException;
+  HBaseAdmin create(Configuration conf) throws IOException;
 }

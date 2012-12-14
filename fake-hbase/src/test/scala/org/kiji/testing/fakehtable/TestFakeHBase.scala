@@ -17,14 +17,28 @@
  * limitations under the License.
  */
 
-package org.kiji.schema.impl;
+package org.kiji.testing.fakehtable
 
+import scala.collection.JavaConverters._
+import org.junit.runner.RunWith
+import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
+import org.apache.hadoop.hbase.client.Put
+import org.apache.hadoop.hbase.client.Get
+import org.apache.hadoop.hbase.client.Delete
+import org.apache.hadoop.hbase.HTableDescriptor
 
-/** Interface for a fake HBase. */
-public interface HBaseInterface {
-  /** @return the factory for HTable interfaces. */
-  HTableInterfaceFactory getHTableFactory();
+@RunWith(classOf[JUnitRunner])
+class TestFakeHBase extends FunSuite {
 
-  /** @return a factory for HBaseAdmin. */
-  HBaseAdminFactory getAdminFactory();
+  test("FakeHBase") {
+    val hbase = new FakeHBase()
+    val desc = new HTableDescriptor("table-name")
+    hbase.Admin.createTable(desc)
+
+    val tables = hbase.Admin.listTables()
+    expect(1)(tables.length)
+    expect("table-name")(tables(0).getNameAsString())
+  }
+
 }
