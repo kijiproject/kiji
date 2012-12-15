@@ -108,7 +108,6 @@ public abstract class Lookup<T> implements Iterable<T> {
     return getPriority(clazz, Thread.currentThread().getContextClassLoader());
   }
 
-
   /**
    * Creates a lookup instance that can resolve providers for the specified class
    * or interface, by using a priority method to establish which is the best

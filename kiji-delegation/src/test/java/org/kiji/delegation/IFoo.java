@@ -17,15 +17,13 @@
  * limitations under the License.
  */
 
-/**
- * A lightweight service loading library based on java.util.ServiceLoader that
- * can be used by Kiji framework modules for dynamically loading different
- * service provider implementations at runtime. This delegates functionality
- * required by "upstream" modules to downstream runtime implementations.
- *
- * <p>The main client class is {@link org.kiji.delegation.Lookup},
- * which provides an API for lookups, as well as factory methods for
- * lookup service implementations.</p>
- */
 package org.kiji.delegation;
+
+/**
+ * An interface used for testing service lookups. The {@link Providers} class
+ * contains many provider implementations of the service.
+ */
+public interface IFoo {
+  String getMessage();
+}
 

@@ -65,7 +65,6 @@ public final class PriorityLookup<T extends PriorityProvider> extends Lookup<T> 
     return lookup(Collections.<String, String>emptyMap());
   }
 
-
   /**
    * Lookup a provider instance for the specified clazz and return the highest-priority
    * instance we can create.
@@ -123,6 +122,10 @@ public final class PriorityLookup<T extends PriorityProvider> extends Lookup<T> 
     }
 
     // Perform an external sort on the list, using their priorities.
+    // Note that Collections.sort() puts the items in ascending order
+    // according to the comparator. Our comparator is thus reversed
+    // with respect to provider priorities, so that we get the items
+    // in descending order.
     final Comparator<T> comparator = new Comparator<T>() {
 
       /** {@inheritDoc} */
@@ -135,11 +138,12 @@ public final class PriorityLookup<T extends PriorityProvider> extends Lookup<T> 
         int priority1 = sortingMap.get(provider1);
         int priority2 = sortingMap.get(provider2);
         if (priority1 > priority2) {
-          return 1;
+          return -1;
         } else if (priority1 == priority2) {
           return 0;
         } else {
-          return -1;
+          assert priority1 < priority2;
+          return 1;
         }
       }
 

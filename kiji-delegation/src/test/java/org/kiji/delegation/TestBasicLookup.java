@@ -17,15 +17,26 @@
  * limitations under the License.
  */
 
-/**
- * A lightweight service loading library based on java.util.ServiceLoader that
- * can be used by Kiji framework modules for dynamically loading different
- * service provider implementations at runtime. This delegates functionality
- * required by "upstream" modules to downstream runtime implementations.
- *
- * <p>The main client class is {@link org.kiji.delegation.Lookup},
- * which provides an API for lookups, as well as factory methods for
- * lookup service implementations.</p>
- */
 package org.kiji.delegation;
+
+import static org.junit.Assert.*;
+
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class TestBasicLookup {
+  private static final Logger LOG = LoggerFactory.getLogger(TestBasicLookup.class);
+
+  @Test
+  public void testLookup() {
+    Lookup<IFoo> lookup = Lookup.get(IFoo.class);
+    IFoo myFoo = lookup.lookup();
+    LOG.info("Got foo implementation: " + myFoo.getClass().getName());
+    String result = myFoo.getMessage();
+    assertNotNull(result);
+    LOG.info("Got result string: " + result);
+    assertTrue("Got a weird string back from IFoo", result.startsWith("impl"));
+  }
+}
 
