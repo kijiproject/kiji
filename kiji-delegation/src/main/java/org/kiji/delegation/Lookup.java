@@ -44,7 +44,7 @@ import java.util.Iterator;
  *       instance could be found.</li>
  * </ol>
  *
- * @param &lt;T&gt; the type that this Lookup instance provides.
+ * @param <T> the type that this Lookup instance provides.
  */
 public abstract class Lookup<T> implements Iterable<T> {
 
@@ -73,6 +73,7 @@ public abstract class Lookup<T> implements Iterable<T> {
    * Creates a lookup instance that can resolve providers for the specified class
    * or interface.
    *
+   * @param <U> the type that this Lookup instance should provide.
    * @param clazz the abstract class or interface to lookup a provider for.
    * @return a new Lookup instance that uses the current thread's context classloader.
    */
@@ -84,6 +85,7 @@ public abstract class Lookup<T> implements Iterable<T> {
    * Creates a lookup instance that can resolve providers for the specified class
    * or interface.
    *
+   * @param <U> the type that this Lookup instance should provide.
    * @param clazz the abstract class or interface to lookup a provider for.
    * @param classLoader the classloader to use to resolve service lookups.
    * @return a new Lookup instance that uses the specified classloader.
@@ -97,6 +99,7 @@ public abstract class Lookup<T> implements Iterable<T> {
    * or interface, by using a priority method to establish which is the best
    * provider. See {@link PriorityProvider}.
    *
+   * @param <U> the type that this Lookup instance should provide.
    * @param clazz the abstract class or interface to lookup a provider for.
    * @return a new Lookup instance that uses the current thread's context classloader.
    */
@@ -110,9 +113,10 @@ public abstract class Lookup<T> implements Iterable<T> {
    * Creates a lookup instance that can resolve providers for the specified class
    * or interface, by using a priority method to establish which is the best
    * provider. See {@link PriorityProvider}.
-
    *
+   * @param <U> the type that this Lookup instance should provide.
    * @param clazz the abstract class or interface to lookup a provider for.
+   * @param classLoader the classloader to use to resolve service lookups.
    * @return a new Lookup instance that uses the current thread's context classloader.
    */
   public static <U extends PriorityProvider> Lookup<U> getPriority(

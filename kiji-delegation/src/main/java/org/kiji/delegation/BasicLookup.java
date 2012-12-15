@@ -27,7 +27,7 @@ import java.util.ServiceLoader;
  * provider of a specified interface, without a specified means of preferring
  * one implementation over another.
  *
- * @param &lt;T&gt; the type that this Lookup instance provides.
+ * @param <T> the type that this Lookup instance provides.
  */
 public final class BasicLookup<T> extends Lookup<T> {
   /** The ClassLoader that we use to look up service implementations. */

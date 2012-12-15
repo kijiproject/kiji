@@ -35,7 +35,7 @@ import java.util.Map;
  *
  * See the {@link PriorityProvider} API for more details.
  *
- * @param &lt;T&gt; the interface type this Lookup instance is creating; this
+ * @param <T> the interface type this Lookup instance is creating; this
  * must subclass {@link PriorityProvider}.
  */
 public final class PriorityLookup<T extends PriorityProvider> extends Lookup<T> {
@@ -96,12 +96,26 @@ public final class PriorityLookup<T extends PriorityProvider> extends Lookup<T> 
    * of 0 or less.
    */
   public Iterator<T> iterator() {
+    return iterator(Collections.<String, String>emptyMap());
+  }
+
+  /**
+   * Returns an iterator of all valid provider instances for the specified class,
+   * sorted by priority. This filters out any provider instances with a priority
+   * of 0 or less.
+   *
+   * @param runtimeHints parameters that describe the environment so the factories
+   *     can evaluate their relative priorities more precisely.
+   * @return an iterator of all valid provider instances for the specified class,
+   * sorted by priority.
+   */
+  public Iterator<T> iterator(Map<String, String> runtimeHints) {
     final Map<T, Integer> sortingMap = new HashMap<T, Integer>();
     final List<T> lst = new ArrayList<T>();
 
     // Match up providers with priorities, retaining only ones with priorities > 0.
-    for(T provider : mLookup) {
-      int priority = provider.getPriority(Collections.<String, String>emptyMap());
+    for (T provider : mLookup) {
+      int priority = provider.getPriority(runtimeHints);
       if (priority > 0) {
         sortingMap.put(provider, priority);
         lst.add(provider);
@@ -133,6 +147,14 @@ public final class PriorityLookup<T extends PriorityProvider> extends Lookup<T> 
       @Override
       public boolean equals(Object obj) {
         return obj == this;
+      }
+
+      /** {@inheritDoc} */
+      @Override
+      public int hashCode() {
+        // Method provided to prevent checkstyle warning, but we never expect
+        // to hash this comparator in a clever way. They're all the same.
+        return 42;
       }
     };
     Collections.sort(lst, comparator);
