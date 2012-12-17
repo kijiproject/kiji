@@ -103,7 +103,7 @@ public abstract class Lookup<T> implements Iterable<T> {
    * @param clazz the abstract class or interface to lookup a provider for.
    * @return a new Lookup instance that uses the current thread's context classloader.
    */
-  public static <U extends PriorityProvider> Lookup<U> getPriority(
+  public static <U extends PriorityProvider> PriorityLookup<U> getPriority(
       Class<U> clazz) {
     return getPriority(clazz, Thread.currentThread().getContextClassLoader());
   }
@@ -118,7 +118,7 @@ public abstract class Lookup<T> implements Iterable<T> {
    * @param classLoader the classloader to use to resolve service lookups.
    * @return a new Lookup instance that uses the current thread's context classloader.
    */
-  public static <U extends PriorityProvider> Lookup<U> getPriority(
+  public static <U extends PriorityProvider> PriorityLookup<U> getPriority(
       Class<U> clazz, ClassLoader classLoader) {
     return new PriorityLookup<U>(clazz, classLoader);
   }
