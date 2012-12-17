@@ -39,7 +39,7 @@ import java.util.Iterator;
  *       on a single line. If you have multiple <tt>IFoo</tt> implementations in your
  *       module, list them all, one per line.</li>
  *   <li>At runtime, a class that needs a concrete implementation of <tt>IFoo</tt> could
- *       run: <tt>IFoo fooInstance = Lookups.get(IFoo.class).lookup()</tt>.</li>
+ *       run: <tt>IFoo fooInstance = Lookup.get(IFoo.class).lookup();</tt>.</li>
  *   <li>You will get an unchecked {@link NoSuchProviderException} if no suitable <tt>IFoo</tt>
  *       instance could be found.</li>
  * </ol>
