@@ -20,38 +20,48 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.kiji.platforms</groupId>
-  <artifactId>kiji-platforms</artifactId>
+  <artifactId>kiji-hadoop1-hbase92-platform</artifactId>
   <version>1.0.0-rc2-SNAPSHOT</version>
-  <packaging>pom</packaging>
+  <packaging>jar</packaging>
 
   <parent>
-    <groupId>org.kiji.pom</groupId>
-    <artifactId>root-pom</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <groupId>org.kiji.platforms</groupId>
+    <artifactId>kiji-platforms</artifactId>
+    <version>1.0.0-rc2-SNAPSHOT</version>
+    <relativePath>..</relativePath>
   </parent>
 
-  <name>Kiji platform definition top-level project</name>
-  <description>Virtual dependencies that define Hadoop platforms</description>
+  <name>kiji-hadoop1-hbase92-platform</name>
+  <description>Dependency on Apache Hadoop 1.x and HBase 0.92.x</description>
   <inceptionYear>2012</inceptionYear>
 
-  <modules>
-    <module>kiji-cdh4-1-platform</module>
-    <module>kiji-cdh4-platform</module>
+  <properties>
+    <hadoop.version>1.0.3</hadoop.version>
+    <hbase.version>0.92.1</hbase.version>
+  </properties>
 
-    <module>kiji-hadoop1-hbase92-platform</module>
-  </modules>
+  <build>
+  </build>
 
-  <repositories>
-    <repository>
-      <id>kiji-repos</id>
-      <name>kiji-repos</name>
-      <url>https://repo.wibidata.com/artifactory/kiji</url>
-    </repository>
-    <repository>
-      <id>kiji-nightly</id>
-      <name>kiji-nightly</name>
-      <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
-    </repository>
-  </repositories>
+  <dependencies>
+     <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-core</artifactId>
+      <version>${hadoop.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-minicluster</artifactId>
+      <version>${hadoop.version}</version>
+      <scope>compile</scope>
+    </dependency>
 
+    <dependency>
+      <groupId>org.apache.hbase</groupId>
+      <artifactId>hbase</artifactId>
+      <version>${hbase.version}</version>
+      <scope>compile</scope>
+    </dependency>
+  </dependencies>
 </project>
