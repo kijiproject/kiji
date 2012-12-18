@@ -11,6 +11,9 @@ on the Hadoop and HBase jars in the `HADOOP_HOME` and `HBASE_HOME`
 directories, Kiji will determine what compatibility layer to load in order to
 work with different platforms.
 
+Usage
+-----
+
 When you compile and test your application, you should do so against the
 version of Hadoop that you intend to run. Your project should declare
 provided-scope dependencies on KijiSchema, as well as a support platform. For
@@ -31,6 +34,21 @@ example, to run on CDH4:
         <scope>provided</scope>
       </dependency>
     </dependencies>
+
+
+Available platforms
+-------------------
+
+To ensure platform compatibility with Kiji, you should compile and deploy
+against a Hadoop version specified in a Kiji platform definition. The
+following platform definitions are provided:
+
+* kiji-cdh4-platform (Latest CDH4 release)
+* kiji-cdh4-1-platform (Latest CDH4.1 update)
+* kiji-hadoop1-hbase92-platform (Apache Hadoop 1.x and HBase 0.92.x)
+
+Maven usage notes
+-----------------
 
 If you depend on such a module, you can use the `mvn dependency:tree` command
 to visualize the actual dependencies being used:
