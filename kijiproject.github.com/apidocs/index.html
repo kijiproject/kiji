@@ -1,0 +1,180 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Documentation: API Reference</title>
+    
+    <meta name="author" content="WibiData">
+    <link href="/assets/themes/twitter/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/assets/themes/twitter/css/style.css" rel="stylesheet" type="text/css" media="all">
+    <link href="/assets/themes/twitter/css/github.css" rel="stylesheet" type="text/css" media="all">
+  </head>
+
+  <body>
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container-fluid">
+          <a class="brand" href="http://www.kiji.org">Kiji Community</a>
+          <ul class="nav">
+            <li>
+              <a href="http://www.kiji.org">The Kiji Project</a>
+            </li>
+            <li>
+              <a href="http://www.kiji.org/features/">Features</a>
+            </li>
+            <li class="dropdown">
+              <a href="http://www.kiji.org/getstarted/">Get Started</a>
+              <ul class="dropdown-menu">
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getstarted/#Downloads">Downloads</a>
+                </li>
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getstarted/#Installation">Installation</a>
+                </li>
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getstarted/#Quick_Start_Guide">Quick Start Guide</a>
+                </li>
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getstarted/#Maven">Getting Started with Maven</a>
+                </li>
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getstarted/#Training_Services">
+                    Training & Services
+                  </a>
+                </li>
+              </ul>
+            </li>
+            <li class="dropdown">
+              <a href="http://www.kiji.org/getinvolved">Get Involved</a>
+              <ul class="dropdown-menu">
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getinvolved/#Mailing_Lists">Mailing Lists</a>
+                </li>
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getinvolved/#Source_Code">Source Code</a>
+                </li>
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getinvolved/#Issue_Tracker">Issue Tracking</a>
+                </li>
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getinvolved/#Contributing_to_Kiji">
+                    Contributing to Kiji
+                  </a>
+                </li>
+              </ul>
+            </li>
+            <li class="dropdown active">
+              <a href="/">Documentation</a>
+              <ul class="dropdown-menu">
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getstarted/#Quick_Start_Guide">Quick Start Guide</a>
+                </li>
+                <li class="menu-item">
+                  <a href="/tutorial/phonebook-tutorial">Phonebook Tutorial</a>
+                </li>
+                <li class="menu-item">
+                  <a href="/userguide/schema/1.0.0-rc1/kiji-schema-overview">
+                    User Guide
+                  </a>
+                </li>
+                <li class="menu-item">
+                  <a href="/apidocs">API Reference</a>
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="http://www.kiji.org/blog/">Blog</a>
+            </li>
+            <li>
+              <a href="http://www.kiji.org/aboutkiji">About Kiji</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="container-fluid">
+      <div class="content">
+        
+<div class="page-header">
+  <h1 class="page-title">
+    Documentation: API Reference
+    
+  </h1>
+</div>
+
+<div class="row">
+  <div class="span1">&nbsp;</div>
+  <div class="span10">
+    <p>The Kiji framework contains several components; documentation for their
+    APIs is provided through the links below.</p>
+
+    <h2>Core Kiji Framework Modules</h2>
+    <p>
+      Primary APIs for use by clients of the Kiji framework. Clients should
+      only depend on APIs listed as <tt>@ApiAudience.Public</tt>. Contributors
+      to other Kiji framework components may use <tt>@ApiAudience.Framework</tt>
+      APIs, but beware that they may change between minor versions.
+    </p>
+
+    <ul>
+      <li><a href="kiji-schema/1.0.0-rc1">KijiSchema</a>
+          [<a href="kiji-schema/1.0.0-rc1">1.0.0-rc1</a>]</li>
+    </ul>
+
+    <h2>Extended Framework Tools</h2>
+    <p>
+      Additional APIs for use by clients of the Kiji framework. Modules in this section
+      are intended for testing, or as convenience APIs.
+    </p>
+
+    <ul>
+      <li><a href="hbase-maven-plugin/1.0.9-cdh4">hbase-maven-plugin</a>
+          [<a href="hbase-maven-plugin/1.0.9-cdh4">1.0.9-cdh4</a>]</li>
+    </ul>
+
+
+    <h2>Internal Framework Components</h2>
+    <p>
+      APIs used internally between framework modules. Clients should not directly
+      depend on any APIs in here; these are intended for the framework author audience
+      only.
+    </p>
+
+    <ul>
+      <li><a href="hadoop-configurator/1.0.2">hadoop-configurator</a>
+          [<a href="hadoop-configurator/1.0.2">1.0.2</a>]</li>
+    </ul>
+
+
+  </div>
+  <div class="span1">&nbsp;</div>
+</div>
+
+      <footer>
+        <hr/>
+        <p>&copy; Kiji Community</p>
+      </footer>
+    </div>
+
+    
+
+
+  <script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-35866189-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+
+
+  </body>
+</html>
+
