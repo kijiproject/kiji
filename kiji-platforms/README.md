@@ -27,7 +27,7 @@ example, to run on CDH4:
       <dependency>
         <groupId>org.kiji.platforms</groupId>
         <artifactId>kiji-cdh4-platform</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.0-rc2</version>
         <scope>provided</scope>
       </dependency>
     </dependencies>
