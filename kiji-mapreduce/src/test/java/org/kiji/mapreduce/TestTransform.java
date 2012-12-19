@@ -40,6 +40,7 @@ import org.kiji.mapreduce.input.KijiTableMapReduceJobInput;
 import org.kiji.mapreduce.input.KijiTableMapReduceJobInput.RowOptions;
 import org.kiji.mapreduce.output.KijiTableMapReduceJobOutput;
 import org.kiji.schema.EntityId;
+import org.kiji.schema.HBaseFactory;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiAdmin;
 import org.kiji.schema.KijiConfiguration;
@@ -112,7 +113,10 @@ public class TestTransform {
   @Before
   public void setUp() throws Exception {
     // TODO(KIJI-358): Remove this as this prevents tests to run in parallel within the same JVMs.
-    TestingHBaseFactory.get().reset();
+    HBaseFactory factory = HBaseFactory.Provider.get();
+    if (factory instanceof TestingHBaseFactory) {
+      ((TestingHBaseFactory) factory).reset();
+    }
   }
 
   @Test
