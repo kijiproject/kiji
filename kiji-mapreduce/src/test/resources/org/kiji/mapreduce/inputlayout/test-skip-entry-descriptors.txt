@@ -1,0 +1,8 @@
+qualifier:columnFoo
+schema:"string"
+
+skip-entry
+
+qualifier:columnBar
+schema:"string"
+

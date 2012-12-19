@@ -1,0 +1,6 @@
+org.kiji.mapreduce.tools.KijiBulkImport
+org.kiji.mapreduce.tools.KijiBulkLoad
+org.kiji.mapreduce.tools.KijiGather
+org.kiji.mapreduce.tools.KijiJobHistory
+org.kiji.mapreduce.tools.KijiProduce
+org.kiji.mapreduce.tools.KijiTransform

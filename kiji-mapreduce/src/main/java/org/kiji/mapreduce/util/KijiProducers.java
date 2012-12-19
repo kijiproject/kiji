@@ -1,0 +1,91 @@
+/**
+ * (c) Copyright 2012 WibiData, Inc.
+ *
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.kiji.mapreduce.util;
+
+import java.io.IOException;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.util.ReflectionUtils;
+
+import org.kiji.mapreduce.KijiProducer;
+import org.kiji.mapreduce.KijiProducerOutputException;
+import org.kiji.schema.KijiColumnName;
+import org.kiji.schema.layout.InvalidLayoutException;
+import org.kiji.schema.layout.KijiTableLayout;
+import org.kiji.schema.layout.KijiTableLayout.LocalityGroupLayout.FamilyLayout;
+
+/** Utility methods for working with <code>KijiProducer</code>s. */
+public final class KijiProducers {
+  /** Disable the constructor for this utility class. */
+  private KijiProducers() {}
+
+  /**
+   * Creates an instance of the producer specified by the
+   * {@link org.apache.hadoop.conf.Configuration}.
+   *
+   * <p>The configuration would have stored the producer name only if
+   * it was configured by a KijiProduceJobBuilder, so don't try calling this
+   * method with any old Configuration object.</p>
+   *
+   * @param conf The job configuration.
+   * @return a brand-spankin'-new KijiProducer instance.
+   * @throws IOException If the producer name cannot be instantiated from the configuration.
+   */
+  public static KijiProducer create(Configuration conf) throws IOException {
+    Class<? extends KijiProducer> producerClass
+        = conf.getClass(KijiProducer.CONF_PRODUCER_CLASS, null, KijiProducer.class);
+    if (null == producerClass) {
+      throw new IOException("Producer class could not be found in configuration.");
+    }
+    return ReflectionUtils.newInstance(producerClass, conf);
+  }
+
+  /**
+   * Makes sure the producer's requested output column exists in the
+   * kiji table layout.
+   *
+   * @param producer The producer whose output column should be validated.
+   * @param tableLayout The layout of the table to validate the output column against.
+   * @throws InvalidLayoutException If the table layout is invalid.
+   * @throws KijiProducerOutputException If the output column cannot be written to.
+   */
+  public static void validateOutputColumn(KijiProducer producer, KijiTableLayout tableLayout)
+      throws InvalidLayoutException, KijiProducerOutputException {
+    String outputColumn = producer.getOutputColumn();
+    if (null == outputColumn) {
+      throw new KijiProducerOutputException("KijiProducer.getOutputColumn() may not return null.");
+    }
+
+    final KijiColumnName columnName = new KijiColumnName(outputColumn);
+    final FamilyLayout family = tableLayout.getFamilyMap().get(columnName.getFamily());
+    if (null == family) {
+      throw new KijiProducerOutputException(
+          "Output column family " + columnName.getFamily() + " doesn't exist");
+    }
+
+    // If writing to a particular column qualifier of a group, make sure it exists.
+    if (columnName.isFullyQualified()
+        && family.isGroupType()
+        && !family.getColumnMap().containsKey(columnName.getQualifier())) {
+      throw new KijiProducerOutputException(String.format("Column '%s' does not exist.",
+          columnName));
+    }
+  }
+}

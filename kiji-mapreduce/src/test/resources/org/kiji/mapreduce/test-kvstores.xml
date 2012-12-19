@@ -1,0 +1,10 @@
+<stores>
+  <store class="SeqFileKeyValueStore" name="mapperMap">
+    <configuration>
+      <property>
+        <name>paths</name>
+        <value>/user/aaron/foo.seq</value>
+      </property>
+    </configuration>
+  </store>
+</stores>

@@ -1,0 +1,4 @@
+qualifier:column
+schema:
+  "string"
+
