@@ -118,6 +118,7 @@
       <groupId>org.kiji.testing</groupId>
       <artifactId>fake-hbase</artifactId>
       <version>0.0.1-SNAPSHOT</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.kiji.avro</groupId>
