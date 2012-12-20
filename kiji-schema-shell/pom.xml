@@ -36,6 +36,7 @@
 
   <properties>
     <kiji-schema.version>1.0.0-rc2-SNAPSHOT</kiji-schema.version>
+    <kiji-cdh4-platform.version>${kiji-schema.version}</kiji-cdh4-platform.version>
   </properties>
 
   <build>
@@ -127,6 +128,15 @@
       <version>${kiji-schema.version}</version>
       <scope>provided</scope>
     </dependency>
+
+    <!-- TODO: Use the multi-profile world of kiji-schema to support multiple backends. -->
+    <dependency>
+      <groupId>org.kiji.platforms</groupId>
+      <artifactId>kiji-cdh4-platform</artifactId>
+      <version>${kiji-cdh4-platform.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
   </dependencies>
 
   <repositories>
