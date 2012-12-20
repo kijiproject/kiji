@@ -26,6 +26,7 @@ import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.JsonDecoder;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.commons.io.IOUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -42,15 +43,14 @@ import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.mapreduce.DistributedCacheJars;
+import org.kiji.mapreduce.KijiConfKeys;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
-import org.kiji.schema.KijiConfiguration;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableWriter;
-import org.kiji.schema.mapreduce.ContextKijiTableWriter;
-import org.kiji.schema.mapreduce.DistributedCacheJars;
-import org.kiji.schema.mapreduce.KijiOutput;
-import org.kiji.schema.mapreduce.KijiTableOutputFormat;
+import org.kiji.schema.KijiURI;
+import org.kiji.schema.KijiURIException;
 
 /**
  * Shell for the PhonebookImportMapper class.  This class manages
@@ -65,40 +65,32 @@ public class PhonebookImporter extends Configured implements Tool {
    * into the phonebook table.
    */
   public static class PhonebookImportMapper
-      extends Mapper<LongWritable, Text, NullWritable, KijiOutput> {
+      extends Mapper<LongWritable, Text, NullWritable, NullWritable> {
     private static final Logger LOG = LoggerFactory.getLogger(PhonebookImportMapper.class);
 
     private Kiji mKiji;
     private KijiTable mTable;
     private KijiTableWriter mWriter;
 
-    /**
-     * Called once per MapReduce task to initialize.
-     *
-     * @param context The MapReduce task context.
-     * @throws IOException If there is an IO error.
-     * @throws InterruptedException If the thread is interrupted.
-     */
+    /** {@inheritDoc} */
     @Override
-    protected void setup(Context context) throws IOException, InterruptedException {
-      final KijiConfiguration conf = new KijiConfiguration(
-          context.getConfiguration(), KijiConfiguration.DEFAULT_INSTANCE_NAME);
-      mKiji = Kiji.open(conf);
+    protected void setup(Context hadoopContext) throws IOException, InterruptedException {
+      super.setup(hadoopContext);
+      final Configuration conf = hadoopContext.getConfiguration();
+      KijiURI tableURI;
+      try {
+        tableURI = KijiURI.parse(conf.get(KijiConfKeys.OUTPUT_KIJI_TABLE_URI));
+      } catch (KijiURIException kue) {
+        throw new IOException(kue);
+      }
+      mKiji = Kiji.open(tableURI, conf);
       mTable = mKiji.openTable(TABLE_NAME);
-      mWriter = new ContextKijiTableWriter(context);
+      mWriter = mTable.openTableWriter();
     }
 
-    /**
-     * Called once per line from the input file. Inserts a row into the phonebook table.
-     *
-     * @param byteOffset The byte offset into the file for this line.
-     * @param line The line of the file to process.
-     * @param context The MapReduce task context.
-     * @throws IOException If there is an IO error.
-     * @throws InterruptedException If the thread is interrupted.
-     */
+    /** {@inheritDoc} */
     @Override
-    public void map(LongWritable byteOffset, Text line, Context context)
+    public void map(LongWritable byteOffset, Text line, Context hadoopContext)
         throws IOException, InterruptedException {
       // Each line of the text file has the form:
       //
@@ -140,18 +132,13 @@ public class PhonebookImporter extends Configured implements Tool {
       mWriter.put(user, Fields.INFO_FAMILY, Fields.ADDRESS, streetAddr);
     }
 
-    /**
-     * Called once at the end of the MapReduce task.
-     *
-     * @param context The MapReduce task context.
-     * @throws IOException If there is an IO error.
-     * @throws InterruptedException If the thread is interrupted.
-     */
+    /** {@inheritDoc} */
     @Override
-    protected void cleanup(Context context) throws IOException, InterruptedException {
+    protected void cleanup(Context hadoopContext) throws IOException, InterruptedException {
       IOUtils.closeQuietly(mWriter);
       IOUtils.closeQuietly(mTable);
       IOUtils.closeQuietly(mKiji);
+      super.cleanup(hadoopContext);
     }
   }
 
@@ -177,14 +164,14 @@ public class PhonebookImporter extends Configured implements Tool {
     // Run the mapper that will import entries from the input file.
     job.setMapperClass(PhonebookImportMapper.class);
     job.setMapOutputKeyClass(NullWritable.class);
-    job.setMapOutputValueClass(KijiOutput.class);
+    job.setMapOutputValueClass(NullWritable.class);
 
     // Use no reducer (this is a map-only job).
     job.setNumReduceTasks(0);
 
     // Direct the job output to the phonebook table.
-    job.setOutputFormatClass(KijiTableOutputFormat.class);
-    KijiTableOutputFormat.setOptions(job, TABLE_NAME);
+    final KijiURI tableURI = KijiURI.parse(String.format("kiji://.env/default/%s", TABLE_NAME));
+    job.getConfiguration().set(KijiConfKeys.OUTPUT_KIJI_TABLE_URI, tableURI.toString());
 
     // Tell Hadoop where the java dependencies are located, so they
     // can be shipped to the cluster during execution.

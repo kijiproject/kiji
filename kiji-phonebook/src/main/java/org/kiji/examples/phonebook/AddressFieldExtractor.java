@@ -33,14 +33,15 @@ import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.mapreduce.DistributedCacheJars;
+import org.kiji.mapreduce.KijiConfKeys;
+import org.kiji.mapreduce.KijiTableContext;
+import org.kiji.mapreduce.KijiTableInputFormat;
+import org.kiji.mapreduce.context.DirectKijiTableWriterContext;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
-import org.kiji.schema.mapreduce.ContextKijiTableWriter;
-import org.kiji.schema.mapreduce.DistributedCacheJars;
-import org.kiji.schema.mapreduce.KijiOutput;
-import org.kiji.schema.mapreduce.KijiTableInputFormat;
-import org.kiji.schema.mapreduce.KijiTableOutputFormat;
+import org.kiji.schema.KijiURI;
 
 /**
  * Extracts fields from the address column into individual columns in the derived column family.
@@ -54,7 +55,7 @@ public class AddressFieldExtractor extends Configured implements Tool {
    * fields into individual fields in the derived column family.
    */
   public static class AddressMapper
-      extends Mapper<EntityId, KijiRowData, NullWritable, KijiOutput> {
+      extends Mapper<EntityId, KijiRowData, NullWritable, NullWritable> {
     private static final Logger LOG = LoggerFactory.getLogger(AddressMapper.class);
 
     /** Job counters. */
@@ -70,42 +71,41 @@ public class AddressFieldExtractor extends Configured implements Tool {
      *
      * @param entityId The id for the row.
      * @param row The row data requested (in this case, just the address column).
-     * @param context The MapReduce task context.
+     * @param hadoopContext The MapReduce task context.
      * @throws IOException If there is an IO error.
-     * @throws InterruptedException If the thread is interrupted.
      */
     @Override
-    public void map(EntityId entityId, KijiRowData row, Context context)
-        throws IOException, InterruptedException {
+    public void map(EntityId entityId, KijiRowData row, Context hadoopContext)
+        throws IOException {
       // Check that the row has the info:address column.
       // The column names are specified as constants in the Fields.java class.
       if (!row.containsColumn(Fields.INFO_FAMILY, Fields.ADDRESS)) {
         LOG.info("Missing address field in row: " + entityId);
-        context.getCounter(Counter.MISSING_ADDRESS).increment(1L);
+        hadoopContext.getCounter(Counter.MISSING_ADDRESS).increment(1L);
         return;
       }
-      final Address address = row.getValue(Fields.INFO_FAMILY, Fields.ADDRESS, Address.class);
+      final Address address = row.getMostRecentValue(Fields.INFO_FAMILY, Fields.ADDRESS);
 
       // Write the data in the address record into individual columns.
-      final ContextKijiTableWriter writer = new ContextKijiTableWriter(context);
+      final KijiTableContext context = new DirectKijiTableWriterContext(hadoopContext);
       try {
-        writer.put(entityId, Fields.DERIVED_FAMILY, Fields.ADDR_LINE_1, address.getAddr1());
+        context.put(entityId, Fields.DERIVED_FAMILY, Fields.ADDR_LINE_1, address.getAddr1());
 
         // Optional.
         if (null != address.getApt()) {
-          writer.put(entityId, Fields.DERIVED_FAMILY, Fields.APT_NUMBER, address.getApt());
+          context.put(entityId, Fields.DERIVED_FAMILY, Fields.APT_NUMBER, address.getApt());
         }
 
         // Optional.
         if (null != address.getAddr2()) {
-          writer.put(entityId, Fields.DERIVED_FAMILY, Fields.ADDR_LINE_2, address.getAddr2());
+          context.put(entityId, Fields.DERIVED_FAMILY, Fields.ADDR_LINE_2, address.getAddr2());
         }
 
-        writer.put(entityId, Fields.DERIVED_FAMILY, Fields.CITY, address.getCity());
-        writer.put(entityId, Fields.DERIVED_FAMILY, Fields.STATE, address.getState());
-        writer.put(entityId, Fields.DERIVED_FAMILY, Fields.ZIP, address.getZip());
+        context.put(entityId, Fields.DERIVED_FAMILY, Fields.CITY, address.getCity());
+        context.put(entityId, Fields.DERIVED_FAMILY, Fields.STATE, address.getState());
+        context.put(entityId, Fields.DERIVED_FAMILY, Fields.ZIP, address.getZip());
       } finally {
-        writer.close();
+        context.close();
       }
     }
   }
@@ -129,19 +129,24 @@ public class AddressFieldExtractor extends Configured implements Tool {
     job.setInputFormatClass(KijiTableInputFormat.class);
     final KijiDataRequest dataRequest = new KijiDataRequest()
         .addColumn(new KijiDataRequest.Column(Fields.INFO_FAMILY, Fields.ADDRESS));
-    KijiTableInputFormat.setOptions(TABLE_NAME, dataRequest, job);
+    final KijiURI tableURI = KijiURI.parse(String.format("kiji://.env/default/%s", TABLE_NAME));
+    KijiTableInputFormat.configureJob(
+        job,
+        tableURI,
+        dataRequest,
+        /* start row */ null,
+        /* end row */ null);
 
     // Run the mapper that will do the address extraction.
     job.setMapperClass(AddressMapper.class);
     job.setOutputKeyClass(NullWritable.class);
-    job.setOutputValueClass(KijiOutput.class);
+    job.setOutputValueClass(NullWritable.class);
 
     // Use no reducer (this is map-only job).
     job.setNumReduceTasks(0);
 
     // Write extracted data to the Kiji phonebook table.
-    job.setOutputFormatClass(KijiTableOutputFormat.class);
-    KijiTableOutputFormat.setOptions(job, TABLE_NAME);
+    job.getConfiguration().set(KijiConfKeys.OUTPUT_KIJI_TABLE_URI, tableURI.toString());
 
     // Tell Hadoop where the java dependencies are located, so they
     // can be shipped to the cluster during execution.

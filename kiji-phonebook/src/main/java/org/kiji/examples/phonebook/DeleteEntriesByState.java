@@ -23,6 +23,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.mapreduce.GenericTableMapReduceUtil;
@@ -36,14 +38,17 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.common.flags.Flag;
 import org.kiji.common.flags.FlagParser;
+import org.kiji.mapreduce.DistributedCacheJars;
+import org.kiji.mapreduce.KijiConfKeys;
+import org.kiji.mapreduce.KijiTableInputFormat;
 import org.kiji.schema.EntityId;
+import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
-import org.kiji.schema.mapreduce.ContextKijiTableWriter;
-import org.kiji.schema.mapreduce.DistributedCacheJars;
-import org.kiji.schema.mapreduce.KijiOutput;
-import org.kiji.schema.mapreduce.KijiTableInputFormat;
-import org.kiji.schema.mapreduce.KijiTableOutputFormat;
+import org.kiji.schema.KijiTable;
+import org.kiji.schema.KijiTableWriter;
+import org.kiji.schema.KijiURI;
+import org.kiji.schema.KijiURIException;
 
 /**
  * Deletes all entries from the phonebook table that have an address from a particular US state.
@@ -62,7 +67,7 @@ public class DeleteEntriesByState extends Configured implements Tool {
    * in the "delete.state" job configuration variable.
    */
   public static class DeleteEntriesByStateMapper
-      extends Mapper<EntityId, KijiRowData, NullWritable, KijiOutput> {
+      extends Mapper<EntityId, KijiRowData, NullWritable, NullWritable> {
     private static final Logger LOG = LoggerFactory.getLogger(DeleteEntriesByStateMapper.class);
 
     /** Configuration variable that will contain the 2-letter US state code. */
@@ -74,6 +79,31 @@ public class DeleteEntriesByState extends Configured implements Tool {
       MISSING_ADDRESS
     }
 
+    /** Kiji instance to delete from. */
+    private Kiji mKiji;
+
+    /** Kiji table to delete from. */
+    private KijiTable mTable;
+
+    /** Writer to deletes. */
+    private KijiTableWriter mWriter;
+
+    /** {@inheritDoc} */
+    @Override
+    protected void setup(Context hadoopContext) throws IOException, InterruptedException {
+      super.setup(hadoopContext);
+      final Configuration conf = hadoopContext.getConfiguration();
+      KijiURI tableURI;
+      try {
+        tableURI = KijiURI.parse(conf.get(KijiConfKeys.OUTPUT_KIJI_TABLE_URI));
+      } catch (KijiURIException kue) {
+        throw new IOException(kue);
+      }
+      mKiji = Kiji.open(tableURI, hadoopContext.getConfiguration());
+      mTable = mKiji.openTable(tableURI.getTable());
+      mWriter = mTable.openTableWriter();
+    }
+
     /**
      * This method will be called once for each row of the phonebook table.
      *
@@ -81,33 +111,36 @@ public class DeleteEntriesByState extends Configured implements Tool {
      * @param row The data from the row (in this case, it would only
      *     include the address column because that is all we requested
      *     when configuring the input format).
-     * @param context The MapReduce job context used to emit output.
+     * @param hadoopContext The MapReduce job context used to emit output.
      * @throws IOException If there is an IO error.
-     * @throws InterruptedException If the thread is interrupted.
      */
     @Override
-    public void map(EntityId entityId, KijiRowData row, Context context)
-        throws IOException, InterruptedException {
+    public void map(EntityId entityId, KijiRowData row, Context hadoopContext)
+        throws IOException {
       // Check that the row has the info:address column.
       // The column names are specified as constants in the Fields.java class.
       if (!row.containsColumn(Fields.INFO_FAMILY, Fields.ADDRESS)) {
         LOG.info("Missing address field in row: " + entityId);
-        context.getCounter(Counter.MISSING_ADDRESS).increment(1L);
+        hadoopContext.getCounter(Counter.MISSING_ADDRESS).increment(1L);
         return;
       }
 
-      final String victimState = context.getConfiguration().get(CONF_STATE, "");
-      final Address address = row.getValue(Fields.INFO_FAMILY, Fields.ADDRESS, Address.class);
+      final String victimState = hadoopContext.getConfiguration().get(CONF_STATE, "");
+      final Address address = row.getMostRecentValue(Fields.INFO_FAMILY, Fields.ADDRESS);
 
       if (victimState.equals(address.getState().toString())) {
         // Delete the entry.
-        final ContextKijiTableWriter writer = new ContextKijiTableWriter(context);
-        try {
-          writer.deleteRow(entityId);
-        } finally {
-          writer.close();
-        }
+        mWriter.deleteRow(entityId);
       }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected void cleanup(Context hadoopContext) throws IOException, InterruptedException {
+      IOUtils.closeQuietly(mWriter);
+      IOUtils.closeQuietly(mTable);
+      IOUtils.closeQuietly(mKiji);
+      super.cleanup(hadoopContext);
     }
   }
 
@@ -136,20 +169,25 @@ public class DeleteEntriesByState extends Configured implements Tool {
     job.setInputFormatClass(KijiTableInputFormat.class);
     final KijiDataRequest dataRequest = new KijiDataRequest()
         .addColumn(new KijiDataRequest.Column(Fields.INFO_FAMILY, Fields.ADDRESS));
-    KijiTableInputFormat.setOptions(TABLE_NAME, dataRequest, job);
+    final KijiURI tableURI = KijiURI.parse(String.format("kiji://.env/default/%s", TABLE_NAME));
+    KijiTableInputFormat.configureJob(
+        job,
+        tableURI,
+        dataRequest,
+        /* start row */ null,
+        /* end row */ null);
 
     // Run the mapper that will delete entries from the specified state.
     job.setMapperClass(DeleteEntriesByStateMapper.class);
     job.setMapOutputKeyClass(NullWritable.class);
-    job.setMapOutputValueClass(KijiOutput.class);
+    job.setMapOutputValueClass(NullWritable.class);
     job.getConfiguration().set(DeleteEntriesByStateMapper.CONF_STATE, mState);
 
     // Use no reducer (this is map-only job).
     job.setNumReduceTasks(0);
 
     // Delete data from the Kiji phonebook table.
-    job.setOutputFormatClass(KijiTableOutputFormat.class);
-    KijiTableOutputFormat.setOptions(job, TABLE_NAME);
+    job.getConfiguration().set(KijiConfKeys.OUTPUT_KIJI_TABLE_URI, tableURI.toString());
 
     // Tell Hadoop where the java dependencies are located, so they
     // can be shipped to the cluster during execution.

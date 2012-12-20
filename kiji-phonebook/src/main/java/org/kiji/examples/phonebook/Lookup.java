@@ -102,11 +102,11 @@ public class Lookup extends Configured implements Tool {
       }
 
       final String formattedOutput = String.format("%s %s: email=%s, tel=%s, addr=%s",
-          rowData.getStringValue(Fields.INFO_FAMILY, Fields.FIRST_NAME),
-          rowData.getStringValue(Fields.INFO_FAMILY, Fields.LAST_NAME),
-          rowData.getStringValue(Fields.INFO_FAMILY, Fields.EMAIL),
-          rowData.getStringValue(Fields.INFO_FAMILY, Fields.TELEPHONE),
-          rowData.getValue(Fields.INFO_FAMILY, Fields.ADDRESS, Address.class));
+          rowData.getMostRecentValue(Fields.INFO_FAMILY, Fields.FIRST_NAME),
+          rowData.getMostRecentValue(Fields.INFO_FAMILY, Fields.LAST_NAME),
+          rowData.getMostRecentValue(Fields.INFO_FAMILY, Fields.EMAIL),
+          rowData.getMostRecentValue(Fields.INFO_FAMILY, Fields.TELEPHONE),
+          rowData.getMostRecentValue(Fields.INFO_FAMILY, Fields.ADDRESS));
       System.out.println(formattedOutput);
 
     } catch (KijiTableNotFoundException e) {
