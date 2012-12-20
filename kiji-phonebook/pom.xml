@@ -38,6 +38,7 @@
   <properties>
     <kiji-schema.version>1.0.0-rc2-SNAPSHOT</kiji-schema.version>
     <kiji-mapreduce.version>${kiji-schema.version}</kiji-mapreduce.version>
+    <kiji-cdh4-platform.version>${kiji-schema.version}</kiji-cdh4-platform.version>
   </properties>
 
   <build>
@@ -93,6 +94,12 @@
       <groupId>org.kiji.mapreduce</groupId>
       <artifactId>kiji-mapreduce</artifactId>
       <version>${kiji-mapreduce.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.platforms</groupId>
+      <artifactId>kiji-cdh4-platform</artifactId>
+      <version>${kiji-cdh4-platform.version}</version>
       <scope>provided</scope>
     </dependency>
   </dependencies>
