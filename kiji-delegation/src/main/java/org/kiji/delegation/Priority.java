@@ -19,9 +19,12 @@
 
 package org.kiji.delegation;
 
+import org.kiji.annotations.ApiAudience;
+
 /**
  * Canonical priority levels for use by PriorityProvider implementations.
  */
+@ApiAudience.Framework
 public final class Priority {
   /** Private constructor; utility class should not be instantiated. */
   private Priority() {
@@ -51,6 +54,12 @@ public final class Priority {
    * normal priority level and capability.
    */
   public static final int LOW = 500;
+
+  /**
+   * A priority level indicating that a service provider has minimal
+   * ability to fulfill the runtime requirements, and may only do so partially.
+   */
+  public static final int VERY_LOW = 100;
 
   /** The lowest priority that could still be active. */
   public static final int MIN = 1;

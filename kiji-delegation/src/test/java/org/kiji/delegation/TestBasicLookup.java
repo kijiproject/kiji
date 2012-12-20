@@ -30,7 +30,7 @@ public class TestBasicLookup {
 
   @Test
   public void testLookup() {
-    Lookup<IFoo> lookup = Lookup.get(IFoo.class);
+    Lookup<IFoo> lookup = Lookups.get(IFoo.class);
     IFoo myFoo = lookup.lookup();
     LOG.info("Got foo implementation: " + myFoo.getClass().getName());
     String result = myFoo.getMessage();

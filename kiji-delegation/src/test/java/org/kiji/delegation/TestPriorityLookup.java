@@ -33,7 +33,7 @@ public class TestPriorityLookup {
 
   @Test
   public void testLookup() {
-    Lookup<IPriorityFoo> lookup = Lookup.getPriority(IPriorityFoo.class);
+    Lookup<IPriorityFoo> lookup = Lookups.getPriority(IPriorityFoo.class);
 
     // This should only be ImplB, which has the highest priority.
     IFoo myFoo = lookup.lookup();
@@ -47,7 +47,7 @@ public class TestPriorityLookup {
 
   @Test
   public void testMultiLookup() {
-    Lookup<IPriorityFoo> lookup = Lookup.getPriority(IPriorityFoo.class);
+    Lookup<IPriorityFoo> lookup = Lookups.getPriority(IPriorityFoo.class);
 
     // We should get back a list of providers, ImplB followed by ImplA,
     // according to their priority order.

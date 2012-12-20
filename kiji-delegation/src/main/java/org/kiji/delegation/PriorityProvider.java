@@ -21,6 +21,8 @@ package org.kiji.delegation;
 
 import java.util.Map;
 
+import org.kiji.annotations.ApiAudience;
+
 /**
  * A service that can be selected based on its relative priority.
  *
@@ -42,6 +44,7 @@ import java.util.Map;
  * is then selected. This factory instance can then classload and create the true
  * service instance using its own API.</p>
  */
+@ApiAudience.Public
 public interface PriorityProvider {
   /**
    * Returns the priority that this instance believes it has. Higher priorities

@@ -20,6 +20,9 @@
 package org.kiji.delegation;
 
 import java.util.Iterator;
+import java.util.Map;
+
+import org.kiji.annotations.ApiAudience;
 
 /**
  * Allows you to lookup provider implementations of interfaces or abstract classes.
@@ -46,8 +49,8 @@ import java.util.Iterator;
  *
  * @param <T> the type that this Lookup instance provides.
  */
+@ApiAudience.Framework
 public abstract class Lookup<T> implements Iterable<T> {
-
   /**
    * Create a Lookup instance. Package-protected c'tor; clients should use the
    * get() factory methods to get an appropriate instance.
@@ -65,61 +68,25 @@ public abstract class Lookup<T> implements Iterable<T> {
   public abstract T lookup();
 
   /**
+   * Lookup a provider instance for the specified clazz and return an instance.
+   *
+   * @param runtimeHints parameters that may be used by Lookup instances or their
+   *     targets to evaluate the best provider to return.
+   * @return a provider instance for clazz we discover.
+   * @throws NoSuchProviderException if no runtime provider for the interface
+   *     can be found.
+   */
+  public abstract T lookup(Map<String, String> runtimeHints);
+
+  /**
    * @return an iterator of all provider instances for the specified class.
    */
   public abstract Iterator<T> iterator();
 
   /**
-   * Creates a lookup instance that can resolve providers for the specified class
-   * or interface.
-   *
-   * @param <U> the type that this Lookup instance should provide.
-   * @param clazz the abstract class or interface to lookup a provider for.
-   * @return a new Lookup instance that uses the current thread's context classloader.
+   * @param runtimeHints parameters that may be used by Lookup instances or their
+   *     targets to evaluate the best way to order the returned providers.
+   * @return an iterator of all provider instances for the specified class.
    */
-  public static <U> Lookup<U> get(Class<U> clazz) {
-    return get(clazz, Thread.currentThread().getContextClassLoader());
-  }
-
-  /**
-   * Creates a lookup instance that can resolve providers for the specified class
-   * or interface.
-   *
-   * @param <U> the type that this Lookup instance should provide.
-   * @param clazz the abstract class or interface to lookup a provider for.
-   * @param classLoader the classloader to use to resolve service lookups.
-   * @return a new Lookup instance that uses the specified classloader.
-   */
-  public static <U> Lookup<U> get(Class<U> clazz, ClassLoader classLoader) {
-    return new BasicLookup<U>(clazz, classLoader);
-  }
-
-  /**
-   * Creates a lookup instance that can resolve providers for the specified class
-   * or interface, by using a priority method to establish which is the best
-   * provider. See {@link PriorityProvider}.
-   *
-   * @param <U> the type that this Lookup instance should provide.
-   * @param clazz the abstract class or interface to lookup a provider for.
-   * @return a new Lookup instance that uses the current thread's context classloader.
-   */
-  public static <U extends PriorityProvider> PriorityLookup<U> getPriority(
-      Class<U> clazz) {
-    return getPriority(clazz, Thread.currentThread().getContextClassLoader());
-  }
-
-  /**
-   * Creates a lookup instance that can resolve providers for the specified class
-   * or interface, by using a priority method to establish which is the best
-   * provider. See {@link PriorityProvider}.
-   *
-   * @param <U> the type that this Lookup instance should provide.
-   * @param clazz the abstract class or interface to lookup a provider for.
-   * @param classLoader the classloader to use to resolve service lookups.
-   * @return a new Lookup instance that uses the current thread's context classloader.
-   */
-  public static <U extends PriorityProvider> PriorityLookup<U> getPriority(
-      Class<U> clazz, ClassLoader classLoader) {
-    return new PriorityLookup<U>(clazz, classLoader);
-  }
+  public abstract Iterator<T> iterator(Map<String, String> runtimeHints);
 }

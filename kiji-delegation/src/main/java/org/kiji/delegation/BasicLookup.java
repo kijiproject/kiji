@@ -20,7 +20,13 @@
 package org.kiji.delegation;
 
 import java.util.Iterator;
+import java.util.Map;
 import java.util.ServiceLoader;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.kiji.annotations.ApiAudience;
 
 /**
  * Basic provider of the {@link Lookup} API. This Lookup instance returns "some"
@@ -29,7 +35,10 @@ import java.util.ServiceLoader;
  *
  * @param <T> the type that this Lookup instance provides.
  */
-public final class BasicLookup<T> extends Lookup<T> {
+@ApiAudience.Private
+final class BasicLookup<T> extends Lookup<T> {
+  private static final Logger LOG = LoggerFactory.getLogger(BasicLookup.class);
+
   /** The ClassLoader that we use to look up service implementations. */
   private final ClassLoader mClassLoader;
   /** A representation of the interface or abstract class the user wants to load. */
@@ -60,6 +69,7 @@ public final class BasicLookup<T> extends Lookup<T> {
    * @throws NoSuchProviderException if no runtime provider for the interface
    *     can be found.
    */
+  @Override
   public T lookup() {
     Iterator<T> it = mServiceLoader.iterator();
     if (!it.hasNext()) {
@@ -71,10 +81,37 @@ public final class BasicLookup<T> extends Lookup<T> {
   }
 
   /**
+   * Lookup a provider instance for the specified clazz and return the first
+   * instance we can create.
+   *
+   * @param runtimeHints ignored in this Lookup implementation.
+   * @return the first provider instance for clazz we discover.
+   * @throws NoSuchProviderException if no runtime provider for the interface
+   *     can be found.
+   */
+  @Override
+  public T lookup(Map<String, String> runtimeHints) {
+    LOG.debug("BasicLookup.lookup() called with runtimeHints; ignoring them.");
+    return lookup();
+  }
+
+  /**
    * @return an iterator of all provider instances for the specified class in no
    *     particular order.
    */
+  @Override
   public Iterator<T> iterator() {
     return mServiceLoader.iterator();
+  }
+
+  /**
+   * @param runtimeHints ignored in this Lookup implementation.
+   * @return an iterator of all provider instances for the specified class in no
+   *     particular order.
+   */
+  @Override
+  public Iterator<T> iterator(Map<String, String> runtimeHints) {
+    LOG.debug("BasicLookup.iterator() called with runtimeHints; ignoring them.");
+    return iterator();
   }
 }

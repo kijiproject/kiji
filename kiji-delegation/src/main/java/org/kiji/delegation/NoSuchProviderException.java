@@ -19,10 +19,13 @@
 
 package org.kiji.delegation;
 
+import org.kiji.annotations.ApiAudience;
+
 /**
  * Thrown by a {@link Lookup} object when we cannot find a provider
  * for the specified interface or abstract class.
  */
+@ApiAudience.Public
 public final class NoSuchProviderException extends RuntimeException {
 
   /**

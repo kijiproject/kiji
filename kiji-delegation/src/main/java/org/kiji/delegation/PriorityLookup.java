@@ -27,6 +27,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.kiji.annotations.ApiAudience;
 
 /**
  * A {@link Lookup} instance that selects the best instance of an abstract
@@ -38,7 +39,8 @@ import java.util.Map;
  * @param <T> the interface type this Lookup instance is creating; this
  * must subclass {@link PriorityProvider}.
  */
-public final class PriorityLookup<T extends PriorityProvider> extends Lookup<T> {
+@ApiAudience.Private
+final class PriorityLookup<T extends PriorityProvider> extends Lookup<T> {
   /** Underlying Lookup instance that does the heavy lifting. */
   private final Lookup<T> mLookup;
 
@@ -50,7 +52,7 @@ public final class PriorityLookup<T extends PriorityProvider> extends Lookup<T> 
    * @param classLoader the classloader to use.
    */
   PriorityLookup(Class<T> clazz, ClassLoader classLoader) {
-    mLookup = Lookup.get(clazz, classLoader);
+    mLookup = Lookups.get(clazz, classLoader);
   }
 
   /**
@@ -61,6 +63,7 @@ public final class PriorityLookup<T extends PriorityProvider> extends Lookup<T> 
    * @throws NoSuchProviderException if no runtime provider for the interface
    *     can be found.
    */
+  @Override
   public T lookup() {
     return lookup(Collections.<String, String>emptyMap());
   }
@@ -75,6 +78,7 @@ public final class PriorityLookup<T extends PriorityProvider> extends Lookup<T> 
    * @throws NoSuchProviderException if no runtime provider for the interface
    *     can be found.
    */
+  @Override
   public T lookup(Map<String, String> runtimeHints) {
     int bestPriority = 0;
     T bestProvider = null;
@@ -94,6 +98,7 @@ public final class PriorityLookup<T extends PriorityProvider> extends Lookup<T> 
    * sorted by priority. This filters out any provider instances with a priority
    * of 0 or less.
    */
+  @Override
   public Iterator<T> iterator() {
     return iterator(Collections.<String, String>emptyMap());
   }
@@ -108,6 +113,7 @@ public final class PriorityLookup<T extends PriorityProvider> extends Lookup<T> 
    * @return an iterator of all valid provider instances for the specified class,
    * sorted by priority.
    */
+  @Override
   public Iterator<T> iterator(Map<String, String> runtimeHints) {
     final Map<T, Integer> sortingMap = new HashMap<T, Integer>();
     final List<T> lst = new ArrayList<T>();
