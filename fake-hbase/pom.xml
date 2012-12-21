@@ -30,7 +30,7 @@
     <version>1.0.1-SNAPSHOT</version>
   </parent>
 
-  <name>fake-htable</name>
+  <name>fake-hbase</name>
   <description>
     Fake HBase table implementation, for testing purposes.
   </description>
