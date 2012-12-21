@@ -95,7 +95,7 @@ schema> describe phonebook;
             Schema: "string"
 
         Column derived:zip (Address zip code.)
-            Schema: "string"
+            Schema: "int"
 
     Column family: stats
         Description: Statistics about a contact.

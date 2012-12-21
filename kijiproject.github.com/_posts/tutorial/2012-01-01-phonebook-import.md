@@ -78,7 +78,7 @@ example - using the `kiji jar` command.
 <div class="userinput">
 {% highlight bash %}
 $KIJI_HOME/bin/kiji jar \
-    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-1.0.0-rc1.jar \
+    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-1.0.0-rc2.jar \
     org.kiji.examples.phonebook.StandalonePhonebookImporter \
     $KIJI_HOME/examples/phonebook/input-data.txt
 {% endhighlight %}
@@ -111,24 +111,31 @@ The first thing we'll want to look at is the `setup()` method (which Hadoop will
 executing any map tasks):
 
 {% highlight java %}
+/** {@inheritDoc} */
 @Override
-protected void setup(Context context) throws IOException, InterruptedException {
-  KijiConfiguration conf = new KijiConfiguration(
-      context.getConfiguration(), KijiConfiguration.DEFAULT_INSTANCE_NAME);
-  mKiji = Kiji.open(conf);
+protected void setup(Context hadoopContext)
+    throws IOException, InterruptedException {
+  super.setup(hadoopContext);
+  final Configuration conf = hadoopContext.getConfiguration();
+  KijiURI tableURI;
+  try {
+    tableURI = KijiURI.parse(conf.get(KijiConfKeys.OUTPUT_KIJI_TABLE_URI));
+  } catch (KijiURIException kue) {
+    throw new IOException(kue);
+  }
+  mKiji = Kiji.open(tableURI, conf);
   mTable = mKiji.openTable(TABLE_NAME);
-  mWriter = new ContextKijiTableWriter(context);
+  mWriter = mTable.openTableWriter();
 }
 {% endhighlight %}
 
-This method sets up all the resources necessary for map tasks.  Since this is a MapReduce job, we
-initialize a `ContextKijiTableWriter` with the associated MapReduce `Context` in for our writing
-to the phonebook Kiji table. Contrast this with the `KijiTableWriter` we used in the previous example.
-`ContextKijiTableWriter` is constructed with a MapReduce context, and does not need to be closed
-because it does not maintain any connections.
+This method sets up all the resources necessary for map tasks. Note that we use a different
+way to specify Kiji table and instance names here, a [`KijiURI`]({{site.api_url}}KijiURI.html).
+This newer way to specify Kiji instance addresses is more robust than specifying the instance
+name as a string.
 
 At the top of the map method, you'll see that we extract the fields from the lines as the above
-example.  Then using the `ContextKijiTableWriter` mWriter that is initialized earlier in setup,
+example.  Then using the `KijiTableWriter` mWriter that is initialized earlier in setup,
 we'll write all of the fields to the phonebook table:
 
 {% highlight java %}
@@ -143,6 +150,9 @@ public void map(LongWritable byteOffset, Text line, Context context)
   mWriter.put(user, Fields.INFO_FAMILY, Fields.ADDRESS, streetAddr);
 }
 {% endhighlight %}
+
+When the map task is complete, a `cleanup()` method will close the Kiji resources opened
+in `setup()`.
 
 The outer `PhonebookImporter` class contains a `run(...)` method that handles the setup
 of the MapReduce job.  This is a typical MapReduce job setup. For detailed description
@@ -169,6 +179,13 @@ any reduce tasks to perform.
 job.setNumReduceTasks(0);
 {% endhighlight %}
 
+Since we use the `KijiTableWriter` directly, and don't emit key-value pairs to an
+OutputFormat, we disable this feature of MapReduce:
+
+{% highlight java %}
+job.setOutputFormatClass(NullOutputFormat.class);
+{% endhighlight %}
+
 ### Running the Example
 First you'll need to put the text file of friends into hdfs.  You can do this
 by using the hdfs `-copyFromLocal` command:
@@ -187,7 +204,7 @@ path to the `input-data.txt` file in hdfs.
 <div class="userinput">
 {% highlight bash %}
 $KIJI_HOME/bin/kiji jar \
-    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-1.0.0-rc1.jar \
+    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-1.0.0-rc2.jar \
     org.kiji.examples.phonebook.PhonebookImporter \
     /tmp/input-data.txt
 {% endhighlight %}

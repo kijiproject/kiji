@@ -91,7 +91,7 @@ to the file in hdfs.
 <div class="userinput">
 {% highlight bash %}
 $KIJI_HOME/bin/kiji jar \
-    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-1.0.0-rc1.jar \
+    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-1.0.0-rc2.jar \
     org.kiji.examples.phonebook.IncrementTalkTime /tmp/input-phone-log.txt
 {% endhighlight %}
 </div>

@@ -67,7 +67,7 @@ Next, to perform the deletion of this contact using DeleteEntry:
 <div class="userinput">
 {% highlight bash %}
 $KIJI_HOME/bin/kiji jar \
-    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-1.0.0-rc1.jar \
+    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-1.0.0-rc2.jar \
     org.kiji.examples.phonebook.DeleteEntry
 {% endhighlight %}
 </div>
@@ -97,7 +97,7 @@ sanitize your phonebook of any California contacts.
 
 ### DeleteEntriesByState.java
 
-Deletions from within a MapReduce job are performed using a `ContextKijiTableWriter`.
+Deletions from within a MapReduce job are also performed using a `KijiTableWriter`.
 The DeleteEntriesByState example runs a MapReduce job that reads through the contacts
 in the phonebook table and deletes any entry that has an address from the specified
 state.
@@ -113,20 +113,16 @@ public void map(EntityId entityId, KijiRowData row, Context context)
   }
 
   final String victimState = context.getConfiguration().get(CONF_STATE, "");
-  final Address address = row.getValue(Fields.INFO_FAMILY, Fields.ADDRESS, Address.class);
+  final Address address = row.getMostRecentValue(Fields.INFO_FAMILY, Fields.ADDRESS);
 {% endhighlight %}
 
-A `ContextKijiTableWriter` is then used to delete the row if the state matches:
+A `KijiTableWriter` we opened in the `setup()` method is then used to delete
+the row if the state matches:
 
 {% highlight java %}
   if (victimState.equals(address.getState().toString())) {
     // Delete the entry.
-    final ContextKijiTableWriter writer = new ContextKijiTableWriter(context);
-    try {
-      writer.deleteRow(entityId);
-    } finally {
-      writer.close();
-    }
+    mWriter.deleteRow(entityId);
   }
 }
 {% endhighlight %}
@@ -138,7 +134,7 @@ You can run the DeleteEntriesByState MapReduce job by running:
 <div class="userinput">
 {% highlight bash %}
 $KIJI_HOME/bin/kiji jar \
-    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-1.0.0-rc1.jar \
+    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-1.0.0-rc2.jar \
     org.kiji.examples.phonebook.DeleteEntriesByState --state=CA
 {% endhighlight %}
 </div>

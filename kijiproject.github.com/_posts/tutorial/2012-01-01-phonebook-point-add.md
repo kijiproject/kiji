@@ -70,7 +70,7 @@ You run the class `AddEntry` with the `kiji` command-line tool as follows:
 <div class="userinput">
 {% highlight bash %}
 $KIJI_HOME/bin/kiji jar \
-    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-1.0.0-rc1.jar \
+    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-1.0.0-rc2.jar \
     org.kiji.examples.phonebook.AddEntry
 {% endhighlight %}
 </div>
@@ -97,6 +97,18 @@ Zip: 94110
 
 #### Verify
 Let's verify that our entry got into the phonebook table.
+
+Beforehand, you must tell `kiji ls` where the `org.kiji.examples.phonebook.Address`
+Avro record class (mentioned in the DDL and used by `AddEntry`) is.
+Put the phonebook jar file on your Kiji classpath:
+
+<div class="userinput">
+{% highlight bash %}
+export KIJI_CLASSPATH=$KIJI_HOME/examples/phonebook/lib/kiji-phonebook-*.jar
+{% endhighlight %}
+</div>
+
+Now use `kiji ls`:
 
 <div class="userinput">
 {% highlight bash %}
@@ -171,7 +183,7 @@ You can run the following command to perform a lookup using the `Lookup.java` ex
 <div class="userinput">
 {% highlight bash %}
 $KIJI_HOME/bin/kiji jar \
-    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-1.0.0-rc1.jar \
+    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-1.0.0-rc2.jar \
     org.kiji.examples.phonebook.Lookup --first=Renuka --last=Apte
 {% endhighlight %}
 </div>

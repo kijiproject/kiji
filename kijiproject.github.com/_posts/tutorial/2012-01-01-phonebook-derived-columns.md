@@ -32,7 +32,7 @@ The AddressMapper extends Hadoop's Mapper class. The map function is run per row
 It extracts the address field from each row as follows:
 
 {% highlight java %}
-Address address = row.getValue(Fields.INFO_FAMILY, Fields.ADDRESS, Address.class);
+Address address = row.getMostRecentValue(Fields.INFO_FAMILY, Fields.ADDRESS);
 {% endhighlight %}
 
 Address is the same Avro type you read about on the
@@ -57,7 +57,7 @@ You can execute this example using the `kiji jar` command with the class name:
 <div class="userinput">
 {% highlight bash %}
 $KIJI_HOME/bin/kiji jar \
-    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-1.0.0-rc1.jar \
+    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-1.0.0-rc2.jar \
     org.kiji.examples.phonebook.AddressFieldExtractor
 {% endhighlight %}
 </div>
