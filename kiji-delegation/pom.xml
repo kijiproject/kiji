@@ -21,13 +21,13 @@
 
   <groupId>org.kiji.delegation</groupId>
   <artifactId>kiji-delegation</artifactId>
-  <version>1.0.0-rc2-SNAPSHOT</version>
+  <version>1.0.0-rc3-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <parent>
     <groupId>org.kiji.pom</groupId>
     <artifactId>root-pom</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.2-SNAPSHOT</version>
   </parent>
 
   <name>Kiji Dynamic Binding Library</name>
