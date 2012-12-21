@@ -51,15 +51,14 @@ RPC instead of one for each get.
 ## Modifying Data<a id="modifying-data"> </a>
 
 The [`KijiTableWriter`]({{site.api_url}}KijiTableWriter.html) class provides a `put(...)` method to write/update cells to a Kiji table. The
-cell is addressed by its entity ID, column family, column qualifier, and timestamp. Use the [`KijiCell`]({{site.api_url}}KijiCell.html)
-class to describe the typed cell data to be written. You can get a [`KijiTableWriter`]({{site.api_url}}KijiTableWriter.html) for a [`KijiTable`]({{site.api_url}}KijiTable.html) using the [`openTableWriter()`]({{site.api_url}}KijiTable.html#openTableWriter%28%29) method.
+cell is addressed by its entity ID, column family, column qualifier, and timestamp.  You can get a [`KijiTableWriter`]({{site.api_url}}KijiTableWriter.html) for a [`KijiTable`]({{site.api_url}}KijiTable.html) using the [`openTableWriter()`]({{site.api_url}}KijiTable.html#openTableWriter%28%29) method.
 
 {% highlight java %}
 KijiTableWriter writer = table.openTableWriter();
 
 long timestamp = System.currentTimeMillis();
 writer.put(table.getEntityId("your-row"), "your-family", "your-qualifier", timestamp,
-    new KijiCell<CharSequence>(Schema.create(Schema.Type.STRING), "your-string-value"));
+    "your-string-value");
 writer.flush();
 writer.close();
 {% endhighlight %}
@@ -132,9 +131,12 @@ public void map(EntityId entityId, KijiRowData row, Context context) {
 }
 {% endhighlight %}
 
-[`KijiTableOutputFormat`]({{site.api_url}}mapreduce/KijiTableOutputFormat.html) provides the ability to write to Kiji tables from a MapReduce job using [`KijiMutation`]({{site.api_url}}mapreduce/KijiMutation.html)s.
-To configure a job to write to a Kiji table, use [`KijiTableOutputFormat`]({{site.api_url}}mapreduce/KijiTableOutputFormat.html)'s static `setOptions`
-method. For example:
+To write to a Kiji table from a MapReduce job, you should use
+[`KijiTableWriter`]({{site.api_url}}KijiTableWriter.html) as before. You should also set
+your OutputFormat class to `NullOutputFormat`, so MapReduce doesn't expect to create
+a directory full of text files on your behalf.
+
+To configure a job to write to a Kiji table, refer to the following example:
 
 {% highlight java %}
 Configuration conf = HBaseConfiguration.create();
@@ -148,15 +150,12 @@ DistributedCacheJars.addJarsToDistributedCache(job,
 job.setUserClassesTakesPrecedence(true);
 
 // Setup the OutputFormat.
-KijiTableOutputFormat.setOptions(job, "your-kiji-instance-name", "the-table-name");
 job.setOutputKeyClass(NullWritable.class);
-job.setOutputValueClass(KijiOutput.class);
-job.setOutputFormatClass(KijiTableOutputFormat.class);
+job.setOutputValueClass(NullWritable.class);
+job.setOutputFormatClass(NullOutputFormat.class);
 {% endhighlight %}
 
-The [`ContextKijiTableWriter`]({{site.api_url}}mapreduce/ContextKijiTableWriter.html) class provides the ability to write to Kiji tables from within a
-MapReduce job. This class provides the the same methods provided by the [`KijiTableWriter`]({{site.api_url}}KijiTableWriter.html)
-described above. For example (from within a mapper):
+And then, from within a Mapper:
 
 {% highlight java %}
 public class MyMapper extends Mapper<LongWritable, Text, NullWritable, KijiOutput> {
@@ -171,7 +170,7 @@ public class MyMapper extends Mapper<LongWritable, Text, NullWritable, KijiOutpu
     table = kiji.openTable("the-table-name");
 
     // Create a KijiTableWriter that writes to a MapReduce context.
-    writer = new ContextKijiTableWriter(context);
+    writer = table.openTableWriter();
   }
 
   @Override
