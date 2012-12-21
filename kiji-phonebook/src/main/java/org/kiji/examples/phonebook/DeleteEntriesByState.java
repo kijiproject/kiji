@@ -38,9 +38,6 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.common.flags.Flag;
 import org.kiji.common.flags.FlagParser;
-import org.kiji.mapreduce.DistributedCacheJars;
-import org.kiji.mapreduce.KijiConfKeys;
-import org.kiji.mapreduce.KijiTableInputFormat;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
@@ -49,6 +46,9 @@ import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableWriter;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.KijiURIException;
+import org.kiji.schema.mapreduce.DistributedCacheJars;
+import org.kiji.schema.mapreduce.KijiConfKeys;
+import org.kiji.schema.mapreduce.KijiTableInputFormat;
 
 /**
  * Deletes all entries from the phonebook table that have an address from a particular US state.

@@ -22,6 +22,8 @@ package org.kiji.examples.phonebook;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.mapreduce.GenericTableMapReduceUtil;
@@ -33,15 +35,17 @@ import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.kiji.mapreduce.DistributedCacheJars;
-import org.kiji.mapreduce.KijiConfKeys;
-import org.kiji.mapreduce.KijiTableContext;
-import org.kiji.mapreduce.KijiTableInputFormat;
-import org.kiji.mapreduce.context.DirectKijiTableWriterContext;
 import org.kiji.schema.EntityId;
+import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
+import org.kiji.schema.KijiTable;
+import org.kiji.schema.KijiTableWriter;
 import org.kiji.schema.KijiURI;
+import org.kiji.schema.KijiURIException;
+import org.kiji.schema.mapreduce.DistributedCacheJars;
+import org.kiji.schema.mapreduce.KijiConfKeys;
+import org.kiji.schema.mapreduce.KijiTableInputFormat;
 
 /**
  * Extracts fields from the address column into individual columns in the derived column family.
@@ -62,6 +66,27 @@ public class AddressFieldExtractor extends Configured implements Tool {
     public static enum Counter {
       /** Counts the number of rows with a missing info:address column. */
       MISSING_ADDRESS
+    }
+
+    private Kiji mKiji;
+    private KijiTable mTable;
+    private KijiTableWriter mTableWriter;
+
+    /** {@inheritDoc} */
+    @Override
+    protected void setup(Context hadoopContext) throws IOException, InterruptedException {
+      super.setup(hadoopContext);
+      final Configuration conf = hadoopContext.getConfiguration();
+      KijiURI tableURI;
+      try {
+        tableURI = KijiURI.parse(conf.get(KijiConfKeys.OUTPUT_KIJI_TABLE_URI));
+      } catch (KijiURIException kue) {
+        throw new IOException(kue);
+      }
+
+      mKiji = Kiji.open(tableURI, conf);
+      mTable = mKiji.openTable(TABLE_NAME);
+      mTableWriter = mTable.openTableWriter();
     }
 
     /**
@@ -87,26 +112,30 @@ public class AddressFieldExtractor extends Configured implements Tool {
       final Address address = row.getMostRecentValue(Fields.INFO_FAMILY, Fields.ADDRESS);
 
       // Write the data in the address record into individual columns.
-      final KijiTableContext context = new DirectKijiTableWriterContext(hadoopContext);
-      try {
-        context.put(entityId, Fields.DERIVED_FAMILY, Fields.ADDR_LINE_1, address.getAddr1());
+      mTableWriter.put(entityId, Fields.DERIVED_FAMILY, Fields.ADDR_LINE_1, address.getAddr1());
 
-        // Optional.
-        if (null != address.getApt()) {
-          context.put(entityId, Fields.DERIVED_FAMILY, Fields.APT_NUMBER, address.getApt());
-        }
-
-        // Optional.
-        if (null != address.getAddr2()) {
-          context.put(entityId, Fields.DERIVED_FAMILY, Fields.ADDR_LINE_2, address.getAddr2());
-        }
-
-        context.put(entityId, Fields.DERIVED_FAMILY, Fields.CITY, address.getCity());
-        context.put(entityId, Fields.DERIVED_FAMILY, Fields.STATE, address.getState());
-        context.put(entityId, Fields.DERIVED_FAMILY, Fields.ZIP, address.getZip());
-      } finally {
-        context.close();
+      // Optional.
+      if (null != address.getApt()) {
+        mTableWriter.put(entityId, Fields.DERIVED_FAMILY, Fields.APT_NUMBER, address.getApt());
       }
+
+      // Optional.
+      if (null != address.getAddr2()) {
+        mTableWriter.put(entityId, Fields.DERIVED_FAMILY, Fields.ADDR_LINE_2, address.getAddr2());
+      }
+
+      mTableWriter.put(entityId, Fields.DERIVED_FAMILY, Fields.CITY, address.getCity());
+      mTableWriter.put(entityId, Fields.DERIVED_FAMILY, Fields.STATE, address.getState());
+      mTableWriter.put(entityId, Fields.DERIVED_FAMILY, Fields.ZIP, address.getZip());
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected void cleanup(Context hadoopContext) throws IOException, InterruptedException {
+      IOUtils.closeQuietly(mTableWriter);
+      IOUtils.closeQuietly(mTable);
+      IOUtils.closeQuietly(mKiji);
+      super.cleanup(hadoopContext);
     }
   }
 

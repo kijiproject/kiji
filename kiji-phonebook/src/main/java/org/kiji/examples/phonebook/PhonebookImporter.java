@@ -43,14 +43,14 @@ import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.kiji.mapreduce.DistributedCacheJars;
-import org.kiji.mapreduce.KijiConfKeys;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableWriter;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.KijiURIException;
+import org.kiji.schema.mapreduce.DistributedCacheJars;
+import org.kiji.schema.mapreduce.KijiConfKeys;
 
 /**
  * Shell for the PhonebookImportMapper class.  This class manages
