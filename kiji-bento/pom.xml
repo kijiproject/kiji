@@ -17,10 +17,10 @@
   <inceptionYear>2012</inceptionYear>
 
   <properties>
-    <bento-cluster.version>1.0.0-rc2</bento-cluster.version>
-    <kiji-schema.version>1.0.0-rc2</kiji-schema.version>
-    <kiji-schema-shell.version>1.0.0-rc2</kiji-schema-shell.version>
-    <kiji-phonebook.version>1.0.0-rc2</kiji-phonebook.version>
+    <bento-cluster.version>1.0.0-rc3-SNAPSHOT</bento-cluster.version>
+    <kiji-schema.version>1.0.0-rc3-SNAPSHOT</kiji-schema.version>
+    <kiji-schema-shell.version>1.0.0-rc3-SNAPSHOT</kiji-schema-shell.version>
+    <kiji-phonebook.version>1.0.0-rc3-SNAPSHOT</kiji-phonebook.version>
   </properties>
 
   <build>
