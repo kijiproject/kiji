@@ -44,3 +44,22 @@ the phonebook example under `$KIJI_HOME/examples/phonebook/lib/`. If you wish to
 use jars of example code that you have built, you should adjust the command
 lines in this tutorial to use the jars in `$KIJI_HOME/examples/phonebook/target/`.
 
+If you are using the Bento Box, `kiji-env.sh` will have set `$KIJI_HOME` for you
+already. If not, you should set that yourself in your environment:
+
+<div class="userinput">
+{% highlight bash %}
+export KIJI_HOME=/path/to/kiji-schema
+{% endhighlight %}
+</div>
+
+To work through this tutorial, various Kiji tools will require that Avro data
+type definitions particular to the working phonebook example be on the
+classpath. You can add your artifacts to the Kiji classpath by running:
+
+<div class="userinput">
+{% highlight bash %}
+export KIJI_CLASSPATH=$KIJI_HOME/examples/phonebook/lib/kiji-phonebook-*.jar
+{% endhighlight %}
+</div>
+
