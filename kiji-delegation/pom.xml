@@ -35,7 +35,7 @@
   <inceptionYear>2012</inceptionYear>
 
   <properties>
-    <annotations.version>1.0.0-rc2</annotations.version>
+    <annotations.version>1.0.0-rc3-SNAPSHOT</annotations.version>
   </properties>
 
   <build>
