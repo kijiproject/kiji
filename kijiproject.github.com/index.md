@@ -38,6 +38,9 @@ title: Documentation
         <p class="description">
           Your complete guide to KijiSchema.
         </p>
+        <p class="description">
+          <small><a href="/userguides.html">older user guides...</a></small>
+        </p>
       </div>
     </a>
   </div>
