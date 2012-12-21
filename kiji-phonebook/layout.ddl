@@ -19,7 +19,7 @@ WITH LOCALITY GROUP default
     addr2 "string" WITH DESCRIPTION 'Address line two.',
     city "string" WITH DESCRIPTION 'Address city.',
     state "string" WITH DESCRIPTION 'Address state.',
-    zip "string" WITH DESCRIPTION 'Address zip code.'
+    zip "int" WITH DESCRIPTION 'Address zip code.'
   ),
   FAMILY stats WITH DESCRIPTION 'Statistics about a contact.' (
     talktime COUNTER WITH DESCRIPTION 'Time spent talking with this person'

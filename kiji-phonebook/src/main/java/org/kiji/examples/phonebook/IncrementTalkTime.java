@@ -35,6 +35,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.NullOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
@@ -152,6 +153,8 @@ public class IncrementTalkTime extends Configured implements Tool {
 
     // Use no reducer (this is a map-only job).
     job.setNumReduceTasks(0);
+    // Since table writers do not emit any key-value pairs, we set the output format to Null.
+    job.setOutputFormatClass(NullOutputFormat.class);
 
     // Direct the job output to the phonebook table.
     final KijiURI tableURI = KijiURI.parse(String.format("kiji://.env/default/%s", TABLE_NAME));

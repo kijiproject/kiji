@@ -31,6 +31,7 @@ import org.apache.hadoop.hbase.mapreduce.GenericTableMapReduceUtil;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.lib.output.NullOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
@@ -181,6 +182,9 @@ public class DeleteEntriesByState extends Configured implements Tool {
     job.setMapperClass(DeleteEntriesByStateMapper.class);
     job.setMapOutputKeyClass(NullWritable.class);
     job.setMapOutputValueClass(NullWritable.class);
+    // Since table writers do not emit any key-value pairs, we set the output format to Null.
+    job.setOutputFormatClass(NullOutputFormat.class);
+
     job.getConfiguration().set(DeleteEntriesByStateMapper.CONF_STATE, mState);
 
     // Use no reducer (this is map-only job).

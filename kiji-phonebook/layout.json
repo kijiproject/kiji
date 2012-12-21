@@ -124,7 +124,7 @@
         column_schema : {
           storage : "UID",
           type : "INLINE",
-          value : '"string"'
+          value : '"int"'
         }
       } ]
     }, {
