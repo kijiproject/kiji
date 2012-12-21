@@ -30,9 +30,9 @@ kiji_url : http://www.kiji.org
 # Finally if you are pushing to a GitHub project page, include the project name at the end.
 #
 production_url : http://docs.kiji.org
-userguide_url : /userguide/schema/1.0.0-rc1/
+userguide_url : /userguide/schema/1.0.0-rc2/
 tutorial_url : /tutorial/
-api_url : /apidocs/org/kiji/schema/
+api_url : /apidocs/kiji-schema/1.0.0-rc2/org/kiji/schema/
 
 # All Jekyll-Bootstrap specific configurations are namespaced into this hash
 #
