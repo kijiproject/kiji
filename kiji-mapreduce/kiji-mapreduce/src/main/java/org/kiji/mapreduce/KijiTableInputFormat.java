@@ -131,6 +131,8 @@ public class KijiTableInputFormat
     final Configuration conf = job.getConfiguration();
     final Kiji kiji = Kiji.open(tableURI, conf);
     final KijiTable table = kiji.openTable(tableURI.getTable());
+    IOUtils.closeQuietly(table);
+    IOUtils.closeQuietly(kiji);
 
     // TODO: Check for jars config:
     // GenericTableMapReduceUtil.initTableInput(hbaseTableName, scan, job);
@@ -184,6 +186,7 @@ public class KijiTableInputFormat
     /** {@inheritDoc} */
     @Override
     public void initialize(InputSplit split, TaskAttemptContext context) throws IOException {
+      assert split instanceof KijiTableSplit;
       mSplit = (KijiTableSplit) split;
 
       final Configuration conf = context.getConfiguration();
