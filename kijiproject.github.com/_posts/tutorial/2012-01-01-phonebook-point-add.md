@@ -96,11 +96,11 @@ Zip: 94110
 </div>
 
 #### Verify
-Let's verify that our entry got into the phonebook table.
+Now we can verify that our entry got into the phonebook table.
 
 Beforehand, you must tell `kiji ls` where the `org.kiji.examples.phonebook.Address`
 Avro record class (mentioned in the DDL and used by `AddEntry`) is.
-Put the phonebook jar file on your Kiji classpath:
+If you have not already done so, put the phonebook jar file on your Kiji classpath:
 
 <div class="userinput">
 {% highlight bash %}
