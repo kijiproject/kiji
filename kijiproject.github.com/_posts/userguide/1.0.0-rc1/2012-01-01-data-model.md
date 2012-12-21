@@ -4,6 +4,7 @@ title: Data Model
 categories: [userguide, schema, 1.0.0-rc1]
 tags : [schema-ug]
 order : 2
+version: 1.0.0-rc1
 description: KijiSchema's underlying data model.
 ---
 

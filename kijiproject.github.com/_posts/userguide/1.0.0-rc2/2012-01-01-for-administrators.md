@@ -1,8 +1,9 @@
 ---
 layout: post
 title: For Administrators
-categories: [userguide, schema, 1.0.0-rc1]
+categories: [userguide, schema, 1.0.0-rc2]
 tags : [schema-ug]
+version: 1.0.0-rc2
 order : 5
 description: Installation and maintenance of kiji-schema.
 ---

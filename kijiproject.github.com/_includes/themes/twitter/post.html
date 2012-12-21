@@ -20,13 +20,15 @@
       {% else %}
         {% capture prevOrder %}{{ page.order | minus:1 }}{% endcapture %}
         {% for subpage in pages %}
-          {% capture curOrder %}{{ subpage.order }}{% endcapture %}
-          {% if curOrder == prevOrder %}
-            <li class="prev">
-              <a href="{{ BASE_PATH }}{{ subpage.url }}" title="{{ subpage.title }}">
-              &larr; Previous
-              </a>
-            </li>
+          {% if subpage.version == page.version %}
+            {% capture curOrder %}{{ subpage.order }}{% endcapture %}
+            {% if curOrder == prevOrder %}
+              <li class="prev">
+                <a href="{{ BASE_PATH }}{{ subpage.url }}" title="{{ subpage.title }}">
+                &larr; Previous
+                </a>
+              </li>
+            {% endif %}
           {% endif %}
         {% endfor %}
       {% endif %}
@@ -37,13 +39,15 @@
       {% else %}
         {% capture nextOrder %}{{ page.order | plus:1 }}{% endcapture %}
         {% for subpage in pages %}
-          {% capture curOrder %}{{ subpage.order }}{% endcapture %}
-          {% if curOrder == nextOrder %}
-            <li class="next">
-              <a href="{{ BASE_PATH }}{{ subpage.url }}" title="{{ subpage.title }}">
-              Next &rarr;
-              </a>
-            </li>
+          {% if subpage.version == page.version %}
+            {% capture curOrder %}{{ subpage.order }}{% endcapture %}
+            {% if curOrder == nextOrder %}
+              <li class="next">
+                <a href="{{ BASE_PATH }}{{ subpage.url }}" title="{{ subpage.title }}">
+                Next &rarr;
+                </a>
+              </li>
+            {% endif %}
           {% endif %}
         {% endfor %}
       {% endif %}

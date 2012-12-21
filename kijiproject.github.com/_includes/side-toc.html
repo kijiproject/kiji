@@ -6,13 +6,15 @@
           {% assign index = forloop.index %}
           {% for subpage in pages %}
             {% if index == subpage.order %}
-              <li>
-                {% if subpage.url == page.url %}
-                  <b>{{ subpage.title }}</b>
-                {% else %}
-                  <a href="{{ BASE_PATH }}{{ subpage.url }}">{{ subpage.title }}</a>
-                {% endif %}
-              </li>
+              {% if subpage.version == page.version %}
+                <li>
+                  {% if subpage.url == page.url %}
+                    <b>{{ subpage.title }}</b>
+                  {% else %}
+                    <a href="{{ BASE_PATH }}{{ subpage.url }}">{{ subpage.title }}</a>
+                  {% endif %}
+                </li>
+              {% endif %}
             {% endif %}
           {% endfor %}
         {% endfor %}

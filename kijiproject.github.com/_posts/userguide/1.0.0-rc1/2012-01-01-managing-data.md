@@ -3,6 +3,7 @@ layout: post
 title: Managing Data
 categories: [userguide, schema, 1.0.0-rc1]
 tags: [schema-ug]
+version: 1.0.0-rc1
 order: 3
 description: How to manage data with KijiSchema.
 ---

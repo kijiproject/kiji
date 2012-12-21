@@ -3,6 +3,7 @@ layout: post
 title: What is KijiSchema?
 categories: [userguide, schema, 1.0.0-rc1]
 tags : [schema-ug]
+version: 1.0.0-rc1
 order : 1
 description: Overview.
 ---
