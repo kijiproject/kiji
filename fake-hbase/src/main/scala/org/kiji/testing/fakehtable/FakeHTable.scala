@@ -259,45 +259,93 @@ class FakeHTable(
     }
   }
 
-  override def delete(delete: Delete): Unit = {
-    val rowKey = delete.getRow
+  /**
+   * Removes empty maps for a specified row, family and/or qualifier.
+   *
+   * @param rowKey Key of the row to clean up.
+   * @param family Optional family to clean up. None means clean all families.
+   * @param qualifier Optional qualifier to clean up. None means clean all qualifiers.
+   */
+  private def cleanupRow(rowKey: Bytes, family: Option[Bytes], qualifier: Option[Bytes]): Unit = {
     val row = rows.get(rowKey)
     if (row == null) { return }
 
-    if (delete.getFamilyMap.isEmpty) {
-      for ((family, qualifiers) <- row.asScala) {
-        for ((qualifier, series) <- qualifiers.asScala) {
-          series.subMap(delete.getTimeStamp, true, 0, true).clear()
+    val families : Iterable[Bytes] = family match {
+      case Some(_) => family
+      case None => row.keySet.asScala
+    }
+    for (family <- families) {
+      val rowQualifierMap = row.get(family)
+      if (rowQualifierMap == null) { return }
+
+      val qualifiers : Iterable[Bytes] = qualifier match {
+        case Some(_) => qualifier
+        case None => rowQualifierMap.keySet.asScala
+      }
+      for (qualifier <- qualifiers) {
+        val timeSerie = rowQualifierMap.get(qualifier)
+        if (timeSerie != null) {
+          if (timeSerie.isEmpty) {
+            rowQualifierMap.remove(qualifier)
+          }
         }
       }
-      return
-    }
 
-    for ((requestedFamily, kvs) <- delete.getFamilyMap.asScala) {
-      val rowQualifierMap = row.get(requestedFamily)
-      if (rowQualifierMap != null) {
-        for (kv <- kvs.asScala) {
-          require(kv.isDelete)
-          if (kv.isDeleteFamily) {
-            // Removes versions of an entire family prior to the specified timestamp:
-            for ((qualifier, series) <- rowQualifierMap.asScala) {
-              series.subMap(kv.getTimestamp, true, 0, true).clear()
-            }
-          } else if (kv.isDeleteColumnOrFamily) {
-            // Removes versions of a column prior to the specified timestamp:
-            val series = rowQualifierMap.get(kv.getQualifier)
-            if (series != null) {
-              series.subMap(kv.getTimestamp, true, 0, true).clear()
-            }
-          } else {
-            // Removes exactly one cell:
-            val series = rowQualifierMap.get(kv.getQualifier)
-            if (series != null) {
-              series.remove(kv.getTimestamp)
+      if (rowQualifierMap.isEmpty) {
+        rows.remove(rowKey)
+      }
+    }
+  }
+
+  override def delete(delete: Delete): Unit = {
+    synchronized {
+      val rowKey = delete.getRow
+      val row = rows.get(rowKey)
+      if (row == null) { return }
+
+      if (delete.getFamilyMap.isEmpty) {
+        for ((family, qualifiers) <- row.asScala) {
+          for ((qualifier, series) <- qualifiers.asScala) {
+            series.subMap(delete.getTimeStamp, true, 0, true).clear()
+          }
+        }
+        cleanupRow(rowKey = rowKey, family = None, qualifier = None)
+        return
+      }
+
+      for ((requestedFamily, kvs) <- delete.getFamilyMap.asScala) {
+        val rowQualifierMap = row.get(requestedFamily)
+        if (rowQualifierMap != null) {
+          for (kv <- kvs.asScala) {
+            require(kv.isDelete)
+            if (kv.isDeleteFamily) {
+              // Removes versions of an entire family prior to the specified timestamp:
+              for ((qualifier, series) <- rowQualifierMap.asScala) {
+                series.subMap(kv.getTimestamp, true, 0, true).clear()
+              }
+            } else if (kv.isDeleteColumnOrFamily) {
+              // Removes versions of a column prior to the specified timestamp:
+              val series = rowQualifierMap.get(kv.getQualifier)
+              if (series != null) {
+                series.subMap(kv.getTimestamp, true, 0, true).clear()
+              }
+            } else {
+              // Removes exactly one cell:
+              val series = rowQualifierMap.get(kv.getQualifier)
+              if (series != null) {
+                val timestamp = {
+                  if (kv.getTimestamp == HConstants.LATEST_TIMESTAMP) {
+                    series.firstKey
+                  } else {
+                    kv.getTimestamp
+                  }
+                }
+                series.remove(timestamp)
+              }
             }
           }
         }
-        sys.error("Not implemented")
+        cleanupRow(rowKey = rowKey, family = Some(requestedFamily), qualifier = None)
       }
     }
   }
