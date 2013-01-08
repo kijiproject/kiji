@@ -323,8 +323,9 @@
           <version>${maven-checkstyle-plugin.version}</version>
           <configuration>
             <skip>${skipVerify}</skip>
-            <configLocation>${basedir}/src/main/checkstyle/checkstyle.xml</configLocation>
-            <suppressionsLocation>${basedir}/src/main/checkstyle/suppressions.xml</suppressionsLocation>
+            <configLocation>src/main/checkstyle/checkstyle.xml</configLocation>
+            <suppressionsLocation>src/main/checkstyle/suppressions.xml</suppressionsLocation>
+            <headerLocation>src/main/checkstyle/header-file.txt</headerLocation>
             <includeTestSourceDirectory>true</includeTestSourceDirectory>
             <excludes>**/*.scala</excludes>
           </configuration>
@@ -349,8 +350,8 @@
             <skip>${skipVerify}</skip>
             <effort>Max</effort>
             <threshold>Low</threshold>
-            <includeFilterFile>${basedir}/src/main/findbugs/includeFilter.xml</includeFilterFile>
-            <excludeFilterFile>${basedir}/src/main/findbugs/excludeFilter.xml</excludeFilterFile>
+            <includeFilterFile>src/main/findbugs/includeFilter.xml</includeFilterFile>
+            <excludeFilterFile>src/main/findbugs/excludeFilter.xml</excludeFilterFile>
             <xmlOutput>true</xmlOutput>
           </configuration>
           <executions>
