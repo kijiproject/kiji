@@ -19,22 +19,28 @@
 
 package org.kiji.testing.fakehtable
 
-import java.util.{Iterator => JIterator}
-import java.util.{Map => JMap}
-import java.util.NavigableSet
+import java.io.PrintStream
 import java.util.Arrays
+import java.util.{Iterator => JIterator}
 import java.util.{List => JList}
+import java.util.{Map => JMap}
 import java.util.NavigableMap
+import java.util.NavigableSet
 import java.util.{TreeMap => JTreeMap}
 import java.util.{TreeSet => JTreeSet}
+
+import scala.Option.option2Iterable
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.collection.JavaConverters.asScalaSetConverter
 import scala.collection.JavaConverters.mapAsScalaMapConverter
 import scala.collection.mutable.Buffer
 import scala.util.control.Breaks.break
 import scala.util.control.Breaks.breakable
+
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.hbase.client.coprocessor.Batch
+import org.apache.hadoop.hbase.HConstants
+import org.apache.hadoop.hbase.HTableDescriptor
+import org.apache.hadoop.hbase.KeyValue
 import org.apache.hadoop.hbase.client.Delete
 import org.apache.hadoop.hbase.client.Get
 import org.apache.hadoop.hbase.client.HTableInterface
@@ -45,15 +51,12 @@ import org.apache.hadoop.hbase.client.ResultScanner
 import org.apache.hadoop.hbase.client.Row
 import org.apache.hadoop.hbase.client.RowLock
 import org.apache.hadoop.hbase.client.Scan
+import org.apache.hadoop.hbase.client.coprocessor.Batch
 import org.apache.hadoop.hbase.io.TimeRange
 import org.apache.hadoop.hbase.ipc.CoprocessorProtocol
 import org.apache.hadoop.hbase.util.Bytes
-import org.apache.hadoop.hbase.HConstants
-import org.apache.hadoop.hbase.HTableDescriptor
-import org.apache.hadoop.hbase.KeyValue
+import org.kiji.testing.fakehtable.JNavigableMapWithAsScalaIterator.javaNavigableMapAsScalaIterator
 import org.slf4j.LoggerFactory
-import org.kiji.testing.fakehtable.JNavigableMapWithAsScalaIterator.javaNavigableMapAsScalaIterator;
-import java.io.PrintStream
 
 /**
  * Fake in-memory HTable.
@@ -274,26 +277,31 @@ class FakeHTable(
       case Some(_) => family
       case None => row.keySet.asScala
     }
+    val emptyFamilies = Buffer[Bytes]()  // empty families to clean up
     for (family <- families) {
       val rowQualifierMap = row.get(family)
-      if (rowQualifierMap == null) { return }
-
-      val qualifiers : Iterable[Bytes] = qualifier match {
-        case Some(_) => qualifier
-        case None => rowQualifierMap.keySet.asScala
-      }
-      for (qualifier <- qualifiers) {
-        val timeSerie = rowQualifierMap.get(qualifier)
-        if (timeSerie != null) {
-          if (timeSerie.isEmpty) {
-            rowQualifierMap.remove(qualifier)
+      if (rowQualifierMap != null) {
+        val qualifiers : Iterable[Bytes] = qualifier match {
+          case Some(_) => qualifier
+          case None => rowQualifierMap.keySet.asScala
+        }
+        val emptyQualifiers = Buffer[Bytes]()
+        for (qualifier <- qualifiers) {
+          val timeSeries = rowQualifierMap.get(qualifier)
+          if ((timeSeries != null)  && timeSeries.isEmpty) {
+            emptyQualifiers += qualifier
           }
         }
-      }
+        emptyQualifiers.foreach { qualifier => rowQualifierMap.remove(qualifier) }
 
-      if (rowQualifierMap.isEmpty) {
-        rows.remove(rowKey)
+        if (rowQualifierMap.isEmpty) {
+          emptyFamilies += family
+        }
       }
+    }
+    emptyFamilies.foreach { family => row.remove(family) }
+    if (row.isEmpty) {
+      rows.remove(rowKey)
     }
   }
 
@@ -615,7 +623,23 @@ class FakeHTable(
     }
 
     override def next(): Result = {
-      if (key == null) { return null }
+      while (true) {
+        nextRow() match {
+          case None => return null
+          case Some(result) => {
+            if (!result.isEmpty) {
+              return result
+            }
+          }
+        }
+      }
+      // next() returns when a non empty Result is found or when there are no more rows:
+      sys.error("dead code")
+    }
+
+    /** @return a Result, potentially empty, for the next row. */
+    private def nextRow(): Option[Result] = {
+      if (key == null) { return None }
 
       /** Map: family -> qualifier -> time stamp -> cell value */
       val rowKey = key
@@ -630,13 +654,13 @@ class FakeHTable(
         key = null
       }
 
-      return makeResult(
+      return Some(makeResult(
           rowKey = rowKey,
           row = row,
           familyMap = scan.getFamilyMap,
           timeRange = scan.getTimeRange,
           maxVersions = scan.getMaxVersions
-      )
+      ))
     }
 
     override def next(nrows: Int): Array[Result] = {

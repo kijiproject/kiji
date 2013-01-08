@@ -19,15 +19,13 @@
 
 package org.kiji.testing.fakehtable
 
-import scala.collection.JavaConverters._
+import org.apache.hadoop.hbase.client.Delete
+import org.apache.hadoop.hbase.client.Get
+import org.apache.hadoop.hbase.client.Put
+import org.apache.hadoop.hbase.client.Scan
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
-import org.apache.hadoop.hbase.client.Put
-import org.apache.hadoop.hbase.client.Get
-import org.apache.hadoop.hbase.client.Delete
-import org.apache.hadoop.hbase.client.Scan
-import org.apache.hadoop.hbase.HConstants
 
 @RunWith(classOf[JUnitRunner])
 class TestFakeHTable extends FunSuite {
@@ -192,4 +190,44 @@ class TestFakeHTable extends FunSuite {
     expect(null)(scanner.next())
   }
 
+  test("delete with family/qualifier/time-series cleanups") {
+    val table = new FakeHTable(name = "table", conf = null, desc = null)
+
+    // Populate one row with 4 families, each with 4 qualifiers, each with 4 versions:
+    val count = 4
+    val rowKey = "key".getBytes
+    for (fId <- 0 until count) {
+      val family = "family%d".format(fId).getBytes
+      for (cId <- 0 until count) {
+        val qualifier = "qualifier%d".format(cId).getBytes
+        for (timestamp <- 0L until count) {
+          table.put(new Put(rowKey).add(family, qualifier, timestamp, "value1".getBytes))
+        }
+      }
+    }
+
+    // Delete all versions of family1:qualifier1 one by one, and check:
+    for (timestamp <- 0 until count) {
+      table.delete(new Delete(rowKey)
+          .deleteColumn("family1".getBytes, "qualifier1".getBytes, timestamp))
+    }
+    {
+      val scanner = table.getScanner(new Scan(rowKey)
+          .setMaxVersions(Int.MaxValue)
+          .addColumn("family1".getBytes, "qualifier1".getBytes))
+      expect(null)(scanner.next())
+    }
+
+    // Delete all qualifiers in family2 and check:
+    for (cId <- 0 until count) {
+      table.delete(new Delete(rowKey)
+          .deleteColumns("family2".getBytes, "qualifier%d".format(cId).getBytes))
+    }
+    {
+      val scanner = table.getScanner(new Scan(rowKey)
+          .setMaxVersions(Int.MaxValue)
+          .addFamily("family2".getBytes))
+      expect(null)(scanner.next())
+    }
+  }
 }
