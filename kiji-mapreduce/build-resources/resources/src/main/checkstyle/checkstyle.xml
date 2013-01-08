@@ -53,7 +53,7 @@
   <!-- Checks for the file header.                     -->
   <!-- See http://checkstyle.sf.net/config_header.html -->
   <module name="Header">
-    <property name="headerFile" value="src/main/checkstyle/header-file.txt" />
+    <property name="headerFile" value="${checkstyle.header.file}" />
     <property name="ignoreLines" value="2" />
     <property name="fileExtensions" value="java, scala" />
   </module>
@@ -170,7 +170,6 @@
     <module name="LeftCurly"/>
     <module name="NeedBraces"/>
     <module name="RightCurly"/>
-
 
     <!-- Checks for common coding problems               -->
     <!-- See http://checkstyle.sf.net/config_coding.html -->
