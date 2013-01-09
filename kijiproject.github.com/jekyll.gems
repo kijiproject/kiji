@@ -1,12 +1,4 @@
 # jekyll.gems generated gem export file. Note that any env variable settings will be missing. Append these after using a ';' field separator
 
-albino -v1.3.3
-classifier -v1.3.3
-directory_watcher -v1.4.1
-fast-stemmer -v1.0.1
-jekyll -v0.11.0
-kramdown -v0.14.0
 liquid -v2.2.2
-maruku -v0.6.1
-posix-spawn -v0.3.6
-syntax -v1.0.0
+jekyll -v0.11.0
