@@ -221,5 +221,11 @@
     <property name="checkFormat" value="$1"/>
   </module>
 
-  <module name="SuppressionFilter" />
+  <!-- Suppresses audit events mentioned in suppression file -->
+  <!-- This is necessary because maven-checkstyle-plugin doesn't find the
+       suppression file when given a non-absolute path -->
+  <!-- See http://checkstyle.sf.net/config.html#SuppressionFilter -->
+  <module name="SuppressionFilter">
+    <property name="file" value="src/main/checkstyle/suppressions.xml"/>
+  </module>
 </module>
