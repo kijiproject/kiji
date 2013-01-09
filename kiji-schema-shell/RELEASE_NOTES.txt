@@ -1,0 +1,10 @@
+
+
+                              Kiji Schema Shell Release Notes
+
+Version 1.0.0-rc3
+  * DDLSHELL-5. Adds RELEASE_NOTES.txt
+
+Version 1.0.0-rc2
+  * DDLSHELL-3. Use Kiji artifacts instead of odiago/wibi artifacts.
+
