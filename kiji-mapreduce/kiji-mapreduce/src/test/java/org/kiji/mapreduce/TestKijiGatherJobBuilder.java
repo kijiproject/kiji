@@ -26,7 +26,6 @@ import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
@@ -37,6 +36,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.kiji.mapreduce.kvstore.EmptyKeyValueStore;
+import org.kiji.mapreduce.kvstore.RequiredStores;
 import org.kiji.mapreduce.kvstore.UnconfiguredKeyValueStore;
 import org.kiji.mapreduce.output.TextMapReduceJobOutput;
 import org.kiji.schema.Kiji;
@@ -80,7 +80,7 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
   public static class UnconfiguredKVGatherer extends MyGatherer {
     @Override
     public Map<String, KeyValueStore<?, ?>> getRequiredStores() {
-      return Collections.<String, KeyValueStore<?, ?>>singletonMap("foostore",
+      return RequiredStores.just("foostore",
           new UnconfiguredKeyValueStore<String, Object>());
     }
   }

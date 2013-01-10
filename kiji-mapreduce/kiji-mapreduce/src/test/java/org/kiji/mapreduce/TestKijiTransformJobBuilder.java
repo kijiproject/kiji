@@ -23,7 +23,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
 import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
@@ -40,6 +39,7 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.mapreduce.input.TextMapReduceJobInput;
 import org.kiji.mapreduce.kvstore.EmptyKeyValueStore;
+import org.kiji.mapreduce.kvstore.RequiredStores;
 import org.kiji.mapreduce.kvstore.SeqFileKeyValueStore;
 import org.kiji.mapreduce.output.TextMapReduceJobOutput;
 import org.kiji.schema.KijiConfiguration;
@@ -70,8 +70,7 @@ public class TestKijiTransformJobBuilder {
 
     @Override
     public Map<String, KeyValueStore<?, ?>> getRequiredStores() {
-      return Collections.<String, KeyValueStore<?, ?>>singletonMap("mapperMap",
-          new EmptyKeyValueStore<String, Object>());
+      return RequiredStores.just("mapperMap", new EmptyKeyValueStore<String, Object>());
     }
   }
 
@@ -100,8 +99,7 @@ public class TestKijiTransformJobBuilder {
 
     @Override
     public Map<String, KeyValueStore<?, ?>> getRequiredStores() {
-      return Collections.<String, KeyValueStore<?, ?>>singletonMap("reducerMap",
-          new EmptyKeyValueStore<String, Object>());
+      return RequiredStores.with("reducerMap", new EmptyKeyValueStore<String, Object>());
     }
   }
 

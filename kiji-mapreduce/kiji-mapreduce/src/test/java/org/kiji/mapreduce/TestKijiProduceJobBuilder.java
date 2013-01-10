@@ -26,7 +26,6 @@ import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
@@ -39,6 +38,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import org.kiji.mapreduce.kvstore.EmptyKeyValueStore;
+import org.kiji.mapreduce.kvstore.RequiredStores;
 import org.kiji.mapreduce.kvstore.UnconfiguredKeyValueStore;
 import org.kiji.mapreduce.mapper.ProduceMapper;
 import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
@@ -86,7 +86,7 @@ public class TestKijiProduceJobBuilder extends KijiClientTest {
   public static class UnconfiguredKVProducer extends MyProducer {
     @Override
     public Map<String, KeyValueStore<?, ?>> getRequiredStores() {
-      return Collections.<String, KeyValueStore<?, ?>>singletonMap("foostore",
+      return RequiredStores.with("foostore",
           new UnconfiguredKeyValueStore<String, Object>());
     }
   }
