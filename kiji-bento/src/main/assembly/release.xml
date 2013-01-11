@@ -42,6 +42,7 @@
         <include>README.md</include>
         <!-- log4j override to suppress hbase warnings -->
         <include>conf/log4j.properties</include>
+        <include>release-notes/**</include>
       </includes>
       <filtered>true</filtered>
     </fileSet>
@@ -63,6 +64,7 @@
       <directory>target/prereqs-dir/kiji-schema-${kiji-schema.version}</directory>
       <excludes>
         <exclude>bin/**</exclude>
+        <exclude>RELEASE_NOTES.txt</exclude>
       </excludes>
       <filtered>false</filtered>
       <fileMode>0644</fileMode>
@@ -127,5 +129,28 @@
       <fileMode>0755</fileMode>
     </fileSet>
   </fileSets>
-
+  <files>
+    <!-- Mostly to move and rename release notes. -->
+    <file>
+      <!-- kiji-schema release notes -->
+      <source>target/prereqs-dir/kiji-schema-${kiji-schema.version}/RELEASE_NOTES.txt</source>
+      <outputDirectory>release-notes</outputDirectory>
+      <destName>SCHEMA_RELEASE_NOTES.txt</destName>
+      <fileMode>0644</fileMode>
+    </file>
+    <file>
+      <!-- bento-cluster release notes -->
+      <source>target/prereqs-dir/bento-cluster-${bento-cluster.version}/RELEASE_NOTES.txt</source>
+      <outputDirectory>release-notes</outputDirectory>
+      <destName>CLUSTER_RELEASE_NOTES.txt</destName>
+      <fileMode>0644</fileMode>
+    </file>
+    <file>
+      <!-- kiji-schema-shell release notes -->
+      <source>target/prereqs-dir/kiji-schema-shell-${kiji-schema-shell.version}/RELEASE_NOTES.txt</source>
+      <outputDirectory>release-notes</outputDirectory>
+      <destName>DDL_RELEASE_NOTES.txt</destName>
+      <fileMode>0644</fileMode>
+    </file>
+  </files>
 </assembly>

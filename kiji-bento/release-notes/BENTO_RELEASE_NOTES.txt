@@ -1,0 +1,10 @@
+
+
+                              Kiji Bento Box Release Notes
+
+Version 1.0.0-rc3
+  * BENTO-6. Adds and populates release-notes directory.
+
+Version 1.0.0-rc2
+  * BENTO-3. Fixes kiji-env for zsh shell users.
+
