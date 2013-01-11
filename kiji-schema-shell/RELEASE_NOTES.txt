@@ -3,6 +3,7 @@
                               Kiji Schema Shell Release Notes
 
 Version 1.0.0-rc3
+  * DDLSHELL-6. Improve shell 'help' command.
   * DDLSHELL-5. Adds RELEASE_NOTES.txt
 
 Version 1.0.0-rc2

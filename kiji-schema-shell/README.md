@@ -65,5 +65,5 @@ Language Reference
 ==================
 
 To read a full reference manual for this component, see 
-[The DDL reference in the online KijiSchema user guide](http://docs.kiji.org/userguide/schema/1.0.0-rc1/schema-shell-ddl-ref/).
+[The DDL reference in the online KijiSchema user guide](http://docs.kiji.org/userguide/schema/${project.version}/schema-shell-ddl-ref/).
 

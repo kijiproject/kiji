@@ -42,15 +42,6 @@ class ShellMain {
   val filename: String = ""
 
   /**
-   * @returns the version number associated with this software package.
-   */
-  def version(): String = {
-    // Uses the value of 'Implementation-Version' in META-INF/MANIFEST.MF:
-    val version = Option(classOf[ShellMain].getPackage().getImplementationVersion())
-    return version.getOrElse("(unknown)")
-  }
-
-  /**
    * Programmatic entry point.
    * Like main(), but without that pesky sys.exit() call.
    * @returns a return status code. 0 is success.
@@ -58,7 +49,7 @@ class ShellMain {
   def run(): Int = {
     val chatty = expr.equals("") && filename.equals("")
     if (chatty) {
-      println("Kiji schema shell v" + version())
+      println("Kiji schema shell v" + ShellMain.version())
       println("""Enter 'help' for instructions (without quotes).
                 |Enter 'quit' to quit.
                 |DDL statements must be terminated with a ';'""".stripMargin)
@@ -101,6 +92,16 @@ class ShellMain {
 }
 
 object ShellMain {
+
+  /**
+   * @returns the version number associated with this software package.
+   */
+  def version(): String = {
+    // Uses the value of 'Implementation-Version' in META-INF/MANIFEST.MF:
+    val version = Option(classOf[ShellMain].getPackage().getImplementationVersion())
+    return version.getOrElse("(unknown)")
+  }
+
   /**
    * Main entry point for running the Wibi shell.
    *
