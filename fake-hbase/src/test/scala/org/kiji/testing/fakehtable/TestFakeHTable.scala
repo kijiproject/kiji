@@ -230,4 +230,42 @@ class TestFakeHTable extends FunSuite {
       expect(null)(scanner.next())
     }
   }
+
+  test("FakeResultScanner.hasNext on an empty table") {
+    val table = new FakeHTable(name = "table", conf = null, desc = null)
+    val scanner = table.getScanner(new Scan())
+    val iterator = scanner.iterator()
+    expect(false)(iterator.hasNext())
+    expect(null)(iterator.next())
+  }
+
+  test("FakeResultScanner.hasNext") {
+    val table = new FakeHTable(name = "table", conf = null, desc = null)
+    table.put(new Put("key".getBytes)
+        .add("family".getBytes, "qualifier".getBytes, 1L, "value1".getBytes))
+
+    val scanner = table.getScanner(new Scan())
+    val iterator = scanner.iterator()
+    expect(true)(iterator.hasNext())
+    assert(iterator.next() != null)
+    expect(false)(iterator.hasNext())
+    expect(null)(iterator.next())
+  }
+
+  test("FakeResultScanner.hasNext with restricted qualifier") {
+    val table = new FakeHTable(name = "table", conf = null, desc = null)
+    table.put(new Put("key1".getBytes)
+        .add("family".getBytes, "qualifier1".getBytes, 1L, "value1".getBytes))
+    table.put(new Put("key2".getBytes)
+        .add("family".getBytes, "qualifier2".getBytes, 1L, "value1".getBytes))
+
+    val scanner = table.getScanner(new Scan()
+        .addColumn("family".getBytes, "qualifier1".getBytes))
+    val iterator = scanner.iterator()
+    expect(true)(iterator.hasNext())
+    assert(iterator.next() != null)
+    expect(false)(iterator.hasNext())
+    expect(null)(iterator.next())
+  }
+
 }

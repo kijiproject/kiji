@@ -618,13 +618,23 @@ class FakeHTable(
       key = null
     }
 
+    /** Next result to return. */
+    private var nextResult: Result = getNextResult()
+
     override def hasNext(): Boolean = {
-      return (key != null)
+      return (nextResult != null)
     }
 
     override def next(): Result = {
+      val result = nextResult
+      nextResult = getNextResult()
+      return result
+    }
+
+    /** @return the next non-empty result. */
+    private def getNextResult(): Result = {
       while (true) {
-        nextRow() match {
+        getResultForNextRow() match {
           case None => return null
           case Some(result) => {
             if (!result.isEmpty) {
@@ -638,11 +648,11 @@ class FakeHTable(
     }
 
     /** @return a Result, potentially empty, for the next row. */
-    private def nextRow(): Option[Result] = {
+    private def getResultForNextRow(): Option[Result] = {
       if (key == null) { return None }
+      val rowKey = key
 
       /** Map: family -> qualifier -> time stamp -> cell value */
-      val rowKey = key
       val row = rows.get(key)
       require(row != null)
 
