@@ -1,4 +1,4 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <!--
     (c) Copyright 2012 WibiData, Inc.
 
@@ -17,125 +17,69 @@
     See the License for the specific language governing permissions and
     limitations under the License.
   -->
-
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.kiji.mapreduce.lib</groupId>
-  <artifactId>kiji-mapreduce-lib</artifactId>
-  <version>1.0.0-rc1-SNAPSHOT</version>
-  <packaging>jar</packaging>
+  <artifactId>kiji-mapreduce-lib-root</artifactId>
+  <version>1.0.0-rc3-SNAPSHOT</version>
+  <packaging>pom</packaging>
 
   <parent>
     <groupId>org.kiji.pom</groupId>
     <artifactId>root-pom</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.0.2-SNAPSHOT</version>
   </parent>
 
-  <name>Kiji MapReduce Library</name>
-  <description>A library for creating MapReduce jobs in Kiji</description>
-  <url>http://www.kiji.org</url>
+  <name>Kiji MapReduce lib top-level project</name>
+  <description>MapReduce library for KijiSchema</description>
+  <inceptionYear>2012</inceptionYear>
 
   <properties>
-    <kiji-schema.version>1.0.0-rc2-SNAPSHOT</kiji-schema.version>
-    <kiji-mapreduce.version>1.0.0-rc1-SNAPSHOT</kiji-mapreduce.version>
+    <annotations.version>1.0.0-rc3-SNAPSHOT</annotations.version>
+    <kiji-delegation.version>1.0.0-rc3-SNAPSHOT</kiji-delegation.version>
+    <kiji-platforms.version>1.0.0-rc3-SNAPSHOT</kiji-platforms.version>
+    <kiji-schema.version>1.0.0-rc3-SNAPSHOT</kiji-schema.version>
+    <kiji-mapreduce.version>1.0.0-rc3-SNAPSHOT</kiji-mapreduce.version>
   </properties>
 
+  <modules>
+    <module>build-resources</module>
+    <module>kiji-mapreduce-lib</module>
+  </modules>
+
   <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-      </plugin>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <!-- must supply build-resources module with checkstyle/checkstyle.xml
+               and suppressions.xml to use this -->
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-checkstyle-plugin</artifactId>
+          <dependencies>
+            <dependency>
+              <groupId>org.kiji.mapreduce</groupId>
+              <artifactId>build-resources</artifactId>
+              <version>${project.version}</version>
+            </dependency>
+          </dependencies>
+        </plugin>
 
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-      </plugin>
-
-      <plugin>
-        <!-- configured with files in the src/main/assembly/ directory -->
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-assembly-plugin</artifactId>
-      </plugin>
-
-      <plugin>
-        <!-- must supply src/main/checkstyle/checkstyle.xml and suppressions.xml to use this -->
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-checkstyle-plugin</artifactId>
-      </plugin>
-
-      <plugin>
-        <!-- must supply src/main/findbugs/excludeFilter.xml and includeFilter.xml -->
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>findbugs-maven-plugin</artifactId>
-      </plugin>
-    </plugins>
+        <plugin>
+          <!-- must supply build-resources module with findbugs/includeFilter.xml
+               and excludeFilter.xml to use this -->
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>findbugs-maven-plugin</artifactId>
+          <dependencies>
+            <dependency>
+              <groupId>org.kiji.mapreduce</groupId>
+              <artifactId>build-resources</artifactId>
+              <version>${project.version}</version>
+            </dependency>
+          </dependencies>
+        </plugin>
+      </plugins>
+    </pluginManagement>
   </build>
-
-  <dependencies>
-    <dependency>
-      <groupId>org.kiji.mapreduce</groupId>
-      <artifactId>kiji-mapreduce</artifactId>
-      <version>${kiji-mapreduce.version}</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.kiji.mapreduce</groupId>
-      <artifactId>kiji-mapreduce</artifactId>
-      <version>${kiji-mapreduce.version}</version>
-      <type>test-jar</type>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.kiji.schema</groupId>
-      <artifactId>kiji-schema</artifactId>
-      <version>${kiji-schema.version}</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.kiji.schema</groupId>
-      <artifactId>kiji-schema</artifactId>
-      <version>${kiji-schema.version}</version>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.wibidata.hadoop</groupId>
-      <artifactId>hadoop-configurator</artifactId>
-      <version>1.0.1</version>
-    </dependency>
-    <dependency>
-      <groupId>com.odiago.avro</groupId>
-      <artifactId>odiago-avro</artifactId>
-      <version>1.1.0-cdh4</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-test</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.easymock</groupId>
-      <artifactId>easymock</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-minicluster</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.mrunit</groupId>
-      <artifactId>mrunit</artifactId>
-      <classifier>hadoop2</classifier>
-      <!--- I do not know if this version number is correct-->
-      <version>0.9.0-incubating</version>
-    </dependency>
-  </dependencies>
 
   <repositories>
     <repository>
@@ -149,4 +93,11 @@
       <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
     </repository>
   </repositories>
+
+  <scm>
+    <connection>scm:git:git@github.com:kijiproject/kiji-mapreduce.git</connection>
+    <url>scm:git:git@github.com:kijiproject/kiji-mapreduce.git</url>
+    <developerConnection>scm:git:git@github.com:kijiproject/kiji-mapreduce.git</developerConnection>
+  </scm>
+
 </project>
