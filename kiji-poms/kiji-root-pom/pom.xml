@@ -30,6 +30,7 @@
     <it.threadCount>1</it.threadCount>
 
     <!-- versions for program dependencies -->
+    <annotations.version>1.0.0-rc3-SNAPSHOT</annotations.version>
     <avro.version>1.7.2</avro.version>
     <commons-io.version>2.1</commons-io.version>
     <commons-lang3.version>3.0</commons-lang3.version>
@@ -429,6 +430,12 @@
         <groupId>org.kiji.common</groupId>
         <artifactId>kiji-common-flags</artifactId>
         <version>${kiji-common-flags.version}</version>
+        <scope>compile</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.kiji.annotations</groupId>
+        <artifactId>annotations</artifactId>
+        <version>${annotations.version}</version>
         <scope>compile</scope>
       </dependency>
       <dependency>
