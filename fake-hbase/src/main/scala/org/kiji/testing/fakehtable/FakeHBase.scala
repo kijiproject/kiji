@@ -46,11 +46,20 @@ class FakeHBase
   type Bytes = Array[Byte]
 
   /** Controls whether to automatically create unknown tables or throw a TableNotFoundException. */
-  // TODO Make this configurable
-  private val CreateUnknownTable = true
+  private var createUnknownTable = false
 
   /** Map of the tables. */
   private[fakehtable] val tableMap = new JTreeMap[Bytes, FakeHTable](Bytes.BYTES_COMPARATOR)
+
+  /**
+   * Enables or disables the «create unknown table» feature.
+   *
+   * @param createUnknownTableFlag Whether unknown tables should be implicitly created.
+   *     When disabled, TableNotFoundException is raised.
+   */
+  def setCreateUnknownTable(createUnknownTableFlag: Boolean): Unit = {
+    this.createUnknownTable = createUnknownTableFlag
+  }
 
   // -----------------------------------------------------------------------------------------------
 
@@ -64,7 +73,7 @@ class FakeHBase
       synchronized {
         var table = tableMap.get(tableNameBytes)
         if (table == null) {
-          if (!CreateUnknownTable) {
+          if (!createUnknownTable) {
             throw new TableNotFoundException(tableName)
           }
           val desc = new HTableDescriptor(tableName)
