@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import com.google.common.base.Preconditions;
 import org.apache.avro.Schema;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -128,18 +127,6 @@ public class BinaryHTableBulkImporter extends HTableBulkImporter {
     }
     scan.setCacheBlocks(false);
     return scan;
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public String getLocalityGroup() {
-    // setConf() would have thrown an exception if there were no column descriptors.
-    Preconditions.checkState(!mColumnDescriptors.isEmpty());
-
-    // We can only output to one column family at a time, so just grab the first one.
-
-    // TODO: This should return the Kiji locality group name
-    return mColumnDescriptors.get(0).getKijiColumnName().getFamily();
   }
 
   /** {@inheritDoc} */

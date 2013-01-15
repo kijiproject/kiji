@@ -66,11 +66,7 @@ public class TestKijiBulkImportJobBuilder extends KijiClientTest {
 
   /** A KijiBulkImporter for testing that the job-builder propagates this class correctly. */
   protected static class NoopBulkImporter extends KijiBulkImporter<Void, Void> {
-    @Override
-    public String getLocalityGroup() {
-      return "default"; // The one family name defined in the test foo-table.
-    }
-
+    /** {@inheritDoc} */
     @Override
     public void produce(Void key, Void value, KijiTableContext context)
         throws IOException {
@@ -80,6 +76,7 @@ public class TestKijiBulkImportJobBuilder extends KijiClientTest {
 
   /** A BulkImporter implementation that uses a KeyValueStore. */
   public static class KVStoreBulkImporter extends NoopBulkImporter {
+    /** {@inheritDoc} */
     @Override
     public Map<String, KeyValueStore<?, ?>> getRequiredStores() {
       return Collections.<String, KeyValueStore<?, ?>>singletonMap(

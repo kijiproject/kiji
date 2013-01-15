@@ -72,6 +72,7 @@ public class TestTransform {
 
     private KijiTableContext mTableContext;
 
+    /** {@inheritDoc} */
     @Override
     protected void setup(Context context)
         throws IOException, InterruptedException {
@@ -80,6 +81,7 @@ public class TestTransform {
       mTableContext = new DirectKijiTableWriterContext(context);
     }
 
+    /** {@inheritDoc} */
     @Override
     protected void map(EntityId eid, KijiRowData row, Context hadoopContext)
         throws IOException, InterruptedException {
@@ -90,6 +92,7 @@ public class TestTransform {
       mTableContext.put(genEId, "primitives", "string", "generated content for " + userId);
     }
 
+    /** {@inheritDoc} */
     @Override
     protected void cleanup(Context context)
         throws IOException, InterruptedException {
@@ -99,11 +102,13 @@ public class TestTransform {
       super.cleanup(context);
     }
 
+    /** {@inheritDoc} */
     @Override
     public Class<?> getOutputKeyClass() {
       return HFileKeyValue.class;
     }
 
+    /** {@inheritDoc} */
     @Override
     public Class<?> getOutputValueClass() {
       return NullWritable.class;

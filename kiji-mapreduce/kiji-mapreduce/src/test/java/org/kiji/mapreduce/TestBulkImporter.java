@@ -82,12 +82,6 @@ public class TestBulkImporter {
   public static class SimpleBulkImporter extends KijiBulkImporter<LongWritable, Text> {
     /** {@inheritDoc} */
     @Override
-    public String getLocalityGroup() {
-      return "default";
-    }
-
-    /** {@inheritDoc} */
-    @Override
     public void produce(LongWritable inputKey, Text value, KijiTableContext context)
         throws IOException {
       final String line = value.toString();
@@ -185,12 +179,6 @@ public class TestBulkImporter {
     private boolean mSetupFlag = false;
     private int mProduceCounter = 0;
     private boolean mCleanupFlag = false;
-
-    /** {@inheritDoc} */
-    @Override
-    public String getLocalityGroup() {
-      return "default";
-    }
 
     /** {@inheritDoc} */
     @Override

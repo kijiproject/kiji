@@ -20,10 +20,8 @@
 package org.kiji.mapreduce;
 
 import java.io.IOException;
-import java.util.Locale;
 import java.util.Map;
 
-import com.google.common.base.Preconditions;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.util.ReflectionUtils;
@@ -31,15 +29,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.mapreduce.mapper.BulkImportMapper;
-import org.kiji.mapreduce.output.KijiHFileOutputFormat;
 import org.kiji.mapreduce.output.KijiTableMapReduceJobOutput;
 import org.kiji.mapreduce.reducer.IdentityReducer;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiTable;
-import org.kiji.schema.NoSuchColumnException;
 import org.kiji.schema.impl.HBaseKijiTable;
 import org.kiji.schema.layout.KijiTableLayout;
-import org.kiji.schema.layout.KijiTableLayout.LocalityGroupLayout;
 
 /** Builds a job that runs a KijiBulkImporter to import data into a Kiji table. */
 public class KijiBulkImportJobBuilder extends KijiMapReduceJobBuilder<KijiBulkImportJobBuilder> {
@@ -118,15 +113,9 @@ public class KijiBulkImportJobBuilder extends KijiMapReduceJobBuilder<KijiBulkIm
     }
     mBulkImporter = ReflectionUtils.newInstance(mBulkImporterClass, job.getConfiguration());
 
-    // Make sure the column the importer wants to target exist in the table layout.
-    String localityGroup = mBulkImporter.getLocalityGroup();
-    validateLocalityGroup(localityGroup, getTableLayout());
-
     // Configure the mapper and reducer. This part depends on whether we're going to write
     // to HFiles or directly to the table.
-    final LocalityGroupLayout targetLocalityGroup = getTableLayout().getLocalityGroupMap()
-        .get(localityGroup);
-    configureJobForHFileOutput(job, targetLocalityGroup);
+    configureJobForHFileOutput(job);
 
     job.setJobName("Kiji bulk import: " + mBulkImporterClass.getSimpleName());
 
@@ -138,19 +127,14 @@ public class KijiBulkImportJobBuilder extends KijiMapReduceJobBuilder<KijiBulkIm
    * Configures the job settings specific to writing HFiles.
    *
    * @param job The job to configure.
-   * @param localityGroup The locality group the HFiles are being generated for.
    */
-  protected void configureJobForHFileOutput(Job job, LocalityGroupLayout localityGroup) {
+  protected void configureJobForHFileOutput(Job job) {
     // Construct the mapper instance that runs the importer.
     mMapper = new BulkImportMapper<Object, Object, Object, Object>();
 
     // Don't need to do anything during the Reducer, but we need to run the reduce phase
     // so the KeyValue records output from the map phase get sorted.
     mReducer = new IdentityReducer<Object, Object>();
-
-    // Set the compression type for the generated HFiles to match the target locality group.
-    job.getConfiguration().set(KijiHFileOutputFormat.CONF_HFILE_COMPRESSION,
-        localityGroup.getDesc().getCompressionType().name().toLowerCase(Locale.US));
   }
 
   /** {@inheritDoc} */
@@ -223,22 +207,5 @@ public class KijiBulkImportJobBuilder extends KijiMapReduceJobBuilder<KijiBulkIm
   @Override
   protected KijiTableLayout getTableLayout() {
     return mOutputTable.getLayout();
-  }
-
-  /**
-   * Validates that the localityGroup exists in the table layout.
-   *
-   * @param localityGroup The name of the localityGroup to check for in the layout.
-   * @param tableLayout The layout of the table to check for the existence of
-   *     <code>localityGroup</code>.
-   * @throws NoSuchColumnException If the localityGroup doesn't exist in the layout.
-   */
-  private static void validateLocalityGroup(String localityGroup, KijiTableLayout tableLayout)
-      throws NoSuchColumnException {
-    Preconditions.checkNotNull(localityGroup);
-    if (!tableLayout.getLocalityGroupMap().containsKey(localityGroup)) {
-      throw new NoSuchColumnException(String.format(
-          "Table '%s' has no localityGroup '%s'.", tableLayout.getName(), localityGroup));
-    }
   }
 }

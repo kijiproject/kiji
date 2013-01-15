@@ -20,7 +20,6 @@
 package org.kiji.mapreduce;
 
 import java.io.IOException;
-import java.util.Locale;
 import java.util.Map;
 
 import com.google.common.base.Preconditions;
@@ -31,18 +30,15 @@ import org.apache.hadoop.mapreduce.lib.map.KijiMultithreadedMapper;
 import org.apache.hadoop.util.ReflectionUtils;
 
 import org.kiji.mapreduce.mapper.ProduceMapper;
-import org.kiji.mapreduce.output.KijiHFileOutputFormat;
 import org.kiji.mapreduce.output.KijiTableMapReduceJobOutput;
 import org.kiji.mapreduce.reducer.IdentityReducer;
 import org.kiji.mapreduce.util.KijiProducers;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.InternalKijiError;
-import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.layout.InvalidLayoutException;
 import org.kiji.schema.layout.KijiTableLayout;
-import org.kiji.schema.layout.KijiTableLayout.LocalityGroupLayout;
 
 /** Builds jobs that run a producer over a Kiji table. */
 public class KijiProduceJobBuilder extends KijiTableInputJobBuilder<KijiProduceJobBuilder> {
@@ -130,15 +126,6 @@ public class KijiProduceJobBuilder extends KijiTableInputJobBuilder<KijiProduceJ
     // Producers should output to HFiles.
     mMapper = new ProduceMapper();
     mReducer = new IdentityReducer<Object, Object>();
-
-    // Set the compression type for the generated HFiles to match the target locality group.
-    final String outputColumn = mProducer.getOutputColumn();
-    final LocalityGroupLayout targetLocalityGroup =
-        getTableLayout()
-        .getFamilyMap().get(new KijiColumnName(outputColumn).getFamily())
-        .getLocalityGroup();
-    conf.set(KijiHFileOutputFormat.CONF_HFILE_COMPRESSION,
-        targetLocalityGroup.getDesc().getCompressionType().name().toLowerCase(Locale.US));
 
     job.setJobName("Kiji produce: " + mProducerClass.getSimpleName());
 

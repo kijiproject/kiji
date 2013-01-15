@@ -22,34 +22,36 @@ package org.kiji.mapreduce.context;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HConstants;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.TaskInputOutputContext;
 
+import org.kiji.mapreduce.HFileKeyValue;
 import org.kiji.mapreduce.KijiConfKeys;
 import org.kiji.mapreduce.KijiTableContext;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.EntityIdFactory;
+import org.kiji.schema.HBaseColumnName;
 import org.kiji.schema.Kiji;
-import org.kiji.schema.KijiPutter;
+import org.kiji.schema.KijiCellEncoder;
+import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;
-import org.kiji.schema.KijiURIException;
+import org.kiji.schema.impl.DefaultKijiCellEncoderFactory;
+import org.kiji.schema.layout.ColumnNameTranslator;
+import org.kiji.schema.layout.impl.CellSpec;
 
-/**
- * Kiji context that to write cells to a configured output table.
- *
- * <p> Implemented as direct writes sent to the HTable.
- *
- * <p> Using this table writer context in a MapReduce is strongly discouraged :
- * pushing a lot of data into a running HBase instance may trigger region splits
- * and cause the HBase instance to go offline.
- */
-public class DirectKijiTableWriterContext
+/** Kiji context that emits puts for the configured output table to HFiles. */
+public class HFileWriterContext
     extends InternalKijiContext
     implements KijiTableContext {
 
+  /** NullWritable shortcut. */
+  private static final NullWritable NULL = NullWritable.get();
+
   private final Kiji mKiji;
   private final KijiTable mTable;
-  private final KijiPutter mPutter;
+  private final ColumnNameTranslator mColumnNameTranslator;
   private final EntityIdFactory mEntityIdFactory;
 
   /**
@@ -58,14 +60,14 @@ public class DirectKijiTableWriterContext
    * @param hadoopContext Underlying Hadoop context.
    * @throws IOException on I/O error.
    */
-  public DirectKijiTableWriterContext(TaskInputOutputContext<?, ?, ?, ?> hadoopContext)
+  public HFileWriterContext(TaskInputOutputContext<?, ?, ?, ?> hadoopContext)
       throws IOException {
     super(hadoopContext);
     final Configuration conf = new Configuration(hadoopContext.getConfiguration());
     final KijiURI outputURI = getOutputURI(conf);
     mKiji = Kiji.open(outputURI, conf);
     mTable = mKiji.openTable(outputURI.getTable());
-    mPutter = mTable.openTableWriter();
+    mColumnNameTranslator = new ColumnNameTranslator(mTable.getLayout());
     mEntityIdFactory = mTable.getEntityIdFactory();
   }
 
@@ -73,14 +75,29 @@ public class DirectKijiTableWriterContext
   @Override
   public <T> void put(EntityId entityId, String family, String qualifier, T value)
       throws IOException {
-    mPutter.put(entityId, family, qualifier, value);
+    put(entityId, family, qualifier, HConstants.LATEST_TIMESTAMP, value);
   }
 
   /** {@inheritDoc} */
   @Override
   public <T> void put(EntityId entityId, String family, String qualifier, long timestamp, T value)
       throws IOException {
-    mPutter.put(entityId, family, qualifier, timestamp, value);
+    final KijiColumnName kijiColumn = new KijiColumnName(family, qualifier);
+    final HBaseColumnName hbaseColumn = mColumnNameTranslator.toHBaseColumnName(kijiColumn);
+    final CellSpec cellSpec = mTable.getLayout().getCellSpec(kijiColumn)
+        .setSchemaTable(mKiji.getSchemaTable());
+    final KijiCellEncoder encoder = DefaultKijiCellEncoderFactory.get().create(cellSpec);
+    final HFileKeyValue mrKey = new HFileKeyValue(
+        entityId.getHBaseRowKey(),
+        hbaseColumn.getFamily(),
+        hbaseColumn.getQualifier(),
+        timestamp,
+        encoder.encode(value));
+    try {
+      getMapReduceContext().write(mrKey, NULL);
+    } catch (InterruptedException ie) {
+      throw new IOException(ie);
+    }
   }
 
   /** {@inheritDoc} */
@@ -89,17 +106,8 @@ public class DirectKijiTableWriterContext
     return mEntityIdFactory.fromKijiRowKey(key);
   }
 
-  /** {@inheritDoc} */
-  @Override
-  public void flush() throws IOException {
-    mPutter.flush();
-    super.flush();
-  }
-
-  /** {@inheritDoc} */
   @Override
   public void close() throws IOException {
-    mPutter.close();
     mTable.close();
     mKiji.close();
     super.close();
@@ -113,10 +121,6 @@ public class DirectKijiTableWriterContext
    * @throws IOException on I/O error.
    */
   private static KijiURI getOutputURI(Configuration conf) throws IOException {
-    try {
-      return KijiURI.parse(conf.get(KijiConfKeys.OUTPUT_KIJI_TABLE_URI));
-    } catch (KijiURIException kue) {
-      throw new IOException(kue);
-    }
+    return KijiURI.parse(conf.get(KijiConfKeys.OUTPUT_KIJI_TABLE_URI));
   }
 }

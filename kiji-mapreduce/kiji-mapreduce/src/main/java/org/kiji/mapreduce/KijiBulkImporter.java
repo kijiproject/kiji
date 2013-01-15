@@ -100,14 +100,6 @@ public abstract class KijiBulkImporter<K, V>
   }
 
   /**
-   * @return the locality group to write to.
-   * @deprecated the need to specify an output locality group will disappear once the
-   *     KijiHFileOutputFormat has been fixed so that it can write multiple locality groups.
-   */
-  @Deprecated
-  public abstract String getLocalityGroup();
-
-  /**
    * Called once to initialize this producer before any calls to
    * {@link #produce(Object, Object, Context)}.
    *

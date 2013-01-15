@@ -101,22 +101,6 @@ public class TestBinaryHTableBulkImporter {
 
     BinaryHTableBulkImporter importer = new BinaryHTableBulkImporter();
     importer.setConf(conf);
-
-    assertEquals("info", importer.getLocalityGroup());
-  }
-
-  @Test(expected=RuntimeException.class)
-  public void testGetOutputColumnMultipleFamilies() throws IOException {
-    Configuration conf = new Configuration();
-    conf.set(BinaryHTableBulkImporter.CONF_COLUMN_DESCRIPTORS,
-        "foo:bar:int:info:id,foo:baz:string:another:name");
-
-    BinaryHTableBulkImporter importer = new BinaryHTableBulkImporter();
-    importer.setConf(conf);
-
-    // This should throw an exception because writing to family "info" and "another" is
-    // not allowed -- only one column family may be written to at a time.
-    importer.getLocalityGroup();
   }
 
   @Test

@@ -172,12 +172,6 @@ public abstract class DescribedInputTextBulkImporter extends BaseTextBulkImporte
     return mOutputLocalityGroup;
   }
 
-  /** {@inheritDoc} */
-  @Override
-  public String getLocalityGroup() {
-    return mLocalityGroup;
-  }
-
   /**
    * Returns a List of ColumnInfo, from a list of QualifierInfo and a family.
    *
