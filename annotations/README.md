@@ -17,3 +17,5 @@ For more information, see the Javadoc comments for our existing annotations:
   annotations](https://github.com/kijiproject/annotations/blob/master/src/main/java/org/kiji/annotations/ApiAudience.java)
 * [API stability
 annotations](https://github.com/kijiproject/annotations/blob/master/src/main/java/org/kiji/annotations/ApiStability.java)
+* [API inheritance
+  annotations](https://github.com/kijiproject/annotations/blob/master/src/main/java/org/kiji/annotations/Inheritance.java)
