@@ -23,6 +23,7 @@ import static org.apache.hadoop.hbase.util.Bytes.toBytes;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Map;
 
 import com.google.common.base.Preconditions;
@@ -82,7 +83,7 @@ public class KijiHFileOutputFormat
   @Override
   public RecordWriter<HFileKeyValue, NullWritable> getRecordWriter(TaskAttemptContext context)
       throws IOException {
-    return new TableRecordWriter(context);
+    return new TableRecordWriter(this, context);
   }
 
   /**
@@ -90,7 +91,7 @@ public class KijiHFileOutputFormat
    *
    * Dispatches records to the appropriate family record writer.
    */
-  private class TableRecordWriter
+  private static class TableRecordWriter
       extends RecordWriter<HFileKeyValue, NullWritable> {
 
     // ---------------------------------------------------------------------------------------------
@@ -168,7 +169,7 @@ public class KijiHFileOutputFormat
 
         mCompressionType =
             Compression.getCompressionAlgorithmByName(
-                mLGLayout.getDesc().getCompressionType().toString().toLowerCase());
+                mLGLayout.getDesc().getCompressionType().toString().toLowerCase(Locale.ROOT));
 
         mWriter = openNewWriter();
       }
@@ -224,7 +225,6 @@ public class KijiHFileOutputFormat
         }
         final Path hfilePath = new Path(familyDirectory, String.format("%05d", mHFileCounter));
         mHFileCounter += 1;
-        // final Path hfilePath = StoreFile.getUniqueFile(mFileSystem, familyDirectory);
 
         // Create the writer.
         LOG.info("Opening HFile.Writer for family " + mFamily + " at " + hfilePath);
@@ -284,16 +284,18 @@ public class KijiHFileOutputFormat
     /**
      * Initializes a new table-wide record writer.
      *
+     * @param oformat KijiHFileOutputFormat this writer is built from.
      * @param context Context of the task.
      * @throws IOException on I/O error.
      */
-    public TableRecordWriter(TaskAttemptContext context) throws IOException {
+    public TableRecordWriter(KijiHFileOutputFormat oformat, TaskAttemptContext context)
+        throws IOException {
       mContext = Preconditions.checkNotNull(context);
       mConf = mContext.getConfiguration();
       mLatestTimestamp = mConf.getLong(CONF_LATEST_TIMESTAMP, System.currentTimeMillis());
       mLatestTimestampBytes = toBytes(mLatestTimestamp);
 
-      mOutputDir = getDefaultWorkFile(mContext, OUTPUT_EXTENSION);
+      mOutputDir = oformat.getDefaultWorkFile(mContext, OUTPUT_EXTENSION);
       mFileSystem = mOutputDir.getFileSystem(mConf);
 
       mTableURI = KijiURI.parse(mConf.get(KijiConfKeys.OUTPUT_KIJI_TABLE_URI));
