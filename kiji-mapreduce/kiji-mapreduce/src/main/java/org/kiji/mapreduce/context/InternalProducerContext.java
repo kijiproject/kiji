@@ -27,19 +27,24 @@ import org.apache.hadoop.mapreduce.TaskInputOutputContext;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.InternalProducerContextInterface;
+import org.kiji.mapreduce.KijiTableContext;
+import org.kiji.mapreduce.KijiTableContextFactory;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiColumnName;
-import org.kiji.schema.KijiPutter;
 import org.kiji.schema.KijiRowData;
 
-/** Implementation of a producer context. */
+/**
+ * Implementation of a producer context.
+ *
+ * Wraps a full KijiTableContext and restricts it to puts allowed in a producer.
+ */
 @ApiAudience.Private
 public class InternalProducerContext
     extends InternalKijiContext
     implements InternalProducerContextInterface {
 
   /** Interface to write to the output table. */
-  private final KijiPutter mPutter;
+  private final KijiTableContext mTableContext;
 
   /** Family to write to. */
   private final String mFamily;
@@ -53,18 +58,16 @@ public class InternalProducerContext
   /**
    * Initializes a producer context.
    *
-   * @param context Underlying Hadoop context.
-   * @param putter Putter to write to the table.
+   * @param taskContext Underlying Hadoop context.
    * @param outputColumn Column to write.
    * @throws IOException on I/O error.
    */
   public InternalProducerContext(
-      TaskInputOutputContext<EntityId, KijiRowData, ?, ?> context,
-      KijiPutter putter,
+      TaskInputOutputContext<EntityId, KijiRowData, ?, ?> taskContext,
       KijiColumnName outputColumn)
       throws IOException {
-    super(context);
-    mPutter = Preconditions.checkNotNull(putter);
+    super(taskContext);
+    mTableContext = KijiTableContextFactory.create(taskContext);
     mFamily = Preconditions.checkNotNull(outputColumn.getFamily());
     mQualifier = outputColumn.getQualifier();
   }
@@ -103,7 +106,7 @@ public class InternalProducerContext
     Preconditions.checkNotNull(mEntityId);
     Preconditions.checkNotNull(mQualifier,
         "Producer output configured for a map-type family, use put(qualifier, timestamp, value)");
-    mPutter.put(mEntityId, mFamily, mQualifier, timestamp, value);
+    mTableContext.put(mEntityId, mFamily, mQualifier, timestamp, value);
   }
 
   /** {@inheritDoc} */
@@ -114,6 +117,20 @@ public class InternalProducerContext
     Preconditions.checkState(null == mQualifier,
         "Qualifier already specified by producer configuration.");
 
-    mPutter.put(mEntityId, mFamily, qualifier, timestamp, value);
+    mTableContext.put(mEntityId, mFamily, qualifier, timestamp, value);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public void flush() throws IOException {
+    mTableContext.flush();
+    super.flush();
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public void close() throws IOException {
+    mTableContext.close();
+    super.close();
   }
 }

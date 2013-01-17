@@ -132,7 +132,7 @@ public class KijiBulkImportJobBuilder extends KijiMapReduceJobBuilder<KijiBulkIm
    */
   protected void configureJobForHFileOutput(Job job) {
     // Construct the mapper instance that runs the importer.
-    mMapper = new BulkImportMapper<Object, Object, Object, Object>();
+    mMapper = new BulkImportMapper<Object, Object>();
 
     // Don't need to do anything during the Reducer, but we need to run the reduce phase
     // so the KeyValue records output from the map phase get sorted.

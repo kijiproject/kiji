@@ -34,8 +34,6 @@ import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.KijiDataRequester;
 import org.kiji.mapreduce.KijiMapper;
 import org.kiji.schema.EntityId;
-import org.kiji.schema.Kiji;
-import org.kiji.schema.KijiConfiguration;
 import org.kiji.schema.KijiRowData;
 
 /**
@@ -64,18 +62,6 @@ public abstract class KijiTableMapper<K, V>
   protected abstract void map(KijiRowData input, Context context)
       throws IOException;
 
-  /**
-   * Creates the connection to the kiji instance. This serves as a dependency injection
-   * point for unit testing with a mock kiji instance.
-   *
-   * @param kijiConf Kiji configuration.
-   * @return a new kiji connection.
-   * @throws IOException on I/O error.
-   */
-  protected Kiji createKiji(KijiConfiguration kijiConf) throws IOException {
-    return Kiji.open(kijiConf);
-  }
-
   /** {@inheritDoc} */
   @Override
   protected void setup(Context context) throws IOException {
@@ -91,12 +77,13 @@ public abstract class KijiTableMapper<K, V>
     }
   }
 
+  /** {@inheritDoc} */
   @Override
-  protected void map(EntityId key, KijiRowData values, Context context)
-      throws IOException, InterruptedException {
+  protected void map(EntityId key, KijiRowData values, Context context) throws IOException {
     map(values, context);
   }
 
+  /** {@inheritDoc} */
   @Override
   protected void cleanup(Context context) throws IOException {
     if (context.getInputSplit() instanceof TableSplit) {

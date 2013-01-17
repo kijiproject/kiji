@@ -31,6 +31,9 @@ public final class KijiConfKeys {
   /** URI of the output Kiji table to write to. */
   public static final String OUTPUT_KIJI_TABLE_URI = "kiji.output.table.uri";
 
+  /** Name of the KijiTableContext class to use. */
+  public static final String KIJI_TABLE_CONTEXT_CLASS = "kiji.table.context.class";
+
   /** Serialized input data request. */
   public static final String INPUT_DATA_REQUEST = "kiji.input.request";
 

@@ -21,6 +21,7 @@ package org.kiji.mapreduce.output;
 
 import java.io.IOException;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.OutputFormat;
@@ -28,11 +29,21 @@ import org.apache.hadoop.mapreduce.lib.output.NullOutputFormat;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.KijiConfKeys;
+import org.kiji.mapreduce.KijiTableContext;
 import org.kiji.mapreduce.MapReduceJobOutput;
+import org.kiji.mapreduce.context.DirectKijiTableWriterContext;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiTable;
 
-/** A MapReduce job output that writes to a Kiji table. */
+/**
+ * MapReduce job output configuration that directly writes to a Kiji table.
+ *
+ * Use of this job output configuration is discouraged for many reasons:
+ *  <li> It may induce a very high load on the target HBase cluster.
+ *  <li> It may result in partial writes (eg. if the job fails half through).
+ *
+ * The recommended way to write to HBase tables is through the {@link HFileMapReduceJobOutput}.
+ */
 @ApiAudience.Public
 public class KijiTableMapReduceJobOutput extends MapReduceJobOutput {
 
@@ -70,23 +81,31 @@ public class KijiTableMapReduceJobOutput extends MapReduceJobOutput {
   /** {@inheritDoc} */
   @Override
   public void configure(Job job) throws IOException {
+    // Do not invoke super.configure(job) since getOutputFormatClass() is not supported!
+    final Configuration conf = job.getConfiguration();
     final Kiji kiji = mTable.getKiji();
 
-    job.getConfiguration().set(
+    conf.set(
         KijiConfKeys.OUTPUT_KIJI_TABLE_URI, String.format("kiji://%s:%s/%s/%s",
-            job.getConfiguration().get(HConstants.ZOOKEEPER_QUORUM),
-            job.getConfiguration().getInt(HConstants.ZOOKEEPER_CLIENT_PORT,
-                HConstants.DEFAULT_ZOOKEPER_CLIENT_PORT),
+            conf.get(HConstants.ZOOKEEPER_QUORUM),
+            conf.getInt(HConstants.ZOOKEEPER_CLIENT_PORT, HConstants.DEFAULT_ZOOKEPER_CLIENT_PORT),
             kiji.getName(),
             mTable.getName()));
 
-    // For direct HTable writes, there is no MapReduce output:
+    // Hadoop output format:
     job.setOutputFormatClass(NullOutputFormat.class);
+
+    // Kiji table context:
+    conf.setClass(
+        KijiConfKeys.KIJI_TABLE_CONTEXT_CLASS,
+        DirectKijiTableWriterContext.class,
+        KijiTableContext.class);
+
     job.setNumReduceTasks(mNumReduceTasks);
 
     // Since there's no "commit" operation for an entire map task writing to a
     // Kiji table, do not use speculative execution when writing directly to a Kiji table.
-    job.getConfiguration().setBoolean("mapred.map.tasks.speculative.execution", false);
+    conf.setBoolean("mapred.map.tasks.speculative.execution", false);
   }
 
   /** {@inheritDoc} */

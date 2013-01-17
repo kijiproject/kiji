@@ -40,11 +40,11 @@ import org.kiji.mapreduce.JobHistoryCounters;
 import org.kiji.mapreduce.KijiBulkImporter;
 import org.kiji.mapreduce.KijiMapper;
 import org.kiji.mapreduce.KijiTableContext;
-import org.kiji.mapreduce.context.DirectKijiTableWriterContext;
+import org.kiji.mapreduce.KijiTableContextFactory;
 import org.kiji.mapreduce.util.KijiBulkImporters;
 
 /**
- * A mapper that runs a KijiBulkImporter instance inside its map phase.
+ * Hadoop mapper that runs a KijiBulkImporter.
  *
  * <p>The input to this mapper depends on the format of the data being imported.  For
  * example, if you were importing data from text files using a TextInputFormat, the
@@ -63,54 +63,29 @@ import org.kiji.mapreduce.util.KijiBulkImporters;
  * of a Kiji table.  When run as a map-only job with an HBase TableOutputFormat, the Puts
  * will be sent directly to the HTable for committing.</p>
  *
- * <h1>Usage:</h1>
- * <p><code>setConf()</code> must be called immediately after instantiation.</p>
- *
- * <h1>Configuration:</h1>
- * <ul>
- *   <li><tt>kiji.bulk.import.output.column</tt> (required)
- *       - Specifies the family or fully qualified column to write to.</li>
- *   <li><tt>kiji.bulk.import.enable.dry.run</tt> (optional)
- *       - If set to "true", no writes are generated from this job.
- *       Otherwise, this job completes normally (logging and incrementing counters).
- *       This is useful for verifying that data will import as expected.</li>
- * </ul>
- *
- * @param <INKEY> The type of the MapReduce input key, which depends on the input format.
- * @param <INVALUE> The type of the MapReduce input value, which depends on the input format.
- * @param <OUTKEY> The type of the MapReduce output key, which depends on the output format.
- * @param <OUTVALUE> The type of the MapReduce output value, which depends on the output format.
+ * @param <K> Type of the MapReduce input key.
+ * @param <V> Type of the MapReduce input value.
  */
 @ApiAudience.Private
-public class BulkImportMapper<INKEY, INVALUE, OUTKEY, OUTVALUE>
-    extends Mapper<INKEY, INVALUE, OUTKEY, OUTVALUE>
+public class BulkImportMapper<K, V>
+    extends Mapper<K, V, HFileKeyValue, NullWritable>
     implements Configurable, AvroKeyReader, AvroValueReader, HTableReader, KijiMapper {
 
   private static final Logger LOG = LoggerFactory.getLogger(BulkImportMapper.class);
-
-  /** Configuration variable that stores whether this should be executed as a dry run. */
-  public static final String CONF_DRY_RUN_ENABLED = "kiji.bulk.import.enable.dry.run";
 
   /** The job configuration. */
   private Configuration mConf;
 
   /** The KijiBulkImporter instance to delegate the import work to. */
-  private KijiBulkImporter<INKEY, INVALUE> mBulkImporter;
+  private KijiBulkImporter<K, V> mBulkImporter;
 
   /** Kiji context for bulk-importers. */
   private KijiTableContext mTableContext;
-
-  /** True if this should be a dry-run where no data is imported to kiji.  Set by setConf(). */
-  private boolean mDryRunEnabled = false;
 
   /** {@inheritDoc} */
   @Override
   public void setConf(Configuration conf) {
     mConf = conf;
-    mDryRunEnabled = conf.getBoolean(CONF_DRY_RUN_ENABLED, false);
-    if (mDryRunEnabled) {
-      LOG.info("Dry-run enabled.  No data will be written as a result of this job.");
-    }
   }
 
   /** {@inheritDoc} */
@@ -127,30 +102,19 @@ public class BulkImportMapper<INKEY, INVALUE, OUTKEY, OUTVALUE>
     } catch (InterruptedException ie) {
       throw new IOException(ie);
     }
-    final Configuration conf = context.getConfiguration();
 
+    final Configuration conf = context.getConfiguration();
     mBulkImporter = KijiBulkImporters.create(conf);
-    mTableContext = new DirectKijiTableWriterContext(context);
+    mTableContext = KijiTableContextFactory.create(context);
 
     mBulkImporter.setup(mTableContext);
   }
 
   @Override
-  protected void map(INKEY key, INVALUE value, Context mapContext)
+  protected void map(K key, V value, Context mapContext)
       throws IOException {
     mBulkImporter.produce(key, value, mTableContext);
     mapContext.getCounter(JobHistoryCounters.BULKIMPORTER_RECORDS_PROCESSED).increment(1);
-  }
-
-  /**
-   * Returns whether this bulk import should be executed as a dry-run.
-   * If true, no writes will be produced, although logging and counters will
-   * operate as usual.  If false (default), writes will be generated as expected.
-   *
-   * @return Whether this bulk import should be executed as a dry run.
-   */
-  protected boolean isDryRunEnabled() {
-    return mDryRunEnabled;
   }
 
   /** {@inheritDoc} */
@@ -169,7 +133,7 @@ public class BulkImportMapper<INKEY, INVALUE, OUTKEY, OUTVALUE>
   /** {@inheritDoc} */
   @Override
   public Schema getAvroKeyReaderSchema() throws IOException {
-    KijiBulkImporter<INKEY, INVALUE> bulkImporter = KijiBulkImporters.create(getConf());
+    KijiBulkImporter<K, V> bulkImporter = KijiBulkImporters.create(getConf());
     if (bulkImporter instanceof AvroKeyReader) {
       LOG.debug("Bulk importer " + bulkImporter.getClass().getName()
           + " implements AvroKeyReader, querying for reader schema.");
@@ -181,7 +145,7 @@ public class BulkImportMapper<INKEY, INVALUE, OUTKEY, OUTVALUE>
   /** {@inheritDoc} */
   @Override
   public Schema getAvroValueReaderSchema() throws IOException {
-    KijiBulkImporter<INKEY, INVALUE> bulkImporter = KijiBulkImporters.create(getConf());
+    KijiBulkImporter<K, V> bulkImporter = KijiBulkImporters.create(getConf());
     if (bulkImporter instanceof AvroValueReader) {
       LOG.debug("Bulk importer " + bulkImporter.getClass().getName()
           + " implements AvroValueReader, querying for reader schema.");
@@ -193,7 +157,7 @@ public class BulkImportMapper<INKEY, INVALUE, OUTKEY, OUTVALUE>
   /** {@inheritDoc} */
   @Override
   public Scan getInputHTableScan(Configuration conf) throws IOException {
-    KijiBulkImporter<INKEY, INVALUE> bulkImporter = KijiBulkImporters.create(conf);
+    KijiBulkImporter<K, V> bulkImporter = KijiBulkImporters.create(conf);
     if (bulkImporter instanceof HTableReader) {
       LOG.debug("Bulk importer " + bulkImporter.getClass().getName()
           + " implements HTableReader, querying for input HTable Scan specification.");

@@ -41,7 +41,16 @@ import org.kiji.schema.impl.DefaultKijiCellEncoderFactory;
 import org.kiji.schema.layout.ColumnNameTranslator;
 import org.kiji.schema.layout.impl.CellSpec;
 
-/** Kiji context that emits puts for the configured output table to HFiles. */
+/**
+ * Kiji context that emits puts for the configured output table to HFiles.
+ *
+ * This is the recommended way for writing to an HBase table.
+ *  <li> This context provides some level of atomicity and isolation
+ *       (no partial writes to the table while the M/R job runs, or if the M/R job fails).
+ *  <li> Region servers are not hammered but a sustained stream of puts while the M/R job.
+ *  <li> After the M/R job completed successfully, the output is committed to the HBase table
+ *       using the HFileLoader.
+ */
 public class HFileWriterContext
     extends InternalKijiContext
     implements KijiTableContext {
@@ -64,7 +73,7 @@ public class HFileWriterContext
       throws IOException {
     super(hadoopContext);
     final Configuration conf = new Configuration(hadoopContext.getConfiguration());
-    final KijiURI outputURI = getOutputURI(conf);
+    final KijiURI outputURI = KijiURI.parse(conf.get(KijiConfKeys.OUTPUT_KIJI_TABLE_URI));
     mKiji = Kiji.open(outputURI, conf);
     mTable = mKiji.openTable(outputURI.getTable());
     mColumnNameTranslator = new ColumnNameTranslator(mTable.getLayout());
@@ -111,16 +120,5 @@ public class HFileWriterContext
     mTable.close();
     mKiji.close();
     super.close();
-  }
-
-  /**
-   * Reports the URI of the configured output table.
-   *
-   * @param conf Read the output URI from this configuration.
-   * @return the configured output URI.
-   * @throws IOException on I/O error.
-   */
-  private static KijiURI getOutputURI(Configuration conf) throws IOException {
-    return KijiURI.parse(conf.get(KijiConfKeys.OUTPUT_KIJI_TABLE_URI));
   }
 }

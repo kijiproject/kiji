@@ -47,12 +47,15 @@ import org.slf4j.LoggerFactory;
 import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.HFileKeyValue;
 import org.kiji.mapreduce.JobConfigurationException;
+import org.kiji.mapreduce.KijiConfKeys;
+import org.kiji.mapreduce.KijiTableContext;
+import org.kiji.mapreduce.context.HFileWriterContext;
 import org.kiji.schema.KijiRowKeySplitter;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.impl.HBaseKijiTable;
 
 /**
- * MapReduce job output that is stored in HFiles (the backing store files for HBase regions).
+ * MapReduce output configuration for Kiji jobs that generate HFiles.
  *
  * <p>The generated HFiles can be directly loaded into the regions of an existing HTable.
  * Use a {@link org.kiji.mapreduce.HFileLoader} to load HFiles into a Kiji table.</p>
@@ -111,15 +114,22 @@ public class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
   @Override
   public void configure(Job job) throws IOException {
     super.configure(job);
+    final Configuration conf = job.getConfiguration();
 
     // Set the output path.
     FileOutputFormat.setOutputPath(job, mPath);
 
-    // Configure the output format.
+    // Hadoop output format:
     job.setOutputFormatClass(KijiHFileOutputFormat.class);
 
+    // Kiji table context:
+    conf.setClass(
+        KijiConfKeys.KIJI_TABLE_CONTEXT_CLASS,
+        HFileWriterContext.class,
+        KijiTableContext.class);
+
     // Configure the total order partitioner so generated HFile shards are contiguous and sorted.
-    HBaseKijiTable kijiTable = HBaseKijiTable.downcast(getTable());
+    final HBaseKijiTable kijiTable = HBaseKijiTable.downcast(getTable());
     if (NUM_SPLITS_AUTO == mNumSplits) {
       configurePartitioner(job, kijiTable.getHTable(), getRegionStartKeys(kijiTable.getHTable()));
     } else {
@@ -145,8 +155,7 @@ public class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
       configurePartitioner(job, kijiTable.getHTable(), generateEvenStartKeys(mNumSplits));
     }
 
-    // Add the HBase dependency jars to the distributed cache so they appear on the
-    // classpath of the tasks.
+    // Adds HBase dependency jars to the distributed cache so they appear on the task classpath:
     GenericTableMapReduceUtil.addAllDependencyJars(job);
   }
 

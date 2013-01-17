@@ -33,7 +33,6 @@ import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiPutter;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;
-import org.kiji.schema.KijiURIException;
 
 /**
  * Kiji context that writes cells to a configured output table.
@@ -64,7 +63,7 @@ public class DirectKijiTableWriterContext
       throws IOException {
     super(hadoopContext);
     final Configuration conf = new Configuration(hadoopContext.getConfiguration());
-    final KijiURI outputURI = getOutputURI(conf);
+    final KijiURI outputURI = KijiURI.parse(conf.get(KijiConfKeys.OUTPUT_KIJI_TABLE_URI));
     mKiji = Kiji.open(outputURI, conf);
     mTable = mKiji.openTable(outputURI.getTable());
     mPutter = mTable.openTableWriter();
@@ -105,20 +104,5 @@ public class DirectKijiTableWriterContext
     mTable.close();
     mKiji.close();
     super.close();
-  }
-
-  /**
-   * Reports the URI of the configured output table.
-   *
-   * @param conf Read the output URI from this configuration.
-   * @return the configured output URI.
-   * @throws IOException on I/O error.
-   */
-  private static KijiURI getOutputURI(Configuration conf) throws IOException {
-    try {
-      return KijiURI.parse(conf.get(KijiConfKeys.OUTPUT_KIJI_TABLE_URI));
-    } catch (KijiURIException kue) {
-      throw new IOException(kue);
-    }
   }
 }
