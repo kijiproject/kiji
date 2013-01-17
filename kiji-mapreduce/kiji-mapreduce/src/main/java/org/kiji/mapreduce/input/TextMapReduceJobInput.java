@@ -23,7 +23,10 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 
+import org.kiji.annotations.ApiAudience;
+
 /** Input for a map reduce job that is read from text files. */
+@ApiAudience.Public
 public class TextMapReduceJobInput extends FileMapReduceJobInput {
   /**
    * Creates a new <code>TextMapReduceJobInput</code> instance.

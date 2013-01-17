@@ -30,6 +30,7 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.KijiDataRequester;
 import org.kiji.mapreduce.KijiMapper;
 import org.kiji.schema.EntityId;
@@ -43,6 +44,7 @@ import org.kiji.schema.KijiRowData;
  * @param <K> Type of the MapReduce output key.
  * @param <V> Type of the MapReduce output value.
  */
+@ApiAudience.Private
 public abstract class KijiTableMapper<K, V>
     extends Mapper<EntityId, KijiRowData, K, V>
     implements Configurable, KijiMapper, KijiDataRequester {

@@ -25,6 +25,7 @@ import com.google.common.base.Preconditions;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.HFileKeyValue;
 import org.kiji.mapreduce.InternalProducerContextInterface;
 import org.kiji.mapreduce.JobConfigurationException;
@@ -48,6 +49,7 @@ import org.kiji.schema.KijiURIException;
  * @param <K> The type of the MapReduce output key.
  * @param <V> The type of the MapReduce output value.
  */
+@ApiAudience.Private
 public class ProduceMapper<K, V> extends KijiTableMapper<K, V> {
   /** Actual producer implementation. */
   private KijiProducer mProducer;

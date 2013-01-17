@@ -26,6 +26,7 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.common.flags.Flag;
 import org.kiji.common.flags.IllegalFlagValueException;
 import org.kiji.mapreduce.KijiProduceJobBuilder;
@@ -35,6 +36,7 @@ import org.kiji.mapreduce.output.KijiTableMapReduceJobOutput;
 import org.kiji.schema.tools.KijiToolLauncher;
 
 /** Program for running a Kiji producer in a MapReduce job. */
+@ApiAudience.Private
 public class KijiProduce extends KijiJobTool<KijiProduceJobBuilder> {
   private static final Logger LOG = LoggerFactory.getLogger(KijiProduce.class);
 

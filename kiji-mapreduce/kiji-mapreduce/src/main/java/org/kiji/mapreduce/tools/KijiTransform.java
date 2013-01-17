@@ -21,6 +21,7 @@ package org.kiji.mapreduce.tools;
 
 import java.io.IOException;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.common.flags.Flag;
 import org.kiji.mapreduce.KijiMapper;
 import org.kiji.mapreduce.KijiReducer;
@@ -29,6 +30,7 @@ import org.kiji.schema.KijiConfiguration;
 import org.kiji.schema.tools.KijiToolLauncher;
 
 /** Transforms data using a Kiji MapReduce job. */
+@ApiAudience.Private
 public class KijiTransform extends JobTool<KijiTransformJobBuilder> {
   @Flag(name="mapper", usage="Fully-qualified class name of the mapper to run")
   private String mMapperName = "";

@@ -19,7 +19,10 @@
 
 package org.kiji.mapreduce.tools;
 
+import org.kiji.annotations.ApiAudience;
+
 /** Thrown when a flag is required but not supplied by the user. */
+@ApiAudience.Framework
 public class RequiredFlagException extends Exception {
   /**
    * Creates a new <code>RequiredFlagException</code> instance.

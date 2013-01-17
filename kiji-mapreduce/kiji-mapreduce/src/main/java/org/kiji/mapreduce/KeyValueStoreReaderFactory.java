@@ -31,6 +31,8 @@ import org.apache.hadoop.util.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.annotations.ApiAudience;
+
 /**
  * Class that manages the creation of KeyValueStoreReaders associated
  * with a set of bound KeyValueStore name--instance pairs.
@@ -39,6 +41,7 @@ import org.slf4j.LoggerFactory;
  * if available, rather than creating a new store reader for a given named
  * store.</p>
  */
+@ApiAudience.Private
 public class KeyValueStoreReaderFactory implements Closeable {
   private static final Logger LOG = LoggerFactory.getLogger(
       KeyValueStoreReaderFactory.class.getName());

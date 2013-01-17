@@ -19,7 +19,10 @@
 
 package org.kiji.mapreduce;
 
+import org.kiji.annotations.ApiAudience;
+
 /** Configuration keys used by KijiMR in Hadoop Configuration objects. */
+@ApiAudience.Framework
 public final class KijiConfKeys {
 
   /** URI of the input table to read from. */

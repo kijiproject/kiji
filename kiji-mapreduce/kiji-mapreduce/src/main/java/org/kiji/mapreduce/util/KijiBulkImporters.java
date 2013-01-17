@@ -24,9 +24,11 @@ import java.io.IOException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ReflectionUtils;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.KijiBulkImporter;
 
 /** Utility methods for working with <code>KijiBulkImporter</code>. */
+@ApiAudience.Private
 public final class KijiBulkImporters {
   /** Utility class. */
   private KijiBulkImporters() {}

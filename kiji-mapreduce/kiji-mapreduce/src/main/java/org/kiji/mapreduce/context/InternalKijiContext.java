@@ -23,11 +23,13 @@ import java.io.IOException;
 
 import org.apache.hadoop.mapreduce.TaskInputOutputContext;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.KeyValueStoreReader;
 import org.kiji.mapreduce.KeyValueStoreReaderFactory;
 import org.kiji.mapreduce.KijiContext;
 
 /** Implements KijiContext. */
+@ApiAudience.Private
 public class InternalKijiContext implements KijiContext {
   /** Underlying Hadoop context. */
   private final TaskInputOutputContext mHadoopContext;

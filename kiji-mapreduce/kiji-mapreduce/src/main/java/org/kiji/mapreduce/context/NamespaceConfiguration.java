@@ -21,6 +21,8 @@ package org.kiji.mapreduce.context;
 
 import org.apache.hadoop.conf.Configuration;
 
+import org.kiji.annotations.ApiAudience;
+
 /**
  * <p>A Configuration backed by a namespace in a parent
  * {@link org.apache.hadoop.conf.Configuration}.</p>
@@ -28,6 +30,7 @@ import org.apache.hadoop.conf.Configuration;
  * <p><code>setFoo("my-var", "my-val")</code> is equivalent to calling
  * <code>getDelegate().setFoo(getNamespace() + "my-var", "my-val")</code></p>.
  */
+@ApiAudience.Private
 public class NamespaceConfiguration {
   /** The parent Configuration to write to. */
   private final Configuration mDelegate;
@@ -36,7 +39,7 @@ public class NamespaceConfiguration {
 
   /**
    * Constructs a new NamespaceConfiguration that will read and write
-   * values to the parent Configuration, under the spacified namespace.
+   * values to the parent Configuration, under the specified namespace.
    *
    * @param parent The Configuration to back this NamespaceConfiguration.
    * @param namespace The namespace to write to.

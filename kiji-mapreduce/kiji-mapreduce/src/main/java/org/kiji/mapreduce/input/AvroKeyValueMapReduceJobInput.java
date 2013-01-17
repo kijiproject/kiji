@@ -22,12 +22,14 @@ package org.kiji.mapreduce.input;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.InputFormat;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.avro.mapreduce.AvroKeyValueInputFormat;
 
 /**
  * A MapReduce job input of Avro container files of generic records, where each entry has
  * a 'key' and a 'value' field.
  */
+@ApiAudience.Public
 public class AvroKeyValueMapReduceJobInput extends FileMapReduceJobInput {
   /**
    * Creates a new <code>AvroKeyValueMapReduceJobInput</code> instance.

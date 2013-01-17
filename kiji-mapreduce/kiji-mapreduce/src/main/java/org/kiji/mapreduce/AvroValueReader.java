@@ -23,11 +23,14 @@ import java.io.IOException;
 
 import org.apache.avro.Schema;
 
+import org.kiji.annotations.ApiAudience;
+
 /**
  * Kiji analytic functions (mappers, reducers, producer, gatherers, etc.) that read
  * {@link org.apache.avro.mapred.AvroValue} objects are required to implement this interface
  * as a means of specifying the Avro reader schema for their input value data.
  */
+@ApiAudience.Public
 public interface AvroValueReader {
   /**
    * If the input value class is {@link org.apache.avro.mapred.AvroValue}, this method

@@ -21,7 +21,10 @@ package org.kiji.mapreduce;
 
 import org.apache.hadoop.mapreduce.Job;
 
+import org.kiji.annotations.ApiAudience;
+
 /** Internal implementation of a runnable Kiji MapReduce job. */
+@ApiAudience.Private
 public class InternalMapReduceJob extends MapReduceJob {
   /**
    * Creates a new <code>InternalMapReduceJob</code> instance.

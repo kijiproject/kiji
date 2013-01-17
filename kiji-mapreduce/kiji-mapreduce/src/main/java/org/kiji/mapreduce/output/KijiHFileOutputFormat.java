@@ -43,6 +43,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.HFileKeyValue;
 import org.kiji.mapreduce.KijiConfKeys;
 import org.kiji.schema.Kiji;
@@ -64,9 +65,9 @@ import org.kiji.schema.layout.impl.ColumnId;
  *
  * <p>You may only write HFiles with a single column family at a time.</p>
  */
+@ApiAudience.Framework
 public class KijiHFileOutputFormat
     extends FileOutputFormat<HFileKeyValue, NullWritable> {
-
   private static final Logger LOG = LoggerFactory.getLogger(KijiHFileOutputFormat.class);
 
   public static final String OUTPUT_EXTENSION = ".hfile";

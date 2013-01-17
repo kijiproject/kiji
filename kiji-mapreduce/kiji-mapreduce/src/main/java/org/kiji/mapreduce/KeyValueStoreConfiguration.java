@@ -23,9 +23,11 @@ import java.util.Map.Entry;
 
 import org.apache.hadoop.conf.Configuration;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.context.NamespaceConfiguration;
 
 /** Used to serialize KeyValueStore information into a unique namespace. */
+@ApiAudience.Private
 public class KeyValueStoreConfiguration extends NamespaceConfiguration {
   /**
    * KeyValueStore definitions are serialized to the Configuration as a set of

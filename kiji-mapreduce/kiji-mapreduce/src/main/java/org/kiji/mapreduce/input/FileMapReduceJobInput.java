@@ -25,9 +25,11 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.MapReduceJobInput;
 
 /** Base class for map reduce job input that is read from files. */
+@ApiAudience.Public
 public abstract class FileMapReduceJobInput extends MapReduceJobInput {
   /** The path to the input files. */
   private final Path[] mPaths;

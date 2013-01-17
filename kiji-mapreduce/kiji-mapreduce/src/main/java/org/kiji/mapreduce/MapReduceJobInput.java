@@ -24,7 +24,10 @@ import java.io.IOException;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.Job;
 
+import org.kiji.annotations.ApiAudience;
+
 /** Base class for types of input to a MapReduce job. */
+@ApiAudience.Public
 public abstract class MapReduceJobInput {
   /**
    * Configure a job to use this type of input for the MapReduce.

@@ -24,6 +24,7 @@ import java.io.IOException;
 import org.apache.avro.Schema;
 import org.apache.avro.hadoop.io.AvroKeyValue;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.KeyValueStoreConfiguration;
 import org.kiji.mapreduce.KeyValueStoreReader;
 import org.kiji.mapreduce.kvstore.AvroKVRecordKeyValueArrayStore.AbstractOptions;
@@ -48,6 +49,7 @@ import org.kiji.mapreduce.kvstore.AvroKVRecordKeyValueArrayStore.AbstractOptions
  * @param <K> The type of the key field.
  * @param <V> The type of the value field.
  */
+@ApiAudience.Public
 public class AvroKVRecordKeyValueStore<K, V> extends FileKeyValueStore<K, V> {
   /** A wrapped store for looking up an Avro record by its 'key' field. */
   private final AvroKVRecordKeyValueArrayStore<K, V> mStore;

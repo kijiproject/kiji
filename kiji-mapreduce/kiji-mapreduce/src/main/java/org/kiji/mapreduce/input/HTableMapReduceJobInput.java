@@ -25,10 +25,12 @@ import org.apache.hadoop.hbase.mapreduce.TableInputFormat;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.Job;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.HTableInputFormat;
 import org.kiji.mapreduce.MapReduceJobInput;
 
 /** Job input that reads from an HTable (an HBase table). */
+@ApiAudience.Public
 public class HTableMapReduceJobInput extends MapReduceJobInput {
   /** The name of the HTable to use as job input. */
   private final String mTableName;

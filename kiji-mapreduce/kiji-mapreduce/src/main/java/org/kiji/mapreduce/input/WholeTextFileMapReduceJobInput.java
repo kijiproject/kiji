@@ -22,10 +22,13 @@ package org.kiji.mapreduce.input;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.InputFormat;
 
+import org.kiji.annotations.ApiAudience;
+
 /**
  * A job input for reading entire text files as the records to a map task.
  * A single map task will process each file under a specified Path.
  */
+@ApiAudience.Public
 public class WholeTextFileMapReduceJobInput extends FileMapReduceJobInput {
 
   /**

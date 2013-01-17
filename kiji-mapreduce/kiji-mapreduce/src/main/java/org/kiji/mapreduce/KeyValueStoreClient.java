@@ -21,6 +21,8 @@ package org.kiji.mapreduce;
 
 import java.util.Map;
 
+import org.kiji.annotations.ApiAudience;
+
 /**
  * <p>KeyValueStoreClient defines a mapping between store names and their
  * KeyValueStore implementations via the getRequiredStores() method.
@@ -35,6 +37,7 @@ import java.util.Map;
  * <p>How the KeyValueStores are surfaced to a KeyValueStoreClient is undefined.
  * Look to the implementing class for details on how these are surfaced.</p>
  */
+@ApiAudience.Public
 public interface KeyValueStoreClient {
   /**
    * <p>Returns a mapping that specifies the names of all key-value stores that must be loaded

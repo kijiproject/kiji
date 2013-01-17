@@ -21,6 +21,7 @@ package org.kiji.mapreduce.tools;
 
 import java.io.IOException;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.common.flags.Flag;
 import org.kiji.mapreduce.KijiGatherJobBuilder;
 import org.kiji.mapreduce.KijiGatherer;
@@ -28,6 +29,7 @@ import org.kiji.mapreduce.KijiReducer;
 import org.kiji.schema.tools.KijiToolLauncher;
 
 /** Command-line tool for running a KijiGatherer. */
+@ApiAudience.Private
 public class KijiGather extends KijiJobTool<KijiGatherJobBuilder> {
   @Flag(name="gatherer", usage="Fully-qualified class name of the gatherer to run")
   private String mGathererName = "";

@@ -22,6 +22,7 @@ package org.kiji.mapreduce.kvstore;
 import java.io.IOException;
 import java.util.List;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.KeyValueStoreReader;
 
 /**
@@ -34,6 +35,7 @@ import org.kiji.mapreduce.KeyValueStoreReader;
  * @param <K> the key type expected to be implemented by the keys to this reader.
  * @param <V> the value type expected to be accessed by keys in the reader.
  */
+@ApiAudience.Private
 public class AvroKVSingleValueReader<K, V> extends KeyValueStoreReader<K, V> {
   private KeyValueStoreReader<K, List<V>> mReader;
   /**

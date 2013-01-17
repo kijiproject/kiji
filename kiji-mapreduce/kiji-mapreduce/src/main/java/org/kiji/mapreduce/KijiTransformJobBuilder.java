@@ -29,9 +29,11 @@ import org.apache.hadoop.util.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.schema.KijiConfiguration;
 
 /** Builds a job that runs a MapReduce in Hadoop. */
+@ApiAudience.Public
 public class KijiTransformJobBuilder extends MapReduceJobBuilder<KijiTransformJobBuilder> {
   private static final Logger LOG = LoggerFactory.getLogger(KijiTransformJobBuilder.class);
 

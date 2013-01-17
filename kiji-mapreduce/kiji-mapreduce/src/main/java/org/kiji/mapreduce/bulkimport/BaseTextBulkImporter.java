@@ -26,6 +26,7 @@ import org.apache.hadoop.io.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.KijiBulkImporter;
 import org.kiji.mapreduce.KijiTableContext;
 
@@ -36,6 +37,7 @@ import org.kiji.mapreduce.KijiTableContext;
  * of writes to add to that entity.  Override the produce(String, Context)
  * method with this behavior.</p>
  */
+@ApiAudience.Public
 public abstract class BaseTextBulkImporter extends KijiBulkImporter<LongWritable, Text> {
   private static final Logger LOG = LoggerFactory.getLogger(BaseTextBulkImporter.class);
 

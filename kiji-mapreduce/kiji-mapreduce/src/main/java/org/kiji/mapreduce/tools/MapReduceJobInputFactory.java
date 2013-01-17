@@ -23,6 +23,7 @@ import java.util.Arrays;
 
 import org.apache.hadoop.fs.Path;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.MapReduceJobInput;
 import org.kiji.mapreduce.input.AvroKeyMapReduceJobInput;
 import org.kiji.mapreduce.input.AvroKeyValueMapReduceJobInput;
@@ -36,6 +37,7 @@ import org.kiji.mapreduce.input.WholeTextFileMapReduceJobInput;
  *
  * See {@link JobInputSpec} for the full inputspec specification.
  */
+@ApiAudience.Framework
 public class MapReduceJobInputFactory {
   /**
    * Creates a MapReduceJobInput from an inputspec string.

@@ -27,6 +27,7 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.common.flags.Flag;
 import org.kiji.mapreduce.KijiBulkImportJobBuilder;
 import org.kiji.mapreduce.KijiBulkImporter;
@@ -38,6 +39,7 @@ import org.kiji.schema.KijiTable;
 import org.kiji.schema.tools.KijiToolLauncher;
 
 /** Bulk imports a file into a Kiji table. */
+@ApiAudience.Private
 public class KijiBulkImport extends JobTool<KijiBulkImportJobBuilder> {
   private static final Logger LOG = LoggerFactory.getLogger(KijiBulkImport.class);
 

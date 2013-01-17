@@ -38,6 +38,7 @@ import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.KeyValueStore;
 import org.kiji.mapreduce.KeyValueStoreConfiguration;
 import org.kiji.mapreduce.util.Lists;
@@ -50,6 +51,7 @@ import org.kiji.mapreduce.util.Lists;
  * @param <K> the key type expected to be implemented by the keys to this store.
  * @param <V> the value type expected to be accessed by keys to this store.
  */
+@ApiAudience.Public
 public abstract class FileKeyValueArrayStore<K, V> extends KeyValueStore<K, List<V>>
     implements Configurable {
 

@@ -28,6 +28,7 @@ import org.apache.hadoop.hbase.TableNotFoundException;
 import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.mapreduce.LoadIncrementalHFiles;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.schema.InternalKijiError;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.impl.HBaseKijiTable;
@@ -37,6 +38,7 @@ import org.kiji.schema.impl.HBaseKijiTable;
  *
  * @see com.kijidata.core.client.KijiBulkImportJobBuilder
  */
+@ApiAudience.Public
 public class HFileLoader extends Configured {
   /**
    * Creates a new <code>HFileLoader</code> instance.

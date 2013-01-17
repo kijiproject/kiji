@@ -26,6 +26,7 @@ import org.apache.avro.Schema;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.KeyValueStore;
 import org.kiji.mapreduce.KeyValueStoreConfiguration;
 import org.kiji.mapreduce.KeyValueStoreReader;
@@ -71,6 +72,7 @@ import org.kiji.schema.KijiTableReader;
  *
  * @param <V> the value type returned by this key-value store.
  */
+@ApiAudience.Public
 public class KijiTableKeyValueStore<V> extends KeyValueStore<String, V> implements Configurable {
   // TODO(WIBI-1652): Add a flag that allows users to specify hex-strings (pre-hashed entity ids)
   // as keys instead of "vanilla" key strings.

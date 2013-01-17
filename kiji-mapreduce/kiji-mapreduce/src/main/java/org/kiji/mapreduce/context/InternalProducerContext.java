@@ -25,6 +25,7 @@ import com.google.common.base.Preconditions;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.mapreduce.TaskInputOutputContext;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.InternalProducerContextInterface;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiColumnName;
@@ -32,6 +33,7 @@ import org.kiji.schema.KijiPutter;
 import org.kiji.schema.KijiRowData;
 
 /** Implementation of a producer context. */
+@ApiAudience.Private
 public class InternalProducerContext
     extends InternalKijiContext
     implements InternalProducerContextInterface {

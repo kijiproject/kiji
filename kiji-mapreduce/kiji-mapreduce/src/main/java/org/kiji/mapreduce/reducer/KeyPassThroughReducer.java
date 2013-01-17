@@ -31,6 +31,7 @@ import org.apache.hadoop.util.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.AvroKeyWriter;
 import org.kiji.mapreduce.KijiBaseReducer;
 
@@ -42,6 +43,7 @@ import org.kiji.mapreduce.KijiBaseReducer;
  * @param <INVALUE> The input value type.
  * @param <OUTVALUE> The output value type.
  */
+@ApiAudience.Public
 public abstract class KeyPassThroughReducer<K, INVALUE, OUTVALUE>
     extends KijiBaseReducer<K, INVALUE, K, OUTVALUE>
     implements Configurable, AvroKeyWriter {

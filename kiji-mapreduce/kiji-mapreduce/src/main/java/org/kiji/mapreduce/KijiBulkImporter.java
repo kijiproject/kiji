@@ -26,6 +26,8 @@ import java.util.Map;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 
+import org.kiji.annotations.ApiAudience;
+
 /**
  * <p>Base class for all Kiji bulk importers.  Subclasses of KijiBulkImporter can be
  * passed to the --importer flag of a <code>kiji bulk-import</code> command.</p>
@@ -60,6 +62,7 @@ import org.apache.hadoop.conf.Configuration;
  * @param <K> The type of the MapReduce input key, which will depend on the input format used.
  * @param <V> The type of the MapReduce input value, which will depend on the input format used.
  */
+@ApiAudience.Public
 public abstract class KijiBulkImporter<K, V>
     implements Configurable, KeyValueStoreClient {
 

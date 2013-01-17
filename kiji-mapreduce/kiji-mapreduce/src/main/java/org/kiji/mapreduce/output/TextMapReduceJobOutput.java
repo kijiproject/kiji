@@ -23,7 +23,10 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.OutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
+import org.kiji.annotations.ApiAudience;
+
 /** A MapReduce job output of text files. */
+@ApiAudience.Public
 public class TextMapReduceJobOutput extends FileMapReduceJobOutput {
   /**
    * Creates a new <code>TextMapReduceJobOutput</code> instance.

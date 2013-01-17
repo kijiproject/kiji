@@ -28,6 +28,7 @@ import org.apache.hadoop.util.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.AvroKeyWriter;
 import org.kiji.mapreduce.AvroValueWriter;
 import org.kiji.mapreduce.JobHistoryCounters;
@@ -43,6 +44,7 @@ import org.kiji.schema.KijiRowData;
  * @param <K> The type of the MapReduce output key.
  * @param <V> The type of the MapReduce output value.
  */
+@ApiAudience.Private
 public class GatherMapper<K, V>
     extends KijiTableMapper<K, V>
     implements AvroKeyWriter, AvroValueWriter {

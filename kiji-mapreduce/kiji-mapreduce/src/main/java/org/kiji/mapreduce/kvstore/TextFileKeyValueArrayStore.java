@@ -31,6 +31,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.KeyValueStoreConfiguration;
 import org.kiji.mapreduce.KeyValueStoreReader;
 
@@ -69,6 +70,7 @@ import org.kiji.mapreduce.KeyValueStoreReader;
  * </ul>
  *
  */
+@ApiAudience.Public
 public class TextFileKeyValueArrayStore extends FileKeyValueArrayStore<String, String> {
 
   /** The KeyValueStoreConfiguration variable for the delimiter. */

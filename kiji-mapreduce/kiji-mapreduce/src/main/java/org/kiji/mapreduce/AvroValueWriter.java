@@ -23,11 +23,14 @@ import java.io.IOException;
 
 import org.apache.avro.Schema;
 
+import org.kiji.annotations.ApiAudience;
+
 /**
  * Kiji analytic functions (mappers, reducers, producer, gatherers, etc.) that output
  * {@link org.apache.avro.mapred.AvroValue} objects are required to implement this interface
  * as a means of specifying the Avro writer schema for their output value data.
  */
+@ApiAudience.Public
 public interface AvroValueWriter {
   /**
    * If the output key class is {@link org.apache.avro.mapred.AvroValue}, the Kiji framework

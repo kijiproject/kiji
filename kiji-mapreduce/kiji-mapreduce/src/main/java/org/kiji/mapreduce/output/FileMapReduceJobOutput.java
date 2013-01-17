@@ -25,9 +25,11 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.MapReduceJobOutput;
 
 /** Base class for MapReduce job output types that write to files. */
+@ApiAudience.Public
 public abstract class FileMapReduceJobOutput extends MapReduceJobOutput {
   /** The file system path for the output files. */
   private final Path mFilePath;

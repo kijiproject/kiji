@@ -22,9 +22,11 @@ package org.kiji.mapreduce.output;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.OutputFormat;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.avro.mapreduce.AvroSequenceFileOutputFormat;
 
 /** MapReduce job output that is written as sequence files. */
+@ApiAudience.Public
 public class SequenceFileMapReduceJobOutput extends FileMapReduceJobOutput {
   /**
    * Creates a new <code>SequenceFileMapReduceJobOutput</code> instance.

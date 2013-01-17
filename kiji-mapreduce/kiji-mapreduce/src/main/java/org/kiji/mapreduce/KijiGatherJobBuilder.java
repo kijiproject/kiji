@@ -26,6 +26,7 @@ import java.util.Map;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.util.ReflectionUtils;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.mapper.GatherMapper;
 import org.kiji.schema.KijiDataRequest;
 
@@ -44,6 +45,7 @@ import org.kiji.schema.KijiDataRequest;
  * </code></pre>
  */
 @SuppressWarnings("rawtypes")
+@ApiAudience.Public
 public class KijiGatherJobBuilder extends KijiTableInputJobBuilder<KijiGatherJobBuilder> {
   /** The class of the gatherer to run. */
   private Class<? extends KijiGatherer> mGathererClass;

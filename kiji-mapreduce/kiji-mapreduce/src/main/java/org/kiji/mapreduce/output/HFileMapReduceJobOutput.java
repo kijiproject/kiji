@@ -44,6 +44,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.HFileKeyValue;
 import org.kiji.mapreduce.JobConfigurationException;
 import org.kiji.schema.KijiRowKeySplitter;
@@ -56,6 +57,7 @@ import org.kiji.schema.impl.HBaseKijiTable;
  * <p>The generated HFiles can be directly loaded into the regions of an existing HTable.
  * Use a {@link org.kiji.mapreduce.HFileLoader} to load HFiles into a Kiji table.</p>
  */
+@ApiAudience.Public
 public class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
   private static final Logger LOG = LoggerFactory.getLogger(HFileMapReduceJobOutput.class);
 

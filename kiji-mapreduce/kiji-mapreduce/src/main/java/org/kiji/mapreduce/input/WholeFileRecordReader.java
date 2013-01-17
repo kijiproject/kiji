@@ -34,12 +34,15 @@ import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.annotations.ApiAudience;
+
 /**
  * <p>A RecordReader that reads an entire file as a single key-value.
  * The key is the qualified path to this file, and the value is the Text contents of the file.
  * This is intended for reading small files.
  * (Note that the entire file must be able to fit in ram)</p>
  */
+@ApiAudience.Private
 public class WholeFileRecordReader extends RecordReader<Text, Text> {
   private static final Logger LOG = LoggerFactory.getLogger(WholeFileRecordReader.class);
 

@@ -26,6 +26,8 @@ import java.util.TreeMap;
 
 import org.apache.avro.hadoop.util.AvroCharSequenceComparator;
 
+import org.kiji.annotations.ApiAudience;
+
 /**
  * A reader for Avro "map" data.
  *
@@ -50,6 +52,7 @@ import org.apache.avro.hadoop.util.AvroCharSequenceComparator;
  *
  * @param <V> The map's value type.
  */
+@ApiAudience.Public
 public class AvroMapReader<V> implements Map<CharSequence, V> {
   /** The wrapped Avro map to read. */
   private final Map<CharSequence, V> mMap;

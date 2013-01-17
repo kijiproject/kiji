@@ -24,6 +24,8 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
+import org.kiji.annotations.ApiAudience;
+
 /**
  * Describes the format and location for the output of a MapReduce job.
  *
@@ -35,6 +37,7 @@ import org.apache.commons.lang.StringUtils;
  * number or reducers.  When writing files, the number of sharded output files will
  * be equal to the number of reducers, since each reducer writes one shard.</p>
  */
+@ApiAudience.Framework
 public class JobOutputSpec {
   /**
    * The job output formats supported by Kiji.  In the string

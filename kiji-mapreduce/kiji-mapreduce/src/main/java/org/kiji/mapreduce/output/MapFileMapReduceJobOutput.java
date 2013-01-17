@@ -23,7 +23,10 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.OutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.MapFileOutputFormat;
 
+import org.kiji.annotations.ApiAudience;
+
 /** MapReduce job output that writes to map files (indexed sequence files). */
+@ApiAudience.Public
 public class MapFileMapReduceJobOutput extends FileMapReduceJobOutput {
   /**
    * Creates a new <code>MapFileMapReduceJobOutput</code> instance.

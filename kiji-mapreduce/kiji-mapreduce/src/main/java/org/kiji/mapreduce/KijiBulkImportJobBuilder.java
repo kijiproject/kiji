@@ -28,6 +28,7 @@ import org.apache.hadoop.util.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.mapper.BulkImportMapper;
 import org.kiji.mapreduce.output.KijiTableMapReduceJobOutput;
 import org.kiji.mapreduce.reducer.IdentityReducer;
@@ -37,6 +38,7 @@ import org.kiji.schema.impl.HBaseKijiTable;
 import org.kiji.schema.layout.KijiTableLayout;
 
 /** Builds a job that runs a KijiBulkImporter to import data into a Kiji table. */
+@ApiAudience.Public
 public class KijiBulkImportJobBuilder extends KijiMapReduceJobBuilder<KijiBulkImportJobBuilder> {
   private static final Logger LOG = LoggerFactory.getLogger(KijiBulkImportJobBuilder.class);
 

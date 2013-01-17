@@ -26,6 +26,7 @@ import java.util.Map;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 
@@ -68,6 +69,7 @@ import org.kiji.schema.KijiRowData;
  * getDataRequest() and getOutputColumn() have each been called at least once.
  * </p>
  */
+@ApiAudience.Public
 public abstract class KijiProducer
     implements Configurable, KijiDataRequester, KeyValueStoreClient {
 

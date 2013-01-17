@@ -26,7 +26,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.kiji.annotations.ApiAudience;
+
 /** A library of static List manipulation functions. */
+@ApiAudience.Private
 public final class Lists {
   /** Private constructor to prevent instantiation. */
   private Lists() {

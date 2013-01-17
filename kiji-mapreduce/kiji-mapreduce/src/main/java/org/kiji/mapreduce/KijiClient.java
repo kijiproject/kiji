@@ -19,6 +19,7 @@
 
 package org.kiji.mapreduce;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.schema.Kiji;
 
 /**
@@ -27,6 +28,7 @@ import org.kiji.schema.Kiji;
  * <p>This interface exposes a single method {@link KijiClient#setKiji(Kiji)} that serves
  * as a dependency-injection point for testing.</p>
  */
+@ApiAudience.Framework
 public interface KijiClient {
   /**
    * Sets the Kiji instance that should be used by the class.

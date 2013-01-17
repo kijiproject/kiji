@@ -27,11 +27,13 @@ import org.apache.hadoop.mapreduce.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.tools.KijiJobHistory;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiConfiguration;
 
 /** An implementation of a runnable MapReduce job that interacts with Kiji tables. */
+@ApiAudience.Framework
 public class KijiMapReduceJob extends InternalMapReduceJob {
   private static final Logger LOG = LoggerFactory.getLogger(KijiMapReduceJob.class);
 

@@ -45,6 +45,7 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
@@ -60,6 +61,7 @@ import org.kiji.schema.impl.HBaseKijiRowData;
 import org.kiji.schema.impl.HBaseKijiTable;
 
 /** InputFormat for Hadoop MapReduce jobs reading from a Kiji table. */
+@ApiAudience.Framework
 public class KijiTableInputFormat
     extends InputFormat<EntityId, KijiRowData>
     implements Configurable {

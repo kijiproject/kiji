@@ -36,6 +36,7 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.hadoop.configurator.HadoopConf;
 import org.kiji.hadoop.configurator.HadoopConfigurator;
 import org.kiji.mapreduce.KijiTableContext;
@@ -94,6 +95,7 @@ import org.kiji.schema.KijiColumnName;
  * class may be extended.  Subclasses may override the <code>decodeHBaseCell()</code>
  * method to customize how HBase cells are converted to Kiji cells.</p>
  */
+@ApiAudience.Public
 public class BinaryHTableBulkImporter extends HTableBulkImporter {
   private static final Logger LOG = LoggerFactory.getLogger(BinaryHTableBulkImporter.class);
 

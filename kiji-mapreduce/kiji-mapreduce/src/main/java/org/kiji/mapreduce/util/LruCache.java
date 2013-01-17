@@ -22,6 +22,8 @@ package org.kiji.mapreduce.util;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.kiji.annotations.ApiAudience;
+
 /**
  * LRU cache based on LinkedHashMap.
  *
@@ -33,6 +35,7 @@ import java.util.Map;
  * @param <V> the value type in the map.
  */
 @SuppressWarnings("serial")
+@ApiAudience.Private
 public class LruCache<K, V> extends LinkedHashMap<K, V> {
   // Code based on http://littletechsecrets.wordpress.com/2008/11/16/simple-lru-cache-in-java/
 

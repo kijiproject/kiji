@@ -24,6 +24,8 @@ import java.io.IOException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.Scan;
 
+import org.kiji.annotations.ApiAudience;
+
 /**
  * An interface for Kiji mappers or bulk importers that read from HBase HTables.
  *
@@ -33,6 +35,7 @@ import org.apache.hadoop.hbase.client.Scan;
  * <p>If your mapper or bulk importer uses an HTableInputFormat, you should implement this
  * interface as a means of specifying the input HTable scan descriptor.</p>
  */
+@ApiAudience.Private
 public interface HTableReader {
   /**
    * Returns an HBase scan descriptor that specifies what subset of rows and cells should

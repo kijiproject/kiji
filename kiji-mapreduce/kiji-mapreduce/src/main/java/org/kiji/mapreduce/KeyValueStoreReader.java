@@ -22,6 +22,8 @@ package org.kiji.mapreduce;
 import java.io.Closeable;
 import java.io.IOException;
 
+import org.kiji.annotations.ApiAudience;
+
 /**
  * Allows users to read from a KeyValueStore opened in a producer.
  *
@@ -41,6 +43,7 @@ import java.io.IOException;
  * @param <K> the type associated with keys in this store.
  * @param <V> the type associated with values in this store.
  */
+@ApiAudience.Public
 public abstract class KeyValueStoreReader<K, V> implements Closeable {
 
   /**

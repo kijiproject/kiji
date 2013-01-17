@@ -47,6 +47,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.KeyValueStore;
 import org.kiji.mapreduce.KeyValueStoreConfiguration;
 
@@ -54,6 +55,7 @@ import org.kiji.mapreduce.KeyValueStoreConfiguration;
  * Utility that parses an XML file that specifies KeyValueStore implementations
  * to bind in an application.
  */
+@ApiAudience.Private
 public class XmlKeyValueStoreParser {
   private static final Logger LOG = LoggerFactory.getLogger(
       XmlKeyValueStoreParser.class.getName());

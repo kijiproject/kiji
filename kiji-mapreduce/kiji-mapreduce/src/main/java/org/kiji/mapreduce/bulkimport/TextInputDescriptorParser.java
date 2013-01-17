@@ -32,6 +32,8 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.annotations.ApiAudience;
+
 /**
  * <p>This class is used by
  * {@link org.kiji.mapreduce.bulkimport.DescribedInputTextBulkImporter} to
@@ -55,6 +57,7 @@ import org.slf4j.LoggerFactory;
  * Call parse(in) to parse column names and schema names to internal variables.
  * After this call, these variables may be recovered with <code>getQualifierInfo()</code>.</p>
  */
+@ApiAudience.Private
 public class TextInputDescriptorParser {
   private static final Logger LOG = LoggerFactory.getLogger(TextInputDescriptorParser.class);
 

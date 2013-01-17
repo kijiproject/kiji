@@ -22,12 +22,14 @@ package org.kiji.mapreduce.output;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.OutputFormat;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.avro.mapreduce.AvroKeyValueOutputFormat;
 
 /**
  * A MapReduce job output of Avro container files of generic records, where each entry has
  * a 'key' and a 'value' field.
  */
+@ApiAudience.Public
 public class AvroKeyValueMapReduceJobOutput extends FileMapReduceJobOutput {
   /**
    * Creates a new <code>AvroKeyValueMapReduceJobOutput</code> instance.

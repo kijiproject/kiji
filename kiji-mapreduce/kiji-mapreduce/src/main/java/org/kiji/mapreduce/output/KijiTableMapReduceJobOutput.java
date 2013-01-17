@@ -26,12 +26,14 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.OutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.NullOutputFormat;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.KijiConfKeys;
 import org.kiji.mapreduce.MapReduceJobOutput;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiTable;
 
 /** A MapReduce job output that writes to a Kiji table. */
+@ApiAudience.Public
 public class KijiTableMapReduceJobOutput extends MapReduceJobOutput {
 
   /** Kiji table to write to. */

@@ -19,7 +19,10 @@
 
 package org.kiji.mapreduce;
 
+import org.kiji.annotations.ApiAudience;
+
 /** An enumeration for the various hadoop job counters we collect. */
+@ApiAudience.Private
 public enum JobHistoryCounters {
   PRODUCER_ROWS_PROCESSED,
   GATHERER_ROWS_PROCESSED,

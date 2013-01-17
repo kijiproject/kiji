@@ -22,6 +22,7 @@ package org.kiji.mapreduce.bulkimport;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.HTableReader;
 import org.kiji.mapreduce.KijiBulkImporter;
 
@@ -41,6 +42,7 @@ import org.kiji.mapreduce.KijiBulkImporter;
  *     requested in the Scan.</li>
  * </ul>
  */
+@ApiAudience.Public
 public abstract class HTableBulkImporter
     extends KijiBulkImporter<ImmutableBytesWritable, Result>
     implements HTableReader {

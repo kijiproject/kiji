@@ -31,6 +31,7 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.AvroKeyReader;
 import org.kiji.mapreduce.AvroValueReader;
 import org.kiji.mapreduce.HFileKeyValue;
@@ -80,6 +81,7 @@ import org.kiji.mapreduce.util.KijiBulkImporters;
  * @param <OUTKEY> The type of the MapReduce output key, which depends on the output format.
  * @param <OUTVALUE> The type of the MapReduce output value, which depends on the output format.
  */
+@ApiAudience.Private
 public class BulkImportMapper<INKEY, INVALUE, OUTKEY, OUTVALUE>
     extends Mapper<INKEY, INVALUE, OUTKEY, OUTVALUE>
     implements Configurable, AvroKeyReader, AvroValueReader, HTableReader, KijiMapper {

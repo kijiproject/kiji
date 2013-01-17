@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.kvstore.XmlKeyValueStoreParser;
 
 /**
@@ -72,6 +73,7 @@ import org.kiji.mapreduce.kvstore.XmlKeyValueStoreParser;
 // TODO(WIBI-1578): The job Configuration should either *always*
 // be present at initialization, or else never present then.
 // If the later, then perhaps KeyValueStore.open() can take the job Configuration?
+@ApiAudience.Public
 public abstract class KeyValueStore<K, V> {
   private static final Logger LOG = LoggerFactory.getLogger(
       KeyValueStore.class.getName());

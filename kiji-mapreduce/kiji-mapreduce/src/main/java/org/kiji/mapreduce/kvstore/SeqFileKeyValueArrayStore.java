@@ -31,6 +31,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.util.ReflectionUtils;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.KeyValueStoreReader;
 
 /**
@@ -39,6 +40,7 @@ import org.kiji.mapreduce.KeyValueStoreReader;
  * @param <K> The type of the key field stored in the SequenceFile(s).
  * @param <V> The type of value field stored in the SequenceFile(s).
  */
+@ApiAudience.Public
 public class SeqFileKeyValueArrayStore<K, V> extends FileKeyValueArrayStore<K, V> {
 
   /** An object to encapsulate the numerous options of an AvroKVRecordKeyValueStore. */

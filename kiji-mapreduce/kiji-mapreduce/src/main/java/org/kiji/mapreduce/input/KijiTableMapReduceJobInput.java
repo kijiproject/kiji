@@ -30,6 +30,7 @@ import org.apache.hadoop.hbase.mapreduce.GenericTableMapReduceUtil;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.Job;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.KijiConfKeys;
 import org.kiji.mapreduce.KijiTableInputFormat;
 import org.kiji.mapreduce.MapReduceJobInput;
@@ -53,6 +54,7 @@ import org.kiji.schema.layout.KijiTableLayout;
  * Input may be read from the entire table, or from a range of rows using a start and end
  * key.</p>
  */
+@ApiAudience.Public
 public class KijiTableMapReduceJobInput extends MapReduceJobInput {
   /** The table to read the job input from. */
   private final HBaseKijiTable mInputTable;

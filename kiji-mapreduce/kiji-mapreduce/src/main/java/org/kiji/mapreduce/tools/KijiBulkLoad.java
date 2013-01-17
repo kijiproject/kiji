@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.apache.hadoop.fs.Path;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.common.flags.Flag;
 import org.kiji.mapreduce.HFileLoader;
 import org.kiji.schema.KijiTable;
@@ -31,6 +32,7 @@ import org.kiji.schema.tools.KijiToolLauncher;
 import org.kiji.schema.tools.VersionValidatedTool;
 
 /** Bulk loads HFiles into a Kiji table. */
+@ApiAudience.Private
 public class KijiBulkLoad extends VersionValidatedTool {
   @Flag(name="input", usage="HFile location")
   protected String mInputFlag = "";

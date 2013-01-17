@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.KeyValueStore;
 
 /**
@@ -42,6 +43,7 @@ import org.kiji.mapreduce.KeyValueStore;
  * {@link KeyValueStore}
  * {@link org.kiji.mapreduce.KijiProducer}
  */
+@ApiAudience.Public
 public final class RequiredStores {
 
   /** Not a stateful class; cannot be instantiated. */

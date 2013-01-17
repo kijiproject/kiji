@@ -25,7 +25,10 @@ import org.apache.hadoop.mapreduce.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.annotations.ApiAudience;
+
 /** A Hadoop MapReduce job that runs Kiji mappers and reducers. */
+@ApiAudience.Public
 public abstract class MapReduceJob {
   private static final Logger LOG = LoggerFactory.getLogger(MapReduceJob.class);
 

@@ -27,6 +27,7 @@ import org.apache.hadoop.io.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.hadoop.configurator.HadoopConf;
 import org.kiji.hadoop.configurator.HadoopConfigurator;
 import org.kiji.mapreduce.KijiTableContext;
@@ -52,6 +53,7 @@ import org.kiji.schema.EntityId;
  *
  * {@inheritDoc}
  */
+@ApiAudience.Public
 public class DelimitedJsonBulkImporter extends DescribedInputTextBulkImporter {
   private static final Logger LOG = LoggerFactory.getLogger(DelimitedJsonBulkImporter.class);
 

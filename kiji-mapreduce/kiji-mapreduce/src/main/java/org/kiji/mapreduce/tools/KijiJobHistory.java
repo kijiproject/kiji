@@ -33,6 +33,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.mapreduce.Counters;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.common.flags.Flag;
 import org.kiji.mapreduce.JobHistoryKijiTable;
 import org.kiji.schema.Kiji;
@@ -42,6 +43,7 @@ import org.kiji.schema.tools.KijiToolLauncher;
 import org.kiji.schema.tools.VersionValidatedTool;
 
 /** A tool that installs a job history table and lets you query individual jobs from it. */
+@ApiAudience.Private
 public class KijiJobHistory extends VersionValidatedTool {
   @Flag(name="job-id", usage="ID of the job to query.")
   private String mJobId = "";

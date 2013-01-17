@@ -31,11 +31,14 @@ import org.apache.hadoop.mapreduce.lib.input.CombineFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileRecordReader;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 
+import org.kiji.annotations.ApiAudience;
+
 /**
  * An input format for reading multiple files in a single map task.
  * Exactly one (unsplit) file will be read by each record passed to the mapper.
  * Records are constructed from WholeFileRecordReaders.
  */
+@ApiAudience.Private
 public class WholeFileInputFormat extends CombineFileInputFormat<Text, Text> {
   /**
    * Guarantees that no file is split.

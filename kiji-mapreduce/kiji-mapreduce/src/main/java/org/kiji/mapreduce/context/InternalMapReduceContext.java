@@ -23,6 +23,7 @@ import java.io.IOException;
 
 import org.apache.hadoop.mapreduce.TaskInputOutputContext;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.MapReduceContext;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiRowData;
@@ -33,6 +34,7 @@ import org.kiji.schema.KijiRowData;
  * @param <K> Type of the keys to emit.
  * @param <V> Type of the values to emit.
  */
+@ApiAudience.Private
 public class InternalMapReduceContext<K, V>
     extends InternalKijiContext
     implements MapReduceContext<K, V> {

@@ -24,6 +24,7 @@ import java.io.IOException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ReflectionUtils;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.KijiProducer;
 import org.kiji.mapreduce.KijiProducerOutputException;
 import org.kiji.schema.KijiColumnName;
@@ -32,6 +33,7 @@ import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayout.LocalityGroupLayout.FamilyLayout;
 
 /** Utility methods for working with <code>KijiProducer</code>s. */
+@ApiAudience.Private
 public final class KijiProducers {
   /** Disable the constructor for this utility class. */
   private KijiProducers() {}

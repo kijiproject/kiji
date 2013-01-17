@@ -21,6 +21,8 @@ package org.kiji.mapreduce;
 
 import org.apache.hadoop.mapreduce.Reducer;
 
+import org.kiji.annotations.ApiAudience;
+
 /**
  * Base class for kiji reducer that do not run over kiji tables.
  *
@@ -29,6 +31,7 @@ import org.apache.hadoop.mapreduce.Reducer;
  * @param <OUTKEY> The type of the output key from the mapper.
  * @param <OUTVALUE> The type of the output value from the mapper.
  */
+@ApiAudience.Public
 public abstract class KijiBaseReducer<INKEY, INVALUE, OUTKEY, OUTVALUE>
     extends Reducer<INKEY, INVALUE, OUTKEY, OUTVALUE> implements KijiReducer {
 }

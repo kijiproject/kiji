@@ -24,6 +24,7 @@ import java.io.IOException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Job;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.input.KijiTableMapReduceJobInput;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.InternalKijiError;
@@ -43,6 +44,7 @@ import org.kiji.schema.layout.KijiTableLayout;
  *
  * @param <T> The type of the builder class.
  */
+@ApiAudience.Framework
 public abstract class KijiTableInputJobBuilder<T extends KijiTableInputJobBuilder<T>>
     extends KijiMapReduceJobBuilder<T> {
   /** The table to use as input for the job. */

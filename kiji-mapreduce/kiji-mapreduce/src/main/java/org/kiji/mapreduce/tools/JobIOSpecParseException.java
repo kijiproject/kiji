@@ -19,7 +19,10 @@
 
 package org.kiji.mapreduce.tools;
 
+import org.kiji.annotations.ApiAudience;
+
 /** Thrown when a JobInputSpec or JobOutputSpec cannot be parsed. */
+@ApiAudience.Framework
 public class JobIOSpecParseException extends Exception {
   /**
    * @param message A message describing the problem with parsing.

@@ -19,7 +19,10 @@
 
 package org.kiji.mapreduce;
 
+import org.kiji.annotations.ApiAudience;
+
 /** Base interface for all mappers used by Kiji. */
+@ApiAudience.Public
 public interface KijiMapper {
   /**
    * Gets the type of the output keys from the mapper.

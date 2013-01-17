@@ -43,6 +43,7 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.kvstore.XmlKeyValueStoreParser;
 import org.kiji.mapreduce.util.AvroMapReduce;
 import org.kiji.mapreduce.util.Jars;
@@ -53,6 +54,7 @@ import org.kiji.schema.Kiji;
  *
  * @param <T> The type of the builder class.
  */
+@ApiAudience.Framework
 public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder> {
   private static final Logger LOG = LoggerFactory.getLogger(MapReduceJobBuilder.class);
 

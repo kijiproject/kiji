@@ -21,6 +21,7 @@ package org.kiji.mapreduce.kvstore;
 
 import java.io.IOException;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.KeyValueStoreConfiguration;
 import org.kiji.mapreduce.KeyValueStoreReader;
 import org.kiji.mapreduce.kvstore.SeqFileKeyValueArrayStore.AbstractOptions;
@@ -35,6 +36,7 @@ import org.kiji.mapreduce.kvstore.SeqFileKeyValueArrayStore.AbstractOptions;
  * @param <K> The type of the key field stored in the SequenceFile(s).
  * @param <V> The type of value field stored in the SequenceFile(s).
  */
+@ApiAudience.Public
 public class SeqFileKeyValueStore<K, V> extends FileKeyValueStore<K, V> {
 
   private SeqFileKeyValueArrayStore<K, V> mStore;

@@ -23,6 +23,7 @@ import java.io.IOException;
 
 import org.apache.hadoop.mapreduce.Job;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.TableLayoutSerializer;
@@ -33,6 +34,7 @@ import org.kiji.schema.layout.TableLayoutSerializer;
  *
  * @param <T> The type of the builder class.
  */
+@ApiAudience.Framework
 public abstract class KijiMapReduceJobBuilder<T extends KijiMapReduceJobBuilder<T>>
     extends MapReduceJobBuilder<T> {
 

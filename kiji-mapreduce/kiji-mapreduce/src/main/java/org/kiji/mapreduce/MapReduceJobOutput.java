@@ -24,7 +24,10 @@ import java.io.IOException;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.OutputFormat;
 
+import org.kiji.annotations.ApiAudience;
+
 /** Describe class <code>MapReduceJobOutput</code> here. */
+@ApiAudience.Public
 public abstract class MapReduceJobOutput {
   /**
    * Configures the output for a MapReduce job.

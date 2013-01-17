@@ -19,10 +19,12 @@
 
 package org.kiji.mapreduce;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiPutter;
 
 /** Context for Kiji bulk-importers or reducers to output to a Kiji table. */
+@ApiAudience.Public
 public interface KijiTableContext extends KijiContext, KijiPutter {
 
   /**

@@ -29,6 +29,7 @@ import org.apache.hadoop.util.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.AvroValueWriter;
 
 /**
@@ -40,6 +41,7 @@ import org.kiji.mapreduce.AvroValueWriter;
  * @param <K> The MapReduce input key type.
  * @param <V> The MapReduce input value type.
  */
+@ApiAudience.Public
 public class IdentityReducer<K, V> extends KeyPassThroughReducer<K, V, V>
     implements AvroValueWriter {
   private static final Logger LOG = LoggerFactory.getLogger(IdentityReducer.class);

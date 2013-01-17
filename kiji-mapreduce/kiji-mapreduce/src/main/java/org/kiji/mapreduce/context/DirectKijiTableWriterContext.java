@@ -24,6 +24,7 @@ import java.io.IOException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.TaskInputOutputContext;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.KijiConfKeys;
 import org.kiji.mapreduce.KijiTableContext;
 import org.kiji.schema.EntityId;
@@ -35,7 +36,7 @@ import org.kiji.schema.KijiURI;
 import org.kiji.schema.KijiURIException;
 
 /**
- * Kiji context that to write cells to a configured output table.
+ * Kiji context that writes cells to a configured output table.
  *
  * <p> Implemented as direct writes sent to the HTable.
  *
@@ -43,6 +44,7 @@ import org.kiji.schema.KijiURIException;
  * pushing a lot of data into a running HBase instance may trigger region splits
  * and cause the HBase instance to go offline.
  */
+@ApiAudience.Private
 public class DirectKijiTableWriterContext
     extends InternalKijiContext
     implements KijiTableContext {

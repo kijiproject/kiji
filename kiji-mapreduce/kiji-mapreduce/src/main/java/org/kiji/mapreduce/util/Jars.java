@@ -24,7 +24,10 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.util.Enumeration;
 
+import org.kiji.annotations.ApiAudience;
+
 /** Utility class for dealing with Java Jar files and their contained classes. */
+@ApiAudience.Private
 public final class Jars {
   /** Configuration variable name to store jars that export to distributed cache. */
   private static final String TMPJARS_NAME = "tmpjars";

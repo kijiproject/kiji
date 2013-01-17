@@ -21,6 +21,7 @@ package org.kiji.mapreduce.kvstore;
 
 import java.io.IOException;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.KeyValueStore;
 import org.kiji.mapreduce.KeyValueStoreConfiguration;
 import org.kiji.mapreduce.KeyValueStoreReader;
@@ -33,6 +34,7 @@ import org.kiji.mapreduce.KeyValueStoreReader;
  * @param <K> the key type for the store.
  * @param <V> the value type for the store.
  */
+@ApiAudience.Public
 public class UnconfiguredKeyValueStore<K, V> extends KeyValueStore<K, V> {
 
   /** Construct the definition of an unconfigured KeyValueStore. */

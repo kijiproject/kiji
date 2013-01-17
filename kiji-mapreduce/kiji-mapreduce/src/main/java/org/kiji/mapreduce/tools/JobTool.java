@@ -25,6 +25,7 @@ import java.util.List;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.common.flags.Flag;
 import org.kiji.mapreduce.MapReduceJobBuilder;
 import org.kiji.schema.InternalKijiError;
@@ -35,6 +36,7 @@ import org.kiji.schema.tools.VersionValidatedTool;
  *
  * @param <B> The type of job builder to use.
  */
+@ApiAudience.Framework
 public abstract class JobTool<B extends MapReduceJobBuilder> extends VersionValidatedTool {
 
   @Flag(name="input", usage="Input specification '<format>:<location>'")

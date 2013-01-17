@@ -23,12 +23,14 @@ import java.io.IOException;
 
 import org.apache.avro.Schema;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.AvroKeyReader;
 import org.kiji.mapreduce.AvroKeyWriter;
 import org.kiji.mapreduce.AvroValueReader;
 import org.kiji.mapreduce.AvroValueWriter;
 
 /** A utility class for working with MapReduce jobs that use Avro for input or output data. */
+@ApiAudience.Private
 public final class AvroMapReduce {
   /** Constructor disabled for this utility class. */
   private AvroMapReduce() {}

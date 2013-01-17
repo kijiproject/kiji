@@ -21,6 +21,7 @@ package org.kiji.mapreduce.kvstore;
 
 import java.io.IOException;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.KeyValueStoreConfiguration;
 import org.kiji.mapreduce.KeyValueStoreReader;
 import org.kiji.mapreduce.kvstore.TextFileKeyValueArrayStore.AbstractOptions;
@@ -68,6 +69,7 @@ import org.kiji.mapreduce.kvstore.TextFileKeyValueArrayStore.AbstractOptions;
  * </ul>
  *
  */
+@ApiAudience.Public
 public class TextFileKeyValueStore extends FileKeyValueStore<String, String> {
 
   private TextFileKeyValueArrayStore mStore;

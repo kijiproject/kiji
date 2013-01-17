@@ -22,9 +22,11 @@ package org.kiji.mapreduce.input;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.InputFormat;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.avro.mapreduce.AvroSequenceFileInputFormat;
 
 /** MapReduce job input that is read from sequence files. */
+@ApiAudience.Public
 public class SequenceFileMapReduceJobInput extends FileMapReduceJobInput {
   /**
    * Creates a new <code>SequenceFileMapReduceJobInput</code> instance.

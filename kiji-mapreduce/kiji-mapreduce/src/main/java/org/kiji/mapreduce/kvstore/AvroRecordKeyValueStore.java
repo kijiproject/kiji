@@ -24,6 +24,7 @@ import java.io.IOException;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.IndexedRecord;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.KeyValueStoreConfiguration;
 import org.kiji.mapreduce.KeyValueStoreReader;
 import org.kiji.mapreduce.kvstore.AvroRecordKeyValueArrayStore.AbstractOptions;
@@ -50,6 +51,7 @@ import org.kiji.mapreduce.kvstore.AvroRecordKeyValueArrayStore.AbstractOptions;
  * @param <K> The type of the key field.
  * @param <V> The type of record in the Avro container file.
  */
+@ApiAudience.Public
 public class AvroRecordKeyValueStore<K, V extends IndexedRecord>
     extends FileKeyValueStore<K, V> {
 

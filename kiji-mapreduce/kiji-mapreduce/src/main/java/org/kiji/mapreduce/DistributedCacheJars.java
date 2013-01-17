@@ -34,7 +34,10 @@ import org.apache.hadoop.mapreduce.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.annotations.ApiAudience;
+
 /** Utility class for dealing with Java JAR files and the hadoop distributed cache. */
+@ApiAudience.Private
 public final class DistributedCacheJars {
   private static final Logger LOG = LoggerFactory.getLogger(DistributedCacheJars.class);
 

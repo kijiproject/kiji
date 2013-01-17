@@ -21,6 +21,7 @@ package org.kiji.mapreduce.tools;
 
 import org.apache.hadoop.fs.Path;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.MapReduceJobOutput;
 import org.kiji.mapreduce.output.AvroKeyMapReduceJobOutput;
 import org.kiji.mapreduce.output.AvroKeyValueMapReduceJobOutput;
@@ -33,6 +34,7 @@ import org.kiji.mapreduce.output.TextMapReduceJobOutput;
  *
  * See {@link JobOutputSpec} for the full outputspec specification.
  */
+@ApiAudience.Framework
 public class MapReduceJobOutputFactory {
   /**
    * Creates a MapReduceJobOutput from an outputspec string.

@@ -27,6 +27,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.hadoop.mapreduce.Job;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiAdmin;
@@ -42,6 +43,7 @@ import org.kiji.schema.layout.KijiTableLayout;
  *
  * Used in places like KijiMapReduceJob to record information about jobs run through Kiji.
  */
+@ApiAudience.Private
 public final class JobHistoryKijiTable implements Closeable {
   /** The name of the table storing a history of completed jobs. */
   private static final String TABLE_NAME = "job_history";
