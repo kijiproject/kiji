@@ -40,6 +40,7 @@ import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiAdmin;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.tools.KijiToolLauncher;
+import org.kiji.schema.tools.RequiredFlagException;
 import org.kiji.schema.tools.VersionValidatedTool;
 
 /** A tool that installs a job history table and lets you query individual jobs from it. */

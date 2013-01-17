@@ -27,6 +27,7 @@ import org.kiji.mapreduce.KijiGatherJobBuilder;
 import org.kiji.mapreduce.KijiGatherer;
 import org.kiji.mapreduce.KijiReducer;
 import org.kiji.schema.tools.KijiToolLauncher;
+import org.kiji.schema.tools.RequiredFlagException;
 
 /** Command-line tool for running a KijiGatherer. */
 @ApiAudience.Private

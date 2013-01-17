@@ -29,6 +29,7 @@ import org.kiji.common.flags.Flag;
 import org.kiji.mapreduce.HFileLoader;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.tools.KijiToolLauncher;
+import org.kiji.schema.tools.RequiredFlagException;
 import org.kiji.schema.tools.VersionValidatedTool;
 
 /** Bulk loads HFiles into a Kiji table. */

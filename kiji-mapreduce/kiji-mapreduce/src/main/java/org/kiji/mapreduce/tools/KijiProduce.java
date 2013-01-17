@@ -34,6 +34,7 @@ import org.kiji.mapreduce.KijiProducer;
 import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
 import org.kiji.mapreduce.output.KijiTableMapReduceJobOutput;
 import org.kiji.schema.tools.KijiToolLauncher;
+import org.kiji.schema.tools.RequiredFlagException;
 
 /** Program for running a Kiji producer in a MapReduce job. */
 @ApiAudience.Private

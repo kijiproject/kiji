@@ -37,6 +37,7 @@ import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
 import org.kiji.mapreduce.output.KijiTableMapReduceJobOutput;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.tools.KijiToolLauncher;
+import org.kiji.schema.tools.RequiredFlagException;
 
 /** Bulk imports a file into a Kiji table. */
 @ApiAudience.Private

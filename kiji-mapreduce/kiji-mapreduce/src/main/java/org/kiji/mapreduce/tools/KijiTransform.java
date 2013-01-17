@@ -28,6 +28,7 @@ import org.kiji.mapreduce.KijiReducer;
 import org.kiji.mapreduce.KijiTransformJobBuilder;
 import org.kiji.schema.KijiConfiguration;
 import org.kiji.schema.tools.KijiToolLauncher;
+import org.kiji.schema.tools.RequiredFlagException;
 
 /** Transforms data using a Kiji MapReduce job. */
 @ApiAudience.Private

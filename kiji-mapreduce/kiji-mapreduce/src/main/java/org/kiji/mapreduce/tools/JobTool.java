@@ -29,6 +29,7 @@ import org.kiji.annotations.ApiAudience;
 import org.kiji.common.flags.Flag;
 import org.kiji.mapreduce.MapReduceJobBuilder;
 import org.kiji.schema.InternalKijiError;
+import org.kiji.schema.tools.RequiredFlagException;
 import org.kiji.schema.tools.VersionValidatedTool;
 
 /**
