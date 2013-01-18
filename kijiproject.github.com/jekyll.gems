@@ -1,4 +1,8 @@
 # jekyll.gems generated gem export file. Note that any env variable settings will be missing. Append these after using a ';' field separator
 
-liquid -v2.2.2
-jekyll -v0.11.0
+maruku -v0.6.0
+liquid -v2.4.1
+jekyll -v0.12.0
+redcarpet -v2.1.1
+rdiscount -v1.6.8
+RedCloth -v4.2.9
