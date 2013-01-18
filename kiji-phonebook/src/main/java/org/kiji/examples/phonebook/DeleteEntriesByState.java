@@ -100,7 +100,7 @@ public class DeleteEntriesByState extends Configured implements Tool {
       } catch (KijiURIException kue) {
         throw new IOException(kue);
       }
-      mKiji = Kiji.open(tableURI, hadoopContext.getConfiguration());
+      mKiji = Kiji.Factory.open(tableURI, hadoopContext.getConfiguration());
       mTable = mKiji.openTable(tableURI.getTable());
       mWriter = mTable.openTableWriter();
     }

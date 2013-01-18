@@ -73,7 +73,8 @@ public class DeleteEntry extends Configured implements Tool {
       setConf(HBaseConfiguration.addHbaseResources(getConf()));
 
       // Connect to the Kiji table and open a writer.
-      kiji = Kiji.open(new KijiConfiguration(getConf(), KijiConfiguration.DEFAULT_INSTANCE_NAME));
+      kiji = Kiji.Factory.open(
+          new KijiConfiguration(getConf(), KijiConfiguration.DEFAULT_INSTANCE_NAME));
       table = kiji.openTable(TABLE_NAME);
       writer = table.openTableWriter();
 

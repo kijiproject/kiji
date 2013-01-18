@@ -85,7 +85,7 @@ public class AddressFieldExtractor extends Configured implements Tool {
         throw new IOException(kue);
       }
 
-      mKiji = Kiji.open(tableURI, conf);
+      mKiji = Kiji.Factory.open(tableURI, conf);
       mTable = mKiji.openTable(TABLE_NAME);
       mTableWriter = mTable.openTableWriter();
     }

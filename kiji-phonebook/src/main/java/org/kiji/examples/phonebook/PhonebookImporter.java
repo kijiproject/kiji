@@ -84,7 +84,7 @@ public class PhonebookImporter extends Configured implements Tool {
       } catch (KijiURIException kue) {
         throw new IOException(kue);
       }
-      mKiji = Kiji.open(tableURI, conf);
+      mKiji = Kiji.Factory.open(tableURI, conf);
       mTable = mKiji.openTable(TABLE_NAME);
       mWriter = mTable.openTableWriter();
     }

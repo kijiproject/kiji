@@ -88,7 +88,8 @@ public class AddEntry extends Configured implements Tool {
       setConf(HBaseConfiguration.addHbaseResources(getConf()));
 
       // Connect to Kiji and open the table.
-      kiji = Kiji.open(new KijiConfiguration(getConf(), KijiConfiguration.DEFAULT_INSTANCE_NAME));
+      kiji = Kiji.Factory.open(
+          new KijiConfiguration(getConf(), KijiConfiguration.DEFAULT_INSTANCE_NAME));
       table = kiji.openTable(TABLE_NAME);
       writer = table.openTableWriter();
 

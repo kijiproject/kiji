@@ -78,7 +78,8 @@ public class Lookup extends Configured implements Tool {
       setConf(HBaseConfiguration.create(getConf()));
 
       // Connect to Kiji, open the table and reader.
-      kiji = Kiji.open(new KijiConfiguration(getConf(), KijiConfiguration.DEFAULT_INSTANCE_NAME));
+      kiji = Kiji.Factory.open(
+          new KijiConfiguration(getConf(), KijiConfiguration.DEFAULT_INSTANCE_NAME));
       table = kiji.openTable(TABLE_NAME);
       reader = table.openTableReader();
 
