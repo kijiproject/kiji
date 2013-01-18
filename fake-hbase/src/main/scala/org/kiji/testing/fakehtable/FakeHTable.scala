@@ -98,6 +98,9 @@ class FakeHTable(
   /** Map: row key -> family -> qualifier -> timestamp -> cell data. */
   private val rows: Table = new JTreeMap[Bytes, RowFamilies](Bytes.BYTES_COMPARATOR)
 
+  /** Region splits. */
+  private[fakehtable] var split: Seq[Bytes] = Seq()
+
   override def getTableName(): Array[Byte] = {
     return name.getBytes
   }

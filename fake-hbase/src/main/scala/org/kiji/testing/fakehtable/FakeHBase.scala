@@ -19,9 +19,14 @@
 
 package org.kiji.testing.fakehtable
 
+import java.util.Arrays
 import java.util.{List => JList}
 import java.util.{TreeMap => JTreeMap}
+
 import scala.collection.JavaConverters._
+import scala.collection.mutable.Buffer
+import scala.Fractional
+
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.client.HBaseAdmin
 import org.apache.hadoop.hbase.client.HTableInterface
@@ -29,16 +34,11 @@ import org.apache.hadoop.hbase.util.Bytes
 import org.apache.hadoop.hbase.HColumnDescriptor
 import org.apache.hadoop.hbase.HRegionInfo
 import org.apache.hadoop.hbase.HTableDescriptor
-import org.apache.hadoop.hbase.TableNotFoundException
-import org.apache.hadoop.hbase.TableNotDisabledException
 import org.apache.hadoop.hbase.TableExistsException
-import net.sf.cglib.proxy.MethodInterceptor
-import net.sf.cglib.proxy.MethodProxy
-import org.kiji.schema.impl.HBaseInterface
+import org.apache.hadoop.hbase.TableNotDisabledException
+import org.apache.hadoop.hbase.TableNotFoundException
 import org.kiji.schema.impl.HBaseAdminFactory
-
-// -------------------------------------------------------------------------------------------------
-
+import org.kiji.schema.impl.HBaseInterface
 
 /** Fake HBase instance, as a collection of fake HTable instances. */
 class FakeHBase
@@ -107,7 +107,6 @@ class FakeHBase
     }
 
     def createTable(desc: HTableDescriptor, split: Array[Bytes]): Unit = {
-      // TODO(taton) Implement split
       synchronized {
         if (tableMap.containsKey(desc.getName)) {
           throw new TableExistsException(desc.getNameAsString)
@@ -117,6 +116,8 @@ class FakeHBase
             conf = null,
             desc = desc
         )
+        Arrays.sort(split, Bytes.BYTES_COMPARATOR)
+        table.split = split
         tableMap.put(desc.getName, table)
       }
     }
@@ -127,8 +128,15 @@ class FakeHBase
         endKey: Bytes,
         numRegions: Int
     ): Unit = {
-      // TODO(taton) Implement split
-      createTable(desc = desc, split = null)
+      // TODO Handle startKey/endKey
+      val split = Buffer[Bytes]()
+      val min = 0
+      val max: BigInt = (BigInt(1) << 128) - 1
+      for (n <- 1 until numRegions) {
+        val boundary: Bytes = MD5Space(n, numRegions)
+        split.append(boundary)
+      }
+      createTable(desc = desc, split = split.toArray)
     }
 
     def deleteColumn(tableName: Bytes, columnName: Bytes): Unit = {
@@ -175,8 +183,18 @@ class FakeHBase
 
     def getTableRegions(tableName: Bytes): JList[HRegionInfo] = {
       synchronized {
+        val table = tableMap.get(tableName)
+        if (table == null) {
+          throw new TableNotFoundException(Bytes.toStringBinary(tableName))
+        }
         val list = new java.util.ArrayList[HRegionInfo]()
-        val region = new HRegionInfo(tableName)
+        var startKey: Bytes = null
+        for (boundary <- table.split) {
+          val region = new HRegionInfo(tableName, startKey, boundary)
+          list.add(region)
+          startKey = boundary
+        }
+        val region = new HRegionInfo(tableName, startKey, null)
         list.add(region)
         return list
       }

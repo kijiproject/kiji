@@ -27,6 +27,7 @@ import org.apache.hadoop.hbase.client.Put
 import org.apache.hadoop.hbase.client.Get
 import org.apache.hadoop.hbase.client.Delete
 import org.apache.hadoop.hbase.HTableDescriptor
+import org.apache.commons.codec.binary.Hex
 
 @RunWith(classOf[JUnitRunner])
 class TestFakeHBase extends FunSuite {
@@ -39,6 +40,21 @@ class TestFakeHBase extends FunSuite {
     val tables = hbase.Admin.listTables()
     expect(1)(tables.length)
     expect("table-name")(tables(0).getNameAsString())
+  }
+
+  test("Simple region split") {
+    val hbase = new FakeHBase()
+    val desc = new HTableDescriptor("table-name")
+    hbase.Admin.createTable(desc, null, null, numRegions = 2)
+
+    val regions = hbase.Admin.getTableRegions("table-name".getBytes).asScala
+    expect(2)(regions.size)
+    assert(regions.head.getStartKey.isEmpty)
+    assert(regions.last.getEndKey.isEmpty)
+    for (i <- 0 until regions.size - 1) {
+      expect(regions(i).getEndKey.toSeq)(regions(i + 1).getStartKey.toSeq)
+    }
+    expect("7fffffffffffffffffffffffffffffff")(Hex.encodeHexString(regions(0).getEndKey))
   }
 
 }

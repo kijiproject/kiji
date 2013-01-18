@@ -161,7 +161,7 @@ trait HBaseAdminConversionHelpers extends HBaseAdminInterface {
   }
 
   override def createTable(desc: HTableDescriptor): Unit = {
-    createTable(desc, split = null)
+    createTable(desc, split = Array())
   }
 
   override def createTableAsync(desc: HTableDescriptor, split: Array[Bytes]): Unit = {
