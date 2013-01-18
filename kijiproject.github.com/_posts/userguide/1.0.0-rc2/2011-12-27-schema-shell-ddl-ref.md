@@ -2,7 +2,7 @@
 layout: post
 title: DDL Shell Reference
 id: userguide/ddl-ref
-category: [userguide, schema, 1.0.0-rc2]
+categories: [userguide, schema, 1.0.0-rc2]
 component: schema
 version: 1.0.0-rc2
 order : 6

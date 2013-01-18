@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Command-Line Tool Reference
-category: [userguide, schema, 1.0.0-rc2]
+categories: [userguide, schema, 1.0.0-rc2]
 component: schema
 version: 1.0.0-rc2
 tags : [schema-ug]

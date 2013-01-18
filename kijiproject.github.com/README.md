@@ -24,7 +24,7 @@ the following at the top of the file (include the dashes):
     ---
     layout: post
     title: My Content Title
-    category: [userguide, schema, 1.0.0-rc1] or tutorial
+    categories: [userguide, schema, 1.0.0-rc1] or tutorial
     tags: [doc_type]
     description: A tutorial on computer stuff.
     ---
