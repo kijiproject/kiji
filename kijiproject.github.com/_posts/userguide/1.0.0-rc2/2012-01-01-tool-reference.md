@@ -26,7 +26,7 @@ $ kiji COMMAND [FLAG]...
         Use: `kiji jar <jarFile> <mainClass> [args...]`
 *  `ls`                    - [List, describe, or scan Kiji tables](#ref.ls)
 *  `create-table`          - [Create a Kiji table](#ref.create-table)
-*  `delete-table`          - [Delete a Kiji table](#ref.delete-table)
+*  `delete`                - [Delete a Kiji table, row, or cell](#ref.delete)
 *  `flush-table`           - [Flush table write-ahead logs](#ref.flush-table)
 *  `layout`                - [Manage table layouts](#ref.layout)
 *  `increment`             - [Increment a counter cell](#ref.increment)
@@ -186,22 +186,46 @@ The following arguments are optional:
 TODO: Document the format of the files specifying split keys.
 -->
 
-## Deleting tables: `delete-table`<a id="ref.delete-table"> </a>
+## Deleting tables, rows, and cells: `delete`<a id="ref.delete"> </a>
 
-The `delete-table` command will delete a KijiSchema
-table definition, and drop all rows which were in the table.
-This command has two mandatory arguments:
+The `delete` command will delete a KijiSchema
+table, row, or cell, and drop all values which were in them.
+This command has one mandatory argument:
 
 *  `--table=<table-name>`
-   - Specifies the name of the table to delete.
+   - The name of the table from which to delete.  If specified without --row, the entire table
+     will be deleted.
+
+And several optional arguments:
+
+*  `--row=<row-name>`
+   - The name of the row from which to delete values.  If specified without --family, all
+     values in the row will be deleted.
+
+*  `--family=<family-name>`
+   - The name of the family from which to delete values.  If specified without --qualifier, all
+     values in the row and family will be deleted. (requires a specified row)
+
+*  `--qualifier=<column-name>`
+   - The name of a column qualifier from which to delete values.  If specified without a
+     timestamp or --most-recent, all values in the cell will be deleted.
+     (requires a specified family)
+
+*  `--upto-timestamp=<long>`
+   - The timestamp at or before which all values will be deleted. (requires a specified row)
+
+*  `--exact-timestamp=<long>`
+   - The timestamp at which to delete a value.
+     (requires a specified row, family, and qualifier)
+
+*  `--most-recent`
+   - Set to delete the most recent value of a cell.
+     (requires a specified row, family, and qualifier)
+
 *  `--confirm`
-   - Must be set to perform the table deletion without interactive confirmation.
+   - Set to perform the deletions without interactive confirmation.
 
-It also accepts an optional `--kiji=<kiji-uri>` argument to
-specify the address of the installed Kiji instance from which to delete
-the table.
-
-Flushing tables: `flush-table`<a id="ref.flush-table"> </a>
+## Flushing tables: `flush-table`<a id="ref.flush-table"> </a>
 --------------------------------------------------------
 
 The `flush-table` command will instruct HBase to
