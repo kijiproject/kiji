@@ -130,7 +130,7 @@ object KijiSystem extends AbstractKijiSystem {
   private def kiji(instance: String): Option[Kiji] = {
     if (!kijiCache.contains(instance)) {
       try {
-        val theKiji = Kiji.open(kijiConf(instance))
+        val theKiji = Kiji.Factory.open(kijiConf(instance))
         kijiCache += (instance -> theKiji)
         Some(theKiji)
       } catch {
