@@ -52,7 +52,7 @@ public abstract class KijiMapReduceJobBuilder<T extends KijiMapReduceJobBuilder<
     }
 
     // Set the kiji instance name in the job configuration.
-    KijiMapReduceJob.setInstanceName(job.getConfiguration(), kiji.getName());
+    KijiMapReduceJob.setInstanceName(job.getConfiguration(), kiji.getURI().getInstance());
 
     // Set the table layout in the job configuration.
     KijiTableLayout tableLayout = getTableLayout();

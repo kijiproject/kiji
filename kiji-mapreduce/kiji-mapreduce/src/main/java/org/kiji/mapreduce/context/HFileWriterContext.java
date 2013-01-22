@@ -74,7 +74,7 @@ public class HFileWriterContext
     super(hadoopContext);
     final Configuration conf = new Configuration(hadoopContext.getConfiguration());
     final KijiURI outputURI = KijiURI.parse(conf.get(KijiConfKeys.OUTPUT_KIJI_TABLE_URI));
-    mKiji = Kiji.open(outputURI, conf);
+    mKiji = Kiji.Factory.open(outputURI, conf);
     mTable = mKiji.openTable(outputURI.getTable());
     mColumnNameTranslator = new ColumnNameTranslator(mTable.getLayout());
     mEntityIdFactory = mTable.getEntityIdFactory();

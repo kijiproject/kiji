@@ -140,7 +140,7 @@ public abstract class DescribedInputTextBulkImporter extends BaseTextBulkImporte
 
     Kiji kiji = null;
     try {
-      kiji = Kiji.open(uri, conf);
+      kiji = Kiji.Factory.open(uri, conf);
 
       KijiTable table = null;
       try {

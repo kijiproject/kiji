@@ -50,6 +50,7 @@ import org.kiji.mapreduce.output.KijiHFileOutputFormat;
 import org.kiji.mapreduce.reducer.IdentityReducer;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiClientTest;
+import org.kiji.schema.KijiURI;
 import org.kiji.schema.impl.HBaseKijiTable;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayouts;
@@ -105,7 +106,7 @@ public class TestKijiBulkImportJobBuilder extends KijiClientTest {
 
     // Set expected method calls.
     expect(kiji.getConf()).andReturn(conf).anyTimes();
-    expect(kiji.getName()).andReturn("mykiji").anyTimes();
+    expect(kiji.getURI()).andReturn(KijiURI.parse("kiji://.env/mykiji")).anyTimes();
     expect(myTable.getKiji()).andReturn(kiji).anyTimes();
     expect(myTable.getName()).andReturn("table").anyTimes();
     expect(myTable.getLayout()).andReturn(tableLayout).anyTimes();
@@ -154,7 +155,7 @@ public class TestKijiBulkImportJobBuilder extends KijiClientTest {
 
     // Set expected method calls.
     expect(kiji.getConf()).andReturn(conf).anyTimes();
-    expect(kiji.getName()).andReturn("mykiji").anyTimes();
+    expect(kiji.getURI()).andReturn(KijiURI.parse("kiji://.env/mykiji")).anyTimes();
     expect(myTable.getKiji()).andReturn(kiji).anyTimes();
     expect(myTable.getName()).andReturn("table").anyTimes();
     expect(myTable.getLayout()).andReturn(tableLayout).anyTimes();

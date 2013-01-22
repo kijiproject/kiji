@@ -79,7 +79,7 @@ public class MapReduceJobInputFactory {
     // TODO: Figure out how to handle Kiji table inputs:
     //    case KIJI: {
     //      final KijiURI uri = KijiURI.parse(jobInputSpec.getLocation());
-    //      final Kiji kiji = Kiji.open(uri);
+    //      final Kiji kiji = Kiji.Factory.open(uri);
     //      final KijiTable table = kiji.openTable(uri.getTable());
     //      return new KijiTableMapReduceJobInput((HBaseKijiTable) table);
     //    }

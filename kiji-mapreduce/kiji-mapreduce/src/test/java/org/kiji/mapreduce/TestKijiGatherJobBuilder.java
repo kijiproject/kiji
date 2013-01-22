@@ -44,6 +44,7 @@ import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
+import org.kiji.schema.KijiURI;
 import org.kiji.schema.impl.HBaseKijiTable;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayouts;
@@ -126,7 +127,7 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
 
     // Set expected method calls.
     expect(kiji.getConf()).andReturn(conf).anyTimes();
-    expect(kiji.getName()).andReturn("mykiji").anyTimes();
+    expect(kiji.getURI()).andReturn(KijiURI.parse("kiji://.env/mykiji/")).anyTimes();
     expect(myTable.getKiji()).andReturn(kiji).anyTimes();
     expect(myTable.getName()).andReturn("table").anyTimes();
     expect(myTable.getLayout()).andReturn(tableLayout).anyTimes();
@@ -160,7 +161,7 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
 
     // Set expected method calls.
     expect(kiji.getConf()).andReturn(conf).anyTimes();
-    expect(kiji.getName()).andReturn("mykiji").anyTimes();
+    expect(kiji.getURI()).andReturn(KijiURI.parse("kiji://.env/mykiji")).anyTimes();
     expect(myTable.getKiji()).andReturn(kiji).anyTimes();
     expect(myTable.getName()).andReturn("table").anyTimes();
     expect(myTable.getLayout()).andReturn(tableLayout).anyTimes();
@@ -187,7 +188,7 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
 
     // Set expected method calls.
     expect(kiji.getConf()).andReturn(conf).anyTimes();
-    expect(kiji.getName()).andReturn("mykiji").anyTimes();
+    expect(kiji.getURI()).andReturn(KijiURI.parse("kiji://.env/mykiji")).anyTimes();
     expect(myTable.getKiji()).andReturn(kiji).anyTimes();
     expect(myTable.getName()).andReturn("table").anyTimes();
     expect(myTable.getLayout()).andReturn(tableLayout).anyTimes();

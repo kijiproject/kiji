@@ -89,7 +89,7 @@ public class KijiTableMapReduceJobOutput extends MapReduceJobOutput {
         KijiConfKeys.OUTPUT_KIJI_TABLE_URI, String.format("kiji://%s:%s/%s/%s",
             conf.get(HConstants.ZOOKEEPER_QUORUM),
             conf.getInt(HConstants.ZOOKEEPER_CLIENT_PORT, HConstants.DEFAULT_ZOOKEPER_CLIENT_PORT),
-            kiji.getName(),
+            kiji.getURI().getInstance(),
             mTable.getName()));
 
     // Hadoop output format:

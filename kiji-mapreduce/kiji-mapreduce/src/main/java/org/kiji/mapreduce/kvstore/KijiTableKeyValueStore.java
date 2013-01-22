@@ -330,7 +330,7 @@ public class KijiTableKeyValueStore<V> extends KeyValueStore<String, V> implemen
     private TableKVReader() throws IOException {
       Configuration conf = getConf();
       String instanceName = KijiMapReduceJob.getInstanceName(conf);
-      mKiji = Kiji.open(new KijiConfiguration(conf, instanceName));
+      mKiji = Kiji.Factory.open(new KijiConfiguration(conf, instanceName));
       mKijiTable = mKiji.openTable(mTableName);
       mTableReader = mKijiTable.openTableReader();
 

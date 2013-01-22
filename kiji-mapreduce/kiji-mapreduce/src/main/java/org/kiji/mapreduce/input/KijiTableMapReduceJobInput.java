@@ -154,7 +154,7 @@ public class KijiTableMapReduceJobInput extends MapReduceJobInput {
 
     // Get the name of the HBase table that stores the Kiji table data.
     String hbaseTableName = KijiManagedHBaseTableName.getKijiTableName(
-        mInputTable.getKiji().getName(), mInputTable.getName()).toString();
+        mInputTable.getKiji().getURI().getInstance(), mInputTable.getName()).toString();
 
     // Create the HBase scan configured to read the appropriate input from the Kiji table.
     Scan configuredScan = createConfiguredScan(mInputTable.getLayout());
@@ -174,7 +174,7 @@ public class KijiTableMapReduceJobInput extends MapReduceJobInput {
         kiji.getConf().get(HConstants.ZOOKEEPER_QUORUM),
         kiji.getConf().getInt(HConstants.ZOOKEEPER_CLIENT_PORT,
             HConstants.DEFAULT_ZOOKEPER_CLIENT_PORT),
-        kiji.getName(),
+        kiji.getURI().getInstance(),
         mInputTable.getName()));
   }
 

@@ -169,7 +169,7 @@ public class TestKijiHFileOutputFormat {
     mConf.set("mapred.output.dir", "file://" + mTempDir.toString());
 
     KijiInstaller.install(mTableURI, mConf);
-    mKiji = Kiji.open(mTableURI);
+    mKiji = Kiji.Factory.open(mTableURI);
 
     final KijiAdmin admin = mKiji.getAdmin();
     mLayout = new KijiTableLayout(KijiTableLayouts.getLayout(KijiTableLayouts.FULL_FEATURED), null);

@@ -31,6 +31,7 @@ import org.junit.Test;
 
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiTable;
+import org.kiji.schema.KijiURI;
 import org.kiji.schema.impl.HBaseKijiTable;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayouts;
@@ -47,7 +48,7 @@ public class TestKijiTableMapReduceJobOutput {
     expect(table.getName()).andReturn("foo").anyTimes();
     expect(table.getKiji()).andReturn(kiji).anyTimes();
     expect(table.getLayout()).andReturn(layout).anyTimes();
-    expect(kiji.getName()).andReturn("").anyTimes();
+    expect(kiji.getURI()).andReturn(KijiURI.parse("kiji://.env/")).anyTimes();
 
     replay(table);
     replay(kiji);

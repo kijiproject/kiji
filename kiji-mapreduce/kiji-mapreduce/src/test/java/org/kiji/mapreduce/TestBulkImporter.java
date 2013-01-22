@@ -116,8 +116,8 @@ public class TestBulkImporter {
     conf.set("fs.defaultFS", "file://" + testTmpDir);
 
     KijiInstaller.install(kijiInstanceURI, conf);
-    final Kiji kiji = Kiji.open(kijiInstanceURI, conf);
-    LOG.info(String.format("Opened Kiji instance '%s'.", kiji.getName()));
+    final Kiji kiji = Kiji.Factory.open(kijiInstanceURI, conf);
+    LOG.info(String.format("Opened Kiji instance '%s'.", kijiInstanceURI.getInstance()));
 
     // Create input Kiji table:
     final KijiAdmin admin =
@@ -239,8 +239,8 @@ public class TestBulkImporter {
     conf.set("fs.defaultFS", "file://" + testTmpDir);
 
     KijiInstaller.install(kijiInstanceURI, conf);
-    final Kiji kiji = Kiji.open(kijiInstanceURI, conf);
-    LOG.info(String.format("Opened Kiji instance '%s'.", kiji.getName()));
+    final Kiji kiji = Kiji.Factory.open(kijiInstanceURI, conf);
+    LOG.info(String.format("Opened Kiji instance '%s'.", kijiInstanceURI.getInstance()));
 
     // Create input Kiji table:
     final KijiAdmin admin =

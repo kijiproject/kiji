@@ -85,7 +85,7 @@ public class KijiMapReduceJob extends InternalMapReduceJob {
     Kiji kiji = null;
     JobHistoryKijiTable jobHistory = null;
     try {
-      kiji = Kiji.open(new KijiConfiguration(job.getConfiguration(),
+      kiji = Kiji.Factory.open(new KijiConfiguration(job.getConfiguration(),
           getInstanceName(job.getConfiguration())));
       jobHistory = JobHistoryKijiTable.open(kiji);
       jobHistory.recordJob(job, mJobStartTime, mJobEndTime);

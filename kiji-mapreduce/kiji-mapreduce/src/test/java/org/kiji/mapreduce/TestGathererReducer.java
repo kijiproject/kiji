@@ -151,8 +151,8 @@ public class TestGathererReducer {
     conf.set("fs.defaultFS", "file://" + testTmpDir);
 
     KijiInstaller.install(kijiInstanceURI, conf);
-    final Kiji kiji = Kiji.open(kijiInstanceURI, conf);
-    LOG.info(String.format("Opened fake Kiji '%s'.", kiji.getName()));
+    final Kiji kiji = Kiji.Factory.open(kijiInstanceURI, conf);
+    LOG.info(String.format("Opened fake Kiji '%s'.", kijiInstanceURI.getInstance()));
 
     // Create input Kiji table:
     final KijiAdmin admin =
