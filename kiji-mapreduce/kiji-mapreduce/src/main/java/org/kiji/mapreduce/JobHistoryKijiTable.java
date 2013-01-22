@@ -22,6 +22,7 @@ package org.kiji.mapreduce;
 import java.io.Closeable;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
@@ -102,10 +103,11 @@ public final class JobHistoryKijiTable implements Closeable {
        writer.put(jobEntity, "info", "startTime", startTime, startTime);
        writer.put(jobEntity, "info", "endTime", startTime, endTime);
        job.getCounters().write(dos);
-       writer.put(jobEntity, "info", "counters", startTime, baos.toByteArray());
+       writer.put(jobEntity, "info", "counters", startTime, ByteBuffer.wrap(baos.toByteArray()));
        baos.reset();
        job.getConfiguration().write(dos);
-       writer.put(jobEntity, "info", "configuration", startTime, baos.toByteArray());
+       writer.put(jobEntity, "info", "configuration", startTime,
+           ByteBuffer.wrap(baos.toByteArray()));
      } finally {
        IOUtils.closeQuietly(writer);
      }
