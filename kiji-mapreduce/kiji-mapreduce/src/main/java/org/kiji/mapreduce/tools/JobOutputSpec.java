@@ -38,7 +38,7 @@ import org.kiji.annotations.ApiAudience;
  * be equal to the number of reducers, since each reducer writes one shard.</p>
  */
 @ApiAudience.Framework
-public class JobOutputSpec {
+public final class JobOutputSpec {
   /**
    * The job output formats supported by Kiji.  In the string
    * representation of a JobOutputSpec, this is the part before the
@@ -135,10 +135,23 @@ public class JobOutputSpec {
    *     if a location is implied by the format).
    * @param splits The number of output splits.
    */
-  public JobOutputSpec(Format format, String location, int splits) {
+  private JobOutputSpec(Format format, String location, int splits) {
     mFormat = format;
     mLocation = location;
     mSplits = splits;
+  }
+
+  /**
+   * Creates a new job output specification.
+   *
+   * @param format is the format of the data output by the job.
+   * @param location is the target location of the output data (or <code>null</code> if a location
+   *     is implied by the format).
+   * @param splits is the number of desired output splits.
+   * @return a new job output specification using the specified format, location, and splits.
+   */
+  public static JobOutputSpec create(Format format, String location, int splits) {
+    return new JobOutputSpec(format, location, splits);
   }
 
   /** @return The format of the output data. */

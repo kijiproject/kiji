@@ -75,9 +75,8 @@ public class TestBulkImporter {
   }
 
   /**
-   * Producer intended to run on the generic KijiMR test layout.
-   *
-   * @see testing resource org/kiji/mapreduce/layout/test.json
+   * Producer intended to run on the generic KijiMR test layout. Uses the resource
+   * org/kiji/mapreduce/layout/test.json
    */
   public static class SimpleBulkImporter extends KijiBulkImporter<LongWritable, Text> {
     /** {@inheritDoc} */
@@ -136,7 +135,7 @@ public class TestBulkImporter {
         TestingResources.get("org/kiji/mapreduce/TestBulkImportInput.txt"));
 
     // Run the bulk-import:
-    final MapReduceJob job = new KijiBulkImportJobBuilder()
+    final MapReduceJob job = KijiBulkImportJobBuilder.create()
         .withBulkImporter(SimpleBulkImporter.class)
         .withInput(new TextMapReduceJobInput(new Path(inputFile.toString())))
         .withOutput(new KijiTableMapReduceJobOutput(table))
@@ -259,7 +258,7 @@ public class TestBulkImporter {
         TestingResources.get("org/kiji/mapreduce/TestBulkImportInput.txt"));
 
     // Run the bulk-import:
-    final MapReduceJob job = new KijiBulkImportJobBuilder()
+    final MapReduceJob job = KijiBulkImportJobBuilder.create()
         .withBulkImporter(BulkImporterWorkflow.class)
         .withInput(new TextMapReduceJobInput(new Path(inputFile.toString())))
         .withOutput(new KijiTableMapReduceJobOutput(table))

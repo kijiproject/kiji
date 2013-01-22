@@ -62,7 +62,7 @@ import org.kiji.schema.impl.HBaseKijiTable;
 
 /** InputFormat for Hadoop MapReduce jobs reading from a Kiji table. */
 @ApiAudience.Framework
-public class KijiTableInputFormat
+public final class KijiTableInputFormat
     extends InputFormat<EntityId, KijiRowData>
     implements Configurable {
   private static final Logger LOG = LoggerFactory.getLogger(KijiTableInputFormat.class);

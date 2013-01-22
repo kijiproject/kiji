@@ -32,7 +32,7 @@ import org.kiji.schema.tools.RequiredFlagException;
 
 /** Transforms data using a Kiji MapReduce job. */
 @ApiAudience.Private
-public class KijiTransform extends JobTool<KijiTransformJobBuilder> {
+public final class KijiTransform extends JobTool<KijiTransformJobBuilder> {
   @Flag(name="mapper", usage="Fully-qualified class name of the mapper to run")
   private String mMapperName = "";
 
@@ -70,7 +70,7 @@ public class KijiTransform extends JobTool<KijiTransformJobBuilder> {
 
   @Override
   protected KijiTransformJobBuilder createJobBuilder() {
-    return new KijiTransformJobBuilder();
+    return KijiTransformJobBuilder.create();
   }
 
   @Override
@@ -80,7 +80,7 @@ public class KijiTransform extends JobTool<KijiTransformJobBuilder> {
     jobBuilder.withKijiConfiguration(new KijiConfiguration(getConf(), getURI().getInstance()));
 
     // Input.
-    MapReduceJobInputFactory inputFactory = new MapReduceJobInputFactory();
+    MapReduceJobInputFactory inputFactory = MapReduceJobInputFactory.create();
     jobBuilder.withInput(inputFactory.createFromInputSpec(mInputSpec));
 
     // Mapper.
@@ -97,7 +97,7 @@ public class KijiTransform extends JobTool<KijiTransformJobBuilder> {
     }
 
     // Output.
-    MapReduceJobOutputFactory outputFactory = new MapReduceJobOutputFactory();
+    MapReduceJobOutputFactory outputFactory = MapReduceJobOutputFactory.create();
     jobBuilder.withOutput(outputFactory.createFromOutputSpec(mOutputSpec));
   }
 

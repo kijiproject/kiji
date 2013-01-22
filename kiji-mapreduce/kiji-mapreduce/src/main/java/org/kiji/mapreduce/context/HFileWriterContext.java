@@ -26,6 +26,7 @@ import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.TaskInputOutputContext;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.HFileKeyValue;
 import org.kiji.mapreduce.KijiConfKeys;
 import org.kiji.mapreduce.KijiTableContext;
@@ -51,7 +52,8 @@ import org.kiji.schema.layout.impl.CellSpec;
  *  <li> After the M/R job completed successfully, the output is committed to the HBase table
  *       using the HFileLoader.
  */
-public class HFileWriterContext
+@ApiAudience.Private
+public final class HFileWriterContext
     extends InternalKijiContext
     implements KijiTableContext {
 
@@ -64,9 +66,11 @@ public class HFileWriterContext
   private final EntityIdFactory mEntityIdFactory;
 
   /**
-   * Constructs a new table writer context using the specified options.
+   * Constructs a new context that can write cells to an HFile that can be loaded into an HBase
+   * table.
    *
-   * @param hadoopContext Underlying Hadoop context.
+   * @param hadoopContext is the Hadoop {@link TaskInputOutputContext} that will be used to perform
+   *     the writes.
    * @throws IOException on I/O error.
    */
   public HFileWriterContext(TaskInputOutputContext<?, ?, ?, ?> hadoopContext)
@@ -78,6 +82,19 @@ public class HFileWriterContext
     mTable = mKiji.openTable(outputURI.getTable());
     mColumnNameTranslator = new ColumnNameTranslator(mTable.getLayout());
     mEntityIdFactory = mTable.getEntityIdFactory();
+  }
+
+  /**
+   * Creates a new context that can write cells to an HFile that can be loaded into an HBase table.
+   *
+   * @param hadoopContext is the Hadoop {@link TaskInputOutputContext} that will be used to perform
+   *    the writes.
+   * @return a new context that can write cells to an HFile that can be loaded into an HBase table.
+   * @throws IOException if there is an I/O error.
+   */
+  public static HFileWriterContext create(TaskInputOutputContext<?, ?, ?, ?> hadoopContext)
+      throws IOException {
+    return new HFileWriterContext(hadoopContext);
   }
 
   /** {@inheritDoc} */

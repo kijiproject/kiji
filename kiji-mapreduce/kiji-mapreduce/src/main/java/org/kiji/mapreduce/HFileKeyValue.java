@@ -51,7 +51,7 @@ import org.kiji.annotations.ApiAudience;
  * @see org.apache.hadoop.hbase.KeyValue
  */
 @ApiAudience.Framework
-public class HFileKeyValue implements WritableComparable<HFileKeyValue> {
+public final class HFileKeyValue implements WritableComparable<HFileKeyValue> {
   private static final Logger LOG = LoggerFactory.getLogger(HFileKeyValue.class);
 
   /** The wrapped KeyValue (this is never null). */

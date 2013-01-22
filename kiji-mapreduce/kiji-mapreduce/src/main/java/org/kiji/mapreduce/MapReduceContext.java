@@ -22,6 +22,7 @@ package org.kiji.mapreduce;
 import java.io.IOException;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.Inheritance;
 
 /**
  * Context for MapReduce jobs that emit key/value pairs.
@@ -30,6 +31,7 @@ import org.kiji.annotations.ApiAudience;
  * @param <V> Type of the values to emit.
  */
 @ApiAudience.Public
+@Inheritance.Sealed
 public interface MapReduceContext<K, V> extends KijiContext {
   /**
    * Emits a key/value pair.

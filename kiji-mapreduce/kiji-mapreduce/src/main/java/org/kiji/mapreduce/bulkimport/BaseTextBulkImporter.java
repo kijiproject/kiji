@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.Inheritance;
 import org.kiji.mapreduce.KijiBulkImporter;
 import org.kiji.mapreduce.KijiTableContext;
 
@@ -38,6 +39,7 @@ import org.kiji.mapreduce.KijiTableContext;
  * method with this behavior.</p>
  */
 @ApiAudience.Public
+@Inheritance.Extensible
 public abstract class BaseTextBulkImporter extends KijiBulkImporter<LongWritable, Text> {
   private static final Logger LOG = LoggerFactory.getLogger(BaseTextBulkImporter.class);
 

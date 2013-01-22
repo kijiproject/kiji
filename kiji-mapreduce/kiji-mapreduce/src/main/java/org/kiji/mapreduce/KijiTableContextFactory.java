@@ -26,7 +26,10 @@ import java.lang.reflect.InvocationTargetException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.TaskInputOutputContext;
 
+import org.kiji.annotations.ApiAudience;
+
 /** Instantiates a KijiTableContext according to a configuration. */
+@ApiAudience.Private
 public final class KijiTableContextFactory {
 
   /**

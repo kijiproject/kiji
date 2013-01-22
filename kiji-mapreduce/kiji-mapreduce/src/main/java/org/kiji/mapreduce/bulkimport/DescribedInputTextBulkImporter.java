@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.Inheritance;
 import org.kiji.hadoop.configurator.HadoopConf;
 import org.kiji.hadoop.configurator.HadoopConfigurator;
 import org.kiji.mapreduce.KijiConfKeys;
@@ -58,6 +59,7 @@ import org.kiji.schema.KijiURIException;
  * @see org.kiji.mapreduce.bulkimport.TextInputDescriptorParser
  */
 @ApiAudience.Public
+@Inheritance.Extensible
 public abstract class DescribedInputTextBulkImporter extends BaseTextBulkImporter {
   private static final Logger LOG = LoggerFactory.getLogger(DescribedInputTextBulkImporter.class);
 
@@ -253,7 +255,7 @@ public abstract class DescribedInputTextBulkImporter extends BaseTextBulkImporte
     FileSystem fs = descriptorPath.getFileSystem(getConf());
     FSDataInputStream inputStream = fs.open(descriptorPath);
 
-    TextInputDescriptorParser layoutParser = new TextInputDescriptorParser();
+    TextInputDescriptorParser layoutParser = TextInputDescriptorParser.create();
     layoutParser.parse(inputStream);
     return layoutParser;
   }

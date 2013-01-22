@@ -37,7 +37,7 @@ import org.kiji.annotations.ApiAudience;
  * Otherwise, it behaves exactly like the HBase TableInputFormat.</p>
  */
 @ApiAudience.Private
-public class HTableInputFormat extends TableInputFormat {
+public final class HTableInputFormat extends TableInputFormat {
   /** {@inheritDoc} */
   @Override
   public List<InputSplit> getSplits(JobContext context) throws IOException {

@@ -131,7 +131,7 @@ public class IntegrationTestRegexQualifierColumnFilter extends AbstractKijiInteg
       throws ClassNotFoundException, IOException, InterruptedException {
     // Run a gatherer over the test_table.
     Path outputPath = getDfsPath("qualifiers-that-start-with-the-letter-a");
-    MapReduceJob gatherJob = new KijiGatherJobBuilder()
+    MapReduceJob gatherJob = KijiGatherJobBuilder.create()
         .withInputTable(mTable)
         .withGatherer(MyGatherer.class)
         .withOutput(new SequenceFileMapReduceJobOutput(outputPath, 1))

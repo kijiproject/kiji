@@ -31,7 +31,7 @@ import org.kiji.mapreduce.MapReduceJobInput;
 
 /** Job input that reads from an HTable (an HBase table). */
 @ApiAudience.Public
-public class HTableMapReduceJobInput extends MapReduceJobInput {
+public final class HTableMapReduceJobInput extends MapReduceJobInput {
   /** The name of the HTable to use as job input. */
   private final String mTableName;
 

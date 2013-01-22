@@ -24,9 +24,11 @@ import java.io.Flushable;
 import java.io.IOException;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.Inheritance;
 
 /** Interface for contexts passed to Kiji MapReduce methods. */
 @ApiAudience.Public
+@Inheritance.Sealed
 public interface KijiContext extends Closeable, Flushable {
   /**
    * Opens a KeyValueStore associated with storeName for read-access.

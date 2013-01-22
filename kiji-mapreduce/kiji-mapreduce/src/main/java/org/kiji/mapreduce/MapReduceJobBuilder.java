@@ -44,6 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.Inheritance;
 import org.kiji.mapreduce.kvstore.XmlKeyValueStoreParser;
 import org.kiji.mapreduce.util.AvroMapReduce;
 import org.kiji.mapreduce.util.Jars;
@@ -55,6 +56,7 @@ import org.kiji.schema.Kiji;
  * @param <T> The type of the builder class.
  */
 @ApiAudience.Framework
+@Inheritance.Sealed
 public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder> {
   private static final Logger LOG = LoggerFactory.getLogger(MapReduceJobBuilder.class);
 
@@ -68,7 +70,7 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder> {
   private Map<String, KeyValueStore<?, ?>> mBoundStores;
 
   /** Creates a new <code>MapReduceJobBuilder</code> instance. */
-  public MapReduceJobBuilder() {
+  MapReduceJobBuilder() {
     mJarDirectories = new ArrayList<File>();
     mBoundStores = new HashMap<String, KeyValueStore<?, ?>>();
 

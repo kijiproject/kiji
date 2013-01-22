@@ -26,7 +26,7 @@ import org.junit.Test;
 public class TestJobInputSpec {
   @Test
   public void testNormalConstructor() {
-    JobInputSpec spec = new JobInputSpec(JobInputSpec.Format.TEXT, "/tmp/foo");
+    JobInputSpec spec = JobInputSpec.create(JobInputSpec.Format.TEXT, "/tmp/foo");
     assertEquals(JobInputSpec.Format.TEXT, spec.getFormat());
     assertEquals("/tmp/foo", spec.getLocation());
   }

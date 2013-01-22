@@ -26,10 +26,12 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.Inheritance;
 import org.kiji.mapreduce.MapReduceJobInput;
 
 /** Base class for map reduce job input that is read from files. */
 @ApiAudience.Public
+@Inheritance.Sealed
 public abstract class FileMapReduceJobInput extends MapReduceJobInput {
   /** The path to the input files. */
   private final Path[] mPaths;
@@ -39,7 +41,7 @@ public abstract class FileMapReduceJobInput extends MapReduceJobInput {
    *
    * @param paths The paths to the input files.
    */
-  protected FileMapReduceJobInput(Path... paths) {
+  FileMapReduceJobInput(Path... paths) {
     mPaths = paths;
   }
 

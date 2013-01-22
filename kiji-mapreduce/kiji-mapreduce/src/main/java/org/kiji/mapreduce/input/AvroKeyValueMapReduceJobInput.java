@@ -30,7 +30,7 @@ import org.kiji.avro.mapreduce.AvroKeyValueInputFormat;
  * a 'key' and a 'value' field.
  */
 @ApiAudience.Public
-public class AvroKeyValueMapReduceJobInput extends FileMapReduceJobInput {
+public final class AvroKeyValueMapReduceJobInput extends FileMapReduceJobInput {
   /**
    * Creates a new <code>AvroKeyValueMapReduceJobInput</code> instance.
    *

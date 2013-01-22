@@ -27,7 +27,7 @@ import org.kiji.avro.mapreduce.AvroKeyInputFormat;
 
 /** MapReduce job input that is read from Avro container files. */
 @ApiAudience.Public
-public class AvroKeyMapReduceJobInput extends FileMapReduceJobInput {
+public final class AvroKeyMapReduceJobInput extends FileMapReduceJobInput {
   /**
    * Creates a new <code>AvroKeyMapReduceJobInput</code> instance.
    *

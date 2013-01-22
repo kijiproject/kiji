@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.Inheritance;
 import org.kiji.mapreduce.KijiDataRequester;
 import org.kiji.mapreduce.KijiMapper;
 import org.kiji.schema.EntityId;
@@ -43,6 +44,7 @@ import org.kiji.schema.KijiRowData;
  * @param <V> Type of the MapReduce output value.
  */
 @ApiAudience.Private
+@Inheritance.Sealed
 public abstract class KijiTableMapper<K, V>
     extends Mapper<EntityId, KijiRowData, K, V>
     implements Configurable, KijiMapper, KijiDataRequester {
@@ -51,6 +53,11 @@ public abstract class KijiTableMapper<K, V>
 
   /** Configuration for this instance. */
   private Configuration mConf;
+
+  /**
+   * Constructs a new mapper that reads from a Kiji table.
+   */
+  KijiTableMapper() { }
 
   /**
    * Kiji mapper function that processes an input row.

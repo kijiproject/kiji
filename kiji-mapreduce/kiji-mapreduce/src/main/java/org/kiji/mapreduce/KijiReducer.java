@@ -20,9 +20,11 @@
 package org.kiji.mapreduce;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.Inheritance;
 
 /** Base interface for all reducers used by Kiji. */
 @ApiAudience.Public
+@Inheritance.Extensible
 public interface KijiReducer {
   /**
    * Gets the type of the output keys from the reducer.

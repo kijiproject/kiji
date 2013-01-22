@@ -36,17 +36,28 @@ import org.kiji.schema.impl.HBaseKijiTable;
 /**
  * Loads HFiles generated from a bulk-import job into a Kiji table.
  *
- * @see com.kijidata.core.client.KijiBulkImportJobBuilder
+ * @see org.kiji.mapreduce.KijiBulkImportJobBuilder
+ * @see org.kiji.mapreduce.tools.KijiBulkLoad
  */
 @ApiAudience.Public
-public class HFileLoader extends Configured {
+public final class HFileLoader extends Configured {
   /**
    * Creates a new <code>HFileLoader</code> instance.
    *
    * @param conf The Hadoop configuration.
    */
-  public HFileLoader(Configuration conf) {
+  private HFileLoader(Configuration conf) {
     super(conf);
+  }
+
+  /**
+   * Creates a new HFile loader.
+   *
+   * @param conf The configuration to be used by the new loader.
+   * @return A new loader that can be used to add HFiles to HBase tables.
+   */
+  public static HFileLoader create(Configuration conf) {
+    return new HFileLoader(conf);
   }
 
   /**

@@ -58,7 +58,7 @@ import org.kiji.annotations.ApiAudience;
  * After this call, these variables may be recovered with <code>getQualifierInfo()</code>.</p>
  */
 @ApiAudience.Private
-public class TextInputDescriptorParser {
+public final class TextInputDescriptorParser {
   private static final Logger LOG = LoggerFactory.getLogger(TextInputDescriptorParser.class);
 
   /** Token expected at the beginning of lines naming a qualifier. */
@@ -127,6 +127,21 @@ public class TextInputDescriptorParser {
 
   /** An unmodifiable List of QualifierInfo loaded from parse() method. */
   private List<QualifierInfo> mQualifierInfo = null;
+
+  /**
+   * Constructs an input-descriptor file parser. Such files are used by
+   * {@link DescribedInputTextBulkImporter}.
+   */
+  private TextInputDescriptorParser() { }
+
+  /**
+   * Creates a new input-descriptor file parser.
+   *
+   * @return a new input-descriptor file parser for use by {@link DescribedInputTextBulkImporter}.
+   */
+  public static TextInputDescriptorParser create() {
+    return new TextInputDescriptorParser();
+  }
 
   /**
    * Returns the unmodifiable List of QualifierInfo loaded from the <code>parse()</code> method,

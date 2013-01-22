@@ -117,7 +117,7 @@ public class TestKijiBulkImportJobBuilder extends KijiClientTest {
     replay(htable);
 
     LOG.info("Configuring job...");
-    KijiBulkImportJobBuilder builder = new KijiBulkImportJobBuilder()
+    KijiBulkImportJobBuilder builder = KijiBulkImportJobBuilder.create()
         .withInput(new TextMapReduceJobInput(new Path("/path/to/input")))
         .withBulkImporter(NoopBulkImporter.class)
         .withOutput(new HFileMapReduceJobOutput(myTable, new Path("/path/to/output"), 10));
@@ -166,7 +166,7 @@ public class TestKijiBulkImportJobBuilder extends KijiClientTest {
     replay(htable);
 
     LOG.info("Configuring job...");
-    KijiBulkImportJobBuilder builder = new KijiBulkImportJobBuilder()
+    KijiBulkImportJobBuilder builder = KijiBulkImportJobBuilder.create()
         .withInput(new TextMapReduceJobInput(new Path("/path/to/input")))
         .withBulkImporter(KVStoreBulkImporter.class)
         .withOutput(new HFileMapReduceJobOutput(myTable, new Path("/path/to/output"), 10));

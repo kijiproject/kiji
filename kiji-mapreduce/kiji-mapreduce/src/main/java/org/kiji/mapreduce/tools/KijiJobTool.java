@@ -22,6 +22,7 @@ package org.kiji.mapreduce.tools;
 import java.io.IOException;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.Inheritance;
 import org.kiji.common.flags.Flag;
 import org.kiji.mapreduce.KijiTableInputJobBuilder;
 import org.kiji.schema.EntityIdFactory;
@@ -34,6 +35,7 @@ import org.kiji.schema.tools.ToolUtils;
  * @param <B> The type of job builder to use.
  */
 @ApiAudience.Framework
+@Inheritance.Extensible
 public abstract class KijiJobTool<B extends KijiTableInputJobBuilder> extends JobTool<B> {
   @Flag(name="start-row", usage="The row to start scanning at (inclusive)")
   protected String mStartRow = "";

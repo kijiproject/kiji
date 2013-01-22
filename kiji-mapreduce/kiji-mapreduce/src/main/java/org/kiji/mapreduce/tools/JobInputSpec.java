@@ -41,7 +41,7 @@ import org.kiji.annotations.ApiAudience;
  * method.</p>
  */
 @ApiAudience.Framework
-public class JobInputSpec {
+public final class JobInputSpec {
   /**
    * The Job input formats supported by Kiji.  In the string representation of a
    * JobInputSpec, this is the part before the first colon, e.g. the "avro" in
@@ -127,7 +127,7 @@ public class JobInputSpec {
    * @param format The format of the input data.
    * @param locations The locations of the input data.
    */
-  public JobInputSpec(Format format, String... locations) {
+  private JobInputSpec(Format format, String... locations) {
     if ((Format.KIJI == format || Format.HTABLE == format) && locations.length != 1) {
       throw new UnsupportedOperationException("Format " + format.toString()
           + " only supports a single input location."
@@ -135,6 +135,18 @@ public class JobInputSpec {
     }
     mFormat = format;
     mLocations = locations;
+  }
+
+  /**
+   * Creates a new job input specification.  When created with formats KIJI or HTABLE only one
+   * input location may be specified. Otherwise multiple input locations may be given.
+   *
+   * @param format is the format of the input data.
+   * @param locations are the locations of the input data.
+   * @return a new job input specification using the specified format and locations.
+   */
+  public static JobInputSpec create(Format format, String... locations) {
+    return new JobInputSpec(format, locations);
   }
 
   /** @return The format of the input data. */

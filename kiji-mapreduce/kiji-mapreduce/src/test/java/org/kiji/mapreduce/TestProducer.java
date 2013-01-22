@@ -70,9 +70,8 @@ public class TestProducer {
   }
 
   /**
-   * Producer intended to run on the generic KijiMR test layout.
-   *
-   * @see testing resource org/kiji/mapreduce/layout/test.json
+   * Producer intended to run on the generic KijiMR test layout. Uses resource
+   * org/kiji/mapreduce/layout/test.json.
    */
   public static class SimpleProducer extends KijiProducer {
 
@@ -134,7 +133,7 @@ public class TestProducer {
     }
 
     // Run producer:
-    final MapReduceJob job = new KijiProduceJobBuilder()
+    final MapReduceJob job = KijiProduceJobBuilder.create()
         .withProducer(SimpleProducer.class)
         .withInputTable(table)
         .withOutput(new KijiTableMapReduceJobOutput(table))
@@ -251,7 +250,7 @@ public class TestProducer {
     }
 
     // Run producer:
-    final MapReduceJob job = new KijiProduceJobBuilder()
+    final MapReduceJob job = KijiProduceJobBuilder.create()
         .withProducer(ProducerWorkflow.class)
         .withInputTable(table)
         .withOutput(new KijiTableMapReduceJobOutput(table))

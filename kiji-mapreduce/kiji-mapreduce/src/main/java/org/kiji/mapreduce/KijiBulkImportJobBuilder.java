@@ -39,7 +39,8 @@ import org.kiji.schema.layout.KijiTableLayout;
 
 /** Builds a job that runs a KijiBulkImporter to import data into a Kiji table. */
 @ApiAudience.Public
-public class KijiBulkImportJobBuilder extends KijiMapReduceJobBuilder<KijiBulkImportJobBuilder> {
+public final class KijiBulkImportJobBuilder
+    extends KijiMapReduceJobBuilder<KijiBulkImportJobBuilder> {
   private static final Logger LOG = LoggerFactory.getLogger(KijiBulkImportJobBuilder.class);
 
   /** The class of the bulk importer to run. */
@@ -58,7 +59,7 @@ public class KijiBulkImportJobBuilder extends KijiMapReduceJobBuilder<KijiBulkIm
   private HBaseKijiTable mOutputTable;
 
   /** Constructs a builder for jobs that run a KijiBulkImporter. */
-  public KijiBulkImportJobBuilder() {
+  private KijiBulkImportJobBuilder() {
     mBulkImporterClass = null;
 
     mBulkImporter = null;
@@ -67,6 +68,15 @@ public class KijiBulkImportJobBuilder extends KijiMapReduceJobBuilder<KijiBulkIm
 
     mJobInput = null;
     mOutputTable = null;
+  }
+
+  /**
+   * Creates a new builder for Kiji bulk import jobs.
+   *
+   * @return a new Kiji bulk import job builder.
+   */
+  public static KijiBulkImportJobBuilder create() {
+    return new KijiBulkImportJobBuilder();
   }
 
   /**
@@ -142,7 +152,7 @@ public class KijiBulkImportJobBuilder extends KijiMapReduceJobBuilder<KijiBulkIm
   /** {@inheritDoc} */
   @Override
   protected MapReduceJob build(Job job) {
-    return new KijiMapReduceJob(job);
+    return KijiMapReduceJob.create(job);
   }
 
   /** {@inheritDoc} */

@@ -44,7 +44,7 @@ import org.kiji.schema.KijiURI;
  * and cause the HBase instance to go offline.
  */
 @ApiAudience.Private
-public class DirectKijiTableWriterContext
+public final class DirectKijiTableWriterContext
     extends InternalKijiContext
     implements KijiTableContext {
 
@@ -54,9 +54,10 @@ public class DirectKijiTableWriterContext
   private final EntityIdFactory mEntityIdFactory;
 
   /**
-   * Constructs a new table writer context using the specified options.
+   * Constructs a new context that can write cells directly to a Kiji table.
    *
-   * @param hadoopContext Underlying Hadoop context.
+   * @param hadoopContext is the Hadoop {@link TaskInputOutputContext} that will be used to perform
+   *     the writes.
    * @throws IOException on I/O error.
    */
   public DirectKijiTableWriterContext(TaskInputOutputContext<?, ?, ?, ?> hadoopContext)
@@ -68,6 +69,19 @@ public class DirectKijiTableWriterContext
     mTable = mKiji.openTable(outputURI.getTable());
     mPutter = mTable.openTableWriter();
     mEntityIdFactory = mTable.getEntityIdFactory();
+  }
+
+  /**
+   * Creates a new context that can write cells directly to a Kiji table.
+   *
+   * @param hadoopContext is the Hadoop {@link TaskInputOutputContext} that will be used to perform
+   *     the writes.
+   * @return a new context that can write cells directly to a Kiji table.
+   * @throws IOException if there is an I/O error.
+   */
+  public static DirectKijiTableWriterContext
+      create(TaskInputOutputContext<?, ?, ?, ?> hadoopContext) throws IOException {
+    return new DirectKijiTableWriterContext(hadoopContext);
   }
 
   /** {@inheritDoc} */

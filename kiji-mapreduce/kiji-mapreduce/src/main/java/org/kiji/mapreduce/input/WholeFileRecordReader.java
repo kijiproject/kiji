@@ -43,7 +43,7 @@ import org.kiji.annotations.ApiAudience;
  * (Note that the entire file must be able to fit in ram)</p>
  */
 @ApiAudience.Private
-public class WholeFileRecordReader extends RecordReader<Text, Text> {
+public final class WholeFileRecordReader extends RecordReader<Text, Text> {
   private static final Logger LOG = LoggerFactory.getLogger(WholeFileRecordReader.class);
 
   /** The path to the file to read. */

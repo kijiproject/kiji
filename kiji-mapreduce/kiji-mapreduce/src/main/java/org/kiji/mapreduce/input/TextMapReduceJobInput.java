@@ -27,7 +27,7 @@ import org.kiji.annotations.ApiAudience;
 
 /** Input for a map reduce job that is read from text files. */
 @ApiAudience.Public
-public class TextMapReduceJobInput extends FileMapReduceJobInput {
+public final class TextMapReduceJobInput extends FileMapReduceJobInput {
   /**
    * Creates a new <code>TextMapReduceJobInput</code> instance.
    *

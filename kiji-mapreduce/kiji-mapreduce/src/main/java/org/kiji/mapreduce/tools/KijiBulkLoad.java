@@ -34,9 +34,9 @@ import org.kiji.schema.tools.VersionValidatedTool;
 
 /** Bulk loads HFiles into a Kiji table. */
 @ApiAudience.Private
-public class KijiBulkLoad extends VersionValidatedTool {
+public final class KijiBulkLoad extends VersionValidatedTool {
   @Flag(name="input", usage="HFile location")
-  protected String mInputFlag = "";
+  private String mInputFlag = "";
 
   @Flag(name="table", usage="Kiji table name")
   private String mTableName = "";
@@ -94,7 +94,7 @@ public class KijiBulkLoad extends VersionValidatedTool {
   @Override
   protected int run(List<String> nonFlagArgs) throws Exception {
     // Load the HFiles
-    HFileLoader hFileLoader = new HFileLoader(getConf());
+    HFileLoader hFileLoader = HFileLoader.create(getConf());
     hFileLoader.load(new Path(mInputFlag), mOutputTable);
 
     return 0;

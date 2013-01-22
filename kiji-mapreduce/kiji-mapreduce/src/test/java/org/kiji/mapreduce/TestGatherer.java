@@ -60,9 +60,8 @@ public class TestGatherer {
   private static final Logger LOG = LoggerFactory.getLogger(TestGatherer.class);
 
   /**
-   * Producer intended to run on the generic KijiMR test layout.
-   *
-   * @see testing resource org/kiji/mapreduce/layout/test.json
+   * Producer intended to run on the generic KijiMR test layout. Uses resource
+   * org/kiji/mapreduce/layout/test.json.
    */
   public static class TestingGatherer extends KijiGatherer<LongWritable, Text> {
 
@@ -157,7 +156,7 @@ public class TestGatherer {
     final int numSplits = 1;
 
     // Run gatherer:
-    final MapReduceJob job = new KijiGatherJobBuilder()
+    final MapReduceJob job = KijiGatherJobBuilder.create()
         .withGatherer(TestingGatherer.class)
         .withInputTable(table)
         .withOutput(new TextMapReduceJobOutput(new Path(outputDir.toString()), numSplits))

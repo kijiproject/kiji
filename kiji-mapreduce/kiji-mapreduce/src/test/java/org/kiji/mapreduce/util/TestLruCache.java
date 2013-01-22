@@ -31,7 +31,7 @@ public class TestLruCache {
 
   @Test
   public void testCache() {
-    LruCache<String, String> cache = new LruCache<String, String>(4);
+    LruCache<String, String> cache = LruCache.create(4);
     cache.put("a", "a1");
     cache.put("b", "b1");
     cache.put("c", "c1");

@@ -122,7 +122,7 @@ public class TestKijiProduceJobBuilder extends KijiClientTest {
     replay(myTable);
     replay(htable);
 
-    MapReduceJob produceJob = new KijiProduceJobBuilder()
+    MapReduceJob produceJob = KijiProduceJobBuilder.create()
         .withInputTable(myTable)
         .withProducer(MyProducer.class)
         .withOutput(new HFileMapReduceJobOutput(myTable, new Path("foo/bar"), 10))
@@ -162,7 +162,7 @@ public class TestKijiProduceJobBuilder extends KijiClientTest {
 
     // This should throw an exception because we didn't provide a better KVStore
     // than the UnconfiguredKeyValueStore in the default.
-    new KijiProduceJobBuilder()
+    KijiProduceJobBuilder.create()
         .withInputTable(myTable)
         .withProducer(UnconfiguredKVProducer.class)
         .withOutput(new KijiTableMapReduceJobOutput(myTable))
@@ -187,7 +187,7 @@ public class TestKijiProduceJobBuilder extends KijiClientTest {
     replay(kiji);
     replay(myTable);
 
-    MapReduceJob produceJob = new KijiProduceJobBuilder()
+    MapReduceJob produceJob = KijiProduceJobBuilder.create()
         .withInputTable(myTable)
         .withProducer(UnconfiguredKVProducer.class)
         .withStore("foostore", new EmptyKeyValueStore<String, Object>())
@@ -228,7 +228,7 @@ public class TestKijiProduceJobBuilder extends KijiClientTest {
 
     // This should throw a job configuration exception because the output table does not
     // match the input table.
-    new KijiProduceJobBuilder()
+    KijiProduceJobBuilder.create()
         .withInputTable(myTable)
         .withProducer(MyProducer.class)
         .withOutput(new KijiTableMapReduceJobOutput(otherTable))

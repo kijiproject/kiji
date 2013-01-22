@@ -35,19 +35,34 @@ import org.kiji.schema.KijiRowData;
  * @param <V> Type of the values to emit.
  */
 @ApiAudience.Private
-public class InternalMapReduceContext<K, V>
+public final class InternalMapReduceContext<K, V>
     extends InternalKijiContext
     implements MapReduceContext<K, V> {
 
   /**
-   * Initializes a MapReduce context.
+   * Constructs a new context for MapReduce jobs.
    *
-   * @param context Underlying Hadoop context.
+   * @param context is the Hadoop {@link TaskInputOutputContext} that will back the new context.
    * @throws IOException on I/O error.
    */
-  public InternalMapReduceContext(TaskInputOutputContext<EntityId, KijiRowData, K, V> context)
+  private InternalMapReduceContext(TaskInputOutputContext<EntityId, KijiRowData, K, V> context)
       throws IOException {
     super(context);
+  }
+
+  /**
+   * Creates a new context for MapReduce jobs.
+   *
+   * @param context is the Hadoop {@link TaskInputOutputContext} that will back the new context
+   *    for MapReduce jobs.
+   * @param <K> is the type of key that can be written by the new context.
+   * @param <V> is the type of value that can be written by the new context.
+   * @return a new context for MapReduce jobs.
+   * @throws IOException if there is an I/O error.
+   */
+  public static <K, V> InternalMapReduceContext<K, V>
+      create(TaskInputOutputContext<EntityId, KijiRowData, K, V> context) throws IOException {
+    return new InternalMapReduceContext<K, V>(context);
   }
 
   /** {@inheritDoc} */

@@ -31,7 +31,7 @@ import org.kiji.schema.tools.RequiredFlagException;
 
 /** Command-line tool for running a KijiGatherer. */
 @ApiAudience.Private
-public class KijiGather extends KijiJobTool<KijiGatherJobBuilder> {
+public final class KijiGather extends KijiJobTool<KijiGatherJobBuilder> {
   @Flag(name="gatherer", usage="Fully-qualified class name of the gatherer to run")
   private String mGathererName = "";
 
@@ -69,7 +69,7 @@ public class KijiGather extends KijiJobTool<KijiGatherJobBuilder> {
 
   @Override
   protected KijiGatherJobBuilder createJobBuilder() {
-    return new KijiGatherJobBuilder();
+    return KijiGatherJobBuilder.create();
   }
 
   /**
@@ -104,7 +104,7 @@ public class KijiGather extends KijiJobTool<KijiGatherJobBuilder> {
       checkSubclass(reducerClass, KijiReducer.class);
       jobBuilder.withReducer(reducerClass.asSubclass(KijiReducer.class));
     }
-    MapReduceJobOutputFactory outputFactory = new MapReduceJobOutputFactory();
+    MapReduceJobOutputFactory outputFactory = MapReduceJobOutputFactory.create();
     jobBuilder.withOutput(outputFactory.createFromOutputSpec(mOutputSpec));
   }
 

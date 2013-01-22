@@ -28,3 +28,4 @@ public enum JobHistoryCounters {
   GATHERER_ROWS_PROCESSED,
   BULKIMPORTER_RECORDS_PROCESSED,
 }
+

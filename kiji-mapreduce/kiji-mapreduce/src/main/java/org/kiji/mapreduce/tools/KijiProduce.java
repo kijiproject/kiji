@@ -38,7 +38,7 @@ import org.kiji.schema.tools.RequiredFlagException;
 
 /** Program for running a Kiji producer in a MapReduce job. */
 @ApiAudience.Private
-public class KijiProduce extends KijiJobTool<KijiProduceJobBuilder> {
+public final class KijiProduce extends KijiJobTool<KijiProduceJobBuilder> {
   private static final Logger LOG = LoggerFactory.getLogger(KijiProduce.class);
 
   @Flag(name = "producer", usage = "Fully-qualified class name of the producer to run")
@@ -78,7 +78,7 @@ public class KijiProduce extends KijiJobTool<KijiProduceJobBuilder> {
 
   @Override
   protected KijiProduceJobBuilder createJobBuilder() {
-    return new KijiProduceJobBuilder();
+    return KijiProduceJobBuilder.create();
   }
 
   @Override
@@ -92,7 +92,7 @@ public class KijiProduce extends KijiJobTool<KijiProduceJobBuilder> {
       jobBuilder.withOutput(new HFileMapReduceJobOutput(
           getInputTable(), new Path(mOutputSpec.getLocation()), mOutputSpec.getSplits()));
     } else {
-      MapReduceJobOutputFactory outputFactory = new MapReduceJobOutputFactory();
+      MapReduceJobOutputFactory outputFactory = MapReduceJobOutputFactory.create();
       jobBuilder.withOutput(outputFactory.createFromOutputSpec(mOutputSpec));
     }
     jobBuilder.withNumThreads(mNumThreadsPerMapper);

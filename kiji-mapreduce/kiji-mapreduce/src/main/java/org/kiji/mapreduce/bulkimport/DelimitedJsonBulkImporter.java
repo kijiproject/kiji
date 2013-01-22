@@ -54,7 +54,7 @@ import org.kiji.schema.EntityId;
  * {@inheritDoc}
  */
 @ApiAudience.Public
-public class DelimitedJsonBulkImporter extends DescribedInputTextBulkImporter {
+public final class DelimitedJsonBulkImporter extends DescribedInputTextBulkImporter {
   private static final Logger LOG = LoggerFactory.getLogger(DelimitedJsonBulkImporter.class);
 
   /** Configuration variable that specifies the column value separator in the text input files. */

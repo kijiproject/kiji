@@ -26,7 +26,7 @@ import org.junit.Test;
 public class TestJobOutputSpec {
   @Test
   public void testNullPathConstructor() {
-    JobOutputSpec spec = new JobOutputSpec(JobOutputSpec.Format.KIJI, null, 1);
+    JobOutputSpec spec = JobOutputSpec.create(JobOutputSpec.Format.KIJI, null, 1);
     assertEquals(JobOutputSpec.Format.KIJI, spec.getFormat());
     assertEquals(null, spec.getLocation());
     assertEquals(1, spec.getSplits());
@@ -34,7 +34,7 @@ public class TestJobOutputSpec {
 
   @Test
   public void testNormalConstructor() {
-    JobOutputSpec spec = new JobOutputSpec(JobOutputSpec.Format.TEXT, "/tmp/foo", 2);
+    JobOutputSpec spec = JobOutputSpec.create(JobOutputSpec.Format.TEXT, "/tmp/foo", 2);
     assertEquals(JobOutputSpec.Format.TEXT, spec.getFormat());
     assertEquals("/tmp/foo", spec.getLocation());
     assertEquals(2, spec.getSplits());

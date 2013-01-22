@@ -67,7 +67,7 @@ import org.kiji.mapreduce.util.KijiBulkImporters;
  * @param <V> Type of the MapReduce input value.
  */
 @ApiAudience.Private
-public class BulkImportMapper<K, V>
+public final class BulkImportMapper<K, V>
     extends Mapper<K, V, HFileKeyValue, NullWritable>
     implements Configurable, AvroKeyReader, AvroValueReader, HTableReader, KijiMapper {
 

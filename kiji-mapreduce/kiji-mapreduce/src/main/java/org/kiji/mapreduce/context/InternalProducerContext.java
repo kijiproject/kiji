@@ -39,7 +39,7 @@ import org.kiji.schema.KijiRowData;
  * Wraps a full KijiTableContext and restricts it to puts allowed in a producer.
  */
 @ApiAudience.Private
-public class InternalProducerContext
+public final class InternalProducerContext
     extends InternalKijiContext
     implements InternalProducerContextInterface {
 
@@ -62,7 +62,7 @@ public class InternalProducerContext
    * @param outputColumn Column to write.
    * @throws IOException on I/O error.
    */
-  public InternalProducerContext(
+  private InternalProducerContext(
       TaskInputOutputContext<EntityId, KijiRowData, ?, ?> taskContext,
       KijiColumnName outputColumn)
       throws IOException {
@@ -70,6 +70,22 @@ public class InternalProducerContext
     mTableContext = KijiTableContextFactory.create(taskContext);
     mFamily = Preconditions.checkNotNull(outputColumn.getFamily());
     mQualifier = outputColumn.getQualifier();
+  }
+
+  /**
+   * Creates a new implementation of {@link InternalProducerContextInterface} for use by Kiji
+   * producers.
+   *
+   * @param taskContext is the Hadoop {@link TaskInputOutputContext} to which the new context's
+   *    functionality will be delegated.
+   * @param outputColumn is the name of the Kiji column that the new context can write to.
+   * @return a new context for use by Kiji producers that can write to a column of a Kiji table.
+   * @throws IOException if there is an I/O error.
+   */
+  public static InternalProducerContext create(
+      TaskInputOutputContext<EntityId, KijiRowData, ?, ?> taskContext,
+      KijiColumnName outputColumn) throws IOException {
+    return new InternalProducerContext(taskContext, outputColumn);
   }
 
   /** {@inheritDoc} */

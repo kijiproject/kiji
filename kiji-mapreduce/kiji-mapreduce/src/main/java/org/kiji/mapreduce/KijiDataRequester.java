@@ -20,10 +20,12 @@
 package org.kiji.mapreduce;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.Inheritance;
 import org.kiji.schema.KijiDataRequest;
 
 /** Interface for classes that specify a set of columns to read from a kiji table. */
 @ApiAudience.Public
+@Inheritance.Extensible
 public interface KijiDataRequester {
   /**
    * Return a KijiDataRequest that describes which input columns need to be available.

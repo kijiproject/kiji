@@ -27,7 +27,7 @@ import org.kiji.annotations.ApiAudience;
 
 /** MapReduce job output that writes to map files (indexed sequence files). */
 @ApiAudience.Public
-public class MapFileMapReduceJobOutput extends FileMapReduceJobOutput {
+public final class MapFileMapReduceJobOutput extends FileMapReduceJobOutput {
   /**
    * Creates a new <code>MapFileMapReduceJobOutput</code> instance.
    *

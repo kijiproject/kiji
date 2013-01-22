@@ -29,7 +29,7 @@ import org.kiji.annotations.ApiAudience;
  * A single map task will process each file under a specified Path.
  */
 @ApiAudience.Public
-public class WholeTextFileMapReduceJobInput extends FileMapReduceJobInput {
+public final class WholeTextFileMapReduceJobInput extends FileMapReduceJobInput {
 
   /**
    * Creates a new <code>WholeTextFileMapReduceJobInput</code> instance.

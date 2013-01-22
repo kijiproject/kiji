@@ -65,7 +65,7 @@ public class TestTextInputDescriptorParser {
   @Test
   public void parseOneLayout() throws IOException {
     InputStream in = new ByteArrayInputStream(ONE_LAYOUT.getBytes());
-    TextInputDescriptorParser layoutParser = new TextInputDescriptorParser();
+    TextInputDescriptorParser layoutParser = TextInputDescriptorParser.create();
     layoutParser.parse(in);
 
     List<QualifierInfo> info = layoutParser.getQualifierInfo();
@@ -78,7 +78,7 @@ public class TestTextInputDescriptorParser {
   @Test
   public void parseSeveralLayouts() throws IOException {
     InputStream in = new ByteArrayInputStream(SEVERAL_LAYOUTS.getBytes());
-    TextInputDescriptorParser layoutParser = new TextInputDescriptorParser();
+    TextInputDescriptorParser layoutParser = TextInputDescriptorParser.create();
     layoutParser.parse(in);
 
     List<QualifierInfo> info = layoutParser.getQualifierInfo();
@@ -93,28 +93,28 @@ public class TestTextInputDescriptorParser {
   @Test(expected=IOException.class)
   public void testExceptionIfNoBlankLines() throws IOException {
     InputStream in = new ByteArrayInputStream(SEVERAL_LAYOUTS_WITHOUT_BLANK_LINES.getBytes());
-    TextInputDescriptorParser layoutParser = new TextInputDescriptorParser();
+    TextInputDescriptorParser layoutParser = TextInputDescriptorParser.create();
     layoutParser.parse(in);
   }
 
   @Test(expected=IOException.class)
   public void testExceptionIfNoBlankLines2() throws IOException {
     InputStream in = new ByteArrayInputStream(SEVERAL_LAYOUTS_AND_SKIPS_WITHOUT_BLANKS.getBytes());
-    TextInputDescriptorParser layoutParser = new TextInputDescriptorParser();
+    TextInputDescriptorParser layoutParser = TextInputDescriptorParser.create();
     layoutParser.parse(in);
   }
 
   @Test(expected=RuntimeException.class)
   public void testExceptionIfIllegalSchema() throws IOException {
     InputStream in = new ByteArrayInputStream(BAD_SCHEMA_LAYOUT.getBytes());
-    TextInputDescriptorParser layoutParser = new TextInputDescriptorParser();
+    TextInputDescriptorParser layoutParser = TextInputDescriptorParser.create();
     layoutParser.parse(in);
   }
 
   @Test
   public void jsonMayContainWhitespace() throws IOException {
     InputStream in = new ByteArrayInputStream(LAYOUT_WITH_WHITESPACE.getBytes());
-    TextInputDescriptorParser layoutParser = new TextInputDescriptorParser();
+    TextInputDescriptorParser layoutParser = TextInputDescriptorParser.create();
     layoutParser.parse(in);
     assertEquals(STRING_SCHEMA, layoutParser.getQualifierInfo().get(0).getSchema());
   }
@@ -122,7 +122,7 @@ public class TestTextInputDescriptorParser {
   @Test
   public void parseSkippable() throws IOException {
     InputStream in = new ByteArrayInputStream(LAYOUT_WITH_SKIPABLE_ENTRY.getBytes());
-    TextInputDescriptorParser layoutParser = new TextInputDescriptorParser();
+    TextInputDescriptorParser layoutParser = TextInputDescriptorParser.create();
     layoutParser.parse(in);
 
     List<QualifierInfo> info = layoutParser.getQualifierInfo();

@@ -39,7 +39,7 @@ import org.kiji.annotations.ApiAudience;
  * Records are constructed from WholeFileRecordReaders.
  */
 @ApiAudience.Private
-public class WholeFileInputFormat extends CombineFileInputFormat<Text, Text> {
+public final class WholeFileInputFormat extends CombineFileInputFormat<Text, Text> {
   /**
    * Guarantees that no file is split.
    *

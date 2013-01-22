@@ -34,7 +34,7 @@ import org.kiji.schema.KijiConfiguration;
 
 /** An implementation of a runnable MapReduce job that interacts with Kiji tables. */
 @ApiAudience.Framework
-public class KijiMapReduceJob extends InternalMapReduceJob {
+public final class KijiMapReduceJob extends InternalMapReduceJob {
   private static final Logger LOG = LoggerFactory.getLogger(KijiMapReduceJob.class);
 
   // TODO(WIBI-1665): Versions of Hadoop after 20.x add the ability to get start and
@@ -49,8 +49,19 @@ public class KijiMapReduceJob extends InternalMapReduceJob {
    *
    * @param job The Hadoop job to run.
    */
-  public KijiMapReduceJob(Job job) {
+  private KijiMapReduceJob(Job job) {
     super(job);
+  }
+
+  /**
+   * Creates a new <code>KijiMapReduceJob</code>.
+   *
+   * @param job is a Hadoop {@link Job} that interacts with Kiji and will be wrapped by the new
+   *     <code>KijiMapReduceJob</code>.
+   * @return A new <code>KijiMapReduceJob</code> backed by a Hadoop {@link Job}.
+   */
+  public static KijiMapReduceJob create(Job job) {
+    return new KijiMapReduceJob(job);
   }
 
   /**

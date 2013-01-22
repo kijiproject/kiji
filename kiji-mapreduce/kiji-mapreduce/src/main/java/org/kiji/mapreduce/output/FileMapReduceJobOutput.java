@@ -26,10 +26,12 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.Inheritance;
 import org.kiji.mapreduce.MapReduceJobOutput;
 
 /** Base class for MapReduce job output types that write to files. */
 @ApiAudience.Public
+@Inheritance.Sealed
 public abstract class FileMapReduceJobOutput extends MapReduceJobOutput {
   /** The file system path for the output files. */
   private final Path mFilePath;
@@ -42,7 +44,7 @@ public abstract class FileMapReduceJobOutput extends MapReduceJobOutput {
    * @param filePath The file system path for the output files.
    * @param numSplits The number of output file splits.
    */
-  protected FileMapReduceJobOutput(Path filePath, int numSplits) {
+  FileMapReduceJobOutput(Path filePath, int numSplits) {
     mFilePath = filePath;
     mNumSplits = numSplits;
   }

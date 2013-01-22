@@ -31,7 +31,7 @@ public class InternalMapReduceJob extends MapReduceJob {
    *
    * @param job The Hadoop Job to run.
    */
-  public InternalMapReduceJob(Job job) {
+  InternalMapReduceJob(Job job) {
     super(job);
   }
 }

@@ -96,7 +96,7 @@ import org.kiji.schema.KijiColumnName;
  * method to customize how HBase cells are converted to Kiji cells.</p>
  */
 @ApiAudience.Public
-public class BinaryHTableBulkImporter extends HTableBulkImporter {
+public final class BinaryHTableBulkImporter extends HTableBulkImporter {
   private static final Logger LOG = LoggerFactory.getLogger(BinaryHTableBulkImporter.class);
 
   /** The configuration variable listing the input/output columns and their types. */

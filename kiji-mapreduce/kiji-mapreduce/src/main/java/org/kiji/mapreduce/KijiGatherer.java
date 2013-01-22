@@ -27,6 +27,7 @@ import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.Inheritance;
 import org.kiji.schema.KijiRowData;
 
 /**
@@ -67,6 +68,7 @@ import org.kiji.schema.KijiRowData;
  * @param <V> The type of the output value from the gatherer.
  */
 @ApiAudience.Public
+@Inheritance.Extensible
 public abstract class KijiGatherer<K, V>
     implements Configurable, KeyValueStoreClient, KijiDataRequester, KijiMapper {
 

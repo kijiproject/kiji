@@ -27,7 +27,7 @@ import org.kiji.avro.mapreduce.AvroSequenceFileInputFormat;
 
 /** MapReduce job input that is read from sequence files. */
 @ApiAudience.Public
-public class SequenceFileMapReduceJobInput extends FileMapReduceJobInput {
+public final class SequenceFileMapReduceJobInput extends FileMapReduceJobInput {
   /**
    * Creates a new <code>SequenceFileMapReduceJobInput</code> instance.
    *

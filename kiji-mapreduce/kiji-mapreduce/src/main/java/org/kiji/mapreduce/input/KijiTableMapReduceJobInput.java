@@ -55,7 +55,7 @@ import org.kiji.schema.layout.KijiTableLayout;
  * key.</p>
  */
 @ApiAudience.Public
-public class KijiTableMapReduceJobInput extends MapReduceJobInput {
+public final class KijiTableMapReduceJobInput extends MapReduceJobInput {
   /** The table to read the job input from. */
   private final HBaseKijiTable mInputTable;
 

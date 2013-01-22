@@ -27,7 +27,7 @@ import org.kiji.avro.mapreduce.AvroKeyOutputFormat;
 
 /** A MapReduce job output of simple Avro container files. */
 @ApiAudience.Public
-public class AvroKeyMapReduceJobOutput extends FileMapReduceJobOutput {
+public final class AvroKeyMapReduceJobOutput extends FileMapReduceJobOutput {
   /**
    * Creates a new <code>AvroMapReduceJobOutput</code> instance.
    *

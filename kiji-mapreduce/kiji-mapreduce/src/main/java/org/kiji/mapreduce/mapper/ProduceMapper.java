@@ -41,7 +41,7 @@ import org.kiji.schema.KijiRowData;
  * Hadoop mapper that runs a Kiji producer.
  */
 @ApiAudience.Private
-public class ProduceMapper extends KijiTableMapper<HFileKeyValue, NullWritable> {
+public final class ProduceMapper extends KijiTableMapper<HFileKeyValue, NullWritable> {
   /** Actual producer implementation. */
   private KijiProducer mProducer;
 
@@ -73,7 +73,7 @@ public class ProduceMapper extends KijiTableMapper<HFileKeyValue, NullWritable> 
     final String column = Preconditions.checkNotNull(mProducer.getOutputColumn());
     mOutputColumn = new KijiColumnName(column);
 
-    mProducerContext = new InternalProducerContext(context, mOutputColumn);
+    mProducerContext = InternalProducerContext.create(context, mOutputColumn);
     mProducer.setup(mProducerContext);
   }
 

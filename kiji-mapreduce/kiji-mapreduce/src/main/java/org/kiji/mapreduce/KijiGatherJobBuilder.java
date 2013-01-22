@@ -46,7 +46,7 @@ import org.kiji.schema.KijiDataRequest;
  */
 @SuppressWarnings("rawtypes")
 @ApiAudience.Public
-public class KijiGatherJobBuilder extends KijiTableInputJobBuilder<KijiGatherJobBuilder> {
+public final class KijiGatherJobBuilder extends KijiTableInputJobBuilder<KijiGatherJobBuilder> {
   /** The class of the gatherer to run. */
   private Class<? extends KijiGatherer> mGathererClass;
   /** The class of the combiner to run. */
@@ -66,7 +66,7 @@ public class KijiGatherJobBuilder extends KijiTableInputJobBuilder<KijiGatherJob
   private KijiDataRequest mDataRequest;
 
   /** Constructs a builder for jobs that run a Kiji gatherer over a Kiji table. */
-  public KijiGatherJobBuilder() {
+  private KijiGatherJobBuilder() {
     mGathererClass = null;
     mCombinerClass = null;
     mReducerClass = null;
@@ -77,6 +77,15 @@ public class KijiGatherJobBuilder extends KijiTableInputJobBuilder<KijiGatherJob
     mReducer = null;
 
     mDataRequest = null;
+  }
+
+  /**
+   * Creates a new builder for Kiji gather jobs.
+   *
+   * @return a new Kiji gather job builder.
+   */
+  public static KijiGatherJobBuilder create() {
+    return new KijiGatherJobBuilder();
   }
 
   /**
@@ -183,7 +192,7 @@ public class KijiGatherJobBuilder extends KijiTableInputJobBuilder<KijiGatherJob
   /** {@inheritDoc} */
   @Override
   protected MapReduceJob build(Job job) {
-    return new KijiMapReduceJob(job);
+    return KijiMapReduceJob.create(job);
   }
 
   /** {@inheritDoc} */

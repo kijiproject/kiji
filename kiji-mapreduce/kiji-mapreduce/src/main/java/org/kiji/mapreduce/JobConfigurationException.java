@@ -23,7 +23,7 @@ import org.kiji.annotations.ApiAudience;
 
 /** Thrown when a MapReduceJob is being built, but it has missing or incomplete configuration. */
 @ApiAudience.Public
-public class JobConfigurationException extends RuntimeException {
+public final class JobConfigurationException extends RuntimeException {
   /**
    * Creates a new <code>JobConfigurationException</code> instance.
    *

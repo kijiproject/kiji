@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.Inheritance;
 
 /**
  * Base class for reducers that emit to a Kiji table.
@@ -38,6 +39,7 @@ import org.kiji.annotations.ApiAudience;
  * @param <V> Type of the reducer input values.
  */
 @ApiAudience.Public
+@Inheritance.Extensible
 public abstract class KijiTableReducer<K, V>
     extends KijiBaseReducer<K, V, HFileKeyValue, NullWritable> {
   private static final Logger LOG = LoggerFactory.getLogger(KijiTableReducer.class);

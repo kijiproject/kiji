@@ -45,7 +45,7 @@ import org.kiji.schema.KijiRowData;
  * @param <V> The type of the MapReduce output value.
  */
 @ApiAudience.Private
-public class GatherMapper<K, V>
+public final class GatherMapper<K, V>
     extends KijiTableMapper<K, V>
     implements AvroKeyWriter, AvroValueWriter {
 
@@ -119,7 +119,7 @@ public class GatherMapper<K, V>
     Preconditions.checkState(null == mGathererContext);
     setConf(context.getConfiguration());
 
-    mGathererContext = new InternalMapReduceContext<K, V>(context);
+    mGathererContext = InternalMapReduceContext.create(context);
     mGatherer.setup(mGathererContext);
   }
 

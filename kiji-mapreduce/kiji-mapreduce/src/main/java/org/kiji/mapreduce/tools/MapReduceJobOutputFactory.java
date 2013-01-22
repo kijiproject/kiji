@@ -35,7 +35,21 @@ import org.kiji.mapreduce.output.TextMapReduceJobOutput;
  * See {@link JobOutputSpec} for the full outputspec specification.
  */
 @ApiAudience.Framework
-public class MapReduceJobOutputFactory {
+public final class MapReduceJobOutputFactory {
+  /**
+   * Constructs a new factory for MapReduce job outputs.
+   */
+  private MapReduceJobOutputFactory() { }
+
+  /**
+   * Creates a new factory for instances of {@link MapReduceJobOutput}.
+   *
+   * @return a new factory for MapReduce job outputs.
+   */
+  public static MapReduceJobOutputFactory create() {
+    return new MapReduceJobOutputFactory();
+  }
+
   /**
    * Creates a MapReduceJobOutput from an outputspec string.
    *

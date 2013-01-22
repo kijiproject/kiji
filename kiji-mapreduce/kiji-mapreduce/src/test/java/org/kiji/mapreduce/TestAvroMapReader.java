@@ -49,7 +49,7 @@ public class TestAvroMapReader {
     assertTrue(originalMap.containsKey(new Utf8("foo")));
     assertTrue(originalMap.containsKey("foo"));
 
-    AvroMapReader<Integer> originalMapReader = new AvroMapReader<Integer>(originalMap);
+    AvroMapReader<Integer> originalMapReader = AvroMapReader.create(originalMap);
     assertTrue(originalMapReader.containsKey(new Utf8("foo")));
     assertEquals(42, originalMapReader.get(new Utf8("foo")).intValue());
     assertTrue(originalMapReader.containsKey("foo"));
@@ -78,7 +78,7 @@ public class TestAvroMapReader {
         deserializedMap.containsKey("foo"));
 
     // Use the reader.  It should work just fine with Strings or Utf8's.
-    AvroMapReader<Integer> mapReader = new AvroMapReader<Integer>(deserializedMap);
+    AvroMapReader<Integer> mapReader = AvroMapReader.create(deserializedMap);
     assertTrue(mapReader.containsKey(new Utf8("foo")));
     assertEquals(42, mapReader.get(new Utf8("foo")).intValue());
     assertTrue(mapReader.containsKey("foo"));

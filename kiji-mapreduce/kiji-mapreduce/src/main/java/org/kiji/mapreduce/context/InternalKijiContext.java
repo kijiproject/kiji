@@ -38,12 +38,13 @@ public class InternalKijiContext implements KijiContext {
   private final KeyValueStoreReaderFactory mKeyValueStoreFactory;
 
   /**
-   * Initializes a Kiji context.
+   * Constructs a new implementation of {@link KijiContext}.
    *
-   * @param context Underlying Hadoop MapReduce context.
+   * @param context is the Hadoop {@link TaskInputOutputContext} that will back the new
+   *    {@link KijiContext}
    * @throws IOException on I/O error.
    */
-  public InternalKijiContext(TaskInputOutputContext context) throws IOException {
+  InternalKijiContext(TaskInputOutputContext context) throws IOException {
     mHadoopContext = context;
     mKeyValueStoreFactory = new KeyValueStoreReaderFactory(context.getConfiguration());
   }

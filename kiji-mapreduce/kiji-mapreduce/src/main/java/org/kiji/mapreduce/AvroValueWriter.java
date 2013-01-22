@@ -24,6 +24,7 @@ import java.io.IOException;
 import org.apache.avro.Schema;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.Inheritance;
 
 /**
  * Kiji analytic functions (mappers, reducers, producer, gatherers, etc.) that output
@@ -31,6 +32,7 @@ import org.kiji.annotations.ApiAudience;
  * as a means of specifying the Avro writer schema for their output value data.
  */
 @ApiAudience.Public
+@Inheritance.Extensible
 public interface AvroValueWriter {
   /**
    * If the output key class is {@link org.apache.avro.mapred.AvroValue}, the Kiji framework

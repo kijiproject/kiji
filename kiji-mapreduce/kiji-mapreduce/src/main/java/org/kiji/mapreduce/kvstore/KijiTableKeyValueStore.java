@@ -340,7 +340,7 @@ public class KijiTableKeyValueStore<V> extends KeyValueStore<String, V> implemen
           .withTimeRange(mMinTs, mMaxTs);
 
       if (mMaxObjectsToCache > 1) {
-        mResultCache = new LruCache<EntityId, V>(mMaxObjectsToCache);
+        mResultCache = LruCache.create(mMaxObjectsToCache);
       } else {
         mResultCache = null;
       }

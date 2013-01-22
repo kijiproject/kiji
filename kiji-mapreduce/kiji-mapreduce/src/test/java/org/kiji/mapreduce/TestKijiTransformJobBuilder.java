@@ -106,7 +106,7 @@ public class TestKijiTransformJobBuilder {
   /** WIBI-1170. Must supply a kiji configuration object. */
   @Test(expected=JobConfigurationException.class)
   public void testSupplyKijiConfig() throws Exception {
-    new KijiTransformJobBuilder()
+    KijiTransformJobBuilder.create()
         // .withKijiConfiguration(new KijiConfiguration(new Configuration, "foo"))
         .withInput(new TextMapReduceJobInput(new Path("/path/to/my/input")))
         .withMapper(MyMapper.class)
@@ -118,7 +118,7 @@ public class TestKijiTransformJobBuilder {
   @Test
   public void testBuild() throws Exception {
     LOG.info("Configuring job...");
-    KijiTransformJobBuilder builder = new KijiTransformJobBuilder()
+    KijiTransformJobBuilder builder = KijiTransformJobBuilder.create()
         .withKijiConfiguration(new KijiConfiguration(new Configuration(), "foo"))
         .withInput(new TextMapReduceJobInput(new Path("/path/to/my/input")))
         .withMapper(MyMapper.class)
@@ -154,7 +154,7 @@ public class TestKijiTransformJobBuilder {
     // Test that we can override default configuration KeyValueStores from an XML file.
     LOG.info("Configuring job...");
     InputStream xmlStores = Resources.openSystemResource("org/kiji/mapreduce/test-kvstores.xml");
-    KijiTransformJobBuilder builder = new KijiTransformJobBuilder()
+    KijiTransformJobBuilder builder = KijiTransformJobBuilder.create()
         .withKijiConfiguration(new KijiConfiguration(new Configuration(), "foo"))
         .withInput(new TextMapReduceJobInput(new Path("/path/to/my/input")))
         .withMapper(MyMapper.class)
@@ -190,7 +190,7 @@ public class TestKijiTransformJobBuilder {
 
   @Test(expected=JobConfigurationException.class)
   public void testMissingConfiguration() throws IOException {
-    KijiTransformJobBuilder builder = new KijiTransformJobBuilder()
+    KijiTransformJobBuilder builder = KijiTransformJobBuilder.create()
         .withInput(new TextMapReduceJobInput(new Path("/path/to/my/input")))
         .withMapper(MyMapper.class)
         .withReducer(MyReducer.class)

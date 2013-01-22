@@ -43,7 +43,7 @@ import org.kiji.schema.layout.KijiTableLayout;
 
 /** Builds jobs that run a producer over a Kiji table. */
 @ApiAudience.Public
-public class KijiProduceJobBuilder extends KijiTableInputJobBuilder<KijiProduceJobBuilder> {
+public final class KijiProduceJobBuilder extends KijiTableInputJobBuilder<KijiProduceJobBuilder> {
   /** The default number of threads per mapper to use for running producers. */
   private static final int DEFAULT_NUM_THREADS_PER_MAPPER = 1;
 
@@ -63,7 +63,7 @@ public class KijiProduceJobBuilder extends KijiTableInputJobBuilder<KijiProduceJ
   private KijiDataRequest mDataRequest;
 
   /** Constructs a builder for jobs that run a Kiji producer over a Kiji table. */
-  public KijiProduceJobBuilder() {
+  private KijiProduceJobBuilder() {
     mProducerClass = null;
     mNumThreadsPerMapper = DEFAULT_NUM_THREADS_PER_MAPPER;
 
@@ -72,6 +72,15 @@ public class KijiProduceJobBuilder extends KijiTableInputJobBuilder<KijiProduceJ
     mReducer = null;
 
     mDataRequest = null;
+  }
+
+  /**
+   * Creates a new builder for Kiji produce jobs.
+   *
+   * @return a new Kiji produce job builder.
+   */
+  public static KijiProduceJobBuilder create() {
+    return new KijiProduceJobBuilder();
   }
 
   /**
@@ -160,7 +169,7 @@ public class KijiProduceJobBuilder extends KijiTableInputJobBuilder<KijiProduceJ
   /** {@inheritDoc} */
   @Override
   protected MapReduceJob build(Job job) {
-    return new KijiMapReduceJob(job);
+    return KijiMapReduceJob.create(job);
   }
 
   /** {@inheritDoc} */

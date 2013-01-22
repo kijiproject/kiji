@@ -22,6 +22,7 @@ package org.kiji.mapreduce.context;
 import org.apache.hadoop.conf.Configuration;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.Inheritance;
 
 /**
  * <p>A Configuration backed by a namespace in a parent
@@ -31,6 +32,7 @@ import org.kiji.annotations.ApiAudience;
  * <code>getDelegate().setFoo(getNamespace() + "my-var", "my-val")</code></p>.
  */
 @ApiAudience.Private
+@Inheritance.Sealed
 public class NamespaceConfiguration {
   /** The parent Configuration to write to. */
   private final Configuration mDelegate;

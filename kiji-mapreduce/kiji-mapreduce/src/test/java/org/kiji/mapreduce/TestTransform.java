@@ -62,9 +62,8 @@ public class TestTransform {
   private static final Logger LOG = LoggerFactory.getLogger(TestTransform.class);
 
   /**
-   * Example mapper intended to run on the generic KijiMR test layout.
-   *
-   * @see testing resource org/kiji/mapreduce/layout/test.json
+   * Example mapper intended to run on the generic KijiMR test layout. This test uses the resource
+   * org/kiji/mapreduce/layout/test.json
    */
   public static class ExampleMapper
       extends Mapper<EntityId, KijiRowData, HFileKeyValue, NullWritable>
@@ -78,7 +77,7 @@ public class TestTransform {
         throws IOException, InterruptedException {
       super.setup(context);
       Preconditions.checkState(mTableContext == null);
-      mTableContext = new DirectKijiTableWriterContext(context);
+      mTableContext = DirectKijiTableWriterContext.create(context);
     }
 
     /** {@inheritDoc} */
@@ -162,7 +161,7 @@ public class TestTransform {
     }
 
     // Run the transform (map-only job):
-    final MapReduceJob job = new KijiTransformJobBuilder()
+    final MapReduceJob job = KijiTransformJobBuilder.create()
         .withKijiConfiguration(kijiConf)
         .withMapper(ExampleMapper.class)
         .withInput(new KijiTableMapReduceJobInput(

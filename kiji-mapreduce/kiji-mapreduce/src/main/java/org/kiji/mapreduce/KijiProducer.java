@@ -27,6 +27,7 @@ import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.Inheritance;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 
@@ -70,6 +71,7 @@ import org.kiji.schema.KijiRowData;
  * </p>
  */
 @ApiAudience.Public
+@Inheritance.Extensible
 public abstract class KijiProducer
     implements Configurable, KijiDataRequester, KeyValueStoreClient {
 

@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.Inheritance;
 import org.kiji.mapreduce.AvroKeyWriter;
 import org.kiji.mapreduce.KijiBaseReducer;
 
@@ -44,6 +45,7 @@ import org.kiji.mapreduce.KijiBaseReducer;
  * @param <OUTVALUE> The output value type.
  */
 @ApiAudience.Public
+@Inheritance.Extensible
 public abstract class KeyPassThroughReducer<K, INVALUE, OUTVALUE>
     extends KijiBaseReducer<K, INVALUE, K, OUTVALUE>
     implements Configurable, AvroKeyWriter {

@@ -20,6 +20,7 @@
 package org.kiji.mapreduce;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.Inheritance;
 import org.kiji.schema.EntityId;
 
 /**
@@ -28,6 +29,7 @@ import org.kiji.schema.EntityId;
  * Allows the produce mapper to set the entity ID.
  */
 @ApiAudience.Private
+@Inheritance.Sealed
 public interface InternalProducerContextInterface extends ProducerContext {
   /**
    * Sets the entity ID of the current row being processed and written to.

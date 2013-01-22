@@ -61,7 +61,7 @@ import org.kiji.schema.impl.HBaseKijiTable;
  * Use a {@link org.kiji.mapreduce.HFileLoader} to load HFiles into a Kiji table.</p>
  */
 @ApiAudience.Public
-public class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
+public final class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
   private static final Logger LOG = LoggerFactory.getLogger(HFileMapReduceJobOutput.class);
 
   /**

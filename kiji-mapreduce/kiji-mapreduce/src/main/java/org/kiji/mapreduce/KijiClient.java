@@ -20,6 +20,7 @@
 package org.kiji.mapreduce;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.Inheritance;
 import org.kiji.schema.Kiji;
 
 /**
@@ -29,6 +30,7 @@ import org.kiji.schema.Kiji;
  * as a dependency-injection point for testing.</p>
  */
 @ApiAudience.Framework
+@Inheritance.Sealed
 public interface KijiClient {
   /**
    * Sets the Kiji instance that should be used by the class.

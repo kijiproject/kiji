@@ -36,7 +36,7 @@ import org.kiji.annotations.ApiAudience;
  */
 @SuppressWarnings("serial")
 @ApiAudience.Private
-public class LruCache<K, V> extends LinkedHashMap<K, V> {
+public final class LruCache<K, V> extends LinkedHashMap<K, V> {
   // Code based on http://littletechsecrets.wordpress.com/2008/11/16/simple-lru-cache-in-java/
 
   private static final long serialVersionUID = 1;
@@ -44,14 +44,26 @@ public class LruCache<K, V> extends LinkedHashMap<K, V> {
   private int mMaxSize;
 
   /**
-   * Construct a cache that holds up to maxSize elements.
+   * Constructs a cache that holds up to maxSize elements.
    *
    * @param maxSize the maximum number of elements the cache can hold.
    */
-  public LruCache(int maxSize) {
+  private LruCache(int maxSize) {
     // Create an access-oriented cache that holds the user's max objects + 1 intermediate obj.
     super(maxSize + 1, 1, true);
     mMaxSize = maxSize;
+  }
+
+  /**
+   * Creates a new cache that holds a limited number of elements.
+   *
+   * @param maxSize is the maximum number of elements the new cache can hold.
+   * @param <K> is the type of key stored in the new cache.
+   * @param <V> is the type of value stored in the new cache.
+   * @return a new cache that can hold up to <code>maxSize</code> elements.
+   */
+  public static <K, V> LruCache<K, V> create(int maxSize) {
+    return new LruCache<K, V>(maxSize);
   }
 
   /** {@inheritDoc} */

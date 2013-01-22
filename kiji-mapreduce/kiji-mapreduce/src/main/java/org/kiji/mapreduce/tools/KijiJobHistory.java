@@ -45,7 +45,7 @@ import org.kiji.schema.tools.VersionValidatedTool;
 
 /** A tool that installs a job history table and lets you query individual jobs from it. */
 @ApiAudience.Private
-public class KijiJobHistory extends VersionValidatedTool {
+public final class KijiJobHistory extends VersionValidatedTool {
   @Flag(name="job-id", usage="ID of the job to query.")
   private String mJobId = "";
 

@@ -210,7 +210,7 @@ public class IntegrationTestColumnPaging extends AbstractKijiIntegrationTest {
     final Path outputPath = getDfsPath("output");
 
     // Run the gatherer.
-    final MapReduceJob job = new KijiGatherJobBuilder()
+    final MapReduceJob job = KijiGatherJobBuilder.create()
         .withInputTable(mUserTable)
         .withGatherer(PagingGatherer.class)
         .withOutput(new AvroKeyValueMapReduceJobOutput(outputPath, 1))

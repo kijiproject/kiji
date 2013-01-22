@@ -41,7 +41,7 @@ import org.kiji.schema.tools.RequiredFlagException;
 
 /** Bulk imports a file into a Kiji table. */
 @ApiAudience.Private
-public class KijiBulkImport extends JobTool<KijiBulkImportJobBuilder> {
+public final class KijiBulkImport extends JobTool<KijiBulkImportJobBuilder> {
   private static final Logger LOG = LoggerFactory.getLogger(KijiBulkImport.class);
 
   @Flag(name="table", usage="Kiji table name")
@@ -112,7 +112,7 @@ public class KijiBulkImport extends JobTool<KijiBulkImportJobBuilder> {
 
   @Override
   protected KijiBulkImportJobBuilder createJobBuilder() {
-    return new KijiBulkImportJobBuilder();
+    return KijiBulkImportJobBuilder.create();
   }
 
   @Override
@@ -120,7 +120,7 @@ public class KijiBulkImport extends JobTool<KijiBulkImportJobBuilder> {
       throws ClassNotFoundException, IOException, JobIOSpecParseException {
     super.configure(jobBuilder);
 
-    MapReduceJobInputFactory inputFactory = new MapReduceJobInputFactory();
+    MapReduceJobInputFactory inputFactory = MapReduceJobInputFactory.create();
     jobBuilder.withInput(inputFactory.createFromInputSpec(mInputSpec));
     Class<? extends KijiBulkImporter> importerClass =
         Class.forName(mImporter).asSubclass(KijiBulkImporter.class);

@@ -135,7 +135,7 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
     replay(kiji);
     replay(myTable);
 
-    MapReduceJob gatherJob = new KijiGatherJobBuilder()
+    MapReduceJob gatherJob = KijiGatherJobBuilder.create()
         .withInputTable(myTable)
         .withGatherer(MyGatherer.class)
         .withCombiner(MyCombiner.class)
@@ -169,7 +169,7 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
     replay(kiji);
     replay(myTable);
 
-    new KijiGatherJobBuilder()
+    KijiGatherJobBuilder.create()
         .withInputTable(myTable)
         .withGatherer(UnconfiguredKVGatherer.class)
         .withCombiner(MyCombiner.class)
@@ -196,7 +196,7 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
     replay(kiji);
     replay(myTable);
 
-    MapReduceJob gatherJob = new KijiGatherJobBuilder()
+    MapReduceJob gatherJob = KijiGatherJobBuilder.create()
         .withInputTable(myTable)
         .withGatherer(UnconfiguredKVGatherer.class)
         .withCombiner(MyCombiner.class)

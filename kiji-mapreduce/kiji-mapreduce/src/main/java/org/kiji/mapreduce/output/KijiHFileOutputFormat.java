@@ -66,7 +66,7 @@ import org.kiji.schema.layout.impl.ColumnId;
  * <p>You may only write HFiles with a single column family at a time.</p>
  */
 @ApiAudience.Framework
-public class KijiHFileOutputFormat
+public final class KijiHFileOutputFormat
     extends FileOutputFormat<HFileKeyValue, NullWritable> {
   private static final Logger LOG = LoggerFactory.getLogger(KijiHFileOutputFormat.class);
 

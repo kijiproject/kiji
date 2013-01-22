@@ -22,10 +22,12 @@ package org.kiji.mapreduce;
 import java.io.IOException;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.Inheritance;
 import org.kiji.schema.EntityId;
 
 /** Context for producers to output new cells in the currently processed row. */
 @ApiAudience.Public
+@Inheritance.Sealed
 public interface ProducerContext extends KijiContext {
   /** @return the entity ID of the row being currently written to. */
   EntityId getEntityId();

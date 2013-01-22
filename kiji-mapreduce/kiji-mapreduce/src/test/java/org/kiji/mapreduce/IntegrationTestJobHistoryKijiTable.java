@@ -131,7 +131,7 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
     JobHistoryKijiTable jobHistory = JobHistoryKijiTable.open(kiji);
 
     // Construct a Producer for this table.
-    KijiProduceJobBuilder builder = new KijiProduceJobBuilder()
+    KijiProduceJobBuilder builder = KijiProduceJobBuilder.create()
         .withInputTable(fooTable)
         .withProducer(EmailDomainProducer.class)
         .withOutput(new KijiTableMapReduceJobOutput(fooTable));
@@ -197,7 +197,7 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
     JobHistoryKijiTable jobHistory = JobHistoryKijiTable.open(kiji);
 
     // Construct a Producer for this table.
-    KijiProduceJobBuilder builder = new KijiProduceJobBuilder()
+    KijiProduceJobBuilder builder = KijiProduceJobBuilder.create()
         .withInputTable(fooTable)
         .withProducer(EmailDomainProducer.class)
         .withOutput(new KijiTableMapReduceJobOutput(fooTable));
@@ -238,7 +238,7 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
      KijiAdmin kijiAdmin = kiji.getAdmin();
      kijiAdmin.deleteTable(JobHistoryKijiTable.getInstallName());
 
-     KijiProduceJobBuilder builder = new KijiProduceJobBuilder()
+     KijiProduceJobBuilder builder = KijiProduceJobBuilder.create()
          .withInputTable(fooTable)
          .withProducer(EmailDomainProducer.class)
          .withOutput(new KijiTableMapReduceJobOutput(fooTable));

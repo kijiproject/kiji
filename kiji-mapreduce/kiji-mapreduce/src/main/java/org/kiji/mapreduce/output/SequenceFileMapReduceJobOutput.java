@@ -27,7 +27,7 @@ import org.kiji.avro.mapreduce.AvroSequenceFileOutputFormat;
 
 /** MapReduce job output that is written as sequence files. */
 @ApiAudience.Public
-public class SequenceFileMapReduceJobOutput extends FileMapReduceJobOutput {
+public final class SequenceFileMapReduceJobOutput extends FileMapReduceJobOutput {
   /**
    * Creates a new <code>SequenceFileMapReduceJobOutput</code> instance.
    *

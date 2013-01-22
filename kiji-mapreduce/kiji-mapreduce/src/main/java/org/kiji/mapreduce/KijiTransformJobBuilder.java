@@ -34,7 +34,7 @@ import org.kiji.schema.KijiConfiguration;
 
 /** Builds a job that runs a MapReduce in Hadoop. */
 @ApiAudience.Public
-public class KijiTransformJobBuilder extends MapReduceJobBuilder<KijiTransformJobBuilder> {
+public final class KijiTransformJobBuilder extends MapReduceJobBuilder<KijiTransformJobBuilder> {
   private static final Logger LOG = LoggerFactory.getLogger(KijiTransformJobBuilder.class);
 
   /** The class of the mapper to run. */
@@ -57,7 +57,7 @@ public class KijiTransformJobBuilder extends MapReduceJobBuilder<KijiTransformJo
   private MapReduceJobInput mJobInput;
 
   /** Constructs a builder for jobs that run a MapReduce job to transform data. */
-  public KijiTransformJobBuilder() {
+  private KijiTransformJobBuilder() {
     mMapperClass = null;
     mCombinerClass = null;
     mReducerClass = null;
@@ -68,6 +68,15 @@ public class KijiTransformJobBuilder extends MapReduceJobBuilder<KijiTransformJo
 
     mKijiConf = null;
     mJobInput = null;
+  }
+
+  /**
+   * Creates a new builder for Kiji transform jobs.
+   *
+   * @return a new Kiji transform job builder.
+   */
+  public static KijiTransformJobBuilder create() {
+    return new KijiTransformJobBuilder();
   }
 
   /**

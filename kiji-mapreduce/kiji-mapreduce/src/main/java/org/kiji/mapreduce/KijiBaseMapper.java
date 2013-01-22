@@ -22,6 +22,7 @@ package org.kiji.mapreduce;
 import org.apache.hadoop.mapreduce.Mapper;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.Inheritance;
 
 /**
  * Base class for kiji mappers that do not run over kiji tables.
@@ -32,6 +33,7 @@ import org.kiji.annotations.ApiAudience;
  * @param <OUTVALUE> The type of the output value from the mapper.
  */
 @ApiAudience.Public
+@Inheritance.Extensible
 public abstract class KijiBaseMapper<INKEY, INVALUE, OUTKEY, OUTVALUE>
     extends Mapper<INKEY, INVALUE, OUTKEY, OUTVALUE>
     implements KijiMapper {

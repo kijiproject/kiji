@@ -23,7 +23,7 @@ import org.kiji.annotations.ApiAudience;
 
 /** Thrown when a KijiProducer fails to produce output. */
 @ApiAudience.Public
-public class KijiProducerOutputException extends Exception {
+public final class KijiProducerOutputException extends Exception {
   /**
    * Creates a new <code>KijiProducerOutputException</code> instance.
    *

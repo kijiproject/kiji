@@ -38,7 +38,21 @@ import org.kiji.mapreduce.input.WholeTextFileMapReduceJobInput;
  * See {@link JobInputSpec} for the full inputspec specification.
  */
 @ApiAudience.Framework
-public class MapReduceJobInputFactory {
+public final class MapReduceJobInputFactory {
+  /**
+   * Constructs a new factory for MapReduce job inputs.
+   */
+  private MapReduceJobInputFactory() { }
+
+  /**
+   * Creates a new factory for instances of {@link MapReduceJobInput}.
+   *
+   * @return a new factory for MapReduce job inputs.
+   */
+  public static MapReduceJobInputFactory create() {
+    return new MapReduceJobInputFactory();
+  }
+
   /**
    * Creates a MapReduceJobInput from an inputspec string.
    *

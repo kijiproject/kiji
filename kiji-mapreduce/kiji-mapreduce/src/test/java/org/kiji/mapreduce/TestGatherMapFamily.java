@@ -155,7 +155,7 @@ public class TestGatherMapFamily {
     final int numSplits = 1;
 
     // Run gatherer:
-    final MapReduceJob job = new KijiGatherJobBuilder()
+    final MapReduceJob job = KijiGatherJobBuilder.create()
         .withGatherer(MapFamilyGatherer.class)
         .withInputTable(table)
         .withOutput(new TextMapReduceJobOutput(new Path(outputDir.toString()), numSplits))

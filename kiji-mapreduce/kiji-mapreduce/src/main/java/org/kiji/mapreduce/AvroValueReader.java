@@ -24,6 +24,7 @@ import java.io.IOException;
 import org.apache.avro.Schema;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.Inheritance;
 
 /**
  * Kiji analytic functions (mappers, reducers, producer, gatherers, etc.) that read
@@ -31,6 +32,7 @@ import org.kiji.annotations.ApiAudience;
  * as a means of specifying the Avro reader schema for their input value data.
  */
 @ApiAudience.Public
+@Inheritance.Extensible
 public interface AvroValueReader {
   /**
    * If the input value class is {@link org.apache.avro.mapred.AvroValue}, this method

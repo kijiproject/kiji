@@ -26,9 +26,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.Inheritance;
 
 /** A Hadoop MapReduce job that runs Kiji mappers and reducers. */
 @ApiAudience.Public
+@Inheritance.Sealed
 public abstract class MapReduceJob {
   private static final Logger LOG = LoggerFactory.getLogger(MapReduceJob.class);
 
@@ -40,13 +42,12 @@ public abstract class MapReduceJob {
    *
    * @param job The Hadoop job to be run.
    */
-  protected MapReduceJob(Job job) {
+  MapReduceJob(Job job) {
     mJob = job;
   }
 
   /**
-   * The status of a job that was started asynchronously using {@link
-   * com.kijidata.core.client.MapReduceJob#submit()}.
+   * The status of a job that was started asynchronously using {@link #submit()}.
    */
   public static class Status {
     /** The Job whose status is being tracked. */
