@@ -30,7 +30,6 @@ import java.util.NavigableSet
 import java.util.{TreeMap => JTreeMap}
 import java.util.{TreeSet => JTreeSet}
 
-import scala.Option.option2Iterable
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.collection.JavaConverters.asScalaSetConverter
 import scala.collection.JavaConverters.mapAsScalaMapConverter
@@ -40,6 +39,7 @@ import scala.util.control.Breaks.break
 import scala.util.control.Breaks.breakable
 
 import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.HConstants
 import org.apache.hadoop.hbase.HTableDescriptor
 import org.apache.hadoop.hbase.KeyValue
@@ -66,20 +66,21 @@ import org.slf4j.LoggerFactory
  * Fake in-memory HTable.
  *
  * @param name Table name.
- * @param conf Table configuration.
  * @param desc Table descriptor.
+ * @param conf Table configuration.
  * @param autoFlush auto-flush flag.
  * @param enabled Whether the table is enabled.
  */
 class FakeHTable(
     val name: String,
-    val conf: Configuration,
     val desc: HTableDescriptor,
+    val conf: Configuration = HBaseConfiguration.create(),
     private var autoFlush: Boolean = false,
     private var writeBufferSize: Long = 1,
     var enabled: Boolean = true
 ) extends HTableInterface {
   private val Log = LoggerFactory.getLogger(getClass)
+  require(conf != null)
 
   /** Whether the table has been closed. */
   private var closed: Boolean = false

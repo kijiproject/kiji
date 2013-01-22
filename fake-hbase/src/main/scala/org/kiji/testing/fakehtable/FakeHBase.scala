@@ -23,20 +23,19 @@ import java.util.Arrays
 import java.util.{List => JList}
 import java.util.{TreeMap => JTreeMap}
 
-import scala.collection.JavaConverters._
+import scala.collection.JavaConverters.asScalaIteratorConverter
 import scala.collection.mutable.Buffer
-import scala.Fractional
 
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.hbase.client.HBaseAdmin
-import org.apache.hadoop.hbase.client.HTableInterface
-import org.apache.hadoop.hbase.util.Bytes
 import org.apache.hadoop.hbase.HColumnDescriptor
 import org.apache.hadoop.hbase.HRegionInfo
 import org.apache.hadoop.hbase.HTableDescriptor
 import org.apache.hadoop.hbase.TableExistsException
 import org.apache.hadoop.hbase.TableNotDisabledException
 import org.apache.hadoop.hbase.TableNotFoundException
+import org.apache.hadoop.hbase.client.HBaseAdmin
+import org.apache.hadoop.hbase.client.HTableInterface
+import org.apache.hadoop.hbase.util.Bytes
 import org.kiji.schema.impl.HBaseAdminFactory
 import org.kiji.schema.impl.HBaseInterface
 
@@ -113,7 +112,6 @@ class FakeHBase
         }
         val table = new FakeHTable(
             name = desc.getNameAsString,
-            conf = null,
             desc = desc
         )
         Arrays.sort(split, Bytes.BYTES_COMPARATOR)

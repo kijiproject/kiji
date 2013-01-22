@@ -19,15 +19,13 @@
 
 package org.kiji.testing.fakehtable
 
-import scala.collection.JavaConverters._
+import scala.collection.JavaConverters.asScalaBufferConverter
+
+import org.apache.commons.codec.binary.Hex
+import org.apache.hadoop.hbase.HTableDescriptor
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
-import org.apache.hadoop.hbase.client.Put
-import org.apache.hadoop.hbase.client.Get
-import org.apache.hadoop.hbase.client.Delete
-import org.apache.hadoop.hbase.HTableDescriptor
-import org.apache.commons.codec.binary.Hex
 
 @RunWith(classOf[JUnitRunner])
 class TestFakeHBase extends FunSuite {
