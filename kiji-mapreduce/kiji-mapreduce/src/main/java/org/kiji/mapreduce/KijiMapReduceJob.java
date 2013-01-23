@@ -31,6 +31,7 @@ import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.tools.KijiJobHistory;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiConfiguration;
+import org.kiji.schema.util.ReferenceCountableUtils;
 
 /** An implementation of a runnable MapReduce job that interacts with Kiji tables. */
 @ApiAudience.Framework
@@ -108,7 +109,7 @@ public final class KijiMapReduceJob extends InternalMapReduceJob {
           + " --install");
     } finally {
       IOUtils.closeQuietly(jobHistory);
-      IOUtils.closeQuietly(kiji);
+      ReferenceCountableUtils.releaseQuietly(kiji);
     }
   }
 

@@ -33,7 +33,6 @@ import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
-import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.mapreduce.TableSplit;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.mapreduce.InputFormat;
@@ -54,8 +53,6 @@ import org.kiji.schema.KijiRowScanner;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.KijiURI;
-import org.kiji.schema.KijiURIException;
-import org.kiji.schema.impl.DefaultHBaseFactory;
 import org.kiji.schema.impl.HBaseEntityId;
 import org.kiji.schema.impl.HBaseKijiRowData;
 import org.kiji.schema.impl.HBaseKijiTable;
@@ -93,23 +90,29 @@ public final class KijiTableInputFormat
   @Override
   public List<InputSplit> getSplits(JobContext context) throws IOException {
     final Configuration conf = context.getConfiguration();
-    final KijiURI inputTableURI = getInputTableURI(conf);
+    final KijiURI inputTableURI = KijiURI.parse(conf.get(KijiConfKeys.INPUT_TABLE_URI));
     final Kiji kiji = Kiji.Factory.open(inputTableURI, conf);
-    final KijiTable table = kiji.openTable(inputTableURI.getTable());
-
-    final HBaseAdmin admin =
-        DefaultHBaseFactory.Provider.get().getHBaseAdminFactory(inputTableURI).create(conf);
-    final HTableInterface htable = HBaseKijiTable.downcast(table).getHTable();
-
-    final List<HRegionInfo> regions = admin.getTableRegions(htable.getTableName());
-    final List<InputSplit> splits = Lists.newArrayList();
-    for (HRegionInfo region : regions) {
-      final byte[] startKey = region.getStartKey();
-      final TableSplit tableSplit = new TableSplit(
-          htable.getTableName(), startKey, region.getEndKey(), table.getName());
-      splits.add(new KijiTableSplit(tableSplit, startKey));
+    try {
+      final KijiTable table = kiji.openTable(inputTableURI.getTable());
+      try {
+        final HBaseAdmin admin = kiji.getAdmin().getHBaseAdmin();  // not owned
+        final byte[] htableName = HBaseKijiTable.downcast(table).getHTable().getTableName();
+        final List<HRegionInfo> regions = admin.getTableRegions(htableName);
+        final List<InputSplit> splits = Lists.newArrayList();
+        for (HRegionInfo region : regions) {
+          final byte[] startKey = region.getStartKey();
+          // TODO(KIJIMR-25): TableSplit.getLocation is bogus, should not be table.getName():
+          final TableSplit tableSplit =
+              new TableSplit(htableName, startKey, region.getEndKey(), table.getName());
+          splits.add(new KijiTableSplit(tableSplit, startKey));
+        }
+        return splits;
+      } finally {
+        table.close();
+      }
+    } finally {
+      kiji.release();
     }
-    return splits;
   }
 
   /**
@@ -129,12 +132,7 @@ public final class KijiTableInputFormat
       String startRow,
       String endRow)
       throws IOException {
-
     final Configuration conf = job.getConfiguration();
-    final Kiji kiji = Kiji.Factory.open(tableURI, conf);
-    final KijiTable table = kiji.openTable(tableURI.getTable());
-    IOUtils.closeQuietly(table);
-    IOUtils.closeQuietly(kiji);
 
     // TODO: Check for jars config:
     // GenericTableMapReduceUtil.initTableInput(hbaseTableName, scan, job);
@@ -156,9 +154,6 @@ public final class KijiTableInputFormat
     /** Data request. */
     protected final KijiDataRequest mDataRequest;
 
-    /** Hadoop Configuration object containing settings. */
-    protected final Configuration mConf;
-
     private Kiji mKiji = null;
     private KijiTable mTable = null;
     private KijiTableReader mReader = null;
@@ -170,17 +165,18 @@ public final class KijiTableInputFormat
     private HBaseKijiRowData mCurrentRow = null;
 
     /**
-     * Creates a new RecordReader for this input format. This RecordReader will perform the actual
-     * reads from Kiji.
+     * Creates a new RecordReader for this input format.
      *
-     * @param conf The configuration object for this Kiji.
+     * Perform the actual reads from Kiji.
+     *
+     * @param conf Configuration for the target Kiji.
      */
     public KijiTableRecordReader(Configuration conf) {
-      mConf = conf;
-
       // Get data request from the job configuration.
-      final String dataRequestB64 = checkNotNull(mConf.get(KijiConfKeys.INPUT_DATA_REQUEST),
-          "Missing data request in job configuration.");
+      final String dataRequestB64 =
+          checkNotNull(
+              conf.get(KijiConfKeys.INPUT_DATA_REQUEST),
+              "Missing data request in job configuration.");
       final byte[] dataRequestBytes = Base64.decodeBase64(Bytes.toBytes(dataRequestB64));
       mDataRequest = (KijiDataRequest) SerializationUtils.deserialize(dataRequestBytes);
     }
@@ -192,7 +188,7 @@ public final class KijiTableInputFormat
       mSplit = (KijiTableSplit) split;
 
       final Configuration conf = context.getConfiguration();
-      final KijiURI inputURI = getInputTableURI(conf);
+      final KijiURI inputURI = KijiURI.parse(conf.get(KijiConfKeys.INPUT_TABLE_URI));
       mKiji = Kiji.Factory.open(inputURI, conf);
       mTable = mKiji.openTable(inputURI.getTable());
       mReader = mTable.openTableReader();
@@ -241,7 +237,7 @@ public final class KijiTableInputFormat
       IOUtils.closeQuietly(mScanner);
       IOUtils.closeQuietly(mReader);
       IOUtils.closeQuietly(mTable);
-      IOUtils.closeQuietly(mKiji);
+      mKiji.release();
       mIterator = null;
       mScanner = null;
       mReader = null;
@@ -250,21 +246,6 @@ public final class KijiTableInputFormat
 
       mSplit = null;
       mCurrentRow = null;
-    }
-  }
-
-  /**
-   * Reports the URI of the configured input table.
-   *
-   * @param conf Read the input URI from this configuration.
-   * @return the configured input URI.
-   * @throws IOException on I/O error.
-   */
-  private static KijiURI getInputTableURI(Configuration conf) throws IOException {
-    try {
-      return KijiURI.parse(conf.get(KijiConfKeys.INPUT_TABLE_URI));
-    } catch (KijiURIException kue) {
-      throw new IOException(kue);
     }
   }
 }

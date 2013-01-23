@@ -135,7 +135,7 @@ public final class HFileWriterContext
   @Override
   public void close() throws IOException {
     mTable.close();
-    mKiji.close();
+    mKiji.release();
     super.close();
   }
 }

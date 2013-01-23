@@ -305,7 +305,7 @@ public final class KijiHFileOutputFormat
       final KijiTable table = kiji.openTable(mTableURI.getTable());
       mLayout = table.getLayout();
       table.close();
-      kiji.close();
+      kiji.release();
     }
 
     /** {@inheritDoc} */

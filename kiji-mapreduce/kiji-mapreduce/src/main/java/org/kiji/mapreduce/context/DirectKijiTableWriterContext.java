@@ -116,7 +116,7 @@ public final class DirectKijiTableWriterContext
   public void close() throws IOException {
     mPutter.close();
     mTable.close();
-    mKiji.close();
+    mKiji.release();
     super.close();
   }
 }

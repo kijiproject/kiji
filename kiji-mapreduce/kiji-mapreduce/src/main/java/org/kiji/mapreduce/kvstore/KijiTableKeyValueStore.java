@@ -420,7 +420,7 @@ public class KijiTableKeyValueStore<V> extends KeyValueStore<String, V> implemen
           mKijiTable.close();
         }
         if (null != mKiji) {
-          mKiji.close();
+          mKiji.release();
         }
       } finally {
         mTableReader = null;

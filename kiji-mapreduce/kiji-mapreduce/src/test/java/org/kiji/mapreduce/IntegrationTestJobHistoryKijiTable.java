@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.ByteBuffer;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Counters;
 import org.junit.Before;
@@ -44,6 +43,7 @@ import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.testutil.AbstractKijiIntegrationTest;
+import org.kiji.schema.util.ReferenceCountableUtils;
 
 /**
  * Integration test for the job history table.
@@ -63,8 +63,7 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
       KijiAdmin kijiAdmin = kiji.getAdmin();
       JobHistoryKijiTable.install(kijiAdmin);
     } finally {
-      IOUtils.closeQuietly(kiji);
-      // TODO(SCHEMA-158): Clean up internal hbaseAdmin in kijiAdmin.
+      ReferenceCountableUtils.releaseQuietly(kiji);
     }
   }
 
@@ -77,7 +76,7 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
     // This will throw an IOException if there's difficulty opening the table
     JobHistoryKijiTable jobHistory = JobHistoryKijiTable.open(kiji);
     jobHistory.close();
-    kiji.close();
+    kiji.release();
   }
 
   /** A private inner producer to test job recording. */
@@ -182,7 +181,7 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
 
     fooTable.close();
     jobHistory.close();
-    kiji.close();
+    kiji.release();
   }
 
   /**
@@ -224,7 +223,7 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
 
     fooTable.close();
     jobHistory.close();
-    kiji.close();
+    kiji.release();
   }
 
   /**
@@ -245,8 +244,7 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
      MapReduceJob mrJob = builder.build();
      assertTrue(mrJob.run());
 
-     // TODO(SCHEMA-158): Clean up internal hbaseAdmin in kijiAdmin.
      fooTable.close();
-     kiji.close();
+     kiji.release();
    }
 }

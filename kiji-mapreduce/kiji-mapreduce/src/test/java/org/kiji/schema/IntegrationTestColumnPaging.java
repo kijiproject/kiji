@@ -111,9 +111,9 @@ public class IntegrationTestColumnPaging extends AbstractKijiIntegrationTest {
   }
 
   @After
-  public void teardown() {
+  public void teardown() throws Exception {
     IOUtils.closeQuietly(mUserTable);
-    IOUtils.closeQuietly(mKiji);
+    mKiji.release();
   }
 
   /**

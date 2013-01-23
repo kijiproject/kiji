@@ -33,7 +33,6 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
-import org.kiji.schema.KijiAdmin;
 import org.kiji.schema.KijiCell;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableWriter;
@@ -56,13 +55,9 @@ public abstract class KijiRowFilterIntegrationTest extends AbstractKijiIntegrati
   /** An opened kiji table. */
   private KijiTable mFoodsTable;
 
-  /** A kiji admin to create and delete the food table. */
-  private KijiAdmin mAdmin;
-
   @Before
   public void setup() throws IOException {
     mKiji = Kiji.Factory.open(getKijiConfiguration());
-    mAdmin = mKiji.getAdmin();
     try {
       createTable();
     } catch (Exception e) {
@@ -76,8 +71,7 @@ public abstract class KijiRowFilterIntegrationTest extends AbstractKijiIntegrati
   public void teardown() throws Exception {
     mFoodsTable.close();
     deleteTable();
-    // TODO(SCHEMA-158): Clean up internal hbaseAdmin in mAdmin.
-    mKiji.close();
+    mKiji.release();
   }
 
   /**
@@ -87,7 +81,7 @@ public abstract class KijiRowFilterIntegrationTest extends AbstractKijiIntegrati
     final KijiTableLayout foodTableLayout =
         new KijiTableLayout(KijiTableLayouts.getLayout(KijiTableLayouts.FOODS), null);
 
-    mAdmin.createTable(FOODS_TABLE_NAME, foodTableLayout, false);
+    mKiji.getAdmin().createTable(FOODS_TABLE_NAME, foodTableLayout, false);
     LOG.info("Table " + FOODS_TABLE_NAME + " created.");
   }
 
@@ -95,7 +89,7 @@ public abstract class KijiRowFilterIntegrationTest extends AbstractKijiIntegrati
    * Deletes the 'foods' table.
    */
   private void deleteTable() throws Exception {
-    mAdmin.deleteTable(FOODS_TABLE_NAME);
+    mKiji.getAdmin().deleteTable(FOODS_TABLE_NAME);
   }
 
   /**

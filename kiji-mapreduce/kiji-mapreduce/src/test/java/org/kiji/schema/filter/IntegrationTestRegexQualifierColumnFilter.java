@@ -45,7 +45,6 @@ import org.kiji.mapreduce.MapReduceContext;
 import org.kiji.mapreduce.MapReduceJob;
 import org.kiji.mapreduce.output.SequenceFileMapReduceJobOutput;
 import org.kiji.schema.Kiji;
-import org.kiji.schema.KijiAdmin;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
@@ -60,18 +59,16 @@ public class IntegrationTestRegexQualifierColumnFilter extends AbstractKijiInteg
 
   public static final String TABLE_NAME = "regex_test";
 
-  private Kiji mKibi;
-  private KijiAdmin mAdmin;
+  private Kiji mKiji;
   private KijiTable mTable;
 
   @Before
   public void setup() throws Exception {
-    mKibi = Kiji.Factory.open(getKijiConfiguration());
-    mAdmin = mKibi.getAdmin();
+    mKiji = Kiji.Factory.open(getKijiConfiguration());
     final KijiTableLayout layout =
         new KijiTableLayout(KijiTableLayouts.getLayout(KijiTableLayouts.REGEX), null);
-    mAdmin.createTable(TABLE_NAME, layout, false);
-    mTable = mKibi.openTable(TABLE_NAME);
+    mKiji.getAdmin().createTable(TABLE_NAME, layout, false);
+    mTable = mKiji.openTable(TABLE_NAME);
 
     // Write some stuff to the table.
     KijiTableWriter writer = mTable.openTableWriter();
@@ -86,10 +83,9 @@ public class IntegrationTestRegexQualifierColumnFilter extends AbstractKijiInteg
   }
 
   @After
-  public void teardown() {
-    // TODO(SCHEMA-158): Clean up internal hbaseAdmin in mAdmin.
+  public void teardown() throws Exception {
     IOUtils.closeQuietly(mTable);
-    IOUtils.closeQuietly(mKibi);
+    mKiji.release();
   }
 
   /**
