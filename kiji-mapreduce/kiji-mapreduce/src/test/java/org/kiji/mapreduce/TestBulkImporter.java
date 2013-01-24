@@ -146,8 +146,7 @@ public class TestBulkImporter {
     {
       final KijiRowScanner scanner = table.openTableReader().getScanner(
           new KijiDataRequest()
-              .addColumn(new Column("primitives")),
-          null, null);
+              .addColumn(new Column("primitives")));
       for (KijiRowData row : scanner) {
         final EntityId eid = row.getEntityId();
         final String rowId = Bytes.toString(eid.getKijiRowKey());
@@ -269,8 +268,7 @@ public class TestBulkImporter {
     {
       final KijiRowScanner scanner = table.openTableReader().getScanner(
           new KijiDataRequest()
-              .addColumn(new Column("primitives")),
-          null, null);
+              .addColumn(new Column("primitives")));
       final Set<String> produced = Sets.newHashSet();
       for (KijiRowData row : scanner) {
         final String string = row.getMostRecentValue("primitives", "string").toString();

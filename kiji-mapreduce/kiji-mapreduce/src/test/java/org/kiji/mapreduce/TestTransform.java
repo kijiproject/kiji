@@ -175,8 +175,7 @@ public class TestTransform {
     // Validate the output table content:
     {
       final KijiRowScanner scanner = table.openTableReader().getScanner(
-          new KijiDataRequest().addColumn(new Column("info")),
-          null, null);
+          new KijiDataRequest().addColumn(new Column("info")));
       for (KijiRowData row : scanner) {
         final EntityId eid = row.getEntityId();
         final String userId = Bytes.toString(eid.getKijiRowKey());

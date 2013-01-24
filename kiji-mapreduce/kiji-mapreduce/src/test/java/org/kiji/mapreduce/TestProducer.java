@@ -145,8 +145,7 @@ public class TestProducer {
       final KijiRowScanner scanner = table.openTableReader().getScanner(
           new KijiDataRequest()
               .addColumn(new Column("info"))
-              .addColumn(new Column("map_family")),
-          null, null);
+              .addColumn(new Column("map_family")));
       for (KijiRowData row : scanner) {
         final EntityId eid = row.getEntityId();
         final String userId = Bytes.toString(eid.getKijiRowKey());
@@ -261,8 +260,7 @@ public class TestProducer {
     {
       final KijiRowScanner scanner = table.openTableReader().getScanner(
           new KijiDataRequest()
-              .addColumn(new Column("primitives", "string")),
-          null, null);
+              .addColumn(new Column("primitives", "string")));
       final Set<String> produced = Sets.newHashSet();
       for (KijiRowData row : scanner) {
         produced.add(row.getMostRecentValue("primitives", "string").toString());
