@@ -38,6 +38,7 @@ import org.kiji.schema.KijiURI
 import org.kiji.schema.KijiMetaTable
 import org.kiji.schema.avro.TableLayoutDesc
 import org.kiji.schema.layout.KijiTableLayout
+import org.kiji.schema.util.ReferenceCountableUtils
 
 
 /**
@@ -237,6 +238,7 @@ object KijiSystem extends AbstractKijiSystem {
       }
     }
 
-    kijiCache.foreach { case (key, closeable) => IOUtils.closeQuietly(closeable) }
+    kijiCache.foreach { case (key, refCountable) =>
+        ReferenceCountableUtils.releaseQuietly(refCountable) }
   }
 }
