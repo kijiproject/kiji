@@ -38,22 +38,12 @@
     <!-- Mappers/Reducers/Gatherers/Producers/Tools initialize in setup() so it's okay if their
          constructors don't initialize an instance variable. -->
     <Or>
-      <Class name="~org[.]kiji[.]mapreduce[.]mapper[.].*Mapper" />
-      <Class name="~org[.]kiji[.]mapreduce[.]reducer[.].*Reducer" />
+      <Class name="~org[.]kiji[.]mapreduce[.]lib[.]map[.].*Mapper" />
+      <Class name="~org[.]kiji[.]mapreduce[.]lib[.]reduce[.].*Reducer" />
+      <Class name="~org[.]kiji[.]mapreduce[.]lib[.]gather[.].*Gatherer" />
+      <Class name="~org[.]kiji[.]mapreduce[.]lib[.]produce[.].*Producer" />
     </Or>
     <Bug pattern="UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR" />
   </Match>
 
-  <!--
-    Other one-off exclusions.
-  -->
-  <Match>
-    <!-- For performance, code returning the same array every time is correct. -->
-    <Class name="org.kiji.mapreduce.KijiTableSplit" />
-    <Or>
-      <Bug pattern="EI_EXPOSE_REP" />
-      <Bug pattern="EI_EXPOSE_REP2" />
-      <Bug pattern="EQ_DOESNT_OVERRIDE_EQUALS" />
-    </Or>
-  </Match>
 </FindBugsFilter>

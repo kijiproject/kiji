@@ -57,7 +57,7 @@
           <artifactId>maven-checkstyle-plugin</artifactId>
           <dependencies>
             <dependency>
-              <groupId>org.kiji.mapreduce</groupId>
+              <groupId>org.kiji.mapreduce.lib</groupId>
               <artifactId>build-resources</artifactId>
               <version>${project.version}</version>
             </dependency>
@@ -71,7 +71,7 @@
           <artifactId>findbugs-maven-plugin</artifactId>
           <dependencies>
             <dependency>
-              <groupId>org.kiji.mapreduce</groupId>
+              <groupId>org.kiji.mapreduce.lib</groupId>
               <artifactId>build-resources</artifactId>
               <version>${project.version}</version>
             </dependency>
