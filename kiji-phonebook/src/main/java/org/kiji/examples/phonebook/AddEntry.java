@@ -34,6 +34,7 @@ import org.kiji.schema.KijiConfiguration;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableNotFoundException;
 import org.kiji.schema.KijiTableWriter;
+import org.kiji.schema.util.ReferenceCountableUtils;
 
 /**
  * Interactively create a phonebook entry and add it to the Kiji table.
@@ -111,7 +112,7 @@ public class AddEntry extends Configured implements Tool {
       // Safely free up resources by closing in reverse order.
       IOUtils.closeQuietly(writer);
       IOUtils.closeQuietly(table);
-      IOUtils.closeQuietly(kiji);
+      ReferenceCountableUtils.releaseQuietly(kiji);
       IOUtils.closeQuietly(console);
     }
 

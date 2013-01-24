@@ -38,6 +38,7 @@ import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableNotFoundException;
 import org.kiji.schema.KijiTableReader;
+import org.kiji.schema.util.ReferenceCountableUtils;
 
 /**
  * Lookup a phonebook entry by user id and return the information.
@@ -117,7 +118,7 @@ public class Lookup extends Configured implements Tool {
       // Safely free up resources by closing in reverse order.
       IOUtils.closeQuietly(reader);
       IOUtils.closeQuietly(table);
-      IOUtils.closeQuietly(kiji);
+      ReferenceCountableUtils.releaseQuietly(kiji);
     }
 
     return 0;

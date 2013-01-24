@@ -49,6 +49,7 @@ import org.kiji.schema.KijiURI;
 import org.kiji.schema.KijiURIException;
 import org.kiji.schema.mapreduce.DistributedCacheJars;
 import org.kiji.schema.mapreduce.KijiConfKeys;
+import org.kiji.schema.util.ReferenceCountableUtils;
 
 /**
  * Reads an input file that lists the number of minutes of talk time
@@ -122,7 +123,7 @@ public class IncrementTalkTime extends Configured implements Tool {
       // Safely free up resources by closing in reverse order.
       IOUtils.closeQuietly(mWriter);
       IOUtils.closeQuietly(mTable);
-      IOUtils.closeQuietly(mKiji);
+      ReferenceCountableUtils.releaseQuietly(mKiji);
       super.cleanup(hadoopContext);
     }
   }

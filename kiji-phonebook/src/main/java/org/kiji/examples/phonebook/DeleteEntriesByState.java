@@ -50,6 +50,7 @@ import org.kiji.schema.KijiURIException;
 import org.kiji.schema.mapreduce.DistributedCacheJars;
 import org.kiji.schema.mapreduce.KijiConfKeys;
 import org.kiji.schema.mapreduce.KijiTableInputFormat;
+import org.kiji.schema.util.ReferenceCountableUtils;
 
 /**
  * Deletes all entries from the phonebook table that have an address from a particular US state.
@@ -140,7 +141,7 @@ public class DeleteEntriesByState extends Configured implements Tool {
     protected void cleanup(Context hadoopContext) throws IOException, InterruptedException {
       IOUtils.closeQuietly(mWriter);
       IOUtils.closeQuietly(mTable);
-      IOUtils.closeQuietly(mKiji);
+      ReferenceCountableUtils.releaseQuietly(mKiji);
       super.cleanup(hadoopContext);
     }
   }

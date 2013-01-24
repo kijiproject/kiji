@@ -37,6 +37,7 @@ import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiConfiguration;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableWriter;
+import org.kiji.schema.util.ReferenceCountableUtils;
 
 /**
  * A local program that will parse user records from a text file and insert the records
@@ -83,7 +84,7 @@ public class StandalonePhonebookImporter extends Configured implements Tool {
       IOUtils.closeQuietly(reader);
       IOUtils.closeQuietly(writer);
       IOUtils.closeQuietly(table);
-      IOUtils.closeQuietly(kiji);
+      ReferenceCountableUtils.releaseQuietly(kiji);
     }
     return 0;
   }

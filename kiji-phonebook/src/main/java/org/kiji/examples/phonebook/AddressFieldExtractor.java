@@ -47,6 +47,7 @@ import org.kiji.schema.KijiURIException;
 import org.kiji.schema.mapreduce.DistributedCacheJars;
 import org.kiji.schema.mapreduce.KijiConfKeys;
 import org.kiji.schema.mapreduce.KijiTableInputFormat;
+import org.kiji.schema.util.ReferenceCountableUtils;
 
 /**
  * Extracts fields from the address column into individual columns in the derived column family.
@@ -135,7 +136,7 @@ public class AddressFieldExtractor extends Configured implements Tool {
     protected void cleanup(Context hadoopContext) throws IOException, InterruptedException {
       IOUtils.closeQuietly(mTableWriter);
       IOUtils.closeQuietly(mTable);
-      IOUtils.closeQuietly(mKiji);
+      ReferenceCountableUtils.releaseQuietly(mKiji);
       super.cleanup(hadoopContext);
     }
   }

@@ -52,6 +52,7 @@ import org.kiji.schema.KijiURI;
 import org.kiji.schema.KijiURIException;
 import org.kiji.schema.mapreduce.DistributedCacheJars;
 import org.kiji.schema.mapreduce.KijiConfKeys;
+import org.kiji.schema.util.ReferenceCountableUtils;
 
 /**
  * Shell for the PhonebookImportMapper class.  This class manages
@@ -138,7 +139,7 @@ public class PhonebookImporter extends Configured implements Tool {
     protected void cleanup(Context hadoopContext) throws IOException, InterruptedException {
       IOUtils.closeQuietly(mWriter);
       IOUtils.closeQuietly(mTable);
-      IOUtils.closeQuietly(mKiji);
+      ReferenceCountableUtils.releaseQuietly(mKiji);
       super.cleanup(hadoopContext);
     }
   }
