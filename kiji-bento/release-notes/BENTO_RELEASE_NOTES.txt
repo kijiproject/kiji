@@ -8,3 +8,6 @@ Version 1.0.0-rc3
 Version 1.0.0-rc2
   * BENTO-3. Fixes kiji-env for zsh shell users.
 
+Version 1.0.0-rc1
+  * Initial release.
+
