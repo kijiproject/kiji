@@ -1,22 +1,20 @@
-  (c) Copyright 2012 WibiData, Inc.
-
-  See the NOTICE file distributed with this work for additional
-  information regarding copyright ownership.
-
-  Licensed under the Apache License, Version 2.0 (the "License");
-  you may not use this file except in compliance with the License.
-  You may obtain a copy of the License at
-
-      http://www.apache.org/licenses/LICENSE-2.0
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
-
 
                      Kiji Phonebook example release notes
 
-Version 1.0.0
-  * First release.
+
+Version 1.0.0-rc3
+  * SCHEMA-50. Update usage to match API from KijiSchema 1.0.0-rc3
+      (release() and retain() methods for Kiji objects)
+  * SCHEMA-97. Changed instances of Kiji.open(...) to Kiji.Factory.open(...).
+
+Version 1.0.0-rc2
+  * PHONE-7. Bugfix: Set zip code to 'int' in layout.
+  * PHONE-6. Use deprecated KijiSchema MapReduce classes.
+      These classes are marked as deprecated, because they will be
+      replaced by the Kiji MapReduce library. Stay tuned for that
+      release.
+  * SCHEMA-59. Declare an explicit dependency on the CDH4 platform module.
+  * PHONE-2. Support reading console input from Eclipse.
+
+Version 1.0.0-rc1
+  * First release candidate.
