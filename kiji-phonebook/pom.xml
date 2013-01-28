@@ -22,13 +22,13 @@
 
   <groupId>org.kiji.examples.phonebook</groupId>
   <artifactId>kiji-phonebook</artifactId>
-  <version>1.0.0-rc3-SNAPSHOT</version>
+  <version>1.0.0-rc4-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <parent>
     <groupId>org.kiji.pom</groupId>
     <artifactId>root-pom</artifactId>
-    <version>1.0.2-SNAPSHOT</version>
+    <version>1.0.3-SNAPSHOT</version>
   </parent>
 
   <name>Kiji Phonebook Example</name>
