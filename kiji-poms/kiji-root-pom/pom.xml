@@ -46,8 +46,8 @@
     <scala.version>2.9.2</scala.version>
     <scala-jline.version>2.9.0-1</scala-jline.version>
     <scalatest.version>1.8</scalatest.version>
-    <slf4j-api.version>1.6.1</slf4j-api.version>
-    <slf4j-log4j12.version>1.6.1</slf4j-log4j12.version>
+    <slf4j-api.version>1.7.2</slf4j-api.version>
+    <slf4j-log4j12.version>1.7.2</slf4j-log4j12.version>
     <specs2.version>1.12</specs2.version>
 
     <!-- versions for maven plugins -->
