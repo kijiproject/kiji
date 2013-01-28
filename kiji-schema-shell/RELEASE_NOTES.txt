@@ -3,6 +3,9 @@
                               Kiji Schema Shell Release Notes
 
 Version 1.0.0-rc3
+  * SCHEMA-154. Update to KijiSchema 1.0.0-rc3 API (Kiji.getAdmin())
+  * SCHEMA-50. Update to KijiSchema 1.0.0-rc3 API (Kiji.release(), retain())
+  * SCHEMA-97. Update to 1.0.0-rc3 API (Kiji.open() -> Kiji.Factory.open())
   * DDLSHELL-6. Improve shell 'help' command.
   * DDLSHELL-5. Adds RELEASE_NOTES.txt
 
