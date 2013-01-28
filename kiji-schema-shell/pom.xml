@@ -21,13 +21,13 @@
 
   <groupId>org.kiji.schema-shell</groupId>
   <artifactId>kiji-schema-shell</artifactId>
-  <version>1.0.0-rc3-SNAPSHOT</version>
+  <version>1.0.0-rc3</version>
   <packaging>jar</packaging>
 
   <parent>
     <groupId>org.kiji.pom</groupId>
     <artifactId>root-pom</artifactId>
-    <version>1.0.2-SNAPSHOT</version>
+    <version>1.0.2</version>
   </parent>
 
   <name>kiji-schema-shell</name>
