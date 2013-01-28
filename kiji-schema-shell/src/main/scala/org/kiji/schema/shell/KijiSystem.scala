@@ -96,7 +96,7 @@ object KijiSystem extends AbstractKijiSystem {
     if (!kijiAdminCache.contains(instance)) {
       kiji(instance) match {
         case Some(theKiji) => {
-          val admin = new KijiAdmin(hBaseAdmin, theKiji)
+          val admin = theKiji.getAdmin()
           kijiAdminCache += (instance -> admin)
           Some(admin)
         }
