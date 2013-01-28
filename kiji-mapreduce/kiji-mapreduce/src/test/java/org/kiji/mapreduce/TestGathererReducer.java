@@ -29,32 +29,26 @@ import java.util.Set;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import org.apache.commons.io.FileUtils;
-import org.apache.hadoop.conf.Configuration;
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.mapreduce.output.TextMapReduceJobOutput;
-import org.kiji.schema.HBaseFactory;
 import org.kiji.schema.Kiji;
-import org.kiji.schema.KijiAdmin;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequest.Column;
-import org.kiji.schema.KijiInstaller;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
-import org.kiji.schema.KijiTableWriter;
-import org.kiji.schema.KijiURI;
-import org.kiji.schema.TestingHBaseFactory;
-import org.kiji.schema.impl.DefaultHBaseFactory;
 import org.kiji.schema.layout.KijiTableLayout;
+import org.kiji.schema.util.InstanceBuilder;
 
 /** Runs a producer job in-process against a fake HBase instance. */
 public class TestGathererReducer {
@@ -121,62 +115,48 @@ public class TestGathererReducer {
     }
   }
 
+  private Kiji mKiji;
+  private KijiTable mTable;
+
   @Before
-  public void setUp() throws Exception {
-    // TODO(KIJI-358): This is quite dangerous, actually, if Maven runs tests in parallel.
-    // Instead we should picck separate fake HBase instance IDs for each test.
-    HBaseFactory factory = HBaseFactory.Provider.get();
-    if (factory instanceof TestingHBaseFactory) {
-      ((TestingHBaseFactory) factory).reset();
-    }
+  public void setupEnvironment() throws Exception {
+    // Get the test table layouts.
+    final KijiTableLayout layout =
+        new KijiTableLayout(KijiMRTestLayouts.getTestLayout(), null);
+
+    // Populate the environment.
+    mKiji = new InstanceBuilder()
+        .withTable("test", layout)
+            .withRow("Marsellus Wallace")
+                .withFamily("info")
+                    .withQualifier("first_name").withValue("Marsellus")
+                    .withQualifier("last_name").withValue("Wallace")
+                    .withQualifier("zip_code").withValue(94110)
+            .withRow("Vincent Vega")
+                .withFamily("info")
+                    .withQualifier("first_name").withValue("Vincent")
+                    .withQualifier("last_name").withValue("Vega")
+                    .withQualifier("zip_code").withValue(94110)
+        .build();
+
+    // Fill local variables.
+    mTable = mKiji.openTable("test");
+  }
+
+  @After
+  public void cleanupEnvironment() throws IOException {
+    IOUtils.closeQuietly(mTable);
+    mKiji.release();
   }
 
   @Test
   public void testGatherer() throws Exception {
-    // Setup configuration:
-    final KijiURI kijiInstanceURI = KijiURI.parse("kiji://.fake.1/test_instance");
-    final Configuration conf = HBaseConfiguration.create();
-
-    // In-process MapReduce execution:
-    conf.set("mapred.job.tracker", "local");
-
     final File systemTmpDir = new File(System.getProperty("java.io.tmpdir"));
     Preconditions.checkState(systemTmpDir.exists());
 
     final File testTmpDir = File.createTempFile("kiji-mr", ".test", systemTmpDir);
     testTmpDir.delete();
     Preconditions.checkState(testTmpDir.mkdirs());
-
-    conf.set("fs.defaultFS", "file://" + testTmpDir);
-
-    KijiInstaller.install(kijiInstanceURI, conf);
-    final Kiji kiji = Kiji.Factory.open(kijiInstanceURI, conf);
-    LOG.info(String.format("Opened fake Kiji '%s'.", kijiInstanceURI.getInstance()));
-
-    // Create input Kiji table:
-    final KijiAdmin admin =
-        new KijiAdmin(
-            DefaultHBaseFactory.Provider.get().getHBaseAdminFactory(kijiInstanceURI).create(conf),
-            kiji);
-
-    final KijiTableLayout tableLayout =
-        new KijiTableLayout(KijiMRTestLayouts.getTestLayout(), null);
-    admin.createTable("test", tableLayout, false);
-
-    final KijiTable table = kiji.openTable("test");
-
-    // Populate input Kiji table:
-    {
-      final KijiTableWriter writer = table.openTableWriter();
-      writer.put(table.getEntityId("Marsellus Wallace"), "info", "first_name", "Marsellus");
-      writer.put(table.getEntityId("Marsellus Wallace"), "info", "last_name", "Wallace");
-      writer.put(table.getEntityId("Marsellus Wallace"), "info", "zip_code", 94110);
-
-      writer.put(table.getEntityId("Vincent Vega"), "info", "first_name", "Vincent");
-      writer.put(table.getEntityId("Vincent Vega"), "info", "last_name", "Vega");
-      writer.put(table.getEntityId("Vincent Vega"), "info", "zip_code", 94110);
-      writer.close();
-    }
 
     final File outputDir = File.createTempFile("gatherer-output", ".dir", testTmpDir);
     Preconditions.checkState(outputDir.delete());
@@ -186,23 +166,21 @@ public class TestGathererReducer {
     final MapReduceJob job = KijiGatherJobBuilder.create()
         .withGatherer(TestingGatherer.class)
         .withReducer(TestingReducer.class)
-        .withInputTable(table)
+        .withInputTable(mTable)
         .withOutput(new TextMapReduceJobOutput(new Path(outputDir.toString()), numSplits))
         .build();
     assertTrue(job.run());
 
     // Validate output:
-    {
-      final File outputPartFile = new File(outputDir, "part-r-00000");
-      final String gatheredText = FileUtils.readFileToString(outputPartFile);
-      final String[] lines = gatheredText.split("\n");
-      assertEquals(1, lines.length);
-      for (String line : lines) {
-        final String[] split = line.split("\t");
-        assertEquals(2, split.length);
-        assertEquals("94110", split[0]);
-        assertEquals("2", split[1]);
-      }
+    final File outputPartFile = new File(outputDir, "part-r-00000");
+    final String gatheredText = FileUtils.readFileToString(outputPartFile);
+    final String[] lines = gatheredText.split("\n");
+    assertEquals(1, lines.length);
+    for (String line : lines) {
+      final String[] split = line.split("\t");
+      assertEquals(2, split.length);
+      assertEquals("94110", split[0]);
+      assertEquals("2", split[1]);
     }
 
     // Cleanup:

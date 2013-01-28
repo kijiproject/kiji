@@ -29,10 +29,10 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import org.apache.avro.util.Utf8;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.mapreduce.Counters;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -40,33 +40,53 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.mapreduce.output.KijiTableMapReduceJobOutput;
 import org.kiji.schema.EntityId;
-import org.kiji.schema.HBaseFactory;
 import org.kiji.schema.Kiji;
-import org.kiji.schema.KijiAdmin;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequest.Column;
-import org.kiji.schema.KijiInstaller;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiRowScanner;
 import org.kiji.schema.KijiTable;
-import org.kiji.schema.KijiTableWriter;
-import org.kiji.schema.KijiURI;
-import org.kiji.schema.TestingHBaseFactory;
-import org.kiji.schema.impl.DefaultHBaseFactory;
+import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.layout.KijiTableLayout;
+import org.kiji.schema.util.InstanceBuilder;
 
 /** Runs a producer job in-process against a fake HBase instance. */
 public class TestProducer {
   private static final Logger LOG = LoggerFactory.getLogger(TestProducer.class);
 
+  private Kiji mKiji;
+  private KijiTable mTable;
+  private KijiTableReader mReader;
+
   @Before
-  public void setUp() throws Exception {
-    // TODO(KIJI-358): This is quite dangerous, actually, if Maven runs tests in parallel.
-    // Instead we should picck separate fake HBase instance IDs for each test.
-    HBaseFactory factory = HBaseFactory.Provider.get();
-    if (factory instanceof TestingHBaseFactory) {
-      ((TestingHBaseFactory) factory).reset();
-    }
+  public void setupEnvironment() throws Exception {
+    // Get the test table layouts.
+    final KijiTableLayout layout =
+        new KijiTableLayout(KijiMRTestLayouts.getTestLayout(), null);
+
+    // Populate the environment.
+    mKiji = new InstanceBuilder()
+        .withTable("test", layout)
+            .withRow("Marsellus Wallace")
+                .withFamily("info")
+                    .withQualifier("first_name").withValue("Marsellus")
+                    .withQualifier("last_name").withValue("Wallace")
+            .withRow("Vincent Vega")
+                .withFamily("info")
+                    .withQualifier("first_name").withValue("Vincent")
+                    .withQualifier("last_name").withValue("Vega")
+        .build();
+
+    // Fill local variables.
+    mTable = mKiji.openTable("test");
+    mReader = mTable.openTableReader();
+  }
+
+  @After
+  public void cleanupEnvironment() throws IOException {
+    IOUtils.closeQuietly(mReader);
+    IOUtils.closeQuietly(mTable);
+    mKiji.release();
   }
 
   /**
@@ -100,68 +120,34 @@ public class TestProducer {
 
   @Test
   public void testSimpleProducer() throws Exception {
-    // Setup configuration:
-    final KijiURI kijiInstanceURI = KijiURI.parse("kiji://.fake.1/test_instance");
-    final Configuration conf = HBaseConfiguration.create();
-
-    // In-process MapReduce execution:
-    conf.set("mapred.job.tracker", "local");
-
-    KijiInstaller.install(kijiInstanceURI, conf);
-    final Kiji kiji = Kiji.Factory.open(kijiInstanceURI, conf);
-    LOG.info(String.format("Opened Kiji instance '%s'.", kijiInstanceURI.getInstance()));
-
-    // Create input table:
-    final KijiAdmin admin =
-        new KijiAdmin(
-            DefaultHBaseFactory.Provider.get().getHBaseAdminFactory(kijiInstanceURI).create(conf),
-            kiji);
-    final KijiTableLayout tableLayout =
-        new KijiTableLayout(KijiMRTestLayouts.getTestLayout(), null);
-    admin.createTable("test", tableLayout, false);
-    final KijiTable table = kiji.openTable("test");
-
-    // Write input table content:
-    {
-      final KijiTableWriter writer = table.openTableWriter();
-      writer.put(table.getEntityId("Marsellus Wallace"), "info", "first_name", "Marsellus");
-      writer.put(table.getEntityId("Marsellus Wallace"), "info", "last_name", "Wallace");
-
-      writer.put(table.getEntityId("Vincent Vega"), "info", "first_name", "Vincent");
-      writer.put(table.getEntityId("Vincent Vega"), "info", "last_name", "Vega");
-      writer.close();
-    }
-
     // Run producer:
     final MapReduceJob job = KijiProduceJobBuilder.create()
         .withProducer(SimpleProducer.class)
-        .withInputTable(table)
-        .withOutput(new KijiTableMapReduceJobOutput(table))
+        .withInputTable(mTable)
+        .withOutput(new KijiTableMapReduceJobOutput(mTable))
         .build();
     assertTrue(job.run());
 
     // Validate produced output:
-    {
-      final KijiRowScanner scanner = table.openTableReader().getScanner(
-          new KijiDataRequest()
-              .addColumn(new Column("info"))
-              .addColumn(new Column("map_family")));
-      for (KijiRowData row : scanner) {
-        final EntityId eid = row.getEntityId();
-        final String userId = Bytes.toString(eid.getKijiRowKey());
-        LOG.info(String.format("Row: %s", userId));
-        assertEquals(userId, String.format("%s %s",
-            row.getMostRecentValue("info", "first_name"),
-            row.getMostRecentValue("info", "last_name")));
-        assertEquals(1, row.getMostRecentValues("map_family").size());
-        final Map.Entry<String, Utf8> entry =
-            row.<Utf8>getMostRecentValues("map_family").entrySet().iterator().next();
-        assertEquals("produced qualifier", entry.getKey().toString());
-        assertTrue(entry.getValue().toString()
-            .startsWith(String.format("produced content for row '%s': ", userId)));
-      }
-      scanner.close();
+    final KijiRowScanner scanner = mReader.getScanner(
+        new KijiDataRequest()
+            .addColumn(new Column("info"))
+            .addColumn(new Column("map_family")));
+    for (KijiRowData row : scanner) {
+      final EntityId eid = row.getEntityId();
+      final String userId = Bytes.toString(eid.getKijiRowKey());
+      LOG.info("Row: {}", userId);
+      assertEquals(userId, String.format("%s %s",
+          row.getMostRecentValue("info", "first_name"),
+          row.getMostRecentValue("info", "last_name")));
+      assertEquals(1, row.getMostRecentValues("map_family").size());
+      final Map.Entry<String, Utf8> entry =
+          row.<Utf8>getMostRecentValues("map_family").entrySet().iterator().next();
+      assertEquals("produced qualifier", entry.getKey().toString());
+      assertTrue(entry.getValue().toString()
+          .startsWith(String.format("produced content for row '%s': ", userId)));
     }
+    scanner.close();
   }
 
   /** Producer to test the setup/produce/cleanup workflow. */
@@ -216,60 +202,27 @@ public class TestProducer {
   /** Tests the producer workflow (setup/produce/cleanup) and counters. */
   @Test
   public void testProducerWorkflow() throws Exception {
-    // Setup configuration:
-    final KijiURI kijiInstanceURI = KijiURI.parse("kiji://.fake.1/test_instance");
-    final Configuration conf = HBaseConfiguration.create();
-
-    // In-process MapReduce execution:
-    conf.set("mapred.job.tracker", "local");
-
-    KijiInstaller.install(kijiInstanceURI, conf);
-    final Kiji kiji = Kiji.Factory.open(kijiInstanceURI, conf);
-    LOG.info(String.format("Opened Kiji instance '%s'.", kijiInstanceURI.getInstance()));
-
-    // Create input table:
-    final KijiAdmin admin =
-        new KijiAdmin(
-            DefaultHBaseFactory.Provider.get().getHBaseAdminFactory(kijiInstanceURI).create(conf),
-            kiji);
-    final KijiTableLayout tableLayout =
-        new KijiTableLayout(KijiMRTestLayouts.getTestLayout(), null);
-    admin.createTable("test", tableLayout, false);
-    final KijiTable table = kiji.openTable("test");
-
-    // Write input table content:
-    {
-      final KijiTableWriter writer = table.openTableWriter();
-      writer.put(table.getEntityId("Marsellus Wallace"), "info", "first_name", "Marsellus");
-      writer.put(table.getEntityId("Marsellus Wallace"), "info", "last_name", "Wallace");
-
-      writer.put(table.getEntityId("Vincent Vega"), "info", "first_name", "Vincent");
-      writer.put(table.getEntityId("Vincent Vega"), "info", "last_name", "Vega");
-      writer.close();
-    }
-
     // Run producer:
     final MapReduceJob job = KijiProduceJobBuilder.create()
         .withProducer(ProducerWorkflow.class)
-        .withInputTable(table)
-        .withOutput(new KijiTableMapReduceJobOutput(table))
+        .withInputTable(mTable)
+        .withOutput(new KijiTableMapReduceJobOutput(mTable))
         .build();
     assertTrue(job.run());
 
     // Validate produced output:
-    {
-      final KijiRowScanner scanner = table.openTableReader().getScanner(
-          new KijiDataRequest()
-              .addColumn(new Column("primitives", "string")));
-      final Set<String> produced = Sets.newHashSet();
-      for (KijiRowData row : scanner) {
-        produced.add(row.getMostRecentValue("primitives", "string").toString());
-      }
-      scanner.close();
-
-      assertTrue(produced.contains("Marsellus Wallace"));
-      assertTrue(produced.contains("Vincent Vega"));
+    final KijiRowScanner scanner = mReader.getScanner(
+        new KijiDataRequest()
+            .addColumn(new Column("primitives", "string")));
+    final Set<String> produced = Sets.newHashSet();
+    for (KijiRowData row : scanner) {
+      produced.add(row.getMostRecentValue("primitives", "string").toString());
     }
+    scanner.close();
+
+    assertTrue(produced.contains("Marsellus Wallace"));
+    assertTrue(produced.contains("Vincent Vega"));
+
     final Counters counters = job.getHadoopJob().getCounters();
     assertEquals(2, counters.findCounter(JobHistoryCounters.PRODUCER_ROWS_PROCESSED).getValue());
   }

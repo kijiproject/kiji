@@ -79,8 +79,8 @@ public abstract class KijiTableMapper<K, V>
     }
     if (context.getInputSplit() instanceof TableSplit) {
       TableSplit taskSplit = (TableSplit) context.getInputSplit();
-      LOG.info(String.format("Setting up map task on region [%s -- %s]%n",
-          toHex(taskSplit.getStartRow()), toHex(taskSplit.getEndRow())));
+      LOG.info("Setting up map task on region [{} -- {}]",
+          toHex(taskSplit.getStartRow()), toHex(taskSplit.getEndRow()));
     }
   }
 
@@ -95,8 +95,8 @@ public abstract class KijiTableMapper<K, V>
   protected void cleanup(Context context) throws IOException {
     if (context.getInputSplit() instanceof TableSplit) {
       TableSplit taskSplit = (TableSplit) context.getInputSplit();
-      LOG.info(String.format("Cleaning up task on region [%s -- %s]%n",
-          toHex(taskSplit.getStartRow()), toHex(taskSplit.getEndRow())));
+      LOG.info("Cleaning up task on region [{} -- {}]",
+          toHex(taskSplit.getStartRow()), toHex(taskSplit.getEndRow()));
     }
     try {
       super.cleanup(context);

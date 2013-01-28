@@ -46,6 +46,7 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.schema.EntityId;
+import org.kiji.schema.HBaseFactory;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
@@ -96,7 +97,8 @@ public final class KijiTableInputFormat
     try {
       final KijiTable table = kiji.openTable(inputTableURI.getTable());
       try {
-        final HBaseAdmin admin = kiji.getAdmin().getHBaseAdmin();  // not owned
+        final HBaseFactory hbaseFactory = HBaseFactory.Provider.get();
+        final HBaseAdmin admin = hbaseFactory.getHBaseAdminFactory(inputTableURI).create(conf);
         final byte[] htableName = HBaseKijiTable.downcast(table).getHTable().getTableName();
         final List<HRegionInfo> regions = admin.getTableRegions(htableName);
         final List<InputSplit> splits = Lists.newArrayList();
@@ -107,6 +109,7 @@ public final class KijiTableInputFormat
               new TableSplit(htableName, startKey, region.getEndKey(), table.getName());
           splits.add(new KijiTableSplit(tableSplit, startKey));
         }
+        admin.close();
         return splits;
       } finally {
         table.close();

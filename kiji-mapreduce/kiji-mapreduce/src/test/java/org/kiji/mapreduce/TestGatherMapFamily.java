@@ -31,28 +31,22 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import org.apache.avro.util.Utf8;
 import org.apache.commons.io.FileUtils;
-import org.apache.hadoop.conf.Configuration;
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.io.Text;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.mapreduce.output.TextMapReduceJobOutput;
-import org.kiji.schema.HBaseFactory;
 import org.kiji.schema.Kiji;
-import org.kiji.schema.KijiAdmin;
 import org.kiji.schema.KijiDataRequest;
-import org.kiji.schema.KijiInstaller;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
-import org.kiji.schema.KijiTableWriter;
-import org.kiji.schema.KijiURI;
-import org.kiji.schema.TestingHBaseFactory;
-import org.kiji.schema.impl.DefaultHBaseFactory;
 import org.kiji.schema.layout.KijiTableLayout;
+import org.kiji.schema.util.InstanceBuilder;
 
 /** Tests a gatherer on a map-type family. */
 public class TestGatherMapFamily {
@@ -93,62 +87,50 @@ public class TestGatherMapFamily {
     }
   }
 
+  private Kiji mKiji;
+  private KijiTable mTable;
+
   @Before
-  public void setUp() throws Exception {
-    // TODO(KIJI-358): This is quite dangerous, actually, if Maven runs tests in parallel.
-    // Instead we should picck separate fake HBase instance IDs for each test.
-    HBaseFactory factory = HBaseFactory.Provider.get();
-    if (factory instanceof TestingHBaseFactory) {
-      ((TestingHBaseFactory) factory).reset();
-    }
+  public void setupEnvironment() throws Exception {
+    // Get the test table layouts.
+    final KijiTableLayout layout =
+        new KijiTableLayout(KijiMRTestLayouts.getTestLayout(), null);
+
+    // Populate the environment.
+    mKiji = new InstanceBuilder()
+        .withTable("test", layout)
+            .withRow("Marsellus Wallace")
+                .withFamily("info")
+                    .withQualifier("first_name").withValue("Marsellus")
+                    .withQualifier("last_name").withValue("Wallace")
+                .withFamily("map_family")
+                    .withQualifier("key-mw").withValue("MW")
+            .withRow("Vincent Vega")
+                .withFamily("info")
+                    .withQualifier("first_name").withValue("Vincent")
+                    .withQualifier("last_name").withValue("Vega")
+                .withFamily("map_family")
+                    .withQualifier("key-vv").withValue("VV")
+        .build();
+
+    // Fill local variables.
+    mTable = mKiji.openTable("test");
+  }
+
+  @After
+  public void cleanupEnvironment() throws IOException {
+    IOUtils.closeQuietly(mTable);
+    mKiji.release();
   }
 
   @Test
   public void testGather() throws Exception {
-    // Setup configuration:
-    final KijiURI kijiInstanceURI = KijiURI.parse("kiji://.fake.1/test_instance");
-    final Configuration conf = HBaseConfiguration.create();
-
-    // In-process MapReduce execution:
-    conf.set("mapred.job.tracker", "local");
-
     final File systemTmpDir = new File(System.getProperty("java.io.tmpdir"));
     Preconditions.checkState(systemTmpDir.exists());
 
     final File testTmpDir = File.createTempFile("kiji-mr", ".test", systemTmpDir);
     testTmpDir.delete();
     Preconditions.checkState(testTmpDir.mkdirs());
-
-    conf.set("fs.defaultFS", "file://" + testTmpDir);
-
-    KijiInstaller.install(kijiInstanceURI, conf);
-    final Kiji kiji = Kiji.Factory.open(kijiInstanceURI, conf);
-    LOG.info(String.format("Opened Kiji instance: '%s'.", kijiInstanceURI.getInstance()));
-
-    // Create input Kiji table:
-    final KijiAdmin admin =
-        new KijiAdmin(
-            DefaultHBaseFactory.Provider.get().getHBaseAdminFactory(kijiInstanceURI).create(conf),
-            kiji);
-
-    final KijiTableLayout tableLayout =
-        new KijiTableLayout(KijiMRTestLayouts.getTestLayout(), null);
-    admin.createTable("test", tableLayout, false);
-
-    final KijiTable table = kiji.openTable("test");
-
-    // Populate input Kiji table:
-    {
-      final KijiTableWriter writer = table.openTableWriter();
-      writer.put(table.getEntityId("Marsellus Wallace"), "info", "first_name", "Marsellus");
-      writer.put(table.getEntityId("Marsellus Wallace"), "info", "last_name", "Wallace");
-      writer.put(table.getEntityId("Marsellus Wallace"), "map_family", "key-mw", "MW");
-
-      writer.put(table.getEntityId("Vincent Vega"), "info", "first_name", "Vincent");
-      writer.put(table.getEntityId("Vincent Vega"), "info", "last_name", "Vega");
-      writer.put(table.getEntityId("Vincent Vega"), "map_family", "key-vv", "VV");
-      writer.close();
-    }
 
     final File outputDir = File.createTempFile("gatherer-output", ".dir", testTmpDir);
     Preconditions.checkState(outputDir.delete());
@@ -157,22 +139,20 @@ public class TestGatherMapFamily {
     // Run gatherer:
     final MapReduceJob job = KijiGatherJobBuilder.create()
         .withGatherer(MapFamilyGatherer.class)
-        .withInputTable(table)
+        .withInputTable(mTable)
         .withOutput(new TextMapReduceJobOutput(new Path(outputDir.toString()), numSplits))
         .build();
     assertTrue(job.run());
 
     // Validate output:
-    {
-      final File outputPartFile = new File(outputDir, "part-m-00000");
-      final String gatheredText = FileUtils.readFileToString(outputPartFile);
-      final Set<String> outputLines = Sets.newHashSet();
-      for (String line : gatheredText.split("\n")) {
-        outputLines.add(line);
-      }
-      assertTrue(outputLines.contains("key-vv\tVV"));
-      assertTrue(outputLines.contains("key-mw\tMW"));
+    final File outputPartFile = new File(outputDir, "part-m-00000");
+    final String gatheredText = FileUtils.readFileToString(outputPartFile);
+    final Set<String> outputLines = Sets.newHashSet();
+    for (String line : gatheredText.split("\n")) {
+      outputLines.add(line);
     }
+    assertTrue(outputLines.contains("key-vv\tVV"));
+    assertTrue(outputLines.contains("key-mw\tMW"));
 
     // Cleanup:
     FileUtils.deleteQuietly(testTmpDir);

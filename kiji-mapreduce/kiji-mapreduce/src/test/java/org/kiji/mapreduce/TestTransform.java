@@ -25,11 +25,11 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 
 import com.google.common.base.Preconditions;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -40,22 +40,17 @@ import org.kiji.mapreduce.input.KijiTableMapReduceJobInput;
 import org.kiji.mapreduce.input.KijiTableMapReduceJobInput.RowOptions;
 import org.kiji.mapreduce.output.KijiTableMapReduceJobOutput;
 import org.kiji.schema.EntityId;
-import org.kiji.schema.HBaseFactory;
 import org.kiji.schema.Kiji;
-import org.kiji.schema.KijiAdmin;
 import org.kiji.schema.KijiConfiguration;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequest.Column;
-import org.kiji.schema.KijiInstaller;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiRowScanner;
 import org.kiji.schema.KijiTable;
-import org.kiji.schema.KijiTableWriter;
-import org.kiji.schema.KijiURI;
-import org.kiji.schema.TestingHBaseFactory;
-import org.kiji.schema.impl.DefaultHBaseFactory;
+import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.impl.HBaseKijiTable;
 import org.kiji.schema.layout.KijiTableLayout;
+import org.kiji.schema.util.InstanceBuilder;
 
 /** Runs a map-only job in-process against a fake HBase instance. */
 public class TestTransform {
@@ -114,79 +109,69 @@ public class TestTransform {
     }
   }
 
+  private Kiji mKiji;
+  private KijiTable mTable;
+  private KijiTableReader mReader;
+
   @Before
-  public void setUp() throws Exception {
-    // TODO(KIJI-358): Remove this as this prevents tests to run in parallel within the same JVMs.
-    HBaseFactory factory = HBaseFactory.Provider.get();
-    if (factory instanceof TestingHBaseFactory) {
-      ((TestingHBaseFactory) factory).reset();
-    }
+  public void setupEnvironment() throws Exception {
+    // Get the test table layouts.
+    final KijiTableLayout layout =
+        new KijiTableLayout(KijiMRTestLayouts.getTestLayout(), null);
+
+    // Populate the environment.
+    mKiji = new InstanceBuilder()
+        .withTable("test", layout)
+            .withRow("Marsellus Wallace")
+                .withFamily("info")
+                    .withQualifier("first_name").withValue("Marsellus")
+                    .withQualifier("last_name").withValue("Wallace")
+            .withRow("Vincent Vega")
+                .withFamily("info")
+                    .withQualifier("first_name").withValue("Vincent")
+                    .withQualifier("last_name").withValue("Vega")
+        .build();
+
+    // Fill local variables.
+    mTable = mKiji.openTable("test");
+    mReader = mTable.openTableReader();
+  }
+
+  @After
+  public void cleanupEnvironment() throws IOException {
+    IOUtils.closeQuietly(mReader);
+    IOUtils.closeQuietly(mTable);
+    mKiji.release();
   }
 
   @Test
   public void testMapReduce() throws Exception {
-    // Setup configuration:
-    final KijiURI kijiInstanceURI = KijiURI.parse("kiji://.fake.1/test_instance");
-    final Configuration conf = HBaseConfiguration.create();
-
-    // In-process MapReduce execution:
-    conf.set("mapred.job.tracker", "local");
-
-    final KijiConfiguration kijiConf = new KijiConfiguration(conf, kijiInstanceURI);
-
-    KijiInstaller.install(kijiInstanceURI, conf);
-    final Kiji kiji = Kiji.Factory.open(kijiInstanceURI, conf);
-    LOG.info(String.format("Opened Kiji instance '%s'.", kijiInstanceURI.getInstance()));
-
-    // Create input Kiji table:
-    final KijiAdmin admin =
-        new KijiAdmin(
-            DefaultHBaseFactory.Provider.get().getHBaseAdminFactory(kijiInstanceURI).create(conf),
-            kiji);
-    final KijiTableLayout tableLayout =
-        new KijiTableLayout(KijiMRTestLayouts.getTestLayout(), null);
-    admin.createTable("test", tableLayout, false);
-
-    final KijiTable table = kiji.openTable("test");
-
-    // Set input table content:
-    {
-      final KijiTableWriter writer = table.openTableWriter();
-      writer.put(table.getEntityId("Marsellus Wallace"), "info", "first_name", "Marsellus");
-      writer.put(table.getEntityId("Marsellus Wallace"), "info", "last_name", "Wallace");
-
-      writer.put(table.getEntityId("Vincent Vega"), "info", "first_name", "Vincent");
-      writer.put(table.getEntityId("Vincent Vega"), "info", "last_name", "Vega");
-      writer.close();
-    }
-
     // Run the transform (map-only job):
+    final KijiConfiguration kijiConf = new KijiConfiguration(mKiji.getConf(), mKiji.getURI());
     final MapReduceJob job = KijiTransformJobBuilder.create()
         .withKijiConfiguration(kijiConf)
         .withMapper(ExampleMapper.class)
         .withInput(new KijiTableMapReduceJobInput(
-            (HBaseKijiTable) table,
+            (HBaseKijiTable) mTable,
             new KijiDataRequest().addColumn(new Column("info")),
             new RowOptions()))
-        .withOutput(new KijiTableMapReduceJobOutput((HBaseKijiTable) table))
+        .withOutput(new KijiTableMapReduceJobOutput((HBaseKijiTable) mTable))
         .build();
     assertTrue(job.run());
 
     // Validate the output table content:
-    {
-      final KijiRowScanner scanner = table.openTableReader().getScanner(
-          new KijiDataRequest().addColumn(new Column("info")));
-      for (KijiRowData row : scanner) {
-        final EntityId eid = row.getEntityId();
-        final String userId = Bytes.toString(eid.getKijiRowKey());
-        LOG.info(String.format("Row: %s", userId));
-        if (!userId.startsWith("generated row for ")) {
-          assertEquals(userId, String.format("%s %s",
-              row.getMostRecentValue("info", "first_name"),
-              row.getMostRecentValue("info", "last_name")));
-        }
+    final KijiRowScanner scanner = mReader.getScanner(
+        new KijiDataRequest().addColumn(new Column("info")));
+    for (KijiRowData row : scanner) {
+      final EntityId eid = row.getEntityId();
+      final String userId = Bytes.toString(eid.getKijiRowKey());
+      LOG.info("Row: {}", userId);
+      if (!userId.startsWith("generated row for ")) {
+        assertEquals(userId, String.format("%s %s",
+            row.getMostRecentValue("info", "first_name"),
+            row.getMostRecentValue("info", "last_name")));
       }
-      scanner.close();
     }
+    scanner.close();
   }
 }

@@ -23,9 +23,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.NavigableMap;
 
+import com.google.common.base.Preconditions;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -48,38 +51,36 @@ import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
-import org.kiji.schema.KijiTableWriter;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayouts;
-import org.kiji.schema.testutil.AbstractKijiIntegrationTest;
+import org.kiji.schema.util.InstanceBuilder;
 
-public class IntegrationTestRegexQualifierColumnFilter extends AbstractKijiIntegrationTest {
-  private static final Logger LOG = LoggerFactory.getLogger(
-      IntegrationTestRegexQualifierColumnFilter.class);
-
-  public static final String TABLE_NAME = "regex_test";
+public class TestRegexQualifierColumnFilter {
+  private static final Logger LOG = LoggerFactory.getLogger(TestRegexQualifierColumnFilter.class);
+  private static final String TABLE_NAME = "regex_test";
 
   private Kiji mKiji;
   private KijiTable mTable;
 
   @Before
   public void setup() throws Exception {
-    mKiji = Kiji.Factory.open(getKijiConfiguration());
+    // Get the test table layouts.
     final KijiTableLayout layout =
         new KijiTableLayout(KijiTableLayouts.getLayout(KijiTableLayouts.REGEX), null);
-    mKiji.getAdmin().createTable(TABLE_NAME, layout, false);
-    mTable = mKiji.openTable(TABLE_NAME);
 
-    // Write some stuff to the table.
-    KijiTableWriter writer = mTable.openTableWriter();
-    try {
-      writer.put(mTable.getEntityId("1"), "family", "apple", "cell");
-      writer.put(mTable.getEntityId("1"), "family", "banana", "cell");
-      writer.put(mTable.getEntityId("1"), "family", "carrot", "cell");
-      writer.put(mTable.getEntityId("1"), "family", "aardvark", "cell");
-    } finally {
-      writer.close();
-    }
+    // Populate the environment.
+    mKiji = new InstanceBuilder()
+        .withTable("regex_test", layout)
+            .withRow("1")
+                .withFamily("family")
+                    .withQualifier("apple").withValue("cell")
+                    .withQualifier("banana").withValue("cell")
+                    .withQualifier("carrot").withValue("cell")
+                    .withQualifier("aardvark").withValue("cell")
+        .build();
+
+    // Fill local variables.
+    mTable = mKiji.openTable("regex_test");
   }
 
   @After
@@ -123,21 +124,30 @@ public class IntegrationTestRegexQualifierColumnFilter extends AbstractKijiInteg
   }
 
   @Test
-  public void testRegexQualifierColumnFilter()
-      throws ClassNotFoundException, IOException, InterruptedException {
+  public void testRegexQualifierColumnFilter() throws Exception {
+    final File systemTmpDir = new File(System.getProperty("java.io.tmpdir"));
+    Preconditions.checkState(systemTmpDir.exists());
+
+    final File testTmpDir = File.createTempFile("kiji-mr", ".test", systemTmpDir);
+    testTmpDir.delete();
+    Preconditions.checkState(testTmpDir.mkdirs());
+
+    final File outputDir = File.createTempFile("gatherer-output", ".dir", testTmpDir);
+    Preconditions.checkState(outputDir.delete());
+    final int numSplits = 1;
+
     // Run a gatherer over the test_table.
-    Path outputPath = getDfsPath("qualifiers-that-start-with-the-letter-a");
-    MapReduceJob gatherJob = KijiGatherJobBuilder.create()
+    final MapReduceJob gatherJob = KijiGatherJobBuilder.create()
         .withInputTable(mTable)
         .withGatherer(MyGatherer.class)
-        .withOutput(new SequenceFileMapReduceJobOutput(outputPath, 1))
+        .withOutput(new SequenceFileMapReduceJobOutput(new Path(outputDir.getPath()), numSplits))
         .build();
     assertTrue(gatherJob.run());
 
     // Check the output file: two things should be there (apple, aardvark).
-    final Configuration conf = getKijiConfiguration().getConf();
-    SequenceFile.Reader reader = new SequenceFile.Reader(
-        FileSystem.get(conf), new Path(outputPath, "part-m-00000"), conf);
+    final Configuration conf = mKiji.getConf();
+    final SequenceFile.Reader reader = new SequenceFile.Reader(
+        FileSystem.get(conf), new Path(outputDir.getPath(), "part-m-00000"), conf);
     try {
       Text key = new Text();
       assertTrue(reader.next(key));
@@ -148,5 +158,8 @@ public class IntegrationTestRegexQualifierColumnFilter extends AbstractKijiInteg
     } finally {
       reader.close();
     }
+
+    // Cleanup:
+    FileUtils.deleteQuietly(testTmpDir);
   }
 }

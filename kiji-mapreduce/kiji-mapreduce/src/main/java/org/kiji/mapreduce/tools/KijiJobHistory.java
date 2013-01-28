@@ -30,7 +30,6 @@ import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.mapreduce.Counters;
 
 import org.kiji.annotations.ApiAudience;
@@ -86,7 +85,7 @@ public final class KijiJobHistory extends VersionValidatedTool {
     Kiji kiji = getKiji();
 
     if (mInstall) {
-      KijiAdmin kijiAdmin = new KijiAdmin(new HBaseAdmin(kiji.getConf()), kiji);
+      final KijiAdmin kijiAdmin = kiji.getAdmin();
       JobHistoryKijiTable.install(kijiAdmin);
     }
 
