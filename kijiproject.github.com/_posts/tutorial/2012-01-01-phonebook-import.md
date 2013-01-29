@@ -78,7 +78,7 @@ example - using the `kiji jar` command.
 <div class="userinput">
 {% highlight bash %}
 $KIJI_HOME/bin/kiji jar \
-    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-1.0.0-rc2.jar \
+    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-1.0.0-rc3.jar \
     org.kiji.examples.phonebook.StandalonePhonebookImporter \
     $KIJI_HOME/examples/phonebook/input-data.txt
 {% endhighlight %}
@@ -204,7 +204,7 @@ path to the `input-data.txt` file in hdfs.
 <div class="userinput">
 {% highlight bash %}
 $KIJI_HOME/bin/kiji jar \
-    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-1.0.0-rc2.jar \
+    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-1.0.0-rc3.jar \
     org.kiji.examples.phonebook.PhonebookImporter \
     /tmp/input-data.txt
 {% endhighlight %}

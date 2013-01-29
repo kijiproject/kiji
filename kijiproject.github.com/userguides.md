@@ -10,8 +10,10 @@ theory and practice behind developing Big Data applications with Kiji.</p>
 to the Kiji version you are using.</p>
 
 <ul>
+  <li><a href="/userguide/schema/1.0.0-rc3/kiji-schema-overview/">
+      KijiSchema 1.0.0-rc3</a> (latest)</li>
   <li><a href="/userguide/schema/1.0.0-rc2/kiji-schema-overview/">
-      KijiSchema 1.0.0-rc2</a> (latest)</li>
+      KijiSchema 1.0.0-rc2</a></li>
   <li><a href="/userguide/schema/1.0.0-rc1/kiji-schema-overview/">
       KijiSchema 1.0.0-rc1</a></li>
 </ul>

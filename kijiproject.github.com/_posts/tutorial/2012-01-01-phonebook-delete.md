@@ -67,7 +67,7 @@ Next, to perform the deletion of this contact using DeleteEntry:
 <div class="userinput">
 {% highlight bash %}
 $KIJI_HOME/bin/kiji jar \
-    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-1.0.0-rc2.jar \
+    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-1.0.0-rc3.jar \
     org.kiji.examples.phonebook.DeleteEntry
 {% endhighlight %}
 </div>
@@ -134,7 +134,7 @@ You can run the DeleteEntriesByState MapReduce job by running:
 <div class="userinput">
 {% highlight bash %}
 $KIJI_HOME/bin/kiji jar \
-    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-1.0.0-rc2.jar \
+    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-1.0.0-rc3.jar \
     org.kiji.examples.phonebook.DeleteEntriesByState --state=CA
 {% endhighlight %}
 </div>

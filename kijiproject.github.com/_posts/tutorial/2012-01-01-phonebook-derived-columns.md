@@ -57,7 +57,7 @@ You can execute this example using the `kiji jar` command with the class name:
 <div class="userinput">
 {% highlight bash %}
 $KIJI_HOME/bin/kiji jar \
-    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-1.0.0-rc2.jar \
+    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-1.0.0-rc3.jar \
     org.kiji.examples.phonebook.AddressFieldExtractor
 {% endhighlight %}
 </div>
