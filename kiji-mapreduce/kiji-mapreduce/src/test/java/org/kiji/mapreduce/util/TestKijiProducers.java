@@ -37,8 +37,8 @@ public class TestKijiProducers extends KijiClientTest {
 
   @Before
   public void setupLayout() throws Exception {
-    mTableLayout = getKiji().getMetaTable()
-        .updateTableLayout("table", KijiTableLayouts.getLayout(KijiTableLayouts.SIMPLE));
+    mTableLayout = KijiTableLayouts.getTableLayout(KijiTableLayouts.SIMPLE);
+    getKiji().getAdmin().createTable(mTableLayout.getName(), mTableLayout, false);
   }
 
   public static class MyProducer extends KijiProducer {

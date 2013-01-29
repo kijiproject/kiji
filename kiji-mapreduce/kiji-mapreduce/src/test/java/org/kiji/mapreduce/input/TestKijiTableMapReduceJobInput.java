@@ -55,8 +55,8 @@ import org.kiji.schema.util.ScanEquals;
 public class TestKijiTableMapReduceJobInput extends KijiClientTest {
   @Before
   public void setupLayout() throws Exception {
-    getKiji().getMetaTable()
-        .updateTableLayout("table", KijiTableLayouts.getLayout(KijiTableLayouts.SIMPLE));
+    getKiji().getAdmin()
+        .createTable("table", KijiTableLayouts.getTableLayout(KijiTableLayouts.SIMPLE), false);
   }
 
   @Test
