@@ -35,7 +35,7 @@ import org.junit.Test;
 
 import org.kiji.mapreduce.bulkimport.BinaryHTableBulkImporter.BinaryHBaseCellDecoder;
 import org.kiji.mapreduce.bulkimport.BinaryHTableBulkImporter.ColumnDescriptor;
-import org.kiji.schema.KijiCell;
+import org.kiji.schema.DecodedCell;
 import org.kiji.schema.KijiColumnName;
 
 public class TestBinaryHTableBulkImporter {
@@ -43,42 +43,42 @@ public class TestBinaryHTableBulkImporter {
   public void testBinaryHBaseCellDecoder() throws IOException {
     BinaryHBaseCellDecoder decoder = new BinaryHBaseCellDecoder();
 
-    KijiCell<?> booleanCell = decoder.decode(
+    DecodedCell<?> booleanCell = decoder.decode(
         BinaryHBaseCellDecoder.Type.BOOLEAN, Bytes.toBytes(true));
     assertEquals(Schema.create(Schema.Type.BOOLEAN), booleanCell.getWriterSchema());
     assertTrue((Boolean) booleanCell.getData());
 
-    KijiCell<?> doubleCell = decoder.decode(
+    DecodedCell<?> doubleCell = decoder.decode(
         BinaryHBaseCellDecoder.Type.DOUBLE, Bytes.toBytes(3.2));
     assertEquals(Schema.create(Schema.Type.DOUBLE), doubleCell.getWriterSchema());
     assertEquals(3.2, (Double) doubleCell.getData(), 1e-10);
 
-    KijiCell<?> floatCell = decoder.decode(
+    DecodedCell<?> floatCell = decoder.decode(
         BinaryHBaseCellDecoder.Type.FLOAT, Bytes.toBytes(3.1f));
     assertEquals(Schema.create(Schema.Type.FLOAT), floatCell.getWriterSchema());
     assertEquals(3.1f, (Float) floatCell.getData(), 1e-10);
 
-    KijiCell<?> bytesCell = decoder.decode(
+    DecodedCell<?> bytesCell = decoder.decode(
         BinaryHBaseCellDecoder.Type.BYTES, new byte[] {1, 2, 3});
     assertEquals(Schema.create(Schema.Type.BYTES), bytesCell.getWriterSchema());
     assertArrayEquals(new byte[] {1, 2, 3}, ((ByteBuffer) bytesCell.getData()).array());
 
-    KijiCell<?> intCell = decoder.decode(
+    DecodedCell<?> intCell = decoder.decode(
         BinaryHBaseCellDecoder.Type.INT, Bytes.toBytes(3));
     assertEquals(Schema.create(Schema.Type.INT), intCell.getWriterSchema());
     assertEquals(3, ((Integer) intCell.getData()).intValue());
 
-    KijiCell<?> longCell = decoder.decode(
+    DecodedCell<?> longCell = decoder.decode(
         BinaryHBaseCellDecoder.Type.LONG, Bytes.toBytes(42L));
     assertEquals(Schema.create(Schema.Type.LONG), longCell.getWriterSchema());
     assertEquals(42L, ((Long) longCell.getData()).longValue());
 
-    KijiCell<?> shortCell = decoder.decode(
+    DecodedCell<?> shortCell = decoder.decode(
         BinaryHBaseCellDecoder.Type.SHORT, Bytes.toBytes((short) 4));
     assertEquals(Schema.create(Schema.Type.INT), shortCell.getWriterSchema());
     assertEquals(4, ((Integer) shortCell.getData()).intValue());
 
-    KijiCell<?> stringCell = decoder.decode(
+    DecodedCell<?> stringCell = decoder.decode(
         BinaryHBaseCellDecoder.Type.STRING, Bytes.toBytes("hi"));
     assertEquals(Schema.create(Schema.Type.STRING), stringCell.getWriterSchema());
     assertEquals("hi", ((CharSequence) stringCell.getData()).toString());

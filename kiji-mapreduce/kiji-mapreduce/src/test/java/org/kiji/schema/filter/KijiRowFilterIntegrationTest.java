@@ -31,9 +31,9 @@ import org.junit.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.schema.DecodedCell;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
-import org.kiji.schema.KijiCell;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableWriter;
 import org.kiji.schema.layout.KijiTableLayout;
@@ -137,10 +137,10 @@ public abstract class KijiRowFilterIntegrationTest extends AbstractKijiIntegrati
     EntityId entityId = mFoodsTable.getEntityId(foodName);
 
     // Set the name of the food.
-    foodWriter.put(entityId, "info", "name", new KijiCell<CharSequence>(stringType, foodName));
+    foodWriter.put(entityId, "info", "name", new DecodedCell<CharSequence>(stringType, foodName));
 
     // Set the color of the food.
-    foodWriter.put(entityId, "info", "color", new KijiCell<CharSequence>(stringType, foodColor));
+    foodWriter.put(entityId, "info", "color", new DecodedCell<CharSequence>(stringType, foodColor));
 
     // Set the array of people who like the food (unless nobody likes it).
     List<CharSequence> arrayOfPeopleWhoLikeIt = new ArrayList<CharSequence>();
@@ -149,12 +149,12 @@ public abstract class KijiRowFilterIntegrationTest extends AbstractKijiIntegrati
     }
     if (!arrayOfPeopleWhoLikeIt.isEmpty()) {
       foodWriter.put(entityId, "info", "peopleWhoLikeIt",
-          new KijiCell<List<CharSequence>>(arrayOfStringsType, arrayOfPeopleWhoLikeIt));
+          new DecodedCell<List<CharSequence>>(arrayOfStringsType, arrayOfPeopleWhoLikeIt));
     }
     // Set the cost by country map family data.
     for (int i = 0; i < costs.size(); i++) {
       foodWriter.put(entityId, "priceByCountry", countries.get(i),
-          new KijiCell<Double>(floatType, costs.get(i)));
+          new DecodedCell<Double>(floatType, costs.get(i)));
     }
   }
 }

@@ -40,8 +40,8 @@ import org.kiji.annotations.ApiAudience;
 import org.kiji.hadoop.configurator.HadoopConf;
 import org.kiji.hadoop.configurator.HadoopConfigurator;
 import org.kiji.mapreduce.KijiTableContext;
+import org.kiji.schema.DecodedCell;
 import org.kiji.schema.EntityId;
-import org.kiji.schema.KijiCell;
 import org.kiji.schema.KijiColumnName;
 
 /**
@@ -152,7 +152,7 @@ public final class BinaryHTableBulkImporter extends HTableBulkImporter {
       }
 
       // Convert the HBase cell to a Kiji cell.
-      KijiCell<?> kijiCell = decodeHBaseCell(columnDescriptor, keyValue.getValue());
+      DecodedCell<?> kijiCell = decodeHBaseCell(columnDescriptor, keyValue.getValue());
 
       // Write it at the same timestamp as the HBase cell.
       final String family = columnDescriptor.getKijiColumnName().getFamily();
@@ -319,7 +319,7 @@ public final class BinaryHTableBulkImporter extends HTableBulkImporter {
    * @return A kiji cell to be imported.
    * @throws IOException If there is an error.
    */
-  protected KijiCell<?> decodeHBaseCell(ColumnDescriptor columnDescriptor, byte[] hbaseCell)
+  protected DecodedCell<?> decodeHBaseCell(ColumnDescriptor columnDescriptor, byte[] hbaseCell)
       throws IOException {
     BinaryHBaseCellDecoder.Type type = BinaryHBaseCellDecoder.Type.valueOf(
         columnDescriptor.getType().toUpperCase(Locale.getDefault()));
@@ -372,24 +372,24 @@ public final class BinaryHTableBulkImporter extends HTableBulkImporter {
      * @return The decoded kiji cell.
      * @throws IOException If there is an error decoding.
      */
-    public KijiCell<?> decode(Type type, byte[] bytes) throws IOException {
+    public DecodedCell<?> decode(Type type, byte[] bytes) throws IOException {
       switch(type) {
       case BOOLEAN:
-        return new KijiCell<Boolean>(type.getSchema(), Bytes.toBoolean(bytes));
+        return new DecodedCell<Boolean>(type.getSchema(), Bytes.toBoolean(bytes));
       case BYTES:
-        return new KijiCell<ByteBuffer>(type.getSchema(), ByteBuffer.wrap(bytes));
+        return new DecodedCell<ByteBuffer>(type.getSchema(), ByteBuffer.wrap(bytes));
       case DOUBLE:
-        return new KijiCell<Double>(type.getSchema(), Bytes.toDouble(bytes));
+        return new DecodedCell<Double>(type.getSchema(), Bytes.toDouble(bytes));
       case FLOAT:
-        return new KijiCell<Float>(type.getSchema(), Bytes.toFloat(bytes));
+        return new DecodedCell<Float>(type.getSchema(), Bytes.toFloat(bytes));
       case INT:
-        return new KijiCell<Integer>(type.getSchema(), Bytes.toInt(bytes));
+        return new DecodedCell<Integer>(type.getSchema(), Bytes.toInt(bytes));
       case LONG:
-        return new KijiCell<Long>(type.getSchema(), Bytes.toLong(bytes));
+        return new DecodedCell<Long>(type.getSchema(), Bytes.toLong(bytes));
       case SHORT:
-        return new KijiCell<Integer>(type.getSchema(), (int) Bytes.toShort(bytes));
+        return new DecodedCell<Integer>(type.getSchema(), (int) Bytes.toShort(bytes));
       case STRING:
-        return new KijiCell<CharSequence>(type.getSchema(), Bytes.toString(bytes));
+        return new DecodedCell<CharSequence>(type.getSchema(), Bytes.toString(bytes));
       default:
         throw new IOException("Unsupported HBase encoding type: " + type.toString());
       }
