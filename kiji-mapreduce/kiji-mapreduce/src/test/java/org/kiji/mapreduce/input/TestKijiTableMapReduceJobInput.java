@@ -19,94 +19,101 @@
 
 package org.kiji.mapreduce.input;
 
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
 import java.io.IOException;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.mapreduce.GenericTableMapReduceUtil;
 import org.apache.hadoop.hbase.mapreduce.TableInputFormat;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.mapreduce.Job;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.kiji.mapreduce.KijiMRTestLayouts;
 import org.kiji.mapreduce.MapReduceJobInput;
 import org.kiji.schema.EntityId;
-import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiManagedHBaseTableName;
-import org.kiji.schema.KijiURI;
+import org.kiji.schema.KijiTable;
 import org.kiji.schema.impl.HBaseDataRequestAdapter;
-import org.kiji.schema.impl.HBaseKijiTable;
 import org.kiji.schema.impl.RawEntityId;
 import org.kiji.schema.layout.KijiTableLayout;
-import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.util.ScanEquals;
+import org.kiji.schema.util.TestFileUtils;
 
 public class TestKijiTableMapReduceJobInput extends KijiClientTest {
+  private File mTempDir;
+  private Path mTempPath;
+  private KijiTable mTable;
+
   @Before
-  public void setupLayout() throws Exception {
-    getKiji().getAdmin()
-        .createTable("table", KijiTableLayouts.getTableLayout(KijiTableLayouts.SIMPLE), false);
+  public void setUp() throws Exception {
+    mTempDir = TestFileUtils.createTempDir("test", "dir");
+    mTempPath = new Path("file://" + mTempDir);
+
+    getConf().set("fs.defaultFS", mTempPath.toString());
+    getConf().set("fs.default.name", mTempPath.toString());
+    final KijiTableLayout layout = new KijiTableLayout(KijiMRTestLayouts.getTestLayout(), null);
+    getKiji().getAdmin().createTable("test", layout, false);
+
+    // Set the working directory so that it gets cleaned up after the test:
+    getConf().set("mapred.working.dir", new Path(mTempPath, "workdir").toString());
+
+    mTable = getKiji().openTable("test");
+  }
+
+  @After
+  public void tearDown() throws Exception {
+    FileUtils.deleteDirectory(mTempDir);
+    mTable.close();
+    mTempDir = null;
+    mTempPath = null;
+    mTable = null;
   }
 
   @Test
   public void testConfigure() throws IOException {
-    Job job = new Job();
-    // Read from mykiji.mytable.
-    Kiji kiji = createMock(Kiji.class);
-    HBaseKijiTable inputTable = createMock(HBaseKijiTable.class);
-    KijiTableLayout tableLayout = getKiji().getMetaTable().getTableLayout("table");
+    final Job job = new Job();
 
-    expect(kiji.getURI()).andReturn(KijiURI.parse("kiji://.env/mykiji")).anyTimes();
-    expect(kiji.getConf()).andReturn(job.getConfiguration()).anyTimes();
-    expect(inputTable.getKiji()).andReturn(kiji).anyTimes();
-    expect(inputTable.getName()).andReturn("table").anyTimes();
-    expect(inputTable.getLayout()).andReturn(tableLayout);
+    // Request the latest 3 versions of column 'info:email':
+    KijiDataRequest dataRequest = new KijiDataRequest()
+        .addColumn(new KijiDataRequest.Column("info", "email").withMaxVersions(3));
 
-    // Request the latest 3 versions of the foo:bar column.
-    KijiDataRequest dataRequest = new KijiDataRequest();
-    dataRequest.addColumn(new KijiDataRequest.Column("family", "column").withMaxVersions(3));
-
-    // Read from here to there.
-    EntityId startRow = RawEntityId.fromKijiRowKey(Bytes.toBytes("here"));
-    EntityId limitRow = RawEntityId.fromKijiRowKey(Bytes.toBytes("there"));
-
-    replay(kiji);
-    replay(inputTable);
-
-    // Configure the job.
-    KijiTableMapReduceJobInput.RowOptions rowOptions = new KijiTableMapReduceJobInput.RowOptions(
-        startRow, limitRow, null);
-    MapReduceJobInput kijiTableJobInput = new KijiTableMapReduceJobInput(
-        inputTable, dataRequest, rowOptions);
+    // Read from 'here' to 'there':
+    final EntityId startRow = RawEntityId.fromKijiRowKey(Bytes.toBytes("here"));
+    final EntityId limitRow = RawEntityId.fromKijiRowKey(Bytes.toBytes("there"));
+    final KijiTableMapReduceJobInput.RowOptions rowOptions =
+        new KijiTableMapReduceJobInput.RowOptions(startRow, limitRow, null);
+    final MapReduceJobInput kijiTableJobInput =
+        new KijiTableMapReduceJobInput(mTable, dataRequest, rowOptions);
     kijiTableJobInput.configure(job);
 
-    verify(kiji);
-    verify(inputTable);
-
     // Check that the job was configured correctly.
-    Configuration conf = job.getConfiguration();
-    assertEquals(KijiManagedHBaseTableName.getKijiTableName("mykiji", "table").toString(),
+    final Configuration conf = job.getConfiguration();
+    assertEquals(
+        KijiManagedHBaseTableName.getKijiTableName(
+            getKiji().getURI().getInstance(), mTable.getURI().getTable()).toString(),
         conf.get(TableInputFormat.INPUT_TABLE));
 
     // Check the scan range.
-    Scan scan = GenericTableMapReduceUtil.convertStringToScan(conf.get(TableInputFormat.SCAN));
+    final Scan scan =
+        GenericTableMapReduceUtil.convertStringToScan(conf.get(TableInputFormat.SCAN));
     assertArrayEquals(Bytes.toBytes("here"), scan.getStartRow());
     assertArrayEquals(Bytes.toBytes("there"), scan.getStopRow());
 
     // Check the scan columns.
-    HBaseDataRequestAdapter dataRequestAdapter = new HBaseDataRequestAdapter(dataRequest);
-    Scan expectedScan = dataRequestAdapter.toScan(tableLayout);
+    final HBaseDataRequestAdapter dataRequestAdapter = new HBaseDataRequestAdapter(dataRequest);
+    final Scan expectedScan = dataRequestAdapter.toScan(mTable.getLayout());
     expectedScan.setStartRow(Bytes.toBytes("here"));
     expectedScan.setStopRow(Bytes.toBytes("there"));
     expectedScan.setCacheBlocks(false);

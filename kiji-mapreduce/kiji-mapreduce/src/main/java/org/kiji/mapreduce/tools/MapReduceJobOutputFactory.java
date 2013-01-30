@@ -19,15 +19,23 @@
 
 package org.kiji.mapreduce.tools;
 
+import java.io.IOException;
+
+import com.google.common.base.Preconditions;
 import org.apache.hadoop.fs.Path;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.MapReduceJobOutput;
 import org.kiji.mapreduce.output.AvroKeyMapReduceJobOutput;
 import org.kiji.mapreduce.output.AvroKeyValueMapReduceJobOutput;
+import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
+import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
 import org.kiji.mapreduce.output.MapFileMapReduceJobOutput;
 import org.kiji.mapreduce.output.SequenceFileMapReduceJobOutput;
 import org.kiji.mapreduce.output.TextMapReduceJobOutput;
+import org.kiji.schema.Kiji;
+import org.kiji.schema.KijiTable;
+import org.kiji.schema.KijiURI;
 
 /**
  * A factory for creating MapReduceJobOutput objects from outputspecs.
@@ -87,6 +95,36 @@ public final class MapReduceJobOutputFactory {
     case AVRO_KV:
       return new AvroKeyValueMapReduceJobOutput(
           new Path(jobOutputSpec.getLocation()), jobOutputSpec.getSplits());
+    case KIJI: {
+      try {
+        final KijiURI uri = KijiURI.parse(jobOutputSpec.getLocation());
+        final Kiji kiji = Kiji.Factory.open(uri);
+        try {
+          final KijiTable table = kiji.openTable(uri.getTable());
+          return new DirectKijiTableMapReduceJobOutput(table, jobOutputSpec.getSplits());
+        } finally {
+          kiji.release();
+        }
+      } catch (IOException ioe) {
+        throw new RuntimeException(ioe);
+      }
+    }
+    case HFILE: {
+      try {
+        final String[] splits = jobOutputSpec.getLocation().split(";");
+        Preconditions.checkState(splits.length == 2);
+        final KijiURI uri = KijiURI.parse(splits[0]);
+        final Kiji kiji = Kiji.Factory.open(uri);
+        try {
+          final KijiTable table = kiji.openTable(uri.getTable());
+          return new HFileMapReduceJobOutput(table, new Path(splits[1]), jobOutputSpec.getSplits());
+        } finally {
+          kiji.release();
+        }
+      } catch (IOException ioe) {
+        throw new RuntimeException(ioe);
+      }
+    }
     default:
       throw new JobIOSpecParseException(
           "Unknown format " + jobOutputSpec.getFormat(), jobOutputSpec.toString());

@@ -26,9 +26,10 @@ import org.junit.Test;
 public class TestJobOutputSpec {
   @Test
   public void testNullPathConstructor() {
-    JobOutputSpec spec = JobOutputSpec.create(JobOutputSpec.Format.KIJI, null, 1);
+    final String location = "the-location";
+    JobOutputSpec spec = JobOutputSpec.create(JobOutputSpec.Format.KIJI, location, 1);
     assertEquals(JobOutputSpec.Format.KIJI, spec.getFormat());
-    assertEquals(null, spec.getLocation());
+    assertEquals(location, spec.getLocation());
     assertEquals(1, spec.getSplits());
   }
 
@@ -42,16 +43,20 @@ public class TestJobOutputSpec {
 
   @Test
   public void testParseKiji() throws JobIOSpecParseException {
-    JobOutputSpec spec = JobOutputSpec.parse("kiji");
+    JobOutputSpec spec = JobOutputSpec.parse("kiji:kiji://hbase/instance/table@123");
     assertEquals(JobOutputSpec.Format.KIJI, spec.getFormat());
-    assertEquals(null, spec.getLocation());
+    assertEquals("kiji://hbase/instance/table", spec.getLocation());
+    assertEquals(123, spec.getSplits());
   }
 
-  @Test
+  @Test(expected=JobIOSpecParseException.class)
   public void testParseKijiColon() throws JobIOSpecParseException {
-    JobOutputSpec spec = JobOutputSpec.parse("kiji:");
-    assertEquals(JobOutputSpec.Format.KIJI, spec.getFormat());
-    assertEquals(null, spec.getLocation());
+    JobOutputSpec.parse("kiji:");
+  }
+
+  @Test(expected=JobIOSpecParseException.class)
+  public void testParseKijiNoSplits() throws JobIOSpecParseException {
+    JobOutputSpec.parse("kiji:kiji://hbase/instance/table");
   }
 
   @Test
@@ -67,6 +72,23 @@ public class TestJobOutputSpec {
     JobOutputSpec spec = JobOutputSpec.parse("hfile:/tmp/foo@8");
     assertEquals(JobOutputSpec.Format.HFILE, spec.getFormat());
     assertEquals("/tmp/foo", spec.getLocation());
+    assertEquals(8, spec.getSplits());
+  }
+
+  @Test
+  public void testParseHFileHDFS() throws JobIOSpecParseException {
+    JobOutputSpec spec = JobOutputSpec.parse("hfile:hdfs://localhost:1234/tmp/foo@8");
+    assertEquals(JobOutputSpec.Format.HFILE, spec.getFormat());
+    assertEquals("hdfs://localhost:1234/tmp/foo", spec.getLocation());
+    assertEquals(8, spec.getSplits());
+  }
+
+  @Test
+  public void testParseHFileHDFSWithKiji() throws JobIOSpecParseException {
+    JobOutputSpec spec =
+        JobOutputSpec.parse("hfile:kiji://hbase/instance/table;hdfs://localhost:1234/tmp/foo@8");
+    assertEquals(JobOutputSpec.Format.HFILE, spec.getFormat());
+    assertEquals("kiji://hbase/instance/table;hdfs://localhost:1234/tmp/foo", spec.getLocation());
     assertEquals(8, spec.getSplits());
   }
 

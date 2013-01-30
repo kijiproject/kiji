@@ -19,10 +19,6 @@
 
 package org.kiji.mapreduce.output;
 
-import static org.easymock.EasyMock.createMock;
-import static org.easymock.EasyMock.expect;
-import static org.easymock.EasyMock.replay;
-import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertFalse;
 
 import org.apache.hadoop.conf.Configuration;
@@ -30,37 +26,26 @@ import org.apache.hadoop.mapreduce.Job;
 import org.junit.Test;
 
 import org.kiji.schema.Kiji;
+import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiTable;
-import org.kiji.schema.KijiURI;
-import org.kiji.schema.impl.HBaseKijiTable;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayouts;
 
-public class TestKijiTableMapReduceJobOutput {
+public class TestKijiTableMapReduceJobOutput extends KijiClientTest {
 
   /** Test that mapper speculative execution is disabled for KijiTableMapReduceJobOutput. */
   @Test
   public void testSpecExDisabled() throws Exception {
-    Kiji kiji = createMock(Kiji.class);
-    KijiTable table = createMock(HBaseKijiTable.class);
+    final Kiji kiji = getKiji();
     final KijiTableLayout layout =
-        new KijiTableLayout(KijiTableLayouts.getLayout(KijiTableLayouts.SIMPLE), null);
-    expect(table.getName()).andReturn("foo").anyTimes();
-    expect(table.getKiji()).andReturn(kiji).anyTimes();
-    expect(table.getLayout()).andReturn(layout).anyTimes();
-    expect(kiji.getURI()).andReturn(KijiURI.parse("kiji://.env/")).anyTimes();
+        new KijiTableLayout(KijiTableLayouts.getLayout(KijiTableLayouts.SIMPLE),  null);
+    kiji.getAdmin().createTable("table", layout, false);
+    final KijiTable table = kiji.openTable("table");
 
-    replay(table);
-    replay(kiji);
+    final Job job = new Job();
+    new DirectKijiTableMapReduceJobOutput(table).configure(job);
 
-    KijiTableMapReduceJobOutput jobOut = new KijiTableMapReduceJobOutput(table);
-    Job job = new Job();
-    jobOut.configure(job);
-
-    verify(table);
-    verify(kiji);
-
-    Configuration conf = job.getConfiguration();
+    final Configuration conf = job.getConfiguration();
     boolean isMapSpecExEnabled = conf.getBoolean("mapred.map.tasks.speculative.execution", true);
     assertFalse(isMapSpecExEnabled);
   }

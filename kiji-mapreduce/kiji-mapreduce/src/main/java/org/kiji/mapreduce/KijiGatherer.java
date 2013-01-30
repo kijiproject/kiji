@@ -74,9 +74,6 @@ import org.kiji.schema.KijiRowData;
 public abstract class KijiGatherer<K, V>
     implements Configurable, KeyValueStoreClient, KijiDataRequester, KijiMapper {
 
-  /** The configuration key used to store the name of the KijiGatherer class. */
-  public static final String CONF_GATHERER_CLASS = "kiji.gatherer.class";
-
   /** The Configuration for this instance. */
   private Configuration mConf;
 

@@ -77,9 +77,6 @@ import org.kiji.schema.KijiRowData;
 public abstract class KijiProducer
     implements Configurable, KijiDataRequester, KeyValueStoreClient {
 
-  /** The configuration key used to store the name of the KijiProducer class. */
-  public static final String CONF_PRODUCER_CLASS = "kiji.producer.class";
-
   /** The Configuration of this producer. */
   private Configuration mConf;
 

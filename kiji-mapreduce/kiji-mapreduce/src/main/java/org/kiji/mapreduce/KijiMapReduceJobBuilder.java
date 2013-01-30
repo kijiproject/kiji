@@ -27,7 +27,6 @@ import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.Inheritance;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.layout.KijiTableLayout;
-import org.kiji.schema.layout.TableLayoutSerializer;
 
 /**
  * Base class for MapReduce jobs that interact with a Kiji instance.  Users should use a concrete
@@ -55,12 +54,6 @@ public abstract class KijiMapReduceJobBuilder<T extends KijiMapReduceJobBuilder<
 
     // Set the kiji instance name in the job configuration.
     KijiMapReduceJob.setInstanceName(job.getConfiguration(), kiji.getURI().getInstance());
-
-    // Set the table layout in the job configuration.
-    KijiTableLayout tableLayout = getTableLayout();
-    if (null != tableLayout) {
-      TableLayoutSerializer.serializeInputTableLayout(tableLayout, job.getConfiguration());
-    }
 
     super.configureJob(job);
   }

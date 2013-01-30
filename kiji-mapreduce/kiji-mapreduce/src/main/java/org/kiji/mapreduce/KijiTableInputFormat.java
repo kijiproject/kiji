@@ -92,7 +92,7 @@ public final class KijiTableInputFormat
   @Override
   public List<InputSplit> getSplits(JobContext context) throws IOException {
     final Configuration conf = context.getConfiguration();
-    final KijiURI inputTableURI = KijiURI.parse(conf.get(KijiConfKeys.INPUT_TABLE_URI));
+    final KijiURI inputTableURI = KijiURI.parse(conf.get(KijiConfKeys.KIJI_INPUT_TABLE_URI));
     final Kiji kiji = Kiji.Factory.open(inputTableURI, conf);
     try {
       final KijiTable table = kiji.openTable(inputTableURI.getTable());
@@ -147,8 +147,8 @@ public final class KijiTableInputFormat
     job.setInputFormatClass(KijiTableInputFormat.class);
     final String serializedRequest =
         Base64.encodeBase64String(SerializationUtils.serialize(dataRequest));
-    conf.set(KijiConfKeys.INPUT_DATA_REQUEST, serializedRequest);
-    conf.set(KijiConfKeys.INPUT_TABLE_URI, tableURI.toString());
+    conf.set(KijiConfKeys.KIJI_INPUT_DATA_REQUEST, serializedRequest);
+    conf.set(KijiConfKeys.KIJI_INPUT_TABLE_URI, tableURI.toString());
   }
 
   /** Hadoop record reader for Kiji table rows. */
@@ -179,7 +179,7 @@ public final class KijiTableInputFormat
       // Get data request from the job configuration.
       final String dataRequestB64 =
           checkNotNull(
-              conf.get(KijiConfKeys.INPUT_DATA_REQUEST),
+              conf.get(KijiConfKeys.KIJI_INPUT_DATA_REQUEST),
               "Missing data request in job configuration.");
       final byte[] dataRequestBytes = Base64.decodeBase64(Bytes.toBytes(dataRequestB64));
       mDataRequest = (KijiDataRequest) SerializationUtils.deserialize(dataRequestBytes);
@@ -192,17 +192,15 @@ public final class KijiTableInputFormat
       mSplit = (KijiTableSplit) split;
 
       final Configuration conf = context.getConfiguration();
-      final KijiURI inputURI = KijiURI.parse(conf.get(KijiConfKeys.INPUT_TABLE_URI));
-      final KijiScannerOptions scannerOptions =
-          new KijiScannerOptions()
-          .setStartRow(new HBaseEntityId(mSplit.getStartRow()))
-          .setStopRow(new HBaseEntityId(mSplit.getEndRow()));
+      final KijiURI inputURI = KijiURI.parse(conf.get(KijiConfKeys.KIJI_INPUT_TABLE_URI));
       mKiji = Kiji.Factory.open(inputURI, conf);
       mTable = mKiji.openTable(inputURI.getTable());
       mReader = mTable.openTableReader();
-      mScanner = mReader.getScanner(
-          mDataRequest,
-          scannerOptions);
+      final KijiScannerOptions scannerOptions =
+          new KijiScannerOptions()
+              .setStartRow(new HBaseEntityId(mSplit.getStartRow()))
+              .setStopRow(new HBaseEntityId(mSplit.getEndRow()));
+      mScanner = mReader.getScanner(mDataRequest, scannerOptions);
       mIterator = mScanner.iterator();
       mCurrentRow = null;
     }

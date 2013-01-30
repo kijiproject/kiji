@@ -31,8 +31,8 @@ import org.kiji.common.flags.Flag;
 import org.kiji.common.flags.IllegalFlagValueException;
 import org.kiji.mapreduce.KijiProduceJobBuilder;
 import org.kiji.mapreduce.KijiProducer;
+import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
 import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
-import org.kiji.mapreduce.output.KijiTableMapReduceJobOutput;
 import org.kiji.schema.tools.KijiToolLauncher;
 import org.kiji.schema.tools.RequiredFlagException;
 
@@ -87,7 +87,7 @@ public final class KijiProduce extends KijiJobTool<KijiProduceJobBuilder> {
     super.configure(jobBuilder);
     jobBuilder.withProducer(Class.forName(mProducerName).asSubclass(KijiProducer.class));
     if (JobOutputSpec.Format.KIJI == mOutputSpec.getFormat()) {
-      jobBuilder.withOutput(new KijiTableMapReduceJobOutput(getInputTable()));
+      jobBuilder.withOutput(new DirectKijiTableMapReduceJobOutput(getInputTable()));
     } else if (JobOutputSpec.Format.HFILE == mOutputSpec.getFormat()) {
       jobBuilder.withOutput(new HFileMapReduceJobOutput(
           getInputTable(), new Path(mOutputSpec.getLocation()), mOutputSpec.getSplits()));

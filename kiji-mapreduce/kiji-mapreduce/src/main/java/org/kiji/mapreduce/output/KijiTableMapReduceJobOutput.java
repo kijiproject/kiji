@@ -22,45 +22,23 @@ package org.kiji.mapreduce.output;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HConstants;
+import org.apache.hadoop.hbase.mapreduce.GenericTableMapReduceUtil;
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.OutputFormat;
-import org.apache.hadoop.mapreduce.lib.output.NullOutputFormat;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.KijiConfKeys;
-import org.kiji.mapreduce.KijiTableContext;
 import org.kiji.mapreduce.MapReduceJobOutput;
-import org.kiji.mapreduce.context.DirectKijiTableWriterContext;
-import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiTable;
 
-/**
- * MapReduce job output configuration that directly writes to a Kiji table.
- *
- * Use of this job output configuration is discouraged for many reasons:
- *  <li> It may induce a very high load on the target HBase cluster.
- *  <li> It may result in partial writes (eg. if the job fails half through).
- *
- * The recommended way to write to HBase tables is through the {@link HFileMapReduceJobOutput}.
- */
-@ApiAudience.Public
-public class KijiTableMapReduceJobOutput extends MapReduceJobOutput {
+/** MapReduce job output configuration that outputs to a Kiji table. */
+@ApiAudience.Private
+public abstract class KijiTableMapReduceJobOutput extends MapReduceJobOutput {
 
-  /** Kiji table to write to. */
+  /** Kiji table the job intends to write to. */
   private final KijiTable mTable;
 
   /** Number of reduce tasks to use. */
   private final int mNumReduceTasks;
-
-  /**
-   * Creates a new <code>KijiTableMapReduceJobOutput</code> instance.
-   *
-   * @param table The kiji table to write output to.
-   */
-  public KijiTableMapReduceJobOutput(KijiTable table) {
-    this(table, 0);
-  }
 
   /**
    * Creates a new <code>KijiTableMapReduceJobOutput</code> instance.
@@ -78,39 +56,24 @@ public class KijiTableMapReduceJobOutput extends MapReduceJobOutput {
     return mTable;
   }
 
+  /** @return the number of reducers. */
+  public int getNumReduceTasks() {
+    return mNumReduceTasks;
+  }
+
   /** {@inheritDoc} */
   @Override
   public void configure(Job job) throws IOException {
-    // Do not invoke super.configure(job) since getOutputFormatClass() is not supported!
+    // sets Hadoop output format according to getOutputFormatClass()
+    super.configure(job);
+
     final Configuration conf = job.getConfiguration();
-    final Kiji kiji = mTable.getKiji();
+    conf.set(KijiConfKeys.KIJI_OUTPUT_TABLE_URI, getTable().getURI().toString());
 
-    conf.set(
-        KijiConfKeys.OUTPUT_KIJI_TABLE_URI, String.format("kiji://%s:%s/%s/%s",
-            conf.get(HConstants.ZOOKEEPER_QUORUM),
-            conf.getInt(HConstants.ZOOKEEPER_CLIENT_PORT, HConstants.DEFAULT_ZOOKEPER_CLIENT_PORT),
-            kiji.getURI().getInstance(),
-            mTable.getName()));
+    job.setNumReduceTasks(getNumReduceTasks());
 
-    // Hadoop output format:
-    job.setOutputFormatClass(NullOutputFormat.class);
-
-    // Kiji table context:
-    conf.setClass(
-        KijiConfKeys.KIJI_TABLE_CONTEXT_CLASS,
-        DirectKijiTableWriterContext.class,
-        KijiTableContext.class);
-
-    job.setNumReduceTasks(mNumReduceTasks);
-
-    // Since there's no "commit" operation for an entire map task writing to a
-    // Kiji table, do not use speculative execution when writing directly to a Kiji table.
-    conf.setBoolean("mapred.map.tasks.speculative.execution", false);
+    // Adds HBase dependency jars to the distributed cache so they appear on the task classpath:
+    GenericTableMapReduceUtil.addAllDependencyJars(job);
   }
 
-  /** {@inheritDoc} */
-  @Override
-  protected Class<? extends OutputFormat> getOutputFormatClass() {
-    throw new UnsupportedOperationException();
-  }
 }

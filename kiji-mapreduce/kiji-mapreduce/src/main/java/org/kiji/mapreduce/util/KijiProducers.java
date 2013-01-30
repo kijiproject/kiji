@@ -25,6 +25,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ReflectionUtils;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.mapreduce.KijiConfKeys;
 import org.kiji.mapreduce.KijiProducer;
 import org.kiji.mapreduce.KijiProducerOutputException;
 import org.kiji.schema.KijiColumnName;
@@ -51,8 +52,8 @@ public final class KijiProducers {
    * @throws IOException If the producer name cannot be instantiated from the configuration.
    */
   public static KijiProducer create(Configuration conf) throws IOException {
-    Class<? extends KijiProducer> producerClass
-        = conf.getClass(KijiProducer.CONF_PRODUCER_CLASS, null, KijiProducer.class);
+    final Class<? extends KijiProducer> producerClass =
+        conf.getClass(KijiConfKeys.KIJI_PRODUCER_CLASS, null, KijiProducer.class);
     if (null == producerClass) {
       throw new IOException("Producer class could not be found in configuration.");
     }

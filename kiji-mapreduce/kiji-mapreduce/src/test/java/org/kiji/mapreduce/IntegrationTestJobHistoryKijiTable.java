@@ -35,7 +35,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.kiji.mapreduce.output.KijiTableMapReduceJobOutput;
+import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiAdmin;
 import org.kiji.schema.KijiConfiguration;
@@ -133,7 +133,7 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
     KijiProduceJobBuilder builder = KijiProduceJobBuilder.create()
         .withInputTable(fooTable)
         .withProducer(EmailDomainProducer.class)
-        .withOutput(new KijiTableMapReduceJobOutput(fooTable));
+        .withOutput(new DirectKijiTableMapReduceJobOutput(fooTable));
     MapReduceJob mrJob = builder.build();
 
     // Record the jobId and run the job.
@@ -175,7 +175,7 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
     LOG.info("Deserialized configuration has " + new Integer(config.size()).toString() + " keys.");
     Configuration.dumpConfiguration(config, new OutputStreamWriter(System.out));
     assertTrue(EmailDomainProducer.class
-        == config.getClass(KijiProducer.CONF_PRODUCER_CLASS, null));
+        == config.getClass(KijiConfKeys.KIJI_PRODUCER_CLASS, null));
     assertEquals("Couldn't retrieve configuration field from deserialized configuration.",
         "squirrel", config.get("CONF_TEST_ANIMAL_STRING"));
 
@@ -199,7 +199,7 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
     KijiProduceJobBuilder builder = KijiProduceJobBuilder.create()
         .withInputTable(fooTable)
         .withProducer(EmailDomainProducer.class)
-        .withOutput(new KijiTableMapReduceJobOutput(fooTable));
+        .withOutput(new DirectKijiTableMapReduceJobOutput(fooTable));
     MapReduceJob mrJob = builder.build();
 
     LOG.info("About to submit job: " + mrJob.getHadoopJob().getJobName());
@@ -240,7 +240,7 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
      KijiProduceJobBuilder builder = KijiProduceJobBuilder.create()
          .withInputTable(fooTable)
          .withProducer(EmailDomainProducer.class)
-         .withOutput(new KijiTableMapReduceJobOutput(fooTable));
+         .withOutput(new DirectKijiTableMapReduceJobOutput(fooTable));
      MapReduceJob mrJob = builder.build();
      assertTrue(mrJob.run());
 

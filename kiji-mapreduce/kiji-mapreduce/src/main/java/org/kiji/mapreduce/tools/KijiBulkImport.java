@@ -31,10 +31,8 @@ import org.kiji.annotations.ApiAudience;
 import org.kiji.common.flags.Flag;
 import org.kiji.mapreduce.KijiBulkImportJobBuilder;
 import org.kiji.mapreduce.KijiBulkImporter;
-// TODO: Fix this bulk importer.
-//import org.kiji.mapreduce.bulkimport.DelimitedJsonBulkImporter;
+import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
 import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
-import org.kiji.mapreduce.output.KijiTableMapReduceJobOutput;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.tools.KijiToolLauncher;
 import org.kiji.schema.tools.RequiredFlagException;
@@ -126,7 +124,7 @@ public final class KijiBulkImport extends JobTool<KijiBulkImportJobBuilder> {
         Class.forName(mImporter).asSubclass(KijiBulkImporter.class);
     jobBuilder.withBulkImporter(importerClass);
     if (JobOutputSpec.Format.KIJI == mOutputSpec.getFormat()) {
-      jobBuilder.withOutput(new KijiTableMapReduceJobOutput(mOutputTable));
+      jobBuilder.withOutput(new DirectKijiTableMapReduceJobOutput(mOutputTable));
     } else {
       jobBuilder.withOutput(new HFileMapReduceJobOutput(
               mOutputTable, new Path(mOutputSpec.getLocation()), mOutputSpec.getSplits()));

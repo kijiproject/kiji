@@ -26,6 +26,7 @@ import org.apache.hadoop.util.ReflectionUtils;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.KijiBulkImporter;
+import org.kiji.mapreduce.KijiConfKeys;
 
 /** Utility methods for working with <code>KijiBulkImporter</code>. */
 @ApiAudience.Private
@@ -49,8 +50,8 @@ public final class KijiBulkImporters {
    */
   @SuppressWarnings("unchecked")
   public static <K, V> KijiBulkImporter<K, V> create(Configuration conf) throws IOException {
-    Class<? extends KijiBulkImporter> bulkImporterClass
-        = conf.getClass(KijiBulkImporter.CONF_BULK_IMPORTER_CLASS, null, KijiBulkImporter.class);
+    final Class<? extends KijiBulkImporter> bulkImporterClass =
+        conf.getClass(KijiConfKeys.KIJI_BULK_IMPORTER_CLASS, null, KijiBulkImporter.class);
     if (null == bulkImporterClass) {
       throw new IOException("Unable to load bulk importer class");
     }

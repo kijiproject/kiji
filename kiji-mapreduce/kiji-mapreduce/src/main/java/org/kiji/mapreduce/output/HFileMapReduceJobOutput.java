@@ -34,12 +34,13 @@ import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HTableInterface;
-import org.apache.hadoop.hbase.mapreduce.GenericTableMapReduceUtil;
 import org.apache.hadoop.hbase.mapreduce.hadoopbackport.TotalOrderPartitioner;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.SequenceFile.Writer;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.OutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,8 +51,10 @@ import org.kiji.mapreduce.JobConfigurationException;
 import org.kiji.mapreduce.KijiConfKeys;
 import org.kiji.mapreduce.KijiTableContext;
 import org.kiji.mapreduce.context.HFileWriterContext;
+import org.kiji.schema.KijiAdmin;
 import org.kiji.schema.KijiRowKeySplitter;
 import org.kiji.schema.KijiTable;
+import org.kiji.schema.impl.HBaseKijiAdmin;
 import org.kiji.schema.impl.HBaseKijiTable;
 
 /**
@@ -72,12 +75,6 @@ public final class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
 
   /** The path to the directory to create the HFiles in. */
   private final Path mPath;
-
-  /**
-   * The number of splits for the output.  May be zero, which means match the number of
-   * splits to be the number of existing regions in the table.
-   */
-  private final int mNumSplits;
 
   /**
    * Create job output of HFiles that can be efficiently loaded into a Kiji table.
@@ -102,25 +99,20 @@ public final class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
    *
    * @param table The kiji table the resulting HFiles are intended for.
    * @param path The directory path to output the HFiles to.
-   * @param numSplits The number of splits (determines the number of reduce tasks).
+   * @param numSplits Number of splits (determines the number of reduce tasks).
    */
   public HFileMapReduceJobOutput(KijiTable table, Path path, int numSplits) {
-    super(table);
+    super(table, numSplits);
     mPath = path;
-    mNumSplits = numSplits;
   }
 
   /** {@inheritDoc} */
   @Override
   public void configure(Job job) throws IOException {
+    // sets Hadoop output format, Kiji output table and # of reducers:
     super.configure(job);
+
     final Configuration conf = job.getConfiguration();
-
-    // Set the output path.
-    FileOutputFormat.setOutputPath(job, mPath);
-
-    // Hadoop output format:
-    job.setOutputFormatClass(KijiHFileOutputFormat.class);
 
     // Kiji table context:
     conf.setClass(
@@ -128,12 +120,37 @@ public final class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
         HFileWriterContext.class,
         KijiTableContext.class);
 
+    // Set the output path.
+    FileOutputFormat.setOutputPath(job, mPath);
+
     // Configure the total order partitioner so generated HFile shards are contiguous and sorted.
-    final HBaseKijiTable kijiTable = HBaseKijiTable.downcast(getTable());
-    if (NUM_SPLITS_AUTO == mNumSplits) {
-      configurePartitioner(job, kijiTable.getHTable(), getRegionStartKeys(kijiTable.getHTable()));
+    configurePartitioner(job, makeTableKeySplit(getTable(), getNumReduceTasks()));
+
+    // Note: the HFile job output requires the reducer of the map/reduce to be IdentityReducer.
+    //     This is enforced externally.
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  protected Class<? extends OutputFormat> getOutputFormatClass() {
+    return KijiHFileOutputFormat.class;
+  }
+
+  /**
+   * Generates a split for a given table.
+   *
+   * @param table Kiji table to split.
+   * @param nsplits Number of splits.
+   * @return a list of split start keys, as HFileKeyValue (with no value, just the keys).
+   * @throws IOException on I/O error.
+   */
+  private static List<HFileKeyValue> makeTableKeySplit(KijiTable table, int nsplits)
+      throws IOException {
+
+    if (NUM_SPLITS_AUTO == nsplits) {
+      return getRegionStartKeys(table);
     } else {
-      switch (kijiTable.getLayout().getDesc().getKeysFormat().getEncoding()) {
+      switch (table.getLayout().getDesc().getKeysFormat().getEncoding()) {
       case RAW: {
         // The user has explicitly specified how many HFiles to create, but this is not
         // possible when row key hashing is disabled.
@@ -141,7 +158,7 @@ public final class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
             "Table '%s' has row key hashing disabled, so the number of HFile splits must be"
             + "determined by the number of HRegions in the HTable. "
             + "Use an HFileMapReduceJobOutput constructor that enables auto splitting.",
-            kijiTable.getName()));
+            table.getName()));
       }
       case HASH:
       case HASH_PREFIX: {
@@ -150,13 +167,15 @@ public final class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
       }
       default:
         throw new RuntimeException("Unhandled row key encoding: "
-            + kijiTable.getLayout().getDesc().getKeysFormat().getEncoding());
+            + table.getLayout().getDesc().getKeysFormat().getEncoding());
       }
-      configurePartitioner(job, kijiTable.getHTable(), generateEvenStartKeys(mNumSplits));
+      return generateEvenStartKeys(nsplits);
     }
+  }
 
-    // Adds HBase dependency jars to the distributed cache so they appear on the task classpath:
-    GenericTableMapReduceUtil.addAllDependencyJars(job);
+  /** @return the path where to write HFiles. */
+  public Path getPath() {
+    return mPath;
   }
 
   /**
@@ -173,13 +192,11 @@ public final class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
    * each of those partitions.</p>
    *
    * @param job The job to configure.
-   * @param table The target HTable.
    * @param startKeys A list of keys that will mark the boundaries between the partitions
    *     for the sorted map output records.
    * @throws IOException If there is an error.
    */
-  private static void configurePartitioner(
-      Job job, HTableInterface table, List<HFileKeyValue> startKeys)
+  private static void configurePartitioner(Job job, List<HFileKeyValue> startKeys)
       throws IOException {
     job.setPartitionerClass(TotalOrderPartitioner.class);
 
@@ -187,22 +204,22 @@ public final class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
     job.setNumReduceTasks(startKeys.size());
 
     // Write the file that the TotalOrderPartitioner reads to determine where to partition records.
-    Path partitionFilePath = new Path(
-        job.getWorkingDirectory(), "partitions_" + System.currentTimeMillis());
+    Path partitionFilePath =
+        new Path(job.getWorkingDirectory(), "partitions_" + System.currentTimeMillis());
     LOG.info("Writing partition information to " + partitionFilePath);
 
-    FileSystem fs = partitionFilePath.getFileSystem(job.getConfiguration());
+    final FileSystem fs = partitionFilePath.getFileSystem(job.getConfiguration());
     partitionFilePath = partitionFilePath.makeQualified(fs);
     writePartitionFile(job.getConfiguration(), partitionFilePath, startKeys);
 
     // Add it to the distributed cache.
-    URI cacheUri;
     try {
-      cacheUri = new URI(partitionFilePath.toString() + "#" + TotalOrderPartitioner.DEFAULT_PATH);
+      final URI cacheUri =
+          new URI(partitionFilePath.toString() + "#" + TotalOrderPartitioner.DEFAULT_PATH);
+      DistributedCache.addCacheFile(cacheUri, job.getConfiguration());
     } catch (URISyntaxException e) {
       throw new IOException(e);
     }
-    DistributedCache.addCacheFile(cacheUri, job.getConfiguration());
     DistributedCache.createSymlink(job.getConfiguration());
   }
 
@@ -219,7 +236,8 @@ public final class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
    * @throws IOException If there is an error.
    */
   private static void writePartitionFile(
-      Configuration conf, Path partitionsPath, List<HFileKeyValue> startKeys) throws IOException {
+      Configuration conf, Path partitionsPath, List<HFileKeyValue> startKeys)
+      throws IOException {
     if (startKeys.isEmpty()) {
       throw new IllegalArgumentException("No regions passed");
     }
@@ -240,9 +258,11 @@ public final class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
     sorted.remove(first);
 
     // Write the actual file
-    FileSystem fs = partitionsPath.getFileSystem(conf);
-    SequenceFile.Writer writer = SequenceFile.createWriter(
-        fs, conf, partitionsPath, HFileKeyValue.class, NullWritable.class);
+    final SequenceFile.Writer writer =
+        SequenceFile.createWriter(conf,
+            Writer.file(partitionsPath),
+            Writer.keyClass(HFileKeyValue.class),
+            Writer.valueClass(NullWritable.class));
 
     try {
       for (HFileKeyValue startKey : sorted) {
@@ -283,20 +303,21 @@ public final class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
    * return KeyValue instead of ImmutableBytesWritable.</p>
    *
    * @param table The HTable to get region boundary start keys for.
-   * @return The list of start keys.
-   * @throws IOException If there is an error.
+   * @return the start keys of the table regions.
+   * @throws IOException on I/O error.
    */
-  private static List<HFileKeyValue> getRegionStartKeys(HTableInterface table) throws IOException {
-    final HBaseAdmin admin = new HBaseAdmin(table.getConfiguration());
-    try {
-      final List<HRegionInfo> regions = admin.getTableRegions(table.getTableName());
-      final List<HFileKeyValue> ret = new ArrayList<HFileKeyValue>(regions.size());
-      for (HRegionInfo region : regions) {
-        ret.add(HFileKeyValue.createFromRowKey(region.getStartKey()));
-      }
-      return ret;
-    } finally {
-      admin.close();
+  // TODO(SCHEMA-153): Move this to KijiAdmin
+  private static List<HFileKeyValue> getRegionStartKeys(KijiTable table)
+      throws IOException {
+    final KijiAdmin admin = table.getKiji().getAdmin();
+    final HBaseAdmin hbaseAdmin = ((HBaseKijiAdmin) admin).getHBaseAdmin();
+    final HTableInterface hbaseTable = HBaseKijiTable.downcast(table).getHTable();
+
+    final List<HRegionInfo> regions = hbaseAdmin.getTableRegions(hbaseTable.getTableName());
+    final List<HFileKeyValue> ret = new ArrayList<HFileKeyValue>(regions.size());
+    for (HRegionInfo region : regions) {
+      ret.add(HFileKeyValue.createFromRowKey(region.getStartKey()));
     }
+    return ret;
   }
 }

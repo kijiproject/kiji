@@ -32,6 +32,7 @@ import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.AvroKeyWriter;
 import org.kiji.mapreduce.AvroValueWriter;
 import org.kiji.mapreduce.JobHistoryCounters;
+import org.kiji.mapreduce.KijiConfKeys;
 import org.kiji.mapreduce.KijiGatherer;
 import org.kiji.mapreduce.MapReduceContext;
 import org.kiji.mapreduce.context.InternalMapReduceContext;
@@ -94,9 +95,9 @@ public final class GatherMapper<K, V>
     @SuppressWarnings("unchecked")
     Class<? extends KijiGatherer<K, V>> gatherClass =
         (Class<? extends KijiGatherer<K, V>>)
-        conf.getClass(KijiGatherer.CONF_GATHERER_CLASS, null, KijiGatherer.class);
+        conf.getClass(KijiConfKeys.KIJI_GATHERER_CLASS, null, KijiGatherer.class);
     if (null == gatherClass) {
-      LOG.error("Null " + KijiGatherer.CONF_GATHERER_CLASS + " in createGatherer()?");
+      LOG.error("Null " + KijiConfKeys.KIJI_GATHERER_CLASS + " in createGatherer()?");
       return null;
     }
     return ReflectionUtils.newInstance(gatherClass, conf);

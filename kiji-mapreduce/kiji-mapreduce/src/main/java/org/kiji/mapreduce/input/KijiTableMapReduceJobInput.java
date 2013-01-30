@@ -24,7 +24,6 @@ import java.io.IOException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.SerializationUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.mapreduce.GenericTableMapReduceUtil;
 import org.apache.hadoop.mapreduce.InputFormat;
@@ -36,14 +35,13 @@ import org.kiji.mapreduce.KijiTableInputFormat;
 import org.kiji.mapreduce.MapReduceJobInput;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.InternalKijiError;
-import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiManagedHBaseTableName;
 import org.kiji.schema.KijiSchemaTable;
+import org.kiji.schema.KijiTable;
 import org.kiji.schema.filter.KijiRowFilter;
 import org.kiji.schema.filter.KijiRowFilterApplicator;
 import org.kiji.schema.impl.HBaseDataRequestAdapter;
-import org.kiji.schema.impl.HBaseKijiTable;
 import org.kiji.schema.layout.InvalidLayoutException;
 import org.kiji.schema.layout.KijiTableLayout;
 
@@ -57,7 +55,7 @@ import org.kiji.schema.layout.KijiTableLayout;
 @ApiAudience.Public
 public final class KijiTableMapReduceJobInput extends MapReduceJobInput {
   /** The table to read the job input from. */
-  private final HBaseKijiTable mInputTable;
+  private final KijiTable mInputTable;
 
   /** Specifies which columns and versions of cells to read from the table. */
   private final KijiDataRequest mDataRequest;
@@ -139,7 +137,7 @@ public final class KijiTableMapReduceJobInput extends MapReduceJobInput {
    *     table to some subset of the rows.
    */
   public KijiTableMapReduceJobInput(
-      HBaseKijiTable inputTable, KijiDataRequest dataRequest, RowOptions rowOptions) {
+      KijiTable inputTable, KijiDataRequest dataRequest, RowOptions rowOptions) {
     // TODO(WIBI-1667): Validate these arguments.
     mInputTable = inputTable;
     mDataRequest = dataRequest;
@@ -151,31 +149,22 @@ public final class KijiTableMapReduceJobInput extends MapReduceJobInput {
   public void configure(Job job) throws IOException {
     // Configure the input format class.
     super.configure(job);
+    final Configuration conf = job.getConfiguration();
+
+    final String dataRequestB64 =
+        Base64.encodeBase64String(SerializationUtils.serialize(mDataRequest));
+    conf.set(KijiConfKeys.KIJI_INPUT_DATA_REQUEST, dataRequestB64);
+    conf.set(KijiConfKeys.KIJI_INPUT_TABLE_URI, mInputTable.getURI().toString());
 
     // Get the name of the HBase table that stores the Kiji table data.
-    String hbaseTableName = KijiManagedHBaseTableName.getKijiTableName(
+    final String hbaseTableName = KijiManagedHBaseTableName.getKijiTableName(
         mInputTable.getKiji().getURI().getInstance(), mInputTable.getName()).toString();
 
     // Create the HBase scan configured to read the appropriate input from the Kiji table.
-    Scan configuredScan = createConfiguredScan(mInputTable.getLayout());
+    final Scan configuredScan = createConfiguredScan(mInputTable.getLayout());
 
     // Configure the table input using HBase.
     GenericTableMapReduceUtil.initTableInput(hbaseTableName, configuredScan, job);
-
-    final Configuration conf = job.getConfiguration();
-
-    final String serializedRequest = Base64
-        .encodeBase64String(SerializationUtils.serialize(mDataRequest));
-    conf.set(KijiConfKeys.INPUT_DATA_REQUEST, serializedRequest);
-
-    final Kiji kiji = mInputTable.getKiji();
-    // TODO(KIJI-144): Move this to KijiTable.getTableURI()
-    conf.set(KijiConfKeys.INPUT_TABLE_URI, String.format("kiji://%s:%s/%s/%s",
-        kiji.getConf().get(HConstants.ZOOKEEPER_QUORUM),
-        kiji.getConf().getInt(HConstants.ZOOKEEPER_CLIENT_PORT,
-            HConstants.DEFAULT_ZOOKEPER_CLIENT_PORT),
-        kiji.getURI().getInstance(),
-        mInputTable.getName()));
   }
 
   /** {@inheritDoc} */

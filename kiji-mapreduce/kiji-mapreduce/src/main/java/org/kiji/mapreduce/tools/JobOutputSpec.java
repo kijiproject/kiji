@@ -19,10 +19,12 @@
 
 package org.kiji.mapreduce.tools;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import org.apache.commons.lang.StringUtils;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 
 import org.kiji.annotations.ApiAudience;
 
@@ -46,69 +48,59 @@ public final class JobOutputSpec {
    */
   public static enum Format {
     /** A Kiji table. */
-    KIJI("kiji", false),
+    KIJI("kiji"),
     /** Text files in a file system. */
-    TEXT("text", true),
+    TEXT("text"),
     /** Sequence files in a file system. */
-    SEQUENCE_FILE("seq", true),
+    SEQUENCE_FILE("seq"),
     /** Map files in a file system. */
-    MAP_FILE("map", true),
+    MAP_FILE("map"),
     /** Avro container files in a file system. */
-    AVRO("avro", true),
+    AVRO("avro"),
     /** Avro container files of key/value generic records. */
-    AVRO_KV("avrokv", true),
+    AVRO_KV("avrokv"),
     /** HFiles used in HBase for bulk loading into region servers. */
-    HFILE("hfile", true);
+    HFILE("hfile");
 
     /** The short name of the format. */
     private String mName;
-    /** Whether a location is required by this format. */
-    private boolean mIsLocationRequired;
 
     /** A static map from a format name to formats. */
-    private static Map<String, Format> mNameMap;
+    private static final Map<String, Format> NAME_MAP = Maps.newHashMap();
     static {
       // Initialize the map from names to Formats for quick lookup later.
-      mNameMap = new HashMap<String, Format>();
       for (Format format : Format.class.getEnumConstants()) {
-        mNameMap.put(format.getName(), format);
+        NAME_MAP.put(format.getName(), format);
       }
     }
 
     /**
-     * Constructor for a member of the Format enum.
+     * Initializes a format enum value.
      *
-     * @param name The short name of the format.
-     * @param isLocationRequired Whether the format requires a location.
+     * @param name Name of the format.
      */
-    private Format(String name, boolean isLocationRequired) {
+    private Format(String name) {
       mName = name;
-      mIsLocationRequired = isLocationRequired;
     }
 
     /**
-     * The short name of the format.
+     * Name of the format.
      *
-     * @return The format name.
+     * @return the format name.
      */
     public String getName() {
       return mName;
     }
 
-    /** @return Whether a location is required by the format. */
-    public boolean isLocationRequired() {
-      return mIsLocationRequired;
-    }
-
     /**
-     * Gets a Format object from a short name.
+     * Gets a Format object from its name.
      *
-     * @param name The short name of the format.
-     * @return The Format object.
+     * @param name Name of the format.
+     * @return the parsed format enum value.
      * @throws JobIOSpecParseException If the name does not identify a valid format.
      */
     public static Format parse(String name) throws JobIOSpecParseException {
-      Format format = mNameMap.get(name);
+      final Format format = NAME_MAP.get(name);
       if (null == format) {
         throw new JobIOSpecParseException("Unrecognized format", name);
       }
@@ -118,8 +110,10 @@ public final class JobOutputSpec {
 
   /** The format of the job output data. */
   private Format mFormat;
+
   /** The location of the job output data, or null if not specified. */
   private String mLocation;
+
   /**
    * The number of splits for the output data, which determines the
    * number of reducers and the number of sharded output files if this
@@ -136,9 +130,10 @@ public final class JobOutputSpec {
    * @param splits The number of output splits.
    */
   private JobOutputSpec(Format format, String location, int splits) {
-    mFormat = format;
-    mLocation = location;
+    mFormat = Preconditions.checkNotNull(format);
+    mLocation = Preconditions.checkNotNull(location);
     mSplits = splits;
+    Preconditions.checkArgument(splits >= 0);
   }
 
   /**
@@ -175,6 +170,9 @@ public final class JobOutputSpec {
     return mFormat.getName() + ":" + mLocation + "@" + mSplits;
   }
 
+  /** Regex matching "format:location@split". */
+  private static final Pattern RE_JOB_OUTPUT_SPEC = Pattern.compile("([^:]+):(.*)@(\\d+)");
+
   /**
    * Parses the string representation of a JobOutputSpec.  The string
    * representation is of the format {@literal "<format>:<location>@<splits>"}.
@@ -184,26 +182,14 @@ public final class JobOutputSpec {
    * @throws JobIOSpecParseException If it is unable to parse.
    */
   public static JobOutputSpec parse(String spec) throws JobIOSpecParseException {
-    String[] parts = StringUtils.split(spec, ":", 2);
-
-    // Parse the format.
-    Format format = Format.parse(parts[0]);
-
-    // Parse the location and splits only if it was required.
-    String location = null;
-    int splits = 0;
-    if (format.isLocationRequired()) {
-      if (parts.length != 2) {
-        throw new JobIOSpecParseException("Location required", spec);
-      }
-      String[] fields = StringUtils.split(parts[1], "@");
-      if (fields.length != 2) {
-        throw new JobIOSpecParseException("Number of splits required", spec);
-      }
-      location = fields[0];
-      splits = Integer.parseInt(fields[1]);
+    final Matcher matcher = RE_JOB_OUTPUT_SPEC.matcher(spec);
+    if (!matcher.matches()) {
+      throw new JobIOSpecParseException(
+          "Invalid job output spec, expecting 'format:location@nsplit'.", spec);
     }
-
-    return new JobOutputSpec(format, location, splits);
+    final Format format = Format.parse(matcher.group(1));
+    final String location = matcher.group(2);
+    final int nsplits = Integer.parseInt(matcher.group(3));
+    return new JobOutputSpec(format, location, nsplits);
   }
 }

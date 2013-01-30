@@ -126,7 +126,7 @@ public final class KijiProduceJobBuilder extends KijiTableInputJobBuilder<KijiPr
     mDataRequest = mProducer.getDataRequest();
 
     // Serialize the producer class name into the job configuration.
-    conf.setClass(KijiProducer.CONF_PRODUCER_CLASS, mProducerClass, KijiProducer.class);
+    conf.setClass(KijiConfKeys.KIJI_PRODUCER_CLASS, mProducerClass, KijiProducer.class);
 
     // Configure the mapper and reducer to use.
     Preconditions.checkState(getJobOutput() instanceof KijiTableMapReduceJobOutput);

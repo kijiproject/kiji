@@ -109,7 +109,7 @@ public final class KijiBulkImportJobBuilder
     // Store the name of the the importer to use in the job configuration so the mapper can
     // create instances of it.
     job.getConfiguration().setClass(
-        KijiBulkImporter.CONF_BULK_IMPORTER_CLASS, mBulkImporterClass, KijiBulkImporter.class);
+        KijiConfKeys.KIJI_BULK_IMPORTER_CLASS, mBulkImporterClass, KijiBulkImporter.class);
 
     // Make sure the job output format is a KijiTableMapReduceJobOutput or a subclass of it.
     MapReduceJobOutput jobOutput = getJobOutput();

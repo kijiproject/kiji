@@ -77,7 +77,7 @@ public final class HFileWriterContext
       throws IOException {
     super(hadoopContext);
     final Configuration conf = new Configuration(hadoopContext.getConfiguration());
-    final KijiURI outputURI = KijiURI.parse(conf.get(KijiConfKeys.OUTPUT_KIJI_TABLE_URI));
+    final KijiURI outputURI = KijiURI.parse(conf.get(KijiConfKeys.KIJI_OUTPUT_TABLE_URI));
     mKiji = Kiji.Factory.open(outputURI, conf);
     mTable = mKiji.openTable(outputURI.getTable());
     mColumnNameTranslator = new ColumnNameTranslator(mTable.getLayout());
@@ -88,7 +88,7 @@ public final class HFileWriterContext
    * Creates a new context that can write cells to an HFile that can be loaded into an HBase table.
    *
    * @param hadoopContext is the Hadoop {@link TaskInputOutputContext} that will be used to perform
-   *    the writes.
+   *     the writes.
    * @return a new context that can write cells to an HFile that can be loaded into an HBase table.
    * @throws IOException if there is an I/O error.
    */

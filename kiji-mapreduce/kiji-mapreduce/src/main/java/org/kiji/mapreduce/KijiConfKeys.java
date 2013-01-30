@@ -26,16 +26,25 @@ import org.kiji.annotations.ApiAudience;
 public final class KijiConfKeys {
 
   /** URI of the input table to read from. */
-  public static final String INPUT_TABLE_URI = "kiji.input.table.uri";
+  public static final String KIJI_INPUT_TABLE_URI = "kiji.input.table.uri";
 
   /** URI of the output Kiji table to write to. */
-  public static final String OUTPUT_KIJI_TABLE_URI = "kiji.output.table.uri";
+  public static final String KIJI_OUTPUT_TABLE_URI = "kiji.output.table.uri";
 
   /** Name of the KijiTableContext class to use. */
   public static final String KIJI_TABLE_CONTEXT_CLASS = "kiji.table.context.class";
 
   /** Serialized input data request. */
-  public static final String INPUT_DATA_REQUEST = "kiji.input.request";
+  public static final String KIJI_INPUT_DATA_REQUEST = "kiji.input.data.request";
+
+  /** Fully qualified name of the KijiGatherer class to run. */
+  public static final String KIJI_GATHERER_CLASS = "kiji.gatherer.class";
+
+  /** Fully qualified name of the KijiProducer class to run. */
+  public static final String KIJI_PRODUCER_CLASS = "kiji.producer.class";
+
+  /** Fully qualified name of the KijiBulkImporter class to run. */
+  public static final String KIJI_BULK_IMPORTER_CLASS = "kiji.bulk.importer.class";
 
   /** Utility class may not be instantiated. */
   private KijiConfKeys() {

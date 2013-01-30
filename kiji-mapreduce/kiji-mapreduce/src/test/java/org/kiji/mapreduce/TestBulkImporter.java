@@ -44,7 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.mapreduce.input.TextMapReduceJobInput;
-import org.kiji.mapreduce.output.KijiTableMapReduceJobOutput;
+import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
@@ -65,7 +65,7 @@ public class TestBulkImporter {
   private KijiTableReader mReader;
 
   @Before
-  public void setupEnvironment() throws Exception {
+  public void setUp() throws Exception {
     // Get the test table layouts.
     final KijiTableLayout layout =
         new KijiTableLayout(KijiMRTestLayouts.getTestLayout(), null);
@@ -81,7 +81,7 @@ public class TestBulkImporter {
   }
 
   @After
-  public void cleanupEnvironment() throws IOException {
+  public void tearDown() throws Exception {
     IOUtils.closeQuietly(mReader);
     IOUtils.closeQuietly(mTable);
     mKiji.release();
@@ -127,7 +127,7 @@ public class TestBulkImporter {
     final MapReduceJob job = KijiBulkImportJobBuilder.create()
         .withBulkImporter(SimpleBulkImporter.class)
         .withInput(new TextMapReduceJobInput(new Path(inputFile.toString())))
-        .withOutput(new KijiTableMapReduceJobOutput(mTable))
+        .withOutput(new DirectKijiTableMapReduceJobOutput(mTable))
         .build();
     assertTrue(job.run());
 
@@ -222,7 +222,7 @@ public class TestBulkImporter {
     final MapReduceJob job = KijiBulkImportJobBuilder.create()
         .withBulkImporter(BulkImporterWorkflow.class)
         .withInput(new TextMapReduceJobInput(new Path(inputFile.toString())))
-        .withOutput(new KijiTableMapReduceJobOutput(mTable))
+        .withOutput(new DirectKijiTableMapReduceJobOutput(mTable))
         .build();
     assertTrue(job.run());
 
@@ -236,6 +236,7 @@ public class TestBulkImporter {
       produced.add(string);
     }
     scanner.close();
+
     assertTrue(produced.contains("Marsellus Wallace"));
     assertTrue(produced.contains("Vincent Vega"));
 

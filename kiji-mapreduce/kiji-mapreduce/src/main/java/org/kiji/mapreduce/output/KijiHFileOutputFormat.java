@@ -54,16 +54,18 @@ import org.kiji.schema.layout.KijiTableLayout.LocalityGroupLayout;
 import org.kiji.schema.layout.impl.ColumnId;
 
 /**
- * An output format that writes HFiles that can be loaded directly into HBase HRegions.
+ * Hadoop output format that writes HFiles that can be loaded directly into HBase region servers.
  *
- * <p>This is better than the existing HBase HFileOutputFormat because it uses the
- * MapReduce framework for sorting the KeyValue objects instead of requiring an in-memory
- * sort to happen in the reduce phase.</p>
+ * <p> Allows writing entries to any HBase family of the target table.
+ *     Each reduce task generates a set of files per HBase family.
  *
- * <p>For this output format to be useful, the KeyValues should already be sorted and
- * partitioned into chunks that fit within an existing region of the target HTable.</p>
+ * <p> HFile entries must be properly ordered. This is achieved through the shuffle/sort phase
+ *     of the M/R job, combined with an identity reducer.
  *
- * <p>You may only write HFiles with a single column family at a time.</p>
+ * <p> Entries should be partitioned into chunks that fit within an existing region of the target
+ *     HTable.
+ *
+ * <p> The generated HFiles can be loaded into the target HTable with the {@link HFileLoader}.
  */
 @ApiAudience.Framework
 public final class KijiHFileOutputFormat
@@ -299,7 +301,7 @@ public final class KijiHFileOutputFormat
       mOutputDir = oformat.getDefaultWorkFile(mContext, OUTPUT_EXTENSION);
       mFileSystem = mOutputDir.getFileSystem(mConf);
 
-      mTableURI = KijiURI.parse(mConf.get(KijiConfKeys.OUTPUT_KIJI_TABLE_URI));
+      mTableURI = KijiURI.parse(mConf.get(KijiConfKeys.KIJI_OUTPUT_TABLE_URI));
 
       final Kiji kiji = Kiji.Factory.open(mTableURI);
       final KijiTable table = kiji.openTable(mTableURI.getTable());

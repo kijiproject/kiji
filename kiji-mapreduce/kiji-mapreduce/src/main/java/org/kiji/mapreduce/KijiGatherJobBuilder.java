@@ -23,13 +23,21 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.common.base.Preconditions;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.util.ReflectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.kvstore.KeyValueStoreClient;
 import org.kiji.mapreduce.mapper.GatherMapper;
+import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
+import org.kiji.mapreduce.output.HFileReducerMapReduceJobOutput;
+import org.kiji.mapreduce.reducer.IdentityReducer;
 import org.kiji.schema.KijiDataRequest;
 
 /**
@@ -37,7 +45,7 @@ import org.kiji.schema.KijiDataRequest;
  *
  * <p>Example usage:</p>
  * <pre><code>
- * MapReduceJob job = new KijiGatherJobBuilder()
+ * MapReduceJob job = KijiGatherJobBuilder.create()
  *     .withInputTable(myTable)
  *     .withGatherer(MyCountGatherer.class)
  *     .withReducer(IntSumReducer.class)
@@ -49,18 +57,28 @@ import org.kiji.schema.KijiDataRequest;
 @SuppressWarnings("rawtypes")
 @ApiAudience.Public
 public final class KijiGatherJobBuilder extends KijiTableInputJobBuilder<KijiGatherJobBuilder> {
+  private static final Logger LOG = LoggerFactory.getLogger(KijiGatherJobBuilder.class);
+
+  /** Base configuration. */
+  private Configuration mConf = null;
+
   /** The class of the gatherer to run. */
   private Class<? extends KijiGatherer> mGathererClass;
+
   /** The class of the combiner to run. */
   private Class<? extends KijiReducer> mCombinerClass;
+
   /** The class of the reducer to run. */
   private Class<? extends KijiReducer> mReducerClass;
 
   private GatherMapper mMapper;
+
   /** The gatherer instance. */
   private KijiGatherer<?, ?> mGatherer;
+
   /** The combiner instance (may be null if no combiner is specified). */
   private KijiReducer mCombiner;
+
   /** The reducer instance (may be null if no reducer is specified). */
   private KijiReducer mReducer;
 
@@ -88,6 +106,17 @@ public final class KijiGatherJobBuilder extends KijiTableInputJobBuilder<KijiGat
    */
   public static KijiGatherJobBuilder create() {
     return new KijiGatherJobBuilder();
+  }
+
+  /**
+   * Sets the map/reduce job base configuration.
+   *
+   * @param conf Map/reduce job base configuration.
+   * @return this.
+   */
+  public KijiGatherJobBuilder withConf(Configuration conf) {
+    mConf = conf;
+    return this;
   }
 
   /**
@@ -126,40 +155,75 @@ public final class KijiGatherJobBuilder extends KijiTableInputJobBuilder<KijiGat
 
   /** {@inheritDoc} */
   @Override
+  public Configuration getConf() {
+    return (mConf != null) ? mConf : super.getConf();
+  }
+
+  /** {@inheritDoc} */
+  @Override
   protected void configureJob(Job job) throws IOException {
     // Construct the gatherer instance.
     if (null == mGathererClass) {
       throw new JobConfigurationException("Must specify a gatherer.");
     }
-    // Serialize the gatherer class name into the job configuration.
-    job.getConfiguration().setClass(
-        KijiGatherer.CONF_GATHERER_CLASS, mGathererClass, KijiGatherer.class);
 
-    mGatherer = ReflectionUtils.newInstance(mGathererClass, job.getConfiguration());
-    mMapper.setConf(job.getConfiguration());
+    final Configuration conf = job.getConfiguration();
+
+    // Serialize the gatherer class name into the job configuration.
+    conf.setClass(KijiConfKeys.KIJI_GATHERER_CLASS, mGathererClass, KijiGatherer.class);
+
+    if ((getJobOutput() instanceof HFileMapReduceJobOutput) && (null == mReducerClass)) {
+      mReducerClass = IdentityReducer.class;
+    }
+
+    mGatherer = ReflectionUtils.newInstance(mGathererClass, conf);
+    mMapper.setConf(conf);
     mDataRequest = mGatherer.getDataRequest();
 
     // Construct the combiner instance (if specified).
     if (null != mCombinerClass) {
-      mCombiner = ReflectionUtils.newInstance(mCombinerClass, job.getConfiguration());
+      mCombiner = ReflectionUtils.newInstance(mCombinerClass, conf);
     }
 
     // Construct the reducer instance (if specified).
     if (null != mReducerClass) {
-      mReducer = ReflectionUtils.newInstance(mReducerClass, job.getConfiguration());
+      mReducer = ReflectionUtils.newInstance(mReducerClass, conf);
     }
 
-    StringBuilder name = new StringBuilder();
-    name.append("Kiji gather: ");
-    name.append(mGathererClass.getSimpleName());
+    final StringBuilder name = new StringBuilder("Kiji gather: " + mGathererClass.getSimpleName());
     if (null != mReducerClass) {
-      name.append(" / ");
-      name.append(mReducerClass.getSimpleName());
+      name.append(" / " + mReducerClass.getSimpleName());
     }
     job.setJobName(name.toString());
 
     // Configure the table input job.
     super.configureJob(job);
+
+    // Some validation:
+    if (getJobOutput() instanceof HFileMapReduceJobOutput) {
+       if (mReducer instanceof IdentityReducer) {
+         Preconditions.checkState(
+             mGatherer.getOutputKeyClass() == HFileKeyValue.class,
+             String.format(
+                 "Gatherer '%s' writing HFiles must output HFileKeyValue keys, but got '%s'",
+                 mGathererClass.getName(), mGatherer.getOutputKeyClass().getName()));
+         Preconditions.checkState(
+             mGatherer.getOutputValueClass() == NullWritable.class,
+             String.format(
+                 "Gatherer '%s' writing HFiles must output NullWritable values, but got '%s'",
+                 mGathererClass.getName(), mGatherer.getOutputValueClass().getName()));
+       }
+       Preconditions.checkState(
+           mReducer.getOutputKeyClass() == HFileKeyValue.class,
+           String.format(
+               "Reducer '%s' writing HFiles must output HFileKeyValue keys, but got '%s'",
+               mReducerClass.getName(), mReducer.getOutputKeyClass().getName()));
+       Preconditions.checkState(
+           mReducer.getOutputValueClass() == NullWritable.class,
+           String.format(
+               "Reducer '%s' writing HFiles must output NullWritable values, but got '%s'",
+               mReducerClass.getName(), mReducer.getOutputValueClass().getName()));
+    }
   }
 
   /** {@inheritDoc} */
@@ -225,5 +289,30 @@ public final class KijiGatherJobBuilder extends KijiTableInputJobBuilder<KijiGat
   @Override
   protected Class<?> getJarClass() {
     return mGathererClass;
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  protected void configureOutput(Job job) throws IOException {
+    final MapReduceJobOutput output = getJobOutput();
+    if (null == output) {
+      throw new JobConfigurationException("Must specify job output.");
+    }
+    final KijiReducer reducer = getReducer();
+
+    if (output instanceof HFileMapReduceJobOutput) {
+      if (reducer instanceof IdentityReducer) {
+        output.configure(job);
+      } else {
+        // Cannot use the HFile output format if the reducer is not IdentityReducer:
+        // Writing HFile from a Kiji reducer requires an extra map/reduce to sort the HFile keys.
+        // This forces the output format of this map/reduce to be SequenceFile.
+        final HFileMapReduceJobOutput hfileOutput = (HFileMapReduceJobOutput) output;
+        LOG.warn("Reducing to HFiles will require an extra Map/Reduce job.");
+        new HFileReducerMapReduceJobOutput(hfileOutput).configure(job);
+      }
+    } else {
+      output.configure(job);
+    }
   }
 }

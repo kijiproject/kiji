@@ -148,7 +148,7 @@ public abstract class KijiTableInputJobBuilder<T extends KijiTableInputJobBuilde
   /** {@inheritDoc} */
   @Override
   protected KijiTableLayout getTableLayout() {
-    return HBaseKijiTable.downcast(mInputTable).getLayout();
+    return mInputTable.getLayout();
   }
 
   /**

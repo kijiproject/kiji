@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 import org.kiji.mapreduce.context.DirectKijiTableWriterContext;
 import org.kiji.mapreduce.input.KijiTableMapReduceJobInput;
 import org.kiji.mapreduce.input.KijiTableMapReduceJobInput.RowOptions;
-import org.kiji.mapreduce.output.KijiTableMapReduceJobOutput;
+import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiConfiguration;
@@ -155,7 +155,7 @@ public class TestTransform {
             (HBaseKijiTable) mTable,
             new KijiDataRequest().addColumn(new Column("info")),
             new RowOptions()))
-        .withOutput(new KijiTableMapReduceJobOutput((HBaseKijiTable) mTable))
+        .withOutput(new DirectKijiTableMapReduceJobOutput(mTable))
         .build();
     assertTrue(job.run());
 

@@ -178,7 +178,7 @@ public class TestKijiHFileOutputFormat {
     mDefaultLGId = mLayout.getLocalityGroupMap().get("default").getId();
     mInMemoryLGId = mLayout.getLocalityGroupMap().get("inMemory").getId();
 
-    mConf.set(KijiConfKeys.OUTPUT_KIJI_TABLE_URI, mTableURI.toString());
+    mConf.set(KijiConfKeys.KIJI_OUTPUT_TABLE_URI, mTableURI.toString());
 
     mFormat = new KijiHFileOutputFormat();
   }

@@ -49,6 +49,17 @@ public final class KijiMRTestLayouts {
     return getLayout(TEST_LAYOUT);
   }
 
+  /**
+   * @param tableName For the table name in the layout.
+   * @return a generic test layout.
+   * @throws IOException on I/O error.
+   */
+  public static TableLayoutDesc getTestLayout(String tableName) throws IOException {
+    final TableLayoutDesc desc = getLayout(TEST_LAYOUT);
+    desc.setName(tableName);
+    return desc;
+  }
+
   /** Utility class cannot be instantiated. */
   private KijiMRTestLayouts() {
   }
