@@ -81,7 +81,7 @@ public class PhonebookImporter extends Configured implements Tool {
       final Configuration conf = hadoopContext.getConfiguration();
       KijiURI tableURI;
       try {
-        tableURI = KijiURI.parse(conf.get(KijiConfKeys.OUTPUT_KIJI_TABLE_URI));
+        tableURI = KijiURI.newBuilder(conf.get(KijiConfKeys.OUTPUT_KIJI_TABLE_URI)).build();
       } catch (KijiURIException kue) {
         throw new IOException(kue);
       }
@@ -174,7 +174,8 @@ public class PhonebookImporter extends Configured implements Tool {
     job.setOutputFormatClass(NullOutputFormat.class);
 
     // Direct the job output to the phonebook table.
-    final KijiURI tableURI = KijiURI.parse(String.format("kiji://.env/default/%s", TABLE_NAME));
+    final KijiURI tableURI =
+        KijiURI.newBuilder(String.format("kiji://.env/default/%s", TABLE_NAME)).build();
     job.getConfiguration().set(KijiConfKeys.OUTPUT_KIJI_TABLE_URI, tableURI.toString());
 
     // Tell Hadoop where the java dependencies are located, so they
