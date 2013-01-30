@@ -212,7 +212,7 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
    * Install a Kiji instance.
    */
   def installKiji(instanceName: String): Unit = {
-    val kijiUri = KijiURI.parse("kiji://.env/" + instanceName)
+    val kijiUri = KijiURI.newBuilder("kiji://.env/" + instanceName).build()
     KijiInstaller.install(kijiUri, HBaseConfiguration.create())
   }
 
