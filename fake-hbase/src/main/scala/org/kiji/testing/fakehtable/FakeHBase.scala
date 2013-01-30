@@ -25,6 +25,7 @@ import java.util.{TreeMap => JTreeMap}
 
 import scala.collection.JavaConverters.asScalaIteratorConverter
 import scala.collection.mutable.Buffer
+import scala.math.BigInt.int2bigInt
 
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HColumnDescriptor
@@ -34,6 +35,7 @@ import org.apache.hadoop.hbase.TableExistsException
 import org.apache.hadoop.hbase.TableNotDisabledException
 import org.apache.hadoop.hbase.TableNotFoundException
 import org.apache.hadoop.hbase.client.HBaseAdmin
+import org.apache.hadoop.hbase.client.HTable
 import org.apache.hadoop.hbase.client.HTableInterface
 import org.apache.hadoop.hbase.util.Bytes
 import org.kiji.schema.impl.HBaseAdminFactory
@@ -79,7 +81,7 @@ class FakeHBase
           table = new FakeHTable(name = tableName, conf = conf, desc = desc)
           tableMap.put(tableNameBytes, table)
         }
-        return table
+        return Proxy.create(classOf[HTable], new PythonProxy(table))
       }
     }
 
@@ -101,7 +103,7 @@ class FakeHBase
 
   object Admin extends HBaseAdminCore with HBaseAdminConversionHelpers {
     def addColumn(tableName: Bytes, column: HColumnDescriptor): Unit = {
-        // TODO(taton) Implement metadata
+      // TODO(taton) Implement metadata
       // For now, do nothing
     }
 
@@ -115,7 +117,7 @@ class FakeHBase
             desc = desc
         )
         Arrays.sort(split, Bytes.BYTES_COMPARATOR)
-        table.split = split
+        table.setSplit(split)
         tableMap.put(desc.getName, table)
       }
     }
@@ -185,16 +187,7 @@ class FakeHBase
         if (table == null) {
           throw new TableNotFoundException(Bytes.toStringBinary(tableName))
         }
-        val list = new java.util.ArrayList[HRegionInfo]()
-        var startKey: Bytes = null
-        for (boundary <- table.split) {
-          val region = new HRegionInfo(tableName, startKey, boundary)
-          list.add(region)
-          startKey = boundary
-        }
-        val region = new HRegionInfo(tableName, startKey, null)
-        list.add(region)
-        return list
+        return table.getRegions()
       }
     }
 

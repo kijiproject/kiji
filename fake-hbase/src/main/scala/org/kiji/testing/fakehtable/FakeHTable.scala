@@ -30,6 +30,7 @@ import java.util.NavigableSet
 import java.util.{TreeMap => JTreeMap}
 import java.util.{TreeSet => JTreeSet}
 
+import scala.Option.option2Iterable
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.collection.JavaConverters.asScalaSetConverter
 import scala.collection.JavaConverters.mapAsScalaMapConverter
@@ -41,8 +42,11 @@ import scala.util.control.Breaks.breakable
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.HConstants
+import org.apache.hadoop.hbase.HRegionInfo
+import org.apache.hadoop.hbase.HRegionLocation
 import org.apache.hadoop.hbase.HTableDescriptor
 import org.apache.hadoop.hbase.KeyValue
+import org.apache.hadoop.hbase.ServerName
 import org.apache.hadoop.hbase.client.Delete
 import org.apache.hadoop.hbase.client.Get
 import org.apache.hadoop.hbase.client.HTableInterface
@@ -85,6 +89,9 @@ class FakeHTable(
   /** Whether the table has been closed. */
   private var closed: Boolean = false
 
+  /** Region splits and locations. */
+  private var regions: Seq[HRegionLocation] = Seq()
+
   /** Byte array shortcut. */
   type Bytes = Array[Byte]
 
@@ -102,9 +109,6 @@ class FakeHTable(
 
   /** Map: row key -> family -> qualifier -> timestamp -> cell data. */
   private val rows: Table = new JTreeMap[Bytes, RowFamilies](Bytes.BYTES_COMPARATOR)
-
-  /** Region splits. */
-  private[fakehtable] var split: Seq[Bytes] = Seq()
 
   override def getTableName(): Array[Byte] = {
     return name.getBytes
@@ -601,6 +605,87 @@ class FakeHTable(
       filter.filterRow(kvs)
     }
     return new Result(kvs.toArray(new Array[KeyValue](kvs.size)))
+  }
+
+  // -----------------------------------------------------------------------------------------------
+
+  /** @return the regions info for this table. */
+  private[fakehtable] def getRegions(): JList[HRegionInfo] = {
+    val list = new java.util.ArrayList[HRegionInfo]()
+    for (region <- regions) {
+      list.add(region.getRegionInfo)
+    }
+    return list
+  }
+
+  /**
+   * Converts a list of region boundaries (null excluded) into a stream of regions.
+   *
+   * @param split Region boundaries, first and last null/empty excluded.
+   * @return a stream of (start, end) regions.
+   */
+  private def toRegions(split: Seq[Bytes]): Iterator[(Bytes, Bytes)] = {
+    if (!split.isEmpty) {
+      require((split.head != null) && !split.head.isEmpty)
+      require((split.last != null) && !split.last.isEmpty)
+    }
+    val startKeys = Iterator(null) ++ split.iterator
+    val endKeys = split.iterator ++ Iterator(null)
+    return startKeys.zip(endKeys).toIterator
+  }
+
+  /**
+   * Sets the region splits for this table.
+   *
+   * @param split Split boundaries (excluding the first and last null/empty).
+   */
+  private[fakehtable] def setSplit(split: Array[Bytes]): Unit = {
+    val fakePort = 1234
+    val tableName: Bytes = Bytes.toBytes(name)
+
+    val newRegions = Buffer[HRegionLocation]()
+    for ((start, end) <- toRegions(split)) {
+      val fakeHost = "fake-location-%d".format(newRegions.size)
+      val regionInfo = new HRegionInfo(tableName, start, end)
+      newRegions += new HRegionLocation(regionInfo, fakeHost, fakePort)
+    }
+    this.regions = newRegions.toSeq
+  }
+
+  // -----------------------------------------------------------------------------------------------
+  // HTable methods that are not part of HTableInterface, but required anyway:
+
+  /** See HTable.getRegionLocation(). */
+  def getRegionLocation(row: String): HRegionLocation = {
+    return getRegionLocation(Bytes.toBytes(row))
+  }
+
+  /** See HTable.getRegionLocation(). */
+  def getRegionLocation(row: Bytes): HRegionLocation = {
+    return getRegionLocation(row, false)
+  }
+
+  /** See HTable.getRegionLocation(). */
+  def getRegionLocation(row: Bytes, reload: Boolean): HRegionLocation = {
+    for (region <- regions) {
+      val start = region.getRegionInfo.getStartKey
+      val end = region.getRegionInfo.getEndKey
+      // start ≤ row < end:
+      if ((Bytes.compareTo(start, row) <= 0)
+          && (end.isEmpty || (Bytes.compareTo(row, end) < 0))) {
+        return region
+      }
+    }
+    sys.error("Invalid region split: last region must does not end with empty row key")
+  }
+
+  /** See HTable.getRegionLocations(). */
+  def getRegionLocations(): NavigableMap[HRegionInfo, ServerName] = {
+    val map = new JTreeMap[HRegionInfo, ServerName]()
+    for (region <- regions) {
+      map.put(region.getRegionInfo, new ServerName(region.getHostname, region.getPort, 0))
+    }
+    return map
   }
 
   // -----------------------------------------------------------------------------------------------

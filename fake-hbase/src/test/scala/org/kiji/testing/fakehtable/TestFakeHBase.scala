@@ -26,6 +26,8 @@ import org.apache.hadoop.hbase.HTableDescriptor
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
+import org.apache.hadoop.hbase.HBaseConfiguration
+import org.apache.hadoop.hbase.client.HTable
 
 @RunWith(classOf[JUnitRunner])
 class TestFakeHBase extends FunSuite {
@@ -55,4 +57,15 @@ class TestFakeHBase extends FunSuite {
     expect("7fffffffffffffffffffffffffffffff")(Hex.encodeHexString(regions(0).getEndKey))
   }
 
+  test("FakeHTable.asInstanceOf[HTable]") {
+    val hbase = new FakeHBase()
+    val desc = new HTableDescriptor("table")
+    hbase.Admin.createTable(desc)
+    val conf = HBaseConfiguration.create()
+    val htable = hbase.InterfaceFactory.create(conf, "table").asInstanceOf[HTable]
+    val locations = htable.getRegionLocations()
+    expect(1)(locations.size)
+    val location = htable.getRegionLocation("row key")
+    expect(locations.keySet.iterator.next)(location.getRegionInfo)
+  }
 }
