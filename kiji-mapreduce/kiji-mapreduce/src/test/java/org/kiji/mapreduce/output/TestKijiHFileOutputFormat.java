@@ -158,8 +158,8 @@ public class TestKijiHFileOutputFormat {
   @Before
   public void setUp() throws Exception {
     mConf = HBaseConfiguration.create();
-    mTableURI = KijiURI.parse(String.format(
-        "kiji://.fake.%s/default/user", FAKE_INSTANCE_COUNTER.getAndIncrement()));
+    mTableURI = KijiURI.newBuilder(String.format(
+        "kiji://.fake.%s/default/user", FAKE_INSTANCE_COUNTER.getAndIncrement())).build();
 
     mTempDir = File.createTempFile("test-" + System.currentTimeMillis() + "-", "");
     Preconditions.checkState(mTempDir.delete());

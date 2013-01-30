@@ -23,7 +23,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -31,7 +30,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -47,7 +45,6 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.junit.Test;
 
 import org.kiji.schema.EntityId;
-import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiURI;
@@ -112,12 +109,13 @@ public class IntegrationTestKijiTableInputFormat
     job.setJarByClass(IntegrationTestKijiTableInputFormat.class);
 
     // Setup the InputFormat.
-    final KijiURI tableURI = new KijiURI(
-        Lists.newArrayList(conf.get(HConstants.ZOOKEEPER_QUORUM).split(",")),
-        conf.getInt(HConstants.ZOOKEEPER_CLIENT_PORT, HConstants.DEFAULT_ZOOKEPER_CLIENT_PORT),
-        instance,
-        table,
-        Collections.<KijiColumnName>emptyList());
+    final KijiURI tableURI = KijiURI.newBuilder()
+      .withZookeeperQuorum(conf.get(HConstants.ZOOKEEPER_QUORUM).split(","))
+      .withZookeeperClientPort(conf.getInt(
+          HConstants.ZOOKEEPER_CLIENT_PORT, HConstants.DEFAULT_ZOOKEPER_CLIENT_PORT))
+      .withInstanceName(instance)
+      .withTableName(table)
+      .build();
     KijiTableInputFormat.configureJob(job, tableURI, request, null, null);
     job.setInputFormatClass(KijiTableInputFormat.class);
 

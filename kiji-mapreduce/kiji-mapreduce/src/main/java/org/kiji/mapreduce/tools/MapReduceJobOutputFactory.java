@@ -97,7 +97,7 @@ public final class MapReduceJobOutputFactory {
           new Path(jobOutputSpec.getLocation()), jobOutputSpec.getSplits());
     case KIJI: {
       try {
-        final KijiURI uri = KijiURI.parse(jobOutputSpec.getLocation());
+        final KijiURI uri = KijiURI.newBuilder(jobOutputSpec.getLocation()).build();
         final Kiji kiji = Kiji.Factory.open(uri);
         try {
           final KijiTable table = kiji.openTable(uri.getTable());
@@ -113,7 +113,7 @@ public final class MapReduceJobOutputFactory {
       try {
         final String[] splits = jobOutputSpec.getLocation().split(";");
         Preconditions.checkState(splits.length == 2);
-        final KijiURI uri = KijiURI.parse(splits[0]);
+        final KijiURI uri = KijiURI.newBuilder(splits[0]).build();
         final Kiji kiji = Kiji.Factory.open(uri);
         try {
           final KijiTable table = kiji.openTable(uri.getTable());

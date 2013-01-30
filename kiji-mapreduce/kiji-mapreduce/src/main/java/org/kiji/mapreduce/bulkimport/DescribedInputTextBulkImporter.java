@@ -136,7 +136,7 @@ public abstract class DescribedInputTextBulkImporter extends BaseTextBulkImporte
 
     KijiURI uri;
     try {
-      uri = KijiURI.parse(conf.get(KijiConfKeys.KIJI_OUTPUT_TABLE_URI));
+      uri = KijiURI.newBuilder(conf.get(KijiConfKeys.KIJI_OUTPUT_TABLE_URI)).build();
     } catch (KijiURIException kue) {
       throw new RuntimeException(kue);
     }

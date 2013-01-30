@@ -366,7 +366,7 @@ public final class KijiTableKeyValueStore<V> implements Configurable, KeyValueSt
     }
 
     try {
-      mTableUri = KijiURI.parse(conf.get(CONF_TABLE_URI));
+      mTableUri = KijiURI.newBuilder(conf.get(CONF_TABLE_URI)).build();
     } catch (KijiURIException kue) {
       throw new IOException("Error parsing input URI: " + kue.getMessage(), kue);
     }

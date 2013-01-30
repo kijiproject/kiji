@@ -301,7 +301,7 @@ public final class KijiHFileOutputFormat
       mOutputDir = oformat.getDefaultWorkFile(mContext, OUTPUT_EXTENSION);
       mFileSystem = mOutputDir.getFileSystem(mConf);
 
-      mTableURI = KijiURI.parse(mConf.get(KijiConfKeys.KIJI_OUTPUT_TABLE_URI));
+      mTableURI = KijiURI.newBuilder(mConf.get(KijiConfKeys.KIJI_OUTPUT_TABLE_URI)).build();
 
       final Kiji kiji = Kiji.Factory.open(mTableURI);
       final KijiTable table = kiji.openTable(mTableURI.getTable());

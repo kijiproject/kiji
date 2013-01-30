@@ -64,7 +64,8 @@ public final class DirectKijiTableWriterContext
       throws IOException {
     super(hadoopContext);
     final Configuration conf = new Configuration(hadoopContext.getConfiguration());
-    final KijiURI outputURI = KijiURI.parse(conf.get(KijiConfKeys.KIJI_OUTPUT_TABLE_URI));
+    final KijiURI outputURI =
+        KijiURI.newBuilder(conf.get(KijiConfKeys.KIJI_OUTPUT_TABLE_URI)).build();
     mKiji = Kiji.Factory.open(outputURI, conf);
     mTable = mKiji.openTable(outputURI.getTable());
     mPutter = mTable.openTableWriter();

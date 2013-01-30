@@ -92,7 +92,8 @@ public final class KijiTableInputFormat
   @Override
   public List<InputSplit> getSplits(JobContext context) throws IOException {
     final Configuration conf = context.getConfiguration();
-    final KijiURI inputTableURI = KijiURI.parse(conf.get(KijiConfKeys.KIJI_INPUT_TABLE_URI));
+    final KijiURI inputTableURI =
+        KijiURI.newBuilder(conf.get(KijiConfKeys.KIJI_INPUT_TABLE_URI)).build();
     final Kiji kiji = Kiji.Factory.open(inputTableURI, conf);
     try {
       final KijiTable table = kiji.openTable(inputTableURI.getTable());
@@ -192,15 +193,18 @@ public final class KijiTableInputFormat
       mSplit = (KijiTableSplit) split;
 
       final Configuration conf = context.getConfiguration();
-      final KijiURI inputURI = KijiURI.parse(conf.get(KijiConfKeys.KIJI_INPUT_TABLE_URI));
+      final KijiURI inputURI =
+          KijiURI.newBuilder(conf.get(KijiConfKeys.KIJI_INPUT_TABLE_URI)).build();
+      final KijiScannerOptions scannerOptions =
+          new KijiScannerOptions()
+          .setStartRow(new HBaseEntityId(mSplit.getStartRow()))
+          .setStopRow(new HBaseEntityId(mSplit.getEndRow()));
       mKiji = Kiji.Factory.open(inputURI, conf);
       mTable = mKiji.openTable(inputURI.getTable());
       mReader = mTable.openTableReader();
-      final KijiScannerOptions scannerOptions =
-          new KijiScannerOptions()
-              .setStartRow(new HBaseEntityId(mSplit.getStartRow()))
-              .setStopRow(new HBaseEntityId(mSplit.getEndRow()));
-      mScanner = mReader.getScanner(mDataRequest, scannerOptions);
+      mScanner = mReader.getScanner(
+          mDataRequest,
+          scannerOptions);
       mIterator = mScanner.iterator();
       mCurrentRow = null;
     }

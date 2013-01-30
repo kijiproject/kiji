@@ -67,7 +67,7 @@ public final class SimpleTableMapperAsBulkImporter
    */
   public static void main(String[] args) throws Exception {
     final Configuration conf = HBaseConfiguration.create();
-    final KijiURI uri = KijiURI.parse("kiji://.env/test/test");
+    final KijiURI uri = KijiURI.newBuilder("kiji://.env/test/test").build();
     final Kiji kiji = Kiji.Factory.open(uri, conf);
     final KijiTable table = kiji.openTable(uri.getTable());
 

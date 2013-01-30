@@ -91,7 +91,7 @@ public final class HFileReduceJob {
 
     final Path inputPath = new Path(mInputPath);
     final Path outputPath = new Path(mOutputPath);
-    final KijiURI tableURI = KijiURI.parse(mOutputTable);
+    final KijiURI tableURI = KijiURI.newBuilder(mOutputTable).build();
     final Kiji kiji = Kiji.Factory.open(tableURI);
     final KijiTable table = kiji.openTable(tableURI.getTable());
 
