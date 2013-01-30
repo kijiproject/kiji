@@ -120,9 +120,7 @@ public final class KijiBulkImport extends JobTool<KijiBulkImportJobBuilder> {
 
     MapReduceJobInputFactory inputFactory = MapReduceJobInputFactory.create();
     jobBuilder.withInput(inputFactory.createFromInputSpec(mInputSpec));
-    Class<? extends KijiBulkImporter> importerClass =
-        Class.forName(mImporter).asSubclass(KijiBulkImporter.class);
-    jobBuilder.withBulkImporter(importerClass);
+    jobBuilder.withBulkImporter(KijiBulkImporter.forName(mImporter));
     if (JobOutputSpec.Format.KIJI == mOutputSpec.getFormat()) {
       jobBuilder.withOutput(new DirectKijiTableMapReduceJobOutput(mOutputTable));
     } else {

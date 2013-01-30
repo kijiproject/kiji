@@ -23,7 +23,6 @@ import java.io.IOException;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.mapreduce.Mapper;
 
 import org.kiji.common.flags.Flag;
 import org.kiji.common.flags.FlagParser;
@@ -63,8 +62,7 @@ public final class HFileReduceJob {
 
   /** An identity mapper. */
   private static class IdentityMapper
-      extends Mapper<HFileKeyValue, NullWritable, HFileKeyValue, NullWritable>
-      implements KijiMapper {
+      extends KijiMapper<HFileKeyValue, NullWritable, HFileKeyValue, NullWritable> {
 
     /** {@inheritDoc} */
     @Override

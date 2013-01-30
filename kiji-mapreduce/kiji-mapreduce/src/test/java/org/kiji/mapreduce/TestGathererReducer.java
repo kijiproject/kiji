@@ -34,7 +34,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Reducer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -91,8 +90,7 @@ public class TestGathererReducer {
 
   /** Reducer to count the number of users per zip-code. */
   public static class TestingReducer
-      extends Reducer<LongWritable, Text, LongWritable, LongWritable>
-      implements KijiReducer {
+      extends KijiReducer<LongWritable, Text, LongWritable, LongWritable> {
 
     /** {@inheritDoc} */
     @Override
@@ -119,7 +117,7 @@ public class TestGathererReducer {
   private KijiTable mTable;
 
   @Before
-  public void setupEnvironment() throws Exception {
+  public void setUp() throws Exception {
     // Get the test table layouts.
     final KijiTableLayout layout =
         new KijiTableLayout(KijiMRTestLayouts.getTestLayout(), null);
@@ -144,7 +142,7 @@ public class TestGathererReducer {
   }
 
   @After
-  public void cleanupEnvironment() throws IOException {
+  public void tearDown() throws Exception {
     IOUtils.closeQuietly(mTable);
     mKiji.release();
   }
@@ -172,15 +170,17 @@ public class TestGathererReducer {
     assertTrue(job.run());
 
     // Validate output:
-    final File outputPartFile = new File(outputDir, "part-r-00000");
-    final String gatheredText = FileUtils.readFileToString(outputPartFile);
-    final String[] lines = gatheredText.split("\n");
-    assertEquals(1, lines.length);
-    for (String line : lines) {
-      final String[] split = line.split("\t");
-      assertEquals(2, split.length);
-      assertEquals("94110", split[0]);
-      assertEquals("2", split[1]);
+    {
+      final File outputPartFile = new File(outputDir, "part-r-00000");
+      final String gatheredText = FileUtils.readFileToString(outputPartFile);
+      final String[] lines = gatheredText.split("\n");
+      assertEquals(1, lines.length);
+      for (String line : lines) {
+        final String[] split = line.split("\t");
+        assertEquals(2, split.length);
+        assertEquals("94110", split[0]);
+        assertEquals("2", split[1]);
+      }
     }
 
     // Cleanup:

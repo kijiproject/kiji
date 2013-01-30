@@ -54,7 +54,7 @@ public class TestKijiTransformJobBuilder {
   private static final Logger LOG = LoggerFactory.getLogger(TestKijiTransformJobBuilder.class);
 
   /** A line count mapper for testing. */
-  public static class MyMapper extends KijiBaseMapper<LongWritable, Text, Text, IntWritable>
+  public static class MyMapper extends KijiMapper<LongWritable, Text, Text, IntWritable>
       implements KeyValueStoreClient {
 
     @Override
@@ -80,7 +80,7 @@ public class TestKijiTransformJobBuilder {
   }
 
   /** A sum reducer for testing. */
-  public static class MyReducer extends KijiBaseReducer<Text, IntWritable, Text, IntWritable>
+  public static class MyReducer extends KijiReducer<Text, IntWritable, Text, IntWritable>
       implements KeyValueStoreClient {
     @Override
     protected void reduce(Text line, Iterable<IntWritable> counts, Context context)

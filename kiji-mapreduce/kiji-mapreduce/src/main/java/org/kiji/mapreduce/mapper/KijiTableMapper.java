@@ -26,7 +26,6 @@ import java.io.IOException;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.mapreduce.TableSplit;
-import org.apache.hadoop.mapreduce.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +37,7 @@ import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiRowData;
 
 /**
- * Base class for {@link org.apache.hadoop.mapreduce.Mapper}s that read from Kiji tables.
+ * Base class for mappers reading from a Kiji table.
  *
  * @param <K> Type of the MapReduce output key.
  * @param <V> Type of the MapReduce output value.
@@ -46,18 +45,17 @@ import org.kiji.schema.KijiRowData;
 @ApiAudience.Private
 @Inheritance.Sealed
 public abstract class KijiTableMapper<K, V>
-    extends Mapper<EntityId, KijiRowData, K, V>
-    implements Configurable, KijiMapper, KijiDataRequester {
+    extends KijiMapper<EntityId, KijiRowData, K, V>
+    implements Configurable, KijiDataRequester {
 
   private static final Logger LOG = LoggerFactory.getLogger(KijiTableMapper.class);
 
   /** Configuration for this instance. */
   private Configuration mConf;
 
-  /**
-   * Constructs a new mapper that reads from a Kiji table.
-   */
-  KijiTableMapper() { }
+  /** Constructs a new mapper that reads from a Kiji table. */
+  KijiTableMapper() {
+  }
 
   /**
    * Kiji mapper function that processes an input row.

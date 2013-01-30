@@ -19,24 +19,36 @@
 
 package org.kiji.mapreduce;
 
+import org.apache.hadoop.mapreduce.Reducer;
+
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.Inheritance;
 
-/** Base interface for all reducers used by Kiji. */
+/**
+ * Base class for Kiji reducer.
+ *
+ * @param <INKEY> The type of the input key to the mapper.
+ * @param <INVALUE> The type of the input value to the mapper.
+ * @param <OUTKEY> The type of the output key from the mapper.
+ * @param <OUTVALUE> The type of the output value from the mapper.
+ */
 @ApiAudience.Public
 @Inheritance.Extensible
-public interface KijiReducer {
-  /**
-   * Gets the type of the output keys from the reducer.
-   *
-   * @return The Java class of the reduce output keys.
-   */
-  Class<?> getOutputKeyClass();
+public abstract class KijiReducer<INKEY, INVALUE, OUTKEY, OUTVALUE>
+    extends Reducer<INKEY, INVALUE, OUTKEY, OUTVALUE>
+    implements KVOutputJob {
 
   /**
-   * Gets the type of the output values from the reducer.
+   * Loads a KijiReducer class by name.
    *
-   * @return The Java class of the reduce output values.
+   * @param className Fully qualified name of the class to load.
+   * @return the loaded class.
+   * @throws ClassNotFoundException if the class is not found.
+   * @throws ClassCastException if the class is not a KijiReducer.
    */
-  Class<?> getOutputValueClass();
+  @SuppressWarnings("rawtypes")
+  public static Class<? extends KijiReducer> forName(String className)
+      throws ClassNotFoundException {
+    return Class.forName(className).asSubclass(KijiReducer.class);
+  }
 }

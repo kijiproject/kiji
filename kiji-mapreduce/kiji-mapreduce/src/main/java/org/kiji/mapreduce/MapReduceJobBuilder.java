@@ -250,13 +250,9 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder> {
    */
   protected void configureMapper(Job job) throws IOException {
     // Set the map class in the job configuration.
-    KijiMapper mapper = getMapper();
+    final KijiMapper<?, ?, ?, ?> mapper = getMapper();
     if (null == mapper) {
       throw new JobConfigurationException("Must specify a mapper");
-    }
-    if (!(mapper instanceof Mapper<?, ?, ?, ?>)) {
-      throw new JobConfigurationException(
-          "Mapper must be an instance of " + Mapper.class.getName());
     }
     if (mapper instanceof Configurable) {
       ((Configurable) mapper).setConf(job.getConfiguration());
@@ -292,7 +288,7 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder> {
    * @param mapper The Kiji mapper the job is configured to run.
    * @throws IOException If the Avro schemas cannot be configured.
    */
-  protected void configureAvro(Job job, KijiMapper mapper) throws IOException {
+  protected void configureAvro(Job job, KijiMapper<?, ?, ?, ?> mapper) throws IOException {
     // If the user has specified particular reader schemas for the records of the input,
     // put it in the job configuration.
     Schema inputKeyReaderSchema = AvroMapReduce.getAvroKeyReaderSchema(mapper);
@@ -348,7 +344,7 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder> {
    * @param mapper The Kiji mapper the job is configured to run.
    * @throws IOException If the HTable input cannot be configured.
    */
-  protected void configureHTableInput(Job job, KijiMapper mapper) throws IOException {
+  protected void configureHTableInput(Job job, KijiMapper<?, ?, ?, ?> mapper) throws IOException {
     if (mapper instanceof HTableReader) {
       HTableReader htableReader = (HTableReader) mapper;
       Scan hbaseInputTableScan = htableReader.getInputHTableScan(job.getConfiguration());
@@ -366,7 +362,7 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder> {
    * @param job The Hadoop MR job.
    */
   protected void configureCombiner(Job job) {
-    KijiReducer combiner = getCombiner();
+    final KijiReducer<?, ?, ?, ?> combiner = getCombiner();
     if (null == combiner) {
       LOG.debug("No combiner provided.");
       return;
@@ -384,7 +380,7 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder> {
    * @throws IOException If there is an error.
    */
   protected void configureReducer(Job job) throws IOException {
-    KijiReducer reducer = getReducer();
+    final KijiReducer<?, ?, ?, ?> reducer = getReducer();
     if (null == reducer) {
       LOG.info("No reducer provided. This will be a map-only job");
       job.setNumReduceTasks(0);
@@ -406,7 +402,7 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder> {
     if (reducer instanceof Configurable) {
       ((Configurable) reducer).setConf(job.getConfiguration());
     }
-    job.setReducerClass(((Reducer<?, ?, ?, ?>) reducer).getClass());
+    job.setReducerClass(reducer.getClass());
 
     // Set output key class.
     Class<?> outputKeyClass = reducer.getOutputKeyClass();
@@ -579,21 +575,21 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder> {
    *
    * @return An instance of the mapper.
    */
-  protected abstract KijiMapper getMapper();
+  protected abstract KijiMapper<?, ?, ?, ?> getMapper();
 
   /**
    * Gets an instance of the MapReduce combiner to be used for this job.
    *
    * @return An instance of the combiner, or null if this job should not use a combiner.
    */
-  protected abstract KijiReducer getCombiner();
+  protected abstract KijiReducer<?, ?, ?, ?> getCombiner();
 
   /**
    * Gets an instance of the MapReduce reducer to be used for this job.
    *
    * @return An instance of the reducer, or null if this job should be map-only.
    */
-  protected abstract KijiReducer getReducer();
+  protected abstract KijiReducer<?, ?, ?, ?> getReducer();
 
   /**
    * Returns a class that should be used to determine which Java jar archive will be

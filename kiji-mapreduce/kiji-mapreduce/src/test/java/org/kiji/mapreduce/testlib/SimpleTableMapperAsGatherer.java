@@ -50,7 +50,9 @@ import org.kiji.schema.KijiRowData;
  *
  * Most of the boilerplate could be avoided :(
  */
-public class SimpleTableMapperAsGatherer extends KijiGatherer<HFileKeyValue, NullWritable> {
+public class SimpleTableMapperAsGatherer
+    extends KijiGatherer<HFileKeyValue, NullWritable> {
+
   private static final Logger LOG = LoggerFactory.getLogger(SimpleTableMapperAsGatherer.class);
 
   /** {@inheritDoc} */

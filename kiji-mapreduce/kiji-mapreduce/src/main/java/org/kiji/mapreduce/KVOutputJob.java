@@ -19,21 +19,20 @@
 
 package org.kiji.mapreduce;
 
-import org.apache.hadoop.mapreduce.Reducer;
-
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.Inheritance;
 
 /**
- * Base class for kiji reducer that do not run over kiji tables.
+ * Base interface for tasks that emit (key, value) pairs.
  *
- * @param <INKEY> The type of the input key to the mapper.
- * @param <INVALUE> The type of the input value to the mapper.
- * @param <OUTKEY> The type of the output key from the mapper.
- * @param <OUTVALUE> The type of the output value from the mapper.
+ * Tasks can be mappers, reducers, gatherers, etc.
  */
 @ApiAudience.Public
 @Inheritance.Extensible
-public abstract class KijiBaseReducer<INKEY, INVALUE, OUTKEY, OUTVALUE>
-    extends Reducer<INKEY, INVALUE, OUTKEY, OUTVALUE> implements KijiReducer {
+public interface KVOutputJob {
+  /** @return the type of keys emitted by this task. */
+  Class<?> getOutputKeyClass();
+
+  /** @return the type of values emitted by this task. */
+  Class<?> getOutputValueClass();
 }

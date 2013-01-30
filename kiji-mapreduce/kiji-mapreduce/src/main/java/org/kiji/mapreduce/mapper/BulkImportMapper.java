@@ -27,7 +27,6 @@ import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.mapreduce.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,8 +67,8 @@ import org.kiji.mapreduce.util.KijiBulkImporters;
  */
 @ApiAudience.Private
 public final class BulkImportMapper<K, V>
-    extends Mapper<K, V, HFileKeyValue, NullWritable>
-    implements Configurable, AvroKeyReader, AvroValueReader, HTableReader, KijiMapper {
+    extends KijiMapper<K, V, HFileKeyValue, NullWritable>
+    implements Configurable, AvroKeyReader, AvroValueReader, HTableReader {
 
   private static final Logger LOG = LoggerFactory.getLogger(BulkImportMapper.class);
 

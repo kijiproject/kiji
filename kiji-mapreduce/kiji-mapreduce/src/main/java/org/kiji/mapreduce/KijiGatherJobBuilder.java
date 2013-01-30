@@ -77,10 +77,10 @@ public final class KijiGatherJobBuilder extends KijiTableInputJobBuilder<KijiGat
   private KijiGatherer<?, ?> mGatherer;
 
   /** The combiner instance (may be null if no combiner is specified). */
-  private KijiReducer mCombiner;
+  private KijiReducer<?, ?, ?, ?> mCombiner;
 
   /** The reducer instance (may be null if no reducer is specified). */
-  private KijiReducer mReducer;
+  private KijiReducer<?, ?, ?, ?> mReducer;
 
   /** The data request for the job's table input. */
   private KijiDataRequest mDataRequest;
@@ -136,8 +136,7 @@ public final class KijiGatherJobBuilder extends KijiTableInputJobBuilder<KijiGat
    * @param combinerClass The combiner class.
    * @return This builder instance so you may chain configuration method calls.
    */
-  public KijiGatherJobBuilder withCombiner(
-      Class<? extends KijiReducer> combinerClass) {
+  public KijiGatherJobBuilder withCombiner(Class<? extends KijiReducer> combinerClass) {
     mCombinerClass = combinerClass;
     return this;
   }
@@ -269,19 +268,19 @@ public final class KijiGatherJobBuilder extends KijiTableInputJobBuilder<KijiGat
 
   /** {@inheritDoc} */
   @Override
-  protected KijiMapper getMapper() {
+  protected KijiMapper<?, ?, ?, ?> getMapper() {
     return mMapper;
   }
 
   /** {@inheritDoc} */
   @Override
-  protected KijiReducer getCombiner() {
+  protected KijiReducer<?, ?, ?, ?> getCombiner() {
     return mCombiner;
   }
 
   /** {@inheritDoc} */
   @Override
-  protected KijiReducer getReducer() {
+  protected KijiReducer<?, ?, ?, ?> getReducer() {
     return mReducer;
   }
 

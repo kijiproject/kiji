@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.Inheritance;
 import org.kiji.mapreduce.AvroKeyWriter;
-import org.kiji.mapreduce.KijiBaseReducer;
+import org.kiji.mapreduce.KijiReducer;
 
 /**
  * An abstract KijiReducer to encapsulate common functionality among
@@ -47,7 +47,7 @@ import org.kiji.mapreduce.KijiBaseReducer;
 @ApiAudience.Public
 @Inheritance.Extensible
 public abstract class KeyPassThroughReducer<K, INVALUE, OUTVALUE>
-    extends KijiBaseReducer<K, INVALUE, K, OUTVALUE>
+    extends KijiReducer<K, INVALUE, K, OUTVALUE>
     implements Configurable, AvroKeyWriter {
   private static final Logger LOG = LoggerFactory.getLogger(KeyPassThroughReducer.class);
 

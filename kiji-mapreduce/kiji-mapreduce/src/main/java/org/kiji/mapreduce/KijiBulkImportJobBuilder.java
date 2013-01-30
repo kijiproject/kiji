@@ -25,8 +25,6 @@ import java.util.Map;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.util.ReflectionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.kvstore.KeyValueStore;
@@ -42,17 +40,17 @@ import org.kiji.schema.layout.KijiTableLayout;
 @ApiAudience.Public
 public final class KijiBulkImportJobBuilder
     extends KijiMapReduceJobBuilder<KijiBulkImportJobBuilder> {
-  private static final Logger LOG = LoggerFactory.getLogger(KijiBulkImportJobBuilder.class);
 
   /** The class of the bulk importer to run. */
+  @SuppressWarnings("rawtypes")
   private Class<? extends KijiBulkImporter> mBulkImporterClass;
 
   /** The bulk importer instance. */
   private KijiBulkImporter<?, ?> mBulkImporter;
   /** The mapper instance to run (which runs the bulk importer inside it). */
-  private KijiMapper mMapper;
+  private KijiMapper<?, ?, ?, ?> mMapper;
   /** The reducer instance to run (may be null). */
-  private KijiReducer mReducer;
+  private KijiReducer<?, ?, ?, ?> mReducer;
 
   /** The job input. */
   private MapReduceJobInput mJobInput;
@@ -97,6 +95,7 @@ public final class KijiBulkImportJobBuilder
    * @param bulkImporterClass The bulk importer class to use in the job.
    * @return This builder instance so you may chain configuration method calls.
    */
+  @SuppressWarnings("rawtypes")
   public KijiBulkImportJobBuilder withBulkImporter(
       Class<? extends KijiBulkImporter> bulkImporterClass) {
     mBulkImporterClass = bulkImporterClass;
@@ -187,20 +186,20 @@ public final class KijiBulkImportJobBuilder
 
   /** {@inheritDoc} */
   @Override
-  protected KijiMapper getMapper() {
+  protected KijiMapper<?, ?, ?, ?> getMapper() {
     return mMapper;
   }
 
   /** {@inheritDoc} */
   @Override
-  protected KijiReducer getCombiner() {
+  protected KijiReducer<?, ?, ?, ?> getCombiner() {
     // Use no combiner.
     return null;
   }
 
   /** {@inheritDoc} */
   @Override
-  protected KijiReducer getReducer() {
+  protected KijiReducer<?, ?, ?, ?> getReducer() {
     return mReducer;
   }
 

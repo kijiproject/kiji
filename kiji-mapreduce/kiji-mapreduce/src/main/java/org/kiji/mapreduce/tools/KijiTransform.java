@@ -84,16 +84,16 @@ public final class KijiTransform extends JobTool<KijiTransformJobBuilder> {
     jobBuilder.withInput(inputFactory.createFromInputSpec(mInputSpec));
 
     // Mapper.
-    jobBuilder.withMapper(Class.forName(mMapperName).asSubclass(KijiMapper.class));
+    jobBuilder.withMapper(KijiMapper.forName(mMapperName));
 
     // Combiner.
     if (!mCombinerName.isEmpty()) {
-      jobBuilder.withCombiner(Class.forName(mCombinerName).asSubclass(KijiReducer.class));
+      jobBuilder.withCombiner(KijiReducer.forName(mCombinerName));
     }
 
     // Reducer.
     if (!mReducerName.isEmpty()) {
-      jobBuilder.withReducer(Class.forName(mReducerName).asSubclass(KijiReducer.class));
+      jobBuilder.withReducer(KijiReducer.forName(mReducerName));
     }
 
     // Output.

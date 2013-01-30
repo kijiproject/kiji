@@ -56,9 +56,9 @@ public final class KijiProduceJobBuilder extends KijiTableInputJobBuilder<KijiPr
   /** The producer instance. */
   private KijiProducer mProducer;
   /** The mapper instance. */
-  private KijiMapper mMapper;
+  private KijiMapper<?, ?, ?, ?> mMapper;
   /** The reducer instance. */
-  private KijiReducer mReducer;
+  private KijiReducer<?, ?, ?, ?> mReducer;
 
   /** The data request for the job's table input. */
   private KijiDataRequest mDataRequest;
@@ -200,20 +200,20 @@ public final class KijiProduceJobBuilder extends KijiTableInputJobBuilder<KijiPr
 
   /** {@inheritDoc} */
   @Override
-  protected KijiMapper getMapper() {
+  protected KijiMapper<?, ?, ?, ?> getMapper() {
     return mMapper;
   }
 
   /** {@inheritDoc} */
   @Override
-  protected KijiReducer getCombiner() {
+  protected KijiReducer<?, ?, ?, ?> getCombiner() {
     // Producers can't have combiners.
     return null;
   }
 
   /** {@inheritDoc} */
   @Override
-  protected KijiReducer getReducer() {
+  protected KijiReducer<?, ?, ?, ?> getReducer() {
     return mReducer;
   }
 

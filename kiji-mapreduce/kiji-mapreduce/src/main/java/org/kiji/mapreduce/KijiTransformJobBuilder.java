@@ -40,18 +40,21 @@ public final class KijiTransformJobBuilder extends MapReduceJobBuilder<KijiTrans
   private static final Logger LOG = LoggerFactory.getLogger(KijiTransformJobBuilder.class);
 
   /** The class of the mapper to run. */
+  @SuppressWarnings("rawtypes")
   private Class<? extends KijiMapper> mMapperClass;
   /** The class of the combiner to run. */
+  @SuppressWarnings("rawtypes")
   private Class<? extends KijiReducer> mCombinerClass;
   /** The class of the reducer to run. */
+  @SuppressWarnings("rawtypes")
   private Class<? extends KijiReducer> mReducerClass;
 
   /** The mapper instance. */
-  private KijiMapper mMapper;
+  private KijiMapper<?, ?, ?, ?> mMapper;
   /** The combiner instance (may be null if no combiner is specified). */
-  private KijiReducer mCombiner;
+  private KijiReducer<?, ?, ?, ?> mCombiner;
   /** The reducer instance (may be null if no reducer is specified). */
-  private KijiReducer mReducer;
+  private KijiReducer<?, ?, ?, ?> mReducer;
 
   /** The kiji configuration. */
   private KijiConfiguration mKijiConf;
@@ -113,6 +116,7 @@ public final class KijiTransformJobBuilder extends MapReduceJobBuilder<KijiTrans
    * @param mapperClass The mapper class.
    * @return This builder instance so you may chain configuration method calls.
    */
+  @SuppressWarnings("rawtypes")
   public KijiTransformJobBuilder withMapper(Class<? extends KijiMapper> mapperClass) {
     mMapperClass = mapperClass;
     return this;
@@ -124,8 +128,8 @@ public final class KijiTransformJobBuilder extends MapReduceJobBuilder<KijiTrans
    * @param combinerClass The combiner class.
    * @return This builder instance so you may chain configuration method calls.
    */
-  public KijiTransformJobBuilder withCombiner(
-      Class<? extends KijiReducer> combinerClass) {
+  @SuppressWarnings("rawtypes")
+  public KijiTransformJobBuilder withCombiner(Class<? extends KijiReducer> combinerClass) {
     mCombinerClass = combinerClass;
     return this;
   }
@@ -136,6 +140,7 @@ public final class KijiTransformJobBuilder extends MapReduceJobBuilder<KijiTrans
    * @param reducerClass The reducer class.
    * @return This builder instance so you may chain configuration method calls.
    */
+  @SuppressWarnings("rawtypes")
   public KijiTransformJobBuilder withReducer(Class<? extends KijiReducer> reducerClass) {
     mReducerClass = reducerClass;
     return this;
@@ -233,19 +238,19 @@ public final class KijiTransformJobBuilder extends MapReduceJobBuilder<KijiTrans
 
   /** {@inheritDoc} */
   @Override
-  protected KijiMapper getMapper() {
+  protected KijiMapper<?, ?, ?, ?> getMapper() {
     return mMapper;
   }
 
   /** {@inheritDoc} */
   @Override
-  protected KijiReducer getCombiner() {
+  protected KijiReducer<?, ?, ?, ?> getCombiner() {
     return mCombiner;
   }
 
   /** {@inheritDoc} */
   @Override
-  protected KijiReducer getReducer() {
+  protected KijiReducer<?, ?, ?, ?> getReducer() {
     return mReducer;
   }
 

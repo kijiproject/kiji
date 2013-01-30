@@ -27,7 +27,7 @@ import org.apache.hadoop.io.NullWritable;
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.Inheritance;
 import org.kiji.mapreduce.AvroKeyWriter;
-import org.kiji.mapreduce.KijiBaseReducer;
+import org.kiji.mapreduce.KijiReducer;
 
 /**
  * Base class for reducers used with AvroOutputFormat to write Avro container files.
@@ -38,7 +38,8 @@ import org.kiji.mapreduce.KijiBaseReducer;
  */
 @ApiAudience.Public
 @Inheritance.Extensible
-public abstract class AvroReducer<K, V, T> extends KijiBaseReducer<K, V, AvroKey<T>, NullWritable>
+public abstract class AvroReducer<K, V, T>
+    extends KijiReducer<K, V, AvroKey<T>, NullWritable>
     implements AvroKeyWriter {
   /** A shared AvroKey wrapper that is reused when writing MapReduce output keys. */
   private AvroKey<T> mKey;

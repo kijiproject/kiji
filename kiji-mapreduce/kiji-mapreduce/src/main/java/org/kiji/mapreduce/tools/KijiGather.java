@@ -72,37 +72,17 @@ public final class KijiGather extends KijiJobTool<KijiGatherJobBuilder> {
     return KijiGatherJobBuilder.create();
   }
 
-  /**
-   * Verifies that theClass can be cast to an instance of theInterface.
-   * Throws ClassCastException if theClass cannot be cast as theInterface.
-   *
-   * @param theClass a class to check if it can be cast to an interface.
-   * @param theInterface the target superclass or interface of theClass.
-   */
-  private void checkSubclass(Class<?> theClass, Class<?> theInterface) {
-    if (!theInterface.isAssignableFrom(theClass)) {
-      throw new ClassCastException("Error: Specified class " + theClass.getName()
-          + " must extend " + theInterface.getName());
-    }
-  }
-
   @Override
   protected void configure(KijiGatherJobBuilder jobBuilder)
       throws ClassNotFoundException, IOException, JobIOSpecParseException {
     super.configure(jobBuilder);
-    Class<?> gathererClass = Class.forName(mGathererName);
-    checkSubclass(gathererClass, KijiGatherer.class);
-    jobBuilder.withGatherer(gathererClass.asSubclass(KijiGatherer.class));
+    jobBuilder.withGatherer(KijiGatherer.forName(mGathererName));
 
     if (!mCombinerName.isEmpty()) {
-      Class<?> combinerClass = Class.forName(mCombinerName);
-      checkSubclass(combinerClass, KijiReducer.class);
-      jobBuilder.withCombiner(combinerClass.asSubclass(KijiReducer.class));
+      jobBuilder.withCombiner(KijiReducer.forName(mCombinerName));
     }
     if (!mReducerName.isEmpty()) {
-      Class<?> reducerClass = Class.forName(mReducerName);
-      checkSubclass(reducerClass, KijiReducer.class);
-      jobBuilder.withReducer(reducerClass.asSubclass(KijiReducer.class));
+      jobBuilder.withReducer(KijiReducer.forName(mReducerName));
     }
     MapReduceJobOutputFactory outputFactory = MapReduceJobOutputFactory.create();
     jobBuilder.withOutput(outputFactory.createFromOutputSpec(mOutputSpec));

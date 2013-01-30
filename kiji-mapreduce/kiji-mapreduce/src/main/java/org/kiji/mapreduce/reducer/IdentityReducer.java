@@ -42,7 +42,8 @@ import org.kiji.mapreduce.AvroValueWriter;
  * @param <V> The MapReduce input value type.
  */
 @ApiAudience.Public
-public final class IdentityReducer<K, V> extends KeyPassThroughReducer<K, V, V>
+public final class IdentityReducer<K, V>
+    extends KeyPassThroughReducer<K, V, V>
     implements AvroValueWriter {
   private static final Logger LOG = LoggerFactory.getLogger(IdentityReducer.class);
 

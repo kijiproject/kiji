@@ -130,7 +130,7 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
   // -----------------------------------------------------------------------------------------------
 
   /** Combiner to use in the test job. */
-  public static class MyCombiner extends KijiBaseReducer<Text, Text, Text, Text> {
+  public static class MyCombiner extends KijiReducer<Text, Text, Text, Text> {
     /** {@inheritDoc} */
     @Override
     public Class<?> getOutputKeyClass() {
@@ -147,7 +147,7 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
   // -----------------------------------------------------------------------------------------------
 
   /** Reducer to use in the test job. */
-  public static class MyReducer extends KijiBaseReducer<Text, Text, Text, Text> {
+  public static class MyReducer extends KijiReducer<Text, Text, Text, Text> {
     /** {@inheritDoc} */
     @Override
     public Class<?> getOutputKeyClass() {

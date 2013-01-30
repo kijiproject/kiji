@@ -42,7 +42,7 @@ import org.kiji.mapreduce.kvstore.KeyValueStoreReaderFactory;
 @ApiAudience.Public
 @Inheritance.Extensible
 public abstract class KijiTableReducer<K, V>
-    extends KijiBaseReducer<K, V, HFileKeyValue, NullWritable> {
+    extends KijiReducer<K, V, HFileKeyValue, NullWritable> {
   private static final Logger LOG = LoggerFactory.getLogger(KijiTableReducer.class);
 
   /** Factory that manages creation of readers for KeyValueStores. */

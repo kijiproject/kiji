@@ -70,6 +70,20 @@ import org.kiji.mapreduce.kvstore.KeyValueStoreClient;
 public abstract class KijiBulkImporter<K, V>
     implements Configurable, KeyValueStoreClient {
 
+  /**
+   * Loads a KijiBulkImporter class by name.
+   *
+   * @param className Fully qualified name of the class to load.
+   * @return the loaded class.
+   * @throws ClassNotFoundException if the class is not found.
+   * @throws ClassCastException if the class is not a KijiBulkImporter.
+   */
+  @SuppressWarnings("rawtypes")
+  public static Class<? extends KijiBulkImporter> forName(String className)
+      throws ClassNotFoundException {
+    return Class.forName(className).asSubclass(KijiBulkImporter.class);
+  }
+
   /** The Configuration of this producer. */
   private Configuration mConf;
 

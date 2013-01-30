@@ -19,24 +19,36 @@
 
 package org.kiji.mapreduce;
 
+import org.apache.hadoop.mapreduce.Mapper;
+
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.Inheritance;
 
-/** Base interface for all mappers used by Kiji. */
+/**
+ * Base class for Kiji mappers.
+ *
+ * @param <INKEY> The type of the input key to the mapper.
+ * @param <INVALUE> The type of the input value to the mapper.
+ * @param <OUTKEY> The type of the output key from the mapper.
+ * @param <OUTVALUE> The type of the output value from the mapper.
+ */
 @ApiAudience.Public
 @Inheritance.Extensible
-public interface KijiMapper {
-  /**
-   * Gets the type of the output keys from the mapper.
-   *
-   * @return The Java class of the map output keys.
-   */
-  Class<?> getOutputKeyClass();
+public abstract class KijiMapper<INKEY, INVALUE, OUTKEY, OUTVALUE>
+    extends Mapper<INKEY, INVALUE, OUTKEY, OUTVALUE>
+    implements KVOutputJob {
 
   /**
-   * Gets the type of the output values from the mapper.
+   * Loads a KijiMapper class by name.
    *
-   * @return The Java class of the map output values.
+   * @param className Fully qualified name of the class to load.
+   * @return the loaded class.
+   * @throws ClassNotFoundException if the class is not found.
+   * @throws ClassCastException if the class is not a KijiMapper.
    */
-  Class<?> getOutputValueClass();
+  @SuppressWarnings("rawtypes")
+  public static Class<? extends KijiMapper> forName(String className)
+      throws ClassNotFoundException {
+    return Class.forName(className).asSubclass(KijiMapper.class);
+  }
 }

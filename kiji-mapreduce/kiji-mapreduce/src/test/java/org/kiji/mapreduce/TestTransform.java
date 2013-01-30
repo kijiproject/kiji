@@ -28,7 +28,6 @@ import com.google.common.base.Preconditions;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.mapreduce.Mapper;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -61,8 +60,7 @@ public class TestTransform {
    * org/kiji/mapreduce/layout/test.json
    */
   public static class ExampleMapper
-      extends Mapper<EntityId, KijiRowData, HFileKeyValue, NullWritable>
-      implements KijiMapper {
+      extends KijiMapper<EntityId, KijiRowData, HFileKeyValue, NullWritable> {
 
     private KijiTableContext mTableContext;
 
@@ -114,7 +112,7 @@ public class TestTransform {
   private KijiTableReader mReader;
 
   @Before
-  public void setupEnvironment() throws Exception {
+  public void setUp() throws Exception {
     // Get the test table layouts.
     final KijiTableLayout layout =
         new KijiTableLayout(KijiMRTestLayouts.getTestLayout(), null);
@@ -138,7 +136,7 @@ public class TestTransform {
   }
 
   @After
-  public void cleanupEnvironment() throws IOException {
+  public void tearDown() throws Exception {
     IOUtils.closeQuietly(mReader);
     IOUtils.closeQuietly(mTable);
     mKiji.release();
@@ -160,18 +158,20 @@ public class TestTransform {
     assertTrue(job.run());
 
     // Validate the output table content:
-    final KijiRowScanner scanner = mReader.getScanner(
-        new KijiDataRequest().addColumn(new Column("info")));
-    for (KijiRowData row : scanner) {
-      final EntityId eid = row.getEntityId();
-      final String userId = Bytes.toString(eid.getKijiRowKey());
-      LOG.info("Row: {}", userId);
-      if (!userId.startsWith("generated row for ")) {
-        assertEquals(userId, String.format("%s %s",
-            row.getMostRecentValue("info", "first_name"),
-            row.getMostRecentValue("info", "last_name")));
+    {
+      final KijiRowScanner scanner = mTable.openTableReader().getScanner(
+          new KijiDataRequest().addColumn(new Column("info")));
+      for (KijiRowData row : scanner) {
+        final EntityId eid = row.getEntityId();
+        final String userId = Bytes.toString(eid.getKijiRowKey());
+        LOG.info("Row: {}", userId);
+        if (!userId.startsWith("generated row for ")) {
+          assertEquals(userId, String.format("%s %s",
+              row.getMostRecentValue("info", "first_name"),
+              row.getMostRecentValue("info", "last_name")));
+        }
       }
+      scanner.close();
     }
-    scanner.close();
   }
 }

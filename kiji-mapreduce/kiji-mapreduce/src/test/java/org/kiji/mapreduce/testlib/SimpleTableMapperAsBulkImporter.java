@@ -49,7 +49,6 @@ import org.kiji.schema.KijiURI;
 public final class SimpleTableMapperAsBulkImporter
     extends KijiBulkImporter<EntityId, KijiRowData> {
 
-
   /** {@inheritDoc} */
   @Override
   public void produce(EntityId eid, KijiRowData row, KijiTableContext context) throws IOException {
