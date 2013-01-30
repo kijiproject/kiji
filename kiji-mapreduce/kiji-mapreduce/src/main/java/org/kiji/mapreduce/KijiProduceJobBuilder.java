@@ -30,6 +30,7 @@ import org.apache.hadoop.mapreduce.lib.map.KijiMultithreadedMapper;
 import org.apache.hadoop.util.ReflectionUtils;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.mapper.ProduceMapper;
 import org.kiji.mapreduce.output.KijiTableMapReduceJobOutput;
 import org.kiji.mapreduce.reducer.IdentityReducer;

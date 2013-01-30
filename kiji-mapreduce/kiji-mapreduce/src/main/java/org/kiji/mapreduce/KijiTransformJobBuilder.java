@@ -30,6 +30,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.mapreduce.kvstore.KeyValueStore;
+import org.kiji.mapreduce.kvstore.KeyValueStoreClient;
 import org.kiji.schema.KijiConfiguration;
 
 /** Builds a job that runs a MapReduce in Hadoop. */

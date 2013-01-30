@@ -45,7 +45,10 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.Inheritance;
-import org.kiji.mapreduce.kvstore.XmlKeyValueStoreParser;
+import org.kiji.mapreduce.kvstore.KeyValueStore;
+import org.kiji.mapreduce.kvstore.impl.KeyValueStoreConfigSerializer;
+import org.kiji.mapreduce.kvstore.impl.KeyValueStoreConfigValidator;
+import org.kiji.mapreduce.kvstore.impl.XmlKeyValueStoreParser;
 import org.kiji.mapreduce.util.AvroMapReduce;
 import org.kiji.mapreduce.util.Jars;
 import org.kiji.schema.Kiji;
@@ -189,7 +192,7 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder> {
    */
   @SuppressWarnings("unchecked")
   public T withStoreBindings(InputStream inputSpec) throws IOException {
-    XmlKeyValueStoreParser parser = new XmlKeyValueStoreParser();
+    XmlKeyValueStoreParser parser = XmlKeyValueStoreParser.get();
     Map<String, KeyValueStore<?, ?>> newStores = parser.loadStoresFromXml(inputSpec);
     mergeStores(mBoundStores, newStores);
     return (T) this;
@@ -465,8 +468,10 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder> {
    *     may include, e.g., the case where a store is required but not defined.
    */
   protected void configureStores(Job job) throws IOException {
-    KeyValueStore.bindAndValidateRequiredStores(getRequiredStores(), mBoundStores);
-    KeyValueStore.addStoreMapToConfiguration(mBoundStores, job.getConfiguration());
+    KeyValueStoreConfigValidator.get().bindAndValidateRequiredStores(
+        getRequiredStores(), mBoundStores);
+    KeyValueStoreConfigSerializer.get().addStoreMapToConfiguration(
+        mBoundStores, job.getConfiguration());
   }
 
   /**

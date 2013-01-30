@@ -3,7 +3,7 @@
     <configuration>
       <property>
         <name>paths</name>
-        <value>/user/aaron/foo.seq</value>
+        <value>/tmp/foo.seq</value>
       </property>
     </configuration>
   </store>

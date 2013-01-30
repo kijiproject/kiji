@@ -17,36 +17,75 @@
  * limitations under the License.
  */
 
-package org.kiji.mapreduce.context;
+package org.kiji.mapreduce.kvstore;
+
+import java.util.Map.Entry;
 
 import org.apache.hadoop.conf.Configuration;
 
 import org.kiji.annotations.ApiAudience;
-import org.kiji.annotations.Inheritance;
 
 /**
- * <p>A Configuration backed by a namespace in a parent
- * {@link org.apache.hadoop.conf.Configuration}.</p>
- *
- * <p><code>setFoo("my-var", "my-val")</code> is equivalent to calling
- * <code>getDelegate().setFoo(getNamespace() + "my-var", "my-val")</code></p>.
+ * Used to serialize KeyValueStore information into a unique namespace
+ * inside a Configuration object. All conf keys written to this object (e.g., "foo")
+ * are prefixed by a namespace ("ns") specific to the particular key-value store
+ * instance (e.g., "ns.foo").
  */
-@ApiAudience.Private
-@Inheritance.Sealed
-public class NamespaceConfiguration {
+@ApiAudience.Framework
+public final class KeyValueStoreConfiguration {
+
   /** The parent Configuration to write to. */
   private final Configuration mDelegate;
   /** The namespace to write in. */
   private final String mNamespace;
 
   /**
-   * Constructs a new NamespaceConfiguration that will read and write
-   * values to the parent Configuration, under the specified namespace.
+   * KeyValueStore definitions are serialized to the Configuration as a set of
+   * keys under the "kiji.kvstores.[i]" namespace.
+   */
+  public static final String KEY_VALUE_STORE_NAMESPACE = "kiji.job.kvstores.";
+
+  /**
+   * Factory method to wrap a Configuration in a KeyValueStoreConfiguration.
    *
-   * @param parent The Configuration to back this NamespaceConfiguration.
+   * <p>The resulting KeyValueStoreConfiguration will have all key-value pairs that the
+   * parent does. The resulting KeyValueStoreConfiguration will write to the "0"'th
+   * KeyValueStore entry in the "kiji.job.kvstores" namespace (e.g., calling
+   * <code>set("foo", ...)</code> on the resulting namespace will set key
+   * <tt>kiji.job.kvstores.0.foo</tt> within the backing Configuration.</p>
+   *
+   * @param conf the Configuration to wrap in a KeyValueStoreConfiguration.
+   * @return A new KeyValueStoreConfiguration that is configured to write to
+   *     a namespace within the supplied Configuration.
+   */
+  public static KeyValueStoreConfiguration fromConf(Configuration conf) {
+    KeyValueStoreConfiguration theConf = new KeyValueStoreConfiguration(
+        new Configuration(false), 0);
+    for (Entry<String, String> e : conf) {
+      theConf.set(e.getKey(), e.getValue());
+    }
+    return theConf;
+  }
+
+  /**
+   * Creates a KeyValueStoreConfiguration that writes to the <code>storeIndex</code>th
+   * KeyValueStore namespace.
+   *
+   * @param parent The parent Configuration to back data.
+   * @param storeIndex The namespace index to write to.
+   */
+  public KeyValueStoreConfiguration(Configuration parent, int storeIndex) {
+    this(parent, KEY_VALUE_STORE_NAMESPACE + storeIndex);
+  }
+
+  /**
+   * Constructs a new KeyValueStoreConfiguration that will read and write
+   * values to the parent Configuration, under an arbitrary namespace.
+   *
+   * @param parent The Configuration to back this KeyValueStoreConfiguration.
    * @param namespace The namespace to write to.
    */
-  public NamespaceConfiguration(Configuration parent, String namespace) {
+  public KeyValueStoreConfiguration(Configuration parent, String namespace) {
     if (null == parent || null == namespace) {
       throw new IllegalArgumentException("Parent configuration and namespace must be non-null.");
     }
@@ -55,7 +94,7 @@ public class NamespaceConfiguration {
   }
 
   /**
-   * Returns the parent Configuration that backs this NamespaceConfiguration.
+   * Returns the parent Configuration that backs this KeyValueStoreConfiguration.
    *
    * @return The parent Configuration.
    */
@@ -64,7 +103,7 @@ public class NamespaceConfiguration {
   }
 
   /**
-   * Returns the namespace that this NamespaceConfiguration works in.
+   * Returns the namespace that this KeyValueStoreConfiguration works in.
    *
    * @return The namespace.
    */
@@ -284,12 +323,14 @@ public class NamespaceConfiguration {
   }
 
   /**
-   * Returns the prefix for all keys stored in this NamespaceConfiguration.
+   * Returns the specified name, prepended with the namespace prefix for all keys
+   * stored in this KeyValueStoreConfiguration.
    *
    * @param name The String to prefix with the namespace.
-   * @return The prefix for all keys stored in this NamespaceConfiguration.
+   * @return The true key to write into the underlying Configuration; the namespace
+   *     concatenated with a "." character and the specified name.
    */
-  protected String prefix(String name) {
+  private String prefix(String name) {
     return getNamespace() + "." + name;
   }
 }

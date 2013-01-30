@@ -17,15 +17,20 @@
  * limitations under the License.
  */
 
-package org.kiji.mapreduce;
+package org.kiji.mapreduce.kvstore;
 
 import java.io.Closeable;
 import java.io.IOException;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.Inheritance;
 
 /**
- * Allows users to read from a KeyValueStore opened in a producer.
+ * Allows users to read from a KeyValueStore.
+ *
+ * <p>A KeyValueStoreReader is created and configured by {@link
+ * org.kiji.mapreduce.kvstore.KeyValueStore#open()}. From there, it performs the required
+ * I/O or computational operations required to retrieve values by key.</p>
  *
  * <p>By default, this data is presented to you as a read-only, non-iterable map.
  * Only get() requests for an explicit key are supported by default, though some
@@ -36,7 +41,7 @@ import org.kiji.annotations.ApiAudience;
  * you should call the close() method when you are finished using this KeyValueStoreReader.
  * </p>
  *
- * <p>KeyValueStoreReader implementations may throw IOException or InterruptedException
+ * <p>KeyValueStoreReader implementations may throw IOException
  * from their constructor or other initialization routines called by KeyValueStore.open()
  * when attempting to connect to underlying resources.</p>
  *
@@ -44,7 +49,8 @@ import org.kiji.annotations.ApiAudience;
  * @param <V> the type associated with values in this store.
  */
 @ApiAudience.Public
-public abstract class KeyValueStoreReader<K, V> implements Closeable {
+@Inheritance.Extensible
+public interface KeyValueStoreReader<K, V> extends Closeable {
 
   /**
    * Looks up the specified key in the KeyValueStore and returns the associated
@@ -55,10 +61,8 @@ public abstract class KeyValueStoreReader<K, V> implements Closeable {
    * @return the value associated with 'key', or null if no such value is available.
    * @throws IOException if there is an IO error communicating with the underlying
    *     storage medium for the KeyValueStore.
-   * @throws InterruptedException if accessing the underlying storage medium was
-   *     interrupted.
    */
-  public abstract V get(K key) throws IOException, InterruptedException;
+  V get(K key) throws IOException;
 
   /**
    * Determines if the specified key exists in the KeyValueStore.
@@ -67,22 +71,9 @@ public abstract class KeyValueStoreReader<K, V> implements Closeable {
    * @return true if the key is present in the KeyValueStore.
    * @throws IOException if there is an IO error communicating with the underlying
    *     storage medium for the KeyValueStore.
-   * @throws InterruptedException if accessing the underlying storage medium was
-   *     interrupted.
    */
-  public abstract boolean containsKey(K key) throws IOException, InterruptedException;
-
-  /** {@inheritDoc} */
-  @Override
-  public void close() throws IOException {
-  }
+  boolean containsKey(K key) throws IOException;
 
   /** @return true if the reader is open; false if close() has already been called. */
-  public abstract boolean isOpen();
-
-  @Override
-  protected void finalize() throws Throwable {
-    close();
-    super.finalize();
-  }
+  boolean isOpen();
 }

@@ -28,6 +28,8 @@ import org.apache.hadoop.conf.Configuration;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.Inheritance;
+import org.kiji.mapreduce.kvstore.KeyValueStore;
+import org.kiji.mapreduce.kvstore.KeyValueStoreClient;
 
 /**
  * <p>Base class for all Kiji bulk importers.  Subclasses of KijiBulkImporter can be

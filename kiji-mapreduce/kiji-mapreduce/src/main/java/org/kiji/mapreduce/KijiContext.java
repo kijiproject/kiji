@@ -25,6 +25,7 @@ import java.io.IOException;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.Inheritance;
+import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
 
 /** Interface for contexts passed to Kiji MapReduce methods. */
 @ApiAudience.Public

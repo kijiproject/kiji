@@ -17,23 +17,33 @@
  * limitations under the License.
  */
 
-package org.kiji.mapreduce;
+package org.kiji.mapreduce.kvstore;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.util.Arrays;
 
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Test;
 
-import org.kiji.mapreduce.context.NamespaceConfiguration;
+public class TestKeyValueStoreConfiguration {
+  @Test
+  public void testCopyFromConfiguration() {
+    Configuration conf = new Configuration(false);
+    conf.set("foo", "foo-value");
+    conf.setInt("bar", 123);
+    conf.setClass("qaz", String.class, Object.class);
 
-public class TestNamespaceConfiguration {
+    KeyValueStoreConfiguration kvStoreConf = KeyValueStoreConfiguration.fromConf(conf);
+    assertEquals("foo-value", kvStoreConf.get("foo"));
+    assertEquals(123, kvStoreConf.getInt("bar", 0));
+    assertEquals(String.class, kvStoreConf.getClass("qaz", null));
+  }
+
   @Test
   public void testStoreString() {
     Configuration parent = new Configuration(false);
-    NamespaceConfiguration isolated = new NamespaceConfiguration(parent, "the.namespace");
+    KeyValueStoreConfiguration isolated = new KeyValueStoreConfiguration(parent, "the.namespace");
     isolated.set("foo-key", "foo-value");
     assertEquals("foo-value", isolated.get("foo-key"));
 
@@ -45,7 +55,7 @@ public class TestNamespaceConfiguration {
   public void testStoreBoolean() {
     final boolean expected = true;
     Configuration parent = new Configuration(false);
-    NamespaceConfiguration isolated = new NamespaceConfiguration(parent, "the.namespace");
+    KeyValueStoreConfiguration isolated = new KeyValueStoreConfiguration(parent, "the.namespace");
     isolated.setBoolean("foo-key", expected);
     assertEquals(expected, isolated.getBoolean("foo-key", !expected));
 
@@ -56,7 +66,7 @@ public class TestNamespaceConfiguration {
   @Test
   public void testStoreClass() {
     Configuration parent = new Configuration(false);
-    NamespaceConfiguration isolated = new NamespaceConfiguration(parent, "the.namespace");
+    KeyValueStoreConfiguration isolated = new KeyValueStoreConfiguration(parent, "the.namespace");
     isolated.setClass("foo-key", String.class, Object.class);
     assertEquals(String.class, isolated.getClass("foo-key", null));
     assertEquals(String.class, isolated.getClass("foo-key", null, Object.class));
@@ -68,7 +78,7 @@ public class TestNamespaceConfiguration {
   @Test
   public void testStoreFloat() {
     Configuration parent = new Configuration(false);
-    NamespaceConfiguration isolated = new NamespaceConfiguration(parent, "the.namespace");
+    KeyValueStoreConfiguration isolated = new KeyValueStoreConfiguration(parent, "the.namespace");
     isolated.setFloat("foo-key", 3.14F);
     assertEquals(3.14F, isolated.getFloat("foo-key", 0.0F), 0.0F);
 
@@ -79,7 +89,7 @@ public class TestNamespaceConfiguration {
   @Test
   public void testStoreInt() {
     Configuration parent = new Configuration(false);
-    NamespaceConfiguration isolated = new NamespaceConfiguration(parent, "the.namespace");
+    KeyValueStoreConfiguration isolated = new KeyValueStoreConfiguration(parent, "the.namespace");
     isolated.setInt("foo-key", 123);
     assertEquals(123, isolated.getInt("foo-key", 0));
 
@@ -90,7 +100,7 @@ public class TestNamespaceConfiguration {
   @Test
   public void testStoreLong() {
     Configuration parent = new Configuration(false);
-    NamespaceConfiguration isolated = new NamespaceConfiguration(parent, "the.namespace");
+    KeyValueStoreConfiguration isolated = new KeyValueStoreConfiguration(parent, "the.namespace");
     isolated.setLong("foo-key", 12345L);
     assertEquals(12345L, isolated.getLong("foo-key", 0L));
 
@@ -101,7 +111,7 @@ public class TestNamespaceConfiguration {
   @Test
   public void testStoreStringArray() {
     Configuration parent = new Configuration(false);
-    NamespaceConfiguration isolated = new NamespaceConfiguration(parent, "the.namespace");
+    KeyValueStoreConfiguration isolated = new KeyValueStoreConfiguration(parent, "the.namespace");
     isolated.setStrings("foo-key", "first", "second", "third");
     assertTrue(Arrays.equals(new String[] {"first", "second", "third"},
         isolated.getStrings("foo-key")));

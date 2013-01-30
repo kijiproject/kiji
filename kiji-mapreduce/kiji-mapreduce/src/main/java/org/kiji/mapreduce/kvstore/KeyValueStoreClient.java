@@ -17,27 +17,29 @@
  * limitations under the License.
  */
 
-package org.kiji.mapreduce;
+package org.kiji.mapreduce.kvstore;
 
 import java.util.Map;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.Inheritance;
 
 /**
- * <p>KeyValueStoreClient defines a mapping between store names and their
+ * <p>A KeyValueStoreClient defines a mapping between store names and their
  * KeyValueStore implementations via the getRequiredStores() method.
  * When used in the Kiji framework, you may override these default implementations
  * at runtime with either MapReduceJobBuilder.withStore()
  * or MapReduceJobBuilder.withStoreBindingsFile().</p>
  *
- * <p>There is not currently a way to bind stores within Fresheners.
- * As a result, if you use a Producer in a Freshener, you will need to specify
- * implementations for each KeyValueStore in the getRequiredStores() method.</p>
- *
  * <p>How the KeyValueStores are surfaced to a KeyValueStoreClient is undefined.
- * Look to the implementing class for details on how these are surfaced.</p>
+ * Look to the implementing class for details on how these are surfaced; e.g., in the Context
+ * objects supplied as arguments to Producers and Gatherers. If you are
+ * implementing your own handler for data using MapReduce or other means "from scratch",
+ * you may want to use a {@link KeyValueStoreReaderFactory} to deserialize a set of
+ * KeyValueStores from a Configuration object.</p>
  */
 @ApiAudience.Public
+@Inheritance.Extensible
 public interface KeyValueStoreClient {
   /**
    * <p>Returns a mapping that specifies the names of all key-value stores that must be loaded
@@ -45,7 +47,7 @@ public interface KeyValueStoreClient {
    * used if the user does not specify alternate locations/implementations.
    * It is an error for any of these default implementations to be null.
    * If you want to defer KeyValueStore definition to runtime, bind a name
-   * to the {@link org.kiji.mapreduce.kvstore.UnconfiguredKeyValueStore} instead.<p>
+   * to the {@link org.kiji.mapreduce.kvstore.lib.UnconfiguredKeyValueStore} instead.<p>
    *
    * @return a map from store names to default KeyValueStore implementations.
    */

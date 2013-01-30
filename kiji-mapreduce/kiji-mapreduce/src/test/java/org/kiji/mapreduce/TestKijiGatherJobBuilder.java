@@ -35,9 +35,12 @@ import org.apache.hadoop.mapreduce.Job;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.kiji.mapreduce.kvstore.EmptyKeyValueStore;
+import org.kiji.mapreduce.kvstore.KeyValueStore;
+import org.kiji.mapreduce.kvstore.KeyValueStoreConfiguration;
 import org.kiji.mapreduce.kvstore.RequiredStores;
-import org.kiji.mapreduce.kvstore.UnconfiguredKeyValueStore;
+import org.kiji.mapreduce.kvstore.impl.KeyValueStoreConfigSerializer;
+import org.kiji.mapreduce.kvstore.lib.EmptyKeyValueStore;
+import org.kiji.mapreduce.kvstore.lib.UnconfiguredKeyValueStore;
 import org.kiji.mapreduce.output.TextMapReduceJobOutput;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiClientTest;
@@ -81,8 +84,7 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
   public static class UnconfiguredKVGatherer extends MyGatherer {
     @Override
     public Map<String, KeyValueStore<?, ?>> getRequiredStores() {
-      return RequiredStores.just("foostore",
-          new UnconfiguredKeyValueStore<String, Object>());
+      return RequiredStores.just("foostore", UnconfiguredKeyValueStore.builder().build());
     }
   }
 
@@ -202,7 +204,7 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
         .withCombiner(MyCombiner.class)
         .withReducer(MyReducer.class)
         .withOutput(new TextMapReduceJobOutput(new Path("mypath"), 10))
-        .withStore("foostore", new EmptyKeyValueStore<String, Object>())
+        .withStore("foostore", EmptyKeyValueStore.builder().build())
         .build();
 
     verify(kiji);
@@ -211,10 +213,12 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
     // Verify that the MR Job was configured correctly.
     Job job = gatherJob.getHadoopJob();
     Configuration confOut = job.getConfiguration();
-    assertEquals(1, confOut.getInt(KeyValueStore.CONF_KEY_VALUE_STORE_COUNT, 0));
+    assertEquals(1, confOut.getInt(KeyValueStoreConfigSerializer.CONF_KEY_VALUE_STORE_COUNT, 0));
     assertEquals(EmptyKeyValueStore.class.getName(),
-        confOut.get(KeyValueStore.CONF_KEY_VALUE_BASE + "0.class"));
+        confOut.get(KeyValueStoreConfiguration.KEY_VALUE_STORE_NAMESPACE + "0."
+        + KeyValueStoreConfigSerializer.CONF_CLASS));
     assertEquals("foostore",
-        confOut.get(KeyValueStore.CONF_KEY_VALUE_BASE + "0.name"));
+        confOut.get(KeyValueStoreConfiguration.KEY_VALUE_STORE_NAMESPACE + "0."
+        + KeyValueStoreConfigSerializer.CONF_NAME));
   }
 }

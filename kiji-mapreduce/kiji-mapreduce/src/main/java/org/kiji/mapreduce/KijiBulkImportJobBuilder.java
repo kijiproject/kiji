@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.mapper.BulkImportMapper;
 import org.kiji.mapreduce.output.KijiTableMapReduceJobOutput;
 import org.kiji.mapreduce.reducer.IdentityReducer;

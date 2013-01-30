@@ -17,13 +17,12 @@
  * limitations under the License.
  */
 
-package org.kiji.mapreduce.kvstore;
+package org.kiji.mapreduce.kvstore.lib;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -35,10 +34,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import org.kiji.mapreduce.KeyValueStoreReader;
+import org.kiji.mapreduce.kvstore.KeyValueStore;
+import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
 
-/** Test that the SeqFileKeyValueArrayStore implementation works. */
-public class TestSeqFileKeyValueArrayStore {
+/** Test that the SeqFileKeyValueStore implementation works. */
+public class TestSeqFileKeyValueStore {
 
   // Disable checkstyle for this variable.  It must be public to work with JUnit @Rule.
   // CSOFF: VisibilityModifierCheck
@@ -61,7 +61,9 @@ public class TestSeqFileKeyValueArrayStore {
     try {
       writer.append(new Text("one"), new IntWritable(1));
       writer.append(new Text("two"), new IntWritable(2));
-      writer.append(new Text("two"), new IntWritable(3));
+      writer.append(new Text("three"), new IntWritable(3));
+
+      // Redundant key with a different value. This should have no effect on the KVStore.
       writer.append(new Text("two"), new IntWritable(42));
     } finally {
       writer.close();
@@ -73,42 +75,19 @@ public class TestSeqFileKeyValueArrayStore {
   @Test
   public void testSeqFileKVStore() throws IOException, InterruptedException {
     Path p = writeSeqFile();
-    SeqFileKeyValueArrayStore<Text, IntWritable> store =
-        new SeqFileKeyValueArrayStore<Text, IntWritable>(
-        new SeqFileKeyValueArrayStore.Options().withInputPath(p));
-    KeyValueStoreReader<Text, List<IntWritable>> reader = store.open();
+    KeyValueStore<Text, IntWritable> store = SeqFileKeyValueStore.builder()
+        .withInputPath(p).build();
+    KeyValueStoreReader<Text, IntWritable> reader = store.open();
 
     assertTrue(reader.containsKey(new Text("one")));
-    assertEquals(1, reader.get(new Text("one")).size());
-    assertEquals(new IntWritable(1), reader.get(new Text("one")).get(0));
+    assertEquals(new IntWritable(1), reader.get(new Text("one")));
 
     // This uses the earlier definition in the file, not the later one.
     assertTrue(reader.containsKey(new Text("two")));
-    assertEquals(3, reader.get(new Text("two")).size());
-    assertEquals(new IntWritable(2), reader.get(new Text("two")).get(0));
-    assertEquals(new IntWritable(3), reader.get(new Text("two")).get(1));
-    assertEquals(new IntWritable(42), reader.get(new Text("two")).get(2));
+    assertEquals(new IntWritable(2), reader.get(new Text("two")));
 
-    reader.close();
-  }
-
-  @Test
-  public void testSeqFileKVStoreCapped() throws IOException, InterruptedException {
-    Path p = writeSeqFile();
-    SeqFileKeyValueArrayStore<Text, IntWritable> store =
-        new SeqFileKeyValueArrayStore<Text, IntWritable>(
-        new SeqFileKeyValueArrayStore.Options().withInputPath(p).withMaxValues(2));
-    KeyValueStoreReader<Text, List<IntWritable>> reader = store.open();
-
-    assertTrue(reader.containsKey(new Text("one")));
-    assertEquals(1, reader.get(new Text("one")).size());
-    assertEquals(new IntWritable(1), reader.get(new Text("one")).get(0));
-
-    // This uses the earlier definition in the file, not the later one.
-    assertTrue(reader.containsKey(new Text("two")));
-    assertEquals(2, reader.get(new Text("two")).size());
-    assertEquals(new IntWritable(2), reader.get(new Text("two")).get(0));
-    assertEquals(new IntWritable(3), reader.get(new Text("two")).get(1));
+    assertTrue(reader.containsKey(new Text("three")));
+    assertEquals(new IntWritable(3), reader.get(new Text("three")));
 
     reader.close();
   }

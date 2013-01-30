@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.Inheritance;
+import org.kiji.mapreduce.kvstore.KeyValueStoreReaderFactory;
 
 /**
  * Base class for reducers that emit to a Kiji table.
@@ -60,7 +61,7 @@ public abstract class KijiTableReducer<K, V>
     mTableContext = KijiTableContextFactory.create(hadoopContext);
 
     // Create any KeyValueStore instances necessary.
-    mKeyValueStores = new KeyValueStoreReaderFactory(conf);
+    mKeyValueStores = KeyValueStoreReaderFactory.create(conf);
   }
 
   /** {@inheritDoc} */
@@ -78,6 +79,7 @@ public abstract class KijiTableReducer<K, V>
     Preconditions.checkState(mTableContext != null);
     mTableContext.close();
     mTableContext = null;
+    mKeyValueStores.close();
     super.cleanup(hadoopContext);
   }
 

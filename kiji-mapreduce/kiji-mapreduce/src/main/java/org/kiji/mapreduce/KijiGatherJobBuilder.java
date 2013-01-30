@@ -27,6 +27,8 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.util.ReflectionUtils;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.mapreduce.kvstore.KeyValueStore;
+import org.kiji.mapreduce.kvstore.KeyValueStoreClient;
 import org.kiji.mapreduce.mapper.GatherMapper;
 import org.kiji.schema.KijiDataRequest;
 

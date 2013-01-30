@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.mapreduce.kvstore;
+package org.kiji.mapreduce.kvstore.lib;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -41,7 +41,7 @@ import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.kiji.mapreduce.KeyValueStoreReader;
+import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
 import org.kiji.schema.avro.Node;
 
 public class TestAvroRecordKeyValueStore {
@@ -61,13 +61,11 @@ public class TestAvroRecordKeyValueStore {
   public void testSpecificAvroRecordKeyValueStore() throws IOException, InterruptedException {
     Path avroFilePath
         = new Path(getClass().getClassLoader().getResource(NODE_AVRO_FILE).toString());
-    AvroRecordKeyValueStore<CharSequence, Node> store
-        = new AvroRecordKeyValueStore<CharSequence, Node>(
-            new AvroRecordKeyValueStore.Options()
+    AvroRecordKeyValueStore<CharSequence, Node> store = AvroRecordKeyValueStore.builder()
             .withConfiguration(new Configuration())
             .withInputPath(avroFilePath)
             .withReaderSchema(Node.SCHEMA$)
-            .withKeyFieldName("label"));
+            .withKeyFieldName("label").build();
     KeyValueStoreReader<CharSequence, Node> reader = store.open();
 
     assertTrue(reader.containsKey("foo"));
@@ -166,13 +164,12 @@ public class TestAvroRecordKeyValueStore {
 
     // Open the store.
     Path avroFilePath = writeGenericRecordAvroFile();
-    AvroRecordKeyValueStore<Integer, GenericRecord> store
-        = new AvroRecordKeyValueStore<Integer, GenericRecord>(
-            new AvroRecordKeyValueStore.Options()
-            .withConfiguration(new Configuration())
-            .withInputPath(avroFilePath)
-            .withReaderSchema(readerSchema)
-            .withKeyFieldName("key"));
+    AvroRecordKeyValueStore<Integer, GenericRecord> store =
+        AvroRecordKeyValueStore.builder()
+        .withConfiguration(new Configuration())
+        .withInputPath(avroFilePath)
+        .withReaderSchema(readerSchema)
+        .withKeyFieldName("key").build();
     KeyValueStoreReader<Integer, GenericRecord> reader = store.open();
 
     assertTrue(reader.containsKey(1));
@@ -187,12 +184,11 @@ public class TestAvroRecordKeyValueStore {
   public void testAvroRecordKVStoreWithoutSchema() throws IOException, InterruptedException {
     // Open the store.
     Path avroFilePath = writeGenericRecordAvroFile();
-    AvroRecordKeyValueStore<Integer, GenericRecord> store
-        = new AvroRecordKeyValueStore<Integer, GenericRecord>(
-            new AvroRecordKeyValueStore.Options()
-            .withConfiguration(new Configuration())
-            .withInputPath(avroFilePath)
-            .withKeyFieldName("key"));
+    AvroRecordKeyValueStore<Integer, GenericRecord> store =
+        AvroRecordKeyValueStore.builder()
+        .withConfiguration(new Configuration())
+        .withInputPath(avroFilePath)
+        .withKeyFieldName("key").build();
     KeyValueStoreReader<Integer, GenericRecord> reader = store.open();
 
     assertTrue(reader.containsKey(1));
@@ -207,13 +203,12 @@ public class TestAvroRecordKeyValueStore {
   public void testMultipleInputFiles() throws IOException, InterruptedException {
     Path avroFilePath = writeGenericRecordAvroFile();
     Path secondPath = writeSecondAvroFile();
-    AvroRecordKeyValueStore<Integer, GenericRecord> store
-        = new AvroRecordKeyValueStore<Integer, GenericRecord>(
-            new AvroRecordKeyValueStore.Options()
-            .withConfiguration(new Configuration())
-            .withInputPath(avroFilePath)
-            .withInputPath(secondPath)
-            .withKeyFieldName("key"));
+    AvroRecordKeyValueStore<Integer, GenericRecord> store =
+        AvroRecordKeyValueStore.builder()
+        .withConfiguration(new Configuration())
+        .withInputPath(avroFilePath)
+        .withInputPath(secondPath)
+        .withKeyFieldName("key").build();
     KeyValueStoreReader<Integer, GenericRecord> reader = store.open();
 
     assertTrue(reader.containsKey(1));
@@ -235,12 +230,11 @@ public class TestAvroRecordKeyValueStore {
     writeSecondAvroFile();
     Path temporaryPath = LocalFileSystem.get(new Configuration()).makeQualified(
         new Path(mTempDir.getRoot().getAbsolutePath()));
-    AvroRecordKeyValueStore<Integer, GenericRecord> store
-        = new AvroRecordKeyValueStore<Integer, GenericRecord>(
-            new AvroRecordKeyValueStore.Options()
-            .withConfiguration(new Configuration())
-            .withInputPath(temporaryPath)
-            .withKeyFieldName("key"));
+    AvroRecordKeyValueStore<Integer, GenericRecord> store =
+        AvroRecordKeyValueStore.builder()
+        .withConfiguration(new Configuration())
+        .withInputPath(temporaryPath)
+        .withKeyFieldName("key").build();
     KeyValueStoreReader<Integer, GenericRecord> reader = store.open();
 
     // Check that keys from both files map to their respective values.
@@ -268,12 +262,11 @@ public class TestAvroRecordKeyValueStore {
         new Path(mTempDir.getRoot().getAbsolutePath()));
     temporaryPath = new Path(temporaryPath.toString() + "/*.avro");
     LOG.info("Using input glob: " + temporaryPath);
-    AvroRecordKeyValueStore<Integer, GenericRecord> store
-        = new AvroRecordKeyValueStore<Integer, GenericRecord>(
-            new AvroRecordKeyValueStore.Options()
-            .withConfiguration(new Configuration())
-            .withInputPath(temporaryPath)
-            .withKeyFieldName("key"));
+    AvroRecordKeyValueStore<Integer, GenericRecord> store =
+        AvroRecordKeyValueStore.builder()
+        .withConfiguration(new Configuration())
+        .withInputPath(temporaryPath)
+        .withKeyFieldName("key").build();
     KeyValueStoreReader<Integer, GenericRecord> reader = store.open();
 
     // Check that keys from both files map to their respective values.

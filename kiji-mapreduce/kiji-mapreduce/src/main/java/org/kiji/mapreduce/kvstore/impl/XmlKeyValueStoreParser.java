@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.mapreduce.kvstore;
+package org.kiji.mapreduce.kvstore.impl;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -48,17 +48,34 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import org.kiji.annotations.ApiAudience;
-import org.kiji.mapreduce.KeyValueStore;
-import org.kiji.mapreduce.KeyValueStoreConfiguration;
+import org.kiji.mapreduce.kvstore.KeyValueStore;
+import org.kiji.mapreduce.kvstore.KeyValueStoreConfiguration;
+import org.kiji.mapreduce.kvstore.lib.TextFileKeyValueStore;
 
 /**
  * Utility that parses an XML file that specifies KeyValueStore implementations
  * to bind in an application.
  */
 @ApiAudience.Private
-public class XmlKeyValueStoreParser {
+public final class XmlKeyValueStoreParser {
   private static final Logger LOG = LoggerFactory.getLogger(
       XmlKeyValueStoreParser.class.getName());
+
+  /** Creates a new instance. */
+  private XmlKeyValueStoreParser() {
+  }
+
+  // Singleton instance.
+  private static final XmlKeyValueStoreParser INSTANCE = new XmlKeyValueStoreParser();
+
+  /**
+   * This method returns XmlKeyValueStoreParser instance.
+   *
+   * @return an XmlKeyValueStoreParser instance.
+   */
+  public static XmlKeyValueStoreParser get() {
+    return INSTANCE;
+  }
 
   /**
    * Given an InputStream pointing to an opened resource that specifies a set of KeyValueStores
@@ -121,7 +138,8 @@ public class XmlKeyValueStoreParser {
           // TODO(KIJI-364): Make this compatible with user-written kvstores that live
           // in the default package. (Maybe try instantiating them first?)
           if (!storeClassStr.contains(".")) {
-            storeClassStr = FileKeyValueStore.class.getPackage().getName()
+            // TODO: Make this a sane integration when these classes move to kiji-mr-lib
+            storeClassStr = TextFileKeyValueStore.class.getPackage().getName()
                 + "." + storeClassStr;
           }
 
@@ -138,11 +156,11 @@ public class XmlKeyValueStoreParser {
                 userStoreClass.asSubclass(KeyValueStore.class);
             LOG.info("Instantiating " + storeClass.getName() + " for store name " + storeName);
 
-            // Create the store instance, and then let it configure itself by
+            // Create the store instance, and then configure it by
             // parsing the <store> element.
-            KeyValueStore<?, ?> store = ReflectionUtils.newInstance(
-                storeClass, new Configuration());
-            store.configureFromXml(node, storeName);
+            KeyValueStore<?, ?> store = ReflectionUtils.newInstance(storeClass,
+                new Configuration());
+            configureFromXml(store, storeName, node);
             outMap.put(storeName, store);
           } catch (ClassNotFoundException cnfe) {
             throw new IOException("No such class: " + storeClassStr, cnfe);
@@ -162,6 +180,62 @@ public class XmlKeyValueStoreParser {
   }
 
   /**
+   * Allows a store to define a mechanism for reading arbitrary serialized data from an
+   * XML file specifying KeyValueStore definitions.
+   *
+   * <p>KeyValueStore definitions may be specified in an XML file applied by the user.
+   * Each store is defined in a &lt;store&gt; element. KeyValueStore implementations should
+   * expect the store element to contain a single child element called &lt;configuration&gt;.
+   * This method reads this child element
+   * as a KeyValueStoreConfiguration object, then initializes the argument KeyValueStore by passing
+   * this to initFromConf().</p>
+   *
+   * <p>If no &lt;configuration&gt; element is present, the KeyValueStore is initialized
+   * with an empty KeyValueStoreConfiguration.</p>
+   *
+   * @param store the store instance being configured.
+   * @param storeName the name being bound to this store instance.
+   * @param xmlNode the w3c DOM node representing the &lt;store&gt; element in the document.
+   * @throws IOException if there is an error parsing the XML document node.
+   */
+  private void configureFromXml(KeyValueStore<?, ?> store, String storeName, Node xmlNode)
+      throws IOException {
+    NodeList storeChildren = xmlNode.getChildNodes();
+    Node configurationNode = null;
+    int numRealChildren = 0;
+    for (int j = 0; j < storeChildren.getLength(); j++) {
+      Node storeChild = storeChildren.item(j);
+      if (storeChild.getNodeType() != Node.ELEMENT_NODE) {
+        continue;
+      } else {
+        numRealChildren++;
+        if (storeChild.getNodeName().equals("configuration")) {
+          configurationNode = storeChild;
+        }
+      }
+    }
+
+    if (numRealChildren > 1) {
+      // Don't recognize the XML schema here.
+      throw new IOException("Unrecognized XML schema for store " + storeName
+          + "; expected <configuration> element.");
+    } else if (numRealChildren == 0) {
+      assert null == configurationNode;
+      LOG.warn("No <configuration> supplied for store " + storeName);
+      store.initFromConf(KeyValueStoreConfiguration.fromConf(new Configuration(false)));
+    } else if (null == configurationNode) {
+      // Got a single child element, but it wasn't a <configuration>.
+      throw new IOException("Unrecognized XML schema for store " + storeName
+          + "; expected <configuration> element.");
+    } else {
+      assert numRealChildren == 1;
+      // Configure the store by parsing the <configuration> element.
+      KeyValueStoreConfiguration conf = parseConfiguration(configurationNode);
+      store.initFromConf(conf);
+    }
+  }
+
+  /**
    * Given a DOM Node object that represents a &lt;configuration&gt; block
    * within a &lt;store&gt; object, reformat this as an xml document that can be parsed
    * by {@link org.apache.hadoop.conf.Configuration}, and then return a
@@ -173,7 +247,7 @@ public class XmlKeyValueStoreParser {
    *     with this node.
    * @throws IOException if there's an error processing the XML data.
    */
-  public KeyValueStoreConfiguration parseConfiguration(Node configNode) throws IOException {
+  private KeyValueStoreConfiguration parseConfiguration(Node configNode) throws IOException {
     if (null == configNode) {
       return null;
     } else if (!configNode.getNodeName().equals("configuration")) {
@@ -237,7 +311,7 @@ public class XmlKeyValueStoreParser {
    * @param doc the target XML document.
    * @throws IOException if there is an error parsing the XML.
    */
-  private static void copyConfigNodes(Element dest, Node src, Document doc) throws IOException {
+  private void copyConfigNodes(Element dest, Node src, Document doc) throws IOException {
     assert null != dest;
     assert null != src;
 
@@ -269,7 +343,7 @@ public class XmlKeyValueStoreParser {
    * element KeyValueStore in a Configuration.
    * @throws IOException if there is an error parsing the input XML.
    */
-  private static Node copyPropertyNode(Node propertyNode, Document doc) throws IOException {
+  private Node copyPropertyNode(Node propertyNode, Document doc) throws IOException {
     Element out = doc.createElement("property");
 
     NodeList propChildren = propertyNode.getChildNodes();
@@ -300,7 +374,7 @@ public class XmlKeyValueStoreParser {
    * @return the string contents of the single text child element.
    * @throws IOException if the XML DOM under this element is not a single text node.
    */
-  private static String getChildText(Node elem) throws IOException {
+  private String getChildText(Node elem) throws IOException {
     assert elem.getNodeType() == Node.ELEMENT_NODE;
     NodeList children = elem.getChildNodes();
     if (children.getLength() != 1) {

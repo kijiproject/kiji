@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.mapreduce.kvstore;
+package org.kiji.mapreduce.kvstore.lib;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -34,7 +34,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import org.kiji.mapreduce.KeyValueStoreReader;
+import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
 
 /** Test that the TextFileKeyValueStore implementation works. */
 public class TestTextFileKeyValueStore {
@@ -98,8 +98,9 @@ public class TestTextFileKeyValueStore {
   @Test
   public void testBasicTextFile() throws IOException, InterruptedException {
     Path p = writeBasicTextFile();
-    TextFileKeyValueStore store = new TextFileKeyValueStore(
-        new TextFileKeyValueStore.Options().withInputPath(p));
+
+    TextFileKeyValueStore store = TextFileKeyValueStore.builder().withInputPath(p).build();
+
     KeyValueStoreReader<String, String> reader = store.open();
 
     assertTrue(reader.containsKey("a"));
@@ -130,8 +131,7 @@ public class TestTextFileKeyValueStore {
   public void testFileNoEndingNewline() throws IOException, InterruptedException {
     // Tests that a file that does not end with a newline still works just fine.
     Path p = writeFileWithoutNewline();
-    TextFileKeyValueStore store = new TextFileKeyValueStore(
-        new TextFileKeyValueStore.Options().withInputPath(p));
+    TextFileKeyValueStore store = TextFileKeyValueStore.builder().withInputPath(p).build();
     KeyValueStoreReader<String, String> reader = store.open();
 
     assertTrue(reader.containsKey("a"));

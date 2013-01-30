@@ -26,7 +26,6 @@ import static org.easymock.EasyMock.verify;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
@@ -43,7 +42,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.mapreduce.input.TextMapReduceJobInput;
-import org.kiji.mapreduce.kvstore.EmptyKeyValueStore;
+import org.kiji.mapreduce.kvstore.KeyValueStore;
+import org.kiji.mapreduce.kvstore.KeyValueStoreConfiguration;
+import org.kiji.mapreduce.kvstore.RequiredStores;
+import org.kiji.mapreduce.kvstore.impl.KeyValueStoreConfigSerializer;
+import org.kiji.mapreduce.kvstore.lib.EmptyKeyValueStore;
 import org.kiji.mapreduce.mapper.BulkImportMapper;
 import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
 import org.kiji.mapreduce.output.KijiHFileOutputFormat;
@@ -80,8 +83,7 @@ public class TestKijiBulkImportJobBuilder extends KijiClientTest {
     /** {@inheritDoc} */
     @Override
     public Map<String, KeyValueStore<?, ?>> getRequiredStores() {
-      return Collections.<String, KeyValueStore<?, ?>>singletonMap(
-          "foostore", new EmptyKeyValueStore<String, Object>());
+      return RequiredStores.just("foostore", EmptyKeyValueStore.get());
     }
   }
 
@@ -193,10 +195,12 @@ public class TestKijiBulkImportJobBuilder extends KijiClientTest {
 
     // KeyValueStore-specific checks here.
     Configuration confOut = job.getConfiguration();
-    assertEquals(1, confOut.getInt(KeyValueStore.CONF_KEY_VALUE_STORE_COUNT, 0));
+    assertEquals(1, confOut.getInt(KeyValueStoreConfigSerializer.CONF_KEY_VALUE_STORE_COUNT, 0));
     assertEquals(EmptyKeyValueStore.class.getName(),
-        confOut.get(KeyValueStore.CONF_KEY_VALUE_BASE + "0.class"));
+        confOut.get(KeyValueStoreConfiguration.KEY_VALUE_STORE_NAMESPACE + "0."
+        + KeyValueStoreConfigSerializer.CONF_CLASS));
     assertEquals("foostore",
-        confOut.get(KeyValueStore.CONF_KEY_VALUE_BASE + "0.name"));
+        confOut.get(KeyValueStoreConfiguration.KEY_VALUE_STORE_NAMESPACE + "0."
+        + KeyValueStoreConfigSerializer.CONF_NAME));
   }
 }

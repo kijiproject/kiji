@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.kiji.annotations.ApiAudience;
-import org.kiji.mapreduce.KeyValueStore;
 
 /**
  * Convenient methods for assembling maps from names to KeyValueStore
@@ -51,7 +50,9 @@ public final class RequiredStores {
   }
 
   /**
-   * @return an immutable empty mapping from names to store implementations.
+   * Returns an immutable, empty mapping from names to store implementations.
+   *
+   * @return an immutable, empty mapping from names to store implementations.
    */
   public static Map<String, KeyValueStore<?, ?>> none() {
     return Collections.emptyMap();
@@ -73,11 +74,12 @@ public final class RequiredStores {
 
 
   /**
-   * A Map from names to KeyValueStore entries.
+   * A Map from names to KeyValueStore entries, created by RequiredStores.with().
    *
    * <p>Includes a with() method that allows you to daisy-chain calls
    * to add multiple stores in a concise fashion.</p>
    */
+  @ApiAudience.Public
   public static final class StoreMap extends HashMap<String, KeyValueStore<?, ?>> {
     private static final long serialVersionUID = 1L;
 
@@ -98,7 +100,7 @@ public final class RequiredStores {
   }
 
   /**
-   * Creates a map from names to stores with an initial entry. Returns a map that
+   * Creates a map from names to stores with an initial entry. Returns a StoreMap that
    * can be populated with additional mappings.
    *
    * @param name the name of the single KeyValueStore required.

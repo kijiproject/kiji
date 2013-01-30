@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.mapreduce.kvstore;
+package org.kiji.mapreduce.kvstore.lib;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -37,7 +37,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import org.kiji.mapreduce.KeyValueStoreReader;
+import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
 
 public class TestAvroKVRecordKeyValueStore {
   // Disable checkstyle for this variable.  It must be public to work with JUnit @Rule.
@@ -96,12 +96,11 @@ public class TestAvroKVRecordKeyValueStore {
 
     // Open the store.
     Path avroFilePath = writeGenericRecordAvroFile();
-    AvroKVRecordKeyValueStore<Integer, CharSequence> store
-        = new AvroKVRecordKeyValueStore<Integer, CharSequence>(
-            new AvroKVRecordKeyValueStore.Options()
-            .withConfiguration(new Configuration())
-            .withInputPath(avroFilePath)
-            .withReaderSchema(readerSchema));
+    AvroKVRecordKeyValueStore<Integer, CharSequence> store =
+        AvroKVRecordKeyValueStore.builder()
+        .withConfiguration(new Configuration())
+        .withInputPath(avroFilePath)
+        .withReaderSchema(readerSchema).build();
     KeyValueStoreReader<Integer, CharSequence> reader = store.open();
 
     assertTrue(reader.containsKey(1));
@@ -116,11 +115,10 @@ public class TestAvroKVRecordKeyValueStore {
   public void testAvroKVRKVSWithoutSchema() throws IOException, InterruptedException {
     // Open the store.
     Path avroFilePath = writeGenericRecordAvroFile();
-    AvroKVRecordKeyValueStore<Integer, CharSequence> store
-        = new AvroKVRecordKeyValueStore<Integer, CharSequence>(
-            new AvroKVRecordKeyValueStore.Options()
-            .withConfiguration(new Configuration())
-            .withInputPath(avroFilePath));
+    AvroKVRecordKeyValueStore<Integer, CharSequence> store =
+        AvroKVRecordKeyValueStore.builder()
+        .withConfiguration(new Configuration())
+        .withInputPath(avroFilePath).build();
     KeyValueStoreReader<Integer, CharSequence> reader = store.open();
 
     assertTrue(reader.containsKey(1));

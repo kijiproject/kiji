@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.mapreduce.kvstore;
+package org.kiji.mapreduce.kvstore.lib;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -25,7 +25,6 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
 
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileWriter;
@@ -38,9 +37,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import org.kiji.mapreduce.KeyValueStoreReader;
+import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
 
-public class TestAvroKVArrayRecordKeyValueStore {
+public class TestAvroAllKVRecordKeyValueStore {
   // Disable checkstyle for this variable.  It must be public to work with JUnit @Rule.
   // CSOFF: VisibilityModifierCheck
   @Rule
@@ -81,13 +80,6 @@ public class TestAvroKVArrayRecordKeyValueStore {
     record.put("value", "deux");
     fileWriter.append(record);
 
-    // Write a duplicate record with the same key field value.
-    record = new GenericData.Record(writerSchema);
-    record.put("key", 2);
-    record.put("blah", "blah");
-    record.put("value", "deuce");
-    fileWriter.append(record);
-
     // Close it and return the path.
     fileWriter.close();
     return new Path(file.getPath());
@@ -104,54 +96,16 @@ public class TestAvroKVArrayRecordKeyValueStore {
 
     // Open the store.
     Path avroFilePath = writeGenericRecordAvroFile();
-    AvroKVRecordKeyValueArrayStore<Integer, CharSequence> store
-        = new AvroKVRecordKeyValueArrayStore<Integer, CharSequence>(
-            new AvroKVRecordKeyValueArrayStore.Options()
+    AvroKVRecordKeyValueStore<Integer, CharSequence> store =
+        AvroKVRecordKeyValueStore.builder()
             .withConfiguration(new Configuration())
             .withInputPath(avroFilePath)
-            .withReaderSchema(readerSchema));
-    KeyValueStoreReader<Integer, List<CharSequence>> reader = store.open();
+            .withReaderSchema(readerSchema).build();
+    KeyValueStoreReader<Integer, CharSequence> reader = store.open();
 
     assertTrue(reader.containsKey(1));
-    List<CharSequence> values = reader.get(1);
-    assertEquals(1, values.size());
-    assertEquals("one", values.get(0).toString());
+    assertEquals("one", reader.get(1).toString());
     assertTrue(reader.containsKey(2));
-    values = reader.get(2);
-    assertEquals(3, values.size());
-    assertEquals("two", values.get(0).toString());
-    assertEquals("deux", values.get(1).toString());
-    assertEquals("deuce", values.get(2).toString());
-  }
-
-  @Test
-  public void testGenericMaxedAvroKVRecordKeyValueStore() throws IOException, InterruptedException {
-    // Only read the key and value fields (skip the 'blah' field).
-    Schema readerSchema = Schema.createRecord("record", null, null, false);
-    readerSchema.setFields(
-        Arrays.asList(
-            new Schema.Field("key", Schema.create(Schema.Type.INT), null, null),
-            new Schema.Field("value", Schema.create(Schema.Type.STRING), null, null)));
-
-    // Open the store.
-    Path avroFilePath = writeGenericRecordAvroFile();
-    AvroKVRecordKeyValueArrayStore<Integer, CharSequence> store
-        = new AvroKVRecordKeyValueArrayStore<Integer, CharSequence>(
-            new AvroKVRecordKeyValueArrayStore.Options()
-            .withConfiguration(new Configuration())
-            .withInputPath(avroFilePath)
-            .withMaxValues(2)
-            .withReaderSchema(readerSchema));
-    KeyValueStoreReader<Integer, List<CharSequence>> reader = store.open();
-
-    assertTrue(reader.containsKey(1));
-    List<CharSequence> values = reader.get(1);
-    assertEquals(1, values.size());
-    assertEquals("one", values.get(0).toString());
-    assertTrue(reader.containsKey(2));
-    values = reader.get(2);
-    assertEquals(2, values.size());
-    assertEquals("two", values.get(0).toString());
-    assertEquals("deux", values.get(1).toString());
+    assertEquals("two", reader.get(2).toString()); // First field in wins.
   }
 }
