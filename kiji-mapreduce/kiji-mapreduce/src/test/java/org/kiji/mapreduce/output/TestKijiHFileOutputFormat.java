@@ -168,7 +168,7 @@ public class TestKijiHFileOutputFormat {
     mConf.set("fs.defaultFS", "file://" + mTempDir.toString());
     mConf.set("mapred.output.dir", "file://" + mTempDir.toString());
 
-    KijiInstaller.install(mTableURI, mConf);
+    KijiInstaller.get().install(mTableURI, mConf);
     mKiji = Kiji.Factory.open(mTableURI);
 
     final KijiAdmin admin = mKiji.getAdmin();
