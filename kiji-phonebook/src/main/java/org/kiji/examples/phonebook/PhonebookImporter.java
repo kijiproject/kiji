@@ -25,7 +25,6 @@ import java.io.IOException;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.JsonDecoder;
 import org.apache.avro.specific.SpecificDatumReader;
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
@@ -52,7 +51,7 @@ import org.kiji.schema.KijiURI;
 import org.kiji.schema.KijiURIException;
 import org.kiji.schema.mapreduce.DistributedCacheJars;
 import org.kiji.schema.mapreduce.KijiConfKeys;
-import org.kiji.schema.util.ReferenceCountableUtils;
+import org.kiji.schema.util.ResourceUtils;
 
 /**
  * Shell for the PhonebookImportMapper class.  This class manages
@@ -137,9 +136,9 @@ public class PhonebookImporter extends Configured implements Tool {
     /** {@inheritDoc} */
     @Override
     protected void cleanup(Context hadoopContext) throws IOException, InterruptedException {
-      IOUtils.closeQuietly(mWriter);
-      IOUtils.closeQuietly(mTable);
-      ReferenceCountableUtils.releaseQuietly(mKiji);
+      ResourceUtils.closeOrLog(mWriter);
+      ResourceUtils.closeOrLog(mTable);
+      ResourceUtils.releaseOrLog(mKiji);
       super.cleanup(hadoopContext);
     }
   }

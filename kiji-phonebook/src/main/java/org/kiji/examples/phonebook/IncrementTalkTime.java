@@ -22,7 +22,6 @@ package org.kiji.examples.phonebook;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
@@ -49,7 +48,7 @@ import org.kiji.schema.KijiURI;
 import org.kiji.schema.KijiURIException;
 import org.kiji.schema.mapreduce.DistributedCacheJars;
 import org.kiji.schema.mapreduce.KijiConfKeys;
-import org.kiji.schema.util.ReferenceCountableUtils;
+import org.kiji.schema.util.ResourceUtils;
 
 /**
  * Reads an input file that lists the number of minutes of talk time
@@ -121,9 +120,9 @@ public class IncrementTalkTime extends Configured implements Tool {
     @Override
     protected void cleanup(Context hadoopContext) throws IOException, InterruptedException {
       // Safely free up resources by closing in reverse order.
-      IOUtils.closeQuietly(mWriter);
-      IOUtils.closeQuietly(mTable);
-      ReferenceCountableUtils.releaseQuietly(mKiji);
+      ResourceUtils.closeOrLog(mWriter);
+      ResourceUtils.closeOrLog(mTable);
+      ResourceUtils.releaseOrLog(mKiji);
       super.cleanup(hadoopContext);
     }
   }

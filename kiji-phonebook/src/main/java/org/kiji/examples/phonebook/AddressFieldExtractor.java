@@ -22,7 +22,6 @@ package org.kiji.examples.phonebook;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -47,7 +46,7 @@ import org.kiji.schema.KijiURIException;
 import org.kiji.schema.mapreduce.DistributedCacheJars;
 import org.kiji.schema.mapreduce.KijiConfKeys;
 import org.kiji.schema.mapreduce.KijiTableInputFormat;
-import org.kiji.schema.util.ReferenceCountableUtils;
+import org.kiji.schema.util.ResourceUtils;
 
 /**
  * Extracts fields from the address column into individual columns in the derived column family.
@@ -134,9 +133,9 @@ public class AddressFieldExtractor extends Configured implements Tool {
     /** {@inheritDoc} */
     @Override
     protected void cleanup(Context hadoopContext) throws IOException, InterruptedException {
-      IOUtils.closeQuietly(mTableWriter);
-      IOUtils.closeQuietly(mTable);
-      ReferenceCountableUtils.releaseQuietly(mKiji);
+      ResourceUtils.closeOrLog(mTableWriter);
+      ResourceUtils.closeOrLog(mTable);
+      ResourceUtils.releaseOrLog(mKiji);
       super.cleanup(hadoopContext);
     }
   }

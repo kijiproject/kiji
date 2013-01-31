@@ -21,7 +21,6 @@ package org.kiji.examples.phonebook;
 
 import java.io.IOException;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.util.Tool;
@@ -34,7 +33,7 @@ import org.kiji.schema.KijiConfiguration;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableNotFoundException;
 import org.kiji.schema.KijiTableWriter;
-import org.kiji.schema.util.ReferenceCountableUtils;
+import org.kiji.schema.util.ResourceUtils;
 
 /**
  * Interactively create a phonebook entry and add it to the Kiji table.
@@ -110,10 +109,10 @@ public class AddEntry extends Configured implements Tool {
       return 1;
     } finally {
       // Safely free up resources by closing in reverse order.
-      IOUtils.closeQuietly(writer);
-      IOUtils.closeQuietly(table);
-      ReferenceCountableUtils.releaseQuietly(kiji);
-      IOUtils.closeQuietly(console);
+      ResourceUtils.closeOrLog(writer);
+      ResourceUtils.closeOrLog(table);
+      ResourceUtils.releaseOrLog(kiji);
+      ResourceUtils.closeOrLog(console);
     }
 
     return 0;

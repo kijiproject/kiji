@@ -26,7 +26,6 @@ import java.io.IOException;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.JsonDecoder;
 import org.apache.avro.specific.SpecificDatumReader;
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.util.Tool;
@@ -37,7 +36,7 @@ import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiConfiguration;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableWriter;
-import org.kiji.schema.util.ReferenceCountableUtils;
+import org.kiji.schema.util.ResourceUtils;
 
 /**
  * A local program that will parse user records from a text file and insert the records
@@ -81,10 +80,10 @@ public class StandalonePhonebookImporter extends Configured implements Tool {
       System.out.println("Error importing records: " + e);
       return 1;
     } finally {
-      IOUtils.closeQuietly(reader);
-      IOUtils.closeQuietly(writer);
-      IOUtils.closeQuietly(table);
-      ReferenceCountableUtils.releaseQuietly(kiji);
+      ResourceUtils.closeOrLog(reader);
+      ResourceUtils.closeOrLog(writer);
+      ResourceUtils.closeOrLog(table);
+      ResourceUtils.releaseOrLog(kiji);
     }
     return 0;
   }

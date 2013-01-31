@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 
-import org.apache.commons.io.IOUtils;
+import org.kiji.schema.util.ResourceUtils;
 
 /**
  * A source of input that delivers prompts to the user and reads responses from the console.
@@ -68,6 +68,6 @@ public final class ConsolePrompt implements Closeable {
    */
   @Override
   public void close() {
-    IOUtils.closeQuietly(mConsoleReader);
+    ResourceUtils.closeOrLog(mConsoleReader);
   }
 }

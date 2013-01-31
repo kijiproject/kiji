@@ -23,7 +23,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -50,7 +49,7 @@ import org.kiji.schema.KijiURIException;
 import org.kiji.schema.mapreduce.DistributedCacheJars;
 import org.kiji.schema.mapreduce.KijiConfKeys;
 import org.kiji.schema.mapreduce.KijiTableInputFormat;
-import org.kiji.schema.util.ReferenceCountableUtils;
+import org.kiji.schema.util.ResourceUtils;
 
 /**
  * Deletes all entries from the phonebook table that have an address from a particular US state.
@@ -139,9 +138,9 @@ public class DeleteEntriesByState extends Configured implements Tool {
     /** {@inheritDoc} */
     @Override
     protected void cleanup(Context hadoopContext) throws IOException, InterruptedException {
-      IOUtils.closeQuietly(mWriter);
-      IOUtils.closeQuietly(mTable);
-      ReferenceCountableUtils.releaseQuietly(mKiji);
+      ResourceUtils.closeOrLog(mWriter);
+      ResourceUtils.closeOrLog(mTable);
+      ResourceUtils.releaseOrLog(mKiji);
       super.cleanup(hadoopContext);
     }
   }

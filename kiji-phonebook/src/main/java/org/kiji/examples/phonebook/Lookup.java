@@ -22,7 +22,6 @@ package org.kiji.examples.phonebook;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.util.Tool;
@@ -38,7 +37,7 @@ import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableNotFoundException;
 import org.kiji.schema.KijiTableReader;
-import org.kiji.schema.util.ReferenceCountableUtils;
+import org.kiji.schema.util.ResourceUtils;
 
 /**
  * Lookup a phonebook entry by user id and return the information.
@@ -116,9 +115,9 @@ public class Lookup extends Configured implements Tool {
       return 1;
     } finally {
       // Safely free up resources by closing in reverse order.
-      IOUtils.closeQuietly(reader);
-      IOUtils.closeQuietly(table);
-      ReferenceCountableUtils.releaseQuietly(kiji);
+      ResourceUtils.closeOrLog(reader);
+      ResourceUtils.closeOrLog(table);
+      ResourceUtils.releaseOrLog(kiji);
     }
 
     return 0;
