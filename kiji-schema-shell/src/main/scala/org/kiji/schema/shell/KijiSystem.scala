@@ -24,7 +24,6 @@ import java.io.IOException
 import scala.collection.JavaConversions._
 import scala.collection.mutable.Map
 
-import org.apache.commons.io.IOUtils
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.HTableDescriptor
 import org.apache.hadoop.hbase.client.HBaseAdmin
@@ -38,8 +37,7 @@ import org.kiji.schema.KijiURI
 import org.kiji.schema.KijiMetaTable
 import org.kiji.schema.avro.TableLayoutDesc
 import org.kiji.schema.layout.KijiTableLayout
-import org.kiji.schema.util.ReferenceCountableUtils
-
+import org.kiji.schema.util.ResourceUtils
 
 /**
  * This object serves to provide Kiji schema shell with access to KijiSchema.
@@ -234,11 +232,11 @@ object KijiSystem extends AbstractKijiSystem {
       case None => { /* do nothing. */ }
       case Some(admin) => {
         // Close this.
-        IOUtils.closeQuietly(hBaseAdmin)
+        ResourceUtils.closeOrLog(hBaseAdmin)
       }
     }
 
     kijiCache.foreach { case (key, refCountable) =>
-        ReferenceCountableUtils.releaseQuietly(refCountable) }
+        ResourceUtils.releaseOrLog(refCountable) }
   }
 }

@@ -25,11 +25,10 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.PrintStream
 
-import org.apache.commons.io.IOUtils
-
 import org.kiji.schema.avro.TableLayoutDesc
 
 import org.kiji.schema.shell.Environment
+import org.kiji.schema.util.ResourceUtils
 
 /**
  * Emit the DDL to create the named table to stdout, or a file.
@@ -55,7 +54,7 @@ class DumpTableDDLCommand(val env: Environment, val tableName: String,
           // to the specified file.
           new DumpTableDDLCommand(env.withPrinter(outputStream), tableName, None).exec()
         } finally {
-          IOUtils.closeQuietly(outputStream)
+          ResourceUtils.closeOrLog(outputStream)
         }
       }
     }

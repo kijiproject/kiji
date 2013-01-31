@@ -25,8 +25,6 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.PrintStream
 
-import org.apache.commons.io.IOUtils
-
 import org.kiji.schema.avro.CellSchema
 import org.kiji.schema.avro.ColumnDesc
 import org.kiji.schema.avro.CompressionType

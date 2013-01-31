@@ -24,7 +24,6 @@ import java.io.IOException
 import scala.collection.JavaConversions._
 import scala.collection.mutable.Map
 
-import org.apache.commons.io.IOUtils
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.HBaseAdmin

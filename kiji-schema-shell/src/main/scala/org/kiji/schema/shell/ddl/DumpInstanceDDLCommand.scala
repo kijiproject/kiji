@@ -25,10 +25,9 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.PrintStream
 
-import org.apache.commons.io.IOUtils
-
 import org.kiji.schema.shell.DDLException
 import org.kiji.schema.shell.Environment
+import org.kiji.schema.util.ResourceUtils
 
 /**
  * Emit the DDL to create all tables to stdout or a file.
@@ -46,7 +45,7 @@ class DumpInstanceDDLCommand(val env: Environment, val maybeFile: Option[String]
           // to the specified file.
           new DumpInstanceDDLCommand(env.withPrinter(outputStream), None).exec()
         } finally {
-          IOUtils.closeQuietly(outputStream)
+          ResourceUtils.closeOrLog(outputStream)
         }
       }
     }
