@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 import org.kiji.annotations.ApiAudience;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiConfiguration;
-import org.kiji.schema.util.ReferenceCountableUtils;
+import org.kiji.schema.util.ResourceUtils;
 
 /** An implementation of a runnable MapReduce job that interacts with Kiji tables. */
 @ApiAudience.Framework
@@ -109,7 +109,7 @@ public final class KijiMapReduceJob extends InternalMapReduceJob {
       }
     } finally {
       IOUtils.closeQuietly(jobHistory);
-      ReferenceCountableUtils.releaseQuietly(kiji);
+      ResourceUtils.releaseOrLog(kiji);
     }
   }
 

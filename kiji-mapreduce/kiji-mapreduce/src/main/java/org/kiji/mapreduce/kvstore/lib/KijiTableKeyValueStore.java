@@ -42,7 +42,7 @@ import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.KijiURIException;
-import org.kiji.schema.util.ReferenceCountableUtils;
+import org.kiji.schema.util.ResourceUtils;
 
 /**
  * KeyValueStore lookup implementation based on a Kiji table.
@@ -270,7 +270,7 @@ public final class KijiTableKeyValueStore<V> implements Configurable, KeyValueSt
         throw new IllegalArgumentException("Could not open table: " + mTableUri, ioe);
       } finally {
         IOUtils.closeQuietly(kijiTable);
-        ReferenceCountableUtils.releaseQuietly(kiji);
+        ResourceUtils.releaseOrLog(kiji);
       }
 
       return new KijiTableKeyValueStore<V>(this);
@@ -561,7 +561,7 @@ public final class KijiTableKeyValueStore<V> implements Configurable, KeyValueSt
       try {
         IOUtils.closeQuietly(mTableReader);
         IOUtils.closeQuietly(mKijiTable);
-        ReferenceCountableUtils.releaseQuietly(mKiji);
+        ResourceUtils.releaseOrLog(mKiji);
       } finally {
         mTableReader = null;
         mKijiTable = null;

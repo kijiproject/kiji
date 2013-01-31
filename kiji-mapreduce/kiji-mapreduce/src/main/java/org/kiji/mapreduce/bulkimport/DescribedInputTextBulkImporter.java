@@ -44,7 +44,7 @@ import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.KijiURIException;
-import org.kiji.schema.util.ReferenceCountableUtils;
+import org.kiji.schema.util.ResourceUtils;
 
 /**
  * Importing from a text file requires specifying a KijiColumnName, and writer Schema
@@ -157,7 +157,7 @@ public abstract class DescribedInputTextBulkImporter extends BaseTextBulkImporte
     } catch (IOException ex) {
       throw new RuntimeException(ex);
     } finally {
-      ReferenceCountableUtils.releaseQuietly(kiji);
+      ResourceUtils.releaseOrLog(kiji);
     }
   }
 

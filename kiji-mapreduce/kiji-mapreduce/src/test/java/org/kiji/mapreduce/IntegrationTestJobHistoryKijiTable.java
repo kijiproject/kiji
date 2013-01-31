@@ -43,7 +43,7 @@ import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.testutil.AbstractKijiIntegrationTest;
-import org.kiji.schema.util.ReferenceCountableUtils;
+import org.kiji.schema.util.ResourceUtils;
 
 /**
  * Integration test for the job history table.
@@ -63,7 +63,7 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
       KijiAdmin kijiAdmin = kiji.getAdmin();
       JobHistoryKijiTable.install(kijiAdmin);
     } finally {
-      ReferenceCountableUtils.releaseQuietly(kiji);
+      ResourceUtils.releaseOrLog(kiji);
     }
   }
 
