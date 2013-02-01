@@ -30,9 +30,9 @@ setConf(HBaseConfiguration.addHbaseResources(getConf()));
 The code then connects to Kiji and opens the phonebook table for writing.
 The `KijiConfiguration.DEFAULT_INSTANCE_NAME` is `default`.
 {% highlight java %}
-kiji = Kiji.open(new KijiConfiguration(getConf(),
-    KijiConfiguration.DEFAULT_INSTANCE_NAME));
-table = kiji.openTable(TABLE_NAME); //TABLE_NAME is "phonebook"
+kiji = Kiji.Factory.open(
+    new KijiConfiguration(getConf(), KijiConfiguration.DEFAULT_INSTANCE_NAME));
+table = kiji.openTable(TABLE_NAME);
 writer = table.openTableWriter();
 {% endhighlight %}
 
@@ -41,7 +41,7 @@ We then create an `EntityId` using the contact's first and last name.
 The `EntityId` uniquely identifies the row for the contact in the Kiji table. 
 
 {% highlight java %}
-EntityId user = table.getEntityId(first + "," + last);
+final EntityId user = table.getEntityId(first + "," + last);
 {% endhighlight %}
 
 We write the contact information gained from the user to the appropriate columns
@@ -61,7 +61,8 @@ that they use. We close these objects in the reverse order we opened them in.
 {% highlight java %}
 IOUtils.closeQuietly(writer);
 IOUtils.closeQuietly(table);
-IOUtils.closeQuietly(kiji);
+ReferenceCountableUtils.releaseQuietly(kiji);
+IOUtils.closeQuietly(console);
 {% endhighlight %}
 
 ### Running the Example
@@ -104,7 +105,7 @@ If you have not already done so, put the phonebook jar file on your Kiji classpa
 
 <div class="userinput">
 {% highlight bash %}
-export KIJI_CLASSPATH=$KIJI_HOME/examples/phonebook/lib/kiji-phonebook-*.jar
+export KIJI_CLASSPATH="$KIJI_HOME/examples/phonebook/lib/\*"
 {% endhighlight %}
 </div>
 

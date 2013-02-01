@@ -58,12 +58,12 @@ Address streetAddr = datumReader.read(null, decoder);
 Next we create a unique [`EntityId`]({{site.api_url}}/EntityId.html) that will be used to reference this row.  As before, we will use
 the combination of first and last name as a unique reference to this row:
 {% highlight java %}
-EntityId user = table.getEntityId(firstName + "," + lastName);
+final EntityId user = table.getEntityId(firstName + "," + lastName);
 {% endhighlight %}
 
 Finally we just retrieve the current system timestamp and write these record fields.
 {% highlight java %}
-long timestamp = System.currentTimeMillis();
+final long timestamp = System.currentTimeMillis();
 writer.put(user, Fields.INFO_FAMILY, Fields.FIRST_NAME, timestamp, firstName);
 writer.put(user, Fields.INFO_FAMILY, Fields.LAST_NAME, timestamp, lastName);
 writer.put(user, Fields.INFO_FAMILY, Fields.EMAIL, timestamp, email);
@@ -123,10 +123,9 @@ protected void setup(Context hadoopContext)
   } catch (KijiURIException kue) {
     throw new IOException(kue);
   }
-  mKiji = Kiji.open(tableURI, conf);
+  mKiji = Kiji.Factory.open(tableURI, conf);
   mTable = mKiji.openTable(TABLE_NAME);
   mWriter = mTable.openTableWriter();
-}
 {% endhighlight %}
 
 This method sets up all the resources necessary for map tasks. Note that we use a different
@@ -140,7 +139,7 @@ we'll write all of the fields to the phonebook table:
 
 {% highlight java %}
 @Override
-public void map(LongWritable byteOffset, Text line, Context context)
+public void map(LongWritable byteOffset, Text line, Context hadoopContext)
     throws IOException, InterruptedException {
   ...
   mWriter.put(user, Fields.INFO_FAMILY, Fields.FIRST_NAME, firstName);
@@ -160,16 +159,16 @@ you can refer to [Accessing Data]({{site.userguide_url}}/accessing-data/).  Whil
 logic here closely resembles the non-MapReduce importer above, the heavy lifting of
 configuring the MapReduce job is done within the `run(...)` method.
 
-The mapper class is specified as the inner class `PhonebookImportMapper`:
-
-{% highlight java %}
-job.setMapperClass(PhonebookImportMapper.class);
-{% endhighlight %}
-
 The hdfs file path to the sample input data is set to the first command line argument here:
 
 {% highlight java %}
 FileInputFormat.setInputPaths(job, new Path(args[0]));
+{% endhighlight %}
+
+The mapper class is specified as the inner class `PhonebookImportMapper`:
+
+{% highlight java %}
+job.setMapperClass(PhonebookImportMapper.class);
 {% endhighlight %}
 
 Also note that we've set the number of reduce tasks to 0 because  we don't have

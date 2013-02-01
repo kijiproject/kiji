@@ -59,7 +59,7 @@ classpath. You can add your artifacts to the Kiji classpath by running:
 
 <div class="userinput">
 {% highlight bash %}
-export KIJI_CLASSPATH=$KIJI_HOME/examples/phonebook/lib/kiji-phonebook-*.jar
+export KIJI_CLASSPATH=$KIJI_HOME/examples/phonebook/lib/*
 {% endhighlight %}
 </div>
 

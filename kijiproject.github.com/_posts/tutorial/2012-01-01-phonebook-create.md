@@ -10,7 +10,9 @@ description: To use a phonebook, you need a phonebook.
 We need to create a table to store your bajillion phonebook contacts.
 Creating a table in Kiji amounts to specifying a layout and registering
 that layout with Kiji. Layouts can be specified using the Kiji
-Data Definition Language, *DDL*, or in a JSON form.
+Data Definition Language, *DDL*, or in a JSON form. In this section,
+we will cover using the DDL. <!-- TODO(DOCS-21): Re-enable JSON section.
+after fixes. -->
 
 ### Using the DDL
 
@@ -109,45 +111,13 @@ schema> quit;
 {% endhighlight %}
 </div>
 
-### Using JSON
+<!--
+TODO(DOCS-21): JSON section has been removed from this document due to bugs in the
+release.
 
-A low level way of providing the layout is by using JSON. To learn more about specifying
-the layout in JSON, take a look at [Managing Data]({{site.userguide_url}}managing-data/).
-
-But first, we need to delete the table we just created, just so that we can create it
-another time using JSON! Use the following command to delete the table:
-
-<div class="userinput">
-{% highlight bash %}
-$KIJI_HOME/bin/kiji delete-table --table=phonebook
-{% endhighlight %}
-</div>
-
-    Deleting kiji table: kiji://localhost:2181/default/phonebook/
-    Are you sure? This action will remove this table and all its data from kiji and cannot be undone!
-    Please answer yes or no.
-    yes
-    00/11/00 20:33:16 INFO org.apache.hadoop.hbase.client.HBaseAdmin: Started disable of kiji.default.table.phonebook
-    00/11/00 20:33:18 INFO org.apache.hadoop.hbase.client.HBaseAdmin: Disabled kiji.default.table.phonebook
-    00/11/00 20:33:19 INFO org.apache.hadoop.hbase.client.HBaseAdmin: Deleted kiji.default.table.phonebook
-    Deleted kiji table: kiji://localhost:2181/default/phonebook/
-
-The command below creates the same phonebook table with the layout specified in the `layout.json` file in your
-`$KIJI_HOME/examples/phonebook` directory.
-
-<div class="userinput">
-{% highlight bash %}
-$KIJI_HOME/bin/kiji create-table --table=phonebook \
-    --layout=$KIJI_HOME/examples/phonebook/layout.json
-{% endhighlight %}
-</div>
-
-{% highlight bash %}
-Parsing table layout: $KIJI_HOME/examples/phonebook/layout.json
-Creating kiji table: kiji://localhost:2181/default/phonebook/...
-{% endhighlight %}
-
-
+Re-enable this section after the next release fixes the
+layout.json file.
+-->
 #### Verify
 
 To ensure that your table exists, use the `kiji ls` command to show the available
