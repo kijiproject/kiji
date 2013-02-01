@@ -119,7 +119,7 @@ protected void setup(Context hadoopContext)
   final Configuration conf = hadoopContext.getConfiguration();
   KijiURI tableURI;
   try {
-    tableURI = KijiURI.parse(conf.get(KijiConfKeys.OUTPUT_KIJI_TABLE_URI));
+    tableURI = KijiURI.newBuilder(conf.get(KijiConfKeys.OUTPUT_KIJI_TABLE_URI)).build();
   } catch (KijiURIException kue) {
     throw new IOException(kue);
   }
