@@ -33,6 +33,7 @@ import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiConfiguration;
 import org.kiji.schema.KijiDataRequest;
+import org.kiji.schema.KijiDataRequestBuilder;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableNotFoundException;
@@ -86,13 +87,14 @@ public class Lookup extends Configured implements Tool {
       // Specify the row and column data to read.
       // The column names are specified as constants in the Fields.java class.
       final EntityId entityId = table.getEntityId(mFirst + "," + mLast);
-      final KijiDataRequest dataRequest = new KijiDataRequest()
-          .addColumn(new KijiDataRequest.Column(Fields.INFO_FAMILY, Fields.FIRST_NAME))
-          .addColumn(new KijiDataRequest.Column(Fields.INFO_FAMILY, Fields.LAST_NAME))
-          .addColumn(new KijiDataRequest.Column(Fields.INFO_FAMILY, Fields.EMAIL))
-          .addColumn(new KijiDataRequest.Column(Fields.INFO_FAMILY, Fields.TELEPHONE))
-          .addColumn(new KijiDataRequest.Column(Fields.INFO_FAMILY, Fields.ADDRESS));
-
+      final KijiDataRequestBuilder reqBuilder = KijiDataRequest.builder();
+      reqBuilder.addColumns()
+          .add(Fields.INFO_FAMILY, Fields.FIRST_NAME)
+          .add(Fields.INFO_FAMILY, Fields.LAST_NAME)
+          .add(Fields.INFO_FAMILY, Fields.EMAIL)
+          .add(Fields.INFO_FAMILY, Fields.TELEPHONE)
+          .add(Fields.INFO_FAMILY, Fields.ADDRESS);
+      final KijiDataRequest dataRequest = reqBuilder.build();
       final KijiRowData rowData = reader.get(entityId, dataRequest);
 
       if (!rowData.containsColumn(Fields.INFO_FAMILY, Fields.FIRST_NAME)) {

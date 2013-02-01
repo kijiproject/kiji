@@ -2,6 +2,10 @@
                      Kiji Phonebook example release notes
 
 
+Version 1.0.0-rc4
+  * SCHEMA-133. Update usage to match API from KjiiSchema 1.0.0-rc4
+      (use KijiDataRequestBuilders instead of mutable KijiDataRequests.)
+
 Version 1.0.0-rc3
   * SCHEMA-50. Update usage to match API from KijiSchema 1.0.0-rc3
       (release() and retain() methods for Kiji objects)

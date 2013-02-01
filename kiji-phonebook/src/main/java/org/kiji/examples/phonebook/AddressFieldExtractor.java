@@ -157,8 +157,7 @@ public class AddressFieldExtractor extends Configured implements Tool {
 
     // Read from the Kiji phonebook table.
     job.setInputFormatClass(KijiTableInputFormat.class);
-    final KijiDataRequest dataRequest = new KijiDataRequest()
-        .addColumn(new KijiDataRequest.Column(Fields.INFO_FAMILY, Fields.ADDRESS));
+    final KijiDataRequest dataRequest = KijiDataRequest.create(Fields.INFO_FAMILY, Fields.ADDRESS);
     final KijiURI tableURI =
         KijiURI.newBuilder(String.format("kiji://.env/default/%s", TABLE_NAME)).build();
     KijiTableInputFormat.configureJob(
