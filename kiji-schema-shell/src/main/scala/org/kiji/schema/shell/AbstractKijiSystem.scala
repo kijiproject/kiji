@@ -31,7 +31,6 @@ import org.apache.hadoop.hbase.client.HBaseAdmin
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiConfiguration
 
-import org.kiji.schema.KijiAdmin
 import org.kiji.schema.KijiURI
 import org.kiji.schema.KijiMetaTable
 import org.kiji.schema.avro.TableLayoutDesc

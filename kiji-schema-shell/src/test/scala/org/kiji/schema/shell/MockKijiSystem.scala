@@ -25,7 +25,6 @@ import java.util.NoSuchElementException
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiConfiguration
 
-import org.kiji.schema.KijiAdmin
 import org.kiji.schema.KijiConfiguration
 import org.kiji.schema.KijiMetaTable
 import org.kiji.schema.layout.KijiTableLayout

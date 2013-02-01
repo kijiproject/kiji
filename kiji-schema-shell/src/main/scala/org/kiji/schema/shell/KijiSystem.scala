@@ -32,7 +32,6 @@ import org.apache.hadoop.util.StringUtils
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiConfiguration
 
-import org.kiji.schema.KijiAdmin
 import org.kiji.schema.KijiURI
 import org.kiji.schema.KijiMetaTable
 import org.kiji.schema.avro.TableLayoutDesc
@@ -48,9 +47,7 @@ import org.kiji.schema.util.ResourceUtils
  */
 object KijiSystem extends AbstractKijiSystem {
   // A map from Kiji instance names to internal implementations of Kiji instances.
-  private val kijiCache = Map[String, Kiji]()
-  // A map from Kiji instance names to Kiji admins for those instances.
-  private val kijiAdminCache = Map[String, KijiAdmin]()
+  private val kijis = Map[String, Kiji]()
 
   // A lazily-initialized HBaseAdmin.
   private var maybeHBaseAdmin: Option[HBaseAdmin] = None
@@ -75,33 +72,9 @@ object KijiSystem extends AbstractKijiSystem {
    *     cannot be opened.
    */
   private def kijiMetaTable(instance: String): Option[KijiMetaTable] = {
-    kiji(instance) match {
+    kijiCache(instance) match {
       case Some(theKiji) => Some(theKiji.getMetaTable())
       case None => None
-    }
-  }
-
-  /**
-   * Gets the Kiji admin for the Kiji instance with the specified name.
-   *
-   * <p>This method caches admin objects.</p>
-   *
-   * @param instance Name of the Kiji instance.
-   * @return A Kiji admin object for the specified Kiji instance, or None if the specified
-   *     instance cannot be opened.
-   */
-  private def kijiAdmin(instance: String): Option[KijiAdmin] = {
-    if (!kijiAdminCache.contains(instance)) {
-      kiji(instance) match {
-        case Some(theKiji) => {
-          val admin = theKiji.getAdmin()
-          kijiAdminCache += (instance -> admin)
-          Some(admin)
-        }
-        case None => None
-      }
-    } else {
-      Some(kijiAdminCache(instance))
     }
   }
 
@@ -126,11 +99,11 @@ object KijiSystem extends AbstractKijiSystem {
    * @return An Kiji for the Kiji instance with the specified name, or none if the
    *     instance specified cannot be opened.
    */
-  private def kiji(instance: String): Option[Kiji] = {
-    if (!kijiCache.contains(instance)) {
+  private def kijiCache(instance: String): Option[Kiji] = {
+    if (!kijis.contains(instance)) {
       try {
         val theKiji = Kiji.Factory.open(kijiConf(instance))
-        kijiCache += (instance -> theKiji)
+        kijis += (instance -> theKiji)
         Some(theKiji)
       } catch {
         case exn: Exception => {
@@ -139,15 +112,15 @@ object KijiSystem extends AbstractKijiSystem {
         }
       }
     } else {
-      Some(kijiCache(instance))
+      Some(kijis(instance))
     }
   }
 
   /** {@inheritDoc} */
   override def getTableNamesDescriptions(instance: String): Array[(String, String)] = {
     // Get all table names.
-    val tableNames: List[String] = kijiAdmin(instance) match {
-      case Some(admin) => admin.getTableNames().toList
+    val tableNames: List[String] = kijiCache(instance) match {
+      case Some(kiji) => kiji.getTableNames().toList
       case None => List()
     }
     // join table names and descriptions.
@@ -179,25 +152,25 @@ object KijiSystem extends AbstractKijiSystem {
 
   /** {@inheritDoc} */
   override def createTable(instance: String, table: String, layout: KijiTableLayout): Unit = {
-    kijiAdmin(instance) match {
-      case Some(admin) => { admin.createTable(table, layout, false) }
-      case None => { throw new IOException("Cannot get instance admin for \"" + instance + "\"") }
+    kijiCache(instance) match {
+      case Some(kiji) => { kiji.createTable(table, layout) }
+      case None => { throw new IOException("Cannot get kiji for \"" + instance + "\"") }
     }
   }
 
   /** {@inheritDoc} */
   override def applyLayout(instance: String, table: String, layout: TableLayoutDesc): Unit = {
-    kijiAdmin(instance) match {
-      case Some(admin) => { admin.setTableLayout(table, layout, false, Console.out) }
-      case None => { throw new IOException("Cannot get instance admin for \"" + instance + "\"") }
+    kijiCache(instance) match {
+      case Some(kiji) => { kiji.modifyTableLayout(table, layout, false, Console.out) }
+      case None => { throw new IOException("Cannot get kiji for \"" + instance + "\"") }
     }
   }
 
   /** {@inheritDoc} */
   override def dropTable(instance: String, table: String): Unit = {
-    kijiAdmin(instance) match {
-      case Some(admin) => { admin.deleteTable(table) }
-      case None => { throw new IOException("Cannot get instance admin for \"" + instance + "\"") }
+    kijiCache(instance) match {
+      case Some(kiji) => { kiji.deleteTable(table) }
+      case None => { throw new IOException("Cannot get kiji for \"" + instance + "\"") }
     }
   }
 
@@ -236,7 +209,7 @@ object KijiSystem extends AbstractKijiSystem {
       }
     }
 
-    kijiCache.foreach { case (key, refCountable) =>
+    kijis.foreach { case (key, refCountable) =>
         ResourceUtils.releaseOrLog(refCountable) }
   }
 }
