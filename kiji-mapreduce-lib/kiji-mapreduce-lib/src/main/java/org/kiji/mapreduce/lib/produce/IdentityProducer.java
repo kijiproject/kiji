@@ -33,6 +33,7 @@ import org.kiji.mapreduce.ProducerContext;
 import org.kiji.schema.DecodedCell;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
+import org.kiji.schema.KijiDataRequestBuilder;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.NoSuchColumnException;
 
@@ -100,8 +101,10 @@ public class IdentityProducer extends KijiProducer {
   /** {@inheritDoc} */
   @Override
   public KijiDataRequest getDataRequest() {
-    return new KijiDataRequest()
-        .addColumn(new KijiDataRequest.Column(mInputColumn).withMaxVersions(Integer.MAX_VALUE));
+    KijiDataRequestBuilder builder = KijiDataRequest.builder();
+    builder.addColumns().withMaxVersions(Integer.MAX_VALUE)
+        .add(mInputColumn.getFamily(), mInputColumn.getQualifier());
+    return builder.build();
   }
 
   /** {@inheritDoc} */

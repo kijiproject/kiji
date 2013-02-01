@@ -56,9 +56,7 @@ public abstract class SingleInputProducer extends KijiProducer {
   @Override
   public KijiDataRequest getDataRequest() {
     initializeInputColumn();
-    KijiDataRequest dataRequest = new KijiDataRequest();
-    dataRequest.addColumn(new KijiDataRequest.Column(mInputColumn));
-    return dataRequest;
+    return KijiDataRequest.create(mInputColumn.getFamily(), mInputColumn.getQualifier());
   }
 
   /** {@inheritDoc} */

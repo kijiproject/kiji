@@ -36,6 +36,7 @@ import org.kiji.mapreduce.MapReduceContext;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
+import org.kiji.schema.KijiDataRequestBuilder;
 import org.kiji.schema.KijiRowData;
 
 /**
@@ -100,9 +101,9 @@ public class MapTypeDelimitedFileGatherer extends KijiGatherer<Text, NullWritabl
 
   @Override
   public KijiDataRequest getDataRequest() {
-    KijiDataRequest dataRequest = new KijiDataRequest();
-    dataRequest.addColumn(new KijiDataRequest.Column(mFamily).withMaxVersions(mMaxVersions));
-    return dataRequest;
+    KijiDataRequestBuilder builder = KijiDataRequest.builder();
+    builder.addColumns().withMaxVersions(mMaxVersions).addFamily(mFamily);
+    return builder.build();
   }
 
   @Override

@@ -22,6 +22,7 @@ package org.kiji.mapreduce.lib.produce;
 import java.util.Collection;
 
 import org.kiji.schema.KijiDataRequest;
+import org.kiji.schema.KijiDataRequestBuilder;
 
 /**
  * Base class for producers that read all versions from a single input column.
@@ -34,7 +35,14 @@ public abstract class AllVersionsSingleInputProducer extends SingleInputProducer
     if (columns.size() != 1) {
       throw new RuntimeException("Should be exactly one input column");
     }
-    columns.iterator().next().withMaxVersions(Integer.MAX_VALUE);
-    return request;
+    KijiDataRequest.Column col = columns.iterator().next();
+
+    KijiDataRequestBuilder out = KijiDataRequest.builder();
+    out.withTimeRange(request.getMinTimestamp(), request.getMaxTimestamp())
+        .addColumns().withMaxVersions(Integer.MAX_VALUE)
+            .withPageSize(col.getPageSize())
+            .withFilter(col.getFilter())
+            .add(col.getFamily(), col.getQualifier());
+    return out.build();
   }
 }

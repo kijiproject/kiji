@@ -55,9 +55,7 @@ public class EmailDomainCountGatherer extends KijiGatherer<Text, IntWritable> {
   /** {@inheritDoc} */
   @Override
   public KijiDataRequest getDataRequest() {
-    KijiDataRequest dataRequest = new KijiDataRequest();
-    dataRequest.addColumn(new KijiDataRequest.Column("info", "email"));
-    return dataRequest;
+    return KijiDataRequest.create("info", "email");
   }
 
   /** {@inheritDoc} */
