@@ -210,7 +210,7 @@ public final class KijiTableMapReduceJobInput extends MapReduceJobInput {
     if (null != mRowOptions.getRowFilter()) {
       KijiTableLayout tableLayout = mInputTable.getLayout();
       KijiSchemaTable schemaTable = mInputTable.getKiji().getSchemaTable();
-      new KijiRowFilterApplicator(mRowOptions.getRowFilter(), tableLayout, schemaTable)
+      KijiRowFilterApplicator.create(mRowOptions.getRowFilter(), tableLayout, schemaTable)
           .applyTo(scan);
     }
   }
