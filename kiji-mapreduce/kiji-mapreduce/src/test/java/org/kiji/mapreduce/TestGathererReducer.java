@@ -43,7 +43,6 @@ import org.slf4j.LoggerFactory;
 import org.kiji.mapreduce.output.TextMapReduceJobOutput;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
-import org.kiji.schema.KijiDataRequest.Column;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.layout.KijiTableLayout;
@@ -74,8 +73,7 @@ public class TestGathererReducer {
     /** {@inheritDoc} */
     @Override
     public KijiDataRequest getDataRequest() {
-      return new KijiDataRequest()
-          .addColumn(new Column("info"));
+      return KijiDataRequest.create("info");
     }
 
     /** {@inheritDoc} */

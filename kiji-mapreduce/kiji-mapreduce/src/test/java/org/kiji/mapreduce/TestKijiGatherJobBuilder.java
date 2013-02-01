@@ -61,8 +61,7 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
     /** {@inheritDoc} */
     @Override
     public KijiDataRequest getDataRequest() {
-      return new KijiDataRequest()
-          .addColumn(new KijiDataRequest.Column("info", "email"));
+      return KijiDataRequest.create("info", "email");
     }
 
     /** {@inheritDoc} */
@@ -92,8 +91,7 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
     /** {@inheritDoc} */
     @Override
     public KijiDataRequest getDataRequest() {
-      return new KijiDataRequest()
-          .addColumn(new KijiDataRequest.Column("info", "email"));
+      return KijiDataRequest.create("info", "email");
     }
 
     /** {@inheritDoc} */

@@ -46,7 +46,6 @@ import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
 import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
-import org.kiji.schema.KijiDataRequest.Column;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiRowScanner;
 import org.kiji.schema.KijiTable;
@@ -186,7 +185,7 @@ public class IntegrationTestSimpleBulkImporter extends AbstractKijiIntegrationTe
   }
 
   private void validateOutputTable() throws Exception {
-    final KijiDataRequest kdr = new KijiDataRequest().addColumn(new Column("primitives"));
+    final KijiDataRequest kdr = KijiDataRequest.create("primitives");
     final Map<String, KijiRowData> rows = toRowMap(mOutputTable, kdr);
     assertEquals(10, rows.size());
     for (int i = 1; i <= 10; ++i) {

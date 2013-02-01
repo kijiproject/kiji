@@ -46,6 +46,7 @@ import org.junit.Test;
 
 import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiDataRequest;
+import org.kiji.schema.KijiDataRequestBuilder;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.testutil.FooTableIntegrationTest;
@@ -102,9 +103,9 @@ public class IntegrationTestKijiTableInputFormat
     // Get settings for test.
     final String instance = getInstanceName();
     final String table = getFooTable().getName();
-    final KijiDataRequest request = new KijiDataRequest()
-        .addColumn(new KijiDataRequest.Column("info", "name"))
-        .addColumn(new KijiDataRequest.Column("info", "email"));
+    final KijiDataRequestBuilder builder = KijiDataRequest.builder();
+    builder.addColumns().add("info", "name").add("info", "email");
+    final KijiDataRequest request = builder.build();
 
     job.setJarByClass(IntegrationTestKijiTableInputFormat.class);
 

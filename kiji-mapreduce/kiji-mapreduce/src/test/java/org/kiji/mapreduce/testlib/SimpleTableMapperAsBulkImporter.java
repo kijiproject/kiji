@@ -34,7 +34,6 @@ import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
-import org.kiji.schema.KijiDataRequest.Column;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;
@@ -70,8 +69,7 @@ public final class SimpleTableMapperAsBulkImporter
     final Kiji kiji = Kiji.Factory.open(uri, conf);
     final KijiTable table = kiji.openTable(uri.getTable());
 
-    final KijiDataRequest dataRequest = new KijiDataRequest()
-        .addColumn(new Column("primitives"));
+    final KijiDataRequest dataRequest = KijiDataRequest.create("primitives");
 
     final MapReduceJob mrjob = KijiBulkImportJobBuilder.create()
         .withBulkImporter(SimpleTableMapperAsBulkImporter.class)

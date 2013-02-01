@@ -49,6 +49,7 @@ import org.kiji.mapreduce.MapReduceJob;
 import org.kiji.mapreduce.output.SequenceFileMapReduceJobOutput;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
+import org.kiji.schema.KijiDataRequestBuilder;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.layout.KijiTableLayout;
@@ -96,10 +97,11 @@ public class TestRegexQualifierColumnFilter {
   public static class MyGatherer extends KijiGatherer<Text, NullWritable> {
     @Override
     public KijiDataRequest getDataRequest() {
-      return new KijiDataRequest()
-          .addColumn(new KijiDataRequest.Column("family")
-              .withFilter(new RegexQualifierColumnFilter("a.*"))
-              .withMaxVersions(10));
+      KijiDataRequestBuilder builder = KijiDataRequest.builder();
+      builder.addColumns().withMaxVersions(10)
+          .withFilter(new RegexQualifierColumnFilter("a.*"))
+          .addFamily("family");
+      return builder.build();
     }
 
     @Override

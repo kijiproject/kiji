@@ -44,7 +44,7 @@ import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
 import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
-import org.kiji.schema.KijiDataRequest.Column;
+import org.kiji.schema.KijiDataRequestBuilder;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiRowScanner;
 import org.kiji.schema.KijiTable;
@@ -190,8 +190,9 @@ public class IntegrationTestTableMapper extends AbstractKijiIntegrationTest {
   }
 
   private void validateOutputTable() throws Exception {
-    final KijiDataRequest okdr = new KijiDataRequest()
-        .addColumn(new Column("primitives").withMaxVersions(3));
+    final KijiDataRequestBuilder okdrb = KijiDataRequest.builder();
+    okdrb.addColumns().withMaxVersions(3).addFamily("primitives");
+    final KijiDataRequest okdr = okdrb.build();
     final Map<String, KijiRowData> rows = toRowMap(mOutputTable, okdr);
     assertEquals(2, rows.size());
     final Collection<CharSequence> peopleIn94110 =

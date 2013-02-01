@@ -48,7 +48,6 @@ import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
-import org.kiji.schema.KijiDataRequest.Column;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiRowScanner;
 import org.kiji.schema.KijiTable;
@@ -133,8 +132,7 @@ public class TestBulkImporter {
 
     // Validate output:
     final KijiRowScanner scanner = mReader.getScanner(
-        new KijiDataRequest()
-            .addColumn(new Column("primitives")));
+        KijiDataRequest.create("primitives"));
     for (KijiRowData row : scanner) {
       final EntityId eid = row.getEntityId();
       final String rowId = Bytes.toString(eid.getKijiRowKey());
@@ -228,8 +226,7 @@ public class TestBulkImporter {
 
     // Validate output:
     final KijiRowScanner scanner = mReader.getScanner(
-        new KijiDataRequest()
-            .addColumn(new Column("primitives")));
+        KijiDataRequest.create("primitives"));
     final Set<String> produced = Sets.newHashSet();
     for (KijiRowData row : scanner) {
       final String string = row.getMostRecentValue("primitives", "string").toString();

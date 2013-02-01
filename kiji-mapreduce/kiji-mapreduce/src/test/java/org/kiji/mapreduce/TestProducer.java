@@ -42,7 +42,7 @@ import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
-import org.kiji.schema.KijiDataRequest.Column;
+import org.kiji.schema.KijiDataRequestBuilder;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiRowScanner;
 import org.kiji.schema.KijiTable;
@@ -98,8 +98,7 @@ public class TestProducer {
     /** {@inheritDoc} */
     @Override
     public KijiDataRequest getDataRequest() {
-      return new KijiDataRequest()
-          .addColumn(new Column("info"));
+      return KijiDataRequest.create("info");
     }
 
     /** {@inheritDoc} */
@@ -129,10 +128,9 @@ public class TestProducer {
     assertTrue(job.run());
 
     // Validate produced output:
-    final KijiRowScanner scanner = mReader.getScanner(
-        new KijiDataRequest()
-            .addColumn(new Column("info"))
-            .addColumn(new Column("map_family")));
+    final KijiDataRequestBuilder builder = KijiDataRequest.builder();
+    builder.addColumns().addFamily("info").addFamily("map_family");
+    final KijiRowScanner scanner = mReader.getScanner(builder.build());
     for (KijiRowData row : scanner) {
       final EntityId eid = row.getEntityId();
       final String userId = Bytes.toString(eid.getKijiRowKey());
@@ -159,8 +157,7 @@ public class TestProducer {
     /** {@inheritDoc} */
     @Override
     public KijiDataRequest getDataRequest() {
-      return new KijiDataRequest()
-          .addColumn(new Column("info"));
+      return KijiDataRequest.create("info");
     }
 
     /** {@inheritDoc} */
@@ -212,8 +209,7 @@ public class TestProducer {
 
     // Validate produced output:
     final KijiRowScanner scanner = mReader.getScanner(
-        new KijiDataRequest()
-            .addColumn(new Column("primitives", "string")));
+        KijiDataRequest.create("primitives", "string"));
     final Set<String> produced = Sets.newHashSet();
     for (KijiRowData row : scanner) {
       produced.add(row.getMostRecentValue("primitives", "string").toString());

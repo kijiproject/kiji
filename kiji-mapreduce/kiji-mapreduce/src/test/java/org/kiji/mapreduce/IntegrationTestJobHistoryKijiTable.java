@@ -85,9 +85,7 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
     @Override
     public KijiDataRequest getDataRequest() {
       // We only need to read the most recent email address field from the user's row.
-      return new KijiDataRequest()
-      .addColumn(new KijiDataRequest.Column("info", "email")
-      .withMaxVersions(1));
+      return KijiDataRequest.create("info", "email");
     }
 
     /** {@inheritDoc} */

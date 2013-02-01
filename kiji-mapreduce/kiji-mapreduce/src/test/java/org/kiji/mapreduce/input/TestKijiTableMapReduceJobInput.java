@@ -43,6 +43,7 @@ import org.kiji.mapreduce.MapReduceJobInput;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiDataRequest;
+import org.kiji.schema.KijiDataRequestBuilder;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.hbase.KijiManagedHBaseTableName;
 import org.kiji.schema.impl.HBaseDataRequestAdapter;
@@ -86,8 +87,9 @@ public class TestKijiTableMapReduceJobInput extends KijiClientTest {
     final Job job = new Job();
 
     // Request the latest 3 versions of column 'info:email':
-    KijiDataRequest dataRequest = new KijiDataRequest()
-        .addColumn(new KijiDataRequest.Column("info", "email").withMaxVersions(3));
+    KijiDataRequestBuilder builder = KijiDataRequest.builder();
+    builder.addColumns().withMaxVersions(3).add("info", "email");
+    KijiDataRequest dataRequest = builder.build();
 
     // Read from 'here' to 'there':
     final EntityId startRow = RawEntityId.fromKijiRowKey(Bytes.toBytes("here"));

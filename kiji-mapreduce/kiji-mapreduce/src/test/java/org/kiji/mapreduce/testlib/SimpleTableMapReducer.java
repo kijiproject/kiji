@@ -30,7 +30,6 @@ import org.kiji.mapreduce.KijiTableContext;
 import org.kiji.mapreduce.KijiTableReducer;
 import org.kiji.mapreduce.MapReduceContext;
 import org.kiji.schema.KijiDataRequest;
-import org.kiji.schema.KijiDataRequest.Column;
 import org.kiji.schema.KijiRowData;
 
 /**
@@ -46,8 +45,7 @@ public class SimpleTableMapReducer {
     /** {@inheritDoc} */
     @Override
     public KijiDataRequest getDataRequest() {
-      return new KijiDataRequest()
-          .addColumn(new Column("primitives"));
+      return KijiDataRequest.create("primitives");
     }
 
     /** {@inheritDoc} */

@@ -42,7 +42,6 @@ import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiConfiguration;
 import org.kiji.schema.KijiDataRequest;
-import org.kiji.schema.KijiDataRequest.Column;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiRowScanner;
 import org.kiji.schema.KijiTable;
@@ -151,7 +150,7 @@ public class TestTransform {
         .withMapper(ExampleMapper.class)
         .withInput(new KijiTableMapReduceJobInput(
             (HBaseKijiTable) mTable,
-            new KijiDataRequest().addColumn(new Column("info")),
+            KijiDataRequest.create("info"),
             new RowOptions()))
         .withOutput(new DirectKijiTableMapReduceJobOutput(mTable))
         .build();
@@ -160,7 +159,7 @@ public class TestTransform {
     // Validate the output table content:
     {
       final KijiRowScanner scanner = mTable.openTableReader().getScanner(
-          new KijiDataRequest().addColumn(new Column("info")));
+          KijiDataRequest.create("info"));
       for (KijiRowData row : scanner) {
         final EntityId eid = row.getEntityId();
         final String userId = Bytes.toString(eid.getKijiRowKey());

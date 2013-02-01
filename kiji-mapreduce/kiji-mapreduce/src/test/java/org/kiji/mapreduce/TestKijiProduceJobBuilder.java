@@ -63,9 +63,7 @@ public class TestKijiProduceJobBuilder extends KijiClientTest {
     /** {@inheritDoc} */
     @Override
     public KijiDataRequest getDataRequest() {
-      KijiDataRequest dataRequest = new KijiDataRequest();
-      dataRequest.addColumn(new KijiDataRequest.Column("info", "email"));
-      return dataRequest;
+      return KijiDataRequest.create("info", "email");
     }
 
     /** {@inheritDoc} */

@@ -136,7 +136,7 @@ public final class JobHistoryKijiTable implements Closeable {
     // TODO: This API is too low level. Eventually we should return a JobHistoryEntry object which
     // has fields for the explicit attributes and a map for any implicit attributes.
     KijiTableReader wtr = mKijiTable.openTableReader();
-    KijiDataRequest wdr = new KijiDataRequest().addColumn(new KijiDataRequest.Column("info"));
+    KijiDataRequest wdr = KijiDataRequest.create("info");
 
     try {
       return wtr.get(mKijiTable.getEntityId(jobId), wdr);

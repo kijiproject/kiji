@@ -33,7 +33,6 @@ import org.kiji.mapreduce.KijiTableContextFactory;
 import org.kiji.mapreduce.MapReduceContext;
 import org.kiji.mapreduce.context.InternalMapReduceContext;
 import org.kiji.schema.KijiDataRequest;
-import org.kiji.schema.KijiDataRequest.Column;
 import org.kiji.schema.KijiRowData;
 
 /**
@@ -70,8 +69,7 @@ public class SimpleTableMapperAsGatherer
   /** {@inheritDoc} */
   @Override
   public KijiDataRequest getDataRequest() {
-    return new KijiDataRequest()
-        .addColumn(new Column("info"));
+    return KijiDataRequest.create("info");
   }
 
   private KijiTableContext mTableContext = null;

@@ -37,6 +37,7 @@ import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
+import org.kiji.schema.KijiDataRequestBuilder;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
@@ -479,10 +480,11 @@ public final class KijiTableKeyValueStore<V> implements Configurable, KeyValueSt
       mKijiTable = mKiji.openTable(mTableUri.getTable());
       mTableReader = mKijiTable.openTableReader();
 
-      mDataReq = new KijiDataRequest()
-          .addColumn(new KijiDataRequest.Column(mColumn.getFamily(), mColumn.getQualifier())
-              .withMaxVersions(1))
+      KijiDataRequestBuilder dataReqBuilder = KijiDataRequest.builder()
           .withTimeRange(mMinTs, mMaxTs);
+      dataReqBuilder
+          .addColumns().withMaxVersions(1).add(mColumn.getFamily(), mColumn.getQualifier());
+      mDataReq = dataReqBuilder.build();
 
       if (mMaxObjectsToCache > 1) {
         mResultCache = LruCache.create(mMaxObjectsToCache);

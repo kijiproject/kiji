@@ -57,8 +57,7 @@ public class TestGatherMapFamily {
     /** {@inheritDoc} */
     @Override
     public KijiDataRequest getDataRequest() {
-      return new KijiDataRequest()
-          .addColumn(new KijiDataRequest.Column("map_family"));
+      return KijiDataRequest.create("map_family");
     }
 
     /** {@inheritDoc} */
