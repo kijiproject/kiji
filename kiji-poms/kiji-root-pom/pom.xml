@@ -57,6 +57,7 @@
     <maven-assembly-plugin.version>2.3</maven-assembly-plugin.version>
     <maven-checkstyle-plugin.version>2.9.1</maven-checkstyle-plugin.version>
     <maven-compiler-plugin.version>2.3.2</maven-compiler-plugin.version>
+    <maven-dependency-plugin.version>2.6</maven-dependency-plugin.version>
     <maven-failsafe-plugin.version>2.12</maven-failsafe-plugin.version>
     <maven-jar-plugin.version>2.3.1</maven-jar-plugin.version>
     <maven-javadoc-plugin.version>2.8</maven-javadoc-plugin.version>
@@ -189,6 +190,12 @@
             </includes>
             <redirectTestOutputToFile>${redirectTestOutputToFile}</redirectTestOutputToFile>
           </configuration>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <version>${maven-dependency-plugin.version}</version>
         </plugin>
 
         <plugin>
