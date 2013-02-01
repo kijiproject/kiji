@@ -81,7 +81,7 @@ public abstract class KijiRowFilterIntegrationTest extends AbstractKijiIntegrati
     final KijiTableLayout foodTableLayout =
         new KijiTableLayout(KijiTableLayouts.getLayout(KijiTableLayouts.FOODS), null);
 
-    mKiji.getAdmin().createTable(FOODS_TABLE_NAME, foodTableLayout, false);
+    mKiji.createTable(FOODS_TABLE_NAME, foodTableLayout);
     LOG.info("Table " + FOODS_TABLE_NAME + " created.");
   }
 
@@ -89,7 +89,7 @@ public abstract class KijiRowFilterIntegrationTest extends AbstractKijiIntegrati
    * Deletes the 'foods' table.
    */
   private void deleteTable() throws Exception {
-    mKiji.getAdmin().deleteTable(FOODS_TABLE_NAME);
+    mKiji.deleteTable(FOODS_TABLE_NAME);
   }
 
   /**

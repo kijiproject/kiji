@@ -37,7 +37,6 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
 import org.kiji.schema.Kiji;
-import org.kiji.schema.KijiAdmin;
 import org.kiji.schema.KijiConfiguration;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
@@ -60,8 +59,7 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
     Kiji kiji = null;
     try {
       kiji = Kiji.Factory.open(getKijiConfiguration());
-      KijiAdmin kijiAdmin = kiji.getAdmin();
-      JobHistoryKijiTable.install(kijiAdmin);
+      JobHistoryKijiTable.install(kiji);
     } finally {
       ResourceUtils.releaseOrLog(kiji);
     }
@@ -232,8 +230,7 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
      createAndPopulateFooTable();
      Kiji kiji = Kiji.Factory.open(getKijiConfiguration());
      KijiTable fooTable = kiji.openTable("foo");
-     KijiAdmin kijiAdmin = kiji.getAdmin();
-     kijiAdmin.deleteTable(JobHistoryKijiTable.getInstallName());
+     kiji.deleteTable(JobHistoryKijiTable.getInstallName());
 
      KijiProduceJobBuilder builder = KijiProduceJobBuilder.create()
          .withInputTable(fooTable)

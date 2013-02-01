@@ -39,8 +39,8 @@ import org.kiji.schema.layout.KijiTableLayouts;
 public class TestKijiTableKeyValueStore extends KijiClientTest {
   @Before
   public void setupEnvironment() throws Exception {
-    getKiji().getAdmin().createTable("table",
-        new KijiTableLayout(KijiTableLayouts.getLayout(KijiTableLayouts.SIMPLE), null), false);
+    getKiji().createTable("table",
+        new KijiTableLayout(KijiTableLayouts.getLayout(KijiTableLayouts.SIMPLE), null));
   }
 
   /** @return an uninitialized store to test for initialization from a Configuration. */

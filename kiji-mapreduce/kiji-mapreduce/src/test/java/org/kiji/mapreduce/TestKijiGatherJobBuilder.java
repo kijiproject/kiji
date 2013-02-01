@@ -197,7 +197,7 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
     conf.set("fs.defaultFS", mTempPath.toString());
     conf.set("fs.default.name", mTempPath.toString());
     final KijiTableLayout layout = new KijiTableLayout(KijiMRTestLayouts.getTestLayout(), null);
-    getKiji().getAdmin().createTable("test", layout, false);
+    getKiji().createTable("test", layout);
 
     // Set the working directory so that it gets cleaned up after the test:
     conf.set("mapred.working.dir", new Path(mTempPath, "workdir").toString());

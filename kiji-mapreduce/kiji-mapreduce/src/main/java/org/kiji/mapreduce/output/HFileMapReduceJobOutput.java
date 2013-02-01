@@ -51,10 +51,9 @@ import org.kiji.mapreduce.JobConfigurationException;
 import org.kiji.mapreduce.KijiConfKeys;
 import org.kiji.mapreduce.KijiTableContext;
 import org.kiji.mapreduce.context.HFileWriterContext;
-import org.kiji.schema.KijiAdmin;
 import org.kiji.schema.KijiRowKeySplitter;
 import org.kiji.schema.KijiTable;
-import org.kiji.schema.impl.HBaseKijiAdmin;
+import org.kiji.schema.impl.HBaseKiji;
 import org.kiji.schema.impl.HBaseKijiTable;
 
 /**
@@ -309,8 +308,7 @@ public final class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
   // TODO(SCHEMA-153): Move this to KijiAdmin
   private static List<HFileKeyValue> getRegionStartKeys(KijiTable table)
       throws IOException {
-    final KijiAdmin admin = table.getKiji().getAdmin();
-    final HBaseAdmin hbaseAdmin = ((HBaseKijiAdmin) admin).getHBaseAdmin();
+    final HBaseAdmin hbaseAdmin = ((HBaseKiji) table.getKiji()).getHBaseAdmin();
     final HTableInterface hbaseTable = HBaseKijiTable.downcast(table).getHTable();
 
     final List<HRegionInfo> regions = hbaseAdmin.getTableRegions(hbaseTable.getTableName());

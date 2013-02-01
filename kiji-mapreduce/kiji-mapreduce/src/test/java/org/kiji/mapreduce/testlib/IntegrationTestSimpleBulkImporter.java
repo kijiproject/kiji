@@ -132,7 +132,7 @@ public class IntegrationTestSimpleBulkImporter extends AbstractKijiIntegrationTe
     writeBulkImportInput(mBulkImportInputPath);
     mKiji = Kiji.Factory.open(getKijiURI(), mConf);
     final KijiTableLayout layout = new KijiTableLayout(KijiMRTestLayouts.getTestLayout(), null);
-    mKiji.getAdmin().createTable("test", layout, false);
+    mKiji.createTable("test", layout);
     mOutputTable = mKiji.openTable("test");
   }
 

@@ -39,7 +39,7 @@ public class TestKijiTableMapReduceJobOutput extends KijiClientTest {
     final Kiji kiji = getKiji();
     final KijiTableLayout layout =
         new KijiTableLayout(KijiTableLayouts.getLayout(KijiTableLayouts.SIMPLE),  null);
-    kiji.getAdmin().createTable("table", layout, false);
+    kiji.createTable("table", layout);
     final KijiTable table = kiji.openTable("table");
 
     final Job job = new Job();

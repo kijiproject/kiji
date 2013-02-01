@@ -65,10 +65,8 @@ public class IntegrationTestColumnPaging extends AbstractKijiIntegrationTest {
   @Before
   public void setup() throws Exception {
     mKiji = Kiji.Factory.open(getKijiConfiguration());
-    KijiAdmin admin = mKiji.getAdmin();
-    admin.createTable("user",
-        new KijiTableLayout(KijiTableLayouts.getLayout(KijiTableLayouts.PAGING_TEST), null),
-        false);
+    mKiji.createTable("user",
+        new KijiTableLayout(KijiTableLayouts.getLayout(KijiTableLayouts.PAGING_TEST), null));
     // TODO(SCHEMA-158): Clean up internal hbaseAdmin in kijiAdmin.
     mUserTable = mKiji.openTable("user");
 

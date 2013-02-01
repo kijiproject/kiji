@@ -31,7 +31,6 @@ import org.apache.hadoop.mapreduce.Job;
 import org.kiji.annotations.ApiAudience;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
-import org.kiji.schema.KijiAdmin;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
@@ -116,13 +115,12 @@ public final class JobHistoryKijiTable implements Closeable {
   /**
    * Install the job history table into a Kiji instance.
    *
-   * @param admin The KijiAdmin to install this table.
+   * @param kiji The Kiji instance to install this table in.
    * @throws IOException If there is an error.
    */
-  public static void install(KijiAdmin admin) throws IOException {
-    admin.createTable(TABLE_NAME,
-        KijiTableLayout.createFromEffectiveJsonResource(TABLE_LAYOUT_RESOURCE),
-        false);
+  public static void install(Kiji kiji) throws IOException {
+    kiji.createTable(TABLE_NAME,
+        KijiTableLayout.createFromEffectiveJsonResource(TABLE_LAYOUT_RESOURCE));
   }
 
   /**

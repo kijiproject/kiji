@@ -36,7 +36,6 @@ import org.kiji.annotations.ApiAudience;
 import org.kiji.common.flags.Flag;
 import org.kiji.mapreduce.JobHistoryKijiTable;
 import org.kiji.schema.Kiji;
-import org.kiji.schema.KijiAdmin;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.tools.KijiToolLauncher;
 import org.kiji.schema.tools.RequiredFlagException;
@@ -82,11 +81,10 @@ public final class KijiJobHistory extends VersionValidatedTool {
 
   @Override
   protected int run(List<String> nonFlagArgs) throws Exception {
-    Kiji kiji = getKiji();
+    final Kiji kiji = getKiji();
 
     if (mInstall) {
-      final KijiAdmin kijiAdmin = kiji.getAdmin();
-      JobHistoryKijiTable.install(kijiAdmin);
+      JobHistoryKijiTable.install(kiji);
     }
 
     if (!mJobId.isEmpty()) {

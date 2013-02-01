@@ -57,7 +57,6 @@ import org.slf4j.LoggerFactory;
 import org.kiji.mapreduce.HFileKeyValue;
 import org.kiji.mapreduce.KijiConfKeys;
 import org.kiji.schema.Kiji;
-import org.kiji.schema.KijiAdmin;
 import org.kiji.schema.KijiInstaller;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.layout.KijiTableLayout;
@@ -171,9 +170,8 @@ public class TestKijiHFileOutputFormat {
     KijiInstaller.get().install(mTableURI, mConf);
     mKiji = Kiji.Factory.open(mTableURI);
 
-    final KijiAdmin admin = mKiji.getAdmin();
     mLayout = new KijiTableLayout(KijiTableLayouts.getLayout(KijiTableLayouts.FULL_FEATURED), null);
-    admin.createTable("user", mLayout, false);
+    mKiji.createTable("user", mLayout);
 
     mDefaultLGId = mLayout.getLocalityGroupMap().get("default").getId();
     mInMemoryLGId = mLayout.getLocalityGroupMap().get("inMemory").getId();

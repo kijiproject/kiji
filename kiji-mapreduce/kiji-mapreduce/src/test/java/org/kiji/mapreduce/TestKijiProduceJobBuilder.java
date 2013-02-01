@@ -95,7 +95,7 @@ public class TestKijiProduceJobBuilder extends KijiClientTest {
     getConf().set("fs.defaultFS", mTempPath.toString());
     getConf().set("fs.default.name", mTempPath.toString());
     final KijiTableLayout layout = new KijiTableLayout(KijiMRTestLayouts.getTestLayout(), null);
-    getKiji().getAdmin().createTable("test", layout, false);
+    getKiji().createTable("test", layout);
 
     // Set the working directory so that it gets cleaned up after the test:
     getConf().set("mapred.working.dir", new Path(mTempPath, "workdir").toString());
@@ -171,7 +171,7 @@ public class TestKijiProduceJobBuilder extends KijiClientTest {
     {
       final KijiTableLayout layout =
           new KijiTableLayout(KijiMRTestLayouts.getTestLayout("other"), null);
-      getKiji().getAdmin().createTable(layout.getName(), layout, false);
+      getKiji().createTable(layout.getName(), layout);
     }
     final KijiTable otherTable = getKiji().openTable("other");
 

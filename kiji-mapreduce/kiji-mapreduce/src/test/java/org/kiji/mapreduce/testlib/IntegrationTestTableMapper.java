@@ -130,10 +130,10 @@ public class IntegrationTestTableMapper extends AbstractKijiIntegrationTest {
 
     final KijiTableLayout inputLayout =
         new KijiTableLayout(KijiMRTestLayouts.getTestLayout(inputTableName), null);
-    mKiji.getAdmin().createTable(inputTableName, inputLayout, false);
+    mKiji.createTable(inputTableName, inputLayout);
     final KijiTableLayout outputLayout =
         new KijiTableLayout(KijiMRTestLayouts.getTestLayout(outputTableName), null);
-    mKiji.getAdmin().createTable("output", outputLayout, false);
+    mKiji.createTable("output", outputLayout);
 
     mInputTable = mKiji.openTable(inputTableName);
     mOutputTable = mKiji.openTable(outputTableName);
