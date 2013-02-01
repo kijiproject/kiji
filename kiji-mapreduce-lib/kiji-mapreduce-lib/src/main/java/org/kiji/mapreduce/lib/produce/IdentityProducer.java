@@ -30,7 +30,7 @@ import org.kiji.hadoop.configurator.HadoopConf;
 import org.kiji.hadoop.configurator.HadoopConfigurator;
 import org.kiji.mapreduce.KijiProducer;
 import org.kiji.mapreduce.ProducerContext;
-import org.kiji.schema.KijiCell;
+import org.kiji.schema.DecodedCell;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
@@ -149,9 +149,9 @@ public class IdentityProducer extends KijiProducer {
 
       // Write the data to the output column.
       if (!mOutputColumn.isFullyQualified()) {
-        context.put(columnName.getQualifier(), timestamp, new KijiCell<Object>(schema, data));
+        context.put(columnName.getQualifier(), timestamp, new DecodedCell<Object>(schema, data));
       } else {
-        context.put(timestamp, new KijiCell<Object>(schema, data));
+        context.put(timestamp, new DecodedCell<Object>(schema, data));
       }
     }
   }

@@ -23,14 +23,14 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.Text;
 
-import org.kiji.mapreduce.KijiBaseMapper;
+import org.kiji.mapreduce.KijiMapper;
 
 /**
  * A Mapper that takes name/text records, and outputs name/flattened-text pairs.
  * Here, "flattened-text" refers to the original text with all newlines
  * replaced by single spaces.
  */
-public class TextFlatteningMapper extends KijiBaseMapper<Text, Text, Text, Text> {
+public class TextFlatteningMapper extends KijiMapper<Text, Text, Text, Text> {
   /** Reusable Text to store the contents of each file to write. */
   private Text mFlattenedFile;
 

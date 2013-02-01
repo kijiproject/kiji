@@ -31,7 +31,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobConf;
 
 import org.kiji.mapreduce.AvroValueWriter;
-import org.kiji.mapreduce.KijiBaseReducer;
+import org.kiji.mapreduce.KijiReducer;
 
 /**
  * A reducer that aggregates its text input values into a list.
@@ -43,7 +43,7 @@ import org.kiji.mapreduce.KijiBaseReducer;
  *
  * @param <K> The input key type, which will also be used as the output key type.
  */
-public class TextListReducer<K> extends KijiBaseReducer<K, Text, K, AvroValue<List<CharSequence>>>
+public class TextListReducer<K> extends KijiReducer<K, Text, K, AvroValue<List<CharSequence>>>
     implements Configurable, AvroValueWriter {
   /** The job configuration. */
   private Configuration mConf;

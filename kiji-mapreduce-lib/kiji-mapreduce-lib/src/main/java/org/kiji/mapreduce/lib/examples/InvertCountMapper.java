@@ -24,7 +24,7 @@ import java.io.IOException;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 
-import org.kiji.mapreduce.KijiBaseMapper;
+import org.kiji.mapreduce.KijiMapper;
 
 /**
  * A map that inverts its (Text, IntWritable) records into (IntWritable, Text) records.
@@ -34,7 +34,7 @@ import org.kiji.mapreduce.KijiBaseMapper;
  * EmailDomainCountGatherJob to generate a dataset of email domains sorted by their
  * popularity.</p>
  */
-public class InvertCountMapper extends KijiBaseMapper<Text, IntWritable, IntWritable, Text> {
+public class InvertCountMapper extends KijiMapper<Text, IntWritable, IntWritable, Text> {
   /** {@inheritDoc} */
   @Override
   public void map(Text key, IntWritable value, Context context)
