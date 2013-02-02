@@ -39,6 +39,8 @@ import org.slf4j.LoggerFactory;
 import org.kiji.annotations.ApiAudience;
 import org.kiji.hadoop.configurator.HadoopConf;
 import org.kiji.hadoop.configurator.HadoopConfigurator;
+import org.kiji.mapreduce.HTableReader;
+import org.kiji.mapreduce.KijiBulkImporter;
 import org.kiji.mapreduce.KijiTableContext;
 import org.kiji.schema.DecodedCell;
 import org.kiji.schema.EntityId;
@@ -48,6 +50,16 @@ import org.kiji.schema.KijiColumnName;
  * A bulk importer that reads columns from an HTable that were encoded using the {@link
  * org.apache.hadoop.hbase.util.Bytes} utility class.
  *
+ * <p>You may extend this class to be used as the --importer flag when you have specified
+ * an --input flag of <code>htable:&lt;tablename&gt;</code> in your <code>kiji
+ * bulk-import</code> command.</p>
+ *
+ * <p>Concrete subclass must implement:</p>
+ * <ul>
+ *   <li>getOutputColumn() - Specify the target column in the Kiji table.</li>
+ *   <li>getInputHTableScan() - The Scan descriptor describing the rows/columns you wish
+ *     to read from the HTable.</li>
+ * </ul>
  * <p>Since HTable columns have no concept of schemas or types, this importer requires you
  * specify the type of encoding that was used for each input HTable column.  Any primitive
  * types supported by the HBase <code>Bytes</code> utility class may be used here:</p>
@@ -96,7 +108,10 @@ import org.kiji.schema.KijiColumnName;
  * method to customize how HBase cells are converted to Kiji cells.</p>
  */
 @ApiAudience.Public
-public final class BinaryHTableBulkImporter extends HTableBulkImporter {
+public final class BinaryHTableBulkImporter
+  extends KijiBulkImporter<ImmutableBytesWritable, Result>
+  implements HTableReader {
+
   private static final Logger LOG = LoggerFactory.getLogger(BinaryHTableBulkImporter.class);
 
   /** The configuration variable listing the input/output columns and their types. */
