@@ -30,6 +30,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +39,9 @@ import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.Inheritance;
 import org.kiji.hadoop.configurator.HadoopConf;
 import org.kiji.hadoop.configurator.HadoopConfigurator;
+import org.kiji.mapreduce.KijiBulkImporter;
 import org.kiji.mapreduce.KijiConfKeys;
+import org.kiji.mapreduce.KijiTableContext;
 import org.kiji.mapreduce.bulkimport.TextInputDescriptorParser.QualifierInfo;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiColumnName;
@@ -50,6 +54,12 @@ import org.kiji.schema.util.ResourceUtils;
  * Importing from a text file requires specifying a KijiColumnName, and writer Schema
  * for each element to be inserted into kiji, in addition to the raw import data.
  *
+ * <p>Use this Mapper over text files to import data into a Kiji
+ * table.  Each line in the file will be treated data for one row.
+ * This line should generate a single EntityId to write to, and any number
+ * of writes to add to that entity.  Override the produce(String, Context)
+ * method with this behavior.</p>
+ *
  * <p>This class reads a list of qualifiers and writer Schemas from an input-descriptor file
  * in hdfs.  See {@link org.kiji.mapreduce.bulkimport.TextInputDescriptorParser} for
  * input-descriptor format.</p>
@@ -61,7 +71,7 @@ import org.kiji.schema.util.ResourceUtils;
  */
 @ApiAudience.Public
 @Inheritance.Extensible
-public abstract class DescribedInputTextBulkImporter extends BaseTextBulkImporter {
+public abstract class DescribedInputTextBulkImporter extends KijiBulkImporter<LongWritable, Text> {
   private static final Logger LOG = LoggerFactory.getLogger(DescribedInputTextBulkImporter.class);
 
   /** Configuration variable specifying the kiji column family to write to. */
@@ -159,6 +169,24 @@ public abstract class DescribedInputTextBulkImporter extends BaseTextBulkImporte
     } finally {
       ResourceUtils.releaseOrLog(kiji);
     }
+  }
+
+  /**
+   * Converts a line of text to a set of writes to <code>context</code>, and
+   * an EntityId for the row.
+   *
+   * @param line The line to parse.
+   * @param context The context to write to.
+   * @throws IOException if there is an error.
+   */
+  public abstract void produce(Text line, KijiTableContext context)
+      throws IOException;
+
+  /** {@inheritDoc} */
+  @Override
+  public void produce(LongWritable fileOffset, Text line, KijiTableContext context)
+      throws IOException {
+    produce(line, context);
   }
 
   /**
