@@ -21,11 +21,9 @@ package org.kiji.mapreduce;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
@@ -48,7 +46,6 @@ import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.layout.KijiTableLayout;
-import org.kiji.schema.util.TestFileUtils;
 
 public class TestKijiProduceJobBuilder extends KijiClientTest {
 
@@ -83,32 +80,23 @@ public class TestKijiProduceJobBuilder extends KijiClientTest {
     }
   }
 
-  private File mTempDir;
-  private Path mTempPath;
+  /** Test table, owned by this test. */
   private KijiTable mTable;
 
   @Before
-  public void setUp() throws Exception {
-    mTempDir = TestFileUtils.createTempDir("test", "dir");
-    mTempPath = new Path("file://" + mTempDir);
-
-    getConf().set("fs.defaultFS", mTempPath.toString());
-    getConf().set("fs.default.name", mTempPath.toString());
+  public final void setupTestKijiProducer() throws Exception {
     final KijiTableLayout layout = new KijiTableLayout(KijiMRTestLayouts.getTestLayout(), null);
     getKiji().createTable("test", layout);
 
     // Set the working directory so that it gets cleaned up after the test:
-    getConf().set("mapred.working.dir", new Path(mTempPath, "workdir").toString());
+    getConf().set("mapred.working.dir", "file://" + getLocalTempDir() + "/workdir");
 
     mTable = getKiji().openTable("test");
   }
 
   @After
-  public void tearDown() throws Exception {
-    FileUtils.deleteDirectory(mTempDir);
+  public void teardownTestKijiProducer() throws Exception {
     mTable.close();
-    mTempDir = null;
-    mTempPath = null;
     mTable = null;
   }
 
@@ -116,6 +104,7 @@ public class TestKijiProduceJobBuilder extends KijiClientTest {
   public void testBuildWithHFileOutput() throws ClassNotFoundException, IOException {
 
     final MapReduceJob produceJob = KijiProduceJobBuilder.create()
+        .withConf(getConf())
         .withInputTable(mTable)
         .withProducer(MyProducer.class)
         .withOutput(new HFileMapReduceJobOutput(mTable, new Path("foo/bar"), 10))
@@ -138,6 +127,7 @@ public class TestKijiProduceJobBuilder extends KijiClientTest {
     // This should throw an exception because we didn't provide a better KVStore
     // than the UnconfiguredKeyValueStore in the default.
     KijiProduceJobBuilder.create()
+        .withConf(getConf())
         .withInputTable(mTable)
         .withProducer(UnconfiguredKVProducer.class)
         .withOutput(new DirectKijiTableMapReduceJobOutput(mTable))
@@ -148,6 +138,7 @@ public class TestKijiProduceJobBuilder extends KijiClientTest {
   public void testEmptyKeyValueStore() throws ClassNotFoundException, IOException {
     // We override UnconfiguredKeyValueStore with EmptyKeyValueStore; this should succeed.
     MapReduceJob produceJob = KijiProduceJobBuilder.create()
+        .withConf(getConf())
         .withInputTable(mTable)
         .withProducer(UnconfiguredKVProducer.class)
         .withStore("foostore", EmptyKeyValueStore.get())
@@ -174,15 +165,17 @@ public class TestKijiProduceJobBuilder extends KijiClientTest {
       getKiji().createTable(layout.getName(), layout);
     }
     final KijiTable otherTable = getKiji().openTable("other");
-
-    // This should throw a job configuration exception because the output table does not
-    // match the input table.
-    KijiProduceJobBuilder.create()
-        .withInputTable(mTable)
-        .withProducer(MyProducer.class)
-        .withOutput(new DirectKijiTableMapReduceJobOutput(otherTable))
-        .build();
-
-    otherTable.close();
+    try {
+      // This should throw a job configuration exception because the output table does not
+      // match the input table.
+      KijiProduceJobBuilder.create()
+          .withConf(getConf())
+          .withInputTable(mTable)
+          .withProducer(MyProducer.class)
+          .withOutput(new DirectKijiTableMapReduceJobOutput(otherTable))
+          .build();
+    } finally {
+      otherTable.close();
+    }
   }
 }

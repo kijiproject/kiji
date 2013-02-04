@@ -30,8 +30,6 @@ import java.util.Set;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.LongWritable;
@@ -46,7 +44,7 @@ import org.slf4j.LoggerFactory;
 import org.kiji.mapreduce.input.TextMapReduceJobInput;
 import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
 import org.kiji.schema.EntityId;
-import org.kiji.schema.Kiji;
+import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiRowScanner;
@@ -56,34 +54,32 @@ import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.util.InstanceBuilder;
 
 /** Runs a bulk-importer job in-process against a fake HBase instance. */
-public class TestBulkImporter {
+public class TestBulkImporter extends KijiClientTest {
   private static final Logger LOG = LoggerFactory.getLogger(TestBulkImporter.class);
 
-  private Kiji mKiji;
   private KijiTable mTable;
   private KijiTableReader mReader;
 
   @Before
-  public void setUp() throws Exception {
+  public final void setupTestBulkImporter() throws Exception {
     // Get the test table layouts.
     final KijiTableLayout layout =
         new KijiTableLayout(KijiMRTestLayouts.getTestLayout(), null);
 
     // Populate the environment.
-    mKiji = new InstanceBuilder()
+    new InstanceBuilder(getKiji())
         .withTable("test", layout)
         .build();
 
     // Fill local variables.
-    mTable = mKiji.openTable("test");
+    mTable = getKiji().openTable("test");
     mReader = mTable.openTableReader();
   }
 
   @After
-  public void tearDown() throws Exception {
-    IOUtils.closeQuietly(mReader);
-    IOUtils.closeQuietly(mTable);
-    mKiji.release();
+  public final void teardownTestBulkImporter() throws Exception {
+    mReader.close();
+    mTable.close();
   }
 
   /**
@@ -110,20 +106,14 @@ public class TestBulkImporter {
 
   @Test
   public void testSimpleBulkImporter() throws Exception {
-    final File systemTmpDir = new File(System.getProperty("java.io.tmpdir"));
-    Preconditions.checkState(systemTmpDir.exists());
-
-    final File testTmpDir = File.createTempFile("kiji-mr", ".test", systemTmpDir);
-    testTmpDir.delete();
-    Preconditions.checkState(testTmpDir.mkdirs());
-
     // Prepare input file:
-    final File inputFile = File.createTempFile("TestBulkImportInput", ".txt", testTmpDir);
+    final File inputFile = File.createTempFile("TestBulkImportInput", ".txt", getLocalTempDir());
     TestingResources.writeTextFile(inputFile,
         TestingResources.get("org/kiji/mapreduce/TestBulkImportInput.txt"));
 
     // Run the bulk-import:
     final MapReduceJob job = KijiBulkImportJobBuilder.create()
+        .withConf(getConf())
         .withBulkImporter(SimpleBulkImporter.class)
         .withInput(new TextMapReduceJobInput(new Path(inputFile.toString())))
         .withOutput(new DirectKijiTableMapReduceJobOutput(mTable))
@@ -131,8 +121,7 @@ public class TestBulkImporter {
     assertTrue(job.run());
 
     // Validate output:
-    final KijiRowScanner scanner = mReader.getScanner(
-        KijiDataRequest.create("primitives"));
+    final KijiRowScanner scanner = mReader.getScanner(KijiDataRequest.create("primitives"));
     for (KijiRowData row : scanner) {
       final EntityId eid = row.getEntityId();
       final String rowId = Bytes.toString(eid.getKijiRowKey());
@@ -148,8 +137,6 @@ public class TestBulkImporter {
       }
     }
     scanner.close();
-
-    FileUtils.deleteQuietly(testTmpDir);
   }
 
   /**
@@ -204,20 +191,14 @@ public class TestBulkImporter {
   /** Tests the bulk-importer workflow (setup/produce/cleanup) and counters. */
   @Test
   public void testBulkImporterWorkflow() throws Exception {
-    final File systemTmpDir = new File(System.getProperty("java.io.tmpdir"));
-    Preconditions.checkState(systemTmpDir.exists());
-
-    final File testTmpDir = File.createTempFile("kiji-mr", ".test", systemTmpDir);
-    testTmpDir.delete();
-    Preconditions.checkState(testTmpDir.mkdirs());
-
     // Prepare input file:
-    final File inputFile = File.createTempFile("TestBulkImportInput", ".txt", testTmpDir);
+    final File inputFile = File.createTempFile("TestBulkImportInput", ".txt", getLocalTempDir());
     TestingResources.writeTextFile(inputFile,
         TestingResources.get("org/kiji/mapreduce/TestBulkImportInput.txt"));
 
     // Run the bulk-import:
     final MapReduceJob job = KijiBulkImportJobBuilder.create()
+        .withConf(getConf())
         .withBulkImporter(BulkImporterWorkflow.class)
         .withInput(new TextMapReduceJobInput(new Path(inputFile.toString())))
         .withOutput(new DirectKijiTableMapReduceJobOutput(mTable))
@@ -225,8 +206,7 @@ public class TestBulkImporter {
     assertTrue(job.run());
 
     // Validate output:
-    final KijiRowScanner scanner = mReader.getScanner(
-        KijiDataRequest.create("primitives"));
+    final KijiRowScanner scanner = mReader.getScanner(KijiDataRequest.create("primitives"));
     final Set<String> produced = Sets.newHashSet();
     for (KijiRowData row : scanner) {
       final String string = row.getMostRecentValue("primitives", "string").toString();
@@ -240,8 +220,6 @@ public class TestBulkImporter {
     final Counters counters = job.getHadoopJob().getCounters();
     assertEquals(2,
         counters.findCounter(JobHistoryCounters.BULKIMPORTER_RECORDS_PROCESSED).getValue());
-
-    FileUtils.deleteQuietly(testTmpDir);
   }
 
   // TODO(KIJI-359): Implement missing tests

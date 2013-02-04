@@ -29,7 +29,6 @@ import java.util.Set;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.LongWritable;
@@ -41,7 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.mapreduce.output.TextMapReduceJobOutput;
-import org.kiji.schema.Kiji;
+import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
@@ -49,7 +48,7 @@ import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.util.InstanceBuilder;
 
 /** Runs a producer job in-process against a fake HBase instance. */
-public class TestGatherer {
+public class TestGatherer extends KijiClientTest {
   private static final Logger LOG = LoggerFactory.getLogger(TestGatherer.class);
 
   /**
@@ -86,17 +85,17 @@ public class TestGatherer {
     }
   }
 
-  private Kiji mKiji;
+  /** Test table, owned by this test. */
   private KijiTable mTable;
 
   @Before
-  public void setupEnvironment() throws Exception {
+  public final void setupTestGatherer() throws Exception {
     // Get the test table layouts.
     final KijiTableLayout layout =
         new KijiTableLayout(KijiMRTestLayouts.getTestLayout(), null);
 
     // Populate the environment.
-    mKiji = new InstanceBuilder()
+    new InstanceBuilder(getKiji())
         .withTable("test", layout)
             .withRow("Marsellus Wallace")
                 .withFamily("info")
@@ -111,30 +110,23 @@ public class TestGatherer {
         .build();
 
     // Fill local variables.
-    mTable = mKiji.openTable("test");
+    mTable = getKiji().openTable("test");
   }
 
   @After
-  public void cleanupEnvironment() throws IOException {
-    IOUtils.closeQuietly(mTable);
-    mKiji.release();
+  public final void teardownTestGatherer() throws Exception {
+    mTable.close();
   }
 
   @Test
   public void testGatherer() throws Exception {
-    final File systemTmpDir = new File(System.getProperty("java.io.tmpdir"));
-    Preconditions.checkState(systemTmpDir.exists());
-
-    final File testTmpDir = File.createTempFile("kiji-mr", ".test", systemTmpDir);
-    testTmpDir.delete();
-    Preconditions.checkState(testTmpDir.mkdirs());
-
-    final File outputDir = File.createTempFile("gatherer-output", ".dir", testTmpDir);
+    final File outputDir = File.createTempFile("gatherer-output", ".dir", getLocalTempDir());
     Preconditions.checkState(outputDir.delete());
     final int numSplits = 1;
 
     // Run gatherer:
     final MapReduceJob job = KijiGatherJobBuilder.create()
+        .withConf(getConf())
         .withGatherer(TestingGatherer.class)
         .withInputTable(mTable)
         .withOutput(new TextMapReduceJobOutput(new Path(outputDir.toString()), numSplits))
@@ -155,8 +147,5 @@ public class TestGatherer {
     }
     assertTrue(userIds.contains("Marsellus Wallace"));
     assertTrue(userIds.contains("Vincent Vega"));
-
-    // Cleanup:
-    FileUtils.deleteQuietly(testTmpDir);
   }
 }

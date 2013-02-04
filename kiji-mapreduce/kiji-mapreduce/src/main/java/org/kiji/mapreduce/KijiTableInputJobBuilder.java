@@ -21,7 +21,6 @@ package org.kiji.mapreduce;
 
 import java.io.IOException;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Job;
 
 import org.kiji.annotations.ApiAudience;
@@ -112,12 +111,6 @@ public abstract class KijiTableInputJobBuilder<T extends KijiTableInputJobBuilde
   public T withFilter(KijiRowFilter rowFilter) {
     mRowFilter = rowFilter;
     return (T) this;
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public Configuration getConf() {
-    return mInputTable.getKiji().getConf();
   }
 
   /** {@inheritDoc} */

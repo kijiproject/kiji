@@ -90,6 +90,7 @@ public final class ProduceMapper extends KijiTableMapper<HFileKeyValue, NullWrit
   protected void cleanup(Context context) throws IOException {
     Preconditions.checkState(mProducerContext != null);
     mProducer.cleanup(mProducerContext);
+    mProducerContext.close();
     mProducerContext = null;
     super.cleanup(context);
   }

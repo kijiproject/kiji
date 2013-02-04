@@ -121,6 +121,7 @@ public final class BulkImportMapper<K, V>
   protected void cleanup(Context context) throws IOException {
     Preconditions.checkNotNull(mTableContext);
     mBulkImporter.cleanup(mTableContext);
+    mTableContext.close();
     mTableContext = null;
     try {
       super.cleanup(context);

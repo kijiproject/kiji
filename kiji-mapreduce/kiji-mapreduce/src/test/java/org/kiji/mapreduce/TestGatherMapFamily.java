@@ -31,17 +31,14 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import org.apache.avro.util.Utf8;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.kiji.mapreduce.output.TextMapReduceJobOutput;
-import org.kiji.schema.Kiji;
+import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
@@ -49,8 +46,7 @@ import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.util.InstanceBuilder;
 
 /** Tests a gatherer on a map-type family. */
-public class TestGatherMapFamily {
-  private static final Logger LOG = LoggerFactory.getLogger(TestGatherMapFamily.class);
+public class TestGatherMapFamily extends KijiClientTest {
 
   /** Testing gatherer implementation. */
   public static class MapFamilyGatherer extends KijiGatherer<Text, Text> {
@@ -86,17 +82,17 @@ public class TestGatherMapFamily {
     }
   }
 
-  private Kiji mKiji;
+  /** Test table, owned by this test. */
   private KijiTable mTable;
 
   @Before
-  public void setupEnvironment() throws Exception {
+  public final void setupTestGatherMapFamily() throws Exception {
     // Get the test table layouts.
     final KijiTableLayout layout =
         new KijiTableLayout(KijiMRTestLayouts.getTestLayout(), null);
 
     // Populate the environment.
-    mKiji = new InstanceBuilder()
+    new InstanceBuilder(getKiji())
         .withTable("test", layout)
             .withRow("Marsellus Wallace")
                 .withFamily("info")
@@ -113,30 +109,24 @@ public class TestGatherMapFamily {
         .build();
 
     // Fill local variables.
-    mTable = mKiji.openTable("test");
+    mTable = getKiji().openTable("test");
   }
 
   @After
-  public void cleanupEnvironment() throws IOException {
-    IOUtils.closeQuietly(mTable);
-    mKiji.release();
+  public void teardownTestGatherMapFamily() throws Exception {
+    mTable.close();
+    mTable = null;
   }
 
   @Test
   public void testGather() throws Exception {
-    final File systemTmpDir = new File(System.getProperty("java.io.tmpdir"));
-    Preconditions.checkState(systemTmpDir.exists());
-
-    final File testTmpDir = File.createTempFile("kiji-mr", ".test", systemTmpDir);
-    testTmpDir.delete();
-    Preconditions.checkState(testTmpDir.mkdirs());
-
-    final File outputDir = File.createTempFile("gatherer-output", ".dir", testTmpDir);
+    final File outputDir = File.createTempFile("gatherer-output", ".dir", getLocalTempDir());
     Preconditions.checkState(outputDir.delete());
     final int numSplits = 1;
 
     // Run gatherer:
     final MapReduceJob job = KijiGatherJobBuilder.create()
+        .withConf(getConf())
         .withGatherer(MapFamilyGatherer.class)
         .withInputTable(mTable)
         .withOutput(new TextMapReduceJobOutput(new Path(outputDir.toString()), numSplits))
@@ -152,8 +142,5 @@ public class TestGatherMapFamily {
     }
     assertTrue(outputLines.contains("key-vv\tVV"));
     assertTrue(outputLines.contains("key-mw\tMW"));
-
-    // Cleanup:
-    FileUtils.deleteQuietly(testTmpDir);
   }
 }

@@ -37,12 +37,10 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
 import org.kiji.schema.Kiji;
-import org.kiji.schema.KijiConfiguration;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.testutil.AbstractKijiIntegrationTest;
-import org.kiji.schema.util.ResourceUtils;
 
 /**
  * Integration test for the job history table.
@@ -55,13 +53,12 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
    * Installs the job history table.
    */
   @Before
-  public void setup() throws Exception {
-    Kiji kiji = null;
+  public final  void setupIntegrationTestJobHistoryKijiTable() throws Exception {
+    final Kiji kiji = Kiji.Factory.open(getKijiURI());
     try {
-      kiji = Kiji.Factory.open(getKijiConfiguration());
       JobHistoryKijiTable.install(kiji);
     } finally {
-      ResourceUtils.releaseOrLog(kiji);
+      kiji.release();
     }
   }
 
@@ -70,9 +67,9 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
    */
   @Test
   public void testInstallAndOpen() throws Exception {
-    Kiji kiji = Kiji.Factory.open(getKijiConfiguration());
+    Kiji kiji = Kiji.Factory.open(getKijiURI());
     // This will throw an IOException if there's difficulty opening the table
-    JobHistoryKijiTable jobHistory = JobHistoryKijiTable.open(kiji);
+    final JobHistoryKijiTable jobHistory = JobHistoryKijiTable.open(kiji);
     jobHistory.close();
     kiji.release();
   }
@@ -116,17 +113,17 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
   @Test
   public void testMappers() throws Exception {
     createAndPopulateFooTable();
-    KijiConfiguration kijiConf = getKijiConfiguration();
+    final Configuration jobConf = getConf();
     // Set a value in the configuration. We'll check to be sure we can retrieve it later.
-    kijiConf.getConf().set("CONF_TEST_ANIMAL_STRING", "squirrel");
-    LOG.info("Kiji configuration has " + new Integer(kijiConf.getConf().size()).toString()
-        + " keys.");
-    Kiji kiji = Kiji.Factory.open(kijiConf);
-    KijiTable fooTable = kiji.openTable("foo");
-    JobHistoryKijiTable jobHistory = JobHistoryKijiTable.open(kiji);
+    jobConf.set("CONF_TEST_ANIMAL_STRING", "squirrel");
+    LOG.info("Kiji configuration has {} keys.", jobConf.size());
+    final Kiji kiji = Kiji.Factory.open(getKijiURI());
+    final KijiTable fooTable = kiji.openTable("foo");
+    final JobHistoryKijiTable jobHistory = JobHistoryKijiTable.open(kiji);
 
     // Construct a Producer for this table.
-    KijiProduceJobBuilder builder = KijiProduceJobBuilder.create()
+    final KijiProduceJobBuilder builder = KijiProduceJobBuilder.create()
+        .withConf(jobConf)
         .withInputTable(fooTable)
         .withProducer(EmailDomainProducer.class)
         .withOutput(new DirectKijiTableMapReduceJobOutput(fooTable));
@@ -187,12 +184,13 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
   @Test
   public void testSubmit() throws Exception {
     createAndPopulateFooTable();
-    Kiji kiji = Kiji.Factory.open(getKijiConfiguration());
-    KijiTable fooTable = kiji.openTable("foo");
+    final Kiji kiji = Kiji.Factory.open(getKijiURI());
+    final KijiTable fooTable = kiji.openTable("foo");
     JobHistoryKijiTable jobHistory = JobHistoryKijiTable.open(kiji);
 
     // Construct a Producer for this table.
     KijiProduceJobBuilder builder = KijiProduceJobBuilder.create()
+        .withConf(getConf())
         .withInputTable(fooTable)
         .withProducer(EmailDomainProducer.class)
         .withOutput(new DirectKijiTableMapReduceJobOutput(fooTable));
@@ -228,15 +226,16 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
    @Test
    public void testMissingHistoryTableNonfatal() throws Exception {
      createAndPopulateFooTable();
-     Kiji kiji = Kiji.Factory.open(getKijiConfiguration());
-     KijiTable fooTable = kiji.openTable("foo");
+     final Kiji kiji = Kiji.Factory.open(getKijiURI());
+     final KijiTable fooTable = kiji.openTable("foo");
      kiji.deleteTable(JobHistoryKijiTable.getInstallName());
 
-     KijiProduceJobBuilder builder = KijiProduceJobBuilder.create()
+     final KijiProduceJobBuilder builder = KijiProduceJobBuilder.create()
+         .withConf(getConf())
          .withInputTable(fooTable)
          .withProducer(EmailDomainProducer.class)
          .withOutput(new DirectKijiTableMapReduceJobOutput(fooTable));
-     MapReduceJob mrJob = builder.build();
+     final MapReduceJob mrJob = builder.build();
      assertTrue(mrJob.run());
 
      fooTable.close();

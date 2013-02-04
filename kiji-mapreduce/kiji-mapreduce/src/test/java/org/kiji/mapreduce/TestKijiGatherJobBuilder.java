@@ -25,7 +25,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
@@ -51,7 +50,6 @@ import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.layout.KijiTableLayout;
-import org.kiji.schema.util.TestFileUtils;
 
 public class TestKijiGatherJobBuilder extends KijiClientTest {
   // -----------------------------------------------------------------------------------------------
@@ -174,8 +172,7 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
 
   // -----------------------------------------------------------------------------------------------
 
-  private File mTempDir;
-  private Path mTempPath;
+  /** Test table, owned by this test. */
   private KijiTable mTable;
 
   @Before
@@ -190,33 +187,29 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
   }
 
   private void doSetUp() throws Exception {
-    mTempDir = TestFileUtils.createTempDir("test", "dir");
-    mTempPath = new Path("file://" + mTempDir.getAbsolutePath());
-
-    final Configuration conf = getConf();
-    conf.set("fs.defaultFS", mTempPath.toString());
-    conf.set("fs.default.name", mTempPath.toString());
     final KijiTableLayout layout = new KijiTableLayout(KijiMRTestLayouts.getTestLayout(), null);
     getKiji().createTable("test", layout);
 
     // Set the working directory so that it gets cleaned up after the test:
-    conf.set("mapred.working.dir", new Path(mTempPath, "workdir").toString());
+    getConf().set("mapred.working.dir", "file://" + getLocalTempDir() + "/workdir");
 
     mTable = getKiji().openTable("test");
   }
 
   @After
   public void tearDown() throws Exception {
-    FileUtils.deleteDirectory(mTempDir);
     mTable.close();
-    mTempDir = null;
-    mTempPath = null;
     mTable = null;
+  }
+
+  private Path getLocalTestPath(String name) {
+    return new Path("file://" + new File(getLocalTempDir(), name));
   }
 
   @Test
   public void testBuildValid() throws Exception {
     final MapReduceJob gatherJob = KijiGatherJobBuilder.create()
+        .withConf(getConf())
         .withInputTable(mTable)
         .withGatherer(SimpleGatherer.class)
         .withCombiner(MyCombiner.class)
@@ -238,7 +231,7 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
         .withConf(getConf())
         .withInputTable(mTable)
         .withGatherer(GatherToHFile.class)
-        .withOutput(new HFileMapReduceJobOutput(mTable, new Path(mTempPath, "/hfile"), 10))
+        .withOutput(new HFileMapReduceJobOutput(mTable, getLocalTestPath("hfile"), 10))
         .build();
 
     final Job job = gatherJob.getHadoopJob();
@@ -259,7 +252,7 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
         .withInputTable(mTable)
         .withGatherer(SimpleGatherer.class)
         .withReducer(ReducerToHFile.class)
-        .withOutput(new HFileMapReduceJobOutput(mTable, new Path(mTempPath, "/hfile"), 10))
+        .withOutput(new HFileMapReduceJobOutput(mTable, getLocalTestPath("hfile"), 10))
         .build();
 
     final Job job = gatherJob.getHadoopJob();
@@ -277,6 +270,7 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
   public void testUnconfiguredKeyValueStore() throws Exception {
     // Should explode as we don't define a KVStore for 'foostore', but the class requires one:
     KijiGatherJobBuilder.create()
+        .withConf(getConf())
         .withInputTable(mTable)
         .withGatherer(UnconfiguredKVGatherer.class)
         .withCombiner(MyCombiner.class)
@@ -289,6 +283,7 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
   public void testEmptyKeyValueStore() throws Exception {
     // We override UnconfiguredKeyValueStore with EmptyKeyValueStore; this should succeed.
     final MapReduceJob gatherJob = KijiGatherJobBuilder.create()
+        .withConf(getConf())
         .withInputTable(mTable)
         .withGatherer(UnconfiguredKVGatherer.class)
         .withCombiner(MyCombiner.class)

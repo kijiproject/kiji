@@ -59,9 +59,6 @@ import org.kiji.schema.KijiDataRequest;
 public final class KijiGatherJobBuilder extends KijiTableInputJobBuilder<KijiGatherJobBuilder> {
   private static final Logger LOG = LoggerFactory.getLogger(KijiGatherJobBuilder.class);
 
-  /** Base configuration. */
-  private Configuration mConf = null;
-
   /** The class of the gatherer to run. */
   private Class<? extends KijiGatherer> mGathererClass;
 
@@ -109,17 +106,6 @@ public final class KijiGatherJobBuilder extends KijiTableInputJobBuilder<KijiGat
   }
 
   /**
-   * Sets the map/reduce job base configuration.
-   *
-   * @param conf Map/reduce job base configuration.
-   * @return this.
-   */
-  public KijiGatherJobBuilder withConf(Configuration conf) {
-    mConf = conf;
-    return this;
-  }
-
-  /**
    * Configures the job with the Kiji gatherer to run in the map phase.
    *
    * @param gathererClass The gatherer class.
@@ -150,12 +136,6 @@ public final class KijiGatherJobBuilder extends KijiTableInputJobBuilder<KijiGat
   public KijiGatherJobBuilder withReducer(Class<? extends KijiReducer> reducerClass) {
     mReducerClass = reducerClass;
     return this;
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public Configuration getConf() {
-    return (mConf != null) ? mConf : super.getConf();
   }
 
   /** {@inheritDoc} */
@@ -307,7 +287,7 @@ public final class KijiGatherJobBuilder extends KijiTableInputJobBuilder<KijiGat
         // Writing HFile from a Kiji reducer requires an extra map/reduce to sort the HFile keys.
         // This forces the output format of this map/reduce to be SequenceFile.
         final HFileMapReduceJobOutput hfileOutput = (HFileMapReduceJobOutput) output;
-        LOG.warn("Reducing to HFiles will require an extra Map/Reduce job.");
+        LOG.warn("Reducing to HFiles will require an extra MapReduce job.");
         new HFileReducerMapReduceJobOutput(hfileOutput).configure(job);
       }
     } else {

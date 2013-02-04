@@ -37,7 +37,6 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.hadoop.io.AvroKeyValue;
 import org.apache.avro.mapred.AvroValue;
 import org.apache.avro.mapred.FsInput;
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.junit.After;
@@ -52,7 +51,6 @@ import org.kiji.mapreduce.KijiGatherer;
 import org.kiji.mapreduce.MapReduceContext;
 import org.kiji.mapreduce.MapReduceJob;
 import org.kiji.mapreduce.output.AvroKeyValueMapReduceJobOutput;
-import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.testutil.AbstractKijiIntegrationTest;
 
@@ -63,14 +61,12 @@ public class IntegrationTestColumnPaging extends AbstractKijiIntegrationTest {
   private KijiTable mUserTable;
 
   @Before
-  public void setup() throws Exception {
-    mKiji = Kiji.Factory.open(getKijiConfiguration());
-    mKiji.createTable("user",
-        new KijiTableLayout(KijiTableLayouts.getLayout(KijiTableLayouts.PAGING_TEST), null));
-    // TODO(SCHEMA-158): Clean up internal hbaseAdmin in kijiAdmin.
+  public final void setupIntegrationTestColumnPaging() throws Exception {
+    mKiji = Kiji.Factory.open(getKijiURI());
+    mKiji.createTable("user", KijiTableLayouts.getTableLayout(KijiTableLayouts.PAGING_TEST));
     mUserTable = mKiji.openTable("user");
 
-    KijiTableWriter writer = mUserTable.openTableWriter();
+    final KijiTableWriter writer = mUserTable.openTableWriter();
     try {
       EntityId entityId = mUserTable.getEntityId("garrett");
       writer.put(entityId, "info", "name", "garrett");
@@ -110,14 +106,15 @@ public class IntegrationTestColumnPaging extends AbstractKijiIntegrationTest {
 
   @After
   public void teardown() throws Exception {
-    IOUtils.closeQuietly(mUserTable);
+    mUserTable.close();
     mKiji.release();
   }
 
   /**
    * A gatherer that outputs the locations a user has lived in.
    */
-  public static class PagingGatherer extends KijiGatherer<Text, AvroValue<List<CharSequence>>>
+  public static class PagingGatherer
+      extends KijiGatherer<Text, AvroValue<List<CharSequence>>>
       implements AvroValueWriter {
     @Override
     public KijiDataRequest getDataRequest() {
@@ -130,8 +127,10 @@ public class IntegrationTestColumnPaging extends AbstractKijiIntegrationTest {
     }
 
     @Override
-    public void gather(KijiRowData input,
-        MapReduceContext<Text, AvroValue<List<CharSequence>>> context) throws IOException {
+    public void gather(
+        KijiRowData input,
+        MapReduceContext<Text, AvroValue<List<CharSequence>>> context)
+        throws IOException {
       // Read the user name.
       if (!input.containsColumn("info", "name")) {
         return;
@@ -202,12 +201,12 @@ public class IntegrationTestColumnPaging extends AbstractKijiIntegrationTest {
   }
 
   @Test
-  public void testPagingGatherer()
-      throws ClassNotFoundException, IOException, InterruptedException {
+  public void testPagingGatherer() throws Exception {
     final Path outputPath = getDfsPath("output");
 
     // Run the gatherer.
     final MapReduceJob job = KijiGatherJobBuilder.create()
+        .withConf(getConf())
         .withInputTable(mUserTable)
         .withGatherer(PagingGatherer.class)
         .withOutput(new AvroKeyValueMapReduceJobOutput(outputPath, 1))

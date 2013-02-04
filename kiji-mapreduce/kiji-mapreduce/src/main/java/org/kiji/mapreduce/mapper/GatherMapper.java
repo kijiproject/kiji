@@ -138,6 +138,7 @@ public final class GatherMapper<K, V>
   protected void cleanup(Context context) throws IOException {
     Preconditions.checkNotNull(mGathererContext);
     mGatherer.cleanup(mGathererContext);
+    mGathererContext.close();
     mGathererContext = null;
 
     super.cleanup(context);

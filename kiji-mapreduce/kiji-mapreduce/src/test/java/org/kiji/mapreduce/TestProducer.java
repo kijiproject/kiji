@@ -29,7 +29,6 @@ import java.util.Set;
 
 import com.google.common.collect.Sets;
 import org.apache.avro.util.Utf8;
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.mapreduce.Counters;
 import org.junit.After;
@@ -40,7 +39,7 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
 import org.kiji.schema.EntityId;
-import org.kiji.schema.Kiji;
+import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequestBuilder;
 import org.kiji.schema.KijiRowData;
@@ -51,21 +50,23 @@ import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.util.InstanceBuilder;
 
 /** Runs a producer job in-process against a fake HBase instance. */
-public class TestProducer {
+public class TestProducer extends KijiClientTest {
   private static final Logger LOG = LoggerFactory.getLogger(TestProducer.class);
 
-  private Kiji mKiji;
+  /** Test table, owned by this test. */
   private KijiTable mTable;
+
+  /** Table reader, owned by this test. */
   private KijiTableReader mReader;
 
   @Before
-  public void setupEnvironment() throws Exception {
+  public final void setupTestProducer() throws Exception {
     // Get the test table layouts.
     final KijiTableLayout layout =
         new KijiTableLayout(KijiMRTestLayouts.getTestLayout(), null);
 
     // Populate the environment.
-    mKiji = new InstanceBuilder()
+    new InstanceBuilder(getKiji())
         .withTable("test", layout)
             .withRow("Marsellus Wallace")
                 .withFamily("info")
@@ -78,15 +79,14 @@ public class TestProducer {
         .build();
 
     // Fill local variables.
-    mTable = mKiji.openTable("test");
+    mTable = getKiji().openTable("test");
     mReader = mTable.openTableReader();
   }
 
   @After
-  public void cleanupEnvironment() throws IOException {
-    IOUtils.closeQuietly(mReader);
-    IOUtils.closeQuietly(mTable);
-    mKiji.release();
+  public final void teardownTestProducer() throws Exception {
+    mReader.close();
+    mTable.close();
   }
 
   /**
@@ -121,6 +121,7 @@ public class TestProducer {
   public void testSimpleProducer() throws Exception {
     // Run producer:
     final MapReduceJob job = KijiProduceJobBuilder.create()
+        .withConf(getConf())
         .withProducer(SimpleProducer.class)
         .withInputTable(mTable)
         .withOutput(new DirectKijiTableMapReduceJobOutput(mTable))
@@ -201,6 +202,7 @@ public class TestProducer {
   public void testProducerWorkflow() throws Exception {
     // Run producer:
     final MapReduceJob job = KijiProduceJobBuilder.create()
+        .withConf(getConf())
         .withProducer(ProducerWorkflow.class)
         .withInputTable(mTable)
         .withOutput(new DirectKijiTableMapReduceJobOutput(mTable))

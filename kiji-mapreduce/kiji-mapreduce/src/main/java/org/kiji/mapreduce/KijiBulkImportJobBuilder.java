@@ -22,7 +22,6 @@ package org.kiji.mapreduce;
 import java.io.IOException;
 import java.util.Map;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.util.ReflectionUtils;
 
@@ -32,7 +31,6 @@ import org.kiji.mapreduce.mapper.BulkImportMapper;
 import org.kiji.mapreduce.output.KijiTableMapReduceJobOutput;
 import org.kiji.mapreduce.reducer.IdentityReducer;
 import org.kiji.schema.Kiji;
-import org.kiji.schema.KijiTable;
 import org.kiji.schema.impl.HBaseKijiTable;
 import org.kiji.schema.layout.KijiTableLayout;
 
@@ -153,23 +151,6 @@ public final class KijiBulkImportJobBuilder
   @Override
   protected MapReduceJob build(Job job) {
     return KijiMapReduceJob.create(job);
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public Configuration getConf() {
-    // We know that this job's output is on its way to a Kiji table, so any valid
-    // MapReduceJobOutput that is configured on this builder must have a reference to that
-    // KijiTable.  We will use the configuration object associated with that KijiTable's
-    // Kiji instance.
-    MapReduceJobOutput configuredJobOutput = getJobOutput();
-    if (!(configuredJobOutput instanceof KijiTableMapReduceJobOutput)) {
-      throw new JobConfigurationException(
-          "Incompatible job output (must be a subclass of "
-          + KijiTableMapReduceJobOutput.class.getName() + ".");
-    }
-    KijiTable targetTable = ((KijiTableMapReduceJobOutput) configuredJobOutput).getTable();
-    return targetTable.getKiji().getConf();
   }
 
   /** {@inheritDoc} */

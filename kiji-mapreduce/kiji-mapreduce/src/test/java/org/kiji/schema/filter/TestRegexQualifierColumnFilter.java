@@ -28,10 +28,6 @@ import java.io.IOException;
 import java.util.NavigableMap;
 
 import com.google.common.base.Preconditions;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
@@ -47,7 +43,7 @@ import org.kiji.mapreduce.KijiGatherer;
 import org.kiji.mapreduce.MapReduceContext;
 import org.kiji.mapreduce.MapReduceJob;
 import org.kiji.mapreduce.output.SequenceFileMapReduceJobOutput;
-import org.kiji.schema.Kiji;
+import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequestBuilder;
 import org.kiji.schema.KijiRowData;
@@ -56,21 +52,21 @@ import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.util.InstanceBuilder;
 
-public class TestRegexQualifierColumnFilter {
+public class TestRegexQualifierColumnFilter extends KijiClientTest {
   private static final Logger LOG = LoggerFactory.getLogger(TestRegexQualifierColumnFilter.class);
   private static final String TABLE_NAME = "regex_test";
 
-  private Kiji mKiji;
+  /** Test table, owned by this test. */
   private KijiTable mTable;
 
   @Before
-  public void setup() throws Exception {
+  public final void setupTestRegexQualifierColumnFilter() throws Exception {
     // Get the test table layouts.
     final KijiTableLayout layout =
         new KijiTableLayout(KijiTableLayouts.getLayout(KijiTableLayouts.REGEX), null);
 
     // Populate the environment.
-    mKiji = new InstanceBuilder()
+    new InstanceBuilder(getKiji())
         .withTable("regex_test", layout)
             .withRow("1")
                 .withFamily("family")
@@ -81,13 +77,12 @@ public class TestRegexQualifierColumnFilter {
         .build();
 
     // Fill local variables.
-    mTable = mKiji.openTable("regex_test");
+    mTable = getKiji().openTable("regex_test");
   }
 
   @After
-  public void teardown() throws Exception {
-    IOUtils.closeQuietly(mTable);
-    mKiji.release();
+  public final void teardownTestRegexQualifierColumnFilter() throws Exception {
+    mTable.close();
   }
 
   /**
@@ -127,19 +122,13 @@ public class TestRegexQualifierColumnFilter {
 
   @Test
   public void testRegexQualifierColumnFilter() throws Exception {
-    final File systemTmpDir = new File(System.getProperty("java.io.tmpdir"));
-    Preconditions.checkState(systemTmpDir.exists());
-
-    final File testTmpDir = File.createTempFile("kiji-mr", ".test", systemTmpDir);
-    testTmpDir.delete();
-    Preconditions.checkState(testTmpDir.mkdirs());
-
-    final File outputDir = File.createTempFile("gatherer-output", ".dir", testTmpDir);
+    final File outputDir = File.createTempFile("gatherer-output", ".dir", getLocalTempDir());
     Preconditions.checkState(outputDir.delete());
     final int numSplits = 1;
 
     // Run a gatherer over the test_table.
     final MapReduceJob gatherJob = KijiGatherJobBuilder.create()
+        .withConf(getConf())
         .withInputTable(mTable)
         .withGatherer(MyGatherer.class)
         .withOutput(new SequenceFileMapReduceJobOutput(new Path(outputDir.getPath()), numSplits))
@@ -147,11 +136,11 @@ public class TestRegexQualifierColumnFilter {
     assertTrue(gatherJob.run());
 
     // Check the output file: two things should be there (apple, aardvark).
-    final Configuration conf = mKiji.getConf();
     final SequenceFile.Reader reader = new SequenceFile.Reader(
-        FileSystem.get(conf), new Path(outputDir.getPath(), "part-m-00000"), conf);
+        getConf(),
+        SequenceFile.Reader.file(new Path(outputDir.getPath(), "part-m-00000")));
     try {
-      Text key = new Text();
+      final Text key = new Text();
       assertTrue(reader.next(key));
       assertEquals("aardvark", key.toString());
       assertTrue(reader.next(key));
@@ -160,8 +149,5 @@ public class TestRegexQualifierColumnFilter {
     } finally {
       reader.close();
     }
-
-    // Cleanup:
-    FileUtils.deleteQuietly(testTmpDir);
   }
 }

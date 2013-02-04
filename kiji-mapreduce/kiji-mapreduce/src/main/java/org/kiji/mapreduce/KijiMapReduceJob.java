@@ -20,8 +20,9 @@
 package org.kiji.mapreduce;
 
 import java.io.IOException;
+import java.util.Set;
 
-import org.apache.commons.io.IOUtils;
+import com.google.common.collect.Sets;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Job;
 import org.slf4j.Logger;
@@ -29,7 +30,8 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.schema.Kiji;
-import org.kiji.schema.KijiConfiguration;
+import org.kiji.schema.KijiTableNotFoundException;
+import org.kiji.schema.KijiURI;
 import org.kiji.schema.util.ResourceUtils;
 
 /** An implementation of a runnable MapReduce job that interacts with Kiji tables. */
@@ -65,51 +67,74 @@ public final class KijiMapReduceJob extends InternalMapReduceJob {
   }
 
   /**
-   * Sets the name of the Kiji instance into the configuration object.
+   * Records information about a completed job into the history table of a Kiji instance.
    *
-   * @param conf The hadoop configuration object.
-   * @param instanceName The name of the kiji instance.
-   */
-  public static void setInstanceName(Configuration conf, String instanceName) {
-    // TODO(WIBI-1666): Validate acceptable kiji name here.
-    conf.set(KijiConfiguration.CONF_KIJI_INSTANCE_NAME, instanceName);
-  }
-
-  /**
-   * Gets the name of the Kiji instance from the configuration object.
-   *
-   * @param conf The hadoop configuration object.
-   * @return The name of the kiji instance.
-   */
-  public static String getInstanceName(Configuration conf) {
-    return conf.get(KijiConfiguration.CONF_KIJI_INSTANCE_NAME,
-        KijiConfiguration.DEFAULT_INSTANCE_NAME);
-  }
-
-  /**
-   * Attempts to record information about a completed job into the KijiJobHistory table.
    * If the attempt fails due to an IOException (a Kiji cannot be made, there is no job history
    * table, its content is corrupted, etc.), we catch the exception and warn the user.
+   *
+   * @param kiji Kiji instance to write the job record to.
+   * @throws IOException on I/O error.
    */
-  private void recordJobHistory() {
+  private void recordJobHistory(Kiji kiji) throws IOException {
     Job job = getHadoopJob();
-    Kiji kiji = null;
     JobHistoryKijiTable jobHistory = null;
     try {
-      kiji = Kiji.Factory.open(new KijiConfiguration(job.getConfiguration(),
-          getInstanceName(job.getConfiguration())));
       jobHistory = JobHistoryKijiTable.open(kiji);
       jobHistory.recordJob(job, mJobStartTime, mJobEndTime);
-    } catch (IOException e) {
-      // Warn about the error, but don't fail the job.
-      LOG.warn("Exception while recording job history: " + e
-          + " This does not affect the success of the job.");
-      if (null != kiji) {
-        LOG.warn("Please run: kiji job-history --install --kiji=" + kiji.getURI());
+    } catch (KijiTableNotFoundException ktnfe) {
+      if (ktnfe.getTableName().equals(JobHistoryKijiTable.getInstallName())) {
+        LOG.warn(
+            "Error recording job {} in history table of Kiji instance {}: "
+            + "job history table is not installed.\n"
+            + "This does not affect the success of job {}.\n"
+            + "Please run: kiji job-history --install --kiji={}",
+            getHadoopJob().getJobID(),
+            kiji.getURI(),
+            getHadoopJob().getJobID(),
+            kiji.getURI());
+      } else {
+        throw ktnfe;
       }
     } finally {
-      IOUtils.closeQuietly(jobHistory);
-      ResourceUtils.releaseOrLog(kiji);
+      ResourceUtils.closeOrLog(jobHistory);
+    }
+  }
+
+  /**
+   * Records information about a completed job into all relevant Kiji instances.
+   *
+   * Underlying failures are logged but not fatal.
+   */
+  private void recordJobHistory() {
+    final Set<KijiURI> recorded = Sets.newHashSet();
+    final Configuration conf = getHadoopJob().getConfiguration();
+    final String[] instanceURIs = new String[] {
+        conf.get(KijiConfKeys.KIJI_INPUT_TABLE_URI),
+        conf.get(KijiConfKeys.KIJI_OUTPUT_TABLE_URI),
+    };
+    for (String instanceURI : instanceURIs) {
+      if (instanceURI != null) {
+        try {
+          final KijiURI uri = KijiURI.newBuilder(instanceURI).build();
+          final Kiji kiji = Kiji.Factory.open(uri, conf);
+          try {
+            if (!recorded.contains(kiji.getURI())) {
+              recordJobHistory(kiji);
+            }
+          } finally {
+            recorded.add(kiji.getURI());
+            kiji.release();
+          }
+        } catch (IOException ioe) {
+          LOG.warn(
+              "Error recording job {} in history table of Kiji instance {}: {}\n"
+              + "This does not affect the success of job {}.",
+              getHadoopJob().getJobID(),
+              instanceURI,
+              ioe,
+              getHadoopJob().getJobID());
+        }
+      }
     }
   }
 
@@ -155,7 +180,11 @@ public final class KijiMapReduceJob extends InternalMapReduceJob {
     mJobStartTime = System.currentTimeMillis();
     boolean ret = super.run();
     mJobEndTime = System.currentTimeMillis();
-    recordJobHistory();
+    try {
+      recordJobHistory();
+    } catch (Throwable thr) {
+      thr.printStackTrace();
+    }
     return ret;
   }
 }

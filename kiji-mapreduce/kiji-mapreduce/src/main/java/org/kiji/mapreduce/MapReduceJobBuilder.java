@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Preconditions;
 import org.apache.avro.Schema;
 import org.apache.avro.mapred.AvroKey;
 import org.apache.avro.mapred.AvroValue;
@@ -60,11 +61,14 @@ import org.kiji.schema.Kiji;
  */
 @ApiAudience.Framework
 @Inheritance.Sealed
-public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder> {
+public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder<T>> {
   private static final Logger LOG = LoggerFactory.getLogger(MapReduceJobBuilder.class);
 
   /** A list of directories containing jars to be loaded onto the distributed cache. */
   private final List<File> mJarDirectories;
+
+  /** Base Hadoop configuration used to build the MapReduce job. */
+  private Configuration mConf;
 
   /** The output for the job. */
   private MapReduceJobOutput mJobOutput;
@@ -87,7 +91,8 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder> {
    * @throws IOException If there is an error.
    */
   public MapReduceJob build() throws IOException {
-    Job job = createJob(getConf());
+    Preconditions.checkNotNull(mConf, "Must set the job base configuration using .withConf()");
+    final Job job = new Job(mConf);
     configureJob(job);
     return build(job);
   }
@@ -199,21 +204,20 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder> {
   }
 
   /**
-   * Returns the configuration object to be used for the job.
+   * Sets the base Hadoop configuration used to build the MapReduce job.
    *
-   * @return The Hadoop configuration for the job.
+   * @param conf Base Hadoop configuration used to build the MapReduce job.
+   * @return this.
    */
-  public abstract Configuration getConf();
+  @SuppressWarnings("unchecked")
+  public T withConf(Configuration conf) {
+    mConf = Preconditions.checkNotNull(conf);
+    return (T) this;
+  }
 
-  /**
-   * Creates a new Hadoop Job instance.
-   *
-   * @param conf The Hadoop configuration.
-   * @return a new Hadoop MapReduce job.
-   * @throws IOException If there is an error.
-   */
-  protected Job createJob(Configuration conf) throws IOException {
-    return new Job(conf);
+  /** @return the base Hadoop configuration used to build the MapReduce job. */
+  public final Configuration getConf() {
+    return mConf;
   }
 
   /**

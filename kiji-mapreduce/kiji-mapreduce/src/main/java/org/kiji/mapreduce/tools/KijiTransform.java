@@ -21,12 +21,13 @@ package org.kiji.mapreduce.tools;
 
 import java.io.IOException;
 
+import org.apache.hadoop.conf.Configuration;
+
 import org.kiji.annotations.ApiAudience;
 import org.kiji.common.flags.Flag;
 import org.kiji.mapreduce.KijiMapper;
 import org.kiji.mapreduce.KijiReducer;
 import org.kiji.mapreduce.KijiTransformJobBuilder;
-import org.kiji.schema.KijiConfiguration;
 import org.kiji.schema.tools.KijiToolLauncher;
 import org.kiji.schema.tools.RequiredFlagException;
 
@@ -77,7 +78,7 @@ public final class KijiTransform extends JobTool<KijiTransformJobBuilder> {
   protected void configure(KijiTransformJobBuilder jobBuilder)
       throws ClassNotFoundException, IOException, JobIOSpecParseException {
     super.configure(jobBuilder);
-    jobBuilder.withKijiConfiguration(new KijiConfiguration(getConf(), getURI().getInstance()));
+    jobBuilder.withConf(new Configuration());  // use MapReduce cluster from local environment.
 
     // Input.
     MapReduceJobInputFactory inputFactory = MapReduceJobInputFactory.create();

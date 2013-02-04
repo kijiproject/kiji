@@ -21,6 +21,7 @@ package org.kiji.mapreduce.testlib;
 
 import java.io.IOException;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 
@@ -34,7 +35,6 @@ import org.kiji.mapreduce.input.SequenceFileMapReduceJobInput;
 import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
 import org.kiji.mapreduce.reducer.IdentityReducer;
 import org.kiji.schema.Kiji;
-import org.kiji.schema.KijiConfiguration;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;
 
@@ -93,11 +93,8 @@ public final class HFileReduceJob {
     final Kiji kiji = Kiji.Factory.open(tableURI);
     final KijiTable table = kiji.openTable(tableURI.getTable());
 
-    final KijiConfiguration kijiConf =
-        new KijiConfiguration(kiji.getConf(), kiji.getURI().getInstance());
-
     final MapReduceJob mrjob = KijiTransformJobBuilder.create()
-        .withKijiConfiguration(kijiConf)
+        .withConf(new Configuration())  // use MapReduce cluster from local environment
         .withInput(new SequenceFileMapReduceJobInput(inputPath))
         .withOutput(new HFileMapReduceJobOutput(table, outputPath, mNumSplits))
         .withMapper(IdentityMapper.class)

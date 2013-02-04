@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -34,6 +35,8 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,8 +50,8 @@ import org.kiji.mapreduce.kvstore.impl.KeyValueStoreConfigSerializer;
 import org.kiji.mapreduce.kvstore.lib.EmptyKeyValueStore;
 import org.kiji.mapreduce.kvstore.lib.SeqFileKeyValueStore;
 import org.kiji.mapreduce.output.TextMapReduceJobOutput;
-import org.kiji.schema.KijiConfiguration;
 import org.kiji.schema.util.Resources;
+import org.kiji.schema.util.TestFileUtils;
 
 public class TestKijiTransformJobBuilder {
   private static final Logger LOG = LoggerFactory.getLogger(TestKijiTransformJobBuilder.class);
@@ -108,33 +111,34 @@ public class TestKijiTransformJobBuilder {
     }
   }
 
-  /** WIBI-1170. Must supply a kiji configuration object. */
-  @Test(expected=JobConfigurationException.class)
-  public void testSupplyKijiConfig() throws Exception {
-    KijiTransformJobBuilder.create()
-        // .withKijiConfiguration(new KijiConfiguration(new Configuration, "foo"))
+  private Configuration mConf = null;
+  private File mTempDir = null;
+
+  @Before
+  public final void setupTestKijiTransformJob() throws Exception {
+    mTempDir = TestFileUtils.createTempDir("kijimrtest", "dir");
+    mConf = new Configuration();
+    mConf.set("fs.default.name", "file://" + mTempDir);
+  }
+
+  @After
+  public final void teardownTestKijiTransformJob() throws Exception {
+    FileUtils.deleteDirectory(mTempDir);
+    mTempDir = null;
+    mConf = null;
+  }
+
+  @Test
+  public void testBuild() throws Exception {
+    final MapReduceJob job = KijiTransformJobBuilder.create()
+        .withConf(mConf)
         .withInput(new TextMapReduceJobInput(new Path("/path/to/my/input")))
         .withMapper(MyMapper.class)
         .withReducer(MyReducer.class)
         .withOutput(new TextMapReduceJobOutput(new Path("/path/to/my/output"), 16))
         .build();
-  }
 
-  @Test
-  public void testBuild() throws Exception {
-    LOG.info("Configuring job...");
-    KijiTransformJobBuilder builder = KijiTransformJobBuilder.create()
-        .withKijiConfiguration(new KijiConfiguration(new Configuration(), "foo"))
-        .withInput(new TextMapReduceJobInput(new Path("/path/to/my/input")))
-        .withMapper(MyMapper.class)
-        .withReducer(MyReducer.class)
-        .withOutput(new TextMapReduceJobOutput(new Path("/path/to/my/output"), 16));
-
-    LOG.info("Building job...");
-    MapReduceJob job = builder.build();
-
-    LOG.info("Verifying job configuration...");
-    Job hadoopJob = job.getHadoopJob();
+    final Job hadoopJob = job.getHadoopJob();
     assertEquals(TextInputFormat.class, hadoopJob.getInputFormatClass());
     assertEquals(MyMapper.class, hadoopJob.getMapperClass());
     assertEquals(MyReducer.class, hadoopJob.getReducerClass());
@@ -161,31 +165,32 @@ public class TestKijiTransformJobBuilder {
   @Test
   public void testBuildWithXmlKVStores() throws Exception {
     // Test that we can override default configuration KeyValueStores from an XML file.
-    LOG.info("Configuring job...");
-    InputStream xmlStores = Resources.openSystemResource("org/kiji/mapreduce/test-kvstores.xml");
-    KijiTransformJobBuilder builder = KijiTransformJobBuilder.create()
-        .withKijiConfiguration(new KijiConfiguration(new Configuration(), "foo"))
-        .withInput(new TextMapReduceJobInput(new Path("/path/to/my/input")))
-        .withMapper(MyMapper.class)
-        .withReducer(MyReducer.class)
-        .withOutput(new TextMapReduceJobOutput(new Path("/path/to/my/output"), 16))
-        .withStoreBindings(xmlStores);
-    xmlStores.close();
+    final InputStream xmlStores =
+        Resources.openSystemResource("org/kiji/mapreduce/test-kvstores.xml");
 
     // This file needs to exist before we build the job, or else
     // we can't build the job; it's referenced by a key-value store that checks
     // for its presence.
-    File tmpFile = new File("/tmp/foo.seq");
+    final File tmpFile = new File("/tmp/foo.seq");
     if (tmpFile.createNewFile()) {
       // We created this temp file, we're responsible for deleting it.
       tmpFile.deleteOnExit();
     }
 
     LOG.info("Building job...");
-    MapReduceJob job = builder.build();
+    final MapReduceJob job = KijiTransformJobBuilder.create()
+        .withConf(mConf)
+        .withInput(new TextMapReduceJobInput(new Path("/path/to/my/input")))
+        .withMapper(MyMapper.class)
+        .withReducer(MyReducer.class)
+        .withOutput(new TextMapReduceJobOutput(new Path("/path/to/my/output"), 16))
+        .withStoreBindings(xmlStores)
+        .build();
+
+    xmlStores.close();
 
     LOG.info("Verifying job configuration...");
-    Job hadoopJob = job.getHadoopJob();
+    final Job hadoopJob = job.getHadoopJob();
     assertEquals(TextInputFormat.class, hadoopJob.getInputFormatClass());
     assertEquals(MyMapper.class, hadoopJob.getMapperClass());
     assertEquals(MyReducer.class, hadoopJob.getReducerClass());
@@ -208,17 +213,5 @@ public class TestKijiTransformJobBuilder {
     assertEquals("reducerMap",
         confOut.get(KeyValueStoreConfiguration.KEY_VALUE_STORE_NAMESPACE + "1."
         + KeyValueStoreConfigSerializer.CONF_NAME));
-  }
-
-  @Test(expected=JobConfigurationException.class)
-  public void testMissingConfiguration() throws IOException {
-    KijiTransformJobBuilder builder = KijiTransformJobBuilder.create()
-        .withInput(new TextMapReduceJobInput(new Path("/path/to/my/input")))
-        .withMapper(MyMapper.class)
-        .withReducer(MyReducer.class)
-        .withOutput(new TextMapReduceJobOutput(new Path("/path/to/my/output"), 16));
-
-    // We didn't call withConfiguration(), so this should throw an exception when we build.
-    builder.build();
   }
 }

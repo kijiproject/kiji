@@ -19,10 +19,6 @@
 
 package org.kiji.mapreduce;
 
-import java.io.IOException;
-
-import org.apache.hadoop.mapreduce.Job;
-
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.Inheritance;
 import org.kiji.schema.Kiji;
@@ -41,21 +37,6 @@ public abstract class KijiMapReduceJobBuilder<T extends KijiMapReduceJobBuilder<
 
   /** Constructs a builder for jobs that interact with a Kiji instance. */
   KijiMapReduceJobBuilder() {
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  protected void configureJob(Job job) throws IOException {
-    Kiji kiji = getKiji();
-    if (null == kiji) {
-      throw new JobConfigurationException("No kiji instance was set by the job builder."
-          + " This probably means it shouldn't be a subclass of KijiMapReduceJobBuilder.");
-    }
-
-    // Set the kiji instance name in the job configuration.
-    KijiMapReduceJob.setInstanceName(job.getConfiguration(), kiji.getURI().getInstance());
-
-    super.configureJob(job);
   }
 
   /**

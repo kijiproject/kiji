@@ -25,7 +25,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.IOException;
 
 import com.google.common.base.Preconditions;
-import org.apache.commons.io.IOUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.NullWritable;
 import org.junit.After;
@@ -40,7 +40,6 @@ import org.kiji.mapreduce.input.KijiTableMapReduceJobInput.RowOptions;
 import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
-import org.kiji.schema.KijiConfiguration;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiRowScanner;
@@ -136,17 +135,23 @@ public class TestTransform {
 
   @After
   public void tearDown() throws Exception {
-    IOUtils.closeQuietly(mReader);
-    IOUtils.closeQuietly(mTable);
+    mReader.close();
+    mTable.close();
     mKiji.release();
   }
 
   @Test
   public void testMapReduce() throws Exception {
+    final Configuration jobConf = new Configuration();
+    jobConf.set("mapred.job.tracker", "local");
+
+    final String tmpDir = "file:///tmp/hdfs-testing-" + System.nanoTime();
+    jobConf.set("fs.default.name", tmpDir);
+    jobConf.set("fs.default.FS", tmpDir);
+
     // Run the transform (map-only job):
-    final KijiConfiguration kijiConf = new KijiConfiguration(mKiji.getConf(), mKiji.getURI());
     final MapReduceJob job = KijiTransformJobBuilder.create()
-        .withKijiConfiguration(kijiConf)
+        .withConf(jobConf)
         .withMapper(ExampleMapper.class)
         .withInput(new KijiTableMapReduceJobInput(
             (HBaseKijiTable) mTable,

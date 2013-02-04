@@ -63,6 +63,7 @@ public class IntegrationTestTableMapReducer extends AbstractKijiIntegrationTest 
         final Path output = new Path(fs.getUri().toString(), "/table-mr-output");
 
         final MapReduceJob mrjob = KijiGatherJobBuilder.create()
+            .withConf(conf)
             .withGatherer(SimpleTableMapReducer.TableMapper.class)
             .withReducer(SimpleTableMapReducer.TableReducer.class)
             .withInputTable(table)

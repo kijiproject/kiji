@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.slf4j.Logger;
@@ -32,7 +31,6 @@ import org.slf4j.LoggerFactory;
 import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.kvstore.KeyValueStoreClient;
-import org.kiji.schema.KijiConfiguration;
 
 /** Builds a job that runs a MapReduce in Hadoop. */
 @ApiAudience.Public
@@ -56,8 +54,6 @@ public final class KijiTransformJobBuilder extends MapReduceJobBuilder<KijiTrans
   /** The reducer instance (may be null if no reducer is specified). */
   private KijiReducer<?, ?, ?, ?> mReducer;
 
-  /** The kiji configuration. */
-  private KijiConfiguration mKijiConf;
   /** The job input. */
   private MapReduceJobInput mJobInput;
 
@@ -71,7 +67,6 @@ public final class KijiTransformJobBuilder extends MapReduceJobBuilder<KijiTrans
     mCombiner = null;
     mReducer = null;
 
-    mKijiConf = null;
     mJobInput = null;
   }
 
@@ -82,21 +77,6 @@ public final class KijiTransformJobBuilder extends MapReduceJobBuilder<KijiTrans
    */
   public static KijiTransformJobBuilder create() {
     return new KijiTransformJobBuilder();
-  }
-
-  /**
-   * Sets the base job configuration object to use.
-   *
-   *  <p>The Configuration instance returned by <code>kijiConf.getConf()</code> will not be
-   *  modified; it will be used as the template for the Configuration object created and held
-   *  in the underlying Hadoop MapReduce job.</p>
-   *
-   * @param kijiConf A kiji configuration object
-   * @return This builder instance so yuo may chain configuration method calls.
-   */
-  public KijiTransformJobBuilder withKijiConfiguration(KijiConfiguration kijiConf) {
-    mKijiConf = kijiConf;
-    return this;
   }
 
   /**
@@ -218,16 +198,6 @@ public final class KijiTransformJobBuilder extends MapReduceJobBuilder<KijiTrans
   @Override
   protected MapReduceJob build(Job job) {
     return new InternalMapReduceJob(job);
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public Configuration getConf() {
-    // Check that the Hadoop configuration was set.
-    if (null == mKijiConf) {
-      throw new JobConfigurationException("Must specify a configuration");
-    }
-    return mKijiConf.getConf();
   }
 
   /** {@inheritDoc} */

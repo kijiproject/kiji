@@ -120,7 +120,7 @@ public class IntegrationTestTableMapper extends AbstractKijiIntegrationTest {
   }
 
   @Before
-  public void setUp() throws Exception {
+  public void setupIntegrationTestTableMapper() throws Exception {
     mConf = createConfiguration();
     mFS = FileSystem.get(mConf);
 
@@ -142,7 +142,7 @@ public class IntegrationTestTableMapper extends AbstractKijiIntegrationTest {
   }
 
   @After
-  public void tearDown() throws Exception {
+  public final void teardownIntegrationTestTableMapper() throws Exception {
     mInputTable.close();
     mOutputTable.close();
     mKiji.release();
@@ -157,6 +157,7 @@ public class IntegrationTestTableMapper extends AbstractKijiIntegrationTest {
   @Test
   public void testSimpleTableMapperDirect() throws Exception {
     final MapReduceJob mrjob = KijiGatherJobBuilder.create()
+        .withConf(mConf)
         .withGatherer(SimpleTableMapperAsGatherer.class)
         .withInputTable(mInputTable)
         .withOutput(new DirectKijiTableMapReduceJobOutput(mOutputTable))
@@ -171,6 +172,7 @@ public class IntegrationTestTableMapper extends AbstractKijiIntegrationTest {
     final Path hfileDirPath = this.makeRandomPath("hfile-output");
     try {
       final MapReduceJob mrjob = KijiGatherJobBuilder.create()
+          .withConf(mConf)
           .withGatherer(SimpleTableMapperAsGatherer.class)
           .withInputTable(mInputTable)
           .withOutput(new HFileMapReduceJobOutput(mOutputTable, hfileDirPath, 1))

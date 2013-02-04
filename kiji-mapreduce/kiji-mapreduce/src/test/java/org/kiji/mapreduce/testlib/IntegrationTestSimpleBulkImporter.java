@@ -152,6 +152,7 @@ public class IntegrationTestSimpleBulkImporter extends AbstractKijiIntegrationTe
   @Test
   public void testSimpleBulkImporterDirect() throws Exception {
     final MapReduceJob mrjob = KijiBulkImportJobBuilder.create()
+        .withConf(mConf)
         .withBulkImporter(SimpleBulkImporter.class)
         .withInput(new TextMapReduceJobInput(mBulkImportInputPath))
         .withOutput(new DirectKijiTableMapReduceJobOutput(mOutputTable))
@@ -166,6 +167,7 @@ public class IntegrationTestSimpleBulkImporter extends AbstractKijiIntegrationTe
     final Path hfileDirPath = this.makeRandomPath("hfile-output");
     try {
       final MapReduceJob mrjob = KijiBulkImportJobBuilder.create()
+          .withConf(mConf)
           .withBulkImporter(SimpleBulkImporter.class)
           .withInput(new TextMapReduceJobInput(mBulkImportInputPath))
           .withOutput(new HFileMapReduceJobOutput(mOutputTable, hfileDirPath))
