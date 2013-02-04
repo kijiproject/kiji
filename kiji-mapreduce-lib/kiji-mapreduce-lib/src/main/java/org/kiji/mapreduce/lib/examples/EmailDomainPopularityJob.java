@@ -19,6 +19,7 @@
 
 package org.kiji.mapreduce.lib.examples;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -36,8 +37,8 @@ import org.kiji.mapreduce.lib.reduce.IntSumReducer;
 import org.kiji.mapreduce.output.AvroKeyValueMapReduceJobOutput;
 import org.kiji.mapreduce.output.SequenceFileMapReduceJobOutput;
 import org.kiji.schema.Kiji;
-import org.kiji.schema.KijiConfiguration;
 import org.kiji.schema.KijiTable;
+import org.kiji.schema.KijiURI;
 
 /**
  * A program that generates an Avro file of email domains sorted by decreasing popularity.
@@ -72,10 +73,14 @@ public class EmailDomainPopularityJob extends Configured implements Tool {
     }
 
     // Read the arguments from the commmand-line.
-    String instanceName = args[0];
-    String kijiTableName = args[1];
-    Path outputPath = new Path(args[2]);
-    int numSplits = Integer.parseInt(args[3]);
+    final String instanceName = args[0];
+    final String kijiTableName = args[1];
+    final Path outputPath = new Path(args[2]);
+    final int numSplits = Integer.parseInt(args[3]);
+
+    final KijiURI tableURI = KijiURI
+        .newBuilder(String.format("kiji://.env/%s/%s", instanceName, kijiTableName))
+        .build();
 
     LOG.info("Configuring a gather job over table " + kijiTableName + ".");
     LOG.info("Writing output to " + outputPath + ".");
@@ -85,11 +90,10 @@ public class EmailDomainPopularityJob extends Configured implements Tool {
     setConf(HBaseConfiguration.addHbaseResources(getConf()));
 
     LOG.info("Opening a kiji connection...");
-    KijiConfiguration kijiConf = new KijiConfiguration(getConf(), instanceName);
-    Kiji kiji = Kiji.Factory.open(kijiConf);
+    final Kiji kiji = Kiji.Factory.open(tableURI);
 
     LOG.info("Opening kiji table " + kijiTableName + "...");
-    KijiTable table = kiji.openTable(kijiTableName);
+    final KijiTable table = kiji.openTable(kijiTableName);
 
     LOG.info("Running the first job: Count email domain popularity...");
     Path emailDomainCountPath = new Path(outputPath, "email-domain-count");
@@ -103,7 +107,7 @@ public class EmailDomainPopularityJob extends Configured implements Tool {
     LOG.info("Running the second job: Invert and sort...");
     Path sortedPopularityPath = new Path(outputPath, "sorted-popularity");
     boolean isSecondJobSuccessful = invertAndSortByPopularity(
-        emailDomainCountPath, sortedPopularityPath, numSplits, kijiConf);
+        emailDomainCountPath, sortedPopularityPath, numSplits, getConf());
     if (!isSecondJobSuccessful) {
       LOG.error("Second job failed.");
       return 2;
@@ -147,16 +151,16 @@ public class EmailDomainPopularityJob extends Configured implements Tool {
    * @param inputPath The map from email domains to their popularity.
    * @param outputPath The output path for the sorted map of popularity to email domains.
    * @param numSplits The number of output file shards to write.
-   * @param kijiConf the kiji configuration object to be used.
+   * @param conf Base Hadoop configuration.
    * @return Whether the job was successful.
    * @throws Exception If there is an exception.
    */
   private boolean invertAndSortByPopularity(
-      Path inputPath, Path outputPath, int numSplits, KijiConfiguration kijiConf)
+      Path inputPath, Path outputPath, int numSplits, Configuration conf)
       throws Exception {
     LOG.info("Configuring a transform job...");
     KijiTransformJobBuilder jobBuilder = KijiTransformJobBuilder.create()
-        .withKijiConfiguration(kijiConf)
+        .withConf(conf)
         .withInput(new SequenceFileMapReduceJobInput(inputPath))
         .withMapper(InvertCountMapper.class)
         .withReducer(TextListReducer.class)
