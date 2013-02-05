@@ -28,10 +28,11 @@ setConf(HBaseConfiguration.addHbaseResources(getConf()));
 {% endhighlight %}
 
 The code then connects to Kiji and opens the phonebook table for writing.
-The `KijiConfiguration.DEFAULT_INSTANCE_NAME` is `default`.
+The `KConstants.DEFAULT_INSTANCE_NAME` is `default`.
 {% highlight java %}
 kiji = Kiji.Factory.open(
-    new KijiConfiguration(getConf(), KijiConfiguration.DEFAULT_INSTANCE_NAME));
+    KijiURI.newBuilder().withInstanceName(KConstants.DEFAULT_INSTANCE_NAME),
+    getConf());
 table = kiji.openTable(TABLE_NAME);
 writer = table.openTableWriter();
 {% endhighlight %}
@@ -141,8 +142,9 @@ We connect to Kiji and our phonebook table in the same way we did above.
 
 {% highlight java %}
 setConf(HBaseConfiguration.create(getConf()));
-kiji = Kiji.open(new KijiConfiguration(getConf(),
-    KijiConfiguration.DEFAULT_INSTANCE_NAME));
+kiji = Kiji.Factory.open(
+    KijiURI.newBuilder().withInstanceName(KConstants.DEFAULT_INSTANCE_NAME),
+    getConf());
 table = kiji.openTable(TABLE_NAME); // TABLE_NAME is "phonebook"
 {% endhighlight %}
 
