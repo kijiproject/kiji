@@ -69,7 +69,7 @@ public abstract class MapReduceJob {
      * @throws IOException If there is an error querying the job.
      */
     public boolean isComplete() throws IOException {
-        return mJob.isComplete();
+      return mJob.isComplete();
     }
 
     /**

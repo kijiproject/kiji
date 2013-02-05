@@ -222,7 +222,7 @@ public class IntegrationTestColumnPaging extends AbstractKijiIntegrationTest {
 
     // Open the avro file.
     DataFileReader<GenericRecord> fileReader = new DataFileReader<GenericRecord>(
-        new FsInput(new Path(outputPath, "part-m-00000.avro"), getKijiConfiguration().getConf()),
+        new FsInput(new Path(outputPath, "part-m-00000.avro"), getIntegrationHelper().getConf()),
         new GenericDatumReader<GenericRecord>(recordSchema));
 
     try {

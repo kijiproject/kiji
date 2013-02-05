@@ -57,7 +57,7 @@ public abstract class KijiRowFilterIntegrationTest extends AbstractKijiIntegrati
 
   @Before
   public void setup() throws IOException {
-    mKiji = Kiji.Factory.open(getKijiConfiguration());
+    mKiji = Kiji.Factory.open(getKijiURI(), getIntegrationHelper().getConf());
     try {
       createTable();
     } catch (Exception e) {

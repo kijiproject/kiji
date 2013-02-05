@@ -26,6 +26,7 @@ import org.apache.avro.Schema;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HConstants;
 
 import org.kiji.annotations.ApiAudience;
@@ -128,7 +129,7 @@ public final class KijiTableKeyValueStore<V> implements Configurable, KeyValueSt
       mMaxObjectsToCache = DEFAULT_MAX_OBJECTS_TO_CACHE;
       mMinTs = 0;
       mMaxTs = HConstants.LATEST_TIMESTAMP;
-      mConf = new Configuration();
+      mConf = HBaseConfiguration.create(); //new Configuration();
     }
 
     /**

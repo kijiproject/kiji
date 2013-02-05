@@ -46,6 +46,9 @@ public final class KijiConfKeys {
   /** Fully qualified name of the KijiBulkImporter class to run. */
   public static final String KIJI_BULK_IMPORTER_CLASS = "kiji.bulk.importer.class";
 
+  /** Kiji Instance Name. */
+  public static final String KIJI_INSTANCE_NAME = "kiji.instance.name";
+
   /** Utility class may not be instantiated. */
   private KijiConfKeys() {
   }
