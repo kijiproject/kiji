@@ -20,10 +20,12 @@
 package org.kiji.schema.shell
 
 import org.specs2.mutable._
-import org.kiji.schema.KijiConfiguration
+
+import org.kiji.schema.KijiURI
 import org.kiji.schema.avro.RowKeyEncoding
 import org.kiji.schema.avro.RowKeyFormat
 import org.kiji.schema.avro.TableLayoutDesc
+import org.kiji.schema.KConstants
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.util.VersionInfo
 import java.util.ArrayList
@@ -31,11 +33,13 @@ import java.util.ArrayList
 import org.kiji.schema.shell.input.NullInputSource
 
 class TestMockKijiSystem extends SpecificationWithJUnit {
+  val defaultURI = KijiURI.newBuilder().withInstanceName(KConstants.DEFAULT_INSTANCE_NAME).build()
+
   "MockKijiSystem" should {
     "include three instances" in {
       val instances = new MockKijiSystem().listInstances()
       instances.size mustEqual 3
-      instances.contains(KijiConfiguration.DEFAULT_INSTANCE_NAME) mustEqual true
+      instances.contains(KConstants.DEFAULT_INSTANCE_NAME) mustEqual true
       instances.contains("foo") mustEqual true
       instances.contains("a-missing-instance") mustEqual false
     }
@@ -52,8 +56,8 @@ class TestMockKijiSystem extends SpecificationWithJUnit {
       avro.setKeysFormat(rowKeyFormat)
       val layout = new KijiTableLayout(avro, null)
       val sys = new MockKijiSystem
-      sys.createTable(KijiConfiguration.DEFAULT_INSTANCE_NAME, "t", layout)
-      (sys.getTableNamesDescriptions(KijiConfiguration.DEFAULT_INSTANCE_NAME)
+      sys.createTable(defaultURI, "t", layout)
+      (sys.getTableNamesDescriptions(defaultURI)
           mustEqual List(("t", "desc")).toArray)
     }
 
@@ -69,9 +73,9 @@ class TestMockKijiSystem extends SpecificationWithJUnit {
       avro.setKeysFormat(rowKeyFormat)
       val layout = new KijiTableLayout(avro, null)
       val sys = new MockKijiSystem
-      sys.createTable(KijiConfiguration.DEFAULT_INSTANCE_NAME, "t", layout)
+      sys.createTable(defaultURI, "t", layout)
 
-      new Environment(KijiConfiguration.DEFAULT_INSTANCE_NAME, Console.out,
+      new Environment(defaultURI, Console.out,
         sys, new NullInputSource).containsTable("t") mustEqual true
     }
 
@@ -87,11 +91,11 @@ class TestMockKijiSystem extends SpecificationWithJUnit {
       avro.setKeysFormat(rowKeyFormat)
       val layout = new KijiTableLayout(avro, null)
       val sys = new MockKijiSystem
-      sys.createTable(KijiConfiguration.DEFAULT_INSTANCE_NAME, "t", layout)
-      (sys.getTableNamesDescriptions(KijiConfiguration.DEFAULT_INSTANCE_NAME)
+      sys.createTable(defaultURI, "t", layout)
+      (sys.getTableNamesDescriptions(defaultURI)
           mustEqual List(("t", "desc")).toArray)
-      sys.dropTable(KijiConfiguration.DEFAULT_INSTANCE_NAME, "t")
-      (sys.getTableNamesDescriptions(KijiConfiguration.DEFAULT_INSTANCE_NAME)
+      sys.dropTable(defaultURI, "t")
+      (sys.getTableNamesDescriptions(defaultURI)
           mustEqual List[(String, String)]().toArray)
     }
 
@@ -107,14 +111,14 @@ class TestMockKijiSystem extends SpecificationWithJUnit {
       rowKeyFormat.setEncoding(RowKeyEncoding.HASH)
       avro.setKeysFormat(rowKeyFormat)
       val layout = new KijiTableLayout(avro, null)
-      sys.createTable(KijiConfiguration.DEFAULT_INSTANCE_NAME, "t", layout)
-      (sys.createTable(KijiConfiguration.DEFAULT_INSTANCE_NAME, "t", layout)
+      sys.createTable(defaultURI, "t", layout)
+      (sys.createTable(defaultURI, "t", layout)
           must throwA[RuntimeException])
     }
 
     "disallow drop table on missing table" in {
       val sys = new MockKijiSystem
-      sys.dropTable(KijiConfiguration.DEFAULT_INSTANCE_NAME, "t") must throwA[RuntimeException]
+      sys.dropTable(defaultURI, "t") must throwA[RuntimeException]
     }
 
     "disallow apply layout on missing table" in {
@@ -130,7 +134,7 @@ class TestMockKijiSystem extends SpecificationWithJUnit {
       // Verify that this is a valid layout
       new KijiTableLayout(avro, null)
       // .. but you can't apply it to a missing table.
-      (sys.applyLayout(KijiConfiguration.DEFAULT_INSTANCE_NAME, "t", avro)
+      (sys.applyLayout(defaultURI, "t", avro)
           must throwA[RuntimeException])
     }
 
@@ -152,8 +156,8 @@ class TestMockKijiSystem extends SpecificationWithJUnit {
       val layout: KijiTableLayout = new KijiTableLayout(avro, null)
       val sys = new MockKijiSystem
 
-      sys.createTable(KijiConfiguration.DEFAULT_INSTANCE_NAME, "t", layout)
-      (sys.getTableNamesDescriptions(KijiConfiguration.DEFAULT_INSTANCE_NAME)
+      sys.createTable(defaultURI, "t", layout)
+      (sys.getTableNamesDescriptions(defaultURI)
           mustEqual List(("t", "desc1")).toArray)
 
       val avro2: TableLayoutDesc = new TableLayoutDesc
@@ -162,8 +166,8 @@ class TestMockKijiSystem extends SpecificationWithJUnit {
       avro2.setName("t")
       avro2.setDescription("desc2")
       avro2.setKeysFormat(rowKeyFormat)
-      sys.applyLayout(KijiConfiguration.DEFAULT_INSTANCE_NAME, "t", avro2)
-      (sys.getTableNamesDescriptions(KijiConfiguration.DEFAULT_INSTANCE_NAME)
+      sys.applyLayout(defaultURI, "t", avro2)
+      (sys.getTableNamesDescriptions(defaultURI)
           mustEqual List(("t", "desc2")).toArray)
     }
 
@@ -179,11 +183,11 @@ class TestMockKijiSystem extends SpecificationWithJUnit {
       val layout: KijiTableLayout = new KijiTableLayout(avro, null)
       val sys = new MockKijiSystem
 
-      sys.createTable(KijiConfiguration.DEFAULT_INSTANCE_NAME, "t", layout)
-      (sys.getTableNamesDescriptions(KijiConfiguration.DEFAULT_INSTANCE_NAME)
+      sys.createTable(defaultURI, "t", layout)
+      (sys.getTableNamesDescriptions(defaultURI)
           mustEqual List(("t", "desc1")).toArray)
 
-      val maybeLayout2 = sys.getTableLayout(KijiConfiguration.DEFAULT_INSTANCE_NAME, "t")
+      val maybeLayout2 = sys.getTableLayout(defaultURI, "t")
       maybeLayout2 must beSome[KijiTableLayout]
 
       val layout2 = maybeLayout2 match {
@@ -194,7 +198,7 @@ class TestMockKijiSystem extends SpecificationWithJUnit {
       layout2.getDesc().setDescription("desc2") // Prove that this updates a copy...
 
       // By verifying that the MockKijiSystem returns the original description.
-      (sys.getTableNamesDescriptions(KijiConfiguration.DEFAULT_INSTANCE_NAME)
+      (sys.getTableNamesDescriptions(defaultURI)
           mustEqual List(("t", "desc1")).toArray)
     }
   }

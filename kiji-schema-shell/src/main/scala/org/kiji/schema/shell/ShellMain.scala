@@ -21,7 +21,8 @@ package org.kiji.schema.shell
 
 import org.kiji.common.flags.Flag
 import org.kiji.common.flags.FlagParser
-import org.kiji.schema.KijiConfiguration
+import org.kiji.schema.KConstants
+import org.kiji.schema.KijiURI
 import org.kiji.schema.shell.ddl.DDLCommand
 import org.kiji.schema.shell.ddl.ErrorCommand
 import org.kiji.schema.shell.input.FileInputSource
@@ -33,7 +34,7 @@ import org.kiji.schema.shell.input.StringInputSource
  */
 class ShellMain {
   @Flag(name="kiji", usage="Kiji instance name")
-  val instanceName: String = KijiConfiguration.DEFAULT_INSTANCE_NAME
+  val instanceName: String = KConstants.DEFAULT_INSTANCE_NAME
 
   @Flag(name="expr", usage="Expression to execute")
   val expr: String = ""
@@ -76,7 +77,8 @@ class ShellMain {
       }
     )
 
-    return new Environment(instanceName, Console.out, KijiSystem, input)
+    val uri = KijiURI.newBuilder().withInstanceName(instanceName).build()
+    return new Environment(uri, Console.out, KijiSystem, input)
   }
 
   /**

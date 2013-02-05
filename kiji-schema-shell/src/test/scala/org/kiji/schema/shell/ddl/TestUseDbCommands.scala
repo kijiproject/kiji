@@ -22,8 +22,7 @@ package org.kiji.schema.shell.ddl
 import scala.collection.JavaConversions._
 import org.specs2.mutable._
 
-import org.kiji.schema.KijiConfiguration
-
+import org.kiji.schema.KConstants
 import org.kiji.schema.shell.DDLException
 import org.kiji.schema.shell.DDLParser
 
@@ -37,7 +36,7 @@ class TestUseDbCommands extends CommandTestCase {
     "select the database we request" in {
       val usecmd = new UseInstanceCommand(env, "foo")
       val env2 = usecmd.exec()
-      env2.instanceName mustEqual "foo"
+      env2.instanceURI.getInstance() mustEqual "foo"
     }
   }
 
@@ -48,13 +47,13 @@ class TestUseDbCommands extends CommandTestCase {
       res1.successful mustEqual true
 
       val env2 = res1.get.exec()
-      env2.instanceName mustEqual "foo"
+      env2.instanceURI.getInstance() mustEqual "foo"
       val parser2: DDLParser = new DDLParser(env2)
       val res2 = parser2.parseAll(parser2.statement, "USE DEFAULT INSTANCE;")
       res2.successful mustEqual true
 
       val env3 = res2.get.exec()
-      env3.instanceName mustEqual KijiConfiguration.DEFAULT_INSTANCE_NAME
+      env3.instanceURI.getInstance() mustEqual KConstants.DEFAULT_INSTANCE_NAME
     }
   }
 }

@@ -24,7 +24,8 @@ import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 import org.specs2.mutable._
 
-import org.kiji.schema.KijiConfiguration
+import org.kiji.schema.KConstants
+import org.kiji.schema.KijiURI
 import org.kiji.schema.avro.FamilyDesc
 import org.kiji.schema.layout.KijiTableLayout
 
@@ -59,7 +60,7 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
       // Check that we have created as many locgroups, map families, and group families
       // as we expect to be here.
       val maybeLayout2 = env.kijiSystem.getTableLayout(
-          KijiConfiguration.DEFAULT_INSTANCE_NAME, "foo")
+          defaultURI, "foo")
       maybeLayout2 must beSome[KijiTableLayout]
       val layout2 = maybeLayout2.get.getDesc
       val locGroups2 = layout2.getLocalityGroups()
@@ -97,7 +98,7 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
       // Check that we have created as many locgroups, map families, and group families
       // as we expect to be here.
       val maybeLayout2 = env.kijiSystem.getTableLayout(
-          KijiConfiguration.DEFAULT_INSTANCE_NAME, "foo")
+          defaultURI, "foo")
       maybeLayout2 must beSome[KijiTableLayout]
       val layout2 = maybeLayout2.get.getDesc
       val locGroups2 = layout2.getLocalityGroups()
@@ -117,7 +118,7 @@ ALTER TABLE foo ADD COLUMN info:meep "string" WITH DESCRIPTION 'beep beep!';""")
 
       // Check that the new column is here.
       val maybeLayout3 = env.kijiSystem.getTableLayout(
-          KijiConfiguration.DEFAULT_INSTANCE_NAME, "foo")
+          defaultURI, "foo")
       maybeLayout3 must beSome[KijiTableLayout]
       val layout3 = maybeLayout3.get.getDesc
       val locGroups3 = layout3.getLocalityGroups()
@@ -148,7 +149,7 @@ ALTER TABLE foo RENAME COLUMN info:email AS info:mail;""")
 
       // Check that the new column is here.
       val maybeLayout3 = env.kijiSystem.getTableLayout(
-          KijiConfiguration.DEFAULT_INSTANCE_NAME, "foo")
+          defaultURI, "foo")
       maybeLayout3 must beSome[KijiTableLayout]
       val layout3 = maybeLayout3.get.getDesc
       val locGroups3 = layout3.getLocalityGroups()
@@ -182,7 +183,7 @@ ALTER TABLE foo DROP COLUMN info:email;""")
 
       // Check that the new column is here.
       val maybeLayout3 = env.kijiSystem.getTableLayout(
-          KijiConfiguration.DEFAULT_INSTANCE_NAME, "foo")
+          defaultURI, "foo")
       maybeLayout3 must beSome[KijiTableLayout]
       val layout3 = maybeLayout3.get.getDesc
       val locGroups3 = layout3.getLocalityGroups()
@@ -251,7 +252,7 @@ ALTER TABLE foo DROP LOCALITY GROUP default;""")
 
       // Check that we have 0 locality groups.
       val maybeLayout3 = env.kijiSystem.getTableLayout(
-          KijiConfiguration.DEFAULT_INSTANCE_NAME, "foo")
+          defaultURI, "foo")
       maybeLayout3 must beSome[KijiTableLayout]
       val layout3 = maybeLayout3.get.getDesc
       val locGroups3 = layout3.getLocalityGroups()
@@ -271,7 +272,7 @@ ALTER TABLE foo RENAME LOCALITY GROUP default def;""")
 
       // Check that the locality group has the new name
       val maybeLayout3 = env.kijiSystem.getTableLayout(
-          KijiConfiguration.DEFAULT_INSTANCE_NAME, "foo")
+          defaultURI, "foo")
       maybeLayout3 must beSome[KijiTableLayout]
       val layout3 = maybeLayout3.get.getDesc
       val locGroups3 = layout3.getLocalityGroups()
@@ -291,7 +292,7 @@ ALTER TABLE foo SET DESCRIPTION = 'testing!' FOR FAMILY info;""")
 
       // Check that the family has a new description.
       val maybeLayout3 = env.kijiSystem.getTableLayout(
-          KijiConfiguration.DEFAULT_INSTANCE_NAME, "foo")
+          defaultURI, "foo")
       maybeLayout3 must beSome[KijiTableLayout]
       val layout3 = maybeLayout3.get.getDesc
       (layout3.getLocalityGroups().head.getFamilies().find({ fam =>
@@ -311,7 +312,7 @@ ALTER TABLE foo SET DESCRIPTION = 'testing!';""")
 
       // Check that the table has an updated description.
       val maybeLayout3 = env.kijiSystem.getTableLayout(
-          KijiConfiguration.DEFAULT_INSTANCE_NAME, "foo")
+          defaultURI, "foo")
       maybeLayout3 must beSome[KijiTableLayout]
       maybeLayout3.get.getDesc().getDescription().toString() mustEqual "testing!"
     }
@@ -328,7 +329,7 @@ ALTER TABLE foo SET DESCRIPTION = 'testing!' FOR LOCALITY GROUP 'default';""")
 
       // Check that the locality group has the new description
       val maybeLayout3 = env.kijiSystem.getTableLayout(
-          KijiConfiguration.DEFAULT_INSTANCE_NAME, "foo")
+          defaultURI, "foo")
       maybeLayout3 must beSome[KijiTableLayout]
       val layout3 = maybeLayout3.get.getDesc
       val locGroups3 = layout3.getLocalityGroups()
@@ -349,7 +350,7 @@ ALTER TABLE foo SET INMEMORY = true FOR LOCALITY GROUP 'default';""")
 
       // Check that the locality group has the new property
       val maybeLayout3 = env.kijiSystem.getTableLayout(
-          KijiConfiguration.DEFAULT_INSTANCE_NAME, "foo")
+          defaultURI, "foo")
       maybeLayout3 must beSome[KijiTableLayout]
       val layout3 = maybeLayout3.get.getDesc
       val locGroups3 = layout3.getLocalityGroups()
@@ -369,7 +370,7 @@ ALTER TABLE foo ADD MAP TYPE FAMILY ints "int" TO LOCALITY GROUP default;""")
 
       // Check that the new family exists.
       val maybeLayout3 = env.kijiSystem.getTableLayout(
-          KijiConfiguration.DEFAULT_INSTANCE_NAME, "foo")
+          defaultURI, "foo")
       maybeLayout3 must beSome[KijiTableLayout]
       val layout3 = maybeLayout3.get.getDesc
       val locGroups3 = layout3.getLocalityGroups()
@@ -389,7 +390,7 @@ ALTER TABLE foo SET SCHEMA = "string" FOR MAP TYPE FAMILY ints;""")
       res3.successful mustEqual true
       val env4 = res3.get.exec()
       val maybeLayout4 = env.kijiSystem.getTableLayout(
-          KijiConfiguration.DEFAULT_INSTANCE_NAME, "foo")
+          defaultURI, "foo")
       maybeLayout4 must beSome[KijiTableLayout]
       val layout4 = maybeLayout4.get.getDesc
       val locGroups4 = layout4.getLocalityGroups()
@@ -413,7 +414,7 @@ ALTER TABLE foo SET SCHEMA = "int" FOR COLUMN info:email;""")
 
       // Check that the new family exists.
       val maybeLayout2 = env3.kijiSystem.getTableLayout(
-          KijiConfiguration.DEFAULT_INSTANCE_NAME, "foo")
+          defaultURI, "foo")
       maybeLayout2 must beSome[KijiTableLayout]
       val layout2 = maybeLayout2.get.getDesc
       val locGroups2 = layout2.getLocalityGroups()
@@ -442,7 +443,7 @@ ALTER TABLE foo SET SCHEMA = "int" FOR COLUMN info:email;""")
 
       // Also record the current table layout.
       val maybeLayout = env3.kijiSystem.getTableLayout(
-          KijiConfiguration.DEFAULT_INSTANCE_NAME, "foo")
+          defaultURI, "foo")
       maybeLayout must beSome[KijiTableLayout]
       val layout = maybeLayout.get.getDesc
 
@@ -454,7 +455,7 @@ ALTER TABLE foo SET SCHEMA = "int" FOR COLUMN info:email;""")
 
       // Verify that the table is dropped.
       val maybeLayout2 = env4.kijiSystem.getTableLayout(
-          KijiConfiguration.DEFAULT_INSTANCE_NAME, "foo")
+          defaultURI, "foo")
       maybeLayout2 must beNone
 
       // Recreate it using the auto-generated DDL.
@@ -464,7 +465,7 @@ ALTER TABLE foo SET SCHEMA = "int" FOR COLUMN info:email;""")
       val env5 = res4.get.exec()
 
       val maybeLayout3 = env5.kijiSystem.getTableLayout(
-          KijiConfiguration.DEFAULT_INSTANCE_NAME, "foo")
+          defaultURI, "foo")
       maybeLayout3 must beSome[KijiTableLayout]
       val layout3 = maybeLayout3.get.getDesc
 

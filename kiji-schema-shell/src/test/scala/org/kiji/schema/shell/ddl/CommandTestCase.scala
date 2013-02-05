@@ -21,8 +21,8 @@ package org.kiji.schema.shell.ddl
 
 import org.specs2.mutable._
 
-import org.kiji.schema.KijiConfiguration
-
+import org.kiji.schema.KConstants
+import org.kiji.schema.KijiURI
 import org.kiji.schema.shell.Environment
 import org.kiji.schema.shell.MockKijiSystem
 import org.kiji.schema.shell.input.NullInputSource
@@ -33,7 +33,10 @@ import org.kiji.schema.shell.input.NullInputSource
 class CommandTestCase extends SpecificationWithJUnit {
   isolated // Create a new instance for every test, to get a fresh environment.
 
+  /** URI pointing to the default Kiji instance. */
+  val defaultURI = KijiURI.newBuilder().withInstanceName(KConstants.DEFAULT_INSTANCE_NAME).build()
+
   /** Return the environment to use for testing. */
-  val env: Environment = new Environment(KijiConfiguration.DEFAULT_INSTANCE_NAME,
-      System.out, new MockKijiSystem, new NullInputSource)
+  val env: Environment =
+      new Environment(defaultURI, System.out, new MockKijiSystem, new NullInputSource)
 }

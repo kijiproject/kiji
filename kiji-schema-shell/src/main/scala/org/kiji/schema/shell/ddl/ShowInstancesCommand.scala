@@ -47,7 +47,7 @@ class ShowInstancesCommand(val env: Environment) extends DDLCommand {
         .append("\n")
     // Add the instance names
     instances.foreach { case name =>
-      if (name.equals(env.instanceName)) {
+      if (name.equals(getKijiURI().getInstance())) {
         output.append("* ") // Currently-selected instance.
       } else {
         output.append("  ")

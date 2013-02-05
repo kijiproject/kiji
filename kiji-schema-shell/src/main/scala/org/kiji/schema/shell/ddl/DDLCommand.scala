@@ -21,7 +21,7 @@ package org.kiji.schema.shell.ddl
 
 import scala.collection.JavaConversions._
 
-import org.kiji.schema.KijiConfiguration
+import org.kiji.schema.KijiURI
 import org.kiji.schema.avro.ColumnDesc
 import org.kiji.schema.avro.FamilyDesc
 import org.kiji.schema.avro.LocalityGroupDesc
@@ -47,8 +47,8 @@ abstract class DDLCommand {
   def exec(): Environment
 
   /** Return the Kiji instance name being operated on. */
-  def getKijiInstance(): String = {
-    env.instanceName
+  def getKijiURI(): KijiURI = {
+    env.instanceURI
   }
 
   /**

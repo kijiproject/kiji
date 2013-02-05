@@ -48,7 +48,7 @@ class CreateTableCommand(val env: Environment,
 
   override def validateArguments(): Unit = {
     // Check that the table doesn't exist.
-    env.kijiSystem.getTableLayout(getKijiInstance(), tableName) match {
+    env.kijiSystem.getTableLayout(getKijiURI(), tableName) match {
       case Some(layout) => { throw new DDLException("Table " + tableName + " already exists.") }
       case _ => ()
     }
@@ -90,6 +90,6 @@ class CreateTableCommand(val env: Environment,
   }
 
   override def applyUpdate(layout: TableLayoutDesc): Unit = {
-    env.kijiSystem.createTable(getKijiInstance(), tableName, new KijiTableLayout(layout, null))
+    env.kijiSystem.createTable(getKijiURI(), tableName, new KijiTableLayout(layout, null))
   }
 }

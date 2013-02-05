@@ -21,7 +21,6 @@ package org.kiji.schema.shell.ddl
 
 import scala.collection.JavaConversions._
 
-import org.kiji.schema.KijiConfiguration
 import org.kiji.schema.avro.ColumnDesc
 import org.kiji.schema.avro.FamilyDesc
 import org.kiji.schema.avro.LocalityGroupDesc
@@ -59,7 +58,7 @@ abstract class TableDDLCommand extends DDLCommand {
    * Retrieve the table layout to modify from Kiji.
    */
   def getInitialLayout(): TableLayoutDesc = {
-    env.kijiSystem.getTableLayout(getKijiInstance(), tableName) match {
+    env.kijiSystem.getTableLayout(getKijiURI(), tableName) match {
       case Some(layout) => { layout.getDesc() }
       case None => { throw new TableNotFoundException(tableName) }
     }
@@ -88,7 +87,7 @@ abstract class TableDDLCommand extends DDLCommand {
       case None => { } // No previous layout to refer to.
       case Some(ref) => { layout.setReferenceLayout(ref) }
     }
-    env.kijiSystem.applyLayout(getKijiInstance(), tableName, layout)
+    env.kijiSystem.applyLayout(getKijiURI(), tableName, layout)
   }
 
   /**
@@ -98,7 +97,7 @@ abstract class TableDDLCommand extends DDLCommand {
    * @return Some(reference id) if there's an existing layout, or None if there isn't.
    */
   private def getLayoutReferenceId(): Option[String] = {
-    env.kijiSystem.getTableLayout(getKijiInstance(), tableName) match {
+    env.kijiSystem.getTableLayout(getKijiURI(), tableName) match {
       case None => None // No existing layout. e.g., we're creating a new table.
       case Some(layout) => Some(layout.getDesc().getLayoutId())
     }
@@ -197,7 +196,7 @@ abstract class TableDDLCommand extends DDLCommand {
   }
 
   protected def checkTableExists(): Unit = {
-    env.kijiSystem.getTableLayout(getKijiInstance(), tableName) match {
+    env.kijiSystem.getTableLayout(getKijiURI(), tableName) match {
       case Some(layout) => { /* success. */ }
       case None => throw new DDLException("No such table \"" + tableName + "\"")
     }

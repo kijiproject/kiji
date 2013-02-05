@@ -23,10 +23,9 @@ import scala.collection.mutable.Map
 import java.util.NoSuchElementException
 
 import org.kiji.schema.Kiji
-import org.kiji.schema.KijiConfiguration
-
-import org.kiji.schema.KijiConfiguration
+import org.kiji.schema.KConstants
 import org.kiji.schema.KijiMetaTable
+import org.kiji.schema.KijiURI
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.avro.TableLayoutDesc
 
@@ -35,18 +34,22 @@ import org.kiji.schema.avro.TableLayoutDesc
  * and does not communicate with HBase.
  */
 class MockKijiSystem extends AbstractKijiSystem {
-  private val instanceData: Map[String, Map[String, KijiTableLayout]] = Map()
+  private val instanceData: Map[KijiURI, Map[String, KijiTableLayout]] = Map()
 
   {
+    val defaultURI = KijiURI.newBuilder().withInstanceName(KConstants.DEFAULT_INSTANCE_NAME).build()
+    val fooURI = KijiURI.newBuilder().withInstanceName("foo").build()
+    val barURI = KijiURI.newBuilder().withInstanceName("bar").build()
+
     // Create 3 empty instances.
-    instanceData(KijiConfiguration.DEFAULT_INSTANCE_NAME) = Map[String, KijiTableLayout]()
-    instanceData("foo") = Map[String, KijiTableLayout]()
-    instanceData("bar") = Map[String, KijiTableLayout]()
+    instanceData(defaultURI) = Map[String, KijiTableLayout]()
+    instanceData(fooURI) = Map[String, KijiTableLayout]()
+    instanceData(barURI) = Map[String, KijiTableLayout]()
   }
 
-  override def getTableNamesDescriptions(instance: String): Array[(String, String)] = {
+  override def getTableNamesDescriptions(uri: KijiURI): Array[(String, String)] = {
     try {
-      val tables: Map[String, KijiTableLayout] = instanceData(instance)
+      val tables: Map[String, KijiTableLayout] = instanceData(uri)
       val out: List[(String, String)] = tables.keys.foldLeft(Nil:List[(String,String)])(
           (lst, tableName) =>
               (tableName, tables(tableName).getDesc.getDescription().toString()) :: lst
@@ -54,30 +57,30 @@ class MockKijiSystem extends AbstractKijiSystem {
       return out.toArray
     } catch {
       case nsee: NoSuchElementException => {
-        throw new RuntimeException("No such instance: " + instance)
+        throw new RuntimeException("No such instance: " + uri.toString)
       }
     }
   }
 
-  override def getTableLayout(instance: String, table: String): Option[KijiTableLayout] = {
+  override def getTableLayout(uri: KijiURI, table: String): Option[KijiTableLayout] = {
     try {
       Some(new KijiTableLayout(TableLayoutDesc.newBuilder(
-          instanceData(instance)(table).getDesc()).build(), null))
+          instanceData(uri)(table).getDesc()).build(), null))
     } catch {
       case nsee: NoSuchElementException => None
     }
   }
 
-  override def createTable(instance: String, table: String, layout: KijiTableLayout): Unit = {
+  override def createTable(uri: KijiURI, table: String, layout: KijiTableLayout): Unit = {
     // Verify that the layout has all the required values set.
     TableLayoutDesc.newBuilder(layout.getDesc()).build()
     try {
-      instanceData(instance)(table)
+      instanceData(uri)(table)
       throw new RuntimeException("Table already exists")
     } catch {
       case nsee: NoSuchElementException => {
         try {
-          val tableMap = instanceData(instance)
+          val tableMap = instanceData(uri)
           tableMap(table) = layout
         } catch {
           case nsee: NoSuchElementException => {
@@ -88,25 +91,25 @@ class MockKijiSystem extends AbstractKijiSystem {
     }
   }
 
-  override def applyLayout(instance: String, table: String, layout: TableLayoutDesc): Unit = {
+  override def applyLayout(uri: KijiURI, table: String, layout: TableLayoutDesc): Unit = {
     try {
       // Check that the table already exists.
-      instanceData(instance)(table)
+      instanceData(uri)(table)
       // Verify that the layout has all the required values set.
       val layoutCopy = TableLayoutDesc.newBuilder(layout).build()
       // Verify that the update is legal.
-      val wrappedLayout = new KijiTableLayout(layoutCopy, instanceData(instance)(table))
+      val wrappedLayout = new KijiTableLayout(layoutCopy, instanceData(uri)(table))
       // TODO: Process deletes manually.
-      instanceData(instance)(table) = wrappedLayout // Update our copy to match.
+      instanceData(uri)(table) = wrappedLayout // Update our copy to match.
     } catch {
       case nsee: NoSuchElementException => throw new RuntimeException(table + " doesn't exist!")
     }
   }
 
-  override def dropTable(instance: String, table: String): Unit = {
+  override def dropTable(uri: KijiURI, table: String): Unit = {
     try {
-      instanceData(instance)(table) // Verify it exists first.
-      instanceData(instance).remove(table) // Then remove it.
+      instanceData(uri)(table) // Verify it exists first.
+      instanceData(uri).remove(table) // Then remove it.
     } catch {
       case nsee: NoSuchElementException => {
         throw new RuntimeException("missing instance or table")
@@ -115,7 +118,10 @@ class MockKijiSystem extends AbstractKijiSystem {
   }
 
   override def listInstances(): Set[String] = {
-    instanceData.keySet.foldLeft(Nil: List[String])((lst, instance) => instance :: lst).toSet
+    instanceData
+        .keySet
+        .foldLeft(Nil: List[String])((lst, uri) => uri.getInstance() :: lst)
+        .toSet
   }
 
   override def shutdown(): Unit = {

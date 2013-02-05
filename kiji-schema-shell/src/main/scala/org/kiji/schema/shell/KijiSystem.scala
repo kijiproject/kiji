@@ -24,16 +24,15 @@ import java.io.IOException
 import scala.collection.JavaConversions._
 import scala.collection.mutable.Map
 
+import com.google.common.collect.ImmutableList;
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.HTableDescriptor
 import org.apache.hadoop.hbase.client.HBaseAdmin
 import org.apache.hadoop.util.StringUtils
 
 import org.kiji.schema.Kiji
-import org.kiji.schema.KijiConfiguration
-
-import org.kiji.schema.KijiURI
 import org.kiji.schema.KijiMetaTable
+import org.kiji.schema.KijiURI
 import org.kiji.schema.avro.TableLayoutDesc
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.util.ResourceUtils
@@ -47,7 +46,7 @@ import org.kiji.schema.util.ResourceUtils
  */
 object KijiSystem extends AbstractKijiSystem {
   // A map from Kiji instance names to internal implementations of Kiji instances.
-  private val kijis = Map[String, Kiji]()
+  private val kijis = Map[KijiURI, Kiji]()
 
   // A lazily-initialized HBaseAdmin.
   private var maybeHBaseAdmin: Option[HBaseAdmin] = None
@@ -67,27 +66,15 @@ object KijiSystem extends AbstractKijiSystem {
   /**
    * Gets the meta table for the Kiji instance with the specified name.
    *
-   * @param instance Name of the Kiji instance.
+   * @param uri Name of the Kiji instance.
    * @return A meta table for the specified Kiji instance, or None if the specified instance
    *     cannot be opened.
    */
-  private def kijiMetaTable(instance: String): Option[KijiMetaTable] = {
-    kijiCache(instance) match {
+  private def kijiMetaTable(uri: KijiURI): Option[KijiMetaTable] = {
+    kijiCache(uri) match {
       case Some(theKiji) => Some(theKiji.getMetaTable())
       case None => None
     }
-  }
-
-  /**
-   * Gets the Kiji configuration for the specified Kiji instance.
-   *
-   * <p>This method caches configuration instances for a given Kiji instance.</p>
-   *
-   * @param instance Name of the Kiji instance.
-   * @return A configuration for the specified Kiji instance.
-   */
-  private def kijiConf(instance: String): KijiConfiguration = {
-    new KijiConfiguration(HBaseConfiguration.create(), instance)
   }
 
   /**
@@ -95,15 +82,15 @@ object KijiSystem extends AbstractKijiSystem {
    *
    * <p>This method caches the Kiji instances opened.</p>
    *
-   * @param instance Name of the Kiji instance.
+   * @param uri Name of the Kiji instance.
    * @return An Kiji for the Kiji instance with the specified name, or none if the
    *     instance specified cannot be opened.
    */
-  private def kijiCache(instance: String): Option[Kiji] = {
-    if (!kijis.contains(instance)) {
+  private def kijiCache(uri: KijiURI): Option[Kiji] = {
+    if (!kijis.contains(uri)) {
       try {
-        val theKiji = Kiji.Factory.open(kijiConf(instance))
-        kijis += (instance -> theKiji)
+        val theKiji = Kiji.Factory.open(uri)
+        kijis += (uri -> theKiji)
         Some(theKiji)
       } catch {
         case exn: Exception => {
@@ -112,20 +99,20 @@ object KijiSystem extends AbstractKijiSystem {
         }
       }
     } else {
-      Some(kijis(instance))
+      Some(kijis(uri))
     }
   }
 
   /** {@inheritDoc} */
-  override def getTableNamesDescriptions(instance: String): Array[(String, String)] = {
+  override def getTableNamesDescriptions(uri: KijiURI): Array[(String, String)] = {
     // Get all table names.
-    val tableNames: List[String] = kijiCache(instance) match {
+    val tableNames: List[String] = kijiCache(uri) match {
       case Some(kiji) => kiji.getTableNames().toList
       case None => List()
     }
     // join table names and descriptions.
     tableNames.map { name =>
-      kijiMetaTable(instance) match {
+      kijiMetaTable(uri) match {
         case Some(metaTable) => {
           val description = metaTable.getTableLayout(name).getDesc().getDescription()
           (name, description)
@@ -136,8 +123,8 @@ object KijiSystem extends AbstractKijiSystem {
   }
 
   /** {@inheritDoc} */
-  override def getTableLayout(instance: String, table: String): Option[KijiTableLayout] = {
-    kijiMetaTable(instance) match {
+  override def getTableLayout(uri: KijiURI, table: String): Option[KijiTableLayout] = {
+    kijiMetaTable(uri) match {
       case Some(metaTable) => {
         try {
           val layout = metaTable.getTableLayout(table)
@@ -151,26 +138,26 @@ object KijiSystem extends AbstractKijiSystem {
   }
 
   /** {@inheritDoc} */
-  override def createTable(instance: String, table: String, layout: KijiTableLayout): Unit = {
-    kijiCache(instance) match {
+  override def createTable(uri: KijiURI, table: String, layout: KijiTableLayout): Unit = {
+    kijiCache(uri) match {
       case Some(kiji) => { kiji.createTable(table, layout) }
-      case None => { throw new IOException("Cannot get kiji for \"" + instance + "\"") }
+      case None => { throw new IOException("Cannot get kiji for \"" + uri.toString() + "\"") }
     }
   }
 
   /** {@inheritDoc} */
-  override def applyLayout(instance: String, table: String, layout: TableLayoutDesc): Unit = {
-    kijiCache(instance) match {
+  override def applyLayout(uri: KijiURI, table: String, layout: TableLayoutDesc): Unit = {
+    kijiCache(uri) match {
       case Some(kiji) => { kiji.modifyTableLayout(table, layout, false, Console.out) }
-      case None => { throw new IOException("Cannot get kiji for \"" + instance + "\"") }
+      case None => { throw new IOException("Cannot get kiji for \"" + uri.toString() + "\"") }
     }
   }
 
   /** {@inheritDoc} */
-  override def dropTable(instance: String, table: String): Unit = {
-    kijiCache(instance) match {
+  override def dropTable(uri: KijiURI, table: String): Unit = {
+    kijiCache(uri) match {
       case Some(kiji) => { kiji.deleteTable(table) }
-      case None => { throw new IOException("Cannot get kiji for \"" + instance + "\"") }
+      case None => { throw new IOException("Cannot get kiji for \"" + uri.toString() + "\"") }
     }
   }
 

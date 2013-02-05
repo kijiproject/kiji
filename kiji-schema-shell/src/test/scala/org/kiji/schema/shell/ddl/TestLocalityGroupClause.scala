@@ -22,7 +22,6 @@ package org.kiji.schema.shell.ddl
 import scala.collection.JavaConversions._
 import org.specs2.mutable._
 
-import org.kiji.schema.KijiConfiguration
 import org.kiji.schema.layout.KijiTableLayout
 
 import org.kiji.schema.shell.DDLException

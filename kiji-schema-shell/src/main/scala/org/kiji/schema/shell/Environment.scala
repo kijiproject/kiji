@@ -21,7 +21,8 @@ package org.kiji.schema.shell
 
 import java.io.PrintStream
 
-import org.kiji.schema.KijiConfiguration
+import org.kiji.schema.KConstants
+import org.kiji.schema.KijiURI
 import org.kiji.schema.shell.input.JLineInputSource
 import org.kiji.schema.shell.input.InputSource
 
@@ -29,7 +30,8 @@ import org.kiji.schema.shell.input.InputSource
  * Runtime environment in which DDL commands are executed.
  */
 class Environment(
-    val instanceName: String = KijiConfiguration.DEFAULT_INSTANCE_NAME,
+    val instanceURI: KijiURI =
+        KijiURI.newBuilder().withInstanceName(KConstants.DEFAULT_INSTANCE_NAME).build(),
     val printer: PrintStream = Console.out,
     val kijiSystem: AbstractKijiSystem = KijiSystem,
     val inputSource: InputSource = new JLineInputSource) {
@@ -38,18 +40,19 @@ class Environment(
    * @return a new Environment with the instance name replaced with 'newInstance'.
    */
   def withInstance(newInstance: String): Environment = {
-    new Environment(newInstance, printer, kijiSystem, inputSource)
+    new Environment(KijiURI.newBuilder(instanceURI).withInstanceName(newInstance).build(),
+        printer, kijiSystem, inputSource)
   }
 
   /**
    * @return a new Environment with the printer replaced with 'newPrinter'.
    */
   def withPrinter(newPrinter: PrintStream): Environment = {
-    new Environment(instanceName, newPrinter, kijiSystem, inputSource)
+    new Environment(instanceURI, newPrinter, kijiSystem, inputSource)
   }
 
   def withInputSource(newSource: InputSource): Environment = {
-    new Environment(instanceName, printer, kijiSystem, newSource)
+    new Environment(instanceURI, printer, kijiSystem, newSource)
   }
 
   /**
@@ -57,7 +60,7 @@ class Environment(
    * @return true if a table named 'tableName' is present in the system.
    */
   def containsTable(tableName: String): Boolean = {
-    kijiSystem.getTableLayout(instanceName, tableName) match {
+    kijiSystem.getTableLayout(instanceURI, tableName) match {
       case Some(_) => true
       case None => false
     }

@@ -25,7 +25,7 @@ import org.kiji.schema.shell.Environment
 
 class ShowTablesCommand(val env: Environment) extends DDLCommand {
   override def exec(): Environment = {
-    val tableNamesDescriptions = env.kijiSystem.getTableNamesDescriptions(getKijiInstance())
+    val tableNamesDescriptions = env.kijiSystem.getTableNamesDescriptions(getKijiURI())
 
     if (tableNamesDescriptions.size == 0) {
       // No tables; exit here.

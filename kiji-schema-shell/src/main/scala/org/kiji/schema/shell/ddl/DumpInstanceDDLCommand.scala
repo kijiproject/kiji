@@ -56,9 +56,9 @@ class DumpInstanceDDLCommand(val env: Environment, val maybeFile: Option[String]
    * Find all tables and dump their layouts to the environment's output sink.
    */
   def dumpAllLayouts(): Unit = {
-    val namesAndDescs = env.kijiSystem.getTableNamesDescriptions(env.instanceName)
+    val namesAndDescs = env.kijiSystem.getTableNamesDescriptions(getKijiURI())
     namesAndDescs.foreach { case (name, _) =>
-      dumpLayout(env.kijiSystem.getTableLayout(env.instanceName, name).getOrElse(
+      dumpLayout(env.kijiSystem.getTableLayout(getKijiURI(), name).getOrElse(
           // Shouldn't get this, since the KijiSystem just returned this name to us..
           // but we're racing with other clients of the system who may have dropped
           // the table.

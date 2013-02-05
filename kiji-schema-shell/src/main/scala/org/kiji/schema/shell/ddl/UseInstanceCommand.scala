@@ -22,7 +22,7 @@ package org.kiji.schema.shell.ddl
 import org.kiji.schema.shell.DDLException
 import org.kiji.schema.shell.Environment
 
-import org.kiji.schema.KijiConfiguration
+import org.kiji.schema.KConstants
 
 /** Return a modified environment that uses a different Kiji instance name. */
 class UseInstanceCommand(val env: Environment, val instance: String) extends DDLCommand {
@@ -31,7 +31,7 @@ class UseInstanceCommand(val env: Environment, val instance: String) extends DDL
 
     // TODO: Eventually eliminate hilarity around instance names.
     if (instances.contains(instance)
-        || (instance.equals(KijiConfiguration.DEFAULT_INSTANCE_NAME)
+        || (instance.equals(KConstants.DEFAULT_INSTANCE_NAME)
             && instances.contains("(default)"))) {
       echo("Using Kiji instance \"" + instance + "\"")
       return env.withInstance(instance)

@@ -33,6 +33,6 @@ class DropTableCommand(val env: Environment, val tableName: String) extends Tabl
 
   override def applyUpdate(layout: TableLayoutDesc): Unit = {
     // We apply the layout by calling the drop table operation of KijiAdmin.
-    env.kijiSystem.dropTable(getKijiInstance(), tableName)
+    env.kijiSystem.dropTable(getKijiURI(), tableName)
   }
 }

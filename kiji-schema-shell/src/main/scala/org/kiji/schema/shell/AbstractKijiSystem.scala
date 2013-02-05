@@ -29,10 +29,8 @@ import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.HBaseAdmin
 
 import org.kiji.schema.Kiji
-import org.kiji.schema.KijiConfiguration
-
-import org.kiji.schema.KijiURI
 import org.kiji.schema.KijiMetaTable
+import org.kiji.schema.KijiURI
 import org.kiji.schema.avro.TableLayoutDesc
 import org.kiji.schema.layout.KijiTableLayout
 
@@ -48,25 +46,25 @@ abstract class AbstractKijiSystem {
    * @return An array of pairs, where each pair contains the name of a Kiji table and the
    *     description for that Kiji table.
    */
-  def getTableNamesDescriptions(instance: String): Array[(String, String)]
+  def getTableNamesDescriptions(uri: KijiURI): Array[(String, String)]
 
   /**
    * Gets the layout for the specified Kiji table.
    *
-   * @param instance The Kiji instance containing the table.
+   * @param uri The Kiji instance containing the table.
    * @param table The table whose layout should be retrieved.
    * @return The table layout, or None if the layout cannot be retrieved.
    */
-  def getTableLayout(instance: String, table: String): Option[KijiTableLayout]
+  def getTableLayout(uri: KijiURI, table: String): Option[KijiTableLayout]
 
   /** Create a new table in the specified Kiji instance. */
-  def createTable(instance: String, table: String, layout: KijiTableLayout): Unit
+  def createTable(uri: KijiURI, table: String, layout: KijiTableLayout): Unit
 
   /** Apply a table layout update to a Kiji table in the specified instance. */
-  def applyLayout(instance: String, table: String, layout: TableLayoutDesc): Unit
+  def applyLayout(uri: KijiURI, table: String, layout: TableLayoutDesc): Unit
 
   /** Drop a table. */
-  def dropTable(instance: String, table: String): Unit
+  def dropTable(uri: KijiURI, table: String): Unit
 
   /**
    * @return a list of all available Kiji instances.

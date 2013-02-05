@@ -37,9 +37,9 @@ import org.kiji.schema.shell.input.NullInputSource
 class IntegrationTestKijiSystem extends SpecificationWithJUnit {
   "KijiSystem" should {
     "create a table correctly" in {
-      val instanceName = getNewInstanceName()
-      installKiji(instanceName)
-      val parser = getParser(env(instanceName))
+      val uri = getNewInstanceURI()
+      installKiji(uri)
+      val parser = getParser(env(uri))
       val res = parser.parseAll(parser.statement, """
 CREATE TABLE foo WITH DESCRIPTION 'some data'
 ROW KEY FORMAT HASHED
@@ -63,11 +63,10 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
       res2.successful mustEqual true
       val env3 = res2.get.exec()
 
-
       // Programmatically test proper table creation.
       // Check that we have created as many locgroups, map families, and group families
       // as we expect to be here.
-      val maybeLayout = env3.kijiSystem.getTableLayout(instanceName, "foo")
+      val maybeLayout = env3.kijiSystem.getTableLayout(uri, "foo")
       maybeLayout must beSome[KijiTableLayout]
       val layout = maybeLayout.get.getDesc
       val locGroups = layout.getLocalityGroups()
@@ -85,9 +84,9 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
     }
 
     "create and drop a table" in {
-      val instanceName = getNewInstanceName()
-      installKiji(instanceName)
-      val parser = getParser(env(instanceName))
+      val uri = getNewInstanceURI()
+      installKiji(uri)
+      val parser = getParser(env(uri))
       val res = parser.parseAll(parser.statement, """
 CREATE TABLE foo WITH DESCRIPTION 'some data'
 ROW KEY FORMAT HASHED
@@ -105,7 +104,7 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
       val env2 = res.get.exec()
 
       // Verify that it's there.
-      val maybeLayout = env2.kijiSystem.getTableLayout(instanceName, "foo")
+      val maybeLayout = env2.kijiSystem.getTableLayout(uri, "foo")
       maybeLayout must beSome[KijiTableLayout]
 
       // Drop the table.
@@ -115,14 +114,14 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
       val env3 = res2.get.exec()
 
       // Programmatically test that the table no longer exists.
-      val maybeLayout2 = env3.kijiSystem.getTableLayout(instanceName, "foo")
+      val maybeLayout2 = env3.kijiSystem.getTableLayout(uri, "foo")
       maybeLayout2 must beNone
     }
 
     "create and alter a table" in {
-      val instanceName = getNewInstanceName()
-      installKiji(instanceName)
-      val parser = getParser(env(instanceName))
+      val uri = getNewInstanceURI()
+      installKiji(uri)
+      val parser = getParser(env(uri))
       val res = parser.parseAll(parser.statement, """
 CREATE TABLE foo WITH DESCRIPTION 'some data'
 ROW KEY FORMAT HASHED
@@ -149,7 +148,7 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
       // Programmatically test proper table creation.
       // Check that we have created as many locgroups, map families, and group families
       // as we expect to be here.
-      val maybeLayout = env3.kijiSystem.getTableLayout(instanceName, "foo")
+      val maybeLayout = env3.kijiSystem.getTableLayout(uri, "foo")
       maybeLayout must beSome[KijiTableLayout]
       val layout = maybeLayout.get.getDesc
       val locGroups = layout.getLocalityGroups()
@@ -176,7 +175,7 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
 
       // Programmatically inspect the modified layout, verify that
       // 'integers' is not present, but 'info' is.
-      val maybeLayout2 = env4.kijiSystem.getTableLayout(instanceName, "foo")
+      val maybeLayout2 = env4.kijiSystem.getTableLayout(uri, "foo")
       maybeLayout2 must beSome[KijiTableLayout]
       val layout2 = maybeLayout2.get.getDesc
       val locGroups2 = layout2.getLocalityGroups()
@@ -194,7 +193,7 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
       val env5 = res4.get.exec()
 
       // Inspect the modified layout. Verify the table description has been changed.
-      val maybeLayout3 = env5.kijiSystem.getTableLayout(instanceName, "foo")
+      val maybeLayout3 = env5.kijiSystem.getTableLayout(uri, "foo")
       maybeLayout3 must beSome[KijiTableLayout]
       val layout3 = maybeLayout3.get.getDesc
       layout3.getDescription().toString mustEqual "ohai"
@@ -204,24 +203,24 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
   /**
    * @return the name of a unique Kiji instance (that doesn't yet exist).
    */
-  def getNewInstanceName(): String = {
-    return UUID.randomUUID().toString().replaceAll("-", "_");
+  def getNewInstanceURI(): KijiURI = {
+    val instanceName = UUID.randomUUID().toString().replaceAll("-", "_");
+    return KijiURI.newBuilder("kiji://.env/" + instanceName).build()
   }
 
   /**
    * Install a Kiji instance.
    */
-  def installKiji(instanceName: String): Unit = {
-    val kijiUri = KijiURI.newBuilder("kiji://.env/" + instanceName).build()
-    KijiInstaller.get().install(kijiUri, HBaseConfiguration.create())
+  def installKiji(instanceURI: KijiURI): Unit = {
+    KijiInstaller.get().install(instanceURI, HBaseConfiguration.create())
   }
 
   /**
    * Get an Environment instance.
    */
-  def env(instanceName: String): Environment = {
+  def env(instanceURI: KijiURI): Environment = {
     new Environment(
-        instanceName,
+        instanceURI,
         System.out,
         KijiSystem,
         new NullInputSource())

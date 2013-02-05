@@ -22,12 +22,12 @@ package org.kiji.schema.shell
 import org.kiji.schema.avro.HashType
 import org.kiji.schema.avro.RowKeyEncoding
 import org.kiji.schema.avro.RowKeyFormat
+import org.kiji.schema.KConstants
 
 import org.kiji.schema.shell.ddl._
 import org.kiji.schema.shell.ddl.CompressionTypeToken._
 import org.kiji.schema.shell.ddl.LocalityGroupPropName._
 
-import org.kiji.schema.KijiConfiguration
 import org.kiji.schema.util.KijiNameValidator
 
 import scala.util.parsing.combinator._
@@ -441,7 +441,7 @@ class DDLParser(val env: Environment) extends JavaTokenParsers with JsonStringPa
    */
   def useInstance: Parser[DDLCommand] = (
       i("USE")~>i("DEFAULT")~>i("INSTANCE")
-      ^^ (_ => new UseInstanceCommand(env, KijiConfiguration.DEFAULT_INSTANCE_NAME))
+      ^^ (_ => new UseInstanceCommand(env, KConstants.DEFAULT_INSTANCE_NAME))
     | i("USE")~>instanceName ^^ (name => new UseInstanceCommand(env, name))
   )
 
