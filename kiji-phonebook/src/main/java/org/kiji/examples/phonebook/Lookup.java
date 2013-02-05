@@ -30,14 +30,15 @@ import org.apache.hadoop.util.ToolRunner;
 import org.kiji.common.flags.Flag;
 import org.kiji.common.flags.FlagParser;
 import org.kiji.schema.EntityId;
+import org.kiji.schema.KConstants;
 import org.kiji.schema.Kiji;
-import org.kiji.schema.KijiConfiguration;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequestBuilder;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableNotFoundException;
 import org.kiji.schema.KijiTableReader;
+import org.kiji.schema.KijiURI;
 import org.kiji.schema.util.ResourceUtils;
 
 /**
@@ -80,7 +81,8 @@ public class Lookup extends Configured implements Tool {
 
       // Connect to Kiji, open the table and reader.
       kiji = Kiji.Factory.open(
-          new KijiConfiguration(getConf(), KijiConfiguration.DEFAULT_INSTANCE_NAME));
+          KijiURI.newBuilder().withInstanceName(KConstants.DEFAULT_INSTANCE_NAME).build(),
+          getConf());
       table = kiji.openTable(TABLE_NAME);
       reader = table.openTableReader();
 

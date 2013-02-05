@@ -32,10 +32,11 @@ import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
 import org.kiji.schema.EntityId;
+import org.kiji.schema.KConstants;
 import org.kiji.schema.Kiji;
-import org.kiji.schema.KijiConfiguration;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableWriter;
+import org.kiji.schema.KijiURI;
 import org.kiji.schema.util.ResourceUtils;
 
 /**
@@ -65,7 +66,8 @@ public class StandalonePhonebookImporter extends Configured implements Tool {
     try {
       // Connect to Kiji and open the table.
       kiji = Kiji.Factory.open(
-          new KijiConfiguration(getConf(), KijiConfiguration.DEFAULT_INSTANCE_NAME));
+          KijiURI.newBuilder().withInstanceName(KConstants.DEFAULT_INSTANCE_NAME).build(),
+          getConf());
       table = kiji.openTable(TABLE_NAME);
       writer = table.openTableWriter();
 
