@@ -90,7 +90,7 @@ public class EmailDomainPopularityJob extends Configured implements Tool {
     setConf(HBaseConfiguration.addHbaseResources(getConf()));
 
     LOG.info("Opening a kiji connection...");
-    final Kiji kiji = Kiji.Factory.open(tableURI);
+    final Kiji kiji = Kiji.Factory.open(tableURI, getConf());
 
     LOG.info("Opening kiji table " + kijiTableName + "...");
     final KijiTable table = kiji.openTable(kijiTableName);

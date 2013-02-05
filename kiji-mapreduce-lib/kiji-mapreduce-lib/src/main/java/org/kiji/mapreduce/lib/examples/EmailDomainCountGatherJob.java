@@ -32,8 +32,8 @@ import org.kiji.mapreduce.MapReduceJob;
 import org.kiji.mapreduce.lib.reduce.IntSumReducer;
 import org.kiji.mapreduce.output.TextMapReduceJobOutput;
 import org.kiji.schema.Kiji;
-import org.kiji.schema.KijiConfiguration;
 import org.kiji.schema.KijiTable;
+import org.kiji.schema.KijiURI;
 
 /**
  * A program that runs the {@link org.kiji.mapreduce.lib.examples.EmailDomainCountGatherer}
@@ -72,8 +72,8 @@ public class EmailDomainCountGatherJob extends Configured implements Tool {
     setConf(HBaseConfiguration.addHbaseResources(getConf()));
 
     LOG.info("Opening a kiji connection...");
-    KijiConfiguration kijiConf = new KijiConfiguration(getConf(), instanceName);
-    Kiji kiji = Kiji.Factory.open(kijiConf);
+    KijiURI kijiURI = KijiURI.newBuilder().withInstanceName(instanceName).build();
+    Kiji kiji = Kiji.Factory.open(kijiURI, getConf());
 
     LOG.info("Opening kiji table " + kijiTableName + "...");
     KijiTable table = kiji.openTable(kijiTableName);
