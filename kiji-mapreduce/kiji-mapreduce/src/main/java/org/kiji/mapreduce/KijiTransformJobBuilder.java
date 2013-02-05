@@ -197,7 +197,7 @@ public final class KijiTransformJobBuilder extends MapReduceJobBuilder<KijiTrans
   /** {@inheritDoc} */
   @Override
   protected MapReduceJob build(Job job) {
-    return new InternalMapReduceJob(job);
+    return KijiMapReduceJob.create(job);
   }
 
   /** {@inheritDoc} */

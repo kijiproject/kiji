@@ -36,7 +36,7 @@ import org.kiji.schema.util.ResourceUtils;
 
 /** An implementation of a runnable MapReduce job that interacts with Kiji tables. */
 @ApiAudience.Framework
-public final class KijiMapReduceJob extends InternalMapReduceJob {
+public final class KijiMapReduceJob extends MapReduceJob {
   private static final Logger LOG = LoggerFactory.getLogger(KijiMapReduceJob.class);
 
   // TODO(WIBI-1665): Versions of Hadoop after 20.x add the ability to get start and
