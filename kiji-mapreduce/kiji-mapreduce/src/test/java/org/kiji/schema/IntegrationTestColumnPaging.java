@@ -35,16 +35,17 @@ import org.apache.avro.file.DataFileReader;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.hadoop.io.AvroKeyValue;
+import org.apache.avro.mapred.AvroKey;
 import org.apache.avro.mapred.AvroValue;
 import org.apache.avro.mapred.FsInput;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.Text;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.mapreduce.AvroKeyWriter;
 import org.kiji.mapreduce.AvroValueWriter;
 import org.kiji.mapreduce.KijiGatherJobBuilder;
 import org.kiji.mapreduce.KijiGatherer;
@@ -114,8 +115,8 @@ public class IntegrationTestColumnPaging extends AbstractKijiIntegrationTest {
    * A gatherer that outputs the locations a user has lived in.
    */
   public static class PagingGatherer
-      extends KijiGatherer<Text, AvroValue<List<CharSequence>>>
-      implements AvroValueWriter {
+      extends KijiGatherer<AvroKey<CharSequence>, AvroValue<List<CharSequence>>>
+      implements AvroKeyWriter, AvroValueWriter {
     @Override
     public KijiDataRequest getDataRequest() {
       KijiDataRequestBuilder builder = KijiDataRequest.builder();
@@ -129,7 +130,7 @@ public class IntegrationTestColumnPaging extends AbstractKijiIntegrationTest {
     @Override
     public void gather(
         KijiRowData input,
-        MapReduceContext<Text, AvroValue<List<CharSequence>>> context)
+        MapReduceContext<AvroKey<CharSequence>, AvroValue<List<CharSequence>>> context)
         throws IOException {
       // Read the user name.
       if (!input.containsColumn("info", "name")) {
@@ -137,56 +138,64 @@ public class IntegrationTestColumnPaging extends AbstractKijiIntegrationTest {
       }
       CharSequence name = input.getMostRecentValue("info", "name");
 
-      // Read the first page of locations (2 cells) the user has lived in.
+      // Page over location column.
       List<CharSequence> locations = new ArrayList<CharSequence>();
-      for (CharSequence location : input.<CharSequence>getValues("info", "location").values()) {
+      KijiPager locationPager = input.getPager("info", "location");
+      assertTrue("Our pager always has a first page.", locationPager.hasNext());
+      for (CharSequence location : locationPager.next().<CharSequence>getValues("info", "location")
+          .values()) {
         locations.add(location);
       }
+      LOG.debug("This size of our locations list is [{}].", locations.size());
       assertEquals(2, locations.size());
 
       // Read the second page of locations (2 cells).
-      assertTrue(input.nextPage("info", "location"));
-      for (CharSequence location : input.<CharSequence>getValues("info", "location").values()) {
+      assertTrue("Our pager should have a second page.", locationPager.hasNext());
+      for (CharSequence location : locationPager.next().<CharSequence>getValues("info", "location")
+          .values()) {
         locations.add(location);
       }
+      LOG.debug("This size of our locations list is [{}].", locations.size());
       assertEquals(4, locations.size());
 
       // Read the last page of locations (1 cell).
-      assertTrue(input.nextPage("info", "location"));
-      for (CharSequence location : input.<CharSequence>getValues("info", "location").values()) {
+      assertTrue("Our pager should have a third page", locationPager.hasNext());
+      for (CharSequence location : locationPager.next().<CharSequence>getValues("info", "location")
+          .values()) {
         locations.add(location);
       }
-      assertEquals(5, locations.size());
 
-      assertFalse(input.nextPage("info", "location"));
+      assertFalse("Our page should not have a fifth page.", locationPager.hasNext());
 
-      // Read the first page of jobs.
+      // Page over jobs column.
+      KijiPager jobsPager = input.getPager("jobs");
+      assertTrue("Our pagers always have a first page.", jobsPager.hasNext());
       List<CharSequence> jobs = new ArrayList<CharSequence>();
       for (Map.Entry<String, CharSequence> employment
-               : input.<CharSequence>getMostRecentValues("jobs").entrySet()) {
+               : jobsPager.next().<CharSequence>getMostRecentValues("jobs").entrySet()) {
         jobs.add(employment.getValue().toString() + " @ " + employment.getKey());
       }
       assertEquals(2, jobs.size());
 
       // Read the second page of jobs.
-      assertTrue(input.nextPage("jobs"));
+      assertTrue(jobsPager.hasNext());
       for (Map.Entry<String, CharSequence> employment
-               : input.<CharSequence>getMostRecentValues("jobs").entrySet()) {
+               : jobsPager.next().<CharSequence>getMostRecentValues("jobs").entrySet()) {
         jobs.add(employment.getValue().toString() + " @ " + employment.getKey());
       }
       assertEquals(4, jobs.size());
+      // We should try to get the next page
+      assertTrue(jobsPager.hasNext());
 
-      assertFalse(input.nextPage("jobs"));
-
-      context.write(new Text(name.toString() + "-locations"),
+      context.write(new AvroKey(name.toString() + "-locations"),
           new AvroValue<List<CharSequence>>(locations));
-      context.write(new Text(name.toString() + "-jobs"),
+      context.write(new AvroKey(name.toString() + "-jobs"),
           new AvroValue<List<CharSequence>>(jobs));
     }
 
     @Override
     public Class<?> getOutputKeyClass() {
-      return Text.class;
+      return AvroKey.class;
     }
 
     @Override
@@ -197,6 +206,11 @@ public class IntegrationTestColumnPaging extends AbstractKijiIntegrationTest {
     @Override
     public Schema getAvroValueWriterSchema() {
       return Schema.createArray(Schema.create(Schema.Type.STRING));
+    }
+
+    @Override
+    public Schema getAvroKeyWriterSchema() throws IOException {
+      return Schema.create(Schema.Type.STRING);
     }
   }
 
