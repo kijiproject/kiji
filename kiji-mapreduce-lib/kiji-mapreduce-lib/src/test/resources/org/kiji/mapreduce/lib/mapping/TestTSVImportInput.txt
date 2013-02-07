@@ -1,0 +1,4 @@
+first	last	email	phone
+John	Doe	johndoe@gmail.com	202-555-9876
+Alice	Smith	alice.smith@yahoo.com	
+Bob	Jones	bobbyj@aol.com	415-555-4161
