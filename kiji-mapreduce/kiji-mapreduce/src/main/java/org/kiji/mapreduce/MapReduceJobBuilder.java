@@ -536,26 +536,39 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder<T>> {
       DistributedCacheJars.addJarsToDistributedCache(job, jarDirectory);
     }
 
-    // Get the path to the main kiji jar.
-    String kijiJarPath;
+    // Get the path to the kiji-schema jar.
+    String kijiSchemaJarPath;
     try {
-      kijiJarPath = Jars.getJarPathForClass(Kiji.class);
+      kijiSchemaJarPath = Jars.getJarPathForClass(Kiji.class);
     } catch (ClassNotFoundException e) {
-      LOG.warn("The kiji jar could not be found, so no kiji dependency jars will be "
+      LOG.warn("The kiji-schema jar could not be found, so no kiji dependency jars will be "
           + "loaded onto the distributed cache.");
       return;
     }
 
-    // We release kiji to a directory called KIJI_HOME, and the jars for kiji and all its
+    String kijiMRJarPath;
+    try {
+      kijiMRJarPath = Jars.getJarPathForClass(MapReduceJobBuilder.class);
+    } catch (ClassNotFoundException e) {
+      LOG.warn("The kiji-mapreduce jar could not be found, so no kiji dependency jars will be "
+          + "loaded onto the distributed cache.");
+      return;
+    }
+
+    // We release kiji-schema to a directory called KIJI_HOME, and the jars for kiji and all its
     // dependencies live in KIJI_HOME/lib.  Add everything in this lib directory to the
     // distributed cache.
-    String kijiDependencyLibDir = new File(kijiJarPath).getParent();
-    LOG.debug("Adding kiji dependency jars to the distributed cache of the job: "
-        + kijiDependencyLibDir);
-    DistributedCacheJars.addJarsToDistributedCache(job, kijiDependencyLibDir);
+    String kijiSchemaDependencyLibDir = new File(kijiSchemaJarPath).getParent();
+    LOG.debug("Adding kiji-schema dependency jars to the distributed cache of the job: "
+        + kijiSchemaDependencyLibDir);
+    DistributedCacheJars.addJarsToDistributedCache(job, kijiSchemaDependencyLibDir);
+    // And the same for kiji-mapreduce.
+    String kijiMRDependencyLibDir = new File(kijiMRJarPath).getParent();
+    LOG.debug("Adding kiji-mapreduce dependency jars to the distributed cache of the job: "
+        + kijiMRDependencyLibDir);
+    DistributedCacheJars.addJarsToDistributedCache(job, kijiMRDependencyLibDir);
 
-    // WIBI-1393: Make sure that the user jars appear before hadoop's, otherwise
-    // things like avro would be bound to whatever hadoop depends on.
+    // Ensure jars we place on the dcache take precedence over Hadoop + HBase lib jars.
     job.setUserClassesTakesPrecedence(true);
   }
 
