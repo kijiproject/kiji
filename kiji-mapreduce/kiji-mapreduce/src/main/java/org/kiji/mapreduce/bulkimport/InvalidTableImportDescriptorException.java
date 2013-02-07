@@ -17,13 +17,26 @@
  * limitations under the License.
  */
 
-/**
- * Bulk importer framework for Kiji MapReduce.
- *
- * This package is mainly comprised of the class
- * {@link org.kiji.mapreduce.bulkimport.KijiTableImportDescriptor} which contains relevant
- * descriptor information for how to configure aspects of bulk importing(for example the mapping
- * of source files in the input to the destination KijiTable columns.
- */
-
 package org.kiji.mapreduce.bulkimport;
+
+import java.io.IOException;
+
+import org.kiji.annotations.ApiAudience;
+
+/**
+ * Thrown when an invalid Kiji table import descriptor is encountered.
+ * A table import descriptor is invalid when either the columns specified in either the source
+ * or the destination don't exist.
+ */
+@ApiAudience.Public
+public class InvalidTableImportDescriptorException extends IOException {
+
+  /**
+   * Creates a new <code>InvalidTableImportDescriptorException</code> with the specified reason.
+   *
+   * @param reason A message describing the reason the mapping is invalid.
+   */
+  public InvalidTableImportDescriptorException(String reason) {
+    super(reason);
+  }
+}
