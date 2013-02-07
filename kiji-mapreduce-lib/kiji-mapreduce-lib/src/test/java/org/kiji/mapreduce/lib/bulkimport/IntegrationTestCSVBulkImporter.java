@@ -94,7 +94,7 @@ public class IntegrationTestCSVBulkImporter
     writeTestResource(mImportDescriptorPath, BulkImporterTestUtils.FOO_IMPORT_DESCRIPTOR);
 
     mKiji = Kiji.Factory.open(getKijiURI(), mConf);
-    final KijiTableLayout layout = new KijiTableLayout(KijiMRTestLayouts.getTestLayout(), null);
+    final KijiTableLayout layout = KijiTableLayout.newLayout(KijiMRTestLayouts.getTestLayout());
     mKiji.createTable("test", layout);
     mOutputTable = mKiji.openTable("test");
   }

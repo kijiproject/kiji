@@ -58,7 +58,7 @@ public class TestCSVBulkImporter extends KijiClientTest {
   public final void setupTestBulkImporter() throws Exception {
     // Get the test table layouts.
     final KijiTableLayout layout =
-        new KijiTableLayout(KijiMRTestLayouts.getTestLayout(), null);
+        KijiTableLayout.newLayout(KijiMRTestLayouts.getTestLayout());
 
     // Populate the environment.
     new InstanceBuilder(getKiji())
