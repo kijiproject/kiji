@@ -23,13 +23,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.nio.ByteBuffer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.mapreduce.Counters;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -56,7 +54,9 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
   public final  void setupIntegrationTestJobHistoryKijiTable() throws Exception {
     final Kiji kiji = Kiji.Factory.open(getKijiURI());
     try {
+      LOG.info("Table installing.");
       JobHistoryKijiTable.install(kiji);
+      LOG.info("Table installed.");
     } finally {
       kiji.release();
     }
@@ -115,8 +115,7 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
     createAndPopulateFooTable();
     final Configuration jobConf = getConf();
     // Set a value in the configuration. We'll check to be sure we can retrieve it later.
-    jobConf.set("CONF_TEST_ANIMAL_STRING", "squirrel");
-    LOG.info("Kiji configuration has {} keys.", jobConf.size());
+    jobConf.set("conf.test.animal.string", "squirrel");
     final Kiji kiji = Kiji.Factory.open(getKijiURI());
     final KijiTable fooTable = kiji.openTable("foo");
     final JobHistoryKijiTable jobHistory = JobHistoryKijiTable.open(kiji);
@@ -151,26 +150,22 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
     // Check counters. We don't know the exact number of rows in the foo table, so just check if
     // it's greater than 0.
     assertTrue(jobRecord.containsColumn("info", "counters"));
-    Counters counters = new Counters();
-    ByteBuffer countersByteBuffer = jobRecord.getMostRecentValue("info", "counters");
-    counters.readFields(new DataInputStream(new ByteArrayInputStream(countersByteBuffer.array())));
-    long processed = counters.findCounter(JobHistoryCounters.PRODUCER_ROWS_PROCESSED).getValue();
-    LOG.info("Processed " + processed + " rows.");
-    assertTrue(processed > 0);
+    final String countersString = jobRecord.getMostRecentValue("info", "counters").toString();
+    final Pattern countersPattern = Pattern.compile("PRODUCER_ROWS_PROCESSED=(\\d+)");
+    final Matcher countersMatcher = countersPattern.matcher(countersString);
+    assertTrue(countersMatcher.find());
+    assertTrue(Integer.parseInt(countersMatcher.group(1)) > 0);
 
-    // Test to make sure the Configuration contains the value we set before.
+    // Test to make sure the Configuration has the correct producer class, and records the value
+    // we set previously.
     assertTrue(jobRecord.containsColumn("info", "configuration"));
-    LOG.info(jobRecord.<ByteBuffer>getMostRecentValue("info", "configuration").array().toString());
-    Configuration config = new Configuration();
-    ByteBuffer configByteBuffer = jobRecord.getMostRecentValue("info", "configuration");
-    ByteArrayInputStream configInputStream = new ByteArrayInputStream(configByteBuffer.array());
-    config.readFields(new DataInputStream(configInputStream));
-    LOG.info("Deserialized configuration has " + new Integer(config.size()).toString() + " keys.");
-    Configuration.dumpConfiguration(config, new OutputStreamWriter(System.out));
+    final String configString = jobRecord.getMostRecentValue("info", "configuration").toString();
+    final Configuration config = new Configuration();
+    config.addResource(new ByteArrayInputStream(configString.getBytes()));
     assertTrue(EmailDomainProducer.class
         == config.getClass(KijiConfKeys.KIJI_PRODUCER_CLASS, null));
     assertEquals("Couldn't retrieve configuration field from deserialized configuration.",
-        "squirrel", config.get("CONF_TEST_ANIMAL_STRING"));
+        "squirrel", config.get("conf.test.animal.string"));
 
     fooTable.close();
     jobHistory.close();

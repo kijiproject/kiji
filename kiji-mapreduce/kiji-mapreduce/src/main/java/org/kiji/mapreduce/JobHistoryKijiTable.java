@@ -20,9 +20,7 @@
 package org.kiji.mapreduce;
 
 import java.io.Closeable;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
@@ -92,24 +90,20 @@ public final class JobHistoryKijiTable implements Closeable {
    * @throws IOException If there is an error writing to the table.
    */
   public void recordJob(Job job, long startTime, long endTime) throws IOException {
-     KijiTableWriter writer = mKijiTable.openTableWriter();
-     ByteArrayOutputStream baos = new ByteArrayOutputStream();
-     DataOutputStream dos = new DataOutputStream(baos);
-     EntityId jobEntity = mKijiTable.getEntityId(job.getJobID().toString());
-     try {
-       writer.put(jobEntity, "info", "jobId", startTime, job.getJobID().toString());
-       writer.put(jobEntity, "info", "jobName", startTime, job.getJobName());
-       writer.put(jobEntity, "info", "startTime", startTime, startTime);
-       writer.put(jobEntity, "info", "endTime", startTime, endTime);
-       job.getCounters().write(dos);
-       writer.put(jobEntity, "info", "counters", startTime, ByteBuffer.wrap(baos.toByteArray()));
-       baos.reset();
-       job.getConfiguration().write(dos);
-       writer.put(jobEntity, "info", "configuration", startTime,
-           ByteBuffer.wrap(baos.toByteArray()));
-     } finally {
-       IOUtils.closeQuietly(writer);
-     }
+    KijiTableWriter writer = mKijiTable.openTableWriter();
+    EntityId jobEntity = mKijiTable.getEntityId(job.getJobID().toString());
+    try {
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      writer.put(jobEntity, "info", "jobId", startTime, job.getJobID().toString());
+      writer.put(jobEntity, "info", "jobName", startTime, job.getJobName());
+      writer.put(jobEntity, "info", "startTime", startTime, startTime);
+      writer.put(jobEntity, "info", "endTime", startTime, endTime);
+      writer.put(jobEntity, "info", "counters", startTime, job.getCounters().toString());
+      job.getConfiguration().writeXml(baos);
+      writer.put(jobEntity, "info", "configuration", startTime, baos.toString("UTF-8"));
+    } finally {
+      IOUtils.closeQuietly(writer);
+    }
   }
 
   /**

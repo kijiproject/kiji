@@ -56,12 +56,12 @@
             {
               name: "counters",
               description: "A serialization of the Counters for the job",
-              column_schema: {type: "INLINE", storage: "UID", value: '"bytes"'}
+              column_schema: {type: "INLINE", storage: "UID", value: '"string"'}
             },
             {
               name: "configuration",
-              description: "A serialization of the Configuration for the job",
-              column_schema: {type: "INLINE", storage: "UID", value: '"bytes"'}
+              description: "A JSON representation of the Configuration for the job",
+              column_schema: {type: "INLINE", storage: "UID", value: '"string"'}
             }
           ]
         }
