@@ -33,14 +33,14 @@ import org.kiji.schema.shell.input.StringInputSource
  * An object used to run a Kiji schema shell.
  */
 class ShellMain {
-  @Flag(name="kiji", usage="Kiji instance name")
-  val instanceName: String = KConstants.DEFAULT_INSTANCE_NAME
+  @Flag(name="kiji", usage="Kiji instance URI")
+  var kijiURI: String = "kiji://.env/%s".format(KConstants.DEFAULT_INSTANCE_NAME)
 
   @Flag(name="expr", usage="Expression to execute")
-  val expr: String = ""
+  var expr: String = ""
 
   @Flag(name="file", usage="Script file to execute")
-  val filename: String = ""
+  var filename: String = ""
 
   /**
    * Programmatic entry point.
@@ -77,7 +77,7 @@ class ShellMain {
       }
     )
 
-    val uri = KijiURI.newBuilder().withInstanceName(instanceName).build()
+    val uri = KijiURI.newBuilder(kijiURI).build()
     return new Environment(uri, Console.out, KijiSystem, input)
   }
 

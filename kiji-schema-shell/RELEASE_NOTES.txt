@@ -2,6 +2,11 @@
 
                               Kiji Schema Shell Release Notes
 
+Version 1.0.0-rc4
+  * SCHEMA-10. The --kiji flag now specifies a Kiji instance as a URI.
+  * Updated to match KijiSchema 1.0.0-rc4 API
+    SCHEMA-109, SCHEMA-143, SCHEMA-155, SCHEMA-168
+
 Version 1.0.0-rc3
   * SCHEMA-154. Update to KijiSchema 1.0.0-rc3 API (Kiji.getAdmin())
   * SCHEMA-50. Update to KijiSchema 1.0.0-rc3 API (Kiji.release(), retain())
