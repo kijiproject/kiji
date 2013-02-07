@@ -54,7 +54,7 @@ class TestMockKijiSystem extends SpecificationWithJUnit {
       val rowKeyFormat = new RowKeyFormat
       rowKeyFormat.setEncoding(RowKeyEncoding.HASH)
       avro.setKeysFormat(rowKeyFormat)
-      val layout = new KijiTableLayout(avro, null)
+      val layout = KijiTableLayout.newLayout(avro)
       val sys = new MockKijiSystem
       sys.createTable(defaultURI, "t", layout)
       (sys.getTableNamesDescriptions(defaultURI)
@@ -71,7 +71,7 @@ class TestMockKijiSystem extends SpecificationWithJUnit {
       val rowKeyFormat = new RowKeyFormat
       rowKeyFormat.setEncoding(RowKeyEncoding.HASH)
       avro.setKeysFormat(rowKeyFormat)
-      val layout = new KijiTableLayout(avro, null)
+      val layout = KijiTableLayout.newLayout(avro)
       val sys = new MockKijiSystem
       sys.createTable(defaultURI, "t", layout)
 
@@ -89,7 +89,7 @@ class TestMockKijiSystem extends SpecificationWithJUnit {
       val rowKeyFormat = new RowKeyFormat
       rowKeyFormat.setEncoding(RowKeyEncoding.HASH)
       avro.setKeysFormat(rowKeyFormat)
-      val layout = new KijiTableLayout(avro, null)
+      val layout = KijiTableLayout.newLayout(avro)
       val sys = new MockKijiSystem
       sys.createTable(defaultURI, "t", layout)
       (sys.getTableNamesDescriptions(defaultURI)
@@ -110,7 +110,7 @@ class TestMockKijiSystem extends SpecificationWithJUnit {
       val rowKeyFormat = new RowKeyFormat
       rowKeyFormat.setEncoding(RowKeyEncoding.HASH)
       avro.setKeysFormat(rowKeyFormat)
-      val layout = new KijiTableLayout(avro, null)
+      val layout = KijiTableLayout.newLayout(avro)
       sys.createTable(defaultURI, "t", layout)
       (sys.createTable(defaultURI, "t", layout)
           must throwA[RuntimeException])
@@ -132,7 +132,7 @@ class TestMockKijiSystem extends SpecificationWithJUnit {
       avro.setName("t")
       avro.setDescription("meep")
       // Verify that this is a valid layout
-      new KijiTableLayout(avro, null)
+      KijiTableLayout.newLayout(avro)
       // .. but you can't apply it to a missing table.
       (sys.applyLayout(defaultURI, "t", avro)
           must throwA[RuntimeException])
@@ -141,7 +141,7 @@ class TestMockKijiSystem extends SpecificationWithJUnit {
     "createTable should fail on malformed input records" in {
       val sys = new MockKijiSystem
       val avro: TableLayoutDesc = new TableLayoutDesc // Missing the localityGroups list, etc.
-      new KijiTableLayout(avro, null) must throwA[RuntimeException]
+      KijiTableLayout.newLayout(avro) must throwA[RuntimeException]
     }
 
     "update layout with applyLayout" in {
@@ -153,7 +153,7 @@ class TestMockKijiSystem extends SpecificationWithJUnit {
       avro.setKeysFormat(rowKeyFormat)
       avro.setName("t")
       avro.setDescription("desc1")
-      val layout: KijiTableLayout = new KijiTableLayout(avro, null)
+      val layout: KijiTableLayout = KijiTableLayout.newLayout(avro)
       val sys = new MockKijiSystem
 
       sys.createTable(defaultURI, "t", layout)
@@ -180,7 +180,7 @@ class TestMockKijiSystem extends SpecificationWithJUnit {
       val rowKeyFormat = new RowKeyFormat
       rowKeyFormat.setEncoding(RowKeyEncoding.HASH)
       avro.setKeysFormat(rowKeyFormat)
-      val layout: KijiTableLayout = new KijiTableLayout(avro, null)
+      val layout: KijiTableLayout = KijiTableLayout.newLayout(avro)
       val sys = new MockKijiSystem
 
       sys.createTable(defaultURI, "t", layout)
