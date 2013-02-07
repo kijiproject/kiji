@@ -37,8 +37,8 @@ public class TestKijiTableMapReduceJobOutput extends KijiClientTest {
   @Test
   public void testSpecExDisabled() throws Exception {
     final Kiji kiji = getKiji();
-    final KijiTableLayout layout =
-        new KijiTableLayout(KijiTableLayouts.getLayout(KijiTableLayouts.SIMPLE),  null);
+    final KijiTableLayout layout = KijiTableLayout.createUpdatedLayout(
+        KijiTableLayouts.getLayout(KijiTableLayouts.SIMPLE),  null);
     kiji.createTable("table", layout);
     final KijiTable table = kiji.openTable("table");
 

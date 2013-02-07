@@ -131,7 +131,7 @@ public class IntegrationTestSimpleBulkImporter extends AbstractKijiIntegrationTe
     mBulkImportInputPath = makeRandomPath("bulk-import-input");
     writeBulkImportInput(mBulkImportInputPath);
     mKiji = Kiji.Factory.open(getKijiURI(), mConf);
-    final KijiTableLayout layout = new KijiTableLayout(KijiMRTestLayouts.getTestLayout(), null);
+    final KijiTableLayout layout = KijiTableLayout.newLayout(KijiMRTestLayouts.getTestLayout());
     mKiji.createTable("test", layout);
     mOutputTable = mKiji.openTable("test");
   }

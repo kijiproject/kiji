@@ -40,7 +40,7 @@ public class TestKijiTableKeyValueStore extends KijiClientTest {
   @Before
   public void setupEnvironment() throws Exception {
     getKiji().createTable("table",
-        new KijiTableLayout(KijiTableLayouts.getLayout(KijiTableLayouts.SIMPLE), null));
+        KijiTableLayout.newLayout(KijiTableLayouts.getLayout(KijiTableLayouts.SIMPLE)));
   }
 
   /** @return an uninitialized store to test for initialization from a Configuration. */

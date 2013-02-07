@@ -187,7 +187,8 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
   }
 
   private void doSetUp() throws Exception {
-    final KijiTableLayout layout = new KijiTableLayout(KijiMRTestLayouts.getTestLayout(), null);
+    final KijiTableLayout layout =
+        KijiTableLayout.newLayout(KijiMRTestLayouts.getTestLayout());
     getKiji().createTable("test", layout);
 
     // Set the working directory so that it gets cleaned up after the test:

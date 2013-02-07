@@ -170,7 +170,7 @@ public class TestKijiHFileOutputFormat {
     KijiInstaller.get().install(mTableURI, mConf);
     mKiji = Kiji.Factory.open(mTableURI);
 
-    mLayout = new KijiTableLayout(KijiTableLayouts.getLayout(KijiTableLayouts.FULL_FEATURED), null);
+    mLayout = KijiTableLayout.newLayout(KijiTableLayouts.getLayout(KijiTableLayouts.FULL_FEATURED));
     mKiji.createTable("user", mLayout);
 
     mDefaultLGId = mLayout.getLocalityGroupMap().get("default").getId();

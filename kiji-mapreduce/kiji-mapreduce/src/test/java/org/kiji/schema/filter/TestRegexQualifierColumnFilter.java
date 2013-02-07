@@ -63,7 +63,7 @@ public class TestRegexQualifierColumnFilter extends KijiClientTest {
   public final void setupTestRegexQualifierColumnFilter() throws Exception {
     // Get the test table layouts.
     final KijiTableLayout layout =
-        new KijiTableLayout(KijiTableLayouts.getLayout(KijiTableLayouts.REGEX), null);
+        KijiTableLayout.newLayout(KijiTableLayouts.getLayout(KijiTableLayouts.REGEX));
 
     // Populate the environment.
     new InstanceBuilder(getKiji())

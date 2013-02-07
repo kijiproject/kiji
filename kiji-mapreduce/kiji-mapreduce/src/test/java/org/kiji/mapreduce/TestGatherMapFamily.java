@@ -89,7 +89,7 @@ public class TestGatherMapFamily extends KijiClientTest {
   public final void setupTestGatherMapFamily() throws Exception {
     // Get the test table layouts.
     final KijiTableLayout layout =
-        new KijiTableLayout(KijiMRTestLayouts.getTestLayout(), null);
+        KijiTableLayout.newLayout(KijiMRTestLayouts.getTestLayout());
 
     // Populate the environment.
     new InstanceBuilder(getKiji())

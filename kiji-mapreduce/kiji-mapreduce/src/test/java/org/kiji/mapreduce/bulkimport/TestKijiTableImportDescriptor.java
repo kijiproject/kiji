@@ -61,7 +61,7 @@ public class TestKijiTableImportDescriptor {
 
     KijiTableImportDescriptor mapping = new KijiTableImportDescriptor(mappingDesc);
     final KijiTableLayout fooLayout =
-        new KijiTableLayout(KijiMRTestLayouts.getTestLayout(), null);
+        KijiTableLayout.newLayout(KijiMRTestLayouts.getTestLayout());
     mapping.validateDestination(fooLayout);
   }
 
@@ -75,7 +75,7 @@ public class TestKijiTableImportDescriptor {
 
     KijiTableImportDescriptor mapping = new KijiTableImportDescriptor(mappingDesc);
     final KijiTableLayout fooLayout =
-        new KijiTableLayout(KijiMRTestLayouts.getTestLayout(), null);
+        KijiTableLayout.newLayout(KijiMRTestLayouts.getTestLayout());
     try {
       mapping.validateDestination(fooLayout);
       fail("Should've gotten an InvalidTableImportDescription by here.");

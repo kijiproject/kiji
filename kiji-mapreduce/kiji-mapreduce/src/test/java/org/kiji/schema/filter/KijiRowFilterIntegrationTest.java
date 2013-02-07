@@ -79,7 +79,7 @@ public abstract class KijiRowFilterIntegrationTest extends AbstractKijiIntegrati
    */
   private void createTable() throws Exception {
     final KijiTableLayout foodTableLayout =
-        new KijiTableLayout(KijiTableLayouts.getLayout(KijiTableLayouts.FOODS), null);
+        KijiTableLayout.newLayout(KijiTableLayouts.getLayout(KijiTableLayouts.FOODS));
 
     mKiji.createTable(FOODS_TABLE_NAME, foodTableLayout);
     LOG.info("Table " + FOODS_TABLE_NAME + " created.");

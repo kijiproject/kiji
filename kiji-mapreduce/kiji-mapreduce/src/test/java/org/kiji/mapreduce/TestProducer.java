@@ -63,7 +63,7 @@ public class TestProducer extends KijiClientTest {
   public final void setupTestProducer() throws Exception {
     // Get the test table layouts.
     final KijiTableLayout layout =
-        new KijiTableLayout(KijiMRTestLayouts.getTestLayout(), null);
+        KijiTableLayout.newLayout(KijiMRTestLayouts.getTestLayout());
 
     // Populate the environment.
     new InstanceBuilder(getKiji())

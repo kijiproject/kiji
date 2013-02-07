@@ -46,7 +46,7 @@ public class IntegrationTestTableMapReducer extends AbstractKijiIntegrationTest 
     try {
       final int nregions = 16;
       final KijiTableLayout tableLayout =
-          new KijiTableLayout(KijiMRTestLayouts.getTestLayout(), null);
+          KijiTableLayout.newLayout(KijiMRTestLayouts.getTestLayout());
       final String tableName = tableLayout.getName();
       kiji.createTable(tableName, tableLayout, nregions);
 
