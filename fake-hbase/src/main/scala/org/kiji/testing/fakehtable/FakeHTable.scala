@@ -688,6 +688,29 @@ class FakeHTable(
     return map
   }
 
+  /**
+   * See HTable.getRegionsInRange(startKey, endKey).
+   *
+   * Adapted from org.apache.hadoop.hbase.client.HTable.
+   * Note: if startKey == endKey, this returns the location for startKey.
+   */
+  def getRegionsInRange(startKey: Bytes, endKey: Bytes): JList[HRegionLocation] = {
+    val endKeyIsEndOfTable = Bytes.equals(endKey, HConstants.EMPTY_END_ROW)
+    if ((Bytes.compareTo(startKey, endKey) > 0) && !endKeyIsEndOfTable) {
+      throw new IllegalArgumentException("Invalid range: %s > %s".format(
+          Bytes.toStringBinary(startKey), Bytes.toStringBinary(endKey)))
+    }
+    val regionList = new JArrayList[HRegionLocation]()
+    var currentKey = startKey
+    do {
+      val regionLocation = getRegionLocation(currentKey, false)
+      regionList.add(regionLocation)
+      currentKey = regionLocation.getRegionInfo().getEndKey()
+    } while (!Bytes.equals(currentKey, HConstants.EMPTY_END_ROW)
+        && (endKeyIsEndOfTable || Bytes.compareTo(currentKey, endKey) < 0))
+    return regionList
+  }
+
   // -----------------------------------------------------------------------------------------------
 
   def toHex(bytes: Bytes): String = {
