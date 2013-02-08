@@ -1,0 +1,44 @@
+{
+  name : "users",
+  description : "A set of users",
+  keys_format : {
+    encoding : "HASH_PREFIX",
+    hash_type : "MD5",
+    hash_size : 4
+  },
+  locality_groups : [ {
+    id : 1,
+    name : "default",
+    description : "Main locality group",
+    in_memory : false,
+    max_versions : 2147483647,
+    ttl_seconds : 2147483647,
+    compression_type : "NONE",
+    families : [ {
+      id : 1,
+      name : "info",
+      description : "Information about a user",
+      columns : [ {
+        id : 1,
+        name : "track_plays",
+        description : "Tracks played by the user",
+        column_schema : {
+          storage : "UID",
+          type : "INLINE",
+          value : "\"string\""
+        }
+      }, {
+        id : 2,
+        name : "next_song_rec",
+        description : "Next song recommendation based on play history for a user",
+        column_schema : {
+          storage : "UID",
+          type : "INLINE",
+          value : "\"string\""
+        }
+      } ]
+    } ]
+  } ],
+  version : "kiji-1.0",
+  layout_id : "1"
+}

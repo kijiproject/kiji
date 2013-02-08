@@ -20,23 +20,32 @@
 package org.kiji.examples.music.gather;
 
 import java.io.IOException;
+import java.util.NavigableMap;
 
+import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
 
 import org.kiji.mapreduce.KijiGatherer;
 import org.kiji.mapreduce.MapReduceContext;
 import org.kiji.schema.KijiDataRequest;
+import org.kiji.schema.KijiDataRequestBuilder;
 import org.kiji.schema.KijiRowData;
 
 /**
  * Gatherer to count the total number of times each song has been played.
+ *
+ * Reads the track plays from the user table and emits (song ID, 1) pairs for each track play.
+ * This gatherer should be combined with a summing reducer to count the number of plays per track.
  */
-public class SongPlayCounter extends KijiGatherer<LongWritable, LongWritable> {
+public class SongPlayCounter extends KijiGatherer<Text, LongWritable> {
+  /** Only keep one Text object around to reduce the chance of a garbage collection pause.*/
+  private Text mText;
 
   /** {@inheritDoc} */
   @Override
   public Class<?> getOutputKeyClass() {
-    return LongWritable.class;
+    return Text.class;
   }
 
   /** {@inheritDoc} */
@@ -47,15 +56,33 @@ public class SongPlayCounter extends KijiGatherer<LongWritable, LongWritable> {
 
   /** {@inheritDoc} */
   @Override
-  public KijiDataRequest getDataRequest() {
-    return KijiDataRequest.create("");
+  public void setup(MapReduceContext<Text, LongWritable> context) throws IOException {
+    mText = new Text();
   }
 
   /** {@inheritDoc} */
   @Override
-  public void gather(KijiRowData row, MapReduceContext<LongWritable, LongWritable> context)
+  public KijiDataRequest getDataRequest() {
+    // Retrieve all versions of info:track_plays:
+    final KijiDataRequestBuilder builder = KijiDataRequest.builder();
+    builder.addColumns()
+        .withMaxVersions(HConstants.ALL_VERSIONS)
+        .add("info", "track_plays");
+    return builder.build();
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public void gather(KijiRowData row, MapReduceContext<Text, LongWritable> context)
       throws IOException {
-    // TODO Auto-generated method stub
+
+    final LongWritable one = new LongWritable(1);
+    NavigableMap<Long, CharSequence> trackPlays = row.getValues("info", "track_plays");
+    for (CharSequence trackId : trackPlays.values()) {
+      mText.set(trackId.toString());
+      context.write(mText, one);
+      mText.clear();
+    }
   }
 
 }

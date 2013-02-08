@@ -1,0 +1,44 @@
+{
+  name : "songs",
+  description : "Songs available for playing",
+  keys_format : {
+    encoding : "HASH_PREFIX",
+    hash_type : "MD5",
+    hash_size : 4
+  },
+  locality_groups : [ {
+    id : 1,
+    name : "default",
+    description : "Main locality group",
+    in_memory : false,
+    max_versions : 2147483647,
+    ttl_seconds : 2147483647,
+    compression_type : "NONE",
+    families : [ {
+      id : 1,
+      name : "info",
+      description : "Information about a song",
+      columns : [ {
+        id : 1,
+        name : "metadata",
+        description : "Song metadata",
+        column_schema : {
+          storage : "UID",
+          type : "CLASS",
+          value : "org.kiji.examples.music.SongMetadata"
+        }
+      }, {
+        id : 2,
+        name : "top_30_next_songs",
+        description : "Probabilities of a song being the next song to be played",
+        column_schema : {
+          storage : "UID",
+          type : "CLASS",
+          value : "org.kiji.examples.music.NextSongProbability"
+        }
+      } ]
+    } ]
+  } ],
+  version : "kiji-1.0",
+  layout_id : "1"
+}
