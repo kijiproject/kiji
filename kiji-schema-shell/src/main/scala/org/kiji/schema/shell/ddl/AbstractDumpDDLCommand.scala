@@ -34,6 +34,7 @@ import org.kiji.schema.avro.RowKeyEncoding
 import org.kiji.schema.avro.SchemaType
 import org.kiji.schema.avro.TableLayoutDesc
 import org.kiji.schema.shell.Environment
+import org.kiji.schema.layout.KijiTableLayout
 
 /**
  * Trait that is included by DDLCommand instances that implement
@@ -53,11 +54,11 @@ trait AbstractDumpDDLCommand {
     echoNoNL("  ")
     echo(dumpDescription(layout))
     // TODO(aaron): Support all key formats and sub-specifiers.
-    layout.getKeysFormat().getEncoding() match {
+    KijiTableLayout.getEncoding(layout.getKeysFormat()) match {
       case RowKeyEncoding.HASH => { echo("  ROW KEY FORMAT HASHED") }
       case RowKeyEncoding.RAW => { echo("  ROW KEY FORMAT RAW") }
       case RowKeyEncoding.HASH_PREFIX => {
-        val prefixSize = layout.getKeysFormat().getHashSize()
+        val prefixSize = KijiTableLayout.getHashSize(layout.getKeysFormat())
         echo("  ROW KEY FORMAT HASH PREFIXED (" + prefixSize + ")")
       }
     }

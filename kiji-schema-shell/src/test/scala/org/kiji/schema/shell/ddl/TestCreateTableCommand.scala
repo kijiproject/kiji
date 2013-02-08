@@ -24,6 +24,7 @@ import org.specs2.mutable._
 
 import org.kiji.schema.avro.RowKeyEncoding
 import org.kiji.schema.shell.DDLException
+import org.kiji.schema.layout.KijiTableLayout
 
 class TestCreateTableCommand extends CommandTestCase {
   "CreateTableCommand" should {
@@ -47,7 +48,7 @@ class TestCreateTableCommand extends CommandTestCase {
       ctcmd.updateLayout(layout)
       layout.getDescription() mustEqual ""
       layout.getName() mustEqual "foo"
-      layout.getKeysFormat().getEncoding() mustEqual RowKeyEncoding.HASH
+      KijiTableLayout.getEncoding(layout.getKeysFormat()) mustEqual RowKeyEncoding.HASH
       val locGroupAvroList = layout.getLocalityGroups()
       locGroupAvroList.size mustEqual 1
       val locGroupAvro = locGroupAvroList.head
@@ -65,7 +66,7 @@ class TestCreateTableCommand extends CommandTestCase {
       ctcmd.validateArguments()
       val layout = ctcmd.getInitialLayout()
       ctcmd.updateLayout(layout)
-      layout.getKeysFormat().getEncoding() mustEqual RowKeyEncoding.HASH
+      KijiTableLayout.getEncoding(layout.getKeysFormat()) mustEqual RowKeyEncoding.HASH
 
       // Check that this succeeds. MockKijiSystem will validate that enough
       // default values are populated.
@@ -79,7 +80,7 @@ class TestCreateTableCommand extends CommandTestCase {
       ctcmd.validateArguments()
       val layout = ctcmd.getInitialLayout()
       ctcmd.updateLayout(layout)
-      layout.getKeysFormat().getEncoding() mustEqual RowKeyEncoding.RAW
+      KijiTableLayout.getEncoding(layout.getKeysFormat()) mustEqual RowKeyEncoding.RAW
 
       // Check that this succeeds. MockKijiSystem will validate that enough
       // default values are populated.
@@ -102,7 +103,7 @@ class TestCreateTableCommand extends CommandTestCase {
       ctcmd.validateArguments()
       val layout = ctcmd.getInitialLayout()
       ctcmd.updateLayout(layout)
-      layout.getKeysFormat().getEncoding() mustEqual RowKeyEncoding.HASH_PREFIX
+      KijiTableLayout.getEncoding(layout.getKeysFormat()) mustEqual RowKeyEncoding.HASH_PREFIX
 
       // Check that this succeeds. MockKijiSystem will validate that enough
       // default values are populated.
