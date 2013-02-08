@@ -16,13 +16,16 @@ CREATE TABLE songs WITH DESCRIPTION 'Songs available for playing'
 ROW KEY FORMAT HASH PREFIXED(4)
 WITH LOCALITY GROUP default
   WITH DESCRIPTION 'Main locality group' (
-  MAXVERSIONS = INFINITY,
+  MAXVERSIONS = 1,
   TTL = FOREVER,
   INMEMORY = false,
   COMPRESSED WITH NONE,
   FAMILY info WITH DESCRIPTION 'Information about a song' (
     metadata CLASS org.kiji.examples.music.SongMetadata WITH DESCRIPTION 'Song metadata',
+  ),
+  FAMILY derived WITH DESCRIPTION 'Data derived from user interactions' (
     top_30_next_songs CLASS org.kiji.examples.music.NextSongProbability
-      WITH DESCRIPTION 'Probabilities of a song being the next song to be played'
+       WITH DESCRIPTION 'Probabilities of a song being the next song to be played'
+    number_of_plays "long" WITH DESCRIPTION 'Count of the number of plays.'
   )
 );
