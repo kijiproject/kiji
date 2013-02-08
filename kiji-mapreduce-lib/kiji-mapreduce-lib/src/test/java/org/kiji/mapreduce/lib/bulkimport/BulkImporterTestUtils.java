@@ -71,7 +71,7 @@ public final class BulkImporterTestUtils {
     long rowsProcessed = 0;
     for (KijiRowData row : importedKijiRowData) {
       final EntityId eid = row.getEntityId();
-      final String rowId = Bytes.toString(eid.getKijiRowKey());
+      final String rowId = Bytes.toString((byte[]) eid.getComponentByIndex(0));
 
       final String cellContent = row.getMostRecentValues("info").toString();
       LOG.info("Row: {}, fields: {}", rowId, cellContent);
