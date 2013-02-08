@@ -92,7 +92,7 @@ public class TestCSVBulkImporter extends KijiClientTest {
         .withConf(conf)
         .withBulkImporter(CSVBulkImporter.class)
         .withInput(new TextMapReduceJobInput(new Path(inputFile.toString())))
-        .withOutput(new DirectKijiTableMapReduceJobOutput(mTable))
+        .withOutput(new DirectKijiTableMapReduceJobOutput(mTable.getURI()))
         .build();
     assertTrue(job.run());
 
@@ -127,7 +127,7 @@ public class TestCSVBulkImporter extends KijiClientTest {
         .withConf(conf)
         .withBulkImporter(CSVBulkImporter.class)
         .withInput(new TextMapReduceJobInput(new Path(inputFile.toString())))
-        .withOutput(new DirectKijiTableMapReduceJobOutput(mTable))
+        .withOutput(new DirectKijiTableMapReduceJobOutput(mTable.getURI()))
         .build();
     assertTrue(job.run());
 
@@ -158,7 +158,7 @@ public class TestCSVBulkImporter extends KijiClientTest {
         .withConf(conf)
         .withBulkImporter(CSVBulkImporter.class)
         .withInput(new TextMapReduceJobInput(new Path(inputFile.toString())))
-        .withOutput(new DirectKijiTableMapReduceJobOutput(mTable))
+        .withOutput(new DirectKijiTableMapReduceJobOutput(mTable.getURI()))
         .build();
     assertTrue(job.run());
 
@@ -187,7 +187,7 @@ public class TestCSVBulkImporter extends KijiClientTest {
     CSVBulkImporter csvbi = new CSVBulkImporter();
     csvbi.setConf(conf);
     try {
-      csvbi.setupImporter(null);
+      csvbi.setup(null);
       fail("Should've gotten an IOException by here.");
     } catch (IOException ie) {
       assertEquals("Invalid delimiter '!' specified.  Valid options are: ',','\t'",

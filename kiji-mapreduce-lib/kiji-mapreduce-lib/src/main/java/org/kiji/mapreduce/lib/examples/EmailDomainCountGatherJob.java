@@ -80,7 +80,7 @@ public class EmailDomainCountGatherJob extends Configured implements Tool {
 
     LOG.info("Configuring a gather job...");
     KijiGatherJobBuilder jobBuilder = KijiGatherJobBuilder.create()
-        .withInputTable(table)
+        .withInputTable(table.getURI())
         .withGatherer(EmailDomainCountGatherer.class)
         .withCombiner(IntSumReducer.class)
         .withReducer(IntSumReducer.class)

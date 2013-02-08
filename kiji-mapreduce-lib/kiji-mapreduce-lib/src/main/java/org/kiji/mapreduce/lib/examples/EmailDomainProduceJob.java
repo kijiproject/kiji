@@ -73,9 +73,9 @@ public class EmailDomainProduceJob extends Configured implements Tool {
 
     LOG.info("Configuring a produce job...");
     KijiProduceJobBuilder jobBuilder = KijiProduceJobBuilder.create()
-        .withInputTable(table)
+        .withInputTable(table.getURI())
         .withProducer(EmailDomainProducer.class)
-        .withOutput(new DirectKijiTableMapReduceJobOutput(table));
+        .withOutput(new DirectKijiTableMapReduceJobOutput(table.getURI()));
 
     LOG.info("Building the produce job...");
     MapReduceJob job = jobBuilder.build();

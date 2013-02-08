@@ -25,7 +25,6 @@ import java.util.Collections;
 import java.util.Set;
 
 import com.google.common.base.Preconditions;
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -47,7 +46,6 @@ import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;
-import org.kiji.schema.KijiURIException;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.util.ResourceUtils;
 
@@ -102,31 +100,6 @@ public abstract class DescribedInputTextBulkImporter extends KijiBulkImporter<Lo
   @Override
   public void setConf(Configuration conf) {
     super.setConf(conf);
-    HadoopConfigurator.configure(this);
-
-    KijiURI uri;
-    try {
-      uri = KijiURI.newBuilder(conf.get(KijiConfKeys.KIJI_OUTPUT_TABLE_URI)).build();
-    } catch (KijiURIException kue) {
-      throw new RuntimeException(kue);
-    }
-
-    Kiji kiji = null;
-    try {
-      kiji = Kiji.Factory.open(uri, conf);
-
-      KijiTable table = null;
-      try {
-        table = kiji.openTable(uri.getTable());
-        mOutputTableLayout = table.getLayout();
-      } finally {
-        IOUtils.closeQuietly(table);
-      }
-    } catch (IOException ex) {
-      throw new RuntimeException(ex);
-    } finally {
-      ResourceUtils.releaseOrLog(kiji);
-    }
   }
 
   /**
@@ -137,7 +110,24 @@ public abstract class DescribedInputTextBulkImporter extends KijiBulkImporter<Lo
    */
   @Override
   public final void setup(KijiTableContext context) throws IOException {
+    HadoopConfigurator.configure(this);
+    final Configuration conf = getConf();
     Preconditions.checkNotNull(mTableImportDescriptor);
+
+    final KijiURI uri = KijiURI.newBuilder(conf.get(KijiConfKeys.KIJI_OUTPUT_TABLE_URI)).build();
+
+    final Kiji kiji = Kiji.Factory.open(uri, conf);
+    try {
+      final KijiTable table = kiji.openTable(uri.getTable());
+      try {
+        mOutputTableLayout = table.getLayout();
+      } finally {
+        ResourceUtils.closeOrLog(table);
+      }
+    } finally {
+      ResourceUtils.releaseOrLog(kiji);
+    }
+
     Preconditions.checkNotNull(mOutputTableLayout);
     mTableImportDescriptor.validateDestination(mOutputTableLayout);
 

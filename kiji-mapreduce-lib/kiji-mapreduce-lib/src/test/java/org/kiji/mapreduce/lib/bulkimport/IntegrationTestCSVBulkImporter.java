@@ -122,7 +122,7 @@ public class IntegrationTestCSVBulkImporter
           .withConf(mConf)
           .withBulkImporter(CSVBulkImporter.class)
           .withInput(new TextMapReduceJobInput(mBulkImportInputPath))
-          .withOutput(new HFileMapReduceJobOutput(mOutputTable, hfileDirPath))
+          .withOutput(new HFileMapReduceJobOutput(mOutputTable.getURI(), hfileDirPath))
           .build();
       assertTrue(mrjob.run());
 
