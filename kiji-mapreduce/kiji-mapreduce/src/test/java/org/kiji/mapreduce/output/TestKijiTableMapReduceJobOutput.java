@@ -43,7 +43,7 @@ public class TestKijiTableMapReduceJobOutput extends KijiClientTest {
     final KijiTable table = kiji.openTable("table");
 
     final Job job = new Job();
-    new DirectKijiTableMapReduceJobOutput(table).configure(job);
+    new DirectKijiTableMapReduceJobOutput(table.getURI()).configure(job);
 
     final Configuration conf = job.getConfiguration();
     boolean isMapSpecExEnabled = conf.getBoolean("mapred.map.tasks.speculative.execution", true);

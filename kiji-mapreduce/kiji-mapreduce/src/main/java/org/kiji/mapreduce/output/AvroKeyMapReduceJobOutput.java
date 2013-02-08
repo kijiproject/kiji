@@ -20,6 +20,7 @@
 package org.kiji.mapreduce.output;
 
 import org.apache.hadoop.fs.Path;
+
 import org.apache.hadoop.mapreduce.OutputFormat;
 
 import org.kiji.annotations.ApiAudience;
@@ -28,8 +29,12 @@ import org.kiji.avro.mapreduce.AvroKeyOutputFormat;
 /** A MapReduce job output of simple Avro container files. */
 @ApiAudience.Public
 public final class AvroKeyMapReduceJobOutput extends FileMapReduceJobOutput {
+  /** Default constructor. Do not use directly. */
+  public AvroKeyMapReduceJobOutput() {
+  }
+
   /**
-   * Creates a new <code>AvroMapReduceJobOutput</code> instance.
+   * Creates a new <code>AvroKeyMapReduceJobOutput</code> instance.
    *
    * @param filePath The file system path for the output files.
    * @param numSplits The number of output file splits.

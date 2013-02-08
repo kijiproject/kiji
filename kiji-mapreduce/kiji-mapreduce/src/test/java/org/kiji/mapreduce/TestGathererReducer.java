@@ -151,7 +151,7 @@ public class TestGathererReducer extends KijiClientTest {
         .withConf(getConf())
         .withGatherer(TestingGatherer.class)
         .withReducer(TestingReducer.class)
-        .withInputTable(mTable)
+        .withInputTable(mTable.getURI())
         .withOutput(new TextMapReduceJobOutput(new Path(outputDir.toString()), numSplits))
         .build();
     assertTrue(job.run());

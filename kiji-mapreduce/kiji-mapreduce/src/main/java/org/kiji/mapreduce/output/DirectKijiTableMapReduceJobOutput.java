@@ -31,7 +31,7 @@ import org.kiji.annotations.Inheritance;
 import org.kiji.mapreduce.KijiConfKeys;
 import org.kiji.mapreduce.KijiTableContext;
 import org.kiji.mapreduce.context.DirectKijiTableWriterContext;
-import org.kiji.schema.KijiTable;
+import org.kiji.schema.KijiURI;
 
 /**
  * MapReduce job output configuration that directly writes to a Kiji table.
@@ -45,23 +45,27 @@ import org.kiji.schema.KijiTable;
 @ApiAudience.Public
 @Inheritance.Sealed
 public class DirectKijiTableMapReduceJobOutput extends KijiTableMapReduceJobOutput {
-  /**
-   * Creates a new <code>KijiTableMapReduceJobOutput</code> instance.
-   *
-   * @param table The kiji table to write output to.
-   */
-  public DirectKijiTableMapReduceJobOutput(KijiTable table) {
-    this(table, 0);
+  /** Default constructor. Do not use directly. */
+  public DirectKijiTableMapReduceJobOutput() {
   }
 
   /**
    * Creates a new <code>KijiTableMapReduceJobOutput</code> instance.
    *
-   * @param table The kiji table to write output to.
+   * @param tableURI The kiji table to write output to.
+   */
+  public DirectKijiTableMapReduceJobOutput(KijiURI tableURI) {
+    this(tableURI, 0);
+  }
+
+  /**
+   * Creates a new <code>KijiTableMapReduceJobOutput</code> instance.
+   *
+   * @param tableURI The kiji table to write output to.
    * @param numReduceTasks The number of reduce tasks to use (use zero if using a producer).
    */
-  public DirectKijiTableMapReduceJobOutput(KijiTable table, int numReduceTasks) {
-    super(table, numReduceTasks);
+  public DirectKijiTableMapReduceJobOutput(KijiURI tableURI, int numReduceTasks) {
+    super(tableURI, numReduceTasks);
   }
 
   /** {@inheritDoc} */

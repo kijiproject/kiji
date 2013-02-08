@@ -159,8 +159,8 @@ public class IntegrationTestTableMapper extends AbstractKijiIntegrationTest {
     final MapReduceJob mrjob = KijiGatherJobBuilder.create()
         .withConf(mConf)
         .withGatherer(SimpleTableMapperAsGatherer.class)
-        .withInputTable(mInputTable)
-        .withOutput(new DirectKijiTableMapReduceJobOutput(mOutputTable))
+        .withInputTable(mInputTable.getURI())
+        .withOutput(new DirectKijiTableMapReduceJobOutput(mOutputTable.getURI()))
         .build();
     assertTrue(mrjob.run());
 
@@ -174,8 +174,8 @@ public class IntegrationTestTableMapper extends AbstractKijiIntegrationTest {
       final MapReduceJob mrjob = KijiGatherJobBuilder.create()
           .withConf(mConf)
           .withGatherer(SimpleTableMapperAsGatherer.class)
-          .withInputTable(mInputTable)
-          .withOutput(new HFileMapReduceJobOutput(mOutputTable, hfileDirPath, 1))
+          .withInputTable(mInputTable.getURI())
+          .withOutput(new HFileMapReduceJobOutput(mOutputTable.getURI(), hfileDirPath, 1))
           .build();
       assertTrue(mrjob.run());
 

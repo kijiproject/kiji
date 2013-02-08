@@ -21,11 +21,15 @@ package org.kiji.mapreduce.tools;
 
 import java.io.IOException;
 
+import com.google.common.base.Preconditions;
+
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.Inheritance;
 import org.kiji.common.flags.Flag;
 import org.kiji.mapreduce.KijiTableInputJobBuilder;
+import org.kiji.mapreduce.input.KijiTableMapReduceJobInput;
 import org.kiji.schema.EntityIdFactory;
+import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.tools.ToolUtils;
 
@@ -37,63 +41,65 @@ import org.kiji.schema.tools.ToolUtils;
 @ApiAudience.Framework
 @Inheritance.Extensible
 public abstract class KijiJobTool<B extends KijiTableInputJobBuilder> extends JobTool<B> {
+  // TODO(SCHEMA-185): Update usage doc for entity IDs:
   @Flag(name="start-row", usage="The row to start scanning at (inclusive)")
   protected String mStartRow = "";
 
   @Flag(name="limit-row", usage="The row to stop scanning at (exclusive)")
   protected String mLimitRow = "";
 
-  /** The kiji table. */
-  private KijiTable mKijiTable;
+  /** Job input must be a Kiji table. */
+  private KijiTableMapReduceJobInput mJobInput = null;
 
   /** Creates a new <code>KijiTool</code> instance. */
   protected KijiJobTool() {
-    mKijiTable = null;
   }
 
+  /** {@inheritDoc} */
   @Override
   protected void validateFlags() throws Exception {
+    // Parse --input and --output flags:
     super.validateFlags();
-    if (mInputSpec.getFormat() != JobInputSpec.Format.KIJI) {
-      throw new RuntimeException("--input must be 'kiji:<tablename>'");
-    }
+
+    Preconditions.checkArgument(getJobInput() instanceof KijiTableMapReduceJobInput,
+        "Invalid job input '%s' : input must be a Kiji table.", mInputFlag);
+
+    mJobInput = (KijiTableMapReduceJobInput) getJobInput();
   }
 
-  @Override
-  protected void setup() throws Exception {
-    super.setup();
-    assert 1 == mInputSpec.getLocations().length; // This is enforced by the JobInputSpec c'tor.
-    mKijiTable = getKiji().openTable(mInputSpec.getLocation());
-  }
-
-  @Override
-  protected void cleanup() throws IOException {
-    if (null != mKijiTable) {
-      mKijiTable.close();
-    }
-    super.cleanup();
-  }
-
+  /** {@inheritDoc} */
   @Override
   protected void configure(B jobBuilder)
       throws ClassNotFoundException, IOException, JobIOSpecParseException {
+    // Basic job configuration (base JobConf, jars and KV stores):
     super.configure(jobBuilder);
-    jobBuilder.withInputTable(mKijiTable);
-    final EntityIdFactory eidFactory = EntityIdFactory.getFactory(mKijiTable.getLayout());
-    if (!mStartRow.isEmpty()) {
-      jobBuilder.withStartRow(eidFactory.getEntityId(ToolUtils.parseRowKeyFlag(mStartRow)));
-    }
-    if (!mLimitRow.isEmpty()) {
-      jobBuilder.withLimitRow(eidFactory.getEntityId(ToolUtils.parseRowKeyFlag(mLimitRow)));
+
+    // Configure job input:
+    jobBuilder.withJobInput(mJobInput);
+
+    final Kiji kiji = Kiji.Factory.open(mJobInput.getInputTableURI());
+    try {
+      final KijiTable table = kiji.openTable(mJobInput.getInputTableURI().getTable());
+      try {
+        final EntityIdFactory eidFactory = EntityIdFactory.getFactory(table.getLayout());
+        if (!mStartRow.isEmpty()) {
+          jobBuilder.withStartRow(
+              eidFactory.getEntityIdFromHBaseRowKey(ToolUtils.parseRowKeyFlag(mStartRow)));
+        }
+        if (!mLimitRow.isEmpty()) {
+          jobBuilder.withLimitRow(
+              eidFactory.getEntityIdFromHBaseRowKey(ToolUtils.parseRowKeyFlag(mLimitRow)));
+        }
+      } finally {
+        table.close();
+      }
+    } finally {
+      kiji.release();
     }
   }
 
-  /**
-   * Gets the Kiji table this job will run over.
-   *
-   * @return The input Kiji table.
-   */
-  protected KijiTable getInputTable() {
-    return mKijiTable;
+  /** @return the input for this job, which must be a Kiji table. */
+  protected KijiTableMapReduceJobInput getJobInputTable() {
+    return mJobInput;
   }
 }

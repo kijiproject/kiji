@@ -28,6 +28,10 @@ import org.kiji.annotations.ApiAudience;
 /** A MapReduce job output of text files. */
 @ApiAudience.Public
 public final class TextMapReduceJobOutput extends FileMapReduceJobOutput {
+  /** Default constructor. Do not use directly. */
+  public TextMapReduceJobOutput() {
+  }
+
   /**
    * Creates a new <code>TextMapReduceJobOutput</code> instance.
    *

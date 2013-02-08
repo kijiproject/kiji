@@ -123,8 +123,8 @@ public class TestProducer extends KijiClientTest {
     final MapReduceJob job = KijiProduceJobBuilder.create()
         .withConf(getConf())
         .withProducer(SimpleProducer.class)
-        .withInputTable(mTable)
-        .withOutput(new DirectKijiTableMapReduceJobOutput(mTable))
+        .withInputTable(mTable.getURI())
+        .withOutput(new DirectKijiTableMapReduceJobOutput(mTable.getURI()))
         .build();
     assertTrue(job.run());
 
@@ -204,8 +204,8 @@ public class TestProducer extends KijiClientTest {
     final MapReduceJob job = KijiProduceJobBuilder.create()
         .withConf(getConf())
         .withProducer(ProducerWorkflow.class)
-        .withInputTable(mTable)
-        .withOutput(new DirectKijiTableMapReduceJobOutput(mTable))
+        .withInputTable(mTable.getURI())
+        .withOutput(new DirectKijiTableMapReduceJobOutput(mTable.getURI()))
         .build();
     assertTrue(job.run());
 

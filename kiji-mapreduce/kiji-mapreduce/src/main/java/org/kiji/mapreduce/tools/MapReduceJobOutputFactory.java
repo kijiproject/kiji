@@ -20,9 +20,7 @@
 package org.kiji.mapreduce.tools;
 
 import java.io.IOException;
-
-import com.google.common.base.Preconditions;
-import org.apache.hadoop.fs.Path;
+import java.util.Map;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.MapReduceJobOutput;
@@ -33,9 +31,8 @@ import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
 import org.kiji.mapreduce.output.MapFileMapReduceJobOutput;
 import org.kiji.mapreduce.output.SequenceFileMapReduceJobOutput;
 import org.kiji.mapreduce.output.TextMapReduceJobOutput;
-import org.kiji.schema.Kiji;
-import org.kiji.schema.KijiTable;
-import org.kiji.schema.KijiURI;
+import org.kiji.mapreduce.tools.JobOutputSpec.Format;
+import org.kiji.schema.tools.SpaceSeparatedMapParser;
 
 /**
  * A factory for creating MapReduceJobOutput objects from outputspecs.
@@ -44,9 +41,7 @@ import org.kiji.schema.KijiURI;
  */
 @ApiAudience.Framework
 public final class MapReduceJobOutputFactory {
-  /**
-   * Constructs a new factory for MapReduce job outputs.
-   */
+  /** Constructs a new factory for MapReduce job outputs. */
   private MapReduceJobOutputFactory() { }
 
   /**
@@ -59,75 +54,50 @@ public final class MapReduceJobOutputFactory {
   }
 
   /**
-   * Creates a MapReduceJobOutput from an outputspec string.
+   * Creates a job output from a command-line flag space-separated parameters map.
    *
-   * @param outputSpec The outputspec.
-   * @return A new MapReduceJobOutput instance.
-   * @throws JobIOSpecParseException If the outputspec cannot be parsed.
+   * @param ssm Space-separated parameters map from the command-line.
+   * @return a job output configured from the command-line parameters.
+   * @throws IOException on I/O error.
    */
-  public MapReduceJobOutput createFromOutputSpec(String outputSpec)
-      throws JobIOSpecParseException {
-    return createFromOutputSpec(JobOutputSpec.parse(outputSpec));
+  public MapReduceJobOutput fromSpaceSeparatedMap(String ssm) throws IOException {
+    final Map<String, String> params = SpaceSeparatedMapParser.create().parse(ssm);
+    final String format = params.get(JobIOConfKeys.FORMAT_KEY);
+    try {
+      final MapReduceJobOutput output = createJobOutput(Format.parse(format));
+      output.initialize(params);
+      return output;
+    } catch (JobIOSpecParseException exn) {
+      throw new IOException(String.format(
+          "Invalid job output specification: '%s': %s", ssm, exn.getMessage()), exn);
+    }
   }
 
   /**
-   * Creates a MapReduceJobOutput from an outputspec.
+   * Instantiates the appropriate job output.
    *
-   * @param jobOutputSpec The outputspec.
-   * @return A new MapReduceJobOutput instance.
-   * @throws JobIOSpecParseException If the outputspec cannot be parsed.
+   * @param format Format of the job output.
+   * @return an unconfigured job output instance.
+   * @throws IOException on I/O error.
    */
-  public MapReduceJobOutput createFromOutputSpec(JobOutputSpec jobOutputSpec)
-      throws JobIOSpecParseException {
-    switch (jobOutputSpec.getFormat()) {
+  private static MapReduceJobOutput createJobOutput(Format format) throws IOException {
+    switch (format) {
     case TEXT:
-      return new TextMapReduceJobOutput(
-          new Path(jobOutputSpec.getLocation()), jobOutputSpec.getSplits());
+      return new TextMapReduceJobOutput();
     case SEQUENCE_FILE:
-      return new SequenceFileMapReduceJobOutput(
-          new Path(jobOutputSpec.getLocation()), jobOutputSpec.getSplits());
+      return new SequenceFileMapReduceJobOutput();
     case MAP_FILE:
-      return new MapFileMapReduceJobOutput(
-          new Path(jobOutputSpec.getLocation()), jobOutputSpec.getSplits());
+      return new MapFileMapReduceJobOutput();
     case AVRO:
-      return new AvroKeyMapReduceJobOutput(
-          new Path(jobOutputSpec.getLocation()), jobOutputSpec.getSplits());
+      return new AvroKeyMapReduceJobOutput();
     case AVRO_KV:
-      return new AvroKeyValueMapReduceJobOutput(
-          new Path(jobOutputSpec.getLocation()), jobOutputSpec.getSplits());
-    case KIJI: {
-      try {
-        final KijiURI uri = KijiURI.newBuilder(jobOutputSpec.getLocation()).build();
-        final Kiji kiji = Kiji.Factory.open(uri);
-        try {
-          final KijiTable table = kiji.openTable(uri.getTable());
-          return new DirectKijiTableMapReduceJobOutput(table, jobOutputSpec.getSplits());
-        } finally {
-          kiji.release();
-        }
-      } catch (IOException ioe) {
-        throw new RuntimeException(ioe);
-      }
-    }
-    case HFILE: {
-      try {
-        final String[] splits = jobOutputSpec.getLocation().split(";");
-        Preconditions.checkState(splits.length == 2);
-        final KijiURI uri = KijiURI.newBuilder(splits[0]).build();
-        final Kiji kiji = Kiji.Factory.open(uri);
-        try {
-          final KijiTable table = kiji.openTable(uri.getTable());
-          return new HFileMapReduceJobOutput(table, new Path(splits[1]), jobOutputSpec.getSplits());
-        } finally {
-          kiji.release();
-        }
-      } catch (IOException ioe) {
-        throw new RuntimeException(ioe);
-      }
-    }
+      return new AvroKeyValueMapReduceJobOutput();
+    case KIJI:
+      return new DirectKijiTableMapReduceJobOutput();
+    case HFILE:
+      return new HFileMapReduceJobOutput();
     default:
-      throw new JobIOSpecParseException(
-          "Unknown format " + jobOutputSpec.getFormat(), jobOutputSpec.toString());
+      throw new RuntimeException(String.format("Unhandled job output format: '%s'.", format));
     }
   }
 }

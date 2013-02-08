@@ -77,29 +77,21 @@ public final class KijiTransform extends JobTool<KijiTransformJobBuilder> {
   @Override
   protected void configure(KijiTransformJobBuilder jobBuilder)
       throws ClassNotFoundException, IOException, JobIOSpecParseException {
+    // Configure lib jars and KV stores:
     super.configure(jobBuilder);
-    jobBuilder.withConf(new Configuration());  // use MapReduce cluster from local environment.
 
-    // Input.
-    MapReduceJobInputFactory inputFactory = MapReduceJobInputFactory.create();
-    jobBuilder.withInput(inputFactory.createFromInputSpec(mInputSpec));
+    jobBuilder
+        .withConf(new Configuration())  // use MapReduce cluster from local environment
+        .withInput(MapReduceJobInputFactory.create().fromSpaceSeparatedMap(mInputFlag))
+        .withOutput(MapReduceJobOutputFactory.create().fromSpaceSeparatedMap(mOutputFlag))
+        .withMapper(KijiMapper.forName(mMapperName));
 
-    // Mapper.
-    jobBuilder.withMapper(KijiMapper.forName(mMapperName));
-
-    // Combiner.
     if (!mCombinerName.isEmpty()) {
       jobBuilder.withCombiner(KijiReducer.forName(mCombinerName));
     }
-
-    // Reducer.
     if (!mReducerName.isEmpty()) {
       jobBuilder.withReducer(KijiReducer.forName(mReducerName));
     }
-
-    // Output.
-    MapReduceJobOutputFactory outputFactory = MapReduceJobOutputFactory.create();
-    jobBuilder.withOutput(outputFactory.createFromOutputSpec(mOutputSpec));
   }
 
   /**

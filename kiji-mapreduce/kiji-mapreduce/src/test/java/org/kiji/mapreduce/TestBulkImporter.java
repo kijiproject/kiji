@@ -116,7 +116,7 @@ public class TestBulkImporter extends KijiClientTest {
         .withConf(getConf())
         .withBulkImporter(SimpleBulkImporter.class)
         .withInput(new TextMapReduceJobInput(new Path(inputFile.toString())))
-        .withOutput(new DirectKijiTableMapReduceJobOutput(mTable))
+        .withOutput(new DirectKijiTableMapReduceJobOutput(mTable.getURI()))
         .build();
     assertTrue(job.run());
 
@@ -201,7 +201,7 @@ public class TestBulkImporter extends KijiClientTest {
         .withConf(getConf())
         .withBulkImporter(BulkImporterWorkflow.class)
         .withInput(new TextMapReduceJobInput(new Path(inputFile.toString())))
-        .withOutput(new DirectKijiTableMapReduceJobOutput(mTable))
+        .withOutput(new DirectKijiTableMapReduceJobOutput(mTable.getURI()))
         .build();
     assertTrue(job.run());
 

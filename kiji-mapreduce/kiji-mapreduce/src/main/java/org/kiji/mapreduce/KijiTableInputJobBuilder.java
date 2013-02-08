@@ -32,46 +32,64 @@ import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequestException;
 import org.kiji.schema.KijiDataRequestValidator;
 import org.kiji.schema.KijiTable;
+import org.kiji.schema.KijiURI;
 import org.kiji.schema.filter.KijiRowFilter;
-import org.kiji.schema.impl.HBaseKijiTable;
-import org.kiji.schema.layout.KijiTableLayout;
 
 /**
- * Builds MapReduce jobs that use a Kiji table as input.  Users should use a concrete
- * implementation such as {@link org.kiji.mapreduce.KijiGatherJobBuilder}.
+ * Base class for MapReduce jobs that use a Kiji table as input.
  *
- * @param <T> The type of the builder class.
+ * @param <T> Type of the builder class.
  */
 @ApiAudience.Framework
 @Inheritance.Sealed
 public abstract class KijiTableInputJobBuilder<T extends KijiTableInputJobBuilder<T>>
     extends KijiMapReduceJobBuilder<T> {
   /** The table to use as input for the job. */
-  private KijiTable mInputTable;
+  private KijiURI mInputTableURI;
+
   /** The entity id of the start row (inclusive). */
   private EntityId mStartRow;
+
   /** The entity id of the limit row (exclusive). */
   private EntityId mLimitRow;
+
   /** A row filter that specifies rows to exclude from the scan (optional, so may be null). */
   private KijiRowFilter mRowFilter;
 
   /** Constructs a builder for jobs that use a Kiji table as input. */
   KijiTableInputJobBuilder() {
-    mInputTable = null;
+    mInputTableURI = null;
     mStartRow = null;
     mLimitRow = null;
     mRowFilter = null;
   }
 
   /**
-   * Configures the job with the Kiji table to use as input.
+   * Configures the job input table.
    *
-   * @param inputTable The Kiji table to use as input for the job.
+   * @param input The job input table.
    * @return This builder instance so you may chain configuration method calls.
    */
   @SuppressWarnings("unchecked")
-  public T withInputTable(KijiTable inputTable) {
-    mInputTable = inputTable;
+  public T withJobInput(KijiTableMapReduceJobInput input) {
+    mInputTableURI = input.getInputTableURI();
+    if (input.getRowOptions() != null) {
+      mStartRow = input.getRowOptions().getStartRow();
+      mLimitRow = input.getRowOptions().getLimitRow();
+      mRowFilter = input.getRowOptions().getRowFilter();
+    }
+    return (T) this;
+  }
+
+  /**
+   * Configures the job with the Kiji table to use as input.
+   *
+   * @param inputTableURI The Kiji table to use as input for the job.
+   * @return This builder instance so you may chain configuration method calls.
+   */
+  @SuppressWarnings("unchecked")
+  public T withInputTable(KijiURI inputTableURI) {
+    mInputTableURI = inputTableURI;
     return (T) this;
   }
 
@@ -114,66 +132,57 @@ public abstract class KijiTableInputJobBuilder<T extends KijiTableInputJobBuilde
   /** {@inheritDoc} */
   @Override
   protected void configureJob(Job job) throws IOException {
-    // Perform validation against the table layout.
-    validateAgainstTableLayout(getTableLayout());
-
     // Configure the input, mapper, combiner, and reducer, output.
     super.configureJob(job);
+
+    // Validate the Kiji data request against the current table layout:
+    final Kiji kiji = Kiji.Factory.open(mInputTableURI);
+    try {
+      final KijiTable table = kiji.openTable(mInputTableURI.getTable());
+      try {
+        validateInputTable(table);
+      } finally {
+        table.close();
+      }
+    } finally {
+      kiji.release();
+    }
   }
 
   /** {@inheritDoc} */
   @Override
   protected MapReduceJobInput getJobInput() {
-    KijiTableMapReduceJobInput.RowOptions rowOptions
-        = new KijiTableMapReduceJobInput.RowOptions(mStartRow, mLimitRow, mRowFilter);
-    return new KijiTableMapReduceJobInput(
-        HBaseKijiTable.downcast(mInputTable), getDataRequest(), rowOptions);
+    final KijiTableMapReduceJobInput.RowOptions rowOptions =
+        new KijiTableMapReduceJobInput.RowOptions(mStartRow, mLimitRow, mRowFilter);
+    return new KijiTableMapReduceJobInput(mInputTableURI, getDataRequest(), rowOptions);
   }
 
-  /** {@inheritDoc} */
-  @Override
-  protected Kiji getKiji() {
-    return mInputTable.getKiji();
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  protected KijiTableLayout getTableLayout() {
-    return mInputTable.getLayout();
+  /** @return the URI of the input table. */
+  protected KijiURI getInputTableURI() {
+    return mInputTableURI;
   }
 
   /**
-   * Provides access to the input table the built job will read from.
+   * Subclasses must override this to provide a Kiji data request for the input table.
    *
-   * @return The table the built job will read from.
-   */
-  protected KijiTable getInputTable() {
-    return mInputTable;
-  }
-
-  /**
-   * Gets the object that describes what data should be read from the Kiji table for the
-   * input of the MapReduce job.
-   *
-   * @return The kiji data request.
+   * @return the Kiji data request to configure the input table scanner with.
    */
   protected abstract KijiDataRequest getDataRequest();
 
   /**
-   * Checks that the job can be run against the table's layout.  Throws an exception if not.
+   * Validates the input table.
    *
-   * @param tableLayout The layout of the table the job will use as input.
-   * @throws IOException If the job cannot be run over the input table because the layout
-   *     is incompatible.
+   * Sub-classes may override this method to perform additional validation requiring an active
+   * connection to the input table.
+   *
+   * @param table Input table.
+   * @throws IOException on I/O error.
    */
-  protected void validateAgainstTableLayout(KijiTableLayout tableLayout) throws IOException {
-    // Validate the data request.
-    KijiDataRequest dataRequest = getDataRequest();
-    KijiDataRequestValidator validator = new KijiDataRequestValidator(dataRequest);
+  protected void validateInputTable(KijiTable table) throws IOException {
     try {
-      validator.validate(tableLayout);
-    } catch (KijiDataRequestException e) {
-      throw new JobConfigurationException("Invalid data request: " + e.getMessage());
+      new KijiDataRequestValidator(getDataRequest()).validate(table.getLayout());
+    } catch (KijiDataRequestException kdre) {
+      throw new JobConfigurationException("Invalid data request: " + kdre.getMessage());
     }
   }
 }

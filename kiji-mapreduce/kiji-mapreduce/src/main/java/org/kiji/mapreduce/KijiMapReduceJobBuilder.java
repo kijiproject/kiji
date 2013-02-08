@@ -21,8 +21,6 @@ package org.kiji.mapreduce;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.Inheritance;
-import org.kiji.schema.Kiji;
-import org.kiji.schema.layout.KijiTableLayout;
 
 /**
  * Base class for MapReduce jobs that interact with a Kiji instance.  Users should use a concrete
@@ -34,22 +32,4 @@ import org.kiji.schema.layout.KijiTableLayout;
 @Inheritance.Sealed
 public abstract class KijiMapReduceJobBuilder<T extends KijiMapReduceJobBuilder<T>>
     extends MapReduceJobBuilder<T> {
-
-  /** Constructs a builder for jobs that interact with a Kiji instance. */
-  KijiMapReduceJobBuilder() {
-  }
-
-  /**
-   * Returns the kiji instance this job should be interacting with.
-   *
-   * @return The kiji instance this job works with.
-   */
-  protected abstract Kiji getKiji();
-
-  /**
-   * Returns the layout of a table to serialize into the job configuration.  May return null.
-   *
-   * @return A table layout to serialize into the job configuration.
-   */
-  protected abstract KijiTableLayout getTableLayout();
 }

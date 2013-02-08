@@ -22,8 +22,7 @@ package org.kiji.mapreduce.tools;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.hadoop.fs.Path;
+import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,8 +30,12 @@ import org.kiji.annotations.ApiAudience;
 import org.kiji.common.flags.Flag;
 import org.kiji.mapreduce.KijiBulkImportJobBuilder;
 import org.kiji.mapreduce.KijiBulkImporter;
+import org.kiji.mapreduce.MapReduceJobInput;
+import org.kiji.mapreduce.MapReduceJobOutput;
 import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
 import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
+import org.kiji.mapreduce.output.KijiTableMapReduceJobOutput;
+import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.tools.KijiToolLauncher;
 import org.kiji.schema.tools.RequiredFlagException;
@@ -42,15 +45,8 @@ import org.kiji.schema.tools.RequiredFlagException;
 public final class KijiBulkImport extends JobTool<KijiBulkImportJobBuilder> {
   private static final Logger LOG = LoggerFactory.getLogger(KijiBulkImport.class);
 
-  @Flag(name="table", usage="Kiji table name")
-  private String mTableName = "";
-
   @Flag(name="importer", usage="KijiBulkImporter class to use")
-  //private String mImporter = DelimitedJsonBulkImporter.class.getName();
   private String mImporter = "";
-
-  /** The table to import data into. */
-  private KijiTable mOutputTable;
 
   /** {@inheritDoc} */
   @Override
@@ -70,13 +66,22 @@ public final class KijiBulkImport extends JobTool<KijiBulkImportJobBuilder> {
     return "Bulk";
   }
 
+  /** Kiji instance where the output table lives. */
+  private Kiji mKiji;
+
+  /** KijiTable to import data into. */
+  private KijiTable mTable;
+
+  /** Job output. */
+  private KijiTableMapReduceJobOutput mOutput;
+
+  /** {@inheritDoc} */
   @Override
   protected void validateFlags() throws Exception {
+    // Do NOT call super.validateFlags()
+
     if (mInputFlag.isEmpty()) {
       throw new RequiredFlagException("input");
-    }
-    if (mTableName.isEmpty()) {
-      throw new RequiredFlagException("table");
     }
     if (mImporter.isEmpty()) {
       throw new RequiredFlagException("importer");
@@ -85,72 +90,94 @@ public final class KijiBulkImport extends JobTool<KijiBulkImportJobBuilder> {
       throw new RequiredFlagException("output");
     }
 
-    mInputSpec = JobInputSpec.parse(mInputFlag);
-    mOutputSpec = JobOutputSpec.parse(mOutputFlag);
-    if (JobOutputSpec.Format.HFILE != mOutputSpec.getFormat()
-        && JobOutputSpec.Format.KIJI != mOutputSpec.getFormat()) {
-      throw new RuntimeException("Invalid format specified '"
-          + mOutputSpec.getFormat().getName() + "'. Bulk imports require the "
-          + JobOutputSpec.Format.HFILE.getName() + " or "
-          + JobOutputSpec.Format.KIJI.getName() + " output format.");
-    }
+    final MapReduceJobOutput mrJobOutput =
+        MapReduceJobOutputFactory.create().fromSpaceSeparatedMap(mOutputFlag);
+    Preconditions.checkArgument(mrJobOutput instanceof KijiTableMapReduceJobOutput,
+        "Bulk-import jobs output format must be 'hfile' or 'kiji', but got output spec '%s'.",
+        mOutputFlag);
+    mOutput = (KijiTableMapReduceJobOutput) mrJobOutput;
+
+    Preconditions.checkArgument(mOutput.getOutputTableURI().getTable() != null,
+        "Specify the table to import data into with --output=...");
   }
 
+  /** {@inheritDoc} */
   @Override
   protected void setup() throws Exception {
     super.setup();
-    mOutputTable = getKiji().openTable(mTableName);
+    mKiji = Kiji.Factory.open(mOutput.getOutputTableURI());
+    mTable = mKiji.openTable(mOutput.getOutputTableURI().getTable());
   }
 
+  /** {@inheritDoc} */
   @Override
   protected void cleanup() throws IOException {
-    IOUtils.closeQuietly(mOutputTable);
+    mTable.close();
+    mKiji.release();
     super.cleanup();
   }
 
+  /** {@inheritDoc} */
   @Override
   protected KijiBulkImportJobBuilder createJobBuilder() {
     return KijiBulkImportJobBuilder.create();
   }
 
+  /** {@inheritDoc} */
   @Override
   protected void configure(KijiBulkImportJobBuilder jobBuilder)
       throws ClassNotFoundException, IOException, JobIOSpecParseException {
-    super.configure(jobBuilder);
 
-    MapReduceJobInputFactory inputFactory = MapReduceJobInputFactory.create();
-    jobBuilder.withInput(inputFactory.createFromInputSpec(mInputSpec));
-    jobBuilder.withBulkImporter(KijiBulkImporter.forName(mImporter));
-    if (JobOutputSpec.Format.KIJI == mOutputSpec.getFormat()) {
-      jobBuilder.withOutput(new DirectKijiTableMapReduceJobOutput(mOutputTable));
-    } else {
-      jobBuilder.withOutput(new HFileMapReduceJobOutput(
-              mOutputTable, new Path(mOutputSpec.getLocation()), mOutputSpec.getSplits()));
+    // Resolve job input:
+    final MapReduceJobInput input =
+        MapReduceJobInputFactory.create().fromSpaceSeparatedMap(mInputFlag);
+
+    // Resolve job output:
+    final MapReduceJobOutput output =
+        MapReduceJobOutputFactory.create().fromSpaceSeparatedMap(mOutputFlag);
+    if (!(output instanceof KijiTableMapReduceJobOutput)) {
+      throw new RuntimeException(String.format(
+          "Invalid bulk-importer job output: '%s'; must output to a Kiji table.", mOutputFlag));
     }
+    mOutput = (KijiTableMapReduceJobOutput) output;
+
+    // Configure job:
+    super.configure(jobBuilder);
+    jobBuilder
+        .withBulkImporter(KijiBulkImporter.forName(mImporter))
+        .withInput(input)
+        .withOutput(mOutput);
   }
 
+  /** {@inheritDoc} */
   @Override
   protected int run(List<String> nonFlagArgs) throws Exception {
-    int jobStatus = super.run(nonFlagArgs);
+    final int jobStatus = super.run(nonFlagArgs);
 
-    if (JobOutputSpec.Format.KIJI == mOutputSpec.getFormat()) {
-      // Imported directly to the table, no need to do anything else.
-      LOG.info("Bulk import complete.");
-      return jobStatus;
-    }
-
-    if (0 != jobStatus) {
-      LOG.error("HFiles were not generated successfully.");
-    } else {
-      // Provide instructions for completing the bulk import.
-      if (JobOutputSpec.Format.HFILE == mOutputSpec.getFormat()) {
-        LOG.info("To complete loading of job results into table, run the kiji bulk-load command");
-        LOG.info("    e.g. kiji bulk-load --table=" + mTableName + " --input="
-            + mOutputSpec.getLocation() + (getURI().getInstance() == null ? "" : " --instance="
-                + getURI().getInstance()));
+    // TODO: Make this a method of job outputs?
+    if (mOutput instanceof DirectKijiTableMapReduceJobOutput) {
+      if (jobStatus == 0) {
+        LOG.info("Bulk-import job for table {} completed successfully.",
+            mOutput.getOutputTableURI());
+      } else {
+        LOG.error("Bulk-import job failed, output table {} may have partial writes.",
+            mOutput.getOutputTableURI());
       }
+    } else if (mOutput instanceof HFileMapReduceJobOutput) {
+      if (jobStatus == 0) {
+        // Provide instructions for completing the bulk import.
+        LOG.info("Bulk-import job completed successfully. "
+            + "HFiles may now be bulk-loaded into table {} with: {}",
+            mOutput.getOutputTableURI(),
+            String.format("kiji bulk-load --table=%s", mOutput.getOutputTableURI()));
+      } else {
+        LOG.error(
+            "Bulk-importer job failed: HFiles for table {} were not generated successfully.",
+            mOutput.getOutputTableURI());
+      }
+    } else {
+      LOG.error("Unknown job output format: {}", mOutput.getClass().getName());
     }
-
     return jobStatus;
   }
 

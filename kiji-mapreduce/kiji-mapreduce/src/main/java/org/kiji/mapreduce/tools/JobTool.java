@@ -22,15 +22,14 @@ package org.kiji.mapreduce.tools;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
+import com.google.common.base.Preconditions;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.Inheritance;
 import org.kiji.common.flags.Flag;
 import org.kiji.mapreduce.MapReduceJobBuilder;
-import org.kiji.schema.InternalKijiError;
-import org.kiji.schema.tools.RequiredFlagException;
+import org.kiji.mapreduce.MapReduceJobInput;
+import org.kiji.mapreduce.MapReduceJobOutput;
 import org.kiji.schema.tools.VersionValidatedTool;
 
 /**
@@ -42,14 +41,14 @@ import org.kiji.schema.tools.VersionValidatedTool;
 @Inheritance.Extensible
 public abstract class JobTool<B extends MapReduceJobBuilder> extends VersionValidatedTool {
 
-  @Flag(name="input", usage="Input specification '<format>:<location>'")
+  // TODO(KIJIMR-62): Better usage doc:
+  @Flag(name="input",
+      usage="Job input specification: --input=\"format=<input-format> ...\".")
   protected String mInputFlag = "";
 
-  @Flag(name="output", usage="Output specification '<format>:<location>@<splits>'")
+  @Flag(name="output",
+      usage="Job output specification: --output=\"format=<output-format> nsplits=N ...\"")
   protected String mOutputFlag = "";
-
-  @Flag(name="overwrite", usage="Overwrite the output path if it exists")
-  protected boolean mOverwriteOutput = false;
 
   @Flag(name="lib", usage="A directory of jars for including user code")
   protected String mLibDir = "";
@@ -57,21 +56,18 @@ public abstract class JobTool<B extends MapReduceJobBuilder> extends VersionVali
   @Flag(name="kvstores", usage="KeyValueStore specification XML file to attach to the job")
   protected String mKvStoreFile = "";
 
-  protected JobInputSpec mInputSpec;
-  protected JobOutputSpec mOutputSpec;
+  private MapReduceJobInput mJobInput;
+  private MapReduceJobOutput mJobOutput;
 
+  /** {@inheritDoc} */
   @Override
   protected void validateFlags() throws Exception {
-    if (mInputFlag.isEmpty()) {
-      throw new RequiredFlagException("input");
-    }
-    if (mOutputFlag.isEmpty()) {
-      throw new RequiredFlagException("output");
-    }
-
-    // Parse the input and output specs.
-    mInputSpec = JobInputSpec.parse(mInputFlag);
-    mOutputSpec = JobOutputSpec.parse(mOutputFlag);
+    Preconditions.checkArgument(!mInputFlag.isEmpty(),
+        "Specify an input to the job with --input=...");
+    Preconditions.checkArgument(!mOutputFlag.isEmpty(),
+        "Specify an output to the job with --output=...");
+    mJobInput = MapReduceJobInputFactory.create().fromSpaceSeparatedMap(mInputFlag);
+    mJobOutput = MapReduceJobOutputFactory.create().fromSpaceSeparatedMap(mOutputFlag);
   }
 
   /**
@@ -91,6 +87,9 @@ public abstract class JobTool<B extends MapReduceJobBuilder> extends VersionVali
    */
   protected void configure(B jobBuilder)
       throws ClassNotFoundException, IOException, JobIOSpecParseException {
+    // Use default environment configuration:
+    jobBuilder.withConf(getConf());
+
     // Add user dependency jars if specified.
     if (!mLibDir.isEmpty()) {
       jobBuilder.addJarDirectory(mLibDir);
@@ -102,28 +101,22 @@ public abstract class JobTool<B extends MapReduceJobBuilder> extends VersionVali
     }
   }
 
+  /** {@inheritDoc} */
   @Override
   protected int run(List<String> nonFlagArgs) throws Exception {
-    // Create the job builder.
-    B jobBuilder = createJobBuilder();
-    if (null == jobBuilder) {
-      throw new InternalKijiError("Unable to create job builder.");
-    }
-
+    final B jobBuilder = createJobBuilder();
+    Preconditions.checkNotNull(jobBuilder, "Internal error: unable to create job builder?");
     configure(jobBuilder);
-
-    // Delete the output files if they already exist and --overwrite=true
-    if (mOutputSpec != null
-        && mOutputSpec.getFormat() != JobOutputSpec.Format.KIJI
-        && null != mOutputSpec.getLocation() && mOverwriteOutput) {
-      FileSystem fs = FileSystem.get(getConf());
-      Path outPath = new Path(mOutputSpec.getLocation());
-      if (fs.exists(outPath)) {
-        fs.delete(outPath, true);
-      }
-    }
-
-    // Run the job.
     return jobBuilder.build().run() ? 0 : 1;
+  }
+
+  /** @return the job input. */
+  protected MapReduceJobInput getJobInput() {
+    return mJobInput;
+  }
+
+  /** @return the job output. */
+  protected MapReduceJobOutput getJobOutput() {
+    return mJobOutput;
   }
 }

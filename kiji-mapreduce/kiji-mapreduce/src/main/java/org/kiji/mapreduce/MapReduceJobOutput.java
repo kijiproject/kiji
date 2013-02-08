@@ -20,6 +20,7 @@
 package org.kiji.mapreduce;
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.OutputFormat;
@@ -31,6 +32,14 @@ import org.kiji.annotations.Inheritance;
 @ApiAudience.Public
 @Inheritance.Sealed
 public abstract class MapReduceJobOutput {
+  /**
+   * Initializes the job output from command-line parameters.
+   *
+   * @param params Initialization parameters.
+   * @throws IOException on I/O error.
+   */
+  public abstract void initialize(Map<String, String> params) throws IOException;
+
   /**
    * Configures the output for a MapReduce job.
    *

@@ -20,6 +20,7 @@
 package org.kiji.mapreduce;
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.Job;
@@ -31,6 +32,15 @@ import org.kiji.annotations.Inheritance;
 @ApiAudience.Public
 @Inheritance.Sealed
 public abstract class MapReduceJobInput {
+
+  /**
+   * Initializes the job input with the given parameters.
+   *
+   * @param params Parameters, usually parsed from the command-line.
+   * @throws IOException on I/O error.
+   */
+  public abstract void initialize(Map<String, String> params) throws IOException;
+
   /**
    * Configure a job to use this type of input for the MapReduce.
    *

@@ -20,6 +20,7 @@
 package org.kiji.mapreduce.output;
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.mapreduce.GenericTableMapReduceUtil;
@@ -28,37 +29,49 @@ import org.apache.hadoop.mapreduce.Job;
 import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.KijiConfKeys;
 import org.kiji.mapreduce.MapReduceJobOutput;
-import org.kiji.schema.KijiTable;
+import org.kiji.mapreduce.tools.JobIOConfKeys;
+import org.kiji.schema.KijiURI;
 
 /** MapReduce job output configuration that outputs to a Kiji table. */
 @ApiAudience.Private
 public abstract class KijiTableMapReduceJobOutput extends MapReduceJobOutput {
 
-  /** Kiji table the job intends to write to. */
-  private final KijiTable mTable;
+  /** URI of the output table. */
+  private KijiURI mTableURI;
 
   /** Number of reduce tasks to use. */
-  private final int mNumReduceTasks;
+  private int mNumReduceTasks;
+
+  /** Default constructor. Do not use directly. */
+  KijiTableMapReduceJobOutput() {
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public void initialize(Map<String, String> params) throws IOException {
+    mTableURI = KijiURI.newBuilder(params.get(JobIOConfKeys.TABLE_KEY)).build();
+    mNumReduceTasks = Integer.parseInt(params.get(JobIOConfKeys.NSPLITS_KEY));
+  }
 
   /**
    * Creates a new <code>KijiTableMapReduceJobOutput</code> instance.
    *
-   * @param table The kiji table to write output to.
+   * @param tableURI The kiji table to write output to.
    * @param numReduceTasks The number of reduce tasks to use (use zero if using a producer).
    */
-  public KijiTableMapReduceJobOutput(KijiTable table, int numReduceTasks) {
-    mTable = table;
+  public KijiTableMapReduceJobOutput(KijiURI tableURI, int numReduceTasks) {
+    mTableURI = tableURI;
     mNumReduceTasks = numReduceTasks;
-  }
-
-  /** @return the Kiji table to write to. */
-  public KijiTable getTable() {
-    return mTable;
   }
 
   /** @return the number of reducers. */
   public int getNumReduceTasks() {
     return mNumReduceTasks;
+  }
+
+  /** @return the URI of the configured output table. */
+  public KijiURI getOutputTableURI() {
+    return mTableURI;
   }
 
   /** {@inheritDoc} */
@@ -68,7 +81,7 @@ public abstract class KijiTableMapReduceJobOutput extends MapReduceJobOutput {
     super.configure(job);
 
     final Configuration conf = job.getConfiguration();
-    conf.set(KijiConfKeys.KIJI_OUTPUT_TABLE_URI, getTable().getURI().toString());
+    conf.set(KijiConfKeys.KIJI_OUTPUT_TABLE_URI, mTableURI.toString());
 
     job.setNumReduceTasks(getNumReduceTasks());
 

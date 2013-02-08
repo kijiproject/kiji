@@ -19,25 +19,23 @@
 
 package org.kiji.mapreduce.input;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.SerializationUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.client.Scan;
-import org.apache.hadoop.hbase.mapreduce.GenericTableMapReduceUtil;
-import org.apache.hadoop.hbase.mapreduce.TableInputFormat;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.mapreduce.Job;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.kiji.mapreduce.KijiConfKeys;
 import org.kiji.mapreduce.KijiMRTestLayouts;
 import org.kiji.mapreduce.MapReduceJobInput;
 import org.kiji.schema.EntityId;
@@ -45,11 +43,9 @@ import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequestBuilder;
 import org.kiji.schema.KijiTable;
-import org.kiji.schema.hbase.KijiManagedHBaseTableName;
-import org.kiji.schema.impl.HBaseDataRequestAdapter;
+import org.kiji.schema.KijiURI;
 import org.kiji.schema.impl.RawEntityId;
 import org.kiji.schema.layout.KijiTableLayout;
-import org.kiji.schema.util.ScanEquals;
 import org.kiji.schema.util.TestFileUtils;
 
 public class TestKijiTableMapReduceJobInput extends KijiClientTest {
@@ -97,28 +93,18 @@ public class TestKijiTableMapReduceJobInput extends KijiClientTest {
     final KijiTableMapReduceJobInput.RowOptions rowOptions =
         new KijiTableMapReduceJobInput.RowOptions(startRow, limitRow, null);
     final MapReduceJobInput kijiTableJobInput =
-        new KijiTableMapReduceJobInput(mTable, dataRequest, rowOptions);
+        new KijiTableMapReduceJobInput(mTable.getURI(), dataRequest, rowOptions);
     kijiTableJobInput.configure(job);
 
     // Check that the job was configured correctly.
     final Configuration conf = job.getConfiguration();
     assertEquals(
-        KijiManagedHBaseTableName.getKijiTableName(
-            getKiji().getURI().getInstance(), mTable.getURI().getTable()).toString(),
-        conf.get(TableInputFormat.INPUT_TABLE));
+        mTable.getURI(),
+        KijiURI.newBuilder(conf.get(KijiConfKeys.KIJI_INPUT_TABLE_URI)).build());
 
-    // Check the scan range.
-    final Scan scan =
-        GenericTableMapReduceUtil.convertStringToScan(conf.get(TableInputFormat.SCAN));
-    assertArrayEquals(Bytes.toBytes("here"), scan.getStartRow());
-    assertArrayEquals(Bytes.toBytes("there"), scan.getStopRow());
-
-    // Check the scan columns.
-    final HBaseDataRequestAdapter dataRequestAdapter = new HBaseDataRequestAdapter(dataRequest);
-    final Scan expectedScan = dataRequestAdapter.toScan(mTable.getLayout());
-    expectedScan.setStartRow(Bytes.toBytes("here"));
-    expectedScan.setStopRow(Bytes.toBytes("there"));
-    expectedScan.setCacheBlocks(false);
-    assertTrue(new ScanEquals(expectedScan).matches(scan));
+    final KijiDataRequest decoded =
+        (KijiDataRequest) SerializationUtils.deserialize(
+            Base64.decodeBase64(conf.get(KijiConfKeys.KIJI_INPUT_DATA_REQUEST)));
+    assertEquals(dataRequest, decoded);
   }
 }

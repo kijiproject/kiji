@@ -155,7 +155,7 @@ public class IntegrationTestSimpleBulkImporter extends AbstractKijiIntegrationTe
         .withConf(mConf)
         .withBulkImporter(SimpleBulkImporter.class)
         .withInput(new TextMapReduceJobInput(mBulkImportInputPath))
-        .withOutput(new DirectKijiTableMapReduceJobOutput(mOutputTable))
+        .withOutput(new DirectKijiTableMapReduceJobOutput(mOutputTable.getURI()))
         .build();
     assertTrue(mrjob.run());
 
@@ -170,7 +170,7 @@ public class IntegrationTestSimpleBulkImporter extends AbstractKijiIntegrationTe
           .withConf(mConf)
           .withBulkImporter(SimpleBulkImporter.class)
           .withInput(new TextMapReduceJobInput(mBulkImportInputPath))
-          .withOutput(new HFileMapReduceJobOutput(mOutputTable, hfileDirPath))
+          .withOutput(new HFileMapReduceJobOutput(mOutputTable.getURI(), hfileDirPath))
           .build();
       assertTrue(mrjob.run());
 

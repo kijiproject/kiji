@@ -19,20 +19,17 @@
 
 package org.kiji.mapreduce;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.SerializationUtils;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HRegionInfo;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
+import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.mapreduce.TableSplit;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.mapreduce.InputFormat;
@@ -48,16 +45,17 @@ import org.kiji.annotations.ApiAudience;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
+import org.kiji.schema.KijiRegion;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiRowScanner;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.KijiTableReader.KijiScannerOptions;
 import org.kiji.schema.KijiURI;
-import org.kiji.schema.hbase.HBaseFactory;
 import org.kiji.schema.impl.HBaseEntityId;
 import org.kiji.schema.impl.HBaseKijiRowData;
 import org.kiji.schema.impl.HBaseKijiTable;
+import org.kiji.schema.util.ResourceUtils;
 
 /** InputFormat for Hadoop MapReduce jobs reading from a Kiji table. */
 @ApiAudience.Framework
@@ -98,20 +96,20 @@ public final class KijiTableInputFormat
     try {
       final KijiTable table = kiji.openTable(inputTableURI.getTable());
       try {
-        final HBaseFactory hbaseFactory = HBaseFactory.Provider.get();
-        final HBaseAdmin admin = hbaseFactory.getHBaseAdminFactory(inputTableURI).create(conf);
-        final byte[] htableName = HBaseKijiTable.downcast(table).getHTable().getTableName();
-        final List<HRegionInfo> regions = admin.getTableRegions(htableName);
+        final HTableInterface htable = HBaseKijiTable.downcast(table).getHTable();
+
         final List<InputSplit> splits = Lists.newArrayList();
-        for (HRegionInfo region : regions) {
+        for (KijiRegion region : table.getRegions()) {
           final byte[] startKey = region.getStartKey();
-          // TODO(KIJIMR-25): TableSplit.getLocation is bogus, should not be table.getName():
+          // TODO(KIJIMR-65): For now pick the first available location (ie. region server), if any.
+          final String location =
+              region.getLocations().isEmpty() ? null : region.getLocations().iterator().next();
           final TableSplit tableSplit =
-              new TableSplit(htableName, startKey, region.getEndKey(), table.getName());
+              new TableSplit(htable.getTableName(), startKey, region.getEndKey(), location);
           splits.add(new KijiTableSplit(tableSplit, startKey));
         }
-        admin.close();
         return splits;
+
       } finally {
         table.close();
       }
@@ -178,10 +176,8 @@ public final class KijiTableInputFormat
      */
     public KijiTableRecordReader(Configuration conf) {
       // Get data request from the job configuration.
-      final String dataRequestB64 =
-          checkNotNull(
-              conf.get(KijiConfKeys.KIJI_INPUT_DATA_REQUEST),
-              "Missing data request in job configuration.");
+      final String dataRequestB64 = conf.get(KijiConfKeys.KIJI_INPUT_DATA_REQUEST);
+      Preconditions.checkNotNull(dataRequestB64, "Missing data request in job configuration.");
       final byte[] dataRequestBytes = Base64.decodeBase64(Bytes.toBytes(dataRequestB64));
       mDataRequest = (KijiDataRequest) SerializationUtils.deserialize(dataRequestBytes);
     }
@@ -195,16 +191,13 @@ public final class KijiTableInputFormat
       final Configuration conf = context.getConfiguration();
       final KijiURI inputURI =
           KijiURI.newBuilder(conf.get(KijiConfKeys.KIJI_INPUT_TABLE_URI)).build();
-      final KijiScannerOptions scannerOptions =
-          new KijiScannerOptions()
+      final KijiScannerOptions scannerOptions = new KijiScannerOptions()
           .setStartRow(new HBaseEntityId(mSplit.getStartRow()))
           .setStopRow(new HBaseEntityId(mSplit.getEndRow()));
       mKiji = Kiji.Factory.open(inputURI, conf);
       mTable = mKiji.openTable(inputURI.getTable());
       mReader = mTable.openTableReader();
-      mScanner = mReader.getScanner(
-          mDataRequest,
-          scannerOptions);
+      mScanner = mReader.getScanner(mDataRequest, scannerOptions);
       mIterator = mScanner.iterator();
       mCurrentRow = null;
     }
@@ -243,9 +236,9 @@ public final class KijiTableInputFormat
     /** {@inheritDoc} */
     @Override
     public void close() throws IOException {
-      IOUtils.closeQuietly(mScanner);
-      IOUtils.closeQuietly(mReader);
-      IOUtils.closeQuietly(mTable);
+      ResourceUtils.closeOrLog(mScanner);
+      ResourceUtils.closeOrLog(mReader);
+      ResourceUtils.closeOrLog(mTable);
       mKiji.release();
       mIterator = null;
       mScanner = null;

@@ -128,7 +128,7 @@ public class TestGatherMapFamily extends KijiClientTest {
     final MapReduceJob job = KijiGatherJobBuilder.create()
         .withConf(getConf())
         .withGatherer(MapFamilyGatherer.class)
-        .withInputTable(mTable)
+        .withInputTable(mTable.getURI())
         .withOutput(new TextMapReduceJobOutput(new Path(outputDir.toString()), numSplits))
         .build();
     assertTrue(job.run());

@@ -36,27 +36,32 @@ import org.kiji.mapreduce.output.KijiTableMapReduceJobOutput;
 import org.kiji.mapreduce.reducer.IdentityReducer;
 import org.kiji.mapreduce.util.KijiProducers;
 import org.kiji.schema.EntityId;
-import org.kiji.schema.InternalKijiError;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
-import org.kiji.schema.layout.InvalidLayoutException;
-import org.kiji.schema.layout.KijiTableLayout;
+import org.kiji.schema.KijiTable;
 
 /** Builds jobs that run a producer over a Kiji table. */
 @ApiAudience.Public
 public final class KijiProduceJobBuilder extends KijiTableInputJobBuilder<KijiProduceJobBuilder> {
+
   /** The default number of threads per mapper to use for running producers. */
   private static final int DEFAULT_NUM_THREADS_PER_MAPPER = 1;
 
   /** The class of the producer to run. */
   private Class<? extends KijiProducer> mProducerClass;
+
   /** The number of threads per mapper to use for running producers. */
   private int mNumThreadsPerMapper;
 
+  /** Producer job output. */
+  private KijiTableMapReduceJobOutput mJobOutput;
+
   /** The producer instance. */
   private KijiProducer mProducer;
+
   /** The mapper instance. */
   private KijiMapper<?, ?, ?, ?> mMapper;
+
   /** The reducer instance. */
   private KijiReducer<?, ?, ?, ?> mReducer;
 
@@ -67,11 +72,9 @@ public final class KijiProduceJobBuilder extends KijiTableInputJobBuilder<KijiPr
   private KijiProduceJobBuilder() {
     mProducerClass = null;
     mNumThreadsPerMapper = DEFAULT_NUM_THREADS_PER_MAPPER;
-
     mProducer = null;
     mMapper = null;
     mReducer = null;
-
     mDataRequest = null;
   }
 
@@ -96,6 +99,27 @@ public final class KijiProduceJobBuilder extends KijiTableInputJobBuilder<KijiPr
   }
 
   /**
+   * Configures the producer output.
+   *
+   * @param jobOutput Output table of the producer must match the input table.
+   * @return this builder instance so you may chain configuration method calls.
+   */
+  public KijiProduceJobBuilder withOutput(KijiTableMapReduceJobOutput jobOutput) {
+    mJobOutput = jobOutput;
+    return super.withOutput(jobOutput);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @param jobOutput Output table of the producer must match the input table.
+   */
+  @Override
+  public KijiProduceJobBuilder withOutput(MapReduceJobOutput jobOutput) {
+    return withOutput((KijiTableMapReduceJobOutput) jobOutput);
+  }
+
+  /**
    * Sets the number of threads to use for running the producer in parallel.
    *
    * <p>You may use this setting to run multiple instances of your producer in parallel
@@ -106,9 +130,7 @@ public final class KijiProduceJobBuilder extends KijiTableInputJobBuilder<KijiPr
    * @return This build instance so you may chain configuration method calls.
    */
   public KijiProduceJobBuilder withNumThreads(int numThreads) {
-    if (numThreads < 1) {
-      throw new IllegalArgumentException("numThreads must be positive.");
-    }
+    Preconditions.checkArgument(numThreads >= 1, "numThreads must be positive, got %d", numThreads);
     mNumThreadsPerMapper = numThreads;
     return this;
   }
@@ -122,16 +144,12 @@ public final class KijiProduceJobBuilder extends KijiTableInputJobBuilder<KijiPr
     if (null == mProducerClass) {
       throw new JobConfigurationException("Must specify a producer.");
     }
-    mProducer = ReflectionUtils.newInstance(mProducerClass, job.getConfiguration());
-    mDataRequest = mProducer.getDataRequest();
 
     // Serialize the producer class name into the job configuration.
     conf.setClass(KijiConfKeys.KIJI_PRODUCER_CLASS, mProducerClass, KijiProducer.class);
 
-    // Configure the mapper and reducer to use.
-    Preconditions.checkState(getJobOutput() instanceof KijiTableMapReduceJobOutput);
     // Write to the table, but make sure the output table is the same as the input table.
-    if (!getInputTable().equals(((KijiTableMapReduceJobOutput) getJobOutput()).getTable())) {
+    if (!getInputTableURI().equals(mJobOutput.getOutputTableURI())) {
       throw new JobConfigurationException("Output table must be the same as the input table.");
     }
 
@@ -140,6 +158,9 @@ public final class KijiProduceJobBuilder extends KijiTableInputJobBuilder<KijiPr
     mReducer = new IdentityReducer<Object, Object>();
 
     job.setJobName("Kiji produce: " + mProducerClass.getSimpleName());
+
+    mProducer = ReflectionUtils.newInstance(mProducerClass, job.getConfiguration());
+    mDataRequest = mProducer.getDataRequest();
 
     // Configure the table input job.
     super.configureJob(job);
@@ -181,21 +202,12 @@ public final class KijiProduceJobBuilder extends KijiTableInputJobBuilder<KijiPr
 
   /** {@inheritDoc} */
   @Override
-  protected void validateAgainstTableLayout(KijiTableLayout tableLayout) throws IOException {
-    super.validateAgainstTableLayout(tableLayout);
+  protected void validateInputTable(KijiTable inputTable) throws IOException {
+    // Validate the Kiji data request against the input table layout:
+    super.validateInputTable(inputTable);
 
-    // Validate the output column the producer will write to (make sure it exists).
-    try {
-      KijiProducers.validateOutputColumn(mProducer, tableLayout);
-    } catch (InvalidLayoutException e) {
-      throw new InternalKijiError(
-          "Invalid table layout found while configuring a job: " + tableLayout.toString()
-          + " [Error: " + e.getMessage() + "]");
-    } catch (KijiProducerOutputException e) {
-      throw new JobConfigurationException(
-          "Producer is configured to write a column that does not exist in the input table: "
-          + e.getMessage());
-    }
+    // Validate the producer output column against the output table (ie. the input table):
+    KijiProducers.validateOutputColumn(mProducer, inputTable.getLayout());
   }
 
   /** {@inheritDoc} */

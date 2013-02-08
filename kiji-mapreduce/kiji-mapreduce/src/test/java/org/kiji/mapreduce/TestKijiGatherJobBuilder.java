@@ -211,7 +211,7 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
   public void testBuildValid() throws Exception {
     final MapReduceJob gatherJob = KijiGatherJobBuilder.create()
         .withConf(getConf())
-        .withInputTable(mTable)
+        .withInputTable(mTable.getURI())
         .withGatherer(SimpleGatherer.class)
         .withCombiner(MyCombiner.class)
         .withReducer(MyReducer.class)
@@ -230,9 +230,9 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
   public void testGatherToHFile() throws Exception {
     final MapReduceJob gatherJob = KijiGatherJobBuilder.create()
         .withConf(getConf())
-        .withInputTable(mTable)
+        .withInputTable(mTable.getURI())
         .withGatherer(GatherToHFile.class)
-        .withOutput(new HFileMapReduceJobOutput(mTable, getLocalTestPath("hfile"), 10))
+        .withOutput(new HFileMapReduceJobOutput(mTable.getURI(), getLocalTestPath("hfile"), 10))
         .build();
 
     final Job job = gatherJob.getHadoopJob();
@@ -250,10 +250,10 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
   public void testGatherReducerToHFile() throws Exception {
     final MapReduceJob gatherJob = KijiGatherJobBuilder.create()
         .withConf(getConf())
-        .withInputTable(mTable)
+        .withInputTable(mTable.getURI())
         .withGatherer(SimpleGatherer.class)
         .withReducer(ReducerToHFile.class)
-        .withOutput(new HFileMapReduceJobOutput(mTable, getLocalTestPath("hfile"), 10))
+        .withOutput(new HFileMapReduceJobOutput(mTable.getURI(), getLocalTestPath("hfile"), 10))
         .build();
 
     final Job job = gatherJob.getHadoopJob();
@@ -272,7 +272,7 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
     // Should explode as we don't define a KVStore for 'foostore', but the class requires one:
     KijiGatherJobBuilder.create()
         .withConf(getConf())
-        .withInputTable(mTable)
+        .withInputTable(mTable.getURI())
         .withGatherer(UnconfiguredKVGatherer.class)
         .withCombiner(MyCombiner.class)
         .withReducer(MyReducer.class)
@@ -285,7 +285,7 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
     // We override UnconfiguredKeyValueStore with EmptyKeyValueStore; this should succeed.
     final MapReduceJob gatherJob = KijiGatherJobBuilder.create()
         .withConf(getConf())
-        .withInputTable(mTable)
+        .withInputTable(mTable.getURI())
         .withGatherer(UnconfiguredKVGatherer.class)
         .withCombiner(MyCombiner.class)
         .withReducer(MyReducer.class)

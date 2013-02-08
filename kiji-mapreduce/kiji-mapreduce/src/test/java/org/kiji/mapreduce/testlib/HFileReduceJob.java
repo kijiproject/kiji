@@ -96,7 +96,7 @@ public final class HFileReduceJob {
     final MapReduceJob mrjob = KijiTransformJobBuilder.create()
         .withConf(new Configuration())  // use MapReduce cluster from local environment
         .withInput(new SequenceFileMapReduceJobInput(inputPath))
-        .withOutput(new HFileMapReduceJobOutput(table, outputPath, mNumSplits))
+        .withOutput(new HFileMapReduceJobOutput(table.getURI(), outputPath, mNumSplits))
         .withMapper(IdentityMapper.class)
         .withReducer(IdentityReducer.class)
         .build();

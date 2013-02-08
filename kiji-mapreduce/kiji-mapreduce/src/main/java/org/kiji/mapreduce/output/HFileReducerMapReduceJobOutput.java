@@ -20,6 +20,7 @@
 package org.kiji.mapreduce.output;
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Job;
@@ -42,6 +43,13 @@ import org.kiji.mapreduce.context.HFileWriterContext;
 public class HFileReducerMapReduceJobOutput extends MapReduceJobOutput {
   private final HFileMapReduceJobOutput mJobOutput;
 
+  /** {@inheritDoc} */
+  @Override
+  public void initialize(Map<String, String> params) throws IOException {
+    // TODO(KIJIMR-63): this is ugly and should be fixed
+    throw new UnsupportedOperationException();
+  }
+
   /**
    * Initializes an instance.
    *
@@ -57,7 +65,7 @@ public class HFileReducerMapReduceJobOutput extends MapReduceJobOutput {
     super.configure(job);  // sets the Hadoop output format
 
     final Configuration conf = job.getConfiguration();
-    conf.set(KijiConfKeys.KIJI_OUTPUT_TABLE_URI, mJobOutput.getTable().getURI().toString());
+    conf.set(KijiConfKeys.KIJI_OUTPUT_TABLE_URI, mJobOutput.getOutputTableURI().toString());
 
     // Kiji table context:
     conf.setClass(

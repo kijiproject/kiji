@@ -20,6 +20,7 @@
 package org.kiji.mapreduce.output;
 
 import org.apache.hadoop.fs.Path;
+
 import org.apache.hadoop.mapreduce.OutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.MapFileOutputFormat;
 
@@ -28,14 +29,18 @@ import org.kiji.annotations.ApiAudience;
 /** MapReduce job output that writes to map files (indexed sequence files). */
 @ApiAudience.Public
 public final class MapFileMapReduceJobOutput extends FileMapReduceJobOutput {
+  /** Default constructor. Do not use directly. */
+  public MapFileMapReduceJobOutput() {
+  }
+
   /**
    * Creates a new <code>MapFileMapReduceJobOutput</code> instance.
    *
-   * @param filepath The file system path for the output files.
+   * @param filePath The file system path for the output files.
    * @param numSplits The number of output file splits.
    */
-  public MapFileMapReduceJobOutput(Path filepath, int numSplits) {
-    super(filepath, numSplits);
+  public MapFileMapReduceJobOutput(Path filePath, int numSplits) {
+    super(filePath, numSplits);
   }
 
   /** {@inheritDoc} */

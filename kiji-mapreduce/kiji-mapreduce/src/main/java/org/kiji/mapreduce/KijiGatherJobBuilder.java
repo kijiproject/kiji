@@ -155,6 +155,12 @@ public final class KijiGatherJobBuilder extends KijiTableInputJobBuilder<KijiGat
       mReducerClass = IdentityReducer.class;
     }
 
+    final StringBuilder name = new StringBuilder("Kiji gather: " + mGathererClass.getSimpleName());
+    if (null != mReducerClass) {
+      name.append(" / " + mReducerClass.getSimpleName());
+    }
+    job.setJobName(name.toString());
+
     mGatherer = ReflectionUtils.newInstance(mGathererClass, conf);
     mMapper.setConf(conf);
     mDataRequest = mGatherer.getDataRequest();
@@ -169,13 +175,7 @@ public final class KijiGatherJobBuilder extends KijiTableInputJobBuilder<KijiGat
       mReducer = ReflectionUtils.newInstance(mReducerClass, conf);
     }
 
-    final StringBuilder name = new StringBuilder("Kiji gather: " + mGathererClass.getSimpleName());
-    if (null != mReducerClass) {
-      name.append(" / " + mReducerClass.getSimpleName());
-    }
-    job.setJobName(name.toString());
-
-    // Configure the table input job.
+    // Configure the table input job (requires mGatherer, mMapper and mReducer to be set):
     super.configureJob(job);
 
     // Some validation:

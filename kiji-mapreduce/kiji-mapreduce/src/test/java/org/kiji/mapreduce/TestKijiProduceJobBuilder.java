@@ -106,9 +106,9 @@ public class TestKijiProduceJobBuilder extends KijiClientTest {
 
     final MapReduceJob produceJob = KijiProduceJobBuilder.create()
         .withConf(getConf())
-        .withInputTable(mTable)
+        .withInputTable(mTable.getURI())
         .withProducer(MyProducer.class)
-        .withOutput(new HFileMapReduceJobOutput(mTable, new Path("foo/bar"), 10))
+        .withOutput(new HFileMapReduceJobOutput(mTable.getURI(), new Path("foo/bar"), 10))
         .build();
 
     // Verify that the MR Job was configured correctly.
@@ -129,9 +129,9 @@ public class TestKijiProduceJobBuilder extends KijiClientTest {
     // than the UnconfiguredKeyValueStore in the default.
     KijiProduceJobBuilder.create()
         .withConf(getConf())
-        .withInputTable(mTable)
+        .withInputTable(mTable.getURI())
         .withProducer(UnconfiguredKVProducer.class)
-        .withOutput(new DirectKijiTableMapReduceJobOutput(mTable))
+        .withOutput(new DirectKijiTableMapReduceJobOutput(mTable.getURI()))
         .build();
   }
 
@@ -140,10 +140,10 @@ public class TestKijiProduceJobBuilder extends KijiClientTest {
     // We override UnconfiguredKeyValueStore with EmptyKeyValueStore; this should succeed.
     MapReduceJob produceJob = KijiProduceJobBuilder.create()
         .withConf(getConf())
-        .withInputTable(mTable)
+        .withInputTable(mTable.getURI())
         .withProducer(UnconfiguredKVProducer.class)
         .withStore("foostore", EmptyKeyValueStore.get())
-        .withOutput(new DirectKijiTableMapReduceJobOutput(mTable))
+        .withOutput(new DirectKijiTableMapReduceJobOutput(mTable.getURI()))
         .build();
 
     // Verify that the MR Job was configured correctly.
@@ -171,9 +171,9 @@ public class TestKijiProduceJobBuilder extends KijiClientTest {
       // match the input table.
       KijiProduceJobBuilder.create()
           .withConf(getConf())
-          .withInputTable(mTable)
+          .withInputTable(mTable.getURI())
           .withProducer(MyProducer.class)
-          .withOutput(new DirectKijiTableMapReduceJobOutput(otherTable))
+          .withOutput(new DirectKijiTableMapReduceJobOutput(otherTable.getURI()))
           .build();
     } finally {
       otherTable.close();

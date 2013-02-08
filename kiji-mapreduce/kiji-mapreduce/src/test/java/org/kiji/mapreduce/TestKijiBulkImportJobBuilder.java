@@ -105,7 +105,7 @@ public class TestKijiBulkImportJobBuilder extends KijiClientTest {
         .withConf(getConf())
         .withInput(new TextMapReduceJobInput(new Path(mTempPath, "input")))
         .withBulkImporter(NoopBulkImporter.class)
-        .withOutput(new HFileMapReduceJobOutput(mTable, new Path(mTempPath, "output"), 10))
+        .withOutput(new HFileMapReduceJobOutput(mTable.getURI(), new Path(mTempPath, "output"), 10))
         .build();
 
     final Job job = mrjob.getHadoopJob();
@@ -125,7 +125,7 @@ public class TestKijiBulkImportJobBuilder extends KijiClientTest {
         .withConf(getConf())
         .withInput(new TextMapReduceJobInput(new Path(mTempPath, "input")))
         .withBulkImporter(KVStoreBulkImporter.class)
-        .withOutput(new HFileMapReduceJobOutput(mTable, new Path(mTempPath, "output"), 10))
+        .withOutput(new HFileMapReduceJobOutput(mTable.getURI(), new Path(mTempPath, "output"), 10))
         .build();
 
     final Job job = mrjob.getHadoopJob();

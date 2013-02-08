@@ -29,7 +29,6 @@ import org.kiji.mapreduce.KijiConfKeys;
 import org.kiji.mapreduce.KijiProducer;
 import org.kiji.mapreduce.KijiProducerOutputException;
 import org.kiji.schema.KijiColumnName;
-import org.kiji.schema.layout.InvalidLayoutException;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayout.LocalityGroupLayout.FamilyLayout;
 
@@ -66,29 +65,32 @@ public final class KijiProducers {
    *
    * @param producer The producer whose output column should be validated.
    * @param tableLayout The layout of the table to validate the output column against.
-   * @throws InvalidLayoutException If the table layout is invalid.
    * @throws KijiProducerOutputException If the output column cannot be written to.
    */
   public static void validateOutputColumn(KijiProducer producer, KijiTableLayout tableLayout)
-      throws InvalidLayoutException, KijiProducerOutputException {
-    String outputColumn = producer.getOutputColumn();
+      throws KijiProducerOutputException {
+    final String outputColumn = producer.getOutputColumn();
     if (null == outputColumn) {
-      throw new KijiProducerOutputException("KijiProducer.getOutputColumn() may not return null.");
+      throw new KijiProducerOutputException(String.format(
+          "Producer '%s' must specify an output column by overridding getOutputColumn().",
+          producer.getClass().getName()));
     }
 
     final KijiColumnName columnName = new KijiColumnName(outputColumn);
     final FamilyLayout family = tableLayout.getFamilyMap().get(columnName.getFamily());
     if (null == family) {
-      throw new KijiProducerOutputException(
-          "Output column family " + columnName.getFamily() + " doesn't exist");
+      throw new KijiProducerOutputException(String.format(
+          "Producer '%s' specifies unknown output column family '%s' in table '%s'.",
+          producer.getClass().getName(), columnName.getFamily(), tableLayout.getName()));
     }
 
-    // If writing to a particular column qualifier of a group, make sure it exists.
+    // When writing to a particular column qualifier of a group, make sure it exists:
     if (columnName.isFullyQualified()
         && family.isGroupType()
         && !family.getColumnMap().containsKey(columnName.getQualifier())) {
-      throw new KijiProducerOutputException(String.format("Column '%s' does not exist.",
-          columnName));
+      throw new KijiProducerOutputException(String.format(
+          "Producer '%s' specifies unknown column '%s' in table '%s'.",
+          producer.getClass().getName(), columnName, tableLayout.getName()));
     }
   }
 }

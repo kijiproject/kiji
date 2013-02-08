@@ -123,9 +123,9 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
     // Construct a Producer for this table.
     final KijiProduceJobBuilder builder = KijiProduceJobBuilder.create()
         .withConf(jobConf)
-        .withInputTable(fooTable)
+        .withInputTable(fooTable.getURI())
         .withProducer(EmailDomainProducer.class)
-        .withOutput(new DirectKijiTableMapReduceJobOutput(fooTable));
+        .withOutput(new DirectKijiTableMapReduceJobOutput(fooTable.getURI()));
     MapReduceJob mrJob = builder.build();
 
     // Record the jobId and run the job.
@@ -186,9 +186,9 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
     // Construct a Producer for this table.
     KijiProduceJobBuilder builder = KijiProduceJobBuilder.create()
         .withConf(getConf())
-        .withInputTable(fooTable)
+        .withInputTable(fooTable.getURI())
         .withProducer(EmailDomainProducer.class)
-        .withOutput(new DirectKijiTableMapReduceJobOutput(fooTable));
+        .withOutput(new DirectKijiTableMapReduceJobOutput(fooTable.getURI()));
     MapReduceJob mrJob = builder.build();
 
     LOG.info("About to submit job: " + mrJob.getHadoopJob().getJobName());
@@ -227,9 +227,9 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
 
      final KijiProduceJobBuilder builder = KijiProduceJobBuilder.create()
          .withConf(getConf())
-         .withInputTable(fooTable)
+         .withInputTable(fooTable.getURI())
          .withProducer(EmailDomainProducer.class)
-         .withOutput(new DirectKijiTableMapReduceJobOutput(fooTable));
+         .withOutput(new DirectKijiTableMapReduceJobOutput(fooTable.getURI()));
      final MapReduceJob mrJob = builder.build();
      assertTrue(mrJob.run());
 

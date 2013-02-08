@@ -20,6 +20,7 @@
 package org.kiji.mapreduce.output;
 
 import org.apache.hadoop.fs.Path;
+
 import org.apache.hadoop.mapreduce.OutputFormat;
 
 import org.kiji.annotations.ApiAudience;
@@ -31,6 +32,10 @@ import org.kiji.avro.mapreduce.AvroKeyValueOutputFormat;
  */
 @ApiAudience.Public
 public final class AvroKeyValueMapReduceJobOutput extends FileMapReduceJobOutput {
+  /** Default constructor. Do not use directly. */
+  public AvroKeyValueMapReduceJobOutput() {
+  }
+
   /**
    * Creates a new <code>AvroKeyValueMapReduceJobOutput</code> instance.
    *

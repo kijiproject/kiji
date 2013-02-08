@@ -45,7 +45,6 @@ import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiRowScanner;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
-import org.kiji.schema.impl.HBaseKijiTable;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.util.InstanceBuilder;
 
@@ -154,10 +153,8 @@ public class TestTransform {
         .withConf(jobConf)
         .withMapper(ExampleMapper.class)
         .withInput(new KijiTableMapReduceJobInput(
-            (HBaseKijiTable) mTable,
-            KijiDataRequest.create("info"),
-            new RowOptions()))
-        .withOutput(new DirectKijiTableMapReduceJobOutput(mTable))
+            mTable.getURI(), KijiDataRequest.create("info"), new RowOptions()))
+        .withOutput(new DirectKijiTableMapReduceJobOutput(mTable.getURI()))
         .build();
     assertTrue(job.run());
 

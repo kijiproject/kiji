@@ -20,6 +20,7 @@
 package org.kiji.mapreduce.input;
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.apache.hadoop.hbase.mapreduce.TableInputFormat;
 import org.apache.hadoop.mapreduce.InputFormat;
@@ -28,12 +29,23 @@ import org.apache.hadoop.mapreduce.Job;
 import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.HTableInputFormat;
 import org.kiji.mapreduce.MapReduceJobInput;
+import org.kiji.mapreduce.tools.JobIOConfKeys;
 
 /** Job input that reads from an HTable (an HBase table). */
 @ApiAudience.Public
 public final class HTableMapReduceJobInput extends MapReduceJobInput {
   /** The name of the HTable to use as job input. */
-  private final String mTableName;
+  private String mTableName;
+
+  /** Default constructor. Do not use directly. */
+  public HTableMapReduceJobInput() {
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public void initialize(Map<String, String> params) throws IOException {
+    mTableName = params.get(JobIOConfKeys.HTABLE_NAME_KEY);
+  }
 
   /**
    * Creates a new <code>HTableMapReduceJobInput</code> instance.

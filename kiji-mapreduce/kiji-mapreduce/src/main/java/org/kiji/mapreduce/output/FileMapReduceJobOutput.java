@@ -20,6 +20,7 @@
 package org.kiji.mapreduce.output;
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
@@ -28,15 +29,28 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.Inheritance;
 import org.kiji.mapreduce.MapReduceJobOutput;
+import org.kiji.mapreduce.tools.JobIOConfKeys;
 
 /** Base class for MapReduce job output types that write to files. */
 @ApiAudience.Public
 @Inheritance.Sealed
 public abstract class FileMapReduceJobOutput extends MapReduceJobOutput {
+
   /** The file system path for the output files. */
-  private final Path mFilePath;
+  private Path mFilePath;
   /** The number of output file splits. */
-  private final int mNumSplits;
+  private int mNumSplits;
+
+  /** Default constructor. Do not use directly. */
+  FileMapReduceJobOutput() {
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public void initialize(Map<String, String> params) throws IOException {
+    mFilePath = new Path(params.get(JobIOConfKeys.FILE_PATH_KEY));
+    mNumSplits = Integer.parseInt(params.get(JobIOConfKeys.NSPLITS_KEY));
+  }
 
   /**
    * Creates a new <code>FileMapReduceJobOutput</code> instance.

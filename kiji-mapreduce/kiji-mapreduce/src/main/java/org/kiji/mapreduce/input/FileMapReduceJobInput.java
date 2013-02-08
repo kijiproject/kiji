@@ -20,7 +20,11 @@
 package org.kiji.mapreduce.input;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
@@ -28,13 +32,26 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.Inheritance;
 import org.kiji.mapreduce.MapReduceJobInput;
+import org.kiji.mapreduce.tools.JobIOConfKeys;
 
 /** Base class for map reduce job input that is read from files. */
 @ApiAudience.Public
 @Inheritance.Sealed
 public abstract class FileMapReduceJobInput extends MapReduceJobInput {
   /** The path to the input files. */
-  private final Path[] mPaths;
+  private Path[] mPaths;
+
+  /** {@inheritDoc} */
+  @Override
+  public void initialize(Map<String, String> params) throws IOException {
+    Preconditions.checkArgument(params.containsKey(JobIOConfKeys.FILE_PATH_KEY),
+        "File job input is missing parameter '%s'.", JobIOConfKeys.FILE_PATH_KEY);
+    final List<Path> paths = Lists.newArrayList();
+    for (String path : params.get(JobIOConfKeys.FILE_PATH_KEY).split(",")) {
+      paths.add(new Path(path));
+    }
+    mPaths = paths.toArray(new Path[paths.size()]);
+  }
 
   /**
    * Creates a new <code>FileMapReduceJobInput</code> instance.

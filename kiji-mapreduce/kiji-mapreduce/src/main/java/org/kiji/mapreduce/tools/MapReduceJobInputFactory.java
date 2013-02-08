@@ -19,18 +19,20 @@
 
 package org.kiji.mapreduce.tools;
 
-import java.util.Arrays;
-
-import org.apache.hadoop.fs.Path;
+import java.io.IOException;
+import java.util.Map;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.MapReduceJobInput;
 import org.kiji.mapreduce.input.AvroKeyMapReduceJobInput;
 import org.kiji.mapreduce.input.AvroKeyValueMapReduceJobInput;
 import org.kiji.mapreduce.input.HTableMapReduceJobInput;
+import org.kiji.mapreduce.input.KijiTableMapReduceJobInput;
 import org.kiji.mapreduce.input.SequenceFileMapReduceJobInput;
 import org.kiji.mapreduce.input.TextMapReduceJobInput;
 import org.kiji.mapreduce.input.WholeTextFileMapReduceJobInput;
+import org.kiji.mapreduce.tools.JobInputSpec.Format;
+import org.kiji.schema.tools.SpaceSeparatedMapParser;
 
 /**
  * Constructs instances of MapReduceJobInput from a string specification.
@@ -54,68 +56,55 @@ public final class MapReduceJobInputFactory {
   }
 
   /**
-   * Creates a MapReduceJobInput from an inputspec string.
+   * Creates a job input from a command-line flag space-separated parameters map.
    *
-   * @param inputSpec The inputspec.
-   * @return A new MapReduceJobInput instance.
-   * @throws JobIOSpecParseException If the inputspec cannot be parsed.
+   * @param ssm Space-separated parameters map from the command-line.
+   * @return a job input configured from the command-line parameters.
+   * @throws IOException on I/O error.
    */
-  public MapReduceJobInput createFromInputSpec(String inputSpec) throws JobIOSpecParseException {
-    return createFromInputSpec(JobInputSpec.parse(inputSpec));
+  public MapReduceJobInput fromSpaceSeparatedMap(String ssm) throws IOException {
+    final Map<String, String> params = SpaceSeparatedMapParser.create().parse(ssm);
+    try {
+      final MapReduceJobInput input =
+          createJobInput(Format.parse(params.get(JobIOConfKeys.FORMAT_KEY)));
+      input.initialize(params);
+      return input;
+    } catch (JobIOSpecParseException exn) {
+      throw new IOException(String.format(
+          "Invalid job output specification: '%s': %s", ssm, exn.getMessage()), exn);
+    }
   }
 
   /**
-   * Creates a MapReduceJobInput from a JobInputSpec.
+   * Instantiates the appropriate job output.
    *
-   * @param jobInputSpec The <code>JobInputSpec</code> describing the input.
-   * @return A new MapReduceJobInput instance.
-   * @throws JobIOSpecParseException If the inputspec cannot be parsed.
+   * @param format Format of the job input.
+   * @return an unconfigured job input instance.
+   * @throws IOException on I/O error.
    */
-  public MapReduceJobInput createFromInputSpec(JobInputSpec jobInputSpec)
-      throws JobIOSpecParseException {
-    switch (jobInputSpec.getFormat()) {
-    case AVRO:
-      return new AvroKeyMapReduceJobInput(getPaths(jobInputSpec.getLocations()));
-    case AVRO_KV:
-      return new AvroKeyValueMapReduceJobInput(getPaths(jobInputSpec.getLocations()));
+  private MapReduceJobInput createJobInput(Format format) throws IOException {
+    switch (format) {
     case HTABLE:
-      if (null == jobInputSpec.getLocations() || 1 != jobInputSpec.getLocations().length) {
-        throw new UnsupportedOperationException("Can not use multiple htables as input."
-            + "  Tables: " + Arrays.toString(jobInputSpec.getLocations()));
-      }
-      return new HTableMapReduceJobInput(jobInputSpec.getLocation());
-    case SEQUENCE:
-      return new SequenceFileMapReduceJobInput(getPaths(jobInputSpec.getLocations()));
-    case SMALL_TEXT_FILES:
-      return new WholeTextFileMapReduceJobInput(getPaths(jobInputSpec.getLocations()));
+      return new HTableMapReduceJobInput();
     case TEXT:
-      return new TextMapReduceJobInput(getPaths(jobInputSpec.getLocations()));
-    // TODO: Figure out how to handle Kiji table inputs:
-    //    case KIJI: {
-    //      final KijiURI uri = KijiURI.parse(jobInputSpec.getLocation());
-    //      final Kiji kiji = Kiji.Factory.open(uri);
-    //      final KijiTable table = kiji.openTable(uri.getTable());
-    //      return new KijiTableMapReduceJobInput((HBaseKijiTable) table);
-    //    }
+      return new TextMapReduceJobInput();
+    case SMALL_TEXT_FILES:
+      return new WholeTextFileMapReduceJobInput();
+    case SEQUENCE:
+      return new SequenceFileMapReduceJobInput();
+      // TODO(KIJIMR-61) Map file job input
+    // case MAP_FILE:
+    //   throw new IOException(String.format(
+    //       "Map files are not supported as job input in spec '%s'.", ssm));
+    case AVRO:
+      return new AvroKeyMapReduceJobInput();
+    case AVRO_KV:
+      return new AvroKeyValueMapReduceJobInput();
+    case KIJI:
+      return new KijiTableMapReduceJobInput();
     default:
-      throw new JobIOSpecParseException(
-          "Unknown format " + jobInputSpec.getFormat(), jobInputSpec.toString());
+      throw new RuntimeException(String.format("Unhandled job output format: '%s'.", format));
     }
   }
 
-  /**
-   * Tranforms a list of locations into a list of Paths.
-   *
-   * @param locations The array of locations to transform.
-   * @return The list of Paths corresponding to these locations.
-   */
-  private static Path[] getPaths(String[] locations) {
-    assert null != locations;
-
-    Path[] paths = new Path[locations.length];
-    for (int i = 0; i < locations.length; i++) {
-      paths[i] = new Path(locations[i]);
-    }
-    return paths;
-  }
 }

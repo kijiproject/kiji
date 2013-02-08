@@ -85,7 +85,7 @@ public final class KijiGather extends KijiJobTool<KijiGatherJobBuilder> {
       jobBuilder.withReducer(KijiReducer.forName(mReducerName));
     }
     MapReduceJobOutputFactory outputFactory = MapReduceJobOutputFactory.create();
-    jobBuilder.withOutput(outputFactory.createFromOutputSpec(mOutputSpec));
+    jobBuilder.withOutput(outputFactory.fromSpaceSeparatedMap(mOutputFlag));
   }
 
   /**

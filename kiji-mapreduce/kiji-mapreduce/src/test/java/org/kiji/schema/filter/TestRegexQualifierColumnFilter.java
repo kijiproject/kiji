@@ -129,7 +129,7 @@ public class TestRegexQualifierColumnFilter extends KijiClientTest {
     // Run a gatherer over the test_table.
     final MapReduceJob gatherJob = KijiGatherJobBuilder.create()
         .withConf(getConf())
-        .withInputTable(mTable)
+        .withInputTable(mTable.getURI())
         .withGatherer(MyGatherer.class)
         .withOutput(new SequenceFileMapReduceJobOutput(new Path(outputDir.getPath()), numSplits))
         .build();

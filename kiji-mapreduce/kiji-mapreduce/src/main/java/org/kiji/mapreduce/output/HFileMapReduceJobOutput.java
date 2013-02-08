@@ -24,6 +24,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeSet;
 
 import org.apache.hadoop.conf.Configuration;
@@ -51,8 +52,11 @@ import org.kiji.mapreduce.JobConfigurationException;
 import org.kiji.mapreduce.KijiConfKeys;
 import org.kiji.mapreduce.KijiTableContext;
 import org.kiji.mapreduce.context.HFileWriterContext;
+import org.kiji.mapreduce.tools.JobIOConfKeys;
+import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiRowKeySplitter;
 import org.kiji.schema.KijiTable;
+import org.kiji.schema.KijiURI;
 import org.kiji.schema.impl.HBaseKiji;
 import org.kiji.schema.impl.HBaseKijiTable;
 import org.kiji.schema.layout.KijiTableLayout;
@@ -74,18 +78,29 @@ public final class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
   private static final int NUM_SPLITS_AUTO = 0;
 
   /** The path to the directory to create the HFiles in. */
-  private final Path mPath;
+  private Path mPath;
+
+  /** Default constructor. Do not use directly. */
+  public HFileMapReduceJobOutput() {
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public void initialize(Map<String, String> params) throws IOException {
+    super.initialize(params);
+    mPath = new Path(params.get(JobIOConfKeys.FILE_PATH_KEY));
+  }
 
   /**
    * Create job output of HFiles that can be efficiently loaded into a Kiji table.
    * The number of HFiles created (which determines the number of reduce tasks) will
    * match the number of existing regions in the target Kiji table.
    *
-   * @param table The kiji table the resulting HFiles are intended for.
+   * @param tableURI The kiji table the resulting HFiles are intended for.
    * @param path The directory path to output the HFiles to.
    */
-  public HFileMapReduceJobOutput(KijiTable table, Path path) {
-    this(table, path, NUM_SPLITS_AUTO);
+  public HFileMapReduceJobOutput(KijiURI tableURI, Path path) {
+    this(tableURI, path, NUM_SPLITS_AUTO);
   }
 
   /**
@@ -101,7 +116,7 @@ public final class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
    * @param path The directory path to output the HFiles to.
    * @param numSplits Number of splits (determines the number of reduce tasks).
    */
-  public HFileMapReduceJobOutput(KijiTable table, Path path, int numSplits) {
+  public HFileMapReduceJobOutput(KijiURI table, Path path, int numSplits) {
     super(table, numSplits);
     mPath = path;
   }
@@ -124,7 +139,7 @@ public final class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
     FileOutputFormat.setOutputPath(job, mPath);
 
     // Configure the total order partitioner so generated HFile shards are contiguous and sorted.
-    configurePartitioner(job, makeTableKeySplit(getTable(), getNumReduceTasks()));
+    configurePartitioner(job, makeTableKeySplit(getOutputTableURI(), getNumReduceTasks()));
 
     // Note: the HFile job output requires the reducer of the map/reduce to be IdentityReducer.
     //     This is enforced externally.
@@ -139,37 +154,46 @@ public final class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
   /**
    * Generates a split for a given table.
    *
-   * @param table Kiji table to split.
+   * @param tableURI URI of the Kiji table to split.
    * @param nsplits Number of splits.
    * @return a list of split start keys, as HFileKeyValue (with no value, just the keys).
    * @throws IOException on I/O error.
    */
-  private static List<HFileKeyValue> makeTableKeySplit(KijiTable table, int nsplits)
+  private static List<HFileKeyValue> makeTableKeySplit(KijiURI tableURI, int nsplits)
       throws IOException {
-
-    if (NUM_SPLITS_AUTO == nsplits) {
-      return getRegionStartKeys(table);
-    } else {
-      switch (KijiTableLayout.getEncoding(table.getLayout().getDesc().getKeysFormat())) {
-      case RAW: {
-        // The user has explicitly specified how many HFiles to create, but this is not
-        // possible when row key hashing is disabled.
-        throw new JobConfigurationException(String.format(
-            "Table '%s' has row key hashing disabled, so the number of HFile splits must be"
-            + "determined by the number of HRegions in the HTable. "
-            + "Use an HFileMapReduceJobOutput constructor that enables auto splitting.",
-            table.getName()));
+    final Kiji kiji = Kiji.Factory.open(tableURI);
+    try {
+      final KijiTable table = kiji.openTable(tableURI.getTable());
+      try {
+        if (NUM_SPLITS_AUTO == nsplits) {
+          return getRegionStartKeys(table);
+        } else {
+          switch (KijiTableLayout.getEncoding(table.getLayout().getDesc().getKeysFormat())) {
+          case RAW: {
+            // The user has explicitly specified how many HFiles to create, but this is not
+            // possible when row key hashing is disabled.
+            throw new JobConfigurationException(String.format(
+                "Table '%s' has row key hashing disabled, so the number of HFile splits must be"
+                + "determined by the number of HRegions in the HTable. "
+                + "Use an HFileMapReduceJobOutput constructor that enables auto splitting.",
+                table.getName()));
+          }
+          case HASH:
+          case HASH_PREFIX: {
+            // Those cases are supported:
+            break;
+          }
+          default:
+            throw new RuntimeException("Unhandled row key encoding: "
+                + KijiTableLayout.getEncoding(table.getLayout().getDesc().getKeysFormat()));
+          }
+          return generateEvenStartKeys(nsplits);
+        }
+      } finally {
+        table.close();
       }
-      case HASH:
-      case HASH_PREFIX: {
-        // Those cases are supported:
-        break;
-      }
-      default:
-        throw new RuntimeException("Unhandled row key encoding: "
-            + KijiTableLayout.getEncoding(table.getLayout().getDesc().getKeysFormat()));
-      }
-      return generateEvenStartKeys(nsplits);
+    } finally {
+      kiji.release();
     }
   }
 

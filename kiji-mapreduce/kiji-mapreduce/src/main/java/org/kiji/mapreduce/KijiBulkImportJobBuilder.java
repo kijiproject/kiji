@@ -22,17 +22,17 @@ package org.kiji.mapreduce;
 import java.io.IOException;
 import java.util.Map;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.util.ReflectionUtils;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.mapper.BulkImportMapper;
+import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
+import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
 import org.kiji.mapreduce.output.KijiTableMapReduceJobOutput;
 import org.kiji.mapreduce.reducer.IdentityReducer;
-import org.kiji.schema.Kiji;
-import org.kiji.schema.impl.HBaseKijiTable;
-import org.kiji.schema.layout.KijiTableLayout;
 
 /** Builds a job that runs a KijiBulkImporter to import data into a Kiji table. */
 @ApiAudience.Public
@@ -52,8 +52,9 @@ public final class KijiBulkImportJobBuilder
 
   /** The job input. */
   private MapReduceJobInput mJobInput;
-  /** The target kiji table for the import. */
-  private HBaseKijiTable mOutputTable;
+
+  /** Job output must be a Kiji table. */
+  private KijiTableMapReduceJobOutput mJobOutput;
 
   /** Constructs a builder for jobs that run a KijiBulkImporter. */
   private KijiBulkImportJobBuilder() {
@@ -64,7 +65,7 @@ public final class KijiBulkImportJobBuilder
     mReducer = null;
 
     mJobInput = null;
-    mOutputTable = null;
+    mJobOutput = null;
   }
 
   /**
@@ -88,6 +89,39 @@ public final class KijiBulkImportJobBuilder
   }
 
   /**
+   * Configures the bulk-importer output Kiji table.
+   *
+   * @param jobOutput Bulk importer must output to a Kiji table.
+   * @return this builder.
+   */
+  public KijiBulkImportJobBuilder withOutput(KijiTableMapReduceJobOutput jobOutput) {
+    mJobOutput = jobOutput;
+    super.withOutput(jobOutput);
+    return this;
+  }
+
+  /**
+   * Configures the job output.
+   *
+   * @param jobOutput The output for the job.
+   *     Bulk importer must output to a Kiji table.
+   * @return This builder instance so you may chain configuration method calls.
+   *
+   * {@inheritDoc}
+   */
+  @Override
+  public KijiBulkImportJobBuilder withOutput(MapReduceJobOutput jobOutput) {
+    if (!(jobOutput instanceof KijiTableMapReduceJobOutput)) {
+      throw new JobConfigurationException(String.format(
+          "Invalid job output %s: expecting %s or %s",
+          jobOutput.getClass().getName(),
+          DirectKijiTableMapReduceJobOutput.class.getName(),
+          HFileMapReduceJobOutput.class.getName()));
+    }
+    return withOutput((KijiTableMapReduceJobOutput) jobOutput);
+  }
+
+  /**
    * Configures the job with a bulk importer to run in the map phase.
    *
    * @param bulkImporterClass The bulk importer class to use in the job.
@@ -103,25 +137,18 @@ public final class KijiBulkImportJobBuilder
   /** {@inheritDoc} */
   @Override
   protected void configureJob(Job job) throws IOException {
+    final Configuration conf = job.getConfiguration();
+
     // Store the name of the the importer to use in the job configuration so the mapper can
     // create instances of it.
-    job.getConfiguration().setClass(
-        KijiConfKeys.KIJI_BULK_IMPORTER_CLASS, mBulkImporterClass, KijiBulkImporter.class);
-
-    // Make sure the job output format is a KijiTableMapReduceJobOutput or a subclass of it.
-    MapReduceJobOutput jobOutput = getJobOutput();
-    if (!(jobOutput instanceof KijiTableMapReduceJobOutput)) {
-      throw new JobConfigurationException(
-          "Job output must be a KijiTableMapReduceJobOutput or a subclass.");
-    }
-    mOutputTable = HBaseKijiTable.downcast(((KijiTableMapReduceJobOutput) jobOutput).getTable());
-    jobOutput.configure(job);
-
     // Construct the bulk importer instance.
     if (null == mBulkImporterClass) {
       throw new JobConfigurationException("Must specify a bulk importer.");
     }
-    mBulkImporter = ReflectionUtils.newInstance(mBulkImporterClass, job.getConfiguration());
+    conf.setClass(
+        KijiConfKeys.KIJI_BULK_IMPORTER_CLASS, mBulkImporterClass, KijiBulkImporter.class);
+
+    mJobOutput.configure(job);
 
     // Configure the mapper and reducer. This part depends on whether we're going to write
     // to HFiles or directly to the table.
@@ -129,7 +156,9 @@ public final class KijiBulkImportJobBuilder
 
     job.setJobName("Kiji bulk import: " + mBulkImporterClass.getSimpleName());
 
-    // Configure the MapReduce job.
+    mBulkImporter = ReflectionUtils.newInstance(mBulkImporterClass, conf);
+
+    // Configure the MapReduce job (requires mBulkImporter to be set properly):
     super.configureJob(job);
   }
 
@@ -188,17 +217,5 @@ public final class KijiBulkImportJobBuilder
   @Override
   protected Class<?> getJarClass() {
     return mBulkImporterClass;
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  protected Kiji getKiji() {
-    return mOutputTable.getKiji();
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  protected KijiTableLayout getTableLayout() {
-    return mOutputTable.getLayout();
   }
 }
