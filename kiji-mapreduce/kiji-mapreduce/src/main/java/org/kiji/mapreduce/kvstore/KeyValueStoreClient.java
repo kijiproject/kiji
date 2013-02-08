@@ -42,7 +42,7 @@ import org.kiji.annotations.Inheritance;
  * defining the store configurations you require and opening an initialized
  * {@link KeyValueStoreReader} implementation. For example, KijiProducer and KijiGatherer
  * classes can use the <code>getStore(String storeName)</code> method of the Context
- * object passed in as an argument to <code>produce()</code>, <code>gather()</code>, etc. 
+ * object passed in as an argument to <code>produce()</code>, <code>gather()</code>, etc.
  * You should refer to the documentation for the API you are implementing against.</p>
  *
  * <p>If you are implementing your own
