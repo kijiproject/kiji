@@ -110,7 +110,7 @@ public class TestProducer extends KijiClientTest {
     /** {@inheritDoc} */
     @Override
     public void produce(KijiRowData input, ProducerContext context) throws IOException {
-      final String userId = Bytes.toString(input.getEntityId().getKijiRowKey());
+      final String userId = Bytes.toString((byte[]) input.getEntityId().getComponentByIndex(0));
       final String firstName = input.getMostRecentValue("info", "first_name").toString();
       context.put("produced qualifier",
           String.format("produced content for row '%s': %s", userId, firstName));
@@ -134,7 +134,7 @@ public class TestProducer extends KijiClientTest {
     final KijiRowScanner scanner = mReader.getScanner(builder.build());
     for (KijiRowData row : scanner) {
       final EntityId eid = row.getEntityId();
-      final String userId = Bytes.toString(eid.getKijiRowKey());
+      final String userId = Bytes.toString((byte[]) eid.getComponentByIndex(0));
       LOG.info("Row: {}", userId);
       assertEquals(userId, String.format("%s %s",
           row.getMostRecentValue("info", "first_name"),
@@ -182,7 +182,7 @@ public class TestProducer extends KijiClientTest {
       assertTrue(mSetupFlag);
       assertFalse(mCleanupFlag);
       mProduceCounter += 1;
-      final String rowKey = Bytes.toString(input.getEntityId().getKijiRowKey());
+      final String rowKey = Bytes.toString((byte[]) input.getEntityId().getComponentByIndex(0));
       context.put(rowKey);
     }
 

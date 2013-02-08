@@ -64,7 +64,7 @@ public class SimpleTableMapReducer {
     @Override
     public void gather(KijiRowData input, MapReduceContext<LongWritable, Text> context)
         throws IOException {
-      final String rowKey = Bytes.toString(input.getEntityId().getKijiRowKey());
+      final String rowKey = Bytes.toString((byte[]) input.getEntityId().getComponentByIndex(0));
       final CharSequence cseq = input.getMostRecentValue("primitives", "string");
       if (cseq == null) {
         return;

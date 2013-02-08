@@ -27,7 +27,6 @@ import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.Inheritance;
 import org.kiji.mapreduce.input.KijiTableMapReduceJobInput;
 import org.kiji.schema.EntityId;
-import org.kiji.schema.InternalKijiError;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequestException;
@@ -35,7 +34,6 @@ import org.kiji.schema.KijiDataRequestValidator;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.filter.KijiRowFilter;
 import org.kiji.schema.impl.HBaseKijiTable;
-import org.kiji.schema.layout.InvalidLayoutException;
 import org.kiji.schema.layout.KijiTableLayout;
 
 /**
@@ -174,10 +172,6 @@ public abstract class KijiTableInputJobBuilder<T extends KijiTableInputJobBuilde
     KijiDataRequestValidator validator = new KijiDataRequestValidator(dataRequest);
     try {
       validator.validate(tableLayout);
-    } catch (InvalidLayoutException e) {
-      throw new InternalKijiError(
-          "Invalid table layout found while configuring a job: " + tableLayout.toString()
-          + " [Error: " + e.getMessage() + "]");
     } catch (KijiDataRequestException e) {
       throw new JobConfigurationException("Invalid data request: " + e.getMessage());
     }

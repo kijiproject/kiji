@@ -77,7 +77,7 @@ public class TestTransform {
         throws IOException, InterruptedException {
       Preconditions.checkNotNull(mTableContext);
 
-      final String userId = Bytes.toString(eid.getKijiRowKey());
+      final String userId = Bytes.toString((byte[]) eid.getComponentByIndex(0));
       final EntityId genEId = mTableContext.getEntityId("generated row for " + userId);
       mTableContext.put(genEId, "primitives", "string", "generated content for " + userId);
     }
@@ -167,7 +167,7 @@ public class TestTransform {
           KijiDataRequest.create("info"));
       for (KijiRowData row : scanner) {
         final EntityId eid = row.getEntityId();
-        final String userId = Bytes.toString(eid.getKijiRowKey());
+        final String userId = Bytes.toString((byte[]) eid.getComponentByIndex(0));
         LOG.info("Row: {}", userId);
         if (!userId.startsWith("generated row for ")) {
           assertEquals(userId, String.format("%s %s",

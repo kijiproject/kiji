@@ -79,12 +79,12 @@ public abstract class KijiJobTool<B extends KijiTableInputJobBuilder> extends Jo
       throws ClassNotFoundException, IOException, JobIOSpecParseException {
     super.configure(jobBuilder);
     jobBuilder.withInputTable(mKijiTable);
-    final EntityIdFactory eidFactory = mKijiTable.getEntityIdFactory();
+    final EntityIdFactory eidFactory = EntityIdFactory.getFactory(mKijiTable.getLayout());
     if (!mStartRow.isEmpty()) {
-      jobBuilder.withStartRow(eidFactory.fromHBaseRowKey(ToolUtils.parseRowKeyFlag(mStartRow)));
+      jobBuilder.withStartRow(eidFactory.getEntityId(ToolUtils.parseRowKeyFlag(mStartRow)));
     }
     if (!mLimitRow.isEmpty()) {
-      jobBuilder.withLimitRow(eidFactory.fromHBaseRowKey(ToolUtils.parseRowKeyFlag(mLimitRow)));
+      jobBuilder.withLimitRow(eidFactory.getEntityId(ToolUtils.parseRowKeyFlag(mLimitRow)));
     }
   }
 

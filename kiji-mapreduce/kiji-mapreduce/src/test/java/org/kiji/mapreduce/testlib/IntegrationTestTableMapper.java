@@ -91,7 +91,7 @@ public class IntegrationTestTableMapper extends AbstractKijiIntegrationTest {
       try {
         final Map<String, KijiRowData> rows = Maps.newHashMap();
         for (KijiRowData row : scanner) {
-          rows.put(Bytes.toString(row.getEntityId().getKijiRowKey()), row);
+          rows.put(Bytes.toString((byte[]) row.getEntityId().getComponentByIndex(0)), row);
         }
         return rows;
       } finally {

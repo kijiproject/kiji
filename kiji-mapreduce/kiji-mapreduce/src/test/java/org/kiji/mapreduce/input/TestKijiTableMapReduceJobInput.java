@@ -92,8 +92,8 @@ public class TestKijiTableMapReduceJobInput extends KijiClientTest {
     KijiDataRequest dataRequest = builder.build();
 
     // Read from 'here' to 'there':
-    final EntityId startRow = RawEntityId.fromKijiRowKey(Bytes.toBytes("here"));
-    final EntityId limitRow = RawEntityId.fromKijiRowKey(Bytes.toBytes("there"));
+    final EntityId startRow = RawEntityId.getEntityId(Bytes.toBytes("here"));
+    final EntityId limitRow = RawEntityId.getEntityId(Bytes.toBytes("there"));
     final KijiTableMapReduceJobInput.RowOptions rowOptions =
         new KijiTableMapReduceJobInput.RowOptions(startRow, limitRow, null);
     final MapReduceJobInput kijiTableJobInput =

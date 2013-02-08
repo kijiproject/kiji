@@ -124,7 +124,7 @@ public class TestBulkImporter extends KijiClientTest {
     final KijiRowScanner scanner = mReader.getScanner(KijiDataRequest.create("primitives"));
     for (KijiRowData row : scanner) {
       final EntityId eid = row.getEntityId();
-      final String rowId = Bytes.toString(eid.getKijiRowKey());
+      final String rowId = Bytes.toString((byte[]) eid.getComponentByIndex(0));
       final String cellContent = row.getMostRecentValue("primitives", "string").toString();
       LOG.info("Row: {}, primitives.string: {}, primitives.long: {}",
           rowId, cellContent, row.getMostRecentValue("primitives", "long"));

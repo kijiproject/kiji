@@ -69,7 +69,7 @@ public final class DirectKijiTableWriterContext
     mKiji = Kiji.Factory.open(outputURI, conf);
     mTable = mKiji.openTable(outputURI.getTable());
     mPutter = mTable.openTableWriter();
-    mEntityIdFactory = mTable.getEntityIdFactory();
+    mEntityIdFactory = EntityIdFactory.getFactory(mTable.getLayout());
   }
 
   /**
@@ -102,7 +102,7 @@ public final class DirectKijiTableWriterContext
   /** {@inheritDoc} */
   @Override
   public EntityId getEntityId(String key) {
-    return mEntityIdFactory.fromKijiRowKey(key);
+    return mEntityIdFactory.getEntityId(key);
   }
 
   /** {@inheritDoc} */

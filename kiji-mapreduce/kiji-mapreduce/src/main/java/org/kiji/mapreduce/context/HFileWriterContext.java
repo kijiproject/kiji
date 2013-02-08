@@ -82,7 +82,7 @@ public final class HFileWriterContext
     mKiji = Kiji.Factory.open(outputURI, conf);
     mTable = mKiji.openTable(outputURI.getTable());
     mColumnNameTranslator = new ColumnNameTranslator(mTable.getLayout());
-    mEntityIdFactory = mTable.getEntityIdFactory();
+    mEntityIdFactory = EntityIdFactory.getFactory(mTable.getLayout());
   }
 
   /**
@@ -130,7 +130,7 @@ public final class HFileWriterContext
   /** {@inheritDoc} */
   @Override
   public EntityId getEntityId(String key) {
-    return mEntityIdFactory.fromKijiRowKey(key);
+    return mEntityIdFactory.getEntityId(key);
   }
 
   @Override

@@ -80,7 +80,7 @@ public class TestGatherer extends KijiClientTest {
     public void gather(KijiRowData row, MapReduceContext<LongWritable, Text> context)
         throws IOException {
       final Integer zipCode = row.getMostRecentValue("info", "zip_code");
-      final String userId = Bytes.toString(row.getEntityId().getKijiRowKey());
+      final String userId = Bytes.toString((byte[]) row.getEntityId().getComponentByIndex(0));
       context.write(new LongWritable(zipCode), new Text(userId));
     }
   }
