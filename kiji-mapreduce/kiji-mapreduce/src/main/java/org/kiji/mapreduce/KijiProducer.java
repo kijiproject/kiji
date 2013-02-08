@@ -49,10 +49,10 @@ import org.kiji.schema.KijiRowData;
  * </p>
  *
  * <p>
- * As a KeyValueStoreClient, KijiProducers will have access to all
- * stores defined by getRequiredStores().
- * These stores are surfaced in the setup(), produce(), and cleanup() methods
- * via the Context provided to each.
+ * As a {@link KeyValueStoreClient}, KijiProducers will have access to all
+ * stores defined by {@link KeyValueStoreClient#getRequiredStores()}. Readers for
+ * these stores are surfaced in the setup(), produce(), and cleanup() methods
+ * via the Context provided to each by calling {@link KijiContext#getStore(String)}.
  * </p>
  *
  * <p>
@@ -116,17 +116,7 @@ public abstract class KijiProducer
   @Override
   public abstract KijiDataRequest getDataRequest();
 
-  /**
-   * Returns a mapping that specifies the names of all key-value stores that must be loaded
-   * to execute this producer, and default {@link KeyValueStore} definitions that can be
-   * used if the user does not specify alternate locations/implementations.
-   * This method is called on the client once.
-   *
-   * <p>The default implementation of this method returns an empty map of Strings to
-   * KeyValueStores.</p>
-   *
-   * @return a map from store names to default KeyValueStore implementations.
-   */
+  /** {@inheritDoc} */
   @Override
   public Map<String, KeyValueStore<?, ?>> getRequiredStores() {
     return Collections.emptyMap();

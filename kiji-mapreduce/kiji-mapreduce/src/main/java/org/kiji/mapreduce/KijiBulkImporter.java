@@ -46,10 +46,12 @@ import org.kiji.mapreduce.kvstore.KeyValueStoreClient;
  * <p>Internal state is set by a call to setConf().  Thus, KijiBulkImporters will be
  * automagically initialized by hadoop's ReflectionUtils.</p>
  *
- * <p>As a KeyValueStoreClient, KijiProducers will have access to all
- * stores defined by getRequiredStores().
- * These stores are surfaced in the setup(), produce(), and cleanup() methods
- * via the getStore() method of the Context provided to each.</p>
+ * <p>
+ * As a {@link KeyValueStoreClient}, KijiBulkImporter will have access to all
+ * stores defined by {@link KeyValueStoreClient#getRequiredStores()}. Readers for
+ * these stores are surfaced in the setup(), produce(), and cleanup() methods
+ * via the Context provided to each by calling {@link KijiContext#getStore(String)}.
+ * </p>
  *
  * <p>Once the internal state is set, functions may be called in any order, except for
  * restrictions on setup(), produce(), and cleanup().</p>
