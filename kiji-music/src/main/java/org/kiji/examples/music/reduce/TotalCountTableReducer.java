@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.music.reduce;
+package org.kiji.examples.music.reduce;
 
 import java.io.IOException;
 
