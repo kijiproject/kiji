@@ -163,9 +163,7 @@ public final class CSVBulkImporter extends DescribedInputTextBulkImporter {
     try {
       fields = split(value.toString());
     } catch (ParseException pe) {
-      LOG.error("Unable to parse line: {} with exception {}",
-          value.toString(), pe.getMessage());
-      //TODO(KIJIMRLIB-4) Emit this to a rejected output so that import can be reattempted
+      reject(value, context, pe.toString());
       return;
     }
     for (KijiColumnName kijiColumnName : getDestinationColumns()) {
@@ -176,7 +174,7 @@ public final class CSVBulkImporter extends DescribedInputTextBulkImporter {
         String fieldValue = fields.get(mFieldMap.get(source));
         context.put(eid, kijiColumnName.getFamily(), kijiColumnName.getQualifier(), fieldValue);
       } else {
-        LOG.warn("Detected trailing empty field: " + source);
+        incomplete(value, context, "Detected trailing empty field: " + source);
       }
     }
 

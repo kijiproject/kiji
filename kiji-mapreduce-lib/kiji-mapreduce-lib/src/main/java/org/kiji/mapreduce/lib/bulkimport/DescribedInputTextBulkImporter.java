@@ -38,6 +38,7 @@ import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.Inheritance;
 import org.kiji.hadoop.configurator.HadoopConf;
 import org.kiji.hadoop.configurator.HadoopConfigurator;
+import org.kiji.mapreduce.JobHistoryCounters;
 import org.kiji.mapreduce.KijiBulkImporter;
 import org.kiji.mapreduce.KijiConfKeys;
 import org.kiji.mapreduce.KijiTableContext;
@@ -51,7 +52,8 @@ import org.kiji.schema.util.ResourceUtils;
 
 /**
  * DescribedInputTextBulkImporter is an abstract class that provides methods to bulk importers for
- * mapping from source fields in the import lines to destination Kiji columns.
+ * mapping from source fields in the import lines to destination Kiji columns.  These can be used
+ * inside of KijiBulkImportJobBuilder via the withBulkImporter parameter.
  *
  * Importing from a text file requires specifying a KijiColumnName, and the source field
  * for each element to be inserted into kiji, in addition to the raw import data.  This information
@@ -73,6 +75,8 @@ import org.kiji.schema.util.ResourceUtils;
  *
  * Extensions of this class can use the following methods to implement their producers:
  * <ul>
+ *   <li>{@link #incomplete} - to log and mark a row that was incomplete.</li>
+ *   <li>{@link #reject} - to log and mark a row that could not be processed.</li>
  *   <li>{@link #getDestinationColumns} - to retrieve a collection of destination columns.</li>
  *   <li>{@link #getSource} - to retrieve the source for one of the columns listed above.</li>
  *   <li>{@link #getEntityIdSource()} - to retrieve the source for the entity id for the row.</li>
@@ -89,6 +93,17 @@ public abstract class DescribedInputTextBulkImporter extends KijiBulkImporter<Lo
    * ordering of columns in delimited read-in file.
    */
   public static final String CONF_FILE = "kiji.import.text.input.descriptor.path";
+
+  public static final String CONF_LOG_RATE = "kiji.import.text.log.rate";
+
+  // Number of lines to skip between reject/incomplete lines
+  private Long mLogRate = 1000L;
+
+  // Current counter of the number of incomplete lines.
+  private Long mIncompleteLineCounter = 0L;
+
+  // Current counter of the number of rejected lines.
+  private Long mRejectedLineCounter = 0L;
 
   /** Table layout of the output table. */
   private KijiTableLayout mOutputTableLayout;
@@ -156,6 +171,46 @@ public abstract class DescribedInputTextBulkImporter extends KijiBulkImporter<Lo
       throws IOException;
 
   /**
+   * Post-processes incomplete lines(Logging, keeping count, etc).
+   *
+   * @param line the line that was marked incomplete incomplete by the producer.
+   * @param context the context in which the incompletion occured.
+   * @param reason the reason why this line was incomplete.
+   */
+  public void incomplete(Text line, KijiTableContext context, String reason) {
+    if (mIncompleteLineCounter % mLogRate == 0L) {
+      LOG.error("Rejecting line: {} with reason: {}",
+          line.toString(), reason);
+    }
+    mIncompleteLineCounter++;
+
+    //TODO(KIJIMRLIB-9) Abort this bulk importer job early if incomplete records exceed a threshold
+    context.incrementCounter(JobHistoryCounters.BULKIMPORTER_RECORDS_INCOMPLETE);
+
+    //TODO(KIJIMRLIB-4) Add a strict mode where we reject incomplete lines
+  }
+
+  /**
+   * Post-processes rejected lines(Logging, keeping count, etc).
+   *
+   * @param line the line that was rejected by the producer.
+   * @param context the context in which the rejection occured.
+   * @param reason the reason why this line was rejected.
+   */
+  public void reject(Text line, KijiTableContext context, String reason) {
+    if (mRejectedLineCounter % mLogRate == 0L) {
+      LOG.error("Rejecting line: {} with reason: {}",
+          line.toString(), reason);
+    }
+    mRejectedLineCounter++;
+
+    //TODO(KIJIMRLIB-9) Abort this bulk importer job early if rejected records exceed a threshold
+    context.incrementCounter(JobHistoryCounters.BULKIMPORTER_RECORDS_REJECTED);
+
+    //TODO(KIJIMRLIB-4) Allow this to emit to a rejected output so that import can be reattempted.
+  }
+
+  /**
    * Subclasses should implement the produce(Text line, KijiTableContext context) method instead.
    * {@inheritDoc}
    */
@@ -206,6 +261,22 @@ public abstract class DescribedInputTextBulkImporter extends KijiBulkImporter<Lo
    */
   public void cleanupImporter(KijiTableContext context) throws IOException {}
 
+  /**
+   * Sets the log rate - the number of lines between log statements for incomplete/rejected lines.
+   *
+   * @param logRateString The logging rate as a string.
+   */
+  @HadoopConf(key=CONF_LOG_RATE, usage="The number of lines to skip between log statements")
+  protected void setLogRate(String logRateString) {
+    if (logRateString != null) {
+      try {
+        Long logRate = Long.parseLong(logRateString);
+        mLogRate = logRate;
+      } catch (NumberFormatException ne) {
+        LOG.warn("Unable to parse log rate: " + logRateString);
+      }
+    }
+  }
 
   /**
    * Sets the input descriptor.

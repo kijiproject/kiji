@@ -1,0 +1,3 @@
+{"name":{"first":"John","last":"Doe"},"email":"johndoe@gmail.com","phone":"202-555-9876"}
+{"name":{"first":"Alice","last":"Smith"},"email":"alice.smith@yahoo.com"}
+{"name":{"first":"Bob","last":"Jones"},"email":"bobbyj@aol.com","phone":"415-555-4161"}

@@ -21,10 +21,8 @@ package org.kiji.mapreduce.lib.bulkimport;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.io.File;
-import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -35,7 +33,6 @@ import org.junit.Test;
 
 import org.kiji.mapreduce.JobHistoryCounters;
 import org.kiji.mapreduce.KijiBulkImportJobBuilder;
-import org.kiji.mapreduce.KijiConfKeys;
 import org.kiji.mapreduce.KijiMRTestLayouts;
 import org.kiji.mapreduce.MapReduceJob;
 import org.kiji.mapreduce.TestingResources;
@@ -50,7 +47,7 @@ import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.util.InstanceBuilder;
 
 /** Unit tests. */
-public class TestCSVBulkImporter extends KijiClientTest {
+public class TestJSONBulkImporter extends KijiClientTest {
   private KijiTable mTable;
   private KijiTableReader mReader;
 
@@ -77,11 +74,11 @@ public class TestCSVBulkImporter extends KijiClientTest {
   }
 
   @Test
-  public void testCSVBulkImporter() throws Exception {
+  public void testJSONBulkImporter() throws Exception {
     // Prepare input file:
-    File inputFile = File.createTempFile("TestCSVImportInput", ".txt", getLocalTempDir());
+    File inputFile = File.createTempFile("TestJSONImportInput", ".txt", getLocalTempDir());
     TestingResources.writeTextFile(inputFile,
-        TestingResources.get(BulkImporterTestUtils.CSV_IMPORT_DATA));
+        TestingResources.get(BulkImporterTestUtils.JSON_IMPORT_DATA));
 
     Configuration conf = getConf();
     conf.set(DescribedInputTextBulkImporter.CONF_FILE,
@@ -90,42 +87,7 @@ public class TestCSVBulkImporter extends KijiClientTest {
     // Run the bulk-import:
     final MapReduceJob job = KijiBulkImportJobBuilder.create()
         .withConf(conf)
-        .withBulkImporter(CSVBulkImporter.class)
-        .withInput(new TextMapReduceJobInput(new Path(inputFile.toString())))
-        .withOutput(new DirectKijiTableMapReduceJobOutput(mTable.getURI()))
-        .build();
-    assertTrue(job.run());
-
-    final Counters counters = job.getHadoopJob().getCounters();
-    assertEquals(4,
-        counters.findCounter(JobHistoryCounters.BULKIMPORTER_RECORDS_PROCESSED).getValue());
-
-    // Validate output:
-    final KijiRowScanner scanner = mReader.getScanner(KijiDataRequest.create("info"));
-    BulkImporterTestUtils.validateImportedRows(scanner);
-    scanner.close();
-  }
-
-  @Test
-  public void testInjectedHeaderRow() throws Exception {
-    String headerRow = "first,last,email,phone";
-
-    // Prepare input file:
-    File inputFile = File.createTempFile("HeaderlessCSVImportInput", ".txt", getLocalTempDir());
-    TestingResources.writeTextFile(inputFile,
-        TestingResources.get(BulkImporterTestUtils.HEADERLESS_CSV_IMPORT_DATA));
-
-    Configuration conf = getConf();
-    conf.set(DescribedInputTextBulkImporter.CONF_FILE,
-        BulkImporterTestUtils.localResource(BulkImporterTestUtils.FOO_IMPORT_DESCRIPTOR));
-
-    // Set the header row
-    conf.set(CSVBulkImporter.CONF_INPUT_HEADER_ROW, headerRow);
-
-    // Run the bulk-import:
-    final MapReduceJob job = KijiBulkImportJobBuilder.create()
-        .withConf(conf)
-        .withBulkImporter(CSVBulkImporter.class)
+        .withBulkImporter(JSONBulkImporter.class)
         .withInput(new TextMapReduceJobInput(new Path(inputFile.toString())))
         .withOutput(new DirectKijiTableMapReduceJobOutput(mTable.getURI()))
         .build();
@@ -146,28 +108,27 @@ public class TestCSVBulkImporter extends KijiClientTest {
   }
 
   @Test
-  public void testTSVBulkImporter() throws Exception {
+  public void testJSONPathBulkImporter() throws Exception {
     // Prepare input file:
-    File inputFile = File.createTempFile("TestTSVImportInput", ".txt", getLocalTempDir());
+    File inputFile = File.createTempFile("TestComplexJSONImportInput", ".txt", getLocalTempDir());
     TestingResources.writeTextFile(inputFile,
-        TestingResources.get(BulkImporterTestUtils.TSV_IMPORT_DATA));
+        TestingResources.get(BulkImporterTestUtils.COMPLEX_JSON_IMPORT_DATA));
 
     Configuration conf = getConf();
     conf.set(DescribedInputTextBulkImporter.CONF_FILE,
-        BulkImporterTestUtils.localResource(BulkImporterTestUtils.FOO_IMPORT_DESCRIPTOR));
-    conf.set(CSVBulkImporter.CONF_FIELD_DELIMITER, "\t");
+        BulkImporterTestUtils.localResource(BulkImporterTestUtils.FOO_JSONPATH_IMPORT_DESCRIPTOR));
 
     // Run the bulk-import:
     final MapReduceJob job = KijiBulkImportJobBuilder.create()
         .withConf(conf)
-        .withBulkImporter(CSVBulkImporter.class)
+        .withBulkImporter(JSONBulkImporter.class)
         .withInput(new TextMapReduceJobInput(new Path(inputFile.toString())))
         .withOutput(new DirectKijiTableMapReduceJobOutput(mTable.getURI()))
         .build();
     assertTrue(job.run());
 
     final Counters counters = job.getHadoopJob().getCounters();
-    assertEquals(4,
+    assertEquals(3,
         counters.findCounter(JobHistoryCounters.BULKIMPORTER_RECORDS_PROCESSED).getValue());
     assertEquals(1,
         counters.findCounter(JobHistoryCounters.BULKIMPORTER_RECORDS_INCOMPLETE).getValue());
@@ -178,28 +139,5 @@ public class TestCSVBulkImporter extends KijiClientTest {
     final KijiRowScanner scanner = mReader.getScanner(KijiDataRequest.create("info"));
     BulkImporterTestUtils.validateImportedRows(scanner);
     scanner.close();
-  }
-
-  @Test
-  public void testFailOnInvalidDelimiter() throws Exception {
-    // Prepare input file:
-    File inputFile = File.createTempFile("TestCSVImportInput", ".txt", getLocalTempDir());
-    TestingResources.writeTextFile(inputFile,
-        TestingResources.get(BulkImporterTestUtils.CSV_IMPORT_DATA));
-
-    Configuration conf = getConf();
-    conf.set(DescribedInputTextBulkImporter.CONF_FILE,
-        BulkImporterTestUtils.localResource(BulkImporterTestUtils.FOO_IMPORT_DESCRIPTOR));
-    conf.set(CSVBulkImporter.CONF_FIELD_DELIMITER, "!");
-    conf.set(KijiConfKeys.KIJI_OUTPUT_TABLE_URI, mTable.getURI().toString());
-    CSVBulkImporter csvbi = new CSVBulkImporter();
-    csvbi.setConf(conf);
-    try {
-      csvbi.setup(null);
-      fail("Should've gotten an IOException by here.");
-    } catch (IOException ie) {
-      assertEquals("Invalid delimiter '!' specified.  Valid options are: ',','\t'",
-          ie.getMessage());
-    }
   }
 }
