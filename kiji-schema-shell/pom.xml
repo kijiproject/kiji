@@ -128,6 +128,13 @@
       <version>${kiji-schema.version}</version>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>org.kiji.schema</groupId>
+      <artifactId>kiji-schema</artifactId>
+      <type>test-jar</type>
+      <version>${kiji-schema.version}</version>
+      <scope>test</scope>
+    </dependency>
 
     <!-- TODO: Use the multi-profile world of kiji-schema to support multiple backends. -->
     <dependency>
@@ -135,6 +142,13 @@
       <artifactId>kiji-cdh4-platform</artifactId>
       <version>${kiji-cdh4-platform.version}</version>
       <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.kiji.testing</groupId>
+      <artifactId>fake-hbase</artifactId>
+      <version>0.0.3-SNAPSHOT</version>
+      <scope>test</scope>
     </dependency>
 
   </dependencies>

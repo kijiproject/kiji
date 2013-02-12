@@ -67,3 +67,27 @@ Language Reference
 To read a full reference manual for this component, see 
 [The DDL reference in the online KijiSchema user guide](http://docs.kiji.org/userguide/schema/${project.version}/schema-shell-ddl-ref/).
 
+API
+===
+
+You can use the `org.kiji.schema.shell.api.Client` object to programmatically
+invoke DDL commands from a Java or Scala-based system.
+
+Example:
+
+    import org.kiji.schema.KijiURI;
+    import org.kiji.schema.shell.api.Client;
+
+    void exampleMethod() {
+      Client client = Client.newInstance(KijiURI.parse("kiji://.env/default"));
+      try {
+        // One or more calls to executeUpdate(). These will throw DDLException
+        // if there's a problem with your DDL statement.
+        client.executeUpdate("DROP TABLE t");
+      } finally {
+        // Always call close when you're done.
+        client.close()
+      }
+    }
+
+
