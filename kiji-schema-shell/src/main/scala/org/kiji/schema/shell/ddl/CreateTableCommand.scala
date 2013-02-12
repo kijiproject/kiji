@@ -42,7 +42,7 @@ class CreateTableCommand(val env: Environment,
   // We always operate on an empty layout when creating a new table.
   override def getInitialLayout(): TableLayoutDesc = {
     val layout = new TableLayoutDesc
-    layout.setVersion(VersionInfo.getClientDataVersion())
+    layout.setVersion(VersionInfo.getClientDataVersion().toCanonicalString())
     return layout
   }
 
