@@ -62,6 +62,21 @@
       <unpack>true</unpack>
       <useProjectArtifact>false</useProjectArtifact>
     </dependencySet>
+    <dependencySet>
+      <outputDirectory>.</outputDirectory>
+      <includes>
+        <include>org.kiji.mapreduce:kiji-mapreduce:tar.gz</include>
+      </includes>
+      <unpack>true</unpack>
+      <useProjectArtifact>false</useProjectArtifact>
+    </dependencySet>
+    <dependencySet>
+      <outputDirectory>.</outputDirectory>
+      <includes>
+        <include>org.kiji.mapreduce.lib:kiji-mapreduce-lib:tar.gz</include>
+      </includes>
+      <unpack>true</unpack>
+      <useProjectArtifact>false</useProjectArtifact>
+    </dependencySet>
   </dependencySets>
-
 </assembly>

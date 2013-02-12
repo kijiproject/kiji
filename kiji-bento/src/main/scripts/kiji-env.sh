@@ -53,6 +53,10 @@ KIJI_HOME="${bin}/.."
 export KIJI_HOME
 echo "Set KIJI_HOME=${KIJI_HOME}"
 
+KIJI_MR_HOME="${KIJI_HOME}"
+export KIJI_MR_HOME
+echo "Set KIJI_MR_HOME=${KIJI_MR_HOME}"
+
 PATH="${KIJI_HOME}/bin:${KIJI_HOME}/schema-shell/bin:${PATH}"
 export PATH
 echo "Added kiji and kiji-schema-shell binaries to PATH."

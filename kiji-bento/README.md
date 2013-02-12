@@ -3,11 +3,19 @@
 kiji-bento ${project.version}
 =============================
 
-kiji-bento is a standalone distribution of kiji-schema that includes:
+kiji-bento is a standalone distribution of projects in the Kiji
+ecosystem that includes:
 
 * `kiji-schema`: Included at the top-level of the distribution,
-kiji-schema provides a simple Java API and tools for storing and
-managing typed data in HBase.
+kiji-schema provides a simple Java API and command-line tools for
+storing and managing typed data in HBase.
+* `kiji-mapreduce`: Included in the `lib` directory, kiji-mapreduce
+provides a simple Java API and command-line tools for using Hadoop
+MapReduce to import and process data in Kiji tables.
+* `kiji-mapreduce-lib`: Included in the `lib` directory,
+kiji-mapreduce-lib is a Java library of utilities for writing
+MapReduce jobs on Kiji tables, as well as ready to use producers,
+gatherers, and importers.
 * `bento-cluster`: Located in the `cluster` directory, bento-cluster
 allows users to run HDFS, MapReduce, and HBase clusters easily on the
 local machine.
@@ -74,5 +82,5 @@ bento-cluster.
 Quickstart
 ----------
 
-To continue using Kiji, consult the online 
+To continue using Kiji, consult the online
 [quickstart guide](http://www.kiji.org/getstarted/#Quick_Start_Guide).

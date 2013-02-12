@@ -21,6 +21,8 @@
     <kiji-schema.version>1.0.0-rc4-SNAPSHOT</kiji-schema.version>
     <kiji-schema-shell.version>1.0.0-rc4-SNAPSHOT</kiji-schema-shell.version>
     <kiji-phonebook.version>1.0.0-rc4-SNAPSHOT</kiji-phonebook.version>
+    <kiji-mapreduce.version>1.0.0-rc4-SNAPSHOT</kiji-mapreduce.version>
+    <kiji-mapreduce-lib.version>1.0.0-rc4-SNAPSHOT</kiji-mapreduce-lib.version>
   </properties>
 
   <build>
@@ -88,6 +90,20 @@
       <groupId>org.kiji.bento</groupId>
       <artifactId>bento-cluster</artifactId>
       <version>${bento-cluster.version}</version>
+      <classifier>release</classifier>
+      <type>tar.gz</type>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.mapreduce</groupId>
+      <artifactId>kiji-mapreduce</artifactId>
+      <version>${kiji-mapreduce.version}</version>
+      <classifier>release</classifier>
+      <type>tar.gz</type>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.mapreduce.lib</groupId>
+      <artifactId>kiji-mapreduce-lib</artifactId>
+      <version>${kiji-mapreduce-lib.version}</version>
       <classifier>release</classifier>
       <type>tar.gz</type>
     </dependency>

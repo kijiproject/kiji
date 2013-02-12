@@ -65,6 +65,7 @@
       <excludes>
         <exclude>bin/**</exclude>
         <exclude>RELEASE_NOTES.txt</exclude>
+        <exclude>docs/**</exclude>
       </excludes>
       <filtered>false</filtered>
       <fileMode>0644</fileMode>
@@ -76,6 +77,14 @@
       <directory>target/prereqs-dir/kiji-schema-${kiji-schema.version}/bin</directory>
       <filtered>false</filtered>
       <fileMode>0755</fileMode>
+    </fileSet>
+    <fileSet>
+      <!-- kiji-schema api docs -->
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <outputDirectory>docs/kiji-schema</outputDirectory>
+      <directory>target/prereqs-dir/kiji-schema-${kiji-schema.version}/docs</directory>
+      <filtered>false</filtered>
+      <fileMode>0644</fileMode>
     </fileSet>
     <fileSet>
       <!-- kiji-schema-shell -->
@@ -127,6 +136,46 @@
       </includes>
       <filtered>false</filtered>
       <fileMode>0755</fileMode>
+    </fileSet>
+    <fileSet>
+      <!-- kiji-mapreduce -->
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <outputDirectory>.</outputDirectory>
+      <directory>target/prereqs-dir/kiji-mapreduce-${kiji-mapreduce.version}</directory>
+      <excludes>
+        <exclude>RELEASE_NOTES.txt</exclude>
+        <exclude>docs/**</exclude>
+      </excludes>
+      <filtered>false</filtered>
+      <fileMode>0644</fileMode>
+    </fileSet>
+    <fileSet>
+      <!-- kiji-mapreduce api docs -->
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <outputDirectory>docs/kiji-mapreduce</outputDirectory>
+      <directory>target/prereqs-dir/kiji-mapreduce-${kiji-mapreduce.version}/docs</directory>
+      <filtered>false</filtered>
+      <fileMode>0644</fileMode>
+    </fileSet>
+    <fileSet>
+      <!-- kiji-mapreduce-lib -->
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <outputDirectory>.</outputDirectory>
+      <directory>target/prereqs-dir/kiji-mapreduce-lib-${kiji-mapreduce-lib.version}</directory>
+      <excludes>
+        <exclude>RELEASE_NOTES.txt</exclude>
+        <exclude>docs/**</exclude>
+      </excludes>
+      <filtered>false</filtered>
+      <fileMode>0644</fileMode>
+    </fileSet>
+    <fileSet>
+      <!-- kiji-mapreduce-lib api docs -->
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <outputDirectory>docs/kiji-mapreduce-lib</outputDirectory>
+      <directory>target/prereqs-dir/kiji-mapreduce-lib-${kiji-mapreduce-lib.version}/docs</directory>
+      <filtered>false</filtered>
+      <fileMode>0644</fileMode>
     </fileSet>
   </fileSets>
   <files>
