@@ -30,6 +30,7 @@ import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.util.VersionInfo
 import java.util.ArrayList
 
+import org.kiji.schema.shell.ddl.CreateTableCommand
 import org.kiji.schema.shell.input.NullInputSource
 
 class TestMockKijiSystem extends SpecificationWithJUnit {
@@ -47,7 +48,7 @@ class TestMockKijiSystem extends SpecificationWithJUnit {
     "allow create table" in {
       val avro: TableLayoutDesc = new TableLayoutDesc
       avro.setLocalityGroups(new ArrayList())
-      avro.setVersion(VersionInfo.getClientDataVersion().toCanonicalString())
+      avro.setVersion(CreateTableCommand.DDL_LAYOUT_VERSION.toString())
 
       avro.setName("t")
       avro.setDescription("desc")
@@ -64,7 +65,7 @@ class TestMockKijiSystem extends SpecificationWithJUnit {
     "support the Environment.containsTable operation" in {
       val avro: TableLayoutDesc = new TableLayoutDesc
       avro.setLocalityGroups(new ArrayList())
-      avro.setVersion(VersionInfo.getClientDataVersion().toCanonicalString())
+      avro.setVersion(CreateTableCommand.DDL_LAYOUT_VERSION.toString())
 
       avro.setName("t")
       avro.setDescription("desc")
@@ -82,7 +83,7 @@ class TestMockKijiSystem extends SpecificationWithJUnit {
     "allow drop table" in {
       val avro: TableLayoutDesc = new TableLayoutDesc
       avro.setLocalityGroups(new ArrayList())
-      avro.setVersion(VersionInfo.getClientDataVersion().toCanonicalString())
+      avro.setVersion(CreateTableCommand.DDL_LAYOUT_VERSION.toString())
 
       avro.setName("t")
       avro.setDescription("desc")
@@ -102,7 +103,7 @@ class TestMockKijiSystem extends SpecificationWithJUnit {
     "disallow create table twice on the same name" in {
       val avro: TableLayoutDesc = new TableLayoutDesc
       avro.setLocalityGroups(new ArrayList())
-      avro.setVersion(VersionInfo.getClientDataVersion().toCanonicalString())
+      avro.setVersion(CreateTableCommand.DDL_LAYOUT_VERSION.toString())
       val sys = new MockKijiSystem
 
       avro.setName("t")
@@ -125,7 +126,7 @@ class TestMockKijiSystem extends SpecificationWithJUnit {
       val sys = new MockKijiSystem
       val avro: TableLayoutDesc = new TableLayoutDesc
       avro.setLocalityGroups(new ArrayList())
-      avro.setVersion(VersionInfo.getClientDataVersion().toCanonicalString())
+      avro.setVersion(CreateTableCommand.DDL_LAYOUT_VERSION.toString())
       val rowKeyFormat = new RowKeyFormat
       rowKeyFormat.setEncoding(RowKeyEncoding.HASH)
       avro.setKeysFormat(rowKeyFormat)
@@ -147,7 +148,7 @@ class TestMockKijiSystem extends SpecificationWithJUnit {
     "update layout with applyLayout" in {
       val avro: TableLayoutDesc = new TableLayoutDesc
       avro.setLocalityGroups(new ArrayList())
-      avro.setVersion(VersionInfo.getClientDataVersion().toCanonicalString())
+      avro.setVersion(CreateTableCommand.DDL_LAYOUT_VERSION.toString())
       val rowKeyFormat = new RowKeyFormat
       rowKeyFormat.setEncoding(RowKeyEncoding.HASH)
       avro.setKeysFormat(rowKeyFormat)
@@ -162,7 +163,7 @@ class TestMockKijiSystem extends SpecificationWithJUnit {
 
       val avro2: TableLayoutDesc = new TableLayoutDesc
       avro2.setLocalityGroups(new ArrayList())
-      avro2.setVersion(VersionInfo.getClientDataVersion().toCanonicalString())
+      avro2.setVersion(CreateTableCommand.DDL_LAYOUT_VERSION.toString())
       avro2.setName("t")
       avro2.setDescription("desc2")
       avro2.setKeysFormat(rowKeyFormat)
@@ -174,7 +175,7 @@ class TestMockKijiSystem extends SpecificationWithJUnit {
     "getTableLayout() should deep copy Avro records given to client" in {
       val avro: TableLayoutDesc = new TableLayoutDesc
       avro.setLocalityGroups(new ArrayList())
-      avro.setVersion(VersionInfo.getClientDataVersion().toCanonicalString())
+      avro.setVersion(CreateTableCommand.DDL_LAYOUT_VERSION.toString())
       avro.setName("t")
       avro.setDescription("desc1")
       val rowKeyFormat = new RowKeyFormat

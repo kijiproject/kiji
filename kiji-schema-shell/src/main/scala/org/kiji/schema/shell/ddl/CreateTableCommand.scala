@@ -27,10 +27,19 @@ import org.kiji.schema.avro.FamilyDesc
 import org.kiji.schema.avro.LocalityGroupDesc
 import org.kiji.schema.avro.TableLayoutDesc
 import org.kiji.schema.layout.KijiTableLayout
-import org.kiji.schema.util.VersionInfo
+import org.kiji.schema.util.ProtocolVersion
 
 import org.kiji.schema.shell.DDLException
 import org.kiji.schema.shell.Environment
+
+object CreateTableCommand {
+  /**
+   * Version string we embed in layouts created with this tool, advertising the version
+   * semantics we declare ourselves to be in line with.
+   */
+  // TODO(SCHEMA-197): Update this to "layout-1.1" or whatever the new protocol is.
+  val DDL_LAYOUT_VERSION = ProtocolVersion.parse("kiji-1.1");
+}
 
 class CreateTableCommand(val env: Environment,
                          val tableName: String,
@@ -42,7 +51,7 @@ class CreateTableCommand(val env: Environment,
   // We always operate on an empty layout when creating a new table.
   override def getInitialLayout(): TableLayoutDesc = {
     val layout = new TableLayoutDesc
-    layout.setVersion(VersionInfo.getClientDataVersion().toCanonicalString())
+    layout.setVersion(CreateTableCommand.DDL_LAYOUT_VERSION.toString())
     return layout
   }
 
