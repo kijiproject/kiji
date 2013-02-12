@@ -34,7 +34,8 @@ import org.kiji.annotations.ApiAudience;
  * Parser that extracts fields from the NCSA Common Log Format.  The fields available for
  * extraction are represented by the enumeration {@link Field}
  * Details about this format here:
- * {@linkurl http://www.w3.org/Daemon/User/Config/Logging.html#common-logfile-format}
+ * @see <a href="http://www.w3.org/Daemon/User/Config/Logging.html#common-logfile-format">
+ *     Common logfile format</a>
  */
 @ApiAudience.Public
 public final class CommonLogParser {

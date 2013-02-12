@@ -47,8 +47,6 @@ import org.kiji.schema.KijiColumnName;
  * For import files that do not contain a header row, a default can be specified by setting the
  * <code>kiji.import.text.column.header_row</code> configuration item specified by
  * {@link #CONF_INPUT_HEADER_ROW}.
- *
- * {@inheritDoc}
  */
 @ApiAudience.Public
 public final class CSVBulkImporter extends DescribedInputTextBulkImporter {

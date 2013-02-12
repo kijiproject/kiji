@@ -32,7 +32,7 @@
   </Match>
   <Match>
     <!-- Bugs in auto-generated Avro sources -->
-    <Class name="~org[.]kiji[.]mapreduce[.]avro[.].*" />
+    <Class name="~org[.]kiji[.]mapreduce[.]lib[.]avro[.].*" />
   </Match>
   <Match>
     <!-- Mappers/Reducers/Gatherers/Producers/Tools initialize in setup() so it's okay if their

@@ -39,8 +39,8 @@
  *   Related Documentation:
  * </p>
  * <ul>
- *   <li>{@link org.kiji.mapreduce.bulkimport.KijiTableImportDescriptor} - The bulk import mapping
- *       import configuration.</li>
+ *   <li>{@link org.kiji.mapreduce.lib.bulkimport.KijiTableImportDescriptor} - The bulk import
+ *       mapping import configuration.</li>
  * </ul>
  */
 

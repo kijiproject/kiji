@@ -40,8 +40,6 @@ import org.kiji.schema.KijiColumnName;
  * columns whose sources are not present in the JSON object are skipped.
  *
  * Complex paths in JSON are specified by strings delimited with periods(.).
- *
- * {@inheritDoc}
  */
 @ApiAudience.Public
 public final class JSONBulkImporter extends DescribedInputTextBulkImporter {

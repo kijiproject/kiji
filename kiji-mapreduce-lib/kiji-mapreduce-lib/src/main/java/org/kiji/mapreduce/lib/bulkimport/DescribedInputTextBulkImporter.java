@@ -42,7 +42,6 @@ import org.kiji.mapreduce.JobHistoryCounters;
 import org.kiji.mapreduce.KijiBulkImporter;
 import org.kiji.mapreduce.KijiConfKeys;
 import org.kiji.mapreduce.KijiTableContext;
-import org.kiji.mapreduce.bulkimport.KijiTableImportDescriptor;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiTable;
@@ -57,7 +56,7 @@ import org.kiji.schema.util.ResourceUtils;
  *
  * Importing from a text file requires specifying a KijiColumnName, and the source field
  * for each element to be inserted into kiji, in addition to the raw import data.  This information
- * is provided by {@link org.kiji.mapreduce.bulkimport.KijiTableImportDescriptor} which is set via
+ * is provided by {@link KijiTableImportDescriptor} which is set via
  * the <code>kiji.import.text.input.descriptor.path</code> parameter in {@link #CONF_FILE}.
  *
  * <p>Use this Mapper over text files to import data into a Kiji
