@@ -41,12 +41,21 @@ import org.kiji.schema.tools.ToolUtils;
 @ApiAudience.Framework
 @Inheritance.Extensible
 public abstract class KijiJobTool<B extends KijiTableInputJobBuilder> extends JobTool<B> {
-  // TODO(SCHEMA-185): Update usage doc for entity IDs:
-  @Flag(name="start-row", usage="The row to start scanning at (inclusive)")
-  protected String mStartRow = "";
+  @Flag(name="start-row",
+      usage="HBase row to start scanning at (inclusive), "
+          + "e.g. --start-row='hex:0088deadbeef', or --start-row='utf8:the row key in UTF8'.")
+  protected String mStartRowFlag = null;
 
-  @Flag(name="limit-row", usage="The row to stop scanning at (exclusive)")
-  protected String mLimitRow = "";
+  @Flag(name="limit-row",
+      usage="HBase row to stop scanning at (exclusive), "
+          + "e.g. --limit-row='hex:0088deadbeef', or --limit-row='utf8:the row key in UTF8'.")
+  protected String mLimitRowFlag = null;
+
+  /** HBase row to start scanning from (inclusive). */
+  private byte[] mHBaseStartRow = null;
+
+  /** HBase row to stop scanning at (exclusive). */
+  private byte[] mHBaseLimitRow = null;
 
   /** Job input must be a Kiji table. */
   private KijiTableMapReduceJobInput mJobInput = null;
@@ -65,6 +74,13 @@ public abstract class KijiJobTool<B extends KijiTableInputJobBuilder> extends Jo
         "Invalid job input '%s' : input must be a Kiji table.", mInputFlag);
 
     mJobInput = (KijiTableMapReduceJobInput) getJobInput();
+
+    if ((mStartRowFlag != null) && !mStartRowFlag.isEmpty()) {
+      mHBaseStartRow = ToolUtils.parseBytesFlag(mStartRowFlag);
+    }
+    if ((mLimitRowFlag != null) && !mLimitRowFlag.isEmpty()) {
+      mHBaseLimitRow = ToolUtils.parseBytesFlag(mLimitRowFlag);
+    }
   }
 
   /** {@inheritDoc} */
@@ -82,13 +98,11 @@ public abstract class KijiJobTool<B extends KijiTableInputJobBuilder> extends Jo
       final KijiTable table = kiji.openTable(mJobInput.getInputTableURI().getTable());
       try {
         final EntityIdFactory eidFactory = EntityIdFactory.getFactory(table.getLayout());
-        if (!mStartRow.isEmpty()) {
-          jobBuilder.withStartRow(
-              eidFactory.getEntityIdFromHBaseRowKey(ToolUtils.parseRowKeyFlag(mStartRow)));
+        if (mHBaseStartRow != null) {
+          jobBuilder.withStartRow(eidFactory.getEntityIdFromHBaseRowKey(mHBaseStartRow));
         }
-        if (!mLimitRow.isEmpty()) {
-          jobBuilder.withLimitRow(
-              eidFactory.getEntityIdFromHBaseRowKey(ToolUtils.parseRowKeyFlag(mLimitRow)));
+        if (mHBaseLimitRow != null) {
+          jobBuilder.withLimitRow(eidFactory.getEntityIdFromHBaseRowKey(mHBaseLimitRow));
         }
       } finally {
         table.close();

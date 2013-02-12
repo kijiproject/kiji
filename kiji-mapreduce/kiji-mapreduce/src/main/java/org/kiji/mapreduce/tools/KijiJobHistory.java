@@ -28,6 +28,7 @@ import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.List;
 
+import com.google.common.base.Preconditions;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Counters;
@@ -35,15 +36,20 @@ import org.apache.hadoop.mapreduce.Counters;
 import org.kiji.annotations.ApiAudience;
 import org.kiji.common.flags.Flag;
 import org.kiji.mapreduce.JobHistoryKijiTable;
+import org.kiji.schema.KConstants;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiRowData;
+import org.kiji.schema.KijiURI;
+import org.kiji.schema.tools.BaseTool;
 import org.kiji.schema.tools.KijiToolLauncher;
 import org.kiji.schema.tools.RequiredFlagException;
-import org.kiji.schema.tools.VersionValidatedTool;
 
 /** A tool that installs a job history table and lets you query individual jobs from it. */
 @ApiAudience.Private
-public final class KijiJobHistory extends VersionValidatedTool {
+public final class KijiJobHistory extends BaseTool {
+  @Flag(name="kiji", usage="URI of the Kiji instance to query.")
+  private String mKijiURIFlag = KConstants.DEFAULT_URI;
+
   @Flag(name="job-id", usage="ID of the job to query.")
   private String mJobId = "";
 
@@ -52,6 +58,9 @@ public final class KijiJobHistory extends VersionValidatedTool {
 
   @Flag(name="install", usage="Install a job history table.")
   private boolean mInstall = false;
+
+  /** URI of the Kiji instance to query. */
+  private KijiURI mKijiURI = null;
 
   /** {@inheritDoc} */
   @Override
@@ -71,38 +80,47 @@ public final class KijiJobHistory extends VersionValidatedTool {
     return "Admin";
   }
 
+  /** {@inheritDoc} */
   @Override
   protected void validateFlags() throws Exception {
     super.validateFlags();
+    Preconditions.checkArgument((mKijiURIFlag != null) && !mKijiURIFlag.isEmpty(),
+        "Specify a Kiji instance with --kiji=kiji://hbase-address/kiji-instance");
+    mKijiURI = KijiURI.newBuilder(mKijiURIFlag).build();
+
     if (mJobId.isEmpty() && !mInstall) {
       throw new RequiredFlagException("job-id=<jobid> or --install");
     }
   }
 
+  /** {@inheritDoc} */
   @Override
   protected int run(List<String> nonFlagArgs) throws Exception {
-    final Kiji kiji = getKiji();
-
-    if (mInstall) {
-      JobHistoryKijiTable.install(kiji);
-    }
-
-    if (!mJobId.isEmpty()) {
-      JobHistoryKijiTable jobHistoryTable = JobHistoryKijiTable.open(kiji);
-      KijiRowData data = jobHistoryTable.getJobDetails(mJobId);
-      PrintStream ps = getPrintStream();
-
-      ps.printf("Job:\t\t%s%n", data.getMostRecentValue("info", "jobId"));
-      ps.printf("Name:\t\t%s%n", data.getMostRecentValue("info", "jobName"));
-      ps.printf("Started:\t%s%n", new Date((Long) data.getMostRecentValue("info", "startTime")));
-      ps.printf("Ended:\t\t%s%n", new Date((Long) data.getMostRecentValue("info", "endTime")));
-      if (mVerbose) {
-        printCounters(data);
-        printConfiguration(data);
+    final Kiji kiji = Kiji.Factory.open(mKijiURI);
+    try {
+      if (mInstall) {
+        JobHistoryKijiTable.install(kiji);
       }
+
+      if (!mJobId.isEmpty()) {
+        JobHistoryKijiTable jobHistoryTable = JobHistoryKijiTable.open(kiji);
+        final KijiRowData data = jobHistoryTable.getJobDetails(mJobId);
+        final PrintStream ps = getPrintStream();
+
+        ps.printf("Job:\t\t%s%n", data.getMostRecentValue("info", "jobId"));
+        ps.printf("Name:\t\t%s%n", data.getMostRecentValue("info", "jobName"));
+        ps.printf("Started:\t%s%n", new Date((Long) data.getMostRecentValue("info", "startTime")));
+        ps.printf("Ended:\t\t%s%n", new Date((Long) data.getMostRecentValue("info", "endTime")));
+        if (mVerbose) {
+          printCounters(data);
+          printConfiguration(data);
+        }
+      }
+    } finally {
+      kiji.release();
     }
 
-    return 0;
+    return SUCCESS;
   }
 
   /**

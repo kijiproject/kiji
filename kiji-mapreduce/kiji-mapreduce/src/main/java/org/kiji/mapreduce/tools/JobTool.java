@@ -30,7 +30,7 @@ import org.kiji.common.flags.Flag;
 import org.kiji.mapreduce.MapReduceJobBuilder;
 import org.kiji.mapreduce.MapReduceJobInput;
 import org.kiji.mapreduce.MapReduceJobOutput;
-import org.kiji.schema.tools.VersionValidatedTool;
+import org.kiji.schema.tools.BaseTool;
 
 /**
  * Base class for tools that run MapReduce jobs.
@@ -39,7 +39,7 @@ import org.kiji.schema.tools.VersionValidatedTool;
  */
 @ApiAudience.Framework
 @Inheritance.Extensible
-public abstract class JobTool<B extends MapReduceJobBuilder> extends VersionValidatedTool {
+public abstract class JobTool<B extends MapReduceJobBuilder> extends BaseTool {
 
   // TODO(KIJIMR-62): Better usage doc:
   @Flag(name="input",

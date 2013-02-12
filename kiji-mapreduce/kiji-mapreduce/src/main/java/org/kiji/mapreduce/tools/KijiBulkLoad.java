@@ -19,30 +19,35 @@
 
 package org.kiji.mapreduce.tools;
 
-import java.io.IOException;
 import java.util.List;
 
+import com.google.common.base.Preconditions;
 import org.apache.hadoop.fs.Path;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.common.flags.Flag;
 import org.kiji.mapreduce.HFileLoader;
+import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiTable;
+import org.kiji.schema.KijiURI;
+import org.kiji.schema.tools.BaseTool;
 import org.kiji.schema.tools.KijiToolLauncher;
-import org.kiji.schema.tools.RequiredFlagException;
-import org.kiji.schema.tools.VersionValidatedTool;
 
 /** Bulk loads HFiles into a Kiji table. */
 @ApiAudience.Private
-public final class KijiBulkLoad extends VersionValidatedTool {
-  @Flag(name="input", usage="HFile location")
-  private String mInputFlag = "";
+public final class KijiBulkLoad extends BaseTool {
+  @Flag(name="hfile", usage="Path of the directory containing HFile(s) to bulk-load. "
+      + "Typically --hfile=hdfs://hdfs-cluster-address/path/to/hfile.dir/")
+  private String mHFileFlag = null;
 
-  @Flag(name="table", usage="Kiji table name")
-  private String mTableName = "";
+  @Flag(name="table", usage="URI of the Kiji table to bulk-load into.")
+  private String mTableURIFlag = null;
 
-  /** The table to import data into. */
-  private KijiTable mOutputTable;
+  /** URI of the Kiji table to bulk-load into. */
+  private KijiURI mTableURI = null;
+
+  /** Path of the HFile(s) to bulk-load. */
+  private Path mHFile = null;
 
   /** {@inheritDoc} */
   @Override
@@ -65,39 +70,38 @@ public final class KijiBulkLoad extends VersionValidatedTool {
   /** {@inheritDoc} */
   @Override
   protected void validateFlags() throws Exception {
-    if (mInputFlag.isEmpty()) {
-      throw new RequiredFlagException("input");
-    }
+    super.validateFlags();
+    Preconditions.checkArgument((mTableURIFlag != null) && !mTableURIFlag.isEmpty(),
+        "Specify the table to bulk-load into with "
+        + "--table=kiji://hbase-address/kiji-instance/table");
+    mTableURI = KijiURI.newBuilder(mTableURIFlag).build();
+    Preconditions.checkArgument(mTableURI.getTable() != null,
+        "Specify the table to bulk-load into with "
+        + "--table=kiji://hbase-address/kiji-instance/table");
 
-    if (mTableName.isEmpty()) {
-      throw new RequiredFlagException("table");
-    }
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  protected void setup() throws Exception {
-    super.setup();
-    mOutputTable = getKiji().openTable(mTableName);
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  protected void cleanup() throws IOException {
-    if (null != mOutputTable) {
-      mOutputTable.close();
-    }
-    super.cleanup();
+    Preconditions.checkArgument((mHFileFlag != null) && !mHFileFlag.isEmpty(),
+        "Specify the HFiles to bulk-load. "
+        + "E.g. --hfile=hdfs://hdfs-cluster-address/path/to/hfile.dir/");
+    mHFile = new Path(mHFileFlag);
   }
 
   /** {@inheritDoc} */
   @Override
   protected int run(List<String> nonFlagArgs) throws Exception {
-    // Load the HFiles
-    HFileLoader hFileLoader = HFileLoader.create(getConf());
-    hFileLoader.load(new Path(mInputFlag), mOutputTable);
-
-    return 0;
+    final Kiji kiji = Kiji.Factory.open(mTableURI);
+    try {
+      final KijiTable table = kiji.openTable(mTableURI.getTable());
+      try {
+        // Load the HFiles
+        final HFileLoader hFileLoader = HFileLoader.create(getConf());
+        hFileLoader.load(mHFile, table);
+        return SUCCESS;
+      } finally {
+        table.close();
+      }
+    } finally {
+      kiji.release();
+    }
   }
 
   /**
