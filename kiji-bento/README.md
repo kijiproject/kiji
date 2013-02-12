@@ -1,27 +1,35 @@
-(c) Copyright 2012 WibiData, Inc.
+(c) Copyright 2013 WibiData, Inc.
 
-kiji-bento ${project.version}
-=============================
+Kiji BentoBox ${project.version}
+================================
 
-kiji-bento is a standalone distribution of projects in the Kiji
-ecosystem that includes:
+The Kiji BentoBox is an SDK for developing Big Data Applications with the
+Kiji framework. It includes a complete set of Kiji framework modules,
+with compatible versions of each.
 
-* `kiji-schema`: Included at the top-level of the distribution,
-kiji-schema provides a simple Java API and command-line tools for
-storing and managing typed data in HBase.
-* `kiji-mapreduce`: Included in the `lib` directory, kiji-mapreduce
-provides a simple Java API and command-line tools for using Hadoop
-MapReduce to import and process data in Kiji tables.
-* `kiji-mapreduce-lib`: Included in the `lib` directory,
-kiji-mapreduce-lib is a Java library of utilities for writing
-MapReduce jobs on Kiji tables, as well as ready to use producers,
-gatherers, and importers.
-* `bento-cluster`: Located in the `cluster` directory, bento-cluster
-allows users to run HDFS, MapReduce, and HBase clusters easily on the
-local machine.
-* `kiji-schema-shell`: Included in the `schema-shell` directory,
-kiji-schema-shell provides a layout definition language for use with
-`kiji-schema`.
+This kiji-bento release (${project.version}) includes:
+
+* `kiji-schema` ${kiji-schema.version}: Included at the top-level of the
+  distribution, kiji-schema provides a simple Java API and command-line tools
+  for storing and managing typed data in HBase.
+* `kiji-mapreduce` ${kiji-mapreduce.version}: Included in the `lib` directory,
+  kiji-mapreduce provides a simple Java API and command-line tools for using
+  Hadoop MapReduce to import and process data in Kiji tables.
+* `kiji-mapreduce-lib` ${kiji-mapreduce-lib.version}: Included in the `lib`
+  directory, kiji-mapreduce-lib is a Java library of utilities for writing
+  MapReduce jobs on Kiji tables, as well as ready to use producers, gatherers,
+  and importers.
+* `bento-cluster` ${bento-cluster.version}: Located in the `cluster`
+  directory, bento-cluster allows users to run HDFS, MapReduce, and HBase
+  clusters easily on the local machine.
+* `kiji-schema-shell` ${kiji-schema-shell.version}: Included in the
+  `schema-shell` directory, kiji-schema-shell provides a layout definition
+  language for use with `kiji-schema`.
+* `kiji-phonebook` ${kiji-phonebook.version}: Included in the
+  `examples/phonebook` directory, kiji-phonebook is an example standalone
+  application (with source code) that stores, processes, and retrieves data
+  from a Kiji instance.
+* API documentation is made available in the `docs` directory.
 
 Installation
 ------------
