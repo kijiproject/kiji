@@ -37,7 +37,7 @@ import org.kiji.mapreduce.reducer.IdentityReducer;
 /** Builds a job that runs a KijiBulkImporter to import data into a Kiji table. */
 @ApiAudience.Public
 public final class KijiBulkImportJobBuilder
-    extends KijiMapReduceJobBuilder<KijiBulkImportJobBuilder> {
+    extends MapReduceJobBuilder<KijiBulkImportJobBuilder> {
 
   /** The class of the bulk importer to run. */
   @SuppressWarnings("rawtypes")

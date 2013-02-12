@@ -57,7 +57,8 @@ import org.kiji.schema.Kiji;
 /**
  * Base class for builders that configure <code>MapReduceJob</code>s.
  *
- * @param <T> The type of the builder class.
+ * @param <T> The type of the builder class. Users should use a concrete
+ * implementation such as {@link org.kiji.mapreduce.KijiGatherJobBuilder}.
  */
 @ApiAudience.Framework
 @Inheritance.Sealed

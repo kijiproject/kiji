@@ -43,7 +43,7 @@ import org.kiji.schema.filter.KijiRowFilter;
 @ApiAudience.Framework
 @Inheritance.Sealed
 public abstract class KijiTableInputJobBuilder<T extends KijiTableInputJobBuilder<T>>
-    extends KijiMapReduceJobBuilder<T> {
+    extends MapReduceJobBuilder<T> {
   /** The table to use as input for the job. */
   private KijiURI mInputTableURI;
 
