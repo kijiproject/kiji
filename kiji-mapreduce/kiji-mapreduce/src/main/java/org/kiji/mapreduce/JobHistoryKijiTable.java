@@ -41,7 +41,7 @@ import org.kiji.schema.layout.KijiTableLayout;
  *
  * Used in places like KijiMapReduceJob to record information about jobs run through Kiji.
  */
-@ApiAudience.Private
+@ApiAudience.Framework
 public final class JobHistoryKijiTable implements Closeable {
   /** The name of the table storing a history of completed jobs. */
   private static final String TABLE_NAME = "job_history";
