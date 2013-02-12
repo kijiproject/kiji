@@ -16,6 +16,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+/**
+ * Sample Kiji Table Import Descriptor for Apache Common Log format.  This should be used in
+ * conjunction with a table defined with the layout specified in layout/commonlog-layout.json.
+ */
 {
   name : "foo",
   families : [ {

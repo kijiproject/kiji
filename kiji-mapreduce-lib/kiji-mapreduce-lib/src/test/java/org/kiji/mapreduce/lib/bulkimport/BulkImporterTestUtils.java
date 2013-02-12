@@ -61,13 +61,14 @@ public final class BulkImporterTestUtils {
   public static final String FOO_JSONPATH_IMPORT_DESCRIPTOR =
       "org/kiji/mapreduce/lib/mapping/foo-test-jsonpath-import-descriptor.json";
 
-  public static final String COMMON_LOG_LAYOUT = "org/kiji/mapreduce/lib/layout/commonlog.json";
+  public static final String COMMON_LOG_LAYOUT =
+      "org/kiji/mapreduce/lib/layout/commonlog-layout.json";
 
   public static final String COMMON_LOG_IMPORT_DATA =
       "org/kiji/mapreduce/lib/mapping/TestCommonLog.log";
 
   public static final String COMMON_LOG_IMPORT_DESCRIPTOR =
-      "org/kiji/mapreduce/lib/mapping/common-log-import-descriptor.json";
+      "src/main/resources/org/kiji/mapreduce/lib/mapping/commonlog-import-descriptor.json";
 
   public static String localResource(String resource) {
     return LOCAL_RESOURCE_PREFIX + resource;

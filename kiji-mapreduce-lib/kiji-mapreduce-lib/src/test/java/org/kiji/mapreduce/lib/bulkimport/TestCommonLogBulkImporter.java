@@ -82,7 +82,7 @@ public class TestCommonLogBulkImporter extends KijiClientTest {
 
     Configuration conf = getConf();
     conf.set(DescribedInputTextBulkImporter.CONF_FILE,
-        BulkImporterTestUtils.localResource(BulkImporterTestUtils.COMMON_LOG_IMPORT_DESCRIPTOR));
+        BulkImporterTestUtils.COMMON_LOG_IMPORT_DESCRIPTOR);
 
     // Run the bulk-import:
     final MapReduceJob job = KijiBulkImportJobBuilder.create()

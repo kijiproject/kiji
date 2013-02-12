@@ -16,6 +16,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+/**
+ * Sample Kiji Table Layout for Apache Common Log format.
+ */
 {
   name: "logs",
   description: "Sample layout for Apache logs.",
@@ -30,7 +34,7 @@
       name: "log",
       columns: [ {
         name: "remotehost",
-        description: "Remote hostname (or IP number if DNS hostname is not available.",
+        description: "Remote hostname (or IP number if DNS hostname is not available).",
         column_schema: {type: "INLINE", value: '"string"'}
       }, {
         name: "ident",
