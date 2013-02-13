@@ -27,14 +27,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 
+import com.google.common.collect.Lists;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HConstants;
-import org.apache.hadoop.hbase.HRegionInfo;
-import org.apache.hadoop.hbase.client.HBaseAdmin;
-import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.mapreduce.hadoopbackport.TotalOrderPartitioner;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.NullWritable;
@@ -54,11 +52,10 @@ import org.kiji.mapreduce.KijiTableContext;
 import org.kiji.mapreduce.context.HFileWriterContext;
 import org.kiji.mapreduce.tools.JobIOConfKeys;
 import org.kiji.schema.Kiji;
+import org.kiji.schema.KijiRegion;
 import org.kiji.schema.KijiRowKeySplitter;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;
-import org.kiji.schema.impl.HBaseKiji;
-import org.kiji.schema.impl.HBaseKijiTable;
 import org.kiji.schema.layout.KijiTableLayout;
 
 /**
@@ -166,7 +163,12 @@ public final class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
       final KijiTable table = kiji.openTable(tableURI.getTable());
       try {
         if (NUM_SPLITS_AUTO == nsplits) {
-          return getRegionStartKeys(table);
+          final List<HFileKeyValue> startKeys = Lists.newArrayList();
+          for (KijiRegion region : table.getRegions()) {
+            startKeys.add(HFileKeyValue.createFromRowKey(region.getStartKey()));
+          }
+          return startKeys;
+
         } else {
           switch (KijiTableLayout.getEncoding(table.getLayout().getDesc().getKeysFormat())) {
           case RAW: {
@@ -318,29 +320,5 @@ public final class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
       }
     }
     return startKeys;
-  }
-
-  /**
-   * Return the start keys of all of the regions in this table as a list of KeyValues.
-   *
-   * <p>This method was copied from HFileOutputFormat of 0.90.1-cdh3u0 and modified to
-   * return KeyValue instead of ImmutableBytesWritable.</p>
-   *
-   * @param table The HTable to get region boundary start keys for.
-   * @return the start keys of the table regions.
-   * @throws IOException on I/O error.
-   */
-  // TODO(SCHEMA-153): Move this to KijiAdmin
-  private static List<HFileKeyValue> getRegionStartKeys(KijiTable table)
-      throws IOException {
-    final HBaseAdmin hbaseAdmin = ((HBaseKiji) table.getKiji()).getHBaseAdmin();
-    final HTableInterface hbaseTable = HBaseKijiTable.downcast(table).getHTable();
-
-    final List<HRegionInfo> regions = hbaseAdmin.getTableRegions(hbaseTable.getTableName());
-    final List<HFileKeyValue> ret = new ArrayList<HFileKeyValue>(regions.size());
-    for (HRegionInfo region : regions) {
-      ret.add(HFileKeyValue.createFromRowKey(region.getStartKey()));
-    }
-    return ret;
   }
 }

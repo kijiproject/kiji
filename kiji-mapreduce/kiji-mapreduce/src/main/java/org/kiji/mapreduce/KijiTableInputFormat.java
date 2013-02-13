@@ -29,7 +29,6 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.SerializationUtils;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.mapreduce.TableSplit;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.mapreduce.InputFormat;
@@ -96,8 +95,7 @@ public final class KijiTableInputFormat
     try {
       final KijiTable table = kiji.openTable(inputTableURI.getTable());
       try {
-        final HTableInterface htable = HBaseKijiTable.downcast(table).getHTable();
-
+        final byte[] htableName = HBaseKijiTable.downcast(table).getHTable().getTableName();
         final List<InputSplit> splits = Lists.newArrayList();
         for (KijiRegion region : table.getRegions()) {
           final byte[] startKey = region.getStartKey();
@@ -105,7 +103,7 @@ public final class KijiTableInputFormat
           final String location =
               region.getLocations().isEmpty() ? null : region.getLocations().iterator().next();
           final TableSplit tableSplit =
-              new TableSplit(htable.getTableName(), startKey, region.getEndKey(), location);
+              new TableSplit(htableName, startKey, region.getEndKey(), location);
           splits.add(new KijiTableSplit(tableSplit, startKey));
         }
         return splits;
