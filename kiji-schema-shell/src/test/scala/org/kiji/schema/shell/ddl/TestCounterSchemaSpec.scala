@@ -19,21 +19,16 @@
 
 package org.kiji.schema.shell.ddl
 
-import org.kiji.schema.avro.CellSchema
-import org.kiji.schema.avro.SchemaStorage
-import org.kiji.schema.avro.SchemaType
+import scala.collection.JavaConversions._
+import org.specs2.mutable._
 
-/**
- * A schema that represents an HBase counter.
- */
-class CounterSchemaSpec() extends SchemaSpec {
-  override def toColumnSchema(): CellSchema = {
-    val schema = new CellSchema
-    schema.setType(SchemaType.COUNTER)
-    schema.setValue(null)
-    schema.setStorage(SchemaStorage.FINAL)
-    return schema
+class TestCounterSchemaSpec extends CommandTestCase {
+  "CounterSchemaSpec" should {
+    "have a null value" in {
+      val counterSpec = new CounterSchemaSpec
+      val cellSchema = counterSpec.toColumnSchema()
+
+      cellSchema.getValue() must beNull
+    }
   }
-
-  override def toString(): String = { "(COUNTER schema)" }
 }
