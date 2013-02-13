@@ -27,8 +27,11 @@ import org.kiji.schema.shell.ddl.ErrorCommand
 
 /**
  * An object that processes user input.
+ *
+ * If throwOnSyntaxErr is true, then the processUserInput() method will
+ * throw DDLExceptions in addition to printing to stdout.
  */
-class InputProcessor {
+class InputProcessor(val throwOnSyntaxErr: Boolean = false) {
 
   val PROMPT_STR = "schema> "
   val CONTINUE_PROMPT_STR = "     -> "
@@ -194,9 +197,13 @@ class InputProcessor {
             val parseResult = parser.parseAll(parser.statement, buf.toString())
             val nextEnv = (
               try {
-                parseResult.getOrElse(new ErrorCommand(env, parseResult.toString())).exec()
+                parseResult.getOrElse(new ErrorCommand(
+                    env, parseResult.toString(), throwOnSyntaxErr)).exec()
               } catch { case e: DDLException =>
                 println(e.getMessage())
+                if (throwOnSyntaxErr) {
+                  throw e
+                }
                 env
               }
             )
@@ -205,6 +212,9 @@ class InputProcessor {
           } catch {
             case e: KijiInvalidNameException =>
               println("Invalid identifier: " + e.getMessage())
+              if (throwOnSyntaxErr) {
+                throw new DDLException("Invalid identifier: " + e.getMessage())
+              }
               processUserInput(new StringBuilder, env)
           }
         } else {

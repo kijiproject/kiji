@@ -33,7 +33,7 @@ class Environment(
     val instanceURI: KijiURI =
         KijiURI.newBuilder().withInstanceName(KConstants.DEFAULT_INSTANCE_NAME).build(),
     val printer: PrintStream = Console.out,
-    val kijiSystem: AbstractKijiSystem = KijiSystem,
+    val kijiSystem: AbstractKijiSystem = new KijiSystem,
     val inputSource: InputSource = new JLineInputSource) {
 
   /**

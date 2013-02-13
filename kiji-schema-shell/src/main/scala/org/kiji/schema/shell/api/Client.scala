@@ -61,6 +61,8 @@ class Client private(val kijiUri: KijiURI) extends Closeable {
   /** Output stream where stdout from DDL commands is redirected. */
   private val mStdoutBytes = new ByteArrayOutputStream
 
+  private val mKijiSystem = new KijiSystem
+
   /**
    * Executes a DDL statement. The statement does not need to be terminated by a ';'
    * character.
@@ -99,8 +101,8 @@ class Client private(val kijiUri: KijiURI) extends Closeable {
     mStdoutBytes.reset()
     val output = new PrintStream(mStdoutBytes, false, "UTF-8")
     try {
-      val env = new Environment(kijiUri, output, KijiSystem, input)
-      new InputProcessor().processUserInput(new StringBuilder(), env)
+      val env = new Environment(kijiUri, output, mKijiSystem, input)
+      new InputProcessor(throwOnSyntaxErr=true).processUserInput(new StringBuilder(), env)
     } finally {
       ResourceUtils.closeOrLog(output)
       ResourceUtils.closeOrLog(input)
@@ -122,7 +124,7 @@ class Client private(val kijiUri: KijiURI) extends Closeable {
    * when you are done with the client.
    */
   def close(): Unit = {
-    KijiSystem.shutdown()
+    mKijiSystem.shutdown()
   }
 }
 
@@ -134,5 +136,7 @@ object Client {
    * @param uri the Kiji URI to connect to.
    * @return a new instance of a Client object.
    */
-  def newInstance(uri: KijiURI): Client = { new Client(uri) }
+  def newInstance(uri: KijiURI): Client = {
+    return new Client(uri)
+  }
 }

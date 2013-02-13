@@ -19,14 +19,18 @@
 
 package org.kiji.schema.shell.api
 
+import java.util.concurrent.atomic.AtomicInteger
+
 import scala.collection.JavaConversions._
 
 import org.specs2.mutable._
 import org.apache.hadoop.hbase.HBaseConfiguration
+import org.kiji.schema.Kiji
 import org.kiji.schema.KijiInstaller
 import org.kiji.schema.KijiURI
 import org.kiji.schema.avro.FamilyDesc
 import org.kiji.schema.layout.KijiTableLayout
+import org.kiji.schema.shell.DDLException
 import org.kiji.schema.shell.Environment
 import org.kiji.schema.shell.KijiSystem
 import org.kiji.schema.shell.input.NullInputSource
@@ -36,7 +40,6 @@ class TestClient extends SpecificationWithJUnit {
   "The Client API" should {
     "create a table correctly" in {
       val uri = getNewInstanceURI()
-      installKiji(uri)
       val client = Client.newInstance(uri)
       client.executeUpdate("""
           |CREATE TABLE foo WITH DESCRIPTION 'some data'
@@ -56,7 +59,8 @@ class TestClient extends SpecificationWithJUnit {
       // Programmatically test proper table creation.
       // Check that we have created as many locgroups, map families, and group families
       // as we expect to be here.
-      val maybeLayout = env(uri).kijiSystem.getTableLayout(uri, "foo")
+      val environment = env(uri)
+      val maybeLayout = environment.kijiSystem.getTableLayout(uri, "foo")
       maybeLayout must beSome[KijiTableLayout]
       val layout = maybeLayout.get.getDesc
       val locGroups = layout.getLocalityGroups()
@@ -73,18 +77,93 @@ class TestClient extends SpecificationWithJUnit {
       maybeInfo.get.getColumns().size mustEqual 3
 
       client.close()
+      environment.kijiSystem.shutdown()
+    }
+
+    "tolerate statements not terminated with a semicolon" in {
+      val uri = getNewInstanceURI()
+      val client = Client.newInstance(uri)
+      client.executeUpdate("""
+          |CREATE TABLE foo WITH DESCRIPTION 'some data'
+          |ROW KEY FORMAT HASHED
+          |WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
+          |  MAXVERSIONS = INFINITY,
+          |  TTL = FOREVER,
+          |  INMEMORY = false,
+          |  COMPRESSED WITH GZIP,
+          |  FAMILY info WITH DESCRIPTION 'basic information' (
+          |    name "string" WITH DESCRIPTION 'The user\'s name',
+          |    email "string",
+          |    age "int"),
+          |  MAP TYPE FAMILY integers COUNTER
+          |)""".stripMargin('|'))
+      client.close()
+    }
+
+    "handle sequential clients" in {
+      val uri = getNewInstanceURI()
+      val client = Client.newInstance(uri)
+      client.executeUpdate("""
+          |CREATE TABLE foo WITH DESCRIPTION 'some data'
+          |ROW KEY FORMAT HASHED
+          |WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
+          |  MAXVERSIONS = INFINITY,
+          |  TTL = FOREVER,
+          |  INMEMORY = false,
+          |  COMPRESSED WITH GZIP,
+          |  FAMILY info WITH DESCRIPTION 'basic information' (
+          |    name "string" WITH DESCRIPTION 'The user\'s name',
+          |    email "string",
+          |    age "int")
+          |)""".stripMargin('|'))
+      client.close()
+
+      val client2 = Client.newInstance(uri)
+      client2.executeUpdate("DROP TABLE foo")
+      client.close()
+    }
+
+    "throw on syntax err" in {
+      val uri = getNewInstanceURI()
+      val client = Client.newInstance(uri)
+      try {
+        client.executeUpdate("THIS IS NOT A VALID CREATE TABLE STATEMENT")
+        println("Got this instead: " + client.getLastOutput())
+        failure("This should have failed")
+      } catch {
+        case e: DDLException =>
+          println("Got expected exception: " + e.getMessage())
+      } finally {
+        client.close()
+      }
+    }
+
+    "throw on semantic err" in {
+      val uri = getNewInstanceURI()
+      val client = Client.newInstance(uri)
+      try {
+        client.executeUpdate("DROP TABLE neverthereinthefirstplace;")
+        failure("This should have failed")
+      } catch {
+        case e: DDLException =>
+          println("Got expected exception: " + e.getMessage())
+      } finally {
+        client.close()
+      }
     }
   }
 
-  private var mNextInstanceId = 0;
+  private val mNextInstanceId = new AtomicInteger(0);
 
   /**
    * @return the name of a unique Kiji instance (that doesn't yet exist).
    */
   def getNewInstanceURI(): KijiURI = {
-    val id = mNextInstanceId;
-    mNextInstanceId += 1;
-    return KijiURI.newBuilder("kiji://.fake." + id + "/default").build()
+    val id = mNextInstanceId.incrementAndGet()
+    val uri = KijiURI.newBuilder().withZookeeperQuorum(Array(".fake." +
+        id)).withInstanceName("default").build()
+    installKiji(uri)
+    return uri
   }
 
   /**
@@ -98,7 +177,7 @@ class TestClient extends SpecificationWithJUnit {
     new Environment(
         uri,
         System.out,
-        KijiSystem,
+        new KijiSystem,
         new NullInputSource())
   }
 }

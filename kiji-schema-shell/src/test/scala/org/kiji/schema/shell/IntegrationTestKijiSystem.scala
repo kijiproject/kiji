@@ -39,7 +39,8 @@ class IntegrationTestKijiSystem extends SpecificationWithJUnit {
     "create a table correctly" in {
       val uri = getNewInstanceURI()
       installKiji(uri)
-      val parser = getParser(env(uri))
+      val environment = env(uri)
+      val parser = getParser(environment)
       val res = parser.parseAll(parser.statement, """
 CREATE TABLE foo WITH DESCRIPTION 'some data'
 ROW KEY FORMAT HASHED
@@ -81,12 +82,15 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
           grp.getName().toString() == "info" })
       maybeInfo must beSome[FamilyDesc]
       maybeInfo.get.getColumns().size mustEqual 3
+
+      environment.kijiSystem.shutdown()
     }
 
     "create and drop a table" in {
       val uri = getNewInstanceURI()
       installKiji(uri)
-      val parser = getParser(env(uri))
+      val environment = env(uri)
+      val parser = getParser(environment)
       val res = parser.parseAll(parser.statement, """
 CREATE TABLE foo WITH DESCRIPTION 'some data'
 ROW KEY FORMAT HASHED
@@ -116,12 +120,15 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
       // Programmatically test that the table no longer exists.
       val maybeLayout2 = env3.kijiSystem.getTableLayout(uri, "foo")
       maybeLayout2 must beNone
+
+      environment.kijiSystem.shutdown()
     }
 
     "create and alter a table" in {
       val uri = getNewInstanceURI()
       installKiji(uri)
-      val parser = getParser(env(uri))
+      val environment = env(uri)
+      val parser = getParser(environment)
       val res = parser.parseAll(parser.statement, """
 CREATE TABLE foo WITH DESCRIPTION 'some data'
 ROW KEY FORMAT HASHED
@@ -197,6 +204,8 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
       maybeLayout3 must beSome[KijiTableLayout]
       val layout3 = maybeLayout3.get.getDesc
       layout3.getDescription().toString mustEqual "ohai"
+
+      environment.kijiSystem.shutdown()
     }
   }
 
@@ -222,7 +231,7 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
     new Environment(
         instanceURI,
         System.out,
-        KijiSystem,
+        new KijiSystem,
         new NullInputSource())
   }
 

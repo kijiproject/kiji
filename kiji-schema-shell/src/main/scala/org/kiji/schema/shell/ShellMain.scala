@@ -78,7 +78,7 @@ class ShellMain {
     )
 
     val uri = KijiURI.newBuilder(kijiURI).build()
-    return new Environment(uri, Console.out, KijiSystem, input)
+    return new Environment(uri, Console.out, ShellMain.shellKijiSystem, input)
   }
 
   /**
@@ -95,6 +95,9 @@ class ShellMain {
 
 object ShellMain {
 
+  /** Singleton KijiSystem instance used in interactive shell process. */
+  val shellKijiSystem: AbstractKijiSystem = new KijiSystem
+
   /**
    * @returns the version number associated with this software package.
    */
@@ -105,7 +108,7 @@ object ShellMain {
   }
 
   /**
-   * Main entry point for running the Wibi shell.
+   * Main entry point for running the Kiji schema shell.
    *
    * @param args Command line arguments.
    */
@@ -119,7 +122,7 @@ object ShellMain {
     val retVal = shellMain.run()
 
     // Close all connections properly before exiting.
-    KijiSystem.shutdown()
+    ShellMain.shellKijiSystem.shutdown()
     if (retVal != 0) {
       sys.exit(retVal)
     }

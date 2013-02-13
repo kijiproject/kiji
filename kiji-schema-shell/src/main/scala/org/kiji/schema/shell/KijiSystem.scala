@@ -38,13 +38,15 @@ import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.util.ResourceUtils
 
 /**
- * This object serves to provide Kiji schema shell with access to KijiSchema.
- * Clients of this object should use it to obtain handles to Kiji resources.  Clients
+ * Instances of this class provide the Kiji schema shell with access to KijiSchema.
+ * Clients of this class should use it to obtain handles to Kiji resources.  Clients
  * should avoid closing any Kiji resources they obtain through this object.  Instead,
  * clients should use the {@link KijiSystem#shutdown} method to shutdown all
  * resources when done with interacting with Kiji.
+ *
+ * <p>Each thread should create its own KijiSystem instance.</p>
  */
-object KijiSystem extends AbstractKijiSystem {
+class KijiSystem extends AbstractKijiSystem {
   // A map from Kiji instance names to internal implementations of Kiji instances.
   private val kijis = Map[KijiURI, Kiji]()
 
@@ -193,10 +195,12 @@ object KijiSystem extends AbstractKijiSystem {
       case Some(admin) => {
         // Close this.
         ResourceUtils.closeOrLog(hBaseAdmin)
+        maybeHBaseAdmin = None
       }
     }
 
     kijis.foreach { case (key, refCountable) =>
         ResourceUtils.releaseOrLog(refCountable) }
+    kijis.clear
   }
 }
