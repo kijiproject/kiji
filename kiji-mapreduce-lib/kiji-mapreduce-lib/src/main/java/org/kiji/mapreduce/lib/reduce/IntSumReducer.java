@@ -23,8 +23,6 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.IntWritable;
 
-import org.kiji.mapreduce.reducer.KeyPassThroughReducer;
-
 /**
  * <p>A WibiReducer that works on key/value pairs where the value is
  * an IntWritable.  For all integer values with the same key, the
