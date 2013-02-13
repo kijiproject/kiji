@@ -26,12 +26,12 @@ import org.apache.hadoop.io.NullWritable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.mapreduce.GathererContext;
 import org.kiji.mapreduce.HFileKeyValue;
 import org.kiji.mapreduce.KijiGatherer;
 import org.kiji.mapreduce.KijiTableContext;
 import org.kiji.mapreduce.KijiTableContextFactory;
-import org.kiji.mapreduce.MapReduceContext;
-import org.kiji.mapreduce.context.InternalMapReduceContext;
+import org.kiji.mapreduce.context.InternalGathererContext;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 
@@ -76,16 +76,16 @@ public class SimpleTableMapperAsGatherer
 
   /** {@inheritDoc} */
   @Override
-  public void setup(MapReduceContext<HFileKeyValue, NullWritable> context) throws IOException {
+  public void setup(GathererContext<HFileKeyValue, NullWritable> context) throws IOException {
     Preconditions.checkState(mTableContext == null);
     super.setup(context);
     mTableContext =
-        KijiTableContextFactory.create(((InternalMapReduceContext)context).getMapReduceContext());
+        KijiTableContextFactory.create(((InternalGathererContext)context).getMapReduceContext());
   }
 
   /** {@inheritDoc} */
   @Override
-  public void gather(KijiRowData input, MapReduceContext<HFileKeyValue, NullWritable> unused)
+  public void gather(KijiRowData input, GathererContext<HFileKeyValue, NullWritable> unused)
       throws IOException {
     Preconditions.checkState(mTableContext != null);
 
@@ -105,7 +105,7 @@ public class SimpleTableMapperAsGatherer
 
   /** {@inheritDoc} */
   @Override
-  public void cleanup(MapReduceContext<HFileKeyValue, NullWritable> context) throws IOException {
+  public void cleanup(GathererContext<HFileKeyValue, NullWritable> context) throws IOException {
     Preconditions.checkState(mTableContext != null);
     mTableContext.close();
     mTableContext = null;

@@ -64,7 +64,7 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
 
     /** {@inheritDoc} */
     @Override
-    public void gather(KijiRowData input, MapReduceContext<Text, Text> context)
+    public void gather(KijiRowData input, GathererContext<Text, Text> context)
         throws IOException {
       // Gathering logic, unused in these tests.
     }
@@ -94,7 +94,7 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
 
     /** {@inheritDoc} */
     @Override
-    public void gather(KijiRowData input, MapReduceContext<HFileKeyValue, NullWritable> context)
+    public void gather(KijiRowData input, GathererContext<HFileKeyValue, NullWritable> context)
         throws IOException {
       // Gathering logic, unused in these tests.
     }

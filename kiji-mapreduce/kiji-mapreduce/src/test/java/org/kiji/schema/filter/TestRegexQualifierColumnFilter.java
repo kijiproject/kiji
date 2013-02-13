@@ -38,9 +38,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.mapreduce.GathererContext;
 import org.kiji.mapreduce.KijiGatherJobBuilder;
 import org.kiji.mapreduce.KijiGatherer;
-import org.kiji.mapreduce.MapReduceContext;
 import org.kiji.mapreduce.MapReduceJob;
 import org.kiji.mapreduce.output.SequenceFileMapReduceJobOutput;
 import org.kiji.schema.KijiClientTest;
@@ -100,7 +100,7 @@ public class TestRegexQualifierColumnFilter extends KijiClientTest {
     }
 
     @Override
-    public void gather(KijiRowData input, MapReduceContext<Text, NullWritable> context)
+    public void gather(KijiRowData input, GathererContext<Text, NullWritable> context)
         throws IOException {
       NavigableMap<String, NavigableMap<Long, CharSequence>> qualifiers =
           input.getValues("family");

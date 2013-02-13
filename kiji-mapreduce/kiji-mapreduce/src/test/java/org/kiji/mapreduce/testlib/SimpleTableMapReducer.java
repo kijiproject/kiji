@@ -25,10 +25,10 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 
+import org.kiji.mapreduce.GathererContext;
 import org.kiji.mapreduce.KijiGatherer;
 import org.kiji.mapreduce.KijiTableContext;
 import org.kiji.mapreduce.KijiTableReducer;
-import org.kiji.mapreduce.MapReduceContext;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 
@@ -62,7 +62,7 @@ public class SimpleTableMapReducer {
 
     /** {@inheritDoc} */
     @Override
-    public void gather(KijiRowData input, MapReduceContext<LongWritable, Text> context)
+    public void gather(KijiRowData input, GathererContext<LongWritable, Text> context)
         throws IOException {
       final String rowKey = Bytes.toString((byte[]) input.getEntityId().getComponentByIndex(0));
       final CharSequence cseq = input.getMostRecentValue("primitives", "string");

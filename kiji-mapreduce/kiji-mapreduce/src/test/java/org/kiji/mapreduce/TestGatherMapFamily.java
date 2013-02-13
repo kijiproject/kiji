@@ -58,7 +58,7 @@ public class TestGatherMapFamily extends KijiClientTest {
 
     /** {@inheritDoc} */
     @Override
-    public void gather(KijiRowData input, MapReduceContext<Text, Text> context)
+    public void gather(KijiRowData input, GathererContext<Text, Text> context)
         throws IOException {
       final NavigableMap<String, Utf8> qmap = input.getMostRecentValues("map_family");
       Preconditions.checkState(qmap.size() == 1);

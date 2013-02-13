@@ -25,14 +25,14 @@ import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.Inheritance;
 
 /**
- * Context for MapReduce jobs that emit key/value pairs.
+ * Context for gatherers. GathererContexts emit key/value pairs.
  *
  * @param <K> Type of the keys to emit.
  * @param <V> Type of the values to emit.
  */
 @ApiAudience.Public
 @Inheritance.Sealed
-public interface MapReduceContext<K, V> extends KijiContext {
+public interface GathererContext<K, V> extends KijiContext {
   /**
    * Emits a key/value pair.
    *

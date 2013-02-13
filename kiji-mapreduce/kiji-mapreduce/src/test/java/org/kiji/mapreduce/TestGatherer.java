@@ -77,7 +77,7 @@ public class TestGatherer extends KijiClientTest {
 
     /** {@inheritDoc} */
     @Override
-    public void gather(KijiRowData row, MapReduceContext<LongWritable, Text> context)
+    public void gather(KijiRowData row, GathererContext<LongWritable, Text> context)
         throws IOException {
       final Integer zipCode = row.getMostRecentValue("info", "zip_code");
       final String userId = Bytes.toString((byte[]) row.getEntityId().getComponentByIndex(0));

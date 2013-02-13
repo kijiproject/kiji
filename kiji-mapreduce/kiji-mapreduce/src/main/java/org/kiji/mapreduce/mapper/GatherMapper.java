@@ -31,11 +31,11 @@ import org.slf4j.LoggerFactory;
 import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.AvroKeyWriter;
 import org.kiji.mapreduce.AvroValueWriter;
+import org.kiji.mapreduce.GathererContext;
 import org.kiji.mapreduce.JobHistoryCounters;
 import org.kiji.mapreduce.KijiConfKeys;
 import org.kiji.mapreduce.KijiGatherer;
-import org.kiji.mapreduce.MapReduceContext;
-import org.kiji.mapreduce.context.InternalMapReduceContext;
+import org.kiji.mapreduce.context.InternalGathererContext;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 
@@ -59,7 +59,7 @@ public final class GatherMapper<K, V>
    * The context object that allows the gatherer to interact with MapReduce,
    * KVStores, etc.
    */
-  private MapReduceContext<K, V> mGathererContext;
+  private GathererContext<K, V> mGathererContext;
 
   @Override
   public void setConf(Configuration conf) {
@@ -120,7 +120,7 @@ public final class GatherMapper<K, V>
     Preconditions.checkState(null == mGathererContext);
     setConf(context.getConfiguration());
 
-    mGathererContext = InternalMapReduceContext.create(context);
+    mGathererContext = InternalGathererContext.create(context);
     mGatherer.setup(mGathererContext);
   }
 

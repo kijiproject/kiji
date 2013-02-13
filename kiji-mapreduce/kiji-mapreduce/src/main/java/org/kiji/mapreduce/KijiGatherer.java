@@ -116,7 +116,7 @@ public abstract class KijiGatherer<K, V>
    * @param context A gatherer context used to write key/value output, access stores, etc.
    * @throws IOException if there is an error.
    */
-  public void setup(MapReduceContext<K, V> context) throws IOException {
+  public void setup(GathererContext<K, V> context) throws IOException {
     // By default, do nothing.
   }
 
@@ -127,7 +127,7 @@ public abstract class KijiGatherer<K, V>
    * @param context A gatherer context, used to write key/value output.
    * @throws IOException If there is an error.
    */
-  public abstract void gather(KijiRowData input, MapReduceContext<K, V> context)
+  public abstract void gather(KijiRowData input, GathererContext<K, V> context)
       throws IOException;
 
   /**
@@ -137,7 +137,7 @@ public abstract class KijiGatherer<K, V>
    * @param context A gatherer context used to write key/value output, access stores, etc.
    * @throws IOException if there is an error.
    */
-  public void cleanup(MapReduceContext<K, V> context) throws IOException {
+  public void cleanup(GathererContext<K, V> context) throws IOException {
     // By default, do nothing.
   }
 
