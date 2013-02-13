@@ -24,8 +24,8 @@ import java.io.IOException;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 
+import org.kiji.mapreduce.GathererContext;
 import org.kiji.mapreduce.KijiGatherer;
-import org.kiji.mapreduce.MapReduceContext;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 
@@ -60,14 +60,14 @@ public class EmailDomainCountGatherer extends KijiGatherer<Text, IntWritable> {
 
   /** {@inheritDoc} */
   @Override
-  public void setup(MapReduceContext context) throws IOException {
+  public void setup(GathererContext context) throws IOException {
     super.setup(context);
     mDomain = new Text();
   }
 
   /** {@inheritDoc} */
   @Override
-  public void gather(KijiRowData input, MapReduceContext context)
+  public void gather(KijiRowData input, GathererContext context)
       throws IOException {
     if (!input.containsColumn("info", "email")) {
       // No email data.

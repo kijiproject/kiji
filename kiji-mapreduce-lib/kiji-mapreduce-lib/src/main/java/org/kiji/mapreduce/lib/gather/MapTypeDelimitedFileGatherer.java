@@ -31,8 +31,8 @@ import org.apache.hadoop.io.Text;
 
 import org.kiji.hadoop.configurator.HadoopConf;
 import org.kiji.hadoop.configurator.HadoopConfigurator;
+import org.kiji.mapreduce.GathererContext;
 import org.kiji.mapreduce.KijiGatherer;
-import org.kiji.mapreduce.MapReduceContext;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
@@ -107,7 +107,7 @@ public class MapTypeDelimitedFileGatherer extends KijiGatherer<Text, NullWritabl
   }
 
   @Override
-  public void setup(MapReduceContext context) throws IOException {
+  public void setup(GathererContext context) throws IOException {
     super.setup(context);
     mLine = new Text();
   }
@@ -151,7 +151,7 @@ public class MapTypeDelimitedFileGatherer extends KijiGatherer<Text, NullWritabl
    * @throws IOException if there's an error.
    */
   @Override
-  public void gather(KijiRowData input, MapReduceContext context)
+  public void gather(KijiRowData input, GathererContext context)
       throws IOException {
     for (String key : input.getQualifiers(mFamily)) {
     NavigableMap<Long, Object> values = input.getMostRecentValue(mFamily, key);
