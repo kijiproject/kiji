@@ -21,20 +21,48 @@ package org.kiji.mapreduce.testlib;
 
 import java.io.IOException;
 
+import org.apache.hadoop.conf.Configurable;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.mapred.JobConf;
 
-import org.kiji.mapreduce.reducer.KeyPassThroughReducer;
+import org.kiji.mapreduce.KijiReducer;
 
 /**
  * <p>A KijiReducer that works on key/value pairs where the value is
  * an IntWritable.  For all integer values with the same key, the
- * IntSumReducer will output a single pair with a value equal to the
+ * SimpleIntSumReducer will output a single pair with a value equal to the
  * sum, leaving the key unchanged.</p>
+ *
+ * This class is for testing in Kiji MapReduce.  To use this in actual MapReduce jobs, use the
+ * IntSumReducer in Kiji MapReduce Lib.
  *
  * @param <K> The type of the reduce input key.
  */
-public class IntSumReducer<K> extends KeyPassThroughReducer<K, IntWritable, IntWritable> {
+public class SimpleIntSumReducer<K> extends KijiReducer<K, IntWritable, K, IntWritable>
+    implements Configurable {
   private IntWritable mValue;
+
+  /** The Hadoop configuration. */
+  private Configuration mConf;
+
+  /** {@inheritDoc} */
+  @Override
+  public void setConf(Configuration conf) {
+    mConf = conf;
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public Configuration getConf() {
+    return mConf;
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public Class<?> getOutputKeyClass() {
+    return new JobConf(getConf()).getMapOutputKeyClass();
+  }
 
   /** {@inheritDoc} */
   @Override

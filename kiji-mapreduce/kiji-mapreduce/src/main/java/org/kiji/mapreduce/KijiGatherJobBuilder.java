@@ -48,7 +48,7 @@ import org.kiji.schema.KijiDataRequest;
  * MapReduceJob job = KijiGatherJobBuilder.create()
  *     .withInputTable(myTable)
  *     .withGatherer(MyCountGatherer.class)
- *     .withReducer(IntSumReducer.class)
+ *     .withReducer(SimpleIntSumReducer.class)
  *     .withOutput(new TextMapReduceJobOutput("path/to/counts", numSplits))
  *     .build();
  * boolean success = job.run();

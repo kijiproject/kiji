@@ -22,6 +22,8 @@ package org.kiji.mapreduce.reducer;
 import java.io.IOException;
 
 import org.apache.avro.Schema;
+import org.apache.hadoop.conf.Configurable;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -30,7 +32,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.mapreduce.AvroKeyWriter;
 import org.kiji.mapreduce.AvroValueWriter;
+import org.kiji.mapreduce.KijiReducer;
 
 /**
  * This MapReduce reducer will pass through all of the input key-value
@@ -38,14 +42,32 @@ import org.kiji.mapreduce.AvroValueWriter;
  * IdentityReducer only in that it extends KijiReducer so it can be
  * run within the Kiji framework.
  *
+ * This class implements the {@link AvroKeyWriter} and the {@link AvroValueWriter} interfaces
+ * so that it can be used for Avro output
+ *
  * @param <K> The MapReduce input key type.
  * @param <V> The MapReduce input value type.
  */
 @ApiAudience.Public
 public final class IdentityReducer<K, V>
-    extends KeyPassThroughReducer<K, V, V>
-    implements AvroValueWriter {
+    extends KijiReducer<K, V, K, V>
+    implements Configurable, AvroKeyWriter, AvroValueWriter {
   private static final Logger LOG = LoggerFactory.getLogger(IdentityReducer.class);
+
+  /** The Hadoop configuration. */
+  private Configuration mConf;
+
+  /** {@inheritDoc} */
+  @Override
+  public void setConf(Configuration conf) {
+    mConf = conf;
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public Configuration getConf() {
+    return mConf;
+  }
 
   /** {@inheritDoc} */
   @Override
@@ -66,6 +88,24 @@ public final class IdentityReducer<K, V>
   @Override
   public Class<?> getOutputValueClass() {
     return new JobConf(getConf()).getMapOutputValueClass();
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public Schema getAvroKeyWriterSchema() throws IOException {
+    Class<? extends Mapper<?, ?, ?, ?>> mapperClass;
+    try {
+      mapperClass = new Job(getConf()).getMapperClass();
+    } catch (ClassNotFoundException e) {
+      throw new IOException("Mapper class was not configured. "
+          + "Could not infer avro key writer schema.", e);
+    }
+    Mapper<?, ?, ?, ?> mapper = ReflectionUtils.newInstance(mapperClass, getConf());
+    if (mapper instanceof AvroKeyWriter) {
+      LOG.info("Mapper is an AvroKeyWriter. Using the same schema for Reducer output keys.");
+      return ((AvroKeyWriter) mapper).getAvroKeyWriterSchema();
+    }
+    return null;
   }
 
   /** {@inheritDoc} */
