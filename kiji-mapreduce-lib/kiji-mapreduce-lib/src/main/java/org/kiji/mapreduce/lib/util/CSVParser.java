@@ -87,7 +87,8 @@ public final class CSVParser {
   private static List<String> parseFields(String line, Pattern pattern)
       throws ParseException {
     List<String> derivedFields = new ArrayList();
-    List<String> tokens = Arrays.asList(pattern.split(line));
+    // -1 limit parameter is used to keep trailing fields in the result.
+    List<String> tokens = Arrays.asList(pattern.split(line, -1));
     Iterator<String> tokenItr = tokens.iterator();
 
     while (tokenItr.hasNext()) {
@@ -98,9 +99,8 @@ public final class CSVParser {
         throw new ParseException("Optional double quotes(\") not at the beginning of the field",
             line.indexOf(ESCAPE_CHARACTER));
       }
-
       // If this is an escaped string, parse individual characters to handle escaping
-      if (token.charAt(0) == ESCAPE_CHARACTER) {
+      if (token.length() != 0 && token.charAt(0) == ESCAPE_CHARACTER) {
         StringBuilder sb = new StringBuilder();
         int pos = 1; // Start beyond the quote
         boolean done = false;

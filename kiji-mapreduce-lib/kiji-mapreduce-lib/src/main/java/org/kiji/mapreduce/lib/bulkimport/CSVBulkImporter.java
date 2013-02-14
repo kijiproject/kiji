@@ -164,16 +164,23 @@ public final class CSVBulkImporter extends DescribedInputTextBulkImporter {
       reject(value, context, pe.toString());
       return;
     }
+
+    List<String> emptyFields = Lists.newArrayList();
     for (KijiColumnName kijiColumnName : getDestinationColumns()) {
       final EntityId eid = getEntityId(fields, context);
       String source = getSource(kijiColumnName);
 
       if (mFieldMap.get(source) < fields.size()) {
         String fieldValue = fields.get(mFieldMap.get(source));
-        context.put(eid, kijiColumnName.getFamily(), kijiColumnName.getQualifier(), fieldValue);
-      } else {
-        incomplete(value, context, "Detected trailing empty field: " + source);
+        if (!fieldValue.isEmpty()) {
+          context.put(eid, kijiColumnName.getFamily(), kijiColumnName.getQualifier(), fieldValue);
+        } else {
+          emptyFields.add(source);
+        }
       }
+    }
+    if (!emptyFields.isEmpty()) {
+      incomplete(value, context, "Record is missing fields: " + StringUtils.join(emptyFields, ","));
     }
 
   }

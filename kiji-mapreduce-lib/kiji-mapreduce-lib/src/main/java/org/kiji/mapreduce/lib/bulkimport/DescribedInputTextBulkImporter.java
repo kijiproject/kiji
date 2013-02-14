@@ -178,7 +178,7 @@ public abstract class DescribedInputTextBulkImporter extends KijiBulkImporter<Lo
    */
   public void incomplete(Text line, KijiTableContext context, String reason) {
     if (mIncompleteLineCounter % mLogRate == 0L) {
-      LOG.error("Rejecting line: {} with reason: {}",
+      LOG.error("Incomplete line: {} with reason: {}",
           line.toString(), reason);
     }
     mIncompleteLineCounter++;

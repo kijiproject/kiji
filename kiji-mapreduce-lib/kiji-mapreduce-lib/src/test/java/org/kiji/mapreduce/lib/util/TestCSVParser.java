@@ -46,7 +46,22 @@ public class TestCSVParser {
     List<String> derivedFields = CSVParser.parseCSV(line);
     List<String> expected = Arrays.asList("first", "last", "phone");
     assertStringListsEqual(expected, derivedFields);
+  }
 
+  @Test
+  public void testTrailingEmptys() throws ParseException {
+    String line = "first,last,phone,,";
+    List<String> derivedFields = CSVParser.parseCSV(line);
+    List<String> expected = Arrays.asList("first", "last", "phone", "", "");
+    assertStringListsEqual(expected, derivedFields);
+  }
+
+  @Test
+  public void testEmptysComma() throws ParseException {
+    String line = "first,last,,phone";
+    List<String> derivedFields = CSVParser.parseCSV(line);
+    List<String> expected = Arrays.asList("first", "last", "", "phone");
+    assertStringListsEqual(expected, derivedFields);
   }
 
   @Test(expected = ParseException.class)
@@ -101,7 +116,7 @@ public class TestCSVParser {
   }
 
   @Test
-  public void testTabSeparatedValuess() throws ParseException {
+  public void testTabSeparatedValues() throws ParseException {
     String line = "John Doe\tSan Francisco, CA\t94110";
     List<String> derivedFields = CSVParser.parseTSV(line);
     List<String> expected = Arrays.asList("John Doe", "San Francisco, CA", "94110");
