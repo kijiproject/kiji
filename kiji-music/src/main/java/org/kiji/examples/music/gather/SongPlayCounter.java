@@ -26,8 +26,8 @@ import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 
+import org.kiji.mapreduce.GathererContext;
 import org.kiji.mapreduce.KijiGatherer;
-import org.kiji.mapreduce.MapReduceContext;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequestBuilder;
 import org.kiji.schema.KijiRowData;
@@ -41,6 +41,8 @@ import org.kiji.schema.KijiRowData;
 public class SongPlayCounter extends KijiGatherer<Text, LongWritable> {
   /** Only keep one Text object around to reduce the chance of a garbage collection pause.*/
   private Text mText;
+  /** Only keep one LongWritable object around to reduce the chance of a garbage collection pause.*/
+  private static final LongWritable ONE = new LongWritable(1);
 
   /** {@inheritDoc} */
   @Override
@@ -56,7 +58,7 @@ public class SongPlayCounter extends KijiGatherer<Text, LongWritable> {
 
   /** {@inheritDoc} */
   @Override
-  public void setup(MapReduceContext<Text, LongWritable> context) throws IOException {
+  public void setup(GathererContext<Text, LongWritable> context) throws IOException {
     mText = new Text();
   }
 
@@ -73,14 +75,12 @@ public class SongPlayCounter extends KijiGatherer<Text, LongWritable> {
 
   /** {@inheritDoc} */
   @Override
-  public void gather(KijiRowData row, MapReduceContext<Text, LongWritable> context)
+  public void gather(KijiRowData row, GathererContext<Text, LongWritable> context)
       throws IOException {
-
-    final LongWritable one = new LongWritable(1);
     NavigableMap<Long, CharSequence> trackPlays = row.getValues("info", "track_plays");
     for (CharSequence trackId : trackPlays.values()) {
       mText.set(trackId.toString());
-      context.write(mText, one);
+      context.write(mText, ONE);
       mText.clear();
     }
   }

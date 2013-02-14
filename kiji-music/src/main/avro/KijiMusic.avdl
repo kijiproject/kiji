@@ -30,10 +30,24 @@ protocol KijiMusicRecords {
     long duration;
   }
 
-  /** Probability of a song being the next to be played. */
-  record NextSongProbability {
+  /** A count of the number of times a song has been played. */
+  record SongCount {
     string song_id;
-    double probability;
+    long count;
+  }
+
+  /** Container record for the top songs and their number of plays. */
+  record TopSongs {
+     array<SongCount> topSongs;
+  }
+
+  /** Song play bigram. */
+  record SongBiGram {
+    /** The id of the first song played in a sequence. */
+    string first_song_played;
+
+    /** The id of the song played immediately after it. */
+    string second_song_played;
   }
 
 }

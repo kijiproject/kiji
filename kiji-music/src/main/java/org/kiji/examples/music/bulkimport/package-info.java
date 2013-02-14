@@ -18,15 +18,16 @@
  */
 
 /**
- * TODO: Update this with documentation on how to do bulk imports, once kiji-schema
- * supports bulk-import
+ * This package contains the bulk-importers used in the KijiMusic tutorial.
  *
- * For the time being, bulk imports are run from the CLI:
- *
- * java -cp $KIJI_CLASSPATH:target/kiji-music-0.1.jar org.kiji.mapreduce.tools.KijiBulkImport \
- *   --input=text:kiji-music-users.txt \
- *   --table=users \
- *   --importer=org.kiji.examples.music.bulkimport.TrackPlaysBulkImporter \
- *   --output=kiji
+ * Bulk imports are run from the shell:
+ * <pre>
+ *   kiji bulk-import \
+ *       --kiji=${KIJI} \
+ *       --importer=org.kiji.examples.music.bulkimport.SongMetadataBulkImporter \
+ *       --lib=lib/ \
+ *       --output=”format=kiji table=${KIJI}/songs nsplits=1” \
+ *       --input=”format=text file=${HDFS_ROOT}/kiji-mr-tutorial/song-metadata.json”
+ * </pre>
  */
 package org.kiji.examples.music.bulkimport;

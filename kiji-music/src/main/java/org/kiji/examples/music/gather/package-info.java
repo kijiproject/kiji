@@ -18,8 +18,8 @@
  */
 
 /**
- * This is the KijiMusic top-level package.
+ * This package contains various gatherers used in the KijiMusic tutorial.
  *
- * TODO: Figure out what kinds of stuff goes in this package.
+ * TODO: Add a usage example.
  */
-package org.kiji.examples.music;
+package org.kiji.examples.music.gather;

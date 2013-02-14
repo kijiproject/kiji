@@ -29,12 +29,12 @@
         }
       }, {
         id : 2,
-        name : "top_30_next_songs",
+        name : "next_songs",
         description : "Probabilities of a song being the next song to be played",
         column_schema : {
           storage : "UID",
           type : "CLASS",
-          value : "org.kiji.examples.music.NextSongProbability"
+          value : "org.kiji.examples.music.NextSongCount"
         }
       } ]
     } ]
