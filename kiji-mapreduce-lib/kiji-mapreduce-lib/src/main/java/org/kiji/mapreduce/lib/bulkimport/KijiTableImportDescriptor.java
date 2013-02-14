@@ -45,6 +45,7 @@ import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.util.FromJson;
 import org.kiji.schema.util.KijiNameValidator;
+import org.kiji.schema.util.ProtocolVersion;
 import org.kiji.schema.util.ResourceUtils;
 import org.kiji.schema.util.ToJson;
 
@@ -72,7 +73,7 @@ import org.kiji.schema.util.ToJson;
  *     } ],
  *   } ],
  *   entityIdSource : "first", // field in the source to generate the entity id from.
- *   version : "imports-1.0" // format version number of the import descriptor
+ *   version : "import-1.0" // format version number of the import descriptor
  * }
  * </code></pre>
  *
@@ -97,6 +98,17 @@ import org.kiji.schema.util.ToJson;
 @ApiAudience.Public
 public final class KijiTableImportDescriptor {
   private static final Logger LOG = LoggerFactory.getLogger(KijiTableImportDescriptor.class);
+
+  // ProtocolVersions specifying when different features were added to import functionality.
+
+  /** Minimum import version we can recognize. */
+  private static final ProtocolVersion MIN_IMPORT_VER = ProtocolVersion.parse("import-1.0.0");
+
+  /** Maximum import version we can recognize. */
+  private static final ProtocolVersion MAX_IMPORT_VER = ProtocolVersion.parse("import-1.0.0");
+
+  /** All import versions must use the format 'import-x.y' to specify what version they use. */
+  private static final String IMPORT_PROTOCOL_NAME = "import";
 
   /** Concrete layout of a family. */
   @ApiAudience.Public
@@ -228,11 +240,29 @@ public final class KijiTableImportDescriptor {
    */
   public KijiTableImportDescriptor(TableImportDescriptorDesc desc)
       throws InvalidTableImportDescriptorException {
+
     // Deep-copy the descriptor to prevent mutating a parameter:
     mDesc = TableImportDescriptorDesc.newBuilder(Preconditions.checkNotNull(desc)).build();
 
     // Ensure the array of locality groups is mutable:
     mDesc.setFamilies(Lists.newArrayList(mDesc.getFamilies()));
+
+    // Check that the version specified in the import descriptor matches the features used.
+    final ProtocolVersion importVersion = ProtocolVersion.parse(mDesc.getVersion());
+    if (!IMPORT_PROTOCOL_NAME.equals(importVersion.getProtocolName())) {
+      throw new InvalidTableImportDescriptorException(
+          String.format("Invalid version protocol: '%s'. Expected: '%s'.",
+          importVersion.getProtocolName(),
+          IMPORT_PROTOCOL_NAME));
+    }
+
+    if (MAX_IMPORT_VER.compareTo(importVersion) < 0) {
+      throw new InvalidTableImportDescriptorException("The maximum import version we support is "
+          + MAX_IMPORT_VER + "; this import requires " + importVersion);
+    } else if (MIN_IMPORT_VER.compareTo(importVersion) > 0) {
+      throw new InvalidTableImportDescriptorException("The minimum import version we support is "
+          + MIN_IMPORT_VER + "; this import requires " + importVersion);
+    }
 
     if (!isValidName(getName())) {
       throw new InvalidTableImportDescriptorException(

@@ -34,15 +34,10 @@ import org.kiji.schema.util.FromJson;
 
 /** Unit tests. */
 public class TestKijiTableImportDescriptor {
-  public static final String FOO_IMPORT_DESCRIPTOR =
-      "org/kiji/mapreduce/mapping/foo-test-import-descriptor.json";
-
-  public static final String FOO_INVALID_DESCRIPTOR =
-      "org/kiji/mapreduce/mapping/foo-test-invalid.json";
 
   @Test
   public void testFoo() throws IOException {
-    final String json = TestingResources.get(FOO_IMPORT_DESCRIPTOR);
+    final String json = TestingResources.get(BulkImporterTestUtils.FOO_IMPORT_DESCRIPTOR);
     TableImportDescriptorDesc mappingDesc =
         (TableImportDescriptorDesc) FromJson.fromJsonString(json,
             TableImportDescriptorDesc.SCHEMA$);
@@ -53,7 +48,7 @@ public class TestKijiTableImportDescriptor {
 
   @Test
   public void testValidation() throws IOException {
-    final String json = TestingResources.get(FOO_IMPORT_DESCRIPTOR);
+    final String json = TestingResources.get(BulkImporterTestUtils.FOO_IMPORT_DESCRIPTOR);
 
     TableImportDescriptorDesc mappingDesc =
         (TableImportDescriptorDesc) FromJson.fromJsonString(json,
@@ -67,7 +62,7 @@ public class TestKijiTableImportDescriptor {
 
   @Test
   public void testValidationFail() throws IOException {
-    final String json = TestingResources.get(FOO_INVALID_DESCRIPTOR);
+    final String json = TestingResources.get(BulkImporterTestUtils.FOO_INVALID_DESCRIPTOR);
 
     TableImportDescriptorDesc mappingDesc =
         (TableImportDescriptorDesc) FromJson.fromJsonString(json,

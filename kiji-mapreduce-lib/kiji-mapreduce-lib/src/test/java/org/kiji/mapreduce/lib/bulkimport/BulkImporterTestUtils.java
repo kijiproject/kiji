@@ -61,6 +61,9 @@ public final class BulkImporterTestUtils {
   public static final String FOO_JSONPATH_IMPORT_DESCRIPTOR =
       "org/kiji/mapreduce/lib/mapping/foo-test-jsonpath-import-descriptor.json";
 
+  public static final String FOO_INVALID_DESCRIPTOR =
+      "org/kiji/mapreduce/lib/mapping/foo-test-invalid.json";
+
   public static final String COMMON_LOG_LAYOUT =
       "org/kiji/mapreduce/lib/layout/commonlog-layout.json";
 

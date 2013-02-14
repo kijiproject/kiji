@@ -51,9 +51,7 @@ protocol KijiTableImportDescriptorRecords {
     /** EntityId source column. */
     string entityIdSource;
 
-    // TODO: Nail down descriptor versioning.
-    /** Descriptor format version (eg. "kiji-1.0"). */
+    /** Descriptor format version (eg. "import-1.0"). */
     string version;
   }
-
 }
