@@ -1,0 +1,8 @@
+# Gradle things
+build/
+.gradle/
+
+# Eclipse things
+.classpath
+.project
+.settings/

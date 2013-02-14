@@ -1,15 +1,38 @@
 apply plugin: 'scala'
+apply plugin: 'eclipse'
 
 ext.cascadingVersion = '2.1.4-wip-103'
+ext.scaldingVersion = '0.8.2'
+ext.kijiVersion = '1.0.0-rc4-SNAPSHOT'
+ext.hadoopVersion = '2.0.0-mr1-cdh4.1.2'
+ext.hbaseVersion = '0.92.1-cdh4.1.2'
 
 repositories {
   mavenCentral()
+
+  // Repositories for Kiji
+  mavenRepo name: 'kiji', url: 'https://repo.wibidata.com/artifactory/kiji'
+  mavenRepo name: 'kiji-nightly', url: 'https://repo.wibidata.com/artifactory/kiji-nightly'
+
+  // Repositories for cascading
   mavenRepo name: 'conjars', url: 'http://conjars.org/repo/'
   mavenRepo name: 'apache', url: 'https://repository.apache.org/content/repositories/releases/'
 }
 
 dependencies {
+  // Cascading dependencies
   compile group: 'cascading', name: 'cascading-core', version: cascadingVersion
   compile group: 'cascading', name: 'cascading-local', version: cascadingVersion
   compile group: 'cascading', name: 'cascading-hadoop', version: cascadingVersion
+
+  // Scalding dependencies
+  compile group: 'com.twitter', name: 'scalding_2.9.2', version: scaldingVersion
+
+  // Kiji dependencies
+  compile group: 'org.kiji.schema', name: 'kiji-schema', version: kijiVersion
+  compile group: 'org.kiji.mapreduce', name: 'kiji-mapreduce', version: kijiVersion
+
+  // CDH dependencies
+  compile group: 'org.apache.hadoop', name: 'hadoop-core', version: hadoopVersion
+  compile group: 'org.apache.hbase', name: 'hbase', version: hbaseVersion
 }

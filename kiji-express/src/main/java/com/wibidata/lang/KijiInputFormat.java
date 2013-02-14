@@ -1,6 +1,36 @@
+package com.wibidata.lang;
+
+import java.io.IOException;
+import java.util.Iterator;
+import java.util.List;
+
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang.SerializationUtils;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.client.HTableInterface;
+import org.apache.hadoop.hbase.mapreduce.TableSplit;
+import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.mapred.InputFormat;
+import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
+import org.apache.hadoop.mapred.Reporter;
+import org.kiji.mapreduce.KijiConfKeys;
+import org.kiji.schema.Kiji;
+import org.kiji.schema.KijiDataRequest;
+import org.kiji.schema.KijiRegion;
+import org.kiji.schema.KijiRowData;
+import org.kiji.schema.KijiRowScanner;
+import org.kiji.schema.KijiTable;
+import org.kiji.schema.KijiTableReader;
+import org.kiji.schema.KijiTableReader.KijiScannerOptions;
+import org.kiji.schema.KijiURI;
+import org.kiji.schema.impl.HBaseEntityId;
+import org.kiji.schema.impl.HBaseKijiTable;
+import org.kiji.schema.util.ResourceUtils;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 
 /**
  * Input format for Kiji that uses the old 'mapred' api.
@@ -27,9 +57,9 @@ public class KijiInputFormat
               region.getLocations().isEmpty() ? null : region.getLocations().iterator().next();
           final TableSplit tableSplit =
               new TableSplit(htable.getTableName(), startKey, region.getEndKey(), location);
-          splits.add(new KijiTableSplit(tableSplit, startKey));
+          splits.add(new KijiTableSplit(tableSplit));
         }
-        return splits;
+        return splits.toArray(new InputSplit[0]);
 
       } finally {
         table.close();
@@ -41,7 +71,7 @@ public class KijiInputFormat
 
   /** {@inheritDoc} */
   @Override
-  public RecordReader<KijiKey, KijiValue> createRecordReader(
+  public RecordReader<KijiKey, KijiValue> getRecordReader(
       InputSplit split, JobConf conf, Reporter reporter) throws IOException {
     // TODO: Use reporter to report progress.
     return new KijiTableRecordReader(split, conf);
@@ -62,8 +92,6 @@ public class KijiInputFormat
 
     private KijiTableSplit mSplit = null;
 
-    private HBaseKijiRowData mCurrentRow = null;
-
     /**
      * Creates a new RecordReader for this input format.
      *
@@ -71,7 +99,7 @@ public class KijiInputFormat
      *
      * @param conf Configuration for the target Kiji.
      */
-    public KijiTableRecordReader(InputSplit split, Configuration conf) {
+    public KijiTableRecordReader(InputSplit split, Configuration conf) throws IOException {
       // Get data request from the job configuration.
       final String dataRequestB64 = conf.get(KijiConfKeys.KIJI_INPUT_DATA_REQUEST);
       Preconditions.checkNotNull(dataRequestB64, "Missing data request in job configuration.");
@@ -149,33 +177,6 @@ public class KijiInputFormat
       mKiji = null;
 
       mSplit = null;
-      mCurrentRow = null;
-    }
-  }
-
-  // TODO: Get rid of this.
-  public static class KijiKey {
-    private EntityId mCurrentKey;
-
-    public EntityId get() {
-      return mCurrentKey;
-    }
-
-    public void set(EntityId key) {
-      mCurrentKey = key;
-    }
-  }
-
-  // TODO: Get rid of this.
-  public static class KijiValue {
-    private KijiRowData mCurrentValue;
-
-    public KijiRowData get() {
-      return mCurrentValue;
-    }
-
-    public void set(KijiRowData value) {
-      mCurrentValue = value;
     }
   }
 }

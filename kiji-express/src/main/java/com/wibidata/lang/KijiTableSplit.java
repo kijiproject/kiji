@@ -1,23 +1,57 @@
+package com.wibidata.lang;
+
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
+import org.apache.hadoop.hbase.mapreduce.TableSplit;
 import org.apache.hadoop.mapred.InputSplit;
 
 /**
  * Split for a Kiji table that has been extended to support hadoop's older 'mapred' api.
  */
 public class KijiTableSplit
-    extends org.kiji.mapreduce.KijiTableSplit
     implements InputSplit {
+  private final TableSplit mSplit;
 
   /** The default constructor. */
   public KijiTableSplit() {
-    super();
+    mSplit = new TableSplit();
   }
 
-  /**
-   * Create a new KijiTableSplit instance from an HBase TableSplit.
-   * @param tableSplit the HBase TableSplit to clone.
-   * @param regionStartKey the starting key of the region associated with this split.
-   */
-  public KijiTableSplit(TableSplit tableSplit, byte[] regionStartKey) {
-    super(tableSplit, regionStartKey);
+  public KijiTableSplit(TableSplit tableSplit) {
+    mSplit = tableSplit;
+  }
+
+  /** {@inheritDoc} */
+  @Override
+	public long getLength() {
+    return mSplit.getLength();
+  }
+
+  /** {@inheritDoc} */
+  @Override
+	public String[] getLocations() {
+    return mSplit.getLocations();
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public void readFields(DataInput in) throws IOException {
+    mSplit.readFields(in);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public void write(DataOutput out) throws IOException {
+    mSplit.write(out);
+  }
+
+  public byte[] getStartRow() {
+    return mSplit.getStartRow();
+  }
+
+  public byte[] getEndRow() {
+    return mSplit.getEndRow();
   }
 }
