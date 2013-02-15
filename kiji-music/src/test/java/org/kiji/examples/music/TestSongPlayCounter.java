@@ -51,6 +51,7 @@ public class TestSongPlayCounter extends KijiClientTest {
 
   private KijiURI mTableURI;
 
+  /** Initialize our environment. */
   @Before
   public final void setup() throws Exception {
     final KijiTableLayout layout =
@@ -74,6 +75,7 @@ public class TestSongPlayCounter extends KijiClientTest {
         .build();
   }
 
+  /* Test our play count computes the expected results. */
   @Test
   public void testSongPlayCounter() throws Exception {
     final File outputDir = new File(getLocalTempDir(), "output.sequence_file");

@@ -34,7 +34,7 @@
         column_schema : {
           storage : "UID",
           type : "CLASS",
-          value : "org.kiji.examples.music.NextSongCount"
+          value : "org.kiji.examples.music.TopSongs"
         }
       } ]
     } ]

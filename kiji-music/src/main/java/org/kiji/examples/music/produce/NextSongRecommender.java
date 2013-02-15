@@ -21,8 +21,10 @@
 package org.kiji.examples.music.produce;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
+import org.kiji.examples.music.SongCount;
 import org.kiji.examples.music.TopSongs;
 import org.kiji.mapreduce.KijiProducer;
 import org.kiji.mapreduce.ProducerContext;
@@ -37,7 +39,7 @@ import org.kiji.schema.KijiURI;
 import org.kiji.schema.KijiURIException;
 
 /**
- *
+ * Producer generating recommendations for the next songs each user might like.
  */
 public class NextSongRecommender extends KijiProducer implements KeyValueStoreClient {
 
@@ -69,7 +71,6 @@ public class NextSongRecommender extends KijiProducer implements KeyValueStoreCl
     String mostRecentSong = input.<CharSequence>getMostRecentValue("info", "track_plays")
         .toString(); // Avro strings get deserialized to CharSequences.
     TopSongs topSongs = topNextSongsReader.get(mostRecentSong);
-
   }
 
   /** {@inheritDoc} */
@@ -87,4 +88,13 @@ public class NextSongRecommender extends KijiProducer implements KeyValueStoreCl
     return RequiredStores.just("nextPlayed", kvStoreBuilder.build());
   }
 
+  /**
+   * This method uses a list of song counts to determine the next song a user should listen to.
+   *
+   * @param topNextSongs A list of most popular songs.
+   * @return CharSequence The id of the recommended song.
+   */
+  private CharSequence recommend(List<SongCount> topNextSongs) {
+    return topNextSongs.get(0).getSongId(); // Lets do the simplest possible thing.
+  }
 }

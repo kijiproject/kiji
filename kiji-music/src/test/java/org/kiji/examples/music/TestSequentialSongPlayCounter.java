@@ -48,6 +48,7 @@ public class TestSequentialSongPlayCounter extends KijiClientTest {
 
   private KijiURI mUserTableURI;
 
+  /** Initialize our environment. */
   @Before
   public final void setup() throws Exception {
     final KijiTableLayout userLayout =
@@ -70,6 +71,7 @@ public class TestSequentialSongPlayCounter extends KijiClientTest {
         .build();
   }
 
+  /** Test that our MR job computes results as expected. */
   @Test
   public void testSongPlayCounter() throws Exception {
     // Configure and run job.
