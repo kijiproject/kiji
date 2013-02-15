@@ -93,7 +93,7 @@ public class TestRegexQualifierColumnFilter extends KijiClientTest {
     @Override
     public KijiDataRequest getDataRequest() {
       KijiDataRequestBuilder builder = KijiDataRequest.builder();
-      builder.addColumns().withMaxVersions(10)
+      builder.newColumnsDef().withMaxVersions(10)
           .withFilter(new RegexQualifierColumnFilter("a.*"))
           .addFamily("family");
       return builder.build();

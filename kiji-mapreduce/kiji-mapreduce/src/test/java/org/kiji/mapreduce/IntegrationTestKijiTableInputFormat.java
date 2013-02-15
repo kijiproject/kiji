@@ -104,7 +104,7 @@ public class IntegrationTestKijiTableInputFormat
     final String instance = getInstanceName();
     final String table = getFooTable().getName();
     final KijiDataRequestBuilder builder = KijiDataRequest.builder();
-    builder.addColumns().add("info", "name").add("info", "email");
+    builder.newColumnsDef().add("info", "name").add("info", "email");
     final KijiDataRequest request = builder.build();
 
     job.setJarByClass(IntegrationTestKijiTableInputFormat.class);

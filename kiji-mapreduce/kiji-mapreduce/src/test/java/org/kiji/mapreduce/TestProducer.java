@@ -130,7 +130,7 @@ public class TestProducer extends KijiClientTest {
 
     // Validate produced output:
     final KijiDataRequestBuilder builder = KijiDataRequest.builder();
-    builder.addColumns().addFamily("info").addFamily("map_family");
+    builder.newColumnsDef().addFamily("info").addFamily("map_family");
     final KijiRowScanner scanner = mReader.getScanner(builder.build());
     for (KijiRowData row : scanner) {
       final EntityId eid = row.getEntityId();

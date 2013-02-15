@@ -484,7 +484,7 @@ public final class KijiTableKeyValueStore<V> implements Configurable, KeyValueSt
       KijiDataRequestBuilder dataReqBuilder = KijiDataRequest.builder()
           .withTimeRange(mMinTs, mMaxTs);
       dataReqBuilder
-          .addColumns().withMaxVersions(1).add(mColumn.getFamily(), mColumn.getQualifier());
+          .newColumnsDef().withMaxVersions(1).add(mColumn.getFamily(), mColumn.getQualifier());
       mDataReq = dataReqBuilder.build();
 
       if (mMaxObjectsToCache > 1) {
