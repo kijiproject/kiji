@@ -67,7 +67,7 @@ public class SongPlayCounter extends KijiGatherer<Text, LongWritable> {
   public KijiDataRequest getDataRequest() {
     // Retrieve all versions of info:track_plays:
     final KijiDataRequestBuilder builder = KijiDataRequest.builder();
-    builder.addColumns()
+    builder.newColumnsDef()
         .withMaxVersions(HConstants.ALL_VERSIONS)
         .add("info", "track_plays");
     return builder.build();
