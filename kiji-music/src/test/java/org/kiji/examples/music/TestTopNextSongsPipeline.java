@@ -154,22 +154,22 @@ public class TestTopNextSongsPipeline extends KijiClientTest {
     KijiDataRequest request = KijiDataRequest.builder()
         .addColumns(ColumnsDef.create()
             .withMaxVersions(Integer.MAX_VALUE)
-            .add("info", "next_songs"))
+            .add("info", "top_next_songs"))
         .build();
 
     TopSongs valuesForSong1 = mSongTableReader.get(mSongTable.getEntityId("song-1"), request)
-        .getMostRecentValue("info", "next_songs");
+        .getMostRecentValue("info", "top_next_songs");
     assertEquals("Wrong number of most popular songs played next for song-1", 3,
       valuesForSong1.getTopSongs().size());
 
     TopSongs valuesForSong2 = mSongTableReader.get(mSongTable.getEntityId("song-2"), request)
-        .getMostRecentValue("info", "next_songs");
+        .getMostRecentValue("info", "top_next_songs");
     LOG.info("the list of song counts {}", valuesForSong2.getTopSongs().toString());
     assertEquals("Wrong number of most popular songs played next for song-2", 2,
       valuesForSong2.getTopSongs().size());
 
     TopSongs valuesForSong8 = mSongTableReader.get(mSongTable.getEntityId("song-8"), request)
-        .getMostRecentValue("info", "next_songs");
+        .getMostRecentValue("info", "top_next_songs");
     LOG.info("the list of song counts {}", valuesForSong2.getTopSongs().toString());
     assertEquals("Wrong number of most popular songs played next for song-8", 1,
       valuesForSong8.getTopSongs().size());

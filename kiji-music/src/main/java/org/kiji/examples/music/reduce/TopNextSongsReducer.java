@@ -98,7 +98,7 @@ public class TopNextSongsReducer
     // next for this key/song.
     mTopSongs.setTopSongs(Lists.newArrayList(mTopNextSongs));
     // Write this to the song table.
-    context.put(context.getEntityId(key.datum().toString()), "info", "next_songs", mTopSongs);
+    context.put(context.getEntityId(key.datum().toString()), "info", "top_next_songs", mTopSongs);
   }
 
   /** {@inheritDoc} */

@@ -32,11 +32,9 @@ import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.kvstore.KeyValueStoreClient;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
 import org.kiji.mapreduce.kvstore.RequiredStores;
-import org.kiji.mapreduce.kvstore.lib.KijiTableKeyValueStore;
+import org.kiji.mapreduce.kvstore.lib.UnconfiguredKeyValueStore;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
-import org.kiji.schema.KijiURI;
-import org.kiji.schema.KijiURIException;
 
 /**
  * Producer generating recommendations for the next songs each user might like.
@@ -46,7 +44,7 @@ public class NextSongRecommender extends KijiProducer implements KeyValueStoreCl
   /** {@inheritDoc} */
   @Override
   public KijiDataRequest getDataRequest() {
-    // Only request the most recent version from the "interactions:track_plays" column.
+    // Only request the most recent version from the "info:track_plays" column.
     return KijiDataRequest.create("info", "track_plays");
   }
 
@@ -70,22 +68,28 @@ public class NextSongRecommender extends KijiProducer implements KeyValueStoreCl
     // Get the most recent song the user has listened to:
     String mostRecentSong = input.<CharSequence>getMostRecentValue("info", "track_plays")
         .toString(); // Avro strings get deserialized to CharSequences.
+    // Read the most popular songs played after mostRecentSong, from the song table.
     TopSongs topSongs = topNextSongsReader.get(mostRecentSong);
+    // Read the array of song counts stored in field ""
+    List<SongCount> popularNextSongs = topSongs.getTopSongs();
+    // Write our recommended next song to "info:next_song_rec"
+    context.put(recommend(popularNextSongs));
   }
 
   /** {@inheritDoc} */
   @Override
   public Map<String, KeyValueStore<?, ?>> getRequiredStores() {
-    KijiTableKeyValueStore.Builder kvStoreBuilder = KijiTableKeyValueStore.builder();
+    /** KijiTableKeyValueStore.Builder kvStoreBuilder = KijiTableKeyValueStore.builder();
     // Our default implementation will use the default kiji instance, and a table named songs.
     KijiURI tableURI;
-    try {
+    try { //TODO: figure out a reasonable default
       tableURI = KijiURI.newBuilder().withTableName("songs").build();
     } catch (KijiURIException ex) {
       throw new RuntimeException(ex);
     }
-    kvStoreBuilder.withColumn("info", "top_next_songs").withTable(tableURI);
-    return RequiredStores.just("nextPlayed", kvStoreBuilder.build());
+    kvStoreBuilder.withColumn("info", "top_next_songs").withTable(tableURI); */
+    // return RequiredStores.just("nextPlayed", kvStoreBuilder.build());
+    return RequiredStores.just("nextPlayed", UnconfiguredKeyValueStore.builder().build());
   }
 
   /**
@@ -95,6 +99,6 @@ public class NextSongRecommender extends KijiProducer implements KeyValueStoreCl
    * @return CharSequence The id of the recommended song.
    */
   private CharSequence recommend(List<SongCount> topNextSongs) {
-    return topNextSongs.get(0).getSongId(); // Lets do the simplest possible thing.
+    return topNextSongs.get(0).getSongId(); // Do the simplest possible thing.
   }
 }

@@ -29,7 +29,7 @@
         }
       }, {
         id : 2,
-        name : "next_songs",
+        name : "top_next_songs",
         description : "Probabilities of a song being the next song to be played",
         column_schema : {
           storage : "UID",
