@@ -37,8 +37,7 @@ object CreateTableCommand {
    * Version string we embed in layouts created with this tool, advertising the version
    * semantics we declare ourselves to be in line with.
    */
-  // TODO(SCHEMA-197): Update this to "layout-1.1" or whatever the new protocol is.
-  val DDL_LAYOUT_VERSION = ProtocolVersion.parse("kiji-1.1");
+  val DDL_LAYOUT_VERSION = ProtocolVersion.parse("layout-1.1");
 }
 
 class CreateTableCommand(val env: Environment,

@@ -3,6 +3,7 @@
                               Kiji Schema Shell Release Notes
 
 Version 1.0.0-rc4
+  * SCHEMA-197. Update layout protocol to 'layout-1.1'.
   * DDLSHELL-11. Add Client API object to enable programmatic access.
       See org.kiji.schema.shell.api.Client.
   * SCHEMA-10. The --kiji flag now specifies a Kiji instance as a URI.
