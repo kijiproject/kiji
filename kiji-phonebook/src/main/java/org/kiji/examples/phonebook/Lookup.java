@@ -90,7 +90,7 @@ public class Lookup extends Configured implements Tool {
       // The column names are specified as constants in the Fields.java class.
       final EntityId entityId = table.getEntityId(mFirst + "," + mLast);
       final KijiDataRequestBuilder reqBuilder = KijiDataRequest.builder();
-      reqBuilder.addColumns()
+      reqBuilder.newColumnsDef()
           .add(Fields.INFO_FAMILY, Fields.FIRST_NAME)
           .add(Fields.INFO_FAMILY, Fields.LAST_NAME)
           .add(Fields.INFO_FAMILY, Fields.EMAIL)
