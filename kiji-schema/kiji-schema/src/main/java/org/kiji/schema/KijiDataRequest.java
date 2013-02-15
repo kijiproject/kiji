@@ -46,16 +46,22 @@ import org.kiji.schema.filter.KijiColumnFilter;
  * <p>For example, to request the 3 most recent versions of cell data from a column
  * <code>bar</code> from
  * the family <code>foo</code> within the time range [123, 456):
- *
  * <pre>
- * KijiDataRequestBuilder builder = KijiDataRequest.builder();
- * builder.withTimeRange(123L, 456L)
- *     .column().withMaxVersions(3).add("foo", "bar");
- * KijiDataRequest dataRequest = builder.build();
+ * KijiDataRequestBuilder builder = KijiDataRequest.builder()
+ *     .withTimeRange(123L, 456L);
+ * builder.newColumnsDef().withMaxVersions(3).add("foo", "bar");
+ * KijiDataRequest request = builder.build();
+ * </pre>
+ * Or:
+ * <pre>
+ * KijiDataRequest dataRequest = KijiDataRequest.builder()
+ *     .withTimeRange(123L, 456L)
+ *     .addColumns(KijiDataRequestBuilder.ColumnsDef.create().withMaxVersions(3).add("foo", "bar"))
+ *     .build();
  * </pre>
  * </p>
  *
- * <p>For convenience, you can build KijiDataRequests for a single cell
+ * <p>For convenience, you can also build KijiDataRequests for a single cell
  * using the <code>KijiDataRequest.create()</code> method:
  *
  * <pre>
@@ -256,7 +262,7 @@ public final class KijiDataRequest implements Serializable {
    */
   public static KijiDataRequest create(String family) {
     KijiDataRequestBuilder builder = builder();
-    builder.addColumns().addFamily(family);
+    builder.newColumnsDef().addFamily(family);
     return builder.build();
   }
 
@@ -275,7 +281,7 @@ public final class KijiDataRequest implements Serializable {
    */
   public static KijiDataRequest create(String family, String qualifier) {
     KijiDataRequestBuilder builder = builder();
-    builder.addColumns().add(family, qualifier);
+    builder.newColumnsDef().add(family, qualifier);
     return builder.build();
   }
 
