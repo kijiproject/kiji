@@ -39,7 +39,7 @@ public abstract class AllVersionsSingleInputProducer extends SingleInputProducer
 
     KijiDataRequestBuilder out = KijiDataRequest.builder();
     out.withTimeRange(request.getMinTimestamp(), request.getMaxTimestamp())
-        .addColumns().withMaxVersions(Integer.MAX_VALUE)
+        .newColumnsDef().withMaxVersions(Integer.MAX_VALUE)
             .withPageSize(col.getPageSize())
             .withFilter(col.getFilter())
             .add(col.getFamily(), col.getQualifier());

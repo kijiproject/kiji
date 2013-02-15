@@ -102,7 +102,7 @@ public class MapTypeDelimitedFileGatherer extends KijiGatherer<Text, NullWritabl
   @Override
   public KijiDataRequest getDataRequest() {
     KijiDataRequestBuilder builder = KijiDataRequest.builder();
-    builder.addColumns().withMaxVersions(mMaxVersions).addFamily(mFamily);
+    builder.newColumnsDef().withMaxVersions(mMaxVersions).addFamily(mFamily);
     return builder.build();
   }
 

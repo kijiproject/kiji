@@ -102,7 +102,7 @@ public class IdentityProducer extends KijiProducer {
   @Override
   public KijiDataRequest getDataRequest() {
     KijiDataRequestBuilder builder = KijiDataRequest.builder();
-    builder.addColumns().withMaxVersions(Integer.MAX_VALUE)
+    builder.newColumnsDef().withMaxVersions(Integer.MAX_VALUE)
         .add(mInputColumn.getFamily(), mInputColumn.getQualifier());
     return builder.build();
   }
