@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<stores>
+  <store name="nextPlayed" class="org.kiji.mapreduce.kvstore.lib.KijiTableKeyValueStore">
+    <configuration>
+      <property>
+        <name>table.uri</name>
+        <!--This URI can be replaced with the URI of a different 'songs' table to use. -->
+        <value>kiji://.env/default/songs</value> <!-- The default URI -->
+      </property>
+      <property>
+        <name>column</name>
+        <value>info:top_next_songs</value>
+       </property>
+       <property>
+         <name>avro.reader.schema</name>
+         <value>org.kiji.examples.music.TopSongs</value>
+        </property>
+    </configuration>
+  </store>
+</stores>
