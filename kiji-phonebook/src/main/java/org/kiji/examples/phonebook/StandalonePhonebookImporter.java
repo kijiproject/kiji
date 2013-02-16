@@ -47,6 +47,29 @@ public class StandalonePhonebookImporter extends Configured implements Tool {
   /** Name of the table to read for phonebook entries. */
   public static final String TABLE_NAME = "phonebook";
 
+  /** Kiji instance to connect to. */
+  private KijiURI mKijiURI;
+
+  /**
+   * Default constructor for StandalonePhonebookImporter instances.
+   *
+   * @throws IOException if there's an error building the target Kiji URI.
+   */
+  public StandalonePhonebookImporter() throws IOException {
+    mKijiURI = KijiURI.newBuilder().withInstanceName(
+        KConstants.DEFAULT_INSTANCE_NAME).build();
+  }
+
+  /**
+   * Sets the Kiji URI to connect to. This is used in integration tests.
+   * By default, this class will use the default instance, named "default."
+   *
+   * @param uri the URI to use.
+   */
+  void setKijiURI(KijiURI uri) {
+    mKijiURI = uri;
+  }
+
   /**
    * Reads a file one line at a time, inserting rows into the phonebook table.
    *
@@ -65,9 +88,7 @@ public class StandalonePhonebookImporter extends Configured implements Tool {
     BufferedReader reader = null;
     try {
       // Connect to Kiji and open the table.
-      kiji = Kiji.Factory.open(
-          KijiURI.newBuilder().withInstanceName(KConstants.DEFAULT_INSTANCE_NAME).build(),
-          getConf());
+      kiji = Kiji.Factory.open(mKijiURI, getConf());
       table = kiji.openTable(TABLE_NAME);
       writer = table.openTableWriter();
 

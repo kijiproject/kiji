@@ -144,23 +144,16 @@ public class PhonebookImporter extends Configured implements Tool {
   }
 
   /**
-   * Submits the PhonebookImportMapper job to Hadoop.
+   * Configure the MapReduce job to run the import.
    *
-   * @param args Command line arguments; contains the path to the input text file to import.
-   * @return The status code for the application; 0 indicates success.
-   * @throws Exception If there is an error running the Kiji program.
+   * @param job the MapReduce Job object to configure.
+   * @param inputPath the Path to the input data.
+   * @throws IOException if there's an error interacting with the job or the Kiji URI.
    */
-  @Override
-  public int run(String[] args) throws Exception {
-    // Load HBase configuration before connecting to Kiji.
-    setConf(HBaseConfiguration.addHbaseResources(getConf()));
-
-    // Configure a map-only job that imports phonebook entries from a file into the table.
-    final Job job = new Job(getConf(), "PhonebookImporter");
-
+  void configureJob(Job job, Path inputPath) throws IOException {
     // Read from a text file.
     job.setInputFormatClass(TextInputFormat.class);
-    FileInputFormat.setInputPaths(job, new Path(args[0]));
+    FileInputFormat.setInputPaths(job, inputPath);
 
     // Run the mapper that will import entries from the input file.
     job.setMapperClass(PhonebookImportMapper.class);
@@ -176,6 +169,23 @@ public class PhonebookImporter extends Configured implements Tool {
     final KijiURI tableURI =
         KijiURI.newBuilder(String.format("kiji://.env/default/%s", TABLE_NAME)).build();
     job.getConfiguration().set(KijiConfKeys.OUTPUT_KIJI_TABLE_URI, tableURI.toString());
+  }
+
+  /**
+   * Submits the PhonebookImportMapper job to Hadoop.
+   *
+   * @param args Command line arguments; contains the path to the input text file to import.
+   * @return The status code for the application; 0 indicates success.
+   * @throws Exception If there is an error running the Kiji program.
+   */
+  @Override
+  public int run(String[] args) throws Exception {
+    // Load HBase configuration before connecting to Kiji.
+    setConf(HBaseConfiguration.addHbaseResources(getConf()));
+
+    // Configure a map-only job that imports phonebook entries from a file into the table.
+    final Job job = new Job(getConf(), "PhonebookImporter");
+    configureJob(job, new Path(args[0]));
 
     // Tell Hadoop where the java dependencies are located, so they
     // can be shipped to the cluster during execution.

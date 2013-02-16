@@ -92,7 +92,7 @@
         column_schema : {
           storage : "UID",
           type : "INLINE",
-          value : "[\"string\", \"null\"]"
+          value : "[\"string\",\"null\"]"
         }
       }, {
         name : "addr2",
@@ -132,13 +132,13 @@
       description : "Statistics about a contact.",
       columns : [ {
         name : "talktime",
-        description : "Time spent talking with this person.",
+        description : "Time spent talking with this person",
         column_schema : {
-          storage : "UID",
+          storage : "FINAL",
           type : "COUNTER"
         }
       } ]
     }]
   } ],
-  version : "kiji-1.0"
+  version : "layout-1.1"
 }

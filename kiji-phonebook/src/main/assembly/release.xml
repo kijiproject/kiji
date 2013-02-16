@@ -47,11 +47,21 @@
         <include>LICENSE.txt</include>
         <include>NOTICE.txt</include>
         <include>RELEASE_NOTES.txt</include>
+        <include>pom.xml</include>
+      </includes>
+      <filtered>false</filtered>
+    </fileSet>
+    <fileSet>
+      <!-- text files used as resources for testing, etc. -->
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <directory>src/main/resources/phonebook</directory>
+      <outputDirectory>/</outputDirectory>
+      <fileMode>0644</fileMode>
+      <includes>
         <include>layout.json</include>
         <include>layout.ddl</include>
         <include>input-data.txt</include>
         <include>input-phone-log.txt</include>
-        <include>pom.xml</include>
       </includes>
       <filtered>false</filtered>
     </fileSet>

@@ -15,7 +15,7 @@ WITH LOCALITY GROUP default
   ),
   FAMILY derived WITH DESCRIPTION 'Information derived from an individual\'s address.' (
     addr1 "string" WITH DESCRIPTION 'Address line one.',
-    apt "string" WITH DESCRIPTION 'Address Apartment number.',
+    apt [ "string", "null" ] WITH DESCRIPTION 'Address Apartment number.',
     addr2 "string" WITH DESCRIPTION 'Address line two.',
     city "string" WITH DESCRIPTION 'Address city.',
     state "string" WITH DESCRIPTION 'Address state.',
