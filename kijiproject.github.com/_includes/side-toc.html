@@ -6,7 +6,7 @@
           {% assign index = forloop.index %}
           {% for subpage in pages %}
             {% if index == subpage.order %}
-              {% if subpage.version == page.version %}
+              {% if subpage.categories == page.categories %}
                 <li>
                   {% if subpage.url == page.url %}
                     <b>{{ subpage.title }}</b>

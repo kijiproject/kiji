@@ -17,12 +17,12 @@ title: Documentation
     </a>
   </div>
   <div class="span4 offset1">
-    <a href="{{ site.tutorial_url }}phonebook-tutorial" class="boxlink">
+    <a href="{{ site.tutorial_url }}.html" class="boxlink">
       <div class="well">
         <div class="large-number">2</div>
-        <div class="title">Phonebook Tutorial</div>
+        <div class="title">Tutorials</div>
         <p class="description">
-          Learn how to use MapReduce with contact info in a Kiji table.
+          Hands on introductions to using KijiSchema and KijiMapReduce.
         </p>
       </div>
     </a>
@@ -31,21 +31,18 @@ title: Documentation
 
 <div class="row-fluid home-box">
   <div class="span4 offset1">
-    <a href="{{ site.userguide_url }}kiji-schema-overview" class="boxlink">
+    <a href="{{ site.userguide_url }}.html" class="boxlink">
       <div class="well">
         <div class="large-number">3</div>
-        <div class="title">User Guide</div>
+        <div class="title">User Guides</div>
         <p class="description">
-          Your complete guide to KijiSchema.
-        </p>
-        <p class="description">
-          <small><a href="/userguides.html">older user guides...</a></small>
+          Your complete guide to Kiji.
         </p>
       </div>
     </a>
   </div>
   <div class="span4 offset1">
-    <a href="{{ HOME_URL }}apidocs" class="boxlink">
+    <a href="{{ site.api_url }}" class="boxlink">
       <div class="well">
         <div class="large-number">4</div>
         <div class="title">API Reference</div>

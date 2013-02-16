@@ -20,7 +20,7 @@
       {% else %}
         {% capture prevOrder %}{{ page.order | minus:1 }}{% endcapture %}
         {% for subpage in pages %}
-          {% if subpage.version == page.version %}
+          {% if subpage.categories == page.categories %}
             {% capture curOrder %}{{ subpage.order }}{% endcapture %}
             {% if curOrder == prevOrder %}
               <li class="prev">
@@ -39,7 +39,7 @@
       {% else %}
         {% capture nextOrder %}{{ page.order | plus:1 }}{% endcapture %}
         {% for subpage in pages %}
-          {% if subpage.version == page.version %}
+          {% if subpage.categories == page.categories %}
             {% capture curOrder %}{{ subpage.order }}{% endcapture %}
             {% if curOrder == nextOrder %}
               <li class="next">
