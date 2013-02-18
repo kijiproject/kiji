@@ -21,8 +21,8 @@ package org.kiji.mapreduce.lib.examples;
 
 import java.io.IOException;
 
-import org.kiji.mapreduce.KijiProducer;
-import org.kiji.mapreduce.ProducerContext;
+import org.kiji.mapreduce.produce.KijiProducer;
+import org.kiji.mapreduce.produce.ProducerContext;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 

@@ -27,8 +27,8 @@ import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.kiji.mapreduce.KijiGatherJobBuilder;
 import org.kiji.mapreduce.MapReduceJob;
+import org.kiji.mapreduce.gather.KijiGatherJobBuilder;
 import org.kiji.mapreduce.lib.reduce.IntSumReducer;
 import org.kiji.mapreduce.output.TextMapReduceJobOutput;
 import org.kiji.schema.Kiji;

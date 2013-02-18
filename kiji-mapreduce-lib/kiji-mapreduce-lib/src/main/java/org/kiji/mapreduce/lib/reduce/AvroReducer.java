@@ -24,8 +24,8 @@ import java.io.IOException;
 import org.apache.avro.mapred.AvroKey;
 import org.apache.hadoop.io.NullWritable;
 
-import org.kiji.mapreduce.AvroKeyWriter;
 import org.kiji.mapreduce.KijiReducer;
+import org.kiji.mapreduce.avro.AvroKeyWriter;
 
 /**
  * Base class for reducers used with AvroOutputFormat to write Avro container files.

@@ -26,9 +26,9 @@ import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.kiji.mapreduce.KijiProduceJobBuilder;
 import org.kiji.mapreduce.MapReduceJob;
 import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
+import org.kiji.mapreduce.produce.KijiProduceJobBuilder;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;

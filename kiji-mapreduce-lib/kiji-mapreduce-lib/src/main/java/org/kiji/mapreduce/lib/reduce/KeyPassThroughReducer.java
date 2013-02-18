@@ -33,8 +33,8 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.Inheritance;
-import org.kiji.mapreduce.AvroKeyWriter;
 import org.kiji.mapreduce.KijiReducer;
+import org.kiji.mapreduce.avro.AvroKeyWriter;
 
 /**
  * An abstract KijiReducer to encapsulate common functionality among

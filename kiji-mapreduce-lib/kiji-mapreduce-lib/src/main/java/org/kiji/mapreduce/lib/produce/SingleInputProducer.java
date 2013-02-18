@@ -25,7 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.mapreduce.KijiContext;
-import org.kiji.mapreduce.KijiProducer;
+import org.kiji.mapreduce.produce.KijiProducer;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
 

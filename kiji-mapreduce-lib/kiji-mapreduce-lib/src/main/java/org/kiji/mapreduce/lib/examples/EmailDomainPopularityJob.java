@@ -29,9 +29,9 @@ import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.kiji.mapreduce.KijiGatherJobBuilder;
-import org.kiji.mapreduce.KijiTransformJobBuilder;
+import org.kiji.mapreduce.KijiMapReduceJobBuilder;
 import org.kiji.mapreduce.MapReduceJob;
+import org.kiji.mapreduce.gather.KijiGatherJobBuilder;
 import org.kiji.mapreduce.input.SequenceFileMapReduceJobInput;
 import org.kiji.mapreduce.lib.reduce.IntSumReducer;
 import org.kiji.mapreduce.output.AvroKeyValueMapReduceJobOutput;
@@ -158,8 +158,8 @@ public class EmailDomainPopularityJob extends Configured implements Tool {
   private boolean invertAndSortByPopularity(
       Path inputPath, Path outputPath, int numSplits, Configuration conf)
       throws Exception {
-    LOG.info("Configuring a transform job...");
-    KijiTransformJobBuilder jobBuilder = KijiTransformJobBuilder.create()
+    LOG.info("Configuring a kiji mapreduce job...");
+    KijiMapReduceJobBuilder jobBuilder = KijiMapReduceJobBuilder.create()
         .withConf(conf)
         .withInput(new SequenceFileMapReduceJobInput(inputPath))
         .withMapper(InvertCountMapper.class)

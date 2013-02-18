@@ -31,10 +31,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.kiji.mapreduce.JobHistoryCounters;
-import org.kiji.mapreduce.KijiBulkImportJobBuilder;
 import org.kiji.mapreduce.MapReduceJob;
 import org.kiji.mapreduce.TestingResources;
+import org.kiji.mapreduce.bulkimport.KijiBulkImportJobBuilder;
+import org.kiji.mapreduce.framework.JobHistoryCounters;
 import org.kiji.mapreduce.input.TextMapReduceJobInput;
 import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
 import org.kiji.schema.KijiClientTest;

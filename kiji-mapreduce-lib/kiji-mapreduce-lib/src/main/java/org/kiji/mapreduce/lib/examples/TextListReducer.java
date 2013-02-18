@@ -30,8 +30,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobConf;
 
-import org.kiji.mapreduce.AvroValueWriter;
 import org.kiji.mapreduce.KijiReducer;
+import org.kiji.mapreduce.avro.AvroValueWriter;
 
 /**
  * A reducer that aggregates its text input values into a list.

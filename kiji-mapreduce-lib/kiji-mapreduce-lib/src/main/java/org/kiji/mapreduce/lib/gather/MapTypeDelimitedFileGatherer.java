@@ -31,8 +31,8 @@ import org.apache.hadoop.io.Text;
 
 import org.kiji.hadoop.configurator.HadoopConf;
 import org.kiji.hadoop.configurator.HadoopConfigurator;
-import org.kiji.mapreduce.GathererContext;
-import org.kiji.mapreduce.KijiGatherer;
+import org.kiji.mapreduce.gather.GathererContext;
+import org.kiji.mapreduce.gather.KijiGatherer;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;

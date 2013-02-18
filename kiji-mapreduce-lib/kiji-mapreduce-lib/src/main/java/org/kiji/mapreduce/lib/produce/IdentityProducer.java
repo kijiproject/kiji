@@ -28,8 +28,8 @@ import org.apache.hadoop.conf.Configuration;
 
 import org.kiji.hadoop.configurator.HadoopConf;
 import org.kiji.hadoop.configurator.HadoopConfigurator;
-import org.kiji.mapreduce.KijiProducer;
-import org.kiji.mapreduce.ProducerContext;
+import org.kiji.mapreduce.produce.KijiProducer;
+import org.kiji.mapreduce.produce.ProducerContext;
 import org.kiji.schema.DecodedCell;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
