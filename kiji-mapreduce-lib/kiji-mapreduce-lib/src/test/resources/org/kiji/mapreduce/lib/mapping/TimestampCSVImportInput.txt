@@ -1,0 +1,4 @@
+time,first,last,email,phone
+1284102000,John,Doe,johndoe@gmail.com,202-555-9876
+1352880000,Alice,Smith,alice.smith@yahoo.com,
+1361520000,Bob,Jones,bobbyj@aol.com,415-555-4161

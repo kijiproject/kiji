@@ -88,10 +88,10 @@ public class IntegrationTestCSVBulkImporter
     mConf = createConfiguration();
     mFS = FileSystem.get(mConf);
     mBulkImportInputPath = makeRandomPath("bulk-import-input");
-    writeTestResource(mBulkImportInputPath, BulkImporterTestUtils.CSV_IMPORT_DATA);
+    writeTestResource(mBulkImportInputPath, BulkImporterTestUtils.TIMESTAMP_CSV_IMPORT_DATA);
 
     mImportDescriptorPath = makeRandomPath("import-descriptor");
-    writeTestResource(mImportDescriptorPath, BulkImporterTestUtils.FOO_IMPORT_DESCRIPTOR);
+    writeTestResource(mImportDescriptorPath, BulkImporterTestUtils.FOO_TIMESTAMP_IMPORT_DESCRIPTOR);
 
     mKiji = Kiji.Factory.open(getKijiURI(), mConf);
     final KijiTableLayout layout = KijiTableLayout.newLayout(KijiMRTestLayouts.getTestLayout());
@@ -134,7 +134,7 @@ public class IntegrationTestCSVBulkImporter
       final KijiTableReader reader = mOutputTable.openTableReader();
       final KijiDataRequest kdr = KijiDataRequest.create("info");
       KijiRowScanner scanner = reader.getScanner(kdr);
-      BulkImporterTestUtils.validateImportedRows(scanner);
+      BulkImporterTestUtils.validateImportedRows(scanner, true);
       scanner.close();
       reader.close();
     } finally {

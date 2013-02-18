@@ -21,10 +21,13 @@ package org.kiji.mapreduce.lib.bulkimport;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.util.Set;
 
+import com.google.common.collect.Sets;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +43,9 @@ public final class BulkImporterTestUtils {
 
   public static final String CSV_IMPORT_DATA =
       "org/kiji/mapreduce/lib/mapping/TestCSVImportInput.txt";
+
+  public static final String TIMESTAMP_CSV_IMPORT_DATA =
+      "org/kiji/mapreduce/lib/mapping/TimestampCSVImportInput.txt";
 
   public static final String TSV_IMPORT_DATA =
       "org/kiji/mapreduce/lib/mapping/TestTSVImportInput.txt";
@@ -57,6 +63,9 @@ public final class BulkImporterTestUtils {
 
   public static final String FOO_IMPORT_DESCRIPTOR =
     "org/kiji/mapreduce/lib/mapping/foo-test-import-descriptor.json";
+
+  public static final String FOO_TIMESTAMP_IMPORT_DESCRIPTOR =
+      "org/kiji/mapreduce/lib/mapping/foo-test-timestamp-import-descriptor.json";
 
   public static final String FOO_JSONPATH_IMPORT_DESCRIPTOR =
       "org/kiji/mapreduce/lib/mapping/foo-test-jsonpath-import-descriptor.json";
@@ -85,9 +94,11 @@ public final class BulkImporterTestUtils {
    * can come from a KijiRowScanner.
    *
    * @param importedKijiRowData an iterable of KijiRowData whose contents to validate.
+   * @param validateTimestamps whether we should verify that the timestamps are as expected.
    * @throws IOException if there's an error reading the row data
    */
-  public static void validateImportedRows(Iterable<KijiRowData> importedKijiRowData)
+  public static void validateImportedRows(Iterable<KijiRowData> importedKijiRowData,
+      boolean validateTimestamps)
       throws IOException {
     long rowsProcessed = 0;
     for (KijiRowData row : importedKijiRowData) {
@@ -103,16 +114,43 @@ public final class BulkImporterTestUtils {
         assertEquals("Jones", row.getMostRecentValue("info", "last_name").toString());
         assertEquals("bobbyj@aol.com", row.getMostRecentValue("info", "email").toString());
         assertEquals("415-555-4161", row.getMostRecentValue("info", "phone").toString());
+        if (validateTimestamps) {
+          // Get all the timestamp for each cell in the row.
+          Set<Long> rowTimestamps = Sets.newHashSet();
+          for (String qualifier : row.getQualifiers("info")) {
+            rowTimestamps.addAll(row.getTimestamps("info", qualifier));
+          }
+          assertEquals(1, rowTimestamps.size());
+          assertTrue(rowTimestamps.contains(1361520000L));
+        }
       } else if (rowId.equals("Alice")) {
         assertEquals("Alice", row.getMostRecentValue("info", "first_name").toString());
         assertEquals("Smith", row.getMostRecentValue("info", "last_name").toString());
         assertEquals("alice.smith@yahoo.com", row.getMostRecentValue("info", "email").toString());
         assertNull(row.getMostRecentValue("info", "phone"));
+        if (validateTimestamps) {
+          // Get all the timestamp for each cell in the row.
+          Set<Long> rowTimestamps = Sets.newHashSet();
+          for (String qualifier : row.getQualifiers("info")) {
+            rowTimestamps.addAll(row.getTimestamps("info", qualifier));
+          }
+          assertEquals(1, rowTimestamps.size());
+          assertTrue(rowTimestamps.contains(1352880000L));
+        }
       } else if (rowId.equals("John")) {
         assertEquals("John", row.getMostRecentValue("info", "first_name").toString());
         assertEquals("Doe", row.getMostRecentValue("info", "last_name").toString());
         assertEquals("johndoe@gmail.com", row.getMostRecentValue("info", "email").toString());
         assertEquals("202-555-9876", row.getMostRecentValue("info", "phone").toString());
+        if (validateTimestamps) {
+          // Get all the timestamp for each cell in the row.
+          Set<Long> rowTimestamps = Sets.newHashSet();
+          for (String qualifier : row.getQualifiers("info")) {
+            rowTimestamps.addAll(row.getTimestamps("info", qualifier));
+          }
+          assertEquals(1, rowTimestamps.size());
+          assertTrue(rowTimestamps.contains(1284102000L));
+        }
       } else {
         fail("Found an unexpected row: " + rowId);
       }

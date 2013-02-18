@@ -241,6 +241,16 @@ public abstract class DescribedInputTextBulkImporter extends KijiBulkImporter<Lo
     return mTableImportDescriptor.getEntityIdSource();
   }
 
+  /** @return whether to override the timestamp from system time. */
+  protected final boolean isOverrideTimestamp() {
+    return null != mTableImportDescriptor.getOverrideTimestampSource();
+  }
+
+  /** @return the source for timestamp. */
+  protected final String getTimestampSource() {
+    return mTableImportDescriptor.getOverrideTimestampSource();
+  }
+
   /**
    * Subclasses should implement the {@link #cleanupImporter(KijiTableContext)} method instead.
    * {@inheritDoc}

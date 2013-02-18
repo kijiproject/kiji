@@ -103,7 +103,41 @@ public class TestJSONBulkImporter extends KijiClientTest {
 
     // Validate output:
     final KijiRowScanner scanner = mReader.getScanner(KijiDataRequest.create("info"));
-    BulkImporterTestUtils.validateImportedRows(scanner);
+    BulkImporterTestUtils.validateImportedRows(scanner, false);
+    scanner.close();
+  }
+
+  @Test
+  public void testTimestampJSONBulkImporter() throws Exception {
+    // Prepare input file:
+    File inputFile = File.createTempFile("TestJSONImportInput", ".txt", getLocalTempDir());
+    TestingResources.writeTextFile(inputFile,
+        TestingResources.get(BulkImporterTestUtils.JSON_IMPORT_DATA));
+
+    Configuration conf = getConf();
+    conf.set(DescribedInputTextBulkImporter.CONF_FILE,
+        BulkImporterTestUtils.localResource(BulkImporterTestUtils.FOO_TIMESTAMP_IMPORT_DESCRIPTOR));
+
+    // Run the bulk-import:
+    final MapReduceJob job = KijiBulkImportJobBuilder.create()
+        .withConf(conf)
+        .withBulkImporter(JSONBulkImporter.class)
+        .withInput(new TextMapReduceJobInput(new Path(inputFile.toString())))
+        .withOutput(new DirectKijiTableMapReduceJobOutput(mTable.getURI()))
+        .build();
+    assertTrue(job.run());
+
+    final Counters counters = job.getHadoopJob().getCounters();
+    assertEquals(3,
+        counters.findCounter(JobHistoryCounters.BULKIMPORTER_RECORDS_PROCESSED).getValue());
+    assertEquals(1,
+        counters.findCounter(JobHistoryCounters.BULKIMPORTER_RECORDS_INCOMPLETE).getValue());
+    assertEquals(0,
+        counters.findCounter(JobHistoryCounters.BULKIMPORTER_RECORDS_REJECTED).getValue());
+
+    // Validate output:
+    final KijiRowScanner scanner = mReader.getScanner(KijiDataRequest.create("info"));
+    BulkImporterTestUtils.validateImportedRows(scanner, true);
     scanner.close();
   }
 
@@ -137,7 +171,7 @@ public class TestJSONBulkImporter extends KijiClientTest {
 
     // Validate output:
     final KijiRowScanner scanner = mReader.getScanner(KijiDataRequest.create("info"));
-    BulkImporterTestUtils.validateImportedRows(scanner);
+    BulkImporterTestUtils.validateImportedRows(scanner, false);
     scanner.close();
   }
 }

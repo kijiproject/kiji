@@ -308,6 +308,11 @@ public final class KijiTableImportDescriptor {
     return mColumnNameToSource;
   }
 
+  /** @return the source for the timestamp. */
+  public String getOverrideTimestampSource() {
+    return mDesc.getOverrideTimestampSource();
+  }
+
   /** @return the source for the entityId. */
   public String getEntityIdSource() {
     return mDesc.getEntityIdSource();

@@ -124,10 +124,8 @@ public final class CSVBulkImporter extends DescribedInputTextBulkImporter {
   }
 
   /**
-   * Generates the entity id for this imported line.
+   * Generates the entity id for this imported line using the source from the import descriptor.
    * Called within the produce() method.
-   * This implementation returns the first entry in <code>entries</code> as the EntityId.
-   * Override this method to specify a different EntityId during the produce() method.
    *
    * @param fields One line of input text split on the column delimiter.
    * @param context The context used by the produce() method.
@@ -137,6 +135,19 @@ public final class CSVBulkImporter extends DescribedInputTextBulkImporter {
     //TODO(KIJIMRLIB-3) Extend this to support composite row key ids
     String rowkey = fields.get(mFieldMap.get(getEntityIdSource()));
     return context.getEntityId(rowkey);
+  }
+
+  /**
+   * Generates the timestamp for this imported line using the source from the import descriptor.
+   * Called within the produce() method.
+   *
+   * @param fields One line of input text split on the column delimiter.
+   * @return The timestamp to be used for this row of data.
+   */
+  protected Long getTimestamp(List<String> fields) {
+    String timestampString = fields.get(mFieldMap.get(getTimestampSource()));
+    Long timestamp = Long.parseLong(timestampString);
+    return timestamp;
   }
 
   /** {@inheritDoc} */
@@ -173,7 +184,16 @@ public final class CSVBulkImporter extends DescribedInputTextBulkImporter {
       if (mFieldMap.get(source) < fields.size()) {
         String fieldValue = fields.get(mFieldMap.get(source));
         if (!fieldValue.isEmpty()) {
-          context.put(eid, kijiColumnName.getFamily(), kijiColumnName.getQualifier(), fieldValue);
+          String family = kijiColumnName.getFamily();
+          String qualifier = kijiColumnName.getQualifier();
+          if (isOverrideTimestamp()) {
+            // Override the timestamp from the imported source
+            Long timestamp = getTimestamp(fields);
+            context.put(eid, family, qualifier, timestamp, fieldValue);
+          } else {
+            // Use the system time as the timestamp
+            context.put(eid, family, qualifier, fieldValue);
+          }
         } else {
           emptyFields.add(source);
         }

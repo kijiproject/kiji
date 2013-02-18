@@ -99,7 +99,17 @@ public final class JSONBulkImporter extends DescribedInputTextBulkImporter {
       String source = getSource(kijiColumnName);
       String fieldValue = getFromPath(gson, source);
       if (fieldValue != null) {
-        context.put(eid, kijiColumnName.getFamily(), kijiColumnName.getQualifier(), fieldValue);
+        String family = kijiColumnName.getFamily();
+        String qualifier = kijiColumnName.getQualifier();
+        if (isOverrideTimestamp()) {
+          // Override the timestamp from the imported source
+          String timestampSource = getFromPath(gson, getTimestampSource());
+          Long timestamp = Long.parseLong(timestampSource);
+          context.put(eid, family, qualifier, timestamp, fieldValue);
+        } else {
+          // Use the system time as the timestamp
+          context.put(eid, family, qualifier, fieldValue);
+        }
       } else {
         incomplete(value, context, "Detected missing field: " + source);
       }

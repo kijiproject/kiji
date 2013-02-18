@@ -64,6 +64,7 @@ public final class CommonLogBulkImporter extends DescribedInputTextBulkImporter 
       Field source = Field.valueOf(getSource(kijiColumnName));
       String fieldValue = fieldMap.get(source);
       if (fieldValue != null) {
+        // TODO(KIJIMRLIB-12) Add some ability to use timestamps derived from the log file.
         context.put(eid,  kijiColumnName.getFamily(), kijiColumnName.getQualifier(), fieldValue);
       } else {
         reject(value, context, "Log file missing field: " + source);

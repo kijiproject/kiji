@@ -102,7 +102,7 @@ public class TestCSVBulkImporter extends KijiClientTest {
 
     // Validate output:
     final KijiRowScanner scanner = mReader.getScanner(KijiDataRequest.create("info"));
-    BulkImporterTestUtils.validateImportedRows(scanner);
+    BulkImporterTestUtils.validateImportedRows(scanner, false);
     scanner.close();
   }
 
@@ -141,7 +141,37 @@ public class TestCSVBulkImporter extends KijiClientTest {
 
     // Validate output:
     final KijiRowScanner scanner = mReader.getScanner(KijiDataRequest.create("info"));
-    BulkImporterTestUtils.validateImportedRows(scanner);
+    BulkImporterTestUtils.validateImportedRows(scanner, false);
+    scanner.close();
+  }
+
+  @Test
+  public void testTimestampedCSVBulkImporter() throws Exception {
+    // Prepare input file:
+    File inputFile = File.createTempFile("TimestampCSVImportInput", ".txt", getLocalTempDir());
+    TestingResources.writeTextFile(inputFile,
+        TestingResources.get(BulkImporterTestUtils.TIMESTAMP_CSV_IMPORT_DATA));
+
+    Configuration conf = getConf();
+    conf.set(DescribedInputTextBulkImporter.CONF_FILE,
+        BulkImporterTestUtils.localResource(BulkImporterTestUtils.FOO_TIMESTAMP_IMPORT_DESCRIPTOR));
+
+    // Run the bulk-import:
+    final MapReduceJob job = KijiBulkImportJobBuilder.create()
+        .withConf(conf)
+        .withBulkImporter(CSVBulkImporter.class)
+        .withInput(new TextMapReduceJobInput(new Path(inputFile.toString())))
+        .withOutput(new DirectKijiTableMapReduceJobOutput(mTable.getURI()))
+        .build();
+    assertTrue(job.run());
+
+    final Counters counters = job.getHadoopJob().getCounters();
+    assertEquals(4,
+        counters.findCounter(JobHistoryCounters.BULKIMPORTER_RECORDS_PROCESSED).getValue());
+
+    // Validate output:
+    final KijiRowScanner scanner = mReader.getScanner(KijiDataRequest.create("info"));
+    BulkImporterTestUtils.validateImportedRows(scanner, true);
     scanner.close();
   }
 
@@ -176,7 +206,7 @@ public class TestCSVBulkImporter extends KijiClientTest {
 
     // Validate output:
     final KijiRowScanner scanner = mReader.getScanner(KijiDataRequest.create("info"));
-    BulkImporterTestUtils.validateImportedRows(scanner);
+    BulkImporterTestUtils.validateImportedRows(scanner, false);
     scanner.close();
   }
 

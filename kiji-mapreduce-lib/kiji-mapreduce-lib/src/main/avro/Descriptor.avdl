@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-// Kiji table import descriptor 
+// Kiji table import descriptor
 
 @namespace("org.kiji.mapreduce.lib.avro")
 protocol KijiTableImportDescriptorRecords {
@@ -50,6 +50,9 @@ protocol KijiTableImportDescriptorRecords {
 
     /** EntityId source column. */
     string entityIdSource;
+
+    /** If this is set, override system timestamp with the source field as timestamp. */
+    union { null, string } overrideTimestampSource = null;
 
     /** Descriptor format version (eg. "import-1.0"). */
     string version;
