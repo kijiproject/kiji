@@ -22,9 +22,12 @@ package org.kiji.mapreduce.lib.bulkimport;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -46,6 +49,7 @@ import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;
+import org.kiji.schema.avro.CellSchema;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.util.ResourceUtils;
 
@@ -74,6 +78,7 @@ import org.kiji.schema.util.ResourceUtils;
  *
  * Extensions of this class can use the following methods to implement their producers:
  * <ul>
+ *   <li>{@link #convert} - parses the text into the type associated with the column.</li>
  *   <li>{@link #incomplete} - to log and mark a row that was incomplete.</li>
  *   <li>{@link #reject} - to log and mark a row that could not be processed.</li>
  *   <li>{@link #getDestinationColumns} - to retrieve a collection of destination columns.</li>
@@ -95,6 +100,16 @@ public abstract class DescribedInputTextBulkImporter extends KijiBulkImporter<Lo
 
   public static final String CONF_LOG_RATE = "kiji.import.text.log.rate";
 
+  private static final ImmutableMap<String, Class> KIJI_CELL_TYPE_TO_CLASS_MAP =
+      new ImmutableMap.Builder()
+          .put("\"boolean\"", Boolean.class)
+          .put("\"int\"", Integer.class)
+          .put("\"long\"", Long.class)
+          .put("\"float\"", Float.class)
+          .put("\"double\"", Double.class)
+          .put("\"string\"", String.class)
+          .build();
+
   // Number of lines to skip between reject/incomplete lines
   private Long mLogRate = 1000L;
 
@@ -109,6 +124,9 @@ public abstract class DescribedInputTextBulkImporter extends KijiBulkImporter<Lo
 
   /** Table import descriptor for this bulk load. */
   private KijiTableImportDescriptor mTableImportDescriptor;
+
+  /** KijiColumnName to cell type map. */
+  private Map<KijiColumnName, Class> mColumnNameClassMap;
 
   /** {@inheritDoc} */
   @Override
@@ -144,6 +162,27 @@ public abstract class DescribedInputTextBulkImporter extends KijiBulkImporter<Lo
 
     Preconditions.checkNotNull(mOutputTableLayout);
     mTableImportDescriptor.validateDestination(mOutputTableLayout);
+
+    // Retrieve the classes for all of the imported columns.
+    Map<KijiColumnName, Class> columnNameClassMap = Maps.newHashMap();
+    for (KijiColumnName kijiColumnName : mTableImportDescriptor.getColumnNameSourceMap().keySet()) {
+      CellSchema cellSchema = mOutputTableLayout.getCellSchema(kijiColumnName);
+      switch(cellSchema.getType()) {
+        case INLINE:
+          if (KIJI_CELL_TYPE_TO_CLASS_MAP.containsKey(cellSchema.getValue())) {
+            columnNameClassMap.put(kijiColumnName,
+              KIJI_CELL_TYPE_TO_CLASS_MAP.get(cellSchema.getValue()));
+          } else {
+            throw new IOException("Unsupported described output type: " + cellSchema.getValue());
+          }
+          break;
+        case CLASS:
+          throw new IOException("Unsupported described output type: " + cellSchema.getType());
+        default:
+          throw new IOException("Unsupported described output type: " + cellSchema.getType());
+      }
+    }
+    mColumnNameClassMap = ImmutableMap.copyOf(columnNameClassMap);
 
     setupImporter(context);
   }
@@ -207,6 +246,30 @@ public abstract class DescribedInputTextBulkImporter extends KijiBulkImporter<Lo
     context.incrementCounter(JobHistoryCounters.BULKIMPORTER_RECORDS_REJECTED);
 
     //TODO(KIJIMRLIB-4) Allow this to emit to a rejected output so that import can be reattempted.
+  }
+
+  /**
+   * Converts the value into an object of the type associated with the specified column.
+   * @param kijiColumnName the destination column to infer the type from.
+   * @param value string representation of the value.
+   * @return object containing the parsed representation of the value.
+   */
+  public Object convert(KijiColumnName kijiColumnName, String value) {
+    Class clazz = mColumnNameClassMap.get(kijiColumnName);
+    if (clazz == Boolean.class) {
+      return Boolean.valueOf(value);
+    } else if (clazz == Integer.class) {
+      return Integer.valueOf(value);
+    } else if (clazz == Long.class) {
+      return Long.valueOf(value);
+    } else if (clazz == Float.class) {
+      return Float.valueOf(value);
+    } else if (clazz == Double.class) {
+      return Double.valueOf(value);
+    } else if (clazz == String.class) {
+      return value;
+    }
+    return value;
   }
 
   /**

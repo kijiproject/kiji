@@ -59,6 +59,9 @@ public final class BulkImporterTestUtils {
   public static final String HEADERLESS_CSV_IMPORT_DATA =
       "org/kiji/mapreduce/lib/mapping/HeaderlessCSVImportInput.txt";
 
+  public static final String PRIMITIVE_IMPORT_DATA =
+      "org/kiji/mapreduce/lib/mapping/TestPrimitiveImportInput.txt";
+
   public static final String LOCAL_RESOURCE_PREFIX = "src/test/resources/";
 
   public static final String FOO_IMPORT_DESCRIPTOR =
@@ -69,6 +72,9 @@ public final class BulkImporterTestUtils {
 
   public static final String FOO_JSONPATH_IMPORT_DESCRIPTOR =
       "org/kiji/mapreduce/lib/mapping/foo-test-jsonpath-import-descriptor.json";
+
+  public static final String FOO_PRIMITIVE_IMPORT_DESCRIPTOR =
+      "org/kiji/mapreduce/lib/mapping/foo-test-primitive-import-descriptor.json";
 
   public static final String FOO_INVALID_DESCRIPTOR =
       "org/kiji/mapreduce/lib/mapping/foo-test-invalid.json";

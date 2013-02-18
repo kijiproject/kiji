@@ -43,6 +43,7 @@ import org.kiji.mapreduce.input.TextMapReduceJobInput;
 import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
 import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiDataRequest;
+import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiRowScanner;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
@@ -231,5 +232,41 @@ public class TestCSVBulkImporter extends KijiClientTest {
       assertEquals("Invalid delimiter '!' specified.  Valid options are: ',','\t'",
           ie.getMessage());
     }
+  }
+
+  @Test
+  public void testPrimitives() throws Exception {
+    // Prepare input file:
+    File inputFile = File.createTempFile("TestCSVImportInput", ".txt", getLocalTempDir());
+    TestingResources.writeTextFile(inputFile,
+        TestingResources.get(BulkImporterTestUtils.PRIMITIVE_IMPORT_DATA));
+
+    Configuration conf = getConf();
+    conf.set(DescribedInputTextBulkImporter.CONF_FILE,
+        BulkImporterTestUtils.localResource(BulkImporterTestUtils.FOO_PRIMITIVE_IMPORT_DESCRIPTOR));
+
+    // Run the bulk-import:
+    final MapReduceJob job = KijiBulkImportJobBuilder.create()
+        .withConf(conf)
+        .withBulkImporter(CSVBulkImporter.class)
+        .withInput(new TextMapReduceJobInput(new Path(inputFile.toString())))
+        .withOutput(new DirectKijiTableMapReduceJobOutput(mTable.getURI()))
+        .build();
+    assertTrue(job.run());
+
+    final Counters counters = job.getHadoopJob().getCounters();
+    assertEquals(2,
+        counters.findCounter(JobHistoryCounters.BULKIMPORTER_RECORDS_PROCESSED).getValue());
+
+    // Validate output:
+    final KijiRowScanner scanner = mReader.getScanner(KijiDataRequest.create("primitives"));
+    KijiRowData row = scanner.iterator().next();
+    assertEquals(false, row.getMostRecentValue("primitives", "boolean"));
+    assertEquals(0, row.getMostRecentValue("primitives", "int"));
+    assertEquals(1L, row.getMostRecentValue("primitives", "long"));
+    assertEquals(1.0f, row.getMostRecentValue("primitives", "float"));
+    assertEquals(2.0d, row.getMostRecentValue("primitives", "double"));
+    assertEquals("Hello", row.getMostRecentValue("primitives", "string").toString());
+    scanner.close();
   }
 }

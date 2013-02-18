@@ -189,10 +189,10 @@ public final class CSVBulkImporter extends DescribedInputTextBulkImporter {
           if (isOverrideTimestamp()) {
             // Override the timestamp from the imported source
             Long timestamp = getTimestamp(fields);
-            context.put(eid, family, qualifier, timestamp, fieldValue);
+            context.put(eid, family, qualifier, timestamp, convert(kijiColumnName, fieldValue));
           } else {
             // Use the system time as the timestamp
-            context.put(eid, family, qualifier, fieldValue);
+            context.put(eid, family, qualifier, convert(kijiColumnName, fieldValue));
           }
         } else {
           emptyFields.add(source);
