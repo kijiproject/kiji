@@ -28,10 +28,10 @@ import org.apache.hadoop.io.LongWritable;
 
 import org.kiji.examples.music.SongBiGram;
 import org.kiji.examples.music.SongCount;
-import org.kiji.mapreduce.AvroKeyReader;
-import org.kiji.mapreduce.AvroKeyWriter;
-import org.kiji.mapreduce.AvroValueWriter;
 import org.kiji.mapreduce.KijiReducer;
+import org.kiji.mapreduce.avro.AvroKeyReader;
+import org.kiji.mapreduce.avro.AvroKeyWriter;
+import org.kiji.mapreduce.avro.AvroValueWriter;
 
 /**
  * A reducer that takes in pairs of songs that have been played sequentially and the number one.

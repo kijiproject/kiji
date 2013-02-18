@@ -36,8 +36,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.examples.music.gather.SongPlayCounter;
-import org.kiji.mapreduce.KijiGatherJobBuilder;
 import org.kiji.mapreduce.MapReduceJob;
+import org.kiji.mapreduce.gather.KijiGatherJobBuilder;
 import org.kiji.mapreduce.lib.reduce.LongSumReducer;
 import org.kiji.mapreduce.output.SequenceFileMapReduceJobOutput;
 import org.kiji.schema.KijiClientTest;

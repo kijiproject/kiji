@@ -29,8 +29,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.examples.music.KijiMusicCounters;
-import org.kiji.mapreduce.KijiBulkImporter;
 import org.kiji.mapreduce.KijiTableContext;
+import org.kiji.mapreduce.bulkimport.KijiBulkImporter;
 import org.kiji.schema.EntityId;
 
 /**

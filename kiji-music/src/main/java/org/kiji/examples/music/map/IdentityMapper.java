@@ -26,11 +26,11 @@ import org.apache.avro.mapred.AvroKey;
 import org.apache.avro.mapred.AvroValue;
 
 import org.kiji.examples.music.SongCount;
-import org.kiji.mapreduce.AvroKeyReader;
-import org.kiji.mapreduce.AvroKeyWriter;
-import org.kiji.mapreduce.AvroValueReader;
-import org.kiji.mapreduce.AvroValueWriter;
 import org.kiji.mapreduce.KijiMapper;
+import org.kiji.mapreduce.avro.AvroKeyReader;
+import org.kiji.mapreduce.avro.AvroKeyWriter;
+import org.kiji.mapreduce.avro.AvroValueReader;
+import org.kiji.mapreduce.avro.AvroValueWriter;
 
 /**
  * This mapper emits the same key-value pairs that are passed in.

@@ -28,9 +28,9 @@ import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.io.LongWritable;
 
 import org.kiji.examples.music.SongBiGram;
-import org.kiji.mapreduce.AvroKeyWriter;
-import org.kiji.mapreduce.GathererContext;
-import org.kiji.mapreduce.KijiGatherer;
+import org.kiji.mapreduce.avro.AvroKeyWriter;
+import org.kiji.mapreduce.gather.GathererContext;
+import org.kiji.mapreduce.gather.KijiGatherer;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequestBuilder;
 import org.kiji.schema.KijiRowData;

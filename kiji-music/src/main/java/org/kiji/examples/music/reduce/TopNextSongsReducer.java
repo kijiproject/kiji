@@ -32,11 +32,10 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.examples.music.SongCount;
 import org.kiji.examples.music.TopSongs;
-import org.kiji.mapreduce.AvroKeyReader;
-import org.kiji.mapreduce.AvroValueReader;
 import org.kiji.mapreduce.KijiTableContext;
 import org.kiji.mapreduce.KijiTableReducer;
-
+import org.kiji.mapreduce.avro.AvroKeyReader;
+import org.kiji.mapreduce.avro.AvroValueReader;
 
 /**
  * This reducer writes a list of the top songs played after a song (the key) to the corresponding

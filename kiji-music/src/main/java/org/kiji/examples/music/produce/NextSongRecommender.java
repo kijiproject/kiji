@@ -26,13 +26,13 @@ import java.util.Map;
 
 import org.kiji.examples.music.SongCount;
 import org.kiji.examples.music.TopSongs;
-import org.kiji.mapreduce.KijiProducer;
-import org.kiji.mapreduce.ProducerContext;
 import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.kvstore.KeyValueStoreClient;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
 import org.kiji.mapreduce.kvstore.RequiredStores;
 import org.kiji.mapreduce.kvstore.lib.UnconfiguredKeyValueStore;
+import org.kiji.mapreduce.produce.KijiProducer;
+import org.kiji.mapreduce.produce.ProducerContext;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 

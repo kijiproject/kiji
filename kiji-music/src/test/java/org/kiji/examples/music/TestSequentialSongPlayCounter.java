@@ -32,8 +32,8 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.examples.music.gather.SequentialPlayCounter;
 import org.kiji.examples.music.reduce.SequentialPlayCountReducer;
-import org.kiji.mapreduce.KijiGatherJobBuilder;
 import org.kiji.mapreduce.MapReduceJob;
+import org.kiji.mapreduce.gather.KijiGatherJobBuilder;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
 import org.kiji.mapreduce.kvstore.lib.AvroKVRecordKeyValueStore;
 import org.kiji.mapreduce.output.AvroKeyValueMapReduceJobOutput;

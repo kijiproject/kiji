@@ -32,11 +32,11 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.kiji.examples.music.produce.NextSongRecommender;
-import org.kiji.mapreduce.KijiProduceJobBuilder;
 import org.kiji.mapreduce.MapReduceJob;
 import org.kiji.mapreduce.MapReduceJobOutput;
 import org.kiji.mapreduce.kvstore.lib.KijiTableKeyValueStore;
 import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
+import org.kiji.mapreduce.produce.KijiProduceJobBuilder;
 import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequestBuilder;
