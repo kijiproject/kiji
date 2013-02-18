@@ -23,6 +23,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.InputFormat;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.mapreduce.input.impl.WholeFileInputFormat;
 
 /**
  * A job input for reading entire text files as the records to a map task.

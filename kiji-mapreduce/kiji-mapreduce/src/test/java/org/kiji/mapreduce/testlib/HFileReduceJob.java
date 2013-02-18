@@ -27,10 +27,10 @@ import org.apache.hadoop.io.NullWritable;
 
 import org.kiji.common.flags.Flag;
 import org.kiji.common.flags.FlagParser;
-import org.kiji.mapreduce.HFileKeyValue;
+import org.kiji.mapreduce.KijiMapReduceJobBuilder;
 import org.kiji.mapreduce.KijiMapper;
-import org.kiji.mapreduce.KijiTransformJobBuilder;
 import org.kiji.mapreduce.MapReduceJob;
+import org.kiji.mapreduce.framework.HFileKeyValue;
 import org.kiji.mapreduce.input.SequenceFileMapReduceJobInput;
 import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
 import org.kiji.mapreduce.reducer.IdentityReducer;
@@ -93,7 +93,7 @@ public final class HFileReduceJob {
     final Kiji kiji = Kiji.Factory.open(tableURI);
     final KijiTable table = kiji.openTable(tableURI.getTable());
 
-    final MapReduceJob mrjob = KijiTransformJobBuilder.create()
+    final MapReduceJob mrjob = KijiMapReduceJobBuilder.create()
         .withConf(new Configuration())  // use MapReduce cluster from local environment
         .withInput(new SequenceFileMapReduceJobInput(inputPath))
         .withOutput(new HFileMapReduceJobOutput(table.getURI(), outputPath, mNumSplits))

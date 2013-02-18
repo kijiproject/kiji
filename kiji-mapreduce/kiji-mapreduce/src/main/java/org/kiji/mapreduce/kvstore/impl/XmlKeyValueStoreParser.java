@@ -49,7 +49,7 @@ import org.xml.sax.SAXException;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.kvstore.KeyValueStore;
-import org.kiji.mapreduce.kvstore.KeyValueStoreConfiguration;
+import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
 import org.kiji.mapreduce.kvstore.lib.TextFileKeyValueStore;
 
 /**

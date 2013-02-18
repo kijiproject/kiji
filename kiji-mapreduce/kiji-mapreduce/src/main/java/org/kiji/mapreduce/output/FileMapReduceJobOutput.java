@@ -29,7 +29,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.Inheritance;
 import org.kiji.mapreduce.MapReduceJobOutput;
-import org.kiji.mapreduce.tools.JobIOConfKeys;
+import org.kiji.mapreduce.tools.framework.JobIOConfKeys;
 
 /** Base class for MapReduce job output types that write to files. */
 @ApiAudience.Public

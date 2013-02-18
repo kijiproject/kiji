@@ -37,6 +37,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.kiji.mapreduce.gather.GathererContext;
+import org.kiji.mapreduce.gather.KijiGatherJobBuilder;
+import org.kiji.mapreduce.gather.KijiGatherer;
 import org.kiji.mapreduce.output.TextMapReduceJobOutput;
 import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiDataRequest;
@@ -45,7 +48,7 @@ import org.kiji.schema.KijiTable;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.util.InstanceBuilder;
 
-/** Runs a producer job in-process against a fake HBase instance. */
+/** Runs a gatherer job with a reducer in-process against a fake HBase instance. */
 public class TestGathererReducer extends KijiClientTest {
   /**
    * Producer intended to run on the generic KijiMR test layout. Uses resource

@@ -28,11 +28,14 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.common.flags.Flag;
-import org.kiji.mapreduce.KijiProduceJobBuilder;
-import org.kiji.mapreduce.KijiProducer;
+
 import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
 import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
-import org.kiji.mapreduce.output.KijiTableMapReduceJobOutput;
+import org.kiji.mapreduce.output.impl.KijiTableMapReduceJobOutput;
+import org.kiji.mapreduce.produce.KijiProduceJobBuilder;
+import org.kiji.mapreduce.produce.KijiProducer;
+import org.kiji.mapreduce.tools.framework.JobIOSpecParseException;
+import org.kiji.mapreduce.tools.framework.KijiJobTool;
 import org.kiji.schema.tools.KijiToolLauncher;
 
 /** Program for running a Kiji producer in a MapReduce job. */

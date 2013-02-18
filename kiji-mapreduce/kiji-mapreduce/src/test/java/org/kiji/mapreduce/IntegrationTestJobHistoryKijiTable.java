@@ -33,7 +33,12 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.mapreduce.framework.JobHistoryKijiTable;
+import org.kiji.mapreduce.framework.KijiConfKeys;
 import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
+import org.kiji.mapreduce.produce.KijiProduceJobBuilder;
+import org.kiji.mapreduce.produce.KijiProducer;
+import org.kiji.mapreduce.produce.ProducerContext;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;

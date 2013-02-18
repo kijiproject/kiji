@@ -23,6 +23,7 @@ import java.io.IOException;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.Inheritance;
+import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
 
 /**
  * <p>A KeyValueStore specifies all the resources needed to surface

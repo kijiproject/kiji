@@ -18,7 +18,7 @@
  */
 
 /**
- * Bulk importer framework for Kiji MapReduce.
+ * Bulk importer classes for Kiji MapReduce clients.
  *
  * This package is mainly comprised of the class
  * {@link org.kiji.mapreduce.bulkimport.KijiTableImportDescriptor} which contains relevant

@@ -22,9 +22,10 @@ package org.kiji.mapreduce.util;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.kiji.mapreduce.KijiProducer;
-import org.kiji.mapreduce.KijiProducerOutputException;
-import org.kiji.mapreduce.ProducerContext;
+import org.kiji.mapreduce.produce.KijiProducer;
+import org.kiji.mapreduce.produce.KijiProducerOutputException;
+import org.kiji.mapreduce.produce.ProducerContext;
+import org.kiji.mapreduce.produce.impl.KijiProducers;
 import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;

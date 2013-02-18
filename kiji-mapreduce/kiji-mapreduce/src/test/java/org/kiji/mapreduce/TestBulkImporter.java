@@ -41,6 +41,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.mapreduce.bulkimport.KijiBulkImportJobBuilder;
+import org.kiji.mapreduce.bulkimport.KijiBulkImporter;
+import org.kiji.mapreduce.framework.JobHistoryCounters;
 import org.kiji.mapreduce.input.TextMapReduceJobInput;
 import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
 import org.kiji.schema.EntityId;

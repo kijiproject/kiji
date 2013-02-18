@@ -32,8 +32,8 @@ import org.apache.hadoop.util.ReflectionUtils;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.kvstore.KeyValueStore;
-import org.kiji.mapreduce.kvstore.KeyValueStoreConfiguration;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
+import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
 
 /**
  * KeyValueStore implementation that reads records from SequenceFiles.

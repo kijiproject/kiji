@@ -37,6 +37,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.kiji.mapreduce.gather.GathererContext;
+import org.kiji.mapreduce.gather.KijiGatherJobBuilder;
+import org.kiji.mapreduce.gather.KijiGatherer;
 import org.kiji.mapreduce.output.TextMapReduceJobOutput;
 import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiDataRequest;

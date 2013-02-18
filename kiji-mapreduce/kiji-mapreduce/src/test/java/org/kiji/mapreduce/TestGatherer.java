@@ -39,6 +39,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.mapreduce.gather.GathererContext;
+import org.kiji.mapreduce.gather.KijiGatherJobBuilder;
+import org.kiji.mapreduce.gather.KijiGatherer;
 import org.kiji.mapreduce.output.TextMapReduceJobOutput;
 import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiDataRequest;
@@ -47,7 +50,7 @@ import org.kiji.schema.KijiTable;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.util.InstanceBuilder;
 
-/** Runs a producer job in-process against a fake HBase instance. */
+/** Runs a gatherer job in-process against a fake HBase instance. */
 public class TestGatherer extends KijiClientTest {
   private static final Logger LOG = LoggerFactory.getLogger(TestGatherer.class);
 

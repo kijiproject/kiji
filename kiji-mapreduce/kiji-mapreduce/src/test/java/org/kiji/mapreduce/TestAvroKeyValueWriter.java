@@ -23,6 +23,8 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import org.kiji.mapreduce.avro.AvroKeyWriter;
+import org.kiji.mapreduce.avro.AvroValueWriter;
 import org.kiji.mapreduce.reducer.IdentityReducer;
 
 public class TestAvroKeyValueWriter {

@@ -54,8 +54,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.kiji.mapreduce.HFileKeyValue;
-import org.kiji.mapreduce.KijiConfKeys;
+import org.kiji.mapreduce.framework.HFileKeyValue;
+import org.kiji.mapreduce.framework.KijiConfKeys;
+import org.kiji.mapreduce.output.framework.KijiHFileOutputFormat;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiInstaller;
 import org.kiji.schema.KijiURI;

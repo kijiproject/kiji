@@ -38,10 +38,10 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.kiji.mapreduce.GathererContext;
-import org.kiji.mapreduce.KijiGatherJobBuilder;
-import org.kiji.mapreduce.KijiGatherer;
 import org.kiji.mapreduce.MapReduceJob;
+import org.kiji.mapreduce.gather.GathererContext;
+import org.kiji.mapreduce.gather.KijiGatherJobBuilder;
+import org.kiji.mapreduce.gather.KijiGatherer;
 import org.kiji.mapreduce.output.SequenceFileMapReduceJobOutput;
 import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiDataRequest;

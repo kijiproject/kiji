@@ -21,8 +21,8 @@ package org.kiji.mapreduce.kvstore.lib;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.kvstore.KeyValueStore;
-import org.kiji.mapreduce.kvstore.KeyValueStoreConfiguration;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
+import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
 
 /**
  * A KeyValueStore that contains no data. Perhaps useful for testing.

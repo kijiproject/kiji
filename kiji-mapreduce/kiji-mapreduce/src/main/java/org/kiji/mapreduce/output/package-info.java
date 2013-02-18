@@ -17,5 +17,5 @@
  * limitations under the License.
  */
 
-/** MapReduce job output types. */
+/** MapReduce job output types for Kiji-powered applications. */
 package org.kiji.mapreduce.output;

@@ -26,8 +26,8 @@ import com.google.common.base.Preconditions;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 
-import org.kiji.mapreduce.KijiBulkImporter;
 import org.kiji.mapreduce.KijiTableContext;
+import org.kiji.mapreduce.bulkimport.KijiBulkImporter;
 import org.kiji.schema.EntityId;
 
 /**

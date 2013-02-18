@@ -25,6 +25,7 @@ import org.apache.hadoop.fs.Path;
 import org.junit.Assert;
 import org.junit.Test;
 
+import org.kiji.mapreduce.gather.KijiGatherJobBuilder;
 import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
 import org.kiji.mapreduce.testlib.SimpleTableMapReducer;
 import org.kiji.schema.Kiji;

@@ -29,6 +29,8 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.Inheritance;
+import org.kiji.mapreduce.framework.HFileKeyValue;
+import org.kiji.mapreduce.impl.KijiTableContextFactory;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReaderFactory;
 
 /**

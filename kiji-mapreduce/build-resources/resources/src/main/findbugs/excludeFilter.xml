@@ -30,16 +30,20 @@
       <Bug pattern="EI_EXPOSE_REP2" />
     </Or>
   </Match>
-  <Match>
-    <!-- Bugs in auto-generated Avro sources -->
+  <!-- Normally we suppress any bugs found in the *.avro namespace, because
+       it represents generated code. But org.kiji.mapreduce contains no
+       generated avro, and contains real classes in .avro. If you re-enable
+       a suppression for generate code, be careful about this. -->
+  <!-- <Match>
     <Class name="~org[.]kiji[.]mapreduce[.]avro[.].*" />
-  </Match>
+  </Match> -->
   <Match>
     <!-- Mappers/Reducers/Gatherers/Producers/Tools initialize in setup() so it's okay if their
          constructors don't initialize an instance variable. -->
     <Or>
-      <Class name="~org[.]kiji[.]mapreduce[.]mapper[.].*Mapper" />
-      <Class name="~org[.]kiji[.]mapreduce[.]reducer[.].*Reducer" />
+      <Class name="~org[.]kiji[.]mapreduce[.]bulkimport[.]impl[.].*Mapper" />
+      <Class name="~org[.]kiji[.]mapreduce[.]gather[.]impl[.].*Mapper" />
+      <Class name="~org[.]kiji[.]mapreduce[.]produce[.]impl[.].*Mapper" />
     </Or>
     <Bug pattern="UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR" />
   </Match>
@@ -54,11 +58,16 @@
   -->
   <Match>
     <!-- For performance, code returning the same array every time is correct. -->
-    <Class name="org.kiji.mapreduce.KijiTableSplit" />
+    <Class name="org.kiji.mapreduce.impl.KijiTableSplit" />
     <Or>
       <Bug pattern="EI_EXPOSE_REP" />
       <Bug pattern="EI_EXPOSE_REP2" />
       <Bug pattern="EQ_DOESNT_OVERRIDE_EQUALS" />
     </Or>
+  </Match>
+  <Match>
+    <!-- Disable the equals check for HFileKeyValue -->
+    <Class name="org.kiji.mapreduce.framework.HFileKeyValue" />
+    <Bug pattern="EQ_COMPARETO_USE_OBJECT_EQUALS" />
   </Match>
 </FindBugsFilter>

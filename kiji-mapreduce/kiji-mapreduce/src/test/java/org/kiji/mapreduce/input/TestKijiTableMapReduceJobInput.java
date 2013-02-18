@@ -35,9 +35,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.kiji.mapreduce.KijiConfKeys;
 import org.kiji.mapreduce.KijiMRTestLayouts;
 import org.kiji.mapreduce.MapReduceJobInput;
+import org.kiji.mapreduce.framework.KijiConfKeys;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiDataRequest;

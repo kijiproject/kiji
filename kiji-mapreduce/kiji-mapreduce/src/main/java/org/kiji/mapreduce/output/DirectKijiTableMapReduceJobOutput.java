@@ -28,9 +28,10 @@ import org.apache.hadoop.mapreduce.lib.output.NullOutputFormat;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.Inheritance;
-import org.kiji.mapreduce.KijiConfKeys;
 import org.kiji.mapreduce.KijiTableContext;
-import org.kiji.mapreduce.context.DirectKijiTableWriterContext;
+import org.kiji.mapreduce.framework.KijiConfKeys;
+import org.kiji.mapreduce.impl.DirectKijiTableWriterContext;
+import org.kiji.mapreduce.output.impl.KijiTableMapReduceJobOutput;
 import org.kiji.schema.KijiURI;
 
 /**

@@ -26,7 +26,7 @@ import org.apache.hadoop.conf.Configuration;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.kvstore.KeyValueStore;
-import org.kiji.mapreduce.kvstore.KeyValueStoreConfiguration;
+import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
 
 /**
  * Serialize multiple KeyValueStoreConfigurations into a Hadoop Configuration

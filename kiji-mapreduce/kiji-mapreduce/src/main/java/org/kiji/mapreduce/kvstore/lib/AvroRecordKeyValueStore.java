@@ -34,8 +34,8 @@ import org.apache.hadoop.fs.Path;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.kvstore.KeyValueStore;
-import org.kiji.mapreduce.kvstore.KeyValueStoreConfiguration;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
+import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
 
 /**
  * An interface for providing read access to Avro container files of records.

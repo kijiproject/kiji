@@ -23,9 +23,13 @@ import java.io.IOException;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.common.flags.Flag;
-import org.kiji.mapreduce.KijiGatherJobBuilder;
-import org.kiji.mapreduce.KijiGatherer;
+
 import org.kiji.mapreduce.KijiReducer;
+import org.kiji.mapreduce.gather.KijiGatherJobBuilder;
+import org.kiji.mapreduce.gather.KijiGatherer;
+import org.kiji.mapreduce.tools.framework.JobIOSpecParseException;
+import org.kiji.mapreduce.tools.framework.KijiJobTool;
+import org.kiji.mapreduce.tools.framework.MapReduceJobOutputFactory;
 import org.kiji.schema.tools.KijiToolLauncher;
 import org.kiji.schema.tools.RequiredFlagException;
 

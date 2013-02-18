@@ -23,6 +23,9 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
+import org.kiji.mapreduce.tools.framework.JobIOSpecParseException;
+import org.kiji.mapreduce.tools.framework.JobOutputSpec;
+
 public class TestJobOutputSpec {
   @Test
   public void testNullPathConstructor() {

@@ -29,10 +29,10 @@ import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.Job;
 
 import org.kiji.annotations.ApiAudience;
-import org.kiji.mapreduce.KijiConfKeys;
-import org.kiji.mapreduce.KijiTableInputFormat;
 import org.kiji.mapreduce.MapReduceJobInput;
-import org.kiji.mapreduce.tools.JobIOConfKeys;
+import org.kiji.mapreduce.framework.KijiConfKeys;
+import org.kiji.mapreduce.framework.KijiTableInputFormat;
+import org.kiji.mapreduce.tools.framework.JobIOConfKeys;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiURI;

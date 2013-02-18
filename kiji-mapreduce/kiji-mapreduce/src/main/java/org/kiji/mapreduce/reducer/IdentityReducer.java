@@ -32,9 +32,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
-import org.kiji.mapreduce.AvroKeyWriter;
-import org.kiji.mapreduce.AvroValueWriter;
 import org.kiji.mapreduce.KijiReducer;
+import org.kiji.mapreduce.avro.AvroKeyWriter;
+import org.kiji.mapreduce.avro.AvroValueWriter;
 
 /**
  * This MapReduce reducer will pass through all of the input key-value

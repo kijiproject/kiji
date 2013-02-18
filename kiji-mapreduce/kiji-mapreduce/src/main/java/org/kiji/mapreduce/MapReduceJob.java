@@ -42,7 +42,7 @@ public abstract class MapReduceJob {
    *
    * @param job The Hadoop job to be run.
    */
-  MapReduceJob(Job job) {
+  protected MapReduceJob(Job job) {
     mJob = job;
   }
 

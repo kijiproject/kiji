@@ -35,7 +35,7 @@ import org.apache.hadoop.mapreduce.Counters;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.common.flags.Flag;
-import org.kiji.mapreduce.JobHistoryKijiTable;
+import org.kiji.mapreduce.framework.JobHistoryKijiTable;
 import org.kiji.schema.KConstants;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiRowData;

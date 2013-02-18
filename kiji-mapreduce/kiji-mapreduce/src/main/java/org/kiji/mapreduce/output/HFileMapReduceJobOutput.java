@@ -45,12 +45,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
-import org.kiji.mapreduce.HFileKeyValue;
 import org.kiji.mapreduce.JobConfigurationException;
-import org.kiji.mapreduce.KijiConfKeys;
 import org.kiji.mapreduce.KijiTableContext;
-import org.kiji.mapreduce.context.HFileWriterContext;
-import org.kiji.mapreduce.tools.JobIOConfKeys;
+import org.kiji.mapreduce.framework.HFileKeyValue;
+import org.kiji.mapreduce.framework.KijiConfKeys;
+import org.kiji.mapreduce.impl.HFileWriterContext;
+import org.kiji.mapreduce.output.framework.KijiHFileOutputFormat;
+import org.kiji.mapreduce.output.impl.KijiTableMapReduceJobOutput;
+import org.kiji.mapreduce.tools.framework.JobIOConfKeys;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiRegion;
 import org.kiji.schema.KijiRowKeySplitter;

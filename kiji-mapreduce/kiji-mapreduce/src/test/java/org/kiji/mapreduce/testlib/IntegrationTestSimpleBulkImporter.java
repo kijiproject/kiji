@@ -38,9 +38,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.kiji.mapreduce.HFileLoader;
-import org.kiji.mapreduce.KijiBulkImportJobBuilder;
 import org.kiji.mapreduce.KijiMRTestLayouts;
 import org.kiji.mapreduce.MapReduceJob;
+import org.kiji.mapreduce.bulkimport.KijiBulkImportJobBuilder;
 import org.kiji.mapreduce.input.TextMapReduceJobInput;
 import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
 import org.kiji.mapreduce.output.HFileMapReduceJobOutput;

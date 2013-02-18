@@ -24,10 +24,10 @@ import java.io.IOException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 
-import org.kiji.mapreduce.KijiBulkImportJobBuilder;
-import org.kiji.mapreduce.KijiBulkImporter;
 import org.kiji.mapreduce.KijiTableContext;
 import org.kiji.mapreduce.MapReduceJob;
+import org.kiji.mapreduce.bulkimport.KijiBulkImportJobBuilder;
+import org.kiji.mapreduce.bulkimport.KijiBulkImporter;
 import org.kiji.mapreduce.input.KijiTableMapReduceJobInput;
 import org.kiji.mapreduce.input.KijiTableMapReduceJobInput.RowOptions;
 import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;

@@ -26,12 +26,13 @@ import org.apache.hadoop.io.NullWritable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.kiji.mapreduce.GathererContext;
-import org.kiji.mapreduce.HFileKeyValue;
-import org.kiji.mapreduce.KijiGatherer;
+
 import org.kiji.mapreduce.KijiTableContext;
-import org.kiji.mapreduce.KijiTableContextFactory;
-import org.kiji.mapreduce.context.InternalGathererContext;
+import org.kiji.mapreduce.framework.HFileKeyValue;
+import org.kiji.mapreduce.gather.GathererContext;
+import org.kiji.mapreduce.gather.KijiGatherer;
+import org.kiji.mapreduce.gather.impl.InternalGathererContext;
+import org.kiji.mapreduce.impl.KijiTableContextFactory;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 

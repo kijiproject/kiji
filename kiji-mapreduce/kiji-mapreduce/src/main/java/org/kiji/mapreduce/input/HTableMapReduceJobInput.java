@@ -27,9 +27,9 @@ import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.Job;
 
 import org.kiji.annotations.ApiAudience;
-import org.kiji.mapreduce.HTableInputFormat;
 import org.kiji.mapreduce.MapReduceJobInput;
-import org.kiji.mapreduce.tools.JobIOConfKeys;
+import org.kiji.mapreduce.impl.HTableInputFormat;
+import org.kiji.mapreduce.tools.framework.JobIOConfKeys;
 
 /** Job input that reads from an HTable (an HBase table). */
 @ApiAudience.Public

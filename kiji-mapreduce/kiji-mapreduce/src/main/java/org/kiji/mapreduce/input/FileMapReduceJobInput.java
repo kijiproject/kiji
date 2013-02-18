@@ -32,7 +32,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.Inheritance;
 import org.kiji.mapreduce.MapReduceJobInput;
-import org.kiji.mapreduce.tools.JobIOConfKeys;
+import org.kiji.mapreduce.tools.framework.JobIOConfKeys;
 
 /** Base class for map reduce job input that is read from files. */
 @ApiAudience.Public
