@@ -119,7 +119,7 @@ another time using JSON! Use the following command to delete the table:
 
 <div class="userinput">
 {% highlight bash %}
-$KIJI_HOME/bin/kiji delete-table --table=phonebook
+$KIJI_HOME/bin/kiji delete-table --target=kiji://.env/default/phonebook
 {% endhighlight %}
 </div>
 
@@ -137,7 +137,7 @@ The command below creates the same phonebook table with the layout specified in 
 
 <div class="userinput">
 {% highlight bash %}
-$KIJI_HOME/bin/kiji create-table --table=phonebook \
+$KIJI_HOME/bin/kiji create-table --table=kiji://.env/default/phonebook \
     --layout=$KIJI_HOME/examples/phonebook/layout.json
 {% endhighlight %}
 </div>

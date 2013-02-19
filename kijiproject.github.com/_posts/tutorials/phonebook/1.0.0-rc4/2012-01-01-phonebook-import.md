@@ -91,7 +91,7 @@ Verify that the user records were added properly by executing:
 
 <div class="userinput">
 {% highlight bash %}
-$KIJI_HOME/bin/kiji ls --table=phonebook
+$KIJI_HOME/bin/kiji ls --kiji=kiji://.env/default/phonebook
 {% endhighlight %}
 </div>
 
@@ -217,7 +217,7 @@ Verify that the user records were added properly by executing:
 
 <div class="userinput">
 {% highlight bash %}
-$KIJI_HOME/bin/kiji ls --table=phonebook
+$KIJI_HOME/bin/kiji ls --kiji=kiji://.env/default/phonebook
 {% endhighlight %}
 </div>
 

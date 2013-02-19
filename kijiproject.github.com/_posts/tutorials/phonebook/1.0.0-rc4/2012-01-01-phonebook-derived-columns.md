@@ -67,7 +67,7 @@ You can use the following command to see if your contacts' address data was succ
 
 <div class="userinput">
 {% highlight bash %}
-$KIJI_HOME/bin/kiji ls --table=phonebook --columns=derived
+$KIJI_HOME/bin/kiji ls --kiji=kiji://.env/default/phonebook --columns=derived
 {% endhighlight %}
 </div>
 

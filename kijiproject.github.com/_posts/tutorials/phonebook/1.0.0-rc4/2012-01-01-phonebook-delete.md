@@ -47,7 +47,7 @@ table:
 
 <div class="userinput">
 {% highlight bash %}
-$KIJI_HOME/bin/kiji ls --table=phonebook --entity-id="Renuka,Apte"
+$KIJI_HOME/bin/kiji ls --kiji=kiji://.env/default/phonebook --entity-id="Renuka,Apte"
 {% endhighlight %}
 </div>
 
@@ -81,7 +81,7 @@ entry for Renuka does not get printed:
 
 <div class="userinput">
 {% highlight bash %}
-$KIJI_HOME/bin/kiji ls --table=phonebook --entity-id="Renuka,Apte"
+$KIJI_HOME/bin/kiji ls --kiji=kiji://.env/default/phonebook --entity-id="Renuka,Apte"
 {% endhighlight %}
 </div>
 
@@ -145,7 +145,7 @@ phonebook entries from California get printed.
 
 <div class="userinput">
 {% highlight bash %}
-$KIJI_HOME/bin/kiji ls --table=phonebook --columns="derived:state"
+$KIJI_HOME/bin/kiji ls --kiji=kiji://.env/default/phonebook --columns="derived:state"
 {% endhighlight %}
 </div>
 

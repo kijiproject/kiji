@@ -112,7 +112,7 @@ Now use `kiji ls`:
 
 <div class="userinput">
 {% highlight bash %}
-$KIJI_HOME/bin/kiji ls --table=phonebook
+$KIJI_HOME/bin/kiji ls --kiji=kiji://.env/default/phonebook
 {% endhighlight %}
 </div>
 

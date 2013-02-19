@@ -101,7 +101,7 @@ Now we can look up the derived talktime value from the stats column for the user
 
 <div class="userinput">
 {% highlight bash %}
-$KIJI_HOME/bin/kiji ls --table=phonebook \
+$KIJI_HOME/bin/kiji ls --kiji=kiji://.env/default/phonebook \
     --entity-id="John,Doe" --columns="stats"
 {% endhighlight %}
 </div>
