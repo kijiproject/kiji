@@ -134,7 +134,7 @@ class InputProcessor(val throwOnSyntaxErr: Boolean = false) {
         |For a full layout definition language reference, see the user guide
         |available online at:
         |""".stripMargin +
-        "  http://http://docs.kiji.org/userguide/schema/" +
+        "  http://docs.kiji.org/userguide/schema/" +
         ShellMain.version() + "/schema-shell-ddl-ref/\n" +
         """
         |For more information,see the README.md file distributed with this program.
