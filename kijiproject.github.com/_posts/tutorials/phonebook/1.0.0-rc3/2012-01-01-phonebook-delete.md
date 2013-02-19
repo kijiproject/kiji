@@ -2,7 +2,7 @@
 layout: post
 title: Delete Contacts
 categories: [tutorials, phonebook-tutorial, 1.0.0-rc3]
-tags: [article]
+tags: [phonebook]
 order: 8
 description: Examples of Point deletions.
 ---

@@ -2,7 +2,7 @@
 layout: post
 title: Setup
 categories: [tutorials, phonebook-tutorial, 1.0.0-rc3]
-tags: [article]
+tags: [phonebook]
 order: 2
 description: Setup and compile instructions for the phonebook tutorial.
 ---

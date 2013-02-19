@@ -2,7 +2,7 @@
 layout: post
 title: Overview
 categories: [tutorials, phonebook-tutorial, 1.0.0-rc4]
-tags: [article]
+tags: [phonebook]
 order: 1
 description: Quick tutorial to get up and running with Kiji Tables.
 ---

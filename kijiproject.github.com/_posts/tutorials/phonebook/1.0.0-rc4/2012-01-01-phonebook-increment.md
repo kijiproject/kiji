@@ -2,7 +2,7 @@
 layout: post
 title : Use Counters
 categories: [tutorials, phonebook-tutorial, 1.0.0-rc4]
-tags: [article]
+tags: [phonebook]
 order : 7
 description: Use atomic increment in the Phonebook example to calculate talktime.
 ---

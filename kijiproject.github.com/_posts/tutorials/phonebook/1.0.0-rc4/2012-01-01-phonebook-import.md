@@ -2,7 +2,7 @@
 layout: post
 title: Import Data
 categories: [tutorials, phonebook-tutorial, 1.0.0-rc4]
-tags: [article]
+tags: [phonebook]
 order: 5
 description: How to import data into the phonebook table.
 ---

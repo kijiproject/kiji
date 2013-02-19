@@ -2,7 +2,7 @@
 layout: post
 title : Read and Write in Kiji
 categories: [tutorials, phonebook-tutorial, 1.0.0-rc4]
-tags: [article]
+tags: [phonebook]
 order : 4
 description: Add and lookup and single entry.
 ---

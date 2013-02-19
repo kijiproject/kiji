@@ -2,7 +2,7 @@
 layout: post
 title : Derive Data
 categories: [tutorials, phonebook-tutorial, 1.0.0-rc3]
-tags: [article]
+tags: [phonebook]
 order: 6
 description: Decompose address into its individual fields.
 ---

@@ -12,28 +12,10 @@ files Jekyll.
 Our docs will be transformed into readable pages using Jekyll. Jekyll
 allows us to write our documentation in markdown, and host it as
 static pages in github. We are particularly using
-jekyll-bootstrap. Learn more about jekyll-bootstrap at
-http://www.jekyllbootstrap.com
+jekyll-bootstrap. [Learn more about jekyll-bootstrap.](http://www.jekyllbootstrap.com)
+
 
 ## Creating and editing documentation
-To add a new file, find the user guide section or article you want and
-create a file named YYYY-MM-DD-title.md under the _posts directory,
-and write it using markdown syntax. In the file, you should include
-the following at the top of the file (include the dashes):
-
-    ---
-    layout: post
-    title: My Content Title
-    categories: [userguide, schema, 1.0.0-rc1]
-    tags: [doc_type]
-    description: A tutorial on computer stuff.
-    ---
-
-The above is YAML Front Matter syntax that instructs Jekyll what to do
-with the file when compiling it into a static site. Set the 'doc_type'
-is either 'article' or 'schema_ug'. The tag allows us to collate
-articles and userguides. The ordering of these articles and userguides
-is determined by the date in the filename. Janky, c'est la vie.
 You can write everything in markdown (see markdown_styleguide.md for more
 information.) and do code highlighting inline with backticks `code` or
 in blocks with the template:
@@ -44,6 +26,25 @@ in blocks with the template:
 
 Java in the above template can be any short name for a language from
 [this list.](http://pygments.org/languages/) 
+
+To add a new file, find the user guide section or article you want and
+create a file named YYYY-MM-DD-title.md under the _posts directory,
+and write it using markdown syntax. In the file, you should include
+the following at the top of the file (include the dashes):
+
+    ---
+    layout: post
+    title: Delete Contacts
+    categories: [tutorials, phonebook-tutorial, 1.0.0-rc4]
+    tags: [article]
+    order: 8
+    description: Examples of Point deletions.
+    ---
+
+The above is YAML Front Matter syntax that instructs Jekyll what to do
+with the file when compiling it into a static site. The tag allows us to collate
+articles and userguides.
+
 
 ## Previewing Changes
 

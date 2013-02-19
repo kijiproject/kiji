@@ -2,7 +2,7 @@
 layout : post
 title : Create a Table
 categories: [tutorials, phonebook-tutorial, 1.0.0-rc3]
-tags : [article]
+tags : [phonebook]
 order : 3
 description: To use a phonebook, you need a phonebook.
 ---
