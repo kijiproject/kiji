@@ -183,7 +183,8 @@ Table names may not be changed.
 ### Layout record descriptor <a name="ref.table_layout_desc" id="ref.table_layout_desc"></a>
 
 For reference, the Avro descriptor for table layout records is defined in
-`src/main/avro/Layout.avdl` within the kiji-schema git project as follows:
+[`src/main/avro/Layout.avdl`](https://github.com/kijiproject/kiji-schema/blob/master/kiji-schema/src/main/avro/Layout.avdl "Layout.avdl")
+within the kiji-schema git project as follows:
 
 {% highlight java %}
 /**
