@@ -21,8 +21,11 @@ package org.kiji.mapreduce.tools;
 
 import java.util.List;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.hbase.HConstants;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.common.flags.Flag;
@@ -93,7 +96,13 @@ public final class KijiBulkLoad extends BaseTool {
       final KijiTable table = kiji.openTable(mTableURI.getTable());
       try {
         // Load the HFiles
-        final HFileLoader hFileLoader = HFileLoader.create(getConf());
+        // TODO(SCHEMA-188): Consolidate this logic in a single central place:
+        final Configuration conf = getConf();
+        conf.set(HConstants.ZOOKEEPER_QUORUM,
+            Joiner.on(",").join(mTableURI.getZookeeperQuorumOrdered()));
+        conf.setInt(HConstants.ZOOKEEPER_CLIENT_PORT, mTableURI.getZookeeperClientPort());
+
+        final HFileLoader hFileLoader = HFileLoader.create(conf);
         hFileLoader.load(mHFile, table);
         return SUCCESS;
       } finally {
