@@ -21,11 +21,8 @@ WITH LOCALITY GROUP default
   INMEMORY = false,
   COMPRESSED WITH NONE,
   FAMILY info WITH DESCRIPTION 'Information about a song' (
-    metadata CLASS org.kiji.examples.music.SongMetadata WITH DESCRIPTION 'Song metadata'
-  ),
-  FAMILY derived WITH DESCRIPTION 'Data derived from user interactions' (
+    metadata CLASS org.kiji.examples.music.SongMetadata WITH DESCRIPTION 'Song metadata',
     top_next_songs CLASS org.kiji.examples.music.TopSongs
-       WITH DESCRIPTION 'The most likely next songs to be played, and their counts',
-    number_of_plays "long" WITH DESCRIPTION 'Count of the number of plays.'
+       WITH DESCRIPTION 'The most likely next songs to be played, and their counts'
   )
 );
