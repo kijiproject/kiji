@@ -59,6 +59,7 @@ public class SongPlayCounter extends KijiGatherer<Text, LongWritable> {
   /** {@inheritDoc} */
   @Override
   public void setup(GathererContext<Text, LongWritable> context) throws IOException {
+    super.setup(context); // Any time you override setup, call super.setup(context);
     mText = new Text();
   }
 

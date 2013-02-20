@@ -58,7 +58,7 @@ public class TopNextSongsReducer
   /** {@inheritDoc} */
   @Override
   public void setup(Context context) throws IOException, InterruptedException {
-    super.setup(context);
+    super.setup(context); // Any time you override setup, call super.setup(context);
     mTopSongs = new TopSongs();
     // This TreeSet will keep track of the "largest" SongCount objects seen so far. Two SongCount
     // objects, song1 and song2, can be compared and the object with the largest value in the field

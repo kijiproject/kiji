@@ -50,6 +50,7 @@ public class SequentialPlayCounter extends KijiGatherer<AvroKey<SongBiGram>, Lon
   /** {@inheritDoc} */
   @Override
   public void setup(GathererContext<AvroKey<SongBiGram>, LongWritable> context) throws IOException {
+    super.setup(context); // Any time you override setup, call super.setup(context);
     mBiGram = new SongBiGram();
   }
 
