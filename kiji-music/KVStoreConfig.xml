@@ -4,17 +4,13 @@
     <configuration>
       <property>
         <name>table.uri</name>
-        <!--This URI can be replaced with the URI of a different 'songs' table to use. -->
-        <value>kiji://.env/default/songs</value> <!-- The default URI -->
+        <!-- This URI can be replace with the URI of a different 'songs' table to use. -->
+        <value>kiji://.env/kiji_music/songs</value>
       </property>
       <property>
         <name>column</name>
         <value>info:top_next_songs</value>
-       </property>
-       <property>
-         <name>avro.reader.schema</name>
-         <value>org.kiji.examples.music.TopSongs</value>
-        </property>
+      </property>
     </configuration>
   </store>
 </stores>
