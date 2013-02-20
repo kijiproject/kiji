@@ -31,6 +31,7 @@ kiji_url : http://www.kiji.org
 production_url : http://docs.kiji.org
 userguide_url : /userguides
 userguide_schema_rc4 : /userguides/schema/1.0.0-rc4
+userguide_mapreduce_rc4 : /userguides/mapreduce/1.0.0-rc4
 
 tutorial_url : /tutorials
 api_url : /apidocs
