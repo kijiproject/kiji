@@ -9,11 +9,10 @@ description: Bulk importing historic data into a Kiji table.
 
 Short description of what this MapReduce job accomplishes.
 
-### ClassName.java
-Describe the Mapper.
-
-### ClassName.java
-Describe the Reducer.
+### Bulk Importing with Library Classes
+* quick descripition of importing lib
+* describe bulk import input descriptor
+* General warning about being careful with timestamps and table config
 
 ### Running the Example
 
@@ -24,3 +23,5 @@ $KIJI_HOME/bin/kiji jar \
 </div>
 
 #### Verify
+check MR input/output counts
+ls the tables
