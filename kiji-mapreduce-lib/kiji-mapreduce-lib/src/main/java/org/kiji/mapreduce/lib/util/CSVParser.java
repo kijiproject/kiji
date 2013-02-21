@@ -32,9 +32,12 @@ import org.kiji.annotations.ApiAudience;
  * Parser that extracts fields from RFC 4180 (http://tools.ietf.org/html/rfc4180) compliant
  * CSV and TSV lines of text.
  *
- * <p>Typical invocations to parse CSV and TSV lines respectively:</p>
- * <code>CSVParser.parseCSV("first,last")</code>.
- * <code>TSVParser.parseTSV("first\tlast")</code>.
+ * <h2>Typical invocations to parse CSV and TSV lines respectively:</h2>
+ * <pre><code>
+ *   List&lt;String&gt; parsedoCSVFields = CSVParser.parseCSV("first,last");
+ *
+ *   List&lt;String&gt; parsedTSVFields TSVParser.parseTSV("first\tlast");
+ * </code></pre>
  *
  * <p>The difference between these methods and String.split(',') is that this handles the escaping
  * of double quotes in the manner specified by RFC 4180 Section 2.7.</p>

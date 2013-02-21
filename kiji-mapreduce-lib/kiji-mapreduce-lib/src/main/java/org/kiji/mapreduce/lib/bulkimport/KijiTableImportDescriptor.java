@@ -50,7 +50,7 @@ import org.kiji.schema.util.ResourceUtils;
 import org.kiji.schema.util.ToJson;
 
 /**
- * Mapping of input schema to Kiji table layouts for bulk importers
+ * Mapping of input schema to Kiji table layouts for bulk importers.
  *
  * <p>
  *   KijiTableImportDescriptor wraps a table import descriptor represented as a
@@ -73,16 +73,18 @@ import org.kiji.schema.util.ToJson;
  *     } ],
  *   } ],
  *   entityIdSource : "first", // field in the source to generate the entity id from.
+ *   overrideTimestampSource : "time", // optional field to use to set the timestamps on rows.
  *   version : "import-1.0" // format version number of the import descriptor
  * }
  * </code></pre>
  *
- * <h1>Overall structure</h1>
+ * <h2>Overall structure</h2>
  * <p>At the top-level, a table import descriptor contains:
  * <ul>
  *   <li>the table that is the destination of the import.</li>
  *   <li>the table column families.</li>
  *   <li>the source for the entity id.</li>
+ *   <li>(optional) timestamp to use instead of system timestamp.</li>
  *   <li>format version of the import descriptor.</li>
  * </ul>
  * </p>

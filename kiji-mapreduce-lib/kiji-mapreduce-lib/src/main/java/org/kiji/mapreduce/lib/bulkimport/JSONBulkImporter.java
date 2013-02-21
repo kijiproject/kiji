@@ -35,11 +35,44 @@ import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiColumnName;
 
 /**
- * Bulk importer that handles JSON files.  The expected JSON file should be an enter separated
- * set of records.  Each line represents a separate JSON object to be imported into a row.  Target
- * columns whose sources are not present in the JSON object are skipped.
+ * Bulk importer that handles JSON files.  The expected JSON file should be a set of records
+ * separated by new lines
+ * (see {@link org.apache.hadoop.mapreduce.lib.input.TextInputFormat TextInputFormat}).
+ * Each line represents a separate JSON object to be imported into a row.  Target
+ * columns whose sources are not present in the JSON object are skipped.  This bulk importer uses
+ * <a href="http://code.google.com/p/google-gson/">google-gson</a> to parse lines into fields.
  *
  * Complex paths in JSON are specified by strings delimited with periods(.).
+ *
+ * <h2>Creating a bulk import job for JSON files:</h2>
+ * <p>
+ *   The bulk importer can be passed into a
+ *   {@link org.kiji.mapreduce.bulkimport.KijiBulkImportJobBuilder}.  A
+ *   {@link KijiTableImportDescriptor}, which defines the mapping from the import fields to the
+ *   destination Kiji columns, must be passed in as part of the job configuration.  For writing
+ *   to an HFile which can later be loaded with the <code>kiji bulk-load</code> tool the job
+ *   creation looks like:
+ * </p>
+ * <pre><code>
+ *   // Set the import descriptor file to be used for this bulk importer.
+ *   conf.set(DescribedInputTextBulkImporter.CONF_FILE, "foo-test-import-descriptor.json");
+ *   // Configure and create the MapReduce job.
+ *   final MapReduceJob job = KijiBulkImportJobBuilder.create()
+ *       .withConf(conf)
+ *       .withBulkImporter(JSONBulkImporter.class)
+ *       .withInput(new TextMapReduceJobInput(new Path(inputFile.toString())))
+ *       .withOutput(new HFileMapReduceJobOutput(mOutputTable, hfileDirPath))
+ *       .build();
+ * </code></pre>
+ * <p>
+ *   Alternately the bulk importer can be configured to write directly to a Kiji Table.  This is
+ *   <em>not recommended</em> because it generates individual puts for each cell that is being
+ *   written. For small jobs or tests, a direct Kiji table output job can be created by modifying
+ *   out the .withOutput parameter to:
+ *   <code>.withOutput(new DirectKijiTableMapReduceJobOutput(mOutputTable))</code>
+ * </p>
+ *
+ * @see KijiTableImportDescriptor
  */
 @ApiAudience.Public
 public final class JSONBulkImporter extends DescribedInputTextBulkImporter {

@@ -56,18 +56,18 @@ import org.kiji.schema.util.ResourceUtils;
 /**
  * DescribedInputTextBulkImporter is an abstract class that provides methods to bulk importers for
  * mapping from source fields in the import lines to destination Kiji columns.  These can be used
- * inside of KijiBulkImportJobBuilder via the withBulkImporter parameter.
+ * inside of KijiBulkImportJobBuilder via the withBulkImporter method.
  *
  * Importing from a text file requires specifying a KijiColumnName, and the source field
- * for each element to be inserted into kiji, in addition to the raw import data.  This information
+ * for each element to be inserted into Kiji, in addition to the raw import data.  This information
  * is provided by {@link KijiTableImportDescriptor} which is set via
  * the <code>kiji.import.text.input.descriptor.path</code> parameter in {@link #CONF_FILE}.
  *
  * <p>Use this Mapper over text files to import data into a Kiji
- * table.  Each line in the file will be treated data for one row.
+ * table.  Each line in the file will be treated as data for one row.
  * This line should generate a single EntityId to write to, and any number
- * of writes to add to that entity.  Override the produce(String, Context)
- * method with this behavior.</p>
+ * of writes to add to that entity.  You should override the produce(String, Context)
+ * method to generate the entities from the input lines.</p>
  *
  * Extensions of this class should implement the following methods:
  * <ul>
@@ -188,7 +188,7 @@ public abstract class DescribedInputTextBulkImporter extends KijiBulkImporter<Lo
   }
 
   /**
-   * Extensible version of {@link org.kiji.mapreduce.KijiBulkImporter#setup} for subclasses of
+   * Extensible version of {@link KijiBulkImporter#setup} for subclasses of
    * DescribedInputTextBulkImporter.
    * Does nothing by default.
    *
@@ -324,7 +324,7 @@ public abstract class DescribedInputTextBulkImporter extends KijiBulkImporter<Lo
   }
 
   /**
-   * Extensible version of {@link org.kiji.mapreduce.KijiBulkImporter#cleanup} for subclasses of
+   * Extensible version of {@link KijiBulkImporter#cleanup} for subclasses of
    * DescribedInputTextBulkImporter.
    * Does nothing by default.
    *

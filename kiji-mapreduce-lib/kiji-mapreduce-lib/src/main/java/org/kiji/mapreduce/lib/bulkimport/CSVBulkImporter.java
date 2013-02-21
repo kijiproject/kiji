@@ -42,11 +42,48 @@ import org.kiji.schema.KijiColumnName;
 /**
  * Bulk importer that handles comma separated files.  TSVs are also supported by setting the
  * <code>kiji.import.text.field.separator</code> configuration item specified by
- * {@link #CONF_FIELD_DELIMITER}.
+ * {@link #CONF_FIELD_DELIMITER}.  This bulk importer uses
+ * {@link org.kiji.mapreduce.lib.util.CSVParser} for parsing lines into fields.
  *
- * For import files that do not contain a header row, a default can be specified by setting the
+ * A default header row can be specified by setting the
  * <code>kiji.import.text.column.header_row</code> configuration item specified by
- * {@link #CONF_INPUT_HEADER_ROW}.
+ * {@link #CONF_INPUT_HEADER_ROW}.  If this is not specified, this bulk importer will infer
+ * headers from the first line of text encountered.  Not that within a MapReduce job this is not
+ * necessarily the first line of the file and thus this parameter should be set.
+ *
+ * <h2>Creating a bulk import job for CSV:</h2>
+ * <p>
+ *   The CSV bulk importer can be passed into a
+ *   {@link org.kiji.mapreduce.bulkimport.KijiBulkImportJobBuilder}.  A
+ *   {@link KijiTableImportDescriptor}, which defines the mapping from the import fields to the
+ *   destination Kiji columns, must be passed in as part of the job configuration.  For writing
+ *   to an HFile which can later be loaded with the <code>kiji bulk-load<code> tool the job
+ *   creation looks like:
+ * </p>
+ * <pre><code>
+ *   // Set the import descriptor file to be used for this bulk importer.
+ *   conf.set(DescribedInputTextBulkImporter.CONF_FILE, "foo-test-import-descriptor.json");
+ *
+ *   // Set the header line.
+ *   conf.set(CSVBulkImporter.CONF_INPUT_HEADER_ROW, "first,last,email,phone");
+ *
+ *   // Configure and create the MapReduce job.
+ *   final MapReduceJob job = KijiBulkImportJobBuilder.create()
+ *       .withConf(conf)
+ *       .withBulkImporter(CSVBulkImporter.class)
+ *       .withInput(new TextMapReduceJobInput(new Path(inputFile.toString())))
+ *       .withOutput(new HFileMapReduceJobOutput(mOutputTable, hfileDirPath))
+ *       .build();
+ * </code></pre>
+ * <p>
+ *   Alternately the bulk importer can be configured to write directly to a Kiji Table.  This is
+ *   <em>not recommended</em> because it generates individual puts for each cell that is being
+ *   written. For small jobs or tests, a direct Kiji table output job can be created by modifying
+ *   out the .withOutput parameter to:
+ *   <code>.withOutput(new DirectKijiTableMapReduceJobOutput(mOutputTable))</code>
+ * </p>
+ *
+ * @see KijiTableImportDescriptor
  */
 @ApiAudience.Public
 public final class CSVBulkImporter extends DescribedInputTextBulkImporter {

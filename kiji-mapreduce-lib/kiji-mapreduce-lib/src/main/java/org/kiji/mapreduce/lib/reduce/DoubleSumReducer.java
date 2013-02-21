@@ -24,8 +24,8 @@ import java.io.IOException;
 import org.apache.hadoop.io.DoubleWritable;
 
 /**
- * <p>A WibiReducer that works of key/value pairs where the value is
- * an DoubleWritable.  For all integer values with the same key, the
+ * <p>A KijiReducer that works of key/value pairs where the value is
+ * an DoubleWritable.  For all double values with the same key, the
  * DoubleSumReducer will output a single pair with a value equal to the
  * sum, leaving the key unchanged.</p>
  *

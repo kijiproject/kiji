@@ -17,5 +17,21 @@
  * limitations under the License.
  */
 
-/** Kiji MapReduce Producers. */
+/**
+ * Producers for Kiji MapReduce.
+ *
+ * <p>
+ *   A KijiProducer executes a function over a subset of the columns in a table row and produces
+ *   output to be injected back into a column of that row.  Produce jobs which execute the
+ *   producer over all rows in the table can be created using the
+ *   <code>KijiProduceJobBuilder</code>.  Producers can be invoked using the
+ *   <code>kiji produce</code> tool.
+ * </p>
+
+ * <h2>Usable producers:</h2>
+ * <li>{@link org.kiji.mapreduce.lib.produce.ConfiguredRegexProducer} - extracts data via
+ *     regex.</li>
+ * <li>{@link org.kiji.mapreduce.lib.produce.IdentityProducer} - copies data from one family or
+ *     column to another.</li>
+ */
 package org.kiji.mapreduce.lib.produce;

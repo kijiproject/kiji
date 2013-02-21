@@ -31,14 +31,15 @@ import org.kiji.hadoop.configurator.HadoopConfigurator;
  * Here is an example of the EmailDomainProfiler implemented with
  * ConfiguredRegexProducer that reads from "info:email" and writes to
  * "derived:domain":
- *
+ * <pre>
  * bin/kiji produce \
  *   -Dkiji.regexproducer.input.column=info:email \
  *   -Dkiji.regexproducer.output.column=derived:domain \
  *   -Dkiji.regexproducer.regex='[^@]+@(.*)' \
- *   --input=kiji:foo \
- *   --output=kiji \
+ *   --input="format=kiji table=kiji://.env/default/foo" \
+ *   --output="format=kiji table=kiji://.env/default/foo nsplits=2" \
  *   --producer=org.kiji.mapreduce.lib.produce.ConfiguredRegexProducer
+ * </pre>
  */
 public class ConfiguredRegexProducer extends RegexProducer {
   public static final String CONF_INPUT_COLUMN = "kiji.regexproducer.input.column";

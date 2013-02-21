@@ -19,6 +19,6 @@
 
 /**
  * Simple examples of using the Kiji MapReduce client library API to write gatherers, producers,
-*  and importers.
+ * and importers.
  */
 package org.kiji.mapreduce.lib.examples;

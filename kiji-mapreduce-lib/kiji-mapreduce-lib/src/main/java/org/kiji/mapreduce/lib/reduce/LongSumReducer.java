@@ -24,8 +24,8 @@ import java.io.IOException;
 import org.apache.hadoop.io.LongWritable;
 
 /**
- * <p>A WibiReducer that works of key/value pairs where the value is
- * an LongWritable.  For all integer values with the same key, the
+ * <p>A KijiReducer that works of key/value pairs where the value is
+ * an LongWritable.  For all long values with the same key, the
  * LongSumReducer will output a single pair with a value equal to the
  * sum, leaving the key unchanged.</p>
  *

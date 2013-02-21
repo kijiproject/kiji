@@ -35,9 +35,40 @@ import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiColumnName;
 
 /**
- * Bulk importer that handles the NCSA Common Log Format.
+ * Bulk importer that takes lines from an NCSA/Apache common logs and can produce a row for each 
+ * entry in the log file.  This is the basic log file format used by the Apache HTTP server.
+ * This bulk importer uses {@link org.kiji.mapreduce.lib.util.CommonLogParser} for parsing lines
+ * into fields.
  *
- * Details about this format here:
+ * <h2>Creating a bulk import job for NCSA/Apache Common logs:</h2>
+ * <p>
+ *   The common log bulk importer can be passed into a
+ *   {@link org.kiji.mapreduce.bulkimport.KijiBulkImportJobBuilder}.  A
+ *   {@link KijiTableImportDescriptor}, which defines the mapping from the import fields to the
+ *   destination Kiji columns, must be passed in as part of the job configuration.  For writing
+ *   to an HFile which can later be loaded with the <code>kiji bulk-load</code> tool the job
+ *   creation looks like:
+ * </p>
+ * <pre><code>
+ *   // Set the import descriptor file to be used for this bulk importer.
+ *   conf.set(DescribedInputTextBulkImporter.CONF_FILE, "commonlog-import-descriptor.json");
+ *   // Configure and create the MapReduce job.
+ *   final MapReduceJob job = KijiBulkImportJobBuilder.create()
+ *       .withConf(conf)
+ *       .withBulkImporter(CommonLogBulkImporter.class)
+ *       .withInput(new TextMapReduceJobInput(new Path(inputFile.toString())))
+ *       .withOutput(new HFileMapReduceJobOutput(mOutputTable, hfileDirPath))
+ *       .build();
+ * </code></pre>
+ * <p>
+ *   Alternately the bulk importer can be configured to write directly to a Kiji Table.  This is
+ *   <em>not recommended</em> because it generates individual puts for each cell that is being
+ *   written. For small jobs or tests, a direct Kiji table output job can be created by modifying
+ *   out the .withOutput parameter to:
+ *   <code>.withOutput(new DirectKijiTableMapReduceJobOutput(mOutputTable))</code>
+ * </p>
+ *
+ * @see KijiTableImportDescriptor
  * @see <a href="http://www.w3.org/Daemon/User/Config/Logging.html#common-logfile-format">
  *      Common logfile format </a>
  */

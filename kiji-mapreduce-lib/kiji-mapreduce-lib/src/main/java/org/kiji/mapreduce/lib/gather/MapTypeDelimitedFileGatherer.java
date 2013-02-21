@@ -40,11 +40,11 @@ import org.kiji.schema.KijiDataRequestBuilder;
 import org.kiji.schema.KijiRowData;
 
 /**
- * Gatherer to flatten map-type kiji data into delimited files in hdfs.
- * <p>This implementation writes one file for each map created.
+ * Gatherer to flatten a map-type family into a delimited file in HDFS.
+ * <p>This implementation writes one file per map-type family.
  * Each line contains one key-value pair from a map-type family.
  * By default, data is output in the format:</p>
- * <br/>
+ * <br>
  * <p><tt>[entityid]|[timestamp]|[key]|[value_as_json]</tt></p>
  *
  * <p>As an exception to this pattern, strings are printed explicitly, instead of within
@@ -60,7 +60,7 @@ public class MapTypeDelimitedFileGatherer extends KijiGatherer<Text, NullWritabl
   /**
    * Delimiter used to separate entityid, timestamp, key, and value data when writing to hdfs.
    * In order for hive to parse the generated file correctly, this character can NOT
-   * match any character in the json representation of kiji data.
+   * match any character in the json representation of Kiji data.
    * Choose an appropriate delimiter.
    */
   private static final String CONF_FIELD_DELIMITER = "kiji.export.field.delimiter";

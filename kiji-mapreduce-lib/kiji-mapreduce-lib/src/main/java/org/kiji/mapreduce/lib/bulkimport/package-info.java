@@ -20,28 +20,30 @@
 /**
  * Bulk importers for Kiji MapReduce.
  *
- * Bulk importers in Kiji MapReduce can be created using the
- * {@link org.kiji.mapreduce.KijiBulkImportJobBuilder}.  These classes can generally be specified
- * as part of the {@link org.kiji.mapreduce.KijiBulkImportJobBuilder}.
- *
  * <p>
- *   Classes of note:
+ *   Bulk importers are used for parsing data from input sources into fields which correspond to 
+ *   Kiji columns.  Bulk import jobs in Kiji MapReduce can be created using the
+ *   <code>KijiBulkImportJobBuilder</code>.  There are two options for importing data
+ *   into Kiji tables: using a bulk importer to create HFiles or "putting" individual rows. A bulk
+ *   importer is suitable for reading in data from files, whereas putting is suitable for importing
+ *   individual rows.  Bulk importers can be invoked using the <code>kiji bulk-import</code> tool.
+ *   Generated HFiles from bulk importers can subsequently be loaded using the
+ *   <code>kiji bulk-load</code> tool.
  * </p>
- * <ul>
- *   <li>{@link org.kiji.mapreduce.lib.bulkimport.DescribedInputTextBulkImporter} - Base class for
- *       bulk importing of any form of structured text class.  Other bulk importers will inherit
- *       from this including:</li>
- *   <li>{@link org.kiji.mapreduce.lib.bulkimport.CSVBulkImporter} - CSV (Comma Separated Value)
- *       bulk importer that also processes TSV(Tab Separated Values).</li>
- * </ul>
  *
- * <p>
- *   Related Documentation:
- * </p>
- * <ul>
- *   <li>{@link org.kiji.mapreduce.lib.bulkimport.KijiTableImportDescriptor} - The bulk import
- *       mapping import configuration.</li>
- * </ul>
+ * <h2>Usable bulk importers:</h2>
+ * <li>{@link org.kiji.mapreduce.lib.bulkimport.CommonLogBulkImporter} - Common Log bulk 
+ *     importer</li>
+ * <li>{@link org.kiji.mapreduce.lib.bulkimport.CSVBulkImporter} - CSV (Comma Separated Value)
+ *     bulk importer that also processes TSV(Tab Separated Values).</li>
+ * <li>{@link org.kiji.mapreduce.lib.bulkimport.JSONBulkImporter} - JSON bulk importer
+ *
+ * <h2>Related Documentation:</h2>
+ * <li>{@link org.kiji.mapreduce.lib.bulkimport.DescribedInputTextBulkImporter} - Base class for
+ *     bulk importing of any form of structured text class.  Other bulk importers will inherit
+ *     from this including:</li>
+ * <li>{@link org.kiji.mapreduce.lib.bulkimport.KijiTableImportDescriptor} - The bulk import
+ *     mapping import configuration.</li>
  */
 
 package org.kiji.mapreduce.lib.bulkimport;

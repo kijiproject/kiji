@@ -18,7 +18,7 @@
  */
 
 /**
- * This package contains utility classes (for example, parsers) which may be useful to clients
- * when running MapReduce jobs that use the Kiji system.
+ * Utility classes (for example, parsers) which may be useful to clients when running MapReduce
+ * jobs that use the Kiji system.
  */
 package org.kiji.mapreduce.lib.util;

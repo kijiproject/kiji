@@ -24,7 +24,7 @@ import java.io.IOException;
 import org.apache.hadoop.io.IntWritable;
 
 /**
- * <p>A WibiReducer that works on key/value pairs where the value is
+ * <p>A KijiReducer that works on key/value pairs where the value is
  * an IntWritable.  For all integer values with the same key, the
  * IntSumReducer will output a single pair with a value equal to the
  * sum, leaving the key unchanged.</p>

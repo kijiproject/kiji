@@ -18,6 +18,17 @@
  */
 
 /**
- * Kiji MapReduce gatherers.
+ * Gatherers for Kiji MapReduce.
+ *
+ * <p>
+ *   A Kiji Gatherer scans over the rows of a Kiji table using the MapReduce framework to
+ *   aggregate information which can be passed to a Reducer.  Gather jobs in Kiji MapReduce can be
+ *   created using the <code>KijiGatherJobBuilder</code>. Gather jobs are invoked
+ *   using the <code>kiji gather</code> tool.
+ * </p>
+ *
+ * <h2>Usable gatherers:</h2>
+ * <li>{@link org.kiji.mapreduce.lib.gather.MapTypeDelimitedFileGatherer} - Gatherer that flattens
+ *     map-type Kiji data into delimited files in HDFS.</li>
  */
 package org.kiji.mapreduce.lib.gather;

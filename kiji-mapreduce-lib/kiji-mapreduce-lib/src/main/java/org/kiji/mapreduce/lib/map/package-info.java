@@ -18,6 +18,10 @@
  */
 
 /**
- * Kiji MapReduce mappers.
+ * Mappers for Kiji MapReduce.
+ *
+ * <h2>Usable mappers:</h2>
+ * <li>{@link org.kiji.mapreduce.lib.map.TextFlatteningMapper} - Takes name/text records and
+ *     outputs name/flattened-text pairs. Flattened text has new lines replaced with spaces.</li>
  */
 package org.kiji.mapreduce.lib.map;

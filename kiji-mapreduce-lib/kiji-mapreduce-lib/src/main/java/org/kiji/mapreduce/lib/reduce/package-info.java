@@ -18,6 +18,14 @@
  */
 
 /**
- * Kiji MapReduce reducers.
+ * Reducers for Kiji MapReduce.
+ *
+ * <h2>Usable reducers:</h2>
+ * <li>{@link org.kiji.mapreduce.lib.reduce.DoubleSumReducer} - for all double values with the same
+ *     key, returns a single pair with a double value equal to the sum.</li>
+ * <li>{@link org.kiji.mapreduce.lib.reduce.IntSumReducer} - for all int values with the same
+ *     key, returns a single pair with a int value equal to the sum.</li>
+ * <li>{@link org.kiji.mapreduce.lib.reduce.LongSumReducer} - for all long values with the same
+ *     key, returns a single pair with a long value equal to the sum.</li>
  */
 package org.kiji.mapreduce.lib.reduce;
