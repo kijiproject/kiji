@@ -231,7 +231,7 @@ public class MyMapper extends Mapper<LongWritable, Text, NullWritable, KijiOutpu
   public void map(LongWritable key, Text value, Context context) {
     // ...
 
-    writer.put(table.getEntityId("your-row"), "your-family, "your-qualifier", value.toString());
+    writer.put(table.getEntityId("your-row"), "your-family", "your-qualifier", value.toString());
   }
 
   @Override
