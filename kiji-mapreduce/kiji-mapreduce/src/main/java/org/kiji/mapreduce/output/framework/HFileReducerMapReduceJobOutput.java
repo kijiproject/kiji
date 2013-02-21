@@ -40,7 +40,7 @@ import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
  *
  * Used for the special case when the user wants a reducer to write HFiles.
  * Reducers can't write HFiles directly, but must write SequenceFiles that will be post-processed
- * (sorted) by an identity Map/Reduce in order to finally write HFiles.
+ * (sorted) by an identity MapReduce in order to finally write HFiles.
  */
 @ApiAudience.Framework
 public class HFileReducerMapReduceJobOutput extends MapReduceJobOutput {

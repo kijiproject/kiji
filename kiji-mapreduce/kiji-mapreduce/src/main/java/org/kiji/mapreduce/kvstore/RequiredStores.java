@@ -40,7 +40,7 @@ import org.kiji.annotations.ApiAudience;
  * <tt>RequiredStores.with("a", A).with("b", B)...</tt>.</p>
  *
  * {@link KeyValueStore}
- * {@link org.kiji.mapreduce.KijiProducer}
+ * {@link org.kiji.mapreduce.produce.KijiProducer}
  */
 @ApiAudience.Public
 public final class RequiredStores {

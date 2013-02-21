@@ -34,7 +34,7 @@ import org.kiji.annotations.Inheritance;
 import org.kiji.mapreduce.MapReduceJobInput;
 import org.kiji.mapreduce.tools.framework.JobIOConfKeys;
 
-/** Base class for map reduce job input that is read from files. */
+/** Base class for MapReduce job input that is read from files. */
 @ApiAudience.Public
 @Inheritance.Sealed
 public abstract class FileMapReduceJobInput extends MapReduceJobInput {

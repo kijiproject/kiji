@@ -18,7 +18,7 @@
  */
 {
   name: "job_history",
-  description: "History of map reduce jobs run through Kiji: record metrics on run MapReduce jobs.",
+  description: "History of MapReduce jobs run through Kiji: record metrics on run MapReduce jobs.",
   keys_format: {"encoding": "RAW"},
   locality_groups: [
     {

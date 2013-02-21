@@ -135,7 +135,7 @@ public abstract class KijiProducer
 
   /**
    * Called once to initialize this producer before any calls to
-   * {@link #produce(KijiRowData, Context)}.
+   * {@link #produce(KijiRowData, ProducerContext)}.
    *
    * @param context The KijiContext providing access to KeyValueStores, Counters, etc.
    * @throws IOException on I/O error.
@@ -155,7 +155,7 @@ public abstract class KijiProducer
 
   /**
    * Called once to clean up this producer after all
-   * {@link #produce(KijiRowData, Context)} calls are made.
+   * {@link #produce(KijiRowData, ProducerContext)} calls are made.
    *
    * @param context The KijiContext providing access to KeyValueStores, Counters, etc.
    * @throws IOException on I/O error.

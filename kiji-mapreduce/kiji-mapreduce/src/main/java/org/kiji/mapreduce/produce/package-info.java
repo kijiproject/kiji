@@ -19,6 +19,33 @@
 
 /**
  * Producer classes for Kiji MapReduce clients.
+ * <p>
+ *   A KijiProducer executes a function over a subset of the columns in a table row and produces
+ *   output to be injected back into a column of that row. Producers can be run in the context of
+ *   a MapReduce over entire Kiji tables, or on-demand over a single row at a time.
+ *   The {@link org.kiji.mapreduce.produce.KijiProducer} class is the base class for all producers.
+ *   Subclasses take inputs from {@link org.kiji.mapreduce.MapReduceJobInput} and produce output to
+ *   Kiji.
+ * </p>
+ *
+ * <h2>Constructing a produce job:</h2>
+ * <p>
+ *   A producer job that executes its function over each row in a table and injects the result
+ *   back into the row can be constructed as follows:
+ * </p>
+ * <pre><code>
+ *   // Configure and create the MapReduce job.
+ *   final MapReduceJob job = KijiProduceJobBuilder.create()
+ *       .withProducer(SimpleProducer.class)
+ *       .withInputTable(mTable.getURI())
+ *       .withOutput(new DirectKijiTableMapReduceJobOutput(mTable.getURI()))
+ *       .build();
+ * </code></pre>
+ * <p>
+ *   The <code>kiji produce</code> command line tool wraps this functionality and can be used
+ *   for constructing produce jobs.
+ * </p>
+ * @see org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput
  */
 
 package org.kiji.mapreduce.produce;

@@ -70,7 +70,7 @@ public interface KijiContext extends Closeable, Flushable {
   /**
    * Report progress to the kiji framework.
    *
-   * <p>If called as part of a map reduce job, this will indicate progress in the style of
+   * <p>If called as part of a MapReduce job, this will indicate progress in the style of
    * org.apache.hadoop.util.Progressable, keeping the task from being marked as dead. It may also
    * be called safely from Fresheners, so a producer using this call can be used either as a
    * Freshener or part of a Hadoop job.
@@ -80,7 +80,7 @@ public interface KijiContext extends Closeable, Flushable {
   /**
    * Sets a status string for the kiji task.
    *
-   * <p>If called as part of a map reduce job, the msg will be used as the task status
+   * <p>If called as part of a MapReduce job, the msg will be used as the task status
    * string. It may also be called safely from Fresheners, so a producer using this call can be
    * used either as a Freshener or part of a Hadoop job.</p>
    *

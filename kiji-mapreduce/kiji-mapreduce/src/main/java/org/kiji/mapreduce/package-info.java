@@ -17,5 +17,31 @@
  * limitations under the License.
  */
 
-/** Kiji MapReduce utilities. */
+/**
+ * Kiji MapReduce utilities.
+ *
+ * <p>
+ *   Kiji MapReduce includes APIs to build MapReduce jobs that run over Kiji tables, bringing
+ *   MapReduce-based analytic techniques to a broad base of Kiji Schema users.
+ * </p>
+ *
+ * <h2>Building MapReduce jobs:</h2>
+ * <p>
+ *   Kiji MapReduce contains many job builders for various types of MapReduce jobs.
+ * </p>
+ * <li>{@link org.kiji.mapreduce.bulkimport Bulk Importers} - for the creation of bulk
+ *     import jobs which allow data to be inserted into Kiji tables efficiently.
+ * <li>{@link org.kiji.mapreduce.produce Producers} - for the creation of produce jobs
+ *     which generate per-row derived entity data.
+ * <li>{@link org.kiji.mapreduce.gather Gatherers} - for the creation of gather jobs
+ *     which scan over the rows of a Kiji table to aggregate information which can be passed to a
+ *     reducer.
+ * <li>{@link org.kiji.mapreduce.KijiMapReduceJobBuilder General MapReduce} - for the creation of
+ *     general MapReduce jobs around Kiji mappers and reducers.</li>
+ *
+ * <h2>Utility packages for MapReduce job construction:</h2>
+ * <li>{@link org.kiji.mapreduce.input} - input formats for MapReduce jobs</li>
+ * <li>{@link org.kiji.mapreduce.output} - output formats for MapReduce jobs</li>
+ * <li>{@link org.kiji.mapreduce.kvstore} - Key-Value store API used in MapReduce jobs</li>
+ */
 package org.kiji.mapreduce;

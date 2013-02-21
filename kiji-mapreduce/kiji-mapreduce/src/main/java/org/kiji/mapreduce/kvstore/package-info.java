@@ -44,7 +44,7 @@
  * convenient constructors for sets of KeyValueStore configurations of varying size.</p>
  *
  * <p>You can override these KeyValueStore configurations when submitting a MapReduce
- * program; use a {@link org.kiji.mapreduce.MapReduceJobBuilder} or related class to
+ * program; use a {@link org.kiji.mapreduce.framework.MapReduceJobBuilder} or related class to
  * specify a different KeyValueStore implementation to use at run-time using the
  * withStore() method.</p>
  *

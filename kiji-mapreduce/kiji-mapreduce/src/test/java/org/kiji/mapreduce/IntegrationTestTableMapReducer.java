@@ -71,7 +71,7 @@ public class IntegrationTestTableMapReducer extends AbstractKijiIntegrationTest 
             .withOutput(new HFileMapReduceJobOutput(table.getURI(), output, 16))
             .build();
         if (!mrjob.run()) {
-          Assert.fail("Map/Reduce job failed");
+          Assert.fail("MapReduce job failed");
         }
 
       } finally {

@@ -26,7 +26,24 @@ import org.apache.hadoop.mapreduce.lib.output.MapFileOutputFormat;
 
 import org.kiji.annotations.ApiAudience;
 
-/** MapReduce job output that writes to map files (indexed sequence files). */
+/**
+ * The class MapFileMapReduceJobOutput is used to indicate the usage of Hadoop map files as
+ * output for a MapReduce job.
+ *
+ * <h2>Configuring an output:</h2>
+ * <p>
+ *   MapFileMapReduceJobOutput must be configured with a location to write output map files
+ *   to and the number of output splits to use:
+ * </p>
+ * <pre>
+ *   <code>
+ *     final Path outputPath = new Path("/path/to/output/folder");
+ *
+ *     // Create a map file job output with 10 splits.
+ *     final MapReduceJobOutput textOutput = new MapFileMapReduceJobOutput(outputPath, 10);
+ *   </code>
+ * </pre>
+ */
 @ApiAudience.Public
 public final class MapFileMapReduceJobOutput extends FileMapReduceJobOutput {
   /** Default constructor. Do not use directly. */
@@ -36,8 +53,8 @@ public final class MapFileMapReduceJobOutput extends FileMapReduceJobOutput {
   /**
    * Creates a new <code>MapFileMapReduceJobOutput</code> instance.
    *
-   * @param filePath The file system path for the output files.
-   * @param numSplits The number of output file splits.
+   * @param filePath Path to output folder.
+   * @param numSplits Number of output file splits.
    */
   public MapFileMapReduceJobOutput(Path filePath, int numSplits) {
     super(filePath, numSplits);

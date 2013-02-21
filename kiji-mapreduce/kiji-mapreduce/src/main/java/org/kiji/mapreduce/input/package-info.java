@@ -17,5 +17,29 @@
  * limitations under the License.
  */
 
-/** MapReduce job input types. */
+/**
+ * MapReduce job input types.
+ *
+ * <p>
+ *   {@link org.kiji.mapreduce.MapReduceJobInput} is the base type for classes that can act
+ *   as inputs to a MapReduce job for jobs that are created using a
+ *   {@link org.kiji.mapreduce.framework.MapReduceJobBuilder}.
+ * <p>
+ *
+ * <h2>Usable Kiji MapReduce input types</h2>
+ * <li>{@link org.kiji.mapreduce.input.AvroKeyMapReduceJobInput} - Avro container files containing
+ *     keys as input.</li>
+ * <li>{@link org.kiji.mapreduce.input.AvroKeyValueMapReduceJobInput} - Avro container files
+ *     containing key value pairs as input.</li>
+ * <li>{@link org.kiji.mapreduce.input.HTableMapReduceJobInput} - HBase table as input.</li>
+ * <li>{@link org.kiji.mapreduce.input.KijiTableMapReduceJobInput} - Kiji table as input.</li>
+ * <li>{@link org.kiji.mapreduce.input.SequenceFileMapReduceJobInput} - Hadoop sequence file as
+ *     input.</li>
+ * <li>{@link org.kiji.mapreduce.input.TextMapReduceJobInput} - text files in HDFS as input with
+ *     each line as a row.</li>
+ * <li>{@link org.kiji.mapreduce.input.WholeTextFileMapReduceJobInput} - text files in HDFS as
+ *     input with each file as a row.</li>
+ *
+ * @see org.kiji.mapreduce.framework.MapReduceJobBuilder
+ */
 package org.kiji.mapreduce.input;

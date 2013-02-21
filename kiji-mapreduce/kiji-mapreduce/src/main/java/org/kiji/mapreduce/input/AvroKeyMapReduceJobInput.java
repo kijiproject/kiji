@@ -25,14 +25,32 @@ import org.apache.hadoop.mapreduce.InputFormat;
 import org.kiji.annotations.ApiAudience;
 import org.kiji.avro.mapreduce.AvroKeyInputFormat;
 
-/** MapReduce job input that is read from Avro container files. */
+/**
+ * The class AvroKeyMapReduceJobInput is used to indicate the usage of Avro container
+ * files containing keys as input to a MapReduce job. Any MapReduce job configured to
+ * read from an Avro container file using this job input should expect to receive keys
+ * of the same type that were used to write the container file.
+ *
+ * <h2>Configuring an input:</h2>
+ * <p>
+ *   AvroKeyMapReduceJobInput must be configured with the paths of Avro container files
+ *   to read from:
+ * </p>
+ * <pre>
+ *   <code>
+ *     final Path avroContainerFile = new Path("/path/to/avro/container/file");
+ *     final MapReduceJobInput avroJobInput = new AvroKeyMapReduceJobInput(avroContainerFile);
+ *   </code>
+ * </pre>
+ * @see AvroKeyValueMapReduceJobInput
+ */
 @ApiAudience.Public
 public final class AvroKeyMapReduceJobInput extends FileMapReduceJobInput {
 
   /**
-   * Creates a new <code>AvroKeyMapReduceJobInput</code> instance.
+   * Constructs job input from a varags of paths to Avro container files.
    *
-   * @param paths The paths to the avro input files.
+   * @param paths The paths to the Avro input files.
    */
   public AvroKeyMapReduceJobInput(Path... paths) {
     super(paths);

@@ -65,7 +65,8 @@ import org.kiji.schema.layout.impl.ColumnId;
  * <p> Entries should be partitioned into chunks that fit within an existing region of the target
  *     HTable.
  *
- * <p> The generated HFiles can be loaded into the target HTable with the {@link HFileLoader}.
+ * <p> The generated HFiles can be loaded into the target HTable with the
+ * {@link org.kiji.mapreduce.HFileLoader}.
  */
 @ApiAudience.Framework
 public final class KijiHFileOutputFormat

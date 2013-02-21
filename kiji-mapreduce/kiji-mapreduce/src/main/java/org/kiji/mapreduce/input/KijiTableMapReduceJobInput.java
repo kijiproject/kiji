@@ -39,11 +39,34 @@ import org.kiji.schema.KijiURI;
 import org.kiji.schema.filter.KijiRowFilter;
 
 /**
- * Input for a MapReduce job that uses data from a Kiji table.
+ * The class KijiTableMapReduceJobInput is used to indicate the usage of a KijiTable
+ * as input to a MapReduce job. Any MapReduce job configured to read from a KijiTable
+ * should expect to receive an {@link EntityId} as a key and a {@link org.kiji.schema.KijiRowData}
+ * as a value.
  *
- * <p>The input is Kiji table column data as specified by a <code>KijiDataRequest</code>.
- * Input may be read from the entire table, or from a range of rows using a start and end
- * key.</p>
+ * <h2>Configuring an input:</h2>
+ * <p>
+ *   KijiTableMapReduceJobInput must be configured with a {@link KijiDataRequest}
+ *   specifying the columns to read during the MapReduce job. KijiTableMapReduceJobInput
+ *   can also be configured with optional row bounds that will limit section of rows
+ *   that the job will use. Use a {@link RowOptions RowOptions} to specify these options:
+ * </p>
+ * <pre>
+ *   <code>
+ *     // Request the latest 3 versions of column 'info:email':
+ *     final KijiDataRequestBuilder builder = KijiDataRequest.builder();
+ *     builder.newColumnsDef().withMaxVersions(3).add("info", "email");
+ *     final KijiDataRequest dataRequest = builder.build();
+ *
+ *     // Read from 'here' to 'there':
+ *     final EntityId startRow = RawEntityId.getEntityId(Bytes.toBytes("here"));
+ *     final EntityId limitRow = RawEntityId.getEntityId(Bytes.toBytes("there"));
+ *     final KijiTableMapReduceJobInput.RowOptions rowOptions =
+ *         new KijiTableMapReduceJobInput.RowOptions(startRow, limitRow, null);
+ *     final MapReduceJobInput kijiTableJobInput =
+ *         new KijiTableMapReduceJobInput(mTable.getURI(), dataRequest, rowOptions);
+ *   </code>
+ * </pre>
  */
 @ApiAudience.Public
 public final class KijiTableMapReduceJobInput extends MapReduceJobInput {
@@ -59,14 +82,18 @@ public final class KijiTableMapReduceJobInput extends MapReduceJobInput {
   /**
    * Options that specify which rows from the input table should be included.
    *
-   * <p>The settings here are used conjunctively with an AND operator.  In other words, a
-   * row will be included if and only if it is:
+   * <p>
+   *   The settings here are used conjunctively with an AND operator.  In other words, a
+   *   row will be included if and only if it is:
    *   <ul>
    *     <li>lexicographically equal to or after the start row, <em>and</em></li>
    *     <li>lexicographically before the limit row, <em>and</em></li>
    *     <li>accepted by the row filter.</li>
    *   </ul>
    * </p>
+   *
+   * @see KijiRowFilter for more information about filtering which rows get read from
+   *     the Kiji table.
    */
   public static class RowOptions {
     /**
@@ -99,23 +126,42 @@ public final class KijiTableMapReduceJobInput extends MapReduceJobInput {
      * @param limitRow The limit row (exclusive).
      * @param rowFilter A row filter.
      */
+    /**
+     * Creates a new <code>RowOptions</code> instance.
+     *
+     * @param startRow Entity id of the row to start reading from (inclusive). Specify null
+     *     to indicate starting at the first row of the table.
+     * @param limitRow Entity id of the row to stop reading at (exclusive). Specify null to
+     *     indicate stopping at the last row of the table.
+     * @param rowFilter A row filter to apply to the Kiji table.
+     */
     public RowOptions(EntityId startRow, EntityId limitRow, KijiRowFilter rowFilter) {
       mStartRow = startRow;
       mLimitRow = limitRow;
       mRowFilter = rowFilter;
     }
 
-    /** @return The start row (inclusive, may be null to include the first row of the table). */
+    /**
+     * Gets the entity id of the row to start reading from (inclusive). May be null to
+     * indicate starting at the first row of the table.
+     *
+     * @return Entity id of the row to start reading from.
+     */
     public EntityId getStartRow() {
       return mStartRow;
     }
 
-    /** @return The limit row (exclusive, may be null to include the last row of the table). */
+    /**
+     * Gets the entity id of the row to stop reading at (exclusive). May be null to
+     * indicate ending at the last row of the table.
+     *
+     * @return Entity id of the row to stop reading at.
+     */
     public EntityId getLimitRow() {
       return mLimitRow;
     }
 
-    /** @return The row filter (may be null). */
+    /** @return Row filter to apply to all rows being read (may be null). */
     public KijiRowFilter getRowFilter() {
       return mRowFilter;
     }
@@ -167,12 +213,12 @@ public final class KijiTableMapReduceJobInput extends MapReduceJobInput {
     return KijiTableInputFormat.class;
   }
 
-  /** @return the input table URI. */
+  /** @return Input table URI. */
   public KijiURI getInputTableURI() {
     return mInputTableURI;
   }
 
-  /** @return the row options. */
+  /** @return Specified row options. */
   public RowOptions getRowOptions() {
     return mRowOptions;
   }

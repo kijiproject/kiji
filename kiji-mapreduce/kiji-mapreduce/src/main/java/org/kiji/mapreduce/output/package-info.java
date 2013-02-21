@@ -17,5 +17,30 @@
  * limitations under the License.
  */
 
-/** MapReduce job output types for Kiji-powered applications. */
+/**
+ * MapReduce job output types.
+ *
+ * <p>
+ *   {@link org.kiji.mapreduce.MapReduceJobOutput} is the base type for classes that can act
+ *   as outputs to a MapReduce job for jobs that are created using a
+ *   {@link org.kiji.mapreduce.framework.MapReduceJobBuilder}.
+ * <p>
+ *
+ * <h2>Usable Kiji MapReduce output types</h2>
+ * <li>{@link org.kiji.mapreduce.output.AvroKeyMapReduceJobOutput} - Avro container files containing
+ *     keys as output.</li>
+ * <li>{@link org.kiji.mapreduce.output.AvroKeyValueMapReduceJobOutput} - Avro container files
+ *     containing key value pairs as output.</li>
+ * <li>{@link org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput} - Kiji table as
+ *     output</li>
+ * <li>{@link org.kiji.mapreduce.output.HFileMapReduceJobOutput} - HFile as output.</li>
+ * <li>{@link org.kiji.mapreduce.output.MapFileMapReduceJobOutput} - Hadoop map files as
+ *     output</li>
+ * <li>{@link org.kiji.mapreduce.output.SequenceFileMapReduceJobOutput} - Hadoop sequence files as
+ *     output</li>
+ * <li>{@link org.kiji.mapreduce.output.TextMapReduceJobOutput} - text files as output</li>
+ *
+ * @see org.kiji.mapreduce.framework.MapReduceJobBuilder
+ */
+
 package org.kiji.mapreduce.output;

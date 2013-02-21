@@ -53,7 +53,8 @@ import org.kiji.schema.KijiRowData;
  * As a {@link KeyValueStoreClient}, KijiGatherers will have access to all
  * stores defined by {@link KeyValueStoreClient#getRequiredStores()}. Readers for
  * these stores are surfaced in the setup(), produce(), and cleanup() methods
- * via the Context provided to each by calling {@link KijiContext#getStore(String)}.
+ * via the Context provided to each by calling
+ * {@link org.kiji.mapreduce.KijiContext#getStore(String)}.
  * </p>
  *
  * <p>

@@ -25,7 +25,24 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 import org.kiji.annotations.ApiAudience;
 
-/** A MapReduce job output of text files. */
+/**
+ * The class TextMapReduceJobOutput is used to indicate the usage of text files as output
+ * for a MapReduce job.
+ *
+ * <h2>Configuring an output:</h2>
+ * <p>
+ *   TextMapReduceJobOutput must be configured with a location to write output text files
+ *   to and the number of output splits to use:
+ * </p>
+ * <pre>
+ *   <code>
+ *     final Path outputPath = new Path("/path/to/output/folder");
+ *
+ *     // Create a text file job output with 10 splits.
+ *     final MapReduceJobOutput textOutput = new TextMapReduceJobOutput(outputPath, 10);
+ *   </code>
+ * </pre>
+ */
 @ApiAudience.Public
 public final class TextMapReduceJobOutput extends FileMapReduceJobOutput {
   /** Default constructor. Do not use directly. */
@@ -35,8 +52,8 @@ public final class TextMapReduceJobOutput extends FileMapReduceJobOutput {
   /**
    * Creates a new <code>TextMapReduceJobOutput</code> instance.
    *
-   * @param filePath The file system path for the output files.
-   * @param numSplits The number of output file splits.
+   * @param filePath Path to output folder.
+   * @param numSplits Number of output file splits.
    */
   public TextMapReduceJobOutput(Path filePath, int numSplits) {
     super(filePath, numSplits);

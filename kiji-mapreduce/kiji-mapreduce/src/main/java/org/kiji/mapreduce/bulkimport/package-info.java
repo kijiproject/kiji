@@ -20,10 +20,49 @@
 /**
  * Bulk importer classes for Kiji MapReduce clients.
  *
- * This package is mainly comprised of the class
- * {@link org.kiji.mapreduce.bulkimport.KijiTableImportDescriptor} which contains relevant
- * descriptor information for how to configure aspects of bulk importing(for example the mapping
- * of source files in the input to the destination KijiTable columns.
+ * <p>
+ *   The {@link org.kiji.mapreduce.bulkimport.KijiBulkImporter} class is the base class for all
+ *   bulk importers.  Subclasses take inputs from {@link org.kiji.mapreduce.MapReduceJobInput}
+ *   and produce output to Kiji either directly or through HFiles.
+ * </p>
+ *
+ * <h2>Constructing a bulk import job:</h2>
+ * <p>
+ *   A bulk import job that outputs to an intermediary HFile(which can subsequently be imported
+ *   via a <code>kiji bulk-load</code> command can be created here:
+ * </p>
+ * <pre><code>
+ *   // Configure and create the MapReduce job.
+ *   final MapReduceJob job = KijiBulkImportJobBuilder.create()
+ *       .withConf(conf)
+ *       .withBulkImporter(JSONBulkImporter.class)
+ *       .withInput(new TextMapReduceJobInput(new Path(inputFile.toString())))
+ *       .withOutput(new DirectKijiTableMapReduceJobOutput(mOutputTable))
+ *       .build();
+ * </code></pre>
+ * <p>
+ *   Alternately a bulk import job that directly outputs to a Kiji table can be performed by
+ *   replacing the .withOutput parameter.  This is generally not recommended as this can result
+ *   in heavy load on the target HBase cluster.  Also if the job doesn't complete, this can result
+ *   in partial writes.
+ * </p>
+ * <pre><code>
+ *   // Configure and create the MapReduce job.
+ *   final MapReduceJob job = KijiBulkImportJobBuilder.create()
+ *       .withConf(conf)
+ *       .withBulkImporter(JSONBulkImporter.class)
+ *       .withInput(new TextMapReduceJobInput(new Path(inputFile.toString())))
+ *       .withOutput(new HFileMapReduceJobOutput(mOutputTable, hfileDirPath))
+ *       .build();
+ * </code></pre>
+ * <p>
+ *   The <code>kiji bulk-import</code> command line tool wraps this functionality and can be used
+ *   for constructing bulk import jobs.  If HFiles are created as the output for a bulk import job
+ *   they can be loaded into HBase using the <code>kiji bulk-load</code> command.
+ * </p>
+ *
+ * @see org.kiji.mapreduce.output.HFileMapReduceJobOutput
+ * @see org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput
  */
 
 package org.kiji.mapreduce.bulkimport;

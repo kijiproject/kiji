@@ -50,7 +50,7 @@ import org.kiji.schema.KijiRowData;
  * <p>
  * Mapper implementations using this MapRunnable must be thread-safe.
  * <p>
- * The Map-Reduce job has to be configured with the mapper to use via
+ * The MapReduce job has to be configured with the mapper to use via
  * {@link #setMapperClass(Configuration, Class)} and
  * the number of thread the thread-pool can use with the
  * {@link #getNumberOfThreads(Configuration) method. The default

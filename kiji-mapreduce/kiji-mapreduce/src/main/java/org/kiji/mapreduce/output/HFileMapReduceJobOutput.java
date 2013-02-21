@@ -61,10 +61,30 @@ import org.kiji.schema.KijiURI;
 import org.kiji.schema.layout.KijiTableLayout;
 
 /**
- * MapReduce output configuration for Kiji jobs that generate HFiles.
+ * The class HFileMapReduceJobOutput is used to indicate the usage of HFiles based on the layout
+ * of a Kiji table as output for a MapReduce job.
  *
- * <p>The generated HFiles can be directly loaded into the regions of an existing HTable.
- * Use a {@link org.kiji.mapreduce.HFileLoader} to load HFiles into a Kiji table.</p>
+ * <p>
+ *   This job output writes output from MapReduce jobs to HFiles. The generated HFiles
+ *   can be directly loaded into the regions of an existing HTable. Use a
+ *   {@link org.kiji.mapreduce.HFileLoader} to load HFiles into a Kiji table.
+ * </p>
+ *
+ * <h2>Configuring an output:</h2>
+ * <p>
+ *   HFileMapReduceJobOutput must be configured with the address of the Kiji table to
+ *   write to as well as a location to write output HFiles to:
+ * </p>
+ * <pre>
+ *   <code>
+ *     final KijiURI tableURI = KijiURI.newBuilder("kiji://.env/default/mytable").build();
+ *     final Path hfileLocation = new Path("/path/to/hfile/output");
+ *
+ *     final MapReduceJobOutput kijiTableOutput =
+ *         new HFileMapReduceJobOutput(tableURI, hfileLocation);
+ *   </code>
+ * </pre>
+ * @see DirectKijiTableMapReduceJobOutput
  */
 @ApiAudience.Public
 public final class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
@@ -108,8 +128,8 @@ public final class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
    * specified with the <code>numSplits</code> argument.  Controlling the number of
    * splits is only possible when targeting a Kiji table with &lt;hashRowKeys&gt;
    * enabled.  Typically, you should allow the system to
-   * match the number of splits to the number of regions in the table by using the {@link
-   * #HFileMapReduceJobOutput(KijiTable, Path)} constructor instead.
+   * match the number of splits to the number of regions in the table by using the
+   * {@link #HFileMapReduceJobOutput(KijiURI, Path)} constructor instead.
    *
    * @param table The kiji table the resulting HFiles are intended for.
    * @param path The directory path to output the HFiles to.
@@ -140,7 +160,7 @@ public final class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
     // Configure the total order partitioner so generated HFile shards are contiguous and sorted.
     configurePartitioner(job, makeTableKeySplit(getOutputTableURI(), getNumReduceTasks()));
 
-    // Note: the HFile job output requires the reducer of the map/reduce to be IdentityReducer.
+    // Note: the HFile job output requires the reducer of the MapReduce job to be IdentityReducer.
     //     This is enforced externally.
   }
 

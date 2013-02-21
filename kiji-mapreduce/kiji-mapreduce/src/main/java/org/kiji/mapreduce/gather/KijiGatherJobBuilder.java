@@ -294,7 +294,7 @@ public final class KijiGatherJobBuilder extends KijiTableInputJobBuilder<KijiGat
       } else {
         // Cannot use the HFile output format if the reducer is not IdentityReducer:
         // Writing HFile from a Kiji reducer requires an extra map/reduce to sort the HFile keys.
-        // This forces the output format of this map/reduce to be SequenceFile.
+        // This forces the output format of this MapReduce job to be SequenceFile.
         final HFileMapReduceJobOutput hfileOutput = (HFileMapReduceJobOutput) output;
         LOG.warn("Reducing to HFiles will require an extra MapReduce job.");
         new HFileReducerMapReduceJobOutput(hfileOutput).configure(job);

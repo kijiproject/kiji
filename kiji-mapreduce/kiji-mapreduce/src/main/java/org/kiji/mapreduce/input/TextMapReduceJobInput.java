@@ -25,11 +25,30 @@ import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 
 import org.kiji.annotations.ApiAudience;
 
-/** Input for a map reduce job that is read from text files. */
+/**
+ * The class TextMapReduceJobInput is used to indicate the usage of lines in text files
+ * in HDFS as input to a MapReduce job. Any MapReduce job configured to read lines from
+ * text files in HDFS should expect to receive <code>LongWritable</code> as a key (line
+ * number) and <code>Text</code> as a value (text of the line).
+ *
+ * <h2>Configuring an input:</h2>
+ * <p>
+ *   TextMapReduceJobInput must be configured with the paths of the files to read from.
+ *   Each block from the specified files will be read by one MapReduce split. To setup
+ *   reading from a single text file:
+ * </p>
+ * <pre>
+ *   <code>
+ *     final Path inputFile = new Path("/path/to/input");
+ *     final MapReduceJobInput textJobInput = new TextMapReduceJobInput(inputFile);
+ *   </code>
+ * </pre>
+ * @see WholeTextFileMapReduceJobInput
+ */
 @ApiAudience.Public
 public final class TextMapReduceJobInput extends FileMapReduceJobInput {
   /**
-   * Creates a new <code>TextMapReduceJobInput</code> instance.
+   * Constructs job input from a varargs of paths to text files.
    *
    * @param paths The paths to the job input files.
    */

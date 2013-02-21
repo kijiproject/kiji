@@ -32,7 +32,7 @@ import org.kiji.annotations.Inheritance;
  * or MapReduceJobBuilder.withStoreBindingsFile().</p>
  *
  * <p>How the KeyValueStores are surfaced to a KeyValueStoreClient varies across
- * implementations; often {@link KijiContext#getStore(String)} is used within
+ * implementations; often {@link org.kiji.mapreduce.KijiContext#getStore(String)} is used within
  * methods that receive Context objects as arguments.
  * You <b>should not</b> open KeyValueStoreReaders directly by repeatedly calling {@link
  * #getRequiredStores()}. This will create a new store and reader each time, and the

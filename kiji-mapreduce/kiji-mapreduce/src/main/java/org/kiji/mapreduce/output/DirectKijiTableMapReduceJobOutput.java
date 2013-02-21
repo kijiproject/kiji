@@ -35,13 +35,29 @@ import org.kiji.mapreduce.output.impl.KijiTableMapReduceJobOutput;
 import org.kiji.schema.KijiURI;
 
 /**
- * MapReduce job output configuration that directly writes to a Kiji table.
+ * The class DirectKijiTableMapReduceJobOutput is used to indicate the usage of a Kiji table
+ * as an output for a MapReduce job.
  *
- * Use of this job output configuration is discouraged for many reasons:
- *  <li> It may induce a very high load on the target HBase cluster.
- *  <li> It may result in partial writes (eg. if the job fails half through).
+ * <p>
+ *   Use of this job output configuration is discouraged for many reasons:
+ *   <ul>
+ *     <li> It may induce a very high load on the target HBase cluster.
+ *     <li> It may result in partial writes (eg. if the job fails half through).
+ *   </ul>
+ *   The recommended way to write to HBase tables is through the {@link HFileMapReduceJobOutput}.
+ * </p>
  *
- * The recommended way to write to HBase tables is through the {@link HFileMapReduceJobOutput}.
+ * <h2>Configuring an output:</h2>
+ * <p>
+ *   DirectKijiTableMapReduceJobOutput must be configured with the address of the Kiji table to
+ *   write to and optionally the number of reduce tasks to use for the job:
+ * </p>
+ * <pre>
+ *   <code>
+ *     final MapReduceJobOutput kijiTableOutput = new DirectKijiTableMapReduceJobOutput(myURI);
+ *   </code>
+ * </pre>
+ * @see HFileMapReduceJobOutput
  */
 @ApiAudience.Public
 @Inheritance.Sealed
@@ -53,7 +69,7 @@ public class DirectKijiTableMapReduceJobOutput extends KijiTableMapReduceJobOutp
   /**
    * Creates a new <code>KijiTableMapReduceJobOutput</code> instance.
    *
-   * @param tableURI The kiji table to write output to.
+   * @param tableURI The Kiji table to write to.
    */
   public DirectKijiTableMapReduceJobOutput(KijiURI tableURI) {
     this(tableURI, 0);
@@ -62,7 +78,7 @@ public class DirectKijiTableMapReduceJobOutput extends KijiTableMapReduceJobOutp
   /**
    * Creates a new <code>KijiTableMapReduceJobOutput</code> instance.
    *
-   * @param tableURI The kiji table to write output to.
+   * @param tableURI The Kiji table to write to.
    * @param numReduceTasks The number of reduce tasks to use (use zero if using a producer).
    */
   public DirectKijiTableMapReduceJobOutput(KijiURI tableURI, int numReduceTasks) {

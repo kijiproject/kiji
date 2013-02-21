@@ -19,7 +19,6 @@
 
 /**
  * Basic identity reducer which is required for Kiji MapReduce jobs.  Any additional custom
- * reducers can be found in the {@link org.kiji.mapreduce.lib.reducer} package inside of
- * the Kiji MapReduce Library.
+ * reducers can be found inside of the Kiji MapReduce Library.
  */
 package org.kiji.mapreduce.reducer;

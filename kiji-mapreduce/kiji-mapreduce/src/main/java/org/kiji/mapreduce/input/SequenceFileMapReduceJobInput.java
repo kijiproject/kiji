@@ -25,11 +25,28 @@ import org.apache.hadoop.mapreduce.InputFormat;
 import org.kiji.annotations.ApiAudience;
 import org.kiji.avro.mapreduce.AvroSequenceFileInputFormat;
 
-/** MapReduce job input that is read from sequence files. */
+/**
+ * The class SequenceFileMapReduceJobInput is used to indicate the usage of a Hadoop
+ * sequence file as input to a MapReduce job. Any MapReduce job configured to read from a
+ * sequence file should expect to receive key-value pairs of same type that were used to
+ * write the sequence file.
+ *
+ * <h2>Configuring an input:</h2>
+ * <p>
+ *   SequenceFileMapReduceJobInput must be configured with the paths of the sequence files
+ *   to read from:
+ * </p>
+ * <pre>
+ *   <code>
+ *     final Path sequenceFile = new Path("/path/to/sequence/file");
+ *     final MapReduceJobInput seqFileJobInput = new SequenceFileMapReduceJobInput(sequenceFile);
+ *   </code>
+ * </pre>
+ */
 @ApiAudience.Public
 public final class SequenceFileMapReduceJobInput extends FileMapReduceJobInput {
   /**
-   * Creates a new <code>SequenceFileMapReduceJobInput</code> instance.
+   * Constructs job input from a varargs of paths to sequence files.
    *
    * @param paths The paths to the input sequence files.
    */

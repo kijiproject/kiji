@@ -27,8 +27,28 @@ import org.kiji.annotations.ApiAudience;
 import org.kiji.avro.mapreduce.AvroKeyValueOutputFormat;
 
 /**
- * A MapReduce job output of Avro container files of generic records, where each entry has
- * a 'key' and a 'value' field.
+ * The class AvroKeyValueMapReduceJobOutput is used to indicate the usage of Avro container files
+ * as output for a MapReduce job.
+ *
+ * <p>
+ *   This job output permits writing key-value pairs to the Avro container file. If you only
+ *   need to write keys to a container file use {@link AvroKeyMapReduceJobOutput} instead.
+ * </p>
+ *
+ * <h2>Configuring an output:</h2>
+ * <p>
+ *   AvroKeyValueMapReduceJobOutput must be configured with a location to write output container
+ *   files to and the number of output splits to use:
+ * </p>
+ * <pre>
+ *   <code>
+ *     final Path outputPath = new Path("/path/to/output/folder");
+ *
+ *     // Create a text file job output with 10 splits.
+ *     final MapReduceJobOutput textOutput = new AvroKeyValueMapReduceJobOutput(outputPath, 10);
+ *   </code>
+ * </pre>
+ * @see AvroKeyMapReduceJobOutput
  */
 @ApiAudience.Public
 public final class AvroKeyValueMapReduceJobOutput extends FileMapReduceJobOutput {

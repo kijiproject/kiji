@@ -31,7 +31,22 @@ import org.kiji.mapreduce.MapReduceJobInput;
 import org.kiji.mapreduce.impl.HTableInputFormat;
 import org.kiji.mapreduce.tools.framework.JobIOConfKeys;
 
-/** Job input that reads from an HTable (an HBase table). */
+/**
+ * The class HTableMapReduceJobInput is used to indicate the usage of a HBase table
+ * as input to a MapReduce job. Any MapReduce job configured to read from an HBase
+ * table should expect to receive an <code>ImmutableBytesWritable</code> as a key
+ * and a <code>Result</code> as a value.
+ *
+ * <h2>Configuring an input:</h2>
+ * <p>
+ *   HTableMapReduceJobInput must be configured with the name of the input HBase table:
+ * </p>
+ * <pre>
+ *   <code>
+ *     final MapReduceJobInput htableJobInput = new HTableMapReduceJobInput("mytable");
+ *   </code>
+ * </pre>
+ */
 @ApiAudience.Public
 public final class HTableMapReduceJobInput extends MapReduceJobInput {
   /** The name of the HTable to use as job input. */

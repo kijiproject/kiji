@@ -26,7 +26,30 @@ import org.apache.hadoop.mapreduce.OutputFormat;
 import org.kiji.annotations.ApiAudience;
 import org.kiji.avro.mapreduce.AvroKeyOutputFormat;
 
-/** A MapReduce job output of simple Avro container files. */
+/**
+ * The class AvroKeyMapReduceJobOutput is used to indicate the usage of Avro container files
+ * as output for a MapReduce job.
+ *
+ * <p>
+ *   This job output will only permit writing keys to the Avro container file. To write
+ *   key-value pairs to a container file use {@link AvroKeyValueMapReduceJobOutput} instead.
+ * </p>
+ *
+ * <h2>Configuring an output:</h2>
+ * <p>
+ *   AvroKeyMapReduceJobOutput must be configured with a location to write output container files
+ *   to and the number of output splits to use:
+ * </p>
+ * <pre>
+ *   <code>
+ *     final Path outputPath = new Path("/path/to/output/folder");
+ *
+ *     // Create a text file job output with 10 splits.
+ *     final MapReduceJobOutput textOutput = new AvroKeyMapReduceJobOutput(outputPath, 10);
+ *   </code>
+ * </pre>
+ * @see AvroKeyValueMapReduceJobOutput
+ */
 @ApiAudience.Public
 public final class AvroKeyMapReduceJobOutput extends FileMapReduceJobOutput {
   /** Default constructor. Do not use directly. */
@@ -36,8 +59,8 @@ public final class AvroKeyMapReduceJobOutput extends FileMapReduceJobOutput {
   /**
    * Creates a new <code>AvroKeyMapReduceJobOutput</code> instance.
    *
-   * @param filePath The file system path for the output files.
-   * @param numSplits The number of output file splits.
+   * @param filePath Path to output folder.
+   * @param numSplits Number of output file splits.
    */
   public AvroKeyMapReduceJobOutput(Path filePath, int numSplits) {
     super(filePath, numSplits);

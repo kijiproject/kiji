@@ -26,7 +26,24 @@ import org.apache.hadoop.mapreduce.OutputFormat;
 import org.kiji.annotations.ApiAudience;
 import org.kiji.avro.mapreduce.AvroSequenceFileOutputFormat;
 
-/** MapReduce job output that is written as sequence files. */
+/**
+ * The class SequenceFileMapReduceJobOutput is used to indicate the usage of Hadoop
+ * sequence files as output for a MapReduce job.
+ *
+ * <h2>Configuring an output:</h2>
+ * <p>
+ *   SequenceFileMapReduceJobOutput must be configured with a location to write output
+ *   sequence files to and the number of output splits to use:
+ * </p>
+ * <pre>
+ *   <code>
+ *     final Path outputPath = new Path("/path/to/output/folder");
+ *
+ *     // Create a sequence file job output with 10 splits.
+ *     final MapReduceJobOutput textOutput = new SequenceFileMapReduceJobOutput(outputPath, 10);
+ *   </code>
+ * </pre>
+ */
 @ApiAudience.Public
 public final class SequenceFileMapReduceJobOutput extends FileMapReduceJobOutput {
   /** Default constructor. Do not use directly. */
