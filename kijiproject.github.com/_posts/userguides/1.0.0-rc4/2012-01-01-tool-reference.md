@@ -12,145 +12,108 @@ description: A reference of commands available for the schema command line tool.
 Running kiji with no arguments will list all the available tools:
 
 {% highlight bash %}
-$ kiji COMMAND [FLAG]...
+$ kiji <tool> [FLAG]...
 {% endhighlight %}
 
-## Commands
+### Instance administration
+*  `install`                 - [Install a kiji instance onto a running HBase cluster.](#ref.install)
+*  `uninstall`               - [Remove a kiji instance from a running HBase cluster.](#ref.uninstall)
+*  `metadata`                - [Backup or restore kiji metadata.](#ref.metadata)
 
-*  `help`                  - Display this help message.
-*  `install`               - [Install KijiSchema onto a running HBase instance](#ref.install)
-*  `uninstall`             - [Uninstall KijiSchema from a running HBase instance](#ref.uninstall)
-*  `version`               - Print the version of KijiSchema.
-*  `classpath`             - Print the classpath used to build or run KijiSchema
-*  `jar`                   - [Run a main class from the specified jar](#ref.jar)
-        Use: `kiji jar <jarFile> <mainClass> [args...]`
-*  `ls`                    - [List, describe, or scan Kiji tables](#ref.ls)
-*  `create-table`          - [Create a Kiji table](#ref.create-table)
-*  `delete`                - [Delete a Kiji table, row, or cell](#ref.delete)
-*  `flush-table`           - [Flush table write-ahead logs](#ref.flush-table)
-*  `layout`                - [Manage table layouts](#ref.layout)
-*  `increment`             - [Increment a counter cell](#ref.increment)
-*  `put`                   - [Set the value of a single cell](#ref.put)
-*  `synthesize-user-data`  - [Synthesize user data into a table](#ref.synthdata)
+### Table administration
+*  `create-table`            - [Create a kiji table in a kiji instance.](#ref.create-table)
+*  `delete`                  - [Delete kiji tables, rows, and cells.](#ref.delete)
+*  `layout`                  - [View or modify kiji table layouts.](#ref.layout)
+*  `flush-table`             - [Flush kiji user and meta table write-ahead logs.](#ref.flush-table)
 
-## Targeting a KijiSchema instance: Kiji URI<a id="ref.kiji_uri"> </a>
+### Data inspection/modification
+*  `ls`                      - [List kiji instances, tables and rows.](#ref.ls)
+*  `increment`               - [Increment a counter column in a kiji table.](#ref.increment)
+*  `put`                     - [Write a cell to a column in a kiji table.](#ref.put)
 
-Most commands accept an optional parameter `--kiji=<kiji-uri>` that specifies a
-KijiSchema instance to interact with.
-The format for this parameter is a URI generally formatted as:
-`kiji://zookeeper_host:2181/kiji_instance_name`, and includes:
+### Miscellaneous
+*  `help`                    - Describe available Kiji tools.
+*  `version`                 - Print the kiji distribution and data versions in use.
+*  `classpath`               - Print the classpath used to run kiji tools.
+*  `synthesize-user-data`    - [Synthesize user data into a kiji table.](#ref.synthdata)
+*  `jar`                     - [Run a class from a user-supplied jar file.](#ref.jar)
 
-*  The address of the HBase instance KijiSchema has been installed on.
-   This is the address of the ZooKeeper quorum used by the HBase instance.
-   The default is `.env`, which tells KijiSchema to use the HBase instance
-   identified by the HBase configuration files in `$HBASE_HOME`.
-*  And the name of the KijiSchema instance.
-   The default KijiSchema instance name is `default`.
+### Targeting a Kiji instance or a Kiji table with Kiji URIs<a id="ref.kiji_uri"> </a>
 
-The default value for this parameter is `--kiji=kiji://.env/default`, which
-references the KijiSchema instance named "default" and installed on the HBase
-instance identified in the HBase configuration files in `$HBASE_HOME`.
+Most KijiSchema command-line tools accept a parameter specifying an HBase cluster, a Kiji instance or a Kiji table.
+These elements can be specified in a unified way through Kiji URIs.
 
-The URI for KijiSchema instance named "the_instance" and installed on a mini
-HBase cluster running locally on a laptop is
-`--kiji=kiji://localhost:2181/the_instance`.
+Kiji URIs are formatted hierarchically:
+{% highlight bash %}
+    kiji://<HBase cluster>/<Kiji instance>/<Kiji table>/<columns>
+{% endhighlight %}
+
+*  `HBase cluster`: the address of a ZooKeeper quorum used by the HBase
+   instance KijiSchema has been installed on. The default is `.env`, which
+   tells KijiSchema to use the HBase instance identified by the HBase
+   configuration files available on the classpath.
+*  `Kiji instance`: the name of the Kiji instance within the HBase cluster.
+*  `Kiji table`: the name of the Kiji table within the Kiji instance.
+*  `columns`: a set of columns or column families within the Kiji table, separated by comas.
+
+The HBase cluster address is a required component of all Kiji URIs.
+Any further component is optional. For instance:
+
+*   `kiji://localhost:2181` references the HBase cluster whose ZooKeeper quorum is composed
+    of the server listening on `localhost:2181`.
+*   `kiji://localhost:2181/kiji_instance_1` designates the Kiji instance named `kiji_instance_1`
+    and living the the HBase cluster `kiji://localhost:2181`.
+*   `kiji://localhost:2181/kiji_instance_1/the_table` designates the Kiji table named `the_table`
+    and living the the Kiji instance `kiji://localhost:2181/kiji_instance_1`.
+*   `kiji://localhost:2181/kiji_instance_1/the_table/family1,family:column2` references the
+    column family `family1` and the column `family:column2` within the Kiji table
+    `kiji://localhost:2181/kiji_instance_1/the_table`.
+
+
+The default value for Kiji URIs is `kiji://.env/default`, which
+references the Kiji instance named `default` and installed on the HBase
+instance identified by the HBase configuration available on the classpath.
+
+### Scripting using the command-line interface<a id="ref.interactive"> </a>
+
+All Kiji command-line tools accept a `--interactive` flag that controls whether user
+interactions are allowed. By default, this flag is set to true, which enables user
+interactions such as confirmations for dangerous operations.
+
+When scripting Kiji commands, you may disable user interactions with `--interactive=false`.
+
+----------
 
 ## Installation: `install`<a id="ref.install"> </a>
 
-The `kiji install` command will create the initial metadata tables
+The `kiji install` command creates the initial metadata tables
 `kiji.<instance-name>.meta`, `kiji.<instance-name>.status`,
 `kiji.<instance-name>.schema_id` and `kiji.<instance-name>.schema_hash`
 required by the KijiSchema system.
-This should be run once during initial setup of KijiSchema.
+This should be run once during initial setup of a KijiSchema instance.
 
-A different HBase instance or KijiSchema instance name may be specified using the
-[`--kiji` parameter](#ref.kiji_uri).
+The HBase cluster and the Kiji instance name may be specified with a [Kiji URI](#ref.kiji_uri):
+
+{% highlight bash %}
+kiji install --kiji=kiji://hbase_cluster/kiji_instance
+{% endhighlight %}
 
 ## Removal: `uninstall`<a id="ref.uninstall"> </a>
 
 The `kiji uninstall` command removes an installed KijiSchema instance, and deletes
 all the user tables it contains.
-The KijiSchema instance to remove is specified through the
-[`--kiji` parameter](#ref.kiji_uri).
-
-This command accepts an optional parameter:
-*  `--confirm`
-   - Must be set to perform the instance removal without interactive confirmation.
-
-## Listing Information: `ls`<a id="ref.ls"> </a>
-
-The `kiji ls` command is the basic tool used to explore a KijiSchema repository.
-It can drill down into KijiSchema-based data sets at many levels.
-
-When run with `--instances`, this command lists the Kiji instances installed on the
-HBase instance specified with `--kiji=<kiji-uri>` (by default, `kiji://.env`):
+The HBase cluster and the name of the Kiji instance to remove is specified with a [Kiji URI](#ref.kiji_uri):
 
 {% highlight bash %}
-$ kiji ls --instances
-default
+kiji uninstall --kiji=kiji://hbase_cluster/kiji_instance
 {% endhighlight %}
 
-When run with no arguments, this command lists the tables in the Kiji instance
-specified with `--kiji=<kiji-uri>` (by default, `kiji://.env/default`):
+Metadata backups: `metadata`<a name="ref.metadata"> </a>
+-------------------------------------------------------
 
-{% highlight bash %}
-$ kiji ls
-users
-products
-{% endhighlight %}
+`TODO` Document the metadata backup/restore tool.
 
-The `ls` command can also be used to list the contents of a table.
-`kiji ls --table=<table-name>` displays the contents of a Kiji table.
-Each record appears as a set of lines, set apart by blank lines.
-Each cell appears on two lines:
-the first line contains the row key (a hashed representation of a primary key),
-a timestamp (expressed in milliseconds since the UNIX epoch),
-and the cell name (`family:qualifier`).
-The second line contains the string representation of the cell data itself.
-For example, running `kiji ls --table=users` on a table generated with the `synthdata`
-command (see [Generating Sample Data](#ref.synthdata)) displays rows like:
-
-{% highlight bash %}
-$ kiji ls --table=users
-\xA6t\xCEIm\xB7A\x88\x7F\xD1\xA9n\xB0\xEC\x16\xDB [1305851507300] info:name
-                                 Olga Jefferson
-\xA6t\xCEIm\xB7A\x88\x7F\xD1\xA9n\xB0\xEC\x16\xDB [1305851507301] info:email
-                                 Olga.Jefferson@hotmail.com
-
-\xf8\x8f\xe2\xb2,E\x8b\xea\xd5\x08\xf8\x8a\xee`\x91y [1305851507425] info:name
-                                 Sidney Tijuana
-\xf8\x8f\xe2\xb2,E\x8b\xea\xd5\x08\xf8\x8a\xee`\x91y [1305851507427] info:email
-                                 Sidney.Tijuana@hotmail.com
-…
-{% endhighlight %}
-
-Providing just the `--table` argument is not particularly useful;
-you will typically want to restrict the set of data printed to the terminal.
-The following options will do just that:
-
-*  `--columns=family:qualifier,family:qualifier...`
-   - Display a subset of the available columns. `--columns=*` will include all columns.
-
-*  `--start-row=row-key` and `--limit-row=row-key`
-   - Restrict the row range to print.
-
-*  `--max-rows=<int>`
-   - Display at most this many rows of data.
-
-*  `--max-versions=<int>`
-   - Display at most this many versions of each cell.
-
-*  `--min-timestamp=<long>` and `--max-timestamp=<long>`
-   - Display only cells whose timestamps fall within the given range.
-     Timestamps are expressed in milliseconds since the Epoch.
-
-*  `--entity-hash=<string>`
-   - Display only cells from a single row; ignores `--start-row` and `--limit-row`.
-     The string argument is the hexadecimal representation of the pre-hashed row id.
-
-*  `--entity-id=<string>`
-   - Display only cells from a single row; ignores `--start-row` and `--limit-row`.
-     The string is the human-readable value representing the row id, encoded as UTF8.
+----------
 
 ## Creating Tables: `create-table`<a id="ref.create-table"> </a>
 
@@ -160,17 +123,14 @@ Kiji table. This is stored in an underlying HBase table with the name
 
 This command has two mandatory arguments:
 
-*  `--table=<table-name>`
-   - Name of the table to create.
+*  `--table=<table-uri>`
+   - Kiji URI of the table to create.
      It is an error for this table to already exist.
 *  `--layout=<path/to/layout.json>`
    - Path to a file a JSON file containing the table layout specification,
      as described in [Managing Data]({{site.userguide_url}}managing-data#layouts).
 
 The following arguments are optional:
-
-*  `--kiji=<kiji-uri>`
-   - Address of the Kiji instance to interact with.
 
 *  `--num-regions=<int>`
    - The number of initial regions to create in the table.
@@ -192,38 +152,71 @@ The `delete` command will delete a KijiSchema
 table, row, or cell, and drop all values which were in them.
 This command has one mandatory argument:
 
-*  `--table=<table-name>`
-   - The name of the table from which to delete.  If specified without --row, the entire table
-     will be deleted.
+*  `--target=<kiji-uri>` -
+   URI of the target to delete or to delete from.
+   The target may be an entire Kiji instance, a Kiji table or a set of columns within a Kiji table.
 
 And several optional arguments:
 
-*  `--row=<row-name>`
-   - The name of the row from which to delete values.  If specified without --family, all
-     values in the row will be deleted.
+*  `--entity-id=<entity-id>` -
+   Specifies the entity ID of a single row to delete or to delete from.
+   Requires the target Kiji URI to designate a Kiji table.
 
-*  `--family=<family-name>`
-   - The name of the family from which to delete values.  If specified without --qualifier, all
-     values in the row and family will be deleted. (requires a specified row)
+   The default is to not target a specific row, ie. to delete the entire Kiji table specified with `--target=...`.
 
-*  `--qualifier=<column-name>`
-   - The name of a column qualifier from which to delete values.  If specified without a
-     timestamp or --most-recent, all values in the cell will be deleted.
-     (requires a specified family)
+*  `--timestamp=<timestamp-spec>` -
+   Timestamp specification:
+   *   `'<timestamp>'` to delete cells with exactly this timestamp, expressed in milliseconds since the Epoch;
+   *   `'latest'` to delete the most recent cell only;
+   *   `'upto:<timestamp>'` to delete all cells with a timestamp older than the specified timestamp expressed in milliseconds since the Epoch;
+   *   `'all'` to delete all cells, irrespective of their timestamp.
 
-*  `--upto-timestamp=<long>`
-   - The timestamp at or before which all values will be deleted. (requires a specified row)
+   The default is `--timestamp=all`.
 
-*  `--exact-timestamp=<long>`
-   - The timestamp at which to delete a value.
-     (requires a specified row, family, and qualifier)
+Managing layouts: `layout`<a id="ref.layout"> </a>
+------------------------------------------------
 
-*  `--most-recent`
-   - Set to delete the most recent value of a cell.
-     (requires a specified row, family, and qualifier)
+The `kiji layout` command displays or modifies the layout associated with a table.
 
-*  `--confirm`
-   - Set to perform the deletions without interactive confirmation.
+This command requires two parameters:
+
+*  `--table=<table-uri>` - URI of the Kiji table to examine the layout of.
+*  `--do=<action>` - Action to perform on the layout: `dump` (the default), `set` or `history`.
+
+You may dump the current layout of a table with:
+{% highlight bash %}
+$ kiji layout --table=kiji://.env/default/users
+{
+  name: "users",
+  description: "The user table",
+  keys_format : {encoding : "RAW"},
+  locality_groups : [
+    …
+  ],
+  layout_id : "3",
+}
+{% endhighlight %}
+
+You may update the layout of a table with:
+{% highlight bash %}
+$ kiji layout --table=kiji://.env/default/users --do=set --layout=/path/to/layout.json
+{% endhighlight %}
+
+The file `/path/to/layout.json` is a JSON descriptor of the updated table layout.
+
+Optionally, you may use the `--dry-run` argument to prints out messages stating whether or not the update would succeed
+(i.e., whether or not the layout is valid) and what locality groups would be updated by the new layout.
+
+Finally, you may dump the layout history of a table with:
+{% highlight bash %}
+$ kiji layout \
+    --table=kiji://.env/default/users \
+    --do=history \
+    --max-version=5 \
+    --write-to=/path/to/table-layout-history/layout
+{% endhighlight %}
+
+This dumps the 5 latest revisions of the table layout in 5 JSON files `/path/to/table-layout-history/layout-<timestamp>.json`.
 
 ## Flushing tables: `flush-table`<a id="ref.flush-table"> </a>
 --------------------------------------------------------
@@ -240,55 +233,153 @@ recovery time in the event that HBase experiences a failure.
 You must use one or both of the following arguments to specify what
 to flush:
 
-*  `--table=<table-name>`
-   - Specifies the table name to flush.
+*  `--table=<table-uri>`
+   - URI of the Kiji table to flush.
 *  `--meta`
    - If set, flushes KijiSchema metadata tables.
-
-It also accepts an optional `--kiji=<kiji-uri>` argument to
-specify the address of the installed Kiji instance in which to find
-the table to flush.
 
 You should only flush tables during a period of relative inactivity.
 Flushing while a large number of operations are ongoing may adversely
 affect performance. The flush operation is also asynchronous; the
 command may return before the actual flush operation is complete.
 
-Managing layouts: `layout`<a id="ref.layout"> </a>
-------------------------------------------------
+----------
 
-The `kiji layout` command displays or modifies
-the layout associated with a table.
+## Listing Information: `ls`<a id="ref.ls"> </a>
 
-When run with `--table=<table-name>`, this displays the current layout
-associated with a given table:
+The `kiji ls` command is the basic tool used to explore a KijiSchema repository.
+It can drill down into KijiSchema-based data sets at many levels,
+according to the target referenced through the Kiji URI specified with `--kiji=...`.
 
+You may list the Kiji instances existing in an HBase cluster by specifying the URI of an HBase cluster:
 {% highlight bash %}
-$ kiji layout --table=users
-{
-  name: "users",
-  description: "The user table",
-  keys_format : {encoding : "RAW"},
-  locality_groups : [
-    …
-  ],
-  layout_id : "3",
-}
+$ kiji ls --kiji=kiji://localhost:2181
+kiji://localhost:2181/kiji_instance1/
+kiji://localhost:2181/kiji_instance2/
 {% endhighlight %}
 
-When run with the `--do=set --layout=/path/to/layout.json`
-argument, this sets the layout for a table to match the specified
-layout JSON file.
+You may list the Kiji tables within a Kiji instance by specifying the URI of a Kiji instance:
+{% highlight bash %}
+$ kiji ls --kiji=kiji://localhost:2181/kiji_instance1
+Listing tables in kiji instance: kiji://localhost:2181/kiji_instance1/
+table1
+table2
+table3
+{% endhighlight %}
 
-The `--dry-run` argument specifies that `--do=set`
-should not actually update the layout; it simply prints out
-a message stating whether or not the update would succeed (i.e., whether or not
-the layout is valid) and what locality groups would be updated by the new layout.
+Finally, you may display the content of a table by specifying the URI of a Kiji table:
+{% highlight bash %}
+$ kiji ls --kiji=kiji://localhost:2181/kiji_instance1/table1
+Scanning kiji table: kiji://localhost:2181/kiji_instance1/table1/
+entity-id='Olga Jefferson' [1305851507300] info:name
+                                 Olga Jefferson
+entity-id='Olga Jefferson' [1305851507301] info:email
+                                 Olga.Jefferson@hotmail.com
 
-When run with the `--do=history --max-versions=<int>`, this command dumps the most
-recent versions of the table layout.
+entity-id='Sidney Tijuana' [1305851507425] info:name
+                                 Sidney Tijuana
+entity-id='Sidney Tijuana' [1305851507427] info:email
+                                 Sidney.Tijuana@hotmail.com
+…
+{% endhighlight %}
 
-Running an Application Jar with KijiSchema: `jar`<a name="jar"> </a>
+Each record appears as a set of lines, set apart by blank lines.
+Each cell appears on two lines:
+the first line contains the row entity ID,
+the cell timestamp expressed in milliseconds since the UNIX epoch,
+and the cell column name (`family:qualifier`).
+The second line contains the string representation of the cell data itself.
+
+
+You will typically want to restrict the set of data printed to the terminal.
+The following options will do just that:
+
+*  `--columns=family:qualifier,family:qualifier...` -
+   Restricts the set of columns to print the content of.
+
+   The default, `--columns=*`, includes all columns in the table.
+
+*  `--start-row=row-key` and `--limit-row=row-key` -
+   Restrict the range of rows to scan through.
+   The start row is included in the scan while the limit row is excluded.
+   Start and limit rows are expressed as HBase encoded rows, as in:
+   `--start-row='hex:0088deadbeef'` or `--limit-row='utf8:the row key in UTF8'`.
+
+   The default is to scan through all the rows in the table.
+
+*  `--max-rows=<int>` -
+   Limits the total number of rows to display the content of.
+
+   The default is 0 and sets no limit.
+
+*  `--max-versions=<int>` -
+   Restrict the number of versions of each cell to display.
+
+   The default is 1, ie. displays the latest version of each cell.
+
+*  `--min-timestamp=<long>` and `--max-timestamp=<long>` -
+   Excludes cell versions whose timestamp is outside the specified time range.
+   Timestamps are expressed in milliseconds since the Epoch.
+
+   The default is to not exclude any cell.
+
+*  `--entity-id=<string>` -
+   Specifies the entity ID of a single row to look up:
+
+   *   Either as Kiji row keys, with `--entity-id=kiji=...`:
+
+       Old deprecated Kiji row keys are specified as naked UTF-8 strings;
+
+       New Kiji row keys are specified in JSON, as in: `--entity-id=kiji="['component1', 2, 'component3']"`.
+
+   *   or as HBase encoded row keys specified as bytes:
+       *    by default as UTF-8 strings, or prefixed as in `'utf8:encoded\x0astring'`;
+       *    in hexadecimal as in `'hex:deadfeed'`;
+       *    as a URL with `'url:this%20URL%00'`.
+
+
+   Specifying `--entity-id=...` overrides `--start-row` and `--limit-row`.
+
+Incrementing counters: `increment`<a name="ref.increment"> </a>
+---------------------------------------------------------------
+
+The `kiji increment` command may be used to increment
+(or decrement) a KijiSchema counter.
+
+The following arguments are required:
+
+*  `--cell=<column-uri>`       - [Kiji URI](#ref.kiji_uri) specifying a single column to increment.
+*  `--entity-id=<entity>`      - Entity ID of the target row.
+*  `--value=amount`            - The value to increment by.
+
+See [`kiji ls`](#ref.ls) for how to specify entity IDs.
+
+Setting Individual Cells: `put`<a name="ref.put"> </a>
+--------------------------------------------------
+
+To aid in the insertion of small data sets, debugging, and testing, the
+`kiji put` command may be used to insert individual values in a Kiji table.
+
+The following arguments are required:
+
+*  `--target=<column-uri>`     - [Kiji URI](#ref.kiji_uri) specifying a single column to write.
+*  `--entity-id=<entity>`      - Target row id (an unhashed, human-readable string)
+*  `--value=<JSON value>`      - The value to insert. The value is specified as a
+   JSON string according to [the Avro JSON encoding specification](http://avro.apache.org/docs/current/spec.html#json_encoding)
+
+See [`kiji ls`](#ref.ls) for how to specify entity IDs.
+
+The following arguments are optional:
+
+*  `--schema=Avro schema`      - By default, KijiSchema will use the reader schema
+   attached to a column in its layout to decode the JSON and encode the binary
+   data for insertion in the table. This argument allows you to use an alternate
+   writer schema.
+*  `--timestamp=long`          - Specifies a timestamp (in milliseconds since the Epoch) other than "now".
+
+----------
+
+Running an Application Jar with KijiSchema: `jar`<a name="ref.jar"> </a>
 --------------------------------------------------------------------
 
 If your application requires KijiSchema and its dependencies, you
@@ -301,48 +392,6 @@ main class to run:
 {% highlight bash %}
 $ kiji jar myapp.jar com.pkg.MyApp [args...]
 {% endhighlight %}
-
-Incrementing counters: `increment`<a name="ref.increment"> </a>
----------------------------------------------------------------
-
-The `kiji increment` command may be used to increment
-(or decrement) a KijiSchema counter.
-
-The following arguments are required:
-
-*  `--table=<table-name>`      - Target table
-*  `--column=family:qualifier` - Target column
-*  `--entity-hash=entity`      - Target row id (the actual pre-hashed entity string)
-*  `--entity-id=entity`        - Target row id (an unhashed, human-readable string)
-*  `--value=amount`            - The value to increment by.
-
-Exactly one of `--entity-id` or `--entity-hash` must be used.
-
-Setting Individual Cells: `put`<a name="put"> </a>
---------------------------------------------------
-
-To aid in the insertion of small data sets, debugging, and testing, the
-`kiji put` command may be used to insert individual values in a Kiji table.
-
-The following arguments are required:
-
-*  `--table=<table-name>`      - Target table
-*  `--column=family:qualifier` - Target column
-*  `--entity-hash=entity`      - Target row id (the actual pre-hashed entity string)
-*  `--entity-id=entity`        - Target row id (an unhashed, human-readable string)
-*  `--value=<JSON value>`      - The value to insert. The value is specified as a
-   JSON string according to [the Avro JSON encoding specification](http://avro.apache.org/docs/current/spec.html#json_encoding)
-
-Exactly one of `--entity-id` or `--entity-hash` must be used.
-
-The following arguments are optional:
-
-*  `--schema=Avro schema`      - By default, KijiSchema will use the reader schema
-   attached to a column in its layout to decode the JSON and encode the binary
-   data for insertion in the table. This argument allows you to use an alternate
-   writer schema.
-*  `--timestamp=long`          - Specifies a timestamp (in milliseconds since the Epoch) other than "now".
-*  `--kiji=<kiji-uri>`         - Address of the Kiji instance to interact with.
 
 Generating Sample Data: `synthesize-user-data`<a name="ref.synthdata"> </a>
 ---------------------------------------------------------------------------
@@ -358,11 +407,9 @@ generated names. These columns can be used with mappers and reducers.
 
 To use this tool, first create a table with the layout in
 `${KIJI_HOME}/examples/synthdata-layout.xml`.
-Then invoke `bin/kiji synthesize-user-data --table=<table-name>`.
+Then invoke `bin/kiji synthesize-user-data --table=<table-uri>`.
 This will generate 100 rows of data.
 You can create a different number of records by specifying
 `--num-users=<int>`.
 
 You can specify a different list of names with the `--name-dict=filename` argument.
-
-It also accepts an optional `--kiji=<kiji-uri>` argument to specify the address of the Kiji instance.
