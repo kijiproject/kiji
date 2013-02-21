@@ -57,7 +57,7 @@ import org.kiji.schema.KijiColumnName;
  *   {@link org.kiji.mapreduce.bulkimport.KijiBulkImportJobBuilder}.  A
  *   {@link KijiTableImportDescriptor}, which defines the mapping from the import fields to the
  *   destination Kiji columns, must be passed in as part of the job configuration.  For writing
- *   to an HFile which can later be loaded with the <code>kiji bulk-load<code> tool the job
+ *   to an HFile which can later be loaded with the <code>kiji bulk-load</code> tool the job
  *   creation looks like:
  * </p>
  * <pre><code>

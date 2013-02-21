@@ -35,7 +35,7 @@ import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiColumnName;
 
 /**
- * Bulk importer that takes lines from an NCSA/Apache common logs and can produce a row for each 
+ * Bulk importer that takes lines from an NCSA/Apache common logs and can produce a row for each
  * entry in the log file.  This is the basic log file format used by the Apache HTTP server.
  * This bulk importer uses {@link org.kiji.mapreduce.lib.util.CommonLogParser} for parsing lines
  * into fields.
