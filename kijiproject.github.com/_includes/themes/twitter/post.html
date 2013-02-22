@@ -11,6 +11,9 @@
     {% if page.tags contains 'schema-ug' %}
       {% assign title = 'KijiSchema User Guide' %}
       {% assign pages = site.tags.schema-ug %}
+    {% elsif page.tags contains 'mapreduce-ug' %}
+      {% assign title = 'KijiMR User Guide' %}
+      {% assign pages = site.tags.mapreduce-ug %}
     {% elsif page.tags contains 'phonebook' %}
       {% assign title = 'Phonebook Tutorial'  %}
       {% assign pages = site.tags.phonebook %}
@@ -64,6 +67,9 @@
     {% if page.tags contains 'schema-ug' %}
       {% assign title = 'KijiSchema User Guide' %}
       {% assign pages = site.tags.schema-ug %}
+    {% elsif page.tags contains 'mapreduce-ug' %}
+      {% assign title = 'KijiMR User Guide' %}
+      {% assign pages = site.tags.mapreduce-ug %}
     {% elsif page.tags contains 'phonebook' %}
       {% assign title = 'Phonebook Tutorial'  %}
       {% assign pages = site.tags.phonebook %}

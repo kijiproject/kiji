@@ -17,4 +17,4 @@ to the Kiji version you are using.
 
 ## KijiMapReduce
 
-* [KijiMapReduce 1.0.0-rc4]({{site.userguide_url}}/mapreduce/1.0.0-rc4/kijimr/)
+* [KijiMapReduce 1.0.0-rc4]({{site.userguide_url}}/mapreduce/1.0.0-rc4/kiji-mr-overview/)
