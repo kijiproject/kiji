@@ -111,7 +111,43 @@ kiji uninstall --kiji=kiji://hbase_cluster/kiji_instance
 Metadata backups: `metadata`<a name="ref.metadata"> </a>
 -------------------------------------------------------
 
-`TODO` Document the metadata backup/restore tool.
+The `kiji metadata` command allows you to backup and restore metadata information in KijiSchema.
+This metadata contains table layout information as well as the schema definitions.
+
+### Creating a backup
+
+You can backup the metadata for a specific Kiji instance with:
+
+<div class="userinput">
+{% highlight bash %}
+kiji metadata --kiji=kiji://hbase_cluster/kiji_instance --backup=mybackup
+{% endhighlight %}
+</div>
+
+### Restoring from a backup
+
+Similarily, you can restore the metadata for a specific Kiji instance with:
+
+<div class="userinput">
+{% highlight bash %}
+kiji metadata --kiji=kiji://hbase_cluster/kiji_instance --restore=mybackup
+{% endhighlight %}
+</div>
+
+After asking for confirmation:
+
+    Are you sure you want to restore metadata from backup?
+    This will delete your current metatable.
+    Please answer yes or no.
+
+Restoration begins:
+
+    Restoring Metadata from backup.
+    Restore complete.
+
+If restoration of only a subset of the table and schema information is desired, the following flags should be used:
+* `--tables` - restores all tables from the metadata backup into the specified Kiji instance.
+* `--schemas` - restores all schema table entries from the metadata backup into the specified Kiji instance.
 
 ----------
 
