@@ -34,7 +34,7 @@ import org.kiji.mapreduce.bulkimport.KijiBulkImporter;
 import org.kiji.schema.EntityId;
 
 /**
- * Bulk-importer to load the KijiMusic Users table.
+ * Bulk-importer to load the information about the track plays into the KijiMusic Users table.
  *
  * <p>Input files will contain JSON data representing track plays, with one song per line, as in:
  * <pre>
@@ -68,6 +68,7 @@ public class TrackPlaysBulkImporter extends KijiBulkImporter<LongWritable, Text>
       context.put(eid, "info", "track_plays", unixTime, songId);
 
     } catch (ParseException pe) {
+      // Catch and log any malformed json records.
       context.incrementCounter(KijiMusicCounters.JSONParseFailure);
       LOG.error("Failed to parse JSON record '{}': {}", line, pe);
     }

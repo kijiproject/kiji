@@ -20,6 +20,12 @@
 /**
  * This package contains producers used in the KijiMusic tutorial.
  *
- * TODO: Add a usage example.
+ * NextSongRecommender can be run from the command-line:
+ * kiji produce \
+ * --producer=org.kiji.examples.music.produce.NextSongRecommender \
+ *  --input="format=kiji table=$KIJI/users" \
+ *  --output="format=kiji table=$KIJI/users nsplits=2" \
+ *  --lib=${LIBS_DIR} \
+ *  --kvstores=KVStoreConfig.xml
  */
 package org.kiji.examples.music.produce;

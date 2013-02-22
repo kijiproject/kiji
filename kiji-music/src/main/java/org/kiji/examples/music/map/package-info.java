@@ -19,7 +19,5 @@
 
 /**
  * This package contains mappers used in the KijiMusic tutorial.
- *
- * TODO: Figure out what kinds of stuff goes in this package.
  */
 package org.kiji.examples.music.map;

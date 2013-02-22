@@ -20,6 +20,14 @@
 /**
  * This package contains various gatherers used in the KijiMusic tutorial.
  *
- * TODO: Add a usage example.
+ * Gatherers can be run from the shell:
+ * <pre>
+ *   kiji gather \
+ *   --gatherer=org.kiji.examples.music.gather.SongPlayCounter \
+ *   --reducer=org.kiji.mapreduce.lib.reduce.LongSumReducer \
+ *   --input="format=kiji table=${KIJI}/users" \
+ *   --output="format=seq file=${HDFS_ROOT}/output.sequence_file nsplits=2" \
+ *   --lib=target/kiji-music-0.1-SNAPSHOT-release/kiji-music-0.1-SNAPSHOT/lib/
+ * </pre>
  */
 package org.kiji.examples.music.gather;

@@ -36,7 +36,8 @@ import org.kiji.schema.KijiRowData;
  * Gatherer to count the total number of times each song has been played.
  *
  * Reads the track plays from the user table and emits (song ID, 1) pairs for each track play.
- * This gatherer should be combined with a summing reducer to count the number of plays per track.
+ * This gatherer should be combined with a summing reducer (such as LongSumReducer) to count the
+ * number of plays for every track.
  */
 public class SongPlayCounter extends KijiGatherer<Text, LongWritable> {
   /** Only keep one Text object around to reduce the chance of a garbage collection pause.*/
@@ -66,10 +67,11 @@ public class SongPlayCounter extends KijiGatherer<Text, LongWritable> {
   /** {@inheritDoc} */
   @Override
   public KijiDataRequest getDataRequest() {
-    // Retrieve all versions of info:track_plays:
+    // This method is how we specify which columns in each row the gatherer operates on.
+    // In this case, we need all versions of the info:track_plays column.
     final KijiDataRequestBuilder builder = KijiDataRequest.builder();
     builder.newColumnsDef()
-        .withMaxVersions(HConstants.ALL_VERSIONS)
+        .withMaxVersions(HConstants.ALL_VERSIONS) // Retrieve all versions.
         .add("info", "track_plays");
     return builder.build();
   }
@@ -78,6 +80,8 @@ public class SongPlayCounter extends KijiGatherer<Text, LongWritable> {
   @Override
   public void gather(KijiRowData row, GathererContext<Text, LongWritable> context)
       throws IOException {
+    // The gather method operates on one row at a time.  For each user, we iterate through
+    // all their track plays and emit a pair of the track ID and the number 1.
     NavigableMap<Long, CharSequence> trackPlays = row.getValues("info", "track_plays");
     for (CharSequence trackId : trackPlays.values()) {
       mText.set(trackId.toString());

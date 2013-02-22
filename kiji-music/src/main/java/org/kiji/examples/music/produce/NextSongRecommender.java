@@ -38,6 +38,14 @@ import org.kiji.schema.KijiRowData;
 
 /**
  * Producer generating recommendations for the next songs each user might like.
+ *
+ * A producer operates over one Kiji row at a time, and writes out to the same row.
+ *
+ * In this producer, for each user, we write a recommendation for the next song into
+ * the info:next_song_rec column, based on their track_plays, and using the provided
+ * KeyValueStore that is a map from song to the songs played after that song, by popularity.
+ * The KeyValueStore must be specified either from the command line, or must be overridden
+ * when the job is configured.
  */
 public class NextSongRecommender extends KijiProducer implements KeyValueStoreClient {
 
@@ -51,13 +59,14 @@ public class NextSongRecommender extends KijiProducer implements KeyValueStoreCl
   /** {@inheritDoc} */
   @Override
   public String getOutputColumn() {
+    // This is the output column of the kiji table that we write to.
     return "info:next_song_rec";
   }
 
     /** {@inheritDoc} */
   @Override
   public void produce(KijiRowData input, ProducerContext context) throws IOException {
-    // Open the key value store reader
+    // Open the key value store reader.
     KeyValueStoreReader<String, TopSongs> topNextSongsReader = null;
     try {
       topNextSongsReader = context.getStore("nextPlayed");
@@ -70,7 +79,7 @@ public class NextSongRecommender extends KijiProducer implements KeyValueStoreCl
         .toString(); // Avro strings get deserialized to CharSequences.
     // Read the most popular songs played after mostRecentSong, from the song table.
     TopSongs topSongs = topNextSongsReader.get(mostRecentSong);
-    // Read the array of song counts stored in field ""
+    // Read the array of song counts stored in field "" of the KeyValueStore.
     List<SongCount> popularNextSongs = topSongs.getTopSongs();
     // Write our recommended next song to "info:next_song_rec"
     context.put(recommend(popularNextSongs));
@@ -79,16 +88,9 @@ public class NextSongRecommender extends KijiProducer implements KeyValueStoreCl
   /** {@inheritDoc} */
   @Override
   public Map<String, KeyValueStore<?, ?>> getRequiredStores() {
-    /** KijiTableKeyValueStore.Builder kvStoreBuilder = KijiTableKeyValueStore.builder();
-    // Our default implementation will use the default kiji instance, and a table named songs.
-    KijiURI tableURI;
-    try { //TODO: figure out a reasonable default
-      tableURI = KijiURI.newBuilder().withTableName("songs").build();
-    } catch (KijiURIException ex) {
-      throw new RuntimeException(ex);
-    }
-    kvStoreBuilder.withColumn("info", "top_next_songs").withTable(tableURI); */
-    // return RequiredStores.just("nextPlayed", kvStoreBuilder.build());
+    // We set the default KVStore to be unconfigured; see https://jira.kiji.org/browse/KIJIMR-91
+    // We will have to supply a KVStore in an .xml file from the command line
+    // when running this producer.
     return RequiredStores.just("nextPlayed", UnconfiguredKeyValueStore.builder().build());
   }
 

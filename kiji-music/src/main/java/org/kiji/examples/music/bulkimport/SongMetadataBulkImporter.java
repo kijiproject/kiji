@@ -35,8 +35,9 @@ import org.kiji.mapreduce.bulkimport.KijiBulkImporter;
 import org.kiji.schema.EntityId;
 
 /**
- * Bulk-importer to load the KijiMusic songs metadata.
+ * Bulk-importer to load the KijiMusic songs metadata from a text file into a Kiji table.
  *
+ * <p>
  * Input files will contain JSON data representing song metadata, with one song per line:
  * <pre>
  * {
@@ -49,10 +50,13 @@ import org.kiji.schema.EntityId;
  *   "duration" : "180"
  * }
  * </pre>
+ * </p>
  *
+ * <p>
  * The bulk-importer expects a text input format:
- *   <li> input keys are the positions (in bytes) of each line in input file;
- *   <li> input values are the lines, as Text instances.
+ *   <li> input keys are the positions (in bytes) of each line in input file;</li>
+ *   <li> input values are the lines, as Text instances.</li>
+ * </p>
  */
 public class SongMetadataBulkImporter extends KijiBulkImporter<LongWritable, Text> {
   private static final Logger LOG = LoggerFactory.getLogger(SongMetadataBulkImporter.class);
@@ -91,6 +95,7 @@ public class SongMetadataBulkImporter extends KijiBulkImporter<LongWritable, Tex
       context.put(eid, "info", "metadata", song);
 
     } catch (ParseException pe) {
+      // Catch and log any malformed JSON records.
       context.incrementCounter(KijiMusicCounters.JSONParseFailure);
       LOG.error("Failed to parse JSON record '{}': {}", line, pe);
     }

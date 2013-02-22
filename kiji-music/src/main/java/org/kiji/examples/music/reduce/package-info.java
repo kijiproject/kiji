@@ -20,6 +20,13 @@
 /**
  * This package contains reducers used in the KijiMusic tutorial.
  *
- * TODO: Add a usage example.
+ * Reducers can be run from the command line as part of a kiji mapreduce command:
+ *
+ * kiji mapreduce \
+ * --mapper=org.kiji.examples.music.map.IdentityMapper \
+ *  --reducer=org.kiji.examples.music.reduce.TopNextSongsReducer \
+ *  --input="format=avrokv file=${HDFS_ROOT}/output.sequentialPlayCount" \
+ *  --output="format=kiji table=${KIJI}/songs nsplits=1" \
+ *  --lib=${LIBS_DIR}
  */
 package org.kiji.examples.music.reduce;

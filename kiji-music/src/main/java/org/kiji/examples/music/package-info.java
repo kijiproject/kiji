@@ -18,8 +18,11 @@
  */
 
 /**
- * This is the KijiMusic top-level package.
+ * This is the KijiMusic tutorial top-level package.
  *
- * TODO: Figure out what kinds of stuff goes in this package.
+ * <p>
+ * We organize our KijiMapReduce classes by type, so that all gatherers go in the same package,
+ * all producers go in the same package, etc.
+ * </p>
  */
 package org.kiji.examples.music;

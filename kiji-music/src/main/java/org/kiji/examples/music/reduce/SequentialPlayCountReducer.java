@@ -51,19 +51,20 @@ public class SequentialPlayCountReducer
       throws IOException, InterruptedException {
     // Initialize sum to zero.
     long sum = 0L;
-    // Add up all the values.
+    // Add up all the values.  When this reducer is used after SongPlayCounter, every value
+    // should be the number 1, so we are just counting the number of times the second song
+    // was played after the first (the key).
     for (LongWritable value : values) {
       sum += value.get();
     }
 
     // Set values for this count.
     final SongBiGram songPair = key.datum();
-
     final SongCount nextSongCount = SongCount.newBuilder()
          .setCount(sum)
          .setSongId(songPair.getSecondSongPlayed())
          .build();
-    // Write out result for this song
+    // Write out result for this song.
     context.write(
         new AvroKey<CharSequence>(songPair.getFirstSongPlayed().toString()),
         new AvroValue<SongCount>(nextSongCount));

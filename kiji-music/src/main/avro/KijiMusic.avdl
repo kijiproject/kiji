@@ -18,6 +18,10 @@
  */
 
 @namespace("org.kiji.examples.music")
+/**
+ * Avro records for storing data in this tutorial are defined here.
+ * These are the data types stored in Kiji.
+ */
 protocol KijiMusicRecords {
 
   /** Metadata for a song. */

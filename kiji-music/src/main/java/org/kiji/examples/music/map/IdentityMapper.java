@@ -34,6 +34,8 @@ import org.kiji.mapreduce.avro.AvroValueWriter;
 
 /**
  * This mapper emits the same key-value pairs that are passed in.
+ *
+ * It is used when we run a mapreduce where the map phase is irrelevant.
  */
 public class IdentityMapper
     extends KijiMapper<
