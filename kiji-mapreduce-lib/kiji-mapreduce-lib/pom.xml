@@ -32,8 +32,8 @@
     <relativePath>..</relativePath>
   </parent>
 
-  <name>Kiji MapReduce lib </name>
-  <description>MapReduce library for KijiSchema</description>
+  <name>The KijiMR Library</name>
+  <description>The KijiMR Library for KijiSchema</description>
   <url>http://www.kiji.org</url>
 
   <build>

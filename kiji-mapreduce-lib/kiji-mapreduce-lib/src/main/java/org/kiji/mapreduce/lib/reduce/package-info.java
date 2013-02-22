@@ -18,7 +18,7 @@
  */
 
 /**
- * Reducers for Kiji MapReduce.
+ * Reducers for KijiMR.
  *
  * <h2>Usable reducers:</h2>
  * <li>{@link org.kiji.mapreduce.lib.reduce.DoubleSumReducer} - for all double values with the same

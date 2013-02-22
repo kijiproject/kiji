@@ -18,11 +18,11 @@
  */
 
 /**
- * Gatherers for Kiji MapReduce.
+ * Gatherers for KijiMR.
  *
  * <p>
  *   A Kiji Gatherer scans over the rows of a Kiji table using the MapReduce framework to
- *   aggregate information which can be passed to a Reducer.  Gather jobs in Kiji MapReduce can be
+ *   aggregate information which can be passed to a Reducer.  Gather jobs in KijiMR can be
  *   created using the <code>KijiGatherJobBuilder</code>. Gather jobs are invoked
  *   using the <code>kiji gather</code> tool.
  * </p>

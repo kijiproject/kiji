@@ -18,7 +18,7 @@
  */
 
 /**
- * Mappers for Kiji MapReduce.
+ * Mappers for KijiMR.
  *
  * <h2>Usable mappers:</h2>
  * <li>{@link org.kiji.mapreduce.lib.map.TextFlatteningMapper} - Takes name/text records and

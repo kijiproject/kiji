@@ -18,11 +18,11 @@
  */
 
 /**
- * Bulk importers for Kiji MapReduce.
+ * Bulk importers for KijiMR.
  *
  * <p>
  *   Bulk importers are used for parsing data from input sources into fields which correspond to
- *   Kiji columns.  Bulk import jobs in Kiji MapReduce can be created using the
+ *   Kiji columns.  Bulk import jobs in KijiMR can be created using the
  *   <code>KijiBulkImportJobBuilder</code>.  There are two options for importing data
  *   into Kiji tables: using a bulk importer to create HFiles or "putting" individual rows. A bulk
  *   importer is suitable for reading in data from files, whereas putting is suitable for importing

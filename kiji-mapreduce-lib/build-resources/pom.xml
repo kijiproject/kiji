@@ -31,7 +31,7 @@
     <relativePath>..</relativePath>
   </parent>
 
-  <name>Kiji MapReduce Lib build resources</name>
+  <name>The KijiMR Library build resources</name>
   <description>Provides build resources common to all modules</description>
 
   <build>

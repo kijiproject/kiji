@@ -18,7 +18,7 @@
  */
 
 /**
- * Producers for Kiji MapReduce.
+ * Producers for KijiMR.
  *
  * <p>
  *   A KijiProducer executes a function over a subset of the columns in a table row and produces
