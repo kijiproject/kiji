@@ -208,7 +208,7 @@ only want the most recent value from this column, so we can use the create conve
   }
 {% endhighlight %}
 
-In our produce method, we then access our requested data through the KijiRowData:
+In our produce method, we then access our requested data through the [`KijiRowData`]({{site.api_schema_rc4}}/KijiRowData.html):
 
 {% highlight java %}
   String mostRecentSong = input.<CharSequence>getMostRecentValue("info", "track_plays")
@@ -263,7 +263,7 @@ the value we want to write as the parameter.
 {% endhighlight %}
 
 ### TestNextSongRecommender.java
-To test NextSongRecommender, we need specify which KijiTable we want to use to back our
+To test NextSongRecommender, we need specify which [`KijiTable`]({{site.api_schema_rc4}}/KijiTable.html) we want to use to back our
 KeyValueStore. We do this by constructing the KeyValueStore we want to use, via the KeyValueStore's
 builder method. We then override the KeyValueStore binding in this job configuration by using the
 withStore() method of JobBuilders.
@@ -280,7 +280,7 @@ withStore() method of JobBuilders.
 {% endhighlight %}
 
 ### Running the Example
-When we run this example, we again need to need specify which KijiTable we want to use to back our
+When we run this example, we again need to need specify which [`KijiTable`]({{site.api_schema_rc4}}/KijiTable.html) we want to use to back our
 KeyValueStore. This time, we will override the KeyValueStore binding from
 the command line using an XML configuration file. The content of the file is displayed below.
 If you are not using KijiBento, you may need to modify this XML file so that the URI points to the

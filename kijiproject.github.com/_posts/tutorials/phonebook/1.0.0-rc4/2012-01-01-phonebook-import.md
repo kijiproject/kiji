@@ -55,7 +55,7 @@ JsonDecoder decoder =
 Address streetAddr = datumReader.read(null, decoder);
 {% endhighlight %}
 
-Next we create a unique [`EntityId`]({{site.api_url}}/EntityId.html) that will be used to reference this row.  As before, we will use
+Next we create a unique [`EntityId`]({{site.api_schema_rc4}}/EntityId.html) that will be used to reference this row.  As before, we will use
 the combination of first and last name as a unique reference to this row:
 {% highlight java %}
 EntityId user = table.getEntityId(firstName + "," + lastName);
@@ -104,21 +104,21 @@ puts in a distributed fashion.
 
 ### PhonebookImporter.java
 Our example of importing data into a table with MapReduce can be found in the class
-`PhonebookImporter`. PhonebookImporter defines a special type of MapReduce job called a 
+`PhonebookImporter`. PhonebookImporter defines a special type of MapReduce job called a
 Kiji bulk import job that reads each line of our input file, parses it, and writes it to a table.
-Kiji bulk import jobs are created by implementing a `KijiBulkImporter`, not a `Mapper` and
-`Reducer`. This API is provided by KijiMR. The
+Kiji bulk import jobs are created by implementing a [`KijiBulkImporter`]({{site.api_mr_rc4}}/KijiBulkImporter.html),
+not a `Mapper` and `Reducer`. This API is provided by KijiMR. The
 [Music recommendation tutorial](/tutorials/music-recommendation/1.0.0-rc4/music-overview/)
 covers KijiMR in much greater detail, but we will take a look at using the
-`KijiBulkImporter` API below.
+[`KijiBulkImporter`]({{site.api_mr_rc4}}/KijiBulkImporter.html) API below.
 
 Instead of a `map()` method, we provide a `produce()` method definition; this method processes
 an input record from a file like an ordinary mapper, except its `context` argument is
 specifically targeted to output to a row in a Kiji table.
 
 At the top of the `produce()` method, you'll see that we extract the fields from
-the lines as in the above
-example.  Then using the `KijiTableContext` context argument,
+the lines as in the above example.  Then using the
+[`KijiTableContext`]({{site.api_mr_rc4}}/KijiTableContext.java) context argument,
 we'll write all of the fields to the phonebook table:
 
 {% highlight java %}
@@ -134,7 +134,8 @@ public void produce(LongWritable byteOffset, Text line, KijiTableContext context
 }
 {% endhighlight %}
 
-The `context.put()` calls are identical in form to using a `KijiTableWriter`.
+The `context.put()` calls are identical in form to using a
+[`KijiTableWriter`]({{site.api_schema_rc4}}/KijiTableWriter.html).
 
 If you are writing a custom bulk importer and require specialized setup and teardown steps,
 these can be placed in `setup()` and `cleanup()` methods like in a Mapper. We don't need
@@ -144,7 +145,7 @@ The outer `PhonebookImporter` class contains `configureJob(...)` and `run(...)` 
 that handle the setup and execution
 of the MapReduce job.  Instead of constructing a Hadoop `Job` object directly, we use a
 `KijiBulkImportJobBuilder`. This builder object lets us specify Kiji-specific arguments,
-and construct a `MapReduceJob` (A Kiji-specific wrapper around `Job`):
+and construct a [`MapReduceJob`]({{site.api_mr_rc4}}/MapReduceJob.html) (A Kiji-specific wrapper around `Job`):
 
 {% highlight java %}
 MapReduceJob configureJob(Path inputPath, KijiURI tableUri) throws IOException {
@@ -158,7 +159,7 @@ MapReduceJob configureJob(Path inputPath, KijiURI tableUri) throws IOException {
 {% endhighlight %}
 
 The HDFS file path to the sample input data is set to the first command line argument.
-A `KijiURI` is constructed that specifies the `phonebook` table as the target:
+A [`KijiURI`]({{site.api_schema_rc4}}/KijiURI.html) is constructed that specifies the `phonebook` table as the target:
 
 {% highlight java %}
 public int run(String[] args) throws Exception {
@@ -168,14 +169,17 @@ public int run(String[] args) throws Exception {
 }
 {% endhighlight %}
 
-The `TextMapReduceJobInput` and `DirectKijiTableMapReduceJobOutput` classes are abstractions
-that, under the hood, configure an `InputFormat` and `OutputFormat` for the MapReduce job.
-Different KijiMR job types (bulk importer, producer, or gatherer) support different subsets
-of available formats (files, tables, etc). These classes allow the system to ensure that
-the correct type is used. For example, bulk import jobs require that the target is a
-table. "Regular" MapReduce jobs configured through `KijiMapReduceJobBuilder` can use
-any `MapReduceJobInput` and `MapReduceJobOutput` that makes sense in the context of the
-application.
+The [`TextMapReduceJobInput`]({{site.api_mr_rc4}}/TextMapReduceJobInput.html) and
+[`DirectKijiTableMapReduceJobOutput`]({{site.api_mr_rc4}}/DirectKijiTableMapReduceJobOutput.html)
+classes are abstractions that, under the hood, configure an `InputFormat` and `OutputFormat`
+for the MapReduce job. Different KijiMR job types (bulk importer, producer, or gatherer)
+support different subsets of available formats (files, tables, etc). These classes allow the
+system to ensure that the correct type is used. For example, bulk import jobs require that the
+target is a table. "Regular" MapReduce jobs configured through
+[`KijiMapReduceJobBuilder`]({{site.api_mr_rc4}}/KijiMapReduceJobBuilder.html) can use
+any [`MapReduceJobInput`]({{site.api_mr_rc4}}/MapReduceJobInput.html) and
+[`MapReduceJobOutput`]({{site.api_mr_rc4}}/MapReduceJobOutput.html) that makes sense
+in the context of the application.
 
 ### Running the Example
 First you'll need to put the text file containing your friends' contact info into HDFS.
@@ -221,8 +225,10 @@ $KIJI_HOME/bin/kiji bulk-import \
 {% endhighlight %}
 </div>
 
-The `--input` and `--output` arguments specify in text form the same `MapReduceJobInput`
-and `MapReduceJobOutput` objects as are created programmatically in this example. 
+The `--input` and `--output` arguments specify in text form the same
+[`MapReduceJobInput`]({{site.api_mr_rc4}}/MapReduceJobInput.html) and
+[`MapReduceJobOutput`]({{site.api_mr_rc4}}/MapReduceJobOutput.html)
+objects as are created programmatically in this example.
 
 #### Verify
 Verify that the user records were added properly by executing:

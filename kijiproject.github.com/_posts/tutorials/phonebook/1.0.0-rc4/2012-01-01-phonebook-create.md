@@ -31,7 +31,7 @@ $KIJI_HOME/schema-shell/bin/kiji-schema-shell \
     OK.
 
 #### Verify
-Enter the Kiji schema shell using the following command:
+Enter the KijiSchema shell using the following command:
 
 <div class="userinput">
 {% highlight bash %}

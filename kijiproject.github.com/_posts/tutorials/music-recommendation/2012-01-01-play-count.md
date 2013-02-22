@@ -122,7 +122,7 @@ public class LongSumReducer<K> extends KeyPassThroughReducer<K, LongWritable, Lo
 
 ### SongPlayCounter.java
 The SongPlayCounter is an example of a [Gatherer]({{site.userguide_mapreduce_rc4}}/gatherers), which is essentially a
-mapper that gets input from a KijiTable.  SongPlayCounter proceeds through discrete stages:
+mapper that gets input from a [`KijiTable`]({{site.api_schema_rc4}}/KijiTable.html).  SongPlayCounter proceeds through discrete stages:
 * Setup reusable resources.
 * Read all values from column: "info:track_plays".
 * Process the data from "info:track_plays" and emit a key/value pair for each track id each time
@@ -147,7 +147,7 @@ cleanup() method.
 
 #### Read track play data from the table
 A gatherer takes input from a table, so it must declare what data it will need. It does this in the
-form of a [KijiDataRequest](link-data-request-builder), which is defined in getDataRequest().
+form of a [`KijiDataRequest`](link-data-request-builder), which is defined in getDataRequest().
 For the song count job, we want to request all songs that have been played, for every user. In order
 to get all of the values written to the "info:track_plays" column, we must specify that the maximum
 number of versions we want is HConstants.ALL_VERSIONS. Otherwise, we will only get the most recent

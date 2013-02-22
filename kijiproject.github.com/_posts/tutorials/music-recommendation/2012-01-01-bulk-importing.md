@@ -71,7 +71,7 @@ final SongMetadata song = SongMetadata.newBuilder()
       .build();
 {% endhighlight %}
 
-We create an EntityId object in order to use the song ID as the row key.
+We create an [`EntityId`]({{site.api_schema_rc4}}/EntityId.html) object in order to use the song ID as the row key.
 {% highlight java %}
 final EntityId eid = context.getEntityId(songId);
 {% endhighlight %}
