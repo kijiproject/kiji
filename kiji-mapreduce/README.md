@@ -1,7 +1,7 @@
-KijiMapReduce ${project.version}
-================================
+KijiMR ${project.version}
+=========================
 
-KijiMapReduce is a framework for writing MapReduce-based computation
+KijiMR is a framework for writing MapReduce-based computation
 over data stored in KijiSchema.
 
 For more information about KijiSchema, see

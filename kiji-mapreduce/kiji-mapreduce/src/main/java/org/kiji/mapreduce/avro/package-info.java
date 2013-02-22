@@ -18,7 +18,7 @@
  */
 
 /**
- * Avro interfaces for Kiji MapReduce.
+ * Avro interfaces for KijiMR.
  *
  * This package is mainly comprised of interfaces that expose avro schemas associated with the
  * input or output of the implementing class.

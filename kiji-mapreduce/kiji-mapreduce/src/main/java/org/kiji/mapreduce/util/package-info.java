@@ -17,5 +17,5 @@
  * limitations under the License.
  */
 
-/** Kiji MapReduce utilities. */
+/** KijiMR utilities. */
 package org.kiji.mapreduce.util;

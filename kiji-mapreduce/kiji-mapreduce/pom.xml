@@ -31,7 +31,7 @@
     <version>1.0.0-rc4-SNAPSHOT</version>
   </parent>
 
-  <name>Kiji MapReduce</name>
+  <name>KijiMR</name>
   <description>A framework for interacting with Kiji Through MapReduce</description>
   <url>http://www.kiji.org</url>
 

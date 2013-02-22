@@ -34,8 +34,8 @@ import org.kiji.mapreduce.KijiReducer;
  * SimpleIntSumReducer will output a single pair with a value equal to the
  * sum, leaving the key unchanged.</p>
  *
- * This class is for testing in Kiji MapReduce.  To use this in actual MapReduce jobs, use the
- * IntSumReducer in Kiji MapReduce Lib.
+ * This class is for testing in KijiMR.  To use this in actual MapReduce jobs, use the
+ * IntSumReducer in the KijiMR Library.
  *
  * @param <K> The type of the reduce input key.
  */

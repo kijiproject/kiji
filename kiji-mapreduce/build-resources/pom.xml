@@ -31,7 +31,7 @@
     <relativePath>..</relativePath>
   </parent>
 
-  <name>Kiji MapReduce build resources</name>
+  <name>KijiMR build resources</name>
   <description>Provides build resources common to all modules</description>
 
   <build>

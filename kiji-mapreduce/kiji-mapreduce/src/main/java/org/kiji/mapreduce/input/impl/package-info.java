@@ -18,7 +18,7 @@
  */
 
 /**
- * Internal implementation details for Kiji MapReduce's job input classes. Clients should not
+ * Internal implementation details for KijiMR's job input classes. Clients should not
  * use these.
  */
 package org.kiji.mapreduce.input.impl;

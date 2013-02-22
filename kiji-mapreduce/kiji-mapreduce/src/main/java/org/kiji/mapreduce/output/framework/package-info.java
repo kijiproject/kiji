@@ -18,7 +18,7 @@
  */
 
 /**
- * Framework-level classes supporting Kiji MapReduce job output classes. Applications
+ * Framework-level classes supporting KijiMR job output classes. Applications
  * should not use these.
  */
 

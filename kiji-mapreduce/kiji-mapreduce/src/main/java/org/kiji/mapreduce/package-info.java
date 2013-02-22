@@ -18,16 +18,16 @@
  */
 
 /**
- * Kiji MapReduce utilities.
+ * KijiMR utilities.
  *
  * <p>
- *   Kiji MapReduce includes APIs to build MapReduce jobs that run over Kiji tables, bringing
+ *   KijiMR includes APIs to build MapReduce jobs that run over Kiji tables, bringing
  *   MapReduce-based analytic techniques to a broad base of Kiji Schema users.
  * </p>
  *
  * <h2>Building MapReduce jobs:</h2>
  * <p>
- *   Kiji MapReduce contains many job builders for various types of MapReduce jobs.
+ *   KijiMR contains many job builders for various types of MapReduce jobs.
  * </p>
  * <li>{@link org.kiji.mapreduce.bulkimport Bulk Importers} - for the creation of bulk
  *     import jobs which allow data to be inserted into Kiji tables efficiently.

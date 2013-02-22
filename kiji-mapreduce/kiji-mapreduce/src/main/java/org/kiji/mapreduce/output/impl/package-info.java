@@ -18,7 +18,7 @@
  */
 
 /**
- * Implementation details for Kiji MapReduce's Hadoop output classes. Clients
+ * Implementation details for KijiMR's Hadoop output classes. Clients
  * should not use these.
  */
 

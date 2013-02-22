@@ -18,7 +18,7 @@
  */
 
 /**
- * Internal classes for Kiji MapReduce bulk importers. These classes should not be used by clients.
+ * Internal classes for KijiMR bulk importers. These classes should not be used by clients.
  */
 
 package org.kiji.mapreduce.bulkimport.impl;

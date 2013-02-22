@@ -18,7 +18,7 @@
  */
 
 /**
- * Framework-level classes supporting Kiji MapReduce key value stores. Applications
+ * Framework-level classes supporting KijiMR key value stores. Applications
  * should not use these.
  */
 

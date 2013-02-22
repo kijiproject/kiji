@@ -18,7 +18,7 @@
  */
 
 /**
- * Framework-level classes supporting basic Kiji MapReduce classes. Applications
+ * Framework-level classes supporting basic KijiMR classes. Applications
  * should not use these.
  */
 

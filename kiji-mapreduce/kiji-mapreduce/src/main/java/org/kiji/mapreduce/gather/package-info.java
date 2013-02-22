@@ -18,7 +18,7 @@
  */
 
 /**
- * Gatherer classes for Kiji MapReduce clients.
+ * Gatherer classes for KijiMR clients.
  *
  * <p>
  *   A Kiji Gatherer scans over the rows of a Kiji table using the MapReduce framework to

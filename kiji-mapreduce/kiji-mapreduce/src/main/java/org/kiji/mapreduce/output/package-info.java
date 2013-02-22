@@ -26,7 +26,7 @@
  *   {@link org.kiji.mapreduce.framework.MapReduceJobBuilder}.
  * <p>
  *
- * <h2>Usable Kiji MapReduce output types</h2>
+ * <h2>Usable KijiMR output types</h2>
  * <li>{@link org.kiji.mapreduce.output.AvroKeyMapReduceJobOutput} - Avro container files containing
  *     keys as output.</li>
  * <li>{@link org.kiji.mapreduce.output.AvroKeyValueMapReduceJobOutput} - Avro container files

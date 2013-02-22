@@ -30,7 +30,7 @@
     <version>1.0.3-SNAPSHOT</version>
   </parent>
 
-  <name>Kiji MapReduce top-level project</name>
+  <name>KijiMR top-level project</name>
   <description>MapReduce framework integration for KijiSchema</description>
   <inceptionYear>2012</inceptionYear>
 

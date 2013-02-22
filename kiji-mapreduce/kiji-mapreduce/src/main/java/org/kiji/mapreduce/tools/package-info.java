@@ -17,5 +17,5 @@
  * limitations under the License.
  */
 
-/** Kiji MapReduce commandline tools. */
+/** KijiMR commandline tools. */
 package org.kiji.mapreduce.tools;

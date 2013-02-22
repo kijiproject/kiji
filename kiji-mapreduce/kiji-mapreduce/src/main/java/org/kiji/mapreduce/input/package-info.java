@@ -26,7 +26,7 @@
  *   {@link org.kiji.mapreduce.framework.MapReduceJobBuilder}.
  * <p>
  *
- * <h2>Usable Kiji MapReduce input types</h2>
+ * <h2>Usable KijiMR input types</h2>
  * <li>{@link org.kiji.mapreduce.input.AvroKeyMapReduceJobInput} - Avro container files containing
  *     keys as input.</li>
  * <li>{@link org.kiji.mapreduce.input.AvroKeyValueMapReduceJobInput} - Avro container files

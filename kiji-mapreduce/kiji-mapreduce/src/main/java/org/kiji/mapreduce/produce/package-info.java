@@ -18,7 +18,7 @@
  */
 
 /**
- * Producer classes for Kiji MapReduce clients.
+ * Producer classes for KijiMR clients.
  * <p>
  *   A KijiProducer executes a function over a subset of the columns in a table row and produces
  *   output to be injected back into a column of that row. Producers can be run in the context of

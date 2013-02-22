@@ -18,7 +18,7 @@
  */
 
 /**
- * Framework-level classes supporting Kiji MapReduce command line tools. Applications
+ * Framework-level classes supporting KijiMR command line tools. Applications
  * should not use these.
  */
 

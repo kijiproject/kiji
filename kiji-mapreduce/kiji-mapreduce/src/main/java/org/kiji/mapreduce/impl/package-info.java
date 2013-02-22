@@ -18,7 +18,7 @@
  */
 
 /**
- * Internal implementation details for Kiji MapReduce's top level classes. Clients should not
+ * Internal implementation details for KijiMR's top level classes. Clients should not
  * use these.
  */
 package org.kiji.mapreduce.impl;

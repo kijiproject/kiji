@@ -18,7 +18,7 @@
  */
 
 /**
- * Bulk importer classes for Kiji MapReduce clients.
+ * Bulk importer classes for KijiMR clients.
  *
  * <p>
  *   The {@link org.kiji.mapreduce.bulkimport.KijiBulkImporter} class is the base class for all
