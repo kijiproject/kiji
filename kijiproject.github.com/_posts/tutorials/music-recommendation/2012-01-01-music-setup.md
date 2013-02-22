@@ -90,7 +90,7 @@ Create the Kiji music tables:
 
 <div class="userinput">
 {% highlight bash %}
-kiji-schema-shell --kiji=$i{KIJI} --file=$KIJI_HOME/examples/music/music_schema.ddl
+kiji-schema-shell --kiji=${KIJI} --file=$KIJI_HOME/examples/music/music_schema.ddl
 {% endhighlight %}
 </div>
 

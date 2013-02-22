@@ -7,9 +7,9 @@ order : 7
 description: Read and write to the same row of a table.
 ---
 
-<div id="accordion-container"> 
-  <h2 class="accordion-header"> NextSongRecommender.java </h2> 
-     <div class="accordion-content"> 
+<div id="accordion-container">
+  <h2 class="accordion-header"> NextSongRecommender.java </h2>
+  <div class="accordion-content">
 {% highlight java %}
    public class NextSongRecommender extends KijiProducer implements KeyValueStoreClient {
 
@@ -65,9 +65,9 @@ description: Read and write to the same row of a table.
   }
 }
 {% endhighlight %}
-     </div> 
- <h2 class="accordion-header"> TestNextSongRecommender.java </h2> 
-   <div class="accordion-content"> 
+  </div>
+  <h2 class="accordion-header"> TestNextSongRecommender.java </h2>
+  <div class="accordion-content">
 {% highlight java %}
 public class TestNextSongRecommender extends KijiClientTest {
 
@@ -163,9 +163,9 @@ public class TestNextSongRecommender extends KijiClientTest {
   }
 }
 {% endhighlight %}
-    </div> 
- <h2 class="accordion-header"> KVStoreConfig.xml </h2> 
-   <div class="accordion-content">
+  </div>
+  <h2 class="accordion-header"> KVStoreConfig.xml </h2>
+  <div class="accordion-content">
 {% highlight xml %}
 <?xml version="1.0" encoding="UTF-8"?>
 <stores>
@@ -184,7 +184,7 @@ public class TestNextSongRecommender extends KijiClientTest {
   </store>
 </stores>
 {% endhighlight %}
-    </div> 
+  </div>
 </div>
 
 ### NextSongRecommender.java
@@ -211,8 +211,8 @@ only want the most recent value from this column, so we can use the create conve
 In our produce method, we then access our requested data through the KijiRowData:
 
 {% highlight java %}
-String mostRecentSong = input.<CharSequence>getMostRecentValue("info", "track_plays")
-    .toString();// Avro strings get deserialized to CharSequences, so .toString() the result.
+  String mostRecentSong = input.<CharSequence>getMostRecentValue("info", "track_plays")
+      .toString();// Avro strings get deserialized to CharSequences, so .toString() the result.
 {% endhighlight %}
 
 #### Join External Data Sources
@@ -259,7 +259,22 @@ Since the column is already declared, to write a value to it, we simply call con
 the value we want to write as the parameter.
 
 {% highlight java %}
-    context.put(recommend(popularNextSongs));
+  context.put(recommend(popularNextSongs));
+{% endhighlight %}
+
+### TestNextSongRecommender.java
+To test NextSongRecommender, we need to build a job that is configured with a Kiji table column
+as a KeyValueStore. This is easily accomplished by using KijiTableKeyValueStore's builder:
+
+{% highlight java %}
+  KijiTableKeyValueStore.Builder kvStoreBuilder = KijiTableKeyValueStore.builder();
+  kvStoreBuilder.withColumn("info", "top_next_songs").withTable(mSongTableURI);
+
+  // Configure first job.
+  final MapReduceJob mrjob = KijiProduceJobBuilder.create()
+      .withStore("nextPlayed", kvStoreBuilder.build())
+
+  // ...
 {% endhighlight %}
 
 ### Running the Example
