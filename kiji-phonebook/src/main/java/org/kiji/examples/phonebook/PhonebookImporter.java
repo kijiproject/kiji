@@ -19,43 +19,33 @@
 
 package org.kiji.examples.phonebook;
 
-import java.io.File;
 import java.io.IOException;
 
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.io.JsonDecoder;
 import org.apache.avro.specific.SpecificDatumReader;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.mapreduce.GenericTableMapReduceUtil;
 import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
-import org.apache.hadoop.mapreduce.lib.output.NullOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.mapreduce.KijiTableContext;
+import org.kiji.mapreduce.MapReduceJob;
+import org.kiji.mapreduce.bulkimport.KijiBulkImportJobBuilder;
+import org.kiji.mapreduce.bulkimport.KijiBulkImporter;
+import org.kiji.mapreduce.input.TextMapReduceJobInput;
+import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
 import org.kiji.schema.EntityId;
-import org.kiji.schema.Kiji;
-import org.kiji.schema.KijiTable;
-import org.kiji.schema.KijiTableWriter;
 import org.kiji.schema.KijiURI;
-import org.kiji.schema.KijiURIException;
-import org.kiji.schema.mapreduce.DistributedCacheJars;
-import org.kiji.schema.mapreduce.KijiConfKeys;
-import org.kiji.schema.util.ResourceUtils;
 
 /**
  * Shell for the PhonebookImportMapper class.  This class manages
- * the command line arguments and job setup for the mapper class.
+ * the command line arguments and job setup for the bulk importer.
  */
 public class PhonebookImporter extends Configured implements Tool {
   /** Name of the table to insert phonebook entries into. */
@@ -65,34 +55,15 @@ public class PhonebookImporter extends Configured implements Tool {
    * Map task that will parse user records from a text file and insert the records
    * into the phonebook table.
    */
-  public static class PhonebookImportMapper
-      extends Mapper<LongWritable, Text, NullWritable, NullWritable> {
-    private static final Logger LOG = LoggerFactory.getLogger(PhonebookImportMapper.class);
+  public static class PhonebookBulkImporter
+      extends KijiBulkImporter<LongWritable, Text> {
 
-    private Kiji mKiji;
-    private KijiTable mTable;
-    private KijiTableWriter mWriter;
+    private static final Logger LOG = LoggerFactory.getLogger(PhonebookBulkImporter.class);
 
     /** {@inheritDoc} */
     @Override
-    protected void setup(Context hadoopContext) throws IOException, InterruptedException {
-      super.setup(hadoopContext);
-      final Configuration conf = hadoopContext.getConfiguration();
-      KijiURI tableURI;
-      try {
-        tableURI = KijiURI.newBuilder(conf.get(KijiConfKeys.OUTPUT_KIJI_TABLE_URI)).build();
-      } catch (KijiURIException kue) {
-        throw new IOException(kue);
-      }
-      mKiji = Kiji.Factory.open(tableURI, conf);
-      mTable = mKiji.openTable(TABLE_NAME);
-      mWriter = mTable.openTableWriter();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void map(LongWritable byteOffset, Text line, Context hadoopContext)
-        throws IOException, InterruptedException {
+    public void produce(LongWritable byteOffset, Text line, KijiTableContext context)
+        throws IOException {
       // Each line of the text file has the form:
       //
       //     firstname|lastname|email|telephone|addressJson
@@ -122,53 +93,33 @@ public class PhonebookImporter extends Configured implements Tool {
       final Address streetAddr = datumReader.read(null, decoder);
 
       // Create a row ID with the first and last name.
-      final EntityId user = mTable.getEntityId(firstName + "," + lastName);
+      final EntityId user = context.getEntityId(firstName + "," + lastName);
 
       // Write the fields to appropriate table columns in the row.
       // The column names are specified as constants in the Fields.java class.
-      mWriter.put(user, Fields.INFO_FAMILY, Fields.FIRST_NAME, firstName);
-      mWriter.put(user, Fields.INFO_FAMILY, Fields.LAST_NAME, lastName);
-      mWriter.put(user, Fields.INFO_FAMILY, Fields.EMAIL, email);
-      mWriter.put(user, Fields.INFO_FAMILY, Fields.TELEPHONE, telephone);
-      mWriter.put(user, Fields.INFO_FAMILY, Fields.ADDRESS, streetAddr);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected void cleanup(Context hadoopContext) throws IOException, InterruptedException {
-      ResourceUtils.closeOrLog(mWriter);
-      ResourceUtils.closeOrLog(mTable);
-      ResourceUtils.releaseOrLog(mKiji);
-      super.cleanup(hadoopContext);
+      context.put(user, Fields.INFO_FAMILY, Fields.FIRST_NAME, firstName);
+      context.put(user, Fields.INFO_FAMILY, Fields.LAST_NAME, lastName);
+      context.put(user, Fields.INFO_FAMILY, Fields.EMAIL, email);
+      context.put(user, Fields.INFO_FAMILY, Fields.TELEPHONE, telephone);
+      context.put(user, Fields.INFO_FAMILY, Fields.ADDRESS, streetAddr);
     }
   }
 
   /**
    * Configure the MapReduce job to run the import.
    *
-   * @param job the MapReduce Job object to configure.
    * @param inputPath the Path to the input data.
+   * @param tableUri the URI to the destination table for the import.
+   * @return a MapReduceJob that's ready to run.
    * @throws IOException if there's an error interacting with the job or the Kiji URI.
    */
-  void configureJob(Job job, Path inputPath) throws IOException {
-    // Read from a text file.
-    job.setInputFormatClass(TextInputFormat.class);
-    FileInputFormat.setInputPaths(job, inputPath);
-
-    // Run the mapper that will import entries from the input file.
-    job.setMapperClass(PhonebookImportMapper.class);
-    job.setMapOutputKeyClass(NullWritable.class);
-    job.setMapOutputValueClass(NullWritable.class);
-
-    // Use no reducer (this is a map-only job).
-    job.setNumReduceTasks(0);
-    // Since table writers do not emit any key-value pairs, we set the output format to Null.
-    job.setOutputFormatClass(NullOutputFormat.class);
-
-    // Direct the job output to the phonebook table.
-    final KijiURI tableURI =
-        KijiURI.newBuilder(String.format("kiji://.env/default/%s", TABLE_NAME)).build();
-    job.getConfiguration().set(KijiConfKeys.OUTPUT_KIJI_TABLE_URI, tableURI.toString());
+  MapReduceJob configureJob(Path inputPath, KijiURI tableUri) throws IOException {
+    return KijiBulkImportJobBuilder.create()
+        .withConf(getConf())
+        .withInput(new TextMapReduceJobInput(inputPath))
+        .withOutput(new DirectKijiTableMapReduceJobOutput(tableUri))
+        .withBulkImporter(PhonebookBulkImporter.class)
+        .build();
   }
 
   /**
@@ -183,21 +134,17 @@ public class PhonebookImporter extends Configured implements Tool {
     // Load HBase configuration before connecting to Kiji.
     setConf(HBaseConfiguration.addHbaseResources(getConf()));
 
-    // Configure a map-only job that imports phonebook entries from a file into the table.
-    final Job job = new Job(getConf(), "PhonebookImporter");
-    configureJob(job, new Path(args[0]));
+    // Direct the job output to the phonebook table. Due to the size of this data set,
+    // we can write directly to the table rather than use HFileMapReduceJobOutput.
+    // small amount of output
+    final KijiURI tableUri =
+        KijiURI.newBuilder(String.format("kiji://.env/default/%s", TABLE_NAME)).build();
 
-    // Tell Hadoop where the java dependencies are located, so they
-    // can be shipped to the cluster during execution.
-    job.setJarByClass(PhonebookImporter.class);
-    GenericTableMapReduceUtil.addAllDependencyJars(job);
-    DistributedCacheJars.addJarsToDistributedCache(
-        job, new File(System.getenv("KIJI_HOME"), "lib"));
-    job.setUserClassesTakesPrecedence(true);
+    // Configure a map-only job that imports phonebook entries from a file into the table.
+    final MapReduceJob job = configureJob(new Path(args[0]), tableUri);
 
     // Run the job.
-    final boolean isSuccessful = job.waitForCompletion(true);
-
+    final boolean isSuccessful = job.run();
     return isSuccessful ? 0 : 1;
   }
 

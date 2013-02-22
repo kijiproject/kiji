@@ -50,7 +50,15 @@ import org.kiji.schema.util.ResourceUtils;
 
 /**
  * Extracts fields from the address column into individual columns in the derived column family.
+ *
+ * @deprecated using "Raw" MapReduce over Kiji tables is no longer the preferred
+ *     mechanism for iterating over rows of a Kiji table. To write a function that
+ *     processes and updates a table in a row-by-row fashion, you should extend {@link
+ *     org.kiji.mapreduce.produce.KijiProducer}. You should use {@link
+ *     org.kiji.mapreduce.produce.KijiProduceJobBuilder} for constructing such MapReduce
+ *     jobs.
  */
+@Deprecated
 public class AddressFieldExtractor extends Configured implements Tool {
   /** Name of the table to read for phonebook entries. */
   public static final String TABLE_NAME = "phonebook";

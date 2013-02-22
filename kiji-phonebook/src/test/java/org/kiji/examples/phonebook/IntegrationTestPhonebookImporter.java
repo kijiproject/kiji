@@ -36,11 +36,11 @@ import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapreduce.Job;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.kiji.mapreduce.MapReduceJob;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
@@ -49,7 +49,6 @@ import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.layout.KijiTableLayout;
-import org.kiji.schema.mapreduce.KijiConfKeys;
 import org.kiji.schema.testutil.AbstractKijiIntegrationTest;
 import org.kiji.schema.util.Resources;
 
@@ -123,16 +122,13 @@ public class IntegrationTestPhonebookImporter
     PhonebookImporter importer = new PhonebookImporter();
     importer.setConf(mConf);
 
-    Job job = new Job(mConf);
-
-    importer.configureJob(job, mInputPath);
-
-    // Override the output table uri in the job with one associated with this
-    // test-specific Kiji instance.
+    // configure a MapReduce job that uses our specific HBase instance as well as the
+    // one-off filename for the input data.
     final KijiURI tableURI = KijiURI.newBuilder(getKijiURI()).withTableName("phonebook").build();
-    job.getConfiguration().set(KijiConfKeys.OUTPUT_KIJI_TABLE_URI, tableURI.toString());
 
-    final boolean jobSuccess = job.waitForCompletion(true);
+    MapReduceJob job = importer.configureJob(mInputPath, tableURI);
+
+    final boolean jobSuccess = job.run();
     assertTrue("Importer exited with non-zero status", jobSuccess);
 
     checkOutputTable();

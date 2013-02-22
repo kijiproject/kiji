@@ -53,6 +53,14 @@ import org.kiji.schema.util.ResourceUtils;
 
 /**
  * Deletes all entries from the phonebook table that have an address from a particular US state.
+ *
+ * @deprecated using "Raw" MapReduce is no longer the preferred mechanism to iterate
+ *     over rows of a Kiji table. You should instead use the KijiMR library. To write a
+ *     function that processes and updates a table in a row-by-row fashion, you should
+ *     extend {@link org.kiji.mapreduce.produce.KijiProducer}.  You should use {@link
+ *     org.kiji.mapreduce.produce.KijiProduceJobBuilder} for constructing such MapReduce
+ *     jobs.  You will still need to explicitly open a KijiTableWriter to call {@link
+ *     KijiTableWriter#deleteRow}.
  */
 public class DeleteEntriesByState extends Configured implements Tool {
   /** Name of the table to read for phonebook entries. */

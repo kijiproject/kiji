@@ -54,6 +54,14 @@ import org.kiji.schema.util.ResourceUtils;
  * Reads an input file that lists the number of minutes of talk time
  * per person. The talk time is incremented in the person's record in
  * the phone book table.
+ *
+ * @deprecated using "Raw" MapReduce jobs that interact with Kiji tables is no longer
+ *     the preferred mechanism.  The <tt>org.kiji.schema.mapreduce</tt> classes are
+ *     deprecated and may be removed in a future version of KijiSchema. You should instead
+ *     use the KijiMR library, extend the {@link org.kiji.mapreduce.KijiMapper} class and
+ *     use the {@link org.kiji.mapreduce.KijiMapReduceJobBuilder} class to configure such
+ *     jobs, rather than use classes like {@link DistributedCacheJars} and {@link
+ *     KijiConfKeys}.
  */
 public class IncrementTalkTime extends Configured implements Tool {
   private static final Logger LOG = LoggerFactory.getLogger(IncrementTalkTime.class);

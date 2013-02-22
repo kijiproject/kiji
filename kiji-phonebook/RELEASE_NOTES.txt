@@ -3,6 +3,9 @@
 
 
 Version 1.0.0-rc4
+  * DOCS-26. Update bulk importing to use KijiMR; deprecate MapReduce
+      examples. Check out the "Kiji Music" example project for a
+      complete KijiMR example application.
   * SCHEMA-133. Update usage to match API from KjiiSchema 1.0.0-rc4
       (use KijiDataRequestBuilders instead of mutable KijiDataRequests.)
 
