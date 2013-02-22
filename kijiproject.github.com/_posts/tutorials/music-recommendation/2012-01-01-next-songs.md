@@ -139,15 +139,15 @@ public class TopNextSongsReducer
   }
 }
 {% endhighlight %}
-    </div> 
+    </div>
 </div>
 
 ### IdentityMapper.java
-This is a stunning homage to Java boiler plate. This mapper just passes through all keys and values
-passed into it.
+This is a stunning homage to Java boilerplate. This mapper is the identity function; it just
+emits the same keys and values as it receives without changing them.
 
 
-### TopNextSongsReducer.java 
+### TopNextSongsReducer.java
 The keys passed into this reducer are song ids and the values are SongCount records. In order to
 find the songs most frequently played after a given song, we need to identify the SongCount
 records with the largest number of counts, for every key.
@@ -156,11 +156,11 @@ To do this efficiently, we will maintain an ordered collection of SongCount reco
 size. As we iterate through all the values, we will keep the top SongCount records seen so far
 in our ordered collection.
 
-This reducer
-* Creates an ordered collection that will maintain a list of the top SongCount record, for each key.
-* Examines each value for a key, and maintains a running list of the top SongCount records seen so
+This reducer goes through three steps:
+* Create an ordered collection that will maintain a list of the top SongCount record, for each key.
+* Examine each value for a key, and maintains a running list of the top SongCount records seen so
   far.
-* Writes a TopNextSongs record to the songs table.
+* Write a TopNextSongs record to the songs table.
 
 
 #### Create an ordered Collection
@@ -242,7 +242,7 @@ Explain verifying the output to tables using a table reader.
 
 <div class="userinput">
 {% highlight bash %}
-$ kiji mapreduce \
+kiji mapreduce \
       --mapper=org.kiji.examples.music.map.IdentityMapper \
       --reducer=org.kiji.examples.music.reduce.TopNextSongsReducer \
       --input="format=avrokv file=${HDFS_ROOT}/output.sequentialPlayCount" \
@@ -252,9 +252,14 @@ $ kiji mapreduce \
 </div>
 
 #### Verify
+Since we write TopNextSongs back to the Kiji table, we can use the Kiji command-line tools
+to inspect our Kiji tables.
 
 <div class="userinput">
 {% highlight bash %}
 kiji ls --kiji=${KIJI}/songs --columns=info:top_next_songs --max-rows=3
 {% endhighlight %}
 </div>
+
+You should see 3 cells from the column "info:top_next_songs", each containing a list of songs
+and the number of times they came next.

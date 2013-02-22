@@ -53,7 +53,8 @@ export KIJI_HOME=/path/to/kiji-mapreduce
 </div>
 
 After Bento starts, it will display ports you will need to complete this tutorial.
-You will need the MapReduce JobTracker webapp (http://localhost:50030 by default), HDFS NameNode port (8020 by default) and the Zookeeper client port (2181 by default).
+You will need the MapReduce JobTracker webapp ([http://localhost:50030](http://localhost:50030) by default),
+HDFS NameNode port (8020 by default) and the Zookeeper client port (2181 by default).
 
 ##### Set your environment variables
 If your HDFS NameNode port or Zookeeper client port are not the default values, change them to
@@ -82,7 +83,8 @@ export KIJI_CLASSPATH=$(find ${LIBS_DIR} -name "*.jar" -printf '%p:')
 Install your Kiji instance:
 
 <div class="userinput">
-{% highlight bash %} $ kiji install --kiji=${KIJI}
+{% highlight bash %}
+kiji install --kiji=${KIJI}
 {% endhighlight %}
 </div>
 
@@ -102,6 +104,7 @@ navigate to the `$KIJI_HOME/examples/music` directory and use the python script 
 
 <div class="userinput">
 {% highlight bash %}
+rm $KIJI_HOME/examples/music/data/*
 $KIJI_HOME/examples/music/bin/data_generator.py --output-dir=$KIJI_HOME/examples/music/data/
 {% endhighlight %}
 </div>

@@ -310,7 +310,7 @@ Now, run the command.
 
 <div class="userinput">
 {% highlight bash %}
-$ kiji produce \
+kiji produce \
       --producer=org.kiji.examples.music.produce.NextSongRecommender \
       --input="format=kiji table=$KIJI/users" \
       --output="format=kiji table=$KIJI/users nsplits=2" \
@@ -325,6 +325,8 @@ $ kiji produce \
 {% highlight bash %}
 kiji ls --kiji=$KIJI/users --columns=info:next_song_rec --max-rows=3
 {% endhighlight %}
+
+These are our recommendations for the next song to play for each user!
 </div>
 
 

@@ -441,7 +441,7 @@ in a limited way using a KeyValueStoreReader.
 
 <div class="userinput">
 {% highlight bash %}
-$ kiji gather \
+kiji gather \
       --gatherer=org.kiji.examples.music.gather.SequentialPlayCounter \
       --reducer=org.kiji.examples.music.reduce.SequentialPlayCountReducer \
       --input="format=kiji table=${KIJI}/users" \
@@ -453,5 +453,7 @@ $ kiji gather \
 #### Verify
 Because this job outputs avrokv files, which are binary and hard to read directly, we can use the
 Hadoop job tracker to verify the success of the job.  Using your favorite browser, navigate to
-localhost:50030 and locate the Kiji gather: SequentialPlayCounter / SequentialPlayCountReducer
-job.  On the job page, check that Map output records is roughly 7,000.
+the jobtracker page ([localhost:50030 by default](http://localhost:50030)).  This is where you can
+monitor all your Hadoop jobs. Locate the Kiji gather: SequentialPlayCounter /
+SequentialPlayCountReducer job and navigate to the job page by clicking on the Job ID.  On the
+job page, check that Map output records is roughly 7,000.

@@ -8,8 +8,8 @@ description: Like WordCount, for songs.
 ---
 
 ### The 'Hello World!' of MapReduce
-To quote Scalding Developers [Hadoop is a distributed system for counting words.](https://github.com/twitter/scalding)
-Unfortunately, we here at PANDORA are fresh out of words, but the play history of millions of users
+To quote Scalding Developers, [Hadoop is a distributed system for counting words.](https://github.com/twitter/scalding)
+Unfortunately, we here at PANDORA are fresh out of words, but we do have the play history of millions of users
 listening to  millions of different songs.
 
 This MapReduce job uses the listening history of our users that we have stored in a Kiji table to
@@ -375,7 +375,7 @@ local job runner. The resulting output sequence file is then validated.
 
 <div class="userinput">
 {% highlight bash %}
-$ kiji gather \
+kiji gather \
       --gatherer=org.kiji.examples.music.gather.SongPlayCounter \
       --reducer=org.kiji.mapreduce.lib.reduce.LongSumReducer \
       --input="format=kiji table=${KIJI}/users" \
@@ -390,10 +390,10 @@ To confirm that the gather job worked, examine the output using hadoop filesyste
 
 <div class="userinput">
 {% highlight bash %}
-$ hadoop fs -text ${HDFS_ROOT}/output.txt_file/part-r-00000
-song-1  100
-song-10 272
-song-12 101
-...
+hadoop fs -text ${HDFS_ROOT}/output.txt_file/part-r-00000
 {% endhighlight %}
 </div>
+    song-1  100
+    song-10 272
+    song-12 101
+    ...
