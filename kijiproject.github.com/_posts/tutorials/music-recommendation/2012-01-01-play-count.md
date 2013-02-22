@@ -1,6 +1,6 @@
 ---
 layout: post
-title : SongCount
+title : PlayCount
 categories: [tutorials, music-recommendation, 1.0.0-rc4]
 tags: [music]
 order : 4

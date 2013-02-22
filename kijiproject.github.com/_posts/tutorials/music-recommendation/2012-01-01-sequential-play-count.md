@@ -1,6 +1,6 @@
 ---
 layout: post
-title : SequentialSongCount
+title : SequentialPlayCount
 categories: [tutorials, music-recommendation, 1.0.0-rc4]
 tags: [music]
 order : 5
