@@ -21,7 +21,7 @@
  * This is the KijiMusic tutorial top-level package.
  *
  * <p>
- * We organize our KijiMapReduce classes by type, so that all gatherers go in the same package,
+ * We organize our KijiMR classes by type, so that all gatherers go in the same package,
  * all producers go in the same package, etc.
  * </p>
  */
