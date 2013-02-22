@@ -4,8 +4,24 @@ title : Derive Data
 categories: [tutorials, phonebook-tutorial, 1.0.0-rc4]
 tags: [phonebook]
 order: 6
-description: Decompose address into its individual fields.
+description: Decompose an address into its individual fields.
 ---
+
+<div class="hero-unit">
+  <h3>This page is deprecated.</h3>
+  <p>
+    For a more up-to-date look at how to derive data using Producers, see the 
+    <a href="/tutorials/music-recommendation/1.0.0-rc4/music-overview/">Music
+    recommendation tutorial</a>.
+    This section is preserved for your reference, but the APIs referenced herein
+    are deprecated and may be removed in a future release of KijiSchema.
+  </p>
+  <p>
+    Note that later sections of this tutorial rely on you running the commands
+    in this section. But you should not model your future MapReduce analyses on
+    the code in <tt>AddressFieldExtractor</tt>.
+  </p>
+</div>
 
 Your friends have been terribly disorganized about giving you their contact details.
 Being the perfectionist you are, you would like to be able to, at any given point, know
@@ -36,7 +52,7 @@ Address address = row.getMostRecentValue(Fields.INFO_FAMILY, Fields.ADDRESS);
 {% endhighlight %}
 
 Address is the same Avro type you read about on the
-[Phonebook Importer]({{site.tutorial_url}}/phonebook-import/) page. The JSON
+[Phonebook Importer](../phonebook-import/) page. The JSON
 description for it can be found at
 `$KIJI_HOME/examples/phonebook/src/main/avro/Address.avsc`. More information
 about Avro types can be found

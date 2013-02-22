@@ -33,6 +33,22 @@ spent calling you with the IncrementTalkTime example.
 
 ### IncrementTalkTime.java
 
+
+<div class="row">
+  <div class="span2">&nbsp;</div>
+  <div class="span8" style="background-color:#eee; border-radius: 6px; padding: 10px">
+    <h3>Deprecation Warning</h3>
+    <p>
+      This section refers to classes in the <tt>org.kiji.schema.mapreduce</tt> package
+      that may be removed in the future. You should use the KijiMR library to manage
+      MapReduce jobs that interoperate with Kiji tables. In particular, the
+      <tt>KijiMapReduceJobBuilder</tt> takes care of lots of things you'd have to do
+      manually here (e.g., use <tt>GenericTableMapReduceUtil</tt> and
+      <tt>DistributedCacheJars</tt>).
+    </p>
+  </div>
+</div>
+
 The `stats:talktime` column of the phonebook table is of the type COUNTER. You can see this by
 looking at the layout files. As Kiji tables are based on Hbase, they also provide the ability to
 treat columns as counters.

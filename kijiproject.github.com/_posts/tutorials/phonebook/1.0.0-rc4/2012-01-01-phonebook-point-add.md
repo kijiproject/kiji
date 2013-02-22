@@ -27,12 +27,26 @@ To start, `AddEntry.java` loads an HBase configuration.
 setConf(HBaseConfiguration.addHbaseResources(getConf()));
 {% endhighlight %}
 
-The code then connects to Kiji and opens the phonebook table for writing.
-The `KijiConfiguration.DEFAULT_INSTANCE_NAME` is `default`.
+The code then connects to Kiji and opens the phonebook table for writing. A Kiji
+instance is specified by a [`KijiURI`]({{site.api_url}}KijiURI.html). A Kiji URI specifies an HBase cluster to
+connect to (identified by its Zookeeper quorum) and a Kiji instance name.
+The value of `KConstants.DEFAULT_INSTANCE_NAME` is `"default"`.
+For example, if ZooKeeper is running on `zkhost:2181`, the name of the default
+Kiji instance on the cluster would be `kiji://zkhost:2181/default`.
+
+Rather than specify a ZooKeeper cluster yourself, you can rely on the quorum
+specified in your `hbase-site.xml` file by using the "hostname" of `.env`, like
+this: `kiji://.env/default`. 
+
+To create a `KijiURI`, you use a `KijiURI.KijiURIBuilder` instance. By default,
+this will use the `".env"` pseudo-host so that you connect to your normal HBase
+cluster.
+
 {% highlight java %}
-kiji = Kiji.open(new KijiConfiguration(getConf(),
-    KijiConfiguration.DEFAULT_INSTANCE_NAME));
-table = kiji.openTable(TABLE_NAME); //TABLE_NAME is "phonebook"
+kiji = Kiji.Factory.open(
+    KijiURI.newBuilder().withInstanceName(KConstants.DEFAULT_INSTANCE_NAME).build(),
+    getConf());
+table = kiji.openTable(TABLE_NAME); // TABLE_NAME is "phonebook"
 writer = table.openTableWriter();
 {% endhighlight %}
 
@@ -59,10 +73,28 @@ We close these objects to free resources (for example, connections to HBase)
 that they use. We close these objects in the reverse order we opened them in.
 
 {% highlight java %}
-IOUtils.closeQuietly(writer);
-IOUtils.closeQuietly(table);
-IOUtils.closeQuietly(kiji);
+ResourceUtils.closeOrLog(writer);
+ResourceUtils.closeOrLog(table);
+ResourceUtils.releaseOrLog(kiji);
 {% endhighlight %}
+
+Something important to note is that the Kiji instance is _released_ rather than closed.
+Kiji instances are often long-lived objects that many aspects of your system may hold
+reference to. Rather than require that you define a single "owner" of this object who
+closes it when the system is finished using it, you can use reference counting to manage
+this object's lifetime.
+
+When a `Kiji` instance is created with `Kiji.Factory.open()`,
+it has an automatic reference count of 1. You should call `kiji.release()` or
+`ResourceUtils.releaseOrLog(kiji)` to discard this reference.
+
+If another class or method gets a reference to an already-opened Kiji instance,
+you should call `kiji.retain()` to increment its reference count. That same
+class or method is responsible for calling `kiji.release()` when it no longer
+holds the reference.
+
+A Kiji object will close itself and free its underlying resources when its
+reference count drops to 0.
 
 ### Running the Example
 You run the class `AddEntry` with the `kiji` command-line tool as follows:
@@ -140,8 +172,9 @@ We connect to Kiji and our phonebook table in the same way we did above.
 
 {% highlight java %}
 setConf(HBaseConfiguration.create(getConf()));
-kiji = Kiji.open(new KijiConfiguration(getConf(),
-    KijiConfiguration.DEFAULT_INSTANCE_NAME));
+kiji = Kiji.Factory.open(
+    KijiURI.newBuilder().withInstanceName(KConstants.DEFAULT_INSTANCE_NAME).build(),
+    getConf());
 table = kiji.openTable(TABLE_NAME); // TABLE_NAME is "phonebook"
 {% endhighlight %}
 
@@ -160,12 +193,14 @@ final EntityId entityId = table.getEntityId(mFirst + "," + mLast);
 
 Create a data request to specify the desired columns from the Kiji Table.
 {% highlight java %}
-final KijiDataRequest dataReq = new KijiDataRequest()
-    .addColumn(new KijiDataRequest.Column(Fields.INFO_FAMILY, Fields.FIRST_NAME))
-    .addColumn(new KijiDataRequest.Column(Fields.INFO_FAMILY, Fields.LAST_NAME))
-    .addColumn(new KijiDataRequest.Column(Fields.INFO_FAMILY, Fields.EMAIL))
-    .addColumn(new KijiDataRequest.Column(Fields.INFO_FAMILY, Fields.TELEPHONE))
-    .addColumn(new KijiDataRequest.Column(Fields.INFO_FAMILY, Fields.ADDRESS));
+final KijiDataRequestBuilder reqBuilder = KijiDataRequest.builder();
+reqBuilder.newColumnsDef()
+    .add(Fields.INFO_FAMILY, Fields.FIRST_NAME)
+    .add(Fields.INFO_FAMILY, Fields.LAST_NAME)
+    .add(Fields.INFO_FAMILY, Fields.EMAIL)
+    .add(Fields.INFO_FAMILY, Fields.TELEPHONE)
+    .add(Fields.INFO_FAMILY, Fields.ADDRESS);
+final KijiDataRequest dataRequest = reqBuilder.build();
 {% endhighlight %}
 
 We now retrieve our result by passing the

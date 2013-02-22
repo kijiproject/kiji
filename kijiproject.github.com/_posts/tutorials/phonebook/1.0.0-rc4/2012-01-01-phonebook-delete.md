@@ -67,7 +67,7 @@ Next, to perform the deletion of this contact using DeleteEntry:
 <div class="userinput">
 {% highlight bash %}
 $KIJI_HOME/bin/kiji jar \
-    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-1.0.0-rc3.jar \
+    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-1.0.0-rc4.jar \
     org.kiji.examples.phonebook.DeleteEntry
 {% endhighlight %}
 </div>
@@ -88,6 +88,19 @@ $KIJI_HOME/bin/kiji ls --kiji=kiji://.env/default/phonebook --entity-id="Renuka,
     Looking up entity: \x17\xDC\xE7\x85\x0F{\xB6SF\x9A\xB5&\xA5\x8C\x81[ from kiji table: kiji://localhost:2181/default/phonebook/
 
 ## Deleting from a MapReduce Job
+
+<div class="row">
+  <div class="span2">&nbsp;</div>
+  <div class="span8" style="background-color:#eee; border-radius: 6px; padding: 10px">
+    <h3>Deprecation Warning</h3>
+    <p>
+      The DeleteEntriesByState MapReduce class refers to classes in the
+      <tt>org.kiji.schema.mapreduce</tt> package
+      that may be removed in the future. You should use the KijiMR library to manage
+      MapReduce jobs that interoperate with Kiji tables.
+    </p>
+  </div>
+</div>
 
 You’re tired of all your San Francisco friends bragging about their startups.
 You’ve decided to clean your phonebook of anyone from the state of California. Since
@@ -169,3 +182,7 @@ To learn more about Kiji, check out these other resources:
 
 For information about the Kiji Project and user-to-user support:
 <a class="btn btn-primary" href="mailto:user+subscribe@kiji.org">Sign up for user@kiji.org</a>
+
+Hungry for more? To learn about KijiMR, Kiji's MapReduce integration library,
+check out the 
+[Music recommendation tutorial](/tutorials/music-recommendation/1.0.0-rc4/music-overview/).

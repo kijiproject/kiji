@@ -83,7 +83,7 @@ schema> describe phonebook;
             Schema: "string"
 
         Column derived:apt (Address Apartment number.)
-            Schema: "string"
+            Schema: [ "string", "null" ]
 
         Column derived:addr2 (Address line two.)
             Schema: "string"
