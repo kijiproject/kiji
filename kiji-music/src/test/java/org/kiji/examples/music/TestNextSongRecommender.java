@@ -113,11 +113,12 @@ public class TestNextSongRecommender extends KijiClientTest {
 
   @Test
   public void testProducer() throws IOException, ClassNotFoundException, InterruptedException {
-     MapReduceJobOutput tableOutput = new DirectKijiTableMapReduceJobOutput(mUserTableURI, 1);
-         KijiTableKeyValueStore.Builder kvStoreBuilder = KijiTableKeyValueStore.builder();
+    MapReduceJobOutput tableOutput = new DirectKijiTableMapReduceJobOutput(mUserTableURI, 1);
+    KijiTableKeyValueStore.Builder kvStoreBuilder = KijiTableKeyValueStore.builder();
     // Our default implementation will use the default kiji instance, and a table named songs.
     kvStoreBuilder.withColumn("info", "top_next_songs").withTable(mSongTableURI);
-        // Configure first job.
+
+    // Configure first job.
     final MapReduceJob mrjob = KijiProduceJobBuilder.create()
         .withConf(getConf())
         .withProducer(NextSongRecommender.class)
@@ -126,7 +127,7 @@ public class TestNextSongRecommender extends KijiClientTest {
         .withStore("nextPlayed", kvStoreBuilder.build())
         .build();
 
-        // Run both jobs and confirm that they are successful.
+    // Run the job and confirm that it is successful.
     assertTrue(mrjob.run());
 
     KijiDataRequest request = KijiDataRequest.builder()
@@ -138,7 +139,7 @@ public class TestNextSongRecommender extends KijiClientTest {
     CharSequence valueForSong1 = mUserTableReader.get(mUserTable.getEntityId("user-1"), request)
         .getMostRecentValue("info", "next_song_rec");
     assertEquals("User-1 just listened to son-1, so their next song rec should be song-4", "song-4",
-      valueForSong1.toString());
+        valueForSong1.toString());
 
   }
 }

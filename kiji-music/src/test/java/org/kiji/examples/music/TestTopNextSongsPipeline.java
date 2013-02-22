@@ -103,7 +103,7 @@ public class TestTopNextSongsPipeline extends KijiClientTest {
                 .withValue(8L, "song-1")
                 .withValue(9L, "song-8")
                 .withValue(10L, "song-1")
-        .withTable(songLayout.getName(), songLayout)
+        .withTable(songTableName, songLayout)
         .build();
     // Open table and table reader.
     mSongTable = getKiji().openTable(songTableName);
@@ -126,7 +126,7 @@ public class TestTopNextSongsPipeline extends KijiClientTest {
    */
   @Test
   public void testTopNextSongPipeline() throws Exception {
-   // Configure and run job.
+    // Configure and run job.
     final File outputDir = new File(getLocalTempDir(), "output.sequence_file");
     final Path path = new Path("file://" + outputDir);
     // Configure first job.
@@ -139,7 +139,7 @@ public class TestTopNextSongsPipeline extends KijiClientTest {
         .withOutput(new AvroKeyValueMapReduceJobOutput(path, 1))
         .build();
     // Configure second job.
-    MapReduceJobOutput tableOutput = new DirectKijiTableMapReduceJobOutput(mSongTableURI, 1);
+    final MapReduceJobOutput tableOutput = new DirectKijiTableMapReduceJobOutput(mSongTableURI, 1);
     final MapReduceJob mrjob2 = KijiMapReduceJobBuilder.create()
         .withConf(getConf())
         .withInput(new AvroKeyValueMapReduceJobInput(path))
@@ -160,20 +160,20 @@ public class TestTopNextSongsPipeline extends KijiClientTest {
     TopSongs valuesForSong1 = mSongTableReader.get(mSongTable.getEntityId("song-1"), request)
         .getMostRecentValue("info", "top_next_songs");
     assertEquals("Wrong number of most popular songs played next for song-1", 3,
-      valuesForSong1.getTopSongs().size());
+        valuesForSong1.getTopSongs().size());
 
     TopSongs valuesForSong2 = mSongTableReader.get(mSongTable.getEntityId("song-2"), request)
         .getMostRecentValue("info", "top_next_songs");
     LOG.info("the list of song counts {}", valuesForSong2.getTopSongs().toString());
     assertEquals("Wrong number of most popular songs played next for song-2", 2,
-      valuesForSong2.getTopSongs().size());
+        valuesForSong2.getTopSongs().size());
 
     TopSongs valuesForSong8 = mSongTableReader.get(mSongTable.getEntityId("song-8"), request)
         .getMostRecentValue("info", "top_next_songs");
     LOG.info("the list of song counts {}", valuesForSong2.getTopSongs().toString());
     assertEquals("Wrong number of most popular songs played next for song-8", 1,
-      valuesForSong8.getTopSongs().size());
+        valuesForSong8.getTopSongs().size());
     assertEquals("The onyl song played aftert song-8 is song-1.", "song-1",
-      valuesForSong8.getTopSongs().get(0).getSongId().toString());
+        valuesForSong8.getTopSongs().get(0).getSongId().toString());
   }
 }

@@ -32,8 +32,9 @@
       <!-- filtered text files -->
       <useDefaultExcludes>false</useDefaultExcludes>
       <outputDirectory>/</outputDirectory>
-      <fileMode>0644</fileMode>
+      <fileMode>0755</fileMode>
       <includes>
+        <include>data_generator.py</include>
       </includes>
       <filtered>true</filtered>
     </fileSet>
