@@ -102,7 +102,7 @@ navigate to the `$KIJI_HOME/examples/music` directory and use the python script 
 
 <div class="userinput">
 {% highlight bash %}
-$KIJI_HOME/examples/music/data_generator.py --output-dir=$KIJI_HOME/examples/music/data/
+$KIJI_HOME/examples/music/bin/data_generator.py --output-dir=$KIJI_HOME/examples/music/data/
 {% endhighlight %}
 </div>
 
