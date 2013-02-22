@@ -40,7 +40,7 @@ import org.kiji.schema.util.ResourceUtils;
 public final class KijiMapReduceJob extends MapReduceJob {
   private static final Logger LOG = LoggerFactory.getLogger(KijiMapReduceJob.class);
 
-  // TODO(WIBI-1665): Versions of Hadoop after 20.x add the ability to get start and
+  // TODO(KIJIMR-92): Versions of Hadoop after 20.x add the ability to get start and
   // end times directly from a Job, making these superfluous.
   /** Used to track when the job's execution begins. */
   private long mJobStartTime;

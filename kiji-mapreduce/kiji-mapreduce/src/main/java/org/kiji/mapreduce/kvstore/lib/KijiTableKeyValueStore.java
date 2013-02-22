@@ -80,7 +80,7 @@ import org.kiji.schema.util.ResourceUtils;
  */
 @ApiAudience.Public
 public final class KijiTableKeyValueStore<V> implements Configurable, KeyValueStore<String, V> {
-  // TODO(WIBI-1652): Add a flag that allows users to specify hex-strings (pre-hashed entity ids)
+  // TODO(KIJIMR-94): Add a flag that allows users to specify hex-strings (pre-hashed entity ids)
   // as keys instead of "vanilla" key strings.
 
   /** Cache the most recent 100 lookups in memory. */

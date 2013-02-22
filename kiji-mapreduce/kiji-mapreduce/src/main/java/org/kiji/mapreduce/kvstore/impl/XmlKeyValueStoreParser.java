@@ -274,10 +274,6 @@ public final class XmlKeyValueStoreParser {
 
       String confXmlText = outStream.toString("UTF-8");
 
-      // TODO(WIBI-1578): Rather than creating a brand new Configuration,
-      // this method should take another to merge with.
-      // This way, we can guarantee hdfs and kiji-connection resources
-      // on it as well.
       Configuration conf = new Configuration(false);
       conf.addResource(new ByteArrayInputStream(confXmlText.getBytes("UTF-8")));
       return KeyValueStoreConfiguration.fromConf(conf);

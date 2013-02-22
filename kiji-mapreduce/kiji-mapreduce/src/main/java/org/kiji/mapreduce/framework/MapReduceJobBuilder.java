@@ -538,7 +538,6 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder<T>> {
     // Add the jars that the user has added via addJarDirectory() method calls.
     // We are doing this BEFORE we add the Kiji's own dependency jars,
     // so that users can "override" dependencies of Kiji, such as Avro.
-    // See WIBI-1013 for more information.
     for (File jarDirectory : mJarDirectories) {
       LOG.debug("Adding directory of user jars to the distributed cache: "
           + jarDirectory.getPath());
