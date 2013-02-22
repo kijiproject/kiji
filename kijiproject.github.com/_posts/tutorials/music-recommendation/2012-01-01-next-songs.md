@@ -234,9 +234,72 @@ Luckily, context also contains methods for generating EntityIds.
   }
 {% endhighlight %}
 
-### Describe Tests
-Talk about how cool it is that we can test the result of a sequence of jobs in a unit test.
-Explain verifying the output to tables using a table reader.
+### TestTopNextSongsPipeline.java
+Two jobs are constructed during this test and run one after another. The first job outputs to an
+intermediate Avro container file (Add link to relevant userguide section) written to the local file system which is used as input by the
+second job. Each of the jobs is configured using a job builder:
+
+{% highlight java %}
+  // Configure and run job.
+  final File outputDir = new File(getLocalTempDir(), "output.sequence_file");
+  final Path path = new Path("file://" + outputDir);
+  // Configure first job.
+  final MapReduceJob mrjob1 = KijiGatherJobBuilder.create()
+      .withConf(getConf())
+      .withGatherer(SequentialPlayCounter.class)
+      .withReducer(SequentialPlayCountReducer.class)
+      .withInputTable(mUserTableURI)
+      // Note: the local map/reduce job runner does not allow more than one reducer:
+      .withOutput(new AvroKeyValueMapReduceJobOutput(path, 1))
+      .build();
+  // Configure second job.
+  final MapReduceJobOutput tableOutput = new DirectKijiTableMapReduceJobOutput(mSongTableURI, 1);
+  final MapReduceJob mrjob2 = KijiMapReduceJobBuilder.create()
+      .withConf(getConf())
+      .withInput(new AvroKeyValueMapReduceJobInput(path))
+      .withMapper(IdentityMapper.class)
+      .withReducer(TopNextSongsReducer.class)
+      .withOutput(tableOutput).build();
+
+  // Run both jobs and confirm that they are successful.
+  assertTrue(mrjob1.run());
+  assertTrue(mrjob2.run());
+{% endhighlight %}
+
+The results of these two jobs end up being written to a Kiji table. To validate the output data
+a KijiTableReader is used to read the records in question.
+
+{% highlight java %}
+  mSongTable = getKiji().openTable(songTableName);
+  mSongTableReader = mSongTable.openTableReader();
+
+  // ...
+
+  KijiDataRequest request = KijiDataRequest.builder()
+      .addColumns(ColumnsDef.create()
+          .withMaxVersions(Integer.MAX_VALUE)
+          .add("info", "top_next_songs"))
+      .build();
+
+  TopSongs valuesForSong1 = mSongTableReader.get(mSongTable.getEntityId("song-1"), request)
+      .getMostRecentValue("info", "top_next_songs");
+  assertEquals("Wrong number of most popular songs played next for song-1", 3,
+      valuesForSong1.getTopSongs().size());
+
+  TopSongs valuesForSong2 = mSongTableReader.get(mSongTable.getEntityId("song-2"), request)
+      .getMostRecentValue("info", "top_next_songs");
+  LOG.info("the list of song counts {}", valuesForSong2.getTopSongs().toString());
+  assertEquals("Wrong number of most popular songs played next for song-2", 2,
+      valuesForSong2.getTopSongs().size());
+
+  TopSongs valuesForSong8 = mSongTableReader.get(mSongTable.getEntityId("song-8"), request)
+      .getMostRecentValue("info", "top_next_songs");
+  LOG.info("the list of song counts {}", valuesForSong2.getTopSongs().toString());
+  assertEquals("Wrong number of most popular songs played next for song-8", 1,
+      valuesForSong8.getTopSongs().size());
+  assertEquals("The onyl song played aftert song-8 is song-1.", "song-1",
+      valuesForSong8.getTopSongs().get(0).getSongId().toString());
+{% endhighlight %}
 
 ### Running the Example
 
