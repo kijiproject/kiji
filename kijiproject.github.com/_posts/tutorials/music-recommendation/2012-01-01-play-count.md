@@ -378,7 +378,7 @@ local job runner. The resulting output sequence file is then validated.
 $ kiji gather \
       --gatherer=org.kiji.examples.music.gather.SongPlayCounter \
       --reducer=org.kiji.mapreduce.lib.reduce.LongSumReducer \
-      --input="format=kiji file=${HDFS_ROOT}/users" \
+      --input="format=kiji table=${KIJI}/users" \
       --output="format=text file=${HDFS_ROOT}/output.txt_file nsplits=2" \
       --lib=${LIBS_DIR}
 {% endhighlight %}
@@ -390,7 +390,7 @@ To confirm that the gather job worked, examine the output using hadoop filesyste
 
 <div class="userinput">
 {% highlight bash %}
-$ hadoop fs -text ${HDFS_ROOT}/output.text_file/part-r-00000
+$ hadoop fs -text ${HDFS_ROOT}/output.txt_file/part-r-00000
 song-1  100
 song-10 272
 song-12 101

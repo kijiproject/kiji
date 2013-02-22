@@ -72,8 +72,8 @@ classpath. You can add your artifacts to the Kiji classpath by running:
 
 <div class="userinput">
 {% highlight bash %}
-export LIBS_DIR=$($KIJI_HOME/examples/music/lib)
-export KIJI_CLASSPATH=$(find ${LIBS_DIR} -name *.jar -printf '%p:')
+export LIBS_DIR=$KIJI_HOME/examples/music/lib
+export KIJI_CLASSPATH=$(find ${LIBS_DIR} -name "*.jar" -printf '%p:')
 {% endhighlight %}
 </div>
 
@@ -102,7 +102,7 @@ navigate to the `$KIJI_HOME/examples/music` directory and use the python script 
 
 <div class="userinput">
 {% highlight bash %}
-./data_generator.py --output-dir=data/
+$KIJI_HOME/examples/music/data_generator.py --output-dir=$KIJI_HOME/examples/music/data/
 {% endhighlight %}
 </div>
 
