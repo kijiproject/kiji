@@ -29,16 +29,6 @@
   <includeBaseDirectory>true</includeBaseDirectory>
   <fileSets>
     <fileSet>
-      <!-- filtered text files -->
-      <useDefaultExcludes>false</useDefaultExcludes>
-      <outputDirectory>/</outputDirectory>
-      <fileMode>0755</fileMode>
-      <includes>
-        <include>data_generator.py</include>
-      </includes>
-      <filtered>true</filtered>
-    </fileSet>
-    <fileSet>
       <!-- text files -->
       <useDefaultExcludes>false</useDefaultExcludes>
       <outputDirectory>/</outputDirectory>
@@ -55,6 +45,16 @@
       <fileMode>0644</fileMode>
       <includes>
         <include>src/**</include>
+      </includes>
+      <filtered>false</filtered>
+    </fileSet>
+    <fileSet>
+      <!-- scripts -->
+      <useDefaultExcludes>true</useDefaultExcludes>
+      <outputDirectory>/</outputDirectory>
+      <fileMode>0755</fileMode>
+      <includes>
+        <include>bin/**</include>
       </includes>
       <filtered>false</filtered>
     </fileSet>

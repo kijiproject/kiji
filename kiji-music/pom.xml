@@ -111,13 +111,7 @@
       <groupId>org.kiji.mapreduce.lib</groupId>
       <artifactId>kiji-mapreduce-lib</artifactId>
       <version>${kiji-mapreduce.version}</version>
-      <scope>runtime</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase</artifactId>
-      <version>${hbase.version}</version>
-      <scope>compile</scope>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>com.googlecode.json-simple</groupId>
