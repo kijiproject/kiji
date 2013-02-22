@@ -242,12 +242,12 @@ Explain verifying the output to tables using a table reader.
 
 <div class="userinput">
 {% highlight bash %}
-kiji mapreduce \
---mapper=org.kiji.examples.music.map.IdentityMapper \
---reducer=org.kiji.examples.music.reduce.TopNextSongsReducer \
---input="format=avrokv file=${HDFS_ROOT}/output.sequentialPlayCount" \
---output="format=kiji table=${KIJI}/songs nsplits=1" \
---lib=${LIBS_DIR}
+$ kiji mapreduce \
+      --mapper=org.kiji.examples.music.map.IdentityMapper \
+      --reducer=org.kiji.examples.music.reduce.TopNextSongsReducer \
+      --input="format=avrokv file=${HDFS_ROOT}/output.sequentialPlayCount" \
+      --output="format=kiji table=${KIJI}/songs nsplits=1" \
+      --lib=${LIBS_DIR}
 {% endhighlight %}
 </div>
 

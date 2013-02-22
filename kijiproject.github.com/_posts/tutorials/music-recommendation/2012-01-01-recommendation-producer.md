@@ -310,12 +310,12 @@ Now, run the command.
 
 <div class="userinput">
 {% highlight bash %}
-kiji produce \
---producer=org.kiji.examples.music.produce.NextSongRecommender \
---input="format=kiji table=$KIJI/users" \
---output="format=kiji table=$KIJI/users nsplits=2" \
---lib=${LIBS_DIR} \
---kvstores=KVStoreConfig.xml
+$ kiji produce \
+      --producer=org.kiji.examples.music.produce.NextSongRecommender \
+      --input="format=kiji table=$KIJI/users" \
+      --output="format=kiji table=$KIJI/users nsplits=2" \
+      --lib=${LIBS_DIR} \
+      --kvstores=$KIJI_HOME/examples/music/KVStoreConfig.xml
 {% endhighlight %}
 </div>
 

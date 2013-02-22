@@ -442,7 +442,7 @@ in a limited way using a KeyValueStoreReader.
 <div class="userinput">
 {% highlight bash %}
 $ kiji gather \
-      --gatherer=org.kiji.examples.music.gather.SongPlayCounter \
+      --gatherer=org.kiji.examples.music.gather.SequentialPlayCounter \
       --reducer=org.kiji.examples.music.reduce.SequentialPlayCountReducer \
       --input="format=kiji table=${KIJI}/users" \
       --output="format=avrokv file=${HDFS_ROOT}/output.sequentialPlayCount nsplits=2" \
