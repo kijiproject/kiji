@@ -263,8 +263,10 @@ the value we want to write as the parameter.
 {% endhighlight %}
 
 ### TestNextSongRecommender.java
-To test NextSongRecommender, we need to build a job that is configured with a Kiji table column
-as a KeyValueStore. This is easily accomplished by using KijiTableKeyValueStore's builder:
+To test NextSongRecommender, we need specify which KijiTable we want to use to back our
+KeyValueStore. We do this by constructing the KeyValueStore we want to use, via the KeyValueStore's
+builder method. We then override the KeyValueStore binding in this job configuration by using the
+withStore() method of JobBuilders.
 
 {% highlight java %}
   KijiTableKeyValueStore.Builder kvStoreBuilder = KijiTableKeyValueStore.builder();
@@ -278,7 +280,33 @@ as a KeyValueStore. This is easily accomplished by using KijiTableKeyValueStore'
 {% endhighlight %}
 
 ### Running the Example
-When we run this example, we need to give the 
+When we run this example, we again need to need specify which KijiTable we want to use to back our
+KeyValueStore. This time, we will override the KeyValueStore binding (link to docs about this) from
+the command line using an XML configuration file. The content of the file is displayed below.
+If you are not using KijiBento, you may need to modify this XML file so that the URI points to the
+songs table you would like to use.
+
+
+{% highlight xml %}
+<?xml version="1.0" encoding="UTF-8"?>
+<stores>
+  <store name="nextPlayed" class="org.kiji.mapreduce.kvstore.lib.KijiTableKeyValueStore">
+    <configuration>
+      <property>
+        <name>table.uri</name>
+        <!-- This URI can be replace with the URI of a different 'songs' table to use. -->
+        <value>kiji://.env/kiji_music/songs</value>
+      </property>
+      <property>
+        <name>column</name>
+        <value>info:top_next_songs</value>
+      </property>
+    </configuration>
+  </store>
+</stores>
+{% endhighlight %}
+
+Now, run the command.
 
 <div class="userinput">
 {% highlight bash %}
