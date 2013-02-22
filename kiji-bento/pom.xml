@@ -23,6 +23,7 @@
     <kiji-phonebook.version>1.0.0-rc4-SNAPSHOT</kiji-phonebook.version>
     <kiji-mapreduce.version>1.0.0-rc4-SNAPSHOT</kiji-mapreduce.version>
     <kiji-mapreduce-lib.version>1.0.0-rc4-SNAPSHOT</kiji-mapreduce-lib.version>
+    <kiji-music.version>0.1-SNAPSHOT</kiji-music.version>
   </properties>
 
   <build>
@@ -65,6 +66,13 @@
   <dependencies>
     <!-- Kiji project dependencies -->
 
+    <dependency>
+      <groupId>org.kiji.examples.music</groupId>
+      <artifactId>kiji-music</artifactId>
+      <version>${kiji-music.version}</version>
+      <classifier>release</classifier>
+      <type>tar.gz</type>
+    </dependency>
     <dependency>
       <groupId>org.kiji.examples.phonebook</groupId>
       <artifactId>kiji-phonebook</artifactId>

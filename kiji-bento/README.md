@@ -29,6 +29,10 @@ This kiji-bento release (${project.version}) includes:
   `examples/phonebook` directory, kiji-phonebook is an example standalone
   application (with source code) that stores, processes, and retrieves data
   from a Kiji instance.
+* `kiji-music` ${kiji-music.version}: Included in the
+  `examples/music` directory, kiji-music is an example of loading the listening
+  history of users of a music service into a Kiji table, and then generating new
+  music recommendations.
 * API documentation is made available in the `docs` directory.
 
 Installation

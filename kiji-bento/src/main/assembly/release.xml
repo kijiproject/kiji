@@ -114,6 +114,25 @@
       <fileMode>0644</fileMode>
     </fileSet>
     <fileSet>
+      <!-- kiji-music examples -->
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <outputDirectory>examples/music</outputDirectory>
+      <directory>target/prereqs-dir/kiji-music-${kiji-music.version}</directory>
+      <filtered>false</filtered>
+      <excludes>
+        <exclude>bin/**</exclude>
+      </excludes>
+      <fileMode>0644</fileMode>
+    </fileSet>
+    <fileSet>
+      <!-- kiji-music scripts -->
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <outputDirectory>examples/music/bin</outputDirectory>
+      <directory>target/prereqs-dir/kiji-music-${kiji-music.version}/bin</directory>
+      <filtered>false</filtered>
+      <fileMode>0755</fileMode>
+    </fileSet>
+    <fileSet>
       <!-- bento-cluster -->
       <useDefaultExcludes>false</useDefaultExcludes>
       <outputDirectory>cluster</outputDirectory>
