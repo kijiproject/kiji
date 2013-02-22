@@ -7,12 +7,12 @@ order : 6
 description: Outputing to a Kiji table in a MapReduce job.
 ---
 
-This MapReduce job processes the result of the SequentialSong MR job and writes a list of the top
-songs played after a song (the key) to the corresponding row in the songs table.
+This MapReduce job processes the result of the SequentialSong MapReduce job and writes a list of
+the top songs played after each song (the key) to the corresponding row in the songs table.
 
-<div id="accordion-container"> 
-  <h2 class="accordion-header"> IdentityMapper.java </h2> 
-     <div class="accordion-content"> 
+<div id="accordion-container">
+  <h2 class="accordion-header"> IdentityMapper.java </h2>
+     <div class="accordion-content">
 {% highlight java %}
 public class IdentityMapper
     extends KijiMapper<
@@ -63,9 +63,9 @@ public class IdentityMapper
   }
 }
 {% endhighlight %}
-     </div> 
- <h2 class="accordion-header"> TopNextSongsReducer.java </h2> 
-   <div class="accordion-content"> 
+     </div>
+ <h2 class="accordion-header"> TopNextSongsReducer.java </h2>
+   <div class="accordion-content">
 {% highlight java %}
 public class TopNextSongsReducer
     extends KijiTableReducer<AvroKey<CharSequence>, AvroValue<SongCount>>
@@ -156,9 +156,9 @@ To do this efficiently, we will maintain an ordered collection of SongCount reco
 size. As we iterate through all the values, we will keep the top SongCount records seen so far
 in our ordered collection.
 
-This reducer goes through three steps:
-* Create an ordered collection that will maintain a list of the top SongCount record, for each key.
-* Examine each value for a key, and maintains a running list of the top SongCount records seen so
+This reducer
+* Creates an ordered collection that will maintain a list of the top SongCount records, for each key.
+* Examines each value for a key, and maintains a running list of the top SongCount records seen so
   far.
 * Write a TopNextSongs record to the songs table.
 
@@ -195,7 +195,7 @@ To find the top N songs, we iterate through the values associated with a given k
 value to our set, and then removing the smallest value if our set is larger than the number of top
 SongCount records we want to find.
 
-It is worht pointing out that when you call value.datum(), the *same* SongCount record, with
+It is worth pointing out that when you call value.datum(), the *same* SongCount record, with
 different fields, will be returned.  Many Hadoop projects reuse objects, so be aware! To get around
 the problem that this creates with trying to use a set, we create a new SongCount record for each
 value using SongCount's builder method.
@@ -324,5 +324,11 @@ kiji ls --kiji=${KIJI}/songs --columns=info:top_next_songs --max-rows=3
 {% endhighlight %}
 </div>
 
-You should see 3 cells from the column "info:top_next_songs", each containing a list of songs
-and the number of times they came next.
+    entity-id='song-32' [1361564627564] info:top_next_songs
+                                 {"topSongs": [{"song_id": "song-37", "count": 10}, {"song_id": "song-34", "count": 11}, {"song_id": "song-30", "count": 18}]}
+
+    entity-id='song-49' [1361564627741] info:top_next_songs
+                                 {"topSongs": [{"song_id": "song-46", "count": 10}, {"song_id": "song-41", "count": 20}, {"song_id": "song-40", "count": 27}]}
+
+    entity-id='song-36' [1361564627591] info:top_next_songs
+                                 {"topSongs": [{"song_id": "song-32", "count": 11}, {"song_id": "song-35", "count": 15}, {"song_id": "song-30", "count": 27}]}

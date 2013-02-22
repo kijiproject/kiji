@@ -188,7 +188,7 @@ public class TestNextSongRecommender extends KijiClientTest {
 </div>
 
 ### NextSongRecommender.java
-The NextSongRecommender is an example of a [KijiProducer](link-to-userguide). A producer operates on
+The NextSongRecommender is an example of a [KijiProducer]({{site.userguide_mapreduce_rc4}}/producers). A producer operates on
 a single row of input data and generates new outputs that are written to the same row. For every row
 this producer processes, it will:
 
@@ -216,7 +216,7 @@ In our produce method, we then access our requested data through the KijiRowData
 {% endhighlight %}
 
 #### Join External Data Sources
-KeyValueStores allow you to access external data sources in a MapReduce job.
+[KeyValueStores]({{site.userguide_mapreduce_rc4}}/key-value-stores) allow you to access external data sources in a MapReduce job.
 In this case, we will use the "top_next_songs" column of our songs table as a KeyValueStore. In
 order to access KeyValueStores in a KijiMR Job, the class that needs the external data must
 implement KeyValueStoreClient. This interface requires that you implement getRequiredStores().
@@ -234,7 +234,7 @@ implementation unconfigured.
 
 When we run this producer in a test, we will override the default implementation programmatically
 using a job builder. When you run this producer from the command line, you will override the
-default implementation using the KVConfig.xml file.
+default implementation using the KVStoreConfig.xml file.
 
 #### Generate a Recommendation
 To generate a recommendation from the list of songs that are most likely to be played next, we do
@@ -281,7 +281,7 @@ withStore() method of JobBuilders.
 
 ### Running the Example
 When we run this example, we again need to need specify which KijiTable we want to use to back our
-KeyValueStore. This time, we will override the KeyValueStore binding (link to docs about this) from
+KeyValueStore. This time, we will override the KeyValueStore binding from
 the command line using an XML configuration file. The content of the file is displayed below.
 If you are not using KijiBento, you may need to modify this XML file so that the URI points to the
 songs table you would like to use.
@@ -329,4 +329,12 @@ kiji ls --kiji=$KIJI/users --columns=info:next_song_rec --max-rows=3
 These are our recommendations for the next song to play for each user!
 </div>
 
+    entity-id='user-41' [1361564713968] info:next_song_rec
+                                 song-41
+
+    entity-id='user-3' [1361564713980] info:next_song_rec
+                                 song-2
+
+    entity-id='user-13' [1361564713990] info:next_song_rec
+                                 song-27
 

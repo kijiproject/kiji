@@ -173,7 +173,7 @@ public class SequentialPlayCountReducer
 ### SequentialPlayCounter.java
 SequentialPlayCounter.java operates in much the same way that SongPlayCounter.java does, but is
 requires a more complex key structure to store both the song played and the song that followed.
-The easiest way work with complex keys in Kiji is to use [Avro](linktosomething).
+The easiest way work with complex keys in Kiji is to use [Avro](http://avro.apache.org).
 We define a SongBiGram, that will serve as our key, as a pair of songs played sequentially by a
 single user.
 
@@ -235,7 +235,7 @@ for the number of times it has been played after the initial song.
 This reducer takes AvroKeys as input, and writes AvroKeys and AvroValues as output, so it must
 implement AvroKeyReader, AvroKeyWriter, and AvroValueWriter. The keys we are emiting are just strings
 so we could use a [Text](link-to-text-key-docs) key. Instead, we made the choice to use an AvroKey
-so that we could use the Kiji defined [AvroKeyValue output format](link-to-userguide-section), which
+so that we could use the Kiji defined [AvroKeyValue output format]({{site.userguide_mapreduce_rc4}}/command-line-tools/#output), which
 requires that you output AvroKeys and AvroValues.
 
 The schema for our avro key is so simple that we don't have to add a record to our .avdl file
@@ -254,9 +254,7 @@ SequentialPlayCountReducer starts with the same reduction operation that LongSum
 count track plays in the Song Count example, but diverges when emitting key/value pairs.  Instead
 of passing the keys through the reducer, SequentialPlayCountReducer creates new keys based on the
 track ids in the SongBiGram keys.  The new keys are simply the first track id from each biGram,
-while the second track id becomes part of a more complex output value type called SongCount.  A
-SongCount consists of a track id and a LongWritable valued at the total number of times these two
-songs occurred together.
+while the second track id becomes part the SongCount value.
 
 {% highlight java %}
   protected void reduce(AvroKey<SongBiGram> key, Iterable<LongWritable> values, Context context)

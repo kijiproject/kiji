@@ -23,7 +23,7 @@ bento start
 
 If you have downloaded the Kiji Standalone BentoBox, the code for this tutorial
 is already compiled and located in the `$KIJI_HOME/examples/music/lib/` directory.
-You can skip to [Set your environment variables](link-to-header-below) if you want
+You can skip to "Set your environment variables" if you want
 to get started playing with the example code.
 
 
@@ -56,7 +56,7 @@ After Bento starts, it will display ports you will need to complete this tutoria
 You will need the MapReduce JobTracker webapp ([http://localhost:50030](http://localhost:50030) by default),
 HDFS NameNode port (8020 by default) and the Zookeeper client port (2181 by default).
 
-##### Set your environment variables
+### Set your environment variables
 If your HDFS NameNode port or Zookeeper client port are not the default values, change them to
 match in the code below.
 

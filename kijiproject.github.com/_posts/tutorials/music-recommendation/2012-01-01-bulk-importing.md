@@ -8,7 +8,7 @@ description: Bulk importing data into a Kiji table.
 ---
 
 In cases where we have a significant amount of existing data that we'd like to load into a Kiji
-table, it hardly makes sense to do it a row at a time. We will show you how to use MapReduce to import 
+table, it hardly makes sense to do it a row at a time. We will show you how to use MapReduce to import
 large amounts of data into Kiji, efficiently.
 
 ### Custom Bulk Importers
@@ -32,9 +32,10 @@ example of a JSON record in our input.
 }
 {% endhighlight %}
 
-The `SongMetadataBulkImporter` class extends `KijiBulkImporter`. It expects a text input format where
-input keys are the positions (in bytes) of each line in input file and input values are the lines of text
-described above.
+The `SongMetadataBulkImporter` class extends `KijiBulkImporter`. It expects a
+[text input format]({{site.userguide_mapreduce_rc4}}/command-line-tools/#input) where
+input keys are the positions (in bytes) of each line in input file and input values are the lines
+of text described above.
 
 In the produce method of the class, we extract the json as follows:
 {% highlight java %}
@@ -99,13 +100,18 @@ $ kiji bulk-import \
 #### Verify
 <div class="userinput">
 {% highlight bash %}
-$ kiji ls --kiji=${KIJI}
+$ kiji ls --kiji=${KIJI}/songs --max-rows=3
 {% endhighlight %}
 </div>
 
-    Listing tables in kiji instance: kiji://localhost:2181/kiji_music/
-    songs
-    users
+    entity-id='song-32' [1361561116668] info:metadata
+                                 {"song_name": "song name-32", "artist_name": "artist-2", "album_name": "album-0", "genre": "genre4.0", "tempo": 130, "duration": 120}
+
+    entity-id='song-49' [1361561116737] info:metadata
+                                 {"song_name": "song name-49", "artist_name": "artist-3", "album_name": "album-1", "genre": "genre7.0", "tempo": 80, "duration": 240}
+
+    entity-id='song-36' [1361561116684] info:metadata
+                                 {"song_name": "song name-36", "artist_name": "artist-2", "album_name": "album-0", "genre": "genre4.0", "tempo": 170, "duration": 120}
 
 ### Bulk importing using table import descriptors
 
@@ -176,4 +182,20 @@ $ kiji bulk-import \
     --lib=${LIBS_DIR}
 {% endhighlight %}
 </div>
+
+#### Verify
+<div class="userinput">
+{% highlight bash %}
+$ kiji ls --kiji=${KIJI}/users --max-rows=3
+{% endhighlight %}
+</div>
+
+    entity-id='user-41' [1325750820000] info:track_plays
+                                 song-43
+
+    entity-id='user-3' [1325756880000] info:track_plays
+                                 song-1
+
+    entity-id='user-13' [1325752080000] info:track_plays
+                                 song-23
 

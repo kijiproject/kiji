@@ -8,9 +8,10 @@ description: Like WordCount, for songs.
 ---
 
 ### The 'Hello World!' of MapReduce
-To quote Scalding Developers, [Hadoop is a distributed system for counting words.](https://github.com/twitter/scalding)
-Unfortunately, we here at PANDORA are fresh out of words, but we do have the play history of millions of users
-listening to  millions of different songs.
+To quote Scalding Developers
+[Hadoop is a distributed system for counting words.](https://github.com/twitter/scalding)
+Unfortunately, we here at PANDORA are fresh out of words, but we do have the play history of
+millions of users listening to  millions of different songs.
 
 This MapReduce job uses the listening history of our users that we have stored in a Kiji table to
 calculate the total number of times each song has been played. The result of this computation is
@@ -120,7 +121,7 @@ public class LongSumReducer<K> extends KeyPassThroughReducer<K, LongWritable, Lo
 </div>
 
 ### SongPlayCounter.java
-The SongPlayCounter is an example of a [Gatherer](link-to-gatherer-docs), which is essentially a
+The SongPlayCounter is an example of a [Gatherer]({{site.userguide_mapreduce_rc4}}/gatherers), which is essentially a
 mapper that gets input from a KijiTable.  SongPlayCounter proceeds through discrete stages:
 * Setup reusable resources.
 * Read all values from column: "info:track_plays".
@@ -131,7 +132,7 @@ mapper that gets input from a KijiTable.  SongPlayCounter proceeds through discr
 Prepares any resources that may be needed by the gatherer.  In Hadoop, reusable objects are
 commonly instantiated only once to protect against long garbage collection pauses. This is
 particularly important with Kiji because long garbage collection pauses can cause MR jobs to fail
-because various resource timeout or cannot be found.
+because various resources timeout or cannot be found.
 
 Since setup() is an overriden method, we call super.setup() to ensure that all resources are
 initialized properly.  If you open resources in setup(), be sure to close them in the corresponding
@@ -146,7 +147,7 @@ cleanup() method.
 
 #### Read track play data from the table
 A gatherer takes input from a table, so it must declare what data it will need. It does this in the
-form of a [KijiDataRequest](link-data-request-builder), which is returned by the getDataRequest().
+form of a [KijiDataRequest](link-data-request-builder), which is defined in getDataRequest().
 For the song count job, we want to request all songs that have been played, for every user. In order
 to get all of the values written to the "info:track_plays" column, we must specify that the maximum
 number of versions we want is HConstants.ALL_VERSIONS. Otherwise, we will only get the most recent
@@ -184,17 +185,17 @@ object before the next call to gather.
 The key-value pairs emiited from the gatherer are shuffled and sorted by the MapReduce framework,
 so that each (call to reduce/reducer) is given a key and an iterator of all values associated with
 a key. The LongSumReducer calls reduce() for each key and sums all of the associated values to produce a
-total play count for each song id. The LongSumReducer has two stages:
+total play count for each song id. The LongSumReducer has three stages:
 * Setup reusable resources.
 * Sums the values associated with a key.
-* Outputs the key paired with the sum. 
+* Outputs the key paired with the sum.
 
 Summing values is such a common MapReduce operation, LongSumReducer.java is provided by the KijiMR
-library. 
+library.
 
 #### Initialize Resources
-It is common practice to avoid instantiating new objects in map or reduce methods
-Hadoop developers have a (perhaps now outdated) skepticism of garbage collection in the JVM. 
+It is common practice to avoid instantiating new objects in map or reduce methods as
+Hadoop developers have a (perhaps now outdated) skepticism of garbage collection in the JVM.
 
 {% highlight java %}
   protected void setup(Context context) {
@@ -390,10 +391,10 @@ To confirm that the gather job worked, examine the output using hadoop filesyste
 
 <div class="userinput">
 {% highlight bash %}
-hadoop fs -text ${HDFS_ROOT}/output.txt_file/part-r-00000
+$ hadoop fs -text ${HDFS_ROOT}/output.txt_file/part-r-00000 | head -3
 {% endhighlight %}
 </div>
+
     song-1  100
     song-10 272
     song-12 101
-    ...
