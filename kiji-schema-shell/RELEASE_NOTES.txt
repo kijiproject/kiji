@@ -3,12 +3,14 @@
                               Kiji Schema Shell Release Notes
 
 Version 1.0.0-rc4
+  * DDLSHELL-16. Fix link to layout definition language.
   * SCHEMA-197. Update layout protocol to 'layout-1.1'.
   * DDLSHELL-11. Add Client API object to enable programmatic access.
       See org.kiji.schema.shell.api.Client.
+  * DDLSHELL-14. COUNTER schema spec should have null schema value.
   * SCHEMA-10. The --kiji flag now specifies a Kiji instance as a URI.
   * Updated to match KijiSchema 1.0.0-rc4 API
-    SCHEMA-109, SCHEMA-143, SCHEMA-155, SCHEMA-168
+    SCHEMA-109, SCHEMA-143, SCHEMA-155, SCHEMA-168, SCHEMA-3.
 
 Version 1.0.0-rc3
   * SCHEMA-154. Update to KijiSchema 1.0.0-rc3 API (Kiji.getAdmin())
