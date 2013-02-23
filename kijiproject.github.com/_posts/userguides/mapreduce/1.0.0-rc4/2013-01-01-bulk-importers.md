@@ -12,7 +12,7 @@ Before we can analyze any data in a Kiji table, we have to get that data into th
 
 Using KijiSchema alone, you can load data into a Kiji table from a single machine using a simple program looping over the input. For very small jobs, the speed of one machine may be sufficient, but for bigger jobs, a distributed approach is needed. With a little elaboration, the simple program's work can be distributed in the form of a MapReduce job whose mappers write to the Kiji table in parallel. However, writing directly to KijiSchema's underlying HBase from a MapReduce job can introduce heavy load to a cluster making things sluggish or even unstable.
 
-To more efficiently import data into Kiji tables, KijiMR includes _Bulk Importers_. A bulk importer is a MapReduce job that processes its input into files that can be output that can be loaded directly into Kiji. The format of the input and how it translates into Kiji table entity IDs and columns are details particular to each concrete subclass of `KijiBulkImporter`.
+To more efficiently import data into Kiji tables, KijiMR includes _Bulk Importers_. A bulk importer is a MapReduce job that processes its input into files that can be output that can be loaded directly into Kiji. The format of the input and how it translates into Kiji table entity IDs and columns are details particular to each concrete subclass of [`KijiBulkImporter`]({{site.api_mr_rc4}}/bulkimport/KijiBulkImporter.html).
 
 ### Classes Overview
 
@@ -21,14 +21,14 @@ All bulk importers extend the abstract class `org.kiji.mapreduce.bulkimport.Kiji
 
 ### Using the API
 
-All bulk importers must extend the parameterized class `KijiBulkImporter` with the types of the key and value of their input.  Concrete bulk importers must implement the following method:
+All bulk importers must extend the parameterized class [`KijiBulkImporter`]({{site.api_mr_rc4}}/bulkimport/KijiBulkImporter.html) with the types of the key and value of their input.  Concrete bulk importers must implement the following method:
 
 * `void produce(K key, V value, KijiTableContext context)` contains the logic to produce the content for the output Kiji table from the input.  It will be called once per key-value pair from the input(for many input text file types this is once per line).  The `produce()` method can use its `context` argument to output to this column as detailed below.
 
-Optionally, bulk importers can override the `setup()` and `cleanup` methods to initialize and finalize resources that can be reused during the bulk import job.  These methods will be called once by each task, `setup()` before processing input rows and `cleanup()` after the task is done processing.
+Optionally, bulk importers can override the `setup()` and `cleanup()` methods to initialize and finalize resources that can be reused during the bulk import job.  These methods will be called once by each task, `setup()` before processing input rows and `cleanup()` after the task is done processing.
 
 As mentioned above, a bulk importer's `produce()` method has a `org.kiji.mapreduce.KijiTableContext` argument.  This class has methods which are necessary for putting the data into Kiji:
-* `EntityId getEntityId(String kijiRowKey)` returns the `EntityId` to be used as the row key for the specified row key.
+* `EntityId getEntityId(String kijiRowKey)` returns the [`EntityId`]({{site.api_schema_rc4}}/EntityId.html) to be used as the row key for the specified row key.
 * `void put(EntityId entityId, String family, String qualifier, T value)` puts data into the row specified by the entityId and column specified by the family and qualifier at the current timestamp.  The type of `value` must be compatible with the output column's type as declared by the table layout.
 * `void put(EntityId entityId, String family, String qualifier, long timestamp , T value)` similar to the put call above, but puts data with the specified timestamp.  This is only recommended for doing the initial import of data as this affects HBase's internal workings.  See <a href="http://www.kiji.org/2013/02/13/common-pitfalls-of-timestamps-in-hbase">Common Pitfalls of Timestamps in HBase</a> for more information.
 
@@ -101,15 +101,15 @@ See the command-line section of this userguide for a more comprehensive list of 
 ### Provided Library Classes
 
 Within the `org.kiji.mapreduce.lib.bulkimport` package of the KijiMR Library, there is a variety of useful parsers for building your own bulk importer:
-* `CSVParser` - parses delimited CSV(Comma Separated Value) data into the component fields.  This parser also handles TSV(Tab Separated Value) data.
-* `CommonLogParser` - parses Common Log Format data(used by Apache web server) into the relevant fields for each request in the log.
+* [`CSVParser`]({{site.api_mrlib_rc4}}/util/CSVParser.html) - parses delimited CSV(Comma Separated Value) data into the component fields.  This parser also handles TSV(Tab Separated Value) data.
+* [`CommonLogParser`]({{site.api_mrlib_rc4}}/util/CommonLogParser.html) - parses Common Log Format data(used by Apache web server) into the relevant fields for each request in the log.
 
 There are several associated bulk importers that parse data into rows:
-* `CSVBulkImporter` - takes in CSV files and produces a row for each line in the file.
-* `CommonLogBulkImporter` - takes in an Apache web server log and produces a row for each client request.
-* `JSONBulkImporter` - takes an a text file with a JSON object on each line and produces a row for each object.
+* [`CSVBulkImporter`]({{site.api_mrlib_rc4}}/bulkimport/CSVBulkImporter.html) - takes in CSV files and produces a row for each line in the file.
+* [`CommonLogBulkImporter`]({{site.api_mrlib_rc4}}/bulkimport/CommonLogBulkImporter.html) - takes in an Apache web server log and produces a row for each client request.
+* [`JSONBulkImporter`]({{site.api_mrlib_rc4}}/bulkimport/JSONBulkImporter.html) - takes an a text file with a JSON object on each line and produces a row for each object.
 
-All of these bulk importers extend `DescribedInputTextBulkImporter` which contains helper functions and can be configured via a `KijiTableImportDescriptor` object for the specific input files and output tables in question. `KijiTableImportDescriptor` is an Avro-based specification that translates from the inferred schemas inside of the input files to the existing Kiji table layout.
+All of these bulk importers extend [`DescribedInputTextBulkImporter`]({{site.api_mrlib_rc4}}/bulkimport/DescribedInputTextBulkImporter.html) which contains helper functions and can be configured via a [`KijiTableImportDescriptor`]({{site.api_mrlib_rc4}}/bulkimport/KijiTableImportDescriptor.html) object for the specific input files and output tables in question. [`KijiTableImportDescriptor`]({{site.api_mrlib_rc4}}/bulkimport/KijiTableImportDescriptor.html) is an Avro-based specification that translates from the inferred schemas inside of the input files to the existing Kiji table layout.
 
 See the javadoc for these classes for instructions and examples on using them.
 

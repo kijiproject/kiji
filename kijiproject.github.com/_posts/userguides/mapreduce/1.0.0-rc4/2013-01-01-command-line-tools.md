@@ -38,15 +38,15 @@ Kiji commands bulk-import, produce and gather all recognize the following flags:
 
 Bulk importers must specify the name of the class providing the bulk-import logic:
 
-*   `--importer=java.package.BulkImporterClassName`: specifies the KijiBulkImporter class to use.
+*   `--importer=java.package.BulkImporterClassName`: specifies the [`KijiBulkImporter`]({{site.api_mr_rc4}}/bulkimport/KijiBulkImporter.html) class to use.
 
 Producers must specify the name of the class providing the producers logic:
 
-*   `--producer=java.package.ProducerClassName`: specifies the KijiProducer class to use.
+*   `--producer=java.package.ProducerClassName`: specifies the [`KijiProducer`]({{site.api_mr_rc4}}/produce/KijiProducer.html) class to use.
 
 Gatherer must specify the name of the class providing the gathering logic, and optionally a reducing logic:
 
-*   `--gatherer=java.package.GathererClassName`: specifies the KijiGatherer class to use.
+*   `--gatherer=java.package.GathererClassName`: specifies the [`KijiGatherer`]({{site.api_mr_rc4}}/gather/KijiGatherer.html) class to use.
 
 *   `--combiner=java.package.CombinerClassName`: optionally specifies a Combiner class to use.
 

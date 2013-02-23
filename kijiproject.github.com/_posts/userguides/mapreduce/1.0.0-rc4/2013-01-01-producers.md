@@ -10,7 +10,7 @@ description: Producers.
 
 ### Motivation
 
-A KijiProducer executes a function over a subset of the columns in a table row and produces output to be injected back into a column of that row.
+A [`KijiProducer`]({{site.api_mr_rc4}}/produce/KijiProducer.html) executes a function over a subset of the columns in a table row and produces output to be injected back into a column of that row.
 Producers can be run in the context of a MapReduce over entire Kiji tables, or on-demand over a single row at a time.
 Common tasks for producers include parsing, profiling, recommending, predicting, and classifying.
 For example, you might run a LocationIPProducer to compute and store the location of each user into a new column,
@@ -26,16 +26,16 @@ All producers must extend the abstract class `org.kiji.mapreduce.produce.KijiPro
 
 ### Using the API
 
-Each producer must extend `KijiProducer` and must implement the following three methods:
+Each producer must extend [`KijiProducer`]({{site.api_mr_rc4}}/produce/KijiProducer.html) and must implement the following three methods:
 
- * `KijiDataRequest getDataRequest()`. This method specifies the columns retrieved while scanning from the input table. It should construct and return a `KijiDataRequest`.
+ * `KijiDataRequest getDataRequest()`. This method specifies the columns retrieved while scanning from the input table. It should construct and return a [`KijiDataRequest`]({{site.api_schema_rc4}}/KijiDataRequest.html).
  * `String getOutputColumn()`. This method specifies the fully qualified column or the column family 'being produced'. It should return a string of the form "family:qualifier" or "family". Family-only output columns are only valid for map-type families (see the KijiSchema user guide).
- * `void produce(KijiRowData input, ProducerContext context)`. This method contains the logic to produce the content for the output column for each input row. It will be called once per row processed by the task. `input` contains columns from the row as requested by the `KijiDataRequest` returned from `getDataRequest()`. The `produce()` method can use its `context` argument to output to this column as detailed below.
+ * `void produce(KijiRowData input, ProducerContext context)`. This method contains the logic to produce the content for the output column for each input row. It will be called once per row processed by the task. `input` contains columns from the row as requested by the [`KijiDataRequest`]({{site.api_schema_rc4}}/KijiDataRequest.html) returned from `getDataRequest()`. The `produce()` method can use its `context` argument to output to this column as detailed below.
 
-When producing new content for a row, the producer may combine the input row data with data from external stores through `KeyValueStore`s by implementing `Map<String, KeyValueStore<?, ?>> getRequiredStores()`. This method should construct and return a map specifying all the `KeyValueStore`s that this producer wants to access. The `KeyValueStore`s may then be accessed from the `produce()` method through the `ProducerContext`. For more details, you may check the [KeyValue Stores]({{site.userguide_mapreduce_rc4}}/key-value-stores) section in this guide.
+When producing new content for a row, the producer may combine the input row data with data from external stores through [`KeyValueStore`]({{site.api_mr_rc4}}/kvstore/KeyValueStore.html)s by implementing `Map<String, KeyValueStore<?, ?>> getRequiredStores()`. This method should construct and return a map specifying all the [`KeyValueStore`]({{site.api_mr_rc4}}/kvstore/KeyValueStore.html)s that this producer wants to access. The [`KeyValueStore`]({{site.api_mr_rc4}}/kvstore/KeyValueStore.html)s may then be accessed from the `produce()` method through the [`ProducerContext`]({{site.api_mr_rc4}}/produce/ProducerContext.html). For more details, you may check the [KeyValue Stores]({{site.userguide_mapreduce_rc4}}/key-value-stores) section in this guide.
 
 Optionally, a producer may implement `setup()` and `cleanup()` to initialize and finalize resources that can be reused during the produce task.
-These methods will be called once by each task, `setup()` before processing input row and `cleanup()` after the task is done processing. If you wish to use a `KeyValueStore`, it should be opened once with `context.getStore(storeName)` in `setup()`, saved in a member variable, and closed in `cleanup()`.
+These methods will be called once by each task, `setup()` before processing input row and `cleanup()` after the task is done processing. If you wish to use a [`KeyValueStore`]({{site.api_mr_rc4}}/kvstore/KeyValueStore.html), it should be opened once with `context.getStore(storeName)` in `setup()`, saved in a member variable, and closed in `cleanup()`.
 
 As mentioned above, a Producer's `produce()` method has a `org.kiji.mapreduce.producer.ProducerContext` argument. This class has a number of methods which are important to a producer author:
 
@@ -112,9 +112,9 @@ Note: the output table of a producer must match the input table. The `nsplits` p
 
 The `org.kiji.mapreduce.lib.produce` package of the Kiji MapReduce Library contains a number of producer implementations that might be of use to application developers:
 
-* `AllVersionsSingleInputProducer` and `SingleInputProducer` are convenience classes. Subclasses of these abstract classes only have to implement `String getInputColumn()` instead of constructing an entire `KijiDataRequest` in `getDataRequest()`. The `produce()` method will receive all the versions of that column (if the parent class is `AllVersionsSingleInputProducer`) or the most recent (if the parent class is `SingleInputProducer`).
-* `RegexProducer` is an abstract subclass of `SingleInputProducer`. Subclasses must implement `String getInputColumn()` to specify a column and `String getRegex()`, which should be a regular expression that matches the contents of the input column. The regex should have one capturing group. `RegexProducer` contains a `produce()` method which will write that group to the output column. Both input and output should be strings.
-* `ConfiguredRegexProducer` is a concrete implementation of `RegexProducer` which uses Configuration keys to specify its input, output, and regular expression. You can use this class to copy substrings from one column to another without writing java code.
-* `IdentityProducer` is another concrete producer. It copies data directly from its input column to its output column, both of which may be specified using configuration keys on the commandline. This can be useful for clients who want to copy one column's data to another without writing code.
+* [`AllVersionsSingleInputProducer`]({{site.api_mrlib_rc4}}/produce/AllVersionsSingleInputProducer.html) and [`SingleInputProducer`]({{site.api_mrlib_rc4}}/produce/SingleInputProducer.html) are convenience classes. Subclasses of these abstract classes only have to implement `String getInputColumn()` instead of constructing an entire [`KijiDataRequest`]({{site.api_schema_rc4}}/KijiDataRequest.html) in `getDataRequest()`. The `produce()` method will receive all the versions of that column (if the parent class is [`AllVersionsSingleInputProducer`]({{site.api_mrlib_rc4}}/produce/AllVersionsSingleInputProducer.html)) or the most recent (if the parent class is [`SingleInputProducer`]({{site.api_mrlib_rc4}}/produce/SingleInputProducer.html)).
+* [`RegexProducer`]({{site.api_mrlib_rc4}}/produce/RegexProducer.html) is an abstract subclass of [`SingleInputProducer`]({{site.api_mrlib_rc4}}/produce/SingleInputProducer.html). Subclasses must implement `String getInputColumn()` to specify a column and `String getRegex()`, which should be a regular expression that matches the contents of the input column. The regex should have one capturing group. [`RegexProducer`]({{site.api_mrlib_rc4}}/produce/RegexProducer.html) contains a `produce()` method which will write that group to the output column. Both input and output should be strings.
+* [`ConfiguredRegexProducer`]({{site.api_mrlib_rc4}}/produce/ConfiguredRegexProducer.html) is a concrete implementation of [`RegexProducer`]({{site.api_mrlib_rc4}}/produce/RegexProducer.html) which uses Configuration keys to specify its input, output, and regular expression. You can use this class to copy substrings from one column to another without writing java code.
+* [`IdentityProducer`]({{site.api_mrlib_rc4}}/produce/IdentityProducer.html) is another concrete producer. It copies data directly from its input column to its output column, both of which may be specified using configuration keys on the commandline. This can be useful for clients who want to copy one column's data to another without writing code.
 
 See the javadoc of these classes for more information about using them.

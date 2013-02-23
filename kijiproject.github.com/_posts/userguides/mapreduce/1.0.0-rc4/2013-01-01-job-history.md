@@ -36,13 +36,13 @@ The `org.kiji.mapreduce.JobHistoryKijiTable` is the main class responsible for p
 
 ### Using the API
 
-The `JobHistoryKijiTable` class surfaces the call `getJobDetails` for retrieving the recorded metadata.
+The [`JobHistoryKijiTable`]({{site.api_mr_rc4}}/framework/JobHistoryKijiTable.html) class surfaces the call `getJobDetails` for retrieving the recorded metadata.
 
-Jobs that are created using `KijiMapReduceJob` will automatically record metadata to the `job_history` table if it has been installed.  Any MapReduce jobs using the job builders in Kiji for bulk importers, producers, or gatherers fall under this category and will report data.
+Jobs that are created using [`KijiMapReduceJob`]({{site.api_mr_rc4}}/framework/KijiMapReduceJob.html) will automatically record metadata to the `job_history` table if it has been installed.  Any MapReduce jobs using the job builders in Kiji for bulk importers, producers, or gatherers fall under this category and will report data.
 
 ### Example
 
-The job_history table is a Kiji table under the hood, and can thus be inspected using the `kiji ls` tool.  The `EntityId` associated with the job_history table is the jobId.  For example, to look at all of the jobIds that have been recorded:
+The job_history table is a Kiji table under the hood, and can thus be inspected using the `kiji ls` tool.  The [`EntityId`]({{site.api_schema_rc4}}/EntityId.html) associated with the job_history table is the jobId.  For example, to look at all of the jobIds that have been recorded:
 
 {% highlight bash %}
 kiji ls --kiji=kiji://.env/default/job_history --columns=info:jobId
