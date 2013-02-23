@@ -35,6 +35,7 @@
       <fileMode>0644</fileMode>
       <includes>
         <include>pom.xml</include>
+        <include>music_schema.ddl</include>
       </includes>
       <filtered>false</filtered>
     </fileSet>
