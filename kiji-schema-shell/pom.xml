@@ -35,7 +35,7 @@
   <inceptionYear>2012</inceptionYear>
 
   <properties>
-    <kiji-schema.version>1.0.0-rc4-SNAPSHOT</kiji-schema.version>
+    <kiji-schema.version>1.0.0-rc4</kiji-schema.version>
     <kiji-cdh4-platform.version>${kiji-schema.version}</kiji-cdh4-platform.version>
   </properties>
 
