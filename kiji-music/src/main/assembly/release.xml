@@ -43,7 +43,7 @@
       <!-- data files -->
       <useDefaultExcludes>false</useDefaultExcludes>
       <directory>example_data</directory>
-      <outputDirectory>/data</outputDirectory>
+      <outputDirectory>/example_data</outputDirectory>
       <fileMode>0644</fileMode>
       <includes>
         <include>*.json</include>
