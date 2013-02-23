@@ -15,6 +15,6 @@ to the Kiji version you are using.
 * [KijiSchema 1.0.0-rc2]({{site.userguide_url}}/schema/1.0.0-rc2/kiji-schema-overview/)
 * [KijiSchema 1.0.0-rc1]({{site.userguide_url}}/schema/1.0.0-rc1/kiji-schema-overview/)
 
-## KijiMapReduce
+## KijiMR
 
-* [KijiMapReduce 1.0.0-rc4]({{site.userguide_url}}/mapreduce/1.0.0-rc4/kiji-mr-overview/)
+* [KijiMR 1.0.0-rc4]({{site.userguide_url}}/mapreduce/1.0.0-rc4/kiji-mr-overview/)

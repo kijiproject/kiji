@@ -15,7 +15,7 @@ Covers the core functionality of Kiji; creating, writing, and reading from table
 
 * [Phone Book Tutorial 1.0.0-rc3](tutorials/phonebook-tutorial/1.0.0-rc3/phonebook-tutorial)
 
-# KijiMapReduce
+# KijiMR
 Covers how build and run MapReduce jobs that use Kiji tables as input and/or output. This is
 the word count of recommendation systems.
 
