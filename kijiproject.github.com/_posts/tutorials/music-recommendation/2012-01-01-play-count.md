@@ -226,7 +226,7 @@ To confirm that the gather job worked, examine the output using hadoop filesyste
 
 <div class="userinput">
 {% highlight bash %}
-$ hadoop fs -text output.txt_file/part-r-00000 | head -3
+hadoop fs -text output.txt_file/part-r-00000 | head -3
 {% endhighlight %}
 </div>
 
