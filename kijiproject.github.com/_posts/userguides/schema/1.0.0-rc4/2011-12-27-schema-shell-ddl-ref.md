@@ -35,7 +35,7 @@ important piece of data.
 * Run `bin/kiji-schema-shell`
 
 This command takes a few options (e.g., to load a script out of a file).
-See `bin/kiji-schema-shell --help` for all the available options.
+Run `bin/kiji-schema-shell --help` for all the available options.
 
 ### An Example
 
@@ -214,7 +214,7 @@ the hash of the string value (`ROW KEY FORMAT HASHED`). They may also be a
 composite of the two (`ROW KEY FORMAT HASH PREFIXED(n)`), where `n` is an
 integer between 1 and 16 specifying the number of hash bytes to retain as
 the prefix size (e.g: `ROW KEY FORMAT HASH PREFIXED(2)` will use raw keys
-with two bytes of the key hash as a prefix.) If no ROW KEY FORMAT clause is
+with two bytes of the key hash as a prefix.) If no `ROW KEY FORMAT` clause is
 given, it is assumed to be `HASHED`.
 
 Each locality group is defined as follows:
@@ -244,7 +244,7 @@ Within a group-type family, individual column qualifiers are specified with:
     [COLUMN] foo [WITH SCHEMA] schema [WITH DESCRIPTION 'd']
 
 
-#### `CREATE TABLE Example`
+#### `CREATE TABLE` Example
 
 The following is an example that puts together all of the different syntax
 elements described in the previous section:

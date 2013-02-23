@@ -90,8 +90,9 @@ You should see output like the following:
     12/11/06 19:48:50 INFO org.kiji.schema.KijiInstaller: Installed kiji 'default'
     Successfully created kiji instance: kiji://localhost:2181/default/
 
-Now you can create some tables in the DDL `schema-shell`, explore the Phonebook
-`example`, and get started
+Now you can create some tables in the
+[DDL schema-shell]({{site.userguide_schema_rc4}}/schema-shell-ddl-ref), explore the
+[Phonebook example]({{site.tutorial_phonebook_rc4}}/phonebook-tutorial), and get started
 [building a Maven project](http://www.kiji.org/get-started-with-maven) with
 Kiji. See the
 [quickstart guide](http://www.kiji.org/getstarted/#Quick_Start_Guide) to get
@@ -100,7 +101,7 @@ acquainted with the tools.
 ## Maintenance Guide
 
 Due to the fault-tolerant nature of Hadoop and HBase, your Kiji instance
-should not require much on-going maintenance. The following list of
+should not require much ongoing maintenance. The following list of
 recommended practices describe what maintenance should be performed to
 ensure uninterrupted operation.
 

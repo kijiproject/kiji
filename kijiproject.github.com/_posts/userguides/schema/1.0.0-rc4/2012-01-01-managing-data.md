@@ -165,7 +165,16 @@ Locality groups control the physical properties of the underlying storage:
 ### Names
 
 Locality groups, families, and columns are identified by their primary names.
-The primary name may be changed with the help of the `renamed_from` field.
+
+### Updating layouts
+
+Table layouts may be updated by specifying a table layout update descriptor. A table
+layout update descriptor entirely specifies the new layout, and sets the `reference_layout` 
+field to specify the original layout to update. Locality groups, families, and columns can be
+updated by redefining the locality group, family, or column with the same name.
+To rename locality groups, families, or columns, set the `renamed_from` field
+in the new definition to the original name.  Table names may not be changed.
+
 For example, to rename the `default` locality group into `new_name`, one may
 update the table layout with a locality group descriptor as follows:
 
@@ -176,9 +185,6 @@ locality_groups: [ {
   ...
 } ]
 {% endhighlight %}
-
-Table names may not be changed.
-
 
 ### Layout record descriptor <a name="ref.table_layout_desc" id="ref.table_layout_desc"></a>
 

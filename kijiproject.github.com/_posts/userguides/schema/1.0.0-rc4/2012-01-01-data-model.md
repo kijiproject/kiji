@@ -20,6 +20,7 @@ related families physically close to one another.
 > What Kiji calls a "locality group", HBase calls a "family". The Kiji
 > column "family" allows you to choose the logical grouping and namespace
 > of columns separately from the physical configuration of how the data is stored.
+> In Kiji, multiple families can belong to one locality group.
 
 As in HBase, rows in Kiji tables can have an arbitrary number of
 columns. Individual rows may have hundreds or thousands (or more)
@@ -28,7 +29,7 @@ columns.
 
 Unlike HBase, each cell in a Kiji table has a schema associated with it.
 Schemas in KijiSchema are versioned. The schema and layout system is
-described in greater detail in [Managing Data]({{site.userguide_schema_rc4}}/managing-data)
+described in greater detail in [Managing Data]({{site.userguide_schema_rc4}}/managing-data).
 
 ### Entity-Centric Data Model
 KijiSchema’s data model is *entity-centric*. Each row typically holds

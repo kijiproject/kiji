@@ -50,7 +50,7 @@ For example:
 {% highlight java %}
 final KijiTableReader reader = table.openTableReader();
 try {
-  // Select which columns you want to read.
+  // Select which columns you want to read:
   final KijiDataRequest dataRequest = KijiDataRequest.builder()
       .addColumns(ColumnsDef.create().add("some_family", "some_qualifier"))
       .build();
@@ -100,7 +100,7 @@ try {
 
 ## Modifying Data<a id="modifying-data"> </a>
 
-The [`KijiTableWriter`]({{site.api_schema_rc4}}/KijiTableWriter.html) class provides a `put(...)` method to write/update cells to a Kiji table.
+The [`KijiTableWriter`]({{site.api_schema_rc4}}/KijiTableWriter.html) class provides a `put(...)` method to write or update cells in a Kiji table.
 The cell is addressed by its entity ID, column family, column qualifier, and timestamp.
 You can get a [`KijiTableWriter`]({{site.api_schema_rc4}}/KijiTableWriter.html) for a [`KijiTable`]({{site.api_schema_rc4}}/KijiTable.html) using the [`openTableWriter()`]({{site.api_schema_rc4}}/KijiTable.html#openTableWriter%28%29) method.
 
@@ -130,7 +130,7 @@ a Kiji cell, the column must be declared with a schema of type
 "counter". See [Managing Data]({{site.userguide_schema_rc4}}/managing-data#layouts)
 for details on how to declare a counter in your table layout.
 
-Columns containing counters may be accessed like other columns: counters are exposed as long integers.
+Columns containing counters may be accessed like other columns; counters are exposed as long integers.
 In particular, the counter value may be retrieved using `KijiTableReader.get(...)` and written using `KijiTableWriter.put(...)`.
 In addition to that, the [`KijiTableWriter`]({{site.api_schema_rc4}}/KijiTableWriter.html) class also provides a method to atomically increment counter values.
 
@@ -155,7 +155,7 @@ try {
     <h3>Deprecation Warning</h3>
     <p>
       This section refers to classes in the <tt>org.kiji.schema.mapreduce</tt> package
-      that may be removed in the future. Please see the <a href="/userguides/mapreduce/1.0.0-rc4">
+      that may be removed in the future. Please see the <a href="/userguides/mapreduce/1.0.0-rc4/kiji-mr-overview/">
       KijiMR Userguide</a> for information on using MapReduce with Kiji.
     </p>
   </div>
