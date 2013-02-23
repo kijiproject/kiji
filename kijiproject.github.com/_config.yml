@@ -29,8 +29,10 @@ kiji_url : http://www.kiji.org
 # Finally if you are pushing to a GitHub project page, include the project name at the end.
 #
 production_url : http://docs.kiji.org
+api_url : /apidocs
 userguide_url : /userguides
 tutorial_url : /tutorials
+
 # rc1
 api_schema_rc1 : /apidocs/kiji-schema/1.0.0-rc1/org/kiji/schema
 userguide_schema_rc1 : /userguides/schema/1.0.0-rc1
