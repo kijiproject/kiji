@@ -22,7 +22,7 @@ All gatherers extend the abstract class
 described below. Clients should be familiar with the
 `org.kiji.mapreduce.gather.GatherContext` class, which is used to output the
 Gatherer's key-value pairs. Finally, while gather jobs can be launched from the
-commandline with `kiji gather`,
+command line with `kiji gather`,
 `org.kiji.mapreduce.gather.KijiGatherJobBuilder` can be used to construct a
 MapReduce job that runs a given gather with configured input, output, and
 reducer. The job can then be launched programmatically.
@@ -48,7 +48,7 @@ will be called once by each task, `setup()` before processing input rows and
 
 The class of a gatherer's output key and value may have restrictions
 depending on the output format used with this gatherer. For example, if used with a sequence file output format, classes must either be Avro types
-or implement the `org.apache.hadoop.io.Writable` interface. See the Command-line Tools section of this guide for more about output format options.
+or implement the `org.apache.hadoop.io.Writable` interface. See the Command Line Tools section of this guide for more about output format options.
 
 As mentioned above, a gatherer's `gather` method has a `org.kiji.mapreduce.gather.GatherContext` argument. This class has a number of methods which are relevant to a gatherer author:
 
@@ -127,7 +127,7 @@ public class FamilySizeGatherer extends KijiGatherer<IntWritable, IntWritable> {
 }
 {% endhighlight %}
 
-The gatherer described above may be used on the command-line as follows.
+The gatherer described above may be used on the command line as follows.
 It expects a Kiji input table whose rows represent households,
 with a column `'info:zip_code'` that contains the Zip code of each household
 and with a column family `'members'` that lists the household members.

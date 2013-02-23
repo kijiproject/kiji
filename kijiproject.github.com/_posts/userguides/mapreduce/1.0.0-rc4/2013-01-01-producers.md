@@ -59,7 +59,7 @@ and return a map specifying all the
 access. The [`KeyValueStore`]({{site.api_mr_rc4}}/kvstore/KeyValueStore.html)s may then be accessed
 from the `produce()` method through the
 [`ProducerContext`]({{site.api_mr_rc4}}/produce/ProducerContext.html). For more details, you may
-check the [Key Value Stores]({{site.userguide_mapreduce_rc4}}/key-value-stores) section in this
+check the [Key-Value Stores]({{site.userguide_mapreduce_rc4}}/key-value-stores) section in this
 guide.
 
 Optionally, a producer may implement `setup()` and `cleanup()` to initialize and finalize resources

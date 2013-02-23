@@ -1,18 +1,18 @@
 ---
 layout: post
-title: Command-line Tools
+title: Command Line Tools
 categories: [userguides, mapreduce, 1.0.0-rc4]
 tags : [mapreduce-ug]
 version: 1.0.0-rc4
 order : 6
-description: Command-line Tools.
+description: Command Line Tools.
 ---
 
-The KijiMR framework provides command-line tools to submit and monitor MapReduce jobs.
+The KijiMR framework provides command line tools to submit and monitor MapReduce jobs.
 
 ## Overview of available tools
 
-Kiji MapReduce provides the following command-line tools:
+KijiMR provides the following command line tools:
 *   `kiji bulk-import`: runs a bulk-importer job that imports data from an external data source into a Kiji table.
 *   `kiji produce`: runs a producer job.
 *   `kiji gather`: runs a gatherer job that processes the rows from a Kiji table and writes files, optionally using a reducer.
