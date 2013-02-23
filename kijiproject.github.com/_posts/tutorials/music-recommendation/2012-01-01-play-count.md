@@ -230,6 +230,6 @@ hadoop fs -text output.txt_file/part-r-00000 | head -3
 {% endhighlight %}
 </div>
 
-    song-1  328
-    song-10 256
-    song-12 122
+    song-1  100
+    song-10 272
+    song-12 101
