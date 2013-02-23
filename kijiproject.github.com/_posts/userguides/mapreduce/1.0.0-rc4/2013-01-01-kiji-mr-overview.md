@@ -8,22 +8,45 @@ order : 1
 description: Overview.
 ---
 
-KijiMR is the second major component in the Kiji ecosystem for Apache Hadoop and HBase after KijiSchema.
+KijiMR allows KijiSchema users to employ MapReduce-based techniques to develop many kinds of
+applications, including those using machine learning and other complex analytics.
 
-KijiMR includes APIs to build MapReduce jobs that read and write data stored in Kiji tables, bringing MapReduce-based analytic techniques to a broad base of KijiSchema users, to support applications such as machine learning and analysis.
+KijiMR is organized around three core MapReduce job types: _Bulk Importers_, _Producers_ and
+_Gatherers_.
 
-KijiMR is organized around three core MapReduce job types: _Bulk Importers_, _Producers_ and _Gatherers_. These may read from external data sources through _KeyValueStores_.
+ * _Bulk Importers_ make it easy to efficiently load data into Kiji tables from a variety of
+   formats, such as JSON or CSV files stored in HDFS.
+ * _Producers_ are entity-centric operations that use an entity's existing data to generate new
+   information and store it back in the entity's row. One typical use-case for producers is to
+   generate new recommendations for a user based on the user's history.
+ * _Gatherers_ provide flexible MapReduce computations that scan over Kiji table rows and output
+   key-value pairs. By using different outputs and reducers, gatherers can export data in a variety
+   of formats (such as text or Avro) or into other Kiji tables.
 
- * _Bulk Importers_ make it easy to efficiently load data into Kiji tables from a variety of formats, such as JSON or CSV files in HDFS clusters.
- * _Producers_ are entity-centric operations that use a entity's existing data to generate new information and store it back in the entity's row. One typical use-case for producers is to generate new recommendations for a user based on the user's history.
- * _Gatherers_ provide flexible MapReduce computations that scan over Kiji table rows and output key-value pairs. By using different outputs and reducers, Gatherers can export data to external data stores such as files in HDFS clusters in a variety of formats (such as text or avro) or even into HFiles to efficiently load data into other Kiji Tables.
+Finally, KijiMR allows any of these jobs to combine the data they operate on with external
+_KeyValueStores_. This allows the user to join data sets stored in HDFS and Kiji.
 
-Finally, KijiMR allows any of these jobs to combine their data with external _KeyValueStores_ as a way to join data sets store in HDFS, in Kiji, etc.
+Unlike KijiSchema, where the classes most relevant to application developers were usually concrete,
+these core job types exist in KijiMR as abstract classes (such as
+[`KijiProducer`]({{site.api_mr_rc4}}/produce/KijiProducer.html)). It is typically up to the
+application developer to subclass the appropriate class in their application and implement their
+application's analysis logic in a few methods (such as
+[`KijiProducer`]({{site.api_mr_rc4}}/produce/KijiProducer.html)'s `produce()` and
+`getDataRequest()`). They can then point the job at the appropriate Kiji table using either the
+`kiji` command line tools or programmatically using one of the framework's JobBuilders (such as
+[`KijiProduceJobBuilder`]({{site.api_mr_rc4}}/produce/KijiProduceJobBuilder.html)) that make
+launching these jobs easy.  Kiji can also record metadata about jobs run using KijiMR to provide
+a historical view.
 
-Unlike KijiSchema, where the classes most relevant to application developers were usually concrete, these core job types exist in Kiji MapReduce as abstract classes (such as [`KijiProducer`]({{site.api_mr_rc4}}/produce/KijiProducer.html)). It is typically up to the application developer to subclass the appropriate class in their application and implement their application's analysis logic in a few methods (such as [`KijiProducer`]({{site.api_mr_rc4}}/produce/KijiProducer.html)'s `produce()` and `getDataRequest()`). They can then point the job at the appropriate Kiji table using either the `kiji` command-line tools or programmatically using one of the framework's JobBuilders (such as [`KijiProduceJobBuilder`]({{site.api_mr_rc4}}/produce/KijiProduceJobBuilder.html)) that make launching these jobs easy.  Jobs within Kiji can record relevant job related metadata to provide a historical view.
+The KijiMR Library provides a growing repository of implemented solutions to many common use-cases.
+These solutions can be used directly or as example code. Both KijiMR and the KijiMR Library are
+included with distributions of Kiji BentoBox.
 
-To provide a starting point and some useful precanned solutions, the complementary Kiji MapReduce Library provides a growing repository of sample implementations that can be used directly or as example code. Both Kiji MapReduce and the Kiji MapReduce Library are included in the Kiji Bento Box distribution.
+In the sections of this guide that follow, the core job types will be explained in greater detail.
+Motiviation, example code snippets, and (where appropriate) a description of reference
+implementations in the KijiMR Library will be given for each. This guide also contains an in-depth
+description of how to use  _KeyValueStores_ to expose side-data stored in HDFS and Kiji through a
+consistent interface to your MapReduce jobs. Finally, this guide contains a description of the
+command line tools included with KijiMR and facilities that make it easier to test KijiMR
+application code.
 
-In the sections of this guide that follow, the core job types will be explained in greater detail, including motivation, example code snippets, and where appropriate, a description of the Kiji MapReduce Library's reference implementations. This guide also contains an in-depth description of how to use Kiji MapReduce's _KeyValueStores_ to expose data stored in different places and formats (such as HDFS or KijiTables) through a consistent interface to your MapReduce jobs. For power users, we've included instructions on how to use the [`KijiMapReduceJobBuilder`]({{site.api_mr_rc4}}/KijiMapReduceJobBuilder.html) class and `kiji mapreduce` command to build and launch arbitrary MapReduce jobs using Kiji mappers and reducers to perform flexible data transformation.
-
-Finally this guide contains a description of the command-line tools included with Kiji MapReduce and facilities that make it easier to test Kiji MapReduce application code.
