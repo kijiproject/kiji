@@ -89,7 +89,7 @@ this object's lifetime.
 
 When a [`Kiji`]({{site.api_schema_rc4}}/Kiji.html) instance is created with `Kiji.Factory.open()`,
 it has an automatic reference count of 1. You should call `kiji.release()` or
-[`ResourceUtils`]({{site.api_schema_rc4}}/ResourceUtils.html)`.releaseOrLog(kiji)` to discard this reference.
+[`ResourceUtils`]({{site.api_schema_rc4}}/util/ResourceUtils.html)`.releaseOrLog(kiji)` to discard this reference.
 
 If another class or method gets a reference to an already-opened Kiji instance,
 you should call `kiji.retain()` to increment its reference count. That same

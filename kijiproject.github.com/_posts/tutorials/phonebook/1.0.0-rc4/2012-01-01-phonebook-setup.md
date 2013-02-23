@@ -24,7 +24,7 @@ bento start
 
 If you have downloaded the Kiji Standalone BentoBox, the code for this tutorial
 is already compiled and located in the `$KIJI_HOME/examples/phonebook/lib/` directory.
-You can skip to [Create a Table]({{site.tutorial_url}}phonebook-create)
+You can skip to [Create a Table]({{site.tutorial_phonebook_rc4}}/phonebook-create)
 if you want to get started playing with the example code.
 
 

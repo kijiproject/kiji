@@ -36,7 +36,7 @@ Address address = row.getMostRecentValue(Fields.INFO_FAMILY, Fields.ADDRESS);
 {% endhighlight %}
 
 Address is the same Avro type you read about on the
-[Phonebook Importer]({{site.tutorial_url}}/phonebook-import/) page. The JSON
+[Phonebook Importer]({{site.tutorial_phonebook_rc3}}/phonebook-import/) page. The JSON
 description for it can be found at
 `$KIJI_HOME/examples/phonebook/src/main/avro/Address.avsc`. More information
 about Avro types can be found

@@ -176,7 +176,7 @@ bento stop
 </div>
 
 To learn more about Kiji, check out these other resources:
- - [User Guide]({{site.userguide_url}}kiji-schema-overview)
+ - [User Guide]({{site.userguide_schema_rc4}}/kiji-schema-overview)
  - [API Docs](http://docs.kiji.org/apidocs)
  - [Source Code](http://github.com/kijiproject)
 

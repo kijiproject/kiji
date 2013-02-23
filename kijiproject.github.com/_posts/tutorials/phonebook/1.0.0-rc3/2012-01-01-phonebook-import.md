@@ -55,7 +55,7 @@ JsonDecoder decoder =
 Address streetAddr = datumReader.read(null, decoder);
 {% endhighlight %}
 
-Next we create a unique [`EntityId`]({{site.api_url}}/EntityId.html) that will be used to reference this row.  As before, we will use
+Next we create a unique [`EntityId`]({{site.api_schema_rc3}}/EntityId.html) that will be used to reference this row.  As before, we will use
 the combination of first and last name as a unique reference to this row:
 {% highlight java %}
 EntityId user = table.getEntityId(firstName + "," + lastName);
@@ -130,7 +130,7 @@ protected void setup(Context hadoopContext)
 {% endhighlight %}
 
 This method sets up all the resources necessary for map tasks. Note that we use a different
-way to specify Kiji table and instance names here, a [`KijiURI`]({{site.api_url}}KijiURI.html).
+way to specify Kiji table and instance names here, a [`KijiURI`]({{site.api_schema_rc3}}/KijiURI.html).
 This newer way to specify Kiji instance addresses is more robust than specifying the instance
 name as a string.
 
@@ -156,7 +156,7 @@ in `setup()`.
 
 The outer `PhonebookImporter` class contains a `run(...)` method that handles the setup
 of the MapReduce job.  This is a typical MapReduce job setup. For detailed description
-you can refer to [Accessing Data]({{site.userguide_url}}/accessing-data/).  While the
+you can refer to [Accessing Data]({{site.userguide_schema_rc3}}/accessing-data/).  While the
 logic here closely resembles the non-MapReduce importer above, the heavy lifting of
 configuring the MapReduce job is done within the `run(...)` method.
 

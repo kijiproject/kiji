@@ -19,7 +19,7 @@ consult the [Get Started](http://www.kiji.org/getstarted) section of the Kiji we
 
 We have provided the phonebook layout in the `$KIJI_HOME/examples/phonebook/layout.ddl` file.
 For more information about how to create this file, see the
-[DDL Shell Reference]({{site.userguide_url}}/schema/1.0.0-rc4/schema-shell-ddl-ref/).
+[DDL Shell Reference]({{site.userguide_schema_rc4}}/schema-shell-ddl-ref/).
 
 <div class="userinput">
 {% highlight bash %}
@@ -112,7 +112,7 @@ schema> quit;
 ### Using JSON
 
 A low level way of providing the layout is by using JSON. To learn more about specifying
-the layout in JSON, take a look at [Managing Data]({{site.userguide_url}}/schema/1.0.0-rc4/managing-data/).
+the layout in JSON, take a look at [Managing Data]({{site.userguide_schema_rc4}}/managing-data/).
 
 But first, we need to delete the table we just created, just so that we can create it
 another time using JSON! Use the following command to delete the table:

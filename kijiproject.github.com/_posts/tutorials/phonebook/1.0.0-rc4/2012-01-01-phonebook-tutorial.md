@@ -17,7 +17,7 @@ to bulk load this into your Kiji table.
 Example code for a more in depth look at these use cases exist in the directory
 `$KIJI_HOME/examples/phonebook/src/main/java`.  Instructions for how to build and use this
 example code can be found in the next section of this tutorial,
-[Setup]({{site.tutorial_url}}phonebook-setup).
+[Setup]({{site.tutorial_phonebook_rc4}}/phonebook-setup).
 
 ### How to Use this Tutorial
 

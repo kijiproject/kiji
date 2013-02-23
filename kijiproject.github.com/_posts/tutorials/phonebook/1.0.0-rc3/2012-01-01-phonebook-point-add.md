@@ -13,7 +13,7 @@ and reading contacts.
 ## Writing to a Table
 Clearly, you need a way to add your ever-increasing set of friends to the phonebook.
 KijiSchema supports writing to Kiji tables with the
-[`KijiTableWriter`]({{site.api_url}}KijiTableWriter.html) class. The phonebook example
+[`KijiTableWriter`]({{site.api_schema_rc3}}/KijiTableWriter.html) class. The phonebook example
 includes code that uses a `KijiTableWriter` to write to the phonebook table.
 
 ### AddEntry.java
@@ -131,7 +131,7 @@ $KIJI_HOME/bin/kiji ls --table=phonebook
 ## Reading From a Table
 Now that we've added a contact to your phonebook, we should be able to read this
 contact from the table. KijiSchema supports reading from Kiji tables with the
-[`KijiTableReader`]({{site.api_url}}KijiTableReader.html) class. We have included an
+[`KijiTableReader`]({{site.api_schema_rc3}}/KijiTableReader.html) class. We have included an
 example of retrieving a single contact from the Kiji table using the contact's first
 and last names.
 
@@ -146,13 +146,13 @@ table = kiji.openTable(TABLE_NAME); // TABLE_NAME is "phonebook"
 {% endhighlight %}
 
 Since we are interested in reading from our table, we open a
-[`KijiTableReader`]({{site.api_url}}KijiTableReader.html).
+[`KijiTableReader`]({{site.api_schema_rc3}}/KijiTableReader.html).
 {% highlight java %}
 reader = table.openTableReader();
 {% endhighlight %}
 
 #### Looking up the requested entry
-Create an [`EntityId`]({{site.api_url}}/EntityId.html) to retrieve a contact
+Create an [`EntityId`]({{site.api_schema_rc3}}/EntityId.html) to retrieve a contact
 using the contact's first and last name:
 {% highlight java %}
 final EntityId entityId = table.getEntityId(mFirst + "," + mLast);
@@ -169,8 +169,8 @@ final KijiDataRequest dataReq = new KijiDataRequest()
 {% endhighlight %}
 
 We now retrieve our result by passing the
-[`EntityId`]({{site.api_url}}/EntityId.html) and data request to our table reader.
-Doing so results in a [`KijiRowData`]({{site.api_url}}/KijiRowData.html) containing
+[`EntityId`]({{site.api_schema_rc3}}/EntityId.html) and data request to our table reader.
+Doing so results in a [`KijiRowData`]({{site.api_schema_rc3}}/KijiRowData.html) containing
 the data read from the table.
 
 {% highlight java %}

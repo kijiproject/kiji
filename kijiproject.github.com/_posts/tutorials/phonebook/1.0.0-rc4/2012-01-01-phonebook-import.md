@@ -106,11 +106,11 @@ puts in a distributed fashion.
 Our example of importing data into a table with MapReduce can be found in the class
 `PhonebookImporter`. PhonebookImporter defines a special type of MapReduce job called a
 Kiji bulk import job that reads each line of our input file, parses it, and writes it to a table.
-Kiji bulk import jobs are created by implementing a [`KijiBulkImporter`]({{site.api_mr_rc4}}/KijiBulkImporter.html),
+Kiji bulk import jobs are created by implementing a [`KijiBulkImporter`]({{site.api_mr_rc4}}/bulkimport/KijiBulkImporter.html),
 not a `Mapper` and `Reducer`. This API is provided by KijiMR. The
 [Music recommendation tutorial](/tutorials/music-recommendation/1.0.0-rc4/music-overview/)
 covers KijiMR in much greater detail, but we will take a look at using the
-[`KijiBulkImporter`]({{site.api_mr_rc4}}/KijiBulkImporter.html) API below.
+[`KijiBulkImporter`]({{site.api_mr_rc4}}/bulkimport/KijiBulkImporter.html) API below.
 
 Instead of a `map()` method, we provide a `produce()` method definition; this method processes
 an input record from a file like an ordinary mapper, except its `context` argument is
@@ -118,7 +118,7 @@ specifically targeted to output to a row in a Kiji table.
 
 At the top of the `produce()` method, you'll see that we extract the fields from
 the lines as in the above example.  Then using the
-[`KijiTableContext`]({{site.api_mr_rc4}}/KijiTableContext.java) context argument,
+[`KijiTableContext`]({{site.api_mr_rc4}}/KijiTableContext.html) context argument,
 we'll write all of the fields to the phonebook table:
 
 {% highlight java %}
@@ -169,8 +169,8 @@ public int run(String[] args) throws Exception {
 }
 {% endhighlight %}
 
-The [`TextMapReduceJobInput`]({{site.api_mr_rc4}}/TextMapReduceJobInput.html) and
-[`DirectKijiTableMapReduceJobOutput`]({{site.api_mr_rc4}}/DirectKijiTableMapReduceJobOutput.html)
+The [`TextMapReduceJobInput`]({{site.api_mr_rc4}}/input/TextMapReduceJobInput.html) and
+[`DirectKijiTableMapReduceJobOutput`]({{site.api_mr_rc4}}/output/DirectKijiTableMapReduceJobOutput.html)
 classes are abstractions that, under the hood, configure an `InputFormat` and `OutputFormat`
 for the MapReduce job. Different KijiMR job types (bulk importer, producer, or gatherer)
 support different subsets of available formats (files, tables, etc). These classes allow the

@@ -30,14 +30,21 @@ kiji_url : http://www.kiji.org
 #
 production_url : http://docs.kiji.org
 userguide_url : /userguides
-userguide_schema_rc4 : /userguides/schema/1.0.0-rc4
-userguide_mapreduce_rc4 : /userguides/mapreduce/1.0.0-rc4
-
 tutorial_url : /tutorials
-api_url : /apidocs
+
+# rc3
+api_schema_rc3 : /apidocs/kiji-schema/1.0.0-rc3/org/kiji/schema
+tutorial_phonebook_rc3 : /tutorials/phonebook-tutorial/1.0.0-rc3
+userguide_schema_rc3 : /userguides/schema/1.0.0-rc3
+
+# rc4
 api_schema_rc4 : /apidocs/kiji-schema/1.0.0-rc4/org/kiji/schema
 api_mr_rc4 : /apidocs/kiji-mapreduce/1.0.0-rc4/org/kiji/mapreduce
 api_mrlib_rc4 : /apidocs/kiji-mapreduce-lib/1.0.0-rc4/org/kiji/mapreduce
+tutorial_phonebook_rc4 : /tutorials/phonebook-tutorial/1.0.0-rc4
+tutorial_music_rc4 : /tutorials/music-recommendation/1.0.0-rc4
+userguide_schema_rc4 : /userguides/schema/1.0.0-rc4
+userguide_mapreduce_rc4 : /userguides/mapreduce/1.0.0-rc4
 
 # All Jekyll-Bootstrap specific configurations are namespaced into this hash
 #

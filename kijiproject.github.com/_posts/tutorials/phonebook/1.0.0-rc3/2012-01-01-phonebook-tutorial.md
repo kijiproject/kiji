@@ -17,12 +17,12 @@ to bulk load this into your Kiji table.
 Example code for a more in depth look at these use cases exist in the directory
 `$KIJI_HOME/examples/phonebook/src/main/java`.  Instructions for how to build and use this
 example code can be found in the next section of this tutorial,
-[Setup]({{site.tutorial_url}}phonebook-setup).
+[Setup]({{site.tutorial_phonebook_rc3}}/phonebook-setup).
 
 ### How to Use this Tutorial
 
 * **Links to Javadoc** - Class names link to the relevant Javadoc:
-[`EntityId`]({{site.api_url}}EntityId.html).
+[`EntityId`]({{site.api_schema_rc3}}/EntityId.html).
 
 * **Code Walkthrough** - Code snippets are in gray boxes with language specific syntax highlighting:
 
