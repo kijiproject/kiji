@@ -40,6 +40,17 @@
       <filtered>false</filtered>
     </fileSet>
     <fileSet>
+      <!-- data files -->
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <directory>example_data</directory>
+      <outputDirectory>/data</outputDirectory>
+      <fileMode>0644</fileMode>
+      <includes>
+        <include>*.json</include>
+      </includes>
+      <filtered>false</filtered>
+    </fileSet>
+    <fileSet>
       <!-- source code -->
       <useDefaultExcludes>true</useDefaultExcludes>
       <outputDirectory>/</outputDirectory>
