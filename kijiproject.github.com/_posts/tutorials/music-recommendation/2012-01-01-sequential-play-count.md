@@ -18,159 +18,14 @@ SequentialSongCount mapper and reducer allow us to do that.
 
 <div id="accordion-container">
   <h2 class="accordion-header"> SequentialPlayCounter.java </h2>
-    <div class="accordian-content">
-{% highlight java %}
-/**
- * This gatherer reads from the "info:track_plays" column of the user table, and for every pair of
- * songs played in a row, it emits a SongBiGram and a LongWritable(1). This will allow us to count
- * how many times the two songs have been played in that order.
- */
-public class SequentialPlayCounter extends KijiGatherer<AvroKey<SongBiGram>, LongWritable>
-  implements AvroKeyWriter {
-  /** Only keep one LongWritable object, to reduce the chance of a garbage collection pause. */
-  private static final LongWritable ONE = new LongWritable(1);
-  /** Only keep one SongBiGram object, to reduce the chance of a garbage collection pause. */
-  private SongBiGram mBiGram;
-
-  /** {@inheritDoc} */
-  @Override
-  public void setup(GathererContext<AvroKey<SongBiGram>, LongWritable> context) throws IOException {
-    super.setup(context); // Any time you override setup, call super.setup(context);
-    mBiGram = new SongBiGram();
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public void gather(KijiRowData input, GathererContext<AvroKey<SongBiGram>, LongWritable> context)
-      throws IOException {
-    CharSequence firstSong = null;
-    CharSequence nextSong = null;
-    NavigableMap<Long, CharSequence> trackPlays = input.getValues("info", "track_plays");
-    for (CharSequence trackId : trackPlays.values()) {
-      if (null != nextSong) {
-        // If this is not the first song, we need to slide our window along.
-        firstSong = nextSong;
-        nextSong = trackId;
-        mBiGram.setFirstSongPlayed(firstSong);
-        mBiGram.setSecondSongPlayed(nextSong);
-        context.write(new AvroKey<SongBiGram>(mBiGram), ONE);
-      } else {
-        // If this is the most recent song played, set ourselves up for the next iteration.
-        nextSong = trackId;
-      }
-    }
-  }
-
-
-  /** {@inheritDoc} */
-  @Override
-  public KijiDataRequest getDataRequest() {
-    // Retrieve all versions of info:track_plays:
-    final KijiDataRequestBuilder builder = KijiDataRequest.builder();
-    builder.newColumnsDef()
-        .withMaxVersions(HConstants.ALL_VERSIONS)
-        .add("info", "track_plays");
-    return builder.build();
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public Class<?> getOutputValueClass() {
-    return LongWritable.class;
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public Class<?> getOutputKeyClass() {
-    // Our class is AvroKey, note that we must also specify the schema.
-    return AvroKey.class;
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public Schema getAvroKeyWriterSchema() throws IOException {
-    // Since we are writing AvroKeys, we need to specify the schema.
-    return SongBiGram.SCHEMA$;
-  }
-
-}
-{% endhighlight %}
+    <div class="accordion-content">
     </div>
   <h2 class="accordion-header"> SequentialPlayCountReducer.java </h2>
-    <div class="accordian-content">
-{% highlight java %}
-/**
- * A reducer that takes in pairs of songs that have been played sequentially and the number one.
- * It then computes the number of times those songs have been played together, and emits the id of
- * the first song as the key, and a SongCount record representing the song played after the first as
- * the value. A SongCount record has a field containing the id of the subsequent song and a field
- * for the number of time sit has been played after the initial song.
- */
-public class SequentialPlayCountReducer
-    extends KijiReducer<
-        AvroKey<SongBiGram>, LongWritable, AvroKey<CharSequence>, AvroValue<SongCount>>
-    implements AvroKeyReader, AvroKeyWriter, AvroValueWriter {
-
-  /** {@inheritDoc} */
-  @Override
-  protected void reduce(AvroKey<SongBiGram> key, Iterable<LongWritable> values, Context context)
-      throws IOException, InterruptedException {
-    // Initialize sum to zero.
-    long sum = 0L;
-    // Add up all the values.
-    for (LongWritable value : values) {
-      sum += value.get();
-    }
-
-    // Set values for this count.
-    final SongBiGram songPair = key.datum();
-
-    final SongCount nextSongCount = SongCount.newBuilder()
-         .setCount(sum)
-         .setSongId(songPair.getSecondSongPlayed())
-         .build();
-    // Write out result for this song
-    context.write(
-        new AvroKey<CharSequence>(songPair.getFirstSongPlayed().toString()),
-        new AvroValue<SongCount>(nextSongCount));
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public Schema getAvroKeyReaderSchema() throws IOException {
-    return SongBiGram.SCHEMA$;
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public Class<?> getOutputKeyClass() {
-    return AvroKey.class;
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public Class<?> getOutputValueClass() {
-    return AvroValue.class;
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public Schema getAvroValueWriterSchema() throws IOException {
-    return SongCount.SCHEMA$;
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public Schema getAvroKeyWriterSchema() throws IOException {
-    // Programmatically retrieve the avro schema for a String.
-    return Schema.create(Schema.Type.STRING);
-  }
-}
-{% endhighlight %}
+    <div class="accordion-content">
     </div>
 </div>
 
-### SequentialPlayCounter.java
+<h3 style="margin-top:0px;padding-top:10px;"> SequentialPlayCounter.java </h3>
 SequentialPlayCounter.java operates in much the same way that SongPlayCounter.java does, but is
 requires a more complex key structure to store both the song played and the song that followed.
 The easiest way work with complex keys in Kiji is to use [Avro](http://avro.apache.org).
@@ -290,80 +145,10 @@ test:
 <div id="accordion-container">
   <h2 class="accordion-header"> TestSequentialSongPlayCounter.java </h2>
     <div class="accordion-content">
-{% highlight java %}
-/** Test for SequentialPlayCounter. */
-public class TestSequentialSongPlayCounter extends KijiClientTest {
-  private static final Logger LOG = LoggerFactory.getLogger(TestSongPlayCounter.class);
-
-  private KijiURI mUserTableURI;
-
-  /** Initialize our environment. */
-  @Before
-  public final void setup() throws Exception {
-    final KijiTableLayout userLayout =
-        KijiTableLayout.createFromEffectiveJsonResource("/layout/users.json");
-    final String userTableName = userLayout.getName();
-    mUserTableURI = KijiURI.newBuilder(getKiji().getURI()).withTableName(userTableName).build();
-
-
-    new InstanceBuilder(getKiji())
-        .withTable(userTableName, userLayout)
-            .withRow("user-1").withFamily("info").withQualifier("track_plays")
-                .withValue(2L, "song-2")
-                .withValue(3L, "song-1")
-            .withRow("user-2").withFamily("info").withQualifier("track_plays")
-                .withValue(2L, "song-3")
-                .withValue(3L, "song-2")
-                .withValue(4L, "song-1")
-            .withRow("user-3").withFamily("info").withQualifier("track_plays")
-                .withValue(1L, "song-5")
-        .build();
-  }
-
-  /** Test that our MR job computes results as expected. */
-  @Test
-  public void testSongPlayCounter() throws Exception {
-    // Configure and run job.
-    final File outputDir = new File(getLocalTempDir(), "output.sequence_file");
-    final Path path = new Path("file://" + outputDir);
-    final MapReduceJob mrjob = KijiGatherJobBuilder.create()
-        .withConf(getConf())
-        .withGatherer(SequentialPlayCounter.class)
-        .withReducer(SequentialPlayCountReducer.class)
-        .withInputTable(mUserTableURI)
-        // Note: the local map/reduce job runner does not allow more than one reducer:
-        .withOutput(new AvroKeyValueMapReduceJobOutput(new Path("file://" + outputDir), 1))
-        .build();
-    assertTrue(mrjob.run());
-
-    // Using a KVStoreReader here is a hack. It works in the sense it is easy to read from, but it
-    // assumes that the is only one value for every key.
-    AvroKVRecordKeyValueStore.Builder kvStoreBuilder = AvroKVRecordKeyValueStore.builder()
-        .withInputPath(path).withConfiguration(getConf());
-    final AvroKVRecordKeyValueStore outputKeyValueStore = kvStoreBuilder.build();
-    KeyValueStoreReader reader = outputKeyValueStore.open();
-
-    // Check that our results are correct.
-    assertTrue(reader.containsKey("song-1"));
-    SongCount song1Result = (SongCount) reader.get("song-1");
-    assertEquals(2L, song1Result.getCount().longValue());
-    // Avro strings are deserialized to CharSequences in Java, .toString() allows junit to correctly
-    // compare the expected and actual values.
-
-    assertEquals("song-2", song1Result.getSongId().toString());
-    assertTrue(reader.containsKey("song-2"));
-    SongCount song2Result = (SongCount) reader.get("song-2");
-    assertEquals(1L, song2Result.getCount().longValue());
-    // Avro strings are deserialized to CharSequences in Java, .toString() allows junit to correctly
-    // compare the expected and actual values.
-    assertEquals("song-3", song2Result.getSongId().toString());
-  }
-}
-{% endhighlight %}
   </div>
 </div>
 
-#### Create an in-memory Kiji instance
+<h4 style="margin-top:0px;padding-top:10px;"> Create an in-memory Kiji instance </h4>
 The InstanceBuilder class provides methods for populating a test Kiji instance. Once the test
 instance has been defined, its build method is called, creating the in-memory instance and
 table.

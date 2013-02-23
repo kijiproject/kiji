@@ -20,107 +20,13 @@ written to a text file in HDFS.
 <div id="accordion-container">
   <h2 class="accordion-header"> SongPlayCounter.java </h2>
      <div class="accordion-content">
-{% highlight java %}
-/**
- * Gatherer to count the total number of times each song has been played.
- *
- * Reads the track plays from the user table and emits (song ID, 1) pairs for each track play.
- * This gatherer should be combined with a summing reducer to count the number of plays per track.
- */
-public class SongPlayCounter extends KijiGatherer<Text, LongWritable> {
-  /** Only keep one Text object around to reduce the chance of a garbage collection pause.*/
-  private Text mText;
-  /** Only keep one LongWritable object around to reduce the chance of a garbage collection pause.*/
-  private static final LongWritable ONE = new LongWritable(1);
-
-  /** {@inheritDoc} */
-  @Override
-  public Class<?> getOutputKeyClass() {
-    return Text.class;
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public Class<?> getOutputValueClass() {
-    return LongWritable.class;
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public void setup(GathererContext<Text, LongWritable> context) throws IOException {
-    super.setup(context); // Any time you override setup, call super.setup(context);
-    mText = new Text();
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public KijiDataRequest getDataRequest() {
-    // Retrieve all versions of info:track_plays:
-    final KijiDataRequestBuilder builder = KijiDataRequest.builder();
-    builder.newColumnsDef()
-        .withMaxVersions(HConstants.ALL_VERSIONS)
-        .add("info", "track_plays");
-    return builder.build();
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public void gather(KijiRowData row, GathererContext<Text, LongWritable> context)
-      throws IOException {
-    NavigableMap<Long, CharSequence> trackPlays = row.getValues("info", "track_plays");
-    for (CharSequence trackId : trackPlays.values()) {
-      mText.set(trackId.toString());
-      context.write(mText, ONE);
-      mText.clear();
-    }
-  }
-
-}
-{% endhighlight %}
      </div>
  <h2 class="accordion-header"> LongSumReducer.java </h2>
    <div class="accordion-content">
-{% highlight java %}
-/**
- * <p>A WibiReducer that works of key/value pairs where the value is
- * an LongWritable.  For all integer values with the same key, the
- * LongSumReducer will output a single pair with a value equal to the
- * sum, leaving the key unchanged.</p>
- *
- * @param <K> The type of the reduce input key.
- */
-public class LongSumReducer<K> extends KeyPassThroughReducer<K, LongWritable, LongWritable> {
-  private LongWritable mValue;
-
-  /** {@inheritDoc} */
-  @Override
-  protected void setup(Context context) {
-    mValue = new LongWritable();
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  protected void reduce(K key, Iterable<LongWritable> values,
-      Context context) throws IOException, InterruptedException {
-    long sum = 0;
-    for (LongWritable value : values) {
-      sum += value.get();
-    }
-    mValue.set(sum);
-    context.write(key, mValue);
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public Class<?> getOutputValueClass() {
-    return LongWritable.class;
-  }
-}
-{% endhighlight %}
     </div>
 </div>
 
-### SongPlayCounter.java
+<h3 style="margin-top:0px;padding-top:10px;"> SongPlayCounter.java </h3>
 The SongPlayCounter is an example of a [Gatherer]({{site.userguide_mapreduce_rc4}}/gatherers), which is essentially a
 mapper that gets input from a [`KijiTable`]({{site.api_schema_rc4}}/KijiTable.html).  SongPlayCounter proceeds through discrete stages:
 * Setup reusable resources.
@@ -233,89 +139,11 @@ To verify that SongPlayCounter performs as expected, SongPlayCounter's test:
 
 <div id="accordion-container">
   <h2 class="accordion-header"> TestSongPlayCounter.java </h2>
-     <div class="accordion-content">
-
-{% highlight java %}
-/** Unit-test for the SongPlayCounter gatherer. */
-public class TestSongPlayCounter extends KijiClientTest {
-  private static final Logger LOG = LoggerFactory.getLogger(TestSongPlayCounter.class);
-
-  private KijiURI mTableURI;
-
-  /** Initialize our environment. */
-  @Before
-  public final void setup() throws Exception {
-    final KijiTableLayout layout =
-        KijiTableLayout.createFromEffectiveJsonResource("/layout/users.json");
-    final String tableName = layout.getName();
-    mTableURI = KijiURI.newBuilder(getKiji().getURI()).withTableName(tableName).build();
-
-    new InstanceBuilder(getKiji())
-        .withTable(tableName, layout)
-            .withRow("user-1").withFamily("info").withQualifier("track_plays")
-                .withValue(1L, "song-1")
-                .withValue(2L, "song-2")
-                .withValue(3L, "song-3")
-            .withRow("user-2").withFamily("info").withQualifier("track_plays")
-                .withValue(1L, "song-1")
-                .withValue(2L, "song-3")
-                .withValue(3L, "song-4")
-                .withValue(4L, "song-1")
-            .withRow("user-3").withFamily("info").withQualifier("track_plays")
-                .withValue(1L, "song-5")
-        .build();
-  }
-
-  /* Test our play count computes the expected results. */
-  @Test
-  public void testSongPlayCounter() throws Exception {
-    final File outputDir = new File(getLocalTempDir(), "output.sequence_file");
-    final MapReduceJob mrjob = KijiGatherJobBuilder.create()
-        .withConf(getConf())
-        .withGatherer(SongPlayCounter.class)
-        .withReducer(LongSumReducer.class)
-        .withInputTable(mTableURI)
-        // Note: the local map/reduce job runner does not allow more than one reducer:
-        .withOutput(new SequenceFileMapReduceJobOutput(new Path("file://" + outputDir), 1))
-        .build();
-    assertTrue(mrjob.run());
-
-    final Map<String, Long> counts = Maps.newTreeMap();
-    readSequenceFile(new File(outputDir, "part-r-00000"), counts);
-    LOG.info("Counts map: {}", counts);
-    assertEquals(5, counts.size());
-    assertEquals(3L, (long) counts.get("song-1"));
-    assertEquals(1L, (long) counts.get("song-2"));
-    assertEquals(2L, (long) counts.get("song-3"));
-    assertEquals(1L, (long) counts.get("song-4"));
-    assertEquals(1L, (long) counts.get("song-5"));
-  }
-
-  /**
-   * Reads a sequence file of (song ID, # of song plays) into a map.
-   *
-   * @param path Path of the sequence file to read.
-   * @param map Map to fill in with (song ID, # of song plays) entries.
-   * @throws Exception on I/O error.
-   */
-  private void readSequenceFile(File path, Map<String, Long> map) throws Exception {
-    final SequenceFile.Reader reader = new SequenceFile.Reader(
-        getConf(),
-        SequenceFile.Reader.file(new Path("file://" + path.toString())));
-    final Text songId = new Text();
-    final LongWritable nplays = new LongWritable();
-    while (reader.next(songId, nplays)) {
-      map.put(songId.toString(), nplays.get());
-    }
-    reader.close();
-  }
-}
-{% endhighlight %}
-
+    <div class="accordion-content">
     </div>
 </div>
 
-#### Create an in-memory Kiji instance
+<h4 style="margin-top:0px;padding-top:10px;"> Create an in-memory Kiji instance </h4>
 The InstanceBuilder class provides methods for populating a test Kiji instance. Once the test
 instance has been defined, its build method is called, creating the in-memory instance and
 table.
@@ -395,6 +223,6 @@ $ hadoop fs -text ${HDFS_ROOT}/output.txt_file/part-r-00000 | head -3
 {% endhighlight %}
 </div>
 
-    song-1  100
-    song-10 272
-    song-12 101
+    song-1  328
+    song-10 256
+    song-12 122
