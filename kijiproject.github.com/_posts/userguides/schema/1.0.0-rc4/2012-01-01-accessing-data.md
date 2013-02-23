@@ -149,6 +149,18 @@ try {
 
 ## MapReduce<a id="mapreduce"> </a>
 
+<div class="row">
+  <div class="span2">&nbsp;</div>
+  <div class="span8" style="background-color:#eee; border-radius: 6px; padding: 10px">
+    <h3>Deprecation Warning</h3>
+    <p>
+      This section refers to classes in the <tt>org.kiji.schema.mapreduce</tt> package
+      that may be removed in the future. Please see the <a href="/userguides/mapreduce/1.0.0-rc4">
+      KijiMR Userguide</a> for information on using MapReduce with Kiji.
+    </p>
+  </div>
+</div>
+
 The [`KijiTableInputFormat`]({{site.api_schema_rc4}}/mapreduce/KijiTableInputFormat.html) provides the necessary functionality to read from a Kiji table in a
 MapReduce job. To configure a job to read from a Kiji table, use [`KijiTableInputFormat`]({{site.api_schema_rc4}}/mapreduce/KijiTableInputFormat.html)'s
 static `setOptions` method. For example:

@@ -164,7 +164,7 @@ This command has two mandatory arguments:
      It is an error for this table to already exist.
 *  `--layout=<path/to/layout.json>`
    - Path to a file a JSON file containing the table layout specification,
-     as described in [Managing Data]({{site.userguide_url}}managing-data#layouts).
+     as described in [Managing Data]({{site.userguide_schema_rc4}}/managing-data#layouts).
 
 The following arguments are optional:
 

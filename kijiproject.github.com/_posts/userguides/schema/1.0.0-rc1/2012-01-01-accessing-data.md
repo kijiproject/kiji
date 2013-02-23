@@ -8,14 +8,14 @@ order : 4
 description: How to access data using KijiSchema.
 ---
 
-The [`KijiTableReader`]({{site.api_url}}KijiTableReader.html) class provides a `get(...)` method to read typed data from a Kiji table row.
-The row is addressed by its [`EntityId`]({{site.api_url}}EntityId.html) (which can be retrieved from the [`KijiTable`]({{site.api_url}}KijiTable.html) instance using the [`getEntityId()`]({{site.api_url}}KijiTable.html#getEntityId%28java.lang.String%29) method).
-Specify the desired cells from the rows with a [`KijiDataRequest`]({{site.api_url}}KijiDataRequest.html). See the 
-[`KijiDataRequest`]({{site.api_url}}KijiDataRequest.html) documentation for details.
+The [`KijiTableReader`]({{site.api_schema_rc1}}/KijiTableReader.html) class provides a `get(...)` method to read typed data from a Kiji table row.
+The row is addressed by its [`EntityId`]({{site.api_schema_rc1}}/EntityId.html) (which can be retrieved from the [`KijiTable`]({{site.api_schema_rc1}}/KijiTable.html) instance using the [`getEntityId()`]({{site.api_schema_rc1}}/KijiTable.html#getEntityId%28java.lang.String%29) method).
+Specify the desired cells from the rows with a [`KijiDataRequest`]({{site.api_schema_rc1}}/KijiDataRequest.html). See the 
+[`KijiDataRequest`]({{site.api_schema_rc1}}/KijiDataRequest.html) documentation for details.
 
-In general, [`Kiji`]({{site.api_url}}Kiji.html) and [`KijiTable`]({{site.api_url}}KijiTable.html) instances should only be opened once over the life of an
-application. ([`EntityIdFactory`]({{site.api_url}}EntityIdFactory.html)s should also be reused). [`KijiTablePool`]({{site.api_url}}KijiTablePool.html) can be used to maintain a
-pool of opened [`KijiTable`]({{site.api_url}}KijiTable.html) objects for reuse. To initially open a [`KijiTable`]({{site.api_url}}KijiTable.html):
+In general, [`Kiji`]({{site.api_schema_rc1}}/Kiji.html) and [`KijiTable`]({{site.api_schema_rc1}}/KijiTable.html) instances should only be opened once over the life of an
+application. ([`EntityIdFactory`]({{site.api_schema_rc1}}/EntityIdFactory.html)s should also be reused). [`KijiTablePool`]({{site.api_schema_rc1}}/KijiTablePool.html) can be used to maintain a
+pool of opened [`KijiTable`]({{site.api_schema_rc1}}/KijiTable.html) objects for reuse. To initially open a [`KijiTable`]({{site.api_schema_rc1}}/KijiTable.html):
 
 {% highlight java %}
 Configuration conf = HBaseConfiguration.create();
@@ -24,8 +24,8 @@ Kiji kiji = Kiji.open(kijiConf);
 KijiTable table = kiji.openTable("the-table-name");
 {% endhighlight %}
 
-To read from an existing [`KijiTable`]({{site.api_url}}KijiTable.html) instance, create a [`KijiDataRequest`]({{site.api_url}}KijiDataRequest.html) specifying the columns of data to
-return. Then, query for the desired [`EntityId`]({{site.api_url}}EntityId.html), using a [[`KijiTableReader`]({{site.api_url}}KijiTableReader.html)]({{site.api_url}}KijiTableReader.html). You can get a [`KijiTableReader`]({{site.api_url}}KijiTableReader.html) for a [`KijiTable`]({{site.api_url}}KijiTable.html) using the [`openTableReader()`]({{site.api_url}}KijiTable.html#openTableReader%28%29) method. For example:
+To read from an existing [`KijiTable`]({{site.api_schema_rc1}}/KijiTable.html) instance, create a [`KijiDataRequest`]({{site.api_schema_rc1}}/KijiDataRequest.html) specifying the columns of data to
+return. Then, query for the desired [`EntityId`]({{site.api_schema_rc1}}/EntityId.html), using a [[`KijiTableReader`]({{site.api_schema_rc1}}/KijiTableReader.html)]({{site.api_schema_rc1}}/KijiTableReader.html). You can get a [`KijiTableReader`]({{site.api_schema_rc1}}/KijiTableReader.html) for a [`KijiTable`]({{site.api_schema_rc1}}/KijiTable.html) using the [`openTableReader()`]({{site.api_schema_rc1}}/KijiTable.html#openTableReader%28%29) method. For example:
 
 {% highlight java %}
 KijiTableReader reader = table.openTableReader();
@@ -44,15 +44,15 @@ KijiRowData rowData = reader.get(entityId, dataRequest);
 reader.close();
 {% endhighlight %}
 
-The [[`KijiTableReader`]({{site.api_url}}KijiTableReader.html)]({{site.api_url}}KijiTableReader.html) also implements a `bulkGet(...)` method for retrieving data for a list
-of [`EntityId`]({{site.api_url}}EntityId.html)s.  This is more efficient than a series of calls to `get(...)` because it uses a single
+The [[`KijiTableReader`]({{site.api_schema_rc1}}/KijiTableReader.html)]({{site.api_schema_rc1}}/KijiTableReader.html) also implements a `bulkGet(...)` method for retrieving data for a list
+of [`EntityId`]({{site.api_schema_rc1}}/EntityId.html)s.  This is more efficient than a series of calls to `get(...)` because it uses a single
 RPC instead of one for each get.
 
 ## Modifying Data<a id="modifying-data"> </a>
 
-The [`KijiTableWriter`]({{site.api_url}}KijiTableWriter.html) class provides a `put(...)` method to write/update cells to a Kiji table. The
-cell is addressed by its entity ID, column family, column qualifier, and timestamp. Use the [`KijiCell`]({{site.api_url}}KijiCell.html)
-class to describe the typed cell data to be written. You can get a [`KijiTableWriter`]({{site.api_url}}KijiTableWriter.html) for a [`KijiTable`]({{site.api_url}}KijiTable.html) using the [`openTableWriter()`]({{site.api_url}}KijiTable.html#openTableWriter%28%29) method.
+The [`KijiTableWriter`]({{site.api_schema_rc1}}/KijiTableWriter.html) class provides a `put(...)` method to write/update cells to a Kiji table. The
+cell is addressed by its entity ID, column family, column qualifier, and timestamp. Use the [`KijiCell`]({{site.api_schema_rc1}}/KijiCell.html)
+class to describe the typed cell data to be written. You can get a [`KijiTableWriter`]({{site.api_schema_rc1}}/KijiTableWriter.html) for a [`KijiTable`]({{site.api_schema_rc1}}/KijiTable.html) using the [`openTableWriter()`]({{site.api_schema_rc1}}/KijiTable.html#openTableWriter%28%29) method.
 
 {% highlight java %}
 KijiTableWriter writer = table.openTableWriter();
@@ -71,10 +71,10 @@ Incrementing a counter value stored in a Kiji cell would normally require a
 locks can cause contention, Kiji exposes a feature of HBase to do this more
 efficiently by pushing the work to the server side. To increment a counter value in
 a Kiji cell, the column must be declared with a schema of type
-"counter". See [Managing Data]({{site.userguide_url}}/managing-data#layouts)
+"counter". See [Managing Data]({{site.userguide_schema_rc1}}/managing-data#layouts)
 for details on how to declare a counter in your table layout.
 
-The [`KijiTableWriter`]({{site.api_url}}KijiTableWriter.html) class provides methods for incrementing
+The [`KijiTableWriter`]({{site.api_schema_rc1}}/KijiTableWriter.html) class provides methods for incrementing
 counter values. Non-counter columns can not be incremented, and counter columns
 support only the increment operation. In other words, attempting to increment a
 column value that is not declared to be a counter will throw an exception. Likewise,
@@ -96,8 +96,8 @@ writer.close();
 
 ## MapReduce<a id="mapreduce"> </a>
 
-The [`KijiTableInputFormat`]({{site.api_url}}mapreduce/KijiTableInputFormat.html) provides the necessary functionality to read from a Kiji table in a
-MapReduce job. To configure a job to read from a Kiji table, use [`KijiTableInputFormat`]({{site.api_url}}mapreduce/KijiTableInputFormat.html)'s
+The [`KijiTableInputFormat`]({{site.api_schema_rc1}}/mapreduce/KijiTableInputFormat.html) provides the necessary functionality to read from a Kiji table in a
+MapReduce job. To configure a job to read from a Kiji table, use [`KijiTableInputFormat`]({{site.api_schema_rc1}}/mapreduce/KijiTableInputFormat.html)'s
 static `setOptions` method. For example:
 
 {% highlight java %}
@@ -122,7 +122,7 @@ job.setInputFormatClass(KijiTableInputFormat.class);
 The code contained within "// \*" is responsible for shipping Kiji resources to the DistributedCache.
 This is so that all nodes within your hadoop cluster will have access to Kiji dependencies.
 
-[`KijiTableInputFormat`]({{site.api_url}}mapreduce/KijiTableInputFormat.html) outputs keys of type [`EntityId`]({{site.api_url}}EntityId.html) and values of type [`KijiRowData`]({{site.api_url}}KijiRowData.html). This
+[`KijiTableInputFormat`]({{site.api_schema_rc1}}/mapreduce/KijiTableInputFormat.html) outputs keys of type [`EntityId`]({{site.api_schema_rc1}}/EntityId.html) and values of type [`KijiRowData`]({{site.api_schema_rc1}}/KijiRowData.html). This
 data can be accessed from within a mapper:
 
 {% highlight java %}
@@ -132,8 +132,8 @@ public void map(EntityId entityId, KijiRowData row, Context context) {
 }
 {% endhighlight %}
 
-[`KijiTableOutputFormat`]({{site.api_url}}mapreduce/KijiTableOutputFormat.html) provides the ability to write to Kiji tables from a MapReduce job using [`KijiMutation`]({{site.api_url}}mapreduce/KijiMutation.html)s.
-To configure a job to write to a Kiji table, use [`KijiTableOutputFormat`]({{site.api_url}}mapreduce/KijiTableOutputFormat.html)'s static `setOptions`
+[`KijiTableOutputFormat`]({{site.api_schema_rc1}}/mapreduce/KijiTableOutputFormat.html) provides the ability to write to Kiji tables from a MapReduce job using [`KijiMutation`]({{site.api_schema_rc1}}/mapreduce/KijiMutation.html)s.
+To configure a job to write to a Kiji table, use [`KijiTableOutputFormat`]({{site.api_schema_rc1}}/mapreduce/KijiTableOutputFormat.html)'s static `setOptions`
 method. For example:
 
 {% highlight java %}
@@ -154,8 +154,8 @@ job.setOutputValueClass(KijiOutput.class);
 job.setOutputFormatClass(KijiTableOutputFormat.class);
 {% endhighlight %}
 
-The [`ContextKijiTableWriter`]({{site.api_url}}mapreduce/ContextKijiTableWriter.html) class provides the ability to write to Kiji tables from within a
-MapReduce job. This class provides the the same methods provided by the [`KijiTableWriter`]({{site.api_url}}KijiTableWriter.html)
+The [`ContextKijiTableWriter`]({{site.api_schema_rc1}}/mapreduce/ContextKijiTableWriter.html) class provides the ability to write to Kiji tables from within a
+MapReduce job. This class provides the the same methods provided by the [`KijiTableWriter`]({{site.api_schema_rc1}}/KijiTableWriter.html)
 described above. For example (from within a mapper):
 
 {% highlight java %}

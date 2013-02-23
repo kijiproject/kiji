@@ -180,7 +180,7 @@ locality_groups: [ {
 Table names may not be changed.
 
 
-### Layout record descriptor <a name="ref.table_layout_desc" id="ref.table_layout_desc"></a>
+### Layout record descriptor <a name="ref.table_layout_desc" id="ref.table_layout_desc"> </a>
 
 For reference, the Avro descriptor for table layout records is defined in
 `src/main/avro/Layout.avdl` within the kiji-schema git project as follows:

@@ -31,6 +31,13 @@ kiji_url : http://www.kiji.org
 production_url : http://docs.kiji.org
 userguide_url : /userguides
 tutorial_url : /tutorials
+# rc1
+api_schema_rc1 : /apidocs/kiji-schema/1.0.0-rc1/org/kiji/schema
+userguide_schema_rc1 : /userguides/schema/1.0.0-rc1
+
+# rc2
+api_schema_rc2 : /apidocs/kiji-schema/1.0.0-rc2/org/kiji/schema
+userguide_schema_rc2 : /userguides/schema/1.0.0-rc2
 
 # rc3
 api_schema_rc3 : /apidocs/kiji-schema/1.0.0-rc3/org/kiji/schema
