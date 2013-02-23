@@ -110,6 +110,12 @@ kiji bulk-import \
 {% endhighlight %}
 </div>
 
+When the MapReduce bulk import job runs, KijiMR will warn you that jars are already added.
+This is normal and not a cause for alarm.  Once the MapReduce job actually starts, you will
+receive periodic progress updates for the map and reduce phases of the job.  When the job
+completes, MapReduce will print a number of metrics describing the results of the job. You can also
+examine the output of your job at ([http://localhost:50030](the JobTracker Web UI : http://localhost:50030).
+
 #### Verify
 
 Verify that the `user` table records were added properly by executing:
