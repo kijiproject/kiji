@@ -13,9 +13,9 @@ To quote Scalding Developers
 Unfortunately, we here at PANDORA are fresh out of words, but we do have the play history of
 millions of users listening to  millions of different songs.
 
-This MapReduce job uses the listening history of our users that we have stored in a Kiji table to
-calculate the total number of times each song has been played. The result of this computation is
-written to a text file in HDFS.
+This MapReduce job uses the listening history of our users that we have stored in the "users" Kiji
+table to calculate the total number of times each song has been played. The result of this computation
+is written to a text file in HDFS.
 
 <div id="accordion-container">
   <h2 class="accordion-header"> SongPlayCounter.java </h2>
@@ -26,19 +26,20 @@ written to a text file in HDFS.
     </div>
 </div>
 
-<h3 style="margin-top:0px;padding-top:10px;"> SongPlayCounter.java </h3>
+<h3 style="margin-top:0px;padding-top:10px;"> SongPlayCounter </h3>
+
 The SongPlayCounter is an example of a [Gatherer]({{site.userguide_mapreduce_rc4}}/gatherers), which is essentially a
 mapper that gets input from a [`KijiTable`]({{site.api_schema_rc4}}/KijiTable.html).  SongPlayCounter proceeds through discrete stages:
 * Setup reusable resources.
 * Read all values from column: "info:track_plays".
-* Process the data from "info:track_plays" and emit a key/value pair for each track id each time
+* Process the data from "info:track_plays" and emit a key-value pair for each track ID each time
   it occurs.
 
 #### Initialize Resources
-Prepares any resources that may be needed by the gatherer.  In Hadoop, reusable objects are
-commonly instantiated only once to protect against long garbage collection pauses. This is
-particularly important with Kiji because long garbage collection pauses can cause MR jobs to fail
-because various resources timeout or cannot be found.
+First, SongPlayCounter prepares any resources that may be needed by the gatherer.  In Hadoop,
+reusable objects are commonly instantiated only once to protect against long garbage collection
+pauses. This is particularly important with Kiji because long garbage collection pauses can cause
+MR jobs to fail because various resources timeout or cannot be found.
 
 Since setup() is an overriden method, we call super.setup() to ensure that all resources are
 initialized properly.  If you open resources in setup(), be sure to close them in the corresponding
@@ -70,7 +71,7 @@ public KijiDataRequest getDataRequest() {
 }
 {% endhighlight %}
 
-#### Process track play data into key/value pairs for occurrences
+#### Process track play data into key-value pairs for occurrences
 Called once for each row in the Kiji table, gather() retrieves all the values in the
 "info:track_plays" column, and for each value, sets the Text object we are resuing to contain the
 current value, writes the key-value pairs using `context.write(mText, ONE)` and then clears the Text
@@ -87,16 +88,16 @@ object before the next call to gather.
   }
 {% endhighlight %}
 
-### LongSumReducer.java
-The key-value pairs emiited from the gatherer are shuffled and sorted by the MapReduce framework,
-so that each (call to reduce/reducer) is given a key and an iterator of all values associated with
+### LongSumReducer
+The key-value pairs emitted from the gatherer are shuffled and sorted by the MapReduce framework,
+so each call to the reducer is given a key and an iterator of all values associated with
 a key. The LongSumReducer calls reduce() for each key and sums all of the associated values to produce a
-total play count for each song id. The LongSumReducer has three stages:
+total play count for each song ID. The LongSumReducer has three stages:
 * Setup reusable resources.
-* Sums the values associated with a key.
-* Outputs the key paired with the sum.
+* Sum the values associated with a key.
+* Output the key paired with the sum.
 
-Summing values is such a common MapReduce operation, LongSumReducer.java is provided by the KijiMR
+Because summing values is such a common MapReduce operation, LongSumReducer is provided by the KijiMR
 library.
 
 #### Initialize Resources
@@ -131,7 +132,7 @@ to the output collector.
   }
 {% endhighlight %}
 
-### TestSongPlayCounter.java
+### TestSongPlayCounter
 To verify that SongPlayCounter performs as expected, SongPlayCounter's test:
 * Creates and populates an in-memory Kiji instance.
 * Runs a MapReduce job with SongPlayCounter as the gatherer and LongSumReducer as the reducer.
@@ -174,7 +175,7 @@ table.
 
 #### Run and verify SongPlayCounter
 KijiGatherJobBuilder is used to create a test MapReduce job. This job builder can be used outside
-the context of a test to configure and run jobs programatically. The job is then run using Hadoop's
+the context of a test to configure and run jobs programmatically. The job is then run using Hadoop's
 local job runner. The resulting output sequence file is then validated.
 
 {% highlight java %}
@@ -215,7 +216,7 @@ kiji gather \
 
 #### Verify
 
-To confirm that the gather job worked, examine the output using hadoop filesystem commandline tools:
+To confirm that the gather job worked, examine the output using hadoop filesystem command line tools:
 
 <div class="userinput">
 {% highlight bash %}
