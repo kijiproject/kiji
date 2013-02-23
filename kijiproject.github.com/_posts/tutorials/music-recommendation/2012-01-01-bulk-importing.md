@@ -189,7 +189,7 @@ Copy the descriptor file into HDFS.
 <div class="userinput">
 {% highlight bash %}
 $ hadoop fs -copyFromLocal \
-    $KIJI_HOME/examples/music/import/song-plays-import-descriptor.json \
+    $MUSIC_HOME/import/song-plays-import-descriptor.json \
     kiji-mr-tutorial/
 {% endhighlight %}
 </div>

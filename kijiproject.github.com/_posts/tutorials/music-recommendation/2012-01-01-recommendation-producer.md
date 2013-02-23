@@ -154,7 +154,7 @@ kiji produce \
       --input="format=kiji table=$KIJI/users" \
       --output="format=kiji table=$KIJI/users nsplits=2" \
       --lib=${LIBS_DIR} \
-      --kvstores=$KIJI_HOME/examples/music/KVStoreConfig.xml
+      --kvstores=$MUSIC_HOME/KVStoreConfig.xml
 {% endhighlight %}
 </div>
 
