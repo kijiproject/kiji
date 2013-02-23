@@ -118,11 +118,12 @@ withStore() method of JobBuilders.
 {% endhighlight %}
 
 ### Running the Example
-When we run this example, we again need to need specify which [`KijiTable`]({{site.api_schema_rc4}}/KijiTable.html) we want to use to back our
+When we run this example, we again need to need specify which
+[`KijiTable`]({{site.api_schema_rc4}}/KijiTable.html) we want to use to back our
 KeyValueStore. This time, we will override the KeyValueStore binding from
-the command line using an XML configuration file. The contents of the file are displayed below.
-If you are not using BentoBox, you may need to modify this XML file so that the URI points to the
-songs table you would like to use.
+the command line using an XML configuration file (located at $KIJI_HOME/examples/music/KVStoreConfig.xml).
+The contents of the file are displayed below. If you are not using BentoBox, you may need to modify this
+XML file so that the URI points to the songs table you would like to use.
 
 
 {% highlight xml %}
