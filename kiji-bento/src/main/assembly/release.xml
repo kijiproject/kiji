@@ -52,10 +52,23 @@
       <outputDirectory>bin</outputDirectory>
       <directory>src/main/scripts</directory>
       <fileMode>0755</fileMode>
-      <excludes>
-        <exclude>*~</exclude>
-        <exclude>*.swp</exclude>
-      </excludes>
+      <includes>
+        <include>kiji-env.sh</include>
+        <include>record-usage-timestamp.sh</include>
+        <include>upgrade-informer.sh</include>
+      </includes>
+    </fileSet>
+    <!-- scripts used by bento-cluster for upgrade check-in. -->
+    <fileSet>
+      <useDefaultExcludes>true</useDefaultExcludes>
+      <outputDirectory>cluster/bin</outputDirectory>
+      <directory>src/main/scripts</directory>
+      <fileMode>0755</fileMode>
+      <includes>
+        <include>generate-uuid.sh</include>
+        <include>upgrade-daemon-start.sh</include>
+        <include>upgrade-daemon-stop.sh</include>
+      </includes>
     </fileSet>
     <fileSet>
       <!-- kiji-schema -->
@@ -221,4 +234,21 @@
       <fileMode>0644</fileMode>
     </file>
   </files>
+  <dependencySets>
+    <dependencySet>
+      <outputDirectory>lib</outputDirectory>
+      <scope>runtime</scope>
+      <useTransitiveFiltering>true</useTransitiveFiltering>
+      <fileMode>0644</fileMode>
+      <excludes>
+        <exclude>org.apache.hadoop</exclude>
+        <exclude>org.apache.hbase</exclude>
+        <exclude>org.kiji.schema</exclude>
+        <exclude>org.kiji.mapreduce</exclude>
+        <exclude>org.kiji.bento:bento-cluster</exclude>
+        <exclude>org.kiji.examples.phonebook</exclude>
+        <exclude>org.kiji.examples.music</exclude>
+      </excludes>
+    </dependencySet>
+  </dependencySets>
 </assembly>

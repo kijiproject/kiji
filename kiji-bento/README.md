@@ -96,3 +96,22 @@ Quickstart
 
 To continue using Kiji, consult the online
 [quickstart guide](http://www.kiji.org/getstarted/#Quick_Start_Guide).
+
+Upgrade Server Check-in
+------------------------
+Kiji BentoBox will periodically check in with an upgrade server to
+determine if there are any upgrades available for your distribution.
+If upgrades are available, the `kiji` script that comes with BentoBox
+will periodically remind you (once a day) of available upgrades.
+BentoBox sends anonymized information when checking in with the
+upgrade server.
+
+To disable checking in with the upgrade server, write a file named
+`disable-checkin` to the `conf` directory that is part of the
+BentoBox distribution. Using the `touch` command is sufficient. For
+example:
+
+> `touch $KIJI_HOME/conf/disable-checkin`
+
+will disable check in with the upgrade server.
+
