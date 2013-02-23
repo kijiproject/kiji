@@ -9,7 +9,7 @@
   <parent>
     <groupId>org.kiji.pom</groupId>
     <artifactId>root-pom</artifactId>
-    <version>1.0.3</version>
+    <version>1.0.4-SNAPSHOT</version>
   </parent>
 
   <name>kiji-bento</name>
@@ -17,13 +17,13 @@
   <inceptionYear>2012</inceptionYear>
 
   <properties>
-    <bento-cluster.version>1.0.0-rc4</bento-cluster.version>
-    <kiji-schema.version>1.0.0-rc4</kiji-schema.version>
-    <kiji-schema-shell.version>1.0.0-rc4</kiji-schema-shell.version>
-    <kiji-phonebook.version>1.0.0-rc4</kiji-phonebook.version>
-    <kiji-mapreduce.version>1.0.0-rc4</kiji-mapreduce.version>
-    <kiji-mapreduce-lib.version>1.0.0-rc4</kiji-mapreduce-lib.version>
-    <kiji-music.version>1.0.0-rc4</kiji-music.version>
+    <bento-cluster.version>1.0.0-rc5-SNAPSHOT</bento-cluster.version>
+    <kiji-schema.version>1.0.0-rc5-SNAPSHOT</kiji-schema.version>
+    <kiji-schema-shell.version>1.0.0-rc5-SNAPSHOT</kiji-schema-shell.version>
+    <kiji-phonebook.version>1.0.0-rc5-SNAPSHOT</kiji-phonebook.version>
+    <kiji-mapreduce.version>1.0.0-rc5-SNAPSHOT</kiji-mapreduce.version>
+    <kiji-mapreduce-lib.version>1.0.0-rc5-SNAPSHOT</kiji-mapreduce-lib.version>
+    <kiji-music.version>1.0.0-rc5-SNAPSHOT</kiji-music.version>
   </properties>
 
   <build>
