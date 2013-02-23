@@ -53,6 +53,14 @@ export KIJI_HOME=/path/to/kiji-schema
 {% endhighlight %}
 </div>
 
+Install your Kiji instance. Running `kiji install` with no `--kiji` flag installs the default instance:
+
+<div class="userinput">
+{% highlight bash %}
+kiji install
+{% endhighlight %}
+</div>
+
 To work through this tutorial, various Kiji tools will require that Avro data
 type definitions particular to the working phonebook example be on the
 classpath. You can add your artifacts to the Kiji classpath by running:
