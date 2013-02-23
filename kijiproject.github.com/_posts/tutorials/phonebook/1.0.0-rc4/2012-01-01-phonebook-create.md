@@ -119,7 +119,7 @@ another time using JSON! Use the following command to delete the table:
 
 <div class="userinput">
 {% highlight bash %}
-$KIJI_HOME/bin/kiji delete-table --target=kiji://.env/default/phonebook
+$KIJI_HOME/bin/kiji delete --target=kiji://.env/default/phonebook
 {% endhighlight %}
 </div>
 
