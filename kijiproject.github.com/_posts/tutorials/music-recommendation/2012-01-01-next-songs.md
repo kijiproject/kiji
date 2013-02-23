@@ -185,7 +185,7 @@ a KijiTableReader is used to read the records in question.
 kiji mapreduce \
       --mapper=org.kiji.examples.music.map.IdentityMapper \
       --reducer=org.kiji.examples.music.reduce.TopNextSongsReducer \
-      --input="format=avrokv file=${HDFS_ROOT}/output.sequentialPlayCount" \
+      --input="format=avrokv file=output.sequentialPlayCount" \
       --output="format=kiji table=${KIJI}/songs nsplits=1" \
       --lib=${LIBS_DIR}
 {% endhighlight %}

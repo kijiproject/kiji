@@ -209,7 +209,7 @@ kiji gather \
       --gatherer=org.kiji.examples.music.gather.SongPlayCounter \
       --reducer=org.kiji.mapreduce.lib.reduce.LongSumReducer \
       --input="format=kiji table=${KIJI}/users" \
-      --output="format=text file=${HDFS_ROOT}/output.txt_file nsplits=2" \
+      --output="format=text file=output.txt_file nsplits=2" \
       --lib=${LIBS_DIR}
 {% endhighlight %}
 </div>
@@ -220,7 +220,7 @@ To confirm that the gather job worked, examine the output using hadoop filesyste
 
 <div class="userinput">
 {% highlight bash %}
-$ hadoop fs -text ${HDFS_ROOT}/output.txt_file/part-r-00000 | head -3
+$ hadoop fs -text output.txt_file/part-r-00000 | head -3
 {% endhighlight %}
 </div>
 

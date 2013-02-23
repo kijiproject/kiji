@@ -93,7 +93,7 @@ $ kiji bulk-import \
     --importer=org.kiji.examples.music.bulkimport.SongMetadataBulkImporter \
     --lib=${LIBS_DIR} \
     --output="format=kiji table=${KIJI}/songs nsplits=1" \
-    --input="format=text file=${HDFS_ROOT}/kiji-mr-tutorial/song-metadata.json"
+    --input="format=text file=kiji-mr-tutorial/song-metadata.json"
 {% endhighlight %}
 </div>
 
@@ -166,7 +166,7 @@ Copy the descriptor file into HDFS.
 {% highlight bash %}
 $ hadoop fs -copyFromLocal \
     $KIJI_HOME/examples/music/import/song-plays-import-descriptor.json \
-    ${HDFS_ROOT}/kiji-mr-tutorial/
+    kiji-mr-tutorial/
 {% endhighlight %}
 </div>
 
@@ -175,10 +175,10 @@ Run the JSON bulk importer.
 <div class="userinput">
 {% highlight bash %}
 $ kiji bulk-import \
-    -Dkiji.import.text.input.descriptor.path=${HDFS_ROOT}/kiji-mr-tutorial/song-plays-import-descriptor.json \
+    -Dkiji.import.text.input.descriptor.path=kiji-mr-tutorial/song-plays-import-descriptor.json \
     --importer=org.kiji.mapreduce.lib.bulkimport.JSONBulkImporter \
     --output="format=kiji table=${KIJI}/users nsplits=1" \
-    --input="format=text file=$HDFS_ROOT/kiji-mr-tutorial/song-plays.json" \
+    --input="format=text file=kiji-mr-tutorial/song-plays.json" \
     --lib=${LIBS_DIR}
 {% endhighlight %}
 </div>

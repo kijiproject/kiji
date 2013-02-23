@@ -228,7 +228,7 @@ kiji gather \
       --gatherer=org.kiji.examples.music.gather.SequentialPlayCounter \
       --reducer=org.kiji.examples.music.reduce.SequentialPlayCountReducer \
       --input="format=kiji table=${KIJI}/users" \
-      --output="format=avrokv file=${HDFS_ROOT}/output.sequentialPlayCount nsplits=2" \
+      --output="format=avrokv file=output.sequentialPlayCount nsplits=2" \
       --lib=${LIBS_DIR}
 {% endhighlight %}
 </div>

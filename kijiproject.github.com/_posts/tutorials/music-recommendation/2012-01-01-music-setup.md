@@ -53,18 +53,17 @@ export KIJI_HOME=/path/to/kiji-mapreduce
 {% endhighlight %}
 </div>
 
-After Bento starts, it will display ports you will need to complete this tutorial.
-You will need the MapReduce JobTracker webapp ([http://localhost:50030](http://localhost:50030) by default),
-HDFS NameNode port (8020 by default) and the Zookeeper client port (2181 by default).
+After Bento starts, it will display ports you will need to complete this tutorial. It will be useful
+to know the address of the MapReduce JobTracker webapp 
+([http://localhost:50030](http://localhost:50030) by default) while working through this tutorial.
 
 ### Set your environment variables
-If your HDFS NameNode port or Zookeeper client port are not the default values, change them to
-the appropriate values when running the code below.
+It will be useful to define an environment variable named `KIJI` that holds a Kiji URI to the Kiji
+instance we'll use during this tutorial.
 
 <div class="userinput">
 {% highlight bash %}
-export HDFS_ROOT=hdfs://localhost:8020
-export KIJI=kiji://localhost:2181/kiji_music
+export KIJI=kiji://.env/kiji_music
 {% endhighlight %}
 </div>
 
@@ -75,7 +74,7 @@ classpath. You can add your artifacts to the Kiji classpath by running:
 <div class="userinput">
 {% highlight bash %}
 export LIBS_DIR=$KIJI_HOME/examples/music/lib
-export KIJI_CLASSPATH=$(find ${LIBS_DIR} -name "*.jar" -printf '%p:')
+export KIJI_CLASSPATH="${LIBS_DIR}/*"
 {% endhighlight %}
 </div>
 
@@ -126,8 +125,8 @@ Upload the data set to HDFS (this step is required, even if you did not generate
 
 <div class="userinput">
 {% highlight bash %}
-hadoop fs -mkdir $HDFS_ROOT/kiji-mr-tutorial
-hadoop fs -copyFromLocal $KIJI_HOME/examples/music/data/*.json $HDFS_ROOT/kiji-mr-tutorial/
+hadoop fs -mkdir kiji-mr-tutorial
+hadoop fs -copyFromLocal $KIJI_HOME/examples/music/data/*.json kiji-mr-tutorial/
 {% endhighlight %}
 </div>
 
