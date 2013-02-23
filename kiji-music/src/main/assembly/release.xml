@@ -40,6 +40,17 @@
       <filtered>false</filtered>
     </fileSet>
     <fileSet>
+      <!-- import files -->
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <directory>import</directory>
+      <outputDirectory>/import</outputDirectory>
+      <fileMode>0644</fileMode>
+      <includes>
+        <include>*.json</include>
+      </includes>
+      <filtered>false</filtered>
+    </fileSet>
+    <fileSet>
       <!-- data files -->
       <useDefaultExcludes>false</useDefaultExcludes>
       <directory>example_data</directory>
