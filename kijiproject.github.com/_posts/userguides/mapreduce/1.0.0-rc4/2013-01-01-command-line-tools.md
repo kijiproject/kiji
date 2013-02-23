@@ -4,7 +4,7 @@ title: Command Line Tools
 categories: [userguides, mapreduce, 1.0.0-rc4]
 tags : [mapreduce-ug]
 version: 1.0.0-rc4
-order : 6
+order : 7 
 description: Command Line Tools.
 ---
 
