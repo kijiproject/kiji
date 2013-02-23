@@ -10,9 +10,7 @@ description: Read and write to the same row of a table.
 <div id="accordion-container">
   <h2 class="accordion-header"> NextSongRecommender.java </h2>
     <div class="accordion-content">
-  </div>
-  <h2 class="accordion-header"> KVStoreConfig.xml </h2>
-    <div class="accordion-content">
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/master/src/main/java/org/kiji/examples/music/produce/NextSongRecommender.java"> </script>
   </div>
 </div>
 
@@ -94,10 +92,12 @@ the value we want to write as the parameter.
 <div id="accordion-container">
   <h2 class="accordion-header"> TestNextSongRecommender.java </h2>
     <div class="accordion-content">
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/master/src/test/java/org/kiji/examples/music/TestNextSongRecommender.java"> </script>
   </div>
 </div>
 
 <h3 style="margin-top:0px;padding-top:10px;"> TestNextSongRecommender.java </h3>
+
 To test NextSongRecommender, we need specify which KijiTable we want to use to back our
 KeyValueStore. We do this by constructing the KeyValueStore we want to use, via the KeyValueStore's
 builder method. We then override the KeyValueStore binding in this job configuration by using the

@@ -13,9 +13,11 @@ the top songs played after each song (the key) to the corresponding row in the s
 <div id="accordion-container">
   <h2 class="accordion-header"> IdentityMapper.java </h2>
     <div class="accordion-content">
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/master/src/main/java/org/kiji/examples/music/map/IdentityMapper.java"> </script>
     </div>
   <h2 class="accordion-header"> TopNextSongsReducer.java </h2>
    <div class="accordion-content">
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/master/src/main/java/org/kiji/examples/music/reduce/TopNextSongsReducer.java"> </script>
     </div>
 </div>
 
@@ -111,7 +113,14 @@ Luckily, context also contains methods for generating EntityIds.
   }
 {% endhighlight %}
 
-### TestTopNextSongsPipeline.java
+<div id="accordion-container">
+  <h2 class="accordion-header"> TestTopNextSongsPipeline.java </h2>
+    <div class="accordion-content">
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/master/src/test/java/org/kiji/examples/music/TestTopNextSongsPipeline.java"> </script>
+  </div>
+</div>
+
+<h3 style="margin-top:0px;padding-top:10px;"> TestTopNextSongsPipeline.java </h3>
 Two jobs are constructed during this test and run one after another. The first job outputs to an
 intermediate Avro container file (Add link to relevant userguide section) written to the local file system which is used as input by the
 second job. Each of the jobs is configured using a job builder:

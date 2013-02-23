@@ -19,9 +19,11 @@ SequentialSongCount mapper and reducer allow us to do that.
 <div id="accordion-container">
   <h2 class="accordion-header"> SequentialPlayCounter.java </h2>
     <div class="accordion-content">
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/master/src/main/java/org/kiji/examples/music/gather/SequentialPlayCounter.java"> </script>
     </div>
   <h2 class="accordion-header"> SequentialPlayCountReducer.java </h2>
     <div class="accordion-content">
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/master/src/main/java/org/kiji/examples/music/reduce/SequentialPlayCountReducer.java"> </script>
     </div>
 </div>
 
@@ -145,6 +147,7 @@ test:
 <div id="accordion-container">
   <h2 class="accordion-header"> TestSequentialSongPlayCounter.java </h2>
     <div class="accordion-content">
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/master/src/test/java/org/kiji/examples/music/TestSequentialSongPlayCounter.java"> </script>
   </div>
 </div>
 

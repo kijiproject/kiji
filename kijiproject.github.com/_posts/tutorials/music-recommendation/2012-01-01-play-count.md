@@ -20,9 +20,11 @@ is written to a text file in HDFS.
 <div id="accordion-container">
   <h2 class="accordion-header"> SongPlayCounter.java </h2>
      <div class="accordion-content">
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/master/src/main/java/org/kiji/examples/music/gather/SongPlayCounter.java"> </script>
      </div>
  <h2 class="accordion-header"> LongSumReducer.java </h2>
    <div class="accordion-content">
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-mapreduce-lib/raw/master/kiji-mapreduce-lib/src/main/java/org/kiji/mapreduce/lib/reduce/LongSumReducer.java"> </script>
     </div>
 </div>
 
@@ -141,6 +143,7 @@ To verify that SongPlayCounter performs as expected, SongPlayCounter's test:
 <div id="accordion-container">
   <h2 class="accordion-header"> TestSongPlayCounter.java </h2>
     <div class="accordion-content">
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/master/src/test/java/org/kiji/examples/music/TestSongPlayCounter.java"> </script>
     </div>
 </div>
 

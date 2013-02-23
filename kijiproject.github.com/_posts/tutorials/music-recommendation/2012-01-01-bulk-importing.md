@@ -11,7 +11,18 @@ In cases where there is a significant amount of existing data to load into a Kij
 table, it hardly makes sense to do it a row at a time. We will show you how to use MapReduce to efficiently import
 such large amounts of data into Kiji.
 
-### Custom Bulk Importers
+<div id="accordion-container">
+  <h2 class="accordion-header"> SongMetadataBulkImporter.java </h2>
+    <div class="accordion-content">
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/master/src/main/java/org/kiji/examples/music/bulkimport/SongMetadataBulkImporter.java"> </script>
+  </div>
+  <h2 class="accordion-header"> JSONBulkImporter.java </h2>
+    <div class="accordion-content">
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-mapreduce-lib/raw/master/kiji-mapreduce-lib/src/main/java/org/kiji/mapreduce/lib/bulkimport/JSONBulkImporter.java"> </script>
+  </div>
+</div>
+
+<h3 style="margin-top:0px;padding-top:10px;">Custom Bulk Importers</h3>
 
 One of the ways to bulk import your data is to extend `KijiBulkImporter` and override its `produce()` method
 to insert rows in a distributed manner into the Kiji table. In the example below, we use this method to populate the song
