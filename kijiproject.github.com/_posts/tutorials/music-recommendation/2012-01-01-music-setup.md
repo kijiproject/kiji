@@ -104,7 +104,7 @@ for more information on the KijiSchema DDL.
 ##### (Optional) Generate Data
 
 The music recommendation example comes with pregenerated song data in
-`$KIJI_HOME/examples/music/data`.  These .json files contain randomly-generated song information
+`$KIJI_HOME/examples/music/example_data`.  These .json files contain randomly-generated song information
 and randomly-generated usage information for this tutorial.
 
 If you wish to generate new data, wipe the data directory, then
@@ -112,12 +112,13 @@ navigate to the `$KIJI_HOME/examples/music` directory and use the python script 
 
 <div class="userinput">
 {% highlight bash %}
-rm $KIJI_HOME/examples/music/data/*
-$KIJI_HOME/examples/music/bin/data_generator.py --output-dir=$KIJI_HOME/examples/music/data/
+rm $KIJI_HOME/examples/music/example_data/*
+$KIJI_HOME/examples/music/bin/data_generator.py --output-dir=$KIJI_HOME/examples/music/example_data/
 {% endhighlight %}
 </div>
 
-This should generate 3 JSON files: `data/song-dist.json`, `data/song-metadata.json`, and `data/song-plays.json`.
+This should generate 3 JSON files: `example_data/song-dist.json`, `example_data/song-metadata.json`
+and `example_data/song-plays.json`.
 
 ### Upload Data to HDFS
 
