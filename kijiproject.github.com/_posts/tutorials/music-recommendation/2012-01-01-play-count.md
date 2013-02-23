@@ -64,10 +64,11 @@ version by default.
 
 {% highlight java %}
 public KijiDataRequest getDataRequest() {
-  // Retrieve all versions of info:track_plays:
+  // This method is how we specify which columns in each row the gatherer operates on.
+  // In this case, we need all versions of the info:track_plays column.
   final KijiDataRequestBuilder builder = KijiDataRequest.builder();
   builder.newColumnsDef()
-    .withMaxVersions(HConstants.ALL_VERSIONS)
+    .withMaxVersions(HConstants.ALL_VERSIONS) // Retrieve all versions.
     .add("info", "track_plays");
   return builder.build();
 }
@@ -81,6 +82,8 @@ object before the next call to gather.
 {% highlight java %}
   public void gather(KijiRowData row, GathererContext<Text, LongWritable> context)
       throws IOException {
+    // The gather method operates on one row at a time.  For each user, we iterate through
+    // all their track plays and emit a pair of the track ID and the number 1.
     NavigableMap<Long, CharSequence> trackPlays = row.getValues("info", "track_plays");
     for (CharSequence trackId : trackPlays.values()) {
       mText.set(trackId.toString());

@@ -66,17 +66,18 @@ tally.
     CharSequence firstSong = null;
     CharSequence nextSong = null;
     NavigableMap<Long, CharSequence> trackPlays = input.getValues("info", "track_plays");
-    for (CharSequence trackId : trackPlays.values()) {
+    for (CharSequence trackId : trackPlays.values()) { // Iterate through this user's track plays.
+      // Slide the window one song over.
+      firstSong = nextSong;
+      nextSong = trackId;
+      // If firstSong is null, we are at the beginning of the list and our sliding window
+      // only contains one song, so don't output it. Otherwise...
       if (null != nextSong) {
-        // If this is not the first song, we need to slide our window along.
-        firstSong = nextSong;
-        nextSong = trackId;
+        // Create the bigram of these two songs.
         mBiGram.setFirstSongPlayed(firstSong);
         mBiGram.setSecondSongPlayed(nextSong);
+        // Emit the bigram of these two songs.
         context.write(new AvroKey<SongBiGram>(mBiGram), ONE);
-      } else {
-        // If this is the most recent song played, set ourselves up for the next iteration.
-        nextSong = trackId;
       }
     }
   }
@@ -130,7 +131,7 @@ while the second track id becomes part the SongCount value.
          .setCount(sum)
          .setSongId(songPair.getSecondSongPlayed())
          .build();
-    // Write out result for this song
+    // Write out result for this song.
     context.write(
         new AvroKey<CharSequence>(songPair.getFirstSongPlayed().toString()),
         new AvroValue<SongCount>(nextSongCount));
