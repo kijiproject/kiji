@@ -117,7 +117,7 @@ $KIJI_HOME/examples/music/bin/data_generator.py --output-dir=$KIJI_HOME/examples
 {% endhighlight %}
 </div>
 
-This should generate 3 JSON files: data/song-dist.json, data/song-metadata.json and data/song-plays.json.
+This should generate 3 JSON files: `data/song-dist.json`, `data/song-metadata.json`, and `data/song-plays.json`.
 
 ### Upload Data to HDFS
 
@@ -126,7 +126,7 @@ Upload the data set to HDFS (this step is required, even if you did not generate
 <div class="userinput">
 {% highlight bash %}
 hadoop fs -mkdir kiji-mr-tutorial
-hadoop fs -copyFromLocal $KIJI_HOME/examples/music/data/*.json kiji-mr-tutorial/
+hadoop fs -copyFromLocal $KIJI_HOME/examples/music/example_data/*.json kiji-mr-tutorial/
 {% endhighlight %}
 </div>
 

@@ -7,18 +7,18 @@ order : 3
 description: Bulk importing data into a Kiji table.
 ---
 
-In cases where we have a significant amount of existing data that we'd like to load into a Kiji
-table, it hardly makes sense to do it a row at a time. We will show you how to use MapReduce to import
-large amounts of data into Kiji, efficiently.
+In cases where there is a significant amount of existing data to load into a Kiji
+table, it hardly makes sense to do it a row at a time. We will show you how to use MapReduce to efficiently import
+such large amounts of data into Kiji.
 
 ### Custom Bulk Importers
 
-One of the ways to bulk import your data is to extend `KijiBulkImporter` and use its produce() method
-to insert rows into the Kiji table. In the example below, we use this method to populate the song
+One of the ways to bulk import your data is to extend `KijiBulkImporter` and override its `produce()` method
+to insert rows in a distributed manner into the Kiji table. In the example below, we use this method to populate the song
 metadata.
 
-Input files contain JSON data representing song metadata, with one song per line. Below is an
-example of a JSON record in our input.
+Input files contain JSON data representing song metadata, with one song per line. Below is the whitespace-augmented
+example of a single row in our input file `song-metadata.json`.
 
 {% highlight js %}
 {
@@ -33,11 +33,11 @@ example of a JSON record in our input.
 {% endhighlight %}
 
 The `SongMetadataBulkImporter` class extends `KijiBulkImporter`. It expects a
-[text input format]({{site.userguide_mapreduce_rc4}}/command-line-tools/#input) where
-input keys are the positions (in bytes) of each line in input file and input values are the lines
+[text input format]({{site.userguide_mapreduce_rc4}}/command-line-tools/#input) where the
+input keys are the byte offsets of each line in the input file and the input values are the lines
 of text described above.
 
-In the produce method of the class, we extract the json as follows:
+In the `produce()` method of the class, extract the JSON as follows:
 {% highlight java %}
 // Parse JSON:
 final JSONObject json = (JSONObject) parser.parse(line.toString());
@@ -46,7 +46,7 @@ final JSONObject json = (JSONObject) parser.parse(line.toString());
 final String songId = json.get("song_id").toString();
 {% endhighlight %}
 
-We use an Avro record called SongMetaData described below:
+Use an Avro record called SongMetaData described below:
 {% highlight java %}
 record SongMetadata {
     string song_name;
@@ -58,7 +58,7 @@ record SongMetadata {
     }
 {% endhighlight %}
 
-We then build the Avro metadata record from the parsed json.
+Then build an Avro metadata record from the parsed JSON.
 
 {% highlight java %}
 final SongMetadata song = SongMetadata.newBuilder()
@@ -76,16 +76,18 @@ We create an [`EntityId`]({{site.api_schema_rc4}}/EntityId.html) object in order
 final EntityId eid = context.getEntityId(songId);
 {% endhighlight %}
 
-Finally, we write this avro record to a cell in our Kiji table with the song ID as the row key.
+Finally, write this Avro record to a cell in our Kiji table with the song ID as the row key.
 {% highlight java %}
 context.put(eid, "info", "metadata", song);
 {% endhighlight %}
 
-*As an aside, care must be taken while using explicit timestamps while writing to Kiji. You can read 
-[this post](http://www.kiji.org/2013/02/13/common-pitfalls-of-timestamps-in-hbase/) on the Kiji blog
-for more details about this.*
+*As an aside, take care while using explicit timestamps when writing to Kiji. You can read about
+[common pitfalls of timestamps in HBase](http://www.kiji.org/2013/02/13/common-pitfalls-of-timestamps-in-hbase/) on the Kiji blog
+for more details.*
 
 ### Running the Example
+
+Run the bulk import tool by specifying `SongMetadataBulkImporter` as the importer, the Kiji table `songs` as the output, and `song-metadata.json` as the input with the following command:
 
 <div class="userinput">
 {% highlight bash %}
@@ -98,11 +100,16 @@ $ kiji bulk-import \
 </div>
 
 #### Verify
+
+Verify that the `user` table records were added properly by executing:
+
 <div class="userinput">
 {% highlight bash %}
 $ kiji ls --kiji=${KIJI}/songs --max-rows=3
 {% endhighlight %}
 </div>
+
+Here's what the first three entries should look like (assuming you're using the pregenerated song data).
 
     entity-id='song-32' [1361561116668] info:metadata
                                  {"song_name": "song name-32", "artist_name": "artist-2", "album_name": "album-0", "genre": "genre4.0", "tempo": 130, "duration": 120}
@@ -115,22 +122,22 @@ $ kiji ls --kiji=${KIJI}/songs --max-rows=3
 
 ### Bulk importing using table import descriptors
 
-Another way to bulk import your data is by using import descriptors.
-At the top-level, a table import descriptor contains:
+In the example below, we use an import descriptor to bulk import our history of song plays from the `song-plays.json` into the
+`user` table. This method of bulk import requires a table import descriptor, which is a JSON file containing:
 
- *   The table that is the destination of the import.
- *   The table column families.
- *   The source for the entity id.
- *   An optional timestamp to use instead of system timestamp.
- *   The format version of the import descriptor.
+<ul>
+<li>The table that is the destination of the import.</li>
+<li>The table column families.</li>
+<ul>
+<li>The name of the destination column.</li>
+<li>The name of the source field to import from.</li>
+</ul>
+<li>The source for the entity ID.</li>
+<li>An optional timestamp to use instead of system timestamp.</li>
+<li>The format version of the import descriptor.</li>
+</ul>
 
-Each column family has:
-
- *   The name of the destination column.
- *   The name of the source field to import from.
-
-In the example below, we use import descriptors to bulk import our history of song plays into the
-user table. The import descriptor used for the user table is shown below:
+The import descriptor used for the `user` table is shown below:
 
 {% highlight bash %}
 {
@@ -153,7 +160,7 @@ represents a separate JSON object to be imported into a row. The JSON object is 
 import descriptor such as the one above. Target columns whose sources are not present in the JSON
 object are skipped.
 
-This descriptor defines a MapReduce job, where every row of the input file is parsed,
+This descriptor parametrizes a special MapReduce job, where every row of the input file is parsed,
 and inserted into the `users` Kiji table. The value of `user_id` will
 be used as the row key in the Kiji table, the timestamp will be retrieved from the `play_time`
 field. The value of `song_id` will be extracted and inserted into the `info:track_plays` column.
@@ -170,7 +177,7 @@ $ hadoop fs -copyFromLocal \
 {% endhighlight %}
 </div>
 
-Run the JSON bulk importer.
+Run the bulk import tool by specifying `JSONBulkImporter` as the importer, the Kiji table `users` as the output, and `song-plays.json` as the input with the following command:
 
 <div class="userinput">
 {% highlight bash %}
@@ -184,11 +191,16 @@ $ kiji bulk-import \
 </div>
 
 #### Verify
+
+Verify that the `user` table records were added properly by executing:
+
 <div class="userinput">
 {% highlight bash %}
 $ kiji ls --kiji=${KIJI}/users --max-rows=3
 {% endhighlight %}
 </div>
+
+Here’s what the first three entries should look like:
 
     entity-id='user-41' [1325750820000] info:track_plays
                                  song-43
