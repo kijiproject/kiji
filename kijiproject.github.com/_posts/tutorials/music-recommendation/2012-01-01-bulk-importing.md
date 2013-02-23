@@ -102,7 +102,7 @@ Run the bulk import tool by specifying `SongMetadataBulkImporter` as the importe
 
 <div class="userinput">
 {% highlight bash %}
-$ kiji bulk-import \
+kiji bulk-import \
     --importer=org.kiji.examples.music.bulkimport.SongMetadataBulkImporter \
     --lib=${LIBS_DIR} \
     --output="format=kiji table=${KIJI}/songs nsplits=1" \
@@ -116,7 +116,7 @@ Verify that the `user` table records were added properly by executing:
 
 <div class="userinput">
 {% highlight bash %}
-$ kiji ls --kiji=${KIJI}/songs --max-rows=3
+kiji ls --kiji=${KIJI}/songs --max-rows=3
 {% endhighlight %}
 </div>
 
@@ -192,7 +192,7 @@ Run the bulk import tool by specifying `JSONBulkImporter` as the importer, the K
 
 <div class="userinput">
 {% highlight bash %}
-$ kiji bulk-import \
+kiji bulk-import \
     -Dkiji.import.text.input.descriptor.path=kiji-mr-tutorial/song-plays-import-descriptor.json \
     --importer=org.kiji.mapreduce.lib.bulkimport.JSONBulkImporter \
     --output="format=kiji table=${KIJI}/users nsplits=1" \
@@ -207,7 +207,7 @@ Verify that the `user` table records were added properly by executing:
 
 <div class="userinput">
 {% highlight bash %}
-$ kiji ls --kiji=${KIJI}/users --max-rows=3
+kiji ls --kiji=${KIJI}/users --max-rows=3
 {% endhighlight %}
 </div>
 

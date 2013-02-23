@@ -8,13 +8,13 @@ description: Includes info on working with Avro
 ---
 
 Instead of recommending the most popular songs to everyone using our service, we want to tailor our
-recommendations based on user's listening history. For every user, we will lookup the most recent
+recommendations based on user's listening history. For every user, we will look up the most recent
 song they have listened to and then recommend the song most frequently played after it. In order
 to do that, we need to create an index so that for each song, we can quickly look up what the
 most popular songs to listen to afterwards are.
 
 So, we need to count the number of times two songs have been played, one after another. The
-SequentialSongCount mapper and reducer allow us to do that.
+`SequentialPlayCounter` and `SequentialPlayCountReducer` allow us to do that.
 
 <div id="accordion-container">
   <h2 class="accordion-header"> SequentialPlayCounter.java </h2>
@@ -27,35 +27,35 @@ SequentialSongCount mapper and reducer allow us to do that.
     </div>
 </div>
 
-<h3 style="margin-top:0px;padding-top:10px;"> SequentialPlayCounter.java </h3>
-SequentialPlayCounter.java operates in much the same way that SongPlayCounter.java does, but is
+<h3 style="margin-top:0px;padding-top:10px;"> SequentialPlayCounter </h3>
+`SequentialPlayCounter` operates in much the same way that `SongPlayCounter` does, but it
 requires a more complex key structure to store both the song played and the song that followed.
 The easiest way work with complex keys in Kiji is to use [Avro](http://avro.apache.org).
-We define a SongBiGram, that will serve as our key, as a pair of songs played sequentially by a
+We define a `SongBiGram`, which will be our key, as a pair of songs played sequentially by a
 single user.
 
 {% highlight js %}
   /** Song play bigram. */
   record SongBiGram {
-    /** The id of the first song played in a sequence. */
+    /** The ID of the first song played in a sequence. */
     string first_song_played;
 
-    /** The id of the song played immediately after it. */
+    /** The ID of the song played immediately after it. */
     string second_song_played;
   }
 {% endhighlight %}
 
-Where SongPlayCounter's output value class was Text.class, SequentialPlayCounter uses AvroKey.class
-which requires that we also implement AvroKeyWriter and override getAvroKeyWriterSchema() to
+Whereas `SongPlayCounter`'s output value class was `Text.class`, `SequentialPlayCounter` uses `AvroKey.class`
+which requires that we also implement `AvroKeyWriter` and override `getAvroKeyWriterSchema()` to
 fully define the Avro key format.
 
-SequentialPlayCounter executes the same basic stages as SongPlayCounter, but with a more complex
+`SequentialPlayCounter` executes the same basic stages as `SongPlayCounter`, but with a more complex
 gather operation.
 
 #### Read track play data and compose complex keys
-SequentialPlayCounter reads the same data as SongPlayCounter, but maintains a "sliding window"
-of the most recent two track ids.  For each song after the first, gather() emits a key/value pair
-where the key is a SongBiGram of the two most recently played songs, and the value is one (1) as a
+`SequentialPlayCounter` reads the same data as `SongPlayCounter`, but maintains a "sliding window"
+of the most recent two track ids.  For each song after the first, `gather()` emits a key-value pair
+where the key is a `SongBiGram` of the two most recently played songs, and the value is one (1) as a
 tally.
 
 {% highlight java %}
@@ -83,21 +83,21 @@ tally.
   }
 {% endhighlight %}
 
-### SequentialPlayCountReducer.java
+### SequentialPlayCountReducer
 This reducer takes in pairs of songs that have been played sequentially and the number one.
-It then computes the number of times those songs have been played together, and emits the id of
-the first song as the key, and a SongCount record representing the song played after the first as
-the value. A SongCount record has a field containing the id of the subsequent song and a field
+It then computes the number of times those songs have been played together, and emits the ID of
+the first song as the key, and a `SongCount` record representing the song played after the first as
+the value. A `SongCount` record has a field containing the ID of the subsequent song and a field
 for the number of times it has been played after the initial song.
 
-This reducer takes AvroKeys as input, and writes AvroKeys and AvroValues as output, so it must
-implement AvroKeyReader, AvroKeyWriter, and AvroValueWriter. The keys we are emiting are just strings
-so we could use a [Text](link-to-text-key-docs) key. Instead, we made the choice to use an AvroKey
+This reducer takes `AvroKey` as input, and writes `AvroKey` and `AvroValue` as output, so it must
+implement `AvroKeyReader`, `AvroKeyWriter`, and `AvroValueWriter`. The keys we are emitting are just strings
+so we could use a [Text](link-to-text-key-docs) key. Instead, we made the choice to use an `AvroKey`
 so that we could use the Kiji defined [AvroKeyValue output format]({{site.userguide_mapreduce_rc4}}/command-line-tools/#output), which
-requires that you output AvroKeys and AvroValues.
+requires that you output `AvroKey` and `AvroValue`.
 
-The schema for our avro key is so simple that we don't have to add a record to our .avdl file
-in order to return the correct schema in getWriterSchema(). Instead, we can use the static methods
+The schema for our Avro key is so simple that we don't have to add a record to our avdl file
+in order to return the correct schema in `getWriterSchema()`. Instead, we can use the static methods
 avro provides for creating schemas of primitive types.
 
 {% highlight java %}
@@ -108,11 +108,11 @@ avro provides for creating schemas of primitive types.
 {% endhighlight %}
 
 #### Sum Sequential Plays
-SequentialPlayCountReducer starts with the same reduction operation that LongSumReducer used to
-count track plays in the Song Count example, but diverges when emitting key/value pairs.  Instead
-of passing the keys through the reducer, SequentialPlayCountReducer creates new keys based on the
-track ids in the SongBiGram keys.  The new keys are simply the first track id from each biGram,
-while the second track id becomes part the SongCount value.
+`SequentialPlayCountReducer` starts with the same reduction operation that `LongSumReducer` used to
+count track plays in the `SongCount` example, but diverges when emitting key-value pairs.  Instead
+of passing the keys through the reducer, `SequentialPlayCountReducer` creates new keys based on the
+track IDs in the `SongBiGram` keys.  The new keys are simply the first track ID from each bi-gram,
+while the second track ID becomes part the `SongCount` value.
 
 {% highlight java %}
   protected void reduce(AvroKey<SongBiGram> key, Iterable<LongWritable> values, Context context)
@@ -138,11 +138,11 @@ while the second track id becomes part the SongCount value.
   }
 {% endhighlight %}
 
-### TestSequentialSongPlayCounter.java
-To verify that SequentialPlayCounter and SequentialPlayCountReducer function as expected, their
+### TestSequentialSongPlayCounter
+To verify that `SequentialPlayCounter` and `SequentialPlayCountReducer` function as expected, their
 test:
 * Creates and populates an in-memory Kiji instance
-* Runs a MapReduce job with SequentialPlayCounter as the gatherer and SequentialPlayCountReducer as the reducer
+* Runs a MapReduce job with `SequentialPlayCounter` as the gatherer and `SequentialPlayCountReducer` as the reducer
 * Verifies that the output is as expected
 
 <div id="accordion-container">
@@ -180,7 +180,7 @@ table.
 {% endhighlight %}
 
 #### Run and verify SequentialPlayCounter and SequentialPlayCountReducer
-KijiGatherJobBuilder is used to create a test MapReduce job. This job builder can be used outside
+`KijiGatherJobBuilder` is used to create a test MapReduce job. This job builder can be used outside
 the context of a test to configure and run jobs programatically. The job is then run using Hadoop's
 local job runner. The resulting output sequence file is then validated.
 
@@ -238,9 +238,9 @@ kiji gather \
 </div>
 
 #### Verify
-Because this job outputs avrokv files, which are binary and hard to read directly, we can use the
+Because this job outputs Avro key-value files, which are binary and hard to read directly, we can use the
 Hadoop job tracker to verify the success of the job.  Using your favorite browser, navigate to
-the jobtracker page ([localhost:50030 by default](http://localhost:50030)).  This is where you can
-monitor all your Hadoop jobs. Locate the Kiji gather: SequentialPlayCounter /
-SequentialPlayCountReducer job and navigate to the job page by clicking on the Job ID.  On the
-job page, check that Map output records is roughly 7,000.
+the JobTracker page ([localhost:50030 by default](http://localhost:50030)).  This is where you can
+monitor all your Hadoop jobs. Locate the Kiji gather: `SequentialPlayCounter` /
+`SequentialPlayCountReducer` job and navigate to the job page by clicking on the Job ID.  On the
+job page, check that Map output records number roughly 7000.
