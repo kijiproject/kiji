@@ -1,9 +1,10 @@
 apply plugin: 'scala'
 apply plugin: 'eclipse'
 
-ext.cascadingVersion = '2.1.4-wip-103'
-ext.scaldingVersion = '0.8.2'
-ext.kijiVersion = '1.0.0-rc4-SNAPSHOT'
+//ext.cascadingVersion = '2.1.4-wip-103'
+ext.cascadingVersion = '2.0.7'
+ext.scaldingVersion = '0.8.3'
+ext.kijiVersion = '1.0.0-rc4'
 ext.hadoopVersion = '2.0.0-mr1-cdh4.1.2'
 ext.hbaseVersion = '0.92.1-cdh4.1.2'
 
@@ -35,4 +36,12 @@ dependencies {
   // CDH dependencies
   compile group: 'org.apache.hadoop', name: 'hadoop-core', version: hadoopVersion
   compile group: 'org.apache.hbase', name: 'hbase', version: hbaseVersion
+}
+
+jar {
+  from(configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }) {
+    exclude "META-INF/*.SF"
+    exclude "META-INF/*.DSA"
+    exclude "META-INF/*.RSA"
+  }
 }

@@ -1,35 +1,28 @@
 package com.wibidata.lang;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.SerializationUtils;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.RecordReader;
-import org.kiji.mapreduce.KijiConfKeys;
+import org.kiji.mapreduce.framework.KijiConfKeys;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequest.Column;
 import org.kiji.schema.KijiRowData;
+
+import com.google.common.collect.Lists;
 
 import cascading.flow.FlowProcess;
 import cascading.scheme.Scheme;
 import cascading.scheme.SinkCall;
 import cascading.scheme.SourceCall;
 import cascading.tap.Tap;
+import cascading.tuple.Fields;
 import cascading.tuple.Tuple;
 
-// type mismatch;
-// found:    KijiScheme
-// required: Scheme[JobConf, RecordReader[_, _], OutputCollector[_, _], _, _]
-//
-// Note: Array[Object] <: Any (and KijiScheme <: Scheme[JobConf,RecordReader,OutputCollector,Array[Object],Array[Object]]),
-//   but Java-defined class Scheme is invariant in type SourceContext. You may wish to investigate a wildcard type
-//   such as `_ <: Any`. (SLS 3.2.10)
-//
-// Note: Array[Object] <: Any (and KijiScheme <: Scheme[JobConf,RecordReader,OutputCollector,Array[Object],Array[Object]]),
-//   but Java-defined class Scheme is invariant in type SinkContext. You may wish to investigate a wildcard type
-//   such as `_ <: Any`. (SLS 3.2.10)
 @SuppressWarnings("rawtypes")
 public class KijiScheme
     extends Scheme<JobConf, RecordReader, OutputCollector, Object[], Object[]> {
@@ -39,6 +32,21 @@ public class KijiScheme
 
   public KijiScheme(KijiDataRequest request) {
     mRequest = request;
+
+    final List<Fields> columnFields = Lists.newArrayList();
+    for (KijiDataRequest.Column column : request.getColumns()) {
+      // TODO: Support data requests with column families.
+      final String fieldName = column.getFamily() + "_" + column.getQualifier();
+
+      columnFields.add(new Fields(fieldName));
+    }
+    final Fields[] fields = columnFields.toArray(new Fields[0]);
+
+    setSourceFields(Fields.join(fields));
+  }
+
+  public KijiDataRequest getDataRequest() {
+    return mRequest;
   }
 
   /** {@inheritDoc} */
@@ -75,7 +83,7 @@ public class KijiScheme
     final KijiRowData row = value.get();
 
     // Store the retrieved columns in the tuple.
-    // TODO: Ensure that map-type families get populated with the same number of columns each time.
+    // TODO: Ensure that map-type families get populated with the same tuple ordering of columns each time.
     for (Column column : mRequest.getColumns()) {
       final String family = column.getFamily();
 

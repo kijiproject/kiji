@@ -15,7 +15,7 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
-import org.kiji.mapreduce.KijiConfKeys;
+import org.kiji.mapreduce.framework.KijiConfKeys;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRegion;
@@ -41,8 +41,9 @@ public class KijiInputFormat
   /** {@inheritDoc} */
   @Override
   public InputSplit[] getSplits(JobConf conf, int numSplits) throws IOException {
-    final KijiURI inputTableURI =
-        KijiURI.newBuilder(conf.get(KijiConfKeys.KIJI_INPUT_TABLE_URI)).build();
+    final String uriString = Preconditions.checkNotNull(
+        conf.get(KijiConfKeys.KIJI_INPUT_TABLE_URI));
+    final KijiURI inputTableURI = KijiURI.newBuilder(uriString).build();
     final Kiji kiji = Kiji.Factory.open(inputTableURI, conf);
     try {
       final KijiTable table = kiji.openTable(inputTableURI.getTable());
@@ -169,7 +170,7 @@ public class KijiInputFormat
       ResourceUtils.closeOrLog(mScanner);
       ResourceUtils.closeOrLog(mReader);
       ResourceUtils.closeOrLog(mTable);
-      mKiji.release();
+      ResourceUtils.releaseOrLog(mKiji);
       mIterator = null;
       mScanner = null;
       mReader = null;
