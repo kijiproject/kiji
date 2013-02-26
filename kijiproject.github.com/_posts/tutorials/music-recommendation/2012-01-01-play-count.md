@@ -10,7 +10,7 @@ description: Like WordCount, for songs.
 ### The 'Hello World!' of MapReduce
 To quote Scalding Developers
 [Hadoop is a distributed system for counting words.](https://github.com/twitter/scalding)
-Unfortunately, we here at PANDORA are fresh out of words, but we do have the play history of
+Unfortunately, we here at Pandorify are fresh out of words, but we do have the play history of
 millions of users listening to  millions of different songs.
 
 This MapReduce job uses the listening history of our users that we have stored in the "users" Kiji
