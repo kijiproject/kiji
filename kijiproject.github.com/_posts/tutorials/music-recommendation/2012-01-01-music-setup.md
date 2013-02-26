@@ -89,7 +89,15 @@ kiji install --kiji=${KIJI}
 {% endhighlight %}
 </div>
 
-Create the Kiji music tables:
+Create the Kiji music tables that have layouts described in `music_schema.ddl`.
+
+<div id="accordion-container">
+  <h2 class="accordion-header"> music_schema.ddl </h2>
+    <div class="accordion-content">
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/master/music_schema.ddl"> </script>
+  </div>
+</div>
+
 
 <div class="userinput">
 {% highlight bash %}
