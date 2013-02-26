@@ -6,12 +6,15 @@ import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiURI
 
 /**
- * Usage: (from root of scalding dir)
- *   scripts/scald.rb -cp $(kiji classpath) <path/to/this/script> \
- *       --input kiji://.env/default --output ./wordcount.tsv
- *
+ * Usage:
  *   kiji jar <path/to/this/jar> com.twitter.scalding.Tool com.wibidata.lang.NewsgroupWordCount \
- *       --input kiji://.env/default --output ./wordcount.tsv
+ *       --input kiji://.env/default/words --output ./wordcount.tsv --hdfs
+ *
+ * Would like usage to be: (from root of scalding dir. )
+ *   scripts/scald.rb -cp $(kiji classpath) <path/to/this/script> \
+ *       --input kiji://.env/default/words --output ./wordcount.tsv --hdfs
+ *
+ * [Currently this doesn't work because dependencies aren't packaged properly]
  */
 class NewsgroupWordCount(args: Args) extends Job(args) {
   val request = {
