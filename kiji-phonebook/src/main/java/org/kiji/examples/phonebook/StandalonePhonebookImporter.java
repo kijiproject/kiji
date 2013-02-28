@@ -105,7 +105,7 @@ public class StandalonePhonebookImporter extends Configured implements Tool {
     } finally {
       ResourceUtils.closeOrLog(reader);
       ResourceUtils.closeOrLog(writer);
-      ResourceUtils.closeOrLog(table);
+      ResourceUtils.releaseOrLog(table);
       ResourceUtils.releaseOrLog(kiji);
     }
     return 0;

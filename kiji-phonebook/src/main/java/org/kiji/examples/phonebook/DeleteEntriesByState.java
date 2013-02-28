@@ -147,7 +147,7 @@ public class DeleteEntriesByState extends Configured implements Tool {
     @Override
     protected void cleanup(Context hadoopContext) throws IOException, InterruptedException {
       ResourceUtils.closeOrLog(mWriter);
-      ResourceUtils.closeOrLog(mTable);
+      ResourceUtils.releaseOrLog(mTable);
       ResourceUtils.releaseOrLog(mKiji);
       super.cleanup(hadoopContext);
     }

@@ -50,6 +50,7 @@ import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.testutil.AbstractKijiIntegrationTest;
+import org.kiji.schema.util.ResourceUtils;
 import org.kiji.schema.util.Resources;
 
 /** Tests PhonebookImporter. */
@@ -106,8 +107,8 @@ public class IntegrationTestPhonebookImporter
 
   @After
   public void tearDown() throws Exception {
-    mOutputTable.close();
-    mKiji.release();
+    ResourceUtils.releaseOrLog(mOutputTable);
+    ResourceUtils.releaseOrLog(mKiji);
     mFS.delete(mInputPath, false);
 
     mOutputTable = null;

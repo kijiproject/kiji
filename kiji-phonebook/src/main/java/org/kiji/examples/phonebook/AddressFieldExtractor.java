@@ -53,10 +53,10 @@ import org.kiji.schema.util.ResourceUtils;
  *
  * @deprecated using "Raw" MapReduce over Kiji tables is no longer the preferred
  *     mechanism for iterating over rows of a Kiji table. To write a function that
- *     processes and updates a table in a row-by-row fashion, you should extend {@link
- *     org.kiji.mapreduce.produce.KijiProducer}. You should use {@link
- *     org.kiji.mapreduce.produce.KijiProduceJobBuilder} for constructing such MapReduce
- *     jobs.
+ *     processes and updates a table in a row-by-row fashion, you should extend
+ *     {@link org.kiji.mapreduce.produce.KijiProducer}. You should use
+ *     {@link org.kiji.mapreduce.produce.KijiProduceJobBuilder} for constructing
+ *     such MapReduce jobs.
  */
 @Deprecated
 public class AddressFieldExtractor extends Configured implements Tool {
@@ -142,7 +142,7 @@ public class AddressFieldExtractor extends Configured implements Tool {
     @Override
     protected void cleanup(Context hadoopContext) throws IOException, InterruptedException {
       ResourceUtils.closeOrLog(mTableWriter);
-      ResourceUtils.closeOrLog(mTable);
+      ResourceUtils.releaseOrLog(mTable);
       ResourceUtils.releaseOrLog(mKiji);
       super.cleanup(hadoopContext);
     }

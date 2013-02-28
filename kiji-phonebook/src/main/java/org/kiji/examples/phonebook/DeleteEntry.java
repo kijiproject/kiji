@@ -91,7 +91,7 @@ public class DeleteEntry extends Configured implements Tool {
     } finally {
       // Safely free up resources by closing in reverse order.
       ResourceUtils.closeOrLog(writer);
-      ResourceUtils.closeOrLog(table);
+      ResourceUtils.releaseOrLog(table);
       ResourceUtils.releaseOrLog(kiji);
       ResourceUtils.closeOrLog(console);
     }

@@ -60,8 +60,8 @@ import org.kiji.schema.util.ResourceUtils;
  *     deprecated and may be removed in a future version of KijiSchema. You should instead
  *     use the KijiMR library, extend the {@link org.kiji.mapreduce.KijiMapper} class and
  *     use the {@link org.kiji.mapreduce.KijiMapReduceJobBuilder} class to configure such
- *     jobs, rather than use classes like {@link DistributedCacheJars} and {@link
- *     KijiConfKeys}.
+ *     jobs, rather than use classes like {@link DistributedCacheJars} and
+ *     {@link KijiConfKeys}.
  */
 public class IncrementTalkTime extends Configured implements Tool {
   private static final Logger LOG = LoggerFactory.getLogger(IncrementTalkTime.class);
@@ -129,7 +129,7 @@ public class IncrementTalkTime extends Configured implements Tool {
     protected void cleanup(Context hadoopContext) throws IOException, InterruptedException {
       // Safely free up resources by closing in reverse order.
       ResourceUtils.closeOrLog(mWriter);
-      ResourceUtils.closeOrLog(mTable);
+      ResourceUtils.releaseOrLog(mTable);
       ResourceUtils.releaseOrLog(mKiji);
       super.cleanup(hadoopContext);
     }
