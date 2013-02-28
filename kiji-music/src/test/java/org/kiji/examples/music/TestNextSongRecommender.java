@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,6 +44,7 @@ import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.util.InstanceBuilder;
+import org.kiji.schema.util.ResourceUtils;
 
 /**
  * Tests our recommendation producer.
@@ -107,8 +107,8 @@ public class TestNextSongRecommender extends KijiClientTest {
   @After
   public final void cleanup() {
     // Close table and table reader in the reverse order.
-    IOUtils.closeQuietly(mUserTableReader);
-    IOUtils.closeQuietly(mUserTable);
+    ResourceUtils.closeOrLog(mUserTableReader);
+    ResourceUtils.releaseOrLog(mUserTable);
   }
 
   @Test

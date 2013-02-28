@@ -24,7 +24,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.Path;
 import org.junit.After;
 import org.junit.Before;
@@ -51,6 +50,7 @@ import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.util.InstanceBuilder;
+import org.kiji.schema.util.ResourceUtils;
 
 /**
  * This is an example of testing multiple, chained MR jobs.
@@ -114,8 +114,8 @@ public class TestTopNextSongsPipeline extends KijiClientTest {
   @After
   public final void cleanup() {
     // Close table and table reader in the reverse order.
-    IOUtils.closeQuietly(mSongTableReader);
-    IOUtils.closeQuietly(mSongTable);
+    ResourceUtils.closeOrLog(mSongTableReader);
+    ResourceUtils.releaseOrLog(mSongTable);
   }
 
 
