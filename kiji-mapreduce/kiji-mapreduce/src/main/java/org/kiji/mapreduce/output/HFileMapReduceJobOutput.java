@@ -336,7 +336,7 @@ public final class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
     startKeys.add(HFileKeyValue.createFromRowKey(HConstants.EMPTY_BYTE_ARRAY));
 
     if (numRegions > 1) {
-      byte[][] splitKeys = KijiRowKeySplitter.getSplitKeys(numRegions);
+      byte[][] splitKeys = KijiRowKeySplitter.get().getSplitKeys(numRegions);
       for (byte[] hbaseRowKey : splitKeys) {
         startKeys.add(HFileKeyValue.createFromRowKey(hbaseRowKey));
       }
