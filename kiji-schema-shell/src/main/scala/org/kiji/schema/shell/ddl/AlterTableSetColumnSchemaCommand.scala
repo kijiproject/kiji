@@ -37,7 +37,7 @@ class AlterTableSetColumnSchemaCommand(
     checkColumnExists(layout, columnName.family, columnName.qualifier)
   }
 
-  override def updateLayout(layout: TableLayoutDesc): Unit = {
+  override def updateLayout(layout: TableLayoutDesc.Builder): Unit = {
     getColumn(layout, columnName).getOrElse(throw new DDLException("No such column"))
         .setColumnSchema(schema.toColumnSchema())
   }

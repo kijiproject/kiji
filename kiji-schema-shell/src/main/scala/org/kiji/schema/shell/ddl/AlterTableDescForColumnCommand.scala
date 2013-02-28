@@ -20,7 +20,6 @@
 package org.kiji.schema.shell.ddl
 
 import scala.collection.JavaConversions._
-import scala.collection.mutable.ListBuffer
 
 import org.kiji.schema.avro.TableLayoutDesc
 import org.kiji.schema.layout.KijiTableLayout
@@ -39,7 +38,7 @@ class AlterTableDescForColumnCommand(
     checkColumnExists(layout, columnName.family, columnName.qualifier)
   }
 
-  override def updateLayout(layout: TableLayoutDesc): Unit = {
+  override def updateLayout(layout: TableLayoutDesc.Builder): Unit = {
     getColumn(layout, columnName).getOrElse(throw new DDLException("Missing!"))
         .setDescription(description)
   }

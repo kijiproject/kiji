@@ -20,7 +20,6 @@
 package org.kiji.schema.shell.ddl
 
 import scala.collection.JavaConversions._
-import scala.collection.mutable.ListBuffer
 
 import org.kiji.schema.avro.TableLayoutDesc
 import org.kiji.schema.layout.KijiTableLayout
@@ -39,7 +38,7 @@ class AlterTableSetFamilySchemaCommand(
     checkColFamilyIsMapType(layout, familyName)
   }
 
-  override def updateLayout(layout: TableLayoutDesc): Unit = {
+  override def updateLayout(layout: TableLayoutDesc.Builder): Unit = {
     getFamily(layout, familyName).getOrElse(throw new DDLException("Missing family"))
         .setMapSchema(schema.toColumnSchema())
   }

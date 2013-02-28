@@ -20,8 +20,8 @@
 package org.kiji.schema.shell.ddl
 
 import scala.collection.JavaConversions._
-import scala.collection.mutable.ListBuffer
 
+import org.kiji.schema.avro.LocalityGroupDesc
 import org.kiji.schema.avro.TableLayoutDesc
 import org.kiji.schema.layout.KijiTableLayout
 
@@ -38,11 +38,15 @@ class AlterLocalityGroupPropertyCommand (
     checkLocalityGroupExists(layout, localityGroupName)
   }
 
-  override def updateLayout(layout: TableLayoutDesc): Unit = {
-    layout.getLocalityGroups().foreach { localityGroup =>
+  override def updateLayout(layout: TableLayoutDesc.Builder): Unit = {
+    val newGroups = layout.getLocalityGroups().map { localityGroup =>
       if (localityGroup.getName().equals(localityGroupName)) {
-        property.apply(localityGroup)
+        property.apply(LocalityGroupDesc.newBuilder(localityGroup)).build()
+      } else {
+        localityGroup
       }
     }
+
+    layout.setLocalityGroups(newGroups)
   }
 }

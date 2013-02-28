@@ -21,6 +21,7 @@ package org.kiji.schema.shell.ddl
 
 import scala.collection.JavaConversions._
 
+import org.kiji.schema.avro.LocalityGroupDesc
 import org.kiji.schema.avro.TableLayoutDesc
 
 import org.kiji.schema.shell.DDLException
@@ -43,12 +44,16 @@ class AlterTableAddMapFamilyCommand(
     checkLocalityGroupExists(layout, localityGroupName)
   }
 
-  override def updateLayout(layout: TableLayoutDesc): Unit = {
+  override def updateLayout(layout: TableLayoutDesc.Builder): Unit = {
     // Add the new map-type column family to the locality group.
-    layout.getLocalityGroups().foreach { localityGroup =>
+    val newGroups = layout.getLocalityGroups().map { localityGroup =>
       if (localityGroup.getName().equals(localityGroupName)) {
-        mapClause.apply(localityGroup)
+        mapClause.apply(LocalityGroupDesc.newBuilder(localityGroup)).build()
+      } else {
+        localityGroup
       }
     }
+
+    layout.setLocalityGroups(newGroups)
   }
 }

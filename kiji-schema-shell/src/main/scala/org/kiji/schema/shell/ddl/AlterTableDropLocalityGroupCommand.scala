@@ -36,7 +36,7 @@ class AlterTableDropLocalityGroupCommand(
     checkLocalityGroupExists(layout, localityGroupName)
   }
 
-  override def updateLayout(layout: TableLayoutDesc): Unit = {
+  override def updateLayout(layout: TableLayoutDesc.Builder): Unit = {
     getLocalityGroup(layout, localityGroupName).getOrElse(throw new DDLException("No such group"))
         .setDelete(true)
   }

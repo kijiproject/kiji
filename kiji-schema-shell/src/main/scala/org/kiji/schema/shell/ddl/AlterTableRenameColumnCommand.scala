@@ -41,7 +41,7 @@ class AlterTableRenameColumnCommand(
     }
   }
 
-  override def updateLayout(layout: TableLayoutDesc): Unit = {
+  override def updateLayout(layout: TableLayoutDesc.Builder): Unit = {
     // Rename the column.
     val col = getColumn(layout, columnName.family, columnName.qualifier).getOrElse(
         throw new DDLException("No such column"))

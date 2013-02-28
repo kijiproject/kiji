@@ -40,7 +40,7 @@ class AlterTableRenameFamilyCommand(
     checkColFamilyMissing(layout, targetName)
   }
 
-  override def updateLayout(layout: TableLayoutDesc): Unit = {
+  override def updateLayout(layout: TableLayoutDesc.Builder): Unit = {
     // Rename the family in the locality group.
     val family = getFamily(layout, familyName).getOrElse(throw new DDLException("No such family"))
     family.setRenamedFrom(familyName)

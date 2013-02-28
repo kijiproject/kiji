@@ -48,9 +48,9 @@ class AlterTableCreateLocalityGroupCommand(
     }
   }
 
-  override def updateLayout(layout: TableLayoutDesc): Unit = {
-    val avroLocGroup = newLocalityGroup()
-    locGroup.updateLocalityGroup(avroLocGroup)
-    layout.getLocalityGroups().add(avroLocGroup)
+  override def updateLayout(layout: TableLayoutDesc.Builder): Unit = {
+    val avroLocGroupBuilder = newLocalityGroup()
+    locGroup.updateLocalityGroup(avroLocGroupBuilder)
+    layout.getLocalityGroups().add(avroLocGroupBuilder.build())
   }
 }

@@ -20,7 +20,6 @@
 package org.kiji.schema.shell.ddl
 
 import scala.collection.JavaConversions._
-import scala.collection.mutable.ListBuffer
 
 import org.kiji.schema.avro.TableLayoutDesc
 import org.kiji.schema.layout.KijiTableLayout
@@ -39,7 +38,7 @@ class AlterTableDescForLocalityGroupCommand(
     checkLocalityGroupExists(layout, localityGroupName)
   }
 
-  override def updateLayout(layout: TableLayoutDesc): Unit = {
+  override def updateLayout(layout: TableLayoutDesc.Builder): Unit = {
     getLocalityGroup(layout, localityGroupName).getOrElse(throw new DDLException("Missing group"))
         .setDescription(description)
   }

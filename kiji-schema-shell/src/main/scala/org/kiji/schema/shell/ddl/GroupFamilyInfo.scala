@@ -19,7 +19,6 @@
 
 package org.kiji.schema.shell.ddl
 
-import scala.collection.mutable.ListBuffer
 import scala.collection.JavaConversions._
 
 import java.util.ArrayList
@@ -32,12 +31,12 @@ import org.kiji.schema.avro.LocalityGroupDesc
  */
 class GroupFamilyInfo(val name: String, val desc: Option[String], val cols: List[ColumnClause]) {
   /**
-   * Add this new group family definition to a locality group.
+   * Add this new group family definition to a locality group's builder.
    * Assumes that this family name does not exist elsewhere in the layout
    * (verified in AlterTableAddGroupFamilyCommand.validateArguments()).
    */
-  def addToLocalityGroup(locGroup: LocalityGroupDesc): Unit = {
-    val groupFamily = new FamilyDesc
+  def addToLocalityGroup(locGroup: LocalityGroupDesc.Builder): Unit = {
+    val groupFamily = FamilyDesc.newBuilder()
     groupFamily.setName(name)
     groupFamily.setEnabled(true)
     desc match {
@@ -46,8 +45,8 @@ class GroupFamilyInfo(val name: String, val desc: Option[String], val cols: List
     }
 
     var avroCols = cols.map(c => c.toAvroColumnDesc())
-    groupFamily.setColumns(ListBuffer(avroCols: _*))
+    groupFamily.setColumns(avroCols)
     groupFamily.setAliases(new ArrayList[String])
-    locGroup.getFamilies().add(groupFamily)
+    locGroup.getFamilies().add(groupFamily.build())
   }
 }

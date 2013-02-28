@@ -56,7 +56,7 @@ class TestCreateTableCommand extends CommandTestCase {
 
       // Check that this succeeds. MockKijiSystem will validate that enough
       // default values are populated.
-      ctcmd.applyUpdate(layout)
+      ctcmd.applyUpdate(layout.build())
     }
 
     "support hashed as default row format" in {
@@ -70,7 +70,7 @@ class TestCreateTableCommand extends CommandTestCase {
 
       // Check that this succeeds. MockKijiSystem will validate that enough
       // default values are populated.
-      ctcmd.applyUpdate(layout)
+      ctcmd.applyUpdate(layout.build())
     }
 
     "support row format raw" in {
@@ -84,7 +84,7 @@ class TestCreateTableCommand extends CommandTestCase {
 
       // Check that this succeeds. MockKijiSystem will validate that enough
       // default values are populated.
-      ctcmd.applyUpdate(layout)
+      ctcmd.applyUpdate(layout.build())
     }
 
     "fail if hash rowkeys are specified with non-16-byte-size" in {
@@ -107,7 +107,7 @@ class TestCreateTableCommand extends CommandTestCase {
 
       // Check that this succeeds. MockKijiSystem will validate that enough
       // default values are populated.
-      ctcmd.applyUpdate(layout)
+      ctcmd.applyUpdate(layout.build())
     }
 
     "fail if hashprefix size is greater than 16" in {
@@ -141,7 +141,7 @@ class TestCreateTableCommand extends CommandTestCase {
       ctcmd.updateLayout(layout)
       layout.getDescription() mustEqual "desc" // Check that Some(desc) works.
 
-      ctcmd.applyUpdate(layout) // This should succeed.
+      ctcmd.applyUpdate(layout.build()) // This should succeed.
       ctcmd.validateArguments() must throwA[DDLException] // But now the table exists. This fails.
     }
 

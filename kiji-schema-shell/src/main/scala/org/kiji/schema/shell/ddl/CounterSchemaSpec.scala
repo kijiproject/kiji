@@ -28,11 +28,11 @@ import org.kiji.schema.avro.SchemaType
  */
 class CounterSchemaSpec() extends SchemaSpec {
   override def toColumnSchema(): CellSchema = {
-    val schema = new CellSchema
-    schema.setType(SchemaType.COUNTER)
-    schema.setValue(null)
-    schema.setStorage(SchemaStorage.FINAL)
-    return schema
+    return CellSchema.newBuilder()
+        .setType(SchemaType.COUNTER)
+        .setValue(null)
+        .setStorage(SchemaStorage.FINAL)
+        .build()
   }
 
   override def toString(): String = { "(COUNTER schema)" }

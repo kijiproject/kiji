@@ -349,7 +349,7 @@ ALTER TABLE foo SET INMEMORY = true FOR LOCALITY GROUP 'default';""")
       val env3 = res2.get.exec()
 
       // Check that the locality group has the new property
-      val maybeLayout3 = env.kijiSystem.getTableLayout(
+      val maybeLayout3 = env3.kijiSystem.getTableLayout(
           defaultURI, "foo")
       maybeLayout3 must beSome[KijiTableLayout]
       val layout3 = maybeLayout3.get.getDesc

@@ -41,12 +41,12 @@ class DumpTableDDLCommand(val env: Environment, val tableName: String,
   }
 
   /** Doesn't actually update the layout, just prints it. */
-  override def updateLayout(layout: TableLayoutDesc): Unit = { }
+  override def updateLayout(layout: TableLayoutDesc.Builder): Unit = { }
 
   override def exec(): Environment = {
     validateArguments()
     maybeFile match {
-      case None => { dumpLayout(getInitialLayout()) } // Just dump to stdout as planned.
+      case None => { dumpLayout(getInitialLayout().build()) } // Just dump to stdout as planned.
       case Some(filename) => {
         val outputStream = new PrintStream(new FileOutputStream(new File(filename)), false, "UTF-8")
         try {

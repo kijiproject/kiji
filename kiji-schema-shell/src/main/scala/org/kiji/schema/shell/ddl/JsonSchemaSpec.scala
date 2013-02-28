@@ -28,10 +28,10 @@ class JsonSchemaSpec(val json: String) extends SchemaSpec {
   override def toString(): String = { json }
 
   override def toColumnSchema(): CellSchema = {
-    val schema = new CellSchema
+    val schema = CellSchema.newBuilder
     schema.setType(SchemaType.INLINE)
     schema.setStorage(SchemaStorage.UID)
     schema.setValue(json)
-    return schema
+    return schema.build()
   }
 }

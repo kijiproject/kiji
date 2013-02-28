@@ -29,12 +29,12 @@ class LocalityGroupClause(val name: String,
                           val props: List[LocalityGroupProp]) {
 
   /**
-   * Update a LocalityGroupDesc with the attributes associated with this locality
+   * Update a LocalityGroupDesc builder with the attributes associated with this locality
    * group clause.
    *
-   * @return The same LocalityGroupDesc, modified with updated fields.
+   * @return The same LocalityGroupDesc builder, modified with updated fields.
    */
-  def updateLocalityGroup(locGroup: LocalityGroupDesc): LocalityGroupDesc = {
+  def updateLocalityGroup(locGroup: LocalityGroupDesc.Builder): LocalityGroupDesc.Builder = {
     Option(locGroup.getName()) match {
       case Some(existingName) => {
         if (!existingName.equals(name)) {

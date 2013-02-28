@@ -25,9 +25,9 @@ import org.kiji.schema.avro.LocalityGroupDesc
 
 /** Defines how to initialize a new LocalityGroup definition. */
 trait NewLocalityGroup {
-  /** @return a new LocalityGroupDesc with empty family lists. */
-  def newLocalityGroup(): LocalityGroupDesc = {
-    val locGroup = new LocalityGroupDesc
+  /** @return a new LocalityGroupDesc builder with empty family lists. */
+  def newLocalityGroup(): LocalityGroupDesc.Builder = {
+    val locGroup = LocalityGroupDesc.newBuilder()
     locGroup.setAliases(new java.util.ArrayList[String]())
     locGroup.setFamilies(new java.util.ArrayList[FamilyDesc]())
     locGroup.setDescription("")

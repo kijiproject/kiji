@@ -34,17 +34,16 @@ class ColumnClause(
 
   /** @return a new ColumnDesc that describes this column. */
   def toAvroColumnDesc(): ColumnDesc = {
-    val col = new ColumnDesc
-    col.setName(qualifier)
-    col.setAliases(new java.util.ArrayList[String])
-    col.setEnabled(true)
-
-    desc match {
-      case Some(descStr) => { col.setDescription(descStr) }
-      case None => { col.setDescription("") }
-    }
-    col.setColumnSchema(schema.toColumnSchema())
-    return col
+    return ColumnDesc.newBuilder()
+        .setName(qualifier)
+        .setAliases(new java.util.ArrayList[String])
+        .setEnabled(true)
+        .setDescription(desc match {
+            case Some(descStr) => descStr
+            case None => ""
+            })
+        .setColumnSchema(schema.toColumnSchema())
+        .build()
   }
 }
 

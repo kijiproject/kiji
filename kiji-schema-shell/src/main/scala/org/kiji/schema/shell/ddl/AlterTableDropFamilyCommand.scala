@@ -36,7 +36,7 @@ class AlterTableDropFamilyCommand(
     checkColFamilyExists(layout, familyName)
   }
 
-  override def updateLayout(layout: TableLayoutDesc): Unit = {
+  override def updateLayout(layout: TableLayoutDesc.Builder): Unit = {
     // Remove the new family from the locality group.
     getFamily(layout, familyName).getOrElse(throw new DDLException("No such family"))
         .setDelete(true)

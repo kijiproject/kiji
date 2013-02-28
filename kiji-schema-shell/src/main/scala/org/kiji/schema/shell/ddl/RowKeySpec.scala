@@ -51,7 +51,7 @@ class RowKeySpec(val encoding:String, val size:Int) {
 
   /** @return an Avro RowKeyFormat that represents this format in the Layout. */
   def toAvroFormat(): RowKeyFormat = {
-    val keysFormat = new RowKeyFormat
+    val keysFormat = RowKeyFormat.newBuilder()
     if (encoding == "hash") {
       keysFormat.setEncoding(RowKeyEncoding.HASH)
       keysFormat.setHashType(HashType.MD5) // TODO: support multiple hash types.
@@ -63,7 +63,7 @@ class RowKeySpec(val encoding:String, val size:Int) {
       keysFormat.setHashType(HashType.MD5) // TODO: support multiple hash types.
       keysFormat.setHashSize(size)
     }
-    return keysFormat
+    return keysFormat.build()
   }
 }
 

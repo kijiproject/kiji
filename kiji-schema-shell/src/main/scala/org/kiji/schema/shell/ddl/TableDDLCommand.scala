@@ -47,9 +47,9 @@ abstract class TableDDLCommand extends DDLCommand {
   def exec(): Environment = {
     // Default behavior: Get the table layout, mutate it, and apply the new layout.
     validateArguments()
-    val layout = getInitialLayout()
-    updateLayout(layout)
-    applyUpdate(layout)
+    val layoutBuilder = getInitialLayout()
+    updateLayout(layoutBuilder)
+    applyUpdate(layoutBuilder.build())
     echo("OK.")
     return env
   }
@@ -57,9 +57,9 @@ abstract class TableDDLCommand extends DDLCommand {
   /**
    * Retrieve the table layout to modify from Kiji.
    */
-  def getInitialLayout(): TableLayoutDesc = {
+  def getInitialLayout(): TableLayoutDesc.Builder = {
     env.kijiSystem.getTableLayout(getKijiURI(), tableName) match {
-      case Some(layout) => { layout.getDesc() }
+      case Some(layout) => { TableLayoutDesc.newBuilder(layout.getDesc()) }
       case None => { throw new TableNotFoundException(tableName) }
     }
   }
@@ -72,13 +72,13 @@ abstract class TableDDLCommand extends DDLCommand {
   def validateArguments(): Unit
 
   /**
-   * Given a table layout (e.g., from getInitialLayout()), apply any mutations to the
+   * Given a builder for a table layout (e.g., from getInitialLayout()), apply any mutations to the
    * data structure representing the table's layout.
    */
-  def updateLayout(layout: TableLayoutDesc): Unit
+  def updateLayout(layout: TableLayoutDesc.Builder): Unit
 
   /**
-   * Given a table layout, apply it to the Kiji instance (e.g., by creating a table,
+   * Given a built table layout, apply it to the Kiji instance (e.g., by creating a table,
    * or updating an existing one.) The default behavior is to assume the table
    * already exists, and apply the layout to the table using KijiAdmin.
    */
@@ -106,7 +106,8 @@ abstract class TableDDLCommand extends DDLCommand {
   // Methods that check properties of tables for use in validateArguments().
   // On error, they throw DDLException. On success they do nothing.
 
-  protected def checkColFamilyExists(layout: TableLayoutDesc, familyName: String): Unit = {
+  protected def checkColFamilyExists(
+      layout: TableLayoutDesc.Builder, familyName: String): Unit = {
     getFamily(layout, familyName) match {
       case None => {
         throw new DDLException("No such family \"" + familyName + "\" in table " + layout.getName())
@@ -115,7 +116,8 @@ abstract class TableDDLCommand extends DDLCommand {
     }
   }
 
-  protected def checkColFamilyIsGroupType(layout: TableLayoutDesc, familyName: String): Unit = {
+  protected def checkColFamilyIsGroupType(
+      layout: TableLayoutDesc.Builder, familyName: String): Unit = {
     getFamily(layout, familyName) match {
       case None => {
         throw new DDLException("No such family \"" + familyName + "\" in table " + layout.getName())
@@ -131,8 +133,8 @@ abstract class TableDDLCommand extends DDLCommand {
     }
   }
 
-  protected def checkColumnExists(layout: TableLayoutDesc, familyName: String,
-      qualifier: String): Unit = {
+  protected def checkColumnExists(
+      layout: TableLayoutDesc.Builder, familyName: String, qualifier: String): Unit = {
     getFamily(layout, familyName).getOrElse(
         throw new DDLException("No such family \"" + familyName + "\""))
     checkColFamilyIsGroupType(layout, familyName)
@@ -141,7 +143,7 @@ abstract class TableDDLCommand extends DDLCommand {
                   + "\" does not exist."))
   }
 
-  protected def checkColumnMissing(layout: TableLayoutDesc, familyName: String,
+  protected def checkColumnMissing(layout: TableLayoutDesc.Builder, familyName: String,
       qualifier: String): Unit = {
     getFamily(layout, familyName).getOrElse(
         throw new DDLException("No such family \"" + familyName + "\""))
@@ -156,7 +158,8 @@ abstract class TableDDLCommand extends DDLCommand {
     }
   }
 
-  protected def checkColFamilyIsMapType(layout: TableLayoutDesc, familyName: String): Unit = {
+  protected def checkColFamilyIsMapType(
+      layout: TableLayoutDesc.Builder, familyName: String): Unit = {
     getFamily(layout, familyName) match {
       case None => {
         throw new DDLException("No such family \"" + familyName + "\" in table " + layout.getName())
@@ -169,7 +172,8 @@ abstract class TableDDLCommand extends DDLCommand {
     }
   }
 
-  protected def checkColFamilyMissing(layout: TableLayoutDesc, familyName: String): Unit = {
+  protected def checkColFamilyMissing(
+      layout: TableLayoutDesc.Builder, familyName: String): Unit = {
     getFamily(layout, familyName) match {
       case Some(f) => {
         throw new DDLException("Family \"" + familyName + "\" already exists in table "
@@ -179,13 +183,15 @@ abstract class TableDDLCommand extends DDLCommand {
     }
   }
 
-  protected def checkLocalityGroupExists(layout: TableLayoutDesc, groupName: String): Unit = {
+  protected def checkLocalityGroupExists(
+      layout: TableLayoutDesc.Builder, groupName: String): Unit = {
     getLocalityGroup(layout, groupName).getOrElse(
         throw new DDLException("No such locality group \"" + groupName + "\" in table "
             + layout.getName()))
   }
 
-  protected def checkLocalityGroupMissing(layout: TableLayoutDesc, groupName: String): Unit = {
+  protected def checkLocalityGroupMissing(
+      layout: TableLayoutDesc.Builder, groupName: String): Unit = {
     getLocalityGroup(layout, groupName) match {
       case Some(lg) => {
         throw new DDLException("Locality group \"" + groupName + "\" already exists in table "
@@ -203,14 +209,14 @@ abstract class TableDDLCommand extends DDLCommand {
   }
 
   /**
-   * Extracts a mutable ColumnDesc from a TableLayoutDesc.
+   * Extracts a mutable ColumnDesc from a TableLayoutDesc builder.
    *
-   * @param layout the Avro table description to walk.
+   * @param layout the builder for the Avro table description to walk.
    * @param familyName the family name for the column to extract.
    * @param qualifier the qualifier for the column to extract.
    * @return Some[ColumnDesc] describing the column, or None.
    */
-  protected def getColumn(layout: TableLayoutDesc, familyName: String,
+  protected def getColumn(layout: TableLayoutDesc.Builder, familyName: String,
       qualifier: String): Option[ColumnDesc] = {
     layout.getLocalityGroups().foreach { localityGroup =>
       localityGroup.getFamilies().foreach { family =>
@@ -228,24 +234,26 @@ abstract class TableDDLCommand extends DDLCommand {
   }
 
   /**
-   * Extracts a mutable ColumnDesc from a TableLayoutDesc.
+   * Extracts a mutable ColumnDesc from a TableLayoutDesc builder.
    *
-   * @param layout the Avro table description to walk.
+   * @param layout the builder for the Avro table description to walk.
    * @param columnName the family name and qualifier for the column to extract.
    * @return Some[ColumnDesc] describing the column, or None.
    */
-  protected def getColumn(layout: TableLayoutDesc, columnName: ColumnName): Option[ColumnDesc] = {
+  protected def getColumn(
+      layout: TableLayoutDesc.Builder, columnName: ColumnName): Option[ColumnDesc] = {
     getColumn(layout, columnName.family, columnName.qualifier)
   }
 
   /**
-   * Extracts a mutable FamilyDesc from a TableLayoutDesc.
+   * Extracts a mutable FamilyDesc from a TableLayoutDesc builder.
    *
-   * @param layout the Avro table description to walk.
+   * @param layout the builder for the Avro table description to walk.
    * @param familyName the family name to extract.
    * @return Some[FamilyDesc] describing the family, or None.
    */
-  protected def getFamily(layout: TableLayoutDesc, familyName: String): Option[FamilyDesc] = {
+  protected def getFamily(
+      layout: TableLayoutDesc.Builder, familyName: String): Option[FamilyDesc] = {
     layout.getLocalityGroups().foreach { localityGroup =>
       localityGroup.getFamilies().foreach { family =>
         if (family.getName().equals(familyName)) {
@@ -258,13 +266,13 @@ abstract class TableDDLCommand extends DDLCommand {
   }
 
   /**
-   * Extracts a mutable LocalityGroupDesc from a TableLayoutDesc.
+   * Extracts a mutable LocalityGroupDesc from a TableLayoutDesc builder.
    *
-   * @param layout the Avro table description to walk.
+   * @param layout the builder for the Avro table description to walk.
    * @param localityGroupName the locality group name to extract.
    * @return Some[LocalityGroupDesc] describing the group, or None.
    */
-  protected def getLocalityGroup(layout: TableLayoutDesc,
+  protected def getLocalityGroup(layout: TableLayoutDesc.Builder,
       localityGroupName: String): Option[LocalityGroupDesc] = {
     layout.getLocalityGroups().foreach { localityGroup =>
       if (localityGroup.getName() == localityGroupName) {

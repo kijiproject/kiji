@@ -30,10 +30,10 @@ import CompressionTypeToken._
 class LocalityGroupProp(val property: LocalityGroupPropName, val value: Any) {
 
   /**
-   * Apply this property info to the specified LocalityGroupDesc. Returns
-   * the input LocalityGroupDesc object, with updated fields.
+   * Apply this property info to the specified LocalityGroupDesc builder. Returns
+   * the input LocalityGroupDesc builder, with updated fields.
    */
-  def apply(group: LocalityGroupDesc): LocalityGroupDesc = {
+  def apply(group: LocalityGroupDesc.Builder): LocalityGroupDesc.Builder = {
     property match {
       case LocalityGroupPropName.MaxVersions => { group.setMaxVersions(value.asInstanceOf[Int]) }
       case LocalityGroupPropName.InMemory => { group.setInMemory(value.asInstanceOf[Boolean]) }

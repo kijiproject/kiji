@@ -46,11 +46,11 @@ class ClassSchemaSpec(private val parts: List[String]) extends SchemaSpec {
   }
 
   override def toColumnSchema(): CellSchema = {
-    val schema = new CellSchema
-    schema.setType(SchemaType.CLASS)
-    schema.setStorage(SchemaStorage.UID)
-    schema.setValue(className)
-    return schema
+    return CellSchema.newBuilder()
+        .setType(SchemaType.CLASS)
+        .setStorage(SchemaStorage.UID)
+        .setValue(className)
+        .build()
   }
 
   override def toString(): String = { className }

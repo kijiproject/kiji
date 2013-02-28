@@ -36,7 +36,7 @@ class AlterTableDropColumnCommand(
     checkColumnExists(layout, colName.family, colName.qualifier)
   }
 
-  override def updateLayout(layout: TableLayoutDesc): Unit = {
+  override def updateLayout(layout: TableLayoutDesc.Builder): Unit = {
     getColumn(layout, colName.family, colName.qualifier).getOrElse(
         throw new DDLException("No such column")).setDelete(true)
   }

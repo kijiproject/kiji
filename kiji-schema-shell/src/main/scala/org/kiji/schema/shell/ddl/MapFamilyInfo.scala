@@ -30,12 +30,12 @@ import org.kiji.schema.avro.LocalityGroupDesc
  */
 class MapFamilyInfo(val name: String, val schema: SchemaSpec, val desc: Option[String]) {
   /**
-   * Add this new map family definition to a locality group.
+   * Add this new map family definition to a locality group's builder.
    * Assumes that this family name does not exist elsewhere in the layout
    * (verified in AlterTableAddMapFamilyCommand.validateArguments()).
    */
-  def addToLocalityGroup(group: LocalityGroupDesc): Unit = {
-    val mapFamily = new FamilyDesc
+  def addToLocalityGroup(group: LocalityGroupDesc.Builder): Unit = {
+    val mapFamily = FamilyDesc.newBuilder()
     mapFamily.setName(name)
     mapFamily.setEnabled(true)
     desc match {
@@ -46,6 +46,6 @@ class MapFamilyInfo(val name: String, val schema: SchemaSpec, val desc: Option[S
     mapFamily.setMapSchema(schema.toColumnSchema())
     mapFamily.setColumns(new ArrayList[ColumnDesc])
     mapFamily.setAliases(new ArrayList[String])
-    group.getFamilies().add(mapFamily)
+    group.getFamilies().add(mapFamily.build())
   }
 }

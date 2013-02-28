@@ -20,7 +20,6 @@
 package org.kiji.schema.shell.ddl
 
 import scala.collection.JavaConversions._
-import scala.collection.mutable.ListBuffer
 
 import org.kiji.schema.avro.ColumnDesc
 import org.kiji.schema.avro.FamilyDesc
@@ -48,10 +47,9 @@ class CreateTableCommand(val env: Environment,
                          with NewLocalityGroup {
 
   // We always operate on an empty layout when creating a new table.
-  override def getInitialLayout(): TableLayoutDesc = {
-    val layout = new TableLayoutDesc
-    layout.setVersion(CreateTableCommand.DDL_LAYOUT_VERSION.toString())
-    return layout
+  override def getInitialLayout(): TableLayoutDesc.Builder = {
+    return TableLayoutDesc.newBuilder()
+        .setVersion(CreateTableCommand.DDL_LAYOUT_VERSION.toString())
   }
 
   override def validateArguments(): Unit = {
@@ -80,7 +78,7 @@ class CreateTableCommand(val env: Environment,
     rowKeySpec.validate()
   }
 
-  override def updateLayout(layout: TableLayoutDesc): Unit = {
+  override def updateLayout(layout: TableLayoutDesc.Builder): Unit = {
     layout.setName(tableName)
     desc match {
       case Some(descStr) => { layout.setDescription(descStr) }
@@ -90,11 +88,12 @@ class CreateTableCommand(val env: Environment,
     val keysFormat = rowKeySpec.toAvroFormat()
     layout.setKeysFormat(keysFormat)
 
-    var localityGroups = locGroups.foldLeft[List[LocalityGroupDesc]](Nil)(
-        (lst: List[LocalityGroupDesc], grpData:LocalityGroupClause) => {
+    val localityGroupBuilders = locGroups.foldLeft[List[LocalityGroupDesc.Builder]](Nil)(
+        (lst: List[LocalityGroupDesc.Builder], grpData: LocalityGroupClause) => {
           grpData.updateLocalityGroup(newLocalityGroup()) :: lst
         })
-    layout.setLocalityGroups(ListBuffer(localityGroups: _*))
+    val localityGroups = localityGroupBuilders.map(builder => builder.build())
+    layout.setLocalityGroups(localityGroups)
   }
 
   override def applyUpdate(layout: TableLayoutDesc): Unit = {

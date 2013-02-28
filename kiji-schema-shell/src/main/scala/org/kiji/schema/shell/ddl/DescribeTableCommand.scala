@@ -44,7 +44,7 @@ class DescribeTableCommand(
   private val jsonParser = new JsonParser()
 
   override def validateArguments(): Unit = { }
-  override def updateLayout(layout: TableLayoutDesc): Unit = { }
+  override def updateLayout(layout: TableLayoutDesc.Builder): Unit = { }
 
   override def exec(): Environment = {
     val layout = getInitialLayout()

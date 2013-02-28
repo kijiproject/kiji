@@ -40,7 +40,7 @@ class AlterTableRenameLocalityGroupCommand(
     checkLocalityGroupMissing(layout, targetName)
   }
 
-  override def updateLayout(layout: TableLayoutDesc): Unit = {
+  override def updateLayout(layout: TableLayoutDesc.Builder): Unit = {
     // Rename the locality group.
     val localityGroup = getLocalityGroup(layout, locGroupName).getOrElse(
         throw new DDLException("No such locality group"))

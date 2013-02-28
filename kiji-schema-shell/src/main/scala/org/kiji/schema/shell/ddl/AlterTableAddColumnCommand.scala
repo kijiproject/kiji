@@ -47,7 +47,7 @@ class AlterTableAddColumnCommand(
     checkColumnMissing(layout, familyName, colClause.qualifier)
   }
 
-  override def updateLayout(layout: TableLayoutDesc): Unit = {
+  override def updateLayout(layout: TableLayoutDesc.Builder): Unit = {
     // Get the group-type column family from the layout and add the column to its list.
     getFamily(layout, familyName).getOrElse(throw new DDLException("Missing family!"))
         .getColumns().add(colClause.toAvroColumnDesc())
