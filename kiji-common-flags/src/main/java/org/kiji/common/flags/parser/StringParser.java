@@ -15,25 +15,21 @@
  * permissions and limitations under the License.
  */
 
-package org.kiji.common.flags;
+package org.kiji.common.flags.parser;
 
-/**
- * Exception thrown when the type of a flag is not supported.
- *
- * This happens when annotating a field with an <pre>@Flag</pre> while there is no declared
- * parser for this field's type.
- */
-public class UnsupportedFlagTypeException extends RuntimeException {
-  /** Generated serial version ID. */
-  private static final long serialVersionUID = -1500132821312834934L;
+import org.kiji.common.flags.FlagSpec;
 
-  /**
-   * Creates a new <code>UnsupportedFlagTypeException</code> instance.
-   *
-   * @param spec Flag descriptor to create an "unsupported" exception for.
-   */
-  public UnsupportedFlagTypeException(FlagSpec spec) {
-    super(String.format("Unsupported type '%s' for flag '--%s' declared in '%s'.",
-        spec.getTypeName(), spec.getName(), spec.toString()));
+
+public class StringParser extends SimpleValueParser<String> {
+  /** {@inheritDoc} */
+  @Override
+  public Class<? extends String> getParsedClass() {
+    return String.class;
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public String parse(FlagSpec flag, String string) {
+    return string;
   }
 }

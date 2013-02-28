@@ -22,13 +22,27 @@ package org.kiji.common.flags;
  * field because it is an incompatible type.
  */
 public class IllegalFlagValueException extends RuntimeException {
+  private static final long serialVersionUID = -6219698605704501226L;
+
   /**
    * Creates a new <code>IllegalFlagValueException</code> instance.
    *
-   * @param flagName The flag name.
-   * @param flagValue The flag value.
+   * @param message Human-readable message detailing the invalid flag.
    */
-  public IllegalFlagValueException(String flagName, String flagValue) {
-    super("Illegal value for flag " + flagName + ": " + flagValue);
+  public IllegalFlagValueException(String message) {
+    super(message);
+  }
+
+  /**
+   * Creates an <code>IllegalFlagValueException</code> instance.
+   *
+   * @param spec Specification of the flag being parsed.
+   * @param argument Command-line argument being parsed.
+   */
+  public IllegalFlagValueException(FlagSpec spec, String argument) {
+    super(String.format(
+        "Invalid %s command-line argument '--%s=%s': "
+        + "'%s' is not a valid %s value for flag '%s'.",
+        spec.getTypeName(), spec.getName(), argument, argument, spec.getTypeName(), spec));
   }
 }

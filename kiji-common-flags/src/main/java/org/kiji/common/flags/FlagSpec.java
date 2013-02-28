@@ -18,19 +18,30 @@
 package org.kiji.common.flags;
 
 import java.lang.reflect.Field;
+import java.util.Map;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
+
+import org.kiji.delegation.Lookup;
+import org.kiji.delegation.Lookups;
 
 /**
  * Everything there is to know about a flag definition.
  */
-class FlagSpec {
+public class FlagSpec {
   /** The Java field that should be assigned to with the flag's value. */
-  private Field mField;
+  private final Field mField;
 
   /** The Flag annotation. */
-  private Flag mFlag;
+  private final Flag mFlag;
 
   /** The object that contains the flag definition. */
-  private Object mObj;
+  private final Object mObj;
+
+  /** Parser for this flag. */
+  private final ValueParser<?> mParser;
 
   /**
    * Creates a new <code>FlagSpec</code> instance.
@@ -43,6 +54,57 @@ class FlagSpec {
     mField = field;
     mFlag = flag;
     mObj = obj;
+    mParser = findParser();
+  }
+
+  /**
+   * Identifies the parser for this flag.
+   *
+   * Requires mField and mFlag being set properly.
+   *
+   * @return the command-line argument parser for this flag.
+   */
+  private ValueParser<?> findParser() {
+    final Class<?> fieldClass = mField.getType();
+
+    if (mFlag.parser() != ValueParser.class) {
+      try {
+        final ValueParser<?> parser = mFlag.parser().newInstance();
+        final Class<?> parsedClass = parser.getParsedClass();
+        if (parser.parsesSubclasses()) {
+          if (!parsedClass.isAssignableFrom(fieldClass)) {
+            throw new RuntimeException(String.format(
+                "Parser '%s' does not match field: %s", parser.getClass().getName(), mField));
+          }
+        } else {
+          if (parsedClass != fieldClass) {
+            throw new RuntimeException(String.format(
+                "Parser '%s' does not match field type: %s", parser.getClass().getName(), mField));
+          }
+        }
+        return parser;
+      } catch (IllegalAccessException iae) {
+        throw new RuntimeException(iae);
+      } catch (InstantiationException ie) {
+        throw new RuntimeException(ie);
+      }
+    }
+
+    final ValueParser<?> simpleParser = PARSERS.get(fieldClass);
+    if (simpleParser != null) {
+      return simpleParser;
+    }
+
+    for (Map.Entry<Class<?>, ValueParser<?>> entry : BASE_PARSERS.entrySet()) {
+      final Class<?> baseClass = entry.getKey();
+      final ValueParser<?> baseClassParser = entry.getValue();
+      if (baseClass.isAssignableFrom(fieldClass)) {
+        return baseClassParser;
+      }
+    }
+
+    // Failed to find a matching flag parser:
+    throw new UnsupportedFlagTypeException(this);
   }
 
   /**
@@ -113,32 +175,7 @@ class FlagSpec {
       if (!mField.isAccessible()) {
         mField.setAccessible(true);
       }
-      if (mField.getType() == boolean.class) {
-        return Boolean.toString(mField.getBoolean(mObj));
-      }
-      if (mField.getType() == double.class) {
-        return Double.toString(mField.getDouble(mObj));
-      }
-      if (mField.getType() == float.class) {
-        return Float.toString(mField.getFloat(mObj));
-      }
-      if (mField.getType() == int.class) {
-        return Integer.toString(mField.getInt(mObj));
-      }
-      if (mField.getType() == long.class) {
-        return Long.toString(mField.getLong(mObj));
-      }
-      if (mField.getType() == short.class) {
-        return Short.toString(mField.getShort(mObj));
-      }
-      if (mField.getType() == String.class) {
-        String s = (String) mField.get(mObj);
-        if (s != null) {
-          return "\"" + s + "\"";
-        }
-        return "null";
-      }
-      return "";
+      return String.format("%s", mField.get(mObj));
     } catch (IllegalAccessException e) {
       throw new IllegalAccessError(e.getMessage());
     }
@@ -155,48 +192,87 @@ class FlagSpec {
     if (!mField.isAccessible()) {
       mField.setAccessible(true);
     }
-    if (mField.getType() == boolean.class) {
-      if (value.equals("true") || value.isEmpty()) {
-        mField.setBoolean(mObj, true);
-      } else if (value.equals("false")) {
-        mField.setBoolean(mObj, false);
+    mField.set(mObj, mParser.parse(this, value));
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public String toString() {
+    return mField.getDeclaringClass().getName() + "." + mField.getName();
+  }
+
+  /**
+   * Map from flag value class to flag value parser.
+   *
+   * The parsers in this map parse exactly the class specified in the key.
+   */
+  private static final ImmutableMap<Class<?>, ValueParser<?>> PARSERS;
+
+  /**
+   * Map from flag value base class to flag value parser.
+   *
+   * The parsers in this map parse all subclasses of the class specified in the key.
+   */
+  private static final ImmutableMap<Class<?>, ValueParser<?>> BASE_PARSERS;
+
+  /** Initializes the parsers maps. */
+  static {
+    final Map<Class<?>, ValueParser<?>> parserMap = Maps.newHashMap();
+    final Map<Class<?>, ValueParser<?>> baseParserMap = Maps.newHashMap();
+    final Lookup<ValueParser> lookup = Lookups.get(ValueParser.class);
+    buildParserMap(lookup, parserMap, baseParserMap);
+    PARSERS = ImmutableMap.copyOf(parserMap);
+    BASE_PARSERS = ImmutableMap.copyOf(baseParserMap);
+  }
+
+  /**
+   * Builds the command-line argument parser maps.
+   *
+   * @param parsers Iterable of ValueParser to register.
+   * @param parserMap Map of parsers for exact value types to fill in.
+   * @param baseParserMap Map of parsers for subclass types to fill in.
+   * @throws RuntimeException if there are conflicts on the value types to register parsers for.
+   */
+  public static void buildParserMap(
+      Iterable<ValueParser> parsers,
+      Map<Class<?>, ValueParser<?>> parserMap,
+      Map<Class<?>, ValueParser<?>> baseParserMap) {
+    for (ValueParser<?> parser : parsers) {
+      final Class<?> klass = parser.getParsedClass();
+      if (parser.parsesSubclasses()) {
+        // Ensure there is no conflicting base parser already registered:
+        for (Map.Entry<Class<?>, ValueParser<?>> entry : baseParserMap.entrySet()) {
+          final Class<?> registeredClass = entry.getKey();
+          final ValueParser<?> existing = entry.getValue();
+          if (registeredClass.equals(klass)) {
+            throw new RuntimeException(String.format(
+                "Conflicting command-line argument parsers for subclasses of '%s' : '%s' and '%s'.",
+                klass.getName(),
+                existing.getClass().getName(),
+                parser.getClass().getName()));
+          }
+          if (registeredClass.isAssignableFrom(klass) || klass.isAssignableFrom(registeredClass)) {
+            throw new RuntimeException(String.format(
+                "Conflicting command-line argument parsers for subclasses of '%s' : '%s' and '%s'.",
+                klass.getName(),
+                existing.getClass().getName(),
+                parser.getClass().getName()));
+          }
+        }
+        final ValueParser<?> existing = baseParserMap.put(klass, parser);
+
+        // Given the previous checks, existing must be null:
+        Preconditions.checkState(existing == null);
       } else {
-        throw new IllegalFlagValueException(getName(), value);
+        final ValueParser<?> existing = parserMap.put(klass, parser);
+        if (existing != null) {
+          throw new RuntimeException(String.format(
+              "Conflicting command-line argument parsers for type '%s' : '%s' and '%s'.",
+              klass.getName(),
+              existing.getClass().getName(),
+              parser.getClass().getName()));
+        }
       }
-    } else if (mField.getType() == double.class) {
-      try {
-        mField.setDouble(mObj, Double.parseDouble(value));
-      } catch (NumberFormatException e) {
-        throw new IllegalFlagValueException(getName(), value);
-      }
-    } else if (mField.getType() == float.class) {
-      try {
-        mField.setFloat(mObj, Float.parseFloat(value));
-      } catch (NumberFormatException e) {
-        throw new IllegalFlagValueException(getName(), value);
-      }
-    } else if (mField.getType() == int.class) {
-      try {
-        mField.setInt(mObj, Integer.parseInt(value));
-      } catch (NumberFormatException e) {
-        throw new IllegalFlagValueException(getName(), value);
-      }
-    } else if (mField.getType() == long.class) {
-      try {
-        mField.setLong(mObj, Long.parseLong(value));
-      } catch (NumberFormatException e) {
-        throw new IllegalFlagValueException(getName(), value);
-      }
-    } else if (mField.getType() == short.class) {
-      try {
-        mField.setShort(mObj, Short.parseShort(value));
-      } catch (NumberFormatException e) {
-        throw new IllegalFlagValueException(getName(), value);
-      }
-    } else if (mField.getType() == String.class) {
-      mField.set(mObj, value);
-    } else {
-      throw new UnsupportedFlagTypeException(mField.getName());
     }
   }
 }

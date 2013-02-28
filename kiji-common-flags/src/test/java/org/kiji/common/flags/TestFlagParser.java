@@ -136,7 +136,7 @@ public class TestFlagParser {
       FlagParser.init(myFlags, args);
       Assert.assertTrue(false);  // Should have thrown an exception.
     } catch (UnsupportedFlagTypeException e) {
-      Assert.assertTrue(e.getMessage().contains("unsupportedFlagType"));;
+      Assert.assertTrue(e.getMessage(), e.getMessage().contains("unsupportedFlagType"));;
     }
   }
 
@@ -149,8 +149,8 @@ public class TestFlagParser {
     try {
       FlagParser.init(myFlags, args);
       Assert.assertTrue(false);  // Should have thrown an exception.
-    } catch (IllegalFlagValueException e) {
-      Assert.assertTrue(e.getMessage().contains("flagFloat"));
+    } catch (IllegalFlagValueException ifve) {
+      Assert.assertTrue(ifve.getMessage().contains("flagFloat"));
     }
   }
 
@@ -165,7 +165,7 @@ public class TestFlagParser {
       Assert.assertTrue(false);  // Should have thrown an exception.
     } catch (IllegalFlagValueException e) {
       // Parsing hex is not supported.
-      Assert.assertTrue(e.getMessage().contains("flagInt"));
+      Assert.assertTrue(e.getMessage(), e.getMessage().contains("flagInt"));
     }
   }
 
@@ -181,7 +181,7 @@ public class TestFlagParser {
       Assert.assertTrue(false);  // Should have thrown an exception.
     } catch (IllegalFlagValueException e) {
       // This will be treated as a flag without a value.
-      Assert.assertTrue(e.getMessage().contains("flagInt"));
+      Assert.assertTrue(e.getMessage(), e.getMessage().contains("flagInt"));
     }
   }
 
@@ -204,7 +204,7 @@ public class TestFlagParser {
     String help = out.toString();
     Assert.assertEquals(
         "  --help=<boolean>\n\tDisplay this help message\n\t(Default=false)\n\n"
-        + "  --flagDefault=<String>\n\t(Default=\"defaultValue\")\n\n"
+        + "  --flagDefault=<String>\n\t(Default=defaultValue)\n\n"
         + "  --flagDouble=<double>\n\t(Default=0.0)\n\n"
         + "  --flagFloat=<float>\n\t(Default=0.0)\n\n"
         + "  --flagInt=<int>\n\t(Default=0)\n\n"

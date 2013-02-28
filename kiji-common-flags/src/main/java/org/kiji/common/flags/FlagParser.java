@@ -42,14 +42,16 @@ public class FlagParser {
    * @return A map from flag name to its definition.
    */
   private static Map<String, FlagSpec> extractFlagDeclarations(Object obj) {
-    Map<String, FlagSpec> flags = new TreeMap<String, FlagSpec>();
+    final Map<String, FlagSpec> flags = new TreeMap<String, FlagSpec>();
+    // Walk up the chain of inheritance:
     Class<?> clazz = obj.getClass();
     do {
+      // Register public fields with @Flag annotations:
       for (Field field : clazz.getDeclaredFields()) {
-        Flag flag = field.getAnnotation(Flag.class);
+        final Flag flag = field.getAnnotation(Flag.class);
         if (flag != null) {
-          FlagSpec flagSpec = new FlagSpec(field, flag, obj);
-          String flagName = flagSpec.getName();
+          final FlagSpec flagSpec = new FlagSpec(field, flag, obj);
+          final String flagName = flagSpec.getName();
           if (flags.containsKey(flagName)) {
             throw new DuplicateFlagException(flagName);
           }
@@ -87,9 +89,10 @@ public class FlagParser {
       String[] args,
       List<String> nonFlagArgs,
       Map<String, FlagSpec> declaredFlags,
-      boolean ignoreUnknownFlags) throws UnrecognizedFlagException {
+      boolean ignoreUnknownFlags)
+      throws UnrecognizedFlagException {
 
-    Map<String, String> parsedFlags = new TreeMap<String, String>();
+    final Map<String, String> parsedFlags = new TreeMap<String, String>();
     boolean ignoreTheRest = false;
     for (String arg : args) {
       if (ignoreTheRest) {
@@ -108,7 +111,7 @@ public class FlagParser {
         continue;
       }
       final String flagName = matcher.group(1);
-      final String flagValue = (matcher.group(3) != null) ? matcher.group(3) : "";
+      final String flagValue = matcher.group(3);  // may be null
 
       if (declaredFlags.containsKey(flagName) || flagName.equals(HELP_FLAG_NAME)) {
         parsedFlags.put(flagName, flagValue);
@@ -171,12 +174,15 @@ public class FlagParser {
    * @throws DuplicateFlagException If there are duplicate flags.
    * @throws UnrecognizedFlagException When parsing a flag that was not declared.
    */
-  public static List<String> init(Object obj, String[] args, PrintStream out,
+  public static List<String> init(
+      Object obj,
+      String[] args,
+      PrintStream out,
       boolean ignoreUnknownFlags) {
 
-    List<String> nonFlagArgs = new ArrayList<String>();
-    Map<String, FlagSpec> declaredFlags = extractFlagDeclarations(obj);
-    Map<String, String> parsedFlags =
+    final List<String> nonFlagArgs = new ArrayList<String>();
+    final Map<String, FlagSpec> declaredFlags = extractFlagDeclarations(obj);
+    final Map<String, String> parsedFlags =
         parseArgs(args, nonFlagArgs, declaredFlags, ignoreUnknownFlags);
 
     if (parsedFlags.containsKey("help") && !declaredFlags.containsKey("help")) {

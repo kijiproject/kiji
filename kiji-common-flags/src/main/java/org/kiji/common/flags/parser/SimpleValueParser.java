@@ -15,31 +15,19 @@
  * permissions and limitations under the License.
  */
 
-package org.kiji.common.flags;
+package org.kiji.common.flags.parser;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import org.kiji.common.flags.ValueParser;
 
 /**
- * Annotates fields that should be assigned to when a command-line is parsed.
+ * Base class for parsers of a single exact value class.
+ *
+ * @param <T> Type of the parsed value.
  */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
-public @interface Flag {
-  /** The name of the flag. */
-  String name() default "";
-
-  /** The human-readable usage string. */
-  String usage() default "";
-
-  /** Whether the flag should be displayed when {@code --help} is provided. */
-  boolean hidden() default false;
-
-  /** An environment variable to use as the default value. */
-  String envVar() default "";
-
-  /** Explicit flag parser to use. */
-  Class<? extends ValueParser> parser() default ValueParser.class;
+public abstract class SimpleValueParser<T> implements ValueParser<T> {
+  /** {@inheritDoc} */
+  @Override
+  public boolean parsesSubclasses() {
+    return false;
+  }
 }

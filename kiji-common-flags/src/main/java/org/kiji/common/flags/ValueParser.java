@@ -17,29 +17,28 @@
 
 package org.kiji.common.flags;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-
 /**
- * Annotates fields that should be assigned to when a command-line is parsed.
+ * Base interface of a parser for flag values.
+ *
+ * All flag value parsers must implement this interface.
+ *
+ * @param <T> Type of the parsed value.
  */
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
-public @interface Flag {
-  /** The name of the flag. */
-  String name() default "";
+public interface ValueParser<T> {
 
-  /** The human-readable usage string. */
-  String usage() default "";
+  /** @return the class of the value being parsed. */
+  Class<? extends T> getParsedClass();
 
-  /** Whether the flag should be displayed when {@code --help} is provided. */
-  boolean hidden() default false;
+  /** @return whether this parser also parses subclasses */
+  boolean parsesSubclasses();
 
-  /** An environment variable to use as the default value. */
-  String envVar() default "";
-
-  /** Explicit flag parser to use. */
-  Class<? extends ValueParser> parser() default ValueParser.class;
+  /**
+   * Parses a value from a string command-line flag.
+   *
+   * @param flag Specification of the flag being parsed.
+   *     Includes the Flag annotation and the field details.
+   * @param string The string from the command-line to be parsed.
+   * @return the parsed value.
+   */
+  T parse(FlagSpec flag, String string);
 }

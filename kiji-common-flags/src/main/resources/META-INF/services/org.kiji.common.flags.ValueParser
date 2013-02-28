@@ -1,0 +1,16 @@
+org.kiji.common.flags.parser.BooleanParser
+org.kiji.common.flags.parser.DoubleParser
+org.kiji.common.flags.parser.FloatParser
+org.kiji.common.flags.parser.IntegerParser
+org.kiji.common.flags.parser.LongParser
+org.kiji.common.flags.parser.ShortParser
+
+org.kiji.common.flags.parser.PrimitiveBooleanParser
+org.kiji.common.flags.parser.PrimitiveDoubleParser
+org.kiji.common.flags.parser.PrimitiveFloatParser
+org.kiji.common.flags.parser.PrimitiveIntegerParser
+org.kiji.common.flags.parser.PrimitiveLongParser
+org.kiji.common.flags.parser.PrimitiveShortParser
+
+org.kiji.common.flags.parser.StringParser
+org.kiji.common.flags.parser.EnumParser

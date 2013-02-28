@@ -15,25 +15,31 @@
  * permissions and limitations under the License.
  */
 
-package org.kiji.common.flags;
+package org.kiji.common.flags.parser;
+
+import org.kiji.common.flags.FlagSpec;
+import org.kiji.common.flags.IllegalFlagValueException;
 
 /**
- * Exception thrown when the type of a flag is not supported.
+ * Parser for command-line arguments of type Double (object).
  *
- * This happens when annotating a field with an <pre>@Flag</pre> while there is no declared
- * parser for this field's type.
+ * <li> <code>"--flag"</code> evaluates to <code>null</code>
+ * <li> <code>"--flag="</code> is invalid.
  */
-public class UnsupportedFlagTypeException extends RuntimeException {
-  /** Generated serial version ID. */
-  private static final long serialVersionUID = -1500132821312834934L;
+public class DoubleParser extends NullableSimpleValueParser<Double> {
+  /** {@inheritDoc} */
+  @Override
+  public Class<? extends Double> getParsedClass() {
+    return Double.class;
+  }
 
-  /**
-   * Creates a new <code>UnsupportedFlagTypeException</code> instance.
-   *
-   * @param spec Flag descriptor to create an "unsupported" exception for.
-   */
-  public UnsupportedFlagTypeException(FlagSpec spec) {
-    super(String.format("Unsupported type '%s' for flag '--%s' declared in '%s'.",
-        spec.getTypeName(), spec.getName(), spec.toString()));
+  /** {@inheritDoc} */
+  @Override
+  public Double parseNonNull(FlagSpec flag, String string) {
+    try {
+      return Double.parseDouble(string);
+    } catch (NumberFormatException nfe) {
+      throw new IllegalFlagValueException(flag, string);
+    }
   }
 }
