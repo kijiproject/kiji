@@ -515,6 +515,13 @@
         <artifactId>hadoop-minicluster</artifactId>
         <version>${hadoop.version}</version>
         <scope>provided</scope>
+        <!-- Minicluster uses commons-daemon 1.0.3 which has a corrupted pom. -->
+        <exclusions>
+          <exclusion>
+            <groupId>commons-daemon</groupId>
+            <artifactId>commons-daemon</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.hadoop</groupId>
