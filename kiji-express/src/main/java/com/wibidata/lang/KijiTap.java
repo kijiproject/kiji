@@ -135,7 +135,7 @@ public class KijiTap
         Base64.encodeBase64String(SerializationUtils.serialize(mScheme.getDataRequest()));
     conf.set(KijiConfKeys.KIJI_INPUT_DATA_REQUEST, serializedRequest);
 
-    super.sinkConfInit(process, conf);
+    super.sourceConfInit(process, conf);
   }
 
   /** {@inheritDoc} */
