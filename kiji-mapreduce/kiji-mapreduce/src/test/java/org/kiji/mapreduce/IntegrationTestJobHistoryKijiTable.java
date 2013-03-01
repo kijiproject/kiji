@@ -44,6 +44,7 @@ import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.testutil.AbstractKijiIntegrationTest;
+import org.kiji.schema.util.ResourceUtils;
 
 /**
  * Integration test for the job history table.
@@ -172,9 +173,9 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
     assertEquals("Couldn't retrieve configuration field from deserialized configuration.",
         "squirrel", config.get("conf.test.animal.string"));
 
-    fooTable.close();
-    jobHistory.close();
-    kiji.release();
+    ResourceUtils.releaseOrLog(fooTable);
+    ResourceUtils.closeOrLog(jobHistory);
+    ResourceUtils.releaseOrLog(kiji);
   }
 
   /**
@@ -215,30 +216,30 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
     assertTrue(jobRecord.<Long>getMostRecentValue("info", "startTime")
         < jobRecord.<Long>getMostRecentValue("info", "endTime"));
 
-    fooTable.close();
-    jobHistory.close();
-    kiji.release();
+    ResourceUtils.releaseOrLog(fooTable);
+    ResourceUtils.closeOrLog(jobHistory);
+    ResourceUtils.releaseOrLog(kiji);
   }
 
   /**
    * Tests that a job will still run to completion even without an installed job history table.
    */
-   @Test
-   public void testMissingHistoryTableNonfatal() throws Exception {
-     createAndPopulateFooTable();
-     final Kiji kiji = Kiji.Factory.open(getKijiURI());
-     final KijiTable fooTable = kiji.openTable("foo");
-     kiji.deleteTable(JobHistoryKijiTable.getInstallName());
+  @Test
+  public void testMissingHistoryTableNonfatal() throws Exception {
+    createAndPopulateFooTable();
+    final Kiji kiji = Kiji.Factory.open(getKijiURI());
+    final KijiTable fooTable = kiji.openTable("foo");
+    kiji.deleteTable(JobHistoryKijiTable.getInstallName());
 
-     final KijiProduceJobBuilder builder = KijiProduceJobBuilder.create()
-         .withConf(getConf())
-         .withInputTable(fooTable.getURI())
-         .withProducer(EmailDomainProducer.class)
-         .withOutput(new DirectKijiTableMapReduceJobOutput(fooTable.getURI()));
-     final MapReduceJob mrJob = builder.build();
-     assertTrue(mrJob.run());
+    final KijiProduceJobBuilder builder = KijiProduceJobBuilder.create()
+        .withConf(getConf())
+        .withInputTable(fooTable.getURI())
+        .withProducer(EmailDomainProducer.class)
+        .withOutput(new DirectKijiTableMapReduceJobOutput(fooTable.getURI()));
+    final MapReduceJob mrJob = builder.build();
+    assertTrue(mrJob.run());
 
-     fooTable.close();
-     kiji.release();
-   }
+    ResourceUtils.releaseOrLog(fooTable);
+    ResourceUtils.releaseOrLog(kiji);
+  }
 }

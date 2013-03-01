@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.util.Map;
 
 import org.apache.avro.Schema;
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -271,7 +270,7 @@ public final class KijiTableKeyValueStore<V> implements Configurable, KeyValueSt
       } catch (IOException ioe) {
         throw new IllegalArgumentException("Could not open table: " + mTableUri, ioe);
       } finally {
-        IOUtils.closeQuietly(kijiTable);
+        ResourceUtils.releaseOrLog(kijiTable);
         ResourceUtils.releaseOrLog(kiji);
       }
 
@@ -562,8 +561,8 @@ public final class KijiTableKeyValueStore<V> implements Configurable, KeyValueSt
     @Override
     public void close() throws IOException {
       try {
-        IOUtils.closeQuietly(mTableReader);
-        IOUtils.closeQuietly(mKijiTable);
+        ResourceUtils.closeOrLog(mTableReader);
+        ResourceUtils.releaseOrLog(mKijiTable);
         ResourceUtils.releaseOrLog(mKiji);
       } finally {
         mTableReader = null;

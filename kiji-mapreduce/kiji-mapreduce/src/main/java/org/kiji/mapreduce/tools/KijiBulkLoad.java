@@ -35,6 +35,7 @@ import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.tools.BaseTool;
 import org.kiji.schema.tools.KijiToolLauncher;
+import org.kiji.schema.util.ResourceUtils;
 
 /** Bulk loads HFiles into a Kiji table. */
 @ApiAudience.Private
@@ -106,10 +107,10 @@ public final class KijiBulkLoad extends BaseTool {
         hFileLoader.load(mHFile, table);
         return SUCCESS;
       } finally {
-        table.close();
+        ResourceUtils.releaseOrLog(table);
       }
     } finally {
-      kiji.release();
+      ResourceUtils.releaseOrLog(kiji);
     }
   }
 

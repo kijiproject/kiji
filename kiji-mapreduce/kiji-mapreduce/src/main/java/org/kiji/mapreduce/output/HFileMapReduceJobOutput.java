@@ -59,6 +59,7 @@ import org.kiji.schema.KijiRowKeySplitter;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.layout.KijiTableLayout;
+import org.kiji.schema.util.ResourceUtils;
 
 /**
  * The class HFileMapReduceJobOutput is used to indicate the usage of HFiles based on the layout
@@ -214,10 +215,10 @@ public final class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
           return generateEvenStartKeys(nsplits);
         }
       } finally {
-        table.close();
+        ResourceUtils.releaseOrLog(table);
       }
     } finally {
-      kiji.release();
+      ResourceUtils.releaseOrLog(kiji);
     }
   }
 

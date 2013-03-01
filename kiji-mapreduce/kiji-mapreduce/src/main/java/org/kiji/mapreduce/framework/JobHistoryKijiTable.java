@@ -22,7 +22,6 @@ package org.kiji.mapreduce.framework;
 import java.io.Closeable;
 import java.io.IOException;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.hadoop.mapreduce.Job;
 
@@ -35,6 +34,7 @@ import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.KijiTableWriter;
 import org.kiji.schema.layout.KijiTableLayout;
+import org.kiji.schema.util.ResourceUtils;
 
 /**
  * A class providing an API to install and access the job history kiji table.
@@ -102,7 +102,7 @@ public final class JobHistoryKijiTable implements Closeable {
       job.getConfiguration().writeXml(baos);
       writer.put(jobEntity, "info", "configuration", startTime, baos.toString("UTF-8"));
     } finally {
-      IOUtils.closeQuietly(writer);
+      ResourceUtils.closeOrLog(writer);
     }
   }
 
@@ -133,12 +133,12 @@ public final class JobHistoryKijiTable implements Closeable {
     try {
       return wtr.get(mKijiTable.getEntityId(jobId), wdr);
     } finally {
-      IOUtils.closeQuietly(wtr);
+      ResourceUtils.closeOrLog(wtr);
     }
   }
 
   @Override
   public void close() throws IOException {
-    IOUtils.closeQuietly(mKijiTable);
+    ResourceUtils.releaseOrLog(mKijiTable);
   }
 }

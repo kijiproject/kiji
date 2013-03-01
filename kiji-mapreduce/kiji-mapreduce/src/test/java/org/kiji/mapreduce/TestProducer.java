@@ -52,6 +52,7 @@ import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.util.InstanceBuilder;
+import org.kiji.schema.util.ResourceUtils;
 
 /** Runs a producer job in-process against a fake HBase instance. */
 public class TestProducer extends KijiClientTest {
@@ -89,8 +90,8 @@ public class TestProducer extends KijiClientTest {
 
   @After
   public final void teardownTestProducer() throws Exception {
-    mReader.close();
-    mTable.close();
+    ResourceUtils.closeOrLog(mReader);
+    ResourceUtils.releaseOrLog(mTable);
   }
 
   /**

@@ -43,6 +43,7 @@ import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.tools.KijiToolLauncher;
 import org.kiji.schema.tools.RequiredFlagException;
+import org.kiji.schema.util.ResourceUtils;
 
 /** Bulk imports a file into a Kiji table. */
 @ApiAudience.Private
@@ -116,8 +117,8 @@ public final class KijiBulkImport extends JobTool<KijiBulkImportJobBuilder> {
   /** {@inheritDoc} */
   @Override
   protected void cleanup() throws IOException {
-    mTable.close();
-    mKiji.release();
+    ResourceUtils.releaseOrLog(mTable);
+    ResourceUtils.releaseOrLog(mKiji);
     super.cleanup();
   }
 

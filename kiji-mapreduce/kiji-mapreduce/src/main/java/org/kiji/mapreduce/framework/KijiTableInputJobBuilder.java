@@ -36,6 +36,7 @@ import org.kiji.schema.KijiDataRequestValidator;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.filter.KijiRowFilter;
+import org.kiji.schema.util.ResourceUtils;
 
 /**
  * Base class for MapReduce jobs that use a Kiji table as input.
@@ -144,10 +145,10 @@ public abstract class KijiTableInputJobBuilder<T extends KijiTableInputJobBuilde
       try {
         validateInputTable(table);
       } finally {
-        table.close();
+        ResourceUtils.releaseOrLog(table);
       }
     } finally {
-      kiji.release();
+      ResourceUtils.releaseOrLog(kiji);
     }
   }
 

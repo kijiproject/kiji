@@ -39,6 +39,7 @@ import org.kiji.schema.KijiTableWriter;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.testutil.AbstractKijiIntegrationTest;
+import org.kiji.schema.util.ResourceUtils;
 
 /**
  * A base class for integration tests of KijiRowFilter implementations.
@@ -69,9 +70,9 @@ public abstract class KijiRowFilterIntegrationTest extends AbstractKijiIntegrati
 
   @After
   public void teardown() throws Exception {
-    mFoodsTable.close();
+    ResourceUtils.releaseOrLog(mFoodsTable);
     deleteTable();
-    mKiji.release();
+    ResourceUtils.releaseOrLog(mKiji);
   }
 
   /**

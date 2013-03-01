@@ -51,6 +51,7 @@ import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.layout.KijiTableLayout;
+import org.kiji.schema.util.ResourceUtils;
 
 public class TestKijiProduceJobBuilder extends KijiClientTest {
 
@@ -102,7 +103,7 @@ public class TestKijiProduceJobBuilder extends KijiClientTest {
 
   @After
   public void teardownTestKijiProducer() throws Exception {
-    mTable.close();
+    ResourceUtils.releaseOrLog(mTable);
     mTable = null;
   }
 
@@ -181,7 +182,7 @@ public class TestKijiProduceJobBuilder extends KijiClientTest {
           .withOutput(new DirectKijiTableMapReduceJobOutput(otherTable.getURI()))
           .build();
     } finally {
-      otherTable.close();
+      ResourceUtils.releaseOrLog(otherTable);
     }
   }
 }

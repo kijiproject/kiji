@@ -36,8 +36,6 @@ import org.apache.hadoop.io.Text;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.kiji.mapreduce.gather.GathererContext;
 import org.kiji.mapreduce.gather.KijiGatherJobBuilder;
@@ -49,11 +47,10 @@ import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.util.InstanceBuilder;
+import org.kiji.schema.util.ResourceUtils;
 
 /** Runs a gatherer job in-process against a fake HBase instance. */
 public class TestGatherer extends KijiClientTest {
-  private static final Logger LOG = LoggerFactory.getLogger(TestGatherer.class);
-
   /**
    * Producer intended to run on the generic KijiMR test layout. Uses resource
    * org/kiji/mapreduce/layout/test.json.
@@ -118,7 +115,7 @@ public class TestGatherer extends KijiClientTest {
 
   @After
   public final void teardownTestGatherer() throws Exception {
-    mTable.close();
+    ResourceUtils.releaseOrLog(mTable);
   }
 
   @Test

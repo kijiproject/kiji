@@ -35,8 +35,6 @@ import org.apache.hadoop.io.Text;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.kiji.mapreduce.MapReduceJob;
 import org.kiji.mapreduce.gather.GathererContext;
@@ -51,11 +49,9 @@ import org.kiji.schema.KijiTable;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.util.InstanceBuilder;
+import org.kiji.schema.util.ResourceUtils;
 
 public class TestRegexQualifierColumnFilter extends KijiClientTest {
-  private static final Logger LOG = LoggerFactory.getLogger(TestRegexQualifierColumnFilter.class);
-  private static final String TABLE_NAME = "regex_test";
-
   /** Test table, owned by this test. */
   private KijiTable mTable;
 
@@ -82,7 +78,7 @@ public class TestRegexQualifierColumnFilter extends KijiClientTest {
 
   @After
   public final void teardownTestRegexQualifierColumnFilter() throws Exception {
-    mTable.close();
+    ResourceUtils.releaseOrLog(mTable);
   }
 
   /**

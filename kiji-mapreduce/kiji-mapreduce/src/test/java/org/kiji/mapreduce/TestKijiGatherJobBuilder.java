@@ -55,6 +55,7 @@ import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.layout.KijiTableLayout;
+import org.kiji.schema.util.ResourceUtils;
 
 public class TestKijiGatherJobBuilder extends KijiClientTest {
   // -----------------------------------------------------------------------------------------------
@@ -204,7 +205,7 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
 
   @After
   public void tearDown() throws Exception {
-    mTable.close();
+    ResourceUtils.releaseOrLog(mTable);
     mTable = null;
   }
 

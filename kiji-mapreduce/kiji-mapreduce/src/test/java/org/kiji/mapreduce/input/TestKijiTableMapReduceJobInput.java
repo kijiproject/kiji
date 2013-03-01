@@ -46,6 +46,7 @@ import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.impl.RawEntityId;
 import org.kiji.schema.layout.KijiTableLayout;
+import org.kiji.schema.util.ResourceUtils;
 import org.kiji.schema.util.TestFileUtils;
 
 public class TestKijiTableMapReduceJobInput extends KijiClientTest {
@@ -72,7 +73,7 @@ public class TestKijiTableMapReduceJobInput extends KijiClientTest {
   @After
   public void tearDown() throws Exception {
     FileUtils.deleteDirectory(mTempDir);
-    mTable.close();
+    ResourceUtils.releaseOrLog(mTable);
     mTempDir = null;
     mTempPath = null;
     mTable = null;

@@ -52,6 +52,7 @@ import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.KijiTableWriter;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.testutil.AbstractKijiIntegrationTest;
+import org.kiji.schema.util.ResourceUtils;
 
 /** Tests bulk-importers. */
 public class IntegrationTestTableMapper extends AbstractKijiIntegrationTest {
@@ -143,9 +144,9 @@ public class IntegrationTestTableMapper extends AbstractKijiIntegrationTest {
 
   @After
   public final void teardownIntegrationTestTableMapper() throws Exception {
-    mInputTable.close();
-    mOutputTable.close();
-    mKiji.release();
+    ResourceUtils.releaseOrLog(mInputTable);
+    ResourceUtils.releaseOrLog(mOutputTable);
+    ResourceUtils.releaseOrLog(mKiji);
 
     mInputTable = null;
     mOutputTable = null;

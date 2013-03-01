@@ -48,6 +48,7 @@ import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.util.InstanceBuilder;
+import org.kiji.schema.util.ResourceUtils;
 
 /** Runs a map-only job in-process against a fake HBase instance. */
 public class TestLaunchMapReduce {
@@ -135,9 +136,9 @@ public class TestLaunchMapReduce {
 
   @After
   public void tearDown() throws Exception {
-    mReader.close();
-    mTable.close();
-    mKiji.release();
+    ResourceUtils.closeOrLog(mReader);
+    ResourceUtils.releaseOrLog(mTable);
+    ResourceUtils.releaseOrLog(mKiji);
   }
 
   @Test

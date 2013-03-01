@@ -34,6 +34,7 @@ import org.kiji.schema.KijiTableWriter;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.testutil.AbstractKijiIntegrationTest;
+import org.kiji.schema.util.ResourceUtils;
 
 /** Tests running a table map/reducer. */
 public class IntegrationTestTableMapReducer extends AbstractKijiIntegrationTest {
@@ -75,11 +76,11 @@ public class IntegrationTestTableMapReducer extends AbstractKijiIntegrationTest 
         }
 
       } finally {
-        table.close();
+        ResourceUtils.releaseOrLog(table);
       }
 
     } finally {
-      kiji.release();
+      ResourceUtils.releaseOrLog(kiji);
     }
   }
 

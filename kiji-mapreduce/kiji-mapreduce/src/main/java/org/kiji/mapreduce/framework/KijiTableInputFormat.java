@@ -37,8 +37,6 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.impl.KijiTableSplit;
@@ -62,8 +60,6 @@ import org.kiji.schema.util.ResourceUtils;
 public final class KijiTableInputFormat
     extends InputFormat<EntityId, KijiRowData>
     implements Configurable {
-  private static final Logger LOG = LoggerFactory.getLogger(KijiTableInputFormat.class);
-
   /** Configuration of this input format. */
   private Configuration mConf;
 
@@ -110,10 +106,10 @@ public final class KijiTableInputFormat
         return splits;
 
       } finally {
-        table.close();
+        ResourceUtils.releaseOrLog(table);
       }
     } finally {
-      kiji.release();
+      ResourceUtils.releaseOrLog(kiji);
     }
   }
 
@@ -237,14 +233,14 @@ public final class KijiTableInputFormat
     public void close() throws IOException {
       ResourceUtils.closeOrLog(mScanner);
       ResourceUtils.closeOrLog(mReader);
-      ResourceUtils.closeOrLog(mTable);
-      mKiji.release();
+      ResourceUtils.releaseOrLog(mTable);
+      ResourceUtils.releaseOrLog(mKiji);
+
       mIterator = null;
       mScanner = null;
       mReader = null;
       mTable = null;
       mKiji = null;
-
       mSplit = null;
       mCurrentRow = null;
     }

@@ -55,6 +55,7 @@ import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.util.InstanceBuilder;
+import org.kiji.schema.util.ResourceUtils;
 
 /** Runs a bulk-importer job in-process against a fake HBase instance. */
 public class TestBulkImporter extends KijiClientTest {
@@ -81,8 +82,8 @@ public class TestBulkImporter extends KijiClientTest {
 
   @After
   public final void teardownTestBulkImporter() throws Exception {
-    mReader.close();
-    mTable.close();
+    ResourceUtils.closeOrLog(mReader);
+    ResourceUtils.releaseOrLog(mTable);
   }
 
   /**

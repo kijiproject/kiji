@@ -32,6 +32,7 @@ import org.kiji.schema.EntityIdFactory;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.tools.ToolUtils;
+import org.kiji.schema.util.ResourceUtils;
 
 /**
  * Base class for tools that run MapReduce jobs over kiji tables.
@@ -105,10 +106,10 @@ public abstract class KijiJobTool<B extends KijiTableInputJobBuilder> extends Jo
           jobBuilder.withLimitRow(eidFactory.getEntityIdFromHBaseRowKey(mHBaseLimitRow));
         }
       } finally {
-        table.close();
+        ResourceUtils.releaseOrLog(table);
       }
     } finally {
-      kiji.release();
+      ResourceUtils.releaseOrLog(kiji);
     }
   }
 

@@ -52,6 +52,7 @@ import org.kiji.schema.KijiURI;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayout.LocalityGroupLayout;
 import org.kiji.schema.layout.impl.ColumnId;
+import org.kiji.schema.util.ResourceUtils;
 
 /**
  * Hadoop output format that writes HFiles that can be loaded directly into HBase region servers.
@@ -257,7 +258,7 @@ public final class KijiHFileOutputFormat
         hfileWriter.appendFileInfo(StoreFile.BULKLOAD_TASK_KEY, toBytes(taskAttemptID));
         hfileWriter.appendFileInfo(StoreFile.MAJOR_COMPACTION_KEY, toBytes(true));
 
-        hfileWriter.close();
+        ResourceUtils.closeOrLog(hfileWriter);
       }
     }
 
@@ -307,8 +308,8 @@ public final class KijiHFileOutputFormat
       final Kiji kiji = Kiji.Factory.open(mTableURI);
       final KijiTable table = kiji.openTable(mTableURI.getTable());
       mLayout = table.getLayout();
-      table.close();
-      kiji.release();
+      ResourceUtils.releaseOrLog(table);
+      ResourceUtils.releaseOrLog(kiji);
     }
 
     /** {@inheritDoc} */

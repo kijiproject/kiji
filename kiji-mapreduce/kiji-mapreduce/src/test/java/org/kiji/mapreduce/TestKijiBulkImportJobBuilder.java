@@ -51,6 +51,7 @@ import org.kiji.mapreduce.reducer.IdentityReducer;
 import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.layout.KijiTableLayout;
+import org.kiji.schema.util.ResourceUtils;
 import org.kiji.schema.util.TestFileUtils;
 
 public class TestKijiBulkImportJobBuilder extends KijiClientTest {
@@ -96,7 +97,7 @@ public class TestKijiBulkImportJobBuilder extends KijiClientTest {
   @After
   public void tearDown() throws Exception {
     FileUtils.deleteDirectory(mTempDir);
-    mTable.close();
+    ResourceUtils.releaseOrLog(mTable);
     mTempDir = null;
     mTempPath = null;
     mTable = null;

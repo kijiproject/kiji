@@ -47,6 +47,7 @@ import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.util.InstanceBuilder;
+import org.kiji.schema.util.ResourceUtils;
 
 /** Tests a gatherer on a map-type family. */
 public class TestGatherMapFamily extends KijiClientTest {
@@ -117,7 +118,7 @@ public class TestGatherMapFamily extends KijiClientTest {
 
   @After
   public void teardownTestGatherMapFamily() throws Exception {
-    mTable.close();
+    ResourceUtils.releaseOrLog(mTable);
     mTable = null;
   }
 

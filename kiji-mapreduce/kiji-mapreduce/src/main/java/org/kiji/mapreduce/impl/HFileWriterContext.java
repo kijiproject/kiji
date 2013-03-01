@@ -41,6 +41,7 @@ import org.kiji.schema.hbase.HBaseColumnName;
 import org.kiji.schema.impl.DefaultKijiCellEncoderFactory;
 import org.kiji.schema.layout.ColumnNameTranslator;
 import org.kiji.schema.layout.impl.CellSpec;
+import org.kiji.schema.util.ResourceUtils;
 
 /**
  * Kiji context that emits puts for the configured output table to HFiles.
@@ -106,6 +107,7 @@ public final class HFileWriterContext
   }
 
   /** {@inheritDoc} */
+  @SuppressWarnings("unchecked")
   @Override
   public <T> void put(EntityId entityId, String family, String qualifier, long timestamp, T value)
       throws IOException {
@@ -135,8 +137,8 @@ public final class HFileWriterContext
 
   @Override
   public void close() throws IOException {
-    mTable.close();
-    mKiji.release();
+    ResourceUtils.releaseOrLog(mTable);
+    ResourceUtils.releaseOrLog(mKiji);
     super.close();
   }
 }
