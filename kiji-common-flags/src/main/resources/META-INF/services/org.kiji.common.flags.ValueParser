@@ -13,4 +13,8 @@ org.kiji.common.flags.parser.PrimitiveLongParser
 org.kiji.common.flags.parser.PrimitiveShortParser
 
 org.kiji.common.flags.parser.StringParser
+
 org.kiji.common.flags.parser.EnumParser
+
+org.kiji.common.flags.parser.StringListParser
+org.kiji.common.flags.parser.StringMapParser

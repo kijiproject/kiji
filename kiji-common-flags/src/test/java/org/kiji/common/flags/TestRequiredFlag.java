@@ -18,63 +18,46 @@
 package org.kiji.common.flags;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Tests the flag parser for enumeration values. */
-public class TestEnumFlag {
-  private static final Logger LOG = LoggerFactory.getLogger(TestEnumFlag.class);
-
-  public static enum Values {
-    VALUE_ONE,
-    VALUE_TWO,
-    VALUE_THREE
-  }
+/** Tests the behavior of required flags. */
+public class TestRequiredFlag {
+  private static final Logger LOG = LoggerFactory.getLogger(TestRequiredFlag.class);
 
   private static final class TestObject {
-    @Flag public Values flagEnum = null;
+    @Flag(required = true) public String flagRequired = null;
   }
 
   private TestObject mTest = new TestObject();
 
   @Test
-  public void testEnumUnset() {
-    FlagParser.init(mTest, new String[]{});
-    assertNull(mTest.flagEnum);
+  public void testValidRequired() {
+    FlagParser.init(mTest, new String[]{"--flagRequired=value"});
   }
 
   @Test
-  public void testEnumValueOne() {
-    FlagParser.init(mTest, new String[]{"--flagEnum=VALUE_ONE"});
-    assertEquals(Values.VALUE_ONE, mTest.flagEnum);
+  public void testRequiredValidEmpty() {
+    FlagParser.init(mTest, new String[]{"--flagRequired="});
   }
 
   @Test
-  public void testEnumValueOneLowerCase() {
-    FlagParser.init(mTest, new String[]{"--flagEnum=value_one"});
-    assertEquals(Values.VALUE_ONE, mTest.flagEnum);
+  public void testRequiredValidNull() {
+    FlagParser.init(mTest, new String[]{"--flagRequired"});
   }
 
   @Test
-  public void testEnumValueTwo() {
-    FlagParser.init(mTest, new String[]{"--flagEnum=VALUE_TWO"});
-    assertEquals(Values.VALUE_TWO, mTest.flagEnum);
-  }
-
-  @Test
-  public void testEnumUnknown() {
+  public void testRequiredMissing() {
     try {
-      FlagParser.init(mTest, new String[]{"--flagEnum=unknown"});
+      FlagParser.init(mTest, new String[]{});
       fail();
     } catch (IllegalFlagValueException ifve) {
       LOG.debug("Expected exception: {}", ifve.getMessage());
       assertEquals(
-          "Invalid Values enum command-line argument '--flagEnum=unknown': "
-          + "expecting one of VALUE_ONE,VALUE_TWO,VALUE_THREE.",
+          "Flag '--flagRequired' is required but has not been specified.",
           ifve.getMessage());
     }
   }

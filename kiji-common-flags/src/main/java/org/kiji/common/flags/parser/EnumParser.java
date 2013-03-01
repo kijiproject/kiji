@@ -26,12 +26,11 @@ import com.google.common.base.Joiner;
 
 import org.kiji.common.flags.FlagSpec;
 import org.kiji.common.flags.IllegalFlagValueException;
-import org.kiji.common.flags.ValueParser;
 
 /**
  * Parser for enum values from command-line flags.
  */
-public final class EnumParser implements ValueParser<Enum> {
+public final class EnumParser extends SimpleValueParser<Enum> {
   /** {@inheritDoc} */
   @Override
   public boolean parsesSubclasses() {

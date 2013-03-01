@@ -17,6 +17,8 @@
 
 package org.kiji.common.flags;
 
+import java.util.List;
+
 /**
  * Base interface of a parser for flag values.
  *
@@ -33,12 +35,15 @@ public interface ValueParser<T> {
   boolean parsesSubclasses();
 
   /**
-   * Parses a value from a string command-line flag.
+   * Parses all the values associated to a command-line flag.
    *
    * @param flag Specification of the flag being parsed.
    *     Includes the Flag annotation and the field details.
-   * @param string The string from the command-line to be parsed.
+   * @param values The many command-line arguments associated to this flag, in order.
+   *     The list contains at least one element, and more if the flag has been repeated.
+   *     It is up to the parser to decide how to handle multiple values (reject, override,
+   *     aggregate, etc).
    * @return the parsed value.
    */
-  T parse(FlagSpec flag, String string);
+  T parse(FlagSpec flag, List<String> values);
 }

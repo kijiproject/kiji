@@ -18,6 +18,7 @@
 package org.kiji.common.flags;
 
 import java.lang.reflect.Field;
+import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Preconditions;
@@ -184,15 +185,21 @@ public class FlagSpec {
   /**
    * Assigns the value of the flag to its field.
    *
-   * @param value The value.
-   *
+   * @param values All the values specified for this flag, in the order they are specified.
    * @throws IllegalAccessException If the field cannot be assigned.
    */
-  public void setValue(String value) throws IllegalAccessException {
+  public void setValue(List<String> values) throws IllegalAccessException {
     if (!mField.isAccessible()) {
       mField.setAccessible(true);
     }
-    mField.set(mObj, mParser.parse(this, value));
+    if (values.isEmpty()) {
+      if (mFlag.required()) {
+        throw new IllegalFlagValueException(String.format(
+            "Flag '--%s' is required but has not been specified.", getName()));
+      }
+    } else {
+      mField.set(mObj, mParser.parse(this, values));
+    }
   }
 
   /** {@inheritDoc} */

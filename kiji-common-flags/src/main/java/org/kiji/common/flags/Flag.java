@@ -42,4 +42,7 @@ public @interface Flag {
 
   /** Explicit flag parser to use. */
   Class<? extends ValueParser> parser() default ValueParser.class;
+
+  /** Whether the flag is required or optional. */
+  boolean required() default false;
 }

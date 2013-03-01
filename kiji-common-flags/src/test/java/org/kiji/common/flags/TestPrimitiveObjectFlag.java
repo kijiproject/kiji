@@ -125,8 +125,8 @@ public class TestPrimitiveObjectFlag {
     } catch (IllegalFlagValueException ifve) {
       LOG.debug("Expected exception: {}", ifve.getMessage());
       assertEquals(
-          "Invalid class java.lang.Double command-line argument '--flagDouble=': "
-          + "'' is not a valid class java.lang.Double value for flag "
+          "Invalid command-line argument '--flagDouble=' for flag type class java.lang.Double: "
+          + "'' is not a valid value for class java.lang.Double flag declared in "
           + "'org.kiji.common.flags.TestPrimitiveObjectFlag$TestObject.flagDouble'.",
           ifve.getMessage());
     }

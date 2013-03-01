@@ -17,11 +17,11 @@
 
 package org.kiji.common.flags;
 
-import org.kiji.common.flags.parser.SimpleValueParser;
-
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
+
+import org.kiji.common.flags.parser.SimpleValueParser;
 
 /** Tests for custom flag parsers. */
 public class TestCustomParser {
@@ -37,7 +37,7 @@ public class TestCustomParser {
 
     /** {@inheritDoc} */
     @Override
-    public String parse(FlagSpec flag, String string) {
+    public String parse(FlagSpec flag, String value) {
       return SENTINEL;
     }
   }

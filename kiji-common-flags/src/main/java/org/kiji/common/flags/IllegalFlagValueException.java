@@ -21,7 +21,7 @@ package org.kiji.common.flags;
  * Thrown when the value assigned on the command line cannot be coerced into the Java
  * field because it is an incompatible type.
  */
-public class IllegalFlagValueException extends RuntimeException {
+public class IllegalFlagValueException extends IllegalArgumentException {
   private static final long serialVersionUID = -6219698605704501226L;
 
   /**
@@ -40,9 +40,20 @@ public class IllegalFlagValueException extends RuntimeException {
    * @param argument Command-line argument being parsed.
    */
   public IllegalFlagValueException(FlagSpec spec, String argument) {
-    super(String.format(
-        "Invalid %s command-line argument '--%s=%s': "
-        + "'%s' is not a valid %s value for flag '%s'.",
-        spec.getTypeName(), spec.getName(), argument, argument, spec.getTypeName(), spec));
+    super(formatError(spec, argument));
+  }
+
+  private static String formatError(FlagSpec spec, String argument) {
+    if (argument == null) {
+      return String.format(
+          "Invalid command-line argument '--%s' for flag type %s: "
+          + "null is not a valid value for %s flag declared in '%s'.",
+          spec.getName(), spec.getTypeName(), spec.getTypeName(), spec);
+    } else {
+      return String.format(
+          "Invalid command-line argument '--%s=%s' for flag type %s: "
+          + "'%s' is not a valid value for %s flag declared in '%s'.",
+          spec.getName(), argument, spec.getTypeName(), argument, spec.getTypeName(), spec);
+    }
   }
 }

@@ -17,43 +17,50 @@
 
 package org.kiji.common.flags.parser;
 
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
+import com.google.common.collect.Maps;
+
 import org.kiji.common.flags.FlagSpec;
 import org.kiji.common.flags.IllegalFlagValueException;
+import org.kiji.common.flags.ValueParser;
 
 /**
- * Parser for command-line flag parameters of native type boolean.
+ * Parser for a list of strings.
  *
- * Notes:
- *   <li> flag evaluates to true if and only if the string value is "true" or "yes"
- *        (case insensitive match).
- *   <li> flag evaluates to false if and only if the string value is "false" or "no"
- *        (case insensitive match).
- *   <li> <code>"--flag"</code> is evaluated as <code>"--flag=true"</code>
- *   <li> <code>"--flag="</code> is evaluated as <code>"--flag=true"</code>
- *   <li> Other inputs are rejected.
+ * Usage example:
+ *   <code>tool --flag=key1=value1 --flag=key2=value2 --value=key3=value3</code>
  */
-public class PrimitiveBooleanParser extends SimpleValueParser<Boolean> {
+public class StringMapParser implements ValueParser<Map> {
   /** {@inheritDoc} */
   @Override
-  public Class<? extends Boolean> getParsedClass() {
-    return boolean.class;
+  public Class<? extends Map> getParsedClass() {
+    return Map.class;
   }
 
   /** {@inheritDoc} */
   @Override
-  public Boolean parse(FlagSpec flag, String string) {
-    if (string == null) {
-      // Handle the case: "--flag" without an equal sign:
-      return true;
-    }
-    if (string.isEmpty()) {
-      return true;
-    }
+  public boolean parsesSubclasses() {
+    return true;
+  }
 
-    try {
-      return Truth.parse(string);
-    } catch (IllegalArgumentException iae) {
-      throw new IllegalFlagValueException(flag, string);
+
+  /** {@inheritDoc} */
+  @Override
+  public Map<String, String> parse(FlagSpec flag, List<String> values) {
+    final TreeMap<String, String> map = Maps.newTreeMap();
+    for (String keyValue : values) {
+      if (keyValue == null) {
+        throw new IllegalFlagValueException(flag, keyValue);
+      }
+      final String[] split = keyValue.split("=", 2);
+      if (split.length != 2) {
+        throw new IllegalFlagValueException(flag, keyValue);
+      }
+      map.put(split[0], split[1]);
     }
+    return map;
   }
 }

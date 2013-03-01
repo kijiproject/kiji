@@ -20,11 +20,16 @@ package org.kiji.common.flags;
 import java.io.PrintStream;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
 
 /**
  * Provides a static method init(), used to parse flags from a command line.
@@ -44,8 +49,7 @@ public class FlagParser {
   private static Map<String, FlagSpec> extractFlagDeclarations(Object obj) {
     final Map<String, FlagSpec> flags = new TreeMap<String, FlagSpec>();
     // Walk up the chain of inheritance:
-    Class<?> clazz = obj.getClass();
-    do {
+    for (Class<?> clazz = obj.getClass(); clazz != null; clazz = clazz.getSuperclass()) {
       // Register public fields with @Flag annotations:
       for (Field field : clazz.getDeclaredFields()) {
         final Flag flag = field.getAnnotation(Flag.class);
@@ -58,7 +62,7 @@ public class FlagParser {
           flags.put(flagSpec.getName(), flagSpec);
         }
       }
-    } while (null != (clazz = clazz.getSuperclass()));
+    }
     return flags;
   }
 
@@ -80,19 +84,19 @@ public class FlagParser {
    * @param declaredFlags Declared flag map.
    * @param ignoreUnknownFlags When set, unknown flags behave like non-flag arguments.
    *
-   * @return A map from flag-name to flag-value.
+   * @return A map from flag-name to the list of all values specified for the flag, in order.
    *
    * @throws UnrecognizedFlagException when encountering an unknown flag name while
    *     ignoreUnknownFlags is not set.
    */
-  private static Map<String, String> parseArgs(
+  private static ListMultimap<String, String> parseArgs(
       String[] args,
       List<String> nonFlagArgs,
       Map<String, FlagSpec> declaredFlags,
       boolean ignoreUnknownFlags)
       throws UnrecognizedFlagException {
 
-    final Map<String, String> parsedFlags = new TreeMap<String, String>();
+    final ListMultimap<String, String> parsedFlags = ArrayListMultimap.create();
     boolean ignoreTheRest = false;
     for (String arg : args) {
       if (ignoreTheRest) {
@@ -182,7 +186,7 @@ public class FlagParser {
 
     final List<String> nonFlagArgs = new ArrayList<String>();
     final Map<String, FlagSpec> declaredFlags = extractFlagDeclarations(obj);
-    final Map<String, String> parsedFlags =
+    final ListMultimap<String, String> parsedFlags =
         parseArgs(args, nonFlagArgs, declaredFlags, ignoreUnknownFlags);
 
     if (parsedFlags.containsKey("help") && !declaredFlags.containsKey("help")) {
@@ -190,29 +194,29 @@ public class FlagParser {
       return null;
     }
 
-    for (Map.Entry<String, String> flag : parsedFlags.entrySet()) {
-      try {
-        declaredFlags.get(flag.getKey()).setValue(flag.getValue());
-      } catch (IllegalAccessException e) {
-        throw new IllegalAccessError(e.getMessage());
-      }
-    }
+    try {
+      // Always walk through all command-line flags:
+      for (Map.Entry<String, FlagSpec> entry : declaredFlags.entrySet()) {
+        final String flagName = entry.getKey();
+        final FlagSpec spec = entry.getValue();
 
-    // Use environment variables to set values for flags that can be set from
-    // the environment and weren't explicitly set on the command line.
-    for (Map.Entry<String, FlagSpec> declFlag : declaredFlags.entrySet()) {
-      FlagSpec flag = declFlag.getValue();
-      if (flag.getEnvVar().length() > 0 && !parsedFlags.containsKey(flag.getName())) {
-        String envVal = System.getenv(flag.getEnvVar());
-        if (null != envVal) {
-          // This environment variable was set.
-          try {
-            flag.setValue(envVal);
-          } catch (IllegalAccessException e) {
-            throw new IllegalAccessError(e.getMessage());
+        final List<String> values = parsedFlags.get(flagName);
+        if (!values.isEmpty()) {
+          // Flag is specified once or more on the command-line:
+          spec.setValue(values);
+        } else if (!spec.getEnvVar().isEmpty()) {
+          final String envVal = System.getenv(spec.getEnvVar());
+          if (null != envVal) {
+            // Flag is not specified on the command-line but is set through environment variable:
+            spec.setValue(Lists.newArrayList(envVal));
           }
+        } else {
+          // Flag is not specified on the command-line:
+          spec.setValue(Collections.<String>emptyList());
         }
       }
+    } catch (IllegalAccessException iae) {
+      throw new RuntimeException(iae);
     }
 
     return nonFlagArgs;

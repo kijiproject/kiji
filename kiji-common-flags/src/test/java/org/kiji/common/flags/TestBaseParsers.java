@@ -51,8 +51,8 @@ public class TestBaseParsers {
 
     /** {@inheritDoc} */
     @Override
-    public CharSequence parse(FlagSpec flag, String string) {
-      return string;
+    public CharSequence parse(FlagSpec flag, List<String> values) {
+      return values.get(values.size() - 1);
     }
   }
 
@@ -71,8 +71,8 @@ public class TestBaseParsers {
 
     /** {@inheritDoc} */
     @Override
-    public String parse(FlagSpec flag, String string) {
-      return string;
+    public String parse(FlagSpec flag, List<String> values) {
+      return values.get(values.size() - 1);
     }
   }
 

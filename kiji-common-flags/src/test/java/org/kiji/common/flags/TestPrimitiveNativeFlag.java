@@ -93,8 +93,8 @@ public class TestPrimitiveNativeFlag {
     } catch (IllegalFlagValueException ifve) {
       LOG.debug("Expected exception: {}", ifve.getMessage());
       assertEquals(
-          "Invalid boolean command-line argument '--flagBoolean=tru': "
-          + "'tru' is not a valid boolean value for flag "
+          "Invalid command-line argument '--flagBoolean=tru' for flag type boolean: "
+          + "'tru' is not a valid value for boolean flag declared in "
           + "'org.kiji.common.flags.TestPrimitiveNativeFlag$TestObject.flagBoolean'.",
           ifve.getMessage());
     }
@@ -120,8 +120,8 @@ public class TestPrimitiveNativeFlag {
     } catch (IllegalFlagValueException ifve) {
       LOG.debug("Expected exception: {}", ifve.getMessage());
       assertEquals(
-          "Invalid short command-line argument '--flagShort=32768': "
-          + "'32768' is not a valid short value for flag "
+          "Invalid command-line argument '--flagShort=32768' for flag type short: "
+          + "'32768' is not a valid value for short flag declared in "
           + "'org.kiji.common.flags.TestPrimitiveNativeFlag$TestObject.flagShort'.",
           ifve.getMessage());
     }
@@ -178,9 +178,9 @@ public class TestPrimitiveNativeFlag {
     } catch (IllegalFlagValueException ifve) {
       LOG.debug("Expected exception: {}", ifve.getMessage());
       assertEquals(
-          "Invalid double command-line argument '--flagDouble=3.4.5': "
-          + "'3.4.5' is not a valid double value "
-          + "for flag 'org.kiji.common.flags.TestPrimitiveNativeFlag$TestObject.flagDouble'.",
+          "Invalid command-line argument '--flagDouble=3.4.5' for flag type double: "
+          + "'3.4.5' is not a valid value for double flag declared in "
+          + "'org.kiji.common.flags.TestPrimitiveNativeFlag$TestObject.flagDouble'.",
           ifve.getMessage());
     }
   }
