@@ -47,14 +47,20 @@ articles and userguides.
 
 
 ## Previewing Changes
-
+### PreReqs
 In order to preview what your changes look like, you will need to have
 Ruby and Jekyll installed. It is highly recommended that you control your
 ruby version using rvm. Check out instructions at
-http://github.com/mojombo/jekyll. Once Jekyll is installed `jekyll
---server --safe` will display the site corresponding to the
-current state of the project at http://localhost:4000. Note that the
-pygments highlighting of codeblocks will only work if you have
+http://github.com/mojombo/jekyll.
+
+### Seeing Something
+To see how your local version of kiji-docs renders, run `rake preview`. This
+command turns off google analytics, so as not to inflate our stats, and runs 
+`jekyll --no-auto --server --pygments --no-lsi --safe`. Since we use the no-auto
+parameter, you will need to rerun preview to see new changes, but trust us,
+it is better this way.
+
+Note that the pygments highlighting of codeblocks will only work if you have
 pygments installed.
 
 ## Contributing Documentation
