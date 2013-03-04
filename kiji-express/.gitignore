@@ -11,3 +11,9 @@ build/
 *.iml
 .idea/
 
+# Maven things
+target/
+dependency-reduced-pom.xml
+
+# Vim things
+*.swp
