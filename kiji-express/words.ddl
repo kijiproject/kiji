@@ -5,6 +5,7 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'Main storage.' (
   TTL = FOREVER,
   COMPRESSED WITH GZIP,
   FAMILY info WITH DESCRIPTION 'Basic information' (
-    word "string" WITH DESCRIPTION 'The word.'
+    word "string" WITH DESCRIPTION 'The word.',
+    doubleword "string" WITH DESCRIPTION 'Twice the word.'
   )
 );

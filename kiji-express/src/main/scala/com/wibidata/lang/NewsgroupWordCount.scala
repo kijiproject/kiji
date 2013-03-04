@@ -1,10 +1,12 @@
 package com.wibidata.lang
 
+import java.util.HashMap
 import java.util.NavigableMap
 
 import com.twitter.scalding._
 import org.apache.avro.util.Utf8
 
+import org.kiji.schema.EntityId
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiURI
 
@@ -36,4 +38,17 @@ class NewsgroupWordCount(args: Args) extends Job(args) {
         word.toLowerCase() }
       .groupBy('token) { _.size }
       .write(Tsv(args("output")))
+
+  // Demo/test of writing to a KijiSource.
+  // Map from the field name to the column you want them written.
+  val outputSpec = new java.util.HashMap[String, String]()
+  outputSpec.put("info_doubleword", "info_doubleword")
+  KijiSource(request,uri)
+    .map(('entityid, 'info_word) -> 'info_doubleword) {
+      tup:(EntityId, NavigableMap[Long, Utf8]) => tup match {
+        case (id, words) =>
+          "%s%s".format(words.firstEntry().getValue(), words.firstEntry().getValue())
+      }
+    }
+    .write(KijiSource(request, uri, outputSpec))
 }

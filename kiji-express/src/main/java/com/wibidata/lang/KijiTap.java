@@ -18,6 +18,8 @@ import org.kiji.mapreduce.DistributedCacheJars;
 import org.kiji.mapreduce.framework.KijiConfKeys;
 import org.kiji.mapreduce.util.Jars;
 import org.kiji.schema.Kiji;
+import org.kiji.schema.KijiTable;
+import org.kiji.schema.KijiTableWriter;
 import org.kiji.schema.KijiURI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +28,7 @@ import com.google.common.base.Preconditions;
 
 import cascading.flow.FlowProcess;
 import cascading.tap.Tap;
+import cascading.tap.hadoop.io.HadoopTupleEntrySchemeCollector;
 import cascading.tap.hadoop.io.HadoopTupleEntrySchemeIterator;
 import cascading.tuple.TupleEntryCollector;
 import cascading.tuple.TupleEntryIterator;
@@ -43,7 +46,7 @@ public class KijiTap
   private final KijiScheme mScheme;
   private final String mId = UUID.randomUUID().toString();
 
-  public KijiTap(KijiURI tableURI, KijiScheme scheme) {
+  public KijiTap(KijiURI tableURI, KijiScheme scheme) throws IOException {
     super(scheme);
 
     mTableURI = tableURI.toString();
@@ -141,7 +144,7 @@ public class KijiTap
   /** {@inheritDoc} */
   @Override
   public void sinkConfInit(FlowProcess<JobConf> process, JobConf conf) {
-    // TODO: Implement
+    conf.set(KijiConfKeys.KIJI_OUTPUT_TABLE_URI, mTableURI);
   }
 
   /** {@inheritDoc} */
@@ -162,9 +165,8 @@ public class KijiTap
   @Override
   public TupleEntryCollector openForWrite(
       FlowProcess<JobConf> jobConfFlowProcess,
-      OutputCollector outputCollector) {
-    // TODO: Implement.
-    throw new UnsupportedOperationException("Writing is not supported with KijiTap.");
+      OutputCollector outputCollector) throws IOException {
+    return new HadoopTupleEntrySchemeCollector(jobConfFlowProcess, this, outputCollector);
   }
 
   /** {@inheritDoc} */
