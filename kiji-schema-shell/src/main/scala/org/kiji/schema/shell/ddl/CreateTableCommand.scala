@@ -30,6 +30,7 @@ import org.kiji.schema.util.ProtocolVersion
 
 import org.kiji.schema.shell.DDLException
 import org.kiji.schema.shell.Environment
+import org.kiji.schema.shell.ddl.key.FormattedKeySpec
 
 object CreateTableCommand {
   /**
@@ -39,12 +40,21 @@ object CreateTableCommand {
   val DDL_LAYOUT_VERSION = ProtocolVersion.parse("layout-1.1");
 }
 
+/**
+ * Creates a new table.
+ *
+ * @param env the schema shell environment.
+ * @param tableName the name of the table to create.
+ * @param desc an optional human-readable description for the table.
+ * @param rowKeySpec a specification of how row keys are constructed.
+ * @param locGroups a list of initial locality group specifications to create the table with.
+ */
 class CreateTableCommand(val env: Environment,
-                         val tableName: String,
-                         val desc: Option[String],
-                         val rowKeySpec: RowKeySpec,
-                         val locGroups: List[LocalityGroupClause]) extends TableDDLCommand
-                         with NewLocalityGroup {
+    val tableName: String,
+    val desc: Option[String],
+    val rowKeySpec: FormattedKeySpec,
+    val locGroups: List[LocalityGroupClause]) extends TableDDLCommand
+    with NewLocalityGroup {
 
   // We always operate on an empty layout when creating a new table.
   override def getInitialLayout(): TableLayoutDesc.Builder = {
@@ -85,7 +95,7 @@ class CreateTableCommand(val env: Environment,
       case None => { layout.setDescription("") }
     }
 
-    val keysFormat = rowKeySpec.toAvroFormat()
+    val keysFormat = rowKeySpec.createFormattedKey() // Assigns it a RowKeyFormat2.
     layout.setKeysFormat(keysFormat)
 
     val localityGroupBuilders = locGroups.foldLeft[List[LocalityGroupDesc.Builder]](Nil)(

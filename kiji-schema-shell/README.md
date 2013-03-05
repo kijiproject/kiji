@@ -30,6 +30,7 @@ Running
 =======
 
 * Export `$KIJI_HOME` to point to your KijiSchema installation.
+  If you source `kiji-env.sh` in the BentoBox, this is taken care of.
 * Run `bin/kiji-schema-shell`
 
 This command takes a few options (e.g., to load a script out of a file).
@@ -38,8 +39,8 @@ See `bin/kiji-schema-shell --help` for all the available options.
 An Example
 ----------
 
-    CREATE TABLE foo WITH DESCRIPTION 'some data'
-    ROW KEY FORMAT HASHED
+    CREATE TABLE users WITH DESCRIPTION 'some data'
+    ROW KEY FORMAT (username STRING)
     WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
       MAXVERSIONS = INFINITY,
       TTL = FOREVER,
@@ -52,12 +53,12 @@ An Example
       MAP TYPE FAMILY integers COUNTER WITH DESCRIPTION 'metric tracking data'
     );
 
-    ALTER TABLE foo ADD MAP TYPE FAMILY strings { "type" : "string" }
+    ALTER TABLE users ADD MAP TYPE FAMILY strings { "type" : "string" }
       WITH DESCRIPTION 'ad-hoc string data' TO LOCALITY GROUP default;
 
     SHOW TABLES;
-    DESCRIBE EXTENDED foo;
-    DROP TABLE foo;
+    DESCRIBE EXTENDED users;
+    DROP TABLE users;
     SHOW TABLES;
 
 
@@ -65,7 +66,7 @@ Language Reference
 ==================
 
 To read a full reference manual for this component, see 
-[The DDL reference in the online KijiSchema user guide](http://docs.kiji.org/userguide/schema/${project.version}/schema-shell-ddl-ref/).
+[The DDL reference in the online KijiSchema user guide](http://docs.kiji.org/userguides/schema/${project.version}/schema-shell-ddl-ref/).
 
 API
 ===
@@ -86,8 +87,17 @@ Example:
         client.executeUpdate("DROP TABLE t");
       } finally {
         // Always call close when you're done.
-        client.close()
+        client.close();
       }
     }
 
+
+You will need to include this artifact in your project's dependency list.
+For maven users:
+
+    &lt;dependency&gt;
+      &lt;groupId&gt;org.kiji.schema-shell&lt;/groupId&gt;
+      &lt;artifactId&gt;kiji-schema-shell&lt;/artifactId&gt;
+      &lt;version&gt;${project.version}&lt;/version&gt;
+    &lt;/dependency&gt;
 

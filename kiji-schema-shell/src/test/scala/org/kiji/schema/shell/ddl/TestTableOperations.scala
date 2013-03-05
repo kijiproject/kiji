@@ -26,7 +26,7 @@ import org.specs2.mutable._
 
 import org.kiji.schema.KConstants
 import org.kiji.schema.KijiURI
-import org.kiji.schema.avro.FamilyDesc
+import org.kiji.schema.avro._
 import org.kiji.schema.layout.KijiTableLayout
 
 import org.kiji.schema.shell.DDLException
@@ -63,6 +63,9 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
           defaultURI, "foo")
       maybeLayout2 must beSome[KijiTableLayout]
       val layout2 = maybeLayout2.get.getDesc
+      val rowKey = maybeLayout2.get.getDesc.getKeysFormat().asInstanceOf[RowKeyFormat2]
+      rowKey.getSalt().getHashSize() mustEqual 16
+      rowKey.getSalt().getSuppressKeyMaterialization() mustEqual true
       val locGroups2 = layout2.getLocalityGroups()
       locGroups2.size mustEqual 1
       val defaultLocGroup2 = locGroups2.head
@@ -470,7 +473,227 @@ ALTER TABLE foo SET SCHEMA = "int" FOR COLUMN info:email;""")
       val layout3 = maybeLayout3.get.getDesc
 
       // Check that the table layout is exactly the same as the original layout.
+      System.out.println("layout rkf: " + layout.getKeysFormat().toString())
+      System.out.println("layout3 rkf: " + layout3.getKeysFormat().toString())
       layout mustEqual layout3
+    }
+
+    "create a table with a formatted key" in {
+      val parser = getParser()
+      val res = parser.parseAll(parser.statement, """
+CREATE TABLE foo WITH DESCRIPTION 'some data'
+ROW KEY FORMAT (a STRING, b INT)
+WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage';""");
+      res.successful mustEqual true
+      res.get must beAnInstanceOf[CreateTableCommand]
+      val env2 = res.get.exec()
+
+      // Check that we have created as many locgroups, map families, and group families
+      // as we expect to be here.
+      val maybeLayout2 = env.kijiSystem.getTableLayout(
+          defaultURI, "foo")
+      maybeLayout2 must beSome[KijiTableLayout]
+      val layout2 = maybeLayout2.get.getDesc
+      val rowKey = maybeLayout2.get.getDesc.getKeysFormat().asInstanceOf[RowKeyFormat2]
+      rowKey.getSalt().getHashSize() mustEqual 2
+      rowKey.getSalt().getSuppressKeyMaterialization() mustEqual false
+      rowKey.getComponents().size mustEqual 2
+      rowKey.getComponents()(0).getName mustEqual "a"
+      rowKey.getComponents()(0).getType mustEqual ComponentType.STRING
+      rowKey.getComponents()(1).getName mustEqual "b"
+      rowKey.getComponents()(1).getType mustEqual ComponentType.INTEGER
+      rowKey.getRangeScanStartIndex mustEqual 1
+      rowKey.getNullableStartIndex mustEqual 1
+
+      val locGroups2 = layout2.getLocalityGroups()
+      locGroups2.size mustEqual 1
+    }
+
+    "create a table with a non-null formatted key" in {
+      val parser = getParser()
+      val res = parser.parseAll(parser.statement, """
+CREATE TABLE foo WITH DESCRIPTION 'some data'
+ROW KEY FORMAT (a STRING, b INT NOT NULL)
+WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage';""");
+      res.successful mustEqual true
+      res.get must beAnInstanceOf[CreateTableCommand]
+      val env2 = res.get.exec()
+
+      // Check that we have created as many locgroups, map families, and group families
+      // as we expect to be here.
+      val maybeLayout2 = env.kijiSystem.getTableLayout(
+          defaultURI, "foo")
+      maybeLayout2 must beSome[KijiTableLayout]
+      val layout2 = maybeLayout2.get.getDesc
+      val rowKey = maybeLayout2.get.getDesc.getKeysFormat().asInstanceOf[RowKeyFormat2]
+      rowKey.getSalt().getHashSize() mustEqual 2
+      rowKey.getSalt().getSuppressKeyMaterialization() mustEqual false
+      rowKey.getComponents().size mustEqual 2
+      rowKey.getComponents()(0).getName mustEqual "a"
+      rowKey.getComponents()(0).getType mustEqual ComponentType.STRING
+      rowKey.getComponents()(1).getName mustEqual "b"
+      rowKey.getComponents()(1).getType mustEqual ComponentType.INTEGER
+      rowKey.getRangeScanStartIndex mustEqual 1
+      rowKey.getNullableStartIndex mustEqual 2 // different
+
+      val locGroups2 = layout2.getLocalityGroups()
+      locGroups2.size mustEqual 1
+    }
+
+    "create a table with a composite hash of size 4" in {
+      val parser = getParser()
+      val res = parser.parseAll(parser.statement, """
+CREATE TABLE foo WITH DESCRIPTION 'some data'
+ROW KEY FORMAT (a STRING, b INT, HASH(THROUGH b, SIZE=4))
+WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage';""");
+      res.successful mustEqual true
+      res.get must beAnInstanceOf[CreateTableCommand]
+      val env2 = res.get.exec()
+
+      // Check that we have created as many locgroups, map families, and group families
+      // as we expect to be here.
+      val maybeLayout2 = env.kijiSystem.getTableLayout(
+          defaultURI, "foo")
+      maybeLayout2 must beSome[KijiTableLayout]
+      val layout2 = maybeLayout2.get.getDesc
+      val rowKey = maybeLayout2.get.getDesc.getKeysFormat().asInstanceOf[RowKeyFormat2]
+      rowKey.getSalt().getHashSize() mustEqual 4 // different
+      rowKey.getSalt().getSuppressKeyMaterialization() mustEqual false
+      rowKey.getComponents().size mustEqual 2
+      rowKey.getComponents()(0).getName mustEqual "a"
+      rowKey.getComponents()(0).getType mustEqual ComponentType.STRING
+      rowKey.getComponents()(1).getName mustEqual "b"
+      rowKey.getComponents()(1).getType mustEqual ComponentType.INTEGER
+      rowKey.getRangeScanStartIndex mustEqual 2 // different
+      rowKey.getNullableStartIndex mustEqual 1
+
+      val locGroups2 = layout2.getLocalityGroups()
+      locGroups2.size mustEqual 1
+    }
+
+    "create a table with a fully-hashed composite key" in {
+      val parser = getParser()
+      val res = parser.parseAll(parser.statement, """
+CREATE TABLE foo WITH DESCRIPTION 'some data'
+ROW KEY FORMAT (a STRING, b INT, HASH(THROUGH b, SUPPRESS FIELDS))
+WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage';""");
+      res.successful mustEqual true
+      res.get must beAnInstanceOf[CreateTableCommand]
+      val env2 = res.get.exec()
+
+      // Check that we have created as many locgroups, map families, and group families
+      // as we expect to be here.
+      val maybeLayout2 = env.kijiSystem.getTableLayout(
+          defaultURI, "foo")
+      maybeLayout2 must beSome[KijiTableLayout]
+      val layout2 = maybeLayout2.get.getDesc
+      val rowKey = maybeLayout2.get.getDesc.getKeysFormat().asInstanceOf[RowKeyFormat2]
+      rowKey.getSalt().getHashSize() mustEqual 16 // set through SUPPRESS FIELDS
+      rowKey.getSalt().getSuppressKeyMaterialization() mustEqual true // different
+      rowKey.getComponents().size mustEqual 2
+      rowKey.getComponents()(0).getName mustEqual "a"
+      rowKey.getComponents()(0).getType mustEqual ComponentType.STRING
+      rowKey.getComponents()(1).getName mustEqual "b"
+      rowKey.getComponents()(1).getType mustEqual ComponentType.INTEGER
+      rowKey.getRangeScanStartIndex mustEqual 2 // different
+      rowKey.getNullableStartIndex mustEqual 1
+
+      val locGroups2 = layout2.getLocalityGroups()
+      locGroups2.size mustEqual 1
+    }
+
+    "create a table with a fully-hashed composite key with overrode size" in {
+      val parser = getParser()
+      val res = parser.parseAll(parser.statement, """
+CREATE TABLE foo WITH DESCRIPTION 'some data'
+ROW KEY FORMAT (a STRING, b INT, HASH(THROUGH b, SUPPRESS FIELDS, SIZE=10))
+WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage';""");
+      res.successful mustEqual true
+      res.get must beAnInstanceOf[CreateTableCommand]
+      val env2 = res.get.exec()
+
+      // Check that we have created as many locgroups, map families, and group families
+      // as we expect to be here.
+      val maybeLayout2 = env.kijiSystem.getTableLayout(
+          defaultURI, "foo")
+      maybeLayout2 must beSome[KijiTableLayout]
+      val layout2 = maybeLayout2.get.getDesc
+      val rowKey = maybeLayout2.get.getDesc.getKeysFormat().asInstanceOf[RowKeyFormat2]
+      rowKey.getSalt().getHashSize() mustEqual 10 // the important setting to check
+      rowKey.getSalt().getSuppressKeyMaterialization() mustEqual true // different
+      rowKey.getComponents().size mustEqual 2
+      rowKey.getComponents()(0).getName mustEqual "a"
+      rowKey.getComponents()(0).getType mustEqual ComponentType.STRING
+      rowKey.getComponents()(1).getName mustEqual "b"
+      rowKey.getComponents()(1).getType mustEqual ComponentType.INTEGER
+      rowKey.getRangeScanStartIndex mustEqual 2 // different
+      rowKey.getNullableStartIndex mustEqual 1
+
+      val locGroups2 = layout2.getLocalityGroups()
+      locGroups2.size mustEqual 1
+    }
+
+    "create a table with an implicitly STRING key" in {
+      val parser = getParser()
+      val res = parser.parseAll(parser.statement, """
+CREATE TABLE foo WITH DESCRIPTION 'some data'
+ROW KEY FORMAT (a, b INT)
+WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage';""");
+      res.successful mustEqual true
+      res.get must beAnInstanceOf[CreateTableCommand]
+      val env2 = res.get.exec()
+
+      // Check that we have created as many locgroups, map families, and group families
+      // as we expect to be here.
+      val maybeLayout2 = env.kijiSystem.getTableLayout(
+          defaultURI, "foo")
+      maybeLayout2 must beSome[KijiTableLayout]
+      val layout2 = maybeLayout2.get.getDesc
+      val rowKey = maybeLayout2.get.getDesc.getKeysFormat().asInstanceOf[RowKeyFormat2]
+      rowKey.getSalt().getHashSize() mustEqual 2
+      rowKey.getSalt().getSuppressKeyMaterialization() mustEqual false
+      rowKey.getComponents().size mustEqual 2
+      rowKey.getComponents()(0).getName mustEqual "a"
+      rowKey.getComponents()(0).getType mustEqual ComponentType.STRING // important
+      rowKey.getComponents()(1).getName mustEqual "b"
+      rowKey.getComponents()(1).getType mustEqual ComponentType.INTEGER
+      rowKey.getRangeScanStartIndex mustEqual 1
+      rowKey.getNullableStartIndex mustEqual 1
+
+      val locGroups2 = layout2.getLocalityGroups()
+      locGroups2.size mustEqual 1
+    }
+
+    "create a table using an explicit THROUGH of the first element" in {
+      // it shouldn't have an effect to say THROUGH A, but let's check.
+      val parser = getParser()
+      val res = parser.parseAll(parser.statement, """
+CREATE TABLE foo WITH DESCRIPTION 'some data'
+ROW KEY FORMAT (a, b INT, HASH(THROUGH a))
+WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage';""");
+      res.successful mustEqual true
+      res.get must beAnInstanceOf[CreateTableCommand]
+      val env2 = res.get.exec()
+
+      // Check that we have created as many locgroups, map families, and group families
+      // as we expect to be here.
+      val maybeLayout2 = env.kijiSystem.getTableLayout(
+          defaultURI, "foo")
+      maybeLayout2 must beSome[KijiTableLayout]
+      val layout2 = maybeLayout2.get.getDesc
+      val rowKey = maybeLayout2.get.getDesc.getKeysFormat().asInstanceOf[RowKeyFormat2]
+      rowKey.getSalt().getHashSize() mustEqual 2
+      rowKey.getSalt().getSuppressKeyMaterialization() mustEqual false
+      rowKey.getComponents().size mustEqual 2
+      rowKey.getComponents()(0).getName mustEqual "a"
+      rowKey.getComponents()(0).getType mustEqual ComponentType.STRING
+      rowKey.getComponents()(1).getName mustEqual "b"
+      rowKey.getComponents()(1).getType mustEqual ComponentType.INTEGER
+      rowKey.getRangeScanStartIndex mustEqual 1
+      rowKey.getNullableStartIndex mustEqual 1
+
+      val locGroups2 = layout2.getLocalityGroups()
+      locGroups2.size mustEqual 1
     }
   }
 

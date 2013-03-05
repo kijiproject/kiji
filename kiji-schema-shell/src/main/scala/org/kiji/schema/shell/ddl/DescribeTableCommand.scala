@@ -25,11 +25,9 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonParser
 
-import org.kiji.schema.avro.FamilyDesc
-import org.kiji.schema.avro.LocalityGroupDesc
-import org.kiji.schema.avro.SchemaType
-import org.kiji.schema.avro.TableLayoutDesc
+import org.kiji.schema.avro._
 
+import org.kiji.schema.shell.DDLException
 import org.kiji.schema.shell.Environment
 
 /**
@@ -49,7 +47,11 @@ class DescribeTableCommand(
   override def exec(): Environment = {
     val layout = getInitialLayout()
     echo("Table: " + tableName + " (" + layout.getDescription() + ")")
+    if (extended) {
+      echo("Table layout format: " + layout.getVersion())
+    }
 
+    describeRowKey(layout)
     layout.getLocalityGroups.foreach { localityGroup =>
       localityGroup.getFamilies.foreach { family =>
         Option(family.getMapSchema()) match {
@@ -76,6 +78,58 @@ class DescribeTableCommand(
     return env
   }
 
+  def describeRowKey(layout: TableLayoutDesc.Builder): Unit = {
+    layout.getKeysFormat() match {
+      case rkf: RowKeyFormat => {
+        rkf.getEncoding() match {
+          case RowKeyEncoding.RAW => echo("Row key: (raw bytes)")
+          case RowKeyEncoding.HASH => echo("Row key: (hashed string)")
+          case RowKeyEncoding.HASH_PREFIX => {
+            echoNoNL("Row key: hash-prefixed string (prefix size=")
+            echoNoNL(rkf.getHashSize().toString())
+            echo(")")
+          }
+          case _ => throw new DDLException("Unexpected RowKeyEncoding in RowKeyFormat")
+        }
+      }
+      case rkf2: RowKeyFormat2 => {
+        rkf2.getEncoding() match {
+          case RowKeyEncoding.RAW => echo("Row key: (raw bytes)")
+          case RowKeyEncoding.FORMATTED => {
+            echo("Row key:")
+            rkf2.getComponents().zipWithIndex.foreach { case (component, idx) =>
+              echoNoNL("\t" + component.getName() + ": " + component.getType().toString())
+              if (idx < rkf2.getNullableStartIndex()) {
+                echo(" NOT NULL")
+              } else {
+                echo("")
+              }
+            }
+            if (extended) {
+              Option(rkf2.getSalt()) match {
+                case None => { echo("  (no hashing)") }
+                case Some(salt: HashSpec) => {
+                  echo("\tHash size: " + salt.getHashSize().toString())
+                  echo("\tHashed through '" +
+                      rkf2.getComponents()(rkf2.getRangeScanStartIndex() - 1).getName() + "'")
+                  if (salt.getSuppressKeyMaterialization()) {
+                    echo("\tKey materialization = false (hash only)")
+                  }
+                }
+              }
+            }
+          }
+          case _ => throw new DDLException("Unexpected RowKeyEncoding in RowKeyFormat2: "
+              + layout.getKeysFormat())
+        }
+      }
+      case _ => {
+        throw new DDLException("Unexpected row key format: " + layout.getKeysFormat())
+      }
+    }
+    echo("")
+  }
+
   def describeGroupFamily(groupFamily: FamilyDesc, localityGroup: LocalityGroupDesc): Unit = {
     val groupFamilyName = groupFamily.getName().trim().replace('\n', ' ')
     echo("Column family: " + groupFamilyName)
@@ -84,7 +138,7 @@ class DescribeTableCommand(
     }
     val famDescription = groupFamily.getDescription()
         .trim().replaceAll("""\s+""", " ")
-    echo("\tDescription: " + famDescription);
+    echo("\tDescription: " + famDescription)
     echo("")
     groupFamily.getColumns.foreach { column =>
       val colName = column.getName().trim().replace('\n', ' ')
@@ -109,7 +163,7 @@ class DescribeTableCommand(
     }
     val famDescription = mapFamily.getDescription()
         .trim().replaceAll("""\s+""", " ")
-    echo("\tDescription: " + famDescription);
+    echo("\tDescription: " + famDescription)
     if (mapFamily.getMapSchema.getType.equals(SchemaType.COUNTER)) {
         echo("\tSchema: (counter)")
     } else {

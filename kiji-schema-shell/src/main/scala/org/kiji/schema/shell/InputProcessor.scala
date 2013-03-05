@@ -81,7 +81,7 @@ class InputProcessor(val throwOnSyntaxErr: Boolean = false) {
         |  DESCRIBE EXTENDED <table>;
         |
         |  CREATE TABLE <name> WITH DESCRIPTION 'description'
-        |    ROW KEY FORMAT { HASHED | RAW | HASH PREFIXED(n) }
+        |    ROW KEY FORMAT { HASHED | RAW | HASH PREFIXED(n) | (formatted--see below*) }
         |    WITH LOCALITY GROUP <group> WITH DESCRIPTION 'description' (
         |      MAXVERSIONS = <n>,
         |      INMEMORY = { true | false },
@@ -93,6 +93,12 @@ class InputProcessor(val throwOnSyntaxErr: Boolean = false) {
         |      MAP TYPE FAMILY <family> WITH SCHEMA schema WITH DESCRIPTION 'desc'),
         |    WITH LOCALITY GROUP...;
         |  DROP TABLE <table>;
+        |
+        |  ... "Formatted" (composite) row keys can be used in CREATE TABLE as follows:
+        |  ROW KEY FORMAT (
+        |        component_name { [STRING] | INT | LONG } [NOT NULL],
+        |        component_name ...,
+        |        [HASH ([THROUGH component_name], [SIZE = n], [SUPPRESS FIELDS])])
         |
         |  ALTER TABLE t ADD COLUMN info:foo [WITH SCHEMA] schema [WITH DESCRIPTION 'd'];
         |  ALTER TABLE t RENAME COLUMN info:foo [AS] info:bar;

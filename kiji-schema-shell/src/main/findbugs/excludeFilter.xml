@@ -82,13 +82,14 @@
     <Bug pattern="SE_NO_SERIALVERSIONID" />
   </Match>
   <Match>
-    <!-- Believed false-positive due to scala-generated anon fn. -->
-    <Class name="~org[.]kiji[.]schema[.]shell[.]ddl[.]ShowTablesCommand\$\$anonfun.*" />
-    <Bug pattern="NP_LOAD_OF_KNOWN_NULL_VALUE" />
+    <!-- The class (Enum) this inherits from is Serializable, but we never use that framework. -->
+    <Class name="org.kiji.schema.shell.ddl.key.RowKeyElemType$" />
+    <Bug pattern="SE_NO_SERIALVERSIONID" />
   </Match>
   <Match>
+    <!-- Scala-generated anonymous functions have a high incidence of false-positive nulls. -->
     <!-- Believed false-positive due to scala-generated anon fn. -->
-    <Class name="~org[.]kiji[.]schema[.]shell[.]ddl[.]DumpInstanceDDLCommand\$\$anonfun.*" />
+    <Class name="~org[.]kiji[.]schema[.]shell[.].*\$\$anonfun.*" />
     <Bug pattern="NP_LOAD_OF_KNOWN_NULL_VALUE" />
   </Match>
 </FindBugsFilter>

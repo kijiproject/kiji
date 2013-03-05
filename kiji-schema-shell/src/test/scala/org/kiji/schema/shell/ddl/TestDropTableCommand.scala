@@ -23,6 +23,7 @@ import scala.collection.JavaConversions._
 import org.specs2.mutable._
 
 import org.kiji.schema.shell.DDLException
+import org.kiji.schema.shell.ddl.key._
 
 class TestDropTableCommand extends CommandTestCase {
   "DropTableCommand" should {
@@ -33,7 +34,7 @@ class TestDropTableCommand extends CommandTestCase {
 
     "remove the table from the dictionary" in {
       val locGroup = new LocalityGroupClause("default", None, List())
-      val ctcmd = new CreateTableCommand(env, "foo", None, new RowKeySpec("hash", 16),
+      val ctcmd = new CreateTableCommand(env, "foo", None, new HashedFormattedKeySpec,
           List(locGroup))
       ctcmd.exec() // Create a table.
 

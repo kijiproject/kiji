@@ -27,12 +27,16 @@ import java.io.PrintStream
 
 import org.kiji.schema.avro.CellSchema
 import org.kiji.schema.avro.ColumnDesc
+import org.kiji.schema.avro.ComponentType
 import org.kiji.schema.avro.CompressionType
 import org.kiji.schema.avro.FamilyDesc
+import org.kiji.schema.avro.HashSpec
 import org.kiji.schema.avro.LocalityGroupDesc
 import org.kiji.schema.avro.RowKeyEncoding
+import org.kiji.schema.avro.RowKeyFormat2
 import org.kiji.schema.avro.SchemaType
 import org.kiji.schema.avro.TableLayoutDesc
+import org.kiji.schema.shell.DDLException
 import org.kiji.schema.shell.Environment
 import org.kiji.schema.layout.KijiTableLayout
 
@@ -53,13 +57,56 @@ trait AbstractDumpDDLCommand {
     echo(quote(layout.getName()))
     echoNoNL("  ")
     echo(dumpDescription(layout))
-    // TODO(aaron): Support all key formats and sub-specifiers.
     KijiTableLayout.getEncoding(layout.getKeysFormat()) match {
+      // Support deprecated RowKeyFormat specifications.
       case RowKeyEncoding.HASH => { echo("  ROW KEY FORMAT HASHED") }
-      case RowKeyEncoding.RAW => { echo("  ROW KEY FORMAT RAW") }
       case RowKeyEncoding.HASH_PREFIX => {
         val prefixSize = KijiTableLayout.getHashSize(layout.getKeysFormat())
         echo("  ROW KEY FORMAT HASH PREFIXED (" + prefixSize + ")")
+      }
+      // RowKeyFormat2 RAW encoding is the same syntax as before.
+      case RowKeyEncoding.RAW => { echo("  ROW KEY FORMAT RAW") }
+      case RowKeyEncoding.FORMATTED => {
+        echoNoNL("  ROW KEY FORMAT (")
+        layout.getKeysFormat() match {
+          case rkf2: RowKeyFormat2 => {
+            rkf2.getComponents().zipWithIndex.foreach { case (component, idx) =>
+              if (idx > 0) {
+                echoNoNL(", ")
+              }
+              echoNoNL(component.getName())
+              echoNoNL(" ")
+              component.getType() match {
+                case ComponentType.STRING => echoNoNL("STRING")
+                case ComponentType.INTEGER => echoNoNL("INT")
+                case ComponentType.LONG => echoNoNL("LONG")
+              }
+              if (rkf2.getNullableStartIndex() > idx) {
+                echoNoNL(" NOT NULL")
+              }
+            }
+
+            Option(rkf2.getSalt()) match {
+              case None => echoNoNL(", HASH(SIZE = 0))")
+              case Some(salt: HashSpec) => {
+                echoNoNL(", HASH(THROUGH ")
+                val rangeStartIdx = rkf2.getRangeScanStartIndex()
+                rkf2.getComponents().zipWithIndex.foreach { case (component, idx) =>
+                  if (idx == rangeStartIdx - 1) {
+                    echoNoNL(component.getName())
+                  }
+                }
+                echoNoNL(", SIZE = ")
+                echoNoNL(salt.getHashSize().toString())
+                if (salt.getSuppressKeyMaterialization()) {
+                  echoNoNL(", SUPPRESS FIELDS")
+                }
+                echo("))")
+              }
+            }
+          }
+          case _ => throw new DDLException("Unexpected key format")
+        }
       }
     }
     var first = true

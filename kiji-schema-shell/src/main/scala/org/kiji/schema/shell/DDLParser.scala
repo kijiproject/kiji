@@ -27,6 +27,8 @@ import org.kiji.schema.KConstants
 import org.kiji.schema.shell.ddl._
 import org.kiji.schema.shell.ddl.CompressionTypeToken._
 import org.kiji.schema.shell.ddl.LocalityGroupPropName._
+import org.kiji.schema.shell.ddl.key._
+import org.kiji.schema.shell.ddl.key.RowKeyElemType._
 
 import org.kiji.schema.util.KijiNameValidator
 
@@ -72,6 +74,9 @@ class DDLParser(val env: Environment) extends JavaTokenParsers with JsonStringPa
 
   /** Matches a legal Kiji table name. */
   def tableName: Parser[String] = validatedNameFromOptionallyQuotedString
+
+  /** Matches a legal Kiji row key component name. */
+  def rowKeyElemName: Parser[String] = validatedNameFromOptionallyQuotedString
 
   /** Matches a legal Kiji locality group name. */
   def localityGroupName: Parser[String] = validatedNameFromOptionallyQuotedString
@@ -220,15 +225,121 @@ class DDLParser(val env: Environment) extends JavaTokenParsers with JsonStringPa
   )
 
   /**
-   * Optional clause that determines whether row hashing is enabled in a CREATE TABLE
-   * statement. Defaults to true.
+   * Optional clause that specifies how the row keys are formatted in a CREATE TABLE
+   * statement.
+   *
+   * Defaults to just using a hash. Also supports explicitly hashed, hash-prefixed, raw,
+   * or composite/formatted keys.
    */
-  def rowFormatClause: Parser[RowKeySpec] = (
-      i("ROW")~>i("KEY")~>i("FORMAT")~>i("HASHED") ^^ (_ => new RowKeySpec("hash", 16))
-    | i("ROW")~>i("KEY")~>i("FORMAT")~>i("RAW")    ^^ (_ => RawRowKeySpec)
+  def rowFormatClause: Parser[FormattedKeySpec] = (
+      i("ROW")~>i("KEY")~>i("FORMAT")~>i("HASHED") ^^ (_ => new HashedFormattedKeySpec)
+    | i("ROW")~>i("KEY")~>i("FORMAT")~>i("RAW")    ^^ (_ => RawFormattedKeySpec)
     | i("ROW")~>i("KEY")~>i("FORMAT")~>i("HASH")~>i("PREFIXED")~>"("~>intValue<~")"
-      ^^ (size => new RowKeySpec("hashprefix", size))
-    | success[Boolean](true) ^^ (_ => DefaultRowKeySpec)
+      ^^ (size => new HashPrefixKeySpec(size))
+    | i("ROW")~>i("KEY")~>i("FORMAT")~>formattedKeysClause
+    | success[Boolean](true) ^^ (_ => DefaultKeySpec)
+  )
+
+  /**
+   * Row key format consisting of multiple named and typed components. Allows specification
+   * of additional properties regarding the row key format as well.
+   *
+   * <p>By default, the first element in the key will be hash-prefixed with a 2-byte MD5
+   * hash. All non-initial elements may be null unless explicitly specified otherwise.
+   * If a field is non-null, all fields to its left must also be non-null. You may change
+   * these defaults through the specification language described below.</p>
+   *
+   * <p>Examples:</p>
+   * <ul>
+   *   <li><tt>ROW KEY FORMAT (name STRING)</tt> - Hash-prefixed string field called "name"</li>
+   *   <li><tt>ROW KEY FORMAT (name)</tt> - Hash-prefixed string field called "name". Key
+   *       fields are assumed to be strings if not otherwise specified.</li>
+   *   <li><tt>ROW KEY FORMAT (zip INT, name STRING)</tt> - A hash-prefixed pair of fields.
+   *       Only the "zip" field is hashed.
+   *       The "name" field may be null (because it is not the first field).</li>
+   *   <li><tt>ROW KEY FORMAT (zip INT, name STRING NOT NULL)</tt> - Specifies that the
+   *       "name" field may not be null. If this property is applied to the <em>i</em>'th field,
+   *       it must also be applied to all fields <em>0 &lt;= field_index &lt; i</em>.</li>
+   *   <li><tt>ROW KEY FORMAT (name STRING, HASH (SIZE = 4))</tt> - Specifies the size of
+   *       the hash prefix for the key in bytes. The default is 2. HASH SIZE must be between
+   *       0 (disabled) and 16 bytes per key.</li>
+   *   <li><tt>ROW KEY FORMAT (name STRING, HASH (THROUGH name, SIZE = 4))</tt> - Synonym for the
+   *       previous example.</li>
+   *   <li><tt>ROW KEY FORMAT (firstname STRING, lastname STRING, HASH (THROUGH lastname))</tt>
+   *       - Specifies that the hash prefix covers both fields. The <tt>THROUGH</tt> clause
+   *       specifies the right-most component included in the hash. All components to the left
+   *       are also hashed.</li>
+   *   <li><tt>ROW KEY FORMAT (name STRING, HASH (SUPPRESS FIELDS))</tt> - Specifies that
+   *       the actual "name" field will not be recorded: just its hash. This is identical
+   *       to the original <tt>ROW KEY FORMAT HASHED</tt> clause. If <tt>SUPPRESS
+   *       FIELDS</tt> is specified, the hash size is set to 16 unless explicitly set with
+   *       a <tt>SIZE = int</tt> clause. The "THROUGH" clause is implicitly set to include
+   *       all fields if it's not already set. If you explicitly set THROUGH, it must be
+   *       through the last (right-most) field.</li>
+   * </ul>
+   */
+  def formattedKeysClause: Parser[FormattedKeySpec] = (
+    "("~>rep1sep(formattedKeyParam, ",")<~")"
+    ^^ (subclauses => new FormattedKeySpec(subclauses))
+  )
+
+  /**
+   * Within a formatted row key, several properties can be specified:
+   * <ul>
+   *   <li>a named, typed element. (e.g., <tt>foo STRING</tt>)</li>
+   *   <li>a named, untyped element. (e.g., <tt>bar</tt>) - Uses type "STRING"</li>
+   *   <li>an element with an optional <tt>NOT NULL</tt> qualifier (e.g., <tt>foo STRING NOT
+   *       NULL</tt>). The first element is always implicitly NOT NULL.</li>
+   *   <li>a <tt>HASH (...)</tt> component that specifies how the hash prefix works.<li>
+   * </ul>
+   */
+  def formattedKeyParam: Parser[FormattedKeyParam] = (
+    i("HASH")~>"("~>rep1sep(keyHashClause, ",")<~")"
+    ^^ (keyHashClauses => new KeyHashParams(keyHashClauses))
+  | rowKeyElemName~rowKeyElemType~rowKeyElemNull
+    ^^ ({case ~(~(name, elemType), elemNull) => new KeyComponent(name, elemType, elemNull)})
+  )
+
+  /**
+   * Within a formatted row key, a HASH ( ... ) block contains one or more key hash
+   * parameters:
+   *
+   * <ul>
+   *   <li><tt>THROUGH <i>fieldname</i></tt> - Specify that the given field is the rightmost
+   *       field included in the calculation of the hash prefix. Key field names specified
+   *       in this fashion represent a left prefix of the total key. That is, given fields
+   *       <tt>(a, b, c)</tt>, specifying <tt>HASH (THROUGH b)</tt> includes the first two
+   *       fields in the hash. By default the left-most field is incorporated in this
+   *       fashion implicitly.</li>
+   *   <li><tt>SIZE = n</tt> - specify how many bytes of hash prefixing to use. Default is 2</li>
+   *   <li><tt>SUPPRESS FIELDS</tt> - specify that no fields should be literally materialized;
+   *       only retain the hash itself. If no SIZE argument is specified, then the hash
+   *       defaults to the full 16 bytes.</li>
+   * </ul>
+   */
+  def keyHashClause: Parser[FormattedKeyHashParam] = (
+    i("THROUGH")~>rowKeyElemName ^^ (elem => new FormattedKeyHashComponent(elem))
+  | i("SIZE")~>"="~>intValue ^^ (size => new FormattedKeyHashSize(size))
+  | i("SUPPRESS")~>i("FIELDS") ^^ (_ => new FormattedKeySuppressFields)
+  )
+
+  /**
+   * Named elements of a row key may be strings, integers, or long values. The default is
+   * STRING, if left unspecified by the user.
+   */
+  def rowKeyElemType: Parser[RowKeyElemType] = (
+    i("STRING") ^^ (_ => RowKeyElemType.STRING)
+  | i("INT") ^^ (_ => RowKeyElemType.INT)
+  | i("LONG") ^^ (_ => RowKeyElemType.LONG)
+  | success[Any](None) ^^ (_ => RowKeyElemType.STRING) // Default key elem type is string.
+  )
+
+  /**
+   * Return true if an element of a row key may be null, false otherwise.
+   */
+  def rowKeyElemNull: Parser[Boolean] = (
+    i("NOT")~i("NULL") ^^ (_ => false)
+  | success[Any](None) ^^ (_ => true) // Default is nullable.
   )
 
   /**
