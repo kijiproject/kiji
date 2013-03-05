@@ -10,8 +10,8 @@ description: Like WordCount, for songs.
 ### The 'Hello World!' of MapReduce
 To quote Scalding Developers
 [Hadoop is a distributed system for counting words.](https://github.com/twitter/scalding)
-Unfortunately, we here at Pandorify are fresh out of words, but we do have the play history of
-millions of users listening to  millions of different songs.
+Unfortunately, we here at Pandorify are fresh out of words, but have the play history of
+bajillions of users listening to bazillions of different songs.
 
 This MapReduce job uses the listening history of our users that we have stored in the "users" Kiji
 table to calculate the total number of times each song has been played. The result of this computation
@@ -30,8 +30,10 @@ is written to a text file in HDFS.
 
 <h3 style="margin-top:0px;padding-top:10px;"> SongPlayCounter </h3>
 
-The SongPlayCounter is an example of a [Gatherer]({{site.userguide_mapreduce_rc4}}/gatherers), which is essentially a
-mapper that gets input from a [`KijiTable`]({{site.api_schema_rc4}}/KijiTable.html).  SongPlayCounter proceeds through discrete stages:
+The SongPlayCounter is an example of a [Gatherer]({{site.userguide_mapreduce_rc4}}/gatherers). A
+gatherer is essentially a mapper that gets input from a [`KijiTable`]({{site.api_schema_rc4}}/KijiTable.html).
+
+SongPlayCounter proceeds through discrete stages:
 * Setup reusable resources.
 * Read all values from column: "info:track_plays".
 * Process the data from "info:track_plays" and emit a key-value pair for each track ID each time
@@ -41,7 +43,7 @@ mapper that gets input from a [`KijiTable`]({{site.api_schema_rc4}}/KijiTable.ht
 First, SongPlayCounter prepares any resources that may be needed by the gatherer.  In Hadoop,
 reusable objects are commonly instantiated only once to protect against long garbage collection
 pauses. This is particularly important with Kiji because long garbage collection pauses can cause
-MR jobs to fail because various resources timeout or cannot be found.
+MR jobs to fail because various underlying HBase resources timeout or cannot be found.
 
 Since setup() is an overriden method, we call super.setup() to ensure that all resources are
 initialized properly.  If you open resources in setup(), be sure to close them in the corresponding
@@ -58,8 +60,9 @@ cleanup() method.
 A gatherer takes input from a table, so it must declare what data it will need. It does this in the
 form of a [`KijiDataRequest`]({{site.api_schema_rc4}}/KijiDataRequest.html), which is defined in getDataRequest().
 For the song count job, we want to request all songs that have been played, for every user. In order
-to get all of the values written to the "info:track_plays" column, we must specify that the maximum
-number of versions we want is HConstants.ALL_VERSIONS. Otherwise, we will only get the most recent
+to get *all* of the values written to the "info:track_plays" column, we must specify that the maximum
+number of versions we want. The special constant that specifies that you want all versions of data
+in a column is `HConstants.ALL_VERSIONS`. Otherwise, we will only get the most recent
 version by default.
 
 {% highlight java %}

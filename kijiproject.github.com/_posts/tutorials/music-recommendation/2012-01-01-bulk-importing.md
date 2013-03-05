@@ -6,10 +6,10 @@ tags: [music]
 order : 3
 description: Bulk importing data into a Kiji table.
 ---
-
-In cases where there is a significant amount of existing data to load into a Kiji
-table, it hardly makes sense to do it a row at a time. We will show you how to use MapReduce to efficiently import
-such large amounts of data into Kiji.
+Here at Pandforify, we have about a millenia of data collected about our users' listening patterns.
+This would take a huge amount of time to load into a Kiji table, when we used a single machine to
+issue writes to our table, one row at a time. Instead we will show you how to use MapReduce to
+efficiently import such large amounts of data into Kiji.
 
 <div id="accordion-container">
   <h2 class="accordion-header"> SongMetadataBulkImporter.java </h2>
@@ -69,7 +69,7 @@ record SongMetadata {
     }
 {% endhighlight %}
 
-Then build an Avro metadata record from the parsed JSON.
+Then build an [Avro]({{site.userguide_mapreduce_rc4}}/working-with-avro) metadata record from the parsed JSON.
 
 {% highlight java %}
 final SongMetadata song = SongMetadata.newBuilder()
@@ -82,7 +82,8 @@ final SongMetadata song = SongMetadata.newBuilder()
       .build();
 {% endhighlight %}
 
-We create an [`EntityId`]({{site.api_schema_rc4}}/EntityId.html) object in order to use the song ID as the row key.
+We create an [`EntityId`]({{site.api_schema_rc4}}/EntityId.html) object in order to use the song ID
+as the row key.
 {% highlight java %}
 final EntityId eid = context.getEntityId(songId);
 {% endhighlight %}
@@ -98,7 +99,8 @@ for more details.*
 
 ### Running the Example
 
-Run the bulk import tool by specifying `SongMetadataBulkImporter` as the importer, the Kiji table `songs` as the output, and `song-metadata.json` as the input with the following command:
+Run the bulk import tool by specifying `SongMetadataBulkImporter` as the importer, the Kiji table
+`songs` as the output, and `song-metadata.json` as the input with the following command:
 
 <div class="userinput">
 {% highlight bash %}
@@ -139,8 +141,9 @@ Here's what the first three entries should look like (assuming you're using the 
 
 ### Bulk importing using table import descriptors
 
-In the example below, we use an import descriptor to bulk import our history of song plays from the `song-plays.json` into the
-`user` table. This method of bulk import requires a table import descriptor, which is a JSON file containing:
+In the example below, we use an import descriptor to bulk import our history of song plays from the
+`song-plays.json` into the `user` table. This method of bulk import requires a table import
+descriptor, which is a JSON file containing:
 
 <ul>
 <li>The table that is the destination of the import.</li>
@@ -194,7 +197,8 @@ $ hadoop fs -copyFromLocal \
 {% endhighlight %}
 </div>
 
-Run the bulk import tool by specifying `JSONBulkImporter` as the importer, the Kiji table `users` as the output, and `song-plays.json` as the input with the following command:
+Run the bulk import tool by specifying `JSONBulkImporter` as the importer, the Kiji table `users`
+as the output, and `song-plays.json` as the input with the following command:
 
 <div class="userinput">
 {% highlight bash %}

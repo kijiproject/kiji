@@ -7,7 +7,7 @@ order : 5
 description: Includes info on working with Avro
 ---
 
-Instead of recommending the most popular songs to everyone using our service, we want to tailor our
+Instead of recommending the most popular songs to everyone using Pandorify, we want to tailor our
 recommendations based on user's listening history. For every user, we will look up the most recent
 song they have listened to and then recommend the song most frequently played after it. In order
 to do that, we need to create an index so that for each song, we can quickly look up what the

@@ -7,6 +7,9 @@ order : 7
 description: Read and write to the same row of a table.
 ---
 
+Now, to generate recommendations for each user, we define a map-only MapReduce job that will process
+each row in the user table and apply our recommendation strategy to it.
+
 <div id="accordion-container">
   <h2 class="accordion-header"> NextSongRecommender.java </h2>
     <div class="accordion-content">
