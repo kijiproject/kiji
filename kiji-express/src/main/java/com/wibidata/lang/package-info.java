@@ -17,31 +17,14 @@
  * limitations under the License.
  */
 
-package com.wibidata.lang;
-
-import org.kiji.schema.EntityId;
-
 /**
- * Acts as a wrapper around {@link EntityId}. Instances of this class can be reused in MapReduce
- * jobs to hold entity ids read from Kiji.
+ * Package containing the main implementation classes for the Kiji Scalding adapter. These
+ * classes make it possible to use a Kiji table as an input source in a Cascading flow. Of
+ * special importance are:
+ * <ol>
+ *   <ul>{@link KijiTap}</ul>, which allows Kiji tables to be used as a source of data in
+ *   Cascading / Scalding flows.
+ *   <ul>{@link KijiScheme}</ul>, which converts data from Kiji into Cascading's tuple model.
+ * </ol>
  */
-public class KijiKey {
-  /** The entity id being wrapped. */
-  private EntityId mCurrentKey;
-
-  /**
-   * @return the entity id wrapped by this instance.
-   */
-  public EntityId get() {
-    return mCurrentKey;
-  }
-
-  /**
-   * Sets the entity id wrapped by this instance.
-   *
-   * @param key that will be wrapped by this instance.
-   */
-  public void set(EntityId key) {
-    mCurrentKey = key;
-  }
-}
+package com.wibidata.lang;

@@ -1,3 +1,22 @@
+/**
+ * (c) Copyright 2013 WibiData, Inc.
+ *
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.wibidata.lang;
 
 import java.io.File;
@@ -6,6 +25,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import cascading.flow.FlowProcess;
+import cascading.tap.Tap;
+import cascading.tap.hadoop.io.HadoopTupleEntrySchemeCollector;
+import cascading.tap.hadoop.io.HadoopTupleEntrySchemeIterator;
+import cascading.tuple.TupleEntryCollector;
+import cascading.tuple.TupleEntryIterator;
+import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.SerializationUtils;
 import org.apache.commons.lang.StringUtils;
@@ -14,42 +41,42 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.RecordReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.kiji.mapreduce.DistributedCacheJars;
 import org.kiji.mapreduce.framework.KijiConfKeys;
 import org.kiji.mapreduce.util.Jars;
 import org.kiji.schema.Kiji;
-import org.kiji.schema.KijiTable;
-import org.kiji.schema.KijiTableWriter;
 import org.kiji.schema.KijiURI;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
-
-import cascading.flow.FlowProcess;
-import cascading.tap.Tap;
-import cascading.tap.hadoop.io.HadoopTupleEntrySchemeCollector;
-import cascading.tap.hadoop.io.HadoopTupleEntrySchemeIterator;
-import cascading.tuple.TupleEntryCollector;
-import cascading.tuple.TupleEntryIterator;
 
 /**
- * Must be used with KijiScheme.
+ * A {@link Tap} for reading data from a Kiji table. The tap is responsible for configuring a
+ * MapReduce job with the correct input format for reading from a Kiji table,
+ * as well as the proper classpath dependencies for MapReduce tasks.
  */
 @SuppressWarnings("rawtypes")
 public class KijiTap
     extends Tap<JobConf, RecordReader, OutputCollector> {
   private static final Logger LOG = LoggerFactory.getLogger(KijiTap.class);
   private static final long serialVersionUID = 1L;
-
+  /** The URI of the table to be read through this tap. */
   private final String mTableURI;
+  /** The scheme to be used with this tap. */
   private final KijiScheme mScheme;
+  /** A unique identifier for this tap instance. */
   private final String mId = UUID.randomUUID().toString();
 
+  /**
+   * Creates a new instance of this tap.
+   *
+   * @param tableURI for the Kiji table this tap will be used to read.
+   * @param scheme to be used with this tap that will convert data read from Kiji into Cascading's
+   *     tuple model.
+   * @throws IOException if there is an error creating the tap.
+   */
   public KijiTap(KijiURI tableURI, KijiScheme scheme) throws IOException {
     super(scheme);
-
     mTableURI = tableURI.toString();
     mScheme = scheme;
   }

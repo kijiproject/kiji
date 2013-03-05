@@ -1,4 +1,23 @@
-package com.wibidata.lang
+/**
+ * (c) Copyright 2013 WibiData, Inc.
+ *
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.wibidata.chopsticks
 
 import scala.io.Source
 import java.io.File
@@ -12,7 +31,8 @@ object NewsgroupLoader {
    * Imports the newsgroup example into a kiji postings table.
    *
    * Usage:
-   *   kiji jar <path/to/this/jar> com.wibidata.lang.NewsgroupLoader <kiji://uri.to.kiji.instance> <path/to/newsgroups/root/>
+   *   kiji jar <path/to/this/jar> com.wibidata.lang.NewsgroupLoader \
+   *       <kiji://uri.to.kiji.instance> <path/to/newsgroups/root/>
    *
    * Tables:
    *   words
@@ -32,7 +52,9 @@ object NewsgroupLoader {
     val uri = KijiURI.newBuilder(args(0)).build()
     val root = new File(args(1))
 
-    if (!root.isDirectory()) { sys.error("Newsgroup root must be a folder (was: %s)".format(root.getPath())) }
+    if (!root.isDirectory()) {
+      sys.error("Newsgroup root must be a folder (was: %s)".format(root.getPath()))
+    }
 
     // Open connections to kiji.
     val kiji = Kiji.Factory.open(uri)

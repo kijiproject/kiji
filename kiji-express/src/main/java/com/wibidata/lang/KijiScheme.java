@@ -1,16 +1,44 @@
+/**
+ * (c) Copyright 2013 WibiData, Inc.
+ *
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.wibidata.lang;
 
 import java.io.IOException;
-import java.util.NavigableMap;
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
 
-import org.apache.avro.util.Utf8;
+import cascading.flow.FlowProcess;
+import cascading.scheme.Scheme;
+import cascading.scheme.SinkCall;
+import cascading.scheme.SourceCall;
+import cascading.tap.Tap;
+import cascading.tuple.Fields;
+import cascading.tuple.Tuple;
+import cascading.tuple.TupleEntry;
+import com.google.common.base.Objects;
+import com.google.common.collect.Lists;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.SerializationUtils;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.RecordReader;
+
 import org.kiji.mapreduce.framework.KijiConfKeys;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
@@ -21,26 +49,32 @@ import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableWriter;
 import org.kiji.schema.KijiURI;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Lists;
-
-import cascading.flow.FlowProcess;
-import cascading.scheme.Scheme;
-import cascading.scheme.SinkCall;
-import cascading.scheme.SourceCall;
-import cascading.tap.Tap;
-import cascading.tuple.Fields;
-import cascading.tuple.Tuple;
-import cascading.tuple.TupleEntry;
-
+/**
+ * A scheme that can source and sink data from a Kiji table. This scheme is responsible for
+ * converting rows from a Kiji table that are input to a Cascading flow into Cascading tuples (see
+ * {@link #source(cascading.flow.FlowProcess, cascading.scheme.SourceCall)}) and writing output
+ * data from a Cascading flow to a Kiji table
+ * (see {@link #sink(cascading.flow.FlowProcess, cascading.scheme.SinkCall)}).
+ */
 @SuppressWarnings("rawtypes")
 public class KijiScheme
     extends Scheme<JobConf, RecordReader, OutputCollector, Object[], Object[]> {
+  /** Schemes must be serialized as part of a Cascading job. */
   private static final long serialVersionUID = 1L;
-
+  /** A data request used when this scheme reads from a Kiji table. */
   private final KijiDataRequest mRequest;
+  /**
+   * A mapping from Cascading tuple field names to Kiji column names,
+   * used when outputting to a Kiji table.
+   */
   private final Map<String, String> mOutputSpec;
 
+  /**
+   * Creates a new scheme for input and/or output to a Kiji table.
+   *
+   * @param request that specifies columns to be read from a Kiji table.
+   * @param outputSpec mapping tuple field names to Kiji column names.
+   */
   public KijiScheme(KijiDataRequest request, Map<String, String> outputSpec) {
     mRequest = request;
     mOutputSpec = outputSpec;
@@ -58,6 +92,9 @@ public class KijiScheme
     setSourceFields(Fields.join(fields));
   }
 
+  /**
+   * @return the data request used by this scheme.
+   */
   public KijiDataRequest getDataRequest() {
     return mRequest;
   }
@@ -68,7 +105,7 @@ public class KijiScheme
       SourceCall<Object[], RecordReader> sourceCall) {
     final Object[] pair = new Object[] {
       sourceCall.getInput().createKey(),
-      sourceCall.getInput().createValue()
+      sourceCall.getInput().createValue(),
     };
     sourceCall.setContext(pair);
   }
@@ -98,7 +135,8 @@ public class KijiScheme
     result.add(row.getEntityId().toString());
 
     // Store the retrieved columns in the tuple.
-    // TODO: Ensure that map-type families get populated with the same tuple ordering of columns each time.
+    // TODO: Ensure that map-type families get populated with the same tuple ordering of columns
+    // each time.
     for (Column column : mRequest.getColumns()) {
       final String family = column.getFamily();
 
@@ -131,7 +169,8 @@ public class KijiScheme
   public void sink(FlowProcess<JobConf> flowProcess, SinkCall<Object[], OutputCollector> sinkCall)
       throws IOException {
     // TODO: Currently this method does the basic thing of using KijiTableWriter.put()
-    // TODO (cont) Eventually we want to be able to write these directly to the files that Kiji uses (?)
+    // TODO (cont) Eventually we want to be able to write these directly to the files that Kiji
+    // uses (?)
 
     // Get a handle to the kiji table and kiji table writer.
     KijiTable kijiTable = (KijiTable) sinkCall.getContext()[0];
@@ -163,7 +202,7 @@ public class KijiScheme
     // TODO: implement
   }
 
-  /** {@inheritDoc */
+  /** {@inheritDoc} */
   @Override
   public void sinkPrepare(FlowProcess<JobConf> flowProcess,
       SinkCall<Object[], OutputCollector> sinkCall) throws IOException {
