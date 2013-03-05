@@ -637,6 +637,7 @@ class DDLParser(val env: Environment) extends JavaTokenParsers with JsonStringPa
     | useInstance
     | showInstances
     | showTables
+    | failure("Not a valid statement. Try 'help' for example usage.")
   )
 
   /**

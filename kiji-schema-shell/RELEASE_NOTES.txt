@@ -3,6 +3,7 @@
                               Kiji Schema Shell Release Notes
 
 Version 1.0.0-rc5
+  * DDLSHELL-17. Improve default top-level error message.
   * DDLSHELL-15. Support for composite, formatted row keys.
   * DDLSHELL-18. Refactor to use Avro builders throughout.
 
