@@ -19,10 +19,17 @@
 {
   name : "phonebook",
   description : "A collection of phone book entries",
-  keys_format : {
-    encoding : "HASH",
-    hash_type : "MD5",
-    hash_size : 16
+  "keys_format" : {
+    "org.kiji.schema.avro.RowKeyFormat2" : {
+      "encoding" : "FORMATTED",
+      "salt" : {
+        "suppress_key_materialization" : true
+      },
+      "components" : [ {
+        "name" : "key",
+        "type" : "STRING"
+      } ]
+    }
   },
   locality_groups : [ {
     name : "default",
