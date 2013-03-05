@@ -21,6 +21,7 @@ import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableWriter;
 import org.kiji.schema.KijiURI;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 
 import cascading.flow.FlowProcess;
@@ -176,6 +177,21 @@ public class KijiScheme
     sinkCall.setContext(new Object[] {kijiTable, kijiTableWriter});
   }
 
+  /** {@inheritDoc} */
+  @Override
+  public boolean equals(Object other) {
+    if (!(other instanceof KijiScheme)) {
+      return false;
+    }
 
-  // TODO: Implement equals, hashCode.
+    final KijiScheme scheme = (KijiScheme) other;
+    return Objects.equal(mRequest, scheme.mRequest)
+        && Objects.equal(mOutputSpec, scheme.mOutputSpec);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(mRequest, mOutputSpec);
+  }
 }

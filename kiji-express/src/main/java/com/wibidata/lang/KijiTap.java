@@ -24,6 +24,7 @@ import org.kiji.schema.KijiURI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
 import cascading.flow.FlowProcess;
@@ -197,6 +198,22 @@ public class KijiTap
     return System.currentTimeMillis(); // currently unable to find last mod time on a table
   }
 
+  /** {@inheritDoc} */
+  @Override
+  public boolean equals(Object other) {
+    if (!(other instanceof KijiTap)) {
+      return false;
+    }
 
-  // TODO: Implement equals, hashCode.
+    final KijiTap tap = (KijiTap) other;
+    return Objects.equal(mTableURI, tap.mTableURI)
+        && Objects.equal(mScheme, tap.mScheme)
+        && Objects.equal(mId, tap.mId);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(mTableURI, mScheme, mId);
+  }
 }
