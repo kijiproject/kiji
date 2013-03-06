@@ -21,7 +21,6 @@ package org.kiji.lang;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,14 +32,16 @@ import cascading.tuple.TupleEntryCollector;
 import cascading.tuple.TupleEntryIterator;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.lang.SerializationUtils;
+import com.google.common.collect.Lists;
+
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.RecordReader;
+import org.apache.hadoop.mapred.lib.NullOutputFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,18 +55,21 @@ import org.kiji.schema.KijiURI;
  * A {@link Tap} for reading data from a Kiji table. The tap is responsible for configuring a
  * MapReduce job with the correct input format for reading from a Kiji table,
  * as well as the proper classpath dependencies for MapReduce tasks.
+ *
+ * Note: Warnings about a missing serialVersionUID are ignored here. When KijiTap is serialized,
+ * the result is not persisted anywhere making serialVersionUID unnecessary.
  */
-@SuppressWarnings("rawtypes")
+@SuppressWarnings({ "rawtypes", "serial" })
 public class KijiTap
     extends Tap<JobConf, RecordReader, OutputCollector> {
   private static final Logger LOG = LoggerFactory.getLogger(KijiTap.class);
-  private static final long serialVersionUID = 1L;
+
   /** The URI of the table to be read through this tap. */
   private final String mTableURI;
   /** The scheme to be used with this tap. */
   private final KijiScheme mScheme;
   /** A unique identifier for this tap instance. */
-  private final String mId = UUID.randomUUID().toString();
+  private final String mId;
 
   /**
    * Creates a new instance of this tap.
@@ -76,95 +80,30 @@ public class KijiTap
    * @throws IOException if there is an error creating the tap.
    */
   public KijiTap(KijiURI tableURI, KijiScheme scheme) throws IOException {
+    // Set the scheme for this tap.
     super(scheme);
     mTableURI = tableURI.toString();
     mScheme = scheme;
+    mId = UUID.randomUUID().toString();
   }
 
   /** {@inheritDoc} */
   @Override
   public void sourceConfInit(FlowProcess<JobConf> process, JobConf conf) {
+    // Configure the job's input format.
     conf.setInputFormat(KijiInputFormat.class);
+
+    // Store the input table.
     conf.set(KijiConfKeys.KIJI_INPUT_TABLE_URI, mTableURI);
 
-    getStepConfigDef().setProperty("poo.poo", "foo");
-
+    // Put Kiji dependency jars on the distributed cache.
     try {
-      final List<String> allJars = new ArrayList<String>();
-
-      // Get the path to the kiji-schema jar.
-      String kijiSchemaJarPath;
-      try {
-        kijiSchemaJarPath = Jars.getJarPathForClass(Kiji.class);
-      } catch (ClassNotFoundException e) {
-        LOG.warn("The kiji-schema jar could not be found, so no kiji dependency jars will be "
-            + "loaded onto the distributed cache.");
-        return;
-      }
-      LOG.info("Found kiji-schema jar: {}", kijiSchemaJarPath);
-
-      // Get the path to the kiji-mapreduce jar.
-      String kijiMRJarPath;
-      try {
-        kijiMRJarPath = Jars.getJarPathForClass(DistributedCacheJars.class);
-      } catch (ClassNotFoundException e) {
-        LOG.warn("The kiji-mapreduce jar could not be found, so no kiji dependency jars will be "
-            + "loaded onto the distributed cache.");
-        return;
-      }
-      LOG.info("Found kiji-mapreduce jar: {}", kijiMRJarPath);
-
-      // Get the path to the kiji-scalding jar.
-      String kijiScaldingPath;
-      try {
-        kijiScaldingPath = Jars.getJarPathForClass(KijiTap.class);
-      } catch (ClassNotFoundException e) {
-        LOG.warn("The kiji-scalding jar could not be found.");
-        return;
-      }
-      LOG.info("Found kiji-scalding jar: {}", kijiScaldingPath);
-
-      // Add kiji-schema dependencies.
-      final File kijiSchemaLibDir = new File(kijiSchemaJarPath).getParentFile();
-      Preconditions.checkState(
-          kijiSchemaLibDir.isDirectory(),
-          "Got a path to kiji-schema lib that isn't a directory: " + kijiSchemaLibDir.getPath());
-      LOG.info("Adding kiji-schema dependency jars to the distributed cache of the job: {}",
-          kijiSchemaLibDir.getPath());
-      allJars.addAll(DistributedCacheJars.getJarsFromDirectory(conf, kijiSchemaLibDir));
-
-      // Add kiji-mapreduce dependencies.
-      final File kijiMRLibDir = new File(kijiMRJarPath).getParentFile();
-      Preconditions.checkState(
-          kijiMRLibDir.isDirectory(),
-          "Got a path to kiji-mapreduce lib that isn't a directory: " + kijiMRLibDir.getPath());
-      LOG.info("Adding kiji-mapreduce dependency jars to the distributed cache of the job: {}",
-          kijiMRLibDir.getPath());
-      allJars.addAll(DistributedCacheJars.getJarsFromDirectory(conf, kijiMRLibDir));
-
-      // Add kiji-scalding dependencies.
-      final File kijiScaldingJar = new File(kijiScaldingPath);
-      Preconditions.checkNotNull(
-          kijiScaldingJar,
-          "Can't find the kiji-scalding jar.");
-      LOG.info("Adding kiji-scalding jar: {}", kijiScaldingJar.getPath());
-      final FileSystem fs = FileSystem.getLocal(conf);
-      // TODO: check to ensure that this is actually a jar.
-      allJars.add(new Path(kijiScaldingJar.getCanonicalPath()).makeQualified(fs).toString());
-
       getStepConfigDef().setProperty(
           "tmpjars",
-          StringUtils.join(DistributedCacheJars.deDuplicateJarNames(allJars), ","));
-
-      // TODO: Do something better than wrapping the exception.
+          StringUtils.join(findKijiJars(conf), ","));
     } catch (IOException ioe) {
       throw new RuntimeException(ioe);
     }
-
-    // Store the data request.
-    final String serializedRequest =
-        Base64.encodeBase64String(SerializationUtils.serialize(mScheme.getDataRequest()));
-    conf.set(KijiConfKeys.KIJI_INPUT_DATA_REQUEST, serializedRequest);
 
     super.sourceConfInit(process, conf);
   }
@@ -172,7 +111,23 @@ public class KijiTap
   /** {@inheritDoc} */
   @Override
   public void sinkConfInit(FlowProcess<JobConf> process, JobConf conf) {
+    // TODO(CHOP-35): Use an output format that writes to HFiles.
+    // Configure the job's output format.
+    conf.setOutputFormat(NullOutputFormat.class);
+
+    // Store the output table.
     conf.set(KijiConfKeys.KIJI_OUTPUT_TABLE_URI, mTableURI);
+
+    // Put Kiji dependency jars on the distributed cache.
+    try {
+      getStepConfigDef().setProperty(
+          "tmpjars",
+          StringUtils.join(findKijiJars(conf), ","));
+    } catch (IOException ioe) {
+      throw new RuntimeException(ioe);
+    }
+
+    super.sinkConfInit(process, conf);
   }
 
   /** {@inheritDoc} */
@@ -242,5 +197,53 @@ public class KijiTap
   @Override
   public int hashCode() {
     return Objects.hashCode(mTableURI, mScheme, mId);
+  }
+
+  /**
+   * Finds Kiji dependency jars and returns a list of their paths. Use this method to find
+   * jars that need to be sent to Hadoop's DistributedCache.
+   *
+   * @param fsConf Configuration containing options for the filesystem containing jars.
+   * @throws IOException If there is an error.
+   * @return A list of paths to dependency jars.
+   */
+  private static List<String> findKijiJars(Configuration fsConf) throws IOException {
+    final List<String> jars = Lists.newArrayList();
+
+    // Find the kiji jars.
+    File schemaJar;
+    File mapreduceJar;
+    File chopsticksJar;
+    try {
+      schemaJar = new File(Jars.getJarPathForClass(Kiji.class));
+      LOG.debug("Found kiji-schema jar: {}", schemaJar);
+
+      mapreduceJar = new File(Jars.getJarPathForClass(DistributedCacheJars.class));
+      LOG.debug("Found kiji-mapreduce jar: {}", mapreduceJar);
+
+      chopsticksJar = new File(Jars.getJarPathForClass(KijiTap.class));
+      LOG.debug("Found kiji-chopsticks jar: {}", chopsticksJar);
+    } catch (ClassNotFoundException cnfe) {
+      LOG.warn("The kiji jars could not be found; no kiji dependency jars will be "
+          + "loaded onto the distributed cache.");
+      return jars;
+    }
+
+    // Add kiji-schema dependencies.
+    jars.addAll(DistributedCacheJars.getJarsFromDirectory(fsConf, schemaJar.getParentFile()));
+
+    // Add kiji-mapreduce dependencies.
+    jars.addAll(DistributedCacheJars.getJarsFromDirectory(fsConf, mapreduceJar.getParentFile()));
+
+    // Add kiji-chopsticks dependencies.
+    Preconditions.checkState(
+        chopsticksJar.getName().endsWith(".jar"),
+        "Failed to find kiji-chopsticks jar. Instead found: {}", chopsticksJar.getName());
+    final FileSystem fs = FileSystem.getLocal(fsConf);
+    jars.add(new Path(chopsticksJar.getCanonicalPath()).makeQualified(fs).toString());
+    fs.close();
+
+    // Remove duplicate jars and return.
+    return DistributedCacheJars.deDuplicateJarNames(jars);
   }
 }
