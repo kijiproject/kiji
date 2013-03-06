@@ -19,13 +19,17 @@
 
 package org.kiji.lang;
 
+import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.schema.EntityId;
 
 /**
  * Acts as a wrapper around {@link EntityId}. Instances of this class can be reused in MapReduce
  * jobs to hold entity ids read from Kiji.
  */
-public class KijiKey {
+@ApiAudience.Private
+@ApiStability.Unstable
+public final class KijiKey {
   /** The entity id being wrapped. */
   private EntityId mCurrentKey;
 

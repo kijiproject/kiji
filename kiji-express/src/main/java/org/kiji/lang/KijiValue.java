@@ -19,13 +19,17 @@
 
 package org.kiji.lang;
 
+import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.schema.KijiRowData;
 
 /**
  * Acts as a wrapper around {@link KijiRowData}. Instances of this class can be reused in MapReduce
  * jobs to wrap {@link KijiRowData} read from a Kiji table.
  */
-public class KijiValue {
+@ApiAudience.Private
+@ApiStability.Unstable
+public final class KijiValue {
   /** The row data being wrapped by this instance. */
   private KijiRowData mCurrentValue;
 

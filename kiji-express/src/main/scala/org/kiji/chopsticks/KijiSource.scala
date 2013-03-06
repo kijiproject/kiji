@@ -40,11 +40,14 @@ import org.kiji.lang.KijiTap
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiURI
 import org.kiji.schema.filter.KijiColumnFilter
+import org.kiji.annotations.{ApiStability, ApiAudience}
 
 /**
  * Facilitates writing to and reading from a Kiji table.
  */
-class KijiSource(
+@ApiAudience.Framework
+@ApiStability.Unstable
+final class KijiSource(
     val tableURI: String,
     val columns: Map[Symbol, Column])
     extends Source {
@@ -61,10 +64,10 @@ class KijiSource(
     new java.util.HashMap(wrapped);
   }
 
-  /** Converts a string into a [[KijiURI]]. */
+  /** Converts a string into a [[org.kiji.schema.KijiURI]]. */
   private def uri(uriString: String): KijiURI = KijiURI.newBuilder(uriString).build()
 
-  /** Creates a new [[KijiScheme]] instance. */
+  /** Creates a new [[org.kiji.lang.KijiScheme]] instance. */
   def kijiScheme: KijiScheme = new KijiScheme(convertColumnMap(columns))
 
   /**

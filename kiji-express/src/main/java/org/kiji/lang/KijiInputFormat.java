@@ -37,6 +37,8 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
 
+import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.framework.KijiConfKeys;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
@@ -66,7 +68,9 @@ import org.kiji.schema.util.ResourceUtils;
  *
  * <p>This input format uses the "old" style MapReduce API for compatibility with Cascading.</p>
  */
-public class KijiInputFormat implements InputFormat<KijiKey, KijiValue> {
+@ApiAudience.Framework
+@ApiStability.Unstable
+public final class KijiInputFormat implements InputFormat<KijiKey, KijiValue> {
 
   /**
    * Gets a set of input splits for a MapReduce job running over a Kiji table. One split is

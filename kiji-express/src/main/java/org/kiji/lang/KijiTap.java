@@ -45,6 +45,8 @@ import org.apache.hadoop.mapred.lib.NullOutputFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.DistributedCacheJars;
 import org.kiji.mapreduce.framework.KijiConfKeys;
 import org.kiji.mapreduce.util.Jars;
@@ -60,7 +62,9 @@ import org.kiji.schema.KijiURI;
  * the result is not persisted anywhere making serialVersionUID unnecessary.
  */
 @SuppressWarnings({ "serial", "rawtypes" })
-public class KijiTap
+@ApiAudience.Framework
+@ApiStability.Unstable
+public final class KijiTap
     extends Tap<JobConf, RecordReader, OutputCollector> {
   private static final Logger LOG = LoggerFactory.getLogger(KijiTap.class);
 

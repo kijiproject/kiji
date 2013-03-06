@@ -38,6 +38,8 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.RecordReader;
 
+import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.framework.KijiConfKeys;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
@@ -60,7 +62,9 @@ import org.kiji.schema.KijiURI;
  * the result is not persisted anywhere making serialVersionUID unnecessary.
  */
 @SuppressWarnings({ "rawtypes", "serial" })
-public class KijiScheme
+@ApiAudience.Framework
+@ApiStability.Unstable
+public final class KijiScheme
     extends Scheme<JobConf, RecordReader, OutputCollector, KijiValue, KijiTableWriter> {
   /** Field name containing a row's {@link EntityId}. */
   public static final String ENTITYID_FIELD = "entityid";

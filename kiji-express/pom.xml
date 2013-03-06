@@ -72,6 +72,12 @@
       <version>${kiji.version}</version>
       <scope>compile</scope>
     </dependency>
+    <dependency>
+      <groupId>org.kiji.annotations</groupId>
+      <artifactId>annotations</artifactId>
+      <version>${kiji.version}</version>
+      <scope>compile</scope>
+    </dependency>
 
     <!-- Cascading/Scalding -->
     <dependency>

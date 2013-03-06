@@ -22,7 +22,10 @@ package org.kiji.chopsticks
 import org.kiji.schema.filter.KijiColumnFilter
 
 import org.kiji.lang.{ Column => JColumn }
+import org.kiji.annotations.{ApiStability, ApiAudience}
 
+@ApiAudience.Public
+@ApiStability.Unstable
 object DSL {
   /** Factory method for KijiSource. */
   def KijiInput(

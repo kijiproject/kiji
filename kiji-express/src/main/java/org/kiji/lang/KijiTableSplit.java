@@ -26,11 +26,16 @@ import java.io.IOException;
 import org.apache.hadoop.hbase.mapreduce.TableSplit;
 import org.apache.hadoop.mapred.InputSplit;
 
+import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
+
 /**
  * An input split that specifies a region of rows from a Kiji table to be processed by a
  * MapReduce task.
  */
-public class KijiTableSplit implements InputSplit {
+@ApiAudience.Private
+@ApiStability.Unstable
+public final class KijiTableSplit implements InputSplit {
   /** An HBase table split to which functionality is delegated. */
   private final TableSplit mSplit;
 

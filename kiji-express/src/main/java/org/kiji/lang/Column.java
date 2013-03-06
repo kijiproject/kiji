@@ -23,12 +23,16 @@ import java.io.Serializable;
 
 import com.google.common.base.Objects;
 
+import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.schema.filter.KijiColumnFilter;
 
 /**
  * Represents a column in a Kiji table.
  */
 @SuppressWarnings("serial")
+@ApiAudience.Public
+@ApiStability.Unstable
 public final class Column implements Serializable {
   /** Name of the column in the form: "family:qualifier". */
   private final String mName;
