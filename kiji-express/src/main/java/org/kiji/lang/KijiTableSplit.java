@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package com.wibidata.lang;
+package org.kiji.lang;
 
 import java.io.DataInput;
 import java.io.DataOutput;

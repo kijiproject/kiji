@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package com.wibidata.chopsticks
+package org.kiji.chopsticks
 
 import java.util.NavigableMap
 
@@ -33,7 +33,7 @@ import org.kiji.schema.KijiURI
  *
  * Usage:
  *   kiji jar <path/to/this/jar> com.twitter.scalding.Tool \
- *       com.wibidata.chopsticks.NewsgroupWordCount \
+ *       org.kiji.chopsticks.NewsgroupWordCount \
  *       --input kiji://.env/default/words --output ./wordcount.tsv --hdfs
  */
 class NewsgroupWordCount(args: Args) extends Job(args) {

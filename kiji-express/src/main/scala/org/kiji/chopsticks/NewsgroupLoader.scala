@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package com.wibidata.chopsticks
+package org.kiji.chopsticks
 
 import scala.io.Source
 import java.io.File
@@ -31,7 +31,7 @@ object NewsgroupLoader {
    * Imports the newsgroup example into a kiji postings table.
    *
    * Usage:
-   *   kiji jar <path/to/this/jar> com.wibidata.lang.NewsgroupLoader \
+   *   kiji jar <path/to/this/jar> org.kiji.lang.NewsgroupLoader \
    *       <kiji://uri.to.kiji.instance> <path/to/newsgroups/root/>
    *
    * Tables:

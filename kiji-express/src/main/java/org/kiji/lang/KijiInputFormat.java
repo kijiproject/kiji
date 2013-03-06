@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package com.wibidata.lang;
+package org.kiji.lang;
 
 import java.io.IOException;
 import java.util.Iterator;

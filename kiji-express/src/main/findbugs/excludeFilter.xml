@@ -26,7 +26,7 @@
     <!-- We never use Java Serialization, so ignore any Serializable findbugs warnings. -->
     <Bug pattern="SE_COMPARATOR_SHOULD_BE_SERIALIZABLE" />
     <!-- Exclude scala classes which live in the chopsticks pacakge. -->
-    <Package name="com.wibidata.chopsticks.*"/> 
+    <Package name="org.kiji.chopsticks.*"/>
   </Match>
 
   <!--

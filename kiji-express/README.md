@@ -27,13 +27,13 @@ setup and is running. This example uses the
 First, create and populate the 'words' table:
 
     kiji-schema-shell --file=words.ddl
-    kiji jar target/kiji-chopsticks-0.1.0-SNAPSHOT.jar com.wibidata.chopsticks.NewsgroupLoader \
+    kiji jar target/kiji-chopsticks-0.1.0-SNAPSHOT.jar org.kiji.chopsticks.NewsgroupLoader \
         kiji://.env/default/words <path/to/newsgroups/root/>
 
 Run the word count, outputting to hdfs:
 
     kiji jar target/kiji-chopsticks-0.1.0-SNAPSHOT.jar \
-        com.twitter.scalding.Tool com.wibidata.chopsticks.NewsgroupWordCount \
+        com.twitter.scalding.Tool org.kiji.chopsticks.NewsgroupWordCount \
         --input kiji://.env/default/words --output ./wordcounts.tsv --hdfs
 
 Check the results of the job:

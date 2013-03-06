@@ -17,31 +17,31 @@
  * limitations under the License.
  */
 
-package com.wibidata.lang;
+package org.kiji.lang;
 
-import org.kiji.schema.KijiRowData;
+import org.kiji.schema.EntityId;
 
 /**
- * Acts as a wrapper around {@link KijiRowData}. Instances of this class can be reused in MapReduce
- * jobs to wrap {@link KijiRowData} read from a Kiji table.
+ * Acts as a wrapper around {@link EntityId}. Instances of this class can be reused in MapReduce
+ * jobs to hold entity ids read from Kiji.
  */
-public class KijiValue {
-  /** The row data being wrapped by this instance. */
-  private KijiRowData mCurrentValue;
+public class KijiKey {
+  /** The entity id being wrapped. */
+  private EntityId mCurrentKey;
 
   /**
-   * @return the row data wrapped by this instance.
+   * @return the entity id wrapped by this instance.
    */
-  public KijiRowData get() {
-    return mCurrentValue;
+  public EntityId get() {
+    return mCurrentKey;
   }
 
   /**
-   * Sets the Kiji row data wrapped by this instance.
+   * Sets the entity id wrapped by this instance.
    *
-   * @param value that will be wrapped by this instance.
+   * @param key that will be wrapped by this instance.
    */
-  public void set(KijiRowData value) {
-    mCurrentValue = value;
+  public void set(EntityId key) {
+    mCurrentKey = key;
   }
 }

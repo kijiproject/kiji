@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package com.wibidata.chopsticks
+package org.kiji.chopsticks
 
 import cascading.scheme.Scheme
 import cascading.tap.Tap
@@ -31,8 +31,8 @@ import org.apache.hadoop.mapred.OutputCollector
 
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiURI
-import com.wibidata.lang.KijiScheme
-import com.wibidata.lang.KijiTap
+import org.kiji.lang.KijiScheme
+import org.kiji.lang.KijiTap
 
 case class KijiSource(
     dataRequest: KijiDataRequest,

@@ -27,4 +27,4 @@
  *   <ul>{@link KijiScheme}</ul>, which converts data from Kiji into Cascading's tuple model.
  * </ol>
  */
-package com.wibidata.lang;
+package org.kiji.lang;

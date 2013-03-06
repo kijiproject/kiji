@@ -1,6 +1,6 @@
 <!-- (c) Copyright 2013 WibiData, Inc. -->
 <scalastyle>
-  <name>WibiData scalastyle configuration</name>
+  <name>Kiji scalastyle configuration</name>
   <check enabled="true" class="org.scalastyle.file.FileLineLengthChecker" level="error">
     <parameters>
       <parameter name="maxLineLength"><![CDATA[100]]></parameter>

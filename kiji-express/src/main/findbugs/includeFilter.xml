@@ -20,6 +20,6 @@
 <FindBugsFilter>
   <Match>
     <!-- We only care about chopsticks code. -->
-    <Package name="~com[.]wibidata[.]lang[.].*" />
+    <Package name="~org[.]kiji[.]lang[.].*" />
   </Match>
 </FindBugsFilter>
