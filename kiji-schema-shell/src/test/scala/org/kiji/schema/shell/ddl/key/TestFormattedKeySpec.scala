@@ -51,7 +51,7 @@ class TestFormattedKeySpec extends CommandTestCase {
       val components = ListBuffer(RowKeyComponent.newBuilder()
           .setName("key").setType(ComponentType.STRING).build())
       val expected = RowKeyFormat2.newBuilder().setEncoding(RowKeyEncoding.FORMATTED)
-          .setSalt(HashSpec.newBuilder().setSuppressKeyMaterialization(true).build())
+          .setSalt(HashSpec.newBuilder().setHashSize(2).build())
           .setComponents(components).build()
       spec.createFormattedKey() mustEqual expected
     }

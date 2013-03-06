@@ -228,7 +228,8 @@ class DDLParser(val env: Environment) extends JavaTokenParsers with JsonStringPa
    * Optional clause that specifies how the row keys are formatted in a CREATE TABLE
    * statement.
    *
-   * Defaults to just using a hash. Also supports explicitly hashed, hash-prefixed, raw,
+   * Defaults to using a single hash-prefixed string component.
+   * Also supports explicitly hashed, hash-prefixed, raw,
    * or composite/formatted keys.
    */
   def rowFormatClause: Parser[FormattedKeySpec] = (

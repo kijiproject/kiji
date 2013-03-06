@@ -230,5 +230,5 @@ class HashPrefixKeySpec(val size: Int) extends FormattedKeySpec(List(
   }
 }
 
-/** The default key spec, if the user doesn't specify one, is HASHED. */
-object DefaultKeySpec extends HashedFormattedKeySpec
+/** The default key spec, if the user doesn't specify one, is HASH PREFIXED(2). */
+object DefaultKeySpec extends HashPrefixKeySpec(2)

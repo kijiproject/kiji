@@ -61,7 +61,7 @@ class TestCreateTableCommand extends CommandTestCase {
       ctcmd.applyUpdate(layout.build())
     }
 
-    "support hashed as default row format" in {
+    "support hash prefix(2) as default row format" in {
       val locGroup = new LocalityGroupClause("default", None, List())
       val ctcmd = new CreateTableCommand(env, "foo", None, DefaultKeySpec, List(locGroup))
 
@@ -69,9 +69,9 @@ class TestCreateTableCommand extends CommandTestCase {
       val layout = ctcmd.getInitialLayout()
       ctcmd.updateLayout(layout)
       KijiTableLayout.getEncoding(layout.getKeysFormat()) mustEqual RowKeyEncoding.FORMATTED
-      layout.getKeysFormat().asInstanceOf[RowKeyFormat2].getSalt().getHashSize() mustEqual 16
+      layout.getKeysFormat().asInstanceOf[RowKeyFormat2].getSalt().getHashSize() mustEqual 2
       layout.getKeysFormat().asInstanceOf[RowKeyFormat2]
-          .getSalt().getSuppressKeyMaterialization() mustEqual true
+          .getSalt().getSuppressKeyMaterialization() mustEqual false
       layout.getKeysFormat().asInstanceOf[RowKeyFormat2].getComponents().size mustEqual 1
       layout.getKeysFormat().asInstanceOf[RowKeyFormat2].getComponents()(0).getName mustEqual "key"
 
