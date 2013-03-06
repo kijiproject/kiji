@@ -245,8 +245,12 @@ public class KijiInputFormat implements InputFormat<KijiKey, KijiValue> {
       if (mIterator.hasNext()) {
         // Read the next row and store it in the provided key/value pair.
         final KijiRowData row = mIterator.next();
-        key.set(row.getEntityId());
-        value.set(row);
+        if (null != key) {
+          key.set(row.getEntityId());
+        }
+        if (null != value) {
+          value.set(row);
+        }
         return true;
       } else {
         return false;
@@ -262,7 +266,7 @@ public class KijiInputFormat implements InputFormat<KijiKey, KijiValue> {
     public void close() throws IOException {
       ResourceUtils.closeOrLog(mScanner);
       ResourceUtils.closeOrLog(mReader);
-      ResourceUtils.closeOrLog(mTable);
+      ResourceUtils.releaseOrLog(mTable);
       ResourceUtils.releaseOrLog(mKiji);
 
       mIterator = null;

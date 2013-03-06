@@ -59,7 +59,7 @@ import org.kiji.schema.KijiURI;
  * Note: Warnings about a missing serialVersionUID are ignored here. When KijiTap is serialized,
  * the result is not persisted anywhere making serialVersionUID unnecessary.
  */
-@SuppressWarnings({ "rawtypes", "serial" })
+@SuppressWarnings({ "serial", "rawtypes" })
 public class KijiTap
     extends Tap<JobConf, RecordReader, OutputCollector> {
   private static final Logger LOG = LoggerFactory.getLogger(KijiTap.class);
@@ -87,7 +87,14 @@ public class KijiTap
     mId = UUID.randomUUID().toString();
   }
 
-  /** {@inheritDoc} */
+  /**
+   * Sets any configuration options that are required for running a MapReduce job
+   * that reads from a Kiji table. This method gets called on the client machine
+   * during job setup.
+   *
+   * @param process Current Cascading flow being built.
+   * @param conf The job configuration object.
+   */
   @Override
   public void sourceConfInit(FlowProcess<JobConf> process, JobConf conf) {
     // Configure the job's input format.
@@ -108,7 +115,14 @@ public class KijiTap
     super.sourceConfInit(process, conf);
   }
 
-  /** {@inheritDoc} */
+  /**
+   * Sets any configuration options that are required for running a MapReduce job
+   * that writes to a Kiji table. This method gets called on the client machine
+   * during job setup.
+   *
+   * @param process Current Cascading flow being built.
+   * @param conf The job configuration object.
+   */
   @Override
   public void sinkConfInit(FlowProcess<JobConf> process, JobConf conf) {
     // TODO(CHOP-35): Use an output format that writes to HFiles.
@@ -138,16 +152,14 @@ public class KijiTap
 
   /** {@inheritDoc} */
   @Override
-  public TupleEntryIterator openForRead(
-      FlowProcess<JobConf> jobConfFlowProcess,
+  public TupleEntryIterator openForRead(FlowProcess<JobConf> jobConfFlowProcess,
       RecordReader recordReader) throws IOException {
     return new HadoopTupleEntrySchemeIterator(jobConfFlowProcess, this, recordReader);
   }
 
   /** {@inheritDoc} */
   @Override
-  public TupleEntryCollector openForWrite(
-      FlowProcess<JobConf> jobConfFlowProcess,
+  public TupleEntryCollector openForWrite(FlowProcess<JobConf> jobConfFlowProcess,
       OutputCollector outputCollector) throws IOException {
     return new HadoopTupleEntrySchemeCollector(jobConfFlowProcess, this, outputCollector);
   }
