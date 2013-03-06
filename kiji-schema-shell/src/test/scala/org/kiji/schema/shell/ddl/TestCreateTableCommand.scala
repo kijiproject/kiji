@@ -30,6 +30,22 @@ import org.kiji.schema.shell.ddl.key._
 
 class TestCreateTableCommand extends CommandTestCase {
   "CreateTableCommand" should {
+    "create layouts <= max version we support" in {
+      // create layout version is of lesser (-1) or equal (0) to max supported version.
+      val ctcmd = new CreateTableCommand(env, "foo", Some("desc"), DefaultKeySpec, List())
+      (CreateTableCommand.DDL_LAYOUT_VERSION.compareTo(ctcmd.MAX_LAYOUT_VERSION) must
+          beLessThan(1))
+    }
+
+    "support a max version less than KijiSchema's max supported version" in {
+      // If this check fails, then this tool needs to depend on a newer version of KijiSchema.
+
+      // Defined as TableDDLCommand.MAX_LAYOUT_VERSION
+      val ctcmd = new CreateTableCommand(env, "foo", Some("desc"), DefaultKeySpec, List())
+      (ctcmd.MAX_LAYOUT_VERSION.compareTo(KijiTableLayout.getMaxSupportedLayoutVersion())
+          must beLessThan(1))
+    }
+
     "require 1+ locality groups" in {
       val ctcmd = new CreateTableCommand(env, "foo", Some("desc"), DefaultKeySpec, List())
       ctcmd.validateArguments() must throwA[DDLException]

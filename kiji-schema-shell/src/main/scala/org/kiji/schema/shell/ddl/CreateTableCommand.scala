@@ -36,6 +36,8 @@ object CreateTableCommand {
   /**
    * Version string we embed in layouts created with this tool, advertising the version
    * semantics we declare ourselves to be in line with.
+   *
+   * Must be &lt;= TableDDLCommand.MAX_LAYOUT_VERSION.
    */
   val DDL_LAYOUT_VERSION = ProtocolVersion.parse("layout-1.1");
 }

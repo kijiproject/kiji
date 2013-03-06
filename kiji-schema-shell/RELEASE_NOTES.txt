@@ -3,6 +3,8 @@
                               Kiji Schema Shell Release Notes
 
 Version 1.0.0-rc5
+  * DDLSHELL-21. Shell refuses to modify table layouts created by
+      newer versions of KijiSchema.
   * DDLSHELL-22. Change default row key format to HASH PREFIXED(2).
   * DDLSHELL-17. Improve default top-level error message.
   * DDLSHELL-15. Support for composite, formatted row keys.

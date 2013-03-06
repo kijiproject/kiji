@@ -26,6 +26,7 @@ import org.kiji.schema.avro.FamilyDesc
 import org.kiji.schema.avro.LocalityGroupDesc
 import org.kiji.schema.avro.TableLayoutDesc
 import org.kiji.schema.layout.KijiTableLayout
+import org.kiji.schema.util.ProtocolVersion
 
 import org.kiji.schema.shell.DDLException
 import org.kiji.schema.shell.Environment
@@ -36,6 +37,12 @@ import org.kiji.schema.shell.TableNotFoundException
  * of a specific table (vs. those which adjust the environment, instance, etc.).
  */
 abstract class TableDDLCommand extends DDLCommand {
+
+  /**
+   * The maximum version string we are comfortable operating on. Newer layers than
+   * this must be modified with newer tools.
+   */
+  val MAX_LAYOUT_VERSION = ProtocolVersion.parse("layout-1.1");
 
   /** The name of the table being operated on. */
   val tableName: String;
@@ -59,7 +66,20 @@ abstract class TableDDLCommand extends DDLCommand {
    */
   def getInitialLayout(): TableLayoutDesc.Builder = {
     env.kijiSystem.getTableLayout(getKijiURI(), tableName) match {
-      case Some(layout) => { TableLayoutDesc.newBuilder(layout.getDesc()) }
+      case Some(layout) => {
+        val desc = layout.getDesc()
+        val tableProtocol = ProtocolVersion.parse(desc.getVersion())
+
+        // Do not modify tables created with newer versions of KijiSchema. We cannot
+        // decode all their Avro in a safe fashion.
+        if (tableProtocol.compareTo(MAX_LAYOUT_VERSION) > 0) {
+          throw new DDLException("Table " + tableName + " is specified by layout version "
+              + tableProtocol.toString() + ", but this tool can not modify layouts newer "
+              + "than " + MAX_LAYOUT_VERSION.toString() + ". Please use a newer version of "
+              + "the KijiSchema shell.")
+        }
+        return TableLayoutDesc.newBuilder(desc)
+      }
       case None => { throw new TableNotFoundException(tableName) }
     }
   }
