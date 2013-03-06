@@ -27,7 +27,7 @@ Commands in this tutorial will depend on this location:
 
 <div class="userinput">
 {% highlight bash %}
-export $MUSIC_HOME = ${KIJI_HOME}/examples/music
+export MUSIC_HOME=${KIJI_HOME}/examples/music
 {% endhighlight %}
 </div>
 
