@@ -37,6 +37,8 @@ import org.apache.hadoop.mapred.OutputCollector
 import org.kiji.lang.Column
 import org.kiji.lang.KijiScheme
 import org.kiji.lang.KijiTap
+import org.kiji.lang.LocalKijiScheme
+import org.kiji.lang.LocalKijiTap
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiURI
 import org.kiji.schema.filter.KijiColumnFilter
@@ -70,6 +72,9 @@ final class KijiSource(
   /** Creates a new [[org.kiji.lang.KijiScheme]] instance. */
   def kijiScheme: KijiScheme = new KijiScheme(convertColumnMap(columns))
 
+  /** Creates a new [[LocalKijiScheme]] instance. */
+  def localKijiScheme: LocalKijiScheme = new LocalKijiScheme(convertColumnMap(columns))
+
   /**
    * Creates a Scheme that writes to/reads from a Kiji table for usage with
    * the hadoop runner.
@@ -78,12 +83,20 @@ final class KijiSource(
       .asInstanceOf[HadoopScheme]
 
   /**
+   * Creates a Scheme that writes to/reads from a Kiji table for usage with
+   * the local runner.
+   */
+  override def localScheme: LocalScheme = localKijiScheme
+      .asInstanceOf[LocalScheme]
+
+  /**
    * Create a connection to the physical data source (also known as a Tap in Cascading)
    * which, in this case, is a [[org.kiji.schema.KijiTable]].
    */
   override def createTap(readOrWrite: AccessMode)(implicit mode: Mode): Tap[_, _, _] = {
     val tap = mode match {
       case Hdfs(_,_) => new KijiTap(uri(tableURI), kijiScheme).asInstanceOf[Tap[_, _, _]]
+      case Local(_) => new LocalKijiTap(uri(tableURI), localKijiScheme).asInstanceOf[Tap[_, _, _]]
 
       // TODO(CHOP-30): Add a case for test modes. The KijiSource should ideally read from
       //     a fake kiji instance.

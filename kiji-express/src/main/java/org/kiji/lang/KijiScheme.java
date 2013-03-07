@@ -189,6 +189,7 @@ public final class KijiScheme
   @Override
   public void sinkConfInit(FlowProcess<JobConf> process,
       Tap<JobConf, RecordReader, OutputCollector> tap, JobConf conf) {
+    // No-op since no configuration parameters need to be set to encode data for Kiji.
   }
 
   /**
@@ -206,13 +207,16 @@ public final class KijiScheme
     final String uriString = process.getConfigCopy().get(KijiConfKeys.KIJI_OUTPUT_TABLE_URI);
     final KijiURI uri = KijiURI.newBuilder(uriString).build();
     final Kiji kiji = Kiji.Factory.open(uri);
-    final KijiTable table = kiji.openTable(uri.getTable());
-    final KijiTableWriter writer = table.openTableWriter();
-    table.release();
-    kiji.release();
-
-    // Store the writer in this scheme's context.
-    sinkCall.setContext(writer);
+    try {
+      final KijiTable table = kiji.openTable(uri.getTable());
+      try {
+        sinkCall.setContext(table.openTableWriter());
+      } finally {
+        table.release();
+      }
+    } finally {
+      kiji.release();
+    }
   }
 
   /**

@@ -86,7 +86,7 @@ public final class KijiTap
    *
    * @param tableURI for the Kiji table this tap will be used to read.
    * @param scheme to be used with this tap that will convert data read from Kiji into Cascading's
-   *     tuple model.
+   *     tuple model. Note: You must use {@link KijiScheme} with this tap.
    * @throws IOException if there is an error creating the tap.
    */
   public KijiTap(KijiURI tableURI, KijiScheme scheme) throws IOException {

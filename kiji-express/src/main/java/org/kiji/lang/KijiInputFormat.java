@@ -108,7 +108,7 @@ public final class KijiInputFormat implements InputFormat<KijiKey, KijiValue> {
         return splits.toArray(new InputSplit[0]);
 
       } finally {
-        table.close();
+        table.release();
       }
     } finally {
       kiji.release();
