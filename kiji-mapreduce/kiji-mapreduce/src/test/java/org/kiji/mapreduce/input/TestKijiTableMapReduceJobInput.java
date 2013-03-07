@@ -39,13 +39,12 @@ import org.kiji.mapreduce.KijiMRTestLayouts;
 import org.kiji.mapreduce.MapReduceJobInput;
 import org.kiji.mapreduce.framework.KijiConfKeys;
 import org.kiji.schema.EntityId;
+import org.kiji.schema.HBaseEntityId;
 import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequestBuilder;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;
-import org.kiji.schema.impl.RawEntityId;
-import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.util.ResourceUtils;
 import org.kiji.schema.util.TestFileUtils;
 
@@ -61,8 +60,7 @@ public class TestKijiTableMapReduceJobInput extends KijiClientTest {
 
     getConf().set("fs.defaultFS", mTempPath.toString());
     getConf().set("fs.default.name", mTempPath.toString());
-    final KijiTableLayout layout = KijiTableLayout.newLayout(KijiMRTestLayouts.getTestLayout());
-    getKiji().createTable("test", layout);
+    getKiji().createTable(KijiMRTestLayouts.getTestLayout());
 
     // Set the working directory so that it gets cleaned up after the test:
     getConf().set("mapred.working.dir", new Path(mTempPath, "workdir").toString());
@@ -89,8 +87,8 @@ public class TestKijiTableMapReduceJobInput extends KijiClientTest {
     KijiDataRequest dataRequest = builder.build();
 
     // Read from 'here' to 'there':
-    final EntityId startRow = RawEntityId.getEntityId(Bytes.toBytes("here"));
-    final EntityId limitRow = RawEntityId.getEntityId(Bytes.toBytes("there"));
+    final EntityId startRow = HBaseEntityId.fromHBaseRowKey(Bytes.toBytes("here"));
+    final EntityId limitRow = HBaseEntityId.fromHBaseRowKey(Bytes.toBytes("there"));
     final KijiTableMapReduceJobInput.RowOptions rowOptions =
         new KijiTableMapReduceJobInput.RowOptions(startRow, limitRow, null);
     final MapReduceJobInput kijiTableJobInput =
