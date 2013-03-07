@@ -1,5 +1,5 @@
 *~
 *.swp
-/target
-/.idea
+target/
+.idea/
 *.iml
