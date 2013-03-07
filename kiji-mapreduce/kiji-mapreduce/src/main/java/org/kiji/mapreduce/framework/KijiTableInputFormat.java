@@ -146,11 +146,11 @@ public final class KijiTableInputFormat
   }
 
   /** Hadoop record reader for Kiji table rows. */
-  public static class KijiTableRecordReader
+  public static final class KijiTableRecordReader
       extends RecordReader<EntityId, KijiRowData> {
 
     /** Data request. */
-    protected final KijiDataRequest mDataRequest;
+    private final KijiDataRequest mDataRequest;
 
     private Kiji mKiji = null;
     private KijiTable mTable = null;
@@ -169,7 +169,7 @@ public final class KijiTableInputFormat
      *
      * @param conf Configuration for the target Kiji.
      */
-    public KijiTableRecordReader(Configuration conf) {
+    private KijiTableRecordReader(Configuration conf) {
       // Get data request from the job configuration.
       final String dataRequestB64 = conf.get(KijiConfKeys.KIJI_INPUT_DATA_REQUEST);
       Preconditions.checkNotNull(dataRequestB64, "Missing data request in job configuration.");
