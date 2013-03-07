@@ -20,6 +20,7 @@
 package org.kiji.mapreduce.framework;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
@@ -33,7 +34,6 @@ import org.kiji.mapreduce.MapReduceJob;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiTableNotFoundException;
 import org.kiji.schema.KijiURI;
-import org.kiji.schema.util.ResourceUtils;
 
 /** An implementation of a runnable MapReduce job that interacts with Kiji tables. */
 @ApiAudience.Framework
@@ -77,10 +77,9 @@ public final class KijiMapReduceJob extends MapReduceJob {
    * @throws IOException on I/O error.
    */
   private void recordJobHistory(Kiji kiji) throws IOException {
-    Job job = getHadoopJob();
-    JobHistoryKijiTable jobHistory = null;
+    final Job job = getHadoopJob();
+    final JobHistoryKijiTable jobHistory = JobHistoryKijiTable.open(kiji);
     try {
-      jobHistory = JobHistoryKijiTable.open(kiji);
       jobHistory.recordJob(job, mJobStartTime, mJobEndTime);
     } catch (KijiTableNotFoundException ktnfe) {
       if (ktnfe.getTableName().equals(JobHistoryKijiTable.getInstallName())) {
@@ -97,7 +96,7 @@ public final class KijiMapReduceJob extends MapReduceJob {
         throw ktnfe;
       }
     } finally {
-      ResourceUtils.closeOrLog(jobHistory);
+      jobHistory.close();
     }
   }
 
@@ -107,23 +106,28 @@ public final class KijiMapReduceJob extends MapReduceJob {
    * Underlying failures are logged but not fatal.
    */
   private void recordJobHistory() {
-    final Set<KijiURI> recorded = Sets.newHashSet();
     final Configuration conf = getHadoopJob().getConfiguration();
-    final String[] instanceURIs = new String[] {
-        conf.get(KijiConfKeys.KIJI_INPUT_TABLE_URI),
-        conf.get(KijiConfKeys.KIJI_OUTPUT_TABLE_URI),
-    };
-    for (String instanceURI : instanceURIs) {
+    final Set<KijiURI> instanceURIs = Sets.newHashSet();
+    if (conf.get(KijiConfKeys.KIJI_INPUT_TABLE_URI) != null) {
+        instanceURIs.add(KijiURI.newBuilder(conf.get(KijiConfKeys.KIJI_INPUT_TABLE_URI))
+            .withTableName(null)
+            .withColumnNames(Collections.<String>emptyList())
+            .build());
+    }
+    if (conf.get(KijiConfKeys.KIJI_OUTPUT_TABLE_URI) != null) {
+        instanceURIs.add(KijiURI.newBuilder(conf.get(KijiConfKeys.KIJI_OUTPUT_TABLE_URI))
+            .withTableName(null)
+            .withColumnNames(Collections.<String>emptyList())
+            .build());
+    }
+
+    for (KijiURI instanceURI : instanceURIs) {
       if (instanceURI != null) {
         try {
-          final KijiURI uri = KijiURI.newBuilder(instanceURI).build();
-          final Kiji kiji = Kiji.Factory.open(uri, conf);
+          final Kiji kiji = Kiji.Factory.open(instanceURI, conf);
           try {
-            if (!recorded.contains(kiji.getURI())) {
-              recordJobHistory(kiji);
-            }
+            recordJobHistory(kiji);
           } finally {
-            recorded.add(kiji.getURI());
             kiji.release();
           }
         } catch (IOException ioe) {

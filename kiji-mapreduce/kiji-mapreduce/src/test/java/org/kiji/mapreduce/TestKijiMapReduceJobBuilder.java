@@ -51,7 +51,7 @@ import org.kiji.mapreduce.kvstore.lib.EmptyKeyValueStore;
 import org.kiji.mapreduce.kvstore.lib.SeqFileKeyValueStore;
 import org.kiji.mapreduce.output.TextMapReduceJobOutput;
 import org.kiji.schema.util.Resources;
-import org.kiji.schema.util.TestFileUtils;
+import org.kiji.schema.util.TestingFileUtils;
 
 public class TestKijiMapReduceJobBuilder {
   private static final Logger LOG = LoggerFactory.getLogger(TestKijiMapReduceJobBuilder.class);
@@ -116,7 +116,7 @@ public class TestKijiMapReduceJobBuilder {
 
   @Before
   public final void setupTestKijiTransformJob() throws Exception {
-    mTempDir = TestFileUtils.createTempDir("kijimrtest", "dir");
+    mTempDir = TestingFileUtils.createTempDir("kijimrtest", "dir");
     mConf = new Configuration();
     mConf.set("fs.default.name", "file://" + mTempDir);
   }

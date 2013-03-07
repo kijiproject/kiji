@@ -35,6 +35,8 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.kiji.mapreduce.HFileLoader;
 import org.kiji.mapreduce.KijiMRTestLayouts;
@@ -56,6 +58,8 @@ import org.kiji.schema.util.ResourceUtils;
 
 /** Tests bulk-importers. */
 public class IntegrationTestTableMapper extends AbstractKijiIntegrationTest {
+  private static final Logger LOG = LoggerFactory.getLogger(IntegrationTestTableMapper.class);
+
   private Configuration mConf = null;
   private FileSystem mFS = null;
   private Kiji mKiji = null;
@@ -121,8 +125,8 @@ public class IntegrationTestTableMapper extends AbstractKijiIntegrationTest {
   }
 
   @Before
-  public void setupIntegrationTestTableMapper() throws Exception {
-    mConf = createConfiguration();
+  public final void setupIntegrationTestTableMapper() throws Exception {
+    mConf = getConf();
     mFS = FileSystem.get(mConf);
 
     mKiji = Kiji.Factory.open(getKijiURI(), mConf);

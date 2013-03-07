@@ -52,7 +52,7 @@ import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.util.ResourceUtils;
-import org.kiji.schema.util.TestFileUtils;
+import org.kiji.schema.util.TestingFileUtils;
 
 public class TestKijiBulkImportJobBuilder extends KijiClientTest {
   /** A KijiBulkImporter for testing that the job-builder propagates this class correctly. */
@@ -80,7 +80,7 @@ public class TestKijiBulkImportJobBuilder extends KijiClientTest {
 
   @Before
   public void setUp() throws Exception {
-    mTempDir = TestFileUtils.createTempDir("test", "dir");
+    mTempDir = TestingFileUtils.createTempDir("test", "dir");
     mTempPath = new Path("file://" + mTempDir);
 
     getConf().set("fs.defaultFS", mTempPath.toString());

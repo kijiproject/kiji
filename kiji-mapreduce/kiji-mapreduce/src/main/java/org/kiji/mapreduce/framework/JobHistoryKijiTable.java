@@ -47,8 +47,9 @@ public final class JobHistoryKijiTable implements Closeable {
   private static final String TABLE_NAME = "job_history";
   /** The path to the layout for the table in our resources. */
   private static final String TABLE_LAYOUT_RESOURCE = "/org/kiji/mapreduce/job-history-layout.json";
+
   /** The HBaseKijiTable managed by the JobHistoryKijiTable. */
-  private KijiTable mKijiTable;
+  private final KijiTable mKijiTable;
 
   /**
    * Opens a JobHistoryKijiTable for a given kiji. Outside code should use this to access the
@@ -139,6 +140,6 @@ public final class JobHistoryKijiTable implements Closeable {
 
   @Override
   public void close() throws IOException {
-    ResourceUtils.releaseOrLog(mKijiTable);
+    mKijiTable.release();
   }
 }

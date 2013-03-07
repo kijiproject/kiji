@@ -46,7 +46,7 @@ import org.kiji.schema.KijiDataRequestBuilder;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.util.ResourceUtils;
-import org.kiji.schema.util.TestFileUtils;
+import org.kiji.schema.util.TestingFileUtils;
 
 public class TestKijiTableMapReduceJobInput extends KijiClientTest {
   private File mTempDir;
@@ -55,7 +55,7 @@ public class TestKijiTableMapReduceJobInput extends KijiClientTest {
 
   @Before
   public void setUp() throws Exception {
-    mTempDir = TestFileUtils.createTempDir("test", "dir");
+    mTempDir = TestingFileUtils.createTempDir("test", "dir");
     mTempPath = new Path("file://" + mTempDir);
 
     getConf().set("fs.defaultFS", mTempPath.toString());
