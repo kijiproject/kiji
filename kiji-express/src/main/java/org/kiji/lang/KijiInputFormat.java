@@ -40,6 +40,7 @@ import org.apache.hadoop.mapred.Reporter;
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.framework.KijiConfKeys;
+import org.kiji.schema.HBaseEntityId;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRegion;
@@ -49,7 +50,6 @@ import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.KijiTableReader.KijiScannerOptions;
 import org.kiji.schema.KijiURI;
-import org.kiji.schema.impl.HBaseEntityId;
 import org.kiji.schema.impl.HBaseKijiTable;
 import org.kiji.schema.util.ResourceUtils;
 
@@ -189,8 +189,8 @@ public final class KijiInputFormat implements InputFormat<KijiKey, KijiValue> {
       final KijiURI inputURI =
           KijiURI.newBuilder(configuration.get(KijiConfKeys.KIJI_INPUT_TABLE_URI)).build();
       final KijiScannerOptions scannerOptions = new KijiScannerOptions()
-          .setStartRow(new HBaseEntityId(mSplit.getStartRow()))
-          .setStopRow(new HBaseEntityId(mSplit.getEndRow()));
+          .setStartRow(HBaseEntityId.fromHBaseRowKey(mSplit.getStartRow()))
+          .setStopRow(HBaseEntityId.fromHBaseRowKey(mSplit.getEndRow()));
       mKiji = Kiji.Factory.open(inputURI, configuration);
       mTable = mKiji.openTable(inputURI.getTable());
       mReader = mTable.openTableReader();
