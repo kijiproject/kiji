@@ -68,6 +68,12 @@ public final class KijiTap
     extends Tap<JobConf, RecordReader, OutputCollector> {
   private static final Logger LOG = LoggerFactory.getLogger(KijiTap.class);
 
+  private static final String DEPENDENCY_ERROR_MSG =
+      "Chopsticks was unable to find dependency jars for the Kiji framework. If you are using "
+      + "KijiBento, make sure you have sourced the 'kiji-env.sh' script. Otherwise, ensure you "
+      + "have the environment variable $KIJI_HOME set to the path to a KijiSchema distribution, "
+      + "and the environment variable $KIJI_MR_HOME set to the path to a KijiMR distribution.";
+
   /** The URI of the table to be read through this tap. */
   private final String mTableURI;
   /** The scheme to be used with this tap. */
@@ -113,7 +119,7 @@ public final class KijiTap
           "tmpjars",
           StringUtils.join(findKijiJars(conf), ","));
     } catch (IOException ioe) {
-      throw new RuntimeException(ioe);
+      throw new RuntimeException(DEPENDENCY_ERROR_MSG, ioe);
     }
 
     super.sourceConfInit(process, conf);
@@ -142,7 +148,7 @@ public final class KijiTap
           "tmpjars",
           StringUtils.join(findKijiJars(conf), ","));
     } catch (IOException ioe) {
-      throw new RuntimeException(ioe);
+      throw new RuntimeException(DEPENDENCY_ERROR_MSG, ioe);
     }
 
     super.sinkConfInit(process, conf);
