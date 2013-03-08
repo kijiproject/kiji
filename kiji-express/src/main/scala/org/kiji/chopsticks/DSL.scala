@@ -27,6 +27,7 @@ import org.kiji.annotations.{ApiStability, ApiAudience}
 @ApiAudience.Public
 @ApiStability.Unstable
 object DSL {
+  // TODO(CHOP-36): Support request-level options.
   /** Factory method for KijiSource. */
   def KijiInput(
       /** Address of the Kiji table to use. */
@@ -90,6 +91,7 @@ object DSL {
       /** Maximum number of versions of a cell to read. Default is 1. */
       maxVersions: Int = 1,
       /** Filter to apply to this column. Set this to null to not use a filter. Default is null. */
+      // TODO(CHOP-37): A simpler way to specify column filters.
       filter: KijiColumnFilter = null)
     : JColumn.InputOptions = new JColumn.InputOptions(maxVersions, filter)
 }
