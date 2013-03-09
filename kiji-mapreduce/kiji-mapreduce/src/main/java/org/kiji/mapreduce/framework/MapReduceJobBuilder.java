@@ -23,19 +23,21 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.avro.Schema;
 import org.apache.avro.mapred.AvroKey;
 import org.apache.avro.mapred.AvroValue;
 import org.apache.avro.mapreduce.AvroJob;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.mapreduce.GenericTableMapReduceUtil;
 import org.apache.hadoop.mapreduce.Job;
@@ -73,8 +75,16 @@ import org.kiji.schema.Kiji;
 public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder<T>> {
   private static final Logger LOG = LoggerFactory.getLogger(MapReduceJobBuilder.class);
 
+  /**
+   * Name of the system property that may contain the path to a lib/*.jar directory to embed
+   * with MapReduce jobs.
+   */
+  public static final String JOB_LIB_PROPERTY = "org.kiji.mapreduce.job.lib";
+  public static final String ADD_CLASSPATH_TO_JOB_DCACHE_PROPERTY =
+      "org.kiji.mapreduce.add.classpath.to.job.dcache";
+
   /** A list of directories containing jars to be loaded onto the distributed cache. */
-  private final List<File> mJarDirectories;
+  private final List<Path> mJarDirectories;
 
   /** Base Hadoop configuration used to build the MapReduce job. */
   private Configuration mConf;
@@ -87,8 +97,8 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder<T>> {
 
   /** Creates a new <code>MapReduceJobBuilder</code> instance. */
   protected MapReduceJobBuilder() {
-    mJarDirectories = new ArrayList<File>();
-    mBoundStores = new HashMap<String, KeyValueStore<?, ?>>();
+    mJarDirectories = Lists.newArrayList();
+    mBoundStores = Maps.newHashMap();
 
     mJobOutput = null;
   }
@@ -112,8 +122,18 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder<T>> {
    * @param jarDirectory The path to a directory of jar files.
    * @return This builder instance so you may chain configuration method calls.
    */
-  @SuppressWarnings("unchecked")
   public T addJarDirectory(File jarDirectory) {
+    return addJarDirectory(jarDirectory.toString());
+  }
+
+  /**
+   * Adds a local directory of jars to the distributed cache of the job.
+   *
+   * @param jarDirectory The path to a directory of jar files.
+   * @return This builder instance so you may chain configuration method calls.
+   */
+  @SuppressWarnings("unchecked")
+  public T addJarDirectory(Path jarDirectory) {
     mJarDirectories.add(jarDirectory);
     return (T) this;
   }
@@ -125,7 +145,13 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder<T>> {
    * @return This builder instance so you may chain configuration method calls.
    */
   public T addJarDirectory(String jarDirectory) {
-    return addJarDirectory(new File(jarDirectory));
+    try {
+      final Path path = new Path(jarDirectory);
+      final FileSystem fs = path.getFileSystem(mConf);
+      return addJarDirectory(fs.makeQualified(path));
+    } catch (IOException ioe) {
+      throw new RuntimeException(ioe);
+    }
   }
 
   /**
@@ -535,46 +561,63 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder<T>> {
   protected void configureJars(Job job) throws IOException {
     job.setJarByClass(getJarClass());
 
+    final String jobLibProperty = System.getProperty(JOB_LIB_PROPERTY, null);
+    if (jobLibProperty != null) {
+      LOG.debug("Adding lib/*.jar directory from system property {}: '{}'.",
+          JOB_LIB_PROPERTY, jobLibProperty);
+      addJarDirectory(jobLibProperty);
+    }
+
     // Add the jars that the user has added via addJarDirectory() method calls.
     // We are doing this BEFORE we add the Kiji's own dependency jars,
     // so that users can "override" dependencies of Kiji, such as Avro.
-    for (File jarDirectory : mJarDirectories) {
-      LOG.debug("Adding directory of user jars to the distributed cache: "
-          + jarDirectory.getPath());
+    for (Path jarDirectory : mJarDirectories) {
+      LOG.debug("Adding directory of user jars to the distributed cache: " + jarDirectory);
       DistributedCacheJars.addJarsToDistributedCache(job, jarDirectory);
     }
 
-    // Get the path to the kiji-schema jar.
-    String kijiSchemaJarPath;
-    try {
-      kijiSchemaJarPath = Jars.getJarPathForClass(Kiji.class);
-    } catch (ClassNotFoundException e) {
-      LOG.warn("The kiji-schema jar could not be found, so no kiji dependency jars will be "
-          + "loaded onto the distributed cache.");
-      return;
-    }
-
-    String kijiMRJarPath;
-    try {
-      kijiMRJarPath = Jars.getJarPathForClass(MapReduceJobBuilder.class);
-    } catch (ClassNotFoundException e) {
-      LOG.warn("The kiji-mapreduce jar could not be found, so no kiji dependency jars will be "
-          + "loaded onto the distributed cache.");
-      return;
+    final boolean addClasspathToDCache =
+        Boolean.parseBoolean(System.getProperty(ADD_CLASSPATH_TO_JOB_DCACHE_PROPERTY, "false"));
+    if (addClasspathToDCache) {
+      final List<Path> jarFiles = Lists.newArrayList();
+      for (String cpEntry : System.getProperty("java.class.path").split(":")) {
+        if (cpEntry.endsWith(".jar")) {
+          jarFiles.add(new Path("file:" + cpEntry));  // local files
+        }
+      }
+      DistributedCacheJars.addJarsToDistributedCache(job, jarFiles);
     }
 
     // We release kiji-schema to a directory called KIJI_HOME, and the jars for kiji and all its
     // dependencies live in KIJI_HOME/lib.  Add everything in this lib directory to the
     // distributed cache.
-    String kijiSchemaDependencyLibDir = new File(kijiSchemaJarPath).getParent();
-    LOG.debug("Adding kiji-schema dependency jars to the distributed cache of the job: "
-        + kijiSchemaDependencyLibDir);
-    DistributedCacheJars.addJarsToDistributedCache(job, kijiSchemaDependencyLibDir);
     // And the same for kiji-mapreduce.
-    String kijiMRDependencyLibDir = new File(kijiMRJarPath).getParent();
-    LOG.debug("Adding kiji-mapreduce dependency jars to the distributed cache of the job: "
-        + kijiMRDependencyLibDir);
-    DistributedCacheJars.addJarsToDistributedCache(job, kijiMRDependencyLibDir);
+    try {
+      final File kijiSchemaJarPath = new File(Jars.getJarPathForClass(Kiji.class));
+      final File kijiSchemaDependencyLibDir = kijiSchemaJarPath.getParentFile();
+
+      LOG.debug("Adding kiji-schema dependency jars to the distributed cache of the job: "
+          + kijiSchemaDependencyLibDir);
+      DistributedCacheJars.addJarsToDistributedCache(
+          job, new Path("file:" + kijiSchemaDependencyLibDir));
+
+    } catch (ClassNotFoundException e) {
+      LOG.warn("The kiji-schema jar could not be found, so no kiji dependency jars will be "
+          + "loaded onto the distributed cache.");
+    }
+
+    try {
+      final File kijiMRJarPath = new File(Jars.getJarPathForClass(MapReduceJobBuilder.class));
+      final File kijiMRDependencyLibDir = kijiMRJarPath.getParentFile();
+      LOG.debug("Adding kiji-mapreduce dependency jars to the distributed cache of the job: "
+          + kijiMRDependencyLibDir);
+      DistributedCacheJars.addJarsToDistributedCache(
+          job, new Path("file:" + kijiMRDependencyLibDir));
+
+    } catch (ClassNotFoundException e) {
+      LOG.warn("The kiji-mapreduce jar could not be found, so no kiji dependency jars will be "
+          + "loaded onto the distributed cache.");
+    }
 
     // Ensure jars we place on the dcache take precedence over Hadoop + HBase lib jars.
     job.setUserClassesTakesPrecedence(true);

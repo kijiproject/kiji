@@ -21,15 +21,20 @@ package org.kiji.mapreduce;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.GlobFilter;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.mapreduce.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,21 +46,34 @@ import org.kiji.annotations.ApiAudience;
 public final class DistributedCacheJars {
   private static final Logger LOG = LoggerFactory.getLogger(DistributedCacheJars.class);
 
-  /** Configuration variable name to store jars that export to distributed cache. */
+  /**
+   * Configuration variable name to store jars that export to distributed cache.
+   *
+   * The value associated to this variable is a comma-separated list of jar file paths.
+   *
+   * @see org.apache.hadoop.mapred.JobClient
+   */
   private static final String CONF_TMPJARS = "tmpjars";
 
   /** No constructor for this utility class. */
-  private DistributedCacheJars() {}
+  private DistributedCacheJars() {
+  }
 
   /**
-   * Adds the jars from a directory into the distributed cache of a job.
+   * Fully qualifies a path if necessary.
    *
-   * @param job The job to configure.
-   * @param jarDirectory A path to a directory of jar files.
-   * @throws IOException If there is a problem reading from the file system.
+   * If path is not fully qualified, the default FS from the given configuration is used to
+   * qualify the path.
+   *
+   * @param pathStr Path to qualify.
+   * @param conf Configuration according to which qualification happens.
+   * @return fully-qualified path.
+   * @throws IOException on I/O error.
    */
-  public static void addJarsToDistributedCache(Job job, String jarDirectory) throws IOException {
-    addJarsToDistributedCache(job, new File(jarDirectory));
+  private static Path qualifiedPathFromString(String pathStr, Configuration conf)
+      throws IOException {
+    final Path path = new Path(pathStr);
+    return path.getFileSystem(conf).makeQualified(path);
   }
 
   /**
@@ -63,26 +81,59 @@ public final class DistributedCacheJars {
    *
    * @param job The job to configure.
    * @param jarDirectory A path to a directory of jar files.
-   * @throws IOException If there is a problem reading from the file system.
+   * @throws IOException on I/O error.
+   */
+  public static void addJarsToDistributedCache(Job job, String jarDirectory) throws IOException {
+    addJarsToDistributedCache(job, qualifiedPathFromString(jarDirectory, job.getConfiguration()));
+  }
+
+  /**
+   * Adds the jars from a directory into the distributed cache of a job.
+   *
+   * @param job The job to configure.
+   * @param jarDirectory A path to a directory of jar files.
+   * @throws IOException on I/O error.
    */
   public static void addJarsToDistributedCache(Job job, File jarDirectory) throws IOException {
+    addJarsToDistributedCache(job, new Path(jarDirectory.getCanonicalPath()));
+  }
+
+  /**
+   * Adds the jars from a directory into the distributed cache of a job.
+   *
+   * @param job The job to configure.
+   * @param jarDirectory A path to a directory of jar files.
+   * @throws IOException on I/O error.
+   */
+  public static void addJarsToDistributedCache(Job job, Path jarDirectory) throws IOException {
     if (null == jarDirectory) {
       throw new IllegalArgumentException("Jar directory may not be null");
     }
-    if (!jarDirectory.exists()) {
-      throw new IOException("The jar directory " + jarDirectory.getPath() + " does not exist.");
-    }
+    addJarsToDistributedCache(job, listJarFilesFromDirectory(job.getConfiguration(), jarDirectory));
+  }
 
-    List<String> allJars = new ArrayList<String>();
-
+  /**
+   * Adds the jar files into the distributed cache of a job.
+   *
+   * @param job The job to configure.
+   * @param jarFiles Collection of jar files to add.
+   * @throws IOException on I/O error.
+   */
+  public static void addJarsToDistributedCache(Job job, Collection<Path> jarFiles)
+      throws IOException {
     // Get existing jars named in configuration.
-    allJars.addAll(getJarsFromConfiguration(job.getConfiguration()));
+    final List<Path> allJars =
+        Lists.newArrayList(getJarsFromConfiguration(job.getConfiguration()));
 
     // Add jars from jarDirectory.
-    allJars.addAll(getJarsFromDirectory(job.getConfiguration(), jarDirectory));
+    for (Path path : jarFiles) {
+      final Path qualifiedPath = path.getFileSystem(job.getConfiguration()).makeQualified(path);
+      LOG.debug("Adding jar {}, fully qualified as {}", path, qualifiedPath);
+      allJars.add(qualifiedPath);
+    }
 
-    // De-dupe
-    List<String> deDupedJars = deDuplicateJarNames(allJars);
+    // De-duplicate the list of jar files, based on their names:
+    final Collection<Path> deDupedJars = deDuplicateFilenames(allJars);
     job.getConfiguration().set(CONF_TMPJARS, StringUtils.join(deDupedJars, ","));
   }
 
@@ -92,15 +143,25 @@ public final class DistributedCacheJars {
    * @param conf The Configuration to get jar names from
    * @return A list of jars.
    */
-  public static List<String> getJarsFromConfiguration(Configuration conf) {
-    List<String> allJars = new ArrayList<String>();
-    String existingJars = conf.get(CONF_TMPJARS);
-    if (null != existingJars && !existingJars.isEmpty()) {
-      for (String jar : existingJars.split(",")) {
-        allJars.add(jar);
-      }
+  public static List<Path> getJarsFromConfiguration(Configuration conf) {
+    final String existingJars = conf.get(CONF_TMPJARS);
+    if ((null == existingJars) || existingJars.isEmpty()) {
+      return Collections.emptyList();
     }
-    return allJars;
+    final List<Path> jarFiles = Lists.newArrayList();
+    for (String jarPath : existingJars.split(",")) {
+      jarFiles.add(new Path(jarPath));
+    }
+    return jarFiles;
+  }
+
+  private static final PathFilter JAR_PATH_FILTER;
+  static {
+    try {
+      JAR_PATH_FILTER = new GlobFilter("*.jar");
+    } catch (IOException ioe) {
+      throw new RuntimeException(ioe);
+    }
   }
 
   /**
@@ -111,43 +172,36 @@ public final class DistributedCacheJars {
    * @return A list of qualified paths to the jars in jarDirectory.
    * @throws IOException if there's a problem.
    */
-  public static List<String> getJarsFromDirectory(Configuration conf, File jarDirectory)
+  public static Collection<Path> listJarFilesFromDirectory(Configuration conf, Path jarDirectory)
       throws IOException {
-    if (!jarDirectory.isDirectory()) {
-      throw new IOException("Attempted to add jars from non-directory: "
-          + jarDirectory.getCanonicalPath());
+    LOG.debug("Listing jar files {}/*.jar", jarDirectory);
+    final FileSystem fs = jarDirectory.getFileSystem(conf);
+    if (!fs.isDirectory(jarDirectory)) {
+      throw new IOException("Attempted to add jars from non-directory: " + jarDirectory);
     }
-    List<String> allJars = new ArrayList<String>();
-    FileSystem fileSystem = FileSystem.getLocal(conf);
-    for (File jar : jarDirectory.listFiles()) {
-      if (jar.exists() && !jar.isDirectory() && jar.getName().endsWith(".jar")) {
-        Path jarPath = new Path(jar.getCanonicalPath());
-        String qualifiedPath = jarPath.makeQualified(fileSystem).toString();
-        allJars.add(qualifiedPath);
+    final List<Path> jarFiles = Lists.newArrayList();
+    for (FileStatus status : fs.listStatus(jarDirectory, JAR_PATH_FILTER)) {
+      if (!status.isDirectory()) {
+        jarFiles.add(fs.makeQualified(status.getPath()));
       }
     }
-    return allJars;
+    return jarFiles;
   }
 
   /**
-   * Takes a list of paths and returns a list of paths with unique filenames.
+   * Removes files whose name are duplicated in a given collection.
    *
-   * @param jarList A list of jars to de-dupe.
-   * @return A de-duplicated list of jars.
+   * @param jarFiles Collection of .jar files to de-duplicate.
+   * @return De-duplicated collection of .jar files.
    */
-  public static List<String> deDuplicateJarNames(List<String> jarList) {
-    Set<String> jarNames = new HashSet<String>();
-    List<String> jarPaths = new ArrayList<String>();
-    for (String jar : jarList) {
-      Path path = new Path(jar);
-      String jarName = path.getName();
-      if (!jarNames.contains(jarName)) {
-        jarNames.add(jarName);
-        jarPaths.add(jar);
-      } else {
-        LOG.warn("Skipping jar at " + jar + " because " + jarName + " already added.");
+  public static List<Path> deDuplicateFilenames(Iterable<Path> jarFiles) {
+    final Set<String> jarFileNames = Sets.newHashSet();
+    final List<Path> uniqueFiles = Lists.newArrayList();
+    for (Path jarFile : jarFiles) {
+      if (jarFileNames.add(jarFile.getName())) {
+        uniqueFiles.add(jarFile);
       }
     }
-    return jarPaths;
+    return uniqueFiles;
   }
 }

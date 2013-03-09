@@ -52,7 +52,6 @@ import org.kiji.schema.KijiRowScanner;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.KijiTableWriter;
-import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.testutil.AbstractKijiIntegrationTest;
 import org.kiji.schema.util.ResourceUtils;
 
@@ -133,12 +132,8 @@ public class IntegrationTestTableMapper extends AbstractKijiIntegrationTest {
     final String inputTableName = "input";
     final String outputTableName = "output";
 
-    final KijiTableLayout inputLayout =
-        KijiTableLayout.newLayout(KijiMRTestLayouts.getTestLayout(inputTableName));
-    mKiji.createTable(inputTableName, inputLayout);
-    final KijiTableLayout outputLayout =
-        KijiTableLayout.newLayout(KijiMRTestLayouts.getTestLayout(outputTableName));
-    mKiji.createTable("output", outputLayout);
+    mKiji.createTable(KijiMRTestLayouts.getTestLayout(inputTableName));
+    mKiji.createTable(KijiMRTestLayouts.getTestLayout(outputTableName));
 
     mInputTable = mKiji.openTable(inputTableName);
     mOutputTable = mKiji.openTable(outputTableName);

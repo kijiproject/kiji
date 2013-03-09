@@ -24,19 +24,20 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -47,11 +48,11 @@ import org.junit.Test;
 import org.kiji.mapreduce.framework.KijiTableInputFormat;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiDataRequest;
-import org.kiji.schema.KijiDataRequestBuilder;
+import org.kiji.schema.KijiDataRequestBuilder.ColumnsDef;
 import org.kiji.schema.KijiRowData;
-import org.kiji.schema.KijiURI;
 import org.kiji.schema.testutil.FooTableIntegrationTest;
 
+/** Tests for the KijiTableInputFormat. */
 public class IntegrationTestKijiTableInputFormat
     extends FooTableIntegrationTest {
 
@@ -102,24 +103,25 @@ public class IntegrationTestKijiTableInputFormat
     final Configuration conf = job.getConfiguration();
 
     // Get settings for test.
-    final String instance = getInstanceName();
-    final String table = getFooTable().getName();
-    final KijiDataRequestBuilder builder = KijiDataRequest.builder();
-    builder.newColumnsDef().add("info", "name").add("info", "email");
-    final KijiDataRequest request = builder.build();
+    final KijiDataRequest request = KijiDataRequest.builder()
+        .addColumns(ColumnsDef.create().add("info", "name").add("info", "email"))
+        .build();
 
     job.setJarByClass(IntegrationTestKijiTableInputFormat.class);
 
     // Setup the InputFormat.
-    final KijiURI tableURI = KijiURI.newBuilder()
-      .withZookeeperQuorum(conf.get(HConstants.ZOOKEEPER_QUORUM).split(","))
-      .withZookeeperClientPort(conf.getInt(
-          HConstants.ZOOKEEPER_CLIENT_PORT, HConstants.DEFAULT_ZOOKEPER_CLIENT_PORT))
-      .withInstanceName(instance)
-      .withTableName(table)
-      .build();
-    KijiTableInputFormat.configureJob(job, tableURI, request, null, null);
+    KijiTableInputFormat.configureJob(job, getFooTable().getURI(), request, null, null);
     job.setInputFormatClass(KijiTableInputFormat.class);
+
+    // Duplicate functionality from MapReduceJobBuilder, since we are not using it here:
+    final List<Path> jarFiles = Lists.newArrayList();
+    final FileSystem fs = FileSystem.getLocal(conf);
+    for (String cpEntry : System.getProperty("java.class.path").split(":")) {
+      if (cpEntry.endsWith(".jar")) {
+        jarFiles.add(fs.makeQualified(new Path(cpEntry)));
+      }
+    }
+    DistributedCacheJars.addJarsToDistributedCache(job, jarFiles);
 
     return job;
   }
@@ -128,7 +130,8 @@ public class IntegrationTestKijiTableInputFormat
   @Test
   public void testMapJob() throws Exception {
     // Create a test job.
-    final Path outputFile = new Path("/foo1/part-r-00000");
+    final Path outputFile = new Path(String.format("/%s-%s-%d/part-r-00000",
+        getClass().getName(), mTestName.getMethodName(), System.currentTimeMillis()));
     final Job job = setupJob();
     job.setJobName("testMapJob");
 
@@ -145,8 +148,8 @@ public class IntegrationTestKijiTableInputFormat
     assertTrue("Hadoop job failed", job.waitForCompletion(true));
 
     // Check to make sure output exists.
-    final FileSystem fs =
-        FileSystem.get(job.getConfiguration()); assertTrue(fs.exists(outputFile.getParent()));
+    final FileSystem fs = FileSystem.get(job.getConfiguration());
+    assertTrue(fs.exists(outputFile.getParent()));
 
     // Verify that the output matches what's expected.
     final FSDataInputStream in = fs.open(outputFile);
@@ -173,7 +176,8 @@ public class IntegrationTestKijiTableInputFormat
   @Test
   public void testMapReduceJob() throws Exception {
     // Create a test job.
-    final Path outputFile = new Path("/foo2/part-r-00000");
+    final Path outputFile = new Path(String.format("/%s-%s-%d/part-r-00000",
+        getClass().getName(), mTestName.getMethodName(), System.currentTimeMillis()));
     final Job job = setupJob();
     job.setJobName("testMapReduceJob");
 
@@ -208,13 +212,8 @@ public class IntegrationTestKijiTableInputFormat
     final Map<String, Set<String>> actual = builder.build();
     final Map<String, Set<String>> expected = ImmutableMap.<String, Set<String>>builder()
         .put("usermail.example.com", Sets.newHashSet(
-              "Aaron Kimball",
-              "Christophe Bisciglia",
-              "Kiyan Ahmadizadeh",
-              "Garrett Wu"))
-        .put("gmail.com", Sets.newHashSet(
-              "John Doe",
-              "Jane Doe"))
+            "Aaron Kimball", "Christophe Bisciglia", "Kiyan Ahmadizadeh", "Garrett Wu"))
+        .put("gmail.com", Sets.newHashSet("John Doe", "Jane Doe"))
         .build();
     assertEquals("Result of job wasn't what was expected", expected, actual);
 

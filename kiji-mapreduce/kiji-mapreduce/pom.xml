@@ -56,6 +56,16 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
+        <configuration>
+          <additionalClasspathElements>
+            <additionalClasspathElement>
+              ${project.build.directory}/${project.artifactId}-${project.version}.jar
+            </additionalClasspathElement>
+            <additionalClasspathElement>
+              ${project.build.directory}/${project.artifactId}-${project.version}-tests.jar
+            </additionalClasspathElement>
+          </additionalClasspathElements>
+        </configuration>
       </plugin>
 
       <plugin>

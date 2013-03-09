@@ -32,7 +32,7 @@ import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableWriter;
 import org.kiji.schema.KijiURI;
-import org.kiji.schema.layout.KijiTableLayout;
+import org.kiji.schema.avro.TableLayoutDesc;
 import org.kiji.schema.testutil.AbstractKijiIntegrationTest;
 import org.kiji.schema.util.ResourceUtils;
 
@@ -47,10 +47,9 @@ public class IntegrationTestTableMapReducer extends AbstractKijiIntegrationTest 
     final Kiji kiji = Kiji.Factory.open(uri, conf);
     try {
       final int nregions = 16;
-      final KijiTableLayout tableLayout =
-          KijiTableLayout.newLayout(KijiMRTestLayouts.getTestLayout());
-      final String tableName = tableLayout.getName();
-      kiji.createTable(tableName, tableLayout, nregions);
+      final TableLayoutDesc layout = KijiMRTestLayouts.getTestLayout();
+      final String tableName = layout.getName();
+      kiji.createTable(layout, nregions);
 
       final KijiTable table = kiji.openTable(tableName);
       try {
@@ -62,7 +61,9 @@ public class IntegrationTestTableMapReducer extends AbstractKijiIntegrationTest 
           writer.close();
         }
 
-        final Path output = new Path(fs.getUri().toString(), "/table-mr-output");
+        final Path output = new Path(fs.getUri().toString(),
+            String.format("/%s-%s-%d/table-mr-output",
+                getClass().getName(), mTestName.getMethodName(), System.currentTimeMillis()));
 
         final MapReduceJob mrjob = KijiGatherJobBuilder.create()
             .withConf(conf)
