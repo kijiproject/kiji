@@ -24,27 +24,19 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.SequenceFile.Writer;
 import org.apache.hadoop.io.Text;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
+import org.kiji.schema.KijiClientTest;
 
 /** Test that the SeqFileKeyValueStore implementation works. */
-public class TestSeqFileKeyValueStore {
-
-  // Disable checkstyle for this variable.  It must be public to work with JUnit @Rule.
-  // CSOFF: VisibilityModifierCheck
-  @Rule
-  public TemporaryFolder mTempDir = new TemporaryFolder();
-  // CSON: VisibilityModifierCheck
+public class TestSeqFileKeyValueStore extends KijiClientTest {
 
   /**
    * Write a set of (key, val) pairs to a SequenceFile.
@@ -53,11 +45,12 @@ public class TestSeqFileKeyValueStore {
    * @throws IOException if there's an error using the file system.
    */
   private Path writeSeqFile() throws IOException {
-    Configuration conf = new Configuration();
-    FileSystem fs = FileSystem.getLocal(conf);
-    Path p = new Path(mTempDir.getRoot() + "/foo.seq");
-    SequenceFile.Writer writer = new SequenceFile.Writer(fs, conf, p,
-        Text.class, IntWritable.class);
+    final Path path = new Path("file:" + getLocalTempDir(), "foo.seq");
+    final SequenceFile.Writer writer = SequenceFile.createWriter(
+        getConf(),
+        Writer.file(path),
+        Writer.keyClass(Text.class),
+        Writer.valueClass(IntWritable.class));
     try {
       writer.append(new Text("one"), new IntWritable(1));
       writer.append(new Text("two"), new IntWritable(2));
@@ -69,26 +62,28 @@ public class TestSeqFileKeyValueStore {
       writer.close();
     }
 
-    return p;
+    return path;
   }
 
   @Test
-  public void testSeqFileKVStore() throws IOException, InterruptedException {
-    Path p = writeSeqFile();
-    KeyValueStore<Text, IntWritable> store = SeqFileKeyValueStore.builder()
-        .withInputPath(p).build();
-    KeyValueStoreReader<Text, IntWritable> reader = store.open();
+  public void testSeqFileKVStore() throws Exception {
+    final Path path = writeSeqFile();
+    final KeyValueStore<Text, IntWritable> store = SeqFileKeyValueStore.builder()
+        .withInputPath(path)
+        .build();
+    final KeyValueStoreReader<Text, IntWritable> reader = store.open();
+    try {
+      assertTrue(reader.containsKey(new Text("one")));
+      assertEquals(new IntWritable(1), reader.get(new Text("one")));
 
-    assertTrue(reader.containsKey(new Text("one")));
-    assertEquals(new IntWritable(1), reader.get(new Text("one")));
+      // This uses the earlier definition in the file, not the later one.
+      assertTrue(reader.containsKey(new Text("two")));
+      assertEquals(new IntWritable(2), reader.get(new Text("two")));
 
-    // This uses the earlier definition in the file, not the later one.
-    assertTrue(reader.containsKey(new Text("two")));
-    assertEquals(new IntWritable(2), reader.get(new Text("two")));
-
-    assertTrue(reader.containsKey(new Text("three")));
-    assertEquals(new IntWritable(3), reader.get(new Text("three")));
-
-    reader.close();
+      assertTrue(reader.containsKey(new Text("three")));
+      assertEquals(new IntWritable(3), reader.get(new Text("three")));
+    } finally {
+      reader.close();
+    }
   }
 }

@@ -95,7 +95,7 @@ public final class DistributedCacheJars {
    * @throws IOException on I/O error.
    */
   public static void addJarsToDistributedCache(Job job, File jarDirectory) throws IOException {
-    addJarsToDistributedCache(job, new Path(jarDirectory.getCanonicalPath()));
+    addJarsToDistributedCache(job, new Path("file:" + jarDirectory.getCanonicalPath()));
   }
 
   /**

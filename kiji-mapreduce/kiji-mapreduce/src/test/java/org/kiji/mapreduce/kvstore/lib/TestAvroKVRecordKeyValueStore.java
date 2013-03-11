@@ -24,108 +24,110 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 
+import com.google.common.collect.Lists;
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
+import org.kiji.schema.KijiClientTest;
 
-public class TestAvroKVRecordKeyValueStore {
-  // Disable checkstyle for this variable.  It must be public to work with JUnit @Rule.
-  // CSOFF: VisibilityModifierCheck
-  @Rule
-  public TemporaryFolder mTempDir = new TemporaryFolder();
-  // CSON: VisibilityModifierCheck
+public class TestAvroKVRecordKeyValueStore extends KijiClientTest {
 
   /** Writes an avro file of generic records with a 'key', 'blah', and 'value' field. */
   private Path writeGenericRecordAvroFile() throws IOException {
     // Open a writer.
-    File file = new File(mTempDir.getRoot(), "generic-kv.avro");
-    Schema writerSchema = Schema.createRecord("record", null, null, false);
-    writerSchema.setFields(
-        Arrays.asList(
-            new Schema.Field("key", Schema.create(Schema.Type.INT), null, null),
-            new Schema.Field("blah", Schema.create(Schema.Type.STRING), null, null),
-            new Schema.Field("value", Schema.create(Schema.Type.STRING), null, null)));
-    DataFileWriter<GenericRecord> fileWriter = new DataFileWriter<GenericRecord>(
-        new GenericDatumWriter<GenericRecord>(writerSchema)).create(writerSchema, file);
+    final File file = new File(getLocalTempDir(), "generic-kv.avro");
+    final Schema writerSchema = Schema.createRecord("record", null, null, false);
+    writerSchema.setFields(Lists.newArrayList(
+        new Schema.Field("key", Schema.create(Schema.Type.INT), null, null),
+        new Schema.Field("blah", Schema.create(Schema.Type.STRING), null, null),
+        new Schema.Field("value", Schema.create(Schema.Type.STRING), null, null)));
 
-    // Write a record.
-    GenericData.Record record = new GenericData.Record(writerSchema);
-    record.put("key", 1);
-    record.put("blah", "blah");
-    record.put("value", "one");
-    fileWriter.append(record);
+    final DataFileWriter<GenericRecord> fileWriter =
+        new DataFileWriter<GenericRecord>(new GenericDatumWriter<GenericRecord>(writerSchema))
+            .create(writerSchema, file);
+    try {
+      // Write a record.
+      GenericData.Record record = new GenericData.Record(writerSchema);
+      record.put("key", 1);
+      record.put("blah", "blah");
+      record.put("value", "one");
+      fileWriter.append(record);
 
-    // Write another record.
-    record = new GenericData.Record(writerSchema);
-    record.put("key", 2);
-    record.put("blah", "blah");
-    record.put("value", "two");
-    fileWriter.append(record);
+      // Write another record.
+      record = new GenericData.Record(writerSchema);
+      record.put("key", 2);
+      record.put("blah", "blah");
+      record.put("value", "two");
+      fileWriter.append(record);
 
-    // Write a duplicate record with the same key field value.
-    record = new GenericData.Record(writerSchema);
-    record.put("key", 2);
-    record.put("blah", "blah");
-    record.put("value", "deux");
-    fileWriter.append(record);
-
-    // Close it and return the path.
-    fileWriter.close();
+      // Write a duplicate record with the same key field value.
+      record = new GenericData.Record(writerSchema);
+      record.put("key", 2);
+      record.put("blah", "blah");
+      record.put("value", "deux");
+      fileWriter.append(record);
+    } finally {
+      // Close it and return the path.
+      fileWriter.close();
+    }
     return new Path(file.getPath());
   }
 
   @Test
-  public void testGenericAvroKVRecordKeyValueStore() throws IOException, InterruptedException {
+  public void testGenericAvroKVRecordKeyValueStore() throws Exception {
     // Only read the key and value fields (skip the 'blah' field).
-    Schema readerSchema = Schema.createRecord("record", null, null, false);
-    readerSchema.setFields(
-        Arrays.asList(
-            new Schema.Field("key", Schema.create(Schema.Type.INT), null, null),
-            new Schema.Field("value", Schema.create(Schema.Type.STRING), null, null)));
+    final Schema readerSchema = Schema.createRecord("record", null, null, false);
+    readerSchema.setFields(Lists.newArrayList(
+        new Schema.Field("key", Schema.create(Schema.Type.INT), null, null),
+        new Schema.Field("value", Schema.create(Schema.Type.STRING), null, null)));
 
     // Open the store.
-    Path avroFilePath = writeGenericRecordAvroFile();
-    AvroKVRecordKeyValueStore<Integer, CharSequence> store =
-        AvroKVRecordKeyValueStore.builder()
-        .withConfiguration(new Configuration())
+    final Path avroFilePath = writeGenericRecordAvroFile();
+    final AvroKVRecordKeyValueStore<Integer, CharSequence> store = AvroKVRecordKeyValueStore
+        .builder()
+        .withConfiguration(getConf())
         .withInputPath(avroFilePath)
-        .withReaderSchema(readerSchema).build();
-    KeyValueStoreReader<Integer, CharSequence> reader = store.open();
+        .withReaderSchema(readerSchema)
+        .build();
+    final KeyValueStoreReader<Integer, CharSequence> reader = store.open();
+    try {
+      assertTrue(reader.containsKey(1));
+      assertEquals("one", reader.get(1).toString());
 
-    assertTrue(reader.containsKey(1));
-    assertEquals("one", reader.get(1).toString());
-
-    assertTrue(reader.containsKey(2));
-    assertEquals("The first record in the file with key 2 should be mapped as the value.",
-        "two", reader.get(2).toString());
+      assertTrue(reader.containsKey(2));
+      assertEquals("The first record in the file with key 2 should be mapped as the value.",
+          "two", reader.get(2).toString());
+    } finally {
+      reader.close();
+    }
   }
 
   @Test
   public void testAvroKVRKVSWithoutSchema() throws IOException, InterruptedException {
     // Open the store.
-    Path avroFilePath = writeGenericRecordAvroFile();
-    AvroKVRecordKeyValueStore<Integer, CharSequence> store =
-        AvroKVRecordKeyValueStore.builder()
-        .withConfiguration(new Configuration())
-        .withInputPath(avroFilePath).build();
-    KeyValueStoreReader<Integer, CharSequence> reader = store.open();
+    final Path avroFilePath = writeGenericRecordAvroFile();
+    final AvroKVRecordKeyValueStore<Integer, CharSequence> store = AvroKVRecordKeyValueStore
+        .builder()
+        .withConfiguration(getConf())
+        .withInputPath(avroFilePath)
+        .build();
+    final KeyValueStoreReader<Integer, CharSequence> reader = store.open();
+    try {
+      assertTrue(reader.containsKey(1));
+      assertEquals("one", reader.get(1).toString());
 
-    assertTrue(reader.containsKey(1));
-    assertEquals("one", reader.get(1).toString());
-
-    assertTrue(reader.containsKey(2));
-    assertEquals("The first record in the file with key 2 should be mapped as the value.",
-        "two", reader.get(2).toString());
+      assertTrue(reader.containsKey(2));
+      assertEquals("The first record in the file with key 2 should be mapped as the value.",
+          "two", reader.get(2).toString());
+    } finally {
+      reader.close();
+    }
   }
 }

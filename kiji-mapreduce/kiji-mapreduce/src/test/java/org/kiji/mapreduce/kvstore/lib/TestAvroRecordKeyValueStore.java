@@ -25,56 +25,52 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 
+import com.google.common.collect.Lists;
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
+import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.avro.Node;
 
-public class TestAvroRecordKeyValueStore {
-  private static final Logger LOG = LoggerFactory.getLogger(
-      TestAvroRecordKeyValueStore.class.getName());
+public class TestAvroRecordKeyValueStore extends KijiClientTest {
+  private static final Logger LOG = LoggerFactory.getLogger(TestAvroRecordKeyValueStore.class);
 
   /** The path to an existing test avro file of specific records (Nodes). */
   public static final String NODE_AVRO_FILE = "org/kiji/mapreduce/kvstore/simple.avro";
 
-  // Disable checkstyle for this variable.  It must be public to work with JUnit @Rule.
-  // CSOFF: VisibilityModifierCheck
-  @Rule
-  public TemporaryFolder mTempDir = new TemporaryFolder();
-  // CSON: VisibilityModifierCheck
-
   @Test
   public void testSpecificAvroRecordKeyValueStore() throws IOException, InterruptedException {
-    Path avroFilePath
-        = new Path(getClass().getClassLoader().getResource(NODE_AVRO_FILE).toString());
-    AvroRecordKeyValueStore<CharSequence, Node> store = AvroRecordKeyValueStore.builder()
-            .withConfiguration(new Configuration())
-            .withInputPath(avroFilePath)
-            .withReaderSchema(Node.SCHEMA$)
-            .withKeyFieldName("label").build();
-    KeyValueStoreReader<CharSequence, Node> reader = store.open();
+    final Path avroFilePath =
+        new Path(getClass().getClassLoader().getResource(NODE_AVRO_FILE).toString());
 
-    assertTrue(reader.containsKey("foo"));
-    assertEquals("foo", reader.get("foo").getLabel().toString());
+    final AvroRecordKeyValueStore<CharSequence, Node> store = AvroRecordKeyValueStore
+        .builder()
+        .withConfiguration(getConf())
+        .withInputPath(avroFilePath)
+        .withReaderSchema(Node.SCHEMA$)
+        .withKeyFieldName("label")
+        .build();
+    final KeyValueStoreReader<CharSequence, Node> reader = store.open();
+    try {
+      assertTrue(reader.containsKey("foo"));
+      assertEquals("foo", reader.get("foo").getLabel().toString());
 
-    assertTrue(reader.containsKey("hello"));
-    assertEquals("hello", reader.get("hello").getLabel().toString());
+      assertTrue(reader.containsKey("hello"));
+      assertEquals("hello", reader.get("hello").getLabel().toString());
 
-    assertFalse(reader.containsKey("does-not-exist"));
+      assertFalse(reader.containsKey("does-not-exist"));
+    } finally {
+      reader.close();
+    }
   }
 
   /**
@@ -84,142 +80,156 @@ public class TestAvroRecordKeyValueStore {
    */
   private Schema getGenericSchema() {
     Schema schema = Schema.createRecord("record", null, null, false);
-    schema.setFields(
-        Arrays.asList(
-            new Schema.Field("key", Schema.create(Schema.Type.INT), null, null),
-            new Schema.Field("blah", Schema.create(Schema.Type.STRING), null, null),
-            new Schema.Field("value", Schema.create(Schema.Type.STRING), null, null)));
+    schema.setFields(Lists.newArrayList(
+        new Schema.Field("key", Schema.create(Schema.Type.INT), null, null),
+        new Schema.Field("blah", Schema.create(Schema.Type.STRING), null, null),
+        new Schema.Field("value", Schema.create(Schema.Type.STRING), null, null)));
     return schema;
   }
 
   /** Writes an avro file of generic records with a 'key', 'blah', and 'value' field. */
   private Path writeGenericRecordAvroFile() throws IOException {
     // Open a writer.
-    File file = new File(mTempDir.getRoot(), "generic.avro");
-    Schema writerSchema = getGenericSchema();
-    DataFileWriter<GenericRecord> fileWriter = new DataFileWriter<GenericRecord>(
-        new GenericDatumWriter<GenericRecord>(writerSchema)).create(writerSchema, file);
+    final File file = new File(getLocalTempDir(), "generic.avro");
+    final Schema writerSchema = getGenericSchema();
+    final DataFileWriter<GenericRecord> fileWriter =
+        new DataFileWriter<GenericRecord>(new GenericDatumWriter<GenericRecord>(writerSchema))
+            .create(writerSchema, file);
+    try {
+      // Write a record.
+      GenericData.Record record = new GenericData.Record(writerSchema);
+      record.put("key", 1);
+      record.put("blah", "blah");
+      record.put("value", "one");
+      fileWriter.append(record);
 
-    // Write a record.
-    GenericData.Record record = new GenericData.Record(writerSchema);
-    record.put("key", 1);
-    record.put("blah", "blah");
-    record.put("value", "one");
-    fileWriter.append(record);
+      // Write another record.
+      record = new GenericData.Record(writerSchema);
+      record.put("key", 2);
+      record.put("blah", "blah");
+      record.put("value", "two");
+      fileWriter.append(record);
 
-    // Write another record.
-    record = new GenericData.Record(writerSchema);
-    record.put("key", 2);
-    record.put("blah", "blah");
-    record.put("value", "two");
-    fileWriter.append(record);
-
-    // Write a duplicate record with the same key field value.
-    record = new GenericData.Record(writerSchema);
-    record.put("key", 2);
-    record.put("blah", "blah");
-    record.put("value", "deux");
-    fileWriter.append(record);
-
-    // Close it and return the path.
-    fileWriter.close();
+      // Write a duplicate record with the same key field value.
+      record = new GenericData.Record(writerSchema);
+      record.put("key", 2);
+      record.put("blah", "blah");
+      record.put("value", "deux");
+      fileWriter.append(record);
+    } finally {
+      // Close it and return the path.
+      fileWriter.close();
+    }
     return new Path(file.getPath());
   }
 
   /** Writes an Avro file containing additional keys and values. */
   private Path writeSecondAvroFile() throws IOException {
     // Open a writer.
-    File file = new File(mTempDir.getRoot(), "generic2.avro");
-    Schema writerSchema = getGenericSchema();
-    DataFileWriter<GenericRecord> fileWriter = new DataFileWriter<GenericRecord>(
-        new GenericDatumWriter<GenericRecord>(writerSchema)).create(writerSchema, file);
+    final File file = new File(getLocalTempDir(), "generic2.avro");
+    final Schema writerSchema = getGenericSchema();
+    final DataFileWriter<GenericRecord> fileWriter =
+        new DataFileWriter<GenericRecord>(new GenericDatumWriter<GenericRecord>(writerSchema))
+            .create(writerSchema, file);
+    try {
+      // Write a record.
+      GenericData.Record record = new GenericData.Record(writerSchema);
+      record.put("key", 3);
+      record.put("blah", "blergh");
+      record.put("value", "three");
+      fileWriter.append(record);
 
-    // Write a record.
-    GenericData.Record record = new GenericData.Record(writerSchema);
-    record.put("key", 3);
-    record.put("blah", "blergh");
-    record.put("value", "three");
-    fileWriter.append(record);
-
-    // Write another record that shadows a record in the first file.
-    record = new GenericData.Record(writerSchema);
-    record.put("key", 2);
-    record.put("blah", "blah");
-    record.put("value", "TWOTWO");
-    fileWriter.append(record);
-
-    // Close it and return the path.
-    fileWriter.close();
+      // Write another record that shadows a record in the first file.
+      record = new GenericData.Record(writerSchema);
+      record.put("key", 2);
+      record.put("blah", "blah");
+      record.put("value", "TWOTWO");
+      fileWriter.append(record);
+    } finally {
+      // Close it and return the path.
+      fileWriter.close();
+    }
     return new Path(file.getPath());
   }
 
   @Test
   public void testGenericAvroRecordKeyValueStore() throws IOException, InterruptedException {
     // Only read the key and value fields (skip the 'blah' field).
-    Schema readerSchema = Schema.createRecord("record", null, null, false);
-    readerSchema.setFields(
-        Arrays.asList(
-            new Schema.Field("key", Schema.create(Schema.Type.INT), null, null),
-            new Schema.Field("value", Schema.create(Schema.Type.STRING), null, null)));
+    final Schema readerSchema = Schema.createRecord("record", null, null, false);
+    readerSchema.setFields(Lists.newArrayList(
+        new Schema.Field("key", Schema.create(Schema.Type.INT), null, null),
+        new Schema.Field("value", Schema.create(Schema.Type.STRING), null, null)));
 
     // Open the store.
-    Path avroFilePath = writeGenericRecordAvroFile();
-    AvroRecordKeyValueStore<Integer, GenericRecord> store =
-        AvroRecordKeyValueStore.builder()
-        .withConfiguration(new Configuration())
+    final Path avroFilePath = writeGenericRecordAvroFile();
+    final AvroRecordKeyValueStore<Integer, GenericRecord> store = AvroRecordKeyValueStore
+        .builder()
+        .withConfiguration(getConf())
         .withInputPath(avroFilePath)
         .withReaderSchema(readerSchema)
-        .withKeyFieldName("key").build();
-    KeyValueStoreReader<Integer, GenericRecord> reader = store.open();
+        .withKeyFieldName("key")
+        .build();
+    final KeyValueStoreReader<Integer, GenericRecord> reader = store.open();
+    try {
+      assertTrue(reader.containsKey(1));
+      assertEquals("one", reader.get(1).get("value").toString());
 
-    assertTrue(reader.containsKey(1));
-    assertEquals("one", reader.get(1).get("value").toString());
-
-    assertTrue(reader.containsKey(2));
-    assertEquals("The first record in the file with key 2 should be mapped as the value.",
-        "two", reader.get(2).get("value").toString());
+      assertTrue(reader.containsKey(2));
+      assertEquals("The first record in the file with key 2 should be mapped as the value.",
+          "two", reader.get(2).get("value").toString());
+    } finally {
+      reader.close();
+    }
   }
 
   @Test
   public void testAvroRecordKVStoreWithoutSchema() throws IOException, InterruptedException {
     // Open the store.
-    Path avroFilePath = writeGenericRecordAvroFile();
-    AvroRecordKeyValueStore<Integer, GenericRecord> store =
-        AvroRecordKeyValueStore.builder()
-        .withConfiguration(new Configuration())
+    final Path avroFilePath = writeGenericRecordAvroFile();
+    final AvroRecordKeyValueStore<Integer, GenericRecord> store = AvroRecordKeyValueStore
+        .builder()
+        .withConfiguration(getConf())
         .withInputPath(avroFilePath)
-        .withKeyFieldName("key").build();
-    KeyValueStoreReader<Integer, GenericRecord> reader = store.open();
+        .withKeyFieldName("key")
+        .build();
+    final KeyValueStoreReader<Integer, GenericRecord> reader = store.open();
+    try {
+      assertTrue(reader.containsKey(1));
+      assertEquals("one", reader.get(1).get("value").toString());
 
-    assertTrue(reader.containsKey(1));
-    assertEquals("one", reader.get(1).get("value").toString());
-
-    assertTrue(reader.containsKey(2));
-    assertEquals("The first record in the file with key 2 should be mapped as the value.",
-        "two", reader.get(2).get("value").toString());
+      assertTrue(reader.containsKey(2));
+      assertEquals("The first record in the file with key 2 should be mapped as the value.",
+          "two", reader.get(2).get("value").toString());
+    } finally {
+      reader.close();
+    }
   }
 
   @Test
   public void testMultipleInputFiles() throws IOException, InterruptedException {
-    Path avroFilePath = writeGenericRecordAvroFile();
-    Path secondPath = writeSecondAvroFile();
-    AvroRecordKeyValueStore<Integer, GenericRecord> store =
-        AvroRecordKeyValueStore.builder()
-        .withConfiguration(new Configuration())
+    final Path avroFilePath = writeGenericRecordAvroFile();
+    final Path secondPath = writeSecondAvroFile();
+    final AvroRecordKeyValueStore<Integer, GenericRecord> store = AvroRecordKeyValueStore
+        .builder()
+        .withConfiguration(getConf())
         .withInputPath(avroFilePath)
         .withInputPath(secondPath)
-        .withKeyFieldName("key").build();
-    KeyValueStoreReader<Integer, GenericRecord> reader = store.open();
+        .withKeyFieldName("key")
+        .build();
+    final KeyValueStoreReader<Integer, GenericRecord> reader = store.open();
+    try {
+      assertTrue(reader.containsKey(1));
+      assertEquals("one", reader.get(1).get("value").toString());
 
-    assertTrue(reader.containsKey(1));
-    assertEquals("one", reader.get(1).get("value").toString());
+      assertTrue(reader.containsKey(3));
+      assertEquals("three", reader.get(3).get("value").toString());
 
-    assertTrue(reader.containsKey(3));
-    assertEquals("three", reader.get(3).get("value").toString());
-
-    assertTrue(reader.containsKey(2));
-    assertEquals("The first record in the first file with key 2 should be mapped as the value.",
-        "two", reader.get(2).get("value").toString());
+      assertTrue(reader.containsKey(2));
+      assertEquals("The first record in the first file with key 2 should be mapped as the value.",
+          "two", reader.get(2).get("value").toString());
+    } finally {
+      reader.close();
+    }
   }
 
   @Test
@@ -228,28 +238,30 @@ public class TestAvroRecordKeyValueStore {
     // we don't need to name both input files.
     writeGenericRecordAvroFile();
     writeSecondAvroFile();
-    Path temporaryPath = LocalFileSystem.get(new Configuration()).makeQualified(
-        new Path(mTempDir.getRoot().getAbsolutePath()));
-    AvroRecordKeyValueStore<Integer, GenericRecord> store =
-        AvroRecordKeyValueStore.builder()
-        .withConfiguration(new Configuration())
+    final Path temporaryPath = new Path("file:" + getLocalTempDir());
+    final AvroRecordKeyValueStore<Integer, GenericRecord> store = AvroRecordKeyValueStore
+        .builder()
+        .withConfiguration(getConf())
         .withInputPath(temporaryPath)
-        .withKeyFieldName("key").build();
-    KeyValueStoreReader<Integer, GenericRecord> reader = store.open();
+        .withKeyFieldName("key")
+        .build();
+    final KeyValueStoreReader<Integer, GenericRecord> reader = store.open();
+    try {
+      // Check that keys from both files map to their respective values.
+      // Since we're not specifying ordering on the files within the directory
+      // when we add them to the store, we can't make an assertion about the
+      // correct value of reader.get(2); this could be "two" or "TWOTWO" depending
+      // on the filesystem.
+      assertTrue(reader.containsKey(1));
+      assertEquals("one", reader.get(1).get("value").toString());
 
-    // Check that keys from both files map to their respective values.
-    // Since we're not specifying ordering on the files within the directory
-    // when we add them to the store, we can't make an assertion about the
-    // correct value of reader.get(2); this could be "two" or "TWOTWO" depending
-    // on the filesystem.
+      assertTrue(reader.containsKey(3));
+      assertEquals("three", reader.get(3).get("value").toString());
 
-    assertTrue(reader.containsKey(1));
-    assertEquals("one", reader.get(1).get("value").toString());
-
-    assertTrue(reader.containsKey(3));
-    assertEquals("three", reader.get(3).get("value").toString());
-
-    assertTrue(reader.containsKey(2));
+      assertTrue(reader.containsKey(2));
+    } finally {
+      reader.close();
+    }
   }
 
   @Test
@@ -258,29 +270,31 @@ public class TestAvroRecordKeyValueStore {
     // to all the input file names.
     writeGenericRecordAvroFile();
     writeSecondAvroFile();
-    Path temporaryPath = LocalFileSystem.get(new Configuration()).makeQualified(
-        new Path(mTempDir.getRoot().getAbsolutePath()));
-    temporaryPath = new Path(temporaryPath.toString() + "/*.avro");
-    LOG.info("Using input glob: " + temporaryPath);
-    AvroRecordKeyValueStore<Integer, GenericRecord> store =
-        AvroRecordKeyValueStore.builder()
-        .withConfiguration(new Configuration())
-        .withInputPath(temporaryPath)
-        .withKeyFieldName("key").build();
-    KeyValueStoreReader<Integer, GenericRecord> reader = store.open();
+    final Path glob = new Path("file:" + getLocalTempDir(), "*.avro");
+    LOG.info("Using input glob: {}", glob);
+    final AvroRecordKeyValueStore<Integer, GenericRecord> store = AvroRecordKeyValueStore
+        .builder()
+        .withConfiguration(getConf())
+        .withInputPath(glob)
+        .withKeyFieldName("key")
+        .build();
+    final KeyValueStoreReader<Integer, GenericRecord> reader = store.open();
+    try {
+      // Check that keys from both files map to their respective values.
+      // Since we're not specifying ordering on the files within the glob
+      // when we add them to the store, we can't make an assertion about the
+      // correct value of reader.get(2); this could be "two" or "TWOTWO" depending
+      // on the filesystem.
 
-    // Check that keys from both files map to their respective values.
-    // Since we're not specifying ordering on the files within the glob
-    // when we add them to the store, we can't make an assertion about the
-    // correct value of reader.get(2); this could be "two" or "TWOTWO" depending
-    // on the filesystem.
+      assertTrue(reader.containsKey(1));
+      assertEquals("one", reader.get(1).get("value").toString());
 
-    assertTrue(reader.containsKey(1));
-    assertEquals("one", reader.get(1).get("value").toString());
+      assertTrue(reader.containsKey(3));
+      assertEquals("three", reader.get(3).get("value").toString());
 
-    assertTrue(reader.containsKey(3));
-    assertEquals("three", reader.get(3).get("value").toString());
-
-    assertTrue(reader.containsKey(2));
+      assertTrue(reader.containsKey(2));
+    } finally {
+      reader.close();
+    }
   }
 }

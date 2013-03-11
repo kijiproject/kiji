@@ -24,26 +24,19 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
 import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
+import org.kiji.schema.KijiClientTest;
 
 /** Test that the TextFileKeyValueStore implementation works. */
-public class TestTextFileKeyValueStore {
-
-  // Disable checkstyle for this variable.  It must be public to work with JUnit @Rule.
-  // CSOFF: VisibilityModifierCheck
-  @Rule
-  public TemporaryFolder mTempDir = new TemporaryFolder();
-  // CSON: VisibilityModifierCheck
+public class TestTextFileKeyValueStore extends KijiClientTest {
 
   /**
    * Write a set of lines to a text file.
@@ -52,11 +45,9 @@ public class TestTextFileKeyValueStore {
    * @throws IOException if there's an error using the file system.
    */
   private Path writeBasicTextFile() throws IOException {
-    Configuration conf = new Configuration();
-    FileSystem fs = FileSystem.getLocal(conf);
-    Path p = new Path(mTempDir.getRoot() + "/foo.txt");
-
-    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(fs.create(p)));
+    final File file = new File(getLocalTempDir(), "foo.txt");
+    final BufferedWriter writer =
+        new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file)));
     try {
       writer.append("a\t1\n");
       writer.append("b\t2\n");
@@ -68,8 +59,7 @@ public class TestTextFileKeyValueStore {
     } finally {
       writer.close();
     }
-
-    return p;
+    return new Path("file:" + file);
   }
 
   /**
@@ -79,11 +69,9 @@ public class TestTextFileKeyValueStore {
    * @throws IOException if there's an error using the file system.
    */
   private Path writeFileWithoutNewline() throws IOException {
-    Configuration conf = new Configuration();
-    FileSystem fs = FileSystem.getLocal(conf);
-    Path p = new Path(mTempDir.getRoot() + "/bar.txt");
-
-    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(fs.create(p)));
+    final File file = new File(getLocalTempDir(), "bar.txt");
+    final BufferedWriter writer =
+        new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file)));
     try {
       writer.append("a\t1\n");
       writer.append("\n"); // Add an empty line.
@@ -91,57 +79,58 @@ public class TestTextFileKeyValueStore {
     } finally {
       writer.close();
     }
-
-    return p;
+    return new Path("file:" + file);
   }
 
   @Test
   public void testBasicTextFile() throws IOException, InterruptedException {
-    Path p = writeBasicTextFile();
-
-    TextFileKeyValueStore store = TextFileKeyValueStore.builder().withInputPath(p).build();
-
+    final Path path = writeBasicTextFile();
+    final TextFileKeyValueStore store = TextFileKeyValueStore.builder().withInputPath(path).build();
     KeyValueStoreReader<String, String> reader = store.open();
+    try {
+      assertTrue(reader.containsKey("a"));
+      assertEquals("1", reader.get("a"));
 
-    assertTrue(reader.containsKey("a"));
-    assertEquals("1", reader.get("a"));
+      assertTrue(reader.containsKey("b"));
+      assertEquals("2", reader.get("b"));
 
-    assertTrue(reader.containsKey("b"));
-    assertEquals("2", reader.get("b"));
+      assertTrue(reader.containsKey("c"));
+      assertEquals("3", reader.get("c"));
 
-    assertTrue(reader.containsKey("c"));
-    assertEquals("3", reader.get("c"));
+      // 'd' had no following delimiter, so it maps to null.
+      assertTrue(reader.containsKey("d"));
+      assertNull(reader.get("d"));
 
-    // 'd' had no following delimiter, so it maps to null.
-    assertTrue(reader.containsKey("d"));
-    assertNull(reader.get("d"));
+      // One row started with a delim, so it is empty str -> 4.
+      assertTrue(reader.containsKey(""));
+      assertEquals("4", reader.get(""));
 
-    // One row started with a delim, so it is empty str -> 4.
-    assertTrue(reader.containsKey(""));
-    assertEquals("4", reader.get(""));
-
-    // 'e' had a following delimiter then a newline, so it maps to empty string.
-    assertTrue(reader.containsKey("e"));
-    assertEquals("", reader.get("e"));
-
-    reader.close();
+      // 'e' had a following delimiter then a newline, so it maps to empty string.
+      assertTrue(reader.containsKey("e"));
+      assertEquals("", reader.get("e"));
+    } finally {
+      reader.close();
+    }
   }
 
   @Test
   public void testFileNoEndingNewline() throws IOException, InterruptedException {
     // Tests that a file that does not end with a newline still works just fine.
-    Path p = writeFileWithoutNewline();
-    TextFileKeyValueStore store = TextFileKeyValueStore.builder().withInputPath(p).build();
-    KeyValueStoreReader<String, String> reader = store.open();
+    final Path path = writeFileWithoutNewline();
+    final TextFileKeyValueStore store = TextFileKeyValueStore.builder().withInputPath(path).build();
+    final KeyValueStoreReader<String, String> reader = store.open();
+    try {
+      assertTrue(reader.containsKey("a"));
+      assertEquals("1", reader.get("a"));
 
-    assertTrue(reader.containsKey("a"));
-    assertEquals("1", reader.get("a"));
+      // The blank line maps "" -> null.
+      assertTrue(reader.containsKey(""));
+      assertNull(reader.get(""));
 
-    // The blank line maps "" -> null.
-    assertTrue(reader.containsKey(""));
-    assertNull(reader.get(""));
-
-    assertTrue(reader.containsKey("b"));
-    assertEquals("2", reader.get("b"));
+      assertTrue(reader.containsKey("b"));
+      assertEquals("2", reader.get("b"));
+    } finally {
+      reader.close();
+    }
   }
 }

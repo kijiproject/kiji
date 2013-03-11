@@ -22,6 +22,7 @@ package org.kiji.mapreduce;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -31,20 +32,13 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 
-public class TestDistributedCacheJars {
+import org.kiji.schema.KijiClientTest;
+
+public class TestDistributedCacheJars extends KijiClientTest {
   /** Configuration variable name to store jars names in. */
   private static final String CONF_TMPJARS = "tmpjars";
-
-  // Disable checkstyle for this variable.  It must be public to work with JUnit @Rule.
-  // CSOFF: VisibilityModifierCheck
-  /** A temporary directory to store jars in. */
-  @Rule
-  public TemporaryFolder mTempDir = new TemporaryFolder();
-  // CSON: VisibilityModifierCheck
 
   /**
    * Pre: Requires mTempDir to be set and filled (only) with .jar files.
@@ -56,6 +50,8 @@ public class TestDistributedCacheJars {
    */
   @Test
   public void testJarsDeDupe() throws IOException {
+    final File tempDir = getLocalTempDir();
+
     // Jar list should de-dupe to {"myjar_a, "myjar_b", "myjar_0", "myjar_1"}
     Set<String> dedupedJarNames = new HashSet<String>(4);
     dedupedJarNames.add("myjar_a.jar");
@@ -78,10 +74,10 @@ public class TestDistributedCacheJars {
     job.getConfiguration().set(CONF_TMPJARS, StringUtils.join(someJars, ","));
 
     // Now add some duplicate jars from mTempDir.
-    assertEquals(0, mTempDir.getRoot().list().length);
-    createTestJars("myjar_0.jar", "myjar_1.jar");
-    assertEquals(2, mTempDir.getRoot().list().length);
-    DistributedCacheJars.addJarsToDistributedCache(job, mTempDir.getRoot());
+    assertEquals(0, tempDir.list().length);
+    createTestJars(tempDir, "myjar_0.jar", "myjar_1.jar");
+    assertEquals(2, tempDir.list().length);
+    DistributedCacheJars.addJarsToDistributedCache(job, tempDir);
 
     // Confirm each jar appears in de-dupe list exactly once.
     String listedJars = job.getConfiguration().get(CONF_TMPJARS);
@@ -101,9 +97,9 @@ public class TestDistributedCacheJars {
    * @param jars The names of files to create.
    * @throws IOException if the files cannot be created.
    */
-  private void createTestJars(String... jars) throws IOException {
+  private void createTestJars(File dir, String... jars) throws IOException {
     for (String jar : jars) {
-      mTempDir.newFile(jar);
+      new File(dir, jar).createNewFile();
     }
   }
 }
