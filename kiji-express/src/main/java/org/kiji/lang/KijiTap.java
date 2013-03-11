@@ -36,7 +36,6 @@ import com.google.common.collect.Lists;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.OutputCollector;
@@ -229,21 +228,24 @@ public final class KijiTap
    * @throws IOException If there is an error.
    * @return A list of paths to dependency jars.
    */
-  private static List<String> findKijiJars(Configuration fsConf) throws IOException {
-    final List<String> jars = Lists.newArrayList();
+  private static List<Path> findKijiJars(Configuration fsConf) throws IOException {
+    final List<Path> jars = Lists.newArrayList();
 
     // Find the kiji jars.
-    File schemaJar;
-    File mapreduceJar;
-    File chopsticksJar;
+    Path schemaJar;
+    Path mapreduceJar;
+    Path chopsticksJar;
     try {
-      schemaJar = new File(Jars.getJarPathForClass(Kiji.class));
+      final File schemaJarFile = new File(Jars.getJarPathForClass(Kiji.class));
+      schemaJar = new Path(schemaJarFile.getParentFile().getCanonicalPath());
       LOG.debug("Found kiji-schema jar: {}", schemaJar);
 
-      mapreduceJar = new File(Jars.getJarPathForClass(DistributedCacheJars.class));
+      final File mapreduceJarFile = new File(Jars.getJarPathForClass(DistributedCacheJars.class));
+      mapreduceJar = new Path(mapreduceJarFile.getParentFile().getCanonicalPath());
       LOG.debug("Found kiji-mapreduce jar: {}", mapreduceJar);
 
-      chopsticksJar = new File(Jars.getJarPathForClass(KijiTap.class));
+      final File chopsticksJarFile = new File(Jars.getJarPathForClass(KijiTap.class));
+      chopsticksJar = new Path(chopsticksJarFile.getParentFile().getCanonicalPath());
       LOG.debug("Found kiji-chopsticks jar: {}", chopsticksJar);
     } catch (ClassNotFoundException cnfe) {
       LOG.warn("The kiji jars could not be found; no kiji dependency jars will be "
@@ -252,20 +254,18 @@ public final class KijiTap
     }
 
     // Add kiji-schema dependencies.
-    jars.addAll(DistributedCacheJars.getJarsFromDirectory(fsConf, schemaJar.getParentFile()));
+    jars.addAll(DistributedCacheJars.listJarFilesFromDirectory(fsConf, schemaJar));
 
     // Add kiji-mapreduce dependencies.
-    jars.addAll(DistributedCacheJars.getJarsFromDirectory(fsConf, mapreduceJar.getParentFile()));
+    jars.addAll(DistributedCacheJars.listJarFilesFromDirectory(fsConf, mapreduceJar));
 
     // Add kiji-chopsticks dependencies.
     Preconditions.checkState(
         chopsticksJar.getName().endsWith(".jar"),
-        "Failed to find kiji-chopsticks jar. Instead found: {}", chopsticksJar.getName());
-    final FileSystem fs = FileSystem.getLocal(fsConf);
-    jars.add(new Path(chopsticksJar.getCanonicalPath()).makeQualified(fs).toString());
-    fs.close();
+        "Failed to find kiji-chopsticks jar. Instead found: {}", chopsticksJar.toString());
+    jars.add(chopsticksJar);
 
     // Remove duplicate jars and return.
-    return DistributedCacheJars.deDuplicateJarNames(jars);
+    return DistributedCacheJars.deDuplicateFilenames(jars);
   }
 }
