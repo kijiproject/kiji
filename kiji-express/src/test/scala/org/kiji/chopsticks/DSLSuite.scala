@@ -41,7 +41,7 @@ class DSLSuite extends FunSuite {
     val input: KijiSource = KijiInput(tableURI)("info:word" -> 'word)
     val expectedScheme: KijiScheme = new KijiScheme(Map("word" -> Column("info:word")))
 
-    assert(expectedScheme == input.kijiScheme)
+    assert(expectedScheme == input.hdfsScheme)
   }
 
   test("DSL should let you specify timerange for KijiInput.") {
@@ -55,7 +55,7 @@ class DSLSuite extends FunSuite {
     val expectedScheme: KijiScheme = new KijiScheme(
       Map("word" -> Column("info:word"), "title" -> Column("info:title")))
 
-    assert(expectedScheme == input.kijiScheme)
+    assert(expectedScheme == input.hdfsScheme)
   }
 
   test("DSL should let you specify inputOptions for a column.") {
@@ -78,6 +78,6 @@ class DSLSuite extends FunSuite {
     val output: KijiSource = KijiOutput(tableURI)('words -> "info:words")
     val expectedScheme: KijiScheme = new KijiScheme(Map("words" -> Column("info:words")))
 
-    assert(expectedScheme == output.kijiScheme)
+    assert(expectedScheme == output.hdfsScheme)
   }
 }

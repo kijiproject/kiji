@@ -27,6 +27,7 @@
     <cascading.version>2.0.7</cascading.version>
     <scalding.version>0.8.3</scalding.version>
     <kiji.version>1.0.0-rc5-SNAPSHOT</kiji.version>
+    <scalatest.version>2.0.M5b</scalatest.version>
   </properties>
 
   <dependencies>
@@ -109,7 +110,20 @@
     <dependency>
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest_${scala.version}</artifactId>
-      <version>2.0.M5b</version>
+      <version>${scalatest.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.testing</groupId>
+      <artifactId>fake-hbase</artifactId>
+      <version>0.0.4-SNAPSHOT</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.schema</groupId>
+      <artifactId>kiji-schema</artifactId>
+      <version>${kiji.version}</version>
+      <type>test-jar</type>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -170,7 +184,7 @@
         </executions>
       </plugin>
 
-      <!-- scalatest -->
+      <!-- ScalaTest -->
       <plugin>
         <groupId>org.scalatest</groupId>
         <artifactId>scalatest-maven-plugin</artifactId>
@@ -231,9 +245,9 @@
       <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
     </repository>
 
-    <!-- scalatest -->
+    <!-- ScalaTest -->
     <repository>
-      <id>sonatype</id>
+      <id>Sonatype OSS Repository</id>
       <url>https://oss.sonatype.org/content/groups/public</url>
     </repository>
 
