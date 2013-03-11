@@ -1,16 +1,16 @@
 #!/bin/bash --posix
 #
 #   (c) Copyright 2012 WibiData, Inc.
-#  
+#
 #   See the NOTICE file distributed with this work for additional
 #   information regarding copyright ownership.
-#  
+#
 #   Licensed under the Apache License, Version 2.0 (the "License");
 #   you may not use this file except in compliance with the License.
 #   You may obtain a copy of the License at
-#  
+#
 #       http://www.apache.org/licenses/LICENSE-2.0
-#  
+#
 #   Unless required by applicable law or agreed to in writing, software
 #   distributed under the License is distributed on an "AS IS" BASIS,
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -116,8 +116,6 @@ fi
 declare -a java_args
 declare -a scala_args
 
-# Don't use the bootstrap classloader.
-CPSELECT="-classpath "
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -173,7 +171,7 @@ KIJI_CLASSPATH=`$KIJICMD classpath`
 "${JAVACMD:=java}" \
   $JAVA_OPTS \
   "${java_args[@]}" \
-  ${CPSELECT}${TOOL_CLASSPATH}":"${KIJI_CLASSPATH}":"${KIJI_SCHEMA_SHELL_CLASSPATH} \
+  -classpath "${TOOL_CLASSPATH}:${KIJI_CLASSPATH}:${KIJI_SCHEMA_SHELL_CLASSPATH}" \
   -Dscala.usejavacp=true \
   -Denv.emacs="$EMACS" \
   $CYGWIN_JLINE_TERMINAL \
