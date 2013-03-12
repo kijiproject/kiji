@@ -183,7 +183,7 @@ public abstract class KijiTableInputJobBuilder<T extends KijiTableInputJobBuilde
    */
   protected void validateInputTable(KijiTable table) throws IOException {
     try {
-      new KijiDataRequestValidator(getDataRequest()).validate(table.getLayout());
+      KijiDataRequestValidator.validatorForLayout(table.getLayout()).validate(getDataRequest());
     } catch (KijiDataRequestException kdre) {
       throw new JobConfigurationException("Invalid data request: " + kdre.getMessage());
     }
