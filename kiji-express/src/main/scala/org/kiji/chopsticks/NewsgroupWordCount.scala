@@ -26,8 +26,6 @@ import org.apache.avro.util.Utf8
 
 import org.kiji.chopsticks.DSL._
 import org.kiji.schema.EntityId
-import org.kiji.schema.KijiDataRequest
-import org.kiji.schema.KijiURI
 
 /**
  * Counts the words from the newsgroup table.

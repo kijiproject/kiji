@@ -23,29 +23,71 @@ import scala.io.Source
 import java.io.File
 
 import org.kiji.schema.Kiji
+import org.kiji.schema.KijiTable
+import org.kiji.schema.KijiTableWriter
 import org.kiji.schema.KijiURI
 import org.kiji.schema.util.ResourceUtils
 
+/**
+ * <p>Reads the 20-newsgroup data set and parses each post into individual words. Each word is then
+ * written to the column "info:word" in the row with entity id equivalent to the word, in the Kiji
+ * table "words".</p>
+ *
+ * <p>This loader can be run from a command line shell as follows:
+ * <code>
+ *   kiji jar <path/to/this/jar> org.kiji.lang.NewsgroupLoader \
+ *       <kiji://uri.to.kiji.instance> <path/to/newsgroups/root/>
+ * </code>
+ * </p>
+ *
+ * <p>The Kiji table "words" must be created before this loader is run. This can be done with the
+ * following KijiSchema DDL Shell command:
+ * <code>
+ *   words
+ *     CREATE TABLE words WITH DESCRIPTION 'Words in the 20Newsgroups dataset.'
+ *     ROW KEY FORMAT HASHED
+ *     WITH LOCALITY GROUP default WITH DESCRIPTION 'Main storage.' (
+ *       MAXVERSIONS = 1,
+ *       TTL = FOREVER,
+ *       COMPRESSED WITH GZIP,
+ *       FAMILY info WITH DESCRIPTION 'Basic information' (
+ *         word "string" WITH DESCRIPTION 'The word.'
+ *       )
+ *     )
+ * </code>
+ * </p>
+ */
 object NewsgroupLoader {
+
   /**
-   * Imports the newsgroup example into a kiji postings table.
+   * Reads a newsgroup post from a file and returns the sequence of words contained in the post.
    *
-   * Usage:
-   *   kiji jar <path/to/this/jar> org.kiji.lang.NewsgroupLoader \
-   *       <kiji://uri.to.kiji.instance> <path/to/newsgroups/root/>
+   * @param posting file from which the newsgroup post will be read.
+   * @return the sequence of words that appear in the post read, or the empty sequence if there is
+   *     a problem reading the file.
+   */
+  def getWords(posting: File): Seq[String] = {
+    println("Reading file '%s'".format(posting.getPath()))
+    var postSource: Option[Source] = None;
+    try {
+      postSource = Some(Source.fromFile(posting.getPath()))
+      postSource.get.mkString.split("""\s+""")
+    } catch {
+      case e: Exception => {
+        Console.err.println("Ignored file %s due to Exception: %s"
+            .format(posting.getPath(), e.getMessage))
+        e.printStackTrace(Console.err)
+        return Seq()
+      }
+    } finally {
+      postSource.foreach { _.close() }
+    }
+  }
+
+  /**
+   * Runs the loader.
    *
-   * Tables:
-   *   words
-   *     CREATE TABLE words WITH DESCRIPTION 'Words in the 20Newsgroups dataset.'
-   *     ROW KEY FORMAT HASHED
-   *     WITH LOCALITY GROUP default WITH DESCRIPTION 'Main storage.' (
-   *       MAXVERSIONS = 1,
-   *       TTL = FOREVER,
-   *       COMPRESSED WITH GZIP,
-   *       FAMILY info WITH DESCRIPTION 'Basic information' (
-   *         word "string" WITH DESCRIPTION 'The word.'
-   *       )
-   *     )
+   * @param args passed in from the command line.
    */
   def main(args: Array[String]) {
     // Read in command line arguments.
@@ -56,37 +98,29 @@ object NewsgroupLoader {
       sys.error("Newsgroup root must be a folder (was: %s)".format(root.getPath()))
     }
 
-    // Open connections to kiji.
-    val kiji = Kiji.Factory.open(uri)
-    val table = kiji.openTable("words")
-    val writer = table.openTableWriter()
+    var kiji: Option[Kiji] = None
+    var table: Option[KijiTable] = None
+    var writer: Option[KijiTableWriter] = None
 
-    // Parse the postings.
-    type Post = String
-    type Newsgroup = Seq[Post]
-    def getWords(posting: File): Seq[String] = {
-      println("Reading file '%s'".format(posting.getPath()))
-      try {
-        return Source
-            .fromFile(posting.getPath())
-            .mkString
-            .split("""\s+""")
-      } catch {
-        case _ => {
-          println("Ignored file '%s'".format(posting.getPath()))
-          return Seq()
-        }
-      }
+    try {
+      // Open connections to kiji.
+      kiji = Some(Kiji.Factory.open(uri))
+      table = Some(kiji.get.openTable("words"))
+      writer = Some(table.get.openTableWriter())
+
+      // Parse the postings.
+      type Post = String
+      type Newsgroup = Seq[Post]
+      for {
+        newsgroup <- root.listFiles()
+        posting <- newsgroup.listFiles()
+        word <- getWords(posting)
+      } writer.get.put(table.get.getEntityId(word), "info", "word", word)
+    } finally {
+      // Cleanup connections.
+      kiji.foreach { ResourceUtils.releaseOrLog(_) }
+      table.foreach { ResourceUtils.closeOrLog(_) }
+      writer.foreach { ResourceUtils.closeOrLog(_) }
     }
-    for {
-      newsgroup <- root.listFiles()
-      posting <- newsgroup.listFiles()
-      word <- getWords(posting)
-    } writer.put(table.getEntityId(word), "info", "word", word)
-
-    // Cleanup connections.
-    ResourceUtils.releaseOrLog(kiji)
-    ResourceUtils.closeOrLog(table)
-    ResourceUtils.closeOrLog(writer)
   }
 }

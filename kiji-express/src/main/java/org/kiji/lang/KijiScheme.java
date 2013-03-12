@@ -68,8 +68,6 @@ public final class KijiScheme
     extends Scheme<JobConf, RecordReader, OutputCollector, KijiValue, KijiTableWriter> {
   /** Field name containing a row's {@link EntityId}. */
   public static final String ENTITYID_FIELD = "entityid";
-  /** Seperator used when using symbols to address columns. */
-  public static final String COLUMN_SEPERATOR = "_";
 
   /** A data request used when this scheme reads from a Kiji table. */
   private final KijiDataRequest mRequest;

@@ -23,7 +23,6 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable.Buffer
 import java.io.InputStream
 import java.io.OutputStream
-import java.util.HashMap
 import java.util.NavigableMap
 import java.util.Properties
 
@@ -61,14 +60,14 @@ import org.kiji.schema.EntityId
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiRowData
-import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiTableWriter
 import org.kiji.schema.KijiURI
 
 /**
  * Facilitates writing to and reading from a Kiji table.
  *
- * @param tableAddress Address of the target KijiTable. This should be provided as a [[KijiURI]].
+ * @param tableAddress Address of the target KijiTable. This should be provided as a
+ *     [[org.kiji.schema.KijiURI]].
  * @param columns Mapping from field name to Kiji column name.
  */
 @ApiAudience.Framework
