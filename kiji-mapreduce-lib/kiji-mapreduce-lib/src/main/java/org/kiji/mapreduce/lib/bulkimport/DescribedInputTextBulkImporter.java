@@ -51,7 +51,6 @@ import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.avro.CellSchema;
 import org.kiji.schema.layout.KijiTableLayout;
-import org.kiji.schema.util.ResourceUtils;
 
 /**
  * DescribedInputTextBulkImporter is an abstract class that provides methods to bulk importers for
