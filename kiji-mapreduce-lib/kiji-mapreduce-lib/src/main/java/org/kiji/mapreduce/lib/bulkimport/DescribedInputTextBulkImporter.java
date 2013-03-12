@@ -100,8 +100,8 @@ public abstract class DescribedInputTextBulkImporter extends KijiBulkImporter<Lo
 
   public static final String CONF_LOG_RATE = "kiji.import.text.log.rate";
 
-  private static final ImmutableMap<String, Class> KIJI_CELL_TYPE_TO_CLASS_MAP =
-      new ImmutableMap.Builder()
+  private static final ImmutableMap<String, Class<?>> KIJI_CELL_TYPE_TO_CLASS_MAP =
+      new ImmutableMap.Builder<String, Class<?>>()
           .put("\"boolean\"", Boolean.class)
           .put("\"int\"", Integer.class)
           .put("\"long\"", Long.class)
@@ -135,9 +135,11 @@ public abstract class DescribedInputTextBulkImporter extends KijiBulkImporter<Lo
   }
 
   /**
-   * Performs validation that this table import descriptor can be applied to the output table.  This
-   * method is final to prevent it from being overridden without being called.  Subclasses should
-   * override the setupImporter() method instead of overriding this method.
+   * Performs validation that this table import descriptor can be applied to the output table.
+   *
+   * This method is final to prevent it from being overridden without being called.
+   * Subclasses should override the setupImporter() method instead of overriding this method.
+   *
    * {@inheritDoc}
    */
   @Override
@@ -154,10 +156,10 @@ public abstract class DescribedInputTextBulkImporter extends KijiBulkImporter<Lo
       try {
         mOutputTableLayout = table.getLayout();
       } finally {
-        ResourceUtils.closeOrLog(table);
+        table.release();
       }
     } finally {
-      ResourceUtils.releaseOrLog(kiji);
+      kiji.release();
     }
 
     Preconditions.checkNotNull(mOutputTableLayout);
@@ -255,7 +257,7 @@ public abstract class DescribedInputTextBulkImporter extends KijiBulkImporter<Lo
    * @return object containing the parsed representation of the value.
    */
   public Object convert(KijiColumnName kijiColumnName, String value) {
-    Class clazz = mColumnNameClassMap.get(kijiColumnName);
+    Class<?> clazz = mColumnNameClassMap.get(kijiColumnName);
     if (clazz == Boolean.class) {
       return Boolean.valueOf(value);
     } else if (clazz == Integer.class) {
