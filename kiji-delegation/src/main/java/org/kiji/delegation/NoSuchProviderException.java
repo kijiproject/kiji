@@ -29,6 +29,15 @@ import org.kiji.annotations.ApiAudience;
 public final class NoSuchProviderException extends RuntimeException {
 
   /**
+   * Create a NoSuchProviderException with the specified message.
+   *
+   * @param message the message to display in the exception.
+   */
+  NoSuchProviderException(String message) {
+    super(message);
+  }
+
+  /**
    * Create a NoSuchProviderException suggesting that we cannot
    * provide the required class.
    *

@@ -7,4 +7,4 @@ service provider implementations at runtime. This delegates functionality
 required by "upstream" modules to downstream runtime implementations.
 
 For more information, see the Javadoc for
-[Lookup](https://github.com/kijiproject/kiji-delegation/blob/master/src/main/java/org/kiji/delegation/Lookup.java)
+[the org.kiji.delegation package](https://github.com/kijiproject/kiji-delegation/blob/master/src/main/java/org/kiji/delegation/package-info.java)

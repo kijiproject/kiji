@@ -23,9 +23,18 @@
  * service provider implementations at runtime. This delegates functionality
  * required by "upstream" modules to downstream runtime implementations.
  *
- * <p>The main client class is {@link org.kiji.delegation.Lookup},
+ * <p>The main client class is {@link org.kiji.delegation.Lookup Lookup},
  * which provides an API for lookups, as well as factory methods for
  * lookup service implementations.</p>
+ *
+ * <p>Clients cannot instantiate a <tt>Lookup</tt> object directly. Instead, use the
+ * {@link org.kiji.delegation.Lookups Lookups} factory class.</p>
+ *
+ * <p>Several more specialized forms of <tt>Lookup</tt> can be used in conjunction
+ * with associated "provider" APIs. For instance, {@link org.kiji.delegation.PriorityLookup
+ * PriorityLookup} allows the client to choose an implementation based on its relative
+ * priority to other implementations; these must implement {@link
+ * org.kiji.delegation.PriorityProvider PriorityProvider}.</p>
  */
 package org.kiji.delegation;
 

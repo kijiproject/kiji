@@ -59,6 +59,19 @@ public final class Lookups {
   }
 
   /**
+   * Creates a BasicLookup instance that can resolve providers for the specified class
+   * or interface. For use by other Lookups in this package.
+   *
+   * @param <T> the type that this Lookup instance should provide.
+   * @param clazz the abstract class or interface to lookup a provider for.
+   * @param classLoader the classloader to use to resolve service lookups.
+   * @return a new Lookup instance that uses the specified classloader.
+   */
+  static <T> BasicLookup<T> getBasic(Class<T> clazz, ClassLoader classLoader) {
+    return new BasicLookup<T>(clazz, classLoader);
+  }
+
+  /**
    * Creates a lookup instance that can resolve providers for the specified class
    * or interface, by using a priority method to establish which is the best
    * provider. See {@link PriorityProvider}.
@@ -86,4 +99,33 @@ public final class Lookups {
       Class<T> clazz, ClassLoader classLoader) {
     return new PriorityLookup<T>(clazz, classLoader);
   }
+
+
+  /**
+   * Creates a lookup instance that can resolve providers for the specified class
+   * or interface by using a name unique to each implementation. See {@link NamedProvider}.
+   *
+   * @param <T> the type that this Lookup instance should provide.
+   * @param clazz the abstract class or interface to lookup a provider for.
+   * @return a new Lookup instance that uses the current thread's context classloader.
+   */
+  public static <T extends NamedProvider> NamedLookup<T> getNamed(
+      Class<T> clazz) {
+    return getNamed(clazz, Thread.currentThread().getContextClassLoader());
+  }
+
+  /**
+   * Creates a lookup instance that can resolve providers for the specified class
+   * or interface, by using a name unique to each implementation. See {@link NamedProvider}.
+   *
+   * @param <T> the type that this Lookup instance should provide.
+   * @param clazz the abstract class or interface to lookup a provider for.
+   * @param classLoader the classloader to use to resolve service lookups.
+   * @return a new Lookup instance that uses the current thread's context classloader.
+   */
+  public static <T extends NamedProvider> NamedLookup<T> getNamed(
+      Class<T> clazz, ClassLoader classLoader) {
+    return new NamedLookup<T>(clazz, classLoader);
+  }
+
 }

@@ -89,4 +89,67 @@ public final class Providers {
       return 0;
     }
   }
+
+  public static final class NamedImplA implements INamedFoo {
+    @Override
+    public String getMessage() {
+      return "NamedA";
+    }
+
+    @Override
+    public String getName() {
+      return "A";
+    }
+  }
+
+  public static final class NamedImplB implements INamedFoo {
+    @Override
+    public String getMessage() {
+      return "NamedB";
+    }
+
+    @Override
+    public String getName() {
+      return "B";
+    }
+  }
+
+  ///// providers of IBar; two of them have the same getName(), which is
+  ///// nondeterministic.
+
+  public static final class NamedBarA1 implements IBar {
+    @Override
+    public String getMessage() {
+      return "a1";
+    }
+
+    @Override
+    public String getName() {
+      return "A";
+    }
+  }
+
+  public static final class NamedBarA2 implements IBar {
+    @Override
+    public String getMessage() {
+      return "a2";
+    }
+
+    @Override
+    public String getName() {
+      return "A"; // same as NamedBarA1.
+    }
+  }
+
+  public static final class NamedBarB implements IBar {
+    @Override
+    public String getMessage() {
+      return "b";
+    }
+
+    @Override
+    public String getName() {
+      return "B";
+    }
+  }
 }

@@ -114,4 +114,13 @@ final class BasicLookup<T> extends Lookup<T> {
     LOG.debug("BasicLookup.iterator() called with runtimeHints; ignoring them.");
     return iterator();
   }
+
+  /**
+   * Returns the Class object representing the interface or abstract class being looked up.
+   *
+   * @return a Class object representing the interface under lookup.
+   */
+  Class<T> getLookupClass() {
+    return mClass;
+  }
 }
