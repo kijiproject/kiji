@@ -24,15 +24,16 @@ import java.util.Collections;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.MapReduceJob;
 import org.kiji.schema.Kiji;
-import org.kiji.schema.KijiTableNotFoundException;
 import org.kiji.schema.KijiURI;
 
 /** An implementation of a runnable MapReduce job that interacts with Kiji tables. */
@@ -78,25 +79,21 @@ public final class KijiMapReduceJob extends MapReduceJob {
    */
   private void recordJobHistory(Kiji kiji) throws IOException {
     final Job job = getHadoopJob();
-    final JobHistoryKijiTable jobHistory = JobHistoryKijiTable.open(kiji);
+    JobHistoryKijiTable jobHistory = null;
     try {
+      jobHistory = JobHistoryKijiTable.open(kiji);
       jobHistory.recordJob(job, mJobStartTime, mJobEndTime);
-    } catch (KijiTableNotFoundException ktnfe) {
-      if (ktnfe.getTableName().equals(JobHistoryKijiTable.getInstallName())) {
+    } catch (IOException ioe) {
+      // We swallow errors for recording jobs, because it's a non-fatal error for the task.
         LOG.warn(
-            "Error recording job {} in history table of Kiji instance {}: "
-            + "job history table is not installed.\n"
-            + "This does not affect the success of job {}.\n"
-            + "Please run: kiji job-history --install --kiji={}",
-            getHadoopJob().getJobID(),
-            kiji.getURI(),
-            getHadoopJob().getJobID(),
-            kiji.getURI());
-      } else {
-        throw ktnfe;
-      }
+            "Error recording job {} in history table of Kiji instance {}:\n"
+            + "{}\n"
+            + "This does not affect the success of job {}.\n",
+            getHadoopJob().getJobID(), kiji.getURI(),
+            StringUtils.stringifyException(ioe),
+            getHadoopJob().getJobID());
     } finally {
-      jobHistory.close();
+      IOUtils.closeQuietly(jobHistory);
     }
   }
 

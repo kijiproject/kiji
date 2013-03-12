@@ -52,8 +52,8 @@ public final class JobHistoryKijiTable implements Closeable {
   private final KijiTable mKijiTable;
 
   /**
-   * Opens a JobHistoryKijiTable for a given kiji. Outside code should use this to access the
-   * JobHistory table.
+   * Opens a JobHistoryKijiTable for a given kiji, installing it if necessary. This method should
+   * be matched with a call to {@link #close}.
    *
    * @param kiji The kiji instance to use.
    * @return An opened JobHistoryKijiTable.
@@ -73,12 +73,16 @@ public final class JobHistoryKijiTable implements Closeable {
   }
 
   /**
-   * Constructs a new JobHistoryKijiTable. Outside code should use open instead.
+   * Private constructor that opens a new JobHistoryKijiTable, creating it if necessary.
    *
    * @param kiji The kiji instance to retrieve the job history table from.
    * @throws IOException If there's an error opening the underlying HBaseKijiTable.
    */
   private JobHistoryKijiTable(Kiji kiji) throws IOException {
+    if (!kiji.getTableNames().contains(TABLE_NAME)) {
+      // Try to install the job history table if necessary.
+      install(kiji);
+    }
     mKijiTable = kiji.openTable(TABLE_NAME);
   }
 
