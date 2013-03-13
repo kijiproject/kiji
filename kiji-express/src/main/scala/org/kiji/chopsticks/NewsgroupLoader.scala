@@ -19,9 +19,11 @@
 
 package org.kiji.chopsticks
 
+import scala.actors.Futures._
 import scala.io.Source
 import java.io.File
 
+import org.kiji.chopsticks.Resources._
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiTableWriter
@@ -35,8 +37,8 @@ import org.kiji.schema.util.ResourceUtils
  *
  * <p>This loader can be run from a command line shell as follows:
  * <code>
- *   kiji jar <path/to/this/jar> org.kiji.lang.NewsgroupLoader \
- *       <kiji://uri.to.kiji.instance> <path/to/newsgroups/root/>
+ *   kiji jar <path/to/this/jar> org.kiji.chopsticks.NewsgroupLoader \
+ *       <kiji://uri/to/kiji/table> <path/to/newsgroups/root/>
  * </code>
  * </p>
  *
@@ -53,12 +55,11 @@ import org.kiji.schema.util.ResourceUtils
  *       FAMILY info WITH DESCRIPTION 'Basic information' (
  *         word "string" WITH DESCRIPTION 'The word.'
  *       )
- *     )
+ *     );
  * </code>
  * </p>
  */
 object NewsgroupLoader {
-
   /**
    * Reads a newsgroup post from a file and returns the sequence of words contained in the post.
    *
@@ -98,29 +99,22 @@ object NewsgroupLoader {
       sys.error("Newsgroup root must be a folder (was: %s)".format(root.getPath()))
     }
 
-    var kiji: Option[Kiji] = None
-    var table: Option[KijiTable] = None
-    var writer: Option[KijiTableWriter] = None
-
-    try {
-      // Open connections to kiji.
-      kiji = Some(Kiji.Factory.open(uri))
-      table = Some(kiji.get.openTable("words"))
-      writer = Some(table.get.openTableWriter())
-
-      // Parse the postings.
-      type Post = String
-      type Newsgroup = Seq[Post]
-      for {
+    // Parse the postings.
+    doAndRelease { Kiji.Factory.open(uri) } { kiji: Kiji =>
+      val tasks = for {
         newsgroup <- root.listFiles()
-        posting <- newsgroup.listFiles()
-        word <- getWords(posting)
-      } writer.get.put(table.get.getEntityId(word), "info", "word", word)
-    } finally {
-      // Cleanup connections.
-      kiji.foreach { ResourceUtils.releaseOrLog(_) }
-      table.foreach { ResourceUtils.closeOrLog(_) }
-      writer.foreach { ResourceUtils.closeOrLog(_) }
+      } yield future {
+        doAndRelease { kiji.openTable("words") } { table: KijiTable =>
+          doAndClose { table.openTableWriter() } { writer: KijiTableWriter =>
+            for {
+              posting <- newsgroup.listFiles()
+              word <- getWords(posting)
+            } writer.put(table.getEntityId(word), "info", "word", word)
+          }
+        }
+      }
+
+      tasks.foreach { _() }
     }
   }
 }

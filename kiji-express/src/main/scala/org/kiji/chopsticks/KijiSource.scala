@@ -50,7 +50,7 @@ import org.apache.hadoop.mapred.RecordReader
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.chopsticks.DSL._
+import org.kiji.chopsticks.Resources._
 import org.kiji.lang.Column
 import org.kiji.lang.KijiScheme
 import org.kiji.lang.KijiTap

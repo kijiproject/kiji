@@ -22,7 +22,6 @@ package org.kiji.chopsticks
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.schema.filter.KijiColumnFilter
-import org.kiji.schema.util.ReferenceCountable
 
 @ApiAudience.Public
 @ApiStability.Unstable
@@ -108,36 +107,4 @@ object DSL {
       maxVersions: Int = 1,
       filter: KijiColumnFilter = null): org.kiji.lang.Column.InputOptions
     = new org.kiji.lang.Column.InputOptions(maxVersions, filter)
-
-  /**
-   * Performs an operation with a releaseable resource by first retaining the resource and releasing
-   * it upon completion of the operation.
-   *
-   * @param resource Retainable resource used by the operation.
-   * @param fn Operation to perform.
-   * @return The result of the operation.
-   */
-  def retainAnd[T, R](resource: ReferenceCountable[R])(fn: R => T): T = {
-    try {
-      fn(resource.retain())
-    } finally {
-      resource.release()
-    }
-  }
-
-  /**
-   * Performs an operation with an already retained releaseable resource by releasing it upon
-   * completion of the operation.
-   *
-   * @param resource Retainable resource used by the operation.
-   * @param fn Operation to perform.
-   * @return The restult of the operation.
-   */
-  def doAndRelease[T, R <: ReferenceCountable[_]](resource: R)(fn: R => T): T = {
-    try {
-      fn(resource)
-    } finally {
-      resource.release()
-    }
-  }
 }
