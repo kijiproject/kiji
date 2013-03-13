@@ -776,7 +776,7 @@ class FakeHTable(
       } else if (scan.getStartRow.isEmpty) {
         rows.firstKey
       } else {
-        rows.floorKey(scan.getStartRow)
+        rows.ceilingKey(scan.getStartRow)
       }
     }
     if (!scan.getStopRow.isEmpty

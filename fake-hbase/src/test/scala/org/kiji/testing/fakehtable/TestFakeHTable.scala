@@ -20,9 +20,8 @@
 package org.kiji.testing.fakehtable
 
 import java.util.Arrays
-
 import scala.collection.JavaConverters.mapAsScalaMapConverter
-
+import scala.collection.JavaConverters._
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.client.Delete
 import org.apache.hadoop.hbase.client.Get
@@ -33,6 +32,7 @@ import org.apache.hadoop.hbase.filter.KeyOnlyFilter
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
+import org.apache.hadoop.hbase.util.Bytes
 
 @RunWith(classOf[JUnitRunner])
 class TestFakeHTable extends FunSuite {
@@ -317,6 +317,31 @@ class TestFakeHTable extends FunSuite {
         assert(tseries.containsKey(2L))
         assert(tseries.containsKey(3L))
       }
+    }
+  }
+
+  test("HTable.scan() with start-row") {
+    val table = new FakeHTable(
+        name = "table",
+        conf = HBaseConfiguration.create(),
+        desc = null
+    )
+
+    val count = 3
+    populateTable(table, count=count)
+
+    {
+      val scanner = table.getScanner(new Scan().setStartRow("key1".getBytes))
+      val rows = scanner.iterator().asScala.toList
+      expect(2)(rows.size)
+      expect("key1")(Bytes.toString(rows(0).getRow))
+      expect("key2")(Bytes.toString(rows(1).getRow))
+    }
+    {
+      val scanner = table.getScanner(new Scan().setStartRow("key1a".getBytes))
+      val rows = scanner.iterator().asScala.toList
+      expect(1)(rows.size)
+      expect("key2")(Bytes.toString(rows(0).getRow))
     }
   }
 
