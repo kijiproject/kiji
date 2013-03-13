@@ -20,9 +20,12 @@
 package org.kiji.mapreduce.tools.framework;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 
 import com.google.common.base.Preconditions;
+import org.apache.hadoop.fs.Path;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.Inheritance;
@@ -50,7 +53,9 @@ public abstract class JobTool<B extends MapReduceJobBuilder> extends BaseTool {
       usage="Job output specification: --output=\"format=<output-format> nsplits=N ...\"")
   protected String mOutputFlag = "";
 
-  @Flag(name="lib", usage="A directory of jars for including user code")
+  @Flag(name="lib",
+      usage="A directory of jars for including user code.\n"
+          + "\tUnqualified paths are resolved in the local filesystem.")
   protected String mLibDir = "";
 
   @Flag(name="kvstores", usage="KeyValueStore specification XML file to attach to the job")
@@ -68,6 +73,16 @@ public abstract class JobTool<B extends MapReduceJobBuilder> extends BaseTool {
         "Specify an output to the job with --output=...");
     mJobInput = MapReduceJobInputFactory.create().fromSpaceSeparatedMap(mInputFlag);
     mJobOutput = MapReduceJobOutputFactory.create().fromSpaceSeparatedMap(mOutputFlag);
+
+    try {
+      final URI libDirURI = new URI(mLibDir);
+      if (libDirURI.getScheme() == null) {
+        mLibDir = "file:" + mLibDir;
+      }
+    } catch (URISyntaxException use) {
+      throw new IllegalArgumentException(
+          String.format("Invalid flag '--lib=%s': %s", mLibDir, use.getMessage()), use);
+    }
   }
 
   /**
@@ -92,7 +107,7 @@ public abstract class JobTool<B extends MapReduceJobBuilder> extends BaseTool {
 
     // Add user dependency jars if specified.
     if (!mLibDir.isEmpty()) {
-      jobBuilder.addJarDirectory(mLibDir);
+      jobBuilder.addJarDirectory(new Path(mLibDir));
     }
 
     // Add user-specified KVStore definitions, if specified.
