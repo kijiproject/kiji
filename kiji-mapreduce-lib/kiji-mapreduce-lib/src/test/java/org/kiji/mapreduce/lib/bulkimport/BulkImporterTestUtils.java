@@ -111,9 +111,6 @@ public final class BulkImporterTestUtils {
       final EntityId eid = row.getEntityId();
       final String rowId = Bytes.toString((byte[]) eid.getComponentByIndex(0));
 
-      final String cellContent = row.getMostRecentValues("info").toString();
-      LOG.info("Row: {}, fields: {}", rowId, cellContent);
-
       // Validate that this row matches the data
       if (rowId.equals("Bob")) {
         assertEquals("Bob", row.getMostRecentValue("info", "first_name").toString());
