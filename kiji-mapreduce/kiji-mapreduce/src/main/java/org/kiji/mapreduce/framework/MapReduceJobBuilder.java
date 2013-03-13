@@ -36,7 +36,6 @@ import org.apache.avro.mapred.AvroValue;
 import org.apache.avro.mapreduce.AvroJob;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.mapreduce.GenericTableMapReduceUtil;
@@ -119,39 +118,42 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder<T>> {
   /**
    * Adds a local directory of jars to the distributed cache of the job.
    *
-   * @param jarDirectory The path to a directory of jar files.
+   * @param jarDirectory The path to a directory of jar files in the local file system.
    * @return This builder instance so you may chain configuration method calls.
    */
   public T addJarDirectory(File jarDirectory) {
-    return addJarDirectory(jarDirectory.toString());
+    return addJarDirectory("file:" + jarDirectory.toString());
   }
 
   /**
-   * Adds a local directory of jars to the distributed cache of the job.
+   * Adds a directory of jars to the distributed cache of the job.
    *
    * @param jarDirectory The path to a directory of jar files.
+   *     Path may be qualified (eg. "hdfs://path/to/dir", or "file:/path/to/dir"),
+   *     or unqualified (eg. "path/to/dir"), in which case it will be resovled against the
+   *     local file system.
    * @return This builder instance so you may chain configuration method calls.
    */
   @SuppressWarnings("unchecked")
   public T addJarDirectory(Path jarDirectory) {
-    mJarDirectories.add(jarDirectory);
+    final Path jarDirPath = (jarDirectory.toUri().getScheme() == null)
+        ? new Path("file:" + jarDirectory)
+        : jarDirectory;
+    mJarDirectories.add(jarDirPath);
     return (T) this;
   }
 
   /**
-   * Adds a local directory of jars to the distributed cache of the job.
+   * Adds a directory of jars to the distributed cache of the job.
    *
    * @param jarDirectory The path to a directory of jar files.
+   *     Path may be qualified (eg. "hdfs://path/to/dir", or "file:/path/to/dir"),
+   *     or unqualified (eg. "path/to/dir"), in which case it will be resovled against the
+   *     local file system.
    * @return This builder instance so you may chain configuration method calls.
    */
   public T addJarDirectory(String jarDirectory) {
-    try {
-      final Path path = new Path(jarDirectory);
-      final FileSystem fs = path.getFileSystem(mConf);
-      return addJarDirectory(fs.makeQualified(path));
-    } catch (IOException ioe) {
-      throw new RuntimeException(ioe);
-    }
+    return addJarDirectory(new Path(jarDirectory));
   }
 
   /**

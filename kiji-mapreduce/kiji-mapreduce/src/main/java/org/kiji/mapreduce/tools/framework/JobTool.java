@@ -50,7 +50,9 @@ public abstract class JobTool<B extends MapReduceJobBuilder> extends BaseTool {
       usage="Job output specification: --output=\"format=<output-format> nsplits=N ...\"")
   protected String mOutputFlag = "";
 
-  @Flag(name="lib", usage="A directory of jars for including user code")
+  @Flag(name="lib",
+      usage="A directory of jars for including user code.\n"
+          + "\tUnqualified paths are resolved in the local filesystem.")
   protected String mLibDir = "";
 
   @Flag(name="kvstores", usage="KeyValueStore specification XML file to attach to the job")
