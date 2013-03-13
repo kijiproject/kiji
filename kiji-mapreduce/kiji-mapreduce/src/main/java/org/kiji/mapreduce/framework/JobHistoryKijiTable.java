@@ -103,6 +103,8 @@ public final class JobHistoryKijiTable implements Closeable {
       writer.put(jobEntity, "info", "jobName", startTime, job.getJobName());
       writer.put(jobEntity, "info", "startTime", startTime, startTime);
       writer.put(jobEntity, "info", "endTime", startTime, endTime);
+      writer.put(jobEntity, "info", "jobEndStatus", startTime,
+          job.isSuccessful() ? "SUCCEEDED" : "FAILED");
       writer.put(jobEntity, "info", "counters", startTime, job.getCounters().toString());
       job.getConfiguration().writeXml(baos);
       writer.put(jobEntity, "info", "configuration", startTime, baos.toString("UTF-8"));
@@ -118,8 +120,8 @@ public final class JobHistoryKijiTable implements Closeable {
    * @throws IOException If there is an error.
    */
   public static void install(Kiji kiji) throws IOException {
-    kiji.createTable(TABLE_NAME,
-        KijiTableLayout.createFromEffectiveJsonResource(TABLE_LAYOUT_RESOURCE));
+    kiji.createTable(
+        KijiTableLayout.createFromEffectiveJsonResource(TABLE_LAYOUT_RESOURCE).getDesc());
   }
 
   /**

@@ -20,6 +20,7 @@
 package org.kiji.mapreduce;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
@@ -43,6 +44,7 @@ import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
+import org.kiji.schema.KijiURI;
 import org.kiji.schema.testutil.AbstractKijiIntegrationTest;
 import org.kiji.schema.util.ResourceUtils;
 
@@ -113,6 +115,28 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
     }
   }
 
+  /** A private inner producer to test job recording of failed jobs. */
+  public static class BrokenEmailDomainProducer extends KijiProducer {
+    /** {@inheritDoc} */
+    @Override
+    public KijiDataRequest getDataRequest() {
+      // We only need to read the most recent email address field from the user's row.
+      return KijiDataRequest.create("info", "email");
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String getOutputColumn() {
+      return "derived:domain";
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void produce(KijiRowData input, ProducerContext context) throws IOException {
+      throw new IOException("This producer always fails.");
+    }
+  }
+
   /**
    * Test of all the basic information recorded by a mapper.
    */
@@ -123,15 +147,15 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
     // Set a value in the configuration. We'll check to be sure we can retrieve it later.
     jobConf.set("conf.test.animal.string", "squirrel");
     final Kiji kiji = Kiji.Factory.open(getKijiURI());
-    final KijiTable fooTable = kiji.openTable("foo");
+    final KijiURI fooTableURI = KijiURI.newBuilder(getKijiURI()).withTableName("foo").build();
     final JobHistoryKijiTable jobHistory = JobHistoryKijiTable.open(kiji);
 
     // Construct a Producer for this table.
     final KijiProduceJobBuilder builder = KijiProduceJobBuilder.create()
         .withConf(jobConf)
-        .withInputTable(fooTable.getURI())
+        .withInputTable(fooTableURI)
         .withProducer(EmailDomainProducer.class)
-        .withOutput(new DirectKijiTableMapReduceJobOutput(fooTable.getURI()));
+        .withOutput(new DirectKijiTableMapReduceJobOutput(fooTableURI));
     MapReduceJob mrJob = builder.build();
 
     // Record the jobId and run the job.
@@ -152,6 +176,8 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
     assertTrue(jobRecord.containsColumn("info", "endTime"));
     assertTrue(jobRecord.<Long>getMostRecentValue("info", "startTime")
         < jobRecord.<Long>getMostRecentValue("info", "endTime"));
+    assertTrue(jobRecord.containsColumn("info", "jobEndStatus"));
+    assertEquals(jobRecord.getMostRecentValue("info", "jobEndStatus").toString(), "SUCCEEDED");
 
     // Check counters. We don't know the exact number of rows in the foo table, so just check if
     // it's greater than 0.
@@ -173,7 +199,44 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
     assertEquals("Couldn't retrieve configuration field from deserialized configuration.",
         "squirrel", config.get("conf.test.animal.string"));
 
-    ResourceUtils.releaseOrLog(fooTable);
+    ResourceUtils.closeOrLog(jobHistory);
+    ResourceUtils.releaseOrLog(kiji);
+  }
+
+  /**
+   * Test that runs a producer that always fails and checks to be sure that it's recorded in the
+   * history table with a failure.
+   */
+  @Test
+  public void testFailingJob() throws Exception {
+    createAndPopulateFooTable();
+    final Configuration jobConf = getConf();
+    final Kiji kiji = Kiji.Factory.open(getKijiURI());
+    final KijiURI fooTableURI = KijiURI.newBuilder(getKijiURI()).withTableName("foo").build();
+    final JobHistoryKijiTable jobHistory = JobHistoryKijiTable.open(kiji);
+
+    // Construct a Producer for this table.
+    final KijiProduceJobBuilder builder = KijiProduceJobBuilder.create()
+        .withConf(jobConf)
+        .withInputTable(fooTableURI)
+        .withProducer(BrokenEmailDomainProducer.class)
+        .withOutput(new DirectKijiTableMapReduceJobOutput(fooTableURI));
+    MapReduceJob mrJob = builder.build();
+
+    // Record the jobId and run the job. Make sure it completes and failed.
+    String jobName = mrJob.getHadoopJob().getJobName();
+    LOG.info("About to run failing job: " + jobName);
+    assertFalse(mrJob.run());
+    String jobId = mrJob.getHadoopJob().getJobID().toString();
+    LOG.info("Job was run with id: " + jobId);
+    assertTrue(mrJob.getHadoopJob().isComplete());
+    assertFalse(mrJob.getHadoopJob().isSuccessful());
+
+    // Retrieve the job status from the history table and make sure it failed.
+    KijiRowData jobRecord = jobHistory.getJobDetails(jobId);
+    assertTrue(jobRecord.containsColumn("info", "jobEndStatus"));
+    assertEquals(jobRecord.getMostRecentValue("info", "jobEndStatus").toString(), "FAILED");
+
     ResourceUtils.closeOrLog(jobHistory);
     ResourceUtils.releaseOrLog(kiji);
   }
@@ -186,15 +249,15 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
   public void testSubmit() throws Exception {
     createAndPopulateFooTable();
     final Kiji kiji = Kiji.Factory.open(getKijiURI());
-    final KijiTable fooTable = kiji.openTable("foo");
+    final KijiURI fooTableURI = KijiURI.newBuilder(getKijiURI()).withTableName("foo").build();
     JobHistoryKijiTable jobHistory = JobHistoryKijiTable.open(kiji);
 
     // Construct a Producer for this table.
     KijiProduceJobBuilder builder = KijiProduceJobBuilder.create()
         .withConf(getConf())
-        .withInputTable(fooTable.getURI())
+        .withInputTable(fooTableURI)
         .withProducer(EmailDomainProducer.class)
-        .withOutput(new DirectKijiTableMapReduceJobOutput(fooTable.getURI()));
+        .withOutput(new DirectKijiTableMapReduceJobOutput(fooTableURI));
     MapReduceJob mrJob = builder.build();
 
     LOG.info("About to submit job: " + mrJob.getHadoopJob().getJobName());
@@ -216,7 +279,6 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
     assertTrue(jobRecord.<Long>getMostRecentValue("info", "startTime")
         < jobRecord.<Long>getMostRecentValue("info", "endTime"));
 
-    ResourceUtils.releaseOrLog(fooTable);
     ResourceUtils.closeOrLog(jobHistory);
     ResourceUtils.releaseOrLog(kiji);
   }

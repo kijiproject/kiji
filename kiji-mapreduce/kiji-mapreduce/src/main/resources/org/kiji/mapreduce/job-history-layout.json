@@ -54,6 +54,11 @@
               column_schema: {type: "INLINE", storage: "UID", value: '"long"'}
             },
             {
+              name: "jobEndStatus",
+              description: "The job's status at the time of completion",
+              column_schema: {type: "INLINE", storage: "UID", value: '"string"'}
+            },
+            {
               name: "counters",
               description: "A serialization of the Counters for the job",
               column_schema: {type: "INLINE", storage: "UID", value: '"string"'}
@@ -64,9 +69,17 @@
               column_schema: {type: "INLINE", storage: "UID", value: '"string"'}
             }
           ]
+        },
+        {
+          name: "extendedInfo",
+          description: "Map family useful for storing additional, derived information",
+          map_schema : {
+            type : "INLINE",
+            value : '"string"'
+          }
         }
       ]
     }
   ],
-  version: "kiji-1.0"
+  version: "layout-1.1"
 }
