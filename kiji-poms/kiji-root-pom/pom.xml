@@ -30,7 +30,7 @@
     <it.threadCount>1</it.threadCount>
 
     <!-- versions for program dependencies -->
-    <annotations.version>1.0.0-rc5</annotations.version>
+    <annotations.version>1.0.0-rc6-SNAPSHOT</annotations.version>
     <avro.version>1.7.2</avro.version>
     <commons-io.version>2.1</commons-io.version>
     <commons-lang.version>2.6</commons-lang.version>
