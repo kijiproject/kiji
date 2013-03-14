@@ -19,7 +19,7 @@ consult the [Get Started](http://www.kiji.org/getstarted) section of the Kiji we
 
 We have provided the phonebook layout in the `$KIJI_HOME/examples/phonebook/layout.ddl` file.
 For more information about how to create this file, see the
-[DDL Shell Reference]({{site.userguide_schema_rc4}}/schema-shell-ddl-ref/).
+[DDL Shell Reference]({{site.userguide_schema_rc5}}/schema-shell-ddl-ref/).
 
 <div class="userinput">
 {% highlight bash %}
@@ -58,6 +58,9 @@ schema> describe phonebook;
 </div>
 
     Table: phonebook (A collection of phone book entries)
+    Row key:
+        key: STRING NOT NULL
+
     Column family: info
         Description: basic information
 
@@ -83,7 +86,7 @@ schema> describe phonebook;
             Schema: "string"
 
         Column derived:apt (Address Apartment number.)
-            Schema: [ "string", "null" ]
+            Schema: ["string","null"]
 
         Column derived:addr2 (Address line two.)
             Schema: "string"
@@ -112,7 +115,7 @@ schema> quit;
 ### Using JSON
 
 A low level way of providing the layout is by using JSON. To learn more about specifying
-the layout in JSON, take a look at [Managing Data]({{site.userguide_schema_rc4}}/managing-data/).
+the layout in JSON, take a look at [Managing Data]({{site.userguide_schema_rc5}}/managing-data/).
 
 But first, we need to delete the table we just created, just so that we can create it
 another time using JSON! Use the following command to delete the table:
@@ -123,14 +126,13 @@ $KIJI_HOME/bin/kiji delete --target=kiji://.env/default/phonebook
 {% endhighlight %}
 </div>
 
-    Deleting kiji table: kiji://localhost:2181/default/phonebook/
-    Are you sure? This action will remove this table and all its data from kiji and cannot be undone!
+    Are you sure you want to delete Kiji table 'kiji://localhost:2181/default/phonebook/'?
     Please answer yes or no.
     yes
-    00/11/00 20:33:16 INFO org.apache.hadoop.hbase.client.HBaseAdmin: Started disable of kiji.default.table.phonebook
-    00/11/00 20:33:18 INFO org.apache.hadoop.hbase.client.HBaseAdmin: Disabled kiji.default.table.phonebook
-    00/11/00 20:33:19 INFO org.apache.hadoop.hbase.client.HBaseAdmin: Deleted kiji.default.table.phonebook
-    Deleted kiji table: kiji://localhost:2181/default/phonebook/
+    13/03/13 19:19:28 INFO org.apache.hadoop.hbase.client.HBaseAdmin: Started disable of kiji.default.table.phonebook
+    13/03/13 19:19:29 INFO org.apache.hadoop.hbase.client.HBaseAdmin: Disabled kiji.default.table.phonebook
+    13/03/13 19:19:29 INFO org.apache.hadoop.hbase.client.HBaseAdmin: Deleted kiji.default.table.phonebook
+    Kiji table 'kiji://localhost:2181/default/phonebook/' deleted.
 
 The command below creates the same phonebook table with the layout specified in the `layout.json` file in your
 `$KIJI_HOME/examples/phonebook` directory.
@@ -155,7 +157,7 @@ tables in your Kiji instance.
 
 <div class="userinput">
 {% highlight bash %}
-$KIJI_HOME/bin/kiji ls
+$KIJI_HOME/bin/kiji ls kiji://.env/default
 {% endhighlight %}
 </div>
 

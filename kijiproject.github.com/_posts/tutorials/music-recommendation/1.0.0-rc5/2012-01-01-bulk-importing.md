@@ -44,7 +44,7 @@ example of a single row in our input file `song-metadata.json`.
 {% endhighlight %}
 
 The `SongMetadataBulkImporter` class extends `KijiBulkImporter`. It expects a
-[text input format]({{site.userguide_mapreduce_rc4}}/command-line-tools/#input) where the
+[text input format]({{site.userguide_mapreduce_rc5}}/command-line-tools/#input) where the
 input keys are the byte offsets of each line in the input file and the input values are the lines
 of text described above.
 
@@ -69,7 +69,7 @@ record SongMetadata {
 }
 {% endhighlight %}
 
-Then build an [Avro]({{site.userguide_mapreduce_rc4}}/working-with-avro) metadata record from the parsed JSON.
+Then build an [Avro]({{site.userguide_mapreduce_rc5}}/working-with-avro) metadata record from the parsed JSON.
 
 
 {% highlight java %}
@@ -83,7 +83,7 @@ final SongMetadata song = SongMetadata.newBuilder()
     .build();
 {% endhighlight %}
 
-We create an [`EntityId`]({{site.api_schema_rc4}}/EntityId.html) object in order to use the song ID
+We create an [`EntityId`]({{site.api_schema_rc5}}/EntityId.html) object in order to use the song ID
 as the row key.
 
 {% highlight java %}

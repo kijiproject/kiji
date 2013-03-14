@@ -8,7 +8,7 @@ description: Examples of Point deletions.
 ---
 
 Deletions of Kiji table cells can be performed both within a MapReduce job and from
-non-distributed java programs. Both types of programs use [`KijiTableWriter`]({{site.api_schema_rc4}}/KijiTableWriter.html)s to
+non-distributed java programs. Both types of programs use [`KijiTableWriter`]({{site.api_schema_rc5}}/KijiTableWriter.html)s to
 delete data.
 
 ## Point Deletions
@@ -21,7 +21,7 @@ to delete.
 
 ### DeleteEntry.java
 
-DeleteEntry uses a [`KijiTableWriter`]({{site.api_schema_rc4}}/KijiTableWriter.html) to perform point deletions on a kiji table:
+DeleteEntry uses a [`KijiTableWriter`]({{site.api_schema_rc5}}/KijiTableWriter.html) to perform point deletions on a kiji table:
 
 {% highlight java %}
 // Open a table writer.
@@ -47,19 +47,20 @@ table:
 
 <div class="userinput">
 {% highlight bash %}
-$KIJI_HOME/bin/kiji ls --kiji=kiji://.env/default/phonebook --entity-id="Renuka,Apte"
+$KIJI_HOME/bin/kiji get kiji://.env/default/phonebook --entity-id="['Renuka,Apte']"
 {% endhighlight %}
 </div>
 
-    \x17\xDC\xE7\x85\x0F{\xB6SF\x9A\xB5&\xA5\x8C\x81[ [1352864000121] info:firstname
+    Looking up entity: hbase=hex:17dce7850f7bb653469ab526a58c815b from kiji table: kiji://localhost:2181/default/phonebook/
+    entity-id=hbase=hex:17dce7850f7bb653469ab526a58c815b [1363228510937] info:firstname
                                      Renuka
-    \x17\xDC\xE7\x85\x0F{\xB6SF\x9A\xB5&\xA5\x8C\x81[ [1352864000121] info:lastname
+    entity-id=hbase=hex:17dce7850f7bb653469ab526a58c815b [1363228510937] info:lastname
                                      Apte
-    \x17\xDC\xE7\x85\x0F{\xB6SF\x9A\xB5&\xA5\x8C\x81[ [1352864000121] info:email
+    entity-id=hbase=hex:17dce7850f7bb653469ab526a58c815b [1363228510937] info:email
                                      ra@wibidata.com
-    \x17\xDC\xE7\x85\x0F{\xB6SF\x9A\xB5&\xA5\x8C\x81[ [1352864000121] info:telephone
+    entity-id=hbase=hex:17dce7850f7bb653469ab526a58c815b [1363228510937] info:telephone
                                      415-111-2222
-    \x17\xDC\xE7\x85\x0F{\xB6SF\x9A\xB5&\xA5\x8C\x81[ [1352864000121] info:address
+    entity-id=hbase=hex:17dce7850f7bb653469ab526a58c815b [1363228510937] info:address
                                      {"addr1": "375 Alabama St", "apt": null, "addr2": null, "city": "SF", "state": "CA", "zip": 94110}
 
 Next, to perform the deletion of this contact using DeleteEntry:
@@ -75,17 +76,17 @@ $KIJI_HOME/bin/kiji jar \
     First name: Renuka
     Last name: Apte
 
-#### Verify 
+#### Verify
 To verify that the row has been deleted, run the following command ensuring that the phonebook
 entry for Renuka does not get printed:
 
 <div class="userinput">
 {% highlight bash %}
-$KIJI_HOME/bin/kiji ls --kiji=kiji://.env/default/phonebook --entity-id="Renuka,Apte"
+$KIJI_HOME/bin/kiji get kiji://.env/default/phonebook --entity-id="['Renuka,Apte']"
 {% endhighlight %}
 </div>
 
-    Looking up entity: \x17\xDC\xE7\x85\x0F{\xB6SF\x9A\xB5&\xA5\x8C\x81[ from kiji table: kiji://localhost:2181/default/phonebook/
+    Looking up entity: hbase=hex:17dce7850f7bb653469ab526a58c815b from kiji table: kiji://localhost:2181/default/phonebook/
 
 ## Deleting from a MapReduce Job
 
@@ -110,7 +111,7 @@ sanitize your phonebook of any California contacts.
 
 ### DeleteEntriesByState.java
 
-Deletions from within a MapReduce job are also performed using a [`KijiTableWriter`]({{site.api_schema_rc4}}/KijiTableWriter.html).
+Deletions from within a MapReduce job are also performed using a [`KijiTableWriter`]({{site.api_schema_rc5}}/KijiTableWriter.html).
 The DeleteEntriesByState example runs a MapReduce job that reads through the contacts
 in the phonebook table and deletes any entry that has an address from the specified
 state.
@@ -129,7 +130,7 @@ public void map(EntityId entityId, KijiRowData row, Context context)
   final Address address = row.getMostRecentValue(Fields.INFO_FAMILY, Fields.ADDRESS);
 {% endhighlight %}
 
-A [`KijiTableWriter`]({{site.api_schema_rc4}}/KijiTableWriter.html) we opened in the `setup()` method is then used to delete
+A [`KijiTableWriter`]({{site.api_schema_rc5}}/KijiTableWriter.html) we opened in the `setup()` method is then used to delete
 the row if the state matches:
 
 {% highlight java %}
@@ -158,13 +159,13 @@ phonebook entries from California get printed.
 
 <div class="userinput">
 {% highlight bash %}
-$KIJI_HOME/bin/kiji ls --kiji=kiji://.env/default/phonebook --columns="derived:state"
+$KIJI_HOME/bin/kiji scan kiji://.env/default/phonebook/derived:state
 {% endhighlight %}
 </div>
 
-    Scanning kiji table: kiji://localhost:2181/default/phonebook/
-    U\x1EP\xC1\xF2c$7\xCC\xBA\xCB\x16\x10\x0F\x11\xDB [1352831738599] derived:state
-                                 DC
+    Scanning kiji table: kiji://localhost:2181/default/phonebook/derived:state/
+    entity-id=hbase=hex:551e50c1f2632437ccbacb16100f11db [1363228186205] derived:state
+                                     DC
 
 ## Wrapping up
 If you started your BentoBox to do this tutorial, now would be a good time to stop it.
@@ -176,7 +177,7 @@ bento stop
 </div>
 
 To learn more about Kiji, check out these other resources:
- - [User Guide]({{site.userguide_schema_rc4}}/kiji-schema-overview)
+ - [User Guide]({{site.userguide_schema_rc5}}/kiji-schema-overview)
  - [API Docs](http://docs.kiji.org/apidocs)
  - [Source Code](http://github.com/kijiproject)
 
@@ -184,5 +185,5 @@ For information about the Kiji Project and user-to-user support:
 <a class="btn btn-primary" href="mailto:user+subscribe@kiji.org">Sign up for user@kiji.org</a>
 
 Hungry for more? To learn about KijiMR, Kiji's MapReduce integration library,
-check out the 
+check out the
 [Music recommendation tutorial](/tutorials/music-recommendation/1.0.0-rc5/music-overview/).

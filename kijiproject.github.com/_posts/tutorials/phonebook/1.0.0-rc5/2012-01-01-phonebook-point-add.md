@@ -13,8 +13,8 @@ and reading contacts.
 ## Writing to a Table
 Clearly, you need a way to add your ever-increasing set of friends to the phonebook.
 KijiSchema supports writing to Kiji tables with the
-[`KijiTableWriter`]({{site.api_schema_rc4}}/KijiTableWriter.html) class. The phonebook example
-includes code that uses a [`KijiTableWriter`]({{site.api_schema_rc4}}/KijiTableWriter.html) to
+[`KijiTableWriter`]({{site.api_schema_rc5}}/KijiTableWriter.html) class. The phonebook example
+includes code that uses a [`KijiTableWriter`]({{site.api_schema_rc5}}/KijiTableWriter.html) to
 write to the phonebook table.
 
 ### AddEntry.java
@@ -28,8 +28,8 @@ To start, `AddEntry.java` loads an HBase configuration.
 setConf(HBaseConfiguration.addHbaseResources(getConf()));
 {% endhighlight %}
 
-The code then connects to Kiji and opens the phonebook table for writing. A [`Kiji`]({{site.api_schema_rc4}}/Kiji.html)
-instance is specified by a [`KijiURI`]({{site.api_schema_rc4}}/KijiURI.html). A Kiji URI specifies an HBase cluster to
+The code then connects to Kiji and opens the phonebook table for writing. A [`Kiji`]({{site.api_schema_rc5}}/Kiji.html)
+instance is specified by a [`KijiURI`]({{site.api_schema_rc5}}/KijiURI.html). A Kiji URI specifies an HBase cluster to
 connect to (identified by its Zookeeper quorum) and a Kiji instance name.
 The value of `KConstants.DEFAULT_INSTANCE_NAME` is `"default"`.
 For example, if ZooKeeper is running on `zkhost:2181`, the name of the default
@@ -39,8 +39,8 @@ Rather than specify a ZooKeeper cluster yourself, you can rely on the quorum
 specified in your `hbase-site.xml` file by using the "hostname" of `.env`, like
 this: `kiji://.env/default`.
 
-To create a [`KijiURI`]({{site.api_schema_rc4}}/KijiURI.html), you use a
-[`KijiURI.KijiURIBuilder`]({{site.api_schema_rc4}}/KijiURI.KijiURIBuilder.html)
+To create a [`KijiURI`]({{site.api_schema_rc5}}/KijiURI.html), you use a
+[`KijiURI.KijiURIBuilder`]({{site.api_schema_rc5}}/KijiURI.KijiURIBuilder.html)
 instance. By default, this will use the `".env"` pseudo-host so that you connect
 to your normal HBase cluster.
 
@@ -53,8 +53,8 @@ writer = table.openTableWriter();
 {% endhighlight %}
 
 #### Adding the phonebook entry
-We then create an [`EntityId`]({{site.api_schema_rc4}}/EntityId.html) using the contact's first
-and last name. The [`EntityId`]({{site.api_schema_rc4}}/EntityId.html) uniquely identifies the
+We then create an [`EntityId`]({{site.api_schema_rc5}}/EntityId.html) using the contact's first
+and last name. The [`EntityId`]({{site.api_schema_rc5}}/EntityId.html) uniquely identifies the
 row for the contact in the Kiji table.
 
 {% highlight java %}
@@ -87,16 +87,16 @@ reference to. Rather than require that you define a single "owner" of this objec
 closes it when the system is finished using it, you can use reference counting to manage
 this object's lifetime.
 
-When a [`Kiji`]({{site.api_schema_rc4}}/Kiji.html) instance is created with `Kiji.Factory.open()`,
+When a [`Kiji`]({{site.api_schema_rc5}}/Kiji.html) instance is created with `Kiji.Factory.open()`,
 it has an automatic reference count of 1. You should call `kiji.release()` or
-[`ResourceUtils`]({{site.api_schema_rc4}}/util/ResourceUtils.html)`.releaseOrLog(kiji)` to discard this reference.
+[`ResourceUtils`]({{site.api_schema_rc5}}/util/ResourceUtils.html)`.releaseOrLog(kiji)` to discard this reference.
 
 If another class or method gets a reference to an already-opened Kiji instance,
 you should call `kiji.retain()` to increment its reference count. That same
 class or method is responsible for calling `kiji.release()` when it no longer
 holds the reference.
 
-A [`Kiji`]({{site.api_schema_rc4}}/Kiji.html) object will close itself and free its underlying resources when its
+A [`Kiji`]({{site.api_schema_rc5}}/Kiji.html) object will close itself and free its underlying resources when its
 reference count drops to 0.
 
 ### Running the Example
@@ -133,40 +133,40 @@ Zip: 94110
 #### Verify
 Now we can verify that our entry got into the phonebook table.
 
-Beforehand, you must tell `kiji ls` where the `org.kiji.examples.phonebook.Address`
+Beforehand, you must tell `kiji scan` where the `org.kiji.examples.phonebook.Address`
 Avro record class (mentioned in the DDL and used by `AddEntry`) is.
 If you have not already done so, put the phonebook jar file on your Kiji classpath:
 
 <div class="userinput">
 {% highlight bash %}
-export KIJI_CLASSPATH=$KIJI_HOME/examples/phonebook/lib/kiji-phonebook-*.jar
+export KIJI_CLASSPATH="$KIJI_HOME/examples/phonebook/lib/kiji-phonebook-*.jar"
 {% endhighlight %}
 </div>
 
-Now use `kiji ls`:
+Now use `kiji scan`:
 
 <div class="userinput">
 {% highlight bash %}
-$KIJI_HOME/bin/kiji ls --kiji=kiji://.env/default/phonebook
+$KIJI_HOME/bin/kiji scan kiji://.env/default/phonebook
 {% endhighlight %}
 </div>
 
     Scanning kiji table: kiji://localhost:2181/default/phonebook/
-    U\x1EP\xC1\xF2c$7\xCC\xBA\xCB\x16\x10\x0F\x11\xDB [1352831108322] info:firstname
+    entity-id=hbase=hex:3927ac19991c6e3d49cdd1d48e135083 [1363224175538] info:firstname
                                      Renuka
-    U\x1EP\xC1\xF2c$7\xCC\xBA\xCB\x16\x10\x0F\x11\xDB [1352831108322] info:lastname
+    entity-id=hbase=hex:3927ac19991c6e3d49cdd1d48e135083 [1363224175538] info:lastname
                                      Apte
-    U\x1EP\xC1\xF2c$7\xCC\xBA\xCB\x16\x10\x0F\x11\xDB [1352831108322] info:email
+    entity-id=hbase=hex:3927ac19991c6e3d49cdd1d48e135083 [1363224175538] info:email
                                      ra@wibidata.com
-    U\x1EP\xC1\xF2c$7\xCC\xBA\xCB\x16\x10\x0F\x11\xDB [1352831108322] info:telephone
+    entity-id=hbase=hex:3927ac19991c6e3d49cdd1d48e135083 [1363224175538] info:telephone
                                      415-111-2222
-    U\x1EP\xC1\xF2c$7\xCC\xBA\xCB\x16\x10\x0F\x11\xDB [1352831108322] info:address
+    entity-id=hbase=hex:3927ac19991c6e3d49cdd1d48e135083 [1363224175538] info:address
                                      {"addr1": "375 Alabama St", "apt": null, "addr2": null, "city": "SF", "state": "CA", "zip": 94110}
 
 ## Reading From a Table
 Now that we've added a contact to your phonebook, we should be able to read this
 contact from the table. KijiSchema supports reading from Kiji tables with the
-[`KijiTableReader`]({{site.api_schema_rc4}}/KijiTableReader.html) class. We have included an
+[`KijiTableReader`]({{site.api_schema_rc5}}/KijiTableReader.html) class. We have included an
 example of retrieving a single contact from the Kiji table using the contact's first
 and last names.
 
@@ -182,13 +182,13 @@ table = kiji.openTable(TABLE_NAME); // TABLE_NAME is "phonebook"
 {% endhighlight %}
 
 Since we are interested in reading from our table, we open a
-[`KijiTableReader`]({{site.api_schema_rc4}}/KijiTableReader.html).
+[`KijiTableReader`]({{site.api_schema_rc5}}/KijiTableReader.html).
 {% highlight java %}
 reader = table.openTableReader();
 {% endhighlight %}
 
 #### Looking up the requested entry
-Create an [`EntityId`]({{site.api_schema_rc4}}/EntityId.html) to retrieve a contact
+Create an [`EntityId`]({{site.api_schema_rc5}}/EntityId.html) to retrieve a contact
 using the contact's first and last name:
 {% highlight java %}
 final EntityId entityId = table.getEntityId(mFirst + "," + mLast);
@@ -207,8 +207,8 @@ final KijiDataRequest dataRequest = reqBuilder.build();
 {% endhighlight %}
 
 We now retrieve our result by passing the
-[`EntityId`]({{site.api_schema_rc4}}/EntityId.html) and data request to our table reader.
-Doing so results in a [`KijiRowData`]({{site.api_schema_rc4}}/KijiRowData.html) containing
+[`EntityId`]({{site.api_schema_rc5}}/EntityId.html) and data request to our table reader.
+Doing so results in a [`KijiRowData`]({{site.api_schema_rc5}}/KijiRowData.html) containing
 the data read from the table.
 
 {% highlight java %}

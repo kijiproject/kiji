@@ -21,7 +21,7 @@ To more efficiently import data into Kiji tables, KijiMR includes _Bulk Importer
 is a MapReduce job that processes its input into files that can that can be loaded
 directly into Kiji. The format of the input and how it translates into Kiji table entity ids and
 columns are details particular to each concrete subclass of
-[`KijiBulkImporter`]({{site.api_mr_rc4}}/bulkimport/KijiBulkImporter.html).
+[`KijiBulkImporter`]({{site.api_mr_rc5}}/bulkimport/KijiBulkImporter.html).
 
 ### Classes Overview
 
@@ -36,7 +36,7 @@ and launch a bulk import job.
 ### Using the API
 
 All bulk importers must extend the parameterized class
-[`KijiBulkImporter`]({{site.api_mr_rc4}}/bulkimport/KijiBulkImporter.html) with the types of the key
+[`KijiBulkImporter`]({{site.api_mr_rc5}}/bulkimport/KijiBulkImporter.html) with the types of the key
 and value of their input.  Concrete bulk importers must implement the following method:
 
 * `void produce(K key, V value, KijiTableContext context)` contains the logic to produce the content
@@ -53,7 +53,7 @@ As mentioned above, a bulk importer's `produce()` method has an `org.kiji.mapred
 argument.  This class has methods needed to write data to Kiji: 
 
 * `EntityId getEntityId(String kijiRowKey)` returns the
-  [`EntityId`]({{site.api_schema_rc4}}/EntityId.html) for a row in a Kiji table given a string
+  [`EntityId`]({{site.api_schema_rc5}}/EntityId.html) for a row in a Kiji table given a string
   identifier.
 
 * `void put(EntityId entityId, String family, String qualifier, T value)` writes data to a column
@@ -127,7 +127,7 @@ here, has already been created with the correct layout in the default Kiji insta
 {% highlight bash %}
 kiji bulk-import \
     --importer=my.application.package.BulkImporterExample \
-    --input="format=text file=hdfs://cluster/path/to/text-input-file \
+    --input="format=text file=hdfs://cluster/path/to/text-input-file" \
     --output="format=kiji table=kiji://.env/default/number_table nsplits=1" \
 {% endhighlight %}
 
@@ -141,28 +141,28 @@ when running bulk import jobs from the command line.
 Within the `org.kiji.mapreduce.lib.bulkimport` package of the KijiMR Library, there is a variety of
 useful parsers for building your own bulk importer:
 
-* [`CSVParser`]({{site.api_mrlib_rc4}}/util/CSVParser.html) - parses delimited CSV (Comma Separated
+* [`CSVParser`]({{site.api_mrlib_rc5}}/util/CSVParser.html) - parses delimited CSV (Comma Separated
   Value) data into component fields.  This parser also handles TSV (Tab Separated Value) data.
 
-* [`CommonLogParser`]({{site.api_mrlib_rc4}}/util/CommonLogParser.html) - parses Common Log Format
+* [`CommonLogParser`]({{site.api_mrlib_rc5}}/util/CommonLogParser.html) - parses Common Log Format
   data (used by Apache web server) into the relevant fields for each request in the log.
 
 There are several associated bulk importers that parse data into rows:
 
-* [`CSVBulkImporter`]({{site.api_mrlib_rc4}}/bulkimport/CSVBulkImporter.html) - takes in CSV files
+* [`CSVBulkImporter`]({{site.api_mrlib_rc5}}/bulkimport/CSVBulkImporter.html) - takes in CSV files
   and writes a row for each line in the file.
 
-* [`CommonLogBulkImporter`]({{site.api_mrlib_rc4}}/bulkimport/CommonLogBulkImporter.html) - takes in
+* [`CommonLogBulkImporter`]({{site.api_mrlib_rc5}}/bulkimport/CommonLogBulkImporter.html) - takes in
   an Apache web server log and produces a row for each client request.
 
-* [`JSONBulkImporter`]({{site.api_mrlib_rc4}}/bulkimport/JSONBulkImporter.html) - takes in a text
+* [`JSONBulkImporter`]({{site.api_mrlib_rc5}}/bulkimport/JSONBulkImporter.html) - takes in a text
   file with a JSON object on each line and produces a row for each object.
 
 All of these bulk importers extend
-[`DescribedInputTextBulkImporter`]({{site.api_mrlib_rc4}}/bulkimport/DescribedInputTextBulkImporter.html)
+[`DescribedInputTextBulkImporter`]({{site.api_mrlib_rc5}}/bulkimport/DescribedInputTextBulkImporter.html)
 which contains helper functions and can be configured via a
-[`KijiTableImportDescriptor`]({{site.api_mrlib_rc4}}/bulkimport/KijiTableImportDescriptor.html).
-[`KijiTableImportDescriptor`]({{site.api_mrlib_rc4}}/bulkimport/KijiTableImportDescriptor.html) is
+[`KijiTableImportDescriptor`]({{site.api_mrlib_rc5}}/bulkimport/KijiTableImportDescriptor.html).
+[`KijiTableImportDescriptor`]({{site.api_mrlib_rc5}}/bulkimport/KijiTableImportDescriptor.html) is
 an Avro-based specification that maps data in input files onto an existing Kiji table layout. 
 
 See the javadoc for these classes for instructions and examples on using them.

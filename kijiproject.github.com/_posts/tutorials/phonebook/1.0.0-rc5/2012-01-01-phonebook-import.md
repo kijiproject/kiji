@@ -55,7 +55,7 @@ JsonDecoder decoder =
 Address streetAddr = datumReader.read(null, decoder);
 {% endhighlight %}
 
-Next we create a unique [`EntityId`]({{site.api_schema_rc4}}/EntityId.html) that will be used to reference this row.  As before, we will use
+Next we create a unique [`EntityId`]({{site.api_schema_rc5}}/EntityId.html) that will be used to reference this row.  As before, we will use
 the combination of first and last name as a unique reference to this row:
 {% highlight java %}
 EntityId user = table.getEntityId(firstName + "," + lastName);
@@ -91,7 +91,7 @@ Verify that the user records were added properly by executing:
 
 <div class="userinput">
 {% highlight bash %}
-$KIJI_HOME/bin/kiji ls --kiji=kiji://.env/default/phonebook
+$KIJI_HOME/bin/kiji scan kiji://.env/default/phonebook
 {% endhighlight %}
 </div>
 
@@ -106,11 +106,11 @@ puts in a distributed fashion.
 Our example of importing data into a table with MapReduce can be found in the class
 `PhonebookImporter`. PhonebookImporter defines a special type of MapReduce job called a
 Kiji bulk import job that reads each line of our input file, parses it, and writes it to a table.
-Kiji bulk import jobs are created by implementing a [`KijiBulkImporter`]({{site.api_mr_rc4}}/bulkimport/KijiBulkImporter.html),
+Kiji bulk import jobs are created by implementing a [`KijiBulkImporter`]({{site.api_mr_rc5}}/bulkimport/KijiBulkImporter.html),
 not a `Mapper` and `Reducer`. This API is provided by KijiMR. The
 [Music recommendation tutorial](/tutorials/music-recommendation/1.0.0-rc5/music-overview/)
 covers KijiMR in much greater detail, but we will take a look at using the
-[`KijiBulkImporter`]({{site.api_mr_rc4}}/bulkimport/KijiBulkImporter.html) API below.
+[`KijiBulkImporter`]({{site.api_mr_rc5}}/bulkimport/KijiBulkImporter.html) API below.
 
 Instead of a `map()` method, we provide a `produce()` method definition; this method processes
 an input record from a file like an ordinary mapper, except its `context` argument is
@@ -118,7 +118,7 @@ specifically targeted to output to a row in a Kiji table.
 
 At the top of the `produce()` method, you'll see that we extract the fields from
 the lines as in the above example.  Then using the
-[`KijiTableContext`]({{site.api_mr_rc4}}/KijiTableContext.html) context argument,
+[`KijiTableContext`]({{site.api_mr_rc5}}/KijiTableContext.html) context argument,
 we'll write all of the fields to the phonebook table:
 
 {% highlight java %}
@@ -135,7 +135,7 @@ public void produce(LongWritable byteOffset, Text line, KijiTableContext context
 {% endhighlight %}
 
 The `context.put()` calls are identical in form to using a
-[`KijiTableWriter`]({{site.api_schema_rc4}}/KijiTableWriter.html).
+[`KijiTableWriter`]({{site.api_schema_rc5}}/KijiTableWriter.html).
 
 If you are writing a custom bulk importer and require specialized setup and teardown steps,
 these can be placed in `setup()` and `cleanup()` methods like in a Mapper. We don't need
@@ -145,7 +145,7 @@ The outer `PhonebookImporter` class contains `configureJob(...)` and `run(...)` 
 that handle the setup and execution
 of the MapReduce job.  Instead of constructing a Hadoop `Job` object directly, we use a
 `KijiBulkImportJobBuilder`. This builder object lets us specify Kiji-specific arguments,
-and construct a [`MapReduceJob`]({{site.api_mr_rc4}}/MapReduceJob.html) (A Kiji-specific wrapper around `Job`):
+and construct a [`MapReduceJob`]({{site.api_mr_rc5}}/MapReduceJob.html) (A Kiji-specific wrapper around `Job`):
 
 {% highlight java %}
 MapReduceJob configureJob(Path inputPath, KijiURI tableUri) throws IOException {
@@ -159,7 +159,7 @@ MapReduceJob configureJob(Path inputPath, KijiURI tableUri) throws IOException {
 {% endhighlight %}
 
 The HDFS file path to the sample input data is set to the first command line argument.
-A [`KijiURI`]({{site.api_schema_rc4}}/KijiURI.html) is constructed that specifies the `phonebook` table as the target:
+A [`KijiURI`]({{site.api_schema_rc5}}/KijiURI.html) is constructed that specifies the `phonebook` table as the target:
 
 {% highlight java %}
 public int run(String[] args) throws Exception {
@@ -169,16 +169,16 @@ public int run(String[] args) throws Exception {
 }
 {% endhighlight %}
 
-The [`TextMapReduceJobInput`]({{site.api_mr_rc4}}/input/TextMapReduceJobInput.html) and
-[`DirectKijiTableMapReduceJobOutput`]({{site.api_mr_rc4}}/output/DirectKijiTableMapReduceJobOutput.html)
+The [`TextMapReduceJobInput`]({{site.api_mr_rc5}}/input/TextMapReduceJobInput.html) and
+[`DirectKijiTableMapReduceJobOutput`]({{site.api_mr_rc5}}/output/DirectKijiTableMapReduceJobOutput.html)
 classes are abstractions that, under the hood, configure an `InputFormat` and `OutputFormat`
 for the MapReduce job. Different KijiMR job types (bulk importer, producer, or gatherer)
 support different subsets of available formats (files, tables, etc). These classes allow the
 system to ensure that the correct type is used. For example, bulk import jobs require that the
 target is a table. "Regular" MapReduce jobs configured through
-[`KijiMapReduceJobBuilder`]({{site.api_mr_rc4}}/KijiMapReduceJobBuilder.html) can use
-any [`MapReduceJobInput`]({{site.api_mr_rc4}}/MapReduceJobInput.html) and
-[`MapReduceJobOutput`]({{site.api_mr_rc4}}/MapReduceJobOutput.html) that makes sense
+[`KijiMapReduceJobBuilder`]({{site.api_mr_rc5}}/KijiMapReduceJobBuilder.html) can use
+any [`MapReduceJobInput`]({{site.api_mr_rc5}}/MapReduceJobInput.html) and
+[`MapReduceJobOutput`]({{site.api_mr_rc5}}/MapReduceJobOutput.html) that makes sense
 in the context of the application.
 
 ### Running the Example
@@ -226,8 +226,8 @@ $KIJI_HOME/bin/kiji bulk-import \
 </div>
 
 The `--input` and `--output` arguments specify in text form the same
-[`MapReduceJobInput`]({{site.api_mr_rc4}}/MapReduceJobInput.html) and
-[`MapReduceJobOutput`]({{site.api_mr_rc4}}/MapReduceJobOutput.html)
+[`MapReduceJobInput`]({{site.api_mr_rc5}}/MapReduceJobInput.html) and
+[`MapReduceJobOutput`]({{site.api_mr_rc5}}/MapReduceJobOutput.html)
 objects as are created programmatically in this example.
 
 #### Verify
@@ -235,20 +235,20 @@ Verify that the user records were added properly by executing:
 
 <div class="userinput">
 {% highlight bash %}
-$KIJI_HOME/bin/kiji ls --kiji=kiji://.env/default/phonebook
+$KIJI_HOME/bin/kiji scan kiji://.env/default/phonebook
 {% endhighlight %}
 </div>
 
 Here's what the first entry should look like:
 
     Scanning kiji table: kiji://localhost:2181/default/phonebook/
-    U\x1EP\xC1\xF2c$7\xCC\xBA\xCB\x16\x10\x0F\x11\xDB [1352513223503] info:firstname
+    entity-id=hbase=hex:551e50c1f2632437ccbacb16100f11db [1363228117784] info:firstname
                                      John
-    U\x1EP\xC1\xF2c$7\xCC\xBA\xCB\x16\x10\x0F\x11\xDB [1352513223504] info:lastname
+    entity-id=hbase=hex:551e50c1f2632437ccbacb16100f11db [1363228117787] info:lastname
                                      Doe
-    U\x1EP\xC1\xF2c$7\xCC\xBA\xCB\x16\x10\x0F\x11\xDB [1352513223505] info:email
+    entity-id=hbase=hex:551e50c1f2632437ccbacb16100f11db [1363228117789] info:email
                                      johndoe@gmail.com
-    U\x1EP\xC1\xF2c$7\xCC\xBA\xCB\x16\x10\x0F\x11\xDB [1352513223505] info:telephone
+    entity-id=hbase=hex:551e50c1f2632437ccbacb16100f11db [1363228117792] info:telephone
                                      202-555-9876
-    U\x1EP\xC1\xF2c$7\xCC\xBA\xCB\x16\x10\x0F\x11\xDB [1352513223506] info:address
+    entity-id=hbase=hex:551e50c1f2632437ccbacb16100f11db [1363228117793] info:address
                                      {"addr1": "1600 Pennsylvania Ave", "apt": null, "addr2": null, "city": "Washington", "state": "DC", "zip": 99999}

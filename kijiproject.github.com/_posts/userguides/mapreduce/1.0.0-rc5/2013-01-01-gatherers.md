@@ -29,21 +29,21 @@ reducer. The job can then be launched programmatically.
 
 ## Using the API
 
-All gatherers must extend the parameterized class [`KijiGatherer`]({{site.api_mr_rc4}}/gather/KijiGatherer.html) with the types
+All gatherers must extend the parameterized class [`KijiGatherer`]({{site.api_mr_rc5}}/gather/KijiGatherer.html) with the types
 of the key and value of their output. Concrete gatherers must implement these methods:
 
  * `Class<?> getOutputKeyClass()` and `Class<?> getOutputValueClass()`. These methods should return the
 classes of the output keys and values emitted by the gatherer.
- * `KijiDataRequest getDataRequest()`. This methods specifies the columns retrieved while scanning rows from the input table. It should construct and return a [`KijiDataRequest`]({{site.api_schema_rc4}}/KijiDataRequest.html).
- * `void gather(KijiRowData input, GathererContext<K, V> context)`. This methods contains the gatherer's logic that translates its input into key-value pairs. It will be called once per row processed by the gatherer task. `input` will contain the columns from the row as requested by the [`KijiDataRequest`]({{site.api_schema_rc4}}/KijiDataRequest.html) returned by `getDataRequest()`. The gatherer should use its `context` parameter to emit key-value pairs as detailed below.
+ * `KijiDataRequest getDataRequest()`. This methods specifies the columns retrieved while scanning rows from the input table. It should construct and return a [`KijiDataRequest`]({{site.api_schema_rc5}}/KijiDataRequest.html).
+ * `void gather(KijiRowData input, GathererContext<K, V> context)`. This methods contains the gatherer's logic that translates its input into key-value pairs. It will be called once per row processed by the gatherer task. `input` will contain the columns from the row as requested by the [`KijiDataRequest`]({{site.api_schema_rc5}}/KijiDataRequest.html) returned by `getDataRequest()`. The gatherer should use its `context` parameter to emit key-value pairs as detailed below.
 
-While processing a row, a gatherer may access data from external stores through [`KeyValueStore`]({{site.api_mr_rc4}}/kvstore/KeyValueStore.html)s by implementing `Map<String, KeyValueStore<?, ?>> getRequiredStores()`. This method should construct and return a map specifying all the [`KeyValueStore`]({{site.api_mr_rc4}}/kvstore/KeyValueStore.html)s that the gatherer wants to access. The [`KeyValueStore`]({{site.api_mr_rc4}}/kvstore/KeyValueStore.html)s may then later be accessed from the `gather()` method through the [`GathererContext`]({{site.api_mr_rc4}}/gather/GathererContext.html). For more details, you may check the [KeyValue Stores]({{site.userguide_mapreduce_rc4}}/key-value-stores) section in this guide.
+While processing a row, a gatherer may access data from external stores through [`KeyValueStore`]({{site.api_mr_rc5}}/kvstore/KeyValueStore.html)s by implementing `Map<String, KeyValueStore<?, ?>> getRequiredStores()`. This method should construct and return a map specifying all the [`KeyValueStore`]({{site.api_mr_rc5}}/kvstore/KeyValueStore.html)s that the gatherer wants to access. The [`KeyValueStore`]({{site.api_mr_rc5}}/kvstore/KeyValueStore.html)s may then later be accessed from the `gather()` method through the [`GathererContext`]({{site.api_mr_rc5}}/gather/GathererContext.html). For more details, you may check the [KeyValue Stores]({{site.userguide_mapreduce_rc5}}/key-value-stores) section in this guide.
 
 Optionally, a gatherer may implement `setup()` and `cleanup()` to initialize and
 finalize resources that can be reused during the gather task. These methods
 will be called once by each task, `setup()` before processing input rows and
 `cleanup()` after the task is done processing. If you wish to use a
-[`KeyValueStore`]({{site.api_mr_rc4}}/kvstore/KeyValueStore.html), it should be opened once with `context.getStore(storeName)` in
+[`KeyValueStore`]({{site.api_mr_rc5}}/kvstore/KeyValueStore.html), it should be opened once with `context.getStore(storeName)` in
 `setup()`, saved in a member variable, and closed in `cleanup()`.
 
 The class of a gatherer's output key and value may have restrictions

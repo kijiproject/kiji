@@ -29,7 +29,7 @@ columns.
 
 Unlike HBase, each cell in a Kiji table has a schema associated with it.
 Schemas in KijiSchema are versioned. The schema and layout system is
-described in greater detail in [Managing Data]({{site.userguide_schema_rc4}}/managing-data).
+described in greater detail in [Managing Data]({{site.userguide_schema_rc5}}/managing-data).
 
 ### Entity-Centric Data Model
 KijiSchema’s data model is *entity-centric*. Each row typically holds

@@ -29,7 +29,7 @@ In this tutorial, we demonstrate how to use KijiMR to leverage your data effecti
 ### How to Use this Tutorial
 
 * **Links to Javadoc** - Class names link to the relevant Javadoc:
-[`EntityId`]({{site.api_schema_rc4}}/EntityId.html).
+[`EntityId`]({{site.api_schema_rc5}}/EntityId.html).
 
 * **Code Walkthrough** - Code snippets are in gray boxes with language specific syntax highlighting.
 

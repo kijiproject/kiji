@@ -24,7 +24,7 @@ bento start
 
 If you have downloaded the Kiji Standalone BentoBox, the code for this tutorial
 is already compiled and located in the `$KIJI_HOME/examples/phonebook/lib/` directory.
-You can skip to [Create a Table]({{site.tutorial_phonebook_rc4}}/phonebook-create)
+You can skip to [Create a Table]({{site.tutorial_phonebook_rc5}}/phonebook-create)
 if you want to get started playing with the example code.
 
 
@@ -67,7 +67,7 @@ classpath. You can add your artifacts to the Kiji classpath by running:
 
 <div class="userinput">
 {% highlight bash %}
-export KIJI_CLASSPATH=$KIJI_HOME/examples/phonebook/lib/*
+export KIJI_CLASSPATH="$KIJI_HOME/examples/phonebook/lib/*"
 {% endhighlight %}
 </div>
 

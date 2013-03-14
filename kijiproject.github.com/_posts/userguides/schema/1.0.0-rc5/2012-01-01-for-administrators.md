@@ -91,8 +91,8 @@ You should see output like the following:
     Successfully created kiji instance: kiji://localhost:2181/default/
 
 Now you can create some tables in the
-[DDL schema-shell]({{site.userguide_schema_rc4}}/schema-shell-ddl-ref), explore the
-[Phonebook example]({{site.tutorial_phonebook_rc4}}/phonebook-tutorial), and get started
+[DDL schema-shell]({{site.userguide_schema_rc5}}/schema-shell-ddl-ref), explore the
+[Phonebook example]({{site.tutorial_phonebook_rc5}}/phonebook-tutorial), and get started
 [building a Maven project](http://www.kiji.org/get-started-with-maven) with
 Kiji. See the
 [quickstart guide](http://www.kiji.org/getstarted/#Quick_Start_Guide) to get

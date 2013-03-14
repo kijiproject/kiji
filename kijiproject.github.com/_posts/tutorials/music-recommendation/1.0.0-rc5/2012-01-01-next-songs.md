@@ -206,7 +206,7 @@ to inspect our Kiji tables.
 
 <div class="userinput">
 {% highlight bash %}
-kiji ls --kiji=${KIJI}/songs --columns=info:top_next_songs --max-rows=3
+kiji scan ${KIJI}/songs/info:top_next_songs --max-rows=3
 {% endhighlight %}
 </div>
 

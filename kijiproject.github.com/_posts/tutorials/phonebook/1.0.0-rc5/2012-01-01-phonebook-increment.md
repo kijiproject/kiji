@@ -113,15 +113,15 @@ $KIJI_HOME/bin/kiji jar \
 </div>
 
 #### Verify
-Now we can look up the derived talktime value from the stats column for the user John Doe using the `kiji ls` command:
+Now we can look up the derived talktime value from the stats column for the user John Doe using the `kiji get` command:
 
 <div class="userinput">
 {% highlight bash %}
-$KIJI_HOME/bin/kiji ls --kiji=kiji://.env/default/phonebook \
-    --entity-id="John,Doe" --columns="stats"
+$KIJI_HOME/bin/kiji get kiji://.env/default/phonebook/stats \
+    --entity-id='"John,Doe"'
 {% endhighlight %}
 </div>
 
-    Looking up entity: U\x1EP\xC1\xF2c$7\xCC\xBA\xCB\x16\x10\x0F\x11\xDB from kiji table: kiji://localhost:2181/default/phonebook/
-    U\x1EP\xC1\xF2c$7\xCC\xBA\xCB\x16\x10\x0F\x11\xDB [1352838746735] stats:talktime
+    Looking up entity: hbase=hex:551e50c1f2632437ccbacb16100f11db from kiji table: kiji://localhost:2181/default/phonebook/stats/
+    entity-id=hbase=hex:551e50c1f2632437ccbacb16100f11db [1363228284547] stats:talktime
                                      15

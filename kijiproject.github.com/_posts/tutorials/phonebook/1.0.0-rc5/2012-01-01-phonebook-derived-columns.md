@@ -10,7 +10,7 @@ description: Decompose an address into its individual fields.
 <div class="hero-unit">
   <h3>This page is deprecated.</h3>
   <p>
-    For a more up-to-date look at how to derive data using Producers, see the 
+    For a more up-to-date look at how to derive data using Producers, see the
     <a href="/tutorials/music-recommendation/1.0.0-rc5/music-overview/">Music
     recommendation tutorial</a>.
     This section is preserved for your reference, but the APIs referenced herein
@@ -83,18 +83,18 @@ You can use the following command to see if your contacts' address data was succ
 
 <div class="userinput">
 {% highlight bash %}
-$KIJI_HOME/bin/kiji ls --kiji=kiji://.env/default/phonebook --columns=derived
+$KIJI_HOME/bin/kiji scan kiji://.env/default/phonebook/derived
 {% endhighlight %}
 </div>
 
-    Scanning kiji table: kiji://localhost:2181/default/phonebook/
-    U\x1EP\xC1\xF2c$7\xCC\xBA\xCB\x16\x10\x0F\x11\xDB [1352750122019] derived:addr1
+    Scanning kiji table: kiji://localhost:2181/default/phonebook/derived/
+    entity-id=hbase=hex:551e50c1f2632437ccbacb16100f11db [1363228186202] derived:addr1
                                      1600 Pennsylvania Ave
-    U\x1EP\xC1\xF2c$7\xCC\xBA\xCB\x16\x10\x0F\x11\xDB [1352750122020] derived:city
+    entity-id=hbase=hex:551e50c1f2632437ccbacb16100f11db [1363228186203] derived:city
                                      Washington
-    U\x1EP\xC1\xF2c$7\xCC\xBA\xCB\x16\x10\x0F\x11\xDB [1352750122021] derived:state
+    entity-id=hbase=hex:551e50c1f2632437ccbacb16100f11db [1363228186205] derived:state
                                      DC
-    U\x1EP\xC1\xF2c$7\xCC\xBA\xCB\x16\x10\x0F\x11\xDB [1352750122022] derived:zip
+    entity-id=hbase=hex:551e50c1f2632437ccbacb16100f11db [1363228186207] derived:zip
                                      99999
 
     ...

@@ -18,7 +18,7 @@ each row in the user table and apply our recommendation strategy to it.
 </div>
 
 <h3 style="margin-top:0px;padding-top:10px;"> NextSongRecommender </h3>
-The NextSongRecommender is an example of a [KijiProducer]({{site.userguide_mapreduce_rc4}}/producers).
+The NextSongRecommender is an example of a [KijiProducer]({{site.userguide_mapreduce_rc5}}/producers).
 A producer operates on a single row of input data and generates new outputs that are written to the
 same row.  It can also refer to external sources of data via KeyValueStores in addition to the input from the row.
 For every row this producer processes, it will:
@@ -40,7 +40,7 @@ only want the most recent value from this column, so we can use the `create()` c
   }
 {% endhighlight %}
 
-In our `produce()` method, we then access our requested data through the [`KijiRowData`]({{site.api_schema_rc4}}/KijiRowData.html):
+In our `produce()` method, we then access our requested data through the [`KijiRowData`]({{site.api_schema_rc5}}/KijiRowData.html):
 
 {% highlight java %}
   String mostRecentSong = input.<CharSequence>getMostRecentValue("info", "track_plays")
@@ -48,7 +48,7 @@ In our `produce()` method, we then access our requested data through the [`KijiR
 {% endhighlight %}
 
 #### Join External Data Sources
-[KeyValueStores]({{site.userguide_mapreduce_rc4}}/key-value-stores) allow you to access external data sources in a MapReduce job.
+[KeyValueStores]({{site.userguide_mapreduce_rc5}}/key-value-stores) allow you to access external data sources in a MapReduce job.
 This is a common pattern in MapReduce jobs, as it allows us to integrate two sources of data. In this case, we will use the
 "top_next_songs" column of our "songs" table as a KeyValueStore.
 
@@ -122,7 +122,7 @@ withStore() method of JobBuilders.
 
 ### Running the Example
 When we run this example, we again need to need specify which
-[`KijiTable`]({{site.api_schema_rc4}}/KijiTable.html) we want to use to back our
+[`KijiTable`]({{site.api_schema_rc5}}/KijiTable.html) we want to use to back our
 KeyValueStore. This time, we will override the KeyValueStore binding from
 the command line using an XML configuration file (located at ${KIJI_HOME}/examples/music/KVStoreConfig.xml).
 The contents of the file are displayed below. If you are not using BentoBox, you may need to modify this
