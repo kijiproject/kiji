@@ -21,7 +21,7 @@
 
   <groupId>org.kiji.platforms</groupId>
   <artifactId>kiji-platforms</artifactId>
-  <version>1.0.0-rc5-SNAPSHOT</version>
+  <version>1.0.0-rc6-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <parent>
