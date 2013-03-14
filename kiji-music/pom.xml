@@ -22,7 +22,7 @@
 
   <groupId>org.kiji.examples.music</groupId>
   <artifactId>kiji-music</artifactId>
-  <version>1.0.0-rc5-SNAPSHOT</version>
+  <version>1.0.0-rc5</version>
   <packaging>jar</packaging>
 
   <parent>
