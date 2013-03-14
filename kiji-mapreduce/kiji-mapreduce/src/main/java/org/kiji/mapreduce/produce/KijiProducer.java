@@ -73,6 +73,27 @@ import org.kiji.schema.KijiRowData;
  * A final guarantee is that setup(), produce(), and cleanup() will be called after
  * getDataRequest() and getOutputColumn() have each been called at least once.
  * </p>
+ *
+ * <h1>Skeleton:</h1>
+ * <p>
+ *   Any concrete implementation of a KijiProducer must implement the {@link #getDataRequest()},
+ *   {@link #produce}, and {@link #getOutputColumn()} methods.
+ *   An example of a produce method that extracts the domains from the email field of each row:
+ * </p>
+ * <pre><code>
+ *   public void produce(KijiRowData input, ProducerContext context)
+ *       throws IOException {
+ *     if (!input.containsColumn("info", "email")) {
+ *       return;
+ *     }
+ *     String email = input.getMostRecentValue("info", "email").toString();
+ *     int atSymbol = email.indexOf("@");
+ *
+ *     String domain = email.substring(atSymbol + 1);
+ *     context.put(domain);
+ *   }
+ * </code></pre>
+ * For the entire code for this producer, check out EmailDomainProducer in KijiMR Lib.
  */
 @ApiAudience.Public
 @Inheritance.Extensible

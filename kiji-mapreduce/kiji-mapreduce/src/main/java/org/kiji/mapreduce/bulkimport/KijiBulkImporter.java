@@ -65,6 +65,23 @@ import org.kiji.mapreduce.kvstore.KeyValueStoreClient;
  * <p>A final guarantee is that setup(), produce(), and cleanup() will be called after
  * getOutputColumn() has been called at least once.</p>
  *
+ * <h1>Skeleton:</h1>
+ * <p>
+ *   Any concrete implementation of a KijiBulkImporter must implement the {@link #produce} method.
+ *   An example of a bulk importer that parses a colon delimited mappings of strings to integers:
+ * </p>
+ * <pre><code>
+ *   public void produce(LongWritable filePos, Text value, KijiTableContext context)
+ *       throws IOException {
+ *     final String[] split = value.toString().split(":");
+ *     final String rowKey = split[0];
+ *     final int integerValue = Integer.parseInt(split[1]);
+
+ *     final EntityId eid = context.getEntityId(rowKey);
+ *     context.put(eid, "primitives", "int", integerValue);
+ *   }
+ * </code></pre>
+ *
  * @param <K> The type of the MapReduce input key, which will depend on the input format used.
  * @param <V> The type of the MapReduce input value, which will depend on the input format used.
  */

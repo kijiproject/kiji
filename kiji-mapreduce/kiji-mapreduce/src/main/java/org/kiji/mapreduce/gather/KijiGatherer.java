@@ -69,6 +69,27 @@ import org.kiji.schema.KijiRowData;
  * that this setup-gather-cleanup cycle may repeat any number of times.
  * </p>
  *
+ * <h1>Skeleton:</h1>
+ * <p>
+ *   Any concrete implementation of a KijiGatherer must implement the {@link #getDataRequest()},
+ *   {@link #gather}, {@link #getOutputKeyClass()}, and {@link #getOutputValueClass()} methods.
+ *   An example of a gather method that counts the domains from the email field of each row:
+ * </p>
+ * <pre><code>
+ *   public void gather(KijiRowData input, GathererContext context)
+ *       throws IOException {
+ *     if (!input.containsColumn("info", "email")) {
+ *       return;
+ *     }
+ *     String email = input.getMostRecentValue("info", "email").toString();
+ *     int atSymbol = email.indexOf("@");
+ *     String domain = email.substring(atSymbol + 1);
+ *     mDomain.set(domain);
+ *     context.write(mDomain, ONE);
+ *   }
+ * </code></pre>
+ * For the entire code for this gatherer, check out EmailDomainCountGatherer in KijiMR Lib.
+ *
  * @param <K> The type of the output key from the gatherer.
  * @param <V> The type of the output value from the gatherer.
  */
