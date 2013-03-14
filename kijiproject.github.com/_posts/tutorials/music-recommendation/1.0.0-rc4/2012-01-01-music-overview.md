@@ -16,7 +16,7 @@ We believe that past patterns are a good source for future recommendations. To i
 the data, we will use a layout in KijiSchema. To effectively use this gigantic flood of data, we
 can use MapReduce paradigms provided by KijiMR to analyze and provide recommendations.
 
-In this tutorial, we demonstrate how simple it is to use KijiMR to leverage your data effectively. You will:
+In this tutorial, we demonstrate how to use KijiMR to leverage your data effectively. You will:
 
 * Efficiently import data into a KijiTable.
 * Manipulate data in and between Kiji and HDFS.

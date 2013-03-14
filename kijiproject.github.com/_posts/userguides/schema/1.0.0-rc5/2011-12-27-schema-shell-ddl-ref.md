@@ -140,7 +140,7 @@ You can also select an instance:
 
     schema> USE foo;
 
-The default instance is named `default`; in addition to `USE default;`, 
+The default instance is named `default`; in addition to `USE default;`,
 you can also select that with the more readable (and more verbose) syntax:
 
     schema> USE DEFAULT INSTANCE;
@@ -203,19 +203,88 @@ The following are not allowed:
 #### `CREATE TABLE` Syntax
 
     CREATE TABLE t [WITH DESCRIPTION 'd']
-    [ROW KEY FORMAT { HASHED | RAW | HASH PREFIXED(int) }]
+    [ROW KEY FORMAT { HASHED | RAW | HASH PREFIXED(int) | formatted_key_spec }]
     WITH locality_group [ , locality_group ...]*;
 
 This creates a table, sets its description, defines how row keys are formatted,
 and defines a list of locality groups.
 
-Row keys may be literal string values (`ROW KEY FORMAT RAW`), or they may be
-the hash of the string value (`ROW KEY FORMAT HASHED`). They may also be a
-composite of the two (`ROW KEY FORMAT HASH PREFIXED(n)`), where `n` is an
-integer between 1 and 16 specifying the number of hash bytes to retain as
-the prefix size (e.g: `ROW KEY FORMAT HASH PREFIXED(2)` will use raw keys
-with two bytes of the key hash as a prefix.) If no `ROW KEY FORMAT` clause is
-given, it is assumed to be `HASHED`.
+##### Row key syntax
+
+Row keys are generally a tuple of one or more string or numeric values, which are usually
+prefixed by a few bytes of salt for load balancing purposes. The salt is calculated
+by hashing one or more elements of the tuple and using a few bytes of the hash.
+
+A `formatted_key_spec` looks something like this:
+
+    ROW KEY FORMAT (component_name STRING, component_name2 INT, ..., HASH (hash_props))
+
+The row key must have at least one component. Each component in the key tuple must have a name
+that matches `[A-Za-z_][A-Za-z0-9_]*`. Components may have one of the following types:
+
+* `STRING` - A UTF-8-encoded string that does not contain the codepoint `\u0000` ('nil').
+* `INT` - A 32-bit signed integer.
+* `LONG` - A 64-bit signed integer.
+* Additionally, components may be marked `NOT NULL` (e.g., `foo STRING NOT NULL`). The
+  first element is implicitly `NOT NULL`. Subsequent elements may be marked as such,
+  but `NOT NULL` elements may not follow nullable ones.
+
+And `hash_props` is a collection of the following properties:
+
+* `THROUGH component_name` - Specifies that the hash prefix is calculated through all
+  fields up to and including `component_name`. By default, the hash prefix will be
+  calculated based on the first field.
+* `SIZE = n` - Specifies the number of bytes to use in the hash prefix, between 0 and 16 inclusive.
+  If not given, this defaults to 2 bytes.
+* `SUPPRESS FIELDS` - If specified, then the "plain text" of your key is discarded; only the
+  hash of the key is used. If `SIZE` is not specified but `SUPPRESS FIELDS` is, the entire 16
+  byte hash will be retained. Do not use this if you need to read the keys out of the table;
+  only use this if recording the hashes alone is sufficient.
+* Each of the above 3 properties may be specified at most once.
+
+There are also a few "canned" row key formats available:
+
+* `ROW KEY FORMAT HASH PREFIXED(n)` - Use a single string component in the key, and
+  include a hash-based salt prefix. `n` specifies the number of bytes of salt. This should
+  be at least 2 bytes. More than 4 is probably overkill.
+* `ROW KEY FORMAT HASHED` - Use a single string component in the key, but rather than
+  include the string component in the key -- just use the 16 byte hash of the string.
+  If you need to read back the value in the key, prefer `HASH PREFIXED` over `HASHED`.
+* `ROW KEY FORMAT RAW` - Use a literal raw byte array for the key. Appropriate for advanced
+  manual control over row keys; use at your own caution.
+* If no `ROW KEY FORMAT` clause is given, it is assumed to be `HASHED`.
+
+Example row keys:
+
+    # A simple row key consisting of a single, hash-prefixed component:
+    CREATE TABLE ex0 ROW KEY FORMAT (username STRING) WITH LOCALITY GROUP...
+
+    # A composite row key:
+    CREATE TABLE ex1 ROW KEY FORMAT (lastname STRING, firstname STRING) WITH LOCALITY GROUP...
+
+    # Key components are implicitly strings; this is equivalent:
+    CREATE TABLE ex1a ROW KEY FORMAT (lastname, firstname) WITH LOCALITY GROUP...
+
+    # The hash prefix is calculated based on (state, zip), not just 'state'.
+    # Note that 'state' is implicitly NOT NULL since it's the first element:
+    CREATE TABLE ex2 ROW KEY FORMAT (state STRING, zip INT NOT NULL, HASH(THROUGH zip)) ...
+
+    # Equivalent to "ROW KEY FORMAT HASHED":
+    CREATE TABLE ex3 ROW KEY FORMAT (key STRING, HASH(SUPPRESS FIELDS)) ...
+
+    # Include a bigger hash (4 bytes) than the default (2 bytes):
+    CREATE TABLE ex4 ROW KEY FORMAT (category_id LONG, product_id LONG, HASH(SIZE=4)) ...
+
+    # Setting many options:
+    CREATE TABLE ex5 ROW KEY FORMAT (a STRING, b LONG NOT NULL, c INT, HASH(THROUGH b, SIZE=8)) ...
+
+    # Row key component names can also be 'single quoted', like other identifiers:
+    CREATE TABLE ex6 ROW KEY FORMAT ('a' STRING) ...
+
+As a final word of caution, please note that after a table is created, its row key format
+cannot be altered.
+
+##### Locality group definition syntax
 
 Each locality group is defined as follows:
 
@@ -249,8 +318,8 @@ Within a group-type family, individual column qualifiers are specified with:
 The following is an example that puts together all of the different syntax
 elements described in the previous section:
 
-    schema> CREATE TABLE foo WITH DESCRIPTION 'some data'
-         -> ROW KEY FORMAT HASHED
+    schema> CREATE TABLE users WITH DESCRIPTION 'some data'
+         -> ROW KEY FORMAT (username STRING, HASH(SIZE=3))
          -> WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
          ->     MAXVERSIONS = INFINITY,
          ->     TTL = FOREVER,
@@ -277,6 +346,8 @@ Warning: THIS WILL DELETE ALL THE DATA IN THE TABLE.
 All table properties that can be set (descriptions, columns & schemas,
 locality group properties, etc) when a table is created, can also be changed
 after the fact.
+
+Row keys are the exception to this: their format is final.
 
 Keywords or clauses in \[square brackets\] are optional in the examples below:
 
@@ -307,7 +378,9 @@ Keywords or clauses in \[square brackets\] are optional in the examples below:
     ALTER TABLE t DROP LOCALITY GROUP lg;
 
     ALTER TABLE t SET DESCRIPTION = 'desc' FOR FAMILY f;
-    ALTER TABLE t SET SCHEMA = schema FOR [MAP TYPE] FAMILY f;
+    ALTER TABLE t SET SCHEMA = schema FOR [MAP TYPE] FAMILY fREATE TABLE ex1 ROW KEY FORMAT (a
+    STRING, b STRING) WITH LOCALITY GROUP...
+
 
     ALTER TABLE t SET DESCRIPTION = 'desc' FOR COLUMN info:foo;
     ALTER TABLE t SET SCHEMA = schema FOR COLUMN info:foo;

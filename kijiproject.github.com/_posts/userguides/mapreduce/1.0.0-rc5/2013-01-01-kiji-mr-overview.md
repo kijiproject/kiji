@@ -50,3 +50,20 @@ consistent interface to your MapReduce jobs. Finally, this guide contains a desc
 command line tools included with KijiMR and facilities that make it easier to test KijiMR
 application code.
 
+## Using KijiMR in Your Project
+
+You will need to include KijiSchema as a dependency in your project. If you're
+using Maven, this can be included as follows:
+
+    <dependency>
+      <groupId>org.kiji.mapreduce</groupId>
+      <artifactId>kiji-mapreduce</artifactId>
+      <version>1.0.0-rc5</version>
+      <scope>provided</scope>
+    </dependency>
+
+* You will also need a dependency on KijiSchema. See [the KijiSchema
+  documentation]({{ site.userguide_schema_rc5 }}/kiji-schema-overview/) for this information.
+* You'll probably need to configure your Maven `settings.xml` to locate these dependencies.
+  See [Getting started with Maven](http://www.kiji.org/get-started-with-maven)
+  for more details.

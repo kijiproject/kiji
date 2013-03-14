@@ -7,7 +7,7 @@ order : 5
 description: Includes info on working with Avro
 ---
 
-Instead of recommending the most popular songs to everyone using our service, we want to tailor our
+Instead of recommending the most popular songs to everyone using Pandorify, we want to tailor our
 recommendations based on user's listening history. For every user, we will look up the most recent
 song they have listened to and then recommend the song most frequently played after it. In order
 to do that, we need to create an index so that for each song, we can quickly look up what the
@@ -34,7 +34,7 @@ The easiest way work with complex keys in Kiji is to use [Avro](http://avro.apac
 We define a `SongBiGram`, which will be our key, as a pair of songs played sequentially by a
 single user.
 
-{% highlight js %}
+{% highlight java %}
   /** Song play bigram. */
   record SongBiGram {
     /** The ID of the first song played in a sequence. */
@@ -128,9 +128,9 @@ while the second track ID becomes part the `SongCount` value.
     final SongBiGram songPair = key.datum();
 
     final SongCount nextSongCount = SongCount.newBuilder()
-         .setCount(sum)
-         .setSongId(songPair.getSecondSongPlayed())
-         .build();
+        .setCount(sum)
+        .setSongId(songPair.getSecondSongPlayed())
+        .build();
     // Write out result for this song.
     context.write(
         new AvroKey<CharSequence>(songPair.getFirstSongPlayed().toString()),
@@ -229,11 +229,11 @@ in a limited way using a KeyValueStoreReader.
 <div class="userinput">
 {% highlight bash %}
 kiji gather \
-      --gatherer=org.kiji.examples.music.gather.SequentialPlayCounter \
-      --reducer=org.kiji.examples.music.reduce.SequentialPlayCountReducer \
-      --input="format=kiji table=${KIJI}/users" \
-      --output="format=avrokv file=output.sequentialPlayCount nsplits=2" \
-      --lib=${LIBS_DIR}
+    --gatherer=org.kiji.examples.music.gather.SequentialPlayCounter \
+    --reducer=org.kiji.examples.music.reduce.SequentialPlayCountReducer \
+    --input="format=kiji table=${KIJI}/users" \
+    --output="format=avrokv file=output.sequentialPlayCount nsplits=2" \
+    --lib=${LIBS_DIR}
 {% endhighlight %}
 </div>
 

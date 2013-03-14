@@ -22,12 +22,12 @@ bento start
 ### Compiling
 
 If you have downloaded the standalone Kiji BentoBox, the code for this tutorial
-is already compiled and located in the `$KIJI_HOME/examples/music/` directory.
+is already compiled and located in the `${KIJI_HOME}/examples/music/` directory.
 Commands in this tutorial will depend on this location:
 
 <div class="userinput">
 {% highlight bash %}
-export $MUSIC_HOME = ${KIJI_HOME}/examples/music
+export MUSIC_HOME=${KIJI_HOME}/examples/music
 {% endhighlight %}
 </div>
 
@@ -38,7 +38,7 @@ Once you have done this, if you are using Kiji BentoBox you can skip to
 "Set your environment variables" if you want to get started playing with the example code.
 Otherwise, follow these steps to compile it from source.
 
-The source code for this tutorial can be found in `$MUSIC_HOME`.
+The source code for this tutorial can be found in `${MUSIC_HOME}`.
 The source is included along with a Maven project. To get started using Maven,
 consult [Getting started With Maven]({{site.kiji_url}}/get-started-with-maven) or
 the [Apache Maven Homepage](http://maven.apache.org/).
@@ -47,12 +47,12 @@ The following tools are required to compile this project:
 * Maven 3.x
 * Java 6
 
-To compile, run `mvn package` from `$MUSIC_HOME`. The build
-artifacts (.jar files) will be placed in the `$MUSIC_HOME/target/`
+To compile, run `mvn package` from `${MUSIC_HOME}`. The build
+artifacts (.jar files) will be placed in the `${MUSIC_HOME}/target/`
 directory. This tutorial assumes you are using the pre-built jars included with
-the music recommendation example under `$MUSIC_HOME/lib/`. If you wish to
+the music recommendation example under `${MUSIC_HOME}/lib/`. If you wish to
 use jars of example code that you have built, you should adjust the command
-lines in this tutorial to use the jars in `$MUSIC_HOME/target/`.
+lines in this tutorial to use the jars in `${MUSIC_HOME}/target/`.
 
 ### Set your environment variables
 After Bento starts, it will display ports you will need to complete this tutorial. It will be useful
@@ -74,7 +74,7 @@ classpath. You can add your artifacts to the Kiji classpath by running:
 
 <div class="userinput">
 {% highlight bash %}
-export LIBS_DIR=$MUSIC_HOME/lib
+export LIBS_DIR=${MUSIC_HOME}/lib
 export KIJI_CLASSPATH="${LIBS_DIR}/*"
 {% endhighlight %}
 </div>
@@ -93,7 +93,7 @@ Create the Kiji music tables:
 
 <div class="userinput">
 {% highlight bash %}
-kiji-schema-shell --kiji=${KIJI} --file=$MUSIC_HOME/music_schema.ddl
+kiji-schema-shell --kiji=${KIJI} --file=${MUSIC_HOME}/music_schema.ddl
 {% endhighlight %}
 </div>
 
@@ -105,15 +105,15 @@ for more information on the KijiSchema DDL.
 ##### (Optional) Generate Data
 
 The music recommendation example comes with pregenerated song data in
-`$MUSIC_HOME/example_data`.  These .json files contain randomly-generated song information
+`${MUSIC_HOME}/example_data`.  These .json files contain randomly-generated song information
 and randomly-generated usage information for this tutorial.
 
 If you wish to generate new data, wipe the data directory, then use the python script provided.
 
 <div class="userinput">
 {% highlight bash %}
-rm $MUSIC_HOME/example_data/*
-$MUSIC_HOME/bin/data_generator.py --output-dir=$MUSIC_HOME/example_data/
+rm ${MUSIC_HOME}/example_data/*
+${MUSIC_HOME}/bin/data_generator.py --output-dir=${MUSIC_HOME}/example_data/
 {% endhighlight %}
 </div>
 
@@ -127,7 +127,7 @@ Upload the data set to HDFS (this step is required, even if you did not generate
 <div class="userinput">
 {% highlight bash %}
 hadoop fs -mkdir kiji-mr-tutorial
-hadoop fs -copyFromLocal $MUSIC_HOME/example_data/*.json kiji-mr-tutorial/
+hadoop fs -copyFromLocal ${MUSIC_HOME}/example_data/*.json kiji-mr-tutorial/
 {% endhighlight %}
 </div>
 

@@ -22,7 +22,7 @@ To initially open a [`KijiTable`]({{site.api_schema_rc4}}/KijiTable.html):
 
 {% highlight java %}
 // URI for Kiji instance « kiji_instance_name » in your default HBase instance:
-final KijiURI kijiURI = KijiURI.newBuilder().withInstanceName("kiji_instance_name");
+final KijiURI kijiURI = KijiURI.newBuilder().withInstanceName("kiji_instance_name").build();
 final Kiji kiji = Kiji.Factory.open(kijiURI);
 try {
   final KijiTable table = kiji.openTable("table_name");

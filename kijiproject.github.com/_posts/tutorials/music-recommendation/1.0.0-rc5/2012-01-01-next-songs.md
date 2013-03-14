@@ -192,11 +192,11 @@ a KijiTableReader is used to read the records in question.
 <div class="userinput">
 {% highlight bash %}
 kiji mapreduce \
-      --mapper=org.kiji.examples.music.map.IdentityMapper \
-      --reducer=org.kiji.examples.music.reduce.TopNextSongsReducer \
-      --input="format=avrokv file=output.sequentialPlayCount" \
-      --output="format=kiji table=${KIJI}/songs nsplits=1" \
-      --lib=${LIBS_DIR}
+    --mapper=org.kiji.examples.music.map.IdentityMapper \
+    --reducer=org.kiji.examples.music.reduce.TopNextSongsReducer \
+    --input="format=avrokv file=output.sequentialPlayCount" \
+    --output="format=kiji table=${KIJI}/songs nsplits=1" \
+    --lib=${LIBS_DIR}
 {% endhighlight %}
 </div>
 

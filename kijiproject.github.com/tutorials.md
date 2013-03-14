@@ -11,7 +11,9 @@ to the Kiji version you are using.
 # KijiSchema
 Covers the core functionality of Kiji; creating, writing, and reading from tables.
 
-* [Phone Book Tutorial](tutorials/phonebook-tutorial/1.0.0-rc4/phonebook-tutorial) (latest)
+* [Phone Book Tutorial](tutorials/phonebook-tutorial/1.0.0-rc5/phonebook-tutorial) (latest)
+
+* [Phone Book Tutorial 1.0.0-rc4](tutorials/phonebook-tutorial/1.0.0-rc4/phonebook-tutorial)
 
 * [Phone Book Tutorial 1.0.0-rc3](tutorials/phonebook-tutorial/1.0.0-rc3/phonebook-tutorial)
 
@@ -19,4 +21,6 @@ Covers the core functionality of Kiji; creating, writing, and reading from table
 Covers how build and run MapReduce jobs that use Kiji tables as input and/or output. This is
 the word count of recommendation systems.
 
-* [Music Recommendation Tutorial](tutorials/music-recommendation/1.0.0-rc4/music-overview) (latest)
+* [Music Recommendation Tutorial](tutorials/music-recommendation/1.0.0-rc5/music-overview) (latest)
+
+* [Music Recommendation Tutorial 1.0.0-rc4](tutorials/music-recommendation/1.0.0-rc4/music-overview)

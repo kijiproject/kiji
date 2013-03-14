@@ -7,18 +7,24 @@ order: 1
 description: A tutorial to get you using MapReduce with Kiji Tables.
 ---
 
-It’s the year 3000, and new music is being created at such a fast pace that your company Pandorify can no longer analyze and categorize music fast enough to recommend it to your users.  Fortunately, technology has kept up! With KijiSchema and KijiMR, you can leverage all the song play data you have collected over the last thousand years to make recommendations for your users!
+It’s the year 3000, and new music is being created at such a fast pace that your company Pandorify
+can no longer analyze and categorize music fast enough to recommend it to your users.  Fortunately,
+technology has kept up! With KijiSchema and KijiMR, you can leverage all the song play data you have
+collected over the last thousand years to make recommendations for your users.
 
-We believe that past patterns are a good source for future recommendations.   To impose structure on the data, we will use a layout in KijiSchema.  To effectively use this gigantic flood of data, we can use MapReduce paradigms provided by KijiMR to analyze and provide recommendations.
+We believe that past patterns are a good source for future recommendations. To impose structure on
+the data, we will use a layout in KijiSchema. To effectively use this gigantic flood of data, we
+can use MapReduce paradigms provided by KijiMR to analyze and provide recommendations.
 
-In this tutorial, we demonstrate how simple it is to use KijiMR to leverage your data effectively.
-
- In this tutorial, you will:
+In this tutorial, we demonstrate how to use KijiMR to leverage your data effectively. You will:
 
 * Efficiently import data into a KijiTable.
 * Manipulate data in and between Kiji and HDFS.
-* Use a gatherer to generate the next-song pairs, and use a generic MapReduce job to aggregate them into counts.
-* Use a producer and join together data sources, to generate the recommendations for our users.
+* Use a [gatherer]({{ site.userguide_mapreduce_rc5 }}/gatherers) to generate the next-song pairs,
+  and use a generic MapReduce job to aggregate them into counts.
+* Use a [producer]({{ site.userguide_mapreduce_rc5 }}/producers) and join together data sources, to
+  generate the recommendations for our users.
+
 
 ### How to Use this Tutorial
 
@@ -31,7 +37,8 @@ In this tutorial, we demonstrate how simple it is to use KijiMR to leverage your
 System.out.println("Hello Kiji");
 {% endhighlight %}
 
-* **Shell Commands** - Shell commands to run the above code will be in light blue boxes, and the results in grey.
+* **Shell Commands** - Shell commands to run the above code will be in light blue boxes, and the
++results in grey.
 
 <div class="userinput">
 {% highlight bash %}
@@ -41,7 +48,7 @@ echo "Hello Kiji"
 
     Hello Kiji
 
-* **Expandable Code** - Larger sections of code are marked with headers in gray boxes that contain a 
+* **Expandable Code** - Larger sections of code are marked with headers in gray boxes that contain a
 +. These can be expanded by clicking the header.
 
 <div id="accordion-container">
