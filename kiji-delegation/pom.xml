@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.kiji.pom</groupId>
     <artifactId>root-pom</artifactId>
-    <version>1.0.4</version>
+    <version>1.0.5-SNAPSHOT</version>
   </parent>
 
   <name>Kiji Dynamic Binding Library</name>
@@ -35,7 +35,7 @@
   <inceptionYear>2012</inceptionYear>
 
   <properties>
-    <annotations.version>1.0.0-rc5</annotations.version>
+    <annotations.version>1.0.0-rc6-SNAPSHOT</annotations.version>
   </properties>
 
   <build>
