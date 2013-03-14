@@ -38,6 +38,7 @@
     <kiji-delegation.version>1.0.0-rc5</kiji-delegation.version>
     <kiji-platforms.version>1.0.0-rc5</kiji-platforms.version>
     <kiji-schema.version>1.0.0-rc5</kiji-schema.version>
+    <fake-hbase.version>0.0.4</fake-hbase.version>
   </properties>
 
   <modules>
