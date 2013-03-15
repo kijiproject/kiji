@@ -51,10 +51,15 @@ import org.apache.hadoop.mapred.RecordReader
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.chopsticks.Resources._
+import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.EntityId
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiColumnName
+import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiRowData
+import org.kiji.schema.KijiRowScanner
+import org.kiji.schema.KijiTable
+import org.kiji.schema.KijiTableReader
 import org.kiji.schema.KijiTableWriter
 import org.kiji.schema.KijiURI
 
@@ -177,7 +182,21 @@ final class KijiSource(
 
       // Test taps.
       // TODO(CHOP-38): Add support for Hadoop based integration tests.
-      case HadoopTest(_, _) => sys.error("HadoopTest mode not supported")
+      case HadoopTest(_, buffers) => {
+        readOrWrite match {
+          case Read => {
+            val scheme = kijiScheme
+            populateTestTable(buffers(this), scheme.getSourceFields())
+
+            new KijiTap(tableUri, scheme).asInstanceOf[Tap[_, _, _]]
+          }
+          case Write => {
+            val scheme = new TestKijiScheme(buffers(this), convertColumnMap(columns))
+
+            new KijiTap(tableUri, scheme).asInstanceOf[Tap[_, _, _]]
+          }
+        }
+      }
       case Test(buffers) => {
         readOrWrite match {
           // Use Kiji's local tap and scheme when reading.
@@ -188,9 +207,9 @@ final class KijiSource(
             new LocalKijiTap(tableUri, scheme).asInstanceOf[Tap[_, _, _]]
           }
 
-          // After performing a write, use TestKijiScheme to populate the output buffer.
+          // After performing a write, use TestLocalKijiScheme to populate the output buffer.
           case Write => {
-            val scheme = new TestKijiScheme(buffers(this), convertColumnMap(columns))
+            val scheme = new TestLocalKijiScheme(buffers(this), convertColumnMap(columns))
 
             new LocalKijiTap(tableUri, scheme).asInstanceOf[Tap[_, _, _]]
           }
@@ -228,7 +247,7 @@ object KijiSource {
    * @param buffer Buffer to fill with post-job table rows for tests.
    * @param columns Scalding field name to Kiji column name mapping.
    */
-  private class TestKijiScheme(
+  private class TestLocalKijiScheme(
       val buffer: Buffer[Tuple],
       columns: Map[String, Column])
       extends LocalKijiScheme(columns) {
@@ -255,6 +274,45 @@ object KijiSource {
         buffer += sourceCall.getIncomingEntry().getTuple()
       }
       sourceCleanup(process, sourceCall)
+    }
+  }
+
+  /**
+   * A KijiScheme that loads rows in a table into the provided buffer. This class should only be
+   * used during tests.
+   *
+   * @param buffer Buffer to fill with post-job table rows for tests.
+   * @param columns Scalding field name to Kiji column name mapping.
+   */
+  private class TestKijiScheme(
+      val buffer: Buffer[Tuple],
+      columns: Map[String, Column])
+      extends KijiScheme(columns) {
+    override def sinkCleanup(
+        process: FlowProcess[JobConf],
+        sinkCall: SinkCall[KijiTableWriter, OutputCollector[_, _]]) {
+      super.sink(process, sinkCall)
+
+      // Store the output table.
+      val uri: KijiURI = KijiURI
+          .newBuilder(process.getConfigCopy().get(KijiConfKeys.KIJI_OUTPUT_TABLE_URI))
+          .build()
+
+      // Read table into buffer.
+      doAndRelease(Kiji.Factory.open(uri)) { kiji: Kiji =>
+        doAndRelease(kiji.openTable(uri.getTable())) { table: KijiTable =>
+          doAndClose(table.openTableReader()) { reader: KijiTableReader =>
+            val request: KijiDataRequest = KijiScheme.buildRequest(columns.values)
+            doAndClose(reader.getScanner(request)) { scanner: KijiRowScanner =>
+              val rows: Iterator[KijiRowData] = scanner.iterator().asScala
+
+              rows.foreach { row: KijiRowData =>
+                buffer += KijiScheme.rowToTuple(columns, getSinkFields(), row)
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

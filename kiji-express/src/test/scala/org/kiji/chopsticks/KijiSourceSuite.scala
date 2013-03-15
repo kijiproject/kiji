@@ -28,97 +28,143 @@ import com.twitter.scalding._
 import org.apache.avro.util.Utf8
 
 import org.kiji.chopsticks.DSL._
+import org.kiji.chopsticks.Resources.doAndRelease
 import org.kiji.schema.EntityId
+import org.kiji.schema.KijiTable
+import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts
 
 class KijiSourceSuite
     extends KijiSuite {
   import KijiSourceSuite._
 
-  test("a word-count job that reads from a Kiji table is run") {
-    // Create test Kiji table.
-    val table = makeTestKijiTable(layout(KijiTableLayouts.SIMPLE))
-    val uri = table.getURI().toString()
+  /** Table layout to use for tests. */
+  val layout: KijiTableLayout = layout(KijiTableLayouts.SIMPLE)
 
-    // Create input rows.
-    val rows = List(
+  /** Input tuples to use for word count tests. */
+  val wordCountInput: List[(EntityId, NavigableMap[Long, Utf8])] = List(
       ( id("row01"), singleton(new Utf8("hello")) ),
       ( id("row02"), singleton(new Utf8("hello")) ),
       ( id("row03"), singleton(new Utf8("world")) ),
-      ( id("row04"), singleton(new Utf8("hello")) )
-    )
+      ( id("row04"), singleton(new Utf8("hello")) ))
+
+  /**
+   * Validates output from [[com.twitter.scalding.examples.WordCountJob]].
+   *
+   * @param outputBuffer containing data that the Kiji table has in it after the job has been run.
+   */
+  def validateWordCount(outputBuffer: Buffer[(String, Int)]) {
+    val outMap = outputBuffer.toMap
+
+    // Validate that the output is as expected.
+    assert(3 === outMap("hello"))
+    assert(1 === outMap("world"))
+  }
+
+  test("a word-count job that reads from a Kiji table is run using Scalding's local mode") {
+    // Create test Kiji table.
+    val uri: String = doAndRelease(makeTestKijiTable(layout)) { table: KijiTable =>
+      table.getURI().toString()
+    }
 
     // Build test job.
     JobTest(new WordCountJob(_))
         .arg("input", uri)
         .arg("output", "outputFile")
-        .source(KijiInput(uri)("family:column" -> 'word), rows)
-        .sink[(String,Int)](Tsv("outputFile")) { outputBuffer =>
-          val outMap = outputBuffer.toMap
-
-          // Validate that the output is as expected.
-          assert(3 === outMap("hello"))
-          assert(1 === outMap("world"))
-        }
+        .source(KijiInput(uri)("family:column" -> 'word), wordCountInput)
+        .sink(Tsv("outputFile"))(validateWordCount)
         // Run the test job.
         .run
         .finish
-
-    // Cleanup resources.
-    table.release()
   }
 
-  test("an import job that writes to a Kiji table is run") {
+  test("a word-count job that reads from a Kiji table is run using Hadoop") {
     // Create test Kiji table.
-    val table = makeTestKijiTable(layout(KijiTableLayouts.SIMPLE))
-    val uri = table.getURI().toString()
+    val uri: String = doAndRelease(makeTestKijiTable(layout)) { table: KijiTable =>
+      table.getURI().toString()
+    }
 
-    // Create input lines.
-    val lines = List(
+    // Build test job.
+    JobTest(new WordCountJob(_))
+        .arg("input", uri)
+        .arg("output", "outputFile")
+        .source(KijiInput(uri)("family:column" -> 'word), wordCountInput)
+        .sink(Tsv("outputFile"))(validateWordCount)
+        // Run the test job.
+        .runHadoop
+        .finish
+  }
+
+  /** Input tuples to use for import tests. */
+  val importInput: List[(String, String)] = List(
       ( "0", "hello hello hello world world hello" ),
-      ( "1", "world hello   world      hello" )
-    )
+      ( "1", "world hello   world      hello" ))
 
-    // Function used to validate output.
-    def validateOutput(outputBuffer: Buffer[(EntityId, NavigableMap[Long, Utf8])]) {
-      assert(10 === outputBuffer.size)
+  /**
+   * Validates output from [[org.kiji.chopsticks.KijiSourceSuite.ImportJob]].
+   *
+   * @param outputBuffer containing data that the Kiji table has in it after the job has been run.
+   */
+  def validateImport(outputBuffer: Buffer[(EntityId, NavigableMap[Long, Utf8])]) {
+    assert(10 === outputBuffer.size)
 
-      // Perform a non-distributed word count.
-      val wordCounts: (Int, Int) = outputBuffer
-          // Extract words from each row.
-          .flatMap { row =>
-            val (_, timeline) = row
-            timeline
-                .asScala
-                .map { case (_, word) => word }
+    // Perform a non-distributed word count.
+    val wordCounts: (Int, Int) = outputBuffer
+        // Extract words from each row.
+        .flatMap { row =>
+          val (_, timeline) = row
+          timeline
+              .asScala
+              .map { case (_, word) => word }
+        }
+        // Count the words.
+        .foldLeft((0, 0)) { (counts, word) =>
+          // Unpack the counters.
+          val (helloCount, worldCount) = counts
+
+          // Increment the appropriate counter and return both.
+          word.toString() match {
+            case "hello" => (helloCount + 1, worldCount)
+            case "world" => (helloCount, worldCount + 1)
           }
-          // Count the words.
-          .foldLeft((0, 0)) { (counts, word) =>
-            // Unpack the counters.
-            val (helloCount, worldCount) = counts
+        }
 
-            // Increment the appropriate counter and return both.
-            word.toString() match {
-              case "hello" => (helloCount + 1, worldCount)
-              case "world" => (helloCount, worldCount + 1)
-            }
-          }
+    // Make sure that the counts are as expected.
+    assert((6, 4) === wordCounts)
+  }
 
-      // Make sure that the counts are as expected.
-      assert((6, 4) === wordCounts)
+  test("an import job that writes to a Kiji table is run using Scalding's local mode") {
+    // Create test Kiji table.
+    val uri: String = doAndRelease(makeTestKijiTable(layout)) { table: KijiTable =>
+      table.getURI().toString()
     }
 
     // Build test job.
     JobTest(new ImportJob(_))
         .arg("input", "inputFile")
         .arg("output", uri)
-        .source(TextLine("inputFile"), lines)
-        .sink[(EntityId, NavigableMap[Long, Utf8])](KijiOutput(uri)('word -> "family:column"))(
-            validateOutput)
+        .source(TextLine("inputFile"), importInput)
+        .sink(KijiOutput(uri)('word -> "family:column"))(validateImport)
+        // Run the test job.
         .run
         .finish
+  }
 
-    table.release()
+  test("an import job that writes to a Kiji table is run using Hadoop") {
+    // Create test Kiji table.
+    val uri: String = doAndRelease(makeTestKijiTable(layout)) { table: KijiTable =>
+      table.getURI().toString()
+    }
+
+    // Build test job.
+    JobTest(new ImportJob(_))
+        .arg("input", "inputFile")
+        .arg("output", uri)
+        .source(TextLine("inputFile"), importInput)
+        .sink(KijiOutput(uri)('word -> "family:column"))(validateImport)
+        // Run the test job.
+        .runHadoop
+        .finish
   }
 
   // TODO(CHOP-39): Write this test.
