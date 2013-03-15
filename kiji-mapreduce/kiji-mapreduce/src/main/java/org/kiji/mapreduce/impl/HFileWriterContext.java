@@ -131,8 +131,14 @@ public final class HFileWriterContext
 
   /** {@inheritDoc} */
   @Override
-  public EntityId getEntityId(String key) {
-    return mEntityIdFactory.getEntityId(key);
+  public EntityIdFactory getEntityIdFactory() {
+    return mEntityIdFactory;
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public EntityId getEntityId(Object... components) {
+    return mEntityIdFactory.getEntityId(components);
   }
 
   @Override

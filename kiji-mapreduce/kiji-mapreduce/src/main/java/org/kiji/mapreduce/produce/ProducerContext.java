@@ -30,7 +30,12 @@ import org.kiji.schema.EntityId;
 @ApiAudience.Public
 @Inheritance.Sealed
 public interface ProducerContext extends KijiContext {
-  /** @return the entity ID of the row being currently written to. */
+  /**
+   * @return the entity ID of the row being currently written to.
+   * @deprecated Use KijiRowData.getEntityId(). This accessor method is being
+   *     removed after 1.0.0-rc6.
+   */
+  @Deprecated
   EntityId getEntityId();
 
   /**

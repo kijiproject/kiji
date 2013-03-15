@@ -22,19 +22,21 @@ package org.kiji.mapreduce;
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.Inheritance;
 import org.kiji.schema.EntityId;
+import org.kiji.schema.EntityIdFactory;
 import org.kiji.schema.KijiPutter;
 
 /** Context for Kiji bulk-importers or reducers to output to a Kiji table. */
 @ApiAudience.Public
 @Inheritance.Sealed
 public interface KijiTableContext extends KijiContext, KijiPutter {
+  /** @return a factory to create entity IDs to write to the output Kiji table. */
+  EntityIdFactory getEntityIdFactory();
 
   /**
    * Creates an entity ID for the specified Kiji row key.
    *
-   * @param kijiRowKey Kiji row key.
+   * @param components Kiji row key components.
    * @return the entity ID for the specified Kiji row key.
    */
-  // TODO: getEntityIdFactory instead
-  EntityId getEntityId(String kijiRowKey);
+  EntityId getEntityId(Object... components);
 }

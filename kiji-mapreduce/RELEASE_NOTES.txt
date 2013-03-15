@@ -3,6 +3,8 @@
                               KijiMR Release Notes
 
 Version 1.0.0-rc6
+  * Add KijiTableContext.getEntityIdFactory().
+    Deprecates ProducerContext.getEntityId(); use KijiRowData.getEntityId().
 
 Version 1.0.0-rc5
   * Initial release.
