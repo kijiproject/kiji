@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.lang
+package org.kiji.chopsticks
 
 import org.apache.hadoop.hbase.mapreduce.TableSplit
 import org.scalatest.FunSuite

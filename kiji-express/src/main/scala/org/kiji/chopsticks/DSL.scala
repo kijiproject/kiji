@@ -51,7 +51,7 @@ object DSL {
    */
   def KijiInput(
       tableURI: String,
-      columns: Map[org.kiji.lang.Column, Symbol]): KijiSource = {
+      columns: Map[Column, Symbol]): KijiSource = {
     val columnMap = columns
         .map { case (col, field) => (field, col) }
     new KijiSource(tableURI, columnMap)
@@ -81,30 +81,6 @@ object DSL {
    */
   def KijiOutput(
       tableURI: String,
-      columns: Map[Symbol, org.kiji.lang.Column])
+      columns: Map[Symbol, Column])
     : KijiSource = new KijiSource(tableURI, columns)
-
-  /**
-   * Constructs a column definition. Use inputOps and outputOps to specify input
-   * and output options.
-   *
-   * @param name Name of the column with the format "family:qualifier".
-   * @param inputOps Options for the column when reading data.
-   */
-  def Column(
-      name: String,
-      inputOps: org.kiji.lang.Column.InputOptions = InputOptions()): org.kiji.lang.Column
-    = new org.kiji.lang.Column(name, inputOps)
-
-  // TODO(CHOP-37): A simpler way to specify column filters.
-  /**
-   * Sets input options for a column.
-   *
-   * @param maxVersions Maximum number of versions of a cell to read.
-   * @param filter Filter to apply to this column.
-   */
-  def InputOptions(
-      maxVersions: Int = 1,
-      filter: KijiColumnFilter = null): org.kiji.lang.Column.InputOptions
-    = new org.kiji.lang.Column.InputOptions(maxVersions, filter)
 }

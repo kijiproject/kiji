@@ -16,3 +16,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package org.kiji.chopsticks
+
+import org.scalatest.FunSuite
+
+import org.kiji.schema.EntityId
+import org.kiji.schema.EntityIdFactory
+import org.kiji.schema.avro.RowKeyFormat
+import org.kiji.schema.avro.RowKeyEncoding
+
+class KijiKeySuite extends FunSuite {
+  test("KijiKey should get the same EntityId you put in.") {
+    val entityIdFactory = EntityIdFactory.getFactory(
+      RowKeyFormat.newBuilder().setEncoding(RowKeyEncoding.RAW).build())
+    val testId = entityIdFactory.getEntityId("foob")
+    val testKey = new KijiKey()
+    testKey.set(testId)
+
+    assert(testId == testKey.get())
+  }
+}

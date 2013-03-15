@@ -174,7 +174,7 @@ object KijiSourceSuite extends KijiSuite {
         // Get the words in each line.
         .flatMap('line -> 'word) { line : String => line.split("\\s+") }
         // Generate an entityId for each word.
-        .map('word -> 'entityid) { _: String => id(UUID.randomUUID().toString()) }
+        .map('word -> 'entityId) { _: String => id(UUID.randomUUID().toString()) }
         // Write the results to the "family:column" column of a Kiji table.
         .write(KijiOutput(args("output"))('word -> "family:column"))
   }

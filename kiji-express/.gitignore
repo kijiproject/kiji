@@ -17,4 +17,5 @@ dependency-reduced-pom.xml
 
 # Vim things
 *.swp
+*.swo
 .cache

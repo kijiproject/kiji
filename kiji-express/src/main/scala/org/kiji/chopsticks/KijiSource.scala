@@ -51,11 +51,6 @@ import org.apache.hadoop.mapred.RecordReader
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.chopsticks.Resources._
-import org.kiji.lang.Column
-import org.kiji.lang.KijiScheme
-import org.kiji.lang.KijiTap
-import org.kiji.lang.LocalKijiScheme
-import org.kiji.lang.LocalKijiTap
 import org.kiji.schema.EntityId
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiColumnName
@@ -93,13 +88,8 @@ final class KijiSource(
    * @param columnMap Mapping from field name to Kiji column name.
    * @return Java map from field name to column definition.
    */
-  private def convertColumnMap(columnMap: Map[Symbol, Column]): java.util.Map[String, Column] = {
-    val wrapped = columnMap
-        .map { case (symbol, column) => (symbol.name, column) }
-        .asJava
-
-    // Copy the map into a HashMap because scala's JavaConverters aren't serializable.
-    new java.util.HashMap(wrapped)
+  private def convertColumnMap(columnMap: Map[Symbol, Column]): Map[String, Column] = {
+    columnMap.map { case (symbol, column) => (symbol.name, column) }
   }
 
   /**
@@ -132,7 +122,7 @@ final class KijiSource(
         // Iterate through fields in the tuple, adding each one.
         while (iterator.hasNext()) {
           val field = iterator.next().toString()
-          val columnName = new KijiColumnName(columns(Symbol(field)).name())
+          val columnName = new KijiColumnName(columns(Symbol(field)).name)
 
           // Get the timeline to be written.
           val timeline: NavigableMap[Long, Any] = tupleEntry.getObject(field)
@@ -240,7 +230,7 @@ object KijiSource {
    */
   private class TestKijiScheme(
       val buffer: Buffer[Tuple],
-      val columns: java.util.Map[String, Column])
+      columns: Map[String, Column])
       extends LocalKijiScheme(columns) {
     override def sinkConfInit(
         process: FlowProcess[Properties],
@@ -258,8 +248,7 @@ object KijiSource {
       super.sink(process, sinkCall)
 
       // Read table into buffer.
-      val sourceCall: ConcreteCall[java.util.Iterator[KijiRowData], InputStream] =
-          new ConcreteCall()
+      val sourceCall: ConcreteCall[InputContext, InputStream] = new ConcreteCall()
       sourceCall.setIncomingEntry(new TupleEntry())
       sourcePrepare(process, sourceCall)
       while (source(process, sourceCall)) {

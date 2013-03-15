@@ -17,14 +17,33 @@
  * limitations under the License.
  */
 
+package org.kiji.chopsticks
+
+import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
+import org.kiji.schema.EntityId
+
 /**
- * Package containing the main implementation classes for the Kiji Scalding adapter. These
- * classes make it possible to use a Kiji table as an input source in a Cascading flow. Of
- * special importance are:
- * <ol>
- *   <ul>{@link KijiTap}</ul>, which allows Kiji tables to be used as a source of data in
- *   Cascading / Scalding flows.
- *   <ul>{@link KijiScheme}</ul>, which converts data from Kiji into Cascading's tuple model.
- * </ol>
+ * Acts as a wrapper around [[EntityId]]. Instances of this class can be reused in MapReduce
+ * jobs to hold entity ids read from Kiji.
  */
-package org.kiji.lang;
+@ApiAudience.Private
+@ApiStability.Unstable
+final class KijiKey {
+  /** The entity id being wrapped. */
+  private var currentKey: EntityId = null
+
+  /**
+   * @return the entity id wrapped by this instance.
+   */
+  def get(): EntityId = currentKey
+
+  /**
+   * Sets the entity id wrapped by this instance.
+   *
+   * @param key that will be wrapped by this instance.
+   */
+  def set(key: EntityId) {
+    currentKey = key
+  }
+}

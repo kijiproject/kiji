@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.lang
+package org.kiji.chopsticks
 
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -26,7 +26,7 @@ import java.io.ObjectOutputStream
 
 import org.scalatest.FunSuite
 
-import org.kiji.lang.Column.InputOptions
+import org.kiji.chopsticks.Column.InputOptions
 import org.kiji.schema.filter.RegexQualifierColumnFilter
 
 class ColumnSuite extends FunSuite {

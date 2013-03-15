@@ -52,7 +52,7 @@ class NewsgroupWordCount(args: Args) extends Job(args) {
       .write(Tsv(resultUri))
 
   KijiInput(tableUri)("info:word" -> 'word)
-      .map(('entityid, 'word) -> 'doubleword) { tuple: (EntityId, NavigableMap[Long, Utf8]) =>
+      .map(('entityId, 'word) -> 'doubleword) { tuple: (EntityId, NavigableMap[Long, Utf8]) =>
         val (_, words) = tuple
         val word = getMostRecent(words).toString()
         "%s%s".format(word, word)

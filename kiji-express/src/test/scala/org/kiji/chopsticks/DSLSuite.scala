@@ -24,7 +24,7 @@ import scala.collection.JavaConversions.mapAsJavaMap
 import org.scalatest.FunSuite
 
 import org.kiji.chopsticks.DSL._
-import org.kiji.lang.KijiScheme
+import org.kiji.chopsticks.Column.InputOptions
 
 class DSLSuite extends FunSuite {
   val tableURI = "kiji://.env/default/table"
