@@ -19,11 +19,16 @@
         <div class="container-fluid">
           <a class="brand" href="{{ site.kiji_url }}">{{ site.title }}</a>
           <ul class="nav">
-            <li>
+            <li class="dropdown">
               <a href="{{ site.kiji_url }}">The Kiji Project</a>
+              <ul class="dropdown-menu">
+                <li class="menu-item">
+                  <a href="{{ site.kiji_url }}/features">Features</a>
+                </li>
+              </ul>
             </li>
             <li>
-              <a href="{{ site.kiji_url }}/features/">Features</a>
+              <a href="{{ site.kiji_url }}/architecture">Architecture</a>
             </li>
             <li class="dropdown">
               <a href="{{ site.kiji_url }}/getstarted/">Get Started</a>
