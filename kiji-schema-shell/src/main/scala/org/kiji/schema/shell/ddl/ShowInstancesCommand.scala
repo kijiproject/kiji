@@ -1,5 +1,5 @@
 /**
- * (c) Copyright 2012 WibiData, Inc.
+ * (c) Copyright 2013 WibiData, Inc.
  *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
@@ -24,7 +24,7 @@ import scala.math._
 import org.kiji.schema.shell.Environment
 
 /** List available Kiji instances. */
-class ShowInstancesCommand(val env: Environment) extends DDLCommand {
+class ShowInstancesCommand(val env: Environment) extends DDLCommand with StrFormatting {
   override def exec(): Environment = {
     val instances = env.kijiSystem.listInstances()
 
@@ -40,7 +40,6 @@ class ShowInstancesCommand(val env: Environment) extends DDLCommand {
         instances.maxBy{ name => name.length() }.length())
 
     // Build an output, starting with a header.
-    def padTo(str: String, len: Int): String = str + " " * (len - str.length)
     val output = new StringBuilder()
     output.append("  Instance:\n")
         .append("=" * (maxNameLength + 2))

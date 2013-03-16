@@ -1,5 +1,5 @@
 /**
- * (c) Copyright 2012 WibiData, Inc.
+ * (c) Copyright 2013 WibiData, Inc.
  *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
@@ -142,7 +142,7 @@ class KijiSystem extends AbstractKijiSystem {
   /** {@inheritDoc} */
   override def createTable(uri: KijiURI, table: String, layout: KijiTableLayout): Unit = {
     kijiCache(uri) match {
-      case Some(kiji) => { kiji.createTable(table, layout) }
+      case Some(kiji) => { kiji.createTable(layout.getDesc()) }
       case None => { throw new IOException("Cannot get kiji for \"" + uri.toString() + "\"") }
     }
   }
@@ -150,7 +150,7 @@ class KijiSystem extends AbstractKijiSystem {
   /** {@inheritDoc} */
   override def applyLayout(uri: KijiURI, table: String, layout: TableLayoutDesc): Unit = {
     kijiCache(uri) match {
-      case Some(kiji) => { kiji.modifyTableLayout(table, layout, false, Console.out) }
+      case Some(kiji) => { kiji.modifyTableLayout(layout, false, Console.out) }
       case None => { throw new IOException("Cannot get kiji for \"" + uri.toString() + "\"") }
     }
   }

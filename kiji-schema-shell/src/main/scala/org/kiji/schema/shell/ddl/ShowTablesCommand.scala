@@ -1,5 +1,5 @@
 /**
- * (c) Copyright 2012 WibiData, Inc.
+ * (c) Copyright 2013 WibiData, Inc.
  *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
@@ -23,7 +23,7 @@ import scala.math._
 
 import org.kiji.schema.shell.Environment
 
-class ShowTablesCommand(val env: Environment) extends DDLCommand {
+class ShowTablesCommand(val env: Environment) extends DDLCommand with StrFormatting {
   override def exec(): Environment = {
     val tableNamesDescriptions = env.kijiSystem.getTableNamesDescriptions(getKijiURI())
 
@@ -40,7 +40,6 @@ class ShowTablesCommand(val env: Environment) extends DDLCommand {
         tableNamesDescriptions.maxBy{ pair => pair._2.length() }._2.length())
 
     // Build an output, starting with a header for the Table/Description display.
-    def padTo(str: String, len: Int): String = str + " " * (len - str.length)
     val output = new StringBuilder()
     output.append(padTo("Table", maxNameLength))
         .append("\tDescription\n")

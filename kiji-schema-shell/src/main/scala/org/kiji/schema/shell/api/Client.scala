@@ -24,6 +24,7 @@ import java.io.Closeable
 import java.io.InputStream
 import java.io.PrintStream
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.KConstants
 import org.kiji.schema.KijiURI
 import org.kiji.schema.shell.Environment
@@ -56,6 +57,7 @@ import org.kiji.schema.util.ResourceUtils
  * processed via <tt>executeStream()</tt> will have an effect on the remainder of the stream,
  * but is not persistent between streams.</p>
  */
+@ApiAudience.Public
 class Client private(val kijiUri: KijiURI) extends Closeable {
 
   /** Output stream where stdout from DDL commands is redirected. */
@@ -133,7 +135,8 @@ object Client {
    * Create a new instance of a Client object.
    * <p>Java programs should call Client.newInstance(uri).</p>
    *
-   * @param uri the Kiji URI to connect to.
+   * @param uri the Kiji URI to connect to. This must specify a Kiji instance, not an
+   *     HBase cluster URI. (e.g., <tt>kiji://.env/myinstance</tt>.)
    * @return a new instance of a Client object.
    */
   def newInstance(uri: KijiURI): Client = {

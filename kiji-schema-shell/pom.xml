@@ -37,6 +37,7 @@
   <properties>
     <kiji-schema.version>1.0.0-SNAPSHOT</kiji-schema.version>
     <kiji-cdh4-platform.version>1.0.0-rc6-SNAPSHOT</kiji-cdh4-platform.version>
+    <kiji-delegation.version>1.0.0-rc6-SNAPSHOT</kiji-delegation.version>
     <fake-hbase.version>0.0.5-SNAPSHOT</fake-hbase.version>
   </properties>
 
@@ -76,6 +77,9 @@
         <!-- must supply src/main/findbugs/excludeFilter.xml and includeFilter.xml -->
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>findbugs-maven-plugin</artifactId>
+        <configuration>
+          <threshold>Default</threshold>
+        </configuration>
       </plugin>
 
       <plugin>
@@ -142,6 +146,13 @@
       <groupId>org.kiji.platforms</groupId>
       <artifactId>kiji-cdh4-platform</artifactId>
       <version>${kiji-cdh4-platform.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.kiji.delegation</groupId>
+      <artifactId>kiji-delegation</artifactId>
+      <version>${kiji-delegation.version}</version>
       <scope>provided</scope>
     </dependency>
 

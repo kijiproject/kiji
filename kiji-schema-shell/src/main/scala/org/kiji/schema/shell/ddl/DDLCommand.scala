@@ -1,5 +1,5 @@
 /**
- * (c) Copyright 2012 WibiData, Inc.
+ * (c) Copyright 2013 WibiData, Inc.
  *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
@@ -37,8 +37,14 @@ import org.kiji.schema.shell.TableNotFoundException
  */
 abstract class DDLCommand {
 
-  /** The environment in which the command should be executed. */
-  val env: Environment;
+  /**
+   * Get the environment in which the command should be executed.
+   *
+   * <p>This must return the same Environment for the lifetime of a <tt>DDLCommand</tt>.
+   *
+   * @return the environment in which the command is executed.
+   */
+  def env(): Environment
 
   /**
    * Method called by the runtime to execute this parsed command.
@@ -47,7 +53,7 @@ abstract class DDLCommand {
   def exec(): Environment
 
   /** Return the Kiji instance name being operated on. */
-  def getKijiURI(): KijiURI = {
+  final def getKijiURI(): KijiURI = {
     env.instanceURI
   }
 
@@ -56,7 +62,7 @@ abstract class DDLCommand {
    * stdout, but can be redirected e.g. for testing.
    * @param s the string to emit.
    */
-  protected def echo(s: String): Unit = {
+  final protected def echo(s: String): Unit = {
     env.printer.println(s)
   }
 
@@ -65,7 +71,7 @@ abstract class DDLCommand {
    * stdout, but can be redirected e.g. for testing.
    * @param s the string to emit.
    */
-  protected def echoNoNL(s:String): Unit = {
+  final protected def echoNoNL(s:String): Unit = {
     env.printer.print(s)
   }
 }

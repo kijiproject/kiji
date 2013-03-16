@@ -1,11 +1,5 @@
 
-
-
-* Add docs for formatted syntax.
-
-================================
-
-* Add docs for API
+* Add docs for API.
 
 * ROW KEY FORMAT should support different hash types (md5, etc) when KijiSchema does..
 

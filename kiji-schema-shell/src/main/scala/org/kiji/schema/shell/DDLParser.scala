@@ -1,5 +1,5 @@
 /**
- * (c) Copyright 2012 WibiData, Inc.
+ * (c) Copyright 2013 WibiData, Inc.
  *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
@@ -29,13 +29,15 @@ import org.kiji.schema.shell.ddl.CompressionTypeToken._
 import org.kiji.schema.shell.ddl.LocalityGroupPropName._
 import org.kiji.schema.shell.ddl.key._
 import org.kiji.schema.shell.ddl.key.RowKeyElemType._
+import org.kiji.schema.shell.spi.ParserPlugin
+import org.kiji.schema.shell.spi.ParserPluginFactory
 
 import org.kiji.schema.util.KijiNameValidator
 
 import scala.util.parsing.combinator._
 
 /**
- * Singleton parser object for a kiji-schema DDL command.
+ * Parser for a kiji-schema DDL command.
  */
 class DDLParser(val env: Environment) extends JavaTokenParsers with JsonStringParser {
 
@@ -71,6 +73,9 @@ class DDLParser(val env: Environment) extends JavaTokenParsers with JsonStringPa
   def instanceName: Parser[String] = (
     optionallyQuotedString ^^ (name => { KijiNameValidator.validateKijiName(name); name })
   )
+
+  /** Matches a legal module name. */
+  def moduleName: Parser[String] = validatedNameFromOptionallyQuotedString
 
   /** Matches a legal Kiji table name. */
   def tableName: Parser[String] = validatedNameFromOptionallyQuotedString
@@ -558,10 +563,24 @@ class DDLParser(val env: Environment) extends JavaTokenParsers with JsonStringPa
   )
 
   /**
+   * Parser that recognizes a 'MODULE (modulename)' statement.
+   */
+  def useModule: Parser[DDLCommand] = (
+    i("MODULE")~>moduleName ^^ (name => new UseModuleCommand(env, name))
+  )
+
+  /**
    * List available Kiji instances. Recognizes a SHOW INSTANCES statement.
    */
   def showInstances: Parser[DDLCommand] = (
       i("SHOW")~i("INSTANCES") ^^ (_ => new ShowInstancesCommand(env))
+  )
+
+  /**
+   * List available plugin modules. Recognizes SHOW MODULES.
+   */
+  def showModules: Parser[DDLCommand] = (
+      i("SHOW")~i("MODULES") ^^ (_ => new ShowModulesCommand(env))
   )
 
   /**
@@ -636,16 +655,81 @@ class DDLParser(val env: Environment) extends JavaTokenParsers with JsonStringPa
     | dumpInstanceDdl
     | loadFile
     | useInstance
+    | useModule
     | showInstances
+    | showModules
     | showTables
-    | failure("Not a valid statement. Try 'help' for example usage.")
   )
 
   /**
    * Parser that recognizes a statement followed by a ';'.
    * This is the top-level parser definition for the DDLParser class.
+   * If no internally-provided statement matches, it will try to use statement
+   * syntax available from plugins.
    */
-  def statement: Parser[DDLCommand] = statementBody ~ ";" ^^ ({case ~(s, _) => s})
+  def statement: Parser[DDLCommand] = (
+      statementBody <~ ";"
+    | pluginParsers
+  )
+
+  /**
+   * A parser that uses indirection to defer parsing to plugins.
+   *
+   * <p>This parser should be invoked last by the 'statement'
+   * parser. Its final match will always be to a failure()
+   * parser that prints an error message indicating that the statement was
+   * invalid.</p>
+   *
+   * @return a Parser that produces a DDLCommand; the Parser will check with
+   *     all registered plugins to see if they can match the entire input.
+   */
+  def pluginParsers: Parser[DDLCommand] = PluginParser
+
+  /**
+   * Class that implements the Parser API and processes plugins.
+   */
+  private object PluginParser extends Parser[DDLCommand] {
+    /**
+     * Evaluate a module's parser against the input string.
+     *
+     * @param existing the existing successful result, if any.
+     * @param module the module whose parser command should be tested.
+     * @param in the input string to match with the parser.
+     * @return None if the parser was unccessful, otherwise Some of the ParseResult
+     *     from the module's parser.
+     */
+    private def evalModule(existing: Option[ParseResult[DDLCommand]],
+        module: ParserPluginFactory, in: Input): Option[ParseResult[DDLCommand]] = {
+
+      existing match {
+        case Some(_) => { return existing }
+        case None => {
+          val parserPlugin: ParserPlugin = module.create(env)
+          val result = parserPlugin.parseAll(parserPlugin.command, in)
+          if (result.successful) {
+            // This module matched! Use its result.
+            return Some(Success(result.get, result.next))
+          } else {
+            return None
+          }
+        }
+      }
+    }
+
+    override def apply(in: Input): ParseResult[DDLCommand] = {
+      val moduleResult: Option[ParseResult[DDLCommand]] =
+        (env.modules.foldLeft[Option[ParseResult[DDLCommand]]]
+          (None: Option[ParseResult[DDLCommand]])
+          ({ (existing: Option[ParseResult[DDLCommand]], module) =>
+            evalModule(existing, module, in)
+          }))
+
+      moduleResult match {
+        case Some(result) => { return result }
+        case None => failure("Not a valid statement. Try 'help' for example usage.").apply(in)
+      }
+    }
+  }
 
   /**
    * @param s the string to recognize in a case-insensitive fashion.

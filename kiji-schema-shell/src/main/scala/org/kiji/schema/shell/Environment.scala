@@ -1,5 +1,5 @@
 /**
- * (c) Copyright 2012 WibiData, Inc.
+ * (c) Copyright 2013 WibiData, Inc.
  *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
@@ -25,6 +25,7 @@ import org.kiji.schema.KConstants
 import org.kiji.schema.KijiURI
 import org.kiji.schema.shell.input.JLineInputSource
 import org.kiji.schema.shell.input.InputSource
+import org.kiji.schema.shell.spi.ParserPluginFactory
 
 /**
  * Runtime environment in which DDL commands are executed.
@@ -34,25 +35,45 @@ class Environment(
         KijiURI.newBuilder().withInstanceName(KConstants.DEFAULT_INSTANCE_NAME).build(),
     val printer: PrintStream = Console.out,
     val kijiSystem: AbstractKijiSystem = new KijiSystem,
-    val inputSource: InputSource = new JLineInputSource) {
+    val inputSource: InputSource = new JLineInputSource,
+    val modules: List[ParserPluginFactory] = List()) {
 
   /**
    * @return a new Environment with the instance name replaced with 'newInstance'.
    */
   def withInstance(newInstance: String): Environment = {
-    new Environment(KijiURI.newBuilder(instanceURI).withInstanceName(newInstance).build(),
-        printer, kijiSystem, inputSource)
+    return new Environment(KijiURI.newBuilder(instanceURI).withInstanceName(newInstance).build(),
+        printer, kijiSystem, inputSource, modules)
   }
 
   /**
    * @return a new Environment with the printer replaced with 'newPrinter'.
    */
   def withPrinter(newPrinter: PrintStream): Environment = {
-    new Environment(instanceURI, newPrinter, kijiSystem, inputSource)
+    return new Environment(instanceURI, newPrinter, kijiSystem, inputSource, modules)
   }
 
+  /** @return a new Environment with the InputSource replaced with newSource. */
   def withInputSource(newSource: InputSource): Environment = {
-    new Environment(instanceURI, printer, kijiSystem, newSource)
+    return new Environment(instanceURI, printer, kijiSystem, newSource, modules)
+  }
+
+  /**
+   * Return a new Environment with 'module' appended to the list of modules.
+   * If the specified module is already on the list, the list is not changed.
+   *
+   * @param module the module to include.
+   * @return an Environment with a list of modules that includes the provided module.
+   */
+  def withModule(module: ParserPluginFactory): Environment = {
+    // Don't add a module more than once; benign condition to silently ignore.
+    val moduleName = module.getName
+    if (modules.map(m => m.getName).contains(moduleName)) {
+      return this // Nothing to change.
+    } else {
+      val newModules = modules :+ module // new list, with module appended to modules.
+      return new Environment(instanceURI, printer, kijiSystem, inputSource, newModules)
+    }
   }
 
   /**
@@ -60,9 +81,6 @@ class Environment(
    * @return true if a table named 'tableName' is present in the system.
    */
   def containsTable(tableName: String): Boolean = {
-    kijiSystem.getTableLayout(instanceURI, tableName) match {
-      case Some(_) => true
-      case None => false
-    }
+    return kijiSystem.getTableLayout(instanceURI, tableName).isDefined
   }
 }
