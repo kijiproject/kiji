@@ -1,0 +1,324 @@
+#!/usr/bin/env bash
+#
+#   (c) Copyright 2013 WibiData, Inc.
+#
+#   See the NOTICE file distributed with this work for additional
+#   information regarding copyright ownership.
+#
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
+#
+#
+#   The chop script provides tools for running KijiChopsticks scripts and interacting with the
+#   KijiChopsticks system.
+#   Tools are run as:
+#
+#   bash> $CHOP_HOME/bin/chop <tool-name> [options]
+#
+#   For full usage information, use:
+#
+#   bash> $CHOP_HOME/bin/chop help
+#
+
+# Resolve a symlink to its absolute target, like how 'readlink -f' works on Linux.
+function resolve_symlink() {
+  TARGET_FILE=$1
+
+  if [ -z "$TARGET_FILE" ]; then
+    echo ""
+    return 0
+  fi
+
+  cd $(dirname "$TARGET_FILE")
+  TARGET_FILE=$(basename "$TARGET_FILE")
+
+  # Iterate down a (possible) chain of symlinks
+  count=0
+  while [ -L "$TARGET_FILE" ]; do
+      if [ "$count" -gt 1000 ]; then
+        # Just stop here, we've hit 1,000 recursive symlinks. (cycle?)
+        break
+      fi
+
+      TARGET_FILE=$(readlink "$TARGET_FILE")
+      cd $(dirname "$TARGET_FILE")
+      TARGET_FILE=$(basename "$TARGET_FILE")
+      count=$(( $count + 1 ))
+  done
+
+  # Compute the canonicalized name by finding the physical path
+  # for the directory we're in and appending the target file.
+  PHYS_DIR=$(pwd -P)
+  RESULT="$PHYS_DIR/$TARGET_FILE"
+  echo "$RESULT"
+}
+
+prgm="$0"
+prgm=`resolve_symlink "$prgm"`
+bin=`dirname "$prgm"`
+bin=`cd "${bin}" && pwd`
+
+CHOP_HOME="${CHOP_HOME:-${bin}/../}"
+
+# Any user code you want to add to the chopsticks classpath may be done via this env var.
+CHOP_CLASSPATH=${CHOP_CLASSPATH:-""}
+
+# Any arguments you want to pass to chopstick's jvm may be done via this env var.
+CHOP_JAVA_OPTS=${CHOP_JAVA_OPTS:-""}
+
+# This is a workaround for OS X Lion, where a bug in JRE 1.6
+# creates a lot of 'SCDynamicStore' errors.
+if [ `uname` = "Darwin" ]; then
+    CHOP_JAVA_OPTS="$CHOP_JAVA_OPTS -Djava.security.krb5.realm= -Djava.security.krb5.kdc="
+fi
+
+# An existing set of directories to use for the java.library.path property should
+# be set with JAVA_LIBRARY_PATH.
+JAVA_LIBRARY_PATH=${JAVA_LIBRARY_PATH:-""}
+
+# Try CDH defaults.
+HBASE_HOME="${HBASE_HOME:-/usr/lib/hbase}"
+HADOOP_HOME="${HADOOP_HOME:-/usr/lib/hadoop}"
+
+# First make sure we have everything we need in the environment.
+if [ -z ${CHOP_HOME} -o ! -d "${CHOP_HOME}" ]; then
+    echo "Please set your CHOP_HOME environment variable."
+    exit 1
+fi
+if [ -z ${HBASE_HOME} -o ! -d "${HBASE_HOME}" ]; then
+    echo "Please set your HBASE_HOME environment variable."
+    exit 1
+fi
+if [ -z ${HADOOP_HOME} -o ! -d "${HADOOP_HOME}" ]; then
+    echo "Please set your HADOOP_HOME environment variable."
+    exit 1
+fi
+
+if [ -z $1 ]; then
+    echo "chop: Tool launcher for KijiChopsticks."
+    echo "Run 'chop help' to see a list of available tools."
+    exit 1
+fi
+
+# Removes classpath entries that match the given regexp (partial match, not full
+# match).
+function remove_classpath_entries() {
+  local cp=$1
+  local regex=$2
+
+  echo $cp | sed "s/[^:]*$regex[^:]*/::/g" | sed 's/::*/:/g'
+  return 0
+}
+
+# Helper to build classpaths correctly
+function append_path() {
+  if [ -z "$1" ]; then
+    echo $2
+  else
+    echo $1:$2
+  fi
+}
+
+# Scrubs classpaths of a given jar. Mutate will dig into *s, only mutating them
+# if it finds the given jar.
+# mutate_classpath scrubme.jar "$(hadoop classpath)"
+function mutate_classpath () {
+
+    local mutated_classpath
+    local jar_to_scrub=$1
+    shift
+
+    # Stop expanding globs
+    set -f
+    IFS=: read -r -a classpath <<< $@
+
+    for path in $classpath; do
+
+        # If it ends with a glob we'll need to dig deeper for jars
+        if [ "${path: -1:1}" = "*" ]; then
+
+            set +f
+            local expanded_classpath=$(JARS=(${path}.jar); IFS=:; echo "${JARS[*]}")
+            set -f
+
+            # If the expanded classpath contains the jar in question, we'll
+            # scrub it later.
+            if [[ $expanded_classpath =~ .*$jar_to_scrub.* ]]; then
+                mutated_classpath=$(append_path $mutated_classpath $expanded_classpath)
+
+            # If the expanded classpath doesn't contain the jar in question, use
+            # the glob version to reduce clutter.
+            else
+                mutated_classpath=$(append_path $mutated_classpath $path)
+            fi
+
+        # No glob just use the path
+        else
+            mutated_classpath=$(append_path $mutated_classpath $path)
+        fi
+    done
+
+    # Scrub all instances of the jar
+    mutated_classpath=$(remove_classpath_entries "$mutated_classpath" "$jar_to_scrub")
+    echo $mutated_classpath
+
+    set +f
+}
+
+
+# Gather the chopsticks dependency jars.
+libjars="${CHOP_HOME}/lib/*"
+
+# Gather the HBase classpath.
+hbase_cp=$(${HBASE_HOME}/bin/hbase classpath)
+hbase_cp=$(mutate_classpath 'slf4j-log4j12' "${hbase_cp}")
+
+# Hadoop classpath
+hadoop_cp=$(${HADOOP_HOME}/bin/hadoop classpath)
+hadoop_cp=$(mutate_classpath 'slf4j-log4j12' "${hadoop_cp}")
+
+# Note that we put the libjars before the hbase jars, in case there are conflicts.
+chop_conf=${CHOP_HOME}/conf
+# We put $CHOP_CLASSPATH at the beginning classpath to allow users to win when there are conflicts.
+chop_cp="${CHOP_CLASSPATH}:${chop_conf}:${libjars}:${hadoop_cp}:${hbase_cp}"
+
+# Determine location of Hadoop native libraries and set java.library.path.
+if [ -d "${HADOOP_HOME}/lib/native" ]; then
+  JAVA_PLATFORM=`java -cp ${hadoop_cp} -Xmx32m org.apache.hadoop.util.PlatformName | sed -e "s/ /_/g"`
+  if [ ! -z "$JAVA_LIBRARY_PATH" ]; then
+    JAVA_LIBRARY_PATH="${JAVA_LIBRARY_PATH}:${HADOOP_HOME}/lib/native/${JAVA_PLATFORM}"
+  else
+    JAVA_LIBRARY_PATH="${HADOOP_HOME}/lib/native/${JAVA_PLATFORM}"
+  fi
+fi
+
+function jar_command() {
+  if [[ $# > 0 && $1 == "--help" ]]; then
+    echo "Usage: chop <local|cluster|jar> <jarFile> <mainClass> [args...]"
+    echo
+    exit 0
+  fi
+  user_jar_file=$1
+  class=$2
+  if [ -z "${user_jar_file}" ]; then
+    echo "Error: no jar file specified."
+    echo "Usage: chop <local|cluster|jar> <jarFile> <mainClass> [args...]"
+    exit 1
+  fi
+  if [ ! -f "${user_jar_file}" ]; then
+    echo "Error: Cannot find jar file ${user_jar_file}"
+    echo "Usage: chop <local|cluster|jar> <jarFile> <mainClass> [args...]"
+    exit 1
+  fi
+  if [ -z "${class}" ]; then
+    echo "Error: no main class specified."
+    echo "Usage: chop <local|cluster|jar> <jarFile> <mainClass> [args...]"
+    exit 1
+  fi
+  chop_cp="${user_jar_file}:${chop_cp}"
+}
+
+function print_tool_usage() {
+  echo 'The chop script can run programs written using KijiChopsticks.'
+  echo
+  echo 'USAGE'
+  echo
+  echo '  chop <command> <args>'
+  echo
+  echo 'COMMANDS'
+  echo
+  echo '  help          - Displays this help message. Use --verbose for more information.'
+  echo '  local         - Runs an analysis job using the local job runner.'
+  echo '  hdfs          - Runs an analysis job using a Hadoop cluster.'
+  echo '  jar           - Runs an arbitrary Scala or Java program.'
+  echo '  classpath     - Prints the classpath used to run KijiChopsticks.'
+  echo
+}
+
+function print_env_usage() {
+  echo
+  echo "ENVIRONMENT VARIABLES"
+  echo
+  echo "  Users can set several environment variables to change the behavior of the chop script."
+  echo "  These include:"
+  echo
+  echo "  CHOP_CLASSPATH      Should contain a colon-seperated list of paths to client libraries"
+  echo "                      to place on the classpath of run tools. The libraries"
+  echo "                      specified will be placed first on the classpath so that they"
+  echo "                      will take precedence over libraries provided by KijiChopsticks."
+  echo "                      By default CHOP_CLASSPATH is empty."
+  echo
+  echo "  CHOP_JAVA_OPTS      Should contain extra arguments to pass to the JVM used to run"
+  echo "                      KijiChopsticks. By default, CHOP_JAVA_OPTS is empty."
+  echo
+  echo "  JAVA_LIBRARY_PATH   Should contain a colon-seperated list of paths to additional native"
+  echo "                      libraries to pass to the JVM (through the java.library.path"
+  echo "                      property). Note the chop script will always pass the native"
+  echo "                      libraries included with your Hadoop distribution to the JVM. By"
+  echo "                      default JAVA_LIBRARY_PATH is empty."
+}
+
+command=$1
+
+case ${command} in
+  help)
+    print_tool_usage
+    if [[ $1 == "--verbose" ]]; then
+      print_env_usage
+    fi
+    exit 0
+    ;;
+
+  classpath)
+    echo "${chop_cp}"
+    exit 0
+    ;;
+
+  local|hdfs)
+    shift  # pop off the command
+    jar_command $@
+    shift
+    shift
+    run_mode=${command}
+    scalding_tool="com.twitter.scalding.Tool"
+    ;;
+
+  jar)
+    shift  # pop off the command
+    jar_command $@
+    shift
+    shift
+    ;;
+esac
+
+if [ -z "${class}" ]; then
+    echo "Unknown command: ${command}"
+    echo "Try:"
+    echo "  chop help"
+    exit 1
+fi
+
+export CHOP_JAVA_OPTS
+
+java_opts=
+if [ ! -z "${JAVA_LIBRARY_PATH}" ]; then
+  java_opts="${java_opts} -Djava.library.path=${JAVA_LIBRARY_PATH}"
+fi
+
+# Run it!
+if [ -z "${scalding_tool}" ]; then
+  exec java -cp "${chop_cp}" ${java_opts} ${CHOP_JAVA_OPTS} \
+    "${class}" "$@"
+else
+  exec java -cp "${chop_cp}" ${java_opts} ${CHOP_JAVA_OPTS} ${scalding_tool} \
+    "${class}" "--${run_mode}" "$@"
+fi

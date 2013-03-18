@@ -37,7 +37,7 @@ import org.kiji.schema.util.ResourceUtils
  *
  * <p>This loader can be run from a command line shell as follows:
  * <code>
- *   kiji jar <path/to/this/jar> org.kiji.chopsticks.NewsgroupLoader \
+ *   chop jar <path/to/this/jar> org.kiji.chopsticks.NewsgroupLoader \
  *       <kiji://uri/to/kiji/table> <path/to/newsgroups/root/>
  * </code>
  * </p>

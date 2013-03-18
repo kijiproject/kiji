@@ -31,9 +31,9 @@ import org.kiji.schema.EntityId
  * Counts the words from the newsgroup table.
  *
  * Usage:
- *   kiji jar <path/to/this/jar> com.twitter.scalding.Tool \
+ *   chop hdfs <path/to/this/jar> \
  *       org.kiji.chopsticks.NewsgroupWordCount \
- *       --input kiji://.env/default/words --output ./wordcount.tsv --hdfs
+ *       --input kiji://.env/default/words --output ./wordcount.tsv
  */
 class NewsgroupWordCount(args: Args) extends Job(args) {
   val tableUri: String = args("input")
