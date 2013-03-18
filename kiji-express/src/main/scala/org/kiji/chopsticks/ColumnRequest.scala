@@ -21,24 +21,25 @@ package org.kiji.chopsticks
 
 import java.io.Serializable
 
-import org.kiji.annotations.{ApiAudience, ApiStability}
-import org.kiji.chopsticks.Column.InputOptions
+import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
+import org.kiji.chopsticks.ColumnRequest.InputOptions
 import org.kiji.schema.filter.KijiColumnFilter
 
 /**
- * Represents a column in a Kiji table.
+ * Represents a request for a column in a Kiji table.
  *
  * @param name The name of the column.
  * @param inputOptions Input options for requesting the column.
  */
 @ApiAudience.Public
 @ApiStability.Unstable
-final case class Column(
+final case class ColumnRequest(
     name: String,
     inputOptions: InputOptions = InputOptions())
     extends Serializable
 
-object Column {
+object ColumnRequest {
   /**
    * Provides the ability to specify InputOptions for a column.
    *

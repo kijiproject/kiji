@@ -19,15 +19,56 @@
 
 package org.kiji.chopsticks
 
+import java.lang.IllegalArgumentException
+
 import scala.collection.JavaConversions.mapAsJavaMap
 
 import org.scalatest.FunSuite
 
 import org.kiji.chopsticks.DSL._
-import org.kiji.chopsticks.Column.InputOptions
+import org.kiji.schema.filter.RegexQualifierColumnFilter
 
 class DSLSuite extends FunSuite {
   val tableURI = "kiji://.env/default/table"
+
+  test("DSL should not let you create a grouptype column without a qualifier.") {
+    intercept[IllegalArgumentException] {
+      val colReq: ColumnRequest = Column("search")
+    }
+  }
+
+  test("DSL should not let you create a maptype column with a qualifier.") {
+    intercept[IllegalArgumentException] {
+      val colReq: ColumnRequest = MapColumn("info:word")
+    }
+  }
+
+  test("DSL should let you specify qualifier regex on maptype columns.") {
+    val colReq: ColumnRequest = MapColumn("search", qualifierMatches=""".*\.com""")
+
+    // TODO: Test it filters keyvalues correctly.
+    assert(colReq.inputOptions.filter.isInstanceOf[RegexQualifierColumnFilter])
+  }
+
+  test("DSL should let you specify versions on maptype column without qualifier regex.") {
+    val colReq: ColumnRequest = MapColumn("search", versions=2)
+
+    assert(colReq.inputOptions.maxVersions == 2)
+  }
+
+  test("DSL should let you specify versions on a grouptype column.") {
+    val colReq: ColumnRequest = Column("info:word", versions=3)
+
+    assert(colReq.inputOptions.maxVersions == 3)
+  }
+
+  test("DSL should have default versions of 1 for maptype and grouptype columns.") {
+    val colReq1: ColumnRequest = Column("info:word")
+    val colReq2: ColumnRequest = MapColumn("searches")
+
+    assert(colReq1.inputOptions.maxVersions == 1)
+    assert(colReq2.inputOptions.maxVersions == 1)
+  }
 
   test("DSL should let you create inputs and outputs with no mappings.") {
     val input: KijiSource = KijiInput(tableURI)()
@@ -60,18 +101,18 @@ class DSLSuite extends FunSuite {
 
   test("DSL should let you specify inputOptions for a column.") {
     val input: KijiSource =
-      KijiInput(tableURI, Map(Column("info:word", InputOptions()) -> 'word))
+      KijiInput(tableURI, Map(Column("info:word") -> 'word))
     val input2: KijiSource =
-      KijiInput(tableURI, Map(Column("info:word", InputOptions(maxVersions=1)) -> 'word))
+      KijiInput(tableURI, Map(Column("info:word", versions = 1) -> 'word))
     val input3: KijiSource = KijiInput(tableURI,
-        Map(Column("info:word", InputOptions(maxVersions=1, filter=null)) -> 'word))
+        Map(MapColumn("searches", versions=1, qualifierMatches=".*") -> 'word))
   }
 
   test("DSL should let you specify different inputOptions for different columns.") {
     val input: KijiSource = KijiInput(tableURI,
       Map(
-        Column("info:word", InputOptions(maxVersions=1)) -> 'word,
-        Column("info:title", InputOptions(maxVersions=2)) -> 'title))
+        Column("info:word", versions=1) -> 'word,
+        Column("info:title", versions=2) -> 'title))
   }
 
   test("DSL should let you create KijiSources as outputs.") {

@@ -21,11 +21,64 @@ package org.kiji.chopsticks
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.chopsticks.ColumnRequest.InputOptions
 import org.kiji.schema.filter.KijiColumnFilter
+import org.kiji.schema.filter.RegexQualifierColumnFilter
 
 @ApiAudience.Public
 @ApiStability.Unstable
 object DSL {
+  /**
+   * Used with [[#MapColumn(String, String, Int)]] and [[#Column(String, Int)]] to specify that all
+   * versions of each column should be read.
+   */
+  val all = Integer.MAX_VALUE
+
+  /**
+   * Used with [[#MapColumn(String, String, Int)]] and [[#Column(String, Int)]] to specify that
+   * only the latest version of each column should be read.
+   */
+  val latest = 1
+
+  /**
+   * Factory method for Column that is a map-type column family.
+   *
+   * @param name of column in "family:qualifier" or "family" form.
+   * @param qualifierMatches Regex for filtering qualifiers. Specify the empty string ("") to accept
+   *     all qualifiers. Default value is "".
+   * @param versions of column to get. Default value is 1.
+   */
+  def MapColumn(
+      name: String,
+      qualifierMatches: String = "",
+      versions: Int = latest): ColumnRequest = {
+    require(name.split(":").length == 1)
+
+    val filter: KijiColumnFilter = {
+      if ("" == qualifierMatches) {
+        null
+      } else {
+        new RegexQualifierColumnFilter(qualifierMatches)
+      }
+    }
+
+    new ColumnRequest(name, new InputOptions(versions, filter))
+  }
+
+  /**
+   * Factory method for Column that is a group-type column.
+   *
+   * @param name of column in "family:qualifier" form.
+   * @param versions of column to get.
+   */
+  def Column(
+      name: String,
+      versions: Int = latest): ColumnRequest = {
+    require(name.split(":").length == 2)
+
+    new ColumnRequest(name, new InputOptions(versions, null))
+  }
+
   // TODO(CHOP-36): Support request-level options.
   /**
    * Factory method for KijiSource.
@@ -51,7 +104,7 @@ object DSL {
    */
   def KijiInput(
       tableURI: String,
-      columns: Map[Column, Symbol]): KijiSource = {
+      columns: Map[ColumnRequest, Symbol]): KijiSource = {
     val columnMap = columns
         .map { case (col, field) => (field, col) }
     new KijiSource(tableURI, columnMap)
@@ -65,8 +118,7 @@ object DSL {
    */
   def KijiOutput(
       tableURI: String) (
-        columns: (Symbol, String)*)
-    : KijiSource = {
+        columns: (Symbol, String)*): KijiSource = {
     val columnMap = columns
         .toMap
         .mapValues(Column(_))
@@ -81,6 +133,7 @@ object DSL {
    */
   def KijiOutput(
       tableURI: String,
-      columns: Map[Symbol, Column])
-    : KijiSource = new KijiSource(tableURI, columns)
+      columns: Map[Symbol, ColumnRequest]): KijiSource = {
+    new KijiSource(tableURI, columns)
+  }
 }

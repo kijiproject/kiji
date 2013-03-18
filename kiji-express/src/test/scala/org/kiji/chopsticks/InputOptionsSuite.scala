@@ -21,7 +21,7 @@ package org.kiji.chopsticks
 
 import org.scalatest.FunSuite
 
-import org.kiji.chopsticks.Column.InputOptions
+import org.kiji.chopsticks.ColumnRequest.InputOptions
 import org.kiji.schema.filter.RegexQualifierColumnFilter
 
 class InputOptionsSuite extends FunSuite {

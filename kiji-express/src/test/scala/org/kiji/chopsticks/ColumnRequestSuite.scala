@@ -26,10 +26,10 @@ import java.io.ObjectOutputStream
 
 import org.scalatest.FunSuite
 
-import org.kiji.chopsticks.Column.InputOptions
+import org.kiji.chopsticks.ColumnRequest.InputOptions
 import org.kiji.schema.filter.RegexQualifierColumnFilter
 
-class ColumnSuite extends FunSuite {
+class ColumnRequestSuite extends FunSuite {
   // TODO(CHOP-37): Test with non-null filter once the new method of specifying filters
   // correctly implements the .equals() and hashCode() methods.
   // Should be able to change the following line to:
@@ -39,15 +39,15 @@ class ColumnSuite extends FunSuite {
   val colName = "myname"
 
   test("Fields of the column are the same as those it is constructed with.") {
-    val col: Column = new Column(colName, opts)
+    val col: ColumnRequest = new ColumnRequest(colName, opts)
 
     assert(colName == col.name)
     assert(opts == col.inputOptions)
   }
 
   test("Two columns with the same parameters are equal and hash to the same value.") {
-    val col1: Column = new Column(colName, opts)
-    val col2: Column = new Column(colName, opts)
+    val col1: ColumnRequest = new ColumnRequest(colName, opts)
+    val col2: ColumnRequest = new ColumnRequest(colName, opts)
 
     assert(col1 == col2)
     assert(col1.hashCode() == col2.hashCode())
@@ -57,7 +57,7 @@ class ColumnSuite extends FunSuite {
     // Serialize and deserialize using java ObjectInputStream and ObjectOutputStream.
     // TODO(CHOP-37): The filter is null because it's not serializable. Once CHOP-37 is
     // done, use the same inputoptions as the other tests in the line below.
-    val col: Column = new Column(colName, new InputOptions(1, null))
+    val col: ColumnRequest = new ColumnRequest(colName, new InputOptions(1, null))
     val bytesOut = new ByteArrayOutputStream()
     val out = new ObjectOutputStream(bytesOut)
     out.writeObject(col)

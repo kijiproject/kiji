@@ -62,7 +62,7 @@ import org.kiji.schema.KijiURI
 @ApiAudience.Framework
 @ApiStability.Unstable
 class KijiScheme(
-    private val columns: Map[String, Column])
+    private val columns: Map[String, ColumnRequest])
     extends Scheme[JobConf, RecordReader[KijiKey, KijiValue], OutputCollector[_, _],
         KijiValue, KijiTableWriter] {
   import KijiScheme._
@@ -248,7 +248,7 @@ object KijiScheme {
    * @return A tuple containing the values contained in the specified row.
    */
   private[chopsticks] def rowToTuple(
-      columns: Map[String, Column],
+      columns: Map[String, ColumnRequest],
       fields: Fields,
       row: KijiRowData): Tuple = {
     val result: Tuple = new Tuple()
@@ -260,7 +260,7 @@ object KijiScheme {
 
     // Add the rest.
     iterator.foreach { fieldName =>
-      val column: Column = columns(fieldName.toString())
+      val column: ColumnRequest = columns(fieldName.toString())
       val columnName: KijiColumnName = new KijiColumnName(column.name)
 
       result.add(row.getValues(columnName.getFamily(), columnName.getQualifier()))
@@ -279,7 +279,7 @@ object KijiScheme {
    * @param writer KijiTableWriter to use to write.
    */
   private[chopsticks] def putTuple(
-      columns: Map[String, Column],
+      columns: Map[String, ColumnRequest],
       fields: Fields,
       output: TupleEntry,
       writer: KijiTableWriter) {
@@ -291,7 +291,7 @@ object KijiScheme {
 
     // Store the retrieved columns in the tuple.
     iterator.foreach { fieldName =>
-      val column: Column = columns(fieldName.toString())
+      val column: ColumnRequest = columns(fieldName.toString())
       val columnName: KijiColumnName = new KijiColumnName(column.name)
 
       writer.put(
@@ -302,10 +302,10 @@ object KijiScheme {
     }
   }
 
-  private[chopsticks] def buildRequest(columns: Iterable[Column]): KijiDataRequest = {
-    def addColumn(builder: KijiDataRequestBuilder, column: Column) {
+  private[chopsticks] def buildRequest(columns: Iterable[ColumnRequest]): KijiDataRequest = {
+    def addColumn(builder: KijiDataRequestBuilder, column: ColumnRequest) {
       val columnName: KijiColumnName = new KijiColumnName(column.name)
-      val inputOptions: Column.InputOptions = column.inputOptions
+      val inputOptions: ColumnRequest.InputOptions = column.inputOptions
 
       builder.newColumnsDef()
           .withMaxVersions(inputOptions.maxVersions)

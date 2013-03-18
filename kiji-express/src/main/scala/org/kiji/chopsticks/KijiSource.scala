@@ -74,7 +74,7 @@ import org.kiji.schema.KijiURI
 @ApiStability.Unstable
 final class KijiSource(
     val tableAddress: String,
-    val columns: Map[Symbol, Column])
+    val columns: Map[Symbol, ColumnRequest])
     extends Source {
   import KijiSource._
 
@@ -93,7 +93,8 @@ final class KijiSource(
    * @param columnMap Mapping from field name to Kiji column name.
    * @return Java map from field name to column definition.
    */
-  private def convertColumnMap(columnMap: Map[Symbol, Column]): Map[String, Column] = {
+  private def convertColumnMap(columnMap: Map[Symbol, ColumnRequest])
+      : Map[String, ColumnRequest] = {
     columnMap.map { case (symbol, column) => (symbol.name, column) }
   }
 
@@ -249,7 +250,7 @@ object KijiSource {
    */
   private class TestLocalKijiScheme(
       val buffer: Buffer[Tuple],
-      columns: Map[String, Column])
+      columns: Map[String, ColumnRequest])
       extends LocalKijiScheme(columns) {
     override def sinkConfInit(
         process: FlowProcess[Properties],
@@ -286,7 +287,7 @@ object KijiSource {
    */
   private class TestKijiScheme(
       val buffer: Buffer[Tuple],
-      columns: Map[String, Column])
+      columns: Map[String, ColumnRequest])
       extends KijiScheme(columns) {
     override def sinkCleanup(
         process: FlowProcess[JobConf],

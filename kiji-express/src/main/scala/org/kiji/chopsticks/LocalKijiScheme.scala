@@ -80,7 +80,7 @@ private[chopsticks] case class InputContext(
 @ApiAudience.Framework
 @ApiStability.Unstable
 class LocalKijiScheme(
-    private val columns: Map[String, Column])
+    private val columns: Map[String, ColumnRequest])
     extends Scheme[Properties, InputStream, OutputStream, InputContext, KijiTableWriter] {
 
   /** Fields expected to be in any tuples processed by this scheme. */

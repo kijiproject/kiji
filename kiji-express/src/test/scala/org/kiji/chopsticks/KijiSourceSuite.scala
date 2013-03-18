@@ -51,7 +51,7 @@ class KijiSourceSuite
   /**
    * Validates output from [[com.twitter.scalding.examples.WordCountJob]].
    *
-   * @param outputBuffer containing data that the Kiji table has in it after the job has been run.
+   * @param outputBuffer containing data that output buffer has in it after the job has been run.
    */
   def validateWordCount(outputBuffer: Buffer[(String, Int)]) {
     val outMap = outputBuffer.toMap
@@ -167,6 +167,42 @@ class KijiSourceSuite
         .finish
   }
 
+  test("a job that requests maxVersions gets them") {
+    // Create test Kiji table.
+    val uri: String = doAndRelease(makeTestKijiTable(layout)) { table: KijiTable =>
+      table.getURI().toString()
+    }
+
+    // Input tuples to use for version count tests.
+    val versionCountInput: List[(EntityId, NavigableMap[Long, Utf8])] = List(
+        ( id("row01"), timeline((10L, new Utf8("two")), (20L, new Utf8("two"))) ),
+        ( id("row02"), timeline(
+            (10L, new Utf8("three")),
+            (20L, new Utf8("three")),
+            (30L, new Utf8("three")) ) ),
+        ( id("row03"), singleton(new Utf8("hello")) ))
+
+
+    def validateVersionCount(outputBuffer: Buffer[(Int, Int)]) {
+      val outMap = outputBuffer.toMap
+      // There should be two rows with 2 returned versions
+      // since one input row has 3 versions but we only requested two.
+      assert(1 == outMap(1))
+      assert(2 == outMap(2))
+    }
+
+    // Build test job.
+    JobTest(new VersionsJob(_))
+        .arg("input", uri)
+        .arg("output", "outputFile")
+        .source(KijiInput(uri, Map((Column("family:column", versions=2) -> 'words))),
+            versionCountInput)
+        .sink(Tsv("outputFile"))(validateVersionCount)
+        // Run the test job.
+        .run
+        .finish
+  }
+
   // TODO(CHOP-39): Write this test.
   test("a word-count job that uses the type-safe api is run") {
     pending
@@ -202,6 +238,26 @@ object KijiSourceSuite extends KijiSuite {
         // Count the occurrences of each word.
         .groupBy('cleanword) { occurences => occurences.size }
         // Write the result to a file.
+        .write(Tsv(args("output")))
+  }
+
+  /**
+   * A job that requests specific number of versions and buckets the results by the number of
+   * versions.  The result is pairs of number of versions and the number of rows with that number
+   * of versions.
+   *
+   * @param args to the job. Two arguments are expected: "input", which should specify the URI
+   *     to the Kiji table the job should be run on, and "output", which specifies the output
+   *     Tsv file.
+   */
+  class VersionsJob(args: Args) extends Job(args) {
+    // Setup input to bind values from the "family:column" column to the symbol 'words.
+    KijiInput(args("input"), Map((Column("family:column", versions=2) -> 'words)))
+        // Count the size of words (number of versions).
+        .map('words -> 'versioncount) { words: NavigableMap[Long, Utf8] =>
+          words.size
+        }
+        .groupBy('versioncount) (_.size)
         .write(Tsv(args("output")))
   }
 
