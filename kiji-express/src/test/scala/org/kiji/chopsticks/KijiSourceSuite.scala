@@ -192,11 +192,45 @@ class KijiSourceSuite
     }
 
     // Build test job.
-    JobTest(new VersionsJob(_))
-        .arg("input", uri)
+    val source = KijiInput(uri, Map((Column("family:column", versions=2) -> 'words)))
+    JobTest(new VersionsJob(source)(_))
         .arg("output", "outputFile")
-        .source(KijiInput(uri, Map((Column("family:column", versions=2) -> 'words))),
-            versionCountInput)
+        .source(source, versionCountInput)
+        .sink(Tsv("outputFile"))(validateVersionCount)
+        // Run the test job.
+        .run
+        .finish
+  }
+
+  test("a job that requests a time range gets them") {
+    // Create test Kiji table.
+    val uri: String = doAndRelease(makeTestKijiTable(layout)) { table: KijiTable =>
+      table.getURI().toString()
+    }
+
+    // Input tuples to use for version count tests.
+    val versionCountInput: List[(EntityId, NavigableMap[Long, Utf8])] = List(
+        ( id("row01"), timeline((10L, new Utf8("two")), (20L, new Utf8("two"))) ),
+        ( id("row02"), timeline(
+            (10L, new Utf8("three")),
+            (20L, new Utf8("three")),
+            (30L, new Utf8("three")) ) ),
+        ( id("row03"), singleton(new Utf8("hello")) ))
+
+
+    def validateVersionCount(outputBuffer: Buffer[(Int, Int)]) {
+      val outMap = outputBuffer.toMap
+      // There should be two rows with 2 returned versions
+      // since one input row has 3 versions but we only requested two.
+      assert(1 === outMap.size)
+      assert(2 === outMap(1))
+    }
+
+    // Build test job.
+    val source = KijiInput(uri, timeRange=TimeRange.Between(15L, 25L))("family:column" -> 'words)
+    JobTest(new VersionsJob(source)(_))
+        .arg("output", "outputFile")
+        .source(source, versionCountInput)
         .sink(Tsv("outputFile"))(validateVersionCount)
         // Run the test job.
         .run
@@ -246,13 +280,13 @@ object KijiSourceSuite extends KijiSuite {
    * versions.  The result is pairs of number of versions and the number of rows with that number
    * of versions.
    *
+   * @param source that the job will use.
    * @param args to the job. Two arguments are expected: "input", which should specify the URI
    *     to the Kiji table the job should be run on, and "output", which specifies the output
    *     Tsv file.
    */
-  class VersionsJob(args: Args) extends Job(args) {
-    // Setup input to bind values from the "family:column" column to the symbol 'words.
-    KijiInput(args("input"), Map((Column("family:column", versions=2) -> 'words)))
+  class VersionsJob(source: KijiSource)(args: Args) extends Job(args) {
+    source
         // Count the size of words (number of versions).
         .map('words -> 'versioncount) { words: NavigableMap[Long, Utf8] =>
           words.size

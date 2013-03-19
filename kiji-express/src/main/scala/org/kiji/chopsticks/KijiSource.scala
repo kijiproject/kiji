@@ -68,12 +68,14 @@ import org.kiji.schema.KijiURI
  *
  * @param tableAddress Address of the target KijiTable. This should be provided as a
  *     [[org.kiji.schema.KijiURI]].
+ * @param timeRange Range of timestamps to read from each column.
  * @param columns Mapping from field name to Kiji column name.
  */
 @ApiAudience.Framework
 @ApiStability.Unstable
 final class KijiSource(
     val tableAddress: String,
+    val timeRange: TimeRange,
     val columns: Map[Symbol, ColumnRequest])
     extends Source {
   import KijiSource._
@@ -83,9 +85,11 @@ final class KijiSource(
   /** The URI of the target Kiji table. */
   private val tableUri: KijiURI = KijiURI.newBuilder(tableAddress).build()
   /** A Kiji scheme intended to be used with Scalding/Cascading's hdfs mode. */
-  private val kijiScheme: KijiScheme = new KijiScheme(convertColumnMap(columns))
+  private val kijiScheme: KijiScheme = new KijiScheme(timeRange, convertColumnMap(columns))
   /** A Kiji scheme intended to be used with Scalding/Cascading's local mode. */
-  private val localKijiScheme: LocalKijiScheme = new LocalKijiScheme(convertColumnMap(columns))
+  private val localKijiScheme: LocalKijiScheme = {
+    new LocalKijiScheme(timeRange, convertColumnMap(columns))
+  }
 
   /**
    * Convert scala columns definition into its corresponding java variety.
@@ -192,7 +196,7 @@ final class KijiSource(
             new KijiTap(tableUri, scheme).asInstanceOf[Tap[_, _, _]]
           }
           case Write => {
-            val scheme = new TestKijiScheme(buffers(this), convertColumnMap(columns))
+            val scheme = new TestKijiScheme(buffers(this), timeRange, convertColumnMap(columns))
 
             new KijiTap(tableUri, scheme).asInstanceOf[Tap[_, _, _]]
           }
@@ -210,7 +214,8 @@ final class KijiSource(
 
           // After performing a write, use TestLocalKijiScheme to populate the output buffer.
           case Write => {
-            val scheme = new TestLocalKijiScheme(buffers(this), convertColumnMap(columns))
+            val scheme = new TestLocalKijiScheme(buffers(this), timeRange,
+                convertColumnMap(columns))
 
             new LocalKijiTap(tableUri, scheme).asInstanceOf[Tap[_, _, _]]
           }
@@ -246,12 +251,14 @@ object KijiSource {
    * should only be used during tests.
    *
    * @param buffer Buffer to fill with post-job table rows for tests.
+   * @param timeRange Range of timestamps to read from each column.
    * @param columns Scalding field name to Kiji column name mapping.
    */
   private class TestLocalKijiScheme(
       val buffer: Buffer[Tuple],
+      timeRange: TimeRange,
       columns: Map[String, ColumnRequest])
-      extends LocalKijiScheme(columns) {
+      extends LocalKijiScheme(timeRange, columns) {
     override def sinkConfInit(
         process: FlowProcess[Properties],
         tap: Tap[Properties, InputStream, OutputStream],
@@ -283,12 +290,14 @@ object KijiSource {
    * used during tests.
    *
    * @param buffer Buffer to fill with post-job table rows for tests.
+   * @param timeRange Range of timestamps to read from each column.
    * @param columns Scalding field name to Kiji column name mapping.
    */
   private class TestKijiScheme(
       val buffer: Buffer[Tuple],
+      timeRange: TimeRange,
       columns: Map[String, ColumnRequest])
-      extends KijiScheme(columns) {
+      extends KijiScheme(timeRange, columns) {
     override def sinkCleanup(
         process: FlowProcess[JobConf],
         sinkCall: SinkCall[KijiTableWriter, OutputCollector[_, _]]) {
@@ -303,7 +312,7 @@ object KijiSource {
       doAndRelease(Kiji.Factory.open(uri)) { kiji: Kiji =>
         doAndRelease(kiji.openTable(uri.getTable())) { table: KijiTable =>
           doAndClose(table.openTableReader()) { reader: KijiTableReader =>
-            val request: KijiDataRequest = KijiScheme.buildRequest(columns.values)
+            val request: KijiDataRequest = KijiScheme.buildRequest(timeRange, columns.values)
             doAndClose(reader.getScanner(request)) { scanner: KijiRowScanner =>
               val rows: Iterator[KijiRowData] = scanner.iterator().asScala
 

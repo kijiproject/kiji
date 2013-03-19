@@ -80,6 +80,7 @@ private[chopsticks] case class InputContext(
 @ApiAudience.Framework
 @ApiStability.Unstable
 class LocalKijiScheme(
+    private val timeRange: TimeRange,
     private val columns: Map[String, ColumnRequest])
     extends Scheme[Properties, InputStream, OutputStream, InputContext, KijiTableWriter] {
 
@@ -122,11 +123,10 @@ class LocalKijiScheme(
     val uriString: String = process.getConfigCopy().getProperty(KijiConfKeys.KIJI_INPUT_TABLE_URI)
     val uri: KijiURI = KijiURI.newBuilder(uriString).build()
 
-    // TODO: Check and see if Kiji.Factory.open should be passed the configuration object in
-    //     process.
+    // Build the input context.
     doAndRelease(Kiji.Factory.open(uri)) { kiji: Kiji =>
       doAndRelease(kiji.openTable(uri.getTable())) { table: KijiTable =>
-        val request = KijiScheme.buildRequest(columns.values)
+        val request = KijiScheme.buildRequest(timeRange, columns.values)
         val reader = table.openTableReader()
         val scanner = reader.getScanner(request)
         val context = InputContext(reader, scanner, scanner.iterator.asScala)

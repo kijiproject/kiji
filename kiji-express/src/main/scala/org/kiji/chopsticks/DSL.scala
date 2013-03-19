@@ -21,7 +21,6 @@ package org.kiji.chopsticks
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.chopsticks.ColumnRequest.InputOptions
 import org.kiji.schema.filter.KijiColumnFilter
 import org.kiji.schema.filter.RegexQualifierColumnFilter
 
@@ -62,7 +61,7 @@ object DSL {
       }
     }
 
-    new ColumnRequest(name, new InputOptions(versions, filter))
+    new ColumnRequest(name, new ColumnRequest.InputOptions(versions, filter))
   }
 
   /**
@@ -76,10 +75,9 @@ object DSL {
       versions: Int = latest): ColumnRequest = {
     require(name.split(":").length == 2)
 
-    new ColumnRequest(name, new InputOptions(versions, null))
+    new ColumnRequest(name, new ColumnRequest.InputOptions(versions, null))
   }
 
-  // TODO(CHOP-36): Support request-level options.
   /**
    * Factory method for KijiSource.
    *
@@ -93,7 +91,25 @@ object DSL {
         .map { case (col, field) => (field, col) }
         .toMap
         .mapValues(Column(_))
-    new KijiSource(tableURI, columnMap)
+    new KijiSource(tableURI, TimeRange.All, columnMap)
+  }
+
+  /**
+   * Factory method for KijiSource.
+   *
+   * @param tableURI Address of the Kiji table to use.
+   * @param timeRange Range of timestamps to read from each column.
+   * @param columns Columns to read from.
+   */
+  def KijiInput(
+      tableURI: String,
+      timeRange: TimeRange) (
+        columns: (String, Symbol)*): KijiSource = {
+    val columnMap = columns
+        .map { case (col, field) => (field, col) }
+        .toMap
+        .mapValues(Column(_))
+    new KijiSource(tableURI, timeRange, columnMap)
   }
 
   /**
@@ -107,7 +123,23 @@ object DSL {
       columns: Map[ColumnRequest, Symbol]): KijiSource = {
     val columnMap = columns
         .map { case (col, field) => (field, col) }
-    new KijiSource(tableURI, columnMap)
+    new KijiSource(tableURI, TimeRange.All, columnMap)
+  }
+
+  /**
+   * Factory method for KijiSource.
+   *
+   * @param tableURI Address of the Kiji table to use.
+   * @param timeRange Range of timestamps to read from each column.
+   * @param columns Columns to read from.
+   */
+  def KijiInput(
+      tableURI: String,
+      timeRange: TimeRange,
+      columns: Map[ColumnRequest, Symbol]): KijiSource = {
+    val columnMap = columns
+        .map { case (col, field) => (field, col) }
+    new KijiSource(tableURI, timeRange, columnMap)
   }
 
   /**
@@ -122,7 +154,7 @@ object DSL {
     val columnMap = columns
         .toMap
         .mapValues(Column(_))
-    new KijiSource(tableURI, columnMap)
+    new KijiSource(tableURI, TimeRange.All, columnMap)
   }
 
   /**
@@ -134,6 +166,6 @@ object DSL {
   def KijiOutput(
       tableURI: String,
       columns: Map[Symbol, ColumnRequest]): KijiSource = {
-    new KijiSource(tableURI, columns)
+    new KijiSource(tableURI, TimeRange.All, columns)
   }
 }

@@ -62,6 +62,7 @@ import org.kiji.schema.KijiURI
 @ApiAudience.Framework
 @ApiStability.Unstable
 class KijiScheme(
+    private val timeRange: TimeRange,
     private val columns: Map[String, ColumnRequest])
     extends Scheme[JobConf, RecordReader[KijiKey, KijiValue], OutputCollector[_, _],
         KijiValue, KijiTableWriter] {
@@ -92,7 +93,7 @@ class KijiScheme(
       tap: Tap[JobConf, RecordReader[KijiKey, KijiValue], OutputCollector[_, _]],
       conf: JobConf) {
     // Build a data request.
-    val request: KijiDataRequest = buildRequest(columns.values)
+    val request: KijiDataRequest = buildRequest(timeRange, columns.values)
 
     // Write all the required values to the job's configuration object.
     conf.setInputFormat(classOf[KijiInputFormat])
@@ -302,7 +303,9 @@ object KijiScheme {
     }
   }
 
-  private[chopsticks] def buildRequest(columns: Iterable[ColumnRequest]): KijiDataRequest = {
+  private[chopsticks] def buildRequest(
+      timeRange: TimeRange,
+      columns: Iterable[ColumnRequest]): KijiDataRequest = {
     def addColumn(builder: KijiDataRequestBuilder, column: ColumnRequest) {
       val columnName: KijiColumnName = new KijiColumnName(column.name)
       val inputOptions: ColumnRequest.InputOptions = column.inputOptions
@@ -313,8 +316,11 @@ object KijiScheme {
           .add(columnName)
     }
 
+    val requestBuilder: KijiDataRequestBuilder = KijiDataRequest.builder()
+        .withTimeRange(timeRange.begin, timeRange.end)
+
     columns
-        .foldLeft(KijiDataRequest.builder()) { (builder, column) =>
+        .foldLeft(requestBuilder) { (builder, column) =>
           addColumn(builder, column)
           builder
         }
