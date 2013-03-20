@@ -211,6 +211,7 @@
               </goals>
               <configuration>
                 <reportOutputDirectory>target/apidocs</reportOutputDirectory>
+                <excludePackageNames>*.impl:org.apache.hadoop.*</excludePackageNames>
               </configuration>
             </execution>
           </executions>
