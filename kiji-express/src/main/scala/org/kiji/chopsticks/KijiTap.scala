@@ -24,6 +24,7 @@ import java.io.File
 import java.util.UUID
 
 import cascading.flow.FlowProcess
+import cascading.property.ConfigDef
 import cascading.scheme.Scheme
 import cascading.tap.Tap
 import cascading.tap.hadoop.io.HadoopTupleEntrySchemeCollector
@@ -91,6 +92,7 @@ class KijiTap(
 
     // Put Kiji dependency jars on the distributed cache.
     getStepConfigDef().setProperty(
+        ConfigDef.Mode.UPDATE,
         "tmpjars",
         findKijiJars(conf).reduce { (a, b) => a + "," + b })
 
@@ -115,6 +117,7 @@ class KijiTap(
 
     // Put Kiji dependency jars on the distributed cache.
     getStepConfigDef().setProperty(
+        ConfigDef.Mode.UPDATE,
         "tmpjars",
         findKijiJars(conf).reduce { (a, b) => a + "," + b })
 
