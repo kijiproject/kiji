@@ -19,6 +19,8 @@
 
 package org.kiji.chopsticks
 
+import java.util.NavigableMap
+
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.schema.filter.KijiColumnFilter
@@ -168,4 +170,13 @@ object DSL {
       columns: Map[Symbol, ColumnRequest]): KijiSource = {
     new KijiSource(tableURI, TimeRange.All, columns)
   }
+
+  /**
+   * Get the first entry of a [[java.util.NavigableMap]]
+   *
+   * @param slice The map to get the first entry from.
+   * @param T The type of value stored in the map.
+   */
+  // TODO: This can be removed once KijiSlice is in.
+  def getMostRecent[T](slice: NavigableMap[Long, T]): T = slice.firstEntry().getValue()
 }

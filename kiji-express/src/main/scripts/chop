@@ -319,6 +319,11 @@ if [ -z "${scalding_tool}" ]; then
   exec java -cp "${chop_cp}" ${java_opts} ${CHOP_JAVA_OPTS} \
     "${class}" "$@"
 else
+  canonical_user_jar_file=$(readlink -e ${user_jar_file})
+  if [ -z "${canonical_user_jar_file}" ]; then
+    echo "Jar file does not exist: ${user_jar_file}"
+    exit 1
+  fi
   exec java -cp "${chop_cp}" ${java_opts} ${CHOP_JAVA_OPTS} ${scalding_tool} \
-    "${class}" "--${run_mode}" "$@"
+    "-Dtmpjars=file://${canonical_user_jar_file}" "${class}" "--${run_mode}" "$@"
 fi
