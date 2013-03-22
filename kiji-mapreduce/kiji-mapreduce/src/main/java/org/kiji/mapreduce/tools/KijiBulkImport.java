@@ -31,7 +31,7 @@ import org.kiji.common.flags.Flag;
 import org.kiji.mapreduce.MapReduceJobInput;
 import org.kiji.mapreduce.MapReduceJobOutput;
 import org.kiji.mapreduce.bulkimport.KijiBulkImportJobBuilder;
-import org.kiji.mapreduce.bulkimport.KijiBulkImporter;
+import org.kiji.mapreduce.bulkimport.impl.KijiBulkImporters;
 import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
 import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
 import org.kiji.mapreduce.output.impl.KijiTableMapReduceJobOutput;
@@ -149,7 +149,7 @@ public final class KijiBulkImport extends JobTool<KijiBulkImportJobBuilder> {
     // Configure job:
     super.configure(jobBuilder);
     jobBuilder
-        .withBulkImporter(KijiBulkImporter.forName(mImporter))
+        .withBulkImporter(KijiBulkImporters.forName(mImporter))
         .withInput(input)
         .withOutput(mOutput);
   }

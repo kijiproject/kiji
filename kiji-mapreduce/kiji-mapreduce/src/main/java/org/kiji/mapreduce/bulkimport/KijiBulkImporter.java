@@ -90,20 +90,6 @@ import org.kiji.mapreduce.kvstore.KeyValueStoreClient;
 public abstract class KijiBulkImporter<K, V>
     implements Configurable, KeyValueStoreClient {
 
-  /**
-   * Loads a KijiBulkImporter class by name.
-   *
-   * @param className Fully qualified name of the class to load.
-   * @return the loaded class.
-   * @throws ClassNotFoundException if the class is not found.
-   * @throws ClassCastException if the class is not a KijiBulkImporter.
-   */
-  @SuppressWarnings("rawtypes")
-  public static Class<? extends KijiBulkImporter> forName(String className)
-      throws ClassNotFoundException {
-    return Class.forName(className).asSubclass(KijiBulkImporter.class);
-  }
-
   /** The Configuration of this producer. */
   private Configuration mConf;
 
@@ -116,13 +102,20 @@ public abstract class KijiBulkImporter<K, V>
     mConf = new Configuration();
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   * <p>If you override this method for your bulk importer, you must call super.setConf(); or the
+   * configuration will not be saved properly.</p>
+   */
   @Override
   public void setConf(Configuration conf) {
     mConf = conf;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   * <p>Overriding this method without returning super.getConf() may cause undesired behavior.</p>
+   */
   @Override
   public Configuration getConf() {
     return mConf;
@@ -135,38 +128,49 @@ public abstract class KijiBulkImporter<K, V>
   }
 
   /**
-   * Called once to initialize this producer before any calls to
+   * Called once to initialize this bulk importer before any calls to
    * {@link #produce(Object, Object, org.kiji.mapreduce.KijiTableContext)}.
    *
    * @param context A context you can use to generate EntityIds and commit writes.
-   *     See {@link org.kiji.mapreduce.KijiTableContext#getEntityId(String)}.
+   *     See {@link org.kiji.mapreduce.KijiTableContext#getEntityId(Object...)}.
    * @throws IOException on I/O error.
    */
   public void setup(KijiTableContext context) throws IOException {
-    // By default, nothing to cleanup.
+    // Nothing may be added here, because users may have implemented setup methods without
+    // super.setup();
   }
 
   /**
    * Produces data to be imported into Kiji.
    *
+   * <p>Produce is called once for each key-value pair record from the raw input data.  To import
+   * this data to Kiji, use the context.put(...) methods inherited from
+   * {@link org.kiji.schema.KijiPutter} to specify a cell address and value to write.  One
+   * execution of produce may include multiple calls to put, which may span multiple rows, columns
+   * and locality groups if desired. The context provides a
+   * {@link KijiTableContext#getEntityId(Object...)} method for generating EntityIds from input
+   * data.</p>
+   *
    * @param key The MapReduce input key (its type depends on the InputFormat you use).
    * @param value The MapReduce input value (its type depends on the InputFormat you use).
    * @param context A context you can use to generate EntityIds and commit writes.
-   *     See {@link org.kiji.mapreduce.KijiTableContext#getEntityId(String)}.
+   *     See {@link org.kiji.mapreduce.KijiTableContext#getEntityId(Object...)} and
+   *     {@link org.kiji.schema.KijiPutter#put(org.kiji.schema.EntityId, String, String, T)}.
    * @throws IOException on I/O error.
    */
   public abstract void produce(K key, V value, KijiTableContext context)
       throws IOException;
 
   /**
-   * Called once to clean up this producer after all
+   * Called once to clean up this bulk importer after all
    * {@link #produce(Object, Object, org.kiji.mapreduce.KijiTableContext)} calls are made.
    *
    * @param context A context you can use to generate EntityIds and commit writes.
-   *     See {@link org.kiji.mapreduce.KijiTableContext#getEntityId(String)}.
+   *     See {@link org.kiji.mapreduce.KijiTableContext#getEntityId(Object...)}.
    * @throws IOException on I/O error.
    */
   public void cleanup(KijiTableContext context) throws IOException {
-    // By default, nothing to cleanup.
+    // Nothing may be added here, because users may have implemented cleanup methods without
+    // super.cleanup();
   }
 }
