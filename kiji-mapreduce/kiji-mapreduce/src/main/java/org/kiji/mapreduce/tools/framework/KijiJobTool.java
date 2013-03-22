@@ -28,7 +28,7 @@ import org.kiji.annotations.Inheritance;
 import org.kiji.common.flags.Flag;
 import org.kiji.mapreduce.framework.KijiTableInputJobBuilder;
 import org.kiji.mapreduce.input.KijiTableMapReduceJobInput;
-import org.kiji.schema.EntityIdFactory;
+import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.tools.ToolUtils;
@@ -43,20 +43,28 @@ import org.kiji.schema.util.ResourceUtils;
 @Inheritance.Extensible
 public abstract class KijiJobTool<B extends KijiTableInputJobBuilder> extends JobTool<B> {
   @Flag(name="start-row",
-      usage="HBase row to start scanning at (inclusive), "
-          + "e.g. --start-row='hex:0088deadbeef', or --start-row='utf8:the row key in UTF8'.")
+      usage="Entity ID of the row to start scanning at (inclusive).\n"
+          + "\tEither 'kiji=<Kiji row key>' or 'hbase=<HBase row key>'.\n"
+          + ("\tHBase row keys are specified as bytes:\n"
+              + "\t\tby default as UTF-8 strings, or prefixed as in 'utf8:encoded\\x0astring';\n"
+              + "\t\tin hexadecimal as in 'hex:deadbeef';\n"
+              + "\t\tas a URL with 'url:this%20URL%00'.\n")
+          + "\tOld deprecated Kiji row keys are specified as naked UTF-8 strings.\n"
+          + ("\tNew Kiji row keys are specified in JSON, "
+              + "as in: --start-row=kiji=\"['component1', 2, 'component3']\"."))
   protected String mStartRowFlag = null;
 
   @Flag(name="limit-row",
-      usage="HBase row to stop scanning at (exclusive), "
-          + "e.g. --limit-row='hex:0088deadbeef', or --limit-row='utf8:the row key in UTF8'.")
+      usage="Entity ID of the row to stop scanning at (exclusive).\n"
+          + "\tEither 'kiji=<Kiji row key>' or 'hbase=<HBase row key>'.\n"
+          + ("\tHBase row keys are specified as bytes:\n"
+              + "\t\tby default as UTF-8 strings, or prefixed as in 'utf8:encoded\\x0astring';\n"
+              + "\t\tin hexadecimal as in 'hex:deadbeef';\n"
+              + "\t\tas a URL with 'url:this%20URL%00'.\n")
+          + "\tOld deprecated Kiji row keys are specified as naked UTF-8 strings.\n"
+          + ("\tNew Kiji row keys are specified in JSON, "
+              + "as in: --limit-row=kiji=\"['component1', 2, 'component3']\"."))
   protected String mLimitRowFlag = null;
-
-  /** HBase row to start scanning from (inclusive). */
-  private byte[] mHBaseStartRow = null;
-
-  /** HBase row to stop scanning at (exclusive). */
-  private byte[] mHBaseLimitRow = null;
 
   /** Job input must be a Kiji table. */
   private KijiTableMapReduceJobInput mJobInput = null;
@@ -75,13 +83,6 @@ public abstract class KijiJobTool<B extends KijiTableInputJobBuilder> extends Jo
         "Invalid job input '%s' : input must be a Kiji table.", mInputFlag);
 
     mJobInput = (KijiTableMapReduceJobInput) getJobInput();
-
-    if ((mStartRowFlag != null) && !mStartRowFlag.isEmpty()) {
-      mHBaseStartRow = ToolUtils.parseBytesFlag(mStartRowFlag);
-    }
-    if ((mLimitRowFlag != null) && !mLimitRowFlag.isEmpty()) {
-      mHBaseLimitRow = ToolUtils.parseBytesFlag(mLimitRowFlag);
-    }
   }
 
   /** {@inheritDoc} */
@@ -98,12 +99,15 @@ public abstract class KijiJobTool<B extends KijiTableInputJobBuilder> extends Jo
     try {
       final KijiTable table = kiji.openTable(mJobInput.getInputTableURI().getTable());
       try {
-        final EntityIdFactory eidFactory = EntityIdFactory.getFactory(table.getLayout());
-        if (mHBaseStartRow != null) {
-          jobBuilder.withStartRow(eidFactory.getEntityIdFromHBaseRowKey(mHBaseStartRow));
+        if (mStartRowFlag != null) {
+          final EntityId eidLimit =
+              ToolUtils.createEntityIdFromUserInputs(mStartRowFlag, table.getLayout());
+          jobBuilder.withStartRow(eidLimit);
         }
-        if (mHBaseLimitRow != null) {
-          jobBuilder.withLimitRow(eidFactory.getEntityIdFromHBaseRowKey(mHBaseLimitRow));
+        if (mLimitRowFlag != null) {
+          final EntityId eidLimit =
+              ToolUtils.createEntityIdFromUserInputs(mLimitRowFlag, table.getLayout());
+          jobBuilder.withLimitRow(eidLimit);
         }
       } finally {
         ResourceUtils.releaseOrLog(table);

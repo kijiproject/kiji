@@ -3,6 +3,8 @@
                               KijiMR Release Notes
 
 Version 1.0.0-rc6
+  * KIJIMR-138. Command-line arguments --start-row and --limit-row understand
+      entity IDs.
   * Add KijiTableContext.getEntityIdFactory().
     Deprecates ProducerContext.getEntityId(); use KijiRowData.getEntityId().
 
