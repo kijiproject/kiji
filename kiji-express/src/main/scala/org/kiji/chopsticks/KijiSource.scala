@@ -282,6 +282,8 @@ object KijiSource {
         buffer += sourceCall.getIncomingEntry().getTuple()
       }
       sourceCleanup(process, sourceCall)
+
+      super.sinkCleanup(process, sinkCall)
     }
   }
 
@@ -323,6 +325,8 @@ object KijiSource {
           }
         }
       }
+
+      super.sinkCleanup(process, sinkCall)
     }
   }
 }

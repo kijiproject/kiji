@@ -51,9 +51,11 @@ object Resources {
   def doAnd[T, R](resource: => R, after: R => Unit)(fn: R => T): T = {
     var error: Option[Exception] = None
 
+    // Build the resource.
+    val res: R = resource
     try {
       // Perform the operation.
-      fn(resource)
+      fn(res)
     } catch {
       // Store the exception in case close fails.
       case e: Exception => {
@@ -63,7 +65,7 @@ object Resources {
     } finally {
       try {
         // Cleanup resources.
-        after(resource)
+        after(res)
       } catch {
         // Throw the exception(s).
         case e: Exception => {

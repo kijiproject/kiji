@@ -19,6 +19,8 @@
 
 package org.kiji.chopsticks
 
+import java.util.concurrent.atomic.AtomicBoolean
+
 import org.apache.commons.codec.binary.Base64
 import org.apache.commons.lang.SerializationUtils
 import org.apache.hadoop.conf.Configuration
@@ -104,6 +106,9 @@ final class KijiRecordReader(
   /** An iterator over the rows retrieved by the scanner. */
   private val iterator: java.util.Iterator[KijiRowData] = scanner.iterator()
 
+  /** This prevents errors when KijiRecordReader is closed multiple times. See CHOP-56. */
+  private var isClosed: Boolean = false
+
   /**
    * @return a new, empty, reusable instance of [[KijiKey]] which will hold keys read by
    *     this record reader.
@@ -157,7 +162,11 @@ final class KijiRecordReader(
 
   /** Release all resources used by this record reader. */
   override def close() {
-    scanner.close()
-    reader.close()
+    if (!isClosed) {
+      isClosed = true
+
+      scanner.close()
+      reader.close()
+    }
   }
 }
