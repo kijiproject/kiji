@@ -53,7 +53,13 @@ public abstract class KijiTableReducer<K, V>
   /** Context used to emit to the output table. */
   private KijiTableContext mTableContext;
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   * Sets up job resources.
+   * User overridden setup methods must contain super.setup().  super.setup() should be the first
+   * line of overridden setup methods so that so that KeyValueStores and KijiTableContext will be
+   * initialized and ready for use by the rest of setup().
+   */
   @Override
   protected void setup(Context hadoopContext) throws IOException, InterruptedException {
     Preconditions.checkState(mTableContext == null);
@@ -71,11 +77,16 @@ public abstract class KijiTableReducer<K, V>
   protected final void reduce(K key, Iterable<V> values, Context hadoopContext)
       throws IOException, InterruptedException {
     // Implements the Hadoop reduce function:
-    Preconditions.checkState(mTableContext != null);
+    Preconditions.checkState(mTableContext != null, "KjiiTableContext is null because setup() "
+        + "failed to execute.  If you overrode setup(), did you call super.setup()?");
     reduce(key, values, mTableContext);
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   * Cleans up job resources.
+   * User overridden cleanup methods must contain super.cleanup().
+   */
   @Override
   protected void cleanup(Context hadoopContext) throws IOException, InterruptedException {
     Preconditions.checkState(mTableContext != null);
@@ -98,13 +109,13 @@ public abstract class KijiTableReducer<K, V>
 
   /** {@inheritDoc} */
   @Override
-  public Class<?> getOutputKeyClass() {
+  public final Class<?> getOutputKeyClass() {
     return HFileKeyValue.class;
   }
 
   /** {@inheritDoc} */
   @Override
-  public Class<?> getOutputValueClass() {
+  public final Class<?> getOutputValueClass() {
     return NullWritable.class;
   }
 }
