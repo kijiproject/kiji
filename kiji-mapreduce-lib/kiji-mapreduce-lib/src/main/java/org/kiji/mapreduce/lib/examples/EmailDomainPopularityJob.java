@@ -113,7 +113,7 @@ public class EmailDomainPopularityJob extends Configured implements Tool {
       return 2;
     }
 
-    table.close();
+    table.release();
     kiji.release();
 
     return 0;

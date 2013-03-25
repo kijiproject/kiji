@@ -92,7 +92,7 @@ public class EmailDomainCountGatherJob extends Configured implements Tool {
     LOG.info("Running the job...");
     boolean isSuccessful = job.run();
 
-    table.close();
+    table.release();
     kiji.release();
 
     LOG.info(isSuccessful ? "Job succeeded." : "Job failed.");

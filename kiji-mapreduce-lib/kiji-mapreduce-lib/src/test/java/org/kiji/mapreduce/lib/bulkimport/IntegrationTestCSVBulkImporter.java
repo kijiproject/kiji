@@ -101,7 +101,7 @@ public class IntegrationTestCSVBulkImporter
 
   @After
   public void tearDown() throws Exception {
-    mOutputTable.close();
+    mOutputTable.release();
     mKiji.release();
     mFS.delete(mBulkImportInputPath, false);
 

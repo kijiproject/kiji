@@ -74,7 +74,7 @@ public class TestCSVBulkImporter extends KijiClientTest {
   @After
   public final void teardownTestBulkImporter() throws Exception {
     mReader.close();
-    mTable.close();
+    mTable.release();
   }
 
   @Test
