@@ -37,18 +37,4 @@ import org.kiji.annotations.Inheritance;
 public abstract class KijiReducer<INKEY, INVALUE, OUTKEY, OUTVALUE>
     extends Reducer<INKEY, INVALUE, OUTKEY, OUTVALUE>
     implements KVOutputJob {
-
-  /**
-   * Loads a KijiReducer class by name.
-   *
-   * @param className Fully qualified name of the class to load.
-   * @return the loaded class.
-   * @throws ClassNotFoundException if the class is not found.
-   * @throws ClassCastException if the class is not a KijiReducer.
-   */
-  @SuppressWarnings("rawtypes")
-  public static Class<? extends KijiReducer> forName(String className)
-      throws ClassNotFoundException {
-    return Class.forName(className).asSubclass(KijiReducer.class);
-  }
 }

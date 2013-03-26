@@ -98,20 +98,6 @@ import org.kiji.schema.KijiRowData;
 public abstract class KijiGatherer<K, V>
     implements Configurable, KeyValueStoreClient, KijiDataRequester, KVOutputJob {
 
-  /**
-   * Loads a KijiGatherer class by name.
-   *
-   * @param className Fully qualified name of the class to load.
-   * @return the loaded class.
-   * @throws ClassNotFoundException if the class is not found.
-   * @throws ClassCastException if the class is not a KijiGatherer.
-   */
-  @SuppressWarnings("rawtypes")
-  public static Class<? extends KijiGatherer> forName(String className)
-      throws ClassNotFoundException {
-    return Class.forName(className).asSubclass(KijiGatherer.class);
-  }
-
   /** The Configuration for this instance. */
   private Configuration mConf;
 

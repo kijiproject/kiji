@@ -33,7 +33,7 @@ import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
 import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
 import org.kiji.mapreduce.output.impl.KijiTableMapReduceJobOutput;
 import org.kiji.mapreduce.produce.KijiProduceJobBuilder;
-import org.kiji.mapreduce.produce.KijiProducer;
+import org.kiji.mapreduce.produce.impl.KijiProducers;
 import org.kiji.mapreduce.tools.framework.JobIOSpecParseException;
 import org.kiji.mapreduce.tools.framework.KijiJobTool;
 import org.kiji.schema.tools.KijiToolLauncher;
@@ -103,7 +103,7 @@ public final class KijiProduce extends KijiJobTool<KijiProduceJobBuilder> {
     super.configure(jobBuilder);
 
     jobBuilder
-        .withProducer(Class.forName(mProducerName).asSubclass(KijiProducer.class))
+        .withProducer(KijiProducers.forName(mProducerName))
         .withOutput(mOutput)
         .withNumThreads(mNumThreadsPerMapper);
   }

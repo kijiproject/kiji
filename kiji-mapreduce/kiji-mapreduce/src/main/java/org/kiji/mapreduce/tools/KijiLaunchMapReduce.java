@@ -26,8 +26,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.kiji.annotations.ApiAudience;
 import org.kiji.common.flags.Flag;
 import org.kiji.mapreduce.KijiMapReduceJobBuilder;
-import org.kiji.mapreduce.KijiMapper;
-import org.kiji.mapreduce.KijiReducer;
+import org.kiji.mapreduce.impl.KijiMappers;
+import org.kiji.mapreduce.impl.KijiReducers;
 import org.kiji.mapreduce.tools.framework.JobIOSpecParseException;
 import org.kiji.mapreduce.tools.framework.JobTool;
 import org.kiji.mapreduce.tools.framework.MapReduceJobInputFactory;
@@ -88,13 +88,13 @@ public final class KijiLaunchMapReduce extends JobTool<KijiMapReduceJobBuilder> 
         .withConf(new Configuration())  // use MapReduce cluster from local environment
         .withInput(MapReduceJobInputFactory.create().fromSpaceSeparatedMap(mInputFlag))
         .withOutput(MapReduceJobOutputFactory.create().fromSpaceSeparatedMap(mOutputFlag))
-        .withMapper(KijiMapper.forName(mMapperName));
+        .withMapper(KijiMappers.forName(mMapperName));
 
     if (!mCombinerName.isEmpty()) {
-      jobBuilder.withCombiner(KijiReducer.forName(mCombinerName));
+      jobBuilder.withCombiner(KijiReducers.forName(mCombinerName));
     }
     if (!mReducerName.isEmpty()) {
-      jobBuilder.withReducer(KijiReducer.forName(mReducerName));
+      jobBuilder.withReducer(KijiReducers.forName(mReducerName));
     }
   }
 

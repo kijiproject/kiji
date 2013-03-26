@@ -3,6 +3,8 @@
                               KijiMR Release Notes
 
 Version 1.0.0-rc6
+  * KIJIMR-108. Moves forName methods from KijiMapper, KijiReducer, KijiGatherer, KijiProducer,
+      KijiBulkImporter to impl package utility classes.
   * KIJIMR-138. Command-line arguments --start-row and --limit-row understand
       entity IDs.
   * Add KijiTableContext.getEntityIdFactory().

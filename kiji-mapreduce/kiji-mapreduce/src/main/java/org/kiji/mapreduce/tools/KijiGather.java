@@ -24,9 +24,9 @@ import java.io.IOException;
 import org.kiji.annotations.ApiAudience;
 import org.kiji.common.flags.Flag;
 
-import org.kiji.mapreduce.KijiReducer;
 import org.kiji.mapreduce.gather.KijiGatherJobBuilder;
-import org.kiji.mapreduce.gather.KijiGatherer;
+import org.kiji.mapreduce.gather.impl.KijiGatherers;
+import org.kiji.mapreduce.impl.KijiReducers;
 import org.kiji.mapreduce.tools.framework.JobIOSpecParseException;
 import org.kiji.mapreduce.tools.framework.KijiJobTool;
 import org.kiji.mapreduce.tools.framework.MapReduceJobOutputFactory;
@@ -80,13 +80,13 @@ public final class KijiGather extends KijiJobTool<KijiGatherJobBuilder> {
   protected void configure(KijiGatherJobBuilder jobBuilder)
       throws ClassNotFoundException, IOException, JobIOSpecParseException {
     super.configure(jobBuilder);
-    jobBuilder.withGatherer(KijiGatherer.forName(mGathererName));
+    jobBuilder.withGatherer(KijiGatherers.forName(mGathererName));
 
     if (!mCombinerName.isEmpty()) {
-      jobBuilder.withCombiner(KijiReducer.forName(mCombinerName));
+      jobBuilder.withCombiner(KijiReducers.forName(mCombinerName));
     }
     if (!mReducerName.isEmpty()) {
-      jobBuilder.withReducer(KijiReducer.forName(mReducerName));
+      jobBuilder.withReducer(KijiReducers.forName(mReducerName));
     }
     MapReduceJobOutputFactory outputFactory = MapReduceJobOutputFactory.create();
     jobBuilder.withOutput(outputFactory.fromSpaceSeparatedMap(mOutputFlag));

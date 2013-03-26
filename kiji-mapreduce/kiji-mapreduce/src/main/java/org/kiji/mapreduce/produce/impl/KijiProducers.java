@@ -60,6 +60,19 @@ public final class KijiProducers {
   }
 
   /**
+   * Loads a KijiProducer class by name.
+   *
+   * @param className Fully qualified name of the class to load.
+   * @return the loaded class.
+   * @throws ClassNotFoundException if the class is not found.
+   * @throws ClassCastException if the class is not a KijiGatherer.
+   */
+  public static Class<? extends KijiProducer> forName(String className)
+      throws ClassNotFoundException {
+    return Class.forName(className).asSubclass(KijiProducer.class);
+  }
+
+  /**
    * Makes sure the producer's requested output column exists in the
    * kiji table layout.
    *
