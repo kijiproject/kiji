@@ -42,7 +42,7 @@
     <hamcrest.version>1.1</hamcrest.version>
     <hbase.version>0.92.1-cdh4.1.2</hbase.version>
     <junit.version>4.10</junit.version>
-    <kiji-common-flags.version>1.0.6</kiji-common-flags.version>
+    <kiji-common-flags.version>1.0.7-SNAPSHOT</kiji-common-flags.version>
     <log4j.version>1.2.16</log4j.version>
     <scala.version>2.9.2</scala.version>
     <scala-jline.version>2.9.0-1</scala-jline.version>
