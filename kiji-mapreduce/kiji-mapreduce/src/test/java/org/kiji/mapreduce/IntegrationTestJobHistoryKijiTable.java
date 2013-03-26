@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -40,6 +41,7 @@ import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
 import org.kiji.mapreduce.produce.KijiProduceJobBuilder;
 import org.kiji.mapreduce.produce.KijiProducer;
 import org.kiji.mapreduce.produce.ProducerContext;
+import org.kiji.mapreduce.tools.KijiJobHistory;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
@@ -302,6 +304,94 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
     assertTrue(mrJob.run());
 
     ResourceUtils.releaseOrLog(fooTable);
+    ResourceUtils.releaseOrLog(kiji);
+  }
+
+  /**
+   * Tests the output of the job-history tool.
+   */
+  @Test
+  public void testJobHistoryTool() throws Exception {
+    createAndPopulateFooTable();
+    final Configuration jobConf = getConf();
+    final Kiji kiji = Kiji.Factory.open(getKijiURI());
+    final KijiURI fooTableURI = KijiURI.newBuilder(getKijiURI()).withTableName("foo").build();
+
+    // Construct two producers for this table.
+    final KijiProduceJobBuilder builderEmailDomain = KijiProduceJobBuilder.create()
+        .withConf(jobConf)
+        .withInputTable(fooTableURI)
+        .withProducer(EmailDomainProducer.class)
+        .withOutput(new DirectKijiTableMapReduceJobOutput(fooTableURI));
+    MapReduceJob mrJobOne = builderEmailDomain.build();
+    MapReduceJob mrJobTwo = builderEmailDomain.build();
+
+    // Run the first produce job.
+    String jobOneName = mrJobOne.getHadoopJob().getJobName();
+    LOG.info("About to run job: " + jobOneName);
+    assertTrue(mrJobOne.run());
+    String jobOneId = mrJobOne.getHadoopJob().getJobID().toString();
+    LOG.info("Job was run with id: " + jobOneId);
+
+    // Get the StdOut from the job-history tool.
+    String jobHistoryStdOut = runTool(new KijiJobHistory(),
+        new String[]{"--kiji=" + kiji.getURI(), "--job-id=" + jobOneId}).getStdout("Utf-8");
+
+    JobHistoryKijiTable jobHistory = JobHistoryKijiTable.open(kiji);
+
+
+    // Check if the StdOut contains the job history for the first job
+    KijiRowData jobOneRecord = jobHistory.getJobDetails(jobOneId);
+    assertTrue(jobHistoryStdOut.contains(
+        jobOneRecord.getMostRecentValue("info", "jobName").toString()));
+    assertTrue(jobHistoryStdOut.contains(
+        jobOneRecord.getMostRecentValue("info", "jobId").toString()));
+    assertTrue(jobHistoryStdOut.contains(
+        (new Date((Long) jobOneRecord.getMostRecentValue("info", "startTime"))).toString()));
+    assertTrue(jobHistoryStdOut.contains(
+        (new Date((Long) jobOneRecord.getMostRecentValue("info", "endTime"))).toString()));
+    assertTrue(jobHistoryStdOut.contains(
+        jobOneRecord.getMostRecentValue("info", "jobEndStatus").toString()));
+
+    // Run the second produce job.
+    String jobTwoName = mrJobTwo.getHadoopJob().getJobName();
+    LOG.info("About to run job: " + jobTwoName);
+    assertTrue(mrJobTwo.run());
+    String jobTwoId = mrJobTwo.getHadoopJob().getJobID().toString();
+    LOG.info("Job was run with id: " + jobTwoId);
+
+    // Get the StdOut from the job-history tool, again.
+    jobHistoryStdOut = runTool(new KijiJobHistory(),
+        new String[]{"--kiji=" + kiji.getURI()}).getStdout("Utf-8");
+
+    // Check if the StdOut contains the relevant job histories for each job.
+    // Check the first produce job again.
+    assertTrue(jobHistoryStdOut.contains(
+        jobOneRecord.getMostRecentValue("info", "jobName").toString()));
+    assertTrue(jobHistoryStdOut.contains(
+        jobOneRecord.getMostRecentValue("info", "jobId").toString()));
+    assertTrue(jobHistoryStdOut.contains(
+        (new Date((Long) jobOneRecord.getMostRecentValue("info", "startTime"))).toString()));
+    assertTrue(jobHistoryStdOut.contains(
+        (new Date((Long) jobOneRecord.getMostRecentValue("info", "endTime"))).toString()));
+    assertTrue(jobHistoryStdOut.contains(
+        jobOneRecord.getMostRecentValue("info", "jobEndStatus").toString()));
+
+    // Check the second produce job.
+    KijiRowData jobTwoRecord = jobHistory.getJobDetails(jobTwoId);
+    assertTrue(jobHistoryStdOut.contains(
+        jobTwoRecord.getMostRecentValue("info", "jobName").toString()));
+    assertTrue(jobHistoryStdOut.contains(
+        jobTwoRecord.getMostRecentValue("info", "jobId").toString()));
+    assertTrue(jobHistoryStdOut.contains(
+        (new Date((Long) jobTwoRecord.getMostRecentValue("info", "startTime"))).toString()));
+    assertTrue(jobHistoryStdOut.contains(
+        (new Date((Long) jobTwoRecord.getMostRecentValue("info", "endTime"))).toString()));
+    assertTrue(jobHistoryStdOut.contains(
+        jobTwoRecord.getMostRecentValue("info", "jobEndStatus").toString()));
+
+    // Clean up.
+    ResourceUtils.closeOrLog(jobHistory);
     ResourceUtils.releaseOrLog(kiji);
   }
 }

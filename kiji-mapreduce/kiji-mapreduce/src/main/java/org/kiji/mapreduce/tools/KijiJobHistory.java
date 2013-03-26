@@ -39,10 +39,10 @@ import org.kiji.mapreduce.framework.JobHistoryKijiTable;
 import org.kiji.schema.KConstants;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiRowData;
+import org.kiji.schema.KijiRowScanner;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.tools.BaseTool;
 import org.kiji.schema.tools.KijiToolLauncher;
-import org.kiji.schema.tools.RequiredFlagException;
 
 /** A tool that installs a job history table and lets you query individual jobs from it. */
 @ApiAudience.Private
@@ -55,9 +55,6 @@ public final class KijiJobHistory extends BaseTool {
 
   @Flag(name="verbose", usage="Include counters and configuration for a given job-id.")
   private boolean mVerbose = false;
-
-  @Flag(name="install", usage="Install a job history table.")
-  private boolean mInstall = false;
 
   /** URI of the Kiji instance to query. */
   private KijiURI mKijiURI = null;
@@ -87,10 +84,6 @@ public final class KijiJobHistory extends BaseTool {
     Preconditions.checkArgument((mKijiURIFlag != null) && !mKijiURIFlag.isEmpty(),
         "Specify a Kiji instance with --kiji=kiji://hbase-address/kiji-instance");
     mKijiURI = KijiURI.newBuilder(mKijiURIFlag).build();
-
-    if (mJobId.isEmpty() && !mInstall) {
-      throw new RequiredFlagException("job-id=<jobid> or --install");
-    }
   }
 
   /** {@inheritDoc} */
@@ -98,29 +91,42 @@ public final class KijiJobHistory extends BaseTool {
   protected int run(List<String> nonFlagArgs) throws Exception {
     final Kiji kiji = Kiji.Factory.open(mKijiURI);
     try {
-      if (mInstall) {
-        JobHistoryKijiTable.install(kiji);
-      }
-
+      JobHistoryKijiTable jobHistoryTable = JobHistoryKijiTable.open(kiji);
       if (!mJobId.isEmpty()) {
-        JobHistoryKijiTable jobHistoryTable = JobHistoryKijiTable.open(kiji);
-        final KijiRowData data = jobHistoryTable.getJobDetails(mJobId);
-        final PrintStream ps = getPrintStream();
-
-        ps.printf("Job:\t\t%s%n", data.getMostRecentValue("info", "jobId"));
-        ps.printf("Name:\t\t%s%n", data.getMostRecentValue("info", "jobName"));
-        ps.printf("Started:\t%s%n", new Date((Long) data.getMostRecentValue("info", "startTime")));
-        ps.printf("Ended:\t\t%s%n", new Date((Long) data.getMostRecentValue("info", "endTime")));
-        if (mVerbose) {
-          printCounters(data);
-          printConfiguration(data);
+        KijiRowData data = jobHistoryTable.getJobDetails(mJobId);
+        printRow(data);
+      } else {
+        KijiRowScanner jobScanner = jobHistoryTable.getJobScanner();
+        for (KijiRowData data : jobScanner) {
+          printRow(data);
+          getPrintStream().printf("%n");
         }
+        jobScanner.close();
       }
+      jobHistoryTable.close();
     } finally {
       kiji.release();
     }
 
     return SUCCESS;
+  }
+
+  /**
+   * Prints a job details.
+   * @param data A row data containing a serialization of the job details.
+   * @throws IOException If there is an error retrieving the counters.
+   */
+  private void printRow(KijiRowData data) throws IOException {
+    final PrintStream ps = getPrintStream();
+    ps.printf("Job:\t\t%s%n", data.getMostRecentValue("info", "jobId"));
+    ps.printf("Name:\t\t%s%n", data.getMostRecentValue("info", "jobName"));
+    ps.printf("Started:\t%s%n", new Date((Long) data.getMostRecentValue("info", "startTime")));
+    ps.printf("Ended:\t\t%s%n", new Date((Long) data.getMostRecentValue("info", "endTime")));
+    ps.printf("End Status:\t\t%s%n", data.getMostRecentValue("info", "jobEndStatus"));
+    if (mVerbose) {
+      printCounters(data);
+      printConfiguration(data);
+    }
   }
 
   /**

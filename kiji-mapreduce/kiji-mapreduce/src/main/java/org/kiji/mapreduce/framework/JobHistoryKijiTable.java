@@ -30,6 +30,7 @@ import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
+import org.kiji.schema.KijiRowScanner;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.KijiTableWriter;
@@ -139,6 +140,23 @@ public final class JobHistoryKijiTable implements Closeable {
 
     try {
       return wtr.get(mKijiTable.getEntityId(jobId), wdr);
+    } finally {
+      ResourceUtils.closeOrLog(wtr);
+    }
+  }
+
+  /**
+   * Get the saved information for all JobIDs.
+   *
+   * @return A KijiRowScanner containing details for all the JobIDs.
+   * @throws IOException If there is an IO error retrieving the data.
+   */
+  public KijiRowScanner getJobScanner() throws IOException {
+    KijiTableReader wtr = mKijiTable.openTableReader();
+    KijiDataRequest wdr = KijiDataRequest.create("info");
+
+    try {
+      return wtr.getScanner(wdr);
     } finally {
       ResourceUtils.closeOrLog(wtr);
     }
