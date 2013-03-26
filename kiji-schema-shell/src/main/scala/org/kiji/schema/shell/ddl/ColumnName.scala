@@ -25,6 +25,19 @@ package org.kiji.schema.shell.ddl
  */
 class ColumnName(val family: String, val qualifier: String) {
   override def toString(): String = {
-    family + ":" + qualifier
+    return family + ":" + qualifier
+  }
+
+  override def hashCode(): Int = {
+    return family.hashCode() ^ qualifier.hashCode()
+  }
+
+  override def equals(other: Any): Boolean = {
+    other match {
+      case col: ColumnName => {
+        return family == col.family && qualifier == col.qualifier
+      }
+      case _ => { return false }
+    }
   }
 }

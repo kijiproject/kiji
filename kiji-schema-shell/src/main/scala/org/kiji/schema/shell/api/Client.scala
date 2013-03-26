@@ -65,6 +65,9 @@ class Client private(val kijiUri: KijiURI) extends Closeable {
 
   private val mKijiSystem = new KijiSystem
 
+  /** Last environment returned by the input processor. */
+  private var mLastEnv: Option[Environment] = None
+
   /**
    * Executes a DDL statement. The statement does not need to be terminated by a ';'
    * character.
@@ -103,8 +106,12 @@ class Client private(val kijiUri: KijiURI) extends Closeable {
     mStdoutBytes.reset()
     val output = new PrintStream(mStdoutBytes, false, "UTF-8")
     try {
-      val env = new Environment(kijiUri, output, mKijiSystem, input)
-      new InputProcessor(throwOnSyntaxErr=true).processUserInput(new StringBuilder(), env)
+      val env = (mLastEnv match {
+        case Some(last) => last.withPrinter(output).withInputSource(input)
+        case None => new Environment(kijiUri, output, mKijiSystem, input)
+      })
+      mLastEnv = Some(new InputProcessor(throwOnSyntaxErr=true)
+          .processUserInput(new StringBuilder(), env))
     } finally {
       ResourceUtils.closeOrLog(output)
       ResourceUtils.closeOrLog(input)

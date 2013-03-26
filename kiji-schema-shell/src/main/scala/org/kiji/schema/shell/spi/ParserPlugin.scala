@@ -62,7 +62,7 @@ abstract trait ParserPlugin extends RegexParsers {
    * Returns a parser that recognizes all legal statements in the plugin's language extension.
    *
    * <p>The input string to this parser will be the user's command as entered at the console
-   * or other script input source. Any trailing semicolon will be matched elsewhere. You may
+   * or other script input source. This must match a trailing semicolon. You may
    * match multiple different commands by using the OR ('|') parser combinator.
    *
    * @return a Parser that matches input and returns some DDLCommand subclass.
