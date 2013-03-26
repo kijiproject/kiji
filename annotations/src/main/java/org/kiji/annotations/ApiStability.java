@@ -26,12 +26,16 @@ import java.lang.annotation.Documented;
  * level. The stability level may be {@link Stable}, {@link Evolving}, or {@link Unstable}.
  *
  * <ul>
- *   <li>By default, unlabeled classes should be assumed to be unstable.</li>
+ *   <li>By default, unlabeled classes should be assumed to be Experimental.</li>
  *   <li>{@link Stable} APIs are guaranteed to change only in binary-compatible
  *     ways within a major version (e.g., all 1.x.x versions)</li>
  *   <li>{@link Evolving} APIs may change in binary-incompatible ways between
- *     minor versions (e.g., from 1.4.1 to 1.5.0) of the software.</li>
- *   <li>{@link Unstable} APIs may change at any time.</li>
+ *     minor versions (e.g., from 1.4.1 to 1.5.0) of the software. In
+ *     particular, new features may be added in one minor version and altered
+ *     or removed in the next.</li>
+ *   <li>{@link Experimental} APIs may change at any time.</li>
+ *   <li>{@link Unstable} This annotation is no longer used. New code should
+ *     use Experimental instead.</li>
  * </ul>
  *
  * <p>{@link Private} APIs should all be considered {@link Unstable}.</p>
@@ -51,5 +55,8 @@ public final class ApiStability {
   @Documented public @interface Evolving { }
 
   /** An API that may change at any time. */
-  @Documented public @interface Unstable { }
+  @Documented public @interface Experimental { }
+
+  /** This annotation is deprecated and {@link Experimental} should be used instead. */
+  @Documented @Deprecated public @interface Unstable { }
 }
