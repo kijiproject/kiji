@@ -39,7 +39,7 @@ class KijiSourceSuite
   import KijiSourceSuite._
 
   /** Table layout to use for tests. */
-  val layout: KijiTableLayout = layout(KijiTableLayouts.SIMPLE)
+  val layout: KijiTableLayout = layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
 
   /** Input tuples to use for word count tests. */
   val wordCountInput: List[(EntityId, NavigableMap[Long, Utf8])] = List(
@@ -71,7 +71,7 @@ class KijiSourceSuite
     JobTest(new WordCountJob(_))
         .arg("input", uri)
         .arg("output", "outputFile")
-        .source(KijiInput(uri)("family:column" -> 'word), wordCountInput)
+        .source(KijiInput(uri)("family:column1" -> 'word), wordCountInput)
         .sink(Tsv("outputFile"))(validateWordCount)
         // Run the test job.
         .run
@@ -88,7 +88,7 @@ class KijiSourceSuite
     JobTest(new WordCountJob(_))
         .arg("input", uri)
         .arg("output", "outputFile")
-        .source(KijiInput(uri)("family:column" -> 'word), wordCountInput)
+        .source(KijiInput(uri)("family:column1" -> 'word), wordCountInput)
         .sink(Tsv("outputFile"))(validateWordCount)
         // Run the test job.
         .runHadoop
@@ -144,7 +144,7 @@ class KijiSourceSuite
         .arg("input", "inputFile")
         .arg("output", uri)
         .source(TextLine("inputFile"), importInput)
-        .sink(KijiOutput(uri)('word -> "family:column"))(validateImport)
+        .sink(KijiOutput(uri)('word -> "family:column1"))(validateImport)
         // Run the test job.
         .run
         .finish
@@ -161,7 +161,7 @@ class KijiSourceSuite
         .arg("input", "inputFile")
         .arg("output", uri)
         .source(TextLine("inputFile"), importInput)
-        .sink(KijiOutput(uri)('word -> "family:column"))(validateImport)
+        .sink(KijiOutput(uri)('word -> "family:column1"))(validateImport)
         // Run the test job.
         .runHadoop
         .finish
@@ -192,7 +192,8 @@ class KijiSourceSuite
     }
 
     // Build test job.
-    val source = KijiInput(uri, Map((Column("family:column", versions=2) -> 'words)))
+    val source =
+        KijiInput(uri, Map((Column("family:column1", versions=2) -> 'words)))
     JobTest(new VersionsJob(source)(_))
         .arg("output", "outputFile")
         .source(source, versionCountInput)
@@ -227,13 +228,42 @@ class KijiSourceSuite
     }
 
     // Build test job.
-    val source = KijiInput(uri, timeRange=TimeRange.Between(15L, 25L))("family:column" -> 'words)
+    val source = KijiInput(uri, timeRange=TimeRange.Between(15L, 25L))("family:column1" -> 'words)
     JobTest(new VersionsJob(source)(_))
         .arg("output", "outputFile")
         .source(source, versionCountInput)
         .sink(Tsv("outputFile"))(validateVersionCount)
         // Run the test job.
         .run
+        .finish
+  }
+
+  test("default for missing values is skipping the row") {
+    val missingValuesInput: List[(EntityId, NavigableMap[Long, Utf8], NavigableMap[Long, Utf8])]
+        = List(
+          ( id("row01"), singleton(new Utf8("hello")), singleton(new Utf8("hello")) ),
+          ( id("row02"), singleton(new Utf8("hello")), missing() ),
+          ( id("row03"), singleton(new Utf8("world")), singleton(new Utf8("world")) ),
+          ( id("row04"), singleton(new Utf8("hello")), singleton(new Utf8("hello")) ))
+
+    // Create test Kiji table.
+    val uri: String = doAndRelease(makeTestKijiTable(layout)) { table: KijiTable =>
+      table.getURI().toString()
+    }
+
+    def validateMissingValuesSize(outputBuffer: Buffer[(String, String)]) {
+      assert(3 === outputBuffer.size)
+    }
+
+    // Build test job.
+    JobTest(new TwoColumnJob(_))
+        .arg("input", uri)
+        .arg("output", "outputFile")
+        .source(KijiInput(uri)("family:column1" -> 'word1, "family:column2" -> 'word2),
+            missingValuesInput)
+        .sink(Tsv("outputFile"))(validateMissingValuesSize)
+        // Run the test job.
+        .runHadoop
         .finish
   }
 
@@ -254,15 +284,16 @@ object KijiSourceSuite extends KijiSuite {
   def getMostRecent[T](timeline: NavigableMap[Long, T]): T = timeline.firstEntry().getValue()
 
   /**
-   * A job that extracts the most recent string value from the column "family:column" for all rows
+   * A job that extracts the most recent string value from the column "family:column1" for all rows
    * in a Kiji table, and then counts the number of occurrences of those strings across rows.
    *
-   * @param args to the job. One argument named "input" is expected, which should specify the URI
-   *     to the Kiji table the job should be run on.
+   * @param args to the job. Two arguments are expected: "input", which should specify the URI
+   *     to the Kiji table the job should be run on, and "output", which specifies the output
+   *     Tsv file.
    */
   class WordCountJob(args: Args) extends Job(args) {
-    // Setup input to bind values from the "family:column" column to the symbol 'word.
-    KijiInput(args("input"))("family:column" -> 'word)
+    // Setup input to bind values from the "family:column1" column to the symbol 'word.
+    KijiInput(args("input"))("family:column1" -> 'word)
         // Sanitize the word.
         .map('word -> 'cleanword) { words: NavigableMap[Long, Utf8] =>
           getMostRecent(words)
@@ -272,6 +303,24 @@ object KijiSourceSuite extends KijiSuite {
         // Count the occurrences of each word.
         .groupBy('cleanword) { occurences => occurences.size }
         // Write the result to a file.
+        .write(Tsv(args("output")))
+  }
+
+  /**
+   * A job that takes the most recent string value from the column "family:column1" and adds
+   * the letter 's' to the end of it. It passes through the column "family:column2" without
+   * any changes.
+   *
+   * @param args to the job. Two arguments are expected: "input", which should specify the URI
+   *     to the Kiji table the job should be run on, and "output", which specifies the output
+   *     Tsv file.
+   */
+  class TwoColumnJob(args: Args) extends Job(args) {
+    // Setup input to bind values from the "family:column1" column to the symbol 'word.
+    KijiInput(args("input"))("family:column1" -> 'word1, "family:column2" -> 'word2)
+        .map('word1 -> 'pluralword) { words: NavigableMap[Long, Utf8] =>
+          getMostRecent(words).toString() + "s"
+        }
         .write(Tsv(args("output")))
   }
 
@@ -297,7 +346,7 @@ object KijiSourceSuite extends KijiSuite {
 
   /**
    * A job that, for each line in a text file, splits the line into words,
-   * and for each word occurrence writes a copy of the word to the column "family:column" in a
+   * and for each word occurrence writes a copy of the word to the column "family:column1" in a
    * row for that word in a Kiji table.
    *
    * @param args to the job. Two arguments are expected: "input", which specifies the path to a
@@ -311,7 +360,7 @@ object KijiSourceSuite extends KijiSuite {
         .flatMap('line -> 'word) { line : String => line.split("\\s+") }
         // Generate an entityId for each word.
         .map('word -> 'entityId) { _: String => id(UUID.randomUUID().toString()) }
-        // Write the results to the "family:column" column of a Kiji table.
-        .write(KijiOutput(args("output"))('word -> "family:column"))
+        // Write the results to the "family:column1" column of a Kiji table.
+        .write(KijiOutput(args("output"))('word -> "family:column1"))
   }
 }

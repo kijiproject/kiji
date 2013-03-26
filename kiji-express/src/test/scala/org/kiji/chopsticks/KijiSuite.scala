@@ -71,6 +71,17 @@ trait KijiSuite
   }
 
   /**
+   * Builds a timeline containing no values.  This can be used to test for behavior of missing
+   * values.
+   *
+   * @tparam T type of the values in the returned timeline.
+   * @return An empty timeline.
+   */
+  def missing[T](): NavigableMap[Long, T] = {
+    new TreeMap[Long, T]()
+  }
+
+  /**
    * Builds a timeline from a list of timestamp, value pairs.
    *
    * @tparam T Type of the values contained within desired timeline.

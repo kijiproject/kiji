@@ -128,15 +128,20 @@ class KijiScheme(
       sourceCall: SourceCall[KijiValue, RecordReader[KijiKey, KijiValue]]): Boolean = {
     // Get the current key/value pair.
     val value: KijiValue = sourceCall.getContext()
-    if (sourceCall.getInput().next(null, value)) {
-      val row: KijiRowData = value.get()
-      val result: Tuple = rowToTuple(columns, getSourceFields(), row)
 
-      sourceCall.getIncomingEntry().setTuple(result)
-      true
-    } else {
-      false
+    // Get the first row where all the requested columns are present,
+    // and use that to set the result tuple.
+    while (sourceCall.getInput().next(null, value)) {
+      val row: KijiRowData = value.get()
+      if (allColumnsPresent(row, columns)) {
+        val result: Tuple = rowToTuple(columns, getSourceFields, row)
+        sourceCall.getIncomingEntry().setTuple(result)
+        return true // We set a result tuple, return true for success.
+      }
+      // If we didn't return true because a column wasn't present, continue the loop.
+      // TODO(CHOP-47): log skipped rows.
     }
+    return false // We reached the end of the RecordReader.
   }
 
   /**
@@ -241,6 +246,26 @@ object KijiScheme {
   private[chopsticks] val entityIdField: String = "entityId"
 
   /**
+   * Determines whether all of the columns requested are present in the given row.
+   *
+   * @param row The Kiji row to inspect.
+   * @param columnsRequested The columns requested in this Scheme.
+   * @return If all the columns requested are in the row.
+   */
+  private def allColumnsPresent(
+      row: KijiRowData,
+      columnsRequested: Map[String, ColumnRequest]): Boolean = {
+    !columnsRequested.values.exists {
+      case ColumnFamily(family, _) => {
+        ! row.containsColumn(family)
+      }
+      case QualifiedColumn(family, qualifier, _) => {
+        ! row.containsColumn(family, qualifier)
+      }
+    }
+  }
+
+  /**
    * Converts a KijiRowData to a Cascading tuple.
    *
    * @param columns Mapping from field name to column definition.
@@ -260,12 +285,17 @@ object KijiScheme {
     iterator.next()
 
     // Add the rest.
-    iterator.foreach { fieldName =>
-      val column: ColumnRequest = columns(fieldName.toString())
-      val columnName: KijiColumnName = new KijiColumnName(column.name)
-
-      result.add(row.getValues(columnName.getFamily(), columnName.getQualifier()))
-    }
+    // Get the column request associated with each field.
+    iterator.map { field => columns(field.toString) }
+        // Build the tuple, by adding each requested value into result.
+        .foreach {
+          case ColumnFamily(family, _) => {
+            result.add (row.getValues(family))
+          }
+          case QualifiedColumn(family, qualifier, _) => {
+            result.add(row.getValues(family, qualifier))
+          }
+        }
 
     return result
   }
@@ -292,14 +322,22 @@ object KijiScheme {
 
     // Store the retrieved columns in the tuple.
     iterator.foreach { fieldName =>
-      val column: ColumnRequest = columns(fieldName.toString())
-      val columnName: KijiColumnName = new KijiColumnName(column.name)
-
-      writer.put(
-          entityId,
-          columnName.getFamily(),
-          columnName.getQualifier(),
-          output.getObject(fieldName.toString()))
+      columns(fieldName.toString()) match {
+        case ColumnFamily(family, _) => {
+          writer.put(
+              entityId,
+              family,
+              null,
+              output.getObject(fieldName.toString()))
+        }
+        case QualifiedColumn(family, qualifier, _) => {
+          writer.put(
+              entityId,
+              family,
+              qualifier,
+              output.getObject(fieldName.toString()))
+        }
+      }
     }
   }
 
@@ -307,13 +345,20 @@ object KijiScheme {
       timeRange: TimeRange,
       columns: Iterable[ColumnRequest]): KijiDataRequest = {
     def addColumn(builder: KijiDataRequestBuilder, column: ColumnRequest) {
-      val columnName: KijiColumnName = new KijiColumnName(column.name)
-      val inputOptions: ColumnRequest.InputOptions = column.inputOptions
-
-      builder.newColumnsDef()
-          .withMaxVersions(inputOptions.maxVersions)
-          .withFilter(inputOptions.filter)
-          .add(columnName)
+      column match {
+        case ColumnFamily(family, inputOptions) => {
+          builder.newColumnsDef()
+              .withMaxVersions(inputOptions.maxVersions)
+              .withFilter(inputOptions.filter)
+              .add(new KijiColumnName(family))
+        }
+        case QualifiedColumn(family, qualifier, inputOptions) => {
+          builder.newColumnsDef()
+              .withMaxVersions(inputOptions.maxVersions)
+              .withFilter(inputOptions.filter)
+              .add(new KijiColumnName(family, qualifier))
+        }
+      }
     }
 
     val requestBuilder: KijiDataRequestBuilder = KijiDataRequest.builder()

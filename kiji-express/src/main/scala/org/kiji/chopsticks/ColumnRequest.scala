@@ -25,19 +25,43 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.chopsticks.ColumnRequest.InputOptions
 import org.kiji.schema.filter.KijiColumnFilter
+import org.kiji.schema.util.KijiNameValidator
 
 /**
  * Represents a request for a column in a Kiji table.
- *
- * @param name The name of the column.
- * @param inputOptions Input options for requesting the column.
  */
 @ApiAudience.Public
 @ApiStability.Unstable
-final case class ColumnRequest(
-    name: String,
+sealed trait ColumnRequest extends Serializable
+
+/**
+ * Represents a request for a fully-qualified column from a Kiji table.
+ *
+ * @param family of the column.
+ * @param qualifier of the column.
+ * @param inputOptions for requesting the column.
+ */
+final case class QualifiedColumn(
+    family: String,
+    qualifier: String,
     inputOptions: InputOptions = InputOptions())
-    extends Serializable
+    extends ColumnRequest {
+  KijiNameValidator.validateLayoutName(family)
+  KijiNameValidator.validateLayoutName(qualifier)
+}
+
+/**
+ * Represents a request for a column family from a Kiji table.
+ *
+ * @param family of the column family.
+ * @param inputOptions for requesting the column family.
+ */
+final case class ColumnFamily(
+    family: String,
+    inputOptions: InputOptions = InputOptions())
+    extends ColumnRequest {
+  KijiNameValidator.validateLayoutName(family)
+}
 
 object ColumnRequest {
   /**
@@ -49,7 +73,8 @@ object ColumnRequest {
   @ApiAudience.Public
   @ApiStability.Unstable
   final case class InputOptions(
-        maxVersions: Int = 1,
-        filter: KijiColumnFilter = null) extends Serializable {
+      maxVersions: Int = 1,
+      filter: KijiColumnFilter = null)
+      extends Serializable {
   }
 }

@@ -132,21 +132,35 @@ final class KijiSource(
         // Iterate through fields in the tuple, adding each one.
         while (iterator.hasNext()) {
           val field = iterator.next().toString()
-          val columnName = new KijiColumnName(columns(Symbol(field)).name)
 
           // Get the timeline to be written.
           val timeline: NavigableMap[Long, Any] = tupleEntry.getObject(field)
               .asInstanceOf[NavigableMap[Long, Any]]
 
           // Write the timeline to the table.
-          for (entry <- timeline.asScala) {
-            val (key, value) = entry
-            writer.put(
-                entityId,
-                columnName.getFamily(),
-                columnName.getQualifier(),
-                key,
-                value)
+          columns(Symbol(field)) match {
+            case ColumnFamily(family, _) => {
+              for (entry <- timeline.asScala) {
+                val (key, value) = entry
+                writer.put(
+                    entityId,
+                    family,
+                    null,
+                    key,
+                    value)
+              }
+            }
+            case QualifiedColumn(family, qualifier, _) => {
+              for (entry <- timeline.asScala) {
+                val (key, value) = entry
+                writer.put(
+                    entityId,
+                    family,
+                    qualifier,
+                    key,
+                    value)
+              }
+            }
           }
         }
       }
@@ -186,7 +200,6 @@ final class KijiSource(
       case Local(_) => new LocalKijiTap(tableUri, localKijiScheme).asInstanceOf[Tap[_, _, _]]
 
       // Test taps.
-      // TODO(CHOP-38): Add support for Hadoop based integration tests.
       case HadoopTest(_, buffers) => {
         readOrWrite match {
           case Read => {

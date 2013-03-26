@@ -21,8 +21,11 @@ package org.kiji.chopsticks
 
 import java.util.NavigableMap
 
+import org.apache.hadoop.hbase.HConstants
+
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.schema.KijiInvalidNameException
 import org.kiji.schema.filter.KijiColumnFilter
 import org.kiji.schema.filter.RegexQualifierColumnFilter
 
@@ -33,7 +36,7 @@ object DSL {
    * Used with [[#MapColumn(String, String, Int)]] and [[#Column(String, Int)]] to specify that all
    * versions of each column should be read.
    */
-  val all = Integer.MAX_VALUE
+  val all = HConstants.ALL_VERSIONS
 
   /**
    * Used with [[#MapColumn(String, String, Int)]] and [[#Column(String, Int)]] to specify that
@@ -52,9 +55,7 @@ object DSL {
   def MapColumn(
       name: String,
       qualifierMatches: String = "",
-      versions: Int = latest): ColumnRequest = {
-    require(name.split(":").length == 1)
-
+      versions: Int = latest): ColumnFamily = {
     val filter: KijiColumnFilter = {
       if ("" == qualifierMatches) {
         null
@@ -63,7 +64,7 @@ object DSL {
       }
     }
 
-    new ColumnRequest(name, new ColumnRequest.InputOptions(versions, filter))
+    new ColumnFamily(name, new ColumnRequest.InputOptions(versions, filter))
   }
 
   /**
@@ -74,10 +75,26 @@ object DSL {
    */
   def Column(
       name: String,
-      versions: Int = latest): ColumnRequest = {
-    require(name.split(":").length == 2)
-
-    new ColumnRequest(name, new ColumnRequest.InputOptions(versions, null))
+      versions: Int = latest): QualifiedColumn = {
+    name.split(":") match {
+      case Array(family, qualifier) => {
+        new QualifiedColumn(
+            family,
+            qualifier,
+            new ColumnRequest.InputOptions(versions, null))
+      }
+      case Array(family) => {
+        throw new KijiInvalidNameException(
+            "Specify the fully qualified column name in the format "
+                + "\"family:qualifier\".\n"
+                + "If you want to specify a map-type column family only, "
+                + "use MapColumn instead of Column.")
+      }
+      case _ => {
+        throw new KijiInvalidNameException(
+          "Specify the fully qualified column name in the format \"family:qualifier\".")
+      }
+    }
   }
 
   /**
@@ -122,7 +139,7 @@ object DSL {
    */
   def KijiInput(
       tableURI: String,
-      columns: Map[ColumnRequest, Symbol]): KijiSource = {
+      columns: Map[_ <: ColumnRequest, Symbol]): KijiSource = {
     val columnMap = columns
         .map { case (col, field) => (field, col) }
     new KijiSource(tableURI, TimeRange.All, columnMap)
