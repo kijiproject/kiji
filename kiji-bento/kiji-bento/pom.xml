@@ -99,7 +99,7 @@
     </dependency>
     <dependency>
       <groupId>org.kiji.mapreduce.lib</groupId>
-      <artifactId>kiji-mapreduce-lib</artifactId>
+      <artifactId>kiji-mapreduce-lib-dist</artifactId>
       <version>${kiji-mapreduce-lib.version}</version>
       <classifier>release</classifier>
       <type>tar.gz</type>

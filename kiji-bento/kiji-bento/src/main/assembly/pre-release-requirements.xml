@@ -81,7 +81,7 @@
     <dependencySet>
       <outputDirectory>.</outputDirectory>
       <includes>
-        <include>org.kiji.mapreduce.lib:kiji-mapreduce-lib:tar.gz</include>
+        <include>org.kiji.mapreduce.lib:kiji-mapreduce-lib-dist:tar.gz</include>
       </includes>
       <unpack>true</unpack>
       <useProjectArtifact>false</useProjectArtifact>

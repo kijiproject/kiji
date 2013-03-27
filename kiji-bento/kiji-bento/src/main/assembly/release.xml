@@ -255,5 +255,19 @@
       <destName>DDL_RELEASE_NOTES.txt</destName>
       <fileMode>0644</fileMode>
     </file>
+    <file>
+      <!-- kijiMR release notes -->
+      <source>target/prereqs-dir/kiji-mapreduce-${kiji-mapreduce.version}/RELEASE_NOTES.txt</source>
+      <outputDirectory>release-notes</outputDirectory>
+      <destName>MR_RELEASE_NOTES.txt</destName>
+      <fileMode>0644</fileMode>
+    </file>
+    <file>
+      <!-- kijiMR lib release notes -->
+      <source>target/prereqs-dir/kiji-mapreduce-lib-${kiji-mapreduce-lib.version}/RELEASE_NOTES.txt</source>
+      <outputDirectory>release-notes</outputDirectory>
+      <destName>MRLIB_RELEASE_NOTES.txt</destName>
+      <fileMode>0644</fileMode>
+    </file>
   </files>
 </assembly>
