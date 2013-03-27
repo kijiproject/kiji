@@ -376,7 +376,7 @@ public abstract class DescribedInputTextBulkImporter extends KijiBulkImporter<Lo
 
     } catch (IOException ioe) {
       LOG.error("Could not read input-descriptor file: " + descriptorPath.toString());
-      throw new RuntimeException("Could not read file: " + descriptorPath.toString());
+      throw new RuntimeException("Could not read file: " + descriptorPath.toString(), ioe);
     }
   }
 }

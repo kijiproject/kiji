@@ -34,42 +34,21 @@
     <fileSet>
       <useDefaultExcludes>true</useDefaultExcludes>
       <outputDirectory></outputDirectory>
-      <directory></directory>
+      <directory>../</directory>
       <fileMode>0644</fileMode>
       <includes>
         <include>NOTICE.txt</include>
         <include>LICENSE.txt</include>
         <include>README.md</include>
+        <include>RELEASE_NOTES.txt</include>
       </includes>
-      <filtered>true</filtered>
-    </fileSet>
-    <fileSet>
-      <useDefaultExcludes>false</useDefaultExcludes>
-      <outputDirectory>bin</outputDirectory>
-      <directory>src/main/scripts</directory>
-      <fileMode>0755</fileMode>
-      <excludes>
-        <exclude>*~</exclude>
-        <exclude>*.swp</exclude>
-      </excludes>
-      <filtered>true</filtered>
-    </fileSet>
-    <fileSet>
-      <useDefaultExcludes>false</useDefaultExcludes>
-      <outputDirectory>conf</outputDirectory>
-      <directory>src/main/conf</directory>
-      <fileMode>0644</fileMode>
-      <excludes>
-        <exclude>*~</exclude>
-        <exclude>*.swp</exclude>
-      </excludes>
       <filtered>true</filtered>
     </fileSet>
     <fileSet>
       <!-- java api documentation -->
       <useDefaultExcludes>false</useDefaultExcludes>
       <outputDirectory>docs/apidocs</outputDirectory>
-      <directory>target/apidocs</directory>
+      <directory>../kiji-mapreduce-lib/target/apidocs</directory>
       <fileMode>0644</fileMode>
       <excludes>
         <exclude>options</exclude>
@@ -86,6 +65,10 @@
       <excludes>
         <exclude>org.apache.hadoop</exclude>
         <exclude>org.apache.hbase</exclude>
+        <exclude>org.apache.avro</exclude>
+        <exclude>org.kiji.mapreduce:</exclude>
+        <exclude>org.slf4j:</exclude>
+        <exclude>log4j:</exclude>
       </excludes>
     </dependencySet>
   </dependencySets>

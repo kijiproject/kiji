@@ -1,0 +1,9 @@
+
+
+                              KijiMR Library Release Notes
+
+Version 1.0.0-rc6
+  * DDLSHELL-23. Added extension for KijiSchema shell to support bulk imports.
+
+Version 1.0.0-rc5
+  * Initial release.

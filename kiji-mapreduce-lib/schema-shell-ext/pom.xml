@@ -21,7 +21,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.kiji.mapreduce.lib</groupId>
-  <artifactId>kiji-mapreduce-lib</artifactId>
+  <artifactId>kiji-mapreduce-shell-ext</artifactId>
   <version>1.0.0-rc6-SNAPSHOT</version>
   <packaging>jar</packaging>
 
@@ -32,24 +32,15 @@
     <relativePath>..</relativePath>
   </parent>
 
-  <name>The KijiMR Library</name>
-  <description>The KijiMR Library for KijiSchema</description>
+  <name>KijiMR Shell Extensions</name>
+  <description>Extensions for the DDL shell that include KijiMR functionality</description>
   <url>http://www.kiji.org</url>
 
   <build>
     <plugins>
       <plugin>
-        <groupId>org.apache.avro</groupId>
-        <artifactId>avro-maven-plugin</artifactId>
-        <configuration>
-          <!-- Avro string compiled to java.lang.String instead of CharSequence -->
-          <stringType>String</stringType>
-        </configuration>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
+        <groupId>org.scala-tools</groupId>
+        <artifactId>maven-scala-plugin</artifactId>
       </plugin>
 
       <plugin>
@@ -79,28 +70,22 @@
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
       </plugin>
 
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-checkstyle-plugin</artifactId>
-      </plugin>
-
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>findbugs-maven-plugin</artifactId>
+        <groupId>org.scalastyle</groupId>
+        <artifactId>scalastyle-maven-plugin</artifactId>
       </plugin>
     </plugins>
   </build>
 
   <dependencies>
     <dependency>
+      <groupId>org.kiji.annotations</groupId>
+      <artifactId>annotations</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.kiji.schema</groupId>
       <artifactId>kiji-schema</artifactId>
       <version>${kiji-schema.version}</version>
@@ -116,36 +101,80 @@
     <dependency>
       <groupId>org.kiji.mapreduce</groupId>
       <artifactId>kiji-mapreduce</artifactId>
-      <version>${kiji-mapreduce.version}</version>
+      <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.kiji.mapreduce</groupId>
       <artifactId>kiji-mapreduce</artifactId>
-      <version>${kiji-mapreduce.version}</version>
+      <version>${project.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.kiji.hadoop</groupId>
-      <artifactId>hadoop-configurator</artifactId>
-      <version>1.0.2</version>
+      <groupId>org.kiji.mapreduce.lib</groupId>
+      <artifactId>kiji-mapreduce-lib</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>org.kiji.testing</groupId>
-      <artifactId>fake-hbase</artifactId>
-      <version>${fake-hbase.version}</version>
+      <groupId>org.kiji.mapreduce.lib</groupId>
+      <artifactId>kiji-mapreduce-lib</artifactId>
+      <version>${project.version}</version>
+      <type>test-jar</type>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.kiji.avro</groupId>
-      <artifactId>kiji-avro</artifactId>
-      <version>1.1.1-cdh4</version>
+      <groupId>org.kiji.schema-shell</groupId>
+      <artifactId>kiji-schema-shell</artifactId>
+      <version>${kiji-schema-shell.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.schema-shell</groupId>
+      <artifactId>kiji-schema-shell</artifactId>
+      <version>${kiji-schema-shell.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.scalatest</groupId>
+      <artifactId>scalatest_${scala.version}</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.specs2</groupId>
+      <artifactId>specs2_${scala.version}</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-client</artifactId>
+      <version>${hadoop.version}</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-test</artifactId>
+      <artifactId>hadoop-core</artifactId>
+      <version>${hadoop.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-minicluster</artifactId>
+      <version>${hadoop.version}</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hbase</groupId>
+      <artifactId>hbase</artifactId>
+      <version>${hbase.version}</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.hbase</groupId>
@@ -154,38 +183,9 @@
       <type>test-jar</type>
     </dependency>
     <dependency>
-      <groupId>org.easymock</groupId>
-      <artifactId>easymock</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-minicluster</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.mrunit</groupId>
-      <artifactId>mrunit</artifactId>
-      <classifier>hadoop2</classifier>
-      <!-- I do not know if this version number is correct-->
-      <version>0.9.0-incubating</version>
-    </dependency>
-    <dependency>
-      <groupId>commons-lang</groupId>
-      <artifactId>commons-lang</artifactId>
-      <version>2.5</version>
-    </dependency>
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>commons-codec</groupId>
-      <artifactId>commons-codec</artifactId>
-      <version>1.4</version>
-    </dependency>
-    <dependency>
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
     </dependency>
+
   </dependencies>
 </project>

@@ -1,0 +1,64 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <!--
+    (c) Copyright 2012 WibiData, Inc.
+
+    See the NOTICE file distributed with this work for additional
+    information regarding copyright ownership.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+  -->
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>org.kiji.mapreduce.lib</groupId>
+  <artifactId>kiji-mapreduce-lib-dist</artifactId>
+  <version>1.0.0-rc6-SNAPSHOT</version>
+  <packaging>pom</packaging>
+
+  <parent>
+    <groupId>org.kiji.mapreduce.lib</groupId>
+    <artifactId>kiji-mapreduce-lib-root</artifactId>
+    <version>1.0.0-rc6-SNAPSHOT</version>
+    <relativePath>..</relativePath>
+  </parent>
+
+  <name>The KijiMR Library (tarball)</name>
+  <description>Tarball distribution of the KijiMR Library</description>
+  <url>http://www.kiji.org</url>
+
+  <build>
+    <plugins>
+      <plugin>
+        <!-- configured with files in the src/main/assembly/ directory -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <finalName>kiji-mapreduce-lib-${project.version}</finalName>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.kiji.mapreduce.lib</groupId>
+      <artifactId>kiji-mapreduce-lib</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.mapreduce.lib</groupId>
+      <artifactId>kiji-mapreduce-shell-ext</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
+</project>
