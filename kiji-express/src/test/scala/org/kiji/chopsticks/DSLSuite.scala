@@ -46,27 +46,27 @@ class DSLSuite extends FunSuite {
     val colReq: ColumnFamily = MapColumn("search", qualifierMatches=""".*\.com""")
 
     // TODO: Test it filters keyvalues correctly.
-    assert(colReq.inputOptions.filter.isInstanceOf[RegexQualifierColumnFilter])
+    assert(colReq.options.filter.isInstanceOf[RegexQualifierColumnFilter])
   }
 
   test("DSL should let you specify versions on maptype column without qualifier regex.") {
     val colReq: ColumnFamily = MapColumn("search", versions=2)
 
-    assert(colReq.inputOptions.maxVersions == 2)
+    assert(colReq.options.maxVersions == 2)
   }
 
   test("DSL should let you specify versions on a grouptype column.") {
     val colReq: QualifiedColumn = Column("info:word", versions=3)
 
-    assert(colReq.inputOptions.maxVersions == 3)
+    assert(colReq.options.maxVersions == 3)
   }
 
   test("DSL should have default versions of 1 for maptype and grouptype columns.") {
     val colReq1: QualifiedColumn = Column("info:word")
     val colReq2: ColumnFamily = MapColumn("searches")
 
-    assert(colReq1.inputOptions.maxVersions == 1)
-    assert(colReq2.inputOptions.maxVersions == 1)
+    assert(colReq1.options.maxVersions == 1)
+    assert(colReq2.options.maxVersions == 1)
   }
 
   test("DSL should let you create inputs and outputs with no mappings.") {
@@ -106,7 +106,7 @@ class DSLSuite extends FunSuite {
     assert(expectedScheme == input.hdfsScheme)
   }
 
-  test("DSL should let you specify inputOptions for a column.") {
+  test("DSL should let you specify options for a column.") {
     val input: KijiSource =
       KijiInput(tableURI, Map(Column("info:word") -> 'word))
     val input2: KijiSource =
@@ -115,7 +115,7 @@ class DSLSuite extends FunSuite {
         Map(MapColumn("searches", versions=1, qualifierMatches=".*") -> 'word))
   }
 
-  test("DSL should let you specify different inputOptions for different columns.") {
+  test("DSL should let you specify different options for different columns.") {
     val input: KijiSource = KijiInput(tableURI,
       Map(
         Column("info:word", versions=1) -> 'word,

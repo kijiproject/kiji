@@ -64,7 +64,7 @@ object DSL {
       }
     }
 
-    new ColumnFamily(name, new ColumnRequest.InputOptions(versions, filter))
+    new ColumnFamily(name, new ColumnRequestOptions(versions, filter))
   }
 
   /**
@@ -81,7 +81,7 @@ object DSL {
         new QualifiedColumn(
             family,
             qualifier,
-            new ColumnRequest.InputOptions(versions, null))
+            new ColumnRequestOptions(versions, null))
       }
       case Array(family) => {
         throw new KijiInvalidNameException(

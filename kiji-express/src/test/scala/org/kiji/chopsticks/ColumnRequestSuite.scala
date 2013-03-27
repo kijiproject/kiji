@@ -26,7 +26,6 @@ import java.io.ObjectOutputStream
 
 import org.scalatest.FunSuite
 
-import org.kiji.chopsticks.ColumnRequest.InputOptions
 import org.kiji.schema.filter.RegexQualifierColumnFilter
 
 class ColumnRequestSuite extends FunSuite {
@@ -35,7 +34,7 @@ class ColumnRequestSuite extends FunSuite {
   // Should be able to change the following line to:
   // def filter = new RegexQualifierColumnFilter(".*")
   val filter = new RegexQualifierColumnFilter(".*")
-  def opts: InputOptions = new InputOptions(1, filter)
+  def opts: ColumnRequestOptions = new ColumnRequestOptions(1, filter)
   val colFamily = "myfamily"
   val colQualifier = "myqualifier"
 
@@ -43,7 +42,7 @@ class ColumnRequestSuite extends FunSuite {
     val col: ColumnFamily = new ColumnFamily(colFamily, opts)
 
     assert(colFamily == col.family)
-    assert(opts == col.inputOptions)
+    assert(opts == col.options)
   }
 
   test("Fields of a qualified column are the same as those it is constructed with.") {
@@ -51,7 +50,7 @@ class ColumnRequestSuite extends FunSuite {
 
     assert(colFamily == col.family)
     assert(colQualifier == col.qualifier)
-    assert(opts == col.inputOptions)
+    assert(opts == col.options)
   }
 
   test("Two family-only columns with the same parameters are equal and hash to the same value.") {
@@ -75,7 +74,7 @@ class ColumnRequestSuite extends FunSuite {
     // TODO(CHOP-37): The filter is null because it's not serializable. Once CHOP-37 is
     // done, use the same inputoptions as the other tests in the line below.
     val col: QualifiedColumn =
-        new QualifiedColumn(colFamily, colQualifier, new InputOptions(1, null))
+        new QualifiedColumn(colFamily, colQualifier, new ColumnRequestOptions(1, null))
     val bytesOut = new ByteArrayOutputStream()
     val out = new ObjectOutputStream(bytesOut)
     out.writeObject(col)

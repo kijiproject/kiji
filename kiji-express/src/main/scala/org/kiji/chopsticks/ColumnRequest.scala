@@ -23,58 +23,71 @@ import java.io.Serializable
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.chopsticks.ColumnRequest.InputOptions
 import org.kiji.schema.filter.KijiColumnFilter
 import org.kiji.schema.util.KijiNameValidator
 
 /**
- * Represents a request for a column in a Kiji table.
+ * A trait that marks case classes that hold column-level options for cell requests to Kiji.
+ *
+ * End-users receive instances of this trait, used to request cells from qualified columns or
+ * map-type column families, using the factory methods [[org.kiji.chopsticks.DSL.Column()]] and
+ * [[org.kiji.chopsticks.DSL.MapColumn()]]. They can then use these requests to obtain a
+ * [[org.kiji.chopsticks.KijiSource]] that reads cells into tuples while obeying the specified
+ * request options.
  */
 @ApiAudience.Public
 @ApiStability.Unstable
-sealed trait ColumnRequest extends Serializable
+private[chopsticks] sealed trait ColumnRequest extends Serializable
 
 /**
- * Represents a request for a fully-qualified column from a Kiji table.
+ * A request for cells from a fully qualified column in a Kiji table.
  *
- * @param family of the column.
- * @param qualifier of the column.
- * @param inputOptions for requesting the column.
+ * @param family of columns that the requested column belongs to.
+ * @param qualifier of the requested column.
+ * @param options that will be used to request cells from the column. If unspecified, default
+ *     request options will be used.
  */
-final case class QualifiedColumn(
+@ApiAudience.Public
+@ApiStability.Unstable
+final case class QualifiedColumn private[chopsticks] (
     family: String,
     qualifier: String,
-    inputOptions: InputOptions = InputOptions())
+    options: ColumnRequestOptions = ColumnRequestOptions())
     extends ColumnRequest {
   KijiNameValidator.validateLayoutName(family)
   KijiNameValidator.validateLayoutName(qualifier)
 }
 
 /**
- * Represents a request for a column family from a Kiji table.
+ * A request for cells from columns in a map-type column family in a Kiji table.
  *
- * @param family of the column family.
- * @param inputOptions for requesting the column family.
+ * @param family (map-type) of the Kiji table whose columns are being requested.
+ * @param options that will be used to request cells from the columns of the family. If
+ *     unspecified, default request options are used.
  */
-final case class ColumnFamily(
+@ApiAudience.Public
+@ApiStability.Unstable
+final case class ColumnFamily private[chopsticks] (
     family: String,
-    inputOptions: InputOptions = InputOptions())
+    options: ColumnRequestOptions = ColumnRequestOptions())
     extends ColumnRequest {
   KijiNameValidator.validateLayoutName(family)
 }
 
-object ColumnRequest {
-  /**
-   * Provides the ability to specify InputOptions for a column.
-   *
-   * @param maxVersions Max versions to return.
-   * @param KijiColumnFilter Filters columns to request.
-   */
-  @ApiAudience.Public
-  @ApiStability.Unstable
-  final case class InputOptions(
-      maxVersions: Int = 1,
-      filter: KijiColumnFilter = null)
-      extends Serializable {
-  }
+/**
+ * The column-level options for cell requests to Kiji.
+ *
+ * @param maxVersions is the maximum number of cells (from the most recent) that will be
+ *     retrieved for the column. By default only the most recent cell is retrieved.
+ * @param filter that a cell must pass to be retrieved by the request. By default no filter is
+ *     applied.
+ */
+@ApiAudience.Public
+@ApiStability.Unstable
+final case class ColumnRequestOptions private[chopsticks] (
+    maxVersions: Int = 1,
+    // Not accessible to end-users because the type is soon to be replaced by a
+    // Chopsticks-specific implementation.
+    private[chopsticks] val filter: KijiColumnFilter = null)
+    extends Serializable {
 }

@@ -21,7 +21,6 @@ package org.kiji.chopsticks
 
 import org.scalatest.FunSuite
 
-import org.kiji.chopsticks.ColumnRequest.InputOptions
 import org.kiji.schema.filter.RegexQualifierColumnFilter
 
 class InputOptionsSuite extends FunSuite {
@@ -31,18 +30,19 @@ class InputOptionsSuite extends FunSuite {
   // def filter = new RegexQualifierColumnFilter(".*")
   val filter = new RegexQualifierColumnFilter(".*")
   val maxVersions = 2
-  val opts = new InputOptions(maxVersions, filter)
+  val opts = new ColumnRequestOptions(maxVersions, filter)
 
   test("maxVersions is the same as constructed with.") {
     assert(maxVersions == opts.maxVersions)
   }
 
-  test("inputOptions is the same as constructed with.") {
+  test("options is the same as constructed with.") {
     assert(filter == opts.filter)
   }
 
-  test("InputOptions with the same maxVersions & filter are equal and hash to the same value.") {
-    val opts2 = new InputOptions(maxVersions, filter)
+  test("ColumnRequestOptions with the same maxVersions & filter are equal and hash to the same "
+      + "value.") {
+    val opts2 = new ColumnRequestOptions(maxVersions, filter)
 
     assert(opts2 == opts)
     assert(opts2.hashCode == opts.hashCode)
