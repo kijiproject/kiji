@@ -24,24 +24,29 @@ import org.kiji.annotations.ApiStability
 import org.kiji.schema.EntityId
 
 /**
- * Acts as a wrapper around [[EntityId]]. Instances of this class can be reused in MapReduce
- * jobs to hold entity ids read from Kiji.
+ * A reusable container for Kiji entity ids.
+ *
+ * The MapReduce framework views a data set as a collection of key-value pairs,
+ * and likes to read those pairs into a reusable instance of the key or value class. When a row
+ * is read from a Kiji table, its entity id (specifically class `EntityId`) is used as the key.
+ * Because instances of `EntityId` are not reusable, this simple class is provided to give the
+ * MapReduce framework a reusable container.
  */
 @ApiAudience.Private
 @ApiStability.Unstable
 final class KijiKey {
-  /** The entity id being wrapped. */
+  /** The entity id contained by this instance. */
   private var currentKey: EntityId = null
 
   /**
-   * @return the entity id wrapped by this instance.
+   * @return the entity id contained in this instance.
    */
   def get(): EntityId = currentKey
 
   /**
-   * Sets the entity id wrapped by this instance.
+   * Sets the entity id contained in this instance.
    *
-   * @param key that will be wrapped by this instance.
+   * @param key that this container will hold.
    */
   def set(key: EntityId) {
     currentKey = key
