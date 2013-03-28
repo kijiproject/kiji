@@ -19,9 +19,12 @@
 
 package org.kiji.chopsticks
 
+import java.util.concurrent.atomic.AtomicLong
+
 import scala.collection.JavaConverters._
 
 import cascading.flow.FlowProcess
+import cascading.flow.hadoop.HadoopFlowProcess
 import cascading.scheme.Scheme
 import cascading.scheme.SinkCall
 import cascading.scheme.SourceCall
@@ -35,6 +38,8 @@ import org.apache.commons.lang.SerializationUtils
 import org.apache.hadoop.mapred.JobConf
 import org.apache.hadoop.mapred.OutputCollector
 import org.apache.hadoop.mapred.RecordReader
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
@@ -67,6 +72,18 @@ class KijiScheme(
     extends Scheme[JobConf, RecordReader[KijiKey, KijiValue], OutputCollector[_, _],
         KijiValue, KijiTableWriter] {
   import KijiScheme._
+
+  // Hadoop mapred counters for the rows read from this scheme.
+  private val counterGroupName = "kiji-chopsticks"
+  private val counterSuccess = "ROWS_READ"
+  private val counterMissingField = "ROWS_SKIPPED_WITH_MISSING_FIELDS"
+
+  // The number of skipped rows to log after.
+  // TODO(CHOP-47): Make this configurable.
+  private val logEvery: Int = 1000
+
+  // Keeps track of how many rows have been skipped, for logging purposes.
+  private val skippedRows: AtomicLong = new AtomicLong()
 
   /** Fields expected to be in any tuples processed by this scheme. */
   private val fields: Fields = {
@@ -131,15 +148,27 @@ class KijiScheme(
 
     // Get the first row where all the requested columns are present,
     // and use that to set the result tuple.
+    // Return true as soon as a result tuple has been set,
+    // or false if we reach the end of the RecordReader.
     while (sourceCall.getInput().next(null, value)) {
       val row: KijiRowData = value.get()
+
+      // If all fields are present, set the result tuple and return from this method.
       if (allColumnsPresent(row, columns)) {
         val result: Tuple = rowToTuple(columns, getSourceFields, row)
         sourceCall.getIncomingEntry().setTuple(result)
+        process.increment(counterGroupName, counterSuccess, 1)
         return true // We set a result tuple, return true for success.
       }
-      // If we didn't return true because a column wasn't present, continue the loop.
-      // TODO(CHOP-47): log skipped rows.
+
+      // Otherwise, this row was missing fields.
+      // Increment the counter for rows with missing fields.
+      process.increment(counterGroupName, counterMissingField, 1)
+      if (skippedRows.getAndIncrement() % logEvery == 0) {
+        logger.warn("Row %s skipped because of missing field(s)."
+            .format(row.getEntityId.toShellString))
+      }
+      // We didn't return true because this row was missing fields; continue the loop.
     }
     return false // We reached the end of the RecordReader.
   }
@@ -242,6 +271,8 @@ class KijiScheme(
 
 /** Companion object for KijiScheme. Contains helper methods and constants. */
 object KijiScheme {
+  private val logger: Logger = LoggerFactory.getLogger(classOf[KijiScheme])
+
   /** Field name containing a row's [[EntityId]]. */
   private[chopsticks] val entityIdField: String = "entityId"
 
