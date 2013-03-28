@@ -31,7 +31,7 @@ import org.kiji.schema.util.KijiNameValidator
  *
  * End-users receive instances of this trait, used to request cells from qualified columns or
  * map-type column families, using the factory methods [[org.kiji.chopsticks.DSL.Column()]] and
- * [[org.kiji.chopsticks.DSL.MapColumn()]]. They can then use these requests to obtain a
+ * [[org.kiji.chopsticks.DSL.MapFamily()]]. They can then use these requests to obtain a
  * [[org.kiji.chopsticks.KijiSource]] that reads cells into tuples while obeying the specified
  * request options.
  */

@@ -38,19 +38,19 @@ class DSLSuite extends FunSuite {
 
   test("DSL should not let you create a maptype column with a qualifier.") {
     intercept[KijiInvalidNameException] {
-      val colReq: ColumnRequest = MapColumn("info:word")
+      val colReq: ColumnRequest = MapFamily("info:word")
     }
   }
 
   test("DSL should let you specify qualifier regex on maptype columns.") {
-    val colReq: ColumnFamily = MapColumn("search", qualifierMatches=""".*\.com""")
+    val colReq: ColumnFamily = MapFamily("search", qualifierMatches=""".*\.com""")
 
     // TODO: Test it filters keyvalues correctly.
     assert(colReq.options.filter.isInstanceOf[RegexQualifierColumnFilter])
   }
 
   test("DSL should let you specify versions on maptype column without qualifier regex.") {
-    val colReq: ColumnFamily = MapColumn("search", versions=2)
+    val colReq: ColumnFamily = MapFamily("search", versions=2)
 
     assert(colReq.options.maxVersions == 2)
   }
@@ -63,7 +63,7 @@ class DSLSuite extends FunSuite {
 
   test("DSL should have default versions of 1 for maptype and grouptype columns.") {
     val colReq1: QualifiedColumn = Column("info:word")
-    val colReq2: ColumnFamily = MapColumn("searches")
+    val colReq2: ColumnFamily = MapFamily("searches")
 
     assert(colReq1.options.maxVersions == 1)
     assert(colReq2.options.maxVersions == 1)
@@ -112,7 +112,7 @@ class DSLSuite extends FunSuite {
     val input2: KijiSource =
       KijiInput(tableURI, Map(Column("info:word", versions = 1) -> 'word))
     val input3: KijiSource = KijiInput(tableURI,
-        Map(MapColumn("searches", versions=1, qualifierMatches=".*") -> 'word))
+        Map(MapFamily("searches", versions=1, qualifierMatches=".*") -> 'word))
   }
 
   test("DSL should let you specify different options for different columns.") {
