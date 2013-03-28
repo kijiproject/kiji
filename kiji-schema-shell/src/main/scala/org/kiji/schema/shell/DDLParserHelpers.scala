@@ -20,6 +20,7 @@
 package org.kiji.schema.shell
 
 import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
 
 import org.kiji.schema.avro.HashType
@@ -40,9 +41,20 @@ import org.kiji.schema.util.KijiNameValidator
 import scala.util.parsing.combinator._
 
 /**
- * Parser for a kiji-schema DDL command.
+ * Parsers for elements of grammar common to many kiji-schema DDL commands. These
+ * grammar elements (for example, table names, column names, etc) may be of use to
+ * authors of additional parser plugins that extend the language.
+ *
+ * <p>Elements like <tt>optionallyQuotedString</tt> should have somewhat obvious
+ * application; this matcher is also used in a more semantically-meaningful form
+ * in the case of matchers like <tt>instanceName</tt>, <tt>tableName</tt>, etc.</p>
+ *
+ * <p>Case-insensitive strings can be matched with <tt>i("SOMESTR")</tt>;
+ * this will match input like <tt>SOMESTR</tt>, <tt>somestr</tt>, and <tt>SoMeStR</tt>, etc.
+ * Uniform definitions of boolean values and integer values are also provided.</p>
  */
 @ApiAudience.Framework
+@ApiStability.Experimental
 @Inheritance.Extensible
 trait DDLParserHelpers extends JavaTokenParsers {
 

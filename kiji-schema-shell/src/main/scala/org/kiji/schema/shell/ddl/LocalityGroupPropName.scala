@@ -19,6 +19,9 @@
 
 package org.kiji.schema.shell.ddl
 
+import org.kiji.annotations.ApiAudience
+
+@ApiAudience.Private
 object LocalityGroupPropName extends Enumeration {
   type LocalityGroupPropName = Value
   val MaxVersions = Value("MaxVersions")

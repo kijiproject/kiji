@@ -28,6 +28,9 @@ import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.HBaseAdmin
 
+import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiMetaTable
 import org.kiji.schema.KijiURI
@@ -38,6 +41,9 @@ import org.kiji.schema.layout.KijiTableLayout
  * Abstract base interface implemented by KijiSystem. Provides method signatures
  * that access and modify underlying resources in KijiSchema.
  */
+@ApiAudience.Framework
+@ApiStability.Evolving
+@Inheritance.Sealed
 abstract class AbstractKijiSystem {
   /**
    * Gets a collection of Kiji table names and descriptions for the specified Kiji instance.

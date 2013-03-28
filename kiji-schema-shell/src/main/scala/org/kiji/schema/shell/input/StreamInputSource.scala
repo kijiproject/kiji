@@ -23,12 +23,15 @@ import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
 
+import org.kiji.annotations.ApiAudience
+
 /**
  * Reads user input from an InputStream full of commands.
  *
  * <p>The close() method of this InputSource will close the underlying stream.</p>
  */
-class StreamInputSource(stream: InputStream) extends InputSource {
+@ApiAudience.Private
+final class StreamInputSource(stream: InputStream) extends InputSource {
   private val bufferedStream = new BufferedReader(new InputStreamReader(stream, "UTF-8"))
 
   /** Read a line of input from the underlying source and return it. */

@@ -19,9 +19,11 @@
 
 package org.kiji.schema.shell.ddl
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.CompressionType
 
 /** Represents types of compression supported by HBase. */
+@ApiAudience.Private
 object CompressionTypeToken extends Enumeration {
   type CompressionTypeToken = Value
   val NONE = Value("NONE")

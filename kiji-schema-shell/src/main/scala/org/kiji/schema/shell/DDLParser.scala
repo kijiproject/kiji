@@ -19,6 +19,7 @@
 
 package org.kiji.schema.shell
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.HashType
 import org.kiji.schema.avro.RowKeyEncoding
 import org.kiji.schema.avro.RowKeyFormat
@@ -39,7 +40,8 @@ import scala.util.parsing.combinator._
 /**
  * Parser for a kiji-schema DDL command.
  */
-class DDLParser(val env: Environment) extends JavaTokenParsers
+@ApiAudience.Private
+final class DDLParser(val env: Environment) extends JavaTokenParsers
     with DDLParserHelpers with JsonStringParser {
 
   /** Matches a legal module name. */

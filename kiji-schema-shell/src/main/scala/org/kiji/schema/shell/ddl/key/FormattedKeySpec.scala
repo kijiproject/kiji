@@ -22,6 +22,7 @@ package org.kiji.schema.shell.ddl.key
 import java.util.ArrayList
 import scala.collection.mutable.HashSet
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.HashSpec
 import org.kiji.schema.avro.RowKeyComponent
 import org.kiji.schema.avro.RowKeyEncoding
@@ -35,6 +36,7 @@ import org.kiji.schema.shell.DDLException
  *
  * @param params the list of parameters that specify the key format.
  */
+@ApiAudience.Private
 class FormattedKeySpec(val params: List[FormattedKeyParam]) {
 
   /**
@@ -201,7 +203,7 @@ object RawFormattedKeySpec extends FormattedKeySpec(List()) {
 }
 
 /** A FormattedKeySpec that represents ROW KEY FORMAT HASHED. */
-class HashedFormattedKeySpec extends FormattedKeySpec(List(
+final class HashedFormattedKeySpec extends FormattedKeySpec(List(
   new KeyComponent("key", RowKeyElemType.STRING, mayBeNull=false),
   new KeyHashParams(List(
     new FormattedKeyHashSize(16),

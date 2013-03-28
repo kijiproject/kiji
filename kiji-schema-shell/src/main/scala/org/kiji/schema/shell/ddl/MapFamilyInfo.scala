@@ -21,6 +21,7 @@ package org.kiji.schema.shell.ddl
 
 import java.util.ArrayList
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.ColumnDesc
 import org.kiji.schema.avro.FamilyDesc
 import org.kiji.schema.avro.LocalityGroupDesc
@@ -28,7 +29,8 @@ import org.kiji.schema.avro.LocalityGroupDesc
 /**
  * Holds info describing a map-type column family.
  */
-class MapFamilyInfo(val name: String, val schema: SchemaSpec, val desc: Option[String]) {
+@ApiAudience.Private
+final class MapFamilyInfo(val name: String, val schema: SchemaSpec, val desc: Option[String]) {
   /**
    * Add this new map family definition to a locality group's builder.
    * Assumes that this family name does not exist elsewhere in the layout

@@ -19,6 +19,7 @@
 
 package org.kiji.schema.shell.ddl
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.CellSchema
 import org.kiji.schema.avro.SchemaStorage
 import org.kiji.schema.avro.SchemaType
@@ -30,7 +31,8 @@ import org.kiji.schema.avro.SchemaType
  * and class names; these should be concatenated with the string "." interleaved
  * between parts.
  */
-class ClassSchemaSpec(private val parts: List[String]) extends SchemaSpec {
+@ApiAudience.Private
+final class ClassSchemaSpec(private val parts: List[String]) extends SchemaSpec {
   /** The fully-qualified class name that represents the schema. */
   val className = {
     val sb = new StringBuilder

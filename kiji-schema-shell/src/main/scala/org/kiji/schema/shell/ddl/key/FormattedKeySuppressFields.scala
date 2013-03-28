@@ -21,13 +21,15 @@ package org.kiji.schema.shell.ddl.key
 
 import scala.collection.mutable.Set
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.RowKeyFormat2
 
 /**
  * The presence of this token in the KeyHashParams implies that the row key
  * should not have any plaintext key components in it; it should just contain the hash.
  */
-class FormattedKeySuppressFields extends FormattedKeyHashParam {
+@ApiAudience.Private
+final class FormattedKeySuppressFields extends FormattedKeyHashParam {
   /** {@inheritDoc} */
   override def validate(names: Set[String]): Unit = { }
 

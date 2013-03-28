@@ -21,12 +21,14 @@ package org.kiji.schema.shell.ddl
 
 import scala.collection.JavaConversions._
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.TableLayoutDesc
 
 import org.kiji.schema.shell.DDLException
 import org.kiji.schema.shell.Environment
 
-class AlterTableDropFamilyCommand(
+@ApiAudience.Private
+final class AlterTableDropFamilyCommand(
     val env: Environment,
     val tableName: String,
     val familyName: String) extends TableDDLCommand {

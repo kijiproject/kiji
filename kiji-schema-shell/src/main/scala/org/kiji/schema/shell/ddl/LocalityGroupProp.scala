@@ -19,6 +19,7 @@
 
 package org.kiji.schema.shell.ddl
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.LocalityGroupDesc
 
 import LocalityGroupPropName._
@@ -27,7 +28,8 @@ import CompressionTypeToken._
 /**
  * Holds a property associated with a locality group.
  */
-class LocalityGroupProp(val property: LocalityGroupPropName, val value: Any) {
+@ApiAudience.Private
+final class LocalityGroupProp(val property: LocalityGroupPropName, val value: Any) {
 
   /**
    * Apply this property info to the specified LocalityGroupDesc builder. Returns

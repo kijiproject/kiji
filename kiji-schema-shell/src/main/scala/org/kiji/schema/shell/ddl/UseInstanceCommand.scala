@@ -19,13 +19,15 @@
 
 package org.kiji.schema.shell.ddl
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.shell.DDLException
 import org.kiji.schema.shell.Environment
 
 import org.kiji.schema.KConstants
 
 /** Return a modified environment that uses a different Kiji instance name. */
-class UseInstanceCommand(val env: Environment, val instance: String) extends DDLCommand {
+@ApiAudience.Private
+final class UseInstanceCommand(val env: Environment, val instance: String) extends DDLCommand {
   override def exec(): Environment = {
     val instances = env.kijiSystem.listInstances()
 

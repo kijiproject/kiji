@@ -21,6 +21,7 @@ package org.kiji.schema.shell.ddl
 
 import scala.collection.JavaConversions._
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.ColumnDesc
 import org.kiji.schema.avro.FamilyDesc
 import org.kiji.schema.avro.LocalityGroupDesc
@@ -36,6 +37,7 @@ import org.kiji.schema.shell.TableNotFoundException
  * Abstract base class for DDL command implementations that manipulate properties
  * of a specific table (vs. those which adjust the environment, instance, etc.).
  */
+@ApiAudience.Private
 abstract class TableDDLCommand extends DDLCommand {
 
   /**

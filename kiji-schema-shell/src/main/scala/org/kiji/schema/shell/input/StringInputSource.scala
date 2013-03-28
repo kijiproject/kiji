@@ -22,10 +22,13 @@ package org.kiji.schema.shell.input
 import java.io.BufferedReader
 import java.io.StringReader
 
+import org.kiji.annotations.ApiAudience
+
 /**
  * Returns a single supplied string as input.
  */
-class StringInputSource(input: String) extends InputSource {
+@ApiAudience.Private
+final class StringInputSource(input: String) extends InputSource {
   private val reader = new BufferedReader(new StringReader(input))
 
   def readLine(prompt: String): Option[String] = {

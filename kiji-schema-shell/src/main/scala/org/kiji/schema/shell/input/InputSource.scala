@@ -21,6 +21,11 @@ package org.kiji.schema.shell.input
 
 import java.io.Closeable
 
+import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.Inheritance
+
+@ApiAudience.Framework
+@Inheritance.Sealed
 abstract class InputSource extends Closeable {
 
   /**

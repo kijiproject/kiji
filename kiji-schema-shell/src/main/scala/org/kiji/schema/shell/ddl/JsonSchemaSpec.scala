@@ -19,12 +19,15 @@
 
 package org.kiji.schema.shell.ddl
 
+import org.kiji.annotations.ApiAudience
+
 import org.kiji.schema.avro.CellSchema
 import org.kiji.schema.avro.SchemaStorage
 import org.kiji.schema.avro.SchemaType
 
 /** A schema specified as its Avro json representation. */
-class JsonSchemaSpec(val json: String) extends SchemaSpec {
+@ApiAudience.Private
+final class JsonSchemaSpec(val json: String) extends SchemaSpec {
   override def toString(): String = { json }
 
   override def toColumnSchema(): CellSchema = {

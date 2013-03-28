@@ -21,13 +21,15 @@ package org.kiji.schema.shell.ddl
 
 import scala.collection.JavaConversions._
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.TableLayoutDesc
 import org.kiji.schema.layout.KijiTableLayout
 
 import org.kiji.schema.shell.DDLException
 import org.kiji.schema.shell.Environment
 
-class AlterTableDescForFamilyCommand(
+@ApiAudience.Private
+final class AlterTableDescForFamilyCommand(
     val env: Environment,
     val tableName: String,
     val familyName: String,

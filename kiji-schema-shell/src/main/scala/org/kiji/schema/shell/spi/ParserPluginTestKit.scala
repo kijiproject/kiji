@@ -20,6 +20,7 @@
 package org.kiji.schema.shell.spi
 
 import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
 import org.kiji.delegation.NamedProvider
 import org.kiji.schema.shell.Environment
 
@@ -35,6 +36,7 @@ import org.kiji.schema.shell.Environment
  * <p>Each test throws {@link IllegalStateException} on error.</p>
  */
 @ApiAudience.Framework
+@ApiStability.Experimental
 final class ParserPluginTestKit(val klazz: Class[_ <: ParserPluginFactory]) {
   /** Tests that klazz is non-null. */
   def testNonNull(): Unit = {

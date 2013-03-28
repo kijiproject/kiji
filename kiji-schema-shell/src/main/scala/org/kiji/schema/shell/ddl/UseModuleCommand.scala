@@ -19,6 +19,7 @@
 
 package org.kiji.schema.shell.ddl
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.delegation.Lookups
 import org.kiji.delegation.NamedLookup
 import org.kiji.delegation.NoSuchProviderException
@@ -33,7 +34,8 @@ import org.kiji.schema.shell.spi.ParserPluginFactory
  * @param env the environment in which this command executes.
  * @param moduleName the name of the module to load.
  */
-class UseModuleCommand(val env: Environment, val moduleName: String) extends DDLCommand {
+@ApiAudience.Private
+final class UseModuleCommand(val env: Environment, val moduleName: String) extends DDLCommand {
   override def exec(): Environment = {
     val lookup = Lookups.getNamed(classOf[ParserPluginFactory])
     try {

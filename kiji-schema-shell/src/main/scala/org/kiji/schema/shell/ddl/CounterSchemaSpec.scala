@@ -19,6 +19,7 @@
 
 package org.kiji.schema.shell.ddl
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.CellSchema
 import org.kiji.schema.avro.SchemaStorage
 import org.kiji.schema.avro.SchemaType
@@ -26,7 +27,8 @@ import org.kiji.schema.avro.SchemaType
 /**
  * A schema that represents an HBase counter.
  */
-class CounterSchemaSpec() extends SchemaSpec {
+@ApiAudience.Private
+final class CounterSchemaSpec() extends SchemaSpec {
   override def toColumnSchema(): CellSchema = {
     return CellSchema.newBuilder()
         .setType(SchemaType.COUNTER)

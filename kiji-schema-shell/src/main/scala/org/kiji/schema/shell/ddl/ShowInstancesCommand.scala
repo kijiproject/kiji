@@ -21,10 +21,12 @@ package org.kiji.schema.shell.ddl
 
 import scala.math._
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.shell.Environment
 
 /** List available Kiji instances. */
-class ShowInstancesCommand(val env: Environment) extends DDLCommand with StrFormatting {
+@ApiAudience.Private
+final class ShowInstancesCommand(val env: Environment) extends DDLCommand with StrFormatting {
   override def exec(): Environment = {
     val instances = env.kijiSystem.listInstances()
 

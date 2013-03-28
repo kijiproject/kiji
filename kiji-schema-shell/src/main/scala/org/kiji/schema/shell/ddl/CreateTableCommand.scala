@@ -21,6 +21,7 @@ package org.kiji.schema.shell.ddl
 
 import scala.collection.JavaConversions._
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.ColumnDesc
 import org.kiji.schema.avro.FamilyDesc
 import org.kiji.schema.avro.LocalityGroupDesc
@@ -51,7 +52,8 @@ object CreateTableCommand {
  * @param rowKeySpec a specification of how row keys are constructed.
  * @param locGroups a list of initial locality group specifications to create the table with.
  */
-class CreateTableCommand(val env: Environment,
+@ApiAudience.Private
+final class CreateTableCommand(val env: Environment,
     val tableName: String,
     val desc: Option[String],
     val rowKeySpec: FormattedKeySpec,

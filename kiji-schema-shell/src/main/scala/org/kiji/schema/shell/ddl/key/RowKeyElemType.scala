@@ -19,9 +19,11 @@
 
 package org.kiji.schema.shell.ddl.key
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.ComponentType
 
 /** Represents data types for elements of formatted row key elements. */
+@ApiAudience.Private
 object RowKeyElemType extends Enumeration {
   type RowKeyElemType = Value
   val STRING = Value("STRING")

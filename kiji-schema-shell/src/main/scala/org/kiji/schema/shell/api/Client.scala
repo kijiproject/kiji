@@ -25,6 +25,7 @@ import java.io.InputStream
 import java.io.PrintStream
 
 import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
 import org.kiji.schema.KConstants
 import org.kiji.schema.KijiURI
 import org.kiji.schema.shell.Environment
@@ -58,7 +59,8 @@ import org.kiji.schema.util.ResourceUtils
  * but is not persistent between streams.</p>
  */
 @ApiAudience.Public
-class Client private(val kijiUri: KijiURI) extends Closeable {
+@ApiStability.Experimental
+final class Client private(val kijiUri: KijiURI) extends Closeable {
 
   /** Output stream where stdout from DDL commands is redirected. */
   private val mStdoutBytes = new ByteArrayOutputStream

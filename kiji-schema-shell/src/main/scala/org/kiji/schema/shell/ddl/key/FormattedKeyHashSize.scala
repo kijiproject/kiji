@@ -21,13 +21,15 @@ package org.kiji.schema.shell.ddl.key
 
 import scala.collection.mutable.Set
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.RowKeyFormat2
 import org.kiji.schema.shell.DDLException
 
 /**
  * The size of the hash prefix for the row key.
  */
-class FormattedKeyHashSize(val size: Int) extends FormattedKeyHashParam {
+@ApiAudience.Private
+final class FormattedKeyHashSize(val size: Int) extends FormattedKeyHashParam {
   /** {@inheritDoc} */
   override def validate(names: Set[String]): Unit = {
     if (size < 0 || size > 16) {

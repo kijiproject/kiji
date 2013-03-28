@@ -23,13 +23,17 @@ import scala.collection.JavaConversions._
 
 import java.util.ArrayList
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.FamilyDesc
 import org.kiji.schema.avro.LocalityGroupDesc
 
 /**
  * Holds info describing a group-type column family.
  */
-class GroupFamilyInfo(val name: String, val desc: Option[String], val cols: List[ColumnClause]) {
+@ApiAudience.Private
+final class GroupFamilyInfo(val name: String, val desc: Option[String],
+    val cols: List[ColumnClause]) {
+
   /**
    * Add this new group family definition to a locality group's builder.
    * Assumes that this family name does not exist elsewhere in the layout

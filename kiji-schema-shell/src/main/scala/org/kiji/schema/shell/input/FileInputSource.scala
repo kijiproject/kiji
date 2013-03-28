@@ -24,8 +24,11 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.InputStreamReader
 
+import org.kiji.annotations.ApiAudience
+
 /** Reads user input from a file full of commands. */
-class FileInputSource(filename: String) extends InputSource {
+@ApiAudience.Private
+final class FileInputSource(filename: String) extends InputSource {
   private val bufferedStream = new BufferedReader(new InputStreamReader(
       new FileInputStream(new File(filename)), "UTF-8"))
 

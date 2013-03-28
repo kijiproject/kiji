@@ -21,6 +21,8 @@ package org.kiji.schema.shell
 
 import jline.UnixTerminal
 
+import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
 import org.kiji.schema.KijiInvalidNameException
 import org.kiji.schema.shell.ddl.DDLCommand
 import org.kiji.schema.shell.ddl.ErrorCommand
@@ -31,7 +33,9 @@ import org.kiji.schema.shell.ddl.ErrorCommand
  * If throwOnSyntaxErr is true, then the processUserInput() method will
  * throw DDLExceptions in addition to printing to stdout.
  */
-class InputProcessor(val throwOnSyntaxErr: Boolean = false) {
+@ApiAudience.Framework
+@ApiStability.Evolving
+final class InputProcessor(val throwOnSyntaxErr: Boolean = false) {
 
   val PROMPT_STR = "schema> "
   val CONTINUE_PROMPT_STR = "     -> "

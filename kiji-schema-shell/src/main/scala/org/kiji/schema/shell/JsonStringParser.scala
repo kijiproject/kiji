@@ -24,11 +24,14 @@ import scala.util.parsing.combinator._
 
 import org.apache.commons.lang3.StringUtils
 
+import org.kiji.annotations.ApiAudience
+
 /**
  * Parser that matches a JSON value (scalar, record, literal, or array) and returns
  * a valid JSON string expression for this value. The value is not converted into a
  * Java value of the appropriate type; the source JSON is used.
  */
+@ApiAudience.Private
 trait JsonStringParser extends JavaTokenParsers {
   def jsonRecord: Parser[String] = (
       "{"~> repsep(jsonAttr, ",") <~"}"

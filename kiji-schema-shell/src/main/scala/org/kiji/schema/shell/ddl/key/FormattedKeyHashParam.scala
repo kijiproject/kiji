@@ -21,12 +21,14 @@ package org.kiji.schema.shell.ddl.key
 
 import scala.collection.mutable.Set
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.RowKeyFormat2
 
 /**
  * An argument to a KeyHashParams instance, as part of a list. Subclasses
  * are all interpreted in KeyHashParams.
  */
+@ApiAudience.Private
 abstract class FormattedKeyHashParam {
   /**
    * Validates that the key hash parameter is valid.

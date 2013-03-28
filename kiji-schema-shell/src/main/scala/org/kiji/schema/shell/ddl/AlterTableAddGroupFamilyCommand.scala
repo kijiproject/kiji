@@ -21,6 +21,7 @@ package org.kiji.schema.shell.ddl
 
 import scala.collection.JavaConversions._
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.LocalityGroupDesc
 import org.kiji.schema.avro.TableLayoutDesc
 
@@ -28,7 +29,8 @@ import org.kiji.schema.shell.DDLException
 import org.kiji.schema.shell.Environment
 
 /** Add a group-type family to a table. */
-class AlterTableAddGroupFamilyCommand(
+@ApiAudience.Private
+final class AlterTableAddGroupFamilyCommand(
     val env: Environment,
     val tableName: String,
     val groupClause: LocalityGroupProp,

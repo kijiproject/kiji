@@ -19,10 +19,12 @@
 
 package org.kiji.schema.shell.ddl
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.TableLayoutDesc
 import org.kiji.schema.shell.Environment
 
-class DropTableCommand(val env: Environment, val tableName: String) extends TableDDLCommand {
+@ApiAudience.Private
+final class DropTableCommand(val env: Environment, val tableName: String) extends TableDDLCommand {
 
   override def validateArguments(): Unit = {
     checkTableExists()

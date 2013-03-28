@@ -19,12 +19,14 @@
 
 package org.kiji.schema.shell.ddl
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.LocalityGroupDesc
 
 /**
  * Represents the specification of a locality group in a CREATE or ALTER TABLE statement.
  */
-class LocalityGroupClause(val name: String,
+@ApiAudience.Private
+final class LocalityGroupClause(val name: String,
                           val desc: Option[String],
                           val props: List[LocalityGroupProp]) {
 

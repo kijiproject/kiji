@@ -19,4 +19,11 @@
 
 package org.kiji.schema.shell
 
+import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
+
+@ApiAudience.Public
+@ApiStability.Evolving
+@Inheritance.Sealed
 class DDLException(val msg:String) extends RuntimeException(msg)

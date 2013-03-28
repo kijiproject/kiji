@@ -30,6 +30,7 @@ import org.apache.hadoop.hbase.HTableDescriptor
 import org.apache.hadoop.hbase.client.HBaseAdmin
 import org.apache.hadoop.util.StringUtils
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiMetaTable
 import org.kiji.schema.KijiURI
@@ -46,7 +47,8 @@ import org.kiji.schema.util.ResourceUtils
  *
  * <p>Each thread should create its own KijiSystem instance.</p>
  */
-class KijiSystem extends AbstractKijiSystem {
+@ApiAudience.Private
+final class KijiSystem extends AbstractKijiSystem {
   // A map from Kiji instance names to internal implementations of Kiji instances.
   private val kijis = Map[KijiURI, Kiji]()
 

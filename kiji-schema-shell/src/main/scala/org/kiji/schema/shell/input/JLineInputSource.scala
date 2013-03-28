@@ -21,8 +21,11 @@ package org.kiji.schema.shell.input
 
 import scala.tools.jline.console.ConsoleReader
 
+import org.kiji.annotations.ApiAudience
+
 /** Reads user input from the console using JLine. */
-class JLineInputSource extends InputSource {
+@ApiAudience.Private
+final class JLineInputSource extends InputSource {
   private val consoleReader = new ConsoleReader
 
   def readLine(prompt: String): Option[String] = {

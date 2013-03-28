@@ -19,8 +19,11 @@
 
 package org.kiji.schema.shell.input
 
+import org.kiji.annotations.ApiAudience
+
 /** Reads no user input; always returns EOF. */
-class NullInputSource extends InputSource {
+@ApiAudience.Private
+final class NullInputSource extends InputSource {
 
   def readLine(prompt: String): Option[String] = {
     return None

@@ -25,6 +25,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.PrintStream
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.CellSchema
 import org.kiji.schema.avro.ColumnDesc
 import org.kiji.schema.avro.ComponentType
@@ -45,6 +46,7 @@ import org.kiji.schema.layout.KijiTableLayout
  * DUMP DDL statements. The methods in this class will dump a table definition
  * to stdout or another file.
  */
+@ApiAudience.Private
 trait AbstractDumpDDLCommand {
 
   // abstract methods implemented by DDLCommand that are required to use AbstractDumpDDLCommand.

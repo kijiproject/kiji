@@ -22,6 +22,7 @@ package org.kiji.schema.shell.spi
 import scala.util.parsing.combinator._
 
 import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
 import org.kiji.schema.shell.Environment
 import org.kiji.schema.shell.ddl.DDLCommand
@@ -45,6 +46,7 @@ import org.kiji.schema.shell.ddl.DDLCommand
  * character.</p>
  */
 @ApiAudience.Framework
+@ApiStability.Experimental
 @Inheritance.Extensible
 abstract trait ParserPlugin extends RegexParsers {
 

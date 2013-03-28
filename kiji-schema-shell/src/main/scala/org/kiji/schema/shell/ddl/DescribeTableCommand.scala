@@ -25,6 +25,7 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonParser
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro._
 
 import org.kiji.schema.shell.DDLException
@@ -33,7 +34,8 @@ import org.kiji.schema.shell.Environment
 /**
  * Print the existing layout for the table.
  */
-class DescribeTableCommand(
+@ApiAudience.Private
+final class DescribeTableCommand(
     val env: Environment,
     val tableName: String,
     val extended: Boolean) extends TableDDLCommand {

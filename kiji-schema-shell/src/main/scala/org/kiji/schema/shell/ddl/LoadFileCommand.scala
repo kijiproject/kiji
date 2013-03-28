@@ -19,6 +19,7 @@
 
 package org.kiji.schema.shell.ddl
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.shell.Environment
 import org.kiji.schema.shell.InputProcessor
 import org.kiji.schema.shell.input.FileInputSource
@@ -28,7 +29,8 @@ import org.kiji.schema.util.ResourceUtils
   * Run the commands in the specified file.
   * This does not change the user's active environment. It runs in a nested environment.
   */
-class LoadFileCommand(val env: Environment, val filename: String) extends DDLCommand {
+@ApiAudience.Private
+final class LoadFileCommand(val env: Environment, val filename: String) extends DDLCommand {
   override def exec(): Environment = {
     val inputSource = new FileInputSource(filename)
     try {

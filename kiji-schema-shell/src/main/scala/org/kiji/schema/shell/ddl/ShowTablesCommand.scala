@@ -21,9 +21,11 @@ package org.kiji.schema.shell.ddl
 
 import scala.math._
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.shell.Environment
 
-class ShowTablesCommand(val env: Environment) extends DDLCommand with StrFormatting {
+@ApiAudience.Private
+final class ShowTablesCommand(val env: Environment) extends DDLCommand with StrFormatting {
   override def exec(): Environment = {
     val tableNamesDescriptions = env.kijiSystem.getTableNamesDescriptions(getKijiURI())
 

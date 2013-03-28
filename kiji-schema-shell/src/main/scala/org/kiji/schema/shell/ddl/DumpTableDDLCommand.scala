@@ -25,6 +25,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.PrintStream
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.TableLayoutDesc
 
 import org.kiji.schema.shell.Environment
@@ -33,7 +34,8 @@ import org.kiji.schema.util.ResourceUtils
 /**
  * Emit the DDL to create the named table to stdout, or a file.
  */
-class DumpTableDDLCommand(val env: Environment, val tableName: String,
+@ApiAudience.Private
+final class DumpTableDDLCommand(val env: Environment, val tableName: String,
     val maybeFile: Option[String]) extends TableDDLCommand with AbstractDumpDDLCommand {
 
   override def validateArguments(): Unit = {

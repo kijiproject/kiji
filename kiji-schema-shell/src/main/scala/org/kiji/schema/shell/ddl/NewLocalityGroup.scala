@@ -19,11 +19,13 @@
 
 package org.kiji.schema.shell.ddl
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.CompressionType
 import org.kiji.schema.avro.FamilyDesc
 import org.kiji.schema.avro.LocalityGroupDesc
 
 /** Defines how to initialize a new LocalityGroup definition. */
+@ApiAudience.Private
 trait NewLocalityGroup {
   /** @return a new LocalityGroupDesc builder with empty family lists. */
   def newLocalityGroup(): LocalityGroupDesc.Builder = {

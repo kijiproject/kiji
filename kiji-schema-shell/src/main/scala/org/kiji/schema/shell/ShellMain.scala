@@ -19,6 +19,7 @@
 
 package org.kiji.schema.shell
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.common.flags.Flag
 import org.kiji.common.flags.FlagParser
 import org.kiji.schema.KConstants
@@ -32,7 +33,8 @@ import org.kiji.schema.shell.input.StringInputSource
 /**
  * An object used to run a Kiji schema shell.
  */
-class ShellMain {
+@ApiAudience.Private
+final class ShellMain {
   @Flag(name="kiji", usage="Kiji instance URI")
   var kijiURI: String = "kiji://.env/%s".format(KConstants.DEFAULT_INSTANCE_NAME)
 

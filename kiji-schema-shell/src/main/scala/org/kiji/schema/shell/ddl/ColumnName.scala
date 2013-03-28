@@ -19,11 +19,16 @@
 
 package org.kiji.schema.shell.ddl
 
+import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
+
 /**
  * Represents a parsed column name. Qualifier should never be null; map-type families
  * are represented through a different means.
  */
-class ColumnName(val family: String, val qualifier: String) {
+@ApiAudience.Framework
+@ApiStability.Evolving
+final class ColumnName(val family: String, val qualifier: String) {
   override def toString(): String = {
     return family + ":" + qualifier
   }

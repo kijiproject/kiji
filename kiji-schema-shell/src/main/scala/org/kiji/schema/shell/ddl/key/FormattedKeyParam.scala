@@ -19,9 +19,11 @@
 
 package org.kiji.schema.shell.ddl.key
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.RowKeyFormat2
 
 /**
  * A parameter to a FormattedKeySpec. Subclasses are interpretted by FormattedKeySpec.
  */
+@ApiAudience.Private
 abstract class FormattedKeyParam

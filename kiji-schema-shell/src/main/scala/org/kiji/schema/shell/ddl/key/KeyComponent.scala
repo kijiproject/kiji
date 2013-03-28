@@ -19,6 +19,7 @@
 
 package org.kiji.schema.shell.ddl.key
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.RowKeyComponent
 import org.kiji.schema.shell.ddl.key.RowKeyElemType._
 
@@ -30,7 +31,8 @@ import org.kiji.schema.shell.ddl.key.RowKeyElemType._
  * @param typ the type of the component.
  * @param mayBeNull is true if the key component is nullable.
  */
-class KeyComponent(val name: String, val typ: RowKeyElemType, val mayBeNull: Boolean)
+@ApiAudience.Private
+final class KeyComponent(val name: String, val typ: RowKeyElemType, val mayBeNull: Boolean)
     extends FormattedKeyParam {
 
   /**

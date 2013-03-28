@@ -21,6 +21,8 @@ package org.kiji.schema.shell
 
 import java.io.PrintStream
 
+import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
 import org.kiji.schema.KConstants
 import org.kiji.schema.KijiURI
 import org.kiji.schema.shell.input.JLineInputSource
@@ -30,7 +32,9 @@ import org.kiji.schema.shell.spi.ParserPluginFactory
 /**
  * Runtime environment in which DDL commands are executed.
  */
-class Environment(
+@ApiAudience.Framework
+@ApiStability.Evolving
+final class Environment(
     val instanceURI: KijiURI =
         KijiURI.newBuilder().withInstanceName(KConstants.DEFAULT_INSTANCE_NAME).build(),
     val printer: PrintStream = Console.out,

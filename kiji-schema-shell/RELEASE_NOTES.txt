@@ -3,6 +3,7 @@
                               Kiji Schema Shell Release Notes
 
 Version 1.0.0
+  * DDLSHELL-27. Add audience and stability annotations.
   * DDLSHELL-25. Support for language plugin modules.
 
 Version 1.0.0-rc5

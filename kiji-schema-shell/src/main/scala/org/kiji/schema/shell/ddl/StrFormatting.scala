@@ -19,10 +19,12 @@
 
 package org.kiji.schema.shell.ddl
 
+import org.kiji.annotations.ApiAudience
 
 /**
  * Handy string formatting utility functions used by DDLCommands.
  */
+@ApiAudience.Private
 trait StrFormatting {
   /**
    * Format a string padded with right-justified space (' ') characters to the

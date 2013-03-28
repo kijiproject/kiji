@@ -21,13 +21,15 @@ package org.kiji.schema.shell.ddl
 
 import scala.collection.JavaConversions._
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.LocalityGroupDesc
 import org.kiji.schema.avro.TableLayoutDesc
 import org.kiji.schema.layout.KijiTableLayout
 
 import org.kiji.schema.shell.Environment
 
-class AlterLocalityGroupPropertyCommand (
+@ApiAudience.Private
+final class AlterLocalityGroupPropertyCommand (
     val env: Environment,
     val tableName: String,
     val localityGroupName: String,

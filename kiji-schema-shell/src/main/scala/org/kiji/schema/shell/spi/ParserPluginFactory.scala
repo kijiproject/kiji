@@ -20,6 +20,7 @@
 package org.kiji.schema.shell.spi
 
 import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
 import org.kiji.delegation.NamedProvider
 import org.kiji.schema.shell.Environment
@@ -55,6 +56,7 @@ import org.kiji.schema.shell.Environment
  * </ul>
  */
 @ApiAudience.Framework
+@ApiStability.Experimental
 @Inheritance.Extensible
 abstract trait ParserPluginFactory extends NamedProvider {
   /**

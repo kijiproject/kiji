@@ -23,6 +23,7 @@ import scala.collection.JavaConversions._
 import scala.collection.mutable.Buffer
 import scala.collection.mutable.Set
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.RowKeyComponent
 import org.kiji.schema.avro.RowKeyFormat2
 import org.kiji.schema.shell.DDLException
@@ -31,7 +32,8 @@ import org.kiji.schema.shell.DDLException
  * The name of the right-most row key component to include in the hash,
  * specified by a <tt>HASH (THROUGH <i>fieldname</i>, ...)</tt> clause.
  */
-class FormattedKeyHashComponent(val name: String) extends FormattedKeyHashParam {
+@ApiAudience.Private
+final class FormattedKeyHashComponent(val name: String) extends FormattedKeyHashParam {
   /** {@inheritDoc} */
   override def validate(names: Set[String]): Unit = {
     if (!names.contains(name)) {

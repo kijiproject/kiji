@@ -21,13 +21,15 @@ package org.kiji.schema.shell.ddl
 
 import scala.collection.JavaConversions._
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.TableLayoutDesc
 
 import org.kiji.schema.shell.DDLException
 import org.kiji.schema.shell.Environment
 
 /** Add a column to a group-type family in a table. */
-class AlterTableAddColumnCommand(
+@ApiAudience.Private
+final class AlterTableAddColumnCommand(
     val env: Environment,
     val tableName: String,
     val colClause: ColumnClause) extends TableDDLCommand {

@@ -19,6 +19,7 @@
 
 package org.kiji.schema.shell.ddl
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.shell.DDLException
 import org.kiji.schema.shell.Environment
 
@@ -31,7 +32,8 @@ import org.kiji.schema.shell.Environment
  * @param throwOnErr if true, then this command throws a DDLException when its <tt>exec()</tt>
  *     method is called (since running this class implies that an error has occurred).
  */
-class ErrorCommand(val env: Environment, val parseResult: String, val throwOnErr: Boolean)
+@ApiAudience.Private
+final class ErrorCommand(val env: Environment, val parseResult: String, val throwOnErr: Boolean)
     extends DDLCommand {
 
   override def exec(): Environment = {

@@ -21,13 +21,15 @@ package org.kiji.schema.shell.ddl
 
 import scala.collection.JavaConversions._
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.TableLayoutDesc
 
 import org.kiji.schema.shell.DDLException
 import org.kiji.schema.shell.Environment
 
 /** Rename 'info:foo' to 'info:bar' in a table. */
-class AlterTableRenameColumnCommand(
+@ApiAudience.Private
+final class AlterTableRenameColumnCommand(
     val env: Environment,
     val tableName: String,
     val columnName: ColumnName,

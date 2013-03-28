@@ -19,9 +19,11 @@
 
 package org.kiji.schema.shell.ddl
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.CellSchema
 
 /** Abstract base class for schema specifications. */
+@ApiAudience.Private
 abstract class SchemaSpec {
   def toColumnSchema(): CellSchema
 }

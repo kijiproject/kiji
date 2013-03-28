@@ -22,6 +22,7 @@ package org.kiji.schema.shell.ddl
 import scala.collection.JavaConverters.iterableAsScalaIterableConverter
 import scala.math._
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.delegation.Lookups
 import org.kiji.delegation.NamedLookup
 import org.kiji.delegation.NoSuchProviderException
@@ -29,7 +30,8 @@ import org.kiji.schema.shell.Environment
 import org.kiji.schema.shell.spi.ParserPluginFactory
 
 /** List available and enabled plugin modules. */
-class ShowModulesCommand(val env: Environment) extends DDLCommand with StrFormatting {
+@ApiAudience.Private
+final class ShowModulesCommand(val env: Environment) extends DDLCommand with StrFormatting {
   override def exec(): Environment = {
     val lookup: NamedLookup[ParserPluginFactory] = Lookups.getNamed(classOf[ParserPluginFactory])
 

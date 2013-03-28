@@ -25,6 +25,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.PrintStream
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.shell.DDLException
 import org.kiji.schema.shell.Environment
 import org.kiji.schema.util.ResourceUtils
@@ -32,7 +33,8 @@ import org.kiji.schema.util.ResourceUtils
 /**
  * Emit the DDL to create all tables to stdout or a file.
  */
-class DumpInstanceDDLCommand(val env: Environment, val maybeFile: Option[String])
+@ApiAudience.Private
+final class DumpInstanceDDLCommand(val env: Environment, val maybeFile: Option[String])
     extends DDLCommand with AbstractDumpDDLCommand {
 
   override def exec(): Environment = {

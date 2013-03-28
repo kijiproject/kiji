@@ -19,6 +19,7 @@
 
 package org.kiji.schema.shell.ddl
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.ColumnDesc
 
 /**
@@ -26,7 +27,8 @@ import org.kiji.schema.avro.ColumnDesc
  * etc. The 'family' field is filled out in an ADD COLUMN statement. When a ColumnClause is
  * nested in an encasing GROUP TYPE FAMILY definition, it may be left as None.
  */
-class ColumnClause(
+@ApiAudience.Private
+final class ColumnClause(
     val family: Option[String],
     val qualifier: String,
     val schema: SchemaSpec,

@@ -19,5 +19,10 @@
 
 package org.kiji.schema.shell
 
-class TableNotFoundException(val tableName: String)
+import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
+
+@ApiAudience.Public
+@ApiStability.Evolving
+final class TableNotFoundException(val tableName: String)
     extends DDLException("No such table: " + tableName)

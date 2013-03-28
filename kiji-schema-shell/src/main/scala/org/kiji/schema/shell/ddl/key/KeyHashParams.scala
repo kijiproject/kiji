@@ -22,6 +22,7 @@ package org.kiji.schema.shell.ddl.key
 import scala.collection.JavaConversions._
 import scala.collection.mutable.Set
 
+import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.RowKeyFormat2
 import org.kiji.schema.shell.DDLException
 
@@ -32,7 +33,8 @@ import org.kiji.schema.shell.DDLException
  * @param hashParams a list of FormattedKeyHashParam properties that specify the
  *     hashing behavior.
  */
-class KeyHashParams(val hashParams: List[FormattedKeyHashParam]) extends FormattedKeyParam {
+@ApiAudience.Private
+final class KeyHashParams(val hashParams: List[FormattedKeyHashParam]) extends FormattedKeyParam {
 
   /**
    * Validates the key hash parameters.
