@@ -118,7 +118,7 @@ object Resources {
    * @param fn Operation to perform.
    * @return The restult of the operation.
    */
-  def doAndClose[T, C <: Closeable](resource: => C)(fn: C => T): T = {
+  def doAndClose[T, C <: { def close(): Unit }](resource: => C)(fn: C => T): T = {
     def after(c: C) { c.close() }
     doAnd(resource, after)(fn)
   }

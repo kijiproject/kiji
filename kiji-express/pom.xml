@@ -28,6 +28,7 @@
     <scalding.version>0.8.3</scalding.version>
     <kiji.version>1.0.0-rc5-SNAPSHOT</kiji.version>
     <scalatest.version>2.0.M5b</scalatest.version>
+    <twitter-util.version>6.2.0</twitter-util.version>
   </properties>
 
   <dependencies>
@@ -103,6 +104,14 @@
       <groupId>com.twitter</groupId>
       <artifactId>scalding_${scala.version}</artifactId>
       <version>${scalding.version}</version>
+      <scope>compile</scope>
+    </dependency>
+
+    <!-- Misc. -->
+    <dependency>
+      <groupId>com.twitter</groupId>
+      <artifactId>util-eval_${scala.version}</artifactId>
+      <version>${twitter-util.version}</version>
       <scope>compile</scope>
     </dependency>
 
