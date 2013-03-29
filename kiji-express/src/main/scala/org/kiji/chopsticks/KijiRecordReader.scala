@@ -19,8 +19,6 @@
 
 package org.kiji.chopsticks
 
-import java.util.concurrent.atomic.AtomicBoolean
-
 import org.apache.commons.codec.binary.Base64
 import org.apache.commons.lang.SerializationUtils
 import org.apache.hadoop.conf.Configuration
@@ -42,21 +40,30 @@ import org.kiji.schema.KijiTableReader.KijiScannerOptions
 import org.kiji.schema.KijiURI
 
 /**
- * A record reader that can scan a subset of rows in a Kiji table. This record reader is
- * configured to read from a Kiji table under certain data request parameters through a Hadoop
- * [[Configuration]] It returns key-value pairs of type [[KijiKey]] (a wrapper around
- * [[org.kiji.schema.EntityId]] and [[KijiValue]] (a wrapper around [[KijiRowData]]).
+ * Reads rows from an HBase region of a Kiji table as key-value pairs that can be used with the
+ * MapReduce framework.
  *
- * The record reader will scan over rows in the table specified in the provided input split,
- * subject to row limits specified in the data request serialized into the specified
- * configuration.
+ * MapReduce views a data set as a collection of key-value pairs divided into input splits,
+ * where each input split is processed by a MapReduce task. This record reader can scan a subset
+ * of rows from a Kiji table (really an HBase region of the Kiji table identified by an input
+ * split) and transform them into key-value pairs that can be processed by the MapReduce framework.
  *
- * @param split for the MapReduce task that will use this record reader. The split specifies a
- *     subset of rows from a Kiji table.
- * @param configuration for the MapReduce job using this record reader. The configuration
- *     should specify the input Kiji table through the configuration variable
- *     [[KijiConfKeys#KIJI_INPUT_TABLE_URI]] and a serialized [[KijiDataRequest]]
- *     through the configuration variable [[KijiConfKeys#KIJI_INPUT_DATA_REQUEST]].
+ * Key-value pairs are obtained from Kiji rows as follows. For each row read,
+ * the row's entity id is used as key (by populating an instance of
+ * [[org.kiji.chopsticks.KijiKey]]) and the row data itself is used as value (by populating an
+ * instance of [[org.kiji.chopsticks.KijiValue]]). The classes [[org.kiji.chopsticks.KijiKey]]
+ * and [[org.kiji.chopsticks.KijiValue]] are simply reusable containers wrapping entity ids and
+ * row data.
+ *
+ * A MapReduce job reading from a Kiji table as part of the KijiChopsticks framework should be
+ * configured to use [[org.kiji.chopsticks.KijiInputFormat]], which allow the job to use this
+ * record reader. The job using this record reader should have a configuration
+ * containing a serialized `KijiDataRequest` at the key `kiji.input.data.request` and a Kiji URI
+ * addressing the target table at the key `kiji.input.table.uri`.
+ *
+ * @param split identifying the HBase region of a Kiji table whose rows will be scanned.
+ * @param configuration containing the Kiji URI of the target Kiji table, and a serialized data
+ *     request.
  */
 @ApiAudience.Framework
 @ApiStability.Unstable
@@ -79,10 +86,10 @@ final class KijiRecordReader(
     }
 
     val dataRequestBytes: Array[Byte] = Base64.decodeBase64(Bytes.toBytes(dataRequestB64))
-    SerializationUtils.deserialize(dataRequestBytes)
-        .asInstanceOf[KijiDataRequest]
+    SerializationUtils.deserialize(dataRequestBytes).asInstanceOf[KijiDataRequest]
   }
 
+  /** A Kiji URI addressing the target table. */
   private val inputURI: KijiURI = KijiURI
       .newBuilder(configuration.get(KijiConfKeys.KIJI_INPUT_TABLE_URI))
       .build()
@@ -110,39 +117,45 @@ final class KijiRecordReader(
   private var isClosed: Boolean = false
 
   /**
-   * @return a new, empty, reusable instance of [[KijiKey]] which will hold keys read by
-   *     this record reader.
+   * Gets a key instance that can be populated with entity ids scanned from the table.
+   *
+   * @return a new, empty, reusable key instance that will hold entity ids scanned by this record
+   *   reader. Note that until populated, the key instance will return `null` if you attempt to
+   *   retrieve the entity id from the key.
    */
   override def createKey(): KijiKey = new KijiKey()
 
   /**
-   * @return a new, empty, reusable instance of [[KijiValue]] which will hold values read by
-   *     this record reader.
+   * Gets a value instance that can be populated with row data scanned from the table.
+   *
+   * @return a new, empty, reusable value instance that will hold row data scanned by this record
+   *     reader. Note that until populated, the value instance will return `null` if you attempt
+   *     to retrieve the row data from the value.
    */
   override def createValue(): KijiValue = new KijiValue()
 
   /**
-   * @return <code>OL</code> always, because it's impossible to tell how much we've read through
+   * @return `OL` always, because it's impossible to tell how much we've read through
    *     a particular key range, because we have no knowledge of how many rows are actually in
    *     the range.
    */
   override def getPos(): Long = 0L
 
   /**
-   * @return <code>0.0</code> always, because it's impossible to tell how much we've read through
+   * @return `0.0` always, because it's impossible to tell how much we've read through
    *     a particular key range, because we have no knowledge of how many rows are actually in
    *     the range.
    */
   override def getProgress(): Float = 0.0f
 
   /**
-   * Populates the specified key and value with the next key-value pair read from the input
-   * split.
+   * Scans the next row from the region of the Kiji table, and populates a key and value with the
+   * entity id and row data obtained.
    *
-   * @param key instance to populate with the next key read.
-   * @param value instance to populate with the next value read.
-   * @return <code>true</code> if a new key-value was read, <code>false</code> if we have reached
-   *     the end of the input split.
+   * @param key instance to populate with the next entity id read.
+   * @param value instance to populate with the next row data read.
+   * @return `true` if a new row was scanned and the key and value populated, `false` if the end
+   *     of the region has been reached.
    */
   override def next(key: KijiKey, value: KijiValue): Boolean = {
     if (iterator.hasNext()) {
@@ -160,7 +173,12 @@ final class KijiRecordReader(
     }
   }
 
-  /** Release all resources used by this record reader. */
+  /**
+   * Closes the table scanner and table reader used by this instance to scan a region of a Kiji
+   * table.
+   *
+   * It is safe (but unnecessary) to call this method multiple times.
+   */
   override def close() {
     if (!isClosed) {
       isClosed = true
