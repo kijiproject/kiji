@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.kiji.pom</groupId>
     <artifactId>root-pom</artifactId>
-    <version>1.0.5-SNAPSHOT</version>
+    <version>1.0.5</version>
   </parent>
 
   <name>Kiji BentoBox top-level project</name>
@@ -36,8 +36,8 @@
 
   <properties>
     <bento-cluster.version>1.0.0-rc6-SNAPSHOT</bento-cluster.version>
-    <kiji-schema.version>1.0.0-SNAPSHOT</kiji-schema.version>
-    <kiji-schema-shell.version>1.0.0-SNAPSHOT</kiji-schema-shell.version>
+    <kiji-schema.version>1.0.0</kiji-schema.version>
+    <kiji-schema-shell.version>1.0.0</kiji-schema-shell.version>
     <kiji-phonebook.version>1.0.0-rc6-SNAPSHOT</kiji-phonebook.version>
     <kiji-mapreduce.version>1.0.0-rc6-SNAPSHOT</kiji-mapreduce.version>
     <kiji-mapreduce-lib.version>1.0.0-rc6-SNAPSHOT</kiji-mapreduce-lib.version>
