@@ -80,6 +80,12 @@
       <version>${kiji.version}</version>
       <scope>compile</scope>
     </dependency>
+    <dependency>
+      <groupId>org.kiji.schema-shell</groupId>
+      <artifactId>kiji-schema-shell</artifactId>
+      <version>${kiji.version}</version>
+      <scope>compile</scope>
+    </dependency>
 
     <!-- Cascading/Scalding -->
     <dependency>

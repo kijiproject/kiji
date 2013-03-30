@@ -19,13 +19,14 @@
 
 package org.kiji.chopsticks
 
+import java.io.InputStream
 import java.util.NavigableMap
 import java.util.TreeMap
 
 import com.twitter.scalding.TupleConversions
 import org.scalatest.FunSuite
 
-import org.kiji.chopsticks.DSL._
+import org.kiji.chopsticks.Resources._
 import org.kiji.schema.EntityId
 import org.kiji.schema.EntityIdFactory
 import org.kiji.schema.Kiji
@@ -34,6 +35,7 @@ import org.kiji.schema.avro.RowKeyEncoding;
 import org.kiji.schema.avro.RowKeyFormat2;
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts
+import org.kiji.schema.shell.api.Client
 import org.kiji.schema.util.InstanceBuilder
 
 /** Contains convenience methods for writing tests that use Kiji. */
@@ -140,5 +142,40 @@ trait KijiSuite
   def layout(resourcePath: String): KijiTableLayout = {
     val tableLayoutDef = KijiTableLayouts.getLayout(resourcePath)
     KijiTableLayout.newLayout(tableLayoutDef)
+  }
+
+  /**
+   * Executes a series of KijiSchema Shell DDL commands, separated by `;`.
+   *
+   * @param kiji to execute the commands against.
+   * @param commands to execute against the Kiji instance.
+   */
+  def executeDDLString(kiji: Kiji, commands: String) {
+    doAndClose(Client.newInstance(kiji.getURI)) { ddlClient =>
+      ddlClient.executeUpdate(commands)
+    }
+  }
+
+  /**
+   * Executes a series of KijiSchema Shell DDL commands, separated by `;`.
+   *
+   * @param kiji to execute the commands against.
+   * @param stream to read a series of commands to execute against the Kiji instance.
+   */
+  def executeDDLStream(kiji: Kiji, stream: InputStream) {
+    doAndClose(Client.newInstance(kiji.getURI)) { ddlClient =>
+      ddlClient.executeStream(stream)
+    }
+  }
+
+  /**
+   * Executes a series of KijiSchema Shell DDL commands, separated by `;`.
+   *
+   * @param kiji to execute the commands against.
+   * @param resourcePath to the classpath resource that a series of commands to execute
+   *     against the Kiji instance will be read from.
+   */
+  def executeDDLResource(kiji: Kiji, resourcePath: String) {
+    executeDDLStream(kiji, getClass.getClassLoader.getResourceAsStream(resourcePath))
   }
 }
