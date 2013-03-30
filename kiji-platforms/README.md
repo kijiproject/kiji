@@ -23,14 +23,14 @@ example, to run on CDH4:
       <dependency>
         <groupId>org.kiji.schema</groupId>
         <artifactId>kiji-schema</artifactId>
-        <version>1.0.0-rc2</version>
+        <version>1.0.0</version>
         <scope>provided</scope>
       </dependency>
 
       <dependency>
         <groupId>org.kiji.platforms</groupId>
         <artifactId>kiji-cdh4-platform</artifactId>
-        <version>1.0.0-rc2</version>
+        <version>1.0.0</version>
         <scope>provided</scope>
       </dependency>
     </dependencies>
@@ -55,7 +55,7 @@ to visualize the actual dependencies being used:
 
     [INFO] org.kiji.foo:foo:jar:1.0.0-SNAPSHOT
     [INFO] ...
-    [INFO] \- org.kiji.platforms:kiji-cdh4-platform:jar:1.0.0-rc2-SNAPSHOT:provided
+    [INFO] \- org.kiji.platforms:kiji-cdh4-platform:jar:1.0.0:provided
     [INFO]    +- org.apache.hadoop:hadoop-client:jar:2.0.0-mr1-cdh4.1.2:provided
     [INFO]    |  +- ...
     [INFO]    +- org.apache.hadoop:hadoop-core:jar:2.0.0-mr1-cdh4.1.2:provided
