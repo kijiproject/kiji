@@ -34,37 +34,37 @@ userguide_url : /userguides
 tutorial_url : /tutorials
 
 # rc1
-api_schema_rc1 : /apidocs/kiji-schema/1.0.0-rc1/org/kiji/schema
+api_schema_rc1 : http://api-docs.kiji.org/kiji-schema/1.0.0-rc1/org/kiji/schema
 userguide_schema_rc1 : /userguides/schema/1.0.0-rc1
 
 # rc2
-api_schema_rc2 : /apidocs/kiji-schema/1.0.0-rc2/org/kiji/schema
+api_schema_rc2 : http://api-docs.kiji.org/kiji-schema/1.0.0-rc2/org/kiji/schema
 userguide_schema_rc2 : /userguides/schema/1.0.0-rc2
 
 # rc3
-api_schema_rc3 : /apidocs/kiji-schema/1.0.0-rc3/org/kiji/schema
+api_schema_rc3 : http://api-docs.kiji.org/kiji-schema/1.0.0-rc3/org/kiji/schema
 tutorial_phonebook_rc3 : /tutorials/phonebook-tutorial/1.0.0-rc3
 userguide_schema_rc3 : /userguides/schema/1.0.0-rc3
 
 # rc4
-api_schema_rc4 : /apidocs/kiji-schema/1.0.0-rc4/org/kiji/schema
-api_mr_rc4 : /apidocs/kiji-mapreduce/1.0.0-rc4/org/kiji/mapreduce
-api_mrlib_rc4 : /apidocs/kiji-mapreduce-lib/1.0.0-rc4/org/kiji/mapreduce
+api_schema_rc4 : http://api-docs.kiji.org/kiji-schema/1.0.0-rc4/org/kiji/schema
+api_mr_rc4 : http://api-docs.kiji.org/kiji-mapreduce/1.0.0-rc4/org/kiji/mapreduce
+api_mrlib_rc4 : http://api-docs.kiji.org/kiji-mapreduce-lib/1.0.0-rc4/org/kiji/mapreduce
 tutorial_phonebook_rc4 : /tutorials/phonebook-tutorial/1.0.0-rc4
 tutorial_music_rc4 : /tutorials/music-recommendation/1.0.0-rc4
 userguide_schema_rc4 : /userguides/schema/1.0.0-rc4
 userguide_mapreduce_rc4 : /userguides/mapreduce/1.0.0-rc4
 
 # rc5
-api_schema_rc5 : /apidocs/kiji-schema/1.0.0-rc5/org/kiji/schema
-api_mr_rc5 : /apidocs/kiji-mapreduce/1.0.0-rc5/org/kiji/mapreduce
-api_mrlib_rc5 : /apidocs/kiji-mapreduce-lib/1.0.0-rc5/org/kiji/mapreduce
+api_schema_rc5 : http://api-docs.kiji.org/kiji-schema/1.0.0-rc5/org/kiji/schema
+api_mr_rc5 : http://api-docs.kiji.org/kiji-mapreduce/1.0.0-rc5/org/kiji/mapreduce
+api_mrlib_rc5 : http://api-docs.kiji.org/kiji-mapreduce-lib/1.0.0-rc5/org/kiji/mapreduce
 tutorial_phonebook_rc5 : /tutorials/phonebook-tutorial/1.0.0-rc5
 tutorial_music_rc5 : /tutorials/music-recommendation/1.0.0-rc5
 userguide_schema_rc5 : /userguides/schema/1.0.0-rc5
 userguide_mapreduce_rc5 : /userguides/mapreduce/1.0.0-rc5
 
-api_schema_1_0_0 : /apidocs/kiji-schema/1.0.0/org/kiji/schema
+api_schema_1_0_0 : http://api-docs.kiji.org/kiji-schema/1.0.0/org/kiji/schema
 userguide_schema_1_0_0 : /userguides/schema/1.0.0
 
 # All Jekyll-Bootstrap specific configurations are namespaced into this hash
@@ -138,7 +138,7 @@ JB :
   analytics :
     provider : google
     google :
-        tracking_id : 'UA-35866189-1'
+        tracking_id : 'UA-REMOVED-DONT-COMMIT'
 
   # Settings for sharing helper.
   # Sharing is for things like tweet, plusone, like, reddit buttons etc.
