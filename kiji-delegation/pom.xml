@@ -21,13 +21,13 @@
 
   <groupId>org.kiji.delegation</groupId>
   <artifactId>kiji-delegation</artifactId>
-  <version>1.0.0-rc6-SNAPSHOT</version>
+  <version>1.0.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <parent>
     <groupId>org.kiji.pom</groupId>
     <artifactId>root-pom</artifactId>
-    <version>1.0.5-SNAPSHOT</version>
+    <version>1.0.5</version>
   </parent>
 
   <name>Kiji Dynamic Binding Library</name>
@@ -35,7 +35,7 @@
   <inceptionYear>2012</inceptionYear>
 
   <properties>
-    <annotations.version>1.0.0-rc6-SNAPSHOT</annotations.version>
+    <annotations.version>1.0.0</annotations.version>
   </properties>
 
   <build>
