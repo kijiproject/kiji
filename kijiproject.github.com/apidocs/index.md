@@ -13,8 +13,8 @@ only depend on APIs listed as <tt>@ApiAudience.Public</tt>. Contributors
 to other Kiji framework components may use <tt>@ApiAudience.Framework</tt>
 APIs, but beware that they may change between minor versions.
 
-
-* [KijiSchema](http://api-docs.kiji.org/kiji-schema/1.0.0-rc5/index.html) (latest)
+* [KijiSchema](http://api-docs.kiji.org/kiji-schema/1.0.0/index.html) (latest)
+  \[[1.0.0](http://api-docs.kiji.org/kiji-schema/1.0.0/index.html)\]
   \[[1.0.0-rc5](http://api-docs.kiji.org/kiji-schema/1.0.0-rc5/index.html)\]
   \[[1.0.0-rc4](http://api-docs.kiji.org/kiji-schema/1.0.0-rc4/index.html)\]
   \[[1.0.0-rc3](http://api-docs.kiji.org/kiji-schema/1.0.0-rc3/index.html)\]
@@ -33,9 +33,9 @@ APIs, but beware that they may change between minor versions.
 Additional APIs for use by clients of the Kiji framework. Modules in this section
 are intended for testing, or as convenience APIs.
 
-
 <ul>
-  <li><a href="http://api-docs.kiji.org/annotations/1.0.0-rc5/index.html">annotations</a>
+  <li><a href="http://api-docs.kiji.org/annotations/1.0.0/index.html">annotations</a>
+      [<a href="http://api-docs.kiji.org/annotations/1.0.0/index.html">1.0.0</a>]
       [<a href="http://api-docs.kiji.org/annotations/1.0.0-rc5/index.html">1.0.0-rc5</a>]
       [<a href="http://api-docs.kiji.org/annotations/1.0.0-rc4/index.html">1.0.0-rc4</a>]
       [<a href="http://api-docs.kiji.org/annotations/1.0.0-rc3/index.html">1.0.0-rc3</a>]
@@ -57,7 +57,8 @@ only.
       [<a href="http://api-docs.kiji.org/hadoop-configurator/1.0.3/index.html">1.0.3</a>]
       [<a href="http://api-docs.kiji.org/hadoop-configurator/1.0.2/index.html">1.0.2</a>]
   </li>
-  <li><a href="http://api-docs.kiji.org/kiji-delegation/1.0.0-rc5/index.html">kiji-delegation</a>
+  <li><a href="http://api-docs.kiji.org/kiji-delegation/1.0.0/index.html">kiji-delegation</a>
+      [<a href="http://api-docs.kiji.org/kiji-delegation/1.0.0/index.html">1.0.0</a>]
       [<a href="http://api-docs.kiji.org/kiji-delegation/1.0.0-rc5/index.html">1.0.0-rc5</a>]
       [<a href="http://api-docs.kiji.org/kiji-delegation/1.0.0-rc4/index.html">1.0.0-rc4</a>]
       [<a href="http://api-docs.kiji.org/kiji-delegation/1.0.0-rc3/index.html">1.0.0-rc3</a>]
