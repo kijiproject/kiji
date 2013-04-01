@@ -1,0 +1,207 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <!--
+    (c) Copyright 2012 WibiData, Inc.
+
+    See the NOTICE file distributed with this work for additional
+    information regarding copyright ownership.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+  -->
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>org.kiji.framework</groupId>
+  <artifactId>framework-pom</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+  <packaging>pom</packaging>
+
+  <name>Kiji framework dependency definitions</name>
+  <description>Dependency management for projects requiring Kiji</description>
+  <inceptionYear>2013</inceptionYear>
+
+  <modules>
+    <module>kiji-framework</module>
+  </modules>
+
+  <properties>
+    <!-- Basic project properties -->
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <maven.compiler.source>1.6</maven.compiler.source>
+    <maven.compiler.target>1.6</maven.compiler.target>
+
+    <!-- Versions for program dependencies -->
+    <annotations.version>1.0.0</annotations.version>
+    <fake-hbase.version>0.0.4</fake-hbase.version>
+    <kiji-common-flags.version>1.0.7</kiji-common-flags.version>
+    <kiji-delegation.version>1.0.0</kiji-delegation.version>
+    <kiji-platforms.version>1.0.0</kiji-platforms.version>
+    <kiji-schema.version>1.0.0</kiji-schema.version>
+    <kiji-schema-shell.version>1.0.0</kiji-schema-shell.version>
+    <kiji-mapreduce.version>1.0.0-rc6-SNAPSHOT</kiji-mapreduce.version>
+    <kiji-mapreduce-lib.version>1.0.0-rc6-SNAPSHOT</kiji-mapreduce-lib.version>
+  </properties>
+
+  <!--
+    You can depend on any of these components by simply referencing the groupId
+    and artifactId in your own <dependencies> block; you can omit the version
+    and scope.
+  -->
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.kiji.annotations</groupId>
+        <artifactId>annotations</artifactId>
+        <version>${annotations.version}</version>
+        <scope>compile</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.kiji.testing</groupId>
+        <artifactId>fake-hbase</artifactId>
+        <version>${fake-hbase.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.kiji.common</groupId>
+        <artifactId>kiji-common-flags</artifactId>
+        <version>${kiji-common-flags.version}</version>
+        <scope>compile</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.kiji.delegation</groupId>
+        <artifactId>kiji-delegation</artifactId>
+        <version>${kiji-delegation.version}</version>
+        <scope>compile</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.kiji.schema</groupId>
+        <artifactId>kiji-schema</artifactId>
+        <version>${kiji-schema.version}</version>
+        <scope>compile</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.kiji.schema</groupId>
+        <artifactId>kiji-schema</artifactId>
+        <version>${kiji-schema.version}</version>
+        <type>test-jar</type>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.kiji.schema-shell</groupId>
+        <artifactId>kiji-schema-shell</artifactId>
+        <version>${kiji-schema-shell.version}</version>
+        <scope>compile</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.kiji.mapreduce</groupId>
+        <artifactId>kiji-mapreduce</artifactId>
+        <version>${kiji-mapreduce.version}</version>
+        <scope>compile</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.kiji.mapreduce.lib</groupId>
+        <artifactId>kiji-mapreduce-lib</artifactId>
+        <version>${kiji-mapreduce-lib.version}</version>
+        <scope>compile</scope>
+      </dependency>
+
+      <!-- kiji-platforms definitions. You must pick one of these. -->
+      <dependency>
+        <groupId>org.kiji.platforms</groupId>
+        <artifactId>kiji-cdh4-1-platform</artifactId>
+        <version>${kiji-platforms.version}</version>
+        <scope>compile</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.kiji.platforms</groupId>
+        <artifactId>kiji-cdh4-platform</artifactId>
+        <version>${kiji-platforms.version}</version>
+        <scope>compile</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.kiji.platforms</groupId>
+        <artifactId>kiji-hadoop1-hbase92-platform</artifactId>
+        <version>${kiji-platforms.version}</version>
+        <scope>compile</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+
+  <!-- Kiji artifacts can be retrieved from the following repositories -->
+  <repositories>
+    <repository>
+      <id>kiji-repos</id>
+      <name>kiji-repos</name>
+      <url>https://repo.wibidata.com/artifactory/kiji</url>
+    </repository>
+    <repository>
+      <id>kiji-nightly</id>
+      <name>kiji-nightly</name>
+      <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
+    </repository>
+  </repositories>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>2.2.2</version>
+        <configuration>
+          <pushChanges>false</pushChanges>
+          <tagNameFormat>kiji-framework-@{project.version}</tagNameFormat>
+        </configuration>
+      </plugin>
+    </plugins>
+
+  </build>
+
+  <!-- Section required for building and deploying this pom itself. -->
+
+  <scm>
+    <connection>scm:git:git@github.com:kijiproject/kiji-framework.git</connection>
+    <url>scm:git:git@github.com:kijiproject/kiji-framework.git</url>
+    <developerConnection>scm:git:git@github.com:kijiproject/kiji-framework.git</developerConnection>
+  </scm>
+
+  <distributionManagement>
+    <repository>
+      <id>kiji-maven</id>
+      <name>kiji-maven-releases</name>
+      <url>https://repo.wibidata.com/artifactory/kiji-packages</url>
+    </repository>
+    <snapshotRepository>
+      <id>kiji-maven</id>
+      <name>kiji-maven-snapshots</name>
+      <url>https://repo.wibidata.com/artifactory/kiji-packages</url>
+    </snapshotRepository>
+  </distributionManagement>
+
+  <profiles>
+    <profile>
+      <id>kiji-nightly</id>
+      <distributionManagement>
+      <repository>
+        <id>kiji-nightly</id>
+        <name>kiji-nightly-releases</name>
+        <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
+      </repository>
+      <snapshotRepository>
+        <id>kiji-nightly</id>
+        <name>kiji-nightly-snapshots</name>
+        <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
+      </snapshotRepository>
+      </distributionManagement>
+    </profile>
+  </profiles>
+</project>
