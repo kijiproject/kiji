@@ -28,7 +28,6 @@ import org.kiji.common.flags.Flag;
 import org.kiji.mapreduce.KijiMapReduceJobBuilder;
 import org.kiji.mapreduce.impl.KijiMappers;
 import org.kiji.mapreduce.impl.KijiReducers;
-import org.kiji.mapreduce.tools.framework.JobIOSpecParseException;
 import org.kiji.mapreduce.tools.framework.JobTool;
 import org.kiji.mapreduce.tools.framework.MapReduceJobInputFactory;
 import org.kiji.mapreduce.tools.framework.MapReduceJobOutputFactory;
@@ -80,7 +79,7 @@ public final class KijiLaunchMapReduce extends JobTool<KijiMapReduceJobBuilder> 
 
   @Override
   protected void configure(KijiMapReduceJobBuilder jobBuilder)
-      throws ClassNotFoundException, IOException, JobIOSpecParseException {
+      throws ClassNotFoundException, IOException {
     // Configure lib jars and KV stores:
     super.configure(jobBuilder);
 

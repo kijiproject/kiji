@@ -23,7 +23,7 @@ import org.kiji.annotations.ApiAudience;
 
 /** Thrown when a JobInputSpec or JobOutputSpec cannot be parsed. */
 @ApiAudience.Framework
-public final class JobIOSpecParseException extends Exception {
+public final class JobIOSpecParseException extends RuntimeException {
   /**
    * @param message A message describing the problem with parsing.
    * @param spec The spec string that could not be parsed.

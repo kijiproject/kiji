@@ -35,14 +35,14 @@ public class TestJobInputSpec {
   }
 
   @Test
-  public void testParseText() throws JobIOSpecParseException {
+  public void testParseText() {
     JobInputSpec spec = JobInputSpec.parse("text:hdfs://localhost:8020/tmp/foo");
     assertEquals(JobInputSpec.Format.TEXT, spec.getFormat());
     assertEquals("hdfs://localhost:8020/tmp/foo", spec.getLocation());
   }
 
   @Test
-  public void testParseMultipleInputs() throws JobIOSpecParseException {
+  public void testParseMultipleInputs() {
     JobInputSpec spec = JobInputSpec.parse("text:hdfs:/tmp/foo,hdfs:/tmp/bar");
     assertEquals(JobInputSpec.Format.TEXT, spec.getFormat());
     assertEquals(2, spec.getLocations().length);
@@ -51,17 +51,17 @@ public class TestJobInputSpec {
   }
 
   @Test(expected=UnsupportedOperationException.class)
-  public void testOneKijiTableAsInput() throws JobIOSpecParseException {
+  public void testOneKijiTableAsInput() {
     JobInputSpec.parse("kiji:foo,bar"); // Only one table may be specified as input.
   }
 
   @Test(expected=JobIOSpecParseException.class)
-  public void testParseInvalidFormat() throws JobIOSpecParseException {
+  public void testParseInvalidFormat() {
     JobInputSpec.parse("invalid:foo");
   }
 
   @Test(expected=JobIOSpecParseException.class)
-  public void testParseNoPath() throws JobIOSpecParseException {
+  public void testParseNoPath() {
     JobInputSpec.parse("invalid");
   }
 }

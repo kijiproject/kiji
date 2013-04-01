@@ -88,7 +88,7 @@ public abstract class KijiJobTool<B extends KijiTableInputJobBuilder> extends Jo
   /** {@inheritDoc} */
   @Override
   protected void configure(B jobBuilder)
-      throws ClassNotFoundException, IOException, JobIOSpecParseException {
+      throws ClassNotFoundException, IOException {
     // Basic job configuration (base JobConf, jars and KV stores):
     super.configure(jobBuilder);
 

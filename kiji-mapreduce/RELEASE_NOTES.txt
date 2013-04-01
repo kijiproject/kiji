@@ -3,6 +3,7 @@
                               KijiMR Release Notes
 
 Version 1.0.0-rc6
+  * KIJIMR-135. JobIOSpecParseException now extends RuntimeException.
   * KIJIMR-157. Removes --install option from job-history tool.
       Updates job-history.
   * KIJIMR-108. Moves forName methods from KijiMapper, KijiReducer, KijiGatherer, KijiProducer,

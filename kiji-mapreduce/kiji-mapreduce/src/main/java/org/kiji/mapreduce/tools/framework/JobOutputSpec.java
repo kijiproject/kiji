@@ -99,7 +99,7 @@ public final class JobOutputSpec {
      * @return the parsed format enum value.
      * @throws JobIOSpecParseException If the name does not identify a valid format.
      */
-    public static Format parse(String name) throws JobIOSpecParseException {
+    public static Format parse(String name) {
       final Format format = NAME_MAP.get(name);
       if (null == format) {
         throw new JobIOSpecParseException("Unrecognized format", name);
@@ -181,7 +181,7 @@ public final class JobOutputSpec {
    * @return The parsed JobOutputSpec.
    * @throws JobIOSpecParseException If it is unable to parse.
    */
-  public static JobOutputSpec parse(String spec) throws JobIOSpecParseException {
+  public static JobOutputSpec parse(String spec) {
     final Matcher matcher = RE_JOB_OUTPUT_SPEC.matcher(spec);
     if (!matcher.matches()) {
       throw new JobIOSpecParseException(

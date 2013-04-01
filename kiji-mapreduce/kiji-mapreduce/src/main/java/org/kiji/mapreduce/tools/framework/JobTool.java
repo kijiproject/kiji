@@ -88,7 +88,7 @@ public abstract class JobTool<B extends MapReduceJobBuilder> extends BaseTool {
    * @throws JobIOSpecParseException If the input or output for the job can not configured.
    */
   protected void configure(B jobBuilder)
-      throws ClassNotFoundException, IOException, JobIOSpecParseException {
+      throws ClassNotFoundException, IOException {
     // Use default environment configuration:
     jobBuilder.withConf(getConf());
 

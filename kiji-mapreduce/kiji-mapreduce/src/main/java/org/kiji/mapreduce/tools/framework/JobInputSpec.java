@@ -102,7 +102,7 @@ public final class JobInputSpec {
      * @return the Format object.
      * @throws JobIOSpecParseException If the name does not identify a valid format.
      */
-    public static Format parse(String name) throws JobIOSpecParseException {
+    public static Format parse(String name) {
       Format format = mNameMap.get(name);
       if (null == format) {
         throw new JobIOSpecParseException("Unrecognized format", name);
@@ -188,7 +188,7 @@ public final class JobInputSpec {
    * @return The parsed JobInputSpec.
    * @throws JobIOSpecParseException If is unable to parse.
    */
-  public static JobInputSpec parse(String spec) throws JobIOSpecParseException {
+  public static JobInputSpec parse(String spec) {
     // Split it on ':'.
     String[] parts = StringUtils.split(spec, ":", 2);
     if (parts.length != 2) {

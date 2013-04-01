@@ -34,7 +34,6 @@ import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
 import org.kiji.mapreduce.output.impl.KijiTableMapReduceJobOutput;
 import org.kiji.mapreduce.produce.KijiProduceJobBuilder;
 import org.kiji.mapreduce.produce.impl.KijiProducers;
-import org.kiji.mapreduce.tools.framework.JobIOSpecParseException;
 import org.kiji.mapreduce.tools.framework.KijiJobTool;
 import org.kiji.schema.tools.KijiToolLauncher;
 
@@ -98,7 +97,7 @@ public final class KijiProduce extends KijiJobTool<KijiProduceJobBuilder> {
   /** {@inheritDoc} */
   @Override
   protected void configure(KijiProduceJobBuilder jobBuilder) throws ClassNotFoundException,
-      IOException, JobIOSpecParseException {
+      IOException {
     // Configure job input:
     super.configure(jobBuilder);
 

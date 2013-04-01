@@ -27,7 +27,6 @@ import org.kiji.common.flags.Flag;
 import org.kiji.mapreduce.gather.KijiGatherJobBuilder;
 import org.kiji.mapreduce.gather.impl.KijiGatherers;
 import org.kiji.mapreduce.impl.KijiReducers;
-import org.kiji.mapreduce.tools.framework.JobIOSpecParseException;
 import org.kiji.mapreduce.tools.framework.KijiJobTool;
 import org.kiji.mapreduce.tools.framework.MapReduceJobOutputFactory;
 import org.kiji.schema.tools.KijiToolLauncher;
@@ -78,7 +77,7 @@ public final class KijiGather extends KijiJobTool<KijiGatherJobBuilder> {
 
   @Override
   protected void configure(KijiGatherJobBuilder jobBuilder)
-      throws ClassNotFoundException, IOException, JobIOSpecParseException {
+      throws ClassNotFoundException, IOException {
     super.configure(jobBuilder);
     jobBuilder.withGatherer(KijiGatherers.forName(mGathererName));
 
