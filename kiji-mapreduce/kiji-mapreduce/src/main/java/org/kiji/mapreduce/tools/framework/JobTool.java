@@ -113,12 +113,12 @@ public abstract class JobTool<B extends MapReduceJobBuilder> extends BaseTool {
   }
 
   /** @return the job input. */
-  protected MapReduceJobInput getJobInput() {
+  protected final MapReduceJobInput getJobInput() {
     return mJobInput;
   }
 
   /** @return the job output. */
-  protected MapReduceJobOutput getJobOutput() {
+  protected final MapReduceJobOutput getJobOutput() {
     return mJobOutput;
   }
 }
