@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.mapreduce.HFileLoader;
 import org.kiji.mapreduce.KijiMRTestLayouts;
-import org.kiji.mapreduce.MapReduceJob;
+import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.TestingResources;
 import org.kiji.mapreduce.bulkimport.KijiBulkImportJobBuilder;
 import org.kiji.mapreduce.input.TextMapReduceJobInput;
@@ -118,7 +118,7 @@ public class IntegrationTestCSVBulkImporter
     try {
       mConf.set(DescribedInputTextBulkImporter.CONF_FILE, mImportDescriptorPath.toString());
 
-      final MapReduceJob mrjob = KijiBulkImportJobBuilder.create()
+      final KijiMapReduceJob mrjob = KijiBulkImportJobBuilder.create()
           .withConf(mConf)
           .withBulkImporter(CSVBulkImporter.class)
           .withInput(new TextMapReduceJobInput(mBulkImportInputPath))

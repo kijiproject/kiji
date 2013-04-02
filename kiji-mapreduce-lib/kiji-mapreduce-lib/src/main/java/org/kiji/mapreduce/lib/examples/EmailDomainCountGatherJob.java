@@ -27,7 +27,7 @@ import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.kiji.mapreduce.MapReduceJob;
+import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.gather.KijiGatherJobBuilder;
 import org.kiji.mapreduce.lib.reduce.IntSumReducer;
 import org.kiji.mapreduce.output.TextMapReduceJobOutput;
@@ -87,7 +87,7 @@ public class EmailDomainCountGatherJob extends Configured implements Tool {
         .withOutput(new TextMapReduceJobOutput(outputPath, numSplits));
 
     LOG.info("Building the gather job...");
-    MapReduceJob job = jobBuilder.build();
+    KijiMapReduceJob job = jobBuilder.build();
 
     LOG.info("Running the job...");
     boolean isSuccessful = job.run();

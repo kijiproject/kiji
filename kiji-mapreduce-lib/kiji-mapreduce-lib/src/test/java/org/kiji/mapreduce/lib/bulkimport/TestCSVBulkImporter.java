@@ -34,7 +34,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.kiji.mapreduce.KijiMRTestLayouts;
-import org.kiji.mapreduce.MapReduceJob;
+import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.TestingResources;
 import org.kiji.mapreduce.bulkimport.KijiBulkImportJobBuilder;
 import org.kiji.mapreduce.framework.JobHistoryCounters;
@@ -89,7 +89,7 @@ public class TestCSVBulkImporter extends KijiClientTest {
         BulkImporterTestUtils.localResource(BulkImporterTestUtils.FOO_IMPORT_DESCRIPTOR));
 
     // Run the bulk-import:
-    final MapReduceJob job = KijiBulkImportJobBuilder.create()
+    final KijiMapReduceJob job = KijiBulkImportJobBuilder.create()
         .withConf(conf)
         .withBulkImporter(CSVBulkImporter.class)
         .withInput(new TextMapReduceJobInput(new Path(inputFile.toString())))
@@ -124,7 +124,7 @@ public class TestCSVBulkImporter extends KijiClientTest {
     conf.set(CSVBulkImporter.CONF_INPUT_HEADER_ROW, headerRow);
 
     // Run the bulk-import:
-    final MapReduceJob job = KijiBulkImportJobBuilder.create()
+    final KijiMapReduceJob job = KijiBulkImportJobBuilder.create()
         .withConf(conf)
         .withBulkImporter(CSVBulkImporter.class)
         .withInput(new TextMapReduceJobInput(new Path(inputFile.toString())))
@@ -158,7 +158,7 @@ public class TestCSVBulkImporter extends KijiClientTest {
         BulkImporterTestUtils.localResource(BulkImporterTestUtils.FOO_TIMESTAMP_IMPORT_DESCRIPTOR));
 
     // Run the bulk-import:
-    final MapReduceJob job = KijiBulkImportJobBuilder.create()
+    final KijiMapReduceJob job = KijiBulkImportJobBuilder.create()
         .withConf(conf)
         .withBulkImporter(CSVBulkImporter.class)
         .withInput(new TextMapReduceJobInput(new Path(inputFile.toString())))
@@ -189,7 +189,7 @@ public class TestCSVBulkImporter extends KijiClientTest {
     conf.set(CSVBulkImporter.CONF_FIELD_DELIMITER, "\t");
 
     // Run the bulk-import:
-    final MapReduceJob job = KijiBulkImportJobBuilder.create()
+    final KijiMapReduceJob job = KijiBulkImportJobBuilder.create()
         .withConf(conf)
         .withBulkImporter(CSVBulkImporter.class)
         .withInput(new TextMapReduceJobInput(new Path(inputFile.toString())))
@@ -246,7 +246,7 @@ public class TestCSVBulkImporter extends KijiClientTest {
         BulkImporterTestUtils.localResource(BulkImporterTestUtils.FOO_PRIMITIVE_IMPORT_DESCRIPTOR));
 
     // Run the bulk-import:
-    final MapReduceJob job = KijiBulkImportJobBuilder.create()
+    final KijiMapReduceJob job = KijiBulkImportJobBuilder.create()
         .withConf(conf)
         .withBulkImporter(CSVBulkImporter.class)
         .withInput(new TextMapReduceJobInput(new Path(inputFile.toString())))

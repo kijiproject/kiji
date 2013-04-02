@@ -26,7 +26,7 @@ import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.kiji.mapreduce.MapReduceJob;
+import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
 import org.kiji.mapreduce.produce.KijiProduceJobBuilder;
 import org.kiji.schema.Kiji;
@@ -78,7 +78,7 @@ public class EmailDomainProduceJob extends Configured implements Tool {
         .withOutput(new DirectKijiTableMapReduceJobOutput(table.getURI()));
 
     LOG.info("Building the produce job...");
-    MapReduceJob job = jobBuilder.build();
+    KijiMapReduceJob job = jobBuilder.build();
 
     LOG.info("Running the job...");
     boolean isSuccessful = job.run();

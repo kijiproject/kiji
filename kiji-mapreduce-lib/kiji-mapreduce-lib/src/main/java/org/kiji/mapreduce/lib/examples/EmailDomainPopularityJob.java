@@ -29,8 +29,8 @@ import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.KijiMapReduceJobBuilder;
-import org.kiji.mapreduce.MapReduceJob;
 import org.kiji.mapreduce.gather.KijiGatherJobBuilder;
 import org.kiji.mapreduce.input.SequenceFileMapReduceJobInput;
 import org.kiji.mapreduce.lib.reduce.IntSumReducer;
@@ -139,7 +139,7 @@ public class EmailDomainPopularityJob extends Configured implements Tool {
         .withOutput(new SequenceFileMapReduceJobOutput(outputPath, numSplits));
 
     LOG.info("Building the gather job...");
-    MapReduceJob job = jobBuilder.build();
+    KijiMapReduceJob job = jobBuilder.build();
 
     LOG.info("Running the gather job...");
     return job.run();
@@ -167,7 +167,7 @@ public class EmailDomainPopularityJob extends Configured implements Tool {
         .withOutput(new AvroKeyValueMapReduceJobOutput(outputPath, numSplits));
 
     LOG.info("Building the transform job...");
-    MapReduceJob job = jobBuilder.build();
+    KijiMapReduceJob job = jobBuilder.build();
 
     // Configure the job to sort by decreasing key, so the most popular email domain is first.
     job.getHadoopJob().setSortComparatorClass(DescendingIntWritableComparator.class);

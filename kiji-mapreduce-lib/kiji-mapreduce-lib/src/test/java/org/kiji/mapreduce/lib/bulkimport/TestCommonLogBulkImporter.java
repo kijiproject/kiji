@@ -31,7 +31,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.kiji.mapreduce.MapReduceJob;
+import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.TestingResources;
 import org.kiji.mapreduce.bulkimport.KijiBulkImportJobBuilder;
 import org.kiji.mapreduce.framework.JobHistoryCounters;
@@ -85,7 +85,7 @@ public class TestCommonLogBulkImporter extends KijiClientTest {
         BulkImporterTestUtils.COMMON_LOG_IMPORT_DESCRIPTOR);
 
     // Run the bulk-import:
-    final MapReduceJob job = KijiBulkImportJobBuilder.create()
+    final KijiMapReduceJob job = KijiBulkImportJobBuilder.create()
         .withConf(conf)
         .withBulkImporter(CommonLogBulkImporter.class)
         .withInput(new TextMapReduceJobInput(new Path(inputFile.toString())))

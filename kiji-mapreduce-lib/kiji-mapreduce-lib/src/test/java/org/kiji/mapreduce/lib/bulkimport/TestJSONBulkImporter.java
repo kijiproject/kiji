@@ -32,7 +32,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.kiji.mapreduce.KijiMRTestLayouts;
-import org.kiji.mapreduce.MapReduceJob;
+import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.TestingResources;
 import org.kiji.mapreduce.bulkimport.KijiBulkImportJobBuilder;
 import org.kiji.mapreduce.framework.JobHistoryCounters;
@@ -85,7 +85,7 @@ public class TestJSONBulkImporter extends KijiClientTest {
         BulkImporterTestUtils.localResource(BulkImporterTestUtils.FOO_IMPORT_DESCRIPTOR));
 
     // Run the bulk-import:
-    final MapReduceJob job = KijiBulkImportJobBuilder.create()
+    final KijiMapReduceJob job = KijiBulkImportJobBuilder.create()
         .withConf(conf)
         .withBulkImporter(JSONBulkImporter.class)
         .withInput(new TextMapReduceJobInput(new Path(inputFile.toString())))
@@ -119,7 +119,7 @@ public class TestJSONBulkImporter extends KijiClientTest {
         BulkImporterTestUtils.localResource(BulkImporterTestUtils.FOO_TIMESTAMP_IMPORT_DESCRIPTOR));
 
     // Run the bulk-import:
-    final MapReduceJob job = KijiBulkImportJobBuilder.create()
+    final KijiMapReduceJob job = KijiBulkImportJobBuilder.create()
         .withConf(conf)
         .withBulkImporter(JSONBulkImporter.class)
         .withInput(new TextMapReduceJobInput(new Path(inputFile.toString())))
@@ -153,7 +153,7 @@ public class TestJSONBulkImporter extends KijiClientTest {
         BulkImporterTestUtils.localResource(BulkImporterTestUtils.FOO_JSONPATH_IMPORT_DESCRIPTOR));
 
     // Run the bulk-import:
-    final MapReduceJob job = KijiBulkImportJobBuilder.create()
+    final KijiMapReduceJob job = KijiBulkImportJobBuilder.create()
         .withConf(conf)
         .withBulkImporter(JSONBulkImporter.class)
         .withInput(new TextMapReduceJobInput(new Path(inputFile.toString())))
