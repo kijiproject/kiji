@@ -167,6 +167,60 @@ class KijiSourceSuite
         .finish
   }
 
+  val importWithTimeInput = (0L, "Line-0") :: (1L, "Line-1") :: (2L, "Line-2") :: Nil
+
+  /**
+   * Validates output from [[org.kiji.chopsticks.KijiSourceSuite.ImportJobWithTime]].
+   *
+   * @param outputBuffer containing data that the Kiji table has in it after the job has been run.
+   */
+  def validateImportWithTime(outputBuffer: Buffer[(EntityId, NavigableMap[Long, Utf8])]) {
+    // There should be one cell per row in the output.
+    val cellsPerRow = outputBuffer.unzip._2.map { m => (m.firstKey(), m.get(m.firstKey)) }
+    // Sort by timestamp.
+    val cellsSortedByTime = cellsPerRow.sortBy { case(ts, line) => ts }
+    // Verify contents.
+    (0 until 2).foreach { index =>
+      assert( (index.toLong, new Utf8("Line-" + index)) == cellsSortedByTime(index) )
+    }
+  }
+
+  test("an import job that writes to a Kiji table with timestamps is run using Scalding's local "
+      + "mode") {
+    // Create test Kiji table.
+    val uri: String = doAndRelease(makeTestKijiTable(layout)) { table: KijiTable =>
+      table.getURI().toString()
+    }
+
+    // Build test job.
+    JobTest(new ImportJobWithTime(_))
+    .arg("input", "inputFile")
+    .arg("output", uri)
+    .source(TextLine("inputFile"), importWithTimeInput)
+    .sink(KijiOutput(uri, 'offset)('line -> "family:column1"))(validateImportWithTime)
+    // Run the test job.
+    .run
+    .finish
+  }
+
+  test("an import job that writes to a Kiji table with timestamps is run using Hadoop") {
+    // Create test Kiji table.
+    val uri: String = doAndRelease(makeTestKijiTable(layout)) { table: KijiTable =>
+      table.getURI().toString()
+    }
+
+    // Build test job.
+    JobTest(new ImportJobWithTime(_))
+    .arg("input", "inputFile")
+    .arg("output", uri)
+    .source(TextLine("inputFile"), importWithTimeInput)
+    .sink(KijiOutput(uri, 'offset)('line -> "family:column1"))(validateImportWithTime)
+    // Run the test job.
+    .runHadoop
+    .finish
+  }
+
+
   test("a job that requests maxVersions gets them") {
     // Create test Kiji table.
     val uri: String = doAndRelease(makeTestKijiTable(layout)) { table: KijiTable =>
@@ -362,5 +416,23 @@ object KijiSourceSuite extends KijiSuite {
         .map('word -> 'entityId) { _: String => id(UUID.randomUUID().toString()) }
         // Write the results to the "family:column1" column of a Kiji table.
         .write(KijiOutput(args("output"))('word -> "family:column1"))
+  }
+
+  /**
+   * A job that, given lines of text, writes each line to row for the line in a Kiji table,
+   * at the column "family:column1", with the offset provided for each line being used as the
+   * timestamp.
+   *
+   * @param args to the job. Two arguments are expected: "input", which specifies the path to a
+   *     text file, and "output", which specifies the URI to a Kiji table.
+   */
+  class ImportJobWithTime(args: Args) extends Job(args) {
+    // Setup input.
+    TextLine(args("input"))
+    .read
+    // Generate an entityId for each line.
+    .map('line -> 'entityId) { id(_: String) }
+    // Write the results to the "family:column1" column of a Kiji table.
+    .write(KijiOutput(args("output"), 'offset)('line -> "family:column1"))
   }
 }

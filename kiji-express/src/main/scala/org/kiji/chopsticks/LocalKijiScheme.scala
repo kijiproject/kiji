@@ -29,26 +29,21 @@ import cascading.scheme.Scheme
 import cascading.scheme.SinkCall
 import cascading.scheme.SourceCall
 import cascading.tap.Tap
-import cascading.tuple.Fields
 import cascading.tuple.Tuple
 import cascading.tuple.TupleEntry
-import com.google.common.base.Objects
-import org.apache.hadoop.conf.Configuration
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.chopsticks.Resources.doAndRelease
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.Kiji
-import org.kiji.schema.KijiColumnName
-import org.kiji.schema.KijiDataRequest
-import org.kiji.schema.KijiDataRequestBuilder
 import org.kiji.schema.KijiRowData
 import org.kiji.schema.KijiRowScanner
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiTableReader
 import org.kiji.schema.KijiTableWriter
 import org.kiji.schema.KijiURI
+import com.google.common.base.Objects
 
 /**
  * Encapsulates the state required to read from a Kiji table.
@@ -81,19 +76,13 @@ private[chopsticks] case class InputContext(
 @ApiStability.Unstable
 class LocalKijiScheme(
     private val timeRange: TimeRange,
+    private val timestampField: Option[Symbol],
     private val columns: Map[String, ColumnRequest])
     extends Scheme[Properties, InputStream, OutputStream, InputContext, KijiTableWriter] {
 
-  /** Fields expected to be in any tuples processed by this scheme. */
-  private val fields: Fields = {
-    val fieldSpec: Fields = KijiScheme.buildFields(columns.keys)
-
-    // Set the fields for this scheme.
-    setSourceFields(fieldSpec)
-    setSinkFields(fieldSpec)
-
-    fieldSpec
-  }
+  /** Set the fields that should be in a tuple when this source is used for reading and writing. */
+  setSourceFields(KijiScheme.buildSourceFields(columns.keys))
+  setSinkFields(KijiScheme.buildSinkFields(columns.keys, timestampField))
 
   /**
    * Sets any configuration options that are required for running a local job
@@ -153,7 +142,7 @@ class LocalKijiScheme(
       // Get the current row.
       val row: KijiRowData = context.iterator.next()
 
-      val result: Tuple = KijiScheme.rowToTuple(columns, getSourceFields(), row)
+      val result: Tuple = KijiScheme.rowToTuple(columns, getSourceFields(), timestampField, row)
       sourceCall.getIncomingEntry().setTuple(result)
 
       true
@@ -230,7 +219,7 @@ class LocalKijiScheme(
 
     // Write the tuple out.
     val output: TupleEntry = sinkCall.getOutgoingEntry()
-    KijiScheme.putTuple(columns, getSinkFields(), output, writer)
+    KijiScheme.putTuple(columns, getSinkFields(), timestampField, output, writer)
   }
 
   /**
@@ -248,10 +237,14 @@ class LocalKijiScheme(
 
   override def equals(other: Any): Boolean = {
     other match {
-      case scheme: LocalKijiScheme => columns == scheme.columns
+      case scheme: LocalKijiScheme => {
+        columns == scheme.columns &&
+            timestampField == scheme.timestampField &&
+            timeRange == scheme.timeRange
+      }
       case _ => false
     }
   }
 
-  override def hashCode(): Int = columns.hashCode()
+  override def hashCode(): Int = Objects.hashCode(columns, timestampField, timeRange)
 }

@@ -73,14 +73,14 @@ class DSLSuite extends FunSuite {
     val input: KijiSource = KijiInput(tableURI)()
     val output: KijiSource = KijiOutput(tableURI)()
 
-    assert(input.columns.isEmpty())
-    assert(output.columns.isEmpty())
+    assert(input.columns.isEmpty)
+    assert(output.columns.isEmpty)
   }
 
   test("DSL should let you create KijiSources as inputs with default options.") {
     val input: KijiSource = KijiInput(tableURI)("info:word" -> 'word)
     val expectedScheme: KijiScheme = {
-      new KijiScheme(TimeRange.All, Map("word" -> Column("info:word")))
+      new KijiScheme(TimeRange.All, None, Map("word" -> Column("info:word")))
     }
 
     assert(expectedScheme == input.hdfsScheme)
@@ -89,7 +89,7 @@ class DSLSuite extends FunSuite {
   test("DSL should let you specify timerange for KijiInput.") {
     val input = KijiInput(tableURI, timeRange=TimeRange.Between(0L,40L))("info:word" -> 'word)
     val expectedScheme: KijiScheme = {
-      new KijiScheme(TimeRange.Between(0L, 40L), Map("word" -> Column("info:word")))
+      new KijiScheme(TimeRange.Between(0L, 40L), None, Map("word" -> Column("info:word")))
     }
 
     assert(expectedScheme == input.hdfsScheme)
@@ -100,6 +100,7 @@ class DSLSuite extends FunSuite {
     val expectedScheme: KijiScheme = {
       new KijiScheme(
           TimeRange.All,
+          None,
           Map("word" -> Column("info:word"), "title" -> Column("info:title")))
     }
 
@@ -122,10 +123,19 @@ class DSLSuite extends FunSuite {
         Column("info:title", versions=2) -> 'title))
   }
 
-  test("DSL should let you create KijiSources as outputs.") {
+  test("DSL should let you create KijiSource with the default timestamp field") {
     val output: KijiSource = KijiOutput(tableURI)('words -> "info:words")
     val expectedScheme: KijiScheme = {
-      new KijiScheme(TimeRange.All, Map("words" -> Column("info:words")))
+      new KijiScheme(TimeRange.All, None, Map("words" -> Column("info:words")))
+    }
+
+    assert(expectedScheme == output.hdfsScheme)
+  }
+
+  test("DSL should let you create KijiSource with a timestamp field") {
+    val output: KijiSource = KijiOutput(tableURI, 'time)('words -> "info:words")
+    val expectedScheme: KijiScheme = {
+      new KijiScheme(TimeRange.All, Some('time), Map("words" -> Column("info:words")))
     }
 
     assert(expectedScheme == output.hdfsScheme)

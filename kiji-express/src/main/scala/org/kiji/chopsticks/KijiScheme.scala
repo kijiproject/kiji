@@ -24,7 +24,6 @@ import java.util.concurrent.atomic.AtomicLong
 import scala.collection.JavaConverters._
 
 import cascading.flow.FlowProcess
-import cascading.flow.hadoop.HadoopFlowProcess
 import cascading.scheme.Scheme
 import cascading.scheme.SinkCall
 import cascading.scheme.SourceCall
@@ -32,7 +31,6 @@ import cascading.tap.Tap
 import cascading.tuple.Fields
 import cascading.tuple.Tuple
 import cascading.tuple.TupleEntry
-import com.google.common.base.Objects
 import org.apache.commons.codec.binary.Base64
 import org.apache.commons.lang.SerializationUtils
 import org.apache.hadoop.mapred.JobConf
@@ -54,6 +52,7 @@ import org.kiji.schema.KijiRowData
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiTableWriter
 import org.kiji.schema.KijiURI
+import com.google.common.base.Objects
 
 /**
  * A scheme that can source and sink data from a Kiji table. This scheme is responsible for
@@ -62,12 +61,17 @@ import org.kiji.schema.KijiURI
  * data from a Cascading flow to a Kiji table
  * (see [[#sink(cascading.flow.FlowProcess, cascading.scheme.SinkCall)]]).
  *
+ * @param timeRange that cells read by this scheme must belong to.
+ * @param timestampField is the name of a tuple field that will contain cell timestamp when the
+ *                       source is used for writing. Specify `None` to write all
+ *                       cells at the current time.
  * @param columns mapping tuple field names to Kiji column names.
  */
 @ApiAudience.Framework
 @ApiStability.Unstable
 class KijiScheme(
     private val timeRange: TimeRange,
+    private val timestampField: Option[Symbol],
     private val columns: Map[String, ColumnRequest])
     extends Scheme[JobConf, RecordReader[KijiKey, KijiValue], OutputCollector[_, _],
         KijiValue, KijiTableWriter] {
@@ -85,16 +89,9 @@ class KijiScheme(
   // Keeps track of how many rows have been skipped, for logging purposes.
   private val skippedRows: AtomicLong = new AtomicLong()
 
-  /** Fields expected to be in any tuples processed by this scheme. */
-  private val fields: Fields = {
-    val fieldSpec: Fields = buildFields(columns.keys)
-
-    // Set the fields for this scheme.
-    setSourceFields(fieldSpec)
-    setSinkFields(fieldSpec)
-
-    fieldSpec
-  }
+  /** Set the fields that should be in a tuple when this source is used for reading and writing. */
+  setSourceFields(buildSourceFields(columns.keys))
+  setSinkFields(buildSinkFields(columns.keys, timestampField))
 
   /**
    * Sets any configuration options that are required for running a MapReduce job
@@ -155,7 +152,7 @@ class KijiScheme(
 
       // If all fields are present, set the result tuple and return from this method.
       if (allColumnsPresent(row, columns)) {
-        val result: Tuple = rowToTuple(columns, getSourceFields, row)
+        val result: Tuple = rowToTuple(columns, getSourceFields, timestampField, row)
         sourceCall.getIncomingEntry().setTuple(result)
         process.increment(counterGroupName, counterSuccess, 1)
         return true // We set a result tuple, return true for success.
@@ -241,7 +238,7 @@ class KijiScheme(
 
     // Write the tuple out.
     val output: TupleEntry = sinkCall.getOutgoingEntry()
-    putTuple(columns, getSinkFields(), output, writer)
+    putTuple(columns, getSinkFields(), timestampField, output, writer)
   }
 
   /**
@@ -261,19 +258,23 @@ class KijiScheme(
 
   override def equals(other: Any): Boolean = {
     other match {
-      case scheme: KijiScheme => columns == scheme.columns
+      case scheme: KijiScheme => {
+        columns == scheme.columns &&
+            timestampField == scheme.timestampField &&
+            timeRange == scheme.timeRange
+      }
       case _ => false
     }
   }
 
-  override def hashCode(): Int = columns.hashCode()
+  override def hashCode(): Int = Objects.hashCode(columns, timestampField, timeRange)
 }
 
 /** Companion object for KijiScheme. Contains helper methods and constants. */
 object KijiScheme {
   private val logger: Logger = LoggerFactory.getLogger(classOf[KijiScheme])
 
-  /** Field name containing a row's [[EntityId]]. */
+  /** Field name containing a row's entity id. */
   private[chopsticks] val entityIdField: String = "entityId"
 
   /**
@@ -307,26 +308,29 @@ object KijiScheme {
   private[chopsticks] def rowToTuple(
       columns: Map[String, ColumnRequest],
       fields: Fields,
+      timestampField: Option[Symbol],
       row: KijiRowData): Tuple = {
     val result: Tuple = new Tuple()
     val iterator = fields.iterator().asScala
 
     // Add the row's EntityId to the tuple.
     result.add(row.getEntityId())
-    iterator.next()
 
-    // Add the rest.
-    // Get the column request associated with each field.
-    iterator.map { field => columns(field.toString) }
-        // Build the tuple, by adding each requested value into result.
-        .foreach {
-          case ColumnFamily(family, _) => {
-            result.add (row.getValues(family))
-          }
-          case QualifiedColumn(family, qualifier, _) => {
-            result.add(row.getValues(family, qualifier))
-          }
-        }
+    // Get rid of the entity id and timestamp fields, then map over each field to add a column
+    // to the tuple.
+    iterator
+        .filter { field => field.toString != entityIdField  }
+        .filter { field => field.toString != timestampField.getOrElse(Symbol("")).name }
+        .map { field => columns(field.toString) }
+          // Build the tuple, by adding each requested value into result.
+          .foreach {
+            case ColumnFamily(family, _) => {
+              result.add (row.getValues(family))
+            }
+            case QualifiedColumn(family, qualifier, _) => {
+              result.add(row.getValues(family, qualifier))
+            }
+         }
 
     return result
   }
@@ -343,6 +347,7 @@ object KijiScheme {
   private[chopsticks] def putTuple(
       columns: Map[String, ColumnRequest],
       fields: Fields,
+      timestampField: Option[Symbol],
       output: TupleEntry,
       writer: KijiTableWriter) {
     val iterator = fields.iterator().asScala
@@ -351,7 +356,15 @@ object KijiScheme {
     val entityId: EntityId = output.getObject(entityIdField).asInstanceOf[EntityId]
     iterator.next()
 
-    // Store the retrieved columns in the tuple.
+    // Get a timestamp to write the values to, if it was specified by the user.
+    val timestamp: Long = timestampField match {
+      case Some(field) => {
+        iterator.next()
+        output.getObject(field.name).asInstanceOf[Long]
+      }
+      case None => System.currentTimeMillis()
+    }
+
     iterator.foreach { fieldName =>
       columns(fieldName.toString()) match {
         case ColumnFamily(family, _) => {
@@ -359,6 +372,7 @@ object KijiScheme {
               entityId,
               family,
               null,
+              timestamp,
               output.getObject(fieldName.toString()))
         }
         case QualifiedColumn(family, qualifier, _) => {
@@ -366,6 +380,7 @@ object KijiScheme {
               entityId,
               family,
               qualifier,
+              timestamp,
               output.getObject(fieldName.toString()))
         }
       }
@@ -403,11 +418,45 @@ object KijiScheme {
         .build()
   }
 
-  private[chopsticks] def buildFields(fieldNames: Iterable[String]): Fields = {
-    val fieldArray: Array[Fields] = (Seq(entityIdField) ++ fieldNames)
-        .map { name: String => new Fields(name) }
-        .toArray
+  /**
+   * Gets a collection of fields by joining two lists of field names and transforming each name
+   * into a field.
+   *
+   * @param headNames is a list of field names.
+   * @param tailNames is a list of field names.
+   * @return a collection of fields created from the names.
+   */
+  private def getFieldArray(headNames: Iterable[String], tailNames: Iterable[String]): Fields = {
+    Fields.join((headNames ++ tailNames).map { new Fields(_) }.toArray: _*)
+  }
 
-    Fields.join(fieldArray: _*)
+  /**
+   * Builds the list of tuple fields being read by a scheme. The special field name
+   * "entityId" will be included to hold entity ids from the rows of Kiji tables.
+   *
+   * @param fieldNames is a list of field names that a scheme should read.
+   * @return is a collection of fields created from the names.
+   */
+  private[chopsticks] def buildSourceFields(fieldNames: Iterable[String]): Fields = {
+    getFieldArray(Seq(entityIdField), fieldNames)
+  }
+
+  /**
+   * Builds the list of tuple fields being written by a scheme. The special field name "entityId"
+   * will be included to hold entity ids that values should be written to. A timestamp field can
+   * also be included, identifying a timestamp that all values will be written to.
+   *
+   * @param fieldNames is a list of field names that a scheme should write to.
+   * @param timestampField is the name of a field containing the timestamp that all values in a
+   *     tuple should be written to. Use the empty symbol if all values should be written at the
+   *     current time.
+   * @return is a collection of fields created from the names.
+   */
+  private[chopsticks] def buildSinkFields(fieldNames: Iterable[String],
+      timestampField: Option[Symbol]): Fields = {
+    timestampField match {
+      case Some(field) => getFieldArray(Seq(entityIdField, field.name), fieldNames)
+      case None => getFieldArray(Seq(entityIdField), fieldNames)
+    }
   }
 }

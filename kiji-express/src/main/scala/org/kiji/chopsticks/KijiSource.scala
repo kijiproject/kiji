@@ -54,7 +54,6 @@ import org.kiji.chopsticks.Resources._
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.EntityId
 import org.kiji.schema.Kiji
-import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiRowData
 import org.kiji.schema.KijiRowScanner
@@ -64,18 +63,39 @@ import org.kiji.schema.KijiTableWriter
 import org.kiji.schema.KijiURI
 
 /**
- * Facilitates writing to and reading from a Kiji table.
+ * A read or write view of a Kiji table.
  *
- * @param tableAddress Address of the target KijiTable. This should be provided as a
- *     [[org.kiji.schema.KijiURI]].
- * @param timeRange Range of timestamps to read from each column.
- * @param columns Mapping from field name to Kiji column name.
+ * A Scalding `Source` provides a view of a data source that can be read as Scalding tuples. A
+ * `Source` is also a `Pipe`, which can be used (via functional operators) to process a data set.
+ *
+ * When reading from a Kiji table, a `KijiSource` will provide a view of a Kiji table as a
+ * collection of tuples that correspond to rows from the Kiji table. Which columns will be read
+ * and how they are associated with tuple fields can be configured,
+ * as well as the time span that cells retrieved must belong to.
+ *
+ * When writing to a Kiji table, a `KijiSource` views a Kiji table as a collection of tuples that
+ * correspond to cells from the Kiji table. Each tuple to be written must provide a cell address
+ * by specifying a Kiji `EntityID` in the tuple field `entityId`, a value to be written in a
+ * configurable field, and (optionally) a timestamp in a configurable field.
+ *
+ * End-users cannot directly obtain instances of `KijiSource`. Instead,
+ * they should use the factory methods in [[org.kiji.chopsticks.DSL]].
+ *
+ * @param tableAddress is a Kiji URI addressing the Kiji table to read or write to.
+ * @param timeRange that cells read must belong to. Ignored when the source is used to write.
+ * @param timestampField is the name of a tuple field that will contain cell timestamp when the
+ *                       source is used for writing. Specify `None` to write all
+ *                       cells at the current time.
+ * @param columns is a one-to-one mapping from field names to Kiji columns. When reading,
+ *                the columns in the map will be read into their associated tuple fields. When
+ *                writing, values from the tuple fields will be written to their associated column.
  */
 @ApiAudience.Framework
 @ApiStability.Unstable
-final class KijiSource(
+final class KijiSource private[chopsticks] (
     val tableAddress: String,
     val timeRange: TimeRange,
+    val timestampField: Option[Symbol],
     val columns: Map[Symbol, ColumnRequest])
     extends Source {
   import KijiSource._
@@ -85,10 +105,11 @@ final class KijiSource(
   /** The URI of the target Kiji table. */
   private val tableUri: KijiURI = KijiURI.newBuilder(tableAddress).build()
   /** A Kiji scheme intended to be used with Scalding/Cascading's hdfs mode. */
-  private val kijiScheme: KijiScheme = new KijiScheme(timeRange, convertColumnMap(columns))
+  private val kijiScheme: KijiScheme =
+      new KijiScheme(timeRange, timestampField, convertColumnMap(columns))
   /** A Kiji scheme intended to be used with Scalding/Cascading's local mode. */
   private val localKijiScheme: LocalKijiScheme = {
-    new LocalKijiScheme(timeRange, convertColumnMap(columns))
+    new LocalKijiScheme(timeRange, timestampField, convertColumnMap(columns))
   }
 
   /**
@@ -209,7 +230,8 @@ final class KijiSource(
             new KijiTap(tableUri, scheme).asInstanceOf[Tap[_, _, _]]
           }
           case Write => {
-            val scheme = new TestKijiScheme(buffers(this), timeRange, convertColumnMap(columns))
+            val scheme = new TestKijiScheme(buffers(this), timeRange,
+                timestampField, convertColumnMap(columns))
 
             new KijiTap(tableUri, scheme).asInstanceOf[Tap[_, _, _]]
           }
@@ -227,7 +249,7 @@ final class KijiSource(
 
           // After performing a write, use TestLocalKijiScheme to populate the output buffer.
           case Write => {
-            val scheme = new TestLocalKijiScheme(buffers(this), timeRange,
+            val scheme = new TestLocalKijiScheme(buffers(this), timeRange, timestampField,
                 convertColumnMap(columns))
 
             new LocalKijiTap(tableUri, scheme).asInstanceOf[Tap[_, _, _]]
@@ -246,12 +268,14 @@ final class KijiSource(
     other match {
       case source: KijiSource =>
         Objects.equal(tableAddress, source.tableAddress) &&
-        Objects.equal(columns, source.columns)
+        Objects.equal(columns, source.columns) &&
+        Objects.equal(timestampField, source.timestampField) &&
+        Objects.equal(timeRange, source.timeRange)
       case _ => false
     }
   }
 
-  override def hashCode(): Int = Objects.hashCode(tableAddress, columns)
+  override def hashCode(): Int = Objects.hashCode(tableAddress, columns, timestampField, timeRange)
 }
 
 /**
@@ -265,13 +289,17 @@ object KijiSource {
    *
    * @param buffer Buffer to fill with post-job table rows for tests.
    * @param timeRange Range of timestamps to read from each column.
+   * @param timestampField is the name of a tuple field that will contain cell timestamp when the
+   *                       source is used for writing. Specify the empty field name to write all
+   *                       cells at the current time.
    * @param columns Scalding field name to Kiji column name mapping.
    */
   private class TestLocalKijiScheme(
       val buffer: Buffer[Tuple],
       timeRange: TimeRange,
+      timestampField: Option[Symbol],
       columns: Map[String, ColumnRequest])
-      extends LocalKijiScheme(timeRange, columns) {
+      extends LocalKijiScheme(timeRange, timestampField, columns) {
     override def sinkConfInit(
         process: FlowProcess[Properties],
         tap: Tap[Properties, InputStream, OutputStream],
@@ -306,13 +334,17 @@ object KijiSource {
    *
    * @param buffer Buffer to fill with post-job table rows for tests.
    * @param timeRange Range of timestamps to read from each column.
+   * @param timestampField is the name of a tuple field that will contain cell timestamp when the
+   *                       source is used for writing. Specify the empty field name to write all
+   *                       cells at the current time.
    * @param columns Scalding field name to Kiji column name mapping.
    */
   private class TestKijiScheme(
       val buffer: Buffer[Tuple],
       timeRange: TimeRange,
+      timestampField: Option[Symbol],
       columns: Map[String, ColumnRequest])
-      extends KijiScheme(timeRange, columns) {
+      extends KijiScheme(timeRange, timestampField, columns) {
     override def sinkCleanup(
         process: FlowProcess[JobConf],
         sinkCall: SinkCall[KijiTableWriter, OutputCollector[_, _]]) {
@@ -332,7 +364,7 @@ object KijiSource {
               val rows: Iterator[KijiRowData] = scanner.iterator().asScala
 
               rows.foreach { row: KijiRowData =>
-                buffer += KijiScheme.rowToTuple(columns, getSinkFields(), row)
+                buffer += KijiScheme.rowToTuple(columns, getSinkFields(), timestampField, row)
               }
             }
           }

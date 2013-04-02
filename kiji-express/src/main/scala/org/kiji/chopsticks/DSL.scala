@@ -200,7 +200,7 @@ object DSL {
         .map { case (col, field) => (field, col) }
         .toMap
         .mapValues(Column(_))
-    new KijiSource(tableURI, TimeRange.All, columnMap)
+    new KijiSource(tableURI, TimeRange.All, None, columnMap)
   }
 
   /**
@@ -226,7 +226,7 @@ object DSL {
         .map { case (col, field) => (field, col) }
         .toMap
         .mapValues(Column(_))
-    new KijiSource(tableURI, timeRange, columnMap)
+    new KijiSource(tableURI, timeRange, None, columnMap)
   }
 
   /**
@@ -249,7 +249,7 @@ object DSL {
       columns: Map[_ <: ColumnRequest, Symbol]): KijiSource = {
     val columnMap = columns
         .map { case (col, field) => (field, col) }
-    new KijiSource(tableURI, TimeRange.All, columnMap)
+    new KijiSource(tableURI, TimeRange.All, None, columnMap)
   }
 
   /**
@@ -274,30 +274,33 @@ object DSL {
       columns: Map[ColumnRequest, Symbol]): KijiSource = {
     val columnMap = columns
         .map { case (col, field) => (field, col) }
-    new KijiSource(tableURI, timeRange, columnMap)
+    new KijiSource(tableURI, timeRange, None, columnMap)
   }
 
   /**
    * Creates a `Source` for writing cells to a Kiji table.
    *
    * A Scalding `Source` can be used to output data in a collection of tuples to some data store.
-   * This factory method can be used to obtain a `Source` which will write the value in a field
-   * of a tuple as a cell at the current time to a column in a Kiji table. Tuples being written
-   * must have a field named "entityId" which contains an entity id for the row in the Kiji table
-   * that tuple fields should be written to.
+   * This factory method can be used to obtain a `Source` that will write values in tuple fields
+   * to cells in columns of a Kiji table. The values in tuple fields can be written to one
+   * row of a Kiji table, whose entity id must be provided in the tuple field "entityId".
+   * Optionally, a tuple field can specify a timestamp that all cells should be written to.
    *
    * @param tableURI is a Kiji URI that addresses a table in a Kiji instance.
+   * @param tsField is the name of a tuple field that contains a timestamp all cells should be
+   *     written with. If unspecified, cells will be written with the current time.
    * @param columns are a series of pairs mapping tuple field names to Kiji column names. When
    *     naming columns, use the format `family:qualifier`.
    * @return a source that can write tuple fields to a cell in columns of a Kiji table.
    */
   def KijiOutput(
-      tableURI: String)
+      tableURI: String,
+      tsField: Symbol = null)
       (columns: (Symbol, String)*): KijiSource = {
     val columnMap = columns
         .toMap
         .mapValues(Column(_))
-    new KijiSource(tableURI, TimeRange.All, columnMap)
+    new KijiSource(tableURI, TimeRange.All, Option(tsField), columnMap)
   }
 
   /**
