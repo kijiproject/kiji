@@ -46,11 +46,9 @@ public interface KijiContext extends Closeable, Flushable {
    * @return A KeyValueStoreReader associated with this storeName, or null
    *     if there is no such KeyValueStore available.
    * @throws IOException if there is an error opening the underlying storage resource.
-   * @throws InterruptedException if there is an interruption while connecting to
-   *     the underlying storage resource.
    */
   <K, V> KeyValueStoreReader<K, V> getStore(String storeName)
-      throws IOException, InterruptedException;
+      throws IOException;
 
   /**
    * Increments a counter by 1.

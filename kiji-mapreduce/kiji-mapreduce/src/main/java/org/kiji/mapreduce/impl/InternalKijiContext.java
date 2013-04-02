@@ -56,8 +56,7 @@ public class InternalKijiContext implements KijiContext {
 
   /** {@inheritDoc} */
   @Override
-  public <K, V> KeyValueStoreReader<K, V> getStore(String storeName) throws IOException,
-      InterruptedException {
+  public <K, V> KeyValueStoreReader<K, V> getStore(String storeName) throws IOException {
     return mKeyValueStoreFactory.openStore(storeName);
   }
 
