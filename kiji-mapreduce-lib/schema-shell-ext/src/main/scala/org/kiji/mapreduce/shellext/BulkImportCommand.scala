@@ -27,7 +27,7 @@ import org.apache.hadoop.fs.FileSystem
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
 
-import org.kiji.mapreduce.MapReduceJob
+import org.kiji.mapreduce.KijiMapReduceJob
 import org.kiji.mapreduce.MapReduceJobInput
 import org.kiji.mapreduce.MapReduceJobOutput
 import org.kiji.mapreduce.tools.framework.MapReduceJobInputFactory
@@ -115,7 +115,7 @@ class BulkImportCommand(
   override def exec(): Environment = {
 
     val conf: Configuration = makeConf()
-    val mrJob: MapReduceJob = KijiBulkImportJobBuilder.create()
+    val mrJob: KijiMapReduceJob = KijiBulkImportJobBuilder.create()
         .withConf(conf)
         .withInput(makeJobInput())
         .withOutput(makeJobOutput())

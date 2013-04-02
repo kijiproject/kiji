@@ -37,12 +37,9 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.mapreduce.HFileLoader;
 import org.kiji.mapreduce.KijiMRTestLayouts;
-import org.kiji.mapreduce.MapReduceJob;
 import org.kiji.mapreduce.TestingResources;
 import org.kiji.mapreduce.bulkimport.KijiBulkImportJobBuilder;
-import org.kiji.mapreduce.input.TextMapReduceJobInput;
 import org.kiji.mapreduce.lib.bulkimport.BulkImporterTestUtils;
-import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowScanner;
