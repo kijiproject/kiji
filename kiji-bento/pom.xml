@@ -35,6 +35,7 @@
   <inceptionYear>2012</inceptionYear>
 
   <properties>
+    <codename>albacore</codename>
     <bento-cluster.version>1.0.0-rc6-SNAPSHOT</bento-cluster.version>
     <kiji-schema.version>1.0.0</kiji-schema.version>
     <kiji-schema-shell.version>1.0.0</kiji-schema-shell.version>

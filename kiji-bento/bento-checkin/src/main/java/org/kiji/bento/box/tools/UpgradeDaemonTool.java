@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.bento.box.BentoBoxUtils;
 import org.kiji.bento.box.CheckinThread;
+import org.kiji.bento.box.UUIDTools;
 import org.kiji.bento.box.UpgradeServerClient;
 import org.kiji.common.flags.Flag;
 import org.kiji.common.flags.FlagParser;
@@ -57,7 +58,7 @@ public final class UpgradeDaemonTool {
   private static final String UPGRADE_FILE_NAME = ".kiji-bento-upgrade";
 
   /** The name of the file where the user's unique and anonymous ID is stored. */
-  private static final String UUID_FILE_NAME = ".kiji-bento-uuid";
+  private static final String UUID_FILE_NAME = UUIDTools.UUID_FILE_NAME;
 
   /** The name of the file that stores a PID for this process. */
   private static final String PID_FILE_NAME = "checkin-daemon.pid";
@@ -81,23 +82,6 @@ public final class UpgradeDaemonTool {
 
   /** The thread that periodically performs check-ins. */
   private CheckinThread mCheckinThread;
-
-  /**
-   * Gets a UUID for the user by reading the file <code>.kiji-bento-uuid</code> from a directory.
-   *
-   * @param directory that should contain the UUID file.
-   * @return the UUID read.
-   */
-  private String getUserUUID(File directory) {
-    File uuidFile = new File(directory, UUID_FILE_NAME);
-    try {
-      return BentoBoxUtils.readFileAsString(uuidFile).trim();
-    } catch (Exception e) {
-      LOG.error("An exception was encountered while reading the user's UUID from the file: "
-          + uuidFile.getAbsolutePath(), e);
-      return null;
-    }
-  }
 
   /**
    * Uses the command-line argument <code>--state-dir</code> to obtain bento cluster's state
@@ -158,14 +142,26 @@ public final class UpgradeDaemonTool {
    *     parsing the specified address.
    */
   private URI getUpgradeServerURI() {
-    if (null == mUpgradeServerURL || mUpgradeServerURL.isEmpty()) {
+    return getUpgradeServerURI(mUpgradeServerURL);
+  }
+
+
+  /**
+   * Parses the supplied raw URI as a URI to connect to.
+   *
+   * @param rawUri the string representing the URI to parse.
+   * @return a URI for the upgrade check-in server, or <code>null</code> if there was an error
+   *     parsing the specified address.
+   */
+  static URI getUpgradeServerURI(String rawUri) {
+    if (null == rawUri || rawUri.isEmpty()) {
       LOG.error("The argument --checkin-server-url was not specified. Cannot continue.");
       return null;
     }
     try {
-      return new URI(mUpgradeServerURL);
+      return new URI(rawUri);
     } catch (Exception e) {
-      LOG.error("Could not parse the provided URL for the check-in server: " + mUpgradeServerURL,
+      LOG.error("Could not parse the provided URL for the check-in server: " + rawUri,
           e);
       return null;
     }
@@ -285,7 +281,7 @@ public final class UpgradeDaemonTool {
     }
 
     // Get the UUID of this user.
-    String uuid = getUserUUID(homeDirectory);
+    String uuid = UUIDTools.getUserUUID(homeDirectory);
     if (null == uuid) {
       return 1;
     }

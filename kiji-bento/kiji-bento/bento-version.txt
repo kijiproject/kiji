@@ -1,0 +1,17 @@
+# Kiji BentoBox version information
+# www.kiji.org
+
+bento-name: ${codename}
+version: ${project.version}
+release-date: ${timestamp}
+
+# This SDK version includes the following components:
+
+kiji-schema: ${kiji-schema.version}
+kiji-schema-shell: ${kiji-schema-shell.version}
+kiji-mapreduce: ${kiji-mapreduce.version}
+kiji-mapreduce-lib: ${kiji-mapreduce-lib.version}
+kiji-phonebook: ${kiji-phonebook.version}
+kiji-music: ${kiji-music.version}
+bento-cluster: ${bento-cluster.version}
+

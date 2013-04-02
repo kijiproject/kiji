@@ -32,6 +32,15 @@
 
   <fileSets>
     <fileSet>
+      <!-- Put version info in the top-level directory. -->
+      <outputDirectory></outputDirectory>
+      <fileMode>0644</fileMode>
+      <includes>
+        <include>bento-version.txt</include>
+      </includes>
+      <filtered>true</filtered>
+    </fileSet>
+    <fileSet>
       <useDefaultExcludes>true</useDefaultExcludes>
       <outputDirectory></outputDirectory>
       <directory>../</directory>
@@ -227,6 +236,8 @@
         <include>upgrade-daemon-start.sh</include>
         <include>upgrade-daemon-stop.sh</include>
         <include>generate-uuid.sh</include>
+        <include>upgrade-installer.sh</include>
+        <include>upgrade-kiji-bootstrap.sh</include>
       </includes>
       <filtered>false</filtered>
       <fileMode>0755</fileMode>

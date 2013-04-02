@@ -47,7 +47,8 @@ public final class UpgradeResponse {
 
   /** A message that can be formatted that will inform the user of a compatible upgrade. */
   private static final String COMPATIBLE_UPGRADE_MSG_FORMAT = "Version %s of Kiji BentoBox "
-      + "(compatible with your version %s) is available for download at %s. %s";
+      + "(compatible with your version %s) is available for download at %s. %s%n"
+      + "Run 'bento upgrade' to automatically upgrade to this version in place.";
 
   /** A message that can be formatted that will inform the user of an incompatible upgrade. */
   private static final String INCOMPATIBLE_UPGRADE_MSG_FORMAT = "Version %s of Kiji BentoBox "

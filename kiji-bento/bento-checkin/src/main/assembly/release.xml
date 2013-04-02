@@ -43,6 +43,8 @@
         <include>upgrade-daemon-start.sh</include>
         <include>upgrade-daemon-stop.sh</include>
         <include>upgrade-informer.sh</include>
+        <include>upgrade-kiji-bootstrap.sh</include>
+        <include>upgrade-installer.sh</include>
       </includes>
     </fileSet>
   </fileSets>

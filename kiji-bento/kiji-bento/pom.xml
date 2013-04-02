@@ -19,6 +19,24 @@
   <build>
     <plugins>
       <plugin>
+        <!-- Add build date in ${timestamp} field. -->
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>buildnumber-maven-plugin</artifactId>
+        <version>1.2</version>
+        <executions>
+          <execution>
+            <phase>initialize</phase>
+            <goals>
+              <goal>create-timestamp</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <timestampFormat>yyyy-MM-dd HH:mm:ss</timestampFormat>
+          <timestampPropertyName>timestamp</timestampPropertyName>
+        </configuration>
+      </plugin>
+      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
         <executions>
@@ -46,6 +64,7 @@
               <descriptors>
                 <descriptor>${basedir}/src/main/assembly/release.xml</descriptor>
               </descriptors>
+              <finalName>kiji-bento-${codename}</finalName>
             </configuration>
           </execution>
         </executions>
