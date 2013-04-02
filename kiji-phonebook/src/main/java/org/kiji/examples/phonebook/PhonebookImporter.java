@@ -34,8 +34,8 @@ import org.apache.hadoop.util.ToolRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.KijiTableContext;
-import org.kiji.mapreduce.MapReduceJob;
 import org.kiji.mapreduce.bulkimport.KijiBulkImportJobBuilder;
 import org.kiji.mapreduce.bulkimport.KijiBulkImporter;
 import org.kiji.mapreduce.input.TextMapReduceJobInput;
@@ -110,10 +110,10 @@ public class PhonebookImporter extends Configured implements Tool {
    *
    * @param inputPath the Path to the input data.
    * @param tableUri the URI to the destination table for the import.
-   * @return a MapReduceJob that's ready to run.
+   * @return a KijiMapReduceJob that's ready to run.
    * @throws IOException if there's an error interacting with the job or the Kiji URI.
    */
-  MapReduceJob configureJob(Path inputPath, KijiURI tableUri) throws IOException {
+  KijiMapReduceJob configureJob(Path inputPath, KijiURI tableUri) throws IOException {
     return KijiBulkImportJobBuilder.create()
         .withConf(getConf())
         .withInput(new TextMapReduceJobInput(inputPath))
@@ -141,7 +141,7 @@ public class PhonebookImporter extends Configured implements Tool {
         KijiURI.newBuilder(String.format("kiji://.env/default/%s", TABLE_NAME)).build();
 
     // Configure a map-only job that imports phonebook entries from a file into the table.
-    final MapReduceJob job = configureJob(new Path(args[0]), tableUri);
+    final KijiMapReduceJob job = configureJob(new Path(args[0]), tableUri);
 
     // Run the job.
     final boolean isSuccessful = job.run();

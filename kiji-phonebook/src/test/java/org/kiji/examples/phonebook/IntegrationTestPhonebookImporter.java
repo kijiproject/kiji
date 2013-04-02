@@ -40,7 +40,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.kiji.mapreduce.MapReduceJob;
+import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
@@ -127,7 +127,7 @@ public class IntegrationTestPhonebookImporter
     // one-off filename for the input data.
     final KijiURI tableURI = KijiURI.newBuilder(getKijiURI()).withTableName("phonebook").build();
 
-    MapReduceJob job = importer.configureJob(mInputPath, tableURI);
+    KijiMapReduceJob job = importer.configureJob(mInputPath, tableURI);
 
     final boolean jobSuccess = job.run();
     assertTrue("Importer exited with non-zero status", jobSuccess);
