@@ -130,7 +130,7 @@ public class TestKijiMapReduceJobBuilder {
 
   @Test
   public void testBuild() throws Exception {
-    final MapReduceJob job = KijiMapReduceJobBuilder.create()
+    final KijiMapReduceJob job = KijiMapReduceJobBuilder.create()
         .withConf(mConf)
         .withInput(new TextMapReduceJobInput(new Path("/path/to/my/input")))
         .withMapper(MyMapper.class)
@@ -178,7 +178,7 @@ public class TestKijiMapReduceJobBuilder {
     }
 
     LOG.info("Building job...");
-    final MapReduceJob job = KijiMapReduceJobBuilder.create()
+    final KijiMapReduceJob job = KijiMapReduceJobBuilder.create()
         .withConf(mConf)
         .withInput(new TextMapReduceJobInput(new Path("/path/to/my/input")))
         .withMapper(MyMapper.class)

@@ -24,8 +24,8 @@ import java.io.IOException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 
+import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.KijiTableContext;
-import org.kiji.mapreduce.MapReduceJob;
 import org.kiji.mapreduce.bulkimport.KijiBulkImportJobBuilder;
 import org.kiji.mapreduce.bulkimport.KijiBulkImporter;
 import org.kiji.mapreduce.input.KijiTableMapReduceJobInput;
@@ -71,7 +71,7 @@ public final class SimpleTableMapperAsBulkImporter
 
     final KijiDataRequest dataRequest = KijiDataRequest.create("primitives");
 
-    final MapReduceJob mrjob = KijiBulkImportJobBuilder.create()
+    final KijiMapReduceJob mrjob = KijiBulkImportJobBuilder.create()
         .withBulkImporter(SimpleTableMapperAsBulkImporter.class)
         .withInput(new KijiTableMapReduceJobInput(table.getURI(), dataRequest, new RowOptions()))
         .withOutput(new DirectKijiTableMapReduceJobOutput(table.getURI()))

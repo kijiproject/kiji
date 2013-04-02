@@ -110,7 +110,7 @@ public class TestKijiProduceJobBuilder extends KijiClientTest {
   @Test
   public void testBuildWithHFileOutput() throws ClassNotFoundException, IOException {
 
-    final MapReduceJob produceJob = KijiProduceJobBuilder.create()
+    final KijiMapReduceJob produceJob = KijiProduceJobBuilder.create()
         .withConf(getConf())
         .withInputTable(mTable.getURI())
         .withProducer(MyProducer.class)
@@ -144,7 +144,7 @@ public class TestKijiProduceJobBuilder extends KijiClientTest {
   @Test
   public void testEmptyKeyValueStore() throws ClassNotFoundException, IOException {
     // We override UnconfiguredKeyValueStore with EmptyKeyValueStore; this should succeed.
-    MapReduceJob produceJob = KijiProduceJobBuilder.create()
+    KijiMapReduceJob produceJob = KijiProduceJobBuilder.create()
         .withConf(getConf())
         .withInputTable(mTable.getURI())
         .withProducer(UnconfiguredKVProducer.class)

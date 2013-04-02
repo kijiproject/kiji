@@ -158,7 +158,7 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
         .withInputTable(fooTableURI)
         .withProducer(EmailDomainProducer.class)
         .withOutput(new DirectKijiTableMapReduceJobOutput(fooTableURI));
-    MapReduceJob mrJob = builder.build();
+    KijiMapReduceJob mrJob = builder.build();
 
     // Record the jobId and run the job.
     String jobName = mrJob.getHadoopJob().getJobName();
@@ -223,7 +223,7 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
         .withInputTable(fooTableURI)
         .withProducer(BrokenEmailDomainProducer.class)
         .withOutput(new DirectKijiTableMapReduceJobOutput(fooTableURI));
-    MapReduceJob mrJob = builder.build();
+    KijiMapReduceJob mrJob = builder.build();
 
     // Record the jobId and run the job. Make sure it completes and failed.
     String jobName = mrJob.getHadoopJob().getJobName();
@@ -260,10 +260,10 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
         .withInputTable(fooTableURI)
         .withProducer(EmailDomainProducer.class)
         .withOutput(new DirectKijiTableMapReduceJobOutput(fooTableURI));
-    MapReduceJob mrJob = builder.build();
+    KijiMapReduceJob mrJob = builder.build();
 
     LOG.info("About to submit job: " + mrJob.getHadoopJob().getJobName());
-    MapReduceJob.Status status = mrJob.submit();
+    KijiMapReduceJob.Status status = mrJob.submit();
     while (!status.isComplete()) {
       Thread.sleep(1000L);
     }
@@ -300,7 +300,7 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
         .withInputTable(fooTable.getURI())
         .withProducer(EmailDomainProducer.class)
         .withOutput(new DirectKijiTableMapReduceJobOutput(fooTable.getURI()));
-    final MapReduceJob mrJob = builder.build();
+    final KijiMapReduceJob mrJob = builder.build();
     assertTrue(mrJob.run());
 
     ResourceUtils.releaseOrLog(fooTable);
@@ -323,8 +323,8 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
         .withInputTable(fooTableURI)
         .withProducer(EmailDomainProducer.class)
         .withOutput(new DirectKijiTableMapReduceJobOutput(fooTableURI));
-    MapReduceJob mrJobOne = builderEmailDomain.build();
-    MapReduceJob mrJobTwo = builderEmailDomain.build();
+    KijiMapReduceJob mrJobOne = builderEmailDomain.build();
+    KijiMapReduceJob mrJobTwo = builderEmailDomain.build();
 
     // Run the first produce job.
     String jobOneName = mrJobOne.getHadoopJob().getJobName();

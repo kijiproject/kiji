@@ -36,7 +36,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.kiji.mapreduce.MapReduceJob;
+import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.gather.GathererContext;
 import org.kiji.mapreduce.gather.KijiGatherJobBuilder;
 import org.kiji.mapreduce.gather.KijiGatherer;
@@ -123,7 +123,7 @@ public class TestRegexQualifierColumnFilter extends KijiClientTest {
     final int numSplits = 1;
 
     // Run a gatherer over the test_table.
-    final MapReduceJob gatherJob = KijiGatherJobBuilder.create()
+    final KijiMapReduceJob gatherJob = KijiGatherJobBuilder.create()
         .withConf(getConf())
         .withInputTable(mTable.getURI())
         .withGatherer(MyGatherer.class)

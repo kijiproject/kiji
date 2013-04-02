@@ -49,9 +49,9 @@ import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.Inheritance;
 import org.kiji.mapreduce.DistributedCacheJars;
 import org.kiji.mapreduce.JobConfigurationException;
+import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.KijiMapper;
 import org.kiji.mapreduce.KijiReducer;
-import org.kiji.mapreduce.MapReduceJob;
 import org.kiji.mapreduce.MapReduceJobInput;
 import org.kiji.mapreduce.MapReduceJobOutput;
 import org.kiji.mapreduce.impl.HTableReader;
@@ -108,7 +108,7 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder<T>> {
    * @return A configured MapReduce job, ready to be run.
    * @throws IOException If there is an error.
    */
-  public MapReduceJob build() throws IOException {
+  public KijiMapReduceJob build() throws IOException {
     Preconditions.checkNotNull(mConf, "Must set the job base configuration using .withConf()");
     final Job job = new Job(mConf);
     configureJob(job);
@@ -631,7 +631,7 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder<T>> {
    * @param job The Hadoop MR job.
    * @return The built <code>MapReduceJob</code>.
    */
-  protected abstract MapReduceJob build(Job job);
+  protected abstract KijiMapReduceJob build(Job job);
 
   /**
    * Gets the input to configure the job with.

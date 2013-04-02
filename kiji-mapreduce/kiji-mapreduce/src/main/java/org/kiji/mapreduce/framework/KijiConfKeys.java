@@ -49,6 +49,9 @@ public final class KijiConfKeys {
   /** Kiji Instance Name. */
   public static final String KIJI_INSTANCE_NAME = "kiji.instance.name";
 
+  /** Polling interval in milliseconds for Kiji MapReduce jobs. */
+  public static final String KIJI_MAPREDUCE_POLL_INTERVAL = "kiji.mapreduce.poll.interval";
+
   /** Utility class may not be instantiated. */
   private KijiConfKeys() {
   }

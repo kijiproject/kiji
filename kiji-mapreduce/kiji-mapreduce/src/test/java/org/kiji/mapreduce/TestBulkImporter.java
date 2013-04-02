@@ -116,7 +116,7 @@ public class TestBulkImporter extends KijiClientTest {
         TestingResources.get("org/kiji/mapreduce/TestBulkImportInput.txt"));
 
     // Run the bulk-import:
-    final MapReduceJob job = KijiBulkImportJobBuilder.create()
+    final KijiMapReduceJob job = KijiBulkImportJobBuilder.create()
         .withConf(getConf())
         .withBulkImporter(SimpleBulkImporter.class)
         .withInput(new TextMapReduceJobInput(new Path(inputFile.toString())))
@@ -201,7 +201,7 @@ public class TestBulkImporter extends KijiClientTest {
         TestingResources.get("org/kiji/mapreduce/TestBulkImportInput.txt"));
 
     // Run the bulk-import:
-    final MapReduceJob job = KijiBulkImportJobBuilder.create()
+    final KijiMapReduceJob job = KijiBulkImportJobBuilder.create()
         .withConf(getConf())
         .withBulkImporter(BulkImporterWorkflow.class)
         .withInput(new TextMapReduceJobInput(new Path(inputFile.toString())))

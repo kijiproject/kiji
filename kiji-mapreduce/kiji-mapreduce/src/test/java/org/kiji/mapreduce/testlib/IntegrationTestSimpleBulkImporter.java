@@ -39,7 +39,7 @@ import org.junit.Test;
 
 import org.kiji.mapreduce.HFileLoader;
 import org.kiji.mapreduce.KijiMRTestLayouts;
-import org.kiji.mapreduce.MapReduceJob;
+import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.bulkimport.KijiBulkImportJobBuilder;
 import org.kiji.mapreduce.input.TextMapReduceJobInput;
 import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
@@ -152,7 +152,7 @@ public class IntegrationTestSimpleBulkImporter extends AbstractKijiIntegrationTe
 
   @Test
   public void testSimpleBulkImporterDirect() throws Exception {
-    final MapReduceJob mrjob = KijiBulkImportJobBuilder.create()
+    final KijiMapReduceJob mrjob = KijiBulkImportJobBuilder.create()
         .withConf(mConf)
         .withBulkImporter(SimpleBulkImporter.class)
         .withInput(new TextMapReduceJobInput(mBulkImportInputPath))
@@ -167,7 +167,7 @@ public class IntegrationTestSimpleBulkImporter extends AbstractKijiIntegrationTe
   public void testSimpleBulkImporterHFile() throws Exception {
     final Path hfileDirPath = this.makeRandomPath("hfile-output");
     try {
-      final MapReduceJob mrjob = KijiBulkImportJobBuilder.create()
+      final KijiMapReduceJob mrjob = KijiBulkImportJobBuilder.create()
           .withConf(mConf)
           .withBulkImporter(SimpleBulkImporter.class)
           .withInput(new TextMapReduceJobInput(mBulkImportInputPath))

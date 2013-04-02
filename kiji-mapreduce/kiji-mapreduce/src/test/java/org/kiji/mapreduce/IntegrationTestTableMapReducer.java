@@ -65,7 +65,7 @@ public class IntegrationTestTableMapReducer extends AbstractKijiIntegrationTest 
             String.format("/%s-%s-%d/table-mr-output",
                 getClass().getName(), mTestName.getMethodName(), System.currentTimeMillis()));
 
-        final MapReduceJob mrjob = KijiGatherJobBuilder.create()
+        final KijiMapReduceJob mrjob = KijiGatherJobBuilder.create()
             .withConf(conf)
             .withGatherer(SimpleTableMapReducer.TableMapper.class)
             .withReducer(SimpleTableMapReducer.TableReducer.class)

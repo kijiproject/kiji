@@ -129,7 +129,7 @@ public class TestGatherMapFamily extends KijiClientTest {
     final int numSplits = 1;
 
     // Run gatherer:
-    final MapReduceJob job = KijiGatherJobBuilder.create()
+    final KijiMapReduceJob job = KijiGatherJobBuilder.create()
         .withConf(getConf())
         .withGatherer(MapFamilyGatherer.class)
         .withInputTable(mTable.getURI())

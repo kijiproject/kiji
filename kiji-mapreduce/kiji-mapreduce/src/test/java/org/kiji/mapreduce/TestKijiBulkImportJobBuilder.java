@@ -105,7 +105,7 @@ public class TestKijiBulkImportJobBuilder extends KijiClientTest {
 
   @Test
   public void testBuildWithHFileOutput() throws Exception {
-    final MapReduceJob mrjob = KijiBulkImportJobBuilder.create()
+    final KijiMapReduceJob mrjob = KijiBulkImportJobBuilder.create()
         .withConf(getConf())
         .withInput(new TextMapReduceJobInput(new Path(mTempPath, "input")))
         .withBulkImporter(NoopBulkImporter.class)
@@ -125,7 +125,7 @@ public class TestKijiBulkImportJobBuilder extends KijiClientTest {
 
   @Test
   public void testBuildWithKeyValueStore() throws Exception {
-    final MapReduceJob mrjob = KijiBulkImportJobBuilder.create()
+    final KijiMapReduceJob mrjob = KijiBulkImportJobBuilder.create()
         .withConf(getConf())
         .withInput(new TextMapReduceJobInput(new Path(mTempPath, "input")))
         .withBulkImporter(KVStoreBulkImporter.class)

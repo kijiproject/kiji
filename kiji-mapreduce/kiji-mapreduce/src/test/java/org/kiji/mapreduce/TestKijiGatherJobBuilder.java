@@ -215,7 +215,7 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
 
   @Test
   public void testBuildValid() throws Exception {
-    final MapReduceJob gatherJob = KijiGatherJobBuilder.create()
+    final KijiMapReduceJob gatherJob = KijiGatherJobBuilder.create()
         .withConf(getConf())
         .withInputTable(mTable.getURI())
         .withGatherer(SimpleGatherer.class)
@@ -234,7 +234,7 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
 
   @Test
   public void testGatherToHFile() throws Exception {
-    final MapReduceJob gatherJob = KijiGatherJobBuilder.create()
+    final KijiMapReduceJob gatherJob = KijiGatherJobBuilder.create()
         .withConf(getConf())
         .withInputTable(mTable.getURI())
         .withGatherer(GatherToHFile.class)
@@ -254,7 +254,7 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
 
   @Test
   public void testGatherReducerToHFile() throws Exception {
-    final MapReduceJob gatherJob = KijiGatherJobBuilder.create()
+    final KijiMapReduceJob gatherJob = KijiGatherJobBuilder.create()
         .withConf(getConf())
         .withInputTable(mTable.getURI())
         .withGatherer(SimpleGatherer.class)
@@ -289,7 +289,7 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
   @Test
   public void testEmptyKeyValueStore() throws Exception {
     // We override UnconfiguredKeyValueStore with EmptyKeyValueStore; this should succeed.
-    final MapReduceJob gatherJob = KijiGatherJobBuilder.create()
+    final KijiMapReduceJob gatherJob = KijiGatherJobBuilder.create()
         .withConf(getConf())
         .withInputTable(mTable.getURI())
         .withGatherer(UnconfiguredKVGatherer.class)

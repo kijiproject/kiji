@@ -125,7 +125,7 @@ public class TestProducer extends KijiClientTest {
   @Test
   public void testSimpleProducer() throws Exception {
     // Run producer:
-    final MapReduceJob job = KijiProduceJobBuilder.create()
+    final KijiMapReduceJob job = KijiProduceJobBuilder.create()
         .withConf(getConf())
         .withProducer(SimpleProducer.class)
         .withInputTable(mTable.getURI())
@@ -206,7 +206,7 @@ public class TestProducer extends KijiClientTest {
   @Test
   public void testProducerWorkflow() throws Exception {
     // Run producer:
-    final MapReduceJob job = KijiProduceJobBuilder.create()
+    final KijiMapReduceJob job = KijiProduceJobBuilder.create()
         .withConf(getConf())
         .withProducer(ProducerWorkflow.class)
         .withInputTable(mTable.getURI())

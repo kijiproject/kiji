@@ -151,7 +151,7 @@ public class TestLaunchMapReduce {
     jobConf.set("fs.default.FS", tmpDir);
 
     // Run the transform (map-only job):
-    final MapReduceJob job = KijiMapReduceJobBuilder.create()
+    final KijiMapReduceJob job = KijiMapReduceJobBuilder.create()
         .withConf(jobConf)
         .withMapper(ExampleMapper.class)
         .withInput(new KijiTableMapReduceJobInput(

@@ -29,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
-import org.kiji.mapreduce.framework.KijiMapReduceJob;
 import org.kiji.mapreduce.framework.MapReduceJobBuilder;
 import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.kvstore.KeyValueStoreClient;
@@ -201,7 +200,7 @@ public final class KijiMapReduceJobBuilder extends MapReduceJobBuilder<KijiMapRe
 
   /** {@inheritDoc} */
   @Override
-  protected MapReduceJob build(Job job) {
+  protected KijiMapReduceJob build(Job job) {
     return KijiMapReduceJob.create(job);
   }
 

@@ -125,7 +125,7 @@ public class TestGatherer extends KijiClientTest {
     final int numSplits = 1;
 
     // Run gatherer:
-    final MapReduceJob job = KijiGatherJobBuilder.create()
+    final KijiMapReduceJob job = KijiGatherJobBuilder.create()
         .withConf(getConf())
         .withGatherer(TestingGatherer.class)
         .withInputTable(mTable.getURI())

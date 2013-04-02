@@ -33,13 +33,12 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.JobConfigurationException;
+import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.KijiMapper;
 import org.kiji.mapreduce.KijiReducer;
-import org.kiji.mapreduce.MapReduceJob;
 import org.kiji.mapreduce.MapReduceJobOutput;
 import org.kiji.mapreduce.framework.HFileKeyValue;
 import org.kiji.mapreduce.framework.KijiConfKeys;
-import org.kiji.mapreduce.framework.KijiMapReduceJob;
 import org.kiji.mapreduce.framework.KijiTableInputJobBuilder;
 import org.kiji.mapreduce.gather.impl.GatherMapper;
 import org.kiji.mapreduce.kvstore.KeyValueStore;
@@ -245,7 +244,7 @@ public final class KijiGatherJobBuilder extends KijiTableInputJobBuilder<KijiGat
 
   /** {@inheritDoc} */
   @Override
-  protected MapReduceJob build(Job job) {
+  protected KijiMapReduceJob build(Job job) {
     return KijiMapReduceJob.create(job);
   }
 

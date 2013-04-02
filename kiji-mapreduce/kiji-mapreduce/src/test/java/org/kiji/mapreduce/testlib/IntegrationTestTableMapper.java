@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.mapreduce.HFileLoader;
 import org.kiji.mapreduce.KijiMRTestLayouts;
-import org.kiji.mapreduce.MapReduceJob;
+import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.gather.KijiGatherJobBuilder;
 import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
 import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
@@ -156,7 +156,7 @@ public class IntegrationTestTableMapper extends AbstractKijiIntegrationTest {
 
   @Test
   public void testSimpleTableMapperDirect() throws Exception {
-    final MapReduceJob mrjob = KijiGatherJobBuilder.create()
+    final KijiMapReduceJob mrjob = KijiGatherJobBuilder.create()
         .withConf(mConf)
         .withGatherer(SimpleTableMapperAsGatherer.class)
         .withInputTable(mInputTable.getURI())
@@ -171,7 +171,7 @@ public class IntegrationTestTableMapper extends AbstractKijiIntegrationTest {
   public void testSimpleTableMapperHFiles() throws Exception {
     final Path hfileDirPath = this.makeRandomPath("hfile-output");
     try {
-      final MapReduceJob mrjob = KijiGatherJobBuilder.create()
+      final KijiMapReduceJob mrjob = KijiGatherJobBuilder.create()
           .withConf(mConf)
           .withGatherer(SimpleTableMapperAsGatherer.class)
           .withInputTable(mInputTable.getURI())
