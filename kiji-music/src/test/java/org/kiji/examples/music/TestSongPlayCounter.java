@@ -36,7 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.examples.music.gather.SongPlayCounter;
-import org.kiji.mapreduce.MapReduceJob;
+import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.gather.KijiGatherJobBuilder;
 import org.kiji.mapreduce.lib.reduce.LongSumReducer;
 import org.kiji.mapreduce.output.SequenceFileMapReduceJobOutput;
@@ -79,7 +79,7 @@ public class TestSongPlayCounter extends KijiClientTest {
   @Test
   public void testSongPlayCounter() throws Exception {
     final File outputDir = new File(getLocalTempDir(), "output.sequence_file");
-    final MapReduceJob mrjob = KijiGatherJobBuilder.create()
+    final KijiMapReduceJob mrjob = KijiGatherJobBuilder.create()
         .withConf(getConf())
         .withGatherer(SongPlayCounter.class)
         .withReducer(LongSumReducer.class)

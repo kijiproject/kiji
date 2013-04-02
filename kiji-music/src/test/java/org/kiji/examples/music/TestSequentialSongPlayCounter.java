@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.examples.music.gather.SequentialPlayCounter;
 import org.kiji.examples.music.reduce.SequentialPlayCountReducer;
-import org.kiji.mapreduce.MapReduceJob;
+import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.gather.KijiGatherJobBuilder;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
 import org.kiji.mapreduce.kvstore.lib.AvroKVRecordKeyValueStore;
@@ -77,7 +77,7 @@ public class TestSequentialSongPlayCounter extends KijiClientTest {
     // Configure and run job.
     final File outputDir = new File(getLocalTempDir(), "output.sequence_file");
     final Path path = new Path("file://" + outputDir);
-    final MapReduceJob mrjob = KijiGatherJobBuilder.create()
+    final KijiMapReduceJob mrjob = KijiGatherJobBuilder.create()
         .withConf(getConf())
         .withGatherer(SequentialPlayCounter.class)
         .withReducer(SequentialPlayCountReducer.class)

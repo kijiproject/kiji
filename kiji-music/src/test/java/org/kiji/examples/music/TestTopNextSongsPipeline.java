@@ -35,8 +35,8 @@ import org.kiji.examples.music.gather.SequentialPlayCounter;
 import org.kiji.examples.music.map.IdentityMapper;
 import org.kiji.examples.music.reduce.SequentialPlayCountReducer;
 import org.kiji.examples.music.reduce.TopNextSongsReducer;
+import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.KijiMapReduceJobBuilder;
-import org.kiji.mapreduce.MapReduceJob;
 import org.kiji.mapreduce.MapReduceJobOutput;
 import org.kiji.mapreduce.gather.KijiGatherJobBuilder;
 import org.kiji.mapreduce.input.AvroKeyValueMapReduceJobInput;
@@ -130,7 +130,7 @@ public class TestTopNextSongsPipeline extends KijiClientTest {
     final File outputDir = new File(getLocalTempDir(), "output.sequence_file");
     final Path path = new Path("file://" + outputDir);
     // Configure first job.
-    final MapReduceJob mrjob1 = KijiGatherJobBuilder.create()
+    final KijiMapReduceJob mrjob1 = KijiGatherJobBuilder.create()
         .withConf(getConf())
         .withGatherer(SequentialPlayCounter.class)
         .withReducer(SequentialPlayCountReducer.class)
@@ -140,7 +140,7 @@ public class TestTopNextSongsPipeline extends KijiClientTest {
         .build();
     // Configure second job.
     final MapReduceJobOutput tableOutput = new DirectKijiTableMapReduceJobOutput(mSongTableURI, 1);
-    final MapReduceJob mrjob2 = KijiMapReduceJobBuilder.create()
+    final KijiMapReduceJob mrjob2 = KijiMapReduceJobBuilder.create()
         .withConf(getConf())
         .withInput(new AvroKeyValueMapReduceJobInput(path))
         .withMapper(IdentityMapper.class)

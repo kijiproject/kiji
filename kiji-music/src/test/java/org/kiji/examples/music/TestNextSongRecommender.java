@@ -31,7 +31,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.kiji.examples.music.produce.NextSongRecommender;
-import org.kiji.mapreduce.MapReduceJob;
+import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.MapReduceJobOutput;
 import org.kiji.mapreduce.kvstore.lib.KijiTableKeyValueStore;
 import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
@@ -119,7 +119,7 @@ public class TestNextSongRecommender extends KijiClientTest {
     kvStoreBuilder.withColumn("info", "top_next_songs").withTable(mSongTableURI);
 
     // Configure first job.
-    final MapReduceJob mrjob = KijiProduceJobBuilder.create()
+    final KijiMapReduceJob mrjob = KijiProduceJobBuilder.create()
         .withConf(getConf())
         .withProducer(NextSongRecommender.class)
         .withInputTable(mUserTableURI)
