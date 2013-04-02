@@ -101,10 +101,10 @@ will be populated from the parent pom.
 
 For example:
 
-    <dependencies>
+    <dependency>
       <groupId>org.kiji.schema</groupId>
       <artifactId>kiji-schema</artifactId>
-    </dependencies>
+    </dependency>
 
 You will still need to specify which components you rely on. e.g., KijiSchema, KijiMR,
 etc. You must also select a `kiji-platform` definition to specify which versions of
@@ -112,8 +112,8 @@ Hadoop and HBase you want to use.
 
 For example:
 
-    <dependencies>
+    <dependency>
       <groupId>org.kiji.platforms</groupId>
       <artifactId>kiji-cdh4-platform</artifactId>
-    </dependencies>
+    </dependency>
 
