@@ -53,6 +53,9 @@ public final class BulkImporterTestUtils {
   public static final String JSON_IMPORT_DATA =
       "org/kiji/mapreduce/lib/mapping/TestJSONImportInput.txt";
 
+  public static final String XML_IMPORT_DATA =
+      "org/kiji/mapreduce/lib/mapping/TestXMLImportInput.txt";
+
   public static final String COMPLEX_JSON_IMPORT_DATA =
       "org/kiji/mapreduce/lib/mapping/TestComplexJSONImportInput.txt";
 
@@ -70,8 +73,17 @@ public final class BulkImporterTestUtils {
   public static final String FOO_TIMESTAMP_IMPORT_DESCRIPTOR =
       "org/kiji/mapreduce/lib/mapping/foo-test-timestamp-import-descriptor.json";
 
+  public static final String FOO_TIMESTAMP_XML_IMPORT_DESCRIPTOR =
+      "org/kiji/mapreduce/lib/mapping/foo-test-timestamp-xml-import-descriptor.json";
+
   public static final String FOO_JSONPATH_IMPORT_DESCRIPTOR =
       "org/kiji/mapreduce/lib/mapping/foo-test-jsonpath-import-descriptor.json";
+
+  public static final String FOO_XML_IMPORT_DESCRIPTOR =
+      "org/kiji/mapreduce/lib/mapping/foo-test-xml-import-descriptor.json";
+
+  public static final String FOO_LG_XML_IMPORT_DESCRIPTOR =
+      "org/kiji/mapreduce/lib/mapping/foo-test-lg-xml-import-descriptor.json";
 
   public static final String FOO_PRIMITIVE_IMPORT_DESCRIPTOR =
       "org/kiji/mapreduce/lib/mapping/foo-test-primitive-import-descriptor.json";

@@ -1,0 +1,3 @@
+<use>test</use><userfake></userfake>
+<user id="John"><first><![CDATA[John]]></first><last>Doe</last><email>johndoe@gmail.com</email><phone>202-555-9876</phone><time>1284102000</time></user>
+<user id="Alice"><first>Alice</first><last>Smith</last><email>alice.smith@yahoo.com</email><time>1352880000</time></user><user id="Bob"><first>Bob</first><last>Jones</last><email>bobbyj@aol.com</email><phone>415-555-4161</phone><time>1361520000</time></user>
