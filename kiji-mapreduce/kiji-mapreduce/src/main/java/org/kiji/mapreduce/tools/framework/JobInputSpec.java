@@ -61,7 +61,9 @@ public final class JobInputSpec {
     /** Text files from a file system. */
     TEXT("text"),
     /** A Kiji table. */
-    KIJI("kiji");
+    KIJI("kiji"),
+    /** XML files from a file system. */
+    XML("xml");
 
     /** The short name of the format. */
     private String mName;

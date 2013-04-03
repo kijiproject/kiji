@@ -40,6 +40,8 @@ public final class KijiMRTestLayouts {
 
   /** Generic test layout with user info, all primitive types, a map-type family of strings. */
   public static final String TEST_LAYOUT = "org/kiji/mapreduce/layout/test.json";
+  /** Multiple locality group test layout. */
+  public static final String LG_TEST_LAYOUT = "org/kiji/mapreduce/layout/lgtest.json";
 
   /**
    * @return a generic test layout.

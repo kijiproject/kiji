@@ -31,6 +31,7 @@ import org.kiji.mapreduce.input.KijiTableMapReduceJobInput;
 import org.kiji.mapreduce.input.SequenceFileMapReduceJobInput;
 import org.kiji.mapreduce.input.TextMapReduceJobInput;
 import org.kiji.mapreduce.input.WholeTextFileMapReduceJobInput;
+import org.kiji.mapreduce.input.XMLMapReduceJobInput;
 import org.kiji.mapreduce.tools.framework.JobInputSpec.Format;
 import org.kiji.schema.tools.SpaceSeparatedMapParser;
 
@@ -102,6 +103,8 @@ public final class MapReduceJobInputFactory {
       return new AvroKeyValueMapReduceJobInput();
     case KIJI:
       return new KijiTableMapReduceJobInput();
+    case XML:
+      return new XMLMapReduceJobInput();
     default:
       throw new RuntimeException(String.format("Unhandled job output format: '%s'.", format));
     }
