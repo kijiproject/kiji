@@ -217,7 +217,7 @@ class FakeHBase
       // TODO(taton) Implement metadata
     }
 
-    def modifyTable(tableName: String, desc: HTableDescriptor): Unit = {
+    def modifyTable(tableName: Bytes, desc: HTableDescriptor): Unit = {
       // TODO(taton) Implement metadata
     }
 

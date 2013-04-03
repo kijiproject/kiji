@@ -71,7 +71,7 @@ trait HBaseAdminCore
 
   def modifyColumn(tableName: Bytes, column: HColumnDescriptor): Unit
 
-  def modifyTable(tableName: String, desc: HTableDescriptor): Unit
+  def modifyTable(tableName: Bytes, desc: HTableDescriptor): Unit
 
   def tableExists(tableName: Bytes): Boolean
 }
@@ -143,7 +143,7 @@ trait HBaseAdminInterface
   def modifyColumn(tableName: String, column: HColumnDescriptor): Unit
   def modifyColumn(tableName: Bytes, column: HColumnDescriptor): Unit
 
-  def modifyTable(tableName: String, desc: HTableDescriptor): Unit
+  def modifyTable(tableName: Bytes, desc: HTableDescriptor): Unit
 
   def tableExists(tableName: String): Boolean
   def tableExists(tableName: Bytes): Boolean
