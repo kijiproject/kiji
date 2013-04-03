@@ -43,15 +43,18 @@ import org.kiji.schema.Kiji
 import org.kiji.schema.KijiURI
 
 /**
- * A [[Tap]] for reading data from a Kiji table.
- * <p>This tap is responsible for configuring a local job to read from a Kiji table.</p>
+ * A Scalding `Tap` for reading data from a Kiji table.
+ *
+ * <p>
+ *   This tap is responsible for configuring a local job to read from a Kiji table.
+ * </p>
  * <p>
  *   Note: Warnings about a missing serialVersionUID are ignored here. When KijiTap is serialized,
  *   the result is not persisted anywhere making serialVersionUID unnecessary.
  * </p>
  */
 @ApiAudience.Framework
-@ApiStability.Unstable
+@ApiStability.Experimental
 class LocalKijiTap(
     uri: KijiURI,
     private val scheme: LocalKijiScheme)
@@ -102,7 +105,9 @@ class LocalKijiTap(
     return new TupleEntrySchemeIterator[Properties, InputStream](
         process,
         getScheme(),
+        // scalastyle:off null
         if (null == input) new ByteArrayInputStream(Array()) else input,
+        // scalastyle:on null
         getIdentifier());
   }
 
@@ -112,7 +117,9 @@ class LocalKijiTap(
     return new TupleEntrySchemeCollector[Properties, OutputStream](
         process,
         getScheme(),
+        // scalastyle:off null
         if (null == output) new ByteArrayOutputStream() else output,
+        // scalastyle:on null
         getIdentifier());
   }
 

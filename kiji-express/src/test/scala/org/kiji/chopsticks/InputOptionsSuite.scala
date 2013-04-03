@@ -30,19 +30,19 @@ class InputOptionsSuite extends FunSuite {
   // def filter = new RegexQualifierColumnFilter(".*")
   val filter = new RegexQualifierColumnFilter(".*")
   val maxVersions = 2
-  val opts = new ColumnRequestOptions(maxVersions, filter)
+  val opts = new ColumnRequestOptions(maxVersions, Some(filter))
 
   test("maxVersions is the same as constructed with.") {
     assert(maxVersions == opts.maxVersions)
   }
 
   test("options is the same as constructed with.") {
-    assert(filter == opts.filter)
+    assert(Some(filter) == opts.filter)
   }
 
   test("ColumnRequestOptions with the same maxVersions & filter are equal and hash to the same "
       + "value.") {
-    val opts2 = new ColumnRequestOptions(maxVersions, filter)
+    val opts2 = new ColumnRequestOptions(maxVersions, Some(filter))
 
     assert(opts2 == opts)
     assert(opts2.hashCode == opts.hashCode)

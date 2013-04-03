@@ -34,7 +34,7 @@ class ColumnRequestSuite extends FunSuite {
   // Should be able to change the following line to:
   // def filter = new RegexQualifierColumnFilter(".*")
   val filter = new RegexQualifierColumnFilter(".*")
-  def opts: ColumnRequestOptions = new ColumnRequestOptions(1, filter)
+  def opts: ColumnRequestOptions = new ColumnRequestOptions(1, Some(filter))
   val colFamily = "myfamily"
   val colQualifier = "myqualifier"
 
@@ -74,7 +74,7 @@ class ColumnRequestSuite extends FunSuite {
     // TODO(CHOP-37): The filter is null because it's not serializable. Once CHOP-37 is
     // done, use the same inputoptions as the other tests in the line below.
     val col: QualifiedColumn =
-        new QualifiedColumn(colFamily, colQualifier, new ColumnRequestOptions(1, null))
+        new QualifiedColumn(colFamily, colQualifier, new ColumnRequestOptions(1, None))
     val bytesOut = new ByteArrayOutputStream()
     val out = new ObjectOutputStream(bytesOut)
     out.writeObject(col)

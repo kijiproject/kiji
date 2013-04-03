@@ -26,7 +26,7 @@ import org.kiji.annotations.ApiStability
 import org.kiji.schema.util.ReferenceCountable
 
 @ApiAudience.Public
-@ApiStability.Unstable
+@ApiStability.Experimental
 object Resources {
   /**
    * Exception that contains multiple exceptions.
@@ -89,7 +89,7 @@ object Resources {
    * @param fn Operation to perform.
    * @return The result of the operation.
    */
-  def retainAnd[T, R <: ReferenceCountable[_]](
+  def retainAnd[T, R <: ReferenceCountable[R]](
       resource: => ReferenceCountable[R])(fn: R => T): T = {
     doAndRelease[T, R](resource.retain())(fn)
   }
@@ -104,7 +104,7 @@ object Resources {
    * @param fn Operation to perform.
    * @return The restult of the operation.
    */
-  def doAndRelease[T, R <: ReferenceCountable[_]](resource: => R)(fn: R => T): T = {
+  def doAndRelease[T, R <: ReferenceCountable[R]](resource: => R)(fn: R => T): T = {
     def after(r: R) { r.release() }
     doAnd(resource, after)(fn)
   }

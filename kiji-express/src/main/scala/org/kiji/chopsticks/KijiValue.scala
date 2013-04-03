@@ -24,14 +24,16 @@ import org.kiji.annotations.ApiStability;
 import org.kiji.schema.KijiRowData;
 
 /**
- * Acts as a wrapper around [[KijiRowData]]. Instances of this class can be reused in MapReduce
- * jobs to wrap [[KijiRowData]] read from a Kiji table.
+ * Acts as a wrapper around [[org.kiji.schema.KijiRowData]]. Instances of this class can be reused
+ * in MapReduce jobs to wrap [[org.kiji.schema.KijiRowData]] read from a Kiji table.
  */
 @ApiAudience.Private
-@ApiStability.Unstable
+@ApiStability.Experimental
 final class KijiValue {
   /** The row data being wrapped by this instance. */
+  // scalastyle:off null
   private var currentValue: KijiRowData = null
+  // scalastyle:on null
 
   /**
    * @return the row data wrapped by this instance.

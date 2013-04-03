@@ -33,10 +33,12 @@ import org.kiji.schema.EntityId
  * MapReduce framework a reusable container.
  */
 @ApiAudience.Private
-@ApiStability.Unstable
+@ApiStability.Experimental
 final class KijiKey {
   /** The entity id contained by this instance. */
+  // scalastyle:off null
   private var currentKey: EntityId = null
+  // scalastyle:on null
 
   /**
    * @return the entity id contained in this instance.

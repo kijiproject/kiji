@@ -60,20 +60,23 @@ private[chopsticks] case class InputContext(
 /**
  * A scheme that can source and sink data from a Kiji table.
  *
- * <p>This scheme is responsible for converting rows from a Kiji table that are input to a
- * Cascading flow into Cascading tuples (see
- * [[#source(cascading.flow.FlowProcess, cascading.scheme.SourceCall)]]) and writing output
- * data from a Cascading flow to a Kiji table
- * (see [[#sink(cascading.flow.FlowProcess, cascading.scheme.SinkCall)]]). This scheme is meant
- * to be used with [[LocalKijiTap]] and Cascading's local job runner. Jobs run with Cascading's
- * local job runner execute on your local machine instead of a cluster. This can be helpful for
- * testing or quick jobs.</p>
- *
- * <p>Note: Warnings about a missing serialVersionUID are ignored here. When KijiScheme is
- * serialized, the result is not persisted anywhere making serialVersionUID unnecessary.</p>
+ * <p>
+ *   This scheme is responsible for converting rows from a Kiji table that are input to a
+ *   Cascading flow into Cascading tuples (see
+ *   `source(cascading.flow.FlowProcess, cascading.scheme.SourceCall)`) and writing output
+ *   data from a Cascading flow to a Kiji table
+ *   (see `sink(cascading.flow.FlowProcess, cascading.scheme.SinkCall)`). This scheme is meant
+ *   to be used with [[org.kiji.chopsticks.LocalKijiTap]] and Cascading's local job runner. Jobs run
+ *   with Cascading's local job runner execute on your local machine instead of a cluster. This can
+ *   be helpful for testing or quick jobs.
+ * </p>
+ * <p>
+ *   Note: Warnings about a missing serialVersionUID are ignored here. When KijiScheme is
+ *   serialized, the result is not persisted anywhere making serialVersionUID unnecessary.
+ * </p>
  */
 @ApiAudience.Framework
-@ApiStability.Unstable
+@ApiStability.Experimental
 class LocalKijiScheme(
     private val timeRange: TimeRange,
     private val timestampField: Option[Symbol],
@@ -163,7 +166,11 @@ class LocalKijiScheme(
     val context: InputContext = sourceCall.getContext()
     context.reader.close()
     context.scanner.close()
+
+    // Set the context to null so that we no longer hold any references to it.
+    // scalastyle:off null
     sourceCall.setContext(null)
+    // scalastyle:on null
   }
 
   /**
@@ -232,7 +239,11 @@ class LocalKijiScheme(
       process: FlowProcess[Properties],
       sinkCall: SinkCall[KijiTableWriter, OutputStream]) {
     sinkCall.getContext().close()
+
+    // Set the context to null so that we no longer hold any references to it.
+    // scalastyle:off null
     sinkCall.setContext(null)
+    // scalastyle:off null
   }
 
   override def equals(other: Any): Boolean = {

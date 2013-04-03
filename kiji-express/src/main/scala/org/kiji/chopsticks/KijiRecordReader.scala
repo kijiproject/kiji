@@ -66,7 +66,7 @@ import org.kiji.schema.KijiURI
  *     request.
  */
 @ApiAudience.Framework
-@ApiStability.Unstable
+@ApiStability.Experimental
 final class KijiRecordReader(
     private val split: KijiTableSplit,
     private val configuration: Configuration)
@@ -161,12 +161,14 @@ final class KijiRecordReader(
     if (iterator.hasNext()) {
       // Read the next row and store it in the provided key/value pair.
       val row: KijiRowData = iterator.next()
+      // scalastyle:off null
       if (null != key) {
         key.set(row.getEntityId())
       }
       if (null != value) {
         value.set(row)
       }
+      // scalastyle:off null
       true
     } else {
       false

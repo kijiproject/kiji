@@ -91,7 +91,7 @@ import org.kiji.schema.KijiURI
  *                writing, values from the tuple fields will be written to their associated column.
  */
 @ApiAudience.Framework
-@ApiStability.Unstable
+@ApiStability.Experimental
 final class KijiSource private[chopsticks] (
     val tableAddress: String,
     val timeRange: TimeRange,
@@ -163,12 +163,14 @@ final class KijiSource private[chopsticks] (
             case ColumnFamily(family, _) => {
               for (entry <- timeline.asScala) {
                 val (key, value) = entry
+                // scalastyle:off null
                 writer.put(
                     entityId,
                     family,
                     null,
                     key,
                     value)
+                // scalastyle:on null
               }
             }
             case QualifiedColumn(family, qualifier, _) => {

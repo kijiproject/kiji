@@ -108,7 +108,7 @@ import org.kiji.schema.filter.RegexQualifierColumnFilter
  * }}}
  */
 @ApiAudience.Public
-@ApiStability.Unstable
+@ApiStability.Experimental
 object DSL {
   /** Used with a column request to indicate that all cells of a column should be retrieved. */
   val all = HConstants.ALL_VERSIONS
@@ -135,11 +135,11 @@ object DSL {
       name: String,
       qualifierMatches: String = "",
       versions: Int = latest): ColumnFamily = {
-    val filter: KijiColumnFilter = {
+    val filter: Option[KijiColumnFilter] = {
       if ("" == qualifierMatches) {
-        null
+        None
       } else {
-        new RegexQualifierColumnFilter(qualifierMatches)
+        Some(new RegexQualifierColumnFilter(qualifierMatches))
       }
     }
 
@@ -163,7 +163,7 @@ object DSL {
         new QualifiedColumn(
             family,
             qualifier,
-            new ColumnRequestOptions(versions, null))
+            new ColumnRequestOptions(versions, None))
       }
       case Array(family) => {
         throw new KijiInvalidNameException(
@@ -174,7 +174,7 @@ object DSL {
       }
       case _ => {
         throw new KijiInvalidNameException(
-          "Specify the fully qualified column name in the format \"family:qualifier\".")
+            "Specify the fully qualified column name in the format \"family:qualifier\".")
       }
     }
   }
@@ -295,7 +295,9 @@ object DSL {
    */
   def KijiOutput(
       tableURI: String,
+      // scalastyle:off null
       tsField: Symbol = null)
+      // scalastyle:on null
       (columns: (Symbol, String)*): KijiSource = {
     val columnMap = columns
         .toMap

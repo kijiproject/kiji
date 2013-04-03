@@ -39,7 +39,7 @@ import org.kiji.schema.KConstants
  *     }}}
  */
 @ApiAudience.Public
-@ApiStability.Unstable
+@ApiStability.Experimental
 sealed trait TimeRange extends Serializable {
   /** Earliest timestamp of the TimeRange. */
   def begin: Long
@@ -54,7 +54,7 @@ object TimeRange {
    * Specifies that all timestamps should be requested.
    */
   @ApiAudience.Public
-  @ApiStability.Unstable
+  @ApiStability.Experimental
   final case object All extends TimeRange {
     override val begin: Long = KConstants.BEGINNING_OF_TIME
     override val end: Long = KConstants.END_OF_TIME
@@ -76,7 +76,7 @@ object TimeRange {
    * @param begin Earliest timestamp that should be requested.
    */
   @ApiAudience.Public
-  @ApiStability.Unstable
+  @ApiStability.Experimental
   final case class After(override val begin: Long) extends TimeRange {
     override val end: Long = KConstants.END_OF_TIME
   }
@@ -87,7 +87,7 @@ object TimeRange {
    * @param end Latest timestamp that should be requested.
    */
   @ApiAudience.Public
-  @ApiStability.Unstable
+  @ApiStability.Experimental
   final case class Before(override val end: Long) extends TimeRange {
     override val begin: Long = KConstants.BEGINNING_OF_TIME
   }
@@ -100,7 +100,7 @@ object TimeRange {
    * @param end Latest timestamp that should be requested.
    */
   @ApiAudience.Public
-  @ApiStability.Unstable
+  @ApiStability.Experimental
   final case class Between(
       override val begin: Long,
       override val end: Long) extends TimeRange {

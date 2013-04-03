@@ -36,7 +36,7 @@ import org.kiji.schema.util.KijiNameValidator
  * request options.
  */
 @ApiAudience.Public
-@ApiStability.Unstable
+@ApiStability.Experimental
 private[chopsticks] sealed trait ColumnRequest extends Serializable
 
 /**
@@ -48,7 +48,7 @@ private[chopsticks] sealed trait ColumnRequest extends Serializable
  *     request options will be used.
  */
 @ApiAudience.Public
-@ApiStability.Unstable
+@ApiStability.Experimental
 final case class QualifiedColumn private[chopsticks] (
     family: String,
     qualifier: String,
@@ -66,7 +66,7 @@ final case class QualifiedColumn private[chopsticks] (
  *     unspecified, default request options are used.
  */
 @ApiAudience.Public
-@ApiStability.Unstable
+@ApiStability.Experimental
 final case class ColumnFamily private[chopsticks] (
     family: String,
     options: ColumnRequestOptions = ColumnRequestOptions())
@@ -83,11 +83,11 @@ final case class ColumnFamily private[chopsticks] (
  *     applied.
  */
 @ApiAudience.Public
-@ApiStability.Unstable
+@ApiStability.Experimental
 final case class ColumnRequestOptions private[chopsticks] (
     maxVersions: Int = 1,
     // Not accessible to end-users because the type is soon to be replaced by a
     // Chopsticks-specific implementation.
-    private[chopsticks] val filter: KijiColumnFilter = null)
+    private[chopsticks] val filter: Option[KijiColumnFilter] = None)
     extends Serializable {
 }

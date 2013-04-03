@@ -60,7 +60,7 @@ import org.kiji.schema.impl.HBaseKijiTable
  * input format exists to address this compatibility issue.
  */
 @ApiAudience.Framework
-@ApiStability.Unstable
+@ApiStability.Experimental
 final class KijiInputFormat
     extends InputFormat[KijiKey, KijiValue] {
   /**
@@ -85,16 +85,22 @@ final class KijiInputFormat
               val startKey: Array[Byte] = region.getStartKey()
               // TODO(KIJIMR-65): For now pick the first available location (ie. region server),
               //     if any.
-              val location: String = if (region.getLocations().isEmpty()) {
-                    null
-                  } else {
-                    region.getLocations().iterator().next()
-                  }
-              val tableSplit: TableSplit = new TableSplit(
-                  htable.getTableName(),
-                  startKey,
-                  region.getEndKey(),
-                  location)
+              val location: String = {
+                if (region.getLocations().isEmpty()) {
+                  // scalastyle:off null
+                  null
+                  // scalastyle:on null
+                } else {
+                  region.getLocations().iterator().next()
+                }
+              }
+              val tableSplit: TableSplit = {
+                new TableSplit(
+                    htable.getTableName(),
+                    startKey,
+                    region.getEndKey(),
+                    location)
+              }
 
               new KijiTableSplit(tableSplit)
             }

@@ -21,25 +21,22 @@ package org.kiji.chopsticks
 
 import org.apache.hadoop.hbase.client.Result
 import org.scalatest.FunSuite
+import org.scalatest.mock.EasyMockSugar
 
 import org.kiji.schema.KijiDataRequest
+import org.kiji.schema.KijiRowData
 import org.kiji.schema.KijiSchemaTable
 import org.kiji.schema.KijiURI
-import org.kiji.schema.impl.HBaseKijiRowData
 import org.kiji.schema.impl.HBaseKijiTableReader
 import org.kiji.schema.layout.KijiTableLayout
 
-class KijiValueSuite extends FunSuite {
-  val kijiURI = KijiURI.newBuilder("kiji://.env/default").build();
-  val tableName = "mTable"
-
+class KijiValueSuite extends FunSuite with EasyMockSugar {
   test("KijiValue should get the same RowData you put in.") {
-    val dataRequest = KijiDataRequest.create("columnfamily")
-    val result = new Result()
-    val rowData = new HBaseKijiRowData(null, dataRequest, null, null, result, null)
-    val testValue = new KijiValue()
-    testValue.set(rowData)
+    val value = new KijiValue()
+    val row = mock[KijiRowData]
 
-    assert(rowData == testValue.get())
+    value.set(row)
+
+    assert(row == value.get())
   }
 }

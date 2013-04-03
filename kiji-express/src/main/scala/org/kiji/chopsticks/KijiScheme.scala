@@ -57,18 +57,17 @@ import com.google.common.base.Objects
 /**
  * A scheme that can source and sink data from a Kiji table. This scheme is responsible for
  * converting rows from a Kiji table that are input to a Cascading flow into Cascading tuples (see
- * [[#source(cascading.flow.FlowProcess, cascading.scheme.SourceCall)]]) and writing output
+ * `source(cascading.flow.FlowProcess, cascading.scheme.SourceCall)`) and writing output
  * data from a Cascading flow to a Kiji table
- * (see [[#sink(cascading.flow.FlowProcess, cascading.scheme.SinkCall)]]).
+ * (see `sink(cascading.flow.FlowProcess, cascading.scheme.SinkCall)`).
  *
  * @param timeRange that cells read by this scheme must belong to.
  * @param timestampField is the name of a tuple field that will contain cell timestamp when the
- *                       source is used for writing. Specify `None` to write all
- *                       cells at the current time.
+ *     source is used for writing. Specify `None` to write all cells at the current time.
  * @param columns mapping tuple field names to Kiji column names.
  */
 @ApiAudience.Framework
-@ApiStability.Unstable
+@ApiStability.Experimental
 class KijiScheme(
     private val timeRange: TimeRange,
     private val timestampField: Option[Symbol],
@@ -147,7 +146,10 @@ class KijiScheme(
     // and use that to set the result tuple.
     // Return true as soon as a result tuple has been set,
     // or false if we reach the end of the RecordReader.
+
+    // scalastyle:off null
     while (sourceCall.getInput().next(null, value)) {
+    // scalastyle:on null
       val row: KijiRowData = value.get()
 
       // If all fields are present, set the result tuple and return from this method.
@@ -180,7 +182,9 @@ class KijiScheme(
   override def sourceCleanup(
       process: FlowProcess[JobConf],
       sourceCall: SourceCall[KijiValue, RecordReader[KijiKey, KijiValue]]) {
+    // scalastyle:off null
     sourceCall.setContext(null)
+    // scalastyle:on null
   }
 
   /**
@@ -253,7 +257,9 @@ class KijiScheme(
       sinkCall: SinkCall[KijiTableWriter, OutputCollector[_, _]]) {
     // Close the writer.
     sinkCall.getContext().close()
+    // scalastyle:off null
     sinkCall.setContext(null)
+    // scalastyle:on null
   }
 
   override def equals(other: Any): Boolean = {
@@ -322,15 +328,15 @@ object KijiScheme {
         .filter { field => field.toString != entityIdField  }
         .filter { field => field.toString != timestampField.getOrElse(Symbol("")).name }
         .map { field => columns(field.toString) }
-          // Build the tuple, by adding each requested value into result.
-          .foreach {
-            case ColumnFamily(family, _) => {
-              result.add (row.getValues(family))
-            }
-            case QualifiedColumn(family, qualifier, _) => {
-              result.add(row.getValues(family, qualifier))
-            }
-         }
+        // Build the tuple, by adding each requested value into result.
+        .foreach {
+          case ColumnFamily(family, _) => {
+            result.add (row.getValues(family))
+          }
+          case QualifiedColumn(family, qualifier, _) => {
+            result.add(row.getValues(family, qualifier))
+          }
+        }
 
     return result
   }
@@ -371,7 +377,9 @@ object KijiScheme {
           writer.put(
               entityId,
               family,
+              // scalastyle:off null
               null,
+              // scalastyle:on null
               timestamp,
               output.getObject(fieldName.toString()))
         }
@@ -395,13 +403,17 @@ object KijiScheme {
         case ColumnFamily(family, inputOptions) => {
           builder.newColumnsDef()
               .withMaxVersions(inputOptions.maxVersions)
-              .withFilter(inputOptions.filter)
+              // scalastyle:off null
+              .withFilter(inputOptions.filter.getOrElse(null))
+              // scalastyle:on null
               .add(new KijiColumnName(family))
         }
         case QualifiedColumn(family, qualifier, inputOptions) => {
           builder.newColumnsDef()
               .withMaxVersions(inputOptions.maxVersions)
-              .withFilter(inputOptions.filter)
+              // scalastyle:off null
+              .withFilter(inputOptions.filter.getOrElse(null))
+              // scalastyle:on null
               .add(new KijiColumnName(family, qualifier))
         }
       }

@@ -20,13 +20,14 @@
   <parent>
     <groupId>org.kiji.pom</groupId>
     <artifactId>root-pom</artifactId>
-    <version>1.0.4-SNAPSHOT</version>
+    <version>1.0.5</version>
   </parent>
 
   <properties>
     <cascading.version>2.0.7</cascading.version>
     <scalding.version>0.8.3</scalding.version>
-    <kiji.version>1.0.0-rc5-SNAPSHOT</kiji.version>
+    <kiji.version>1.0.0</kiji.version>
+    <kiji-mr.version>1.0.0-rc6-SNAPSHOT</kiji-mr.version>
     <scalatest.version>2.0.M5b</scalatest.version>
     <twitter-util.version>6.2.0</twitter-util.version>
   </properties>
@@ -71,7 +72,7 @@
     <dependency>
       <groupId>org.kiji.mapreduce</groupId>
       <artifactId>kiji-mapreduce</artifactId>
-      <version>${kiji.version}</version>
+      <version>${kiji-mr.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -141,6 +142,10 @@
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.easymock</groupId>
+      <artifactId>easymock</artifactId>
+    </dependency>
   </dependencies>
 
   <build>
@@ -166,6 +171,11 @@
               <goal>testCompile</goal>
             </goals>
             <configuration>
+              <args>
+                <arg>-unchecked</arg>
+                <arg>-deprecation</arg>
+                <arg>-explaintypes</arg>
+              </args>
               <sendJavaToScalac>false</sendJavaToScalac>
             </configuration>
           </execution>

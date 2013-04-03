@@ -53,7 +53,7 @@ import org.kiji.schema.Kiji
 import org.kiji.schema.KijiURI
 
 /**
- * A [[Tap]] for reading data from a Kiji table. The tap is responsible for configuring a
+ * A Scalding `Tap` for reading data from a Kiji table. The tap is responsible for configuring a
  * MapReduce job with the correct input format for reading from a Kiji table,
  * as well as the proper classpath dependencies for MapReduce tasks.
  *
@@ -62,7 +62,7 @@ import org.kiji.schema.KijiURI
  *
  * @param uri for the Kiji table this tap will be used to read.
  * @param scheme to be used with this tap that will convert data read from Kiji into Cascading's
- *     tuple model. Note: You must use [[KijiScheme]] with this tap.
+ *     tuple model. Note: You must use [[org.kiji.chopsticks.KijiScheme]] with this tap.
  */
 class KijiTap(
     uri: KijiURI,

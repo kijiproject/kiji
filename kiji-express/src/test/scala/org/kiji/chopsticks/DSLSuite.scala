@@ -46,7 +46,7 @@ class DSLSuite extends FunSuite {
     val colReq: ColumnFamily = MapFamily("search", qualifierMatches=""".*\.com""")
 
     // TODO: Test it filters keyvalues correctly.
-    assert(colReq.options.filter.isInstanceOf[RegexQualifierColumnFilter])
+    assert(colReq.options.filter.get.isInstanceOf[RegexQualifierColumnFilter])
   }
 
   test("DSL should let you specify versions on maptype column without qualifier regex.") {
