@@ -68,12 +68,7 @@ public class NextSongRecommender extends KijiProducer implements KeyValueStoreCl
   public void produce(KijiRowData input, ProducerContext context) throws IOException {
     // Open the key value store reader.
     KeyValueStoreReader<String, TopSongs> topNextSongsReader = null;
-    try {
-      topNextSongsReader = context.getStore("nextPlayed");
-    } catch (InterruptedException ex) {
-      // It is pointless to continue if we can't open the key value store.
-      throw new RuntimeException(ex);
-    }
+    topNextSongsReader = context.getStore("nextPlayed");
     // Get the most recent song the user has listened to:
     String mostRecentSong = input.<CharSequence>getMostRecentValue("info", "track_plays")
         .toString(); // Avro strings get deserialized to CharSequences.
