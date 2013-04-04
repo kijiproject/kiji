@@ -14,7 +14,8 @@ data stored in Kiji tables from Hive.
 
 ## Automatic Hive Shell
 The included bin/bento-hive.sh script can be executed to automatically start a Hive shell
-with the Kiji Hive adapter(and its dependencies preloaded).
+with the Kiji Hive adapter(and its dependencies preloaded).  If necessary, this script will
+automatically download Apache Hive from Cloudera.
 
 This script can take an argument of a Kiji table URI to automatically create the table handler
 from the specified table.  Currently this only supports String types, but the generated SQL
@@ -106,7 +107,7 @@ List all of the tracks that were played:
     SELECT track_plays.value FROM users;
 
 Show only the first 10 users:
-    SELECT track.plays.value FROM users LIMIT 10;
+    SELECT track_plays.value FROM users LIMIT 10;
 
 List all tracks that were played by play order:
     SELECT track_plays.ts,track_plays.value FROM users order by ts ASC;
