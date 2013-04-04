@@ -33,204 +33,247 @@ import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 import org.apache.hadoop.hbase.util.Bytes
+import org.apache.hadoop.hbase.filter.ColumnRangeFilter
 
 @RunWith(classOf[JUnitRunner])
 class TestFakeHTable extends FunSuite {
+  type Bytes = Array[Byte]
 
-  test("HTable.get() on unknown row") {
-    val table = new FakeHTable(name = "table", desc = null)
-    expect(true)(table.get(new Get("key".getBytes)).isEmpty)
+  /**
+   * Implicitly converts string to UTF-8 bytes.
+   *
+   * @param string String to convert to bytes.
+   * @return the string as UTF-8 encoded bytes.
+   */
+  implicit def stringToBytes(string: String): Bytes = {
+    return Bytes.toBytes(string)
   }
 
-  test("HTable.scan() on empty table") {
-    val table = new FakeHTable(name = "table", desc = null)
-    expect(null)(table.getScanner("family".getBytes).next)
+  /**
+   * Decodes UTF-8 encoded bytes to a string.
+   *
+   * @param bytes UTF-8 encoded bytes.
+   * @return the decoded string.
+   */
+  def bytesToString(bytes: Bytes): String = {
+    return Bytes.toString(bytes)
   }
 
-  test("HTable.delete() on unknown row") {
-    val table = new FakeHTable(name = "table", desc = null)
-    table.delete(new Delete("key".getBytes))
+  /**
+   * Implicit string wrapper to add convenience encoding methods
+   *
+   * <p>
+   *   Allows to write <code>"the string"b</code> to represent the UTF-8 bytes for "the string".
+   * </p>
+   *
+   * @param str String to wrap.
+   */
+  class StringAsBytes(str: String) {
+    /** Encodes the string to UTF-8 bytes. */
+    def bytes(): Bytes = stringToBytes(str)
+
+    /** Shortcut for bytes(). */
+    def b = bytes()
   }
 
-  test("HTable.put(row) then HTable.get(row)") {
-    val table = new FakeHTable(name = "table", desc = null)
-    table.put(new Put("key".getBytes)
-        .add("family".getBytes, "qualifier".getBytes, 12345L, "value".getBytes))
+  implicit def implicitToStringAsBytes(str: String): StringAsBytes = {
+    return new StringAsBytes(str)
+  }
 
-    val result = table.get(new Get("key".getBytes))
+  test("HTable.get on unknown row") {
+    val table = new FakeHTable(name = "table", desc = null)
+    expect(true)(table.get(new Get("key")).isEmpty)
+  }
+
+  test("HTable.scan on empty table") {
+    val table = new FakeHTable(name = "table", desc = null)
+    expect(null)(table.getScanner("family").next)
+  }
+
+  test("HTable.delete on unknown row") {
+    val table = new FakeHTable(name = "table", desc = null)
+    table.delete(new Delete("key"))
+  }
+
+  test("HTable.put row then HTable.get row") {
+    val table = new FakeHTable(name = "table", desc = null)
+    table.put(new Put("key")
+        .add("family", "qualifier", 12345L, "value"))
+
+    val result = table.get(new Get("key"))
     expect(false)(result.isEmpty)
-    expect("key")(new String(result.getRow))
-    expect("value")(new String(result.value))
+    expect("key")(Bytes.toString(result.getRow))
+    expect("value")(Bytes.toString(result.value))
 
     expect(1)(result.getMap.size)
-    expect(1)(result.getMap.get("family".getBytes).size)
-    expect(1)(result.getMap.get("family".getBytes).get("qualifier".getBytes).size)
+    expect(1)(result.getMap.get("family"b).size)
+    expect(1)(result.getMap.get("family"b).get("qualifier"b).size)
     expect("value")(
-        new String(result.getMap.get("family".getBytes).get("qualifier".getBytes).get(12345L)))
+        Bytes.toString(result.getMap.get("family"b).get("qualifier"b).get(12345L)))
   }
 
-  test("HTable.put(row) then HTable.scan(family)") {
+  test("HTable.put row then HTable.scan family") {
     val table = new FakeHTable(name = "table", desc = null)
-    table.put(new Put("key".getBytes)
-        .add("family".getBytes, "qualifier".getBytes, 12345L, "value".getBytes))
+    table.put(new Put("key")
+        .add("family", "qualifier", 12345L, "value"))
 
-    val scanner = table.getScanner("family".getBytes)
+    val scanner = table.getScanner("family")
     val it = scanner.iterator
     expect(true)(it.hasNext)
     val result = it.next
     expect(false)(result.isEmpty)
-    expect("key")(new String(result.getRow))
-    expect("value")(new String(result.value))
+    expect("key")(Bytes.toString(result.getRow))
+    expect("value")(Bytes.toString(result.value))
 
     expect(1)(result.getMap.size)
-    expect(1)(result.getMap.get("family".getBytes).size)
-    expect(1)(result.getMap.get("family".getBytes).get("qualifier".getBytes).size)
+    expect(1)(result.getMap.get("family"b).size)
+    expect(1)(result.getMap.get("family"b).get("qualifier"b).size)
     expect("value")(
-        new String(result.getMap.get("family".getBytes).get("qualifier".getBytes).get(12345L)))
+        Bytes.toString(result.getMap.get("family"b).get("qualifier"b).get(12345L)))
 
     expect(false)(it.hasNext)
   }
 
-  test("HTable.put(row) then HTable.delete(row)") {
+  test("HTable.put row then HTable.delete row") {
     val table = new FakeHTable(name = "table", desc = null)
-    table.put(new Put("key".getBytes)
-        .add("family".getBytes, "qualifier".getBytes, 12345L, "value".getBytes))
+    table.put(new Put("key")
+        .add("family", "qualifier", 12345L, "value"))
 
-    table.delete(new Delete("key".getBytes))
-    expect(true)(table.get(new Get("key".getBytes)).isEmpty)
+    table.delete(new Delete("key"))
+    expect(true)(table.get(new Get("key")).isEmpty)
   }
 
-  test("HTable.incrementeColumnValue()") {
+  test("HTable.incrementeColumnValue") {
     val table = new FakeHTable(name = "table", desc = null)
     expect(1)(table.incrementColumnValue(
-        row = "row".getBytes,
-        family = "family".getBytes,
-        qualifier = "qualifier".getBytes,
+        row = "row",
+        family = "family",
+        qualifier = "qualifier",
         amount = 1))
     expect(2)(table.incrementColumnValue(
-        row = "row".getBytes,
-        family = "family".getBytes,
-        qualifier = "qualifier".getBytes,
+        row = "row",
+        family = "family",
+        qualifier = "qualifier",
         amount = 1))
     expect(3)(table.incrementColumnValue(
-        row = "row".getBytes,
-        family = "family".getBytes,
-        qualifier = "qualifier".getBytes,
+        row = "row",
+        family = "family",
+        qualifier = "qualifier",
         amount = 1))
   }
 
-  test("HTable.delete() on specific cell") {
+  test("HTable.delete on specific cell") {
     val table = new FakeHTable(name = "table", desc = null)
-    table.put(new Put("key".getBytes)
-        .add("family".getBytes, "qualifier".getBytes, 1L, "value1".getBytes))
-    table.put(new Put("key".getBytes)
-        .add("family".getBytes, "qualifier".getBytes, 2L, "value2".getBytes))
-    table.put(new Put("key".getBytes)
-        .add("family".getBytes, "qualifier".getBytes, 3L, "value3".getBytes))
-    table.delete(new Delete("key".getBytes)
-        .deleteColumn("family".getBytes, "qualifier".getBytes, 2L))
-    val scanner = table.getScanner(new Scan("key".getBytes)
+    table.put(new Put("key")
+        .add("family", "qualifier", 1L, "value1"))
+    table.put(new Put("key")
+        .add("family", "qualifier", 2L, "value2"))
+    table.put(new Put("key")
+        .add("family", "qualifier", 3L, "value3"))
+    table.delete(new Delete("key")
+        .deleteColumn("family", "qualifier", 2L))
+    val scanner = table.getScanner(new Scan("key")
         .setMaxVersions(Int.MaxValue)
-        .addColumn("family".getBytes, "qualifier".getBytes))
+        .addColumn("family", "qualifier"))
     val row = scanner.next()
     expect(null)(scanner.next())
-    val cells = row.getColumn("family".getBytes, "qualifier".getBytes)
+    val cells = row.getColumn("family", "qualifier")
     expect(2)(cells.size())
     expect(3L)(cells.get(0).getTimestamp)
     expect(1L)(cells.get(1).getTimestamp)
   }
 
-  test("HTable.delete() on most recent cell") {
+  test("HTable.delete on most recent cell") {
     val table = new FakeHTable(name = "table", desc = null)
-    table.put(new Put("key".getBytes)
-        .add("family".getBytes, "qualifier".getBytes, 1L, "value1".getBytes))
-    table.put(new Put("key".getBytes)
-        .add("family".getBytes, "qualifier".getBytes, 2L, "value2".getBytes))
-    table.put(new Put("key".getBytes)
-        .add("family".getBytes, "qualifier".getBytes, 3L, "value3".getBytes))
-    table.delete(new Delete("key".getBytes)
-        .deleteColumn("family".getBytes, "qualifier".getBytes))
-    val scanner = table.getScanner(new Scan("key".getBytes)
+    table.put(new Put("key")
+        .add("family", "qualifier", 1L, "value1"))
+    table.put(new Put("key")
+        .add("family", "qualifier", 2L, "value2"))
+    table.put(new Put("key")
+        .add("family", "qualifier", 3L, "value3"))
+    table.delete(new Delete("key")
+        .deleteColumn("family", "qualifier"))
+    val scanner = table.getScanner(new Scan("key")
         .setMaxVersions(Int.MaxValue)
-        .addColumn("family".getBytes, "qualifier".getBytes))
+        .addColumn("family", "qualifier"))
     val row = scanner.next()
     expect(null)(scanner.next())
-    val cells = row.getColumn("family".getBytes, "qualifier".getBytes)
+    val cells = row.getColumn("family", "qualifier")
     expect(2)(cells.size())
     expect(2L)(cells.get(0).getTimestamp)
     expect(1L)(cells.get(1).getTimestamp)
   }
 
-  test("HTable.delete() on older versions of qualifier") {
+  test("HTable.delete on older versions of qualifier") {
     val table = new FakeHTable(name = "table", desc = null)
-    table.put(new Put("key".getBytes)
-        .add("family".getBytes, "qualifier".getBytes, 1L, "value1".getBytes))
-    table.put(new Put("key".getBytes)
-        .add("family".getBytes, "qualifier".getBytes, 2L, "value2".getBytes))
-    table.put(new Put("key".getBytes)
-        .add("family".getBytes, "qualifier".getBytes, 3L, "value3".getBytes))
-    table.delete(new Delete("key".getBytes)
-        .deleteColumns("family".getBytes, "qualifier".getBytes, 2L))
-    val scanner = table.getScanner(new Scan("key".getBytes)
+    table.put(new Put("key")
+        .add("family", "qualifier", 1L, "value1"))
+    table.put(new Put("key")
+        .add("family", "qualifier", 2L, "value2"))
+    table.put(new Put("key")
+        .add("family", "qualifier", 3L, "value3"))
+    table.delete(new Delete("key")
+        .deleteColumns("family", "qualifier", 2L))
+    val scanner = table.getScanner(new Scan("key")
         .setMaxVersions(Int.MaxValue)
-        .addColumn("family".getBytes, "qualifier".getBytes))
+        .addColumn("family", "qualifier"))
     val row = scanner.next()
     expect(null)(scanner.next())
-    val cells = row.getColumn("family".getBytes, "qualifier".getBytes)
+    val cells = row.getColumn("family", "qualifier")
     expect(1)(cells.size())
     expect(3L)(cells.get(0).getTimestamp)
   }
 
-  test("HTable.delete() all versions of qualifier") {
+  test("HTable.delete all versions of qualifier") {
     val table = new FakeHTable(name = "table", desc = null)
-    table.put(new Put("key".getBytes)
-        .add("family".getBytes, "qualifier".getBytes, 1L, "value1".getBytes))
-    table.put(new Put("key".getBytes)
-        .add("family".getBytes, "qualifier".getBytes, 2L, "value2".getBytes))
-    table.put(new Put("key".getBytes)
-        .add("family".getBytes, "qualifier".getBytes, 3L, "value3".getBytes))
-    table.delete(new Delete("key".getBytes)
-        .deleteColumns("family".getBytes, "qualifier".getBytes))
-    val scanner = table.getScanner(new Scan("key".getBytes)
+    table.put(new Put("key")
+        .add("family", "qualifier", 1L, "value1"))
+    table.put(new Put("key")
+        .add("family", "qualifier", 2L, "value2"))
+    table.put(new Put("key")
+        .add("family", "qualifier", 3L, "value3"))
+    table.delete(new Delete("key")
+        .deleteColumns("family", "qualifier"))
+    val scanner = table.getScanner(new Scan("key")
         .setMaxVersions(Int.MaxValue)
-        .addColumn("family".getBytes, "qualifier".getBytes))
+        .addColumn("family", "qualifier"))
     expect(null)(scanner.next())
   }
 
-  test("HTable.delete() with family/qualifier/time-series cleanups") {
+  test("HTable.delete with family/qualifier/time-series cleanups") {
     val table = new FakeHTable(name = "table", desc = null)
 
     // Populate one row with 4 families, each with 4 qualifiers, each with 4 versions:
     val count = 4
-    val rowKey = "key1".getBytes
+    val rowKey = "key1"
     populateTable(table, count = count)
 
     // Delete all versions of family1:qualifier1 one by one, and check:
     for (timestamp <- 0 until count) {
       table.delete(new Delete(rowKey)
-          .deleteColumn("family1".getBytes, "qualifier1".getBytes, timestamp))
+          .deleteColumn("family1", "qualifier1", timestamp))
     }
     {
       val scanner = table.getScanner(new Scan(rowKey, nextRow(rowKey))
           .setMaxVersions(Int.MaxValue)
-          .addColumn("family1".getBytes, "qualifier1".getBytes))
+          .addColumn("family1", "qualifier1"))
       expect(null)(scanner.next())
     }
 
     // Delete all qualifiers in family2 and check:
     for (cId <- 0 until count) {
       table.delete(new Delete(rowKey)
-          .deleteColumns("family2".getBytes, "qualifier%d".format(cId).getBytes))
+          .deleteColumns("family2", "qualifier%d".format(cId)))
     }
     {
       val scanner = table.getScanner(new Scan(rowKey, nextRow(rowKey))
           .setMaxVersions(Int.MaxValue)
-          .addFamily("family2".getBytes))
+          .addFamily("family2"))
       expect(null)(scanner.next())
     }
   }
 
-  test("ResultScanner.hasNext() on empty table") {
+  test("ResultScanner.hasNext on empty table") {
     val table = new FakeHTable(name = "table", desc = null)
     val scanner = table.getScanner(new Scan())
     val iterator = scanner.iterator()
@@ -238,10 +281,10 @@ class TestFakeHTable extends FunSuite {
     expect(null)(iterator.next())
   }
 
-  test("ResultScanner.hasNext()") {
+  test("ResultScanner.hasNext") {
     val table = new FakeHTable(name = "table", desc = null)
-    table.put(new Put("key".getBytes)
-        .add("family".getBytes, "qualifier".getBytes, 1L, "value1".getBytes))
+    table.put(new Put("key")
+        .add("family", "qualifier", 1L, "value1"))
 
     val scanner = table.getScanner(new Scan())
     val iterator = scanner.iterator()
@@ -251,15 +294,15 @@ class TestFakeHTable extends FunSuite {
     expect(null)(iterator.next())
   }
 
-  test("ResultScanner.hasNext() with qualifier") {
+  test("ResultScanner.hasNext with qualifier") {
     val table = new FakeHTable(name = "table", desc = null)
-    table.put(new Put("key1".getBytes)
-        .add("family".getBytes, "qualifier1".getBytes, 1L, "value1".getBytes))
-    table.put(new Put("key2".getBytes)
-        .add("family".getBytes, "qualifier2".getBytes, 1L, "value1".getBytes))
+    table.put(new Put("key1")
+        .add("family", "qualifier1", 1L, "value1"))
+    table.put(new Put("key2")
+        .add("family", "qualifier2", 1L, "value1"))
 
     val scanner = table.getScanner(new Scan()
-        .addColumn("family".getBytes, "qualifier1".getBytes))
+        .addColumn("family", "qualifier1"))
     val iterator = scanner.iterator()
     expect(true)(iterator.hasNext())
     assert(iterator.next() != null)
@@ -267,7 +310,7 @@ class TestFakeHTable extends FunSuite {
     expect(null)(iterator.next())
   }
 
-  test("HTable.get() with filter") {
+  test("HTable.get with filter") {
     val table = new FakeHTable(
         name = "table",
         conf = HBaseConfiguration.create(),
@@ -277,7 +320,7 @@ class TestFakeHTable extends FunSuite {
     val count = 2
     populateTable(table, count=count)
 
-    val get = new Get("key1".getBytes)
+    val get = new Get("key1")
         .setMaxVersions()
         .setFilter(new KeyOnlyFilter)
     val result = table.get(get)
@@ -287,13 +330,13 @@ class TestFakeHTable extends FunSuite {
       for ((qualifier, tseries) <- qmap.asScala) {
         expect(count)(tseries.size)
         for ((timestamp, value) <- tseries.asScala) {
-          assert(value.isEmpty)
+          expect(0)(value.size)
         }
       }
     }
   }
 
-  test("HTable.get() with max versions") {
+  test("HTable.get with max versions") {
     val table = new FakeHTable(
         name = "table",
         conf = HBaseConfiguration.create(),
@@ -305,7 +348,7 @@ class TestFakeHTable extends FunSuite {
 
     // We generated 4 versions, but request only 2:
     val maxVersions = 2
-    val get = new Get("key1".getBytes)
+    val get = new Get("key1")
         .setMaxVersions(maxVersions)
         .setFilter(new KeyOnlyFilter)
     val result = table.get(get)
@@ -320,7 +363,7 @@ class TestFakeHTable extends FunSuite {
     }
   }
 
-  test("HTable.scan() with start-row") {
+  test("HTable.scan with start-row") {
     val table = new FakeHTable(
         name = "table",
         conf = HBaseConfiguration.create(),
@@ -331,18 +374,92 @@ class TestFakeHTable extends FunSuite {
     populateTable(table, count=count)
 
     {
-      val scanner = table.getScanner(new Scan().setStartRow("key1".getBytes))
+      val scanner = table.getScanner(new Scan().setStartRow("key1"))
       val rows = scanner.iterator().asScala.toList
       expect(2)(rows.size)
       expect("key1")(Bytes.toString(rows(0).getRow))
       expect("key2")(Bytes.toString(rows(1).getRow))
     }
     {
-      val scanner = table.getScanner(new Scan().setStartRow("key1a".getBytes))
+      val scanner = table.getScanner(new Scan().setStartRow("key1a"))
       val rows = scanner.iterator().asScala.toList
       expect(1)(rows.size)
       expect("key2")(Bytes.toString(rows(0).getRow))
     }
+  }
+
+  test("HTable.get with ColumnRangefilter inclusive") {
+    val table = new FakeHTable(
+        name = "table",
+        conf = HBaseConfiguration.create(),
+        desc = null
+    )
+    val count = 5
+    populateTable(table, count=count)
+
+    // Only fetch qualifiers >= 'qualifier2' and <= 'qualifier3',
+    // this should be exactly "qualifier2" and "qualifier3":
+    val get = new Get("key1")
+        .setFilter(new ColumnRangeFilter("qualifier2", true, "qualifier3", true))
+        .setMaxVersions()
+
+    val result = table.get(get)
+    expect("key1")(bytesToString(result.getRow))
+    val families = for (x <- 0 until count) yield "family%d".format(x)
+    expect(families)(result.getMap.keySet.asScala.toList.map {bytesToString(_)})
+    for (family <- families) {
+      val qmap = result.getMap.get(family.bytes())
+      expect(List("qualifier2", "qualifier3"))(qmap.keySet.asScala.toList.map {Bytes.toString(_)})
+      expect(5)(qmap.firstEntry.getValue.size)
+      expect(5)(qmap.lastEntry.getValue.size)
+    }
+  }
+
+  test("HTable.get with ColumnRangefilter exclusive") {
+    val table = new FakeHTable(
+        name = "table",
+        conf = HBaseConfiguration.create(),
+        desc = null
+    )
+    val count = 5
+    populateTable(table, count=count)
+
+    // Only fetch qualifiers > 'qualifier2' and < 'qualifier4',
+    // this should be exactly "qualifier3":
+    val get = new Get("key1")
+        .setFilter(
+            new ColumnRangeFilter("qualifier2", false, "qualifier4", false))
+        .setMaxVersions()
+
+    val result = table.get(get)
+    expect("key1")(bytesToString(result.getRow))
+    val families = for (x <- 0 until count) yield "family%d".format(x)
+    expect(families)(result.getMap.keySet.asScala.toList.map {Bytes.toString(_)})
+    for (family <- families) {
+      val qmap = result.getMap.get(family.bytes())
+      expect(List("qualifier3"))(qmap.keySet.asScala.toList.map {Bytes.toString(_)})
+      expect(5)(qmap.firstEntry.getValue.size)
+    }
+  }
+
+  test("HTable.get with ColumnRangefilter exclusive empty") {
+    val table = new FakeHTable(
+        name = "table",
+        conf = HBaseConfiguration.create(),
+        desc = null
+    )
+    val count = 5
+    populateTable(table, count=count)
+
+    // Only fetch qualifiers >= 'qualifier2.5' and < 'qualifier3',
+    // this should be empty:
+    val get = new Get("key1")
+        .setFilter(
+            new ColumnRangeFilter("qualifier2.5", true, "qualifier3", false))
+        .setMaxVersions()
+
+    val result = table.get(get)
+    expect(true)(result.isEmpty)
   }
 
   /**
@@ -366,14 +483,14 @@ class TestFakeHTable extends FunSuite {
       count: Int = 4
   ): Unit = {
     for (rId <- 0 until count) {
-      val rowKey = "key%d".format(rId).getBytes
+      val rowKey = "key%d".format(rId)
       for (fId <- 0 until count) {
-        val family = "family%d".format(fId).getBytes
+        val family = "family%d".format(fId)
         for (cId <- 0 until count) {
-          val qualifier = "qualifier%d".format(cId).getBytes
+          val qualifier = "qualifier%d".format(cId)
           for (timestamp <- 0L until count) {
             table.put(new Put(rowKey)
-                .add(family, qualifier, timestamp, "value%d".format(timestamp).getBytes))
+                .add(family, qualifier, timestamp, "value%d".format(timestamp)))
           }
         }
       }

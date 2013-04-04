@@ -19,11 +19,12 @@
 
 package org.kiji.testing.fakehtable
 
+import java.lang.{Long => JLong}
 import java.util.Comparator
 
 /** Order timestamps from the most recent ones to the oldest ones. */
-object TimestampComparator extends Comparator[Long] {
-  override def compare(long1: Long, long2: Long): Int = {
+object TimestampComparator extends Comparator[JLong] {
+  override def compare(long1: JLong, long2: JLong): Int = {
     return long2.compareTo(long1)
   }
 }

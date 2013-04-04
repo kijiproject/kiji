@@ -20,6 +20,7 @@
 package org.kiji.testing.fakehtable
 
 import java.io.PrintStream
+import java.lang.{Long => JLong}
 import java.util.{ArrayList => JArrayList}
 import java.util.Arrays
 import java.util.{Iterator => JIterator}
@@ -35,7 +36,6 @@ import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.collection.JavaConverters.asScalaSetConverter
 import scala.collection.JavaConverters.mapAsScalaMapConverter
 import scala.collection.mutable.Buffer
-import scala.util.control.Breaks
 import scala.util.control.Breaks.break
 import scala.util.control.Breaks.breakable
 
@@ -45,7 +45,6 @@ import org.apache.hadoop.hbase.HConstants
 import org.apache.hadoop.hbase.HRegionInfo
 import org.apache.hadoop.hbase.HRegionLocation
 import org.apache.hadoop.hbase.HTableDescriptor
-import org.apache.hadoop.hbase.KeyValue
 import org.apache.hadoop.hbase.ServerName
 import org.apache.hadoop.hbase.client.Delete
 import org.apache.hadoop.hbase.client.Get
@@ -59,7 +58,6 @@ import org.apache.hadoop.hbase.client.RowLock
 import org.apache.hadoop.hbase.client.Scan
 import org.apache.hadoop.hbase.client.coprocessor.Batch
 import org.apache.hadoop.hbase.filter.Filter
-import org.apache.hadoop.hbase.io.TimeRange
 import org.apache.hadoop.hbase.ipc.CoprocessorProtocol
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.hadoop.io.WritableUtils
@@ -69,11 +67,11 @@ import org.slf4j.LoggerFactory
 /**
  * Fake in-memory HTable.
  *
- * @param name Table name.
- * @param desc Table descriptor.
- * @param conf Table configuration.
- * @param autoFlush auto-flush flag.
- * @param enabled Whether the table is enabled.
+ * @param name is the table name.
+ * @param desc is the table HBase descriptor.
+ * @param conf is the HBase configuration.
+ * @param autoFlush is the initial value for the table auto-flush property.
+ * @param enabled is the initial state of the table.
  */
 class FakeHTable(
     val name: String,
@@ -95,8 +93,11 @@ class FakeHTable(
   /** Byte array shortcut. */
   type Bytes = Array[Byte]
 
+  /** Comparator for Bytes. */
+  private final val BytesComparator: java.util.Comparator[Bytes] = Bytes.BYTES_COMPARATOR
+
   /** Time series in a column, ordered by decreasing time stamps. */
-  type ColumnSeries = NavigableMap[Long, Bytes]
+  type ColumnSeries = NavigableMap[JLong, Bytes]
 
   /** Map column qualifiers to cell series. */
   type FamilyQualifiers = NavigableMap[Bytes, ColumnSeries]
@@ -108,7 +109,9 @@ class FakeHTable(
   type Table = NavigableMap[Bytes, RowFamilies]
 
   /** Map: row key -> family -> qualifier -> timestamp -> cell data. */
-  private val rows: Table = new JTreeMap[Bytes, RowFamilies](Bytes.BYTES_COMPARATOR)
+  private val rows: Table = new JTreeMap[Bytes, RowFamilies](BytesComparator)
+
+  // -----------------------------------------------------------------------------------------------
 
   override def getTableName(): Array[Byte] = {
     return name.getBytes
@@ -157,7 +160,7 @@ class FakeHTable(
 
   override def get(get: Get): Result = {
     // get() could be built around scan(), to ensure consistent filters behavior.
-    // For now, we use a shorcut:
+    // For now, we use a shortcut:
     val filter: Filter = getFilter(get.getFilter)
     filter.reset()
     if (filter.filterAllRemaining()) {
@@ -171,10 +174,10 @@ class FakeHTable(
     if (row == null) {
       return new Result()
     }
-    val result = makeResult(
+    val result = ProcessRow.makeResult(
         rowKey = rowKey,
         row = row,
-        familyMap = get.getFamilyMap,
+        familyMap = getFamilyMapRequest(get.getFamilyMap),
         timeRange = get.getTimeRange,
         maxVersions = get.getMaxVersions,
         filter = filter
@@ -212,16 +215,16 @@ class FakeHTable(
 
       val rowKey = put.getRow
       val rowFamilyMap = rows.asScala
-          .getOrElseUpdate(rowKey, new JTreeMap[Bytes, FamilyQualifiers](Bytes.BYTES_COMPARATOR))
+          .getOrElseUpdate(rowKey, new JTreeMap[Bytes, FamilyQualifiers](BytesComparator))
       for ((family, kvs) <- put.getFamilyMap.asScala) {
         val rowQualifierMap = rowFamilyMap.asScala
-            .getOrElseUpdate(family, new JTreeMap[Bytes, ColumnSeries](Bytes.BYTES_COMPARATOR))
+            .getOrElseUpdate(family, new JTreeMap[Bytes, ColumnSeries](BytesComparator))
 
         for (kv <- kvs.asScala) {
           require(family.toSeq == kv.getFamily.toSeq)
 
           val column = rowQualifierMap.asScala
-              .getOrElseUpdate(kv.getQualifier, new JTreeMap[Long, Bytes](TimestampComparator))
+              .getOrElseUpdate(kv.getQualifier, new JTreeMap[JLong, Bytes](TimestampComparator))
 
           val timestamp = {
             if (kv.getTimestamp == HConstants.LATEST_TIMESTAMP) {
@@ -411,19 +414,19 @@ class FakeHTable(
 
       val rowKey = increment.getRow
       val row = rows.asScala
-          .getOrElseUpdate(rowKey, new JTreeMap[Bytes, FamilyQualifiers](Bytes.BYTES_COMPARATOR))
-      val familyMap = new JTreeMap[Bytes, NavigableSet[Bytes]](Bytes.BYTES_COMPARATOR)
+          .getOrElseUpdate(rowKey, new JTreeMap[Bytes, FamilyQualifiers](BytesComparator))
+      val familyMap = new JTreeMap[Bytes, NavigableSet[Bytes]](BytesComparator)
 
       for ((family, qualifierMap) <- increment.getFamilyMap.asScala) {
         val qualifierSet = familyMap.asScala
-            .getOrElseUpdate(family, new JTreeSet[Bytes](Bytes.BYTES_COMPARATOR))
+            .getOrElseUpdate(family, new JTreeSet[Bytes](BytesComparator))
         val rowQualifierMap = row.asScala
-            .getOrElseUpdate(family, new JTreeMap[Bytes, ColumnSeries](Bytes.BYTES_COMPARATOR))
+            .getOrElseUpdate(family, new JTreeMap[Bytes, ColumnSeries](BytesComparator))
 
         for ((qualifier, amount) <- qualifierMap.asScala) {
           qualifierSet.add(qualifier)
           val rowTimeSeries = rowQualifierMap.asScala
-              .getOrElseUpdate(qualifier, new JTreeMap[Long, Bytes](TimestampComparator))
+              .getOrElseUpdate(qualifier, new JTreeMap[JLong, Bytes](TimestampComparator))
           val currentCounter = {
             if (rowTimeSeries.isEmpty) {
               0
@@ -437,7 +440,7 @@ class FakeHTable(
         }
       }
 
-      return makeResult(
+      return ProcessRow.makeResult(
           rowKey = increment.getRow,
           row = row,
           familyMap = familyMap,
@@ -531,80 +534,6 @@ class FakeHTable(
       callback: Batch.Callback[R]
   ): Unit = {
     sys.error("Coprocessor not implemented")
-  }
-
-  // -----------------------------------------------------------------------------------------------
-
-  private val BreakToNextColumn = new Breaks()
-  private val BreakToNextRow = new Breaks()
-
-  /**
-   * Builds an HTable request Result instance.
-   *
-   * @param rowKey the row key.
-   * @param row the actual row data.
-   * @param familyMap the requested columns.
-   * @param timeRange the timestamp range.
-   * @param maxVersions maximum number of versions to return.
-   * @param filter optional HBase filter to apply on the KeyValue entries.
-   * @return a new Result instance with the specified cells (KeyValue entries).
-   */
-  private def makeResult(
-      rowKey: Bytes,
-      row: RowFamilies,
-      familyMap: JMap[Bytes, NavigableSet[Bytes]],
-      timeRange: TimeRange,
-      maxVersions: Int,
-      filter: Filter = PassThroughFilter
-  ): Result = {
-    val kvs: JList[KeyValue] = new JArrayList[KeyValue]()
-    val requestedFamilies = if (!familyMap.isEmpty) familyMap.keySet else row.keySet
-
-    BreakToNextRow.breakable {
-      for (requestedFamily <- requestedFamilies.asScala) {
-        /** Map: qualifier -> time stamp -> cell value */
-        val rowQualifierMap = row.get(requestedFamily)
-        if (rowQualifierMap != null) {
-          val requestedQualifiers = {
-            val qset = familyMap.get(requestedFamily)
-            if ((qset != null) && !qset.isEmpty) qset else rowQualifierMap.keySet
-          }
-          for (requestedQualifier <- requestedQualifiers.asScala) {
-            /** Map: time stamp -> cell value */
-            val rowColumnSeries = rowQualifierMap.get(requestedQualifier)
-            if (rowColumnSeries != null) {
-              /** Map: time stamp -> cell value */
-              val versionMap =
-                  rowColumnSeries.subMap(timeRange.getMax, false, timeRange.getMin, true)
-              BreakToNextColumn.breakable {
-                var nversions = 0
-                for ((timestamp, value) <- versionMap.asScalaIterator) {
-                  val kv =
-                      new KeyValue(rowKey, requestedFamily, requestedQualifier, timestamp, value)
-                  filter.filterKeyValue(kv) match {
-                  case Filter.ReturnCode.INCLUDE => {
-                    kvs.add(filter.transform(kv))
-                    nversions += 1
-                    if (nversions >= maxVersions) {
-                      BreakToNextColumn.break
-                    }
-                  }
-                  case Filter.ReturnCode.SKIP => // Skip this key/value pair.
-                  case Filter.ReturnCode.NEXT_COL => BreakToNextColumn.break
-                  case Filter.ReturnCode.NEXT_ROW => BreakToNextRow.break
-                  case Filter.ReturnCode.SEEK_NEXT_USING_HINT => sys.error("Not implemented")
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-    if (filter.hasFilterRow()) {
-      filter.filterRow(kvs)
-    }
-    return new Result(kvs.toArray(new Array[KeyValue](kvs.size)))
   }
 
   // -----------------------------------------------------------------------------------------------
@@ -758,6 +687,25 @@ class FakeHTable(
     }
   }
 
+  /**
+   * Ensures a family map from a Get/Scan is sorted.
+   *
+   * @param request Requested family/qualifier map.
+   * @return The requested family/qualifiers, as a sorted map.
+   */
+  private def getFamilyMapRequest(
+      request: JMap[Bytes, NavigableSet[Bytes]]
+  ): NavigableMap[Bytes, NavigableSet[Bytes]] = {
+    if (request.isInstanceOf[NavigableMap[_, _]]) {
+      return request.asInstanceOf[NavigableMap[Bytes, NavigableSet[Bytes]]]
+    }
+    val map = new JTreeMap[Bytes, NavigableSet[Bytes]](BytesComparator)
+    for ((family, qualifiers) <- request.asScala) {
+      map.put(family, qualifiers)
+    }
+    return map
+  }
+
   // -----------------------------------------------------------------------------------------------
 
   /**
@@ -768,6 +716,10 @@ class FakeHTable(
   private class FakeResultScanner(
       val scan: Scan
   ) extends ResultScanner with JIterator[Result] {
+
+    /** Requested family/qualifiers map. */
+    private val requestedFamilyMap: NavigableMap[Bytes, NavigableSet[Bytes]] =
+        getFamilyMapRequest(scan.getFamilyMap)
 
     /** Key of the row to return on the next call to next(). Null means no more row. */
     private var key: Bytes = {
@@ -780,7 +732,7 @@ class FakeHTable(
       }
     }
     if (!scan.getStopRow.isEmpty
-       && (Bytes.BYTES_COMPARATOR.compare(key, scan.getStopRow) >= 0)) {
+       && (BytesComparator.compare(key, scan.getStopRow) >= 0)) {
       key = null
     }
 
@@ -823,7 +775,7 @@ class FakeHTable(
       key = rows.higherKey(rowKey)
       if ((key != null)
           && !scan.getStopRow.isEmpty
-          && (Bytes.BYTES_COMPARATOR.compare(key, scan.getStopRow) >= 0)) {
+          && (BytesComparator.compare(key, scan.getStopRow) >= 0)) {
         key = null
       }
       return rowKey
@@ -845,10 +797,10 @@ class FakeHTable(
       val row = rows.get(rowKey)
       require(row != null)
 
-      val result = makeResult(
+      val result = ProcessRow.makeResult(
           rowKey = rowKey,
           row = row,
-          familyMap = scan.getFamilyMap,
+          familyMap = requestedFamilyMap,
           timeRange = scan.getTimeRange,
           maxVersions = scan.getMaxVersions,
           filter = filter
