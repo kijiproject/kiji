@@ -106,6 +106,9 @@ public abstract class KijiGatherer<K, V>
    * This method will be called immediately after instantiation.
    * Override this method to initialize internal state from a configuration.
    *
+   * <p>If you override this method for your gatherer, you must call super.setConf(); or the
+   * configuration will not be saved properly.</p>
+   *
    * @param conf The Configuration to use.
    */
   @Override
@@ -113,7 +116,10 @@ public abstract class KijiGatherer<K, V>
     mConf = conf;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   * <p>Overriding this method without returning super.getConf() may cause undesired behavior.</p>
+   */
   @Override
   public Configuration getConf() {
     return mConf;
@@ -127,7 +133,8 @@ public abstract class KijiGatherer<K, V>
    * @throws IOException if there is an error.
    */
   public void setup(GathererContext<K, V> context) throws IOException {
-    // By default, do nothing.
+    // By default, do nothing. Nothing may be added here, because subclasses may implement setup
+    // methods without super.setup().
   }
 
   /**
@@ -148,7 +155,8 @@ public abstract class KijiGatherer<K, V>
    * @throws IOException if there is an error.
    */
   public void cleanup(GathererContext<K, V> context) throws IOException {
-    // By default, do nothing.
+    // By default, do nothing. Nothing may be added here, because subclasses may implement setup
+    // methods without super.cleanup().
   }
 
   /** {@inheritDoc} */

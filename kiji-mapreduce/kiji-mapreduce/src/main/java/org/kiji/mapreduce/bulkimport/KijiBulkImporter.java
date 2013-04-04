@@ -136,8 +136,8 @@ public abstract class KijiBulkImporter<K, V>
    * @throws IOException on I/O error.
    */
   public void setup(KijiTableContext context) throws IOException {
-    // Nothing may be added here, because users may have implemented setup methods without
-    // super.setup();
+    // By default, do nothing. Nothing may be added here, because subclasses may implement setup
+    // methods without super.setup().
   }
 
   /**
@@ -170,7 +170,7 @@ public abstract class KijiBulkImporter<K, V>
    * @throws IOException on I/O error.
    */
   public void cleanup(KijiTableContext context) throws IOException {
-    // Nothing may be added here, because users may have implemented cleanup methods without
-    // super.cleanup();
+    // By default, do nothing. Nothing may be added here, because subclasses may implement setup
+    // methods without super.cleanup().
   }
 }

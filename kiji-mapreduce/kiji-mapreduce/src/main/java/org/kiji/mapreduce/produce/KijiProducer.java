@@ -116,6 +116,9 @@ public abstract class KijiProducer
    * This function is guaranteed to be called immediately after instantiation.
    * Override this method to initialize internal state from a configuration.
    *
+   * <p>If you override this method for your producer, you must call super.setConf(); or the
+   * configuration will not be saved properly.</p>
+   *
    * @param conf The Configuration to read.
    */
   @Override
@@ -123,7 +126,10 @@ public abstract class KijiProducer
     mConf = conf;
   }
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   * <p>Overriding this method without returning super.getConf() may cause undesired behavior.</p>
+   */
   @Override
   public Configuration getConf() {
     return mConf;
@@ -162,6 +168,8 @@ public abstract class KijiProducer
    * @throws IOException on I/O error.
    */
   public void setup(KijiContext context) throws IOException {
+    // By default, do nothing. Nothing may be added here, because subclasses may implement setup
+    // methods without super.setup().
   }
 
   /**
@@ -182,5 +190,7 @@ public abstract class KijiProducer
    * @throws IOException on I/O error.
    */
   public void cleanup(KijiContext context) throws IOException {
+    // By default, do nothing. Nothing may be added here, because subclasses may implement setup
+    // methods without super.cleanup().
   }
 }
