@@ -1,0 +1,19 @@
+End-to-end test for the KijiMusic tutorial.
+
+To run the test:
+  On a released version:
+    ./kiji_music.py \
+        --log_level=DEBUG \
+        --kiji_bento_version=1.0.0-rc5
+
+  On a KijiBento version you built locally on your machine:
+    ./kiji_music.py \
+        --log_level=5 \
+        --kiji_bento_version=1.0.0-rc6-SNAPSHOT \
+        --maven_local_repo=$HOME/.m2/repository
+
+Requirements: Python3, Maven3, Java6.
+
+Notes:
+ - BentoCluster won't start automatically if the "defaults" Hadoop ports are not available.
+   (See https://jira.kiji.org/browse/CLUSTER-21)
