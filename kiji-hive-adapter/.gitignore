@@ -1,0 +1,20 @@
+# Temporary files used by editors.
+*~
+*.swp
+.#*
+\#*
+
+# Project files from IDEs.
+.classpath
+.project
+.settings
+.idea/
+*.iml
+
+# Build and run artifacts.
+target/
+build/
+derby.log
+metastore_db/
+.hiverc
+*.sql

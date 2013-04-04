@@ -1,0 +1,188 @@
+Introduction
+============
+
+The official Hive adapter for Kiji Schema 1.x.
+
+The Kiji Hive Adapter can be used to for read-only access to
+data stored in Kiji tables from Hive.
+
+## Requirements
+   * Hadoop 2.0.0-mr1-cdh4.1.2
+   * HBase 0.92.1-cdh4.1.2
+   * Hive 0.9.0-cdh4.1.2
+   * KijiSchema 1.0.0
+
+## Automatic Hive Shell
+The included bin/bento-hive.sh script can be executed to automatically start a Hive shell
+with the Kiji Hive adapter(and its dependencies preloaded).
+
+This script can take an argument of a Kiji table URI to automatically create the table handler
+from the specified table.  Currently this only supports String types, but the generated SQL
+can be modified to change the relevant types.
+
+## Manual Hive Installation
+
+If you don't already have Apache Hive installed, you can download it from Cloudera:
+    $ wget http://archive.cloudera.com/cdh4/cdh/4/hive-0.9.0-cdh4.1.2.tar.gz
+
+Extract the archive
+    $ tar -xzf hive-0.9.0-cdh4.1.2.tar.gz
+
+Set up your environment by setting the HIVE_HOME environment variable and adding the hive
+commands to your path:
+    $ export HIVE_HOME=/path/to/hive-0.9.0-cdh4.1.2
+    $ export PATH=$PATH:$HIVE_HOME/bin
+
+## Manual Setup
+
+To use the Kiji Hive Adapter, start hive with the JAR on your
+classpath with the HADOOP_CLASSPATH environment variable.
+
+    $ HADOOP_CLASSPATH=/path/to/kiji-hive-adapter-${project.version}.jar
+
+At the hive shell, add required JARs to the distributed cache using
+the 'add jar' command. Add the Kiji Hive Adapter JAR and the HBase
+JAR from $HBASE_HOME.
+
+    hive> add jar /path/to/kiji-hive-adapter-${project.version}.jar;
+    hive> add jar /path/to/hbase-<version>.jar;
+
+You will need to add these JARs each time you start a hive session.
+
+### Creating Views of Kiji Tables
+
+There are 4 things you will always specify when creating Hive table
+view over an existing Kiji table.
+
+   1. Use the EXTERNAL keyword to reference an existing Kiji table.
+
+   2. Use STORED BY 'org.kiji.hive.KijiTableStorageHandler' so Hive
+      knows how to speak Kiji.
+
+   3. Use WITH SERDEPROPERTIES to specify the mapping of Kiji table
+      columns into Hive columns using the 'kiji.columns' property.
+
+   4. Use TBLPROPERTIES to specify the URI of the Kiji table.
+
+This is best explained with an example.
+
+### Sample Table
+
+The Kiji Music example has an example table with some imported data that is imported as part
+of the tutorial.  The table that we will be using is a users table that tracks each individual
+user, their historical playlist, and their next song recommendations.  The SQL statement
+necessary to setup this table to be used in Hive looks like:
+
+  CREATE EXTERNAL TABLE users (
+    track_plays STRUCT<ts: TIMESTAMP, value: STRING>,
+    next_song_rec STRUCT<ts: TIMESTAMP, value: STRING>
+  )
+  STORED BY 'org.kiji.hive.KijiTableStorageHandler'
+  WITH SERDEPROPERTIES (
+    'kiji.columns' = 'info:track_plays[0],info:next_song_rec[0]'
+  )
+  TBLPROPERTIES (
+    'kiji.table.uri' = 'kiji://.env/kiji_music/users'
+  );
+
+If you'd like to load this automatically you can run the script:
+bin/bento-hive.sh import kiji://.env/kiji_music/users
+against a Bento cluster where this table has already been created and has the data populated.
+
+
+### Sample Queries
+
+These SQL statements all rely on the above table being created in Hive.  You can start a Hive
+shell with the necessary jars for Kiji tables via the command:
+bin/bento-hive.sh shell
+
+List all of the tables that have been created:
+    SHOW TABLES;
+
+List all of the fields in the table 'users':
+    DESCRIBE users;
+
+List all of the tracks that were played:
+    SELECT track_plays.value FROM users;
+
+Show only the first 10 users:
+    SELECT track.plays.value FROM users LIMIT 10;
+
+List all tracks that were played by play order:
+    SELECT track_plays.ts,track_plays.value FROM users order by ts ASC;
+
+List all of the times in which song-44 was played:
+    SELECT track_plays.ts,track_plays.value FROM users WHERE track_plays.value = 'song-44';
+
+Get a list of songs by popularity:
+    SELECT track_plays.value,COUNT(1) AS COUNT FROM users group by track_plays.value ORDER BY COUNT DESC;
+
+If you want more inspiration for queries take a look here:
+https://cwiki.apache.org/Hive/tutorial.html#Tutorial-UsageandExamples
+
+### Mapping Kiji Table Data into Hive
+
+Each column declared in the Hive table needs to have a corresponding
+entry in the 'kiji.columns' property of the WITH SERDEPROPERTIES
+clause. The value of 'kiji.columns' is a comma-separated list of
+Kiji row expressions. The number of Hive columns declared in the CREATE
+EXTERNAL TABLE clause must match the number of Kiji row expressions in
+your 'kiji.columns' value.
+
+
+### Kiji Row Expressions
+
+A Kiji row expression addresses a piece of data in a Kiji table
+row. The form of a Kiji row expression is:
+
+    +---------------------+---------------------------------------------+
+    | Expression          | Hive Type                                   |
+    +---------------------+---------------------------------------------+
+    | family              | MAP<STRING, ARRAY<STRUCT<TIMESTAMP, cell>>> |
+    | family[n]           | MAP<STRING, STRUCT<TIMESTAMP, cell>>        |
+    | family:qualifier    | ARRAY<STRUCT<TIMESTAMP, cell>>              |
+    | family:qualifier[n] | STRUCT<TIMESTAMP, cell>                     |
+    +---------------------+---------------------------------------------+
+
+It is important that the types of the Hive columns in the CREATE
+statement match the type of data generated by the Kiji row
+expressions according to the table above. For a family expression, the
+column will contain a map from qualifier to the array of cells in
+reverse chronological order. For column expressions, the column will
+contain a struct with two fields: the timestamp and the cell value.
+
+The symbol `n` specifies the index of the cell to retrieve, where the
+0-th cell is the one with the greatest timestamp (most recent). For
+example, `event:click[0]` represents the most recent cell from the
+`click` column of the `event` family, and `event:click[1]` represents
+the second most recent cell (the previous click). You may also use the
+special index `-1` to specify the cell with the least timestamp
+(oldest).
+
+The type of the cell value depends on the Avro data type in the Kiji
+table. For primitive types, the relationship is obvious (e.g. an Avro
+"string" maps to a Hive STRING).
+
+    +----------------------------+---------------------------+
+    | Avro Type                  | Hive Type                 |
+    +----------------------------+---------------------------+
+    | "boolean"                  | BOOLEAN                   |
+    | "int"                      | INT                       |
+    | "long"                     | BIGINT, TIMESTAMP         |
+    | "float"                    | FLOAT                     |
+    | "double"                   | DOUBLE                    |
+    | "string"                   | STRING                    |
+    | "bytes"                    | BINARY                    |
+    | "fixed"                    | BINARY, BYTE, SHORT       |
+    | "null"                     | VOID                      |
+    | record { T f1; U f2; ... } | STRUCT<f1: T, f2: U>      |
+    | map<T>                     | MAP<STRING, T>            |
+    | array<T>                   | ARRAY<T>                  |
+    | union {T, U, ...}          | -unsupported-             |
+    | union {null, T}            | T                         |
+    +----------------------------+---------------------------+
+
+Note that we special case union types with null to just return the raw
+Hive type, since Hive types are already nullable.
+
+Happy querying!
