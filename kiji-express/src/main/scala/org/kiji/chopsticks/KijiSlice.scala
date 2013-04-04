@@ -36,7 +36,7 @@ import org.kiji.schema.KijiCell
  * @tparam T is the type of the data stored in the underlying cells.
  */
 @ApiAudience.Public
-@ApiStability.Unstable
+@ApiStability.Experimental
 class KijiSlice[T] private[chopsticks] (val cells: Seq[Cell[T]]) {
   /**
    * Gets the first cell, as decided by the ordering of the slice.

@@ -20,7 +20,9 @@
 package org.kiji.chopsticks
 
 import java.util.NavigableMap
+import java.util.TreeMap
 
+import org.apache.avro.util.Utf8
 import org.apache.hadoop.hbase.HConstants
 
 import org.kiji.annotations.ApiAudience
@@ -89,7 +91,7 @@ import org.kiji.schema.filter.RegexQualifierColumnFilter
  *       KijiInput("kiji://.env/default/newsgroup_users", Before(100000))("info:id" -> 'id)
  *   // Read all versions from "info:posts"
  *   myKijiSource =
- *       KijiInput("kiji://.env/default/newsgroup_users", Map(Column("info:id", all) -> 'id))
+ *       KijiInput("kiji://.env/default/newsgroup_users")(Map(Column("info:id", all) -> 'id))
  * }}}
  *
  * See [[org.kiji.chopsticks.TimeRange]] for more information on how to create and use time
@@ -180,31 +182,8 @@ object DSL {
   }
 
   /**
-   * Creates a `Source` for reading row data from a Kiji table.
-   *
-   * A Scalding `Source` can be used to process a distributed data set and views the entries in
-   * the data set as tuples. This factory method can be used to obtain a `Source` which views
-   * rows in a Kiji table as tuples, with cells from columns or map-type column families provided
-   * as entries in the tuple.
-   *
-   * @param tableURI is a Kiji URI that addresses a table in a Kiji instance.
-   * @param columns are a series of tuples mapping column (or map-type column family) names to
-   *     tuple field names. When naming a column, use the format "column:qualifier".
-   * @return a source for data in the Kiji table, whose row tuples will contain fields with cell
-   *     data from the requested columns and map-type column families.
-   */
-  def KijiInput
-      (tableURI: String)
-      (columns: (String, Symbol)*): KijiSource = {
-    val columnMap = columns
-        .map { case (col, field) => (field, col) }
-        .toMap
-        .mapValues(Column(_))
-    new KijiSource(tableURI, TimeRange.All, None, columnMap)
-  }
-
-  /**
-   * Creates a `Source` for reading row data from a Kiji table.
+   * KijiInput is a class that can be applied to a column -> field mapping in order to create a
+   * `Source` for reading row data from a Kiji table.
    *
    * A Scalding `Source` can be used to process a distributed data set and views the entries in
    * the data set as tuples. This factory method can be used to obtain a `Source` which views
@@ -213,103 +192,146 @@ object DSL {
    *
    * @param tableURI is a Kiji URI that addresses a table in a Kiji instance.
    * @param timeRange that cells must fall into to be retrieved.
-   * @param columns are a series of pairs mapping column (or map-type column family) names to
-   *     tuple field names. When naming a column, use the format `column:qualifier`.
-   * @return a source for data in the Kiji table, whose row tuples will contain fields with cell
-   *     data from the requested columns and map-type column families.
+   * @param loggingInterval to log skipped rows at. For example, if loggingInterval is 5000,
+   *     every 5000th skipped row will be logged.
    */
-  def KijiInput(
-      tableURI: String,
-      timeRange: TimeRange)
-      (columns: (String, Symbol)*): KijiSource = {
-    val columnMap = columns
-        .map { case (col, field) => (field, col) }
-        .toMap
-        .mapValues(Column(_))
-    new KijiSource(tableURI, timeRange, None, columnMap)
-  }
-
-  /**
-   * Creates a `Source` for reading row data from a Kiji table.
-   *
-   * A Scalding `Source` can be used to process a distributed data set and views the entries in
-   * the data set as tuples. This factory method can be used to obtain a `Source` which views
-   * rows in a Kiji table as tuples, with cells from columns or map-type column families provided
-   * as entries in the tuple.
-   *
-   * @param tableURI is a Kiji URI that addresses a table in a Kiji instance.
-   * @param columns are a series of pairs mapping column (or map-type column family) requests to
-   *     tuple field names. Use factory methods `MapFamily` and `Column` to create column
-   *     requests.
-   * @return a source for data in the Kiji table, whose row tuples will contain fields with cell
-   *     data from the requested columns and map-type column families.
-   */
-  def KijiInput(
-      tableURI: String,
-      columns: Map[_ <: ColumnRequest, Symbol]): KijiSource = {
-    val columnMap = columns
-        .map { case (col, field) => (field, col) }
-    new KijiSource(tableURI, TimeRange.All, None, columnMap)
-  }
-
-  /**
-   * Creates a `Source` for reading row data from a Kiji table.
-   *
-   * A Scalding `Source` can be used to process a distributed data set and views the entries in
-   * the data set as tuples. This factory method can be used to obtain a `Source` which views
-   * rows in a Kiji table as tuples, with cells from columns or map-type column families provided
-   * as entries in the tuple.
-   *
-   * @param tableURI is a Kiji URI that addresses a table in a Kiji instance.
-   * @param timeRange that cells must fall into to be retrieved.
-   * @param columns are a series of pairs mapping column (or map-type column family) requests to
-   *     tuple field names. Use factory methods `MapFamily` and `Column` to create column
-   *     requests.
-   * @return a source for data in the Kiji table, whose row tuples will contain fields with cell
-   *     data from the requested columns and map-type column families.
-   */
-  def KijiInput(
-      tableURI: String,
+  class KijiInput(tableURI: String,
       timeRange: TimeRange,
-      columns: Map[ColumnRequest, Symbol]): KijiSource = {
-    val columnMap = columns
-        .map { case (col, field) => (field, col) }
-    new KijiSource(tableURI, timeRange, None, columnMap)
+      loggingInterval: Long) {
+    /**
+     * Applies this input specification to a column mapping, returning a scalding `Source`.
+     *
+     * @param columns are a series of pairs mapping column (or map-type column family) requests to
+     *     tuple field names. Columns are specified as "family:qualifier" or, in the case of a
+     *     map-type column family, simply "familycolumn".
+     * @return a source for data in the Kiji table, whose row tuples will contain fields with cell
+     *     data from the requested columns and map-type column families.
+     */
+    def apply(columns: (String, Symbol)*): KijiSource = {
+      val columnMap = columns
+          .map { case (col, field) => (field, Column(col).ignoreMissing) }
+          .toMap
+      new KijiSource(tableURI, timeRange, None, loggingInterval, columnMap)
+    }
+
+    /**
+     * Applies this input specification to a column mapping, returning a scalding `Source`.
+     *
+     * @param columns are a series of pairs mapping column (or map-type column family) requests to
+     *     tuple field names. Use factory methods `MapFamily` and `Column` to create column
+     *     requests.
+     * @return a source for data in the Kiji table, whose row tuples will contain fields with cell
+     *     data from the requested columns and map-type column families.
+     */
+    def apply(columns: Map[_ <: ColumnRequest, Symbol]): KijiSource = {
+      val columnMap = columns.map {
+        case (columnRequest, field) => (field, columnRequest)
+      }
+      new KijiSource(tableURI, timeRange, None, loggingInterval, columnMap)
+    }
   }
 
   /**
-   * Creates a `Source` for writing cells to a Kiji table.
+   * Companion object for KijiInput that contains a factory method.
+   */
+  object KijiInput {
+    /**
+     * A factory method for instantiating KijiInputs.
+     *
+     * @param tableURI is a Kiji URI that addresses a table in a Kiji instance.
+     * @param timeRange that cells must fall into to be retrieved.
+     * @param loggingInterval to log skipped rows at. For example, if loggingInterval is 5000,
+     *     every 5000th skipped row will be logged.
+     * @return a KijiInput that can be applied to columns.
+     */
+    def apply(
+      tableURI: String,
+      timeRange: TimeRange = TimeRange.All,
+      loggingInterval: Long = 1000): KijiInput = {
+        new KijiInput(tableURI, timeRange, loggingInterval)
+    }
+  }
+
+  /**
+   * KijiOutput is a class that can be applied to a field -> column mapping in order to create a
+   * `Source` for writing cells to a Kiji table.
    *
    * A Scalding `Source` can be used to output data in a collection of tuples to some data store.
-   * This factory method can be used to obtain a `Source` that will write values in tuple fields
-   * to cells in columns of a Kiji table. The values in tuple fields can be written to one
-   * row of a Kiji table, whose entity id must be provided in the tuple field "entityId".
-   * Optionally, a tuple field can specify a timestamp that all cells should be written to.
+   * This factory method can be used to obtain a `Source` which will write the value in a field
+   * of a tuple as a cell at the current time to a column in a Kiji table. Tuples being written
+   * must have a field named "entityId" which contains an entity id for the row in the Kiji table
+   * that tuple fields should be written to.
    *
    * @param tableURI is a Kiji URI that addresses a table in a Kiji instance.
    * @param tsField is the name of a tuple field that contains a timestamp all cells should be
    *     written with. If unspecified, cells will be written with the current time.
-   * @param columns are a series of pairs mapping tuple field names to Kiji column names. When
-   *     naming columns, use the format `family:qualifier`.
-   * @return a source that can write tuple fields to a cell in columns of a Kiji table.
    */
-  def KijiOutput(
-      tableURI: String,
-      // scalastyle:off null
-      tsField: Symbol = null)
-      // scalastyle:on null
-      (columns: (Symbol, String)*): KijiSource = {
-    val columnMap = columns
-        .toMap
-        .mapValues(Column(_))
-    new KijiSource(tableURI, TimeRange.All, Option(tsField), columnMap)
+  class KijiOutput(tableURI: String, tsField: Symbol) {
+    /**
+     * Applies this output specification to a column mapping, returning a scalding `Source`.
+     *
+     * @param columns are a series of pairs mapping tuple field names to Kiji column names. When
+     *     naming columns, use the format `family:qualifier`.
+     * @return a source that can write tuple fields to a cell in columns of a Kiji table.
+     */
+    def apply(columns: (Symbol, String)*): KijiSource = {
+      val columnMap = columns
+          .toMap
+          .mapValues(Column(_).ignoreMissing)
+      new KijiSource(tableURI, TimeRange.All, Option(tsField), 1000, columnMap)
+    }
+
+    /**
+     * Applies this output specification to a column mapping, returning a scalding `Source`.
+     *
+     * @param columns are a series of pairs mapping tuple field names to Kiji column names. Use
+     * factory methods `MapFamily` and `Column` to name columns.
+     * @return a source that can write tuple fields to a cell in columns of a Kiji table.
+     */
+    def apply(columns: Map[_ <: ColumnRequest, Symbol]): KijiSource = {
+      val columnMap = columns.map {
+        case (columnRequest, field) => (field, columnRequest)
+      }
+      new KijiSource(tableURI, TimeRange.All, Option(tsField), 1000, columnMap)
+    }
+  }
+
+  /**
+   * Companion object for KijiOutput that contains a factory method.
+   */
+  object KijiOutput {
+    /**
+     * A factory method for instantiating KijiOutputs.
+     *
+     * @param tableURI is a Kiji URI that addresses a table in a Kiji instance.
+     */
+    def apply(
+        tableURI: String,
+        // scalastyle:off null
+        tsField: Symbol = null): KijiOutput = {
+        // scalastyle:on null
+      new KijiOutput(tableURI, tsField)
+    }
   }
 
   /**
    * Gets the value of the first entry in a map sorted by key.
-
+   *
    * @param aMap to retrieve the value from.
    * @tparam T is the type of value stored in the map.
    */
-  def getMostRecent[T](aMap: NavigableMap[_, T]): T = aMap.firstEntry().getValue()
+  def getMostRecent[T](slice: NavigableMap[Long, T]): T =
+      slice.firstEntry().getValue()
+
+  /**
+   * Creates a Slice (NavigableMap[Long, T]) containing just one key/value pair.
+   *
+   * @param timestamp of the entry.
+   * @param value of the entry.
+   */
+  def singleEntrySlice[T](timestamp: Long, value: T): NavigableMap[Long, T] = {
+    val slice = new TreeMap[Long, T]()
+    slice.put(0L, value)
+    slice
+  }
 }

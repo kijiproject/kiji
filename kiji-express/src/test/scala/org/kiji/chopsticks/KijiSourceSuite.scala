@@ -247,7 +247,7 @@ class KijiSourceSuite
 
     // Build test job.
     val source =
-        KijiInput(uri, Map((Column("family:column1", versions=2) -> 'words)))
+        KijiInput(uri)(Map((Column("family:column1", versions=2) -> 'words)))
     JobTest(new VersionsJob(source)(_))
         .arg("output", "outputFile")
         .source(source, versionCountInput)
@@ -292,14 +292,15 @@ class KijiSourceSuite
         .finish
   }
 
-  test("default for missing values is skipping the row") {
-    val missingValuesInput: List[(EntityId, NavigableMap[Long, Utf8], NavigableMap[Long, Utf8])]
-        = List(
-          ( id("row01"), singleton(new Utf8("hello")), singleton(new Utf8("hello")) ),
-          ( id("row02"), singleton(new Utf8("hello")), missing() ),
-          ( id("row03"), singleton(new Utf8("world")), singleton(new Utf8("world")) ),
-          ( id("row04"), singleton(new Utf8("hello")), singleton(new Utf8("hello")) ))
+  /** Input tuples to use for missing values tests. */
+  val missingValuesInput: List[(EntityId, NavigableMap[Long, Utf8], NavigableMap[Long, Utf8])]
+      = List(
+        ( id("row01"), singleton(new Utf8("hello")), singleton(new Utf8("hello")) ),
+        ( id("row02"), singleton(new Utf8("hello")), missing() ),
+        ( id("row03"), singleton(new Utf8("world")), singleton(new Utf8("world")) ),
+        ( id("row04"), singleton(new Utf8("hello")), singleton(new Utf8("hello")) ))
 
+  test("default for missing values is skipping the row") {
     // Create test Kiji table.
     val uri: String = doAndRelease(makeTestKijiTable(layout)) { table: KijiTable =>
       table.getURI().toString()
@@ -310,7 +311,7 @@ class KijiSourceSuite
     }
 
     // Build test job.
-    JobTest(new TwoColumnJob(_))
+    JobTest(new PluralizeJob(_))
         .arg("input", uri)
         .arg("output", "outputFile")
         .source(KijiInput(uri)("family:column1" -> 'word1, "family:column2" -> 'word2),
@@ -318,6 +319,38 @@ class KijiSourceSuite
         .sink(Tsv("outputFile"))(validateMissingValuesSize)
         // Run the test job.
         .runHadoop
+        .finish
+  }
+
+  test("replacing missing values succeeds") {
+    // Create test Kiji table.
+    val uri: String = doAndRelease(makeTestKijiTable(layout)) { table: KijiTable =>
+      table.getURI().toString()
+    }
+
+    def validateMissingValuesReplaced(outputBuffer: Buffer[(String, String)]) {
+      assert(4 === outputBuffer.size)
+      assert(outputBuffer(0)._2 == "hellos")
+      assert(outputBuffer(1)._2 == "missings")
+    }
+
+    // Build test job.
+    JobTest(new PluralizeReplaceJob(_))
+        .arg("input", uri)
+        .arg("output", "outputFile")
+        .source(KijiInput(uri)(
+            Map(
+                Column("family:column1") -> 'word1,
+                Column("family:column2")
+                    .replaceMissingWith(
+                        singleEntrySlice(0L, new Utf8("missing"))) -> 'word2)),
+            missingValuesInput)
+        .sink(Tsv("outputFile"))(validateMissingValuesReplaced)
+        // Run the test job.
+        .run
+        // note for reviewer: Running this with .runHadoop fails because Utf8 is not
+        // serializable, and the KijiScheme gets serialized.  Hopefully if we eventually
+        // use String or CharSequence instead, this won't be a problem
         .finish
   }
 
@@ -369,12 +402,34 @@ object KijiSourceSuite extends KijiSuite {
    *     to the Kiji table the job should be run on, and "output", which specifies the output
    *     Tsv file.
    */
-  class TwoColumnJob(args: Args) extends Job(args) {
-    // Setup input to bind values from the "family:column1" column to the symbol 'word.
+  class PluralizeJob(args: Args) extends Job(args) {
     KijiInput(args("input"))("family:column1" -> 'word1, "family:column2" -> 'word2)
         .map('word1 -> 'pluralword) { words: NavigableMap[Long, Utf8] =>
           getMostRecent(words).toString() + "s"
         }
+        .write(Tsv(args("output")))
+  }
+
+  /**
+   * A job that takes the most recent string value from the column "family:column1" and adds
+   * the letter 's' to the end of it. It passes through the column "family:column2" without
+   * any changes, replacing missing values with the string "missing".
+   *
+   * @param args to the job. Two arguments are expected: "input", which should specify the URI
+   *     to the Kiji table the job should be run on, and "output", which specifies the output
+   *     Tsv file.
+   */
+  class PluralizeReplaceJob(args: Args) extends Job(args) {
+    KijiInput(args("input"))(
+        Map(
+            Column("family:column1") -> 'word1,
+            Column("family:column2")
+                .replaceMissingWith(
+                        singleEntrySlice(0L, new Utf8("missing"))) -> 'word2))
+        .map('word2 -> 'pluralword) { words: NavigableMap[Long, Utf8] =>
+          getMostRecent(words).toString() + "s"
+        }
+        .discard('word1, 'word2)
         .write(Tsv(args("output")))
   }
 

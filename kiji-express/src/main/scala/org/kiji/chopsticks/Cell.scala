@@ -34,7 +34,7 @@ import org.kiji.schema.KijiCell
  * @tparam T The type of the datum in the cell.
  */
 @ApiAudience.Public
-@ApiStability.Unstable
+@ApiStability.Experimental
 case class Cell[T] private[chopsticks] (family: String, qualifier: String, version: Long, datum: T)
 /**
 * Currently, this companion object is only a factory for creating cells.

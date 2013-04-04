@@ -20,6 +20,7 @@
 package org.kiji.chopsticks
 
 import java.io.Serializable
+import java.util.NavigableMap
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
@@ -34,10 +35,34 @@ import org.kiji.schema.util.KijiNameValidator
  * [[org.kiji.chopsticks.DSL.MapFamily()]]. They can then use these requests to obtain a
  * [[org.kiji.chopsticks.KijiSource]] that reads cells into tuples while obeying the specified
  * request options.
+ *
+ * If desired, end-users can add information about how to handle missing values in this column,
+ * with the methods `replaceMissingWith` or `ignoreMissing`, only one of which can be called before
+ * it is transformed to a ChopsticksColumn.
+ *
+ * If a ColumnRequest is used in the DSL without calling `replaceMissingWith` or `ignoreMissing`,
+ * `ignoreMissing` is the default.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-private[chopsticks] sealed trait ColumnRequest extends Serializable
+private[chopsticks] sealed trait ColumnRequest extends Serializable {
+  /**
+   * Specifies what to replace any missing values on this column with.
+   *
+   * @param replacement Replacement specification.
+   * @return this ColumnRequest with replacement configured.
+   */
+  def replaceMissingWith(replacementSlice: NavigableMap[Long, _]): ColumnRequest
+
+  /**
+   * Specifies that missing values on this column mean the row should be skipped.
+   * This is the default behavior in the DSL if neither this nor `replaceMissingWith` are called
+   * on a ColumnRequest.
+   *
+   * @return this ColumnRequest with skipping behavior configured.
+   */
+  def ignoreMissing(): ColumnRequest
+}
 
 /**
  * A request for cells from a fully qualified column in a Kiji table.
@@ -56,6 +81,17 @@ final case class QualifiedColumn private[chopsticks] (
     extends ColumnRequest {
   KijiNameValidator.validateLayoutName(family)
   KijiNameValidator.validateLayoutName(qualifier)
+
+  override def replaceMissingWith(replacementSlice: NavigableMap[Long, _]): ColumnRequest = {
+    return new QualifiedColumn(
+        family,
+        qualifier,
+        options.newWithReplacement(Some(replacementSlice)))
+  }
+
+  override def ignoreMissing(): ColumnRequest = {
+    return new QualifiedColumn(family, qualifier, options.newWithReplacement(None))
+  }
 }
 
 /**
@@ -72,6 +108,14 @@ final case class ColumnFamily private[chopsticks] (
     options: ColumnRequestOptions = ColumnRequestOptions())
     extends ColumnRequest {
   KijiNameValidator.validateLayoutName(family)
+
+  override def replaceMissingWith(replacementSlice: NavigableMap[Long, _]): ColumnRequest = {
+    return new ColumnFamily(family, options.newWithReplacement(Some(replacementSlice)))
+  }
+
+  override def ignoreMissing(): ColumnRequest = {
+    return new ColumnFamily(family, options.newWithReplacement(None))
+  }
 }
 
 /**
@@ -88,6 +132,11 @@ final case class ColumnRequestOptions private[chopsticks] (
     maxVersions: Int = 1,
     // Not accessible to end-users because the type is soon to be replaced by a
     // Chopsticks-specific implementation.
-    private[chopsticks] val filter: Option[KijiColumnFilter] = None)
+    private[chopsticks] val filter: Option[KijiColumnFilter] = None,
+    replacementSlice: Option[NavigableMap[Long, _]] = None)
     extends Serializable {
+      def newWithReplacement(
+          newReplacement: Option[NavigableMap[Long,_]]): ColumnRequestOptions = {
+        new ColumnRequestOptions(maxVersions, filter, newReplacement)
+      }
 }

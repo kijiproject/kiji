@@ -31,6 +31,9 @@ import cascading.scheme.SourceCall
 import cascading.tap.Tap
 import cascading.tuple.Tuple
 import cascading.tuple.TupleEntry
+import com.google.common.base.Objects
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
@@ -43,7 +46,6 @@ import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiTableReader
 import org.kiji.schema.KijiTableWriter
 import org.kiji.schema.KijiURI
-import com.google.common.base.Objects
 
 /**
  * Encapsulates the state required to read from a Kiji table.
@@ -82,6 +84,7 @@ class LocalKijiScheme(
     private val timestampField: Option[Symbol],
     private val columns: Map[String, ColumnRequest])
     extends Scheme[Properties, InputStream, OutputStream, InputContext, KijiTableWriter] {
+  private val logger: Logger = LoggerFactory.getLogger(classOf[LocalKijiScheme])
 
   /** Set the fields that should be in a tuple when this source is used for reading and writing. */
   setSourceFields(KijiScheme.buildSourceFields(columns.keys))
@@ -140,18 +143,36 @@ class LocalKijiScheme(
   override def source(
       process: FlowProcess[Properties],
       sourceCall: SourceCall[InputContext, InputStream]): Boolean = {
+    // Get the first row where all the requested columns are present,
+    // and use that to set the result tuple.
+    // Return true as soon as a result tuple has been set,
+    // or false if we reach the end of the RecordReader.
     val context: InputContext = sourceCall.getContext()
-    if (context.iterator.hasNext) {
+    while (context.iterator.hasNext) {
       // Get the current row.
       val row: KijiRowData = context.iterator.next()
+      val result: Option[Tuple] =
+          KijiScheme.rowToTuple(columns, getSourceFields, timestampField, row)
 
-      val result: Tuple = KijiScheme.rowToTuple(columns, getSourceFields(), timestampField, row)
-      sourceCall.getIncomingEntry().setTuple(result)
-
-      true
-    } else {
-      false
+      // If no fields were missing, set the result tuple and return from this method.
+      result match {
+        case Some(tuple) => {
+          sourceCall.getIncomingEntry().setTuple(tuple)
+          process.increment(KijiScheme.counterGroupName, KijiScheme.counterSuccess, 1)
+          return true // We set a result tuple, return true for success.
+        }
+        case None => {
+          // Otherwise, this row was missing fields.
+          // Increment the counter for rows with missing fields.
+          process.increment(KijiScheme.counterGroupName, KijiScheme.counterMissingField, 1)
+          // Log for every missing row; we are in local mode.
+          logger.warn("Row %s skipped because of missing field(s)."
+              .format(row.getEntityId.toShellString))
+        }
+      }
+      // We didn't return true because this row was missing fields; continue the loop.
     }
+    return false // We reached the end of the input.
   }
 
   /**

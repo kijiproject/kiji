@@ -80,7 +80,11 @@ class DSLSuite extends FunSuite {
   test("DSL should let you create KijiSources as inputs with default options.") {
     val input: KijiSource = KijiInput(tableURI)("info:word" -> 'word)
     val expectedScheme: KijiScheme = {
-      new KijiScheme(TimeRange.All, None, Map("word" -> Column("info:word")))
+      new KijiScheme(
+          TimeRange.All,
+          None,
+          1000,
+          Map("word" -> Column("info:word").ignoreMissing))
     }
 
     assert(expectedScheme == input.hdfsScheme)
@@ -89,7 +93,11 @@ class DSLSuite extends FunSuite {
   test("DSL should let you specify timerange for KijiInput.") {
     val input = KijiInput(tableURI, timeRange=TimeRange.Between(0L,40L))("info:word" -> 'word)
     val expectedScheme: KijiScheme = {
-      new KijiScheme(TimeRange.Between(0L, 40L), None, Map("word" -> Column("info:word")))
+      new KijiScheme(
+          TimeRange.Between(0L, 40L),
+          None,
+          1000,
+          Map("word" -> Column("info:word").ignoreMissing))
     }
 
     assert(expectedScheme == input.hdfsScheme)
@@ -101,7 +109,10 @@ class DSLSuite extends FunSuite {
       new KijiScheme(
           TimeRange.All,
           None,
-          Map("word" -> Column("info:word"), "title" -> Column("info:title")))
+          1000,
+          Map(
+              "word" -> Column("info:word").ignoreMissing,
+              "title" -> Column("info:title").ignoreMissing))
     }
 
     assert(expectedScheme == input.hdfsScheme)
@@ -109,15 +120,15 @@ class DSLSuite extends FunSuite {
 
   test("DSL should let you specify options for a column.") {
     val input: KijiSource =
-      KijiInput(tableURI, Map(Column("info:word") -> 'word))
+        KijiInput(tableURI)(Map(Column("info:word") -> 'word))
     val input2: KijiSource =
-      KijiInput(tableURI, Map(Column("info:word", versions = 1) -> 'word))
-    val input3: KijiSource = KijiInput(tableURI,
-        Map(MapFamily("searches", versions=1, qualifierMatches=".*") -> 'word))
+        KijiInput(tableURI)(Map(Column("info:word", versions = 1) -> 'word))
+    val input3: KijiSource =
+        KijiInput(tableURI)(Map(MapFamily("searches", versions=1, qualifierMatches=".*") -> 'word))
   }
 
   test("DSL should let you specify different options for different columns.") {
-    val input: KijiSource = KijiInput(tableURI,
+    val input: KijiSource = KijiInput(tableURI)(
       Map(
         Column("info:word", versions=1) -> 'word,
         Column("info:title", versions=2) -> 'title))
@@ -126,7 +137,7 @@ class DSLSuite extends FunSuite {
   test("DSL should let you create KijiSource with the default timestamp field") {
     val output: KijiSource = KijiOutput(tableURI)('words -> "info:words")
     val expectedScheme: KijiScheme = {
-      new KijiScheme(TimeRange.All, None, Map("words" -> Column("info:words")))
+      new KijiScheme(TimeRange.All, None, 1000, Map("words" -> Column("info:words")))
     }
 
     assert(expectedScheme == output.hdfsScheme)
@@ -135,7 +146,7 @@ class DSLSuite extends FunSuite {
   test("DSL should let you create KijiSource with a timestamp field") {
     val output: KijiSource = KijiOutput(tableURI, 'time)('words -> "info:words")
     val expectedScheme: KijiScheme = {
-      new KijiScheme(TimeRange.All, Some('time), Map("words" -> Column("info:words")))
+      new KijiScheme(TimeRange.All, Some('time), 1000, Map("words" -> Column("info:words")))
     }
 
     assert(expectedScheme == output.hdfsScheme)

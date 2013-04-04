@@ -19,6 +19,7 @@
 
 package org.kiji.chopsticks
 
+import java.util.TreeMap
 import java.util.concurrent.atomic.AtomicLong
 
 import scala.collection.JavaConverters._
@@ -31,6 +32,8 @@ import cascading.tap.Tap
 import cascading.tuple.Fields
 import cascading.tuple.Tuple
 import cascading.tuple.TupleEntry
+import com.google.common.base.Objects
+import org.apache.avro.util.Utf8
 import org.apache.commons.codec.binary.Base64
 import org.apache.commons.lang.SerializationUtils
 import org.apache.hadoop.mapred.JobConf
@@ -52,7 +55,6 @@ import org.kiji.schema.KijiRowData
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiTableWriter
 import org.kiji.schema.KijiURI
-import com.google.common.base.Objects
 
 /**
  * A scheme that can source and sink data from a Kiji table. This scheme is responsible for
@@ -61,9 +63,10 @@ import com.google.common.base.Objects
  * data from a Cascading flow to a Kiji table
  * (see `sink(cascading.flow.FlowProcess, cascading.scheme.SinkCall)`).
  *
- * @param timeRange that cells read by this scheme must belong to.
+ * @param timeRange to include from the Kiji table.
  * @param timestampField is the name of a tuple field that will contain cell timestamp when the
- *     source is used for writing. Specify `None` to write all cells at the current time.
+ * @param loggingInterval The interval to log skipped rows on.
+ *    For example, if loggingInterval is 1000, then every 1000th skipped row will be logged.
  * @param columns mapping tuple field names to Kiji column names.
  */
 @ApiAudience.Framework
@@ -71,6 +74,7 @@ import com.google.common.base.Objects
 class KijiScheme(
     private val timeRange: TimeRange,
     private val timestampField: Option[Symbol],
+    private val loggingInterval: Long,
     private val columns: Map[String, ColumnRequest])
     extends Scheme[JobConf, RecordReader[KijiKey, KijiValue], OutputCollector[_, _],
         KijiValue, KijiTableWriter] {
@@ -151,21 +155,24 @@ class KijiScheme(
     while (sourceCall.getInput().next(null, value)) {
     // scalastyle:on null
       val row: KijiRowData = value.get()
+      val result: Option[Tuple] = rowToTuple(columns, getSourceFields, timestampField, row)
 
-      // If all fields are present, set the result tuple and return from this method.
-      if (allColumnsPresent(row, columns)) {
-        val result: Tuple = rowToTuple(columns, getSourceFields, timestampField, row)
-        sourceCall.getIncomingEntry().setTuple(result)
-        process.increment(counterGroupName, counterSuccess, 1)
-        return true // We set a result tuple, return true for success.
-      }
-
-      // Otherwise, this row was missing fields.
-      // Increment the counter for rows with missing fields.
-      process.increment(counterGroupName, counterMissingField, 1)
-      if (skippedRows.getAndIncrement() % logEvery == 0) {
-        logger.warn("Row %s skipped because of missing field(s)."
-            .format(row.getEntityId.toShellString))
+      // If no fields were missing, set the result tuple and return from this method.
+      result match {
+        case Some(tuple) => {
+          sourceCall.getIncomingEntry().setTuple(tuple)
+          process.increment(counterGroupName, counterSuccess, 1)
+          return true // We set a result tuple, return true for success.
+        }
+        case None => {
+          // Otherwise, this row was missing fields.
+          // Increment the counter for rows with missing fields.
+          process.increment(counterGroupName, counterMissingField, 1)
+          if (skippedRows.getAndIncrement() % loggingInterval == 0) {
+            logger.warn("Row %s skipped because of missing field(s)."
+                .format(row.getEntityId.toShellString))
+          }
+        }
       }
       // We didn't return true because this row was missing fields; continue the loop.
     }
@@ -273,49 +280,40 @@ class KijiScheme(
     }
   }
 
-  override def hashCode(): Int = Objects.hashCode(columns, timestampField, timeRange)
+  override def hashCode(): Int =
+      Objects.hashCode(columns, timeRange, timestampField, loggingInterval: java.lang.Long)
 }
 
 /** Companion object for KijiScheme. Contains helper methods and constants. */
 object KijiScheme {
   private val logger: Logger = LoggerFactory.getLogger(classOf[KijiScheme])
 
-  /** Field name containing a row's entity id. */
+  // Hadoop mapred counters for the rows read from this scheme.
+  private[chopsticks] val counterGroupName = "kiji-chopsticks"
+  // Counter name for the number of rows successfully read.
+  private[chopsticks] val counterSuccess = "ROWS_SUCCESSFULLY_READ"
+  // Counter name for the number of rows skipped because of missing fields.
+  private[chopsticks] val counterMissingField = "ROWS_SKIPPED_WITH_MISSING_FIELDS"
+
+  /** Field name containing a row's [[EntityId]]. */
   private[chopsticks] val entityIdField: String = "entityId"
 
   /**
-   * Determines whether all of the columns requested are present in the given row.
-   *
-   * @param row The Kiji row to inspect.
-   * @param columnsRequested The columns requested in this Scheme.
-   * @return If all the columns requested are in the row.
-   */
-  private def allColumnsPresent(
-      row: KijiRowData,
-      columnsRequested: Map[String, ColumnRequest]): Boolean = {
-    !columnsRequested.values.exists {
-      case ColumnFamily(family, _) => {
-        ! row.containsColumn(family)
-      }
-      case QualifiedColumn(family, qualifier, _) => {
-        ! row.containsColumn(family, qualifier)
-      }
-    }
-  }
-
-  /**
-   * Converts a KijiRowData to a Cascading tuple.
+   * Converts a KijiRowData to a Cascading tuple, or None if one of the columns didn't exist
+   * and no replacement was specified.
    *
    * @param columns Mapping from field name to column definition.
    * @param fields Field names of desired tuple elements.
    * @param row The row data.
-   * @return A tuple containing the values contained in the specified row.
+   * @param timestampField TODO
+   * @return A tuple containing the values contained in the specified row, or None if some columns
+   *     didn't exist and no replacement was specified.
    */
   private[chopsticks] def rowToTuple(
       columns: Map[String, ColumnRequest],
       fields: Fields,
       timestampField: Option[Symbol],
-      row: KijiRowData): Tuple = {
+      row: KijiRowData): Option[Tuple] = {
     val result: Tuple = new Tuple()
     val iterator = fields.iterator().asScala
 
@@ -330,15 +328,39 @@ object KijiScheme {
         .map { field => columns(field.toString) }
         // Build the tuple, by adding each requested value into result.
         .foreach {
-          case ColumnFamily(family, _) => {
-            result.add (row.getValues(family))
-          }
-          case QualifiedColumn(family, qualifier, _) => {
-            result.add(row.getValues(family, qualifier))
-          }
+            case colReq @ ColumnFamily(family, ColumnRequestOptions(_, _, replacement)) => {
+              if (row.containsColumn(family)) {
+                result.add(row.getValues(family))
+              } else {
+                replacement match {
+                  case Some(replacementSlice) => {
+                    result.add(replacementSlice)
+                  }
+                  case None =>
+                    // this row cannot be converted to a tuple since this column is missing.
+                    return None
+                }
+              }
+            }
+            case colReq @ QualifiedColumn(
+                family,
+                qualifier,
+                ColumnRequestOptions(_, _, replacement)) => {
+              if (row.containsColumn(family, qualifier)) {
+                result.add(row.getValues(family, qualifier))
+              } else {
+                replacement match {
+                  case Some(replacementSlice) => {
+                    result.add(replacementSlice)
+                  }
+                  // this row cannot be converted to a tuple since this column is missing.
+                  case None => return None
+                }
+              }
+            }
         }
 
-    return result
+    return Some(result)
   }
 
   // TODO(CHOP-35): Use an output format that writes to HFiles.
