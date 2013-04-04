@@ -26,7 +26,7 @@
   <properties>
     <cascading.version>2.0.7</cascading.version>
     <scalding.version>0.8.3</scalding.version>
-    <kiji.version>1.0.0</kiji.version>
+    <kiji.version>1.0.1-SNAPSHOT</kiji.version>
     <kiji-mr.version>1.0.0-rc6-SNAPSHOT</kiji-mr.version>
     <scalatest.version>2.0.M5b</scalatest.version>
     <twitter-util.version>6.2.0</twitter-util.version>

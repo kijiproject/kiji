@@ -26,14 +26,11 @@ import java.io.ObjectOutputStream
 
 import org.scalatest.FunSuite
 
+import org.kiji.schema.filter.KijiColumnFilter
 import org.kiji.schema.filter.RegexQualifierColumnFilter
 
 class ColumnRequestSuite extends FunSuite {
-  // TODO(CHOP-37): Test with non-null filter once the new method of specifying filters
-  // correctly implements the .equals() and hashCode() methods.
-  // Should be able to change the following line to:
-  // def filter = new RegexQualifierColumnFilter(".*")
-  val filter = new RegexQualifierColumnFilter(".*")
+  def filter: KijiColumnFilter = new RegexQualifierColumnFilter(".*")
   def opts: ColumnRequestOptions = new ColumnRequestOptions(1, Some(filter))
   val colFamily = "myfamily"
   val colQualifier = "myqualifier"
@@ -71,10 +68,8 @@ class ColumnRequestSuite extends FunSuite {
 
   test("A column must be serializable.") {
     // Serialize and deserialize using java ObjectInputStream and ObjectOutputStream.
-    // TODO(CHOP-37): The filter is null because it's not serializable. Once CHOP-37 is
-    // done, use the same inputoptions as the other tests in the line below.
     val col: QualifiedColumn =
-        new QualifiedColumn(colFamily, colQualifier, new ColumnRequestOptions(1, None))
+        new QualifiedColumn(colFamily, colQualifier, opts)
     val bytesOut = new ByteArrayOutputStream()
     val out = new ObjectOutputStream(bytesOut)
     out.writeObject(col)
