@@ -28,8 +28,10 @@ import scala.collection.mutable.Buffer
 import com.google.common.io.Files
 import com.twitter.scalding._
 import org.apache.avro.util.Utf8
+import org.apache.hadoop.conf.Configuration
 
 import org.kiji.chopsticks.DSL._
+import org.kiji.chopsticks.Resources.doAndClose
 import org.kiji.chopsticks.Resources.doAndRelease
 import org.kiji.schema.EntityId
 import org.kiji.schema.KijiTable
@@ -90,11 +92,12 @@ KijiInput("%s")("family:column1" -> 'word)
     val uri: String = doAndRelease(makeTestKijiTable(layout)) { table: KijiTable =>
       table.getURI().toString()
     }
+    val runner = new ScriptRunner()
 
     val tempDir: File = Files.createTempDir()
     val classes: File = new File("%s/classes".format(tempDir.getPath()))
     classes.mkdir()
-    val jobc = ScriptRunner.compileScript(scriptString.format(uri), classes)
+    val jobc = runner.compileScript(scriptString.format(uri), classes)
 
     // Build test job.
     JobTest(jobc)

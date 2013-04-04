@@ -68,8 +68,8 @@ import org.kiji.chopsticks.Resources.doAndClose
  *       &lt;/path/to/script&gt; [other options here]
  * }}}
  */
-object ScriptRunner {
-  private val logger: Logger = LoggerFactory.getLogger(this.getClass)
+class ScriptRunner extends Tool {
+  import ScriptRunner._
 
   /**
    * Builds a jar entry and writes it to the specified jar output stream.
@@ -151,16 +151,16 @@ object ScriptRunner {
     compiler.apply(preparedScript)
   }
 
-  /**
-   * Compiles and runs the provided KijiChopsticks script.
-   *
-   * @param args Command line arguments for this script runner. The first argument to ScriptRunner
-   *     is expected to be a path to the script to run. Any remaining flags get passed to the
-   *     script itself.
-   */
-  def main(args: Array[String]) {
-    val scriptFile: File = new File(args.head)
-    val jobArgs: Array[String] = args.tail
+  override def setJobConstructor(jobc: (Args) => Job) {
+    sys.error("ScriptRunner only runs jobs that haven't been compiled yet.")
+  }
+
+  override protected def getJob(args: Args): Job = {
+    val scriptFile: File = {
+      require(!args.positional.isEmpty, "Usage: ScriptRunner <scriptfile> --local|--hdfs [args...]")
+      val List(script, _*) = args.positional
+      new File(script)
+    }
     require(scriptFile.exists(), "%s does not exist".format(scriptFile.getPath()))
     require(scriptFile.isFile(), "%s is not a file".format(scriptFile.getPath()))
 
@@ -189,21 +189,26 @@ object ScriptRunner {
         compileJar.exists(),
         "%s does not exist.".format(compileJar.getPath()))
 
-    // Create a new configuration and store the jar location in 'tmpjars'.
-    val conf = {
-      val hbaseConf = HBaseConfiguration.create()
-      hbaseConf.set("tmpjars", "file:" + compileJar.getPath())
-      hbaseConf
-    }
+    // Get this tool's configuration and store the compiled jar's location in 'tmpjars'.
+    val tmpjars = Option(getConf().get("tmpjars"))
+        .map { "," + _ }
+        .getOrElse("")
+    getConf().set("tmpjars", "file:" + compileJar.getPath() + tmpjars)
 
-    // Create a tool with the compiled job jar.
-    val tool: Tool = {
-      val scaldingTool: Tool = new Tool
-      scaldingTool.setJobConstructor(jobc)
-      scaldingTool
-    }
+    jobc(args + ("" -> args.positional.tail))
+  }
+}
 
-    // Run the job.
-    ToolRunner.run(conf, tool, jobArgs)
+object ScriptRunner {
+  private val logger: Logger = LoggerFactory.getLogger(classOf[ScriptRunner])
+
+  /**
+   * Compiles and runs the provided KijiChopsticks script.
+   *
+   * @param args passed in from the command line. The first argument to ScriptRunner is expected to
+   *     be a path to the script to run. Any remaining flags get passed to the script itself.
+   */
+  def main(args: Array[String]) {
+    ToolRunner.run(HBaseConfiguration.create(), new ScriptRunner, args)
   }
 }
