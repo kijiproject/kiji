@@ -54,7 +54,8 @@ import org.kiji.schema.KijiURI
 import org.kiji.schema.layout.KijiTableLayout
 
 /**
- * Encapsulates the state required to read from a Kiji table.
+ * Encapsulates the state required to read from a Kiji table locally, for use in
+ * [[org.kiji.chopsticks.LocalKijiScheme]].
  *
  * @param reader that has an open connection to the desired Kiji table.
  * @param scanner that has an open connection to the desired Kiji table.
@@ -78,26 +79,41 @@ private[chopsticks] case class OutputContext(
     layout: KijiTableLayout)
 
 /**
- * A scheme that can source and sink data from a Kiji table.
+ * A local version of [[org.kiji.chopsticks.KijiScheme]] that is meant to be used with Cascading's
+ * local job runner. [[org.kiji.chopsticks.KijiScheme]] and LocalKijiScheme both define how to
+ * read and write the data stored in a Kiji table.
  *
- * <p>
- *   This scheme is responsible for converting rows from a Kiji table that are input to a
- *   Cascading flow into Cascading tuples (see
- *   `source(cascading.flow.FlowProcess, cascading.scheme.SourceCall)`) and writing output
- *   data from a Cascading flow to a Kiji table
- *   (see `sink(cascading.flow.FlowProcess, cascading.scheme.SinkCall)`). This scheme is meant
- *   to be used with [[org.kiji.chopsticks.LocalKijiTap]] and Cascading's local job runner. Jobs run
- *   with Cascading's local job runner execute on your local machine instead of a cluster. This can
- *   be helpful for testing or quick jobs.
- * </p>
- * <p>
- *   Note: Warnings about a missing serialVersionUID are ignored here. When KijiScheme is
- *   serialized, the result is not persisted anywhere making serialVersionUID unnecessary.
- * </p>
+ * This scheme is meant to be used with [[org.kiji.chopsticks.LocalKijiTap]] and
+ * Cascading's local job runner. Jobs run with Cascading's local job runner execute on
+ * your local machine instead of a cluster. This can be helpful for testing or quick jobs.
+ *
+ * In Chopsticks, LocalKijiScheme is used in tests.  See [[org.kiji.chopsticks.KijiSource]]'s
+ * `TestLocalKijiScheme` class.
+ *
+ * This scheme is responsible for converting rows from a Kiji table that are input to a
+ * Cascading flow into Cascading tuples (see
+ * `source(cascading.flow.FlowProcess, cascading.scheme.SourceCall)`) and writing output
+ * data from a Cascading flow to a Kiji table
+ * (see `sink(cascading.flow.FlowProcess, cascading.scheme.SinkCall)`).
+ *
+ * Note: LocalKijiScheme logs every row that was skipped because of missing data in a column. It
+ * lacks the parameter `loggingInterval` in [[org.kiji.chopsticks.KijiScheme]] that configures
+ * how many skipped rows will be logged.
+ *
+ * Note: Warnings about a missing serialVersionUID are ignored here. When KijiScheme is
+ * serialized, the result is not persisted anywhere making serialVersionUID unnecessary.
+ *
+ * @see [[org.kiji.chopsticks.KijiScheme]]
+ *
+ * @param timeRange to include from the Kiji table.
+ * @param timestampField is the optional name of a field containing the timestamp that all values
+ *     in a tuple should be written to.
+ *     Use None if all values should be written at the current time.
+ * @param columns mapping tuple field names to requests for Kiji columns.
  */
 @ApiAudience.Framework
 @ApiStability.Experimental
-class LocalKijiScheme(
+private[chopsticks] class LocalKijiScheme(
     private val timeRange: TimeRange,
     private val timestampField: Option[Symbol],
     private val columns: Map[String, ColumnRequest])
@@ -112,9 +128,9 @@ class LocalKijiScheme(
    * Sets any configuration options that are required for running a local job
    * that reads from a Kiji table.
    *
-   * @param process Current Cascading flow being built.
-   * @param tap The tap that is being used with this scheme.
-   * @param conf The job configuration object.
+   * @param process flow being built.
+   * @param tap that is being used with this scheme.
+   * @param conf is an unused Properties object that is a stand-in for a job configuration object.
    */
   override def sourceConfInit(
       process: FlowProcess[Properties],
@@ -127,8 +143,8 @@ class LocalKijiScheme(
   /**
    * Sets up any resources required to read from a Kiji table.
    *
-   * @param process Current Cascading flow being run.
-   * @param sourceCall Object containing the context for this source.
+   * @param process currently being run.
+   * @param sourceCall containing the context for this source.
    */
   override def sourcePrepare(
       process: FlowProcess[Properties],
@@ -154,8 +170,8 @@ class LocalKijiScheme(
    * Reads and converts a row from a Kiji table to a Cascading Tuple. This method
    * is called once for each row in the table.
    *
-   * @param process Current Cascading flow being run.
-   * @param sourceCall Object containing the context for this source.
+   * @param process is the current Cascading flow being run.
+   * @param sourceCall containing the context for this source.
    * @return <code>true</code> if another row was read and it was converted to a tuple,
    *     <code>false</code> if there were no more rows to read.
    */

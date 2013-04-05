@@ -55,7 +55,7 @@ import org.kiji.schema.KijiURI
  */
 @ApiAudience.Framework
 @ApiStability.Experimental
-class LocalKijiTap(
+private[chopsticks] class LocalKijiTap(
     uri: KijiURI,
     private val scheme: LocalKijiScheme)
     extends Tap[Properties, InputStream, OutputStream](

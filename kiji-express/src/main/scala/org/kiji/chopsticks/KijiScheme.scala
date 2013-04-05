@@ -64,17 +64,26 @@ import org.kiji.schema.layout.InvalidLayoutException
 import org.kiji.schema.layout.KijiTableLayout
 
 /**
- * A scheme that can source and sink data from a Kiji table. This scheme is responsible for
- * converting rows from a Kiji table that are input to a Cascading flow into Cascading tuples (see
- * `source(cascading.flow.FlowProcess, cascading.scheme.SourceCall)`) and writing output
+ * A Kiji-specific implementation of a Cascading `Scheme`, which defines how to read and write the
+ * data stored in a Kiji table.
+ *
+ * KijiScheme is responsible for converting rows from a Kiji table that are input to a Cascading
+ * flow into Cascading tuples
+ * (see `source(cascading.flow.FlowProcess, cascading.scheme.SourceCall)`) and writing output
  * data from a Cascading flow to a Kiji table
  * (see `sink(cascading.flow.FlowProcess, cascading.scheme.SinkCall)`).
  *
+ * KijiScheme must be used with [[org.kiji.chopsticks.KijiTap]], since it expects the Tap to have
+ * access to a Kiji table.  [[org.kiji.chopsticks.KijiSource]] handles the creation of both
+ * KijiScheme and KijiTap in Chopsticks.
+ *
  * @param timeRange to include from the Kiji table.
- * @param timestampField is the name of a tuple field that will contain cell timestamp when the
- * @param loggingInterval The interval to log skipped rows on.
- *    For example, if loggingInterval is 1000, then every 1000th skipped row will be logged.
- * @param columns mapping tuple field names to Kiji column names.
+ * @param timestampField is the optional name of a field containing the timestamp that all values
+ *     in a tuple should be written to.
+ *     Use None if all values should be written at the current time.
+ * @param loggingInterval to log skipped rows on. For example, if loggingInterval is 1000,
+ *     then every 1000th skipped row will be logged.
+ * @param columns mapping tuple field names to requests for Kiji columns.
  */
 @ApiAudience.Framework
 @ApiStability.Experimental
@@ -86,15 +95,6 @@ private[chopsticks] class KijiScheme(
     extends Scheme[JobConf, RecordReader[KijiKey, KijiValue], OutputCollector[_, _],
         KijiSourceContext, KijiSinkContext] {
   import KijiScheme._
-
-  // Hadoop mapred counters for the rows read from this scheme.
-  private val counterGroupName = "kiji-chopsticks"
-  private val counterSuccess = "ROWS_READ"
-  private val counterMissingField = "ROWS_SKIPPED_WITH_MISSING_FIELDS"
-
-  // The number of skipped rows to log after.
-  // TODO(CHOP-47): Make this configurable.
-  private val logEvery: Int = 1000
 
   // Keeps track of how many rows have been skipped, for logging purposes.
   private val skippedRows: AtomicLong = new AtomicLong()
@@ -108,12 +108,12 @@ private[chopsticks] class KijiScheme(
    * that reads from a Kiji table. This method gets called on the client machine
    * during job setup.
    *
-   * @param process Current Cascading flow being built.
-   * @param tap The tap that is being used with this scheme.
-   * @param conf The job configuration object.
+   * @param flow being built.
+   * @param tap that is being used with this scheme.
+   * @param conf to which we will add our KijiDataRequest.
    */
   override def sourceConfInit(
-      process: FlowProcess[JobConf],
+      flow: FlowProcess[JobConf],
       tap: Tap[JobConf, RecordReader[KijiKey, KijiValue], OutputCollector[_, _]],
       conf: JobConf) {
     // Build a data request.
@@ -130,13 +130,13 @@ private[chopsticks] class KijiScheme(
    * Sets up any resources required for the MapReduce job. This method is called
    * on the cluster.
    *
-   * @param process Current Cascading flow being run.
-   * @param sourceCall Object containing the context for this source.
+   * @param flow is the current Cascading flow being run.
+   * @param sourceCall containing the context for this source.
    */
   override def sourcePrepare(
-      process: FlowProcess[JobConf],
+      flow: FlowProcess[JobConf],
       sourceCall: SourceCall[KijiSourceContext, RecordReader[KijiKey, KijiValue]]) {
-    val tableUriProperty = process.getStringProperty(KijiConfKeys.KIJI_INPUT_TABLE_URI)
+    val tableUriProperty = flow.getStringProperty(KijiConfKeys.KIJI_INPUT_TABLE_URI)
     // TODO CHOP-71 Remove hack to check for null table uri in sourcePrepare
     // get table layout
     val tableLayout = if (null != tableUriProperty) {
@@ -159,12 +159,13 @@ private[chopsticks] class KijiScheme(
    * Reads and converts a row from a Kiji table to a Cascading Tuple. This method
    * is called once for each row on the cluster.
    *
-   * @param process Current Cascading flow being run.
-   * @param sourceCall Object containing the context for this source.
-   * @return True always. This is used to indicate if there are more rows to read.
+   * @param flow is the current Cascading flow being run.
+   * @param sourceCall containing the context for this source.
+   * @return `true` if another row was read and it was converted to a tuple,
+   *     `false` if there were no more rows to read.
    */
   override def source(
-      process: FlowProcess[JobConf],
+      flow: FlowProcess[JobConf],
       sourceCall: SourceCall[KijiSourceContext, RecordReader[KijiKey, KijiValue]]): Boolean = {
     // Get the current key/value pair.
     val KijiSourceContext(value, layout) = sourceCall.getContext()
@@ -184,13 +185,13 @@ private[chopsticks] class KijiScheme(
       result match {
         case Some(tuple) => {
           sourceCall.getIncomingEntry().setTuple(tuple)
-          process.increment(counterGroupName, counterSuccess, 1)
+          flow.increment(counterGroupName, counterSuccess, 1)
           return true // We set a result tuple, return true for success.
         }
         case None => {
           // Otherwise, this row was missing fields.
           // Increment the counter for rows with missing fields.
-          process.increment(counterGroupName, counterMissingField, 1)
+          flow.increment(counterGroupName, counterMissingField, 1)
           if (skippedRows.getAndIncrement() % loggingInterval == 0) {
             logger.warn("Row %s skipped because of missing field(s)."
                 .format(row.getEntityId.toShellString))
@@ -206,11 +207,11 @@ private[chopsticks] class KijiScheme(
    * Cleans up any resources used during the MapReduce job. This method is called
    * on the cluster.
    *
-   * @param process Current Cascading flow being run.
-   * @param sourceCall Object containing the context for this source.
+   * @param flow currently being run.
+   * @param sourceCall containing the context for this source.
    */
   override def sourceCleanup(
-      process: FlowProcess[JobConf],
+      flow: FlowProcess[JobConf],
       sourceCall: SourceCall[KijiSourceContext, RecordReader[KijiKey, KijiValue]]) {
     // scalastyle:off null
     sourceCall.setContext(null)
@@ -222,12 +223,12 @@ private[chopsticks] class KijiScheme(
    * that writes to a Kiji table. This method gets called on the client machine
    * during job setup.
    *
-   * @param process Current Cascading flow being built.
-   * @param tap The tap that is being used with this scheme.
-   * @param conf The job configuration object.
+   * @param flow being built.
+   * @param tap that is being used with this scheme.
+   * @param conf to which we will add our KijiDataRequest.
    */
   override def sinkConfInit(
-      process: FlowProcess[JobConf],
+      flow: FlowProcess[JobConf],
       tap: Tap[JobConf, RecordReader[KijiKey, KijiValue], OutputCollector[_, _]],
       conf: JobConf) {
     // No-op since no configuration parameters need to be set to encode data for Kiji.
@@ -237,18 +238,18 @@ private[chopsticks] class KijiScheme(
    * Sets up any resources required for the MapReduce job. This method is called
    * on the cluster.
    *
-   * @param process Current Cascading flow being run.
-   * @param sinkCall Object containing the context for this source.
+   * @param flow is the current Cascading flow being run.
+   * @param sinkCall containing the context for this source.
    */
   override def sinkPrepare(
-      process: FlowProcess[JobConf],
+      flow: FlowProcess[JobConf],
       sinkCall: SinkCall[KijiSinkContext, OutputCollector[_, _]]) {
     // Open a table writer.
-    val uriString: String = process.getConfigCopy().get(KijiConfKeys.KIJI_OUTPUT_TABLE_URI)
+    val uriString: String = flow.getConfigCopy().get(KijiConfKeys.KIJI_OUTPUT_TABLE_URI)
     val uri: KijiURI = KijiURI.newBuilder(uriString).build()
 
     // TODO: CHOP-72 Check and see if Kiji.Factory.open should be passed the configuration object in
-    //     process.
+    //     flow.
     doAndRelease(Kiji.Factory.open(uri)) { kiji: Kiji =>
       doAndRelease(kiji.openTable(uri.getTable())) { table: KijiTable =>
         // Set the sink context to an opened KijiTableWriter.
@@ -261,11 +262,11 @@ private[chopsticks] class KijiScheme(
    * Converts and writes a Cascading Tuple to a Kiji table. This method is called once
    * for each row on the cluster.
    *
-   * @param process Current Cascading flow being run.
-   * @param sinkCall Object containing the context for this source.
+   * @param flow is the current Cascading flow being run.
+   * @param sinkCall containing the context for this source.
    */
   override def sink(
-      process: FlowProcess[JobConf],
+      flow: FlowProcess[JobConf],
       sinkCall: SinkCall[KijiSinkContext, OutputCollector[_, _]]) {
     // Retrieve writer from the scheme's context.
     val KijiSinkContext(writer, layout) = sinkCall.getContext()
@@ -279,11 +280,11 @@ private[chopsticks] class KijiScheme(
    * Cleans up any resources used during the MapReduce job. This method is called
    * on the cluster.
    *
-   * @param process Current Cascading flow being run.
-   * @param sinkCall Object containing the context for this source.
+   * @param flow is the current Cascading flow being run.
+   * @param sinkCall containing the context for this source.
    */
   override def sinkCleanup(
-      process: FlowProcess[JobConf],
+      flow: FlowProcess[JobConf],
       sinkCall: SinkCall[KijiSinkContext, OutputCollector[_, _]]) {
     // Close the writer.
     sinkCall.getContext().kijiTableWriter.close()
@@ -307,29 +308,43 @@ private[chopsticks] class KijiScheme(
       Objects.hashCode(columns, timeRange, timestampField, loggingInterval: java.lang.Long)
 }
 
-/** Companion object for KijiScheme. Contains helper methods and constants. */
+/**
+ * Companion object for KijiScheme.
+ *
+ * Contains constants and helper methods for converting between Kiji rows and Cascading tuples,
+ * building Kiji data requests, and some utility methods for handling Cascading fields.
+ */
 object KijiScheme {
   private val logger: Logger = LoggerFactory.getLogger(classOf[KijiScheme])
 
-  // Hadoop mapred counters for the rows read from this scheme.
+  /** Hadoop mapred counter group for Chopsticks. */
   private[chopsticks] val counterGroupName = "kiji-chopsticks"
-  // Counter name for the number of rows successfully read.
+  /** Counter name for the number of rows successfully read. */
   private[chopsticks] val counterSuccess = "ROWS_SUCCESSFULLY_READ"
-  // Counter name for the number of rows skipped because of missing fields.
+  /** Counter name for the number of rows skipped because of missing fields. */
   private[chopsticks] val counterMissingField = "ROWS_SKIPPED_WITH_MISSING_FIELDS"
 
   /** Field name containing a row's [[EntityId]]. */
   private[chopsticks] val entityIdField: String = "entityId"
 
   /**
-   * Converts a KijiRowData to a Cascading tuple, or None if one of the columns didn't exist
-   * and no replacement was specified.
+   * Converts a KijiRowData to a Cascading tuple.
+   *
+   * If there is no data in a column in this row, the value of that field in the tuple will be the
+   * replacement specified in the request for that column.
+   *
+   * Returns None if one of the columns didn't exist and no replacement for it was specified.
+   *
+   * This is used in the `source` method of KijiScheme, for reading rows from Kiji into Chopsticks
+   * tuples.
    *
    * @param columns Mapping from field name to column definition.
    * @param fields Field names of desired tuple elements.
    * @param row The row data.
-   * @param timestampField TODO
-   * @return A tuple containing the values contained in the specified row, or None if some columns
+   * @param timestampField is the optional name of a field containing the timestamp that all values
+   *     in a tuple should be written to.
+   *     Use None if all values should be written at the current time.
+   * @return a tuple containing the values contained in the specified row, or None if some columns
    *     didn't exist and no replacement was specified.
    */
   private[chopsticks] def rowToTuple(
@@ -467,11 +482,15 @@ object KijiScheme {
   /**
    * Writes a Cascading tuple to a Kiji table.
    *
-   * @param columns Mapping from field name to column definition.
-   * @param fields Field names of incoming tuple elements.
-   * @param timestampField (optional) if the user would like to write to a specific version.
-   * @param output Tuple to write out.
-   * @param writer KijiTableWriter to use to write.
+   * This is used in KijiScheme's `sink` method.
+   *
+   * @param columns mapping field names to column definitions.
+   * @param fields names of incoming tuple elements.
+   * @param timestampField is the optional name of a field containing the timestamp that all values
+   *     in a tuple should be written to.
+   *     Use None if all values should be written at the current time.
+   * @param output to write out to Kiji.
+   * @param writer to use for writing to Kiji.
    * @param layout Kiji table layout.
    */
   private[chopsticks] def putTuple(
@@ -593,6 +612,13 @@ object KijiScheme {
     }
   }
 
+  /**
+   * Builds a data request out of the timerange and list of column requests.
+   *
+   * @param timeRange of cells to retrieve.
+   * @param columns to retrieve.
+   * @return data request configured with timeRange and columns.
+   */
   private[chopsticks] def buildRequest(
       timeRange: TimeRange,
       columns: Iterable[ColumnRequest]): KijiDataRequest = {
@@ -657,9 +683,9 @@ object KijiScheme {
    * also be included, identifying a timestamp that all values will be written to.
    *
    * @param fieldNames is a list of field names that a scheme should write to.
-   * @param timestampField is the name of a field containing the timestamp that all values in a
-   *     tuple should be written to. Use the empty symbol if all values should be written at the
-   *     current time.
+   * @param timestampField is the optional name of a field containing the timestamp that all values
+   *     in a tuple should be written to.
+   *     Use None if all values should be written at the current time.
    * @return is a collection of fields created from the names.
    */
   private[chopsticks] def buildSinkFields(fieldNames: Iterable[String],
