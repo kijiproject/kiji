@@ -33,7 +33,7 @@ import org.kiji.schema.layout.KijiTableLayout
  * @param kijiLayout is the layout for this Kiji table.
  */
 @ApiAudience.Private
-@ApiStability.Unstable
+@ApiStability.Experimental
 private[chopsticks] case class KijiSinkContext (
     kijiTableWriter: KijiTableWriter,
     kijiLayout: KijiTableLayout) {

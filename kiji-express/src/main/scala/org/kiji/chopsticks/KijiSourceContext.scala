@@ -31,7 +31,7 @@ import org.kiji.schema.layout.KijiTableLayout
  * @param kijiLayout is the layout of the Kiji table.
  */
 @ApiAudience.Private
-@ApiStability.Unstable
+@ApiStability.Experimental
 private[chopsticks] case class KijiSourceContext (
     rowContainer: KijiValue,
     kijiLayout: KijiTableLayout) {

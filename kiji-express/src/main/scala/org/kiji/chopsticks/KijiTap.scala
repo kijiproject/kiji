@@ -176,7 +176,7 @@ class KijiTap(
 /**
  * Companion object for KijiTap. Contains helper methods for finding/adding dependency jars.
  */
-object KijiTap {
+private[chopsticks] object KijiTap {
   private val logger: Logger = LoggerFactory.getLogger(classOf[KijiTap])
 
   /**

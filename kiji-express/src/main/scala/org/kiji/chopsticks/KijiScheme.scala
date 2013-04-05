@@ -314,7 +314,7 @@ private[chopsticks] class KijiScheme(
  * Contains constants and helper methods for converting between Kiji rows and Cascading tuples,
  * building Kiji data requests, and some utility methods for handling Cascading fields.
  */
-object KijiScheme {
+private[chopsticks] object KijiScheme {
   private val logger: Logger = LoggerFactory.getLogger(classOf[KijiScheme])
 
   /** Hadoop mapred counter group for Chopsticks. */
