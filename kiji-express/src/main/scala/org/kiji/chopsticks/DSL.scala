@@ -22,6 +22,8 @@ package org.kiji.chopsticks
 import java.util.NavigableMap
 import java.util.TreeMap
 
+import scala.collection.JavaConverters._
+
 import org.apache.avro.util.Utf8
 import org.apache.hadoop.hbase.HConstants
 
@@ -320,8 +322,7 @@ object DSL {
    * @param aMap to retrieve the value from.
    * @tparam T is the type of value stored in the map.
    */
-  def getMostRecent[T](slice: NavigableMap[Long, T]): T =
-      slice.firstEntry().getValue()
+  def getMostRecent[T](aMap: Map[Long, T]): T = aMap.head._2
 
   /**
    * Creates a Slice (NavigableMap[Long, T]) containing just one key/value pair.
@@ -329,9 +330,9 @@ object DSL {
    * @param timestamp of the entry.
    * @param value of the entry.
    */
-  def singleEntrySlice[T](timestamp: Long, value: T): NavigableMap[Long, T] = {
+  def singleEntrySlice[T](timestamp: Long, value: T): Map[Long, T] = {
     val slice = new TreeMap[Long, T]()
     slice.put(0L, value)
-    slice
+    slice.asScala.toMap
   }
 }

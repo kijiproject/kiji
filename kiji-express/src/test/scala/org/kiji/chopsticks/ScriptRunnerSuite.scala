@@ -74,10 +74,10 @@ import org.kiji.chopsticks.DSL._
 
 KijiInput("%s")("family:column1" -> 'word)
     // Sanitize the word.
-    .map('word -> 'cleanword) { words: NavigableMap[Long, Utf8] =>
+    .map('word -> 'cleanword) { words: Map[Long, String] =>
       words
-          .firstEntry()
-          .getValue()
+          .head
+          ._2
           .toString()
           .toLowerCase()
     }

@@ -20,7 +20,6 @@
 package org.kiji.chopsticks
 
 import java.io.Serializable
-import java.util.NavigableMap
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
@@ -49,10 +48,10 @@ private[chopsticks] sealed trait ColumnRequest extends Serializable {
   /**
    * Specifies what to replace any missing values on this column with.
    *
-   * @param replacement Replacement specification.
+   * @param replacementSlice Replacement specification.
    * @return this ColumnRequest with replacement configured.
    */
-  def replaceMissingWith(replacementSlice: NavigableMap[Long, _]): ColumnRequest
+  def replaceMissingWith(replacementSlice: Map[Long, _]): ColumnRequest
 
   /**
    * Specifies that missing values on this column mean the row should be skipped.
@@ -82,7 +81,7 @@ final case class QualifiedColumn private[chopsticks] (
   KijiNameValidator.validateLayoutName(family)
   KijiNameValidator.validateLayoutName(qualifier)
 
-  override def replaceMissingWith(replacementSlice: NavigableMap[Long, _]): ColumnRequest = {
+  override def replaceMissingWith(replacementSlice: Map[Long, _]): ColumnRequest = {
     return new QualifiedColumn(
         family,
         qualifier,
@@ -109,7 +108,7 @@ final case class ColumnFamily private[chopsticks] (
     extends ColumnRequest {
   KijiNameValidator.validateLayoutName(family)
 
-  override def replaceMissingWith(replacementSlice: NavigableMap[Long, _]): ColumnRequest = {
+  override def replaceMissingWith(replacementSlice: Map[Long, _]): ColumnRequest = {
     return new ColumnFamily(family, options.newWithReplacement(Some(replacementSlice)))
   }
 
@@ -133,10 +132,10 @@ final case class ColumnRequestOptions private[chopsticks] (
     // Not accessible to end-users because the type is soon to be replaced by a
     // Chopsticks-specific implementation.
     private[chopsticks] val filter: Option[KijiColumnFilter] = None,
-    replacementSlice: Option[NavigableMap[Long, _]] = None)
+    replacementSlice: Option[Map[Long, _]] = None)
     extends Serializable {
       def newWithReplacement(
-          newReplacement: Option[NavigableMap[Long,_]]): ColumnRequestOptions = {
+          newReplacement: Option[Map[Long,_]]): ColumnRequestOptions = {
         new ColumnRequestOptions(maxVersions, filter, newReplacement)
       }
 }

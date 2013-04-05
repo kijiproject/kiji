@@ -316,7 +316,7 @@ object KijiSource {
 
     override def sinkCleanup(
         process: FlowProcess[Properties],
-        sinkCall: SinkCall[KijiTableWriter, OutputStream]) {
+        sinkCall: SinkCall[OutputContext, OutputStream]) {
       super.sink(process, sinkCall)
 
       // Read table into buffer.
@@ -352,7 +352,7 @@ object KijiSource {
       extends KijiScheme(timeRange, timestampField, loggingInterval, columns) {
     override def sinkCleanup(
         process: FlowProcess[JobConf],
-        sinkCall: SinkCall[KijiTableWriter, OutputCollector[_, _]]) {
+        sinkCall: SinkCall[KijiSinkContext, OutputCollector[_, _]]) {
       super.sink(process, sinkCall)
 
       // Store the output table.

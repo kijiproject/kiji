@@ -105,7 +105,7 @@ class KijiSourceSuite
    *
    * @param outputBuffer containing data that the Kiji table has in it after the job has been run.
    */
-  def validateImport(outputBuffer: Buffer[(EntityId, NavigableMap[Long, Utf8])]) {
+  def validateImport(outputBuffer: Buffer[(EntityId, Map[Long, String])]) {
     assert(10 === outputBuffer.size)
 
     // Perform a non-distributed word count.
@@ -114,7 +114,6 @@ class KijiSourceSuite
         .flatMap { row =>
           val (_, timeline) = row
           timeline
-              .asScala
               .map { case (_, word) => word }
         }
         // Count the words.
@@ -174,14 +173,14 @@ class KijiSourceSuite
    *
    * @param outputBuffer containing data that the Kiji table has in it after the job has been run.
    */
-  def validateImportWithTime(outputBuffer: Buffer[(EntityId, NavigableMap[Long, Utf8])]) {
+  def validateImportWithTime(outputBuffer: Buffer[(EntityId, Map[Long, String])]) {
     // There should be one cell per row in the output.
-    val cellsPerRow = outputBuffer.unzip._2.map { m => (m.firstKey(), m.get(m.firstKey)) }
+    val cellsPerRow = outputBuffer.unzip._2.map { m => m.head }
     // Sort by timestamp.
     val cellsSortedByTime = cellsPerRow.sortBy { case(ts, line) => ts }
     // Verify contents.
     (0 until 2).foreach { index =>
-      assert( (index.toLong, new Utf8("Line-" + index)) == cellsSortedByTime(index) )
+      assert( (index.toLong, "Line-" + index) == cellsSortedByTime(index) )
     }
   }
 
@@ -343,7 +342,7 @@ class KijiSourceSuite
                 Column("family:column1") -> 'word1,
                 Column("family:column2")
                     .replaceMissingWith(
-                        singleEntrySlice(0L, new Utf8("missing"))) -> 'word2)),
+                        singleEntrySlice(0L, "missing")) -> 'word2)),
             missingValuesInput)
         .sink(Tsv("outputFile"))(validateMissingValuesReplaced)
         // Run the test job.
@@ -363,13 +362,45 @@ class KijiSourceSuite
   test("a job that uses the matrix api is run") {
     pending
   }
+
+  test("test conversion of column value of type string between java and scala in Hadoop mode") {
+    def validateSimpleAvroChecker(outputBuffer: Buffer[(String, Int)]) {
+      val outMap = outputBuffer.toMap
+
+      // Validate that the output is as expected.
+      intercept[java.util.NoSuchElementException]{outMap("false")}
+      assert(6 === outMap("true"))
+    }
+
+    // Create test Kiji table.
+    val uri: String = doAndRelease(makeTestKijiTable(layout)) { table: KijiTable =>
+      table.getURI().toString()
+    }
+
+    // Input tuples to use for version count tests.
+    val avroCheckerInput: List[(EntityId, NavigableMap[Long, Utf8])] = List(
+        ( id("row01"), timeline((10L, new Utf8("two")), (20L, new Utf8("two"))) ),
+        ( id("row02"), timeline(
+            (10L, new Utf8("three")),
+            (20L, new Utf8("three")),
+            (30L, new Utf8("three")) ) ),
+        ( id("row03"), singleton(new Utf8("hello")) ))
+
+    // Build test job.
+    val testSource = KijiInput(uri)(Map((Column("family:column1", versions=all) -> 'word)))
+    JobTest(new AvroToScalaChecker(testSource)(_))
+      .arg("input", uri)
+      .arg("output", "outputFile")
+      .source(testSource, avroCheckerInput)
+      .sink(Tsv("outputFile"))(validateSimpleAvroChecker)
+      // Run the test job.
+      .runHadoop
+      .finish
+  }
 }
 
 /** Companion object for KijiSourceSuite. Contains helper functions and test jobs. */
 object KijiSourceSuite extends KijiSuite {
-  /** Convenience method for getting the latest value in a timeline. */
-  def getMostRecent[T](timeline: NavigableMap[Long, T]): T = timeline.firstEntry().getValue()
-
   /**
    * A job that extracts the most recent string value from the column "family:column1" for all rows
    * in a Kiji table, and then counts the number of occurrences of those strings across rows.
@@ -382,7 +413,7 @@ object KijiSourceSuite extends KijiSuite {
     // Setup input to bind values from the "family:column1" column to the symbol 'word.
     KijiInput(args("input"))("family:column1" -> 'word)
         // Sanitize the word.
-        .map('word -> 'cleanword) { words: NavigableMap[Long, Utf8] =>
+        .map('word -> 'cleanword) { words: Map[Long, String] =>
           getMostRecent(words)
               .toString()
               .toLowerCase()
@@ -404,7 +435,7 @@ object KijiSourceSuite extends KijiSuite {
    */
   class PluralizeJob(args: Args) extends Job(args) {
     KijiInput(args("input"))("family:column1" -> 'word1, "family:column2" -> 'word2)
-        .map('word1 -> 'pluralword) { words: NavigableMap[Long, Utf8] =>
+        .map('word1 -> 'pluralword) { words: Map[Long, String] =>
           getMostRecent(words).toString() + "s"
         }
         .write(Tsv(args("output")))
@@ -425,8 +456,8 @@ object KijiSourceSuite extends KijiSuite {
             Column("family:column1") -> 'word1,
             Column("family:column2")
                 .replaceMissingWith(
-                        singleEntrySlice(0L, new Utf8("missing"))) -> 'word2))
-        .map('word2 -> 'pluralword) { words: NavigableMap[Long, Utf8] =>
+                        singleEntrySlice(0L, "missing")) -> 'word2))
+        .map('word2 -> 'pluralword) { words: Map[Long, String] =>
           getMostRecent(words).toString() + "s"
         }
         .discard('word1, 'word2)
@@ -446,7 +477,7 @@ object KijiSourceSuite extends KijiSuite {
   class VersionsJob(source: KijiSource)(args: Args) extends Job(args) {
     source
         // Count the size of words (number of versions).
-        .map('words -> 'versioncount) { words: NavigableMap[Long, Utf8] =>
+        .map('words -> 'versioncount) { words: Map[Long, String] =>
           words.size
         }
         .groupBy('versioncount) (_.size)
@@ -484,10 +515,25 @@ object KijiSourceSuite extends KijiSuite {
   class ImportJobWithTime(args: Args) extends Job(args) {
     // Setup input.
     TextLine(args("input"))
-    .read
-    // Generate an entityId for each line.
-    .map('line -> 'entityId) { id(_: String) }
-    // Write the results to the "family:column1" column of a Kiji table.
-    .write(KijiOutput(args("output"), 'offset)('line -> "family:column1"))
+        .read
+        // Generate an entityId for each line.
+        .map('line -> 'entityId) { id(_: String) }
+        // Write the results to the "family:column1" column of a Kiji table.
+        .write(KijiOutput(args("output"), 'offset)('line -> "family:column1"))
+  }
+
+  class AvroToScalaChecker(source: KijiSource)(args: Args) extends Job(args) {
+    source
+        .flatMap('word -> 'matches) { word: Map[Long, Any] =>
+          word.map { case (_, value) =>
+            if (value.isInstanceOf[String]) {
+              "true"
+            } else {
+              "false"
+            }
+          }
+        }
+        .groupBy('matches) (_.size)
+        .write(Tsv(args("output")))
   }
 }
