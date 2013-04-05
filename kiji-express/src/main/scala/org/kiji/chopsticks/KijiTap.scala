@@ -70,7 +70,6 @@ class KijiTap(
     extends Tap[JobConf, RecordReader[KijiKey, KijiValue], OutputCollector[_, _]](
         scheme.asInstanceOf[Scheme[JobConf, RecordReader[KijiKey, KijiValue],
             OutputCollector[_, _], _, _]]) {
-  import KijiTap._
 
   private val tableUri: String = uri.toString()
   private val id: String = UUID.randomUUID().toString()
@@ -90,12 +89,6 @@ class KijiTap(
     // Store the input table.
     conf.set(KijiConfKeys.KIJI_INPUT_TABLE_URI, tableUri)
 
-    // Put Kiji dependency jars on the distributed cache.
-    getStepConfigDef().setProperty(
-        ConfigDef.Mode.UPDATE,
-        "tmpjars",
-        findKijiJars(conf).reduce { (a, b) => a + "," + b })
-
     super.sourceConfInit(process, conf)
   }
 
@@ -114,12 +107,6 @@ class KijiTap(
 
     // Store the output table.
     conf.set(KijiConfKeys.KIJI_OUTPUT_TABLE_URI, tableUri)
-
-    // Put Kiji dependency jars on the distributed cache.
-    getStepConfigDef().setProperty(
-        ConfigDef.Mode.UPDATE,
-        "tmpjars",
-        findKijiJars(conf).reduce { (a, b) => a + "," + b })
 
     super.sinkConfInit(process, conf)
   }
@@ -173,68 +160,3 @@ class KijiTap(
   override def hashCode(): Int = Objects.hashCode(tableUri, scheme, id)
 }
 
-/**
- * Companion object for KijiTap. Contains helper methods for finding/adding dependency jars.
- */
-private[chopsticks] object KijiTap {
-  private val logger: Logger = LoggerFactory.getLogger(classOf[KijiTap])
-
-  /**
-   * Gets the path to the jar file containing a specific class.
-   *
-   * @param clazz whose jar file should be found.
-   * @param libName of the library provided by the jar being searched for. Used only for debug
-   *     messages.
-   * @return the path to the jar file containing the specified class.
-   */
-  private def findJarForClass(clazz: Class[_], libName: String): Option[Path] = {
-    // Try to find the jar for this class.
-    try {
-      val jarFile: File = new File(Jars.getJarPathForClass(clazz))
-      val jarPath: Path = new Path(jarFile.toURI().toString())
-      logger.debug("Found %s jar: %s".format(libName, jarPath))
-
-      Some(jarPath)
-    } catch {
-      case e => {
-        logger.warn("Could not find jar for %s.".format(libName)
-            + " Its dependency jars will not be loaded into the distributed cache.")
-        logger.debug("Failed to find jar for %s with exception: %s".format(libName, e))
-
-        None
-      }
-    }
-  }
-
-  /**
-   * Finds Kiji dependency jars and returns a list of their paths. Use this method to find
-   * jars that need to be sent to Hadoop's DistributedCache.
-   *
-   * @param fsConf Configuration containing options for the filesystem containing jars.
-   * @return A list of paths to dependency jars.
-   */
-  private def findKijiJars(fsConf: Configuration): Seq[String] = {
-    // Find the kiji jars.
-    val kijiJars: Seq[Path] = {
-      val schemaJar: Option[Path] = findJarForClass(classOf[Kiji], "kiji-schema")
-      val mapreduceJar: Option[Path] = findJarForClass(classOf[KijiProducer], "kiji-mapreduce")
-      val chopsticksJar: Option[Path] = findJarForClass(classOf[KijiTap], "kiji-chopsticks")
-
-      schemaJar.toSeq ++ mapreduceJar.toSeq ++ chopsticksJar.toSeq
-    }
-
-    // Add all dependency jars from the directories containing the kiji-schema, kiji-mapreduce,
-    // and kiji-chopsticks jars.
-    val dependencyJars: Seq[Path] = kijiJars.flatMap { jar: Path =>
-      DistributedCacheJars.listJarFilesFromDirectory(fsConf, jar.getParent()).asScala
-    }
-
-    // Remove duplicate jars and return.
-    dependencyJars
-        // Group jar paths by jar name.
-        .groupBy { path => path.getName() }
-        // Select the first found jar for each jar name.
-        .map { case (_, paths) => paths(0).toString() }
-        .toSeq
-  }
-}
