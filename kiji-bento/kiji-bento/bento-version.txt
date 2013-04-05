@@ -14,4 +14,5 @@ kiji-mapreduce-lib: ${kiji-mapreduce-lib.version}
 kiji-phonebook: ${kiji-phonebook.version}
 kiji-music: ${kiji-music.version}
 bento-cluster: ${bento-cluster.version}
+kiji-hive-adapter: ${kiji-hive-adapter.version}
 

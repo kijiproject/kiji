@@ -42,6 +42,7 @@
     <kiji-phonebook.version>1.0.0-rc6-SNAPSHOT</kiji-phonebook.version>
     <kiji-mapreduce.version>1.0.0-rc6-SNAPSHOT</kiji-mapreduce.version>
     <kiji-mapreduce-lib.version>1.0.0-rc6-SNAPSHOT</kiji-mapreduce-lib.version>
+    <kiji-hive-adapter.version>0.1.0-SNAPSHOT</kiji-hive-adapter.version>
     <kiji-music.version>1.0.0-rc6-SNAPSHOT</kiji-music.version>
   </properties>
 

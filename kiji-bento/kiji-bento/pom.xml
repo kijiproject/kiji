@@ -124,6 +124,13 @@
       <type>tar.gz</type>
     </dependency>
     <dependency>
+      <groupId>org.kiji.hive</groupId>
+      <artifactId>kiji-hive-adapter</artifactId>
+      <version>${kiji-hive-adapter.version}</version>
+      <classifier>release</classifier>
+      <type>tar.gz</type>
+    </dependency>
+    <dependency>
       <groupId>org.kiji.kiji-bento</groupId>
       <artifactId>bento-checkin</artifactId>
       <version>${project.version}</version>
