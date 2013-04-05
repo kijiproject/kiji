@@ -112,6 +112,12 @@
       <artifactId>cascading-hadoop</artifactId>
       <version>${cascading.version}</version>
       <scope>compile</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-core</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.twitter</groupId>
