@@ -22,13 +22,13 @@
 
   <groupId>org.kiji.mapreduce</groupId>
   <artifactId>kiji-mapreduce</artifactId>
-  <version>1.0.0-rc6-SNAPSHOT</version>
+  <version>1.0.0-rc6</version>
   <packaging>jar</packaging>
 
   <parent>
     <groupId>org.kiji.mapreduce</groupId>
     <artifactId>kiji-mapreduce-root</artifactId>
-    <version>1.0.0-rc6-SNAPSHOT</version>
+    <version>1.0.0-rc6</version>
   </parent>
 
   <name>KijiMR</name>

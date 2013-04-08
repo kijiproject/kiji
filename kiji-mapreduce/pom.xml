@@ -21,7 +21,7 @@
 
   <groupId>org.kiji.mapreduce</groupId>
   <artifactId>kiji-mapreduce-root</artifactId>
-  <version>1.0.0-rc6-SNAPSHOT</version>
+  <version>1.0.0-rc6</version>
   <packaging>pom</packaging>
 
   <parent>
