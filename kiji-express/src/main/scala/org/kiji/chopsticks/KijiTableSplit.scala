@@ -30,35 +30,62 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 
 /**
- * An input split that specifies a region of rows from a Kiji table to be processed by a
- * MapReduce task.
+ * An input split that specifies a region of rows from a Kiji table to be processed by a MapReduce
+ * task. This input split stores exactly the same data as `TableSplit`, but does a better job
+ * handling default split sizes.
  *
  * @param split to which functionality is delegated.
  */
 @ApiAudience.Private
 @ApiStability.Experimental
-final class KijiTableSplit(
-    private val split: TableSplit)
+final private[chopsticks] class KijiTableSplit(
+    split: org.kiji.mapreduce.impl.KijiTableSplit)
     extends InputSplit {
-
   /**
-   * No argument constructor for KijiTableSplit. This is required to be a seperate constructor
-   * so that java has access to it.
+   * No argument constructor for KijiTableSplit so that it can be constructed via reflection. This
+   * is required to be a seperate constructor so that java has access to it.
    */
   // scalastyle:off public.methods.have.type
-  def this() = this(new TableSplit())
+  def this() = this(new org.kiji.mapreduce.impl.KijiTableSplit())
   // scalastyle:on public.methods.have.type
 
+  /**
+   * Returns the length of the split.
+   *
+   * This method does not currently examine the data in the region represented by the split. We
+   * assume that each split is 3/4 full (where "full" is defined as hbase.hregion.max.filesize).
+   * If the region had that many bytes in it, it would split in two, each containing 1/2 that many
+   * bytes. So we expect, on average, regions to be halfway between "newly split" and "just about
+   * to split."
+   *
+   * @return the length of the split.
+   * @see org.apache.hadoop.mapreduce.InputSplit#getLength()
+   */
   override def getLength(): Long = split.getLength()
 
+  /**
+   * Get the list of hostnames where the input split is located.
+   *
+   * @return a list of hostnames defining this input split.
+   */
   override def getLocations(): Array[String] = split.getLocations()
 
-  override def readFields(in: DataInput) {
-    split.readFields(in)
+  /**
+   * Implementation of Hadoop's writable deserialization.
+   *
+   * @param input data stream containing data to populate this split with.
+   */
+  override def readFields(input: DataInput) {
+    split.readFields(input)
   }
 
-  override def write(out: DataOutput) {
-    split.write(out)
+  /**
+   * Implementation of Hadoop's writable serialization.
+   *
+   * @param output data stream to populate with the data this split contains.
+   */
+  override def write(output: DataOutput) {
+    split.write(output)
   }
 
   /**

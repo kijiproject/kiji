@@ -102,7 +102,7 @@ final class KijiInputFormat
                     location)
               }
 
-              new KijiTableSplit(tableSplit)
+              new KijiTableSplit(new org.kiji.mapreduce.impl.KijiTableSplit(tableSplit, startKey))
             }
             .toArray
       }

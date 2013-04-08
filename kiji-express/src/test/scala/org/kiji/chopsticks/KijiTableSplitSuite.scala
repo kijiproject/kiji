@@ -24,8 +24,9 @@ import org.scalatest.FunSuite
 
 class KijiTableSplitSuite extends FunSuite {
   val hTableSplit =
-    new TableSplit("name".getBytes, "startrow".getBytes, "endrow".getBytes, "location")
-  val kTableSplit = new KijiTableSplit(hTableSplit)
+      new TableSplit("name".getBytes, "startrow".getBytes, "endrow".getBytes, "location")
+  val mTableSplit = new org.kiji.mapreduce.impl.KijiTableSplit(hTableSplit, hTableSplit.getStartRow)
+  val kTableSplit = new KijiTableSplit(mTableSplit)
 
   test("KijiTableSplit should have the same startrow as the hTableSplit.") {
     assert(hTableSplit.getStartRow.toSeq == kTableSplit.getStartRow.toSeq)
