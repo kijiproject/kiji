@@ -3,6 +3,7 @@
                               KijiMR Library Release Notes
 
 Version 1.0.0-rc6
+  * KIJIMRLIB-14. Add XML bulk importer.
   * DDLSHELL-23. Added extension for KijiSchema shell to support bulk imports.
 
 Version 1.0.0-rc5
