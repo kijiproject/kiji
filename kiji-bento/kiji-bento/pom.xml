@@ -64,7 +64,7 @@
               <descriptors>
                 <descriptor>${basedir}/src/main/assembly/release.xml</descriptor>
               </descriptors>
-              <finalName>kiji-bento-${codename}</finalName>
+              <finalName>kiji-bento-${codename}-${project.version}</finalName>
             </configuration>
           </execution>
         </executions>

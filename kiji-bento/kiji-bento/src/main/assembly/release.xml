@@ -29,6 +29,7 @@
   </formats>
 
   <includeBaseDirectory>true</includeBaseDirectory>
+  <baseDirectory>kiji-bento-${codename}</baseDirectory>
 
   <fileSets>
     <fileSet>
