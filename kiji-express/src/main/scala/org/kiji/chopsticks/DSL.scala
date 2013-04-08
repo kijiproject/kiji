@@ -19,12 +19,6 @@
 
 package org.kiji.chopsticks
 
-import java.util.NavigableMap
-import java.util.TreeMap
-
-import scala.collection.JavaConverters._
-
-import org.apache.avro.util.Utf8
 import org.apache.hadoop.hbase.HConstants
 
 import org.kiji.annotations.ApiAudience
@@ -314,25 +308,5 @@ object DSL {
         // scalastyle:on null
       new KijiOutput(tableURI, tsField)
     }
-  }
-
-  /**
-   * Gets the value of the first entry in a map sorted by key.
-   *
-   * @param aMap to retrieve the value from.
-   * @tparam T is the type of value stored in the map.
-   */
-  def getMostRecent[T](aMap: Map[Long, T]): T = aMap.head._2
-
-  /**
-   * Creates a Slice (NavigableMap[Long, T]) containing just one key/value pair.
-   *
-   * @param timestamp of the entry.
-   * @param value of the entry.
-   */
-  def singleEntrySlice[T](timestamp: Long, value: T): Map[Long, T] = {
-    val slice = new TreeMap[Long, T]()
-    slice.put(0L, value)
-    slice.asScala.toMap
   }
 }

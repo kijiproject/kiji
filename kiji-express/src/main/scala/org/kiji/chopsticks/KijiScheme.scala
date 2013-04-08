@@ -21,7 +21,6 @@ package org.kiji.chopsticks
 
 import java.io.InvalidClassException
 import java.util.concurrent.atomic.AtomicLong
-import java.util.TreeMap
 
 import scala.collection.JavaConverters._
 
@@ -38,7 +37,6 @@ import org.apache.avro.generic.IndexedRecord
 import org.apache.avro.generic.GenericData.Fixed
 import org.apache.avro.Schema
 import org.apache.avro.specific.SpecificFixed
-import org.apache.avro.util.Utf8
 import org.apache.commons.codec.binary.Base64
 import org.apache.commons.lang.SerializationUtils
 import org.apache.hadoop.mapred.JobConf
@@ -60,7 +58,6 @@ import org.kiji.schema.KijiRowData
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiTableWriter
 import org.kiji.schema.KijiURI
-import org.kiji.schema.layout.InvalidLayoutException
 import org.kiji.schema.layout.KijiTableLayout
 
 /**
@@ -324,7 +321,7 @@ private[chopsticks] object KijiScheme {
   /** Counter name for the number of rows skipped because of missing fields. */
   private[chopsticks] val counterMissingField = "ROWS_SKIPPED_WITH_MISSING_FIELDS"
 
-  /** Field name containing a row's [[EntityId]]. */
+  /** Field name containing a row's [[org.kiji.schema.EntityId]]. */
   private[chopsticks] val entityIdField: String = "entityId"
 
   /**
@@ -368,16 +365,7 @@ private[chopsticks] object KijiScheme {
         .foreach {
             case colReq @ ColumnFamily(family, ColumnRequestOptions(_, _, replacement)) => {
               if (row.containsColumn(family)) {
-                val familyValues: java.util.NavigableMap[String,
-                    java.util.NavigableMap[java.lang.Long, AnyRef]] = row.getValues[AnyRef](family)
-                val scalaFamilyValues: Map[String,
-                    java.util.NavigableMap[java.lang.Long, AnyRef]] = familyValues.asScala.toMap
-                result.add(
-                    scalaFamilyValues.map {
-                        kv: (String, java.util.NavigableMap[java.lang.Long, AnyRef]) =>
-                            (kv._1, convertKijiValuesToScalaTypes(kv._2))
-                    }
-                )
+                result.add (KijiSlice(row.iterator(family).asScala))
               } else {
                 replacement match {
                   // TODO convert replacement slice
@@ -395,7 +383,7 @@ private[chopsticks] object KijiScheme {
                 qualifier,
                 ColumnRequestOptions(_, _, replacement)) => {
               if (row.containsColumn(family, qualifier)) {
-                result.add(convertKijiValuesToScalaTypes(row.getValues(family, qualifier)))
+                result.add(KijiSlice(row.iterator(family, qualifier).asScala))
               } else {
                 replacement match {
                   // TODO convert replacement slice
@@ -413,29 +401,14 @@ private[chopsticks] object KijiScheme {
   }
 
   /**
-   * Convert a timeline of Java values that are read from a column into a corresponding Scala map.
-   *
-   * @param timeline is a map from Long (version) to column values for the version.
-   * @return a Scala Map corresponding to the Java timeline.
-   */
-  private[chopsticks] def convertKijiValuesToScalaTypes (
-      timeline: java.util.NavigableMap[java.lang.Long, _])
-      : Map[Long, Any] = {
-    timeline
-        .asScala
-        .map { case (timestamp, value) => (timestamp.longValue(), convertJavaType(value)) }
-        .toMap
-  }
-
-  /**
    * Convert Java types (that came from Kiji columns) into corresponding Scala types for
    * usage within Chopsticks.
    *
    * @param columnValue is the value of the Kiji column.
    * @return the corresponding value converted to a Scala type.
    */
-  private def convertJavaType(columnValue: Any): Any = {
-    columnValue match {
+  private[chopsticks] def convertJavaTypes(columnValue: Any): Any = {
+    (columnValue: @unchecked) match {
       // scalastyle:off null
       case null => null
       // scalastyle:on null
@@ -447,19 +420,19 @@ private[chopsticks] object KijiScheme {
       // bytes
       case bb: java.nio.ByteBuffer => bb.array()
       // string
-      case s: java.lang.CharSequence => s.toString()
+      case s: java.lang.CharSequence => s.toString
       // array
       case l: java.util.List[Any] => {
         l.asScala
             .toList
-            .map { elem => convertJavaType(elem) }
+            .map { elem => convertJavaTypes(elem) }
       }
       // map (avro maps always have keys of type CharSequence)
       // TODO CHOP-70 revisit conversion of maps between java and scala
       case m: java.util.Map[CharSequence, Any] => {
         m.asScala
             .toMap
-            .map { case (key, value) => (key.toString, convertJavaType(value)) }
+            .map { case (key, value) => (key.toString, convertJavaTypes(value)) }
       }
       // fixed
       case f: SpecificFixed => f.bytes().array
@@ -537,36 +510,16 @@ private[chopsticks] object KijiScheme {
   }
 
   /**
-   * Convert a timeline of values to be written to a column into a corresponding Java map.
-   *
-   * @tparam T is the type of the column value.
-   * @param timeline is a map from Long (versions) to column values at that version.
-   * @param columnSchema is the schema of the column to be written to.
-   * @return the corresponding Java map for the Kiji table.
-   */
-  private[chopsticks] def convertScalaTypesToKijiValues[T](
-      timeline: Map[Long, T],
-      columnSchema: Schema)
-      : java.util.NavigableMap[java.lang.Long, java.lang.Object] = {
-    val convertedMap = timeline
-        .map { case (timestamp, value) =>
-          (java.lang.Long.valueOf(timestamp), convertScalaTypes(value, columnSchema))
-        }
-        .asJava
-    new java.util.TreeMap(convertedMap)
-  }
-
-  /**
    * Convert Scala types back to Java types to write to a Kiji table.
    *
    * @param columnValue is the value written to this column.
    * @param columnSchema is the schema of the column.
    * @return the converted Java type.
    */
-  private def convertScalaTypes(
+  private[chopsticks] def convertScalaTypes(
       columnValue: Any,
       columnSchema: Schema): java.lang.Object = {
-    columnValue match {
+    (columnValue: @unchecked) match {
       // scalastyle:off null
       case null => null
       // scalastyle:on null
@@ -577,6 +530,8 @@ private[chopsticks] object KijiScheme {
       case d: Double => d.asInstanceOf[java.lang.Double]
       // this could be an avro "bytes" field or avro "fixed" field
       case bb: Array[Byte] => {
+        require(null != columnSchema, "Tried to convert an Array[Byte], but the writer schema" +
+          "was null.")
         if (columnSchema.getType == Schema.Type.BYTES) {
           java.nio.ByteBuffer.wrap(bb)
         } else if (columnSchema.getType == Schema.Type.FIXED) {
@@ -589,12 +544,16 @@ private[chopsticks] object KijiScheme {
       case s: String => s
       // this is an avro array
       case l: List[Any] => {
+        require(null != columnSchema, "Tried to convert a List[Any], but the writer schema was" +
+            " null.")
         l.map { elem => convertScalaTypes(elem, columnSchema.getElementType) }
             .asJava
       }
       // map
       // TODO CHOP-70 revisit conversion of maps between java and scala
       case m: Map[String, Any] => {
+        require(null != columnSchema, "Tried to convert a Map[String, Any], but the writer schema" +
+          "was null.")
         val convertedMap = m.map { case (key, value) =>
           val convertedValue = convertScalaTypes(value, columnSchema.getValueType)
           (key, convertedValue)
@@ -606,7 +565,7 @@ private[chopsticks] object KijiScheme {
       // avro record or object
       case a: IndexedRecord => a
       // any other type we don't understand
-      case _ => throw new InvalidClassException("Trying to write an unrecognized Scala/Java type"
+      case _ => throw new InvalidClassException("Trying to write an unrecognized Scala type"
           + " that cannot be converted to a Java type for writing to Kiji: "
           + columnValue.asInstanceOf[AnyRef].getClass.toString)
     }

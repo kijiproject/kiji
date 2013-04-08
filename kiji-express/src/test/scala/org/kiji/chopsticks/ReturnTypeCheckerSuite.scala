@@ -21,6 +21,7 @@ package org.kiji.chopsticks
 
 import java.io.InvalidClassException
 
+import scala.collection.JavaConversions._
 
 import org.scalatest.FunSuite
 import org.scalatest.matchers.ShouldMatchers
@@ -37,427 +38,231 @@ import org.apache.avro.Schema
  * that are read/written from a Kiji column.
  */
 class ReturnTypeCheckerSuite extends FunSuite with ShouldMatchers {
-  val intHashMap = {
-    val map = new java.util.TreeMap[java.lang.Long, java.lang.Integer]()
-    map.put(new java.lang.Long(10), new java.lang.Integer(10))
-    map.put(new java.lang.Long(20), new java.lang.Integer(20))
-    map
+  val int: java.lang.Integer = new java.lang.Integer(10)
+  test("Test conversion of Integers from Java, to Scala, and back again.") {
+    // Java => Scala
+    val res = KijiScheme.convertJavaTypes(int)
+    assert(res.isInstanceOf[Int])
+    assert(10 == res)
+    // Scala => Java
+    val resJava = KijiScheme.convertScalaTypes(res, null)
+    assert(resJava.isInstanceOf[java.lang.Integer])
+    assert(resJava == int)
   }
 
-  val boolHashMap = {
-    val map = new java.util.TreeMap[java.lang.Long, java.lang.Boolean]()
-    map.put(new java.lang.Long(10), new java.lang.Boolean(true))
-    map.put(new java.lang.Long(20), new java.lang.Boolean(false))
-    map
+  val boolean: java.lang.Boolean = new java.lang.Boolean(true)
+  test("Test conversion of Boolean type from Java, to Scala, and back again.") {
+    // Java => Scala
+    val res = KijiScheme.convertJavaTypes(boolean)
+    assert(res.isInstanceOf[Boolean])
+    assert(true == res)
+    // Scala => Java
+    val resJava = KijiScheme.convertScalaTypes(res, null)
+    assert(resJava.isInstanceOf[java.lang.Boolean])
+    assert(resJava == boolean)
   }
 
-  val longHashMap = {
-    val map = new java.util.TreeMap[java.lang.Long, java.lang.Long]()
-    map.put(new java.lang.Long(10), new java.lang.Long(10))
-    map
+  val long: java.lang.Long= new java.lang.Long(10)
+  test("Test conversion of Long from Java, to Scala, and back again.") {
+    // Java => Scala
+    val res = KijiScheme.convertJavaTypes(long)
+    assert(res.isInstanceOf[Long])
+    assert(10L == res)
+    // Scala => Java
+    val resJava = KijiScheme.convertScalaTypes(res, null)
+    assert(resJava.isInstanceOf[java.lang.Long])
+    assert(resJava == long)
   }
 
-  val floatHashMap = {
-    val map = new java.util.TreeMap[java.lang.Long, java.lang.Float]()
-    map.put(new java.lang.Long(10), new java.lang.Float(10))
-    map
+  val float: java.lang.Float =  new java.lang.Float(10)
+  test("Test conversion of Float from Java, to Scala, and back again.") {
+    // Java => Scala
+    val res = KijiScheme.convertJavaTypes(float)
+    assert(res.isInstanceOf[Float])
+    assert(10F == res)
+    // Scala => Java
+    val resJava = KijiScheme.convertScalaTypes(res, null)
+    assert(resJava.isInstanceOf[java.lang.Float])
+    assert(resJava == float)
   }
 
-  val doubleHashMap = {
-    val map = new java.util.TreeMap[java.lang.Long, java.lang.Double]()
-    map.put(new java.lang.Long(10), new java.lang.Double(10))
-    map.put(new java.lang.Long(20), new java.lang.Double(20))
-    map.put(new java.lang.Long(30), new java.lang.Double(25))
-    map
+  val double: java.lang.Double = new java.lang.Double(10)
+  test("Test conversion of Double from Java, to Scala, and back again.") {
+    // Java => Scala
+    val res = KijiScheme.convertJavaTypes(double)
+    assert(res.isInstanceOf[Double])
+    assert(10 == res)
+    // Scala => Java
+    val resJava = KijiScheme.convertScalaTypes(res, null)
+    assert(resJava.isInstanceOf[java.lang.Double])
+    assert(resJava == double)
   }
 
-  val bytesHashMap = {
-    val map = new java.util.TreeMap[java.lang.Long, java.nio.ByteBuffer]()
-    map.put(new java.lang.Long(10), java.nio.ByteBuffer.wrap(Array(0x11, 0x12)))
-    map
-  }
-
-  val charSequenceHashMap = {
-    val map = new java.util.TreeMap[java.lang.Long, java.lang.CharSequence]()
-    map.put(new java.lang.Long(10), "test")
-    map.put(new java.lang.Long(20), "string")
-    map
-  }
-
-  val listHashMap = {
-    val map = new java.util.TreeMap[java.lang.Long, java.util.List[java.lang.Integer]]()
-    map.put(new java.lang.Long(10),
-      {
-        val arr = new java.util.ArrayList[java.lang.Integer]()
-        arr.add(1)
-        arr.add(2)
-        arr
-      })
-    map.put(new java.lang.Long(20),
-      {
-        val arr = new java.util.ArrayList[java.lang.Integer]()
-        arr.add(3)
-        arr.add(4)
-        arr
-      })
-    map
-  }
-
-  // avro hash maps always have String keys
-  val mapHashMap = {
-    val map = new java.util.TreeMap[java.lang.Long,
-      java.util.Map[java.lang.String, java.lang.Integer]]()
-    map.put(new java.lang.Long(10),
-      {
-        val internalMap = new java.util.HashMap[java.lang.String, java.lang.Integer]()
-        internalMap.put("t1", 1)
-        internalMap.put("t2", 2)
-        internalMap
-      }
-    )
-    map.put(new java.lang.Long(20),
-      {
-        val internalMap = new java.util.HashMap[java.lang.String, java.lang.Integer]()
-        internalMap.put("t3", 3)
-        internalMap.put("t4", 4)
-        internalMap
-      }
-    )
-    map
-  }
-
-  val voidHashMap = {
-    val map = new java.util.TreeMap[java.lang.Long, java.lang.Void]()
-    // scalastyle:off null
-    map.put(new java.lang.Long(10), null)
-    // scalastyle:on null
-    map
-  }
-
-  val unionHashMap = {
-    val map = new java.util.TreeMap[java.lang.Long, java.lang.Object]()
-    map.put(new java.lang.Long(10), new java.lang.Integer(10))
-    map.put(new java.lang.Long(20), "test")
-    map
-  }
-
-  val enumHashMap = {
-    val map = new java.util.TreeMap[java.lang.Long, RowKeyEncoding]()
-    map.put(new java.lang.Long(10), RowKeyEncoding.FORMATTED)
-    map.put(new java.lang.Long(20), RowKeyEncoding.HASH_PREFIX)
-    map
-  }
-
-  val fixedHashMap = {
-    val map = new java.util.TreeMap[java.lang.Long, org.kiji.schema.avro.MD5Hash]()
-    map.put(new java.lang.Long(10), new org.kiji.schema.avro.MD5Hash(Array[Byte](01, 02)))
-    map.put(new java.lang.Long(20), new org.kiji.schema.avro.MD5Hash(Array[Byte](03, 04)))
-    map
-  }
-
-  val recordHashMap = {
-    val map = new java.util.TreeMap[java.lang.Long, org.kiji.schema.avro.HashSpec]()
-    map.put(new java.lang.Long(10), HashSpec.newBuilder.setHashSize(2).build)
-    map.put(new java.lang.Long(20), HashSpec.newBuilder().build())
-    map
-  }
-
-  val badRecordHashMap = {
-    val map = new java.util.TreeMap[java.lang.Long, ColumnRequestOptions]()
-    val filter = new RegexQualifierColumnFilter(".*")
-    val maxVersions = 2
-    val opts = new ColumnRequestOptions(maxVersions, Some(filter))
-    map.put(new java.lang.Long(10), opts)
-    map
-  }
-
-  val nestedListHashMap = {
-    val map = new java.util.TreeMap[java.lang.Long, java.util.List[org.kiji.schema.avro.MD5Hash]]()
-    map.put(new java.lang.Long(10),
-    {
-      val arr = new java.util.ArrayList[org.kiji.schema.avro.MD5Hash]()
-      arr.add(new org.kiji.schema.avro.MD5Hash(Array[Byte](01, 02)))
-      arr.add(new org.kiji.schema.avro.MD5Hash(Array[Byte](03, 04)))
-      arr
-    })
-    map.put(new java.lang.Long(20),
-    {
-      val arr = new java.util.ArrayList[org.kiji.schema.avro.MD5Hash]()
-      arr.add(new org.kiji.schema.avro.MD5Hash(Array[Byte](05, 06)))
-      arr.add(new org.kiji.schema.avro.MD5Hash(Array[Byte](07, 0x08)))
-      arr
-    })
-    map
-  }
-
-  val nestedMapHashMap = {
-    val map = new java.util.TreeMap[java.lang.Long,
-      java.util.Map[java.lang.String, org.kiji.schema.avro.MD5Hash]]()
-    map.put(new java.lang.Long(10),
-    {
-      val internalMap = new java.util.HashMap[java.lang.String, org.kiji.schema.avro.MD5Hash]()
-      internalMap.put("t1", new org.kiji.schema.avro.MD5Hash(Array[Byte](01, 02)))
-      internalMap.put("t2", new org.kiji.schema.avro.MD5Hash(Array[Byte](03, 04)))
-      internalMap
-    }
-    )
-    map.put(new java.lang.Long(20),
-    {
-      val internalMap = new java.util.HashMap[java.lang.String, org.kiji.schema.avro.MD5Hash]()
-      internalMap.put("t3", new org.kiji.schema.avro.MD5Hash(Array[Byte](05, 06)))
-      internalMap.put("t4", new org.kiji.schema.avro.MD5Hash(Array[Byte](07, 0x08)))
-      internalMap
-    }
-    )
-    map
-  }
-
-  test("Test conversion of Int type while reading/writing from/to Kiji Table") {
-    val res = KijiScheme.convertKijiValuesToScalaTypes(intHashMap)
-    assert(2 == res.size)
-    res.foreach(kv => {
-      assert(kv._2.isInstanceOf[Int])
-    })
-    assert(10 == res(10L))
-    assert(20 == res(20L))
-
-    // convert back
-    // scalastyle:off null
-    val resJava = KijiScheme.convertScalaTypesToKijiValues(res, null)
-    // scalastyle:on null
-    assert(resJava.isInstanceOf[java.util.NavigableMap[java.lang.Long, java.lang.Object]])
-    assert(resJava == intHashMap)
-  }
-
-  test("Test conversion of Boolean type while reading/writing from/to Kiji Table") {
-    val res = KijiScheme.convertKijiValuesToScalaTypes(boolHashMap)
-    assert(2 == res.size)
-    res.foreach(kv => assert(kv._2.isInstanceOf[Boolean]))
-    assert(true == res(10L))
-    assert(false == res(20L))
-    // convert back
-    // scalastyle:off null
-    val resJava = KijiScheme.convertScalaTypesToKijiValues(res, null)
-    // scalastyle:on null
-    assert(resJava.isInstanceOf[java.util.NavigableMap[java.lang.Long, java.lang.Object]])
-    assert(resJava == boolHashMap)
-  }
-
-  test("Test conversion of Long type while reading/writing from/to Kiji Table") {
-    val res = KijiScheme.convertKijiValuesToScalaTypes(longHashMap)
-    assert(1 == res.size)
-    res.foreach(kv => assert(kv._2.isInstanceOf[Long]))
-    assert(10L == res(10L))
-    // convert back
-    // scalastyle:off null
-    val resJava = KijiScheme.convertScalaTypesToKijiValues(res, null)
-    // scalastyle:on null
-    assert(resJava.isInstanceOf[java.util.NavigableMap[java.lang.Long, java.lang.Object]])
-    assert(resJava == longHashMap)
-  }
-
-  test("Test conversion of Float type while reading/writing from/to Kiji Table") {
-    val res = KijiScheme.convertKijiValuesToScalaTypes(floatHashMap)
-    assert(1 == res.size)
-    res.foreach(kv => assert(kv._2.isInstanceOf[Float]))
-    assert(10F == res(10L))
-    // convert back
-    // scalastyle:off null
-    val resJava = KijiScheme.convertScalaTypesToKijiValues(res, null)
-    // scalastyle:on null
-    assert(resJava.isInstanceOf[java.util.NavigableMap[java.lang.Long, java.lang.Object]])
-    assert(resJava == floatHashMap)
-  }
-
-  test("Test conversion of Double type while reading/writing from/to Kiji Table") {
-    val res = KijiScheme.convertKijiValuesToScalaTypes(doubleHashMap)
-    assert(3 == res.size)
-    res.foreach(kv => assert(kv._2.isInstanceOf[Double]))
-    assert(10D == res(10L))
-    assert(20D == res(20L))
-    assert(25D == res(30L))
-    // convert back
-    // scalastyle:off null
-    val resJava = KijiScheme.convertScalaTypesToKijiValues(res, null)
-    // scalastyle:on null
-    assert(resJava.isInstanceOf[java.util.NavigableMap[java.lang.Long, java.lang.Object]])
-    assert(resJava == doubleHashMap)
-  }
-
-  test("Test conversion of avro bytes type while reading/writing from/to Kiji Table") {
-    val res = KijiScheme.convertKijiValuesToScalaTypes(bytesHashMap)
-    assert(1 == res.size)
-    res.foreach(kv => assert(kv._2.isInstanceOf[Array[Byte]]))
-    val expected: Array[Byte] = Array(17, 18)
-    assert(expected.deep == res(10L).asInstanceOf[Array[Byte]].deep)
-
-    // convert back
+  val bytes: java.nio.ByteBuffer =  java.nio.ByteBuffer.wrap(Array(0x11, 0x12))
+  test("Test conversion of Avro bytes from Java, to Scala, and back again.") {
+    // Java => Scala
+    val res = KijiScheme.convertJavaTypes(bytes)
+    assert(res.isInstanceOf[Array[Byte]])
+    assert(Array(17, 18).deep == res.asInstanceOf[Array[Byte]].deep)
+    // Scala => Java
     val tableLayout = KijiTableLayout.newLayout(KijiTableLayouts.getLayout("avro-types.json"))
     val columnName = new KijiColumnName("family", "column2")
-    val resJava = KijiScheme.convertScalaTypesToKijiValues(res,
-        tableLayout.getSchema(columnName))
-    assert(resJava.isInstanceOf[java.util.NavigableMap[java.lang.Long, java.lang.Object]])
-    assert(resJava == bytesHashMap)
-
+    val resJava = KijiScheme.convertScalaTypes(res, tableLayout.getSchema(columnName))
+    assert(resJava.isInstanceOf[java.nio.ByteBuffer])
+    assert(resJava == bytes)
   }
 
-  test("Test conversion of avro CharSequence type while reading/writing from/to Kiji Table") {
-    val res = KijiScheme.convertKijiValuesToScalaTypes(charSequenceHashMap)
-    assert(2 == res.size)
-    res.foreach(kv => assert(kv._2.isInstanceOf[String]))
-    assert("test" == res(10L))
-    assert("string" == res(20L))
-
-    // convert back
-    // scalastyle:off null
-    val resJava = KijiScheme.convertScalaTypesToKijiValues(res, null)
-    // scalastyle:on null
-    assert(resJava.isInstanceOf[java.util.NavigableMap[java.lang.Long, java.lang.Object]])
-    assert(resJava == charSequenceHashMap)
+  val charSequence: java.lang.CharSequence = "string".asInstanceOf[java.lang.CharSequence]
+  test("Test conversion of Avro CharSequence from Java, to Scala, and back again.") {
+    // Java => Scala
+    val res = KijiScheme.convertJavaTypes(charSequence)
+    assert(res.isInstanceOf[String])
+    assert("string" == res.asInstanceOf[String])
+    // Scala => Java
+    val resJava = KijiScheme.convertScalaTypes(res, null)
+    assert(resJava.isInstanceOf[java.lang.CharSequence])
+    assert(resJava == charSequence)
   }
 
-  test("Test conversion of avro list type while reading/writing from/to Kiji Table") {
-    val res = KijiScheme.convertKijiValuesToScalaTypes(listHashMap)
-    assert(2 == res.size)
-    res.foreach(kv => assert(kv._2.isInstanceOf[List[Int]]))
-    val expect1: List[Int] = List(1, 2)
-    val expect2: List[Int] = List(3, 4)
-    assert(expect1 == res(10L))
-    assert(expect2 == res(20L))
-    // convert back
+  val list: java.util.List[java.lang.Integer] = {
+    val arr = new java.util.ArrayList[java.lang.Integer]()
+    arr.add(1)
+    arr.add(2)
+    arr
+  }
+  test("Test conversion of Avro list from Java, to Scala, and back again.") {
+    // Java => Scala
+    val res = KijiScheme.convertJavaTypes(list)
+    assert(res.isInstanceOf[List[Int]])
+    assert(List(1, 2) == res.asInstanceOf[List[Int]])
+    // Scala => Java
     val cellSchema = Schema.createArray(Schema.create(Schema.Type.INT))
-    val resJava = KijiScheme.convertScalaTypesToKijiValues(res, cellSchema)
-    assert(resJava.isInstanceOf[java.util.NavigableMap[java.lang.Long, java.lang.Object]])
-    assert(resJava == listHashMap)
+    val resJava = KijiScheme.convertScalaTypes(res, cellSchema)
+    assert(resJava.isInstanceOf[java.util.List[java.lang.Integer]])
+    assert(resJava == list)
   }
 
-  test("Test conversion of avro map type while reading/writing from/to Kiji Table") {
-    val res = KijiScheme.convertKijiValuesToScalaTypes(mapHashMap)
-    assert(2 == res.size)
-    res.foreach(kv => assert(kv._2.isInstanceOf[Map[String, Int]]))
-    val expect1: Map[String, Int] = Map("t1"->1, "t2"->2)
-    val expect2: Map[String, Int] = Map("t3"->3, "t4"->4)
-    assert(expect1 == res(10L))
-    assert(expect2 == res(20L))
+  // Avro maps always have String keys
+  val map: java.util.Map[java.lang.String, java.lang.Integer] = {
+    val internalMap = new java.util.HashMap[java.lang.String, java.lang.Integer]()
+    internalMap.put("t1", 1)
+    internalMap.put("t2", 2)
+    internalMap
+  }
+  test("Test conversion of Avro map from Java, to Scala, and back again.") {
+    val res = KijiScheme.convertJavaTypes(map)
+    assert(res.isInstanceOf[Map[String, Int]])
+    assert(2 == res.asInstanceOf[Map[String, Int]].size)
+    assert(Map("t1"->1, "t2"->2) == res)
     // convert back
     val cellSchema = Schema.createMap(Schema.create(Schema.Type.INT))
-    val resJava = KijiScheme.convertScalaTypesToKijiValues(res, cellSchema)
-    assert(resJava.isInstanceOf[java.util.NavigableMap[java.lang.Long, java.lang.Object]])
-    assert(resJava == mapHashMap)
+    val resJava = KijiScheme.convertScalaTypes(res, cellSchema)
+    assert(resJava.isInstanceOf[java.util.Map[java.lang.String, java.lang.Object]])
+    assert(resJava.asInstanceOf[java.util.Map[java.lang.String, java.lang.Object]].get("t1")
+        .isInstanceOf[java.lang.Integer])
+    assert(resJava == map)
   }
 
-  test("Test conversion of null type while reading/writing from/to Kiji Table") {
-    val res = KijiScheme.convertKijiValuesToScalaTypes(voidHashMap)
-    assert(1 == res.size)
-    // scalastyle:off null
-    res.foreach(kv => assert(null == kv._2))
-    // convert back
-    val resJava = KijiScheme.convertScalaTypesToKijiValues(res, null)
+  val void: java.lang.Void = null.asInstanceOf[java.lang.Void]
+  test("Test conversion of null from Java, to Scala, and back again.") {
+    val res = KijiScheme.convertJavaTypes(void)
+    assert(res == null)
+    val resJava = KijiScheme.convertScalaTypes(res, null)
     // scalastyle:on null
-    assert(resJava.isInstanceOf[java.util.NavigableMap[java.lang.Long, java.lang.Object]])
-    assert(resJava == voidHashMap)
+    assert(resJava == void)
   }
 
-  test("Test conversion of union type while reading/writing from/to Kiji Table") {
-    val res = KijiScheme.convertKijiValuesToScalaTypes(unionHashMap)
-    assert(2 == res.size)
-    res.foreach(kv => assert(kv._2.isInstanceOf[java.lang.Object]))
-    assert(10 == res(10L))
-    assert("test" == res(20L))
-
-    // convert back
-    // scalastyle:off null
-    val resJava = KijiScheme.convertScalaTypesToKijiValues(res, null)
-    // scalastyle:on null
-    assert(resJava.isInstanceOf[java.util.NavigableMap[java.lang.Long, java.lang.Object]])
-    assert(resJava == unionHashMap)
+  val unionList: java.util.List[java.lang.Object] = {
+    val list = new java.util.ArrayList[java.lang.Object]()
+    list.add(new java.lang.Long(10))
+    list.add("test")
+    list
   }
-
-  test("Test conversion of enum type while reading/writing from/to Kiji Table") {
-    val res = KijiScheme.convertKijiValuesToScalaTypes(enumHashMap)
-    assert(2 == res.size)
-    res.foreach(kv => assert(kv._2.isInstanceOf[RowKeyEncoding]))
-    assert(RowKeyEncoding.FORMATTED == res(10L))
-    assert(RowKeyEncoding.HASH_PREFIX == res(20L))
+  test("Test conversion of Avro unions from Java, to Scala, and back again.") {
+    val res = KijiScheme.convertJavaTypes(unionList)
+    assert(res.isInstanceOf[List[Any]])
+    assert(2 == res.asInstanceOf[List[Any]].size)
+    assert(10L == res.asInstanceOf[List[Any]](0))
+    assert("test" == res.asInstanceOf[List[Any]](1))
 
     // convert back
     // scalastyle:off null
-    val resJava = KijiScheme.convertScalaTypesToKijiValues(res, null)
+    val unionSchema = Schema.createUnion(seqAsJavaList(List(Schema.create(Schema.Type.INT),
+        Schema.create(Schema.Type.STRING))))
+    val cellSchema = Schema.createArray(unionSchema)
+    val resJava = KijiScheme.convertScalaTypes(res, cellSchema)
     // scalastyle:on null
-    assert(resJava.isInstanceOf[java.util.NavigableMap[java.lang.Long, java.lang.Object]])
-    assert(resJava == enumHashMap)
+    assert(resJava.isInstanceOf[java.util.List[java.lang.Object]])
+    assert(resJava == unionList)
   }
 
-  test("Test conversion of avro fixed type while reading/writing from/to Kiji Table") {
-    val res = KijiScheme.convertKijiValuesToScalaTypes(fixedHashMap)
-    assert(2 == res.size)
-    res.foreach(kv => assert(kv._2.isInstanceOf[Array[Byte]]))
-    assert(Array[Byte](01, 02).deep == res(10L).asInstanceOf[Array[Byte]].deep)
-    assert(Array[Byte](03, 04).deep == res(20L).asInstanceOf[Array[Byte]].deep)
+  val enum: RowKeyEncoding = RowKeyEncoding.FORMATTED
+  test("Test conversion of enums from Java, to Scala, and back again.") {
+    val res = KijiScheme.convertJavaTypes(enum)
+    assert(res.isInstanceOf[RowKeyEncoding])
+    assert(RowKeyEncoding.FORMATTED == res)
+
+    // convert back
+    // scalastyle:off null
+    val resJava = KijiScheme.convertScalaTypes(res, null)
+    // scalastyle:on null
+    assert(resJava.isInstanceOf[RowKeyEncoding])
+    assert(resJava == enum)
+  }
+
+  val fixed: org.kiji.schema.avro.MD5Hash =
+      new org.kiji.schema.avro.MD5Hash(Array[Byte](03, 04))
+  test("Test conversion of Avro fixed type from Java, to Scala, and back again.") {
+    val res = KijiScheme.convertJavaTypes(fixed)
+    assert(res.isInstanceOf[Any])
+    assert(Array[Byte](03, 04).deep == res.asInstanceOf[Array[Byte]].deep)
 
     // convert back
     val tableLayout = KijiTableLayout.newLayout(KijiTableLayouts.getLayout("avro-types.json"))
     val columnName = new KijiColumnName("family", "column1")
-    val resJava = KijiScheme.convertScalaTypesToKijiValues(res,
-        tableLayout.getSchema(columnName))
-    assert(resJava.isInstanceOf[java.util.NavigableMap[java.lang.Long, java.lang.Object]])
-    assert(resJava == fixedHashMap)
+    val resJava = KijiScheme.convertScalaTypes(res, tableLayout.getSchema(columnName))
+    assert(resJava.isInstanceOf[org.apache.avro.generic.GenericData.Fixed])
+    assert(resJava == fixed)
   }
-
-  test("Test conversion of avro record type while reading/writing from/to Kiji Table") {
-    val res = KijiScheme.convertKijiValuesToScalaTypes(recordHashMap)
-    assert(2 == res.size)
-    res.foreach(kv => assert(kv._2.isInstanceOf[HashSpec]))
-    val expect1 = HashSpec.newBuilder.setHashSize(2).build
+  val record: org.kiji.schema.avro.HashSpec = HashSpec.newBuilder().build()
+  test("Test conversion of Avro record from Java, to Scala, and back again.") {
+    val res = KijiScheme.convertJavaTypes(record)
+    assert(res.isInstanceOf[HashSpec])
     val expect2 = HashSpec.newBuilder().build()
-    assert(expect1 == res(10L).asInstanceOf[HashSpec])
-    assert(expect2 == res(20L).asInstanceOf[HashSpec])
+    assert(record == res.asInstanceOf[HashSpec])
 
     // convert back
     // scalastyle:off null
-    val resJava = KijiScheme.convertScalaTypesToKijiValues(res, null)
+    val resJava = KijiScheme.convertScalaTypes(res, null)
     // scalastyle:on null
-    assert(resJava.isInstanceOf[java.util.NavigableMap[java.lang.Long, java.lang.Object]])
-    assert(resJava == recordHashMap)
+    assert(resJava.isInstanceOf[org.kiji.schema.avro.HashSpec])
+    assert(record == resJava)
   }
 
-  test("Test conversion of avro list of fixed type elements while reading/writing "
-      + "from/to Kiji Table") {
-    val res = KijiScheme.convertKijiValuesToScalaTypes(nestedListHashMap)
-    assert(2 == res.size)
-    res.foreach(kv => assert(kv._2.isInstanceOf[List[Array[Byte]]]))
-    res(10L).asInstanceOf[List[Array[Byte]]](0).deep == Array[Byte](01, 02).deep
-    res(10L).asInstanceOf[List[Array[Byte]]](1).deep == Array[Byte](03, 04).deep
-    res(20L).asInstanceOf[List[Array[Byte]]](0).deep == Array[Byte](05, 06).deep
-    res(20L).asInstanceOf[List[Array[Byte]]](1).deep == Array[Byte](07, 0x08).deep
+  val nestedList: java.util.List[org.kiji.schema.avro.MD5Hash] = {
+    val arr = new java.util.ArrayList[org.kiji.schema.avro.MD5Hash]()
+    arr.add(new org.kiji.schema.avro.MD5Hash(Array[Byte](05, 06)))
+    arr.add(new org.kiji.schema.avro.MD5Hash(Array[Byte](07, 0x08)))
+    arr
+  }
+  test("Test conversion of Avro list of fixed type from Java, to Scala, and back again.") {
+    val res = KijiScheme.convertJavaTypes(nestedList)
+    assert(res.isInstanceOf[List[Array[Byte]]])
+    assert(Array[Byte](05, 06).deep == res.asInstanceOf[List[Array[Byte]]](0).deep)
+    assert(Array[Byte](07, 0x08).deep == res.asInstanceOf[List[Array[Byte]]](1).deep)
 
     // convert back
     val columnSchema = Schema.createArray(Schema.createFixed("test", "fixed schema", "", 2))
-    val resJava = KijiScheme.convertScalaTypesToKijiValues(res, columnSchema)
-    assert(resJava.isInstanceOf[java.util.NavigableMap[java.lang.Long, java.lang.Object]])
-    resJava should equal(nestedListHashMap)
+    val resJava = KijiScheme.convertScalaTypes(res, columnSchema)
+    assert(resJava.isInstanceOf[java.util.List[org.kiji.schema.avro.MD5Hash]])
+    assert(resJava == nestedList)
   }
-
-  test("Test conversion of avro map of string to fixed type elements while reading/writing "
-    + "from/to Kiji Table") {
-    val res = KijiScheme.convertKijiValuesToScalaTypes(nestedMapHashMap)
-    assert(2 == res.size)
-    res.foreach(kv => assert(kv._2.isInstanceOf[Map[String, Array[Byte]]]))
-    res(10L).asInstanceOf[Map[String, Array[Byte]]]("t1") == Array[Byte](01, 02)
-    res(10L).asInstanceOf[Map[String, Array[Byte]]]("t2") == Array[Byte](03, 04)
-    res(20L).asInstanceOf[Map[String, Array[Byte]]]("t3") == Array[Byte](05, 06)
-    res(20L).asInstanceOf[Map[String, Array[Byte]]]("t4") == Array[Byte](07, 0x08)
-
-    // convert back
-    val columnSchema = Schema.createMap(Schema.createFixed("test", "fixed schema", "", 2))
-    val resJava = KijiScheme.convertScalaTypesToKijiValues(res, columnSchema)
-    assert(resJava.isInstanceOf[java.util.NavigableMap[java.lang.Long, java.lang.Object]])
-    resJava should equal(nestedMapHashMap)
-  }
-
-  test("Test for exception when converting unsupported avro class") {
+  val filter = new RegexQualifierColumnFilter(".*")
+  val maxVersions = 2
+  val badRecord: ColumnRequestOptions = new ColumnRequestOptions(maxVersions, Some(filter))
+  test("Test for exception when converting unsupported an Avro class.") {
     intercept[InvalidClassException] {
-      KijiScheme.convertKijiValuesToScalaTypes(badRecordHashMap)
+      KijiScheme.convertJavaTypes(badRecord)
     }
   }
 }

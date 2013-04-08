@@ -20,8 +20,6 @@
 package org.kiji.chopsticks
 
 import java.io.InputStream
-import java.util.NavigableMap
-import java.util.TreeMap
 
 import com.twitter.scalding.TupleConversions
 import org.scalatest.FunSuite
@@ -59,44 +57,53 @@ trait KijiSuite
   }
 
   /**
-   * Builds a timeline from a single value. This will assign the current time as the timestamp for
-   * value.
-   *
-   * @tparam T Type of the values contained within desired timeline.
-   * @param value Single value to put in the timeline.
-   * @return A timeline containing the desired value.
-   */
-  def singleton[T](value: T): NavigableMap[Long, T] = {
-    val timeline: NavigableMap[Long, T] = new TreeMap()
-    timeline.put(Long.MaxValue, value)
-    timeline
-  }
-
-  /**
-   * Builds a timeline containing no values.  This can be used to test for behavior of missing
+   * Builds a slice containing no values.  This can be used to test for behavior of missing
    * values.
    *
-   * @tparam T type of the values in the returned timeline.
-   * @return An empty timeline.
+   * @tparam T type of the values in the returned slice.
+   * @return an empty slice.
    */
-  def missing[T](): NavigableMap[Long, T] = {
-    new TreeMap[Long, T]()
+  def missing[T](): KijiSlice[T] = {
+    val emptyList = List[Cell[T]]()
+    new KijiSlice[T](emptyList)
   }
 
   /**
-   * Builds a timeline from a list of timestamp, value pairs.
+   * Builds a slice from a group type column name and list of version, value pairs.
    *
-   * @tparam T Type of the values contained within desired timeline.
-   * @param values Timestamp value pairs to build the timeline with.
-   * @return A timeline containing the specified timestamp value pairs.
+   * @tparam T type of the values contained within desired slice.
+   * @param columnName for a group type family, of the form "family:qualifier"
+   * @param values pairs of (version, value) to build the slice with.
+   * @return a slice containing the specified cells.
    */
-  def timeline[T](values: (Long, T)*): NavigableMap[Long, T] = {
-    values.foldLeft(new TreeMap[Long, T]) { (tree, entry) =>
-      val (timestamp, value) = entry
+  def slice[T](columnName: String, values: (Long, T)*): KijiSlice[T] = {
+    val columnComponents: Array[String] = columnName.split(":")
+    require(columnComponents.length == 2, "The column name must be of the form" +
+      " \"family:qualifier\", with no extra colons. ")
+    val cells: Seq[Cell[T]] = values.toSeq.map {input: (Long, T) =>
+      val (version, value) = input
+      Cell(columnComponents(0), columnComponents(1), version, value)
+    }.toSeq
+    new KijiSlice[T](cells)
+  }
 
-      tree.put(timestamp, value)
-      tree
-    }
+  /**
+   * Builds a slice from a map type column name and a list of qualifier, version, value triples.
+   *
+   * @tparam T type of the values contained within desired slice.
+   * @param columnName for a map type family, of the form "family"
+   * @param values are triples of (qualifier, version, value) to build the slice with.
+   * @return a slice containing the specified cells.
+   */
+  def mapSlice[T](columnName: String, values: (String, Long, T)*): KijiSlice[T] = {
+    val columnComponents: Array[String] = columnName.split(":")
+    require(columnComponents.length == 1, "The column name must be of the form" +
+      " \"family\", with no extra colons. ")
+    val cells: Seq[Cell[T]] = values.map {input: (String, Long, T) =>
+      val (qualifier, version, value) = input
+      Cell(columnComponents(0), qualifier, version, value)
+    }.toSeq
+    new KijiSlice[T](cells)
   }
 
   /**

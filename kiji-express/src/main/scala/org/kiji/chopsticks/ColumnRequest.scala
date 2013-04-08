@@ -51,7 +51,7 @@ private[chopsticks] sealed trait ColumnRequest extends Serializable {
    * @param replacementSlice Replacement specification.
    * @return this ColumnRequest with replacement configured.
    */
-  def replaceMissingWith(replacementSlice: Map[Long, _]): ColumnRequest
+  def replaceMissingWith(replacementSlice: KijiSlice[_]): ColumnRequest
 
   /**
    * Specifies that missing values on this column mean the row should be skipped.
@@ -81,7 +81,7 @@ final case class QualifiedColumn private[chopsticks] (
   KijiNameValidator.validateLayoutName(family)
   KijiNameValidator.validateLayoutName(qualifier)
 
-  override def replaceMissingWith(replacementSlice: Map[Long, _]): ColumnRequest = {
+  override def replaceMissingWith(replacementSlice: KijiSlice[_]): ColumnRequest = {
     return new QualifiedColumn(
         family,
         qualifier,
@@ -108,7 +108,7 @@ final case class ColumnFamily private[chopsticks] (
     extends ColumnRequest {
   KijiNameValidator.validateLayoutName(family)
 
-  override def replaceMissingWith(replacementSlice: Map[Long, _]): ColumnRequest = {
+  override def replaceMissingWith(replacementSlice: KijiSlice[_]): ColumnRequest = {
     return new ColumnFamily(family, options.newWithReplacement(Some(replacementSlice)))
   }
 
@@ -132,10 +132,10 @@ final case class ColumnRequestOptions private[chopsticks] (
     // Not accessible to end-users because the type is soon to be replaced by a
     // Chopsticks-specific implementation.
     private[chopsticks] val filter: Option[KijiColumnFilter] = None,
-    replacementSlice: Option[Map[Long, _]] = None)
+    replacementSlice: Option[KijiSlice[_]] = None)
     extends Serializable {
       def newWithReplacement(
-          newReplacement: Option[Map[Long,_]]): ColumnRequestOptions = {
+          newReplacement: Option[KijiSlice[_]]): ColumnRequestOptions = {
         new ColumnRequestOptions(maxVersions, filter, newReplacement)
       }
 }

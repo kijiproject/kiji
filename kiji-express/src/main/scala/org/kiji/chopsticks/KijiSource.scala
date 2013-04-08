@@ -23,7 +23,6 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable.Buffer
 import java.io.InputStream
 import java.io.OutputStream
-import java.util.NavigableMap
 import java.util.Properties
 
 import cascading.flow.FlowProcess
@@ -157,36 +156,18 @@ final class KijiSource private[chopsticks] (
           val field = iterator.next().toString()
 
           // Get the timeline to be written.
-          val timeline: NavigableMap[Long, Any] = tupleEntry.getObject(field)
-              .asInstanceOf[NavigableMap[Long, Any]]
+          val cells: Seq[Cell[Any]] = tupleEntry.getObject(field)
+              .asInstanceOf[KijiSlice[Any]].cells
 
           // Write the timeline to the table.
-          columns(Symbol(field)) match {
-            case ColumnFamily(family, _) => {
-              for (entry <- timeline.asScala) {
-                val (key, value) = entry
-                // scalastyle:off null
+              cells.map { cell: Cell[Any] =>
                 writer.put(
                     entityId,
-                    family,
-                    null,
-                    key,
-                    value)
-                // scalastyle:on null
+                    cell.family,
+                    cell.qualifier,
+                    cell.version,
+                    cell.datum)
               }
-            }
-            case QualifiedColumn(family, qualifier, _) => {
-              for (entry <- timeline.asScala) {
-                val (key, value) = entry
-                writer.put(
-                    entityId,
-                    family,
-                    qualifier,
-                    key,
-                    value)
-              }
-            }
-          }
         }
       }
     } finally {
