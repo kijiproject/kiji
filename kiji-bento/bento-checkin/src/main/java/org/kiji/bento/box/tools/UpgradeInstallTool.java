@@ -30,6 +30,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
@@ -119,8 +120,15 @@ public final class UpgradeInstallTool {
     UpgradeResponse response = null;
     try {
       // Get the saved upgrade response, or fail if there is none.
+      String uuid = UUIDTools.getOrCreateUserUUID();
+      if (null == uuid) {
+        // We couldn't save the UUID to the user's home dir for some reason. That's
+        // not a reason to refuse to upgrade though. Create a 1-off uuid and use that.
+        uuid = UUID.randomUUID().toString();
+        assert null != uuid;
+      }
       final UpgradeCheckin request = new UpgradeCheckin.Builder()
-            .withId(UUIDTools.getUserUUID())
+            .withId(uuid)
             .withLastUsedMillis(System.currentTimeMillis())
             .build();
       response = upgradeClient.checkin(request);
@@ -196,6 +204,7 @@ public final class UpgradeInstallTool {
     final File workingDir = makeWorkDir();
     final File targetFile = makeDownloadTarget(upgradeInfo, workingDir);
     final URL upgradeUrl = upgradeInfo.getCompatibleVersionURL();
+    LOG.info("Downloading: " + upgradeUrl.toString());
     final HttpClient httpClient = new DefaultHttpClient();
     final HttpGet getReq = new HttpGet(upgradeUrl.toString());
     try {

@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.bento.box.tools;
+package org.kiji.bento.box;
 
 import static org.junit.Assert.*;
 
@@ -25,40 +25,27 @@ import java.io.File;
 import java.io.IOException;
 import java.util.UUID;
 
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.kiji.bento.box.BentoBoxUtils;
-
 /**
- * Unit tests for the functionality of {@link UUIDGenerationTool}.
+ * Unit tests for the functionality of the {@link UUIDTools}.
  */
-public final class TestUUIDGenerationTool {
-  private static final Logger LOG = LoggerFactory.getLogger(TestUUIDGenerationTool.class);
-  /** The name of the file to which UUIDs should be written. */
-  private static final String UUID_FILE_NAME = ".kiji-bento-uuid";
-
-  /** The UUID tool to use in tests. */
-  private UUIDGenerationTool mTool;
+public final class TestUUIDTools {
+  private static final Logger LOG = LoggerFactory.getLogger(TestUUIDTools.class);
 
   /** A temporary folder for tests. */
   @Rule
   public TemporaryFolder mTempDir = new TemporaryFolder();
 
-  @Before
-  public void setup() {
-    mTool = new UUIDGenerationTool();
-  }
-
   /**
    * @return the contents of the UUID file in the temporary directory for tests.
    */
   private String readUUIDFile() throws IOException {
-    File uuidFile = new File(mTempDir.getRoot(), UUID_FILE_NAME);
+    File uuidFile = new File(mTempDir.getRoot(), UUIDTools.UUID_FILE_NAME);
     return BentoBoxUtils.readFileAsString(uuidFile).trim();
   }
 
@@ -69,10 +56,10 @@ public final class TestUUIDGenerationTool {
   @Test
   public void testIsUUIDFileExists() throws Exception {
     LOG.info("Testing isUUIDFileExists when file does not.");
-    assertFalse(mTool.isUUIDFileExists(mTempDir.getRoot()));
-    mTempDir.newFile(UUID_FILE_NAME);
+    assertFalse(UUIDTools.isUUIDFileExists(mTempDir.getRoot()));
+    mTempDir.newFile(UUIDTools.UUID_FILE_NAME);
     LOG.info("Testing isUUIDFileExists when file does.");
-    assertTrue(mTool.isUUIDFileExists(mTempDir.getRoot()));
+    assertTrue(UUIDTools.isUUIDFileExists(mTempDir.getRoot()));
   }
 
   /**
@@ -83,7 +70,7 @@ public final class TestUUIDGenerationTool {
   public void testWriteUUIDFile() throws Exception {
     LOG.info("Writing UUID file to temporary directory for tests.");
     UUID uuid = UUID.randomUUID();
-    mTool.writeUUID(mTempDir.getRoot(), uuid);
+    UUIDTools.writeUUID(mTempDir.getRoot(), uuid);
 
     LOG.info("Reading back contents of UUID file and comparing.");
     assertEquals("UUID read from file does not match UUID that should have been written.",
@@ -97,9 +84,9 @@ public final class TestUUIDGenerationTool {
   @Test
   public void testGenerateAndWriteUUIDExistingFile() throws IOException {
     LOG.info("Creating a dummy UUID file that should not be overwritten.");
-    mTempDir.newFile(UUID_FILE_NAME);
+    mTempDir.newFile(UUIDTools.UUID_FILE_NAME);
     LOG.info("Trying to write over dummy UUID file (shouldn't happen).");
-    assertTrue(mTool.generateAndWriteUUID(mTempDir.getRoot()));
+    assertTrue(UUIDTools.generateAndWriteUUID(mTempDir.getRoot()));
     LOG.info("Reading contents of UUID file and ensuring its empty.");
     assertEquals("UUID file was overwritten when it already existed!", "", readUUIDFile());
   }
@@ -111,7 +98,7 @@ public final class TestUUIDGenerationTool {
   @Test
   public void testGenerateAndWriteUUID() throws IOException {
     LOG.info("Generating a UUID and writing to a file.");
-    assertTrue(mTool.generateAndWriteUUID(mTempDir.getRoot()));
+    assertTrue(UUIDTools.generateAndWriteUUID(mTempDir.getRoot()));
     LOG.info("Reading contents of UUID file and ensuring it's a UUID.");
     UUID.fromString(readUUIDFile());
   }

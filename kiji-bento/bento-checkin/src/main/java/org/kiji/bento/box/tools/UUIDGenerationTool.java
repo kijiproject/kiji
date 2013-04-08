@@ -20,13 +20,9 @@
 package org.kiji.bento.box.tools;
 
 import java.io.File;
-import java.io.IOException;
-import java.util.UUID;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.kiji.bento.box.BentoBoxUtils;
+import org.kiji.bento.box.UUIDTools;
 
 /**
  * <p> A tool that generates a UUID identifying the user currently running a BentoBox.
@@ -35,58 +31,6 @@ import org.kiji.bento.box.BentoBoxUtils;
  * to that file.</p>
  */
 public final class UUIDGenerationTool {
-  private static final Logger LOG = LoggerFactory.getLogger(UUIDGenerationTool.class);
-  /** The name of the file to which UUIDs should be written. */
-  private static final String UUID_FILE_NAME = ".kiji-bento-uuid";
-
-  /**
-   * Determines if a UUID file exists in the specified directory.
-   *
-   * @param directory will be checked for a file named ".kiji-bento-uuid".
-   * @return <code>true</code> if the UUID file exists in the specified directory,
-   *     <code>false</code> otherwise.
-   */
-  boolean isUUIDFileExists(File directory) {
-    File uuidFile = new File(directory, UUID_FILE_NAME);
-    return uuidFile.exists() && uuidFile.isFile();
-  }
-
-  /**
-   * Writes a file containing a UUID to the specified directory. The file will be named
-   * <code>.kiji-bento-uuid</code> and will contain one line, which will be the UUID specified.
-   *   .
-   *
-   * @param directory is where the UUID file <code>.kiji-bento-uuid</code> should be written.
-   * @param uuid is the UUID to write.
-   * @throws IOException if there is a problem writing the file.
-   */
-  void writeUUID(File directory, UUID uuid) throws IOException {
-    File uuidFile = new File(directory, UUID_FILE_NAME);
-    BentoBoxUtils.writeObjectToFile(uuidFile, uuid);
-  }
-
-  /**
-   * Writes a randomly generated UUID to the file <code>.kiji-bento-uuid</code> in the specified
-   * directory. The file is not written if it already exists. Any {@link Exception}s encountered
-   * are swallowed by this method and logged.
-   *
-   * @param directory is where the UUID file <code>.kiji-bento-uuid</code> should be written.
-   * @return <code>true</code> if no errors are encountered, <code>false</code> otherwise.
-   */
-  boolean generateAndWriteUUID(File directory) {
-    try {
-      /** Only write a new UUID if an existing one does not exist. */
-      if (!isUUIDFileExists(directory)) {
-        UUID uuid = UUID.randomUUID();
-        writeUUID(directory, uuid);
-      }
-      return true;
-    } catch (Exception e) {
-      LOG.error("UUID generation failed. The following exception was encountered while trying "
-          + "to write the UUID file.", e);
-      return false;
-    }
-  }
 
   /**
    * Writes a randomly generated UUID to the file <code>.kiji-bento-uuid</code> in the home
@@ -102,7 +46,7 @@ public final class UUIDGenerationTool {
     }
 
     // Return 0 if write was successful, 1 otherwise.
-    return generateAndWriteUUID(homeDirectory) ? 0 : 1;
+    return UUIDTools.generateAndWriteUUID(homeDirectory) ? 0 : 1;
   }
 
   /**
