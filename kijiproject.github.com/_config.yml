@@ -64,9 +64,10 @@ tutorial_music_rc5 : /tutorials/music-recommendation/1.0.0-rc5
 userguide_schema_rc5 : /userguides/schema/1.0.0-rc5
 userguide_mapreduce_rc5 : /userguides/mapreduce/1.0.0-rc5
 
+# BentoBox Albacore
 api_schema_1_0_0 : http://api-docs.kiji.org/kiji-schema/1.0.0/org/kiji/schema
-api_mr_rc6 : /apidocs/kiji-mapreduce/1.0.0-rc6/org/kiji/mapreduce
-api_mrlib_rc6 : /apidocs/kiji-mapreduce-lib/1.0.0-rc6/org/kiji/mapreduce
+api_mr_rc6 : http://api-docs.kiji.org/kiji-mapreduce/1.0.0-rc6/org/kiji/mapreduce
+api_mrlib_rc6 : http://api-docs.kiji.org/kiji-mapreduce-lib/1.0.0-rc6/org/kiji/mapreduce
 tutorial_phonebook_rc6 : /tutorials/phonebook-tutorial/1.0.0-rc6
 tutorial_music_rc6 : /tutorials/music-recommendation/1.0.0-rc6
 userguide_schema_1_0_0 : /userguides/schema/1.0.0
@@ -143,7 +144,7 @@ JB :
   analytics :
     provider : google
     google :
-        tracking_id : 'UA-35866189-1'
+        tracking_id : 'UA-REMOVED-DONT-COMMIT'
 
   # Settings for sharing helper.
   # Sharing is for things like tweet, plusone, like, reddit buttons etc.
