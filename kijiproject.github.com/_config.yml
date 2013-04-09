@@ -65,7 +65,12 @@ userguide_schema_rc5 : /userguides/schema/1.0.0-rc5
 userguide_mapreduce_rc5 : /userguides/mapreduce/1.0.0-rc5
 
 api_schema_1_0_0 : http://api-docs.kiji.org/kiji-schema/1.0.0/org/kiji/schema
+api_mr_rc6 : /apidocs/kiji-mapreduce/1.0.0-rc6/org/kiji/mapreduce
+api_mrlib_rc6 : /apidocs/kiji-mapreduce-lib/1.0.0-rc6/org/kiji/mapreduce
+tutorial_phonebook_rc6 : /tutorials/phonebook-tutorial/1.0.0-rc6
+tutorial_music_rc6 : /tutorials/music-recommendation/1.0.0-rc6
 userguide_schema_1_0_0 : /userguides/schema/1.0.0
+userguide_mapreduce_rc6 : /userguides/mapreduce/1.0.0-rc6
 
 # All Jekyll-Bootstrap specific configurations are namespaced into this hash
 #

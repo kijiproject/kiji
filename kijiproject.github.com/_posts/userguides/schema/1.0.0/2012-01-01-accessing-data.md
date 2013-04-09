@@ -70,7 +70,7 @@ This is more efficient than a series of calls to `get(...)` because it uses a si
 
 ## Row scanners<a id="scanner"> </a>
 
-If you need to process a range of row, you may use a row [`KijiRowScanner`]({{site.api_schema_1_0_0}}/KijiRowScanner.html):
+If you need to process a range of rows, you may use a row [`KijiRowScanner`]({{site.api_schema_1_0_0}}/KijiRowScanner.html):
 
 {% highlight java %}
 final KijiTableReader reader = table.openTableReader();

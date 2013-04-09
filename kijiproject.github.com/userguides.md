@@ -19,5 +19,6 @@ to the Kiji version you are using.
 
 ## KijiMR
 
+* [KijiMR 1.0.0-rc6]({{site.userguide_url}}/mapreduce/1.0.0-rc6/kiji-mr-overview/)
 * [KijiMR 1.0.0-rc5]({{site.userguide_url}}/mapreduce/1.0.0-rc5/kiji-mr-overview/)
 * [KijiMR 1.0.0-rc4]({{site.userguide_url}}/mapreduce/1.0.0-rc4/kiji-mr-overview/)

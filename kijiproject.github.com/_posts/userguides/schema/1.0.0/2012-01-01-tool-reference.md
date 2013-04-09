@@ -191,7 +191,6 @@ encoded row per line:
 *  The first and last HBase rows are omitted: a region split file with one
    entry E designates 2 regions: `[''..E)` and `[E..)`.
 
-
 ## Deleting tables, rows, and cells: `delete`<a id="ref.delete"> </a>
 
 The `kiji delete` command will delete a KijiSchema
