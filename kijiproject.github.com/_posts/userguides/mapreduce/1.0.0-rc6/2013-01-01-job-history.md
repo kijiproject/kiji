@@ -11,52 +11,50 @@ description: Job History Table.
 ### Motivation
 
 While Hadoop’s job tracker provides detailed information about jobs that have been run in the
-cluster, it is not a persistent data store for such information.  After installation of the
-`job_history` table, Kiji automatically tracks information into the job_history table which can be
-accessed later.  This information includes an xml dump of the full job configuration, start times,
+cluster, it is not a persistent data store for such information. 
+Kiji tracks all historical jobs in a `job_history` table within every instance. 
+This information includes an xml dump of the full job configuration, start times,
 end times, and all job counters.
 
 
 ### Setup
-The job history tables can be installed into the default Kiji instance with the job-history command:
+The `job_history` table is installed in a particular instance as soon as the first MapReduce job is run in that instance.
 
-{% highlight bash %}
-kiji job-history kiji://.env/default --install
-{% endhighlight %}
-
-If you would like to install the job history table into a different instance, specify that in the
-declared Kiji URI.
 You can verify that the table was installed properly using the ls command:
 
 {% highlight bash %}
 kiji ls kiji://.env/default/job_history
 {% endhighlight %}
 
-Any new MapReduce jobs that are run within Kiji will now save relevant job related metadata into this table.
+Jobs that extend [`KijiMapReduceJob`]({{site.api_mr_rc5}}/framework/KijiMapReduceJob.html) will automatically record metadata to the `job_history` table.
 
 ### Classes Overview
 
-The `org.kiji.mapreduce.JobHistoryKijiTable` is the main class responsible for providing access to
-the job_history table.  Currently it provides the ability to record and retrieve job metadata.  This
-is a framework-audience class and subject to change between minor versions
+The [`JobHistoryKijiTable`]({{site.api_mr_rc5}}/framework/JobHistoryKijiTable.html) class is the main class responsible for providing access to
+the `job_history` table.  Currently it provides the ability to record and retrieve job metadata.  This
+is a framework-audience class and subject to change between minor versions.
 
 ### Using the API
 
-The [`JobHistoryKijiTable`]({{site.api_mr_rc5}}/framework/JobHistoryKijiTable.html) class surfaces the call `getJobDetails` for retrieving the recorded metadata.
-
-Jobs that are created using [`KijiMapReduceJob`]({{site.api_mr_rc5}}/framework/KijiMapReduceJob.html) will automatically record metadata to the `job_history` table if it has been installed.  Any MapReduce jobs using the job builders in Kiji for bulk importers, producers, or gatherers fall under this category and will report data.
+The [`JobHistoryKijiTable`]({{site.api_mr_rc5}}/framework/JobHistoryKijiTable.html) class surfaces the calls `getJobDetails(String jobId)` and `getJobScanner()` for retrieving the recorded metadata.
 
 ### Example
 
-The job_history table is a Kiji table under the hood, and can thus be inspected using the `kiji ls` tool.  The [`EntityId`]({{site.api_schema_rc5}}/EntityId.html) associated with the job_history table is the jobId.  For example, to look at all of the jobIds that have been recorded:
+The `job_history` table is a Kiji table under the hood, and can thus be inspected using the `kiji ls`, `kiji scan`, and `kiji get` tools.  The [`EntityId`]({{site.api_schema_rc5}}/EntityId.html) associated with the `job_history` table is the jobId.  For example, to look at all of the jobIds that have been recorded:
 
 {% highlight bash %}
 kiji scan kiji://.env/default/job_history/info:jobId
 {% endhighlight %}
 
-There is also a job_history tool, which displays the job history data in a more human readable
-format.  For example, to look up job data for the job ‘job_20130221123621875_0001’
+There is also a `kiji job_history` tool, which displays the job history data in a more human readable
+format.
 
 {% highlight bash %}
-kiji job-history kiji://.env/default --job-id=job_20130221123621875_0001
+kiji job-history --kiji=kiji://.env/default/
+{% endhighlight %}
+
+To look up the job data for an individual job with jobId ‘job_20130221123621875_0001’, try:
+
+{% highlight bash %}
+kiji job-history --kiji=kiji://.env/default --job-id=job_20130221123621875_0001
 {% endhighlight %}

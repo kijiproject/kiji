@@ -47,8 +47,8 @@ pauses. This is particularly important with Kiji because long garbage collection
 MR jobs to fail because various underlying HBase resources timeout or cannot be found.
 
 Since setup() is an overriden method, we call super.setup() to ensure that all resources are
-initialized properly.  If you open resources in setup(), be sure to close them in the corresponding
-cleanup() method.
+initialized properly.  If you open resources in setup(), be sure to close or release them in the
+corresponding cleanup() method.
 
 {% highlight java %}
   public void setup(GathererContext<Text, LongWritable> context) throws IOException {

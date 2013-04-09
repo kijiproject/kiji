@@ -72,32 +72,35 @@ writer.put(user, Fields.INFO_FAMILY, Fields.FIRST_NAME, timestamp, first);
 
 #### Finalization
 We are done with the Kiji instance, table and writer we opened earlier.
-We close these objects to free resources (for example, connections to HBase)
-that they use. We close these objects in the reverse order we opened them in.
+We close or release these objects to free resources (for example, connections to HBase)
+that they use. We close or release these objects in the reverse order we opened them in.
 
 {% highlight java %}
 ResourceUtils.closeOrLog(writer);
-ResourceUtils.closeOrLog(table);
+ResourceUtils.releaseOrLog(table);
 ResourceUtils.releaseOrLog(kiji);
 {% endhighlight %}
 
-Something important to note is that the Kiji instance is _released_ rather than closed.
-Kiji instances are often long-lived objects that many aspects of your system may hold
+Something important to note is that the Kiji instance and Kiji table are _released_ rather than closed.
+Kiji instances and tables are often long-lived objects that many aspects of your system may hold
 reference to. Rather than require that you define a single "owner" of this object who
 closes it when the system is finished using it, you can use reference counting to manage
 this object's lifetime.
 
 When a [`Kiji`]({{site.api_schema_1_0_0}}/Kiji.html) instance is created with `Kiji.Factory.open()`,
-it has an automatic reference count of 1. You should call `kiji.release()` or
-[`ResourceUtils`]({{site.api_schema_1_0_0}}/util/ResourceUtils.html)`.releaseOrLog(kiji)` to discard this reference.
+or a ['KijiTable']({{site.api_schema_1_0_0}}/KijiTable.html) is opened with `Kiji.openTable(name)`,
+it has an automatic reference count of 1. You should call `kiji.release()` or `table.release()` or use
+[`ResourceUtils`]({{site.api_schema_1_0_0}}/util/ResourceUtils.html)`.releaseOrLog(kiji)` or
+ResourceUtils.releaseOrLog(table) to discard these reference.
 
 If another class or method gets a reference to an already-opened Kiji instance,
 you should call `kiji.retain()` to increment its reference count. That same
 class or method is responsible for calling `kiji.release()` when it no longer
 holds the reference.
 
-A [`Kiji`]({{site.api_schema_1_0_0}}/Kiji.html) object will close itself and free its underlying resources when its
-reference count drops to 0.
+A [`Kiji`]({{site.api_schema_1_0_0}}/Kiji.html) object or
+[`KijiTable`]({{site.api_schema_1_0_0}}/KijiTable.html) will close itself and free its underlying
+resources when its reference count drops to 0.
 
 ### Running the Example
 You run the class `AddEntry` with the `kiji` command-line tool as follows:

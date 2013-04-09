@@ -23,6 +23,203 @@ directly into Kiji. The format of the input and how it translates into Kiji tabl
 columns are details particular to each concrete subclass of
 [`KijiBulkImporter`]({{site.api_mr_rc5}}/bulkimport/KijiBulkImporter.html).
 
+### Bulk Imports from the DDL Shell
+
+KijiMR includes standard bulk importers in its library. It also includes an extension for
+the KijiSchema Shell that allows you to run bulk imports using a SQL-like syntax.
+If you downloaded the Bento Box, the KijiMR library and the shell extensions are already
+included in your `$KIJI_HOME/lib` directory.
+
+To use a bulk importer, you should first enter the schema shell, then load the `bulkimport`
+module.
+
+{% highlight text %}
+$ kiji-schema-shell
+Kiji schema shell v1.0.0
+Enter 'help' for instructions (without quotes).
+Enter 'quit' to quit.
+DDL statements must be terminated with a ';'
+schema> MODULE bulkimport;
+Loading module "bulkimport"
+{% endhighlight %}
+
+You can then run a bulk importer by specifying the data to load, the table
+to load it to, and the importer to run. Most importers will require some sort of configuration.
+The `bulkimport` module provides direct support for configuring the "described text" format used by
+several of KijiMR's stock bulk importers (CSV, JSON, and XML). These formats rely on
+mappings from named fields in the input file to columns in the target table.
+
+Without specifying the specific importer to run, this will fall back on the CSV bulk importer.
+As an example, you could load a CSV file full of info about soldiers as:
+
+{% highlight text %}
+LOAD DATA INFILE '/users/patton/army.csv' INTO TABLE troops
+THROUGH PATH '/users/patton/load_troops'
+FIELDS TERMINATED BY ','
+MAP FIELDS (enlistment_date, name, rank, serial_number) AS (
+  name => info:name,
+  rank => info:rank,
+  serial_number => info:serial_number,
+  serial_number => $ENTITY,
+  enlistment_date => $TIMESTAMP);
+{% endhighlight %}
+
+The input file (or directory) specified by `INFILE` should be in HDFS; it will be
+loaded in parallel by a MapReduce job.
+
+The input file would look something like:
+
+{% highlight text %}
+1362282822000,John Doe,Sgt,123456
+1352282822000,George Patton,General,021415
+...
+{% endhighlight %}
+
+
+The `FIELDS TERMINATED BY ','` is optional; a comma is the default separator. You could
+also write `FIELDS TERMINATED BY '\t'` to use tab-separated data.
+
+The `MAP FIELDS` clause lists the fields in the CSV file and describes how to map
+them to columns in the table. Each field to include is mapped to a specific output
+column.
+
+The magic tokens `$ENTITY` and `$TIMESTAMP` allow you to specify particular
+fields of the input that are used as the entity id, and a consistent timestamp
+for the row. The latter of these is optional; it can simply use the system
+timestamp of the insert. The `$TIMESTAMP` field must be specified in milliseconds
+since 1970.
+
+For convenience, you can also map named fields into a single column family. To
+operate on the previous example, if the field names and qualifiers line up, you
+could express the above as:
+
+{% highlight text %}
+LOAD DATA INFILE '/users/patton/army.csv' INTO TABLE troops
+THROUGH PATH '/users/patton/load_troops'
+MAP FIELDS  (enlistment_date, name, rank, serial_number) AS (
+  DEFAULT FAMILY info,
+  serial_number => info:serial_number,
+  serial_number => $ENTITY,
+  enlistment_date => $TIMESTAMP
+);
+{% endhighlight %}
+
+Note that fields mentioned explicitly (e.g., `$ENTITY` and `$TIMESTAMP`) are not
+part of the default target family; `serial_number` is explicitly mapped into a column
+as well as the entity Id, whereas `enlistment_date` is only used as a timestamp.
+
+#### Load Strategies
+
+When specifying how to run a bulk import, you must pick a strategy to use when
+loading.
+
+You can specify `THROUGH PATH <path>`, meaning to write HFiles in the directory
+specified by `<path>`, and then use HBase's bulk-load mechanism on them. This is
+generally higher performance and provides greater isolation, but interacts less
+predictably with compactions in production clusters. The specified path should not
+exist ahead of time. It will be used to hold temporary data while processing the bulk
+import. The directory will be removed at the end of the job.
+
+You could also specify `DIRECT`, which means to write directly into the specified
+table using HBase `put` operations.  Due to the different performance characteristics
+of each, you must explicitly choose the load strategy.
+
+#### Running Other Bulk Importers
+
+You could also use this mapped-fields syntax to read from other file formats.
+For example, to read from JSON:
+
+{% highlight text %}
+LOAD DATA INFILE '/users/patton/army.json' INTO TABLE troops
+THROUGH PATH '/users/patton/load_troops'
+USING 'org.kiji.mapreduce.bulkimport.JSONBulkImporter'
+MAP FIELDS (enlistment_date, name, rank, serial_number) AS (
+  DEFAULT FAMILY info,
+  serial_number => info:serial_number,
+  serial_number => $ENTITY,
+  enlistment_date => $TIMESTAMP
+);
+{% endhighlight %}
+
+
+You can also run other bulk importers that you write (a description of the API is later in
+this section). You can set key-value properties to include in the MapReduce job's `Configuration`
+with the `PROPERTIES` keyword:
+
+{% highlight text %}
+LOAD DATA INFILE '/users/patton/army.custom.fmt.txt' INTO TABLE troops
+THROUGH PATH '/users/patton/load_troops'
+USING 'org.example.CustomFormatBulkImporter'
+PROPERTIES (
+  'custom.timestamp' = 'enlistment_date',
+  'foo' = 'bar',
+  ...);
+{% endhighlight %}
+
+The above will configure a custom bulk importer with some properties to include in the
+JobConf.
+
+If the specified importer subclasses `DescribedInputTextBulkImporter` and
+supports a JSON field-mapping control file, you may use a `MAP FIELDS`
+clause to specify field names to map (before the optional `PROPERTIES` clause).
+
+#### Specifying the InputFormat
+
+When loading data, you can specify an individual file to load, or a directory
+full of files. You may specify a different input format after the input path
+with the syntax:
+
+{% highlight text %}
+LOAD DATA INFILE '/path/to/files' FORMAT '<somefmt>' INTO TABLE ...
+{% endhighlight %}
+
+For instance:
+
+{% highlight text %}
+LOAD DATA INFILE '/path/to/sequencefiles' FORMAT 'seq' INTO TABLE ...
+{% endhighlight %}
+
+The format strings this tool accepts are the same as are used by the
+<a href="../command-line-tools/">command line tools</a> to describe input data
+(see "Input/output formats" on that page).
+
+Not all bulk importers work with all formats; for instance, the CSV and JSON importers
+only work with text files. (`FORMAT 'text'` is the implied default.)
+Each bulk importer class may require a particular input format.
+
+#### Bulk Import Shell Grammar
+
+The complete grammar for valid statements accepted by the `bulkimport` module is as
+follows:
+
+{% highlight text %}
+field_mapping ::= MAP FIELDS [ (field_name, field_name, ...) ] AS (<mapping_elem>, ...)
+
+mapping_elem ::= DEFAULT FAMILY family_name
+               | field_name => family:column
+               | field_name => $ENTITY
+               | field_name => $TIMESTAMP
+
+csv_import ::= LOAD DATA INFILE 'hdfs://uri/here' INTO TABLE table_name
+    [ DIRECT | THROUGH PATH 'hdfs://uri/to/tmp/dir' ]
+    [ FIELDS TERMINATED BY { '\t' | ',' } ]
+    <field_mapping>;
+
+generic_import ::= LOAD DATA INFILE 'hdfs://uri/here' [FORMAT 'fmt']
+    INTO TABLE table_name
+    [ DIRECT | THROUGH PATH 'hdfs://uri/to/tmp/dir' ]
+    USING 'com.example.ImporterClassName'
+    [ <field_mapping> ]
+    [ PROPERTIES ( 'propname' = 'propvalue', ... ) ];
+
+bulk_import ::= csv_import | generic_import
+{% endhighlight %}
+
+
+The rest of this section describes how bulk importers are implemented, how you
+can extend these with your own bulk importers for custom data formats, and what
+bulk importer classes are available in the KijiMR library.
+
 ### Classes Overview
 
 Kiji bulk importers rely on two classes: all bulk importers extend the abstract class
