@@ -13,7 +13,8 @@ only depend on APIs listed as <tt>@ApiAudience.Public</tt>. Contributors
 to other Kiji framework components may use <tt>@ApiAudience.Framework</tt>
 APIs, but beware that they may change between minor versions.
 
-* [KijiSchema](http://api-docs.kiji.org/kiji-schema/1.0.0/index.html) (latest)
+* [KijiSchema](http://api-docs.kiji.org/kiji-schema/1.0.1/index.html) (latest)
+  \[[1.0.1](http://api-docs.kiji.org/kiji-schema/1.0.1/index.html)\]
   \[[1.0.0](http://api-docs.kiji.org/kiji-schema/1.0.0/index.html)\]
   \[[1.0.0-rc5](http://api-docs.kiji.org/kiji-schema/1.0.0-rc5/index.html)\]
   \[[1.0.0-rc4](http://api-docs.kiji.org/kiji-schema/1.0.0-rc4/index.html)\]
@@ -21,11 +22,13 @@ APIs, but beware that they may change between minor versions.
   \[[1.0.0-rc2](http://api-docs.kiji.org/kiji-schema/1.0.0-rc2/index.html)\]
   \[[1.0.0-rc1](http://api-docs.kiji.org/kiji-schema/1.0.0-rc1/index.html)\]
 
-* [KijiMR](http://api-docs.kiji.org/kiji-mapreduce/1.0.0-rc5/index.html) (latest)
+* [KijiMR](http://api-docs.kiji.org/kiji-mapreduce/1.0.0-rc6/index.html) (latest)
+  \[[1.0.0-rc6](http://api-docs.kiji.org/kiji-mapreduce/1.0.0-rc6/index.html)\]
   \[[1.0.0-rc5](http://api-docs.kiji.org/kiji-mapreduce/1.0.0-rc5/index.html)\]
   \[[1.0.0-rc4](http://api-docs.kiji.org/kiji-mapreduce/1.0.0-rc4/index.html)\]
 
-* [KijiMR Library](http://api-docs.kiji.org/kiji-mapreduce-lib/1.0.0-rc5/index.html) (latest)
+* [KijiMR Library](http://api-docs.kiji.org/kiji-mapreduce-lib/1.0.0-rc6/index.html) (latest)
+  \[[1.0.0-rc6](http://api-docs.kiji.org/kiji-mapreduce-lib/1.0.0-rc6/index.html)\]
   \[[1.0.0-rc5](http://api-docs.kiji.org/kiji-mapreduce-lib/1.0.0-rc5/index.html)\]
   \[[1.0.0-rc4](http://api-docs.kiji.org/kiji-mapreduce-lib/1.0.0-rc4/index.html)\]
 
