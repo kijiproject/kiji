@@ -355,6 +355,9 @@ There are several associated bulk importers that parse data into rows:
 * [`JSONBulkImporter`]({{site.api_mrlib_rc5}}/bulkimport/JSONBulkImporter.html) - takes in a text
   file with a JSON object on each line and produces a row for each object.
 
+* [`XMLBulkImporter`]({{site.api_mrlib_rc5}}/bulkimport/XMLBulkImporter.html) - takes a text encoded
+  XML file and a user specified record delimiting tag and produces a row for each XML record.
+
 All of these bulk importers extend
 [`DescribedInputTextBulkImporter`]({{site.api_mrlib_rc5}}/bulkimport/DescribedInputTextBulkImporter.html)
 which contains helper functions and can be configured via a

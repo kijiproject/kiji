@@ -19,7 +19,7 @@ write to the phonebook table.
 
 ### AddEntry.java
 The class `AddEntry.java` is included in the phonebook example source (located under
-`$KIJI_HOME/examples/phonebook/src/main/java`). It implements a command-line tool
+`$KIJI_HOME/examples/phonebook/src/main/java/org/kiji/examples/phonebook/`). It implements a command-line tool
 that asks a user for contact information and then uses that information to populate
 the columns in a row in the Kiji table `phonebook` for that contact.
 To start, `AddEntry.java` loads an HBase configuration.
@@ -58,7 +58,7 @@ and last name. The [`EntityId`]({{site.api_schema_1_0_0}}/EntityId.html) uniquel
 row for the contact in the Kiji table.
 
 {% highlight java %}
-EntityId user = table.getEntityId(first + "," + last);
+final EntityId user = table.getEntityId(first + "," + last);
 {% endhighlight %}
 
 We write the contact information gained from the user to the appropriate columns
@@ -142,7 +142,7 @@ If you have not already done so, put the phonebook jar file on your Kiji classpa
 
 <div class="userinput">
 {% highlight bash %}
-export KIJI_CLASSPATH="$KIJI_HOME/examples/phonebook/lib/kiji-phonebook-*.jar"
+export KIJI_CLASSPATH="$KIJI_HOME/examples/phonebook/lib/*"
 {% endhighlight %}
 </div>
 
@@ -155,15 +155,15 @@ $KIJI_HOME/bin/kiji scan kiji://.env/default/phonebook
 </div>
 
     Scanning kiji table: kiji://localhost:2181/default/phonebook/
-    entity-id=hbase=hex:3927ac19991c6e3d49cdd1d48e135083 [1363224175538] info:firstname
+    entity-id=hbase=hex:17dce7850f7bb653469ab526a58c815b [1363224175538] info:firstname
                                      Renuka
-    entity-id=hbase=hex:3927ac19991c6e3d49cdd1d48e135083 [1363224175538] info:lastname
+    entity-id=hbase=hex:17dce7850f7bb653469ab526a58c815b [1363224175538] info:lastname
                                      Apte
-    entity-id=hbase=hex:3927ac19991c6e3d49cdd1d48e135083 [1363224175538] info:email
+    entity-id=hbase=hex:17dce7850f7bb653469ab526a58c815b [1363224175538] info:email
                                      ra@wibidata.com
-    entity-id=hbase=hex:3927ac19991c6e3d49cdd1d48e135083 [1363224175538] info:telephone
+    entity-id=hbase=hex:17dce7850f7bb653469ab526a58c815b [1363224175538] info:telephone
                                      415-111-2222
-    entity-id=hbase=hex:3927ac19991c6e3d49cdd1d48e135083 [1363224175538] info:address
+    entity-id=hbase=hex:17dce7850f7bb653469ab526a58c815b [1363224175538] info:address
                                      {"addr1": "375 Alabama St", "apt": null, "addr2": null, "city": "SF", "state": "CA", "zip": 94110}
 
 ## Reading From a Table

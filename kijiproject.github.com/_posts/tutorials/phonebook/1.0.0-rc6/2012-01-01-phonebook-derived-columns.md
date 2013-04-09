@@ -48,7 +48,7 @@ The AddressMapper extends Hadoop's Mapper class. The map function is run per row
 It extracts the address field from each row as follows:
 
 {% highlight java %}
-Address address = row.getMostRecentValue(Fields.INFO_FAMILY, Fields.ADDRESS);
+final Address address = row.getMostRecentValue(Fields.INFO_FAMILY, Fields.ADDRESS);
 {% endhighlight %}
 
 Address is the same Avro type you read about on the
@@ -58,11 +58,11 @@ description for it can be found at
 about Avro types can be found
 [here](http://avro.apache.org/docs/current/spec.html).
 
-We decompose and write the individual fields into a derived column using `writer.put(...)`. For
+We decompose and write the individual fields into a derived column using `mWriter.put(...)`. For
 example, the zip code can be extracted from the Address object and written as follows:
 
 {% highlight java %}
-writer.put(entityId, Fields.DERIVED_FAMILY, Fields.ZIP, address.getZip());
+mWriter.put(entityId, Fields.DERIVED_FAMILY, Fields.ZIP, address.getZip());
 {% endhighlight %}
 
 ### Running the Example

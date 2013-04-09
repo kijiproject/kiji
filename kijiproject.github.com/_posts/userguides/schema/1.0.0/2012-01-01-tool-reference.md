@@ -344,11 +344,11 @@ and the cell column name (`family:qualifier`) specified by the Kiji URI argument
 The second line contains the string representation of the cell data itself.
 
 {% highlight bash %}
-$ kiji get kiji://localhost:2181/kiji_instance1/table1 --entity-id="'Olga Jefferson'"
-Looking up entity: 'Olga Jefferson' from kiji table: : kiji://localhost:2181/kiji_instance1/table1/info:name,info:email
-entity-id='Olga Jefferson' [1305851507300] info:name
+$ kiji get kiji://localhost:2181/kiji_instance1/table1 --entity-id="['Olga Jefferson']"
+Looking up entity: ['Olga Jefferson'] from kiji table: : kiji://localhost:2181/kiji_instance1/table1/info:name,info:email
+entity-id=['Olga Jefferson'] [1305851507300] info:name
                                  Olga Jefferson
-entity-id='Olga Jefferson' [1305851507301] info:email
+entity-id=['Olga Jefferson'] [1305851507301] info:email
                                  Olga.Jefferson@hotmail.com
 {% endhighlight %}
 
@@ -392,14 +392,14 @@ The cells appear similar to how they do with `kiji get`.
 {% highlight bash %}
 $ kiji scan kiji://localhost:2181/kiji_instance1/table1/info:name,info:email
 Scanning kiji table: kiji://localhost:2181/kiji_instance1/table1/
-entity-id='Olga Jefferson' [1305851507300] info:name
+entity-id=['Olga Jefferson'] [1305851507300] info:name
                                  Olga Jefferson
-entity-id='Olga Jefferson' [1305851507301] info:email
+entity-id=['Olga Jefferson'] [1305851507301] info:email
                                  Olga.Jefferson@hotmail.com
 
-entity-id='Sidney Tijuana' [1305851507425] info:name
+entity-id=['Sidney Tijuana'] [1305851507425] info:name
                                  Sidney Tijuana
-entity-id='Sidney Tijuana' [1305851507427] info:email
+entity-id=['Sidney Tijuana'] [1305851507427] info:email
                                  Sidney.Tijuana@hotmail.com
 …
 {% endhighlight %}

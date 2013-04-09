@@ -20,11 +20,11 @@ is written to a text file in HDFS.
 <div id="accordion-container">
   <h2 class="accordion-header"> SongPlayCounter.java </h2>
      <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/master/src/main/java/org/kiji/examples/music/gather/SongPlayCounter.java"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/kiji-music-1.0.0-rc6/src/main/java/org/kiji/examples/music/gather/SongPlayCounter.java"> </script>
      </div>
  <h2 class="accordion-header"> LongSumReducer.java </h2>
    <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-mapreduce-lib/raw/master/kiji-mapreduce-lib/src/main/java/org/kiji/mapreduce/lib/reduce/LongSumReducer.java"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-mapreduce-lib/raw/kiji-mapreduce-lib-root-1.0.0-rc6/kiji-mapreduce-lib/src/main/java/org/kiji/mapreduce/lib/reduce/LongSumReducer.java"> </script>
     </div>
 </div>
 
@@ -125,18 +125,13 @@ to the output collector.
 
 {% highlight java %}
   public void reduce(K key, Iterator<LongWritable> values,
-                     OutputCollector<K, LongWritable> output,
-                     Reporter reporter)
-    throws IOException {
-
-    // sum all values for this key
+      Context context) throws IOException, InterruptedException {
     long sum = 0;
-    while (values.hasNext()) {
-      sum += values.next().get();
+    for (LongWritable value : values) {
+      sum += value.get();
     }
-
-    // output sum
-    output.collect(key, new LongWritable(sum));
+    mValue.set(sum);
+    context.write(key, mValue);
   }
 {% endhighlight %}
 
@@ -149,7 +144,7 @@ To verify that SongPlayCounter performs as expected, SongPlayCounter's test:
 <div id="accordion-container">
   <h2 class="accordion-header"> TestSongPlayCounter.java </h2>
     <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/master/src/test/java/org/kiji/examples/music/TestSongPlayCounter.java"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/kiji-music-1.0.0-rc6/src/test/java/org/kiji/examples/music/TestSongPlayCounter.java"> </script>
     </div>
 </div>
 
@@ -189,7 +184,7 @@ local job runner. The resulting output sequence file is then validated.
 
 {% highlight java %}
   final File outputDir = new File(getLocalTempDir(), "output.sequence_file");
-  final MapReduceJob mrjob = KijiGatherJobBuilder.create()
+  final KijiMapReduceJob mrjob = KijiGatherJobBuilder.create()
       .withConf(getConf())
       .withGatherer(SongPlayCounter.class)
       .withReducer(LongSumReducer.class)

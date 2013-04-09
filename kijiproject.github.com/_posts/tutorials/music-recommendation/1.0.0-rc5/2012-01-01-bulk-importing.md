@@ -14,11 +14,11 @@ efficiently import such large amounts of data into Kiji.
 <div id="accordion-container">
   <h2 class="accordion-header"> SongMetadataBulkImporter.java </h2>
     <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/master/src/main/java/org/kiji/examples/music/bulkimport/SongMetadataBulkImporter.java"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/kiji-music-1.0.0-rc5/src/main/java/org/kiji/examples/music/bulkimport/SongMetadataBulkImporter.java"> </script>
   </div>
   <h2 class="accordion-header"> JSONBulkImporter.java </h2>
     <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-mapreduce-lib/raw/master/kiji-mapreduce-lib/src/main/java/org/kiji/mapreduce/lib/bulkimport/JSONBulkImporter.java"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-mapreduce-lib/raw/kiji-mapreduce-lib-root-1.0.0-rc5/kiji-mapreduce-lib/src/main/java/org/kiji/mapreduce/lib/bulkimport/JSONBulkImporter.java"> </script>
   </div>
 </div>
 

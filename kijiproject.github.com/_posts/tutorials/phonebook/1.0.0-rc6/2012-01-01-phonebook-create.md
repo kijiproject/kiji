@@ -152,7 +152,7 @@ $KIJI_HOME/bin/kiji create-table --table=kiji://.env/default/phonebook \
 
 {% highlight bash %}
 Parsing table layout: $KIJI_HOME/examples/phonebook/layout.json
-Creating kiji table: kiji://localhost:2181/default/phonebook/...
+Creating Kiji table: kiji://localhost:2181/default/phonebook/
 {% endhighlight %}
 
 

@@ -119,14 +119,17 @@ state.
 First, the contact's address is extracted from the row:
 
 {% highlight java %}
-public void map(EntityId entityId, KijiRowData row, Context context)
-    throws IOException, InterruptedException {
+public void map(EntityId entityId, KijiRowData row, Context hadoopContext)
+    throws IOException {
+  // Check that the row has the info:address column.
+  // The column names are specified as constants in the Fields.java class.
   if (!row.containsColumn(Fields.INFO_FAMILY, Fields.ADDRESS)) {
-    // Ignore the row if there is no address.
+    LOG.info("Missing address field in row: " + entityId);
+    hadoopContext.getCounter(Counter.MISSING_ADDRESS).increment(1L);
     return;
   }
 
-  final String victimState = context.getConfiguration().get(CONF_STATE, "");
+  final String victimState = hadoopContext.getConfiguration().get(CONF_STATE, "");
   final Address address = row.getMostRecentValue(Fields.INFO_FAMILY, Fields.ADDRESS);
 {% endhighlight %}
 

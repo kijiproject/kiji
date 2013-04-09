@@ -19,11 +19,11 @@ So, we need to count the number of times two songs have been played, one after a
 <div id="accordion-container">
   <h2 class="accordion-header"> SequentialPlayCounter.java </h2>
     <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/master/src/main/java/org/kiji/examples/music/gather/SequentialPlayCounter.java"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/kiji-music-1.0.0-rc5/src/main/java/org/kiji/examples/music/gather/SequentialPlayCounter.java"> </script>
     </div>
   <h2 class="accordion-header"> SequentialPlayCountReducer.java </h2>
     <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/master/src/main/java/org/kiji/examples/music/reduce/SequentialPlayCountReducer.java"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/kiji-music-1.0.0-rc5/src/main/java/org/kiji/examples/music/reduce/SequentialPlayCountReducer.java"> </script>
     </div>
 </div>
 
@@ -148,7 +148,7 @@ test:
 <div id="accordion-container">
   <h2 class="accordion-header"> TestSequentialSongPlayCounter.java </h2>
     <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/master/src/test/java/org/kiji/examples/music/TestSequentialSongPlayCounter.java"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/kiji-music-1.0.0-rc5/src/test/java/org/kiji/examples/music/TestSequentialSongPlayCounter.java"> </script>
   </div>
 </div>
 

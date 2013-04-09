@@ -13,7 +13,7 @@ each row in the user table and apply our recommendation strategy to it.
 <div id="accordion-container">
   <h2 class="accordion-header"> NextSongRecommender.java </h2>
     <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/master/src/main/java/org/kiji/examples/music/produce/NextSongRecommender.java"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/kiji-music-1.0.0-rc4/src/main/java/org/kiji/examples/music/produce/NextSongRecommender.java"> </script>
   </div>
 </div>
 
@@ -99,7 +99,7 @@ the value we want to write as the parameter.
 <div id="accordion-container">
   <h2 class="accordion-header"> TestNextSongRecommender.java </h2>
     <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/master/src/test/java/org/kiji/examples/music/TestNextSongRecommender.java"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/kiji-music-1.0.0-rc4/src/test/java/org/kiji/examples/music/TestNextSongRecommender.java"> </script>
   </div>
 </div>
 

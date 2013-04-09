@@ -14,11 +14,11 @@ efficiently import such large amounts of data into Kiji.
 <div id="accordion-container">
   <h2 class="accordion-header"> SongMetadataBulkImporter.java </h2>
     <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/master/src/main/java/org/kiji/examples/music/bulkimport/SongMetadataBulkImporter.java"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/kiji-music-1.0.0-rc6/src/main/java/org/kiji/examples/music/bulkimport/SongMetadataBulkImporter.java"> </script>
   </div>
   <h2 class="accordion-header"> JSONBulkImporter.java </h2>
     <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-mapreduce-lib/raw/master/kiji-mapreduce-lib/src/main/java/org/kiji/mapreduce/lib/bulkimport/JSONBulkImporter.java"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-mapreduce-lib/raw/kiji-mapreduce-lib-root-1.0.0-rc6/kiji-mapreduce-lib/src/main/java/org/kiji/mapreduce/lib/bulkimport/JSONBulkImporter.java"> </script>
   </div>
 </div>
 
@@ -193,7 +193,7 @@ Copy the descriptor file into HDFS.
 
 <div class="userinput">
 {% highlight bash %}
-$ hadoop fs -copyFromLocal \
+hadoop fs -copyFromLocal \
     ${MUSIC_HOME}/import/song-plays-import-descriptor.json \
     kiji-mr-tutorial/
 {% endhighlight %}

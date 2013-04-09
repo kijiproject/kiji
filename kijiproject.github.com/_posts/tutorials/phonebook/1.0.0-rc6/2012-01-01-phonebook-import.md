@@ -48,22 +48,22 @@ object.
 // an object and write it to the person's record.
 // The Address record type is generated from src/main/avro/Address.avsc as part
 // of the build process (see avro-maven-plugin in pom.xml).
-SpecificDatumReader<Address> datumReader =
+final SpecificDatumReader<Address> datumReader =
     new SpecificDatumReader<Address>(Address.SCHEMA$);
-JsonDecoder decoder =
+final JsonDecoder decoder =
     DecoderFactory.get().jsonDecoder(Address.SCHEMA$, addressJson);
-Address streetAddr = datumReader.read(null, decoder);
+final Address streetAddr = datumReader.read(null, decoder);
 {% endhighlight %}
 
 Next we create a unique [`EntityId`]({{site.api_schema_1_0_0}}/EntityId.html) that will be used to reference this row.  As before, we will use
 the combination of first and last name as a unique reference to this row:
 {% highlight java %}
-EntityId user = table.getEntityId(firstName + "," + lastName);
+final EntityId user = table.getEntityId(firstName + "," + lastName);
 {% endhighlight %}
 
 Finally we just retrieve the current system timestamp and write these record fields.
 {% highlight java %}
-long timestamp = System.currentTimeMillis();
+final long timestamp = System.currentTimeMillis();
 writer.put(user, Fields.INFO_FAMILY, Fields.FIRST_NAME, timestamp, firstName);
 writer.put(user, Fields.INFO_FAMILY, Fields.LAST_NAME, timestamp, lastName);
 writer.put(user, Fields.INFO_FAMILY, Fields.EMAIL, timestamp, email);
@@ -145,10 +145,10 @@ The outer `PhonebookImporter` class contains `configureJob(...)` and `run(...)` 
 that handle the setup and execution
 of the MapReduce job.  Instead of constructing a Hadoop `Job` object directly, we use a
 `KijiBulkImportJobBuilder`. This builder object lets us specify Kiji-specific arguments,
-and construct a [`MapReduceJob`]({{site.api_mr_rc6}}/MapReduceJob.html) (A Kiji-specific wrapper around `Job`):
+and construct a [`KijiMapReduceJob`]({{site.api_mr_rc6}}/KijiMapReduceJob.html) (A Kiji-specific wrapper around `Job`):
 
 {% highlight java %}
-MapReduceJob configureJob(Path inputPath, KijiURI tableUri) throws IOException {
+KijiMapReduceJob configureJob(Path inputPath, KijiURI tableUri) throws IOException {
   return KijiBulkImportJobBuilder.create()
       .withConf(getConf())
       .withInput(new TextMapReduceJobInput(inputPath))
@@ -163,9 +163,13 @@ A [`KijiURI`]({{site.api_schema_1_0_0}}/KijiURI.html) is constructed that specif
 
 {% highlight java %}
 public int run(String[] args) throws Exception {
+  setConf(HBaseConfiguration.addHbaseResources(getConf()));
   final KijiURI tableUri =
       KijiURI.newBuilder(String.format("kiji://.env/default/%s", TABLE_NAME)).build();
-  final MapReduceJob job = configureJob(new Path(args[0]), tableUri);
+  final KijiMapReduceJob job = configureJob(new Path(args[0]), tableUri);
+
+  final boolean isSuccessful = job.run();
+  return isSuccessful ? 0 : 1;
 }
 {% endhighlight %}
 
@@ -239,7 +243,7 @@ $KIJI_HOME/bin/kiji scan kiji://.env/default/phonebook
 {% endhighlight %}
 </div>
 
-Here's what the first entry should look like:
+Here's what one of the first entries should look like:
 
     Scanning kiji table: kiji://localhost:2181/default/phonebook/
     entity-id=hbase=hex:551e50c1f2632437ccbacb16100f11db [1363228117784] info:firstname

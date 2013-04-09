@@ -19,11 +19,11 @@ So, we need to count the number of times two songs have been played, one after a
 <div id="accordion-container">
   <h2 class="accordion-header"> SequentialPlayCounter.java </h2>
     <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/master/src/main/java/org/kiji/examples/music/gather/SequentialPlayCounter.java"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/kiji-music-1.0.0-rc6/src/main/java/org/kiji/examples/music/gather/SequentialPlayCounter.java"> </script>
     </div>
   <h2 class="accordion-header"> SequentialPlayCountReducer.java </h2>
     <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/master/src/main/java/org/kiji/examples/music/reduce/SequentialPlayCountReducer.java"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/kiji-music-1.0.0-rc6/src/main/java/org/kiji/examples/music/reduce/SequentialPlayCountReducer.java"> </script>
     </div>
 </div>
 
@@ -63,6 +63,9 @@ tally.
   @Override
   public void gather(KijiRowData input, GathererContext<AvroKey<SongBiGram>, LongWritable> context)
       throws IOException {
+    // Here we use a sliding window to build bigrams that represent pairs of songs that have
+    // ever been played one following another.
+    // The variables firstSong and secondSong slide along as we iterate through the track plays.
     CharSequence firstSong = null;
     CharSequence nextSong = null;
     NavigableMap<Long, CharSequence> trackPlays = input.getValues("info", "track_plays");
@@ -72,7 +75,7 @@ tally.
       nextSong = trackId;
       // If firstSong is null, we are at the beginning of the list and our sliding window
       // only contains one song, so don't output it. Otherwise...
-      if (null != nextSong) {
+      if (null != firstSong) {
         // Create the bigram of these two songs.
         mBiGram.setFirstSongPlayed(firstSong);
         mBiGram.setSecondSongPlayed(nextSong);
@@ -102,8 +105,8 @@ avro provides for creating schemas of primitive types.
 
 {% highlight java %}
   public Schema getAvroKeyWriterSchema() throws IOException {
-    // Programmatically retrieve the avro schema for a String.
-    return Schema.create(Schema.Type.STRING);
+    // Since we are writing AvroKeys, we need to specify the schema.
+    return SongBiGram.SCHEMA$;
   }
 {% endhighlight %}
 
@@ -119,14 +122,15 @@ while the second track ID becomes part the `SongCount` value.
       throws IOException, InterruptedException {
     // Initialize sum to zero.
     long sum = 0L;
-    // Add up all the values.
+    // Add up all the values.  When this reducer is used after SongPlayCounter, every value
+    // should be the number 1, so we are just counting the number of times the second song
+    // was played after the first (the key).
     for (LongWritable value : values) {
       sum += value.get();
     }
 
     // Set values for this count.
     final SongBiGram songPair = key.datum();
-
     final SongCount nextSongCount = SongCount.newBuilder()
         .setCount(sum)
         .setSongId(songPair.getSecondSongPlayed())
@@ -148,7 +152,7 @@ test:
 <div id="accordion-container">
   <h2 class="accordion-header"> TestSequentialSongPlayCounter.java </h2>
     <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/master/src/test/java/org/kiji/examples/music/TestSequentialSongPlayCounter.java"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/kiji-music-1.0.0-rc6/src/test/java/org/kiji/examples/music/TestSequentialSongPlayCounter.java"> </script>
   </div>
 </div>
 
@@ -188,7 +192,7 @@ local job runner. The resulting output sequence file is then validated.
   // Configure and run job.
   final File outputDir = new File(getLocalTempDir(), "output.sequence_file");
   final Path path = new Path("file://" + outputDir);
-  final MapReduceJob mrjob = KijiGatherJobBuilder.create()
+  final KijiMapReduceJob mrjob = KijiGatherJobBuilder.create()
       .withConf(getConf())
       .withGatherer(SequentialPlayCounter.class)
       .withReducer(SequentialPlayCountReducer.class)

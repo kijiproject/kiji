@@ -127,8 +127,11 @@ to perform atomic operations on Kiji tables.  The atomic putter uses a begin, pu
 to construct transactions which are executed atomically by the underlying HBase table.  Addressing
 puts in the atomic writer is very similar to KijiTableWriter, except you do not need to specify an
 entityId for every put, because they all must target the same row.  When your transaction is ready,
-you can confirm that all puts target the same locality group and write them if they are using
+you can confirm that all column families you are attempting to write into are within the expected locality
+group and write them by using
 [`commit("localityGroup")`]({{site.api_schema_1_0_0}}/AtomicKijiPutter.html#commit%28java.lang.String%29).
+Calling commit("localityGroup") will throw an IllegalStateException unless all puts target the same
+locality group.
 
 {% highlight java %}
   KijiTable table = ...
@@ -158,10 +161,11 @@ in place so that you may attempt a new check.
 
 {% highlight java %}
   KijiTable table = ...
-  AtomicKijiPutter putter = table.getWriterFactory().openAtomicWriter();
-  KijiTableReader reader = table.openTableReader();
-  KijiDataRequest request = KijiDataRequest.create("meta", "modifications");
-  final long currentModificationCount = reader.get(entityId, request);
+  final AtomicKijiPutter putter = table.getWriterFactory().openAtomicWriter();
+  final KijiTableReader reader = table.openTableReader();
+  final KijiDataRequest request = KijiDataRequest.create("meta", "modifications");
+  final long currentModificationCount =
+      reader.get(entityId, request).getMostRecentValue("meta", "modifications");
   try {
     // Begin a transaction on the specified row:
     putter.begin(entityId);
