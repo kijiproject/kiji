@@ -93,7 +93,7 @@ private[chopsticks] class KijiScheme(
         KijiSourceContext, KijiSinkContext] {
   import KijiScheme._
 
-  // Keeps track of how many rows have been skipped, for logging purposes.
+  /** Keeps track of how many rows have been skipped, for logging purposes. */
   private val skippedRows: AtomicLong = new AtomicLong()
 
   /** Set the fields that should be in a tuple when this source is used for reading and writing. */
