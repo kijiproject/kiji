@@ -491,7 +491,7 @@ private[chopsticks] object KijiScheme {
     iterator.foreach { fieldName =>
       columns(fieldName.toString()) match {
         case ColumnFamily(family, _) => {
-          // TODO CHOP-67 Design putTuple semantics for map type column families
+          // TODO CHOP-56 Design putTuple semantics for map type column families
           throw new UnsupportedOperationException("Writing to a column family without a "
               + "qualifier is not supported.")
         }

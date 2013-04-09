@@ -93,6 +93,66 @@ class KijiSourceSuite
   }
 
   /** Input tuples to use for import tests. */
+  val importMultipleTimestamps: List[(String, String)] = List(
+      ( "0", "1 eid1 word1" ),
+      ( "1", "3 eid1 word2" ),
+      ( "2", "5 eid2 word3" ),
+      ( "3", "7 eid2 word4" ))
+
+  /**
+   * Validates output from [[org.kiji.chopsticks.KijiSourceSuite.ImportJob]].
+   *
+   * @param outputBuffer containing data that the Kiji table has in it after the job has been run.
+   */
+  def validateMultipleTimestamps(outputBuffer: Buffer[(EntityId, KijiSlice[String])]) {
+    assert(outputBuffer.size === 2)
+
+    // There should be two Cells in each of the KijiSlices
+    assert(outputBuffer(0)._2.cells.size === 2)
+    assert(outputBuffer(1)._2.cells.size === 2)
+
+    // KijiSlices order the most recent timestamp first.
+    assert(outputBuffer(0)._2.cells(0).datum === "word2")
+    assert(outputBuffer(0)._2.cells(1).datum === "word1")
+    assert(outputBuffer(1)._2.cells(0).datum === "word4")
+    assert(outputBuffer(1)._2.cells(1).datum === "word3")
+  }
+
+  test("An import job with multiple timestamps imports all timestamps in local mode.") {
+    // Create test Kiji table.
+    val uri: String = doAndRelease(makeTestKijiTable(layout)) { table: KijiTable =>
+      table.getURI().toString()
+    }
+
+    // Build test job.
+    JobTest(new MultipleTimestampsImportJob(_))
+        .arg("input", "inputFile")
+        .arg("output", uri)
+        .source(TextLine("inputFile"), importMultipleTimestamps)
+        .sink(KijiOutput(uri, 'timestamp)('word -> "family:column1"))(validateMultipleTimestamps)
+        // Run the test job.
+        .run
+        .finish
+  }
+
+  test("An import with multiple timestamps imports all timestamps using Hadoop.") {
+    // Create test Kiji table.
+    val uri: String = doAndRelease(makeTestKijiTable(layout)) { table: KijiTable =>
+      table.getURI().toString()
+    }
+
+    // Build test job.
+    JobTest(new MultipleTimestampsImportJob(_))
+        .arg("input", "inputFile")
+        .arg("output", uri)
+        .source(TextLine("inputFile"), importMultipleTimestamps)
+        .sink(KijiOutput(uri, 'timestamp)('word -> "family:column1"))(validateMultipleTimestamps)
+        // Run the test job.
+        .run
+        .finish
+  }
+
+  /** Input tuples to use for import tests. */
   val importInput: List[(String, String)] = List(
       ( "0", "hello hello hello world world hello" ),
       ( "1", "world hello   world      hello" ))
@@ -470,6 +530,20 @@ object KijiSourceSuite extends KijiSuite {
         }
         .groupBy('versioncount) (_.size)
         .write(Tsv(args("output")))
+  }
+
+  class MultipleTimestampsImportJob(args: Args) extends Job(args) {
+    // Setup input.
+    TextLine(args("input"))
+        .read
+        // Get the words in each line.
+        .map('line -> ('timestamp, 'entityId, 'word)) { line: String =>
+          val Array(timestamp, eid, token) = line.split("\\s+")
+
+          (timestamp.toLong, id(eid), token)
+        }
+        // Write the results to the "family:column1" column of a Kiji table.
+        .write(KijiOutput(args("output"), 'timestamp)('word -> "family:column1"))
   }
 
   /**

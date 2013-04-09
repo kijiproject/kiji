@@ -114,68 +114,6 @@ final class KijiSource private[chopsticks] (
   }
 
   /**
-   * Convert scala columns definition into its corresponding java variety.
-   *
-   * @param columnMap Mapping from field name to Kiji column name.
-   * @return Java map from field name to column definition.
-   */
-  private def convertColumnMap(columnMap: Map[Symbol, ColumnRequest])
-      : Map[String, ColumnRequest] = {
-    columnMap.map { case (symbol, column) => (symbol.name, column) }
-  }
-
-  /**
-   * Takes a buffer containing rows and writes them to the table at the specified uri.
-   *
-   * @param rows Tuples to write to populate the table with.
-   * @param fields Field names for elements in the tuple.
-   */
-  private def populateTestTable(rows: Buffer[Tuple], fields: Fields) {
-    // Open a table writer.
-    val writer =
-        doAndRelease(Kiji.Factory.open(tableUri)) { kiji =>
-          doAndRelease(kiji.openTable(tableUri.getTable())) { table =>
-            table.openTableWriter()
-          }
-        }
-
-    // Write the desired rows to the table.
-    try {
-      rows.foreach { row: Tuple =>
-        val tupleEntry = new TupleEntry(fields, row)
-        val iterator = fields.iterator()
-
-        // Get the entity id field.
-        val entityIdField = iterator.next().toString()
-        val entityId = tupleEntry
-            .getObject(entityIdField)
-            .asInstanceOf[EntityId]
-
-        // Iterate through fields in the tuple, adding each one.
-        while (iterator.hasNext()) {
-          val field = iterator.next().toString()
-
-          // Get the timeline to be written.
-          val cells: Seq[Cell[Any]] = tupleEntry.getObject(field)
-              .asInstanceOf[KijiSlice[Any]].cells
-
-          // Write the timeline to the table.
-              cells.map { cell: Cell[Any] =>
-                writer.put(
-                    entityId,
-                    cell.family,
-                    cell.qualifier,
-                    cell.version,
-                    cell.datum)
-              }
-        }
-      }
-    } finally {
-      writer.close()
-    }
-  }
-
-  /**
    * Creates a Scheme that writes to/reads from a Kiji table for usage with
    * the hadoop runner.
    */
@@ -210,13 +148,15 @@ final class KijiSource private[chopsticks] (
         readOrWrite match {
           case Read => {
             val scheme = kijiScheme
-            populateTestTable(buffers(this), scheme.getSourceFields())
+            populateTestTable(tableUri, buffers(this), scheme.getSourceFields())
 
             new KijiTap(tableUri, scheme).asInstanceOf[Tap[_, _, _]]
           }
           case Write => {
-            val scheme = new TestKijiScheme(buffers(this), timeRange,
-                timestampField, loggingInterval, convertColumnMap(columns))
+            val scheme = new TestKijiScheme(
+                timestampField,
+                loggingInterval,
+                columnRequestsAllData(convertColumnMap(columns)))
 
             new KijiTap(tableUri, scheme).asInstanceOf[Tap[_, _, _]]
           }
@@ -227,7 +167,7 @@ final class KijiSource private[chopsticks] (
           // Use Kiji's local tap and scheme when reading.
           case Read => {
             val scheme = localKijiScheme
-            populateTestTable(buffers(this), scheme.getSourceFields())
+            populateTestTable(tableUri, buffers(this), scheme.getSourceFields())
 
             new LocalKijiTap(tableUri, scheme).asInstanceOf[Tap[_, _, _]]
           }
@@ -269,90 +209,137 @@ final class KijiSource private[chopsticks] (
  */
 object KijiSource {
   /**
+   * Convert scala columns definition into its corresponding java variety.
+   *
+   * @param columnMap Mapping from field name to Kiji column name.
+   * @return Java map from field name to column definition.
+   */
+  private def convertColumnMap(columnMap: Map[Symbol, ColumnRequest])
+      : Map[String, ColumnRequest] = {
+    columnMap.map { case (symbol, column) => (symbol.name, column) }
+  }
+
+  /**
+   * Takes a buffer containing rows and writes them to the table at the specified uri.
+   *
+   * @param tableUri of the table to pouplate.
+   * @param rows Tuples to write to populate the table with.
+   * @param fields Field names for elements in the tuple.
+   */
+  private def populateTestTable(tableUri: KijiURI, rows: Buffer[Tuple], fields: Fields) {
+    // Open a table writer.
+    val writer =
+        doAndRelease(Kiji.Factory.open(tableUri)) { kiji =>
+          doAndRelease(kiji.openTable(tableUri.getTable())) { table =>
+            table.openTableWriter()
+          }
+        }
+
+    // Write the desired rows to the table.
+    try {
+      rows.foreach { row: Tuple =>
+        val tupleEntry = new TupleEntry(fields, row)
+        val iterator = fields.iterator()
+
+        // Get the entity id field.
+        val entityIdField = iterator.next().toString()
+        val entityId = tupleEntry
+            .getObject(entityIdField)
+            .asInstanceOf[EntityId]
+
+        // Iterate through fields in the tuple, adding each one.
+        while (iterator.hasNext()) {
+          val field = iterator.next().toString()
+
+          // Get the timeline to be written.
+          val cells: Seq[Cell[Any]] = tupleEntry.getObject(field)
+              .asInstanceOf[KijiSlice[Any]].cells
+
+          // Write the timeline to the table.
+          cells.map { cell: Cell[Any] =>
+            writer.put(
+                entityId,
+                cell.family,
+                cell.qualifier,
+                cell.version,
+                cell.datum)
+          }
+        }
+      }
+    } finally {
+      writer.close()
+    }
+  }
+
+  /**
+   * Returns a map from fieldname to column request where the column request has been
+   * configured as an output column.
+   *
+   * This is used in tests, when we use KijiScheme to read tuples from a Kiji table, and we want
+   * to read all data in all of the columns, so the test can inspect all data in the table.
+   *
+   * @param columns to transform.
+   * @return transformed map where the column requests are configured for output.
+   */
+  private def columnRequestsAllData(
+      columns: Map[String, ColumnRequest]): Map[String, ColumnRequest] = {
+    val emptyOptions: ColumnRequestOptions =
+        new ColumnRequestOptions(Integer.MAX_VALUE, None, None)
+    val modifiedColumns = columns.mapValues {
+      case QualifiedColumn(family, qualifier, options) => {
+        new QualifiedColumn(family, qualifier, emptyOptions)
+      }
+      case ColumnFamily(family, options) => {
+        new ColumnFamily(family, emptyOptions)
+      }
+    }
+
+    // Perform a deep copy to ensure that the resulting map is serializable.
+    Map(modifiedColumns.toArray: _*)
+  }
+
+  /**
    * A LocalKijiScheme that loads rows in a table into the provided buffer. This class
    * should only be used during tests.
    *
-   * @param buffer Buffer to fill with post-job table rows for tests.
-   * @param timeRange Range of timestamps to read from each column.
+   * @param buffer to fill with post-job table rows for tests.
+   * @param timeRange of timestamps to read from each column.
    * @param timestampField is the name of a tuple field that will contain cell timestamp when the
-   *                       source is used for writing. Specify the empty field name to write all
-   *                       cells at the current time.
-   * @param columns Scalding field name to Kiji column name mapping.
+   *     source is used for writing. Specify the empty field name to write all
+   *     cells at the current time.
+   * @param columns is a Scalding field name to Kiji column name mapping.
    */
   private class TestLocalKijiScheme(
       val buffer: Buffer[Tuple],
       timeRange: TimeRange,
       timestampField: Option[Symbol],
       columns: Map[String, ColumnRequest])
-      extends LocalKijiScheme(timeRange, timestampField, columns) {
-    override def sinkConfInit(
-        process: FlowProcess[Properties],
-        tap: Tap[Properties, InputStream, OutputStream],
-        conf: Properties) {
-      super.sinkConfInit(process, tap, conf)
-
-      // Store output uri as input uri.
-      tap.sourceConfInit(process, conf)
-    }
-
+      extends LocalKijiScheme(timeRange, timestampField, columnRequestsAllData(columns)) {
     override def sinkCleanup(
         process: FlowProcess[Properties],
         sinkCall: SinkCall[OutputContext, OutputStream]) {
-      super.sink(process, sinkCall)
-
-      // Read table into buffer.
-      val sourceCall: ConcreteCall[InputContext, InputStream] = new ConcreteCall()
-      sourceCall.setIncomingEntry(new TupleEntry())
-      sourcePrepare(process, sourceCall)
-      while (source(process, sourceCall)) {
-        buffer += sourceCall.getIncomingEntry().getTuple()
-      }
-      sourceCleanup(process, sourceCall)
-
-      super.sinkCleanup(process, sinkCall)
-    }
-  }
-
-  /**
-   * A KijiScheme that loads rows in a table into the provided buffer. This class should only be
-   * used during tests.
-   *
-   * @param buffer Buffer to fill with post-job table rows for tests.
-   * @param timeRange Range of timestamps to read from each column.
-   * @param timestampField is the name of a tuple field that will contain cell timestamp when the
-   *                       source is used for writing. Specify the empty field name to write all
-   *                       cells at the current time.
-   * @param columns Scalding field name to Kiji column name mapping.
-   */
-  private class TestKijiScheme(
-      val buffer: Buffer[Tuple],
-      timeRange: TimeRange,
-      timestampField: Option[Symbol],
-      loggingInterval: Long,
-      columns: Map[String, ColumnRequest])
-      extends KijiScheme(timeRange, timestampField, loggingInterval, columns) {
-    override def sinkCleanup(
-        process: FlowProcess[JobConf],
-        sinkCall: SinkCall[KijiSinkContext, OutputCollector[_, _]]) {
-      super.sink(process, sinkCall)
-
       // Store the output table.
       val uri: KijiURI = KijiURI
-          .newBuilder(process.getConfigCopy().get(KijiConfKeys.KIJI_OUTPUT_TABLE_URI))
+          .newBuilder(process.getConfigCopy().getProperty(KijiConfKeys.KIJI_OUTPUT_TABLE_URI))
           .build()
 
       // Read table into buffer.
       doAndRelease(Kiji.Factory.open(uri)) { kiji: Kiji =>
         doAndRelease(kiji.openTable(uri.getTable())) { table: KijiTable =>
           doAndClose(table.openTableReader()) { reader: KijiTableReader =>
+            // We also want the entire timerange, so the test can inspect all data in the table.
             val request: KijiDataRequest =
-                KijiScheme.buildRequest(timeRange, columns.values)
+                KijiScheme.buildRequest(TimeRange.All, columnRequestsAllData(columns).values)
             doAndClose(reader.getScanner(request)) { scanner: KijiRowScanner =>
               val rows: Iterator[KijiRowData] = scanner.iterator().asScala
 
               rows.foreach { row: KijiRowData =>
                 KijiScheme
-                    .rowToTuple(columns, getSinkFields(), timestampField, row)
+                    .rowToTuple(
+                        columnRequestsAllData(columns),
+                        getSinkFields(),
+                        timestampField,
+                        row)
                     .foreach { tuple => buffer += tuple }
               }
             }
@@ -363,4 +350,24 @@ object KijiSource {
       super.sinkCleanup(process, sinkCall)
     }
   }
+
+  /**
+   * A KijiScheme that loads rows in a table into the provided buffer. This class should only be
+   * used during tests.
+   *
+   * @param timestampField is the name of a tuple field that will contain cell timestamp when the
+   *                       source is used for writing. Specify the empty field name to write all
+   *                       cells at the current time.
+   * @param loggingInterval The interval at which to log skipped rows.
+   * @param columns Scalding field name to Kiji column name mapping.
+   */
+  private class TestKijiScheme(
+      timestampField: Option[Symbol],
+      loggingInterval: Long,
+      columns: Map[String, ColumnRequest])
+      extends KijiScheme(
+          TimeRange.All,
+          timestampField,
+          loggingInterval,
+          columns)
 }
