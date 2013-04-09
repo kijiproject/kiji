@@ -25,6 +25,9 @@ This kiji-bento release (${project.version}) includes:
 * `kiji-schema-shell` ${kiji-schema-shell.version}: Included in the
   `schema-shell` directory, kiji-schema-shell provides a layout definition
   language for use with `kiji-schema`.
+* `kiji-hive-adapter` ${kiji-hive-adapter.version}: Included in the
+  `hive-adapter` directory, kiji-hive-adapter provides a SerDe for
+  Hive to use Kiji tables as external Hive tables.
 * `kiji-phonebook` ${kiji-phonebook.version}: Included in the
   `examples/phonebook` directory, kiji-phonebook is an example standalone
   application (with source code) that stores, processes, and retrieves data
