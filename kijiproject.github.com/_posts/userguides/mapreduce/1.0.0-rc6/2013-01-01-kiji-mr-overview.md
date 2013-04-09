@@ -28,13 +28,13 @@ _KeyValueStores_. This allows the user to join data sets stored in HDFS and Kiji
 
 Unlike KijiSchema, where the classes most relevant to application developers were usually concrete,
 these core job types exist in KijiMR as abstract classes (such as
-[`KijiProducer`]({{site.api_mr_rc5}}/produce/KijiProducer.html)). It is typically up to the
+[`KijiProducer`]({{site.api_mr_rc6}}/produce/KijiProducer.html)). It is typically up to the
 application developer to subclass the appropriate class in their application and implement their
 application's analysis logic in a few methods (such as
-[`KijiProducer`]({{site.api_mr_rc5}}/produce/KijiProducer.html)'s `produce()` and
+[`KijiProducer`]({{site.api_mr_rc6}}/produce/KijiProducer.html)'s `produce()` and
 `getDataRequest()`). They can then point the job at the appropriate Kiji table using either the
 `kiji` command line tools or programmatically using one of the framework's JobBuilders (such as
-[`KijiProduceJobBuilder`]({{site.api_mr_rc5}}/produce/KijiProduceJobBuilder.html)) that make
+[`KijiProduceJobBuilder`]({{site.api_mr_rc6}}/produce/KijiProduceJobBuilder.html)) that make
 launching these jobs easy.  Kiji can also record metadata about jobs run using KijiMR to provide
 a historical view.
 

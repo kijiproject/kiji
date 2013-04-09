@@ -26,17 +26,17 @@ You can verify that the table was installed properly using the ls command:
 kiji ls kiji://.env/default/job_history
 {% endhighlight %}
 
-Jobs that extend [`KijiMapReduceJob`]({{site.api_mr_rc5}}/framework/KijiMapReduceJob.html) will automatically record metadata to the `job_history` table.
+Jobs that extend [`KijiMapReduceJob`]({{site.api_mr_rc6}}/framework/KijiMapReduceJob.html) will automatically record metadata to the `job_history` table.
 
 ### Classes Overview
 
-The [`JobHistoryKijiTable`]({{site.api_mr_rc5}}/framework/JobHistoryKijiTable.html) class is the main class responsible for providing access to
+The [`JobHistoryKijiTable`]({{site.api_mr_rc6}}/framework/JobHistoryKijiTable.html) class is the main class responsible for providing access to
 the `job_history` table.  Currently it provides the ability to record and retrieve job metadata.  This
 is a framework-audience class and subject to change between minor versions.
 
 ### Using the API
 
-The [`JobHistoryKijiTable`]({{site.api_mr_rc5}}/framework/JobHistoryKijiTable.html) class surfaces the calls `getJobDetails(String jobId)` and `getJobScanner()` for retrieving the recorded metadata.
+The [`JobHistoryKijiTable`]({{site.api_mr_rc6}}/framework/JobHistoryKijiTable.html) class surfaces the calls `getJobDetails(String jobId)` and `getJobScanner()` for retrieving the recorded metadata.
 
 ### Example
 
