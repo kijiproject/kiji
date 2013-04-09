@@ -21,7 +21,7 @@
 
   <groupId>org.kiji.hive</groupId>
   <artifactId>kiji-hive-root</artifactId>
-  <version>0.1.1</version>
+  <version>0.1.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <parent>
