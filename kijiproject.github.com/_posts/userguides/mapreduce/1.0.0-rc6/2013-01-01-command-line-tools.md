@@ -32,7 +32,7 @@ Kiji commands bulk-import, produce and gather all recognize the following flags:
 *   `--start-row=` and `--limit-row=`:
     Restrict the range of rows to scan through.
     The start row is included in the scan while the limit row is excluded.
-    Start and limit rows are expressed in the same way as `--entity-id` for [`kiji get`]({{site.userguide_schema_rc5}}/tool-reference/#ref.get).
+    Start and limit rows are expressed in the same way as `--entity-id` for [`kiji get`]({{site.userguide_schema_1_0_1}}/tool-reference/#ref.get).
     For example as HBase encoded rows: `--start-row='hex:0088deadbeef'` or `--limit-row='utf8:the row key in UTF8'`.
 
 

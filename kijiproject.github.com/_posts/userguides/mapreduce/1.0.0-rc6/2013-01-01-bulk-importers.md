@@ -250,7 +250,7 @@ As mentioned above, a bulk importer's `produce()` method has an `org.kiji.mapred
 argument.  This class has methods needed to write data to Kiji: 
 
 * `EntityId getEntityId(String kijiRowKey)` returns the
-  [`EntityId`]({{site.api_schema_rc5}}/EntityId.html) for a row in a Kiji table given a string
+  [`EntityId`]({{site.api_schema_1_0_1}}/EntityId.html) for a row in a Kiji table given a string
   identifier.
 
 * `void put(EntityId entityId, String family, String qualifier, T value)` writes data to a column

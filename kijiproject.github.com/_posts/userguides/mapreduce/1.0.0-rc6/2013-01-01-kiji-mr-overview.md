@@ -63,7 +63,7 @@ using Maven, this can be included as follows:
     </dependency>
 
 * You will also need a dependency on KijiSchema. See [the KijiSchema
-  documentation]({{ site.userguide_schema_rc5 }}/kiji-schema-overview/) for this information.
+  documentation]({{ site.userguide_schema_1_0_1 }}/kiji-schema-overview/) for this information.
 * You'll probably need to configure your Maven `settings.xml` to locate these dependencies.
   See [Getting started with Maven](http://www.kiji.org/get-started-with-maven)
   for more details.

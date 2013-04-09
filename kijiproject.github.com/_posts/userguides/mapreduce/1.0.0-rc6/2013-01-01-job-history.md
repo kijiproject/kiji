@@ -40,7 +40,7 @@ The [`JobHistoryKijiTable`]({{site.api_mr_rc5}}/framework/JobHistoryKijiTable.ht
 
 ### Example
 
-The `job_history` table is a Kiji table under the hood, and can thus be inspected using the `kiji ls`, `kiji scan`, and `kiji get` tools.  The [`EntityId`]({{site.api_schema_rc5}}/EntityId.html) associated with the `job_history` table is the jobId.  For example, to look at all of the jobIds that have been recorded:
+The `job_history` table is a Kiji table under the hood, and can thus be inspected using the `kiji ls`, `kiji scan`, and `kiji get` tools.  The [`EntityId`]({{site.api_schema_1_0_1}}/EntityId.html) associated with the `job_history` table is the jobId.  For example, to look at all of the jobIds that have been recorded:
 
 {% highlight bash %}
 kiji scan kiji://.env/default/job_history/info:jobId

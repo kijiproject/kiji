@@ -40,14 +40,14 @@ implement the following three methods:
 
  * `KijiDataRequest getDataRequest()`. This method specifies the columns retrieved while scanning
    from the input table. It should construct and return a
-   [`KijiDataRequest`]({{site.api_schema_rc5}}/KijiDataRequest.html).
+   [`KijiDataRequest`]({{site.api_schema_1_0_1}}/KijiDataRequest.html).
  * `String getOutputColumn()`. This method specifies the fully-qualified column or the column family
    being produced. It should return a string of the form "family:qualifier" or "family".
    Family-only output columns are only valid for map-type families (see the KijiSchema user guide).
  * `void produce(KijiRowData input, ProducerContext context)`. This method contains the logic to
    produce the content for the output column for each input row. It will be called once per row
    processed by the task. `input` contains columns from the row as requested by the
-   [`KijiDataRequest`]({{site.api_schema_rc5}}/KijiDataRequest.html) returned from
+   [`KijiDataRequest`]({{site.api_schema_1_0_1}}/KijiDataRequest.html) returned from
    `getDataRequest()`. The `produce()` method can use its `context` argument to output to this
    column as detailed below.
 
@@ -165,7 +165,7 @@ producer implementations that might be of use to application developers:
   and [`SingleInputProducer`]({{site.api_mrlib_rc5}}/produce/SingleInputProducer.html) are
   convenience classes. Subclasses of these abstract classes only have to implement `String
   getInputColumn()` instead of constructing an entire
-  [`KijiDataRequest`]({{site.api_schema_rc5}}/KijiDataRequest.html) in `getDataRequest()`. The
+  [`KijiDataRequest`]({{site.api_schema_1_0_1}}/KijiDataRequest.html) in `getDataRequest()`. The
   `produce()` method will receive all the versions of that column (if the parent class is
   [`AllVersionsSingleInputProducer`]({{site.api_mrlib_rc5}}/produce/AllVersionsSingleInputProducer.html))
   or the most recent (if the parent class is
