@@ -93,7 +93,7 @@ for the number of times it has been played after the initial song.
 This reducer takes `AvroKey` as input, and writes `AvroKey` and `AvroValue` as output, so it must
 implement `AvroKeyReader`, `AvroKeyWriter`, and `AvroValueWriter`. The keys we are emitting are just strings
 so we could use a [Text](link-to-text-key-docs) key. Instead, we made the choice to use an `AvroKey`
-so that we could use the Kiji defined [AvroKeyValue output format]({{site.userguide_mapreduce_rc5}}/command-line-tools/#output), which
+so that we could use the Kiji defined [AvroKeyValue output format]({{site.userguide_mapreduce_rc6}}/command-line-tools/#output), which
 requires that you output `AvroKey` and `AvroValue`.
 
 The schema for our Avro key is so simple that we don't have to add a record to our avdl file

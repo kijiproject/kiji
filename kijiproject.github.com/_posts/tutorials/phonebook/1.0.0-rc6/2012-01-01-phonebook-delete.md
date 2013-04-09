@@ -8,7 +8,7 @@ description: Examples of Point deletions.
 ---
 
 Deletions of Kiji table cells can be performed both within a MapReduce job and from
-non-distributed java programs. Both types of programs use [`KijiTableWriter`]({{site.api_schema_rc5}}/KijiTableWriter.html)s to
+non-distributed java programs. Both types of programs use [`KijiTableWriter`]({{site.api_schema_1_0_0}}/KijiTableWriter.html)s to
 delete data.
 
 ## Point Deletions
@@ -21,7 +21,7 @@ to delete.
 
 ### DeleteEntry.java
 
-DeleteEntry uses a [`KijiTableWriter`]({{site.api_schema_rc5}}/KijiTableWriter.html) to perform point deletions on a kiji table:
+DeleteEntry uses a [`KijiTableWriter`]({{site.api_schema_1_0_0}}/KijiTableWriter.html) to perform point deletions on a kiji table:
 
 {% highlight java %}
 // Open a table writer.
@@ -111,7 +111,7 @@ sanitize your phonebook of any California contacts.
 
 ### DeleteEntriesByState.java
 
-Deletions from within a MapReduce job are also performed using a [`KijiTableWriter`]({{site.api_schema_rc5}}/KijiTableWriter.html).
+Deletions from within a MapReduce job are also performed using a [`KijiTableWriter`]({{site.api_schema_1_0_0}}/KijiTableWriter.html).
 The DeleteEntriesByState example runs a MapReduce job that reads through the contacts
 in the phonebook table and deletes any entry that has an address from the specified
 state.
@@ -130,7 +130,7 @@ public void map(EntityId entityId, KijiRowData row, Context context)
   final Address address = row.getMostRecentValue(Fields.INFO_FAMILY, Fields.ADDRESS);
 {% endhighlight %}
 
-A [`KijiTableWriter`]({{site.api_schema_rc5}}/KijiTableWriter.html) we opened in the `setup()` method is then used to delete
+A [`KijiTableWriter`]({{site.api_schema_1_0_0}}/KijiTableWriter.html) we opened in the `setup()` method is then used to delete
 the row if the state matches:
 
 {% highlight java %}
@@ -177,7 +177,7 @@ bento stop
 </div>
 
 To learn more about Kiji, check out these other resources:
- - [User Guide]({{site.userguide_schema_rc5}}/kiji-schema-overview)
+ - [User Guide]({{site.userguide_schema_1_0_0}}/kiji-schema-overview)
  - [API Docs](http://docs.kiji.org/apidocs)
  - [Source Code](http://github.com/kijiproject)
 

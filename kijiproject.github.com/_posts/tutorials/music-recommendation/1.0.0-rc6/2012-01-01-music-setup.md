@@ -99,7 +99,7 @@ kiji-schema-shell --kiji=${KIJI} --file=${MUSIC_HOME}/music_schema.ddl
 
 This command uses [kiji-schema-shell](https://github.com/kijiproject/kiji-schema-shell)
 to create the tables using the KijiSchema DDL, which makes specifying table layouts easy.
-See [the KijiSchema DDL Shell reference]({{site.userguide_schema_rc5}}/schema-shell-ddl-ref)
+See [the KijiSchema DDL Shell reference]({{site.userguide_schema_1_0_0}}/schema-shell-ddl-ref)
 for more information on the KijiSchema DDL.
 
 ##### (Optional) Generate Data

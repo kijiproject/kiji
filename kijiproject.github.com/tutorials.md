@@ -11,7 +11,9 @@ to the Kiji version you are using.
 # KijiSchema
 Covers the core functionality of Kiji; creating, writing, and reading from tables.
 
-* [Phone Book Tutorial](tutorials/phonebook-tutorial/1.0.0-rc5/phonebook-tutorial) (latest)
+* [Phone Book Tutorial](tutorials/phonebook-tutorial/1.0.0-rc6/phonebook-tutorial) (latest)
+
+* [Phone Book Tutorial 1.0.0-rc5](tutorials/phonebook-tutorial/1.0.0-rc5/phonebook-tutorial)
 
 * [Phone Book Tutorial 1.0.0-rc4](tutorials/phonebook-tutorial/1.0.0-rc4/phonebook-tutorial)
 

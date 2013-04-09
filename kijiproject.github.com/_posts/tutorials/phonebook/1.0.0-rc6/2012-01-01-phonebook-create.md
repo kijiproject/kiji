@@ -10,7 +10,8 @@ description: To use a phonebook, you need a phonebook.
 We need to create a table to store your bajillion phonebook contacts.
 Creating a table in Kiji amounts to specifying a layout and registering
 that layout with Kiji. Layouts can be specified using the Kiji
-Data Definition Language, *DDL*, or in a JSON form.
+Data Definition Language, *DDL*, or in a JSON form. The DDL is the easiest
+and most well-supported mechanism to use; we will introduce it first.
 
 ### Using the DDL
 
@@ -19,7 +20,7 @@ consult the [Get Started](http://www.kiji.org/getstarted) section of the Kiji we
 
 We have provided the phonebook layout in the `$KIJI_HOME/examples/phonebook/layout.ddl` file.
 For more information about how to create this file, see the
-[DDL Shell Reference]({{site.userguide_schema_rc5}}/schema-shell-ddl-ref/).
+[DDL Shell Reference]({{site.userguide_schema_1_0_0}}/schema-shell-ddl-ref/).
 
 <div class="userinput">
 {% highlight bash %}
@@ -115,10 +116,15 @@ schema> quit;
 ### Using JSON
 
 A low level way of providing the layout is by using JSON. To learn more about specifying
-the layout in JSON, take a look at [Managing Data]({{site.userguide_schema_rc5}}/managing-data/).
+the layout in JSON, take a look at [Managing Data]({{site.userguide_schema_1_0_0}}/managing-data/).
 
-But first, we need to delete the table we just created, just so that we can create it
-another time using JSON! Use the following command to delete the table:
+The raw JSON view of table layouts is intended for use by system administrators, or
+for low-level debugging purposes. Most users should use the `kiji-schema-shell` DDL tool
+to modify table layouts instead. But for completeness, we introduce the "raw" layout
+tool here as well.
+
+First, we need to delete the table we just created, so that we can create it
+another time using JSON. Use the following command to delete the table:
 
 <div class="userinput">
 {% highlight bash %}

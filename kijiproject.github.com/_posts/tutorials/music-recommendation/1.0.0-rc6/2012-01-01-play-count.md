@@ -30,8 +30,8 @@ is written to a text file in HDFS.
 
 <h3 style="margin-top:0px;padding-top:10px;"> SongPlayCounter </h3>
 
-The SongPlayCounter is an example of a [Gatherer]({{site.userguide_mapreduce_rc5}}/gatherers). A
-gatherer is essentially a mapper that gets input from a [`KijiTable`]({{site.api_schema_rc5}}/KijiTable.html).
+The SongPlayCounter is an example of a [Gatherer]({{site.userguide_mapreduce_rc6}}/gatherers). A
+gatherer is essentially a mapper that gets input from a [`KijiTable`]({{site.api_schema_1_0_0}}/KijiTable.html).
 
 SongPlayCounter proceeds through discrete stages:
 
@@ -59,7 +59,7 @@ cleanup() method.
 
 #### Read track play data from the table
 A gatherer takes input from a table, so it must declare what data it will need. It does this in the
-form of a [`KijiDataRequest`]({{site.api_schema_rc5}}/KijiDataRequest.html), which is defined in getDataRequest().
+form of a [`KijiDataRequest`]({{site.api_schema_1_0_0}}/KijiDataRequest.html), which is defined in getDataRequest().
 For the song count job, we want to request all songs that have been played, for every user. In order
 to get *all* of the values written to the "info:track_plays" column, we must specify that the maximum
 number of versions we want. The special constant that specifies that you want all versions of data
