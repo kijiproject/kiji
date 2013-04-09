@@ -64,8 +64,10 @@ import org.kiji.schema.KijiURI
 /**
  * A read or write view of a Kiji table.
  *
- * A Scalding `Source` provides a view of a data source that can be read as Scalding tuples. A
- * `Source` is also a `Pipe`, which can be used (via functional operators) to process a data set.
+ * A Scalding `Source` provides a view of a data source that can be read as Scalding tuples. It
+ * is comprised of a Cascading tap [[cascading.tap.Tap]], which describes where the data is and how
+ * to access it, and a Cascading Scheme [[cascading.scheme.Scheme]], which describes how to read
+ * and interpret the data.
  *
  * When reading from a Kiji table, a `KijiSource` will provide a view of a Kiji table as a
  * collection of tuples that correspond to rows from the Kiji table. Which columns will be read
