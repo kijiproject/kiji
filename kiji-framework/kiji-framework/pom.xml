@@ -21,13 +21,13 @@
 
   <groupId>org.kiji.framework</groupId>
   <artifactId>kiji-framework</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>1.0.1-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <parent>
     <groupId>org.kiji.framework</groupId>
     <artifactId>framework-pom</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.1-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
 
