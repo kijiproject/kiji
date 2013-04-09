@@ -85,12 +85,12 @@ import org.kiji.schema.KijiURI
  * @param tableAddress is a Kiji URI addressing the Kiji table to read or write to.
  * @param timeRange that cells read must belong to. Ignored when the source is used to write.
  * @param timestampField is the name of a tuple field that will contain cell timestamp when the
- *                       source is used for writing. Specify `None` to write all
- *                       cells at the current time.
+ *     source is used for writing. Specify `None` to write all
+ *     cells at the current time.
  * @param loggingInterval The interval at which to log skipped rows.
  * @param columns is a one-to-one mapping from field names to Kiji columns. When reading,
- *                the columns in the map will be read into their associated tuple fields. When
- *                writing, values from the tuple fields will be written to their associated column.
+ *     the columns in the map will be read into their associated tuple fields. When
+ *     writing, values from the tuple fields will be written to their associated column.
  */
 @ApiAudience.Framework
 @ApiStability.Experimental
