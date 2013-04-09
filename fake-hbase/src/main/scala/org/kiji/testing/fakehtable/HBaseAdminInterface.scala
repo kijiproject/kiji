@@ -20,6 +20,7 @@
 package org.kiji.testing.fakehtable
 
 import java.io.Closeable
+import java.lang.{Integer => JInteger}
 import java.util.regex.Pattern
 import java.util.Arrays
 import java.util.{List => JList}
@@ -29,6 +30,7 @@ import scala.collection.JavaConverters.asScalaBufferConverter
 
 import org.apache.hadoop.hbase.util.Bytes.toBytes
 import org.apache.hadoop.hbase.util.Bytes
+import org.apache.hadoop.hbase.util.Pair
 import org.apache.hadoop.hbase.HColumnDescriptor
 import org.apache.hadoop.hbase.HRegionInfo
 import org.apache.hadoop.hbase.HTableDescriptor
@@ -72,6 +74,8 @@ trait HBaseAdminCore
   def modifyColumn(tableName: Bytes, column: HColumnDescriptor): Unit
 
   def modifyTable(tableName: Bytes, desc: HTableDescriptor): Unit
+
+  def getAlterStatus(tableName: Bytes): Pair[JInteger, JInteger]
 
   def tableExists(tableName: Bytes): Boolean
 }
@@ -144,6 +148,7 @@ trait HBaseAdminInterface
   def modifyColumn(tableName: Bytes, column: HColumnDescriptor): Unit
 
   def modifyTable(tableName: Bytes, desc: HTableDescriptor): Unit
+  def getAlterStatus(tableName: Bytes): Pair[JInteger, JInteger]
 
   def tableExists(tableName: String): Boolean
   def tableExists(tableName: Bytes): Boolean

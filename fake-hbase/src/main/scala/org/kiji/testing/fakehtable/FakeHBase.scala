@@ -19,6 +19,7 @@
 
 package org.kiji.testing.fakehtable
 
+import java.lang.{Integer => JInteger}
 import java.util.Arrays
 import java.util.{List => JList}
 import java.util.{TreeMap => JTreeMap}
@@ -38,6 +39,7 @@ import org.apache.hadoop.hbase.client.HBaseAdmin
 import org.apache.hadoop.hbase.client.HTable
 import org.apache.hadoop.hbase.client.HTableInterface
 import org.apache.hadoop.hbase.util.Bytes
+import org.apache.hadoop.hbase.util.Pair
 import org.kiji.schema.impl.HBaseAdminFactory
 import org.kiji.schema.impl.HBaseInterface
 
@@ -219,6 +221,10 @@ class FakeHBase
 
     def modifyTable(tableName: Bytes, desc: HTableDescriptor): Unit = {
       // TODO(taton) Implement metadata
+    }
+
+    def getAlterStatus(tableName: Bytes): Pair[JInteger, JInteger] = {
+      return new Pair(0, getTableRegions(tableName).size)
     }
 
     def tableExists(tableName: Bytes): Boolean = {
