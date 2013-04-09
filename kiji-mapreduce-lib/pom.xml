@@ -85,6 +85,20 @@
     </pluginManagement>
   </build>
 
+  <dependencyManagement>
+    <!--
+      Allow inter-module build dependencies that are also release-friendly
+      by specifying inter-module dependency version information here.
+    -->
+    <dependencies>
+      <dependency>
+        <groupId>org.kiji.mapreduce.lib</groupId>
+        <artifactId>kiji-mapreduce-lib</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
   <repositories>
     <repository>
       <id>kiji-repos</id>

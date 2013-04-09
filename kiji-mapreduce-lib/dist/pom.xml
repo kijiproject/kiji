@@ -22,7 +22,6 @@
 
   <groupId>org.kiji.mapreduce.lib</groupId>
   <artifactId>kiji-mapreduce-lib-dist</artifactId>
-  <version>1.0.0-rc6-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <parent>

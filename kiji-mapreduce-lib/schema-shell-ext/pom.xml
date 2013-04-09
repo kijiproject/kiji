@@ -22,7 +22,6 @@
 
   <groupId>org.kiji.mapreduce.lib</groupId>
   <artifactId>kiji-mapreduce-shell-ext</artifactId>
-  <version>1.0.0-rc6-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <parent>
@@ -101,20 +100,19 @@
     <dependency>
       <groupId>org.kiji.mapreduce</groupId>
       <artifactId>kiji-mapreduce</artifactId>
-      <version>${project.version}</version>
+      <version>${kiji-mapreduce.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.kiji.mapreduce</groupId>
       <artifactId>kiji-mapreduce</artifactId>
-      <version>${project.version}</version>
+      <version>${kiji-mapreduce.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.kiji.mapreduce.lib</groupId>
       <artifactId>kiji-mapreduce-lib</artifactId>
-      <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
