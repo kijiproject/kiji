@@ -29,11 +29,11 @@ Kiji commands bulk-import, produce and gather all recognize the following flags:
 *   `--lib=/path/to/jars-directory/`: specifies a directory of jar files that contain user code.
 
 
-*   `--start-row=`: specifies the HBase row to start scanning at (inclusive).
-    Example: `--start-row=hex:0088deadbeef`, or `--start-row="utf8:the row key in UTF8"`.
-
-*   `--limit-row=`: specifies the HBase row to stop scanning at (exclusive).
-    Example: `--limit-row=hex:0088deadbeef`, or `--limit-row=:utf8:the row key in UTF8"`.
+*   `--start-row=` and `--limit-row=`:
+    Restrict the range of rows to scan through.
+    The start row is included in the scan while the limit row is excluded.
+    Start and limit rows are expressed in the same way as `--entity-id` for [`kiji get`]({{site.userguide_schema_rc5}}/tool-reference/#ref.get).
+    For example as HBase encoded rows: `--start-row='hex:0088deadbeef'` or `--limit-row='utf8:the row key in UTF8'`.
 
 
 Bulk importers must specify the name of the class providing the bulk-import logic:
