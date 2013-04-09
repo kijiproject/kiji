@@ -1,0 +1,57 @@
+/**
+ * (c) Copyright 2012 WibiData, Inc.
+ *
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@namespace("org.kiji.examples.music")
+/**
+ * Avro records for storing data in this tutorial are defined here.
+ * These are the data types stored in Kiji.
+ */
+protocol KijiMusicRecords {
+
+  /** Metadata for a song. */
+  record SongMetadata {
+    string song_name;
+    string artist_name;
+    string album_name;
+    string genre;
+    long tempo;
+    long duration;
+  }
+
+  /** A count of the number of times a song has been played. */
+  record SongCount {
+    string song_id;
+    long count;
+  }
+
+  /** Container record for the top songs and their number of plays. */
+  record TopSongs {
+     array<SongCount> topSongs;
+  }
+
+  /** Song play bigram. */
+  record SongBiGram {
+    /** The id of the first song played in a sequence. */
+    string first_song_played;
+
+    /** The id of the song played immediately after it. */
+    string second_song_played;
+  }
+
+}
