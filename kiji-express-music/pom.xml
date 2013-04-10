@@ -9,6 +9,12 @@
   <packaging>jar</packaging>
   <inceptionYear>2013</inceptionYear>
 
+  <parent>
+    <groupId>org.kiji.pom</groupId>
+    <artifactId>root-pom</artifactId>
+    <version>1.0.5</version>
+  </parent>
+
   <licenses>
     <license>
       <name>The Apache Software License, Version 2.0</name>
@@ -18,16 +24,11 @@
   </licenses>
 
   <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <avro.version>1.7.2</avro.version>
     <express.version>0.1.0-SNAPSHOT</express.version>
-    <scala.version>2.9.2</scala.version>
     <scalatest.version>2.0.M5b</scalatest.version>
   </properties>
 
   <dependencies>
-    <!-- KijiExpress -->
     <dependency>
       <groupId>org.kiji.express</groupId>
       <artifactId>kiji-express</artifactId>
@@ -35,7 +36,6 @@
       <scope>provided</scope>
     </dependency>
 
-    <!-- Scala -->
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
@@ -43,13 +43,19 @@
       <scope>provided</scope>
     </dependency>
 
-    <!--  Testing-->
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <scope>compile</scope>
+    </dependency>
+
     <dependency>
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest_${scala.version}</artifactId>
       <version>${scalatest.version}</version>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>org.kiji.express</groupId>
       <artifactId>kiji-express</artifactId>
@@ -62,58 +68,18 @@
   <build>
     <plugins>
       <plugin>
-        <!-- Compile for Java 1.6, with warnings enabled. -->
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>2.3.2</version>
-        <configuration>
-          <!-- Maven doesn't let me specify more than one command line
-               flag with the same name, so I've used both styles of
-               specifying compiler args to get all warnings except
-               serialVersionUID. -->
-          <compilerArguments> <Xlint /> </compilerArguments>
-          <compilerArgument>-Xlint:-serial</compilerArgument>
-          <testCompilerArguments> <Xlint /> </testCompilerArguments>
-          <testCompilerArgument>-Xlint:-serial</testCompilerArgument>
-          <!-- End of maven compiler args hack -->
-          <encoding>UTF-8</encoding>
-          <showDeprecation>true</showDeprecation>
-          <showWarnings>true</showWarnings>
-          <source>1.6</source>
-          <target>1.6</target>
-          <excludes>
-            <exclude>**/*.scala</exclude>
-          </excludes>
-        </configuration>
       </plugin>
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
-        <version>2.3.1</version>
-        <configuration>
-          <archive>
-            <manifest>
-              <!-- add project version info, etc. to jar. -->
-              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-            </manifest>
-          </archive>
-        </configuration>
       </plugin>
 
       <plugin>
         <groupId>org.apache.avro</groupId>
         <artifactId>avro-maven-plugin</artifactId>
-        <version>${avro.version}</version>
-        <executions>
-          <execution>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>schema</goal>
-              <goal>idl-protocol</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
 
       <plugin>
@@ -129,17 +95,6 @@
             </goals>
             <configuration>
               <sendJavaToScalac>false</sendJavaToScalac>
-            </configuration>
-          </execution>
-          <execution>
-            <id>scaladocs</id>
-            <phase>prepare-package</phase>
-            <goals>
-              <goal>doc</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>${project.build.directory}/apidocs</outputDirectory>
-              <reportOutputDirectory>${project.build.directory}/apidocs</reportOutputDirectory>
             </configuration>
           </execution>
         </executions>
@@ -189,22 +144,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
-        <version>2.3</version>
-        <configuration>
-          <descriptors>
-            <descriptor>${basedir}/src/main/assembly/release.xml</descriptor>
-          </descriptors>
-          <tarLongFileMode>gnu</tarLongFileMode>
-        </configuration>
-        <executions>
-          <execution>
-            <id>make-assembly</id>
-            <phase>package</phase>
-            <goals>
-              <goal>single</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
 
     </plugins>
