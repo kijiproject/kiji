@@ -305,7 +305,7 @@ public final class KijiHFileOutputFormat
 
       mTableURI = KijiURI.newBuilder(mConf.get(KijiConfKeys.KIJI_OUTPUT_TABLE_URI)).build();
 
-      final Kiji kiji = Kiji.Factory.open(mTableURI);
+      final Kiji kiji = Kiji.Factory.open(mTableURI, mConf);
       final KijiTable table = kiji.openTable(mTableURI.getTable());
       mLayout = table.getLayout();
       ResourceUtils.releaseOrLog(table);

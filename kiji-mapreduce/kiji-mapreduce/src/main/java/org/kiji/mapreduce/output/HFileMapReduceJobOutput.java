@@ -159,7 +159,7 @@ public final class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
     FileOutputFormat.setOutputPath(job, mPath);
 
     // Configure the total order partitioner so generated HFile shards are contiguous and sorted.
-    configurePartitioner(job, makeTableKeySplit(getOutputTableURI(), getNumReduceTasks()));
+    configurePartitioner(job, makeTableKeySplit(getOutputTableURI(), getNumReduceTasks(), conf));
 
     // Note: the HFile job output requires the reducer of the MapReduce job to be IdentityReducer.
     //     This is enforced externally.
@@ -176,12 +176,15 @@ public final class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
    *
    * @param tableURI URI of the Kiji table to split.
    * @param nsplits Number of splits.
+   * @param conf Base Hadoop configuration used to open the Kiji instance.
    * @return a list of split start keys, as HFileKeyValue (with no value, just the keys).
    * @throws IOException on I/O error.
    */
-  private static List<HFileKeyValue> makeTableKeySplit(KijiURI tableURI, int nsplits)
+  private static List<HFileKeyValue> makeTableKeySplit(KijiURI tableURI,
+                                                       int nsplits,
+                                                       Configuration conf)
       throws IOException {
-    final Kiji kiji = Kiji.Factory.open(tableURI);
+    final Kiji kiji = Kiji.Factory.open(tableURI, conf);
     try {
       final KijiTable table = kiji.openTable(tableURI.getTable());
       try {
