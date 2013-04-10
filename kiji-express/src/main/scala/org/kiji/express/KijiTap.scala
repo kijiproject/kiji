@@ -50,7 +50,7 @@ import org.kiji.schema.KijiURI
  *
  * KijiTap must be used with [[org.kiji.express.KijiScheme]] to perform decoding of cells in a
  * Kiji table. [[org.kiji.express.KijiSource]] handles the creation of both KijiScheme and
- * KijiTap in Express.
+ * KijiTap in KijiExpress.
  *
  * @param uri of the Kiji table to read or write from.
  * @param scheme that will convert data read from Kiji into Cascading's tuple model.

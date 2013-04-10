@@ -43,15 +43,17 @@ import org.kiji.schema.Kiji
 import org.kiji.schema.KijiURI
 
 /**
- * A Scalding `Tap` for reading data from a Kiji table.
+ * A Kiji-specific implementation of a Cascading `Tap`, which defines the location of a Kiji table.
  *
- * <p>
- *   This tap is responsible for configuring a local job to read from a Kiji table.
- * </p>
- * <p>
- *   Note: Warnings about a missing serialVersionUID are ignored here. When KijiTap is serialized,
- *   the result is not persisted anywhere making serialVersionUID unnecessary.
- * </p>
+ * LocalKijiTap is responsible for configuring a local Cascading job with the settings necessary to
+ * read from a Kiji table.
+ *
+ * LocalKijiTap must be used with [[org.kiji.express.LocalKijiScheme]] to perform decoding of cells
+ * in a Kiji table. [[org.kiji.express.KijiSource]] handles the creation of both LocalKijiScheme and
+ * LocalKijiTap in KijiExpress.
+ *
+ * @param uri of the Kiji table to read or write from.
+ * @param scheme that will convert data read from Kiji into Cascading's tuple model.
  */
 @ApiAudience.Framework
 @ApiStability.Experimental
@@ -60,50 +62,68 @@ private[express] class LocalKijiTap(
     private val scheme: LocalKijiScheme)
     extends Tap[Properties, InputStream, OutputStream](
         scheme.asInstanceOf[Scheme[Properties, InputStream, OutputStream, _, _]]) {
+
   /** The URI of the table to be read through this tap. */
   private val tableUri: String = uri.toString()
+
   /** A unique identifier for this tap instance. */
   private val id: String = UUID.randomUUID().toString()
 
   /**
    * Sets any configuration options that are required for running a local job
-   * that reads from a Kiji table.
+   * that reads from a Kiji table. This method gets called on the client machine
+   * during job setup.
    *
-   * @param process Current Cascading flow being built.
-   * @param conf The job configuration object.
+   * @param flow being built.
+   * @param conf to which we will add the table uri.
    */
   override def sourceConfInit(
-      process: FlowProcess[Properties],
+      flow: FlowProcess[Properties],
       conf: Properties) {
     // Store the input table.
     conf.setProperty(KijiConfKeys.KIJI_INPUT_TABLE_URI, tableUri);
 
-    super.sourceConfInit(process, conf);
+    super.sourceConfInit(flow, conf);
   }
 
   /**
    * Sets any configuration options that are required for running a local job
-   * that writes to a Kiji table.
+   * that writes to a Kiji table. This method gets called on the client machine
+   * during job setup.
    *
-   * @param process Current Cascading flow being built.
-   * @param conf The job configuration object.
+   * @param flow being built.
+   * @param conf to which we will add the table uri.
    */
   override def sinkConfInit(
-      process: FlowProcess[Properties],
+      flow: FlowProcess[Properties],
       conf: Properties) {
     // Store the output table.
     conf.setProperty(KijiConfKeys.KIJI_OUTPUT_TABLE_URI, tableUri);
 
-    super.sinkConfInit(process, conf);
+    super.sinkConfInit(flow, conf);
   }
 
+  /**
+   * Provides a string representing the resource this `Tap` instance represents.
+   *
+   * @return a java UUID representing this KijiTap instance. Note: This does not return the uri of
+   *     the Kiji table being used by this tap to allow jobs that read from or write to the same
+   *     table to have different data request options.
+   */
   override def getIdentifier(): String = id
 
+  /**
+   * Opens any resources required to read from a Kiji table.
+   *
+   * @param flow being run.
+   * @param input stream that will read from the desired Kiji table.
+   * @return an iterator that reads rows from the desired Kiji table.
+   */
   override def openForRead(
-      process: FlowProcess[Properties],
+      flow: FlowProcess[Properties],
       input: InputStream): TupleEntryIterator = {
     return new TupleEntrySchemeIterator[Properties, InputStream](
-        process,
+        flow,
         getScheme(),
         // scalastyle:off null
         if (null == input) new ByteArrayInputStream(Array()) else input,
@@ -111,11 +131,20 @@ private[express] class LocalKijiTap(
         getIdentifier());
   }
 
+  /**
+   * Opens any resources required to write from a Kiji table.
+   *
+   * @param flow being run.
+   * @param output stream that will write to the desired Kiji table. Note: This is ignored
+   *     currently since writing to a Kiji table is currently implemented without using an output
+   *     format by writing to the table directly from [[org.kiji.express.KijiScheme]].
+   * @return a collector that writes tuples to the desired Kiji table.
+   */
   override def openForWrite(
-      process: FlowProcess[Properties],
+      flow: FlowProcess[Properties],
       output: OutputStream): TupleEntryCollector = {
     return new TupleEntrySchemeCollector[Properties, OutputStream](
-        process,
+        flow,
         getScheme(),
         // scalastyle:off null
         if (null == output) new ByteArrayOutputStream() else output,
@@ -123,15 +152,39 @@ private[express] class LocalKijiTap(
         getIdentifier());
   }
 
-  override def createResource(jobConf: Properties): Boolean = {
+  /**
+   * Builds any resources required to read from or write to a Kiji table.
+   *
+   * Note: KijiExpress currently does not support automatic creation of Kiji tables.
+   *
+   * @param conf containing settings for this flow.
+   * @return true if required resources were created successfully.
+   * @throws UnsupportedOperationException always.
+   */
+  override def createResource(conf: Properties): Boolean = {
     throw new UnsupportedOperationException("KijiTap does not support creating tables for you.")
   }
 
-  override def deleteResource(jobConf: Properties): Boolean = {
+  /**
+   * Deletes any unnecessary resources used to read from or write to a Kiji table.
+   *
+   * Note: KijiExpress currently does not support automatic deletion of Kiji tables.
+   *
+   * @param conf containing settings for this flow.
+   * @return true if superfluous resources were deleted successfully.
+   * @throws UnsupportedOperationException always.
+   */
+  override def deleteResource(conf: Properties): Boolean = {
     throw new UnsupportedOperationException("KijiTap does not support deleting tables for you.")
   }
 
-  override def resourceExists(jobConf: Properties): Boolean = {
+  /**
+   * Determines if the Kiji table this `Tap` instance points to exists.
+   *
+   * @param conf containing settings for this flow.
+   * @return true if the target Kiji table exists.
+   */
+  override def resourceExists(conf: Properties): Boolean = {
     val uri: KijiURI = KijiURI.newBuilder(tableUri).build()
 
     doAndRelease(Kiji.Factory.open(uri)) { kiji: Kiji =>
@@ -139,8 +192,15 @@ private[express] class LocalKijiTap(
     }
   }
 
-  // currently unable to find last mod time on a table.
-  override def getModifiedTime(jobConf: Properties): Long = System.currentTimeMillis()
+  /**
+   * Gets the time that the target Kiji table was last modified.
+   *
+   * Note: This will always return the current timestamp.
+   *
+   * @param conf containing settings for this flow.
+   * @return the current time.
+   */
+  override def getModifiedTime(conf: Properties): Long = System.currentTimeMillis()
 
   override def equals(other: Any): Boolean = {
     other match {
