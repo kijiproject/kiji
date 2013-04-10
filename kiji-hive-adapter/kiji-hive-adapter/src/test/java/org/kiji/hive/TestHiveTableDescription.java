@@ -35,6 +35,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.kiji.schema.GenericCellDecoderFactory;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiDataRequest;
@@ -42,7 +43,6 @@ import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiRowScanner;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
-import org.kiji.schema.GenericCellDecoderFactory;
 import org.kiji.schema.impl.HBaseKijiRowData;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayouts;
