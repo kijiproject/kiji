@@ -24,8 +24,14 @@ import org.kiji.annotations.ApiStability;
 import org.kiji.schema.KijiRowData;
 
 /**
- * Acts as a wrapper around [[org.kiji.schema.KijiRowData]]. Instances of this class can be reused
- * in MapReduce jobs to wrap [[org.kiji.schema.KijiRowData]] read from a Kiji table.
+ * A reusable container for [[org.kiji.schema.KijiRowData]].
+ *
+ * The MapReduce framework views a data set as a collection of key-value pairs,
+ * and likes to read those pairs into a reusable instance of the key or value class. When a row
+ * is read from a Kiji table, its [[org.kiji.schema.EntityId]] is emitted as the key, and
+ * [[org.kiji.schema.KijiRowData]] is emitted as the value. Because instances of
+ * [[org.kiji.schema.KijiRowData]] are not reusable, this class is provided to give the MapReduce
+ * framework a reusable container.
  */
 @ApiAudience.Private
 @ApiStability.Experimental
@@ -36,12 +42,14 @@ final class KijiValue {
   // scalastyle:on null
 
   /**
+   * Retrieves the [[org.kiji.schema.KijiRowData]] wrapped by this instance.
+   *
    * @return the row data wrapped by this instance.
    */
   def get(): KijiRowData = currentValue
 
   /**
-   * Sets the Kiji row data wrapped by this instance.
+   * Sets the [[org.kiji.schema.KijiRowData]] wrapped by this instance.
    *
    * @param value that will be wrapped by this instance.
    */
