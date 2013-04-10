@@ -33,7 +33,7 @@ import org.kiji.schema.KijiURI
  * imported.
  */
 
-val tableURI: String = "kiji://.env/default/users"
+val tableURI: String = "kiji://.env/kiji_express_music/users"
 
 /**
  * Transforms the identifier for a user into an entity id for the users table.

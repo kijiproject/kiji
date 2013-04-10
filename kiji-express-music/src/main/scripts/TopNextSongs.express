@@ -36,8 +36,8 @@ import org.kiji.schema.KijiURI
  * S.
  */
 
-val songsTableURI: String = "kiji://.env/default/songs"
-val usersTableURI: String = "kiji://.env/default/users"
+val songsTableURI: String = "kiji://.env/kiji_express_music/songs"
+val usersTableURI: String = "kiji://.env/kiji_express_music/users"
 
 /**
  * Transforms a Scala `List` into a Java `List`.

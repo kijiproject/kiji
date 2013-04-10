@@ -42,7 +42,7 @@ def songsListenedTo(slice: KijiSlice[String]): Seq[String] = {
 // 2. Breaks each user's track plays history into individual songs.
 // 3. Counts the number of times each song has been played.
 // 4. Writes each song id and play count to a file in HDFS.
-KijiInput("kiji://.env/default/users")(Map(Column("info:track_plays", all) -> 'playlist))
+KijiInput("kiji://.env/kiji_express_music/users")(Map(Column("info:track_plays", all) -> 'playlist))
     .flatMapTo('playlist -> 'song) { songsListenedTo }
     .groupBy('song) { _.size('songCount) }
     .write(Tsv("express-tutorial/songcount-output"))
