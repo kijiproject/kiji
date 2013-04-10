@@ -23,14 +23,21 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.schema.util.ReferenceCountable
 
+/**
+ * The Resources object contains various convenience functions while dealing with
+ * resources such as Kiji instances or Kiji tables, particularly around releasing
+ * or closing them and handling exceptions.
+ */
 @ApiAudience.Public
 @ApiStability.Experimental
 object Resources {
   /**
-   * Exception that contains multiple exceptions.
+   * Exception that contains multiple exceptions. Typically used in the case where
+   * the user gets an exception within their function and further gets an exception
+   * during cleanup in finally.
    *
-   * @param msg Message to include with the exception.
-   * @param errors Multiple exceptions causing this exception.
+   * @param msg is the message to include with the exception.
+   * @param errors causing this exception.
    */
   final case class CompoundException(msg: String, errors: Seq[Exception]) extends Exception
 
@@ -39,12 +46,13 @@ object Resources {
    * [[org.kiji.express.Resources.CompoundException]] when exceptions get thrown
    * during the operation and while resources are being closed.
    *
-   * @tparam T Return type of the operation.
-   * @tparam R Type of resource.
-   * @param resource Opens the resource required by the operation.
-   * @param after Performs any post processing on the resource.
-   * @param fn Operation to perform.
-   * @return The result of the operation.
+   * @tparam T is the return type of the operation.
+   * @tparam R is the type of resource such as a Kiji instance or table.
+   * @param resource required by the operation.
+   * @param after is a function for any post processing on the resource, such as close or release.
+   * @param fn is the operation to perform using the resource, like getting the layout of a table.
+   * @return the result of the operation.
+   * @throws CompoundException if your function crashes as well as the close operation.
    */
   def doAnd[T, R](resource: => R, after: R => Unit)(fn: R => T): T = {
     var error: Option[Exception] = None
@@ -81,11 +89,11 @@ object Resources {
    * Performs an operation with a releaseable resource by first retaining the resource and releasing
    * it upon completion of the operation.
    *
-   * @tparam T Return type of the operation.
-   * @tparam R Type of resource.
-   * @param resource Retainable resource used by the operation.
-   * @param fn Operation to perform.
-   * @return The result of the operation.
+   * @tparam T is the return type of the operation.
+   * @tparam R is the type of resource, such as a Kiji table or instance.
+   * @param resource is the retainable resource object used by the operation.
+   * @param fn is the operation to perform using the releasable resource.
+   * @return the result of the operation.
    */
   def retainAnd[T, R <: ReferenceCountable[R]](
       resource: => ReferenceCountable[R])(fn: R => T): T = {
@@ -96,11 +104,11 @@ object Resources {
    * Performs an operation with an already retained releaseable resource releasing it upon
    * completion of the operation.
    *
-   * @tparam T Return type of the operation.
-   * @tparam R Type of resource.
-   * @param resource Retainable resource used by the operation.
-   * @param fn Operation to perform.
-   * @return The restult of the operation.
+   * @tparam T is the return type of the operation.
+   * @tparam R is the type of resource, such as a Kiji table or instance.
+   * @param resource is the retainable resource object used by the operation.
+   * @param fn is the operation to perform using the resource.
+   * @return the restult of the operation.
    */
   def doAndRelease[T, R <: ReferenceCountable[R]](resource: => R)(fn: R => T): T = {
     def after(r: R) { r.release() }
@@ -110,11 +118,11 @@ object Resources {
   /**
    * Performs an operation with a closeable resource closing it upon completion of the operation.
    *
-   * @tparam T Return type of the operation.
-   * @tparam R Type of resource.
-   * @param resource Closeable resource used by the operation.
-   * @param fn Operation to perform.
-   * @return The restult of the operation.
+   * @tparam T is the return type of the operation.
+   * @tparam R is the type of resource, such as a Kiji table or instance.
+   * @param resource is the closeable resource used by the operation.
+   * @param fn is the operation to perform using the resource.
+   * @return the restult of the operation.
    */
   def doAndClose[T, C <: { def close(): Unit }](resource: => C)(fn: C => T): T = {
     def after(c: C) { c.close() }
