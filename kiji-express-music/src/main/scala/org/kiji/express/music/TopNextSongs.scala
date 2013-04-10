@@ -96,7 +96,7 @@ class TopNextSongs(args: Args) extends Job(args) {
     nextSongs.sortBy('count).reverse.toList[SongCount]('songCount -> 'scalaTopSongs)
   }
 
-  // This Scalding pipline does the following:
+  // This Scalding pipeline does the following:
   // 1. Reads the column "info:track_plays" from a users table in Kiji.
   // 2. Transforms each user's play history into a collection of bigrams that record when one song
   //    was played after another.
