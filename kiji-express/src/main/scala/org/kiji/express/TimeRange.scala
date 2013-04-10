@@ -25,7 +25,8 @@ import org.kiji.schema.KConstants
 
 /**
  * TimeRange is used to specify a range of timestamps. This class is intended to be used with
- * KijiInput.
+ * KijiInput, to specify the range of timestamps to request from Kiji.  The range is inclusive
+ * at the `begin` timestamp end exclusive at the `end` timestamp.
  *
  * There are five concrete implementations of this trait:
  * - All
@@ -41,10 +42,10 @@ import org.kiji.schema.KConstants
 @ApiAudience.Public
 @ApiStability.Experimental
 sealed trait TimeRange extends Serializable {
-  /** Earliest timestamp of the TimeRange. */
+  /** Earliest timestamp of the TimeRange, inclusive. */
   def begin: Long
 
-  /** Latest timestamp of the TimeRange. */
+  /** Latest timestamp of the TimeRange, exclusive. */
   def end: Long
 }
 
@@ -63,7 +64,7 @@ object TimeRange {
   /**
    * Specifies that only the specified timestamp should be requested.
    *
-   * @param timestamp The timestamp to request.
+   * @param timestamp to request.
    */
   final case class At(timestamp: Long) extends TimeRange {
     override val begin: Long = timestamp
@@ -73,7 +74,7 @@ object TimeRange {
   /**
    * Specifies that all timestamps after the specified begin timestamp should be requested.
    *
-   * @param begin Earliest timestamp that should be requested.
+   * @param begin is the earliest timestamp that should be requested.
    */
   @ApiAudience.Public
   @ApiStability.Experimental
@@ -84,7 +85,7 @@ object TimeRange {
   /**
    * Specifies that all timestamps before the specified end timestamp should be requested.
    *
-   * @param end Latest timestamp that should be requested.
+   * @param end is the latest timestamp that should be requested.
    */
   @ApiAudience.Public
   @ApiStability.Experimental
@@ -96,8 +97,8 @@ object TimeRange {
    * Specifies that all timestamps between the specified begin and end timestamps should be
    * requested.
    *
-   * @param begin Earliest timestamp that should be requested.
-   * @param end Latest timestamp that should be requested.
+   * @param begin is the earliest timestamp that should be requested.
+   * @param end is the latest timestamp that should be requested.
    */
   @ApiAudience.Public
   @ApiStability.Experimental
