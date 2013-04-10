@@ -23,21 +23,21 @@ import java.io.InvalidClassException
 
 import scala.collection.JavaConversions._
 
+import org.apache.avro.Schema
 import org.scalatest.FunSuite
-import org.scalatest.matchers.ShouldMatchers
+
+import org.kiji.schema.KijiColumnName
 import org.kiji.schema.avro.HashSpec
 import org.kiji.schema.avro.RowKeyEncoding
 import org.kiji.schema.filter.RegexQualifierColumnFilter
-import org.kiji.schema.KijiColumnName
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts
-import org.apache.avro.Schema
 
 /**
  * Test for converting back and forth between Java and Scala for values
  * that are read/written from a Kiji column.
  */
-class ReturnTypeCheckerSuite extends FunSuite with ShouldMatchers {
+class ReturnTypeCheckerSuite extends FunSuite {
   val int: java.lang.Integer = new java.lang.Integer(10)
   test("Test conversion of Integers from Java, to Scala, and back again.") {
     // Java => Scala
@@ -45,7 +45,9 @@ class ReturnTypeCheckerSuite extends FunSuite with ShouldMatchers {
     assert(res.isInstanceOf[Int])
     assert(10 == res)
     // Scala => Java
+    // scalastyle:off null
     val resJava = KijiScheme.convertScalaTypes(res, null)
+    // scalastyle:on null
     assert(resJava.isInstanceOf[java.lang.Integer])
     assert(resJava == int)
   }
@@ -57,7 +59,9 @@ class ReturnTypeCheckerSuite extends FunSuite with ShouldMatchers {
     assert(res.isInstanceOf[Boolean])
     assert(true == res)
     // Scala => Java
+    // scalastyle:off null
     val resJava = KijiScheme.convertScalaTypes(res, null)
+    // scalastyle:on null
     assert(resJava.isInstanceOf[java.lang.Boolean])
     assert(resJava == boolean)
   }
@@ -69,7 +73,9 @@ class ReturnTypeCheckerSuite extends FunSuite with ShouldMatchers {
     assert(res.isInstanceOf[Long])
     assert(10L == res)
     // Scala => Java
+    // scalastyle:off null
     val resJava = KijiScheme.convertScalaTypes(res, null)
+    // scalastyle:on null
     assert(resJava.isInstanceOf[java.lang.Long])
     assert(resJava == long)
   }
@@ -81,7 +87,9 @@ class ReturnTypeCheckerSuite extends FunSuite with ShouldMatchers {
     assert(res.isInstanceOf[Float])
     assert(10F == res)
     // Scala => Java
+    // scalastyle:off null
     val resJava = KijiScheme.convertScalaTypes(res, null)
+    // scalastyle:on null
     assert(resJava.isInstanceOf[java.lang.Float])
     assert(resJava == float)
   }
@@ -93,7 +101,9 @@ class ReturnTypeCheckerSuite extends FunSuite with ShouldMatchers {
     assert(res.isInstanceOf[Double])
     assert(10 == res)
     // Scala => Java
+    // scalastyle:off null
     val resJava = KijiScheme.convertScalaTypes(res, null)
+    // scalastyle:on null
     assert(resJava.isInstanceOf[java.lang.Double])
     assert(resJava == double)
   }
@@ -119,7 +129,9 @@ class ReturnTypeCheckerSuite extends FunSuite with ShouldMatchers {
     assert(res.isInstanceOf[String])
     assert("string" == res.asInstanceOf[String])
     // Scala => Java
+    // scalastyle:off null
     val resJava = KijiScheme.convertScalaTypes(res, null)
+    // scalastyle:on null
     assert(resJava.isInstanceOf[java.lang.CharSequence])
     assert(resJava == charSequence)
   }
@@ -133,12 +145,15 @@ class ReturnTypeCheckerSuite extends FunSuite with ShouldMatchers {
   test("Test conversion of Avro list from Java, to Scala, and back again.") {
     // Java => Scala
     val res = KijiScheme.convertJavaTypes(list)
-    assert(res.isInstanceOf[List[Int]])
+    assert(res.isInstanceOf[List[_]])
+    assert(res.asInstanceOf[List[_]](0).isInstanceOf[Int])
     assert(List(1, 2) == res.asInstanceOf[List[Int]])
+
     // Scala => Java
     val cellSchema = Schema.createArray(Schema.create(Schema.Type.INT))
     val resJava = KijiScheme.convertScalaTypes(res, cellSchema)
-    assert(resJava.isInstanceOf[java.util.List[java.lang.Integer]])
+    assert(resJava.isInstanceOf[java.util.List[_]])
+    assert(resJava.asInstanceOf[java.util.List[_]].get(0).isInstanceOf[java.lang.Integer])
     assert(resJava == list)
   }
 
@@ -151,26 +166,37 @@ class ReturnTypeCheckerSuite extends FunSuite with ShouldMatchers {
   }
   test("Test conversion of Avro map from Java, to Scala, and back again.") {
     val res = KijiScheme.convertJavaTypes(map)
-    assert(res.isInstanceOf[Map[String, Int]])
+    assert(res.isInstanceOf[Map[_, _]])
+    res.asInstanceOf[Map[String, Int]].foreach { case (key, value) =>
+      key.isInstanceOf[String]
+      value.isInstanceOf[Int]
+    }
     assert(2 == res.asInstanceOf[Map[String, Int]].size)
     assert(Map("t1"->1, "t2"->2) == res)
     // convert back
     val cellSchema = Schema.createMap(Schema.create(Schema.Type.INT))
     val resJava = KijiScheme.convertScalaTypes(res, cellSchema)
-    assert(resJava.isInstanceOf[java.util.Map[java.lang.String, java.lang.Object]])
-    assert(resJava.asInstanceOf[java.util.Map[java.lang.String, java.lang.Object]].get("t1")
-        .isInstanceOf[java.lang.Integer])
+    assert(resJava.isInstanceOf[java.util.Map[_, _]])
+    val iter = resJava.asInstanceOf[java.util.Map[java.lang.String, java.lang.Integer]]
+        .entrySet
+        .iterator
+    while (iter.hasNext()) {
+      val entry = iter.next()
+      entry.getKey.isInstanceOf[java.lang.String]
+      entry.getValue.isInstanceOf[java.lang.Integer]
+    }
     assert(resJava == map)
   }
 
+  // scalastyle:off null
   val void: java.lang.Void = null.asInstanceOf[java.lang.Void]
   test("Test conversion of null from Java, to Scala, and back again.") {
     val res = KijiScheme.convertJavaTypes(void)
     assert(res == null)
     val resJava = KijiScheme.convertScalaTypes(res, null)
-    // scalastyle:on null
     assert(resJava == void)
   }
+  // scalastyle:on null
 
   val unionList: java.util.List[java.lang.Object] = {
     val list = new java.util.ArrayList[java.lang.Object]()
@@ -180,19 +206,17 @@ class ReturnTypeCheckerSuite extends FunSuite with ShouldMatchers {
   }
   test("Test conversion of Avro unions from Java, to Scala, and back again.") {
     val res = KijiScheme.convertJavaTypes(unionList)
-    assert(res.isInstanceOf[List[Any]])
+    assert(res.isInstanceOf[List[_]])
     assert(2 == res.asInstanceOf[List[Any]].size)
     assert(10L == res.asInstanceOf[List[Any]](0))
     assert("test" == res.asInstanceOf[List[Any]](1))
 
     // convert back
-    // scalastyle:off null
     val unionSchema = Schema.createUnion(seqAsJavaList(List(Schema.create(Schema.Type.INT),
         Schema.create(Schema.Type.STRING))))
     val cellSchema = Schema.createArray(unionSchema)
     val resJava = KijiScheme.convertScalaTypes(res, cellSchema)
-    // scalastyle:on null
-    assert(resJava.isInstanceOf[java.util.List[java.lang.Object]])
+    assert(resJava.isInstanceOf[java.util.List[_]])
     assert(resJava == unionList)
   }
 
@@ -254,7 +278,7 @@ class ReturnTypeCheckerSuite extends FunSuite with ShouldMatchers {
     // convert back
     val columnSchema = Schema.createArray(Schema.createFixed("test", "fixed schema", "", 2))
     val resJava = KijiScheme.convertScalaTypes(res, columnSchema)
-    assert(resJava.isInstanceOf[java.util.List[org.kiji.schema.avro.MD5Hash]])
+    assert(resJava.isInstanceOf[java.util.List[_]])
     assert(resJava == nestedList)
   }
   val filter = new RegexQualifierColumnFilter(".*")

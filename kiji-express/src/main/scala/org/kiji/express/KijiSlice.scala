@@ -130,7 +130,7 @@ class KijiSlice[T] private[express] (val cells: Seq[Cell[T]]) {
   val size: Int = cells.size
 
   override def equals(otherSlice: Any): Boolean = otherSlice match {
-    case otherSlice: KijiSlice[T] => (otherSlice.cells == cells)
+    case otherSlice: KijiSlice[_] => (otherSlice.cells == cells)
     case _ => false
   }
 }

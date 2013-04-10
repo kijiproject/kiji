@@ -422,17 +422,19 @@ private[express] object KijiScheme {
       // string
       case s: java.lang.CharSequence => s.toString
       // array
-      case l: java.util.List[Any] => {
+      case l: java.util.List[_] => {
         l.asScala
             .toList
             .map { elem => convertJavaTypes(elem) }
       }
       // map (avro maps always have keys of type CharSequence)
       // TODO CHOP-70 revisit conversion of maps between java and scala
-      case m: java.util.Map[CharSequence, Any] => {
+      case m: java.util.Map[_, _] => {
         m.asScala
             .toMap
-            .map { case (key, value) => (key.toString, convertJavaTypes(value)) }
+            .map { case (key: CharSequence, value) =>
+              (key.toString, convertJavaTypes(value))
+            }
       }
       // fixed
       case f: SpecificFixed => f.bytes().array
@@ -441,7 +443,7 @@ private[express] object KijiScheme {
       case n: java.lang.Void => null
       // scalastyle:on null
       // enum
-      case e: java.lang.Enum[Any] => e
+      case e: java.lang.Enum[_] => e
       // avro record or object
       case a: IndexedRecord => a
       // any other type we don't understand
@@ -497,13 +499,13 @@ private[express] object KijiScheme {
         }
         case QualifiedColumn(family, qualifier, _) => {
           val kijiCol = new KijiColumnName(family, qualifier)
+          val value = output.getObject(fieldName.toString())
           writer.put(
               entityId,
               family,
               qualifier,
               timestamp,
-              convertScalaTypes(output.getObject(
-                  fieldName.toString()), layout.getSchema(kijiCol)))
+              convertScalaTypes(value, layout.getSchema(kijiCol)))
         }
       }
     }
@@ -530,20 +532,20 @@ private[express] object KijiScheme {
       case d: Double => d.asInstanceOf[java.lang.Double]
       // this could be an avro "bytes" field or avro "fixed" field
       case bb: Array[Byte] => {
-        require(null != columnSchema, "Tried to convert an Array[Byte], but the writer schema" +
-          "was null.")
+        require(null != columnSchema, "Tried to convert an Array[Byte], but the writer schema"
+            + "was null.")
         if (columnSchema.getType == Schema.Type.BYTES) {
           java.nio.ByteBuffer.wrap(bb)
         } else if (columnSchema.getType == Schema.Type.FIXED) {
           new Fixed(columnSchema, bb)
         } else {
           throw new SchemaMismatchException("Writing an array of bytes to a column that "
-            + " expects " + columnSchema.getType.getName)
+              + " expects " + columnSchema.getType.getName)
         }
       }
       case s: String => s
       // this is an avro array
-      case l: List[Any] => {
+      case l: List[_] => {
         require(null != columnSchema, "Tried to convert a List[Any], but the writer schema was" +
             " null.")
         l.map { elem => convertScalaTypes(elem, columnSchema.getElementType) }
@@ -551,17 +553,17 @@ private[express] object KijiScheme {
       }
       // map
       // TODO CHOP-70 revisit conversion of maps between java and scala
-      case m: Map[String, Any] => {
+      case m: Map[_, _] => {
         require(null != columnSchema, "Tried to convert a Map[String, Any], but the writer schema" +
           "was null.")
-        val convertedMap = m.map { case (key, value) =>
+        val convertedMap = m.map { case (key: String, value) =>
           val convertedValue = convertScalaTypes(value, columnSchema.getValueType)
           (key, convertedValue)
         }
         new java.util.TreeMap[java.lang.Object, java.lang.Object](convertedMap.asJava)
       }
       // enum
-      case e: java.lang.Enum[Any] => e
+      case e: java.lang.Enum[_] => e
       // avro record or object
       case a: IndexedRecord => a
       // any other type we don't understand
