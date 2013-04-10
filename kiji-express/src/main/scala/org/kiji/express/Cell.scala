@@ -24,29 +24,31 @@ import org.kiji.annotations.ApiStability
 import org.kiji.schema.KijiCell
 
 /**
- * Cell represents a cell in a Kiji table. It contains the family, qualifier, and timestamp that
- * uniquely locates the cell within a table, as well as the datum itself.
+ * A cell from a Kiji table containing some datum, addressed by a family, qualifier,
+ * and version timestamp.
  *
  * @param family of the Kiji table cell.
  * @param qualifier of the Kiji table cell.
  * @param version  of the Kiji table cell.
  * @param datum in the Kiji table cell.
- * @tparam T the type of the datum in the cell.
+ * @tparam T is the type of the datum in the cell.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
 case class Cell[T] private[express] (family: String, qualifier: String, version: Long, datum: T)
 /**
-* Currently, this companion object is only a factory for creating cells.
+* A factory for creating cells used in KijiExpress from cells used in the Kiji Java API.
 */
 object Cell {
   import KijiScheme.convertJavaTypes
   /**
-   * Creates a new Cell using the contents of the specified [[org.kiji.schema.KijiCell]].
+   * Creates a new cell (for use in KijiExpress) from the contents of a cell produced by the
+   * Kiji Java API.
    *
-   * @param cell used to instantiate a Cell.
-   * @tparam T The type of the datum that this Cell contains.
-   * @return a Cell with the same family, qualifier, timestamp, and datum as the passed in KijiCell.
+   * @param cell from a Kiji table produced by the Java API.
+   * @tparam T is the type of the datum that this cell contains.
+   * @return a cell for use in KijiExpress, with the same family, qualifier, timestamp,
+   *     and datum as cell produced by the Java API.
    */
   private[express] def apply[T](cell: KijiCell[T]): Cell[T] = {
     new Cell[T](convertJavaTypes(cell.getFamily).asInstanceOf[String],
