@@ -63,7 +63,9 @@ function resolve_symlink() {
 function generate_hiverc() {
   HIVERC=$1
   echo "-- GENERATED FILE DO NOT EDIT" > ${HIVERC}
-  echo "add jar ${KIJI_HIVE_LIB};" >> ${HIVERC}
+  for x in $(echo $HADOOP_CLASSPATH | tr ":" " "); do
+    echo "add jar ${x};" >> ${HIVERC}
+  done
   echo "add jar ${HBASE_LIB};" >> ${HIVERC}
 }
 
@@ -172,7 +174,7 @@ fi
 HIVE_BINARY="${HIVE_HOME}/bin/hive"
 
 KIJI_HIVE_LIB="${KIJI_HIVE_ADAPTER_LIB}/kiji-hive-adapter-${KIJI_HIVE_ADAPTER_VERSION}.jar"
-export HADOOP_CLASSPATH="${KIJI_HIVE_LIB}"
+HADOOP_CLASSPATH="${KIJI_HIVE_LIB}:${HADOOP_CLASSPATH}"
 
 HBASE_LIB="${HBASE_HOME}/${HBASE_JAR}"
 HIVERC="${KIJI_HIVE_ADAPTER_HOME}.hiverc"

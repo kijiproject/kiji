@@ -14,7 +14,8 @@ data stored in Kiji tables from Hive.
 
 ## Automatic Hive Shell
 The included bin/bento-hive.sh script can be executed to automatically start a Hive shell
-with the Kiji Hive adapter(and its dependencies preloaded).  If necessary, this script will
+with the Kiji Hive adapter(and its dependencies preloaded).  Any jars that are referenced in
+HADOOP_CLASSPATH will also be added within the Hive shell.  If necessary, this script will
 automatically download Apache Hive from Cloudera.
 
 This script can take an argument of a Kiji table URI to automatically create the table handler
@@ -89,6 +90,8 @@ necessary to setup this table to be used in Hive looks like:
 If you'd like to load this automatically you can run the script:
 bin/bento-hive.sh import kiji://.env/kiji_music/users
 against a Bento cluster where this table has already been created and has the data populated.
+This script only works with string object types, but this could be a baseline for a custom
+CREATE EXTERNAL TABLE statement.
 
 
 ### Sample Queries
@@ -98,24 +101,35 @@ shell with the necessary jars for Kiji tables via the command:
 bin/bento-hive.sh shell
 
 List all of the tables that have been created:
+
     SHOW TABLES;
 
 List all of the fields in the table 'users':
+
     DESCRIBE users;
 
 List all of the tracks that were played:
+
     SELECT track_plays.value FROM users;
 
 Show only the first 10 users:
+
     SELECT track_plays.value FROM users LIMIT 10;
 
 List all tracks that were played by play order:
+
     SELECT track_plays.ts,track_plays.value FROM users order by ts ASC;
 
 List all of the times in which song-44 was played:
+
     SELECT track_plays.ts,track_plays.value FROM users WHERE track_plays.value = 'song-44';
 
+List all songs that were played before the hour is less than 10 AM:
+
+    SELECT track_plays.ts, track_plays.value FROM users WHERE HOUR(track_plays.ts) < 10;
+
 Get a list of songs by popularity:
+
     SELECT track_plays.value,COUNT(1) AS COUNT FROM users group by track_plays.value ORDER BY COUNT DESC;
 
 If you want more inspiration for queries take a look here:

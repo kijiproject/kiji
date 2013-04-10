@@ -19,7 +19,9 @@
 
 package org.kiji.hive.utils;
 
-import static org.kiji.hive.utils.HiveTypes.*;
+import static org.kiji.hive.utils.HiveTypes.HiveList;
+import static org.kiji.hive.utils.HiveTypes.HiveMap;
+import static org.kiji.hive.utils.HiveTypes.HiveStruct;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;

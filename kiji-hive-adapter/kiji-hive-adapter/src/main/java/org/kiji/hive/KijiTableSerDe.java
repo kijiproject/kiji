@@ -36,7 +36,7 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 import org.apache.hadoop.io.Writable;
 
 import org.kiji.hive.utils.KijiDataRequestSerializer;
-import org.kiji.schema.SpecificCellDecoderFactory;
+import org.kiji.schema.GenericCellDecoderFactory;
 
 /**
  * A read-only deserializer for reading from Kiji tables in Hive.
@@ -71,7 +71,7 @@ public class KijiTableSerDe implements SerDe {
           .withColumnExpressions(columnExpressions)
           .withSchemaTable(kijiTableInfo.getSchemaTable())
           .withTableLayout(kijiTableInfo.getTableLayout())
-          .withCellDecoderFactory(SpecificCellDecoderFactory.get())
+          .withCellDecoderFactory(GenericCellDecoderFactory.get())
           .build();
     } catch (IOException e) {
       throw new SerDeException("Unable to read kiji table information", e);

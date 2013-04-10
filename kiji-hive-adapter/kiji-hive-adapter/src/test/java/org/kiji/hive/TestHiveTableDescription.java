@@ -42,7 +42,7 @@ import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiRowScanner;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
-import org.kiji.schema.SpecificCellDecoderFactory;
+import org.kiji.schema.GenericCellDecoderFactory;
 import org.kiji.schema.impl.HBaseKijiRowData;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayouts;
@@ -92,7 +92,7 @@ public class TestHiveTableDescription extends KijiClientTest {
         .withColumnExpressions(columnExpressions)
         .withSchemaTable(mKiji.getSchemaTable())
         .withTableLayout(mKiji.openTable("user").getLayout())
-        .withCellDecoderFactory(SpecificCellDecoderFactory.get())
+        .withCellDecoderFactory(GenericCellDecoderFactory.get())
         .build();
   }
 
@@ -107,7 +107,7 @@ public class TestHiveTableDescription extends KijiClientTest {
         .withColumnExpressions(columnExpressions)
         .withSchemaTable(mKiji.getSchemaTable())
         .withTableLayout(mKiji.openTable("user").getLayout())
-        .withCellDecoderFactory(SpecificCellDecoderFactory.get())
+        .withCellDecoderFactory(GenericCellDecoderFactory.get())
         .build();
 
     KijiDataRequest kijiDataRequest = hiveTableDescription.getDataRequest();
@@ -127,7 +127,7 @@ public class TestHiveTableDescription extends KijiClientTest {
         .withColumnExpressions(columnExpressions)
         .withSchemaTable(mKiji.getSchemaTable())
         .withTableLayout(mKiji.openTable("user").getLayout())
-        .withCellDecoderFactory(SpecificCellDecoderFactory.get())
+        .withCellDecoderFactory(GenericCellDecoderFactory.get())
         .build();
 
     final KijiDataRequest kijiDataRequest = hiveTableDescription.getDataRequest();
@@ -150,7 +150,7 @@ public class TestHiveTableDescription extends KijiClientTest {
         .withColumnExpressions(columnExpressions)
         .withSchemaTable(mKiji.getSchemaTable())
         .withTableLayout(mKiji.openTable("user").getLayout())
-        .withCellDecoderFactory(SpecificCellDecoderFactory.get())
+        .withCellDecoderFactory(GenericCellDecoderFactory.get())
         .build();
 
     final KijiDataRequest request = KijiDataRequest.create("info", "name");
