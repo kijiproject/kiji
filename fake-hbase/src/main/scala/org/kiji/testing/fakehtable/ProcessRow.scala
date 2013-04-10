@@ -127,7 +127,7 @@ object ProcessRow {
         /** Ordered set of timestamps to iterate through. */
         val timestamps: NavigableSet[JLong] = versionMap.navigableKeySet
 
-        /** Counter to enforce the max-versions per qualifier (pre-filtering). */
+        /** Counter to enforce the max-versions per qualifier (post-filtering). */
         var nversions = 0
 
         /** Iterator over the timestamps (decreasing order, ie. most recent first). */
@@ -135,21 +135,24 @@ object ProcessRow {
         TimestampLoop {
           if (timestamp == null) TimestampLoop.break
 
-          // Max-version per qualifier happens before filters:
-          nversions += 1
-          if (nversions > maxVersions) {
-            TimestampLoop.break
-          }
-
           val value = versionMap.get(timestamp)
           val kv = new KeyValue(rowKey, family, qualifier, timestamp, value)
-
-          // Log.info("Applying filters on KeyValue {}", kv)
 
           // Apply filter:
           filter.filterKeyValue(kv) match {
             case Filter.ReturnCode.INCLUDE => {
               kvs.add(filter.transform(kv))
+
+              // Max-version per qualifier happens after filtering:
+              // Note that this doesn't take into account the transformed KeyValue.
+              // It is not clear from the documentation whether filter.transform()
+              // may alter the qualifier of the KeyValue.
+              // Also, this doesn't take into account the final modifications resulting from
+              // filter.filterRow(kvs).
+              nversions += 1
+              if (nversions >= maxVersions) {
+                TimestampLoop.break
+              }
             }
             case Filter.ReturnCode.SKIP => // Skip this key/value pair.
             case Filter.ReturnCode.NEXT_COL => TimestampLoop.break
