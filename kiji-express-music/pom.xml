@@ -3,8 +3,8 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.kiji.chopsticks</groupId>
-  <artifactId>kiji-chopsticks-music</artifactId>
+  <groupId>org.kiji.express</groupId>
+  <artifactId>kiji-express-music</artifactId>
   <version>0.1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
   <inceptionYear>2013</inceptionYear>
@@ -19,17 +19,17 @@
 
   <properties>
     <avro.version>1.7.2</avro.version>
-    <chopsticks.version>0.1.0-SNAPSHOT</chopsticks.version>
+    <express.version>0.1.0-SNAPSHOT</express.version>
     <scala.version>2.9.2</scala.version>
     <scalatest.version>2.0.M5b</scalatest.version>
   </properties>
 
   <dependencies>
-    <!-- Chopsticks -->
+    <!-- KijiExpress -->
     <dependency>
-      <groupId>org.kiji.chopsticks</groupId>
-      <artifactId>kiji-chopsticks</artifactId>
-      <version>${chopsticks.version}</version>
+      <groupId>org.kiji.express</groupId>
+      <artifactId>kiji-express</artifactId>
+      <version>${express.version}</version>
       <scope>compile</scope>
     </dependency>
 
@@ -48,9 +48,9 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.kiji.chopsticks</groupId>
-      <artifactId>kiji-chopsticks</artifactId>
-      <version>${chopsticks.version}</version>
+      <groupId>org.kiji.express</groupId>
+      <artifactId>kiji-express</artifactId>
+      <version>${express.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
@@ -213,8 +213,8 @@
   </repositories>
 
   <scm>
-    <connection>scm:git:git@github.com:kijiproject/kiji-chopsticks-music.git</connection>
-    <url>scm:git:git@github.com:kijiproject/kiji-chopsticks-music.git</url>
-    <developerConnection>scm:git:git@github.com:kijiproject/kiji-chopsticks-music.git</developerConnection>
+    <connection>scm:git:git@github.com:kijiproject/kiji-express-music.git</connection>
+    <url>scm:git:git@github.com:kijiproject/kiji-express-music.git</url>
+    <developerConnection>scm:git:git@github.com:kijiproject/kiji-express-music.git</developerConnection>
   </scm>
 </project>

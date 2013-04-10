@@ -17,15 +17,15 @@
  * limitations under the License.
  */
 
-package org.kiji.chopsticks.music
+package org.kiji.express.music
 
 import scala.collection.mutable.Buffer
 
 import com.twitter.scalding._
 
 import org.kiji.examples.music.TopSongs
-import org.kiji.chopsticks.DSL._
-import org.kiji.chopsticks.{KijiSlice, KijiSuite}
+import org.kiji.express._
+import org.kiji.express.DSL._
 import org.kiji.schema.EntityId
 
 /**
@@ -41,7 +41,7 @@ class TopNextSongsSuite extends KijiSuite {
 
   // Execute the DDL shell commands in music-schema.ddl to create the tables for the music
   // tutorial.
-  executeDDLResource(kiji, "org/kiji/chopsticks/music/music-schema.ddl")
+  executeDDLResource(kiji, "org/kiji/express/music/music-schema.ddl")
 
   // Create some fake track plays for three users.
   val testInput =

@@ -17,12 +17,12 @@
  * limitations under the License.
  */
 
-package org.kiji.chopsticks.music
+package org.kiji.express.music
 
 import com.twitter.scalding._
 
-import org.kiji.chopsticks._
-import org.kiji.chopsticks.DSL._
+import org.kiji.express._
+import org.kiji.express.DSL._
 
 /**
  * Counts the number of times a song has been played by users.

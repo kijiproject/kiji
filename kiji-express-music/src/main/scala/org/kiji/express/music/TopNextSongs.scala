@@ -17,16 +17,16 @@
  * limitations under the License.
  */
 
-package org.kiji.chopsticks.music
+package org.kiji.express.music
 
 import scala.collection.JavaConverters._
 
 import com.twitter.scalding._
 
 import com.google.common.collect.Lists
-import org.kiji.chopsticks._
-import org.kiji.chopsticks.DSL._
-import org.kiji.chopsticks.Resources._
+import org.kiji.express._
+import org.kiji.express.DSL._
+import org.kiji.express.Resources._
 import org.kiji.examples.music.SongCount
 import org.kiji.examples.music.TopSongs
 import org.kiji.schema.EntityId

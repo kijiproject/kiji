@@ -17,14 +17,14 @@
  * limitations under the License.
  */
 
-package org.kiji.chopsticks.music
+package org.kiji.express.music
 
 import scala.collection.mutable.Buffer
 
 import com.twitter.scalding.{JobTest, TextLine}
 
-import org.kiji.chopsticks.DSL._
-import org.kiji.chopsticks.{KijiSlice, KijiSuite}
+import org.kiji.express._
+import org.kiji.express.DSL._
 import org.kiji.schema.EntityId
 import org.kiji.examples.music.SongMetadata
 
@@ -39,7 +39,7 @@ class SongMetadataImporterSuite extends KijiSuite {
 
   // Execute the DDL shell commands in music-schema.ddl to create the tables for the music
   // tutorial, including the songs table.
-  executeDDLResource(kiji, "org/kiji/chopsticks/music/music-schema.ddl")
+  executeDDLResource(kiji, "org/kiji/express/music/music-schema.ddl")
 
   // Create a fake record to import, as a tuple. The first tuple element (0) is a dummy file
   // offset, while the second tuple element is a JSON record of song metadata.

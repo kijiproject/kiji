@@ -17,13 +17,14 @@
  * limitations under the License.
  */
 
-package org.kiji.chopsticks.music
+package org.kiji.express.music
+
+import scala.util.parsing.json.JSON
 
 import com.twitter.scalding._
-import util.parsing.json.JSON
 
-import org.kiji.chopsticks.DSL._
-import org.kiji.chopsticks.Resources._
+import org.kiji.express.DSL._
+import org.kiji.express.Resources._
 import org.kiji.schema.EntityId
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiURI

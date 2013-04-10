@@ -17,14 +17,14 @@
  * limitations under the License.
  */
 
-package org.kiji.chopsticks.music
+package org.kiji.express.music
 
 import scala.collection.mutable.Buffer
 
 import com.twitter.scalding._
 
-import org.kiji.chopsticks.DSL._
-import org.kiji.chopsticks.KijiSuite
+import org.kiji.express._
+import org.kiji.express.DSL._
 
 /**
  * A test for counting the number of times songs have been played by users.
@@ -37,7 +37,7 @@ class SongPlayCounterSuite extends KijiSuite {
 
   // Execute the DDL shell commands in music-schema.ddl to create the tables for the music
   // tutorial, including the users table.
-  executeDDLResource(kiji, "org/kiji/chopsticks/music/music-schema.ddl")
+  executeDDLResource(kiji, "org/kiji/express/music/music-schema.ddl")
 
   // Create some fake track plays for three users.
   val testInput =
