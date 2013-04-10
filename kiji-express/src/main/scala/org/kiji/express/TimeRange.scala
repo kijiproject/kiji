@@ -29,11 +29,13 @@ import org.kiji.schema.KConstants
  * at the `begin` timestamp end exclusive at the `end` timestamp.
  *
  * There are five concrete implementations of this trait:
- * - All
- * - At(timestamp: Long)
- * - After(begin: Long)
- * - Before(end: Long)
- * - Between(begin: Long, end: Long)
+ * <ul>
+ *   <li>All</li>
+ *   <li>At(timestamp: Long)</li>
+ *   <li>After(begin: Long)</li>
+ *   <li>Before(end: Long)</li>
+ *   <li>Between(begin: Long, end: Long)</li>
+ * </ul>
  *
  * @example {{{
  *     KijiInput("kiji://.env/default/words", timeRange=Between(0L, 10L))("info:word" -> 'word)
