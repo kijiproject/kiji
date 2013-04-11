@@ -53,7 +53,7 @@ import org.kiji.express.Resources.doAndClose
  * args. Scripts compiled by ScriptRunner get wrapped in a Scalding Job constructor:
  * {{{
  *   // Added by ScriptRunner:
- *   { args: com.twitter.scalding.Args =&gt;
+ *   { args: com.twitter.scalding.Args =>
  *     new com.twitter.scalding.Job(args) {
  *
  *       // User code here.
@@ -64,8 +64,8 @@ import org.kiji.express.Resources.doAndClose
  *
  * To run a script using ScriptRunner call the express jar command with the following syntax.
  * {{{
- *   express jar &lt;/path/to/express/jar&gt; org.kiji.express.ScriptRunner \
- *       &lt;/path/to/script&gt; [other options here]
+ *   express jar </path/to/express/jar> org.kiji.express.ScriptRunner \
+ *       </path/to/script> [other options here]
  * }}}
  */
 class ScriptRunner extends Tool {
@@ -151,6 +151,12 @@ class ScriptRunner extends Tool {
     compiler.apply(preparedScript)
   }
 
+  /**
+   * Allows you to set the job for the Tool to run. This method will always
+   * throw an exception.
+   *
+   * @param jobc is the constructor of the job to run.
+   */
   override def setJobConstructor(jobc: (Args) => Job) {
     sys.error("ScriptRunner only runs jobs that haven't been compiled yet.")
   }
@@ -199,6 +205,10 @@ class ScriptRunner extends Tool {
   }
 }
 
+/**
+ * The companion object for ScriptRunner, which compiles and runs KijiExpress scripts. This contains
+ * the main method, which is the program entry point.
+ */
 object ScriptRunner {
   private val logger: Logger = LoggerFactory.getLogger(classOf[ScriptRunner])
 
