@@ -24,12 +24,43 @@ import org.kiji.annotations.ApiStability
 import org.kiji.schema.KijiCell
 
 /**
- * A collection of [[org.kiji.express.Cell]]s that can be grouped and ordered as needed. Slices
- * are initially ordered first by qualifier and then reverse chronologically by version. To order
- * a KijiSlice chronologically, you can write {{{ chronologicalSlice: KijiSlice =
- * slice.orderChronologically()}}}. To group KijiSlices by column qualifier, you can write
- * {{{groupedSlices: Map[String, KijiSlice[T] = slice.groupByQualifier()}}}. Slices can also be
- * grouped by any arbitrary discriminator function.
+ * A collection of [[org.kiji.express.Cell]]s that can be grouped and ordered as needed. Cells are
+ * the smallest unit of information in a Kiji table; each cells contains a datum (as well as column
+ * family, qualifier, and version.) Slices are initially ordered first by qualifier and then reverse
+ * chronologically (latest first) by version.
+ *
+ * ===Ordering===
+ * The order of the underlying cells can be modified arbitrarily, but we provide convenience methods
+ * for common use cases.
+ *
+ * To order a KijiSlice chronologically, you may write {{{
+ * chronological: KijiSlice = slice.orderChronologically()
+ * }}}.
+ * To order a KijiSlice reverse chronologically, you may write {{{
+ * reverseChronological: KijiSlice =slice.orderReverseChronologically()
+ * }}}.
+ * To order a KijiSlice by column qualifier, you may write {{{
+ * qualifier: KijiSlice = slice.orderByQualifier()
+ * }}}.
+ *
+ *
+ * ===Grouping===
+ * KijiSlices can be grouped together by arbitrary criteria, but we provide a convenience method for
+ * a common case.
+ *
+ * To group KijiSlices by column qualifier, you may write
+ * {{{
+ * groupedSlices: Map[String, KijiSlice[T]] = slice.groupByQualifier()
+ * }}}.
+ *
+ * Slices can also be arbitrarily grouped by passing in a discriminator function, that defines the
+ * grouping criteria, to groupBy().
+ *
+ * Accessing Values:
+ * The underlying collection of cells can be obtained by {{{
+ * myCells: Seq[Cell] = mySlice.cells
+ * }}}.
+ * This Sequence will respect the ordering of the KijiSlice.
  *
  *
  * @param cells A sequence of [[org.kiji.express.Cell]]s for a single entity.
