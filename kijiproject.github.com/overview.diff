@@ -1,0 +1,58 @@
+diff --git a/_posts/tutorials/express-recommendation/0.1.0/2012-01-01-express-overview.md b/_posts/tutorials/express-recommendation/0.1.0/2012-01-01-express-overview.md
+index 26c55c8aee20764bf3541abca93d9d4c85d7d349..87425dee2c4724dd957e063c75b28853709dccc9 100644
+--- a/_posts/tutorials/express-recommendation/0.1.0/2012-01-01-express-overview.md
++++ b/_posts/tutorials/express-recommendation/0.1.0/2012-01-01-express-overview.md
+@@ -5,24 +5,21 @@ categories: [tutorials, express-recommendation, 0.1.0]
+ tags: [music]
+ order: 1
+ description: A tutorial to get you using KijiExpress with Kiji Tables.
+----
++--- 
++
++Analyzing data with MapReduce can be a long path, fraught with many Java classes.
+ 
+-Analyzing data with MapReduce can be a long path, fraught with many Java classes. KijiExpress is designed
+-to make defining data processing jobs faster and more expressive, particularly for data stored in Kiji tables.
++KijiExpress is designed to make defining data processing jobs faster and more
++expressive, particularly for data stored in Kiji tables. KijiExpress allows you
++to define pipelines of MapReduce jobs easily, particularly when dealing with Kiji tables.
+ 
+-KijiExpress is designed from the point of view of analysts, with the aim to lower the barrier to writing 
+-complex map reduce jobs to express algorithms. In particular, it lets you think about your data as a collection
+-and perform a series of transformations on it, just as you would on a simpler, in memory collection.
+ 
+-In this tutorial, we demonstrate how to use KijiExpress to analyze your data effectively. Specifically,
+-we get you started on the beginnings of a music recommendation engine.
++In this tutorial, we demonstrate how to use KijiExpress to analyze your data effectively. You will:
+ 
+-You will learn to:
+ * Quickly and efficiently import data into a KijiTable.
+-* Define a KijiExpress pipeline that counts the number of times songs have been played,
+-and further find the most popular song played after a given song.
+-* Run KijiExpress scripts locally and verify the output for jobs.
+-* Work with complex avro types in pipelines.
++* Define a KijiExpress pipeline that reads from a KijiTable and counts occurances of an event.
++* Run KijiExpress jobs locally and verify the output for jobs.
++* Work with complex Avro types in pipelines.
+ 
+ ### How to Use this Tutorial
+ 
+@@ -45,9 +42,11 @@ echo "Hello Kiji"
+ 
+     Hello Kiji
+ 
+-You can run KijiExpress on compiled jobs or uncompiled scripts. This tutorial will focus on running compiled jobs, but runnable scripts that do the same work as the compiled classes will also be available.
++You can run KijiExpress on compiled jobs or uncompiled scripts. This tutorial will focus on running
++compiled jobs, but runnable scripts that do the same work as the compiled classes will also be available.
+ 
+-* **Expandable Code** - Larger sections of code are marked with headers in gray boxes that contain a +. These can be expanded by clicking the header.
++* **Expandable Code** - Larger sections of code are marked with headers in gray boxes that contain a
+++. These can be expanded by clicking the header.
+ 
+ <div id="accordion-container">
+   <h2 class="accordion-header"> HelloWorld.java </h2>
+@@ -61,4 +60,3 @@ public class HelloWorld {
+ {% endhighlight %}
+   </div>
+ </div>
+-

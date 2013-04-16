@@ -72,4 +72,4 @@ pygments installed.
 * Make your changes.
 * Reference the jira in the commit message (e.g., "DOCS-1: Subscribe buttons to the mailing lists on the website are broken")
 * Push your branch: git push origin my_fix.
-* Use [pull requests](https://help.github.com/articles/using-pull-requests) to contribute your changes once you are done.
+* Use [reviewboard](http://review.kiji.org) to contribute your changes once you are done.

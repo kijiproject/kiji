@@ -20,7 +20,7 @@ Covers the core functionality of Kiji; creating, writing, and reading from table
 * [Phone Book Tutorial 1.0.0-rc3](tutorials/phonebook-tutorial/1.0.0-rc3/phonebook-tutorial)
 
 # KijiMR
-Covers how build and run MapReduce jobs that use Kiji tables as input and/or output. This is
+Covers how to build and run MapReduce jobs that use Kiji tables as input and/or output. This is
 the word count of recommendation systems.
 
 * [Music Recommendation Tutorial](tutorials/music-recommendation/1.0.0-rc6/music-overview) (latest)
@@ -28,3 +28,9 @@ the word count of recommendation systems.
 * [Music Recommendation Tutorial 1.0.0-rc5](tutorials/music-recommendation/1.0.0-rc5/music-overview)
 
 * [Music Recommendation Tutorial 1.0.0-rc4](tutorials/music-recommendation/1.0.0-rc4/music-overview)
+
+# KijiExpress
+Covers how to build and run Express jobs that use Kiji tables as input and/or output. This is the
+word count of recommendation systems.  This tutorial mirrors the KijiMR music tutorial closely.
+
+* [KijiExpress Tutorial](tutorials/express-recommendation/0.1.0/express-overview) (latest)

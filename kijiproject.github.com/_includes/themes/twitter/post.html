@@ -20,6 +20,9 @@
     {% elsif page.tags contains 'music' %}
       {% assign title = 'Music Recommendation Tutorial'  %}
       {% assign pages = site.tags.music %}
+    {% elsif page.tags contains 'express-music' %}
+      {% assign title = 'KijiExpress Tutorial'  %}
+      {% assign pages = site.tags.express-music %}
     {% endif %}
       {% capture maxpages %}{{ pages | size }}{% endcapture %}
 
@@ -76,6 +79,9 @@
     {% elsif page.tags contains 'music' %}
       {% assign title = 'Music Recommendation Tutorial'  %}
       {% assign pages = site.tags.music %}
+    {% elsif page.tags contains 'express-music' %}
+      {% assign title = 'KijiExpress Tutorial'  %}
+      {% assign pages = site.tags.express-music %}
     {% endif %}
     {% include side-toc.html %}
   </div>
