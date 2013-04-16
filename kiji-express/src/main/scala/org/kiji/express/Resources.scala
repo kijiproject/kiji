@@ -108,7 +108,7 @@ object Resources {
    * @tparam R is the type of resource, such as a Kiji table or instance.
    * @param resource is the retainable resource object used by the operation.
    * @param fn is the operation to perform using the resource.
-   * @return the restult of the operation.
+   * @return the result of the operation.
    */
   def doAndRelease[T, R <: ReferenceCountable[R]](resource: => R)(fn: R => T): T = {
     def after(r: R) { r.release() }
@@ -122,7 +122,7 @@ object Resources {
    * @tparam R is the type of resource, such as a Kiji table or instance.
    * @param resource is the closeable resource used by the operation.
    * @param fn is the operation to perform using the resource.
-   * @return the restult of the operation.
+   * @return the result of the operation.
    */
   def doAndClose[T, C <: { def close(): Unit }](resource: => C)(fn: C => T): T = {
     def after(c: C) { c.close() }
