@@ -126,7 +126,6 @@
       <version>0.0.5</version>
       <scope>test</scope>
     </dependency>
-     
     <dependency>
       <groupId>org.kiji.schema</groupId>
       <artifactId>kiji-schema</artifactId>
@@ -134,7 +133,6 @@
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
-    
     <dependency>
       <groupId>org.easymock</groupId>
       <artifactId>easymock</artifactId>
