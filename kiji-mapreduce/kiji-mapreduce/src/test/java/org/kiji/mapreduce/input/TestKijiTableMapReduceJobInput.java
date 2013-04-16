@@ -45,6 +45,8 @@ import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequestBuilder;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;
+import org.kiji.schema.filter.KijiRowFilter;
+import org.kiji.schema.filter.StripValueRowFilter;
 import org.kiji.schema.util.ResourceUtils;
 import org.kiji.schema.util.TestingFileUtils;
 
@@ -89,8 +91,9 @@ public class TestKijiTableMapReduceJobInput extends KijiClientTest {
     // Read from 'here' to 'there':
     final EntityId startRow = HBaseEntityId.fromHBaseRowKey(Bytes.toBytes("here"));
     final EntityId limitRow = HBaseEntityId.fromHBaseRowKey(Bytes.toBytes("there"));
+    final KijiRowFilter filter = new StripValueRowFilter();
     final KijiTableMapReduceJobInput.RowOptions rowOptions =
-        new KijiTableMapReduceJobInput.RowOptions(startRow, limitRow, null);
+        new KijiTableMapReduceJobInput.RowOptions(startRow, limitRow, filter);
     final MapReduceJobInput kijiTableJobInput =
         new KijiTableMapReduceJobInput(mTable.getURI(), dataRequest, rowOptions);
     kijiTableJobInput.configure(job);
@@ -105,5 +108,12 @@ public class TestKijiTableMapReduceJobInput extends KijiClientTest {
         (KijiDataRequest) SerializationUtils.deserialize(
             Base64.decodeBase64(conf.get(KijiConfKeys.KIJI_INPUT_DATA_REQUEST)));
     assertEquals(dataRequest, decoded);
+
+    final String confStartRow = Base64.encodeBase64String(startRow.getHBaseRowKey());
+    final String confLimitRow = Base64.encodeBase64String(limitRow.getHBaseRowKey());
+    assertEquals(confStartRow, conf.get(KijiConfKeys.KIJI_START_ROW_KEY));
+    assertEquals(confLimitRow, conf.get(KijiConfKeys.KIJI_LIMIT_ROW_KEY));
+
+    assertEquals(filter.toJson().toString(), conf.get(KijiConfKeys.KIJI_ROW_FILTER));
   }
 }

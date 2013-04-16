@@ -37,6 +37,15 @@ public final class KijiConfKeys {
   /** Serialized input data request. */
   public static final String KIJI_INPUT_DATA_REQUEST = "kiji.input.data.request";
 
+  /** HBase start row key. */
+  public static final String KIJI_START_ROW_KEY = "kiji.input.start.key";
+
+  /** HBase limit row key. */
+  public static final String KIJI_LIMIT_ROW_KEY = "kiji.input.limit.key";
+
+  /** Serialized KijiRowFilter. */
+  public static final String KIJI_ROW_FILTER = "kiji.input.row.filter";
+
   /** Fully qualified name of the KijiGatherer class to run. */
   public static final String KIJI_GATHERER_CLASS = "kiji.gatherer.class";
 

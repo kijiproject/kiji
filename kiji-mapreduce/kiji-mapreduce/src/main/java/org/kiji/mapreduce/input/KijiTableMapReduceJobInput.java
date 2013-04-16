@@ -22,15 +22,11 @@ package org.kiji.mapreduce.input;
 import java.io.IOException;
 import java.util.Map;
 
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.lang.SerializationUtils;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.Job;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.MapReduceJobInput;
-import org.kiji.mapreduce.framework.KijiConfKeys;
 import org.kiji.mapreduce.framework.KijiTableInputFormat;
 import org.kiji.mapreduce.tools.framework.JobIOConfKeys;
 import org.kiji.schema.EntityId;
@@ -122,18 +118,11 @@ public final class KijiTableMapReduceJobInput extends MapReduceJobInput {
     /**
      * Creates a new <code>RowOptions</code> instance.
      *
-     * @param startRow The start row (inclusive).
-     * @param limitRow The limit row (exclusive).
-     * @param rowFilter A row filter.
-     */
-    /**
-     * Creates a new <code>RowOptions</code> instance.
-     *
      * @param startRow Entity id of the row to start reading from (inclusive). Specify null
      *     to indicate starting at the first row of the table.
      * @param limitRow Entity id of the row to stop reading at (exclusive). Specify null to
-     *     indicate stopping at the last row of the table.
-     * @param rowFilter A row filter to apply to the Kiji table.
+     *     indicate stopping after processing the last row of the table.
+     * @param rowFilter A row filter to apply to the Kiji table. May be null.
      */
     public RowOptions(EntityId startRow, EntityId limitRow, KijiRowFilter rowFilter) {
       mStartRow = startRow;
@@ -153,7 +142,7 @@ public final class KijiTableMapReduceJobInput extends MapReduceJobInput {
 
     /**
      * Gets the entity id of the row to stop reading at (exclusive). May be null to
-     * indicate ending at the last row of the table.
+     * indicate ending after the last row of the table.
      *
      * @return Entity id of the row to stop reading at.
      */
@@ -197,14 +186,10 @@ public final class KijiTableMapReduceJobInput extends MapReduceJobInput {
   public void configure(Job job) throws IOException {
     // Configure the input format class.
     super.configure(job);
-    final Configuration conf = job.getConfiguration();
-
-    conf.set(KijiConfKeys.KIJI_INPUT_TABLE_URI, mInputTableURI.toString());
-    final String dataRequestB64 =
-        Base64.encodeBase64String(SerializationUtils.serialize(mDataRequest));
-    conf.set(KijiConfKeys.KIJI_INPUT_DATA_REQUEST, dataRequestB64);
-
-    // TODO(KIJIMR-64): Serialize the row options (filters)
+    KijiTableInputFormat.configureJob(job, mInputTableURI, mDataRequest,
+        null != mRowOptions ? mRowOptions.getStartRow() : null,
+        null != mRowOptions ? mRowOptions.getLimitRow() : null,
+        null != mRowOptions ? mRowOptions.getRowFilter() : null);
   }
 
   /** {@inheritDoc} */

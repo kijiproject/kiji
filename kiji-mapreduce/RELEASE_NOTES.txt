@@ -3,6 +3,7 @@
                               KijiMR Release Notes
 
 Version 1.0.0-rc61
+  * KIJIMR-64. Serialize row filters & start/limit row keys for MapReduce jobs.
   * KIJIMR-151. Pass Configuration to Kiji in HFileMapReduceJobOutput.
 
 Version 1.0.0-rc6

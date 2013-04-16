@@ -29,6 +29,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.SerializationUtils;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.mapreduce.TableSplit;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.mapreduce.InputFormat;
@@ -51,6 +52,7 @@ import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.KijiTableReader.KijiScannerOptions;
 import org.kiji.schema.KijiURI;
+import org.kiji.schema.filter.KijiRowFilter;
 import org.kiji.schema.impl.HBaseKijiRowData;
 import org.kiji.schema.impl.HBaseKijiTable;
 import org.kiji.schema.util.ResourceUtils;
@@ -94,14 +96,40 @@ public final class KijiTableInputFormat
       try {
         final byte[] htableName = HBaseKijiTable.downcast(table).getHTable().getTableName();
         final List<InputSplit> splits = Lists.newArrayList();
+        byte[] scanStartKey = HConstants.EMPTY_START_ROW;
+        if (null != conf.get(KijiConfKeys.KIJI_START_ROW_KEY)) {
+          scanStartKey = Base64.decodeBase64(conf.get(KijiConfKeys.KIJI_START_ROW_KEY));
+        }
+        byte[] scanLimitKey = HConstants.EMPTY_END_ROW;
+        if (null != conf.get(KijiConfKeys.KIJI_LIMIT_ROW_KEY)) {
+          scanLimitKey = Base64.decodeBase64(conf.get(KijiConfKeys.KIJI_LIMIT_ROW_KEY));
+        }
+
         for (KijiRegion region : table.getRegions()) {
-          final byte[] startKey = region.getStartKey();
-          // TODO(KIJIMR-65): For now pick the first available location (ie. region server), if any.
-          final String location =
+          final byte[] regionStartKey = region.getStartKey();
+          final byte[] regionEndKey = region.getEndKey();
+          // Determine if the scan start and limit key fall into the region.
+          // Logic was copied from o.a.h.h.m.TableInputFormatBase
+          if ((scanStartKey.length == 0 || regionEndKey.length == 0
+               || Bytes.compareTo(scanStartKey, regionEndKey) < 0)
+             && (scanLimitKey.length == 0
+               || Bytes.compareTo(scanLimitKey, regionStartKey) > 0)) {
+            byte[] splitStartKey = (scanStartKey.length == 0
+              || Bytes.compareTo(regionStartKey, scanStartKey) >= 0)
+              ? regionStartKey : scanStartKey;
+            byte[] splitEndKey = ((scanLimitKey.length == 0
+              || Bytes.compareTo(regionEndKey, scanLimitKey) <= 0)
+              && regionEndKey.length > 0)
+              ? regionEndKey : scanLimitKey;
+
+            // TODO(KIJIMR-65): For now pick the first available location (ie. region server),
+            // if any.
+            final String location =
               region.getLocations().isEmpty() ? null : region.getLocations().iterator().next();
-          final TableSplit tableSplit =
-              new TableSplit(htableName, startKey, region.getEndKey(), location);
-          splits.add(new KijiTableSplit(tableSplit, startKey));
+            final TableSplit tableSplit =
+              new TableSplit(htableName, splitStartKey, splitEndKey, location);
+            splits.add(new KijiTableSplit(tableSplit, splitStartKey));
+          }
         }
         return splits;
 
@@ -119,23 +147,29 @@ public final class KijiTableInputFormat
    * @param job Job to configure.
    * @param tableURI URI of the table to read from.
    * @param dataRequest Data request.
-   * @param startRow Minimum row key to process.
-   * @param endRow Maximum row Key to process.
+   * @param startRow Minimum row key to process. May be left null to indicate
+   *     that scanning should start at the beginning of the table.
+   * @param endRow Maximum row key to process. May be left null to indicate that
+   *     scanning should continue to the end of the table.
+   * @param filter Filter to use for scanning. May be left null.
    * @throws IOException on I/O error.
    */
   public static void configureJob(
       Job job,
       KijiURI tableURI,
       KijiDataRequest dataRequest,
-      String startRow,
-      String endRow)
+      EntityId startRow,
+      EntityId endRow,
+      KijiRowFilter filter)
       throws IOException {
+    Preconditions.checkNotNull(job, "job must not be null");
+    Preconditions.checkNotNull(tableURI, "tableURI must not be null");
+    Preconditions.checkNotNull(dataRequest, "dataRequest must not be null");
+
     final Configuration conf = job.getConfiguration();
 
     // TODO: Check for jars config:
     // GenericTableMapReduceUtil.initTableInput(hbaseTableName, scan, job);
-
-    // TODO: Obey specified start/end rows.
 
     // Write all the required values to the job's configuration object.
     job.setInputFormatClass(KijiTableInputFormat.class);
@@ -143,6 +177,17 @@ public final class KijiTableInputFormat
         Base64.encodeBase64String(SerializationUtils.serialize(dataRequest));
     conf.set(KijiConfKeys.KIJI_INPUT_DATA_REQUEST, serializedRequest);
     conf.set(KijiConfKeys.KIJI_INPUT_TABLE_URI, tableURI.toString());
+    if (null != startRow) {
+      conf.set(KijiConfKeys.KIJI_START_ROW_KEY,
+          Base64.encodeBase64String(startRow.getHBaseRowKey()));
+    }
+    if (null != endRow) {
+      conf.set(KijiConfKeys.KIJI_LIMIT_ROW_KEY,
+          Base64.encodeBase64String(endRow.getHBaseRowKey()));
+    }
+    if (null != filter) {
+      conf.set(KijiConfKeys.KIJI_ROW_FILTER, filter.toJson().toString());
+    }
   }
 
   /** Hadoop record reader for Kiji table rows. */
@@ -189,6 +234,11 @@ public final class KijiTableInputFormat
       final KijiScannerOptions scannerOptions = new KijiScannerOptions()
           .setStartRow(HBaseEntityId.fromHBaseRowKey(mSplit.getStartRow()))
           .setStopRow(HBaseEntityId.fromHBaseRowKey(mSplit.getEndRow()));
+      final String filterJson = conf.get(KijiConfKeys.KIJI_ROW_FILTER);
+      if (null != filterJson) {
+        KijiRowFilter filter = KijiRowFilter.toFilter(filterJson);
+        scannerOptions.setKijiRowFilter(filter);
+      }
       mKiji = Kiji.Factory.open(inputURI, conf);
       mTable = mKiji.openTable(inputURI.getTable());
       mReader = mTable.openTableReader();
