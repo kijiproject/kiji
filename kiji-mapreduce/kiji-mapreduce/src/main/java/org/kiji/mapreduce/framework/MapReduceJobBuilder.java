@@ -621,6 +621,12 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder<T>> {
           + "loaded onto the distributed cache.");
     }
 
+    // Finally, make sure HBase's own dependencies are bundled too.
+    // This uses the "Generic" TableMapReduceUtil that is packaged in KijiSchema,
+    // and extends HBase's own TableMapReduceUtil (in the same package) to work
+    // around a few bugs therein.
+    GenericTableMapReduceUtil.addAllDependencyJars(job);
+
     // Ensure jars we place on the dcache take precedence over Hadoop + HBase lib jars.
     job.setUserClassesTakesPrecedence(true);
   }
