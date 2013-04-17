@@ -85,7 +85,7 @@ public class TestDataRequestOptimizer {
 
     KijiDataRequest kijiDataRequest = DataRequestOptimizer.getDataRequest(rowExpressionList);
     assertEquals(1, kijiDataRequest.getColumns().size());
-    for(KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
+    for (KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
       assertEquals(HConstants.ALL_VERSIONS,
           kijiDataRequest.getColumn(column.getFamily(), column.getQualifier()).getMaxVersions());
     }
@@ -97,7 +97,7 @@ public class TestDataRequestOptimizer {
 
     kijiDataRequest = DataRequestOptimizer.getDataRequest(rowExpressionList);
     assertEquals(1, kijiDataRequest.getColumns().size());
-    for(KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
+    for (KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
       assertEquals(4,
           kijiDataRequest.getColumn(column.getFamily(), column.getQualifier()).getMaxVersions());
     }
@@ -116,7 +116,7 @@ public class TestDataRequestOptimizer {
 
     KijiDataRequest kijiDataRequest = DataRequestOptimizer.getDataRequest(rowExpressionList);
     assertEquals(1, kijiDataRequest.getColumns().size());
-    for(KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
+    for (KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
       assertEquals("info", column.getFamily());
       assertNull(column.getQualifier());
       assertEquals(HConstants.ALL_VERSIONS,

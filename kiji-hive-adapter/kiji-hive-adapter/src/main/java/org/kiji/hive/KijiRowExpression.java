@@ -282,7 +282,7 @@ public class KijiRowExpression {
     public KijiDataRequest getDataRequest() {
       // Indexes start from 0, whereas maxVersions starts from 1 so we need to adjust for this
       int maxVersions = mIndex + 1;
-      if(mIndex == -1) {
+      if (mIndex == -1) {
         // If we are getting the oldest cell, we need all versions.
         maxVersions = HConstants.ALL_VERSIONS;
       }
@@ -347,7 +347,9 @@ public class KijiRowExpression {
     @Override
     public KijiDataRequest getDataRequest() {
       KijiDataRequestBuilder builder = KijiDataRequest.builder();
-      builder.newColumnsDef().withMaxVersions(HConstants.ALL_VERSIONS).add(getFamily(), getQualifier());
+      builder.newColumnsDef()
+          .withMaxVersions(HConstants.ALL_VERSIONS)
+          .add(getFamily(), getQualifier());
       return builder.build();
     }
 

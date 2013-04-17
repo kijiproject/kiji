@@ -40,7 +40,7 @@ public class TestKijiRowExpression {
     final KijiDataRequest kijiDataRequest = kijiRowExpression.getDataRequest();
     assertEquals(1, kijiDataRequest.getColumns().size());
 
-    for(KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
+    for (KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
       assertEquals("family", column.getFamily());
       assertNull(column.getQualifier());
       assertEquals(HConstants.ALL_VERSIONS,
@@ -55,7 +55,7 @@ public class TestKijiRowExpression {
     final KijiDataRequest kijiDataRequest = kijiRowExpression.getDataRequest();
     assertEquals(1, kijiDataRequest.getColumns().size());
 
-    for(KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
+    for (KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
       assertEquals(1,
           kijiDataRequest.getColumn(column.getFamily(), column.getQualifier()).getMaxVersions());
       assertEquals("family", column.getFamily());
@@ -71,7 +71,7 @@ public class TestKijiRowExpression {
     assertEquals(1, kijiDataRequest.getColumns().size());
     assertNotNull(kijiDataRequest.getColumn("family", "qualifier"));
 
-    for(KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
+    for (KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
       assertEquals(HConstants.ALL_VERSIONS,
           kijiDataRequest.getColumn(column.getFamily(), column.getQualifier()).getMaxVersions());
     }
@@ -85,7 +85,7 @@ public class TestKijiRowExpression {
     assertEquals(1, kijiDataRequest.getColumns().size());
     assertNotNull(kijiDataRequest.getColumn("family", "qualifier"));
 
-    for(KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
+    for (KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
       assertEquals(1,
           kijiDataRequest.getColumn(column.getFamily(), column.getQualifier()).getMaxVersions());
     }
@@ -98,9 +98,10 @@ public class TestKijiRowExpression {
     final KijiDataRequest kijiDataRequest = kijiRowExpression.getDataRequest();
     assertEquals(1, kijiDataRequest.getColumns().size());
     assertNotNull(kijiDataRequest.getColumn("family", "qualifier"));
-    for(KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
+    for (KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
       assertEquals(1,
-          kijiDataRequest.getColumn(column.getFamily(), column.getQualifier()).getMaxVersions());
+          kijiDataRequest.getColumn(column.getFamily(), column.getQualifier())
+              .getMaxVersions());
     }
   }
 
@@ -111,7 +112,7 @@ public class TestKijiRowExpression {
     final KijiDataRequest kijiDataRequest = kijiRowExpression.getDataRequest();
     assertEquals(1, kijiDataRequest.getColumns().size());
     assertNotNull(kijiDataRequest.getColumn("family", "qualifier"));
-    for(KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
+    for (KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
       assertEquals(1,
           kijiDataRequest.getColumn(column.getFamily(), column.getQualifier()).getMaxVersions());
     }
@@ -122,10 +123,10 @@ public class TestKijiRowExpression {
     final KijiRowExpression kijiRowExpression =
         new KijiRowExpression("family:qualifier", UNVALIDATED_TYPE_INFO);
     KijiDataRequest kijiDataRequest = kijiRowExpression.getDataRequest();
-    for(KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
-      assertEquals("Timeseries expression should generate a KijiDataRequest with versions = MAX_INT",
-          kijiDataRequest.getColumn(column.getFamily(), column.getQualifier()).getMaxVersions(),
-          HConstants.ALL_VERSIONS);
+    for (KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
+      assertEquals(
+          HConstants.ALL_VERSIONS,
+          kijiDataRequest.getColumn(column.getFamily(), column.getQualifier()).getMaxVersions());
     }
   }
 
@@ -136,7 +137,7 @@ public class TestKijiRowExpression {
     KijiDataRequest kijiDataRequest = kijiRowExpression.getDataRequest();
     assertEquals(1, kijiDataRequest.getColumns().size());
     assertNotNull(kijiDataRequest.getColumn("family", "qualifier"));
-    for(KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
+    for (KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
       assertEquals(6,
           kijiDataRequest.getColumn(column.getFamily(), column.getQualifier()).getMaxVersions());
     }
@@ -149,7 +150,7 @@ public class TestKijiRowExpression {
     KijiDataRequest kijiDataRequest = kijiRowExpression.getDataRequest();
     assertEquals(1, kijiDataRequest.getColumns().size());
     assertNotNull(kijiDataRequest.getColumn("family", "qualifier"));
-    for(KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
+    for (KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
       assertEquals(HConstants.ALL_VERSIONS,
           kijiDataRequest.getColumn(column.getFamily(), column.getQualifier()).getMaxVersions());
     }
