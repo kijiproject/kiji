@@ -380,6 +380,7 @@ public final class FileStoreHelper implements Configurable {
 
       // Add the input paths to the DistributedCache and translate path names.
       int uniqueId = 0;
+      // TODO: getExpandedInputPaths() should use the Configuration from conf, not our getConf().
       for (Path inputPath : getExpandedInputPaths()) {
         FileSystem fs = inputPath.getFileSystem(conf.getDelegate());
         Path absolutePath = inputPath.makeQualified(fs);
@@ -419,6 +420,7 @@ public final class FileStoreHelper implements Configurable {
    */
   public void initFromConf(KeyValueStoreConfiguration conf) throws IOException {
     setConf(conf.getDelegate());
+
     mDCachePrefix = conf.get(CONF_DCACHE_PREFIX_KEY, "");
     LOG.debug("Input dCachePrefix: " + mDCachePrefix);
     if (mDCachePrefix.isEmpty()) {

@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -82,7 +83,7 @@ import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
  * </ul>
  */
 @ApiAudience.Public
-public final class TextFileKeyValueStore implements KeyValueStore<String, String> {
+public final class TextFileKeyValueStore implements Configurable, KeyValueStore<String, String> {
 
   /** The configuration variable for the delimiter. */
   private static final String CONF_DELIMITER_KEY = "delim";
@@ -219,6 +220,24 @@ public final class TextFileKeyValueStore implements KeyValueStore<String, String
     mFileHelper = builder.mFileBuilder.build();
     mDelim = builder.mDelim;
     mOpened = false;
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public void setConf(Configuration conf) {
+    if (mOpened) {
+      // Don't allow mutation after we start using this store for reads.
+      throw new IllegalStateException(
+          "Cannot set the configuration after a reader has been opened");
+    }
+
+    mFileHelper.setConf(conf);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public Configuration getConf() {
+    return new Configuration(mFileHelper.getConf());
   }
 
   /** {@inheritDoc} */

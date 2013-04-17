@@ -25,6 +25,7 @@ import java.util.List;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.hadoop.io.AvroKeyValue;
+import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 
@@ -55,7 +56,7 @@ import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
  * @param <V> The type of the value field.
  */
 @ApiAudience.Public
-public final class AvroKVRecordKeyValueStore<K, V> implements KeyValueStore<K, V> {
+public final class AvroKVRecordKeyValueStore<K, V> implements Configurable, KeyValueStore<K, V> {
   /** A wrapped store for looking up an Avro record by its 'key' field. */
   private final AvroRecordKeyValueStore<K, GenericRecord> mStore;
 
@@ -176,6 +177,24 @@ public final class AvroKVRecordKeyValueStore<K, V> implements KeyValueStore<K, V
    */
   public AvroKVRecordKeyValueStore() {
     this(builder());
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public void setConf(Configuration conf) {
+    if (mOpened) {
+      // Don't allow mutation after we start using this store for reads.
+      throw new IllegalStateException(
+          "Cannot set the configuration after a reader has been opened");
+    }
+
+    mStore.setConf(conf);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public Configuration getConf() {
+    return mStore.getConf(); // This creates a new Configuration for return.
   }
 
   /** {@inheritDoc} */

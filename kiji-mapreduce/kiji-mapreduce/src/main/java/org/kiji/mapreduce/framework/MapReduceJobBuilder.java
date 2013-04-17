@@ -234,7 +234,7 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder<T>> {
    */
   @SuppressWarnings("unchecked")
   public T withStoreBindings(InputStream inputSpec) throws IOException {
-    XmlKeyValueStoreParser parser = XmlKeyValueStoreParser.get();
+    XmlKeyValueStoreParser parser = XmlKeyValueStoreParser.get(getConf());
     Map<String, KeyValueStore<?, ?>> newStores = parser.loadStoresFromXml(inputSpec);
     mergeStores(mBoundStores, newStores);
     return (T) this;

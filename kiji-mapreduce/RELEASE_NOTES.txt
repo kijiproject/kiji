@@ -3,6 +3,8 @@
                               KijiMR Release Notes
 
 Version 1.0.0-rc61
+  * KIJIMR-165. XML configuration of file-backed KeyValueStores did not
+      properly load Hadoop default properties.
   * KIJIMR-166. Add HBase jars to MapReduce task classpath.
   * KIJIMR-167. Print better status messages indicating whether jobs succeed
       or fail.

@@ -29,6 +29,7 @@ import org.apache.avro.file.DataFileStream;
 import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.hadoop.util.AvroCharSequenceComparator;
 import org.apache.avro.specific.SpecificDatumReader;
+import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 
@@ -62,7 +63,7 @@ import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
  */
 @ApiAudience.Public
 public final class AvroRecordKeyValueStore<K, V extends IndexedRecord>
-    implements KeyValueStore<K, V> {
+    implements Configurable, KeyValueStore<K, V> {
 
   /** The configuration variable for the Avro record reader schema. */
   private static final String CONF_READER_SCHEMA_KEY = "avro.reader.schema";
@@ -216,6 +217,24 @@ public final class AvroRecordKeyValueStore<K, V extends IndexedRecord>
    */
   public AvroRecordKeyValueStore() {
     this(builder());
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public void setConf(Configuration conf) {
+    if (mOpened) {
+      // Don't allow mutation after we start using this store for reads.
+      throw new IllegalStateException(
+          "Cannot set the configuration after a reader has been opened");
+    }
+
+    mFileHelper.setConf(conf);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public Configuration getConf() {
+    return new Configuration(mFileHelper.getConf());
   }
 
   /** {@inheritDoc} */

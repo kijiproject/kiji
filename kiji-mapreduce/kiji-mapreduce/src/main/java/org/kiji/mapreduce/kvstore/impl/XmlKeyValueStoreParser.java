@@ -61,20 +61,26 @@ public final class XmlKeyValueStoreParser {
   private static final Logger LOG = LoggerFactory.getLogger(
       XmlKeyValueStoreParser.class.getName());
 
-  /** Creates a new instance. */
-  private XmlKeyValueStoreParser() {
-  }
+  /** The Configuration used by ReflectionUtils to instantiate new KeyValueStores. */
+  private Configuration mConf;
 
-  // Singleton instance.
-  private static final XmlKeyValueStoreParser INSTANCE = new XmlKeyValueStoreParser();
+  /**
+   * Creates a new instance.
+   *
+   * @param conf the Configuration to use to instantiate KeyValueStores.
+   */
+  private XmlKeyValueStoreParser(Configuration conf) {
+    mConf = conf;
+  }
 
   /**
    * This method returns XmlKeyValueStoreParser instance.
    *
+   * @param conf the Hadoop Configuration to use to initialize the KeyValueStores.
    * @return an XmlKeyValueStoreParser instance.
    */
-  public static XmlKeyValueStoreParser get() {
-    return INSTANCE;
+  public static XmlKeyValueStoreParser get(Configuration conf) {
+    return new XmlKeyValueStoreParser(conf);
   }
 
   /**
@@ -158,8 +164,7 @@ public final class XmlKeyValueStoreParser {
 
             // Create the store instance, and then configure it by
             // parsing the <store> element.
-            KeyValueStore<?, ?> store = ReflectionUtils.newInstance(storeClass,
-                new Configuration());
+            KeyValueStore<?, ?> store = ReflectionUtils.newInstance(storeClass, mConf);
             configureFromXml(store, storeName, node);
             outMap.put(storeName, store);
           } catch (ClassNotFoundException cnfe) {
@@ -222,7 +227,7 @@ public final class XmlKeyValueStoreParser {
     } else if (numRealChildren == 0) {
       assert null == configurationNode;
       LOG.warn("No <configuration> supplied for store " + storeName);
-      store.initFromConf(KeyValueStoreConfiguration.fromConf(new Configuration(false)));
+      store.initFromConf(new KeyValueStoreConfiguration(new Configuration(mConf), 0));
     } else if (null == configurationNode) {
       // Got a single child element, but it wasn't a <configuration>.
       throw new IOException("Unrecognized XML schema for store " + storeName
@@ -230,8 +235,17 @@ public final class XmlKeyValueStoreParser {
     } else {
       assert numRealChildren == 1;
       // Configure the store by parsing the <configuration> element.
-      KeyValueStoreConfiguration conf = parseConfiguration(configurationNode);
-      store.initFromConf(conf);
+      // The keys in this returned storeConf are all wrapped in a per-kvstore namespace,
+      // and do not contain any default keys.
+      Configuration storeConf = parseConfiguration(configurationNode);
+
+      // Create a "real" configuration with defaults, and add the elements of storeConf on top.
+      Configuration conf = new Configuration(mConf);
+      for (Map.Entry<String, String> entry : storeConf) {
+        conf.set(entry.getKey(), entry.getValue());
+      }
+
+      store.initFromConf(new KeyValueStoreConfiguration(conf, 0));
     }
   }
 
@@ -243,11 +257,11 @@ public final class XmlKeyValueStoreParser {
    *
    * @param configNode a node representing a &lt;configuration&gt; element
    *     in the DOM that is the root of the KeyValueStore's configuration.
-   * @return a new Configuration containing only the key-value pairs associated
+   * @return a new Configuration containing the key-value pairs associated
    *     with this node.
    * @throws IOException if there's an error processing the XML data.
    */
-  private KeyValueStoreConfiguration parseConfiguration(Node configNode) throws IOException {
+  private Configuration parseConfiguration(Node configNode) throws IOException {
     if (null == configNode) {
       return null;
     } else if (!configNode.getNodeName().equals("configuration")) {
@@ -274,9 +288,13 @@ public final class XmlKeyValueStoreParser {
 
       String confXmlText = outStream.toString("UTF-8");
 
+      // This only contains entries from the XML file component for this store; no defaults.
       Configuration conf = new Configuration(false);
       conf.addResource(new ByteArrayInputStream(confXmlText.getBytes("UTF-8")));
-      return KeyValueStoreConfiguration.fromConf(conf);
+
+      // Use KeyValueStoreConfiguration.fromConf() to remap these nodes into a namespace
+      // for this individual key-value store, but return the underlying Configuration object.
+      return KeyValueStoreConfiguration.fromConf(conf).getDelegate();
     } catch (TransformerConfigurationException e) {
       throw new RuntimeException(e);
     } catch (TransformerException e) {

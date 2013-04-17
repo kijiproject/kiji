@@ -30,14 +30,42 @@ import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.junit.Test;
 
 import org.kiji.mapreduce.kvstore.KeyValueStore;
+import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
+import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
 import org.kiji.mapreduce.kvstore.lib.EmptyKeyValueStore;
 import org.kiji.mapreduce.kvstore.lib.SeqFileKeyValueStore;
+import org.kiji.schema.KijiClientTest;
 
-public class TestXmlKeyValueStoreParser {
+public class TestXmlKeyValueStoreParser extends KijiClientTest {
+
+  /**
+   * A KeyValueStore that requires in its initFromConf() method that Hadoop
+   * default values be included.
+   */
+  public static class DefaultsRequiredKVStore implements KeyValueStore<Object, Object> {
+    @Override
+    public void storeToConf(KeyValueStoreConfiguration conf) throws IOException {
+      // Do nothing.
+    }
+
+    @Override
+    public void initFromConf(KeyValueStoreConfiguration kvConf) throws IOException {
+      // Fail if the provided Configuration hasn't loaded core-default.xml.
+      Configuration conf = kvConf.getDelegate();
+      assertEquals("org.apache.hadoop.fs.Hdfs", conf.get("fs.AbstractFileSystem.hdfs.impl"));
+    }
+
+    @Override
+    public KeyValueStoreReader<Object, Object> open() throws IOException {
+      return null;
+    }
+  }
+
   /**
    * @param data a string to wrap in an input stream.
    * @return the input 'data' wrapped in an InputStream object.
@@ -51,10 +79,12 @@ public class TestXmlKeyValueStoreParser {
     }
   }
 
+  private Configuration mConf = new Configuration();
+
   @Test
   public void testSingleStore() throws IOException {
     // Test that a single store can be bound from this.
-    Map<String, KeyValueStore<?, ?>> stores = XmlKeyValueStoreParser.get().loadStoresFromXml(
+    Map<String, KeyValueStore<?, ?>> stores = XmlKeyValueStoreParser.get(mConf).loadStoresFromXml(
         stringAsInputStream("<stores>\n"
         + "  <store class=\"" + EmptyKeyValueStore.class.getCanonicalName() + "\""
         + " name=\"meep\">\n"
@@ -70,7 +100,7 @@ public class TestXmlKeyValueStoreParser {
   @Test
   public void testDefaultPackagePrefix() throws IOException {
     // Test that the default package prefix will be attached to a class name.
-    Map<String, KeyValueStore<?, ?>> stores = XmlKeyValueStoreParser.get().loadStoresFromXml(
+    Map<String, KeyValueStore<?, ?>> stores = XmlKeyValueStoreParser.get(mConf).loadStoresFromXml(
         stringAsInputStream("<stores>\n"
         + "  <store class=\"EmptyKeyValueStore\" name=\"meep\">\n"
         + "    <configuration/>\n"
@@ -85,7 +115,7 @@ public class TestXmlKeyValueStoreParser {
   @Test
   public void testZeroConfigStore() throws IOException {
     // Test that a store with no inner <configuration> is ok.
-    Map<String, KeyValueStore<?, ?>> stores = XmlKeyValueStoreParser.get().loadStoresFromXml(
+    Map<String, KeyValueStore<?, ?>> stores = XmlKeyValueStoreParser.get(mConf).loadStoresFromXml(
         stringAsInputStream("<stores>\n"
         + "  <store class=\"" + EmptyKeyValueStore.class.getCanonicalName() + "\""
         + " name=\"meep\">\n"
@@ -100,7 +130,7 @@ public class TestXmlKeyValueStoreParser {
   @Test
   public void testStoreWithParameters() throws IOException {
     // Test that a store with actual parameters can be bound by this mechanism
-    Map<String, KeyValueStore<?, ?>> stores = XmlKeyValueStoreParser.get().loadStoresFromXml(
+    Map<String, KeyValueStore<?, ?>> stores = XmlKeyValueStoreParser.get(mConf).loadStoresFromXml(
         stringAsInputStream("<stores>\n"
         + "  <store class=\"" + SeqFileKeyValueStore.class.getCanonicalName() + "\""
         + " name=\"meep\">\n"
@@ -126,7 +156,7 @@ public class TestXmlKeyValueStoreParser {
   @Test
   public void testMultipleStores() throws IOException {
     // Test that this can process multiple stores.
-    Map<String, KeyValueStore<?, ?>> stores = XmlKeyValueStoreParser.get().loadStoresFromXml(
+    Map<String, KeyValueStore<?, ?>> stores = XmlKeyValueStoreParser.get(mConf).loadStoresFromXml(
         stringAsInputStream("<stores>\n"
         + "  <store class=\"" + SeqFileKeyValueStore.class.getCanonicalName() + "\""
         + " name=\"foo\">\n"
@@ -158,7 +188,7 @@ public class TestXmlKeyValueStoreParser {
   @Test(expected=IOException.class)
   public void testAliasedStores() throws IOException {
     // Test that multiple stores with the same name cause an IOException.
-    XmlKeyValueStoreParser.get().loadStoresFromXml(
+    XmlKeyValueStoreParser.get(mConf).loadStoresFromXml(
         stringAsInputStream("<stores>\n"
         + "  <store class=\"" + SeqFileKeyValueStore.class.getCanonicalName() + "\""
         + " name=\"foo\">\n"
@@ -175,7 +205,7 @@ public class TestXmlKeyValueStoreParser {
   @Test(expected=IOException.class)
   public void testInvalidParse() throws IOException {
     // Test that invalid XML in the top level throws an exception.
-    XmlKeyValueStoreParser.get().loadStoresFromXml(
+    XmlKeyValueStoreParser.get(mConf).loadStoresFromXml(
         stringAsInputStream("<stores>\n"
         + "  <store class=\"EmptyKeyValueStore\" name=\"meep\">\n"
         + "    <configuration>\n"
@@ -190,7 +220,7 @@ public class TestXmlKeyValueStoreParser {
   @Test(expected=IOException.class)
   public void testInvalidParse2() throws IOException {
     // Test that invalid XML in a <store> element fails.
-    XmlKeyValueStoreParser.get().loadStoresFromXml(
+    XmlKeyValueStoreParser.get(mConf).loadStoresFromXml(
         stringAsInputStream("<stores>\n"
         + "  <store class=\"EmptyKeyValueStore\" name=\"meep\">\n"
         + "    <blort/>\n"
@@ -204,7 +234,7 @@ public class TestXmlKeyValueStoreParser {
   @Test(expected=IOException.class)
   public void testInvalidParse3() throws IOException {
     // Test that invalid XML in a <store> element fails.
-    XmlKeyValueStoreParser.get().loadStoresFromXml(
+    XmlKeyValueStoreParser.get(mConf).loadStoresFromXml(
         stringAsInputStream("<stores>\n"
         + "  <store class=\"EmptyKeyValueStore\" name=\"meep\">\n"
         + "    <configuration/>\n"
@@ -219,7 +249,7 @@ public class TestXmlKeyValueStoreParser {
   @Test(expected=IOException.class)
   public void testInvalidParseInConfiguration() throws IOException {
     // Test that invalid XML in the <configuration> element throws an IOException.
-    XmlKeyValueStoreParser.get().loadStoresFromXml(
+    XmlKeyValueStoreParser.get(mConf).loadStoresFromXml(
         stringAsInputStream("<stores>\n"
         + "  <store class=\"EmptyKeyValueStore\" name=\"meep\">\n"
         + "    <configuration>\n"
@@ -229,5 +259,17 @@ public class TestXmlKeyValueStoreParser {
         + "</stores>"));
 
     fail("Didn't expect to get this far.");
+  }
+
+  @Test
+  public void testConfigDefaultsRequiredStores() throws IOException {
+    // Test that the store in question is configured with a full Configuration instance.
+    XmlKeyValueStoreParser.get(mConf).loadStoresFromXml(
+        stringAsInputStream("<stores>\n"
+        + "  <store class=\"" + DefaultsRequiredKVStore.class.getName() + "\" name=\"meep\">\n"
+        + "    <configuration>\n"
+        + "    </configuration>\n"
+        + "  </store>\n"
+        + "</stores>"));
   }
 }

@@ -30,6 +30,7 @@ import org.kiji.common.flags.Flag;
 import org.kiji.mapreduce.MapReduceJobInput;
 import org.kiji.mapreduce.MapReduceJobOutput;
 import org.kiji.mapreduce.framework.MapReduceJobBuilder;
+import org.kiji.schema.platform.SchemaPlatformBridge;
 import org.kiji.schema.tools.BaseTool;
 
 /**
@@ -89,6 +90,11 @@ public abstract class JobTool<B extends MapReduceJobBuilder> extends BaseTool {
    */
   protected void configure(B jobBuilder)
       throws ClassNotFoundException, IOException {
+    // Get Hadoop config files (hdfs-site.xml, etc) into Configuration objects.
+    // The Configuration for this instance will also get the new default values as
+    // an underlay.
+    SchemaPlatformBridge.get().initializeHadoopResources();
+
     // Use default environment configuration:
     jobBuilder.withConf(getConf());
 

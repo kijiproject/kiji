@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -49,7 +50,7 @@ import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
  * @param <V> The type of value field stored in the SequenceFile(s).
  */
 @ApiAudience.Public
-public final class SeqFileKeyValueStore<K, V> implements KeyValueStore<K, V> {
+public final class SeqFileKeyValueStore<K, V> implements Configurable, KeyValueStore<K, V> {
 
   /** Helper object to manage backing files. */
   private final FileStoreHelper mFileHelper;
@@ -159,6 +160,24 @@ public final class SeqFileKeyValueStore<K, V> implements KeyValueStore<K, V> {
    */
   private SeqFileKeyValueStore(Builder builder) {
     mFileHelper = builder.mFileBuilder.build();
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public void setConf(Configuration conf) {
+    if (mOpened) {
+      // Don't allow mutation after we start using this store for reads.
+      throw new IllegalStateException(
+          "Cannot set the configuration after a reader has been opened");
+    }
+
+    mFileHelper.setConf(conf);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public Configuration getConf() {
+    return new Configuration(mFileHelper.getConf());
   }
 
   /** {@inheritDoc} */
