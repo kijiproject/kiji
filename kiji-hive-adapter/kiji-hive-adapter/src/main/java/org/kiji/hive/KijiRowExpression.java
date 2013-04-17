@@ -31,6 +31,7 @@ import java.util.regex.Pattern;
 
 import org.apache.avro.Schema;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hive.serde2.typeinfo.ListTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
@@ -197,14 +198,6 @@ public class KijiRowExpression {
       throw new UnsupportedOperationException();
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public KijiDataRequest getDataRequest() {
-      KijiDataRequestBuilder builder = KijiDataRequest.builder();
-      builder.newColumnsDef().add(mKijiColumnName.getFamily(), mKijiColumnName.getQualifier());
-      return builder.build();
-    }
-
     /**
      * Gets the Kiji column family name.
      *
@@ -284,6 +277,21 @@ public class KijiRowExpression {
       return struct;
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public KijiDataRequest getDataRequest() {
+      // Indexes start from 0, whereas maxVersions starts from 1 so we need to adjust for this
+      int maxVersions = mIndex + 1;
+      if(mIndex == -1) {
+        // If we are getting the oldest cell, we need all versions.
+        maxVersions = HConstants.ALL_VERSIONS;
+      }
+
+      KijiDataRequestBuilder builder = KijiDataRequest.builder();
+      builder.newColumnsDef().withMaxVersions(maxVersions).add(getFamily(), getQualifier());
+      return builder.build();
+    }
+
     /**
      * Gets the declared (therefore, the target) Hive type for the Kiji cell data.
      *
@@ -335,6 +343,14 @@ public class KijiRowExpression {
       return result;
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public KijiDataRequest getDataRequest() {
+      KijiDataRequestBuilder builder = KijiDataRequest.builder();
+      builder.newColumnsDef().withMaxVersions(HConstants.ALL_VERSIONS).add(getFamily(), getQualifier());
+      return builder.build();
+    }
+
     /**
      * Gets the declared (therefore, the target) Hive type for the Kiji cell value.
      *
@@ -355,7 +371,7 @@ public class KijiRowExpression {
   private static class Parser {
     /** The regular expression for Kiji row expressions. */
     private static final String REGEX =
-        "([A-Za-z0-9_]*)(:([^.\\[]*))?(\\[(\\d+)\\])?([.]([a-z]+))*";
+        "([A-Za-z0-9_]*)(:([^.\\[]*))?(\\[(-?\\d+)\\])?([.]([a-z]+))*";
 
     /** The compiled pattern for Kiji row expressions. */
     private static final Pattern PATTERN = Pattern.compile(REGEX);
@@ -384,7 +400,11 @@ public class KijiRowExpression {
       if (null == matcher.group(4)) {
         return new AllValuesExpression(typeInfo, kijiColumnName);
       }
-      return new FlatValueExpression(typeInfo, kijiColumnName, Integer.valueOf(matcher.group(5)));
+      Integer index = Integer.valueOf(matcher.group(5));
+      if (index < -1) {
+        throw new RuntimeException("Invalid index(must be >= -1): " + index);
+      }
+      return new FlatValueExpression(typeInfo, kijiColumnName, index);
 
       // TODO: Parse other operators on the values.
     }

@@ -22,7 +22,9 @@ package org.kiji.hive;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
+import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.junit.Test;
 
@@ -38,9 +40,12 @@ public class TestKijiRowExpression {
     final KijiDataRequest kijiDataRequest = kijiRowExpression.getDataRequest();
     assertEquals(1, kijiDataRequest.getColumns().size());
 
-    final KijiDataRequest.Column column = kijiDataRequest.getColumns().iterator().next();
-    assertEquals("family", column.getFamily());
-    assertNull(column.getQualifier());
+    for(KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
+      assertEquals("family", column.getFamily());
+      assertNull(column.getQualifier());
+      assertEquals(HConstants.ALL_VERSIONS,
+          kijiDataRequest.getColumn(column.getFamily(), column.getQualifier()).getMaxVersions());
+    }
   }
 
   @Test
@@ -50,9 +55,12 @@ public class TestKijiRowExpression {
     final KijiDataRequest kijiDataRequest = kijiRowExpression.getDataRequest();
     assertEquals(1, kijiDataRequest.getColumns().size());
 
-    final KijiDataRequest.Column column = kijiDataRequest.getColumns().iterator().next();
-    assertEquals("family", column.getFamily());
-    assertNull(column.getQualifier());
+    for(KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
+      assertEquals(1,
+          kijiDataRequest.getColumn(column.getFamily(), column.getQualifier()).getMaxVersions());
+      assertEquals("family", column.getFamily());
+      assertNull(column.getQualifier());
+    }
   }
 
   @Test
@@ -62,6 +70,11 @@ public class TestKijiRowExpression {
     final KijiDataRequest kijiDataRequest = kijiRowExpression.getDataRequest();
     assertEquals(1, kijiDataRequest.getColumns().size());
     assertNotNull(kijiDataRequest.getColumn("family", "qualifier"));
+
+    for(KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
+      assertEquals(HConstants.ALL_VERSIONS,
+          kijiDataRequest.getColumn(column.getFamily(), column.getQualifier()).getMaxVersions());
+    }
   }
 
   @Test
@@ -71,6 +84,11 @@ public class TestKijiRowExpression {
     final KijiDataRequest kijiDataRequest = kijiRowExpression.getDataRequest();
     assertEquals(1, kijiDataRequest.getColumns().size());
     assertNotNull(kijiDataRequest.getColumn("family", "qualifier"));
+
+    for(KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
+      assertEquals(1,
+          kijiDataRequest.getColumn(column.getFamily(), column.getQualifier()).getMaxVersions());
+    }
   }
 
   @Test
@@ -80,6 +98,10 @@ public class TestKijiRowExpression {
     final KijiDataRequest kijiDataRequest = kijiRowExpression.getDataRequest();
     assertEquals(1, kijiDataRequest.getColumns().size());
     assertNotNull(kijiDataRequest.getColumn("family", "qualifier"));
+    for(KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
+      assertEquals(1,
+          kijiDataRequest.getColumn(column.getFamily(), column.getQualifier()).getMaxVersions());
+    }
   }
 
   @Test
@@ -89,5 +111,58 @@ public class TestKijiRowExpression {
     final KijiDataRequest kijiDataRequest = kijiRowExpression.getDataRequest();
     assertEquals(1, kijiDataRequest.getColumns().size());
     assertNotNull(kijiDataRequest.getColumn("family", "qualifier"));
+    for(KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
+      assertEquals(1,
+          kijiDataRequest.getColumn(column.getFamily(), column.getQualifier()).getMaxVersions());
+    }
+  }
+
+  @Test
+  public void testDefaultVersions() {
+    final KijiRowExpression kijiRowExpression =
+        new KijiRowExpression("family:qualifier", UNVALIDATED_TYPE_INFO);
+    KijiDataRequest kijiDataRequest = kijiRowExpression.getDataRequest();
+    for(KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
+      assertEquals("Timeseries expression should generate a KijiDataRequest with versions = MAX_INT",
+          kijiDataRequest.getColumn(column.getFamily(), column.getQualifier()).getMaxVersions(),
+          HConstants.ALL_VERSIONS);
+    }
+  }
+
+  @Test
+  public void testArbitraryIndex() {
+    final KijiRowExpression kijiRowExpression =
+        new KijiRowExpression("family:qualifier[5]", UNVALIDATED_TYPE_INFO);
+    KijiDataRequest kijiDataRequest = kijiRowExpression.getDataRequest();
+    assertEquals(1, kijiDataRequest.getColumns().size());
+    assertNotNull(kijiDataRequest.getColumn("family", "qualifier"));
+    for(KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
+      assertEquals(6,
+          kijiDataRequest.getColumn(column.getFamily(), column.getQualifier()).getMaxVersions());
+    }
+  }
+
+  @Test
+  public void testOldest() {
+    final KijiRowExpression kijiRowExpression =
+        new KijiRowExpression("family:qualifier[-1]", UNVALIDATED_TYPE_INFO);
+    KijiDataRequest kijiDataRequest = kijiRowExpression.getDataRequest();
+    assertEquals(1, kijiDataRequest.getColumns().size());
+    assertNotNull(kijiDataRequest.getColumn("family", "qualifier"));
+    for(KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
+      assertEquals(HConstants.ALL_VERSIONS,
+          kijiDataRequest.getColumn(column.getFamily(), column.getQualifier()).getMaxVersions());
+    }
+  }
+
+  @Test
+  public void testInvalidIndex() {
+    try {
+      final KijiRowExpression kijiRowExpression =
+          new KijiRowExpression("family:qualifier[-2].timestamp", UNVALIDATED_TYPE_INFO);
+      fail("Should fail with a RuntimeException");
+    } catch (RuntimeException re) {
+      assertEquals("Invalid index(must be >= -1): -2", re.getMessage());
+    }
   }
 }

@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
+import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.junit.Test;
 
@@ -70,5 +71,56 @@ public class TestDataRequestOptimizer {
     assertNotNull(kijiDataRequest.getColumn("info", "name"));
     assertNotNull(kijiDataRequest.getColumn("info", "email"));
     assertNull(kijiDataRequest.getColumn("info", "address"));
+  }
+
+  @Test
+  public void testMergeVersions() throws IOException {
+    // Test that an arbitrary index summed with all versions results in all versions.
+    final KijiRowExpression allEmailsRowExpression =
+        new KijiRowExpression("info:email", UNVALIDATED_TYPE_INFO);
+    final KijiRowExpression newestEmailExpression =
+        new KijiRowExpression("info:email[0]", UNVALIDATED_TYPE_INFO);
+    List<KijiRowExpression> rowExpressionList =
+        Lists.newArrayList(allEmailsRowExpression, newestEmailExpression);
+
+    KijiDataRequest kijiDataRequest = DataRequestOptimizer.getDataRequest(rowExpressionList);
+    assertEquals(1, kijiDataRequest.getColumns().size());
+    for(KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
+      assertEquals(HConstants.ALL_VERSIONS,
+          kijiDataRequest.getColumn(column.getFamily(), column.getQualifier()).getMaxVersions());
+    }
+
+    // Test that an arbitrary values added togather results in the larger value
+    final KijiRowExpression secondNewestEmailExpression =
+        new KijiRowExpression("info:email[3]", UNVALIDATED_TYPE_INFO);
+    rowExpressionList = Lists.newArrayList(newestEmailExpression, secondNewestEmailExpression);
+
+    kijiDataRequest = DataRequestOptimizer.getDataRequest(rowExpressionList);
+    assertEquals(1, kijiDataRequest.getColumns().size());
+    for(KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
+      assertEquals(4,
+          kijiDataRequest.getColumn(column.getFamily(), column.getQualifier()).getMaxVersions());
+    }
+  }
+
+  @Test
+  public void testMergeFamilyWithoutQualifier() throws IOException {
+    // Ensure that an expression that contains just the family will supersede one that contains
+    // both a family and a qualifier
+    final KijiRowExpression nameRowExpression =
+        new KijiRowExpression("info:email", UNVALIDATED_TYPE_INFO);
+    final KijiRowExpression fullInfoRowExpression =
+        new KijiRowExpression("info", UNVALIDATED_TYPE_INFO);
+    List<KijiRowExpression> rowExpressionList =
+        Lists.newArrayList(nameRowExpression, fullInfoRowExpression);
+
+    KijiDataRequest kijiDataRequest = DataRequestOptimizer.getDataRequest(rowExpressionList);
+    assertEquals(1, kijiDataRequest.getColumns().size());
+    for(KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
+      assertEquals("info", column.getFamily());
+      assertNull(column.getQualifier());
+      assertEquals(HConstants.ALL_VERSIONS,
+          kijiDataRequest.getColumn(column.getFamily(), column.getQualifier()).getMaxVersions());
+    }
   }
 }
