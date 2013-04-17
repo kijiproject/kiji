@@ -3,19 +3,22 @@
                               KijiMR Release Notes
 
 Version 1.0.0-rc61
+  * KIJIMR-167. Print better status messages indicating whether jobs succeed
+      or fail.
   * KIJIMR-64. Serialize row filters & start/limit row keys for MapReduce jobs.
   * KIJIMR-151. Pass Configuration to Kiji in HFileMapReduceJobOutput.
 
 Version 1.0.0-rc6
   * KIJIMRLIB-14. Add XML input format.
   * KIJIMR-162. Remove InterruptedException from KijiContext.getStores().
-  * KIJIMR-112. Collapses MapReduceJob into KijiMapReduceJob.  Users should change instances of
-      MapReduceJob in their code to KijiMapReduceJob.
+  * KIJIMR-112. Collapses MapReduceJob into KijiMapReduceJob.  Users should
+      change instances of MapReduceJob in their code to KijiMapReduceJob.
   * KIJIMR-135. JobIOSpecParseException now extends RuntimeException.
   * KIJIMR-157. Removes --install option from job-history tool.
       Updates job-history.
-  * KIJIMR-108. Moves forName methods from KijiMapper, KijiReducer, KijiGatherer, KijiProducer,
-      KijiBulkImporter to impl package utility classes.
+  * KIJIMR-108. Moves forName methods from KijiMapper, KijiReducer,
+      KijiGatherer, KijiProducer, KijiBulkImporter to impl package utility
+      classes.
   * KIJIMR-138. Command-line arguments --start-row and --limit-row understand
       entity IDs.
   * KIJIMR-109. Add KijiTableContext.getEntityIdFactory().
