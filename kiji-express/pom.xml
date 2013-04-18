@@ -120,18 +120,23 @@
       <version>${scalatest.version}</version>
       <scope>test</scope>
     </dependency>
+    <!--
+      Keeping the following two dependencies in compile scope allows users to use
+      the KijiExpress testing framework by only depending on the KijiExpress test
+      jar.
+    -->
     <dependency>
       <groupId>org.kiji.testing</groupId>
       <artifactId>fake-hbase</artifactId>
       <version>0.0.5</version>
-      <scope>test</scope>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.kiji.schema</groupId>
       <artifactId>kiji-schema</artifactId>
       <version>${kiji.schema.version}</version>
       <type>test-jar</type>
-      <scope>test</scope>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.easymock</groupId>
