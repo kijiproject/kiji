@@ -78,8 +78,8 @@ class TopNextSongs(args: Args) extends Job(args) {
    */
   def entityId(songId: String): EntityId = {
     val uri = KijiURI.newBuilder(args("songs-table")).build()
-    retainAnd(Kiji.Factory.open(uri)) { kiji =>
-      retainAnd(kiji.openTable(uri.getTable)) { table =>
+    doAndRelease(Kiji.Factory.open(uri)) { kiji =>
+      doAndRelease(kiji.openTable(uri.getTable)) { table =>
         table.getEntityId(songId)
       }
     }
