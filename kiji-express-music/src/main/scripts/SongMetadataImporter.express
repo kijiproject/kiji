@@ -17,10 +17,8 @@
  * limitations under the License.
  */
 
-import com.twitter.scalding._
 import util.parsing.json.JSON
 
-import org.kiji.express.DSL._
 import org.kiji.express.Resources._
 import org.kiji.examples.music.SongMetadata
 import org.kiji.schema.EntityId
