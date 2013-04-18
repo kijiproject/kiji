@@ -108,7 +108,7 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder<T>> {
    * @return A configured MapReduce job, ready to be run.
    * @throws IOException If there is an error.
    */
-  public KijiMapReduceJob build() throws IOException {
+  public final KijiMapReduceJob build() throws IOException {
     Preconditions.checkNotNull(mConf, "Must set the job base configuration using .withConf()");
     final Job job = new Job(mConf);
     configureJob(job);
@@ -159,6 +159,9 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder<T>> {
   /**
    * Configures the job output.
    *
+   * <p>Classes that override this method should call super.getJobOutput or override
+   * {@link MapReduceJobBuilder#getJobOutput() getJobOutput} also.</p>
+   *
    * @param jobOutput The output for the job.
    * @return This builder instance so you may chain configuration method calls.
    */
@@ -170,6 +173,9 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder<T>> {
 
   /**
    * Provides access to the job output that the builder is configured with.
+   *
+   * <p>Classes should override this method if they also override
+   * {@link MapReduceJobBuilder#withOutput(MapReduceJobOutput) withOutput}.</p>
    *
    * @return The output for the job the builder will create.
    */
@@ -185,7 +191,7 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder<T>> {
    * @return This builder instance so you may chain configuration method calls.
    */
   @SuppressWarnings("unchecked")
-  public T withStore(String storeName, KeyValueStore<?, ?> storeImpl) {
+  public final T withStore(String storeName, KeyValueStore<?, ?> storeImpl) {
     if (null == storeImpl) {
       throw new RuntimeException("Cannot bind a store to a null implementation");
     }
@@ -207,7 +213,7 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder<T>> {
    * @return This builder instance so you may chain configuration method calls.
    * @throws IOException if there is an error reading or parsing the spec file.
    */
-  public T withStoreBindingsFile(String specFilename) throws IOException {
+  public final T withStoreBindingsFile(String specFilename) throws IOException {
     InputStream fis = null;
     try {
       fis = new FileInputStream(new File(specFilename));
@@ -233,7 +239,7 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder<T>> {
    * @throws IOException if there is an error reading or parsing the input spec.
    */
   @SuppressWarnings("unchecked")
-  public T withStoreBindings(InputStream inputSpec) throws IOException {
+  public final T withStoreBindings(InputStream inputSpec) throws IOException {
     XmlKeyValueStoreParser parser = XmlKeyValueStoreParser.get(getConf());
     Map<String, KeyValueStore<?, ?>> newStores = parser.loadStoresFromXml(inputSpec);
     mergeStores(mBoundStores, newStores);
@@ -242,6 +248,9 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder<T>> {
 
   /**
    * Sets the base Hadoop configuration used to build the MapReduce job.
+   *
+   * <p>Classes that override this method should call super.withConf or override
+   * {@link MapReduceJobBuilder#getConf() getConf}.</p>
    *
    * @param conf Base Hadoop configuration used to build the MapReduce job.
    * @return this.
@@ -252,7 +261,14 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder<T>> {
     return (T) this;
   }
 
-  /** @return the base Hadoop configuration used to build the MapReduce job. */
+  /**
+   * Gets the base Hadoop configuration used to build the MapReduce job.
+   *
+   * <p>Classes should override this method if they also override
+   * {@link MapReduceJobBuilder#withConf(Configuration) withConf}.</p>
+   *
+   * @return the base Hadoop configuration used to build the MapReduce job.
+   */
   public final Configuration getConf() {
     return mConf;
   }
@@ -504,7 +520,7 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder<T>> {
    * @throws IOException if there is an error configuring the stores. This
    *     may include, e.g., the case where a store is required but not defined.
    */
-  protected void configureStores(Job job) throws IOException {
+  protected final void configureStores(Job job) throws IOException {
     KeyValueStoreConfigValidator.get().bindAndValidateRequiredStores(
         getRequiredStores(), mBoundStores);
     KeyValueStoreConfigSerializer.get().addStoreMapToConfiguration(
@@ -520,7 +536,7 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder<T>> {
    *     all mappings in src.
    * @param src an additional set of KeyValueStore mappings to apply.
    */
-  protected void mergeStores(Map<String, KeyValueStore<?, ?>> dest,
+  protected final void mergeStores(Map<String, KeyValueStore<?, ?>> dest,
       Map<String, KeyValueStore<?, ?>> src) {
     for (Map.Entry<String, KeyValueStore<?, ?>> entry : src.entrySet()) {
       String name = entry.getKey();
@@ -541,6 +557,8 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder<T>> {
   /**
    * Method for job components to declare required KeyValueStore entries (and their default
    * implementations).
+   *
+   * <p>Classes inheriting from MapReduceJobBuilder should override this method.</p>
    *
    * @return a map of required names to default KeyValueStore implementations to add. These will
    *     be used to augment the existing map if any names are not defined by withStore().
