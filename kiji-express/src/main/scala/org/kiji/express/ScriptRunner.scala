@@ -71,6 +71,13 @@ import org.kiji.express.Resources.doAndClose
 class ScriptRunner extends Tool {
   import ScriptRunner._
 
+  private val imports: Seq[String] = Seq(
+      "import com.twitter.scalding._",
+      "import org.kiji.express._",
+      "import org.kiji.express.DSL._")
+  private val before = "{ args: com.twitter.scalding.Args => new com.twitter.scalding.Job(args) {"
+  private val after = "} }"
+
   /**
    * Builds a jar entry and writes it to the specified jar output stream.
    *
@@ -141,9 +148,8 @@ class ScriptRunner extends Tool {
 
     // Modify the script so that it returns a job constructor.
     val preparedScript: String = {
-      val before = "{ args: com.twitter.scalding.Args => new com.twitter.scalding.Job(args) {"
-      val after = "} }"
-      "%s\n%s\n%s".format(before, script, after)
+      val importBlock = imports.reduce { _ + "\n" + _ }
+      "%s\n%s\n%s\n%s".format(importBlock, before, script, after)
     }
 
     // Check and compile the code.

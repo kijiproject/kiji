@@ -59,15 +59,7 @@ class ScriptRunnerSuite extends KijiSuite {
 
   /** Test script to run. */
   val scriptString: String =
-    """
-import java.util.NavigableMap
-
-import com.twitter.scalding._
-import org.apache.avro.util.Utf8
-
-import org.kiji.express.DSL._
-import org.kiji.express.KijiSlice
-
+"""
 KijiInput("%s")("family:column1" -> 'word)
     // Sanitize the word.
     .map('word -> 'cleanword) { words: KijiSlice[String] =>
@@ -79,7 +71,7 @@ KijiInput("%s")("family:column1" -> 'word)
     .groupBy('cleanword) { occurences => occurences.size }
     // Write the result to a file.
     .write(Tsv("outputFile"))
-    """
+"""
 
   test("An script can be compiled and run as a local job.") {
     // Create test Kiji table.
