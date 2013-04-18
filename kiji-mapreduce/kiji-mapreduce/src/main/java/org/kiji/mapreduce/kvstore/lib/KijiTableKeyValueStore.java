@@ -78,7 +78,7 @@ import org.kiji.schema.util.ResourceUtils;
  * @param <V> the value type returned by this key-value store.
  */
 @ApiAudience.Public
-public final class KijiTableKeyValueStore<V> implements Configurable, KeyValueStore<String, V> {
+public final class KijiTableKeyValueStore<V> implements Configurable, KeyValueStore<EntityId, V> {
   // TODO(KIJIMR-94): Add a flag that allows users to specify hex-strings (pre-hashed entity ids)
   // as keys instead of "vanilla" key strings.
 
@@ -390,7 +390,7 @@ public final class KijiTableKeyValueStore<V> implements Configurable, KeyValueSt
 
   /** {@inheritDoc} */
   @Override
-  public KeyValueStoreReader<String, V> open() throws IOException {
+  public KeyValueStoreReader<EntityId, V> open() throws IOException {
     mOpened = true;
     return new TableKVReader();
   }
@@ -457,7 +457,7 @@ public final class KijiTableKeyValueStore<V> implements Configurable, KeyValueSt
 
   /** KeyValueStoreReader implementation that reads from a Kiji table. */
   @ApiAudience.Private
-  private final class TableKVReader implements KeyValueStoreReader<String, V> {
+  private final class TableKVReader implements KeyValueStoreReader<EntityId, V> {
     /** Kiji instance to use. */
     private Kiji mKiji;
     /** Kiji Table instance to open. */
@@ -501,12 +501,11 @@ public final class KijiTableKeyValueStore<V> implements Configurable, KeyValueSt
 
     /** {@inheritDoc} */
     @Override
-    public V get(String key) throws IOException {
+    public V get(EntityId entityId) throws IOException {
       if (!isOpen()) {
         throw new IOException("Closed");
       }
 
-      EntityId entityId = mKijiTable.getEntityId(key);
       // Check the cache first.
       if (null != mResultCache && mResultCache.containsKey(entityId)) {
         return mResultCache.get(entityId);
@@ -538,12 +537,11 @@ public final class KijiTableKeyValueStore<V> implements Configurable, KeyValueSt
 
     /** {@inheritDoc} */
     @Override
-    public boolean containsKey(String key) throws IOException {
+    public boolean containsKey(EntityId entityId) throws IOException {
       if (!isOpen()) {
         throw new IOException("Closed");
       }
 
-      EntityId entityId = mKijiTable.getEntityId(key);
       if (null != mResultCache && mResultCache.containsKey(entityId)) {
         return true; // Cache hit.
       }

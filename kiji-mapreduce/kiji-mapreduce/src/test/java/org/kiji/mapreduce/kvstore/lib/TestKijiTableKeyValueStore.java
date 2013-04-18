@@ -20,6 +20,11 @@
 package org.kiji.mapreduce.kvstore.lib;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import static org.kiji.schema.util.ResourceUtils.closeOrLog;
+import static org.kiji.schema.util.ResourceUtils.releaseOrLog;
 
 import java.io.IOException;
 
@@ -29,9 +34,13 @@ import org.apache.hadoop.util.ReflectionUtils;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
 import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
 import org.kiji.mapreduce.kvstore.impl.KeyValueStoreConfigSerializer;
+import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiClientTest;
+import org.kiji.schema.KijiTable;
+import org.kiji.schema.KijiTableWriter;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayouts;
@@ -145,5 +154,31 @@ public class TestKijiTableKeyValueStore extends KijiClientTest {
         .withMaxTimestamp(512)
         .withCacheLimit(2121)
         .build();
+  }
+
+  @Test
+  public void testSuccessfulReadingFromKVStore() throws IOException {
+    KijiTable table = getKiji().openTable("table");
+    try {
+      EntityId entityId = table.getEntityId("identifier");
+      String value = "value";
+      KijiTableWriter writer = table.openTableWriter();
+      try {
+        writer.put(entityId, "family", "column", "value");
+      } finally {
+        closeOrLog(writer);
+      }
+
+      KijiTableKeyValueStore<CharSequence> input = KijiTableKeyValueStore.builder()
+          .withTable(KijiURI.newBuilder(getKiji().getURI().toString() + "/table").build())
+          .withColumn("family", "column")
+          .build();
+      KeyValueStoreReader<EntityId, CharSequence> reader = input.open();
+      assertTrue(reader.containsKey(entityId));
+      assertEquals(value, reader.get(entityId).toString());
+      assertFalse(reader.containsKey(table.getEntityId("missingIdentifier")));
+    } finally {
+      releaseOrLog(table);
+    }
   }
 }
