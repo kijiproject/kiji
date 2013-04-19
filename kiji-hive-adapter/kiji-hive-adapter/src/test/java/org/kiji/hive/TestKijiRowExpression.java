@@ -20,85 +20,88 @@
 package org.kiji.hive;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import org.apache.hadoop.hbase.HConstants;
-import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.junit.Test;
 
 import org.kiji.schema.KijiDataRequest;
 
+/**
+ * Tests for parsing of KijiRowExpressions into the corresponding KijiDataRequests.
+ */
 public class TestKijiRowExpression {
-  private static final TypeInfo UNVALIDATED_TYPE_INFO = null;
-
   @Test
-  public void testFamilyExpression() {
+  public void testFamilyAllValuesExpression() {
     final KijiRowExpression kijiRowExpression =
-        new KijiRowExpression("family", UNVALIDATED_TYPE_INFO);
+        new KijiRowExpression("family", TypeInfos.FAMILY_MAP_ALL_VALUES);
     final KijiDataRequest kijiDataRequest = kijiRowExpression.getDataRequest();
     assertEquals(1, kijiDataRequest.getColumns().size());
 
     for (KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
-      assertEquals("family", column.getFamily());
-      assertNull(column.getQualifier());
+      assertFalse(column.getColumnName().isFullyQualified());
       assertEquals(HConstants.ALL_VERSIONS,
           kijiDataRequest.getColumn(column.getFamily(), column.getQualifier()).getMaxVersions());
     }
   }
 
   @Test
-  public void testFamilySpecificExpression() {
+  public void testFamilyFlatValueExpression() {
     final KijiRowExpression kijiRowExpression =
-        new KijiRowExpression("family[0]", UNVALIDATED_TYPE_INFO);
+        new KijiRowExpression("family[0]", TypeInfos.FAMILY_MAP_FLAT_VALUE);
     final KijiDataRequest kijiDataRequest = kijiRowExpression.getDataRequest();
     assertEquals(1, kijiDataRequest.getColumns().size());
 
     for (KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
+      assertFalse(column.getColumnName().isFullyQualified());
       assertEquals(1,
           kijiDataRequest.getColumn(column.getFamily(), column.getQualifier()).getMaxVersions());
-      assertEquals("family", column.getFamily());
-      assertNull(column.getQualifier());
     }
   }
 
   @Test
-  public void testFamilyQualifierExpression() {
+  public void testColumnAllValuesExpression() {
     final KijiRowExpression kijiRowExpression =
-        new KijiRowExpression("family:qualifier", UNVALIDATED_TYPE_INFO);
+        new KijiRowExpression("family:qualifier", TypeInfos.COLUMN_ALL_VALUES);
     final KijiDataRequest kijiDataRequest = kijiRowExpression.getDataRequest();
     assertEquals(1, kijiDataRequest.getColumns().size());
     assertNotNull(kijiDataRequest.getColumn("family", "qualifier"));
 
     for (KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
+      assertTrue(column.getColumnName().isFullyQualified());
       assertEquals(HConstants.ALL_VERSIONS,
           kijiDataRequest.getColumn(column.getFamily(), column.getQualifier()).getMaxVersions());
     }
   }
 
   @Test
-  public void testFamilyQualifierSpecificExpression() {
+  public void testColumnFlatValueExpression() {
     final KijiRowExpression kijiRowExpression =
-        new KijiRowExpression("family:qualifier[0]", UNVALIDATED_TYPE_INFO);
+        new KijiRowExpression("family:qualifier[0]", TypeInfos.COLUMN_FLAT_VALUE);
     final KijiDataRequest kijiDataRequest = kijiRowExpression.getDataRequest();
     assertEquals(1, kijiDataRequest.getColumns().size());
     assertNotNull(kijiDataRequest.getColumn("family", "qualifier"));
 
     for (KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
+      assertTrue(column.getColumnName().isFullyQualified());
       assertEquals(1,
           kijiDataRequest.getColumn(column.getFamily(), column.getQualifier()).getMaxVersions());
     }
   }
 
   @Test
-  public void testFamilyQualifierFieldExpression() {
+  public void testColumnFlatValueFieldExpression() {
+    // This expression returns the struct type, and then Hive extracts the relevant part
     final KijiRowExpression kijiRowExpression =
-        new KijiRowExpression("family:qualifier[0].field", UNVALIDATED_TYPE_INFO);
+        new KijiRowExpression("family:qualifier[0].value", TypeInfos.COLUMN_FLAT_VALUE);
     final KijiDataRequest kijiDataRequest = kijiRowExpression.getDataRequest();
     assertEquals(1, kijiDataRequest.getColumns().size());
     assertNotNull(kijiDataRequest.getColumn("family", "qualifier"));
     for (KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
+      assertTrue(column.getColumnName().isFullyQualified());
       assertEquals(1,
           kijiDataRequest.getColumn(column.getFamily(), column.getQualifier())
               .getMaxVersions());
@@ -106,13 +109,15 @@ public class TestKijiRowExpression {
   }
 
   @Test
-  public void testFamilyQualifierTimestampExpression() {
+  public void testColumnFlatValueTimestampExpression() {
+    // This expression returns the struct type, and then Hive extracts the relevant part
     final KijiRowExpression kijiRowExpression =
-        new KijiRowExpression("family:qualifier[0].timestamp", UNVALIDATED_TYPE_INFO);
+        new KijiRowExpression("family:qualifier[0].ts", TypeInfos.COLUMN_FLAT_VALUE);
     final KijiDataRequest kijiDataRequest = kijiRowExpression.getDataRequest();
     assertEquals(1, kijiDataRequest.getColumns().size());
     assertNotNull(kijiDataRequest.getColumn("family", "qualifier"));
     for (KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
+      assertTrue(column.getColumnName().isFullyQualified());
       assertEquals(1,
           kijiDataRequest.getColumn(column.getFamily(), column.getQualifier()).getMaxVersions());
     }
@@ -121,9 +126,10 @@ public class TestKijiRowExpression {
   @Test
   public void testDefaultVersions() {
     final KijiRowExpression kijiRowExpression =
-        new KijiRowExpression("family:qualifier", UNVALIDATED_TYPE_INFO);
+        new KijiRowExpression("family:qualifier", TypeInfos.COLUMN_ALL_VALUES);
     KijiDataRequest kijiDataRequest = kijiRowExpression.getDataRequest();
     for (KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
+      assertTrue(column.getColumnName().isFullyQualified());
       assertEquals(
           HConstants.ALL_VERSIONS,
           kijiDataRequest.getColumn(column.getFamily(), column.getQualifier()).getMaxVersions());
@@ -131,9 +137,9 @@ public class TestKijiRowExpression {
   }
 
   @Test
-  public void testArbitraryIndex() {
+  public void testColumnSpecificFlatValueExpression() {
     final KijiRowExpression kijiRowExpression =
-        new KijiRowExpression("family:qualifier[5]", UNVALIDATED_TYPE_INFO);
+        new KijiRowExpression("family:qualifier[5]", TypeInfos.COLUMN_FLAT_VALUE);
     KijiDataRequest kijiDataRequest = kijiRowExpression.getDataRequest();
     assertEquals(1, kijiDataRequest.getColumns().size());
     assertNotNull(kijiDataRequest.getColumn("family", "qualifier"));
@@ -144,9 +150,9 @@ public class TestKijiRowExpression {
   }
 
   @Test
-  public void testOldest() {
+  public void testColumnOldestFlatValueExpression() {
     final KijiRowExpression kijiRowExpression =
-        new KijiRowExpression("family:qualifier[-1]", UNVALIDATED_TYPE_INFO);
+        new KijiRowExpression("family:qualifier[-1]", TypeInfos.COLUMN_FLAT_VALUE);
     KijiDataRequest kijiDataRequest = kijiRowExpression.getDataRequest();
     assertEquals(1, kijiDataRequest.getColumns().size());
     assertNotNull(kijiDataRequest.getColumn("family", "qualifier"));
@@ -160,7 +166,7 @@ public class TestKijiRowExpression {
   public void testInvalidIndex() {
     try {
       final KijiRowExpression kijiRowExpression =
-          new KijiRowExpression("family:qualifier[-2].timestamp", UNVALIDATED_TYPE_INFO);
+          new KijiRowExpression("family:qualifier[-2].timestamp", TypeInfos.COLUMN_FLAT_VALUE);
       fail("Should fail with a RuntimeException");
     } catch (RuntimeException re) {
       assertEquals("Invalid index(must be >= -1): -2", re.getMessage());

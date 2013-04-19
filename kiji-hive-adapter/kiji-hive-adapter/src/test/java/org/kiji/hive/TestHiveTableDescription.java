@@ -30,7 +30,6 @@ import java.util.List;
 import com.google.common.collect.Lists;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
-import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -118,7 +117,7 @@ public class TestHiveTableDescription extends KijiClientTest {
   public void testConstructDataRequest() throws IOException {
     List<String> columnNames = Lists.newArrayList("info:name");
     List<TypeInfo> columnTypes = Lists.newArrayList();
-    columnTypes.add(TypeInfoUtils.getTypeInfoFromTypeString("struct<ts:timestamp,value:string>"));
+    columnTypes.add(TypeInfos.COLUMN_ALL_VALUES);
     List<String> columnExpressions = Lists.newArrayList("info:name");
 
     final HiveTableDescription hiveTableDescription = HiveTableDescription.newBuilder()
@@ -139,8 +138,7 @@ public class TestHiveTableDescription extends KijiClientTest {
   @SuppressWarnings("unchecked")
   public void testHBaseResultDecoding() throws IOException {
     List<String> columnNames = Lists.newArrayList("info:name");
-    final TypeInfo typeInfo =
-        TypeInfoUtils.getTypeInfoFromTypeString("array<struct<ts:timestamp,value:string>>");
+    final TypeInfo typeInfo = TypeInfos.COLUMN_ALL_VALUES;
     List<TypeInfo> columnTypes = Lists.newArrayList(typeInfo);
     List<String> columnExpressions = Lists.newArrayList("info:name");
 

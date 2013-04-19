@@ -249,7 +249,7 @@ public final class HiveTableDescription {
     // the columns in the row.
     List<Object> columnData = new ArrayList<Object>();
 
-    //TODO This should be done without a deprecated class, but this allows us to not duplicate
+    // TODO: This should be done without a deprecated class, but this allows us to not duplicate
     //code from the HBaseKijiRowData for decoding purposes.
     final KijiRowData kijiRowData = new HBaseKijiRowData(
         mDataRequest,

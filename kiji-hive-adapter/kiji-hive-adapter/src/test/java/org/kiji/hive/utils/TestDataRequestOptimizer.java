@@ -29,15 +29,13 @@ import java.util.List;
 
 import com.google.common.collect.Lists;
 import org.apache.hadoop.hbase.HConstants;
-import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.junit.Test;
 
 import org.kiji.hive.KijiRowExpression;
+import org.kiji.hive.TypeInfos;
 import org.kiji.schema.KijiDataRequest;
 
 public class TestDataRequestOptimizer {
-  private static final TypeInfo UNVALIDATED_TYPE_INFO = null;
-
   @Test
   public void testEmpty() throws IOException {
     List<KijiRowExpression> rowExpressionList = Lists.newArrayList();
@@ -48,7 +46,7 @@ public class TestDataRequestOptimizer {
   @Test
   public void testSingleExpression() throws IOException {
     final KijiRowExpression kijiRowExpression =
-        new KijiRowExpression("info:name", UNVALIDATED_TYPE_INFO);
+        new KijiRowExpression("info:name", TypeInfos.COLUMN_ALL_VALUES);
     List<KijiRowExpression> rowExpressionList = Lists.newArrayList(kijiRowExpression);
 
     KijiDataRequest kijiDataRequest = DataRequestOptimizer.getDataRequest(rowExpressionList);
@@ -60,9 +58,9 @@ public class TestDataRequestOptimizer {
   @Test
   public void testMergeMultipleExpressions() throws IOException {
     final KijiRowExpression nameRowExpression =
-        new KijiRowExpression("info:email", UNVALIDATED_TYPE_INFO);
+        new KijiRowExpression("info:email", TypeInfos.COLUMN_ALL_VALUES);
     final KijiRowExpression emailRowExpression =
-        new KijiRowExpression("info:name", UNVALIDATED_TYPE_INFO);
+        new KijiRowExpression("info:name", TypeInfos.COLUMN_ALL_VALUES);
     List<KijiRowExpression> rowExpressionList =
         Lists.newArrayList(nameRowExpression, emailRowExpression);
 
@@ -75,11 +73,12 @@ public class TestDataRequestOptimizer {
 
   @Test
   public void testMergeVersions() throws IOException {
+
     // Test that an arbitrary index summed with all versions results in all versions.
     final KijiRowExpression allEmailsRowExpression =
-        new KijiRowExpression("info:email", UNVALIDATED_TYPE_INFO);
+        new KijiRowExpression("info:email", TypeInfos.COLUMN_ALL_VALUES);
     final KijiRowExpression newestEmailExpression =
-        new KijiRowExpression("info:email[0]", UNVALIDATED_TYPE_INFO);
+        new KijiRowExpression("info:email[0]", TypeInfos.COLUMN_FLAT_VALUE);
     List<KijiRowExpression> rowExpressionList =
         Lists.newArrayList(allEmailsRowExpression, newestEmailExpression);
 
@@ -92,7 +91,7 @@ public class TestDataRequestOptimizer {
 
     // Test that an arbitrary values added togather results in the larger value
     final KijiRowExpression secondNewestEmailExpression =
-        new KijiRowExpression("info:email[3]", UNVALIDATED_TYPE_INFO);
+        new KijiRowExpression("info:email[3]", TypeInfos.COLUMN_FLAT_VALUE);
     rowExpressionList = Lists.newArrayList(newestEmailExpression, secondNewestEmailExpression);
 
     kijiDataRequest = DataRequestOptimizer.getDataRequest(rowExpressionList);
@@ -108,9 +107,10 @@ public class TestDataRequestOptimizer {
     // Ensure that an expression that contains just the family will supersede one that contains
     // both a family and a qualifier
     final KijiRowExpression nameRowExpression =
-        new KijiRowExpression("info:email", UNVALIDATED_TYPE_INFO);
+        new KijiRowExpression("info:email", TypeInfos.COLUMN_ALL_VALUES);
+
     final KijiRowExpression fullInfoRowExpression =
-        new KijiRowExpression("info", UNVALIDATED_TYPE_INFO);
+        new KijiRowExpression("info", TypeInfos.FAMILY_MAP_ALL_VALUES);
     List<KijiRowExpression> rowExpressionList =
         Lists.newArrayList(nameRowExpression, fullInfoRowExpression);
 

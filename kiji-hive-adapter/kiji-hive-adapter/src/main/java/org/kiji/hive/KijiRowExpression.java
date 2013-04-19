@@ -33,6 +33,7 @@ import org.apache.avro.Schema;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hive.serde2.typeinfo.ListTypeInfo;
+import org.apache.hadoop.hive.serde2.typeinfo.MapTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.slf4j.Logger;
@@ -99,6 +100,12 @@ public class KijiRowExpression {
 
   /**
    * A parsed expression.
+   *
+   * <p>Row expression map into the implementations of this interface</p>
+   * <li>family - {@link FamilyAllValuesExpression}
+   * <li>family[n] - {@link FamilyFlatValueExpression}
+   * <li>family:qualifier - {@link ColumnAllValuesExpression}
+   * <li>family:qualifier[n] - {@link ColumnFlatValueExpression}
    */
   private interface Expression {
     /**
@@ -218,11 +225,171 @@ public class KijiRowExpression {
   }
 
   /**
-   * An expression that reads a single cell value from a Kiji table column.
+   * An expression that reads a particular cell index from a map type Kiji column family.
+   *
+   * Returns results with the Hive type: MAP<STRING, STRUCT<TIMESTAMP, cell>>
    */
-  private static class FlatValueExpression extends ValueExpression {
+  private static class FamilyFlatValueExpression extends ValueExpression {
+    /** Declared (therefore, the target) Hive type for the cell data. */
+    private final TypeInfo mCellTypeInfo;
+
+    /** The index of the cell to read from the column family (newest is zero). */
+    private final int mIndex;
+
+    /**
+     * Constructor.
+     *
+     * @param typeInfo The Hive type.
+     * @param familyName The Kiji column family to read from.
+     * @param index The index of the cell to read from the family (newest is zero).
+     */
+    public FamilyFlatValueExpression(TypeInfo typeInfo, KijiColumnName familyName, int index) {
+      super(typeInfo, familyName);
+
+      // Gets the declared (therefore, the target) Hive type for the cell data.
+      final MapTypeInfo mapTypeInfo = (MapTypeInfo) getTypeInfo();
+      final StructTypeInfo structTypeInfo = (StructTypeInfo) mapTypeInfo.getMapValueTypeInfo();
+      mCellTypeInfo = structTypeInfo.getAllStructFieldTypeInfos().get(1);
+
+      // Gets the flattened index to retrieve(or -1 for the oldest)
+      if (index < -1) {
+        throw new IllegalArgumentException(
+            "Illegal index [" + index + "] for family expression " + familyName);
+      }
+      mIndex = index;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Object getValue(KijiRowData row) throws IOException {
+      final HiveMap<String, HiveStruct> result = new HiveMap<String, HiveStruct>();
+      if (!row.containsColumn(getFamily())) {
+        // TODO: Consider logging LOG.warn("Nothing found for {}", getFamily());
+        return result;
+      }
+
+      final NavigableMap<String, NavigableMap<Long, Object>> familyMap =
+          row.getValues(getFamily());
+      for (Map.Entry<String, NavigableMap<Long, Object>> entry : familyMap.entrySet()) {
+        Map.Entry<Long, Object> cell;
+        if (-1 == mIndex) {
+          cell = entry.getValue().lastEntry();
+        } else {
+          final Iterator<Map.Entry<Long, Object>> cellIterator =
+              entry.getValue().entrySet().iterator();
+          for (int i = 0; i < mIndex && cellIterator.hasNext(); i++) {
+            cellIterator.next();
+          }
+          if (!cellIterator.hasNext()) {
+            continue;
+          }
+          cell = cellIterator.next();
+        }
+        if (null != cell) {
+          final HiveStruct struct = new HiveStruct();
+          // Add the cell timestamp.
+          struct.add(new Timestamp(cell.getKey().longValue()));
+          // Add the cell value.
+          struct.add(getAvroTypeAdapter().toHiveType(mCellTypeInfo, cell.getValue()));
+          result.put(entry.getKey(), struct);
+        }
+      }
+
+      return result;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public KijiDataRequest getDataRequest() {
+      // Indexes start from 0, whereas maxVersions starts from 1 so we need to adjust for this
+      int maxVersions = mIndex + 1;
+      if (mIndex == -1) {
+        // If we are getting the oldest cell, we need all versions.
+        maxVersions = HConstants.ALL_VERSIONS;
+      }
+
+      KijiDataRequestBuilder builder = KijiDataRequest.builder();
+      builder.newColumnsDef().withMaxVersions(maxVersions).addFamily(getFamily());
+      return builder.build();
+    }
+  }
+
+  /**
+   * An expression that reads all cells from from a map type Kiji column family.
+   *
+   * Returns results with the Hive type: MAP<STRING, ARRAY<STRUCT<TIMESTAMP, cell>>>
+   */
+  private static class FamilyAllValuesExpression extends ValueExpression {
+    /** Declared (therefore, the target) Hive type for the cell data. */
+    private final TypeInfo mCellTypeInfo;
+
+    /**
+     * Constructor.
+     *
+     * @param typeInfo The Hive type.
+     * @param familyName The Wibi column family.
+     */
+    public FamilyAllValuesExpression(TypeInfo typeInfo, KijiColumnName familyName) {
+      super(typeInfo, familyName);
+
+      // Gets the declared (therefore, the target) Hive type for the Kiji cell data.
+      final MapTypeInfo mapTypeInfo = (MapTypeInfo) getTypeInfo();
+      final ListTypeInfo listTypeInfo = (ListTypeInfo) mapTypeInfo.getMapValueTypeInfo();
+      final StructTypeInfo structTypeInfo = (StructTypeInfo) listTypeInfo.getListElementTypeInfo();
+      mCellTypeInfo =  structTypeInfo.getAllStructFieldTypeInfos().get(1);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Object getValue(KijiRowData row) throws IOException {
+      final HiveMap<String, HiveList<HiveStruct>> result =
+          new HiveMap<String, HiveList<HiveStruct>>();
+      if (!row.containsColumn(getFamily())) {
+        // TODO: Consider logging LOG.warn("Nothing found for {}", getFamily());
+        return result;
+      }
+
+      final Schema schema = getAvroTypeAdapter().toAvroSchema(mCellTypeInfo);
+
+      final NavigableMap<String, NavigableMap<Long, Object>> familyMap =
+          row.getValues(getFamily());
+      for (Map.Entry<String, NavigableMap<Long, Object>> entry : familyMap.entrySet()) {
+        final HiveList<HiveStruct> timeseries = new HiveList<HiveStruct>();
+        for (Map.Entry<Long, Object> cell : entry.getValue().entrySet()) {
+          final HiveStruct struct = new HiveStruct();
+          // Add the cell timestamp.
+          struct.add(new Timestamp(cell.getKey().longValue()));
+          // Add the cell value.
+          struct.add(getAvroTypeAdapter().toHiveType(mCellTypeInfo, cell.getValue()));
+          timeseries.add(struct);
+        }
+        result.put(entry.getKey(), timeseries);
+      }
+
+      return result;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public KijiDataRequest getDataRequest() {
+      KijiDataRequestBuilder builder = KijiDataRequest.builder();
+      builder.newColumnsDef().withMaxVersions(HConstants.ALL_VERSIONS)
+          .addFamily(getFamily());
+      return builder.build();
+    }
+  }
+
+  /**
+   * An expression that reads a single cell value from a Kiji table column.
+   *
+   * Returns results with the Hive type: STRUCT<TIMESTAMP, cell>
+   */
+  private static class ColumnFlatValueExpression extends ValueExpression {
     /** The index of the cell to read from the Kiji table column (newest is zero). */
     private final int mIndex;
+
+    /** Declared (therefore, the target) Hive type for the cell data. */
+    private final TypeInfo mCellTypeInfo;
 
     /**
      * Constructor.
@@ -231,9 +398,15 @@ public class KijiRowExpression {
      * @param kijiColumnName The Kiji Column name
      * @param index The index of the cell to read from the column (newest is zero).
      */
-    public FlatValueExpression(
+    public ColumnFlatValueExpression(
         TypeInfo typeInfo, KijiColumnName kijiColumnName, int index) {
       super(typeInfo, kijiColumnName);
+
+      // Gets the declared (therefore, the target) Hive type for the Kiji cell data.
+      final StructTypeInfo structTypeInfo = (StructTypeInfo) getTypeInfo();
+      mCellTypeInfo = structTypeInfo.getAllStructFieldTypeInfos().get(1);
+
+      // Gets the flattened index to retrieve(or -1 for the oldest)
       if (index < -1) {
         throw new IllegalArgumentException(
             "Illegal index [" + index + "] for column expression "
@@ -245,12 +418,13 @@ public class KijiRowExpression {
     /** {@inheritDoc} */
     @Override
     public Object getValue(KijiRowData row) throws IOException {
+      final HiveStruct result = new HiveStruct();
+      // Validate that the row contains data for the specified expression, and return empty struct
+      // if nothing is found
       if (!row.containsColumn(getFamily(), getQualifier())) {
-        // TODO Consider logging LOG.warn("Nothing found for {}:{}", getFamily(), getQualifier());
-        return null;
+        // TODO: Consider logging LOG.warn("Nothing found for {}:{}", getFamily(), getQualifier());
+        return result;
       }
-
-      final TypeInfo cellTypeInfo = getCellTypeInfo();
 
       final NavigableMap<Long, Object> cellMap =
           row.getValues(getFamily(), getQualifier());
@@ -269,12 +443,11 @@ public class KijiRowExpression {
         cell = cellIterator.next();
       }
 
-      final HiveStruct struct = new HiveStruct();
       // Add the cell timestamp.
-      struct.add(new Timestamp(cell.getKey().longValue()));
+      result.add(new Timestamp(cell.getKey().longValue()));
       // Add the cell value.
-      struct.add(getAvroTypeAdapter().toHiveType(cellTypeInfo, cell.getValue()));
-      return struct;
+      result.add(getAvroTypeAdapter().toHiveType(mCellTypeInfo, cell.getValue()));
+      return result;
     }
 
     /** {@inheritDoc} */
@@ -291,43 +464,44 @@ public class KijiRowExpression {
       builder.newColumnsDef().withMaxVersions(maxVersions).add(getFamily(), getQualifier());
       return builder.build();
     }
-
-    /**
-     * Gets the declared (therefore, the target) Hive type for the Kiji cell data.
-     *
-     * @return The Hive type.
-     */
-    private TypeInfo getCellTypeInfo() {
-      // TODO: Move this work to the constructor so it is only computed once.
-      final StructTypeInfo structTypeInfo = (StructTypeInfo) getTypeInfo();
-      return structTypeInfo.getAllStructFieldTypeInfos().get(1);
-    }
   }
 
   /**
    * An expression that reads all the cells from a Kiji table column.
+   *
+   * Returns results with the Hive type: ARRAY<STRUCT<TIMESTAMP, cell>>
    */
-  private static class AllValuesExpression extends ValueExpression {
+  private static class ColumnAllValuesExpression extends ValueExpression {
+    /** Declared (therefore, the target) Hive type for the cell data. */
+    private final TypeInfo mCellTypeInfo;
+
     /**
      * Constructor.
      *
      * @param typeInfo The Hive type.
      * @param kijiColumnName  The Kiji column name.
      */
-    public AllValuesExpression(TypeInfo typeInfo, KijiColumnName kijiColumnName) {
+    public ColumnAllValuesExpression(TypeInfo typeInfo, KijiColumnName kijiColumnName) {
       super(typeInfo, kijiColumnName);
+
+      // Gets the declared (therefore, the target) Hive type for the Kiji cell value.
+      final ListTypeInfo listTypeInfo = (ListTypeInfo) getTypeInfo();
+      final StructTypeInfo structTypeInfo = (StructTypeInfo) listTypeInfo.getListElementTypeInfo();
+      mCellTypeInfo =  structTypeInfo.getAllStructFieldTypeInfos().get(1);
     }
 
     /** {@inheritDoc} */
     @Override
     public Object getValue(KijiRowData row) throws IOException {
       final HiveList<HiveStruct> result = new HiveList<HiveStruct>();
+      // Validate that the row contains data for the specified expression, and return empty struct
+      // if nothing is found
       if (!row.containsColumn(getFamily(), getQualifier())) {
+        // TODO: Consider logging LOG.warn("Nothing found for {}:{}", getFamily(), getQualifier());
         return result;
       }
 
-      final TypeInfo cellTypeInfo = getCellTypeInfo();
-      final Schema schema = getAvroTypeAdapter().toAvroSchema(cellTypeInfo);
+      final Schema schema = getAvroTypeAdapter().toAvroSchema(mCellTypeInfo);
 
       final NavigableMap<Long, Object> cellMap =
           row.getValues(getFamily(), getQualifier());
@@ -336,7 +510,7 @@ public class KijiRowExpression {
         // Add the cell timestamp.
         struct.add(new Timestamp(cell.getKey().longValue()));
         // Add the cell value.
-        struct.add(getAvroTypeAdapter().toHiveType(cellTypeInfo, cell.getValue()));
+        struct.add(getAvroTypeAdapter().toHiveType(mCellTypeInfo, cell.getValue()));
         result.add(struct);
       }
 
@@ -351,18 +525,6 @@ public class KijiRowExpression {
           .withMaxVersions(HConstants.ALL_VERSIONS)
           .add(getFamily(), getQualifier());
       return builder.build();
-    }
-
-    /**
-     * Gets the declared (therefore, the target) Hive type for the Kiji cell value.
-     *
-     * @return The Hive type.
-     */
-    private TypeInfo getCellTypeInfo() {
-      // TODO: Move this work to the constructor so it is only computed once.
-      final ListTypeInfo listTypeInfo = (ListTypeInfo) getTypeInfo();
-      final StructTypeInfo structTypeInfo = (StructTypeInfo) listTypeInfo.getListElementTypeInfo();
-      return structTypeInfo.getAllStructFieldTypeInfos().get(1);
     }
   }
 
@@ -397,16 +559,28 @@ public class KijiRowExpression {
 
       // TODO: Support reading the row key.
       final String family = matcher.group(1);
+      if (null == matcher.group(2)) {
+        KijiColumnName kijiFamilyName = new KijiColumnName(family);
+        if (null == matcher.group(4)) {
+          return new FamilyAllValuesExpression(typeInfo, kijiFamilyName);
+        }
+        Integer index = Integer.valueOf(matcher.group(5));
+        if (index < -1) {
+          throw new RuntimeException("Invalid index(must be >= -1): " + index);
+        }
+        return new FamilyFlatValueExpression(typeInfo, kijiFamilyName, index);
+      }
+
       final String qualifier = matcher.group(3);
       KijiColumnName kijiColumnName = new KijiColumnName(family, qualifier);
       if (null == matcher.group(4)) {
-        return new AllValuesExpression(typeInfo, kijiColumnName);
+        return new ColumnAllValuesExpression(typeInfo, kijiColumnName);
       }
       Integer index = Integer.valueOf(matcher.group(5));
       if (index < -1) {
         throw new RuntimeException("Invalid index(must be >= -1): " + index);
       }
-      return new FlatValueExpression(typeInfo, kijiColumnName, index);
+      return new ColumnFlatValueExpression(typeInfo, kijiColumnName, index);
 
       // TODO: Parse other operators on the values.
     }
