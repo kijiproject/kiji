@@ -49,7 +49,6 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.express.Resources.doAndRelease
 import org.kiji.mapreduce.framework.KijiConfKeys
-import org.kiji.schema.EntityId
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiDataRequest
@@ -134,21 +133,11 @@ private[express] class KijiScheme(
       flow: FlowProcess[JobConf],
       sourceCall: SourceCall[KijiSourceContext, RecordReader[KijiKey, KijiValue]]) {
     val tableUriProperty = flow.getStringProperty(KijiConfKeys.KIJI_INPUT_TABLE_URI)
-    // TODO CHOP-71 Remove hack to check for null table uri in sourcePrepare
-    // get table layout
-    val tableLayout = if (null != tableUriProperty) {
-      val tableUri: KijiURI = KijiURI.newBuilder(tableUriProperty).build()
-      doAndRelease(Kiji.Factory.open(tableUri)) { kiji: Kiji =>
-        doAndRelease(kiji.openTable(tableUri.getTable())) { table: KijiTable =>
-            table.getLayout()
-        }
-      }
-    } else {
-      null
-    }
+
+    val uri: KijiURI = KijiURI.newBuilder(tableUriProperty).build()
     val context = KijiSourceContext(
         sourceCall.getInput().createValue(),
-        tableLayout)
+        uri)
     sourceCall.setContext(context)
   }
 
@@ -165,7 +154,7 @@ private[express] class KijiScheme(
       flow: FlowProcess[JobConf],
       sourceCall: SourceCall[KijiSourceContext, RecordReader[KijiKey, KijiValue]]): Boolean = {
     // Get the current key/value pair.
-    val KijiSourceContext(value, layout) = sourceCall.getContext()
+    val KijiSourceContext(value, tableUri) = sourceCall.getContext()
 
     // Get the first row where all the requested columns are present,
     // and use that to set the result tuple.
@@ -176,7 +165,8 @@ private[express] class KijiScheme(
     while (sourceCall.getInput().next(null, value)) {
     // scalastyle:on null
       val row: KijiRowData = value.get()
-      val result: Option[Tuple] = rowToTuple(columns, getSourceFields, timestampField, row)
+      val result: Option[Tuple] = rowToTuple(columns, getSourceFields, timestampField, row,
+          tableUri)
 
       // If no fields were missing, set the result tuple and return from this method.
       result match {
@@ -337,10 +327,11 @@ private[express] object KijiScheme {
    *
    * @param columns Mapping from field name to column definition.
    * @param fields Field names of desired tuple elements.
-   * @param row The row data.
    * @param timestampField is the optional name of a field containing the timestamp that all values
    *     in a tuple should be written to.
    *     Use None if all values should be written at the current time.
+   * @param row to convert to a tuple.
+   * @param tableUri is the URI of the Kiji table.
    * @return a tuple containing the values contained in the specified row, or None if some columns
    *     didn't exist and no replacement was specified.
    */
@@ -348,12 +339,13 @@ private[express] object KijiScheme {
       columns: Map[String, ColumnRequest],
       fields: Fields,
       timestampField: Option[Symbol],
-      row: KijiRowData): Option[Tuple] = {
+      row: KijiRowData,
+      tableUri: KijiURI): Option[Tuple] = {
     val result: Tuple = new Tuple()
     val iterator = fields.iterator().asScala
 
     // Add the row's EntityId to the tuple.
-    result.add(row.getEntityId())
+    result.add(EntityId(tableUri, row.getEntityId()))
 
     // Get rid of the entity id and timestamp fields, then map over each field to add a column
     // to the tuple.
@@ -479,36 +471,37 @@ private[express] object KijiScheme {
 
     // Get the entityId.
     val entityId: EntityId = output.getObject(entityIdField).asInstanceOf[EntityId]
-    iterator.next()
 
     // Get a timestamp to write the values to, if it was specified by the user.
     val timestamp: Long = timestampField match {
       case Some(field) => {
-        iterator.next()
         output.getObject(field.name).asInstanceOf[Long]
       }
       case None => System.currentTimeMillis()
     }
 
-    iterator.foreach { fieldName =>
-      columns(fieldName.toString()) match {
-        case ColumnFamily(family, _) => {
-          // TODO CHOP-56 Design putTuple semantics for map type column families
-          throw new UnsupportedOperationException("Writing to a column family without a "
-              + "qualifier is not supported.")
+    iterator
+        .filter { field => field.toString != entityIdField  }
+        .filter { field => field.toString != timestampField.getOrElse(Symbol("")).name }
+        .foreach { fieldName =>
+          columns(fieldName.toString()) match {
+            case ColumnFamily(family, _) => {
+              // TODO CHOP-56 Design putTuple semantics for map type column families
+              throw new UnsupportedOperationException("Writing to a column family without a "
+                  + "qualifier is not supported.")
+            }
+            case QualifiedColumn(family, qualifier, _) => {
+              val kijiCol = new KijiColumnName(family, qualifier)
+              val value = output.getObject(fieldName.toString())
+              writer.put(
+                  entityId.getJavaEntityId(),
+                  family,
+                  qualifier,
+                  timestamp,
+                  convertScalaTypes(value, layout.getSchema(kijiCol)))
+            }
+          }
         }
-        case QualifiedColumn(family, qualifier, _) => {
-          val kijiCol = new KijiColumnName(family, qualifier)
-          val value = output.getObject(fieldName.toString())
-          writer.put(
-              entityId,
-              family,
-              qualifier,
-              timestamp,
-              convertScalaTypes(value, layout.getSchema(kijiCol)))
-        }
-      }
-    }
   }
 
   /**

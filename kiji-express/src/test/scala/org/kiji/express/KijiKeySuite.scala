@@ -21,7 +21,7 @@ package org.kiji.express
 
 import org.scalatest.FunSuite
 
-import org.kiji.schema.EntityId
+import org.kiji.schema.{EntityId => JEntityId}
 import org.kiji.schema.EntityIdFactory
 import org.kiji.schema.avro.RowKeyFormat
 import org.kiji.schema.avro.RowKeyEncoding

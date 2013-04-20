@@ -19,21 +19,22 @@
 
 package org.kiji.express
 
-import org.kiji.annotations.ApiAudience
-import org.kiji.annotations.ApiStability
-import org.kiji.schema.layout.KijiTableLayout
-import org.kiji.schema.KijiURI
+class Memoize[-T, +R](f: T => R) extends (T => R) {
+  import scala.collection.mutable
+  private[this] val cache = mutable.Map.empty[T, R]
 
-/**
- * Container for a Kiji row data and Kiji table layout object that is required by a map reduce
- * task while reading from a Kiji table.
- *
- * @param rowContainer is the representation of a Kiji row.
- * @param tableUri is the URI of the Kiji table.
- */
-@ApiAudience.Private
-@ApiStability.Experimental
-private[express] case class KijiSourceContext (
-    rowContainer: KijiValue,
-    tableUri: KijiURI) {
+  def apply(x: T): R = {
+    if (cache.contains(x)) {
+      cache(x)
+    }
+    else {
+      val y = f(x)
+      cache + ((x, y))
+      y
+    }
+  }
+}
+
+object Memoize {
+  def apply[T, R](f: T => R): Memoize[T, R] = new Memoize(f)
 }

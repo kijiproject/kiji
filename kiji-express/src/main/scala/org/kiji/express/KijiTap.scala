@@ -22,6 +22,7 @@ package org.kiji.express
 import java.util.UUID
 
 import cascading.flow.FlowProcess
+import cascading.flow.hadoop.HadoopFlowProcess
 import cascading.scheme.Scheme
 import cascading.tap.Tap
 import cascading.tap.hadoop.io.HadoopTupleEntrySchemeCollector
@@ -127,8 +128,19 @@ private[express] class KijiTap(
   override def openForRead(
       flow: FlowProcess[JobConf],
       recordReader: RecordReader[KijiKey, KijiValue]): TupleEntryIterator = {
+    val modifiedFlow = if (flow.getStringProperty(KijiConfKeys.KIJI_INPUT_TABLE_URI) == null) {
+      // TODO CHOP-71 Remove this hack which is introduced by a scalding bug:
+      // https://github.com/twitter/scalding/issues/369
+      // This hack is only required for testing (HadoopTest Mode)
+      val jconf = flow.getConfigCopy
+      val fp = new HadoopFlowProcess(jconf)
+      sourceConfInit(fp, jconf)
+      fp
+    } else {
+      flow
+    }
     new HadoopTupleEntrySchemeIterator(
-        flow,
+        modifiedFlow,
         this.asInstanceOf[Tap[JobConf, RecordReader[_, _], OutputCollector[_, _]]],
         recordReader)
   }

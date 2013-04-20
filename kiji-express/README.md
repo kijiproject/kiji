@@ -21,7 +21,7 @@ and runs the job locally on your machine.  In HDFS mode, the job runs on a clust
 Write a script:
 
     // This is a KijiExpress wordcount script!
-    import org.kiji.chopsticks.DSL._
+    import org.kiji.express.DSL._
 
     // Read from the "columnfamily:inputqualifier" column of your Kiji table
     KijiInput("kiji://your/kiji/uri")("columnfamily:inputqualifier" -> 'word)

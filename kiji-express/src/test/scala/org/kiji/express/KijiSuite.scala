@@ -25,7 +25,7 @@ import com.twitter.scalding.TupleConversions
 import org.scalatest.FunSuite
 
 import org.kiji.express.Resources._
-import org.kiji.schema.EntityId
+import org.kiji.schema.{EntityId => JEntityId}
 import org.kiji.schema.EntityIdFactory
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiTable
@@ -40,22 +40,6 @@ import org.kiji.schema.util.InstanceBuilder
 trait KijiSuite
     extends FunSuite
     with TupleConversions {
-  /**
-   * Builds a [[org.kiji.schema.RawEntityId]] with the provided string.
-   *
-   * @param identifier Desired contents of the entity id.
-   * @return A [[org.kiji.schema.RawEntityId]].
-   */
-  def id(identifier: String): EntityId = {
-    val rowKeyFmt: RowKeyFormat2 = RowKeyFormat2.newBuilder()
-        .setEncoding(RowKeyEncoding.RAW)
-        .build()
-
-    val factory = EntityIdFactory.getFactory(rowKeyFmt)
-
-    factory.getEntityId(identifier)
-  }
-
   /**
    * Builds a slice containing no values.  This can be used to test for behavior of missing
    * values.

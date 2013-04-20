@@ -49,7 +49,6 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.express.Resources._
 import org.kiji.mapreduce.framework.KijiConfKeys
-import org.kiji.schema.EntityId
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiRowData
@@ -257,7 +256,7 @@ object KijiSource {
           // Write the timeline to the table.
           cells.map { cell: Cell[Any] =>
             writer.put(
-                entityId,
+                entityId.getJavaEntityId(),
                 cell.family,
                 cell.qualifier,
                 cell.version,
@@ -338,7 +337,8 @@ object KijiSource {
                         columnRequestsAllData(columns),
                         getSinkFields(),
                         timestampField,
-                        row)
+                        row,
+                        table.getURI)
                     .foreach { tuple => buffer += tuple }
               }
             }

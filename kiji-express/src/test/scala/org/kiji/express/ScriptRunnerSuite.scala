@@ -28,8 +28,8 @@ import com.twitter.scalding._
 
 import org.kiji.express.DSL._
 import org.kiji.express.Resources.doAndRelease
-import org.kiji.schema.EntityId
 import org.kiji.schema.KijiTable
+import org.kiji.schema.KijiURI
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts
 
@@ -37,12 +37,17 @@ class ScriptRunnerSuite extends KijiSuite {
   /** Table layout to use for tests. */
   val layout: KijiTableLayout = layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
 
+  // Create test Kiji table.
+  val uri: KijiURI = doAndRelease(makeTestKijiTable(layout)) { table: KijiTable =>
+    table.getURI()
+  }
+
   /** Input tuples to use for word count tests. */
   val wordCountInput: List[(EntityId, KijiSlice[String])] = List(
-      ( id("row01"), slice("family:column1", (10L, "hello")) ),
-      ( id("row02"), slice("family:column1", (10L, "hello")) ),
-      ( id("row03"), slice("family:column1", (10L, "world")) ),
-      ( id("row04"), slice("family:column1", (10L, "hello")) ))
+      ( EntityId(uri)("row01"), slice("family:column1", (10L, "hello")) ),
+      ( EntityId(uri)("row02"), slice("family:column1", (10L, "hello")) ),
+      ( EntityId(uri)("row03"), slice("family:column1", (10L, "world")) ),
+      ( EntityId(uri)("row04"), slice("family:column1", (10L, "hello")) ))
 
   /**
    * Validates output from [[com.twitter.scalding.examples.WordCountJob]].
@@ -74,10 +79,7 @@ KijiInput("%s")("family:column1" -> 'word)
 """
 
   test("An script can be compiled and run as a local job.") {
-    // Create test Kiji table.
-    val uri: String = doAndRelease(makeTestKijiTable(layout)) { table: KijiTable =>
-      table.getURI().toString()
-    }
+
     val runner = new ScriptRunner()
 
     val tempDir: File = Files.createTempDir()
@@ -87,7 +89,7 @@ KijiInput("%s")("family:column1" -> 'word)
 
     // Build test job.
     JobTest(jobc)
-        .source(KijiInput(uri)("family:column1" -> 'word), wordCountInput)
+        .source(KijiInput(uri.toString)("family:column1" -> 'word), wordCountInput)
         .sink(Tsv("outputFile"))(validateWordCount)
         // Run the test job.
         .run
