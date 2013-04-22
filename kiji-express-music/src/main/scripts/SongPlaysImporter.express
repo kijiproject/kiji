@@ -19,11 +19,6 @@
 
 import util.parsing.json.JSON
 
-import org.kiji.express.Resources._
-import org.kiji.schema.EntityId
-import org.kiji.schema.Kiji
-import org.kiji.schema.KijiURI
-
 /**
  * Imports information about users playing tracks into a Kiji table.
  *
@@ -32,21 +27,6 @@ import org.kiji.schema.KijiURI
  */
 
 val tableURI: String = "kiji://.env/kiji_express_music/users"
-
-/**
- * Transforms the identifier for a user into an entity id for the users table.
- *
- * @param userId is an identifier for a user.
- * @return an entity id for the user in the users table.
- */
-def entityId(userId: String): EntityId = {
-  val uri = KijiURI.newBuilder(tableURI).build()
-  retainAnd(Kiji.Factory.open(uri)) { kiji =>
-    retainAnd(kiji.openTable(uri.getTable)) { table =>
-      table.getEntityId(userId)
-    }
-  }
-}
 
 /**
  * Transforms a JSON record into a tuple whose fields correspond to the fields from the JSON
@@ -72,5 +52,5 @@ def parseJson(json: String): (String, Long, String) = {
 TextLine("express-tutorial/song-plays.json")
     .map('line ->
         ('userId, 'playTime, 'songId)) { parseJson }
-    .map('userId -> 'entityId) { entityId }
+    .map('userId -> 'entityId) { userId: String => EntityId(tableURI)(userId) }
     .write(KijiOutput(tableURI, 'playTime)('songId -> "info:track_plays"))

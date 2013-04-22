@@ -24,11 +24,8 @@ import scala.util.parsing.json.JSON
 import com.twitter.scalding._
 
 import org.kiji.express.DSL._
-import org.kiji.express.Resources._
 import org.kiji.examples.music.SongMetadata
-import org.kiji.schema.EntityId
-import org.kiji.schema.Kiji
-import org.kiji.schema.KijiURI
+import org.kiji.express.EntityId
 
 /**
  * Imports metadata about songs into a Kiji table.
@@ -43,22 +40,6 @@ import org.kiji.schema.KijiURI
  @param args passed in from the command line.
  */
 class SongMetadataImporter(args: Args) extends Job(args) {
-
-  /**
-   * Transforms the identifier for a song into an entity id for the songs table.
-   *
-   * @param songId is an identifier for a song.
-   * @return an entity id for the song in the songs table.
-   */
-  def entityId(songId: String): EntityId = {
-    val uri = KijiURI.newBuilder(args("table-uri")).build()
-    doAndRelease(Kiji.Factory.open(uri)) { kiji =>
-      doAndRelease(kiji.openTable(uri.getTable)) { table =>
-        table.getEntityId(songId)
-      }
-    }
-  }
-
   /**
    * Transforms a JSON record into a tuple whose fields correspond to the fields from the JSON
    * record.
@@ -89,7 +70,7 @@ class SongMetadataImporter(args: Args) extends Job(args) {
   TextLine(args("input"))
       .map('line ->
           ('songId, 'songName, 'albumName, 'artistName, 'genre, 'tempo,'duration)) { parseJson }
-      .map('songId -> 'entityId) { entityId }
+      .map('songId -> 'entityId) { songId: String => EntityId(args("table-uri"))(songId) }
       .pack[SongMetadata](('songName, 'albumName, 'artistName, 'genre, 'tempo, 'duration)
           -> 'metadata)
       .write(KijiOutput(args("table-uri"))('metadata -> "info:metadata"))

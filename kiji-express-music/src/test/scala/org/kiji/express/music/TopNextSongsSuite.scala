@@ -26,7 +26,7 @@ import com.twitter.scalding._
 import org.kiji.examples.music.TopSongs
 import org.kiji.express._
 import org.kiji.express.DSL._
-import org.kiji.schema.EntityId
+import org.kiji.schema.{EntityId => JEntityId}
 
 /**
  * A test for counting the number of times songs have been played by users.
@@ -45,9 +45,12 @@ class TopNextSongsSuite extends KijiSuite {
 
   // Create some fake track plays for three users.
   val testInput =
-      (id("user-0"), slice("info:track_plays", (0L, "song-0"), (1L, "song-1"), (2L, "song-2"))) ::
-      (id("user-1"), slice("info:track_plays", (0L, "song-0"), (1L, "song-0"), (2L, "song-1"))) ::
-      (id("user-2"), slice("info:track_plays", (0L, "song-1"), (1L, "song-2"), (2L, "song-1"))) ::
+      (EntityId(usersURI)("user-0"),
+          slice("info:track_plays", (0L, "song-0"), (1L, "song-1"), (2L, "song-2"))) ::
+      (EntityId(usersURI)("user-1"),
+          slice("info:track_plays", (0L, "song-0"), (1L, "song-0"), (2L, "song-1"))) ::
+      (EntityId(usersURI)("user-2"),
+          slice("info:track_plays", (0L, "song-1"), (1L, "song-2"), (2L, "song-1"))) ::
       Nil
 
   /**
@@ -70,7 +73,8 @@ class TopNextSongsSuite extends KijiSuite {
    */
   def validateTest(topNextSongs: Buffer[(EntityId, KijiSlice[TopSongs])]) {
     val topSongForEachSong = topNextSongs
-        .map { case(entityId, slice) => (entityId.getComponentByIndex(0).toString,slice) }
+        .map { case(entityId, slice) =>
+            (entityId.getJavaEntityId().getComponentByIndex(0).toString,slice) }
         .map { case(id, slice) => (id, slice.getFirstValue().getTopSongs) }
 
     topSongForEachSong.foreach {

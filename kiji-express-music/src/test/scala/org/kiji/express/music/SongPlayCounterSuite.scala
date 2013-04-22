@@ -41,9 +41,12 @@ class SongPlayCounterSuite extends KijiSuite {
 
   // Create some fake track plays for three users.
   val testInput =
-      (id("user-0"), slice("info:track_plays", (0L, "song-0"), (1L, "song-1"), (2L, "song-2"))) ::
-      (id("user-1"), slice("info:track_plays", (0L, "song-0"), (1L, "song-0"), (2L, "song-1"))) ::
-      (id("user-2"), slice("info:track_plays", (0L, "song-1"), (1L, "song-2"), (2L, "song-1"))) ::
+      (EntityId(tableURI)("user-0"),
+          slice("info:track_plays", (0L, "song-0"), (1L, "song-1"), (2L, "song-2"))) ::
+      (EntityId(tableURI)("user-1"),
+          slice("info:track_plays", (0L, "song-0"), (1L, "song-0"), (2L, "song-1"))) ::
+      (EntityId(tableURI)("user-2"),
+          slice("info:track_plays", (0L, "song-1"), (1L, "song-2"), (2L, "song-1"))) ::
       Nil
 
   /**

@@ -20,12 +20,8 @@
 import scala.collection.JavaConverters._
 
 import com.google.common.collect.Lists
-import org.kiji.express.Resources._
 import org.kiji.examples.music.SongCount
 import org.kiji.examples.music.TopSongs
-import org.kiji.schema.EntityId
-import org.kiji.schema.Kiji
-import org.kiji.schema.KijiURI
 
 /**
  * For each song S, create a list of songs sorted by the number of times a song was played after
@@ -59,21 +55,6 @@ def bigrams(slice: KijiSlice[String]): List[(String, String)] = {
 }
 
 /**
- * Transforms the identifier for a song into an entity id for the songs table.
- *
- * @param songId is an identifier for a song.
- * @return an entity id for the song in the songs table.
- */
-def entityId(songId: String): EntityId = {
-  val uri = KijiURI.newBuilder(songsTableURI).build()
-  retainAnd(Kiji.Factory.open(uri)) { kiji =>
-    retainAnd(kiji.openTable(uri.getTable)) { table =>
-      table.getEntityId(songId)
-    }
-  }
-}
-
-/**
  * Transforms a group of tuples into a group containing a list of song count records,
  * sorted by count.
  *
@@ -103,5 +84,5 @@ KijiInput(usersTableURI)(Map(Column("info:track_plays", all) -> 'playlist))
     .groupBy('firstSong) { sortNextSongs }
     .map('scalaTopSongs -> 'topSongs) { scalaListToJavaList }
     .pack[TopSongs]('topSongs -> 'topNextSongs)
-    .map('firstSong -> 'entityId) { entityId }
+    .map('firstSong -> 'entityId) { firstSong: String => EntityId(songsTableURI)(firstSong) }
     .write(KijiOutput(songsTableURI)('topNextSongs -> "info:top_next_songs"))

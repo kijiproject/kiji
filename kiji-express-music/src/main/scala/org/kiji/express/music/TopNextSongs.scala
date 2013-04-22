@@ -26,12 +26,8 @@ import com.twitter.scalding._
 import com.google.common.collect.Lists
 import org.kiji.express._
 import org.kiji.express.DSL._
-import org.kiji.express.Resources._
 import org.kiji.examples.music.SongCount
 import org.kiji.examples.music.TopSongs
-import org.kiji.schema.EntityId
-import org.kiji.schema.Kiji
-import org.kiji.schema.KijiURI
 
 /**
  * For each song S, create a list of songs sorted by the number of times a song was played after
@@ -46,7 +42,6 @@ import org.kiji.schema.KijiURI
  * @param args passed from the command line.
  */
 class TopNextSongs(args: Args) extends Job(args) {
-
   /**
    * Transforms a Scala `List` into a Java `List`.
    *
@@ -68,21 +63,6 @@ class TopNextSongs(args: Args) extends Job(args) {
         .map { itr => itr.iterator }
         .map { itr => (itr.next().datum, itr.next().datum) }
         .toList
-  }
-
-  /**
-   * Transforms the identifier for a song into an entity id for the songs table.
-   *
-   * @param songId is an identifier for a song.
-   * @return an entity id for the song in the songs table.
-   */
-  def entityId(songId: String): EntityId = {
-    val uri = KijiURI.newBuilder(args("songs-table")).build()
-    doAndRelease(Kiji.Factory.open(uri)) { kiji =>
-      doAndRelease(kiji.openTable(uri.getTable)) { table =>
-        table.getEntityId(songId)
-      }
-    }
   }
 
   /**
@@ -115,6 +95,7 @@ class TopNextSongs(args: Args) extends Job(args) {
       .groupBy('firstSong) { sortNextSongs }
       .map('scalaTopSongs -> 'topSongs) { scalaListToJavaList }
       .pack[TopSongs]('topSongs -> 'topNextSongs)
-      .map('firstSong -> 'entityId) { entityId }
+      .map('firstSong -> 'entityId) { firstSong: String =>
+          EntityId(args("songs-table"))(firstSong) }
       .write(KijiOutput(args("songs-table"))('topNextSongs -> "info:top_next_songs"))
 }
