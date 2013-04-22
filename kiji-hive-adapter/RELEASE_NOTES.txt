@@ -1,0 +1,13 @@
+
+
+                        Kiji Hive Adapter Release Notes
+
+Version 0.2.0
+  * KIJIHIVE-8. Fixed conversion issue for decoding complex Avro types.
+  * KIJIHIVE-9. Fixed issue where only the most recent version of data was
+      returned.
+  * KIJIHIVE-10. Added in support for map type families.
+
+Version 0.1.0
+  * Initial Release
+
