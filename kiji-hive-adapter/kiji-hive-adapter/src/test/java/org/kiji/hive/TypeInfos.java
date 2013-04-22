@@ -33,11 +33,11 @@ public final class TypeInfos {
   /** For RowExpressions of the form "family". */
   public static final TypeInfo FAMILY_MAP_ALL_VALUES =
       TypeInfoUtils.getTypeInfoFromTypeString(
-          "map<string,array<struct<ts:timestamp,value:string>>>");
+          "map<string,array<struct<ts:timestamp,value:int>>>");
 
   /** For RowExpressions of the form "family[n]". */
   public static final TypeInfo FAMILY_MAP_FLAT_VALUE =
-      TypeInfoUtils.getTypeInfoFromTypeString("map<string,struct<ts:timestamp,value:string>>");
+      TypeInfoUtils.getTypeInfoFromTypeString("map<string,struct<ts:timestamp,value:int>>");
 
   /** For RowExpressions of the form "family:qualifier". */
   public static final TypeInfo COLUMN_ALL_VALUES =
