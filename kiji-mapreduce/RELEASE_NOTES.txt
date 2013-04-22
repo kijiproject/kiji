@@ -4,8 +4,8 @@
 
 Version 1.0.0-rc61
   * KIJIMR-180. Removes deprecated getEntityId() from ProducerContext.
-  * KIJIMR-52. KijiTableKeyValueStore reader should look up by EntityId, not by
-      String.
+  * KIJIMR-52. KijiTableKeyValueStore reader looks up by EntityId, not by
+      String. (Incompatible change.)
   * KIJIMR-114. Declare various methods of MapReduceJobBuilder as 'final'.
   * KIJIMR-165. XML configuration of file-backed KeyValueStores did not
       properly load Hadoop default properties.
