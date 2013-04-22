@@ -346,12 +346,9 @@ class KijiSlice[T] private[express] (val cells: Seq[Cell[T]]) {
   def min(fn: (Cell[T] => Double)): Double = {
     cells.foldLeft(Double.MaxValue) { (currentValue: Double, currentCell: Cell[T]) =>
       val cellValue = fn(currentCell)
-      if(cellValue < currentValue)
-      {
+      if(cellValue < currentValue) {
         cellValue
-      }
-      else
-      {
+      } else {
         currentValue
       }
     }
@@ -384,12 +381,9 @@ class KijiSlice[T] private[express] (val cells: Seq[Cell[T]]) {
   def max(fn: (Cell[T] => Double)): Double = {
     cells.foldLeft(Double.MinValue) { (currentValue: Double, currentCell: Cell[T]) =>
       val cellValue = fn(currentCell)
-      if(cellValue < currentValue)
-      {
+      if(cellValue > currentValue) {
         cellValue
-      }
-      else
-      {
+      } else {
         currentValue
       }
     }
