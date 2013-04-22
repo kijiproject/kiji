@@ -1,0 +1,108 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <!--
+    (c) Copyright 2013 WibiData, Inc.
+
+    See the NOTICE file distributed with this work for additional
+    information regarding copyright ownership.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+  -->
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <!-- Jar artifacts will be attached to this, so we keep the "main" name. -->
+  <artifactId>kiji-mapreduce</artifactId>
+  <packaging>pom</packaging>
+
+  <parent>
+    <groupId>org.kiji.mapreduce</groupId>
+    <artifactId>kiji-mapreduce-root</artifactId>
+    <version>1.0.0-rc61-SNAPSHOT</version>
+    <relativePath>..</relativePath>
+  </parent>
+
+  <name>KijiMR (tarball)</name>
+  <description>Tarball distribution of KijiMR</description>
+  <url>http://www.kiji.org</url>
+
+  <build>
+    <plugins>
+
+      <!--
+        Attach jar artifacts from kiji-mapreduce-hadoop2 and kiji-mapreduce-hadoop1 as
+        kiji-mapreduce:hadoop2:jar and kiji-mapreduce:hadoop1:jar respectively.
+      -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>1.8</version>
+        <executions>
+          <execution>
+            <id>add-jars</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>attach-artifact</goal>
+            </goals>
+            <configuration>
+              <artifacts>
+                <artifact>
+                  <!-- Default (no classifier) jar artifact is Hadoop2-based, like now. -->
+                  <file
+                    >../kiji-mapreduce/target/kiji-mapreduce-hadoop2-${project.version}.jar</file>
+                  <type>jar</type>
+                  <classifier></classifier>
+                </artifact>
+                <!-- Attach to hadoop1 and hadoop2 classifiers as well. -->
+                <artifact>
+                  <file
+                    >../kiji-mapreduce/target/kiji-mapreduce-hadoop2-${project.version}.jar</file>
+                  <type>jar</type>
+                  <classifier>hadoop2</classifier>
+                </artifact>
+                <artifact>
+                  <file>../mr-hadoop1x/target/kiji-mapreduce-hadoop1-${project.version}.jar</file>
+                  <type>jar</type>
+                  <classifier>hadoop1</classifier>
+                </artifact>
+              </artifacts>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <!-- configured with files in the src/main/assembly/ directory -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
+
+  <dependencies>
+    <!-- Through this, child projects inherit the same dependencies as Hadoop 2.x KijiMR. -->
+    <!-- This does not include Hadoop/HBase dependencies; choose a kiji-platform for that. -->
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>kiji-mapreduce-hadoop2</artifactId>
+      <version>${project.version}</version>
+      <type>pom</type>
+    </dependency>
+
+    <!-- Pass this provided-scope dependency to our clients too. -->
+    <dependency>
+      <groupId>org.kiji.schema</groupId>
+      <artifactId>kiji-schema</artifactId>
+      <version>${kiji-schema.version}</version>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
+</project>

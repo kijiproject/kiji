@@ -35,6 +35,7 @@
   <inceptionYear>2012</inceptionYear>
 
   <properties>
+    <annotations.version>1.0.0</annotations.version>
     <kiji-delegation.version>1.0.0</kiji-delegation.version>
     <kiji-platforms.version>1.0.0</kiji-platforms.version>
     <kiji-schema.version>1.0.2</kiji-schema.version>
@@ -43,7 +44,12 @@
 
   <modules>
     <module>build-resources</module>
-    <module>kiji-mapreduce</module>
+    <module>platform-api</module>
+    <module>cdh4mr1-bridge</module>
+    <module>hadoop1-bridge</module>
+    <module>kiji-mapreduce</module> <!-- hadoop2-based build -->
+    <!-- TODO(KIJIMR-177): Enable hadoop 1.x build    <module>mr-hadoop1x</module> -->
+    <module>dist</module>
   </modules>
 
   <build>

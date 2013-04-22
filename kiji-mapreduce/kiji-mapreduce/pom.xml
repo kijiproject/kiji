@@ -20,15 +20,14 @@
 
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.kiji.mapreduce</groupId>
-  <artifactId>kiji-mapreduce</artifactId>
-  <version>1.0.0-rc62-SNAPSHOT</version>
+  <artifactId>kiji-mapreduce-hadoop2</artifactId>
   <packaging>jar</packaging>
 
   <parent>
     <groupId>org.kiji.mapreduce</groupId>
     <artifactId>kiji-mapreduce-root</artifactId>
     <version>1.0.0-rc62-SNAPSHOT</version>
+    <relativePath>..</relativePath>
   </parent>
 
   <name>KijiMR</name>
@@ -79,12 +78,6 @@
       </plugin>
 
       <plugin>
-        <!-- configured with files in the src/main/assembly/ directory -->
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-assembly-plugin</artifactId>
-      </plugin>
-
-      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
       </plugin>
@@ -100,6 +93,12 @@
     <dependency>
       <groupId>org.kiji.annotations</groupId>
       <artifactId>annotations</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>kiji-mapreduce-platform-api</artifactId>
+      <version>${project.version}</version>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.kiji.schema</groupId>
@@ -188,5 +187,74 @@
       <artifactId>commons-codec</artifactId>
       <version>1.4</version>
     </dependency>
+
+    <!-- All platform bridge implementations that should be bundled with the redistributable. -->
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>kiji-mapreduce-cdh4mr1-bridge</artifactId>
+      <version>${project.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>kiji-mapreduce-hadoop1-bridge</artifactId>
+      <version>${project.version}</version>
+      <scope>runtime</scope>
+    </dependency>
+
   </dependencies>
+
+  <profiles>
+    <profile>
+      <!--
+         Active by default: cdh4 build. Override with -Dplatform=hadoop1 to use
+         an Apache Hadoop 1.x-based platform.
+      -->
+
+      <id>cdh4</id>
+      <activation>
+        <property>
+          <name>!platform</name>
+        </property>
+      </activation>
+
+      <dependencies>
+        <!-- Default Hadoop/HBase versions in kiji-root-pom provide these dependencies. -->
+        <!-- Marked as 'optional' to prevent propagation to transitive projects. -->
+        <dependency>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-core</artifactId>
+          <scope>compile</scope>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-client</artifactId>
+          <scope>compile</scope>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hadoop</groupId>
+          <artifactId>hadoop-minicluster</artifactId>
+          <scope>test</scope>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hbase</groupId>
+          <artifactId>hbase</artifactId>
+          <type>test-jar</type>
+          <scope>test</scope>
+          <optional>true</optional>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.hbase</groupId>
+          <artifactId>hbase</artifactId>
+          <scope>compile</scope>
+          <optional>true</optional>
+        </dependency>
+      </dependencies>
+    </profile>
+
+  </profiles>
+
 </project>

@@ -32,9 +32,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.GlobFilter;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.mapreduce.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -155,15 +153,6 @@ public final class DistributedCacheJars {
     return jarFiles;
   }
 
-  private static final PathFilter JAR_PATH_FILTER;
-  static {
-    try {
-      JAR_PATH_FILTER = new GlobFilter("*.jar");
-    } catch (IOException ioe) {
-      throw new RuntimeException(ioe);
-    }
-  }
-
   /**
    * Lists all jars in the specified directory.
    *
@@ -180,8 +169,8 @@ public final class DistributedCacheJars {
       throw new IOException("Attempted to add jars from non-directory: " + jarDirectory);
     }
     final List<Path> jarFiles = Lists.newArrayList();
-    for (FileStatus status : fs.listStatus(jarDirectory, JAR_PATH_FILTER)) {
-      if (!status.isDirectory()) {
+    for (FileStatus status : fs.listStatus(jarDirectory)) {
+      if (!status.isDir() && status.getPath().getName().endsWith(".jar")) {
         jarFiles.add(fs.makeQualified(status.getPath()));
       }
     }

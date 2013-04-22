@@ -1,0 +1,2 @@
+org.kiji.mapreduce.platform.Hadoop1xKijiMRBridgeFactory
+org.kiji.mapreduce.platform.UniversalKijiMRBridgeFactory
