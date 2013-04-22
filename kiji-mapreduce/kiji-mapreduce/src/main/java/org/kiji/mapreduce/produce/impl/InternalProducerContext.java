@@ -29,6 +29,7 @@ import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.KijiTableContext;
 import org.kiji.mapreduce.impl.InternalKijiContext;
 import org.kiji.mapreduce.impl.KijiTableContextFactory;
+import org.kiji.mapreduce.produce.ProducerContext;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiRowData;
@@ -40,8 +41,7 @@ import org.kiji.schema.KijiRowData;
  */
 @ApiAudience.Private
 public final class InternalProducerContext
-    extends InternalKijiContext
-    implements InternalProducerContextInterface {
+    extends InternalKijiContext implements ProducerContext {
 
   /** Interface to write to the output table. */
   private final KijiTableContext mTableContext;
@@ -88,14 +88,21 @@ public final class InternalProducerContext
     return new InternalProducerContext(taskContext, outputColumn);
   }
 
-  /** {@inheritDoc} */
-  @Override
+  /**
+   * Gets an EntityId as set by {@link setEntityId()}.
+   *
+   * @return the previously set EntityId.
+   */
   public EntityId getEntityId() {
     return mEntityId;
   }
 
-  /** {@inheritDoc} */
-  @Override
+  /**
+   * Sets the entity ID of the current row being processed and written to.
+   *
+   * @param entityId Entity ID of the row being processed and written to.
+   * @return this context.
+   */
   public InternalProducerContext setEntityId(EntityId entityId) {
     mEntityId = entityId;
     return this;

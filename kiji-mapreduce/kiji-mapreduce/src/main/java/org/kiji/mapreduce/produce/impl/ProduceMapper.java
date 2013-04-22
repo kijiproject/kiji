@@ -47,7 +47,7 @@ public final class ProduceMapper extends KijiTableMapper<HFileKeyValue, NullWrit
   private KijiColumnName mOutputColumn;
 
   /** Producer context. */
-  private InternalProducerContextInterface mProducerContext;
+  private InternalProducerContext mProducerContext;
 
   /** {@inheritDoc} */
   @Override
