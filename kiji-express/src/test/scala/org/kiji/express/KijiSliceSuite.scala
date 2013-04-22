@@ -19,10 +19,12 @@
 
 package org.kiji.express
 
-import org.scalatest.FunSuite
 import scala.collection.immutable.List
 
-class KijiSliceSuite extends FunSuite {
+import org.scalatest.FunSuite
+import org.scalatest.matchers.ShouldMatchers
+
+class KijiSliceSuite extends FunSuite with ShouldMatchers {
   val cell0 = Cell[Long]("info", "number", 0L, 0L)
   val cell1 = Cell[Long]("info", "number", 1L, 1L)
   val cell2 = Cell[Long]("info", "number", 2L, 2L)
@@ -86,8 +88,8 @@ class KijiSliceSuite extends FunSuite {
   test("KijiSlice can groupBy datum.") {
     val slice: KijiSlice[Long] = new KijiSlice[Long](mapCellSeq)
     // Group by the datum contained in the cell.
-    val groupedSlices: Map[Long, KijiSlice[Long]] = slice.groupBy[Long]({cell: Cell[Long] =>
-      cell.datum})
+    val groupedSlices: Map[Long, KijiSlice[Long]] = slice.groupBy[Long]( { cell: Cell[Long] =>
+      cell.datum } )
     assert(3 == groupedSlices.size)
     val slice0 = groupedSlices.get(0L).get.orderReverseChronologically()
     assert(3 == slice0.size)
@@ -96,5 +98,56 @@ class KijiSliceSuite extends FunSuite {
     assert(1 == slice1.size)
     val slice3 = groupedSlices.get(3L).get
     assert(1 == slice3.size)
+  }
+
+  test("KijiSlice should properly sum simple types")
+  {
+    val slice: KijiSlice[Long] = new KijiSlice[Long](mapCellSeq)
+    assert(4.0 == slice.sum( { cell: Cell[Long] => cell.datum } ))
+    assert(4.0 == slice.sum)
+  }
+
+  test("KijiSlice should properly compute the squared sum of simple types")
+  {
+    val slice: KijiSlice[Long] = new KijiSlice[Long](mapCellSeq)
+    assert(10.0 == slice.sumSquared( { cell: Cell[Long] => cell.datum } ))
+    assert(10.0 == slice.sumSquared)
+  }
+
+  test("KijiSlice should properly compute the average of simple types")
+  {
+    val slice: KijiSlice[Long] = new KijiSlice[Long](mapCellSeq)
+    slice.avg should equal(0.8)
+    slice.avg( { cell: Cell[Long] => cell.datum } ) should equal (0.8)
+  }
+
+  test("KijiSlice should properly compute the standard deviation of simple types")
+  {
+    val slice: KijiSlice[Long] = new KijiSlice[Long](mapCellSeq)
+    slice.stddev( { cell: Cell[Long] => cell.datum } ) should be (1.16619 plusOrMinus 0.1)
+    slice.stddev should be (1.16619 plusOrMinus 0.1)
+  }
+
+  test("KijiSlice should properly compute the variance of simple types")
+  {
+    val slice: KijiSlice[Long] = new KijiSlice[Long](mapCellSeq)
+    slice.variance( { cell: Cell[Long] => cell.datum } ) should be (1.36 plusOrMinus 0.1)
+    slice.variance should be (1.36 plusOrMinus 0.1)
+  }
+
+  test("KijiSlice should properly find the minimum of simple types")
+  {
+    val slice: KijiSlice[Long] = new KijiSlice[Long](mapCellSeq)
+    val minSort = Ordering.by { cell: Cell[Long] => cell.datum }
+    assert(mapCell0.datum == slice.orderBy(minSort).getFirstValue)
+    assert(0.0 == slice.min)
+  }
+
+  test("KijiSlice should properly find the maximum of simple types")
+  {
+    val slice: KijiSlice[Long] = new KijiSlice[Long](mapCellSeq)
+    val maxSort = Ordering.by { cell: Cell[Long] => cell.datum }
+    assert(mapCell3.datum == slice.orderBy(maxSort).getLastValue)
+    assert(3.0 == slice.max)
   }
 }

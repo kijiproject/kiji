@@ -19,13 +19,16 @@
 
 package org.kiji.express
 
+import scala.annotation.implicitNotFound
+import scala.math.Numeric
+
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.schema.KijiCell
 
 /**
  * A collection of [[org.kiji.express.Cell]]s that can be grouped and ordered as needed. Cells are
- * the smallest unit of information in a Kiji table; each cells contains a datum (as well as column
+ * the smallest unit of information in a Kiji table; each cell contains a datum (as well as column
  * family, qualifier, and version.) Slices are initially ordered first by qualifier and then reverse
  * chronologically (latest first) by version.
  *
@@ -81,13 +84,20 @@ class KijiSlice[T] private[express] (val cells: Seq[Cell[T]]) {
    *
    * @return the first value in the collection, as determined by sorted order.
    */
-  def getFirstValue(): T = cells(0).datum
+  def getFirstValue(): T = getFirst().datum
 
   /**
    * Gets the last cell, as decided by the ordering of the slice.
    *
    * @return the last cell in the collection, as determined by the sorted order.*/
   def getLast(): Cell[T] = cells(cells.length - 1)
+
+  /**
+   * Gets the value of the last cell, as decided by the ordering of the slice.
+   *
+   * @return the last value in the collection, as determined by sorted order.
+   */
+  def getLastValue(): T = getLast().datum
 
   /**
    * Generates a new KijiSlice that is ordered according to the [[scala.math.Ordering]] passed in.
@@ -105,7 +115,7 @@ class KijiSlice[T] private[express] (val cells: Seq[Cell[T]]) {
    * of the underlying cells.
    *
    * @return a new KijiSlice that is ordered chronologically by version number of the underlying
-   *         cells.
+   *    cells.
    */
   def orderChronologically(): KijiSlice[T] = orderBy(Ordering.by {cell: Cell[T] => cell.version} )
 
@@ -114,10 +124,10 @@ class KijiSlice[T] private[express] (val cells: Seq[Cell[T]]) {
    * number of the underlying cells.
    *
    * @return a new KijiSlice that is ordered reverse chronologically by version number of the
-   *         underlying cells.
+   *    underlying cells.
    */
   def orderReverseChronologically(): KijiSlice[T] = orderBy(Ordering.by {cell: Cell[T] =>
-      cell.version} .reverse)
+      cell.version}.reverse)
 
   /**
    * Generates a new KijiSlice that is ordered alphabetically by qualifier of the underlying cells.
@@ -133,7 +143,7 @@ class KijiSlice[T] private[express] (val cells: Seq[Cell[T]]) {
    * @param fn a discriminator function.
    * @tparam K is the type of the key returned by the discriminator function.
    * @return a map from keys to KijiSlices, such that every cell that gets mapped to the same key by
-   *         the discriminator function is in the same KijiSlice.
+   *    the discriminator function is in the same KijiSlice.
    */
   def groupBy[K](fn: (Cell[T] => K)) :Map[K, KijiSlice[T]] = {
     val pairs: Map[K, Seq[Cell[T]]] = cells.groupBy(fn)
@@ -149,16 +159,257 @@ class KijiSlice[T] private[express] (val cells: Seq[Cell[T]]) {
    * given qualifier.
    *
    * @return a map from keys to KijiSlices, such that every cell that gets mapped to the same key
-   *         has the same qualifier.
+   *    has the same qualifier.
    */
   def groupByQualifier(): Map[String, KijiSlice[T]] = groupBy[String]({cell: Cell[T] =>
       cell.qualifier})
 
   /**
    * Gets the number of underlying [[org.kiji.express.Cell]]s.
+   *
    * @return the number of underlying [[org.kiji.express.Cell]]s.
    */
   val size: Int = cells.size
+
+  /**
+   * Gets the value of the underlying [[org.kiji.express.Cell]] as a Double
+   *
+   * @param cell whose value to return as a Double
+   * @return cell's value as a Double
+   */
+  private def getValueAsDouble(cell: Cell[T])(implicit num: Numeric[T]): Double = {
+    num.toDouble(cell.datum)
+  }
+
+  /**
+   * Returns the sum of values, specified by the retrieval function,
+   * of the underlying KijiSlice's [[org.kiji.express.Cell]]s.
+   *
+   * @param fn retrieves the value used for summation
+   * @return the sum of values, specified by the retrieval function,
+   *    of the underlying KijiSlice's [[org.kiji.express.Cell]]s.
+   */
+  def sum(fn: (Cell[T] => Double)): Double = {
+    cells.foldLeft(0.0) { (sum, cell) =>
+      sum + fn(cell)
+    }
+  }
+
+  /**
+   * Returns the sum of values, assuming the value is numeric,
+   * of the underlying KijiSlice's [[org.kiji.express.Cell]]s.
+   *
+   * <b>Note:</b> This method will not compile unless the cells contained within
+   * this KijiSlice contain numeric values.
+   *
+   * @return the sum of values, assuming the value is numeric,
+   *    of the underlying KijiSlice's [[org.kiji.express.Cell]]s.
+   */
+  @implicitNotFound("KijiSlice cells not numeric. Please use the method that "
+                  + "accepts a function argument.")
+  def sum(implicit num: Numeric[T]): Double = sum { cell: Cell[T] => getValueAsDouble(cell)(num) }
+
+  /**
+   * Returns the squared sum of values, specified by the retrieval function,
+   * of the underlying KijiSlice's [[org.kiji.express.Cell]]s.
+   *
+   * @param fn retrieves the value used for summation of squares.
+   * @return the squared sum of values, specified by the retrieval function,
+   *    of the underlying KijiSlice's [[org.kiji.express.Cell]]s.
+   */
+  def sumSquared(fn: (Cell[T] => Double)): Double = {
+    cells.foldLeft(0.0) { (sum, cell) =>
+      val cellVal = fn(cell)
+      sum + (cellVal * cellVal)
+    }
+  }
+
+  /**
+   * Returns the squared sum of values, assuming the value is numeric,
+   * of the underlying KijiSlice's [[org.kiji.express.Cell]]s.
+   *
+   * <b>Note:</b> This method will not compile unless the cells contained within
+   * this KijiSlice contain numeric values.
+   *
+   * @return the squared sum of values, assuming the value is numeric,
+   *    of the underlying KijiSlice's [[org.kiji.express.Cell]]s.
+   */
+  @implicitNotFound("KijiSlice cells not numeric. Please use the method that "
+                  + "accepts a function argument.")
+  def sumSquared(implicit num: Numeric[T]): Double = {
+    sumSquared { cell: Cell[T] => getValueAsDouble(cell)(num) }
+  }
+
+  /**
+   * Returns the average value, specified by the retrieval function,
+   * of the underlying KijiSlice's [[org.kiji.express.Cell]]s.
+   *
+   * @param fn retrieves the value used for calculating the average
+   * @return the average value, specified by the retrieval function,
+   *    of the underlying KijiSlice's [[org.kiji.express.Cell]]s.
+   */
+  def avg(fn: (Cell[T] => Double)): Double = {
+    val totalVal = sum(fn)
+    return totalVal / size
+  }
+
+  /**
+   * Returns the average value, assuming the value is numeric,
+   * of the underlying KijiSlice's [[org.kiji.express.Cell]]s.
+   *
+   * <b>Note:</b> This method will not compile unless the cells contained within
+   * this KijiSlice contain numeric values.
+   *
+   * @return the average value, assuming the value is numeric,
+   *    of the underlying KijiSlice's [[org.kiji.express.Cell]]s
+   */
+  @implicitNotFound("KijiSlice cells not numeric. Please use the method that "
+                  + "accepts a function argument.")
+  def avg(implicit num: Numeric[T]): Double = avg { cell: Cell[T] => getValueAsDouble(cell)(num) }
+
+  /**
+   * Returns the variance, where each value is specified by the retrieval function,
+   * of the underlying KijiSlice's [[org.kiji.express.Cell]]s.
+   *
+   * @param fn retrieves the value used for calculating the variance
+   * @return the variance, where each value is specified by the retrieval function,
+   *    of the underlying KijiSlice's [[org.kiji.express.Cell]]s.
+   */
+  def variance(fn: (Cell[T] => Double)): Double = {
+    val sumAndSumOfSquares = cells.foldLeft((0.0,0.0)) { (sumTuple, cell) =>
+      //The tuple stores the sum(_1) and sumSquared(_2) for later use in the calculation
+      //of the variance.
+      val cellVal = fn(cell)
+      (sumTuple._1 + cellVal, sumTuple._2 + (cellVal * cellVal))
+    }
+
+    val sumOfSquares = sumAndSumOfSquares._2
+    val sum = sumAndSumOfSquares._1
+    val numCells = size
+    val avgVal = sum / size
+
+    return (sumOfSquares / numCells) - (avgVal * avgVal)
+  }
+
+  /**
+   * Returns the variance, assuming each cell's value is numeric,
+   * of the underlying KijiSlice's [[org.kiji.express.Cell]]s.
+   *
+   * <b>Note:</b> This method will not compile unless the cells contained within
+   * this KijiSlice contain numeric values.
+   *
+   * @return the variance, assuming each cell's value is numeric,
+   *    of the underlying KijiSlice's [[org.kiji.express.Cell]]s.
+   */
+  @implicitNotFound("KijiSlice cells not numeric. Please use the method that "
+                  + "accepts a function argument.")
+  def variance(implicit num: Numeric[T]): Double = {
+    variance { cell: Cell[T] => getValueAsDouble(cell)(num) }
+  }
+
+  /**
+   * Returns the standard deviation, where each value is specified by the retrieval function,
+   * of the underlying KijiSlice's [[org.kiji.express.Cell]]s.
+   *
+   * @param fn retrieves the value used for calculating the variance
+   * @return the standard deviation, where each value is specified by the retrieval function,
+   *    of the underlying KijiSlice's [[org.kiji.express.Cell]]s.
+   */
+  def stddev(fn: (Cell[T] => Double)): Double = {
+    return scala.math.sqrt(variance(fn)).toDouble
+  }
+
+  /**
+   * Returns the standard deviation, assuming each cell's value is numeric,
+   * of the underlying KijiSlice's [[org.kiji.express.Cell]]s.
+   *
+   * <b>Note:</b> This method will not compile unless the cells contained within
+   * this KijiSlice contain numeric values.
+   *
+   * @return the standard deviation, assuming each cell's value is numeric,
+   *    of the underlying KijiSlice's [[org.kiji.express.Cell]]s.
+   */
+  @implicitNotFound("KijiSlice cells not numeric. Please use the method that "
+                  + "accepts a function argument.")
+  def stddev(implicit num: Numeric[T]): Double = {
+    stddev { cell: Cell[T] => getValueAsDouble(cell)(num) }
+  }
+
+  /**
+   * Returns the minimum value, specified by the retrieval function,
+   * of the underlying KijiSlice's [[org.kiji.express.Cell]]s.
+   *
+   * @param fn retrieves the value used for calculating the variance
+   * @return the minimum value, specified by the retrieval function,
+   *    of the underlying KijiSlice's [[org.kiji.express.Cell]]s.
+   */
+  def min(fn: (Cell[T] => Double)): Double = {
+    cells.foldLeft(Double.MaxValue) { (currentValue: Double, currentCell: Cell[T]) =>
+      val cellValue = fn(currentCell)
+      if(cellValue < currentValue)
+      {
+        cellValue
+      }
+      else
+      {
+        currentValue
+      }
+    }
+  }
+
+  /**
+   * Returns the minimum value,
+   * of the KijiSlice's underlying [[org.kiji.express.Cell]]s assuming the Cell's value is numeric.
+   *
+   * <b>Note:</b> This method will not compile unless the cells contained within
+   * this KijiSlice contain numeric values.
+   *
+   * @return the minimum value, specified by the retrieval function,
+   *    from the [[org.kiji.express.Cell]]s of the underlying the KijiSlice
+   */
+  @implicitNotFound("KijiSlice cells not numeric. Please use the method that "
+                  + "accepts a function argument.")
+  def min(implicit num: Numeric[T]): Double = {
+    min { cell: Cell[T] => getValueAsDouble(cell)(num) }
+  }
+
+  /**
+   * Returns the maximum value, specified by the retrieval function,
+   * of the underlying KijiSlice's [[org.kiji.express.Cell]]s.
+   *
+   * @param fn retrieves the value used for calculating the variance
+   * @return the maximum value, specified by the retrieval function,
+   *    of the underlying KijiSlice's [[org.kiji.express.Cell]]s.
+   */
+  def max(fn: (Cell[T] => Double)): Double = {
+    cells.foldLeft(Double.MinValue) { (currentValue: Double, currentCell: Cell[T]) =>
+      val cellValue = fn(currentCell)
+      if(cellValue < currentValue)
+      {
+        cellValue
+      }
+      else
+      {
+        currentValue
+      }
+    }
+  }
+
+  /**
+   * Returns the maximum value,
+   * of the KijiSlice's underlying [[org.kiji.express.Cell]]s assuming the Cell's value is numeric.
+   *
+   * <b>Note:</b> This method will not compile unless the cells contained within
+   * this KijiSlice contain numeric values.
+   *
+   * @return the maximum value, specified by the retrieval function,
+   *    from the [[org.kiji.express.Cell]]s of the underlying the KijiSlice
+   */
+  @implicitNotFound("KijiSlice cells not numeric. Please use the method that "
+                  + "accepts a function argument.")
+  def max(implicit num: Numeric[T]): Double = {
+    max { cell: Cell[T] => getValueAsDouble(cell)(num) }
+  }
 
   override def equals(otherSlice: Any): Boolean = otherSlice match {
     case otherSlice: KijiSlice[_] => (otherSlice.cells == cells)
@@ -170,16 +421,16 @@ class KijiSlice[T] private[express] (val cells: Seq[Cell[T]]) {
  * A factory for KijiSlices.
  */
 object KijiSlice {
-  /**
-   * A factory method for instantiating a KijiSlice, given an iterator of
-   * [[org.kiji.schema.KijiCell]]s.
-   * @param cellIter an iterator over KijiCells to instantiate the slice with.
-   * @tparam T is the type of the data stored in the underlying cells.
-   * @return  a KijiSlice that contains the data passed in through the cellIter.
-   */
+
+ /**
+  * A factory method for instantiating a KijiSlice, given an iterator of
+  * [[org.kiji.schema.KijiCell]]s.
+  * @param cellIter an iterator over KijiCells to instantiate the slice with.
+  * @tparam T is the type of the data stored in the underlying cells.
+  * @return a KijiSlice that contains the data passed in through the cellIter.
+  */
   def apply[T](cellIter: Iterator[KijiCell[T]]): KijiSlice[T] = {
     val cells: Seq[Cell[T]] = cellIter.toSeq.map { kijiCell: KijiCell[T] => Cell[T](kijiCell) }
     new KijiSlice[T](cells)
   }
 }
-
