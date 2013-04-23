@@ -23,13 +23,16 @@ import org.scalatest.FunSuite
 
 class MemoizeSuite extends FunSuite {
   test("Test for memoization") {
-    def strSqLen(s: String): Int = s.length*s.length
+    // outer class without equals defined
+    class Outer(val data: Int)
+
+    def strSqLen(s: String): Outer = new Outer(s.length * s.length)
     val strSqLenMemoized = Memoize(strSqLen)
     val a = strSqLenMemoized("hello Memo")
     val b = strSqLen("hello Memo")
-    assert(a == b)
+    assert(a.data == b.data)
     // should go to cache for result
     val c = strSqLenMemoized("hello Memo")
-    assert(c == b)
+    assert(a == c)
   }
 }

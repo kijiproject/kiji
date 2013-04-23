@@ -29,7 +29,7 @@ class Memoize[-T, +R](f: T => R) extends (T => R) {
     }
     else {
       val y = f(x)
-      cache + ((x, y))
+      cache += ((x, y))
       y
     }
   }
