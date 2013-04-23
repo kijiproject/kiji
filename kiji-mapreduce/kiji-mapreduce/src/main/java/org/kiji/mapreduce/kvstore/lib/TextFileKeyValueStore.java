@@ -73,6 +73,8 @@ import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
  *       like any other line in the file.</li>
  * </ul>
  *
+ * <h3>XML Configuration</h3>
+ *
  * <p>A kvstores XML file may contain the following properties when specifying the
  * behavior of this class:</p>
  * <ul>
@@ -80,6 +82,17 @@ import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
  *   <li><tt>delim</tt> - The delimiter string that separates keys and values within
  *       a line of text. (Default is a tab character.)</li>
  *   <li><tt>paths</tt> - A comma-separated list of HDFS paths to files backing this store.
+ * </ul>
+ *
+ * <h3>Default Values</h3>
+ * <ul>
+ *   <li>By default, use of the DistributedCache is enabled.</li>
+ *   <li>You must specify the paths to read. It is an error to leave this unconfigured.</li>
+ *   <li>Files will be read using a new <tt>Configuration</tt> object if you do not specify
+ *       your own.</li>
+ *   <li>The delimiter between the key and the value in the line of text defaults to a tab
+ *   character. You may specify any other UTF-8 character or sequence of UTF-8 characters.
+ *   Note that the MapReduce <tt>TextOutputFormat</tt> emits tab-delimited key-value pairs.</li>
  * </ul>
  */
 @ApiAudience.Public

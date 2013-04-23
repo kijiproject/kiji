@@ -47,6 +47,8 @@ import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
  * lookup of key <i>K</i> will be the first record whose key field has the value
  * <i>K</i>.</p>
  *
+ * <h3>XML Configuration</h3>
+ *
  * <p>A kvstores XML file may contain the following properties when specifying the behavior of this
  * class:</p>
  * <ul>
@@ -56,6 +58,21 @@ import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
  *   <li><tt>key.field</tt> - The name of the field of the input records to treat as
  *       the key in the KeyValueStore.</li>
  *   <li><tt>paths</tt> - A comma-separated list of HDFS paths to files backing this store.
+ * </ul>
+ *
+ * <h3>Default values</h3>
+ *
+ * <ul>
+ *   <li>By default, use of the DistributedCache is enabled.</li>
+ *   <li>You must specify the paths to read. It is an error to leave this unconfigured.</li>
+ *   <li>Files will be read using a new <tt>Configuration</tt> object if you do not specify
+ *       your own.</li>
+ *   <li>If you do not specify an Avro reader schema, the writer schema from each
+ *       file will be used.  (In this case, it is expected that these files have the same writer
+ *       schema.) The schema of each datum in your Avro files must be a record. The record must
+ *       contain a <i>key field</i>; records are indexed by the key field.</li>
+ *   <li>You must specify the name of the key field before opening the reader; it is an
+ *       error to leave this unspecified.</li>
  * </ul>
  *
  * @param <K> The type of the key field.

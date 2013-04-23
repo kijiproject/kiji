@@ -39,11 +39,22 @@ import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
 /**
  * KeyValueStore implementation that reads records from SequenceFiles.
  *
+ * <h3>XML Configuration</h3>
+ *
  * <p>When specifying a SeqFileKeyValueStore in a kvstores XML file, you may
  * specify the following properties:</p>
  * <ul>
  *   <li><tt>dcache</tt> - True if files should be accessed by jobs through the DistributedCache.
  *   <li><tt>paths</tt> - A comma-separated list of HDFS paths to files backing this store.
+ * </ul>
+ *
+ * <h3>Default values</h3>
+ *
+ * <ul>
+ *   <li>By default, use of the DistributedCache is enabled.</li>
+ *   <li>You must specify the paths to read. It is an error to leave this unconfigured.</li>
+ *   <li>Files will be read using a new <tt>Configuration</tt> object if you do not specify
+ *       your own.</li>
  * </ul>
  *
  * @param <K> The type of the key field stored in the SequenceFile(s).

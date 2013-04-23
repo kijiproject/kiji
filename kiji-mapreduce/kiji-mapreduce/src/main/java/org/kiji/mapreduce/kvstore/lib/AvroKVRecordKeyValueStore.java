@@ -43,6 +43,8 @@ import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
  * least) two fields, named "key" and "value." This store will decompose the top-level
  * record into its two fields, and index the "value" field by the key.</p>
  *
+ * <h3>XML Configuration</h3>
+ *
  * <p>A kvstores XML file may contain the following properties when specifying the
  * behavior of this class:</p>
  * <ul>
@@ -50,6 +52,23 @@ import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
  *   <li><tt>paths</tt> - A comma-separated list of HDFS paths to files backing this store.
  *   <li><tt>avro.reader.schema</tt> - The reader schema to apply to records in the
  *       input file(s).</li>
+ * </ul>
+ *
+ * <h3>Default values</h3>
+ *
+ * <ul>
+ *   <li>By default, use of the DistributedCache is enabled.</li>
+ *   <li>You must specify the paths to read. It is an error to leave this unconfigured.</li>
+ *   <li>Files will be read using a new <tt>Configuration</tt> object if you do not specify
+ *       your own.</li>
+ *   <li>If you do not specify an Avro reader schema, the writer schema from each
+ *       file will be used.  (In this case, it is expected that these files have the same writer
+ *       schema.) The schema of each datum in your Avro files must be a record that
+ *       contains at least two fields, called <tt>key</tt> and <tt>value</tt>.
+ *       The schema of these two fields is up to you.
+ *       Any additional fields in a top-level record will be ignored. It is an error for your
+ *       schema to not include these fields; see the {@link AvroRecordKeyValueStore} for a more
+ *       free-form record-based Avro KeyValueStore.</li>
  * </ul>
  *
  * @param <K> The type of the key field.

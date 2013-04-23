@@ -3,6 +3,7 @@
                               KijiMR Release Notes
 
 Version 1.0.0-rc62
+  * KIJIMR-181. Document default values for KeyValueStores.
   * KIJIMR-171. Reorganize project structure for multiple Hadoop distributions.
       KijiMR jars are now placed in $KIJI_MR_HOME/lib/distribution/hadoop2/.
       You can now optionally specify <classifier>hadoop2</classifer> on the KijiMR

@@ -58,6 +58,8 @@ import org.kiji.schema.util.ResourceUtils;
  * fashion. It may cache values to improve repeated read performance. You can set the
  * cache size with {@link KijiTableKeyValueStore.Builder#withCacheLimit(int)}.</p>
  *
+ * <h3>XML Configuration</h3>
+ *
  * <p>When configuring a KijiTableKeyValueStore from a kvstores XML file, the following
  * properties may be used to specify the behavior of this class:</p>
  * <ul>
@@ -73,6 +75,24 @@ import org.kiji.schema.util.ResourceUtils;
  *   <li><tt>avro.reader.schema</tt> - The common Avro reader schema used to
  *       deserialize values from
  *       the value column to return them to the client.</li>
+ * </ul>
+ *
+ * <h3>Default Values</h3>
+ * <ul>
+ *   <li>You must specify the {@link KijiURI} of the table to read; it is an error to
+ *   leave this unconfigured.</li>
+ *   <li>You must specify the column to read as the value; it is an error to leave
+ *   this unconfigured.</li>
+ *   <li>HBase tables will be accessed through a new <tt>Configuration</tt> object
+ *   if none is explicitly specified.</li>
+ *   <li>The minimum timestamp to read defaults to <tt>0</tt>.</li>
+ *   <li>The maximum timestamp to read is "infinity" (no maximum). This can be specified
+ *   as <tt>HConstants.FOREVER</tt>.</li>
+ *   <li>The number of entityId-to-value mappings to cache locally defaults to 100. You
+ *   can disable caching by setting the cache size to 0.</li>
+ *   <li>The Avro reader schema field is currently ignored. The reader schema from the
+ *   table layout for that column will always be used as the reader schema. Support for
+ *   custom reader schemas will be added after SCHEMA-295 is committed to KijiSchema.</li>
  * </ul>
  *
  * @param <V> the value type returned by this key-value store.
