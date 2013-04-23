@@ -37,10 +37,10 @@
   <properties>
     <codename>albacore</codename>
     <bento-cluster.version>1.0.0</bento-cluster.version>
-    <kiji-schema.version>1.0.1</kiji-schema.version>
+    <kiji-schema.version>1.0.2</kiji-schema.version>
     <kiji-schema-shell.version>1.0.0</kiji-schema-shell.version>
     <kiji-phonebook.version>1.0.0-rc6</kiji-phonebook.version>
-    <kiji-mapreduce.version>1.0.0-rc6</kiji-mapreduce.version>
+    <kiji-mapreduce.version>1.0.0-rc61</kiji-mapreduce.version>
     <kiji-mapreduce-lib.version>1.0.0-rc6</kiji-mapreduce-lib.version>
     <kiji-hive-adapter.version>0.1.1</kiji-hive-adapter.version>
     <kiji-music.version>1.0.0-rc6</kiji-music.version>
