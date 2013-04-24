@@ -31,7 +31,7 @@
 
 # Resolve a symlink to its absolute target, like how 'readlink -f' works on Linux.
 function resolve_symlink() {
-  TARGET_FILE=$1
+  TARGET_FILE=${1}
 
   if [ -z "$TARGET_FILE" ]; then
     echo ""
@@ -69,15 +69,12 @@ bin=`cd "${bin}" && pwd`
 
 EXPRESS_HOME="${EXPRESS_HOME:-${bin}/../}"
 
-# Any user code you want to add to the KijiExpress classpath may be done via this env var.
-EXPRESS_CLASSPATH=${EXPRESS_CLASSPATH:-""}
-
 # Any arguments you want to pass to KijiExpress's jvm may be done via this env var.
 EXPRESS_JAVA_OPTS=${EXPRESS_JAVA_OPTS:-""}
 
 # This is a workaround for OS X Lion, where a bug in JRE 1.6
 # creates a lot of 'SCDynamicStore' errors.
-if [ `uname` = "Darwin" ]; then
+if [ "$(uname)" == "Darwin" ]; then
   EXPRESS_JAVA_OPTS="$EXPRESS_JAVA_OPTS -Djava.security.krb5.realm= -Djava.security.krb5.kdc="
 fi
 
@@ -103,7 +100,7 @@ if [ -z ${HADOOP_HOME} -o ! -d "${HADOOP_HOME}" ]; then
   exit 1
 fi
 
-if [ -z $1 ]; then
+if [ -z ${1} ]; then
   echo "express: Tool launcher for KijiExpress."
   echo "Run 'express help' to see a list of available tools."
   exit 1
@@ -112,8 +109,8 @@ fi
 # Removes classpath entries that match the given regexp (partial match, not full
 # match).
 function remove_classpath_entries() {
-  local cp=$1
-  local regex=$2
+  local cp=${1}
+  local regex=${2}
 
   echo $cp | sed "s/[^:]*$regex[^:]*/::/g" | sed 's/::*/:/g'
   return 0
@@ -121,10 +118,10 @@ function remove_classpath_entries() {
 
 # Helper to build classpaths correctly
 function append_path() {
-  if [ -z "$1" ]; then
-    echo $2
+  if [ -z "${1}" ]; then
+    echo ${2}
   else
-    echo $1:$2
+    echo ${1}:${2}
   fi
 }
 
@@ -133,12 +130,12 @@ function append_path() {
 # mutate_classpath scrubme.jar "$(hadoop classpath)"
 function mutate_classpath () {
   local mutated_classpath
-  local jar_to_scrub=$1
+  local jar_to_scrub=${1}
   shift
 
   # Stop expanding globs
   set -f
-  IFS=: read -r -a classpath <<< $@
+  IFS=: read -r -a classpath <<< ${@}
 
   for path in $classpath; do
     # If it ends with a glob we'll need to dig deeper for jars
@@ -170,37 +167,55 @@ function mutate_classpath () {
   set +f
 }
 
+# Extracts the --libjars value from the command line and appends/prepends this value to any
+# classpath variables.To ensure that --libjars doesn't get passed into the scalding_tool, this
+# function effectively rebuilds the remainder of the command line arguments by removing the
+# --libjars argument and value. The result is stored in a new global variable called ${COMMAND_ARGS}
+# which is used by other parts of the script in lieu of ${@}.
+function extract_classpath() {
+  return_args=""
+  while (( "${#}" )); do
+    if [ "${1}" == "--libjars" ]; then
+      libjars_cp=${2}
+      shift
+    else
+      return_args="${return_args} ${1}"
+    fi
+    shift
+  done
+  COMMAND_ARGS=${return_args}
 
-# Gather the express dependency jars.
-libjars="${EXPRESS_HOME}/lib/*"
+  # Gather the express dependency jars.
+  libjars="${EXPRESS_HOME}/lib/*"
 
-# Gather the HBase classpath.
-hbase_cp=$(${HBASE_HOME}/bin/hbase classpath)
-hbase_cp=$(mutate_classpath 'slf4j-log4j12' "${hbase_cp}")
+  # Gather the HBase classpath.
+  hbase_cp=$(${HBASE_HOME}/bin/hbase classpath)
+  hbase_cp=$(mutate_classpath 'slf4j-log4j12' "${hbase_cp}")
 
-# Hadoop classpath
-hadoop_cp=$(${HADOOP_HOME}/bin/hadoop classpath)
-hadoop_cp=$(mutate_classpath 'slf4j-log4j12' "${hadoop_cp}")
+  # Hadoop classpath
+  hadoop_cp=$(${HADOOP_HOME}/bin/hadoop classpath)
+  hadoop_cp=$(mutate_classpath 'slf4j-log4j12' "${hadoop_cp}")
 
-# Note that we put the libjars before the hbase jars, in case there are conflicts.
-express_conf=${EXPRESS_HOME}/conf
-# We put $EXPRESS_CLASSPATH at the beginning classpath to allow users to win when there are
-# conflicts.
-express_cp="${EXPRESS_CLASSPATH}:${express_conf}:${libjars}:${hadoop_cp}:${hbase_cp}"
+  # Note that we put the libjars before the hbase jars, in case there are conflicts.
+  express_conf=${EXPRESS_HOME}/conf
+  # We put $libjars_cp at the beginning classpath to allow users to win when there are
+  # conflicts.
+  express_cp="${libjars_cp}:${express_conf}:${libjars}:${hadoop_cp}:${hbase_cp}"
 
-# Use parts of the classpath to determine jars to send with jobs through the distributed cache.
-tmpjars_cp="${EXPRESS_CLASSPATH}:${libjars}"
-tmpjars=$(java -cp ${express_cp} org.kiji.express.tool.TmpJarsTool ${tmpjars_cp})
+  # Use parts of the classpath to determine jars to send with jobs through the distributed cache.
+  tmpjars_cp="${libjars_cp}:${libjars}"
+  tmpjars=$(java -cp ${express_cp} org.kiji.express.tool.TmpJarsTool ${tmpjars_cp})
 
-# Determine location of Hadoop native libraries and set java.library.path.
-if [ -d "${HADOOP_HOME}/lib/native" ]; then
-  JAVA_PLATFORM=`java -cp ${hadoop_cp} -Xmx32m org.apache.hadoop.util.PlatformName | sed -e "s/ /_/g"`
-  if [ ! -z "$JAVA_LIBRARY_PATH" ]; then
-    JAVA_LIBRARY_PATH="${JAVA_LIBRARY_PATH}:${HADOOP_HOME}/lib/native/${JAVA_PLATFORM}"
-  else
-    JAVA_LIBRARY_PATH="${HADOOP_HOME}/lib/native/${JAVA_PLATFORM}"
+  # Determine location of Hadoop native libraries and set java.library.path.
+  if [ -d "${HADOOP_HOME}/lib/native" ]; then
+    JAVA_PLATFORM=`java -cp ${hadoop_cp} -Xmx32m org.apache.hadoop.util.PlatformName | sed -e "s/ /_/g"`
+    if [ ! -z "$JAVA_LIBRARY_PATH" ]; then
+      JAVA_LIBRARY_PATH="${JAVA_LIBRARY_PATH}:${HADOOP_HOME}/lib/native/${JAVA_PLATFORM}"
+    else
+      JAVA_LIBRARY_PATH="${HADOOP_HOME}/lib/native/${JAVA_PLATFORM}"
+    fi
   fi
-fi
+}
 
 function jar_usage() {
   echo "Usage: express jar <jarFile> <mainClass> [args...]"
@@ -212,13 +227,15 @@ function script_usage() {
 }
 
 function jar_command() {
-  if [[ $# > 0 && $1 == "--help" ]]; then
+  if [[ ${#} > 0 && ${1} == "--help" ]]; then
     jar_usage
     echo
     exit 0
   fi
-  user_target=$1
-  class=$2
+  user_target=${1}
+  class=${2}
+  shift 2
+  COMMAND_ARGS=${@}
   if [ -z "${user_target}" ]; then
     echo "Error: no jar file specified."
     jar_usage
@@ -238,12 +255,14 @@ function jar_command() {
 }
 
 function script_command() {
-  if [[ $# > 0 && $1 == "--help" ]]; then
+  if [[ ${#} > 0 && ${1} == "--help" ]]; then
     script_usage
     echo
     exit 0
   fi
-  user_target=$1
+  user_target=${1}
+  shift
+  COMMAND_ARGS=${@}
   if [ -z "${user_target}" ]; then
     echo "Error: no script file specified."
     script_usage
@@ -261,7 +280,7 @@ function print_tool_usage() {
   echo
   echo 'USAGE'
   echo
-  echo '  express <command> <args>'
+  echo '  express <command> [--libjars <list of dependency jars separated by colon> <args>'
   echo
   echo 'COMMANDS'
   echo
@@ -281,12 +300,6 @@ function print_env_usage() {
   echo "  script."
   echo "  These include:"
   echo
-  echo "  EXPRESS_CLASSPATH   Should contain a colon-separated list of paths to client libraries"
-  echo "                      to place on the classpath of run tools. The libraries"
-  echo "                      specified will be placed first on the classpath so that they"
-  echo "                      will take precedence over libraries provided by KijiExpress."
-  echo "                      By default EXPRESS_CLASSPATH is empty."
-  echo
   echo "  EXPRESS_JAVA_OPTS   Should contain extra arguments to pass to the JVM used to run"
   echo "                      KijiExpress. By default, EXPRESS_JAVA_OPTS is empty."
   echo
@@ -297,27 +310,30 @@ function print_env_usage() {
   echo "                      default JAVA_LIBRARY_PATH is empty."
 }
 
-command=$1
+command=${1}
 
 case ${command} in
   help)
+    shift
     print_tool_usage
-    if [[ $1 == "--verbose" ]]; then
+    if [[ ${1} == "--verbose" ]]; then
       print_env_usage
     fi
     exit 0
     ;;
 
   classpath)
+    shift
+    extract_classpath ${@}
     echo "${express_cp}"
     exit 0
     ;;
 
   script)
     shift  # pop off the command
-    script_command ${@}
-    shift
-    if [[ "${@}" != *--hdfs* ]] && [[ "${@}" != *--local* ]]; then
+    extract_classpath ${@}
+    script_command ${COMMAND_ARGS}
+    if [[ "${COMMAND_ARGS}" != *--hdfs* ]] && [[ "${COMMAND_ARGS}" != *--local* ]]; then
       # Default run mode is local.
       run_mode_flag="--local"
     fi
@@ -326,10 +342,9 @@ case ${command} in
 
   job)
     shift  # pop off the command
-    jar_command ${@}
-    shift
-    shift
-    if [[ "${@}" != *--hdfs* ]] && [[ "${@}" != *--local* ]]; then
+    extract_classpath ${@}
+    jar_command ${COMMAND_ARGS}
+    if [[ "${COMMAND_ARGS}" != *--hdfs* ]] && [[ "${COMMAND_ARGS}" != *--local* ]]; then
       # Default run mode is local.
       run_mode_flag="--local"
     fi
@@ -338,9 +353,8 @@ case ${command} in
 
   jar)
     shift  # pop off the command
-    jar_command $@
-    shift
-    shift
+    extract_classpath ${@}
+    jar_command ${COMMAND_ARGS}
     ;;
 
   *)
@@ -361,9 +375,9 @@ fi
 # Run it!
 if [ -z "${scalding_tool}" ]; then
   exec java -cp "${express_cp}" ${java_opts} ${EXPRESS_JAVA_OPTS} \
-    "${class}" "${@}"
+    "${class}" "${COMMAND_ARGS}"
 else
-  canonical_user_target=$(readlink -e ${user_target})
+  canonical_user_target=$(resolve_symlink ${user_target})
   if [ -z "${canonical_user_target}" ]; then
     echo "File does not exist: ${user_target}"
     exit 1
@@ -371,9 +385,9 @@ else
 
   if [ -z "${class}" ]; then
     exec java -cp "${express_cp}" ${java_opts} ${EXPRESS_JAVA_OPTS} ${scalding_tool} \
-      "-Dtmpjars=${tmpjars}" "${canonical_user_target}" "${run_mode_flag}" "$@"
+      "-Dtmpjars=${tmpjars}" "${canonical_user_target}" "${run_mode_flag}" ${COMMAND_ARGS}
   else
-    exec java -cp "${express_cp}" ${java_opts} ${EXPRESS_JAVA_OPTS} ${scalding_tool} \
-      "-Dtmpjars=file://${canonical_user_target},${tmpjars}" "${class}" "${run_mode_flag}" "$@"
+    java -cp "${express_cp}" ${java_opts} ${EXPRESS_JAVA_OPTS} ${scalding_tool} \
+      "-Dtmpjars=file://${canonical_user_target},${tmpjars}" "${class}" "${run_mode_flag}" ${COMMAND_ARGS}
   fi
 fi
