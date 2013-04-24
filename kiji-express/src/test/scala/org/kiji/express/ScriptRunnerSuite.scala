@@ -20,11 +20,14 @@
 package org.kiji.express
 
 import java.io.File
+import java.net.URL
+import java.net.URLClassLoader
 
 import scala.collection.mutable.Buffer
 
 import com.google.common.io.Files
-import com.twitter.scalding._
+import com.twitter.scalding.JobTest
+import com.twitter.scalding.Tsv
 
 import org.kiji.express.DSL._
 import org.kiji.express.Resources.doAndRelease
@@ -96,8 +99,33 @@ KijiInput("%s")("family:column1" -> 'word)
         .finish
   }
 
-  // TODO(CHOP-60): Write this test.
   test("An script can be compiled and run as a hadoop job.") {
-    pending
+    val runner = new ScriptRunner()
+
+    val tempDir: File = Files.createTempDir()
+    val classes: File = new File("%s/classes".format(tempDir.getPath()))
+    classes.mkdir()
+    val jobc = runner.compileScript(scriptString.format(uri), classes)
+
+    addToClasspath(classes)
+    // Build test job.
+    JobTest(jobc)
+        .source(KijiInput(uri.toString)("family:column1" -> 'word), wordCountInput)
+        .sink(Tsv("outputFile"))(validateWordCount)
+        .runHadoop
+        .finish
+  }
+
+  /*
+   * Ugly hack to add the path where the script is compiled to the current classpath.
+   * This is because it seems that the ScriptRunner compiles its classes to a
+   * separate ClassLoader and hence Cascading/Hadoop can't get a handle on the Job
+   * to run. Ideally the JobTest would construct a Hadoop configuration by parsing
+   * the args via GenericOptionsParser but that would require a Scalding patch.
+   */
+  def addToClasspath(path:File) {
+    val method = classOf[URLClassLoader].getDeclaredMethod("addURL", (classOf[URL]));
+    method.setAccessible(true);
+    method.invoke(ClassLoader.getSystemClassLoader(), (path.toURI().toURL()));
   }
 }
