@@ -27,8 +27,8 @@ export PATH=${PATH}:${PWD}/bin
 
 ### Download, Untar, and Compile Tutorial
 
-Download the KijiExpress Music Tutorial 
-[here](http://archive.kiji.org/tarballs/kiji-express-music-0.1.0-release.tar.gz). 
+Download the KijiExpress Music Tutorial
+[here](http://archive.kiji.org/tarballs/kiji-express-music-0.1.0-release.tar.gz).
 Untar the project into a directory `<path/to/tutorial/root/dir>`:
 
 <div class="userinput">
@@ -110,7 +110,7 @@ kiji-schema-shell --kiji=${KIJI} --file=${MUSIC_EXPRESS_HOME}/music-schema.ddl
 
 This command uses [kiji-schema-shell](https://github.com/kijiproject/kiji-schema-shell)
 to create the tables using the KijiSchema DDL, which makes specifying table layouts easy.
-See [the KijiSchema DDL Shell reference]({{site.userguide_schema_current}}/schema-shell-ddl-ref)
+See [the KijiSchema DDL Shell reference]({{site.userguide_schema_1_0_2}}/schema-shell-ddl-ref)
 for more information on the KijiSchema DDL.
 
 ### Upload Data to HDFS
