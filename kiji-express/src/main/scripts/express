@@ -324,14 +324,14 @@ case ${command} in
 
   classpath)
     shift
-    extract_classpath ${@}
+    extract_classpath "${@}"
     echo "${express_cp}"
     exit 0
     ;;
 
   script)
     shift  # pop off the command
-    extract_classpath ${@}
+    extract_classpath "${@}"
     script_command ${COMMAND_ARGS}
     if [[ "${COMMAND_ARGS}" != *--hdfs* ]] && [[ "${COMMAND_ARGS}" != *--local* ]]; then
       # Default run mode is local.
@@ -342,7 +342,7 @@ case ${command} in
 
   job)
     shift  # pop off the command
-    extract_classpath ${@}
+    extract_classpath "${@}"
     jar_command ${COMMAND_ARGS}
     if [[ "${COMMAND_ARGS}" != *--hdfs* ]] && [[ "${COMMAND_ARGS}" != *--local* ]]; then
       # Default run mode is local.
@@ -353,7 +353,7 @@ case ${command} in
 
   jar)
     shift  # pop off the command
-    extract_classpath ${@}
+    extract_classpath "${@}"
     jar_command ${COMMAND_ARGS}
     ;;
 
