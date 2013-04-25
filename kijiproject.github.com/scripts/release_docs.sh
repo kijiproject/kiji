@@ -5,7 +5,7 @@
 #
 # This script creates new copies of userguides and tutorials based on the development
 # versions being worked on in directories named **/DEVEL.
-# 
+#
 # If executed as-is, nothing will change. You must update the environment variables
 # at the top of this script to publish new documentation versions that correspond
 # with concurrent Kiji module releases. New documentation (e.g., for the music
@@ -22,12 +22,12 @@
 # Please commit the changes to the script when you run it to generate new reified
 # documentation instances from the DEVEL directories.
 
-# Version numbers must be given in two forms: 
+# Version numbers must be given in two forms:
 #  * The FLAT_VERSION_NUMBER (e.g., 1_0_0_rc2)
 #    used in the _config.yml file to refer to versions of modules
 #
 #  * The REGULAR_VER (e.g., 1.0.0-rc2)
-#    that corresponds to the true version number as recorded by Maven to git 
+#    that corresponds to the true version number as recorded by Maven to git
 #    and our release artifacts.
 
 
@@ -196,7 +196,7 @@ if [ ! -d "tutorials/music-recommendation/$MUSIC_VER" ]; then
   # Reify this version number
   find . -name "*.md" -exec sed -i -e \
       "s/music-recommendation, DEVEL]/music-recommendation, $MUSIC_VER]/" {} \;
-  
+
   fix_released_versions
 
   # Add a reference to this version to the global config.

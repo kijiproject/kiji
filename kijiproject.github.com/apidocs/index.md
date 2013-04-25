@@ -71,7 +71,7 @@ only.
   </li>
 </ul>
 
-## Documentation Under Development
+### Documentation Under Development
 
 The API documentation in this section refers to the next version of Kiji under development.
 API documentation is provided for these modules as a reference to developers of Kiji itself.
