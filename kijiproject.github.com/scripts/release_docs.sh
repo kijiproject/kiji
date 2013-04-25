@@ -86,13 +86,13 @@ fix_released_versions() {
 
   # Reify git tags that turn into code snippits and accordions.
   find . -name "*.md" -exec sed -i -e \
-      's/{{site.schema_DEVEL_branch}}'"kiji-schema-root-$SCHEMA_VER" {} \;
+      's/{{site.schema_DEVEL_branch}}/'"kiji-schema-root-$SCHEMA_VER/" {} \;
   find . -name "*.md" -exec sed -i -e \
-      's/{{site.mr_DEVEL_branch}}'"kiji-mapreduce-root-$KIJIMR_VER" {} \;
+      's/{{site.mr_DEVEL_branch}}/'"kiji-mapreduce-root-$KIJIMR_VER/" {} \;
   find . -name "*.md" -exec sed -i -e \
-      's/{{site.mrlib_DEVEL_branch}}'"kiji-mapreduce-lib-root-$MRLIB_VER" {} \;
+      's/{{site.mrlib_DEVEL_branch}}/'"kiji-mapreduce-lib-root-$MRLIB_VER/" {} \;
   find . -name "*.md" -exec sed -i -e \
-      's/{{site.music_DEVEL_branch}}'"kiji-music-$MUSIC_VER" {} \;
+      's/{{site.music_DEVEL_branch}}/'"kiji-music-$MUSIC_VER/" {} \;
 
   # Update HTML links to tutorial elements
   find . -name "*.md" -exec sed -i -e \
@@ -106,15 +106,15 @@ fix_released_versions() {
 
   # Reify release version numbers in the text.
   find . -name "*.md" -exec sed -i -e \
-      's/{{site.schema_DEVEL_version}}'"$SCHEMA_VER" {} \;
+      's/{{site.schema_DEVEL_version}}/'"$SCHEMA_VER/" {} \;
   find . -name "*.md" -exec sed -i -e \
-      's/{{site.mr_DEVEL_version}}'"$KIJIMR_VER" {} \;
+      's/{{site.mr_DEVEL_version}}/'"$KIJIMR_VER/" {} \;
   find . -name "*.md" -exec sed -i -e \
-      's/{{site.mrlib_DEVEL_version}}'"$MRLIB_VER" {} \;
+      's/{{site.mrlib_DEVEL_version}}/'"$MRLIB_VER/" {} \;
   find . -name "*.md" -exec sed -i -e \
-      's/{{site.phonebook_DEVEL_version}}/'"$PHONEBOOK_VER" {} \;
+      's/{{site.phonebook_DEVEL_version}}/'"$PHONEBOOK_VER/" {} \;
   find . -name "*.md" -exec sed -i -e \
-      's/{{site.music_DEVEL_version}}/'"$MUSIC_VER" {} \;
+      's/{{site.music_DEVEL_version}}/'"$MUSIC_VER/" {} \;
 }
 
 
@@ -208,6 +208,7 @@ fi
 
 # Check: If a new version of KijiMR lib is available than previously declared in
 # _config.yml, add the api_mrlib_$MRLIB_FLAT_VER reference to the _config.yml.
+set +e # It's ok to get a non-zero return value here.
 grep "api_mrlib_$MRLIB_FLAT_VER :" "$top/_config.yml" >/dev/null
 if [ "$?" != "0" ]; then
   # We didn't find the API reference. Add KijiMR Library API docs reference to _config.yml.
@@ -220,8 +221,8 @@ echo ""
 echo "Automated documentation release complete."
 echo ""
 echo "At this point you should:"
-echo " * Create new links in userguides.md and apidocs/index.md that point to the"
-echo "   newly released modules."
+echo " * Create new links in userguides.md, apidocs/index.md, and tutorials.md that"
+echo "   point to the newly released modules."
 echo " * Update the DEVEL macros in /_config.yml to point to the next versions."
 echo " * Commit these changes and push to master."
 echo ""

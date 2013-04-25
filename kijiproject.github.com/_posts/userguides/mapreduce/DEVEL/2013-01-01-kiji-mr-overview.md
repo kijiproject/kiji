@@ -58,7 +58,7 @@ using Maven, this can be included as follows:
     <dependency>
       <groupId>org.kiji.mapreduce</groupId>
       <artifactId>kiji-mapreduce</artifactId>
-      <version>{{Site.mr_DEVEL_version}}</version>
+      <version>{{site.mr_DEVEL_version}}</version>
       <scope>provided</scope>
     </dependency>
 
@@ -68,12 +68,12 @@ need to include:
     <dependency>
       <groupId>org.kiji.mapreduce.lib</groupId>
       <artifactId>kiji-mapreduce-lib</artifactId>
-      <version>i{{Site.mrlib_DEVEL_version}}</version>
+      <version>{{site.mrlib_DEVEL_version}}</version>
       <scope>provided</scope>
     </dependency>
 
 * You will also need a dependency on KijiSchema. See [the KijiSchema
-  documentation]({{ site.userguide_schema_DEVEL }}/kiji-schema-overview/) for this information.
+  documentation]({{site.userguide_schema_DEVEL}}/kiji-schema-overview/) for this information.
 * You'll probably need to configure your Maven `settings.xml` to locate these dependencies.
   See [Getting started with Maven](http://www.kiji.org/get-started-with-maven)
   for more details.
