@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<modelVersion>4.0.0</modelVersion>
+
+<groupId>org.kiji.rest</groupId>
+<artifactId>kiji-rest</artifactId>
+<version>0.1.0-SNAPSHOT</version>
+
+<!--
+<parent>
+  <groupId>org.kiji.rest</groupId>
+  <artifactId>kiji-rest-root</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <relativePath>..</relativePath>
+</parent>
+-->
+
+
+<dependencies>
+  <dependency>
+    <groupId>com.yammer.dropwizard</groupId>
+    <artifactId>dropwizard-core</artifactId>
+    <version>0.6.2</version>
+  </dependency>
+    <dependency>
+    <groupId>org.kiji.schema</groupId>
+    <artifactId>kiji-schema</artifactId>
+    <version>1.0.1</version>
+    <!-- Dropwizard works with the internals of logback which conflict with these excluded packages -->
+    <exclusions>
+      <exclusion>
+        <groupId>org.slf4j</groupId>
+        <artifactId>log4j-over-slf4j</artifactId>
+      </exclusion>
+      <exclusion>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-log4j12</artifactId>
+      </exclusion>
+    </exclusions>
+  </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-client</artifactId>
+      <version>2.0.0-mr1-cdh4.1.2</version>
+      <scope>compile</scope>
+    <!-- Dropwizard works with the internals of logback which conflict with these excluded packages -->
+    <exclusions>
+      <exclusion>
+        <groupId>org.slf4j</groupId>
+        <artifactId>log4j-over-slf4j</artifactId>
+      </exclusion>
+      <exclusion>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-log4j12</artifactId>
+      </exclusion>
+    </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-core</artifactId>
+      <version>2.0.0-mr1-cdh4.1.2</version>
+      <scope>compile</scope>
+    <!-- Dropwizard works with the internals of logback which conflict with these excluded packages -->
+    <exclusions>
+      <exclusion>
+        <groupId>org.slf4j</groupId>
+        <artifactId>log4j-over-slf4j</artifactId>
+      </exclusion>
+      <exclusion>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-log4j12</artifactId>
+      </exclusion>
+    </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hbase</groupId>
+      <artifactId>hbase</artifactId>
+      <version>0.92.1-cdh4.1.2</version>
+      <scope>compile</scope>
+    <!-- Dropwizard works with the internals of logback which conflict with these excluded packages -->
+    <exclusions>
+      <exclusion>
+        <groupId>org.slf4j</groupId>
+        <artifactId>log4j-over-slf4j</artifactId>
+      </exclusion>
+      <exclusion>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-log4j12</artifactId>
+      </exclusion>
+    </exclusions>
+    </dependency>
+
+</dependencies>
+
+<properties>
+  <!-- use UTF-8 for everything -->
+  <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+</properties>
+
+<build>
+  <plugins>
+    <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-compiler-plugin</artifactId>
+      <version>2.3.2</version>
+      <!-- compile for Java 1.6 -->
+      <configuration>
+        <source>1.6</source>
+        <target>1.6</target>
+        <encoding>UTF-8</encoding>
+      </configuration>
+    </plugin>
+
+    <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-shade-plugin</artifactId>
+      <version>1.6</version>
+      <configuration>
+        <createDependencyReducedPom>true</createDependencyReducedPom>
+        <filters>
+          <filter>
+            <artifact>*:*</artifact>
+            <excludes>
+              <exclude>META-INF/*.SF</exclude>
+              <exclude>META-INF/*.DSA</exclude>
+              <exclude>META-INF/*.RSA</exclude>
+            </excludes>
+          </filter>
+        </filters>
+      </configuration>
+      <executions>
+        <execution>
+          <phase>package</phase>
+          <goals>
+            <goal>shade</goal>
+          </goals>
+          <configuration>
+            <transformers>
+              <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+              <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                <mainClass>org.kiji.rest.KijiRESTService</mainClass>
+              </transformer>
+            </transformers>
+          </configuration>
+        </execution>
+      </executions>
+    </plugin>
+
+    <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-jar-plugin</artifactId>
+      <version>2.3.2</version>
+      <configuration>
+        <archive>
+          <manifest>
+            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+          </manifest>
+        </archive>
+      </configuration>
+    </plugin>
+
+    <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-javadoc-plugin</artifactId>
+    </plugin>
+
+    <plugin>
+      <groupId>org.apache.maven.plugins</groupId>
+      <artifactId>maven-checkstyle-plugin</artifactId>
+    </plugin>
+
+    <plugin>
+      <groupId>org.codehaus.mojo</groupId>
+      <artifactId>findbugs-maven-plugin</artifactId>
+    </plugin>
+  </plugins>
+</build>
+</project>

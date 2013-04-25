@@ -1,0 +1,4 @@
+{
+    "cluster": "kiji://localhost:2181/",
+    "instances": ["shashir", "default"]
+}
