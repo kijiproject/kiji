@@ -86,8 +86,8 @@ userguide_mapreduce_rc61 : /userguides/mapreduce/1.0.0-rc61
 # latest release versions.
 
 api_schema_DEVEL : http://api-docs.kiji.org/kiji-schema/DEVEL/org/kiji/schema
-api_mrlib_DEVEL : http://api-docs.kiji.org/kiji-schema/DEVEL/org/kiji/schema
-api_mr_DEVEL : http://api-docs.kiji.org/kiji-schema/DEVEL/org/kiji/schema
+api_mrlib_DEVEL : http://api-docs.kiji.org/kiji-schema/DEVEL/org/kiji/mapreduce
+api_mr_DEVEL : http://api-docs.kiji.org/kiji-schema/DEVEL/org/kiji/mapreduce
 
 userguide_schema_DEVEL : /userguides/schema/DEVEL
 userguide_mapreduce_DEVEL : /userguides/mapreduce/DEVEL
