@@ -25,3 +25,12 @@ to the Kiji version you are using.
 * [KijiMR 1.0.0-rc6]({{site.userguide_url}}/mapreduce/1.0.0-rc6/kiji-mr-overview/)
 * [KijiMR 1.0.0-rc5]({{site.userguide_url}}/mapreduce/1.0.0-rc5/kiji-mr-overview/)
 * [KijiMR 1.0.0-rc4]({{site.userguide_url}}/mapreduce/1.0.0-rc4/kiji-mr-overview/)
+
+## Documentation under development 
+
+The documentation links in this section refer to works-in-progress for the next versions
+of the software to be released. Documentation in this section may be incorrect or change
+before release.
+
+* [KijiSchema]({{site.userguide_url}}/schema/DEVEL/kiji-schema-overview/) (latest)
+
