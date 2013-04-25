@@ -42,4 +42,5 @@ These tutorials are not intended for new users; they are for the authors of the 
 themselves. Documentation in this section may be incorrect or may change before release.
 
 * [Phone Book Tutorial](tutorials/phonebook-tutorial/DEVEL/phonebook-tutorial)
+* [Music Recommendation Tutorial](tutorials/music-recommendation/DEVEL/music-overview)
 
