@@ -80,13 +80,19 @@ userguide_schema_1_0_2 : /userguides/schema/1.0.2
 userguide_mapreduce_rc6 : /userguides/mapreduce/1.0.0-rc6
 userguide_mapreduce_rc61 : /userguides/mapreduce/1.0.0-rc61
 
-# Latest development versions of project documentation
+# Latest development versions of project documentation.
+# When these documents are released, they are copied to a directory named
+# after the release version number and have their DEVEL macros finalized to the
+# latest release versions.
+
 api_schema_DEVEL : http://api-docs.kiji.org/kiji-schema/DEVEL/org/kiji/schema
 api_mrlib_DEVEL : http://api-docs.kiji.org/kiji-schema/DEVEL/org/kiji/schema
 api_mr_DEVEL : http://api-docs.kiji.org/kiji-schema/DEVEL/org/kiji/schema
 
 userguide_schema_DEVEL : /userguides/schema/DEVEL
 userguide_mapreduce_DEVEL : /userguides/mapreduce/DEVEL
+
+tutorial_phonebook_DEVEL : /tutorials/phonebook-tutorial/DEVEL
 
 schema_DEVEL_version : 1.1.0
 schema_DEVEL_branch : master
@@ -97,6 +103,7 @@ mr_DEVEL_branch : master
 mrlib_DEVEL_version : 1.0.0-rc61
 mrlib_DEVEL_branch : master
 
+phonebook_DEVEL_version : 1.0.0-rc61
 
 
 

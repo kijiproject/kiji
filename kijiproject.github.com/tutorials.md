@@ -34,3 +34,12 @@ Covers how to build and run Express jobs that use Kiji tables as input and/or ou
 word count of recommendation systems.  This tutorial mirrors the KijiMR music tutorial closely.
 
 * [KijiExpress Tutorial](tutorials/express-recommendation/0.1.0/express-overview) (latest)
+
+# Tutorials under development
+
+The documents in this section reflect the working copy of the latest development branch.
+These tutorials are not intended for new users; they are for the authors of the tutorials
+themselves. Documentation in this section may be incorrect or may change before release.
+
+* [Phone Book Tutorial](tutorials/phonebook-tutorial/DEVEL/phonebook-tutorial)
+
