@@ -1,0 +1,68 @@
+// (c) Copyright 2012 WibiData, Inc.
+[
+{
+  "type": "record",
+  "namespace": "org.kiji.mapreduce.lib.avro",
+  "name": "Node",
+  "doc": "A weighted node in a graph (directedness is up to the user's interpretation).",
+  "fields": [
+    { "type": "string", "name": "label", "doc": "Label of the graph node." },
+    { "type": "double", "name": "weight", "doc": "Weight of the graph node." },
+    {
+      "type": [
+        {
+          "type": "array",
+          "items": {
+            "type": "record",
+            "namespace": "org.kiji.mapreduce.lib.avro",
+            "name": "Edge",
+            "doc": "An edge connecting two nodes in a graph.",
+            "fields": [
+              {
+                "type": [ "string", "null" ],
+                "name": "label",
+                "doc": "Optional label of the graph edge."
+              },
+              { "type": "double", "name": "weight", "doc": "Weight of the graph edge" },
+              {
+                "type": [ "Node", "null" ],
+                "name": "target",
+                "doc": "Node the edge connects to."
+              },
+              {
+                "type": [ { "type": "map", "values": "string" }, "null" ],
+                "name": "annotations",
+                "order": "ignore",
+                "doc": "Additional string annotations associated with the edge."
+              }
+            ]
+          }
+        },
+        "null"
+      ],
+      "name": "edges",
+      "doc": "Array of outgoing edges from the node."
+    },
+    {
+      "type": [ { "type": "map", "values": "string" }, "null" ],
+      "name": "annotations",
+      "order": "ignore",
+      "doc": "Additional string annotations associated with the node."
+    }
+  ]
+},
+{
+  "type": "record",
+  "namespace": "org.kiji.mapreduce.lib.avro",
+  "name": "Path",
+  "doc": "A directed path through a graph.",
+  "fields": [
+    { "type": "Node", "name": "start", "doc": "The beginning of the path." },
+    {
+      "type": [ { "type": "array", "items": "Edge" }, "null" ],
+      "name": "edges",
+      "doc": "The ordered edges of the path."
+    }
+  ]
+}
+]

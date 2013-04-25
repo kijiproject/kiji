@@ -1,3 +1,25 @@
+# Temporary files used by editors.
 *~
 *.swp
-target
+.#*
+\#*
+
+# Project files from IDEs.
+.classpath
+.project
+.settings
+prj.el
+.jde/
+TAGS
+.taglist
+nb-configuration.xml
+nbactions.xml
+.ensime
+.idea/
+*.iml
+
+# Build and run artifacts.
+target/
+build/
+logs/
+pids/
