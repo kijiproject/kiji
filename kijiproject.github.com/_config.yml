@@ -81,10 +81,24 @@ userguide_mapreduce_rc6 : /userguides/mapreduce/1.0.0-rc6
 userguide_mapreduce_rc61 : /userguides/mapreduce/1.0.0-rc61
 
 # Latest development versions of project documentation
-api_schema_devel : http://api-docs.kiji.org/kiji-schema/DEVEL/org/kiji/schema
-userguide_schema_devel : /userguides/schema/DEVEL
+api_schema_DEVEL : http://api-docs.kiji.org/kiji-schema/DEVEL/org/kiji/schema
+api_mrlib_DEVEL : http://api-docs.kiji.org/kiji-schema/DEVEL/org/kiji/schema
+api_mr_DEVEL : http://api-docs.kiji.org/kiji-schema/DEVEL/org/kiji/schema
+
+userguide_schema_DEVEL : /userguides/schema/DEVEL
+userguide_mapreduce_DEVEL : /userguides/mapreduce/DEVEL
+
 schema_DEVEL_version : 1.1.0
 schema_DEVEL_branch : master
+
+mr_DEVEL_version : 1.0.0-rc62
+mr_DEVEL_branch : master
+
+mrlib_DEVEL_version : 1.0.0-rc61
+mrlib_DEVEL_branch : master
+
+
+
 
 # All Jekyll-Bootstrap specific configurations are namespaced into this hash
 #

@@ -33,4 +33,5 @@ of the software to be released. Documentation in this section may be incorrect o
 before release.
 
 * [KijiSchema]({{site.userguide_url}}/schema/DEVEL/kiji-schema-overview/) (latest)
+* [KijiMR]({{site.userguide_url}}/mapreduce/DEVEL/kiji-mr-overview/) (latest)
 
