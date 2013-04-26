@@ -22,7 +22,7 @@ package org.kiji.mapreduce.framework;
 import org.kiji.annotations.ApiAudience;
 
 /** Configuration keys used by KijiMR in Hadoop Configuration objects. */
-@ApiAudience.Framework
+@ApiAudience.Public
 public final class KijiConfKeys {
 
   /** URI of the input table to read from. */
