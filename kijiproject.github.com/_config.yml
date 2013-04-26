@@ -64,6 +64,9 @@ tutorial_music_rc5 : /tutorials/music-recommendation/1.0.0-rc5
 userguide_schema_rc5 : /userguides/schema/1.0.0-rc5
 userguide_mapreduce_rc5 : /userguides/mapreduce/1.0.0-rc5
 
+# Express
+api_express_0_1_0 : http://api-docs.kiji.org/kiji-express/0.1.0/org/kiji/express
+
 # BentoBox Albacore
 api_schema_1_0_0 : http://api-docs.kiji.org/kiji-schema/1.0.0/org/kiji/schema
 api_schema_1_0_1 : http://api-docs.kiji.org/kiji-schema/1.0.1/org/kiji/schema
@@ -86,8 +89,9 @@ userguide_mapreduce_rc61 : /userguides/mapreduce/1.0.0-rc61
 # latest release versions.
 
 api_schema_DEVEL : http://api-docs.kiji.org/kiji-schema/DEVEL/org/kiji/schema
-api_mrlib_DEVEL : http://api-docs.kiji.org/kiji-schema/DEVEL/org/kiji/mapreduce
-api_mr_DEVEL : http://api-docs.kiji.org/kiji-schema/DEVEL/org/kiji/mapreduce
+api_mrlib_DEVEL : http://api-docs.kiji.org/kiji-mapreduce-lib/DEVEL/org/kiji/mapreduce
+api_mr_DEVEL : http://api-docs.kiji.org/kiji-mapreduce/DEVEL/org/kiji/mapreduce
+api_express_DEVEL : http://api-docs.kiji.org/kiji-express/DEVEL/org/kiji/express
 
 userguide_schema_DEVEL : /userguides/schema/DEVEL
 userguide_mapreduce_DEVEL : /userguides/mapreduce/DEVEL
@@ -109,6 +113,11 @@ phonebook_DEVEL_version : 1.0.0-rc61
 music_DEVEL_version : 1.0.0-rc61
 music_DEVEL_branch : master
 
+music_DEVEL_version : 1.0.0-rc61
+music_DEVEL_branch : master
+
+music_express_DEVEL_version : 0.2.0
+music_express_DEVEL_branch : master
 
 # All Jekyll-Bootstrap specific configurations are namespaced into this hash
 #
