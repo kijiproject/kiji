@@ -42,10 +42,10 @@ class SongRecommender(args: Args) extends Job(args) {
     songs.getFirstValue().getTopSongs().get(0).getSongId().toString
   }
   /** This Scalding RichPipe does the following:
-  * 1. Reads the column "info:top_next_songs" from the songs table.
-  * 2. Retrieves the song most recently played by a user.
-  * 3. Recommends that the next song to listen to is the song that is most frequently played
-  * after the song currently being considered.
+  * 1. Reads the column "info:top_next_songs" from the songs table and emits a tuple for every row.
+  * 2. Retrieves the most popular song played (in the 'nextSong field) after every given song (in
+  *      the 'songId field.)
+  * 3. Emits tuples containing only the fields 'songId and 'nextSong.
   */
   val recommendedSong = KijiInput(args("songs-table"))("info:top_next_songs" -> 'topNextSongs)
       .map('entityId -> 'songId) { eId: EntityId => eId(0) }
@@ -56,7 +56,7 @@ class SongRecommender(args: Args) extends Job(args) {
   * 1. Reads the column "info:track_plays" from the users table.
   * 2. Retrieves the song most recently played by a user.
   * 3. Retrieve the TopNextSongs associated with the most recently played song by joining together
-  *  the tuples emitted from the nextSongs pipe with the the 'lastTrackPlayed field
+  *      the tuples emitted from the nextSongs pipe with the the 'lastTrackPlayed field.
   */
   KijiInput(args("users-table"))("info:track_plays" -> 'trackPlays)
       .map('trackPlays -> 'lastTrackPlayed) {
