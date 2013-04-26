@@ -1,0 +1,32 @@
+
+
+                             Kiji Express Release Notes
+
+Version 0.2.0
+  * CHOP-70. Deprecated the EXPRESS_CLASSPATH variable.
+      Currently when specifying any third-party dependencies (job jar, dependency
+      jars etc) when running the express command, the user must set the
+      EXPRESS_CLASSPATH variable ahead of time. Now that variable is deprecated in
+      favor of a command line option (--libjars) where the user can specify a colon
+      separated list of dependency jars.
+  * CHOP-63. Add a series of descriptive stats methods to KijiSlice.
+      The following methods now exist on the KijiSlice class:
+      ** min/max
+      ** mean
+      ** standard deviation
+      ** variance
+      There are two versions of each method:
+      ** One that requires a function argument that returns a numeric value in case the
+         underlying KijiSlice cell is a complex Avro type.
+      ** One that assumes the underlying KijiSlice cell value is numeric (a convenience
+         version of the above. Code won't compile if the underlying cell type is not numeric).
+  * CHOP-22. Design how users interact with Entity IDs.
+      EntityIds can be constructed by calling EntityId("kiji://my/table/uri", "component1", 2L, ...)
+      This includes all types of entity ids, including composite.
+  * CHOP-102. Scripts no longer need to import Scalding and KijiExpress.
+      The following are now automatically imported when running a KijiExpress script:
+      ** com.twitter.scalding._
+      ** org.kiji.express._
+      ** org.kiji.express.DSL._
+  * CHOP-60. Fixes the build on OS X.
+      Increased the heap size for the scala test to 2048m as a way to get the tests to pass.
