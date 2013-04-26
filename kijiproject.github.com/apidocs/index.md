@@ -34,6 +34,9 @@ APIs, but beware that they may change between minor versions.
   \[[1.0.0-rc5](http://api-docs.kiji.org/kiji-mapreduce-lib/1.0.0-rc5/index.html)\]
   \[[1.0.0-rc4](http://api-docs.kiji.org/kiji-mapreduce-lib/1.0.0-rc4/index.html)\]
 
+* [KijiExpress](http://api-docs.kiji.org/kiji-express/0.2.0/index.html) (latest)
+  \[[0.1.0](http://api-docs.kiji.org/kiji-express/0.1.0/index.html)\]
+
 ## Extended Framework Tools
 Additional APIs for use by clients of the Kiji framework. Modules in this section
 are intended for testing, or as convenience APIs.
@@ -80,5 +83,5 @@ Information in this section may be incorrect or may change before release.
 * [KijiSchema](http://api-docs.kiji.org/kiji-schema/DEVEL/index.html)
 * [KijiMR](http://api-docs.kiji.org/kiji-mapreduce/DEVEL/index.html)
 * [KijiMR Library](http://api-docs.kiji.org/kiji-mapreduce-lib/DEVEL/index.html)
-
+* [KijiExpress](http://api-docs.kiji.org/kiji-express/DEVEL/index.html)
 
