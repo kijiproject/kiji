@@ -210,7 +210,7 @@ class FakeHBase
     def listTables(): Array[HTableDescriptor] = {
       synchronized {
         return tableMap.values.iterator.asScala
-            .map { table => table.desc }
+            .map { table => table.getTableDescriptor }
             .toArray
       }
     }

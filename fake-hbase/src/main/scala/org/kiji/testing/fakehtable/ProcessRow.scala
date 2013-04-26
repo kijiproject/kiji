@@ -25,13 +25,15 @@ import java.util.Arrays
 import java.util.{List => JList}
 import java.util.NavigableMap
 import java.util.NavigableSet
+
+import org.apache.hadoop.hbase.HColumnDescriptor
 import org.apache.hadoop.hbase.HConstants
 import org.apache.hadoop.hbase.KeyValue
 import org.apache.hadoop.hbase.client.Result
 import org.apache.hadoop.hbase.filter.Filter
 import org.apache.hadoop.hbase.io.TimeRange
+import org.kiji.testing.fakehtable.JNavigableMapWithAsScalaIterator.javaNavigableMapAsScalaIterator
 import org.slf4j.LoggerFactory
-
 
 /**
  * Utility object providing the logic to prepare HBase Result instances.
@@ -62,6 +64,7 @@ object ProcessRow {
   /**
    * Builds a Result instance from an actual row content and a get/scan request.
    *
+   * @param table is the fake HTable.
    * @param rowKey is the row key.
    * @param row is the actual row data.
    * @param familyMap is the requested columns.
@@ -71,6 +74,7 @@ object ProcessRow {
    * @return a new Result instance with the specified cells (KeyValue entries).
    */
   def makeResult(
+      table: FakeHTable,
       rowKey: Bytes,
       row: RowFamilies,
       familyMap: NavigableMap[Bytes, NavigableSet[Bytes]],
@@ -80,6 +84,9 @@ object ProcessRow {
   ): Result = {
 
     val kvs: JList[KeyValue] = new JArrayList[KeyValue]()
+
+    /** Current time, in milliseconds, to enforce TTL. */
+    val nowMS = System.currentTimeMillis
 
     /**
      * Iteration start key.
@@ -97,10 +104,32 @@ object ProcessRow {
     FamilyLoop {
       if (family == null) FamilyLoop.break
 
+      /** Map: qualifier -> time series. */
       val rowQMap = row.get(family)
       if (rowQMap == null) {
         family = families.higher(family)
         FamilyLoop.continue
+      }
+
+      // Apply table parameter (TTL, max/min versions):
+      {
+        val familyDesc: HColumnDescriptor = table.getFamilyDesc(family)
+
+        val maxVersions = familyDesc.getMaxVersions
+        val minVersions = familyDesc.getMinVersions
+        val minTimestamp = nowMS - (familyDesc.getTimeToLive * 1000)
+
+        for ((qualifier, timeSeries) <- rowQMap.asScalaIterator) {
+          while (timeSeries.size > maxVersions) {
+            timeSeries.remove(timeSeries.lastKey)
+          }
+          if (familyDesc.getTimeToLive != HConstants.FOREVER) {
+            while ((timeSeries.size > minVersions)
+                && (timeSeries.lastKey < minTimestamp)) {
+              timeSeries.remove(timeSeries.lastKey)
+            }
+          }
+        }
       }
 
       /** Ordered set of qualifiers to iterate through. */

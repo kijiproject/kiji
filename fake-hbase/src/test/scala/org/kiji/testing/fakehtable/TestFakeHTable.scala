@@ -20,20 +20,26 @@
 package org.kiji.testing.fakehtable
 
 import java.util.Arrays
+
+import scala.collection.JavaConverters.asScalaIteratorConverter
+import scala.collection.JavaConverters.asScalaSetConverter
 import scala.collection.JavaConverters.mapAsScalaMapConverter
-import scala.collection.JavaConverters._
+
 import org.apache.hadoop.hbase.HBaseConfiguration
+import org.apache.hadoop.hbase.HColumnDescriptor
+import org.apache.hadoop.hbase.HConstants
+import org.apache.hadoop.hbase.HTableDescriptor
 import org.apache.hadoop.hbase.client.Delete
 import org.apache.hadoop.hbase.client.Get
 import org.apache.hadoop.hbase.client.HTableInterface
 import org.apache.hadoop.hbase.client.Put
 import org.apache.hadoop.hbase.client.Scan
+import org.apache.hadoop.hbase.filter.ColumnRangeFilter
 import org.apache.hadoop.hbase.filter.KeyOnlyFilter
+import org.apache.hadoop.hbase.util.Bytes
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
-import org.apache.hadoop.hbase.util.Bytes
-import org.apache.hadoop.hbase.filter.ColumnRangeFilter
 
 @RunWith(classOf[JUnitRunner])
 class TestFakeHTable extends FunSuite {
@@ -79,6 +85,8 @@ class TestFakeHTable extends FunSuite {
   implicit def implicitToStringAsBytes(str: String): StringAsBytes = {
     return new StringAsBytes(str)
   }
+
+  // -----------------------------------------------------------------------------------------------
 
   test("HTable.get on unknown row") {
     val table = new FakeHTable(name = "table", desc = null)
@@ -395,6 +403,11 @@ class TestFakeHTable extends FunSuite {
         desc = null
     )
     val count = 5
+    for (x <- 0 until count) {
+      val familyDesc = new HColumnDescriptor("family%d".format(x))
+      familyDesc.setMaxVersions(HConstants.ALL_VERSIONS)
+      table.getTableDescriptor.addFamily(familyDesc)
+    }
     populateTable(table, count=count)
 
     // Only fetch qualifiers >= 'qualifier2' and <= 'qualifier3',
@@ -422,6 +435,11 @@ class TestFakeHTable extends FunSuite {
         desc = null
     )
     val count = 5
+    for (x <- 0 until count) {
+      val familyDesc = new HColumnDescriptor("family%d".format(x))
+      familyDesc.setMaxVersions(HConstants.ALL_VERSIONS)
+      table.getTableDescriptor.addFamily(familyDesc)
+    }
     populateTable(table, count=count)
 
     // Only fetch qualifiers > 'qualifier2' and < 'qualifier4',
@@ -461,6 +479,121 @@ class TestFakeHTable extends FunSuite {
     val result = table.get(get)
     expect(true)(result.isEmpty)
   }
+
+  test("Enforced family max versions") {
+    val desc = new HTableDescriptor("table")
+    val familyDesc = new HColumnDescriptor("family")
+    familyDesc.setMaxVersions(5)
+    // min versions defaults to 0, TTL defaults to forever.
+    desc.addFamily(familyDesc)
+    val table = new FakeHTable(
+        name = "table",
+        conf = HBaseConfiguration.create(),
+        desc = desc
+    )
+
+    for (index <- 0 until 9) {
+      val timestamp = index
+      table.put(new Put("row").add("family", "q", timestamp, "value-%d".format(index)))
+    }
+
+    val result = table.get(new Get("row").addFamily("family").setMaxVersions())
+    val kvs = result.getColumn("family", "q")
+    expect(5)(kvs.size)
+  }
+
+  test("Enforced family TTL with no min versions") {
+    val ttl = 3600  // 1h TTL
+
+    val desc = new HTableDescriptor("table")
+    val familyDesc = new HColumnDescriptor("family")
+    familyDesc.setMaxVersions(HConstants.ALL_VERSIONS)  // retain all versions
+    familyDesc.setTimeToLive(ttl)                       // 1h TTL
+    familyDesc.setMinVersions(0)                        // no min versions to retain wrt TTL
+    desc.addFamily(familyDesc)
+    val table = new FakeHTable(
+        name = "table",
+        conf = HBaseConfiguration.create(),
+        desc = desc
+    )
+
+    val nowMS = System.currentTimeMillis
+    val minTimestamp = nowMS - (ttl * 1000)
+
+    // Write cells older than TTL, all these cells should be discarded:
+    for (index <- 0 until 9) {
+      val timestamp = minTimestamp - index  // absolutely older than TTL allows
+      table.put(new Put("row").add("family", "q", timestamp, "value-%d".format(index)))
+    }
+
+    {
+      val result = table.get(new Get("row").addFamily("family").setMaxVersions())
+      val kvs = result.getColumn("family", "q")
+      // Must be empty since all the puts were older than TTL allows and no min versions set:
+      expect(0)(kvs.size)
+    }
+
+    // Write cells within TTL range, all these cells should be kept:
+    for (index <- 0 until 9) {
+      val timestamp = nowMS + index  // within TTL range
+      table.put(new Put("row").add("family", "q", timestamp, "value-%d".format(index)))
+    }
+
+    {
+      val result = table.get(new Get("row").addFamily("family").setMaxVersions())
+      val kvs = result.getColumn("family", "q")
+      expect(9)(kvs.size)
+    }
+  }
+
+  test("Enforced family TTL with min versions") {
+    val ttl = 3600  // 1h TTL
+
+    val desc = new HTableDescriptor("table")
+    val familyDesc = new HColumnDescriptor("family")
+    familyDesc.setMaxVersions(HConstants.ALL_VERSIONS)  // retain all versions
+    familyDesc.setTimeToLive(ttl)                       // 1h TTL
+    familyDesc.setMinVersions(2)                        // retain at least 2 versions wrt TTL
+    desc.addFamily(familyDesc)
+    val table = new FakeHTable(
+        name = "table",
+        conf = HBaseConfiguration.create(),
+        desc = desc
+    )
+
+    val nowMS = System.currentTimeMillis
+    val minTimestamp = nowMS - (ttl * 1000)
+
+    // Write cells older than TTL, only 2 of these cells should be retained:
+    for (index <- 0 until 9) {
+      val timestamp = minTimestamp - index  // absolutely older than TTL allows
+      table.put(new Put("row").add("family", "q", timestamp, "value-%d".format(index)))
+    }
+
+    {
+      val result = table.get(new Get("row").addFamily("family").setMaxVersions())
+      val kvs = result.getColumn("family", "q")
+      expect(2)(kvs.size)
+      expect(minTimestamp)(kvs.get(0).getTimestamp)
+      expect(minTimestamp - 1)(kvs.get(1).getTimestamp)
+    }
+
+    // Write cells within TTL range, all these cells should be kept,
+    // but the 2 cells older than TTL should disappear:
+    for (index <- 0 until 9) {
+      val timestamp = nowMS + index  // within TTL range
+      table.put(new Put("row").add("family", "q", timestamp, "value-%d".format(index)))
+    }
+
+    {
+      val result = table.get(new Get("row").addFamily("family").setMaxVersions())
+      val kvs = result.getColumn("family", "q")
+      expect(9)(kvs.size)
+      expect(nowMS)(kvs.get(8).getTimestamp)
+    }
+  }
+
+  // -----------------------------------------------------------------------------------------------
 
   /**
    * Returns the smallest row key strictly greater than the specified row.

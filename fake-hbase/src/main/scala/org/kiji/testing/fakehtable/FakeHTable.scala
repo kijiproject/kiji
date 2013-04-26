@@ -41,6 +41,7 @@ import scala.util.control.Breaks.breakable
 
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
+import org.apache.hadoop.hbase.HColumnDescriptor
 import org.apache.hadoop.hbase.HConstants
 import org.apache.hadoop.hbase.HRegionInfo
 import org.apache.hadoop.hbase.HRegionLocation
@@ -58,6 +59,7 @@ import org.apache.hadoop.hbase.client.RowLock
 import org.apache.hadoop.hbase.client.Scan
 import org.apache.hadoop.hbase.client.coprocessor.Batch
 import org.apache.hadoop.hbase.filter.Filter
+import org.apache.hadoop.hbase.io.hfile.Compression
 import org.apache.hadoop.hbase.ipc.CoprocessorProtocol
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.hadoop.io.WritableUtils
@@ -69,17 +71,20 @@ import org.slf4j.LoggerFactory
  *
  * @param name is the table name.
  * @param desc is the table HBase descriptor.
+ *     Optional and may currently be null (the fake HTable infers descriptors as needed).
  * @param conf is the HBase configuration.
  * @param autoFlush is the initial value for the table auto-flush property.
  * @param enabled is the initial state of the table.
+ * @param autoFillDesc indicates whether descriptors are required or automatically filled-in.
  */
 class FakeHTable(
     val name: String,
-    val desc: HTableDescriptor,
+    desc: HTableDescriptor,
     val conf: Configuration = HBaseConfiguration.create(),
     private var autoFlush: Boolean = false,
     private var writeBufferSize: Long = 1,
-    var enabled: Boolean = true
+    var enabled: Boolean = true,
+    autoFillDesc: Boolean = true
 ) extends HTableInterface {
   private val Log = LoggerFactory.getLogger(getClass)
   require(conf != null)
@@ -113,6 +118,17 @@ class FakeHTable(
 
   // -----------------------------------------------------------------------------------------------
 
+  /** HBase descriptor of the table. */
+  private val mDesc: HTableDescriptor = {
+    desc match {
+      case null => {
+        require(autoFillDesc)
+        new HTableDescriptor(name)
+      }
+      case desc => desc
+    }
+  }
+
   override def getTableName(): Array[Byte] = {
     return name.getBytes
   }
@@ -122,7 +138,7 @@ class FakeHTable(
   }
 
   override def getTableDescriptor(): HTableDescriptor = {
-    return desc
+    return mDesc
   }
 
   override def exists(get: Get): Boolean = {
@@ -175,6 +191,7 @@ class FakeHTable(
       return new Result()
     }
     val result = ProcessRow.makeResult(
+        table = this,
         rowKey = rowKey,
         row = row,
         familyMap = getFamilyMapRequest(get.getFamilyMap),
@@ -217,12 +234,14 @@ class FakeHTable(
       val rowFamilyMap = rows.asScala
           .getOrElseUpdate(rowKey, new JTreeMap[Bytes, FamilyQualifiers](BytesComparator))
       for ((family, kvs) <- put.getFamilyMap.asScala) {
+        /** Map: qualifier -> time series. */
         val rowQualifierMap = rowFamilyMap.asScala
             .getOrElseUpdate(family, new JTreeMap[Bytes, ColumnSeries](BytesComparator))
 
         for (kv <- kvs.asScala) {
-          require(family.toSeq == kv.getFamily.toSeq)
+          require(Arrays.equals(family, kv.getFamily))
 
+          /** Map: timestamp -> value. */
           val column = rowQualifierMap.asScala
               .getOrElseUpdate(kv.getQualifier, new JTreeMap[JLong, Bytes](TimestampComparator))
 
@@ -441,6 +460,7 @@ class FakeHTable(
       }
 
       return ProcessRow.makeResult(
+          table = this,
           rowKey = increment.getRow,
           row = row,
           familyMap = familyMap,
@@ -706,6 +726,28 @@ class FakeHTable(
     return map
   }
 
+  /**
+   * Reports the HBase descriptor for a column family.
+   *
+   * @param family is the column family to report the descriptor of.
+   * @return the descriptor of the specified column family.
+   */
+  private[fakehtable] def getFamilyDesc(family: Bytes): HColumnDescriptor = {
+    val desc = getTableDescriptor()
+    val familyDesc = desc.getFamily(family)
+    if (familyDesc != null) {
+      return familyDesc
+    }
+    require(autoFillDesc)
+    val newFamilyDesc = new HColumnDescriptor(family)
+    // Note on default parameters:
+    //  - min versions is 0
+    //  - max versions is 3
+    //  - TTL is forever
+    desc.addFamily(newFamilyDesc)
+    return newFamilyDesc
+  }
+
   // -----------------------------------------------------------------------------------------------
 
   /**
@@ -798,6 +840,7 @@ class FakeHTable(
       require(row != null)
 
       val result = ProcessRow.makeResult(
+          table = FakeHTable.this,
           rowKey = rowKey,
           row = row,
           familyMap = requestedFamilyMap,
