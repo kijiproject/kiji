@@ -147,7 +147,8 @@ We create entity IDs using the 'firstSong field and put it in the 'entityId, the
 
 <div class="userinput">
 {% highlight bash %}
-express job ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-DEVEL.jar \
+express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
+    ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-DEVEL.jar \
     org.kiji.express.music.TopNextSongs --users-table ${KIJI}/users \
     --songs-table ${KIJI}/songs --hdfs
 {% endhighlight %}
@@ -157,7 +158,8 @@ Or run it as a script:
 
 <div class="userinput">
 {% highlight bash %}
-express script ${MUSIC_EXPRESS_HOME}/scripts/TopNextSongs.express --hdfs
+express script --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
+    ${MUSIC_EXPRESS_HOME}/scripts/TopNextSongs.express --hdfs
 {% endhighlight %}
 </div>
 

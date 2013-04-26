@@ -154,7 +154,8 @@ importer, we use the following command.
 
 <div class="userinput">
 {% highlight bash %}
-express job ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-DEVEL.jar \
+express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
+    ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-DEVEL.jar \
     org.kiji.express.music.SongMetadataImporter \
     --input express-tutorial/song-metadata.json \
     --table-uri ${KIJI}/songs --hdfs
@@ -192,7 +193,8 @@ To run the song play history importer, we can use a similar command.
 
 <div class="userinput">
 {% highlight bash %}
-express job ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-DEVEL.jar \
+express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
+    ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-DEVEL.jar \
     org.kiji.express.music.SongPlaysImporter \
     --input express-tutorial/song-plays.json \
     --table-uri ${KIJI}/users --hdfs
@@ -229,18 +231,20 @@ You should see something like:
     entity-id=['user-2'] [1325735520000] info:track_plays
                                      song-0
 
-Both importers also exist in script form, in the folder `${EXPRESS_MUSIC_HOME}/scripts`. As scripts,
+Both importers also exist in script form, in the folder `${MUSIC_EXPRESS_HOME}/scripts`. As scripts,
 the importers can be run as:
 
 <div class="userinput">
 {% highlight bash %}
-express script ${EXPRESS_MUSIC_HOME}/scripts/SongMetadataImporter.express --hdfs
+express script --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
+    ${MUSIC_EXPRESS_HOME}/scripts/SongMetadataImporter.express --hdfs
 {% endhighlight %}
 </div>
 
 <div class="userinput">
 {% highlight bash %}
-express script ${EXPRESS_MUSIC_HOME}/scripts/SongPlaysImporter.express --hdfs
+express script --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
+    ${MUSIC_EXPRESS_HOME}/scripts/SongPlaysImporter.express --hdfs
 {% endhighlight %}
 </div>
 

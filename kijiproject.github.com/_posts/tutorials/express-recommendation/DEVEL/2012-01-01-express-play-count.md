@@ -160,8 +160,12 @@ Running it:
 
 <div class="userinput">
 {% highlight bash %}
-express job ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-DEVEL.jar org.kiji.express.music.SongPlayCounter --table-uri \
- ${KIJI}/users --output express-tutorial/songcount-output --hdfs
+express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
+    ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-DEVEL.jar \
+    org.kiji.express.music.SongPlayCounter \
+    --table-uri ${KIJI}/users \
+    --output express-tutorial/songcount-output \
+    --hdfs
 {% endhighlight %}
 </div>
 
@@ -169,7 +173,8 @@ Or run it as a script:
 
 <div class="userinput">
 {% highlight bash %}
-express script scripts/SongPlayCounter.express --hdfs
+express script --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
+    ${MUSIC_EXPRESS_HOME}/scripts/SongPlayCounter.express --hdfs
 {% endhighlight %}
 </div>
 
@@ -177,11 +182,11 @@ Verify:
 
 <div class="userinput">
 {% highlight bash %}
-hadoop fs -tail express-tutorial/songcount-output/part-00000
+hadoop fs -tail express-tutorial/songcount-output/part-00000 | head -n 3
 {% endhighlight %}
 </div>
 
-    song-12	101
-    song-45	138
-    song-9	116
+    song-0	260
+    song-1	100
+    song-10	272
 

@@ -84,8 +84,7 @@ classpath. You can add your artifacts to the Kiji classpath by running:
 
 <div class="userinput">
 {% highlight bash %}
-export EXPRESS_CLASSPATH=${MUSIC_EXPRESS_HOME}/lib/*
-export KIJI_CLASSPATH=${EXPRESS_CLASSPATH}
+export KIJI_CLASSPATH="${MUSIC_EXPRESS_HOME}/lib/*"
 {% endhighlight %}
 </div>
 
