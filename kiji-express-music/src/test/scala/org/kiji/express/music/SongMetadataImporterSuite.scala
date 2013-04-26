@@ -53,7 +53,7 @@ class SongMetadataImporterSuite extends KijiSuite {
    *
    * This function accepts the output of a test as a buffer of tuples,
    * where the first tuple element is an entity id for a row that was written to by the job,
-   * and the second tuple element is a map of column values written to that row. We validate the
+   * and the second tuple element is a KijiSlice of SongMetadata records written. We validate the
    * data that should have been written for the single row imported.
    *
    * @param generatedMetadata contains a tuple for each row written to by the importer.
