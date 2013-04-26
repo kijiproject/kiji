@@ -3,6 +3,7 @@
                         Kiji Hive Adapter Release Notes
 
 Version 0.2.0
+  * KIJIHIVE-7. Add support for Avro unions.
   * KIJIHIVE-8. Fixed conversion issue for decoding complex Avro types.
   * KIJIHIVE-9. Fixed issue where only the most recent version of data was
       returned.

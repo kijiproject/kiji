@@ -193,7 +193,7 @@ table. For primitive types, the relationship is obvious (e.g. an Avro
     | record { T f1; U f2; ... } | STRUCT<f1: T, f2: U>      |
     | map<T>                     | MAP<STRING, T>            |
     | array<T>                   | ARRAY<T>                  |
-    | union {T, U, ...}          | -unsupported-             |
+    | union {T, U, ...}          | UNIONTYPE<T, Y, ...>      |
     | union {null, T}            | T                         |
     +----------------------------+---------------------------+
 

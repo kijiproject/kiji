@@ -22,6 +22,7 @@ package org.kiji.hive.utils;
 import static org.kiji.hive.utils.HiveTypes.HiveList;
 import static org.kiji.hive.utils.HiveTypes.HiveMap;
 import static org.kiji.hive.utils.HiveTypes.HiveStruct;
+import static org.kiji.hive.utils.HiveTypes.HiveUnion;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -31,7 +32,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.Lists;
 import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.hadoop.hive.serde2.lazy.ByteArrayRef;
@@ -40,6 +43,7 @@ import org.apache.hadoop.hive.serde2.typeinfo.MapTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
+import org.apache.hadoop.hive.serde2.typeinfo.UnionTypeInfo;
 
 /**
  * Converts an Avro data object to an in-memory representation for Hive.
@@ -49,9 +53,17 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
  * org.apache.hadoop.hive.serde2.objectinspector that start with
  * "Standard" for details about how each Hive type should be formatted.</p>
  */
-public enum AvroTypeAdapter {
+public final class AvroTypeAdapter {
+  /** Private constructor to prevent instantiation. Use get() to get an instance of this. */
+  private AvroTypeAdapter() {}
+
   /** Singleton instance. */
-  INSTANCE;
+  private static final AvroTypeAdapter SINGLETON = new AvroTypeAdapter();
+
+  /** @return an instance of AvroTypeAdapter. */
+  public static AvroTypeAdapter get() {
+    return SINGLETON;
+  }
 
   /**
    * Indicates that an Avro data type is not compatible with a Hive type.
@@ -125,8 +137,13 @@ public enum AvroTypeAdapter {
       }
       return Schema.createRecord(fields);
     case UNION:
-      // TODO: Figure out what we should do with Hive union types.
-      throw new UnsupportedOperationException();
+      final UnionTypeInfo unionTypeInfo = (UnionTypeInfo) hiveType;
+      List<TypeInfo> subTypes = unionTypeInfo.getAllUnionObjectTypeInfos();
+      List<Schema> subSchemas = Lists.newArrayList();
+      for (TypeInfo subType : subTypes) {
+        subSchemas.add(toNonNullableAvroSchema(subType));
+      }
+      return Schema.createUnion(subSchemas);
     default:
       throw new IncompatibleTypeException(hiveType);
     }
@@ -168,13 +185,15 @@ public enum AvroTypeAdapter {
   }
 
   /**
-   * Converts a piece avro data to a hive in-memory object.
+   * Converts a piece avro data to a hive in-memory object.  This method will recursively
+   * unpack the objects for any non-primitive types.
    *
    * @param hiveType The type of the target hive object.
    * @param avro The avro data to convert.
+   * @param schema The schema the passed in type.
    * @return The converted hive datum, compatible with the standard object inspector.
    */
-  public Object toHiveType(TypeInfo hiveType, Object avro) {
+  public Object toHiveType(TypeInfo hiveType, Object avro, Schema schema) {
     if (null == avro) {
       return null;
     }
@@ -186,31 +205,46 @@ public enum AvroTypeAdapter {
       HiveList<Object> hiveList = new HiveList<Object>();
       @SuppressWarnings("unchecked")
       final List<Object> avroList = (List<Object>) avro;
+      final TypeInfo listElementType = ((ListTypeInfo) hiveType).getListElementTypeInfo();
       for (Object avroElement : avroList) {
-        hiveList.add(toHiveType(((ListTypeInfo) hiveType).getListElementTypeInfo(), avroElement));
+        hiveList.add(toHiveType(listElementType, avroElement, schema.getElementType()));
       }
       return hiveList;
     case MAP:
       HiveMap<String, Object> hiveMap = new HiveMap<String, Object>();
       @SuppressWarnings("unchecked")
       final Map<CharSequence, Object> avroMap = (Map<CharSequence, Object>) avro;
+      final TypeInfo mapValueType = ((MapTypeInfo) hiveType).getMapValueTypeInfo();
       for (Map.Entry<CharSequence, Object> avroEntry : avroMap.entrySet()) {
-        final TypeInfo mapValueType = ((MapTypeInfo) hiveType).getMapValueTypeInfo();
-        hiveMap.put(avroEntry.getKey().toString(), toHiveType(mapValueType, avroEntry.getValue()));
+        String entryKey = avroEntry.getKey().toString();
+        Object entryValue = toHiveType(mapValueType, avroEntry.getValue(), schema.getValueType());
+        hiveMap.put(entryKey, entryValue);
       }
       return hiveMap;
     case STRUCT:
       HiveStruct hiveStruct = new HiveStruct();
       final GenericRecord avroRecord = (GenericRecord) avro;
       final StructTypeInfo hiveStructType = (StructTypeInfo) hiveType;
+      List<Schema> schemaList = Lists.newArrayList();
+      for (Schema.Field field : schema.getFields()) {
+        schemaList.add(field.schema());
+      }
       for (int i = 0; i < hiveStructType.getAllStructFieldNames().size(); i++) {
         final String fieldName = hiveStructType.getAllStructFieldNames().get(i);
         final TypeInfo fieldType = hiveStructType.getAllStructFieldTypeInfos().get(i);
-        hiveStruct.add(toHiveType(fieldType, avroRecord.get(fieldName)));
+        hiveStruct.add(toHiveType(fieldType, avroRecord.get(fieldName), schemaList.get(i)));
       }
       return hiveStruct;
     case UNION:
-      throw new UnsupportedOperationException("Union types are not supported.");
+      HiveUnion hiveUnion = new HiveUnion();
+      final Integer tag = GenericData.get().resolveUnion(schema, avro);
+      hiveUnion.setTag(tag.byteValue());
+      Schema unionSubSchema = schema.getTypes().get(tag);
+
+      final UnionTypeInfo hiveUnionType = (UnionTypeInfo) hiveType;
+      final TypeInfo unionSubType = hiveUnionType.getAllUnionObjectTypeInfos().get(tag);
+      hiveUnion.setObject(toHiveType(unionSubType, avro, unionSubSchema));
+      return hiveUnion;
     default:
       throw new IncompatibleTypeException(hiveType, avro);
     }

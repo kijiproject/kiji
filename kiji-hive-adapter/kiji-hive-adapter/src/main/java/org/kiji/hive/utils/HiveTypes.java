@@ -22,6 +22,8 @@ package org.kiji.hive.utils;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.apache.hadoop.hive.serde2.objectinspector.UnionObject;
+
 /**
  * Definitions of how we represent hive types in Java.
  */
@@ -33,6 +35,40 @@ public final class HiveTypes {
   /** A Hive STRUCT. */
   public static class HiveStruct extends ArrayList<Object> {
     private static final long serialVersionUID = 1L;
+  }
+
+  /** A Hive UNION. */
+  public static class HiveUnion implements UnionObject {
+    private byte mTag;
+    private Object mObject;
+
+    /**
+     * Sets the tag for the object inside of the union.
+     * @param tag that defines what the type inside of the union is.
+     */
+    public void setTag(Byte tag) {
+      mTag = tag;
+    }
+
+    /**
+     * Sets the object inside of this union.
+     * @param hiveObject that is of the type specified by the tag.
+     */
+    public void setObject(Object hiveObject) {
+      mObject = hiveObject;
+    }
+
+    @Override
+    /** {@inheritDoc} */
+    public byte getTag() {
+      return mTag;
+    }
+
+    @Override
+    /** {@inheritDoc} */
+    public Object getObject() {
+      return mObject;
+    }
   }
 
   /** A Hive ARRAY. */

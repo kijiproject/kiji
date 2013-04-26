@@ -184,7 +184,7 @@ public class KijiRowExpression {
      * @return The adapter.
      */
     protected AvroTypeAdapter getAvroTypeAdapter() {
-      return AvroTypeAdapter.INSTANCE;
+      return AvroTypeAdapter.get();
     }
 
     /** {@inheritDoc} */
@@ -290,7 +290,10 @@ public class KijiRowExpression {
           // Add the cell timestamp.
           struct.add(new Timestamp(cell.getKey().longValue()));
           // Add the cell value.
-          struct.add(getAvroTypeAdapter().toHiveType(mCellTypeInfo, cell.getValue()));
+          struct.add(getAvroTypeAdapter().toHiveType(
+              mCellTypeInfo,
+              cell.getValue(),
+              row.getReaderSchema(getFamily(), getQualifier())));
           result.put(entry.getKey(), struct);
         }
       }
@@ -360,7 +363,10 @@ public class KijiRowExpression {
           // Add the cell timestamp.
           struct.add(new Timestamp(cell.getKey().longValue()));
           // Add the cell value.
-          struct.add(getAvroTypeAdapter().toHiveType(mCellTypeInfo, cell.getValue()));
+          struct.add(getAvroTypeAdapter().toHiveType(
+              mCellTypeInfo,
+              cell.getValue(),
+              row.getReaderSchema(getFamily(), getQualifier())));
           timeseries.add(struct);
         }
         result.put(entry.getKey(), timeseries);
@@ -446,7 +452,10 @@ public class KijiRowExpression {
       // Add the cell timestamp.
       result.add(new Timestamp(cell.getKey().longValue()));
       // Add the cell value.
-      result.add(getAvroTypeAdapter().toHiveType(mCellTypeInfo, cell.getValue()));
+      result.add(getAvroTypeAdapter().toHiveType(
+          mCellTypeInfo,
+          cell.getValue(),
+          row.getReaderSchema(getFamily(), getQualifier())));
       return result;
     }
 
@@ -510,7 +519,10 @@ public class KijiRowExpression {
         // Add the cell timestamp.
         struct.add(new Timestamp(cell.getKey().longValue()));
         // Add the cell value.
-        struct.add(getAvroTypeAdapter().toHiveType(mCellTypeInfo, cell.getValue()));
+        struct.add(getAvroTypeAdapter().toHiveType(
+            mCellTypeInfo,
+            cell.getValue(),
+            row.getReaderSchema(getFamily(), getQualifier())));
         result.add(struct);
       }
 
