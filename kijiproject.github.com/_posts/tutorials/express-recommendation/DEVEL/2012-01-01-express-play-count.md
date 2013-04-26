@@ -7,7 +7,14 @@ order: 4
 description: A job that counts song plays.
 ---
 
-### The 'Hello World!' of MapReduce
+<div id="accordion-container">
+  <h2 class="accordion-header"> SongPlayCounter.scala </h2>
+  <div class="accordion-content">
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-express-music/raw/{{site.music_express_DEVEL_branch}}/src/main/scala/org/kiji/express/music/SongPlayCounter.scala"> </script>
+  </div>
+</div>
+
+<h3 style="margin-top:0px;padding-top:10px;">The 'Hello World!' of MapReduce</h3>
 
 To quote Scalding Developers
 [Hadoop is a distributed system for counting words.](https://github.com/twitter/scalding)

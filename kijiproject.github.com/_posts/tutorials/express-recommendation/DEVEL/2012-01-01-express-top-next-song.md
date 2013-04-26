@@ -7,7 +7,14 @@ order: 5
 description: Find the most popular song played after this song.
 ---
 
-# Top Next Songs #
+<div id="accordion-container">
+  <h2 class="accordion-header"> TopNextSongs.scala </h2>
+  <div class="accordion-content">
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-express-music/raw/{{site.music_express_DEVEL_branch}}/src/main/scala/org/kiji/express/music/TopNextSongs.scala"> </script>
+  </div>
+</div>
+
+<h3 style="margin-top:0px;padding-top:10px;">Top Next Songs</h3>
 
 Now, for each song, we want to compute a list of the songs that are most frequently played by users
 after that song. This kind of model can eventually be used to write a song recommender.

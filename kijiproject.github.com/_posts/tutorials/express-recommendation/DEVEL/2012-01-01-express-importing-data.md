@@ -7,7 +7,19 @@ order: 3
 description: Importing data files into Kiji tables.
 ---
 
+<div id="accordion-container">
+  <h2 class="accordion-header"> SongMetadataImporter.scala </h2>
+  <div class="accordion-content">
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-express-music/raw/{{site.music_express_DEVEL_branch}}/src/main/scala/org/kiji/express/music/SongMetadataImporter.scala"> </script>
+  </div>
+  <h2 class="accordion-header"> SongPlaysImporter.scala </h2>
+  <div class="accordion-content">
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-express-music/raw/{{site.music_express_DEVEL_branch}}/src/main/scala/org/kiji/express/music/SongPlaysImporter.scala"> </script>
+  </div>
+</div>
+
 <h3 style="margin-top:0px;padding-top:10px;">Custom Importers</h3>
+
 In this section of the tutorial, we will import metadata about songs into the Kiji table `songs`,
 and import data about when users have listened to songs into the Kiji table `users`. The importer
 for song metadata is in the file `SongMetadataImporter.scala`, while the importer for a user's song
