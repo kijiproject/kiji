@@ -83,7 +83,8 @@ since the bigrams method produces a list of song pairs from each playlist.
 #### Count the occurrences of every unique song pair
 
 To perform a count, the `groupBy` method will be used to count the unique occurrences of two songs
-played in sequence.
+played in sequence.  For each group of tuples with the same 'firstSong and 'songId, we put the
+size of that group in the 'count field.
 
 {% highlight scala %}
     .groupBy(('firstSong, 'songId)) { _.size('count) }
@@ -102,11 +103,35 @@ matching setters named `set<Fieldname>`.
 
 #### Sort the ‘nextSongs associated with each ‘firstSong
 
+To sort the 'nextSongs associated with each 'firstSong, we groupBy the 'firstSongs and sort those
+groups.
+
 {% highlight scala %}
     .groupBy('firstSong) { sortNextSongs }
 {% endhighlight %}
 
-We’re basically done!  ‘nextTopSongs contains the data we want: the next top songs, sorted by
+You've seen `groupBy` operations before, with functions inline such as `_.size('count)` earlier
+in this script. Here, sortNextSongs is a UDF we've defined:
+
+{% highlight scala %}
+/**
+ * Transforms a group of tuples into a group containing a list of song count records,
+ * sorted by count.
+ *
+ * @param nextSongs is the group of tuples containing song count records.
+ * @return a group containing a list of song count records, sorted by count.
+ */
+def sortNextSongs(nextSongs: GroupBuilder): GroupBuilder = {
+  nextSongs.sortBy('count).reverse.toList[SongCount]('songCount -> 'scalaTopSongs)
+}
+{% endhighlight %}
+
+A Scalding `GroupBuilder` is basically a group of named tuples, which have been grouped by
+a field, and that you can operate on inside a grouping operation.  Here, we've grouped by the
+'firstSong field, and we sort the group by the number of times they've been played. The result is
+a list of songs in the order from most to least played, in the field 'scalaTopSongs.
+
+We’re basically done!  ‘scalaTopSongs contains the data we want: the next top songs, sorted by
 popularity, that follow any particular song.  The last few lines are the machinery required to put
 that into our songs table.
 
