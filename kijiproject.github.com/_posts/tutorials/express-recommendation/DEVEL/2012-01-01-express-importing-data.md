@@ -55,16 +55,16 @@ returns a Scala tuple containing one element for each bit of metadata. The code 
 below.
 
 {% highlight java %}
- def parseJson(json: String): (String, String, String, String, String, Long, Long) = {
-    val metadata = JSON.parseFull(json).get.asInstanceOf[Map[String, Any]]
-    (metadata.get("song_id").get.asInstanceOf[String],
-        metadata.get("song_name").get.asInstanceOf[String],
-        metadata.get("album_name").get.asInstanceOf[String],
-        metadata.get("artist_name").get.asInstanceOf[String],
-        metadata.get("genre").get.asInstanceOf[String],
-        metadata.get("tempo").get.asInstanceOf[String].toLong,
-        metadata.get("duration").get.asInstanceOf[String].toLong)
-  }
+def parseJson(json: String): (String, String, String, String, String, Long, Long) = {
+  val metadata = JSON.parseFull(json).get.asInstanceOf[Map[String, Any]]
+  (metadata.get("song_id").get.asInstanceOf[String],
+      metadata.get("song_name").get.asInstanceOf[String],
+      metadata.get("album_name").get.asInstanceOf[String],
+      metadata.get("artist_name").get.asInstanceOf[String],
+      metadata.get("genre").get.asInstanceOf[String],
+      metadata.get("tempo").get.asInstanceOf[String].toLong,
+      metadata.get("duration").get.asInstanceOf[String].toLong)
+}
 {% endhighlight %}
 
 As an example, suppose this function received the following JSON string as input:
@@ -79,38 +79,16 @@ It would then return the following Scala tuple:
 (“song-0”, "song name-0", "artist-1", "album-1", "genre5.0", 100, 240)
 {% endhighlight %}
 
-Besides flattening JSON records into individual fields, we'll also have to create an entity id for
-each song that identifies the row in the Kiji table where the metadata should be written. We will
-use the `song_id` provided in the JSON metadata to form the entity id. The Scala function `entityId`
-will act as a UDF that transforms a song id into an entity id for the Kiji table `songs`.
-
-{% highlight java %}
-  def entityId(songId: String): EntityId = {
-    val uri = KijiURI.newBuilder(args("table-uri")).build()
-    retainAnd(Kiji.Factory.open(uri)) { kiji =>
-      retainAnd(kiji.openTable(uri.getTable)) { table =>
-        table.getEntityId(songId)
-      }
-    }
-  }
-{% endhighlight %}
-
-The layout of a Kiji table determines the format of the entity ids used in that table. As a result, we
-need to build a Kiji URI for our table `KijiURI.newBuilder(args("table-uri")).build()`, get a handle
-to a Kiji instance `Kiji.Factory.open(uri)`, open the table `kiji.openTable(uri.getTable)` and
-finally use the open table to create an entity id using the song_id string
-`table.getEntityId(songId)`.
-
-Using these two UDFs, we can write our import flow.
+Using this UDF, we can write our import flow.
 
 {% highlight java %}
 TextLine(args("input"))
-      .map('line ->
-          ('songId, 'songName, 'albumName, 'artistName, 'genre, 'tempo,'duration)) { parseJson }
-      .map('songId -> 'entityId) { entityId }
-      .pack[SongMetadata](('songName, 'albumName, 'artistName, 'genre, 'tempo, 'duration)
-          -> 'metadata)
-      .write(KijiOutput(args("table-uri"))('metadata -> "info:metadata"))
+    .map('line ->
+        ('songId, 'songName, 'albumName, 'artistName, 'genre, 'tempo,'duration)) { parseJson }
+    .map('songId -> 'entityId) { songId: String => EntityId(args("table-uri"))(songId) }
+    .pack[SongMetadata](('songName, 'albumName, 'artistName, 'genre, 'tempo, 'duration)
+        -> 'metadata)
+    .write(KijiOutput(args("table-uri"))('metadata -> "info:metadata"))
 {% endhighlight %}
 
 Let's step through it line by line.
@@ -137,11 +115,11 @@ UDF described above.
 
 #### Transform the song id for each song into an entity id for the songs table
 {% highlight java %}
-.map('songId -> 'entityId) { entityId }
+.map('songId -> 'entityId) { songId: String => EntityId(args("table-uri"))(songId) }
 {% endhighlight %}
 The next `map` transforms the `song_id` field from the tuple into an entity id, and adds this to the
-tuple in a field named `entityId`. We supply the `entityId` UDF described above to accomplish
-this transformation.
+tuple in a field named `entityId`. EntityId in KijiExpress creates an EntityId for a given table
+URI out of the provided components, in this case, `songId`.
 
 #### Pack song name, album name, artist name, genre, tempo, and duration for the song into an Avro record
 {% highlight java %}

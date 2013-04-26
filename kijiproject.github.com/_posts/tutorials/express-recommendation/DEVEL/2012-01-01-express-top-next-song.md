@@ -29,7 +29,8 @@ KijiInput(args("users-table"))(Map(Column("info:track_plays", all) -> 'playlist)
     .groupBy('firstSong) { sortNextSongs }
     .map('scalaTopSongs -> 'topSongs) { scalaListToJavaList }
     .pack[TopSongs]('topSongs -> 'topNextSongs)
-    .map('firstSong -> 'entityId) { entityId }
+    .map('firstSong -> 'entityId) { firstSong: String =>
+        EntityId(args("songs-table"))(firstSong) }
     .write(KijiOutput(args("songs-table"))('topNextSongs -> "info:top_next_songs"))
 {% endhighlight %}
 
@@ -133,29 +134,12 @@ def scalaListToJavaList[T](ls: List[T]): java.util.List[T] = Lists.newArrayList[
 
 #### Finally, write the ‘topNextSongs field to the “info:top_next_songs” column in our table
 
-You've seen this function before.  It creates a Kiji entityId for the songs table for a songId.
-{% highlight scala %}
-/**
- * Transforms the identifier for a song into an entity id for the songs table.
- *
- * @param songId is an identifier for a song.
- * @return an entity id for the song in the songs table.
- */
-def entityId(songId: String): EntityId = {
-  val uri = KijiURI.newBuilder(args("songs-table")).build()
-  retainAnd(Kiji.Factory.open(uri)) { kiji =>
-    retainAnd(kiji.openTable(uri.getTable)) { table =>
-      table.getEntityId(songId)
-    }
-  }
-}
-{% endhighlight %}
-
-We use that function to create the entityId from the first song of the bigram and write out the
-'topNextSongs field, which is a TopSongs record, to the `info:top_next_songs` column:
+We create entity IDs using the 'firstSong field and put it in the 'entityId, then write the
+'topNextSongs field to the "info:top_next_songs" column in our table.
 
 {% highlight scala %}
-    .map('firstSong -> 'entityId) { entityId }
+    .map('firstSong -> 'entityId) { firstSong: String =>
+        EntityId(args("songs-table"))(firstSong) }
     .write(KijiOutput(args("songs-table"))('topNextSongs -> "info:top_next_songs"))
 {% endhighlight %}
 
