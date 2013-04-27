@@ -19,13 +19,13 @@ Download KijiExpress from
 
 <div class="userinput">
 {% highlight bash %}
-tar xzf kiji-express-DEVEL.tar.gz
+tar xzf kiji-express-DEVEL-release.tar.gz
 cd kiji-express-DEVEL
 export PATH=${PATH}:${PWD}/bin
 {% endhighlight %}
 </div>
 
-### Download, Untar, and Compile Tutorial
+### Download and Untar the Tutorial
 
 Download the KijiExpress Music Tutorial
 [here](http://archive.kiji.org/tarballs/kiji-express-music-DEVEL-release.tar.gz).
@@ -38,6 +38,8 @@ export MUSIC_EXPRESS_HOME=<path/to/tutorial/root/dir>
 {% endhighlight %}
 </div>
 
+### Compiling the Tutorial (Optional)
+
 The source is included along with a Maven project. Starting a Maven project that uses Kiji?
 [Read the Maven setup instructions.]({{site.kiji_url}}/get-started-with-maven) or
 the [Apache Maven Homepage](http://maven.apache.org/).
@@ -46,12 +48,19 @@ The following tools are required to compile this project:
 * Maven 3.x
 * Java 6
 
-To compile, run `mvn package` from `$MUSIC_EXPRESS_HOME`. The build
-artifacts (.jar files) will be placed in the `$MUSIC_EXPRESS_HOME/target/`
+To compile the tutorial yourself:
+{% highlight bash %}
+cd ${MUSIC_EXPRESS_HOME}
+mvn package
+{% endhighlight %}
+
+The build artifacts (.jar files) will be placed in the `$MUSIC_EXPRESS_HOME/target/`
 directory. This tutorial assumes you are using the pre-built jars included with
 the music recommendation example under `$MUSIC_EXPRESS_HOME/lib/`. If you wish to
 use jars of example code that you have built, you should adjust the command
 lines in this tutorial to use the jars in `$MUSIC_EXPRESS_HOME/target/`.
+
+### Start a Bento cluster
 
 If you already installed BentoBox, make sure you have started it:
 
