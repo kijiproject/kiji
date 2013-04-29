@@ -27,6 +27,7 @@ import javax.ws.rs.core.MediaType;
 import org.kiji.rest.core.ContentReturnable;
 import org.kiji.rest.core.ElementReturnable;
 import org.kiji.rest.core.Returnable;
+import static org.kiji.rest.resources.ResourceConstants.API_ENTRY_POINT;
 
 import com.yammer.metrics.annotation.Timed;
 
@@ -36,11 +37,9 @@ import com.yammer.metrics.annotation.Timed;
  * This resource is served whenever requests are made using the following
  * resource identifiers: /v1/, /v1/&lt;singleton&gt;.
  */
-@Path(KijiRESTResource.API_ENTRY_POINT)
+@Path(API_ENTRY_POINT)
 @Produces(MediaType.APPLICATION_JSON)
 public class KijiRESTResource {
-  public static final String API_ENTRY_POINT = "/v1/";
-
   /**
    * The entry point if no resource is identified.
    * @return A default Returnable message.

@@ -21,6 +21,7 @@ package org.kiji.rest;
 
 import java.util.List;
 
+import com.google.common.collect.Lists;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
@@ -30,7 +31,7 @@ import org.kiji.rest.resources.InstanceResource;
 import org.kiji.rest.resources.KijiRESTResource;
 import org.kiji.rest.resources.TableResource;
 import org.kiji.schema.KijiURI;
-import org.kiji.schema.KijiURI.KijiURIBuilder;
+
 
 /**
  * Service to provide REST access to a list of Kiji instances.
@@ -57,20 +58,22 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
   /** {@inheritDoc} */
   @Override
   public final void run(final KijiRESTConfiguration configuration, final Environment environment) {
-    final List<String> instances = configuration.getInstances();
+    final List<String> instanceStrings = configuration.getInstances();
+
+    final List<KijiURI> instances = Lists.newArrayList();
 
     // Load health checks for the visible instances.
-    final KijiURIBuilder clusterURI = KijiURI.newBuilder(configuration.getClusterURI());
-    for (String instance : instances) {
-      environment.addHealthCheck(new InstanceHealthCheck(clusterURI
-              .withInstanceName(instance)
-              .build()));
+    final KijiURI clusterURI = KijiURI.newBuilder(configuration.getClusterURI()).build();
+    for (String instance : instanceStrings) {
+      final KijiURI instanceURI = KijiURI.newBuilder(clusterURI).withInstanceName(instance).build();
+      instances.add(instanceURI);
+      environment.addHealthCheck(new InstanceHealthCheck(instanceURI));
     }
 
     // Load resources.
     // TODO Load row-level resources, etc.
     environment.addResource(new KijiRESTResource());
-    environment.addResource(new InstanceResource());
-    environment.addResource(new TableResource());
+    environment.addResource(new InstanceResource(clusterURI, instances));
+    environment.addResource(new TableResource(clusterURI, instances));
   }
 }

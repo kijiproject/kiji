@@ -20,20 +20,24 @@
 package org.kiji.rest.resources;
 
 
-import java.util.concurrent.atomic.AtomicLong;
+import java.io.IOException;
+import java.util.List;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.hadoop.util.StringUtils;
 import org.kiji.rest.core.ContentReturnable;
 import org.kiji.rest.core.ElementReturnable;
 import org.kiji.rest.core.Returnable;
+import static org.kiji.rest.resources.ResourceConstants.API_ENTRY_POINT;
+import static org.kiji.rest.resources.ResourceConstants.INSTANCES;
+import org.kiji.schema.KijiURI;
 
-import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.yammer.metrics.annotation.Timed;
 
 /**
@@ -42,22 +46,23 @@ import com.yammer.metrics.annotation.Timed;
  * resource identifiers: /v1/instances/, /v1/instances/&lt;singleton&gt;,
  * /v1/instances/&lt;instance&gt;.
  */
-@Path(KijiRESTResource.API_ENTRY_POINT + InstanceResource.INSTANCES)
+@Path(API_ENTRY_POINT + INSTANCES)
 @Produces(MediaType.APPLICATION_JSON)
 public class InstanceResource {
-  /** The namespace for instances. */
-  public static final String INSTANCES = "instances/";
+  private final KijiURI mCluster;
+  private final List<KijiURI> mInstances;
 
   /**
-   * Called when the terminal resource element is not identified.
-   * @return a Returnable message indicating the landing point.
+   * Construct the InstanceResource with a partially constructed URI for
+   * the cluster and the list of accessible instances.
+   *
+   * @param clusterURI The builder for the cluster's URI.
+   * @param instances The list of accessible instances.
    */
-  @GET
-  @Timed
-  public Returnable namespace() {
-    ContentReturnable message = new ContentReturnable("Instances");
-    message.add(new ElementReturnable("Kiji"));
-    return message;
+  public InstanceResource(KijiURI cluster, List<KijiURI> instances) {
+    super();
+    mCluster = cluster;
+    mInstances = instances;
   }
 
   /**
@@ -84,6 +89,36 @@ public class InstanceResource {
     ContentReturnable message = new ContentReturnable("instance: " + instance);
     message.add(new ElementReturnable("0.0.1"));
     return message;
+  }
+
+  /**
+   * Lists instances on the cluster which are accessible via this REST service.
+   * Called when the terminal resource element is not identified.
+   *
+   * @return a list of instances on the cluster.
+   */
+  @GET
+  @Timed
+  public List<String> list() throws IOException {
+    List<String> listOfInstances = Lists.newArrayList();
+    for (KijiURI instance : mInstances) {
+      listOfInstances.add(instance.toString());
+    }
+    return listOfInstances;
+  }
+
+  /**
+   * Parses a table name for a kiji instance name.
+   *
+   * @param kijiTableName The table name to parse
+   * @return instance name (or null if none found)
+   */
+  protected static String parseInstanceName(String kijiTableName) {
+    final String[] parts = StringUtils.split(kijiTableName, '\u0000', '.');
+    if (parts.length < 3 || !KijiURI.KIJI_SCHEME.equals(parts[0])) {
+      return null;
+    }
+    return parts[1];
   }
 }
 
