@@ -23,11 +23,17 @@
   </licenses>
 
   <properties>
+    <kiji.framework.version>1.0.1</kiji.framework.version>
     <express.version>0.2.0-SNAPSHOT</express.version>
     <scalatest.version>2.0.M5b</scalatest.version>
   </properties>
 
   <dependencies>
+    <dependency>
+      <groupId>org.kiji.framework</groupId>
+      <artifactId>kiji-framework</artifactId>
+      <version>${kiji.framework.version}</version>
+    </dependency>
     <dependency>
       <groupId>org.kiji.express</groupId>
       <artifactId>kiji-express</artifactId>
