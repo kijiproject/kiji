@@ -30,11 +30,14 @@ import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.kvstore.KeyValueStoreClient;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
 import org.kiji.mapreduce.kvstore.RequiredStores;
+import org.kiji.mapreduce.kvstore.lib.KijiTableKeyValueStore;
 import org.kiji.mapreduce.kvstore.lib.UnconfiguredKeyValueStore;
 import org.kiji.mapreduce.produce.KijiProducer;
 import org.kiji.mapreduce.produce.ProducerContext;
+import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
+import org.kiji.schema.KijiTable;
 
 /**
  * Producer generating recommendations for the next songs each user might like.
@@ -63,17 +66,19 @@ public class NextSongRecommender extends KijiProducer implements KeyValueStoreCl
     return "info:next_song_rec";
   }
 
-    /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public void produce(KijiRowData input, ProducerContext context) throws IOException {
     // Open the key value store reader.
-    KeyValueStoreReader<String, TopSongs> topNextSongsReader = null;
+    KeyValueStoreReader<EntityId, TopSongs> topNextSongsReader = null;
     topNextSongsReader = context.getStore("nextPlayed");
     // Get the most recent song the user has listened to:
     String mostRecentSong = input.<CharSequence>getMostRecentValue("info", "track_plays")
         .toString(); // Avro strings get deserialized to CharSequences.
     // Read the most popular songs played after mostRecentSong, from the song table.
-    TopSongs topSongs = topNextSongsReader.get(mostRecentSong);
+    KijiTable topNextSongsTable = KijiTableKeyValueStore.getTableForReader(topNextSongsReader);
+    EntityId mostRecentSongEID = topNextSongsTable.getEntityId(mostRecentSong);
+    TopSongs topSongs = topNextSongsReader.get(mostRecentSongEID);
     // Read the array of song counts stored in field "" of the KeyValueStore.
     List<SongCount> popularNextSongs = topSongs.getTopSongs();
     // Write our recommended next song to "info:next_song_rec"
