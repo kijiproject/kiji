@@ -210,11 +210,11 @@ kiji scan ${KIJI}/songs/info:top_next_songs --max-rows=3
 {% endhighlight %}
 </div>
 
-    entity-id='song-32' [1361564627564] info:top_next_songs
-                                 {"topSongs": [{"song_id": "song-37", "count": 10}, {"song_id": "song-34", "count": 11}, {"song_id": "song-30", "count": 18}]}
+    entity-id=['song-32'] [1366938451355] info:top_next_songs
+                                 {"topSongs": [{"song_id": "song-39", "count": 9}, {"song_id": "song-30", "count": 18}, {"song_id": "song-31", "count": 19}]}
 
-    entity-id='song-49' [1361564627741] info:top_next_songs
-                                 {"topSongs": [{"song_id": "song-46", "count": 10}, {"song_id": "song-41", "count": 20}, {"song_id": "song-40", "count": 27}]}
+    entity-id=['song-49'] [1366938451406] info:top_next_songs
+                                 {"topSongs": [{"song_id": "song-45", "count": 13}, {"song_id": "song-40", "count": 14}, {"song_id": "song-41", "count": 15}]}
 
-    entity-id='song-36' [1361564627591] info:top_next_songs
-                                 {"topSongs": [{"song_id": "song-32", "count": 11}, {"song_id": "song-35", "count": 15}, {"song_id": "song-30", "count": 27}]}
+    entity-id=['song-10'] [1366938451272] info:top_next_songs
+                                 {"topSongs": [{"song_id": "song-18", "count": 21}, {"song_id": "song-11", "count": 44}, {"song_id": "song-10", "count": 49}]}

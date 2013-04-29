@@ -132,14 +132,14 @@ kiji scan ${KIJI}/songs --max-rows=3
 
 Here's what the first three entries should look like (assuming you're using the pregenerated song data).
 
-    entity-id='song-32' [1361561116668] info:metadata
-                                 {"song_name": "song name-32", "artist_name": "artist-2", "album_name": "album-0", "genre": "genre4.0", "tempo": 130, "duration": 120}
+    entity-id=['song-32'] [1366936225070] info:metadata
+                                 {"song_name": "song name-32", "artist_name": "artist-2", "album_name": "album-0", "genre": "genre1.0", "tempo": 120, "duration": 180}
 
-    entity-id='song-49' [1361561116737] info:metadata
-                                 {"song_name": "song name-49", "artist_name": "artist-3", "album_name": "album-1", "genre": "genre7.0", "tempo": 80, "duration": 240}
+    entity-id=['song-49'] [1366936225102] info:metadata
+                                 {"song_name": "song name-49", "artist_name": "artist-3", "album_name": "album-1", "genre": "genre4.0", "tempo": 150, "duration": 180}
 
-    entity-id='song-36' [1361561116684] info:metadata
-                                 {"song_name": "song name-36", "artist_name": "artist-2", "album_name": "album-0", "genre": "genre4.0", "tempo": 170, "duration": 120}
+    entity-id=['song-36'] [1366936225077] info:metadata
+                                 {"song_name": "song name-36", "artist_name": "artist-2", "album_name": "album-0", "genre": "genre1.0", "tempo": 90, "duration": 0}
 
 ### Bulk importing using table import descriptors
 
@@ -225,12 +225,12 @@ kiji scan ${KIJI}/users --max-rows=3
 
 Here’s what the first three entries should look like:
 
-    entity-id='user-41' [1325750820000] info:track_plays
-                                 song-43
+    entity-id=['user-41'] [1325762580000] info:track_plays
+                                 song-41
 
-    entity-id='user-3' [1325756880000] info:track_plays
-                                 song-1
+    entity-id=['user-3'] [1325751420000] info:track_plays
+                                 song-0
 
-    entity-id='user-13' [1325752080000] info:track_plays
-                                 song-23
+    entity-id=['user-13'] [1325750400000] info:track_plays
+                                 song-10
 

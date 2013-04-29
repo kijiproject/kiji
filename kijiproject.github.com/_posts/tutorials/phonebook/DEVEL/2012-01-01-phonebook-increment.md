@@ -79,7 +79,7 @@ The map task breaks the input line up into its individual components. It then ge
 for this user in the Kiji table as follows:
 
 {% highlight java %}
-EntityId user = mKijiTable.getEntityId(firstName + "," + lastName);
+final EntityId user = mKijiTable.getEntityId(firstName + "," + lastName);
 {% endhighlight %}
 
 The following code increments the existing value of the `stats:talktime` column by the call

@@ -24,8 +24,12 @@ to delete.
 DeleteEntry uses a [`KijiTableWriter`]({{site.api_schema_DEVEL}}/KijiTableWriter.html) to perform point deletions on a kiji table:
 
 {% highlight java %}
-// Open a table writer.
-KijiTableWriter writer = table.openTableWriter();
+// Connect to the Kiji table and open a writer.
+kiji = Kiji.Factory.open(
+    KijiURI.newBuilder().withInstanceName(KConstants.DEFAULT_INSTANCE_NAME).build(),
+    getConf());
+table = kiji.openTable(TABLE_NAME);
+writer = table.openTableWriter();
 {% endhighlight %}
 
 The deletion is then performed by specifying the row ID for the entry, in this case
@@ -35,7 +39,7 @@ a string of the format `firstname,lastname`:
 // Create a row ID with the first and last name.
 EntityId user = table.getEntityId(first + "," + last);
 
-// Attempt to delete row for the specified user.
+// Delete the row for the specified user.
 writer.deleteRow(user);
 {% endhighlight %}
 
