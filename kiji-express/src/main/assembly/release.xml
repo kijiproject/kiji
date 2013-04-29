@@ -40,18 +40,9 @@
         <include>NOTICE.txt</include>
         <include>LICENSE.txt</include>
         <include>README.md</include>
+        <include>RELEASE_NOTES.txt</include>
       </includes>
       <filtered>true</filtered>
-    </fileSet>
-    <fileSet>
-      <useDefaultExcludes>true</useDefaultExcludes>
-      <outputDirectory>ddl</outputDirectory>
-      <directory>src/main/ddl</directory>
-      <fileMode>0644</fileMode>
-      <includes>
-        <include>words.ddl</include>
-      </includes>
-      <filtered>false</filtered>
     </fileSet>
     <fileSet>
       <useDefaultExcludes>false</useDefaultExcludes>

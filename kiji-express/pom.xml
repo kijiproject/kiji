@@ -24,9 +24,9 @@
 
   <properties>
     <scalding.version>0.8.3</scalding.version>
-    <kiji.schema.version>1.0.1</kiji.schema.version>
+    <kiji.schema.version>1.0.2</kiji.schema.version>
     <kiji.schema.shell.version>1.0.0</kiji.schema.shell.version>
-    <kiji.mr.version>1.0.0-rc6</kiji.mr.version>
+    <kiji.mr.version>1.0.0-rc61</kiji.mr.version>
     <scalatest.version>2.0.M5b</scalatest.version>
     <twitter-util.version>6.2.0</twitter-util.version>
   </properties>
@@ -77,19 +77,19 @@
       <groupId>org.kiji.schema</groupId>
       <artifactId>kiji-schema</artifactId>
       <version>${kiji.schema.version}</version>
-      <scope>compile</scope>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.kiji.mapreduce</groupId>
       <artifactId>kiji-mapreduce</artifactId>
       <version>${kiji.mr.version}</version>
-      <scope>compile</scope>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.kiji.schema-shell</groupId>
       <artifactId>kiji-schema-shell</artifactId>
       <version>${kiji.schema.shell.version}</version>
-      <scope>compile</scope>
+      <scope>provided</scope>
     </dependency>
 
     <!-- Scalding -->

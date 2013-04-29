@@ -87,15 +87,15 @@ HBASE_HOME="${HBASE_HOME:-/usr/lib/hbase}"
 HADOOP_HOME="${HADOOP_HOME:-/usr/lib/hadoop}"
 
 # First make sure we have everything we need in the environment.
-if [ -z ${EXPRESS_HOME} -o ! -d "${EXPRESS_HOME}" ]; then
+if [ -z "${EXPRESS_HOME}" -o ! -d "${EXPRESS_HOME}" ]; then
   echo "Please set your EXPRESS_HOME environment variable."
   exit 1
 fi
-if [ -z ${HBASE_HOME} -o ! -d "${HBASE_HOME}" ]; then
+if [ -z "${HBASE_HOME}" -o ! -d "${HBASE_HOME}" ]; then
   echo "Please set your HBASE_HOME environment variable."
   exit 1
 fi
-if [ -z ${HADOOP_HOME} -o ! -d "${HADOOP_HOME}" ]; then
+if [ -z "${HADOOP_HOME}" -o ! -d "${HADOOP_HOME}" ]; then
   echo "Please set your HADOOP_HOME environment variable."
   exit 1
 fi
@@ -186,7 +186,15 @@ function extract_classpath() {
   COMMAND_ARGS=${return_args}
 
   # Gather the express dependency jars.
-  libjars="${EXPRESS_HOME}/lib/*"
+  if [ -z "${KIJI_HOME}" -o ! -d "${KIJI_HOME}" ]; then
+   echo "Please set your KIJI_HOME environment variable."
+   exit 1
+  fi
+  if [ -z "${KIJI_MR_HOME}" -o ! -d "${KIJI_MR_HOME}" ]; then
+   echo "Please set your KIJI_MR_HOME environment variable."
+   exit 1
+  fi
+  libjars="${EXPRESS_HOME}/lib/*:${KIJI_MR_HOME}/lib/*:${KIJI_HOME}/lib/*"
 
   # Gather the HBase classpath.
   hbase_cp=$(${HBASE_HOME}/bin/hbase classpath)
