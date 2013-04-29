@@ -161,7 +161,7 @@ Running it:
 <div class="userinput">
 {% highlight bash %}
 express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
-    ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-DEVEL.jar \
+    ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_DEVEL_version}}.jar \
     org.kiji.express.music.SongPlayCounter \
     --table-uri ${KIJI}/users \
     --output express-tutorial/songcount-output \

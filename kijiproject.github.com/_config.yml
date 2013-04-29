@@ -108,6 +108,9 @@ mr_DEVEL_branch : master
 mrlib_DEVEL_version : 1.0.0-rc61
 mrlib_DEVEL_branch : master
 
+express_DEVEL_version : 0.2.0
+express_DEVEL_branch : master
+
 phonebook_DEVEL_version : 1.0.0-rc61
 
 music_DEVEL_version : 1.0.0-rc61

@@ -43,9 +43,18 @@ KIJIMR_VER=1.0.0-rc62
 MRLIB_FLAT_VER=1_0_0_rc61
 MRLIB_VER=1.0.0-rc61
 
+# KijiExpress version
+EXPRESS_FLAT_VER=0_2_0
+EXPRESS_VER=0.2.0
+
 # Music Recommendation Tutorial version
 MUSIC_FLAT_VER=1_0_0_rc61
 MUSIC_VER=1.0.0-rc61
+
+# Express Music Recommendation tutorial version
+# Currently version-linked to the KijiExpress version.
+EXPRESS_MUSIC_FLAT_VER="$EXPRESS_FLAT_VER"
+EXPRESS_MUSIC_VER="$EXPRESS_VER"
 
 # Phonebook Tutorial version
 PHONEBOOK_FLAT_VER=1_0_0_rc61
@@ -76,45 +85,54 @@ fix_released_versions() {
   find . -name "*.md" -exec sed -i -e "s/api_mrlib_DEVEL/api_mrlib_$MRLIB_FLAT_VER/g" {} \;
   find . -name "*.md" -exec sed -i -e "s/api_mr_DEVEL/api_mr_$KIJIMR_FLAT_VER/g" {} \;
   find . -name "*.md" -exec sed -i -e "s/api_schema_DEVEL/api_schema_$SCHEMA_FLAT_VER/g" {} \;
+  find . -name "*.md" -exec sed -i -e "s/api_express_DEVEL/api_express_$EXPRESS_FLAT_VER/g" {} \;
   find . -name "*.md" -exec sed -i -e \
       "s/userguide_mapreduce_DEVEL/userguide_mapreduce_$KIJIMR_FLAT_VER/g" {} \;
   find . -name "*.md" -exec sed -i -e \
       "s/userguide_schema_DEVEL/userguide_schema_$SCHEMA_FLAT_VER/g" {} \;
 
   find . -name "*.md" -exec sed -i -e \
-      "s/tutorial_phonebook_DEVEL/tutorial_phonebook_$PHONEBOOK_FLAT_VER/" {} \;
+      "s/tutorial_phonebook_DEVEL/tutorial_phonebook_$PHONEBOOK_FLAT_VER/g" {} \;
 
   # Reify git tags that turn into code snippits and accordions.
   find . -name "*.md" -exec sed -i -e \
-      's/{{site.schema_DEVEL_branch}}/'"kiji-schema-root-$SCHEMA_VER/" {} \;
+      's/{{site.schema_DEVEL_branch}}/'"kiji-schema-root-$SCHEMA_VER/g" {} \;
   find . -name "*.md" -exec sed -i -e \
-      's/{{site.mr_DEVEL_branch}}/'"kiji-mapreduce-root-$KIJIMR_VER/" {} \;
+      's/{{site.mr_DEVEL_branch}}/'"kiji-mapreduce-root-$KIJIMR_VER/g" {} \;
   find . -name "*.md" -exec sed -i -e \
-      's/{{site.mrlib_DEVEL_branch}}/'"kiji-mapreduce-lib-root-$MRLIB_VER/" {} \;
+      's/{{site.mrlib_DEVEL_branch}}/'"kiji-mapreduce-lib-root-$MRLIB_VER/g" {} \;
   find . -name "*.md" -exec sed -i -e \
-      's/{{site.music_DEVEL_branch}}/'"kiji-music-$MUSIC_VER/" {} \;
+      's/{{site.music_DEVEL_branch}}/'"kiji-music-$MUSIC_VER/g" {} \;
+  find . -name "*.md" -exec sed -i -e \
+      's/{{site.music_express_DEVEL_branch}}/'"kiji-express-music-$EXPRESS_MUSIC_VER/g" {} \;
 
   # Update HTML links to tutorial elements
   find . -name "*.md" -exec sed -i -e \
-      "s|schema/DEVEL|schema/$SCHEMA_VER|" {} \;
+      "s|schema/DEVEL|schema/$SCHEMA_VER|g" {} \;
   find . -name "*.md" -exec sed -i -e \
-      "s|mapreduce/DEVEL|mapreduce/$KIJIMR_VER|" {} \;
+      "s|mapreduce/DEVEL|mapreduce/$KIJIMR_VER|g" {} \;
   find . -name "*.md" -exec sed -i -e \
-      "s|phonebook/DEVEL|phonebook/$PHONEBOOK_VER|" {} \;
+      "s|phonebook/DEVEL|phonebook/$PHONEBOOK_VER|g" {} \;
   find . -name "*.md" -exec sed -i -e \
-      "s|music-recommendation/DEVEL|music-recommendation/$MUSIC_VER|" {} \;
+      "s|music-recommendation/DEVEL|music-recommendation/$MUSIC_VER|g" {} \;
+  find . -name "*.md" -exec sed -i -e \
+      "s|express-recommendation/DEVEL|express-recommendation/$EXPRESS_MUSIC_VER|g" {} \;
 
   # Reify release version numbers in the text.
   find . -name "*.md" -exec sed -i -e \
-      's/{{site.schema_DEVEL_version}}/'"$SCHEMA_VER/" {} \;
+      's/{{site.schema_DEVEL_version}}/'"$SCHEMA_VER/g" {} \;
   find . -name "*.md" -exec sed -i -e \
-      's/{{site.mr_DEVEL_version}}/'"$KIJIMR_VER/" {} \;
+      's/{{site.mr_DEVEL_version}}/'"$KIJIMR_VER/g" {} \;
   find . -name "*.md" -exec sed -i -e \
-      's/{{site.mrlib_DEVEL_version}}/'"$MRLIB_VER/" {} \;
+      's/{{site.mrlib_DEVEL_version}}/'"$MRLIB_VER/g" {} \;
   find . -name "*.md" -exec sed -i -e \
-      's/{{site.phonebook_DEVEL_version}}/'"$PHONEBOOK_VER/" {} \;
+      's/{{site.phonebook_DEVEL_version}}/'"$PHONEBOOK_VER/g" {} \;
   find . -name "*.md" -exec sed -i -e \
-      's/{{site.music_DEVEL_version}}/'"$MUSIC_VER/" {} \;
+      's/{{site.music_DEVEL_version}}/'"$MUSIC_VER/g" {} \;
+  find . -name "*.md" -exec sed -i -e \
+      's/{{site.music_express_DEVEL_version}}/'"$EXPRESS_MUSIC_VER/g" {} \;
+  find . -name "*.md" -exec sed -i -e \
+      's/{{site.express_DEVEL_version}}/'"$EXPRESS_VER/g" {} \;
 }
 
 
@@ -206,6 +224,26 @@ if [ ! -d "tutorials/music-recommendation/$MUSIC_VER" ]; then
   popd
 fi
 
+if [ ! -d "tutorials/express-recommendation/$EXPRESS_MUSIC_VER" ]; then
+  echo "Creating a new Express music recommendation tutorial: $EXPRESS_MUSIC_VER"
+  cp -ra "tutorials/express-recommendation/DEVEL" \
+      "tutorials/express-recommendation/$EXPRESS_MUSIC_VER"
+
+  pushd "tutorials/express-recommendation/$EXPRESS_MUSIC_VER"
+
+  # Reify this version number
+  find . -name "*.md" -exec sed -i -e \
+      "s/express-recommendation, DEVEL]/express-recommendation, $EXPRESS_MUSIC_VER]/" {} \;
+
+  fix_released_versions
+
+  # Add a reference to this version to the global config.
+  echo "tutorial_exp_music_$EXPRESS_MUSIC_FLAT_VER : /tutorials/express-recommendation/$EXPRESS_MUSIC_VER" \
+      >> _config.yml
+
+  popd
+fi
+
 # Check: If a new version of KijiMR lib is available than previously declared in
 # _config.yml, add the api_mrlib_$MRLIB_FLAT_VER reference to the _config.yml.
 set +e # It's ok to get a non-zero return value here.
@@ -214,6 +252,14 @@ if [ "$?" != "0" ]; then
   # We didn't find the API reference. Add KijiMR Library API docs reference to _config.yml.
   echo "Adding KijiMR Library API docs to _config.yml: $MRLIB_VER"
   echo "api_mrlib_$MRLIB_FLAT_VER : $API/kiji-mapreduce-lib/$MRLIB_VER/org/kiji/mapreduce" \
+      >> "$top/_config.yml"
+fi
+
+grep "api_express_$EXPRESS_FLAT_VER :" "$top/_config.yml" >/dev/null
+if [ "$?" != "0" ]; then
+  # We didn't find the API reference. Add Kiji Express API docs reference to _config.yml.
+  echo "Adding Kiji Express API docs to _config.yml: $EXPRESS_VER"
+  echo "api_express_$EXPRESS_FLAT_VER : $API/kiji-express/$EXPRESS_VER/org/kiji/express" \
       >> "$top/_config.yml"
 fi
 

@@ -173,7 +173,7 @@ We create entity IDs using the 'firstSong field and put it in the 'entityId, the
 <div class="userinput">
 {% highlight bash %}
 express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
-    ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-DEVEL.jar \
+    ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_DEVEL_version}}.jar \
     org.kiji.express.music.TopNextSongs --users-table ${KIJI}/users \
     --songs-table ${KIJI}/songs --hdfs
 {% endhighlight %}

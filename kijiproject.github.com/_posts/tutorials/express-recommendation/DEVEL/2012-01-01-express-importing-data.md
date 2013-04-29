@@ -155,7 +155,7 @@ importer, we use the following command.
 <div class="userinput">
 {% highlight bash %}
 express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
-    ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-DEVEL.jar \
+    ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_DEVEL_version}}.jar \
     org.kiji.express.music.SongMetadataImporter \
     --input express-tutorial/song-metadata.json \
     --table-uri ${KIJI}/songs --hdfs
@@ -194,7 +194,7 @@ To run the song play history importer, we can use a similar command.
 <div class="userinput">
 {% highlight bash %}
 express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
-    ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-DEVEL.jar \
+    ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_DEVEL_version}}.jar \
     org.kiji.express.music.SongPlaysImporter \
     --input express-tutorial/song-plays.json \
     --table-uri ${KIJI}/users --hdfs

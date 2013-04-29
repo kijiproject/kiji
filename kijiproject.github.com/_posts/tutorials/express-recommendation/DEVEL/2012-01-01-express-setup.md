@@ -15,12 +15,12 @@ BentoBox in [three quick steps!](http://www.kiji.org/#tryit)
 ### Download and Untar KijiExpress
 
 Download KijiExpress from
-[here](http://archive.kiji.org/tarballs/kiji-express-DEVEL-release.tar.gz).
+[here](http://archive.kiji.org/tarballs/kiji-express-{{site.express_DEVEL_version}}-release.tar.gz).
 
 <div class="userinput">
 {% highlight bash %}
-tar xzf kiji-express-DEVEL-release.tar.gz
-cd kiji-express-DEVEL
+tar xzf kiji-express-{{site.express_DEVEL_version}}-release.tar.gz
+cd kiji-express-{{site.express_DEVEL_version}}
 export PATH=${PATH}:${PWD}/bin
 {% endhighlight %}
 </div>
@@ -28,7 +28,7 @@ export PATH=${PATH}:${PWD}/bin
 ### Download and Untar the Tutorial
 
 Download the KijiExpress Music Tutorial
-[here](http://archive.kiji.org/tarballs/kiji-express-music-DEVEL-release.tar.gz).
+[here](http://archive.kiji.org/tarballs/kiji-express-music-{{site.music_express_DEVEL_version}}-release.tar.gz).
 Untar the project into a directory `<path/to/tutorial/root/dir>`:
 
 <div class="userinput">
