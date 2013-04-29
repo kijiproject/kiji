@@ -181,4 +181,24 @@ public class TestKijiTableKeyValueStore extends KijiClientTest {
       releaseOrLog(table);
     }
   }
+
+  @Test
+  public void testGetTableForReader() throws IOException {
+    KijiTable table = getKiji().openTable("table");
+    try {
+      EntityId entityIdDirect = table.getEntityId("identifier");
+
+      KijiTableKeyValueStore<CharSequence> input = KijiTableKeyValueStore.builder()
+          .withTable(KijiURI.newBuilder(getKiji().getURI().toString() + "/table").build())
+          .withColumn("family", "column")
+          .build();
+      KeyValueStoreReader<EntityId, CharSequence> reader = input.open();
+      KijiTable retrievedTable = KijiTableKeyValueStore.getTableForReader(reader);
+      EntityId entityIdRetrieved = retrievedTable.getEntityId("identifier");
+      assertEquals(entityIdDirect, entityIdRetrieved);
+      closeOrLog(reader);
+    } finally {
+      releaseOrLog(table);
+    }
+  }
 }

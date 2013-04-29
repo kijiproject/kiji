@@ -589,4 +589,32 @@ public final class KijiTableKeyValueStore<V> implements Configurable, KeyValueSt
       }
     }
   }
+
+  /**
+   * A static method to retrieve a KijiTable from a reader, useful for generating EntityIds. The
+   * reader must be from a KijiTableKeyValueStore.
+   *
+   * <p>The table is the underlying one backing the reader. As such clients should not retain() it
+   * unless they need to use it after closing the reader. The behavior of releasing the table
+   * without first retaining it is undefined.</p>
+   *
+   * <p>The table should be used for generating EntityIds. Using it to get readers or writers is
+   * discouraged.</p>
+   *
+   * @param kvReader a key value store reader. Must come from a KijiTableKeyValueStore.
+   * @throws IllegalArgumentException if the key value reader is not a reader for a
+   * KijiTableKeyValueStore.
+   * @return a KijiTable.
+   */
+  public static KijiTable getTableForReader(KeyValueStoreReader<EntityId, ?> kvReader) {
+    if (null == kvReader) {
+      throw new IllegalArgumentException("kvReader may not be null.");
+    }
+    if (!(kvReader instanceof KijiTableKeyValueStore.TableKVReader)) {
+      throw new IllegalArgumentException("kvReader " + kvReader.toString() + " not a reader for a "
+          + "KijiTableKeyValueStore.");
+    }
+    KijiTableKeyValueStore.TableKVReader tkv = (KijiTableKeyValueStore.TableKVReader)kvReader;
+    return tkv.mKijiTable;
+  }
 }
