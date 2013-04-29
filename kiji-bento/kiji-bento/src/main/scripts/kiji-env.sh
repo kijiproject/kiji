@@ -28,6 +28,12 @@
 #   KIJI_HOME           Set to the parent of the directory this script is contained in.
 #                       This should be the root of a kiji-bento distribution.
 #
+#   KIJI_MR_HOME        Set to the parent of the directory this script is contained in.
+#                       This should be the root of a kiji-bento distribution.
+#
+#   EXPRESS_HOME        Set to the $KIJI_HOME/express directory, which should contain
+#                       a kiji-express distribution.
+#
 #   BENTO_CLUSTER_HOME  Set to the $KIJI_HOME/cluster directory, which should contain a
 #                       bento-cluster distribution.
 #
@@ -40,8 +46,9 @@
 #                       $BENTO_CLUSTER_HOME/lib.
 #
 #   PATH                The $PATH is modified so that $BENTO_CLUSTER_HOME/bin,
-#                       $HADOOP_HOME/bin, $HBASE_HOME/bin, $KIJI_HOME/bin and
-#                       $KIJI_HOME/schema-shell/bin are on it.
+#                       $HADOOP_HOME/bin, $HBASE_HOME/bin, $KIJI_HOME/bin,
+#                       $KIJI_HOME/schema-shell/bin, and $EXPRESS_HOME/bin
+#                       are on it.
 #
 
 # Get the directory this script is located in, no matter how the script is being
@@ -57,7 +64,11 @@ KIJI_MR_HOME="${KIJI_HOME}"
 export KIJI_MR_HOME
 echo "Set KIJI_MR_HOME=${KIJI_MR_HOME}"
 
-PATH="${KIJI_HOME}/bin:${KIJI_HOME}/schema-shell/bin:${PATH}"
+EXPRESS_HOME="${KIJI_HOME}/express"
+export EXPRESS_HOME
+echo "Set EXPRESS_HOME=${EXPRESS_HOME}"
+
+PATH="${KIJI_HOME}/bin:${KIJI_HOME}/schema-shell/bin:${EXPRESS_HOME}/bin:${PATH}"
 export PATH
 echo "Added kiji and kiji-schema-shell binaries to PATH."
 

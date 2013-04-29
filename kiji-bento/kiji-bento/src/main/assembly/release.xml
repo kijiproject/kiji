@@ -115,6 +115,25 @@
       <fileMode>0755</fileMode>
     </fileSet>
     <fileSet>
+      <!-- kiji-express -->
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <outputDirectory>express</outputDirectory>
+      <directory>target/prereqs-dir/kiji-express-${kiji-express.version}</directory>
+      <filtered>false</filtered>
+      <excludes>
+        <exclude>bin/**</exclude>
+      </excludes>
+      <fileMode>0644</fileMode>
+    </fileSet>
+    <fileSet>
+      <!-- kiji-express binaries -->
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <outputDirectory>express/bin</outputDirectory>
+      <directory>target/prereqs-dir/kiji-express-${kiji-express.version}/bin</directory>
+      <filtered>false</filtered>
+      <fileMode>0755</fileMode>
+    </fileSet>
+    <fileSet>
       <!-- kiji-phonebook examples -->
       <useDefaultExcludes>false</useDefaultExcludes>
       <outputDirectory>examples/phonebook</outputDirectory>
@@ -140,6 +159,14 @@
       <directory>target/prereqs-dir/kiji-music-${kiji-music.version}/bin</directory>
       <filtered>false</filtered>
       <fileMode>0755</fileMode>
+    </fileSet>
+    <fileSet>
+      <!-- kiji-express-music examples -->
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <outputDirectory>examples/express-music</outputDirectory>
+      <directory>target/prereqs-dir/kiji-express-music-${kiji-express-music.version}</directory>
+      <filtered>false</filtered>
+      <fileMode>0644</fileMode>
     </fileSet>
     <fileSet>
       <!-- bento-cluster -->

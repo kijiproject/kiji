@@ -97,6 +97,22 @@
     <dependencySet>
       <outputDirectory>.</outputDirectory>
       <includes>
+        <include>org.kiji.express:kiji-express:tar.gz</include>
+      </includes>
+      <unpack>true</unpack>
+      <useProjectArtifact>false</useProjectArtifact>
+    </dependencySet>
+    <dependencySet>
+      <outputDirectory>.</outputDirectory>
+      <includes>
+        <include>org.kiji.express:kiji-express-music:tar.gz</include>
+      </includes>
+      <unpack>true</unpack>
+      <useProjectArtifact>false</useProjectArtifact>
+    </dependencySet>
+    <dependencySet>
+      <outputDirectory>.</outputDirectory>
+      <includes>
         <include>org.kiji.kiji-bento:bento-checkin:tar.gz</include>
       </includes>
       <unpack>true</unpack>

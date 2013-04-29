@@ -28,6 +28,9 @@ This kiji-bento release (${project.version}) includes:
 * `kiji-hive-adapter` ${kiji-hive-adapter.version}: Included in the
   `hive-adapter` directory, kiji-hive-adapter provides a SerDe for
   Hive to use Kiji tables as external Hive tables.
+* `kiji-express` ${kiji-express.version}: Included in the `express`
+  directory, kiji-express provides a Scala DSL for analyzing and modeling
+  data stored in Kiji.
 * `kiji-phonebook` ${kiji-phonebook.version}: Included in the
   `examples/phonebook` directory, kiji-phonebook is an example standalone
   application (with source code) that stores, processes, and retrieves data
@@ -36,6 +39,9 @@ This kiji-bento release (${project.version}) includes:
   `examples/music` directory, kiji-music is an example of loading the listening
   history of users of a music service into a Kiji table, and then generating new
   music recommendations.
+* `kiji-express-music` ${kiji-express-music.version}: Included in the 
+  `examples/express-music` directory, kiji-express-music is a kiji-express
+  implementation of the kiji-music example.
 * API documentation is made available in the `docs` directory.
 
 Installation

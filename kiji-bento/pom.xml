@@ -44,6 +44,8 @@
     <kiji-mapreduce-lib.version>1.0.0-rc6</kiji-mapreduce-lib.version>
     <kiji-hive-adapter.version>0.1.1</kiji-hive-adapter.version>
     <kiji-music.version>1.0.0-rc6</kiji-music.version>
+    <kiji-express.version>0.2.0-SNAPSHOT</kiji-express.version>
+    <kiji-express-music.version>0.2.0-SNAPSHOT</kiji-express-music.version>
   </properties>
 
   <modules>

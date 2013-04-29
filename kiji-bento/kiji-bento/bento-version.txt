@@ -15,4 +15,6 @@ kiji-phonebook: ${kiji-phonebook.version}
 kiji-music: ${kiji-music.version}
 bento-cluster: ${bento-cluster.version}
 kiji-hive-adapter: ${kiji-hive-adapter.version}
+kiji-express: ${kiji-express.version}
+kiji-express-music: ${kiji-express-music.version}
 
