@@ -19,6 +19,7 @@
 
 package org.kiji.rest;
 
+import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.Lists;
@@ -30,6 +31,7 @@ import org.kiji.rest.health.InstanceHealthCheck;
 import org.kiji.rest.resources.InstanceResource;
 import org.kiji.rest.resources.KijiRESTResource;
 import org.kiji.rest.resources.TableResource;
+import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiURI;
 
 
@@ -55,9 +57,11 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
     bootstrap.setName("kiji-rest");
   }
 
-  /** {@inheritDoc} */
+  /** {@inheritDoc} 
+   * @throws IOException */
   @Override
-  public final void run(final KijiRESTConfiguration configuration, final Environment environment) {
+  public final void run(final KijiRESTConfiguration configuration, final Environment environment)
+      throws IOException {
     final List<String> instanceStrings = configuration.getInstances();
 
     final List<KijiURI> instances = Lists.newArrayList();
@@ -66,6 +70,9 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
     final KijiURI clusterURI = KijiURI.newBuilder(configuration.getClusterURI()).build();
     for (String instance : instanceStrings) {
       final KijiURI instanceURI = KijiURI.newBuilder(clusterURI).withInstanceName(instance).build();
+      // Check existence of instance by opening and closing.
+      final Kiji kiji = Kiji.Factory.open(instanceURI);
+      kiji.release();
       instances.add(instanceURI);
       environment.addHealthCheck(new InstanceHealthCheck(instanceURI));
     }
