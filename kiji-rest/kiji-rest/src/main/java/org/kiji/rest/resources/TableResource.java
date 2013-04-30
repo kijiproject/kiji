@@ -21,6 +21,7 @@ package org.kiji.rest.resources;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -38,6 +39,7 @@ import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.KijiURI.KijiURIBuilder;
 
+import com.google.common.collect.Maps;
 import com.yammer.metrics.annotation.Timed;
 
 /**
@@ -72,13 +74,17 @@ public class TableResource {
    */
   @GET
   @Timed
-  public List<String> list(final @PathParam("instance") String instance) throws IOException {
+  public Map<String, Object> list(final @PathParam("instance") String instance) throws IOException {
+    final Map<String, Object> outputMap = Maps.newHashMap();
     final KijiURI kijiURI = KijiURI.newBuilder(mCluster).withInstanceName(instance).build();
     if (!mInstances.contains(kijiURI)) {
       throw new IOException("Instance unavailable");
     }
     final Kiji kiji = Kiji.Factory.open(kijiURI);
-    return kiji.getTableNames();
+    outputMap.put("kiji_uri", kijiURI.toOrderedString());
+    outputMap.put("tables", kiji.getTableNames());
+    kiji.release();
+    return outputMap;
   }
 
   /**
