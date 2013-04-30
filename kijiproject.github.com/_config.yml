@@ -102,24 +102,21 @@ tutorial_music_DEVEL : /tutorials/music-recommendation/DEVEL
 schema_DEVEL_version : 1.1.0
 schema_DEVEL_branch : master
 
-mr_DEVEL_version : 1.0.0-rc62
+mr_DEVEL_version : 1.0.0-rc63
 mr_DEVEL_branch : master
 
-mrlib_DEVEL_version : 1.0.0-rc61
+mrlib_DEVEL_version : 1.0.0-rc62
 mrlib_DEVEL_branch : master
 
-express_DEVEL_version : 0.2.0
+express_DEVEL_version : 0.3.0
 express_DEVEL_branch : master
 
 phonebook_DEVEL_version : 1.0.0-rc61
 
-music_DEVEL_version : 1.0.0-rc61
+music_DEVEL_version : 1.0.0-rc62
 music_DEVEL_branch : master
 
-music_DEVEL_version : 1.0.0-rc61
-music_DEVEL_branch : master
-
-music_express_DEVEL_version : 0.2.0
+music_express_DEVEL_version : 0.3.0
 music_express_DEVEL_branch : master
 
 # All Jekyll-Bootstrap specific configurations are namespaced into this hash
@@ -214,3 +211,9 @@ JB :
   #   ./_includes/custom/[HELPER]
   # where [HELPER] is the name of the helper you are overriding.
 
+userguide_schema_1_0_3 : /userguides/schema/1.0.3
+api_schema_1_0_3 : http://api-docs.kiji.org/kiji-schema/1.0.3/org/kiji/schema
+api_mr_1_0_0_rc62 : http://api-docs.kiji.org/kiji-mapreduce/1.0.0-rc62/org/kiji/mapreduce
+userguide_mapreduce_1_0_0_rc62 : /userguides/mapreduce/1.0.0-rc62
+api_mrlib_1_0_0_rc61 : http://api-docs.kiji.org/kiji-mapreduce-lib/1.0.0-rc61/org/kiji/mapreduce
+api_express_0_2_0 : http://api-docs.kiji.org/kiji-express/0.2.0/org/kiji/express

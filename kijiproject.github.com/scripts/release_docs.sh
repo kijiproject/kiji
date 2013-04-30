@@ -32,8 +32,8 @@
 
 
 # KijiSchema version
-SCHEMA_FLAT_VER=1_1_0
-SCHEMA_VER=1.1.0
+SCHEMA_FLAT_VER=1_0_3
+SCHEMA_VER=1.0.3
 
 # KijiMR version
 KIJIMR_FLAT_VER=1_0_0_rc62
@@ -57,8 +57,8 @@ EXPRESS_MUSIC_FLAT_VER="$EXPRESS_FLAT_VER"
 EXPRESS_MUSIC_VER="$EXPRESS_VER"
 
 # Phonebook Tutorial version
-PHONEBOOK_FLAT_VER=1_0_0_rc61
-PHONEBOOK_VER=1.0.0-rc61
+PHONEBOOK_FLAT_VER=1_0_0_rc6
+PHONEBOOK_VER=1.0.0-rc6
 
 ### Ordinary configuration does not go past this line ###
 
