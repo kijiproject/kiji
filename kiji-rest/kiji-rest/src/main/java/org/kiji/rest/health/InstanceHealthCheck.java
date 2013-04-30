@@ -24,6 +24,7 @@ import java.io.IOException;
 import com.yammer.metrics.core.HealthCheck;
 
 import org.kiji.schema.Kiji;
+import org.kiji.schema.KijiNotInstalledException;
 import org.kiji.schema.KijiURI;
 
 /**
@@ -51,10 +52,14 @@ public class InstanceHealthCheck extends HealthCheck {
    * @throws IOException if there is an error in checking for the instance.
    */
   @Override
-  protected final Result check() throws IOException {
-    // TODO shouldn't this catch the execption and return Result.unhealthy()?
-    Kiji kiji = Kiji.Factory.open(mKijiURI);
-    kiji.release();
+  protected final Result check() {
+    try {
+      Kiji kiji = Kiji.Factory.open(mKijiURI);
+      kiji.release();
+    } catch (Exception exception) {
+      return Result.unhealthy("Could not open/release instance.");
+    }
+
     return Result.healthy();
   }
 }

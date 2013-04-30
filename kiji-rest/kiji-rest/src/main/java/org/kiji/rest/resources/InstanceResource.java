@@ -35,6 +35,8 @@ import javax.ws.rs.core.MediaType;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.yammer.metrics.annotation.Timed;
+import com.yammer.metrics.core.HealthCheck.Result;
+
 import org.apache.hadoop.util.StringUtils;
 
 import org.kiji.rest.util.VersionInfo;
@@ -80,6 +82,7 @@ public class InstanceResource {
     if (!mInstances.contains(kijiURI)) {
       throw new IOException("Instance unavailable");
     }
+
     Map<String, Object> namespace = Maps.newHashMap();
     namespace.put("instance_name", kijiURI.getInstance());
     namespace.put("kiji_uri", kijiURI.toOrderedString());
