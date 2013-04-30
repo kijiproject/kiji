@@ -19,23 +19,28 @@
 
 package org.kiji.rest.resources;
 
+import static org.kiji.rest.resources.ResourceConstants.API_ENTRY_POINT;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import com.yammer.metrics.annotation.Timed;
+
 import org.kiji.rest.core.ContentReturnable;
 import org.kiji.rest.core.ElementReturnable;
 import org.kiji.rest.core.Returnable;
-import static org.kiji.rest.resources.ResourceConstants.API_ENTRY_POINT;
-
-import com.yammer.metrics.annotation.Timed;
-
 
 /**
  * This REST resource interacts with the Kiji cluster.
  * This resource is served whenever requests are made using the following
- * resource identifiers: /v1/, /v1/&lt;singleton&gt;.
+ * resource identifiers:
+ *
+ * <ul>
+ *   <li>/v1/</li>
+ *   <li>/v1/&lt;singleton&gt;.</li>
+ * </ul>
  */
 @Path(API_ENTRY_POINT)
 @Produces(MediaType.APPLICATION_JSON)

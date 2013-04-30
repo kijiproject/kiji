@@ -22,7 +22,7 @@ package org.kiji.rest.resources;
 /**
  * Utility class containing constants relevant to resource paths.
  */
-public class ResourceConstants {
+public final class ResourceConstants {
   /** The namespace for tables. */
   public static final String TABLES = "tables/";
 
@@ -32,9 +32,7 @@ public class ResourceConstants {
   /** The namespace for api. */
   public static final String API_ENTRY_POINT = "/v1/";
 
-  /**
-   * Utility class.
-   */
+  /** Utility class cannot be instantiated. */
   private ResourceConstants() {}
 }
 

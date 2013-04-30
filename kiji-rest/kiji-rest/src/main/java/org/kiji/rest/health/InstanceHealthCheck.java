@@ -19,6 +19,8 @@
 
 package org.kiji.rest.health;
 
+import java.io.IOException;
+
 import com.yammer.metrics.core.HealthCheck;
 
 import org.kiji.schema.Kiji;
@@ -34,7 +36,7 @@ public class InstanceHealthCheck extends HealthCheck {
   /**
    * Constructor parametrized by the URI of the instance which is available to REST clients.
    *
-   * @param kijiURI The URI of the instance.
+   * @param kijiURI The URI of the instance to check.
    */
   public InstanceHealthCheck(final KijiURI kijiURI) {
     super(kijiURI.toString());
@@ -46,9 +48,11 @@ public class InstanceHealthCheck extends HealthCheck {
    * otherwise an exception is trickled to the REST client.
    *
    * @return Healthy result upon successful open/release of instance.
+   * @throws IOException if there is an error in checking for the instance.
    */
   @Override
-  protected final Result check() throws Exception {
+  protected final Result check() throws IOException {
+    // TODO shouldn't this catch the execption and return Result.unhealthy()?
     Kiji kiji = Kiji.Factory.open(mKijiURI);
     kiji.release();
     return Result.healthy();

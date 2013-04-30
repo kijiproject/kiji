@@ -19,7 +19,7 @@
 
 package org.kiji.rest.core;
 
-import java.util.List;
+import java.util.Collection;
 
 /**
  * Interface for key-value objects with String-typed name of the object.
@@ -31,23 +31,23 @@ public interface Returnable {
    * Get the String key of the Returnable object.
    * @return key The String-typed name.
    */
-  public String getName();
+  String getName();
 
   /**
    * Get the Collection of Returnable objects as contents.
    * @return The Collection-typed contents.
    */
-  public List<? extends Returnable> getContents();
+  Collection<? extends Returnable> getContents();
 
   /**
    * Get the value of the counter.
    * @return The counter.
    */
-  public long getCounter();
+  long getCounter();
 
   /**
    * Set the value of the counter.
-   * @param counter
+   * @param counter the value to set
    */
-  public void setCounter(long counter);
+  void setCounter(long counter);
 }

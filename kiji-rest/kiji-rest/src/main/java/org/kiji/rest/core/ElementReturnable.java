@@ -19,7 +19,7 @@
 
 package org.kiji.rest.core;
 
-import java.util.List;
+import java.util.Collection;
 
 /**
  * Returnable object with a name and null contents.
@@ -55,7 +55,7 @@ public class ElementReturnable implements Returnable {
 
   /** {@inheritDoc} */
   @Override
-  public List<Returnable> getContents() {
+  public Collection<Returnable> getContents() {
     return null;
   }
 

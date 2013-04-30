@@ -19,8 +19,9 @@
 
 package org.kiji.rest.resources;
 
+import static org.kiji.rest.resources.ResourceConstants.API_ENTRY_POINT;
+import static org.kiji.rest.resources.ResourceConstants.INSTANCES;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -30,17 +31,15 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import org.apache.hadoop.util.StringUtils;
-import org.kiji.rest.core.ContentReturnable;
-import org.kiji.rest.core.ElementReturnable;
-import org.kiji.rest.core.Returnable;
-import static org.kiji.rest.resources.ResourceConstants.API_ENTRY_POINT;
-import static org.kiji.rest.resources.ResourceConstants.INSTANCES;
-import org.kiji.schema.KijiURI;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.yammer.metrics.annotation.Timed;
+import org.apache.hadoop.util.StringUtils;
+
+import org.kiji.rest.core.ContentReturnable;
+import org.kiji.rest.core.ElementReturnable;
+import org.kiji.rest.core.Returnable;
+import org.kiji.schema.KijiURI;
 
 /**
  * This REST resource interacts with Kiji instances.
@@ -58,7 +57,7 @@ public class InstanceResource {
    * Construct the InstanceResource with a partially constructed URI for
    * the cluster and the list of accessible instances.
    *
-   * @param clusterURI The builder for the cluster's URI.
+   * @param cluster KijiURI in which these instances are contained.
    * @param instances The list of accessible instances.
    */
   public InstanceResource(KijiURI cluster, List<KijiURI> instances) {
@@ -82,12 +81,13 @@ public class InstanceResource {
 
   /**
    * Called when the terminal resource element is the instance name.
+   * @param instance to inspect
    * @return a Returnable message indicating the landing point.
    */
   @Path("{instance}")
   @GET
   @Timed
-  public Returnable instance(final @PathParam("instance") String instance) {
+  public Returnable instance(@PathParam("instance") String instance) {
     ContentReturnable message = new ContentReturnable("instance: " + instance);
     message.add(new ElementReturnable("0.0.1"));
     return message;
@@ -101,7 +101,7 @@ public class InstanceResource {
    */
   @GET
   @Timed
-  public Map<String, Object> list() throws IOException {
+  public Map<String, Object> list() {
     final Map<String, Object> outputMap = Maps.newHashMap();
     final List<String> listOfInstances = Lists.newArrayList();
     for (KijiURI instance : mInstances) {

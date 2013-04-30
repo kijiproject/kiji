@@ -19,9 +19,14 @@
 
 package org.kiji.rest.core;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
+import com.google.common.collect.Lists;
+
+/**
+ * Container class that encapsulates a collection of {@link Returnable} objects.
+ */
 public class ContentReturnable extends ElementReturnable {
   private List<Returnable> mContents;
 
@@ -31,12 +36,13 @@ public class ContentReturnable extends ElementReturnable {
    */
   public ContentReturnable(String name) {
     super(name);
-    mContents = new ArrayList<Returnable>();
+    mContents = Lists.newArrayList();
   }
 
   /**
    * Constructor with a String-typed name of the object.
    * @param name The name of the object.
+   * @param counter The value of the counter to set. //FIXME
    */
   public ContentReturnable(String name, long counter) {
     super(name, counter);
@@ -52,7 +58,7 @@ public class ContentReturnable extends ElementReturnable {
 
   /** {@inheritDoc} */
   @Override
-  public List<Returnable> getContents() {
+  public Collection<Returnable> getContents() {
     return mContents;
   }
 }
