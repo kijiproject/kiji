@@ -51,7 +51,6 @@ import org.kiji.mapreduce.framework.HFileKeyValue;
 import org.kiji.mapreduce.framework.KijiConfKeys;
 import org.kiji.mapreduce.impl.HFileWriterContext;
 import org.kiji.mapreduce.output.framework.KijiHFileOutputFormat;
-import org.kiji.mapreduce.output.impl.KijiTableMapReduceJobOutput;
 import org.kiji.mapreduce.tools.framework.JobIOConfKeys;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiRegion;

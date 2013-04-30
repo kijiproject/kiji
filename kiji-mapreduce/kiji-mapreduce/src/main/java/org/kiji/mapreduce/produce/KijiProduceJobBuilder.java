@@ -38,7 +38,7 @@ import org.kiji.mapreduce.MapReduceJobOutput;
 import org.kiji.mapreduce.framework.KijiConfKeys;
 import org.kiji.mapreduce.framework.KijiTableInputJobBuilder;
 import org.kiji.mapreduce.kvstore.KeyValueStore;
-import org.kiji.mapreduce.output.impl.KijiTableMapReduceJobOutput;
+import org.kiji.mapreduce.output.KijiTableMapReduceJobOutput;
 import org.kiji.mapreduce.produce.impl.KijiProducers;
 import org.kiji.mapreduce.produce.impl.ProduceMapper;
 import org.kiji.mapreduce.reducer.IdentityReducer;

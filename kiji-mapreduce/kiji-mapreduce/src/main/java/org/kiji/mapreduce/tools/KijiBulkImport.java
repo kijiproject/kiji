@@ -34,7 +34,7 @@ import org.kiji.mapreduce.bulkimport.KijiBulkImportJobBuilder;
 import org.kiji.mapreduce.bulkimport.impl.KijiBulkImporters;
 import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
 import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
-import org.kiji.mapreduce.output.impl.KijiTableMapReduceJobOutput;
+import org.kiji.mapreduce.output.KijiTableMapReduceJobOutput;
 import org.kiji.mapreduce.tools.framework.JobTool;
 import org.kiji.mapreduce.tools.framework.MapReduceJobInputFactory;
 import org.kiji.mapreduce.tools.framework.MapReduceJobOutputFactory;

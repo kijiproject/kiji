@@ -31,7 +31,7 @@ import org.kiji.common.flags.Flag;
 
 import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
 import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
-import org.kiji.mapreduce.output.impl.KijiTableMapReduceJobOutput;
+import org.kiji.mapreduce.output.KijiTableMapReduceJobOutput;
 import org.kiji.mapreduce.produce.KijiProduceJobBuilder;
 import org.kiji.mapreduce.produce.impl.KijiProducers;
 import org.kiji.mapreduce.tools.framework.KijiJobTool;

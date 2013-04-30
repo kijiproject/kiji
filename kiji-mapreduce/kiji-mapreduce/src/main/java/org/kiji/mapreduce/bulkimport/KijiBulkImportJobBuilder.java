@@ -39,7 +39,7 @@ import org.kiji.mapreduce.framework.MapReduceJobBuilder;
 import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
 import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
-import org.kiji.mapreduce.output.impl.KijiTableMapReduceJobOutput;
+import org.kiji.mapreduce.output.KijiTableMapReduceJobOutput;
 import org.kiji.mapreduce.reducer.IdentityReducer;
 
 /** Builds a job that runs a KijiBulkImporter to import data into a Kiji table. */
