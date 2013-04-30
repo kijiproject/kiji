@@ -75,7 +75,7 @@ public class TableResource {
   @GET
   @Timed
   public Map<String, Object> list(final @PathParam("instance") String instance) throws IOException {
-    final Map<String, Object> outputMap = Maps.newHashMap();
+    final Map<String, Object> outputMap = Maps.newTreeMap();
     final KijiURI kijiURI = KijiURI.newBuilder(mCluster).withInstanceName(instance).build();
     if (!mInstances.contains(kijiURI)) {
       throw new IOException("Instance unavailable");

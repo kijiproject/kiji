@@ -22,6 +22,7 @@ package org.kiji.rest.resources;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -38,6 +39,7 @@ import static org.kiji.rest.resources.ResourceConstants.INSTANCES;
 import org.kiji.schema.KijiURI;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.yammer.metrics.annotation.Timed;
 
 /**
@@ -99,12 +101,15 @@ public class InstanceResource {
    */
   @GET
   @Timed
-  public List<String> list() throws IOException {
-    List<String> listOfInstances = Lists.newArrayList();
+  public Map<String, Object> list() throws IOException {
+    final Map<String, Object> outputMap = Maps.newHashMap();
+    final List<String> listOfInstances = Lists.newArrayList();
     for (KijiURI instance : mInstances) {
       listOfInstances.add(instance.toString());
     }
-    return listOfInstances;
+    outputMap.put("kiji_uri", mCluster.toOrderedString());
+    outputMap.put("instances", listOfInstances);
+    return outputMap;
   }
 
   /**
