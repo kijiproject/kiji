@@ -12,31 +12,22 @@ have installed the individual components described [here](http://www.kiji.org/ge
 If you don\'t have a working environment yet, you can install the standalone Kiji
 BentoBox in [three quick steps!](http://www.kiji.org/#tryit)
 
-### Download and Untar KijiExpress
-
-Download KijiExpress from
-[here](http://archive.kiji.org/tarballs/kiji-express-0.2.0-release.tar.gz).
-
-<div class="userinput">
-{% highlight bash %}
-tar xzf kiji-express-0.2.0-release.tar.gz
-cd kiji-express-0.2.0
-export PATH=${PATH}:${PWD}/bin
-{% endhighlight %}
-</div>
-
-### Download and Untar the Tutorial
-
-Download the KijiExpress Music Tutorial
-[here](http://archive.kiji.org/tarballs/kiji-express-music-0.2.0-release.tar.gz).
-Untar the project into a directory `<path/to/tutorial/root/dir>`:
+If you have downloaded the standalone Kiji BentoBox, the code for this tutorial
+is already compiled and located in the `${KIJI_HOME}/examples/express-music/` directory.
+Commands in this tutorial will depend on this location:
 
 <div class="userinput">
 {% highlight bash %}
-tar xzf <path/to/tar/ball>
-export MUSIC_EXPRESS_HOME=<path/to/tutorial/root/dir>
+export MUSIC_EXPRESS_HOME=${KIJI_HOME}/examples/express-music
 {% endhighlight %}
 </div>
+
+If you are not using the Kiji BentoBox, set `MUSIC_EXPRESS_HOME` to the path of your local
+kiji-music repository.
+
+Once you have done this, if you are using Kiji BentoBox you can skip to
+"Set your environment variables" if you want to get started playing with the example code.
+Otherwise, follow these steps to compile it from source.
 
 ### Compiling the Tutorial (Optional)
 
