@@ -65,15 +65,20 @@ public class TableResource {
   }
 
   /**
+   * Lists the tables on the instance.
    * Called when the terminal resource element is not identified.
-   * @return a Returnable message indicating the landing point.
+   *
+   * @return a list of tables on the instance.
    */
   @GET
   @Timed
-  public Returnable namespace() {
-    ContentReturnable message = new ContentReturnable("Tables");
-    message.add(new ElementReturnable("Kiji"));
-    return message;
+  public List<String> list(final @PathParam("instance") String instance) throws IOException {
+    final KijiURI kijiURI = KijiURI.newBuilder(mCluster).withInstanceName(instance).build();
+    if (!mInstances.contains(kijiURI)) {
+      throw new IOException("Instance unavailable");
+    }
+    final Kiji kiji = Kiji.Factory.open(kijiURI);
+    return kiji.getTableNames();
   }
 
   /**
@@ -114,7 +119,7 @@ public class TableResource {
       final @PathParam("table") String table) throws IOException {
     final KijiURIBuilder kijiURIBuilder = KijiURI.newBuilder(mCluster).withInstanceName(instance);
     if (!mInstances.contains(kijiURIBuilder.build())) {
-      throw new IOException("No such resource.");
+      throw new IOException("Instance unavailable");
     }
     final KijiURI kijiURI = kijiURIBuilder.withTableName(table).build();
     final Kiji kiji = Kiji.Factory.open(kijiURI);
