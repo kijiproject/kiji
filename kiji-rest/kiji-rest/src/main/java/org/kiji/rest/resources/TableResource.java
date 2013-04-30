@@ -36,10 +36,8 @@ import javax.ws.rs.core.MediaType;
 import com.google.common.collect.Maps;
 import com.yammer.metrics.annotation.Timed;
 
-import org.kiji.rest.core.ContentReturnable;
-import org.kiji.rest.core.ElementReturnable;
-import org.kiji.rest.core.Returnable;
 import org.kiji.schema.Kiji;
+import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.KijiURI.KijiURIBuilder;
 
@@ -74,50 +72,52 @@ public class TableResource {
    *
    * @param instance to list the contained tables.
    * @return a list of tables on the instance.
-   * @throws IOException if there is an error opening the instance.
+   * @throws IOException if the instance is unavailable.
    */
   @GET
   @Timed
   public Map<String, Object> list(@PathParam("instance") String instance) throws IOException {
-    final Map<String, Object> outputMap = Maps.newTreeMap();
     final KijiURI kijiURI = KijiURI.newBuilder(mCluster).withInstanceName(instance).build();
     if (!mInstances.contains(kijiURI)) {
       throw new IOException("Instance unavailable");
     }
+    final Map<String, Object> outputMap = Maps.newTreeMap();
     final Kiji kiji = Kiji.Factory.open(kijiURI);
-    outputMap.put("kiji_uri", kijiURI.toOrderedString());
+    outputMap.put("parent_kiji_uri", kijiURI.toOrderedString());
     outputMap.put("tables", kiji.getTableNames());
     kiji.release();
     return outputMap;
   }
 
   /**
-   * Called when the terminal resource element is the singleton 'version'.
-   * @return a Returnable message indicating the version.
-   */
-  @Path("version")
-  @GET
-  @Timed
-  public Returnable version() {
-    ContentReturnable version = new ContentReturnable("Version");
-    version.add(new ElementReturnable("0.0.1"));
-    return version;
-  }
-
-  /**
    * Called when the terminal resource element is the table name.
    * @param instance in which the table resides.
    * @param table to be inspected.
-   * @return a Returnable message indicating the landing point.
+   * @return a message containing a list of available sub-resources.
+   * @throws IOException if the instance or table is unavailable.
    */
   @Path("{table}")
   @GET
   @Timed
-  public Returnable table(@PathParam("instance") String instance,
-      @PathParam("table") String table) {
-    ContentReturnable message = new ContentReturnable("table: " + instance + "/" + table);
-    message.add(new ElementReturnable("0.0.1"));
-    return message;
+  public Map<String, Object> table(@PathParam("instance") String instance,
+      @PathParam("table") String table) throws IOException {
+    final KijiURIBuilder kijiURIBuilder = KijiURI.newBuilder(mCluster).withInstanceName(instance);
+    if (!mInstances.contains(kijiURIBuilder.build())) {
+      throw new IOException("Instance unavailable");
+    }
+    final KijiURI kijiURI = kijiURIBuilder.withTableName(table).build();
+
+    // TODO Is there a better way to accomplish this check?
+    // Checks is the table can be successfully opened and release.
+    final Kiji kiji = Kiji.Factory.open(kijiURI);
+    final KijiTable checkTable = kiji.openTable(kijiURI.getTable());
+    checkTable.release();
+    kiji.release();
+
+    Map<String, Object> namespace = Maps.newHashMap();
+    namespace.put("table_name", kijiURI.getTable());
+    namespace.put("kiji_uri", kijiURI.toOrderedString());
+    return namespace;
   }
 
   /**

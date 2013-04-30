@@ -22,6 +22,7 @@ package org.kiji.rest.resources;
 import static org.kiji.rest.resources.ResourceConstants.API_ENTRY_POINT;
 import static org.kiji.rest.resources.ResourceConstants.INSTANCES;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -36,9 +37,6 @@ import com.google.common.collect.Maps;
 import com.yammer.metrics.annotation.Timed;
 import org.apache.hadoop.util.StringUtils;
 
-import org.kiji.rest.core.ContentReturnable;
-import org.kiji.rest.core.ElementReturnable;
-import org.kiji.rest.core.Returnable;
 import org.kiji.schema.KijiURI;
 
 /**
@@ -67,30 +65,26 @@ public class InstanceResource {
   }
 
   /**
-   * Called when the terminal resource element is the singleton 'version'.
-   * @return a Returnable message indicating the version.
-   */
-  @Path("version")
-  @GET
-  @Timed
-  public Returnable version() {
-    ContentReturnable version = new ContentReturnable("Version");
-    version.add(new ElementReturnable("0.0.1"));
-    return version;
-  }
-
-  /**
    * Called when the terminal resource element is the instance name.
    * @param instance to inspect
-   * @return a Returnable message indicating the landing point.
+   * @return a message containing a list of available sub-resources.
+   * @throws IOException if the instance is unavailable.
    */
   @Path("{instance}")
   @GET
   @Timed
-  public Returnable instance(@PathParam("instance") String instance) {
-    ContentReturnable message = new ContentReturnable("instance: " + instance);
-    message.add(new ElementReturnable("0.0.1"));
-    return message;
+  public Map<String, Object> instance(@PathParam("instance") String instance) throws IOException {
+    final KijiURI kijiURI = KijiURI.newBuilder(mCluster).withInstanceName(instance).build();
+    if (!mInstances.contains(kijiURI)) {
+      throw new IOException("Instance unavailable");
+    }
+    Map<String, Object> namespace = Maps.newHashMap();
+    namespace.put("instance_name", kijiURI.getInstance());
+    namespace.put("kiji_uri", kijiURI.toOrderedString());
+    List<String> resources = Lists.newArrayList();
+    resources.add("tables");
+    namespace.put("resources", resources);
+    return namespace;
   }
 
   /**
@@ -105,9 +99,9 @@ public class InstanceResource {
     final Map<String, Object> outputMap = Maps.newHashMap();
     final List<String> listOfInstances = Lists.newArrayList();
     for (KijiURI instance : mInstances) {
-      listOfInstances.add(instance.toString());
+      listOfInstances.add(instance.getInstance());
     }
-    outputMap.put("kiji_uri", mCluster.toOrderedString());
+    outputMap.put("parent_kiji_uri", mCluster.toOrderedString());
     outputMap.put("instances", listOfInstances);
     return outputMap;
   }

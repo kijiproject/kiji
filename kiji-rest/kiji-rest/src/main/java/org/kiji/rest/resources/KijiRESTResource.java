@@ -21,16 +21,17 @@ package org.kiji.rest.resources;
 
 import static org.kiji.rest.resources.ResourceConstants.API_ENTRY_POINT;
 
+import java.util.List;
+import java.util.Map;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.yammer.metrics.annotation.Timed;
-
-import org.kiji.rest.core.ContentReturnable;
-import org.kiji.rest.core.ElementReturnable;
-import org.kiji.rest.core.Returnable;
 
 /**
  * This REST resource interacts with the Kiji cluster.
@@ -47,25 +48,30 @@ import org.kiji.rest.core.Returnable;
 public class KijiRESTResource {
   /**
    * The entry point if no resource is identified.
-   * @return A default Returnable message.
+   * @return a message containing a list of available sub-resources.
    */
   @GET
   @Timed
-  public Returnable namespace() {
-    ContentReturnable version = new ContentReturnable("KijiREST");
-    return version;
+  public Map<String, Object> namespace() {
+    Map<String, Object> namespace = Maps.newHashMap();
+    namespace.put("service", "KijiREST");
+    List<String> resources = Lists.newArrayList();
+    resources.add("version");
+    resources.add("instances");
+    namespace.put("resources", resources);
+    return namespace;
   }
 
   /**
    * Singleton resource identifying the version information.
-   * @return A Returnable message containing version information.
+   * @return A message containing version information.
    */
   @Path("version")
   @GET
   @Timed
-  public Returnable version() {
-    ContentReturnable version = new ContentReturnable("Version");
-    version.add(new ElementReturnable("0.1.0"));
+  public Map<String, Object> version() {
+    Map<String, Object> version = Maps.newHashMap();
+    version.put("version", "0.1.0");
     return version;
   }
 }
