@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.kiji.mapreduce</groupId>
     <artifactId>kiji-mapreduce-root</artifactId>
-    <version>1.0.0-rc62-SNAPSHOT</version>
+    <version>1.0.0-rc63-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
 
@@ -57,15 +57,13 @@
               <artifacts>
                 <artifact>
                   <!-- Default (no classifier) jar artifact is Hadoop2-based, like now. -->
-                  <file
-                    >../kiji-mapreduce/target/kiji-mapreduce-hadoop2-${project.version}.jar</file>
+                  <file>../kiji-mapreduce/target/kiji-mapreduce-hadoop2-${project.version}.jar</file>
                   <type>jar</type>
-                  <classifier></classifier>
+                  <classifier />
                 </artifact>
                 <!-- Attach to hadoop1 and hadoop2 classifiers as well. -->
                 <artifact>
-                  <file
-                    >../kiji-mapreduce/target/kiji-mapreduce-hadoop2-${project.version}.jar</file>
+                  <file>../kiji-mapreduce/target/kiji-mapreduce-hadoop2-${project.version}.jar</file>
                   <type>jar</type>
                   <classifier>hadoop2</classifier>
                 </artifact>
