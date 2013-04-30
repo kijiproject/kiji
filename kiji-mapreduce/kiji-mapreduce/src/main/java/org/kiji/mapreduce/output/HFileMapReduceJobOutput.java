@@ -37,7 +37,6 @@ import org.apache.hadoop.hbase.mapreduce.hadoopbackport.TotalOrderPartitioner;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
-import org.apache.hadoop.io.SequenceFile.Writer;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.OutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -51,6 +50,7 @@ import org.kiji.mapreduce.framework.HFileKeyValue;
 import org.kiji.mapreduce.framework.KijiConfKeys;
 import org.kiji.mapreduce.impl.HFileWriterContext;
 import org.kiji.mapreduce.output.framework.KijiHFileOutputFormat;
+import org.kiji.mapreduce.platform.KijiMRPlatformBridge;
 import org.kiji.mapreduce.tools.framework.JobIOConfKeys;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiRegion;
@@ -309,11 +309,8 @@ public final class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
     sorted.remove(first);
 
     // Write the actual file
-    final SequenceFile.Writer writer =
-        SequenceFile.createWriter(conf,
-            Writer.file(partitionsPath),
-            Writer.keyClass(HFileKeyValue.class),
-            Writer.valueClass(NullWritable.class));
+    final SequenceFile.Writer writer = KijiMRPlatformBridge.get().newSeqFileWriter(
+        conf, partitionsPath, HFileKeyValue.class, NullWritable.class);
 
     try {
       for (HFileKeyValue startKey : sorted) {

@@ -19,7 +19,14 @@
 
 package org.kiji.mapreduce.platform;
 
+import java.io.IOException;
+import java.net.URI;
+
+import com.google.common.base.Preconditions;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.mapreduce.TaskType;
@@ -48,5 +55,19 @@ public final class Hadoop1xKijiMRBridge extends KijiMRPlatformBridge {
     boolean isMap = type == TaskType.MAP;
     return new TaskAttemptID(jtIdentifier, jobId, isMap, taskId, id);
   }
+
+
+  /** {@inheritDoc} */
+  @Override
+  public SequenceFile.Writer newSeqFileWriter(Configuration conf, Path filename,
+      Class<?> keyClass, Class<?> valueClass) throws IOException {
+    Preconditions.checkArgument(conf != null, "Configuration argument must be non-null");
+    Preconditions.checkArgument(filename != null, "Filename argument must be non-null");
+
+    final URI fileUri = filename.toUri();
+    final FileSystem fs = FileSystem.get(fileUri, conf);
+    return new SequenceFile.Writer(fs, conf, filename, keyClass, valueClass);
+  }
+
 }
 

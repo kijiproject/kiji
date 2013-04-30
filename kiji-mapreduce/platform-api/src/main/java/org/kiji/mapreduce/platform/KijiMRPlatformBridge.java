@@ -19,7 +19,11 @@
 
 package org.kiji.mapreduce.platform;
 
+import java.io.IOException;
+
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.mapreduce.TaskType;
@@ -64,6 +68,20 @@ public abstract class KijiMRPlatformBridge {
    */
   public abstract TaskAttemptID newTaskAttemptID(String jtIdentifier, int jobId, TaskType type,
       int taskId, int id);
+
+
+  /**
+   * Create and return a new SequenceFile.Writer object.
+   *
+   * @param conf the current Configuration.
+   * @param filename the file to open for write access.
+   * @param keyClass the class representing the 'key' data type in the key-value pairs to write.
+   * @param valueClass the class representing the 'value' data type in the key-value pairs to write.
+   * @return a new SequenceFile.Writer object opened and ready to write to the file.
+   * @throws IOException if there is an error opening the file.
+   */
+  public abstract SequenceFile.Writer newSeqFileWriter(Configuration conf, Path filename,
+      Class<?> keyClass, Class<?> valueClass) throws IOException;
 
   private static KijiMRPlatformBridge mBridge;
 

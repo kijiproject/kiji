@@ -19,7 +19,12 @@
 
 package org.kiji.mapreduce.platform;
 
+import java.io.IOException;
+
+import com.google.common.base.Preconditions;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.mapreduce.TaskType;
@@ -46,4 +51,19 @@ public final class CDH4MR1KijiMRBridge extends KijiMRPlatformBridge {
     // In CDH4, use all these args directly.
     return new TaskAttemptID(jtIdentifier, jobId, type, taskId, id);
   }
+
+  /** {@inheritDoc} */
+  @Override
+  public SequenceFile.Writer newSeqFileWriter(Configuration conf, Path filename,
+      Class<?> keyClass, Class<?> valueClass) throws IOException {
+
+    Preconditions.checkArgument(conf != null, "Configuration argument must be non-null");
+    Preconditions.checkArgument(filename != null, "Filename argument must be non-null");
+
+    return SequenceFile.createWriter(conf,
+        SequenceFile.Writer.file(filename),
+        SequenceFile.Writer.keyClass(keyClass),
+        SequenceFile.Writer.valueClass(valueClass));
+  }
+
 }
