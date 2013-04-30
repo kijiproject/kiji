@@ -37,8 +37,8 @@
 
   <properties>
     <kiji-schema.version>1.0.0</kiji-schema.version>
-    <kiji-mapreduce.version>1.0.0-rc62-SNAPSHOT</kiji-mapreduce.version>
-    <kiji-mapreduce-lib.version>1.0.0-rc6</kiji-mapreduce-lib.version>
+    <kiji-mapreduce.version>1.0.0-rc62</kiji-mapreduce.version>
+    <kiji-mapreduce-lib.version>1.0.0-rc61</kiji-mapreduce-lib.version>
     <kiji-cdh4-platform.version>1.0.0</kiji-cdh4-platform.version>
     <fake-hbase.version>0.0.4</fake-hbase.version>
   </properties>
