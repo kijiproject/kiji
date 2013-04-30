@@ -299,15 +299,27 @@ old_hbase_conf="$old_hbase_dir/conf"
 if [ -f "$old_hadoop_conf/mapred-site.xml" ]; then
   cp "$old_hadoop_conf/mapred-site.xml" "$HADOOP_HOME/conf/"
 fi
+if [ -f "$old_hadoop_conf/bento-mapred-site.xml" ]; then
+  cp "$old_hadoop_conf/bento-mapred-site.xml" "$HADOOP_HOME/conf/"
+fi
 if [ -f "$old_hadoop_conf/core-site.xml" ]; then
   cp "$old_hadoop_conf/core-site.xml" "$HADOOP_HOME/conf/"
+fi
+if [ -f "$old_hadoop_conf/bento-core-site.xml" ]; then
+  cp "$old_hadoop_conf/bento-core-site.xml" "$HADOOP_HOME/conf/"
 fi
 if [ -f "$old_hadoop_conf/hdfs-site.xml" ]; then
   cp "$old_hadoop_conf/hdfs-site.xml" "$HADOOP_HOME/conf/"
 fi
+if [ -f "$old_hadoop_conf/bento-hdfs-site.xml" ]; then
+  cp "$old_hadoop_conf/bento-hdfs-site.xml" "$HADOOP_HOME/conf/"
+fi
 
 if [ -f "$old_hbase_conf/hbase-site.xml" ]; then
   cp "$old_hbase_conf/hbase-site.xml" "$HBASE_HOME/conf/"
+fi
+if [ -f "$old_hbase_conf/bento-hbase-site.xml" ]; then
+  cp "$old_hbase_conf/bento-hbase-site.xml" "$HBASE_HOME/conf/"
 fi
 
 # Move this temporary working BentoBox instance back to where the previous instance

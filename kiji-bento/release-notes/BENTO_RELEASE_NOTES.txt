@@ -2,6 +2,15 @@
 
                               Kiji BentoBox Release Notes
 
+Version 1.0.3
+  * BENTO-31. Fixes error copying configuration files in "bento upgrade".
+
+Version 1.0.2
+  * Include KijiExpress.
+
+Version 1.0.1
+  * Fix to Kiji Hive adapter packaging.
+
 Version 1.0.0-albacore
   * BENTO-11. Adds "bento upgrade" command, to download the latest
       bento box and import data from this one to the new one.
