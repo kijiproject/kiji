@@ -37,6 +37,8 @@ import com.google.common.collect.Maps;
 import com.yammer.metrics.annotation.Timed;
 import org.apache.hadoop.util.StringUtils;
 
+import org.kiji.rest.util.VersionInfo;
+import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiURI;
 
 /**
@@ -83,6 +85,7 @@ public class InstanceResource {
     namespace.put("kiji_uri", kijiURI.toOrderedString());
     List<String> resources = Lists.newArrayList();
     resources.add("tables");
+    resources.add("version");
     namespace.put("resources", resources);
     return namespace;
   }
@@ -96,11 +99,11 @@ public class InstanceResource {
   @GET
   @Timed
   public Map<String, Object> list() {
-    final Map<String, Object> outputMap = Maps.newHashMap();
     final List<String> listOfInstances = Lists.newArrayList();
     for (KijiURI instance : mInstances) {
       listOfInstances.add(instance.getInstance());
     }
+    final Map<String, Object> outputMap = Maps.newHashMap();
     outputMap.put("parent_kiji_uri", mCluster.toOrderedString());
     outputMap.put("instances", listOfInstances);
     return outputMap;
@@ -118,6 +121,38 @@ public class InstanceResource {
       return null;
     }
     return parts[1];
+  }
+
+  /**
+   * Singleton resource identifying the version information.
+   *
+   * @param instance the instance whose version is sought.
+   * @return A message containing version information.
+   * @throws IOException when Kiji software version can not be determined.
+   */
+  @Path("{instance}/version")
+  @GET
+  @Timed
+  public Map<String, Object> version(@PathParam("instance") String instance) throws IOException {
+    final KijiURI kijiURI = KijiURI.newBuilder(mCluster).withInstanceName(instance).build();
+    if (!mInstances.contains(kijiURI)) {
+      throw new IOException("Instance unavailable");
+    }
+    Map<String, Object> version = Maps.newHashMap();
+    version.put("kiji-client-data-version",
+        org.kiji.schema.util.VersionInfo.getClientDataVersion());
+    version.put("kiji-software-version",
+        org.kiji.schema.util.VersionInfo.getSoftwareVersion());
+
+    final Kiji kiji = Kiji.Factory.open(kijiURI);
+    version.put("kiji-instance-version",
+        org.kiji.schema.util.VersionInfo.getClusterDataVersion(kiji));
+    version.put("is_kiji_version_compatible",
+        org.kiji.schema.util.VersionInfo.isKijiVersionCompatible(kiji));
+    kiji.release();
+
+    version.put("rest-version", VersionInfo.getRESTVersion());
+    return version;
   }
 }
 

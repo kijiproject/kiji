@@ -55,7 +55,7 @@ public class TableResource {
   private final List<KijiURI> mInstances;
 
   /**
-   * Construct the InstanceResource with a partially constructed URI for the cluster.
+   * Construct the InstanceResource with the cluster URI.
    *
    * @param cluster KijiURI in which these tables are contained.
    * @param instances list of KijiURIs denoting instances.

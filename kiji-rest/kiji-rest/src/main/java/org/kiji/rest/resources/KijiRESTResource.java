@@ -21,6 +21,7 @@ package org.kiji.rest.resources;
 
 import static org.kiji.rest.resources.ResourceConstants.API_ENTRY_POINT;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -32,6 +33,8 @@ import javax.ws.rs.core.MediaType;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.yammer.metrics.annotation.Timed;
+
+import org.kiji.schema.util.VersionInfo;
 
 /**
  * This REST resource interacts with the Kiji cluster.
@@ -64,14 +67,18 @@ public class KijiRESTResource {
 
   /**
    * Singleton resource identifying the version information.
+   *
    * @return A message containing version information.
+   * @throws IOException when Kiji software version can not be determined.
    */
   @Path("version")
   @GET
   @Timed
-  public Map<String, Object> version() {
+  public Map<String, Object> version() throws IOException {
     Map<String, Object> version = Maps.newHashMap();
-    version.put("version", "0.1.0");
+    version.put("kiji-client-data-version", VersionInfo.getClientDataVersion());
+    version.put("kiji-software-version", VersionInfo.getSoftwareVersion());
+    version.put("rest-version", "0.1.0");
     return version;
   }
 }
