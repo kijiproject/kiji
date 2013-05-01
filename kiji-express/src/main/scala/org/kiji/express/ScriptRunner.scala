@@ -205,7 +205,7 @@ class ScriptRunner extends Tool {
     val tmpjars = Option(getConf().get("tmpjars"))
         .map { "," + _ }
         .getOrElse("")
-    getConf().set("tmpjars", "file:" + compileJar.getPath() + tmpjars)
+    getConf().set("tmpjars", "file://" + compileJar.getPath() + "," + tmpjars)
 
     jobc(args + ("" -> args.positional.tail))
   }
