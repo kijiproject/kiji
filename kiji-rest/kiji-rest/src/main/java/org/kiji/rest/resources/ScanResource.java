@@ -21,56 +21,56 @@ package org.kiji.rest.resources;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriInfo;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.yammer.metrics.annotation.Timed;
 
-import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiURI;
 
 /**
- * This REST resource interacts with Kiji instances.
+ * This REST resource interacts with Kiji tables.
  *
- * This resource is served for requests using the resource identifiers:
- * <li>/v1/instances/
- * <li>/v1/instances/&lt;instance&gt;
+ * This resource is served for requests using the resource identifier:
+ * <li>/v1/instances/&lt;instance&gt/tables/&lt;table&gt;/scans/
  */
-@Path(ResourceConstants.INSTANCES_PATH)
+@Path(ResourceConstants.SCANS_PATH)
 @Produces(MediaType.APPLICATION_JSON)
-public class InstanceResource extends AbstractKijiResource {
+public class ScanResource extends AbstractKijiResource {
   /**
    * Default constructor.
    *
    * @param cluster KijiURI in which these instances are contained.
    * @param instances The list of accessible instances.
    */
-  public InstanceResource(KijiURI cluster, List<KijiURI> instances) {
+  public ScanResource(KijiURI cluster, List<KijiURI> instances) {
     super(cluster, instances);
   }
 
   /**
-   * GETs a list of instances that are available.
+   * GETs a list of rows returned by the scanner.
    *
-   * @return a list of instances on the cluster.
+   * @param instance in which the table resides.
+   * @param table to be inspected.
+   * @param uriInfo containing query parameters.
+   * @return a message containing a list of available sub-resources.
+   * @throws java.io.IOException if the instance or table is unavailable.
    */
   @GET
   @Timed
-  public Map<String, Object> getInstanceList() {
-    final List<String> listOfInstances = Lists.newArrayList();
-    for (KijiURI instance : getInstances()) {
-      listOfInstances.add(instance.getInstance());
-    }
-    final Map<String, Object> outputMap = Maps.newHashMap();
-    outputMap.put("parent_kiji_uri", getCluster().toOrderedString());
-    outputMap.put("instances", listOfInstances);
-    return outputMap;
+  public List<String> getScans(
+      @PathParam(ResourceConstants.INSTANCE_PARAMETER) String instance,
+      @PathParam(ResourceConstants.TABLE_PARAMETER) String table,
+      @Context UriInfo uriInfo
+  ) throws IOException {
+    List<String> result = Lists.newArrayList("Not", "yet", "implemented");
+    return result;
   }
 }
 

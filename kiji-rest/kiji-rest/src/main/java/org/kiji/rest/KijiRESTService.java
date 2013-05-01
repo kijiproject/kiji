@@ -30,10 +30,11 @@ import com.yammer.dropwizard.config.Environment;
 import org.kiji.rest.health.InstanceHealthCheck;
 import org.kiji.rest.resources.InstanceResource;
 import org.kiji.rest.resources.KijiRESTResource;
+import org.kiji.rest.resources.RowsResource;
+import org.kiji.rest.resources.ScanResource;
 import org.kiji.rest.resources.TableResource;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiURI;
-
 
 /**
  * Service to provide REST access to a list of Kiji instances.
@@ -79,9 +80,10 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
     }
 
     // Load resources.
-    // TODO Load row-level resources, etc.
     environment.addResource(new KijiRESTResource());
     environment.addResource(new InstanceResource(clusterURI, instances));
     environment.addResource(new TableResource(clusterURI, instances));
+    environment.addResource(new ScanResource(clusterURI, instances));
+    environment.addResource(new RowsResource(clusterURI, instances));
   }
 }

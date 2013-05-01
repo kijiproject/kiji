@@ -19,12 +19,11 @@
 
 package org.kiji.rest.resources;
 
-import static org.kiji.rest.resources.ResourceConstants.API_ENTRY_POINT;
+import static org.kiji.rest.resources.ResourceConstants.API_ENTRY_PATH;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -38,24 +37,20 @@ import org.kiji.schema.util.VersionInfo;
 
 /**
  * This REST resource interacts with the Kiji cluster.
- * This resource is served whenever requests are made using the following
- * resource identifiers:
  *
- * <ul>
- *   <li>/v1/</li>
- *   <li>/v1/&lt;singleton&gt;.</li>
- * </ul>
+ * This resource is served for requests using the resource identifier:
+ * /v1/
  */
-@Path(API_ENTRY_POINT)
+@Path(API_ENTRY_PATH)
 @Produces(MediaType.APPLICATION_JSON)
 public class KijiRESTResource {
   /**
-   * The entry point if no resource is identified.
+   * GETs a message containing a list of the available sub-resources.
    * @return a message containing a list of available sub-resources.
    */
   @GET
   @Timed
-  public Map<String, Object> namespace() {
+  public Map<String, Object> getRoot() {
     Map<String, Object> namespace = Maps.newHashMap();
     namespace.put("service", "KijiREST");
     List<String> resources = Lists.newArrayList();
@@ -66,15 +61,15 @@ public class KijiRESTResource {
   }
 
   /**
-   * Singleton resource identifying the version information.
+   * GETs version information.
    *
    * @return A message containing version information.
    * @throws IOException when Kiji software version can not be determined.
    */
-  @Path("version")
+  @Path(ResourceConstants.VERSION_ENDPOINT)
   @GET
   @Timed
-  public Map<String, Object> version() throws IOException {
+  public Map<String, Object> getVersion() throws IOException {
     Map<String, Object> version = Maps.newHashMap();
     version.put("kiji-client-data-version", VersionInfo.getClientDataVersion());
     version.put("kiji-software-version", VersionInfo.getSoftwareVersion());
