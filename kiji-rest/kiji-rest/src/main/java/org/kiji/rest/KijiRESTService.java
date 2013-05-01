@@ -23,6 +23,11 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
+import com.google.common.collect.Sets;
+import com.yammer.dropwizard.Service;
+import com.yammer.dropwizard.config.Bootstrap;
+import com.yammer.dropwizard.config.Environment;
+
 import org.kiji.rest.health.InstanceHealthCheck;
 import org.kiji.rest.resources.InstanceResource;
 import org.kiji.rest.resources.KijiRESTResource;
@@ -31,11 +36,6 @@ import org.kiji.rest.resources.RowsResource;
 import org.kiji.rest.resources.TableResource;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiURI;
-
-import com.google.common.collect.Sets;
-import com.yammer.dropwizard.Service;
-import com.yammer.dropwizard.config.Bootstrap;
-import com.yammer.dropwizard.config.Environment;
 
 /**
  * Service to provide REST access to a list of Kiji instances.

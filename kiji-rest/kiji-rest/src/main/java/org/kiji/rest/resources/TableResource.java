@@ -31,12 +31,12 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
+import com.google.common.collect.Maps;
+import com.yammer.metrics.annotation.Timed;
+
 import org.kiji.rest.RoutesConstants;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiURI;
-
-import com.google.common.collect.Maps;
-import com.yammer.metrics.annotation.Timed;
 
 /**
  * This REST resource interacts with Kiji tables.

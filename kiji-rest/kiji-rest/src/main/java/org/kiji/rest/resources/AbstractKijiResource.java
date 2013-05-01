@@ -20,7 +20,6 @@ package org.kiji.rest.resources;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 
 import javax.ws.rs.WebApplicationException;
@@ -67,13 +66,19 @@ public abstract class AbstractKijiResource {
    * @throws WebApplicationException if there is an error getting the instance OR
    *    if the instance requested is unavailable for handling via REST.
    */
-  protected Kiji getKiji(String instance) throws IOException {
+  protected Kiji getKiji(String instance)  {
     final KijiURI kijiURI = KijiURI.newBuilder(getCluster()).withInstanceName(instance).build();
     if (!getInstances().contains(kijiURI)) {
       throw new WebApplicationException(new IOException("Instance " + instance + " unavailable!"),
           Status.FORBIDDEN);
     }
-    final Kiji kiji = Kiji.Factory.open(kijiURI);
+    Kiji kiji;
+    try {
+      kiji = Kiji.Factory.open(kijiURI);
+    } catch (IOException e) {
+      // TODO Auto-generated catch block
+      throw new WebApplicationException(e, Status.INTERNAL_SERVER_ERROR);
+    }
     // TODO Consider using a pool here.
     return kiji;
   }

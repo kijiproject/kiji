@@ -21,9 +21,9 @@ package org.kiji.rest;
 
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.yammer.dropwizard.config.Configuration;
 import org.hibernate.validator.constraints.NotEmpty;
+
+import com.yammer.dropwizard.config.Configuration;
 
 /**
  * The Java object which is deserialized from the YAML configuration file.
@@ -32,12 +32,10 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class KijiRESTConfiguration extends Configuration {
   /** String cluster address. */
   @NotEmpty
-  @JsonProperty("cluster")
   private String mCluster;
 
   /** List of instance names which are visible to REST clients. */
   @NotEmpty
-  @JsonProperty("instances")
   private List<String> mInstances;
 
   /** @return The cluster address. */

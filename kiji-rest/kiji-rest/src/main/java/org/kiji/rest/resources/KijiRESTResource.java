@@ -28,12 +28,12 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import org.kiji.rest.RoutesConstants;
-import org.kiji.schema.util.VersionInfo;
-
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.yammer.metrics.annotation.Timed;
+
+import org.kiji.rest.RoutesConstants;
+import org.kiji.schema.util.VersionInfo;
 
 /**
  * This REST resource interacts with the Kiji cluster.

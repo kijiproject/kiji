@@ -29,15 +29,15 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.yammer.metrics.annotation.Timed;
+
 import org.kiji.rest.RoutesConstants;
 import org.kiji.rest.core.ContentReturnable;
 import org.kiji.rest.core.ElementReturnable;
 import org.kiji.rest.core.Returnable;
 import org.kiji.schema.KijiURI;
-
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.yammer.metrics.annotation.Timed;
 
 /**
  * This REST resource interacts with Kiji instances.
@@ -74,11 +74,12 @@ public class InstanceResource extends AbstractKijiResource {
 
   /**
    * Called when the terminal resource element is the instance name.
+   * @param instance is the instance name to retrieve information about.
    * @return a Returnable message indicating the landing point.
    */
   @GET
   @Timed
-  public Returnable instance(final @PathParam(RoutesConstants.INSTANCE_PATH) String instance) {
+  public Returnable instance(@PathParam(RoutesConstants.INSTANCE_PATH) final String instance) {
     ContentReturnable message = new ContentReturnable("instance: " + instance);
     message.add(new ElementReturnable("0.0.1"));
     return message;

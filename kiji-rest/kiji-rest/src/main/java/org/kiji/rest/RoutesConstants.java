@@ -24,6 +24,12 @@ package org.kiji.rest;
  * in the API.
  */
 public final class RoutesConstants {
+
+  /**
+   * Private constructor to prevent instantiation.
+   */
+  private RoutesConstants() {
+  }
   /** The namespace for api. */
   private static final String API_VERSION = "/v1/";
 
@@ -47,23 +53,23 @@ public final class RoutesConstants {
    * <li>Handled by: {@link InstanceResource#getInstanceList()}
    */
   public static final String INSTANCES_PATH = API_ENTRY_PATH + "instances";
-  
+
   /**
    * GETs instance level metadata.
    * <li>Path: /v1/instances/{instance}
    * <li>Not handled.
    */
   public static final String INSTANCE_PARAMETER = "instance";
-  public static final String INSTANCE_PATH = INSTANCES_PATH +
-      "/instance/{" + INSTANCE_PARAMETER + "}";
-  
+  public static final String INSTANCE_PATH = INSTANCES_PATH
+     + "/instance/{" + INSTANCE_PARAMETER + "}";
+
   /**
    * GETs a list of tables in the specified instance.
    * <li>Path: /v1/instances/{instance}/tables
    * <li>Handled by {@link TableResource#getTableList}
    */
   public static final String TABLES_PATH = INSTANCE_PATH + "/tables";
-  
+
   /**
    * GETs the layout of the specified table.
    * <li>Path: /v1/instances/{instance}/tables/{table}
@@ -71,7 +77,7 @@ public final class RoutesConstants {
    */
   public static final String TABLE_PARAMETER = "table";
   public static final String TABLE_PATH = TABLES_PATH + "/{" + TABLE_PARAMETER + "}";
-  
+
   /**
    * GETs a hexadecimal EntityId using the components specified in the query.
    * <li>Path: /v1/instances/{instance}/tables/{table}/entityId
@@ -86,18 +92,14 @@ public final class RoutesConstants {
    */
   public static final String ROWS_PATH = TABLE_PATH + "/rows";
   public static final String HEX_ENTITY_ID_PARAMETER = "hexEntityId";
-  
+
   /**
    * GETs and PUTs a Kiji row specified by the hex entity id.
    * <li>Path: v1/instances/{instance}/tables/{table}/rows/<hexEntityId>
    * <li>Handled by: {@link RowsResource#getRowByHexEntityId}
    */
   /** Parameter for the hexEntityId of the row. */
-  public static final String ROW_PATH = ROWS_PATH + "/{" + HEX_ENTITY_ID_PARAMETER + "}"; 
-  
+  public static final String ROW_PATH = ROWS_PATH + "/{" + HEX_ENTITY_ID_PARAMETER + "}";
+
   public static final String HEX_ENTITY_ID_SUBPATH = "{" + HEX_ENTITY_ID_PARAMETER + "}/";
-  
 }
-
-
-

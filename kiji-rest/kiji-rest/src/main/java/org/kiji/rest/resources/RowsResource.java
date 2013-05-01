@@ -20,7 +20,6 @@
 package org.kiji.rest.resources;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Set;
 
 import javax.ws.rs.GET;
@@ -32,10 +31,10 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
+import com.yammer.metrics.annotation.Timed;
+
 import org.kiji.rest.RoutesConstants;
 import org.kiji.schema.KijiURI;
-
-import com.yammer.metrics.annotation.Timed;
 
 /**
  * This REST resource interacts with Kiji tables.
