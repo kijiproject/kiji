@@ -29,7 +29,7 @@ import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
 
 import org.kiji.rest.health.InstanceHealthCheck;
-import org.kiji.rest.resources.InstanceResource;
+import org.kiji.rest.resources.InstancesResource;
 import org.kiji.rest.resources.KijiRESTResource;
 import org.kiji.rest.resources.RowResource;
 import org.kiji.rest.resources.RowsResource;
@@ -82,7 +82,7 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
 
     // Load resources.
     environment.addResource(new KijiRESTResource());
-    environment.addResource(new InstanceResource(clusterURI, instances));
+    environment.addResource(new InstancesResource(clusterURI, instances));
     environment.addResource(new TableResource(clusterURI, instances));
     environment.addResource(new RowsResource(clusterURI, instances));
     environment.addResource(new RowResource(clusterURI, instances));

@@ -44,45 +44,18 @@ import org.kiji.schema.KijiURI;
  *
  * This resource is served for requests using the resource identifiers:
  * <li>/v1/instances/
- * <li>/v1/instances/&lt;instance&gt;
  */
 @Path(RoutesConstants.INSTANCE_PATH)
 @Produces(MediaType.APPLICATION_JSON)
-public class InstanceResource extends AbstractKijiResource {
+public class InstancesResource extends AbstractKijiResource {
   /**
    * Default constructor.
    *
    * @param cluster KijiURI in which these instances are contained.
    * @param instances The list of accessible instances.
    */
-  public InstanceResource(KijiURI cluster, Set<KijiURI> instances) {
+  public InstancesResource(KijiURI cluster, Set<KijiURI> instances) {
     super(cluster, instances);
-  }
-
-  /**
-   * Called when the terminal resource element is the singleton 'version'.
-   * @return a Returnable message indicating the version.
-   */
-  @Path("version")
-  @GET
-  @Timed
-  public Returnable version() {
-    ContentReturnable version = new ContentReturnable("Version");
-    version.add(new ElementReturnable("0.0.1"));
-    return version;
-  }
-
-  /**
-   * Called when the terminal resource element is the instance name.
-   * @param instance is the instance name to retrieve information about.
-   * @return a Returnable message indicating the landing point.
-   */
-  @GET
-  @Timed
-  public Returnable instance(@PathParam(RoutesConstants.INSTANCE_PATH) final String instance) {
-    ContentReturnable message = new ContentReturnable("instance: " + instance);
-    message.add(new ElementReturnable("0.0.1"));
-    return message;
   }
 
   /**

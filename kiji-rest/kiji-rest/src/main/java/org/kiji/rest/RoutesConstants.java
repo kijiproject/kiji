@@ -50,7 +50,7 @@ public final class RoutesConstants {
   /**
    * GETs a list of instances that are available.
    * <li>Path: /v1/instances/
-   * <li>Handled by: {@link InstanceResource#getInstanceList()}
+   * <li>Handled by: {@link InstancesResource#getInstanceList()}
    */
   public static final String INSTANCES_PATH = API_ENTRY_PATH + "instances";
 
@@ -60,8 +60,7 @@ public final class RoutesConstants {
    * <li>Not handled.
    */
   public static final String INSTANCE_PARAMETER = "instance";
-  public static final String INSTANCE_PATH = INSTANCES_PATH
-     + "/instance/{" + INSTANCE_PARAMETER + "}";
+  public static final String INSTANCE_PATH = INSTANCES_PATH + "/{" + INSTANCE_PARAMETER + "}";
 
   /**
    * GETs a list of tables in the specified instance.
