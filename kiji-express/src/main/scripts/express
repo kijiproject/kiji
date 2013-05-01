@@ -365,6 +365,13 @@ case ${command} in
     jar_command ${COMMAND_ARGS}
     ;;
 
+  shell)
+    shift # pop off the command
+    extract_classpath "${@}"
+    export EXPRESS_CP="${express_cp}"
+    "${bin}/express-shell" ${COMMAND_ARGS}
+    exit $?
+    ;;
   *)
     echo "Unknown command: ${command}"
     echo "Try:"
