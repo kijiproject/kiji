@@ -19,12 +19,10 @@
 
 package org.kiji.rest.resources;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
@@ -32,7 +30,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.yammer.metrics.annotation.Timed;
 
-import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiURI;
 
 /**
