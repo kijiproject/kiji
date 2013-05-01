@@ -21,20 +21,21 @@ package org.kiji.rest;
 
 import java.io.IOException;
 import java.util.List;
-
-import com.google.common.collect.Lists;
-import com.yammer.dropwizard.Service;
-import com.yammer.dropwizard.config.Bootstrap;
-import com.yammer.dropwizard.config.Environment;
+import java.util.Set;
 
 import org.kiji.rest.health.InstanceHealthCheck;
 import org.kiji.rest.resources.InstanceResource;
 import org.kiji.rest.resources.KijiRESTResource;
+import org.kiji.rest.resources.RowResource;
 import org.kiji.rest.resources.RowsResource;
-import org.kiji.rest.resources.ScanResource;
 import org.kiji.rest.resources.TableResource;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiURI;
+
+import com.google.common.collect.Sets;
+import com.yammer.dropwizard.Service;
+import com.yammer.dropwizard.config.Bootstrap;
+import com.yammer.dropwizard.config.Environment;
 
 /**
  * Service to provide REST access to a list of Kiji instances.
@@ -66,7 +67,7 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
       throws IOException {
     final List<String> instanceStrings = configuration.getInstances();
 
-    final List<KijiURI> instances = Lists.newArrayList();
+    final Set<KijiURI> instances = Sets.newHashSet();
 
     // Load health checks for the visible instances.
     final KijiURI clusterURI = KijiURI.newBuilder(configuration.getClusterURI()).build();
@@ -83,7 +84,7 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
     environment.addResource(new KijiRESTResource());
     environment.addResource(new InstanceResource(clusterURI, instances));
     environment.addResource(new TableResource(clusterURI, instances));
-    environment.addResource(new ScanResource(clusterURI, instances));
     environment.addResource(new RowsResource(clusterURI, instances));
+    environment.addResource(new RowResource(clusterURI, instances));
   }
 }

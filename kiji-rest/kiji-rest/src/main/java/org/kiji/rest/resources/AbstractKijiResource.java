@@ -21,6 +21,10 @@ package org.kiji.rest.resources;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response.Status;
 
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiTable;
@@ -31,7 +35,7 @@ import org.kiji.schema.KijiURI;
  */
 public abstract class AbstractKijiResource {
   private final KijiURI mCluster;
-  private final List<KijiURI> mInstances;
+  private final Set<KijiURI> mInstances;
 
   /**
    * Construct the AbstractKijiResource with a partially constructed URI for
@@ -40,7 +44,7 @@ public abstract class AbstractKijiResource {
    * @param cluster KijiURI in which these instances are contained.
    * @param instances The list of accessible instances.
    */
-  public AbstractKijiResource(KijiURI cluster, List<KijiURI> instances) {
+  public AbstractKijiResource(KijiURI cluster, Set<KijiURI> instances) {
     super();
     mCluster = cluster;
     mInstances = instances;
@@ -52,20 +56,22 @@ public abstract class AbstractKijiResource {
   }
 
   /** @return list of instances associated with this resource. */
-  protected List<KijiURI> getInstances() {
-    return Collections.unmodifiableList(mInstances);
+  protected Set<KijiURI> getInstances() {
+    return Collections.unmodifiableSet(mInstances);
   }
 
   /**
    * Gets a Kiji object for the specified instance.
    * @param instance of the Kiji to request.
    * @return Kiji object
-   * @throws IOException if there is an error.
+   * @throws WebApplicationException if there is an error getting the instance OR
+   *    if the instance requested is unavailable for handling via REST.
    */
   protected Kiji getKiji(String instance) throws IOException {
     final KijiURI kijiURI = KijiURI.newBuilder(getCluster()).withInstanceName(instance).build();
     if (!getInstances().contains(kijiURI)) {
-      throw new IOException("Instance unavailable");
+      throw new WebApplicationException(new IOException("Instance " + instance + " unavailable!"),
+          Status.FORBIDDEN);
     }
     final Kiji kiji = Kiji.Factory.open(kijiURI);
     // TODO Consider using a pool here.

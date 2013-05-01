@@ -21,16 +21,23 @@ package org.kiji.rest.resources;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+
+import org.kiji.rest.RoutesConstants;
+import org.kiji.rest.core.ContentReturnable;
+import org.kiji.rest.core.ElementReturnable;
+import org.kiji.rest.core.Returnable;
+import org.kiji.schema.KijiURI;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.yammer.metrics.annotation.Timed;
-
-import org.kiji.schema.KijiURI;
 
 /**
  * This REST resource interacts with Kiji instances.
@@ -39,7 +46,7 @@ import org.kiji.schema.KijiURI;
  * <li>/v1/instances/
  * <li>/v1/instances/&lt;instance&gt;
  */
-@Path(ResourceConstants.INSTANCES_PATH)
+@Path(RoutesConstants.INSTANCE_PATH)
 @Produces(MediaType.APPLICATION_JSON)
 public class InstanceResource extends AbstractKijiResource {
   /**
@@ -48,8 +55,33 @@ public class InstanceResource extends AbstractKijiResource {
    * @param cluster KijiURI in which these instances are contained.
    * @param instances The list of accessible instances.
    */
-  public InstanceResource(KijiURI cluster, List<KijiURI> instances) {
+  public InstanceResource(KijiURI cluster, Set<KijiURI> instances) {
     super(cluster, instances);
+  }
+
+  /**
+   * Called when the terminal resource element is the singleton 'version'.
+   * @return a Returnable message indicating the version.
+   */
+  @Path("version")
+  @GET
+  @Timed
+  public Returnable version() {
+    ContentReturnable version = new ContentReturnable("Version");
+    version.add(new ElementReturnable("0.0.1"));
+    return version;
+  }
+
+  /**
+   * Called when the terminal resource element is the instance name.
+   * @return a Returnable message indicating the landing point.
+   */
+  @GET
+  @Timed
+  public Returnable instance(final @PathParam(RoutesConstants.INSTANCE_PATH) String instance) {
+    ContentReturnable message = new ContentReturnable("instance: " + instance);
+    message.add(new ElementReturnable("0.0.1"));
+    return message;
   }
 
   /**

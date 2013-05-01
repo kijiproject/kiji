@@ -17,107 +17,87 @@
  * limitations under the License.
  */
 
-package org.kiji.rest.resources;
+package org.kiji.rest;
 
 /**
- * Utility class containing constants relevant to resource paths.
+ * Interface that defines the various routes that are used
+ * in the API.
  */
-public final class ResourceConstants {
+public final class RoutesConstants {
   /** The namespace for api. */
-  private static final String API_ENTRY_POINT = "/v1/";
-
-  /** The namespace for instances. */
-  private static final String INSTANCES = "instances/";
-
-  /** The namespace for tables. */
-  private static final String TABLES = "tables/";
-
-  /** The namespace for scanners. */
-  private static final String SCANS = "scans/";
-
-  /** The namespace for rows. */
-  private static final String ROWS = "rows/";
+  private static final String API_VERSION = "/v1/";
 
   /**
    * GETs a message containing a list of the available sub-resources.
    * <li>Path: /v1/
    * <li>Handled by: {@link KijiRESTResource#getRoot}
    */
-  public static final String API_ENTRY_PATH = API_ENTRY_POINT;
+  public static final String API_ENTRY_PATH = API_VERSION;
 
   /**
    * GETs version information.
    * <li>Path: /v1/version
    * <li>Handled by: {@link KijiRESTResource#getVersion}
    */
-  public static final String VERSION_ENDPOINT = "version";
+  public static final String VERSION_ENDPOINT = API_VERSION + "version";
 
   /**
    * GETs a list of instances that are available.
    * <li>Path: /v1/instances/
    * <li>Handled by: {@link InstanceResource#getInstanceList()}
    */
-  public static final String INSTANCES_PATH =
-      API_ENTRY_PATH + INSTANCES;
-
+  public static final String INSTANCES_PATH = API_ENTRY_PATH + "instances";
+  
   /**
    * GETs instance level metadata.
-   * <li>Path: /v1/instances/{instance}/
+   * <li>Path: /v1/instances/{instance}
    * <li>Not handled.
    */
   public static final String INSTANCE_PARAMETER = "instance";
-  public static final String INSTANCE_SUBPATH = "{" + INSTANCE_PARAMETER + "}/";
-
+  public static final String INSTANCE_PATH = INSTANCES_PATH +
+      "/instance/{" + INSTANCE_PARAMETER + "}";
+  
   /**
    * GETs a list of tables in the specified instance.
-   * <li>Path: /v1/instances/{instance}/tables/
+   * <li>Path: /v1/instances/{instance}/tables
    * <li>Handled by {@link TableResource#getTableList}
    */
-  public static final String TABLES_PATH =
-      INSTANCES_PATH  + INSTANCE_SUBPATH + TABLES;
-
+  public static final String TABLES_PATH = INSTANCE_PATH + "/tables";
+  
   /**
    * GETs the layout of the specified table.
-   * <li>Path: /v1/instances/{instance}/tables/{table}/
+   * <li>Path: /v1/instances/{instance}/tables/{table}
    * <li>Handled by: {@link TableResource#getTable}
    */
   public static final String TABLE_PARAMETER = "table";
-  public static final String TABLE_SUBPATH = "{" + TABLE_PARAMETER + "}/";
-
+  public static final String TABLE_PATH = TABLES_PATH + "/{" + TABLE_PARAMETER + "}";
+  
   /**
    * GETs a hexadecimal EntityId using the components specified in the query.
    * <li>Path: /v1/instances/{instance}/tables/{table}/entityId
    * <li>Handled by: {@link TableResource#getEntityId}
    */
-  public static final String ENTITY_ID_ENDPOINT = "entityId";
-
-  /**
-   * GETs a list of rows returned by the scanner.
-   * <li>Path: /v1/instances/{instance}/tables/{table}/scans/
-   * Handled by: {@link ScanResource#getScans}
-   */
-  public static final String SCANS_PATH =
-      TABLES_PATH + TABLE_SUBPATH + SCANS;
+  public static final String ENTITY_ID_PATH = TABLE_PATH + "/entityId";
 
   /**
    * Handles rows resources.
    * <li>Path: /v1/instances/{instance}/tables/{table}/rows/
    * <li>Handled by: {@link RowsResource}
    */
-  public static final String ROWS_PATH =
-      TABLES_PATH + TABLE_SUBPATH + ROWS;
-
+  public static final String ROWS_PATH = TABLE_PATH + "/rows";
+  public static final String HEX_ENTITY_ID_PARAMETER = "hexEntityId";
+  
   /**
    * GETs and PUTs a Kiji row specified by the hex entity id.
    * <li>Path: v1/instances/{instance}/tables/{table}/rows/<hexEntityId>
    * <li>Handled by: {@link RowsResource#getRowByHexEntityId}
    */
   /** Parameter for the hexEntityId of the row. */
-  public static final String HEX_ENTITY_ID_PARAMETER = "hexEntityId";
+  public static final String ROW_PATH = ROWS_PATH + "/{" + HEX_ENTITY_ID_PARAMETER + "}"; 
+  
   public static final String HEX_ENTITY_ID_SUBPATH = "{" + HEX_ENTITY_ID_PARAMETER + "}/";
-
-  /** Utility class cannot be instantiated. */
-  private ResourceConstants() {}
+  
 }
+
 
 

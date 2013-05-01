@@ -20,8 +20,9 @@
 package org.kiji.rest.resources;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -30,11 +31,12 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
-import com.google.common.collect.Maps;
-import com.yammer.metrics.annotation.Timed;
-
+import org.kiji.rest.RoutesConstants;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiURI;
+
+import com.google.common.collect.Maps;
+import com.yammer.metrics.annotation.Timed;
 
 /**
  * This REST resource interacts with Kiji tables.
@@ -44,7 +46,7 @@ import org.kiji.schema.KijiURI;
  * <li>/v1/instances/&lt;instance&gt/tables/&lt;table&gt;
  * <li>/v1/instances/&lt;instance&gt/tables/&lt;table&gt;/entityId
  */
-@Path(ResourceConstants.TABLES_PATH)
+@Path(RoutesConstants.TABLES_PATH)
 @Produces(MediaType.APPLICATION_JSON)
 public class TableResource extends AbstractKijiResource {
   /**
@@ -53,7 +55,7 @@ public class TableResource extends AbstractKijiResource {
    * @param cluster KijiURI in which these instances are contained.
    * @param instances The list of accessible instances.
    */
-  public TableResource(KijiURI cluster, List<KijiURI> instances) {
+  public TableResource(KijiURI cluster, Set<KijiURI> instances) {
     super(cluster, instances);
   }
 
@@ -67,7 +69,7 @@ public class TableResource extends AbstractKijiResource {
   @GET
   @Timed
   public Map<String, Object> getTableList(
-      @PathParam(ResourceConstants.INSTANCE_PARAMETER) String instance
+      @PathParam(RoutesConstants.INSTANCE_PARAMETER) String instance
   ) throws IOException {
     final Map<String, Object> outputMap = Maps.newTreeMap();
     final Kiji kiji = getKiji(instance);
@@ -85,12 +87,12 @@ public class TableResource extends AbstractKijiResource {
    * @return a message containing the layout of the specified table
    * @throws IOException if the instance or table is unavailable.
    */
-  @Path(ResourceConstants.TABLE_SUBPATH)
+  @Path(RoutesConstants.TABLE_PATH)
   @GET
   @Timed
   public String getTable(
-      @PathParam(ResourceConstants.INSTANCE_PARAMETER) String instance,
-      @PathParam(ResourceConstants.TABLE_PARAMETER) String table
+      @PathParam(RoutesConstants.INSTANCE_PARAMETER) String instance,
+      @PathParam(RoutesConstants.TABLE_PARAMETER) String table
   ) throws IOException {
     final Kiji kiji = getKiji(instance);
     final String layout = kiji
@@ -111,12 +113,12 @@ public class TableResource extends AbstractKijiResource {
    * @return a message containing a list of available sub-resources.
    * @throws IOException if the instance or table is unavailable.
    */
-  @Path(ResourceConstants.TABLE_SUBPATH + ResourceConstants.ENTITY_ID_ENDPOINT)
+  @Path(RoutesConstants.ENTITY_ID_PATH)
   @GET
   @Timed
   public String getEntityId(
-      @PathParam(ResourceConstants.INSTANCE_PARAMETER) String instance,
-      @PathParam(ResourceConstants.TABLE_PARAMETER) String table,
+      @PathParam(RoutesConstants.INSTANCE_PARAMETER) String instance,
+      @PathParam(RoutesConstants.TABLE_PARAMETER) String table,
       @Context UriInfo uriInfo
   ) throws IOException {
     return "getEntityId() called with query parameters:" + uriInfo.getQueryParameters().toString();

@@ -21,6 +21,8 @@ package org.kiji.rest.resources;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -30,9 +32,10 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
 
-import com.yammer.metrics.annotation.Timed;
-
+import org.kiji.rest.RoutesConstants;
 import org.kiji.schema.KijiURI;
+
+import com.yammer.metrics.annotation.Timed;
 
 /**
  * This REST resource interacts with Kiji tables.
@@ -40,7 +43,7 @@ import org.kiji.schema.KijiURI;
  * This resource is served for requests using the resource identifier:
  * <li>/v1/instances/&lt;instance&gt/tables/&lt;table&gt;/rows
  */
-@Path(ResourceConstants.ROWS_PATH)
+@Path(RoutesConstants.ROWS_PATH)
 @Produces(MediaType.APPLICATION_JSON)
 public class RowsResource extends AbstractKijiResource {
   /**
@@ -49,7 +52,7 @@ public class RowsResource extends AbstractKijiResource {
    * @param cluster KijiURI in which these instances are contained.
    * @param instances The list of accessible instances.
    */
-  public RowsResource(KijiURI cluster, List<KijiURI> instances) {
+  public RowsResource(KijiURI cluster, Set<KijiURI> instances) {
     super(cluster, instances);
   }
 
@@ -63,13 +66,13 @@ public class RowsResource extends AbstractKijiResource {
    * @return a message containing the row in question
    * @throws java.io.IOException if the instance or table is unavailable.
    */
-  @Path(ResourceConstants.HEX_ENTITY_ID_SUBPATH)
+  @Path(RoutesConstants.HEX_ENTITY_ID_SUBPATH)
   @GET
   @Timed
   public String getRowByHexEntityId(
-      @PathParam(ResourceConstants.INSTANCE_PARAMETER) String instance,
-      @PathParam(ResourceConstants.TABLE_PARAMETER) String table,
-      @PathParam(ResourceConstants.HEX_ENTITY_ID_PARAMETER) String hexEntityId,
+      @PathParam(RoutesConstants.INSTANCE_PARAMETER) String instance,
+      @PathParam(RoutesConstants.TABLE_PARAMETER) String table,
+      @PathParam(RoutesConstants.HEX_ENTITY_ID_PARAMETER) String hexEntityId,
       @Context UriInfo uriInfo
   ) throws IOException {
     return hexEntityId;
@@ -85,13 +88,13 @@ public class RowsResource extends AbstractKijiResource {
    * @return a message containing the row in question
    * @throws java.io.IOException if the instance or table is unavailable.
    */
-  @Path(ResourceConstants.HEX_ENTITY_ID_SUBPATH)
+  @Path(RoutesConstants.HEX_ENTITY_ID_SUBPATH)
   @PUT
   @Timed
   public String putRowByHexEntityId(
-      @PathParam(ResourceConstants.INSTANCE_PARAMETER) String instance,
-      @PathParam(ResourceConstants.TABLE_PARAMETER) String table,
-      @PathParam(ResourceConstants.HEX_ENTITY_ID_PARAMETER) String hexEntityId,
+      @PathParam(RoutesConstants.INSTANCE_PARAMETER) String instance,
+      @PathParam(RoutesConstants.TABLE_PARAMETER) String table,
+      @PathParam(RoutesConstants.HEX_ENTITY_ID_PARAMETER) String hexEntityId,
       @Context UriInfo uriInfo
   ) throws IOException {
     return hexEntityId;

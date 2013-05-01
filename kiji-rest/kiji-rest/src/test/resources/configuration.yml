@@ -1,4 +1,2 @@
-{
-    "cluster": "kiji://localhost:2181/",
-    "instances": ["default"]
-}
+cluster: "kiji://localhost:2181/" #The base cluster URI
+instances: ["default", "shashir", "dota2"] #Visible instances
