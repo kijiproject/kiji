@@ -35,7 +35,6 @@ import javax.ws.rs.core.MediaType;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.yammer.metrics.annotation.Timed;
-import com.yammer.metrics.core.HealthCheck.Result;
 
 import org.apache.hadoop.util.StringUtils;
 

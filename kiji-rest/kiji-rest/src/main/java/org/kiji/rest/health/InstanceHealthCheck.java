@@ -19,12 +19,9 @@
 
 package org.kiji.rest.health;
 
-import java.io.IOException;
-
 import com.yammer.metrics.core.HealthCheck;
 
 import org.kiji.schema.Kiji;
-import org.kiji.schema.KijiNotInstalledException;
 import org.kiji.schema.KijiURI;
 
 /**
@@ -49,7 +46,6 @@ public class InstanceHealthCheck extends HealthCheck {
    * otherwise an exception is trickled to the REST client.
    *
    * @return Healthy result upon successful open/release of instance.
-   * @throws IOException if there is an error in checking for the instance.
    */
   @Override
   protected final Result check() {

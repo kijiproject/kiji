@@ -57,8 +57,9 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
     bootstrap.setName("kiji-rest");
   }
 
-  /** {@inheritDoc} 
-   * @throws IOException */
+  /** {@inheritDoc}
+   * @throws IOException when instance in configuration can not be opened and closed.
+   */
   @Override
   public final void run(final KijiRESTConfiguration configuration, final Environment environment)
       throws IOException {
