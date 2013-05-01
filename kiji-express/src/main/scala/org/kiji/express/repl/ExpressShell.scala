@@ -43,7 +43,9 @@ import org.kiji.express.Resources._
 @ApiStability.Experimental
 private[express] object ExpressShell extends MainGenericRunner {
 
-  // An instance of the Scala REPL the user will interact with.
+  /**
+   * An instance of the Scala REPL the user will interact with.
+   */
   private[express] var expressREPL: Option[ILoop] = None
 
 
@@ -69,7 +71,7 @@ private[express] object ExpressShell extends MainGenericRunner {
     // Process command line arguments into a settings object, and use that to start the REPL.
     val command = new GenericRunnerCommand(args.toList, (x: String) => errorFn(x))
     import command.settings
-    expressREPL = Some(new ILoop)
+    expressREPL = Some(new ExpressILoop)
     expressREPL.get.process(settings)
   }
 
