@@ -34,23 +34,23 @@ import org.kiji.schema.layout.KijiTableLayouts
  */
 class EntityIdSuite extends KijiSuite {
   /** Table layout to use for tests. */
-  val tableLayoutFormatted = KijiTableLayout.newLayout(
+  val formattedEntityIdLayout = KijiTableLayout.newLayout(
       KijiTableLayouts.getLayout(KijiTableLayouts.FORMATTED_RKF))
   // Create a table to use for testing
-  val tableUriFormatted: String = doAndRelease(makeTestKijiTable(tableLayoutFormatted)) {
+  val formattedTableUri: String = doAndRelease(makeTestKijiTable(formattedEntityIdLayout)) {
     table: KijiTable => table.getURI.toString
   }
 
-  val tableLayoutHashed = KijiTableLayout.newLayout(
+  val hashedEntityIdLayout = KijiTableLayout.newLayout(
     KijiTableLayouts.getLayout(KijiTableLayouts.HASHED_FORMATTED_RKF))
   // Create a table to use for testing
-  val tableUriHashed: String = doAndRelease(makeTestKijiTable(tableLayoutHashed)) {
+  val hashedTableUri: String = doAndRelease(makeTestKijiTable(hashedEntityIdLayout)) {
     table: KijiTable => table.getURI.toString
   }
 
   test("Create an Express EntityId from a Kiji EntityId and vice versa") {
-    val eid = EntityId(tableUriFormatted)("test", "1", "2", 1, 7L)
-    val entityId = eid.getJavaEntityId()
+    val eid = EntityId(formattedTableUri)("test", "1", "2", 1, 7L)
+    val entityId = eid.toJavaEntityId()
     val expected: java.util.List[java.lang.Object] = List[java.lang.Object](
         "test",
         "1",
@@ -60,20 +60,20 @@ class EntityIdSuite extends KijiSuite {
         .asJava
     assert(expected == entityId.getComponents)
 
-    val tableUri: KijiURI = KijiURI.newBuilder(tableUriFormatted).build()
+    val tableUri: KijiURI = KijiURI.newBuilder(formattedTableUri).build()
     val recreate = EntityId(tableUri, entityId)
     assert(eid == recreate)
     assert(recreate(0) == "test")
   }
 
   test("Test equality between EntityIds") {
-    val eid1: EntityId = EntityId(tableUriHashed)("test")
-    val eid2: EntityId = EntityId(tableUriHashed)("test")
+    val eid1: EntityId = EntityId(hashedTableUri)("test")
+    val eid2: EntityId = EntityId(hashedTableUri)("test")
     assert(eid1 == eid2)
     // get the Java EntityId
-    val jEntityId: JEntityId = eid1.getJavaEntityId()
+    val jEntityId: JEntityId = eid1.toJavaEntityId()
 
-    val tableUri: KijiURI = KijiURI.newBuilder(tableUriHashed).build()
+    val tableUri: KijiURI = KijiURI.newBuilder(hashedTableUri).build()
     // this is how it would look if it were read from a table
     val tableEid = EntityId(tableUri, jEntityId)
 
@@ -81,27 +81,34 @@ class EntityIdSuite extends KijiSuite {
     assert(tableEid == eid1)
     assert(eid1 == tableEid)
 
-    val otherEid = EntityId(tableUriHashed)("other")
+    val otherEid = EntityId(hashedTableUri)("other")
 
     assert(otherEid != eid1)
     assert(otherEid != tableEid)
 
-    val tableEid2 = EntityId(tableUri, eid2.getJavaEntityId())
+    val tableEid2 = EntityId(tableUri, eid2.toJavaEntityId())
     assert(tableEid == tableEid2)
   }
 
-  test("EntityIds from Java EntityIds are created using the right API") {
-    val eidFactory: EntityIdFactory = EntityIdFactory.getFactory(tableLayoutFormatted)
-    val components: java.util.List[java.lang.Object] = List[java.lang.Object](
-      "test",
-      "1",
-      "2",
-      new java.lang.Integer(1),
-      new java.lang.Long(7))
-      .asJava
-    val jeid: JEntityId = eidFactory.getEntityId(components)
-    intercept[IllegalArgumentException]{
-      EntityId(tableUriFormatted)(jeid)
-    }
+  test("Test creating a hashed EntityId from a JEntityId and converting it back") {
+    val entityId: EntityId = EntityId(hashedTableUri)("test")
+    val jEntityId: JEntityId = entityId.toJavaEntityId()
+    val uri: KijiURI = KijiURI.newBuilder(hashedTableUri).build()
+    val reconstitutedEntityId: EntityId = EntityId(uri, jEntityId)
+    val reconstitutedJEntityId: JEntityId = reconstitutedEntityId.toJavaEntityId()
+
+    assert(entityId === reconstitutedEntityId)
+    assert(jEntityId === reconstitutedJEntityId)
+  }
+
+  test("Test creating an unhashed EntityId from a JEntityId and converting it back") {
+    val entityId: EntityId = EntityId(formattedTableUri)("test")
+    val jEntityId: JEntityId = entityId.toJavaEntityId()
+    val uri: KijiURI = KijiURI.newBuilder(formattedTableUri).build()
+    val reconstitutedEntityId: EntityId = EntityId(uri, jEntityId)
+    val reconstitutedJEntityId: JEntityId = reconstitutedEntityId.toJavaEntityId()
+
+    assert(entityId === reconstitutedEntityId)
+    assert(jEntityId === reconstitutedJEntityId)
   }
 }

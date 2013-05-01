@@ -256,7 +256,7 @@ object KijiSource {
           // Write the timeline to the table.
           cells.map { cell: Cell[Any] =>
             writer.put(
-                entityId.getJavaEntityId(),
+                entityId.toJavaEntityId(),
                 cell.family,
                 cell.qualifier,
                 cell.version,

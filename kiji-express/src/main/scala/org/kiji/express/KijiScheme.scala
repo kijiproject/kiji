@@ -494,7 +494,7 @@ private[express] object KijiScheme {
               val kijiCol = new KijiColumnName(family, qualifier)
               val value = output.getObject(fieldName.toString())
               writer.put(
-                  entityId.getJavaEntityId(),
+                  entityId.toJavaEntityId(),
                   family,
                   qualifier,
                   timestamp,
