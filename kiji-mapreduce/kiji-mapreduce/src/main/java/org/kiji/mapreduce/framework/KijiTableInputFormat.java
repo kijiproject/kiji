@@ -128,7 +128,7 @@ public final class KijiTableInputFormat
               region.getLocations().isEmpty() ? null : region.getLocations().iterator().next();
             final TableSplit tableSplit =
               new TableSplit(htableName, splitStartKey, splitEndKey, location);
-            splits.add(new KijiTableSplit(tableSplit, splitStartKey));
+            splits.add(new KijiTableSplit(tableSplit));
           }
         }
         return splits;

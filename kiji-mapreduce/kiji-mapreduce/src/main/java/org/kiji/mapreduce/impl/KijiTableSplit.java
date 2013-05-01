@@ -19,16 +19,9 @@
 
 package org.kiji.mapreduce.impl;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.mapreduce.TableSplit;
-import org.apache.hadoop.hbase.util.Bytes;
 
 import org.kiji.annotations.ApiAudience;
 
@@ -38,7 +31,6 @@ import org.kiji.annotations.ApiAudience;
  */
 @ApiAudience.Private
 public final class KijiTableSplit extends TableSplit {
-  private byte[] mRegionStartKey;
   private long mSplitSize; // lazily calculated and populated via getLength().
 
   /** The default constructor. */
@@ -49,25 +41,10 @@ public final class KijiTableSplit extends TableSplit {
   /**
    * Create a new KijiTableSplit instance from an HBase TableSplit.
    * @param tableSplit the HBase TableSplit to clone.
-   * @param regionStartKey the starting key of the region associated with this split.
    */
-  public KijiTableSplit(TableSplit tableSplit, byte[] regionStartKey) {
+  public KijiTableSplit(TableSplit tableSplit) {
     super(tableSplit.getTableName(), tableSplit.getStartRow(), tableSplit.getEndRow(),
         tableSplit.getRegionLocation());
-
-    checkNotNull(regionStartKey);
-    mRegionStartKey = regionStartKey;
-  }
-
-  /**
-   * Returns the start key of the region associated with this split.  If this split
-   * is the first in the total scan, this may differ from the value returned by
-   * getStartRow().
-   *
-   * @return the start key of the region associated with this split.
-   */
-  public byte[] getRegionStartKey() {
-    return mRegionStartKey;
   }
 
   /**
@@ -98,19 +75,5 @@ public final class KijiTableSplit extends TableSplit {
     }
 
     return mSplitSize;
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public void readFields(DataInput in) throws IOException {
-    super.readFields(in); // read all superclass fields.
-    mRegionStartKey = Bytes.readByteArray(in);
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public void write(DataOutput out) throws IOException {
-    super.write(out); // write all superclass fields.
-    Bytes.writeByteArray(out, mRegionStartKey);
   }
 }
