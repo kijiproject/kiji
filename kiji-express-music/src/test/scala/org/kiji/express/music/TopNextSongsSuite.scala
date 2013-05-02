@@ -74,7 +74,7 @@ class TopNextSongsSuite extends KijiSuite {
   def validateTest(topNextSongs: Buffer[(EntityId, KijiSlice[TopSongs])]) {
     val topSongForEachSong = topNextSongs
         .map { case(entityId, slice) =>
-            (entityId.getJavaEntityId().getComponentByIndex(0).toString,slice) }
+            (entityId(0).toString, slice) }
         .map { case(id, slice) => (id, slice.getFirstValue().getTopSongs) }
 
     topSongForEachSong.foreach {

@@ -85,7 +85,7 @@ class SongRecommenderSuite extends KijiSuite {
   def validateTest(recommended: Buffer[(EntityId, KijiSlice[String])]) {
     val recommendedSongsForEachUser = recommended
       .map { case(entityId, slice) =>
-        (entityId.getJavaEntityId().getComponentByIndex(0).toString, slice) }
+        (entityId(0).toString, slice) }
       .map { case(id, slice) => (id, slice.getFirstValue()) }
 
     recommendedSongsForEachUser.foreach {
