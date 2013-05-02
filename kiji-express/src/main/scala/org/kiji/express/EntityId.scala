@@ -55,7 +55,7 @@ sealed trait EntityId extends Product {
    *
    * @return URI of the table this EntityId is associated with.
    */
-  def tableUri: KijiURI
+  def tableUri: String
 
   /**
    * The hbase encoded version of this EntityId.
@@ -101,7 +101,7 @@ sealed trait EntityId extends Product {
  * @param components that compose this EntityId.
  */
 private[express] final class MaterializableEntityId(
-    override val tableUri: KijiURI,
+    override val tableUri: String,
     private[express] override val encoded: Array[Byte],
     private[express] val components: Seq[Any])
     extends EntityId {
@@ -125,7 +125,7 @@ private[express] final class MaterializableEntityId(
  * @param encoded byte array representation of this EntityId.
  */
 private[express] final class HashedEntityId(
-    override val tableUri: KijiURI,
+    override val tableUri: String,
     private[express] override val encoded: Array[Byte])
     extends EntityId {
   private val materializationError: String = ("Components for this entity Id were not materialized."
@@ -152,7 +152,7 @@ object EntityId {
    * @param entityId is the Java [[org.kiji.schema.EntityId]].
    * @return the Express representation of the Java EntityId.
    */
-  private[express] def apply(tableUri: KijiURI, entityId: JEntityId): EntityId = {
+  private[express] def apply(tableUri: String, entityId: JEntityId): EntityId = {
     try {
       val components: Seq[Any] = entityId
           .getComponents
@@ -180,10 +180,10 @@ object EntityId {
    * Create an Express representation of EntityId from the given list of components.
    *
    * @param tableUri of the table this EntityId belongs to.
-   * @param components that compose this EntityId.
+   * @param components of the EntityId.
    * @return a new EntityId addressing a row in the Kiji table specified.
    */
-  def fromComponents(tableUri: KijiURI, components: Seq[Any]): EntityId = {
+  def fromComponents(tableUri: String, components: Seq[Any]): EntityId = {
     val eidFactory = EntityIdFactoryCache.getFactory(tableUri)
     val javaComponents: java.util.List[Object] = components
         .map { elem => KijiScheme.convertScalaTypes(elem, null) }
@@ -196,29 +196,14 @@ object EntityId {
   }
 
   /**
-   * Create an Express EntityId from the given components.
+   * Create an Express representation of EntityId from the given list of components.
    *
    * @param tableUri of the table this EntityId belongs to.
    * @param components of the EntityId.
    * @return a new EntityId addressing a row in the Kiji table specified.
    */
-  def fromComponents(tableUri: String, components: Seq[Any]): EntityId = {
-    val uri: KijiURI = KijiURI
-        .newBuilder(tableUri)
-        .build()
-
-    fromComponents(uri, components)
-  }
-
-  /**
-   * Create an Express representation of EntityId from the given list of components.
-   *
-   * @param tableUri of the table this EntityId belongs to.
-   * @param components that compose this EntityId.
-   * @return a new EntityId addressing a row in the Kiji table specified.
-   */
-  def apply(tableUri: KijiURI)(components: Any*): EntityId = {
-    fromComponents(tableUri, components.toSeq)
+  def fromComponents(tableUri: KijiURI, components: Seq[Any]): EntityId = {
+    fromComponents(tableUri.toString(), components)
   }
 
   /**
@@ -230,5 +215,16 @@ object EntityId {
    */
   def apply(tableUri: String)(components: Any*): EntityId = {
     fromComponents(tableUri, components.toSeq)
+  }
+
+  /**
+   * Create an Express EntityId from the given components.
+   *
+   * @param tableUri of the table this EntityId belongs to.
+   * @param components that compose this EntityId.
+   * @return a new EntityId addressing a row in the Kiji table specified.
+   */
+  def apply(tableUri: KijiURI)(components: Any*): EntityId = {
+    fromComponents(tableUri.toString(), components.toSeq)
   }
 }

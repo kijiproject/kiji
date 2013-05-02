@@ -60,8 +60,7 @@ class EntityIdSuite extends KijiSuite {
         .asJava
     assert(expected == entityId.getComponents)
 
-    val tableUri: KijiURI = KijiURI.newBuilder(formattedTableUri).build()
-    val recreate = EntityId(tableUri, entityId)
+    val recreate = EntityId(formattedTableUri, entityId)
     assert(eid == recreate)
     assert(recreate(0) == "test")
   }
@@ -73,9 +72,8 @@ class EntityIdSuite extends KijiSuite {
     // get the Java EntityId
     val jEntityId: JEntityId = eid1.toJavaEntityId()
 
-    val tableUri: KijiURI = KijiURI.newBuilder(hashedTableUri).build()
     // this is how it would look if it were read from a table
-    val tableEid = EntityId(tableUri, jEntityId)
+    val tableEid = EntityId(hashedTableUri, jEntityId)
 
     // ensure equals works both ways
     assert(tableEid == eid1)
@@ -86,15 +84,14 @@ class EntityIdSuite extends KijiSuite {
     assert(otherEid != eid1)
     assert(otherEid != tableEid)
 
-    val tableEid2 = EntityId(tableUri, eid2.toJavaEntityId())
+    val tableEid2 = EntityId(hashedTableUri, eid2.toJavaEntityId())
     assert(tableEid == tableEid2)
   }
 
   test("Test creating a hashed EntityId from a JEntityId and converting it back") {
     val entityId: EntityId = EntityId(hashedTableUri)("test")
     val jEntityId: JEntityId = entityId.toJavaEntityId()
-    val uri: KijiURI = KijiURI.newBuilder(hashedTableUri).build()
-    val reconstitutedEntityId: EntityId = EntityId(uri, jEntityId)
+    val reconstitutedEntityId: EntityId = EntityId(hashedTableUri, jEntityId)
     val reconstitutedJEntityId: JEntityId = reconstitutedEntityId.toJavaEntityId()
 
     assert(entityId === reconstitutedEntityId)
@@ -104,8 +101,7 @@ class EntityIdSuite extends KijiSuite {
   test("Test creating an unhashed EntityId from a JEntityId and converting it back") {
     val entityId: EntityId = EntityId(formattedTableUri)("test")
     val jEntityId: JEntityId = entityId.toJavaEntityId()
-    val uri: KijiURI = KijiURI.newBuilder(formattedTableUri).build()
-    val reconstitutedEntityId: EntityId = EntityId(uri, jEntityId)
+    val reconstitutedEntityId: EntityId = EntityId(formattedTableUri, jEntityId)
     val reconstitutedJEntityId: JEntityId = reconstitutedEntityId.toJavaEntityId()
 
     assert(entityId === reconstitutedEntityId)

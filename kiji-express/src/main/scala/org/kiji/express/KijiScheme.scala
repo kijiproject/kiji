@@ -345,7 +345,7 @@ private[express] object KijiScheme {
     val iterator = fields.iterator().asScala
 
     // Add the row's EntityId to the tuple.
-    result.add(EntityId(tableUri, row.getEntityId()))
+    result.add(EntityId(tableUri.toString(), row.getEntityId()))
 
     // Get rid of the entity id and timestamp fields, then map over each field to add a column
     // to the tuple.
