@@ -35,6 +35,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.mapreduce.avro.generated.JobHistoryEntry;
 import org.kiji.mapreduce.framework.JobHistoryKijiTable;
 import org.kiji.mapreduce.framework.KijiConfKeys;
 import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
@@ -168,23 +169,15 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
     LOG.info("Job was run with id: " + jobId);
 
     // Retrieve the recorded values and sanity test them.
-    KijiRowData jobRecord = jobHistory.getJobDetails(jobId);
-    assertTrue(jobRecord.containsColumn("info", "jobName"));
-    assertEquals(jobRecord.getMostRecentValue("info", "jobName").toString(), jobName);
-    assertTrue(jobRecord.containsColumn("info", "jobId"));
-    assertEquals(jobRecord.getMostRecentValue("info", "jobId").toString(), jobId);
-
-    assertTrue(jobRecord.containsColumn("info", "startTime"));
-    assertTrue(jobRecord.containsColumn("info", "endTime"));
-    assertTrue(jobRecord.<Long>getMostRecentValue("info", "startTime")
-        < jobRecord.<Long>getMostRecentValue("info", "endTime"));
-    assertTrue(jobRecord.containsColumn("info", "jobEndStatus"));
-    assertEquals(jobRecord.getMostRecentValue("info", "jobEndStatus").toString(), "SUCCEEDED");
+    JobHistoryEntry jobEntry = jobHistory.getJobDetails(jobId);
+    assertEquals(jobEntry.getJobName(), jobName);
+    assertEquals(jobEntry.getJobId(), jobId);
+    assertTrue(jobEntry.getJobStartTime() < jobEntry.getJobEndTime());
+    assertEquals("SUCCEEDED", jobEntry.getJobEndStatus());
 
     // Check counters. We don't know the exact number of rows in the foo table, so just check if
     // it's greater than 0.
-    assertTrue(jobRecord.containsColumn("info", "counters"));
-    final String countersString = jobRecord.getMostRecentValue("info", "counters").toString();
+    final String countersString = jobEntry.getJobCounters();
     final Pattern countersPattern = Pattern.compile("PRODUCER_ROWS_PROCESSED=(\\d+)");
     final Matcher countersMatcher = countersPattern.matcher(countersString);
     assertTrue(countersMatcher.find());
@@ -192,8 +185,7 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
 
     // Test to make sure the Configuration has the correct producer class, and records the value
     // we set previously.
-    assertTrue(jobRecord.containsColumn("info", "configuration"));
-    final String configString = jobRecord.getMostRecentValue("info", "configuration").toString();
+    final String configString = jobEntry.getJobConfiguration();
     final Configuration config = new Configuration();
     config.addResource(new ByteArrayInputStream(configString.getBytes()));
     assertTrue(EmailDomainProducer.class
@@ -235,9 +227,8 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
     assertFalse(mrJob.getHadoopJob().isSuccessful());
 
     // Retrieve the job status from the history table and make sure it failed.
-    KijiRowData jobRecord = jobHistory.getJobDetails(jobId);
-    assertTrue(jobRecord.containsColumn("info", "jobEndStatus"));
-    assertEquals(jobRecord.getMostRecentValue("info", "jobEndStatus").toString(), "FAILED");
+    JobHistoryEntry jobEntry = jobHistory.getJobDetails(jobId);
+    assertEquals("FAILED", jobEntry.getJobEndStatus());
 
     ResourceUtils.closeOrLog(jobHistory);
     ResourceUtils.releaseOrLog(kiji);
@@ -275,11 +266,8 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
     // out.
     Thread.sleep(5000L);
 
-    KijiRowData jobRecord = jobHistory.getJobDetails(jobId);
-    assertTrue(jobRecord.containsColumn("info", "startTime"));
-    assertTrue(jobRecord.containsColumn("info", "endTime"));
-    assertTrue(jobRecord.<Long>getMostRecentValue("info", "startTime")
-        < jobRecord.<Long>getMostRecentValue("info", "endTime"));
+    JobHistoryEntry jobEntry = jobHistory.getJobDetails(jobId);
+    assertTrue(jobEntry.getJobStartTime() < jobEntry.getJobEndTime());
 
     ResourceUtils.closeOrLog(jobHistory);
     ResourceUtils.releaseOrLog(kiji);
@@ -341,17 +329,12 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
 
 
     // Check if the StdOut contains the job history for the first job
-    KijiRowData jobOneRecord = jobHistory.getJobDetails(jobOneId);
-    assertTrue(jobHistoryStdOut.contains(
-        jobOneRecord.getMostRecentValue("info", "jobName").toString()));
-    assertTrue(jobHistoryStdOut.contains(
-        jobOneRecord.getMostRecentValue("info", "jobId").toString()));
-    assertTrue(jobHistoryStdOut.contains(
-        (new Date((Long) jobOneRecord.getMostRecentValue("info", "startTime"))).toString()));
-    assertTrue(jobHistoryStdOut.contains(
-        (new Date((Long) jobOneRecord.getMostRecentValue("info", "endTime"))).toString()));
-    assertTrue(jobHistoryStdOut.contains(
-        jobOneRecord.getMostRecentValue("info", "jobEndStatus").toString()));
+    JobHistoryEntry jobOneEntry = jobHistory.getJobDetails(jobOneId);
+    assertTrue(jobHistoryStdOut.contains(jobOneEntry.getJobName()));
+    assertTrue(jobHistoryStdOut.contains(jobOneEntry.getJobId()));
+    assertTrue(jobHistoryStdOut.contains(new Date(jobOneEntry.getJobStartTime()).toString()));
+    assertTrue(jobHistoryStdOut.contains(new Date(jobOneEntry.getJobEndTime()).toString()));
+    assertTrue(jobHistoryStdOut.contains(jobOneEntry.getJobEndStatus()));
 
     // Run the second produce job.
     String jobTwoName = mrJobTwo.getHadoopJob().getJobName();
@@ -366,29 +349,19 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
 
     // Check if the StdOut contains the relevant job histories for each job.
     // Check the first produce job again.
-    assertTrue(jobHistoryStdOut.contains(
-        jobOneRecord.getMostRecentValue("info", "jobName").toString()));
-    assertTrue(jobHistoryStdOut.contains(
-        jobOneRecord.getMostRecentValue("info", "jobId").toString()));
-    assertTrue(jobHistoryStdOut.contains(
-        (new Date((Long) jobOneRecord.getMostRecentValue("info", "startTime"))).toString()));
-    assertTrue(jobHistoryStdOut.contains(
-        (new Date((Long) jobOneRecord.getMostRecentValue("info", "endTime"))).toString()));
-    assertTrue(jobHistoryStdOut.contains(
-        jobOneRecord.getMostRecentValue("info", "jobEndStatus").toString()));
+    assertTrue(jobHistoryStdOut.contains(jobOneEntry.getJobName()));
+    assertTrue(jobHistoryStdOut.contains(jobOneEntry.getJobId()));
+    assertTrue(jobHistoryStdOut.contains(new Date(jobOneEntry.getJobStartTime()).toString()));
+    assertTrue(jobHistoryStdOut.contains(new Date(jobOneEntry.getJobEndTime()).toString()));
+    assertTrue(jobHistoryStdOut.contains(jobOneEntry.getJobEndStatus()));
 
     // Check the second produce job.
-    KijiRowData jobTwoRecord = jobHistory.getJobDetails(jobTwoId);
-    assertTrue(jobHistoryStdOut.contains(
-        jobTwoRecord.getMostRecentValue("info", "jobName").toString()));
-    assertTrue(jobHistoryStdOut.contains(
-        jobTwoRecord.getMostRecentValue("info", "jobId").toString()));
-    assertTrue(jobHistoryStdOut.contains(
-        (new Date((Long) jobTwoRecord.getMostRecentValue("info", "startTime"))).toString()));
-    assertTrue(jobHistoryStdOut.contains(
-        (new Date((Long) jobTwoRecord.getMostRecentValue("info", "endTime"))).toString()));
-    assertTrue(jobHistoryStdOut.contains(
-        jobTwoRecord.getMostRecentValue("info", "jobEndStatus").toString()));
+    JobHistoryEntry jobTwoEntry = jobHistory.getJobDetails(jobTwoId);
+    assertTrue(jobHistoryStdOut.contains(jobTwoEntry.getJobName()));
+    assertTrue(jobHistoryStdOut.contains(jobTwoEntry.getJobId()));
+    assertTrue(jobHistoryStdOut.contains(new Date(jobTwoEntry.getJobStartTime()).toString()));
+    assertTrue(jobHistoryStdOut.contains(new Date(jobTwoEntry.getJobEndTime()).toString()));
+    assertTrue(jobHistoryStdOut.contains(jobTwoEntry.getJobEndStatus()));
 
     // Clean up.
     ResourceUtils.closeOrLog(jobHistory);

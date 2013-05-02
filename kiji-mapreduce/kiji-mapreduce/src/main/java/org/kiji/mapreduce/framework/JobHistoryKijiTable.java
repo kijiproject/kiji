@@ -21,11 +21,14 @@ package org.kiji.mapreduce.framework;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.hadoop.mapreduce.Job;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.mapreduce.avro.generated.JobHistoryEntry;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
@@ -48,6 +51,23 @@ public final class JobHistoryKijiTable implements Closeable {
   private static final String TABLE_NAME = "job_history";
   /** The path to the layout for the table in our resources. */
   private static final String TABLE_LAYOUT_RESOURCE = "/org/kiji/mapreduce/job-history-layout.json";
+
+  /** Column family where job history information is stored. */
+  public static final String JOB_HISTORY_FAMILY = "info";
+  /** Qualifier where job IDs are stored. */
+  public static final String JOB_HISTORY_ID_QUALIFIER = "jobId";
+  /** Qualifier where job names are stored. */
+  public static final String JOB_HISTORY_NAME_QUALIFIER = "jobName";
+  /** Qualifier where job start times are stored. */
+  public static final String JOB_HISTORY_START_TIME_QUALIFIER = "startTime";
+  /** Qualifier where job end times are stored. */
+  public static final String JOB_HISTORY_END_TIME_QUALIFIER = "endTime";
+  /** Qualifier where job end statuses are stored. */
+  public static final String JOB_HISTORY_END_STATUS_QUALIFIER = "jobEndStatus";
+  /** Qualifier where job counters are stored. */
+  public static final String JOB_HISTORY_COUNTERS_QUALIFIER = "counters";
+  /** Qualifier where job configurations are stored. */
+  public static final String JOB_HISTORY_CONFIGURATION_QUALIFIER = "configuration";
 
   /** The HBaseKijiTable managed by the JobHistoryKijiTable. */
   private final KijiTable mKijiTable;
@@ -100,15 +120,21 @@ public final class JobHistoryKijiTable implements Closeable {
     EntityId jobEntity = mKijiTable.getEntityId(job.getJobID().toString());
     try {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
-      writer.put(jobEntity, "info", "jobId", startTime, job.getJobID().toString());
-      writer.put(jobEntity, "info", "jobName", startTime, job.getJobName());
-      writer.put(jobEntity, "info", "startTime", startTime, startTime);
-      writer.put(jobEntity, "info", "endTime", startTime, endTime);
-      writer.put(jobEntity, "info", "jobEndStatus", startTime,
-          job.isSuccessful() ? "SUCCEEDED" : "FAILED");
-      writer.put(jobEntity, "info", "counters", startTime, job.getCounters().toString());
+      writer.put(jobEntity, JOB_HISTORY_FAMILY, JOB_HISTORY_ID_QUALIFIER,
+          startTime, job.getJobID().toString());
+      writer.put(jobEntity, JOB_HISTORY_FAMILY, JOB_HISTORY_NAME_QUALIFIER,
+          startTime, job.getJobName());
+      writer.put(jobEntity, JOB_HISTORY_FAMILY, JOB_HISTORY_START_TIME_QUALIFIER,
+          startTime, startTime);
+      writer.put(jobEntity, JOB_HISTORY_FAMILY, JOB_HISTORY_END_TIME_QUALIFIER,
+          startTime, endTime);
+      writer.put(jobEntity, JOB_HISTORY_FAMILY, JOB_HISTORY_END_STATUS_QUALIFIER,
+          startTime, job.isSuccessful() ? "SUCCEEDED" : "FAILED");
+      writer.put(jobEntity, JOB_HISTORY_FAMILY, JOB_HISTORY_COUNTERS_QUALIFIER,
+          startTime, job.getCounters().toString());
       job.getConfiguration().writeXml(baos);
-      writer.put(jobEntity, "info", "configuration", startTime, baos.toString("UTF-8"));
+      writer.put(jobEntity, JOB_HISTORY_FAMILY, JOB_HISTORY_CONFIGURATION_QUALIFIER,
+          startTime, baos.toString("UTF-8"));
     } finally {
       ResourceUtils.closeOrLog(writer);
     }
@@ -132,17 +158,31 @@ public final class JobHistoryKijiTable implements Closeable {
    * @return A KijiRowData containing all the information for the requested Job.
    * @throws IOException If there is an IO error retrieving the data.
    */
-  public KijiRowData getJobDetails(String jobId) throws IOException {
-    // TODO: This API is too low level. Eventually we should return a JobHistoryEntry object which
-    // has fields for the explicit attributes and a map for any implicit attributes.
-    KijiTableReader wtr = mKijiTable.openTableReader();
-    KijiDataRequest wdr = KijiDataRequest.create("info");
-
+  public JobHistoryEntry getJobDetails(String jobId) throws IOException {
+    final KijiTableReader reader = mKijiTable.openTableReader();
+    final KijiDataRequest request = KijiDataRequest.create("info");
+    final KijiRowData data;
     try {
-      return wtr.get(mKijiTable.getEntityId(jobId), wdr);
+      data = reader.get(mKijiTable.getEntityId(jobId), request);
     } finally {
-      ResourceUtils.closeOrLog(wtr);
+      reader.close();
     }
+
+    final Map<String, String> extendedInfo = new HashMap<String, String>();
+    for (String qualifier : data.getQualifiers("extendedInfo")) {
+      extendedInfo.put(qualifier, data.<String>getMostRecentValue("extendedInfo", qualifier));
+    }
+
+    return JobHistoryEntry.newBuilder()
+        .setJobId(data.getMostRecentValue("info", "jobId").toString())
+        .setJobName(data.getMostRecentValue("info", "jobName").toString())
+        .setJobStartTime(data.<Long>getMostRecentValue("info", "startTime"))
+        .setJobEndTime(data.<Long>getMostRecentValue("info", "endTime"))
+        .setJobEndStatus(data.getMostRecentValue("info", "jobEndStatus").toString())
+        .setJobCounters(data.getMostRecentValue("info", "counters").toString())
+        .setJobConfiguration(data.getMostRecentValue("info", "configuration").toString())
+        .setExtendedInfo(extendedInfo)
+        .build();
   }
 
   /**

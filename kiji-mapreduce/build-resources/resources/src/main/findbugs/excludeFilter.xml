@@ -30,13 +30,10 @@
       <Bug pattern="EI_EXPOSE_REP2" />
     </Or>
   </Match>
-  <!-- Normally we suppress any bugs found in the *.avro namespace, because
-       it represents generated code. But org.kiji.mapreduce contains no
-       generated avro, and contains real classes in .avro. If you re-enable
-       a suppression for generate code, be careful about this. -->
-  <!-- <Match>
-    <Class name="~org[.]kiji[.]mapreduce[.]avro[.].*" />
-  </Match> -->
+  <!-- Suppress bugs in Avro generated classes. -->
+  <Match>
+    <Class name="~org[.]kiji[.]mapreduce[.]avro[.]generated[.].*" />
+  </Match>
   <Match>
     <!-- Mappers/Reducers/Gatherers/Producers/Tools initialize in setup() so it's okay if their
          constructors don't initialize an instance variable. -->

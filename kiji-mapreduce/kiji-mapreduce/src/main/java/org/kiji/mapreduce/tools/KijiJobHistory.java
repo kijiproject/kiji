@@ -26,7 +26,9 @@ import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.base.Preconditions;
 import org.apache.commons.io.IOUtils;
@@ -35,6 +37,7 @@ import org.apache.hadoop.mapreduce.Counters;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.common.flags.Flag;
+import org.kiji.mapreduce.avro.generated.JobHistoryEntry;
 import org.kiji.mapreduce.framework.JobHistoryKijiTable;
 import org.kiji.schema.KConstants;
 import org.kiji.schema.Kiji;
@@ -93,12 +96,33 @@ public final class KijiJobHistory extends BaseTool {
     try {
       JobHistoryKijiTable jobHistoryTable = JobHistoryKijiTable.open(kiji);
       if (!mJobId.isEmpty()) {
-        KijiRowData data = jobHistoryTable.getJobDetails(mJobId);
-        printRow(data);
+        JobHistoryEntry data = jobHistoryTable.getJobDetails(mJobId);
+        printEntry(data);
       } else {
         KijiRowScanner jobScanner = jobHistoryTable.getJobScanner();
         for (KijiRowData data : jobScanner) {
-          printRow(data);
+          final Map<String, String> extendedInfo = new HashMap<String, String>();
+          for (String qualifier : data.getQualifiers("extendedInfo")) {
+            extendedInfo.put(
+                qualifier, data.getMostRecentValue("extendedInfo", qualifier).toString());
+          }
+          printEntry(JobHistoryEntry.newBuilder()
+              .setJobId(data.getMostRecentValue(JobHistoryKijiTable.JOB_HISTORY_FAMILY,
+                  JobHistoryKijiTable.JOB_HISTORY_ID_QUALIFIER).toString())
+              .setJobName(data.getMostRecentValue(JobHistoryKijiTable.JOB_HISTORY_FAMILY,
+                  JobHistoryKijiTable.JOB_HISTORY_NAME_QUALIFIER).toString())
+              .setJobStartTime(data.<Long>getMostRecentValue(JobHistoryKijiTable.JOB_HISTORY_FAMILY,
+                  JobHistoryKijiTable.JOB_HISTORY_START_TIME_QUALIFIER))
+              .setJobEndTime(data.<Long>getMostRecentValue(JobHistoryKijiTable.JOB_HISTORY_FAMILY,
+                  JobHistoryKijiTable.JOB_HISTORY_END_TIME_QUALIFIER))
+              .setJobEndStatus(data.getMostRecentValue(JobHistoryKijiTable.JOB_HISTORY_FAMILY,
+                  JobHistoryKijiTable.JOB_HISTORY_END_STATUS_QUALIFIER).toString())
+              .setJobCounters(data.getMostRecentValue(JobHistoryKijiTable.JOB_HISTORY_FAMILY,
+                  JobHistoryKijiTable.JOB_HISTORY_COUNTERS_QUALIFIER).toString())
+              .setJobConfiguration(data.getMostRecentValue(JobHistoryKijiTable.JOB_HISTORY_FAMILY,
+                  JobHistoryKijiTable.JOB_HISTORY_CONFIGURATION_QUALIFIER).toString())
+              .setExtendedInfo(extendedInfo)
+              .build());
           getPrintStream().printf("%n");
         }
         jobScanner.close();
@@ -113,31 +137,33 @@ public final class KijiJobHistory extends BaseTool {
 
   /**
    * Prints a job details.
-   * @param data A row data containing a serialization of the job details.
+   *
+   * @param entry a JobHistoryEntry retrieved from the JobHistoryTable.
    * @throws IOException If there is an error retrieving the counters.
    */
-  private void printRow(KijiRowData data) throws IOException {
+  private void printEntry(JobHistoryEntry entry) throws IOException {
     final PrintStream ps = getPrintStream();
-    ps.printf("Job:\t\t%s%n", data.getMostRecentValue("info", "jobId"));
-    ps.printf("Name:\t\t%s%n", data.getMostRecentValue("info", "jobName"));
-    ps.printf("Started:\t%s%n", new Date((Long) data.getMostRecentValue("info", "startTime")));
-    ps.printf("Ended:\t\t%s%n", new Date((Long) data.getMostRecentValue("info", "endTime")));
-    ps.printf("End Status:\t\t%s%n", data.getMostRecentValue("info", "jobEndStatus"));
+    ps.printf("Job:\t\t%s%n", entry.getJobId());
+    ps.printf("Name:\t\t%s%n", entry.getJobName());
+    ps.printf("Started:\t%s%n", new Date(entry.getJobStartTime()));
+    ps.printf("Ended:\t\t%s%n", new Date(entry.getJobEndTime()));
+    ps.printf("End Status:\t\t%s%n", entry.getJobEndStatus());
     if (mVerbose) {
-      printCounters(data);
-      printConfiguration(data);
+      printCounters(entry);
+      printConfiguration(entry);
     }
   }
 
   /**
    * Prints a representation of the Counters for a Job.
-   * @param data A row data containing a serialization of the counters.
+   *
+   * @param entry a JobHistoryEntry retrieved from the JobHistoryTable.
    * @throws IOException If there is an error retrieving the counters.
    */
-  private void printCounters(KijiRowData data) throws IOException {
+  private void printCounters(JobHistoryEntry entry) throws IOException {
     PrintStream ps = getPrintStream();
     Counters counters = new Counters();
-    ByteBuffer countersByteBuffer = data.getMostRecentValue("info", "counters");
+    ByteBuffer countersByteBuffer = ByteBuffer.wrap(entry.getJobCounters().getBytes("utf-8"));
     counters.readFields(
         new DataInputStream(new ByteArrayInputStream(countersByteBuffer.array())));
 
@@ -147,16 +173,16 @@ public final class KijiJobHistory extends BaseTool {
 
   /**
    * Prints a representation of the Configuration for the Job.
-   * @param data A row data containing a serialization of the configuraton.
+   * @param entry a JobHistoryEntry retrieved from the JobHistoryTable.
    * @throws IOException If there is an error retrieving the configuration.
    */
-  private void printConfiguration(KijiRowData data) throws IOException {
+  private void printConfiguration(JobHistoryEntry entry) throws IOException {
     OutputStreamWriter osw = null;
     try {
       PrintStream ps = getPrintStream();
       osw = new OutputStreamWriter(ps, "UTF-8");
       Configuration config = new Configuration();
-      ByteBuffer configByteBuffer = data.getMostRecentValue("info", "configuration");
+      ByteBuffer configByteBuffer = ByteBuffer.wrap(entry.getJobConfiguration().getBytes("utf-8"));
       config.readFields(new DataInputStream(new ByteArrayInputStream(configByteBuffer.array())));
 
       ps.print("Configuration:\n");
