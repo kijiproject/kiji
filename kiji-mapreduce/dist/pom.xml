@@ -61,6 +61,12 @@
                   <type>jar</type>
                   <classifier />
                 </artifact>
+                <artifact>
+                  <!-- Our test-jar artifact is taken from kiji-mapreduce-hadoop2. -->
+                  <file>../kiji-mapreduce/target/kiji-mapreduce-hadoop2-${project.version}-tests.jar</file>
+                  <type>test-jar</type>
+                  <classifier />
+                </artifact>
                 <!-- Attach to hadoop1 and hadoop2 classifiers as well. -->
                 <artifact>
                   <file>../kiji-mapreduce/target/kiji-mapreduce-hadoop2-${project.version}.jar</file>
