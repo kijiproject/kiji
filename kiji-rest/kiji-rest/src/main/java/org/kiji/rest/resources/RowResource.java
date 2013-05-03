@@ -73,13 +73,10 @@ import org.kiji.schema.layout.KijiTableLayout.LocalityGroupLayout.FamilyLayout.C
 import org.kiji.schema.layout.SchemaClassNotFoundException;
 
 /**
- * This REST resource interacts with a single Kiji row identified by its hbase
- * rowkey (in hex).
+ * This REST resource interacts with a single Kiji row identified by its hbase rowkey (in hex).
  *
  * This resource is served for requests using the resource identifiers: <li>
- * GET
- * /v1/instances/&lt;instance&gt/tables/&lt;table&gt/rows/&lt;hex_row_key&gt;
- * PUT
+ * GET /v1/instances/&lt;instance&gt/tables/&lt;table&gt/rows/&lt;hex_row_key&gt; PUT
  * /v1/instances/&lt;instance&gt/tables/&lt;table&gt/rows/&lt;hex_row_key&gt;
  */
 @Path(ROW_PATH)
@@ -89,24 +86,23 @@ public class RowResource extends AbstractKijiResource {
   /**
    * Default constructor.
    *
-   * @param cluster
-   *          KijiURI in which these instances are contained.
-   * @param instances
-   *          The list of accessible instances.
+   * @param cluster KijiURI in which these instances are contained.
+   *
+   * @param instances The list of accessible instances.
+   *
    */
   public RowResource(KijiURI cluster, Set<KijiURI> instances) {
     super(cluster, instances);
   }
 
   /**
-   * Retrieves the Min..Max timestamp given the user specified time range. Min
-   * and Max represent long-type time in milliseconds since the UNIX Epoch. e.g.
-   * '123..1234', '0..', or '..1234'. (Default=0..)
+   * Retrieves the Min..Max timestamp given the user specified time range. Min and Max represent
+   * long-type time in milliseconds since the UNIX Epoch. e.g. '123..1234', '0..', or '..1234'.
+   * (Default=0..)
    *
-   * @param timeRange
-   *          is the user supplied timerange.
-   * @return A long 2-tuple containing the min and max timestamps (in ms since
-   *         UNIX Epoch)
+   * @param timeRange is the user supplied timerange.
+   *
+   * @return A long 2-tuple containing the min and max timestamps (in ms since UNIX Epoch)
    */
   private long[] getTimestamps(String timeRange) {
     long[] lReturn = new long[] { 0, Long.MAX_VALUE };
@@ -114,8 +110,9 @@ public class RowResource extends AbstractKijiResource {
     final Matcher timestampMatcher = timestampPattern.matcher(timeRange);
 
     if (timestampMatcher.matches()) {
-      lReturn[0] = ("".equals(timestampMatcher.group(1))) ? 0 : Long.parseLong(timestampMatcher
-          .group(1));
+      final String leftEndpoint = timestampMatcher.group(1);
+      lReturn[0] = ("".equals(leftEndpoint)) ? 0 : Long.parseLong(leftEndpoint);
+
       final String rightEndpoint = timestampMatcher.group(2);
       lReturn[1] = ("".equals(rightEndpoint)) ? Long.MAX_VALUE : Long.parseLong(rightEndpoint);
     }
@@ -125,20 +122,16 @@ public class RowResource extends AbstractKijiResource {
   /**
    * Returns a list of fully qualified KijiColumnNames to return to the client.
    *
-   * @param tableLayout
-   *          is the layout of the table from which the row is being fetched.
-   * @param columnsDef
-   *          is the columns definition object being modified to be passed down
-   *          to the KijiTableReader.
-   * @param requestedColumns
-   *          the list of user requested columns to display.
-   * @return the list of KijiColumns that will ultimately be displayed. Since
-   *         this method validates the list of incoming columns, it's not
-   *         necessarily the case that what was specified in the
-   *         requestedColumns string correspond exactly to the list of outgoing
-   *         columns. In some cases it could be less (in case of an invalid
-   *         column/qualifier) or more in case of specifying only the family but
-   *         no qualifiers.
+   * @param tableLayout is the layout of the table from which the row is being fetched.
+   *
+   * @param columnsDef is the columns definition object being modified to be passed down to the
+   *        KijiTableReader.
+   * @param requestedColumns the list of user requested columns to display.
+   * @return the list of KijiColumns that will ultimately be displayed. Since this method validates
+   *         the list of incoming columns, it's not necessarily the case that what was specified in
+   *         the requestedColumns string correspond exactly to the list of outgoing columns. In some
+   *         cases it could be less (in case of an invalid column/qualifier) or more in case of
+   *         specifying only the family but no qualifiers.
    */
   private List<KijiColumnName> addColumnDefs(KijiTableLayout tableLayout, ColumnsDef columnsDef,
       String requestedColumns) {
@@ -191,17 +184,12 @@ public class RowResource extends AbstractKijiResource {
   /**
    * PUTs a Kiji row specified by the hex entity id.
    *
-   * @param instance
-   *          in which the table resides
-   * @param table
-   *          in which the row resides
-   * @param hexEntityId
-   *          for the row in question
-   * @param uriInfo
-   *          containing query parameters.
+   * @param instance in which the table resides
+   * @param table in which the row resides
+   * @param hexEntityId for the row in question
+   * @param uriInfo containing query parameters.
    * @return a message containing the row in question
-   * @throws java.io.IOException
-   *           if the instance or table is unavailable.
+   * @throws java.io.IOException if the instance or table is unavailable.
    */
   @PUT
   @Timed
@@ -215,24 +203,16 @@ public class RowResource extends AbstractKijiResource {
   /**
    * GETs a KijiRow given the hex representation of the hbase rowkey.
    *
-   * @param instanceId
-   *          is the instance name
-   * @param tableId
-   *          is the table name
-   * @param hexEntityId
-   *          is the hex representation of the hbase rowkey of the row to return
-   * @param columns
-   *          is a comma separated list of columns (either family or
-   *          family:qualifier) to fetch
-   * @param maxVersions
-   *          is the max versions per column to return
-   * @param timeRange
-   *          is the time range of cells to return (specified by min..max where
-   *          min/max is the ms since UNIX epoch. min and max are both optional;
-   *          however, if something is specified, at least one of min/max must
-   *          be present.)
-   * @return a single KijiRestRow (which is the POJO that is serialized into
-   *         JSON to the client).
+   * @param instanceId is the instance name
+   * @param tableId is the table name
+   * @param hexEntityId is the hex representation of the hbase rowkey of the row to return
+   * @param columns is a comma separated list of columns (either family or family:qualifier) to
+   *        fetch
+   * @param maxVersions is the max versions per column to return
+   * @param timeRange is the time range of cells to return (specified by min..max where min/max is
+   *        the ms since UNIX epoch. min and max are both optional; however, if something is
+   *        specified, at least one of min/max must be present.)
+   * @return a single KijiRestRow (which is the POJO that is serialized into JSON to the client).
    */
   @GET
   @Timed
@@ -289,20 +269,16 @@ public class RowResource extends AbstractKijiResource {
   }
 
   /**
-   * Reads the KijiRowData retrieved and returns the POJO representing the
-   * result sent to the client.
+   * Reads the KijiRowData retrieved and returns the POJO representing the result sent to the
+   * client.
    *
-   * @param rowData
-   *          is the actual row data fetched from Kiji
-   * @param tableLayout
-   *          the layout of the underlying Kiji table itself.
-   * @param columnsRequested
-   *          is the list of columns requested by the client
+   * @param rowData is the actual row data fetched from Kiji
+   * @param tableLayout the layout of the underlying Kiji table itself.
+   * @param columnsRequested is the list of columns requested by the client
    * @return The Kiji row data POJO to be sent to the client
-   * @throws IOException
-   *           when trying to request the specs of a column family that doesn't
-   *           exist. Although this shouldn't happen as columns are assumed to
-   *           have been validated before this method is invoked.
+   * @throws IOException when trying to request the specs of a column family that doesn't exist.
+   *         Although this shouldn't happen as columns are assumed to have been validated before
+   *         this method is invoked.
    */
   private KijiRestRow getKijiRow(KijiRowData rowData, KijiTableLayout tableLayout,
       List<KijiColumnName> columnsRequested) throws IOException {
