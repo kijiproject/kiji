@@ -21,10 +21,10 @@ package org.kiji.rest;
 
 import java.util.List;
 
-import org.hibernate.validator.constraints.NotEmpty;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.yammer.dropwizard.config.Configuration;
+
+import org.hibernate.validator.constraints.NotEmpty;
 
 /**
  * The Java object which is deserialized from the YAML configuration file.

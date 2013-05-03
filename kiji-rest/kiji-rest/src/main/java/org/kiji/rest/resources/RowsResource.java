@@ -19,21 +19,24 @@
 
 package org.kiji.rest.resources;
 
-import java.io.IOException;
+import static org.kiji.rest.RoutesConstants.HEX_ENTITY_ID_PARAMETER;
+import static org.kiji.rest.RoutesConstants.INSTANCE_PARAMETER;
+import static org.kiji.rest.RoutesConstants.ROWS_PATH;
+import static org.kiji.rest.RoutesConstants.TABLE_PARAMETER;
+
+import java.util.List;
 import java.util.Set;
 
 import javax.ws.rs.GET;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.UriInfo;
 
+import com.google.common.collect.Lists;
 import com.yammer.metrics.annotation.Timed;
 
-import org.kiji.rest.RoutesConstants;
+import org.kiji.rest.core.KijiRestRow;
 import org.kiji.schema.KijiURI;
 
 /**
@@ -42,7 +45,7 @@ import org.kiji.schema.KijiURI;
  * This resource is served for requests using the resource identifier:
  * <li>/v1/instances/&lt;instance&gt/tables/&lt;table&gt;/rows
  */
-@Path(RoutesConstants.ROWS_PATH)
+@Path(ROWS_PATH)
 @Produces(MediaType.APPLICATION_JSON)
 public class RowsResource extends AbstractKijiResource {
   /**
@@ -61,42 +64,16 @@ public class RowsResource extends AbstractKijiResource {
    * @param instance in which the table resides
    * @param table in which the row resides
    * @param hexEntityId for the row in question
-   * @param uriInfo containing query parameters.
    * @return a message containing the row in question
-   * @throws java.io.IOException if the instance or table is unavailable.
    */
-  @Path(RoutesConstants.HEX_ENTITY_ID_SUBPATH)
   @GET
   @Timed
-  public String getRowByHexEntityId(
-      @PathParam(RoutesConstants.INSTANCE_PARAMETER) String instance,
-      @PathParam(RoutesConstants.TABLE_PARAMETER) String table,
-      @PathParam(RoutesConstants.HEX_ENTITY_ID_PARAMETER) String hexEntityId,
-      @Context UriInfo uriInfo
-  ) throws IOException {
-    return hexEntityId;
-  }
-
-  /**
-   * PUTs a Kiji row specified by the hex entity id.
-   *
-   * @param instance in which the table resides
-   * @param table in which the row resides
-   * @param hexEntityId for the row in question
-   * @param uriInfo containing query parameters.
-   * @return a message containing the row in question
-   * @throws java.io.IOException if the instance or table is unavailable.
-   */
-  @Path(RoutesConstants.HEX_ENTITY_ID_SUBPATH)
-  @PUT
-  @Timed
-  public String putRowByHexEntityId(
-      @PathParam(RoutesConstants.INSTANCE_PARAMETER) String instance,
-      @PathParam(RoutesConstants.TABLE_PARAMETER) String table,
-      @PathParam(RoutesConstants.HEX_ENTITY_ID_PARAMETER) String hexEntityId,
-      @Context UriInfo uriInfo
-  ) throws IOException {
-    return hexEntityId;
+  public List<KijiRestRow> getRowByHexEntityId(
+      @PathParam(INSTANCE_PARAMETER) String instance,
+      @PathParam(TABLE_PARAMETER) String table,
+      @PathParam(HEX_ENTITY_ID_PARAMETER) String hexEntityId
+  ) {
+    return Lists.newArrayList();
   }
 }
 

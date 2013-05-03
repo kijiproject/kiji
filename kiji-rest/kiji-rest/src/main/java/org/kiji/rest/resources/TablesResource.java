@@ -20,20 +20,19 @@
 package org.kiji.rest.resources;
 
 import static org.kiji.rest.RoutesConstants.INSTANCE_PARAMETER;
-import static org.kiji.rest.RoutesConstants.TABLE_PARAMETER;
-import static org.kiji.rest.RoutesConstants.TABLE_PATH;
+import static org.kiji.rest.RoutesConstants.TABLES_PATH;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response.Status;
 
+import com.google.common.collect.Maps;
 import com.yammer.metrics.annotation.Timed;
 
 import org.kiji.schema.Kiji;
@@ -42,46 +41,41 @@ import org.kiji.schema.KijiURI;
 /**
  * This REST resource interacts with Kiji tables.
  *
- * This resource is served for requests using the resource identifiers: <li>
- * /v1/instances/&lt;instance&gt/tables/&lt;table&gt;
+ * This resource is served for requests using the resource identifiers:
+ * <li>/v1/instances/&lt;instance&gt/tables,
  */
-@Path(TABLE_PATH)
+@Path(TABLES_PATH)
 @Produces(MediaType.APPLICATION_JSON)
-public class TableResource extends AbstractKijiResource {
-
+public class TablesResource extends AbstractKijiResource {
   /**
    * Default constructor.
    *
-   * @param cluster
-   *          KijiURI in which these instances are contained.
-   * @param instances
-   *          The list of accessible instances.
+   * @param cluster KijiURI in which these instances are contained.
+   * @param instances The list of accessible instances.
    */
-  public TableResource(KijiURI cluster, Set<KijiURI> instances) {
+  public TablesResource(KijiURI cluster, Set<KijiURI> instances) {
     super(cluster, instances);
   }
 
   /**
-   * GETs the layout of the specified table.
+   * GETs a list of tables in the specified instance.
    *
-   * @param instance
-   *          in which the table resides.
-   * @param table
-   *          to get the layout for.
-   * @return a message containing the layout of the specified table
+   * @param instance to list the contained tables.
+   * @return a list of tables on the instance.
+   * @throws IOException if the instance is unavailable.
    */
   @GET
   @Timed
-  public String getTable(@PathParam(INSTANCE_PARAMETER) String instance,
-      @PathParam(TABLE_PARAMETER) String table) {
+  public Map<String, Object> getTableList(
+      @PathParam(INSTANCE_PARAMETER) String instance
+  ) throws IOException {
+    final Map<String, Object> outputMap = Maps.newTreeMap();
     final Kiji kiji = getKiji(instance);
-    String layout = null;
-    try {
-      layout = kiji.getMetaTable().getTableLayout(table).getDesc().toString();
-      kiji.release();
-    } catch (IOException e) {
-      throw new WebApplicationException(e, Status.INTERNAL_SERVER_ERROR);
-    }
-    return layout;
+    outputMap.put("parent_kiji_uri", kiji.getURI().toOrderedString());
+    outputMap.put("tables", kiji.getTableNames());
+    kiji.release();
+    return outputMap;
   }
 }
+
+

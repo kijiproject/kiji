@@ -31,7 +31,7 @@ public final class RoutesConstants {
   private RoutesConstants() {
   }
   /** The namespace for api. */
-  private static final String API_VERSION = "/v1/";
+  private static final String API_VERSION = "/v1";
 
   /**
    * GETs a message containing a list of the available sub-resources.
@@ -45,14 +45,14 @@ public final class RoutesConstants {
    * <li>Path: /v1/version
    * <li>Handled by: {@link KijiRESTResource#getVersion}
    */
-  public static final String VERSION_ENDPOINT = API_VERSION + "version";
+  public static final String VERSION_ENDPOINT = API_VERSION + "/version";
 
   /**
    * GETs a list of instances that are available.
    * <li>Path: /v1/instances/
    * <li>Handled by: {@link InstancesResource#getInstanceList()}
    */
-  public static final String INSTANCES_PATH = API_ENTRY_PATH + "instances";
+  public static final String INSTANCES_PATH = API_VERSION + "/instances";
 
   /**
    * GETs instance level metadata.
@@ -85,7 +85,7 @@ public final class RoutesConstants {
   public static final String ENTITY_ID_PATH = TABLE_PATH + "/entityId";
 
   /**
-   * Handles rows resources.
+   * GETs rows resources.
    * <li>Path: /v1/instances/{instance}/tables/{table}/rows/
    * <li>Handled by: {@link RowsResource}
    */
@@ -93,12 +93,10 @@ public final class RoutesConstants {
   public static final String HEX_ENTITY_ID_PARAMETER = "hexEntityId";
 
   /**
-   * GETs and PUTs a Kiji row specified by the hex entity id.
+   * GETs and PUTs a Kiji row identified by its hex rowkey.
    * <li>Path: v1/instances/{instance}/tables/{table}/rows/<hexEntityId>
    * <li>Handled by: {@link RowsResource#getRowByHexEntityId}
    */
   /** Parameter for the hexEntityId of the row. */
   public static final String ROW_PATH = ROWS_PATH + "/{" + HEX_ENTITY_ID_PARAMETER + "}";
-
-  public static final String HEX_ENTITY_ID_SUBPATH = "{" + HEX_ENTITY_ID_PARAMETER + "}/";
 }

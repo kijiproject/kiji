@@ -19,13 +19,14 @@
 
 package org.kiji.rest.resources;
 
+import static org.kiji.rest.RoutesConstants.INSTANCE_PATH;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
@@ -33,10 +34,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.yammer.metrics.annotation.Timed;
 
-import org.kiji.rest.RoutesConstants;
-import org.kiji.rest.core.ContentReturnable;
-import org.kiji.rest.core.ElementReturnable;
-import org.kiji.rest.core.Returnable;
 import org.kiji.schema.KijiURI;
 
 /**
@@ -45,7 +42,7 @@ import org.kiji.schema.KijiURI;
  * This resource is served for requests using the resource identifiers:
  * <li>/v1/instances/
  */
-@Path(RoutesConstants.INSTANCE_PATH)
+@Path(INSTANCE_PATH)
 @Produces(MediaType.APPLICATION_JSON)
 public class InstancesResource extends AbstractKijiResource {
   /**

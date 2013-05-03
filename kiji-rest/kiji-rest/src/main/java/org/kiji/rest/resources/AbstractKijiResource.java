@@ -89,11 +89,17 @@ public abstract class AbstractKijiResource {
    * @param instance in which this table resides
    * @param table name of the requested table
    * @return KijiTable object
-   * @throws IOException if there is an error.
+   * @throws WebApplicationException if there is an error.
    */
-  protected KijiTable getKijiTable(String instance, String table) throws IOException {
+  protected KijiTable getKijiTable(String instance, String table) {
     final Kiji kiji = getKiji(instance);
-    final KijiTable kijiTable = kiji.openTable(table);
+    KijiTable kijiTable;
+    try {
+      kijiTable = kiji.openTable(table);
+    } catch (IOException e) {
+      // TODO Auto-generated catch block
+      throw new WebApplicationException(e, Status.INTERNAL_SERVER_ERROR);
+    }
     // TODO Consider using a KijiTablePool here.
     return kijiTable;
   }

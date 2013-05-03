@@ -19,6 +19,9 @@
 
 package org.kiji.rest.resources;
 
+import static org.kiji.rest.RoutesConstants.API_ENTRY_PATH;
+import static org.kiji.rest.RoutesConstants.VERSION_ENDPOINT;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +35,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.yammer.metrics.annotation.Timed;
 
-import org.kiji.rest.RoutesConstants;
 import org.kiji.schema.util.VersionInfo;
 
 /**
@@ -41,7 +43,7 @@ import org.kiji.schema.util.VersionInfo;
  * This resource is served for requests using the resource identifier:
  * /v1/
  */
-@Path(RoutesConstants.API_ENTRY_PATH)
+@Path(API_ENTRY_PATH)
 @Produces(MediaType.APPLICATION_JSON)
 public class KijiRESTResource {
   /**
@@ -66,7 +68,7 @@ public class KijiRESTResource {
    * @return A message containing version information.
    * @throws IOException when Kiji software version can not be determined.
    */
-  @Path(RoutesConstants.VERSION_ENDPOINT)
+  @Path(VERSION_ENDPOINT)
   @GET
   @Timed
   public Map<String, Object> getVersion() throws IOException {
