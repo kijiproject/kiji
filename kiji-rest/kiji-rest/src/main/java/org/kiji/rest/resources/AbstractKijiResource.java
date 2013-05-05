@@ -76,7 +76,6 @@ public abstract class AbstractKijiResource {
     try {
       kiji = Kiji.Factory.open(kijiURI);
     } catch (IOException e) {
-      // TODO Auto-generated catch block
       throw new WebApplicationException(e, Status.INTERNAL_SERVER_ERROR);
     }
     // TODO Consider using a pool here.
@@ -97,7 +96,6 @@ public abstract class AbstractKijiResource {
     try {
       kijiTable = kiji.openTable(table);
     } catch (IOException e) {
-      // TODO Auto-generated catch block
       throw new WebApplicationException(e, Status.INTERNAL_SERVER_ERROR);
     }
     // TODO Consider using a KijiTablePool here.

@@ -17,4 +17,8 @@
  * limitations under the License.
  */
 
+/**
+ * This package contains POJOs that are used to return REST results. These
+ * objects are serialized to JSON by Jackson when returned to the client.
+ */
 package org.kiji.rest.core;
