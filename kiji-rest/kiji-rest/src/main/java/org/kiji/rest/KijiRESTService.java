@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
+import com.fasterxml.jackson.core.Version;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.collect.Sets;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
@@ -36,6 +38,8 @@ import org.kiji.rest.resources.RowResource;
 import org.kiji.rest.resources.RowsResource;
 import org.kiji.rest.resources.TableResource;
 import org.kiji.rest.resources.TablesResource;
+import org.kiji.rest.serializers.AvroToJsonSerializer;
+import org.kiji.rest.serializers.Utf8ToJsonSerializer;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiURI;
 
@@ -59,6 +63,13 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
   @Override
   public final void initialize(final Bootstrap<KijiRESTConfiguration> bootstrap) {
     bootstrap.setName("kiji-rest");
+    //Need to add a module to convert btw Avro's specific types and JSON. The default
+    //mapping seems to throw an exception.
+    SimpleModule testModule = new SimpleModule("MyModule", new Version(1, 0, 0, null,
+        "org.kiji.rest", "avroToJson"));
+    testModule.addSerializer(new AvroToJsonSerializer());
+    testModule.addSerializer(new Utf8ToJsonSerializer());
+    bootstrap.getObjectMapperFactory().registerModule(testModule);
   }
 
   /** {@inheritDoc}
@@ -81,13 +92,13 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
       instances.add(instanceURI);
       environment.addHealthCheck(new InstanceHealthCheck(instanceURI));
     }
-
     // Load resources.
     environment.addResource(new KijiRESTResource());
     environment.addResource(new InstancesResource(clusterURI, instances));
     environment.addResource(new TableResource(clusterURI, instances));
     environment.addResource(new TablesResource(clusterURI, instances));
-    environment.addResource(new RowsResource(clusterURI, instances));
+    environment.addResource(new RowsResource(clusterURI, instances,
+        environment.getObjectMapperFactory().build()));
     environment.addResource(new RowResource(clusterURI, instances));
     environment.addResource(new EntityIdResource(clusterURI, instances));
   }

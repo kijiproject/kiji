@@ -21,6 +21,8 @@ package org.kiji.rest.resources;
 
 import static org.kiji.rest.RoutesConstants.INSTANCE_PARAMETER;
 import static org.kiji.rest.RoutesConstants.TABLES_PATH;
+import static org.kiji.rest.RoutesConstants.TABLE_PARAMETER;
+import static org.kiji.rest.RoutesConstants.TABLE_PATH;
 
 import java.io.IOException;
 import java.util.Map;
@@ -30,7 +32,9 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response.Status;
 
 import com.google.common.collect.Maps;
 import com.yammer.metrics.annotation.Timed;
@@ -41,8 +45,8 @@ import org.kiji.schema.KijiURI;
 /**
  * This REST resource interacts with Kiji tables.
  *
- * This resource is served for requests using the resource identifiers:
- * <li>/v1/instances/&lt;instance&gt/tables,
+ * This resource is served for requests using the resource identifiers: <li>
+ * /v1/instances/&lt;instance&gt/tables,
  */
 @Path(TABLES_PATH)
 @Produces(MediaType.APPLICATION_JSON)
@@ -61,21 +65,24 @@ public class TablesResource extends AbstractKijiResource {
    * GETs a list of tables in the specified instance.
    *
    * @param instance to list the contained tables.
-   * @return a list of tables on the instance.
-   * @throws IOException if the instance is unavailable.
+   * @return a map of tables to their respective resource URIs for easier future access.
    */
   @GET
   @Timed
-  public Map<String, Object> getTableList(
-      @PathParam(INSTANCE_PARAMETER) String instance
-  ) throws IOException {
-    final Map<String, Object> outputMap = Maps.newTreeMap();
+  public Map<String,String> getTables(@PathParam(INSTANCE_PARAMETER) String instance) {
+
+    Map<String, String> tableMap = Maps.newHashMap();
     final Kiji kiji = getKiji(instance);
-    outputMap.put("parent_kiji_uri", kiji.getURI().toOrderedString());
-    outputMap.put("tables", kiji.getTableNames());
-    kiji.release();
-    return outputMap;
+    try {
+      for(String table:kiji.getTableNames()) {
+        String tableUri = TABLE_PATH.replace("{" + TABLE_PARAMETER + "}", table)
+            .replace("{" + INSTANCE_PARAMETER + "}", instance);
+        tableMap.put(table, tableUri);
+      }
+      kiji.release();
+    } catch (IOException e) {
+      throw new WebApplicationException(e, Status.INTERNAL_SERVER_ERROR);
+    }
+    return tableMap;
   }
 }
-
-

@@ -19,9 +19,10 @@
 
 package org.kiji.rest.resources;
 
-import static org.kiji.rest.RoutesConstants.INSTANCE_PATH;
+import static org.kiji.rest.RoutesConstants.INSTANCES_PATH;
+import static org.kiji.rest.RoutesConstants.INSTANCE_PARAMETER;
+import static org.kiji.rest.RoutesConstants.TABLES_PATH;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -30,7 +31,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.yammer.metrics.annotation.Timed;
 
@@ -42,7 +42,7 @@ import org.kiji.schema.KijiURI;
  * This resource is served for requests using the resource identifiers:
  * <li>/v1/instances/
  */
-@Path(INSTANCE_PATH)
+@Path(INSTANCES_PATH)
 @Produces(MediaType.APPLICATION_JSON)
 public class InstancesResource extends AbstractKijiResource {
   /**
@@ -58,19 +58,18 @@ public class InstancesResource extends AbstractKijiResource {
   /**
    * GETs a list of instances that are available.
    *
-   * @return a list of instances on the cluster.
+   * @return a map of instances to their resource URIs for easier future access
    */
   @GET
   @Timed
-  public Map<String, Object> getInstanceList() {
-    final List<String> listOfInstances = Lists.newArrayList();
-    for (KijiURI instance : getInstances()) {
-      listOfInstances.add(instance.getInstance());
+  public Map<String,String> getInstanceList() {
+    Map<String, String> instanceMap = Maps.newHashMap();
+
+    for(KijiURI u:getInstances()) {
+      String instance = u.getInstance();
+      instanceMap.put(instance, TABLES_PATH.replace("{" + INSTANCE_PARAMETER + "}", instance));
     }
-    final Map<String, Object> outputMap = Maps.newHashMap();
-    outputMap.put("parent_kiji_uri", getCluster().toOrderedString());
-    outputMap.put("instances", listOfInstances);
-    return outputMap;
+    return instanceMap;
   }
 }
 

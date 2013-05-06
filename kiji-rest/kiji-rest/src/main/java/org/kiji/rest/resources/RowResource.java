@@ -125,6 +125,8 @@ public class RowResource extends AbstractRowResource {
       lTimeRange = getTimestamps(timeRange);
     }
     final KijiTable table = super.getKijiTable(instanceId, tableId);
+    //TODO: This currently leaks the table and we need to close resources
+    //properly.
     return getKijiRow(table, hbaseRowKey, lTimeRange, columns, maxVersions);
   }
 }

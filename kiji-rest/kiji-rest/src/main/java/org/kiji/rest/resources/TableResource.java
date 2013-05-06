@@ -38,6 +38,7 @@ import com.yammer.metrics.annotation.Timed;
 
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiURI;
+import org.kiji.schema.avro.TableLayoutDesc;
 
 /**
  * This REST resource interacts with Kiji tables.
@@ -52,10 +53,8 @@ public class TableResource extends AbstractKijiResource {
   /**
    * Default constructor.
    *
-   * @param cluster
-   *          KijiURI in which these instances are contained.
-   * @param instances
-   *          The list of accessible instances.
+   * @param cluster KijiURI in which these instances are contained.
+   * @param instances The list of accessible instances.
    */
   public TableResource(KijiURI cluster, Set<KijiURI> instances) {
     super(cluster, instances);
@@ -64,20 +63,18 @@ public class TableResource extends AbstractKijiResource {
   /**
    * GETs the layout of the specified table.
    *
-   * @param instance
-   *          in which the table resides.
-   * @param table
-   *          to get the layout for.
-   * @return a message containing the layout of the specified table
+   * @param instance in which the table resides.
+   * @param table to get the layout for.
+   * @return the layout of the specified table
    */
   @GET
   @Timed
-  public String getTable(@PathParam(INSTANCE_PARAMETER) String instance,
+  public TableLayoutDesc getTable(@PathParam(INSTANCE_PARAMETER) String instance,
       @PathParam(TABLE_PARAMETER) String table) {
     final Kiji kiji = getKiji(instance);
-    String layout = null;
+    TableLayoutDesc layout = null;
     try {
-      layout = kiji.getMetaTable().getTableLayout(table).getDesc().toString();
+      layout = kiji.getMetaTable().getTableLayout(table).getDesc();
       kiji.release();
     } catch (IOException e) {
       throw new WebApplicationException(e, Status.INTERNAL_SERVER_ERROR);

@@ -44,7 +44,6 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.yammer.dropwizard.json.ObjectMapperFactory;
 import com.yammer.metrics.annotation.Timed;
 
 import org.apache.commons.codec.binary.Hex;
@@ -83,13 +82,22 @@ public class RowsResource extends AbstractRowResource {
   private static final int UNLIMITED_ROWS = -1;
 
   /**
+   * Since we are streaming the rows to the user, we need access to the object mapper
+   * used by DropWizard to convert objects to JSON.
+   */
+  private ObjectMapper mJsonObjectMapper = null;
+
+  /**
    * Default constructor.
    *
-   * @param cluster KijiURI in which these instances are contained.
-   * @param instances The list of accessible instances.
+   * @param cluster is the KijiURI in which these instances are contained.
+   * @param instances is the list of accessible instances.
+   * @param jsonObjectMapper is the ObjectMapper used by DropWizard to convert from Java
+   *        objects to JSON.
    */
-  public RowsResource(KijiURI cluster, Set<KijiURI> instances) {
+  public RowsResource(KijiURI cluster, Set<KijiURI> instances, ObjectMapper jsonObjectMapper) {
     super(cluster, instances);
+    mJsonObjectMapper = jsonObjectMapper;
   }
 
   /**
@@ -99,7 +107,6 @@ public class RowsResource extends AbstractRowResource {
   private class RowStreamer implements StreamingOutput {
 
     private Iterable<KijiRowData> mScanner = null;
-    private ObjectMapper mJsonObjectMapper = null;
     private final KijiTable mTable;
     private int mNumRows = 0;
     private final List<KijiColumnName> mColsRequested;
@@ -115,8 +122,6 @@ public class RowsResource extends AbstractRowResource {
     public RowStreamer(Iterable<KijiRowData> scanner, KijiTable table, int numRows,
         List<KijiColumnName> columns) {
       mScanner = scanner;
-      ObjectMapperFactory fac = new ObjectMapperFactory();
-      mJsonObjectMapper = fac.build();
       mTable = table;
       mNumRows = numRows;
       mColsRequested = columns;
@@ -129,22 +134,22 @@ public class RowsResource extends AbstractRowResource {
      */
     @Override
     public void write(OutputStream os) {
-      int iNumRows = 0;
+      int numRows = 0;
       Writer writer = new BufferedWriter(new OutputStreamWriter(os));
       for (KijiRowData row : mScanner) {
-        if (iNumRows < mNumRows || mNumRows == UNLIMITED_ROWS) {
+        if (numRows < mNumRows || mNumRows == UNLIMITED_ROWS) {
           try {
             KijiRestRow restRow = getKijiRow(row, mTable.getLayout(), mColsRequested);
             String jsonResult = mJsonObjectMapper.writeValueAsString(restRow);
-            //Let's strip out any carriage return + line feeds and replace them with just
-            //line feeds. Therefore we can safely delimit individual json messages on the
-            //carriage return + line feed for clients to parse properly.
+            // Let's strip out any carriage return + line feeds and replace them with just
+            // line feeds. Therefore we can safely delimit individual json messages on the
+            // carriage return + line feed for clients to parse properly.
             jsonResult = jsonResult.replaceAll("\r\n", "\n");
             writer.write(jsonResult + "\r\n");
             writer.flush();
           } catch (IOException e) {
-            //This most likely means that the client closed the connection
-            //and hence close the scanner.
+            // This most likely means that the client closed the connection
+            // and hence close the scanner.
             if (mScanner instanceof KijiRowScanner) {
               try {
                 ((KijiRowScanner) mScanner).close();
@@ -155,7 +160,7 @@ public class RowsResource extends AbstractRowResource {
             return;
           }
         }
-        iNumRows++;
+        numRows++;
       }
     }
   }
@@ -179,38 +184,45 @@ public class RowsResource extends AbstractRowResource {
    */
   @GET
   @Timed
-  //CSOFF: ParameterNumberCheck - There are a bunch of query param options
+  // CSOFF: ParameterNumberCheck - There are a bunch of query param options
   public Response getRows(@PathParam(INSTANCE_PARAMETER) String instance,
-      @PathParam(TABLE_PARAMETER) String table, @QueryParam("eid") String jsonEntityId,
-      @QueryParam("start_rk") String startHBaseRowKey, @QueryParam("end_rk") String endHBaseRowKey,
+      @PathParam(TABLE_PARAMETER) String table,
+      @QueryParam("eid") String jsonEntityId,
+      @QueryParam("start_rk") String startHBaseRowKey,
+      @QueryParam("end_rk") String endHBaseRowKey,
       @QueryParam("limit") @DefaultValue("100") int limit,
       @QueryParam("cols") @DefaultValue("*") String columns,
       @QueryParam("versions") @DefaultValue("1") int maxVersions,
       @QueryParam("timerange") String timeRange) {
-  //CSON: ParameterNumberCheck - There are a bunch of query param options
+    // CSON: ParameterNumberCheck - There are a bunch of query param options
     Response rsp = null;
-    long[] lTimeRange = null;
+    long[] timeRanges = null;
 
     KijiTable kijiTable = super.getKijiTable(instance, table);
 
     if (timeRange != null) {
-      lTimeRange = getTimestamps(timeRange);
+      timeRanges = getTimestamps(timeRange);
     }
 
     KijiDataRequestBuilder dataBuilder = KijiDataRequest.builder();
     if (timeRange != null) {
-      dataBuilder.withTimeRange(lTimeRange[0], lTimeRange[1]);
+      dataBuilder.withTimeRange(timeRanges[0], timeRanges[1]);
     }
 
     ColumnsDef colsRequested = dataBuilder.newColumnsDef().withMaxVersions(maxVersions);
-    List<KijiColumnName> lRequestedColumns = addColumnDefs(kijiTable.getLayout(), colsRequested,
+    List<KijiColumnName> requestedColumns = addColumnDefs(kijiTable.getLayout(), colsRequested,
         columns);
+
+    if (jsonEntityId != null && (startHBaseRowKey != null || endHBaseRowKey != null)) {
+      throw new WebApplicationException(new IllegalArgumentException("Ambiguous request. "
+          + "Specified both jsonEntityId and start/end HBase row keys."), Status.BAD_REQUEST);
+    }
 
     // We will honor eid over start/end rk.
     try {
       if (jsonEntityId != null) {
         EntityId eid = ToolUtils.createEntityIdFromUserInputs(jsonEntityId, kijiTable.getLayout());
-        KijiRestRow returnRow = super.getKijiRow(kijiTable, eid.getHBaseRowKey(), lTimeRange,
+        KijiRestRow returnRow = super.getKijiRow(kijiTable, eid.getHBaseRowKey(), timeRanges,
             columns, maxVersions);
         rsp = Response.ok(returnRow).build();
       } else {
@@ -231,7 +243,7 @@ public class RowsResource extends AbstractRowResource {
         final KijiTableReader reader = kijiTable.openTableReader();
 
         final KijiRowScanner scanner = reader.getScanner(dataBuilder.build(), scanOptions);
-        rsp = Response.ok(new RowStreamer(scanner, kijiTable, limit, lRequestedColumns)).build();
+        rsp = Response.ok(new RowStreamer(scanner, kijiTable, limit, requestedColumns)).build();
       }
     } catch (Exception e) {
       throw new WebApplicationException(e, Status.BAD_REQUEST);
