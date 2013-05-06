@@ -127,11 +127,8 @@ to perform atomic operations on Kiji tables.  The atomic putter uses a begin, pu
 to construct transactions which are executed atomically by the underlying HBase table.  Addressing
 puts in the atomic writer is very similar to KijiTableWriter, except you do not need to specify an
 entityId for every put, because they all must target the same row.  When your transaction is ready,
-you can confirm that all column families you are attempting to write into are within the expected locality
-group and write them by using
-[`commit("localityGroup")`]({{site.api_schema_DEVEL}}/AtomicKijiPutter.html#commit%28java.lang.String%29).
-Calling commit("localityGroup") will throw an IllegalStateException unless all puts target the same
-locality group.
+write it by using
+[`commit()`]({{site.api_schema_DEVEL}}/AtomicKijiPutter.html#commit%28%29).
 
 {% highlight java %}
   KijiTable table = ...
@@ -140,14 +137,14 @@ locality group.
     // Begin a transaction on the specified row:
     putter.begin(entityId);
 
-    // Accumulate a set of puts to write atomically within a locality group:
+    // Accumulate a set of puts to write atomically:
     putter.put(family, qualifier, "value");
     putter.put(family, qualifier2, "value2");
     putter.put(family2, qualifier3, "value3");
     // More puts...
 
     // Write all puts atomically:
-    putter.commit("locality_group");
+    putter.commit();
   } finally {
     putter.close();
   }
@@ -155,7 +152,7 @@ locality group.
 
 If you want to ensure that the table has not been modified while you accumulated puts, you can use
 [`checkAndCommit(family, qualifier, value)`]({{site.api_schema_DEVEL}}/AtomicKijiPutter.html#checkAndCommit%28java.lang.String%2C%20java.lang.String%2C%20T)
-instead of commit("localityGroup").  This will write your puts and return true if the value in the
+instead of commit().  This will write your puts and return true if the value in the
 specified cell matches the value to check, otherwise it will return false and your puts will remain
 in place so that you may attempt a new check.
 
@@ -170,7 +167,7 @@ in place so that you may attempt a new check.
     // Begin a transaction on the specified row:
     putter.begin(entityId);
 
-    // Accumulate a set of puts to write atomically within a locality group:
+    // Accumulate a set of puts to write atomically:
     putter.put(family, qualifier, "value");
     // Increment a cell indicating the number of times the row has been modified.
     putter.put("meta", "modifications", currentModificationCount + 1L);
