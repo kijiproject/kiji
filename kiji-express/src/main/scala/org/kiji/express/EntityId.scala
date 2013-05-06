@@ -112,7 +112,7 @@ private[express] final class MaterializableEntityId(
   private[express] override def toJavaEntityId(): JEntityId = {
     val eidFactory = EntityIdFactoryCache.getFactory(tableUri)
     val javaComponents: java.util.List[Object] = components.toList
-        .map { elem => KijiScheme.convertScalaTypes(elem, null) }
+        .map { elem => elem.asInstanceOf[AnyRef] }
         .asJava
     eidFactory.getEntityId(javaComponents)
   }
@@ -158,7 +158,7 @@ object EntityId {
           .getComponents
           .asScala
           .toSeq
-          .map { elem => KijiScheme.convertJavaTypes(elem) }
+          .map { elem => elem.asInstanceOf[AnyRef] }
 
       new MaterializableEntityId(
           tableUri,
@@ -186,7 +186,7 @@ object EntityId {
   def fromComponents(tableUri: String, components: Seq[Any]): EntityId = {
     val eidFactory = EntityIdFactoryCache.getFactory(tableUri)
     val javaComponents: java.util.List[Object] = components
-        .map { elem => KijiScheme.convertScalaTypes(elem, null) }
+        .map { elem => elem.asInstanceOf[AnyRef] }
         .asJava
 
     new MaterializableEntityId(

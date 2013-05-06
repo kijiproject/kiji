@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.express
+package org.kiji.express.avro
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
@@ -25,5 +25,4 @@ import org.kiji.annotations.ApiStability
 @ApiAudience.Public
 @ApiStability.Experimental
 final class SchemaMismatchException(message: String)
-  extends RuntimeException(message: String) {
-}
+    extends RuntimeException(message)

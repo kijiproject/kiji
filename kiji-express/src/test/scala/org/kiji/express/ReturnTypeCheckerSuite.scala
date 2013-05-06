@@ -26,6 +26,9 @@ import scala.collection.JavaConversions._
 import org.apache.avro.Schema
 import org.scalatest.FunSuite
 
+import org.kiji.express.avro.AvroRecord
+import org.kiji.express.avro.AvroValue
+import org.kiji.express.avro.AvroUtil
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.avro.HashSpec
 import org.kiji.schema.avro.RowKeyEncoding
@@ -41,12 +44,12 @@ class ReturnTypeCheckerSuite extends FunSuite {
   val int: java.lang.Integer = new java.lang.Integer(10)
   test("Test conversion of Integers from Java, to Scala, and back again.") {
     // Java => Scala
-    val res = KijiScheme.convertJavaTypes(int)
+    val res = AvroUtil.convertJavaTypes(int)
     assert(res.isInstanceOf[Int])
     assert(10 == res)
     // Scala => Java
     // scalastyle:off null
-    val resJava = KijiScheme.convertScalaTypes(res, null)
+    val resJava = AvroUtil.convertScalaTypes(res, null)
     // scalastyle:on null
     assert(resJava.isInstanceOf[java.lang.Integer])
     assert(resJava == int)
@@ -55,12 +58,12 @@ class ReturnTypeCheckerSuite extends FunSuite {
   val boolean: java.lang.Boolean = new java.lang.Boolean(true)
   test("Test conversion of Boolean type from Java, to Scala, and back again.") {
     // Java => Scala
-    val res = KijiScheme.convertJavaTypes(boolean)
+    val res = AvroUtil.convertJavaTypes(boolean)
     assert(res.isInstanceOf[Boolean])
     assert(true == res)
     // Scala => Java
     // scalastyle:off null
-    val resJava = KijiScheme.convertScalaTypes(res, null)
+    val resJava = AvroUtil.convertScalaTypes(res, null)
     // scalastyle:on null
     assert(resJava.isInstanceOf[java.lang.Boolean])
     assert(resJava == boolean)
@@ -69,12 +72,12 @@ class ReturnTypeCheckerSuite extends FunSuite {
   val long: java.lang.Long= new java.lang.Long(10)
   test("Test conversion of Long from Java, to Scala, and back again.") {
     // Java => Scala
-    val res = KijiScheme.convertJavaTypes(long)
+    val res = AvroUtil.convertJavaTypes(long)
     assert(res.isInstanceOf[Long])
     assert(10L == res)
     // Scala => Java
     // scalastyle:off null
-    val resJava = KijiScheme.convertScalaTypes(res, null)
+    val resJava = AvroUtil.convertScalaTypes(res, null)
     // scalastyle:on null
     assert(resJava.isInstanceOf[java.lang.Long])
     assert(resJava == long)
@@ -83,12 +86,12 @@ class ReturnTypeCheckerSuite extends FunSuite {
   val float: java.lang.Float =  new java.lang.Float(10)
   test("Test conversion of Float from Java, to Scala, and back again.") {
     // Java => Scala
-    val res = KijiScheme.convertJavaTypes(float)
+    val res = AvroUtil.convertJavaTypes(float)
     assert(res.isInstanceOf[Float])
     assert(10F == res)
     // Scala => Java
     // scalastyle:off null
-    val resJava = KijiScheme.convertScalaTypes(res, null)
+    val resJava = AvroUtil.convertScalaTypes(res, null)
     // scalastyle:on null
     assert(resJava.isInstanceOf[java.lang.Float])
     assert(resJava == float)
@@ -97,12 +100,12 @@ class ReturnTypeCheckerSuite extends FunSuite {
   val double: java.lang.Double = new java.lang.Double(10)
   test("Test conversion of Double from Java, to Scala, and back again.") {
     // Java => Scala
-    val res = KijiScheme.convertJavaTypes(double)
+    val res = AvroUtil.convertJavaTypes(double)
     assert(res.isInstanceOf[Double])
     assert(10 == res)
     // Scala => Java
     // scalastyle:off null
-    val resJava = KijiScheme.convertScalaTypes(res, null)
+    val resJava = AvroUtil.convertScalaTypes(res, null)
     // scalastyle:on null
     assert(resJava.isInstanceOf[java.lang.Double])
     assert(resJava == double)
@@ -111,13 +114,13 @@ class ReturnTypeCheckerSuite extends FunSuite {
   val bytes: java.nio.ByteBuffer =  java.nio.ByteBuffer.wrap(Array(0x11, 0x12))
   test("Test conversion of Avro bytes from Java, to Scala, and back again.") {
     // Java => Scala
-    val res = KijiScheme.convertJavaTypes(bytes)
+    val res = AvroUtil.convertJavaTypes(bytes)
     assert(res.isInstanceOf[Array[Byte]])
     assert(Array(17, 18).deep == res.asInstanceOf[Array[Byte]].deep)
     // Scala => Java
     val tableLayout = KijiTableLayout.newLayout(KijiTableLayouts.getLayout("avro-types.json"))
     val columnName = new KijiColumnName("family", "column2")
-    val resJava = KijiScheme.convertScalaTypes(res, tableLayout.getSchema(columnName))
+    val resJava = AvroUtil.convertScalaTypes(res, tableLayout.getSchema(columnName))
     assert(resJava.isInstanceOf[java.nio.ByteBuffer])
     assert(resJava == bytes)
   }
@@ -125,12 +128,12 @@ class ReturnTypeCheckerSuite extends FunSuite {
   val charSequence: java.lang.CharSequence = "string".asInstanceOf[java.lang.CharSequence]
   test("Test conversion of Avro CharSequence from Java, to Scala, and back again.") {
     // Java => Scala
-    val res = KijiScheme.convertJavaTypes(charSequence)
+    val res = AvroUtil.convertJavaTypes(charSequence)
     assert(res.isInstanceOf[String])
     assert("string" == res.asInstanceOf[String])
     // Scala => Java
     // scalastyle:off null
-    val resJava = KijiScheme.convertScalaTypes(res, null)
+    val resJava = AvroUtil.convertScalaTypes(res, null)
     // scalastyle:on null
     assert(resJava.isInstanceOf[java.lang.CharSequence])
     assert(resJava == charSequence)
@@ -144,14 +147,14 @@ class ReturnTypeCheckerSuite extends FunSuite {
   }
   test("Test conversion of Avro list from Java, to Scala, and back again.") {
     // Java => Scala
-    val res = KijiScheme.convertJavaTypes(list)
+    val res = AvroUtil.convertJavaTypes(list)
     assert(res.isInstanceOf[List[_]])
     assert(res.asInstanceOf[List[_]](0).isInstanceOf[Int])
     assert(List(1, 2) == res.asInstanceOf[List[Int]])
 
     // Scala => Java
     val cellSchema = Schema.createArray(Schema.create(Schema.Type.INT))
-    val resJava = KijiScheme.convertScalaTypes(res, cellSchema)
+    val resJava = AvroUtil.convertScalaTypes(res, cellSchema)
     assert(resJava.isInstanceOf[java.util.List[_]])
     assert(resJava.asInstanceOf[java.util.List[_]].get(0).isInstanceOf[java.lang.Integer])
     assert(resJava == list)
@@ -165,7 +168,7 @@ class ReturnTypeCheckerSuite extends FunSuite {
     internalMap
   }
   test("Test conversion of Avro map from Java, to Scala, and back again.") {
-    val res = KijiScheme.convertJavaTypes(map)
+    val res = AvroUtil.convertJavaTypes(map)
     assert(res.isInstanceOf[Map[_, _]])
     res.asInstanceOf[Map[String, Int]].foreach { case (key, value) =>
       key.isInstanceOf[String]
@@ -175,7 +178,7 @@ class ReturnTypeCheckerSuite extends FunSuite {
     assert(Map("t1"->1, "t2"->2) == res)
     // convert back
     val cellSchema = Schema.createMap(Schema.create(Schema.Type.INT))
-    val resJava = KijiScheme.convertScalaTypes(res, cellSchema)
+    val resJava = AvroUtil.convertScalaTypes(res, cellSchema)
     assert(resJava.isInstanceOf[java.util.Map[_, _]])
     val iter = resJava.asInstanceOf[java.util.Map[java.lang.String, java.lang.Integer]]
         .entrySet
@@ -191,9 +194,9 @@ class ReturnTypeCheckerSuite extends FunSuite {
   // scalastyle:off null
   val void: java.lang.Void = null.asInstanceOf[java.lang.Void]
   test("Test conversion of null from Java, to Scala, and back again.") {
-    val res = KijiScheme.convertJavaTypes(void)
+    val res = AvroUtil.convertJavaTypes(void)
     assert(res == null)
-    val resJava = KijiScheme.convertScalaTypes(res, null)
+    val resJava = AvroUtil.convertScalaTypes(res, null)
     assert(resJava == void)
   }
   // scalastyle:on null
@@ -205,7 +208,7 @@ class ReturnTypeCheckerSuite extends FunSuite {
     list
   }
   test("Test conversion of Avro unions from Java, to Scala, and back again.") {
-    val res = KijiScheme.convertJavaTypes(unionList)
+    val res = AvroUtil.convertJavaTypes(unionList)
     assert(res.isInstanceOf[List[_]])
     assert(2 == res.asInstanceOf[List[Any]].size)
     assert(10L == res.asInstanceOf[List[Any]](0))
@@ -215,20 +218,20 @@ class ReturnTypeCheckerSuite extends FunSuite {
     val unionSchema = Schema.createUnion(seqAsJavaList(List(Schema.create(Schema.Type.INT),
         Schema.create(Schema.Type.STRING))))
     val cellSchema = Schema.createArray(unionSchema)
-    val resJava = KijiScheme.convertScalaTypes(res, cellSchema)
+    val resJava = AvroUtil.convertScalaTypes(res, cellSchema)
     assert(resJava.isInstanceOf[java.util.List[_]])
     assert(resJava == unionList)
   }
 
   val enum: RowKeyEncoding = RowKeyEncoding.FORMATTED
   test("Test conversion of enums from Java, to Scala, and back again.") {
-    val res = KijiScheme.convertJavaTypes(enum)
+    val res = AvroUtil.convertJavaTypes(enum)
     assert(res.isInstanceOf[RowKeyEncoding])
     assert(RowKeyEncoding.FORMATTED == res)
 
     // convert back
     // scalastyle:off null
-    val resJava = KijiScheme.convertScalaTypes(res, null)
+    val resJava = AvroUtil.convertScalaTypes(res, null)
     // scalastyle:on null
     assert(resJava.isInstanceOf[RowKeyEncoding])
     assert(resJava == enum)
@@ -237,29 +240,29 @@ class ReturnTypeCheckerSuite extends FunSuite {
   val fixed: org.kiji.schema.avro.MD5Hash =
       new org.kiji.schema.avro.MD5Hash(Array[Byte](03, 04))
   test("Test conversion of Avro fixed type from Java, to Scala, and back again.") {
-    val res = KijiScheme.convertJavaTypes(fixed)
+    val res = AvroUtil.convertJavaTypes(fixed)
     assert(res.isInstanceOf[Any])
     assert(Array[Byte](03, 04).deep == res.asInstanceOf[Array[Byte]].deep)
 
     // convert back
     val tableLayout = KijiTableLayout.newLayout(KijiTableLayouts.getLayout("avro-types.json"))
     val columnName = new KijiColumnName("family", "column1")
-    val resJava = KijiScheme.convertScalaTypes(res, tableLayout.getSchema(columnName))
+    val resJava = AvroUtil.convertScalaTypes(res, tableLayout.getSchema(columnName))
     assert(resJava.isInstanceOf[org.apache.avro.generic.GenericData.Fixed])
     assert(resJava == fixed)
   }
   val record: org.kiji.schema.avro.HashSpec = HashSpec.newBuilder().build()
   test("Test conversion of Avro record from Java, to Scala, and back again.") {
-    val res = KijiScheme.convertJavaTypes(record)
+    val res = AvroUtil.convertJavaTypes(record)
     assert(res.isInstanceOf[HashSpec])
     val expect2 = HashSpec.newBuilder().build()
     assert(record == res.asInstanceOf[HashSpec])
 
     // convert back
     // scalastyle:off null
-    val resJava = KijiScheme.convertScalaTypes(res, null)
+    val resJava = AvroUtil.convertScalaTypes(res, null)
     // scalastyle:on null
-    assert(resJava.isInstanceOf[org.kiji.schema.avro.HashSpec])
+    assert(resJava.isInstanceOf[HashSpec])
     assert(record == resJava)
   }
 
@@ -270,14 +273,14 @@ class ReturnTypeCheckerSuite extends FunSuite {
     arr
   }
   test("Test conversion of Avro list of fixed type from Java, to Scala, and back again.") {
-    val res = KijiScheme.convertJavaTypes(nestedList)
+    val res = AvroUtil.convertJavaTypes(nestedList)
     assert(res.isInstanceOf[List[Array[Byte]]])
     assert(Array[Byte](05, 06).deep == res.asInstanceOf[List[Array[Byte]]](0).deep)
     assert(Array[Byte](07, 0x08).deep == res.asInstanceOf[List[Array[Byte]]](1).deep)
 
     // convert back
     val columnSchema = Schema.createArray(Schema.createFixed("test", "fixed schema", "", 2))
-    val resJava = KijiScheme.convertScalaTypes(res, columnSchema)
+    val resJava = AvroUtil.convertScalaTypes(res, columnSchema)
     assert(resJava.isInstanceOf[java.util.List[_]])
     assert(resJava == nestedList)
   }
@@ -286,7 +289,7 @@ class ReturnTypeCheckerSuite extends FunSuite {
   val badRecord: ColumnRequestOptions = new ColumnRequestOptions(maxVersions, Some(filter))
   test("Test for exception when converting unsupported an Avro class.") {
     intercept[InvalidClassException] {
-      KijiScheme.convertJavaTypes(badRecord)
+      AvroUtil.convertJavaTypes(badRecord)
     }
   }
 }

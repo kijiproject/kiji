@@ -128,7 +128,9 @@ private[express] class KijiTap(
   override def openForRead(
       flow: FlowProcess[JobConf],
       recordReader: RecordReader[KijiKey, KijiValue]): TupleEntryIterator = {
+    // scalastyle:off null
     val modifiedFlow = if (flow.getStringProperty(KijiConfKeys.KIJI_INPUT_TABLE_URI) == null) {
+    // scalastyle:on null
       // TODO CHOP-71 Remove this hack which is introduced by a scalding bug:
       // https://github.com/twitter/scalding/issues/369
       // This hack is only required for testing (HadoopTest Mode)

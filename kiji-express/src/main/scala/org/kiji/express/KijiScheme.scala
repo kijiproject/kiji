@@ -22,7 +22,9 @@ package org.kiji.express
 import java.io.InvalidClassException
 import java.util.concurrent.atomic.AtomicLong
 
-import scala.collection.JavaConverters._
+import scala.collection.JavaConverters.asScalaIteratorConverter
+import scala.collection.JavaConverters.mapAsJavaMapConverter
+import scala.collection.JavaConverters.seqAsJavaListConverter
 
 import cascading.flow.FlowProcess
 import cascading.scheme.Scheme
@@ -34,9 +36,6 @@ import cascading.tuple.Tuple
 import cascading.tuple.TupleEntry
 import com.google.common.base.Objects
 import org.apache.avro.generic.IndexedRecord
-import org.apache.avro.generic.GenericData.Fixed
-import org.apache.avro.Schema
-import org.apache.avro.specific.SpecificFixed
 import org.apache.commons.codec.binary.Base64
 import org.apache.commons.lang.SerializationUtils
 import org.apache.hadoop.mapred.JobConf
@@ -47,6 +46,7 @@ import org.slf4j.LoggerFactory
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.express.avro.AvroUtil.convertScalaTypes
 import org.kiji.express.Resources.doAndRelease
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.Kiji
@@ -392,59 +392,6 @@ private[express] object KijiScheme {
     return Some(result)
   }
 
-  /**
-   * Convert Java types (that came from Kiji columns) into corresponding Scala types for
-   * usage within KijiExpress.
-   *
-   * @param columnValue is the value of the Kiji column.
-   * @return the corresponding value converted to a Scala type.
-   */
-  private[express] def convertJavaTypes(columnValue: Any): Any = {
-    (columnValue: @unchecked) match {
-      // scalastyle:off null
-      case null => null
-      // scalastyle:on null
-      case i: java.lang.Integer => i
-      case b: java.lang.Boolean => b
-      case l: java.lang.Long => l
-      case f: java.lang.Float => f
-      case d: java.lang.Double => d
-      // bytes
-      case bb: java.nio.ByteBuffer => bb.array()
-      // string
-      case s: java.lang.CharSequence => s.toString
-      // array
-      case l: java.util.List[_] => {
-        l.asScala
-            .toList
-            .map { elem => convertJavaTypes(elem) }
-      }
-      // map (avro maps always have keys of type CharSequence)
-      // TODO CHOP-70 revisit conversion of maps between java and scala
-      case m: java.util.Map[_, _] => {
-        m.asScala
-            .toMap
-            .map { case (key: CharSequence, value) =>
-              (key.toString, convertJavaTypes(value))
-            }
-      }
-      // fixed
-      case f: SpecificFixed => f.bytes().array
-      // scalastyle:off null
-      // null field
-      case n: java.lang.Void => null
-      // scalastyle:on null
-      // enum
-      case e: java.lang.Enum[_] => e
-      // avro record or object
-      case a: IndexedRecord => a
-      // any other type we don't understand
-      case _ => throw new InvalidClassException("Read an unrecognized Java type from Kiji "
-          + "that could not be converted to a Scala type for use with KijiExpress: "
-          + columnValue.asInstanceOf[AnyRef].getClass.toString)
-    }
-  }
-
   // TODO(CHOP-35): Use an output format that writes to HFiles.
   /**
    * Writes a Cascading tuple to a Kiji table.
@@ -502,68 +449,6 @@ private[express] object KijiScheme {
             }
           }
         }
-  }
-
-  /**
-   * Convert Scala types back to Java types to write to a Kiji table.
-   *
-   * @param columnValue is the value written to this column.
-   * @param columnSchema is the schema of the column.
-   * @return the converted Java type.
-   */
-  private[express] def convertScalaTypes(
-      columnValue: Any,
-      columnSchema: Schema): java.lang.Object = {
-    (columnValue: @unchecked) match {
-      // scalastyle:off null
-      case null => null
-      // scalastyle:on null
-      case i: Int => i.asInstanceOf[java.lang.Integer]
-      case b: Boolean => b.asInstanceOf[java.lang.Boolean]
-      case l: Long => l.asInstanceOf[java.lang.Long]
-      case f: Float => f.asInstanceOf[java.lang.Float]
-      case d: Double => d.asInstanceOf[java.lang.Double]
-      // this could be an avro "bytes" field or avro "fixed" field
-      case bb: Array[Byte] => {
-        require(null != columnSchema, "Tried to convert an Array[Byte], but the writer schema"
-            + "was null.")
-        if (columnSchema.getType == Schema.Type.BYTES) {
-          java.nio.ByteBuffer.wrap(bb)
-        } else if (columnSchema.getType == Schema.Type.FIXED) {
-          new Fixed(columnSchema, bb)
-        } else {
-          throw new SchemaMismatchException("Writing an array of bytes to a column that "
-              + " expects " + columnSchema.getType.getName)
-        }
-      }
-      case s: String => s
-      // this is an avro array
-      case l: List[_] => {
-        require(null != columnSchema, "Tried to convert a List[Any], but the writer schema was" +
-            " null.")
-        l.map { elem => convertScalaTypes(elem, columnSchema.getElementType) }
-            .asJava
-      }
-      // map
-      // TODO CHOP-70 revisit conversion of maps between java and scala
-      case m: Map[_, _] => {
-        require(null != columnSchema, "Tried to convert a Map[String, Any], but the writer schema" +
-          "was null.")
-        val convertedMap = m.map { case (key: String, value) =>
-          val convertedValue = convertScalaTypes(value, columnSchema.getValueType)
-          (key, convertedValue)
-        }
-        new java.util.TreeMap[java.lang.Object, java.lang.Object](convertedMap.asJava)
-      }
-      // enum
-      case e: java.lang.Enum[_] => e
-      // avro record or object
-      case a: IndexedRecord => a
-      // any other type we don't understand
-      case _ => throw new InvalidClassException("Trying to write an unrecognized Scala type"
-          + " that cannot be converted to a Java type for writing to Kiji: "
-          + columnValue.asInstanceOf[AnyRef].getClass.toString)
-    }
   }
 
   /**

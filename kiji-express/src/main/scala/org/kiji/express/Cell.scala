@@ -21,6 +21,7 @@ package org.kiji.express
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.express.avro.AvroUtil.convertJavaTypes
 import org.kiji.schema.KijiCell
 
 /**
@@ -40,7 +41,6 @@ case class Cell[T] private[express] (family: String, qualifier: String, version:
 * A factory for creating cells used in KijiExpress from cells used in the Kiji Java API.
 */
 object Cell {
-  import KijiScheme.convertJavaTypes
   /**
    * Creates a new cell (for use in KijiExpress) from the contents of a cell produced by the
    * Kiji Java API.
