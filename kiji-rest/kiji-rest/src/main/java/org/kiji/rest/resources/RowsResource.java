@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Set;
 
@@ -46,6 +47,7 @@ import javax.ws.rs.core.StreamingOutput;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yammer.metrics.annotation.Timed;
 
+import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
 import org.kiji.rest.core.KijiRestRow;
@@ -135,7 +137,7 @@ public class RowsResource extends AbstractRowResource {
     @Override
     public void write(OutputStream os) {
       int numRows = 0;
-      Writer writer = new BufferedWriter(new OutputStreamWriter(os));
+      Writer writer = new BufferedWriter(new OutputStreamWriter(os, Charset.forName("UTF-8")));
       for (KijiRowData row : mScanner) {
         if (numRows < mNumRows || mNumRows == UNLIMITED_ROWS) {
           try {
@@ -245,7 +247,9 @@ public class RowsResource extends AbstractRowResource {
         final KijiRowScanner scanner = reader.getScanner(dataBuilder.build(), scanOptions);
         rsp = Response.ok(new RowStreamer(scanner, kijiTable, limit, requestedColumns)).build();
       }
-    } catch (Exception e) {
+    } catch (IOException e) {
+      throw new WebApplicationException(e, Status.BAD_REQUEST);
+    } catch (DecoderException e) {
       throw new WebApplicationException(e, Status.BAD_REQUEST);
     }
 

@@ -221,9 +221,9 @@ public class AbstractRowResource extends AbstractKijiResource {
           Map<String, NavigableMap<Long, KijiCell<Object>>> rowVals = rowData.getCells(col
               .getFamily());
 
-          for (String key : rowVals.keySet()) {
-            for (Entry<Long, KijiCell<Object>> timestampedCell : rowVals.get(key).entrySet()) {
-              returnRow.addCell(new KijiRestCell(timestampedCell.getValue()));
+          for (Entry<String, NavigableMap<Long, KijiCell<Object>>> e : rowVals.entrySet()) {
+            for (KijiCell<Object> timestampedCell : e.getValue().values()) {
+              returnRow.addCell(new KijiRestCell(timestampedCell));
             }
           }
         }

@@ -21,6 +21,7 @@ package org.kiji.rest.serializers;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.Charset;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -55,7 +56,7 @@ public class AvroToJsonSerializer extends JsonSerializer<GenericContainer> {
     writer.setSchema(record.getSchema());
     writer.write(record, encoder);
     encoder.flush();
-    String jsonString = new String(os.toByteArray());
+    String jsonString = new String(os.toByteArray(), Charset.forName("UTF-8"));
     os.close();
     JsonNode node = mJsonObjectMapper.readTree(jsonString);
     generator.writeTree(node);
