@@ -69,14 +69,14 @@ public class TablesResource extends AbstractKijiResource {
    */
   @GET
   @Timed
-  public Map<String,String> getTables(@PathParam(INSTANCE_PARAMETER) String instance) {
+  public Map<String, String> getTables(@PathParam(INSTANCE_PARAMETER) String instance) {
 
     Map<String, String> tableMap = Maps.newHashMap();
     final Kiji kiji = getKiji(instance);
     try {
-      for(String table:kiji.getTableNames()) {
-        String tableUri = TABLE_PATH.replace("{" + TABLE_PARAMETER + "}", table)
-            .replace("{" + INSTANCE_PARAMETER + "}", instance);
+      for (String table : kiji.getTableNames()) {
+        String tableUri = TABLE_PATH.replace("{" + TABLE_PARAMETER + "}", table).replace(
+            "{" + INSTANCE_PARAMETER + "}", instance);
         tableMap.put(table, tableUri);
       }
       kiji.release();

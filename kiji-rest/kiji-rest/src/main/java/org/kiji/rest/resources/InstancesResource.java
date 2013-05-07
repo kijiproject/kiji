@@ -39,8 +39,7 @@ import org.kiji.schema.KijiURI;
 /**
  * This REST resource interacts with Kiji instances.
  *
- * This resource is served for requests using the resource identifiers:
- * <li>/v1/instances/
+ * This resource is served for requests using the resource identifiers: <li>/v1/instances/
  */
 @Path(INSTANCES_PATH)
 @Produces(MediaType.APPLICATION_JSON)
@@ -62,15 +61,13 @@ public class InstancesResource extends AbstractKijiResource {
    */
   @GET
   @Timed
-  public Map<String,String> getInstanceList() {
+  public Map<String, String> getInstanceList() {
     Map<String, String> instanceMap = Maps.newHashMap();
 
-    for(KijiURI u:getInstances()) {
+    for (KijiURI u : getInstances()) {
       String instance = u.getInstance();
       instanceMap.put(instance, TABLES_PATH.replace("{" + INSTANCE_PARAMETER + "}", instance));
     }
     return instanceMap;
   }
 }
-
-

@@ -22,7 +22,6 @@ package org.kiji.rest.serializers;
 import java.io.IOException;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 
@@ -34,15 +33,15 @@ import org.apache.avro.util.Utf8;
  * can properly be serialized and sent back to the client.
  *
  */
-public class Utf8ToJsonSerializer extends JsonSerializer<Utf8>{
+public class Utf8ToJsonSerializer extends JsonSerializer<Utf8> {
 
+  //CSOFF: JavadocMethodCheck
   /**
    * @see JsonSerializer#serialize(Object, JsonGenerator, SerializerProvider)
    */
   @Override
-  public void serialize(Utf8 record, JsonGenerator generator,
-      SerializerProvider provider)
-      throws IOException, JsonProcessingException {
+  public void serialize(Utf8 record, JsonGenerator generator, SerializerProvider provider)
+      throws IOException {
     generator.writeString(record.toString());
   }
 
@@ -54,4 +53,5 @@ public class Utf8ToJsonSerializer extends JsonSerializer<Utf8>{
     // TODO Auto-generated method stub
     return Utf8.class;
   }
+  //CSON: JavadocMethodCheck
 }

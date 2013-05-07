@@ -23,7 +23,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,17 +39,17 @@ import org.apache.avro.io.JsonEncoder;
  * can properly be serialized and sent back to the client.
  *
  */
-public class AvroToJsonSerializer extends JsonSerializer<GenericContainer>{
+public class AvroToJsonSerializer extends JsonSerializer<GenericContainer> {
 
   private ObjectMapper mJsonObjectMapper = new ObjectMapper();
 
+  //CSOFF: JavadocMethodCheck
   /**
    * @see JsonSerializer#serialize(Object, JsonGenerator, SerializerProvider)
    */
   @Override
   public void serialize(GenericContainer record, JsonGenerator generator,
-      SerializerProvider provider)
-      throws IOException, JsonProcessingException {
+      SerializerProvider provider) throws IOException {
     ByteArrayOutputStream os = new ByteArrayOutputStream();
     JsonEncoder encoder = EncoderFactory.get().jsonEncoder(record.getSchema(), os);
     GenericDatumWriter<GenericContainer> writer = new GenericDatumWriter<GenericContainer>();
@@ -71,4 +70,5 @@ public class AvroToJsonSerializer extends JsonSerializer<GenericContainer>{
     // TODO Auto-generated method stub
     return GenericContainer.class;
   }
+  //CSON: JavadocMethodCheck
 }
