@@ -65,11 +65,11 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
     bootstrap.setName("kiji-rest");
     //Need to add a module to convert btw Avro's specific types and JSON. The default
     //mapping seems to throw an exception.
-    SimpleModule testModule = new SimpleModule("MyModule", new Version(1, 0, 0, null,
+    SimpleModule module = new SimpleModule("KijiRestModule", new Version(1, 0, 0, null,
         "org.kiji.rest", "avroToJson"));
-    testModule.addSerializer(new AvroToJsonSerializer());
-    testModule.addSerializer(new Utf8ToJsonSerializer());
-    bootstrap.getObjectMapperFactory().registerModule(testModule);
+    module.addSerializer(new AvroToJsonSerializer());
+    module.addSerializer(new Utf8ToJsonSerializer());
+    bootstrap.getObjectMapperFactory().registerModule(module);
   }
 
   /** {@inheritDoc}

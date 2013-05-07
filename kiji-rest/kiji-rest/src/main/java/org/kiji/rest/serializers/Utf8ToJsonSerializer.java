@@ -35,9 +35,8 @@ import org.apache.avro.util.Utf8;
  */
 public class Utf8ToJsonSerializer extends JsonSerializer<Utf8> {
 
-  //CSOFF: JavadocMethodCheck
   /**
-   * @see JsonSerializer#serialize(Object, JsonGenerator, SerializerProvider)
+   * {@inheritDoc}
    */
   @Override
   public void serialize(Utf8 record, JsonGenerator generator, SerializerProvider provider)
@@ -46,12 +45,10 @@ public class Utf8ToJsonSerializer extends JsonSerializer<Utf8> {
   }
 
   /**
-   * @see JsonSerializer#handledType()
+   * {@inheritDoc}
    */
   @Override
   public Class<Utf8> handledType() {
-    // TODO Auto-generated method stub
     return Utf8.class;
   }
-  //CSON: JavadocMethodCheck
 }

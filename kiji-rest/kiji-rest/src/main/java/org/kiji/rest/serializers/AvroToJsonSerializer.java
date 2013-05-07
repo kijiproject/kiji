@@ -43,9 +43,8 @@ public class AvroToJsonSerializer extends JsonSerializer<GenericContainer> {
 
   private ObjectMapper mJsonObjectMapper = new ObjectMapper();
 
-  //CSOFF: JavadocMethodCheck
   /**
-   * @see JsonSerializer#serialize(Object, JsonGenerator, SerializerProvider)
+   * {@inheritDoc}
    */
   @Override
   public void serialize(GenericContainer record, JsonGenerator generator,
@@ -63,12 +62,10 @@ public class AvroToJsonSerializer extends JsonSerializer<GenericContainer> {
   }
 
   /**
-   * @see JsonSerializer#handledType()
+   * {@inheritDoc}
    */
   @Override
   public Class<GenericContainer> handledType() {
-    // TODO Auto-generated method stub
     return GenericContainer.class;
   }
-  //CSON: JavadocMethodCheck
 }

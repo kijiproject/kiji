@@ -78,6 +78,7 @@ public class AbstractRowResource extends AbstractKijiResource {
    * @return A long 2-tuple containing the min and max timestamps (in ms since UNIX Epoch)
    */
   protected final long[] getTimestamps(String timeRange) {
+
     long[] lReturn = new long[] { 0, Long.MAX_VALUE };
     final Pattern timestampPattern = Pattern.compile("([0-9]*)\\.\\.([0-9]*)");
     final Matcher timestampMatcher = timestampPattern.matcher(timeRange);
@@ -108,16 +109,17 @@ public class AbstractRowResource extends AbstractKijiResource {
    */
   protected final List<KijiColumnName> addColumnDefs(KijiTableLayout tableLayout,
       ColumnsDef columnsDef, String requestedColumns) {
-    List<KijiColumnName> lReturnCols = Lists.newArrayList();
-    Collection<KijiColumnName> lColumnsRequested = null;
+
+    List<KijiColumnName> returnCols = Lists.newArrayList();
+    Collection<KijiColumnName> requestedColumnList = null;
     // Check for whether or not *all* columns were requested
     if (requestedColumns == null || requestedColumns.trim().equals("*")) {
-      lColumnsRequested = tableLayout.getColumnNames();
+      requestedColumnList = tableLayout.getColumnNames();
     } else {
-      lColumnsRequested = Lists.newArrayList();
+      requestedColumnList = Lists.newArrayList();
       String[] pColumns = requestedColumns.split(",");
       for (String s : pColumns) {
-        lColumnsRequested.add(new KijiColumnName(s));
+        requestedColumnList.add(new KijiColumnName(s));
       }
     }
 
@@ -126,38 +128,38 @@ public class AbstractRowResource extends AbstractKijiResource {
     // expand qualifiers
     // in case only family names were specified (in the case of group type
     // families).
-    for (KijiColumnName kijiColumn : lColumnsRequested) {
+    for (KijiColumnName kijiColumn : requestedColumnList) {
       FamilyLayout layout = colMap.get(kijiColumn.getFamily());
       if (null != layout) {
         if (layout.isMapType()) {
           columnsDef.add(kijiColumn);
-          lReturnCols.add(kijiColumn);
+          returnCols.add(kijiColumn);
         } else {
           Map<String, ColumnLayout> groupColMap = layout.getColumnMap();
           if (kijiColumn.isFullyQualified()) {
             ColumnLayout groupColLayout = groupColMap.get(kijiColumn.getQualifier());
             if (null != groupColLayout) {
               columnsDef.add(kijiColumn);
-              lReturnCols.add(kijiColumn);
+              returnCols.add(kijiColumn);
             }
           } else {
             for (ColumnLayout c : groupColMap.values()) {
               KijiColumnName fullyQualifiedGroupCol = new KijiColumnName(kijiColumn.getFamily(),
                   c.getName());
               columnsDef.add(fullyQualifiedGroupCol);
-              lReturnCols.add(fullyQualifiedGroupCol);
+              returnCols.add(fullyQualifiedGroupCol);
             }
           }
         }
       }
     }
 
-    if (lReturnCols.isEmpty()) {
+    if (returnCols.isEmpty()) {
       throw new WebApplicationException(new IllegalArgumentException("No columns selected!"),
           Status.BAD_REQUEST);
     }
 
-    return lReturnCols;
+    return returnCols;
   }
 
   /**
@@ -174,6 +176,7 @@ public class AbstractRowResource extends AbstractKijiResource {
    */
   protected final KijiRestRow getKijiRow(KijiRowData rowData, KijiTableLayout tableLayout,
       List<KijiColumnName> columnsRequested) throws IOException {
+
     KijiRestRow returnRow = new KijiRestRow(rowData.getEntityId());
     Map<String, FamilyLayout> familyLayoutMap = tableLayout.getFamilyMap();
 
@@ -239,8 +242,9 @@ public class AbstractRowResource extends AbstractKijiResource {
    * @param maxVersions the maximum number of cells per column:qualifier to return
    * @return the KijiRestRow representing the row requested.
    */
-  protected final KijiRestRow getKijiRow(KijiTable table,
-      byte[] hbaseRowKey, long[] timeRange, String columns, int maxVersions) {
+  protected final KijiRestRow getKijiRow(KijiTable table, byte[] hbaseRowKey, long[] timeRange,
+      String columns, int maxVersions) {
+
     KijiRestRow returnRow = null;
     try {
       try {
