@@ -13,7 +13,7 @@
     <version>0.1.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
-  
+
   <dependencies>
     <dependency>
       <groupId>com.yammer.dropwizard</groupId>
@@ -25,7 +25,7 @@
       <groupId>org.kiji.schema</groupId>
       <artifactId>kiji-schema</artifactId>
       <version>1.0.3</version>
-      <!-- Dropwizard works with the internals of logback which conflict 
+      <!-- Dropwizard works with the internals of logback which conflict
         with these excluded packages -->
       <exclusions>
         <exclusion>
@@ -44,7 +44,7 @@
       <artifactId>hadoop-client</artifactId>
       <version>2.0.0-mr1-cdh4.1.2</version>
       <scope>compile</scope>
-      <!-- Dropwizard works with the internals of logback which conflict 
+      <!-- Dropwizard works with the internals of logback which conflict
         with these excluded packages -->
       <exclusions>
         <exclusion>
@@ -71,7 +71,7 @@
       <artifactId>hadoop-core</artifactId>
       <version>2.0.0-mr1-cdh4.1.2</version>
       <scope>compile</scope>
-      <!-- Dropwizard works with the internals of logback which conflict 
+      <!-- Dropwizard works with the internals of logback which conflict
         with these excluded packages -->
       <exclusions>
         <exclusion>
@@ -97,7 +97,7 @@
         <exclusion>
           <groupId>org.codehaus.jackson</groupId>
           <artifactId>jackson-core-asl</artifactId>
-        </exclusion>        
+        </exclusion>
       </exclusions>
     </dependency>
 
