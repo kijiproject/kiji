@@ -30,6 +30,8 @@ import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
 
+import org.kiji.rest.core.GenericRuntimeExceptionMapper;
+import org.kiji.rest.core.WebAppExceptionMapper;
 import org.kiji.rest.health.InstanceHealthCheck;
 import org.kiji.rest.resources.EntityIdResource;
 import org.kiji.rest.resources.InstanceResource;
@@ -93,6 +95,11 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
       instances.add(instanceURI);
       environment.addHealthCheck(new InstanceHealthCheck(instanceURI));
     }
+    //Add exception mappers to print better exception messages to the client than what
+    //Dropwizard does by default.
+    environment.addProvider(new WebAppExceptionMapper());
+    environment.addProvider(new GenericRuntimeExceptionMapper());
+
     // Load resources.
     environment.addResource(new KijiRESTResource());
     environment.addResource(new InstancesResource(clusterURI, instances));
