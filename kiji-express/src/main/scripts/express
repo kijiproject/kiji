@@ -406,9 +406,27 @@ case ${command} in
 
   shell)
     shift # pop off the command
+
+    # Pass a classpath to run the shell with and jars to ship with the distributed cache to
+    # the shell runner.
     extract_classpath "${@}"
     export EXPRESS_CP="${express_cp}"
     export TMPJARS="${tmpjars}"
+
+    # Pass a run mode to the shell runner.
+    local_mode_script="${bin}/local-mode.scala"
+    hdfs_mode_script="${bin}/hdfs-mode.scala"
+    if [[ "${COMMAND_ARGS}" == *--hdfs* ]]; then
+      export EXPRESS_MODE="${hdfs_mode_script}"
+      COMMAND_ARGS=$(echo "${COMMAND_ARGS}" | sed s/--hdfs//)
+    elif [[ "${COMMAND_ARGS}" == *--local* ]]; then
+      export EXPRESS_MODE="${local_mode_script}"
+      COMMAND_ARGS=$(echo "${COMMAND_ARGS}" | sed s/--local//)
+    else
+      export EXPRESS_MODE="${local_mode_script}"
+    fi
+
+    # Run the shell
     "${bin}/express-shell" ${COMMAND_ARGS}
     exit $?
     ;;

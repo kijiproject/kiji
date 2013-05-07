@@ -40,9 +40,17 @@ if [[ -z "${TMPJARS}" ]]; then
   echo "If you are trying to run the KijiExpress shell, use the express command to do so."
 fi
 
+# It should also export EXPRESS_MODE, which should be the path to a script of Scala code the
+# REPL should preload so that Hadoop jobs execute in the Cascading local runner or a Hadoop
+# cluster.
+if [[ -z "${EXPRESS_MODE}" ]]; then
+  echo "The environment variable EXPRESS_MODE is undefined."
+  echo "If you are trying to run the KijiExpress shell, use the express command to do so."
+fi
+
 # There should be a file containing import statements the REPL should execute on startup in the
 # bin directory.
-imports_file="${bin}/imports.scala"
+imports_script="${bin}/imports.scala"
 
 # Not sure what the right default is here: trying nonzero.
 scala_exit_status=1
@@ -153,7 +161,8 @@ fi
   -Dtmpjars="${TMPJARS}" \
   ${CYGWIN_JLINE_TERMINAL} \
   ${main_class} ${@} \
-  -i "${imports_file}" \
+  -i "${imports_script}" \
+  -i "${EXPRESS_MODE}" \
   -Yrepl-sync
 # The -Yrepl-sync option is a fix for the 2.9.1 REPL. This should probably not be necessary in the future.
 
