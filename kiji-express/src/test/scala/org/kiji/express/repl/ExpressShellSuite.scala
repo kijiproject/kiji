@@ -25,19 +25,9 @@ import scala.tools.nsc.interpreter.ILoop
 /**
  * Tests the functionality of [[org.kiji.express.repl.ExpressShell]].
  */
-class TestExpressShell extends FunSuite {
-
-  test("The shell runner knows when a REPL has not been started.") {
-    assert(!ExpressShell.isREPLInitialized())
-  }
-
+class ExpressShellSuite extends FunSuite {
   test("The shell can start a REPL using command line arguments.") {
     pending
-  }
-
-  test("The shell runner knows when a REPL has been initialized.") {
-    ExpressShell.expressREPL = Some(new ILoop)
-    assert(ExpressShell.isREPLInitialized())
   }
 
   test("The shell runner can write a jar file containing classes in a virtual directory.") {

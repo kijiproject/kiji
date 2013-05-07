@@ -48,14 +48,12 @@ private[express] object ExpressShell extends MainGenericRunner {
    */
   private[express] var expressREPL: Option[ILoop] = None
 
-
   /**
-   * Determines if a REPL was ever initialized and started. The REPL may not necessarily still be
-   * running.
-   *
-   * @return `true` if a REPL has been initialized, `false` otherwise.
+   * A comma-separated list of paths to jars to add to the distributed cache of run jobs,
+   * provided as a system property through the command line. Framework developers should use this
+   * value when determining jars to ship with jobs.
    */
-  private[express] def isREPLInitialized() = expressREPL.isDefined
+  private[express] val tmpjars: Option[String] = Option(System.getProperty("tmpjars"))
 
   /**
    * The main entry point for executing the REPL.

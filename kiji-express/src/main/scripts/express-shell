@@ -33,6 +33,13 @@ if [[ -z "${EXPRESS_CP}" ]]; then
   echo "If you are trying to run the KijiExpress shell, use the express command to do so."
 fi
 
+# It should also export TMPJARS, which should contain a comma-separated list of paths to jars
+# to add to the distributed cache of run jobs.
+if [[ -z "${TMPJARS}" ]]; then
+  echo "The environment variable TMPJARS is undefined."
+  echo "If you are trying to run the KijiExpress shell, use the express command to do so."
+fi
+
 # There should be a file containing import statements the REPL should execute on startup in the
 # bin directory.
 imports_file="${bin}/imports.scala"
@@ -143,6 +150,7 @@ fi
   ${CPSELECT}"${TOOL_CLASSPATH}:${EXPRESS_CP}" \
   -Dscala.usejavacp=true \
   -Denv.emacs="${EMACS}" \
+  -Dtmpjars="${TMPJARS}" \
   ${CYGWIN_JLINE_TERMINAL} \
   ${main_class} ${@} \
   -i "${imports_file}" \

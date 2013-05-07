@@ -408,6 +408,7 @@ case ${command} in
     shift # pop off the command
     extract_classpath "${@}"
     export EXPRESS_CP="${express_cp}"
+    export TMPJARS="${tmpjars}"
     "${bin}/express-shell" ${COMMAND_ARGS}
     exit $?
     ;;

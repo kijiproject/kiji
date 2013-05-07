@@ -28,6 +28,7 @@ import com.twitter.scalding.TupleConverter
 import com.twitter.scalding.TupleSetter
 import com.twitter.scalding.RichPipe
 import com.twitter.scalding.Source
+import org.kiji.express.KijiPipe
 
 /**
  * Object containing various implicit conversions required to create Scalding flows. Most of these
@@ -37,7 +38,21 @@ object Implicits
     extends TupleConversions
     with FieldConversions {
   /** Implicit flowDef for this KijiExpress shell session. */
-  implicit val flowDef: FlowDef = {
+  implicit var flowDef: FlowDef = getEmptyFlowDef
+
+  /**
+   * Sets the flow definition in implicit scope to an empty flow definition.
+   */
+  private[express] def resetFlowDef() {
+    flowDef = getEmptyFlowDef
+  }
+
+  /**
+   * Gets a new, empty, flow definition.
+   *
+   * @return a new, empty flow definition.
+   */
+  private[express] def getEmptyFlowDef: FlowDef = {
     val fd = new FlowDef
     fd.setName("ExpressShell")
     fd
@@ -51,6 +66,15 @@ object Implicits
    * @return a RichPipe wrapping the specified Pipe.
    */
   implicit def pipeToRichPipe(pipe: Pipe): RichPipe = new RichPipe(pipe)
+
+  /**
+   * Converts a Cascading Pipe to a KijiExpress KijiPipe. This method permits implicit
+   * conversions from Pipe to KijiPipe.
+   *
+   * @param pipe to convert to a KijiPipe.
+   * @return a KijiPipe wrapping the specified Pipe.
+   */
+  implicit def pipeToKijiPipe(pipe: Pipe): KijiPipe = new KijiPipe(pipe)
 
   /**
    * Converts a Scalding RichPipe to a Cascading Pipe. This method permits implicit conversions from
