@@ -42,7 +42,11 @@ final class ExceptionWrapper {
   public ExceptionWrapper(Status status, Throwable exception) {
     super();
     this.mStatus = status;
-    this.mWrappedException = exception;
+    if (exception.getCause() != null) {
+      this.mWrappedException = exception.getCause();
+    } else {
+      this.mWrappedException = exception;
+    }
   }
 
   /**
