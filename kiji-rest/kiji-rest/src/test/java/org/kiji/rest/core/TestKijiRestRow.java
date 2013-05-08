@@ -40,10 +40,6 @@ public class TestKijiRestRow {
   @JsonProperty("cells")
   private List<TestKijiRestCell> mKijiCells;
 
-  public TestKijiRestRow() {
-
-  }
-
   /**
    * Adds a new TestKijiRestCell to the list of cells in the row.
    *

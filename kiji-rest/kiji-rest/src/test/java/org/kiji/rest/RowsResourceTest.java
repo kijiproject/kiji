@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.Set;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -38,7 +39,7 @@ import org.junit.After;
 import org.junit.Test;
 
 import org.kiji.rest.core.TestKijiRestRow;
-import org.kiji.rest.resources.RowResource;
+import org.kiji.rest.resources.RowsResource;
 import org.kiji.rest.sample_avro.PickBan;
 import org.kiji.rest.sample_avro.Team;
 import org.kiji.schema.EntityId;
@@ -56,7 +57,7 @@ import org.kiji.schema.util.InstanceBuilder;
  * Test class for the Row resource.
  *
  */
-public class RowResourceTest extends ResourceTest {
+public class RowsResourceTest extends ResourceTest {
 
   private Kiji mFakeKiji = null;
 
@@ -151,7 +152,8 @@ public class RowResourceTest extends ResourceTest {
     fakeTable.release();
 
     KijiRESTService.registerSerializers(this.getObjectMapperFactory());
-    RowResource resource = new RowResource(mFakeKiji.getURI(), mValidInstances);
+    RowsResource resource = new RowsResource(mFakeKiji.getURI(), mValidInstances,
+        this.getObjectMapperFactory().build());
     addResource(resource);
   }
 
@@ -161,6 +163,14 @@ public class RowResourceTest extends ResourceTest {
     String hexRowKey = Hex.encodeHexString(eid.getHBaseRowKey());
     fakeTable.release();
     return hexRowKey;
+  }
+
+  protected final String getEntityIdString(String table, Object... components) throws IOException {
+    KijiTable fakeTable = mFakeKiji.openTable(table);
+    EntityId eid = fakeTable.getEntityId(components);
+    String entityIdString = URLEncoder.encode(eid.toShellString(), "UTF-8");
+    fakeTable.release();
+    return entityIdString;
   }
 
   /**
@@ -175,8 +185,8 @@ public class RowResourceTest extends ResourceTest {
 
   @Test
   public void testShouldFetchAllCellsForGivenRow() throws Exception {
-    String hexRowKey = getHBaseRowKeyHex("sample_table", 12345L);
-    String resourceURI = "/v1/instances/default/tables/sample_table/rows/" + hexRowKey;
+    String eid = getEntityIdString("sample_table", 12345L);
+    String resourceURI = "/v1/instances/default/tables/sample_table/rows?eid=" + eid;
     TestKijiRestRow returnRow = client().resource(resourceURI).get(TestKijiRestRow.class);
     assertEquals(7, returnRow.getCells().size());
   }
@@ -184,10 +194,10 @@ public class RowResourceTest extends ResourceTest {
   @Test
   public void testShouldFetchASingleStringCellFromGroupFamily() throws Exception {
 
-    String hexRowKey = getHBaseRowKeyHex("sample_table", 12345L);
+    String eid = getEntityIdString("sample_table", 12345L);
     // Test group qualifier, string type
-    String resourceURI = "/v1/instances/default/tables/sample_table/rows/" + hexRowKey;
-    resourceURI = resourceURI + "?cols=group_family:string_qualifier";
+    String resourceURI = "/v1/instances/default/tables/sample_table/rows?eid=" + eid;
+    resourceURI = resourceURI + "&cols=group_family:string_qualifier";
 
     TestKijiRestRow returnRow = client().resource(resourceURI).get(TestKijiRestRow.class);
     assertEquals(1, returnRow.getCells().size());
@@ -197,11 +207,11 @@ public class RowResourceTest extends ResourceTest {
   @Test
   public void testShouldFetchASingleLongCellFromGroupFamily() throws Exception {
 
-    String hexRowKey = getHBaseRowKeyHex("sample_table", 12345L);
+    String eid = getEntityIdString("sample_table", 12345L);
 
     // Test group qualifier, long type
-    String resourceURI = "/v1/instances/default/tables/sample_table/rows/" + hexRowKey;
-    resourceURI = resourceURI + "?cols=group_family:long_qualifier";
+    String resourceURI = "/v1/instances/default/tables/sample_table/rows?eid=" + eid;
+    resourceURI = resourceURI + "&cols=group_family:long_qualifier";
 
     TestKijiRestRow returnRow = client().resource(resourceURI).get(TestKijiRestRow.class);
     assertEquals(1, returnRow.getCells().size());
@@ -211,11 +221,11 @@ public class RowResourceTest extends ResourceTest {
   @Test
   public void testShouldFetchASingleSpecificAvroCellFromGroupFamily() throws Exception {
 
-    String hexRowKey = getHBaseRowKeyHex("sample_table", 12345L);
+    String eid = getEntityIdString("sample_table", 12345L);
 
     // Test group qualifier, specific avro type
-    String resourceURI = "/v1/instances/default/tables/sample_table/rows/" + hexRowKey;
-    resourceURI = resourceURI + "?cols=group_family:team_qualifier";
+    String resourceURI = "/v1/instances/default/tables/sample_table/rows?eid=" + eid;
+    resourceURI = resourceURI + "&cols=group_family:team_qualifier";
 
     TestKijiRestRow returnRow = client().resource(resourceURI).get(TestKijiRestRow.class);
     assertEquals(1, returnRow.getCells().size());
@@ -228,11 +238,11 @@ public class RowResourceTest extends ResourceTest {
   @Test
   public void testShouldFetchASingleGenericAvroCellFromGroupFamily() throws Exception {
 
-    String hexRowKey = getHBaseRowKeyHex("sample_table", 12345L);
+    String eid = getEntityIdString("sample_table", 12345L);
 
     // Test group qualifier, generic avro type
-    String resourceURI = "/v1/instances/default/tables/sample_table/rows/" + hexRowKey;
-    resourceURI = resourceURI + "?cols=group_family:inline_record";
+    String resourceURI = "/v1/instances/default/tables/sample_table/rows?eid=" + eid;
+    resourceURI = resourceURI + "&cols=group_family:inline_record";
 
     TestKijiRestRow returnRow = client().resource(resourceURI).get(TestKijiRestRow.class);
     assertEquals(1, returnRow.getCells().size());
@@ -245,11 +255,11 @@ public class RowResourceTest extends ResourceTest {
   @Test
   public void testShouldFetchASingleStringCellFromMapFamily() throws Exception {
 
-    String hexRowKey = getHBaseRowKeyHex("sample_table", 12345L);
+    String eid = getEntityIdString("sample_table", 12345L);
 
     // Test map qualifier, string type
-    String resourceURI = "/v1/instances/default/tables/sample_table/rows/" + hexRowKey;
-    resourceURI = resourceURI + "?cols=strings:apple%20iphone";
+    String resourceURI = "/v1/instances/default/tables/sample_table/rows?eid=" + eid;
+    resourceURI = resourceURI + "&cols=strings:apple%20iphone";
 
     TestKijiRestRow returnRow = client().resource(resourceURI).get(TestKijiRestRow.class);
     assertEquals(1, returnRow.getCells().size());
@@ -259,11 +269,11 @@ public class RowResourceTest extends ResourceTest {
   @Test
   public void testShouldFetchASingleLongCellFromMapFamily() throws Exception {
 
-    String hexRowKey = getHBaseRowKeyHex("sample_table", 12345L);
+    String eid = getEntityIdString("sample_table", 12345L);
 
     // Test map qualifier, long type
-    String resourceURI = "/v1/instances/default/tables/sample_table/rows/" + hexRowKey;
-    resourceURI = resourceURI + "?cols=longs:some%20other%20qualifier";
+    String resourceURI = "/v1/instances/default/tables/sample_table/rows?eid=" + eid;
+    resourceURI = resourceURI + "&cols=longs:some%20other%20qualifier";
 
     TestKijiRestRow returnRow = client().resource(resourceURI).get(TestKijiRestRow.class);
     assertEquals(1, returnRow.getCells().size());
@@ -273,11 +283,11 @@ public class RowResourceTest extends ResourceTest {
   @Test
   public void testShouldFetchASingleSpecificAvroCellFromMapFamily() throws Exception {
 
-    String hexRowKey = getHBaseRowKeyHex("sample_table", 12345L);
+    String eid = getEntityIdString("sample_table", 12345L);
 
     // Test map qualifier, specific Avro
-    String resourceURI = "/v1/instances/default/tables/sample_table/rows/" + hexRowKey;
-    resourceURI = resourceURI + "?cols=pick_bans:ban_pick_1";
+    String resourceURI = "/v1/instances/default/tables/sample_table/rows?eid=" + eid;
+    resourceURI = resourceURI + "&cols=pick_bans:ban_pick_1";
 
     TestKijiRestRow returnRow = client().resource(resourceURI).get(TestKijiRestRow.class);
     assertEquals(1, returnRow.getCells().size());
@@ -290,10 +300,10 @@ public class RowResourceTest extends ResourceTest {
   @Test
   public void testShouldFetchAllQualifiersForAGroupFamily() throws Exception {
 
-    String hexRowKey = getHBaseRowKeyHex("sample_table", 12345L);
+    String eid = getEntityIdString("sample_table", 12345L);
 
-    String resourceURI = "/v1/instances/default/tables/sample_table/rows/" + hexRowKey;
-    resourceURI = resourceURI + "?cols=group_family";
+    String resourceURI = "/v1/instances/default/tables/sample_table/rows?eid=" + eid;
+    resourceURI = resourceURI + "&cols=group_family";
 
     TestKijiRestRow returnRow = client().resource(resourceURI).get(TestKijiRestRow.class);
     assertEquals(4, returnRow.getCells().size());
@@ -302,10 +312,10 @@ public class RowResourceTest extends ResourceTest {
   @Test
   public void testShouldFetchAllQualifiersForAMapFamily() throws Exception {
 
-    String hexRowKey = getHBaseRowKeyHex("sample_table", 12345L);
+    String eid = getEntityIdString("sample_table", 12345L);
 
-    String resourceURI = "/v1/instances/default/tables/sample_table/rows/" + hexRowKey;
-    resourceURI = resourceURI + "?cols=strings";
+    String resourceURI = "/v1/instances/default/tables/sample_table/rows?eid=" + eid;
+    resourceURI = resourceURI + "&cols=strings";
 
     TestKijiRestRow returnRow = client().resource(resourceURI).get(TestKijiRestRow.class);
     assertEquals(1, returnRow.getCells().size());
@@ -314,10 +324,10 @@ public class RowResourceTest extends ResourceTest {
   @Test
   public void testShouldFetchAllVersions() throws Exception {
 
-    String hexRowKey = getHBaseRowKeyHex("sample_table", 2345L);
+    String eid = getEntityIdString("sample_table", 2345L);
 
-    String resourceURI = "/v1/instances/default/tables/sample_table/rows/" + hexRowKey;
-    resourceURI = resourceURI + "?cols=group_family:string_qualifier&versions=10";
+    String resourceURI = "/v1/instances/default/tables/sample_table/rows?eid=" + eid;
+    resourceURI = resourceURI + "&cols=group_family:string_qualifier&versions=10";
 
     TestKijiRestRow returnRow = client().resource(resourceURI).get(TestKijiRestRow.class);
     assertEquals(5, returnRow.getCells().size());
@@ -326,10 +336,10 @@ public class RowResourceTest extends ResourceTest {
   @Test
   public void testShouldFetchTheLatestVersion() throws Exception {
 
-    String hexRowKey = getHBaseRowKeyHex("sample_table", 2345L);
+    String eid = getEntityIdString("sample_table", 2345L);
 
-    String resourceURI = "/v1/instances/default/tables/sample_table/rows/" + hexRowKey;
-    resourceURI = resourceURI + "?cols=group_family:string_qualifier&versions=1";
+    String resourceURI = "/v1/instances/default/tables/sample_table/rows?eid=" + eid;
+    resourceURI = resourceURI + "&cols=group_family:string_qualifier&versions=1";
 
     TestKijiRestRow returnRow = client().resource(resourceURI).get(TestKijiRestRow.class);
     assertEquals(1, returnRow.getCells().size());
@@ -339,10 +349,10 @@ public class RowResourceTest extends ResourceTest {
   @Test
   public void testShouldFetchAllCellsByTime() throws Exception {
 
-    String hexRowKey = getHBaseRowKeyHex("sample_table", 56789L);
+    String eid = getEntityIdString("sample_table", 56789L);
 
-    String resourceURI = "/v1/instances/default/tables/sample_table/rows/" + hexRowKey;
-    resourceURI = resourceURI + "?cols=group_family:string_qualifier&timerange=1..6&versions=10";
+    String resourceURI = "/v1/instances/default/tables/sample_table/rows?eid=" + eid;
+    resourceURI = resourceURI + "&cols=group_family:string_qualifier&timerange=1..6&versions=10";
 
     TestKijiRestRow returnRow = client().resource(resourceURI).get(TestKijiRestRow.class);
     assertEquals(5, returnRow.getCells().size());
@@ -352,10 +362,10 @@ public class RowResourceTest extends ResourceTest {
   @Test
   public void testShouldFetchSingleCellByTime() throws Exception {
 
-    String hexRowKey = getHBaseRowKeyHex("sample_table", 56789L);
+    String eid = getEntityIdString("sample_table", 56789L);
 
-    String resourceURI = "/v1/instances/default/tables/sample_table/rows/" + hexRowKey;
-    resourceURI = resourceURI + "?cols=group_family:string_qualifier&timerange=2..3&versions=1";
+    String resourceURI = "/v1/instances/default/tables/sample_table/rows?eid=" + eid;
+    resourceURI = resourceURI + "&cols=group_family:string_qualifier&timerange=2..3&versions=1";
 
     TestKijiRestRow returnRow = client().resource(resourceURI).get(TestKijiRestRow.class);
     assertEquals(1, returnRow.getCells().size());
@@ -364,15 +374,39 @@ public class RowResourceTest extends ResourceTest {
 
   @Test
   public void testShouldThrowExceptionWhenAllColumnsRequestedNotPresent() throws Exception {
-    String hexRowKey = getHBaseRowKeyHex("sample_table", 56789L);
+    String eid = getEntityIdString("sample_table", 56789L);
 
-    String resourceURI = "/v1/instances/default/tables/sample_table/rows/" + hexRowKey;
-    resourceURI = resourceURI + "?cols=group_familyy";
+    String resourceURI = "/v1/instances/default/tables/sample_table/rows?eid=" + eid;
+    resourceURI = resourceURI + "&cols=group_familyy";
     try {
       client().resource(resourceURI).get(TestKijiRestRow.class);
       fail();
     } catch (UniformInterfaceException e) {
       assertEquals(400, e.getResponse().getStatus());
     }
+  }
+
+  @Test
+  public void testShouldSendAllRows() throws Exception {
+    String resourceURI = "/v1/instances/default/tables/sample_table/rows";
+    String out = client().resource(resourceURI).get(String.class);
+    assertEquals(3, out.split("\n").length);
+  }
+
+  @Test
+  public void testShouldLimitRowsSent() throws Exception {
+    String resourceURI = "/v1/instances/default/tables/sample_table/rows?limit=1";
+    String out = client().resource(resourceURI).get(String.class);
+    assertEquals(1, out.split("\n").length);
+  }
+
+  @Test
+  public void testShouldReturnRowsInRange() throws Exception {
+    String eid = getHBaseRowKeyHex("sample_table", 12345L);
+
+    String resourceURI = "/v1/instances/default/tables/sample_table/rows?start_rk=" + eid
+        + "&end_rk=44018000000000003040";
+    TestKijiRestRow row = client().resource(resourceURI).get(TestKijiRestRow.class);
+    assertEquals(eid, row.getHBaseRowKey());
   }
 }

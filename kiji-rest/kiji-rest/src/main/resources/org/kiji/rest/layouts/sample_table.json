@@ -73,7 +73,7 @@
               "renamed_from": null
             }, {
               "id": 3,
-              "name": "dire_team",
+              "name": "team_qualifier",
               "aliases": [],
               "enabled": true,
               "description": "dire team information",
@@ -110,7 +110,7 @@
           "name": "pick_bans",
           "aliases": [],
           "enabled": true,
-          "description": "pick_ban information",
+          "description": "pick_ban map family",
           "map_schema": {
             "org.kiji.schema.avro.CellSchema": {
               "storage": "UID",
