@@ -9,6 +9,17 @@ For more information about KijiSchema, see
 Further documentation is available at the Kiji project
 [Documentation Portal](http://docs.kiji.org)
 
+Starting a local KijiREST server
+--------------------------------
+
+KijiREST is built as an executable JAR and therefore can be run via:
+
+$ java -jar target/kiji-rest-${project.version}-SNAPSHOT.jar server
+        target/test-classes/configugation.yml
+
+Any relevant Avro classes that are necessary for interaction of KijiREST with
+the underlying Kiji tables must be included on the classpath upon instantiation
+of the server.
 
 Development Warning
 -------------------
