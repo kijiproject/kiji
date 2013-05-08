@@ -1,2 +1,2 @@
 cluster: "kiji://localhost:2181/" #The base cluster URI
-instances: ["default", "dota2"] #Visible instances
+instances: ["default"] #Visible instances

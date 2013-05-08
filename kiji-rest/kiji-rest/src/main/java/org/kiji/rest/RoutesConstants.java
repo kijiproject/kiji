@@ -45,7 +45,7 @@ public final class RoutesConstants {
    * <li>Path: /v1/version
    * <li>Handled by: {@link KijiRESTResource#getVersion}
    */
-  public static final String VERSION_ENDPOINT = API_VERSION + "/version";
+  public static final String VERSION_ENDPOINT = "/version";
 
   /**
    * GETs a list of instances that are available.
