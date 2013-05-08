@@ -25,6 +25,7 @@ import com.google.common.base.Preconditions;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.mapreduce.TaskType;
@@ -66,4 +67,10 @@ public final class CDH4MR1KijiMRBridge extends KijiMRPlatformBridge {
         SequenceFile.Writer.valueClass(valueClass));
   }
 
+  /** {@inheritDoc} */
+  @Override
+  public void setUserClassesTakesPrecedence(Job job, boolean value) {
+    // We can do this directly in CDH4.
+    job.setUserClassesTakesPrecedence(value);
+  }
 }

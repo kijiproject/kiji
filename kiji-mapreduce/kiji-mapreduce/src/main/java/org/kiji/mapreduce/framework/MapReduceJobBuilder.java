@@ -59,6 +59,7 @@ import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.kvstore.impl.KeyValueStoreConfigSerializer;
 import org.kiji.mapreduce.kvstore.impl.KeyValueStoreConfigValidator;
 import org.kiji.mapreduce.kvstore.impl.XmlKeyValueStoreParser;
+import org.kiji.mapreduce.platform.KijiMRPlatformBridge;
 import org.kiji.mapreduce.util.AvroMapReduce;
 import org.kiji.mapreduce.util.Jars;
 import org.kiji.schema.Kiji;
@@ -646,7 +647,7 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder<T>> {
     GenericTableMapReduceUtil.addAllDependencyJars(job);
 
     // Ensure jars we place on the dcache take precedence over Hadoop + HBase lib jars.
-    job.setUserClassesTakesPrecedence(true);
+    KijiMRPlatformBridge.get().setUserClassesTakesPrecedence(job, true);
   }
 
   /**

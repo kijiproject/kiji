@@ -27,9 +27,12 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.mapreduce.TaskType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
 
@@ -38,6 +41,7 @@ import org.kiji.annotations.ApiAudience;
  */
 @ApiAudience.Private
 public final class Hadoop1xKijiMRBridge extends KijiMRPlatformBridge {
+  private static final Logger LOG = LoggerFactory.getLogger(Hadoop1xKijiMRBridge.class);
 
   /** {@inheritDoc} */
   @Override
@@ -69,5 +73,12 @@ public final class Hadoop1xKijiMRBridge extends KijiMRPlatformBridge {
     return new SequenceFile.Writer(fs, conf, filename, keyClass, valueClass);
   }
 
+  /** {@inheritDoc} */
+  @Override
+  public void setUserClassesTakesPrecedence(Job job, boolean value) {
+    // Underlying configuration key is not respected in hadoop 1.x.
+    LOG.warn("Cannot setUserClassesTakesPrecedence in Hadoop1.x.  User classes will be added to "
+        + "the task classpath after Hadoop and Kiji dependencies.");
+  }
 }
 

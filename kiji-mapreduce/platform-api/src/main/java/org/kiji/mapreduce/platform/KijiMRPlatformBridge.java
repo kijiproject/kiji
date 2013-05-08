@@ -24,6 +24,7 @@ import java.io.IOException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.mapreduce.TaskType;
@@ -82,6 +83,15 @@ public abstract class KijiMRPlatformBridge {
    */
   public abstract SequenceFile.Writer newSeqFileWriter(Configuration conf, Path filename,
       Class<?> keyClass, Class<?> valueClass) throws IOException;
+
+  /**
+   * Set the boolean property of a given Job for specifying which classpath takes precedence, the
+   * user's or the system's, when tasks are launched.
+   *
+   * @param job the Job for which to set the property.
+   * @param value the value to which to set the property.
+   */
+  public abstract void setUserClassesTakesPrecedence(Job job, boolean value);
 
   private static KijiMRPlatformBridge mBridge;
 
