@@ -41,7 +41,8 @@ import org.kiji.rest.resources.RowResource;
 import org.kiji.rest.resources.RowsResource;
 import org.kiji.rest.resources.TableResource;
 import org.kiji.rest.resources.TablesResource;
-import org.kiji.rest.serializers.AvroToJsonSerializer;
+import org.kiji.rest.serializers.AvroToJsonStringSerializer;
+import org.kiji.rest.serializers.TableLayoutToJsonSerializer;
 import org.kiji.rest.serializers.Utf8ToJsonSerializer;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiURI;
@@ -81,8 +82,9 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
     //mapping seems to throw an exception.
     SimpleModule module = new SimpleModule("KijiRestModule", new Version(1, 0, 0, null,
         "org.kiji.rest", "avroToJson"));
-    module.addSerializer(new AvroToJsonSerializer());
+    module.addSerializer(new AvroToJsonStringSerializer());
     module.addSerializer(new Utf8ToJsonSerializer());
+    module.addSerializer(new TableLayoutToJsonSerializer());
     mapperFactory.registerModule(module);
   }
 
