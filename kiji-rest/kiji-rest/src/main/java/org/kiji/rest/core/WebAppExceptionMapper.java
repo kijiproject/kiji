@@ -20,6 +20,7 @@
 package org.kiji.rest.core;
 
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
@@ -43,9 +44,10 @@ public class WebAppExceptionMapper implements ExceptionMapper<WebApplicationExce
   @Override
   public Response toResponse(WebApplicationException thrownException) {
     ResponseBuilder builder = new ResponseBuilderImpl();
+    builder.type(MediaType.APPLICATION_JSON);
     Status status = Status.fromStatusCode(thrownException.getResponse().getStatus());
     builder.status(status);
-    builder.entity(new ExceptionWrapper(status, thrownException.getCause()));
+    builder.entity(new ExceptionWrapper(status, thrownException));
     return builder.build();
   }
 }
