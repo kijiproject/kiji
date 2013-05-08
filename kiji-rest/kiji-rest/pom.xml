@@ -132,7 +132,7 @@
       </exclusions>
     </dependency>
 
-    <!--  Testing Dependencies  -->
+    <!-- Testing Dependencies -->
     <dependency>
       <groupId>com.yammer.dropwizard</groupId>
       <artifactId>dropwizard-testing</artifactId>
@@ -183,17 +183,9 @@
           <groupId>javax.servlet.jsp</groupId>
           <artifactId>jsp-api</artifactId>
         </exclusion>
-      </exclusions>      
+      </exclusions>
     </dependency>
   </dependencies>
-
-  <properties>
-    <!-- use UTF-8 for everything -->
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <guava.version>14.0.1</guava.version>
-    <dropwizard.version>0.6.2</dropwizard.version>
-  </properties>
 
   <build>
     <plugins>
@@ -273,30 +265,11 @@
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>findbugs-maven-plugin</artifactId>
       </plugin>
-      
+
       <plugin>
         <groupId>org.apache.avro</groupId>
         <artifactId>avro-maven-plugin</artifactId>
-        <version>1.7.2</version>
-        <executions>
-          <execution>
-            <phase>generate-test-sources</phase>
-            <goals>
-              <goal>idl-protocol</goal>
-            </goals>
-            <configuration>
-              <stringType>String</stringType>
-              <includes>
-                <include>*.avdl</include>
-              </includes>
-              <testSourceDirectory>${project.basedir}/src/test/avro/</testSourceDirectory>
-              <!-- 
-              <outputDirectory>${project.basedir}/src/main/java/</outputDirectory>
-               -->
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>      
+      </plugin>
     </plugins>
   </build>
 </project>
