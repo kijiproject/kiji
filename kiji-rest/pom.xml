@@ -35,7 +35,7 @@
   <inceptionYear>2013</inceptionYear>
 
   <properties>
-    <kiji-schema.version>1.0.0</kiji-schema.version>
+    <kiji-schema.version>1.0.3</kiji-schema.version>
     <fake-hbase.version>0.0.4</fake-hbase.version>
   </properties>
 
