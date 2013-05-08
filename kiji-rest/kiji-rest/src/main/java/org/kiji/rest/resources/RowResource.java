@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
@@ -43,7 +44,6 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
-
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
@@ -79,6 +79,7 @@ import org.kiji.schema.util.ResourceUtils;
  */
 @Path(ROW_PATH)
 @Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
 public class RowResource extends AbstractRowResource {
 
   /** Prefix for cell-specific schema parameter. */
@@ -303,13 +304,13 @@ public class RowResource extends AbstractRowResource {
     } catch (DecoderException e1) {
       throw new WebApplicationException(e1, Status.BAD_REQUEST);
     }
-    long[] lTimeRange = null;
+    long[] timeRanges = null;
     if (timeRange != null) {
-      lTimeRange = getTimestamps(timeRange);
+      timeRanges = getTimestamps(timeRange);
     }
     final KijiTable table = super.getKijiTable(instanceId, tableId);
     //TODO: This currently leaks the table and we need to close resources
     //properly.
-    return getKijiRow(table, hbaseRowKey, lTimeRange, columns, maxVersions);
+    return getKijiRow(table, hbaseRowKey, timeRanges, columns, maxVersions);
   }
 }
