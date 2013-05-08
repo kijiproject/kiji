@@ -1,0 +1,169 @@
+{
+  "name": "sample_table",
+  "description": "A table for testing Kiji Rest",
+  "keys_format": {
+    "org.kiji.schema.avro.RowKeyFormat2": {
+      "encoding": "FORMATTED",
+      "salt": {
+        "org.kiji.schema.avro.HashSpec": {
+          "hash_type": "MD5",
+          "hash_size": 2,
+          "suppress_key_materialization": false
+        }
+      },
+      "range_scan_start_index": 1,
+      "nullable_start_index": 1,
+      "components": [
+        {
+          "name": "sequence_number",
+          "type": "LONG"
+        }
+      ]
+    }
+  },
+  "locality_groups": [
+    {
+      "id": 1,
+      "name": "default",
+      "aliases": [],
+      "enabled": true,
+      "description": "main storage",
+      "in_memory": false,
+      "max_versions": 1,
+      "ttl_seconds": 2147483647,
+      "compression_type": "GZ",
+      "families": [
+        {
+          "id": 1,
+          "name": "group_family",
+          "aliases": [],
+          "enabled": true,
+          "description": "basic match information",
+          "map_schema": null,
+          "columns": [
+            {
+              "id": 1,
+              "name": "long_qualifier",
+              "aliases": [],
+              "enabled": true,
+              "description": "",
+              "column_schema": {
+                "storage": "UID",
+                "type": "INLINE",
+                "value": {
+                  "string": "\"long\""
+                }
+              },
+              "delete": false,
+              "renamed_from": null
+            }, {
+              "id": 2,
+              "name": "string_qualifier",
+              "aliases": [],
+              "enabled": true,
+              "description": "",
+              "column_schema": {
+                "storage": "UID",
+                "type": "INLINE",
+                "value": {
+                  "string": "\"string\""
+                }
+              },
+              "delete": false,
+              "renamed_from": null
+            }, {
+              "id": 3,
+              "name": "dire_team",
+              "aliases": [],
+              "enabled": true,
+              "description": "dire team information",
+              "column_schema": {
+                "storage": "UID",
+                "type": "CLASS",
+                "value": {
+                  "string": "org.kiji.rest.sample_avro.Team"
+                }
+              },
+              "delete": false,
+              "renamed_from": null
+            }, {
+              "id": 4,
+              "name": "inline_record",
+              "aliases": [],
+              "enabled": true,
+              "description": "",
+              "column_schema": {
+                "storage": "UID",
+                "type": "INLINE",
+                "value": {
+                  "string": "{\"type\": \"record\",\"name\": \"UserRecord\",\"fields\": [{\"name\": \"username\",\"type\": \"string\"},{\"name\": \"num_purchases\",\"type\": \"long\"}]}"
+                }
+              },
+              "delete": false,
+              "renamed_from": null
+            }
+          ],
+          "delete": false,
+          "renamed_from": null
+        }, {
+          "id": 2,
+          "name": "pick_bans",
+          "aliases": [],
+          "enabled": true,
+          "description": "pick_ban information",
+          "map_schema": {
+            "org.kiji.schema.avro.CellSchema": {
+              "storage": "UID",
+              "type": "CLASS",
+              "value": {
+                "string": "org.kiji.rest.sample_avro.PickBan"
+              }
+            }
+          },
+          "columns": [],
+          "delete": false,
+          "renamed_from": null
+        }, {
+          "id": 3,
+          "name": "strings",
+          "aliases": [],
+          "enabled": true,
+          "description": "Some string map family",
+          "map_schema": {
+            "org.kiji.schema.avro.CellSchema": {
+              "storage": "UID",
+              "type": "INLINE",
+              "value": {
+                "string": "{\"type\": \"string\"}"
+              }
+            }
+          }
+        }, {
+          "id": 4,
+          "name": "longs",
+          "aliases": [],
+          "enabled": true,
+          "description": "Some long map family",
+          "map_schema": {
+            "org.kiji.schema.avro.CellSchema": {
+              "storage": "UID",
+              "type": "INLINE",
+              "value": {
+                "string": "{\"type\": \"long\"}"
+              }
+            }
+          },
+          "columns": [],
+          "delete": false,
+          "renamed_from": null
+        }
+      ],
+      "delete": false,
+      "renamed_from": null
+    }
+  ],
+  "version": "layout-1.1",
+  "layout_id": {
+    "string": "1"
+  }
+}

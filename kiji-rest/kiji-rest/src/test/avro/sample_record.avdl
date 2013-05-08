@@ -1,0 +1,17 @@
+@namespace("org.kiji.rest.sample_avro")
+protocol SampleAvro {
+  record Team {
+    union { null, long } id;
+    union { null, long } complete;
+    union { null, string } name;
+    union { null, long } logo;
+    union { null, long } tower_status;
+    union { null, long } barracks_status;
+  }
+  record PickBan {
+    union { null, long } team;
+    union { null, long } hero_id;
+    union { null, long } order;
+    union { null, boolean } is_pick;
+  }
+}
