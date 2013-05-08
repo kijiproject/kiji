@@ -2,6 +2,10 @@
 
                         Kiji Hive Adapter Release Notes
 
+Version 0.2.1
+  * KIJIHIVE-18. Removed dead code that was causing NPEs while decoding
+      nullable fields within complex types.
+
 Version 0.2.0
   * KIJIHIVE-7. Add support for Avro unions.
   * KIJIHIVE-8. Fixed conversion issue for decoding complex Avro types.

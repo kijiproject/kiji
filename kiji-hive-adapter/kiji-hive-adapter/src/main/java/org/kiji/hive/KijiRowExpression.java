@@ -29,7 +29,6 @@ import java.util.NavigableMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.avro.Schema;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hive.serde2.typeinfo.ListTypeInfo;
@@ -352,8 +351,6 @@ public class KijiRowExpression {
         return result;
       }
 
-      final Schema schema = getAvroTypeAdapter().toAvroSchema(mCellTypeInfo);
-
       final NavigableMap<String, NavigableMap<Long, Object>> familyMap =
           row.getValues(getFamily());
       for (Map.Entry<String, NavigableMap<Long, Object>> entry : familyMap.entrySet()) {
@@ -509,8 +506,6 @@ public class KijiRowExpression {
         // TODO: Consider logging LOG.warn("Nothing found for {}:{}", getFamily(), getQualifier());
         return result;
       }
-
-      final Schema schema = getAvroTypeAdapter().toAvroSchema(mCellTypeInfo);
 
       final NavigableMap<Long, Object> cellMap =
           row.getValues(getFamily(), getQualifier());

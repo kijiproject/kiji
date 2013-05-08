@@ -27,7 +27,6 @@ import static org.kiji.hive.utils.HiveTypes.HiveUnion;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -86,101 +85,6 @@ public final class AvroTypeAdapter {
      */
     public IncompatibleTypeException(TypeInfo hiveType) {
       super("Unable to generate an avro schema that describes hive type [" + hiveType + "]");
-    }
-  }
-
-  /**
-   * Generates a generic avro reader schema from a hive type declaration.
-   *
-   * @param hiveType The hive type to generate an avro schema for.
-   * @return An avro reader schema suitable for reading data necessary
-   *     to fill the hive type.
-   */
-  public Schema toAvroSchema(TypeInfo hiveType) {
-    // Special case the Avro union with null, which in effect just means the type is "nullable".
-    // In Hive, all types are nullable, so {T, null} and {null, T} should become just T in hive.
-
-    return Schema.createUnion(
-        Arrays.asList(Schema.create(Schema.Type.NULL), toNonNullableAvroSchema(hiveType)));
-  }
-
-  /**
-   * Generates a generic avro reader schema from a hive type
-   * declaration that is not nullable.
-   *
-   * @param hiveType The hive type to generate an avro schema for.
-   * @return An avro reader schema suitable for reading data necessary
-   *     to fill the hive type.
-   */
-  public Schema toNonNullableAvroSchema(TypeInfo hiveType) {
-    switch (hiveType.getCategory()) {
-    case PRIMITIVE:
-      return toNonNullableAvroSchema((PrimitiveTypeInfo) hiveType);
-    case LIST:
-      final ListTypeInfo listTypeInfo = (ListTypeInfo) hiveType;
-      return Schema.createArray(toAvroSchema(listTypeInfo.getListElementTypeInfo()));
-    case MAP:
-      final MapTypeInfo mapTypeInfo = (MapTypeInfo) hiveType;
-      // TODO: Validate that the map key type is a string.
-      return Schema.createMap(toAvroSchema(mapTypeInfo.getMapValueTypeInfo()));
-    case STRUCT:
-      final StructTypeInfo structTypeInfo = (StructTypeInfo) hiveType;
-      final List<String> fieldNames = structTypeInfo.getAllStructFieldNames();
-      final List<TypeInfo> fieldTypes = structTypeInfo.getAllStructFieldTypeInfos();
-      final List<Schema.Field> fields = new ArrayList<Schema.Field>();
-      for (int i = 0; i < fieldNames.size(); i++) {
-        final String fieldName = fieldNames.get(i);
-        final TypeInfo fieldType = fieldTypes.get(i);
-        // TODO: Figure out whether we need to specify an empty doc
-        //       string, or if null will work just fine.
-        fields.add(new Schema.Field(fieldName, toAvroSchema(fieldType), "", null));
-      }
-      return Schema.createRecord(fields);
-    case UNION:
-      final UnionTypeInfo unionTypeInfo = (UnionTypeInfo) hiveType;
-      List<TypeInfo> subTypes = unionTypeInfo.getAllUnionObjectTypeInfos();
-      List<Schema> subSchemas = Lists.newArrayList();
-      for (TypeInfo subType : subTypes) {
-        subSchemas.add(toNonNullableAvroSchema(subType));
-      }
-      return Schema.createUnion(subSchemas);
-    default:
-      throw new IncompatibleTypeException(hiveType);
-    }
-  }
-
-  /**
-   * Constructs a non-nullable Avro schema from a primitive Hive type.
-   *
-   * @param primitiveType The Hive type.
-   * @return An avro schema.
-   */
-  public Schema toNonNullableAvroSchema(PrimitiveTypeInfo primitiveType) {
-    switch (primitiveType.getPrimitiveCategory()) {
-    case VOID: // Like the avro null type, right?
-      return Schema.create(Schema.Type.NULL);
-    case BYTE:
-      return Schema.createFixed("BYTE", "", "", 1);
-    case SHORT:
-      return Schema.createFixed("SHORT", "", "", 2);
-    case BOOLEAN:
-      return Schema.create(Schema.Type.BOOLEAN);
-    case INT:
-      return Schema.create(Schema.Type.INT);
-    case LONG:
-      return Schema.create(Schema.Type.LONG);
-    case FLOAT:
-      return Schema.create(Schema.Type.FLOAT);
-    case DOUBLE:
-      return Schema.create(Schema.Type.DOUBLE);
-    case STRING:
-      return Schema.create(Schema.Type.STRING);
-    case TIMESTAMP:
-      return Schema.create(Schema.Type.LONG);
-    case BINARY:
-      return Schema.create(Schema.Type.BYTES);
-    default:
-      throw new IncompatibleTypeException(primitiveType);
     }
   }
 
