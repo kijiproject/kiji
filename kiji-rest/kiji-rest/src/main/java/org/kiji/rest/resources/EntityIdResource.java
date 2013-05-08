@@ -22,7 +22,7 @@ import static org.kiji.rest.RoutesConstants.ENTITY_ID_PATH;
 import static org.kiji.rest.RoutesConstants.INSTANCE_PARAMETER;
 import static org.kiji.rest.RoutesConstants.TABLE_PARAMETER;
 
-import java.util.List;
+import java.io.IOException;
 import java.util.Set;
 
 import javax.ws.rs.GET;
@@ -34,19 +34,15 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 
-import com.google.common.collect.Lists;
 import com.yammer.metrics.annotation.Timed;
 
 import org.apache.commons.codec.binary.Hex;
 
 import org.kiji.schema.EntityId;
-import org.kiji.schema.EntityIdFactory;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;
-import org.kiji.schema.avro.RowKeyComponent;
-import org.kiji.schema.avro.RowKeyFormat;
-import org.kiji.schema.avro.RowKeyFormat2;
 import org.kiji.schema.layout.KijiTableLayout;
+import org.kiji.schema.tools.ToolUtils;
 /**
  * This REST resource represents an entity_id in Kiji.
  *
@@ -72,52 +68,30 @@ public class EntityIdResource extends AbstractKijiResource {
    *
    * @param instance in which the table resides.
    * @param table to translate the entityId for.
-   * @param components of the entityId.
+   * @param components is the JSON array of components of the entityId.
    * @return a message containing a list of available sub-resources.
    */
   @GET
   @Timed
   public String getEntityId(@PathParam(INSTANCE_PARAMETER) String instance,
       @PathParam(TABLE_PARAMETER) String table,
-      @QueryParam("component") List<String> components) {
+      @QueryParam("eid") String components) {
 
-    if (components.isEmpty()) {
+    if (components == null || components.trim().isEmpty()) {
       throw new WebApplicationException(new IllegalArgumentException("Components Required "
           + "to construct entity id!"), Status.BAD_REQUEST);
     }
 
     KijiTable kijiTable = getKijiTable(instance, table);
     KijiTableLayout layout = kijiTable.getLayout();
-    final EntityIdFactory factory = EntityIdFactory.getFactory(layout);
-    final Object keysFormat = layout.getDesc().getKeysFormat();
+
     EntityId entityId = null;
-
-    if (keysFormat instanceof RowKeyFormat) {
-      entityId = factory.getEntityId(components.get(0));
-    } else {
-      //Go through the components and convert the component string into
-      //the strong type that is desired by the key.
-      RowKeyFormat2 newFormat = (RowKeyFormat2) keysFormat;
-      List<RowKeyComponent> rkComponents = newFormat.getComponents();
-      List<Object> parsedComponents = Lists.newArrayList();
-      for (int i = 0; i < components.size() && i < rkComponents.size(); i++) {
-        RowKeyComponent comp = rkComponents.get(i);
-
-        switch (comp.getType()) {
-        case INTEGER: {
-          parsedComponents.add(Integer.parseInt(components.get(i)));
-          break;
-        }
-        case LONG: {
-          parsedComponents.add(Long.parseLong(components.get(i)));
-          break;
-        }
-        default:
-          parsedComponents.add(components.get(i));
-        }
-      }
-      entityId = factory.getEntityId(parsedComponents);
+    try {
+      entityId = ToolUtils.createEntityIdFromUserInputs(components, layout);
+    } catch (IOException e) {
+      throw new WebApplicationException(e, Status.INTERNAL_SERVER_ERROR);
     }
+
     return new String(Hex.encodeHex(entityId.getHBaseRowKey()));
   }
 
