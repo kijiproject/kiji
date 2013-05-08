@@ -45,14 +45,11 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.yammer.metrics.annotation.Timed;
 
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericDatumReader;
-import org.apache.avro.io.DecoderFactory;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
@@ -109,32 +106,36 @@ public class RowResource extends AbstractRowResource {
    * Note that every table put is a 4-tuple: &lt;family:column, value, timestamp, schema&gt;.
    * Query parameters are constructed as follows:
    * <li>family:column=value - value is a JSON string.
+   * <li>timestamp=t - t is the long global timestamp for all puts. Overrided by
+   * 'timestamp.'-prefixed query parameter. This field is mandatory.
    * <li>timestamp.family:column=t - t is the long timestamp at which to put the corresponding
-   * family:column=value. Optional; defaults to REST system time.
+   * family:column=value. Warning: this overrides to the above global timestamp.
    * <li>schema.family:column=schema - schema is the JSON containing the schema of cell.
    * Optional; defaults to what is specified in the table layout.
-   * <li>timestamp=t - t is the long timestamp for all puts. Optional; overrided by
-   * 'timestamp.'-prefixed query parameter.
    *
    * @param instance in which the table resides
    * @param table in which the row resides
-   * @param hexEntityId for the row in question
-   * @param uriInfo containing query parameters.
-   * @return a message containing the row in question
-   * @throws IOException When row put fails.
+   * @param hexEntityId for the row of interest
+   * @param uriInfo containing query parameters
+   * @return a message containing the rowkey of interest
+   * @throws IOException when row put fails
    */
   @PUT
   @Timed
-  public String putRow(@PathParam(INSTANCE_PARAMETER) String instance,
+  public Map<String, String> putRow(@PathParam(INSTANCE_PARAMETER) String instance,
       @PathParam(TABLE_PARAMETER) String table,
       @PathParam(HEX_ENTITY_ID_PARAMETER) String hexEntityId,
       @Context UriInfo uriInfo)
       throws IOException {
+    // Checks existence of mandatory global timestamp.
+    if (!uriInfo.getQueryParameters().containsKey(TIMESTAMP_KEY)) {
+      throw new WebApplicationException(Response.Status.BAD_REQUEST);
+    }
+    // Default global timestamp. Will be set by a query parameter.
+    long globalTimestamp = 0;
+
     final Kiji kiji = super.getKiji(instance);
     final KijiTable kijiTable = kiji.openTable(table);
-
-    // Default global timestamp.
-    long globalTimestamp = System.currentTimeMillis();
 
     final EntityIdFactory factory = EntityIdFactory.getFactory(kijiTable.getLayout());
     final EntityId entityId = factory.getEntityIdFromHBaseRowKey(
@@ -217,63 +218,12 @@ public class RowResource extends AbstractRowResource {
       ResourceUtils.releaseOrLog(kijiTable);
       ResourceUtils.releaseOrLog(kiji);
     }
-    return hexEntityId;
-  }
-
-  /**
-   * A private helper method to perform counter puts.
-   *
-   * @param writer The table writer which will do the putting.
-   * @param entityId The entityId of the row to put to.
-   * @param valueString The value to put; should be convertible to long.
-   * @param column The column to put the cell to.
-   * @param timestamp The timestamp to put the cell at (default is cluster-side UNIX time).
-   * @throws IOException When the put fails.
-   */
-  private void putCounterCell(
-      final KijiTableWriter writer,
-      final EntityId entityId,
-      final String valueString,
-      final KijiColumnName column,
-      final long timestamp)
-      throws IOException {
-    try {
-      long value = Long.parseLong(valueString);
-      writer.put(entityId, column.getFamily(), column.getQualifier(), timestamp, value);
-    } catch (NumberFormatException nfe) {
-      // TODO Make this a more informative exception.
-      // Could not parse parameter to a long.
-      throw new WebApplicationException(nfe, Response.Status.BAD_REQUEST);
-    }
-  }
-
-  /**
-   * A private helper method to perform individual cell puts.
-   *
-   * @param writer The table writer which will do the putting.
-   * @param entityId The entityId of the row to put to.
-   * @param jsonValue The json value to put.
-   * @param column The column to put the cell to.
-   * @param timestamp The timestamp to put the cell at (default is cluster-side UNIX time).
-   * @param schema The schema of the cell (default is specified in layout.).
-   * @throws IOException When the put fails.
-   */
-  private void putCell(
-      final KijiTableWriter writer,
-      final EntityId entityId,
-      final String jsonValue,
-      final KijiColumnName column,
-      final long timestamp,
-      final Schema schema)
-      throws IOException {
-    Preconditions.checkNotNull(schema);
-    // Create the Avro record to write.
-    GenericDatumReader<Object> reader = new GenericDatumReader<Object>(schema);
-    Object datum = reader.read(null, new DecoderFactory().jsonDecoder(schema, jsonValue));
-
-    // Write the put.
-    writer.put(entityId, column.getFamily(), column.getQualifier(), timestamp, datum);
-  }
+    // Better output?
+    Map<String, String> returnedTarget = Maps.newHashMap();
+    returnedTarget.put("target",
+        "/" + uriInfo.getPath() + "/" + new String(Hex.encodeHex(entityId.getHBaseRowKey())));
+    return returnedTarget;
+ }
 
   /**
    * GETs a KijiRow given the hex representation of the hbase rowkey.

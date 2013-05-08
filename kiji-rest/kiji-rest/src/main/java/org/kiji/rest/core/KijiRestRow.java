@@ -21,6 +21,8 @@ package org.kiji.rest.core;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import com.google.common.collect.Lists;
 
 import org.apache.commons.codec.binary.Hex;
@@ -32,9 +34,20 @@ import org.kiji.schema.EntityId;
  *
  */
 public class KijiRestRow {
+  @JsonProperty("entityId")
   private String mHumanReadableEntityId;
+
+  @JsonProperty("hbaseRowKey")
   private String mHBaseRowKey;
+
+  @JsonProperty("cells")
   private List<KijiRestCell> mKijiCells;
+
+  /**
+   * Dummy constructor required for Jackson to (de)serialize JSON properly.
+   */
+  public KijiRestRow() {
+  }
 
   /**
    * Construct a new KijiRestRow object given the entity id.

@@ -30,9 +30,15 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+
+import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.io.DecoderFactory;
 
 import org.kiji.rest.core.KijiRestCell;
 import org.kiji.rest.core.KijiRestRow;
@@ -46,6 +52,7 @@ import org.kiji.schema.KijiDataRequestBuilder.ColumnsDef;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
+import org.kiji.schema.KijiTableWriter;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.layout.CellSpec;
 import org.kiji.schema.layout.KijiTableLayout;
@@ -275,5 +282,60 @@ public class AbstractRowResource extends AbstractKijiResource {
       throw new WebApplicationException(e, Status.INTERNAL_SERVER_ERROR);
     }
     return returnRow;
+  }
+
+  /**
+   * A helper method to perform counter puts.
+   *
+   * @param writer The table writer which will do the putting.
+   * @param entityId The entityId of the row to put to.
+   * @param valueString The value to put; should be convertible to long.
+   * @param column The column to put the cell to.
+   * @param timestamp The timestamp to put the cell at (default is cluster-side UNIX time).
+   * @throws IOException When the put fails.
+   */
+  public static void putCounterCell(
+      final KijiTableWriter writer,
+      final EntityId entityId,
+      final String valueString,
+      final KijiColumnName column,
+      final long timestamp)
+      throws IOException {
+    try {
+      long value = Long.parseLong(valueString);
+      writer.put(entityId, column.getFamily(), column.getQualifier(), timestamp, value);
+    } catch (NumberFormatException nfe) {
+      // TODO Make this a more informative exception.
+      // Could not parse parameter to a long.
+      throw new WebApplicationException(nfe, Response.Status.BAD_REQUEST);
+    }
+  }
+
+  /**
+   * A helper method to perform individual cell puts.
+   *
+   * @param writer The table writer which will do the putting.
+   * @param entityId The entityId of the row to put to.
+   * @param jsonValue The json value to put.
+   * @param column The column to put the cell to.
+   * @param timestamp The timestamp to put the cell at (default is cluster-side UNIX time).
+   * @param schema The schema of the cell (default is specified in layout.).
+   * @throws IOException When the put fails.
+   */
+  public static void putCell(
+      final KijiTableWriter writer,
+      final EntityId entityId,
+      final String jsonValue,
+      final KijiColumnName column,
+      final long timestamp,
+      final Schema schema)
+      throws IOException {
+    Preconditions.checkNotNull(schema);
+    // Create the Avro record to write.
+    GenericDatumReader<Object> reader = new GenericDatumReader<Object>(schema);
+    Object datum = reader.read(null, new DecoderFactory().jsonDecoder(schema, jsonValue));
+
+    // Write the put.
+    writer.put(entityId, column.getFamily(), column.getQualifier(), timestamp, datum);
   }
 }

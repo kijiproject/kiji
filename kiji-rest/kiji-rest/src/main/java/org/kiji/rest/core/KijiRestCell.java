@@ -19,6 +19,10 @@
 
 package org.kiji.rest.core;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import org.hibernate.validator.constraints.NotEmpty;
+
 import org.kiji.schema.KijiCell;
 
 /**
@@ -27,7 +31,18 @@ import org.kiji.schema.KijiCell;
  */
 public class KijiRestCell {
 
-  private KijiCell<?> mCell;
+  @JsonProperty("timestamp")
+  private Long mTimestamp;
+
+  @NotEmpty
+  @JsonProperty("columnFamily")
+  private String mColumnFamily;
+
+  @JsonProperty("columnQualifier")
+  private String mColumnQualifier;
+
+  @JsonProperty("value")
+  private Object mValue;
 
   /**
    * Constructs a KijiRestCell given a KijiCell.
@@ -35,7 +50,16 @@ public class KijiRestCell {
    * @param kijiCell the incoming cell
    */
   public KijiRestCell(KijiCell<?> kijiCell) {
-    mCell = kijiCell;
+    mTimestamp = kijiCell.getTimestamp();
+    mColumnFamily = kijiCell.getFamily();
+    mColumnQualifier = kijiCell.getQualifier();
+    mValue = kijiCell.getData();
+  }
+
+  /**
+   * Dummy constructor required for Jackson to (de)serialize JSON properly.
+   */
+  public KijiRestCell() {
   }
 
   /**
@@ -43,8 +67,8 @@ public class KijiRestCell {
    *
    * @return the underlying cell's timestamp
    */
-  public long getTimestamp() {
-    return mCell.getTimestamp();
+  public Long getTimestamp() {
+    return mTimestamp;
   }
 
   /**
@@ -53,7 +77,7 @@ public class KijiRestCell {
    * @return the underlying cell's column family name
    */
   public String getColumnName() {
-    return mCell.getFamily();
+    return mColumnFamily;
   }
 
   /**
@@ -62,7 +86,7 @@ public class KijiRestCell {
    * @return the underlying cell's column qualifier
    */
   public String getColumnQualifier() {
-    return mCell.getQualifier();
+    return mColumnQualifier;
   }
 
   /**
@@ -71,6 +95,6 @@ public class KijiRestCell {
    * @return the underlying cell's column value
    */
   public Object getValue() {
-    return mCell.getData();
+    return mValue;
   }
 }

@@ -30,29 +30,38 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.Charset;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
+import javax.ws.rs.core.UriInfo;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Maps;
 import com.yammer.metrics.annotation.Timed;
 
+import org.apache.avro.Schema;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
+import org.kiji.rest.core.KijiRestCell;
 import org.kiji.rest.core.KijiRestRow;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.EntityIdFactory;
+import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequestBuilder;
@@ -62,8 +71,11 @@ import org.kiji.schema.KijiRowScanner;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.KijiTableReader.KijiScannerOptions;
+import org.kiji.schema.KijiTableWriter;
 import org.kiji.schema.KijiURI;
+import org.kiji.schema.avro.SchemaType;
 import org.kiji.schema.tools.ToolUtils;
+import org.kiji.schema.util.ResourceUtils;
 
 /**
  * This REST resource interacts with Kiji tables.
@@ -254,5 +266,92 @@ public class RowsResource extends AbstractRowResource {
     }
 
     return rsp;
+  }
+
+  /**
+   * POSTs JSON file to row: performs create and update.
+   * Note that the user-formatted entityId is required.
+   * Also note that writer schema is not considered as of the latest version.
+   * Following is an example of a postable JSON:
+   * {
+   *   "entityId" : "hbase=hex:8c2d2fcc2c150efb49ce0817e1823d46",
+   *   "hbaseRowKey" : "8c2d2fcc2c150efb49ce0817e1823d46",
+   *   "cells" : [ {
+   *     "value" : "\"somevalue\"",
+   *     "timestamp" : 123,
+   *     "columnName" : "info",
+   *     "columnQualifier" : "firstname"
+   *     } ]
+   * }
+   *
+   * @param instance in which the table resides
+   * @param table in which the row resides
+   * @param kijiRestRow POST-ed json data
+   * @param uriInfo containing query parameters
+   * @return a message containing the rowkey of interest
+   * @throws IOException when post fails
+   */
+  @POST
+  @Consumes(MediaType.APPLICATION_JSON)
+  public Map<String, String> postCell(@PathParam(INSTANCE_PARAMETER) String instance,
+      @PathParam(TABLE_PARAMETER) String table,
+      KijiRestRow kijiRestRow,
+      @Context UriInfo uriInfo)
+      throws IOException {
+    final Kiji kiji = super.getKiji(instance);
+    final KijiTable kijiTable = kiji.openTable(table);
+
+    // Default global timestamp.
+    long globalTimestamp = System.currentTimeMillis();
+
+    final EntityId entityId;
+    if (null != kijiRestRow.getEntityId()) {
+      entityId = ToolUtils.createEntityIdFromUserInputs(kijiRestRow.getEntityId(),
+          kijiTable.getLayout());
+    } else {
+      throw new WebApplicationException(Response.Status.BAD_REQUEST);
+    }
+
+    // Open writer and write.
+    final KijiTableWriter writer = kijiTable.openTableWriter();
+    try {
+      for (KijiRestCell kijiRestCell : kijiRestRow.getCells()) {
+        final KijiColumnName column = new KijiColumnName(kijiRestCell.getColumnName(),
+            kijiRestCell.getColumnQualifier());
+        final long timestamp;
+        if (null != kijiRestCell.getTimestamp()) {
+          timestamp = kijiRestCell.getTimestamp();
+        } else {
+          timestamp = globalTimestamp;
+        }
+
+        // Put to either a counter or a regular cell.
+        if (SchemaType.COUNTER == kijiTable.getLayout().getCellSchema(column).getType()) {
+          // Write the counter cell.
+          putCounterCell(writer, entityId, kijiRestCell.getValue().toString(), column, timestamp);
+        } else {
+          // Set writer schema in preparation to write an Avro record.
+          final Schema schema;
+          try {
+            schema = kijiTable.getLayout().getSchema(column);
+          } catch (Exception e) {
+            throw new WebApplicationException(e, Response.Status.BAD_REQUEST);
+          }
+          // Write the cell.
+          putCell(writer, entityId, kijiRestCell.getValue().toString(), column, timestamp, schema);
+        }
+      }
+    } finally {
+      ResourceUtils.closeOrLog(writer);
+      ResourceUtils.releaseOrLog(kijiTable);
+      ResourceUtils.releaseOrLog(kiji);
+    }
+
+    // Better output?
+    Map<String, String> returnedTarget = Maps.newHashMap();
+    returnedTarget.put("target",
+        "/" + uriInfo.getPath() + "/" + new String(Hex.encodeHex(entityId.getHBaseRowKey())));
+    return returnedTarget;
+
   }
 }
