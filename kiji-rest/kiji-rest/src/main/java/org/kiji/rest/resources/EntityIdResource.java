@@ -68,18 +68,18 @@ public class EntityIdResource extends AbstractKijiResource {
    *
    * @param instance in which the table resides.
    * @param table to translate the entityId for.
-   * @param components is the JSON array of components of the entityId.
+   * @param eid is the JSON array of components of the entityId.
    * @return a message containing a list of available sub-resources.
    */
   @GET
   @Timed
   public String getEntityId(@PathParam(INSTANCE_PARAMETER) String instance,
       @PathParam(TABLE_PARAMETER) String table,
-      @QueryParam("eid") String components) {
+      @QueryParam("eid") String eid) {
 
-    if (components == null || components.trim().isEmpty()) {
-      throw new WebApplicationException(new IllegalArgumentException("Components Required "
-          + "to construct entity id!"), Status.BAD_REQUEST);
+    if (eid == null || eid.trim().isEmpty()) {
+      throw new WebApplicationException(new IllegalArgumentException("Entity ID JSON required!"),
+          Status.BAD_REQUEST);
     }
 
     KijiTable kijiTable = getKijiTable(instance, table);
@@ -87,7 +87,7 @@ public class EntityIdResource extends AbstractKijiResource {
 
     EntityId entityId = null;
     try {
-      entityId = ToolUtils.createEntityIdFromUserInputs(components, layout);
+      entityId = ToolUtils.createEntityIdFromUserInputs(eid, layout);
     } catch (IOException e) {
       throw new WebApplicationException(e, Status.INTERNAL_SERVER_ERROR);
     }
