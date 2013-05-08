@@ -22,7 +22,6 @@ package org.kiji.rest.resources;
 import static org.kiji.rest.RoutesConstants.INSTANCE_PARAMETER;
 import static org.kiji.rest.RoutesConstants.INSTANCE_PATH;
 
-import java.io.IOException;
 import java.util.Set;
 
 import javax.ws.rs.GET;
@@ -31,10 +30,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
 
-import com.sun.jersey.core.spi.factory.ResponseBuilderImpl;
 import com.yammer.metrics.annotation.Timed;
 
 import org.kiji.schema.Kiji;
@@ -74,11 +71,8 @@ public class InstanceResource extends AbstractKijiResource {
           .setLayoutVersion(kiji.getSystemTable().getDataVersion().toString())
           .setSchemaTable(kiji.getSchemaTable().toBackup())
           .setMetaTable(kiji.getMetaTable().toBackup()).build();
-    } catch (IOException e) {
-      ResponseBuilder builder = new ResponseBuilderImpl();
-      builder.entity(e.getMessage());
-      builder.status(Status.INTERNAL_SERVER_ERROR);
-      throw new WebApplicationException(builder.build());
+    } catch (Exception e) {
+      throw new WebApplicationException(e, Status.INTERNAL_SERVER_ERROR);
     }
     return backup;
   }
