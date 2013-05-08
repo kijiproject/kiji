@@ -22,7 +22,9 @@ package org.kiji.rest.core;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * Models what a Kiji cell looks like when returned to the client.
+ * Models what a Kiji cell looks like when returned to the client. This
+ * needs to be kept in sync with the KijiRestCell because this is the bean
+ * class that is used for deserializing JSON back into an object for inspection.
  *
  */
 public class TestKijiRestCell {

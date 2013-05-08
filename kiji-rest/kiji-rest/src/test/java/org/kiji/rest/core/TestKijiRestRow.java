@@ -81,17 +81,4 @@ public class TestKijiRestRow {
   public List<TestKijiRestCell> getCells() {
     return mKijiCells;
   }
-
-  public void setCells(List<TestKijiRestCell> cells) {
-    this.mKijiCells = cells;
-  }
-
-  public void setHumanReadableEntityId(String mHumanReadableEntityId) {
-    this.mHumanReadableEntityId = mHumanReadableEntityId;
-  }
-
-  public void setHBaseRowKey(String mHBaseRowKey) {
-    this.mHBaseRowKey = mHBaseRowKey;
-  }
-
 }

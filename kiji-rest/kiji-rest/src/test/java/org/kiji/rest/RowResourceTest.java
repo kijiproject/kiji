@@ -48,7 +48,7 @@ import org.kiji.schema.util.InstanceBuilder;
  */
 public class RowResourceTest extends ResourceTest {
 
-  Kiji mFakeKiji = null;
+  private Kiji mFakeKiji = null;
 
   /**
    * {@inheritDoc}
@@ -69,30 +69,27 @@ public class RowResourceTest extends ResourceTest {
     addResource(resource);
   }
 
-
   /**
    * Runs after each test.
+   *
    * @throws Exception
    */
   @After
-  public void afterTest() throws Exception
-  {
+  public void afterTest() throws Exception {
     mFakeKiji.release();
   }
 
   @Test
-  public void testRowResource() throws Exception
-  {
-    //Create a simple row.
+  public void testRowResource() throws Exception {
+    // Create a simple row.
     KijiTable fakeTable = mFakeKiji.openTable("sample_table");
-    EntityId eid = fakeTable.getEntityId(12345l);
+    EntityId eid = fakeTable.getEntityId(12345L);
     String hexRowKey = Hex.encodeHexString(eid.getHBaseRowKey());
-    String resourceURI = "/v1/instances/default/tables/sample_table/rows/"+ hexRowKey;
+    String resourceURI = "/v1/instances/default/tables/sample_table/rows/" + hexRowKey;
     KijiTableWriter writer = fakeTable.openTableWriter();
     writer.put(eid, "group_family", "string_qualifier", "some_value");
     writer.close();
-    TestKijiRestRow returnRow = client().resource(resourceURI)
-        .get(TestKijiRestRow.class);
+    TestKijiRestRow returnRow = client().resource(resourceURI).get(TestKijiRestRow.class);
     assertEquals(1, returnRow.getCells().size());
     TestKijiRestCell cell = returnRow.getCells().get(0);
     assertEquals("some_value", cell.getValue().toString());

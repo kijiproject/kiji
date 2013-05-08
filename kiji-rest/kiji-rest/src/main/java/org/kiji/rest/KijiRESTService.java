@@ -69,6 +69,13 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
     registerSerializers(bootstrap.getObjectMapperFactory());
   }
 
+  /**
+   * Registers custom serializers with the Jackson ObjectMapper via DropWizard's
+   * ObjectMapperFactory. This is used by both the service initialization and the test
+   * setup method to ensure consistency between test and production.
+   *
+   * @param mapperFactory is the ObjectMapperFactory.
+   */
   public static final void registerSerializers(ObjectMapperFactory mapperFactory) {
     //Need to add a module to convert btw Avro's specific types and JSON. The default
     //mapping seems to throw an exception.
