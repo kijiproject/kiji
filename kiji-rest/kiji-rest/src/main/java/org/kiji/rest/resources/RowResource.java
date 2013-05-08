@@ -24,6 +24,9 @@ import static org.kiji.rest.RoutesConstants.INSTANCE_PARAMETER;
 import static org.kiji.rest.RoutesConstants.ROW_PATH;
 import static org.kiji.rest.RoutesConstants.TABLE_PARAMETER;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.DefaultValue;
@@ -36,17 +39,34 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 import com.yammer.metrics.annotation.Timed;
 
+import org.apache.avro.AvroRuntimeException;
+import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.io.DecoderFactory;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
 import org.kiji.rest.core.KijiRestRow;
+import org.kiji.schema.EntityId;
+import org.kiji.schema.EntityIdFactory;
+import org.kiji.schema.Kiji;
+import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiTable;
+import org.kiji.schema.KijiTableWriter;
 import org.kiji.schema.KijiURI;
+import org.kiji.schema.avro.SchemaType;
+import org.kiji.schema.util.ByteArrayFormatter;
+import org.kiji.schema.util.ResourceUtils;
 
 /**
  * This REST resource interacts with a single Kiji row identified by its hbase rowkey (in hex).
@@ -61,6 +81,15 @@ import org.kiji.schema.KijiURI;
 @Produces(MediaType.APPLICATION_JSON)
 public class RowResource extends AbstractRowResource {
 
+  /** Prefix for cell-specific schema parameter. */
+  private static final String SCHEMA_PREFIX = "schema.";
+
+  /** Query parameter specifying default timestamp for put. */
+  private static final String TIMESTAMP_KEY = "timestamp";
+
+  /** Prefix for cell-specific timestamp parameter. */
+  private static final String TIMESTAMP_PREFIX = "timestamp.";
+
   /**
    * Default constructor.
    *
@@ -74,21 +103,175 @@ public class RowResource extends AbstractRowResource {
   }
 
   /**
-   * PUTs a Kiji row specified by the hex entity id.
+   * Puts a Kiji row specified by the hex rowkey: performs create and update.
+   * This operation is idempotent only when timestamp is specified.
+   * Note that every table put is a 4-tuple: &lt;family:column, value, timestamp, schema&gt;.
+   * Query parameters are constructed as follows:
+   * <li>family:column=value - value is a JSON string.
+   * <li>timestamp.family:column=t - t is the long timestamp at which to put the corresponding
+   * family:column=value. Optional; defaults to REST system time.
+   * <li>schema.family:column=schema - schema is the JSON containing the schema of cell.
+   * Optional; defaults to what is specified in the table layout.
+   * <li>timestamp=t - t is the long timestamp for all puts. Optional; overrided by
+   * 'timestamp.'-prefixed query parameter.
    *
    * @param instance in which the table resides
    * @param table in which the row resides
    * @param hexEntityId for the row in question
    * @param uriInfo containing query parameters.
    * @return a message containing the row in question
+   * @throws IOException When row put fails.
    */
   @PUT
   @Timed
-  public String putRowByHexEntityId(@PathParam(INSTANCE_PARAMETER) String instance,
+  public String putRow(@PathParam(INSTANCE_PARAMETER) String instance,
       @PathParam(TABLE_PARAMETER) String table,
-      @PathParam(HEX_ENTITY_ID_PARAMETER) String hexEntityId, @Context UriInfo uriInfo)
-      {
+      @PathParam(HEX_ENTITY_ID_PARAMETER) String hexEntityId,
+      @Context UriInfo uriInfo)
+      throws IOException {
+    final Kiji kiji = super.getKiji(instance);
+    final KijiTable kijiTable = kiji.openTable(table);
+
+    // Default global timestamp.
+    long globalTimestamp = System.currentTimeMillis();
+
+    final EntityIdFactory factory = EntityIdFactory.getFactory(kijiTable.getLayout());
+    final EntityId entityId = factory.getEntityIdFromHBaseRowKey(
+        ByteArrayFormatter.parseHex(hexEntityId));
+
+    Map<KijiColumnName, String> schemasMap = Maps.newHashMap();
+    Map<KijiColumnName, Long> timestampsMap = Maps.newHashMap();
+    Map<KijiColumnName, String> valuesMap = Maps.newHashMap();
+
+    // Parse the query map to extract timestamps, schemas, and values cell-wise.
+    MultivaluedMap<String, String> queryMap = uriInfo.getQueryParameters();
+    for (Map.Entry<String, List<String>> query : queryMap.entrySet()) {
+      // TODO This parsing loop requires extensive validation.
+      final String queryKey = query.getKey();
+
+      // TODO If more than one queryValue is found, throw an exception.
+      final String queryValue = query.getValue().get(0);
+      if (queryKey.startsWith(SCHEMA_PREFIX)) {
+        KijiColumnName column = new KijiColumnName(queryKey.substring(SCHEMA_PREFIX.length()));
+        schemasMap.put(column, queryValue);
+      } else if (queryKey.startsWith(TIMESTAMP_PREFIX)) {
+        KijiColumnName column = new KijiColumnName(queryKey.substring(TIMESTAMP_PREFIX.length()));
+        timestampsMap.put(column, Long.parseLong(queryValue));
+      } else if (queryKey.equals(TIMESTAMP_KEY)) {
+        globalTimestamp = Long.parseLong(queryValue);
+      } else { // The query entry is column->value pair.
+        KijiColumnName column = new KijiColumnName(queryKey);
+        if (kijiTable.getLayout().exists(column)) {
+          valuesMap.put(column, queryValue);
+        } else {
+          // TODO: Collect all of the columns that don't exist and throw one exception with them.
+          throw new WebApplicationException(Response.Status.BAD_REQUEST);
+        }
+      }
+    }
+
+    // Open writer and write.
+    final KijiTableWriter writer = kijiTable.openTableWriter();
+    try {
+      for (Map.Entry<KijiColumnName, String> entry : valuesMap.entrySet()) {
+        final KijiColumnName column = entry.getKey();
+        final String jsonValue = entry.getValue();
+
+        final long timestamp;
+        if (null != timestampsMap.get(column)) {
+          timestamp = timestampsMap.get(column);
+        } else {
+          timestamp = globalTimestamp;
+        }
+
+        // Put to either a counter or a regular cell.
+        if (SchemaType.COUNTER == kijiTable.getLayout().getCellSchema(column).getType()) {
+          // Write the counter cell.
+          putCounterCell(writer, entityId, jsonValue, column, timestamp);
+        } else {
+          // Get writer schema, otherwise, set schema in preparation to write an Avro record.
+          final Schema schema;
+          if (schemasMap.containsKey(column)) {
+            try {
+              schema = new Schema.Parser().parse(schemasMap.get(column));
+            } catch (AvroRuntimeException are) {
+              // TODO Make this a more informative exception.
+              // Could not parse writer schema.
+              throw new WebApplicationException(are, Response.Status.BAD_REQUEST);
+            }
+          } else {
+            try {
+              schema = kijiTable.getLayout().getSchema(column);
+            } catch (Exception e) {
+              // TODO Make this a more informative exception.
+              throw new WebApplicationException(e, Response.Status.BAD_REQUEST);
+            }
+          }
+          // Write the cell.
+          putCell(writer, entityId, jsonValue, column, timestamp, schema);
+        }
+      }
+    } finally {
+      ResourceUtils.closeOrLog(writer);
+      ResourceUtils.releaseOrLog(kijiTable);
+      ResourceUtils.releaseOrLog(kiji);
+    }
     return hexEntityId;
+  }
+
+  /**
+   * A private helper method to perform counter puts.
+   *
+   * @param writer The table writer which will do the putting.
+   * @param entityId The entityId of the row to put to.
+   * @param valueString The value to put; should be convertible to long.
+   * @param column The column to put the cell to.
+   * @param timestamp The timestamp to put the cell at (default is cluster-side UNIX time).
+   * @throws IOException When the put fails.
+   */
+  private void putCounterCell(
+      final KijiTableWriter writer,
+      final EntityId entityId,
+      final String valueString,
+      final KijiColumnName column,
+      final long timestamp)
+      throws IOException {
+    try {
+      long value = Long.parseLong(valueString);
+      writer.put(entityId, column.getFamily(), column.getQualifier(), timestamp, value);
+    } catch (NumberFormatException nfe) {
+      // TODO Make this a more informative exception.
+      // Could not parse parameter to a long.
+      throw new WebApplicationException(nfe, Response.Status.BAD_REQUEST);
+    }
+  }
+
+  /**
+   * A private helper method to perform individual cell puts.
+   *
+   * @param writer The table writer which will do the putting.
+   * @param entityId The entityId of the row to put to.
+   * @param jsonValue The json value to put.
+   * @param column The column to put the cell to.
+   * @param timestamp The timestamp to put the cell at (default is cluster-side UNIX time).
+   * @param schema The schema of the cell (default is specified in layout.).
+   * @throws IOException When the put fails.
+   */
+  private void putCell(
+      final KijiTableWriter writer,
+      final EntityId entityId,
+      final String jsonValue,
+      final KijiColumnName column,
+      final long timestamp,
+      final Schema schema)
+      throws IOException {
+    Preconditions.checkNotNull(schema);
+    // Create the Avro record to write.
+    GenericDatumReader<Object> reader = new GenericDatumReader<Object>(schema);
+    Object datum = reader.read(null, new DecoderFactory().jsonDecoder(schema, jsonValue));
+
+    // Write the put.
+    writer.put(entityId, column.getFamily(), column.getQualifier(), timestamp, datum);
   }
 
   /**
