@@ -77,6 +77,31 @@ To see the classpath that KijiExpress is running with, you can run:
 
     express classpath
 
+### Interactive Shell ###
+You can use the `express` tool to run a Scala REPL. You can use the shell to run and prototype
+queries. The shell can be run in local mode (such that all jobs run in Cascading's local runner) or
+in HDFS mode (such that all jobs run on a Hadoop cluster). Use
+
+    express shell
+    express shell --local
+
+to use local mode, and
+
+    express shell --hdfs
+
+to use HDFS mode.
+
+Scalding flows created in the REPL must be explicitly run. For example, this REPL query gets the
+latest value from the column `info:track_plays` of a Kiji table and writes the results to a TSV
+file.
+
+    express> KijiInput("kiji://.env/default/users")("info:track_plays" -> 'playSlice)
+    res0: org.kiji.express.KijiSource = org.kiji.express.KijiSource@5f8f9190
+    express> res0.mapTo('playSlice -> 'play) { slice: KijiSlice[String] => slice.getFirstValue() }
+    res1: cascading.pipe.Pipe = Each(org.kiji.express.KijiSource@5f8f9190)[MapFunction[decl:'play']]
+    express> res1.write(Tsv("songPlays"))
+    res2: cascading.pipe.Pipe = Each(org.kiji.express.KijiSource@4791e9e6)[MapFunction[decl:'play']]
+    express> res2.run
 
 ## More Examples ##
 

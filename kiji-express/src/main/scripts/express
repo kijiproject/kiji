@@ -210,6 +210,12 @@ function extract_classpath() {
   # Add KijiExpress specific jars.
   express_libjars="${EXPRESS_HOME}/lib/*"
 
+  # If SCHEMA_SHELL_HOME is set, add kiji-schema-shell jars to the classpath to enable features
+  # that require it.
+  schema_shell_libjars=""
+  if [[ -n "${SCHEMA_SHELL_HOME}" ]]; then
+    schema_shell_libjars="${SCHEMA_SHELL_HOME}/lib/*"
+  fi
   # We may have Hadoop distribution-specific jars to load in
   # $KIJI_HOME/lib/distribution/hadoopN, where N is the major digit of the Hadoop
   # version. Only load at most one such set of jars.
@@ -232,7 +238,7 @@ function extract_classpath() {
   fi
 
   # Compose everything together into a classpath.
-  libjars="${express_libjars}:${mr_distrojars}:${mr_libjars}:${schema_distrojars}:${schema_libjars}"
+  libjars="${express_libjars}:${mr_distrojars}:${mr_libjars}:${schema_distrojars}:${schema_libjars}:${schema_shell_libjars}"
 
   # Gather the HBase classpath.
   hbase_cp=$(${HBASE_HOME}/bin/hbase classpath)
