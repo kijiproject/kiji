@@ -29,8 +29,8 @@ import com.google.common.collect.Sets;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
+import com.yammer.dropwizard.json.ObjectMapperFactory;
 
-import org.kiji.rest.core.GenericRuntimeExceptionMapper;
 import org.kiji.rest.core.WebAppExceptionMapper;
 import org.kiji.rest.health.InstanceHealthCheck;
 import org.kiji.rest.resources.EntityIdResource;
@@ -66,13 +66,17 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
   @Override
   public final void initialize(final Bootstrap<KijiRESTConfiguration> bootstrap) {
     bootstrap.setName("kiji-rest");
+    registerSerializers(bootstrap.getObjectMapperFactory());
+  }
+
+  public static final void registerSerializers(ObjectMapperFactory mapperFactory) {
     //Need to add a module to convert btw Avro's specific types and JSON. The default
     //mapping seems to throw an exception.
     SimpleModule module = new SimpleModule("KijiRestModule", new Version(1, 0, 0, null,
         "org.kiji.rest", "avroToJson"));
     module.addSerializer(new AvroToJsonSerializer());
     module.addSerializer(new Utf8ToJsonSerializer());
-    bootstrap.getObjectMapperFactory().registerModule(module);
+    mapperFactory.registerModule(module);
   }
 
   /** {@inheritDoc}
@@ -98,7 +102,6 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
     //Add exception mappers to print better exception messages to the client than what
     //Dropwizard does by default.
     environment.addProvider(new WebAppExceptionMapper());
-    environment.addProvider(new GenericRuntimeExceptionMapper());
 
     // Load resources.
     environment.addResource(new KijiRESTResource());
