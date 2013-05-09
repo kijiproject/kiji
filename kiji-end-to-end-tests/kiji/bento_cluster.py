@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- mode: python -*-
 # -*- coding: utf-8 -*-
 """Manages a Bento cluster.
 
@@ -70,24 +71,24 @@ class BentoCluster(object):
       if os.path.exists('/proc/%d' % pid):
         logging.info('Bento cluster already started as PID=%d', pid)
         self._pid = pid
-        return
       else:
         # Stale PID file, remove and start a new Bento:
         os.remove(self._pid_file)
 
-    # No PID file, start a Bento:
-    with open('/dev/null', 'r') as input_fd:
-      proc = subprocess.Popen(
-          args=['bin/bento', 'start'],
-          stdin=input_fd,
-          cwd=self._home
-      )
-      proc.communicate()
+    if self._pid is None:
+      # No PID file, start a Bento:
+      with open('/dev/null', 'r') as input_fd:
+        proc = subprocess.Popen(
+            args=['bin/bento', 'start'],
+            stdin=input_fd,
+            cwd=self._home
+        )
+        proc.communicate()
 
-    assert (proc.returncode == 0), ('bento start returned %d' % proc.returncode)
-    with open(self._pid_file, 'r') as f:
-      self._pid = int(f.read())
-      logging.info('Bento cluster created and starter as PID=%d', self._pid)
+      assert (proc.returncode == 0), ('bento start returned %d' % proc.returncode)
+      with open(self._pid_file, 'r') as f:
+        self._pid = int(f.read())
+        logging.info('Bento cluster created and starter as PID=%d', self._pid)
 
     self._hdfs_address = self._GetHDFSAddress()
     self._zk_address = self._GetZooKeeperAddress()
@@ -199,9 +200,5 @@ class BentoCluster(object):
     return 'kiji://%s' % self.zookeeper_address
 
 
-def Main(args):
-  logging.error('%r cannot be used as a standalone script.', args[0])
-
-
 if __name__ == '__main__':
-  Main(sys.argv)
+  raise Error('%r cannot be used as a standalone script.' % args[0])

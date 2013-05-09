@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
+# -*- mode: python -*-
 # -*- coding: utf-8 -*-
 """Runs the KijiMusic tutorial."""
 
-import argparse
 import glob
 import logging
 import os
@@ -13,27 +13,19 @@ import sys
 import tempfile
 import time
 
-import bento_cluster
-import command
-import maven_fetcher
+# Add the root directory to the Python path if necessary:
+__path = os.path.dirname(os.path.dirname(os.path.abspath(sys.argv[0])))
+if __path not in sys.path:
+  sys.path.append(__path)
+
+from kiji import base
+from kiji import bento_cluster
+from kiji import command
+from kiji import maven_fetcher
 
 
-# logging.INFO is 20
-# logging.DEBUG is 10
-DEBUG_VERBOSE = 5
-
-
-# Command-line flags, initialized after parsing:
-FLAGS = None
-
-
-# Horizontal ruler:
-LINE = '-' * 80
-
-
-def NowMS():
-  """Returns: the current time, in ms since the Epoch."""
-  return int(1000 * time.time())
+FLAGS = base.FLAGS
+LogLevel = base.LogLevel
 
 
 class Error(Exception):
@@ -41,92 +33,46 @@ class Error(Exception):
   pass
 
 
+# Horizontal ruler:
+LINE = '-' * 80
+
+
 # ------------------------------------------------------------------------------
 
 
-def BuildFlagParser():
-  """Builds a command-line flag parser for this script.
+FLAGS.AddString(
+  'work_dir',
+  help='Working directory.',
+)
 
-  Returns:
-    The command-line flag parser for this script.
-  """
-  parser = argparse.ArgumentParser(
-    description='KijiMusic tutorial.'
-  )
+FLAGS.AddString(
+  'maven_local_repo',
+  help='Optional Maven local repository from where to fetch artifacts.',
+)
 
-  parser.add_argument(
-    '--work_dir',
-    type=str,
-    default=None,
-    help='Working directory.',
-  )
+FLAGS.AddString(
+  'maven_remote_repo',
+  help='Optional Maven remote repository from where to fetch artifacts.',
+)
 
-  parser.add_argument(
-    '--maven_local_repo',
-    type=str,
-    default=None,
-    help='Optional Maven local repository from where to fetch artifacts.',
-  )
+FLAGS.AddString(
+  'kiji_bento_version',
+  help=('Version of KijiBento to download and test against. '
+        + 'For example "1.0.0-rc4" or "1.0.0-rc5-SNAPSHOT".'),
+)
 
-  parser.add_argument(
-    '--maven_remote_repo',
-    type=str,
-    default=None,
-    help='Optional Maven remote repository from where to fetch artifacts.',
-  )
+FLAGS.AddBoolean(
+  'cleanup_after_test',
+  default=True,
+  help=('When set, disables cleaning up after test. '
+        + 'Bento cluster stay alive, working directory is not wiped.'),
+)
 
-  parser.add_argument(
-    '--kiji_bento_version',
-    type=str,
-    default=None,
-    help=('Version of KijiBento to download and test against. '
-          + 'For example "1.0.0-rc4" or "1.0.0-rc5-SNAPSHOT".'),
-  )
-
-  parser.add_argument(
-    '--disable_cleanup_after_test',
-    nargs='?',
-    action='store',
-    default='false',
-    const='true',
-    help=('When set, disables cleaning up after test. '
-          + 'Bento cluster stay alive, working directory is not wiped.'),
-  )
-
-  parser.add_argument(
-    '--log_dir',
-    type=str,
-    default=None,
-    help='Directory for log files.',
-  )
-
-  parser.add_argument(
-    '--log_level',
-    type=str,
-    default='INFO',
-    help='Log level.',
-  )
-  return parser
-
-
-def Truth(text):
-  """Parses a human truth value.
-
-  Accepts 'true', 'false', 'yes', 'no'.
-  Parsing is case insensitive.
-
-  Args:
-    text: Input to parse.
-  Returns:
-    Parsed truth value as a bool.
-  """
-  lowered = text.lower()
-  if lowered in frozenset(['yes', 'true']):
-    return True
-  elif lowered in frozenset(['no', 'false']):
-    return False
-  else:
-    raise Error('Invalid truth value: %r' % text)
+FLAGS.AddBoolean(
+  'help',
+  default=False,
+  help='Prints a help message.',
+)
 
 
 # ------------------------------------------------------------------------------
@@ -191,7 +137,7 @@ class Tutorial(object):
       maven_remote_repo: Optional remote Maven repository.
     """
     self._work_dir = work_dir
-    self._run_id = NowMS()
+    self._run_id = base.NowMS()
     self._kiji_version = version
     self._maven_local_repo = maven_local_repo
     self._maven_remote_repo = maven_remote_repo
@@ -270,7 +216,7 @@ class Tutorial(object):
         env=self._env,
     )
     logging.debug('Exit code: %d', cmd.exit_code)
-    if logging.getLogger().level <= DEBUG_VERBOSE:
+    if logging.getLogger().level <= LogLevel.DEBUG_VERBOSE:
       logging.debug('Output:\n%s\n%s%s', LINE, cmd.output_text, LINE)
       logging.debug('Error:\n%s\n%s%s', LINE, cmd.error_text, LINE)
     else:
@@ -519,32 +465,14 @@ def ExpectRegexMatch(expect, actual):
 
 def Main(args):
   """Program entry point."""
+  if FLAGS.help:
+    FLAGS.PrintUsage()
+    return os.EX_OK
 
-  # Parse the command-line flags:
-  parser = BuildFlagParser()
-  (parsed_flags, unparsed_flags) = parser.parse_known_args(args[1:])
-  if len(unparsed_flags) > 0:
-    print('Unknown flag: %s' % unparsed_flags)
+  if len(args) > 0:
+    logging.error('Unexpected command-line arguments: %r' % args)
+    FLAGS.PrintUsage()
     return os.EX_USAGE
-  global FLAGS
-  FLAGS = parsed_flags
-
-  FLAGS.disable_cleanup_after_test = Truth(FLAGS.disable_cleanup_after_test)
-
-  # Initialize the logging system:
-  log_level = None
-  if len(FLAGS.log_level) > 0:
-    if (FLAGS.log_level in logging.__dict__):
-      log_level = logging.__dict__[FLAGS.log_level]
-      if type(log_level) != int:
-        log_level = None
-    if log_level is None:
-      log_level = int(FLAGS.log_level)
-  logging.getLogger().setLevel(log_level)
-  log_handler = logging.StreamHandler()
-  log_handler.setFormatter(logging.Formatter(
-      '%(asctime)s %(levelname)s %(filename)s:%(lineno)s : %(message)s'))
-  logging.root.addHandler(log_handler)
 
   # Create a temporary working directory:
   cwd = os.getcwd()
@@ -554,15 +482,9 @@ def Main(args):
   work_dir = os.path.abspath(work_dir)
   if not os.path.exists(work_dir):
     os.makedirs(work_dir)
+  FLAGS.work_dir = work_dir
 
-  logging.debug('Working directory: %r', work_dir)
-
-  if FLAGS.log_dir == None:
-    FLAGS.log_dir = work_dir
-  if not os.path.exists(FLAGS.log_dir):
-    os.makedirs(FLAGS.log_dir)
-
-  logging.debug('Log directory: %r', FLAGS.log_dir)
+  logging.info('Working directory: %r', work_dir)
 
   if not FLAGS.kiji_bento_version:
     print('Specify the version of KijiBento to test '
@@ -582,9 +504,12 @@ def Main(args):
   tutorial.Part2()
   tutorial.Part3()
   tutorial.Part4()
-  if not FLAGS.disable_cleanup_after_test:
+  if FLAGS.cleanup_after_test:
     tutorial.Cleanup()
 
 
+# ------------------------------------------------------------------------------
+
+
 if __name__ == '__main__':
-  Main(sys.argv)
+  base.Run(Main)

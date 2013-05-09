@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- mode: python -*-
 # -*- coding: utf-8 -*-
 """Fetches Maven artifacts."""
 
@@ -128,9 +129,5 @@ def FetchMavenArtifact(
       raise Error('Error fetching artifact: %s' % full_id)
 
 
-def Main(args):
-  logging.error('%r cannot be used as a standalone script.', args[0])
-
-
 if __name__ == '__main__':
-  Main(sys.argv)
+  raise Error('%r cannot be used as a standalone script.' % args[0])

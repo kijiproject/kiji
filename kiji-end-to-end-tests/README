@@ -1,1 +1,4 @@
 This project includes end-to-end tests for the Kiji platform.
+
+The kiji/ directory contains shared libraries.
+You must include this directory in your PYTHONPATH.

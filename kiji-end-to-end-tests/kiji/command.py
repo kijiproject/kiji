@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- mode: python -*-
 # -*- coding: utf-8 -*-
 """Wrapper for shell commands."""
 
@@ -8,8 +9,10 @@ import subprocess
 import sys
 import time
 
+from kiji import base
 
-DEBUG_VERBOSE = 5
+FLAGS = base.FLAGS
+LogLevel = base.LogLevel
 
 
 class Error(Exception):
@@ -22,11 +25,6 @@ class CommandError(Error):
   pass
 
 
-def NowMS():
-  """Returns: the current time, in ms since the Epoch."""
-  return int(1000 * time.time())
-
-
 class Command(object):
   """Runs a shell command."""
 
@@ -35,29 +33,40 @@ class Command(object):
     exit_code=None,
     work_dir=None,
     env=None,
-    log_dir=None
+    log_dir=None,
+    start=True,
+    wait_for=True
   ):
     """Runs a shell command.
 
+    The command runs in the specified working directory and with the given
+    environment.
+    The command takes no standard input.
+    Its output and error streams are captured in files, and are exposed as
+    properties once the process has completed.
+
     Args:
       args: Command-line, as an array of command-line arguments.
+        First argument is the path to the executable.
       exit_code: Optional command exit code to require, or None.
       work_dir: Working directory. None means current workding directory.
       env: Optional environment variables for the subprocess, or None.
       log_dir: Optional directory where to write files capturing the
           command output/error streams.
-          Defaults to the current working directory.
+          Defaults to the log directory (FLAGS.log_dir).
+      start: Whether to start running the command right away.
+      wait_for: Whether to wait for the command to complete.
     Raises:
-      CommandError: if the subprocess exit code does not match exit_code.
+      CommandError: if the sub-process exit code does not match exit_code.
     """
     self._args = tuple(args)
     self._required_exit_code = exit_code
     self._work_dir = work_dir or os.getcwd()
-    self._env = env
-    log_dir = log_dir or os.getcwd()
+    self._env = env or os.environ
+    log_dir = log_dir or FLAGS.log_dir
 
     name = os.path.basename(self._args[0])
-    timestamp = NowMS()
+    timestamp = base.NowMS()
 
     self._input_path = '/dev/null'
     self._output_path = (
@@ -65,7 +74,11 @@ class Command(object):
     self._error_path = (
         os.path.join(log_dir, '%s.%d.%d.err' % (name, timestamp, os.getpid())))
 
-    if logging.getLogger().level <= DEBUG_VERBOSE:
+    self._process = None
+    self._output_bytes = None
+    self._error_bytes = None
+
+    if logging.getLogger().level <= LogLevel.DEBUG_VERBOSE:
       logging.debug('Running command in %r:\n%s\nWith environment:\n%s' % (
           self._work_dir,
           ' \\\n\t'.join(map(repr, self._args)),
@@ -76,6 +89,17 @@ class Command(object):
           self._work_dir,
           ' \\\n\t'.join(map(repr, self._args)),
       ))
+
+    if start:
+      self.Start(wait_for=wait_for)
+
+  def Start(self, wait_for=True):
+    """Starts the process running this command.
+
+    Args:
+      wait_for: Whether to wait for this command to complete.
+    """
+    assert (self._process is None), 'Command is already started.'
 
     with open(self._input_path, 'r') as input_file:
       with open(self._output_path, 'w') as output_file:
@@ -88,7 +112,16 @@ class Command(object):
               cwd=self._work_dir,
               env=self._env,
           )
-          self._process.wait()
+    if wait_for:
+      self.WaitFor()
+
+  def WaitFor(self):
+    """Waits for this command to complete."""
+    assert (self._process is not None), 'Command has not been started.'
+    assert (self._output_bytes is None), 'Command has already completed.'
+
+    self._process.wait()
+
     with open(self._output_path, 'rb') as f:
       self._output_bytes = f.read()
     with open(self._error_path, 'rb') as f:
@@ -106,6 +139,7 @@ class Command(object):
   @property
   def output_bytes(self):
     """Returns: the command output stream as an array of bytes."""
+    assert (self._output_bytes is not None), 'Command has not terminated.'
     return self._output_bytes
 
   @property
@@ -121,6 +155,7 @@ class Command(object):
   @property
   def error_bytes(self):
     """Returns: the command error stream as an array of bytes."""
+    assert (self._error_bytes is not None), 'Command has not terminated.'
     return self._error_bytes
 
   @property
@@ -136,5 +171,9 @@ class Command(object):
   @property
   def exit_code(self):
     """Returns: the command exit code."""
+    assert (self._process is not None), 'Command has not been started.'
     return self._process.returncode
 
+
+if __name__ == '__main__':
+  raise Error('%r cannot be used as a standalone script.' % args[0])

@@ -1,6 +1,9 @@
 End-to-end test for the KijiMusic tutorial.
 
 To run the test:
+  Set the python path to the root directory:
+    export PYTHONPATH=$PYTHONPATH:$PWD/..
+
   On a released version:
     ./kiji_music.py \
         --log_level=DEBUG \
