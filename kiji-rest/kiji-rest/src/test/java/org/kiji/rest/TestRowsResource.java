@@ -407,6 +407,6 @@ public class TestRowsResource extends ResourceTest {
     String resourceURI = "/v1/instances/default/tables/sample_table/rows?start_rk=" + eid
         + "&end_rk=44018000000000003040";
     KijiRestRow row = client().resource(resourceURI).get(KijiRestRow.class);
-    assertEquals(eid, row.getHBaseRowKey());
+    assertEquals(eid, row.getRowKey());
   }
 }
