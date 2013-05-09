@@ -72,11 +72,11 @@ public class KijiRestCell {
   }
 
   /**
-   * Returns the underlying cell's column family name.
+   * Returns the underlying cell's column family.
    *
-   * @return the underlying cell's column family name
+   * @return the underlying cell's column family
    */
-  public String getColumnName() {
+  public String getColumnFamily() {
     return mColumnFamily;
   }
 
