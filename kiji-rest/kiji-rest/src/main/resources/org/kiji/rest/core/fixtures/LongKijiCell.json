@@ -1,6 +1,6 @@
 {
   "value": 1234,
   "timestamp": 1000,
-  "columnName": "user",
+  "columnFamily": "user",
   "columnQualifier": "purchases"
 }

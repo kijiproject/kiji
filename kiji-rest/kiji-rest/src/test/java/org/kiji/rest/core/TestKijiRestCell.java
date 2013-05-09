@@ -19,61 +19,39 @@
 
 package org.kiji.rest.core;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import static com.yammer.dropwizard.testing.JsonHelpers.asJson;
+import static com.yammer.dropwizard.testing.JsonHelpers.jsonFixture;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+
+import org.junit.Test;
+
+import org.kiji.rest.representations.KijiRestCell;
+import org.kiji.schema.DecodedCell;
+import org.kiji.schema.KijiCell;
 
 /**
- * Models what a Kiji cell looks like when returned to the client. This
- * needs to be kept in sync with the KijiRestCell because this is the bean
- * class that is used for deserializing JSON back into an object for inspection.
+ * Simple test class to ensure that KijiCells are serialized to JSON.
  *
  */
 public class TestKijiRestCell {
 
-  @JsonProperty("timestamp")
-  private long mTimestamp;
-
-  @JsonProperty("columnName")
-  private String mColumnName;
-
-  @JsonProperty("columnQualifier")
-  private String mColumnQualifier;
-
-  @JsonProperty("value")
-  private Object mValue;
-
-  /**
-   * Returns the underlying cell's timestamp.
-   *
-   * @return the underlying cell's timestamp
-   */
-  public long getTimestamp() {
-    return mTimestamp;
+  @Test
+  public void shouldSerializeLongCellToJson() throws Exception {
+    DecodedCell<Long> rawCell = new DecodedCell<Long>(null, 1234L);
+    KijiCell<Long> cell = new KijiCell<Long>("user", "purchases", 1000L, rawCell);
+    KijiRestCell restCell = new KijiRestCell(cell);
+    assertThat("a KijiCell can be serialized to JSON", asJson(restCell),
+        is(equalTo(jsonFixture("org/kiji/rest/core/fixtures/LongKijiCell.json"))));
   }
 
-  /**
-   * Returns the underlying cell's column family name.
-   *
-   * @return the underlying cell's column family name
-   */
-  public String getColumnName() {
-    return mColumnName;
-  }
-
-  /**
-   * Returns the underlying cell's column qualifier.
-   *
-   * @return the underlying cell's column qualifier
-   */
-  public String getColumnQualifier() {
-    return mColumnQualifier;
-  }
-
-  /**
-   * Returns the underlying cell's column value.
-   *
-   * @return the underlying cell's column value
-   */
-  public Object getValue() {
-    return mValue;
+  @Test
+  public void shouldSerializeStringCellToJson() throws Exception {
+    KijiCell<String> cell = new KijiCell<String>("user", "name", 1000L,
+        new DecodedCell<String>(null, "a_name"));
+    KijiRestCell restCell = new KijiRestCell(cell);
+    assertThat("a KijiCell can be serialized to JSON", asJson(restCell),
+        is(equalTo(jsonFixture("org/kiji/rest/core/fixtures/StringKijiCell.json"))));
   }
 }
