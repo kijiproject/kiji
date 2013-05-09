@@ -36,6 +36,7 @@ These must all be extant instances on the specified cluster.
 The following are example contents of a proper configuration.yml file:
 
 "cluster" : "kiji://localhost:2181/" #The base cluster URI
+
 "instances" : ["default", "prod", "dev", "test"] #Visible instances
 
 
