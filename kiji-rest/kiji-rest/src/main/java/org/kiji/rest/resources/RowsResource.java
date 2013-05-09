@@ -316,7 +316,7 @@ public class RowsResource extends AbstractRowResource {
     final KijiTableWriter writer = kijiTable.openTableWriter();
     try {
       for (KijiRestCell kijiRestCell : kijiRestRow.getCells()) {
-        final KijiColumnName column = new KijiColumnName(kijiRestCell.getColumnName(),
+        final KijiColumnName column = new KijiColumnName(kijiRestCell.getColumnFamily(),
             kijiRestCell.getColumnQualifier());
         final long timestamp;
         if (null != kijiRestCell.getTimestamp()) {
