@@ -254,29 +254,25 @@ public class AbstractRowResource extends AbstractKijiResource {
 
     KijiRestRow returnRow = null;
     try {
+      final KijiTableReader reader = table.openTableReader();
       try {
-        final KijiTableReader reader = table.openTableReader();
-        try {
-          KijiDataRequestBuilder dataBuilder = KijiDataRequest.builder();
-          if (timeRange != null) {
-            dataBuilder.withTimeRange(timeRange[0], timeRange[1]);
-          }
-
-          ColumnsDef colsRequested = dataBuilder.newColumnsDef().withMaxVersions(maxVersions);
-          List<KijiColumnName> lRequestedColumns = addColumnDefs(table.getLayout(), colsRequested,
-              columns);
-
-          KijiDataRequest dataRequest = dataBuilder.build();
-          EntityIdFactory eidFactory = EntityIdFactory.getFactory(table.getLayout());
-          EntityId entityId = eidFactory.getEntityIdFromHBaseRowKey(hbaseRowKey);
-          KijiRowData row = reader.get(entityId, dataRequest);
-          returnRow = getKijiRow(row, table.getLayout(), lRequestedColumns);
-
-        } finally {
-          reader.close();
+        KijiDataRequestBuilder dataBuilder = KijiDataRequest.builder();
+        if (timeRange != null) {
+          dataBuilder.withTimeRange(timeRange[0], timeRange[1]);
         }
+
+        ColumnsDef colsRequested = dataBuilder.newColumnsDef().withMaxVersions(maxVersions);
+        List<KijiColumnName> lRequestedColumns = addColumnDefs(table.getLayout(), colsRequested,
+            columns);
+
+        KijiDataRequest dataRequest = dataBuilder.build();
+        EntityIdFactory eidFactory = EntityIdFactory.getFactory(table.getLayout());
+        EntityId entityId = eidFactory.getEntityIdFromHBaseRowKey(hbaseRowKey);
+        KijiRowData row = reader.get(entityId, dataRequest);
+        returnRow = getKijiRow(row, table.getLayout(), lRequestedColumns);
+
       } finally {
-        table.release();
+        reader.close();
       }
     } catch (IOException e) {
       throw new WebApplicationException(e, Status.INTERNAL_SERVER_ERROR);

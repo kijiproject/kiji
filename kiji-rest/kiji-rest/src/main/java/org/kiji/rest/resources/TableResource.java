@@ -39,12 +39,13 @@ import com.yammer.metrics.annotation.Timed;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.avro.TableLayoutDesc;
+import org.kiji.schema.util.ResourceUtils;
 
 /**
  * This REST resource interacts with Kiji tables.
  *
- * This resource is served for requests using the resource identifiers: <li>
- * /v1/instances/&lt;instance&gt/tables/&lt;table&gt;
+ * This resource is served for requests using the resource identifier:
+ * <li>/v1/instances/&lt;instance&gt;/tables/&lt;table&gt;
  */
 @Path(TABLE_PATH)
 @Produces(MediaType.APPLICATION_JSON)
@@ -75,9 +76,10 @@ public class TableResource extends AbstractKijiResource {
     TableLayoutDesc layout = null;
     try {
       layout = kiji.getMetaTable().getTableLayout(table).getDesc();
-      kiji.release();
     } catch (IOException e) {
       throw new WebApplicationException(e, Status.INTERNAL_SERVER_ERROR);
+    } finally {
+      ResourceUtils.releaseOrLog(kiji);
     }
     return layout;
   }

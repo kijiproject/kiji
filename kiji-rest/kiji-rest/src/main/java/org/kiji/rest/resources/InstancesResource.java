@@ -40,7 +40,8 @@ import org.kiji.schema.KijiURI;
 /**
  * This REST resource interacts with Kiji instances collection resource.
  *
- * This resource is served for requests using the resource identifiers: <li>/v1/instances/
+ * This resource is served for requests using the resource identifier:
+ * <li>/v1/instances/
  */
 @Path(INSTANCES_PATH)
 @Produces(MediaType.APPLICATION_JSON)

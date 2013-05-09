@@ -42,12 +42,13 @@ import com.yammer.metrics.annotation.Timed;
 import org.kiji.rest.representations.GenericResourceRepresentation;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiURI;
+import org.kiji.schema.util.ResourceUtils;
 
 /**
  * This REST resource interacts with Kiji tables.
  *
- * This resource is served for requests using the resource identifiers: <li>
- * /v1/instances/&lt;instance&gt/tables,
+ * This resource is served for requests using the resource identifier:
+ * <li>/v1/instances/&lt;instance&gt;/tables
  */
 @Path(TABLES_PATH)
 @Produces(MediaType.APPLICATION_JSON)
@@ -81,9 +82,10 @@ public class TablesResource extends AbstractKijiResource {
             .replace("{" + INSTANCE_PARAMETER + "}", instance);
         tables.add(new GenericResourceRepresentation(table, tableUri));
       }
-      kiji.release();
     } catch (IOException e) {
       throw new WebApplicationException(e, Status.INTERNAL_SERVER_ERROR);
+    } finally {
+      ResourceUtils.releaseOrLog(kiji);
     }
     return tables;
   }

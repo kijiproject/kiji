@@ -77,7 +77,7 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
    * @param mapperFactory is the ObjectMapperFactory.
    */
   public static final void registerSerializers(ObjectMapperFactory mapperFactory) {
-    //Need to add a module to convert btw Avro's specific types and JSON. The default
+    // TODO: Add a module to convert btw Avro's specific types and JSON. The default
     //mapping seems to throw an exception.
     SimpleModule module = new SimpleModule("KijiRestModule", new Version(1, 0, 0, null,
         "org.kiji.rest", "avroToJson"));

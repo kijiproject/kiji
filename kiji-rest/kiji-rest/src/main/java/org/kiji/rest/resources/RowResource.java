@@ -70,8 +70,8 @@ import org.kiji.schema.util.ResourceUtils;
  *
  * This resource is served for requests using the resource identifiers:
  * <ul>
- * <li>GET /v1/instances/&lt;instance&gt/tables/&lt;table&gt/rows/&lt;hex_row_key&gt;
- * <li>PUT /v1/instances/&lt;instance&gt/tables/&lt;table&gt/rows/&lt;hex_row_key&gt;
+ * <li>GET /v1/instances/&lt;instance&gt;/tables/&lt;table&gt/rows/&lt;hex_row_key&gt;
+ * <li>PUT /v1/instances/&lt;instance&gt;/tables/&lt;table&gt/rows/&lt;hex_row_key&gt;
  * </ul>
  */
 @Path(ROW_PATH)
@@ -145,7 +145,7 @@ public class RowResource extends AbstractRowResource {
     Map<KijiColumnName, Long> timestampsMap = Maps.newHashMap();
     Map<KijiColumnName, String> valuesMap = Maps.newHashMap();
 
-    // Parse the query map to extract timestamps, schemas, and values cell-wise.
+    // Parse the query map to extract schemas, timestamps, and values cell-wise.
     MultivaluedMap<String, String> queryMap = uriInfo.getQueryParameters();
     for (Map.Entry<String, List<String>> query : queryMap.entrySet()) {
       // TODO This parsing loop requires extensive validation.
@@ -258,9 +258,10 @@ public class RowResource extends AbstractRowResource {
     if (timeRange != null) {
       timeRanges = getTimestamps(timeRange);
     }
+
     final KijiTable table = super.getKijiTable(instanceId, tableId);
-    //TODO: This currently leaks the table and we need to close resources
-    //properly.
-    return getKijiRow(table, hbaseRowKey, timeRanges, columns, maxVersions);
+    KijiRestRow kijiRestRow = getKijiRow(table, hbaseRowKey, timeRanges, columns, maxVersions);
+    ResourceUtils.releaseOrLog(table);
+    return kijiRestRow;
   }
 }

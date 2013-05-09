@@ -42,9 +42,9 @@
       <groupId>org.kiji.schema</groupId>
       <artifactId>kiji-schema</artifactId>
       <version>${kiji-schema.version}</version>
-      <!-- Dropwizard works with the internals of logback which conflict
-        with these excluded packages -->
       <exclusions>
+        <!-- Dropwizard works with the internals of logback which conflict
+          with these excluded packages -->
         <exclusion>
           <groupId>org.slf4j</groupId>
           <artifactId>slf4j-log4j12</artifactId>
@@ -57,10 +57,10 @@
       <artifactId>hadoop-client</artifactId>
       <version>${hadoop.version}</version>
       <scope>compile</scope>
-      <!-- Dropwizard works with the internals of logback which conflict
-        with these excluded packages -->
       <exclusions>
-       <exclusion>
+        <!-- Dropwizard works with the internals of logback which conflict
+          with these excluded packages -->
+        <exclusion>
           <groupId>org.slf4j</groupId>
           <artifactId>slf4j-log4j12</artifactId>
         </exclusion>
@@ -72,12 +72,22 @@
       <artifactId>hadoop-core</artifactId>
       <version>${hadoop.version}</version>
       <scope>compile</scope>
-      <!-- Dropwizard works with the internals of logback which conflict
-        with these excluded packages -->
       <exclusions>
+        <!-- Dropwizard works with the internals of logback which conflict
+          with these excluded packages -->
         <exclusion>
           <groupId>org.slf4j</groupId>
           <artifactId>slf4j-log4j12</artifactId>
+        </exclusion>
+
+        <!-- Prefer the Jackson from fasterxml which is provided by Dropwizard -->
+        <exclusion>
+          <groupId>org.codehaus.jackson</groupId>
+          <artifactId>jackson-mapper-asl</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.codehaus.jackson</groupId>
+          <artifactId>jackson-core-asl</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -87,9 +97,9 @@
       <artifactId>hbase</artifactId>
       <version>${hbase.version}</version>
       <scope>compile</scope>
-      <!-- Dropwizard works with the internals of logback which conflict
-        with these excluded packages -->
       <exclusions>
+        <!-- Dropwizard works with the internals of logback which conflict
+          with these excluded packages -->
         <exclusion>
           <groupId>org.slf4j</groupId>
           <artifactId>slf4j-log4j12</artifactId>
@@ -125,9 +135,9 @@
       <version>${kiji-schema.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
-      <!-- Dropwizard works with the internals of logback which conflict
-        with these excluded packages -->
       <exclusions>
+        <!-- Dropwizard works with the internals of logback which conflict
+          with these excluded packages -->
         <exclusion>
           <groupId>org.slf4j</groupId>
           <artifactId>log4j-over-slf4j</artifactId>

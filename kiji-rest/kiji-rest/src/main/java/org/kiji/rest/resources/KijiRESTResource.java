@@ -40,8 +40,9 @@ import org.kiji.schema.util.VersionInfo;
 /**
  * This REST resource interacts with the Kiji cluster.
  *
- * This resource is served for requests using the resource identifier:
- * /v1/
+ * This resource is served for requests using the resource identifiers:
+ * <li>/v1/
+ * <li>/v1/version
  */
 @Path(API_ENTRY_PATH)
 @Produces(MediaType.APPLICATION_JSON)

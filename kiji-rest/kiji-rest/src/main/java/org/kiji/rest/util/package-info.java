@@ -17,4 +17,7 @@
  * limitations under the License.
  */
 
+/**
+ * Utility classes for KijiREST.
+ */
 package org.kiji.rest.util;

@@ -44,12 +44,13 @@ import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.tools.ToolUtils;
+import org.kiji.schema.util.ResourceUtils;
 
 /**
  * This REST resource represents an entity_id in Kiji.
  *
- * This resource is served for requests using the resource identifiers: <li>
- * GET /v1/instances/&lt;instance&gt/tables/&lt;table&gt/entityId;
+ * This resource is served for requests using the resource identifiers:
+ * <li>GET /v1/instances/&lt;instance&gt/tables/&lt;table&gt/entityId;
  */
 @Path(ENTITY_ID_PATH)
 @Produces(MediaType.APPLICATION_JSON)
@@ -76,7 +77,8 @@ public class EntityIdResource extends AbstractKijiResource {
   @GET
   @Timed
   public EntityIdWrapper getEntityId(@PathParam(INSTANCE_PARAMETER) String instance,
-      @PathParam(TABLE_PARAMETER) String table, @QueryParam("eid") String eid) {
+      @PathParam(TABLE_PARAMETER) String table,
+      @QueryParam("eid") String eid) {
 
     if (eid == null || eid.trim().isEmpty()) {
       throw new WebApplicationException(new IllegalArgumentException("Entity ID JSON required!"),
@@ -85,6 +87,7 @@ public class EntityIdResource extends AbstractKijiResource {
 
     KijiTable kijiTable = getKijiTable(instance, table);
     KijiTableLayout layout = kijiTable.getLayout();
+    ResourceUtils.releaseOrLog(kijiTable);
 
     EntityId entityId = null;
     try {
@@ -94,6 +97,7 @@ public class EntityIdResource extends AbstractKijiResource {
     }
     EntityIdWrapper wrapper = new EntityIdWrapper();
     wrapper.setRowKey(Hex.encodeHexString(entityId.getHBaseRowKey()));
+
     return wrapper;
   }
 

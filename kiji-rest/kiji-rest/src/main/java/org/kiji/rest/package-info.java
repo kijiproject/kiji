@@ -17,4 +17,20 @@
  * limitations under the License.
  */
 
+/**
+ * The main package for KijiREST
+ *
+ * <p>
+ * KijiREST provides a RESTful interface to a data stored in Kiji tables.
+ * </p>
+ *
+ * <p>
+ *   Classes of note:
+ * </p>
+ * <ul>
+ *   <li>{@link org.kiji.rest.KijiRESTConfiguration} Configuration class for KijiREST.
+ *   <li>{@link org.kiji.rest.KijiRESTService} Service that provides REST resources.
+ *   <li>{@link org.kiji.rest.RoutesConstants} Class that defines routes and endpoints used.
+ * </ul>
+ */
 package org.kiji.rest;

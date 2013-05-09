@@ -17,4 +17,7 @@
  * limitations under the License.
  */
 
+/**
+ * Contains resources that respond to REST requests.
+ */
 package org.kiji.rest.resources;

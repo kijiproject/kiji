@@ -17,4 +17,8 @@
  * limitations under the License.
  */
 
+/**
+ * Contains REST health checks for Kiji.
+ */
+
 package org.kiji.rest.health;

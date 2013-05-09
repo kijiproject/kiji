@@ -81,9 +81,7 @@ import org.kiji.schema.util.ResourceUtils;
  * This REST resource interacts with Kiji tables.
  *
  * This resource is served for requests using the resource identifier:
- * <ul>
- * <li>/v1/instances/&lt;instance&gt/tables/&lt;table&gt;/rows
- * </ul>
+ * <li>/v1/instances/&lt;instance&gt;/tables/&lt;table&gt;/rows
  */
 @Path(ROWS_PATH)
 @Produces(MediaType.APPLICATION_JSON)
@@ -263,6 +261,8 @@ public class RowsResource extends AbstractRowResource {
       throw new WebApplicationException(e, Status.BAD_REQUEST);
     } catch (DecoderException e) {
       throw new WebApplicationException(e, Status.BAD_REQUEST);
+    } finally {
+      ResourceUtils.releaseOrLog(kijiTable);
     }
 
     return rsp;
