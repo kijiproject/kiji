@@ -21,6 +21,7 @@ package org.kiji.rest.representations;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.google.common.collect.Lists;
 
@@ -35,10 +36,13 @@ import org.kiji.schema.EntityId;
 @JsonPropertyOrder({"entityId", "rowKey"})
 public class KijiRestRow {
 
+  @JsonProperty("entityId")
   private String mHumanReadableEntityId;
 
+  @JsonProperty("rowKey")
   private String mHBaseRowKey;
 
+  @JsonProperty("cells")
   private List<KijiRestCell> mKijiCells;
 
   /**
