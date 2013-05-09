@@ -21,8 +21,7 @@ package org.kiji.rest.representations;
 
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.google.common.collect.Lists;
 
 import org.apache.commons.codec.binary.Hex;
@@ -33,14 +32,13 @@ import org.kiji.schema.EntityId;
  * Represents the Kiji row returned to the client.
  *
  */
+@JsonPropertyOrder({"entityId", "rowKey"})
 public class KijiRestRow {
-  @JsonProperty("entityId")
+
   private String mHumanReadableEntityId;
 
-  @JsonProperty("hbaseRowKey")
   private String mHBaseRowKey;
 
-  @JsonProperty("cells")
   private List<KijiRestCell> mKijiCells;
 
   /**
@@ -85,7 +83,7 @@ public class KijiRestRow {
    *
    * @return the hex encoding (in ASCII) of this row's hbase row key.
    */
-  public String getHBaseRowKey() {
+  public String getRowKey() {
     return mHBaseRowKey;
   }
 

@@ -29,6 +29,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.Charset;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -148,31 +149,42 @@ public class RowsResource extends AbstractRowResource {
     public void write(OutputStream os) {
       int numRows = 0;
       Writer writer = new BufferedWriter(new OutputStreamWriter(os, Charset.forName("UTF-8")));
-      for (KijiRowData row : mScanner) {
-        if (numRows < mNumRows || mNumRows == UNLIMITED_ROWS) {
+      Iterator<KijiRowData> it = mScanner.iterator();
+      boolean clientClosed = false;
+
+      try {
+        while (it.hasNext() && (numRows < mNumRows || mNumRows == UNLIMITED_ROWS)
+            && !clientClosed) {
+          KijiRowData row = it.next();
+          KijiRestRow restRow = getKijiRow(row, mTable.getLayout(), mColsRequested);
+          String jsonResult = mJsonObjectMapper.writeValueAsString(restRow);
+          // Let's strip out any carriage return + line feeds and replace them with just
+          // line feeds. Therefore we can safely delimit individual json messages on the
+          // carriage return + line feed for clients to parse properly.
+          jsonResult = jsonResult.replaceAll("\r\n", "\n");
+          writer.write(jsonResult + "\r\n");
+          writer.flush();
+          numRows++;
+        }
+      } catch (IOException e) {
+        clientClosed = true;
+      } finally {
+        if (mScanner instanceof KijiRowScanner) {
           try {
-            KijiRestRow restRow = getKijiRow(row, mTable.getLayout(), mColsRequested);
-            String jsonResult = mJsonObjectMapper.writeValueAsString(restRow);
-            // Let's strip out any carriage return + line feeds and replace them with just
-            // line feeds. Therefore we can safely delimit individual json messages on the
-            // carriage return + line feed for clients to parse properly.
-            jsonResult = jsonResult.replaceAll("\r\n", "\n");
-            writer.write(jsonResult + "\r\n");
-            writer.flush();
-          } catch (IOException e) {
-            // This most likely means that the client closed the connection
-            // and hence close the scanner.
-            if (mScanner instanceof KijiRowScanner) {
-              try {
-                ((KijiRowScanner) mScanner).close();
-              } catch (IOException e1) {
-                throw new WebApplicationException(e1, Status.INTERNAL_SERVER_ERROR);
-              }
-            }
-            return;
+            ((KijiRowScanner) mScanner).close();
+          } catch (IOException e1) {
+            throw new WebApplicationException(e1, Status.INTERNAL_SERVER_ERROR);
           }
         }
-        numRows++;
+      }
+
+      if (!clientClosed) {
+        try {
+          writer.flush();
+          writer.close();
+        } catch (IOException e) {
+          throw new WebApplicationException(e, Status.INTERNAL_SERVER_ERROR);
+        }
       }
     }
   }
@@ -274,14 +286,14 @@ public class RowsResource extends AbstractRowResource {
    * Also note that writer schema is not considered as of the latest version.
    * Following is an example of a postable JSON:
    * {
-   *   "entityId" : "hbase=hex:8c2d2fcc2c150efb49ce0817e1823d46",
-   *   "hbaseRowKey" : "8c2d2fcc2c150efb49ce0817e1823d46",
-   *   "cells" : [ {
-   *     "value" : "\"somevalue\"",
-   *     "timestamp" : 123,
-   *     "columnName" : "info",
-   *     "columnQualifier" : "firstname"
-   *     } ]
+   * "entityId" : "hbase=hex:8c2d2fcc2c150efb49ce0817e1823d46",
+   * "hbaseRowKey" : "8c2d2fcc2c150efb49ce0817e1823d46",
+   * "cells" : [ {
+   * "value" : "\"somevalue\"",
+   * "timestamp" : 123,
+   * "columnName" : "info",
+   * "columnQualifier" : "firstname"
+   * } ]
    * }
    *
    * @param instance in which the table resides

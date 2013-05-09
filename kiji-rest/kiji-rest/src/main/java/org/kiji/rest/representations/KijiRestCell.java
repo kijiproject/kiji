@@ -19,7 +19,7 @@
 
 package org.kiji.rest.representations;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -29,19 +29,16 @@ import org.kiji.schema.KijiCell;
  * Models what a Kiji cell looks like when returned to the client.
  *
  */
+@JsonPropertyOrder({"columnFamily", "columnQualifier"})
 public class KijiRestCell {
 
-  @JsonProperty("timestamp")
   private Long mTimestamp;
 
   @NotEmpty
-  @JsonProperty("columnFamily")
   private String mColumnFamily;
 
-  @JsonProperty("columnQualifier")
   private String mColumnQualifier;
 
-  @JsonProperty("value")
   private Object mValue;
 
   /**

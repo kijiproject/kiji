@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 
 import org.kiji.schema.avro.MetadataBackup;
+import org.kiji.schema.util.ToJson;
 
 /**
  * Ensures that the MetadataBackup avro class can be written to the client as a proper
@@ -42,7 +43,7 @@ public class MetadataToJsonSerializer extends JsonSerializer<MetadataBackup> {
   public void serialize(MetadataBackup layout, JsonGenerator generator,
       SerializerProvider provider)
       throws IOException {
-    String jsonString = AvroToJsonStringSerializer.getJsonString(layout);
+    String jsonString = ToJson.toAvroJsonString(layout);
     JsonNode node = mJsonMapper.readTree(jsonString);
     generator.writeTree(node);
   }
