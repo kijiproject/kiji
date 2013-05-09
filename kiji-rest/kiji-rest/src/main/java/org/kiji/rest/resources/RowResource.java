@@ -53,7 +53,7 @@ import org.apache.avro.Schema;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
-import org.kiji.rest.core.KijiRestRow;
+import org.kiji.rest.representations.KijiRestRow;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.EntityIdFactory;
 import org.kiji.schema.Kiji;

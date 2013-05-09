@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.rest.core;
+package org.kiji.rest;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
@@ -28,6 +28,8 @@ import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 import com.sun.jersey.core.spi.factory.ResponseBuilderImpl;
+
+import org.kiji.rest.representations.ExceptionWrapper;
 
 /**
  * A somewhat catch-all mapper to map RuntimeExceptions to something readable. Most other

@@ -27,6 +27,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import org.junit.Test;
 
+import org.kiji.rest.representations.KijiRestCell;
 import org.kiji.schema.DecodedCell;
 import org.kiji.schema.KijiCell;
 

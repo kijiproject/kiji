@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.rest.core;
+package org.kiji.rest.representations;
 
 import javax.ws.rs.core.Response.Status;
 
@@ -28,7 +28,7 @@ import javax.ws.rs.core.Response.Status;
  * that we throw in the resource classes have some details as to why they failed.
  *
  */
-final class ExceptionWrapper {
+public final class ExceptionWrapper {
 
   private Throwable mWrappedException;
   private Status mStatus;

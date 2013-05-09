@@ -31,7 +31,6 @@ import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
 import com.yammer.dropwizard.json.ObjectMapperFactory;
 
-import org.kiji.rest.core.WebAppExceptionMapper;
 import org.kiji.rest.health.InstanceHealthCheck;
 import org.kiji.rest.resources.EntityIdResource;
 import org.kiji.rest.resources.InstanceResource;

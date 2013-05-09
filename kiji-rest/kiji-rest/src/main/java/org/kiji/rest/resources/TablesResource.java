@@ -25,7 +25,7 @@ import static org.kiji.rest.RoutesConstants.TABLE_PARAMETER;
 import static org.kiji.rest.RoutesConstants.TABLE_PATH;
 
 import java.io.IOException;
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
 
 import javax.ws.rs.GET;
@@ -36,9 +36,10 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 
-import com.google.common.collect.Maps;
+import com.google.common.collect.Lists;
 import com.yammer.metrics.annotation.Timed;
 
+import org.kiji.rest.representations.GenericResourceRepresentation;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiURI;
 
@@ -69,20 +70,21 @@ public class TablesResource extends AbstractKijiResource {
    */
   @GET
   @Timed
-  public Map<String, String> getTables(@PathParam(INSTANCE_PARAMETER) String instance) {
+  public List<GenericResourceRepresentation> getTables(
+      @PathParam(INSTANCE_PARAMETER) String instance) {
 
-    Map<String, String> tableMap = Maps.newHashMap();
+    List<GenericResourceRepresentation> tables = Lists.newArrayList();
     final Kiji kiji = getKiji(instance);
     try {
       for (String table : kiji.getTableNames()) {
-        String tableUri = TABLE_PATH.replace("{" + TABLE_PARAMETER + "}", table).replace(
-            "{" + INSTANCE_PARAMETER + "}", instance);
-        tableMap.put(table, tableUri);
+        String tableUri = TABLE_PATH.replace("{" + TABLE_PARAMETER + "}", table)
+            .replace("{" + INSTANCE_PARAMETER + "}", instance);
+        tables.add(new GenericResourceRepresentation(table, tableUri));
       }
       kiji.release();
     } catch (IOException e) {
       throw new WebApplicationException(e, Status.INTERNAL_SERVER_ERROR);
     }
-    return tableMap;
+    return tables;
   }
 }

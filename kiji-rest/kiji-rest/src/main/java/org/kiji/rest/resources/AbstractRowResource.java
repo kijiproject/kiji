@@ -40,8 +40,8 @@ import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.io.DecoderFactory;
 
-import org.kiji.rest.core.KijiRestCell;
-import org.kiji.rest.core.KijiRestRow;
+import org.kiji.rest.representations.KijiRestCell;
+import org.kiji.rest.representations.KijiRestRow;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.EntityIdFactory;
 import org.kiji.schema.KijiCell;

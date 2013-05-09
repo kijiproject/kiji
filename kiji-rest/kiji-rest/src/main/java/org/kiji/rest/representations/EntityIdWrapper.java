@@ -16,9 +16,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package org.kiji.rest.representations;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * This package contains POJOs that are used to return REST results. These
- * objects are serialized to JSON by Jackson when returned to the client.
+ * A simple wrapper class representing the return value of the GET method.
+ *
  */
-package org.kiji.rest.core;
+public class EntityIdWrapper {
+
+  @JsonProperty("rowKey")
+  private String mRowKey;
+
+  /**
+   * Sets the row key of this wrapper.
+   * @param rowKey is the key to set.
+   */
+  public void setRowKey(String rowKey) {
+    mRowKey = rowKey;
+  }
+
+  /**
+   * Returns the row key.
+   * @return the row key.
+   */
+  public String getRowKey() {
+    return mRowKey;
+  }
+}

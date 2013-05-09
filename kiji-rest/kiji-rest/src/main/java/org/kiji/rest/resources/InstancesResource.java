@@ -23,7 +23,7 @@ import static org.kiji.rest.RoutesConstants.INSTANCES_PATH;
 import static org.kiji.rest.RoutesConstants.INSTANCE_PARAMETER;
 import static org.kiji.rest.RoutesConstants.INSTANCE_PATH;
 
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
 
 import javax.ws.rs.GET;
@@ -31,9 +31,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import com.google.common.collect.Maps;
+import com.google.common.collect.Lists;
 import com.yammer.metrics.annotation.Timed;
 
+import org.kiji.rest.representations.GenericResourceRepresentation;
 import org.kiji.schema.KijiURI;
 
 /**
@@ -61,13 +62,14 @@ public class InstancesResource extends AbstractKijiResource {
    */
   @GET
   @Timed
-  public Map<String, String> getInstanceList() {
-    Map<String, String> instanceMap = Maps.newHashMap();
+  public List<GenericResourceRepresentation> getInstanceList() {
+    List<GenericResourceRepresentation> instanceList = Lists.newArrayList();
 
     for (KijiURI u : getInstances()) {
       String instance = u.getInstance();
-      instanceMap.put(instance, INSTANCE_PATH.replace("{" + INSTANCE_PARAMETER + "}", instance));
+      instanceList.add(new GenericResourceRepresentation(instance,
+          INSTANCE_PATH.replace("{" + INSTANCE_PARAMETER + "}", instance)));
     }
-    return instanceMap;
+    return instanceList;
   }
 }

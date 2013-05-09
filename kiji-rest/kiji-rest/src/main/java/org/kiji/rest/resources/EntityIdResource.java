@@ -38,11 +38,13 @@ import com.yammer.metrics.annotation.Timed;
 
 import org.apache.commons.codec.binary.Hex;
 
+import org.kiji.rest.representations.EntityIdWrapper;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.tools.ToolUtils;
+
 /**
  * This REST resource represents an entity_id in Kiji.
  *
@@ -69,13 +71,12 @@ public class EntityIdResource extends AbstractKijiResource {
    * @param instance in which the table resides.
    * @param table to translate the entityId for.
    * @param eid is the JSON array of components of the entityId.
-   * @return a message containing a list of available sub-resources.
+   * @return the resulting entity_id in a JSON object.
    */
   @GET
   @Timed
-  public String getEntityId(@PathParam(INSTANCE_PARAMETER) String instance,
-      @PathParam(TABLE_PARAMETER) String table,
-      @QueryParam("eid") String eid) {
+  public EntityIdWrapper getEntityId(@PathParam(INSTANCE_PARAMETER) String instance,
+      @PathParam(TABLE_PARAMETER) String table, @QueryParam("eid") String eid) {
 
     if (eid == null || eid.trim().isEmpty()) {
       throw new WebApplicationException(new IllegalArgumentException("Entity ID JSON required!"),
@@ -91,8 +92,9 @@ public class EntityIdResource extends AbstractKijiResource {
     } catch (IOException e) {
       throw new WebApplicationException(e, Status.INTERNAL_SERVER_ERROR);
     }
-
-    return new String(Hex.encodeHex(entityId.getHBaseRowKey()));
+    EntityIdWrapper wrapper = new EntityIdWrapper();
+    wrapper.setRowKey(Hex.encodeHexString(entityId.getHBaseRowKey()));
+    return wrapper;
   }
 
 }

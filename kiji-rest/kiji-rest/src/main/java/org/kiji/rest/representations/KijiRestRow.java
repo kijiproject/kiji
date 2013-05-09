@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.rest.core;
+package org.kiji.rest.representations;
 
 import java.util.List;
 
