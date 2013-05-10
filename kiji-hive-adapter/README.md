@@ -75,17 +75,17 @@ of the tutorial.  The table that we will be using is a users table that tracks e
 user, their historical playlist, and their next song recommendations.  The SQL statement
 necessary to setup this table to be used in Hive looks like:
 
-  CREATE EXTERNAL TABLE users (
-    track_plays STRUCT<ts: TIMESTAMP, value: STRING>,
-    next_song_rec STRUCT<ts: TIMESTAMP, value: STRING>
-  )
-  STORED BY 'org.kiji.hive.KijiTableStorageHandler'
-  WITH SERDEPROPERTIES (
-    'kiji.columns' = 'info:track_plays[0],info:next_song_rec[0]'
-  )
-  TBLPROPERTIES (
-    'kiji.table.uri' = 'kiji://.env/kiji_music/users'
-  );
+    CREATE EXTERNAL TABLE users (
+        track_plays STRUCT<ts: TIMESTAMP, value: STRING>,
+        next_song_rec STRUCT<ts: TIMESTAMP, value: STRING>
+    )
+    STORED BY 'org.kiji.hive.KijiTableStorageHandler'
+    WITH SERDEPROPERTIES (
+        'kiji.columns' = 'info:track_plays[0],info:next_song_rec[0]'
+    )
+    TBLPROPERTIES (
+        'kiji.table.uri' = 'kiji://.env/kiji_music/users'
+    );
 
 If you'd like to load this automatically you can run the script:
 bin/bento-hive.sh import kiji://.env/kiji_music/users
