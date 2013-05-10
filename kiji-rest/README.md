@@ -25,7 +25,7 @@ Setting up configuration.yml
 ----------------------------
 
 The configuration.yml path is a required command line argument. It is a
-YAML file with two keys: "cluster" and "instances".
+YAML file with two required keys: "cluster" and "instances".
 
 - "cluster" must be set to the base cluster's kiji URI.
 
@@ -38,6 +38,10 @@ The following are example contents of a proper configuration.yml file:
 "cluster" : "kiji://localhost:2181/" #The base cluster URI
 
 "instances" : ["default", "prod", "dev", "test"] #Visible instances
+
+See [Dropwizard's User Manual](http://dropwizard.codahale.com/manual/core/#configuration-defaults)
+for additional Dropwizard-specific configuration options such as server settings 
+and logging options (console-logging, log files, and syslog).
 
 
 Development Warning
