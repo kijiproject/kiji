@@ -90,6 +90,21 @@ public class TestKijiRowExpression extends KijiClientTest {
   }
 
   @Test
+  public void testEntityIdExpression() throws IOException {
+    final KijiRowExpression kijiRowExpression =
+        new KijiRowExpression(":entity_id", TypeInfos.ENTITY_ID);
+
+    // Test that the KijiDataRequest was constructed correctly
+    final KijiDataRequest kijiDataRequest = kijiRowExpression.getDataRequest();
+    assertEquals(0, kijiDataRequest.getColumns().size());
+
+    // Test that the data returned from this request is decoded properly
+    KijiRowData kijiRowData = mReader.get(mEntityId, kijiDataRequest);
+    String result = (String) kijiRowExpression.evaluate(kijiRowData);
+    assertEquals(mEntityId.toShellString(), result);
+  }
+
+  @Test
   public void testFamilyAllValuesExpression() throws IOException {
     final KijiRowExpression kijiRowExpression =
         new KijiRowExpression("map", TypeInfos.FAMILY_MAP_ALL_VALUES);

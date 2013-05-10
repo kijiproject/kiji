@@ -30,6 +30,22 @@ public final class TypeInfos {
   /** Utility class cannot be instantiated. */
   private TypeInfos() {}
 
+  /** For RowExpressions of the form "_entity_id". */
+  public static final TypeInfo ENTITY_ID =
+      TypeInfoUtils.getTypeInfoFromTypeString("string");
+
+  /** For RowExpressions of the form "_entity_id[n]". */
+  public static final TypeInfo ENTITY_ID_STRING_COMPONENT =
+      TypeInfoUtils.getTypeInfoFromTypeString("string");
+
+  /** For RowExpressions of the form "_entity_id[n]". */
+  public static final TypeInfo ENTITY_ID_INT_COMPONENT =
+      TypeInfoUtils.getTypeInfoFromTypeString("int");
+
+  /** For RowExpressions of the form "_entity_id[n]". */
+  public static final TypeInfo ENTITY_ID_LONG_COMPONENT =
+      TypeInfoUtils.getTypeInfoFromTypeString("bigint");
+
   /** For RowExpressions of the form "family". */
   public static final TypeInfo FAMILY_MAP_ALL_VALUES =
       TypeInfoUtils.getTypeInfoFromTypeString(

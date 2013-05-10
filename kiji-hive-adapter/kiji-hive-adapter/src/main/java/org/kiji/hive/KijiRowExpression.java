@@ -33,13 +33,16 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hive.serde2.typeinfo.ListTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.MapTypeInfo;
+import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.hive.utils.AvroTypeAdapter;
+import org.kiji.hive.utils.AvroTypeAdapter.IncompatibleTypeException;
 import org.kiji.hive.utils.HiveTypes.*;
+import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequestBuilder;
@@ -220,6 +223,137 @@ public class KijiRowExpression {
      */
     protected String getQualifier() {
       return mKijiColumnName.getQualifier();
+    }
+  }
+
+  /**
+   * An expression that reads the EntityId as a string.
+   *
+   * Returns results with the Hive type: STRING.
+   */
+  private static class EntityIdExpression implements Expression {
+    /** The Hive type of the value. */
+    private final TypeInfo mTypeInfo;
+
+    /**
+     * Constructor.
+     *
+     * @param typeInfo The Hive type.
+     */
+    public EntityIdExpression(TypeInfo typeInfo) {
+      mTypeInfo = typeInfo;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean isValue() {
+      return true;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Object getValue(KijiRowData row) throws IOException {
+      final EntityId entityId = row.getEntityId();
+      return entityId.toShellString();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public KijiDataRequest getDataRequest() {
+      final KijiDataRequestBuilder builder = KijiDataRequest.builder();
+      return builder.build();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public List<Expression> getOperands() {
+      throw new UnsupportedOperationException();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Object eval(List<Object> operandValues) {
+      throw new UnsupportedOperationException();
+    }
+  }
+
+  /**
+   * An expression that reads a component of the EntityId.
+   *
+   * Returns results with the Hive type: one of INT, BIGINT, STRING.
+   */
+  private static class EntityIdComponentExpression implements Expression {
+    /** The Hive type of the value. */
+    private final PrimitiveTypeInfo mTypeInfo;
+
+    /** The index of the component to read from the EntityId. */
+    private final int mIndex;
+
+    /**
+     * Constructor.
+     *
+     * @param typeInfo The Hive type.
+     * @param index The index of the component in the EntityId.
+     */
+    public EntityIdComponentExpression(TypeInfo typeInfo, int index) {
+      if (!(typeInfo instanceof PrimitiveTypeInfo)) {
+        throw new IllegalArgumentException(
+            "Illegal type [" + typeInfo + "] for EntityId component. "
+            + "Must be one of INT, BIGINT, or STRING.");
+      }
+
+      if (index < 0) {
+        throw new IllegalArgumentException(
+            "Illegal index [" + index + "] for EntityId component");
+      }
+
+      mTypeInfo = (PrimitiveTypeInfo) typeInfo;
+      mIndex = index;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean isValue() {
+      return true;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Object getValue(KijiRowData row) throws IOException {
+      final EntityId entityId = row.getEntityId();
+      Object component = entityId.getComponentByIndex(mIndex);
+
+      switch (mTypeInfo.getPrimitiveCategory()) {
+
+      case INT:
+      case LONG:
+        return component;
+
+      case STRING:
+        return component.toString();
+
+      default:
+        throw new IncompatibleTypeException(mTypeInfo, component);
+      }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public KijiDataRequest getDataRequest() {
+      final KijiDataRequestBuilder builder = KijiDataRequest.builder();
+      return builder.build();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public List<Expression> getOperands() {
+      throw new UnsupportedOperationException();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Object eval(List<Object> operandValues) {
+      throw new UnsupportedOperationException();
     }
   }
 
@@ -542,10 +676,31 @@ public class KijiRowExpression {
   private static class Parser {
     /** The regular expression for Kiji row expressions. */
     private static final String REGEX =
-        "([A-Za-z0-9_]*)(:([^.\\[]*))?(\\[(-?\\d+)\\])?([.]([a-z]+))*";
+        // turn on comment and whitespace ignoring
+        "(?x)"
+        // match the literal '_entity_id' followed by an optional index within []
+        + "(:entity_id(\\[(\\d+)\\])?)"
+        + "|" // or
+        // match the family name
+        + "([A-Za-z0-9_]*)"
+        // match zero or one qualifiers
+        + "(:([^.\\[]*))?"
+        // match zero or one column timestamp indexes
+        + "(\\[(-?\\d+)\\])?"
+        // match zero or more extensions(unused currently)
+        + "([.]([a-z]+))*";
 
     /** The compiled pattern for Kiji row expressions. */
     private static final Pattern PATTERN = Pattern.compile(REGEX);
+
+    private static final int ENTITY_ID_GROUP = 1;
+    private static final int ENTITY_COMPONENT_GROUP = 2;
+    private static final int ENTITY_COMPONENT_INDEX_GROUP = 3;
+    private static final int FAMILY_GROUP = 4;
+    private static final int QUALIFIER_DELIM_GROUP = 5;
+    private static final int QUALIFIER_GROUP = 6;
+    private static final int TS_GROUP = 7;
+    private static final int TS_INDEX_GROUP = 8;
 
     /**
      * Parses a string expression.
@@ -564,26 +719,33 @@ public class KijiRowExpression {
         throw new RuntimeException("Invalid kiji row expression: " + expression);
       }
 
-      // TODO: Support reading the row key.
-      final String family = matcher.group(1);
-      if (null == matcher.group(2)) {
+      if (null != matcher.group(ENTITY_ID_GROUP)) {
+        if (null == matcher.group(ENTITY_COMPONENT_GROUP)) {
+          return new EntityIdExpression(typeInfo);
+        }
+        Integer index = Integer.valueOf(matcher.group(ENTITY_COMPONENT_INDEX_GROUP));
+        return new EntityIdComponentExpression(typeInfo, index);
+      }
+
+      final String family = matcher.group(FAMILY_GROUP);
+      if (null == matcher.group(QUALIFIER_DELIM_GROUP)) {
         KijiColumnName kijiFamilyName = new KijiColumnName(family);
-        if (null == matcher.group(4)) {
+        if (null == matcher.group(TS_GROUP)) {
           return new FamilyAllValuesExpression(typeInfo, kijiFamilyName);
         }
-        Integer index = Integer.valueOf(matcher.group(5));
+        Integer index = Integer.valueOf(matcher.group(TS_INDEX_GROUP));
         if (index < -1) {
           throw new RuntimeException("Invalid index(must be >= -1): " + index);
         }
         return new FamilyFlatValueExpression(typeInfo, kijiFamilyName, index);
       }
 
-      final String qualifier = matcher.group(3);
+      final String qualifier = matcher.group(QUALIFIER_GROUP);
       KijiColumnName kijiColumnName = new KijiColumnName(family, qualifier);
-      if (null == matcher.group(4)) {
+      if (null == matcher.group(TS_GROUP)) {
         return new ColumnAllValuesExpression(typeInfo, kijiColumnName);
       }
-      Integer index = Integer.valueOf(matcher.group(5));
+      Integer index = Integer.valueOf(matcher.group(TS_INDEX_GROUP));
       if (index < -1) {
         throw new RuntimeException("Invalid index(must be >= -1): " + index);
       }
