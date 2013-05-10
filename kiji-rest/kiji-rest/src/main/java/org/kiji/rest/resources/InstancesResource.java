@@ -34,6 +34,8 @@ import javax.ws.rs.core.MediaType;
 import com.google.common.collect.Lists;
 import com.yammer.metrics.annotation.Timed;
 
+import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.rest.representations.GenericResourceRepresentation;
 import org.kiji.schema.KijiURI;
 
@@ -45,6 +47,7 @@ import org.kiji.schema.KijiURI;
  */
 @Path(INSTANCES_PATH)
 @Produces(MediaType.APPLICATION_JSON)
+@ApiAudience.Public
 public class InstancesResource extends AbstractKijiResource {
   /**
    * Default constructor.
@@ -63,6 +66,7 @@ public class InstancesResource extends AbstractKijiResource {
    */
   @GET
   @Timed
+  @ApiStability.Evolving
   public List<GenericResourceRepresentation> getInstanceList() {
     List<GenericResourceRepresentation> instanceList = Lists.newArrayList();
 

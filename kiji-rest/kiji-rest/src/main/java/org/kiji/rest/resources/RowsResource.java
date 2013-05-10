@@ -58,6 +58,8 @@ import org.apache.avro.Schema;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
+import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.rest.representations.KijiRestCell;
 import org.kiji.rest.representations.KijiRestRow;
 import org.kiji.schema.EntityId;
@@ -86,6 +88,7 @@ import org.kiji.schema.util.ResourceUtils;
  */
 @Path(ROWS_PATH)
 @Produces(MediaType.APPLICATION_JSON)
+@ApiAudience.Public
 public class RowsResource extends AbstractRowResource {
 
   /**
@@ -208,6 +211,7 @@ public class RowsResource extends AbstractRowResource {
    */
   @GET
   @Timed
+  @ApiStability.Experimental
   // CSOFF: ParameterNumberCheck - There are a bunch of query param options
   public Response getRows(@PathParam(INSTANCE_PARAMETER) String instance,
       @PathParam(TABLE_PARAMETER) String table,
@@ -305,6 +309,7 @@ public class RowsResource extends AbstractRowResource {
    */
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
+  @ApiStability.Experimental
   public Map<String, String> postCell(@PathParam(INSTANCE_PARAMETER) String instance,
       @PathParam(TABLE_PARAMETER) String table,
       KijiRestRow kijiRestRow,

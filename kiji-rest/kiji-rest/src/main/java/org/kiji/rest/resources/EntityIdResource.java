@@ -38,6 +38,8 @@ import com.yammer.metrics.annotation.Timed;
 
 import org.apache.commons.codec.binary.Hex;
 
+import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.rest.representations.EntityIdWrapper;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiTable;
@@ -54,6 +56,7 @@ import org.kiji.schema.util.ResourceUtils;
  */
 @Path(ENTITY_ID_PATH)
 @Produces(MediaType.APPLICATION_JSON)
+@ApiAudience.Public
 public class EntityIdResource extends AbstractKijiResource {
 
   /**
@@ -76,6 +79,7 @@ public class EntityIdResource extends AbstractKijiResource {
    */
   @GET
   @Timed
+  @ApiStability.Evolving
   public EntityIdWrapper getEntityId(@PathParam(INSTANCE_PARAMETER) String instance,
       @PathParam(TABLE_PARAMETER) String table,
       @QueryParam("eid") String eid) {

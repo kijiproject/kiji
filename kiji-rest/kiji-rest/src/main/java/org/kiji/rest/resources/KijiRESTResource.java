@@ -35,6 +35,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.yammer.metrics.annotation.Timed;
 
+import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.schema.util.VersionInfo;
 
 /**
@@ -46,6 +48,7 @@ import org.kiji.schema.util.VersionInfo;
  */
 @Path(API_ENTRY_PATH)
 @Produces(MediaType.APPLICATION_JSON)
+@ApiAudience.Public
 public class KijiRESTResource {
   /**
    * GETs a message containing a list of the available sub-resources.
@@ -53,6 +56,7 @@ public class KijiRESTResource {
    */
   @GET
   @Timed
+  @ApiStability.Evolving
   public Map<String, Object> getRoot() {
     Map<String, Object> namespace = Maps.newHashMap();
     namespace.put("service", "KijiREST");
@@ -72,6 +76,7 @@ public class KijiRESTResource {
   @Path(VERSION_ENDPOINT)
   @GET
   @Timed
+  @ApiStability.Evolving
   public Map<String, Object> getVersion() throws IOException {
     Map<String, Object> version = Maps.newHashMap();
     version.put("kiji-client-data-version", VersionInfo.getClientDataVersion());

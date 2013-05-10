@@ -40,6 +40,7 @@ import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.io.DecoderFactory;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.rest.representations.KijiRestCell;
 import org.kiji.rest.representations.KijiRestRow;
 import org.kiji.schema.EntityId;
@@ -63,6 +64,7 @@ import org.kiji.schema.layout.SchemaClassNotFoundException;
 /**
  * Base class with helper methods for accessing KijiRow resources.
  */
+@ApiAudience.Framework
 public class AbstractRowResource extends AbstractKijiResource {
 
   /**

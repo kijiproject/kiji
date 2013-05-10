@@ -25,6 +25,7 @@ import java.util.Set;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response.Status;
 
+import org.kiji.annotations.ApiAudience;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;
@@ -32,6 +33,7 @@ import org.kiji.schema.KijiURI;
 /**
  * Base class with helper methods for accessing Kiji resources.
  */
+@ApiAudience.Framework
 public abstract class AbstractKijiResource {
   private final KijiURI mCluster;
   private final Set<KijiURI> mInstances;

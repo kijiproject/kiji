@@ -39,6 +39,8 @@ import javax.ws.rs.core.Response.Status;
 import com.google.common.collect.Lists;
 import com.yammer.metrics.annotation.Timed;
 
+import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.rest.representations.GenericResourceRepresentation;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiURI;
@@ -52,6 +54,7 @@ import org.kiji.schema.util.ResourceUtils;
  */
 @Path(TABLES_PATH)
 @Produces(MediaType.APPLICATION_JSON)
+@ApiAudience.Public
 public class TablesResource extends AbstractKijiResource {
   /**
    * Default constructor.
@@ -71,6 +74,7 @@ public class TablesResource extends AbstractKijiResource {
    */
   @GET
   @Timed
+  @ApiStability.Evolving
   public List<GenericResourceRepresentation> getTables(
       @PathParam(INSTANCE_PARAMETER) String instance) {
 

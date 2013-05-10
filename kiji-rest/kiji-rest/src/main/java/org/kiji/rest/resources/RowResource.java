@@ -53,6 +53,8 @@ import org.apache.avro.Schema;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
+import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.rest.representations.KijiRestRow;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.EntityIdFactory;
@@ -77,6 +79,7 @@ import org.kiji.schema.util.ResourceUtils;
 @Path(ROW_PATH)
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@ApiAudience.Public
 public class RowResource extends AbstractRowResource {
 
   /** Prefix for cell-specific schema parameter. */
@@ -122,6 +125,7 @@ public class RowResource extends AbstractRowResource {
    */
   @PUT
   @Timed
+  @ApiStability.Experimental
   public Map<String, String> putRow(@PathParam(INSTANCE_PARAMETER) String instance,
       @PathParam(TABLE_PARAMETER) String table,
       @PathParam(HEX_ENTITY_ID_PARAMETER) String hexEntityId,
@@ -241,6 +245,7 @@ public class RowResource extends AbstractRowResource {
    */
   @GET
   @Timed
+  @ApiStability.Evolving
   public KijiRestRow getRow(@PathParam(INSTANCE_PARAMETER) String instanceId,
       @PathParam(TABLE_PARAMETER) String tableId,
       @PathParam(HEX_ENTITY_ID_PARAMETER) String hexEntityId,

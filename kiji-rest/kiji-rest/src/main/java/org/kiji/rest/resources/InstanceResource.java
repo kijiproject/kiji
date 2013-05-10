@@ -34,6 +34,8 @@ import javax.ws.rs.core.Response.Status;
 
 import com.yammer.metrics.annotation.Timed;
 
+import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.avro.MetadataBackup;
@@ -47,6 +49,7 @@ import org.kiji.schema.util.ResourceUtils;
  */
 @Path(INSTANCE_PATH)
 @Produces(MediaType.APPLICATION_JSON)
+@ApiAudience.Public
 public class InstanceResource extends AbstractKijiResource {
   /**
    * Default constructor.
@@ -65,6 +68,7 @@ public class InstanceResource extends AbstractKijiResource {
    */
   @GET
   @Timed
+  @ApiStability.Experimental
   public MetadataBackup getInstanceMetadata(@PathParam(INSTANCE_PARAMETER) String instance) {
     Kiji kiji = super.getKiji(instance);
     MetadataBackup backup = null;

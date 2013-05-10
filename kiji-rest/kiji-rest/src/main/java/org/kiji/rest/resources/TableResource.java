@@ -36,6 +36,8 @@ import javax.ws.rs.core.Response.Status;
 
 import com.yammer.metrics.annotation.Timed;
 
+import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.avro.TableLayoutDesc;
@@ -49,6 +51,7 @@ import org.kiji.schema.util.ResourceUtils;
  */
 @Path(TABLE_PATH)
 @Produces(MediaType.APPLICATION_JSON)
+@ApiAudience.Public
 public class TableResource extends AbstractKijiResource {
 
   /**
@@ -70,6 +73,7 @@ public class TableResource extends AbstractKijiResource {
    */
   @GET
   @Timed
+  @ApiStability.Evolving
   public TableLayoutDesc getTable(@PathParam(INSTANCE_PARAMETER) String instance,
       @PathParam(TABLE_PARAMETER) String table) {
     final Kiji kiji = getKiji(instance);
