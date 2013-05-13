@@ -63,14 +63,14 @@ Import data into the tables
 
 Import the song metadata into a `songs` table.
 
-    express job kiji-express-music-0.1.0-SNAPSHOT.jar \
+    express job kiji-express-music-${project.version}.jar \
     org.kiji.express.music.SongMetadataImporter \
     --input express-tutorial/song-metadata.json \
     --table-uri ${KIJI}/songs --hdfs
 
 Import the users' listening history into a `users` table.
 
-    express job target/kiji-express-music-0.1.0-SNAPSHOT.jar \
+    express job target/kiji-express-music-${project.version}.jar \
     org.kiji.express.music.SongPlaysImporter \
     --input express-tutorial/song-plays.json \
     --table-uri ${KIJI}/users --hdfs
@@ -83,7 +83,7 @@ This MapReduce job uses the listening history of our users that we have stored i
 table to calculate the total number of times each song has been played. The result of this computation
 is written to a text file in HDFS.
 
-    express job kiji-express-music-0.1.0-SNAPSHOT.jar \
+    express job kiji-express-music-${project.version}.jar \
     org.kiji.express.music.SongPlayCounter \
     --table-uri ${KIJI}/users \
     --output express-tutorial/songcount-output --hdfs
@@ -95,7 +95,7 @@ Find the top next songs
 Now, for each song, we want to compute a list of the songs that most frequently follow that song.
 This kind of model can eventually be used to write a song recommender.
 
-    express job kiji-express-music-0.1.0-SNAPSHOT.jar \
+    express job kiji-express-music-${project.version}.jar \
     org.kiji.express.music.TopNextSongs \
     --users-table ${KIJI}/users \
     --songs-table ${KIJI}/songs --hdfs
