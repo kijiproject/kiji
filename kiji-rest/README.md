@@ -50,11 +50,11 @@ All instances specified here must exist.
 
 The following are example contents of a proper configuration.yml file:
 
-"cluster" : "kiji://localhost:2181/" #The base cluster URI
-
+"cluster" : "kiji://localhost:2181/" #The base cluster URI <br />
 "instances" : ["default", "prod", "dev", "test"] #Visible instances
 
-KijiREST is implemented using DropWizard. For more information about configuring the server, please
+KijiREST is implemented using DropWizard. See
+[Dropwizard's User Manual](http://dropwizard.codahale.com/manual/core/#configuration-defaults)
 for additional Dropwizard-specific configuration options such as server settings
 and logging options (console-logging, log files, and syslog).
 
