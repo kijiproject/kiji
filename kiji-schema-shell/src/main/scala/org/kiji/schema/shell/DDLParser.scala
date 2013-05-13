@@ -306,6 +306,8 @@ final class DDLParser(val env: Environment) extends JavaTokenParsers
     ^^ (maxFileSize => (MaxFileSize, maxFileSize))
   | i("MEMSTORE")~>i("FLUSH")~>i("SIZE")~>"="~>longValueOrNull
     ^^ (memStoreFlushSize => (MemStoreFlushSize, memStoreFlushSize))
+  | i("NUMREGIONS")~>"="~>intValue
+    ^^ (numRegions => (InitialRegionCount, numRegions.asInstanceOf[java.lang.Integer]))
   )
 
   /**

@@ -3,6 +3,8 @@
                               Kiji Schema Shell Release Notes
 
 Version 1.1.0
+  * DDLSHELL-24. Add support for NUMREGIONS table property, specifying
+      the initial region count.
   * DDLSHELL-28. Add support for Layout version 1.2 features.
       Supports properties added in https://jira.kiji.org/browse/SCHEMA-283.
   * Requires KijiSchema 1.1.0+.

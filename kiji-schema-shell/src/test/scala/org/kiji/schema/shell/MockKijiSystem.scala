@@ -71,17 +71,17 @@ class MockKijiSystem extends AbstractKijiSystem {
     }
   }
 
-  override def createTable(uri: KijiURI, table: String, layout: KijiTableLayout): Unit = {
+  override def createTable(uri: KijiURI, layout: KijiTableLayout, numRegions: Int): Unit = {
     // Verify that the layout has all the required values set.
     TableLayoutDesc.newBuilder(layout.getDesc()).build()
     try {
-      instanceData(uri)(table)
+      instanceData(uri)(layout.getName())
       throw new RuntimeException("Table already exists")
     } catch {
       case nsee: NoSuchElementException => {
         try {
           val tableMap = instanceData(uri)
-          tableMap(table) = layout
+          tableMap(layout.getName()) = layout
         } catch {
           case nsee: NoSuchElementException => {
               throw new RuntimeException("Instance does not exist")

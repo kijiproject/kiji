@@ -57,7 +57,7 @@ class TestMockKijiSystem extends SpecificationWithJUnit {
       avro.setKeysFormat(rowKeyFormat)
       val layout = KijiTableLayout.newLayout(avro)
       val sys = new MockKijiSystem
-      sys.createTable(defaultURI, "t", layout)
+      sys.createTable(defaultURI, layout, 1)
       (sys.getTableNamesDescriptions(defaultURI)
           mustEqual List(("t", "desc")).toArray)
     }
@@ -74,7 +74,7 @@ class TestMockKijiSystem extends SpecificationWithJUnit {
       avro.setKeysFormat(rowKeyFormat)
       val layout = KijiTableLayout.newLayout(avro)
       val sys = new MockKijiSystem
-      sys.createTable(defaultURI, "t", layout)
+      sys.createTable(defaultURI, layout, 1)
 
       new Environment(defaultURI, Console.out,
         sys, new NullInputSource).containsTable("t") mustEqual true
@@ -92,7 +92,7 @@ class TestMockKijiSystem extends SpecificationWithJUnit {
       avro.setKeysFormat(rowKeyFormat)
       val layout = KijiTableLayout.newLayout(avro)
       val sys = new MockKijiSystem
-      sys.createTable(defaultURI, "t", layout)
+      sys.createTable(defaultURI, layout, 1)
       (sys.getTableNamesDescriptions(defaultURI)
           mustEqual List(("t", "desc")).toArray)
       sys.dropTable(defaultURI, "t")
@@ -112,8 +112,8 @@ class TestMockKijiSystem extends SpecificationWithJUnit {
       rowKeyFormat.setEncoding(RowKeyEncoding.HASH)
       avro.setKeysFormat(rowKeyFormat)
       val layout = KijiTableLayout.newLayout(avro)
-      sys.createTable(defaultURI, "t", layout)
-      (sys.createTable(defaultURI, "t", layout)
+      sys.createTable(defaultURI, layout, 1)
+      (sys.createTable(defaultURI, layout, 1)
           must throwA[RuntimeException])
     }
 
@@ -157,7 +157,7 @@ class TestMockKijiSystem extends SpecificationWithJUnit {
       val layout: KijiTableLayout = KijiTableLayout.newLayout(avro)
       val sys = new MockKijiSystem
 
-      sys.createTable(defaultURI, "t", layout)
+      sys.createTable(defaultURI, layout, 1)
       (sys.getTableNamesDescriptions(defaultURI)
           mustEqual List(("t", "desc1")).toArray)
 
@@ -184,7 +184,7 @@ class TestMockKijiSystem extends SpecificationWithJUnit {
       val layout: KijiTableLayout = KijiTableLayout.newLayout(avro)
       val sys = new MockKijiSystem
 
-      sys.createTable(defaultURI, "t", layout)
+      sys.createTable(defaultURI, layout, 1)
       (sys.getTableNamesDescriptions(defaultURI)
           mustEqual List(("t", "desc1")).toArray)
 

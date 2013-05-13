@@ -27,6 +27,8 @@ import org.apache.hadoop.hbase.HBaseConfiguration
 import org.kiji.schema.KijiInstaller
 import org.kiji.schema.KijiURI
 import org.kiji.schema.avro.FamilyDesc
+import org.kiji.schema.hbase.HBaseFactory
+import org.kiji.schema.hbase.KijiManagedHBaseTableName
 import org.kiji.schema.impl.DefaultHTableInterfaceFactory
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.shell.input.NullInputSource
@@ -204,6 +206,72 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
       maybeLayout3 must beSome[KijiTableLayout]
       val layout3 = maybeLayout3.get.getDesc
       layout3.getDescription().toString mustEqual "ohai"
+
+      environment.kijiSystem.shutdown()
+    }
+
+    "create a multi-region table" in {
+      val uri = getNewInstanceURI()
+      installKiji(uri)
+      val environment = env(uri)
+      val parser = getParser(environment)
+      val res = parser.parseAll(parser.statement, """
+CREATE TABLE foo WITH DESCRIPTION 'some data'
+ROW KEY FORMAT HASHED
+PROPERTIES ( NUMREGIONS = 10 )
+WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
+  MAXVERSIONS = INFINITY,
+  TTL = FOREVER,
+  INMEMORY = false,
+  COMPRESSED WITH GZIP,
+  FAMILY info WITH DESCRIPTION 'basic information' (
+    name "string" WITH DESCRIPTION 'The user\'s name',
+    email "string",
+    age "int")
+);""")
+      res.successful mustEqual true
+      val env2 = res.get.exec()
+
+      // Verify that it's there.
+      val maybeLayout = env2.kijiSystem.getTableLayout(uri, "foo")
+      maybeLayout must beSome[KijiTableLayout]
+
+      // And verify the region count is accurate.
+      val hbaseTableName = KijiManagedHBaseTableName.getKijiTableName(
+          uri.getInstance(), "foo").toBytes()
+      val hbaseFactory = HBaseFactory.Provider.get()
+      val hbaseAdmin = hbaseFactory.getHBaseAdminFactory(uri).create(HBaseConfiguration.create())
+      hbaseAdmin.getTableRegions(hbaseTableName).size mustEqual 10
+      hbaseAdmin.close()
+
+      environment.kijiSystem.shutdown()
+    }
+
+    "refuse to create a multi-region RAW table" in {
+      val uri = getNewInstanceURI()
+      installKiji(uri)
+      val environment = env(uri)
+      val parser = getParser(environment)
+      val res = parser.parseAll(parser.statement, """
+CREATE TABLE foo WITH DESCRIPTION 'some data'
+ROW KEY FORMAT RAW
+PROPERTIES ( NUMREGIONS = 10 )
+WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
+  MAXVERSIONS = INFINITY,
+  TTL = FOREVER,
+  INMEMORY = false,
+  COMPRESSED WITH GZIP,
+  FAMILY info WITH DESCRIPTION 'basic information' (
+    name "string" WITH DESCRIPTION 'The user\'s name',
+    email "string",
+    age "int")
+);""")
+      res.successful mustEqual true
+      res.get.exec() must throwAn[Exception]
+
+      // Verify that it's not there.
+      val maybeLayout = environment.kijiSystem.getTableLayout(uri, "foo")
+      maybeLayout must beNone
 
       environment.kijiSystem.shutdown()
     }

@@ -35,6 +35,21 @@ trait TableProperties {
   /** Key for the memstore flush size of the table. Uses Option[Long] value. */
   val MemStoreFlushSize = "MemStoreFlushSize"
 
+  /** Key specifying the number of regions to create the table with. Uses 'Int' value. */
+  val InitialRegionCount = "InitialRegionCount"
+
+
+  /**
+   * Returns the number of regions to create a table with, based on the table property
+   * specified as an argument. If the region count is not specified in the map, returns 1.
+   *
+   * @param tableProperties a set of name-to-value property mappings for the table.
+   * @return the value of the InitialRegionCount property, or 1 if that's not defined.
+   */
+  def getInitialRegionCount(tableProperties: Map[String, Object]): Int = {
+    return tableProperties.getOrElse(InitialRegionCount, 1).asInstanceOf[Int]
+  }
+
   /**
    * Applies table properties to a TableLayoutDesc builder.
    *
@@ -58,6 +73,7 @@ trait TableProperties {
             case None => table.setMemstoreFlushsize(null)
           }
         }
+        case InitialRegionCount => { /* Do nothing. Handled by the CREATE TABLE cmd itself. */ }
         case _ => throw new DDLException("Unknown table property: " + k)
       }
     }

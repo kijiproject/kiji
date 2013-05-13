@@ -142,9 +142,9 @@ final class KijiSystem extends AbstractKijiSystem {
   }
 
   /** {@inheritDoc} */
-  override def createTable(uri: KijiURI, table: String, layout: KijiTableLayout): Unit = {
+  override def createTable(uri: KijiURI, layout: KijiTableLayout, numRegions: Int): Unit = {
     kijiCache(uri) match {
-      case Some(kiji) => { kiji.createTable(layout.getDesc()) }
+      case Some(kiji) => { kiji.createTable(layout.getDesc(), numRegions) }
       case None => { throw new IOException("Cannot get kiji for \"" + uri.toString() + "\"") }
     }
   }

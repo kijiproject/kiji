@@ -86,7 +86,11 @@ final class InputProcessor(val throwOnSyntaxErr: Boolean = false) {
         |
         |  CREATE TABLE <name> WITH DESCRIPTION 'description'
         |    ROW KEY FORMAT { HASHED | RAW | HASH PREFIXED(n) | (formatted--see below*) }
-        |    [PROPERTIES ( MAX FILE SIZE = <n>, MEMSTORE FLUSH SIZE = <n> )]
+        |    [PROPERTIES (
+        |      MAX FILE SIZE = <n>,
+        |      MEMSTORE FLUSH SIZE = <n>,
+        |      NUMREGIONS = <n>
+        |    )]
         |    WITH LOCALITY GROUP <group> WITH DESCRIPTION 'description' (
         |      MAXVERSIONS = <n>,
         |      INMEMORY = { true | false },

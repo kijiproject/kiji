@@ -115,6 +115,7 @@ final class CreateTableCommand(val env: Environment,
   }
 
   override def applyUpdate(layout: TableLayoutDesc): Unit = {
-    env.kijiSystem.createTable(getKijiURI(), tableName, KijiTableLayout.newLayout(layout))
+    env.kijiSystem.createTable(getKijiURI(), KijiTableLayout.newLayout(layout),
+        getInitialRegionCount(tableProps))
   }
 }

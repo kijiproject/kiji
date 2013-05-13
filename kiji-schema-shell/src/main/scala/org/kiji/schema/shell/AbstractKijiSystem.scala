@@ -64,7 +64,7 @@ abstract class AbstractKijiSystem {
   def getTableLayout(uri: KijiURI, table: String): Option[KijiTableLayout]
 
   /** Create a new table in the specified Kiji instance. */
-  def createTable(uri: KijiURI, table: String, layout: KijiTableLayout): Unit
+  def createTable(uri: KijiURI, layout: KijiTableLayout, numRegions: Int): Unit
 
   /** Apply a table layout update to a Kiji table in the specified instance. */
   def applyLayout(uri: KijiURI, table: String, layout: TableLayoutDesc): Unit
