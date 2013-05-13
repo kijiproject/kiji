@@ -2,6 +2,17 @@
 
                              Kiji Express Release Notes
 
+Version 0.3.0
+  * EXP-30. Allow users to run KijiSchema DDL Shell from KijiExpress Shell.
+      From inside the KijiExpress Shell, the command :schema-shell will run a KijiSchema DDL Shell.
+  * EXP-34.  There is now a KijiExpress Shell.
+      A Scala shell preloaded for KijiExpress can now be run with the command "express shell
+      --local" or "express shell --hdfs".  Once a pipe is fully specified from input to output,
+      it can be run with "pipe.run".
+  * EXP-25. Fixes EntityId's toJavaEntityId method.
+      EntityId.getJavaEntityId has been renamed to EntityId.toJavaEntityId.
+      Creating a HashedEntityId no longer errors. Components of HashedEntityIds cannot be accessed.
+
 Version 0.2.0
   * CHOP-70. Deprecated the EXPRESS_CLASSPATH variable.
       Currently when specifying any third-party dependencies (job jar, dependency
