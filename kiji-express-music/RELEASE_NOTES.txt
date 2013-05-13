@@ -3,6 +3,9 @@
                              Kiji Express Music Tutorial Release Notes
 
 Version 0.2.0
+  * EXP-25. Updates tutorial to use new EntityId mechanisms in KijiExpress.
+
+Version 0.2.0
   * CHOP-59. Add SongRecommender and test suite to tutorial.
       Adds SongRecommender.scala, which uses the results of previous tutorial steps to produce
       a recommendation for the next song a user should listen to.
