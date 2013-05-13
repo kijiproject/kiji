@@ -34,13 +34,26 @@ $ cd $KIJI\_REST\_HOME
 
 $ ./bin/kiji-rest
 
+This will launch the service in the background with the pid of the process is located in
+$KIJI\_REST\_HOME/kiji-rest.pid. The application and request logs can be found
+under $KIJI\_REST\_HOME/logs.
+
 ### Alternatively as root:
 $ /sbin/service kiji-rest start
+
+Stopping a local KijiREST server
+--------------------------------
+
+### If run as non-root:
+$ cat $KIJI\_REST\_HOME/kiji-rest.pid | xargs kill
+
+### As root:
+$ /sbin/service kiji-rest stop
 
 Setting up configuration.yml
 ----------------------------
 
-The configuration.yml file (located in $KIJI\_REST\_HOME/configuration.yml) is a YAML file used
+The configuration.yml file (located in $KIJI\_REST\_HOME/conf/configuration.yml) is a YAML file used
 to configure the KijiREST server. The following keys are required:
 
 - "cluster" is the base cluster's kiji URI.
