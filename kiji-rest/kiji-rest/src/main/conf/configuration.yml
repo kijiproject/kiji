@@ -1,5 +1,50 @@
-#Basic configuration to get started. The cluster property defines the URI of the Kiji
-#cluster and the instances array defines the list of instances allowed to be accessed and
-#modified by REST clients. 
-cluster: "kiji://.env/" #The base cluster URI
-instances: ["default"] #Visible instances
+# Basic configuration to get started.
+
+########## KijiREST Configuration ##########
+# The cluster property defines the URI of the Kiji cluster and the instances array
+# defines the list of instances allowed to be accessed and modified by REST clients.
+
+cluster: kiji://.env/
+instances:
+  - default
+
+
+########## Dropwizard Configuration ##########
+# Set default port and path to REST URI and let logs divert to ./logs/ instead of
+# printing to the console. This is recommended for production systems. For more
+# information on Dropwizard logging options and defaults, see
+# http://dropwizard.codahale.com/manual/core/#configuration-defaults
+
+http:
+  port: 8080
+  adminPort: 8081
+  rootPath: "/"
+  requestLog:
+    console:
+      # If true, log requests to stdout.
+      enabled: false
+      timeZone: UTC
+      logFormat: null
+    file:
+      enabled: true
+      timeZone: UTC
+      logFormat: null
+      currentLogFilename: ./logs/requests.log
+      archive: true
+      archivedLogFilenamePattern: ./logs/requests-%d.log.gz
+      archivedFileCount: 5
+logging:
+  console:
+    enabled: false
+    threshold: ALL
+    timeZone: UTC
+    logFormat: null
+  file:
+    enabled: true
+    threshold: ALL
+    timeZone: UTC
+    logFormat: null
+    currentLogFilename: ./logs/app.log
+    archive: true
+    archivedLogFilenamePattern: ./logs/app-%d.log.gz
+    archivedFileCount: 5
