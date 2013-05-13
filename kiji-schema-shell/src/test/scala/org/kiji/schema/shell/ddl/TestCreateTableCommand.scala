@@ -20,6 +20,7 @@
 package org.kiji.schema.shell.ddl
 
 import scala.collection.JavaConversions._
+import scala.collection.mutable.Map
 import org.specs2.mutable._
 
 import org.kiji.schema.avro.RowKeyEncoding
@@ -32,7 +33,7 @@ class TestCreateTableCommand extends CommandTestCase {
   "CreateTableCommand" should {
     "create layouts <= max version we support" in {
       // create layout version is of lesser (-1) or equal (0) to max supported version.
-      val ctcmd = new CreateTableCommand(env, "foo", Some("desc"), DefaultKeySpec, List())
+      val ctcmd = new CreateTableCommand(env, "foo", Some("desc"), DefaultKeySpec, List(), Map())
       (CreateTableCommand.DDL_LAYOUT_VERSION.compareTo(ctcmd.MAX_LAYOUT_VERSION) must
           beLessThan(1))
     }
@@ -41,25 +42,25 @@ class TestCreateTableCommand extends CommandTestCase {
       // If this check fails, then this tool needs to depend on a newer version of KijiSchema.
 
       // Defined as TableDDLCommand.MAX_LAYOUT_VERSION
-      val ctcmd = new CreateTableCommand(env, "foo", Some("desc"), DefaultKeySpec, List())
+      val ctcmd = new CreateTableCommand(env, "foo", Some("desc"), DefaultKeySpec, List(), Map())
       (ctcmd.MAX_LAYOUT_VERSION.compareTo(KijiTableLayout.getMaxSupportedLayoutVersion())
           must beLessThan(1))
     }
 
     "require 1+ locality groups" in {
-      val ctcmd = new CreateTableCommand(env, "foo", Some("desc"), DefaultKeySpec, List())
+      val ctcmd = new CreateTableCommand(env, "foo", Some("desc"), DefaultKeySpec, List(), Map())
       ctcmd.validateArguments() must throwA[DDLException]
     }
 
     "require non-empty name" in {
-      val ctcmd = new CreateTableCommand(env, "", Some("desc"), RawFormattedKeySpec, List())
+      val ctcmd = new CreateTableCommand(env, "", Some("desc"), RawFormattedKeySpec, List(), Map())
       ctcmd.validateArguments() must throwA[DDLException]
     }
 
     "create reasonable looking Avro records" in {
       val locGroup = new LocalityGroupClause("default", None, List())
       val ctcmd = new CreateTableCommand(env, "foo", None, new HashedFormattedKeySpec,
-          List(locGroup))
+          List(locGroup), Map())
 
       ctcmd.validateArguments()
       val layout = ctcmd.getInitialLayout()
@@ -79,7 +80,7 @@ class TestCreateTableCommand extends CommandTestCase {
 
     "support hash prefix(2) as default row format" in {
       val locGroup = new LocalityGroupClause("default", None, List())
-      val ctcmd = new CreateTableCommand(env, "foo", None, DefaultKeySpec, List(locGroup))
+      val ctcmd = new CreateTableCommand(env, "foo", None, DefaultKeySpec, List(locGroup), Map())
 
       ctcmd.validateArguments()
       val layout = ctcmd.getInitialLayout()
@@ -98,7 +99,8 @@ class TestCreateTableCommand extends CommandTestCase {
 
     "support row format raw" in {
       val locGroup = new LocalityGroupClause("default", None, List())
-      val ctcmd = new CreateTableCommand(env, "foo", None, RawFormattedKeySpec, List(locGroup))
+      val ctcmd = new CreateTableCommand(env, "foo", None, RawFormattedKeySpec, List(locGroup),
+          Map())
 
       ctcmd.validateArguments()
       val layout = ctcmd.getInitialLayout()
@@ -113,7 +115,7 @@ class TestCreateTableCommand extends CommandTestCase {
     "support row format hash prefix" in {
       val locGroup = new LocalityGroupClause("default", None, List())
       val ctcmd = new CreateTableCommand(env, "foo", None,
-          new HashPrefixKeySpec(4), List(locGroup))
+          new HashPrefixKeySpec(4), List(locGroup), Map())
 
       ctcmd.validateArguments()
       val layout = ctcmd.getInitialLayout()
@@ -131,7 +133,7 @@ class TestCreateTableCommand extends CommandTestCase {
     "fail if hashprefix size is greater than 16" in {
       val locGroup = new LocalityGroupClause("default", None, List())
       val ctcmd = new CreateTableCommand(env, "foo", None,
-          new HashPrefixKeySpec(20), List(locGroup))
+          new HashPrefixKeySpec(20), List(locGroup), Map())
 
       ctcmd.validateArguments() must throwA[DDLException]
     }
@@ -139,12 +141,12 @@ class TestCreateTableCommand extends CommandTestCase {
     "fail if hashprefix size is less than 1" in {
       val locGroup = new LocalityGroupClause("default", None, List())
       val ctcmd = new CreateTableCommand(env, "foo", None,
-          new HashPrefixKeySpec(0), List(locGroup))
+          new HashPrefixKeySpec(0), List(locGroup), Map())
 
       ctcmd.validateArguments() must throwA[DDLException]
 
       val ctcmd2 = new CreateTableCommand(env, "foo", None,
-          new HashPrefixKeySpec(-2), List(locGroup))
+          new HashPrefixKeySpec(-2), List(locGroup), Map())
 
       ctcmd.validateArguments() must throwA[DDLException]
     }
@@ -152,7 +154,7 @@ class TestCreateTableCommand extends CommandTestCase {
     "refuse to create tables that already exist" in {
       val locGroup = new LocalityGroupClause("default", None, List())
       val ctcmd = new CreateTableCommand(env, "foo", Some("desc"), DefaultKeySpec,
-          List(locGroup))
+          List(locGroup), Map())
 
       ctcmd.validateArguments()
       val layout = ctcmd.getInitialLayout()

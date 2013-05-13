@@ -19,18 +19,25 @@
 
 package org.kiji.schema.shell.ddl
 
+import scala.collection.mutable.Map
+
 import org.kiji.annotations.ApiAudience
+import org.kiji.schema.avro.TableLayoutDesc
 
+import org.kiji.schema.shell.Environment
+
+/** Update one or more table-level properties. */
 @ApiAudience.Private
-object LocalityGroupPropName extends Enumeration {
-  type LocalityGroupPropName = Value
-  val MaxVersions = Value("MaxVersions")
-  val InMemory  = Value("InMemory")
-  val TimeToLive = Value("TimeToLive")
-  val Compression = Value("Compression")
-  val MapFamily = Value("MapFamily")
-  val GroupFamily = Value("GroupFamily")
-  val BlockSize = Value("BlockSize")
-  val BloomFilter = Value("BloomFilter")
-}
+final class AlterTableSetPropertyCommand(
+    val env: Environment,
+    val tableName: String,
+    val tableProperties: Map[String, Object]) extends TableDDLCommand with TableProperties {
 
+  override def validateArguments(): Unit = {
+    checkTableExists()
+  }
+
+  override def updateLayout(layout: TableLayoutDesc.Builder): Unit = {
+    applyTableProperties(tableProperties, layout)
+  }
+}

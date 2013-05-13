@@ -20,6 +20,7 @@
 package org.kiji.schema.shell.ddl
 
 import scala.collection.JavaConversions._
+import scala.collection.mutable.Map
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.ColumnDesc
@@ -40,7 +41,7 @@ object CreateTableCommand {
    *
    * Must be &lt;= TableDDLCommand.MAX_LAYOUT_VERSION.
    */
-  val DDL_LAYOUT_VERSION = ProtocolVersion.parse("layout-1.1");
+  val DDL_LAYOUT_VERSION = ProtocolVersion.parse("layout-1.2");
 }
 
 /**
@@ -57,8 +58,9 @@ final class CreateTableCommand(val env: Environment,
     val tableName: String,
     val desc: Option[String],
     val rowKeySpec: FormattedKeySpec,
-    val locGroups: List[LocalityGroupClause]) extends TableDDLCommand
-    with NewLocalityGroup {
+    val locGroups: List[LocalityGroupClause],
+    val tableProps: Map[String, Object]) extends TableDDLCommand
+    with NewLocalityGroup with TableProperties {
 
   // We always operate on an empty layout when creating a new table.
   override def getInitialLayout(): TableLayoutDesc.Builder = {
@@ -108,6 +110,8 @@ final class CreateTableCommand(val env: Environment,
         })
     val localityGroups = localityGroupBuilders.map(builder => builder.build())
     layout.setLocalityGroups(localityGroups)
+
+    applyTableProperties(tableProps, layout)
   }
 
   override def applyUpdate(layout: TableLayoutDesc): Unit = {

@@ -44,7 +44,7 @@ abstract class TableDDLCommand extends DDLCommand {
    * The maximum version string we are comfortable operating on. Newer layers than
    * this must be modified with newer tools.
    */
-  val MAX_LAYOUT_VERSION = ProtocolVersion.parse("layout-1.1");
+  val MAX_LAYOUT_VERSION = ProtocolVersion.parse("layout-1.2");
 
   /** The name of the table being operated on. */
   val tableName: String;

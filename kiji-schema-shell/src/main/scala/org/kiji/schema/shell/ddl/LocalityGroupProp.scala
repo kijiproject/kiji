@@ -20,6 +20,7 @@
 package org.kiji.schema.shell.ddl
 
 import org.kiji.annotations.ApiAudience
+import org.kiji.schema.avro.BloomType
 import org.kiji.schema.avro.LocalityGroupDesc
 
 import LocalityGroupPropName._
@@ -49,6 +50,15 @@ final class LocalityGroupProp(val property: LocalityGroupPropName, val value: An
       }
       case LocalityGroupPropName.GroupFamily => {
         value.asInstanceOf[GroupFamilyInfo].addToLocalityGroup(group)
+      }
+      case LocalityGroupPropName.BlockSize => {
+        value.asInstanceOf[Option[Int]] match {
+          case Some(size) => group.setBlockSize(size)
+          case None => group.setBlockSize(null)
+        }
+      }
+      case LocalityGroupPropName.BloomFilter => {
+        group.setBloomType(value.asInstanceOf[BloomType])
       }
     }
 

@@ -20,6 +20,7 @@
 package org.kiji.schema.shell.ddl
 
 import org.kiji.annotations.ApiAudience
+import org.kiji.schema.avro.BloomType
 import org.kiji.schema.avro.CompressionType
 import org.kiji.schema.avro.FamilyDesc
 import org.kiji.schema.avro.LocalityGroupDesc
@@ -38,6 +39,7 @@ trait NewLocalityGroup {
     locGroup.setMaxVersions(Int.MaxValue)
     locGroup.setTtlSeconds(Int.MaxValue)
     locGroup.setInMemory(false)
+    locGroup.setBloomType(BloomType.NONE)
     return locGroup
   }
 }

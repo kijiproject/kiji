@@ -19,7 +19,10 @@
 
 package org.kiji.schema.shell
 
+import scala.collection.mutable.Map
+
 import org.kiji.annotations.ApiAudience
+import org.kiji.schema.avro.BloomType
 import org.kiji.schema.avro.HashType
 import org.kiji.schema.avro.RowKeyEncoding
 import org.kiji.schema.avro.RowKeyFormat
@@ -42,7 +45,7 @@ import scala.util.parsing.combinator._
  */
 @ApiAudience.Private
 final class DDLParser(val env: Environment) extends JavaTokenParsers
-    with DDLParserHelpers with JsonStringParser {
+    with DDLParserHelpers with JsonStringParser with TableProperties {
 
   /** Matches a legal module name. */
   def moduleName: Parser[String] = validatedNameFromOptionallyQuotedString
@@ -70,6 +73,12 @@ final class DDLParser(val env: Environment) extends JavaTokenParsers
     | i("SNAPPY") ^^ (_ => CompressionTypeToken.SNAPPY)
   )
 
+  /** Matches one of the bloom filter modes supported by HBase. */
+  def bloomFilter: Parser[BloomType] = (
+      i("NONE") ^^ (_ => BloomType.NONE)
+    | i("ROW") ^^ (_ => BloomType.ROW)
+    | i("ROWCOL") ^^ (_ => BloomType.ROWCOL)
+  )
 
   /**
    * An optional clause of the form: WITH DESCRIPTION 'd'.
@@ -93,6 +102,10 @@ final class DDLParser(val env: Environment) extends JavaTokenParsers
     ^^ (ttl => new LocalityGroupProp(LocalityGroupPropName.TimeToLive, ttl))
   | i("COMPRESSED")~>i("WITH")~>compression
     ^^ (comp => new LocalityGroupProp(LocalityGroupPropName.Compression, comp))
+  | i("BLOCK")~>i("SIZE")~>"="~>intValueOrNull
+    ^^ (blockSize => new LocalityGroupProp(LocalityGroupPropName.BlockSize, blockSize))
+  | i("BLOOM")~>i("FILTER")~>"="~>bloomFilter
+    ^^ (bloomFilter => new LocalityGroupProp(LocalityGroupPropName.BloomFilter, bloomFilter))
   )
 
   /** Description of a map-type column family. */
@@ -283,14 +296,41 @@ final class DDLParser(val env: Environment) extends JavaTokenParsers
   | success[Any](None) ^^ (_ => true) // Default is nullable.
   )
 
+
+  /**
+   * Return a (String, Object) pair representing a table property name and its value to set
+   * on the specified table.
+   */
+  def tableProperty: Parser[(String, Object)] = (
+    i("MAX")~>i("FILE")~>i("SIZE")~>"="~>longValueOrNull
+    ^^ (maxFileSize => (MaxFileSize, maxFileSize))
+  | i("MEMSTORE")~>i("FLUSH")~>i("SIZE")~>"="~>longValueOrNull
+    ^^ (memStoreFlushSize => (MemStoreFlushSize, memStoreFlushSize))
+  )
+
+  /**
+   * Return a map from well-defined strings to key-dependent values representing the
+   * different properties that can be applied to a table.
+   * This clause is optional; omission returns an empty map.
+   */
+  def tablePropertiesClause: Parser[Map[String, Object]] = (
+    i("PROPERTIES")~>i("(")~>repsep(tableProperty, ",")<~")" ^^
+    ({case propList: List[(String, Object)] =>
+      // Convert the list of properties into a map
+      propList.foldLeft(Map[String, Object]())({ case (map, (k, v)) => map += (k -> v) })
+    })
+  | success[Any](None) ^^ (_ => Map[String, Object]())
+  )
+
   /**
    * Parser that recognizes a CREATE TABLE statement.
    */
   def createTable: Parser[DDLCommand] = (
       i("CREATE")~>i("TABLE")~>tableName~descriptionClause~rowFormatClause
+      ~tablePropertiesClause
       ~i("WITH")~rep1sep(lg_clause, ",")
-      ^^ ({ case ~(~(~(~(name, desc), rowFormat), _), localityGroups) =>
-                new CreateTableCommand(env, name, desc, rowFormat, localityGroups)
+      ^^ ({ case ~(~(~(~(~(name, desc), rowFormat), tableProps), _), localityGroups) =>
+                new CreateTableCommand(env, name, desc, rowFormat, localityGroups, tableProps)
           })
   )
 
@@ -299,6 +339,18 @@ final class DDLParser(val env: Environment) extends JavaTokenParsers
    */
   def dropTable: Parser[DDLCommand] = (
       i("DROP")~>i("TABLE")~>tableName ^^ (t => new DropTableCommand(env, t))
+  )
+
+  /**
+   * Parser that recognizes an ALTER TABLE.. SET tableProperty clause.
+   */
+  def alterTableSetProperty: Parser[DDLCommand] = (
+    i("ALTER")~>i("TABLE")~>tableName~i("SET")~tableProperty ^^
+    ({ case ~(~(name, _), (tablePropKey, tablePropVal)) =>
+      val tablePropsMap = Map[String, Object]()
+      tablePropsMap += (tablePropKey -> tablePropVal)
+      new AlterTableSetPropertyCommand(env, name, tablePropsMap)
+    })
   )
 
   /**
@@ -567,6 +619,7 @@ final class DDLParser(val env: Environment) extends JavaTokenParsers
    */
   def statementBody: Parser[DDLCommand] = (
       alterAddGroupFamily
+    | alterTableSetProperty
     | alterAddMapFamily
     | alterDropFamily
     | alterRenameFamily

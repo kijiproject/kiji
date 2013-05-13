@@ -54,6 +54,7 @@ final class DescribeTableCommand(
     }
 
     describeRowKey(layout)
+    describeTableProperties(layout)
     layout.getLocalityGroups.foreach { localityGroup =>
       localityGroup.getFamilies.foreach { family =>
         Option(family.getMapSchema()) match {
@@ -72,7 +73,9 @@ final class DescribeTableCommand(
         echo("\tIn memory: " + localityGroup.getInMemory().toString())
         echo("\tMax versions: " + localityGroup.getMaxVersions().toString())
         echo("\tttl: " + localityGroup.getTtlSeconds() + " seconds")
-        echo("\tcompression: " + localityGroup.getCompressionType().toString())
+        echo("\tCompression: " + localityGroup.getCompressionType().toString())
+        echo("\tBloom filter: " + localityGroup.getBloomType())
+        echo("\tBlock size: " + localityGroup.getBlockSize())
         echo("")
       }
     }
@@ -130,6 +133,15 @@ final class DescribeTableCommand(
       }
     }
     echo("")
+  }
+
+  def describeTableProperties(layout: TableLayoutDesc.Builder): Unit = {
+    if (!extended) {
+      return
+    }
+
+    echo("Max file size: " + layout.getMaxFilesize())
+    echo("Memstore flush size: " + layout.getMemstoreFlushsize())
   }
 
   def describeGroupFamily(groupFamily: FamilyDesc, localityGroup: LocalityGroupDesc): Unit = {

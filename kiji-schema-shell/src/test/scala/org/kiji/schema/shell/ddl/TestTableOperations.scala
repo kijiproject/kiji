@@ -79,6 +79,245 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
       maybeInfo.get.getColumns().size mustEqual 3
     }
 
+    "Use the table MEMSTORE FLUSH SIZE property" in {
+      val parser = getParser()
+      val res = parser.parseAll(parser.statement, """
+        |CREATE TABLE foo WITH DESCRIPTION 'some data'
+        |ROW KEY FORMAT HASHED
+        |PROPERTIES (
+        |  MEMSTORE FLUSH SIZE = 5000
+        |)
+        |WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
+        |  MAXVERSIONS = INFINITY,
+        |  FAMILY info WITH DESCRIPTION 'basic information' (
+        |    name "string" WITH DESCRIPTION 'The user\'s name'
+        |  ));""".stripMargin);
+      res.successful mustEqual true
+      res.get must beAnInstanceOf[CreateTableCommand]
+      val env2 = res.get.exec()
+
+      val maybeLayout2 = env.kijiSystem.getTableLayout(
+          defaultURI, "foo")
+      maybeLayout2 must beSome[KijiTableLayout]
+      val layout2 = maybeLayout2.get.getDesc
+      val memstoreFlushSize = layout2.getMemstoreFlushsize
+      memstoreFlushSize mustEqual 5000
+    }
+
+    "Use the table MAX FILE SIZE property" in {
+      val parser = getParser()
+      val res = parser.parseAll(parser.statement, """
+        |CREATE TABLE foo WITH DESCRIPTION 'some data'
+        |ROW KEY FORMAT HASHED
+        |PROPERTIES (
+        |  MAX FILE SIZE = 5000
+        |)
+        |WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
+        |  MAXVERSIONS = INFINITY,
+        |  FAMILY info WITH DESCRIPTION 'basic information' (
+        |    name "string" WITH DESCRIPTION 'The user\'s name'
+        |  ));""".stripMargin);
+      res.successful mustEqual true
+      res.get must beAnInstanceOf[CreateTableCommand]
+      val env2 = res.get.exec()
+
+      val maybeLayout2 = env.kijiSystem.getTableLayout(
+          defaultURI, "foo")
+      maybeLayout2 must beSome[KijiTableLayout]
+      val layout2 = maybeLayout2.get.getDesc
+      val maxFileSize = layout2.getMaxFilesize
+      maxFileSize mustEqual 5000
+    }
+
+    "Use the table MAX FILE SIZE property with an invalid value" in {
+      val parser = getParser()
+      val res = parser.parseAll(parser.statement, """
+        |CREATE TABLE foo WITH DESCRIPTION 'some data'
+        |ROW KEY FORMAT HASHED
+        |PROPERTIES (
+        |  MAX FILE SIZE = -50
+        |)
+        |WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
+        |  MAXVERSIONS = INFINITY,
+        |  FAMILY info WITH DESCRIPTION 'basic information' (
+        |    name "string" WITH DESCRIPTION 'The user\'s name'
+        |  ));""".stripMargin);
+      res.successful mustEqual true
+      res.get must beAnInstanceOf[CreateTableCommand]
+      res.get.exec() must throwAn[Exception]
+    }
+
+    "Use the locality group BLOOM FILTER property" in {
+      val parser = getParser()
+      val res = parser.parseAll(parser.statement, """
+        |CREATE TABLE foo WITH DESCRIPTION 'some data'
+        |ROW KEY FORMAT HASHED
+        |WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
+        |  MAXVERSIONS = INFINITY,
+        |  BLOOM FILTER = ROW,
+        |  FAMILY info WITH DESCRIPTION 'basic information' (
+        |    name "string" WITH DESCRIPTION 'The user\'s name'
+        |  ));""".stripMargin);
+      res.successful mustEqual true
+      res.get must beAnInstanceOf[CreateTableCommand]
+      val env2 = res.get.exec()
+
+      val maybeLayout2 = env.kijiSystem.getTableLayout(
+          defaultURI, "foo")
+      maybeLayout2 must beSome[KijiTableLayout]
+      val layout2 = maybeLayout2.get.getDesc
+      val locGroups2 = layout2.getLocalityGroups()
+      locGroups2.size mustEqual 1
+      val defaultLocGroup2 = locGroups2.head
+      defaultLocGroup2.getName().toString() mustEqual "default"
+      defaultLocGroup2.getFamilies().size mustEqual 1
+      defaultLocGroup2.getBloomType() mustEqual BloomType.ROW
+    }
+
+    "Use the locality group BLOCK SIZE property" in {
+      val parser = getParser()
+      val res = parser.parseAll(parser.statement, """
+        |CREATE TABLE foo WITH DESCRIPTION 'some data'
+        |ROW KEY FORMAT HASHED
+        |WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
+        |  MAXVERSIONS = INFINITY,
+        |  BLOCK SIZE = 100,
+        |  FAMILY info WITH DESCRIPTION 'basic information' (
+        |    name "string" WITH DESCRIPTION 'The user\'s name'
+        |  ));""".stripMargin);
+      res.successful mustEqual true
+      res.get must beAnInstanceOf[CreateTableCommand]
+      val env2 = res.get.exec()
+
+      val maybeLayout2 = env.kijiSystem.getTableLayout(
+          defaultURI, "foo")
+      maybeLayout2 must beSome[KijiTableLayout]
+      val layout2 = maybeLayout2.get.getDesc
+      val locGroups2 = layout2.getLocalityGroups()
+      locGroups2.size mustEqual 1
+      val defaultLocGroup2 = locGroups2.head
+      defaultLocGroup2.getName().toString() mustEqual "default"
+      defaultLocGroup2.getFamilies().size mustEqual 1
+      defaultLocGroup2.getBlockSize() mustEqual 100
+    }
+
+    "Use the locality group BLOCK SIZE = NULL property" in {
+      val parser = getParser()
+      val res = parser.parseAll(parser.statement, """
+        |CREATE TABLE foo WITH DESCRIPTION 'some data'
+        |ROW KEY FORMAT HASHED
+        |WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
+        |  MAXVERSIONS = INFINITY,
+        |  BLOCK SIZE = nULL,
+        |  FAMILY info WITH DESCRIPTION 'basic information' (
+        |    name "string" WITH DESCRIPTION 'The user\'s name'
+        |  ));""".stripMargin);
+      res.successful mustEqual true
+      res.get must beAnInstanceOf[CreateTableCommand]
+      val env2 = res.get.exec()
+
+      val maybeLayout2 = env.kijiSystem.getTableLayout(
+          defaultURI, "foo")
+      maybeLayout2 must beSome[KijiTableLayout]
+      val layout2 = maybeLayout2.get.getDesc
+      val locGroups2 = layout2.getLocalityGroups()
+      locGroups2.size mustEqual 1
+      val defaultLocGroup2 = locGroups2.head
+      defaultLocGroup2.getName().toString() mustEqual "default"
+      defaultLocGroup2.getFamilies().size mustEqual 1
+      defaultLocGroup2.getBlockSize() must beNull
+    }
+
+    "Use the locality group BLOCK SIZE property incorrectly" in {
+      val parser = getParser()
+      val res = parser.parseAll(parser.statement, """
+        |CREATE TABLE foo WITH DESCRIPTION 'some data'
+        |ROW KEY FORMAT HASHED
+        |WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
+        |  MAXVERSIONS = INFINITY,
+        |  BLOCK SIZE = 0,
+        |  FAMILY info WITH DESCRIPTION 'basic information' (
+        |    name "string" WITH DESCRIPTION 'The user\'s name'
+        |  ));""".stripMargin);
+      res.successful mustEqual true
+      res.get must beAnInstanceOf[CreateTableCommand]
+      res.get.exec() must throwAn[Exception]
+    }
+
+    "Set and alter the table MEMSTORE FLUSH SIZE property" in {
+      val parser = getParser()
+      val res = parser.parseAll(parser.statement, """
+        |CREATE TABLE foo WITH DESCRIPTION 'some data'
+        |ROW KEY FORMAT HASHED
+        |PROPERTIES (
+        |  MEMSTORE FLUSH SIZE = 5000
+        |)
+        |WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
+        |  MAXVERSIONS = INFINITY,
+        |  FAMILY info WITH DESCRIPTION 'basic information' (
+        |    name "string" WITH DESCRIPTION 'The user\'s name'
+        |  ));""".stripMargin);
+      res.successful mustEqual true
+      res.get must beAnInstanceOf[CreateTableCommand]
+      val env2 = res.get.exec()
+
+      val maybeLayout2 = env.kijiSystem.getTableLayout(
+          defaultURI, "foo")
+      maybeLayout2 must beSome[KijiTableLayout]
+      val layout2 = maybeLayout2.get.getDesc
+      val memstoreFlushSize2 = layout2.getMemstoreFlushsize
+      memstoreFlushSize2 mustEqual 5000
+
+      val res2 = parser.parseAll(parser.statement, """
+        |ALTER TABLE foo SET MEMSTORE FLUSH SIZE = 10000;""".stripMargin);
+      res2.successful mustEqual true
+      res2.get must beAnInstanceOf[AlterTableSetPropertyCommand]
+      val env3 = res2.get.exec()
+
+      val maybeLayout3 = env3.kijiSystem.getTableLayout(defaultURI, "foo")
+      maybeLayout3 must beSome[KijiTableLayout]
+      val layout3 = maybeLayout3.get.getDesc
+      val memstoreFlushSize3 = layout3.getMemstoreFlushsize
+      memstoreFlushSize3 mustEqual 10000
+    }
+
+    "Set and alter the table MAX FILE SIZE property" in {
+      val parser = getParser()
+      val res = parser.parseAll(parser.statement, """
+        |CREATE TABLE foo WITH DESCRIPTION 'some data'
+        |ROW KEY FORMAT HASHED
+        |PROPERTIES (
+        |  MAX FILE SIZE = 5000
+        |)
+        |WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
+        |  MAXVERSIONS = INFINITY,
+        |  FAMILY info WITH DESCRIPTION 'basic information' (
+        |    name "string" WITH DESCRIPTION 'The user\'s name'
+        |  ));""".stripMargin);
+      res.successful mustEqual true
+      res.get must beAnInstanceOf[CreateTableCommand]
+      val env2 = res.get.exec()
+
+      val maybeLayout2 = env.kijiSystem.getTableLayout(
+          defaultURI, "foo")
+      maybeLayout2 must beSome[KijiTableLayout]
+      val layout2 = maybeLayout2.get.getDesc
+      val maxFileSize2 = layout2.getMaxFilesize
+      maxFileSize2 mustEqual 5000
+
+      val res2 = parser.parseAll(parser.statement, """
+        |ALTER TABLE foo SET MAX FILE SIZE = 10000;""".stripMargin);
+      res2.successful mustEqual true
+      res2.get must beAnInstanceOf[AlterTableSetPropertyCommand]
+      val env3 = res2.get.exec()
+
+      val maybeLayout3 = env3.kijiSystem.getTableLayout(defaultURI, "foo")
+      maybeLayout3 must beSome[KijiTableLayout]
+      val layout3 = maybeLayout3.get.getDesc
+      val maxFileSize3 = layout3.getMaxFilesize
+      maxFileSize3 mustEqual 10000
+    }
+
     "create a table and add a column" in {
       val parser = getParser()
       val res = parser.parseAll(parser.statement, """

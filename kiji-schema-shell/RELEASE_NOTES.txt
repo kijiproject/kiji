@@ -2,6 +2,11 @@
 
                               Kiji Schema Shell Release Notes
 
+Version 1.1.0
+  * DDLSHELL-28. Add support for Layout version 1.2 features.
+      Supports properties added in https://jira.kiji.org/browse/SCHEMA-283.
+  * Requires KijiSchema 1.1.0+.
+
 Version 1.0.0
   * DDLSHELL-27. Add audience and stability annotations.
   * DDLSHELL-25. Support for language plugin modules.

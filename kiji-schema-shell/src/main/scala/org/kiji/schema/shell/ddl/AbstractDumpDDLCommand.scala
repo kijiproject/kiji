@@ -111,6 +111,7 @@ trait AbstractDumpDDLCommand {
         }
       }
     }
+    dumpTableProperties(layout)
     var first = true
     layout.getLocalityGroups().foreach { group =>
       if (!first) {
@@ -122,6 +123,13 @@ trait AbstractDumpDDLCommand {
     echo(";")
   }
 
+  def dumpTableProperties(layout: TableLayoutDesc): Unit = {
+    echo("  PROPERTIES (")
+    echo("    MAX FILE SIZE = " + layout.getMaxFilesize() + ",")
+    echo("    MEMSTORE FLUSH SIZE = " + layout.getMemstoreFlushsize())
+    echo("  )")
+  }
+
   def dumpLocalityGroup(group: LocalityGroupDesc): Unit = {
     echoNoNL("  WITH LOCALITY GROUP ")
     echo(quote(group.getName()))
@@ -131,6 +139,13 @@ trait AbstractDumpDDLCommand {
     echo("    MAXVERSIONS = " + group.getMaxVersions().toString() + ",") // TODO: "INFINITY"
     echo("    TTL = " + group.getTtlSeconds().toString() + ",") // TODO: "FOREVER"
     echo("    INMEMORY = " + group.getInMemory().toString() + ",")
+    echo("    BLOCK SIZE = " + group.getBlockSize() + ",")
+    val bloomType = group.getBloomType()
+    if (null != bloomType) {
+      echo("    BLOOM FILTER = " + bloomType + ",")
+    } else {
+      echo("    BLOOM FILTER = NONE,")
+    }
     echoNoNL("    COMPRESSED WITH " + dumpCompressionType(group.getCompressionType()))
     if (group.getFamilies().size > 0) {
       group.getFamilies().foreach { family =>

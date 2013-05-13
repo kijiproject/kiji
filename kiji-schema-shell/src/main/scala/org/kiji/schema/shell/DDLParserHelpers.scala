@@ -61,7 +61,7 @@ trait DDLParserHelpers extends JavaTokenParsers {
   /**
    * Matches a string enclosed by 'single quotes', that may contain escapes.
    *
-   * @return a parser tha matches the above and returns the string contained within
+   * @return a parser that matches the above and returns the string contained within
    * the quotes, with the enclosing single-quote-marks removed and any escape character
    * sequences converted to the actual characters they represent.
    */
@@ -71,59 +71,85 @@ trait DDLParserHelpers extends JavaTokenParsers {
     ^^ (strWithEscapes => unescape(strWithEscapes.substring(1, strWithEscapes.length - 1)))
   )
 
-  /** An identifier that is optionally 'single quoted' */
+  /** @return a matcher for an identifier that is optionally 'single quoted' */
   def optionallyQuotedString: Parser[String] = (
       ident | singleQuotedString
   )
 
   /**
-   * Matches table, family, etc. names are strings that are optionally 'single quoted',
-   * and must match the Kiji name restrictions.
+   * @return a matcher for table, family, etc. names are strings that are optionally
+   * 'single quoted', and must match the Kiji name restrictions.
    **/
   def validatedNameFromOptionallyQuotedString: Parser[String] = (
     optionallyQuotedString ^^ (name => { KijiNameValidator.validateLayoutName(name); name })
   )
 
   /**
-   * Matches a legal Kiji instance name.
+   * @return a matcher for a legal Kiji instance name.
    */
   def instanceName: Parser[String] = (
     optionallyQuotedString ^^ (name => { KijiNameValidator.validateKijiName(name); name })
   )
 
-  /** Matches a legal Kiji table name. */
+  /** @return a matcher for a legal Kiji table name. */
   def tableName: Parser[String] = validatedNameFromOptionallyQuotedString
 
-  /** Matches a legal Kiji row key component name. */
+  /** @return a matcher for a legal Kiji row key component name. */
   def rowKeyElemName: Parser[String] = validatedNameFromOptionallyQuotedString
 
-  /** Matches a legal Kiji locality group name. */
+  /** @return a matcher for a legal Kiji locality group name. */
   def localityGroupName: Parser[String] = validatedNameFromOptionallyQuotedString
 
-  /** Matches a legal Kiji column family name. */
+  /** @return a matcher for a legal Kiji column family name. */
   def familyName: Parser[String] = validatedNameFromOptionallyQuotedString
 
-  /** Matches a legal Kiji column qualifier name. */
+  /** @return a matcher for a legal Kiji column qualifier name. */
   def qualifier: Parser[String] = validatedNameFromOptionallyQuotedString
 
-  /** Column names take the form info:foo, 'info':foo, info:'foo', or 'info':'foo' */
+  /**
+   * @return a matcher for column names, which take the form info:foo, 'info':foo,
+   * info:'foo', or 'info':'foo' */
   def colName: Parser[ColumnName] = (
       validatedNameFromOptionallyQuotedString~":"~validatedNameFromOptionallyQuotedString
       ^^ ({case ~(~(family, _), qualifier) => new ColumnName(family, qualifier) })
   )
 
+  /** @return a matcher for a boolean literal value. */
   def bool: Parser[Boolean] = (
       i("TRUE") ^^ (_ => true)
     | i("FALSE") ^^ (_ => false)
   )
 
   /**
-   * Matches an integer. The strings INFINITY and FOREVER are both synonyms for Int.MaxValue.
+   * @return a matcher for an integer. The strings INFINITY and FOREVER are both synonyms
+   * for Int.MaxValue.
    */
   def intValue: Parser[Int] = (
       wholeNumber ^^ (x => x.toInt)
     | i("INFINITY") ^^ (_ => Int.MaxValue)
     | i("FOREVER") ^^ (_ => Int.MaxValue)
+  )
+
+  /** @return a matcher for an intValue or 'NULL', and returns an Option[Int]. */
+  def intValueOrNull: Parser[Option[Int]] = (
+      intValue ^^ (x => Some(x))
+    | i("NULL") ^^ (_ => None)
+  )
+
+  /**
+   * @return a matcher for a long-valued integer. The strings INFINITY and FOREVER are
+   * both synonyms for Int.MaxValue.
+   */
+  def longValue: Parser[Long] = (
+      wholeNumber ^^ (x => x.toLong)
+    | i("INFINITY") ^^ (_ => Int.MaxValue.toLong)
+    | i("FOREVER") ^^ (_ => Int.MaxValue.toLong)
+  )
+
+  /** @return a matcher for a longValue or 'NULL', and returns an Option[Long]. */
+  def longValueOrNull: Parser[Option[Long]] = (
+      longValue ^^ (x => Some(x))
+    | i("NULL") ^^ (_ => None)
   )
 
   /**

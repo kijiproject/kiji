@@ -86,11 +86,14 @@ final class InputProcessor(val throwOnSyntaxErr: Boolean = false) {
         |
         |  CREATE TABLE <name> WITH DESCRIPTION 'description'
         |    ROW KEY FORMAT { HASHED | RAW | HASH PREFIXED(n) | (formatted--see below*) }
+        |    [PROPERTIES ( MAX FILE SIZE = <n>, MEMSTORE FLUSH SIZE = <n> )]
         |    WITH LOCALITY GROUP <group> WITH DESCRIPTION 'description' (
         |      MAXVERSIONS = <n>,
         |      INMEMORY = { true | false },
         |      TTL = <n>,
         |      COMPRESSED WITH { GZIP | LZO | SNAPPY | NONE },
+        |      BLOOM FILTER = { NONE | ROW | ROWCOL },
+        |      BLOCK SIZE = { NULL | <n> },
         |      GROUP TYPE FAMILY <family> WITH DESCRIPTION 'description' (
         |        COLUMN <column> WITH SCHEMA schema WITH DESCRIPTION 'desc'
         |      ),
@@ -144,7 +147,7 @@ final class InputProcessor(val throwOnSyntaxErr: Boolean = false) {
         |For a full layout definition language reference, see the user guide
         |available online at:
         |""".stripMargin +
-        "  http://docs.kiji.org/userguide/schema/" +
+        "  http://docs.kiji.org/userguides/schema/" +
         ShellMain.version() + "/schema-shell-ddl-ref/\n" +
         """
         |For more information,see the README.md file distributed with this program.
