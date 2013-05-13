@@ -37,6 +37,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 import org.apache.avro.Schema;
+import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.io.DecoderFactory;
 
@@ -126,8 +127,8 @@ public class AbstractRowResource extends AbstractKijiResource {
       requestedColumnList = tableLayout.getColumnNames();
     } else {
       requestedColumnList = Lists.newArrayList();
-      String[] pColumns = requestedColumns.split(",");
-      for (String s : pColumns) {
+      String[] requestedColumnArray = requestedColumns.split(",");
+      for (String s : requestedColumnArray) {
         requestedColumnList.add(new KijiColumnName(s));
       }
     }
@@ -202,6 +203,8 @@ public class AbstractRowResource extends AbstractKijiResource {
         // Avro API, we will have to require clients to load the rest server
         // with compiled
         // Avro schemas on the classpath.
+        returnRow.addCell(new KijiRestCell(-1L, col.getFamily(), col.getQualifier(),
+            "Error loading cell: " + e.getMessage()));
         continue;
       }
       if (spec.isCounter()) {
@@ -264,14 +267,14 @@ public class AbstractRowResource extends AbstractKijiResource {
         }
 
         ColumnsDef colsRequested = dataBuilder.newColumnsDef().withMaxVersions(maxVersions);
-        List<KijiColumnName> lRequestedColumns = addColumnDefs(table.getLayout(), colsRequested,
+        List<KijiColumnName> requestedColumns = addColumnDefs(table.getLayout(), colsRequested,
             columns);
 
         KijiDataRequest dataRequest = dataBuilder.build();
         EntityIdFactory eidFactory = EntityIdFactory.getFactory(table.getLayout());
         EntityId entityId = eidFactory.getEntityIdFromHBaseRowKey(hbaseRowKey);
         KijiRowData row = reader.get(entityId, dataRequest);
-        returnRow = getKijiRow(row, table.getLayout(), lRequestedColumns);
+        returnRow = getKijiRow(row, table.getLayout(), requestedColumns);
 
       } finally {
         reader.close();
@@ -330,9 +333,14 @@ public class AbstractRowResource extends AbstractKijiResource {
       throws IOException {
     Preconditions.checkNotNull(schema);
     // Create the Avro record to write.
-    GenericDatumReader<Object> reader = new GenericDatumReader<Object>(schema);
-    Object datum = reader.read(null, new DecoderFactory().jsonDecoder(schema, jsonValue));
-
+    // String types are a bit annoying in that those need double escaping of the quotations
+    // which are impractical for clients and don't match the semantics of what GET returns. This
+    // is because the JSON decoder requires escaped strings to be properly parsed into JSON.
+    Object datum = jsonValue;
+    if (schema.getType() != Type.STRING) {
+      GenericDatumReader<Object> reader = new GenericDatumReader<Object>(schema);
+      datum = reader.read(null, new DecoderFactory().jsonDecoder(schema, jsonValue));
+    }
     // Write the put.
     writer.put(entityId, column.getFamily(), column.getQualifier(), timestamp, datum);
   }

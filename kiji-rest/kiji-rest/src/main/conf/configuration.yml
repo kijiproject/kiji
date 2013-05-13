@@ -1,0 +1,5 @@
+#Basic configuration to get started. The cluster property defines the URI of the Kiji
+#cluster and the instances array defines the list of instances allowed to be accessed and
+#modified by REST clients. 
+cluster: "kiji://.env/" #The base cluster URI
+instances: ["default"] #Visible instances

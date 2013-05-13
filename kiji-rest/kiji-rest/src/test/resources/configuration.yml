@@ -1,2 +1,0 @@
-cluster: "kiji://localhost:2181/" #The base cluster URI
-instances: ["default"] #Visible instances

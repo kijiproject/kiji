@@ -1,0 +1,2 @@
+Place any dependent jars that you need loaded with the kiji-rest server. This may include compiled
+Avro classes. All jars placed here will be picked up and loaded on kiji-rest server's classpath. 

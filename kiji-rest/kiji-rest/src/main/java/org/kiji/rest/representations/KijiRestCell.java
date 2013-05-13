@@ -27,8 +27,19 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.kiji.schema.KijiCell;
 
 /**
- * Models what a Kiji cell looks like when returned to the client.
- *
+ * Models what a Kiji cell looks like when returned to the client. The value property can
+ * store one of three things (two data types but three unique meanings):
+ * <ol>
+ *   <li> Numbers (ints, longs, floats, doubles etc)
+ *   <li> String literals
+ *   <li> String literals that are JSON objects represented as escaped strings.
+ * </ol>
+ * The JSON string within a value is used when the underlying cell value is a more complex
+ * Avro type (arrays, maps, unions, records). For more information about the JSON encoding
+ * of Avro records, please consult the Avro
+ * <a href="http://avro.apache.org/docs/current/spec.html#json_encoding">spec</a>. When setting
+ * a cell value to a complex Avro type, please ensure that the string is properly escaped so that
+ * it's not interpreted as a JSON object but rather as a JSON string.
  */
 @JsonPropertyOrder({"columnFamily", "columnQualifier"})
 public class KijiRestCell {
@@ -56,6 +67,22 @@ public class KijiRestCell {
     mColumnFamily = kijiCell.getFamily();
     mColumnQualifier = kijiCell.getQualifier();
     mValue = kijiCell.getData();
+  }
+
+  /**
+   * Constructs a new KijiRestCell from the components.
+   * @param timestamp is the timestamp of the cell.
+   * @param columnFamily is the columnFamily.
+   * @param columnQualifier is the columnQualifier.
+   * @param value is the value of the cell.
+   */
+  public KijiRestCell(Long timestamp, String columnFamily,
+      String columnQualifier, Object value) {
+    super();
+    this.mTimestamp = timestamp;
+    this.mColumnFamily = columnFamily;
+    this.mColumnQualifier = columnQualifier;
+    this.mValue = value;
   }
 
   /**
