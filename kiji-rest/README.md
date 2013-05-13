@@ -9,29 +9,44 @@ For more information about KijiSchema, see
 Further documentation is available at the Kiji project
 [Documentation Portal](http://docs.kiji.org)
 
+Installing KijiREST (requires root privileges)
+--------------------------------
+
+* It's assumed that where KijiREST is unpacked is called $KIJI\_REST\_HOME By default, this is
+assumed to be /opt/wibi/kiji-rest. This can be changed by modifying the KIJI\_REST\_HOME variable
+in bin/kiji-rest.initd script.
+* Create a non-privileged user called "kiji" which will be used to run the service. This can be
+changed by modifying the KIJI\_REST\_USER variable in bin/kiji-rest.initd script.
+  * sudo useradd kiji
+* Copy $KIJI\_REST\_HOME/bin/kiji-rest.initd as /etc/init.d/kiji-rest
+  * sudo cp $KIJI\_REST\_HOME/bin/kiji-rest.initd /etc/init.d/kiji-rest
+* chkconfig --add kiji-rest
+
 Starting a local KijiREST server
 --------------------------------
 
-KijiREST is built as an executable JAR and therefore can be run via:
+Any relevant Avro classes that are necessary for interaction of KijiREST with the underlying Kiji
+tables must be included on the classpath upon instantiation
+of the server. This is done by placing the jar containing the necessary Avro classes in the
+$KIJI\_REST\_HOME/lib folder.
 
-$ java -jar target/kiji-rest-${project.version}-SNAPSHOT.jar server
-        target/test-classes/configuration.yml
+$ cd $KIJI\_REST\_HOME
 
-Any relevant Avro classes that are necessary for interaction of KijiREST with
-the underlying Kiji tables must be included on the classpath upon instantiation
-of the server.
+$ ./bin/kiji-rest
+
+### Alternatively as root:
+$ /sbin/service kiji-rest start
 
 Setting up configuration.yml
 ----------------------------
 
-The configuration.yml path is a required command line argument. It is a
-YAML file with two required keys: "cluster" and "instances".
+The configuration.yml file (located in $KIJI\_REST\_HOME/configuration.yml) is a YAML file used
+to configure the KijiREST server. The following keys are required:
 
-- "cluster" must be set to the base cluster's kiji URI.
+- "cluster" is the base cluster's kiji URI.
 
-- "instance" must be set to a YAML/JSON list of the names of those
-instances which are allowed to be visible to users of this REST service.
-These must all be extant instances on the specified cluster.
+- "instance" is an array of instances which are allowed to be visible to users of this REST service.
+All instances specified here must exist.
 
 The following are example contents of a proper configuration.yml file:
 
@@ -39,8 +54,8 @@ The following are example contents of a proper configuration.yml file:
 
 "instances" : ["default", "prod", "dev", "test"] #Visible instances
 
-See [Dropwizard's User Manual](http://dropwizard.codahale.com/manual/core/#configuration-defaults)
-for additional Dropwizard-specific configuration options such as server settings 
+KijiREST is implemented using DropWizard. For more information about configuring the server, please
+for additional Dropwizard-specific configuration options such as server settings
 and logging options (console-logging, log files, and syslog).
 
 
@@ -49,7 +64,7 @@ Development Warning
 
 This project is still under heavy development and has not yet had a formal release.
 The APIs and code in this project may change in severely incompatible ways while we
-redesign components for their presentation-ready form. 
+redesign components for their presentation-ready form.
 
 End users are advised to not depend on any functionality in this repository until a
 release is performed. See [the Kiji project homepage](http://www.kiji.org) to download
@@ -57,4 +72,3 @@ an existing release of KijiSchema, and follow [@kijiproject](http://twitter.com/
 for announcements of future releases, including KijiREST.
 
 Issues are being tracked at [the Kiji JIRA instance](https://jira.kiji.org/browse/SCHEMA).
-
