@@ -263,6 +263,14 @@
       <fileMode>0644</fileMode>
     </fileSet>
     <fileSet>
+      <!-- kiji-rest binaries -->
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <outputDirectory>rest/bin</outputDirectory>
+      <directory>target/prereqs-dir/kiji-rest-${kiji-rest.version}/bin</directory>
+      <filtered>false</filtered>
+      <fileMode>0755</fileMode>
+    </fileSet>
+    <fileSet>
       <!-- bento-checkin -->
       <useDefaultExcludes>false</useDefaultExcludes>
       <outputDirectory>.</outputDirectory>
