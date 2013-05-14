@@ -27,15 +27,44 @@ We now have to join these to get our result.
 #### Get the most popular song played next
 
 We first describe a helper function which retrieves the song id of the most popular song given the list of top
-next songs. `getMostPopularSong` takes as its input a KijiSlice of TopSongs, which is basically an Avro class
-with a list of the top songs. We get the latest version of the slice using `.getFirstValue`, get the underlying
-list using `getTopSongs` and get the first (most popular) song. This object is of type `SongCount`. We retrieve
-the song id by `getSongId` and convert the resulting CharSequence to a string.
+next songs. `getMostPopularSong` takes as its input a KijiSlice of AvroRecords from the "info:top_next_songs"
+column of the songs table.
+
+The "info:top_next_songs" column contains a TopSongs Avro record.  You can look in the KijiMusic.avdl file for
+the definitions of these Avro records:
+{% highlight scala %}
+  /** A count of the number of times a song has been played. */
+  record SongCount {
+    string song_id;
+    long count;
+  }
+
+  /** Container record for the top songs and their number of plays. */
+  record TopSongs {
+     array<SongCount> top_songs;
+  }
+{% endhighlight %}
+
+In KijiExpress, Avro records are read out as a generic AvroRecord.  Fields in a record can
+be accessed with `record("fieldname")`; if the result of that is a list or map, that can be
+accessed by index or key, respectively.  If the result of that is a primitive, we need to declare
+what type of primitive we expect it to be with, for example, `asString`, if it is a String.
+
+
+For the `getMostPopularSongs` function, we get the latest version of the slice using
+`.getFirstValue`.  We know we the contents of the "info:top_next_songs" column
+will be a `TopSongs` record with a field called "top_songs" that is a list of the next songs.  We
+access that field with `songRecord("top_songs")`.  We know those top next songs are records with
+a field "song_id" that is the ID of that song, and it is a string, so we retrieve it with
+`mostPopularSong("song_id").asString`.  The entire function looks like this:
 
 {% highlight scala %}
   // This method retrieves the most popular song (at index 0) in the TopNextSongs record.
-  def getMostPopularSong(songs: KijiSlice[TopSongs]): String = {
-    songs.getFirstValue().getTopSongs().get(0).getSongId().toString
+  def getMostPopularSong(songs: KijiSlice[AvroRecord]): String = {
+    val songRecord = songs.getFirstValue
+    val topSongs = songRecord("top_songs")
+    val mostPopularSong = topSongs(0)
+    return mostPopularSong("song_id").asString
   }
 {% endhighlight %}
 
