@@ -118,7 +118,7 @@ public abstract class KijiJobTool<B extends KijiTableInputJobBuilder> extends Jo
   }
 
   /** @return the input for this job, which must be a Kiji table. */
-  protected KijiTableMapReduceJobInput getJobInputTable() {
+  protected final KijiTableMapReduceJobInput getJobInputTable() {
     return mJobInput;
   }
 }
