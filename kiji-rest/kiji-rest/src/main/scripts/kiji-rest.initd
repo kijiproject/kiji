@@ -60,7 +60,7 @@ start() {
   mv ${KIJI_REST_HOME}/kiji-rest.pid ${RUNDIR}
 
   #Check that the server came up properly.
-  for second in {5..0}
+  for second in {30..0}
   do
     checkstatusofproc
     RETVAL=$?
@@ -88,6 +88,7 @@ stop() {
   fi
 
   pid=$(cat ${PIDFILE})
+  kill $pid
   for second in {5..0}
   do
     checkstatusofproc
