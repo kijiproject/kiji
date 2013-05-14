@@ -145,6 +145,13 @@
       <type>tar.gz</type>
     </dependency>
     <dependency>
+      <groupId>org.kiji.rest</groupId>
+      <artifactId>kiji-rest</artifactId>
+      <version>${kiji-rest.version}</version>
+      <classifier>release</classifier>
+      <type>tar.gz</type>
+    </dependency>
+    <dependency>
       <groupId>org.kiji.kiji-bento</groupId>
       <artifactId>bento-checkin</artifactId>
       <version>${project.version}</version>
