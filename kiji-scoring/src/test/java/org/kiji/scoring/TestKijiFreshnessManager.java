@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.util.Map;
@@ -159,11 +160,13 @@ public class TestKijiFreshnessManager {
     final ShelfLife policy = new ShelfLife(100);
     try {
       mFreshManager.storePolicy("user", "info:invalid", TestProducer.class, policy);
+      fail("KijiFreshnessManager.storePolicy() should have thrown an IllegalArgumentException");
     } catch (IllegalArgumentException iae) {
       assertEquals("Table does not contain specified column: info:invalid", iae.getMessage());
     }
     try {
       mFreshManager.storePolicy("user", "info", TestProducer.class, policy);
+      fail("KijiFreshnessManager.storePolicy() should have thrown an IllegalArgumentException");
     } catch (IllegalArgumentException iae) {
       assertEquals("Specified family: info is not a valid Map Type family in the table: user",
           iae.getMessage());
@@ -171,6 +174,7 @@ public class TestKijiFreshnessManager {
     mFreshManager.storePolicy("user", "networks", TestProducer.class, policy);
     try {
       mFreshManager.storePolicy("user", "networks:qualifier", TestProducer.class, policy);
+      fail("KijiFreshnessManager.storePolicy() should have thrown an IllegalArgumentException");
     } catch (IllegalArgumentException iae) {
       assertEquals("There is already a freshness policy attached to family: networks Freshness "
           + "policies may not be attached to a map type family and fully qualified columns within "
@@ -180,6 +184,7 @@ public class TestKijiFreshnessManager {
     mFreshManager.storePolicy("user", "networks:qualifier", TestProducer.class, policy);
     try {
       mFreshManager.storePolicy("user", "networks", TestProducer.class, policy);
+      fail("KijiFreshnessManager.storePolicy() should have thrown an IllegalArgumentException");
     } catch (IllegalArgumentException iae) {
       assertEquals("There is already a freshness policy attached to a fully qualified column in "
           + "family: networks Freshness policies may not be attached to a map type family and fully"
