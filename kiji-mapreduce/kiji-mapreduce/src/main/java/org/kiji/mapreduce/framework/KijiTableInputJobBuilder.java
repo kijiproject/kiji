@@ -21,6 +21,7 @@ package org.kiji.mapreduce.framework;
 
 import java.io.IOException;
 
+import com.google.common.base.Preconditions;
 import org.apache.hadoop.mapreduce.Job;
 
 import org.kiji.annotations.ApiAudience;
@@ -74,7 +75,7 @@ public abstract class KijiTableInputJobBuilder<T extends KijiTableInputJobBuilde
    * @return This builder instance so you may chain configuration method calls.
    */
   @SuppressWarnings("unchecked")
-  public T withJobInput(KijiTableMapReduceJobInput input) {
+  public final T withJobInput(KijiTableMapReduceJobInput input) {
     mInputTableURI = input.getInputTableURI();
     if (input.getRowOptions() != null) {
       mStartRow = input.getRowOptions().getStartRow();
@@ -91,7 +92,7 @@ public abstract class KijiTableInputJobBuilder<T extends KijiTableInputJobBuilde
    * @return This builder instance so you may chain configuration method calls.
    */
   @SuppressWarnings("unchecked")
-  public T withInputTable(KijiURI inputTableURI) {
+  public final T withInputTable(KijiURI inputTableURI) {
     mInputTableURI = inputTableURI;
     return (T) this;
   }
@@ -103,7 +104,7 @@ public abstract class KijiTableInputJobBuilder<T extends KijiTableInputJobBuilde
    * @return This builder instance so you may chain configuration method calls.
    */
   @SuppressWarnings("unchecked")
-  public T withStartRow(EntityId entityId) {
+  public final T withStartRow(EntityId entityId) {
     mStartRow = entityId;
     return (T) this;
   }
@@ -115,7 +116,7 @@ public abstract class KijiTableInputJobBuilder<T extends KijiTableInputJobBuilde
    * @return This builder instance so you may chain configuration method calls.
    */
   @SuppressWarnings("unchecked")
-  public T withLimitRow(EntityId entityId) {
+  public final T withLimitRow(EntityId entityId) {
     mLimitRow = entityId;
     return (T) this;
   }
@@ -127,10 +128,30 @@ public abstract class KijiTableInputJobBuilder<T extends KijiTableInputJobBuilde
    * @return This builder instance so you may chain configuration method calls.
    */
   @SuppressWarnings("unchecked")
-  public T withFilter(KijiRowFilter rowFilter) {
+  public final T withFilter(KijiRowFilter rowFilter) {
     mRowFilter = rowFilter;
     return (T) this;
   }
+
+  /** {@inheritDoc} */
+  @Override
+  protected final MapReduceJobInput getJobInput() {
+    final KijiTableMapReduceJobInput.RowOptions rowOptions =
+        new KijiTableMapReduceJobInput.RowOptions(mStartRow, mLimitRow, mRowFilter);
+    return new KijiTableMapReduceJobInput(mInputTableURI, getDataRequest(), rowOptions);
+  }
+
+  /** @return the URI of the input table. */
+  protected final KijiURI getInputTableURI() {
+    return mInputTableURI;
+  }
+
+  /**
+   * Subclasses must override this to provide a Kiji data request for the input table.
+   *
+   * @return the Kiji data request to configure the input table scanner with.
+   */
+  protected abstract KijiDataRequest getDataRequest();
 
   /** {@inheritDoc} */
   @Override
@@ -139,6 +160,7 @@ public abstract class KijiTableInputJobBuilder<T extends KijiTableInputJobBuilde
     super.configureJob(job);
 
     // Validate the Kiji data request against the current table layout:
+    Preconditions.checkNotNull(mInputTableURI, "Input Kiji table was never set.");
     final Kiji kiji = Kiji.Factory.open(mInputTableURI);
     try {
       final KijiTable table = kiji.openTable(mInputTableURI.getTable());
@@ -151,26 +173,6 @@ public abstract class KijiTableInputJobBuilder<T extends KijiTableInputJobBuilde
       ResourceUtils.releaseOrLog(kiji);
     }
   }
-
-  /** {@inheritDoc} */
-  @Override
-  protected MapReduceJobInput getJobInput() {
-    final KijiTableMapReduceJobInput.RowOptions rowOptions =
-        new KijiTableMapReduceJobInput.RowOptions(mStartRow, mLimitRow, mRowFilter);
-    return new KijiTableMapReduceJobInput(mInputTableURI, getDataRequest(), rowOptions);
-  }
-
-  /** @return the URI of the input table. */
-  protected KijiURI getInputTableURI() {
-    return mInputTableURI;
-  }
-
-  /**
-   * Subclasses must override this to provide a Kiji data request for the input table.
-   *
-   * @return the Kiji data request to configure the input table scanner with.
-   */
-  protected abstract KijiDataRequest getDataRequest();
 
   /**
    * Validates the input table.
