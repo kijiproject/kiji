@@ -182,7 +182,7 @@ public final class HFileKeyValue implements WritableComparable<HFileKeyValue> {
    * <p>This comparator is registered with the Writable serialization framework so it is
    * used when comparing HFileKeyValue keys.</p>
    */
-  public static class FastComparator extends WritableComparator {
+  public static final class FastComparator extends WritableComparator {
     /** Constructor. */
     public FastComparator() {
       super(HFileKeyValue.class);
