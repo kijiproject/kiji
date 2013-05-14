@@ -45,7 +45,7 @@ public abstract class AvroBulkImporter<T> extends KijiBulkImporter<AvroKey<T>, N
     implements AvroKeyReader {
 
   @Override
-  public void produce(AvroKey<T> key, NullWritable ignore,
+  public final void produce(AvroKey<T> key, NullWritable ignore,
       KijiTableContext context)
       throws IOException {
     produce(key.datum(), context);
