@@ -71,29 +71,29 @@ class TopNextSongsSuite extends KijiSuite {
    * @param topNextSongs contains three tuples for three songs, each containing a record of the
    *     top next songs played.
    */
-  def validateTest(topNextSongs: Buffer[(EntityId, KijiSlice[TopSongs])]) {
+  def validateTest(topNextSongs: Buffer[(EntityId, KijiSlice[AvroRecord])]) {
     val topSongForEachSong = topNextSongs
         .map { case(entityId, slice) =>
             (entityId(0).toString, slice) }
-        .map { case(id, slice) => (id, slice.getFirstValue().getTopSongs) }
+        .map { case(id, slice) => (id, slice.getFirstValue()("top_songs")) }
 
     topSongForEachSong.foreach {
       case ("song-0", topSongs) => {
-        assert(2 == topSongs.size())
-        assert("song-1" == topSongs.get(0).getSongId.toString)
-        assert(2 == topSongs.get(0).getCount)
-        assert("song-0" == topSongs.get(1).getSongId.toString)
-        assert(1 == topSongs.get(1).getCount)
+        assert(2 === topSongs.asList.size)
+        assert("song-1" === topSongs(0)("song_id").asString)
+        assert(2 === topSongs(0)("count").asLong)
+        assert("song-0" === topSongs(1)("song_id").asString)
+        assert(1 === topSongs(1)("count").asLong)
       }
       case ("song-1", topSongs) => {
-        assert(1 == topSongs.size())
-        assert("song-2" == topSongs.get(0).getSongId.toString)
-        assert(2 == topSongs.get(0).getCount)
+        assert(1 === topSongs.asList.size)
+        assert("song-2" === topSongs(0)("song_id").asString)
+        assert(2 === topSongs(0)("count").asLong)
       }
       case ("song-2", topSongs) => {
-        assert(1 == topSongs.size())
-        assert("song-1" == topSongs.get(0).getSongId.toString)
-        assert(1 == topSongs.get(0).getCount)
+        assert(1 === topSongs.asList.size)
+        assert("song-1" === topSongs(0)("song_id").asString)
+        assert(1 === topSongs(0)("count").asLong)
       }
     }
   }

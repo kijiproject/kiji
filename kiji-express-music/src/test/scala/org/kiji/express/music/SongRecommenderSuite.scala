@@ -90,10 +90,10 @@ class SongRecommenderSuite extends KijiSuite {
 
     recommendedSongsForEachUser.foreach {
       case ("user-1", recommendedSong) => {
-        assert("song-4" == recommendedSong)
+        assert("song-4" === recommendedSong)
       }
       case ("user-2", recommendedSong) => {
-        assert("song-5" == recommendedSong)
+        assert("song-5" === recommendedSong)
       }
     }
   }

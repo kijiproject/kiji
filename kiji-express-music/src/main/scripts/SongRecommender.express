@@ -17,8 +17,6 @@
  * limitations under the License.
  */
 
-import org.kiji.examples.music.TopSongs
-
 /**
  * Generates recommendations for the next song each user might like to listen to.
  *
@@ -38,8 +36,9 @@ val usersTableURI: String = "kiji://.env/kiji_express_music/users"
  * @param songs from the TopNextSongs record.
  * @return the most popular song.
  */
-def getMostPopularSong(songs: KijiSlice[TopSongs]): String = {
-  songs.getFirstValue().getTopSongs().get(0).getSongId().toString
+def getMostPopularSong(songs: KijiSlice[AvroRecord]): String = {
+  val songRecord = songs.getFirstValue
+  songRecord("top_songs")(0)("song_id").asString
 }
 
 /**
@@ -66,4 +65,3 @@ KijiInput(usersTableURI)("info:track_plays" -> 'trackPlays)
          slice: KijiSlice[String] => slice.getFirstValue()}
     .joinWithSmaller('lastTrackPlayed -> 'songId, recommendedSong)
     .write(KijiOutput(usersTableURI)('nextSong -> "info:next_song_rec"))
-

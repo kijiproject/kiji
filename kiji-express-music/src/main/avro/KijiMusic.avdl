@@ -42,7 +42,7 @@ protocol KijiMusicRecords {
 
   /** Container record for the top songs and their number of plays. */
   record TopSongs {
-     array<SongCount> topSongs;
+     array<SongCount> top_songs;
   }
 
   /** Song play bigram. */

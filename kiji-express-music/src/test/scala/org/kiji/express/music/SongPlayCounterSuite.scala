@@ -57,13 +57,13 @@ class SongPlayCounterSuite extends KijiSuite {
    */
   def validateTest(songCounts: Buffer[(String, Long)]) {
     val sortedBySong = songCounts.sortBy { case(song, count) => song }
-    assert(3 == sortedBySong.size)
+    assert(3 === sortedBySong.size)
     (0 until 2).foreach { i =>
-      assert("song-" + i == sortedBySong(i)._1)
+      assert("song-" + i === sortedBySong(i)._1)
     }
-    assert(3 == sortedBySong(0)._2)
-    assert(4 == sortedBySong(1)._2)
-    assert(2 == sortedBySong(2)._2)
+    assert(3 === sortedBySong(0)._2)
+    assert(4 === sortedBySong(1)._2)
+    assert(2 === sortedBySong(2)._2)
   }
 
   test("SongPlayCounter counts the number of times songs have been played by users (local).") {

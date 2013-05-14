@@ -60,11 +60,11 @@ class SongPlaysImporterSuite extends KijiSuite {
    */
   def validateTest(generatedPlays: Buffer[(EntityId, KijiSlice[String])]) {
     // One row for one user.
-    assert(1 == generatedPlays.size)
+    assert(1 === generatedPlays.size)
     // Check contents of playlist.
     val playlist = generatedPlays(0)._2
     playlist.orderChronologically().cells.foreach { cell =>
-      assert("song-" + cell.version == cell.datum)
+      assert("song-" + cell.version === cell.datum)
     }
   }
 
