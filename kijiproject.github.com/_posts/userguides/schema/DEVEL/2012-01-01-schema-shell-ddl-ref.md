@@ -145,6 +145,19 @@ you can also select that with the more readable (and more verbose) syntax:
 
     schema> USE DEFAULT INSTANCE;
 
+You can create an instance by running:
+
+    schema> CREATE INSTANCE foo;
+
+Creating an instance will automatically `USE` the new instance.
+
+You can also drop an instance by running:
+
+    schema> DROP INSTANCE foo;
+
+This will drop all tables in the instance! You cannot drop the current instance.
+You must `USE` another instance first (or maybe create one with `CREATE INSTANCE`
+to move to).
 
 ### Listing and Describing Tables
 
