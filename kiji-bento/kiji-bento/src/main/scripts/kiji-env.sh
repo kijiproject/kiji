@@ -31,6 +31,9 @@
 #   KIJI_MR_HOME        Set to the parent of the directory this script is contained in.
 #                       This should be the root of a kiji-bento distribution.
 #
+#   SCHEMA_SHELL_HOME   Set to the $KIJI_HOME/schema-shell directory, which should
+#                       contain a kiji-schema-shell distribution.
+#
 #   EXPRESS_HOME        Set to the $KIJI_HOME/express directory, which should contain
 #                       a kiji-express distribution.
 #
@@ -63,6 +66,10 @@ echo "Set KIJI_HOME=${KIJI_HOME}"
 KIJI_MR_HOME="${KIJI_HOME}"
 export KIJI_MR_HOME
 echo "Set KIJI_MR_HOME=${KIJI_MR_HOME}"
+
+SCHEMA_SHELL_HOME="${KIJI_HOME}/schema-shell"
+export SCHEMA_SHELL_HOME
+echo "Set SCHEMA_SHELL_HOME=${SCHEMA_SHELL_HOME}"
 
 EXPRESS_HOME="${KIJI_HOME}/express"
 export EXPRESS_HOME

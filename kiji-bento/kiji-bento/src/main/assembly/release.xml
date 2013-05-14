@@ -121,6 +121,8 @@
       <directory>target/prereqs-dir/kiji-express-${kiji-express.version}</directory>
       <filtered>false</filtered>
       <excludes>
+        <!-- This is already included by schema-shell. -->
+        <exclude>lib/scala-library*.jar</exclude>
         <exclude>bin/**</exclude>
       </excludes>
       <fileMode>0644</fileMode>
