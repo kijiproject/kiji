@@ -28,6 +28,7 @@ final class DropTableCommand(val env: Environment, val tableName: String) extend
 
   override def validateArguments(): Unit = {
     checkTableExists()
+    checkConfirmationPrompt("Are you sure you want to drop table '" + tableName + "'?")
   }
 
   // Don't make any changes to the layout itself.

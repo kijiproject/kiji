@@ -178,6 +178,8 @@ class TestClient extends SpecificationWithJUnit {
         uri,
         System.out,
         new KijiSystem,
-        new NullInputSource())
+        new NullInputSource(),
+        List(),
+        false)
   }
 }

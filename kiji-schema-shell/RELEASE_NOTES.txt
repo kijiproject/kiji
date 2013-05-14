@@ -3,7 +3,11 @@
                               Kiji Schema Shell Release Notes
 
 Version 1.1.0
-  * DDLSHELL-20. Add CREATE INSTANCE <instance> and DROP INSTANCE <instance> commands.
+  * DDLSHELL-33. DROP INSTANCE and DROP TABLE commands run on the shell require
+      the user to type 'yes' at a prompt. API usage and scripts are not
+      affected.
+  * DDLSHELL-20. Add CREATE INSTANCE <instance> and DROP INSTANCE <instance>
+      commands.
   * DDLSHELL-19. Prevent program crash when you operate on a Kiji instance
       that doesn't exist.
   * DDLSHELL-24. Add support for NUMREGIONS table property, specifying

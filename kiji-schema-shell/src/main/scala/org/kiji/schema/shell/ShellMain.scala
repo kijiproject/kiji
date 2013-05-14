@@ -68,19 +68,20 @@ final class ShellMain {
    * Create the initial Environment object that should be used to start query processing.
    */
   def initialEnv(): Environment = {
-    val input = (
+    val (input, isInteractive) = (
       if (!filename.equals("")) {
-        new FileInputSource(filename)
+        (new FileInputSource(filename), false)
       } else if (!expr.equals("")) {
-        new StringInputSource(expr)
+        (new StringInputSource(expr), false)
       } else {
         // Read from the interactive terminal
-        new JLineInputSource
+        (new JLineInputSource, true)
       }
     )
 
     val uri = KijiURI.newBuilder(kijiURI).build()
-    return new Environment(uri, Console.out, ShellMain.shellKijiSystem, input)
+    return new Environment(uri, Console.out, ShellMain.shellKijiSystem, input,
+        List(), isInteractive)
   }
 
   /**

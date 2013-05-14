@@ -365,7 +365,9 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
         instanceURI,
         System.out,
         new KijiSystem,
-        new NullInputSource())
+        new NullInputSource(),
+        List(),
+        false)
   }
 
   /**

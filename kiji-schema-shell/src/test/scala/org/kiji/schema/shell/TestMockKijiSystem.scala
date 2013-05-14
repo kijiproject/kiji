@@ -77,7 +77,7 @@ class TestMockKijiSystem extends SpecificationWithJUnit {
       sys.createTable(defaultURI, layout, 1)
 
       new Environment(defaultURI, Console.out,
-        sys, new NullInputSource).containsTable("t") mustEqual true
+        sys, new NullInputSource, List(), false).containsTable("t") mustEqual true
     }
 
     "allow drop table" in {

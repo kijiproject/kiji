@@ -110,7 +110,7 @@ final class Client private(val kijiUri: KijiURI) extends Closeable {
     try {
       val env = (mLastEnv match {
         case Some(last) => last.withPrinter(output).withInputSource(input)
-        case None => new Environment(kijiUri, output, mKijiSystem, input)
+        case None => new Environment(kijiUri, output, mKijiSystem, input, List(), false)
       })
       mLastEnv = Some(new InputProcessor(throwOnSyntaxErr=true)
           .processUserInput(new StringBuilder(), env))

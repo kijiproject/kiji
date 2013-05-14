@@ -38,5 +38,6 @@ class CommandTestCase extends SpecificationWithJUnit {
 
   /** Return the environment to use for testing. */
   val env: Environment =
-      new Environment(defaultURI, System.out, new MockKijiSystem, new NullInputSource)
+      new Environment(defaultURI, System.out, new MockKijiSystem,
+          new NullInputSource, List(), false)
 }

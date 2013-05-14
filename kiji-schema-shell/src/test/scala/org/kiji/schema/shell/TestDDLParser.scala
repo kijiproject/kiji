@@ -289,6 +289,8 @@ class TestDDLParser extends SpecificationWithJUnit {
         defaultURI,
         System.out,
         new MockKijiSystem(),
-        new NullInputSource))
+        new NullInputSource,
+        List(),
+        false))
   }
 }

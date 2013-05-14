@@ -40,26 +40,27 @@ final class Environment(
     val printer: PrintStream = Console.out,
     val kijiSystem: AbstractKijiSystem = new KijiSystem,
     val inputSource: InputSource = new JLineInputSource,
-    val modules: List[ParserPluginFactory] = List()) {
+    val modules: List[ParserPluginFactory] = List(),
+    val isInteractive: Boolean = false) {
 
   /**
    * @return a new Environment with the instance name replaced with 'newInstance'.
    */
   def withInstance(newInstance: String): Environment = {
     return new Environment(KijiURI.newBuilder(instanceURI).withInstanceName(newInstance).build(),
-        printer, kijiSystem, inputSource, modules)
+        printer, kijiSystem, inputSource, modules, isInteractive)
   }
 
   /**
    * @return a new Environment with the printer replaced with 'newPrinter'.
    */
   def withPrinter(newPrinter: PrintStream): Environment = {
-    return new Environment(instanceURI, newPrinter, kijiSystem, inputSource, modules)
+    return new Environment(instanceURI, newPrinter, kijiSystem, inputSource, modules, isInteractive)
   }
 
   /** @return a new Environment with the InputSource replaced with newSource. */
   def withInputSource(newSource: InputSource): Environment = {
-    return new Environment(instanceURI, printer, kijiSystem, newSource, modules)
+    return new Environment(instanceURI, printer, kijiSystem, newSource, modules, isInteractive)
   }
 
   /**
@@ -76,8 +77,22 @@ final class Environment(
       return this // Nothing to change.
     } else {
       val newModules = modules :+ module // new list, with module appended to modules.
-      return new Environment(instanceURI, printer, kijiSystem, inputSource, newModules)
+      return new Environment(instanceURI, printer, kijiSystem, inputSource,
+          newModules, isInteractive)
     }
+  }
+
+  /**
+   * Return a new Environment with the interactivity flag set to the value of the argument
+   * to this method.
+   *
+   * @param is true if this is run from an interactive terminal, false if from a script
+   *    or API usage.
+   * @return an Environment with the isInteractive flag set to the argument value.
+   */
+  def withInteractiveFlag(interactiveFlag: Boolean): Environment = {
+    return new Environment(instanceURI, printer, kijiSystem, inputSource, modules,
+        interactiveFlag)
   }
 
   /**

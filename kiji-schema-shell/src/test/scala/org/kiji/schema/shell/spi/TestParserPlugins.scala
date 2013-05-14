@@ -212,6 +212,8 @@ class TestParserPlugins extends SpecificationWithJUnit {
         defaultURI,
         new PrintStream(out),
         new MockKijiSystem(),
-        new NullInputSource))
+        new NullInputSource,
+        List(),
+        false))
   }
 }

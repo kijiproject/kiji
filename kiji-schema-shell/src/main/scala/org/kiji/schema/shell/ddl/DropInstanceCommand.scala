@@ -40,6 +40,9 @@ final class DropInstanceCommand(val env: Environment, val instanceName: String)
           + "Switch to another one first with 'USE <instance>;'.")
     }
 
+    checkConfirmationPrompt("Are you sure you want to drop the entire instance '"
+        + instanceName + "'?")
+
     val conf = HBaseConfiguration.create()
     val uri = KijiURI.newBuilder().withInstanceName(instanceName).build()
     echo("Dropping instance: " + instanceName + "...")
