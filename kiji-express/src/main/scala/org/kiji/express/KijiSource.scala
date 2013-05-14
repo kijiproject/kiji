@@ -50,12 +50,15 @@ import org.kiji.annotations.ApiStability
 import org.kiji.express.Resources._
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.Kiji
+import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiRowData
 import org.kiji.schema.KijiRowScanner
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiTableReader
 import org.kiji.schema.KijiURI
+import org.kiji.schema.layout.CellSpec
+import org.kiji.schema.layout.KijiTableLayout
 
 /**
  * A read or write view of a Kiji table.
@@ -220,7 +223,7 @@ object KijiSource {
   /**
    * Takes a buffer containing rows and writes them to the table at the specified uri.
    *
-   * @param tableUri of the table to pouplate.
+   * @param tableUri of the table to populate.
    * @param rows Tuples to write to populate the table with.
    * @param fields Field names for elements in the tuple.
    */
@@ -231,6 +234,18 @@ object KijiSource {
           doAndRelease(kiji.openTable(tableUri.getTable())) { table =>
             table.openTableWriter()
           }
+        }
+
+    val tableLayout =
+        doAndRelease(Kiji.Factory.open(tableUri)) { kiji =>
+          doAndRelease(kiji.openTable(tableUri.getTable())) { table =>
+            table.getLayout()
+          }
+        }
+
+    val schemaTable =
+        doAndRelease(Kiji.Factory.open(tableUri)) { kiji =>
+          kiji.getSchemaTable()
         }
 
     // Write the desired rows to the table.
@@ -254,18 +269,26 @@ object KijiSource {
               .asInstanceOf[KijiSlice[Any]].cells
 
           // Write the timeline to the table.
-          cells.map { cell: Cell[Any] =>
+          cells.map { cell: Cell[Any] => {
+            val datum =
+                AvroUtil.encodeToJava(
+                    cell.datum,
+                    tableLayout
+                        .getCellSchema(new KijiColumnName(cell.family, cell.qualifier))
+                        .getSchema)
             writer.put(
                 entityId.toJavaEntityId(),
                 cell.family,
                 cell.qualifier,
                 cell.version,
-                cell.datum)
-          }
+                datum
+            )
+          }}
         }
       }
     } finally {
       writer.close()
+      schemaTable.close()
     }
   }
 
@@ -324,13 +347,13 @@ object KijiSource {
       // Read table into buffer.
       doAndRelease(Kiji.Factory.open(uri)) { kiji: Kiji =>
         doAndRelease(kiji.openTable(uri.getTable())) { table: KijiTable =>
+          val genericTable = new ExpressGenericTable(table.getURI, columns.values.toSeq)
           doAndClose(table.openTableReader()) { reader: KijiTableReader =>
             // We also want the entire timerange, so the test can inspect all data in the table.
             val request: KijiDataRequest =
                 KijiScheme.buildRequest(TimeRange.All, columnRequestsAllData(columns).values)
             doAndClose(reader.getScanner(request)) { scanner: KijiRowScanner =>
               val rows: Iterator[KijiRowData] = scanner.iterator().asScala
-
               rows.foreach { row: KijiRowData =>
                 KijiScheme
                     .rowToTuple(
@@ -338,7 +361,8 @@ object KijiSource {
                         getSinkFields(),
                         timestampField,
                         row,
-                        table.getURI)
+                        table.getURI,
+                        genericTable)
                     .foreach { tuple => buffer += tuple }
               }
             }

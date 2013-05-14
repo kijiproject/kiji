@@ -409,13 +409,20 @@ class KijiSlice[T] private[express] (val cells: Seq[Cell[T]]) {
     case otherSlice: KijiSlice[_] => (otherSlice.cells == cells)
     case _ => false
   }
+
+  override def hashCode(): Int = {
+    cells.hashCode()
+  }
+
+  override def toString(): String = {
+    "KijiSlice: %s".format(cells.toString)
+  }
 }
 
 /**
  * A factory for KijiSlices.
  */
 object KijiSlice {
-
  /**
   * A factory method for instantiating a KijiSlice, given an iterator of
   * [[org.kiji.schema.KijiCell]]s.

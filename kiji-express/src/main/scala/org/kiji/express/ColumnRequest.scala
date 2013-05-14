@@ -23,6 +23,7 @@ import java.io.Serializable
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.schema.KijiColumnName
 import org.kiji.schema.filter.KijiColumnFilter
 import org.kiji.schema.util.KijiNameValidator
 
@@ -61,6 +62,14 @@ private[express] sealed trait ColumnRequest extends Serializable {
    * @return this ColumnRequest with skipping behavior configured.
    */
   def ignoreMissing(): ColumnRequest
+
+  /**
+   * Returns the standard KijiColumnName representation of the name of the column this
+   * ColumnRequests is for.
+   *
+   * @return the name of the column this ColumnRequest specifies.
+   */
+  private[express] def getColumnName(): KijiColumnName
 }
 
 /**
@@ -91,6 +100,8 @@ final case class QualifiedColumn private[express] (
   override def ignoreMissing(): ColumnRequest = {
     return new QualifiedColumn(family, qualifier, options.newWithReplacement(None))
   }
+
+  override def getColumnName(): KijiColumnName = new KijiColumnName(family, qualifier)
 }
 
 /**
@@ -115,6 +126,8 @@ final case class ColumnFamily private[express] (
   override def ignoreMissing(): ColumnRequest = {
     return new ColumnFamily(family, options.newWithReplacement(None))
   }
+
+  override def getColumnName(): KijiColumnName = new KijiColumnName(family)
 }
 
 /**

@@ -20,14 +20,20 @@
 package org.kiji.express
 
 import scala.collection.mutable.Buffer
+
 import java.util.UUID
 
+import org.apache.avro.Schema
+import org.apache.avro.generic.GenericData
+import org.apache.avro.generic.GenericRecord
 import com.twitter.scalding._
 
 import org.kiji.express.DSL._
 import org.kiji.express.Resources.doAndRelease
 import org.kiji.schema.{EntityId => JEntityId}
 import org.kiji.schema.KijiTable
+import org.kiji.schema.avro.HashSpec
+import org.kiji.schema.avro.HashType
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts
 
@@ -35,8 +41,11 @@ class KijiSourceSuite
     extends KijiSuite {
   import KijiSourceSuite._
 
-  /** Table layout to use for tests. */
-  val layout: KijiTableLayout = layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
+  /** Simple table layout to use for tests. */
+  val simpleLayout: KijiTableLayout = layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
+
+  /** Table layout using Avro schemas to use for tests. */
+  val avroLayout: KijiTableLayout = layout("avro-types.json")
 
   /** Input tuples to use for word count tests. */
   def wordCountInput(uri: String): List[(EntityId, KijiSlice[String])] = {
@@ -62,7 +71,7 @@ class KijiSourceSuite
 
   test("a word-count job that reads from a Kiji table is run using Scalding's local mode") {
     // Create test Kiji table.
-    val uri: String = doAndRelease(makeTestKijiTable(layout)) { table: KijiTable =>
+    val uri: String = doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
       table.getURI().toString()
     }
 
@@ -79,7 +88,7 @@ class KijiSourceSuite
 
   test("a word-count job that reads from a Kiji table is run using Hadoop") {
     // Create test Kiji table.
-    val uri: String = doAndRelease(makeTestKijiTable(layout)) { table: KijiTable =>
+    val uri: String = doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
       table.getURI().toString()
     }
 
@@ -122,7 +131,7 @@ class KijiSourceSuite
 
   test("An import job with multiple timestamps imports all timestamps in local mode.") {
     // Create test Kiji table.
-    val uri: String = doAndRelease(makeTestKijiTable(layout)) { table: KijiTable =>
+    val uri: String = doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
       table.getURI().toString()
     }
 
@@ -139,7 +148,7 @@ class KijiSourceSuite
 
   test("An import with multiple timestamps imports all timestamps using Hadoop.") {
     // Create test Kiji table.
-    val uri: String = doAndRelease(makeTestKijiTable(layout)) { table: KijiTable =>
+    val uri: String = doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
       table.getURI().toString()
     }
 
@@ -195,7 +204,7 @@ class KijiSourceSuite
 
   test("an import job that writes to a Kiji table is run using Scalding's local mode") {
     // Create test Kiji table.
-    val uri: String = doAndRelease(makeTestKijiTable(layout)) { table: KijiTable =>
+    val uri: String = doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
       table.getURI().toString()
     }
 
@@ -212,7 +221,7 @@ class KijiSourceSuite
 
   test("an import job that writes to a Kiji table is run using Hadoop") {
     // Create test Kiji table.
-    val uri: String = doAndRelease(makeTestKijiTable(layout)) { table: KijiTable =>
+    val uri: String = doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
       table.getURI().toString()
     }
 
@@ -248,7 +257,7 @@ class KijiSourceSuite
   test("an import job that writes to a Kiji table with timestamps is run using Scalding's local "
       + "mode") {
     // Create test Kiji table.
-    val uri: String = doAndRelease(makeTestKijiTable(layout)) { table: KijiTable =>
+    val uri: String = doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
       table.getURI().toString()
     }
 
@@ -265,7 +274,7 @@ class KijiSourceSuite
 
   test("an import job that writes to a Kiji table with timestamps is run using Hadoop") {
     // Create test Kiji table.
-    val uri: String = doAndRelease(makeTestKijiTable(layout)) { table: KijiTable =>
+    val uri: String = doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
       table.getURI().toString()
     }
 
@@ -293,7 +302,7 @@ class KijiSourceSuite
 
   test("a job that requests maxVersions gets them") {
     // Create test Kiji table.
-    val uri: String = doAndRelease(makeTestKijiTable(layout)) { table: KijiTable =>
+    val uri: String = doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
       table.getURI().toString()
     }
 
@@ -319,7 +328,7 @@ class KijiSourceSuite
 
   test("a job that requests a time range gets them") {
     // Create test Kiji table.
-    val uri: String = doAndRelease(makeTestKijiTable(layout)) { table: KijiTable =>
+    val uri: String = doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
       table.getURI().toString()
     }
 
@@ -356,7 +365,7 @@ class KijiSourceSuite
 
   test("Default for missing values is skipping the row.") {
     // Create test Kiji table.
-    val uri: String = doAndRelease(makeTestKijiTable(layout)) { table: KijiTable =>
+    val uri: String = doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
       table.getURI().toString()
     }
 
@@ -379,7 +388,7 @@ class KijiSourceSuite
 
   test("replacing missing values succeeds") {
     // Create test Kiji table.
-    val uri: String = doAndRelease(makeTestKijiTable(layout)) { table: KijiTable =>
+    val uri: String = doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
       table.getURI().toString()
     }
     def validateMissingValuesReplaced(outputBuffer: Buffer[(EntityId, String)]) {
@@ -403,9 +412,6 @@ class KijiSourceSuite
       .sink(Tsv("outputFile"))(validateMissingValuesReplaced)
     // Run the test job.
       .run
-    // note for reviewer: Running this with .runHadoop fails because Utf8 is not
-    // serializable, and the KijiScheme gets serialized.  Hopefully if we eventually
-    // use String or CharSequence instead, this won't be a problem
       .finish
   }
 
@@ -427,7 +433,7 @@ class KijiSourceSuite
       assert(6 === outMap("true"))
     }
     // Create test Kiji table.
-    val uri: String = doAndRelease(makeTestKijiTable(layout)) { table: KijiTable =>
+    val uri: String = doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
       table.getURI().toString()
     }
     // Input tuples to use for version count tests.
@@ -450,6 +456,39 @@ class KijiSourceSuite
       .finish
   }
 
+  test("A job that uses the generic API is run.") {
+    // Create test Kiji table.
+    val uri: String = doAndRelease(makeTestKijiTable(avroLayout)) { table: KijiTable =>
+      table.getURI().toString()
+    }
+
+    val specificRecord = new HashSpec()
+    specificRecord.setHashType(HashType.MD5)
+    specificRecord.setHashSize(13)
+    specificRecord.setSuppressKeyMaterialization(true)
+    def genericValuesInput(uri: String): List[(EntityId, KijiSlice[HashSpec])] = {
+      List((EntityId(uri)("row01"), slice("family:column3", (10L, specificRecord))))
+    }
+
+    def validateGenericOutput(outputBuffer: Buffer[(Int, Int)]): Unit = {
+      assert (1 === outputBuffer.size)
+      // There exactly 1 record with hash_size of 13.
+      assert ((13, 1) === outputBuffer(0))
+    }
+
+    val jobTest = JobTest(new GenericAvroJob(_))
+        .arg("input", uri)
+        .arg("output", "outputFile")
+        .source(KijiInput(uri) (Map (Column("family:column3") -> 'records)),
+            genericValuesInput(uri))
+        .sink(Tsv("outputFile"))(validateGenericOutput)
+
+    // Run in local mode
+    jobTest.run.finish
+
+    // Run in hadoop mode
+    jobTest.runHadoop.finish
+  }
 }
 
 /** Companion object for KijiSourceSuite. Contains helper functions and test jobs. */
@@ -612,5 +651,26 @@ object KijiSourceSuite extends KijiSuite {
         }
         .groupBy('matches) (_.size)
         .write(Tsv(args("output")))
+  }
+
+  /**
+   * A job that uses the generic API, getting the "hash_size" field from a generic record, and
+   * writes the number of records that have a certain hash_size.
+   *
+   * @param args to the job. Two arguments are expected: "input", which should specify the URI
+   *     to the Kiji table the job should be run on, and "output", which specifies the output
+   *     Tsv file.
+   */
+  class GenericAvroJob(args: Args) extends Job(args) {
+    KijiInput(args("input"))("family:column3" -> 'records)
+    .map('records -> 'hashSizeField) { slice: KijiSlice[AvroValue] =>
+        slice.getFirst match {
+          case Cell(_, _, _, record: AvroRecord) => {
+            record("hash_size").asInt
+          }
+        }
+    }
+    .groupBy('hashSizeField)(_.size)
+    .write(Tsv(args("output")))
   }
 }

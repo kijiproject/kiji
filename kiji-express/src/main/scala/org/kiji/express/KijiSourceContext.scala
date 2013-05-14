@@ -21,7 +21,6 @@ package org.kiji.express
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.KijiURI
 
 /**
@@ -35,5 +34,6 @@ import org.kiji.schema.KijiURI
 @ApiStability.Experimental
 private[express] case class KijiSourceContext (
     rowContainer: KijiValue,
-    tableUri: KijiURI) {
+    tableUri: KijiURI,
+    expressGenericTable: ExpressGenericTable) {
 }

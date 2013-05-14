@@ -21,7 +21,6 @@ package org.kiji.express
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.express.avro.AvroUtil.convertJavaTypes
 import org.kiji.schema.KijiCell
 
 /**
@@ -51,9 +50,10 @@ object Cell {
    *     and datum as cell produced by the Java API.
    */
   private[express] def apply[T](cell: KijiCell[T]): Cell[T] = {
-    new Cell[T](convertJavaTypes(cell.getFamily).asInstanceOf[String],
-        convertJavaTypes(cell.getQualifier).asInstanceOf[String],
-        convertJavaTypes(cell.getTimestamp).asInstanceOf[Long],
-        convertJavaTypes(cell.getData).asInstanceOf[T])
+    new Cell[T](
+        cell.getFamily,
+        cell.getQualifier,
+        cell.getTimestamp.longValue,
+        AvroUtil.decodeGenericFromJava(cell.getData).asInstanceOf[T])
   }
 }

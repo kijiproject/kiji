@@ -24,7 +24,7 @@
 
   <properties>
     <scalding.version>0.8.3</scalding.version>
-    <kiji.schema.version>1.0.3</kiji.schema.version>
+    <kiji.schema.version>1.0.4-SNAPSHOT</kiji.schema.version>
     <kiji.schema.shell.version>1.0.0</kiji.schema.shell.version>
     <kiji.mr.version>1.0.0-rc62</kiji.mr.version>
     <scalatest.version>2.0.M5b</scalatest.version>

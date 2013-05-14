@@ -46,7 +46,6 @@ import org.slf4j.LoggerFactory
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.express.avro.AvroUtil.convertScalaTypes
 import org.kiji.express.Resources.doAndRelease
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.Kiji
@@ -55,8 +54,10 @@ import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiDataRequestBuilder
 import org.kiji.schema.KijiRowData
 import org.kiji.schema.KijiTable
+import org.kiji.schema.KijiSchemaTable
 import org.kiji.schema.KijiTableWriter
 import org.kiji.schema.KijiURI
+import org.kiji.schema.layout.CellSpec
 import org.kiji.schema.layout.KijiTableLayout
 
 /**
@@ -134,11 +135,14 @@ private[express] class KijiScheme(
       sourceCall: SourceCall[KijiSourceContext, RecordReader[KijiKey, KijiValue]]) {
     val tableUriProperty = flow.getStringProperty(KijiConfKeys.KIJI_INPUT_TABLE_URI)
 
+    // Construct an instance of ExpressGenericTable to reuse across all calls to the source method.
     val uri: KijiURI = KijiURI.newBuilder(tableUriProperty).build()
-    val context = KijiSourceContext(
+    val expressGenericTable = new ExpressGenericTable(uri, columns.values.toSeq)
+    // Set the context of the sourcecall to include the single instance of ExpressGenericTable
+    sourceCall.setContext(KijiSourceContext(
         sourceCall.getInput().createValue(),
-        uri)
-    sourceCall.setContext(context)
+        uri,
+        expressGenericTable))
   }
 
   /**
@@ -154,7 +158,7 @@ private[express] class KijiScheme(
       flow: FlowProcess[JobConf],
       sourceCall: SourceCall[KijiSourceContext, RecordReader[KijiKey, KijiValue]]): Boolean = {
     // Get the current key/value pair.
-    val KijiSourceContext(value, tableUri) = sourceCall.getContext()
+    val KijiSourceContext(value, tableUri, expressGenericTable) = sourceCall.getContext()
 
     // Get the first row where all the requested columns are present,
     // and use that to set the result tuple.
@@ -166,7 +170,7 @@ private[express] class KijiScheme(
     // scalastyle:on null
       val row: KijiRowData = value.get()
       val result: Option[Tuple] = rowToTuple(columns, getSourceFields, timestampField, row,
-          tableUri)
+          tableUri, expressGenericTable)
 
       // If no fields were missing, set the result tuple and return from this method.
       result match {
@@ -200,6 +204,8 @@ private[express] class KijiScheme(
   override def sourceCleanup(
       flow: FlowProcess[JobConf],
       sourceCall: SourceCall[KijiSourceContext, RecordReader[KijiKey, KijiValue]]) {
+    val KijiSourceContext(_, _, expressGenericTable) = sourceCall.getContext()
+    expressGenericTable.close()
     // scalastyle:off null
     sourceCall.setContext(null)
     // scalastyle:on null
@@ -340,12 +346,15 @@ private[express] object KijiScheme {
       fields: Fields,
       timestampField: Option[Symbol],
       row: KijiRowData,
-      tableUri: KijiURI): Option[Tuple] = {
+      tableUri: KijiURI,
+      genericTable: ExpressGenericTable): Option[Tuple] = {
     val result: Tuple = new Tuple()
     val iterator = fields.iterator().asScala
 
     // Add the row's EntityId to the tuple.
     result.add(EntityId(tableUri.toString(), row.getEntityId()))
+
+    val expressRow = genericTable.getRow(row)
 
     // Get rid of the entity id and timestamp fields, then map over each field to add a column
     // to the tuple.
@@ -357,7 +366,7 @@ private[express] object KijiScheme {
         .foreach {
             case colReq @ ColumnFamily(family, ColumnRequestOptions(_, _, replacement)) => {
               if (row.containsColumn(family)) {
-                result.add (KijiSlice(row.iterator(family).asScala))
+                result.add (KijiSlice(expressRow.iterator(family)))
               } else {
                 replacement match {
                   // TODO convert replacement slice
@@ -375,7 +384,7 @@ private[express] object KijiScheme {
                 qualifier,
                 ColumnRequestOptions(_, _, replacement)) => {
               if (row.containsColumn(family, qualifier)) {
-                result.add(KijiSlice(row.iterator(family, qualifier).asScala))
+                result.add(KijiSlice(expressRow.iterator(family, qualifier)))
               } else {
                 replacement match {
                   // TODO convert replacement slice
@@ -445,7 +454,7 @@ private[express] object KijiScheme {
                   family,
                   qualifier,
                   timestamp,
-                  convertScalaTypes(value, layout.getSchema(kijiCol)))
+                  AvroUtil.encodeToJava(value, layout.getSchema(kijiCol)))
             }
           }
         }

@@ -187,7 +187,8 @@ private[express] class LocalKijiScheme(
               getSourceFields,
               timestampField,
               row,
-              context.tableUri)
+              context.tableUri,
+              new ExpressGenericTable(context.tableUri, columns.values.toSeq))
 
       // If no fields were missing, set the result tuple and return from this method.
       result match {

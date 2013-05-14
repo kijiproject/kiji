@@ -43,7 +43,13 @@
           type : "INLINE",
           value : '"bytes"'
         }
-      } ]
+      }, {
+        name : "column3",
+        column_schema : {
+          type : "CLASS",
+          value : "org.kiji.schema.avro.HashSpec"
+        }
+      }]
     } ]
   } ],
   version : "layout-1.0"

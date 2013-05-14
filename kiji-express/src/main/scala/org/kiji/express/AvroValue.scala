@@ -17,20 +17,24 @@
  * limitations under the License.
  */
 
-package org.kiji.express.avro
+package org.kiji.express
 
-import org.apache.avro.Schema
+import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 
 /**
- * A marker trait for classes that marks them as having been originally retrieved from an Avro
- * Record.
+ * An class which every AvroValue originally derived from an AvroRecord inherits from.  It defines
+ * the methods for retrieving the contained object of various types, with default implementations
+ * that throw `UnsupportedOperationException`.  Each implementing class implements the appropriate
+ * method given the type of the class.
  *
  * See inheriting classes defined in AvroValueImpls.scala.
  *
  * @param classOfValue is the class of the value this wraps, for more informative error messages.
- * @param columnSchema of the value this wraps.
  */
-class AvroValue(classOfValue: Class[_]) {
+@ApiAudience.Public
+@ApiStability.Experimental
+abstract class AvroValue private[express](classOfValue: Class[_]) {
   /** An error message used for primitives being cast to the wrong types. */
   private val castErrorMessage: String =
       "This AvroValue is of type %s".format(classOfValue.getName) + ", not of type %s."
@@ -149,11 +153,11 @@ class AvroValue(classOfValue: Class[_]) {
    * Accesses a field in this AvroValue, if this is an AvroRecord, or value in this map, if this
    * is an AvroMap.
    *
-   * @param fieldOrMap to access.
+   * @param recordFieldOrMapKey to access.
    * @return the field in this AvroRecord or value in this AvroMap, if possible.
    * @throws UnsupportedOperationException if this is a primitive type or list, not a record.
    */
-  def apply(fieldOrMap: String): AvroValue = {
+  def apply(recordFieldOrMapKey: String): AvroValue = {
     val errorMessage =
         "This AvroValue is a %s, not a Record or Map; it does not have fields to access."
     throw new UnsupportedOperationException(errorMessage)

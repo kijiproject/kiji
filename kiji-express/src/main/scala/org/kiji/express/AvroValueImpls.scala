@@ -17,19 +17,23 @@
  * limitations under the License.
  */
 
-package org.kiji.express.avro
+package org.kiji.express
 
 import scala.collection.JavaConverters.asScalaBufferConverter
 
-import org.apache.avro.Schema
 import org.apache.avro.generic.IndexedRecord
+
+import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 
 /**
  * Represents an Int from an AvroRecord.
  *
  * @param value wrapped by this AvroValue.
  */
-case class AvroInt private[express](value: Int) extends AvroValue(classOf[Int]) {
+@ApiAudience.Public
+@ApiStability.Experimental
+final case class AvroInt private[express](value: Int) extends AvroValue(classOf[Int]) {
   override def asInt(): Int = value
 }
 
@@ -38,7 +42,9 @@ case class AvroInt private[express](value: Int) extends AvroValue(classOf[Int]) 
  *
  * @param value wrapped by this AvroValue.
  */
-case class AvroBoolean private[express](value: Boolean) extends AvroValue(classOf[Boolean]) {
+@ApiAudience.Public
+@ApiStability.Experimental
+final case class AvroBoolean private[express](value: Boolean) extends AvroValue(classOf[Boolean]) {
   override def asBoolean(): Boolean = value
 }
 
@@ -47,7 +53,9 @@ case class AvroBoolean private[express](value: Boolean) extends AvroValue(classO
  *
  * @param value wrapped by this AvroValue.
  */
-case class AvroLong private[express](value: Long) extends AvroValue(classOf[Long]) {
+@ApiAudience.Public
+@ApiStability.Experimental
+final case class AvroLong private[express](value: Long) extends AvroValue(classOf[Long]) {
   override def asLong(): Long = value
 }
 
@@ -56,7 +64,9 @@ case class AvroLong private[express](value: Long) extends AvroValue(classOf[Long
  *
  * @param value wrapped by this AvroValue.
  */
-case class AvroDouble private[express](value: Double) extends AvroValue(classOf[Double]) {
+@ApiAudience.Public
+@ApiStability.Experimental
+final case class AvroDouble private[express](value: Double) extends AvroValue(classOf[Double]) {
   override def asDouble(): Double = value
 }
 
@@ -65,7 +75,9 @@ case class AvroDouble private[express](value: Double) extends AvroValue(classOf[
  *
  * @param value wrapped by this AvroValue.
  */
-case class AvroFloat private[express](value: Float) extends AvroValue(classOf[Float]) {
+@ApiAudience.Public
+@ApiStability.Experimental
+final case class AvroFloat private[express](value: Float) extends AvroValue(classOf[Float]) {
   override def asFloat(): Float = value
 }
 
@@ -74,7 +86,9 @@ case class AvroFloat private[express](value: Float) extends AvroValue(classOf[Fl
  *
  * @param value wrapped by this AvroValue.
  */
-case class AvroString private[express](value: String) extends AvroValue(classOf[String]) {
+@ApiAudience.Public
+@ApiStability.Experimental
+final case class AvroString private[express](value: String) extends AvroValue(classOf[String]) {
   override def asString(): String = value
 }
 
@@ -83,17 +97,22 @@ case class AvroString private[express](value: String) extends AvroValue(classOf[
  *
  * @param value wrapped by this AvroValue.
  */
-case class AvroByteArray private[express](value: Array[Byte])
+@ApiAudience.Public
+@ApiStability.Experimental
+final case class AvroByteArray private[express](value: Array[Byte])
     extends AvroValue(classOf[Array[Byte]]) {
   override def asBytes(): Array[Byte] = value
 }
 
 /**
- * Represents a List from an AvroRecord.
+ * Represents a List from an AvroRecord.  Elements are accessed using the apply method,
+ * for example, `myList(0).asInt` gets the first element if it is a list of Ints.
  *
  * @param value wrapped by this AvroValue.
  */
-case class AvroList private[express](value: List[AvroValue])
+@ApiAudience.Public
+@ApiStability.Experimental
+final case class AvroList private[express](value: List[AvroValue])
     extends AvroValue(classOf[List[AvroValue]]) {
   override def asList(): List[AvroValue] = value
 
@@ -101,11 +120,16 @@ case class AvroList private[express](value: List[AvroValue])
 }
 
 /**
- * Represents a Map from an AvroRecord.
+ * Represents a Map from an AvroRecord.  Values are accessed using the apply method,
+ * for example, `myMap("key").asLong` gets the value corresponding to "key" if it is a Long.
+ *
+ * All keys are strings, since this represents an Avro map.
  *
  * @param value wrapped by this AvroValue.
  */
-case class AvroMap private[express](value: Map[String, AvroValue])
+@ApiAudience.Public
+@ApiStability.Experimental
+final case class AvroMap private[express](value: Map[String, AvroValue])
     extends AvroValue(classOf[Map[String, AvroValue]]) {
   override def asMap(): Map[String, AvroValue] = value
 
@@ -117,7 +141,9 @@ case class AvroMap private[express](value: Map[String, AvroValue])
  *
  * @param name of the Enum wrapped by this AvroValue.
  */
-case class AvroEnum private[express](name: String)
+@ApiAudience.Public
+@ApiStability.Experimental
+final case class AvroEnum private[express](name: String)
     extends AvroValue(classOf[java.lang.Enum[_]]) {
   override def asEnumName(): String = name
 }
@@ -128,35 +154,14 @@ case class AvroEnum private[express](name: String)
  * `myRecord("myField").asInt()`
  *
  * @param record from the KijiCell.
- * @param schema of this AvroRecord.
  */
-case class AvroRecord private[express](map: Map[String, AvroValue], schema: Schema)
+@ApiAudience.Public
+@ApiStability.Experimental
+final case class AvroRecord private[express](map: Map[String, AvroValue])
     extends AvroValue(classOf[IndexedRecord]) {
   override def asRecord(): AvroRecord = this
 
   override def apply(field: String): AvroValue = {
     return map(field)
-  }
-}
-
-/**
- * Companion object containing factory methods for AvroRecord.
- */
-private[express] object AvroRecord {
-  /**
-   * Instantiates an AvroRecord from an IndexedRecord.
-   *
-   * @param record to instantiate from.
-   * @return the equivalent AvroRecord.
-   */
-  private[express] def fromRecord(record: IndexedRecord): AvroRecord = {
-    // Construct a map from field names in this record to the Scala-converted values.
-    val schema = record.getSchema
-    val recordMap =
-        schema.getFields.asScala.map{
-            field => (field.name, AvroUtil.wrapAvroTypes(record.get(field.pos)))
-        }.toMap[String, AvroValue]
-    // Use that map to construct an AvroRecord.
-    new AvroRecord(recordMap, schema)
   }
 }

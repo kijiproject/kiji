@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.express.avro
+package org.kiji.express
 
 import scala.collection.JavaConverters.seqAsJavaListConverter
 import scala.collection.JavaConverters.mapAsJavaMapConverter
@@ -32,7 +32,7 @@ import org.kiji.schema.avro.HashType
 class AvroValueSuite extends FunSuite {
   test("AvroInt throws unsupported exceptions when converting to the wrong type.") {
     val int: java.lang.Integer = new java.lang.Integer(10)
-    val avroInt = AvroUtil.wrapAvroTypes(int)
+    val avroInt = AvroUtil.wrapGenericAvro(int)
     intercept[UnsupportedOperationException] { avroInt.asBoolean() }
     intercept[UnsupportedOperationException] { avroInt.asLong() }
     intercept[UnsupportedOperationException] { avroInt.asFloat() }
@@ -47,13 +47,13 @@ class AvroValueSuite extends FunSuite {
 
   test("Ints are correctly wrapped by AvroInt.") {
     val int: java.lang.Integer = new java.lang.Integer(10)
-    val avroInt = AvroUtil.wrapAvroTypes(int)
+    val avroInt = AvroUtil.wrapGenericAvro(int)
     assert(10 === avroInt.asInt())
   }
 
   test("AvroBoolean throws unsupported exceptions when converting to the wrong type.") {
     val boolean: java.lang.Boolean = new java.lang.Boolean(false)
-    val avroBoolean = AvroUtil.wrapAvroTypes(boolean)
+    val avroBoolean = AvroUtil.wrapGenericAvro(boolean)
     intercept[UnsupportedOperationException] { avroBoolean.asInt() }
     intercept[UnsupportedOperationException] { avroBoolean.asLong() }
     intercept[UnsupportedOperationException] { avroBoolean.asFloat() }
@@ -68,13 +68,13 @@ class AvroValueSuite extends FunSuite {
 
   test("Booleans are correctly wrapped by AvroBoolean.") {
     val boolean: java.lang.Boolean = new java.lang.Boolean(false)
-    val avroBoolean = AvroUtil.wrapAvroTypes(boolean)
+    val avroBoolean = AvroUtil.wrapGenericAvro(boolean)
     assert(false === avroBoolean.asBoolean())
   }
 
   test("AvroLong throws unsupported exceptions when converting to the wrong type.") {
     val long: java.lang.Long= new java.lang.Long(1)
-    val avroLong = AvroUtil.wrapAvroTypes(long)
+    val avroLong = AvroUtil.wrapGenericAvro(long)
     intercept[UnsupportedOperationException] { avroLong.asInt() }
     intercept[UnsupportedOperationException] { avroLong.asBoolean() }
     intercept[UnsupportedOperationException] { avroLong.asFloat() }
@@ -89,13 +89,13 @@ class AvroValueSuite extends FunSuite {
 
   test("Longs are correctly wrapped by AvroLong.") {
     val long: java.lang.Long= new java.lang.Long(1)
-    val avroLong = AvroUtil.wrapAvroTypes(long)
+    val avroLong = AvroUtil.wrapGenericAvro(long)
     assert(1 === avroLong.asLong())
   }
 
   test("AvroFloat throws unsupported exceptions when converting to the wrong type.") {
     val float: java.lang.Float =  new java.lang.Float(10)
-    val avroFloat = AvroUtil.wrapAvroTypes(float)
+    val avroFloat = AvroUtil.wrapGenericAvro(float)
     intercept[UnsupportedOperationException] { avroFloat.asInt() }
     intercept[UnsupportedOperationException] { avroFloat.asBoolean() }
     intercept[UnsupportedOperationException] { avroFloat.asLong() }
@@ -110,13 +110,13 @@ class AvroValueSuite extends FunSuite {
 
   test("Floats are correctly wrapped by AvroFloat.") {
     val float: java.lang.Float =  new java.lang.Float(10)
-    val avroFloat = AvroUtil.wrapAvroTypes(float)
+    val avroFloat = AvroUtil.wrapGenericAvro(float)
     assert(10 === avroFloat.asFloat())
   }
 
   test("AvroDouble throws unsupported exceptions when converting to the wrong type.") {
     val double: java.lang.Double = new java.lang.Double(1)
-    val avroDouble = AvroUtil.wrapAvroTypes(double)
+    val avroDouble = AvroUtil.wrapGenericAvro(double)
     intercept[UnsupportedOperationException] { avroDouble.asInt() }
     intercept[UnsupportedOperationException] { avroDouble.asBoolean() }
     intercept[UnsupportedOperationException] { avroDouble.asLong() }
@@ -131,13 +131,13 @@ class AvroValueSuite extends FunSuite {
 
   test("Doubles are correctly wrapped by AvroDouble.") {
     val double: java.lang.Double = new java.lang.Double(1)
-    val avroDouble = AvroUtil.wrapAvroTypes(double)
+    val avroDouble = AvroUtil.wrapGenericAvro(double)
     assert(1 === avroDouble.asDouble())
   }
 
   test("AvroByteArray throws unsupported exceptions when converting to the wrong type.") {
     val bytes: java.nio.ByteBuffer =  java.nio.ByteBuffer.wrap(Array(0x11, 0x12))
-    val avroByteArray = AvroUtil.wrapAvroTypes(bytes)
+    val avroByteArray = AvroUtil.wrapGenericAvro(bytes)
     intercept[UnsupportedOperationException] { avroByteArray.asInt() }
     intercept[UnsupportedOperationException] { avroByteArray.asBoolean() }
     intercept[UnsupportedOperationException] { avroByteArray.asLong() }
@@ -152,13 +152,13 @@ class AvroValueSuite extends FunSuite {
 
   test("Byte arrays are correctly wrapped by AvroByteArray.") {
     val bytes: java.nio.ByteBuffer =  java.nio.ByteBuffer.wrap(Array(0x11, 0x12))
-    val avroByteArray = AvroUtil.wrapAvroTypes(bytes)
+    val avroByteArray = AvroUtil.wrapGenericAvro(bytes)
     assert(Array(0x11, 0x12) === avroByteArray.asBytes())
   }
 
   test("AvroString throws unsupported exceptions when converting to the wrong type.") {
     val charSequence: java.lang.CharSequence = "hello".asInstanceOf[java.lang.CharSequence]
-    val avroString = AvroUtil.wrapAvroTypes(charSequence)
+    val avroString = AvroUtil.wrapGenericAvro(charSequence)
     intercept[UnsupportedOperationException] { avroString.asInt() }
     intercept[UnsupportedOperationException] { avroString.asBoolean() }
     intercept[UnsupportedOperationException] { avroString.asLong() }
@@ -173,14 +173,14 @@ class AvroValueSuite extends FunSuite {
 
   test("A CharSequence is correctly wrapped by an AvroString.") {
     val charSequence: java.lang.CharSequence = "hello".asInstanceOf[java.lang.CharSequence]
-    val avroString = AvroUtil.wrapAvroTypes(charSequence)
+    val avroString = AvroUtil.wrapGenericAvro(charSequence)
     assert("hello" === avroString.asString())
   }
 
   test("AvroList throws unsupported exceptions when converting to the wrong type.") {
-    val avroInt1 = AvroUtil.wrapAvroTypes(1)
-    val avroInt2 = AvroUtil.wrapAvroTypes(2)
-    val avroList = AvroUtil.wrapAvroTypes(List(1,2).asJava)
+    val avroInt1 = AvroUtil.wrapGenericAvro(1)
+    val avroInt2 = AvroUtil.wrapGenericAvro(2)
+    val avroList = AvroUtil.wrapGenericAvro(List(1,2).asJava)
     intercept[UnsupportedOperationException] { avroList.asInt() }
     intercept[UnsupportedOperationException] { avroList.asBoolean() }
     intercept[UnsupportedOperationException] { avroList.asLong() }
@@ -193,18 +193,18 @@ class AvroValueSuite extends FunSuite {
   }
 
   test("A List is correctly wrapped by an AvroList.") {
-    val avroInt1 = AvroUtil.wrapAvroTypes(1)
-    val avroInt2 = AvroUtil.wrapAvroTypes(2)
-    val avroList = AvroUtil.wrapAvroTypes(List(1,2).asJava)
+    val avroInt1 = AvroUtil.wrapGenericAvro(1)
+    val avroInt2 = AvroUtil.wrapGenericAvro(2)
+    val avroList = AvroUtil.wrapGenericAvro(List(1,2).asJava)
     assert(List(avroInt1, avroInt2) === avroList.asList())
     assert(avroInt1 === avroList(0))
     assert(avroInt2 === avroList(1))
   }
 
   test("AvroMap throws unsupported exceptions when converting to the wrong type.") {
-    val avroInt2 = AvroUtil.wrapAvroTypes(2)
-    val avroInt4 = AvroUtil.wrapAvroTypes(4)
-    val avroMap = AvroUtil.wrapAvroTypes(Map("a"->2,"b"->4).asJava)
+    val avroInt2 = AvroUtil.wrapGenericAvro(2)
+    val avroInt4 = AvroUtil.wrapGenericAvro(4)
+    val avroMap = AvroUtil.wrapGenericAvro(Map("a"->2,"b"->4).asJava)
     intercept[UnsupportedOperationException] { avroMap.asInt() }
     intercept[UnsupportedOperationException] { avroMap.asBoolean() }
     intercept[UnsupportedOperationException] { avroMap.asLong() }
@@ -218,9 +218,9 @@ class AvroValueSuite extends FunSuite {
   }
 
   test("A Map is correctly wrapped by an AvroMap.") {
-    val avroInt2 = AvroUtil.wrapAvroTypes(2)
-    val avroInt4 = AvroUtil.wrapAvroTypes(4)
-    val avroMap = AvroUtil.wrapAvroTypes(Map("a"->2,"b"->4).asJava)
+    val avroInt2 = AvroUtil.wrapGenericAvro(2)
+    val avroInt4 = AvroUtil.wrapGenericAvro(4)
+    val avroMap = AvroUtil.wrapGenericAvro(Map("a"->2,"b"->4).asJava)
     assert(Map("a"->avroInt2,"b"->avroInt4) === avroMap.asMap())
     assert(avroInt2 === avroMap("a"))
     assert(avroInt4 === avroMap("b"))
@@ -228,7 +228,7 @@ class AvroValueSuite extends FunSuite {
 
   test("AvroEnum throws unsupported exceptions when converting to the wrong type.") {
     // Use HashType enum for testing.
-    val avroEnum = AvroUtil.wrapAvroTypes(HashType.MD5)
+    val avroEnum = AvroUtil.wrapGenericAvro(HashType.MD5)
     intercept[UnsupportedOperationException] { avroEnum.asInt() }
     intercept[UnsupportedOperationException] { avroEnum.asBoolean() }
     intercept[UnsupportedOperationException] { avroEnum.asLong() }
@@ -243,7 +243,7 @@ class AvroValueSuite extends FunSuite {
 
   test("An Enum is correctly wrapped by an AvroEnum.") {
     // Use HashType enum for testing.
-    val avroEnum = AvroUtil.wrapAvroTypes(HashType.MD5)
+    val avroEnum = AvroUtil.wrapGenericAvro(HashType.MD5)
     assert(avroEnum.isInstanceOf[AvroEnum])
     assert("MD5" === avroEnum.asEnumName)
   }
@@ -254,7 +254,7 @@ class AvroValueSuite extends FunSuite {
     genericRecord.put("hash_type", HashType.MD5)
     genericRecord.put("hash_size", 12)
     genericRecord.put("suppress_key_materialization", true)
-    val avroRecord = AvroUtil.convertJavaTypes(genericRecord).asInstanceOf[AvroValue]
+    val avroRecord = AvroUtil.wrapGenericAvro(genericRecord).asInstanceOf[AvroValue]
     intercept[UnsupportedOperationException] { avroRecord.asInt() }
     intercept[UnsupportedOperationException] { avroRecord.asBoolean() }
     intercept[UnsupportedOperationException] { avroRecord.asLong() }
@@ -268,11 +268,11 @@ class AvroValueSuite extends FunSuite {
   }
 
   test("A Record is correctly wrapped by an AvroRecord.") {
-    val genericRecord: GenericRecord = new GenericData.Record(HashSpec.SCHEMA$)
+    val genericRecord = new GenericData.Record(HashSpec.SCHEMA$)
     genericRecord.put("hash_type", HashType.MD5)
     genericRecord.put("hash_size", 12)
     genericRecord.put("suppress_key_materialization", true)
-    val avroRecord = AvroUtil.convertJavaTypes(genericRecord).asInstanceOf[AvroValue]
+    val avroRecord = AvroUtil.wrapGenericAvro(genericRecord).asInstanceOf[AvroValue]
     assert(classOf[AvroRecord] === avroRecord.getClass)
     assert("MD5" === avroRecord("hash_type").asEnumName)
     assert(12 === avroRecord("hash_size").asInt)
