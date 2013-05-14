@@ -19,6 +19,8 @@
 
 package org.kiji.schema.shell
 
+import java.io.IOException
+
 import jline.UnixTerminal
 
 import org.kiji.annotations.ApiAudience
@@ -216,12 +218,21 @@ final class InputProcessor(val throwOnSyntaxErr: Boolean = false) {
               try {
                 parseResult.getOrElse(new ErrorCommand(
                     env, parseResult.toString(), throwOnSyntaxErr)).exec()
-              } catch { case e: DDLException =>
-                println(e.getMessage())
-                if (throwOnSyntaxErr) {
-                  throw e
+              } catch {
+                case e: DDLException => {
+                  println(e.getMessage())
+                  if (throwOnSyntaxErr) {
+                    throw e
+                  }
+                  env
                 }
-                env
+                case ioe: IOException => {
+                  println(ioe.getMessage())
+                  if (throwOnSyntaxErr) {
+                    throw ioe
+                  }
+                  env
+                }
               }
             )
             // Continue processing with a new input buffer.
