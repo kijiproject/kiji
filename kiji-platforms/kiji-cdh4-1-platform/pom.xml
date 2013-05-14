@@ -21,13 +21,13 @@
 
   <groupId>org.kiji.platforms</groupId>
   <artifactId>kiji-cdh4-1-platform</artifactId>
-  <version>1.0.1-SNAPSHOT</version>
+  <version>1.1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <parent>
     <groupId>org.kiji.platforms</groupId>
     <artifactId>kiji-platforms</artifactId>
-    <version>1.0.1-SNAPSHOT</version>
+    <version>1.1.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
 
