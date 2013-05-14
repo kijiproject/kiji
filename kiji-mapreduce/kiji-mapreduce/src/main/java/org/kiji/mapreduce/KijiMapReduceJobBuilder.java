@@ -34,8 +34,10 @@ import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.kvstore.KeyValueStoreClient;
 
 /**
- * Builds general MapReduce jobs around Kiji mappers and reducers. For specialized tasks see,
- * for example, {@link org.kiji.mapreduce.produce.KijiProduceJobBuilder}.
+ * Builds general MapReduce jobs around Kiji mappers and reducers. For specialized tasks see
+ * {@link org.kiji.mapreduce.produce.KijiProduceJobBuilder},
+ * {@link org.kiji.mapreduce.gather.KijiGatherJobBuilder},
+ * {@link org.kiji.mapreduce.bulkimport.KijiBulkImportJobBuilder}.
  */
 @ApiAudience.Public
 public final class KijiMapReduceJobBuilder extends MapReduceJobBuilder<KijiMapReduceJobBuilder> {
