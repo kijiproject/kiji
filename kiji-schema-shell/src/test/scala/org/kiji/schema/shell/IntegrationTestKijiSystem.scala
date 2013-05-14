@@ -275,6 +275,71 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
 
       environment.kijiSystem.shutdown()
     }
+
+    "create, use, and drop an instance" in {
+      val uri = getNewInstanceURI()
+      val instanceName = uri.getInstance()
+      val environment = env(uri)
+      val parser = getParser(environment)
+
+      println("Creating instance: " + uri.getInstance())
+      val res = parser.parseAll(parser.statement, "CREATE INSTANCE '" + instanceName + "';")
+      res.successful mustEqual true
+      val env2 = res.get.exec()
+
+      env2.kijiSystem.listInstances.contains(instanceName) mustEqual true
+
+      // Print the instance list to the log for debugging purposes.
+      println("Listing available instances...")
+      val parser2 = getParser(env2)
+      val res2 = parser2.parseAll(parser2.statement, "SHOW INSTANCES;")
+      res2.successful mustEqual true
+      val env3 = res2.get.exec()
+
+      // Programmatically test proper table creation.
+      // Check that we have created as many locgroups, map families, and group families
+      // as we expect to be here.
+      println("Creating a table (tblfoo)...")
+      val parser3 = getParser(env3)
+      val res3 = parser3.parseAll(parser3.statement,
+          "CREATE TABLE tblfoo WITH LOCALITY GROUP lg;")
+      res3.successful mustEqual true
+      val env4 = res3.get.exec()
+
+      // Print the table list to the log for debugging purposes.
+      println("Listing available tables")
+      val parser4 = getParser(env4)
+      val res4 = parser4.parseAll(parser4.statement, "SHOW TABLES;")
+      res4.successful mustEqual true
+      val env5 = res4.get.exec()
+
+      // Create another instance; this implicitly switches to it.
+      val alternateInstance = instanceName + "ALT"
+      println("Creating alternate instance: " + alternateInstance)
+      val parser5 = getParser(env5)
+      val res5 = parser5.parseAll(parser5.statement,
+          "CREATE INSTANCE '" + alternateInstance + "';")
+      res5.successful mustEqual true
+      val env6 = res5.get.exec()
+
+      // Now remove the original instance.
+      println("Dropping instance '" + instanceName + "'")
+      val parser6 = getParser(env6)
+      val res6 = parser6.parseAll(parser6.statement,
+          "DROP INSTANCE '" + instanceName + "';")
+      res5.successful mustEqual true
+      val env7 = res6.get.exec()
+
+      env7.kijiSystem.listInstances.contains(instanceName) mustEqual false
+
+      println("Listing available instances one last time.")
+      val parser7 = getParser(env7)
+      val res7 = parser7.parseAll(parser7.statement, "SHOW INSTANCES;")
+      res7.successful mustEqual true
+      val env8 = res7.get.exec()
+
+      env8.kijiSystem.shutdown()
+    }
   }
 
   /**

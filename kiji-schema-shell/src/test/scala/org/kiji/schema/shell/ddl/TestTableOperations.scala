@@ -934,6 +934,15 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage';""");
       val locGroups2 = layout2.getLocalityGroups()
       locGroups2.size mustEqual 1
     }
+
+    "refuse to drop the current instance" in {
+      val curInstance = env.instanceURI.getInstance()
+      val parser = getParser()
+      val res = parser.parseAll(parser.statement, "DROP INSTANCE '" + curInstance + "';")
+      res.successful mustEqual true
+      res.get must beAnInstanceOf[DropInstanceCommand]
+      res.get.exec() must throwA[DDLException] // Cannot drop the current instance.
+    }
   }
 
   def getParser(): DDLParser = { new DDLParser(env) }

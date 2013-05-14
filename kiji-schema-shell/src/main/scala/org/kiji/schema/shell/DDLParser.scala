@@ -343,6 +343,16 @@ final class DDLParser(val env: Environment) extends JavaTokenParsers
       i("DROP")~>i("TABLE")~>tableName ^^ (t => new DropTableCommand(env, t))
   )
 
+  /** Parser that recognizes a CREATE INSTANCE statement. */
+  def createInstance: Parser[DDLCommand] = (
+    i("CREATE")~>i("INSTANCE")~>instanceName ^^ (name => new CreateInstanceCommand(env, name))
+  )
+
+  /** Parser that recognizes a DROP INSTANCE statement. */
+  def dropInstance: Parser[DDLCommand] = (
+    i("DROP")~>i("INSTANCE")~>instanceName ^^ (name => new DropInstanceCommand(env, name))
+  )
+
   /**
    * Parser that recognizes an ALTER TABLE.. SET tableProperty clause.
    */
@@ -641,6 +651,8 @@ final class DDLParser(val env: Environment) extends JavaTokenParsers
     | createTable
     | descTable
     | dropTable
+    | createInstance
+    | dropInstance
     | dumpTableDdl
     | dumpInstanceDdl
     | loadFile

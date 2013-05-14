@@ -80,6 +80,8 @@ final class InputProcessor(val throwOnSyntaxErr: Boolean = false) {
         |  SHOW INSTANCES;
         |
         |  USE <instance>;
+        |  CREATE INSTANCE <instance>;
+        |  DROP INSTANCE <instance>;
         |
         |  SHOW TABLES;
         |
