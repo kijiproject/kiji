@@ -113,6 +113,14 @@
     <dependencySet>
       <outputDirectory>.</outputDirectory>
       <includes>
+        <include>org.kiji.express:kiji-express-examples:tar.gz</include>
+      </includes>
+      <unpack>true</unpack>
+      <useProjectArtifact>false</useProjectArtifact>
+    </dependencySet>
+    <dependencySet>
+      <outputDirectory>.</outputDirectory>
+      <includes>
         <include>org.kiji.rest:kiji-rest:tar.gz</include>
       </includes>
       <unpack>true</unpack>

@@ -39,9 +39,12 @@ This kiji-bento release (${project.version}) includes:
   `examples/music` directory, kiji-music is an example of loading the listening
   history of users of a music service into a Kiji table, and then generating new
   music recommendations.
-* `kiji-express-music` ${kiji-express-music.version}: Included in the 
+* `kiji-express-music` ${kiji-express-music.version}: Included in the
   `examples/express-music` directory, kiji-express-music is a kiji-express
   implementation of the kiji-music example.
+* `kiji-express-examples` ${kiji-express-examples.version}: Included in the
+  `examples/express-examples` directory, kiji-express-examples provides example
+  usage of kiji-express processing a newsgroups dataset.
 * API documentation is made available in the `docs` directory.
 
 Installation

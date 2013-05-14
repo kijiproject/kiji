@@ -169,6 +169,14 @@
       <fileMode>0644</fileMode>
     </fileSet>
     <fileSet>
+      <!-- kiji-express-examples -->
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <outputDirectory>examples/express-examples</outputDirectory>
+      <directory>target/prereqs-dir/kiji-express-examples-${kiji-express-examples.version}</directory>
+      <filtered>false</filtered>
+      <fileMode>0644</fileMode>
+    </fileSet>
+    <fileSet>
       <!-- bento-cluster -->
       <useDefaultExcludes>false</useDefaultExcludes>
       <outputDirectory>cluster</outputDirectory>

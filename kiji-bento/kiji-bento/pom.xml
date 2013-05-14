@@ -89,6 +89,13 @@
       <type>tar.gz</type>
     </dependency>
     <dependency>
+      <groupId>org.kiji.express</groupId>
+      <artifactId>kiji-express-examples</artifactId>
+      <version>${kiji-express-examples.version}</version>
+      <classifier>release</classifier>
+      <type>tar.gz</type>
+    </dependency>
+    <dependency>
       <groupId>org.kiji.examples.phonebook</groupId>
       <artifactId>kiji-phonebook</artifactId>
       <version>${kiji-phonebook.version}</version>

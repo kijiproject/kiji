@@ -17,5 +17,5 @@ bento-cluster: ${bento-cluster.version}
 kiji-hive-adapter: ${kiji-hive-adapter.version}
 kiji-express: ${kiji-express.version}
 kiji-express-music: ${kiji-express-music.version}
+kiji-express-examples: ${kiji-express-examples.version}
 kiji-rest: ${kiji-rest.version}
-

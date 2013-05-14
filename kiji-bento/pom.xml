@@ -46,6 +46,7 @@
     <kiji-music.version>1.0.0-rc61</kiji-music.version>
     <kiji-express.version>0.3.0</kiji-express.version>
     <kiji-express-music.version>0.3.0</kiji-express-music.version>
+    <kiji-express-examples.version>0.2.0-SNAPSHOT</kiji-express-examples.version>
     <kiji-rest.version>0.1.0</kiji-rest.version>
   </properties>
 
