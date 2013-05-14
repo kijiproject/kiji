@@ -5,7 +5,7 @@
 
   <groupId>org.kiji.pom</groupId>
   <artifactId>root-pom</artifactId>
-  <version>1.0.6-SNAPSHOT</version>
+  <version>1.1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Kiji core dependencies pom</name>
@@ -38,9 +38,9 @@
     <easymock.version>3.0</easymock.version>
     <gson.version>2.2.2</gson.version>
     <guava.version>11.0.2</guava.version>
-    <hadoop.version>2.0.0-mr1-cdh4.1.2</hadoop.version>
+    <hadoop.version>2.0.0-mr1-cdh4.2.1</hadoop.version>
     <hamcrest.version>1.1</hamcrest.version>
-    <hbase.version>0.92.1-cdh4.1.2</hbase.version>
+    <hbase.version>0.94.2-cdh4.2.1</hbase.version>
     <junit.version>4.10</junit.version>
     <kiji-common-flags.version>1.0.7</kiji-common-flags.version>
     <log4j.version>1.2.16</log4j.version>
