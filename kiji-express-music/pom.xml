@@ -29,18 +29,7 @@
   </properties>
 
   <dependencies>
-    <dependency>
-      <groupId>org.kiji.framework</groupId>
-      <artifactId>kiji-framework</artifactId>
-      <version>${kiji.framework.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.kiji.express</groupId>
-      <artifactId>kiji-express</artifactId>
-      <version>${express.version}</version>
-      <scope>provided</scope>
-    </dependency>
-
+    <!-- Scala -->
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
@@ -48,12 +37,26 @@
       <scope>provided</scope>
     </dependency>
 
+    <!-- Kiji -->
+    <dependency>
+      <groupId>org.kiji.express</groupId>
+      <artifactId>kiji-express</artifactId>
+      <version>${express.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.framework</groupId>
+      <artifactId>kiji-framework</artifactId>
+      <version>${kiji.framework.version}</version>
+      <scope>provided</scope>
+    </dependency>
     <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
       <scope>compile</scope>
     </dependency>
 
+    <!-- Testing -->
     <dependency>
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest_${scala.version}</artifactId>
