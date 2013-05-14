@@ -108,7 +108,7 @@ mr_DEVEL_branch : master
 mrlib_DEVEL_version : 1.0.0-rc62
 mrlib_DEVEL_branch : master
 
-express_DEVEL_version : 0.3.0
+express_DEVEL_version : 0.4.0
 express_DEVEL_branch : master
 
 phonebook_DEVEL_version : 1.0.0-rc61
@@ -217,3 +217,4 @@ api_mr_1_0_0_rc62 : http://api-docs.kiji.org/kiji-mapreduce/1.0.0-rc62/org/kiji/
 userguide_mapreduce_1_0_0_rc62 : /userguides/mapreduce/1.0.0-rc62
 api_mrlib_1_0_0_rc61 : http://api-docs.kiji.org/kiji-mapreduce-lib/1.0.0-rc61/org/kiji/mapreduce
 api_express_0_2_0 : http://api-docs.kiji.org/kiji-express/0.2.0/org/kiji/express
+api_express_0_3_0 : http://api-docs.kiji.org/kiji-express/0.3.0/org/kiji/express

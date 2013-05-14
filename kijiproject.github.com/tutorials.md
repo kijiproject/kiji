@@ -29,7 +29,8 @@ the word count of recommendation systems.
 Covers how to build and run Express jobs that use Kiji tables as input and/or output. This is the
 word count of recommendation systems.  This tutorial mirrors the KijiMR music tutorial closely.
 
-* [KijiExpress Tutorial](tutorials/express-recommendation/0.2.0/express-overview) (latest)
+* [KijiExpress Tutorial](tutorials/express-recommendation/0.3.0/express-overview) (latest)
+* [KijiExpress Tutorial 0.2.0](tutorials/express-recommendation/0.2.0/express-overview)
 * [KijiExpress Tutorial 0.1.0](tutorials/express-recommendation/0.1.0/express-overview)
 
 ### Tutorials under development

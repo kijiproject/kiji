@@ -44,8 +44,8 @@ MRLIB_FLAT_VER=1_0_0_rc61
 MRLIB_VER=1.0.0-rc61
 
 # KijiExpress version
-EXPRESS_FLAT_VER=0_2_0
-EXPRESS_VER=0.2.0
+EXPRESS_FLAT_VER=0_3_0
+EXPRESS_VER=0.3.0
 
 # Music Recommendation Tutorial version
 MUSIC_FLAT_VER=1_0_0_rc61
