@@ -40,13 +40,14 @@ import scala.util.control.Breaks.break
 import scala.util.control.Breaks.breakable
 
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.HColumnDescriptor
 import org.apache.hadoop.hbase.HConstants
 import org.apache.hadoop.hbase.HRegionInfo
 import org.apache.hadoop.hbase.HRegionLocation
 import org.apache.hadoop.hbase.HTableDescriptor
+import org.apache.hadoop.hbase.KeyValue
 import org.apache.hadoop.hbase.ServerName
+import org.apache.hadoop.hbase.client.Append
 import org.apache.hadoop.hbase.client.Delete
 import org.apache.hadoop.hbase.client.Get
 import org.apache.hadoop.hbase.client.HTableInterface
@@ -54,17 +55,22 @@ import org.apache.hadoop.hbase.client.Increment
 import org.apache.hadoop.hbase.client.Put
 import org.apache.hadoop.hbase.client.Result
 import org.apache.hadoop.hbase.client.ResultScanner
-import org.apache.hadoop.hbase.client.Row
 import org.apache.hadoop.hbase.client.RowLock
+import org.apache.hadoop.hbase.client.RowMutations
 import org.apache.hadoop.hbase.client.Scan
 import org.apache.hadoop.hbase.client.coprocessor.Batch
 import org.apache.hadoop.hbase.filter.Filter
-import org.apache.hadoop.hbase.io.hfile.Compression
 import org.apache.hadoop.hbase.ipc.CoprocessorProtocol
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.hadoop.io.WritableUtils
 import org.kiji.testing.fakehtable.JNavigableMapWithAsScalaIterator.javaNavigableMapAsScalaIterator
 import org.slf4j.LoggerFactory
+
+import org.apache.hadoop.hbase.client.Row
+import org.apache.hadoop.hbase.HBaseConfiguration
+
+// import org.apache.hadoop.hbase.client.Row
+// import org.apache.hadoop.hbase.HBaseConfiguration
 
 /**
  * Fake in-memory HTable.
@@ -145,13 +151,60 @@ class FakeHTable(
     return !this.get(get).isEmpty()
   }
 
-  override def batch(actions: JList[Row], results: Array[Object]): Unit = {
+  override def append(append: Append): Result = {
+    /** Key values to return as a result. */
+    val resultKVs = Buffer[KeyValue]()
+
+    synchronized {
+      val row = rows.get(append.getRow)
+
+      /**
+       * Gets the current value for the specified cell.
+       *
+       * @param kv contains the coordinate of the cell to report the current value of.
+       * @return the current value of the specified cell, or null if the cell does not exist.
+       */
+      def getCurrentValue(kv: KeyValue): Bytes = {
+        if (row == null) return null
+        val family = row.get(kv.getFamily)
+        if (family == null) return null
+        val qualifier = family.get(kv.getQualifier)
+        if (qualifier == null) return null
+        val entry = qualifier.firstEntry
+        if (entry == null) return null
+        return entry.getValue
+      }
+
+      /** Build a put request with the appended cells. */
+      val put = new Put(append.getRow)
+
+      val timestamp = System.currentTimeMillis
+
+      for ((family, kvs) <- append.getFamilyMap.asScala) {
+        for (kv <- kvs.asScala) {
+          val currentValue: Bytes = getCurrentValue(kv)
+          val newValue: Bytes = {
+            if (currentValue == null) kv.getValue else (currentValue ++ kv.getValue)
+          }
+          val appendedKV =
+              new KeyValue(kv.getRow, kv.getFamily, kv.getQualifier, timestamp, newValue)
+          put.add(appendedKV)
+
+          if (append.isReturnResults) resultKVs += appendedKV.clone()
+        }
+      }
+      this.put(put)
+    }
+    return new Result(resultKVs.toArray)
+  }
+
+  override def batch(actions: JList[_ <: Row], results: Array[Object]): Unit = {
     require(results.size == actions.size)
     val array = batch(actions)
     System.arraycopy(array, 0, results, 0, results.length)
   }
 
-  override def batch(actions: JList[Row]): Array[Object] = {
+  override def batch(actions: JList[_ <: Row]): Array[Object] = {
     val results = Buffer[Object]()
     actions.asScala.foreach { action =>
       action match {
@@ -166,8 +219,14 @@ class FakeHTable(
           this.delete(delete)
           results += new Object()
         }
+        case append: Append => {
+          results += this.append(append)
+        }
         case increment: Increment => {
           results += this.increment(increment)
+        }
+        case mutations: RowMutations => {
+          this.mutateRow(mutations)
         }
       }
     }
@@ -491,6 +550,18 @@ class FakeHTable(
     val result = this.increment(inc)
     require(!result.isEmpty)
     return Bytes.toLong(result.getValue(family, qualifier))
+  }
+
+  override def mutateRow(mutations: RowMutations): Unit = {
+    synchronized {
+      for (mutation <- mutations.getMutations.asScala) {
+        mutation match {
+          case put: Put => this.put(put)
+          case delete: Delete => this.delete(delete)
+          case _ => sys.error("Unexpected row mutation: " + mutation)
+        }
+      }
+    }
   }
 
   override def setAutoFlush(autoFlush: Boolean, clearBufferOnFail: Boolean): Unit = {

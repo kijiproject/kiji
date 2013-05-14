@@ -183,6 +183,12 @@ object ProcessRow {
                 TimestampLoop.break
               }
             }
+            case Filter.ReturnCode.INCLUDE_AND_NEXT_COL => {
+              kvs.add(filter.transform(kv))
+              // No need to check the max-version per qualifier,
+              // since this jumps to the next column directly.
+              TimestampLoop.break
+            }
             case Filter.ReturnCode.SKIP => // Skip this key/value pair.
             case Filter.ReturnCode.NEXT_COL => TimestampLoop.break
             case Filter.ReturnCode.NEXT_ROW => FamilyLoop.break

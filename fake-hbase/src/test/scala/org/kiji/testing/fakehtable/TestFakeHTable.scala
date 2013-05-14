@@ -20,11 +20,9 @@
 package org.kiji.testing.fakehtable
 
 import java.util.Arrays
-
 import scala.collection.JavaConverters.asScalaIteratorConverter
 import scala.collection.JavaConverters.asScalaSetConverter
 import scala.collection.JavaConverters.mapAsScalaMapConverter
-
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.HColumnDescriptor
 import org.apache.hadoop.hbase.HConstants
@@ -40,6 +38,7 @@ import org.apache.hadoop.hbase.util.Bytes
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
+import org.apache.hadoop.hbase.client.Append
 
 @RunWith(classOf[JUnitRunner])
 class TestFakeHTable extends FunSuite {
@@ -405,7 +404,7 @@ class TestFakeHTable extends FunSuite {
     val count = 5
     for (x <- 0 until count) {
       val familyDesc = new HColumnDescriptor("family%d".format(x))
-      familyDesc.setMaxVersions(HConstants.ALL_VERSIONS)
+          .setMaxVersions(HConstants.ALL_VERSIONS)
       table.getTableDescriptor.addFamily(familyDesc)
     }
     populateTable(table, count=count)
@@ -437,7 +436,7 @@ class TestFakeHTable extends FunSuite {
     val count = 5
     for (x <- 0 until count) {
       val familyDesc = new HColumnDescriptor("family%d".format(x))
-      familyDesc.setMaxVersions(HConstants.ALL_VERSIONS)
+          .setMaxVersions(HConstants.ALL_VERSIONS)
       table.getTableDescriptor.addFamily(familyDesc)
     }
     populateTable(table, count=count)
@@ -482,10 +481,10 @@ class TestFakeHTable extends FunSuite {
 
   test("Enforced family max versions") {
     val desc = new HTableDescriptor("table")
-    val familyDesc = new HColumnDescriptor("family")
-    familyDesc.setMaxVersions(5)
-    // min versions defaults to 0, TTL defaults to forever.
-    desc.addFamily(familyDesc)
+    desc.addFamily(new HColumnDescriptor("family")
+        .setMaxVersions(5)
+        // min versions defaults to 0, TTL defaults to forever.
+    )
     val table = new FakeHTable(
         name = "table",
         conf = HBaseConfiguration.create(),
@@ -506,11 +505,11 @@ class TestFakeHTable extends FunSuite {
     val ttl = 3600  // 1h TTL
 
     val desc = new HTableDescriptor("table")
-    val familyDesc = new HColumnDescriptor("family")
-    familyDesc.setMaxVersions(HConstants.ALL_VERSIONS)  // retain all versions
-    familyDesc.setTimeToLive(ttl)                       // 1h TTL
-    familyDesc.setMinVersions(0)                        // no min versions to retain wrt TTL
-    desc.addFamily(familyDesc)
+    desc.addFamily(new HColumnDescriptor("family")
+        .setMaxVersions(HConstants.ALL_VERSIONS)  // retain all versions
+        .setTimeToLive(ttl)                       // 1h TTL
+        .setMinVersions(0)                        // no min versions to retain wrt TTL
+    )
     val table = new FakeHTable(
         name = "table",
         conf = HBaseConfiguration.create(),
@@ -550,11 +549,11 @@ class TestFakeHTable extends FunSuite {
     val ttl = 3600  // 1h TTL
 
     val desc = new HTableDescriptor("table")
-    val familyDesc = new HColumnDescriptor("family")
-    familyDesc.setMaxVersions(HConstants.ALL_VERSIONS)  // retain all versions
-    familyDesc.setTimeToLive(ttl)                       // 1h TTL
-    familyDesc.setMinVersions(2)                        // retain at least 2 versions wrt TTL
-    desc.addFamily(familyDesc)
+    desc.addFamily(new HColumnDescriptor("family")
+        .setMaxVersions(HConstants.ALL_VERSIONS)  // retain all versions
+        .setTimeToLive(ttl)                       // 1h TTL
+        .setMinVersions(2)                        // retain at least 2 versions wrt TTL
+    )
     val table = new FakeHTable(
         name = "table",
         conf = HBaseConfiguration.create(),
@@ -590,6 +589,43 @@ class TestFakeHTable extends FunSuite {
       val kvs = result.getColumn("family", "q")
       expect(9)(kvs.size)
       expect(nowMS)(kvs.get(8).getTimestamp)
+    }
+  }
+
+  test("HTable.append") {
+    val desc = new HTableDescriptor("table")
+    desc.addFamily(new HColumnDescriptor("family")
+        .setMaxVersions(HConstants.ALL_VERSIONS)  // retain all versions
+    )
+    val table = new FakeHTable(
+        name = "table",
+        conf = HBaseConfiguration.create(),
+        desc = desc
+    )
+
+    val key = "row key"
+
+    {
+      val result = table.append(new Append(key).add("family", "qualifier", "value1"))
+      expect(1)(result.size)
+      expect(1)(result.getColumn("family", "qualifier").size)
+      expect("value1")(bytesToString(result.getColumnLatest("family", "qualifier").getValue))
+    }
+    {
+      val result = table.append(new Append(key).add("family", "qualifier", "value2"))
+      expect(1)(result.size)
+      expect(1)(result.getColumn("family", "qualifier").size)
+      expect("value1value2")(bytesToString(result.getColumnLatest("family", "qualifier").getValue))
+    }
+    {
+      val result = table.get(new Get(key)
+          .setMaxVersions()
+          .addColumn("family", "qualifier"))
+      expect(2)(result.size)
+      val kvs = result.getColumn("family", "qualifier")
+      expect(2)(kvs.size)
+      expect("value1value2")(bytesToString(kvs.get(0).getValue))
+      expect("value1")(bytesToString(kvs.get(1).getValue))
     }
   }
 
