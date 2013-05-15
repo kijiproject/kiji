@@ -44,8 +44,18 @@ against a Hadoop version specified in a Kiji platform definition. The
 following platform definitions are provided:
 
 * kiji-cdh4-platform (Latest CDH4 release)
+* kiji-cdh4-2-platform (Latest CDH4.2 update)
 * kiji-cdh4-1-platform (Latest CDH4.1 update)
+* kiji-hadoop1-hbase94-platform (Apache Hadoop 1.x and HBase 0.94.x)
 * kiji-hadoop1-hbase92-platform (Apache Hadoop 1.x and HBase 0.92.x)
+
+Platform compatibility
+----------------------
+
+Newer versions of KijiSchema may not work against older Hadoop distributions.
+KijiSchema 1.0 can run against HBase 0.92-based platforms (kiji-cdh4-1 and
+kiji-hadoop1-hbase92). KijiSchema 1.1 can run against HBase 0.94-backed
+platforms (kiji-cdh4-2 and kiji-hadoop1-hbase94).
 
 Maven usage notes
 -----------------
