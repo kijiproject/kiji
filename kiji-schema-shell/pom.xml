@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.kiji.pom</groupId>
     <artifactId>root-pom</artifactId>
-    <version>1.0.5</version>
+    <version>1.1.0-SNAPSHOT</version>
   </parent>
 
   <name>kiji-schema-shell</name>
@@ -36,9 +36,9 @@
 
   <properties>
     <kiji-schema.version>1.1.0-SNAPSHOT</kiji-schema.version>
-    <kiji-cdh4-platform.version>1.0.0</kiji-cdh4-platform.version>
+    <kiji-cdh4-platform.version>1.1.0-SNAPSHOT</kiji-cdh4-platform.version>
     <kiji-delegation.version>1.0.0</kiji-delegation.version>
-    <fake-hbase.version>0.0.5</fake-hbase.version>
+    <fake-hbase.version>0.1.0-SNAPSHOT</fake-hbase.version>
   </properties>
 
   <build>
