@@ -32,7 +32,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.KeyValue;
-import org.apache.hadoop.hbase.io.hfile.CacheConfig;
 import org.apache.hadoop.hbase.io.hfile.Compression;
 import org.apache.hadoop.hbase.io.hfile.HFile;
 import org.apache.hadoop.hbase.regionserver.StoreFile;
@@ -52,6 +51,7 @@ import org.kiji.schema.KijiURI;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayout.LocalityGroupLayout;
 import org.kiji.schema.layout.impl.ColumnId;
+import org.kiji.schema.platform.SchemaPlatformBridge;
 import org.kiji.schema.util.ResourceUtils;
 
 /**
@@ -234,8 +234,8 @@ public final class KijiHFileOutputFormat
         // Create the writer.
         LOG.info("Opening HFile.Writer for family " + mFamily + " at " + hfilePath);
         final HFile.Writer hfileWriter =
-            HFile.getWriterFactory(mConf, new CacheConfig(mConf)).createWriter(
-                mFileSystem, hfilePath, mBlockSizeBytes, mCompressionType, KeyValue.KEY_COMPARATOR);
+            SchemaPlatformBridge.get().createHFileWriter(mConf, mFileSystem, hfilePath,
+                mBlockSizeBytes, mCompressionType, KeyValue.KEY_COMPARATOR);
 
         // Reset the current file size.
         mCurrentHFileSize = 0L;
