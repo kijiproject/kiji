@@ -71,12 +71,25 @@ import org.kiji.express.Resources.doAndClose
 class ScriptRunner extends Tool {
   import ScriptRunner._
 
-  private val imports: Seq[String] = Seq(
+  /** Directory to place compiled artifacts in. */
+  private[express] val tempDir: File = Files.createTempDir()
+
+  /** Directory to place compiled classes in. Exists as a folder inside of 'tempDir'. */
+  private[express] val compileFolder: File = new File("%s/classes".format(tempDir.getPath()))
+  compileFolder.mkdir()
+
+  /** Import statements to add to each script. */
+  private[express] val imports: Seq[String] = Seq(
       "import com.twitter.scalding._",
       "import org.kiji.express._",
       "import org.kiji.express.DSL._")
-  private val before = "{ args: com.twitter.scalding.Args => new com.twitter.scalding.Job(args) {"
-  private val after = "} }"
+
+  /** Code to insert before each script. */
+  private[express] val before =
+      "{ args: com.twitter.scalding.Args => new com.twitter.scalding.Job(args) {"
+
+  /** Code to insert after each script. */
+  private[express] val after = "} }"
 
   /**
    * Builds a jar entry and writes it to the specified jar output stream.
@@ -176,19 +189,14 @@ class ScriptRunner extends Tool {
     require(scriptFile.exists(), "%s does not exist".format(scriptFile.getPath()))
     require(scriptFile.isFile(), "%s is not a file".format(scriptFile.getPath()))
 
-    // Find a temporary folder to store compiled classes in.
-    val tempDir: File = Files.createTempDir()
-    val compileFolder: File = new File("%s/classes".format(tempDir.getPath()))
-    val compileJar: File = new File("%s/%s.jar".format(tempDir.getPath(), scriptFile.getName()))
-
     // Compile the script.
-    compileFolder.mkdir()
     val script: String = doAndClose(Source.fromFile(scriptFile)) { source: Source =>
       source.mkString
     }
     val jobc: (Args) => Job = compileScript(script, compileFolder)
 
     // Build a jar.
+    val compileJar: File = new File("%s/%s.jar".format(tempDir.getPath(), scriptFile.getName()))
     logger.info("building %s".format(compileJar))
     buildJar(compileFolder, compileJar)
     assume(
@@ -205,7 +213,7 @@ class ScriptRunner extends Tool {
     val tmpjars = Option(getConf().get("tmpjars"))
         .map { "," + _ }
         .getOrElse("")
-    getConf().set("tmpjars", "file://" + compileJar.getPath() + "," + tmpjars)
+    getConf().set("tmpjars", "file://" + compileJar.getPath() + tmpjars)
 
     jobc(args + ("" -> args.positional.tail))
   }
