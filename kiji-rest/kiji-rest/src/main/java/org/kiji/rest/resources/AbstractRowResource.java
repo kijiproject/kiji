@@ -25,17 +25,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericDatumReader;
@@ -55,7 +52,6 @@ import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.KijiTableWriter;
-import org.kiji.schema.KijiURI;
 import org.kiji.schema.layout.CellSpec;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayout.LocalityGroupLayout.FamilyLayout;
@@ -66,17 +62,7 @@ import org.kiji.schema.layout.SchemaClassNotFoundException;
  * Base class with helper methods for accessing KijiRow resources.
  */
 @ApiAudience.Framework
-public class AbstractRowResource extends AbstractKijiResource {
-
-  /**
-   * Default constructor.
-   *
-   * @param cluster KijiURI in which these instances are contained.
-   * @param instances The list of accessible instances.
-   */
-  public AbstractRowResource(KijiURI cluster, Set<KijiURI> instances) {
-    super(cluster, instances);
-  }
+public class AbstractRowResource {
 
   /**
    * Retrieves the Min..Max timestamp given the user specified time range. Min and Max represent

@@ -22,8 +22,6 @@ package org.kiji.rest.resources;
 import static org.kiji.rest.RoutesConstants.INSTANCE_PARAMETER;
 import static org.kiji.rest.RoutesConstants.INSTANCE_PATH;
 
-import java.util.Set;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -36,8 +34,8 @@ import com.yammer.metrics.annotation.Timed;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
+import org.kiji.rest.KijiClient;
 import org.kiji.schema.Kiji;
-import org.kiji.schema.KijiURI;
 import org.kiji.schema.avro.MetadataBackup;
 import org.kiji.schema.util.ResourceUtils;
 
@@ -50,15 +48,16 @@ import org.kiji.schema.util.ResourceUtils;
 @Path(INSTANCE_PATH)
 @Produces(MediaType.APPLICATION_JSON)
 @ApiAudience.Public
-public class InstanceResource extends AbstractKijiResource {
+public class InstanceResource {
+  private final KijiClient mKijiClient;
+
   /**
    * Default constructor.
    *
-   * @param cluster KijiURI in which these instances are contained.
-   * @param instances The list of accessible instances.
+   * @param kijiClient that this should use for connecting to Kiji.
    */
-  public InstanceResource(KijiURI cluster, Set<KijiURI> instances) {
-    super(cluster, instances);
+  public InstanceResource(KijiClient kijiClient) {
+    mKijiClient = kijiClient;
   }
 
   /**
@@ -70,18 +69,17 @@ public class InstanceResource extends AbstractKijiResource {
   @Timed
   @ApiStability.Experimental
   public MetadataBackup getInstanceMetadata(@PathParam(INSTANCE_PARAMETER) String instance) {
-    Kiji kiji = super.getKiji(instance);
-    MetadataBackup backup = null;
+    Kiji kiji = mKijiClient.getKiji(instance);
     try {
-      backup = MetadataBackup.newBuilder()
+      MetadataBackup backup = MetadataBackup.newBuilder()
           .setLayoutVersion(kiji.getSystemTable().getDataVersion().toString())
           .setSchemaTable(kiji.getSchemaTable().toBackup())
           .setMetaTable(kiji.getMetaTable().toBackup()).build();
+      return backup;
     } catch (Exception e) {
       throw new WebApplicationException(e, Status.INTERNAL_SERVER_ERROR);
     } finally {
       ResourceUtils.releaseOrLog(kiji);
     }
-    return backup;
   }
 }

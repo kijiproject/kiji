@@ -24,8 +24,6 @@ import static org.kiji.rest.RoutesConstants.TABLE_PARAMETER;
 import static org.kiji.rest.RoutesConstants.TABLE_PATH;
 
 import java.io.IOException;
-import java.util.Set;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -38,8 +36,8 @@ import com.yammer.metrics.annotation.Timed;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
+import org.kiji.rest.KijiClient;
 import org.kiji.schema.Kiji;
-import org.kiji.schema.KijiURI;
 import org.kiji.schema.avro.TableLayoutDesc;
 import org.kiji.schema.util.ResourceUtils;
 
@@ -52,16 +50,16 @@ import org.kiji.schema.util.ResourceUtils;
 @Path(TABLE_PATH)
 @Produces(MediaType.APPLICATION_JSON)
 @ApiAudience.Public
-public class TableResource extends AbstractKijiResource {
+public class TableResource {
+  private final KijiClient mKijiClient;
 
   /**
    * Default constructor.
    *
-   * @param cluster KijiURI in which these instances are contained.
-   * @param instances The list of accessible instances.
+   * @param kijiClient that this should use for connecting to Kiji.
    */
-  public TableResource(KijiURI cluster, Set<KijiURI> instances) {
-    super(cluster, instances);
+  public TableResource(KijiClient kijiClient) {
+    mKijiClient = kijiClient;
   }
 
   /**
@@ -76,7 +74,7 @@ public class TableResource extends AbstractKijiResource {
   @ApiStability.Evolving
   public TableLayoutDesc getTable(@PathParam(INSTANCE_PARAMETER) String instance,
       @PathParam(TABLE_PARAMETER) String table) {
-    final Kiji kiji = getKiji(instance);
+    final Kiji kiji = mKijiClient.getKiji(instance);
     TableLayoutDesc layout = null;
     try {
       layout = kiji.getMetaTable().getTableLayout(table).getDesc();

@@ -32,8 +32,6 @@ import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -53,18 +51,17 @@ import javax.ws.rs.core.UriInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Maps;
 import com.yammer.metrics.annotation.Timed;
-
 import org.apache.avro.Schema;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
+import org.kiji.rest.KijiClient;
 import org.kiji.rest.representations.KijiRestCell;
 import org.kiji.rest.representations.KijiRestRow;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.EntityIdFactory;
-import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequestBuilder;
@@ -75,7 +72,6 @@ import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.KijiTableReader.KijiScannerOptions;
 import org.kiji.schema.KijiTableWriter;
-import org.kiji.schema.KijiURI;
 import org.kiji.schema.avro.SchemaType;
 import org.kiji.schema.tools.ToolUtils;
 import org.kiji.schema.util.ResourceUtils;
@@ -90,6 +86,7 @@ import org.kiji.schema.util.ResourceUtils;
 @Produces(MediaType.APPLICATION_JSON)
 @ApiAudience.Public
 public class RowsResource extends AbstractRowResource {
+  private final KijiClient mKijiClient;
 
   /**
    * Special constant to denote stream unlimited amount of rows
@@ -101,18 +98,17 @@ public class RowsResource extends AbstractRowResource {
    * Since we are streaming the rows to the user, we need access to the object mapper
    * used by DropWizard to convert objects to JSON.
    */
-  private ObjectMapper mJsonObjectMapper = null;
+  private final ObjectMapper mJsonObjectMapper;
 
   /**
    * Default constructor.
    *
-   * @param cluster is the KijiURI in which these instances are contained.
-   * @param instances is the list of accessible instances.
+   * @param kijiClient that this should use for connecting to Kiji.
    * @param jsonObjectMapper is the ObjectMapper used by DropWizard to convert from Java
    *        objects to JSON.
    */
-  public RowsResource(KijiURI cluster, Set<KijiURI> instances, ObjectMapper jsonObjectMapper) {
-    super(cluster, instances);
+  public RowsResource(KijiClient kijiClient, ObjectMapper jsonObjectMapper) {
+    mKijiClient = kijiClient;
     mJsonObjectMapper = jsonObjectMapper;
   }
 
@@ -226,7 +222,7 @@ public class RowsResource extends AbstractRowResource {
     Response rsp = null;
     long[] timeRanges = null;
 
-    KijiTable kijiTable = super.getKijiTable(instance, table);
+    KijiTable kijiTable = mKijiClient.getKijiTable(instance, table);
 
     if (timeRange != null) {
       timeRanges = getTimestamps(timeRange);
@@ -315,8 +311,7 @@ public class RowsResource extends AbstractRowResource {
       KijiRestRow kijiRestRow,
       @Context UriInfo uriInfo)
       throws IOException {
-    final Kiji kiji = super.getKiji(instance);
-    final KijiTable kijiTable = kiji.openTable(table);
+    final KijiTable kijiTable = mKijiClient.getKijiTable(instance, table);
 
     // Default global timestamp.
     long globalTimestamp = System.currentTimeMillis();
@@ -361,7 +356,6 @@ public class RowsResource extends AbstractRowResource {
     } finally {
       ResourceUtils.closeOrLog(writer);
       ResourceUtils.releaseOrLog(kijiTable);
-      ResourceUtils.releaseOrLog(kiji);
     }
 
     // Better output?

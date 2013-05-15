@@ -27,8 +27,6 @@ import static org.kiji.rest.RoutesConstants.TABLE_PARAMETER;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -47,7 +45,6 @@ import javax.ws.rs.core.UriInfo;
 
 import com.google.common.collect.Maps;
 import com.yammer.metrics.annotation.Timed;
-
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
 import org.apache.commons.codec.DecoderException;
@@ -55,14 +52,13 @@ import org.apache.commons.codec.binary.Hex;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
+import org.kiji.rest.KijiClient;
 import org.kiji.rest.representations.KijiRestRow;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.EntityIdFactory;
-import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableWriter;
-import org.kiji.schema.KijiURI;
 import org.kiji.schema.avro.SchemaType;
 import org.kiji.schema.util.ByteArrayFormatter;
 import org.kiji.schema.util.ResourceUtils;
@@ -81,6 +77,7 @@ import org.kiji.schema.util.ResourceUtils;
 @Consumes(MediaType.APPLICATION_JSON)
 @ApiAudience.Public
 public class RowResource extends AbstractRowResource {
+  private final KijiClient mKijiClient;
 
   /** Prefix for cell-specific schema parameter. */
   private static final String SCHEMA_PREFIX = "schema.";
@@ -94,13 +91,10 @@ public class RowResource extends AbstractRowResource {
   /**
    * Default constructor.
    *
-   * @param cluster KijiURI in which these instances are contained.
-   *
-   * @param instances The list of accessible instances.
-   *
+   * @param kijiClient that this should use for connecting to Kiji.
    */
-  public RowResource(KijiURI cluster, Set<KijiURI> instances) {
-    super(cluster, instances);
+  public RowResource(KijiClient kijiClient) {
+    mKijiClient = kijiClient;
   }
 
   /**
@@ -138,8 +132,7 @@ public class RowResource extends AbstractRowResource {
     // Default global timestamp. Will be set by a query parameter.
     long globalTimestamp = 0;
 
-    final Kiji kiji = super.getKiji(instance);
-    final KijiTable kijiTable = kiji.openTable(table);
+    final KijiTable kijiTable = mKijiClient.getKijiTable(instance, table);
 
     final EntityIdFactory factory = EntityIdFactory.getFactory(kijiTable.getLayout());
     final EntityId entityId = factory.getEntityIdFromHBaseRowKey(
@@ -220,7 +213,6 @@ public class RowResource extends AbstractRowResource {
     } finally {
       ResourceUtils.closeOrLog(writer);
       ResourceUtils.releaseOrLog(kijiTable);
-      ResourceUtils.releaseOrLog(kiji);
     }
     // Better output?
     Map<String, String> returnedTarget = Maps.newHashMap();
@@ -264,9 +256,12 @@ public class RowResource extends AbstractRowResource {
       timeRanges = getTimestamps(timeRange);
     }
 
-    final KijiTable table = super.getKijiTable(instanceId, tableId);
-    KijiRestRow kijiRestRow = getKijiRow(table, hbaseRowKey, timeRanges, columns, maxVersions);
-    ResourceUtils.releaseOrLog(table);
-    return kijiRestRow;
+    final KijiTable table = mKijiClient.getKijiTable(instanceId, tableId);
+    try {
+      KijiRestRow kijiRestRow = getKijiRow(table, hbaseRowKey, timeRanges, columns, maxVersions);
+      return kijiRestRow;
+    } finally {
+      ResourceUtils.releaseOrLog(table);
+    }
   }
 }

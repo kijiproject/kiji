@@ -107,6 +107,10 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
       instances.add(instanceURI);
       environment.addHealthCheck(new InstanceHealthCheck(instanceURI));
     }
+
+    ManagedKijiClient kijiClient = new ManagedKijiClient(clusterURI, instances);
+    environment.manage(kijiClient);
+
     //Add exception mappers to print better exception messages to the client than what
     //Dropwizard does by default.
     environment.addProvider(new WebAppExceptionMapper());
@@ -114,13 +118,13 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
 
     // Load resources.
     environment.addResource(new KijiRESTResource());
-    environment.addResource(new InstancesResource(clusterURI, instances));
-    environment.addResource(new InstanceResource(clusterURI, instances));
-    environment.addResource(new TableResource(clusterURI, instances));
-    environment.addResource(new TablesResource(clusterURI, instances));
-    environment.addResource(new RowsResource(clusterURI, instances,
+    environment.addResource(new InstancesResource(kijiClient));
+    environment.addResource(new InstanceResource(kijiClient));
+    environment.addResource(new TableResource(kijiClient));
+    environment.addResource(new TablesResource(kijiClient));
+    environment.addResource(new RowsResource(kijiClient,
         environment.getObjectMapperFactory().build()));
-    environment.addResource(new RowResource(clusterURI, instances));
-    environment.addResource(new EntityIdResource(clusterURI, instances));
+    environment.addResource(new RowResource(kijiClient));
+    environment.addResource(new EntityIdResource(kijiClient));
   }
 }

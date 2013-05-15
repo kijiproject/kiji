@@ -30,7 +30,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Sets;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.yammer.dropwizard.testing.ResourceTest;
-
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.commons.codec.binary.Hex;
@@ -151,7 +150,8 @@ public class TestRowResource extends ResourceTest {
     fakeTable.release();
 
     KijiRESTService.registerSerializers(this.getObjectMapperFactory());
-    RowResource resource = new RowResource(mFakeKiji.getURI(), mValidInstances);
+    KijiClient kijiClient = new FakeKijiClient(mFakeKiji);
+    RowResource resource = new RowResource(kijiClient);
     addResource(resource);
   }
 

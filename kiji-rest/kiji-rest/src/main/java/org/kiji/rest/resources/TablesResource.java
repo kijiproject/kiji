@@ -26,8 +26,6 @@ import static org.kiji.rest.RoutesConstants.TABLE_PATH;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Set;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -41,9 +39,9 @@ import com.yammer.metrics.annotation.Timed;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
+import org.kiji.rest.KijiClient;
 import org.kiji.rest.representations.GenericResourceRepresentation;
 import org.kiji.schema.Kiji;
-import org.kiji.schema.KijiURI;
 import org.kiji.schema.util.ResourceUtils;
 
 /**
@@ -55,15 +53,16 @@ import org.kiji.schema.util.ResourceUtils;
 @Path(TABLES_PATH)
 @Produces(MediaType.APPLICATION_JSON)
 @ApiAudience.Public
-public class TablesResource extends AbstractKijiResource {
+public class TablesResource {
+  private final KijiClient mKijiClient;
+
   /**
    * Default constructor.
    *
-   * @param cluster KijiURI in which these instances are contained.
-   * @param instances The list of accessible instances.
+   * @param kijiClient that this should use for connecting to Kiji.
    */
-  public TablesResource(KijiURI cluster, Set<KijiURI> instances) {
-    super(cluster, instances);
+  public TablesResource(KijiClient kijiClient) {
+    mKijiClient = kijiClient;
   }
 
   /**
@@ -79,7 +78,7 @@ public class TablesResource extends AbstractKijiResource {
       @PathParam(INSTANCE_PARAMETER) String instance) {
 
     List<GenericResourceRepresentation> tables = Lists.newArrayList();
-    final Kiji kiji = getKiji(instance);
+    Kiji kiji = mKijiClient.getKiji(instance);
     try {
       for (String table : kiji.getTableNames()) {
         String tableUri = TABLE_PATH.replace("{" + TABLE_PARAMETER + "}", table)

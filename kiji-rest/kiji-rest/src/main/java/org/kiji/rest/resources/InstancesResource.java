@@ -24,8 +24,6 @@ import static org.kiji.rest.RoutesConstants.INSTANCE_PARAMETER;
 import static org.kiji.rest.RoutesConstants.INSTANCE_PATH;
 
 import java.util.List;
-import java.util.Set;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -36,6 +34,7 @@ import com.yammer.metrics.annotation.Timed;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
+import org.kiji.rest.KijiClient;
 import org.kiji.rest.representations.GenericResourceRepresentation;
 import org.kiji.schema.KijiURI;
 
@@ -48,15 +47,16 @@ import org.kiji.schema.KijiURI;
 @Path(INSTANCES_PATH)
 @Produces(MediaType.APPLICATION_JSON)
 @ApiAudience.Public
-public class InstancesResource extends AbstractKijiResource {
+public class InstancesResource {
+  private final KijiClient mKijiClient;
+
   /**
    * Default constructor.
    *
-   * @param cluster KijiURI in which these instances are contained.
-   * @param instances The list of accessible instances.
+   * @param kijiClient that this should use for connecting to Kiji.
    */
-  public InstancesResource(KijiURI cluster, Set<KijiURI> instances) {
-    super(cluster, instances);
+  public InstancesResource(KijiClient kijiClient) {
+    mKijiClient = kijiClient;
   }
 
   /**
@@ -70,7 +70,7 @@ public class InstancesResource extends AbstractKijiResource {
   public List<GenericResourceRepresentation> getInstanceList() {
     List<GenericResourceRepresentation> instanceList = Lists.newArrayList();
 
-    for (KijiURI u : getInstances()) {
+    for (KijiURI u : mKijiClient.getInstances()) {
       String instance = u.getInstance();
       instanceList.add(new GenericResourceRepresentation(instance,
           INSTANCE_PATH.replace("{" + INSTANCE_PARAMETER + "}", instance)));

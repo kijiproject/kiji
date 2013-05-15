@@ -23,8 +23,6 @@ import static org.kiji.rest.RoutesConstants.INSTANCE_PARAMETER;
 import static org.kiji.rest.RoutesConstants.TABLE_PARAMETER;
 
 import java.io.IOException;
-import java.util.Set;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -35,15 +33,14 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
 
 import com.yammer.metrics.annotation.Timed;
-
 import org.apache.commons.codec.binary.Hex;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
+import org.kiji.rest.KijiClient;
 import org.kiji.rest.representations.EntityIdWrapper;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiTable;
-import org.kiji.schema.KijiURI;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.tools.ToolUtils;
 import org.kiji.schema.util.ResourceUtils;
@@ -57,16 +54,16 @@ import org.kiji.schema.util.ResourceUtils;
 @Path(ENTITY_ID_PATH)
 @Produces(MediaType.APPLICATION_JSON)
 @ApiAudience.Public
-public class EntityIdResource extends AbstractKijiResource {
+public class EntityIdResource {
+  private final KijiClient mKijiClient;
 
   /**
    * Default constructor.
    *
-   * @param cluster KijiURI in which these instances are contained.
-   * @param instances The list of accessible instances.
+   * @param kijiClient that this should use for connecting to Kiji.
    */
-  public EntityIdResource(KijiURI cluster, Set<KijiURI> instances) {
-    super(cluster, instances);
+  public EntityIdResource(KijiClient kijiClient) {
+    mKijiClient = kijiClient;
   }
 
   /**
@@ -89,20 +86,22 @@ public class EntityIdResource extends AbstractKijiResource {
           Status.BAD_REQUEST);
     }
 
-    KijiTable kijiTable = getKijiTable(instance, table);
-    KijiTableLayout layout = kijiTable.getLayout();
-    ResourceUtils.releaseOrLog(kijiTable);
-
-    EntityId entityId = null;
+    KijiTable kijiTable = mKijiClient.getKijiTable(instance, table);
     try {
-      entityId = ToolUtils.createEntityIdFromUserInputs(eid, layout);
-    } catch (IOException e) {
-      throw new WebApplicationException(e, Status.INTERNAL_SERVER_ERROR);
+      KijiTableLayout layout = kijiTable.getLayout();
+
+      EntityId entityId = null;
+      try {
+        entityId = ToolUtils.createEntityIdFromUserInputs(eid, layout);
+      } catch (IOException e) {
+        throw new WebApplicationException(e, Status.INTERNAL_SERVER_ERROR);
+      }
+      EntityIdWrapper wrapper = new EntityIdWrapper();
+      wrapper.setRowKey(Hex.encodeHexString(entityId.getHBaseRowKey()));
+
+      return wrapper;
+    } finally {
+      ResourceUtils.releaseOrLog(kijiTable);
     }
-    EntityIdWrapper wrapper = new EntityIdWrapper();
-    wrapper.setRowKey(Hex.encodeHexString(entityId.getHBaseRowKey()));
-
-    return wrapper;
   }
-
 }
