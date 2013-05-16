@@ -17,8 +17,8 @@
     limitations under the License.
 */
 {
-  name : "phonebook",
-  description : "A collection of phone book entries",
+  "name" : "phonebook",
+  "description" : "A collection of phone book entries",
   "keys_format" : {
     "org.kiji.schema.avro.RowKeyFormat2" : {
       "encoding" : "FORMATTED",
@@ -31,121 +31,123 @@
       } ]
     }
   },
-  locality_groups : [ {
-    name : "default",
-    description : "Main locality group",
-    in_memory : false,
-    max_versions : 10,
-    ttl_seconds : 2147483647,
-    compression_type : "NONE",
-    families : [ {
-      name : "info",
-      description : "basic information",
-      columns : [ {
-        name : "firstname",
-        description : "First name",
-        column_schema : {
-          storage : "UID",
-          type : "INLINE",
-          value : '"string"'
+  "locality_groups" : [ {
+    "name" : "default",
+    "description" : "Main locality group",
+    "in_memory" : false,
+    "max_versions" : 10,
+    "ttl_seconds" : 2147483647,
+    "bloom_type" : "NONE",
+    "compression_type" : "NONE",
+    "families" : [ {
+      "name" : "info",
+      "description" : "basic information",
+      "columns" : [ {
+        "name" : "firstname",
+        "description" : "First name",
+        "column_schema" : {
+          "storage" : "UID",
+          "type" : "INLINE",
+          "value" : "\"string\""
         }
       }, {
-        name : "lastname",
-        description : "Last name",
-        column_schema : {
-          storage : "UID",
-          type : "INLINE",
-          value : '"string"'
+        "name" : "lastname",
+        "description" : "Last name",
+        "column_schema" : {
+          "storage" : "UID",
+          "type" : "INLINE",
+          "value" : "\"string\""
         }
       }, {
-        name : "email",
-        description : "Email address",
-        column_schema : {
-          storage : "UID",
-          type : "INLINE",
-          value : '"string"'
+        "name" : "email",
+        "description" : "Email address",
+        "column_schema" : {
+          "storage" : "UID",
+          "type" : "INLINE",
+          "value" : "\"string\""
         }
       }, {
-        name : "telephone",
-        description : "Telephone number",
-        column_schema : {
-          storage : "UID",
-          type : "INLINE",
-          value : '"string"'
+        "name" : "telephone",
+        "description" : "Telephone number",
+        "column_schema" : {
+          "storage" : "UID",
+          "type" : "INLINE",
+          "value" : "\"string\""
         }
       }, {
-        name : "address",
-        description : "Street address",
-        column_schema : {
-          storage : "UID",
-          type : "CLASS",
-          value : "org.kiji.examples.phonebook.Address"
+        "name" : "address",
+        "description" : "Street address",
+        "column_schema" : {
+          "storage" : "UID",
+          "type" : "CLASS",
+          "value" : "org.kiji.examples.phonebook.Address"
         }
       } ]
     }, {
-      name : "derived",
-      description : "Information derived from an individual's address.",
-      columns : [ {
-        name : "addr1",
-        description : "Address line one.",
-        column_schema : {
-          storage : "UID",
-          type : "INLINE",
-          value : '"string"'
+      "name" : "derived",
+      "description" : "Information derived from an individual's address.",
+      "columns" : [ {
+        "name" : "addr1",
+        "description" : "Address line one.",
+        "column_schema" : {
+          "storage" : "UID",
+          "type" : "INLINE",
+          "value" : "\"string\""
         }
       }, {
-        name : "apt",
-        description : "Address Apartment number.",
-        column_schema : {
-          storage : "UID",
-          type : "INLINE",
-          value : "[\"string\",\"null\"]"
+        "name" : "apt",
+        "description" : "Address Apartment number.",
+        "column_schema" : {
+          "storage" : "UID",
+          "type" : "INLINE",
+          "value" : "[\"string\",\"null\"]"
         }
       }, {
-        name : "addr2",
-        description : "Address line two.",
-        column_schema : {
-          storage : "UID",
-          type : "INLINE",
-          value : '"string"'
+        "name" : "addr2",
+        "description" : "Address line two.",
+        "column_schema" : {
+          "storage" : "UID",
+          "type" : "INLINE",
+          "value" : "\"string\""
         }
       }, {
-        name : "city",
-        description : "Address city.",
-        column_schema : {
-          storage : "UID",
-          type : "INLINE",
-          value : '"string"'
+        "name" : "city",
+        "description" : "Address city.",
+        "column_schema" : {
+          "storage" : "UID",
+          "type" : "INLINE",
+          "value" : "\"string\""
         }
       }, {
-        name : "state",
-        description : "Address state.",
-        column_schema : {
-          storage : "UID",
-          type : "INLINE",
-          value : '"string"'
+        "name" : "state",
+        "description" : "Address state.",
+        "column_schema" : {
+          "storage" : "UID",
+          "type" : "INLINE",
+          "value" : "\"string\""
         }
       }, {
-        name : "zip",
-        description : "Address zip code.",
-        column_schema : {
-          storage : "UID",
-          type : "INLINE",
-          value : '"int"'
+        "name" : "zip",
+        "description" : "Address zip code.",
+        "column_schema" : {
+          "storage" : "UID",
+          "type" : "INLINE",
+          "value" : "\"int\""
         }
       } ]
     }, {
-      name : "stats",
-      description : "Statistics about a contact.",
-      columns : [ {
-        name : "talktime",
-        description : "Time spent talking with this person",
-        column_schema : {
-          storage : "FINAL",
-          type : "COUNTER"
+      "name" : "stats",
+      "description" : "Statistics about a contact.",
+      "columns" : [ {
+        "id" : 1,
+        "name" : "talktime",
+        "description" : "Time spent talking with this person",
+        "column_schema" : {
+          "storage" : "FINAL",
+          "type" : "COUNTER"
         }
       } ]
-    }]
+    } ]
   } ],
-  version : "layout-1.1"
+  "version" : "layout-1.2"
 }
