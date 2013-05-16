@@ -26,6 +26,9 @@ import org.kiji.annotations.Inheritance;
  * Base interface for tasks that emit (key, value) pairs.
  *
  * Tasks can be mappers, reducers, gatherers, etc.
+ *
+ * Users wishing to create jobs should extend KijiMapper, KijiReducer, KijiGatherer, etc, rather
+ * than directly implementing this interface.
  */
 @ApiAudience.Public
 @Inheritance.Extensible
