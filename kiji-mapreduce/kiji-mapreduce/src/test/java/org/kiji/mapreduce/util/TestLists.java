@@ -20,7 +20,6 @@
 package org.kiji.mapreduce.util;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -155,22 +154,6 @@ public class TestLists {
           }
         }).toString();
     assertEquals("c,b,a", stringified);
-  }
-
-  @Test
-  public void testExists() {
-    List<String> inputs = new ArrayList<String>();
-    inputs.add("a");
-    inputs.add(null);
-    inputs.add("c");
-
-    assertTrue(Lists.exists(inputs, new Lists.IsNullFn<String>()));
-
-    inputs.clear();
-    assertFalse(Lists.exists(inputs, new Lists.IsNullFn<String>()));
-
-    inputs.add("a");
-    assertFalse(Lists.exists(inputs, new Lists.IsNullFn<String>()));
   }
 
   @Test

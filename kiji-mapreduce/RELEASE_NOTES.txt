@@ -3,6 +3,7 @@
                               KijiMR Release Notes
 
 Version 1.0.0-rc62
+  * KIJIMR-132. Removes exists() and isNullFn() from util.Lists.
   * KIJIMR-183. Adds ability to retrieve entity id from a KijiTableKeyValueStore
       reader. Call 'KijiTableKeyValueStore.getTableForReader(reader)' to get the
       underlying KijiTable object.

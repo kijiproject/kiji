@@ -71,24 +71,6 @@ public final class Lists {
     public abstract Y eval(X listElem);
   }
 
-  /**
-   * Evaluation function that returns True if it encounters a null input item.
-   *
-   * @param <X> the input argument type.
-   */
-  public static class IsNullFn<X> extends Func<X, Boolean> {
-    /**
-     * Returns listItem == null.
-     *
-     * @param listItem the list item to operate on.
-     * @return true if listItem is null, false otherwise.
-     */
-    @Override
-    public Boolean eval(X listItem) {
-      return (null == listItem) ? Boolean.TRUE : Boolean.FALSE;
-    }
-  }
-
   /** Evaluation function that returns the String representation of each input item. */
   public static class ToStringFn<X> extends Func<X, String> {
     /**
@@ -157,33 +139,6 @@ public final class Lists {
     }
 
     return next;
-  }
-
-  /**
-   * Consider elements of a list, returning true if one of the elements of the list
-   * satisfies the predicate function so that it returns True. This may short circuit
-   * evaluation if an element of the list satisfies the predicate.
-   *
-   * @param <X> the input array element type.
-   * @param inputList a list of elements to apply a truth predicate to.
-   * @param predicate a function that returns True or False for each element of the input list.
-   * @return true if predicate(inputList[i]) returns true for any index 'i'.
-   */
-  public static <X> boolean exists(List<X> inputList, Func<? super X, Boolean> predicate) {
-    if (null == inputList || inputList.isEmpty()) {
-      return false;
-    }
-
-    for (X val : inputList) {
-      Boolean ret = predicate.eval(val);
-      if (null == ret) {
-        throw new RuntimeException("predicate to exists() must return True or False");
-      } else if (Boolean.TRUE.equals(ret)) {
-        return true;
-      }
-    }
-
-    return false;
   }
 
   /**
