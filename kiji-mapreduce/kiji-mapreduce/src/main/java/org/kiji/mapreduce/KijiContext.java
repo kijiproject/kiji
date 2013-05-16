@@ -34,8 +34,9 @@ public interface KijiContext extends Closeable, Flushable {
   /**
    * Opens a KeyValueStore associated with storeName for read-access.
    *
-   * <p>You should close() the store instance returned by this method
-   * when you are done with it.</p>
+   * <p>The user does not need to call <code>close()</code> on KeyValueStoreReaders returned by
+   * this method; any open KeyValueStoreReaders will be closed automatically by the
+   * KijiProducer/Gatherer/BulkImporter associated with this Context.</p>
    *
    * <p>Calling getStore() multiple times on the same name will reuse the same
    * reader unless it is closed.</p>
