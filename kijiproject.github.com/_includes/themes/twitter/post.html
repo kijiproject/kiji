@@ -4,6 +4,65 @@
       <h1>{{ page.title }}</h1>
     </div>
 
+    <div class="pagination">
+      <ul>
+    {% if page.tags contains 'schema-ug' %}
+      {% assign title = 'KijiSchema User Guide' %}
+      {% assign pages = site.tags.schema-ug %}
+    {% elsif page.tags contains 'mapreduce-ug' %}
+      {% assign title = 'KijiMR User Guide' %}
+      {% assign pages = site.tags.mapreduce-ug %}
+    {% elsif page.tags contains 'phonebook' %}
+      {% assign title = 'Phonebook Tutorial'  %}
+      {% assign pages = site.tags.phonebook %}
+    {% elsif page.tags contains 'music' %}
+      {% assign title = 'Music Recommendation Tutorial'  %}
+      {% assign pages = site.tags.music %}
+    {% elsif page.tags contains 'express-music' %}
+      {% assign title = 'KijiExpress Tutorial'  %}
+      {% assign pages = site.tags.express-music %}
+    {% endif %}
+      {% capture maxpages %}{{ pages | size }}{% endcapture %}
+
+      {% if page.order == 1 %}
+        <li class="prev disabled"><a>&larr; Previous</a></li>
+      {% else %}
+        {% capture prevOrder %}{{ page.order | minus:1 }}{% endcapture %}
+        {% for subpage in pages %}
+          {% if subpage.categories == page.categories %}
+            {% capture curOrder %}{{ subpage.order }}{% endcapture %}
+            {% if curOrder == prevOrder %}
+              <li class="prev">
+                <a href="{{ BASE_PATH }}{{ subpage.url }}" title="{{ subpage.title }}">
+                &larr; Previous
+                </a>
+              </li>
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+
+      {% capture pageOrder %}{{ page.order }}{% endcapture %}
+      {% if pageOrder == maxpages %}
+        <li class="next disabled"><a>Next &rarr;</a></li>
+      {% else %}
+        {% capture nextOrder %}{{ page.order | plus:1 }}{% endcapture %}
+        {% for subpage in pages %}
+          {% if subpage.categories == page.categories %}
+            {% capture curOrder %}{{ subpage.order }}{% endcapture %}
+            {% if curOrder == nextOrder %}
+              <li class="next">
+                <a href="{{ BASE_PATH }}{{ subpage.url }}" title="{{ subpage.title }}">
+                Next &rarr;
+                </a>
+              </li>
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+      </ul>
+    </div>
+
     {{ content }}
 
     <div class="pagination">
