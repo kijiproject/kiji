@@ -185,80 +185,102 @@ public class TestXmlKeyValueStoreParser extends KijiClientTest {
     assertEquals(new Path("/user/aaron/foo.seq"), inputPaths.get(0));
   }
 
-  @Test(expected=IOException.class)
+  @Test
   public void testAliasedStores() throws IOException {
-    // Test that multiple stores with the same name cause an IOException.
-    XmlKeyValueStoreParser.get(mConf).loadStoresFromXml(
-        stringAsInputStream("<stores>\n"
-        + "  <store class=\"" + SeqFileKeyValueStore.class.getCanonicalName() + "\""
-        + " name=\"foo\">\n"
-        + "    <configuration/>\n"
-        + "  </store>\n"
-        + "  <store class=\"EmptyKeyValueStore\" name=\"foo\">\n"
-        + "    <configuration/>\n"
-        + "  </store>\n"
-        + "</stores>"));
-
-    fail("We didn't expect to get this far.");
+    try {
+      // Test that multiple stores with the same name cause an IOException.
+      XmlKeyValueStoreParser.get(mConf).loadStoresFromXml(
+          stringAsInputStream("<stores>\n"
+            + "  <store class=\"" + SeqFileKeyValueStore.class.getCanonicalName() + "\""
+            + " name=\"foo\">\n"
+            + "    <configuration/>\n"
+            + "  </store>\n"
+            + "  <store class=\"EmptyKeyValueStore\" name=\"foo\">\n"
+            + "    <configuration/>\n"
+            + "  </store>\n"
+            + "</stores>"));
+      fail("Should have thrown an IOException.");
+    } catch (IOException ioe) {
+      assertEquals("Store with name \"foo\" is defined multiple times", ioe.getMessage());
+    }
   }
 
-  @Test(expected=IOException.class)
+  @Test
   public void testInvalidParse() throws IOException {
-    // Test that invalid XML in the top level throws an exception.
-    XmlKeyValueStoreParser.get(mConf).loadStoresFromXml(
-        stringAsInputStream("<stores>\n"
-        + "  <store class=\"EmptyKeyValueStore\" name=\"meep\">\n"
-        + "    <configuration>\n"
-        + "    </configuration>\n"
-        + "  </store>\n"
-        + "  <someIllegalElement/>\n"
-        + "</stores>"));
+    try {
+      // Test that invalid XML in the top level throws an exception.
+      XmlKeyValueStoreParser.get(mConf).loadStoresFromXml(
+          stringAsInputStream("<stores>\n"
+            + "  <store class=\"EmptyKeyValueStore\" name=\"meep\">\n"
+            + "    <configuration>\n"
+            + "    </configuration>\n"
+            + "  </store>\n"
+            + "  <someIllegalElement/>\n"
+            + "</stores>"));
 
-    fail("Didn't expect to get this far.");
+      fail("Should have thrown an IOException.");
+    } catch (IOException ioe) {
+      assertEquals("Unexpected first-level element: someIllegalElement", ioe.getMessage());
+    }
   }
 
-  @Test(expected=IOException.class)
+  @Test
   public void testInvalidParse2() throws IOException {
-    // Test that invalid XML in a <store> element fails.
-    XmlKeyValueStoreParser.get(mConf).loadStoresFromXml(
-        stringAsInputStream("<stores>\n"
-        + "  <store class=\"EmptyKeyValueStore\" name=\"meep\">\n"
-        + "    <blort/>\n"
-        + "  </store>\n"
-        + "  <someIllegalElement/>\n"
-        + "</stores>"));
+    try {
+      // Test that invalid XML in a <store> element fails.
+      XmlKeyValueStoreParser.get(mConf).loadStoresFromXml(
+          stringAsInputStream("<stores>\n"
+            + "  <store class=\"EmptyKeyValueStore\" name=\"meep\">\n"
+            + "    <blort/>\n"
+            + "  </store>\n"
+            + "  <someIllegalElement/>\n"
+            + "</stores>"));
 
-    fail("Didn't expect to get this far.");
+      fail("Should have thrown an IOException.");
+    } catch (IOException ioe) {
+      assertEquals("Unrecognized XML schema for store meep; expected <configuration> element.",
+          ioe.getMessage());
+    }
   }
 
-  @Test(expected=IOException.class)
+  @Test
   public void testInvalidParse3() throws IOException {
-    // Test that invalid XML in a <store> element fails.
-    XmlKeyValueStoreParser.get(mConf).loadStoresFromXml(
-        stringAsInputStream("<stores>\n"
-        + "  <store class=\"EmptyKeyValueStore\" name=\"meep\">\n"
-        + "    <configuration/>\n"
-        + "    <blort/>\n"
-        + "  </store>\n"
-        + "  <someIllegalElement/>\n"
-        + "</stores>"));
+    try {
+      // Test that invalid XML in a <store> element fails.
+      XmlKeyValueStoreParser.get(mConf).loadStoresFromXml(
+          stringAsInputStream("<stores>\n"
+            + "  <store class=\"EmptyKeyValueStore\" name=\"meep\">\n"
+            + "    <configuration/>\n"
+            + "    <blort/>\n"
+            + "  </store>\n"
+            + "  <someIllegalElement/>\n"
+            + "</stores>"));
 
-    fail("Didn't expect to get this far.");
+      fail("Should have thrown an IOException");
+    } catch (IOException ioe) {
+      assertEquals("Unrecognized XML schema for store meep; expected <configuration> element.",
+          ioe.getMessage());
+    }
   }
 
-  @Test(expected=IOException.class)
+  @Test
   public void testInvalidParseInConfiguration() throws IOException {
-    // Test that invalid XML in the <configuration> element throws an IOException.
-    XmlKeyValueStoreParser.get(mConf).loadStoresFromXml(
-        stringAsInputStream("<stores>\n"
-        + "  <store class=\"EmptyKeyValueStore\" name=\"meep\">\n"
-        + "    <configuration>\n"
-        + "      <someIllegalElement/>\n"
-        + "    </configuration>\n"
-        + "  </store>\n"
-        + "</stores>"));
+    try {
+      // Test that invalid XML in the <configuration> element throws an IOException.
+      XmlKeyValueStoreParser.get(mConf).loadStoresFromXml(
+          stringAsInputStream("<stores>\n"
+            + "  <store class=\"EmptyKeyValueStore\" name=\"meep\">\n"
+            + "    <configuration>\n"
+            + "      <someIllegalElement/>\n"
+            + "    </configuration>\n"
+            + "  </store>\n"
+            + "</stores>"));
 
-    fail("Didn't expect to get this far.");
+      fail("Should have thrown an IOException.");
+    } catch (IOException ioe) {
+      assertEquals("Unexpected element in configuration: someIllegalElement",
+          ioe.getMessage());
+    }
   }
 
   @Test

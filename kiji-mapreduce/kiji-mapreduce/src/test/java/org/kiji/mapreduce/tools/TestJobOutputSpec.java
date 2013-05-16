@@ -20,6 +20,7 @@
 package org.kiji.mapreduce.tools;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
@@ -52,14 +53,27 @@ public class TestJobOutputSpec {
     assertEquals(123, spec.getSplits());
   }
 
-  @Test(expected=JobIOSpecParseException.class)
+  @Test
   public void testParseKijiColon() {
-    JobOutputSpec.parse("kiji:");
+    try {
+      JobOutputSpec.parse("kiji:");
+      fail("Should have gotten a JobIOSpecParseException.");
+    } catch (JobIOSpecParseException jpe) {
+      assertEquals("Invalid job output spec, expecting 'format:location@nsplit'. [spec=kiji:]",
+          jpe.getMessage());
+    }
   }
 
-  @Test(expected=JobIOSpecParseException.class)
+  @Test
   public void testParseKijiNoSplits() {
-    JobOutputSpec.parse("kiji:kiji://hbase/instance/table");
+    try {
+      JobOutputSpec.parse("kiji:kiji://hbase/instance/table");
+      fail("Should have gotten a JobIOSpecParseException.");
+    } catch (JobIOSpecParseException jpe) {
+      assertEquals("Invalid job output spec, expecting 'format:location@nsplit'. "
+          + "[spec=kiji:kiji://hbase/instance/table]",
+          jpe.getMessage());
+    }
   }
 
   @Test
@@ -103,23 +117,50 @@ public class TestJobOutputSpec {
     assertEquals(2, spec.getSplits());
   }
 
-  @Test(expected=JobIOSpecParseException.class)
+  @Test
   public void testInvalidFormat() {
-    JobOutputSpec.parse("invalid:hdfs://localhost:8000/tmp/foo");
+    try {
+      JobOutputSpec.parse("invalid:hdfs://localhost:8000/tmp/foo");
+      fail("Should have gotten a JobIOSpecParseException.");
+    } catch (JobIOSpecParseException jpe) {
+      assertEquals("Invalid job output spec, expecting 'format:location@nsplit'. "
+          + "[spec=invalid:hdfs://localhost:8000/tmp/foo]",
+          jpe.getMessage());
+    }
   }
 
-  @Test(expected=JobIOSpecParseException.class)
+  @Test
   public void testMissingRequiredPath() {
-    JobOutputSpec.parse("avro");
+    try {
+      JobOutputSpec.parse("avro");
+      fail("Should have gotten a JobIOSpecParseException.");
+    } catch (JobIOSpecParseException jpe) {
+      assertEquals("Invalid job output spec, expecting 'format:location@nsplit'. [spec=avro]",
+          jpe.getMessage());
+    }
   }
 
-  @Test(expected=JobIOSpecParseException.class)
+  @Test
   public void testMissingRequiredPathWithColon() {
-    JobOutputSpec.parse("seq:");
+    try {
+      JobOutputSpec.parse("seq:");
+      fail("Should have gotten a JobIOSpecParseException.");
+    } catch (JobIOSpecParseException jpe) {
+      assertEquals("Invalid job output spec, expecting 'format:location@nsplit'. [spec=seq:]",
+          jpe.getMessage());
+    }
+
   }
 
-  @Test(expected=JobIOSpecParseException.class)
+  @Test
   public void testMissingSplits() {
-    JobOutputSpec.parse("seq:asdf");
+    try {
+      JobOutputSpec.parse("seq:asdf");
+      fail("Should have gotten a JobIOSpecParseException.");
+    } catch (JobIOSpecParseException jpe) {
+      assertEquals("Invalid job output spec, expecting 'format:location@nsplit'. [spec=seq:asdf]",
+          jpe.getMessage());
+    }
+
   }
 }

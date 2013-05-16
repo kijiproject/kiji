@@ -20,6 +20,7 @@
 package org.kiji.mapreduce.tools;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
@@ -50,18 +51,34 @@ public class TestJobInputSpec {
     assertEquals("hdfs:/tmp/bar", spec.getLocations()[1]);
   }
 
-  @Test(expected=UnsupportedOperationException.class)
+  @Test
   public void testOneKijiTableAsInput() {
-    JobInputSpec.parse("kiji:foo,bar"); // Only one table may be specified as input.
+    try {
+      JobInputSpec.parse("kiji:foo,bar"); // Only one table may be specified as input.
+      fail("Should have thrown an UnsupportedOperationException.");
+    } catch (UnsupportedOperationException uoe) {
+      assertEquals("Format KIJI only supports a single input location.  You specified: [foo, bar]",
+      uoe.getMessage());
+    }
   }
 
-  @Test(expected=JobIOSpecParseException.class)
+  @Test
   public void testParseInvalidFormat() {
-    JobInputSpec.parse("invalid:foo");
+    try {
+      JobInputSpec.parse("invalid:foo");
+      fail("Should have thrown an JobIOSpecParseException.");
+    } catch (JobIOSpecParseException jpe) {
+      assertEquals("Unrecognized format [spec=invalid]", jpe.getMessage());
+    }
   }
 
-  @Test(expected=JobIOSpecParseException.class)
+  @Test
   public void testParseNoPath() {
-    JobInputSpec.parse("invalid");
+    try {
+      JobInputSpec.parse("invalid");
+      fail("Should have thrown an JobIOSpecParseException.");
+    } catch (JobIOSpecParseException jpe) {
+      assertEquals("Should be '<format>:<location>' [spec=invalid]", jpe.getMessage());
+    }
   }
 }

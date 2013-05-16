@@ -19,6 +19,9 @@
 
 package org.kiji.mapreduce.util;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 import java.io.IOException;
 
 import org.junit.Rule;
@@ -41,9 +44,15 @@ public class TestJars {
   public TemporaryFolder mTempDir = new TemporaryFolder();
   // CSON: VisibilityModifierCheck
 
-  @Test(expected=ClassNotFoundException.class)
+  @Test
   public void testGetJarPathForClassNotFound() throws ClassNotFoundException, IOException {
-    // This will throw an exception because this class is not in a jar when being run.
-    Jars.getJarPathForClass(TestJars.class);
+    try {
+      // This will throw an exception because this class is not in a jar when being run.
+      Jars.getJarPathForClass(TestJars.class);
+      fail("ClassNotFoundException");
+    } catch (ClassNotFoundException ce) {
+      assertEquals("Unable to find containing jar for class org.kiji.mapreduce.util.TestJars",
+      ce.getMessage());
+    }
   }
 }

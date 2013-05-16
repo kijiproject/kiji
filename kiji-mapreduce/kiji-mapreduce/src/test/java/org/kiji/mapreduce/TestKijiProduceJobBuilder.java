@@ -20,6 +20,7 @@
 package org.kiji.mapreduce;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.util.Map;
@@ -127,18 +128,25 @@ public class TestKijiProduceJobBuilder extends KijiClientTest {
     assertEquals(KijiHFileOutputFormat.class, job.getOutputFormatClass());
   }
 
-  @Test(expected=IOException.class)
+  @Test
   public void testUnconfiguredKeyValueStore() throws ClassNotFoundException, IOException {
     // Should explode as we don't define a KVStore for 'foostore', but the class requires one
 
     // This should throw an exception because we didn't provide a better KVStore
     // than the UnconfiguredKeyValueStore in the default.
-    KijiProduceJobBuilder.create()
+    try {
+      KijiProduceJobBuilder.create()
         .withConf(getConf())
         .withInputTable(mTable.getURI())
         .withProducer(UnconfiguredKVProducer.class)
         .withOutput(new DirectKijiTableMapReduceJobOutput(mTable.getURI()))
         .build();
+      fail("Should have thrown an IOException.");
+    } catch (IOException ioe) {
+      assertEquals("Cannot use an UnconfiguredKeyValueStore. "
+          + "You must override this on the command line or in a JobBuilder.",
+          ioe.getMessage());
+    }
   }
 
   @Test
@@ -164,13 +172,12 @@ public class TestKijiProduceJobBuilder extends KijiClientTest {
         + KeyValueStoreConfigSerializer.CONF_NAME));
   }
 
-  @Test(expected=JobConfigurationException.class)
+  @Test
   public void testBuildWithDifferentTableOutput() throws ClassNotFoundException, IOException {
-    {
-      final KijiTableLayout layout =
-          KijiTableLayout.newLayout(KijiMRTestLayouts.getTestLayout("other"));
-      getKiji().createTable(layout.getName(), layout);
-    }
+    final KijiTableLayout layout =
+        KijiTableLayout.newLayout(KijiMRTestLayouts.getTestLayout("other"));
+    getKiji().createTable(layout.getName(), layout);
+
     final KijiTable otherTable = getKiji().openTable("other");
     try {
       // This should throw a job configuration exception because the output table does not
@@ -181,6 +188,9 @@ public class TestKijiProduceJobBuilder extends KijiClientTest {
           .withProducer(MyProducer.class)
           .withOutput(new DirectKijiTableMapReduceJobOutput(otherTable.getURI()))
           .build();
+      fail("Should have thrown a JobConfigurationException.");
+    } catch (JobConfigurationException jce) {
+      assertEquals("Output table must be the same as the input table.", jce.getMessage());
     } finally {
       ResourceUtils.releaseOrLog(otherTable);
     }

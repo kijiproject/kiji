@@ -19,6 +19,9 @@
 
 package org.kiji.mapreduce.util;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -66,7 +69,7 @@ public class TestKijiProducers extends KijiClientTest {
     KijiProducers.validateOutputColumn(producer, mTableLayout);
   }
 
-  @Test(expected=KijiProducerOutputException.class)
+  @Test
   public void testValidateOutputColumnNonExistentFamily()
       throws InvalidLayoutException, KijiProducerOutputException {
     MyProducer producer = new MyProducer() {
@@ -75,10 +78,18 @@ public class TestKijiProducers extends KijiClientTest {
         return "doesnt_exist:column";
       }
     };
-    KijiProducers.validateOutputColumn(producer, mTableLayout);
+
+    try {
+      KijiProducers.validateOutputColumn(producer, mTableLayout);
+      fail("Should have gotten a KijiProducerOutputException.");
+    } catch (KijiProducerOutputException ke) {
+      assertEquals("Producer 'org.kiji.mapreduce.util.TestKijiProducers$1' specifies "
+          + "unknown output column family 'doesnt_exist' in table 'table'.",
+          ke.getMessage());
+    }
   }
 
-  @Test(expected=KijiProducerOutputException.class)
+  @Test
   public void testValidateOutputColumnNonExistentColumn()
       throws InvalidLayoutException, KijiProducerOutputException {
     MyProducer producer = new MyProducer() {
@@ -87,8 +98,16 @@ public class TestKijiProducers extends KijiClientTest {
         return "family:doesnt_exist";
       }
     };
-    KijiProducers.validateOutputColumn(producer, mTableLayout);
-  }
+
+    try {
+      KijiProducers.validateOutputColumn(producer, mTableLayout);
+      fail("Should have gotten a KijiProducerOutputException.");
+    } catch (KijiProducerOutputException ke) {
+      assertEquals("Producer 'org.kiji.mapreduce.util.TestKijiProducers$2' specifies "
+          + "unknown column 'family:doesnt_exist' in table 'table'.",
+          ke.getMessage());
+    }
+ }
 
   /**
    * Not specifying a qualifier even to a group type is allowed so that you can write to

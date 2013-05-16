@@ -20,6 +20,7 @@
 package org.kiji.mapreduce;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.IOException;
@@ -273,10 +274,11 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
     assertEquals(NullWritable.class, job.getOutputValueClass());
   }
 
-  @Test(expected=IOException.class)
+  @Test
   public void testUnconfiguredKeyValueStore() throws Exception {
-    // Should explode as we don't define a KVStore for 'foostore', but the class requires one:
-    KijiGatherJobBuilder.create()
+    try {
+      // Should explode as we don't define a KVStore for 'foostore', but the class requires one:
+      KijiGatherJobBuilder.create()
         .withConf(getConf())
         .withInputTable(mTable.getURI())
         .withGatherer(UnconfiguredKVGatherer.class)
@@ -284,6 +286,12 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
         .withReducer(MyReducer.class)
         .withOutput(new TextMapReduceJobOutput(new Path("mypath"), 10))
         .build();
+      fail("Should have thrown an IOException.");
+    } catch (IOException ioe) {
+      assertEquals("Cannot use an UnconfiguredKeyValueStore. "
+          + "You must override this on the command line or in a JobBuilder.",
+          ioe.getMessage());
+    }
   }
 
   @Test

@@ -22,6 +22,7 @@ package org.kiji.mapreduce.kvstore.lib;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import static org.kiji.schema.util.ResourceUtils.closeOrLog;
 import static org.kiji.schema.util.ResourceUtils.releaseOrLog;
@@ -107,10 +108,11 @@ public class TestKijiTableKeyValueStore extends KijiClientTest {
     assertEquals(input, output);
   }
 
-  @Test(expected=IllegalArgumentException.class)
+  @Test
   public void testRequiresRealTable() throws IOException {
-    // The specified table must exist in the Kiji instance.
-    KijiTableKeyValueStore<String> input = KijiTableKeyValueStore.builder()
+    try {
+      // The specified table must exist in the Kiji instance.
+      KijiTableKeyValueStore<String> input = KijiTableKeyValueStore.builder()
         .withTable(
             KijiURI.newBuilder(getKiji().getURI().toString() + "/table_name_not_real").build())
         .withColumn("some", "column")
@@ -118,42 +120,64 @@ public class TestKijiTableKeyValueStore extends KijiClientTest {
         .withMaxTimestamp(512)
         .withCacheLimit(2121)
         .build();
+      fail("Should have thrown an IllegalArgumentException.");
+    } catch (IllegalArgumentException iae) {
+      assertEquals("Could not open table: "
+          + "kiji://.fake.TestKijiTableKeyValueStore_testRequiresRealTable-0:2181/"
+          + "TestKijiTableKeyValueStore_testRequiresRealTable/table_name_not_real/",
+          iae.getMessage());
+    }
   }
 
-  @Test(expected=IllegalArgumentException.class)
+  @Test
   public void testRequiresTableUri() {
-    // Test that we need to set the table URI, or it will fail to verify as input.
-    KijiTableKeyValueStore<String> input = KijiTableKeyValueStore.builder()
+    try {
+      // Test that we need to set the table URI, or it will fail to verify as input.
+      KijiTableKeyValueStore<String> input = KijiTableKeyValueStore.builder()
         .withColumn("some", "column")
         .withMinTimestamp(42)
         .withMaxTimestamp(512)
         .withCacheLimit(2121)
         .build();
+      fail("Should have thrown an IllegalArgumentException.");
+    } catch (IllegalArgumentException iae) {
+      assertEquals("Must specify non-null table URI", iae.getMessage());
+    }
   }
 
-  @Test(expected=IllegalArgumentException.class)
+  @Test
   public void testRequiresTableNameInUri() throws IOException {
-    // Test that we need to set the table URI to have both an instance
-    // name and a table name, or it will fail to verify as input.
-    KijiTableKeyValueStore<String> input = KijiTableKeyValueStore.builder()
+    try {
+      // Test that we need to set the table URI to have both an instance
+      // name and a table name, or it will fail to verify as input.
+      KijiTableKeyValueStore<String> input = KijiTableKeyValueStore.builder()
         .withTable(getKiji().getURI())
         .withColumn("some", "column")
         .withMinTimestamp(42)
         .withMaxTimestamp(512)
         .withCacheLimit(2121)
         .build();
+      fail("Should have thrown an IllegalArgumentException.");
+    } catch (IllegalArgumentException iae) {
+      assertEquals("Must specify a non-empty table name", iae.getMessage());
+    }
   }
 
-  @Test(expected=IllegalArgumentException.class)
+  @Test
   public void testRequiresColumn() throws IOException {
-    // Test that we need to set the column to read.
-    KijiTableKeyValueStore<String> input = KijiTableKeyValueStore.builder()
+    try {
+      // Test that we need to set the column to read.
+      KijiTableKeyValueStore<String> input = KijiTableKeyValueStore.builder()
         .withTable(
             KijiURI.newBuilder(getKiji().getURI().toString()).withTableName("table").build())
         .withMinTimestamp(42)
         .withMaxTimestamp(512)
         .withCacheLimit(2121)
         .build();
+      fail("Should have thrown an IllegalArgumentException.");
+    } catch (IllegalArgumentException iae) {
+      assertEquals("Must specify a fully-qualified column", iae.getMessage());
+    }
   }
 
   @Test
