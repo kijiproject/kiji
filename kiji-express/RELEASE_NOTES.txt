@@ -1,8 +1,9 @@
 
-
                              Kiji Express Release Notes
 
 Version 0.4.0
+  * EXP-23. A Scala-friendly interface is provided for KijiMR key-value stores, for use with the
+      KijiExpress modeling SPI.
   * EXP-37. Avro-generated Java classes are no longer required on the classpath to read Avro
       records from Kiji.  Avro records from Kiji are now read into a generic AvroRecord instead of
       the specific class; the treatment of non-records read from Kiji have not changed.  See the
