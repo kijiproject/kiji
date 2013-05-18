@@ -272,10 +272,7 @@ object KijiSource {
           cells.map { cell: Cell[Any] => {
             val datum =
                 AvroUtil.encodeToJava(
-                    cell.datum,
-                    tableLayout
-                        .getCellSchema(new KijiColumnName(cell.family, cell.qualifier))
-                        .getSchema)
+                    cell.datum)
             writer.put(
                 entityId.toJavaEntityId(),
                 cell.family,

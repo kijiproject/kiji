@@ -454,7 +454,7 @@ private[express] object KijiScheme {
                   family,
                   qualifier,
                   timestamp,
-                  AvroUtil.encodeToJava(value, layout.getSchema(kijiCol)))
+                  AvroUtil.encodeToJava(value))
             }
           }
         }

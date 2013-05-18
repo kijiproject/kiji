@@ -267,7 +267,7 @@ class AvroValueSuite extends FunSuite {
     intercept[UnsupportedOperationException] { avroRecord.asEnumName() }
   }
 
-  test("A Record is correctly wrapped by an AvroRecord.") {
+  test("A generic record is correctly wrapped by an AvroRecord.") {
     val genericRecord = new GenericData.Record(HashSpec.SCHEMA$)
     genericRecord.put("hash_type", HashType.MD5)
     genericRecord.put("hash_size", 12)

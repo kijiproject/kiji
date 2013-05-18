@@ -456,7 +456,7 @@ class KijiSourceSuite
       .finish
   }
 
-  test("A job that uses the generic API is run.") {
+  test("A job that reads using the generic API is run.") {
     // Create test Kiji table.
     val uri: String = doAndRelease(makeTestKijiTable(avroLayout)) { table: KijiTable =>
       table.getURI().toString()
@@ -466,28 +466,53 @@ class KijiSourceSuite
     specificRecord.setHashType(HashType.MD5)
     specificRecord.setHashSize(13)
     specificRecord.setSuppressKeyMaterialization(true)
-    def genericValuesInput(uri: String): List[(EntityId, KijiSlice[HashSpec])] = {
+    def genericReadInput(uri: String): List[(EntityId, KijiSlice[HashSpec])] = {
       List((EntityId(uri)("row01"), slice("family:column3", (10L, specificRecord))))
     }
 
-    def validateGenericOutput(outputBuffer: Buffer[(Int, Int)]): Unit = {
+    def validateGenericRead(outputBuffer: Buffer[(Int, Int)]): Unit = {
       assert (1 === outputBuffer.size)
       // There exactly 1 record with hash_size of 13.
       assert ((13, 1) === outputBuffer(0))
     }
 
-    val jobTest = JobTest(new GenericAvroJob(_))
+    val jobTest = JobTest(new GenericAvroReadJob(_))
         .arg("input", uri)
         .arg("output", "outputFile")
         .source(KijiInput(uri) (Map (Column("family:column3") -> 'records)),
-            genericValuesInput(uri))
-        .sink(Tsv("outputFile"))(validateGenericOutput)
+            genericReadInput(uri))
+        .sink(Tsv("outputFile"))(validateGenericRead)
 
     // Run in local mode
     jobTest.run.finish
 
     // Run in hadoop mode
     jobTest.runHadoop.finish
+  }
+
+  test("A job that writes using the generic API is run.") {
+    // Create test Kiji table.
+    val uri: String = doAndRelease(makeTestKijiTable(avroLayout)) { table: KijiTable =>
+      table.getURI().toString()
+    }
+
+    // Input to use with Text source.
+    val genericWriteInput: List[(String, String)] = List(
+        ( "0", "eid1 word1" ),
+        ( "1", "eid2 word2" ))
+
+    // Validates the output buffer contains the same as the input buffer.
+    def validateGenericWrite(outputBuffer: Buffer[(EntityId, KijiSlice[AvroRecord])]): Unit = {
+      val outMap = outputBuffer.toMap
+      assert("word1" === outMap(EntityId(uri)("eid1")).getFirstValue()("contained_string").asString)
+      assert("word2" === outMap(EntityId(uri)("eid2")).getFirstValue()("contained_string").asString)
+    }
+
+    JobTest(new GenericAvroWriteJob(_))
+      .arg("input", "inputFile")
+      .arg("output", uri)
+      .source(TextLine("inputFile"), genericWriteInput)
+      .sink(KijiOutput(uri)('line -> "family:column4"))(validateGenericWrite)
   }
 }
 
@@ -661,7 +686,7 @@ object KijiSourceSuite extends KijiSuite {
    *     to the Kiji table the job should be run on, and "output", which specifies the output
    *     Tsv file.
    */
-  class GenericAvroJob(args: Args) extends Job(args) {
+  class GenericAvroReadJob(args: Args) extends Job(args) {
     KijiInput(args("input"))("family:column3" -> 'records)
     .map('records -> 'hashSizeField) { slice: KijiSlice[AvroValue] =>
         slice.getFirst match {
@@ -672,5 +697,25 @@ object KijiSourceSuite extends KijiSuite {
     }
     .groupBy('hashSizeField)(_.size)
     .write(Tsv(args("output")))
+  }
+
+  /**
+   * A job that uses the generic API, creating a record containing the text from the input,
+   * and writing it to a Kiji table.
+   *
+   * @param args to the job. Two arguments are expected: "input", which specifies the path to a
+   *     text file, and "output", which specifies the URI to a Kiji table.
+   */
+  class GenericAvroWriteJob(args: Args) extends Job(args) {
+    val tableUri: String = args("output")
+    TextLine(args("input"))
+        .read
+        // Generate an entityId for each line.
+        .map('line -> 'entityId) { EntityId(tableUri)(_: String) }
+        .map('line -> 'genericRecord) { text: String =>
+          AvroRecord("field1" -> text, "field2" -> AvroEnum(text))
+        }
+        // Write the results to the "family:column1" column of a Kiji table.
+        .write(KijiOutput(tableUri, 'offset)('line -> "family:column4"))
   }
 }

@@ -44,6 +44,24 @@ import org.kiji.annotations.ApiAudience
  * When reading from Kiji, using the specific API, use the method `decodeSpecificFromJava`.
  * When reading from Kiji, using the generic API, use the method `decodeGenericFromJava`.
  * When writing to Kiji, use the method `encodeToJava`.
+ *
+ * When decoding using the generic API, primitives are converted to Scala primitives, and records
+ * are converted to AvroValues. The contents of a record are also AvroValues, even if they
+ * represent primitives.  These primitives can be accessed with `asInt`, `asLong`, etc methods.
+ * For example: `myRecord("fieldname").asInt` gets an integer field with name `fieldname` from
+ * `myRecord`.
+ *
+ * When decoding using the specific API, primitives are converted to Scala primitives, and records
+ * are converted to their corresponding Java classes.
+ *
+ * Certain AvroValues are used in both the specific and the generic API:
+ * <ul>
+ *   <li>AvroEnum, which always wraps an enum from Avro.  This is because there is not an easy
+ *       Scala equivalent of a Java enum.</li>
+ *   <li>AvroFixed, which always wraps a fixed-length byte array from Avro.  This is to distinguish
+ *       between a regular byte array, which gets converted to an Array[Byte], and a fixed-length
+ *       byte array.</li>
+ * <ul>
  */
  @ApiAudience.Private
 private[express] object AvroUtil {
@@ -62,7 +80,10 @@ private[express] object AvroUtil {
   private[express] def decodeGenericFromJava(x: Any): Any = {
     x match {
       case record: IndexedRecord => wrapGenericAvro(record)
-      case nonrecord => javaTypesToScala(nonrecord)
+      case enumSymbol: GenericData.EnumSymbol => {
+        new AvroEnum(enumSymbol.toString)
+      }
+      case nonrecord => javaToScala(nonrecord)
     }
   }
 
@@ -80,7 +101,10 @@ private[express] object AvroUtil {
       // generic record
       case generic: GenericRecord => throw new InvalidClassException("Cannot read generic record"
           + "%s using the specific API.".format(generic))
-      case nonrecord => javaTypesToScala(nonrecord)
+      case enumSymbol: GenericData.EnumSymbol => {
+        new AvroEnum(enumSymbol.toString)
+      }
+      case nonrecord => javaToScala(nonrecord)
     }
   }
 
@@ -89,13 +113,29 @@ private[express] object AvroUtil {
    * Java types, to write back to Kiji.
    *
    * @param x is the object to change into a Kiji-writable type.
-   * @param schema that `x` will be written with.
    * @return the Java object that can be written to Kiji.
    */
-  private[express] def encodeToJava(x: Any, schema: Schema): Any = {
+  private[express] def encodeToJava(x: Any): Any = {
     x match {
-      case genericValue: AvroValue => unwrapGenericAvro(genericValue, schema)
-      case nongeneric => scalaTypesToJava(nongeneric, schema)
+      case genericValue: AvroValue => unwrapGenericAvro(genericValue)
+      case nongeneric => scalaToJava(nongeneric)
+    }
+  }
+
+  /**
+   * Converts a Scala object into its corresponding AvroValue class.
+   *
+   * @param x is the Scala value to convert.
+   * @return The corresponding AvroValue for x.
+   */
+  private[express] def scalaToGenericAvro(x: Any): AvroValue = {
+    x match {
+      // AvroEnums and AvroRecords are already generic avro.
+      case avro: AvroValue => avro
+      case list: List[_] => new AvroList(list.map(scalaToGenericAvro(_)))
+      case map: Map[String, _] => new AvroMap(map.mapValues(scalaToGenericAvro(_)))
+      case primitive: Any => wrapGenericAvro(scalaToJava(primitive))
+      case null => null
     }
   }
 
@@ -123,10 +163,13 @@ private[express] object AvroUtil {
           new AvroMap(m.asScala.toMap.map { case (key: CharSequence, value) =>
               (key.toString, wrapGenericAvro(value)) }
           )
+      case enum: java.lang.Enum[_] => new AvroEnum(enum.name)
+      // EnumSymbol from an Avro record.
       case enumSymbol: GenericData.EnumSymbol => {
         new AvroEnum(enumSymbol.toString)
       }
-      case javatype => { javaTypesToScala(javatype) match {
+      // primitives
+      case javatype => { javaToScala(javatype) match {
         // scalastyle:off null
         case null => null
         // scalastyle:on null
@@ -137,12 +180,6 @@ private[express] object AvroUtil {
         case d: Double => new AvroDouble(d)
         case b: Array[Byte] => new AvroByteArray(b)
         case s: String => new AvroString(s)
-        case l: List[_] => new AvroList(l.map(wrapGenericAvro(_)))
-        case m: Map[_, _] =>
-            new AvroMap(m.map { case (key: CharSequence, value) =>
-                (key.toString, wrapGenericAvro(value)) }
-            )
-        case e: java.lang.Enum[_] => new AvroEnum(e.name)
         case _ => throw new InvalidClassException(
             "Object %s of type %s cannot be converted to an AvroValue."
                 .format(x, x.getClass))
@@ -157,7 +194,7 @@ private[express] object AvroUtil {
    * @param javaValue is the value to convert.
    * @return the corresponding value converted to a Scala type.
    */
-  private[express] def javaTypesToScala(javaValue: Any): Any = {
+  private[express] def javaToScala(javaValue: Any): Any = {
     javaValue match {
       // scalastyle:off null
       case null => null
@@ -175,19 +212,19 @@ private[express] object AvroUtil {
       case l: java.util.List[_] => {
         l.asScala
             .toList
-            .map { elem => javaTypesToScala(elem) }
+            .map { elem => decodeGenericFromJava(elem) }
       }
       // map (avro maps always have keys of type CharSequence)
-      // TODO CHOP-70 revisit conversion of maps between java and scala
+      // TODO(EXP-51): revisit conversion of maps between java and scala
       case m: java.util.Map[_, _] => {
         m.asScala
             .toMap
             .map { case (key: CharSequence, value) =>
-              (key.toString, javaTypesToScala(value))
+              (key.toString, decodeGenericFromJava(value))
             }
       }
       // fixed
-      case f: SpecificFixed => f.bytes().array
+      case f: SpecificFixed => new AvroFixed(f.bytes().array)
       // scalastyle:off null
       // null field
       case n: java.lang.Void => null
@@ -207,60 +244,107 @@ private[express] object AvroUtil {
    * Unwraps AvroValues into their corresponding Java Objects for writing to a Kiji table.
    *
    * @param avroValue to unwrap.
-   * @param columnSchema of the avroValue to unwrap.
    * @return the corresponding Java Object.
    */
   private[express] def unwrapGenericAvro(
-      avroValue: AvroValue,
-      columnSchema: Schema): java.lang.Object = {
-    avroValue match {
-      // AvroValues
-      case AvroInt(i) => scalaTypesToJava(i, columnSchema)
-      case AvroBoolean(b) => scalaTypesToJava(b, columnSchema)
-      case AvroLong(l) => scalaTypesToJava(l, columnSchema)
-      case AvroFloat(f) => scalaTypesToJava(f, columnSchema)
-      case AvroDouble(d) => scalaTypesToJava(d, columnSchema)
-      case AvroString(s) => scalaTypesToJava(s, columnSchema)
-      case AvroByteArray(bb) => scalaTypesToJava(bb, columnSchema)
-      case AvroList(l: List[_]) => {
-        // scalastyle:off null
-        require(null != columnSchema, "Tried to convert a List[Any], but the writer schema was" +
-            " null.")
-        // scalastyle:on null
-        l.map { elem => unwrapGenericAvro(elem, columnSchema.getElementType) }
-            .asJava
-      }
-      // map
-      // TODO CHOP-70 revisit conversion of maps between java and scala
-      case AvroMap(m: Map[_, _]) => {
-        // scalastyle:off null
-        require(null != columnSchema, "Tried to convert a Map[String, Any], but the writer schema"
-          + "was null.")
-        // scalastyle:on null
-        val convertedMap = m.map { case (key: String, value) =>
-          val convertedValue = unwrapGenericAvro(value, columnSchema.getValueType)
-          (key, convertedValue)
+      avroValue: AvroValue): java.lang.Object = {
+    /**
+     * Inner function that unwraps AvroValues and returns the Object along with a generic version
+     * of its Avro Schema.
+     *
+     * @param avroValue to unwrap.
+     * @return the corresponding Java Object along with its Avro Schema.
+     */
+    def unwrapGenericWithSchema(avroValue: AvroValue): (java.lang.Object, Schema) = {
+      avroValue match {
+        // If it's null, the schema is also null.
+        case null => (null, null)
+        // AvroValues
+        case AvroInt(i) => (scalaToJava(i), Schema.create(Schema.Type.INT))
+        case AvroBoolean(b) => (scalaToJava(b), Schema.create(Schema.Type.BOOLEAN))
+        case AvroLong(l) => (scalaToJava(l), Schema.create(Schema.Type.LONG))
+        case AvroFloat(f) => (scalaToJava(f), Schema.create(Schema.Type.FLOAT))
+        case AvroDouble(d) => (scalaToJava(d), Schema.create(Schema.Type.DOUBLE))
+        case AvroString(s) => (scalaToJava(s), Schema.create(Schema.Type.STRING))
+        case AvroByteArray(bb) => (scalaToJava(bb), Schema.create(Schema.Type.BYTES))
+        case AvroFixed(fixed) => {
+          val schema = Schema.createFixed(
+              "ExpressFixed",
+              "A default fixed Schema created by KijiExpress with no namespace.",
+              null,
+              fixed.size)
+          (new GenericData.Fixed(schema, fixed), schema)
         }
-        new java.util.TreeMap[java.lang.Object, java.lang.Object](convertedMap.asJava)
-      }
-      // enum
-      case AvroEnum(name: String) => {
-        new GenericData.EnumSymbol(columnSchema, name)
-      }
-      // avro record or object
-      case AvroRecord(map: Map[_, _]) => {
-        val record = new GenericData.Record(columnSchema)
-        for ((fieldname, value) <- map) {
-          record.put(fieldname, unwrapGenericAvro(value, columnSchema.getField(fieldname).schema))
+        case AvroList(l: List[_]) => {
+          val (values, schemas) = l.map { elem => unwrapGenericWithSchema(elem) }.unzip
+          val elementSchema = {
+            if (schemas.isEmpty) {
+              null
+            } else {
+              // Require that if schemas is non-empty, all of them must be the same.
+              require(schemas.forall(_ == schemas.head))
+              schemas.head
+            }
+          }
+          (values.asJava, Schema.createArray(elementSchema))
         }
-        record
+        // map
+        // TODO(EXP-51): revisit conversion of maps between java and scala
+        case AvroMap(m: Map[_, _]) => {
+          val convertedMap = m.map { case (key: String, value) => (key, unwrapGenericAvro(value)) }
+          val javaMap =
+              new java.util.TreeMap[java.lang.Object, java.lang.Object](convertedMap.asJava)
+          val (_, schemas) = m.values.map(value => unwrapGenericWithSchema(value)).unzip
+          val elementSchema = {
+            if (schemas.isEmpty) {
+              null
+            } else {
+              // Require that if schemas is non-empty, all of them must be the same.
+              require(schemas.forall(_ == schemas.head))
+              schemas.head
+            }
+          }
+          (javaMap, Schema.createMap(elementSchema))
+        }
+        // enum
+        case AvroEnum(name: String) => {
+          val enumSchema = Schema.createEnum(
+              name,
+              "A schema constructed by KijiExpress, with no namespace.",
+              // scalastyle:off null
+              null, // No namespace.
+              // scalastyle:on null
+              List(name).asJava)
+          (new GenericData.EnumSymbol(enumSchema, name), enumSchema)
+        }
+        // avro record or object
+        case AvroRecord(map: Map[_, _]) => {
+          val fields: List[Schema.Field] = map.map {
+            case (fieldname, value) => {
+              new Schema.Field(
+                  fieldname,
+                  unwrapGenericWithSchema(value)._2,
+                  "A default field constructed by KijiExpress.",
+                  // scalastyle:off null
+                  null) // No namespace.
+                  // scalastyle:on null
+            }
+          }.toList
+          val schema = Schema.createRecord(fields.asJava)
+          val record = new GenericData.Record(schema)
+          for ((fieldname, value) <- map) {
+            record.put(fieldname, unwrapGenericAvro(value))
+          }
+          (record, schema)
+        }
+        case _ => throw new InvalidClassException("Trying to write an unrecognized Scala type"
+            + " that cannot be converted to a Java type for writing to Kiji: "
+            + avroValue.getClass)
       }
-
-      // If none of the cases matched:
-      case _ => throw new InvalidClassException("Trying to write an unrecognized Scala type"
-          + " that cannot be converted to a Java type for writing to Kiji: "
-          + avroValue.asInstanceOf[AnyRef].getClass.toString)
     }
+
+    val (javaValue, schema) = unwrapGenericWithSchema(avroValue)
+    return javaValue
   }
 
   /**
@@ -269,9 +353,8 @@ private[express] object AvroUtil {
    * @param columnValue is the value written to this column.
    * @return the converted Java type.
    */
-  private[express] def scalaTypesToJava(
-      columnValue: Any,
-      columnSchema: Schema): java.lang.Object = {
+  private[express] def scalaToJava(
+      columnValue: Any): java.lang.Object = {
     columnValue match {
       // scalastyle:off null
       case null => null
@@ -282,39 +365,15 @@ private[express] object AvroUtil {
       case f: Float => f.asInstanceOf[java.lang.Float]
       case d: Double => d.asInstanceOf[java.lang.Double]
       case s: String => s
-      case bb: Array[Byte] => {
-        // scalastyle:off null
-        require(null != columnSchema, "Tried to convert an Array[Byte], but the writer schema"
-            + "was null.")
-        // scalastyle:on null
-        if (columnSchema.getType == Schema.Type.BYTES) {
-          java.nio.ByteBuffer.wrap(bb)
-        } else if (columnSchema.getType == Schema.Type.FIXED) {
-          new GenericData.Fixed(columnSchema, bb)
-        } else {
-          throw new SchemaMismatchException("Writing an array of bytes to a column that "
-              + " expects " + columnSchema.getType.getName)
-        }
-      }
+      case bytes: Array[Byte] => java.nio.ByteBuffer.wrap(bytes)
       case l: List[_] => {
-        // scalastyle:off null
-        require(null != columnSchema, "Tried to convert a List[Any], but the writer schema was" +
-            " null.")
-        // scalastyle:on null
-        l.map { elem => scalaTypesToJava(elem, columnSchema.getElementType) }
+        l.map { elem => scalaToJava(elem) }
             .asJava
       }
       // map
-      // TODO CHOP-70 revisit conversion of maps between java and scala
+      // TODO(EXP-51): revisit conversion of maps between java and scala
       case m: Map[_, _] => {
-        // scalastyle:off null
-        require(null != columnSchema, "Tried to convert a Map[String, Any], but the writer schema" +
-          "was null.")
-        // scalastyle:on null
-        val convertedMap = m.map { case (key: String, value) =>
-          val convertedValue = scalaTypesToJava(value, columnSchema.getValueType)
-          (key, convertedValue)
-        }
+        val convertedMap = m.map { case (key: String, value) => (key, scalaToJava(value)) }
         new java.util.TreeMap[java.lang.Object, java.lang.Object](convertedMap.asJava)
       }
       // enum
@@ -322,9 +381,7 @@ private[express] object AvroUtil {
       // Avro records
       case r: IndexedRecord => r
       // AvroValue
-      case avroValue: AvroValue => unwrapGenericAvro(avroValue, columnSchema)
-
-      // If none of the cases matched:
+      case avroValue: AvroValue => unwrapGenericAvro(avroValue)
       case _ => throw new InvalidClassException("Trying to write an unrecognized Scala type"
           + " that cannot be converted to a Java type for writing to Kiji: "
           + columnValue.asInstanceOf[AnyRef].getClass.toString)

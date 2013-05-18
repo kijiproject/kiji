@@ -150,6 +150,16 @@ abstract class AvroValue private[express](classOfValue: Class[_]) {
   }
 
   /**
+   * If this AvroValue is an AvroFixed, gets the string name of its value.
+   *
+   * @return this AvroValue as a fixed-length byte array, if possible.
+   * @throws UnsupportedOperationException if this AvroValue is not a Fixed.
+   */
+  def asFixedBytes(): Array[Byte] = {
+    throw new UnsupportedOperationException(castErrorMessage.format("Fixed"))
+  }
+
+  /**
    * Accesses a field in this AvroValue, if this is an AvroRecord, or value in this map, if this
    * is an AvroMap.
    *

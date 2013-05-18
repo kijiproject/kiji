@@ -143,7 +143,7 @@ final case class AvroMap private[express](value: Map[String, AvroValue])
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-final case class AvroEnum private[express](name: String)
+final case class AvroEnum(name: String)
     extends AvroValue(classOf[java.lang.Enum[_]]) {
   override def asEnumName(): String = name
 }
@@ -164,4 +164,32 @@ final case class AvroRecord private[express](map: Map[String, AvroValue])
   override def apply(field: String): AvroValue = {
     return map(field)
   }
+}
+
+/**
+ * Companion object to AvroRecord containing factory methods for client use.
+ */
+object AvroRecord {
+  /**
+   * Creates an AvroRecord with the keyValues provided.
+   *
+   * @param keyValues the AvroRecord will hold.
+   */
+  def apply(keyValues: (String, Any)*): AvroRecord = {
+    val recordFields = keyValues.map {
+      case (key, value) => (key, AvroUtil.scalaToGenericAvro(value))
+    }.toMap[String, AvroValue]
+
+    new AvroRecord(recordFields)
+  }
+}
+
+/**
+ * Represents a Fixed (fixed-length byte array) from a Avro.
+ *
+ * @param value wrapped by this AvroValue.
+ */
+final case class AvroFixed(fixedByteArray: Array[Byte])
+    extends AvroValue(classOf[AvroFixed]) {
+      override def asFixedBytes(): Array[Byte] = fixedByteArray
 }

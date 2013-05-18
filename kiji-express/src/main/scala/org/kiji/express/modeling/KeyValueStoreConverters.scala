@@ -104,9 +104,7 @@ private[express] trait AvroScalaToJavaKeyConverter[K] extends ScalaToJavaKeyConv
    * @return the key, as a Java/Avro type suitable for use with a KijiMR key-value store.
    */
   override protected def keyConversion(keyWithScalaType: K): Any = {
-    // scalastyle:off null
-    AvroUtil.encodeToJava(keyWithScalaType, null)
-    // scalastyle:on null
+    AvroUtil.encodeToJava(keyWithScalaType)
   }
 }
 
