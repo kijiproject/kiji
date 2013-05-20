@@ -176,26 +176,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
    * @throws IOException if an error occurs communicating with the table or meta table.
    */
   public InternalFreshKijiTableReader(KijiTable table, int timeout) throws IOException {
-    this(table, timeout, DEFAULT_RELOAD_TIME, FreshenerThreadPool.DEFAULT_THREAD_POOL_SIZE);
-  }
-
-  /**
-   * Creates a new <code>InternalFreshKijiTableReader</code> instance that sends read requests
-   * to a Kiji table and performs freshening on returned data.  Automatically reloads freshness
-   * policies from the meta table on a specified interval.  If there is no instance  of
-   * FreshenerThreadPool in process, a new one will be created with the default thread pool size.
-   *
-   * @param table the KijiTable from which to read.
-   * @param timeout the maximum number of milliseconds to spend trying to score data. If the
-   *   process times out, stale data will be returned by
-   *   {@link #get(org.kiji.schema.EntityId, org.kiji.schema.KijiDataRequest)} calls.
-   * @param reloadTime The time to wait in milliseconds between automatically reloading freshness
-   * policies.
-   * @throws IOException if an error occurs communicating with the table or meta table.
-   */
-  public InternalFreshKijiTableReader(KijiTable table, int timeout, int reloadTime)
-      throws IOException {
-    this(table, timeout, reloadTime, FreshenerThreadPool.DEFAULT_THREAD_POOL_SIZE);
+    this(table, timeout, DEFAULT_RELOAD_TIME);
   }
 
   /**
@@ -209,15 +190,14 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
    *   {@link #get(org.kiji.schema.EntityId, org.kiji.schema.KijiDataRequest)} calls.
    * @param reloadTime The time to wait in milliseconds between automatically reloading freshness
    * policies.
-   * @param poolSize the size of a FreshenerThreadPool to create if one does not already exist.
    * @throws IOException if an error occurs communicating with the table or meta table.
    */
-  public InternalFreshKijiTableReader(KijiTable table, int timeout, int reloadTime, int poolSize)
+  public InternalFreshKijiTableReader(KijiTable table, int timeout, int reloadTime)
       throws IOException {
     mTable = table;
     // opening a reader retains the table, so we do not need to call retain manually.
     mReader = mTable.openTableReader();
-    mExecutor = FreshenerThreadPool.getInstance(poolSize).getExecutorService();
+    mExecutor = FreshenerThreadPool.getInstance().getExecutorService();
     mTimeout = timeout;
     final KijiFreshnessManager manager = KijiFreshnessManager.create(table.getKiji());
     mPolicyRecords = manager.retrievePolicies(mTable.getName());
