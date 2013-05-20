@@ -41,8 +41,8 @@ import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.util.InstanceBuilder;
 import org.kiji.scoring.FreshKijiTableReader;
-import org.kiji.scoring.FreshKijiTableReaderFactory;
-import org.kiji.scoring.FreshKijiTableReaderFactory.FreshReaderFactoryType;
+import org.kiji.scoring.FreshKijiTableReaderBuilder;
+import org.kiji.scoring.FreshKijiTableReaderBuilder.FreshReaderType;
 import org.kiji.scoring.PolicyContext;
 import org.kiji.scoring.impl.InternalPolicyContext;
 
@@ -79,9 +79,11 @@ public final class TestNewerThan extends KijiClientTest {
     // Fill local variables.
     mTable = mKiji.openTable("user");
     mReader = mTable.openTableReader();
-    mFreshReader = FreshKijiTableReaderFactory.getFactory(FreshReaderFactoryType.LOCAL).
-        openReader(mTable, 1000);
-
+    mFreshReader = FreshKijiTableReaderBuilder.get()
+        .withReaderType(FreshReaderType.LOCAL)
+        .withTable(mTable)
+        .withTimeout(1000)
+        .build();
   }
 
   @After

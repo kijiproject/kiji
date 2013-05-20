@@ -2,4 +2,9 @@
                               Kiji Scoring Release Notes
 
 Version 0.2.0
+  * SCORE-13. FreshKijiTableReaderFactory has been replaced with FreshKijiTableReaderBuilder.
   * SCORE-36. Makes the fresh CLI tool visible to the kiji tool launcher.
+
+Version 0.1.0
+
+>>>>>>> SCORE-13. Add ability to specify whether a FreshKijiTableReader should return partially fresh data.

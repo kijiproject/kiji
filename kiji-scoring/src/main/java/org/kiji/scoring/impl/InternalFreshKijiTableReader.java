@@ -67,9 +67,6 @@ import org.kiji.scoring.avro.KijiFreshnessPolicyRecord;
 public final class InternalFreshKijiTableReader implements FreshKijiTableReader {
   private static final Logger LOG = LoggerFactory.getLogger(InternalFreshKijiTableReader.class);
 
-  /** Default time between automatic reloads.  0 indicates no automatic reloads. */
-  private static final int DEFAULT_RELOAD_TIME = 0;
-
   /** The kiji table instance. */
   private final KijiTable mTable;
 
@@ -84,6 +81,9 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
 
   /** Time between automatically reloading freshness policies from the metatable in milliseconds. */
   private final int mReloadTime;
+
+  /** Whether to return partially freshened data when available. */
+  private final boolean mAllowPartial;
 
   /**
    * Map from column names to freshness policy records. Created on initialization of the
@@ -165,22 +165,6 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
 
   /**
    * Creates a new <code>InternalFreshKijiTableReader</code> instance that sends read requests
-   * to a Kiji table and performs freshening on the returned data.  Never automatically reloads
-   * policies from the meta table.  If there is no instance of FreshenerThreadPool in process, a new
-   * one will be created with the default thread pool size.
-   *
-   * @param table the table that will be read/scored.
-   * @param timeout the maximum number of milliseconds to spend trying to score data. If the
-   *   process times out, stale data will be returned by
-   *   {@link #get(org.kiji.schema.EntityId, org.kiji.schema.KijiDataRequest)} calls.
-   * @throws IOException if an error occurs communicating with the table or meta table.
-   */
-  public InternalFreshKijiTableReader(KijiTable table, int timeout) throws IOException {
-    this(table, timeout, DEFAULT_RELOAD_TIME);
-  }
-
-  /**
-   * Creates a new <code>InternalFreshKijiTableReader</code> instance that sends read requests
    * to a Kiji table and performs freshening on the returned data.  Automatically reloads freshness
    * policies from the meta table on a schedule.
    *
@@ -190,9 +174,11 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
    *   {@link #get(org.kiji.schema.EntityId, org.kiji.schema.KijiDataRequest)} calls.
    * @param reloadTime The time to wait in milliseconds between automatically reloading freshness
    * policies.
+   * @param allowParial whether to allow returning partially freshened data when available.
    * @throws IOException if an error occurs communicating with the table or meta table.
    */
-  public InternalFreshKijiTableReader(KijiTable table, int timeout, int reloadTime)
+  public InternalFreshKijiTableReader(
+      KijiTable table, int timeout, int reloadTime, boolean allowParial)
       throws IOException {
     mTable = table;
     // opening a reader retains the table, so we do not need to call retain manually.
@@ -214,6 +200,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
       throw new IllegalArgumentException(
           String.format("Reload time must be >= 0, found: %d", reloadTime));
     }
+    mAllowPartial = allowParial;
   }
 
   /** {@inheritDoc} */
@@ -563,16 +550,21 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     } catch (ExecutionException ee) {
       throw new RuntimeException(ee);
     } catch (TimeoutException te) {
-      // If superFuture times out, return cached stale data.
-      try {
-        return clientData.get();
-      } catch (InterruptedException ie) {
-        throw new RuntimeException("Freshening thread interrupted.", ie);
-      } catch (ExecutionException ee) {
-        if (ee.getCause() instanceof IOException) {
-          return mReader.get(eid, dataRequest);
-        } else {
-          throw new RuntimeException(ee);
+      // If superFuture times out, read partially freshened data from the table or return the cached
+      // data based on whether partial freshness is allowed.
+      if (mAllowPartial) {
+        return mReader.get(eid, dataRequest);
+      } else {
+        try {
+          return clientData.get();
+        } catch (InterruptedException ie) {
+          throw new RuntimeException("Freshening thread interrupted.", ie);
+        } catch (ExecutionException ee) {
+          if (ee.getCause() instanceof IOException) {
+            return mReader.get(eid, dataRequest);
+          } else {
+            throw new RuntimeException(ee);
+          }
         }
       }
     }

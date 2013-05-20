@@ -47,6 +47,7 @@ import org.kiji.schema.KijiTable;
 import org.kiji.schema.avro.TableLayoutDesc;
 import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.util.InstanceBuilder;
+import org.kiji.scoring.FreshKijiTableReaderBuilder.FreshReaderType;
 import org.kiji.scoring.lib.AlwaysFreshen;
 
 /**
@@ -226,8 +227,12 @@ public class TestKVStores extends KijiClientTest {
     KijiFreshnessManager manager = KijiFreshnessManager.create(getKiji());
     manager.storePolicy("user", "info:name", SimpleKVProducer.class, new AlwaysFreshen());
     KijiTable userTable = getKiji().openTable("user");
-    FreshKijiTableReader reader =
-        FreshKijiTableReaderFactory.getDefaultFactory().openReader(userTable, 10000);
+    FreshKijiTableReader reader = FreshKijiTableReaderBuilder.get()
+        .withReaderType(FreshReaderType.LOCAL)
+        .withTable(userTable)
+        .withTimeout(10000)
+        .build();
+
     // Read from the table to ensure that the user name is updated.
     KijiRowData data =
         reader.get(userTable.getEntityId("felix"), KijiDataRequest.create("info", "name"));
@@ -244,8 +249,12 @@ public class TestKVStores extends KijiClientTest {
     KijiFreshnessManager manager = KijiFreshnessManager.create(getKiji());
     manager.storePolicy("user", "info:name", UnconfiguredProducer.class, policy);
     KijiTable userTable = getKiji().openTable("user");
-    FreshKijiTableReader reader =
-        FreshKijiTableReaderFactory.getDefaultFactory().openReader(userTable, 10000);
+    FreshKijiTableReader reader = FreshKijiTableReaderBuilder.get()
+        .withReaderType(FreshReaderType.LOCAL)
+        .withTable(userTable)
+        .withTimeout(10000)
+        .build();
+
     // Read from the table to ensure that the user name is updated.
     KijiRowData data =
         reader.get(userTable.getEntityId("felix"), KijiDataRequest.create("info", "name"));

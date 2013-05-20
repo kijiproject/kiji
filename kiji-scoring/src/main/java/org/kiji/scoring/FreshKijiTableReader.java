@@ -35,7 +35,7 @@ import org.kiji.schema.KijiTableReader;
  * <p>
  *   Utilizes {@link org.kiji.schema.EntityId} and {@link org.kiji.schema.KijiDataRequest}
  *   to return {@link org.kiji.schema.KijiRowData}.  Accessible via
- *   {@link FreshKijiTableReaderFactory#openReader(org.kiji.schema.KijiTable, int)}.
+ *   {@link org.kiji.scoring.FreshKijiTableReaderBuilder#get()}.
  * </p>
  *
  * <p>
@@ -66,7 +66,11 @@ import org.kiji.schema.KijiTableReader;
  *     .add("foo", "bar");
  *   final KijiDataRequest request = builder.build();
  *
- *   final KijiTableReader freshReader = FreshKijiTableReaderFactory.openFreshReader(myKijiTable);
+ *   final KijiTableReader freshReader = FreshKijiTableReaderBuilder.get()
+ *       .withReaderType(FreshReaderType.LOCAL)
+ *       .withTable(table)
+ *       .withTimeout(100)
+ *       .build();
  *   final KijiRowData data = freshReader.get(myEntityId, request);
  * </pre>
  *   This code will return the three most recent values including newly generated values output by

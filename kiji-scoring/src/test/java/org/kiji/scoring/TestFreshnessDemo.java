@@ -35,7 +35,7 @@ import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableWriter;
 import org.kiji.schema.layout.KijiTableLayouts;
-import org.kiji.scoring.FreshKijiTableReaderFactory.FreshReaderFactoryType;
+import org.kiji.scoring.FreshKijiTableReaderBuilder.FreshReaderType;
 import org.kiji.scoring.lib.ShelfLife;
 
 /**
@@ -76,8 +76,11 @@ public class TestFreshnessDemo extends KijiClientTest {
     manager.storePolicy("user", "info:visits", DemoProducer.class, policy);
     // Open a FreshKijiTableReader for the table with a timeout of 100 milliseconds.
     // Note: the FreshKijiTableReader must be opened after the freshness policy is registered.
-    final FreshKijiTableReader freshReader =
-        FreshKijiTableReaderFactory.getFactory(FreshReaderFactoryType.LOCAL).openReader(table, 500);
+    final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.get()
+        .withReaderType(FreshReaderType.LOCAL)
+        .withTable(table)
+        .withTimeout(500)
+        .build();
 
     // Write an old value to the cell we plan to request with timestamp 1 and value 10.
     final EntityId eid = table.getEntityId("foo");
