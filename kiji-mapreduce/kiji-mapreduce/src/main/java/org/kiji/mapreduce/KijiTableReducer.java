@@ -22,7 +22,6 @@ package org.kiji.mapreduce;
 import java.io.IOException;
 
 import com.google.common.base.Preconditions;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +30,6 @@ import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.Inheritance;
 import org.kiji.mapreduce.framework.HFileKeyValue;
 import org.kiji.mapreduce.impl.KijiTableContextFactory;
-import org.kiji.mapreduce.kvstore.KeyValueStoreReaderFactory;
 
 /**
  * Base class for reducers that emit to a Kiji table.
@@ -47,9 +45,6 @@ public abstract class KijiTableReducer<K, V>
     extends KijiReducer<K, V, HFileKeyValue, NullWritable> {
   private static final Logger LOG = LoggerFactory.getLogger(KijiTableReducer.class);
 
-  /** Factory that manages creation of readers for KeyValueStores. */
-  private KeyValueStoreReaderFactory mKeyValueStores;
-
   /** Context used to emit to the output table. */
   private KijiTableContext mTableContext;
 
@@ -64,12 +59,8 @@ public abstract class KijiTableReducer<K, V>
   protected void setup(Context hadoopContext) throws IOException, InterruptedException {
     Preconditions.checkState(mTableContext == null);
     super.setup(hadoopContext);
-    final Configuration conf = hadoopContext.getConfiguration();
 
     mTableContext = KijiTableContextFactory.create(hadoopContext);
-
-    // Create any KeyValueStore instances necessary.
-    mKeyValueStores = KeyValueStoreReaderFactory.create(conf);
   }
 
   /** {@inheritDoc} */
@@ -92,7 +83,6 @@ public abstract class KijiTableReducer<K, V>
     Preconditions.checkState(mTableContext != null);
     mTableContext.close();
     mTableContext = null;
-    mKeyValueStores.close();
     super.cleanup(hadoopContext);
   }
 
