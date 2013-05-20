@@ -38,7 +38,7 @@ import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.KijiTableContext;
 import org.kiji.mapreduce.bulkimport.KijiBulkImportJobBuilder;
 import org.kiji.mapreduce.bulkimport.KijiBulkImporter;
-import org.kiji.mapreduce.input.TextMapReduceJobInput;
+import org.kiji.mapreduce.input.MapReduceJobInputs;
 import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiURI;
@@ -116,7 +116,7 @@ public class PhonebookImporter extends Configured implements Tool {
   KijiMapReduceJob configureJob(Path inputPath, KijiURI tableUri) throws IOException {
     return KijiBulkImportJobBuilder.create()
         .withConf(getConf())
-        .withInput(new TextMapReduceJobInput(inputPath))
+        .withInput(MapReduceJobInputs.newTextMapReduceJobInput(inputPath))
         .withOutput(new DirectKijiTableMapReduceJobOutput(tableUri))
         .withBulkImporter(PhonebookBulkImporter.class)
         .build();
