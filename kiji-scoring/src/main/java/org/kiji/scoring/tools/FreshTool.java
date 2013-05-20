@@ -37,6 +37,7 @@ import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.KijiURIException;
 import org.kiji.schema.tools.BaseTool;
+import org.kiji.schema.tools.KijiToolLauncher;
 import org.kiji.scoring.KijiFreshnessManager;
 import org.kiji.scoring.KijiFreshnessPolicy;
 import org.kiji.scoring.avro.KijiFreshnessPolicyRecord;
@@ -371,5 +372,15 @@ public class FreshTool extends BaseTool {
     } finally {
       mKiji.release();
     }
+  }
+
+  /**
+   * Program entry point.
+   *
+   * @param args The command-line arguments.
+   * @throws Exception If there is an error.
+   */
+  public static void main(String[] args) throws Exception {
+    System.exit(new KijiToolLauncher().run(new FreshTool(), args));
   }
 }

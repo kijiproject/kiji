@@ -77,7 +77,7 @@ public class TestFreshnessDemo extends KijiClientTest {
     // Open a FreshKijiTableReader for the table with a timeout of 100 milliseconds.
     // Note: the FreshKijiTableReader must be opened after the freshness policy is registered.
     final FreshKijiTableReader freshReader =
-        FreshKijiTableReaderFactory.getFactory(FreshReaderFactoryType.LOCAL).openReader(table, 100);
+        FreshKijiTableReaderFactory.getFactory(FreshReaderFactoryType.LOCAL).openReader(table, 500);
 
     // Write an old value to the cell we plan to request with timestamp 1 and value 10.
     final EntityId eid = table.getEntityId("foo");

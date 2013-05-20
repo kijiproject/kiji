@@ -1,5 +1,5 @@
 
                               Kiji Scoring Release Notes
 
-Version 0.1.0
-
+Version 0.2.0
+  * SCORE-36. Makes the fresh CLI tool visible to the kiji tool launcher.
