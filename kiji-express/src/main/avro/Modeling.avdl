@@ -1,0 +1,278 @@
+/**
+ * (c) Copyright 2012 WibiData, Inc.
+ *
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * This protocol defines avro objects used for serialization of model pipelines and pipeline run
+ * profiles to/from JSON. Some of these records are also used in the return types of methods defined
+ * in the ModelPipeline and PipelineRunProfile traits.
+ */
+@namespace("org.kiji.express.avro")
+protocol ModelSPI {
+  /**
+   * A specification of the computational phases defining a model workflow.
+   *
+   * Currently this consists of two phases:
+   * - Extract
+   * - Score
+   */
+  record AvroModelSpec {
+    /**
+     * User specified shorthand identifier for this model pipeline. Required.
+     */
+    string name;
+
+    /**
+     * User specified version number for this model pipeline. Required.
+     */
+    string version;
+
+    // TODO(EXP-54): Make the default value of this 'org.kiji.express.modeling.IdentityExtractor'
+    /**
+     * Fully qualified class name of the class to use in the extract phase. This class must
+     * implement the extractor trait.
+     */
+    string extractor_class;
+
+    /**
+     * Fully qualified class name of the class to use in the score phase. This class must implement
+     * the score trait.
+     */
+    string scorer_class;
+
+    /**
+     * Unique identifier for this model pipeline specification. The current version is
+     * model_spec-0.1.0.
+     */
+    string protocol_version = "model_spec-0.1.0";
+  }
+
+  /**
+   * Arbitrary name-value pairs.
+   */
+  record Property {
+    /**
+     * An identifier for a property. Required.
+     */
+    string name;
+
+    /**
+     * The value for the associated property. Required.
+     */
+    string value;
+  }
+
+  // TODO(EXP-52): Add support for SEQ (sequence files) and TEXT (text files).
+  /**
+   * An enumeration of supported types of KeyValueStores.
+   */
+  enum KvStoreType {
+    AVRO_KV,
+    AVRO_RECORD,
+    KIJI_TABLE
+  }
+
+  /**
+   * A specification of all the resources needed to surface data from a backing store.
+   */
+  record KVStore {
+    /**
+     * One of the following valid KVStore types: {AVRO_KV, AVRO_RECORD, KIJI_TABLE}.
+     * Required.
+     */
+    KvStoreType store_type;
+
+    /**
+     * User specified shorthand identifier for a key value store. Required.
+     */
+    string name;
+
+    /**
+     * Other properties that may be needed to instantiate and configure a kv store reader.
+     */
+    array<Property> properties = [];
+  }
+
+  /**
+   * An enumeration of supported ColumnFilters.
+   */
+  enum ColumnFilterType {
+    AND,
+    COLUMN_RANGE,
+    OR,
+    REGEX_QUALIFIER
+  }
+
+  /**
+   * A specification of a column filter and all parameters needed to instantiate it.
+   */
+  record ColumnFilter {
+    /**
+     * One of the following valid column filters: {AND, COLUMN_RANGE, OR, REGEX_QUALIFIER}.
+     * Required.
+     */
+    ColumnFilterType filter_type;
+
+    /**
+     * Other properties that may need to be specified in order to instantiate that filter.
+     */
+    array<Property> properties = [];
+  }
+
+  /**
+   * Column level data request specifications.
+   */
+  record ColumnSpec {
+    /**
+     * The name of the column to request data from. Required.
+     */
+    string name;
+
+    /**
+     * Maximum number of the most recent versions of a particular column to return. Default is 1.
+     */
+    int max_versions = 1;
+
+    /**
+     * A ColumnFilter to attach to the column. Potentially null.
+     */
+    union { null, ColumnFilter } filter = null;
+  }
+
+  /**
+   * Describes a request for columns of data to read from a Kiji table.
+   */
+  record AvroDataRequest {
+    /**
+     * Defines the smallest timestamp that cells returned should have, inclusive. This field may be
+     * 0 if no lower bound on timestamps should be imposed. The default value of this field is 0.
+     */
+    long min_timestamp = 0;
+
+    /**
+     * Defines the largest timestamp that cells returned should have exclusive. This field may be
+     * the maximum possible timestamp (9223372036854775807) if no upper bound on timestamps should
+     * be imposed. The default value of this field is 9223372036854775807.
+     */
+    long max_timestamp = 9223372036854775807;
+
+    /**
+     * An array of column level data request specifications. Required.
+     */
+    array<ColumnSpec> column_definitions;
+  }
+
+  /**
+   * An association between a tuple field name and a column.
+   */
+  record FieldBinding {
+    /**
+     * The name of a tuple field to associate with the provided column. Required.
+     */
+    string tuple_field_name;
+
+    /**
+     * The name of the column to associated with the provided tuple field. Required.
+     */
+    string store_field_name;
+  }
+
+  /**
+   * Runtime resource bindings for the extract phase.
+   *
+   * Note to developers: Please increment the 'protocol_version' field in AvroRunSpec when modifying
+   *     this record.
+   */
+  record AvroExtractRunSpec {
+    /**
+     * Describes a request for columns of data to read from a Kiji table. Required.
+     */
+    AvroDataRequest data_request;
+
+    /**
+     * The KVStores needed during the extract phase. The default value of this field is the empty
+     * list.
+     */
+    array<KVStore> kv_stores = [];
+
+    /**
+     * Associations between field names and column names. Required.
+     */
+    array<FieldBinding> field_bindings;
+  }
+
+  /**
+   * Runtime resource bindings for the score phase.
+   *
+   * Note to developers: Please increment the 'protocol_version' field in AvroRunSpec when modifying
+   *     this record.
+   */
+  record AvroScoreRunSpec {
+    /**
+     * An array of KVStores needed during the score phase. The default value of this field is the
+     * empty list.
+     */
+    array<KVStore> kv_stores = [];
+
+    /**
+     * A column name to write the output of the score phase to. Required.
+     */
+    string output_column;
+  }
+
+  /**
+   * Runtime resource bindings for a model pipeline.
+   */
+  record AvroRunSpec {
+    /**
+     * Unique identifier for this pipeline run profile specification. The current version is
+     * run_spec-0.1.0.
+     */
+    string protocol_version = "run_spec-0.1.0";
+
+    /**
+     * User specified shorthand identifier for this run profile specification. Required.
+     */
+    string name;
+
+    /**
+     * User specified version number for this particular run profile specification. Required.
+     */
+    string version;
+
+    /**
+     * Path in the local file system to JSON file containing the model spec. Required.
+     */
+    string model_spec_path;
+
+    /**
+     * Kiji URI addressing the table that this model workflow will be run against. Required.
+     */
+    string model_table_uri;
+
+    /**
+     * Runtime bindings for data sources used in the extract phase. Potentially null.
+     */
+    union { null, AvroExtractRunSpec } extract_run_spec = null;
+
+    /**
+     * Runtime bindings for data sources used in the score phase. Potentially null.
+     */
+    union { null, AvroScoreRunSpec } score_run_spec = null;
+  }
+}

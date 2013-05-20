@@ -19,6 +19,8 @@
 
 package org.kiji.express
 
+import scala.io.Source
+
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.schema.util.ReferenceCountable
@@ -127,5 +129,21 @@ object Resources {
   def doAndClose[T, C <: { def close(): Unit }](resource: => C)(fn: C => T): T = {
     def after(c: C) { c.close() }
     doAnd(resource, after)(fn)
+  }
+
+  /**
+   * Reads a resource from the classpath into a string.
+   *
+   * @param path to the desired resource (of the form: "path/to/your/resource").
+   * @return the contents of the resource as a string.
+   */
+  def resourceAsString(path: String): String = {
+    val inputStream = getClass()
+        .getClassLoader()
+        .getResourceAsStream(path)
+
+    doAndClose(Source.fromInputStream(inputStream)) { source =>
+      source.mkString
+    }
   }
 }
