@@ -79,20 +79,6 @@ class ExtractorSuite extends FunSuite {
     assert(expectedFn("foo bar") === actualFn("foo bar"))
   }
 
-  test("An extractor can have its context object set") {
-    val extractor: Extractor = new TestExtractor
-    val thrown = intercept[IllegalStateException] {
-      extractor.context
-    }
-    assert("This Scorer has not been initialized properly. Its model context hasn't been set."
-        === thrown.getMessage)
-
-    val expected: ModelContext = new ModelContext
-    extractor.context = expected
-
-    assert(expected === extractor.context)
-  }
-
   test("An extractor defined with invalid field selection will fail on construction") {
     intercept[AssertionError] {
       new TestMalformedExtractor

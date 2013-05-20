@@ -57,41 +57,15 @@ case class ExtractFn[I, O] (
  * }
  * }}}
  *
- * This trait also provides access to a [[org.kiji.express.modeling.ModelContext]] object that can
- * be used to access outside data sources required for data extraction.
+ * This trait also provides access to outside data sources required for data extraction through the
+ * `kvstores` property.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
 trait Extractor
-    extends FieldConversions
+    extends KeyValueStores
+    with FieldConversions
     with TupleConversions {
-  /** Container for a model context. This variable should only be set by Pipeline Runners. */
-  private[this] var _context: Option[ModelContext] = None
-
-  /**
-   * Gets the [[org.kiji.express.modeling.ModelContext]] associated with this phase of the model
-   * workflow. This context object can be used to access outside data sources (KVStores) required
-   * for this computation.
-   *
-   * @return the ModelContext associated with this phase of the model workflow.
-   */
-  def context: ModelContext = {
-    _context.getOrElse {
-      throw new IllegalStateException(
-          "This Scorer has not been initialized properly. Its model context hasn't been set.")
-    }
-  }
-
-  /**
-   * Sets the [[ModelContext]] associated with this phase of the model workflow. This should only be
-   * used by KijiExpress Pipeline Runners.
-   *
-   * @param value to set this phase's context object to.
-   */
-  private[express] def context_=(value: ModelContext) {
-    _context = Some(value)
-  }
-
   /**
    * Used to define the computation required for the Extract phase of the model workflow.
    *

@@ -69,20 +69,6 @@ class ScorerSuite extends FunSuite {
     assert(expectedFn("foo bar") === actualFn("foo bar"))
   }
 
-  test("An scorer can have its context object set") {
-    val scorer: Scorer = new TestScorer
-    val thrown = intercept[IllegalStateException] {
-      scorer.context
-    }
-    assert("This Scorer has not been initialized properly. Its model context hasn't been set."
-        === thrown.getMessage)
-
-    val expected: ModelContext = new ModelContext
-    scorer.context = expected
-
-    assert(expected === scorer.context)
-  }
-
   test("An scorer defined with invalid field selection will fail on construction") {
     intercept[AssertionError] {
       new TestMalformedScorer

@@ -130,12 +130,12 @@ private[express] object AvroUtil {
    */
   private[express] def scalaToGenericAvro(x: Any): AvroValue = {
     x match {
+      case null => null
       // AvroEnums and AvroRecords are already generic avro.
       case avro: AvroValue => avro
       case list: List[_] => new AvroList(list.map(scalaToGenericAvro(_)))
       case map: Map[String, _] => new AvroMap(map.mapValues(scalaToGenericAvro(_)))
-      case primitive: Any => wrapGenericAvro(scalaToJava(primitive))
-      case null => null
+      case primitive => wrapGenericAvro(scalaToJava(primitive))
     }
   }
 
