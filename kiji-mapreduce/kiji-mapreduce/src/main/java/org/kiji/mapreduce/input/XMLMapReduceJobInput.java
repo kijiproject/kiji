@@ -47,11 +47,12 @@ import org.kiji.mapreduce.input.impl.XMLInputFormat;
 @ApiAudience.Public
 public final class XMLMapReduceJobInput extends FileMapReduceJobInput {
   /**
-   * Constructs job input from a varargs of paths to XML files.
+   * Constructs job input from a varargs of paths to XML files.  Accessible via
+   * {@link MapReduceJobInputs#newXMLMapReduceJobInput(org.apache.hadoop.fs.Path...)}.
    *
    * @param paths The paths to the job input files.
    */
-  public XMLMapReduceJobInput(Path... paths) {
+  XMLMapReduceJobInput(Path... paths) {
     super(paths);
   }
 

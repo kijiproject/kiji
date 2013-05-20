@@ -48,11 +48,12 @@ import org.kiji.annotations.ApiAudience;
 @ApiAudience.Public
 public final class TextMapReduceJobInput extends FileMapReduceJobInput {
   /**
-   * Constructs job input from a varargs of paths to text files.
+   * Constructs job input from a varargs of paths to text files.  Accessible via
+   * {@link MapReduceJobInputs#newTextMapReduceJobInput(org.apache.hadoop.fs.Path...)}.
    *
    * @param paths The paths to the job input files.
    */
-  public TextMapReduceJobInput(Path... paths) {
+  TextMapReduceJobInput(Path... paths) {
     super(paths);
   }
 

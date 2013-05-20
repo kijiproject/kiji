@@ -46,11 +46,12 @@ import org.kiji.avro.mapreduce.AvroSequenceFileInputFormat;
 @ApiAudience.Public
 public final class SequenceFileMapReduceJobInput extends FileMapReduceJobInput {
   /**
-   * Constructs job input from a varargs of paths to sequence files.
+   * Constructs job input from a varargs of paths to sequence files.  Accessible via
+   * {@link MapReduceJobInputs#newSequenceFileMapReduceJobInput(org.apache.hadoop.fs.Path...)}.
    *
    * @param paths The paths to the input sequence files.
    */
-  public SequenceFileMapReduceJobInput(Path... paths) {
+  SequenceFileMapReduceJobInput(Path... paths) {
     super(paths);
   }
 

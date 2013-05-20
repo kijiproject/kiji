@@ -41,7 +41,7 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.kiji.mapreduce.input.TextMapReduceJobInput;
+import org.kiji.mapreduce.input.MapReduceJobInputs;
 import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.kvstore.KeyValueStoreClient;
 import org.kiji.mapreduce.kvstore.RequiredStores;
@@ -132,7 +132,7 @@ public class TestKijiMapReduceJobBuilder {
   public void testBuild() throws Exception {
     final KijiMapReduceJob job = KijiMapReduceJobBuilder.create()
         .withConf(mConf)
-        .withInput(new TextMapReduceJobInput(new Path("/path/to/my/input")))
+        .withInput(MapReduceJobInputs.newTextMapReduceJobInput(new Path("/path/to/my/input")))
         .withMapper(MyMapper.class)
         .withReducer(MyReducer.class)
         .withOutput(new TextMapReduceJobOutput(new Path("/path/to/my/output"), 16))
@@ -180,7 +180,7 @@ public class TestKijiMapReduceJobBuilder {
     LOG.info("Building job...");
     final KijiMapReduceJob job = KijiMapReduceJobBuilder.create()
         .withConf(mConf)
-        .withInput(new TextMapReduceJobInput(new Path("/path/to/my/input")))
+        .withInput(MapReduceJobInputs.newTextMapReduceJobInput(new Path("/path/to/my/input")))
         .withMapper(MyMapper.class)
         .withReducer(MyReducer.class)
         .withOutput(new TextMapReduceJobOutput(new Path("/path/to/my/output"), 16))

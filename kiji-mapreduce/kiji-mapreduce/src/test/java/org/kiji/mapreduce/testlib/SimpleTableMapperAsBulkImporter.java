@@ -28,8 +28,8 @@ import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.KijiTableContext;
 import org.kiji.mapreduce.bulkimport.KijiBulkImportJobBuilder;
 import org.kiji.mapreduce.bulkimport.KijiBulkImporter;
-import org.kiji.mapreduce.input.KijiTableMapReduceJobInput;
 import org.kiji.mapreduce.input.KijiTableMapReduceJobInput.RowOptions;
+import org.kiji.mapreduce.input.MapReduceJobInputs;
 import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
@@ -73,7 +73,8 @@ public final class SimpleTableMapperAsBulkImporter
 
     final KijiMapReduceJob mrjob = KijiBulkImportJobBuilder.create()
         .withBulkImporter(SimpleTableMapperAsBulkImporter.class)
-        .withInput(new KijiTableMapReduceJobInput(table.getURI(), dataRequest, new RowOptions()))
+        .withInput(MapReduceJobInputs.newKijiTableMapReduceJobInput(
+            table.getURI(), dataRequest, new RowOptions()))
         .withOutput(new DirectKijiTableMapReduceJobOutput(table.getURI()))
         .build();
     if (!mrjob.run()) {

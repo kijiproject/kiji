@@ -47,11 +47,13 @@ import org.kiji.avro.mapreduce.AvroKeyValueInputFormat;
 @ApiAudience.Public
 public final class AvroKeyValueMapReduceJobInput extends FileMapReduceJobInput {
   /**
-   * Constructs job input from a varargs of paths to Avro container files.
+   * Constructs job input from a varargs of paths to Avro container files.  Accessible via
+   * {@link org.kiji.mapreduce.input.MapReduceJobInputs
+   * #newAvroKeyValueMapReduceJobInput(org.apache.hadoop.fs.Path...)}.
    *
    * @param paths The paths to the avro input files.
    */
-  public AvroKeyValueMapReduceJobInput(Path... paths) {
+  AvroKeyValueMapReduceJobInput(Path... paths) {
     super(paths);
   }
 

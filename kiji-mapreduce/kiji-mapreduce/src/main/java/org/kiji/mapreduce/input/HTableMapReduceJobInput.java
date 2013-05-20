@@ -52,9 +52,8 @@ public final class HTableMapReduceJobInput extends MapReduceJobInput {
   /** The name of the HTable to use as job input. */
   private String mTableName;
 
-  /** Default constructor. Do not use directly. */
-  public HTableMapReduceJobInput() {
-  }
+  /** Default constructor. Used by {@link MapReduceJobInputs} */
+  HTableMapReduceJobInput() { }
 
   /** {@inheritDoc} */
   @Override
@@ -63,11 +62,12 @@ public final class HTableMapReduceJobInput extends MapReduceJobInput {
   }
 
   /**
-   * Creates a new <code>HTableMapReduceJobInput</code> instance.
+   * Creates a new <code>HTableMapReduceJobInput</code> instance.  Accessible via
+   * {@link MapReduceJobInputs#newHTableMapReduceJobInput(String)}.
    *
    * @param tableName The name of the HBase table (HTable) to use as input for the job.
    */
-  public HTableMapReduceJobInput(String tableName) {
+  HTableMapReduceJobInput(String tableName) {
     mTableName = tableName;
   }
 

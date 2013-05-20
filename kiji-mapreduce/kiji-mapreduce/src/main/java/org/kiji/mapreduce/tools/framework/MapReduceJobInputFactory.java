@@ -24,14 +24,7 @@ import java.util.Map;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.MapReduceJobInput;
-import org.kiji.mapreduce.input.AvroKeyMapReduceJobInput;
-import org.kiji.mapreduce.input.AvroKeyValueMapReduceJobInput;
-import org.kiji.mapreduce.input.HTableMapReduceJobInput;
-import org.kiji.mapreduce.input.KijiTableMapReduceJobInput;
-import org.kiji.mapreduce.input.SequenceFileMapReduceJobInput;
-import org.kiji.mapreduce.input.TextMapReduceJobInput;
-import org.kiji.mapreduce.input.WholeTextFileMapReduceJobInput;
-import org.kiji.mapreduce.input.XMLMapReduceJobInput;
+import org.kiji.mapreduce.input.MapReduceJobInputs;
 import org.kiji.mapreduce.tools.framework.JobInputSpec.Format;
 import org.kiji.schema.tools.SpaceSeparatedMapParser;
 
@@ -77,7 +70,7 @@ public final class MapReduceJobInputFactory {
   }
 
   /**
-   * Instantiates the appropriate job output.
+   * Instantiates the appropriate job input.
    *
    * @param format Format of the job input.
    * @return an unconfigured job input instance.
@@ -86,25 +79,25 @@ public final class MapReduceJobInputFactory {
   private MapReduceJobInput createJobInput(Format format) throws IOException {
     switch (format) {
     case HTABLE:
-      return new HTableMapReduceJobInput();
+      return MapReduceJobInputs.newHTableMapReduceJobInput();
     case TEXT:
-      return new TextMapReduceJobInput();
+      return MapReduceJobInputs.newTextMapReduceJobInput();
     case SMALL_TEXT_FILES:
-      return new WholeTextFileMapReduceJobInput();
+      return MapReduceJobInputs.newWholeTextFileMapReduceJobInput();
     case SEQUENCE:
-      return new SequenceFileMapReduceJobInput();
+      return MapReduceJobInputs.newSequenceFileMapReduceJobInput();
       // TODO(KIJIMR-61) Map file job input
     // case MAP_FILE:
     //   throw new IOException(String.format(
     //       "Map files are not supported as job input in spec '%s'.", ssm));
     case AVRO:
-      return new AvroKeyMapReduceJobInput();
+      return MapReduceJobInputs.newAvroKeyMapReduceJobInput();
     case AVRO_KV:
-      return new AvroKeyValueMapReduceJobInput();
+      return MapReduceJobInputs.newAvroKeyValueMapReduceJobInput();
     case KIJI:
-      return new KijiTableMapReduceJobInput();
+      return MapReduceJobInputs.newKijiTableMapReduceJobInput();
     case XML:
-      return new XMLMapReduceJobInput();
+      return MapReduceJobInputs.newXMLMapReduceJobInput();
     default:
       throw new RuntimeException(String.format("Unhandled job output format: '%s'.", format));
     }

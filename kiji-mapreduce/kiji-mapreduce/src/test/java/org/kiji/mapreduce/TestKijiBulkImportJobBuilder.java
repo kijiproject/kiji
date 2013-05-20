@@ -39,7 +39,7 @@ import org.kiji.mapreduce.bulkimport.KijiBulkImportJobBuilder;
 import org.kiji.mapreduce.bulkimport.KijiBulkImporter;
 import org.kiji.mapreduce.bulkimport.impl.BulkImportMapper;
 import org.kiji.mapreduce.framework.KijiConfKeys;
-import org.kiji.mapreduce.input.TextMapReduceJobInput;
+import org.kiji.mapreduce.input.MapReduceJobInputs;
 import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.kvstore.RequiredStores;
 import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
@@ -107,7 +107,7 @@ public class TestKijiBulkImportJobBuilder extends KijiClientTest {
   public void testBuildWithHFileOutput() throws Exception {
     final KijiMapReduceJob mrjob = KijiBulkImportJobBuilder.create()
         .withConf(getConf())
-        .withInput(new TextMapReduceJobInput(new Path(mTempPath, "input")))
+        .withInput(MapReduceJobInputs.newTextMapReduceJobInput(new Path(mTempPath, "input")))
         .withBulkImporter(NoopBulkImporter.class)
         .withOutput(new HFileMapReduceJobOutput(mTable.getURI(), new Path(mTempPath, "output"), 10))
         .build();
@@ -127,7 +127,7 @@ public class TestKijiBulkImportJobBuilder extends KijiClientTest {
   public void testBuildWithKeyValueStore() throws Exception {
     final KijiMapReduceJob mrjob = KijiBulkImportJobBuilder.create()
         .withConf(getConf())
-        .withInput(new TextMapReduceJobInput(new Path(mTempPath, "input")))
+        .withInput(MapReduceJobInputs.newTextMapReduceJobInput(new Path(mTempPath, "input")))
         .withBulkImporter(KVStoreBulkImporter.class)
         .withOutput(new HFileMapReduceJobOutput(mTable.getURI(), new Path(mTempPath, "output"), 10))
         .build();

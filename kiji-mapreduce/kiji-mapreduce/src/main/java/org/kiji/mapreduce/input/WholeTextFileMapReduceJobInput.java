@@ -57,11 +57,12 @@ import org.kiji.mapreduce.input.impl.WholeFileInputFormat;
 public final class WholeTextFileMapReduceJobInput extends FileMapReduceJobInput {
 
   /**
-   * Constructs job input from a varargs of paths to text files.
+   * Constructs job input from a varargs of paths to text files.  Accessible via
+   * {@link MapReduceJobInputs#newWholeTextFileMapReduceJobInput(org.apache.hadoop.fs.Path...)}.
    *
    * @param paths The paths to the job input files.
    */
-  public WholeTextFileMapReduceJobInput(Path... paths) {
+  WholeTextFileMapReduceJobInput(Path... paths) {
     super(paths);
   }
 

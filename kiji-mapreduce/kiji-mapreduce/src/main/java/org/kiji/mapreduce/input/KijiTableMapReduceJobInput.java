@@ -156,9 +156,11 @@ public final class KijiTableMapReduceJobInput extends MapReduceJobInput {
     }
   }
 
-  /** Default constructor. */
-  public KijiTableMapReduceJobInput() {
-  }
+  /**
+   * Default constructor. Accessible via
+   * {@link org.kiji.mapreduce.input.MapReduceJobInputs#newKijiTableMapReduceJobInput()}.
+   */
+  KijiTableMapReduceJobInput() { }
 
   /** {@inheritDoc} */
   @Override
@@ -167,14 +169,17 @@ public final class KijiTableMapReduceJobInput extends MapReduceJobInput {
   }
 
   /**
-   * Constructs job input from column data in a Kiji table over a row range.
+   * Constructs job input from column data in a Kiji table over a row range.  Accessible via
+   * {@link MapReduceJobInputs#newKijiTableMapReduceJobInput(
+   * org.kiji.schema.KijiURI, org.kiji.schema.KijiDataRequest,
+   * org.kiji.mapreduce.input.KijiTableMapReduceJobInput.RowOptions)}.
    *
    * @param inputTableURI URI of the input table.
    * @param dataRequest Specifies the columns and versions of cells to read from the table.
    * @param rowOptions Specifies optional settings for restricting the input from the
    *     table to some subset of the rows.
    */
-  public KijiTableMapReduceJobInput(
+  KijiTableMapReduceJobInput(
       KijiURI inputTableURI, KijiDataRequest dataRequest, RowOptions rowOptions) {
     mInputTableURI = inputTableURI;
     mDataRequest = dataRequest;

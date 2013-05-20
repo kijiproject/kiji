@@ -29,6 +29,7 @@ import org.kiji.annotations.Inheritance;
 import org.kiji.mapreduce.JobConfigurationException;
 import org.kiji.mapreduce.MapReduceJobInput;
 import org.kiji.mapreduce.input.KijiTableMapReduceJobInput;
+import org.kiji.mapreduce.input.MapReduceJobInputs;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
@@ -138,7 +139,8 @@ public abstract class KijiTableInputJobBuilder<T extends KijiTableInputJobBuilde
   protected final MapReduceJobInput getJobInput() {
     final KijiTableMapReduceJobInput.RowOptions rowOptions =
         new KijiTableMapReduceJobInput.RowOptions(mStartRow, mLimitRow, mRowFilter);
-    return new KijiTableMapReduceJobInput(mInputTableURI, getDataRequest(), rowOptions);
+    return MapReduceJobInputs.newKijiTableMapReduceJobInput(
+        mInputTableURI, getDataRequest(), rowOptions);
   }
 
   /** @return the URI of the input table. */
