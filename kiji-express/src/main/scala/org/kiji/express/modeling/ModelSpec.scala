@@ -49,8 +49,17 @@ import org.kiji.schema.util.ToJson
  * }
  * }}}
  *
- * @param name of the model spec.
- * @param version of the model spec.
+ * To load a JSON model specification:
+ * {{{
+ * // Load a JSON string directly.
+ * val myModelSpec: ModelSpec = ModelSpec.loadJson("""{ "name": "myIdentifier", ... }""")
+ *
+ * // Load a JSON file.
+ * val myModelSpec2: ModelSpec = ModelSpec.loadJsonFile("/path/to/json/config.json")
+ * }}}
+ *
+ * @param name of the model specification.
+ * @param version of the model specification.
  * @param extractorClass to be used in the extract phase of the model specification.
  * @param scorerClass to be used in the score phase of the model specification.
  * @param protocolVersion this model specification was written for.
@@ -69,7 +78,7 @@ final class ModelSpec private[express] (
   /**
    * Serializes this model specification into a JSON string.
    *
-   * @return a JSON string that represents the model spec.
+   * @return a JSON string that represents the model specification.
    */
   final def toJson(): String = {
     // Build an AvroModelSpec record.
@@ -100,7 +109,12 @@ final class ModelSpec private[express] (
   }
 
   override def hashCode(): Int =
-      Objects.hashCode(name, version, extractorClass, scorerClass, protocolVersion)
+      Objects.hashCode(
+          name,
+          version,
+          extractorClass,
+          scorerClass,
+          protocolVersion)
 }
 
 /**
@@ -108,13 +122,13 @@ final class ModelSpec private[express] (
  * validation methods.
  */
 object ModelSpec {
-  /** Maximum ModelSpec version we can recognize. */
+  /** Maximum model specification version we can recognize. */
   val MAX_MODEL_SPEC_VER: ProtocolVersion = ProtocolVersion.parse("model_spec-0.1.0")
 
-  /** Minimum ModelSpec version we can recognize. */
+  /** Minimum model specification version we can recognize. */
   val MIN_MODEL_SPEC_VER: ProtocolVersion = ProtocolVersion.parse("model_spec-0.1.0")
 
-  /** Current ModelSpec protocol version. */
+  /** Current model specification protocol version. */
   val CURRENT_MODEL_SPEC_VER: ProtocolVersion = ProtocolVersion.parse("model_spec-0.1.0")
 
   /** Regular expression used to validate a model spec version string. */
@@ -127,7 +141,7 @@ object ModelSpec {
   /**
    * Creates a ModelSpec given a JSON string. In the process, all fields are validated.
    *
-   * @param json specification of a model.
+   * @param json serialized model specification.
    * @return the validated model specification.
    */
   def fromJson(json: String): ModelSpec = {
@@ -166,7 +180,7 @@ object ModelSpec {
       }
     }
 
-    // Build a model spec.
+    // Build a model specification.
     new ModelSpec(
         name = avroModelSpec.getName,
         version = avroModelSpec.getVersion,
@@ -179,7 +193,7 @@ object ModelSpec {
    * Creates a ModelSpec given a path in the local filesystem to a JSON file that
    * specifies a model. In the process, all fields are validated.
    *
-   * @param path in the local filesystem to a JSON specification of a model spec.
+   * @param path in the local filesystem to a JSON file containing a model specification.
    * @return the validated model specification.
    */
   def fromJsonFile(path: String): ModelSpec = {
