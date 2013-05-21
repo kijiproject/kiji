@@ -71,6 +71,18 @@ public class CommandLogger {
     String checkinServerUrl = System.getenv(KIJI_CHECKIN_SERVER);
     if (checkinServerUrl != null) {
       try {
+        // TODO: BENTO-37: environment variable should be a base URI
+        // until then, let's do a few checks to make sure the suffix is correct
+        if (checkinServerUrl.endsWith("/checkin") || checkinServerUrl.endsWith("/checkin/")) {
+          checkinServerUrl = checkinServerUrl.replace("/checkin", "/command");
+        } else if (!checkinServerUrl.endsWith("/command")) {
+          String suffix = "command";
+          if (checkinServerUrl.endsWith("/")) {
+            suffix = "/" + suffix;
+          }
+          checkinServerUrl += suffix;
+        }
+
         mCheckinServerUri = new URI(checkinServerUrl);
       } catch (URISyntaxException e) {
         LOG.error("ERROR", e);
