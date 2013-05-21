@@ -107,6 +107,15 @@ public interface FreshKijiTableReader extends KijiTableReader {
    * Attempts to freshen all data requested in parallel before returning the most up to date data
    *   available.
    *
+   * <p>A thread will be launched for every EntityId in parallel, but all threads willl share
+   * the KijiFreshnessPolicy and KijiProducer objects. For this reason, do not use bulkGet
+   * if your {@link KijiFreshnessPolicy#getDataRequest()},
+   * {@link KijiFreshnessPolicy#isFresh(org.kiji.schema.KijiRowData, PolicyContext)},
+   * {@link org.kiji.mapreduce.produce.KijiProducer#getDataRequest()}, or
+   * {@link org.kiji.mapreduce.produce.KijiProducer#produce(KijiRowData,
+   * org.kiji.mapreduce.produce.ProducerContext)}
+   * are not thread-safe.</p>
+   *
    * @param entityIds A list of EntityIds for the rows to query.
    * @param dataRequest What data to retrieve.
    * @return a list of KijiRowData corresponding the the EntityIds and data request after
