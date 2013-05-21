@@ -130,11 +130,15 @@ private[express] object AvroUtil {
    */
   private[express] def scalaToGenericAvro(x: Any): AvroValue = {
     x match {
+      // scalastyle:off null
       case null => null
+      // scalastyle:on null
       // AvroEnums and AvroRecords are already generic avro.
       case avro: AvroValue => avro
       case list: List[_] => new AvroList(list.map(scalaToGenericAvro(_)))
-      case map: Map[String, _] => new AvroMap(map.mapValues(scalaToGenericAvro(_)))
+      case map: Map[_, _] => {
+        new AvroMap(map.asInstanceOf[Map[String, _]].mapValues(scalaToGenericAvro(_)))
+      }
       case primitive => wrapGenericAvro(scalaToJava(primitive))
     }
   }
@@ -258,7 +262,9 @@ private[express] object AvroUtil {
     def unwrapGenericWithSchema(avroValue: AvroValue): (java.lang.Object, Schema) = {
       avroValue match {
         // If it's null, the schema is also null.
+        // scalastyle:off null
         case null => (null, null)
+        // scalastyle:on null
         // AvroValues
         case AvroInt(i) => (scalaToJava(i), Schema.create(Schema.Type.INT))
         case AvroBoolean(b) => (scalaToJava(b), Schema.create(Schema.Type.BOOLEAN))
@@ -271,7 +277,9 @@ private[express] object AvroUtil {
           val schema = Schema.createFixed(
               "ExpressFixed",
               "A default fixed Schema created by KijiExpress with no namespace.",
+              // scalastyle:off null
               null,
+              // scalastyle:on null
               fixed.size)
           (new GenericData.Fixed(schema, fixed), schema)
         }
@@ -279,7 +287,9 @@ private[express] object AvroUtil {
           val (values, schemas) = l.map { elem => unwrapGenericWithSchema(elem) }.unzip
           val elementSchema = {
             if (schemas.isEmpty) {
+              // scalastyle:off null
               null
+              // scalastyle:on null
             } else {
               // Require that if schemas is non-empty, all of them must be the same.
               require(schemas.forall(_ == schemas.head))
@@ -297,7 +307,9 @@ private[express] object AvroUtil {
           val (_, schemas) = m.values.map(value => unwrapGenericWithSchema(value)).unzip
           val elementSchema = {
             if (schemas.isEmpty) {
+              // scalastyle:off null
               null
+              // scalastyle:on null
             } else {
               // Require that if schemas is non-empty, all of them must be the same.
               require(schemas.forall(_ == schemas.head))

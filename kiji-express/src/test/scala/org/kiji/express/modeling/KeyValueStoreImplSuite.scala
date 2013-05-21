@@ -31,6 +31,7 @@ import org.apache.avro.generic.GenericRecord
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.hbase.HBaseConfiguration
 
+import org.kiji.express.AvroRecord
 import org.kiji.express.EntityId
 import org.kiji.express.KijiSuite
 import org.kiji.express.Resources.doAndClose
@@ -79,7 +80,7 @@ class KeyValueStoreImplSuite extends KijiSuite {
   }
 
   test("Using a KijiExpress KVStore backed by a KijiMR AvroRecordKeyValueStore") {
-    val avroFilePath: Path = generateAvroKVRecordKeyValueStore();
+    val avroFilePath: Path = generateAvroKVRecordKeyValueStore()
     val conf = HBaseConfiguration.create()
     val store: JAvroRecordKeyValueStore[Int, GenericData.Record] = JAvroRecordKeyValueStore
         .builder()
@@ -103,7 +104,7 @@ class KeyValueStoreImplSuite extends KijiSuite {
 
   test("Using a KijiExpress KVStore backed by a KijiMR AvroKVRecordKeyValueStore") {
     // Get the Java key-value store.
-    val avroFilePath: Path = generateAvroKVRecordKeyValueStore();
+    val avroFilePath: Path = generateAvroKVRecordKeyValueStore()
     val conf = HBaseConfiguration.create()
     val store: JAvroKVRecordKeyValueStore[Int, CharSequence] = JAvroKVRecordKeyValueStore
         .builder()
@@ -118,7 +119,30 @@ class KeyValueStoreImplSuite extends KijiSuite {
     }
   }
 
-  /** Writes an avro file of generic records with a 'key', 'blah', and 'value' field. */
+  test("Using a KijiExpress KVStore where keys are records") {
+    // Get the Java key-value store.
+
+    val avroFilePath: Path = generateAvroKVRecordKeyValueStoreWithRecordKey()
+    val conf = HBaseConfiguration.create()
+    val store: JAvroRecordKeyValueStore[AvroRecord, GenericData.Record] = JAvroRecordKeyValueStore
+        .builder()
+        .withConfiguration(conf)
+        .withInputPath(avroFilePath)
+        .withKeyFieldName("key")
+        .build()
+
+    // Wrap the Java key-value store in its corresponding Scala variety and test it.
+    doAndClose(new AvroRecordKeyValueStore[AvroRecord](store)) { kvstore =>
+      assert("one" === kvstore(AvroRecord("innerkey" -> 1))("value").asString)
+      assert("two" === kvstore(AvroRecord("innerkey" -> 2))("value").asString)
+    }
+  }
+
+  /**
+   * Writes an avro file of generic records with a 'key', 'blah', and 'value' field.
+   *
+   * @return the path to the file written.
+   */
   private def generateAvroKVRecordKeyValueStore(): Path = {
     // Build the schema associated with this key-value store.
     // scalastyle:off null
@@ -170,7 +194,86 @@ class KeyValueStoreImplSuite extends KijiSuite {
       }
     }
 
-    return new Path(file.getPath());
+    return new Path(file.getPath())
+  }
+
+  /**
+   * Writes an avro file of generic records with a 'key', 'blah', and 'value' field, where the key
+   * field is a record.
+   *
+   * @return the path to the file written.
+   */
+  private def generateAvroKVRecordKeyValueStoreWithRecordKey(): Path = {
+    // Build the schema associated with this key-value store.
+    // scalastyle:off null
+    val keySchema: Schema =
+        Schema.createRecord(
+            "key_record",
+            null,
+            null,
+            false
+            )
+    keySchema.setFields(
+            Seq(new Schema.Field("innerkey", Schema.create(Schema.Type.INT), null, null)).asJava)
+    val writerSchema: Schema = {
+      val schema: Schema = Schema.createRecord("record", null, null, false)
+      val fields: Seq[Schema.Field] = Seq(
+          new Schema.Field(
+              "key",
+              keySchema,
+              null,
+              null),
+          new Schema.Field("blah", Schema.create(Schema.Type.STRING), null, null),
+          new Schema.Field("value", Schema.create(Schema.Type.STRING), null, null))
+      schema.setFields(fields.asJava)
+      schema
+    }
+    // scalastyle:on null
+
+    // Open a writer.
+    val file: File = File.createTempFile("generic-kv", ".avro")
+    val fileWriter: DataFileWriter[GenericRecord] = {
+      val datumWriter = new GenericDatumWriter[GenericRecord](writerSchema)
+      new DataFileWriter(datumWriter)
+          .create(writerSchema, file)
+    }
+
+    doAndClose(fileWriter) { writer =>
+      // Write a record.
+      {
+        val key1: GenericData.Record = new GenericData.Record(keySchema)
+        key1.put("innerkey", 1)
+        val record: GenericData.Record = new GenericData.Record(writerSchema)
+        record.put("key", key1)
+        record.put("blah", "blah")
+        record.put("value", "one")
+        writer.append(record)
+      }
+
+      // Write another record.
+      {
+        val key2: GenericData.Record = new GenericData.Record(keySchema)
+        key2.put("innerkey", 2)
+        val record: GenericData.Record = new GenericData.Record(writerSchema)
+        record.put("key", key2)
+        record.put("blah", "blah")
+        record.put("value", "two")
+        writer.append(record)
+      }
+
+      // Write a duplicate record with the same key field value.
+      {
+        val key2: GenericData.Record = new GenericData.Record(keySchema)
+        key2.put("innerkey", 2)
+        val record: GenericData.Record = new GenericData.Record(writerSchema)
+        record.put("key", key2)
+        record.put("blah", "blah")
+        record.put("value", "deux")
+        writer.append(record)
+      }
+    }
+
+    return new Path(file.getPath())
   }
 
   /**
