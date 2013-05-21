@@ -67,8 +67,11 @@ public final class GatherMapper<K, V>
     setGatherer(createGatherer(conf));
   }
 
-  /** {@inheritDoc} */
-  @Override
+  /**
+   * Return a KijiDataRequest that describes which input columns need to be available.
+   *
+   * @return A kiji data request.
+   */
   public KijiDataRequest getDataRequest() {
     return mGatherer.getDataRequest();
   }

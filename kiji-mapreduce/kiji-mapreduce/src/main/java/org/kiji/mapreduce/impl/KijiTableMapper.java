@@ -31,7 +31,6 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.Inheritance;
-import org.kiji.mapreduce.KijiDataRequester;
 import org.kiji.mapreduce.KijiMapper;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiRowData;
@@ -45,8 +44,7 @@ import org.kiji.schema.KijiRowData;
 @ApiAudience.Private
 @Inheritance.Sealed
 public abstract class KijiTableMapper<K, V>
-    extends KijiMapper<EntityId, KijiRowData, K, V>
-    implements Configurable, KijiDataRequester {
+    extends KijiMapper<EntityId, KijiRowData, K, V> implements Configurable {
 
   private static final Logger LOG = LoggerFactory.getLogger(KijiTableMapper.class);
 

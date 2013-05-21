@@ -3,6 +3,8 @@
                               KijiMR Release Notes
 
 Version 1.0.0-rc63
+  * KIJIMR-107. Removes the KijiDataRequester interface. KijiGatherer,
+      KijiProducer, etc. no longer implement this interface.
   * KIJIMR-123. MapReduceJobInput constructors are now package private and accessible via
       org.kiji.mapreduce.input.MapReduceJobInputs static methods.
 

@@ -29,7 +29,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.Inheritance;
 import org.kiji.mapreduce.KijiContext;
-import org.kiji.mapreduce.KijiDataRequester;
 import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.kvstore.KeyValueStoreClient;
 import org.kiji.schema.KijiDataRequest;
@@ -98,7 +97,7 @@ import org.kiji.schema.KijiRowData;
 @ApiAudience.Public
 @Inheritance.Extensible
 public abstract class KijiProducer
-    implements Configurable, KijiDataRequester, KeyValueStoreClient {
+    implements Configurable, KeyValueStoreClient {
 
   /** The Configuration of this producer. */
   private Configuration mConf;
@@ -142,7 +141,6 @@ public abstract class KijiProducer
    *
    * @return a kiji data request.
    */
-  @Override
   public abstract KijiDataRequest getDataRequest();
 
   /** {@inheritDoc} */

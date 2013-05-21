@@ -49,8 +49,11 @@ public final class ProduceMapper extends KijiTableMapper<HFileKeyValue, NullWrit
   /** Producer context. */
   private InternalProducerContext mProducerContext;
 
-  /** {@inheritDoc} */
-  @Override
+  /**
+   * Return a KijiDataRequest that describes which input columns need to be available.
+   *
+   * @return A kiji data request.
+   */
   public KijiDataRequest getDataRequest() {
     final KijiDataRequest dataRequest = mProducer.getDataRequest();
     if (dataRequest.isEmpty()) {

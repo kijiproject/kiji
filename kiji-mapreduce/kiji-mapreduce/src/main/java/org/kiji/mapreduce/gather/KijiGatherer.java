@@ -29,9 +29,9 @@ import org.apache.hadoop.conf.Configuration;
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.Inheritance;
 import org.kiji.mapreduce.KVOutputJob;
-import org.kiji.mapreduce.KijiDataRequester;
 import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.kvstore.KeyValueStoreClient;
+import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 
 /**
@@ -96,7 +96,7 @@ import org.kiji.schema.KijiRowData;
 @ApiAudience.Public
 @Inheritance.Extensible
 public abstract class KijiGatherer<K, V>
-    implements Configurable, KeyValueStoreClient, KijiDataRequester, KVOutputJob {
+    implements Configurable, KeyValueStoreClient, KVOutputJob {
 
   /** The Configuration for this instance. */
   private Configuration mConf;
@@ -124,6 +124,15 @@ public abstract class KijiGatherer<K, V>
   public Configuration getConf() {
     return mConf;
   }
+
+  /**
+   * Returns a KijiDataRequest that describes which input columns need to be available to
+   * the gatherer.  This method may be called multiple times, perhaps before {@link
+   * #setup(org.kiji.mapreduce.gather.GathererContext)}.
+   *
+   * @return a kiji data request.
+   */
+  public abstract KijiDataRequest getDataRequest();
 
   /**
    * Called once to initialize the gatherer before any calls to gather().
