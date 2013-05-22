@@ -39,6 +39,10 @@ public final class CheckinUtils {
 
   private static final String DISABLE_CHECKIN = ".disable_kiji_checkin";
 
+  /** System property that can be set to true to disable checkin/command logging */
+  public static final String DISABLE_CHECKIN_PROP =
+      "org.kiji.checkin.CheckinUtils.disable_checkin";
+
   /** Name of folder containing kiji checkin specific files. */
   private static final String HIDDEN_KIJI_DIR = ".kiji";
 
@@ -126,11 +130,13 @@ public final class CheckinUtils {
   /**
    * Returns whether or not the checkin ability is disabled or not. This
    * is true if the user has touched the {@link #DISABLE_CHECKIN} file in ~/{@link #HIDDEN_KIJI_DIR}
-   * folder.
+   * folder OR the system property {@link #DISABLE_CHECKIN_PROP} is set to "true".
    *
    * @return boolean indicating whether or not the checkin feature has been disabled or not.
    */
   public static boolean isCheckinDisabled() {
-    return CheckinUtils.kijiFileExists(DISABLE_CHECKIN);
+
+    boolean disableCheckinProp = Boolean.valueOf(System.getProperty(DISABLE_CHECKIN_PROP, "false"));
+    return CheckinUtils.kijiFileExists(DISABLE_CHECKIN) || disableCheckinProp;
   }
 }
