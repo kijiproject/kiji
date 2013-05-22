@@ -107,7 +107,20 @@ abstract class TableDDLCommand extends DDLCommand {
   def applyUpdate(layout: TableLayoutDesc): Unit = {
     getLayoutReferenceId() match {
       case None => { } // No previous layout to refer to.
-      case Some(ref) => { layout.setReferenceLayout(ref) }
+      case Some(ref) => {
+        layout.setReferenceLayout(ref)
+        try {
+          // By default, layout IDs are integers incremented with each new layout:
+          val refLayoutId = ref.toLong
+          layout.setLayoutId((refLayoutId + 1).toString)
+        } catch {
+          case _: NumberFormatException =>
+            // If a reference layout ID is not an integer (eg. a user manually wrote a layout
+            // with a custom layout ID),
+            // sets the new layout ID to be the current time since the Epoch.
+            layout.setLayoutId(System.currentTimeMillis.toString)
+        }
+      }
     }
     env.kijiSystem.applyLayout(getKijiURI(), tableName, layout)
   }
