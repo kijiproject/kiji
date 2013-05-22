@@ -50,7 +50,7 @@ class KijiSchemeSuite extends KijiSuite {
 
     // Read the tuple back.
     val rowData =
-        reader.get(dummyEid.toJavaEntityId, KijiScheme.buildRequest(TimeRange.All, columns.values))
+      reader.get(dummyEid.toJavaEntityId, KijiScheme.buildRequest(TimeRange.All, columns.values))
     val expressGenericTable = new ExpressGenericTable(uri, columns.values.toSeq)
     val readValue: Option[Tuple] =
         KijiScheme.rowToTuple(columns, fields, None, rowData, uri, expressGenericTable)

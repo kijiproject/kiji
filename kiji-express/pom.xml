@@ -24,85 +24,58 @@
 
   <properties>
     <scalding.version>0.8.3</scalding.version>
-    <kiji-schema.version>1.0.4-SNAPSHOT</kiji-schema.version>
     <kiji-schema-shell.version>1.0.0</kiji-schema-shell.version>
-    <kiji-mapreduce.version>1.0.0-rc62</kiji-mapreduce.version>
     <scalatest.version>2.0.M5b</scalatest.version>
     <twitter-util.version>6.2.0</twitter-util.version>
   </properties>
 
+  <profiles>
+    <profile>
+      <!--
+        Active by default: cdh4.1.2 build. Override with -Dplatform=cdh42 to use a CDH4.2-based
+        platform.
+      -->
+      <id>cdh41</id>
+      <activation>
+        <property>
+          <name>!platform</name>
+        </property>
+      </activation>
+
+      <properties>
+        <hbase.version>0.92.1-cdh4.1.2</hbase.version>
+        <hadoop.version>2.0.0-mr1-cdh4.1.2</hadoop.version>
+        <kiji-schema.version>1.0.4-SNAPSHOT</kiji-schema.version>
+        <kiji-mapreduce.version>1.0.0-rc62</kiji-mapreduce.version>
+        <fake-hbase.version>0.0.5</fake-hbase.version>
+      </properties>
+    </profile>
+    <profile>
+      <!--
+        cdh4.2.1 build. Use -Dplatform=cdh42 to activate.
+      -->
+      <id>cdh42</id>
+      <activation>
+        <property>
+          <name>platform</name>
+          <value>cdh42</value>
+        </property>
+      </activation>
+
+      <properties>
+        <hbase.version>0.94.2-cdh4.2.1</hbase.version>
+        <hadoop.version>2.0.0-mr1-cdh4.2.1</hadoop.version>
+        <kiji-schema.version>1.1.0-SNAPSHOT</kiji-schema.version>
+        <kiji-mapreduce.version>1.0.0-rc63-SNAPSHOT</kiji-mapreduce.version>
+        <fake-hbase.version>0.1.0-SNAPSHOT</fake-hbase.version>
+      </properties>
+    </profile>
+  </profiles>
+
   <dependencies>
-    <!-- Scala -->
-    <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-library</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-compiler</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>jline</artifactId>
-    </dependency>
-
-    <!-- Hadoop/HBase -->
-    <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hadoop</groupId>
-      <artifactId>hadoop-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>log4j</groupId>
-      <artifactId>log4j</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-log4j12</artifactId>
-      <scope>provided</scope>
-    </dependency>
-
-    <!-- Avro -->
-    <dependency>
-      <groupId>org.apache.avro</groupId>
-      <artifactId>avro</artifactId>
-    </dependency>
-
-    <!-- Kiji -->
-    <dependency>
-      <groupId>org.kiji.annotations</groupId>
-      <artifactId>annotations</artifactId>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.kiji.schema</groupId>
-      <artifactId>kiji-schema</artifactId>
-      <version>${kiji-schema.version}</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.kiji.mapreduce</groupId>
-      <artifactId>kiji-mapreduce</artifactId>
-      <version>${kiji-mapreduce.version}</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.kiji.schema-shell</groupId>
-      <artifactId>kiji-schema-shell</artifactId>
-      <version>${kiji-schema-shell.version}</version>
-      <scope>provided</scope>
-    </dependency>
-
-    <!-- Scalding -->
+    <!--
+      Dependencies, alphabetized by groupId:artifactId:type:version
+    -->
     <dependency>
       <groupId>com.twitter</groupId>
       <artifactId>scalding_${scala.version}</artifactId>
@@ -115,32 +88,58 @@
         </exclusion>
       </exclusions>
     </dependency>
-    <!-- Misc. -->
     <dependency>
       <groupId>com.twitter</groupId>
       <artifactId>util-eval_${scala.version}</artifactId>
       <version>${twitter-util.version}</version>
       <scope>compile</scope>
     </dependency>
-
-    <!-- Testing -->
     <dependency>
-      <groupId>org.scalatest</groupId>
-      <artifactId>scalatest_${scala.version}</artifactId>
-      <version>${scalatest.version}</version>
-      <scope>test</scope>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <scope>provided</scope>
     </dependency>
-    <!--
-      Keeping the following two dependencies in compile scope allows users to use
-      the KijiExpress testing framework by only depending on the KijiExpress test
-      jar.
-    -->
     <dependency>
-      <groupId>org.kiji.testing</groupId>
-      <artifactId>fake-hbase</artifactId>
-      <version>0.0.5</version>
+      <groupId>org.apache.avro</groupId>
+      <artifactId>avro</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-core</artifactId>
+      <scope>provided</scope>
+      <version>${hadoop.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hbase</groupId>
+      <artifactId>hbase</artifactId>
+      <scope>provided</scope>
+      <version>${hbase.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.easymock</groupId>
+      <artifactId>easymock</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.annotations</groupId>
+      <artifactId>annotations</artifactId>
       <scope>compile</scope>
     </dependency>
+    <dependency>
+      <groupId>org.kiji.mapreduce</groupId>
+      <artifactId>kiji-mapreduce</artifactId>
+      <version>${kiji-mapreduce.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.schema</groupId>
+      <artifactId>kiji-schema</artifactId>
+      <version>${kiji-schema.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <!--
+      Keep this dependency in compile scope so that users can depend on the KijiExpress testing
+      framework by only depending on the KijiExpress test jar.
+    -->
     <dependency>
       <groupId>org.kiji.schema</groupId>
       <artifactId>kiji-schema</artifactId>
@@ -149,8 +148,48 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>org.easymock</groupId>
-      <artifactId>easymock</artifactId>
+      <groupId>org.kiji.schema-shell</groupId>
+      <artifactId>kiji-schema-shell</artifactId>
+      <version>${kiji-schema-shell.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <!--
+      Keep this dependency in compile scope so that users can depend on the KijiExpress testing
+      framework by only depending on the KijiExpress test jar.
+    -->
+    <dependency>
+      <groupId>org.kiji.testing</groupId>
+      <artifactId>fake-hbase</artifactId>
+      <version>${fake-hbase.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.scalatest</groupId>
+      <artifactId>scalatest_${scala.version}</artifactId>
+      <version>${scalatest.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>jline</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-compiler</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+      <scope>provided</scope>
     </dependency>
   </dependencies>
 
@@ -240,6 +279,11 @@
           <junitxml>.</junitxml>
           <filereports>WDF TestSuite.txt</filereports>
           <argLine>-Xmx2048m</argLine>
+          <systemProperties>
+            <org.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION>
+              DISABLED
+            </org.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION>
+          </systemProperties>
         </configuration>
         <executions>
           <execution>

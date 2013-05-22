@@ -101,8 +101,7 @@ final class KijiInputFormat
                     region.getEndKey(),
                     location)
               }
-
-              new KijiTableSplit(new org.kiji.mapreduce.impl.KijiTableSplit(tableSplit, startKey))
+              new KijiTableSplit(tableSplit)
             }
             .toArray
       }

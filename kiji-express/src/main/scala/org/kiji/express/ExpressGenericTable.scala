@@ -66,7 +66,9 @@ private[express] final class ExpressGenericTable(tableUri: KijiURI, columns: Seq
                 column => {
                   // Build the CellSpec with the necessary schemaTable
                   val cellSchema = tableLayout.getCellSchema(column.getColumnName)
-                  val cellSpec = CellSpec.fromCellSchema(cellSchema, schemaTable)
+                  val cellSpec = CellSpec
+                      .fromCellSchema(cellSchema, schemaTable)
+                      .setReaderSchema(null)
                   (column.getColumnName, cellSpec)
                 }
               }.toMap

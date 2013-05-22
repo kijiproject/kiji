@@ -22,6 +22,7 @@ package org.kiji.express
 import java.io.DataInput
 import java.io.DataOutput
 
+import org.apache.hadoop.hbase.mapreduce.TableSplit
 import org.apache.hadoop.mapred.InputSplit
 
 import org.kiji.annotations.ApiAudience
@@ -37,14 +38,14 @@ import org.kiji.annotations.ApiStability
 @ApiAudience.Private
 @ApiStability.Experimental
 final private[express] class KijiTableSplit(
-    split: org.kiji.mapreduce.impl.KijiTableSplit)
+    split: TableSplit)
     extends InputSplit {
   /**
    * No argument constructor for KijiTableSplit so that it can be constructed via reflection. This
-   * is required to be a seperate constructor so that java has access to it.
+   * is required to be a separate constructor so that java has access to it.
    */
   // scalastyle:off public.methods.have.type
-  def this() = this(new org.kiji.mapreduce.impl.KijiTableSplit())
+  def this() = this(new TableSplit())
   // scalastyle:on public.methods.have.type
 
   /**
