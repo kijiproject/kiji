@@ -32,6 +32,7 @@ import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -51,6 +52,7 @@ import javax.ws.rs.core.UriInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Maps;
 import com.yammer.metrics.annotation.Timed;
+
 import org.apache.avro.Schema;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
@@ -336,21 +338,23 @@ public class RowsResource extends AbstractRowResource {
         } else {
           timestamp = globalTimestamp;
         }
-
-        // Put to either a counter or a regular cell.
-        if (SchemaType.COUNTER == kijiTable.getLayout().getCellSchema(column).getType()) {
-          // Write the counter cell.
-          putCounterCell(writer, entityId, kijiRestCell.getValue().toString(), column, timestamp);
-        } else {
-          // Set writer schema in preparation to write an Avro record.
-          final Schema schema;
-          try {
-            schema = kijiTable.getLayout().getSchema(column);
-          } catch (Exception e) {
-            throw new WebApplicationException(e, Response.Status.BAD_REQUEST);
+        if (timestamp >= 0) {
+          // Put to either a counter or a regular cell.
+          if (SchemaType.COUNTER == kijiTable.getLayout().getCellSchema(column).getType()) {
+            // Write the counter cell.
+            putCounterCell(writer, entityId, kijiRestCell.getValue().toString(), column, timestamp);
+          } else {
+            // Set writer schema in preparation to write an Avro record.
+            final Schema schema;
+            try {
+              schema = kijiTable.getLayout().getSchema(column);
+            } catch (Exception e) {
+              throw new WebApplicationException(e, Response.Status.BAD_REQUEST);
+            }
+            // Write the cell.
+            putCell(writer, entityId, kijiRestCell.getValue().toString(),
+                column, timestamp, schema);
           }
-          // Write the cell.
-          putCell(writer, entityId, kijiRestCell.getValue().toString(), column, timestamp, schema);
         }
       }
     } finally {
