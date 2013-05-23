@@ -43,14 +43,12 @@ import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableWriter;
 import org.kiji.schema.KijiURI;
-import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayouts;
 
 public class TestKijiTableKeyValueStore extends KijiClientTest {
   @Before
   public void setupEnvironment() throws Exception {
-    getKiji().createTable("table",
-        KijiTableLayout.newLayout(KijiTableLayouts.getLayout(KijiTableLayouts.SIMPLE)));
+    getKiji().createTable(KijiTableLayouts.getLayout(KijiTableLayouts.SIMPLE));
   }
 
   /** @return an uninitialized store to test for initialization from a Configuration. */
@@ -110,11 +108,13 @@ public class TestKijiTableKeyValueStore extends KijiClientTest {
 
   @Test
   public void testRequiresRealTable() throws IOException {
+    final KijiURI tableURI =
+        KijiURI.newBuilder(getKiji().getURI().toString() + "/table_name_not_real").build();
     try {
       // The specified table must exist in the Kiji instance.
+
       KijiTableKeyValueStore<String> input = KijiTableKeyValueStore.builder()
-        .withTable(
-            KijiURI.newBuilder(getKiji().getURI().toString() + "/table_name_not_real").build())
+        .withTable(tableURI)
         .withColumn("some", "column")
         .withMinTimestamp(42)
         .withMaxTimestamp(512)
@@ -122,10 +122,7 @@ public class TestKijiTableKeyValueStore extends KijiClientTest {
         .build();
       fail("Should have thrown an IllegalArgumentException.");
     } catch (IllegalArgumentException iae) {
-      assertEquals("Could not open table: "
-          + "kiji://.fake.TestKijiTableKeyValueStore_testRequiresRealTable-0:2181/"
-          + "TestKijiTableKeyValueStore_testRequiresRealTable/table_name_not_real/",
-          iae.getMessage());
+      assertEquals("Could not open table: " + tableURI, iae.getMessage());
     }
   }
 
