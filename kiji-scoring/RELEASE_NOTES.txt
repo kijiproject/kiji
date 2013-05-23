@@ -2,6 +2,8 @@
                               Kiji Scoring Release Notes
 
 Version 0.2.0
+  * SCORE-41. FreshKijiTableReader now includes a preload method, which instantiates all objects
+      necessary for freshening a given data request without side effects.
   * SCORE-39. FreshKijiTableReader now includes methods which override configured timeout durations.
   * SCORE-13. FreshKijiTableReaderFactory has been replaced with FreshKijiTableReaderBuilder.
   * SCORE-36. Makes the fresh CLI tool visible to the kiji tool launcher.

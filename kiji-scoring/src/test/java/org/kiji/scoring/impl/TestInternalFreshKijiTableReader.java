@@ -73,6 +73,8 @@ import org.kiji.scoring.lib.ShelfLife;
 public class TestInternalFreshKijiTableReader {
   private static final Logger LOG = LoggerFactory.getLogger(TestInternalFreshKijiTableReader.class);
 
+  private static String mPreloadState = "unloaded";
+
   /** Dummy &lt;? extends KijiProducer&gt; class for testing */
   public static final class TestProducer extends KijiProducer {
     public KijiDataRequest getDataRequest() {
@@ -147,9 +149,32 @@ public class TestInternalFreshKijiTableReader {
       return Collections.emptyMap();
     }
     public String serialize() {
-      return null;
+      return "";
     }
     public void deserialize(final String policyState) {}
+  }
+
+  /** Dummy freshness policy for testing FreshKijiTableReader.preload(). */
+  private static final class TestPreloadPolicy implements KijiFreshnessPolicy {
+
+    public boolean isFresh(final KijiRowData rowData, final PolicyContext policyContext) {
+      return true;
+    }
+    public boolean shouldUseClientDataRequest() {
+      return true;
+    }
+    public KijiDataRequest getDataRequest() {
+      return null;
+    }
+    public Map<String, KeyValueStore<?, ?>> getRequiredStores() {
+      return Collections.emptyMap();
+    }
+    public String serialize() {
+      return "";
+    }
+    public void deserialize(final String policyState) {
+      mPreloadState = "loaded";
+    }
   }
 
   private Kiji mKiji;
@@ -610,5 +635,21 @@ public class TestInternalFreshKijiTableReader {
     // Read should return stale data given a longer timeout.
     assertEquals("new-val",
         freshReader.get(eid, request, 1200).getMostRecentValue("family", "qual0").toString());
+  }
+
+  @Test
+  public void testPreload() throws IOException {
+    final KijiDataRequest request = KijiDataRequest.create("family", "qual0");
+
+    // Create a KijiFreshnessManager and register a freshness policy.
+    final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
+    manager.storePolicy("table", "family:qual0", TestProducer.class, new TestPreloadPolicy());
+
+    final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.get()
+        .withTable(mTable).build();
+
+    assertEquals("unloaded", mPreloadState);
+    freshReader.preload(request);
+    assertEquals("loaded", mPreloadState);
   }
 }

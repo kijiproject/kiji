@@ -675,6 +675,12 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
 
   /** {@inheritDoc} */
   @Override
+  public void preload(KijiDataRequest dataRequest) throws IOException {
+    getPolicies(dataRequest);
+  }
+
+  /** {@inheritDoc} */
+  @Override
   public void close() throws IOException {
     // Cleanup all cached producers.
     for (KijiColumnName key : mCapsuleCache.keySet()) {
