@@ -323,7 +323,8 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
 
     // Get the StdOut from the job-history tool.
     String jobHistoryStdOut = runTool(new KijiJobHistory(),
-        new String[]{"--kiji=" + kiji.getURI(), "--job-id=" + jobOneId}).getStdout("Utf-8");
+        new String[]{"--kiji=" + kiji.getURI(), "--job-id=" + jobOneId,
+            "--verbose", }).getStdout("Utf-8");
 
     JobHistoryKijiTable jobHistory = JobHistoryKijiTable.open(kiji);
 
@@ -335,6 +336,8 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
     assertTrue(jobHistoryStdOut.contains(new Date(jobOneEntry.getJobStartTime()).toString()));
     assertTrue(jobHistoryStdOut.contains(new Date(jobOneEntry.getJobEndTime()).toString()));
     assertTrue(jobHistoryStdOut.contains(jobOneEntry.getJobEndStatus()));
+    assertTrue(jobHistoryStdOut.contains(jobOneEntry.getJobCounters()));
+    assertTrue(jobHistoryStdOut.contains(jobOneEntry.getJobConfiguration()));
 
     // Run the second produce job.
     String jobTwoName = mrJobTwo.getHadoopJob().getJobName();

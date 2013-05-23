@@ -19,21 +19,14 @@
 
 package org.kiji.mapreduce.tools;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.io.PrintStream;
-import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Preconditions;
-import org.apache.commons.io.IOUtils;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.mapreduce.Counters;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.common.flags.Flag;
@@ -158,39 +151,21 @@ public final class KijiJobHistory extends BaseTool {
    * Prints a representation of the Counters for a Job.
    *
    * @param entry a JobHistoryEntry retrieved from the JobHistoryTable.
-   * @throws IOException If there is an error retrieving the counters.
    */
-  private void printCounters(JobHistoryEntry entry) throws IOException {
+  private void printCounters(JobHistoryEntry entry) {
     PrintStream ps = getPrintStream();
-    Counters counters = new Counters();
-    ByteBuffer countersByteBuffer = ByteBuffer.wrap(entry.getJobCounters().getBytes("utf-8"));
-    counters.readFields(
-        new DataInputStream(new ByteArrayInputStream(countersByteBuffer.array())));
-
     ps.println("Counters:");
-    ps.println(counters.toString());
+    ps.println(entry.getJobCounters());
   }
 
   /**
    * Prints a representation of the Configuration for the Job.
    * @param entry a JobHistoryEntry retrieved from the JobHistoryTable.
-   * @throws IOException If there is an error retrieving the configuration.
    */
-  private void printConfiguration(JobHistoryEntry entry) throws IOException {
-    OutputStreamWriter osw = null;
-    try {
-      PrintStream ps = getPrintStream();
-      osw = new OutputStreamWriter(ps, "UTF-8");
-      Configuration config = new Configuration();
-      ByteBuffer configByteBuffer = ByteBuffer.wrap(entry.getJobConfiguration().getBytes("utf-8"));
-      config.readFields(new DataInputStream(new ByteArrayInputStream(configByteBuffer.array())));
-
-      ps.print("Configuration:\n");
-      Configuration.dumpConfiguration(config, osw);
-      ps.print("\n");
-    } finally {
-      IOUtils.closeQuietly(osw);
-    }
+  private void printConfiguration(JobHistoryEntry entry) {
+    PrintStream ps = getPrintStream();
+    ps.println("Configuration:");
+    ps.println(entry.getJobConfiguration());
   }
 
   /**
