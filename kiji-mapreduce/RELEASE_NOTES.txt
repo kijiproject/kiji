@@ -3,6 +3,7 @@
                               KijiMR Release Notes
 
 Version 1.0.0-rc63
+  * KIJIMR-197. Publish sources and javadoc jars via Maven build.
   * KIJIMR-107. Removes the KijiDataRequester interface. KijiGatherer,
       KijiProducer, etc. no longer implement this interface.
   * KIJIMR-123. MapReduceJobInput constructors are now package private and accessible via

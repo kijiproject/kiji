@@ -67,6 +67,18 @@
                   <type>test-jar</type>
                   <classifier />
                 </artifact>
+                <artifact>
+                  <!-- Add a source jar... -->
+                  <file>../kiji-mapreduce/target/kiji-mapreduce-hadoop2-${project.version}-sources.jar</file>
+                  <type>jar</type>
+                  <classifier>sources</classifier>
+                </artifact>
+                <artifact>
+                  <!-- And the javadoc jar... -->
+                  <file>../kiji-mapreduce/target/kiji-mapreduce-hadoop2-${project.version}-javadoc.jar</file>
+                  <type>jar</type>
+                  <classifier>javadoc</classifier>
+                </artifact>
                 <!-- Attach to hadoop1 and hadoop2 classifiers as well. -->
                 <artifact>
                   <file>../kiji-mapreduce/target/kiji-mapreduce-hadoop2-${project.version}.jar</file>
