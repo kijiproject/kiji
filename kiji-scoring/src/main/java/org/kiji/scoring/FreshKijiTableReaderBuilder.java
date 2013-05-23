@@ -85,9 +85,9 @@ public final class FreshKijiTableReaderBuilder {
   /** The KijiTable from which the new reader will read. */
   private KijiTable mTable;
   /** The time in milliseconds the new reader will wait for freshening to occur. */
-  private int mTimeout;
+  private long mTimeout;
   /** The time in milliseconds the new reader will wait between reloading freshness policies. */
-  private int mReload;
+  private long mReload;
   /** Whether or not the new reader will return partially fresh data when available. */
   private Boolean mPartialFresh;
 
@@ -139,7 +139,7 @@ public final class FreshKijiTableReaderBuilder {
    * @return this FreshKijiTableReaderBuilder configured to automatically reload on the given
    * interval.
    */
-  public FreshKijiTableReaderBuilder withAutomaticReload(int reload) {
+  public FreshKijiTableReaderBuilder withAutomaticReload(long reload) {
     Preconditions.checkArgument(reload > 0, "Reload time must be positive, got: %s", reload);
     Preconditions.checkArgument(mReload == 0, "Reload time is already set to: %d", mReload);
     mReload = reload;

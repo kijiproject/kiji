@@ -76,11 +76,11 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   /** Freshener thread pool executor service. */
   private final ExecutorService mExecutor;
 
-  /** Timeout duration for get requests. */
-  private final int mTimeout;
+  /** Timeout duration in milliseconds for get requests. */
+  private final long mTimeout;
 
   /** Time between automatically reloading freshness policies from the metatable in milliseconds. */
-  private final int mReloadTime;
+  private final long mReloadTime;
 
   /** Whether to return partially freshened data when available. */
   private final boolean mAllowPartial;
@@ -178,7 +178,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
    * @throws IOException if an error occurs communicating with the table or meta table.
    */
   public InternalFreshKijiTableReader(
-      KijiTable table, int timeout, int reloadTime, boolean allowParial)
+      KijiTable table, long timeout, long reloadTime, boolean allowParial)
       throws IOException {
     mTable = table;
     // opening a reader retains the table, so we do not need to call retain manually.
