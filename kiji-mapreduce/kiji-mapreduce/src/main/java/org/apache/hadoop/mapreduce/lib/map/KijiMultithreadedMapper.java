@@ -29,15 +29,14 @@ import org.apache.hadoop.mapreduce.Counter;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobContext;
-import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.StatusReporter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.apache.hadoop.mapreduce.task.MapContextImpl;
 import org.apache.hadoop.util.ReflectionUtils;
 
+import org.kiji.mapreduce.platform.KijiMRPlatformBridge;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiRowData;
 
@@ -235,15 +234,14 @@ public class KijiMultithreadedMapper<K, V>
 
     MapRunner(Context context) throws IOException, InterruptedException {
       mapper = ReflectionUtils.newInstance(mapClass, context.getConfiguration());
-      MapContext<EntityId, KijiRowData, K, V> mapContext =
-          new MapContextImpl<EntityId, KijiRowData, K, V>(outer.getConfiguration(),
-              outer.getTaskAttemptID(),
-              new SubMapRecordReader(),
-              new SubMapRecordWriter(),
-              context.getOutputCommitter(),
-              new SubMapStatusReporter(),
-              outer.getInputSplit());
-      subcontext = new WrappedMapper<EntityId, KijiRowData, K, V>().getMapContext(mapContext);
+      subcontext = KijiMRPlatformBridge.get().getMapperContext(
+          outer.getConfiguration(),
+          outer.getTaskAttemptID(),
+          new SubMapRecordReader(),
+          new SubMapRecordWriter(),
+          context.getOutputCommitter(),
+          new SubMapStatusReporter(),
+          outer.getInputSplit());
     }
 
     public Throwable getThrowable() {

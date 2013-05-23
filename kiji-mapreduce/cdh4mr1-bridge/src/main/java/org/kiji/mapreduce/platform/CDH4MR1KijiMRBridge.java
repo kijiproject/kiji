@@ -25,10 +25,19 @@ import com.google.common.base.Preconditions;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.MapContext;
+import org.apache.hadoop.mapreduce.Mapper.Context;
+import org.apache.hadoop.mapreduce.OutputCommitter;
+import org.apache.hadoop.mapreduce.RecordReader;
+import org.apache.hadoop.mapreduce.RecordWriter;
+import org.apache.hadoop.mapreduce.StatusReporter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.mapreduce.TaskType;
+import org.apache.hadoop.mapreduce.lib.map.WrappedMapper;
+import org.apache.hadoop.mapreduce.task.MapContextImpl;
 import org.apache.hadoop.mapreduce.task.TaskAttemptContextImpl;
 
 import org.kiji.annotations.ApiAudience;
@@ -72,5 +81,29 @@ public final class CDH4MR1KijiMRBridge extends KijiMRPlatformBridge {
   public void setUserClassesTakesPrecedence(Job job, boolean value) {
     // We can do this directly in CDH4.
     job.setUserClassesTakesPrecedence(value);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public <KEYIN, VALUEIN, KEYOUT, VALUEOUT> Context getMapperContext(
+      final Configuration conf,
+      final TaskAttemptID taskId,
+      final RecordReader<KEYIN, VALUEIN> reader,
+      final RecordWriter<KEYOUT, VALUEOUT> writer,
+      final OutputCommitter committer,
+      final StatusReporter reporter,
+      final InputSplit split
+  ) throws IOException, InterruptedException {
+    MapContext<KEYIN, VALUEIN, KEYOUT, VALUEOUT> mapContext =
+        new MapContextImpl<KEYIN, VALUEIN, KEYOUT, VALUEOUT>(
+            conf,
+            taskId,
+            reader,
+            writer,
+            committer,
+            reporter,
+            split
+        );
+    return new WrappedMapper<KEYIN, VALUEIN, KEYOUT, VALUEOUT>().getMapContext(mapContext);
   }
 }

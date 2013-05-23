@@ -24,7 +24,13 @@ import java.io.IOException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.OutputCommitter;
+import org.apache.hadoop.mapreduce.RecordReader;
+import org.apache.hadoop.mapreduce.RecordWriter;
+import org.apache.hadoop.mapreduce.StatusReporter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.mapreduce.TaskType;
@@ -92,6 +98,34 @@ public abstract class KijiMRPlatformBridge {
    * @param value the value to which to set the property.
    */
   public abstract void setUserClassesTakesPrecedence(Job job, boolean value);
+
+  /**
+   * Get a new Mapper.Context.
+   *
+   * @param conf the Hadoop Configuration used to configure the Context.
+   * @param taskId the TaskAttemptID for the Context.
+   * @param reader the RecordReader for the Context.
+   * @param writer the RecordWriter for the Context.
+   * @param committer the OutputCommit for the Context.
+   * @param reporter the StatusReporter for the Context.
+   * @param split the InputSplit for the Context.
+   * @param <KEYIN> the type of the RecordReader key.
+   * @param <VALUEIN> the type of the RecordReader value.
+   * @param <KEYOUT> the type of the RecordWriter key.
+   * @param <VALUEOUT> the type of the RecordWriter value.
+   * @return a new Mapper.Context object.
+   * @throws IOException in case of an IO error.
+   * @throws InterruptedException in case of an interruption.
+   */
+  public abstract <KEYIN, VALUEIN, KEYOUT, VALUEOUT> Mapper.Context getMapperContext(
+      Configuration conf,
+      TaskAttemptID taskId,
+      RecordReader<KEYIN, VALUEIN> reader,
+      RecordWriter<KEYOUT, VALUEOUT> writer,
+      OutputCommitter committer,
+      StatusReporter reporter,
+      InputSplit split
+  ) throws IOException, InterruptedException;
 
   private static KijiMRPlatformBridge mBridge;
 
