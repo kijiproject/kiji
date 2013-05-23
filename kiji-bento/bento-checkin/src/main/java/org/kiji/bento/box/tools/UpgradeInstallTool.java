@@ -260,7 +260,9 @@ public final class UpgradeInstallTool {
     env.clear(); // Run script in pure/empty environment.
     env.put("USER", System.getProperty("user.name"));
     env.put("HOME", System.getProperty("user.home"));
-    env.put("JAVA_HOME", javaHome);
+    if (javaHome != null) {
+      env.put("JAVA_HOME", javaHome);
+    }
 
     final Process bootstrapProcess = bootstrapProcBuilder.start();
     printProcessOutput(bootstrapProcess);
