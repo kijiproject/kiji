@@ -51,6 +51,7 @@ import org.kiji.schema.KijiMetaTable;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
+import org.kiji.schema.KijiTableWriter;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.util.InstanceBuilder;
@@ -580,5 +581,34 @@ public class TestInternalFreshKijiTableReader {
     Thread.sleep(1500);
     assertEquals("two-val",
         freshReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
+  }
+
+  @Test
+  public void testSpecifyTimeout() throws IOException, InterruptedException {
+    final EntityId eid = mTable.getEntityId("foo");
+    final KijiDataRequest request = KijiDataRequest.create("family", "qual0");
+
+    // Create a KijiFreshnessManager and register a freshness policy.
+    final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
+    manager.storePolicy("table", "family:qual0", TestTimeoutProducer.class, new AlwaysFreshen());
+
+    final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.get()
+        .withTable(mTable).withTimeout(100).build();
+
+    // Read should return stale data.
+    assertEquals("foo-val",
+        freshReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
+
+    // Wait for the freshener to finish, assert that it wrote, then reset.
+    Thread.sleep(1000);
+    assertEquals("new-val",
+        mReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
+    final KijiTableWriter writer = mTable.openTableWriter();
+    writer.put(eid, "family", "qual0", "foo-val");
+    writer.close();
+
+    // Read should return stale data given a longer timeout.
+    assertEquals("new-val",
+        freshReader.get(eid, request, 1200).getMostRecentValue("family", "qual0").toString());
   }
 }

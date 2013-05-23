@@ -509,9 +509,16 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     }
   }
 
-    /** {@inheritDoc} */
+  /** {@inheritDoc} */
   @Override
   public KijiRowData get(final EntityId eid, final KijiDataRequest dataRequest) throws IOException {
+    return get(eid, dataRequest, mTimeout);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public KijiRowData get(final EntityId eid, final KijiDataRequest dataRequest, final long timeout)
+      throws IOException {
 
     final Map<KijiColumnName, KijiFreshnessPolicy> policies = getPolicies(dataRequest);
     // If there are no freshness policies attached to the requested columns, return the requested
@@ -539,7 +546,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     final Future<Boolean> superFuture = mExecutor.submit(new GetFuture(futures));
 
     try {
-      if (superFuture.get(mTimeout, TimeUnit.MILLISECONDS)) {
+      if (superFuture.get(timeout, TimeUnit.MILLISECONDS)) {
         // If superFuture returns true to indicate the need for a reread, do so.
         return mReader.get(eid, dataRequest);
       } else {
@@ -614,6 +621,14 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   @Override
   public List<KijiRowData> bulkGet(
       List<EntityId> eids, final KijiDataRequest dataRequest) throws IOException {
+    return bulkGet(eids, dataRequest, mTimeout);
+  }
+
+
+  /** {@inheritDoc} */
+  @Override
+  public List<KijiRowData> bulkGet(List<EntityId> eids, final KijiDataRequest dataRequest,
+      final long timeout) throws IOException {
     final List<Future<KijiRowData>> futures = Lists.newArrayList();
     for (final EntityId eid : eids) {
       final Future<KijiRowData> future = mExecutor.submit(new Callable<KijiRowData>() {
@@ -628,7 +643,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
 
     final List<KijiRowData> futureResult;
     try {
-      futureResult = superDuperFuture.get(mTimeout, TimeUnit.MILLISECONDS);
+      futureResult = superDuperFuture.get(timeout, TimeUnit.MILLISECONDS);
     } catch (InterruptedException ie) {
       throw new RuntimeException("Freshening thread interrupted.", ie);
     } catch (ExecutionException ee) {

@@ -91,9 +91,11 @@ import org.kiji.schema.KijiTableReader;
 public interface FreshKijiTableReader extends KijiTableReader {
 
   /**
-   * Freshens data as needed before returning.  Behaves the same as
-   *   {@link org.kiji.schema.KijiTableReader#get(org.kiji.schema.EntityId,
-   *   org.kiji.schema.KijiDataRequest)} except for the possibility of freshening.
+   * Freshens data as needed before returning.  If freshening has not completed with the configured
+   * timeout, will return stale or partially freshened data depending on the configuration of the
+   * reader.  Behaves the same as
+   * {@link org.kiji.schema.KijiTableReader#get(org.kiji.schema.EntityId,
+   * org.kiji.schema.KijiDataRequest)} except for the possibility of freshening.
    *
    * @param entityId EntityId of the row to query.
    * @param dataRequest What data to retrieve.
@@ -104,10 +106,27 @@ public interface FreshKijiTableReader extends KijiTableReader {
   KijiRowData get(EntityId entityId, KijiDataRequest dataRequest) throws IOException;
 
   /**
-   * Attempts to freshen all data requested in parallel before returning the most up to date data
-   *   available.
+   * Freshens data as needed before returning.  If freshening has not completed within the specified
+   * timeout, will return stale or partially freshened data depending on the configuration of the
+   * reader.  Behaves the same as
+   * {@link org.kiji.schema.KijiTableReader#get(org.kiji.schema.EntityId,
+   * org.kiji.schema.KijiDataRequest)} except for the possibility of freshening.
    *
-   * <p>A thread will be launched for every EntityId in parallel, but all threads willl share
+   * @param entityId the EntityId of the row to query.
+   * @param dataRequest what data to retrieve.
+   * @param timeout how long (in milliseconds) to wait before returning stale or partially fresh
+   * data.
+   * @return the data requested after freshening.
+   * @throws IOException in case of an error reading from the table.
+   */
+  KijiRowData get(EntityId entityId, KijiDataRequest dataRequest, long timeout) throws IOException;
+
+  /**
+   * Attempts to freshen all data requested in parallel before returning.  If freshening has not
+   * completed within the configured timeout, will return stale or partially freshened data
+   * depending on the configuration of the reader.
+   *
+   * <p>A thread will be launched for every EntityId in parallel, but all threads will share
    * the KijiFreshnessPolicy and KijiProducer objects. For this reason, do not use bulkGet
    * if your {@link KijiFreshnessPolicy#getDataRequest()},
    * {@link KijiFreshnessPolicy#isFresh(org.kiji.schema.KijiRowData, PolicyContext)},
@@ -117,13 +136,36 @@ public interface FreshKijiTableReader extends KijiTableReader {
    * are not thread-safe.</p>
    *
    * @param entityIds A list of EntityIds for the rows to query.
-   * @param dataRequest What data to retrieve.
+   * @param dataRequest What data to retrieve from each row.
    * @return a list of KijiRowData corresponding the the EntityIds and data request after
    *   freshening.
    * @throws IOException in case of an error reading from the table.
    */
   @Override
   List<KijiRowData> bulkGet(List<EntityId> entityIds, KijiDataRequest dataRequest)
+      throws IOException;
+
+  /**
+   * Attempts to freshen all data requested in parallel before returning.  If freshening has not
+   * completed with the specified timeout, will return stale or partially freshened data depending
+   * on the configuration of the reader.
+   * <p>A thread will be launched for every EntityId in parallel, but all threads will share
+   * the KijiFreshnessPolicy and KijiProducer objects. For this reason, do not use bulkGet
+   * if your {@link KijiFreshnessPolicy#getDataRequest()},
+   * {@link KijiFreshnessPolicy#isFresh(org.kiji.schema.KijiRowData, PolicyContext)},
+   * {@link org.kiji.mapreduce.produce.KijiProducer#getDataRequest()}, or
+   * {@link org.kiji.mapreduce.produce.KijiProducer#produce(KijiRowData,
+   * org.kiji.mapreduce.produce.ProducerContext)}
+   * are not thread-safe.</p>
+   *
+   * @param entityIds a list of EntityIds for the rows to query.
+   * @param dataRequest what data to retrieve from each row.
+   * @param timeout the time (in milliseconds) to wait before returning stale or partially freshened
+   * data.
+   * @return a list of KijiRowData corresponding to the EntityIds and data request after freshening.
+   * @throws IOException in case of an error reading from the table.
+   */
+  List<KijiRowData> bulkGet(List<EntityId> entityIds, KijiDataRequest dataRequest, long timeout)
       throws IOException;
 
   /**
