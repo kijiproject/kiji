@@ -119,11 +119,11 @@ BentoBox sends anonymized information when checking in with the
 upgrade server.
 
 To disable checking in with the upgrade server, write a file named
-`disable-checkin` to the `conf` directory that is part of the
-BentoBox distribution. Using the `touch` command is sufficient. For
+`.disable_kiji_checkin` to the `$HOME/.kiji`. Using the `touch` command
+is sufficient. For
 example:
 
-> `touch $KIJI_HOME/conf/disable-checkin`
+> `touch $HOME/.kiji/.disable_kiji_checkin`
 
 will disable check in with the upgrade server.
 

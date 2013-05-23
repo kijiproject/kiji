@@ -64,7 +64,7 @@ kiji_bento_conf_dir="${bin}/../../conf"
 
 # If the file disable-checkin exists in the Kiji BentoBox conf dir, then
 # we shouldn't start the checkin server.
-if [ -e "${kiji_bento_conf_dir}/disable-checkin" ]; then
+if [ -e "${kiji_bento_conf_dir}/disable-checkin" -o -e "${HOME}/.kiji/.disable_kiji_checkin" ]; then
   exit 0
 fi
 

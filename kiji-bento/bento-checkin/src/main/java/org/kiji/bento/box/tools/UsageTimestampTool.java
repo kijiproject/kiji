@@ -25,7 +25,7 @@ import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.kiji.bento.box.BentoBoxUtils;
+import org.kiji.checkin.CheckinUtils;
 
 /**
  * <p>A tool that writes the last timestamp the <code>kiji</code> script within a BentoBox was
@@ -49,7 +49,7 @@ public final class UsageTimestampTool {
    */
   void writeTimestamp(File directory, Long timestamp) throws IOException {
     File timestampFile = new File(directory, TIMESTAMP_FILE_NAME);
-    BentoBoxUtils.writeObjectToFile(timestampFile, timestamp);
+    CheckinUtils.writeObjectToFile(timestampFile, timestamp);
   }
 
   /**
@@ -80,7 +80,7 @@ public final class UsageTimestampTool {
    */
   public int run() {
     // Get the home directory and fail if there's a problem.
-    File homeDirectory = BentoBoxUtils.getHomeDirectory();
+    File homeDirectory = CheckinUtils.getHomeDirectory();
     if (null == homeDirectory) {
       return 1;
     }

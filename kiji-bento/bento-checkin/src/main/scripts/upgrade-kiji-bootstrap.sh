@@ -98,6 +98,24 @@ if [ "$PREV_BENTO_ROOT" == "$NEW_BENTO_ROOT" ]; then
   exit 1
 fi
 
+# BENTO-35: To avoid kiji file proliferation in the user's home directory, let's create
+# a $HOME/.kiji folder and move/symlink files as necessary there.
+HIDDEN_KIJI_FOLDER=${HOME}/.kiji
+
+if [ ! -e ${HIDDEN_KIJI_FOLDER} ]; then
+  mkdir -p ${HIDDEN_KIJI_FOLDER}
+fi
+
+# TODO: BENTO-41: Move timestamp and uuid files to $HIDDEN_KIJI_FOLDER and link back to
+# keep hidden kiji files in a consistent location.
+
+# If the disable-checkin file exists in the old bento's conf/ folder, then touch the
+# new location's disable-checkin file until we can deprecate the old location.
+if [ -e $PREV_BENTO_ROOT/conf/disable-checkin ]; then
+  touch ${HIDDEN_KIJI_FOLDER}/.disable_kiji_checkin
+  touch $NEW_BENTO_ROOT/conf/disable-checkin
+fi
+
 cd "$NEW_BENTO_ROOT"
 
 # Load the new Bento environment within this script.
@@ -253,7 +271,9 @@ if [ -d "$archive_dest" ]; then
   # When copying the previous archive subdirs into our archive dir,
   # we wound up with an existing directory with the same name we want
   # to use for the most recent BentoBox.
-  archive_dest=`mktemp -d --tmpdir="$NEW_BENTO_ROOT/archive/" "kiji-bento-$PREV_VERSION-XXXX"`
+  archive_suffix=$(date +%s)
+  archive_dest="${archive_dest}.${archive_suffix}"
+  mkdir -p ${archive_dest}
 else
   # It doesn't exist; create the "normal" archive destination dir.
   mkdir "$archive_dest"

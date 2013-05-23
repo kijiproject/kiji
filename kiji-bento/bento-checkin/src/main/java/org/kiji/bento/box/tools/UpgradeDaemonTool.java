@@ -29,10 +29,10 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.kiji.bento.box.BentoBoxUtils;
 import org.kiji.bento.box.CheckinThread;
-import org.kiji.bento.box.UUIDTools;
-import org.kiji.bento.box.UpgradeServerClient;
+import org.kiji.checkin.CheckinClient;
+import org.kiji.checkin.CheckinUtils;
+import org.kiji.checkin.UUIDTools;
 import org.kiji.common.flags.Flag;
 import org.kiji.common.flags.FlagParser;
 
@@ -185,7 +185,7 @@ public final class UpgradeDaemonTool {
    */
   private Integer readPidFile(File pidFile) {
     try {
-      return Integer.parseInt(BentoBoxUtils.readFileAsString(pidFile).trim());
+      return Integer.parseInt(CheckinUtils.readFileAsString(pidFile).trim());
     } catch (Exception e) {
       LOG.error("Could not read contents of existing PID file: " + pidFile.getAbsolutePath(), e);
       return null;
@@ -212,7 +212,7 @@ public final class UpgradeDaemonTool {
       return false;
     }
     try {
-      BentoBoxUtils.writeObjectToFile(pidFile, getPid());
+      CheckinUtils.writeObjectToFile(pidFile, getPid());
       pidFile.deleteOnExit();
     } catch (Exception e) {
       LOG.error("Error encountered while writing PID file: " + pidFile.getAbsolutePath(), e);
@@ -269,7 +269,7 @@ public final class UpgradeDaemonTool {
     }
 
     // Get the user's home directory.
-    File homeDirectory = BentoBoxUtils.getHomeDirectory();
+    File homeDirectory = CheckinUtils.getHomeDirectory();
     if (null == homeDirectory) {
       return 1;
     }
@@ -296,7 +296,7 @@ public final class UpgradeDaemonTool {
 
     // Create an upgrade server client for use with the check-in thread.
     HttpClient httpClient = new DefaultHttpClient();
-    UpgradeServerClient upgradeClient = UpgradeServerClient.create(httpClient, checkinServerURI);
+    CheckinClient upgradeClient = CheckinClient.create(httpClient, checkinServerURI);
 
     // Install a shutdown hook that will take care of shutting down the check-in thread when this
     // process is killed.

@@ -25,8 +25,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.kiji.bento.box.UpgradeResponse;
-import org.kiji.bento.box.VersionInfo;
+import org.kiji.checkin.VersionInfo;
+import org.kiji.checkin.models.UpgradeResponse;
 import org.kiji.common.flags.Flag;
 import org.kiji.common.flags.FlagParser;
 
@@ -112,7 +112,7 @@ public final class UpgradeInformerTool {
    */
   private String getCurrentVersion() {
     try {
-      return VersionInfo.getSoftwareVersion();
+      return VersionInfo.getSoftwareVersion(this.getClass());
     } catch (Exception e) {
       LOG.error("There was an error getting the current software version. Cannot advise user of "
           + "upgrades.", e);

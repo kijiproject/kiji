@@ -21,8 +21,8 @@ package org.kiji.bento.box.tools;
 
 import java.io.File;
 
-import org.kiji.bento.box.BentoBoxUtils;
-import org.kiji.bento.box.UUIDTools;
+import org.kiji.checkin.CheckinUtils;
+import org.kiji.checkin.UUIDTools;
 
 /**
  * <p> A tool that generates a UUID identifying the user currently running a BentoBox.
@@ -40,7 +40,7 @@ public final class UUIDGenerationTool {
    */
   public int run() {
     // Get the home directory or fail if there's a problem.
-    File homeDirectory = BentoBoxUtils.getHomeDirectory();
+    File homeDirectory = CheckinUtils.getHomeDirectory();
     if (null == homeDirectory) {
       return 1;
     }

@@ -42,11 +42,11 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.kiji.bento.box.UUIDTools;
-import org.kiji.bento.box.UpgradeCheckin;
-import org.kiji.bento.box.UpgradeResponse;
-import org.kiji.bento.box.UpgradeServerClient;
-import org.kiji.bento.box.VersionInfo;
+import org.kiji.checkin.CheckinClient;
+import org.kiji.checkin.UUIDTools;
+import org.kiji.checkin.VersionInfo;
+import org.kiji.checkin.models.UpgradeCheckin;
+import org.kiji.checkin.models.UpgradeResponse;
 import org.kiji.common.flags.Flag;
 import org.kiji.common.flags.FlagParser;
 
@@ -104,7 +104,7 @@ public final class UpgradeInstallTool {
       return 1;
     }
 
-    String currentVersion = VersionInfo.getSoftwareVersion();
+    String currentVersion = VersionInfo.getSoftwareVersion(this.getClass());
     if (null == currentVersion) {
       LOG.error("Could not read current version info.");
       return 1;
@@ -114,8 +114,8 @@ public final class UpgradeInstallTool {
 
     final URI checkinServerURI = UpgradeDaemonTool.getUpgradeServerURI(mUpgradeServerURL);
     final HttpClient httpClient = new DefaultHttpClient();
-    final UpgradeServerClient upgradeClient =
-        UpgradeServerClient.create(httpClient, checkinServerURI);
+    final CheckinClient upgradeClient =
+        CheckinClient.create(httpClient, checkinServerURI);
 
     UpgradeResponse response = null;
     try {
@@ -127,7 +127,7 @@ public final class UpgradeInstallTool {
         uuid = UUID.randomUUID().toString();
         assert null != uuid;
       }
-      final UpgradeCheckin request = new UpgradeCheckin.Builder()
+      final UpgradeCheckin request = new UpgradeCheckin.Builder(this.getClass())
             .withId(uuid)
             .withLastUsedMillis(System.currentTimeMillis())
             .build();

@@ -25,6 +25,11 @@ import java.io.FileNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.checkin.CheckinClient;
+import org.kiji.checkin.CheckinUtils;
+import org.kiji.checkin.models.UpgradeCheckin;
+import org.kiji.checkin.models.UpgradeResponse;
+
 /**
  * A thread that periodically sends check-in messages to a BentoBox upgrade server, and writes
  * the information contained in responses to a file on the local machine.
@@ -54,7 +59,7 @@ public final class CheckinThread extends Thread {
   private final long mCheckinPeriodMillis;
 
   /** The client used to send check-in messages to the upgrade server and receive responses. */
-  private final UpgradeServerClient mUpgradeServerClient;
+  private final CheckinClient mUpgradeServerClient;
 
   /**
    * A flag to indicate when the thread should terminate.
@@ -71,7 +76,7 @@ public final class CheckinThread extends Thread {
    * @param client to use to communicate with the upgrade server.
    */
   public CheckinThread(String userId, File usageTimestampFile, File upgradeInfoFile,
-      long checkinPeriodMillis, UpgradeServerClient client) {
+      long checkinPeriodMillis, CheckinClient client) {
     mUserId = userId;
     mUsageTimestampFile = usageTimestampFile;
     mUpgradeInfoFile = upgradeInfoFile;
@@ -103,7 +108,7 @@ public final class CheckinThread extends Thread {
    */
   private Long getKijiUsageTimestampMillis() {
     try {
-      String timestampStr = BentoBoxUtils.readFileAsString(mUsageTimestampFile).trim();
+      String timestampStr = CheckinUtils.readFileAsString(mUsageTimestampFile).trim();
       return Long.parseLong(timestampStr);
     } catch (FileNotFoundException e) {
       LOG.warn("The kiji usage timestamp file was not found. This is normal if the kiji script "
@@ -145,7 +150,7 @@ public final class CheckinThread extends Thread {
    */
   private UpgradeCheckin getCheckinMessage(Long usageTimestamp) {
     try {
-      return new UpgradeCheckin.Builder()
+      return new UpgradeCheckin.Builder(this.getClass())
           .withId(mUserId)
           .withLastUsedMillis(usageTimestamp)
           .build();

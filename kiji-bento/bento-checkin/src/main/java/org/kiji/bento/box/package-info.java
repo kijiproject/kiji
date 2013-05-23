@@ -18,7 +18,7 @@
  */
 
 /**
- * Contains classes that help implement the tools provided in package
- * {@link org.kiji.bento.box.tools}.
+ * Contains implementations of tools used by Kiji BentoBox. These tools are mostly used
+ * to facilitate check-in with a server that notifies of upgrades to Kiji BentoBox.
  */
 package org.kiji.bento.box;

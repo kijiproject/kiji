@@ -19,7 +19,7 @@
 
 package org.kiji.bento.box;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,6 +30,11 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.kiji.checkin.CheckinClient;
+import org.kiji.checkin.CheckinUtils;
+import org.kiji.checkin.models.UpgradeCheckin;
+import org.kiji.checkin.models.UpgradeResponse;
 
 /**
  * Tests the functionality of {@link CheckinThread}.
@@ -69,10 +74,10 @@ public class TestCheckinThread {
   private void runCheckinThread(long expectedTimestamp) throws IOException, InterruptedException {
     LOG.info("Creating mock upgrade server client to use in check-in thread test.");
     // We'll create the check-in thread with a mocked upgrade server client.
-    UpgradeServerClient mockClient = EasyMock.createMock(UpgradeServerClient.class);
+    CheckinClient mockClient = EasyMock.createMock(CheckinClient.class);
     // We expect to do two check-ins with the upgrade server. Both check-ins should be sending
     // the same message and receiving the same response.
-    UpgradeCheckin expectedCheckin = new UpgradeCheckin.Builder()
+    UpgradeCheckin expectedCheckin = new UpgradeCheckin.Builder(this.getClass())
         .withId(EXPECTED_ID)
         .withLastUsedMillis(expectedTimestamp)
         .build();
@@ -100,7 +105,7 @@ public class TestCheckinThread {
 
     // Now verify the mock and the upgrade info file contents.
     EasyMock.verify(mockClient);
-    String upgradeInfoFileJson = BentoBoxUtils.readFileAsString(getUpgradeInfoFile()).trim();
+    String upgradeInfoFileJson = CheckinUtils.readFileAsString(getUpgradeInfoFile()).trim();
     LOG.info("JSON written to upgrade file was: " + upgradeInfoFileJson);
     assertEquals("Bad upgrade info file written.", EXPECTED_WRITTEN_JSON, upgradeInfoFileJson);
   }
@@ -113,7 +118,7 @@ public class TestCheckinThread {
   @Test
   public void testCheckinThreadTSFile() throws IOException, InterruptedException {
     Long timestamp = 4951L;
-    BentoBoxUtils.writeObjectToFile(getTimestampFile(), timestamp);
+    CheckinUtils.writeObjectToFile(getTimestampFile(), timestamp);
     runCheckinThread(4951L);
   }
 }
