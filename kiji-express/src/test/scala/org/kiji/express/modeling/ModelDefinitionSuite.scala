@@ -46,6 +46,60 @@ class ModelDefinitionSuite extends FunSuite {
   val invalidScorerClassName: String =
       "src/test/resources/modelDefinitions/invalid-scorer-class-name.json"
 
+  test("A ModelDefinition can be created from specified parameters.") {
+    val modelDefinition = ModelDefinition("name",
+        "1.0.0",
+        classOf[org.kiji.express.modeling.ModelDefinitionSuite.MyExtractor],
+        classOf[org.kiji.express.modeling.ModelDefinitionSuite.MyScorer])
+    assert("name" === modelDefinition.name)
+    assert("1.0.0" === modelDefinition.version)
+    assert(classOf[org.kiji.express.modeling.ModelDefinitionSuite.MyExtractor] ===
+        modelDefinition.extractorClass)
+    assert(classOf[org.kiji.express.modeling.ModelDefinitionSuite.MyScorer] ===
+        modelDefinition.scorerClass)
+  }
+
+  test("Settings on a model definition can be modified.") {
+    val modelDefinition = ModelDefinition("name",
+      "1.0.0",
+      classOf[org.kiji.express.modeling.ModelDefinitionSuite.MyExtractor],
+      classOf[org.kiji.express.modeling.ModelDefinitionSuite.MyScorer])
+
+    val modelDefinition2 = modelDefinition.withNewSettings(name = "name2")
+    assert("name2" === modelDefinition2.name)
+    assert("1.0.0" === modelDefinition2.version)
+    assert(classOf[org.kiji.express.modeling.ModelDefinitionSuite.MyExtractor] ===
+        modelDefinition2.extractorClass)
+    assert(classOf[org.kiji.express.modeling.ModelDefinitionSuite.MyScorer] ===
+        modelDefinition2.scorerClass)
+
+    val modelDefinition3 = modelDefinition2.withNewSettings(version = "2.0.0")
+    assert("name2" === modelDefinition3.name)
+    assert("2.0.0" === modelDefinition3.version)
+    assert(classOf[org.kiji.express.modeling.ModelDefinitionSuite.MyExtractor] ===
+        modelDefinition3.extractorClass)
+    assert(classOf[org.kiji.express.modeling.ModelDefinitionSuite.MyScorer] ===
+        modelDefinition3.scorerClass)
+
+    val modelDefinition4 = modelDefinition3.withNewSettings(
+        extractor = classOf[org.kiji.express.modeling.ModelDefinitionSuite.AnotherExtractor])
+    assert("name2" === modelDefinition4.name)
+    assert("2.0.0" === modelDefinition4.version)
+    assert(classOf[org.kiji.express.modeling.ModelDefinitionSuite.AnotherExtractor] ===
+        modelDefinition4.extractorClass)
+    assert(classOf[org.kiji.express.modeling.ModelDefinitionSuite.MyScorer] ===
+        modelDefinition4.scorerClass)
+
+    val modelDefinition5 = modelDefinition4.withNewSettings(
+      scorer = classOf[org.kiji.express.modeling.ModelDefinitionSuite.AnotherScorer])
+    assert("name2" === modelDefinition5.name)
+    assert("2.0.0" === modelDefinition5.version)
+    assert(classOf[org.kiji.express.modeling.ModelDefinitionSuite.AnotherExtractor] ===
+        modelDefinition5.extractorClass)
+    assert(classOf[org.kiji.express.modeling.ModelDefinitionSuite.AnotherScorer] ===
+        modelDefinition5.scorerClass)
+  }
+
   test("ModelDefinition can be created from a path to a valid JSON file.") {
     val definition: ModelDefinition = ModelDefinition
         // TODO(EXP-53): Permit loading of configuration resources from a jar.
@@ -139,6 +193,8 @@ object ModelDefinitionSuite {
     }
   }
 
+  class AnotherExtractor extends MyExtractor
+
   class MyScorer extends Scorer {
     def scoreFn: ScoreFn[_, _] = score('first) { line: String =>
       line
@@ -146,6 +202,8 @@ object ModelDefinitionSuite {
           .size
     }
   }
+
+  class AnotherScorer extends MyScorer
 
   class MyBadExtractor { def howTrue: Boolean = true }
 

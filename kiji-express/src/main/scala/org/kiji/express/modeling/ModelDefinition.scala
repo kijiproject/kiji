@@ -99,6 +99,24 @@ final class ModelDefinition private[express] (
     ToJson.toAvroJsonString(definition)
   }
 
+  /**
+   * Creates a new model definition with settings specified to this method. Any setting specified
+   * to this method is used in the new model definition. Any unspecified setting will use the
+   * value from this model definition in the new model definition.
+   *
+   * @param name of the model definition.
+   * @param version of the model definition.
+   * @param extractor used by the model definition.
+   * @param scorer used by the model definition.
+   * @return a new model definition using the settings specified to this method.
+   */
+  final def withNewSettings( name: String = this.name,
+      version: String = this.version,
+      extractor: Class[_ <: Extractor] = this.extractorClass,
+      scorer: Class[_ <: Scorer] = this.scorerClass): ModelDefinition = {
+    new ModelDefinition(name, version, extractor, scorer, this.protocolVersion)
+  }
+
   override def equals(other: Any): Boolean = {
     other match {
       case definition: ModelDefinition => {
@@ -141,6 +159,22 @@ object ModelDefinition {
   /** Message to show the user when there is an error validating their model definition. */
   private[express] val VALIDATION_MESSAGE = "One or more errors occurred while validating your " +
       "model definition. Please correct the problems in your model definition and try again."
+
+  /**
+   * Creates a new model definition using the specified settings.
+   *
+   * @param name of the model definition.
+   * @param version of the model definition.
+   * @param extractor used by the model definition.
+   * @param scorer used by the model definition.
+   * @return a model definition using the specified settings.
+   */
+  def apply(name: String,
+      version: String,
+      extractor: Class[_ <: Extractor],
+      scorer: Class[_ <: Scorer]): ModelDefinition = {
+    new ModelDefinition(name, version, extractor, scorer, ModelDefinition.CURRENT_MODEL_DEF_VER)
+  }
 
   /**
    * Creates a ModelDefinition given a JSON string. In the process, all fields are validated.
