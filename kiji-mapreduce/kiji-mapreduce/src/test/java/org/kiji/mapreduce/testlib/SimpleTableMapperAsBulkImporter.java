@@ -74,7 +74,7 @@ public final class SimpleTableMapperAsBulkImporter
     final KijiMapReduceJob mrjob = KijiBulkImportJobBuilder.create()
         .withBulkImporter(SimpleTableMapperAsBulkImporter.class)
         .withInput(MapReduceJobInputs.newKijiTableMapReduceJobInput(
-            table.getURI(), dataRequest, new RowOptions()))
+            table.getURI(), dataRequest, RowOptions.create()))
         .withOutput(new DirectKijiTableMapReduceJobOutput(table.getURI()))
         .build();
     if (!mrjob.run()) {

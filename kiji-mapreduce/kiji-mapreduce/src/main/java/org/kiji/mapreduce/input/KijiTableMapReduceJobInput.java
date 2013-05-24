@@ -91,7 +91,7 @@ public final class KijiTableMapReduceJobInput extends MapReduceJobInput {
    * @see KijiRowFilter for more information about filtering which rows get read from
    *     the Kiji table.
    */
-  public static class RowOptions {
+  public static final class RowOptions {
     /**
      * The start of the row range to read from the table (inclusive).  Use null to include
      * the first row in the table.
@@ -110,9 +110,27 @@ public final class KijiTableMapReduceJobInput extends MapReduceJobInput {
      */
     private final KijiRowFilter mRowFilter;
 
-    /** Constructs options with default settings to include all the rows of the table. */
-    public RowOptions() {
-      this(null, null, null);
+    /**
+     * Creates a new <code>RowOptions</code> instance.
+     *
+     * @param startRow Entity id of the row to start reading from (inclusive). Specify null
+     *     to indicate starting at the first row of the table.
+     * @param limitRow Entity id of the row to stop reading at (exclusive). Specify null to
+     *     indicate stopping after processing the last row of the table.
+     * @param rowFilter A row filter to apply to the Kiji table. May be null.
+     */
+    private RowOptions(EntityId startRow, EntityId limitRow, KijiRowFilter rowFilter) {
+      mStartRow = startRow;
+      mLimitRow = limitRow;
+      mRowFilter = rowFilter;
+    }
+
+    /**
+     * Constructs options with default settings to include all the rows of the table.
+     * @return a new RowOptions configured to include all rows of the table.
+     */
+    public static RowOptions create() {
+      return new RowOptions(null, null, null);
     }
 
     /**
@@ -123,11 +141,10 @@ public final class KijiTableMapReduceJobInput extends MapReduceJobInput {
      * @param limitRow Entity id of the row to stop reading at (exclusive). Specify null to
      *     indicate stopping after processing the last row of the table.
      * @param rowFilter A row filter to apply to the Kiji table. May be null.
+     * @return a new RowOptions specifying on which rows of the table to operate.
      */
-    public RowOptions(EntityId startRow, EntityId limitRow, KijiRowFilter rowFilter) {
-      mStartRow = startRow;
-      mLimitRow = limitRow;
-      mRowFilter = rowFilter;
+    public static RowOptions create(EntityId startRow, EntityId limitRow, KijiRowFilter rowFilter) {
+      return new RowOptions(startRow, limitRow, rowFilter);
     }
 
     /**

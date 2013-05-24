@@ -155,7 +155,7 @@ public class TestLaunchMapReduce {
         .withConf(jobConf)
         .withMapper(ExampleMapper.class)
         .withInput(MapReduceJobInputs.newKijiTableMapReduceJobInput(
-            mTable.getURI(), KijiDataRequest.create("info"), new RowOptions()))
+            mTable.getURI(), KijiDataRequest.create("info"), RowOptions.create()))
         .withOutput(new DirectKijiTableMapReduceJobOutput(mTable.getURI()))
         .build();
     assertTrue(job.run());

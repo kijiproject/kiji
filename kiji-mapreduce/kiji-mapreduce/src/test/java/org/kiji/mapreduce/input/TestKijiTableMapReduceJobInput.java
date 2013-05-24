@@ -93,7 +93,7 @@ public class TestKijiTableMapReduceJobInput extends KijiClientTest {
     final EntityId limitRow = HBaseEntityId.fromHBaseRowKey(Bytes.toBytes("there"));
     final KijiRowFilter filter = new StripValueRowFilter();
     final KijiTableMapReduceJobInput.RowOptions rowOptions =
-        new KijiTableMapReduceJobInput.RowOptions(startRow, limitRow, filter);
+        KijiTableMapReduceJobInput.RowOptions.create(startRow, limitRow, filter);
     final MapReduceJobInput kijiTableJobInput =
         new KijiTableMapReduceJobInput(mTable.getURI(), dataRequest, rowOptions);
     kijiTableJobInput.configure(job);

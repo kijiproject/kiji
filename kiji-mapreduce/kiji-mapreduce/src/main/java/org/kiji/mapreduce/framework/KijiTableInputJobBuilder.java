@@ -138,7 +138,7 @@ public abstract class KijiTableInputJobBuilder<T extends KijiTableInputJobBuilde
   @Override
   protected final MapReduceJobInput getJobInput() {
     final KijiTableMapReduceJobInput.RowOptions rowOptions =
-        new KijiTableMapReduceJobInput.RowOptions(mStartRow, mLimitRow, mRowFilter);
+        KijiTableMapReduceJobInput.RowOptions.create(mStartRow, mLimitRow, mRowFilter);
     return MapReduceJobInputs.newKijiTableMapReduceJobInput(
         mInputTableURI, getDataRequest(), rowOptions);
   }
