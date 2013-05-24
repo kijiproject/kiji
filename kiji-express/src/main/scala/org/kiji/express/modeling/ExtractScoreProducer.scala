@@ -52,16 +52,16 @@ import org.kiji.schema.KijiURI
 @ApiStability.Experimental
 final class ExtractScoreProducer
     extends KijiProducer {
-  /** Definition of a Model Pipeline. This variable must be initialized. */
+  /** The model definition. This variable must be initialized. */
   private[this] var _modelDefinition: Option[ModelDefinition] = None
   private[this] def modelDefinition: ModelDefinition = {
     _modelDefinition.getOrElse {
       throw new IllegalStateException(
-          "ExtractScoreProducer is missing its model pipeline. Did setConf get called?")
+          "ExtractScoreProducer is missing its model definition. Did setConf get called?")
     }
   }
 
-  /** Configuration required to run a Model Pipeline. This variable must be initialized. */
+  /** Environment required to run phases of a model. This variable must be initialized. */
   private[this] var _modelEnvironment: Option[ModelEnvironment] = None
   private[this] def modelEnvironment: ModelEnvironment = {
     _modelEnvironment.getOrElse {
@@ -70,7 +70,7 @@ final class ExtractScoreProducer
     }
   }
 
-  /** Extractor to use for this Model Pipeline. This variable must be initialized. */
+  /** Extractor to use for this model definition. This variable must be initialized. */
   private[this] var _extractor: Option[Extractor] = None
   private[this] def extractor: Extractor = {
     _extractor.getOrElse {
@@ -79,7 +79,7 @@ final class ExtractScoreProducer
     }
   }
 
-  /** Scorer to use for this Model Pipeline. This variable must be initialized. */
+  /** Scorer to use for this model definition. This variable must be initialized. */
   private[this] var _scorer: Option[Scorer] = None
   private[this] def scorer: Scorer = {
     _scorer.getOrElse {
@@ -98,7 +98,7 @@ final class ExtractScoreProducer
   }
 
   /**
-   * Sets the Configuration for this KijiProducer to use.  This function is guaranteed to be called
+   * Sets the Configuration for this KijiProducer to use. This function is guaranteed to be called
    * immediately after instantiation.
    *
    * This method loads a [[org.kiji.express.modeling.ModelDefinition]] and a
@@ -107,7 +107,7 @@ final class ExtractScoreProducer
    * @param conf object that this producer should use.
    */
   override def setConf(conf: Configuration) {
-    // Load model pipeline.
+    // Load model definition.
     val modelDefinitionJson: String = conf.get(ExtractScoreProducer.modelDefinitionConfKey)
     // scalastyle:off null
     require(
@@ -242,13 +242,13 @@ object ExtractScoreProducer {
    * Configuration key addressing the JSON description of a
    * [[org.kiji.express.modeling.ModelDefinition]].
    */
-  val modelDefinitionConfKey: String = "org.kiji.express.modeling.pipeline"
+  val modelDefinitionConfKey: String = "org.kiji.express.modeling.definition"
 
   /**
    * Configuration key addressing the JSON configuration of a
    * [[org.kiji.express.modeling.ModelEnvironment]].
    */
-  val modelEnvironmentConfKey: String = "org.kiji.express.modeling.runprofile"
+  val modelEnvironmentConfKey: String = "org.kiji.express.modeling.environment"
 
   /**
    * Converts a tuple into an appropriate representation for processing by a model phase function.

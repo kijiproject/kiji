@@ -32,7 +32,7 @@ import org.kiji.annotations.ApiStability
 trait KeyValueStores {
   /**
    * Container for the key-value stores accessable to this phase of the model workflow. This
-   * property must be initialized by a Model Pipeline Runner.
+   * property must be initialized by a model job runner.
    */
   private[this] var _kvstores: Option[Map[String, KeyValueStore[_, _]]] = None
 
@@ -51,7 +51,7 @@ trait KeyValueStores {
 
   /**
    * Sets the key-value stores accessable to this phase of the model workflow. This should only be
-   * used by KijiExpress Pipeline Runners.
+   * used by KijiExpress model job runners.
    *
    * @param value to set this phase's key-value stores to.
    */
