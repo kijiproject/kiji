@@ -28,7 +28,6 @@ import java.io.PrintStream;
 
 import com.google.common.collect.Lists;
 import org.apache.hadoop.hbase.util.Bytes;
-import org.jruby.javasupport.Java;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
