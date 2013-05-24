@@ -66,7 +66,7 @@ object ExtractScoreJobBuilder {
    */
   def buildJob(modelFile: String, environmentFile: String): KijiMapReduceJob = {
     buildJob(
-        model = ModelDefinition.fromJsonFile(modelFile)
+        model = ModelDefinition.fromJsonFile(modelFile),
         environment = ModelEnvironment.fromJsonFile(environmentFile))
   }
 }
