@@ -19,7 +19,6 @@
 {
   "name" : "myRunProfile",
   "version" : "1.0.0",
-  "model_spec_path" : "src/test/resources/modelSpecs/valid-model-spec.json",
   "model_table_uri" : "kiji://.env/default/mytable",
   "protocol_version" : "run_spec-0.2.0",
   "extract_run_spec" : {

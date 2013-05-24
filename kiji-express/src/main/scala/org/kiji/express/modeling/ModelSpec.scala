@@ -19,6 +19,7 @@
 
 package org.kiji.express.modeling
 
+import scala.collection.JavaConverters.asScalaIteratorConverter
 import scala.io.Source
 
 import com.google.common.base.Objects
@@ -239,7 +240,8 @@ object ModelSpec {
         extractorClass
             .flatMap { x => catchError(validateExtractorClass(x)) },
         scorerClass
-            .flatMap { x => catchError(validateScorerClass(x)) })
+            .flatMap { x => catchError(validateScorerClass(x)) },
+        catchError(validateExtractScoreBindings(extractorClass.get, scorerClass.get)))
 
     // Throw an exception if there were any validation errors.
     val causes = errors.flatten
@@ -320,6 +322,54 @@ object ModelSpec {
       val error = "The class \"%s\" does not implement the Scorer trait."
           .format(scorerClass.getName)
       throw new ValidationException(error)
+    }
+  }
+
+  def validateExtractScoreBindings(extractorClass: Class[_], scorerClass: Class[_]) {
+    if (classOf[Extractor].isAssignableFrom(extractorClass) &&
+        classOf[Scorer].isAssignableFrom(scorerClass)) {
+      val extractor = try {
+        extractorClass.newInstance()
+      } catch {
+        case e: ClassNotFoundException => {
+          throw new ValidationException("Unable to create instance of extractor class. Make sure " +
+              "your extractor class is on the classpath.")
+        }
+      }
+      val scorer = try {
+        scorerClass.newInstance()
+      } catch {
+        case e: ClassNotFoundException => {
+          throw new ValidationException("Unable to create instance of scorer class. Make sure " +
+              "your scorer class is on the classpath.")
+        }
+      }
+
+      val extractorOutputFields: Set[String] = extractor
+          .asInstanceOf[Extractor]
+          .extractFn
+          .fields
+          ._2
+          .iterator()
+          .asScala
+          .map { field => field.toString() }
+          .toSet
+      val scorerInputFields: Seq[String] = scorer
+          .asInstanceOf[Scorer]
+          .scoreFn
+          .fields
+          .iterator()
+          .asScala
+          .map { field => field.toString() }
+          .toSeq
+
+      scorerInputFields
+          .foreach { field =>
+            if (!extractorOutputFields.contains(field)) {
+              throw new ValidationException("Scorer uses a field not output by Extractor: " +
+                  "\"%s\"".format(field))
+            }
+          }
     }
   }
 }

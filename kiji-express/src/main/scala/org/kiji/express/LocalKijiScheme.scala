@@ -181,6 +181,7 @@ private[express] class LocalKijiScheme(
     while (context.iterator.hasNext) {
       // Get the current row.
       val row: KijiRowData = context.iterator.next()
+      val columnNames = columns.values.map { column => column.getColumnName() }
       val result: Option[Tuple] =
           KijiScheme.rowToTuple(
               columns,
@@ -188,7 +189,7 @@ private[express] class LocalKijiScheme(
               timestampField,
               row,
               context.tableUri,
-              new ExpressGenericTable(context.tableUri, columns.values.toSeq))
+              new ExpressGenericTable(context.tableUri, columnNames.toSeq))
 
       // If no fields were missing, set the result tuple and return from this method.
       result match {

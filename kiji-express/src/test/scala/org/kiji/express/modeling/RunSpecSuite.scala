@@ -32,6 +32,7 @@ import org.kiji.express.avro.ColumnSpec
 import org.kiji.express.avro.KVStore
 import org.kiji.express.avro.KvStoreType
 import org.kiji.express.avro.Property
+import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.util.FromJson
 import org.kiji.schema.util.ToJson
 
@@ -43,22 +44,12 @@ class RunSpecSuite extends FunSuite {
       "src/test/resources/runSpecs/invalid-name-run-spec.json"
   val invalidProtocolSpecLocation: String =
       "src/test/resources/runSpecs/invalid-protocol-version-run-spec.json"
-  val invalidModelPathSpecLocation: String =
-      "src/test/resources/runSpecs/invalid-model-path-run-spec.json"
 
   test("RunSpec can be created from a path to a valid JSON file.") {
-    val expectedRequest: AvroDataRequest = {
-      val inColumn: ColumnSpec = ColumnSpec
-          .newBuilder()
-          .setName("info:in")
-          .setMaxVersions(3)
-          .build()
-      AvroDataRequest
-          .newBuilder()
-          .setMinTimestamp(0)
-          .setMaxTimestamp(38475687)
-          .setColumnDefinitions(Seq(inColumn).asJava)
-          .build()
+    val expectedRequest: KijiDataRequest = {
+      val builder = KijiDataRequest.builder().withTimeRange(0, 38475687)
+      builder.newColumnsDef().withMaxVersions(3).add("info", "in")
+      builder.build()
     }
 
     val expectedKvstores: Seq[KVStore] = {
@@ -81,7 +72,6 @@ class RunSpecSuite extends FunSuite {
 
     assert("myRunProfile" === spec.name)
     assert("1.0.0" === spec.version)
-    assert("src/test/resources/modelSpecs/valid-model-spec.json" === spec.modelSpecPath)
     assert(expectedRequest === spec.extractRunSpec.dataRequest)
     assert(expectedKvstores === spec.extractRunSpec.kvstores)
     assert("info:out" === spec.scoreRunSpec.outputColumn)
@@ -121,13 +111,5 @@ class RunSpecSuite extends FunSuite {
     }
     assert("\"run_spec-0.1.0\" is the maximum protocol version supported. " +
         "The provided run spec is of protocol version: \"run_spec-0.2.0\"" === thrown.getMessage)
-  }
-
-  test("RunSpec can validate the model path.") {
-    val thrown = intercept[RunSpecValidationException] {
-      RunSpec.fromJsonFile(invalidModelPathSpecLocation)
-    }
-    assert("The path to the corresponding model specification JSON file can not be empty."
-        === thrown.getMessage)
   }
 }

@@ -137,7 +137,8 @@ private[express] class KijiScheme(
 
     // Construct an instance of ExpressGenericTable to reuse across all calls to the source method.
     val uri: KijiURI = KijiURI.newBuilder(tableUriProperty).build()
-    val expressGenericTable = new ExpressGenericTable(uri, columns.values.toSeq)
+    val columnNames = columns.values.map { column => column.getColumnName() }
+    val expressGenericTable = new ExpressGenericTable(uri, columnNames.toSeq)
     // Set the context of the sourcecall to include the single instance of ExpressGenericTable
     sourceCall.setContext(KijiSourceContext(
         sourceCall.getInput().createValue(),

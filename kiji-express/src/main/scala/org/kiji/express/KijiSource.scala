@@ -344,7 +344,8 @@ object KijiSource {
       // Read table into buffer.
       doAndRelease(Kiji.Factory.open(uri)) { kiji: Kiji =>
         doAndRelease(kiji.openTable(uri.getTable())) { table: KijiTable =>
-          val genericTable = new ExpressGenericTable(table.getURI, columns.values.toSeq)
+          val columnNames = columns.values.map { column => column.getColumnName() }
+          val genericTable = new ExpressGenericTable(table.getURI, columnNames.toSeq)
           doAndClose(table.openTableReader()) { reader: KijiTableReader =>
             // We also want the entire timerange, so the test can inspect all data in the table.
             val request: KijiDataRequest =

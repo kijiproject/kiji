@@ -131,15 +131,15 @@ class ModelSpecSuite extends FunSuite {
 
 object ModelSpecSuite {
   class MyExtractor extends Extractor {
-    def extractFn: ExtractFn[_, _] = extract('textLine -> 'count) { line: String =>
+    def extractFn: ExtractFn[_, _] = extract('textLine -> 'first) { line: String =>
       line
           .split("""\s+""")
-          .size
+          .head
     }
   }
 
   class MyScorer extends Scorer {
-    def scoreFn: ScoreFn[_, _] = score('textLine) { line: String =>
+    def scoreFn: ScoreFn[_, _] = score('first) { line: String =>
       line
           .split("""\s+""")
           .size

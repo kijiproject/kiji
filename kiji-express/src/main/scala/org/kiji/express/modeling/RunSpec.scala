@@ -23,6 +23,7 @@ import java.io.File
 
 import scala.collection.JavaConverters.seqAsJavaListConverter
 import scala.collection.JavaConverters.asScalaBufferConverter
+import scala.collection.JavaConverters.collectionAsScalaIterableConverter
 import scala.io.Source
 
 import com.google.common.base.Objects
@@ -37,6 +38,8 @@ import org.kiji.express.avro.AvroScoreRunSpec
 import org.kiji.express.avro.ColumnSpec
 import org.kiji.express.avro.KVStore
 import org.kiji.express.avro.FieldBinding
+import org.kiji.schema.KijiColumnName
+import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.util.FromJson
 import org.kiji.schema.util.KijiNameValidator
 import org.kiji.schema.util.ProtocolVersion
@@ -54,7 +57,7 @@ import org.kiji.schema.util.ToJson
 @ApiAudience.Public
 @ApiStability.Experimental
 final class ExtractRunSpec private[express] (
-    val dataRequest: AvroDataRequest,
+    val dataRequest: KijiDataRequest,
     val fieldBindings: Seq[FieldBinding],
     val kvstores: Seq[KVStore]) {
   override def equals(other: Any): Boolean = {
@@ -117,7 +120,6 @@ final class ScoreRunSpec private[express] (
  * {
  *   "name" : "myRunProfile",
  *   "version" : "1.0.0",
- *   "model_spec_path" : "/path/to/model-spec.json",
  *   "model_table_uri" : "kiji://.env/default/mytable",
  *   "protocol_version" : "run_spec-0.1.0",
  *   "extract_run_spec" : {
@@ -168,7 +170,6 @@ final class ScoreRunSpec private[express] (
  *
  * @param name of the run specification.
  * @param version of the run specification.
- * @param modelSpecPath is a path to the model specification this run specification will use.
  * @param modelTableUri is the URI of the Kiji table this run specification will read from and
  *     write to.
  * @param extractRunSpec defining configuration details specific to the Extract phase of a model.
@@ -180,7 +181,6 @@ final class ScoreRunSpec private[express] (
 final class RunSpec private[express] (
     val name: String,
     val version: String,
-    val modelSpecPath: String,
     val modelTableUri: String,
     val extractRunSpec: ExtractRunSpec,
     val scoreRunSpec: ScoreRunSpec,
@@ -197,7 +197,7 @@ final class RunSpec private[express] (
     // Build an AvroExtractRunSpec record.
     val extractSpec: AvroExtractRunSpec = AvroExtractRunSpec
         .newBuilder()
-        .setDataRequest(extractRunSpec.dataRequest)
+        .setDataRequest(RunSpec.kijiToAvroDataRequest(extractRunSpec.dataRequest))
         .setKvStores(extractRunSpec.kvstores.asJava)
         .setFieldBindings(extractRunSpec.fieldBindings.asJava)
         .build()
@@ -215,7 +215,6 @@ final class RunSpec private[express] (
         .setName(name)
         .setVersion(version)
         .setProtocolVersion(protocolVersion.toString)
-        .setModelSpecPath(modelSpecPath)
         .setModelTableUri(modelTableUri)
         .setExtractRunSpec(extractSpec)
         .setScoreRunSpec(scoreSpec)
@@ -229,7 +228,6 @@ final class RunSpec private[express] (
       case spec: RunSpec => {
         name == spec.name &&
             version == spec.version &&
-            modelSpecPath == spec.modelSpecPath &&
             modelTableUri == spec.modelTableUri &&
             extractRunSpec == spec.extractRunSpec &&
             scoreRunSpec == spec.scoreRunSpec &&
@@ -243,7 +241,6 @@ final class RunSpec private[express] (
       Objects.hashCode(
           name,
           version,
-          modelSpecPath,
           modelTableUri,
           extractRunSpec,
           scoreRunSpec,
@@ -287,7 +284,7 @@ object RunSpec {
 
     // Load the extractor's run specification.
     val extractSpec = new ExtractRunSpec(
-        dataRequest = avroRunSpec.getExtractRunSpec.getDataRequest,
+        dataRequest = avroToKijiDataRequest(avroRunSpec.getExtractRunSpec.getDataRequest),
         fieldBindings = avroRunSpec.getExtractRunSpec.getFieldBindings.asScala,
         kvstores = avroRunSpec.getExtractRunSpec.getKvStores.asScala)
 
@@ -300,7 +297,6 @@ object RunSpec {
     new RunSpec(
         name = avroRunSpec.getName,
         version = avroRunSpec.getVersion,
-        modelSpecPath = avroRunSpec.getModelSpecPath,
         modelTableUri = avroRunSpec.getModelTableUri,
         extractRunSpec = extractSpec,
         scoreRunSpec = scoreSpec,
@@ -320,6 +316,59 @@ object RunSpec {
     }
 
     fromJson(json)
+  }
+
+  /**
+   * Converts an Avro data request to a Kiji data request.
+   *
+   * @param avroDataRequest to convert.
+   * @return a Kiji data request converted from the provided Avro data request.
+   */
+  private[express] def avroToKijiDataRequest(avroDataRequest: AvroDataRequest): KijiDataRequest = {
+    val builder = KijiDataRequest.builder()
+        .withTimeRange(avroDataRequest.getMinTimestamp(), avroDataRequest.getMaxTimestamp())
+
+    avroDataRequest
+        .getColumnDefinitions
+        .asScala
+        .foreach { columnSpec: ColumnSpec =>
+          val name = new KijiColumnName(columnSpec.getName())
+          val maxVersions = columnSpec.getMaxVersions()
+          // TODO(EXP-62): Add support for filters.
+
+          builder.newColumnsDef().withMaxVersions(maxVersions).add(name)
+        }
+
+    builder.build()
+  }
+
+  /**
+   * Converts a Kiji data request to an Avro data request.
+   *
+   * @param kijiDataRequest to convert.
+   * @return an Avro data request converted from the provided Kiji data request.
+   */
+  private[express] def kijiToAvroDataRequest(kijiDataRequest: KijiDataRequest): AvroDataRequest = {
+    val columns: Seq[ColumnSpec] = kijiDataRequest
+        .getColumns()
+        .asScala
+        .map { column =>
+          ColumnSpec
+              .newBuilder()
+              .setName(column.getName())
+              .setMaxVersions(column.getMaxVersions())
+              // TODO(EXP-62): Add support for filters.
+              .build()
+        }
+        .toSeq
+
+    // Build an Avro data request.
+    AvroDataRequest
+        .newBuilder()
+        .setMinTimestamp(kijiDataRequest.getMinTimestamp())
+        .setMaxTimestamp(kijiDataRequest.getMaxTimestamp())
+        .setColumnDefinitions(columns.asJava)
+        .build()
   }
 
   /**
@@ -354,7 +403,6 @@ object RunSpec {
         catchError(validateProtocolVersion(spec.protocolVersion)),
         catchError(validateName(spec.name)),
         catchError(validateVersion(spec.version)),
-        catchError(validateModelSpec(spec.modelSpecPath)),
         extractorSpec
             .flatMap { x => catchError(validateExtractSpec(x)) },
         scoreSpec
@@ -415,28 +463,6 @@ object RunSpec {
   }
 
   /**
-   * Validates the model spec provided in the run spec.
-   *
-   * @param modelSpecPath to validate.
-   */
-  def validateModelSpec(modelSpecPath: String) {
-    if (modelSpecPath.isEmpty) {
-      val error = "The path to the corresponding model specification JSON file can not be empty."
-      throw new ValidationException(error)
-    } else if (!new File(modelSpecPath).exists()) {
-      val error = "The corresponding model specification JSON file, \"%s\", does not exist."
-          .format(modelSpecPath)
-      throw new ValidationException(error)
-    } else if (!new File(modelSpecPath).isFile()) {
-      val error = "The corresponding model specification JSON file, \"%s\", is not a file."
-          .format(modelSpecPath)
-      throw new ValidationException(error)
-    } else {
-      ModelSpec.fromJsonFile(modelSpecPath)
-    }
-  }
-
-  /**
    * Validates fields in the extract run spec.
    *
    * @param extractSpec to validate.
@@ -446,7 +472,6 @@ object RunSpec {
 
     // Store errors that occur during other validation steps.
     val errors = Seq(
-        catchError(validateDataRequest(extractSpec.dataRequest)),
         catchError(validateExtractBindings(extractSpec.fieldBindings)),
         kvstores
             .flatMap { x => catchError(validateKvstores(x)) })
@@ -542,7 +567,7 @@ object RunSpec {
       throw new ValidationException("Every column name must map to a unique tuple" +
           " field. You have a data field associated with multiple columns. ")
     }
-    columnNames.foreach{ columnName: String =>
+    columnNames.foreach { columnName: String =>
       if (!columnName.matches("^[a-zA-Z_][a-zA-Z0-9_:]+$")) {
         throw new ValidationException("The column name provided as the data binding" +
             " in the extract phase must begin with a letter and only consist of alphanumeric" +
@@ -565,11 +590,19 @@ object RunSpec {
       throw new ValidationException("The column to write out to in the score phase" +
           "can not be the empty string.")
     }
-    if (!outputColumn.matches("^[a-zA-Z_][a-zA-Z0-9_:]+$")) {
-      throw new ValidationException("The name provided as the data binding" +
-          " to the score phase must begin with a letter and only consist of alphanumeric" +
-          " characters and underscores. The column name you provided is: " + outputColumn + " and" +
-          " the regex it must match is: ^[a-zA-Z_][a-zA-Z0-9_:]+$")
+    val columnName: KijiColumnName = try {
+      new KijiColumnName(outputColumn)
+    } catch {
+      case e: IllegalArgumentException => {
+        throw new ValidationException("Invalid output column: " + e.getMessage())
+      }
     }
+    if (!columnName.isFullyQualified()) {
+      throw new ValidationException("The name provided as the data binding must identify a fully " +
+          "qualified column, not a column family.")
+    }
+  }
+
+  def validateColumnName(name: String) {
   }
 }

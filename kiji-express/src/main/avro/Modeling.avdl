@@ -146,7 +146,7 @@ protocol ModelSPI {
     /**
      * Maximum number of the most recent versions of a particular column to return. Default is 1.
      */
-    long max_versions = 1;
+    int max_versions = 1;
 
     /**
      * A ColumnFilter to attach to the column. Potentially null.
@@ -254,11 +254,6 @@ protocol ModelSPI {
      * User specified version number for this particular run profile specification. Required.
      */
     string version;
-
-    /**
-     * Path in the local file system to JSON file containing the model spec. Required.
-     */
-    string model_spec_path;
 
     /**
      * Kiji URI addressing the table that this model workflow will be run against. Required.

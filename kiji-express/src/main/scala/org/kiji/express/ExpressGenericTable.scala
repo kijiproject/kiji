@@ -47,7 +47,7 @@ import org.kiji.schema.util.ResourceUtils
  * @param columns in this table that requested rows will include.
  */
 @ApiAudience.Private
-private[express] final class ExpressGenericTable(tableUri: KijiURI, columns: Seq[ColumnRequest]) {
+private[express] final class ExpressGenericTable(tableUri: KijiURI, columns: Seq[KijiColumnName]) {
   private val logger: Logger = LoggerFactory.getLogger(classOf[ExpressGenericTable])
 
   logger.debug("ExpressGenericTable being initialized for table %s and columns %s".format(
@@ -65,11 +65,13 @@ private[express] final class ExpressGenericTable(tableUri: KijiURI, columns: Seq
               columns.map {
                 column => {
                   // Build the CellSpec with the necessary schemaTable
-                  val cellSchema = tableLayout.getCellSchema(column.getColumnName)
+                  val cellSchema = tableLayout.getCellSchema(column)
+                  // scalastyle:off null
                   val cellSpec = CellSpec
                       .fromCellSchema(cellSchema, schemaTable)
                       .setReaderSchema(null)
-                  (column.getColumnName, cellSpec)
+                  // scalastyle:on null
+                  (column, cellSpec)
                 }
               }.toMap
           cellSpecMap
