@@ -32,9 +32,9 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.express.Resources.doAndClose
 import org.kiji.express.avro.AvroDataRequest
-import org.kiji.express.avro.AvroExtractRunSpec
-import org.kiji.express.avro.AvroRunSpec
-import org.kiji.express.avro.AvroScoreRunSpec
+import org.kiji.express.avro.AvroExtractEnvironment
+import org.kiji.express.avro.AvroModelEnvironment
+import org.kiji.express.avro.AvroScoreEnvironment
 import org.kiji.express.avro.ColumnSpec
 import org.kiji.express.avro.KVStore
 import org.kiji.express.avro.FieldBinding
@@ -46,7 +46,7 @@ import org.kiji.schema.util.ProtocolVersion
 import org.kiji.schema.util.ToJson
 
 /**
- * A specification of the runtime bindings needed in the extract phase of a model pipeline.
+ * A specification of the runtime bindings needed in the extract phase of a model.
  *
  * @param dataRequest describing the input columns required during the extract phase.
  * @param fieldBindings defining a mapping from columns requested to their corresponding field
@@ -56,16 +56,16 @@ import org.kiji.schema.util.ToJson
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-final class ExtractRunSpec private[express] (
+final class ExtractEnvironment private[express] (
     val dataRequest: KijiDataRequest,
     val fieldBindings: Seq[FieldBinding],
     val kvstores: Seq[KVStore]) {
   override def equals(other: Any): Boolean = {
     other match {
-      case spec: ExtractRunSpec => {
-        dataRequest == spec.dataRequest &&
-            fieldBindings == spec.fieldBindings &&
-            kvstores == spec.kvstores
+      case environment: ExtractEnvironment => {
+        dataRequest == environment.dataRequest &&
+            fieldBindings == environment.fieldBindings &&
+            kvstores == environment.kvstores
       }
       case _ => false
     }
@@ -79,22 +79,21 @@ final class ExtractRunSpec private[express] (
 }
 
 /**
- * A specification of the runtime bindings for data sources required in the score phase of a model
- * pipeline.
+ * A specification of the runtime bindings for data sources required in the score phase of a model.
  *
  * @param outputColumn to write scores to.
  * @param kvstores for usage during the score phase.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-final class ScoreRunSpec private[express] (
+final class ScoreEnvironment private[express] (
     val outputColumn: String,
     val kvstores: Seq[KVStore]) {
   override def equals(other: Any): Boolean = {
     other match {
-      case spec: ScoreRunSpec => {
-        outputColumn == spec.outputColumn &&
-            kvstores == spec.kvstores
+      case environment: ScoreEnvironment => {
+        outputColumn == environment.outputColumn &&
+            kvstores == environment.kvstores
       }
       case _ => false
     }
@@ -107,22 +106,22 @@ final class ScoreRunSpec private[express] (
 }
 
 /**
- * A RunSpec is a specification describing how to execute a linked model specification. This
- * includes specifying:
+ * A ModelEnvironment is a specification describing how to execute a linked model definition.
+ * This includes specifying:
  * <ul>
- *   <li>A model specification to run</li>
+ *   <li>A model definition to run</li>
  *   <li>Mappings from logical names of data sources to their physical realizations</li>
  * </ul>
  *
- * Currently this class can only be created from a run specification in a JSON file. JSON run
+ * Currently this class can only be created from a model environment in a JSON file. JSON run
  * specifications should be written using the following format:
  * {{{
  * {
  *   "name" : "myRunProfile",
  *   "version" : "1.0.0",
  *   "model_table_uri" : "kiji://.env/default/mytable",
- *   "protocol_version" : "run_spec-0.1.0",
- *   "extract_run_spec" : {
+ *   "protocol_version" : "model_environment-0.1.0",
+ *   "extract_model_environment" : {
  *     "data_request" : {
  *       "min_timestamp" : 0,
  *       "max_timestamp" : 922347862,
@@ -141,11 +140,11 @@ final class ScoreRunSpec private[express] (
  *       } ]
  *     } ],
  *     "field_bindings" : [ {
- *       "field_name" : "in",
- *       "column_name" : "info:in"
+ *       "tuple_field_name" : "in",
+ *       "store_field_name" : "info:in"
  *     } ]
  *   },
- *   "score_run_spec" : {
+ *   "score_model_environment" : {
  *     "kv_stores" : [ {
  *       "store_type" : "AVRO_KV",
  *       "name" : "side_data",
@@ -159,79 +158,84 @@ final class ScoreRunSpec private[express] (
  * }
  * }}}
  *
- * To load a JSON run specification:
+ * To load a JSON model environment:
  * {{{
  * // Load a JSON string directly:
- * val myRunSpec: RunSpec = RunSpec.loadJson("""{ "name": "myIdentifier", ... }""")
+ * val myModelEnvironment: ModelEnvironment =
+ *     ModelEnvironment.loadJson("""{ "name": "myIdentifier", ... }""")
  *
  * // Load a JSON file:
- * val myRunSpec2: RunSpec = RunSpec.loadJsonFile("/path/to/json/config.json")
+ * val myModelEnvironment2: ModelEnvironment =
+ *     ModelEnvironment.loadJsonFile("/path/to/json/config.json")
  * }}}
  *
- * @param name of the run specification.
- * @param version of the run specification.
- * @param modelTableUri is the URI of the Kiji table this run specification will read from and
+ * @param name of the model environment.
+ * @param version of the model environment.
+ * @param modelTableUri is the URI of the Kiji table this model environment will read from and
  *     write to.
- * @param extractRunSpec defining configuration details specific to the Extract phase of a model.
- * @param scoreRunSpec defining configuration details specific to the Score phase of a model.
- * @param protocolVersion this model specification was written for.
+ * @param extractEnvironment defining configuration details specific to the Extract phase of
+ *     a model.
+ * @param scoreEnvironment defining configuration details specific to the Score phase of a
+ *     model.
+ * @param protocolVersion this model definition was written for.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-final class RunSpec private[express] (
+final class ModelEnvironment private[express] (
     val name: String,
     val version: String,
     val modelTableUri: String,
-    val extractRunSpec: ExtractRunSpec,
-    val scoreRunSpec: ScoreRunSpec,
-    private[express] val protocolVersion: ProtocolVersion = RunSpec.CURRENT_MODEL_SPEC_VER) {
-  // Ensure that all fields set for this run spec are valid.
-  RunSpec.validateRunSpec(this)
+    val extractEnvironment: ExtractEnvironment,
+    val scoreEnvironment: ScoreEnvironment,
+    private[express] val protocolVersion: ProtocolVersion =
+        ModelEnvironment.CURRENT_MODEL_DEF_VER) {
+  // Ensure that all fields set for this model environment are valid.
+  ModelEnvironment.validateModelEnvironment(this)
 
   /**
-   * Serializes this run specification into a JSON string.
+   * Serializes this model environment into a JSON string.
    *
-   * @return a JSON string that represents this run specification.
+   * @return a JSON string that represents this model environment.
    */
   final def toJson(): String = {
-    // Build an AvroExtractRunSpec record.
-    val extractSpec: AvroExtractRunSpec = AvroExtractRunSpec
+    // Build an AvroExtractEnvironment record.
+    val avroExtractEnvironment: AvroExtractEnvironment = AvroExtractEnvironment
         .newBuilder()
-        .setDataRequest(RunSpec.kijiToAvroDataRequest(extractRunSpec.dataRequest))
-        .setKvStores(extractRunSpec.kvstores.asJava)
-        .setFieldBindings(extractRunSpec.fieldBindings.asJava)
+        .setDataRequest(ModelEnvironment.kijiToAvroDataRequest(extractEnvironment.dataRequest))
+        .setKvStores(extractEnvironment.kvstores.asJava)
+        .setFieldBindings(extractEnvironment.fieldBindings.asJava)
         .build()
 
-    // Build an AvroScoreRunSpec record.
-    val scoreSpec: AvroScoreRunSpec = AvroScoreRunSpec
+    // Build an AvroScoreEnvironment record.
+    val avroScoreEnvironment: AvroScoreEnvironment = AvroScoreEnvironment
         .newBuilder()
-        .setKvStores(scoreRunSpec.kvstores.asJava)
-        .setOutputColumn(scoreRunSpec.outputColumn)
+        .setKvStores(scoreEnvironment.kvstores.asJava)
+        .setOutputColumn(scoreEnvironment.outputColumn)
         .build()
 
-    // Build an AvroRunSpec record.
-    val spec: AvroRunSpec = AvroRunSpec
+    // Build an AvroModelEnvironment record.
+    val environment: AvroModelEnvironment = AvroModelEnvironment
         .newBuilder()
         .setName(name)
         .setVersion(version)
         .setProtocolVersion(protocolVersion.toString)
         .setModelTableUri(modelTableUri)
-        .setExtractRunSpec(extractSpec)
-        .setScoreRunSpec(scoreSpec)
+        .setExtractEnvironment(avroExtractEnvironment)
+        .setScoreEnvironment(avroScoreEnvironment)
         .build()
 
-    ToJson.toAvroJsonString(spec)
+    ToJson.toAvroJsonString(environment)
   }
 
   override def equals(other: Any): Boolean = {
     other match {
-      case spec: RunSpec => {
-        name == spec.name &&
-            version == spec.version &&
-            modelTableUri == spec.modelTableUri &&
-            extractRunSpec == spec.extractRunSpec &&
-            scoreRunSpec == spec.scoreRunSpec &&
-            protocolVersion == spec.protocolVersion
+      case environment: ModelEnvironment => {
+        name == environment.name &&
+            version == environment.version &&
+            modelTableUri == environment.modelTableUri &&
+            extractEnvironment == environment.extractEnvironment &&
+            scoreEnvironment == environment.scoreEnvironment &&
+            protocolVersion == environment.protocolVersion
       }
       case _ => false
     }
@@ -242,75 +246,76 @@ final class RunSpec private[express] (
           name,
           version,
           modelTableUri,
-          extractRunSpec,
-          scoreRunSpec,
+          extractEnvironment,
+          scoreEnvironment,
           protocolVersion)
 }
 
 /**
- * Companion object for RunSpec. Contains constants related to run specifications as well as
- * validation methods.
+ * Companion object for ModelEnvironment. Contains constants related to model environments as well
+ * as validation methods.
  */
-object RunSpec {
-  /** Maximum run specification version we can recognize. */
-  val MAX_RUN_SPEC_VER: ProtocolVersion = ProtocolVersion.parse("run_spec-0.1.0")
+object ModelEnvironment {
+  /** Maximum model environment version we can recognize. */
+  val MAX_RUN_ENV_VER: ProtocolVersion = ProtocolVersion.parse("model_environment-0.1.0")
 
-  /** Minimum run specification version we can recognize. */
-  val MIN_RUN_SPEC_VER: ProtocolVersion = ProtocolVersion.parse("run_spec-0.1.0")
+  /** Minimum model environment version we can recognize. */
+  val MIN_RUN_ENV_VER: ProtocolVersion = ProtocolVersion.parse("model_environment-0.1.0")
 
-  /** Current ModelSpec protocol version.  */
-  val CURRENT_MODEL_SPEC_VER: ProtocolVersion = ProtocolVersion.parse("run_spec-0.1.0")
+  /** Current ModelDefinition protocol version. */
+  val CURRENT_MODEL_DEF_VER: ProtocolVersion = ProtocolVersion.parse("model_environment-0.1.0")
 
-  /** Regular expression used to validate a run spec version string. */
+  /** Regular expression used to validate a model environment version string. */
   val VERSION_REGEX: String = "[0-9]+(.[0-9]+)*"
 
-  /** Message to show the user when there is an error validating their model specification. */
+  /** Message to show the user when there is an error validating their model definition. */
   private[express] val VALIDATION_MESSAGE = "One or more errors occurred while validating your " +
-      "run specification. Please correct the problems in your run specification and try again."
+      "model environment. Please correct the problems in your model environment and try again."
 
   /**
-   * Creates a RunSpec given a JSON string. In the process, all fields are validated.
+   * Creates a ModelEnvironment given a JSON string. In the process, all fields are validated.
    *
-   * @param json serialized run specification.
-   * @return the validated run specification.
+   * @param json serialized model environment.
+   * @return the validated model environment.
    */
-  def fromJson(json: String): RunSpec = {
+  def fromJson(json: String): ModelEnvironment = {
     // Parse the json.
-    val avroRunSpec: AvroRunSpec = FromJson
-        .fromJsonString(json, AvroRunSpec.SCHEMA$)
-        .asInstanceOf[AvroRunSpec]
+    val avroModelEnvironment: AvroModelEnvironment = FromJson
+        .fromJsonString(json, AvroModelEnvironment.SCHEMA$)
+        .asInstanceOf[AvroModelEnvironment]
     val protocol = ProtocolVersion
-        .parse(avroRunSpec.getProtocolVersion)
+        .parse(avroModelEnvironment.getProtocolVersion)
 
-    // Load the extractor's run specification.
-    val extractSpec = new ExtractRunSpec(
-        dataRequest = avroToKijiDataRequest(avroRunSpec.getExtractRunSpec.getDataRequest),
-        fieldBindings = avroRunSpec.getExtractRunSpec.getFieldBindings.asScala,
-        kvstores = avroRunSpec.getExtractRunSpec.getKvStores.asScala)
+    // Load the extractor's model environment.
+    val extractEnvironment = new ExtractEnvironment(
+        dataRequest = avroToKijiDataRequest(
+            avroModelEnvironment.getExtractEnvironment.getDataRequest),
+        fieldBindings = avroModelEnvironment.getExtractEnvironment.getFieldBindings.asScala,
+        kvstores = avroModelEnvironment.getExtractEnvironment.getKvStores.asScala)
 
-    // Load the scorer's run specification.
-    val scoreSpec = new ScoreRunSpec(
-        outputColumn = avroRunSpec.getScoreRunSpec.getOutputColumn,
-        kvstores = avroRunSpec.getScoreRunSpec.getKvStores.asScala)
+    // Load the scorer's model environment.
+    val scoreEnvironment = new ScoreEnvironment(
+        outputColumn = avroModelEnvironment.getScoreEnvironment.getOutputColumn,
+        kvstores = avroModelEnvironment.getScoreEnvironment.getKvStores.asScala)
 
-    // Build a run specification.
-    new RunSpec(
-        name = avroRunSpec.getName,
-        version = avroRunSpec.getVersion,
-        modelTableUri = avroRunSpec.getModelTableUri,
-        extractRunSpec = extractSpec,
-        scoreRunSpec = scoreSpec,
+    // Build a model environment.
+    new ModelEnvironment(
+        name = avroModelEnvironment.getName,
+        version = avroModelEnvironment.getVersion,
+        modelTableUri = avroModelEnvironment.getModelTableUri,
+        extractEnvironment = extractEnvironment,
+        scoreEnvironment = scoreEnvironment,
         protocolVersion = protocol)
   }
 
   /**
-   * Creates an RunSpec given a path in the local filesystem to a JSON file that specifies a run
-   * specification. In the process, all fields are validated.
+   * Creates an ModelEnvironment given a path in the local filesystem to a JSON file that specifies
+   * a run specification. In the process, all fields are validated.
    *
-   * @param path in the local filesystem to a JSON file containing a run specification.
-   * @return the validated run specification.
+   * @param path in the local filesystem to a JSON file containing a model environment.
+   * @return the validated model environment.
    */
-  def fromJsonFile(path: String): RunSpec = {
+  def fromJsonFile(path: String): ModelEnvironment = {
     val json: String = doAndClose(Source.fromFile(path)) { source =>
       source.mkString
     }
@@ -387,61 +392,62 @@ object RunSpec {
   }
 
   /**
-   * Verifies that all fields in a run specification are valid. This validation method will collect
+   * Verifies that all fields in a model environment are valid. This validation method will collect
    * all validation errors into one exception.
    *
-   * @param spec to validate.
-   * @throws RunSpecValidationException if there are errors encountered while validating the
-   *     provided model spec.
+   * @param environment to validate.
+   * @throws ModelEnvironmentValidationException if there are errors encountered while validating
+   *     the provided model definition.
    */
-  def validateRunSpec(spec: RunSpec) {
-    val extractorSpec = Option(spec.extractRunSpec)
-    val scoreSpec = Option(spec.scoreRunSpec)
+  def validateModelEnvironment(environment: ModelEnvironment) {
+    val extractEnvironment = Option(environment.extractEnvironment)
+    val scoreEnvironment = Option(environment.scoreEnvironment)
 
     // Collect errors from other validation steps.
     val errors: Seq[Option[ValidationException]] = Seq(
-        catchError(validateProtocolVersion(spec.protocolVersion)),
-        catchError(validateName(spec.name)),
-        catchError(validateVersion(spec.version)),
-        extractorSpec
-            .flatMap { x => catchError(validateExtractSpec(x)) },
-        scoreSpec
-            .flatMap { x => catchError(validateScoreSpec(x)) })
+        catchError(validateProtocolVersion(environment.protocolVersion)),
+        catchError(validateName(environment.name)),
+        catchError(validateVersion(environment.version)),
+        extractEnvironment
+            .flatMap { x => catchError(validateExtractEnvironment(x)) },
+        scoreEnvironment
+            .flatMap { x => catchError(validateScoreEnvironment(x)) })
 
     // Throw an exception if there were any validation errors.
     val causes = errors.flatten
     if (!causes.isEmpty) {
-      throw new RunSpecValidationException(causes)
+      throw new ModelEnvironmentValidationException(causes)
     }
   }
 
   /**
-   * Verifies that a run specification's protocol version is supported.
+   * Verifies that a model environment's protocol version is supported.
    *
    * @param protocolVersion to validate.
    */
   def validateProtocolVersion(protocolVersion: ProtocolVersion) {
-    if (MAX_RUN_SPEC_VER.compareTo(protocolVersion) < 0) {
-      val error = "\"%s\" is the maximum protocol version supported. ".format(MAX_RUN_SPEC_VER) +
-          "The provided run spec is of protocol version: \"%s\"".format(protocolVersion)
+    if (MAX_RUN_ENV_VER.compareTo(protocolVersion) < 0) {
+      val error = "\"%s\" is the maximum protocol version supported. ".format(MAX_RUN_ENV_VER) +
+          "The provided model environment is of protocol version: \"%s\"".format(protocolVersion)
 
       throw new ValidationException(error)
-    } else if (MIN_RUN_SPEC_VER.compareTo(protocolVersion) > 0) {
-      val error = "\"%s\" is the minimum protocol version supported. ".format(MIN_RUN_SPEC_VER) +
-          "The provided run spec is of protocol version: \"%s\"".format(protocolVersion)
+    } else if (MIN_RUN_ENV_VER.compareTo(protocolVersion) > 0) {
+      val error = "\"%s\" is the minimum protocol version supported. ".format(MIN_RUN_ENV_VER) +
+          "The provided model environment is of protocol version: \"%s\"".format(protocolVersion)
 
       throw new ValidationException(error)
     }
   }
 
   /**
-   * Verifies that a run specification's name is valid.
+   * Verifies that a model environment's name is valid.
    *
    * @param name to validate.
    */
   def validateName(name: String) {
     if(name.isEmpty) {
-      throw new ValidationException("The name of the run spec can not be the empty string.")
+      throw new ValidationException("The name of the model environment can not be the empty " +
+          "string.")
     } else if (!KijiNameValidator.isValidAlias(name)) {
       throw new ValidationException("The name \"%s\" is not valid. ".format(name) +
           "Names must match the regex \"%s\"."
@@ -450,55 +456,55 @@ object RunSpec {
   }
 
   /**
-   * Verifies that a model specification's version string is valid.
+   * Verifies that a model definition's version string is valid.
    *
    * @param version to validate.
    */
   def validateVersion(version: String) {
     if (!version.matches(VERSION_REGEX)) {
-      val error = "Run spec version strings must match the regex \"%s\" (1.0.0 would be valid)."
-          .format(VERSION_REGEX)
+      val error = "Model environment version strings must match the regex " +
+          "\"%s\" (1.0.0 would be valid).".format(VERSION_REGEX)
       throw new ValidationException(error)
     }
   }
 
   /**
-   * Validates fields in the extract run spec.
+   * Validates fields in the extract model environment.
    *
-   * @param extractSpec to validate.
+   * @param extractEnvironment to validate.
    */
-  def validateExtractSpec(extractSpec: ExtractRunSpec) {
-    val kvstores = Option(extractSpec.kvstores)
+  def validateExtractEnvironment(extractEnvironment: ExtractEnvironment) {
+    val kvstores = Option(extractEnvironment.kvstores)
 
     // Store errors that occur during other validation steps.
     val errors = Seq(
-        catchError(validateExtractBindings(extractSpec.fieldBindings)),
+        catchError(validateExtractBindings(extractEnvironment.fieldBindings)),
         kvstores
             .flatMap { x => catchError(validateKvstores(x)) })
 
     val causes = errors.flatten
     if (!causes.isEmpty) {
-      throw new RunSpecValidationException(causes)
+      throw new ModelEnvironmentValidationException(causes)
     }
   }
 
   /**
-   * Validates fields in the score run spec.
+   * Validates fields in the score model environment.
    *
-   * @param scoreSpec to validate.
+   * @param scoreEnvironment to validate.
    */
-  def validateScoreSpec(scoreSpec: ScoreRunSpec) {
-    val kvstores = Option(scoreSpec.kvstores)
+  def validateScoreEnvironment(scoreEnvironment: ScoreEnvironment) {
+    val kvstores = Option(scoreEnvironment.kvstores)
 
     // Store errors that occur during other validation steps.
     val errors = Seq(
-        catchError(validateScoreBinding(scoreSpec.outputColumn)),
+        catchError(validateScoreBinding(scoreEnvironment.outputColumn)),
         kvstores
             .flatMap { x => catchError(validateKvstores(x)) })
 
     val causes = errors.flatten
     if (!causes.isEmpty) {
-      throw new RunSpecValidationException(causes)
+      throw new ModelEnvironmentValidationException(causes)
     }
   }
 
@@ -524,13 +530,13 @@ object RunSpec {
         }
 
     if (!errors.isEmpty) {
-      throw new RunSpecValidationException(errors)
+      throw new ModelEnvironmentValidationException(errors)
     }
   }
 
   /**
-   * Validates specified keyvalue stores in the run spec. Currently, this only validates the
-   * format of the name.
+   * Validates specified keyvalue stores in the model environment. Currently, this only validates
+   * the format of the name.
    *
    * @param kvStores to validate.
    */

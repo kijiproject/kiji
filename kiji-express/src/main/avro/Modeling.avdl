@@ -18,12 +18,12 @@
  */
 
 /**
- * This protocol defines avro objects used for serialization of model pipelines and pipeline run
- * profiles to/from JSON. Some of these records are also used in the return types of methods defined
- * in the ModelPipeline and PipelineRunProfile traits.
+ * This protocol defines avro objects used for serialization of model definitions and model
+ * environments to/from JSON. Some of these records are also used in the return types of methods
+ * defined in the ModelDefinition and ModelEnvironment classes.
  */
 @namespace("org.kiji.express.avro")
-protocol ModelSPI {
+protocol Modeling {
   /**
    * A specification of the computational phases defining a model workflow.
    *
@@ -31,14 +31,14 @@ protocol ModelSPI {
    * - Extract
    * - Score
    */
-  record AvroModelSpec {
+  record AvroModelDefinition {
     /**
-     * User specified shorthand identifier for this model pipeline. Required.
+     * User specified shorthand identifier for this model definition. Required.
      */
     string name;
 
     /**
-     * User specified version number for this model pipeline. Required.
+     * User specified version number for this model definition. Required.
      */
     string version;
 
@@ -56,10 +56,9 @@ protocol ModelSPI {
     string scorer_class;
 
     /**
-     * Unique identifier for this model pipeline specification. The current version is
-     * model_spec-0.1.0.
+     * Unique identifier for this model definition. The current version is model_definition-0.1.0.
      */
-    string protocol_version = "model_spec-0.1.0";
+    string protocol_version = "model_definition-0.1.0";
   }
 
   /**
@@ -195,10 +194,10 @@ protocol ModelSPI {
   /**
    * Runtime resource bindings for the extract phase.
    *
-   * Note to developers: Please increment the 'protocol_version' field in AvroRunSpec when modifying
-   *     this record.
+   * Note to developers: Please increment the 'protocol_version' field in AvroModelEnvironment when
+   *     modifying this record.
    */
-  record AvroExtractRunSpec {
+  record AvroExtractEnvironment {
     /**
      * Describes a request for columns of data to read from a Kiji table. Required.
      */
@@ -219,10 +218,10 @@ protocol ModelSPI {
   /**
    * Runtime resource bindings for the score phase.
    *
-   * Note to developers: Please increment the 'protocol_version' field in AvroRunSpec when modifying
-   *     this record.
+   * Note to developers: Please increment the 'protocol_version' field in AvroModelEnvironment when
+   *     modifying this record.
    */
-  record AvroScoreRunSpec {
+  record AvroScoreEnvironment {
     /**
      * An array of KVStores needed during the score phase. The default value of this field is the
      * empty list.
@@ -236,22 +235,21 @@ protocol ModelSPI {
   }
 
   /**
-   * Runtime resource bindings for a model pipeline.
+   * Runtime resource bindings for a model definition.
    */
-  record AvroRunSpec {
+  record AvroModelEnvironment {
     /**
-     * Unique identifier for this pipeline run profile specification. The current version is
-     * run_spec-0.1.0.
+     * Unique identifier for this model environment. The current version is model_environment-0.1.0.
      */
-    string protocol_version = "run_spec-0.1.0";
+    string protocol_version = "model_environment-0.1.0";
 
     /**
-     * User specified shorthand identifier for this run profile specification. Required.
+     * User specified shorthand identifier for this model environment. Required.
      */
     string name;
 
     /**
-     * User specified version number for this particular run profile specification. Required.
+     * User specified version number for this particular model environment. Required.
      */
     string version;
 
@@ -263,11 +261,11 @@ protocol ModelSPI {
     /**
      * Runtime bindings for data sources used in the extract phase. Potentially null.
      */
-    union { null, AvroExtractRunSpec } extract_run_spec = null;
+    union { null, AvroExtractEnvironment } extract_environment = null;
 
     /**
      * Runtime bindings for data sources used in the score phase. Potentially null.
      */
-    union { null, AvroScoreRunSpec } score_run_spec = null;
+    union { null, AvroScoreEnvironment } score_environment = null;
   }
 }

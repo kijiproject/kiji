@@ -57,18 +57,19 @@ class ExtractScoreProducerSuite
     doAndRelease(kiji.openTable(testLayout.getName())) { table: KijiTable =>
       val uri: KijiURI = table.getURI()
 
-      // Update configuration object with appropriately serialized ModelSpec/RunSpec JSON.
+      // Update configuration object with appropriately serialized ModelDefinition/ModelEnvironment
+      // JSON.
       val request: KijiDataRequest = KijiDataRequest.create("family", "column1")
-      val modelSpec: ModelSpec = new ModelSpec(
-          name = "test-model-spec",
+      val modelDefinition: ModelDefinition = new ModelDefinition(
+          name = "test-model-definition",
           version = "1.0",
           extractorClass = classOf[ExtractScoreProducerSuite.DoublingExtractor],
           scorerClass = classOf[ExtractScoreProducerSuite.UpperCaseScorer])
-      val runSpec: RunSpec = new RunSpec(
-          name = "test-run-spec",
+      val modelEnvironment: ModelEnvironment = new ModelEnvironment(
+          name = "test-model-environment",
           version = "1.0",
           modelTableUri = uri.toString,
-          extractRunSpec = new ExtractRunSpec(
+          extractEnvironment = new ExtractEnvironment(
               dataRequest = request,
               fieldBindings = Seq(
                   FieldBinding
@@ -77,12 +78,12 @@ class ExtractScoreProducerSuite
                       .setStoreFieldName("family:column1")
                       .build()),
               kvstores = Seq()),
-          scoreRunSpec = new ScoreRunSpec(
+          scoreEnvironment = new ScoreEnvironment(
               outputColumn = "family:column2",
               kvstores = Seq()))
       val conf: Configuration = HBaseConfiguration.create()
-      conf.set(ExtractScoreProducer.modelSpecConfKey, modelSpec.toJson())
-      conf.set(ExtractScoreProducer.runSpecConfKey, runSpec.toJson())
+      conf.set(ExtractScoreProducer.modelDefinitionConfKey, modelDefinition.toJson())
+      conf.set(ExtractScoreProducer.modelEnvironmentConfKey, modelEnvironment.toJson())
 
       // Build the produce job.
       val produceJob: KijiMapReduceJob = KijiProduceJobBuilder.create()
@@ -128,23 +129,24 @@ class ExtractScoreProducerSuite
     doAndRelease(kiji.openTable(testLayout.getName())) { table: KijiTable =>
       val uri: KijiURI = table.getURI()
 
-      // Update configuration object with appropriately serialized ModelSpec/RunSpec JSON.
+      // Update configuration object with appropriately serialized ModelDefinition/ModelEnvironment
+      // JSON.
       val request: KijiDataRequest = {
         val builder = KijiDataRequest.builder()
         builder.newColumnsDef().add("family", "column1")
         builder.newColumnsDef().add("family", "column2")
         builder.build()
       }
-      val modelSpec: ModelSpec = new ModelSpec(
-          name = "test-model-spec",
+      val modelDefinition: ModelDefinition = new ModelDefinition(
+          name = "test-model-definition",
           version = "1.0",
           extractorClass = classOf[ExtractScoreProducerSuite.TwoArgDoublingExtractor],
           scorerClass = classOf[ExtractScoreProducerSuite.TwoArgUpperCaseScorer])
-      val runSpec: RunSpec = new RunSpec(
-          name = "test-run-spec",
+      val modelEnvironment: ModelEnvironment = new ModelEnvironment(
+          name = "test-model-environment",
           version = "1.0",
           modelTableUri = uri.toString,
-          extractRunSpec = new ExtractRunSpec(
+          extractEnvironment = new ExtractEnvironment(
               dataRequest = request,
               fieldBindings = Seq(
                   FieldBinding
@@ -158,12 +160,12 @@ class ExtractScoreProducerSuite
                       .setStoreFieldName("family:column2")
                       .build()),
               kvstores = Seq()),
-          scoreRunSpec = new ScoreRunSpec(
+          scoreEnvironment = new ScoreEnvironment(
               outputColumn = "family:column2",
               kvstores = Seq()))
-      val conf: Configuration = kiji.getConf()
-      conf.set(ExtractScoreProducer.modelSpecConfKey, modelSpec.toJson())
-      conf.set(ExtractScoreProducer.runSpecConfKey, runSpec.toJson())
+      val conf: Configuration = HBaseConfiguration.create()
+      conf.set(ExtractScoreProducer.modelDefinitionConfKey, modelDefinition.toJson())
+      conf.set(ExtractScoreProducer.modelEnvironmentConfKey, modelEnvironment.toJson())
 
       // Build the produce job.
       val produceJob: KijiMapReduceJob = KijiProduceJobBuilder.create()

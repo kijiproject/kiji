@@ -39,9 +39,9 @@ import org.kiji.mapreduce.kvstore.lib.{KijiTableKeyValueStore => JKijiTableKeyVa
  * system), and/or be used to pass data generated in one modeling workflow step to another.
  *
  * End-users can configure key-value stores for use in a modeling workflow through the JSON
- * configuration of a modeling workflow. See [[org.kiji.express.modeling.ModelSpec]] and
- * [[org.kiji.express.modeling.RunSpec]] for more information. Once configured, a key-value store
- * can be obtained within implementations of modeling workflow steps (like
+ * configuration of a modeling workflow. See [[org.kiji.express.modeling.ModelDefinition]] and
+ * [[org.kiji.express.modeling.ModelEnvironment]] for more information. Once configured, a
+ * key-value store can be obtained within implementations of modeling workflow steps (like
  * [[org.kiji.express.modeling.Extractor]] and [[org.kiji.express.modeling.Scorer]] by using the
  * method `#kvstores`.
  *

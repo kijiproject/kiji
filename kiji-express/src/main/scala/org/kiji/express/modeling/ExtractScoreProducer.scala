@@ -39,7 +39,7 @@ import org.kiji.schema.KijiRowData
 import org.kiji.schema.KijiURI
 
 /**
- * A producer for running [[org.kiji.express.modeling.ModelSpec]]s.
+ * A producer for running [[org.kiji.express.modeling.ModelDefinition]]s.
  *
  * This producer executes the extract and score phases of a model in series. The model that this
  * producer will run is loaded from the json configuration strings stored in configuration keys:
@@ -53,18 +53,18 @@ import org.kiji.schema.KijiURI
 final class ExtractScoreProducer
     extends KijiProducer {
   /** Definition of a Model Pipeline. This variable must be initialized. */
-  private[this] var _modelSpec: Option[ModelSpec] = None
-  private[this] def modelSpec: ModelSpec = {
-    _modelSpec.getOrElse {
+  private[this] var _modelDefinition: Option[ModelDefinition] = None
+  private[this] def modelDefinition: ModelDefinition = {
+    _modelDefinition.getOrElse {
       throw new IllegalStateException(
           "ExtractScoreProducer is missing its model pipeline. Did setConf get called?")
     }
   }
 
   /** Configuration required to run a Model Pipeline. This variable must be initialized. */
-  private[this] var _runSpec: Option[RunSpec] = None
-  private[this] def runSpec: RunSpec = {
-    _runSpec.getOrElse {
+  private[this] var _modelEnvironment: Option[ModelEnvironment] = None
+  private[this] def modelEnvironment: ModelEnvironment = {
+    _modelEnvironment.getOrElse {
       throw new IllegalStateException(
           "ExtractScoreProducer is missing its run profile. Did setConf get called?")
     }
@@ -101,47 +101,47 @@ final class ExtractScoreProducer
    * Sets the Configuration for this KijiProducer to use.  This function is guaranteed to be called
    * immediately after instantiation.
    *
-   * This method loads a [[org.kiji.express.modeling.ModelSpec]] and a
-   * [[org.kiji.express.modeling.RunSpec]] for ExtractScoreProducer to use.
+   * This method loads a [[org.kiji.express.modeling.ModelDefinition]] and a
+   * [[org.kiji.express.modeling.ModelEnvironment]] for ExtractScoreProducer to use.
    *
    * @param conf object that this producer should use.
    */
   override def setConf(conf: Configuration) {
     // Load model pipeline.
-    val modelSpecJson: String = conf.get(ExtractScoreProducer.modelSpecConfKey)
+    val modelDefinitionJson: String = conf.get(ExtractScoreProducer.modelDefinitionConfKey)
     // scalastyle:off null
     require(
-        modelSpecJson != null,
-        "A ModelSpec was not specified!")
+        modelDefinitionJson != null,
+        "A ModelDefinition was not specified!")
     // scalastyle:on null
-    val modelSpecDef = ModelSpec.fromJson(modelSpecJson)
-    _modelSpec = Some(modelSpecDef)
+    val modelDefinitionDef = ModelDefinition.fromJson(modelDefinitionJson)
+    _modelDefinition = Some(modelDefinitionDef)
 
     // Load run profile.
-    val runSpecJson: String = conf.get(ExtractScoreProducer.runSpecConfKey)
+    val modelEnvironmentJson: String = conf.get(ExtractScoreProducer.modelEnvironmentConfKey)
     // scalastyle:off null
     require(
-        runSpecJson != null,
-        "A RunSpec was not specified!")
+        modelEnvironmentJson != null,
+        "A ModelEnvironment was not specified!")
     // scalastyle:on null
-    val runSpecDef = RunSpec.fromJson(runSpecJson)
-    _runSpec = Some(runSpecDef)
+    val modelEnvironmentDef = ModelEnvironment.fromJson(modelEnvironmentJson)
+    _modelEnvironment = Some(modelEnvironmentDef)
 
     // Make an instance of each requires phase.
-    val extractor = modelSpecDef
+    val extractor = modelDefinitionDef
         .extractorClass
         .newInstance()
         .asInstanceOf[Extractor]
-    val scorer = modelSpecDef
+    val scorer = modelDefinitionDef
         .scorerClass
         .newInstance()
         .asInstanceOf[Scorer]
     _extractor = Some(extractor)
     _scorer = Some(scorer)
 
-    val uri = KijiURI.newBuilder(runSpecDef.modelTableUri).build()
-    val columns: Seq[KijiColumnName] = runSpecDef
-        .extractRunSpec
+    val uri = KijiURI.newBuilder(modelEnvironmentDef.modelTableUri).build()
+    val columns: Seq[KijiColumnName] = modelEnvironmentDef
+        .extractEnvironment
         .dataRequest
         .getColumns
         .asScala
@@ -165,7 +165,9 @@ final class ExtractScoreProducer
    *
    * @return a kiji data request.
    */
-  override def getDataRequest(): KijiDataRequest = runSpec.extractRunSpec.dataRequest
+  override def getDataRequest(): KijiDataRequest = modelEnvironment
+      .extractEnvironment
+      .dataRequest
 
   /**
    * Returns the name of the column this producer will write to.
@@ -174,15 +176,15 @@ final class ExtractScoreProducer
    *
    * @return the output column name.
    */
-  override def getOutputColumn(): String = runSpec.scoreRunSpec.outputColumn
+  override def getOutputColumn(): String = modelEnvironment.scoreEnvironment.outputColumn
 
   override def produce(input: KijiRowData, context: ProducerContext) {
     val ExtractFn(extractFields, extract) = extractor.extractFn
     val (extractInputFields, extractOutputFields) = extractFields
     val ScoreFn(scoreFields, score) = scorer.scoreFn
 
-    val fieldMapping = runSpec
-        .extractRunSpec
+    val fieldMapping = modelEnvironment
+        .extractEnvironment
         .fieldBindings
         .map { binding => (binding.getTupleFieldName(), binding.getStoreFieldName()) }
         .toMap
@@ -237,14 +239,16 @@ final class ExtractScoreProducer
 
 object ExtractScoreProducer {
   /**
-   * Configuration key addressing the JSON description of a [[org.kiji.express.modeling.ModelSpec]].
+   * Configuration key addressing the JSON description of a
+   * [[org.kiji.express.modeling.ModelDefinition]].
    */
-  val modelSpecConfKey: String = "org.kiji.express.modeling.pipeline"
+  val modelDefinitionConfKey: String = "org.kiji.express.modeling.pipeline"
 
   /**
-   * Configuration key addressing the JSON configuration of a [[org.kiji.express.modeling.RunSpec]].
+   * Configuration key addressing the JSON configuration of a
+   * [[org.kiji.express.modeling.ModelEnvironment]].
    */
-  val runSpecConfKey: String = "org.kiji.express.modeling.runprofile"
+  val modelEnvironmentConfKey: String = "org.kiji.express.modeling.runprofile"
 
   /**
    * Converts a tuple into an appropriate representation for processing by a model phase function.

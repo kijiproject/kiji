@@ -17,11 +17,11 @@
  * limitations under the License.
  */
 {
-  "name" : "myRunProfile",
+  "name" : "",
   "version" : "1.0.0",
   "model_table_uri" : "kiji://.env/default/mytable",
-  "protocol_version" : "run_spec-0.2.0",
-  "extract_run_spec" : {
+  "protocol_version" : "model_environment-0.1.0",
+  "extract_environment" : {
     "data_request" : {
       "min_timestamp" : 0,
       "max_timestamp" : 38475687,
@@ -44,7 +44,7 @@
       "store_field_name" : "info:in"
     } ]
   },
-  "score_run_spec" : {
+  "score_environment" : {
     "kv_stores" : [ {
       "store_type" : "AVRO_KV",
       "name" : "side_data",

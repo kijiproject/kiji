@@ -48,27 +48,27 @@ object ValidationException {
 }
 
 /**
- * This exception is thrown when a ModelSpec does not have valid fields specified.
+ * This exception is thrown when a ModelDefinition does not have valid fields specified.
  *
  * @param causes for this validation exception.
  * @param msg describing this exception. This can be left blank if desired.
  */
 @ApiAudience.Framework
 @ApiStability.Experimental
-class ModelSpecValidationException(
+class ModelDefinitionValidationException(
     causes: Seq[ValidationException],
     msg: String = "")
     extends ValidationException(ValidationException.messageWithCauses(msg, causes))
 
 /**
- * This exception is thrown when a RunSpec does not have valid fields specified.
+ * This exception is thrown when a ModelEnvironment does not have valid fields specified.
  *
  * @param causes for this validation exception.
  * @param msg describing this exception. This can be left blank if desired.
  */
 @ApiAudience.Framework
 @ApiStability.Experimental
-class RunSpecValidationException(
+class ModelEnvironmentValidationException(
     causes: Seq[ValidationException],
     msg: String = "")
     extends ValidationException(ValidationException.messageWithCauses(msg, causes))

@@ -28,17 +28,17 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
 import org.kiji.express.Resources.doAndClose
-import org.kiji.express.avro.AvroModelSpec
+import org.kiji.express.avro.AvroModelDefinition
 import org.kiji.schema.util.FromJson
 import org.kiji.schema.util.KijiNameValidator
 import org.kiji.schema.util.ProtocolVersion
 import org.kiji.schema.util.ToJson
 
 /**
- * A ModelSpec is a descriptor of the computational logic to use at different phases of
+ * A ModelDefinition is a descriptor of the computational logic to use at different phases of
  * of a modeling workflow.
  *
- * Currently this class can only be created from a model specification in a JSON file. JSON model
+ * Currently this class can only be created from a model definition in a JSON file. JSON model
  * specifications should be written using the following format:
  * {{{
  * {
@@ -46,44 +46,47 @@ import org.kiji.schema.util.ToJson
  *   "version" : "1.0.0",
  *   "extractor_class" : "com.organization.YourExtractor",
  *   "scorer_class" : "com.organization.YourScorer",
- *   "protocol_version" : "model_spec-0.1.0"
+ *   "protocol_version" : "model_definition-0.1.0"
  * }
  * }}}
  *
- * To load a JSON model specification:
+ * To load a JSON model definition:
  * {{{
  * // Load a JSON string directly.
- * val myModelSpec: ModelSpec = ModelSpec.loadJson("""{ "name": "myIdentifier", ... }""")
+ * val myModelDefinition: ModelDefinition =
+ *     ModelDefinition.loadJson("""{ "name": "myIdentifier", ... }""")
  *
  * // Load a JSON file.
- * val myModelSpec2: ModelSpec = ModelSpec.loadJsonFile("/path/to/json/config.json")
+ * val myModelDefinition2: ModelDefinition =
+ *     ModelDefinition.loadJsonFile("/path/to/json/config.json")
  * }}}
  *
- * @param name of the model specification.
- * @param version of the model specification.
- * @param extractorClass to be used in the extract phase of the model specification.
- * @param scorerClass to be used in the score phase of the model specification.
- * @param protocolVersion this model specification was written for.
+ * @param name of the model definition.
+ * @param version of the model definition.
+ * @param extractorClass to be used in the extract phase of the model definition.
+ * @param scorerClass to be used in the score phase of the model definition.
+ * @param protocolVersion this model definition was written for.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-final class ModelSpec private[express] (
+final class ModelDefinition private[express] (
     val name: String,
     val version: String,
     val extractorClass: java.lang.Class[_ <: Extractor],
     val scorerClass: java.lang.Class[_ <: Scorer],
-    private[express] val protocolVersion: ProtocolVersion = ModelSpec.CURRENT_MODEL_SPEC_VER) {
-  // Ensure that all fields set for this model spec are valid.
-  ModelSpec.validateModelSpec(this)
+    private[express] val protocolVersion: ProtocolVersion =
+        ModelDefinition.CURRENT_MODEL_DEF_VER) {
+  // Ensure that all fields set for this model definition are valid.
+  ModelDefinition.validateModelDefinition(this)
 
   /**
-   * Serializes this model specification into a JSON string.
+   * Serializes this model definition into a JSON string.
    *
-   * @return a JSON string that represents the model specification.
+   * @return a JSON string that represents the model definition.
    */
   final def toJson(): String = {
-    // Build an AvroModelSpec record.
-    val spec: AvroModelSpec = AvroModelSpec
+    // Build an AvroModelDefinition record.
+    val definition: AvroModelDefinition = AvroModelDefinition
         .newBuilder()
         .setName(name)
         .setVersion(version)
@@ -93,17 +96,17 @@ final class ModelSpec private[express] (
         .build()
 
     // Encode it into JSON.
-    ToJson.toAvroJsonString(spec)
+    ToJson.toAvroJsonString(definition)
   }
 
   override def equals(other: Any): Boolean = {
     other match {
-      case spec: ModelSpec => {
-        name == spec.name &&
-            version == spec.version &&
-            extractorClass == spec.extractorClass &&
-            scorerClass == spec.scorerClass &&
-            protocolVersion == spec.protocolVersion
+      case definition: ModelDefinition => {
+        name == definition.name &&
+            version == definition.version &&
+            extractorClass == definition.extractorClass &&
+            scorerClass == definition.scorerClass &&
+            protocolVersion == definition.protocolVersion
       }
       case _ => false
     }
@@ -119,48 +122,49 @@ final class ModelSpec private[express] (
 }
 
 /**
- * Companion object for ModelSpec. Contains constants related to model specifications as well as
+ * Companion object for ModelDefinition. Contains constants related to model definitions as well as
  * validation methods.
  */
-object ModelSpec {
-  /** Maximum model specification version we can recognize. */
-  val MAX_MODEL_SPEC_VER: ProtocolVersion = ProtocolVersion.parse("model_spec-0.1.0")
+object ModelDefinition {
+  /** Maximum model definition version we can recognize. */
+  val MAX_MODEL_DEF_VER: ProtocolVersion = ProtocolVersion.parse("model_definition-0.1.0")
 
-  /** Minimum model specification version we can recognize. */
-  val MIN_MODEL_SPEC_VER: ProtocolVersion = ProtocolVersion.parse("model_spec-0.1.0")
+  /** Minimum model definition version we can recognize. */
+  val MIN_MODEL_DEF_VER: ProtocolVersion = ProtocolVersion.parse("model_definition-0.1.0")
 
-  /** Current model specification protocol version. */
-  val CURRENT_MODEL_SPEC_VER: ProtocolVersion = ProtocolVersion.parse("model_spec-0.1.0")
+  /** Current model definition protocol version. */
+  val CURRENT_MODEL_DEF_VER: ProtocolVersion = ProtocolVersion.parse("model_definition-0.1.0")
 
-  /** Regular expression used to validate a model spec version string. */
+  /** Regular expression used to validate a model definition version string. */
   val VERSION_REGEX: String = "[0-9]+(.[0-9]+)*"
 
-  /** Message to show the user when there is an error validating their model specification. */
+  /** Message to show the user when there is an error validating their model definition. */
   private[express] val VALIDATION_MESSAGE = "One or more errors occurred while validating your " +
-      "model specification. Please correct the problems in your model specification and try again."
+      "model definition. Please correct the problems in your model definition and try again."
 
   /**
-   * Creates a ModelSpec given a JSON string. In the process, all fields are validated.
+   * Creates a ModelDefinition given a JSON string. In the process, all fields are validated.
    *
-   * @param json serialized model specification.
-   * @return the validated model specification.
+   * @param json serialized model definition.
+   * @return the validated model definition.
    */
-  def fromJson(json: String): ModelSpec = {
+  def fromJson(json: String): ModelDefinition = {
     // Parse the JSON into an Avro record.
-    val avroModelSpec: AvroModelSpec = FromJson
-        .fromJsonString(json, AvroModelSpec.SCHEMA$)
-        .asInstanceOf[AvroModelSpec]
+    val avroModelDefinition: AvroModelDefinition = FromJson
+        .fromJsonString(json, AvroModelDefinition.SCHEMA$)
+        .asInstanceOf[AvroModelDefinition]
     val protocol = ProtocolVersion
-        .parse(avroModelSpec.getProtocolVersion)
+        .parse(avroModelDefinition.getProtocolVersion)
 
     // Attempt to load the Extractor class.
     val extractor = try {
       Class
-          .forName(avroModelSpec.getExtractorClass)
+          .forName(avroModelDefinition.getExtractorClass)
           .asInstanceOf[Class[Extractor]]
     } catch {
       case _: ClassNotFoundException => {
-        val error = "The class \"%s\" could not be found.".format(avroModelSpec.getExtractorClass) +
+        val extractorClass = avroModelDefinition.getExtractorClass
+        val error = "The class \"%s\" could not be found.".format(extractorClass) +
             " Please ensure that you have provided a valid class name and that it is available " +
             "on your classpath."
         throw new ValidationException(error)
@@ -170,34 +174,35 @@ object ModelSpec {
     // Attempt to load the Scorer class.
     val scorer = try {
       Class
-          .forName(avroModelSpec.getScorerClass)
+          .forName(avroModelDefinition.getScorerClass)
           .asInstanceOf[Class[Scorer]]
     } catch {
       case _: ClassNotFoundException => {
-        val error = "The class \"%s\" could not be found.".format(avroModelSpec.getScorerClass) +
+        val scorerClass = avroModelDefinition.getScorerClass
+        val error = "The class \"%s\" could not be found.".format(scorerClass) +
             " Please ensure that you have provided a valid class name and that it is available " +
             "on your classpath."
         throw new ValidationException(error)
       }
     }
 
-    // Build a model specification.
-    new ModelSpec(
-        name = avroModelSpec.getName,
-        version = avroModelSpec.getVersion,
+    // Build a model definition.
+    new ModelDefinition(
+        name = avroModelDefinition.getName,
+        version = avroModelDefinition.getVersion,
         extractorClass = extractor,
         scorerClass = scorer,
         protocolVersion = protocol)
   }
 
   /**
-   * Creates a ModelSpec given a path in the local filesystem to a JSON file that
+   * Creates a ModelDefinition given a path in the local filesystem to a JSON file that
    * specifies a model. In the process, all fields are validated.
    *
-   * @param path in the local filesystem to a JSON file containing a model specification.
-   * @return the validated model specification.
+   * @param path in the local filesystem to a JSON file containing a model definition.
+   * @return the validated model definition.
    */
-  def fromJsonFile(path: String): ModelSpec = {
+  def fromJsonFile(path: String): ModelDefinition = {
     val json: String = doAndClose(Source.fromFile(path)) { source: Source =>
       source.mkString
     }
@@ -221,22 +226,22 @@ object ModelSpec {
   }
 
   /**
-   * Verifies that all fields in a model specification are valid. This validation method will
+   * Verifies that all fields in a model definition are valid. This validation method will
    * collect all validation errors into one exception.
    *
-   * @param spec to validate.
-   * @throws ModelSpecValidationException if there are errors encountered while validating the
-   *     provided model spec.
+   * @param definition to validate.
+   * @throws ModelDefinitionValidationException if there are errors encountered while validating the
+   *     provided model definition.
    */
-  def validateModelSpec(spec: ModelSpec) {
-    val extractorClass = Option(spec.extractorClass)
-    val scorerClass = Option(spec.scorerClass)
+  def validateModelDefinition(definition: ModelDefinition) {
+    val extractorClass = Option(definition.extractorClass)
+    val scorerClass = Option(definition.scorerClass)
 
     // Collect errors from the other validation steps.
     val errors: Seq[Option[ValidationException]] = Seq(
-        catchError(validateProtocolVersion(spec.protocolVersion)),
-        catchError(validateName(spec.name)),
-        catchError(validateVersion(spec.version)),
+        catchError(validateProtocolVersion(definition.protocolVersion)),
+        catchError(validateName(definition.name)),
+        catchError(validateVersion(definition.version)),
         extractorClass
             .flatMap { x => catchError(validateExtractorClass(x)) },
         scorerClass
@@ -246,37 +251,37 @@ object ModelSpec {
     // Throw an exception if there were any validation errors.
     val causes = errors.flatten
     if (!causes.isEmpty) {
-      throw new ModelSpecValidationException(causes, VALIDATION_MESSAGE)
+      throw new ModelDefinitionValidationException(causes, VALIDATION_MESSAGE)
     }
   }
 
   /**
-   * Verifies that a model specification's protocol version is supported.
+   * Verifies that a model definition's protocol version is supported.
    *
    * @param protocolVersion to validate.
    */
   def validateProtocolVersion(protocolVersion: ProtocolVersion) {
-    if (MAX_MODEL_SPEC_VER.compareTo(protocolVersion) < 0) {
-      val error = "\"%s\" is the maximum protocol version supported. ".format(MAX_MODEL_SPEC_VER) +
-          "The provided model spec is of protocol version: \"%s\"".format(protocolVersion)
+    if (MAX_MODEL_DEF_VER.compareTo(protocolVersion) < 0) {
+      val error = "\"%s\" is the maximum protocol version supported. ".format(MAX_MODEL_DEF_VER) +
+          "The provided model definition is of protocol version: \"%s\"".format(protocolVersion)
 
       throw new ValidationException(error)
-    } else if (MIN_MODEL_SPEC_VER.compareTo(protocolVersion) > 0) {
-      val error = "\"%s\" is the minimum protocol version supported. ".format(MIN_MODEL_SPEC_VER) +
-          "The provided model spec is of protocol version: \"%s\"".format(protocolVersion)
+    } else if (MIN_MODEL_DEF_VER.compareTo(protocolVersion) > 0) {
+      val error = "\"%s\" is the minimum protocol version supported. ".format(MIN_MODEL_DEF_VER) +
+          "The provided model definition is of protocol version: \"%s\"".format(protocolVersion)
 
       throw new ValidationException(error)
     }
   }
 
   /**
-   * Verifies that a model specification's name is valid.
+   * Verifies that a model definition's name is valid.
    *
    * @param name to validate.
    */
   def validateName(name: String) {
     if (name.isEmpty) {
-      throw new ValidationException("The name of the model spec cannot be the empty string.")
+      throw new ValidationException("The name of the model definition cannot be the empty string.")
     } else if (!KijiNameValidator.isValidAlias(name)) {
       throw new ValidationException("The name \"%s\" is not valid. ".format(name) +
           "Names must match the regex \"%s\"."
@@ -285,20 +290,20 @@ object ModelSpec {
   }
 
   /**
-   * Verifies that a model specification's version string is valid.
+   * Verifies that a model definition's version string is valid.
    *
    * @param version string to validate.
    */
   def validateVersion(version: String) {
     if (!version.matches(VERSION_REGEX)) {
-      val error = "Model spec version strings must match the regex \"%s\" (1.0.0 would be valid)."
-          .format(VERSION_REGEX)
+      val error = "Model definition version strings must match the regex " +
+          "\"%s\" (1.0.0 would be valid).".format(VERSION_REGEX)
       throw new ValidationException(error)
     }
   }
 
   /**
-   * Verifies that a model specification's extractor class is a valid class to use during the
+   * Verifies that a model definition's extractor class is a valid class to use during the
    * extract phase.
    *
    * @param extractorClass to validate.
@@ -312,7 +317,7 @@ object ModelSpec {
   }
 
   /**
-   * Verifies that a model specification's scorer class is a valid class to use during the score
+   * Verifies that a model definition's scorer class is a valid class to use during the score
    * phase.
    *
    * @param scorerClass to validate.

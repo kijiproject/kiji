@@ -20,6 +20,6 @@
   "name" : "abandoned-cart-model",
   "version" : "1.0.0",
   "extractor_class" : "blah",
-  "scorer_class" : "org.kiji.express.modeling.ModelSpecSuite$MyScorer",
-  "protocol_version" : "model_spec-0.1.0"
+  "scorer_class" : "org.kiji.express.modeling.ModelDefinitionSuite$MyScorer",
+  "protocol_version" : "model_definition-0.1.0"
 }
