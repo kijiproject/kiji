@@ -550,7 +550,12 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
         // If superFuture returns true to indicate the need for a reread, do so.
         return mReader.get(eid, dataRequest);
       } else {
-        return clientData.get();
+        try {
+          return clientData.get(0L, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException te) {
+          // If clientData is not immediately available, read from the table.
+          return mReader.get(eid, dataRequest);
+        }
       }
     } catch (InterruptedException ie) {
       throw new RuntimeException("Freshening thread interrupted.", ie);
@@ -563,7 +568,10 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
         return mReader.get(eid, dataRequest);
       } else {
         try {
-          return clientData.get();
+          return clientData.get(0L, TimeUnit.MILLISECONDS);
+        } catch (TimeoutException te2) {
+          // If clientData is not immediately available, read from the table.
+          return mReader.get(eid, dataRequest);
         } catch (InterruptedException ie) {
           throw new RuntimeException("Freshening thread interrupted.", ie);
         } catch (ExecutionException ee) {

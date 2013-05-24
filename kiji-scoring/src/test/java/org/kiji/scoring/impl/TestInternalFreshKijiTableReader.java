@@ -580,6 +580,36 @@ public class TestInternalFreshKijiTableReader {
   }
 
   @Test
+  public void testFullPool() throws IOException {
+    final EntityId eid = mTable.getEntityId("foo");
+    final KijiDataRequest request0 = KijiDataRequest.create("family", "qual0");
+    final KijiDataRequest request1 = KijiDataRequest.create("family", "qual1");
+
+    // Create a KijiFreshnessManager and register a freshness policy.
+    final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
+    manager.storePolicy("table", "family:qual0", TestTimeoutProducer.class, new AlwaysFreshen());
+    manager.storePolicy("table", "family:qual1", TestTimeoutProducer.class, new AlwaysFreshen());
+
+    // Set the pool size to 2.
+    FreshenerThreadPool.getInstance(2);
+
+    final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.get()
+        .withTable(mTable).withTimeout(100).build();
+
+    freshReader.get(eid, request0);
+    final long beforeTime = System.currentTimeMillis();
+    freshReader.get(eid, request1);
+    final long afterTime = System.currentTimeMillis();
+    LOG.info("get request sent at: {} result received at: {} total delay: {}",
+        beforeTime, afterTime, afterTime - beforeTime);
+    // Assert that we return quickly.
+    assertTrue(afterTime - beforeTime < 150);
+    // Assert that the producer has not finished.
+    assertEquals("foo-val",
+        mReader.get(eid, request0).getMostRecentValue("family", "qual0").toString());
+  }
+
+  @Test
   public void testSpecifyTimeout() throws IOException, InterruptedException {
     final EntityId eid = mTable.getEntityId("foo");
     final KijiDataRequest request = KijiDataRequest.create("family", "qual0");
