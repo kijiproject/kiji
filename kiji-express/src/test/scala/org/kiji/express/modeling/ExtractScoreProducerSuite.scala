@@ -19,17 +19,11 @@
 
 package org.kiji.express.modeling
 
-import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.hbase.HBaseConfiguration
-
 import org.kiji.express.KijiSlice
 import org.kiji.express.KijiSuite
 import org.kiji.express.Resources.doAndClose
 import org.kiji.express.Resources.doAndRelease
 import org.kiji.express.avro.FieldBinding
-import org.kiji.mapreduce.KijiMapReduceJob
-import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput
-import org.kiji.mapreduce.produce.KijiProduceJobBuilder
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiTable
@@ -81,17 +75,11 @@ class ExtractScoreProducerSuite
           scoreEnvironment = new ScoreEnvironment(
               outputColumn = "family:column2",
               kvstores = Seq()))
-      val conf: Configuration = HBaseConfiguration.create()
-      conf.set(ExtractScoreProducer.modelDefinitionConfKey, modelDefinition.toJson())
-      conf.set(ExtractScoreProducer.modelEnvironmentConfKey, modelEnvironment.toJson())
 
       // Build the produce job.
-      val produceJob: KijiMapReduceJob = KijiProduceJobBuilder.create()
-          .withConf(conf)
-          .withInputTable(uri)
-          .withProducer(classOf[ExtractScoreProducer])
-          .withOutput(new DirectKijiTableMapReduceJobOutput(uri))
-          .build()
+      val produceJob = ExtractScoreJobBuilder.buildJob(
+          model = modelDefinition,
+          environment = modelEnvironment)
 
       // Verify that everything went as expected.
       assert(produceJob.run())
@@ -163,17 +151,11 @@ class ExtractScoreProducerSuite
           scoreEnvironment = new ScoreEnvironment(
               outputColumn = "family:column2",
               kvstores = Seq()))
-      val conf: Configuration = HBaseConfiguration.create()
-      conf.set(ExtractScoreProducer.modelDefinitionConfKey, modelDefinition.toJson())
-      conf.set(ExtractScoreProducer.modelEnvironmentConfKey, modelEnvironment.toJson())
 
       // Build the produce job.
-      val produceJob: KijiMapReduceJob = KijiProduceJobBuilder.create()
-          .withConf(conf)
-          .withInputTable(uri)
-          .withProducer(classOf[ExtractScoreProducer])
-          .withOutput(new DirectKijiTableMapReduceJobOutput(uri))
-          .build()
+      val produceJob = ExtractScoreJobBuilder.buildJob(
+          model = modelDefinition,
+          environment = modelEnvironment)
 
       // Verify that everything went as expected.
       assert(produceJob.run())
