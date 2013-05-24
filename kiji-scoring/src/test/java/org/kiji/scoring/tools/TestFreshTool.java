@@ -20,6 +20,7 @@
 package org.kiji.scoring.tools;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -27,6 +28,7 @@ import java.io.PrintStream;
 
 import com.google.common.collect.Lists;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.jruby.javasupport.Java;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,9 +103,9 @@ public class TestFreshTool extends KijiClientTest {
         KijiURI.newBuilder(getKiji().getURI()).withTableName("user")
             .withColumnNames(Lists.newArrayList("info:name")).build().toString(),
         "--do=register",
-        "org.kiji.scoring.lib.ShelfLife",
-        "{\"shelfLife\":10}",
-        "org.kiji.scoring.tools.TestFreshTool$TestProducer"
+        "--policy-class=org.kiji.scoring.lib.ShelfLife",
+        "--policy-state={\"shelfLife\":10}",
+        "--producer-class=org.kiji.scoring.tools.TestFreshTool$TestProducer"
     ));
 
     final KijiFreshnessPolicyRecord record = KijiFreshnessPolicyRecord.newBuilder()
@@ -118,6 +120,61 @@ public class TestFreshTool extends KijiClientTest {
     assertEquals("Freshness policy: org.kiji.scoring.lib.ShelfLife with state: {\"shelfLife\":10} "
         + "and producer: org.kiji.scoring.tools.TestFreshTool$TestProducer\n"
         + "attached to column: info:name in table: user", mToolOutputStr);
+
+    // Test another ordering for arguments
+    assertEquals(BaseTool.SUCCESS, runTool(new FreshTool(),
+        "--do=register",
+        KijiURI.newBuilder(getKiji().getURI()).withTableName("user")
+            .withColumnNames(Lists.newArrayList("info:visits")).build().toString(),
+        "--policy-state={\"shelfLife\":10}",
+        "--producer-class=org.kiji.scoring.tools.TestFreshTool$TestProducer",
+        "--policy-class=org.kiji.scoring.lib.ShelfLife"
+    ));
+
+    final KijiFreshnessPolicyRecord record2 = KijiFreshnessPolicyRecord.newBuilder()
+        .setRecordVersion("policyrecord-0.1.0")
+        .setProducerClass(TestProducer.class.getName())
+        .setFreshnessPolicyClass(Class.forName("org.kiji.scoring.lib.ShelfLife")
+            .asSubclass(KijiFreshnessPolicy.class).getName())
+        .setFreshnessPolicyState("{\"shelfLife\":10}")
+        .build();
+    assertEquals(record2, manager.retrievePolicy("user", "info:visits"));
+    assertEquals("Freshness policy: org.kiji.scoring.lib.ShelfLife with state: {\"shelfLife\":10} "
+        + "and producer: org.kiji.scoring.tools.TestFreshTool$TestProducer\n"
+        + "attached to column: info:visits in table: user", mToolOutputStr);
+  }
+
+  @Test
+  public void testIllegalRegister() throws Exception {
+    getKiji().createTable(KijiTableLayouts.getLayout(KijiTableLayouts.COUNTER_TEST));
+    try {
+      runTool(new FreshTool(),
+          KijiURI.newBuilder(getKiji().getURI()).withTableName("user")
+              .withColumnNames(Lists.newArrayList("info:name")).build().toString(),
+          "--do=register",
+          "--policy-class=org.kiji..badname",
+          "--policy-state={\"shelfLife\":10}",
+          "--producer-class=org.kiji.scoring.tools.TestFreshTool$TestProducer",
+          "--force=true");
+      fail("runTool should have thrown IllegalArgumentException");
+    } catch (IllegalArgumentException iae) {
+      assertEquals("Policy class name: org.kiji..badname is not a valid Java class identifier.",
+          iae.getMessage());
+    }
+    try {
+      runTool(new FreshTool(),
+          KijiURI.newBuilder(getKiji().getURI()).withTableName("user")
+              .withColumnNames(Lists.newArrayList("info:name")).build().toString(),
+          "--do=register",
+          "--policy-class=org.kiji.class",
+          "--policy-state={\"shelfLife\":10}",
+          "--producer-class=org.kiji.scoring.tools.TestFreshTool$TestProducer.",
+          "--force=true");
+      fail("runTool should have thrown IllegalArgumentException");
+    } catch (IllegalArgumentException iae) {
+      assertEquals("Producer class name: org.kiji.scoring.tools.TestFreshTool$TestProducer. is not "
+          + "a valid Java class identifier.", iae.getMessage());
+    }
   }
 
   @Test

@@ -46,7 +46,7 @@ import org.kiji.scoring.avro.KijiFreshnessPolicyRecord;
  * Command line interface tool for registering and inspecting freshness policies.
  *
  * Usage:
- *  <pre>
+ *  <p><pre>
  *  // Print all freshness policies attached to a table
  *  kiji fresh kiji://.env/instance/table --do=retrieve-all
  *  // Print the freshness policy attached to a column.  (If multiple columns are specified, will
@@ -54,10 +54,16 @@ import org.kiji.scoring.avro.KijiFreshnessPolicyRecord;
  *  kiji fresh kiji://.env/instance/table/family:qualifier --do=retrieve
  *  // Register a freshness policy for a column
  *  kiji fresh kiji://.env/instance/table/family:qualifer --do=register \
- *    org.kiji.scoring.lib.ShelfLife {"shelfLife":10} com.mycompany.freshening.RecommendingProducer
+ *    --policy-class=org.kiji.scoring.lib.ShelfLife \
+ *    --policy-state={"shelfLife":10} \
+ *    --producer-state=com.mycompany.freshening.RecommendingProducer
  *  // Unregister a freshness policy from a column
  *  kiji fresh kiji://.env/instance/table/family:qualifier --do=unregister
- *  </pre>
+ *  </pre></p>
+ *  <p>If the --force flag (default = false) is not set, the kiji fresh tool will perform safety
+ *  checks on class names to ensure classes are available on the classpath.  If --interactive
+ *  (default = true) is true and classes cannot be found on the classpath, the user will be
+ *  prompted to set the --force flag to continue.</p>
  */
 public class FreshTool extends BaseTool {
   private static final Logger LOG = LoggerFactory.getLogger(FreshTool.class);
@@ -65,11 +71,22 @@ public class FreshTool extends BaseTool {
   // Positional argument for the table or column
 
   @Flag(name="do", required=true, usage=
-      "\"register <policy class> <policy state> <producer class>\"; "
+      "\"register (requires --policy-class and --producer-class, --policy-state will be assumed "
+      + "empty unless specified.)\"; "
       + "\"unregister\"; "
       + "\"retrieve\"; "
       + "\"retrieve-all\"")
   private String mDoFlag = "";
+
+  @Flag(name="policy-class", usage="fully qualified name of a KijiFreshnessPolicy class.")
+  private String mPolicyClassFlag;
+
+  @Flag(name="policy-state", usage="serialized state of the KijiFreshnessPolicy, will be passed "
+      + "to KijiFreshnessPolicy.deserialize().")
+  private String mPolicyStateFlag;
+
+  @Flag(name="producer-class", usage="fully qualified name of a KijiPRoducer class.")
+  private String mProducerClassFlag;
 
   @Flag(name="force", usage="set to true to write strings directly without checking for "
       + "compatability")
@@ -157,7 +174,7 @@ public class FreshTool extends BaseTool {
     mManager.storePolicyWithStrings(
         tableName, columnName, producerClass, policyClass, policyState);
     if (isInteractive()) {
-      getPrintStream().format("Freshness policy: %s with state: %s and producer: %s%n "
+      getPrintStream().format("Freshness policy: %s with state: %s and producer: %s%n"
           + "attached to column: %s in table: %s without checks.",
           policyClass, policyState, producerClass,
           columnName, tableName);
@@ -246,6 +263,12 @@ public class FreshTool extends BaseTool {
       getPrintStream().printf("Invalid --do command: '%s'.%n", mDoFlag);
       throw iae;
     }
+    if (mDoMode == DoMode.REGISTER) {
+      Preconditions.checkArgument(mPolicyClassFlag != null && !mPolicyClassFlag.isEmpty(),
+          "--policy-class flag must be set to perform a freshness policy registration.");
+      Preconditions.checkArgument(mProducerClassFlag != null && !mProducerClassFlag.isEmpty(),
+          "--producer-class flag must be set to perform a freshness policy registration.");
+    }
   }
 
   /** {@inheritDoc} */
@@ -254,6 +277,9 @@ public class FreshTool extends BaseTool {
     Preconditions.checkNotNull(nonFlagArgs,
         "Specify a Kiji table or column with \"kiji fresh kiji://hbase-address/kiji-instance/"
         + "kiji-table/[optional-kiji-column]\"");
+    Preconditions.checkArgument(nonFlagArgs.size() >= 1,
+        "Specify a Kiji table or column with \"kiji fresh kiji://hbase-address/kiji-instance/"
+            + "kiji-table/[optional-kiji-column]\"");
     try {
       mURI = KijiURI.newBuilder(nonFlagArgs.get(0)).build();
     } catch (KijiURIException kurie) {
@@ -288,21 +314,18 @@ public class FreshTool extends BaseTool {
             return BaseTool.SUCCESS;
           }
           case REGISTER: {
-            Preconditions.checkArgument(nonFlagArgs.size() == 4, "Incorrect number of arguments "
-                + "for register operation.  specify \"do=register <policy class> '<policy state>' "
-                + "<producer class>\"");
             boolean classesFound = true;
             KijiFreshnessPolicy policy = null;
             Class<? extends KijiProducer> producerClass = null;
             if (!mForceFlag) {
               try {
                 policy = (KijiFreshnessPolicy) ReflectionUtils.newInstance(
-                    Class.forName(nonFlagArgs.get(1)), null);
-                policy.deserialize(nonFlagArgs.get(2));
+                    Class.forName(mPolicyClassFlag), null);
+                policy.deserialize(mPolicyStateFlag);
               } catch (ClassNotFoundException cnfe) {
                 classesFound = false;
                 if (mayProceed("KijiFreshnessPolicy class: %s not found on the classpath.  Do you "
-                    + "want to register this class name anyway?", nonFlagArgs.get(1))) {
+                    + "want to register this class name anyway?", mPolicyClassFlag)) {
                   mForceFlag = true;
                 } else {
                   getPrintStream().println("Registration aborted.");
@@ -311,11 +334,11 @@ public class FreshTool extends BaseTool {
               }
               try {
                 producerClass =
-                    Class.forName(nonFlagArgs.get(3)).asSubclass(KijiProducer.class);
+                    Class.forName(mProducerClassFlag).asSubclass(KijiProducer.class);
               } catch (ClassNotFoundException cnfe) {
                 classesFound = false;
                 if (mayProceed("KijiProducer class: %s not found on the classpath.  Do you "
-                    + "want to register this class name anyway?", nonFlagArgs.get(3))) {
+                    + "want to register this class name anyway?", mProducerClassFlag)) {
                   mForceFlag = true;
                 } else {
                   getPrintStream().println("Registration aborted.");
@@ -342,7 +365,7 @@ public class FreshTool extends BaseTool {
             } else {
               for (KijiColumnName column : mURI.getColumns()) {
                 forceRegisterPolicy(mURI.getTable(), column.getName(),
-                    nonFlagArgs.get(1), nonFlagArgs.get(2), nonFlagArgs.get(3));
+                    mPolicyClassFlag, mPolicyStateFlag, mProducerClassFlag);
               }
               return BaseTool.SUCCESS;
             }
