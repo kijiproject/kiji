@@ -48,7 +48,7 @@
     <module>cdh4mr1-bridge</module>
     <module>hadoop1-bridge</module>
     <module>kiji-mapreduce</module> <!-- hadoop2-based build -->
-    <!-- TODO(KIJIMR-177): Enable hadoop 1.x build    <module>mr-hadoop1x</module> -->
+    <module>mr-hadoop1x</module> <!-- hadoop1-based build -->
     <module>dist</module>
   </modules>
 

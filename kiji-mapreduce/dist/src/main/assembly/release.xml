@@ -55,7 +55,7 @@
       </excludes>
     </fileSet>
 
-    <!-- Copy KijiMR jars into per-distro directories -->
+    <!-- Copy KijiMR jars and distro-specific dependencies into per-distro directories -->
     <fileSet>
       <outputDirectory>lib/distribution/hadoop2</outputDirectory>
       <directory>../kiji-mapreduce/target</directory>
@@ -65,8 +65,16 @@
       </includes>
       <filtered>false</filtered>
     </fileSet>
+    <fileSet>
+      <outputDirectory>lib/distribution/hadoop2</outputDirectory>
+      <directory>../kiji-mapreduce/target/dependency</directory>
+      <fileMode>0644</fileMode>
+      <includes>
+        <include>kiji-avro-*.jar</include>
+      </includes>
+      <filtered>false</filtered>
+    </fileSet>
 
-    <!-- TODO(KIJIMR-177): Enable Hadoop 1.x build
     <fileSet>
       <outputDirectory>lib/distribution/hadoop1</outputDirectory>
       <directory>../mr-hadoop1x/target</directory>
@@ -76,15 +84,27 @@
       </includes>
       <filtered>false</filtered>
     </fileSet>
-    -->
+    <fileSet>
+      <outputDirectory>lib/distribution/hadoop1</outputDirectory>
+      <directory>../mr-hadoop1x/target/dependency</directory>
+      <fileMode>0644</fileMode>
+      <includes>
+        <include>kiji-avro-*.jar</include>
+      </includes>
+      <filtered>false</filtered>
+    </fileSet>
   </fileSets>
 
   <dependencySets>
-    <!-- Copy KijiMR dependencies into lib/ -->
+    <!-- Copy common KijiMR dependencies into lib/ -->
     <dependencySet>
       <outputDirectory>lib</outputDirectory>
       <unpack>false</unpack>
       <useProjectArtifact>false</useProjectArtifact>
+      <excludes>
+        <!-- The following dependency artifacts must be put in per-distro directories. -->
+        <exclude>org.kiji.avro:kiji-avro</exclude>
+      </excludes>
     </dependencySet>
   </dependencySets>
 

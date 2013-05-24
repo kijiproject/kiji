@@ -90,6 +90,18 @@ public abstract class KijiMRPlatformBridge {
   public abstract SequenceFile.Writer newSeqFileWriter(Configuration conf, Path filename,
       Class<?> keyClass, Class<?> valueClass) throws IOException;
 
+
+  /**
+   * Create and return a new SequenceFile.Reader object.
+   *
+   * @param conf the current Configuration
+   * @param filename the file to open for read access.
+   * @return a new SequenceFile.Reader object opened and ready to read the file.
+   * @throws IOException if there is an error opening the file.
+   */
+  public abstract SequenceFile.Reader newSeqFileReader(Configuration conf, Path filename)
+      throws IOException;
+
   /**
    * Set the boolean property of a given Job for specifying which classpath takes precedence, the
    * user's or the system's, when tasks are launched.

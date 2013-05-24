@@ -27,12 +27,12 @@ import java.io.IOException;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.SequenceFile;
-import org.apache.hadoop.io.SequenceFile.Writer;
 import org.apache.hadoop.io.Text;
 import org.junit.Test;
 
 import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
+import org.kiji.mapreduce.platform.KijiMRPlatformBridge;
 import org.kiji.schema.KijiClientTest;
 
 /** Test that the SeqFileKeyValueStore implementation works. */
@@ -46,11 +46,8 @@ public class TestSeqFileKeyValueStore extends KijiClientTest {
    */
   private Path writeSeqFile() throws IOException {
     final Path path = new Path("file:" + getLocalTempDir(), "foo.seq");
-    final SequenceFile.Writer writer = SequenceFile.createWriter(
-        getConf(),
-        Writer.file(path),
-        Writer.keyClass(Text.class),
-        Writer.valueClass(IntWritable.class));
+    final SequenceFile.Writer writer = KijiMRPlatformBridge.get().newSeqFileWriter(
+        getConf(), path, Text.class, IntWritable.class);
     try {
       writer.append(new Text("one"), new IntWritable(1));
       writer.append(new Text("two"), new IntWritable(2));

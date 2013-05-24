@@ -89,6 +89,19 @@ public final class Hadoop1xKijiMRBridge extends KijiMRPlatformBridge {
     return new SequenceFile.Writer(fs, conf, filename, keyClass, valueClass);
   }
 
+
+  /** {@inheritDoc} */
+  @Override
+  public SequenceFile.Reader newSeqFileReader(Configuration conf, Path filename)
+      throws IOException {
+    Preconditions.checkArgument(conf != null, "Configuration argument must be non-null");
+    Preconditions.checkArgument(filename != null, "Filename argument must be non-null");
+
+    final URI fileUri = filename.toUri();
+    final FileSystem fs = FileSystem.get(fileUri, conf);
+    return new SequenceFile.Reader(fs, filename, conf);
+  }
+
   /** {@inheritDoc} */
   @Override
   public void setUserClassesTakesPrecedence(Job job, boolean value) {

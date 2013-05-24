@@ -78,6 +78,17 @@ public final class CDH4MR1KijiMRBridge extends KijiMRPlatformBridge {
 
   /** {@inheritDoc} */
   @Override
+  public SequenceFile.Reader newSeqFileReader(Configuration conf, Path filename)
+      throws IOException {
+
+    Preconditions.checkArgument(conf != null, "Configuration argument must be non-null");
+    Preconditions.checkArgument(filename != null, "Filename argument must be non-null");
+    return new SequenceFile.Reader(conf, SequenceFile.Reader.file(filename));
+  }
+
+
+  /** {@inheritDoc} */
+  @Override
   public void setUserClassesTakesPrecedence(Job job, boolean value) {
     // We can do this directly in CDH4.
     job.setUserClassesTakesPrecedence(value);

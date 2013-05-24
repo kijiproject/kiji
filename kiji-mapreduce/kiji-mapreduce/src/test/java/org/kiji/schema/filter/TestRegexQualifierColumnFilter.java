@@ -41,6 +41,7 @@ import org.kiji.mapreduce.gather.GathererContext;
 import org.kiji.mapreduce.gather.KijiGatherJobBuilder;
 import org.kiji.mapreduce.gather.KijiGatherer;
 import org.kiji.mapreduce.output.SequenceFileMapReduceJobOutput;
+import org.kiji.mapreduce.platform.KijiMRPlatformBridge;
 import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequestBuilder;
@@ -132,9 +133,8 @@ public class TestRegexQualifierColumnFilter extends KijiClientTest {
     assertTrue(gatherJob.run());
 
     // Check the output file: two things should be there (apple, aardvark).
-    final SequenceFile.Reader reader = new SequenceFile.Reader(
-        getConf(),
-        SequenceFile.Reader.file(new Path(outputDir.getPath(), "part-m-00000")));
+    final SequenceFile.Reader reader = KijiMRPlatformBridge.get().newSeqFileReader(
+        getConf(), new Path(outputDir.getPath(), "part-m-00000"));
     try {
       final Text key = new Text();
       assertTrue(reader.next(key));

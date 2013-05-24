@@ -56,8 +56,11 @@ public class TestXmlKeyValueStoreParser extends KijiClientTest {
     @Override
     public void initFromConf(KeyValueStoreConfiguration kvConf) throws IOException {
       // Fail if the provided Configuration hasn't loaded core-default.xml.
+      // Check for both a Hadoop 1.x guaranteed-present key or a Hadoop 2.x key.
       Configuration conf = kvConf.getDelegate();
-      assertEquals("org.apache.hadoop.fs.Hdfs", conf.get("fs.AbstractFileSystem.hdfs.impl"));
+      if (conf.get("fs.AbstractFileSystem.hdfs.impl") == null && conf.get("fs.hdfs.impl") == null) {
+        fail("Could not find HDFS implementation declared in conf; defaults don't seem loaded.");
+      }
     }
 
     @Override
