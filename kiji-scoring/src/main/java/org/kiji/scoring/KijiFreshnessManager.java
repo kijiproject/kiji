@@ -137,11 +137,76 @@ public final class KijiFreshnessManager implements Closeable {
   public void storePolicy(String tableName, String columnName,
       Class<? extends KijiProducer> producerClass, KijiFreshnessPolicy policy)
       throws IOException {
+
+    // Collect the appropriate strings from the objects and write them with storePolicyWithStrings.
+    storePolicyWithStrings(
+        tableName,
+        columnName,
+        producerClass.getName(),
+        policy.getClass().getName(),
+        policy.serialize());
+  }
+
+  /**
+   * Checks if a String is a valid Java class identifier.
+   * @param className the identifier to check.
+   * @return whether the string is a valid Java class identifier.
+   */
+  private boolean isValidClassName(String className) {
+    if (className.endsWith(".")) {
+      return false;
+    }
+    final String[] splitId = className.split("\\.");
+    for (String section : splitId) {
+      final char[] chars = section.toCharArray();
+      // An empty section indicates leading or consecutive '.'s which are illegal.
+      if (chars.length == 0) {
+        return false;
+      }
+      if (!Character.isJavaIdentifierStart(chars[0])) {
+        return false;
+      }
+      for (int i = 1; i < chars.length; i++) {
+        if (!Character.isJavaIdentifierPart(chars[i])) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Saves a freshness policy in the metatable without requiring classes to be available on the
+   * classpath.
+   *
+   * @param tableName the table name with which the freshness policy should be associated.  Throws
+   * an IOException if the table does not exist.
+   * @param columnName the name of the column with which to associate the freshness policy.  This
+   * may be either a fully qualified column from a group type family, or an unqualified map type
+   * family name.
+   * @param producerClass the fully qualified class name of the producer to use for freshening.
+   * @param policyClass the fully qualified class name of the KijiFreshnessPolicy to attach to the
+   * column.
+   * @param policyState the serialized state of the policy class.
+   * @throws IOException in case of an error writing to the metatable.
+   */
+  public void storePolicyWithStrings(String tableName, String columnName, String producerClass,
+      String policyClass, String policyState) throws IOException {
     // Check that the table exists.
     if (!mMetaTable.tableExists(tableName)) {
       throw new KijiTableNotFoundException("Couldn't find table: " + tableName);
     }
-    // Check that the column name is valid.
+    // Check that the policy class name is a valid Java identifier.
+    if (!isValidClassName(policyClass)) {
+      throw new IllegalArgumentException(String.format(
+          "Policy class name: %s is not a valid Java class identifier.", policyClass));
+    }
+    // Check that the producer class name is a valid Java identifier.
+    if (!isValidClassName(producerClass)) {
+      throw new IllegalArgumentException(String.format(
+          "Producer class name: %s is not a valid Java class identifier.", producerClass));
+    }
+    // This code will throw an invalid name if there's something wrong with this columnName string.
     KijiColumnName kcn = new KijiColumnName(columnName);
     // Check that the table includes the specified column or family.
     final KijiTable table = mKiji.openTable(tableName);
@@ -192,44 +257,13 @@ public final class KijiFreshnessManager implements Closeable {
         }
       }
     }
+
     // TODO(Score-22): Design checks to perform here.
     // currently checks that the table exists, that the column name is valid, that the column
     // exists if it is fully qualified, that the family is a map type family if not fully
     // qualified, and that the new attachment does not violate the exclusion between family level
     // freshening and fully qualified freshening in a map type family.
 
-    // Once all checks have passed, register the strings directly.
-    storePolicyWithStrings(
-        tableName,
-        columnName,
-        producerClass.getName(),
-        policy.getClass().getName(),
-        policy.serialize());
-  }
-
-  /**
-   * Saves a freshness policy in the metatable without performing any checks on compatibility of
-   * components.
-   *
-   * @param tableName the table name with which the freshness policy should be associated.  Throws
-   * an IOException if the table does not exist.
-   * @param columnName the name of the column with which to associate the freshness policy.  This
-   * may be either a fully qualified column from a group type family, or an unqualified map type
-   * family name.
-   * @param producerClass the fully qualified class name of the producer to use for freshening.
-   * @param policyClass the fully qualified class name of the KijiFreshnessPolicy to attach to the
-   * column.
-   * @param policyState the serialized state of the policy class.
-   * @throws IOException in case of an error writing to the metatable.
-   */
-  public void storePolicyWithStrings(String tableName, String columnName, String producerClass,
-      String policyClass, String policyState) throws IOException {
-    if (!mMetaTable.tableExists(tableName)) {
-      throw new KijiTableNotFoundException("Couldn't find table: " + tableName);
-    }
-    // This code will throw an invalid name if there's something wrong with this columnName string.
-    KijiColumnName kcn = new KijiColumnName(columnName);
-    //TODO(Scoring-10): Check the column name against the current version of the table.
     KijiFreshnessPolicyRecord record = KijiFreshnessPolicyRecord.newBuilder()
         .setRecordVersion(CUR_FRESHNESS_RECORD_VER.toCanonicalString())
         .setProducerClass(producerClass)

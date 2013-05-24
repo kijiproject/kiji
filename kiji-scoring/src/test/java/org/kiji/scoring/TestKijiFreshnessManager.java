@@ -191,5 +191,36 @@ public class TestKijiFreshnessManager {
           + " qualified columns within that family. To view a list of attached freshness policies "
           + "check log files for KijiFreshnessManager.", iae.getMessage());
     }
+
+    // This should pass.
+    mFreshManager.storePolicy("user", "info:name", TestProducer.class, policy);
+  }
+
+  @Test
+  public void testJavaIdentifiers() throws IOException {
+    try {
+      mFreshManager.storePolicyWithStrings(
+          "user", "networks", "kiji..producer", "kiji.policy.policy", "");
+      fail("Bad producer class name should have thrown IllegalArgumentException");
+    } catch (IllegalArgumentException iae) {
+      assertEquals("Producer class name: kiji..producer is not a valid Java class identifier.",
+          iae.getMessage());
+    }
+    try {
+      mFreshManager.storePolicyWithStrings(
+          "user", "networks", "kiji.a.producer", "kiji.", "");
+      fail("Bad policy class name should have thrown IllegalArgumentException");
+    } catch (IllegalArgumentException iae) {
+      assertEquals("Policy class name: kiji. is not a valid Java class identifier.",
+          iae.getMessage());
+    }
+    try {
+      mFreshManager.storePolicyWithStrings(
+          "user", "networks", "kiji.a.producer", ".kiji", "");
+      fail("Bad policy class name should have thrown IllegalArgumentException");
+    } catch (IllegalArgumentException iae) {
+      assertEquals("Policy class name: .kiji is not a valid Java class identifier.",
+          iae.getMessage());
+    }
   }
 }

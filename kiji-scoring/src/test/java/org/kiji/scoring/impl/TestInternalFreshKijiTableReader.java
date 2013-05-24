@@ -22,7 +22,6 @@ package org.kiji.scoring.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -286,34 +285,6 @@ public class TestInternalFreshKijiTableReader {
     assertEquals(1, freshReader.getPolicies(request).size());
     assertEquals(NeverFreshen.class,
         freshReader.getPolicies(request).get(new KijiColumnName("map")).getClass());
-  }
-
-  @Test
-  public void testFamilyAndQualifiedPolicy() throws IOException {
-    final KijiDataRequest request = KijiDataRequest.create("map", "name");
-
-    // Create a KijiFreshnessManager and register some freshness policies.
-    final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
-    manager.storePolicyWithStrings("table", "map:name", TestProducer.class.getName(),
-        AlwaysFreshen.class.getName(), "");
-    manager.storePolicyWithStrings("table", "map", TestProducer.class.getName(),
-        NeverFreshen.class.getName(), "");
-
-    // Open a new reader to pull in the new freshness policies.
-    final InternalFreshKijiTableReader freshReader =
-        (InternalFreshKijiTableReader) FreshKijiTableReaderBuilder.get()
-        .withReaderType(FreshReaderType.LOCAL)
-        .withTable(mTable)
-        .withTimeout(100)
-        .build();
-
-    try {
-      freshReader.getPolicies(request);
-      fail("getPolicies() should throw IllegalStateException");
-    } catch (IllegalStateException ise) {
-      assertEquals("A record exists for both the family: map and qualified column: "
-          + "map:name\nOnly one may be specified.", ise.getMessage());
-    }
   }
 
   @Test
