@@ -127,7 +127,8 @@ public class RowResource extends AbstractRowResource {
       throws IOException {
     // Checks existence of mandatory global timestamp.
     if (!uriInfo.getQueryParameters().containsKey(TIMESTAMP_KEY)) {
-      throw new WebApplicationException(Response.Status.BAD_REQUEST);
+      throw new WebApplicationException(new IllegalArgumentException("Timestamp is unspecified."),
+          Response.Status.BAD_REQUEST);
     }
     // Default global timestamp. Will be set by a query parameter.
     long globalTimestamp = 0;
@@ -164,7 +165,9 @@ public class RowResource extends AbstractRowResource {
           valuesMap.put(column, queryValue);
         } else {
           // TODO: Collect all of the columns that don't exist and throw one exception with them.
-          throw new WebApplicationException(Response.Status.BAD_REQUEST);
+          throw new WebApplicationException(
+              new IllegalArgumentException("Specified column does not exist: " + column),
+              Response.Status.BAD_REQUEST);
         }
       }
     }
@@ -216,8 +219,7 @@ public class RowResource extends AbstractRowResource {
     }
     // Better output?
     Map<String, String> returnedTarget = Maps.newHashMap();
-    returnedTarget.put("target",
-        "/" + uriInfo.getPath() + "/" + new String(Hex.encodeHex(entityId.getHBaseRowKey())));
+    returnedTarget.put("target", "/" + uriInfo.getPath());
     return returnedTarget;
  }
 

@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.List;
@@ -323,7 +324,8 @@ public class RowsResource extends AbstractRowResource {
       entityId = ToolUtils.createEntityIdFromUserInputs(kijiRestRow.getEntityId(),
           kijiTable.getLayout());
     } else {
-      throw new WebApplicationException(Response.Status.BAD_REQUEST);
+      throw new WebApplicationException(new IllegalArgumentException("EntityId was not specified."),
+          Status.BAD_REQUEST);
     }
 
     // Open writer and write.
@@ -332,6 +334,11 @@ public class RowsResource extends AbstractRowResource {
       for (KijiRestCell kijiRestCell : kijiRestRow.getCells()) {
         final KijiColumnName column = new KijiColumnName(kijiRestCell.getColumnFamily(),
             kijiRestCell.getColumnQualifier());
+        if (!kijiTable.getLayout().exists(column)) {
+          throw new WebApplicationException(
+              new IllegalArgumentException("Specified column does not exist: " + column),
+              Response.Status.BAD_REQUEST);
+        }
         final long timestamp;
         if (null != kijiRestCell.getTimestamp()) {
           timestamp = kijiRestCell.getTimestamp();
@@ -365,7 +372,9 @@ public class RowsResource extends AbstractRowResource {
     // Better output?
     Map<String, String> returnedTarget = Maps.newHashMap();
     returnedTarget.put("target",
-        "/" + uriInfo.getPath() + "/" + new String(Hex.encodeHex(entityId.getHBaseRowKey())));
+        URI.create("/" + uriInfo.getPath() + "/")
+            .resolve(new String(Hex.encodeHex(entityId.getHBaseRowKey())))
+            .toString());
     return returnedTarget;
 
   }
