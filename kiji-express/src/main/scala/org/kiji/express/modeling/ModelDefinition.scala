@@ -38,8 +38,16 @@ import org.kiji.schema.util.ToJson
  * A ModelDefinition is a descriptor of the computational logic to use at different phases of
  * of a modeling workflow.
  *
- * Currently this class can only be created from a model definition in a JSON file. JSON model
- * specifications should be written using the following format:
+ * A ModelDefinition can be created programmatically:
+ * {{{
+ * val modelDefinition = ModelDefinition(name = "name",
+ *     version = "1.0.0",
+ *     extractorClass = classOf[org.kiji.express.modeling.ModelDefinitionSuite.MyExtractor],
+ *     scorerClass = classOf[org.kiji.express.modeling.ModelDefinitionSuite.MyScorer])
+ * }}}
+ *
+ * Alternatively a ModelDefinition can be created from JSON. JSON model specifications should be
+ * written using the following format:
  * {{{
  * {
  *   "name" : "identifier-for-this-model",

@@ -79,6 +79,59 @@ class ModelEnvironmentSuite extends FunSuite {
     assert(expectedKvstores === environment.scoreEnvironment.kvstores)
   }
 
+  test("Settings on a model environment can be modified.") {
+    val dataRequest: KijiDataRequest = {
+      val builder = KijiDataRequest.builder().withTimeRange(0, 38475687)
+      builder.newColumnsDef().withMaxVersions(3).add("info", "in")
+      builder.build()
+    }
+
+    // Extract and score environments to use in tests.
+    val extractEnv = ExtractEnvironment(dataRequest, Seq(), Seq())
+    val extractEnv2 = ExtractEnvironment(
+        dataRequest,
+        Seq(FieldBindingSpec("tuplename", "storefieldname")),
+        Seq(KVStoreSpec("AVRO_KV", "storename", Map())))
+    val scoreEnv = ScoreEnvironment("outputFamily:qualifier", Seq())
+    val scoreEnv2 = ScoreEnvironment(
+        "outputFamily:qualifier",
+        Seq(KVStoreSpec("KIJI_TABLE", "myname", Map())))
+
+    val modelEnv = ModelEnvironment(
+      "myname",
+      "1.0.0",
+      "kiji://myuri",
+      extractEnv,
+      scoreEnv)
+
+    val modelEnv2 = modelEnv.withNewSettings(name = "newname")
+    val modelEnv3 = modelEnv2.withNewSettings(extractEnvironment = extractEnv2)
+    val modelEnv4 = modelEnv3.withNewSettings(scoreEnvironment = scoreEnv2)
+    val modelEnv5 = modelEnv4.withNewSettings(version = "2.0.0")
+
+    assert(modelEnv.name === "myname")
+    assert(modelEnv2.name === "newname")
+    assert(modelEnv2.version === modelEnv.version)
+    assert(modelEnv2.extractEnvironment === modelEnv.extractEnvironment)
+    assert(modelEnv2.scoreEnvironment === modelEnv.scoreEnvironment)
+
+    assert(modelEnv3.version === modelEnv2.version)
+    assert(modelEnv2.extractEnvironment == extractEnv)
+    assert(modelEnv3.extractEnvironment === extractEnv2)
+    assert(modelEnv3.scoreEnvironment === modelEnv2.scoreEnvironment)
+
+    assert(modelEnv4.version === modelEnv3.version)
+    assert(modelEnv4.extractEnvironment === modelEnv3.extractEnvironment)
+    assert(modelEnv3.scoreEnvironment === scoreEnv)
+    assert(modelEnv4.scoreEnvironment === scoreEnv2)
+
+    assert(modelEnv4.version === "1.0.0")
+    assert(modelEnv5.version === "2.0.0")
+    assert(modelEnv5.name === modelEnv4.name)
+    assert(modelEnv5.extractEnvironment === modelEnv4.extractEnvironment)
+    assert(modelEnv5.scoreEnvironment === modelEnv4.scoreEnvironment)
+  }
+
   test("ModelEnvironment can write out JSON.") {
     val originalJson: String = doAndClose(Source.fromFile(validDefinitionLocation)) { source =>
       source.mkString

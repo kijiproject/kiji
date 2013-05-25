@@ -37,13 +37,28 @@ import org.kiji.express.avro.AvroModelEnvironment
 import org.kiji.express.avro.AvroScoreEnvironment
 import org.kiji.express.avro.ColumnSpec
 import org.kiji.express.avro.KVStore
+import org.kiji.express.avro.KvStoreType
 import org.kiji.express.avro.FieldBinding
+import org.kiji.express.avro.Property
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.util.FromJson
 import org.kiji.schema.util.KijiNameValidator
 import org.kiji.schema.util.ProtocolVersion
 import org.kiji.schema.util.ToJson
+
+/**
+ * A case class wrapper around the parameters necessary for an Avro FieldBinding.  This is a
+ * convenience for users to define FieldBindings when using the ModelEnvironment.
+ *
+ * @param tupleFieldName is the name of the tuple field to associate with the `storeFieldName`.
+ * @param storeFieldName is the name of the store field to associate with the `tupleFieldName`.
+ */
+case class FieldBindingSpec(tupleFieldName: String, storeFieldName: String) {
+  def toAvroFieldBinding(): FieldBinding = {
+    new FieldBinding(tupleFieldName, storeFieldName)
+  }
+}
 
 /**
  * A specification of the runtime bindings needed in the extract phase of a model.
@@ -79,6 +94,63 @@ final class ExtractEnvironment private[express] (
 }
 
 /**
+ * Companion object to ExtractEnvironment containing factory methods.
+ */
+object ExtractEnvironment {
+  /**
+   * Creates a new ExtractEnvironment, which is a specification of the runtime bindings needed in
+   * the extract phase of a model.
+   *
+   * @param dataRequest describing the input columns required during the extract phase.
+   * @param fieldBindings describing a mapping from columns requested to their corresponding field
+   *     names. This determines how data that is requested for the extract phase is mapped onto
+   *     named input fields.
+   * @param kvstores describing the kv stores for usage during the extract phase.
+   * @return an ExtractEnvironment with the configuration specified.
+   */
+  def apply(
+      dataRequest: KijiDataRequest,
+      fieldBindings: Seq[FieldBindingSpec],
+      kvStores: Seq[KVStoreSpec]): ExtractEnvironment = {
+    new ExtractEnvironment(
+        dataRequest,
+        fieldBindings.map { fieldBindingSpec => fieldBindingSpec.toAvroFieldBinding },
+        kvStores.map { kvStoreSpec => kvStoreSpec.toAvroKVStore } )
+  }
+}
+
+/**
+ * A case class wrapper around the parameters necessary for an Avro KVStore.  This is a convenience
+ * for users to define their KVStores when using the ModelEnvironment.
+ *
+ * @param storeType of this KVStore.  Must be one of "AVRO_KV", "AVRO_RECORD", "KIJI_TABLE".
+ * @param name specified by the user as a shorthand identifier for this KVStore.
+ * @param properties that may be needed to configure and instantiate a kv store reader.
+ */
+case class KVStoreSpec(storeType: String, name: String, properties: Map[String, String]) {
+  // The allowed store types.
+  val possibleStoreTypes = Set("AVRO_KV", "AVRO_RECORD", "KIJI_TABLE")
+
+  require(
+      possibleStoreTypes.contains(storeType),
+      "storeType must be one of %s, instead was %s".format(possibleStoreTypes, storeType))
+
+  /**
+   * Creates an Avro KVStore from this specification.
+   *
+   * @return an [[org.kiji.express.avro.KVStore]] with its parameters from this specification.
+   */
+  def toAvroKVStore(): KVStore = {
+    val kvStoreType: KvStoreType = Enum.valueOf(classOf[KvStoreType], storeType)
+    val avroProperties: java.util.List[Property] =
+        properties.map { case (name, value) =>
+            new Property(name, value)
+        }.toSeq.asJava
+    new KVStore(kvStoreType, name, avroProperties)
+  }
+}
+
+/**
  * A specification of the runtime bindings for data sources required in the score phase of a model.
  *
  * @param outputColumn to write scores to.
@@ -106,6 +178,23 @@ final class ScoreEnvironment private[express] (
 }
 
 /**
+ * Companion object containing factory methods for ScoreEnvironment.
+ */
+object ScoreEnvironment {
+  /**
+   * Creates a ScoreEnvironment, which is a specification of the runtime bindings for data sources
+   * required in the score phase of a model.
+   *
+   * @param outputColumn to write scores to.
+   * @param kvstores is the specification of the kv stores for usage during the score phase.
+   * @return a ScoreEnvironment with the specified settings.
+   */
+  def apply(outputColumn: String, kvStores: Seq[KVStoreSpec]): ScoreEnvironment = {
+    new ScoreEnvironment(outputColumn, kvStores.map { storeSpec => storeSpec.toAvroKVStore })
+  }
+}
+
+/**
  * A ModelEnvironment is a specification describing how to execute a linked model definition.
  * This includes specifying:
  * <ul>
@@ -113,8 +202,30 @@ final class ScoreEnvironment private[express] (
  *   <li>Mappings from logical names of data sources to their physical realizations</li>
  * </ul>
  *
- * Currently this class can only be created from a model environment in a JSON file. JSON run
- * specifications should be written using the following format:
+ * A ModelEnvironment can be created programmatically:
+ * {{{
+ * val myDataRequest: KijiDataRequest = {
+ *   val builder = KijiDataRequest.builder().withTimeRange(0, 38475687)
+ *   builder.newColumnsDef().withMaxVersions(3).add("info", "in")
+ *   builder.build()
+ * }
+ * val extractEnv = ExtractEnvironment(
+ *     dataRequest = myDataRequest,
+ *     fieldBindings = Seq(FieldBindingSpec("tuplename", "storefieldname")),
+ *     kvStores = Seq(KVStoreSpec("AVRO_KV", "storename", Map())))
+ * val scoreEnv2 = ScoreEnvironment(
+ *     outputColumn = "outputFamily:qualifier",
+ *     kvstores = Seq(KVStoreSpec("KIJI_TABLE", "myname", Map())))
+ * val modelEnv = ModelEnvironment(
+ *   name = "myname",
+ *   version = "1.0.0",
+ *   modelTableUri = "kiji://myuri",
+ *   extractEnvironment = extractEnv,
+ *   scoreEnvironment = scoreEnv)
+ * }}}
+ *
+ * Alternatively a ModelEnvironment can be created from JSON. JSON run specifications should
+ * be written using the following format:
  * {{{
  * {
  *   "name" : "myRunProfile",
@@ -227,6 +338,34 @@ final class ModelEnvironment private[express] (
     ToJson.toAvroJsonString(environment)
   }
 
+  /**
+   * Creates a new model environment with settings specified to this method. Any setting specified
+   * to this method is used in the new model environment. Any unspecified setting will use the
+   * value from this model environment in the new model environment.
+   *
+   * @param name of the model environment.
+   * @param version of the model environment.
+   * @param modelTableUri is the URI of the Kiji table this model environment will read from and
+   *     write to.
+   * @param extractEnvironment defining configuration details specific to the Extract phase of
+   *     a model.
+   * @param scoreEnvironment defining configuration details specific to the Score phase of a
+   *     model.
+   */
+  final def withNewSettings(
+      name: String = this.name,
+      version: String = this.version,
+      modelTableUri: String = this.modelTableUri,
+      extractEnvironment: ExtractEnvironment = this.extractEnvironment,
+      scoreEnvironment: ScoreEnvironment = this.scoreEnvironment): ModelEnvironment = {
+    new ModelEnvironment(
+        name,
+        version,
+        modelTableUri,
+        extractEnvironment,
+        scoreEnvironment)
+  }
+
   override def equals(other: Any): Boolean = {
     other match {
       case environment: ModelEnvironment => {
@@ -271,6 +410,27 @@ object ModelEnvironment {
   /** Message to show the user when there is an error validating their model definition. */
   private[express] val VALIDATION_MESSAGE = "One or more errors occurred while validating your " +
       "model environment. Please correct the problems in your model environment and try again."
+
+  /**
+   * Creates a new ModelEnvironment using the specified settings.
+   * @param name of the model environment.
+   * @param version of the model environment.
+   * @param modelTableUri is the URI of the Kiji table this model environment will read from and
+   *     write to.
+   * @param extractEnvironment defining configuration details specific to the Extract phase of
+   *     a model.
+   * @param scoreEnvironment defining configuration details specific to the Score phase of a
+   *     model.
+   * @return a model environment with the specified settings.
+   */
+  def apply(
+      name: String,
+      version: String,
+      modelTableUri: String,
+      extractEnvironment: ExtractEnvironment,
+      scoreEnvironment: ScoreEnvironment): ModelEnvironment = {
+    new ModelEnvironment(name, version, modelTableUri, extractEnvironment, scoreEnvironment)
+  }
 
   /**
    * Creates a ModelEnvironment given a JSON string. In the process, all fields are validated.
