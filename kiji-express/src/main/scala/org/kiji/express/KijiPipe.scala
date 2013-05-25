@@ -19,14 +19,23 @@
 
 package org.kiji.express
 
+import scala.collection.JavaConverters.iterableAsScalaIterableConverter
+
 import cascading.flow.Flow
 import cascading.pipe.Pipe
+import cascading.tuple.Fields
+import cascading.tuple.Tuple
+import cascading.tuple.TupleEntry
 import com.twitter.scalding.Args
 import com.twitter.scalding.Job
 import com.twitter.scalding.Mode
+import com.twitter.scalding.TupleConversions
+import com.twitter.scalding.TupleConverter
+import com.twitter.scalding.TupleSetter
 
 import org.kiji.express.repl.ExpressShell
 import org.kiji.express.repl.Implicits
+import org.kiji.express.repl.Implicits.pipeToRichPipe
 
 /**
  * A class that adds Kiji-specific functionality to a Cascading pipe. This includes running pipes
@@ -37,7 +46,7 @@ import org.kiji.express.repl.Implicits
  *
  * @param pipe enriched with extra functionality.
  */
-class KijiPipe(private val pipe: Pipe) {
+class KijiPipe(private val pipe: Pipe) extends TupleConversions {
   /**
    * Gets a job that can be used to run the data pipeline.
    *
@@ -113,5 +122,83 @@ class KijiPipe(private val pipe: Pipe) {
    */
   def run() {
     getJob(new Args(Map())).run(Mode.mode)
+  }
+
+  /**
+   * An implicit object that extends TupleConverter[AvroRecord], which will be used by `pack`
+   * as an implicit argument to the call to `pipe.map`.
+   */
+  private[express] implicit object AvroRecordTupleConverter extends TupleConverter[AvroRecord] {
+    /**
+     * Converts a TupleEntry into an AvroRecord.
+     *
+     * @param entry to pack.
+     * @return an AvroRecord with field names and values corresponding to those in `entry`.
+     */
+    override def apply(entry: TupleEntry): AvroRecord = {
+      val fieldMap: Map[String, AvroValue] =
+          entry.getFields.asScala.toBuffer.map { field: Comparable[_] =>
+            (field.toString, AvroUtil.wrapGenericAvro(entry.getObject(field)))
+          }.toMap
+      new AvroRecord(fieldMap)
+    }
+
+    // Arity is unknown.
+    override def arity(): Int = -1
+  }
+
+  /**
+   * Packs the specified fields into an [[org.kiji.express.AvroRecord]].
+   *
+   * @param fieldSpec is the mapping from fields in the Scalding pipeline to which field of the
+   *      AvroRecord it should be packed into.
+   * @return a pipe containing a field with a record packed with the values of the specified fields.
+   */
+  def pack(fieldSpec: (Fields, Fields)): Pipe = {
+    val (fromFields, toFields) = fieldSpec
+    require(toFields.size == 1, "Cannot pack to more than one field.")
+    pipe.map(fieldSpec) { input: AvroRecord => input }
+  }
+
+  /**
+   * An implicit object that extends TupleSetter, which will be used by `unpack` in its call to
+   * `pipe.map`.
+   */
+  private[express] implicit object UnpackAvroTupleSetter extends TupleSetter[Any] {
+    /**
+     * Unpacks an AvroRecord into tuple fields.
+     *
+     * @param arg to unpack.
+     * @return a tuple containing a shallowly-unpacked AvroRecord.
+     * @throws IllegalArgumentException if the entry is not an AvroRecord.
+     */
+    override def apply(arg: Any): Tuple = {
+      arg match {
+        case AvroRecord(underlyingMap) => {
+          val result = new Tuple()
+          underlyingMap.values.foreach { value => result.add(value) }
+          result
+        }
+        case _ => {
+          throw new IllegalArgumentException(
+              "KijiPipe cannot unpack unless the field is an AvroRecord.")
+        }
+      }
+    }
+
+    // Arity is unknown.
+    override def arity(): Int = -1
+  }
+
+  /**
+   * Unpacks the specified fields from an [[org.kiji.express.AvroRecord]].
+   *
+   * @param fieldSpec is the mapping from the field to unpack to the fields to unpack to.
+   * @return a pipe containing a field with the record unpacked into new fields.
+   */
+  def unpack(fieldSpec: (Fields, Fields)): Pipe = {
+    val (fromFields, toFields) = fieldSpec
+    require(fromFields.size == 1, "Cannot unpack from more than one field.")
+    pipe.map(fieldSpec) { input: Any => input }
   }
 }
