@@ -218,3 +218,6 @@ userguide_mapreduce_1_0_0_rc62 : /userguides/mapreduce/1.0.0-rc62
 api_mrlib_1_0_0_rc61 : http://api-docs.kiji.org/kiji-mapreduce-lib/1.0.0-rc61/org/kiji/mapreduce
 api_express_0_2_0 : http://api-docs.kiji.org/kiji-express/0.2.0/org/kiji/express
 api_express_0_3_0 : http://api-docs.kiji.org/kiji-express/0.3.0/org/kiji/express
+userguide_schema_1_0_4 : /userguides/schema/1.0.4
+api_schema_1_0_4 : http://api-docs.kiji.org/kiji-schema/1.0.4/org/kiji/schema
+api_express_0_4_0 : http://api-docs.kiji.org/kiji-express/0.4.0/org/kiji/express
