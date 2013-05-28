@@ -31,18 +31,18 @@ import org.kiji.annotations.ApiStability
 @ApiStability.Experimental
 trait KeyValueStores {
   /**
-   * Container for the key-value stores accessable to this phase of the model workflow. This
+   * Container for the key-value stores accessible to this phase of the model workflow. This
    * property must be initialized by a model job runner.
    */
   private[this] var _kvstores: Option[Map[String, KeyValueStore[_, _]]] = None
 
   /**
-   * Gets the key-value stores accessable to this phase of the model workflow. Key-value stores can
+   * Gets the key-value stores accessible to this phase of the model workflow. Key-value stores can
    * be addressed by their logical name.
    *
-   * @return the key-value stores accessable to this phase of the model workflow.
+   * @return the key-value stores accessible to this phase of the model workflow.
    */
-  final protected[express] def kvstores: Map[String, KeyValueStore[_, _]] = {
+  final private[express] def kvstores: Map[String, KeyValueStore[_, _]] = {
     _kvstores.getOrElse {
       throw new IllegalStateException("This model phase has not been initialized properly. "
           + "Its key-value stores haven't been loaded yet.")
@@ -50,7 +50,23 @@ trait KeyValueStores {
   }
 
   /**
-   * Sets the key-value stores accessable to this phase of the model workflow. This should only be
+   * Gets the [[org.kiji.express.modeling.KeyValueStore]] associated with the specified store name.
+   *
+   * @param name associated with the store.
+   * @tparam K is the type of the keys.
+   * @tparam V is the type of the values.
+   * @return the key-value store associated with the specified name.
+   */
+  final protected[express] def kvstore[K, V](name: String): KeyValueStore[K, V] = {
+    val stores: Map[String, KeyValueStore[_, _]] = _kvstores.getOrElse {
+      throw new IllegalStateException("This model phase has not been initialized properly. "
+        + "Its key-value stores haven't been loaded yet.")
+    }
+    stores(name).asInstanceOf[KeyValueStore[K,V]]
+  }
+
+  /**
+   * Sets the key-value stores accessible to this phase of the model workflow. This should only be
    * used by KijiExpress model job runners.
    *
    * @param value to set this phase's key-value stores to.
