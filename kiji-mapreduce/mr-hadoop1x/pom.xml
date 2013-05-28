@@ -104,26 +104,6 @@
       </plugin>
 
       <plugin>
-        <groupId>org.kiji.maven.plugins</groupId>
-        <artifactId>hbase-maven-plugin</artifactId>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-failsafe-plugin</artifactId>
-        <configuration>
-          <additionalClasspathElements>
-            <additionalClasspathElement>
-              ${project.build.directory}/${project.artifactId}-${project.version}.jar
-            </additionalClasspathElement>
-            <additionalClasspathElement>
-              ${project.build.directory}/${project.artifactId}-${project.version}-tests.jar
-            </additionalClasspathElement>
-          </additionalClasspathElements>
-        </configuration>
-      </plugin>
-
-      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
       </plugin>
@@ -215,4 +195,43 @@
       <scope>compile</scope>
     </dependency>
   </dependencies>
+
+  <profiles>
+    <profile>
+      <!-- A Maven profile that runs integration tests in Hadoop 1. -->
+      <!-- Invoke with mvn clean verify -Dplatform=hadoop1 -->
+      <id>hadoop1-tests</id>
+      <activation>
+        <property>
+          <name>platform</name>
+          <value>hadoop1</value>
+        </property>
+      </activation>
+
+      <build>
+        <plugins>
+
+          <plugin>
+            <groupId>org.kiji.maven.plugins</groupId>
+            <artifactId>hbase-maven-plugin</artifactId>
+          </plugin>
+
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <configuration>
+              <additionalClasspathElements>
+                <additionalClasspathElement>
+                  ${project.build.directory}/${project.artifactId}-${project.version}.jar
+                </additionalClasspathElement>
+                <additionalClasspathElement>
+                  ${project.build.directory}/${project.artifactId}-${project.version}-tests.jar
+                </additionalClasspathElement>
+              </additionalClasspathElements>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>

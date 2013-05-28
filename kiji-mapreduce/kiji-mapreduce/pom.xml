@@ -84,26 +84,6 @@
       </plugin>
 
       <plugin>
-        <groupId>org.kiji.maven.plugins</groupId>
-        <artifactId>hbase-maven-plugin</artifactId>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-failsafe-plugin</artifactId>
-        <configuration>
-          <additionalClasspathElements>
-            <additionalClasspathElement>
-              ${project.build.directory}/${project.artifactId}-${project.version}.jar
-            </additionalClasspathElement>
-            <additionalClasspathElement>
-              ${project.build.directory}/${project.artifactId}-${project.version}-tests.jar
-            </additionalClasspathElement>
-          </additionalClasspathElements>
-        </configuration>
-      </plugin>
-
-      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
         <executions>
@@ -277,6 +257,31 @@
           <name>!platform</name>
         </property>
       </activation>
+
+      <build>
+        <plugins>
+          <!-- Activate integration tests for Hadoop 2 / CDH 4 -->
+          <plugin>
+            <groupId>org.kiji.maven.plugins</groupId>
+            <artifactId>hbase-maven-plugin</artifactId>
+          </plugin>
+
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-failsafe-plugin</artifactId>
+            <configuration>
+              <additionalClasspathElements>
+                <additionalClasspathElement>
+                  ${project.build.directory}/${project.artifactId}-${project.version}.jar
+                </additionalClasspathElement>
+                <additionalClasspathElement>
+                  ${project.build.directory}/${project.artifactId}-${project.version}-tests.jar
+                </additionalClasspathElement>
+              </additionalClasspathElements>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
 
       <dependencies>
         <!-- Default Hadoop/HBase versions in kiji-root-pom provide these dependencies. -->
