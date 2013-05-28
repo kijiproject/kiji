@@ -2,6 +2,9 @@
 
                              Kiji Express Music Tutorial Release Notes
 
+Version 0.4.0
+  * EXP-37. Updates tutorial to use AvroRecord when reading from Kiji.
+
 Version 0.3.0
   * EXP-25. Updates tutorial to use new EntityId mechanisms in KijiExpress.
 
