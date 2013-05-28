@@ -19,6 +19,7 @@
 
 package org.kiji.express.modeling
 
+import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
 
 import org.kiji.mapreduce.KijiMapReduceJob
@@ -37,13 +38,14 @@ object ExtractScoreJobBuilder {
    *
    * @param model containing the desired extract and score phases.
    * @param environment to run against.
+   * @param conf to use with the job, defaults to creating a new HBaseConfiguration.
    * @return a MapReduce job.
    */
-  def buildJob(model: ModelDefinition, environment: ModelEnvironment): KijiMapReduceJob = {
+  def buildJob(model: ModelDefinition, environment: ModelEnvironment,
+      conf: Configuration = HBaseConfiguration.create()): KijiMapReduceJob = {
     val uri = KijiURI.newBuilder(environment.modelTableUri).build()
 
     // Serialize the model configuration objects.
-    val conf = HBaseConfiguration.create()
     conf.set(ExtractScoreProducer.modelDefinitionConfKey, model.toJson())
     conf.set(ExtractScoreProducer.modelEnvironmentConfKey, environment.toJson())
 
@@ -60,13 +62,16 @@ object ExtractScoreJobBuilder {
    * Builds a job for running the extract and score phases of a model in batch over an entire input
    * table.
    *
-   * @param modelFile containing the desired extract and score phases.
-   * @param environmentFile to run against.
+   * @param modelDefPath to file containing the desired model definition file.
+   * @param environmentPath to file containing the desired model environment file.
+   * @param config to use with the job, defaults to creating a new HBaseConfiguration.
    * @return a MapReduce job.
    */
-  def buildJob(modelFile: String, environmentFile: String): KijiMapReduceJob = {
+  def buildJob(modelDefPath: String, environmentPath: String,
+      config: Configuration): KijiMapReduceJob = {
     buildJob(
-        model = ModelDefinition.fromJsonFile(modelFile),
-        environment = ModelEnvironment.fromJsonFile(environmentFile))
+        model = ModelDefinition.fromJsonFile(modelDefPath),
+        environment = ModelEnvironment.fromJsonFile(environmentPath),
+        conf = config)
   }
 }
