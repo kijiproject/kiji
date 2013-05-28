@@ -65,7 +65,7 @@ public final class MapReduceJobInputFactory {
       return input;
     } catch (JobIOSpecParseException exn) {
       throw new IOException(String.format(
-          "Invalid job output specification: '%s': %s", ssm, exn.getMessage()), exn);
+          "Invalid job input specification: '%s': %s", ssm, exn.getMessage()), exn);
     }
   }
 
@@ -86,7 +86,7 @@ public final class MapReduceJobInputFactory {
       return MapReduceJobInputs.newWholeTextFileMapReduceJobInput();
     case SEQUENCE:
       return MapReduceJobInputs.newSequenceFileMapReduceJobInput();
-      // TODO(KIJIMR-61) Map file job input
+    // TODO(KIJIMR-61) Map file job input
     // case MAP_FILE:
     //   throw new IOException(String.format(
     //       "Map files are not supported as job input in spec '%s'.", ssm));
@@ -99,7 +99,7 @@ public final class MapReduceJobInputFactory {
     case XML:
       return MapReduceJobInputs.newXMLMapReduceJobInput();
     default:
-      throw new RuntimeException(String.format("Unhandled job output format: '%s'.", format));
+      throw new RuntimeException(String.format("Unhandled job input format: '%s'.", format));
     }
   }
 
