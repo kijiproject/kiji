@@ -112,6 +112,21 @@ express job ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-0.2.0-SNAPSHOT.jar \
 {% endhighlight %}
 </div>
 
+### Alternative: Running as a script
+
+Alternately, you can also run these as scripts as follows:
+
+<div class="userinput">
+{% highlight bash %}
+express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
+    ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-0.2.0-SNAPSHOT.jar \
+    org.kiji.express.music.SongRecommender --songs-table ${KIJI}/songs \
+    --users-table ${KIJI}/users
+{% endhighlight %}
+</div>
+
+### Verify Output
+
 You can verify the output by scanning the `users-table`.
 
 <div class="userinput">
@@ -127,15 +142,4 @@ You should see something like:
                                      song-41
     entity-id=['user-41'] [1367023207962] info:next_song_rec
                                      song-41
-
-Alternately, you can also run these as scripts as follows:
-
-<div class="userinput">
-{% highlight bash %}
-express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
-    ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-0.2.0-SNAPSHOT.jar \
-    org.kiji.express.music.SongRecommender --songs-table ${KIJI}/songs \
-    --users-table ${KIJI}/users
-{% endhighlight %}
-</div>
 

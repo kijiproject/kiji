@@ -131,3 +131,10 @@ hadoop fs -copyFromLocal ${MUSIC_HOME}/example_data/*.json kiji-mr-tutorial/
 {% endhighlight %}
 </div>
 
+Upload the import descriptor for the bulk-importer in the next section to HDFS:
+
+<div class="userinput">
+{% highlight bash %}
+hadoop fs -copyFromLocal ${MUSIC_HOME}/import/song-plays-import-descriptor.json kiji-mr-tutorial/
+{% endhighlight %}
+</div>

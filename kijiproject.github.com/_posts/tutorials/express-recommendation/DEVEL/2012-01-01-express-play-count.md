@@ -156,7 +156,9 @@ file on HDFS:
 .write(Tsv(args("output")))
 {% endhighlight %}
 
-Running it:
+### Running the Job
+
+Run the SongPlayCounter job.
 
 <div class="userinput">
 {% highlight bash %}
@@ -169,6 +171,8 @@ express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
 {% endhighlight %}
 </div>
 
+### Alternative: Running as a script
+
 Or run it as a script:
 
 <div class="userinput">
@@ -178,7 +182,7 @@ express script --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
 {% endhighlight %}
 </div>
 
-Verify:
+### Verify Output
 
 <div class="userinput">
 {% highlight bash %}

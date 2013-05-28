@@ -7,11 +7,10 @@ order: 1
 description: A tutorial to get you using KijiExpress with Kiji Tables.
 ---
 
-Analyzing data with MapReduce can be a long path, fraught with many Java classes.
-
-KijiExpress is designed to make defining data processing jobs faster and more
-expressive, particularly for data stored in Kiji tables. KijiExpress allows you
-to define pipelines of MapReduce jobs easily, particularly when dealing with Kiji tables.
+KijiExpress is designed to make defining data processing MapReduce jobs quick and expressive,
+particularly for data stored in Kiji tables. Models can be developed using
+[Scalding](http://github.com/twitter/scalding), in the easy-to-use and powerful language of Scala,
+and run over Kiji tables using KijiExpress.
 
 
 In this tutorial, we demonstrate how to use KijiExpress to analyze your data effectively. You will:
@@ -53,13 +52,14 @@ echo "Hello Kiji"
 You can run KijiExpress on compiled jobs or uncompiled scripts. This tutorial will focus on running
 compiled jobs, but runnable scripts that do the same work as the compiled classes will also be available.
 
-### Scalding and the Tuple Model
+### Quick Scala and Scalding Syntax to Get Started
 
-KijiExpress is built on top of Twitter's [Scalding](http://github.com/twitter/scalding). Scalding is
-a powerful Scala library that can be used to process collections of data using MapReduce. Scalding
-(and KijiExpress) view a data set as a collection of _named tuples_. Generally, a single tuple
-corresponds to a single record from a data set. Each element of data in the record is a field in the
-tuple that can be addressed by a specific user-supplied name. 
+#### Scalding and the Tuple Model
+
+Scalding (and KijiExpress) view a data set as a collection of _named tuples_.  A tuple can be
+thought of as an ordered list; a named tuple is an ordered list where each element has a name.
+Generally, a single tuple corresponds to a single record from a data set. Each element of data in
+the record is a field in the tuple that can be addressed by a specific user-supplied name.
 
 By viewing a data set as a collection of named tuples, Scalding allows users to transform their data
 sets using common functional operations. For example, consider this simple Scalding flow.
@@ -71,12 +71,12 @@ TextLine("linesOfText")
 {% endhighlight %}
 
 We'll explain flows like this in more detail in the coming sections. For now, we'll focus on how
-data is viewed and used with the tuple model. The first line, `TextLine("linesOfText.txt")` produces a
-Scalding `Source`. You can think of a `Source` as a view of a data set as a collection of tuples. In
-this case, `TextLine` views a file (in this case the file `linesOfText.txt` in HDFS) as a collection
-of tuples with one tuple corresponding to each line of text. Each tuple has a field named `'line`
-that contains a line of text read from the file. Although unused here, the tuples also contain a
-field named `'offset` that holds the byte offset in the file where the line read appears.
+data is viewed and used with the tuple model. The first line, `TextLine("linesOfText.txt")` produces
+a Scalding `Source`. You can think of a `Source` as a view of a data set as a collection of tuples.
+In this case, `TextLine` views a file (in this case the file `linesOfText.txt` in HDFS) as a
+collection of tuples with one tuple corresponding to each line of text. Each tuple has a field named
+`'line` that contains a line of text read from the file. Although unused here, the tuples also
+contain a field named `'offset` that holds the byte offset in the file where the line read appears.
 
 Once we have a view of the data set as a collection of tuples, we can use different operations to
 derive results that can be stored in new tuple fields. Consider the call to `map` above. A `map`
@@ -89,6 +89,24 @@ containing the length of the line of text).
 
 KijiExpress provides a view of a Kiji table as a collection of tuples by viewing each row from the
 table as a tuple. More details will come in subsequent sections.
+KijiExpress is built on top of Twitter's [Scalding](http://github.com/twitter/scalding). Scalding is
+a powerful Scala library that can be used to process collections of data using MapReduce.
+
+#### Scala syntax
+
+KijiExpress (and Scalding) jobs are written in the Scala programming language.  Scala is
+object-oriented, so while functions are called with the familiar mathematical syntax
+`function(object)`, there are sometimes _methods_ defined on _objects_, where the syntax of using
+that method on the object is `object.function()`.
+
+Functions can take other functions as parameters.  Anonymous functions can be defined inline with
+the notation `input => computeStuff(input)`.
+
+When writing KijiExpress jobs, you will often use methods in your pipelines that take a first
+argument group in `()` parentheses that specifices a mapping from input field names to output field
+names.  You can then define a function in `{}` curly braces immediately following that defines how
+to map from the input fields to the output fields. The syntax looks like this:
+`input.method ('inputfield -> 'outputfield) {x => function(x) }`
 
 ### Scalding Resources
 There are many resources available to learn more about the Scalding library.
