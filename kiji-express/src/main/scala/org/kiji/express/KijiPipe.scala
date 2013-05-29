@@ -125,7 +125,7 @@ class KijiPipe(private val pipe: Pipe) extends TupleConversions {
   }
 
   /**
-   * An implicit object that extends TupleConverter[AvroRecord], which will be used by `pack`
+   * An implicit object that extends TupleConverter[AvroRecord], which will be used by `packAvro`
    * as an implicit argument to the call to `pipe.map`.
    */
   private[express] implicit object AvroRecordTupleConverter extends TupleConverter[AvroRecord] {
@@ -154,17 +154,17 @@ class KijiPipe(private val pipe: Pipe) extends TupleConversions {
    *      AvroRecord it should be packed into.
    * @return a pipe containing a field with a record packed with the values of the specified fields.
    */
-  def pack(fieldSpec: (Fields, Fields)): Pipe = {
+  def packAvro(fieldSpec: (Fields, Fields)): Pipe = {
     val (fromFields, toFields) = fieldSpec
     require(toFields.size == 1, "Cannot pack to more than one field.")
     pipe.map(fieldSpec) { input: AvroRecord => input }
   }
 
   /**
-   * An implicit object that extends TupleSetter, which will be used by `unpack` in its call to
+   * An implicit object that extends TupleSetter, which will be used by `unpackAvro` in its call to
    * `pipe.map`.
    */
-  private[express] implicit object UnpackAvroTupleSetter extends TupleSetter[Any] {
+  private[express] implicit object UnpackTupleSetter extends TupleSetter[Any] {
     /**
      * Unpacks an AvroRecord into tuple fields.
      *
@@ -196,7 +196,7 @@ class KijiPipe(private val pipe: Pipe) extends TupleConversions {
    * @param fieldSpec is the mapping from the field to unpack to the fields to unpack to.
    * @return a pipe containing a field with the record unpacked into new fields.
    */
-  def unpack(fieldSpec: (Fields, Fields)): Pipe = {
+  def unpackAvro(fieldSpec: (Fields, Fields)): Pipe = {
     val (fromFields, toFields) = fieldSpec
     require(fromFields.size == 1, "Cannot unpack from more than one field.")
     pipe.map(fieldSpec) { input: Any => input }
