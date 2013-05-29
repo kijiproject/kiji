@@ -36,7 +36,7 @@ class KeyValueStoreSuite extends FunSuite with EasyMockSugar {
    * implementation is used in the tests below.
    */
   private class DummyKVStore(kvStore: JKeyValueStore[_, _])
-      extends KeyValueStore[String, Int](kvStore) {
+      extends KeyValueStore[String, Int](kvStore.open()) {
     /**
      * Converts a key specified as a Scala type to an equivalent key as a Java type compatible
      * with the KijiSchema key-value store API.

@@ -24,13 +24,17 @@ import java.io.FileWriter
 
 import com.google.common.io.Files
 
-import org.kiji.express.avro.FieldBinding
+import org.kiji.express.KijiSlice
 import org.kiji.express.KijiSuite
+import org.kiji.express.avro.FieldBinding
 import org.kiji.express.modeling.ExtractEnvironment
 import org.kiji.express.modeling.ExtractScoreProducerSuite
+import org.kiji.express.modeling.Extractor
+import org.kiji.express.modeling.FieldBindingSpec
 import org.kiji.express.modeling.ModelDefinition
 import org.kiji.express.modeling.ModelEnvironment
 import org.kiji.express.modeling.ScoreEnvironment
+import org.kiji.express.modeling.Scorer
 import org.kiji.express.Resources.doAndClose
 import org.kiji.express.Resources.doAndRelease
 import org.kiji.schema.Kiji
@@ -49,55 +53,54 @@ class ExtractScoreJobToolSuite extends KijiSuite {
     val modelEnvFile: File = new File(tmpDir, "model-env.json")
 
     try {
+      // Setup the test environment.
       val testLayout: KijiTableLayout = layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
-
       val kiji: Kiji = new InstanceBuilder("default")
-        .withTable(testLayout.getName(), testLayout)
-        .withRow("row1")
-        .withFamily("family")
-        .withQualifier("column1").withValue("foo")
-        .withRow("row2")
-        .withFamily("family")
-        .withQualifier("column1").withValue("bar")
-        .build()
+          .withTable(testLayout.getName(), testLayout)
+              .withRow("row1")
+                  .withFamily("family")
+                      .withQualifier("column1").withValue("foo")
+              .withRow("row2")
+                  .withFamily("family")
+                      .withQualifier("column1").withValue("bar")
+          .build()
 
       doAndRelease(kiji.openTable(testLayout.getName())) { table: KijiTable =>
         val uri: KijiURI = table.getURI()
 
-        // Update configuration object with appropriately serialized ModelDefinition/Environment
-        // JSON.
+        // Create a model definition and environment.
         val request: KijiDataRequest = KijiDataRequest.create("family", "column1")
-        val modelDefinition: ModelDefinition = new ModelDefinition(
-          name = "test-model-definition",
-          version = "1.0",
-          extractorClass = classOf[ExtractScoreProducerSuite.DoublingExtractor],
-          scorerClass = classOf[ExtractScoreProducerSuite.UpperCaseScorer])
+        val modelDefinition: ModelDefinition = ModelDefinition(
+            name = "test-model-definition",
+            version = "1.0",
+            extractor = classOf[ExtractScoreJobToolSuite.DoublingExtractor],
+            scorer = classOf[ExtractScoreJobToolSuite.UpperCaseScorer])
+        val modelEnvironment: ModelEnvironment = ModelEnvironment(
+            name = "test-model-environment",
+            version = "1.0",
+            modelTableUri = uri.toString,
+            extractEnvironment = ExtractEnvironment(
+                dataRequest = request,
+                fieldBindings = Seq(FieldBindingSpec("field", "family:column1")),
+                kvstores = Seq()),
+            scoreEnvironment = new ScoreEnvironment(
+                outputColumn = "family:column2",
+                kvstores = Seq()))
+
+        // Write the created model definition and environment to disk.
         doAndClose(new FileWriter(modelDefFile)) { writer =>
           writer.write(modelDefinition.toJson())
         }
-
-        val modelEnvironment: ModelEnvironment = new ModelEnvironment(
-          name = "test-model-environment",
-          version = "1.0",
-          modelTableUri = uri.toString,
-          extractEnvironment = new ExtractEnvironment(
-            dataRequest = request,
-            fieldBindings = Seq(
-              FieldBinding
-                .newBuilder()
-                .setTupleFieldName("field")
-                .setStoreFieldName("family:column1")
-                .build()),
-            kvstores = Seq()),
-          scoreEnvironment = new ScoreEnvironment(
-            outputColumn = "family:column2",
-            kvstores = Seq()))
         doAndClose(new FileWriter(modelEnvFile)) { writer =>
           writer.write(modelEnvironment.toJson())
         }
 
-        assert(0 === ExtractScoreJobTool.main(Array("--model-def=" + modelDefFile.getAbsolutePath,
-            "--model-env=" + modelEnvFile.getAbsolutePath)))
+        // Run the tool.
+        ExtractScoreJobTool.main(Array(
+            "--model-def=" + modelDefFile.getAbsolutePath,
+            "--model-env=" + modelEnvFile.getAbsolutePath))
+
+        // Validate the results of running the model.
         doAndClose(table.openTableReader()) { reader: KijiTableReader =>
           val v1 = reader
             .get(table.getEntityId("row1"), KijiDataRequest.create("family", "column2"))
@@ -112,8 +115,8 @@ class ExtractScoreJobToolSuite extends KijiSuite {
           assert("BARBAR" === v2)
         }
       }
-
     } finally {
+      // Cleanup.
       tmpDir.delete()
       modelDefFile.delete()
       modelEnvFile.delete()
@@ -134,5 +137,20 @@ class ExtractScoreJobToolSuite extends KijiSuite {
     }
     assert("requirement failed: Specify the Model Environment to use with" +
       " --model-env=/path/to/model-env.json" === thrown.getMessage)
+  }
+}
+
+object ExtractScoreJobToolSuite {
+  class DoublingExtractor extends Extractor {
+    override val extractFn = extract('field -> 'feature) { field: KijiSlice[String] =>
+      val str: String = field.getFirstValue
+      str + str
+    }
+  }
+
+  class UpperCaseScorer extends Scorer {
+    override val scoreFn = score('feature) { feature: String =>
+      feature.toUpperCase
+    }
   }
 }

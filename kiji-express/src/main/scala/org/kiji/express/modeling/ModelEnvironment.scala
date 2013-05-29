@@ -111,11 +111,11 @@ object ExtractEnvironment {
   def apply(
       dataRequest: KijiDataRequest,
       fieldBindings: Seq[FieldBindingSpec],
-      kvStores: Seq[KVStoreSpec]): ExtractEnvironment = {
+      kvstores: Seq[KVStoreSpec]): ExtractEnvironment = {
     new ExtractEnvironment(
         dataRequest,
         fieldBindings.map { fieldBindingSpec => fieldBindingSpec.toAvroFieldBinding },
-        kvStores.map { kvStoreSpec => kvStoreSpec.toAvroKVStore } )
+        kvstores.map { kvStoreSpec => kvStoreSpec.toAvroKVStore } )
   }
 }
 
@@ -189,8 +189,8 @@ object ScoreEnvironment {
    * @param kvstores is the specification of the kv stores for usage during the score phase.
    * @return a ScoreEnvironment with the specified settings.
    */
-  def apply(outputColumn: String, kvStores: Seq[KVStoreSpec]): ScoreEnvironment = {
-    new ScoreEnvironment(outputColumn, kvStores.map { storeSpec => storeSpec.toAvroKVStore })
+  def apply(outputColumn: String, kvstores: Seq[KVStoreSpec]): ScoreEnvironment = {
+    new ScoreEnvironment(outputColumn, kvstores.map { storeSpec => storeSpec.toAvroKVStore })
   }
 }
 
@@ -212,7 +212,7 @@ object ScoreEnvironment {
  * val extractEnv = ExtractEnvironment(
  *     dataRequest = myDataRequest,
  *     fieldBindings = Seq(FieldBindingSpec("tuplename", "storefieldname")),
- *     kvStores = Seq(KVStoreSpec("AVRO_KV", "storename", Map())))
+ *     kvstores = Seq(KVStoreSpec("AVRO_KV", "storename", Map())))
  * val scoreEnv2 = ScoreEnvironment(
  *     outputColumn = "outputFamily:qualifier",
  *     kvstores = Seq(KVStoreSpec("KIJI_TABLE", "myname", Map())))
@@ -698,10 +698,10 @@ object ModelEnvironment {
    * Validates specified keyvalue stores in the model environment. Currently, this only validates
    * the format of the name.
    *
-   * @param kvStores to validate.
+   * @param kvstores to validate.
    */
-  def validateKvstores(kvStores: Seq[KVStore]) {
-    kvStores.foreach { kvStore: KVStore =>
+  def validateKvstores(kvstores: Seq[KVStore]) {
+    kvstores.foreach { kvStore: KVStore =>
       if (!kvStore.getName.matches("^[a-zA-Z_][a-zA-Z0-9_]+$")) {
         throw new ValidationException("The kvstore name must begin with a letter" +
             " and contain only alphanumeric characters and underscores. The kvstore name you" +

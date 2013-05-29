@@ -50,6 +50,8 @@ import org.kiji.schema.layout.KijiTableLayouts
  * key-value store implementations from KijiMR.
  */
 class KeyValueStoreImplSuite extends KijiSuite {
+  import KeyValueStoreImplSuite._
+
   test("Using a KijiExpress KVStore backed by a KijiMR KijiTableKeyValueStore") {
     // Create a test Kiji instance containing a simple table.
     val simpleLayout: KijiTableLayout = layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
@@ -72,7 +74,7 @@ class KeyValueStoreImplSuite extends KijiSuite {
 
     // Now create a KijiExpress key-value store backed by the KijiMR key-value store.
     // Use the key-value store to access values and verify they are correct.
-    doAndClose(new KijiTableKeyValueStore[String](store)) { kvstore =>
+    doAndClose(KeyValueStore[String](store)) { kvstore =>
       assert("value1" === kvstore(EntityId(uri)("1")))
       assert("value2" === kvstore(EntityId(uri)("2")))
       assert("value3" === kvstore(EntityId(uri)("3")))
@@ -90,7 +92,7 @@ class KeyValueStoreImplSuite extends KijiSuite {
         .build()
 
     // Wrap the Java key-value store in its corresponding Scala variety.
-    doAndClose(new AvroRecordKeyValueStore[Int](store)) { kvstore =>
+    doAndClose(KeyValueStore[Int](store)) { kvstore =>
       assert("one" === kvstore(1)("value").asString)
       assert("two" === kvstore(2)("value").asString)
 
@@ -113,7 +115,7 @@ class KeyValueStoreImplSuite extends KijiSuite {
         .build()
 
     // Wrap the Java key-value store in its corresponding Scala variety.
-    doAndClose(new AvroKVRecordKeyValueStore[Int, String](store)) { kvstore =>
+    doAndClose(KeyValueStore[Int, String](store)) { kvstore =>
       assert("one" === kvstore(1))
       assert("two" === kvstore(2))
     }
@@ -121,7 +123,6 @@ class KeyValueStoreImplSuite extends KijiSuite {
 
   test("Using a KijiExpress KVStore where keys are records") {
     // Get the Java key-value store.
-
     val avroFilePath: Path = generateAvroKVRecordKeyValueStoreWithRecordKey()
     val conf = HBaseConfiguration.create()
     val store: JAvroRecordKeyValueStore[AvroRecord, GenericData.Record] = JAvroRecordKeyValueStore
@@ -132,18 +133,20 @@ class KeyValueStoreImplSuite extends KijiSuite {
         .build()
 
     // Wrap the Java key-value store in its corresponding Scala variety and test it.
-    doAndClose(new AvroRecordKeyValueStore[AvroRecord](store)) { kvstore =>
+    doAndClose(KeyValueStore[AvroRecord](store)) { kvstore =>
       assert("one" === kvstore(AvroRecord("innerkey" -> 1))("value").asString)
       assert("two" === kvstore(AvroRecord("innerkey" -> 2))("value").asString)
     }
   }
+}
 
+object KeyValueStoreImplSuite {
   /**
    * Writes an avro file of generic records with a 'key', 'blah', and 'value' field.
    *
    * @return the path to the file written.
    */
-  private def generateAvroKVRecordKeyValueStore(): Path = {
+  private[express] def generateAvroKVRecordKeyValueStore(): Path = {
     // Build the schema associated with this key-value store.
     // scalastyle:off null
     val writerSchema: Schema = {

@@ -19,11 +19,18 @@
 
 package org.kiji.express.modeling
 
+import scala.collection.JavaConverters._
+
+import org.apache.hadoop.fs.Path
+
 import org.kiji.express.KijiSlice
 import org.kiji.express.KijiSuite
 import org.kiji.express.Resources.doAndClose
 import org.kiji.express.Resources.doAndRelease
 import org.kiji.express.avro.FieldBinding
+import org.kiji.express.avro.KVStore
+import org.kiji.express.avro.KvStoreType
+import org.kiji.express.avro.Property
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiTable
@@ -54,25 +61,32 @@ class ExtractScoreProducerSuite
       // Update configuration object with appropriately serialized ModelDefinition/ModelEnvironment
       // JSON.
       val request: KijiDataRequest = KijiDataRequest.create("family", "column1")
-      val modelDefinition: ModelDefinition = new ModelDefinition(
+      val sideDataPath: Path = KeyValueStoreImplSuite.generateAvroKVRecordKeyValueStore()
+      val modelDefinition: ModelDefinition = ModelDefinition(
           name = "test-model-definition",
           version = "1.0",
-          extractorClass = classOf[ExtractScoreProducerSuite.DoublingExtractor],
-          scorerClass = classOf[ExtractScoreProducerSuite.UpperCaseScorer])
-      val modelEnvironment: ModelEnvironment = new ModelEnvironment(
+          extractor = classOf[ExtractScoreProducerSuite.DoublingExtractor],
+          scorer = classOf[ExtractScoreProducerSuite.UpperCaseScorer])
+      val modelEnvironment: ModelEnvironment = ModelEnvironment(
           name = "test-model-environment",
           version = "1.0",
           modelTableUri = uri.toString,
-          extractEnvironment = new ExtractEnvironment(
+          extractEnvironment = ExtractEnvironment(
               dataRequest = request,
               fieldBindings = Seq(
-                  FieldBinding
-                      .newBuilder()
-                      .setTupleFieldName("field")
-                      .setStoreFieldName("family:column1")
-                      .build()),
-              kvstores = Seq()),
-          scoreEnvironment = new ScoreEnvironment(
+                  FieldBindingSpec(tupleFieldName = "field", storeFieldName = "family:column1")),
+              kvstores = Seq(
+                  KVStoreSpec(
+                      storeType = "AVRO_KV",
+                      name = "side_data",
+                      properties = Map(
+                          "path" -> sideDataPath.toString(),
+                          // The Distributed Cache is not supported when using LocalJobRunner in
+                          // Hadoop <= 0.21.0.
+                          // See https://issues.apache.org/jira/browse/MAPREDUCE-476 for more
+                          // information.
+                          "use_dcache" -> "false")))),
+          scoreEnvironment = ScoreEnvironment(
               outputColumn = "family:column2",
               kvstores = Seq()))
 
@@ -93,10 +107,11 @@ class ExtractScoreProducerSuite
             .getMostRecentValue("family", "column2")
             .toString
 
-        assert("FOOFOO" === v1)
-        assert("BARBAR" === v2)
+        assert("FOOFOOONE" === v1)
+        assert("BARBARONE" === v2)
       }
     }
+    kiji.release()
   }
 
   test("A produce job using ExtractScoreProducer with multiple args can be run over a table.") {
@@ -125,30 +140,22 @@ class ExtractScoreProducerSuite
         builder.newColumnsDef().add("family", "column2")
         builder.build()
       }
-      val modelDefinition: ModelDefinition = new ModelDefinition(
+      val modelDefinition: ModelDefinition = ModelDefinition(
           name = "test-model-definition",
           version = "1.0",
-          extractorClass = classOf[ExtractScoreProducerSuite.TwoArgDoublingExtractor],
-          scorerClass = classOf[ExtractScoreProducerSuite.TwoArgUpperCaseScorer])
-      val modelEnvironment: ModelEnvironment = new ModelEnvironment(
+          extractor = classOf[ExtractScoreProducerSuite.TwoArgDoublingExtractor],
+          scorer = classOf[ExtractScoreProducerSuite.TwoArgUpperCaseScorer])
+      val modelEnvironment: ModelEnvironment = ModelEnvironment(
           name = "test-model-environment",
           version = "1.0",
           modelTableUri = uri.toString,
-          extractEnvironment = new ExtractEnvironment(
+          extractEnvironment = ExtractEnvironment(
               dataRequest = request,
               fieldBindings = Seq(
-                  FieldBinding
-                      .newBuilder()
-                      .setTupleFieldName("i1")
-                      .setStoreFieldName("family:column1")
-                      .build(),
-                  FieldBinding
-                      .newBuilder()
-                      .setTupleFieldName("i2")
-                      .setStoreFieldName("family:column2")
-                      .build()),
+                  FieldBindingSpec(tupleFieldName = "i1", storeFieldName = "family:column1"),
+                  FieldBindingSpec(tupleFieldName = "i2", storeFieldName = "family:column2")),
               kvstores = Seq()),
-          scoreEnvironment = new ScoreEnvironment(
+          scoreEnvironment = ScoreEnvironment(
               outputColumn = "family:column2",
               kvstores = Seq()))
 
@@ -173,6 +180,7 @@ class ExtractScoreProducerSuite
         assert("BARBARFOOFOO" === v2)
       }
     }
+    kiji.release()
   }
 }
 
@@ -180,7 +188,9 @@ object ExtractScoreProducerSuite {
   class DoublingExtractor extends Extractor {
     override val extractFn = extract('field -> 'feature) { field: KijiSlice[String] =>
       val str: String = field.getFirstValue
-      str + str
+      val sideData: KeyValueStore[Int, String] = kvstore("side_data")
+
+      str + str + sideData(1)
     }
   }
 

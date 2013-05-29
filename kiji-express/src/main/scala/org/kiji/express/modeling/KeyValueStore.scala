@@ -62,7 +62,7 @@ import org.kiji.mapreduce.kvstore.lib.{KijiTableKeyValueStore => JKijiTableKeyVa
  * and `KeyValueStoreImpl.scala` for concrete implementations of key-value stores backed by
  * various KijiMR key-value stores.
  *
- * @param javaKeyValueStore a KijiMR key-value store that will back this KijiExpress key-value
+ * @param javaKeyValueStoreReader a KijiMR key-value store that will back this KijiExpress key-value
  *     store.
  * @tparam K is the type of key users will specify when accessing the key-value store.
  * @tparam V is the type of value users will retrieve when accessing the key-value store.
@@ -70,14 +70,13 @@ import org.kiji.mapreduce.kvstore.lib.{KijiTableKeyValueStore => JKijiTableKeyVa
 @ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Sealed
-abstract class KeyValueStore[K, V] protected (javaKeyValueStore: JKeyValueStore[_,_])
+abstract class KeyValueStore[K, V] protected[express] (
+    javaKeyValueStoreReader: JKeyValueStoreReader[_,_])
     extends ScalaToJavaKeyConverter[K]
     with JavaToScalaValueConverter[V] {
-  /** The KijiMR key-value store backing this KijiExpress key-value store. */
-  private val kvStore: JKeyValueStore[Any, Any] =
-      javaKeyValueStore.asInstanceOf[JKeyValueStore[Any, Any]]
   /** A reader for the KijiMR key-value store backing this KijiExpress key-value store. */
-  private val kvStoreReader: JKeyValueStoreReader[Any, Any] = kvStore.open()
+  private val kvStoreReader: JKeyValueStoreReader[Any, Any] = javaKeyValueStoreReader
+      .asInstanceOf[JKeyValueStoreReader[Any, Any]]
 
   /**
    * Closes all resources used by this key-value store.
@@ -164,8 +163,8 @@ private[express] object KeyValueStore {
    * @tparam V is the type of value retrieved from the key-value store.
    * @return a KijiExpress key-value store backed by a Kiji table.
    */
-  def apply[V](kvStore: JKijiTableKeyValueStore[Any]): KeyValueStore[EntityId, V] = {
-    new KijiTableKeyValueStore[V](kvStore)
+  def apply[V](kvStore: JKijiTableKeyValueStore[_ <: Any]): KeyValueStore[EntityId, V] = {
+    new KijiTableKeyValueStore[V](kvStore.open())
   }
 
   /**
@@ -179,8 +178,9 @@ private[express] object KeyValueStore {
    * @return a KijiExpress key-value store backed by a KijiMR `AvroRecordKeyValueStore`.
    */
   def apply[K](
-      kvStore: JAvroRecordKeyValueStore[Any, GenericRecord]): KeyValueStore[K, AvroValue] = {
-    new AvroRecordKeyValueStore[K](kvStore)
+      kvStore: JAvroRecordKeyValueStore[_ <: Any, _ <: GenericRecord])
+      : KeyValueStore[K, AvroValue] = {
+    new AvroRecordKeyValueStore[K](kvStore.open())
   }
 
   /**
@@ -195,8 +195,8 @@ private[express] object KeyValueStore {
    * @tparam V is the type of value retrieved from the key-value store.
    * @return a KijiExpress key-value store backed by a KijiMR `AvroKVRecordKeyValueStore`.
    */
-  def apply[K,V](kvStore: JAvroKVRecordKeyValueStore[Any, Any]): KeyValueStore[K, V] = {
-    new AvroKVRecordKeyValueStore[K, V](kvStore)
+  def apply[K,V](kvStore: JAvroKVRecordKeyValueStore[_ <: Any, _ <: Any]): KeyValueStore[K, V] = {
+    new AvroKVRecordKeyValueStore[K, V](kvStore.open())
   }
 }
 

@@ -25,21 +25,21 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.express.AvroValue
 import org.kiji.express.EntityId
-import org.kiji.mapreduce.kvstore.lib.{AvroKVRecordKeyValueStore => JAvroKVRecordKeyValueStore}
-import org.kiji.mapreduce.kvstore.lib.{AvroRecordKeyValueStore => JAvroRecordKeyValueStore}
-import org.kiji.mapreduce.kvstore.lib.{KijiTableKeyValueStore => JKijiTableKeyValueStore}
+import org.kiji.mapreduce.kvstore.{ KeyValueStoreReader => JKeyValueStoreReader }
+import org.kiji.schema.{ EntityId => JEntityId }
 
 /**
  * A KijiExpress key-value store backed by a Kiji table.
  *
- * @param kvStore is a KijiMR key-value store used to back the new KijiExpress key-value store.
+ * @param kvStoreReader is an opened KijiMR key-value store used to back the new KijiExpress
+ *     key-value store.
  * @tparam V is the type of value users will retrieve when accessing a key-value store.
  */
 @ApiAudience.Private
 @ApiStability.Experimental
 private[express] final class KijiTableKeyValueStore[V](
-    kvStore: JKijiTableKeyValueStore[_ <: Any])
-    extends KeyValueStore[EntityId, V](kvStore)
+    kvStoreReader: JKeyValueStoreReader[_ <: JEntityId, _ <: Any])
+    extends KeyValueStore[EntityId, V](kvStoreReader)
     with EntityIdScalaToJavaKeyConverter
     with AvroJavaToScalaValueConverter[V]
 
@@ -47,14 +47,15 @@ private[express] final class KijiTableKeyValueStore[V](
  * A KijiExpress key-value store backed by a KijiMR `AvroRecordKeyValueStore`. The KijiMR
  * key-value store should not have a reader schema configured.
  *
- * @param kvStore is a KijiMR key-value store used to back the new KijiExpress key-value store.
+ * @param kvStoreReader is an opened KijiMR key-value store used to back the new KijiExpress
+ *     key-value store.
  * @tparam K is the type of key users will use to access the key-value store.
  */
 @ApiAudience.Private
 @ApiStability.Experimental
 private[express] final class AvroRecordKeyValueStore[K](
-    kvStore: JAvroRecordKeyValueStore[_ <: Any, _ <: GenericRecord])
-    extends KeyValueStore[K, AvroValue](kvStore)
+    kvStoreReader: JKeyValueStoreReader[_ <: Any, _ <: GenericRecord])
+    extends KeyValueStore[K, AvroValue](kvStoreReader)
     with AvroScalaToJavaKeyConverter[K]
     with AvroJavaToScalaValueConverter[AvroValue]
 
@@ -62,15 +63,15 @@ private[express] final class AvroRecordKeyValueStore[K](
  * A KijiExpress key-value store backed by a KijiMR `AvroKVRecordKeyValueStore`. The
  * KijiMR key-value store should not have a reader schema configured.
  *
- * @param kvStore is a KijiMR key-value store used to back the new KijiExpress key-value store.
+ * @param kvStoreReader is an opened KijiMR key-value store used to back the new KijiExpress
+ *     key-value store.
  * @tparam K is the type of key users will specify when accessing a key-value store.
  * @tparam V is the type of value users will retrieve when accessing a key-value store.
  */
 @ApiAudience.Private
 @ApiStability.Experimental
 private[express] final class AvroKVRecordKeyValueStore[K,V](
-    kvStore: JAvroKVRecordKeyValueStore[_ <: Any, _ <: Any])
-    extends KeyValueStore[K, V](kvStore)
+    kvStoreReader: JKeyValueStoreReader[_ <: Any, _ <: Any])
+    extends KeyValueStore[K, V](kvStoreReader)
     with AvroScalaToJavaKeyConverter[K]
     with AvroJavaToScalaValueConverter[V]
-

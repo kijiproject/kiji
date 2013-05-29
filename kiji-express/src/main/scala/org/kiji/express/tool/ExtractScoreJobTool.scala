@@ -61,11 +61,13 @@ final class ExtractScoreJobTool extends Configured with Tool {
   }
 
   override def run(args: Array[String]): Int = {
+    // scalastyle:off null
     val nonFlagArgs = FlagParser.init(this, args)
     if (nonFlagArgs == null) {
       ExtractScoreJobTool.LOGGER.info("Problems parsing command line flags.")
       return 1
     }
+    // scalastyle:on null
     validateFlags()
     ExtractScoreJobTool.LOGGER.info("Building Extract-Score batch job.")
     val produceJob = ExtractScoreJobBuilder.buildJob(modelDefPath = mModelDefPath,
@@ -89,7 +91,7 @@ object ExtractScoreJobTool {
    * @param args from the command line.
    * @return a return code that signals the success of the specified job.
    */
-  def main(args: Array[String]): Int = {
+  def main(args: Array[String]) {
     ToolRunner.run(HBaseConfiguration.create(), new ExtractScoreJobTool, args)
   }
 }

@@ -21,7 +21,9 @@ package org.kiji.express.modeling
 
 import scala.collection.JavaConverters._
 
-import org.apache.hadoop.conf.Configuration;
+import org.apache.avro.Schema
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.fs.Path
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
@@ -29,7 +31,14 @@ import org.kiji.express.ExpressGenericRow
 import org.kiji.express.ExpressGenericTable
 import org.kiji.express.KijiSlice
 import org.kiji.express.avro.ColumnSpec
+import org.kiji.express.avro.KVStore
+import org.kiji.express.avro.KvStoreType
 import org.kiji.mapreduce.KijiContext
+import org.kiji.mapreduce.kvstore.RequiredStores
+import org.kiji.mapreduce.kvstore.{ KeyValueStore => JKeyValueStore }
+import org.kiji.mapreduce.kvstore.lib.{ AvroKVRecordKeyValueStore => JAvroKVRecordKeyValueStore }
+import org.kiji.mapreduce.kvstore.lib.{ AvroRecordKeyValueStore => JAvroRecordKeyValueStore }
+import org.kiji.mapreduce.kvstore.lib.{ KijiTableKeyValueStore => JKijiTableKeyValueStore }
 import org.kiji.mapreduce.produce.KijiProducer
 import org.kiji.mapreduce.produce.ProducerContext
 import org.kiji.schema.KijiColumnName
@@ -44,8 +53,8 @@ import org.kiji.schema.KijiURI
  * This producer executes the extract and score phases of a model in series. The model that this
  * producer will run is loaded from the json configuration strings stored in configuration keys:
  * <ul>
- *   <li>`org.kiji.express.modeling.definition`</li>
- *   <li>`org.kiji.express.modeling.environment`</li>
+ *   <li>`org.kiji.express.model.definition`</li>
+ *   <li>`org.kiji.express.model.environment`</li>
  * </ul>
  */
 @ApiAudience.Framework
@@ -176,7 +185,51 @@ final class ExtractScoreProducer
    *
    * @return the output column name.
    */
-  override def getOutputColumn(): String = modelEnvironment.scoreEnvironment.outputColumn
+  override def getOutputColumn(): String = modelEnvironment
+      .scoreEnvironment
+      .outputColumn
+
+  /**
+   * Opens the kvstores required for the extract and score phase. Reads kvstore configurations from
+   * the provided model environment.
+   *
+   * @return a mapping from kvstore names to opened kvstores.
+   */
+  override def getRequiredStores(): java.util.Map[String, JKeyValueStore[_, _]] = {
+    // Open the kvstores defined for the extract phase.
+    val extractStoreDefs: Seq[KVStore] = modelEnvironment
+        .extractEnvironment
+        .kvstores
+    val extractStores: Map[String, JKeyValueStore[_, _]] = ExtractScoreProducer
+        .openJKvstores(extractStoreDefs, getConf(), "extract-")
+
+    // Open the kvstores defined for the score phase.
+    val scoreStoreDefs: Seq[KVStore] = modelEnvironment
+        .scoreEnvironment
+        .kvstores
+    val scoreStores: Map[String, JKeyValueStore[_, _]] = ExtractScoreProducer
+        .openJKvstores(scoreStoreDefs, getConf(), "score-")
+
+    // Combine the opened kvstores.
+    (extractStores ++ scoreStores)
+        .asJava
+  }
+
+  override def setup(context: KijiContext) {
+    // Setup the extract phase's kvstores.
+    val extractStoreDefs: Seq[KVStore] = modelEnvironment
+        .extractEnvironment
+        .kvstores
+    extractor.kvstores = ExtractScoreProducer
+        .wrapKvstoreReaders(extractStoreDefs, context, "extract-")
+
+    // Setup the score phase's kvstores.
+    val scoreStoreDefs: Seq[KVStore] = modelEnvironment
+        .scoreEnvironment
+        .kvstores
+    scorer.kvstores = ExtractScoreProducer
+        .wrapKvstoreReaders(scoreStoreDefs, context, "score-")
+  }
 
   override def produce(input: KijiRowData, context: ProducerContext) {
     val ExtractFn(extractFields, extract) = extractor.extractFn
@@ -242,13 +295,133 @@ object ExtractScoreProducer {
    * Configuration key addressing the JSON description of a
    * [[org.kiji.express.modeling.ModelDefinition]].
    */
-  val modelDefinitionConfKey: String = "org.kiji.express.modeling.definition"
+  val modelDefinitionConfKey: String = "org.kiji.express.model.definition"
 
   /**
    * Configuration key addressing the JSON configuration of a
    * [[org.kiji.express.modeling.ModelEnvironment]].
    */
-  val modelEnvironmentConfKey: String = "org.kiji.express.modeling.environment"
+  val modelEnvironmentConfKey: String = "org.kiji.express.model.environment"
+
+  /**
+   * Wrap the provided kvstores in their scala counterparts.
+   *
+   * @param kvstores to open.
+   * @param context providing access to the opened kvstores.
+   * @param prefix prepended to the provided kvstore names.
+   * @return a mapping from the kvstore's name to the wrapped kvstore.
+   */
+  def wrapKvstoreReaders(
+      kvstores: Seq[KVStore],
+      context: KijiContext,
+      prefix: String = ""): Map[String, KeyValueStore[_, _]] = {
+    kvstores
+        .map { kvstore =>
+          val jkvstoreReader = context.getStore(prefix + kvstore.getName())
+
+          val wrapped: KeyValueStore[_, _] = kvstore.getStoreType() match {
+            case KvStoreType.AVRO_KV => {
+              new AvroKVRecordKeyValueStore(jkvstoreReader)
+            }
+            case KvStoreType.AVRO_RECORD => {
+              new AvroRecordKeyValueStore(jkvstoreReader)
+            }
+            case KvStoreType.KIJI_TABLE => {
+              new KijiTableKeyValueStore(jkvstoreReader)
+            }
+          }
+
+          (kvstore.getName(), wrapped)
+        }
+        .toMap
+  }
+
+  /**
+   * Open the provided kvstore definitions.
+   *
+   * @param kvstores to open.
+   * @param conf containing settings pertaining to the specified kvstores.
+   * @param prefix to prepend to the provided kvstore names.
+   * @return a mapping from the kvstore's name to the opened kvstore.
+   */
+  def openJKvstores(
+      kvstores: Seq[KVStore],
+      conf: Configuration,
+      prefix: String = ""): Map[String, JKeyValueStore[_, _]] = {
+    kvstores
+        // Open the kvstores defined for the extract phase.
+        .map { kvstore: KVStore =>
+          val properties: Map[String, String] = kvstore
+              .getProperties()
+              .asScala
+              .map { property => (property.getName(), property.getValue()) }
+              .toMap
+
+          // Handle each type of kvstore differently.
+          val jkvstore: JKeyValueStore[_, _] = kvstore.getStoreType() match {
+            case KvStoreType.AVRO_KV => {
+              // TODO(EXP-65): Validate these properties upon ModelEnvironment creation.
+              // Ensure all necessary properties exist.
+              require(properties.contains("path"))
+
+              // Open AvroKV.
+              val builder = JAvroKVRecordKeyValueStore
+                  .builder()
+                  .withConfiguration(conf)
+                  .withInputPath(new Path(properties("path")))
+              if (properties.contains("use_dcache")) {
+                builder
+                    .withDistributedCache(properties("use_dcache") == "true")
+                    .build()
+              } else {
+                builder.build()
+              }
+            }
+            case KvStoreType.AVRO_RECORD => {
+              // TODO(EXP-65): Validate these properties upon ModelEnvironment creation.
+              // Ensure all necessary properties exist.
+              require(properties.contains("path"))
+              require(properties.contains("key_field"))
+
+              // Open AvroRecord.
+              val builder = JAvroRecordKeyValueStore
+                  .builder()
+                  .withConfiguration(conf)
+                  .withKeyFieldName(properties("key_field"))
+                  .withInputPath(new Path(properties("path")))
+              if (properties.contains("use_dcache")) {
+                builder
+                    .withDistributedCache(properties("use_dcache") == "true")
+                    .build()
+              } else {
+                builder.build()
+              }
+            }
+            case KvStoreType.KIJI_TABLE => {
+              // TODO(EXP-65): Validate these properties upon ModelEnvironment creation.
+              // Ensure all necessary properties exist.
+              require(properties.contains("uri"))
+              require(properties.contains("column"))
+
+              // Kiji table.
+              val uri: KijiURI = KijiURI.newBuilder(properties("uri")).build()
+              val columnName: KijiColumnName = new KijiColumnName(properties("column"))
+              JKijiTableKeyValueStore
+                  .builder()
+                  .withConfiguration(conf)
+                  .withTable(uri)
+                  .withColumn(columnName.getFamily(), columnName.getQualifier())
+                  .build()
+            }
+            case kvstoreType => throw new UnsupportedOperationException(
+                "KeyValueStores of type \"%s\" are not supported".format(kvstoreType.toString))
+          }
+
+          // Pack the kvstore into a tuple with its name.
+          (prefix + kvstore.getName(), jkvstore)
+        }
+        .toMap
+  }
 
   /**
    * Converts a tuple into an appropriate representation for processing by a model phase function.
