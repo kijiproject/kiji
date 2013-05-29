@@ -1,0 +1,2571 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Importing Data</title>
+    <meta name="description" content="Importing data files into Kiji tables.">
+    <meta name="author" content="WibiData">
+    <link href="/assets/themes/twitter/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/assets/themes/twitter/css/style.css" rel="stylesheet" type="text/css" media="all">
+    <link href="/assets/themes/twitter/css/github.css" rel="stylesheet" type="text/css" media="all">
+    <script src="http://code.jquery.com/jquery-latest.js" type="text/javascript"></script>
+    <script src="/assets/themes/twitter/vallenato/vallenato.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="/assets/themes/twitter/css/vallenato.css" type="text/css" media="screen">
+  </head>
+
+  <body>
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container-fluid">
+          <a class="brand" href="http://www.kiji.org">Kiji Community</a>
+          <ul class="nav">
+            <li class="dropdown">
+              <a href="http://www.kiji.org">The Kiji Project</a>
+              <ul class="dropdown-menu">
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/features">Features</a>
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="http://www.kiji.org/architecture">Architecture</a>
+            </li>
+            <li class="dropdown">
+              <a href="http://www.kiji.org/getstarted/">Get Started</a>
+              <ul class="dropdown-menu">
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getstarted/#Downloads">Downloads</a>
+                </li>
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getstarted/#Installation">Installation</a>
+                </li>
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getstarted/#Quick_Start_Guide">Quick Start Guide</a>
+                </li>
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/get-started-with-maven">Getting Started with Maven</a>
+                </li>
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getstarted/#Training_Services">
+                    Training & Services
+                  </a>
+                </li>
+              </ul>
+            </li>
+            <li class="dropdown">
+              <a href="http://www.kiji.org/getinvolved">Get Involved</a>
+              <ul class="dropdown-menu">
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getinvolved/#Mailing_Lists">Mailing Lists</a>
+                </li>
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getinvolved/#Source_Code">Source Code</a>
+                </li>
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getinvolved/#Issue_Tracker">Issue Tracking</a>
+                </li>
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getinvolved/#Contributing_to_Kiji">
+                    Contributing to Kiji
+                  </a>
+                </li>
+              </ul>
+            </li>
+            <li class="dropdown active">
+              <a href="/">Documentation</a>
+              <ul class="dropdown-menu">
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getstarted/#Quick_Start_Guide">Quick Start Guide</a>
+                </li>
+                <li class="menu-item">
+                  <a href="/tutorials.html">Tutorials</a>
+                </li>
+                <li class="menu-item">
+                  <a href="/userguides.html">
+                    User Guides
+                  </a>
+                </li>
+                <li class="menu-item">
+                  <a href="/apidocs">API Reference</a>
+                </li>
+                <li class="menu-item">
+                  <a href="https://github.com/kijiproject/wiki/wiki">Wiki</a>
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="http://www.kiji.org/blog/">Blog</a>
+            </li>
+            <li>
+              <a href="http://www.kiji.org/aboutkiji">About Kiji</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="container-fluid">
+      <div class="content">
+        
+<div class="row-fluid">
+  <div class="span9">
+    <div class="page-header">
+      <h1>Importing Data</h1>
+    </div>
+
+    <div class="pagination">
+      <ul>
+    
+      
+      
+    
+      
+
+      
+        
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+              <li class="prev">
+                <a href="/tutorials/express-recommendation/0.1.0/express-setup" title="Setup">
+                &larr; Previous
+                </a>
+              </li>
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+      
+
+      
+      
+        
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+              <li class="next">
+                <a href="/tutorials/express-recommendation/0.1.0/express-play-count" title="PlayCount">
+                Next &rarr;
+                </a>
+              </li>
+            
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      </ul>
+    </div>
+
+    <h3 style='margin-top:0px;padding-top:10px;'>Custom Importers</h3>
+<p>In this section of the tutorial, we will import metadata about songs into the Kiji table <code>songs</code>, and import data about when users have listened to songs into the Kiji table <code>users</code>. The importer for song metadata is in the file <code>SongMetadataImporter.scala</code>, while the importer for a user&#8217;s song plays history is in the file <code>SongPlaysImporter.scala</code>. Both of these files define importers that can be run as precompiled jobs. They also exist in script form as <code>SongMetadataImporter.express</code> and <code>SongPlaysImporter.express</code>. Later, we&#8217;ll demonstrate how to run the importers both as precompiled jobs and as scripts (although it&#8217;s only necessary to run the importers one of these ways).</p>
+
+<p>In this section, we&#8217;ll provide more details on the song metadata importer. The importer for a user&#8217;s song play history is similar. The importer for song metadata reads a file in HDFS that contains a JSON record of song metadata on each line, and writes metadata (contained in an Avro record) to a Kiji table.</p>
+
+<p>Each JSON record contained in the input file corresponds to a song, and provides the following metadata for the song:</p>
+
+<ul>
+<li>song id</li>
+
+<li>song name</li>
+
+<li>artist name</li>
+
+<li>album name</li>
+
+<li>genre</li>
+
+<li>tempo</li>
+
+<li>duration</li>
+</ul>
+
+<p>Our importer will flatten each of these JSON records into Scalding tuple fields, and then pack those tuple fields into an Avro record. To do this, we&#8217;ll use a few user defined functions (UDF). A UDF in KijiExpress is simply a Scala function; any Scala function can potentially be used as a UDF in a KijiExpress flow. We&#8217;ll first explain the UDFs used in our import flow before explaining the flow itself.</p>
+
+<p>The UDF <code>parseJson</code> takes as an argument a string containing the JSON for an individual record, and returns a Scala tuple containing one element for each bit of metadata. The code for this function is below.</p>
+<div class='highlight'><pre><code class='java'> <span class='n'>def</span> <span class='nf'>parseJson</span><span class='o'>(</span><span class='nl'>json:</span> <span class='n'>String</span><span class='o'>):</span> <span class='o'>(</span><span class='n'>String</span><span class='o'>,</span> <span class='n'>String</span><span class='o'>,</span> <span class='n'>String</span><span class='o'>,</span> <span class='n'>String</span><span class='o'>,</span> <span class='n'>String</span><span class='o'>,</span> <span class='n'>Long</span><span class='o'>,</span> <span class='n'>Long</span><span class='o'>)</span> <span class='o'>=</span> <span class='o'>{</span>
+    <span class='n'>val</span> <span class='n'>metadata</span> <span class='o'>=</span> <span class='n'>JSON</span><span class='o'>.</span><span class='na'>parseFull</span><span class='o'>(</span><span class='n'>json</span><span class='o'>).</span><span class='na'>get</span><span class='o'>.</span><span class='na'>asInstanceOf</span><span class='o'>[</span><span class='n'>Map</span><span class='o'>[</span><span class='n'>String</span><span class='o'>,</span> <span class='n'>Any</span><span class='o'>]]</span>
+    <span class='o'>(</span><span class='n'>metadata</span><span class='o'>.</span><span class='na'>get</span><span class='o'>(</span><span class='s'>&quot;song_id&quot;</span><span class='o'>).</span><span class='na'>get</span><span class='o'>.</span><span class='na'>asInstanceOf</span><span class='o'>[</span><span class='n'>String</span><span class='o'>],</span>
+        <span class='n'>metadata</span><span class='o'>.</span><span class='na'>get</span><span class='o'>(</span><span class='s'>&quot;song_name&quot;</span><span class='o'>).</span><span class='na'>get</span><span class='o'>.</span><span class='na'>asInstanceOf</span><span class='o'>[</span><span class='n'>String</span><span class='o'>],</span>
+        <span class='n'>metadata</span><span class='o'>.</span><span class='na'>get</span><span class='o'>(</span><span class='s'>&quot;album_name&quot;</span><span class='o'>).</span><span class='na'>get</span><span class='o'>.</span><span class='na'>asInstanceOf</span><span class='o'>[</span><span class='n'>String</span><span class='o'>],</span>
+        <span class='n'>metadata</span><span class='o'>.</span><span class='na'>get</span><span class='o'>(</span><span class='s'>&quot;artist_name&quot;</span><span class='o'>).</span><span class='na'>get</span><span class='o'>.</span><span class='na'>asInstanceOf</span><span class='o'>[</span><span class='n'>String</span><span class='o'>],</span>
+        <span class='n'>metadata</span><span class='o'>.</span><span class='na'>get</span><span class='o'>(</span><span class='s'>&quot;genre&quot;</span><span class='o'>).</span><span class='na'>get</span><span class='o'>.</span><span class='na'>asInstanceOf</span><span class='o'>[</span><span class='n'>String</span><span class='o'>],</span>
+        <span class='n'>metadata</span><span class='o'>.</span><span class='na'>get</span><span class='o'>(</span><span class='s'>&quot;tempo&quot;</span><span class='o'>).</span><span class='na'>get</span><span class='o'>.</span><span class='na'>asInstanceOf</span><span class='o'>[</span><span class='n'>String</span><span class='o'>].</span><span class='na'>toLong</span><span class='o'>,</span>
+        <span class='n'>metadata</span><span class='o'>.</span><span class='na'>get</span><span class='o'>(</span><span class='s'>&quot;duration&quot;</span><span class='o'>).</span><span class='na'>get</span><span class='o'>.</span><span class='na'>asInstanceOf</span><span class='o'>[</span><span class='n'>String</span><span class='o'>].</span><span class='na'>toLong</span><span class='o'>)</span>
+  <span class='o'>}</span>
+</code></pre></div>
+<p>As an example, suppose this function received the following JSON string as input:</p>
+<div class='highlight'><pre><code class='bash'><span class='o'>{</span> <span class='s2'>&quot;song_id&quot;</span> : <span class='s2'>&quot;song-0&quot;</span>, <span class='s2'>&quot;song_name&quot;</span> : <span class='s2'>&quot;song name-0&quot;</span>, <span class='s2'>&quot;artist_name&quot;</span> : <span class='s2'>&quot;artist-1&quot;</span>, <span class='s2'>&quot;album_name&quot;</span> : <span class='s2'>&quot;album-1&quot;</span>, <span class='s2'>&quot;genre&quot;</span> : <span class='s2'>&quot;genre5.0&quot;</span>, <span class='s2'>&quot;tempo&quot;</span> : <span class='s2'>&quot;100&quot;</span>, <span class='s2'>&quot;duration&quot;</span> : <span class='s2'>&quot;240&quot;</span> <span class='o'>}</span>
+</code></pre></div>
+<p>It would then return the following Scala tuple:</p>
+<div class='highlight'><pre><code class='bash'><span class='o'>(</span>“song-0”, <span class='s2'>&quot;song name-0&quot;</span>, <span class='s2'>&quot;artist-1&quot;</span>, <span class='s2'>&quot;album-1&quot;</span>, <span class='s2'>&quot;genre5.0&quot;</span>, 100, 240<span class='o'>)</span>
+</code></pre></div>
+<p>Besides flattening JSON records into individual fields, we&#8217;ll also have to create an entity id for each song that identifies the row in the Kiji table where the metadata should be written. We will use the <code>song_id</code> provided in the JSON metadata to form the entity id. The Scala function <code>entityId</code> will act as a UDF that transforms a song id into an entity id for the Kiji table <code>songs</code>.</p>
+<div class='highlight'><pre><code class='java'>  <span class='n'>def</span> <span class='nf'>entityId</span><span class='o'>(</span><span class='nl'>songId:</span> <span class='n'>String</span><span class='o'>):</span> <span class='n'>EntityId</span> <span class='o'>=</span> <span class='o'>{</span>
+    <span class='n'>val</span> <span class='n'>uri</span> <span class='o'>=</span> <span class='n'>KijiURI</span><span class='o'>.</span><span class='na'>newBuilder</span><span class='o'>(</span><span class='n'>args</span><span class='o'>(</span><span class='s'>&quot;table-uri&quot;</span><span class='o'>)).</span><span class='na'>build</span><span class='o'>()</span>
+    <span class='n'>retainAnd</span><span class='o'>(</span><span class='n'>Kiji</span><span class='o'>.</span><span class='na'>Factory</span><span class='o'>.</span><span class='na'>open</span><span class='o'>(</span><span class='n'>uri</span><span class='o'>))</span> <span class='o'>{</span> <span class='n'>kiji</span> <span class='o'>=&gt;</span>
+      <span class='n'>retainAnd</span><span class='o'>(</span><span class='n'>kiji</span><span class='o'>.</span><span class='na'>openTable</span><span class='o'>(</span><span class='n'>uri</span><span class='o'>.</span><span class='na'>getTable</span><span class='o'>))</span> <span class='o'>{</span> <span class='n'>table</span> <span class='o'>=&gt;</span>
+        <span class='n'>table</span><span class='o'>.</span><span class='na'>getEntityId</span><span class='o'>(</span><span class='n'>songId</span><span class='o'>)</span>
+      <span class='o'>}</span>
+    <span class='o'>}</span>
+  <span class='o'>}</span>
+</code></pre></div>
+<p>The layout of a Kiji table determines the format of the entity ids used in that table. As a result, we need to build a Kiji URI for our table <code>KijiURI.newBuilder(args(&quot;table-uri&quot;)).build()</code>, get a handle to a Kiji instance <code>Kiji.Factory.open(uri)</code>, open the table <code>kiji.openTable(uri.getTable)</code> and finally use the open table to create an entity id using the song_id string <code>table.getEntityId(songId)</code>.</p>
+
+<p>Using these two UDFs, we can write our import flow.</p>
+<div class='highlight'><pre><code class='java'><span class='n'>TextLine</span><span class='o'>(</span><span class='n'>args</span><span class='o'>(</span><span class='s'>&quot;input&quot;</span><span class='o'>))</span>
+      <span class='o'>.</span><span class='na'>map</span><span class='o'>(</span><span class='err'>&#39;</span><span class='n'>line</span> <span class='o'>-&gt;</span>
+          <span class='o'>(</span><span class='err'>&#39;</span><span class='n'>songId</span><span class='o'>,</span> <span class='err'>&#39;</span><span class='n'>songName</span><span class='o'>,</span> <span class='err'>&#39;</span><span class='n'>albumName</span><span class='o'>,</span> <span class='err'>&#39;</span><span class='n'>artistName</span><span class='o'>,</span> <span class='err'>&#39;</span><span class='n'>genre</span><span class='o'>,</span> <span class='err'>&#39;</span><span class='n'>tempo</span><span class='o'>,</span><span class='err'>&#39;</span><span class='n'>duration</span><span class='o'>))</span> <span class='o'>{</span> <span class='n'>parseJson</span> <span class='o'>}</span>
+      <span class='o'>.</span><span class='na'>map</span><span class='o'>(</span><span class='err'>&#39;</span><span class='n'>songId</span> <span class='o'>-&gt;</span> <span class='err'>&#39;</span><span class='n'>entityId</span><span class='o'>)</span> <span class='o'>{</span> <span class='n'>entityId</span> <span class='o'>}</span>
+      <span class='o'>.</span><span class='na'>pack</span><span class='o'>[</span><span class='n'>SongMetadata</span><span class='o'>]((</span><span class='err'>&#39;</span><span class='n'>songName</span><span class='o'>,</span> <span class='err'>&#39;</span><span class='n'>albumName</span><span class='o'>,</span> <span class='err'>&#39;</span><span class='n'>artistName</span><span class='o'>,</span> <span class='err'>&#39;</span><span class='n'>genre</span><span class='o'>,</span> <span class='err'>&#39;</span><span class='n'>tempo</span><span class='o'>,</span> <span class='err'>&#39;</span><span class='n'>duration</span><span class='o'>)</span>
+          <span class='o'>-&gt;</span> <span class='err'>&#39;</span><span class='n'>metadata</span><span class='o'>)</span>
+      <span class='o'>.</span><span class='na'>write</span><span class='o'>(</span><span class='n'>KijiOutput</span><span class='o'>(</span><span class='n'>args</span><span class='o'>(</span><span class='s'>&quot;table-uri&quot;</span><span class='o'>))(</span><span class='err'>&#39;</span><span class='n'>metadata</span> <span class='o'>-&gt;</span> <span class='s'>&quot;info:metadata&quot;</span><span class='o'>))</span>
+</code></pre></div>
+<p>Let&#8217;s step through it line by line.</p>
+
+<h4 id='read_json_records_from_an_input_file_in_hdfs'>Read JSON records from an input file in HDFS</h4>
+<div class='highlight'><pre><code class='java'><span class='n'>TextLine</span><span class='o'>(</span><span class='n'>args</span><span class='o'>(</span><span class='s'>&quot;input&quot;</span><span class='o'>))</span>
+</code></pre></div>
+<p>This is done by using <code>TextLine</code>, a Scalding <code>Source</code> that views an input file as a collection of tuples of the form <code>(offset, line)</code>. Here, <code>offset</code> is the offset within the file and <code>line</code> is the contents of an individual line from the file. This stream of tuples is called a <code>pipe</code> in Cascading terminology.</p>
+
+<h4 id='flatten_each_json_record_into_a_tuple_with_fields_corresponding_to_the_song_metadata_extracted_from_the_json_record'>Flatten each JSON record into a tuple with fields corresponding to the song metadata extracted from the JSON record</h4>
+<div class='highlight'><pre><code class='java'><span class='o'>.</span><span class='na'>map</span><span class='o'>(</span><span class='err'>&#39;</span><span class='n'>line</span> <span class='o'>-&gt;</span>
+    <span class='o'>(</span><span class='err'>&#39;</span><span class='n'>songId</span><span class='o'>,</span> <span class='err'>&#39;</span><span class='n'>songName</span><span class='o'>,</span> <span class='err'>&#39;</span><span class='n'>albumName</span><span class='o'>,</span> <span class='err'>&#39;</span><span class='n'>artistName</span><span class='o'>,</span> <span class='err'>&#39;</span><span class='n'>genre</span><span class='o'>,</span> <span class='err'>&#39;</span><span class='n'>tempo</span><span class='o'>,</span><span class='err'>&#39;</span><span class='n'>duration</span><span class='o'>))</span> <span class='o'>{</span> <span class='n'>parseJson</span> <span class='o'>}</span>
+</code></pre></div>
+<p>We now chain this to a <code>map</code> operation. Map-like functions operate over individual rows in a pipe, usually transforming them in some way. The new fields that are transformations of existing ones are added to the original tuple. In our code, we take a line and convert it into a named tuple of <code>(&#39;songId, &#39;songName, &#39;albumName, &#39;artistName, &#39;genre, &#39;tempo,&#39;duration)</code> using the parseJson UDF described above.</p>
+
+<h4 id='transform_the_song_id_for_each_song_into_an_entity_id_for_the_songs_table'>Transform the song id for each song into an entity id for the songs table</h4>
+<div class='highlight'><pre><code class='java'><span class='o'>.</span><span class='na'>map</span><span class='o'>(</span><span class='err'>&#39;</span><span class='n'>songId</span> <span class='o'>-&gt;</span> <span class='err'>&#39;</span><span class='n'>entityId</span><span class='o'>)</span> <span class='o'>{</span> <span class='n'>entityId</span> <span class='o'>}</span>
+</code></pre></div>
+<p>The next <code>map</code> transforms the <code>song_id</code> field from the tuple into an entity id, and adds this to the tuple in a field named <code>entityId</code>. We supply the <code>entityId</code> UDF described above to accomplish this transformation.</p>
+
+<h4 id='pack_song_name_album_name_artist_name_genre_tempo_and_duration_for_the_song_into_an_avro_record'>Pack song name, album name, artist name, genre, tempo, and duration for the song into an Avro record</h4>
+<div class='highlight'><pre><code class='java'><span class='o'>.</span><span class='na'>pack</span><span class='o'>[</span><span class='n'>SongMetadata</span><span class='o'>]((</span><span class='err'>&#39;</span><span class='n'>songName</span><span class='o'>,</span> <span class='err'>&#39;</span><span class='n'>albumName</span><span class='o'>,</span> <span class='err'>&#39;</span><span class='n'>artistName</span><span class='o'>,</span> <span class='err'>&#39;</span><span class='n'>genre</span><span class='o'>,</span> <span class='err'>&#39;</span><span class='n'>tempo</span><span class='o'>,</span> <span class='err'>&#39;</span><span class='n'>duration</span><span class='o'>)</span>
+      <span class='o'>-&gt;</span> <span class='err'>&#39;</span><span class='n'>metadata</span><span class='o'>)</span>
+</code></pre></div>
+<p>Scalding lets you <a href='https://github.com/twitter/scalding/wiki/Fields-based-API-Reference#wiki-pack'>pack</a> a set of fields into a single object using reflection. In our code, SongMetadata is an Avro record consisting of the fields described above. We now add a new field called <code>metadata</code> to each of the tuples whose value is the Avro record created from the song metadata. This will be the object that gets written to the Kiji table.</p>
+
+<h4 id='write_the_avro_records_to_the_column_infometadata_in_a_row_for_the_song_in_a_kiji_table'>Write the Avro records to the column &#8220;info:metadata&#8221; in a row for the song in a Kiji table</h4>
+<div class='highlight'><pre><code class='java'><span class='o'>.</span><span class='na'>write</span><span class='o'>(</span><span class='n'>KijiOutput</span><span class='o'>(</span><span class='n'>args</span><span class='o'>(</span><span class='s'>&quot;table-uri&quot;</span><span class='o'>))(</span><span class='err'>&#39;</span><span class='n'>metadata</span> <span class='o'>-&gt;</span> <span class='s'>&quot;info:metadata&quot;</span><span class='o'>))</span>
+</code></pre></div>
+<p>Finally, we use <code>KijiOutput</code> to create a Scalding <code>Source</code> that can write to a Kiji table. The argument <code>table-uri</code> contains the URI of the Kiji table to write to. We write the contents of the tuple field <code>metadata</code> (our SongMetdata Avro record) to the Kiji table column <code>info:metadata</code>. KijiExpress will automatically use the contents of the tuple field <code>entityId</code> as the entity id of the row in the Kiji table to write to.</p>
+
+<h3 id='running_the_importers'>Running the importers</h3>
+
+<p>Now we will run both the song metadata importer explained above and the song play history importer to import data into the Kiji tables <code>songs</code> and <code>users</code>.</p>
+
+<p>KijiExpress programs or scripts can be run using the <code>express</code> command. First, we&#8217;ll demonstrate how to run the importers as precompiled jobs contained in a <code>jar</code> file. To run the song metadata importer, we use the following command.</p>
+<div class='userinput'>
+
+<div class='highlight'><pre><code class='bash'>express job <span class='k'>${</span><span class='nv'>MUSIC_EXPRESS_HOME</span><span class='k'>}</span>/lib/kiji-express-music-0.1.0.jar <span class='se'>\</span>
+    org.kiji.express.music.SongMetadataImporter <span class='se'>\</span>
+    --input express-tutorial/song-metadata.json <span class='se'>\</span>
+    --table-uri <span class='k'>${</span><span class='nv'>KIJI</span><span class='k'>}</span>/songs --hdfs
+</code></pre></div>
+
+</div>
+<p>After running the importer, you can verify that the Kiji table <code>songs</code> contains the imported data using the <code>kiji scan</code> command.</p>
+<div class='userinput'>
+
+<div class='highlight'><pre><code class='bash'>kiji scan <span class='k'>${</span><span class='nv'>KIJI</span><span class='k'>}</span>/songs --max-rows<span class='o'>=</span>5
+</code></pre></div>
+
+</div>
+<p>You should see something like:</p>
+
+<pre><code>Scanning kiji table: kiji://localhost:2181/kiji_express_music/songs/
+entity-id=[&#39;song-32&#39;] [1365548283995] info:metadata
+                                 {&quot;song_name&quot;: &quot;song name-32&quot;, &quot;artist_name&quot;: &quot;artist-2&quot;, &quot;album_name&quot;: &quot;album-0&quot;, &quot;genre&quot;: &quot;genre1.0&quot;, &quot;tempo&quot;: 120, &quot;duration&quot;: 180}
+
+entity-id=[&#39;song-49&#39;] [1365548285203] info:metadata
+                                 {&quot;song_name&quot;: &quot;song name-49&quot;, &quot;artist_name&quot;: &quot;artist-3&quot;, &quot;album_name&quot;: &quot;album-1&quot;, &quot;genre&quot;: &quot;genre4.0&quot;, &quot;tempo&quot;: 150, &quot;duration&quot;: 180}
+
+entity-id=[&#39;song-36&#39;] [1365548284255] info:metadata
+                                 {&quot;song_name&quot;: &quot;song name-36&quot;, &quot;artist_name&quot;: &quot;artist-2&quot;, &quot;album_name&quot;: &quot;album-0&quot;, &quot;genre&quot;: &quot;genre1.0&quot;, &quot;tempo&quot;: 90, &quot;duration&quot;: 0}
+
+entity-id=[&#39;song-10&#39;] [1365548282517] info:metadata
+                                 {&quot;song_name&quot;: &quot;song name-10&quot;, &quot;artist_name&quot;: &quot;artist-1&quot;, &quot;album_name&quot;: &quot;album-0&quot;, &quot;genre&quot;: &quot;genre5.0&quot;, &quot;tempo&quot;: 160, &quot;duration&quot;: 240}
+
+entity-id=[&#39;song-8&#39;] [1365548282382] info:metadata
+                                 {&quot;song_name&quot;: &quot;song name-8&quot;, &quot;artist_name&quot;: &quot;artist-1&quot;, &quot;album_name&quot;: &quot;album-1&quot;, &quot;genre&quot;: &quot;genre5.0&quot;, &quot;tempo&quot;: 140, &quot;duration&quot;: 180}</code></pre>
+
+<p>To run the song play history importer, we can use a similar command.</p>
+<div class='userinput'>
+
+<div class='highlight'><pre><code class='bash'>express job <span class='k'>${</span><span class='nv'>MUSIC_EXPRESS_HOME</span><span class='k'>}</span>/lib/kiji-express-music-0.1.0.jar <span class='se'>\</span>
+    org.kiji.express.music.SongPlaysImporter <span class='se'>\</span>
+    --input express-tutorial/song-plays.json <span class='se'>\</span>
+    --table-uri <span class='k'>${</span><span class='nv'>KIJI</span><span class='k'>}</span>/users --hdfs
+</code></pre></div>
+
+</div>
+<p>We can again use the <code>kiji scan</code> command to verify the importer was successful.</p>
+<div class='userinput'>
+
+<div class='highlight'><pre><code class='bash'>kiji scan <span class='k'>${</span><span class='nv'>KIJI</span><span class='k'>}</span>/users --max-rows<span class='o'>=</span>2 --max-versions<span class='o'>=</span>5
+</code></pre></div>
+
+</div>
+<p>You should see something like:</p>
+
+<pre><code>entity-id=[&#39;user-28&#39;] [1325739120000] info:track_plays
+                                 song-25
+entity-id=[&#39;user-28&#39;] [1325739060000] info:track_plays
+                                 song-23
+entity-id=[&#39;user-28&#39;] [1325738940000] info:track_plays
+                                 song-25
+entity-id=[&#39;user-28&#39;] [1325738760000] info:track_plays
+                                 song-28
+
+entity-id=[&#39;user-2&#39;] [1325736420000] info:track_plays
+                                 song-4
+entity-id=[&#39;user-2&#39;] [1325736180000] info:track_plays
+                                 song-3
+entity-id=[&#39;user-2&#39;] [1325735940000] info:track_plays
+                                 song-4
+entity-id=[&#39;user-2&#39;] [1325735760000] info:track_plays
+                                 song-28
+entity-id=[&#39;user-2&#39;] [1325735520000] info:track_plays
+                                 song-0</code></pre>
+
+<p>Both importers also exist in script form, in the folder <code>${EXPRESS_MUSIC_HOME}/scripts</code>. As scripts, the importers can be run as:</p>
+<div class='userinput'>
+
+<div class='highlight'><pre><code class='bash'>express script <span class='k'>${</span><span class='nv'>EXPRESS_MUSIC_HOME</span><span class='k'>}</span>/scripts/SongMetadataImporter.express --hdfs
+</code></pre></div>
+
+</div><div class='userinput'>
+
+<div class='highlight'><pre><code class='bash'>express script <span class='k'>${</span><span class='nv'>EXPRESS_MUSIC_HOME</span><span class='k'>}</span>/scripts/SongPlaysImporter.express --hdfs
+</code></pre></div>
+
+</div>
+
+    <div class="pagination">
+      <ul>
+    
+      
+      
+    
+      
+
+      
+        
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+              <li class="prev">
+                <a href="/tutorials/express-recommendation/0.1.0/express-setup" title="Setup">
+                &larr; Previous
+                </a>
+              </li>
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+      
+
+      
+      
+        
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+              <li class="next">
+                <a href="/tutorials/express-recommendation/0.1.0/express-play-count" title="PlayCount">
+                Next &rarr;
+                </a>
+              </li>
+            
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+      
+      </ul>
+    </div>
+  </div>
+
+  <div class="span3">
+    
+      
+      
+    
+    <div class="side-toc">
+    <div class="side-toc-inner">
+      <h3>KijiExpress Tutorial</h3>
+      <ul>
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+              
+                <li>
+                  
+                    <a href="/tutorials/express-recommendation/0.1.0/express-overview">Overview</a>
+                  
+                </li>
+              
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+              
+                <li>
+                  
+                    <a href="/tutorials/express-recommendation/0.1.0/express-setup">Setup</a>
+                  
+                </li>
+              
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+              
+            
+          
+            
+              
+                <li>
+                  
+                    <b>Importing Data</b>
+                  
+                </li>
+              
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+              
+                <li>
+                  
+                    <a href="/tutorials/express-recommendation/0.1.0/express-play-count">PlayCount</a>
+                  
+                </li>
+              
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+              
+                <li>
+                  
+                    <a href="/tutorials/express-recommendation/0.1.0/express-top-next-song">Top Next Songs</a>
+                  
+                </li>
+              
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+      </ul>
+      <h3>Need Help?</h3>
+      <ul>
+        <li>
+      <a class="btn btn-info"  href="https://groups.google.com/a/kiji.org/forum/?fromgroups#!forum/user">User Group Mailing List</a>
+        </li>
+        <li>
+      <a class="btn btn-warning" href="https://jira.kiji.org/secure/CreateIssueDetails!init.jspa?pid=10004&issuetype=1&priority=3&components=10010&summary=Reported%20Docs%20Error:%20Importing Data&description=Please%20describe%20the%20issue.%0a%0aurl:%20/tutorials/express-recommendation/0.1.0/express-importing-data"> Report an Error in Docs </a> 
+        </li>
+    </ul>
+    </div>
+</div>
+
+  </div>
+</div>
+
+
+      </div>
+
+      <footer>
+        <hr/>
+        <p>&copy; Kiji Community</p>
+      </footer>
+    </div>
+
+    
+
+
+  <script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-35866189-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+
+
+  </body>
+</html>
+
