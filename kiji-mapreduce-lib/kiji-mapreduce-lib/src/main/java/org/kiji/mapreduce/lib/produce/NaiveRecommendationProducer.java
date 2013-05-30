@@ -79,6 +79,15 @@ import org.kiji.schema.KijiRowData;
  *     weighted vector of recommendations.
  *   </li>
  * </ul>
+ *
+ * <p>If the associations <code>KeyValueStore</code> is a <code>KijiTableKeyValueStore</code>,
+ * subclasses must override:</p>
+ * <ul>
+ *   <li>
+ *     <code>getRelatedItems()</code> to appropriately acquire <i>related(A)</i> from the
+ *     associations <code>KeyValueStore</code> for each affinity A.
+ *   </li>
+ * </ul>
  */
 public abstract class NaiveRecommendationProducer extends KijiProducer {
   /** The name of the key/value store where associations (related items) can be looked up. */
@@ -151,24 +160,29 @@ public abstract class NaiveRecommendationProducer extends KijiProducer {
   }
 
   /**
-   * Looks up an entity's related items in the association model via the KeyValue store.
+   * Looks up a key's related items in the association model via the <code>KeyValueStore</code>.
+   * If the key-value pairs in the associations <code>KeyValueStore</code> are not of
+   * String key type or not of Node value type, then this method must be overridden.
+   * For example, if the chosen associations <code>KeyValueStore</code> is a
+   * <code>KijiTableKeyValueStore</code>, this method must be overridden to appropriately
+   * convert the String key parameter to the equivalent entityId.
    *
-   * @param entityId The entity id to look up associations (related items) for.
+   * @param key The key to look up associations (related items) for.
    * @param context The producer context.
-   * @return The entity's node in the relationship graph. Its outgoing edges represent its
-   *     direct relationships.  This will not return null; if there are no related items,
-   *     it will return a node with no outgoing edges.
+   * @return The node of associations for the specified key in the relationship graph.
+   *     Its outgoing edges represent its direct relationships.  This will not return null;
+   *     if there are no related items, it will return a node with no outgoing edges.
    * @throws IOException If there is an error.
    */
-  protected Node getRelatedItems(String entityId, ProducerContext context)
+  protected Node getRelatedItems(String key, ProducerContext context)
       throws IOException {
     KeyValueStoreReader<String, Node> associationsStore = context.getStore(ASSOCIATIONS_STORE);
     assert null != associationsStore;
 
-    Node associations = associationsStore.get(entityId);
+    Node associations = associationsStore.get(key);
     if (null == associations) {
       // No associations, just return an empty node.
-      return new NodeBuilder(entityId).build();
+      return new NodeBuilder(key).build();
     }
     return associations;
   }
