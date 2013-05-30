@@ -2,6 +2,9 @@
 
                               KijiMR Library Release Notes
 
+Version 1.0.0-rc62
+  * KIJIMRLIB-18. Upgrade to KijiSchema 1.1.0 and KijiMR 1.0.0-rc62.
+
 Version 1.0.0-rc6
   * KIJIMR-169. Import Wibi's graph library.
   * KIJIMRLIB-14. Add XML bulk importer.

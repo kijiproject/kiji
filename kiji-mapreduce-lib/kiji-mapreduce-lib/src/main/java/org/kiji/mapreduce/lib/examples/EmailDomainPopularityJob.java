@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.KijiMapReduceJobBuilder;
 import org.kiji.mapreduce.gather.KijiGatherJobBuilder;
-import org.kiji.mapreduce.input.SequenceFileMapReduceJobInput;
+import org.kiji.mapreduce.input.MapReduceJobInputs;
 import org.kiji.mapreduce.lib.reduce.IntSumReducer;
 import org.kiji.mapreduce.output.AvroKeyValueMapReduceJobOutput;
 import org.kiji.mapreduce.output.SequenceFileMapReduceJobOutput;
@@ -161,7 +161,7 @@ public class EmailDomainPopularityJob extends Configured implements Tool {
     LOG.info("Configuring a kiji mapreduce job...");
     KijiMapReduceJobBuilder jobBuilder = KijiMapReduceJobBuilder.create()
         .withConf(conf)
-        .withInput(new SequenceFileMapReduceJobInput(inputPath))
+        .withInput(MapReduceJobInputs.newSequenceFileMapReduceJobInput(inputPath))
         .withMapper(InvertCountMapper.class)
         .withReducer(TextListReducer.class)
         .withOutput(new AvroKeyValueMapReduceJobOutput(outputPath, numSplits));

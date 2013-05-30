@@ -45,6 +45,11 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <systemPropertyVariables>
+            <jline.terminal>jline.UnsupportedTerminal</jline.terminal>
+          </systemPropertyVariables>
+        </configuration>
       </plugin>
 
       <plugin>
@@ -64,6 +69,10 @@
               ${project.build.directory}/${project.artifactId}-${project.version}-tests.jar
             </additionalClasspathElement>
           </additionalClasspathElements>
+
+          <systemPropertyVariables>
+            <jline.terminal>jline.UnsupportedTerminal</jline.terminal>
+          </systemPropertyVariables>
         </configuration>
       </plugin>
 

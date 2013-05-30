@@ -35,7 +35,7 @@ import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.TestingResources;
 import org.kiji.mapreduce.bulkimport.KijiBulkImportJobBuilder;
 import org.kiji.mapreduce.framework.JobHistoryCounters;
-import org.kiji.mapreduce.input.TextMapReduceJobInput;
+import org.kiji.mapreduce.input.MapReduceJobInputs;
 import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
 import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiTable;
@@ -88,7 +88,7 @@ public class TestCommonLogBulkImporter extends KijiClientTest {
     final KijiMapReduceJob job = KijiBulkImportJobBuilder.create()
         .withConf(conf)
         .withBulkImporter(CommonLogBulkImporter.class)
-        .withInput(new TextMapReduceJobInput(new Path(inputFile.toString())))
+        .withInput(MapReduceJobInputs.newTextMapReduceJobInput(new Path(inputFile.toString())))
         .withOutput(new DirectKijiTableMapReduceJobOutput(mTable.getURI()))
         .build();
     assertTrue(job.run());
