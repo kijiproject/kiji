@@ -23,7 +23,7 @@ import java.io.Closeable
 
 import org.scalatest.FunSuite
 
-import org.kiji.express.Resources._
+import org.kiji.express.util.Resources._
 
 class ResourcesSuite extends FunSuite {
   test("doAnd runs an operation") {

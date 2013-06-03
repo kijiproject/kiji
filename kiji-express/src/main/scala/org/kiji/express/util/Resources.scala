@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.express
+package org.kiji.express.util
 
 import scala.io.Source
 
@@ -45,7 +45,7 @@ object Resources {
 
   /**
    * Performs an operation with a resource that requires post processing. This method will throw a
-   * [[org.kiji.express.Resources.CompoundException]] when exceptions get thrown
+   * [[org.kiji.express.util.Resources.CompoundException]] when exceptions get thrown
    * during the operation and while resources are being closed.
    *
    * @tparam T is the return type of the operation.

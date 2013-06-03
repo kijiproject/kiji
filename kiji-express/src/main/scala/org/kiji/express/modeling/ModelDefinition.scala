@@ -19,16 +19,17 @@
 
 package org.kiji.express.modeling
 
-import scala.collection.JavaConverters.asScalaIteratorConverter
 import scala.io.Source
 
+import cascading.tuple.Fields
 import com.google.common.base.Objects
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
-import org.kiji.express.Resources.doAndClose
 import org.kiji.express.avro.AvroModelDefinition
+import org.kiji.express.util.Resources.doAndClose
+import org.kiji.express.util.Tuples
 import org.kiji.schema.util.FromJson
 import org.kiji.schema.util.KijiNameValidator
 import org.kiji.schema.util.ProtocolVersion
@@ -392,31 +393,31 @@ object ModelDefinition {
         }
       }
 
-      val extractorOutputFields: Set[String] = extractor
+      val extractorOutputFields: Fields = extractor
           .asInstanceOf[Extractor]
           .extractFn
           .fields
           ._2
-          .iterator()
-          .asScala
-          .map { field => field.toString() }
-          .toSet
-      val scorerInputFields: Seq[String] = scorer
+      val scorerInputFields: Fields = scorer
           .asInstanceOf[Scorer]
           .scoreFn
           .fields
-          .iterator()
-          .asScala
-          .map { field => field.toString() }
-          .toSeq
 
-      scorerInputFields
-          .foreach { field =>
-            if (!extractorOutputFields.contains(field)) {
-              throw new ValidationException("Scorer uses a field not output by Extractor: " +
-                  "\"%s\"".format(field))
+      if (!extractorOutputFields.isResults()) {
+        val extractorOutputFieldNames: Set[String] = Tuples
+            .fieldsToSeq(extractorOutputFields)
+            .toSet
+        val scorerInputFieldNames: Seq[String] = Tuples
+            .fieldsToSeq(scorerInputFields)
+
+        scorerInputFieldNames
+            .foreach { field =>
+              if (!extractorOutputFieldNames.contains(field)) {
+                throw new ValidationException("Scorer uses a field not output by Extractor: " +
+                    "\"%s\"".format(field))
+              }
             }
-          }
+      }
     }
   }
 }

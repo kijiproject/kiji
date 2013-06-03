@@ -27,7 +27,7 @@ import com.twitter.scalding.TextLine
 import com.twitter.scalding.Tsv
 
 import org.kiji.express.DSL._
-import org.kiji.express.Resources.doAndRelease
+import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.schema.KijiTable
 import org.kiji.schema.avro.HashSpec
 import org.kiji.schema.avro.HashType

@@ -35,7 +35,7 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
 
 import org.kiji.express.DSL._
-import org.kiji.express.Resources.doAndRelease
+import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiURI
 import org.kiji.schema.layout.KijiTableLayout

@@ -35,8 +35,8 @@ import org.kiji.express.modeling.ModelDefinition
 import org.kiji.express.modeling.ModelEnvironment
 import org.kiji.express.modeling.ScoreEnvironment
 import org.kiji.express.modeling.Scorer
-import org.kiji.express.Resources.doAndClose
-import org.kiji.express.Resources.doAndRelease
+import org.kiji.express.util.Resources.doAndClose
+import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiTableReader
@@ -103,13 +103,13 @@ class ExtractScoreJobToolSuite extends KijiSuite {
         // Validate the results of running the model.
         doAndClose(table.openTableReader()) { reader: KijiTableReader =>
           val v1 = reader
-            .get(table.getEntityId("row1"), KijiDataRequest.create("family", "column2"))
-            .getMostRecentValue("family", "column2")
-            .toString
+              .get(table.getEntityId("row1"), KijiDataRequest.create("family", "column2"))
+              .getMostRecentValue("family", "column2")
+              .toString
           val v2 = reader
-            .get(table.getEntityId("row2"), KijiDataRequest.create("family", "column2"))
-            .getMostRecentValue("family", "column2")
-            .toString
+              .get(table.getEntityId("row2"), KijiDataRequest.create("family", "column2"))
+              .getMostRecentValue("family", "column2")
+              .toString
 
           assert("FOOFOO" === v1)
           assert("BARBAR" === v2)

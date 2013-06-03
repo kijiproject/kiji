@@ -23,8 +23,8 @@ import scala.io.Source
 
 import org.scalatest.FunSuite
 
-import org.kiji.express.Resources.doAndClose
 import org.kiji.express.avro.AvroModelDefinition
+import org.kiji.express.util.Resources.doAndClose
 import org.kiji.schema.util.FromJson
 import org.kiji.schema.util.ToJson
 

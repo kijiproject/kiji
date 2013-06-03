@@ -23,7 +23,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import org.kiji.annotations.ApiAudience;
-import org.kiji.express.Resources.doAndRelease
+import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.schema.GenericCellDecoderFactory
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiTable

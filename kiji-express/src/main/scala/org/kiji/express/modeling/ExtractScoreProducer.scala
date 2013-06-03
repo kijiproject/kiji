@@ -21,6 +21,7 @@ package org.kiji.express.modeling
 
 import scala.collection.JavaConverters._
 
+import cascading.tuple.Fields
 import org.apache.avro.Schema
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
@@ -33,6 +34,7 @@ import org.kiji.express.KijiSlice
 import org.kiji.express.avro.ColumnSpec
 import org.kiji.express.avro.KVStore
 import org.kiji.express.avro.KvStoreType
+import org.kiji.express.util.Tuples
 import org.kiji.mapreduce.KijiContext
 import org.kiji.mapreduce.kvstore.RequiredStores
 import org.kiji.mapreduce.kvstore.{ KeyValueStore => JKeyValueStore }
@@ -233,23 +235,49 @@ final class ExtractScoreProducer
 
   override def produce(input: KijiRowData, context: ProducerContext) {
     val ExtractFn(extractFields, extract) = extractor.extractFn
-    val (extractInputFields, extractOutputFields) = extractFields
     val ScoreFn(scoreFields, score) = scorer.scoreFn
 
-    val fieldMapping = modelEnvironment
+    // Setup fields.
+    val fieldMapping: Map[String, KijiColumnName] = modelEnvironment
         .extractEnvironment
         .fieldBindings
-        .map { binding => (binding.getTupleFieldName(), binding.getStoreFieldName()) }
+        .map { binding =>
+          (binding.getTupleFieldName(), new KijiColumnName(binding.getStoreFieldName()))
+        }
         .toMap
+    val extractInputFields: Seq[String] = {
+      // If the field specified is the wildcard field, use all columns referenced in this model
+      // environment's field bindings.
+      if (extractFields._1.isAll()) {
+        fieldMapping.keys.toSeq
+      } else {
+        Tuples.fieldsToSeq(extractFields._1)
+      }
+    }
+    val extractOutputFields: Seq[String] = {
+      // If the field specified is the results field, use all input fields from the extract phase.
+      if (extractFields._2.isResults()) {
+        extractInputFields
+      } else {
+        Tuples.fieldsToSeq(extractFields._2)
+      }
+    }
+    val scoreInputFields: Seq[String] = {
+      // If the field specified is the wildcard field, use all fields output by the extract phase.
+      if (scoreFields.isAll()) {
+        extractOutputFields
+      } else {
+        Tuples.fieldsToSeq(scoreFields)
+      }
+    }
 
+    // Wrap KijiRowData in ExpressGenericRow to permit decoding of cells into generic Avro records.
     val row: ExpressGenericRow = genericTable.getRow(input)
 
-    // Get the data required by the extract phase out of the row data.
+    // Prepare input to the extract phase.
     val slices: Seq[KijiSlice[Any]] = extractInputFields
-        .iterator()
-        .asScala
         .map { field =>
-          val columnName = new KijiColumnName(fieldMapping(field.toString))
+          val columnName: KijiColumnName = fieldMapping(field.toString)
 
           // Build a slice from each column within the row.
           if (columnName.isFullyQualified) {
@@ -258,26 +286,19 @@ final class ExtractScoreProducer
             KijiSlice[Any](row.iterator(columnName.getFamily()))
           }
         }
-        .toSeq
 
-    // Get a feature vector from the extract phase.
-    val featureVector: Product = ExtractScoreProducer.fnResultToTuple(
-        extract(ExtractScoreProducer.tupleToFnArg(ExtractScoreProducer.seqToTuple(slices))))
+    // Get output from the extract phase.
+    val featureVector: Product = Tuples.fnResultToTuple(
+        extract(Tuples.tupleToFnArg(Tuples.seqToTuple(slices))))
     val featureMapping: Map[String, Any] = extractOutputFields
-        .iterator
-        .asScala
-        .map { field => field.toString }
-        .zip(featureVector.productIterator)
+        .zip(featureVector.productIterator.toIterable)
         .toMap
 
     // Get a score from the score phase.
-    val scoreInput: Seq[Any] = scoreFields
-        .iterator
-        .asScala
-        .map { field => featureMapping(field.toString) }
-        .toSeq
+    val scoreInput: Seq[Any] = scoreInputFields
+        .map { field => featureMapping(field) }
     val scoreValue: Any =
-        score(ExtractScoreProducer.tupleToFnArg(ExtractScoreProducer.seqToTuple(scoreInput)))
+        score(Tuples.tupleToFnArg(Tuples.seqToTuple(scoreInput)))
 
     // Write the score out using the provided context.
     context.put(scoreValue)
@@ -421,144 +442,5 @@ object ExtractScoreProducer {
           (prefix + kvstore.getName(), jkvstore)
         }
         .toMap
-  }
-
-  /**
-   * Converts a tuple into an appropriate representation for processing by a model phase function.
-   * Handles instances of Tuple1 as special cases and unpacks them to permit functions with only one
-   * parameter to be defined without expecting their argument to be wrapped in a Tuple1 instance.
-   *
-   * @tparam T is the type of the output function argument.
-   * @param tuple to convert.
-   * @return an argument ready to be passed to a model phase function.
-   */
-  def tupleToFnArg[T](tuple: Product): T = {
-    tuple match {
-      case Tuple1(x1) => x1.asInstanceOf[T]
-      case other => other.asInstanceOf[T]
-    }
-  }
-
-  /**
-   * Converts a function return value into a tuple. Handles the case where the provided result is
-   * not a tuple by wrapping it in a Tuple1 instance.
-   *
-   * @param result from a model phase function.
-   * @return a processed tuple.
-   */
-  def fnResultToTuple(result: Any): Product = {
-    result match {
-      case tuple: Tuple1[_] => tuple
-      case tuple: Tuple2[_, _] => tuple
-      case tuple: Tuple3[_, _, _] => tuple
-      case tuple: Tuple4[_, _, _, _] => tuple
-      case tuple: Tuple5[_, _, _, _, _] => tuple
-      case tuple: Tuple6[_, _, _, _, _, _] => tuple
-      case tuple: Tuple7[_, _, _, _, _, _, _] => tuple
-      case tuple: Tuple8[_, _, _, _, _, _, _, _] => tuple
-      case tuple: Tuple9[_, _, _, _, _, _, _, _, _] => tuple
-      case tuple: Tuple10[_, _, _, _, _, _, _, _, _, _] => tuple
-      case tuple: Tuple11[_, _, _, _, _, _, _, _, _, _, _] => tuple
-      case tuple: Tuple12[_, _, _, _, _, _, _, _, _, _, _, _] => tuple
-      case tuple: Tuple13[_, _, _, _, _, _, _, _, _, _, _, _, _] => tuple
-      case tuple: Tuple14[_, _, _, _, _, _, _, _, _, _, _, _, _, _] => tuple
-      case tuple: Tuple15[_, _, _, _, _, _, _, _, _, _, _, _, _, _, _] => tuple
-      case tuple: Tuple16[_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _] => tuple
-      case tuple: Tuple17[_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _] => tuple
-      case tuple: Tuple18[_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _] => tuple
-      case tuple: Tuple19[_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _] => tuple
-      case tuple: Tuple20[_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _] => tuple
-      case tuple: Tuple21[_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _] => tuple
-      case tuple: Tuple22[_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _] => tuple
-      case other => Tuple1(other)
-    }
-  }
-
-  /**
-   * Converts a sequence to a tuple.
-   *
-   * @tparam T is the type of the output tuple.
-   * @param sequence to convert.
-   * @return a tuple converted from the provided sequence.
-   */
-  def seqToTuple[T <: Product](sequence: Seq[_]): T = {
-    val tuple = sequence match {
-      case Seq(x1) => {
-        Tuple1(x1)
-      }
-      case Seq(x1, x2) => {
-        Tuple2(x1, x2)
-      }
-      case Seq(x1, x2, x3) => {
-        Tuple3(x1, x2, x3)
-      }
-      case Seq(x1, x2, x3, x4) => {
-        Tuple4(x1, x2, x3, x4)
-      }
-      case Seq(x1, x2, x3, x4, x5) => {
-        Tuple5(x1, x2, x3, x4, x5)
-      }
-      case Seq(x1, x2, x3, x4, x5, x6) => {
-        Tuple6(x1, x2, x3, x4, x5, x6)
-      }
-      case Seq(x1, x2, x3, x4, x5, x6, x7) => {
-        Tuple7(x1, x2, x3, x4, x5, x6, x7)
-      }
-      case Seq(x1, x2, x3, x4, x5, x6, x7, x8) => {
-        Tuple8(x1, x2, x3, x4, x5, x6, x7, x8)
-      }
-      case Seq(x1, x2, x3, x4, x5, x6, x7, x8, x9) => {
-        Tuple9(x1, x2, x3, x4, x5, x6, x7, x8, x9)
-      }
-      case Seq(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10) => {
-        Tuple10(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10)
-      }
-      case Seq(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11) => {
-        Tuple11(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11)
-      }
-      case Seq(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12) => {
-        Tuple12(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12)
-      }
-      case Seq(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13) => {
-        Tuple13(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13)
-      }
-      case Seq(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14) => {
-        Tuple14(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14)
-      }
-      case Seq(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15) => {
-        Tuple15(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15)
-      }
-      case Seq(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16) => {
-        Tuple16(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16)
-      }
-      case Seq(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17) => {
-        Tuple17(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17)
-      }
-      case Seq(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18) => {
-        Tuple18(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18)
-      }
-      case Seq(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18,
-          x19) => {
-        Tuple19(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18,
-            x19)
-      }
-      case Seq(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18,
-          x19, x20) => {
-        Tuple20(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18,
-            x19, x20)
-      }
-      case Seq(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18,
-          x19, x20, x21) => {
-        Tuple21(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18,
-            x19, x20, x21)
-      }
-      case Seq(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18,
-          x19, x20, x21, x22) => {
-        Tuple22(x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18,
-            x19, x20, x21, x22)
-      }
-    }
-
-    tuple.asInstanceOf[T]
   }
 }

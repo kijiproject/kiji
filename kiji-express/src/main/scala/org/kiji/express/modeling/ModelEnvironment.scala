@@ -30,7 +30,6 @@ import com.google.common.base.Objects
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.express.Resources.doAndClose
 import org.kiji.express.avro.AvroDataRequest
 import org.kiji.express.avro.AvroExtractEnvironment
 import org.kiji.express.avro.AvroModelEnvironment
@@ -40,6 +39,7 @@ import org.kiji.express.avro.KVStore
 import org.kiji.express.avro.KvStoreType
 import org.kiji.express.avro.FieldBinding
 import org.kiji.express.avro.Property
+import org.kiji.express.util.Resources.doAndClose
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.util.FromJson

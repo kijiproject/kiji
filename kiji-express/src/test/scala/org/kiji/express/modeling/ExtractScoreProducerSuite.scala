@@ -25,12 +25,13 @@ import org.apache.hadoop.fs.Path
 
 import org.kiji.express.KijiSlice
 import org.kiji.express.KijiSuite
-import org.kiji.express.Resources.doAndClose
-import org.kiji.express.Resources.doAndRelease
 import org.kiji.express.avro.FieldBinding
 import org.kiji.express.avro.KVStore
 import org.kiji.express.avro.KvStoreType
 import org.kiji.express.avro.Property
+import org.kiji.express.modeling.lib.FirstValueExtractor
+import org.kiji.express.util.Resources.doAndClose
+import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiTable
@@ -42,7 +43,7 @@ import org.kiji.schema.util.InstanceBuilder
 
 class ExtractScoreProducerSuite
     extends KijiSuite {
-  test("A produce job using ExtractScoreProducer can be run over a table.") {
+  test("An extract-score produce job can be run over a table.") {
     val testLayout: KijiTableLayout = layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
 
     val kiji: Kiji = new InstanceBuilder("default")
@@ -114,7 +115,7 @@ class ExtractScoreProducerSuite
     kiji.release()
   }
 
-  test("A produce job using ExtractScoreProducer with multiple args can be run over a table.") {
+  test("An extract-score produce job using multiple fields can be run over a table.") {
     val testLayout: KijiTableLayout = layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
 
     val kiji: Kiji = new InstanceBuilder("default")
@@ -178,6 +179,70 @@ class ExtractScoreProducerSuite
 
         assert("FOOFOOBAZBAZ" === v1)
         assert("BARBARFOOFOO" === v2)
+      }
+    }
+    kiji.release()
+  }
+
+  test("An extract-score produce job using SelectorExtractor can be run over a table.") {
+    val testLayout: KijiTableLayout = layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
+
+    val kiji: Kiji = new InstanceBuilder("default")
+        .withTable(testLayout.getName(), testLayout)
+            .withRow("row1")
+                .withFamily("family")
+                    .withQualifier("column1").withValue(1L, "foo1")
+                    .withQualifier("column1").withValue(2L, "foo2")
+            .withRow("row2")
+                .withFamily("family")
+                    .withQualifier("column1").withValue(1L, "bar1")
+                    .withQualifier("column1").withValue(2L, "bar2")
+        .build()
+
+    doAndRelease(kiji.openTable(testLayout.getName())) { table: KijiTable =>
+      val uri: KijiURI = table.getURI()
+
+      // Update configuration object with appropriately serialized ModelDefinition/ModelEnvironment
+      // JSON.
+      val request: KijiDataRequest = KijiDataRequest.create("family", "column1")
+      val sideDataPath: Path = KeyValueStoreImplSuite.generateAvroKVRecordKeyValueStore()
+      val modelDefinition: ModelDefinition = ModelDefinition(
+          name = "test-model-definition",
+          version = "1.0",
+          extractor = classOf[FirstValueExtractor],
+          scorer = classOf[ExtractScoreProducerSuite.UpperCaseScorer])
+      val modelEnvironment: ModelEnvironment = ModelEnvironment(
+          name = "test-model-environment",
+          version = "1.0",
+          modelTableUri = uri.toString,
+          extractEnvironment = ExtractEnvironment(
+              dataRequest = request,
+              fieldBindings = Seq(
+                  FieldBindingSpec(tupleFieldName = "feature", storeFieldName = "family:column1")),
+              kvstores = Seq()),
+          scoreEnvironment = ScoreEnvironment(
+              outputColumn = "family:column2",
+              kvstores = Seq()))
+
+      // Build the produce job.
+      val produceJob = ExtractScoreJobBuilder.buildJob(
+          model = modelDefinition,
+          environment = modelEnvironment)
+
+      // Verify that everything went as expected.
+      assert(produceJob.run())
+      doAndClose(table.openTableReader()) { reader: KijiTableReader =>
+        val v1 = reader
+            .get(table.getEntityId("row1"), KijiDataRequest.create("family", "column2"))
+            .getMostRecentValue("family", "column2")
+            .toString
+        val v2 = reader
+            .get(table.getEntityId("row2"), KijiDataRequest.create("family", "column2"))
+            .getMostRecentValue("family", "column2")
+            .toString
+
+        assert("FOO2" === v1)
+        assert("BAR2" === v2)
       }
     }
     kiji.release()

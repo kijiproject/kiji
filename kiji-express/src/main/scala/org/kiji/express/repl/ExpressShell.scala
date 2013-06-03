@@ -33,7 +33,7 @@ import com.google.common.io.Files
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.express.Resources._
+import org.kiji.express.util.Resources._
 
 /**
  * A runner for a Scala REPL providing functionality extensions specific to working with

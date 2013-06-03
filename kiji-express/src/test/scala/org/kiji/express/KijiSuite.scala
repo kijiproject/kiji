@@ -24,7 +24,7 @@ import java.io.InputStream
 import com.twitter.scalding.TupleConversions
 import org.scalatest.FunSuite
 
-import org.kiji.express.Resources._
+import org.kiji.express.util.Resources._
 import org.kiji.schema.{EntityId => JEntityId}
 import org.kiji.schema.EntityIdFactory
 import org.kiji.schema.Kiji

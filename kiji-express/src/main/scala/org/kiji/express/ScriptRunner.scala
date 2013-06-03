@@ -42,7 +42,7 @@ import org.apache.hadoop.util.ToolRunner
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import org.kiji.express.Resources.doAndClose
+import org.kiji.express.util.Resources.doAndClose
 
 /**
  * ScriptRunner provides the machinery necessary to be able to run uncompiled KijiExpress

@@ -19,7 +19,7 @@
 
 package org.kiji.express
 
-import org.kiji.express.Resources._
+import org.kiji.express.util.Resources._
 import org.kiji.schema.KijiTable
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts

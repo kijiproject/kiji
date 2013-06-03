@@ -21,7 +21,7 @@ package org.kiji.express
 
 import scala.collection.JavaConverters._
 
-import org.kiji.express.Resources._
+import org.kiji.express.util.Resources._
 import org.kiji.schema.{EntityId => JEntityId}
 import org.kiji.schema.EntityIdFactory
 import org.kiji.schema.KijiTable

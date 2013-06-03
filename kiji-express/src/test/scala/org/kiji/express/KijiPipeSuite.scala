@@ -25,8 +25,8 @@ import com.twitter.scalding._
 
 import org.kiji.express._
 import org.kiji.express.DSL._
-import org.kiji.express.Resources._
 import org.kiji.express.repl.Implicits._
+import org.kiji.express.util.Resources._
 import org.kiji.schema.avro.HashSpec
 import org.kiji.schema.avro.HashType
 import org.kiji.schema.layout.KijiTableLayout

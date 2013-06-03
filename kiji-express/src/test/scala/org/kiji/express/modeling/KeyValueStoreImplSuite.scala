@@ -34,8 +34,8 @@ import org.apache.hadoop.hbase.HBaseConfiguration
 import org.kiji.express.AvroRecord
 import org.kiji.express.EntityId
 import org.kiji.express.KijiSuite
-import org.kiji.express.Resources.doAndClose
-import org.kiji.express.Resources.doAndRelease
+import org.kiji.express.util.Resources.doAndClose
+import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.mapreduce.kvstore.lib.{ AvroRecordKeyValueStore => JAvroRecordKeyValueStore }
 import org.kiji.mapreduce.kvstore.lib.{ AvroKVRecordKeyValueStore => JAvroKVRecordKeyValueStore }
 import org.kiji.mapreduce.kvstore.lib.{ KijiTableKeyValueStore => JKijiTableKeyValueStore }

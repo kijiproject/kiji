@@ -24,14 +24,14 @@ import scala.io.Source
 
 import org.scalatest.FunSuite
 
-import org.kiji.express.Resources.doAndClose
-import org.kiji.express.Resources.resourceAsString
 import org.kiji.express.avro.AvroDataRequest
 import org.kiji.express.avro.AvroModelEnvironment
 import org.kiji.express.avro.ColumnSpec
 import org.kiji.express.avro.KVStore
 import org.kiji.express.avro.KvStoreType
 import org.kiji.express.avro.Property
+import org.kiji.express.util.Resources.doAndClose
+import org.kiji.express.util.Resources.resourceAsString
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.util.FromJson
 import org.kiji.schema.util.ToJson
