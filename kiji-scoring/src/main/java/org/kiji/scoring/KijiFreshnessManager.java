@@ -26,6 +26,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Sets;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.Decoder;
@@ -34,6 +36,7 @@ import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
+import org.apache.hadoop.util.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,9 +45,12 @@ import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.produce.KijiProducer;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiColumnName;
+import org.kiji.schema.KijiDataRequest;
+import org.kiji.schema.KijiDataRequest.Column;
 import org.kiji.schema.KijiMetaTable;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableNotFoundException;
+import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayout.LocalityGroupLayout.FamilyLayout;
 import org.kiji.schema.util.ProtocolVersion;
 import org.kiji.scoring.avro.KijiFreshnessPolicyRecord;
@@ -122,7 +128,11 @@ public final class KijiFreshnessManager implements Closeable {
   }
 
   /**
-   * Saves a freshness policy in the metatable using classes.
+   * Saves a freshness policy in the metatable using classes.  If possible, this method will ensure
+   * that the target attachment column and the producer's output column are compatible (both
+   * unqualified map type families, or both fully qualified columns) and that the producer's data
+   * request can be fulfilled by the target table.  If these checks pass, further checks will be
+   * performed according to {@link #storePolicyWithStrings(String, String, String, String, String)}.
    *
    * @param tableName the table name with which the freshness policy should be associated. If the
    * table doesn't exist, an IOException will be thrown.
@@ -130,13 +140,49 @@ public final class KijiFreshnessManager implements Closeable {
    * either in the format of "family:qualifier" for a single column or "family" for an entire
    * map family.
    * @param producerClass class of the producer to run if the data in the column is not fresh.
-   * @param policy an instance of a KijiFreshnessPolicy that will manage freshening behavior.
+   * @param policy an instance of a KijiFreshnessPolicy that will manage freshening behavior.  This
+   * object's serialize method will be called and the return value used as the policy's saved state.
    * @throws IOException if there is an error saving the freshness policy or if the table is not
    * found.
    */
   public void storePolicy(String tableName, String columnName,
       Class<? extends KijiProducer> producerClass, KijiFreshnessPolicy policy)
       throws IOException {
+
+    // This code will throw an invalid name if there's something wrong with this columnName string.
+    KijiColumnName kcn = new KijiColumnName(columnName);
+    final KijiProducer producer = ReflectionUtils.newInstance(producerClass, null);
+
+    // Check that the column name to attach to matches the type of the column name to which the
+    // producer was designed to write.
+    if (producer.getOutputColumn() != null) {
+      final KijiColumnName outputColumn = new KijiColumnName(producer.getOutputColumn());
+      Preconditions.checkArgument(kcn.isFullyQualified() == outputColumn.isFullyQualified(),
+          "Producer output column and attachment column qualifications do not agree.  Both must be "
+          + "either unqualified or fully qualified.  Producer column: %s Attachment column: %s",
+          producer.getOutputColumn(), columnName);
+      // if outputColumn is null, we cannot validate.
+    }
+
+    // validate that data request can be fulfilled by the table.
+    KijiDataRequest producerRequest = null;
+    try {
+      producerRequest = producer.getDataRequest();
+    } catch (NullPointerException npe) {
+      LOG.debug("NullPointerException thrown by producer.getDataRequest().  Cannot perform "
+          + "validation.  Please ensure that your producer is designed to write to the same type "
+          + "of column to which your freshness policy is attached.");
+    }
+    if (producerRequest != null) {
+      final KijiTableLayout layout = mKiji.openTable(tableName).getLayout();
+      for (Column column : producerRequest.getColumns()) {
+        final KijiColumnName name = new KijiColumnName(column.getFamily(), column.getQualifier());
+        Preconditions.checkArgument(layout.exists(name), "Column: %s in producer data request "
+              + "does not exist in table: %s", name.toString(), tableName);
+      }
+      // The data request may be null if it is configured using KVStores.  If it is null, we
+      // cannot validate.
+    }
 
     // Collect the appropriate strings from the objects and write them with storePolicyWithStrings.
     storePolicyWithStrings(
@@ -177,7 +223,12 @@ public final class KijiFreshnessManager implements Closeable {
 
   /**
    * Saves a freshness policy in the metatable without requiring classes to be available on the
-   * classpath.
+   * classpath.  This method ensures that producer and policy class names are valid Java class
+   * identifiers, that the column exists in the table layout if it is a fully qualified member of a
+   * group type family, that the family exists if the specified columnName is not fully qualified,
+   * and that there is not a conflict between existing freshness policies and the new policy to
+   * attach (i.e. there may never be two freshness policies associated with the same fully qualified
+   * column.).
    *
    * @param tableName the table name with which the freshness policy should be associated.  Throws
    * an IOException if the table does not exist.
@@ -212,24 +263,32 @@ public final class KijiFreshnessManager implements Closeable {
     final KijiTable table = mKiji.openTable(tableName);
     final Set<KijiColumnName> columnsNames = table.getLayout().getColumnNames();
     final Map<String, FamilyLayout> familyMap = table.getLayout().getFamilyMap();
+
+    // Check that the family exists in the table layout.
+    if (!familyMap.containsKey(kcn.getFamily())) {
+      throw new IllegalArgumentException(String.format(
+          "Table: %s does not contain family: %s", tableName, kcn.getFamily()));
+    }
+
     // Check that the column exists if it is fully qualified
     if (kcn.isFullyQualified()) {
-      if (familyMap.containsKey(kcn.getFamily()) && familyMap.get(kcn.getFamily()).isGroupType()
-          && !columnsNames.contains(kcn)) {
-        throw new IllegalArgumentException(String.format(
-            "Table does not contain specified column: %s", kcn.toString()));
+      if (familyMap.get(kcn.getFamily()).isGroupType()) {
+        // Check that the fully qualified group family column exists in the table layout.
+        if (!columnsNames.contains(kcn)) {
+          throw new IllegalArgumentException(String.format(
+              "Table: %s does not contain specified column: %s", tableName, kcn.toString()));
+        }
       } else {
-        if (familyMap.containsKey(kcn.getFamily()) && familyMap.get(kcn.getFamily()).isMapType()
-            && mMetaTable.keySet(tableName).contains(getMetaTableKey(kcn.getFamily()))) {
-          // check for a policy attached to kcn.getFamily()
+        // Check for a policy attached to kcn.getFamily()
+        if (mMetaTable.keySet(tableName).contains(getMetaTableKey(kcn.getFamily()))) {
           throw new IllegalArgumentException(String.format("There is already a freshness policy "
               + "attached to family: %s Freshness policies may not be attached to a map type "
               + "family and fully qualified columns within that family.", kcn.getFamily()));
         }
       }
     } else {
-      // If not fully qualified, check that the family exists and is a map type family.
-      if (!familyMap.containsKey(kcn.toString()) || familyMap.get(kcn.toString()).isGroupType()) {
+      // If not fully qualified, check that the family is a map type family.
+      if (!familyMap.get(kcn.toString()).isMapType()) {
         throw new IllegalArgumentException(String.format(
             "Specified family: %s is not a valid Map Type family in the table: %s",
             kcn.toString(), tableName));
@@ -257,12 +316,6 @@ public final class KijiFreshnessManager implements Closeable {
         }
       }
     }
-
-    // TODO(Score-22): Design checks to perform here.
-    // currently checks that the table exists, that the column name is valid, that the column
-    // exists if it is fully qualified, that the family is a map type family if not fully
-    // qualified, and that the new attachment does not violate the exclusion between family level
-    // freshening and fully qualified freshening in a map type family.
 
     KijiFreshnessPolicyRecord record = KijiFreshnessPolicyRecord.newBuilder()
         .setRecordVersion(CUR_FRESHNESS_RECORD_VER.toCanonicalString())
@@ -339,6 +392,16 @@ public final class KijiFreshnessManager implements Closeable {
    * @throws IOException if an error occurs while deregistering in the metatable.
    */
   public void removePolicy(String tableName, String columnName) throws IOException {
+    // Check that the table exists.
+    if (!mMetaTable.tableExists(tableName)) {
+      throw new KijiTableNotFoundException("Couldn't find table: " + tableName);
+    }
+    // This code will throw an invalid name if there's something wrong with this columnName string.
+    KijiColumnName kcn = new KijiColumnName(columnName);
+
+    Preconditions.checkArgument(mMetaTable.keySet(tableName).contains(getMetaTableKey(columnName)),
+        "There is no freshness policy attached to column: %s in table: %s", columnName, tableName);
+
     mMetaTable.removeValues(tableName, getMetaTableKey(columnName));
   }
 
@@ -346,15 +409,25 @@ public final class KijiFreshnessManager implements Closeable {
    * Remove all freshness policies for a given table.
    *
    * @param tableName the table from which to remove all freshness policies.
+   * @return the set of columns from which freshness policies were removed.  Returns an empty set if
+   * no freshness policies are found.
    * @throws IOException in case of an error reading from the metatable.
    */
-  public void removePolicies(String tableName) throws IOException {
+  public Set<KijiColumnName> removePolicies(String tableName) throws IOException {
+    // Check that the table exists.
+    if (!mMetaTable.tableExists(tableName)) {
+      throw new KijiTableNotFoundException("Couldn't find table: " + tableName);
+    }
+
     final Set<String> keys = mMetaTable.keySet(tableName);
+    final Set<KijiColumnName> removedColumns = Sets.newHashSet();
     for (String key : keys) {
       if (key.startsWith(METATABLE_KEY_PREFIX)) {
         mMetaTable.removeValues(tableName, key);
+        removedColumns.add(fromMetaTableKey(key));
       }
     }
+    return removedColumns;
   }
 
   /**
@@ -374,5 +447,15 @@ public final class KijiFreshnessManager implements Closeable {
    */
   private String getMetaTableKey(String columnName) {
     return METATABLE_KEY_PREFIX + columnName;
+  }
+
+  /**
+   * Helper method that constructs a KijiColumnNAme from a meta table key.
+   *
+   * @param metaTableKey the meta table key from which to get a column name.
+   * @return the KijiColumnName from the given key.
+   */
+  private KijiColumnName fromMetaTableKey(String metaTableKey) {
+    return new KijiColumnName(metaTableKey.substring(METATABLE_KEY_PREFIX.length()));
   }
 }

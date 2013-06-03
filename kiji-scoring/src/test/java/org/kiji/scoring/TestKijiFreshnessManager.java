@@ -26,8 +26,10 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Map;
 
+import com.google.common.collect.Sets;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,6 +44,7 @@ import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.util.InstanceBuilder;
 import org.kiji.scoring.avro.KijiFreshnessPolicyRecord;
+import org.kiji.scoring.lib.AlwaysFreshen;
 import org.kiji.scoring.lib.ShelfLife;
 
 /**
@@ -63,6 +66,19 @@ public class TestKijiFreshnessManager {
     public void produce(
         final KijiRowData kijiRowData, final ProducerContext producerContext) throws IOException {
       producerContext.put("new-val");
+    }
+  }
+
+  private static final class TestFamilyProducer extends KijiProducer {
+    public KijiDataRequest getDataRequest() {
+      return KijiDataRequest.create("info", "name");
+    }
+    public String getOutputColumn() {
+      return "networks";
+    }
+    public void produce(
+        final KijiRowData kijiRowData, final ProducerContext producerContext) throws IOException {
+      producerContext.put("qualifier", "new-val");
     }
   }
 
@@ -128,10 +144,10 @@ public class TestKijiFreshnessManager {
     ShelfLife policy = new ShelfLife(100);
     mFreshManager.storePolicy("user", "info:name", TestProducer.class, policy);
     mFreshManager.storePolicy("user", "info:email", TestProducer.class, policy);
-    mFreshManager.storePolicy("user", "networks", TestProducer.class, policy);
+    mFreshManager.storePolicy("user", "networks", TestFamilyProducer.class, policy);
     Map<KijiColumnName, KijiFreshnessPolicyRecord> policies =
         mFreshManager.retrievePolicies("user");
-    assertEquals(policies.size(), 3);
+    assertEquals(3, policies.size());
     assertTrue(policies.containsKey(new KijiColumnName("info", "name")));
     assertTrue(policies.containsKey(new KijiColumnName("info", "email")));
     assertTrue(policies.containsKey(new KijiColumnName("networks")));
@@ -162,16 +178,16 @@ public class TestKijiFreshnessManager {
       mFreshManager.storePolicy("user", "info:invalid", TestProducer.class, policy);
       fail("KijiFreshnessManager.storePolicy() should have thrown an IllegalArgumentException");
     } catch (IllegalArgumentException iae) {
-      assertEquals("Table does not contain specified column: info:invalid", iae.getMessage());
+      assertEquals("Table: user does not contain specified column: info:invalid", iae.getMessage());
     }
     try {
-      mFreshManager.storePolicy("user", "info", TestProducer.class, policy);
+      mFreshManager.storePolicy("user", "info", TestFamilyProducer.class, policy);
       fail("KijiFreshnessManager.storePolicy() should have thrown an IllegalArgumentException");
     } catch (IllegalArgumentException iae) {
       assertEquals("Specified family: info is not a valid Map Type family in the table: user",
           iae.getMessage());
     }
-    mFreshManager.storePolicy("user", "networks", TestProducer.class, policy);
+    mFreshManager.storePolicy("user", "networks", TestFamilyProducer.class, policy);
     try {
       mFreshManager.storePolicy("user", "networks:qualifier", TestProducer.class, policy);
       fail("KijiFreshnessManager.storePolicy() should have thrown an IllegalArgumentException");
@@ -183,7 +199,7 @@ public class TestKijiFreshnessManager {
     mFreshManager.removePolicy("user", "networks");
     mFreshManager.storePolicy("user", "networks:qualifier", TestProducer.class, policy);
     try {
-      mFreshManager.storePolicy("user", "networks", TestProducer.class, policy);
+      mFreshManager.storePolicy("user", "networks", TestFamilyProducer.class, policy);
       fail("KijiFreshnessManager.storePolicy() should have thrown an IllegalArgumentException");
     } catch (IllegalArgumentException iae) {
       assertEquals("There is already a freshness policy attached to a fully qualified column in "
@@ -222,5 +238,16 @@ public class TestKijiFreshnessManager {
       assertEquals("Policy class name: .kiji is not a valid Java class identifier.",
           iae.getMessage());
     }
+  }
+
+  @Test
+  public void testRemovePolicies() throws IOException {
+    mFreshManager.storePolicy("user", "info:name", TestProducer.class, new AlwaysFreshen());
+    mFreshManager.storePolicy("user", "info:email", TestProducer.class, new AlwaysFreshen());
+    assertEquals(
+        Sets.newHashSet(new KijiColumnName("info:name"), new KijiColumnName("info:email")),
+        mFreshManager.removePolicies("user"));
+
+    assertEquals(new HashSet<KijiColumnName>(), mFreshManager.removePolicies("user"));
   }
 }

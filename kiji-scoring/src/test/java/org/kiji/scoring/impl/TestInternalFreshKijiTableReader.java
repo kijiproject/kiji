@@ -272,7 +272,7 @@ public class TestInternalFreshKijiTableReader {
     // Create a KijiFreshnessManager and register a freshness policy.
     final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
     manager.removePolicies("table");
-    manager.storePolicy("table", "map", TestProducer.class, new NeverFreshen());
+    manager.storePolicy("table", "map", TestFamilyProducer.class, new NeverFreshen());
 
     // Open a new reader to pull in the new freshness policy.
     final InternalFreshKijiTableReader freshReader =
