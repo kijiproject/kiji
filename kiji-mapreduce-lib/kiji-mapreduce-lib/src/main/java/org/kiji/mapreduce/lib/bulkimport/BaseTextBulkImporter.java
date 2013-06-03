@@ -30,11 +30,14 @@ import org.kiji.mapreduce.KijiTableContext;
 import org.kiji.mapreduce.bulkimport.KijiBulkImporter;
 
 /**
- * <p>Use this Mapper over text files to import data into a Kiji
- * table.  Each line in the file will be treated data for one row.
- * This line should generate a single EntityId to write to, and any number
- * of writes to add to that entity.  Override the produce(String, Context)
+ * <p>You can extend this bulk importer to import text data into a Kiji
+ * table.  Each line in the file will be treated as one row of input data.
+ * For each line, you should generate a single EntityId to write to, and any number
+ * of writes to add to that entity.  Override the {@link #produce(Text, Context)}
  * method with this behavior.</p>
+ *
+ * @deprecated This class adds few capabilities; see {@link DescribedInputTextBulkImporter}
+ *     for a much more sophisticated class to help with text processing.
  */
 @Deprecated
 public abstract class BaseTextBulkImporter extends KijiBulkImporter<LongWritable, Text> {
@@ -53,7 +56,7 @@ public abstract class BaseTextBulkImporter extends KijiBulkImporter<LongWritable
 
   /** {@inheritDoc} */
   @Override
-  public void produce(LongWritable fileOffset, Text line, KijiTableContext context)
+  public final void produce(LongWritable fileOffset, Text line, KijiTableContext context)
       throws IOException {
     produce(line, context);
   }

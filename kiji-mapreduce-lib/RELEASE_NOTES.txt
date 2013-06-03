@@ -3,6 +3,7 @@
                               KijiMR Library Release Notes
 
 Version 1.0.0-rc62
+  * KIJIMR-32. Separate bulk importer SPIs from implementation more cleanly.
   * KIJIMRLIB-18. Upgrade to KijiSchema 1.1.0 and KijiMR 1.0.0-rc62.
 
 Version 1.0.0-rc6

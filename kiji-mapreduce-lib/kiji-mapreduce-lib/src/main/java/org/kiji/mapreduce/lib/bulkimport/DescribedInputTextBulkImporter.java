@@ -57,7 +57,7 @@ import org.kiji.schema.layout.KijiTableLayout;
  * mapping from source fields in the import lines to destination Kiji columns.  These can be used
  * inside of KijiBulkImportJobBuilder via the withBulkImporter method.
  *
- * Importing from a text file requires specifying a KijiColumnName, and the source field
+ * <p>Importing from a text file requires specifying a KijiColumnName, and the source field
  * for each element to be inserted into Kiji, in addition to the raw import data.  This information
  * is provided by {@link KijiTableImportDescriptor} which is set via
  * the <code>kiji.import.text.input.descriptor.path</code> parameter in {@link #CONF_FILE}.
@@ -68,14 +68,14 @@ import org.kiji.schema.layout.KijiTableLayout;
  * of writes to add to that entity.  You should override the produce(String, Context)
  * method to generate the entities from the input lines.</p>
  *
- * Extensions of this class should implement the following methods:
+ * <p>Extensions of this class should implement the following methods:
  * <ul>
  *   <li>{@link #produce} - actual producer code for the bulk importer should go here</li>
  *   <li>{@link #setupImporter} - (optional) any specific setup for this bulk importer.</li>
  *   <li>{@link #cleanupImporter} - (optional) any specific cleanup for this bulk importer.</li>
  * </ul>
  *
- * Extensions of this class can use the following methods to implement their producers:
+ * <p>Extensions of this class can use the following methods to implement their producers:
  * <ul>
  *   <li>{@link #convert} - parses the text into the type associated with the column.</li>
  *   <li>{@link #incomplete} - to log and mark a row that was incomplete.</li>
@@ -109,13 +109,13 @@ public abstract class DescribedInputTextBulkImporter extends KijiBulkImporter<Lo
           .put("\"string\"", String.class)
           .build();
 
-  // Number of lines to skip between reject/incomplete lines
+  /** Number of lines to skip between reject/incomplete lines. */
   private Long mLogRate = 1000L;
 
-  // Current counter of the number of incomplete lines.
+  /** Current counter of the number of incomplete lines. */
   private Long mIncompleteLineCounter = 0L;
 
-  // Current counter of the number of rejected lines.
+  /** Current counter of the number of rejected lines. */
   private Long mRejectedLineCounter = 0L;
 
   /** Table layout of the output table. */
@@ -127,7 +127,11 @@ public abstract class DescribedInputTextBulkImporter extends KijiBulkImporter<Lo
   /** KijiColumnName to cell type map. */
   private Map<KijiColumnName, Class> mColumnNameClassMap;
 
-  /** {@inheritDoc} */
+  /**
+   * {@inheritDoc}
+   *
+   * <p>If you override this method, you must call <tt>super.setConf(conf)</tt>.</p>
+   */
   @Override
   public void setConf(Configuration conf) {
     super.setConf(conf);
@@ -137,7 +141,7 @@ public abstract class DescribedInputTextBulkImporter extends KijiBulkImporter<Lo
    * Performs validation that this table import descriptor can be applied to the output table.
    *
    * This method is final to prevent it from being overridden without being called.
-   * Subclasses should override the setupImporter() method instead of overriding this method.
+   * Subclasses should override the {@link #setupImporter} method instead of overriding this method.
    *
    * {@inheritDoc}
    */
@@ -340,7 +344,7 @@ public abstract class DescribedInputTextBulkImporter extends KijiBulkImporter<Lo
    * @param logRateString The logging rate as a string.
    */
   @HadoopConf(key=CONF_LOG_RATE, usage="The number of lines to skip between log statements")
-  protected void setLogRate(String logRateString) {
+  protected final void setLogRate(String logRateString) {
     if (logRateString != null) {
       try {
         Long logRate = Long.parseLong(logRateString);
@@ -352,12 +356,13 @@ public abstract class DescribedInputTextBulkImporter extends KijiBulkImporter<Lo
   }
 
   /**
-   * Sets the input descriptor.
+   * Sets the path to the text input descriptor file and parses it.
    *
    * @param inputDescriptorFile The input descriptor path.
+   * @throws RuntimeException if there's an error reading or parsing the input descriptor.
    */
   @HadoopConf(key=CONF_FILE, usage="The input descriptor file.")
-  protected void setInputDescriptorPath(String inputDescriptorFile) {
+  protected final void setInputDescriptorPath(String inputDescriptorFile) {
 
     if (null == inputDescriptorFile || inputDescriptorFile.isEmpty()) {
       // Remind the user to specify this path.
