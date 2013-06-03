@@ -161,7 +161,7 @@ Upload the import descriptor to HDFS:
 
 <div class="userinput">
 {% highlight bash %}
-hadoop fs -copyFromLocal import/song-plays-import-descriptor.json express-tutorial
+hadoop fs -copyFromLocal ${MUSIC_EXPRESS_HOME}/import/song-plays-import-descriptor.json express-tutorial
 {% endhighlight %}
 </div>
 
