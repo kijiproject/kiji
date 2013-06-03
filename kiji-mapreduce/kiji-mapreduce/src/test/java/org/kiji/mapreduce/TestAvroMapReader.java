@@ -44,34 +44,34 @@ public class TestAvroMapReader {
   @Test
   public void testMap() throws IOException {
     // Create a map.
-    Map<CharSequence, Integer> originalMap = new TreeMap<CharSequence, Integer>(
+    final Map<CharSequence, Integer> originalMap = new TreeMap<CharSequence, Integer>(
         new AvroCharSequenceComparator<CharSequence>());
     originalMap.put("foo", 42);
 
     assertTrue(originalMap.containsKey(new Utf8("foo")));
     assertTrue(originalMap.containsKey("foo"));
 
-    AvroMapReader<Integer> originalMapReader = AvroMapReader.create(originalMap);
+    final AvroMapReader<Integer> originalMapReader = AvroMapReader.create(originalMap);
     assertTrue(originalMapReader.containsKey(new Utf8("foo")));
     assertEquals(42, originalMapReader.get(new Utf8("foo")).intValue());
     assertTrue(originalMapReader.containsKey("foo"));
     assertEquals(42, originalMapReader.get("foo").intValue());
 
     // Serialize it to a stream.
-    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    GenericDatumWriter<Map<CharSequence, Integer>> writer
+    final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    final GenericDatumWriter<Map<CharSequence, Integer>> writer
         = new GenericDatumWriter<Map<CharSequence, Integer>>(
             Schema.createMap(Schema.create(Schema.Type.INT)));
     writer.write(originalMap, EncoderFactory.get().directBinaryEncoder(outputStream, null));
 
     // Read from serialized stream.
-    ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
-    GenericDatumReader<Map<CharSequence, Integer>> reader
+    final ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
+    final GenericDatumReader<Map<CharSequence, Integer>> reader
         = new GenericDatumReader<Map<CharSequence, Integer>>(
             Schema.createMap(Schema.create(Schema.Type.INT)));
 
     // Deserialize the map.
-    Map<CharSequence, Integer> deserializedMap
+    final Map<CharSequence, Integer> deserializedMap
         = reader.read(null, DecoderFactory.get().binaryDecoder(inputStream, null));
 
     // Both of these *should* work, but Avro is broken, so the check for a String key "foo" fails.
@@ -80,10 +80,52 @@ public class TestAvroMapReader {
         deserializedMap.containsKey("foo"));
 
     // Use the reader.  It should work just fine with Strings or Utf8's.
-    AvroMapReader<Integer> mapReader = AvroMapReader.create(deserializedMap);
+    final AvroMapReader<Integer> mapReader = AvroMapReader.create(deserializedMap);
     assertTrue(mapReader.containsKey(new Utf8("foo")));
     assertEquals(42, mapReader.get(new Utf8("foo")).intValue());
     assertTrue(mapReader.containsKey("foo"));
     assertEquals(42, mapReader.get("foo").intValue());
+  }
+
+  @Test
+  public void testReload() throws IOException {
+    // Create an Avro "map" using serialization/deserialization.
+    final Map<CharSequence, Integer> originalMap = new TreeMap<CharSequence, Integer>(
+        new AvroCharSequenceComparator<CharSequence>());
+    originalMap.put("to be deleted", 42);
+
+    final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    final GenericDatumWriter<Map<CharSequence, Integer>> writer
+        = new GenericDatumWriter<Map<CharSequence, Integer>>(
+        Schema.createMap(Schema.create(Schema.Type.INT)));
+    writer.write(originalMap, EncoderFactory.get().directBinaryEncoder(outputStream, null));
+    final ByteArrayInputStream inputStream = new ByteArrayInputStream(outputStream.toByteArray());
+    final GenericDatumReader<Map<CharSequence, Integer>> reader
+        = new GenericDatumReader<Map<CharSequence, Integer>>(
+        Schema.createMap(Schema.create(Schema.Type.INT)));
+    final Map<CharSequence, Integer> deserializedMap
+        = reader.read(null, DecoderFactory.get().binaryDecoder(inputStream, null));
+
+    // Create a reader for it.
+    final AvroMapReader<Integer> mapReader = AvroMapReader.create(deserializedMap);
+
+    // Tests before modifying the original map.
+    assertEquals(42, mapReader.get(new Utf8("to be deleted")).intValue());
+    assertFalse(mapReader.containsKey(new Utf8("to be added")));
+
+    // Tests after modifying the avro map but before calling reload.
+    // The reader shouldn't yet reflect the changes to the 'wrapped' map.
+    deserializedMap.put("to be added", 23);
+    deserializedMap.remove(new Utf8("to be deleted"));
+    assertTrue(deserializedMap.containsKey("to be added"));
+    assertEquals(23, deserializedMap.get("to be added").intValue());
+    assertFalse(deserializedMap.containsKey("to be deleted"));
+    assertEquals(42, mapReader.get(new Utf8("to be deleted")).intValue());
+    assertFalse(mapReader.containsKey(new Utf8("to be added")));
+
+    // Tests after calling reload.
+    mapReader.reload();
+    assertFalse(mapReader.containsKey(new Utf8("to be deleted")));
+    assertEquals(23, mapReader.get(new Utf8("to be added")).intValue());
   }
 }

@@ -3,6 +3,9 @@
                               KijiMR Release Notes
 
 Version 1.0.0-rc63
+  * KIJIMR-115. Improves API of AvroMapReader. read() renamed to reload().
+      Avro "map" automatically loaded when AvroMapReader created. Fixes
+      several bugs in this class.
   * KIJIMR-174. kiji-avro dependency moved to lib/distribution/hadoop*/.
       This dependency is loaded on a Hadoop distribution-specific basis.
   * KIJIMR-197. Publish sources and javadoc jars via Maven build.
