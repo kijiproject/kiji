@@ -205,6 +205,7 @@ public final class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
                 + "Use an HFileMapReduceJobOutput constructor that enables auto splitting.",
                 table.getName()));
           }
+          case FORMATTED:
           case HASH:
           case HASH_PREFIX: {
             // Those cases are supported:
