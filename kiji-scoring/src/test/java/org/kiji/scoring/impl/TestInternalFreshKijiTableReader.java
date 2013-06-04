@@ -61,6 +61,7 @@ import org.kiji.scoring.FreshKijiTableReaderBuilder.FreshReaderType;
 import org.kiji.scoring.KijiFreshnessManager;
 import org.kiji.scoring.KijiFreshnessPolicy;
 import org.kiji.scoring.PolicyContext;
+import org.kiji.scoring.impl.InternalFreshKijiTableReader.FreshnessCapsule;
 import org.kiji.scoring.lib.AlwaysFreshen;
 import org.kiji.scoring.lib.NeverFreshen;
 import org.kiji.scoring.lib.NewerThan;
@@ -133,6 +134,18 @@ public class TestInternalFreshKijiTableReader {
     }
   }
 
+  public static final class TestColumnToFamilyProducer extends KijiProducer {
+    public KijiDataRequest getDataRequest() {
+      return KijiDataRequest.create("map", "qualifier");
+    }
+    public String getOutputColumn() {
+      return null;
+    }
+    public void produce(final KijiRowData input, final ProducerContext context) throws IOException {
+      context.put(input.<Integer>getMostRecentValue("map", "qualifier") + 1);
+    }
+  }
+
   /** Dummy &lt;? extends KijiProducer&gt; class for testing */
   private static final class TestNeverFreshen implements KijiFreshnessPolicy {
     public boolean isFresh(final KijiRowData rowData, final PolicyContext policyContext) {
@@ -193,6 +206,7 @@ public class TestInternalFreshKijiTableReader {
             .withRow("foo")
                 .withFamily("family")
                     .withQualifier("qual0").withValue(5L, "foo-val")
+                    .withQualifier("qual1").withValue(5L, "foo-val")
                     .withQualifier("qual2").withValue(5L, "foo@val.com")
                 .withFamily("map")
                     .withQualifier("qualifier").withValue(5L, 1)
@@ -256,13 +270,19 @@ public class TestInternalFreshKijiTableReader {
         .withTimeout(1000)
         .build();
 
-    assertEquals(2, freshReader.getPolicies(completeRequest).size());
+    assertEquals(2, freshReader.getCapsules(completeRequest).size());
     assertEquals(AlwaysFreshen.class,
-        freshReader.getPolicies(completeRequest).get(new KijiColumnName("family", "qual0"))
-        .getClass());
+        freshReader.getCapsules(completeRequest).get(new KijiColumnName("family", "qual0"))
+        .getPolicy().getClass());
+    assertEquals(TestProducer.class,
+        freshReader.getCapsules(completeRequest).get(new KijiColumnName("family", "qual0"))
+            .getProducer().getClass());
     assertEquals(NeverFreshen.class,
-        freshReader.getPolicies(completeRequest).get(new KijiColumnName("family", "qual2"))
-        .getClass());
+        freshReader.getCapsules(completeRequest).get(new KijiColumnName("family", "qual2"))
+        .getPolicy().getClass());
+    assertEquals(TestProducer.class,
+        freshReader.getCapsules(completeRequest).get(new KijiColumnName("family", "qual2"))
+            .getProducer().getClass());
   }
 
   @Test
@@ -282,9 +302,9 @@ public class TestInternalFreshKijiTableReader {
         .withTimeout(100)
         .build();
 
-    assertEquals(1, freshReader.getPolicies(request).size());
+    assertEquals(1, freshReader.getCapsules(request).size());
     assertEquals(NeverFreshen.class,
-        freshReader.getPolicies(request).get(new KijiColumnName("map")).getClass());
+        freshReader.getCapsules(request).get(new KijiColumnName("map")).getPolicy().getClass());
   }
 
   @Test
@@ -308,27 +328,36 @@ public class TestInternalFreshKijiTableReader {
   public void testGetFutures() throws Exception {
     final EntityId eid = mTable.getEntityId("foo");
     final KijiDataRequest request = KijiDataRequest.create("family", "qual0");
-    final Map<KijiColumnName, KijiFreshnessPolicy> usesClientDataRequest =
-        new HashMap<KijiColumnName, KijiFreshnessPolicy>();
-    final Map<KijiColumnName, KijiFreshnessPolicy> usesOwnDataRequest =
-        new HashMap<KijiColumnName, KijiFreshnessPolicy>();
-    final Future<KijiRowData> clientData = mFreshReader.getClientData(eid, request);
+    final Map<KijiColumnName, FreshnessCapsule> capsules =
+        new HashMap<KijiColumnName, FreshnessCapsule>();
+
+    // Create a KijiFreshnessManager and register some freshness policies.
+    final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
+    manager.storePolicy("table", "family:qual0", TestProducer.class, new NeverFreshen());
+    manager.storePolicy("table", "family:qual2", TestProducer.class, new NeverFreshen());
+
+    // Open a new reader to pull in the new freshness policies.
+    final InternalFreshKijiTableReader freshReader =
+        (InternalFreshKijiTableReader) FreshKijiTableReaderBuilder.get()
+            .withTable(mTable)
+            .withTimeout(1000)
+            .build();
+
+    final Future<KijiRowData> clientData = freshReader.getClientData(eid, request);
 
     // Get an empty list of futures.
-    final List<Future<Boolean>> actual =
-        mFreshReader.getFutures(
-        usesClientDataRequest, usesOwnDataRequest, clientData, eid, request);
+    final List<Future<Boolean>> actual = freshReader.getFutures(capsules, clientData, eid, request);
     assertEquals(0, actual.size());
 
-    // Add two freshness policies.
-    usesClientDataRequest.put(new KijiColumnName("family", "qual0"), new NeverFreshen());
-    usesOwnDataRequest.put(new KijiColumnName("family", "qual0"), new TestNeverFreshen());
+    capsules.put(new KijiColumnName("family", "qual0"),
+        freshReader.makeCapsule(new KijiColumnName("family", "qual0")));
+    capsules.put(new KijiColumnName("family", "qual2"),
+        freshReader.makeCapsule(new KijiColumnName("family", "qual2")));
 
     // Get a list of two futures, both are never freshen, so should return false to indicate no
     // reread.
     final List<Future<Boolean>> actual2 =
-        mFreshReader.getFutures(
-            usesClientDataRequest, usesOwnDataRequest, clientData, eid, request);
+        freshReader.getFutures(capsules, clientData, eid, request);
     assertEquals(2, actual2.size());
     for (Future<Boolean> future : actual2) {
       assertEquals(false, future.get());
@@ -540,11 +569,11 @@ public class TestInternalFreshKijiTableReader {
         .withTimeout(100)
         .build();
 
-    assertTrue(freshReader.getPolicies(KijiDataRequest.create("family", "qual0"))
+    assertTrue(freshReader.getCapsules(KijiDataRequest.create("family", "qual0"))
         .containsKey(new KijiColumnName("family", "qual0")));
     manager.removePolicy("table", "family:qual0");
-    freshReader.reloadPolicies();
-    assertFalse(freshReader.getPolicies(KijiDataRequest.create("family", "qual0"))
+    freshReader.rereadPolicies(false);
+    assertFalse(freshReader.getCapsules(KijiDataRequest.create("family", "qual0"))
         .containsKey(new KijiColumnName("family", "qual0")));
   }
 
@@ -561,7 +590,7 @@ public class TestInternalFreshKijiTableReader {
         .withReaderType(FreshReaderType.LOCAL)
         .withTable(mTable)
         .withTimeout(1000)
-        .withAutomaticReload(1000)
+        .withAutomaticReread(1000)
         .build();
 
     // Register a new freshness policy
@@ -652,5 +681,121 @@ public class TestInternalFreshKijiTableReader {
     assertEquals("unloaded", mPreloadState);
     freshReader.preload(request);
     assertEquals("loaded", mPreloadState);
+  }
+
+  @Test
+  public void testNewCache() throws IOException, InterruptedException {
+    final EntityId eid = mTable.getEntityId("foo");
+    final KijiDataRequest request = KijiDataRequest.create("family", "qual0");
+    final KijiDataRequest request1 = KijiDataRequest.create("family", "qual1");
+
+    // Create a KijiFreshnessManager and register a freshness policy.
+    final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
+    manager.storePolicy("table", "family:qual0", TestTimeoutProducer.class, new AlwaysFreshen());
+
+    final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.get()
+        .withTable(mTable).withTimeout(100).build();
+
+    // Read should return stale data.
+    assertEquals("foo-val",
+        freshReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
+
+    Thread.sleep(100);
+
+    manager.removePolicy("table", "family:qual0");
+    freshReader.rereadPolicies(false);
+
+    final long startTime = System.currentTimeMillis();
+    assertEquals("foo-val",
+        freshReader.get(eid, request1).getMostRecentValue("family", "qual1").toString());
+    // A read with the old policy should time out, with the new policy it should return immediately.
+    assertTrue(System.currentTimeMillis() - startTime < 50L);
+
+    Thread.sleep(1000);
+
+    // The old producer should still finish.
+    assertEquals("new-val",
+        mReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
+  }
+
+  @Test
+  public void testColumnToFamily() throws IOException {
+    final EntityId eid = mTable.getEntityId("foo");
+    final KijiDataRequest request = KijiDataRequest.create("map", "qualifier");
+
+    // Create a KijiFreshnessManager and register a freshness policy.
+    final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
+    manager.storePolicy(
+        "table", "map:qualifier", TestColumnToFamilyProducer.class, new AlwaysFreshen());
+
+    final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.get()
+        .withTable(mTable).withTimeout(1000).build();
+
+    // Get map:qualifier which populates the cache and ensure the producer ran.
+    assertEquals(2, freshReader.get(eid, request).getMostRecentValue("map", "qualifier"));
+
+    manager.removePolicy("table", "map:qualifier");
+    manager.storePolicy("table", "map", TestFamilyProducer.class, new AlwaysFreshen());
+    freshReader.rereadPolicies(false);
+
+    // Get against with the new family wide freshness policy.
+    assertEquals(3, freshReader.get(eid, request).getMostRecentValue("map", "qualifier"));
+  }
+
+  @Test
+  public void testRepeatedUse() throws IOException {
+    final EntityId eid = mTable.getEntityId("foo");
+    final KijiDataRequest request = KijiDataRequest.create("map", "qualifier");
+
+    // Create a KijiFreshnessManager and register a freshness policy.
+    final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
+    manager.storePolicy(
+        "table", "map:qualifier", TestColumnToFamilyProducer.class, new AlwaysFreshen());
+
+    final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.get()
+        .withTable(mTable).withTimeout(1000).build();
+
+    freshReader.get(eid, request);
+    freshReader.get(eid, request);
+    freshReader.get(eid, request);
+    freshReader.get(eid, request);
+    freshReader.get(eid, request);
+    freshReader.get(eid, request);
+    freshReader.get(eid, request);
+    freshReader.get(eid, request);
+    freshReader.get(eid, request);
+  }
+
+  @Test
+  public void testReplaceRecord() throws IOException {
+    final EntityId eid = mTable.getEntityId("foo");
+    final KijiDataRequest request = KijiDataRequest.create("family", "qual0");
+
+    // Create a KijiFreshnessManager and register a freshness policy.
+    final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
+    manager.storePolicy("table", "family:qual0", TestProducer.class, new NeverFreshen());
+
+    final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.get()
+        .withTable(mTable).withTimeout(1000).build();
+
+    freshReader.get(eid, request);
+    freshReader.get(eid, request);
+    freshReader.get(eid, request);
+
+    manager.removePolicy("table", "family:qual0");
+    manager.storePolicy("table", "family:qual0", TestTimeoutProducer.class, new NeverFreshen());
+    freshReader.rereadPolicies(false);
+
+    freshReader.get(eid, request);
+    freshReader.get(eid, request);
+    freshReader.get(eid, request);
+
+    manager.removePolicy("table", "family:qual0");
+    manager.storePolicy("table", "family:qual0", TestProducer.class, new NeverFreshen());
+    freshReader.rereadPolicies(false);
+
+    freshReader.get(eid, request);
+    freshReader.get(eid, request);
+    freshReader.get(eid, request);
   }
 }

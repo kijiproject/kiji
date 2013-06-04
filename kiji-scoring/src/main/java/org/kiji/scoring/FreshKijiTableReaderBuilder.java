@@ -36,8 +36,8 @@ import org.kiji.scoring.impl.InternalFreshKijiTableReader;
  *   Allows the setting of options for creation of FreshKijiTableReaders.  Options include setting
  *   the reader type as enumerated in FreshKijiTableReaderBuilder.FreshReaderType (defaults to
  *   local), setting the time (in milliseconds) to wait for freshening to occur (defaults to 100
- *   ms), setting the period (in milliseconds) between automatically reloading freshness policies
- *   from the meta table (defaults to never automatically reloading), setting whether to allow
+ *   ms), setting the period (in milliseconds) between automatically rereading freshness policies
+ *   from the meta table (defaults to never automatically rereading), setting whether to allow
  *   partially fresh data to be returned by calls to {@link org.kiji.scoring.FreshKijiTableReader
  *   #get(org.kiji.schema.EntityId, org.kiji.schema.KijiDataRequest)} (defaults to false), and a
  *   required setting for the table from which to read.
@@ -51,7 +51,7 @@ import org.kiji.scoring.impl.InternalFreshKijiTableReader;
  *       .withReaderType(FreshReaderType.LOCAL)
  *       .withTable(myTable)
  *       .withTimeout(100)
- *       .withAutomaticReload(3600000)
+ *       .withAutomaticReread(3600000)
  *       .returnPartialFreshData(true)
  *       build();
  * </pre></p>
@@ -65,6 +65,8 @@ public final class FreshKijiTableReaderBuilder {
   private static final FreshReaderType DEFAULT_READER_TYPE = FreshReaderType.LOCAL;
   /** Wait 100 milliseconds for freshening to occur by default. */
   private static final int DEFAULT_TIMEOUT = 100;
+  /** Do not preload freshness policies added by calls to rereadPolicies() by default. */
+  private static final Boolean DEFAULT_PRELOAD_ON_AUTO_REREAD = false;
 
   /**
    * Get a new instance of FreshKijiTableReaderBuilder.
@@ -86,10 +88,18 @@ public final class FreshKijiTableReaderBuilder {
   private KijiTable mTable;
   /** The time in milliseconds the new reader will wait for freshening to occur. */
   private long mTimeout;
-  /** The time in milliseconds the new reader will wait between reloading freshness policies. */
-  private long mReload;
-  /** Whether or not the new reader will return partially fresh data when available. */
+  /**
+   * The time in milliseconds the new reader will wait between automatically rereading freshness
+   * policies from the meta table.
+   */
+  private long mRereadPeriod;
+  /** Whether the new reader will return partially fresh data when available. */
   private Boolean mPartialFresh;
+  /**
+   * Whether to preload new freshness policies during automatic calls to
+   * {@link FreshKijiTableReader#rereadPolicies(boolean)}.
+   */
+  private Boolean mPreloadOnAutoReread;
 
   /**
    * Select the type of FreshKijiTableReader to instantiate.  Types are enumerated in
@@ -132,17 +142,34 @@ public final class FreshKijiTableReaderBuilder {
   }
 
   /**
-   * Configure the FreshKijiTableReader to automatically reload freshness policies from the meta
+   * Configure the FreshKijiTableReader to automatically reread freshness policies from the meta
    * table on a scheduled interval.
    *
-   * @param reload the interval between automatic reloads in milliseconds.
-   * @return this FreshKijiTableReaderBuilder configured to automatically reload on the given
+   * @param rereadPeriod the interval between automatic rereads in milliseconds.  rereadPeriod may
+   * not be negative and a rereadPeriod value of 0 indicate never automatically rereading freshness
+   * policies from the metatable.
+   * @return this FreshKijiTableReaderBuilder configured to automatically reread on the given
    * interval.
    */
-  public FreshKijiTableReaderBuilder withAutomaticReload(long reload) {
-    Preconditions.checkArgument(reload > 0, "Reload time must be positive, got: %s", reload);
-    Preconditions.checkArgument(mReload == 0, "Reload time is already set to: %d", mReload);
-    mReload = reload;
+  public FreshKijiTableReaderBuilder withAutomaticReread(long rereadPeriod) {
+    Preconditions.checkArgument(
+        rereadPeriod > 0, "Reread time must be positive, got: %s", rereadPeriod);
+    Preconditions.checkArgument(
+        mRereadPeriod == 0, "Reread time is already set to: %d", mRereadPeriod);
+    mRereadPeriod = rereadPeriod;
+    return this;
+  }
+
+  /**
+   * Configure the FreshKijiTableReader to preload all new freshness policies added by automatic
+   * calls to {@link FreshKijiTableReader#rereadPolicies(boolean)}.  Has no effect without
+   * {@link #withAutomaticReread(long)}.
+   *
+   * @param withPreload whether to preload freshness policies added by automatic reread calls.
+   * @return this FreshKijiTableReaderBuilder configured to preload after reread if preload == true.
+   */
+  public FreshKijiTableReaderBuilder withPreloadOnAutomaticReread(boolean withPreload) {
+    mPreloadOnAutoReread = withPreload;
     return this;
   }
 
@@ -179,9 +206,13 @@ public final class FreshKijiTableReaderBuilder {
     if (mPartialFresh == null) {
       mPartialFresh = DEFAULT_PARTIAL_FRESHENING;
     }
+    if (mPreloadOnAutoReread == null) {
+      mPreloadOnAutoReread = DEFAULT_PRELOAD_ON_AUTO_REREAD;
+    }
     switch (mReaderType) {
       case LOCAL:
-        return new InternalFreshKijiTableReader(mTable, mTimeout, mReload, mPartialFresh);
+        return new InternalFreshKijiTableReader(
+            mTable, mTimeout, mRereadPeriod, mPartialFresh, mPreloadOnAutoReread);
       default:
         throw new InternalKijiError(String.format("Unknown reader type: %s", mReaderType));
     }

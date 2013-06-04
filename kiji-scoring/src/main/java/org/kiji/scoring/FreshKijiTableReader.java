@@ -181,7 +181,11 @@ public interface FreshKijiTableReader extends KijiTableReader {
   /**
    * Clear cached freshness policies and reload from the metatable.
    *
+   * @param withPreload whether or not to preload classes during reload or allow them to be
+   * instantiated lazily as needed.  Preloaded producer and freshness policy classes will be loaded
+   * and instantiated.  Set the Javadoc for the org.kiji.scoring package for details on the life
+   * cycle.
    * @throws IOException in case of an error reading from the metatable.
    */
-  void reloadPolicies() throws IOException;
+  void rereadPolicies(boolean withPreload) throws IOException;
 }

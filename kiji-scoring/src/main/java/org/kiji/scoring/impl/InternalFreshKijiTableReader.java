@@ -32,6 +32,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -49,10 +53,13 @@ import org.kiji.schema.InternalKijiError;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequest.Column;
+import org.kiji.schema.KijiDataRequestBuilder;
+import org.kiji.schema.KijiDataRequestBuilder.ColumnsDef;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiRowScanner;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
+import org.kiji.schema.util.ReferenceCountable;
 import org.kiji.scoring.FreshKijiTableReader;
 import org.kiji.scoring.KijiFreshnessManager;
 import org.kiji.scoring.KijiFreshnessPolicy;
@@ -79,8 +86,14 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   /** Timeout duration in milliseconds for get requests. */
   private final long mTimeout;
 
-  /** Time between automatically reloading freshness policies from the metatable in milliseconds. */
-  private final long mReloadTime;
+  /** Time between automatically rereading freshness policies from the metatable in milliseconds. */
+  private final long mRereadTime;
+
+  /** TimerTask for automatically rereading freshness policies on a schedule. */
+  private final RereadTask mRereadTask;
+
+  /** Whether to preload new freshness policies during rereadPolicies(). */
+  private final boolean mPreloadOnAutoReread;
 
   /** Whether to return partially freshened data when available. */
   private final boolean mAllowPartial;
@@ -93,36 +106,51 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   private final Map<KijiColumnName, KijiFreshnessPolicyRecord> mPolicyRecords;
 
   /**
+   * Read Write locks for protecting cached record state. This lock should always be acquired
+   * <i>before</i> synchronizing on mCapsuleCache.
+   */
+  private final ReadWriteLock mRecordReadWriteLock = new ReentrantReadWriteLock();
+  private final Lock mRecordReadLock = mRecordReadWriteLock.readLock();
+  private final Lock mRecordWriteLock = mRecordReadWriteLock.writeLock();
+
+  /**
    * Cache of FreshnessCapsules containing a KijiFreshnessPolicy, a KijiProducer, and a
    * KeyValueStoreReaderFactory.  Lazily populated as needed.
    */
   private final Map<KijiColumnName, FreshnessCapsule> mCapsuleCache;
 
-  /** TimerTask for automatically reloading freshness policies on a schedule. */
-  private final ReloadTask mReloadTask;
-
   /**
    * Container class for KijiFreshnessPolicy and associated KijiProducer and
    * KeyValueStoreReaderFactory.
+   *
+   * Package private for testing purposes only, should not be accessed externally.
    */
-  private static final class FreshnessCapsule {
+  final class FreshnessCapsule implements ReferenceCountable<FreshnessCapsule> {
     private final KijiFreshnessPolicy mPolicy;
     private final KijiProducer mProducer;
     private final KeyValueStoreReaderFactory mFactory;
+    private final KijiColumnName mAttachedColumn;
+    private final AtomicInteger mRetainCount;
+
 
     /**
      * Default Constructor.
      * @param policy the KijiFreshnessPolicy to serialize.
      * @param producer the KijiProducer to serialize.
      * @param factory the KeyValueStoreReaderFactory to serialize.
+     * @param attachedColumn the column to which this FreshnessCapsule is associated in
+     * mCapsuleCache.
      */
     public FreshnessCapsule(
         final KijiFreshnessPolicy policy,
         final KijiProducer producer,
-        final KeyValueStoreReaderFactory factory) {
+        final KeyValueStoreReaderFactory factory,
+        final KijiColumnName attachedColumn) {
       mPolicy = policy;
       mProducer = producer;
       mFactory = factory;
+      mAttachedColumn = attachedColumn;
+      mRetainCount = new AtomicInteger(1);
     }
 
     /**
@@ -148,39 +176,75 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     public KeyValueStoreReaderFactory getFactory() {
       return mFactory;
     }
+
+    @Override
+    public FreshnessCapsule retain() {
+      final int counter = mRetainCount.getAndIncrement();
+      Preconditions.checkState(counter >= 1,
+          "Cannot retain closed FreshnessCapsule: %s retain counter was %s.",
+          toString(), counter);
+      return this;
+    }
+
+    @Override
+    public void release() throws IOException {
+      final int counter = mRetainCount.decrementAndGet();
+      Preconditions.checkState(counter >= 0,
+          "Cannot release closed FreshnessCapsule: %s retain counter is now %s.",
+          toString(), counter);
+      if (counter == 0) {
+        close();
+      }
+    }
+
+    /**
+     * Closes and cleans up all stored objects.
+     * @throws IOException in case of an error cleaning up the producer.
+     */
+    private void close() throws IOException {
+      mProducer.cleanup(KijiFreshProducerContext.create(mTable, mAttachedColumn, null, mFactory));
+      mFactory.close();
+    }
   }
 
-  /** TimerTask for reloading freshness policies automatically on a schedule. */
-  private final class ReloadTask extends TimerTask {
+  /** TimerTask for rereading freshness policies automatically on a schedule. */
+  private final class RereadTask extends TimerTask {
     /** Method to run when the task executes. */
     public void run() {
       try {
-        reloadPolicies();
+        rereadPolicies(mPreloadOnAutoReread);
       } catch (IOException ioe) {
-        LOG.warn("Failed to reload freshness policies.  Will attempt again in {} milliseconds",
-            mReloadTime);
+        LOG.warn("Failed to reread freshness policies.  Will attempt again in {} milliseconds",
+            mRereadTime);
       }
     }
   }
 
   /**
    * Creates a new <code>InternalFreshKijiTableReader</code> instance that sends read requests
-   * to a Kiji table and performs freshening on the returned data.  Automatically reloads freshness
+   * to a Kiji table and performs freshening on the returned data.  Automatically rereads freshness
    * policies from the meta table on a schedule.
    *
    * @param table the Kiji table that will be read/scored.
    * @param timeout the maximum number of milliseconds to spend trying to score data.  If the
    *   process times out, stale data will be returned by
    *   {@link #get(org.kiji.schema.EntityId, org.kiji.schema.KijiDataRequest)} calls.
-   * @param reloadTime The time to wait in milliseconds between automatically reloading freshness
-   * policies.
+   * @param rereadTime The time to wait in milliseconds between automatically rereading freshness
+   * policies from the meta table.  To disable automatic rereading, set to 0.
    * @param allowParial whether to allow returning partially freshened data when available.
+   * @param preloadOnAutoReread whether to preload new freshness policies during automatic calls
+   * to {@link #rereadPolicies(boolean)}.  Requires rereadTime > 0.
    * @throws IOException if an error occurs communicating with the table or meta table.
    */
   public InternalFreshKijiTableReader(
-      KijiTable table, long timeout, long reloadTime, boolean allowParial)
+      final KijiTable table,
+      final long timeout,
+      final long rereadTime,
+      final boolean allowParial,
+      final boolean preloadOnAutoReread)
       throws IOException {
     mTable = table;
+    mPreloadOnAutoReread = preloadOnAutoReread;
     // opening a reader retains the table, so we do not need to call retain manually.
     mReader = mTable.openTableReader();
     mExecutor = FreshenerThreadPool.getInstance().getExecutorService();
@@ -188,58 +252,60 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     final KijiFreshnessManager manager = KijiFreshnessManager.create(table.getKiji());
     mPolicyRecords = manager.retrievePolicies(mTable.getName());
     mCapsuleCache = new HashMap<KijiColumnName, FreshnessCapsule>();
-    if (reloadTime > 0) {
-      final Timer reloadTimer = new Timer();
-      mReloadTask = new ReloadTask();
-      reloadTimer.scheduleAtFixedRate(mReloadTask, reloadTime, reloadTime);
-      mReloadTime = reloadTime;
-    } else if (reloadTime == 0) {
-      mReloadTask = null;
-      mReloadTime = 0;
+    if (rereadTime > 0) {
+      final Timer rereadTimer = new Timer();
+      mRereadTask = new RereadTask();
+      rereadTimer.scheduleAtFixedRate(mRereadTask, rereadTime, rereadTime);
+      mRereadTime = rereadTime;
+    } else if (rereadTime == 0) {
+      mRereadTask = null;
+      mRereadTime = 0;
     } else {
       throw new IllegalArgumentException(
-          String.format("Reload time must be >= 0, found: %d", reloadTime));
+          String.format("Reload time must be >= 0, found: %d", rereadTime));
     }
     mAllowPartial = allowParial;
   }
 
   /** {@inheritDoc} */
   @Override
-  public synchronized void reloadPolicies() throws IOException {
+  public void rereadPolicies(final boolean withPreload) throws IOException {
     final Map<KijiColumnName, KijiFreshnessPolicyRecord> newRecords =
         KijiFreshnessManager.create(mTable.getKiji()).retrievePolicies(mTable.getName());
-    for (Map.Entry<KijiColumnName, KijiFreshnessPolicyRecord> entry : mPolicyRecords.entrySet()) {
-      // Remove duplicate records from the new record map.
-      if (newRecords.containsKey(entry.getKey())
-          && newRecords.get(entry.getKey()) == entry.getValue()) {
-        newRecords.remove(entry.getKey());
-      }
-      // Unload freshness policies for columns which no longer have policies attached.
-      if (!newRecords.containsKey(entry.getKey())) {
-        // Remove the policy record.
-        mPolicyRecords.remove(entry.getKey());
-        // Remove any cached objects.
-        if (mCapsuleCache.containsKey(entry.getKey())) {
-          final FreshnessCapsule capsule = mCapsuleCache.get(entry.getKey());
-          capsule.getFactory().close();
-          capsule.getProducer().cleanup(null);
-          mCapsuleCache.remove(entry.getKey());
-        }
-      // Unload freshness policies from columns whose policies have changed.
-      } else if (newRecords.get(entry.getKey()) != entry.getValue()) {
-        // Remove the policy record.
-        mPolicyRecords.remove(entry.getKey());
-        // Remove any cached objects.
-        if (mCapsuleCache.containsKey(entry.getKey())) {
-          final FreshnessCapsule capsule = mCapsuleCache.get(entry.getKey());
-          capsule.getFactory().close();
-          capsule.getProducer().cleanup(null);
-          mCapsuleCache.remove(entry.getKey());
-        }
 
+    mRecordWriteLock.lock();
+    try {
+      synchronized (mCapsuleCache) {
+        for (Map.Entry<KijiColumnName, KijiFreshnessPolicyRecord> entry
+            : mPolicyRecords.entrySet()) {
+          // Remove duplicate records from the new record map.
+          if (newRecords.containsKey(entry.getKey())
+              && newRecords.get(entry.getKey()) == entry.getValue()) {
+            newRecords.remove(entry.getKey());
+          }
+          if (!newRecords.containsKey(entry.getKey())
+              || newRecords.get(entry.getKey()) != entry.getValue()) {
+            // Remove the policy record.
+            mPolicyRecords.remove(entry.getKey());
+            if (mCapsuleCache.containsKey(entry.getKey())) {
+              mCapsuleCache.get(entry.getKey()).release();
+              mCapsuleCache.remove(entry.getKey());
+            }
+          }
+        }
       }
+      mPolicyRecords.putAll(newRecords);
+    } finally {
+      mRecordWriteLock.unlock();
     }
-    mPolicyRecords.putAll(newRecords);
+    if (withPreload) {
+      final KijiDataRequestBuilder builder = KijiDataRequest.builder();
+      final ColumnsDef columns = builder.newColumnsDef();
+      for (KijiColumnName key : newRecords.keySet()) {
+        columns.add(key);
+      }
+      preload(builder.build());
+    }
   }
 
   /**
@@ -261,72 +327,158 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   }
 
   /**
-   * Gets all freshness policies from the local cache necessary to validate a given data request.
+   * Gets an instance of a producer from a String class name.
+   *
+   * @param producer The name of the producer class to instantiate.
+   * @return An instance of the named producer.
+   *
+   * Package private for testing purposes only, should not be accessed externally.
+   */
+  KijiProducer producerForName(String producer) {
+    try {
+      return ReflectionUtils.newInstance(
+          Class.forName(producer).asSubclass(KijiProducer.class), mTable.getKiji().getConf());
+    } catch (ClassNotFoundException cnfe) {
+      throw new RuntimeException(String.format(
+          "Producer class %s was not found on the classpath", producer));
+    }
+  }
+
+  /**
+   * Creates a new FreshnessCapsule from the KijiFreshnessPolicyRecord associated with a given
+   * KijiColumnName key in mPolicyRecords.  Will throw an IllegalStateException if no
+   * KijiFreshnessPolicyRecord can be found for the given column name key.
+   *
+   * @param columnName the key to mPolicyRecords.
+   * @return a new FreshnessCapsule constructed from a record in mPolicyRecords.
+   * @throws IOException in case of an error setting up the producer.
+   */
+  FreshnessCapsule makeCapsule(KijiColumnName columnName) throws IOException {
+    mRecordReadLock.lock();
+    final KijiFreshnessPolicy policy;
+    final KijiProducer producer;
+    try {
+      final KijiFreshnessPolicyRecord record = mPolicyRecords.get(columnName);
+      Preconditions.checkState(null != record, "There is no KijiFreshnessPolicyRecord associated "
+          + "with KijiColumnName key: %s", columnName);
+
+      // Instantiate and initialize the policies.
+      policy = policyForName(record.getFreshnessPolicyClass());
+      policy.deserialize(record.getFreshnessPolicyState());
+
+      // Instantiate the producer.
+      producer = producerForName(record.getProducerClass());
+    } finally {
+      mRecordReadLock.unlock();
+    }
+    // Create a kvstore reader factory for this policy and populate it with required stores.
+    final Map<String, KeyValueStore<?, ?>> kvMap =
+        new HashMap<String, KeyValueStore<?, ?>>();
+    kvMap.putAll(producer.getRequiredStores());
+    kvMap.putAll(policy.getRequiredStores());
+    KeyValueStoreReaderFactory factory = KeyValueStoreReaderFactory.create(kvMap);
+
+    // Initialize the producer.
+    producer.setup(KijiFreshProducerContext.create(mTable, columnName, null, factory));
+
+    // Encapsulate the policy, producer, and factory and serialize them in a cache.
+    return new FreshnessCapsule(policy, producer, factory, columnName);
+  }
+
+  /**
+   * Synchronously gets a capsule from the cache corresponding to a given KijiColumnName.  All read
+   * access to the capsule cache should use this method.  Will throw an IllegalStateException if
+   * no FreshnessCapsule can be found for the given column name key.
+   *
+   * @param columnName the name of the column for which to get a FreshnessCapsule.
+   * @return a FreshnessCapsule corresponding to the given KijiColumnName, already retained.
+   */
+  private FreshnessCapsule getCapsule(KijiColumnName columnName) {
+    synchronized (mCapsuleCache) {
+      final FreshnessCapsule capsule = mCapsuleCache.get(columnName);
+      Preconditions.checkState(null != capsule, "There is no FreshnessCapsule associated "
+          + " KijiColumnName key: %s", columnName);
+      return capsule.retain();
+    }
+  }
+
+  /**
+   * Synchronously puts a capsule into the cache corresponding to the given KijiColumnName.  If
+   * there is already a capsule associated with the given key, releases the previous capsule before
+   * replacing it in the map.  Retains the new capsule as long as it persists in the cache.  All
+   * puts to the capsule cache should use this method.
+   *
+   * @param columnName the name of the column to which to associate the given capsule.
+   * @param capsule the capsule to associate with the given column.
+   * @throws IOException in case of an error closing resources in a released capsule.
+   */
+  private void putCapsule(KijiColumnName columnName, FreshnessCapsule capsule) throws IOException {
+    synchronized (mCapsuleCache) {
+      if (mCapsuleCache.containsKey(columnName)) {
+        capsule.retain();
+        mCapsuleCache.get(columnName).release();
+        mCapsuleCache.put(columnName, capsule);
+      } else {
+        capsule.retain();
+        mCapsuleCache.put(columnName, capsule);
+      }
+    }
+  }
+
+  /**
+   * Gets all freshness capsules from the local cache necessary to service a given data request.
    * Returns an empty Map if there are no policies applicable to the data request.
    *
    * @param dataRequest the data request for which to find freshness policies.
    * @return A map from column name to KijiFreshnessPolicy.
    * @throws IOException if an error occurs while setting up a producer.
-   *
+   * <p/>
    * Package private for testing purposes only, should not be accessed externally.
    */
-  Map<KijiColumnName, KijiFreshnessPolicy> getPolicies(KijiDataRequest dataRequest)
+  Map<KijiColumnName, FreshnessCapsule> getCapsules(KijiDataRequest dataRequest)
       throws IOException {
-    final Map<KijiColumnName, KijiFreshnessPolicy> policies =
-        new HashMap<KijiColumnName, KijiFreshnessPolicy>();
+    final Map<KijiColumnName, FreshnessCapsule> capsules =
+        new HashMap<KijiColumnName, FreshnessCapsule>();
     final Collection<Column> columns = dataRequest.getColumns();
-    for (Column column : columns) {
-      final KijiColumnName family = new KijiColumnName(column.getFamily());
-      if (mCapsuleCache.containsKey(column.getColumnName())) {
-        policies.put(column.getColumnName(), mCapsuleCache.get(column.getColumnName()).getPolicy());
-      } else if (mCapsuleCache.containsKey(family)) {
-        policies.put(family, mCapsuleCache.get(family).getPolicy());
-      } else {
-        final KijiFreshnessPolicyRecord qualifiedRecord =
-            mPolicyRecords.get(column.getColumnName());
-        final KijiFreshnessPolicyRecord familyRecord = mPolicyRecords.get(family);
-        // Ensure that there is only one freshness policy applicable to this column.
-        Preconditions.checkState(!(qualifiedRecord != null && familyRecord != null),
-            String.format("A record exists for both the family: %s and qualified column: %s%n"
-                + "Only one may be specified.",
-                family.toString(), column.getColumnName().toString()));
-        KijiFreshnessPolicyRecord record = null;
-        KijiColumnName columnName = null;
-        if (qualifiedRecord != null) {
-          record = qualifiedRecord;
-          columnName = column.getColumnName();
-        } else {
-          record = familyRecord;
-          columnName = family;
-        }
 
-        if (record != null) {
-          // Instantiate and initialize the policies.
-          final KijiFreshnessPolicy policy = policyForName(record.getFreshnessPolicyClass());
-          policy.deserialize(record.getFreshnessPolicyState());
-          // Add the policy to the list of policies applicable to this data request.
-          policies.put(columnName, policy);
+    mRecordReadLock.lock();
+    try {
+      for (Column column : columns) {
+        final KijiColumnName columnName = column.getColumnName();
+        final KijiColumnName family = new KijiColumnName(column.getFamily());
 
-          // Instantiate the producer.
-          final KijiProducer producer = producerForName(record.getProducerClass());
+        final boolean containsQualifiedRecord = mPolicyRecords.containsKey(columnName);
+        final boolean containsFamilyRecord = mPolicyRecords.containsKey(family);
 
-          // Create a kvstore reader factory for this policy and populate it with
-          // required stores.
-          final Map<String, KeyValueStore<?, ?>> kvMap = new HashMap<String, KeyValueStore<?, ?>>();
-          kvMap.putAll(producer.getRequiredStores());
-          kvMap.putAll(policy.getRequiredStores());
-          KeyValueStoreReaderFactory factory = KeyValueStoreReaderFactory.create(kvMap);
-
-          // Initialize the producer.
-          producer.setup(KijiFreshProducerContext.create(mTable, columnName, null, factory));
-
-          // Encapsulate the policy, producer, and factory and serialize them in a cache.
-          final FreshnessCapsule capsule = new FreshnessCapsule(policy, producer, factory);
-          mCapsuleCache.put(columnName, capsule);
+        if (containsQualifiedRecord && containsFamilyRecord) {
+          throw new InternalKijiError(String.format("Found freshness policy record for qualified "
+              + "column: %s and family: %s only one may exist at a time.", columnName, family));
+        } else if (containsQualifiedRecord) {
+          synchronized (mCapsuleCache) {
+            if (mCapsuleCache.containsKey(columnName)) {
+              capsules.put(columnName, getCapsule(columnName));
+            } else {
+              final FreshnessCapsule capsule = makeCapsule(columnName);
+              capsules.put(columnName, capsule);
+              putCapsule(columnName, capsule);
+            }
+          }
+        } else if (containsFamilyRecord) {
+          synchronized (mCapsuleCache) {
+            if (mCapsuleCache.containsKey(family)) {
+              capsules.put(family, getCapsule(family));
+            } else {
+              final FreshnessCapsule capsule = makeCapsule(family);
+              capsules.put(family, capsule);
+              putCapsule(family, capsule);
+            }
+          }
         }
       }
+    } finally {
+      mRecordReadLock.unlock();
     }
-    return policies;
+    return capsules;
   }
 
   /**
@@ -350,31 +502,11 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   }
 
   /**
-   * Gets an instance of a producer from a String class name.
-   *
-   * @param producer The name of the producer class to instantiate.
-   * @return An instance of the named producer.
-   *
-   * Package private for testing purposes only, should not be accessed externally.
-   */
-  KijiProducer producerForName(String producer) {
-    try {
-      return ReflectionUtils.newInstance(
-        Class.forName(producer).asSubclass(KijiProducer.class), mTable.getKiji().getConf());
-    } catch (ClassNotFoundException cnfe) {
-      throw new RuntimeException(String.format(
-          "Producer class %s was not found on the classpath", producer));
-    }
-  }
-
-  /**
    * Creates a future for each {@link org.kiji.scoring.KijiFreshnessPolicy} applicable to a given
    * {@link org.kiji.schema.KijiDataRequest}.
    *
-   * @param usesClientDataRequest A map from column name to KijiFreshnessPolicies that use the
-   *   client data request to fulfill isFresh() calls.
-   * @param usesOwnDataRequest A map from column name to KijiFreshnessPolicies that use custom
-   *   data requests to fulfill isFresh() calls.
+   * @param capsules a map from column names to freshness capsules as they were registered at the
+   * time of this call.  Capsules are assumed retained earlier and will be released by this method.
    * @param clientData A Future&lt;KijiRowData&gt; representing the data requested by the client.
    *   Freshness policies which use the client data request will block on the return of this future.
    * @param eid The EntityId specified by the client's call to get().
@@ -385,12 +517,24 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
    * Package private for testing purposes only, should not be accessed externally.
    */
   List<Future<Boolean>> getFutures(
-      final Map<KijiColumnName, KijiFreshnessPolicy> usesClientDataRequest,
-      final Map<KijiColumnName, KijiFreshnessPolicy> usesOwnDataRequest,
+      final Map<KijiColumnName, FreshnessCapsule> capsules,
       final Future<KijiRowData> clientData,
       final EntityId eid,
       final KijiDataRequest clientRequest) {
     final List<Future<Boolean>> futures = Lists.newArrayList();
+
+    final Map<KijiColumnName, FreshnessCapsule> usesClientDataRequest =
+        new HashMap<KijiColumnName, FreshnessCapsule>();
+    final Map<KijiColumnName, FreshnessCapsule> usesOwnDataRequest =
+        new HashMap<KijiColumnName, FreshnessCapsule>();
+    for (Map.Entry<KijiColumnName, FreshnessCapsule> entry : capsules.entrySet()) {
+      if (entry.getValue().getPolicy().shouldUseClientDataRequest()) {
+        usesClientDataRequest.put(entry.getKey(), entry.getValue());
+      } else {
+        usesOwnDataRequest.put(entry.getKey(), entry.getValue());
+      }
+    }
+
     for (final KijiColumnName key: usesClientDataRequest.keySet()) {
       if (clientData == null) {
         throw new InternalKijiError(
@@ -415,16 +559,19 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
             }
           }
           if (rowData != null) {
-            final boolean isFresh = usesClientDataRequest.get(key).isFresh(rowData, policyContext);
+            final boolean isFresh =
+                usesClientDataRequest.get(key).getPolicy().isFresh(rowData, policyContext);
             if (isFresh) {
               // If isFresh, return false to indicate a reread is not necessary.
               return Boolean.FALSE;
             } else {
+              final FreshnessCapsule capsule = usesClientDataRequest.get(key);
               final KijiFreshProducerContext context =
                   KijiFreshProducerContext.create(
-                  mTable, key, eid, mCapsuleCache.get(key).getFactory());
-              final KijiProducer producer = mCapsuleCache.get(key).getProducer();
+                      mTable, key, eid, capsule.getFactory());
+              final KijiProducer producer = capsule.getProducer();
               producer.produce(mReader.get(eid, producer.getDataRequest()), context);
+              capsule.release();
 
               // If a producer runs, return true to indicate a reread is necessary.  This assumes
               // the producer will write to the requested cells, eventually it may be appropriate
@@ -442,19 +589,23 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
       final Future<Boolean> requiresReread = mExecutor.submit(new Callable<Boolean>() {
         public Boolean call() throws IOException {
           final KijiRowData rowData =
-              mReader.get(eid, usesOwnDataRequest.get(key).getDataRequest());
+              mReader.get(eid, usesOwnDataRequest.get(key).getPolicy().getDataRequest());
           final PolicyContext policyContext =
               new InternalPolicyContext(clientRequest, key, mTable.getKiji().getConf());
-          final boolean isFresh = usesOwnDataRequest.get(key).isFresh(rowData, policyContext);
+          final boolean isFresh =
+              usesOwnDataRequest.get(key).getPolicy().isFresh(rowData, policyContext);
           if (isFresh) {
             // If isFresh, return false to indicate that a reread is not necessary.
             return Boolean.FALSE;
           } else {
+            final FreshnessCapsule capsule = usesOwnDataRequest.get(key);
             final KijiFreshProducerContext context =
                 KijiFreshProducerContext.create(
-                mTable, key, eid, mCapsuleCache.get(key).getFactory());
-            final KijiProducer producer = mCapsuleCache.get(key).getProducer();
+                    mTable, key, eid, capsule.getFactory());
+            final KijiProducer producer = capsule.getProducer();
             producer.produce(mReader.get(eid, producer.getDataRequest()), context);
+            capsule.release();
+
             // If a producer runs, return true to indicate that a reread is necessary.  This assumes
             // the producer will write to the requested cells, eventually it may be appropriate
             // to actually check if this is true.
@@ -520,28 +671,16 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   public KijiRowData get(final EntityId eid, final KijiDataRequest dataRequest, final long timeout)
       throws IOException {
 
-    final Map<KijiColumnName, KijiFreshnessPolicy> policies = getPolicies(dataRequest);
+    final Map<KijiColumnName, FreshnessCapsule> capsules = getCapsules(dataRequest);
     // If there are no freshness policies attached to the requested columns, return the requested
     // data.
-    if (policies.size() == 0) {
+    if (capsules.size() == 0) {
       return mReader.get(eid, dataRequest);
-    }
-
-    final Map<KijiColumnName, KijiFreshnessPolicy> usesClientDataRequest =
-        new HashMap<KijiColumnName, KijiFreshnessPolicy>();
-    final Map<KijiColumnName, KijiFreshnessPolicy> usesOwnDataRequest =
-        new HashMap<KijiColumnName, KijiFreshnessPolicy>();
-    for (Map.Entry<KijiColumnName, KijiFreshnessPolicy> entry : policies.entrySet()) {
-      if (entry.getValue().shouldUseClientDataRequest()) {
-        usesClientDataRequest.put(entry.getKey(), entry.getValue());
-      } else {
-        usesOwnDataRequest.put(entry.getKey(), entry.getValue());
-      }
     }
 
     final Future<KijiRowData> clientData = getClientData(eid, dataRequest);
     final List<Future<Boolean>> futures =
-        getFutures(usesClientDataRequest, usesOwnDataRequest, clientData, eid, dataRequest);
+        getFutures(capsules, clientData, eid, dataRequest);
 
     final Future<Boolean> superFuture = mExecutor.submit(new GetFuture(futures));
 
@@ -684,21 +823,18 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   /** {@inheritDoc} */
   @Override
   public void preload(KijiDataRequest dataRequest) throws IOException {
-    getPolicies(dataRequest);
+    getCapsules(dataRequest);
   }
 
   /** {@inheritDoc} */
   @Override
   public void close() throws IOException {
-    // Cleanup all cached producers.
-    for (KijiColumnName key : mCapsuleCache.keySet()) {
-      KeyValueStoreReaderFactory factory = mCapsuleCache.get(key).getFactory();
-      mCapsuleCache.get(key)
-          .getProducer().cleanup(KijiFreshProducerContext.create(mTable, key, null, factory));
-      factory.close();
+    // Release all cached freshness capsules, they will close when producers are finished with them.
+    for (Map.Entry<KijiColumnName, FreshnessCapsule> entry : mCapsuleCache.entrySet()) {
+      entry.getValue().release();
     }
-    if (mReloadTask != null) {
-      mReloadTask.cancel();
+    if (mRereadTask != null) {
+      mRereadTask.cancel();
     }
     // Closing the reader releases the underlying table reference, so we do not have to release it
     // manually.
