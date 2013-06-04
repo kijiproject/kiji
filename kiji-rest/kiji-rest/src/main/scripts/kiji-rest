@@ -57,7 +57,7 @@ if [ -z "$PIDFILE" ]; then
 fi
 
 kiji_jar=$(echo ${BASEDIR}/kiji-rest*.jar)
-kiji_rest_cp="${kiji_jar}:${BASEDIR}/lib/*"
+kiji_rest_cp="${kiji_jar}:${BASEDIR}/lib/*:${KIJI_CLASSPATH}"
 
 mkdir -p ${BASEDIR}/logs
 ${JAVA_HOME}/bin/java -cp ${kiji_rest_cp} org.kiji.rest.KijiRESTService server \
