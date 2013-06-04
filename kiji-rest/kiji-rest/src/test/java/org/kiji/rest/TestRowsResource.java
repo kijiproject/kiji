@@ -336,7 +336,7 @@ public class TestRowsResource extends ResourceTest {
     String eid = getEntityIdString("sample_table", 2345L);
 
     String resourceURI = "/v1/instances/default/tables/sample_table/rows?eid=" + eid;
-    resourceURI = resourceURI + "&cols=group_family:string_qualifier&versions=10";
+    resourceURI = resourceURI + "&cols=group_family:string_qualifier&versions=all";
 
     KijiRestRow returnRow = client().resource(resourceURI).get(KijiRestRow.class);
     assertEquals(5, returnRow.getCells().size());

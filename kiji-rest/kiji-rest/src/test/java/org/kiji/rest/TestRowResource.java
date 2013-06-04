@@ -323,7 +323,7 @@ public class TestRowResource extends ResourceTest {
     String hexRowKey = getHBaseRowKeyHex("sample_table", 2345L);
 
     String resourceURI = "/v1/instances/default/tables/sample_table/rows/" + hexRowKey;
-    resourceURI = resourceURI + "?cols=group_family:string_qualifier&versions=10";
+    resourceURI = resourceURI + "?cols=group_family:string_qualifier&versions=all";
 
     KijiRestRow returnRow = client().resource(resourceURI).get(KijiRestRow.class);
     assertEquals(5, returnRow.getCells().size());

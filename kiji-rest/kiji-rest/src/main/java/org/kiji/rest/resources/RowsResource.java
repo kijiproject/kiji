@@ -57,6 +57,7 @@ import com.yammer.metrics.annotation.Timed;
 import org.apache.avro.Schema;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
+import org.apache.hadoop.hbase.HConstants;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
@@ -202,7 +203,8 @@ public class RowsResource extends AbstractRowResource {
    * @param limit the maximum number of rows to return.
    * @param columns is a comma separated list of columns (either family or family:qualifier) to
    *        fetch
-   * @param maxVersions is the max versions per column to return.
+   * @param maxVersionsString is the max versions per column to return.
+   *        Can be "all" for all versions.
    * @param timeRange is the time range of cells to return (specified by min..max where min/max is
    *        the ms since UNIX epoch. min and max are both optional; however, if something is
    *        specified, at least one of min/max must be present.)
@@ -219,7 +221,7 @@ public class RowsResource extends AbstractRowResource {
       @QueryParam("end_rk") String endHBaseRowKey,
       @QueryParam("limit") @DefaultValue("100") int limit,
       @QueryParam("cols") @DefaultValue("*") String columns,
-      @QueryParam("versions") @DefaultValue("1") int maxVersions,
+      @QueryParam("versions") @DefaultValue("1") String maxVersionsString,
       @QueryParam("timerange") String timeRange) {
     // CSON: ParameterNumberCheck - There are a bunch of query param options
     Response rsp = null;
@@ -229,6 +231,17 @@ public class RowsResource extends AbstractRowResource {
 
     if (timeRange != null) {
       timeRanges = getTimestamps(timeRange);
+    }
+
+    int maxVersions;
+    try  {
+      if ("all".equals(maxVersionsString)) {
+        maxVersions = HConstants.ALL_VERSIONS;
+      } else {
+        maxVersions = Integer.parseInt(maxVersionsString);
+      }
+    } catch (NumberFormatException nfe) {
+      throw new WebApplicationException(nfe, Status.BAD_REQUEST);
     }
 
     KijiDataRequestBuilder dataBuilder = KijiDataRequest.builder();
