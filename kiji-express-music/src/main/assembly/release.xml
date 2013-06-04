@@ -89,6 +89,17 @@
       </includes>
       <filtered>false</filtered>
     </fileSet>
+    <!-- Copy the import descriptor for the tutorial. -->
+    <fileSet>
+      <useDefaultExcludes>true</useDefaultExcludes>
+      <outputDirectory>import</outputDirectory>
+      <directory>src/main/resources/import</directory>
+      <fileMode>0644</fileMode>
+      <includes>
+        <include>song-plays-import-descriptor.json</include>
+      </includes>
+      <filtered>false</filtered>
+    </fileSet>
   </fileSets>
 
   <dependencySets>

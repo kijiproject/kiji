@@ -1,0 +1,14 @@
+{
+  name : "users",
+  families : [ {
+    name : "info",
+    columns : [ {
+      name : "track_plays",
+      source : "song_id"
+    } ]
+  } ],
+  entityIdSource : "user_id",
+  overrideTimestampSource : "play_time",
+  version : "import-1.0"
+}
+
