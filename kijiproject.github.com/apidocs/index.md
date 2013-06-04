@@ -81,14 +81,4 @@ only.
   </li>
 </ul>
 
-### Documentation Under Development
-
-The API documentation in this section refers to the next version of Kiji under development.
-API documentation is provided for these modules as a reference to developers of Kiji itself.
-Information in this section may be incorrect or may change before release.
-
-* [KijiSchema](http://api-docs.kiji.org/kiji-schema/DEVEL/index.html)
-* [KijiMR](http://api-docs.kiji.org/kiji-mapreduce/DEVEL/index.html)
-* [KijiMR Library](http://api-docs.kiji.org/kiji-mapreduce-lib/DEVEL/index.html)
-* [KijiExpress](http://api-docs.kiji.org/kiji-express/DEVEL/index.html)
 

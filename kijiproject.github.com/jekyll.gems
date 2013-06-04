@@ -1,8 +1,16 @@
 # jekyll.gems generated gem export file. Note that any env variable settings will be missing. Append these after using a ';' field separator
 
-maruku -v0.6.0
-liquid -v2.4.1
+classifier -v1.3.3
+directory_watcher -v1.4.1
+fast-stemmer -v1.0.2
 jekyll -v0.12.0
-redcarpet -v2.1.1
+kramdown -v0.13.8
+liquid -v2.4.1
+maruku -v0.6.0
+posix-spawn -v0.3.6
+pygments.rb -v0.3.7
 rdiscount -v1.6.8
+redcarpet -v2.1.1
 RedCloth -v4.2.9
+syntax -v1.0.0
+yajl-ruby -v1.1.0
