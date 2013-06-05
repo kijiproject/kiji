@@ -23,13 +23,10 @@ import com.google.common.collect.Lists
 import com.twitter.scalding.JobTest
 import scala.collection.mutable.Buffer
 
-
 import org.kiji.express._
 import org.kiji.express.DSL._
 import org.kiji.express.EntityId
 import org.kiji.express.KijiSlice
-import org.kiji.examples.music.SongCount
-import org.kiji.examples.music.TopSongs
 
 class SongRecommenderSuite extends KijiSuite {
 
@@ -45,19 +42,11 @@ class SongRecommenderSuite extends KijiSuite {
 
   // Create some data (track plays and topSongs) for two users.
 
-  var songFour: SongCount = new SongCount()
-  songFour.setCount(10L)
-  songFour.setSongId("song-4")
-  val listOfSongFour: java.util.List[SongCount] = Lists.newArrayList(songFour)
-  var topSongsForSong1: TopSongs = new TopSongs()
-  topSongsForSong1.setTopSongs(listOfSongFour)
+  val songFour: AvroRecord = AvroRecord("songId" -> "song-4", "count" -> 10L)
+  val topSongsForSong1 = AvroRecord("topSongs" -> AvroList(List(songFour)))
 
-  var songFive: SongCount = new SongCount()
-  songFive.setCount(9L)
-  songFive.setSongId("song-5")
-  val listOfSongFive: java.util.List[SongCount] = Lists.newArrayList(songFive)
-  var topSongsForSong2: TopSongs = new TopSongs()
-  topSongsForSong2.setTopSongs(listOfSongFive)
+  val songFive: AvroRecord = AvroRecord("songId" -> "song-5", "count" -> 9L)
+  val topSongsForSong2 = AvroRecord("topSongs" -> AvroList(List(songFive)))
 
   val testUserInput =
     (EntityId(usersURI)("user-1"),

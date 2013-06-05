@@ -21,6 +21,7 @@ package org.kiji.express.music
 
 import com.twitter.scalding._
 
+import org.kiji.express.KijiJob
 import org.kiji.express.AvroRecord
 import org.kiji.express.DSL._
 import org.kiji.express.EntityId
@@ -38,7 +39,7 @@ import org.kiji.express.KijiSlice
  *
  * @param args passed to this job from the command line.
  */
-class SongRecommender(args: Args) extends Job(args) {
+class SongRecommender(args: Args) extends KijiJob(args) {
   /**
    * This method retrieves the most popular song (at index 0) in the TopNextSongs record.
    *
@@ -47,9 +48,9 @@ class SongRecommender(args: Args) extends Job(args) {
    */
   def getMostPopularSong(songs: KijiSlice[AvroRecord]): String = {
     val songRecord = songs.getFirstValue
-    val topSongs = songRecord("top_songs")
+    val topSongs = songRecord("topSongs")
     val mostPopularSong = topSongs(0)
-    return mostPopularSong("song_id").asString
+    return mostPopularSong("songId").asString
   }
 
   /**

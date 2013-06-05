@@ -25,9 +25,8 @@ import com.twitter.scalding._
 
 import com.google.common.collect.Lists
 import org.kiji.express._
+import org.kiji.express.KijiJob
 import org.kiji.express.DSL._
-import org.kiji.examples.music.SongCount
-import org.kiji.examples.music.TopSongs
 
 /**
  * For each song S, create a list of songs sorted by the number of times a song was played after
@@ -41,7 +40,7 @@ import org.kiji.examples.music.TopSongs
  *
  * @param args passed from the command line.
  */
-class TopNextSongs(args: Args) extends Job(args) {
+class TopNextSongs(args: Args) extends KijiJob(args) {
   /**
    * Transforms a Scala `List` into a Java `List`.
    *
@@ -73,7 +72,7 @@ class TopNextSongs(args: Args) extends Job(args) {
    * @return a group containing a list of song count records, sorted by count.
    */
   def sortNextSongs(nextSongs: GroupBuilder): GroupBuilder = {
-    nextSongs.sortBy('count).reverse.toList[SongCount]('songCount -> 'scalaTopSongs)
+    nextSongs.sortBy('count).reverse.toList[AvroRecord]('songCount -> 'scalaTopSongs)
   }
 
   // This Scalding pipeline does the following:
@@ -91,10 +90,10 @@ class TopNextSongs(args: Args) extends Job(args) {
   KijiInput(args("users-table"))(Map(Column("info:track_plays", all) -> 'playlist))
       .flatMap('playlist -> ('firstSong, 'songId)) { bigrams }
       .groupBy(('firstSong, 'songId)) { _.size('count) }
-      .pack[SongCount](('songId, 'count) -> 'songCount)
+      .packAvro(('songId, 'count) -> 'songCount)
       .groupBy('firstSong) { sortNextSongs }
       .map('scalaTopSongs -> 'topSongs) { scalaListToJavaList }
-      .pack[TopSongs]('topSongs -> 'topNextSongs)
+      .packAvro('topSongs -> 'topNextSongs)
       .map('firstSong -> 'entityId) { firstSong: String =>
           EntityId(args("songs-table"))(firstSong) }
       .write(KijiOutput(args("songs-table"))('topNextSongs -> "info:top_next_songs"))

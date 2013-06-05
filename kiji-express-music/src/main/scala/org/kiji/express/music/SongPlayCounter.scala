@@ -22,6 +22,7 @@ package org.kiji.express.music
 import com.twitter.scalding._
 
 import org.kiji.express._
+import org.kiji.express.KijiJob
 import org.kiji.express.DSL._
 
 /**
@@ -35,7 +36,7 @@ import org.kiji.express.DSL._
  *
  * @param args passed in from the command line.
  */
-class SongPlayCounter(args: Args) extends Job(args) {
+class SongPlayCounter(args: Args) extends KijiJob(args) {
 
   /**
    * Gets the ids of songs a user has listened to.

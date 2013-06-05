@@ -25,6 +25,7 @@ import com.twitter.scalding._
 
 import org.kiji.express.DSL._
 import org.kiji.express.EntityId
+import org.kiji.express.KijiJob
 
 /**
  * Imports information about users playing tracks into a Kiji table.
@@ -39,7 +40,7 @@ import org.kiji.express.EntityId
  *
  * @param args passed in from the command line.
  */
-class SongPlaysImporter(args: Args) extends Job(args) {
+class SongPlaysImporter(args: Args) extends KijiJob(args) {
   /**
    * Transforms a JSON record into a tuple whose fields correspond to the fields from the JSON
    * record.

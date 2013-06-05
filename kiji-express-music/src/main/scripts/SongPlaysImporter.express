@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-import util.parsing.json.JSON
+import scala.util.parsing.json.JSON
 
 /**
  * Imports information about users playing tracks into a Kiji table.

@@ -23,7 +23,6 @@ import scala.collection.mutable.Buffer
 
 import com.twitter.scalding._
 
-import org.kiji.examples.music.TopSongs
 import org.kiji.express._
 import org.kiji.express.DSL._
 import org.kiji.schema.{EntityId => JEntityId}
@@ -75,24 +74,24 @@ class TopNextSongsSuite extends KijiSuite {
     val topSongForEachSong = topNextSongs
         .map { case(entityId, slice) =>
             (entityId(0).toString, slice) }
-        .map { case(id, slice) => (id, slice.getFirstValue()("top_songs")) }
+        .map { case(id, slice) => (id, slice.getFirstValue()("topSongs")) }
 
     topSongForEachSong.foreach {
       case ("song-0", topSongs) => {
         assert(2 === topSongs.asList.size)
-        assert("song-1" === topSongs(0)("song_id").asString)
+        assert("song-1" === topSongs(0)("songId").asString)
         assert(2 === topSongs(0)("count").asLong)
-        assert("song-0" === topSongs(1)("song_id").asString)
+        assert("song-0" === topSongs(1)("songId").asString)
         assert(1 === topSongs(1)("count").asLong)
       }
       case ("song-1", topSongs) => {
         assert(1 === topSongs.asList.size)
-        assert("song-2" === topSongs(0)("song_id").asString)
+        assert("song-2" === topSongs(0)("songId").asString)
         assert(2 === topSongs(0)("count").asLong)
       }
       case ("song-2", topSongs) => {
         assert(1 === topSongs.asList.size)
-        assert("song-1" === topSongs(0)("song_id").asString)
+        assert("song-1" === topSongs(0)("songId").asString)
         assert(1 === topSongs(0)("count").asLong)
       }
     }

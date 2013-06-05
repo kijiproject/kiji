@@ -23,8 +23,8 @@ import scala.util.parsing.json.JSON
 
 import com.twitter.scalding._
 
+import org.kiji.express.KijiJob
 import org.kiji.express.DSL._
-import org.kiji.examples.music.SongMetadata
 import org.kiji.express.EntityId
 
 /**
@@ -39,7 +39,7 @@ import org.kiji.express.EntityId
  *
  @param args passed in from the command line.
  */
-class SongMetadataImporter(args: Args) extends Job(args) {
+class SongMetadataImporter(args: Args) extends KijiJob(args) {
   /**
    * Transforms a JSON record into a tuple whose fields correspond to the fields from the JSON
    * record.
@@ -71,7 +71,7 @@ class SongMetadataImporter(args: Args) extends Job(args) {
       .map('line ->
           ('songId, 'songName, 'albumName, 'artistName, 'genre, 'tempo,'duration)) { parseJson }
       .map('songId -> 'entityId) { songId: String => EntityId(args("table-uri"))(songId) }
-      .pack[SongMetadata](('songName, 'albumName, 'artistName, 'genre, 'tempo, 'duration)
+      .packAvro(('songName, 'albumName, 'artistName, 'genre, 'tempo, 'duration)
           -> 'metadata)
       .write(KijiOutput(args("table-uri"))('metadata -> "info:metadata"))
 }

@@ -26,13 +26,11 @@ import com.twitter.scalding.{JobTest, TextLine}
 import org.kiji.express._
 import org.kiji.express.DSL._
 import org.kiji.schema.EntityId
-import org.kiji.examples.music.SongMetadata
 
 /**
  * A test that ensures the Song Metadata importer can import song data into a Kiji table.
  */
 class SongMetadataImporterSuite extends KijiSuite {
-
   // Get a Kiji to use for the test and record the Kiji URI of the songs table we'll test against.
   val kiji = makeTestKiji("SongMetadataImporterSuite")
   val tableURI = kiji.getURI().toString + "/songs"
@@ -63,9 +61,9 @@ class SongMetadataImporterSuite extends KijiSuite {
     // Get the first song metadata record written.
     val metadata = generatedMetadata(0)._2.getFirstValue()
     // And confirm it contains the fields we expect.
-    assert("song name-0" === metadata("song_name").asString)
-    assert("artist-1" === metadata("artist_name").asString)
-    assert("album-1" === metadata("album_name").asString)
+    assert("song name-0" === metadata("songName").asString)
+    assert("artist-1" === metadata("artistName").asString)
+    assert("album-1" === metadata("albumName").asString)
     assert("genre5.0" === metadata("genre").asString)
     assert(100L === metadata("tempo").asLong)
     assert(240L === metadata("duration").asLong)

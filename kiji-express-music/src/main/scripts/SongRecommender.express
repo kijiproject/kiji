@@ -38,7 +38,9 @@ val usersTableURI: String = "kiji://.env/kiji_express_music/users"
  */
 def getMostPopularSong(songs: KijiSlice[AvroRecord]): String = {
   val songRecord = songs.getFirstValue
-  songRecord("top_songs")(0)("song_id").asString
+  val topSongs = songRecord("topSongs")
+  val mostPopularSong = topSongs(0)
+  return mostPopularSong("songId").asString
 }
 
 /**

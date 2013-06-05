@@ -23,7 +23,7 @@
   </licenses>
 
   <properties>
-    <kiji.framework.version>1.1.0-SNAPSHOT</kiji.framework.version>
+    <kiji.framework.version>1.0.5-SNAPSHOT</kiji.framework.version>
     <express.version>0.5.0-SNAPSHOT</express.version>
     <scalatest.version>2.0.M5b</scalatest.version>
   </properties>
@@ -138,6 +138,12 @@
           <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
           <junitxml>.</junitxml>
           <filereports>WDF TestSuite.txt</filereports>
+          <systemProperties>
+            <!-- disable schema validation, since it is currently too strict for KijiExpress. -->
+            <org.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION>
+              DISABLED
+            </org.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION>
+          </systemProperties>
         </configuration>
         <executions>
           <execution>

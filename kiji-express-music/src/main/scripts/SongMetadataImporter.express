@@ -17,9 +17,7 @@
  * limitations under the License.
  */
 
-import util.parsing.json.JSON
-
-import org.kiji.examples.music.SongMetadata
+import scala.util.parsing.json.JSON
 
 /**
  * Imports metadata about songs into a Kiji table.
@@ -61,6 +59,6 @@ TextLine("express-tutorial/song-metadata.json")
     .map('line ->
         ('songId, 'songName, 'albumName, 'artistName, 'genre, 'tempo,'duration)) { parseJson }
     .map('songId -> 'entityId) { songId: String => EntityId(tableURI)(songId) }
-    .pack[SongMetadata](('songName, 'albumName, 'artistName, 'genre, 'tempo, 'duration)
+    .packAvro(('songName, 'albumName, 'artistName, 'genre, 'tempo, 'duration)
         -> 'metadata)
     .write(KijiOutput(tableURI)('metadata -> "info:metadata"))
