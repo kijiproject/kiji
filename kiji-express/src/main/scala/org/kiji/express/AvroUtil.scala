@@ -146,11 +146,14 @@ private[express] object AvroUtil {
   /**
    * Wraps Java objects that correspond to Avro values into their appropriate AvroValue class.
    *
+   * If `x` is already an AvroValue, this returns `x` with no change.
+   *
    * @param x is the object to wrap.
    * @return the wrapped object as an AvroValue.
    */
   private[express] def wrapGenericAvro(x: Any): AvroValue = {
     x match {
+      case v: AvroValue => v
       case record: IndexedRecord => {
         // Construct a map from field names in this record to the Scala-converted values.
         val schema = record.getSchema
@@ -291,8 +294,8 @@ private[express] object AvroUtil {
               null
               // scalastyle:on null
             } else {
-              // Require that if schemas is non-empty, all of them must be the same.
-              require(schemas.forall(_ == schemas.head))
+              // Require that if schemas is non-empty, all of them must be the same type.
+              require(schemas.forall(_.getType == schemas.head.getType))
               schemas.head
             }
           }

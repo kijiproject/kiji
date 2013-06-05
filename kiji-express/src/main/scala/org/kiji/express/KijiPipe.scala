@@ -67,36 +67,51 @@ class KijiPipe(private val pipe: Pipe) extends TupleConversions {
      * Obtains a configuration used when running the job.
      *
      * This overridden method uses the same configuration as a standard Scalding job,
-     * but adds a jar containing compiled REPL code to the distributed cache if the REPL is
-     * running.
+     * but adds options specific to KijiExpress, including adding a jar containing compiled REPL
+     * code to the distributed cache if the REPL is running.
      *
      * @param mode used to run the job (either local or hadoop).
      * @return the configuration that should be used to run the job.
      */
     override def config(implicit mode: Mode): Map[AnyRef, AnyRef] = {
+      // Use the configuration from Scalding Job as our base.
       val configuration = super.config(mode)
+
+      /** Appends a comma to the end of a string. */
+      def appendComma(str: Any): String = str.toString + ","
+
+      // Java system properties to mapreduce child processes.
+      val childJavaOptsConfig =
+          Map("mapred.child.java.opts" -> {
+              // Use any mapred.child.java.opts already in the configuration.
+              configuration.get("mapred.child.java.opts").map(appendComma).getOrElse("") +
+                  // Disable schema validation in any child mapreduce processes.
+                  "-Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED"
+          })
       // If the REPL is running, we should add tmpjars passed in from the command line,
       // and a jar of REPL code, to the distributed cache of jobs run through the REPL.
       val replCodeJar = ExpressShell.createReplCodeJar()
-      if (replCodeJar.isDefined) {
-        def appendComma(str: Any): String = str.toString + ","
-        val tmpJarsConfiguration = Map("tmpjars" -> {
-            // Use tmpjars already in the configuration.
-            configuration
-                .get("tmpjars")
-                .map(appendComma)
-                .getOrElse("") +
-            // And tmpjars passed to ExpressShell from the command line when started.
-            ExpressShell.tmpjars
-                .map(appendComma)
-                .getOrElse("") +
-            // And a jar of code compiled by the REPL.
-            "file://" + replCodeJar.get.getAbsolutePath
-        })
-        configuration ++ tmpJarsConfiguration
-      } else {
-        configuration
-      }
+      val tmpJarsConfig =
+        if (replCodeJar.isDefined) {
+          Map("tmpjars" -> {
+              // Use tmpjars already in the configuration.
+              configuration
+                  .get("tmpjars")
+                  .map(appendComma)
+                  .getOrElse("") +
+              // And tmpjars passed to ExpressShell from the command line when started.
+              ExpressShell.tmpjars
+                  .map(appendComma)
+                  .getOrElse("") +
+              // And a jar of code compiled by the REPL.
+              "file://" + replCodeJar.get.getAbsolutePath
+          })
+        } else {
+          // No need to add the tmpjars to the configuration
+          Map[String, String]()
+        }
+
+      configuration ++ childJavaOptsConfig ++ tmpJarsConfig
     }
 
     /**

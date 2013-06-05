@@ -48,13 +48,13 @@ import org.kiji.express.util.Resources.doAndClose
  * ScriptRunner provides the machinery necessary to be able to run uncompiled KijiExpress
  * scripts.
  *
- * An uncompiled KijiExpress should be written as if it were a script inside of a Scalding Job
+ * An uncompiled KijiExpress should be written as if it were a script inside of a KijiJob
  * class. Scripts can access command line arguments by using the Scalding Args object with the name
- * args. Scripts compiled by ScriptRunner get wrapped in a Scalding Job constructor:
+ * args. Scripts compiled by ScriptRunner get wrapped in a KijiJob constructor:
  * {{{
  *   // Added by ScriptRunner:
  *   { args: com.twitter.scalding.Args =>
- *     new com.twitter.scalding.Job(args) {
+ *     new KijiJob(args) {
  *
  *       // User code here.
  *
@@ -86,7 +86,7 @@ class ScriptRunner extends Tool {
 
   /** Code to insert before each script. */
   private[express] val before =
-      "{ args: com.twitter.scalding.Args => new com.twitter.scalding.Job(args) {"
+      "{ args: com.twitter.scalding.Args => new KijiJob(args) {"
 
   /** Code to insert after each script. */
   private[express] val after = "} }"
@@ -154,7 +154,7 @@ class ScriptRunner extends Tool {
    * @param outputDirectory that compiled classes will be placed in.
    * @return a function that will construct a KijiExpress job given command line arguments.
    */
-  private[express] def compileScript(script: String, outputDirectory: File): (Args) => Job = {
+  private[express] def compileScript(script: String, outputDirectory: File): (Args) => KijiJob = {
     // Create an evaluator that will compile the script to a temporary directory.
     logger.info("compiling classes to %s".format(outputDirectory))
     val compiler = new Eval(Some(outputDirectory))
@@ -193,7 +193,7 @@ class ScriptRunner extends Tool {
     val script: String = doAndClose(Source.fromFile(scriptFile)) { source: Source =>
       source.mkString
     }
-    val jobc: (Args) => Job = compileScript(script, compileFolder)
+    val jobc: (Args) => KijiJob = compileScript(script, compileFolder)
 
     // Build a jar.
     val compileJar: File = new File("%s/%s.jar".format(tempDir.getPath(), scriptFile.getName()))

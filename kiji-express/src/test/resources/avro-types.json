@@ -55,6 +55,13 @@
           type : "INLINE",
           value : '{"type": "record", "name": "stringcontainer", "doc": "A simple inline record that contains a string", "fields": [{"name": "contained_string", "type": "string"}]}'
         }
+      }, {
+        name : "column5",
+        description: "A class that does not exist on the classpath, for testing purposes.",
+        column_schema : {
+          type : "CLASS",
+          value : "org.kiji.nonexistent.class"
+        }
       }]
     } ]
   } ],

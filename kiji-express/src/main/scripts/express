@@ -453,9 +453,11 @@ fi
 
 # Run it!
 if [ -z "${scalding_tool}" ]; then
-  exec java -cp "${express_cp}" ${java_opts} ${EXPRESS_JAVA_OPTS} \
+  exec java \
+    -cp "${express_cp}" ${java_opts} ${EXPRESS_JAVA_OPTS} \
     -Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED \
-    "${class}" ${COMMAND_ARGS}
+    "${class}" ${COMMAND_ARGS} \
+    -D mapred.child.java.opts="-Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED"
 else
   canonical_user_target=$(resolve_symlink ${user_target})
   if [ -z "${canonical_user_target}" ]; then
@@ -464,14 +466,19 @@ else
   fi
 
   if [ -z "${class}" ]; then
-    exec java -cp "${express_cp}" ${java_opts} ${EXPRESS_JAVA_OPTS} \
+    exec java \
+      -cp "${express_cp}" ${java_opts} ${EXPRESS_JAVA_OPTS} \
       -Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED \
       ${scalding_tool} \
-      "-Dtmpjars=${tmpjars}" "${canonical_user_target}" "${run_mode_flag}" ${COMMAND_ARGS}
+      "${canonical_user_target}" "${run_mode_flag}" ${COMMAND_ARGS}
+      -D mapred.child.java.opts="-Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED"
   else
-    java -cp "${express_cp}" ${java_opts} ${EXPRESS_JAVA_OPTS} ${scalding_tool} \
+    java \
       -Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED \
-      "-Dtmpjars=file://${canonical_user_target},${tmpjars}" "${class}" "${run_mode_flag}" \
-      ${COMMAND_ARGS}
+      -cp "${express_cp}" ${java_opts} ${EXPRESS_JAVA_OPTS} ${scalding_tool} \
+      "-Dtmpjars=file://${canonical_user_target},${tmpjars}" \
+      "${class}" "${run_mode_flag}" \
+      ${COMMAND_ARGS} \
+      -D mapred.child.java.opts="-Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED"
   fi
 fi

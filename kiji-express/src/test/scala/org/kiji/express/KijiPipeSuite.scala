@@ -130,6 +130,44 @@ class KijiPipeSuite extends KijiSuite {
     jobTest.runHadoop.finish
   }
 
+  test("A KijiPipe can pack tuples into AvroRecords when the table layout has a 'CLASS' type.") {
+    val avroLayout: KijiTableLayout = layout("avro-types.json")
+
+    val uri: String = doAndRelease(makeTestKijiTable(avroLayout)) { table: KijiTable =>
+      table.getURI().toString()
+    }
+
+    val packingInput: List[(String, String)] = List(( "0", "1 eid1 word1" ))
+
+    def validatePacking(outputBuffer: Buffer[(EntityId, KijiSlice[AvroRecord])]) {
+      // Get the first record from the first KijiSlice.
+      val outputRecord = outputBuffer(0)._2.getFirstValue
+      assert("1 eid1 word1" === outputRecord("line").asString)
+      assert(12 === outputRecord("length").asInt)
+    }
+
+    def packTupleJob(args: Args): Job = {
+      val cascadingPipe = TextLine(args("input")).read
+          .map ('line -> 'length) { line: String => line.length }
+          .map ('offset -> 'entityId) { offset: String => EntityId(args("output"))(offset) }
+      new KijiPipe(cascadingPipe)
+          .packAvro(('line, 'length) -> 'record)
+          .write(KijiOutput(args("output"))('record -> "family:column5"))
+          .getJob(args)
+    }
+
+    val jobTest = JobTest(packTupleJob(_))
+        .arg("input", "inputFile")
+        .arg("output", uri)
+        .source(TextLine("inputFile"), packingInput)
+        .sink(KijiOutput(uri)('record -> "family:column5"))(validatePacking)
+
+    // Run in local mode.
+    jobTest.run.finish
+    // Run in hadoop mode.
+    jobTest.runHadoop.finish
+  }
+
   test("A KijiPipe can unpack tuples from AvroRecords.") {
     val avroLayout: KijiTableLayout = layout("avro-types.json")
 
