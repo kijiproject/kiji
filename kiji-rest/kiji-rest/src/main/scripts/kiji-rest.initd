@@ -36,6 +36,7 @@ DESC="Kiji REST"
 
 KIJI_REST_USER="kiji"
 KIJI_REST_HOME="/opt/wibi/kiji-rest"
+KIJI_REST_URL="http://localhost:8080"
 
 #Setup some directories
 mkdir -p ${RUNDIR}
@@ -48,7 +49,7 @@ check_for_app() {
 }
 
 checkstatusofproc(){
-  curl -s "http://localhost:8080" -o /dev/null
+  curl -s ${KIJI_REST_URL} -o /dev/null
 }
 
 start() {
