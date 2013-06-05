@@ -47,7 +47,7 @@ The entire pipeline put together looks like this:
  *
  * @param args passed in from the command line.
  */
-class SongPlayCounter(args: Args) extends Job(args) {
+class SongPlayCounter(args: Args) extends KijiJob(args) {
 
   /**
    * Gets the ids of songs a user has listened to.

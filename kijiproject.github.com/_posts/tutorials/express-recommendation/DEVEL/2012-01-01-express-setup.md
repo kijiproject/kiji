@@ -86,16 +86,6 @@ export KIJI=kiji://.env/kiji_express_music
 {% endhighlight %}
 </div>
 
-To work through this tutorial, various Kiji tools will require that Avro data
-type definitions particular to the working music recommendation example be on the
-classpath. You can add your artifacts to the Kiji classpath by running:
-
-<div class="userinput">
-{% highlight bash %}
-export KIJI_CLASSPATH="${MUSIC_EXPRESS_HOME}/lib/*"
-{% endhighlight %}
-</div>
-
 
 ### Install Kiji and Create Tables
 

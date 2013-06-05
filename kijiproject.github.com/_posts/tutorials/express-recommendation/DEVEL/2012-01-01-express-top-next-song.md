@@ -25,10 +25,10 @@ The entire pipeline for this computation is a little more complex.  It looks lik
 KijiInput(args("users-table"))(Map(Column("info:track_plays", all) -> 'playlist))
     .flatMap('playlist -> ('firstSong, 'songId)) { bigrams }
     .groupBy(('firstSong, 'songId)) { _.size('count) }
-    .pack[SongCount](('songId, 'count) -> 'songCount)
+    .packAvro(('songId, 'count) -> 'songCount)
     .groupBy('firstSong) { sortNextSongs }
     .map('scalaTopSongs -> 'topSongs) { scalaListToJavaList }
-    .pack[TopSongs]('topSongs -> 'topNextSongs)
+    .packAvro('topSongs -> 'topNextSongs)
     .map('firstSong -> 'entityId) { firstSong: String =>
         EntityId(args("songs-table"))(firstSong) }
     .write(KijiOutput(args("songs-table"))('topNextSongs -> "info:top_next_songs"))
@@ -91,14 +91,15 @@ size of that group in the 'count field.
 {% endhighlight %}
 
 #### Pack the pair of ‘songId and ‘count into a SongCount record
-
-Next, a `SongCount` record is constructed containing the song played and the count associated
-with it. Scalding's `pack` method is used to perform this operation. `pack` takes a mapping from
-tuple fields to a field name to bind the resulting record to. Any fields specified must have
-matching setters named `set<Fieldname>`.
+Next, a `SongCount` record is constructed containing the song played and the count associated with
+with it. KijiExpress's `packAvro` method is used to perform this operation. `packAvro` takes a
+mapping from tuple fields to a field name. The resulting AvroRecord is bound to the field name. That
+AvroRecord has every tuple entry that was packed into it as a field.  For example, here, after the
+`packAvro` operation, the `'songCount` field contains an AvroRecord with two fields: `songId` and
+`count`.
 
 {% highlight scala %}
-    .pack[SongCount](('songId, 'count) -> 'songCount)
+    .packAvro(('songId, 'count) -> 'songCount)
 {% endhighlight %}
 
 #### Sort the ‘nextSongs associated with each ‘firstSong
@@ -154,7 +155,7 @@ def scalaListToJavaList[T](ls: List[T]): java.util.List[T] = Lists.newArrayList[
 
 {% highlight scala %}
     .map('scalaTopSongs -> 'topSongs) { scalaListToJavaList }
-    .pack[TopSongs]('topSongs -> 'topNextSongs)
+    .packAvro('topSongs -> 'topNextSongs)
 {% endhighlight %}
 
 #### Finally, write the ‘topNextSongs field to the “info:top_next_songs” column in our table
