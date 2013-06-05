@@ -105,7 +105,6 @@ public class IntegrationTestKijiBulkLoad
   @Test
   public void testBulkLoadHFile() throws Exception {
     final Path hfileDirPath = this.makeRandomPath("hfile-output");
-
     final KijiMapReduceJob mrjob = KijiBulkImportJobBuilder.create()
         .withConf(getConf())
         .withInput(MapReduceJobInputs.newTextMapReduceJobInput(mBulkImportInputPath))
@@ -134,7 +133,6 @@ public class IntegrationTestKijiBulkLoad
     final HFileLoader loader = HFileLoader.create(mConf);
     loader.load(hfileDirPath, mOutputTable);
   }
-
 
   @Test
   public void testBulkLoadMultipleSplits() throws Exception {
