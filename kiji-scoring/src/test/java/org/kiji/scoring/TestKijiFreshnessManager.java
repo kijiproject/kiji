@@ -43,14 +43,11 @@ import org.kiji.schema.KijiRowData;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.util.InstanceBuilder;
+import org.kiji.scoring.KijiFreshnessManager.FreshnessValidationException;
 import org.kiji.scoring.avro.KijiFreshnessPolicyRecord;
 import org.kiji.scoring.lib.AlwaysFreshen;
 import org.kiji.scoring.lib.ShelfLife;
 
-/**
- * Created with IntelliJ IDEA. User: aaron Date: 4/16/13 Time: 10:13 AM To change this template use
- * File | Settings | File Templates.
- */
 public class TestKijiFreshnessManager {
   /** A Kiji instance for testing. */
   private Kiji mKiji;
@@ -174,40 +171,45 @@ public class TestKijiFreshnessManager {
   @Test
   public void testInvalidColumnAttachment() throws IOException {
     final ShelfLife policy = new ShelfLife(100);
+
     try {
       mFreshManager.storePolicy("user", "info:invalid", TestProducer.class, policy);
-      fail("KijiFreshnessManager.storePolicy() should have thrown an IllegalArgumentException");
-    } catch (IllegalArgumentException iae) {
-      assertEquals("Table: user does not contain specified column: info:invalid", iae.getMessage());
+      fail();
+    } catch (FreshnessValidationException fve) {
+      assertEquals("There were validation failures.\nNO_QUALIFIED_COLUMN_IN_TABLE: Table: user does"
+          + " not contain specified column: info:invalid", fve.getMessage());
     }
+
     try {
       mFreshManager.storePolicy("user", "info", TestFamilyProducer.class, policy);
-      fail("KijiFreshnessManager.storePolicy() should have thrown an IllegalArgumentException");
-    } catch (IllegalArgumentException iae) {
-      assertEquals("Specified family: info is not a valid Map Type family in the table: user",
-          iae.getMessage());
+      fail();
+    } catch (FreshnessValidationException fve) {
+      assertEquals("There were validation failures.\nGROUP_TYPE_FAMILY_ATTACHMENT: Specified "
+          + "family: info is not a valid Map Type family in the table: user", fve.getMessage());
     }
+
     mFreshManager.storePolicy("user", "networks", TestFamilyProducer.class, policy);
     try {
       mFreshManager.storePolicy("user", "networks:qualifier", TestProducer.class, policy);
-      fail("KijiFreshnessManager.storePolicy() should have thrown an IllegalArgumentException");
-    } catch (IllegalArgumentException iae) {
-      assertEquals("There is already a freshness policy attached to family: networks Freshness "
+    } catch (FreshnessValidationException fve) {
+      assertEquals("There were validation failures.\nFRESHENER_ALREADY_ATTACHED: There is already a"
+          + " freshness policy attached to family: networks Freshness "
           + "policies may not be attached to a map type family and fully qualified columns within "
-          + "that family.", iae.getMessage());
+          + "that family.", fve.getMessage());
     }
+
+
     mFreshManager.removePolicy("user", "networks");
     mFreshManager.storePolicy("user", "networks:qualifier", TestProducer.class, policy);
     try {
       mFreshManager.storePolicy("user", "networks", TestFamilyProducer.class, policy);
-      fail("KijiFreshnessManager.storePolicy() should have thrown an IllegalArgumentException");
-    } catch (IllegalArgumentException iae) {
-      assertEquals("There is already a freshness policy attached to a fully qualified column in "
+    } catch (FreshnessValidationException fve) {
+      assertEquals("There were validation failures.\nFRESHENER_ALREADY_ATTACHED: There is already a"
+          + " freshness policy attached to a fully qualified column in "
           + "family: networks Freshness policies may not be attached to a map type family and fully"
           + " qualified columns within that family. To view a list of attached freshness policies "
-          + "check log files for KijiFreshnessManager.", iae.getMessage());
+          + "check log files for KijiFreshnessManager.", fve.getMessage());
     }
-
     // This should pass.
     mFreshManager.storePolicy("user", "info:name", TestProducer.class, policy);
   }
@@ -217,26 +219,24 @@ public class TestKijiFreshnessManager {
     try {
       mFreshManager.storePolicyWithStrings(
           "user", "networks", "kiji..producer", "kiji.policy.policy", "");
-      fail("Bad producer class name should have thrown IllegalArgumentException");
-    } catch (IllegalArgumentException iae) {
-      assertEquals("Producer class name: kiji..producer is not a valid Java class identifier.",
-          iae.getMessage());
+      fail();
+    } catch (FreshnessValidationException fve) {
+      assertEquals("There were validation failures.\nBAD_PRODUCER_NAME: Producer class name: "
+          + "kiji..producer is not a valid Java class identifier.", fve.getMessage());
     }
+
     try {
-      mFreshManager.storePolicyWithStrings(
-          "user", "networks", "kiji.a.producer", "kiji.", "");
-      fail("Bad policy class name should have thrown IllegalArgumentException");
-    } catch (IllegalArgumentException iae) {
-      assertEquals("Policy class name: kiji. is not a valid Java class identifier.",
-          iae.getMessage());
+      mFreshManager.storePolicyWithStrings("user", "networks", "kiji.a.producer", "kiji.", "");
+    } catch (FreshnessValidationException fve) {
+      assertEquals("There were validation failures.\nBAD_POLICY_NAME: Policy class name: kiji. is "
+          + "not a valid Java class identifier.", fve.getMessage());
     }
+
     try {
-      mFreshManager.storePolicyWithStrings(
-          "user", "networks", "kiji.a.producer", ".kiji", "");
-      fail("Bad policy class name should have thrown IllegalArgumentException");
-    } catch (IllegalArgumentException iae) {
-      assertEquals("Policy class name: .kiji is not a valid Java class identifier.",
-          iae.getMessage());
+      mFreshManager.storePolicyWithStrings("user", "networks", "kiji.a.producer", ".kiji", "");
+    } catch (FreshnessValidationException fve) {
+      assertEquals("There were validation failures.\nBAD_POLICY_NAME: Policy class name: .kiji is "
+          + "not a valid Java class identifier.", fve.getMessage());
     }
   }
 

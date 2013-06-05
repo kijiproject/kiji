@@ -20,13 +20,16 @@
 package org.kiji.scoring.tools;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 
 import com.google.common.collect.Lists;
+import org.apache.avro.io.DatumWriter;
+import org.apache.avro.io.Encoder;
+import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -40,9 +43,11 @@ import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.tools.BaseTool;
+import org.kiji.schema.util.ProtocolVersion;
 import org.kiji.scoring.KijiFreshnessManager;
 import org.kiji.scoring.KijiFreshnessPolicy;
 import org.kiji.scoring.avro.KijiFreshnessPolicyRecord;
+import org.kiji.scoring.lib.AlwaysFreshen;
 import org.kiji.scoring.lib.NeverFreshen;
 
 public class TestFreshTool extends KijiClientTest {
@@ -146,34 +151,32 @@ public class TestFreshTool extends KijiClientTest {
   @Test
   public void testIllegalRegister() throws Exception {
     getKiji().createTable(KijiTableLayouts.getLayout(KijiTableLayouts.COUNTER_TEST));
-    try {
-      runTool(new FreshTool(),
-          KijiURI.newBuilder(getKiji().getURI()).withTableName("user")
-              .withColumnNames(Lists.newArrayList("info:name")).build().toString(),
-          "--do=register",
-          "--policy-class=org.kiji..badname",
-          "--policy-state={\"shelfLife\":10}",
-          "--producer-class=org.kiji.scoring.tools.TestFreshTool$TestProducer",
-          "--force=true");
-      fail("runTool should have thrown IllegalArgumentException");
-    } catch (IllegalArgumentException iae) {
-      assertEquals("Policy class name: org.kiji..badname is not a valid Java class identifier.",
-          iae.getMessage());
-    }
-    try {
-      runTool(new FreshTool(),
-          KijiURI.newBuilder(getKiji().getURI()).withTableName("user")
-              .withColumnNames(Lists.newArrayList("info:name")).build().toString(),
-          "--do=register",
-          "--policy-class=org.kiji.class",
-          "--policy-state={\"shelfLife\":10}",
-          "--producer-class=org.kiji.scoring.tools.TestFreshTool$TestProducer.",
-          "--force=true");
-      fail("runTool should have thrown IllegalArgumentException");
-    } catch (IllegalArgumentException iae) {
-      assertEquals("Producer class name: org.kiji.scoring.tools.TestFreshTool$TestProducer. is not "
-          + "a valid Java class identifier.", iae.getMessage());
-    }
+
+    runTool(new FreshTool(),
+        KijiURI.newBuilder(getKiji().getURI()).withTableName("user")
+            .withColumnNames(Lists.newArrayList("info:name")).build().toString(),
+        "--do=register",
+        "--policy-class=org.kiji..badname",
+        "--policy-state={\"shelfLife\":10}",
+        "--producer-class=org.kiji.scoring.tools.TestFreshTool$TestProducer",
+        "--interactive=false");
+
+    assertEquals("BAD_POLICY_NAME: java.lang.IllegalArgumentException: Policy class name: "
+        + "org.kiji..badname is not a valid Java class identifier.", mToolOutputLines[0]);
+
+
+    runTool(new FreshTool(),
+        KijiURI.newBuilder(getKiji().getURI()).withTableName("user")
+            .withColumnNames(Lists.newArrayList("info:name")).build().toString(),
+        "--do=register",
+        "--policy-class=org.kiji.class",
+        "--policy-state={\"shelfLife\":10}",
+        "--producer-class=org.kiji.scoring.tools.TestFreshTool$TestProducer.",
+        "--interactive=false");
+
+    assertEquals("BAD_PRODUCER_NAME: java.lang.IllegalArgumentException: Producer class name: org."
+        + "kiji.scoring.tools.TestFreshTool$TestProducer. is not a valid Java class identifier.",
+        mToolOutputLines[0]);
   }
 
   @Test
@@ -272,5 +275,39 @@ public class TestFreshTool extends KijiClientTest {
     ));
     assertEquals("There are no freshness policies attached to columns in table: user",
         mToolOutputStr);
+  }
+
+  @Test
+  public void testValidate() throws Exception {
+    getKiji().createTable(KijiTableLayouts.getLayout(KijiTableLayouts.COUNTER_TEST));
+    final KijiFreshnessManager manager = KijiFreshnessManager.create(getKiji());
+    manager.storePolicy("user", "info:name", TestProducer.class, new AlwaysFreshen());
+    assertEquals(BaseTool.SUCCESS, runTool(new FreshTool(),
+        KijiURI.newBuilder(getKiji().getURI()).withTableName("user").build().toString(),
+        "--do=validate-all"));
+
+    KijiFreshnessPolicyRecord record = KijiFreshnessPolicyRecord.newBuilder()
+        .setRecordVersion(ProtocolVersion.parse("policyrecord-0.1").toCanonicalString())
+            .setProducerClass(TestProducer.class.getName())
+            .setFreshnessPolicyClass(AlwaysFreshen.class.getName())
+            .setFreshnessPolicyState("")
+            .build();
+
+    final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    final EncoderFactory encoderFactory = EncoderFactory.get();
+    Encoder encoder = encoderFactory.directBinaryEncoder(outputStream, null);
+    final DatumWriter<KijiFreshnessPolicyRecord> recordWriter =
+        new SpecificDatumWriter<KijiFreshnessPolicyRecord>(KijiFreshnessPolicyRecord.SCHEMA$);
+    recordWriter.write(record, encoder);
+    getKiji().getMetaTable().putValue("user", "kiji.scoring.fresh.columnName",
+        outputStream.toByteArray());
+
+    assertEquals(BaseTool.FAILURE, runTool(new FreshTool(),
+        KijiURI.newBuilder(getKiji().getURI()).withTableName("user").build().toString(),
+        "--do=validate-all"));
+    assertEquals("Freshness policy attached to column: columnName is not valid.",
+        mToolOutputLines[1]);
+    assertEquals("NO_FAMILY_IN_TABLE: java.lang.IllegalArgumentException: Table: user does not "
+        + "contain family: columnName", mToolOutputLines[2]);
   }
 }
