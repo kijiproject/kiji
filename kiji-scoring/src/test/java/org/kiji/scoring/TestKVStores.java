@@ -227,7 +227,7 @@ public class TestKVStores extends KijiClientTest {
     KijiFreshnessManager manager = KijiFreshnessManager.create(getKiji());
     manager.storePolicy("user", "info:name", SimpleKVProducer.class, new AlwaysFreshen());
     KijiTable userTable = getKiji().openTable("user");
-    FreshKijiTableReader reader = FreshKijiTableReaderBuilder.get()
+    FreshKijiTableReader reader = FreshKijiTableReaderBuilder.create()
         .withReaderType(FreshReaderType.LOCAL)
         .withTable(userTable)
         .withTimeout(10000)
@@ -249,7 +249,7 @@ public class TestKVStores extends KijiClientTest {
     KijiFreshnessManager manager = KijiFreshnessManager.create(getKiji());
     manager.storePolicy("user", "info:name", UnconfiguredProducer.class, policy);
     KijiTable userTable = getKiji().openTable("user");
-    FreshKijiTableReader reader = FreshKijiTableReaderBuilder.get()
+    FreshKijiTableReader reader = FreshKijiTableReaderBuilder.create()
         .withReaderType(FreshReaderType.LOCAL)
         .withTable(userTable)
         .withTimeout(10000)

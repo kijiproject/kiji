@@ -76,7 +76,7 @@ public class TestFreshnessDemo extends KijiClientTest {
     manager.storePolicy("user", "info:visits", DemoProducer.class, policy);
     // Open a FreshKijiTableReader for the table with a timeout of 100 milliseconds.
     // Note: the FreshKijiTableReader must be opened after the freshness policy is registered.
-    final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.get()
+    final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
         .withReaderType(FreshReaderType.LOCAL)
         .withTable(table)
         .withTimeout(500)

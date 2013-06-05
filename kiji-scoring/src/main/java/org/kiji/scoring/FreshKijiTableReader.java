@@ -35,7 +35,7 @@ import org.kiji.schema.KijiTableReader;
  * <p>
  *   Utilizes {@link org.kiji.schema.EntityId} and {@link org.kiji.schema.KijiDataRequest}
  *   to return {@link org.kiji.schema.KijiRowData}.  Accessible via
- *   {@link org.kiji.scoring.FreshKijiTableReaderBuilder#get()}.
+ *   {@link org.kiji.scoring.FreshKijiTableReaderBuilder#create()}.
  * </p>
  *
  * <p>
@@ -66,7 +66,7 @@ import org.kiji.schema.KijiTableReader;
  *     .add("foo", "bar");
  *   final KijiDataRequest request = builder.build();
  *
- *   final KijiTableReader freshReader = FreshKijiTableReaderBuilder.get()
+ *   final KijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
  *       .withReaderType(FreshReaderType.LOCAL)
  *       .withTable(table)
  *       .withTimeout(100)

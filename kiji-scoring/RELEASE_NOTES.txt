@@ -2,6 +2,7 @@
                               Kiji Scoring Release Notes
 
 Version 0.2.0
+  * SCORE-45. FreshKijiTableReaderBuilder.get() is now FreshKijiTableReaderBuilder.create().
   * SCORE-34. FreshKijiTableReader.reloadPolicies has been renamed rereadPolicies to reflect the
       distinction from preload.
   * SCORE-22. KijiFreshnessManager store policy methods now include a variety of safety checks.

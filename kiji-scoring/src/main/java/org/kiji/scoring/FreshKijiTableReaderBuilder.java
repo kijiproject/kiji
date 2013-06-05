@@ -47,7 +47,7 @@ import org.kiji.scoring.impl.InternalFreshKijiTableReader;
  *   To create a new FreshKijiTableReader:
  * </p>
  * <p><pre>
- *   final FreshKijiTableReader = FreshKijiTableReaderBuilder.get()
+ *   final FreshKijiTableReader = FreshKijiTableReaderBuilder.create()
  *       .withReaderType(FreshReaderType.LOCAL)
  *       .withTable(myTable)
  *       .withTimeout(100)
@@ -73,7 +73,7 @@ public final class FreshKijiTableReaderBuilder {
    *
    * @return a new instance of FreshKijiTableReaderBuilder.
    */
-  public static FreshKijiTableReaderBuilder get() {
+  public static FreshKijiTableReaderBuilder create() {
     return new FreshKijiTableReaderBuilder();
   }
 

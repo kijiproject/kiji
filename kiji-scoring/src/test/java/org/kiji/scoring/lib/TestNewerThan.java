@@ -79,7 +79,7 @@ public final class TestNewerThan extends KijiClientTest {
     // Fill local variables.
     mTable = mKiji.openTable("user");
     mReader = mTable.openTableReader();
-    mFreshReader = FreshKijiTableReaderBuilder.get()
+    mFreshReader = FreshKijiTableReaderBuilder.create()
         .withReaderType(FreshReaderType.LOCAL)
         .withTable(mTable)
         .withTimeout(1000)
