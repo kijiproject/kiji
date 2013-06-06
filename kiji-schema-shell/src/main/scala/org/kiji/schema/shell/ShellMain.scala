@@ -19,16 +19,17 @@
 
 package org.kiji.schema.shell
 
+import scala.collection.JavaConverters._
+
 import org.kiji.annotations.ApiAudience
 import org.kiji.common.flags.Flag
 import org.kiji.common.flags.FlagParser
 import org.kiji.schema.KConstants
 import org.kiji.schema.KijiURI
-import org.kiji.schema.shell.ddl.DDLCommand
-import org.kiji.schema.shell.ddl.ErrorCommand
 import org.kiji.schema.shell.input.FileInputSource
 import org.kiji.schema.shell.input.JLineInputSource
 import org.kiji.schema.shell.input.StringInputSource
+import org.kiji.schema.shell.ddl.UseModuleCommand
 
 /**
  * An object used to run a Kiji schema shell.
@@ -44,10 +45,13 @@ final class ShellMain {
   @Flag(name="file", usage="Script file to execute")
   var filename: String = ""
 
+  @Flag(name="modules", usage="Comma-separated list of names of modules to pre-load.")
+  var moduleNamesToPreLoad: java.util.List[String] = new java.util.ArrayList()
+
   /**
    * Programmatic entry point.
    * Like main(), but without that pesky sys.exit() call.
-   * @returns a return status code. 0 is success.
+   * @return a return status code. 0 is success.
    */
   def run(): Int = {
     val chatty = expr.equals("") && filename.equals("")
@@ -62,6 +66,23 @@ final class ShellMain {
       println("Thank you for flying Kiji!")
     }
     0 // Return 0 if we didn't terminate with an exception.
+  }
+
+  /**
+   * Obtains a new environment loaded with any modules specified on the command line.
+   *
+   * @param envToLoad is an environment that should be loaded with modules.
+   * @return a new environment loaded with any modules specified on the command line.
+   */
+  private def preloadModules(envToLoad: Environment): Environment = {
+    // The tool accepts multiple --modules flags, each of which should contain a comma-separated
+    // list of module names to preload. We transform the comma-separated lists into a single list
+    // of names, and then fold the names into an environment with each named module loaded.
+    moduleNamesToPreLoad.asScala
+        .flatMap { _.split(',') }
+        .foldLeft(envToLoad) { (env, moduleName) =>
+          (new UseModuleCommand(env, moduleName)).exec()
+        }
   }
 
   /**
@@ -80,8 +101,8 @@ final class ShellMain {
     )
 
     val uri = KijiURI.newBuilder(kijiURI).build()
-    return new Environment(uri, Console.out, ShellMain.shellKijiSystem, input,
-        List(), isInteractive)
+    return preloadModules(new Environment(uri, Console.out, ShellMain.shellKijiSystem, input,
+        List(), isInteractive))
   }
 
   /**
