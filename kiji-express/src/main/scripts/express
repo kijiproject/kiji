@@ -338,6 +338,7 @@ function print_tool_usage() {
   echo
   echo '  help          - Displays this help message. Use --verbose for more information.'
   echo '  shell         - Starts an interactive shell for running KijiExpress code.'
+  echo '  schema-shell  - Starts KijiSchema Shell loaded with KijiExpress extensions.'
   echo '  script        - Runs a raw KijiExpress script.'
   echo '  job           - Runs a compiled KijiExpress job.'
   echo '  jar           - Runs an arbitrary Scala or Java program.'
@@ -408,6 +409,25 @@ case ${command} in
     shift  # pop off the command
     extract_classpath "${@}"
     jar_command ${COMMAND_ARGS}
+    ;;
+
+  schema-shell)
+    shift # pop off command
+    # Check if SCHEMA_SHELL_HOME is set. If not we cannot run the shell.
+    if [ -z "${SCHEMA_SHELL_HOME}" ]; then
+      echo "The environment variable SCHEMA_SHELL_HOME is undefined, and so KijiSchema Shell"
+      echo "cannot be run. Please set SCHEMA_SHELL_HOME to the path to a KijiSchema Shell"
+      echo "distribution and try again."
+      exit 1
+    fi
+    extract_classpath "${@}"
+    schema_shell_script="${SCHEMA_SHELL_HOME}/bin/kiji-schema-shell"
+    # We'll add express dependencies to KIJI_CLASSPATH so that they are picked up by
+    # kiji-schema-shell.
+    export KIJI_CLASSPATH="${KIJI_CLASSPATH}:${express_cp}"
+    # Invoke the kiji-schema-shell command with the express modules preloaded.
+    ${schema_shell_script} --modules=modeling ${COMMAND_ARGS}
+    exit $?
     ;;
 
   shell)

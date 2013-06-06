@@ -116,7 +116,7 @@ private[express] final class LifecycleExecutionCommand (
       case e: Exception => {
         echo("Failed to run batch extract and score.")
         throw new DDLException("Exception encountered while attempting to run "
-            + "batch extract and score." + e.getMessage)
+            + "batch extract and score: " + e.getMessage)
       }
     }
     env
