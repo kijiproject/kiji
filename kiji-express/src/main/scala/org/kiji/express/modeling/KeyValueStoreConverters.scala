@@ -23,6 +23,7 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.express.AvroUtil
 import org.kiji.express.EntityId
+import org.kiji.schema.KijiURI
 
 /**
  * Converts keys specified as Scala types to equivalent keys as Java types compatible with the
@@ -74,7 +75,13 @@ private[express] trait JavaToScalaValueConverter[V] {
  */
 @ApiAudience.Private
 @ApiStability.Experimental
-private[express] trait EntityIdScalaToJavaKeyConverter extends ScalaToJavaKeyConverter[EntityId] {
+private[express] trait EntityIdScalaToJavaKeyConverter extends ScalaToJavaKeyConverter[Seq[Any]] {
+  /**
+   * URI addressing the Kiji table that these entityIds belong to. This must be overridden in any
+   * implementing classes.
+   */
+  def tableUri: KijiURI
+
   /**
    * Converts a KijiExpress [[org.kiji.express.EntityId]] to a KijiMR entity id,
    * suitable for use with a `KijiTableKeyValueStore`.
@@ -82,8 +89,8 @@ private[express] trait EntityIdScalaToJavaKeyConverter extends ScalaToJavaKeyCon
    * @param keyWithScalaType is the KijiExpress entity id to convert.
    * @return is the equivalent KijiMR entity id.
    */
-  override protected def keyConversion(keyWithScalaType: EntityId): Any = {
-    keyWithScalaType.toJavaEntityId()
+  override protected def keyConversion(keyWithScalaType: Seq[Any]): Any = {
+    EntityId.fromComponents(tableUri, keyWithScalaType).toJavaEntityId()
   }
 }
 

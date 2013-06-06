@@ -31,6 +31,7 @@ import org.kiji.mapreduce.kvstore.{KeyValueStoreReader => JKeyValueStoreReader}
 import org.kiji.mapreduce.kvstore.lib.{AvroKVRecordKeyValueStore => JAvroKVRecordKeyValueStore}
 import org.kiji.mapreduce.kvstore.lib.{AvroRecordKeyValueStore => JAvroRecordKeyValueStore}
 import org.kiji.mapreduce.kvstore.lib.{KijiTableKeyValueStore => JKijiTableKeyValueStore}
+import org.kiji.schema.KijiURI
 
 /**
  * A map from keys to values backed by a data store. KijiExpress end-users can configure and use
@@ -160,11 +161,16 @@ private[express] object KeyValueStore {
    * Kiji table, by using the qualified column name as key.
    *
    * @param kvStore from KijiMR that will back the KijiExpress key-value store.
+   * @param tableUri addressing the table that this key-value store will read from.
    * @tparam V is the type of value retrieved from the key-value store.
    * @return a KijiExpress key-value store backed by a Kiji table.
    */
-  def apply[V](kvStore: JKijiTableKeyValueStore[_ <: Any]): KeyValueStore[EntityId, V] = {
-    new KijiTableKeyValueStore[V](kvStore.open())
+  def apply[V](
+      kvStore: JKijiTableKeyValueStore[_ <: Any],
+      tableUri: String): KeyValueStore[Seq[Any], V] = {
+    val uri: KijiURI = KijiURI.newBuilder(tableUri).build()
+
+    new KijiTableKeyValueStore[V](kvStore.open(), uri)
   }
 
   /**

@@ -74,10 +74,10 @@ class KeyValueStoreImplSuite extends KijiSuite {
 
     // Now create a KijiExpress key-value store backed by the KijiMR key-value store.
     // Use the key-value store to access values and verify they are correct.
-    doAndClose(KeyValueStore[String](store)) { kvstore =>
-      assert("value1" === kvstore(EntityId(uri)("1")))
-      assert("value2" === kvstore(EntityId(uri)("2")))
-      assert("value3" === kvstore(EntityId(uri)("3")))
+    doAndClose(KeyValueStore[String](store, uri.toString())) { kvstore =>
+      assert("value1" === kvstore(Seq("1")))
+      assert("value2" === kvstore(Seq("2")))
+      assert("value3" === kvstore(Seq("3")))
     }
   }
 

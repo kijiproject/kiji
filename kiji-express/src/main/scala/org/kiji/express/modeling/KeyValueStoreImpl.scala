@@ -27,19 +27,22 @@ import org.kiji.express.AvroValue
 import org.kiji.express.EntityId
 import org.kiji.mapreduce.kvstore.{ KeyValueStoreReader => JKeyValueStoreReader }
 import org.kiji.schema.{ EntityId => JEntityId }
+import org.kiji.schema.KijiURI
 
 /**
  * A KijiExpress key-value store backed by a Kiji table.
  *
  * @param kvStoreReader is an opened KijiMR key-value store used to back the new KijiExpress
  *     key-value store.
+ * @param tableUri of the Kiji table to read from.
  * @tparam V is the type of value users will retrieve when accessing a key-value store.
  */
 @ApiAudience.Private
 @ApiStability.Experimental
 private[express] final class KijiTableKeyValueStore[V](
-    kvStoreReader: JKeyValueStoreReader[_ <: JEntityId, _ <: Any])
-    extends KeyValueStore[EntityId, V](kvStoreReader)
+    kvStoreReader: JKeyValueStoreReader[_ <: JEntityId, _ <: Any],
+    override val tableUri: KijiURI)
+    extends KeyValueStore[Seq[Any], V](kvStoreReader)
     with EntityIdScalaToJavaKeyConverter
     with AvroJavaToScalaValueConverter[V]
 

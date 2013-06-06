@@ -337,7 +337,7 @@ object ExtractScoreProducer {
       context: KijiContext,
       prefix: String = ""): Map[String, KeyValueStore[_, _]] = {
     kvstores
-        .map { kvstore =>
+        .map { kvstore: KVStore =>
           val jkvstoreReader = context.getStore(prefix + kvstore.getName())
 
           val wrapped: KeyValueStore[_, _] = kvstore.getStoreType() match {
@@ -348,7 +348,14 @@ object ExtractScoreProducer {
               new AvroRecordKeyValueStore(jkvstoreReader)
             }
             case KvStoreType.KIJI_TABLE => {
-              new KijiTableKeyValueStore(jkvstoreReader)
+              val properties: Map[String, String] = kvstore
+                  .getProperties()
+                  .asScala
+                  .map { property => (property.getName(), property.getValue()) }
+                  .toMap
+              val uri: KijiURI = KijiURI.newBuilder(properties("uri")).build()
+
+              new KijiTableKeyValueStore(jkvstoreReader, uri)
             }
           }
 
