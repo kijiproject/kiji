@@ -39,7 +39,7 @@ import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.KijiMapReduceJobBuilder;
 import org.kiji.mapreduce.MapReduceJobOutput;
 import org.kiji.mapreduce.gather.KijiGatherJobBuilder;
-import org.kiji.mapreduce.input.AvroKeyValueMapReduceJobInput;
+import org.kiji.mapreduce.input.MapReduceJobInputs;
 import org.kiji.mapreduce.output.AvroKeyValueMapReduceJobOutput;
 import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
 import org.kiji.schema.KijiClientTest;
@@ -142,7 +142,7 @@ public class TestTopNextSongsPipeline extends KijiClientTest {
     final MapReduceJobOutput tableOutput = new DirectKijiTableMapReduceJobOutput(mSongTableURI, 1);
     final KijiMapReduceJob mrjob2 = KijiMapReduceJobBuilder.create()
         .withConf(getConf())
-        .withInput(new AvroKeyValueMapReduceJobInput(path))
+        .withInput(MapReduceJobInputs.newAvroKeyValueMapReduceJobInput(path))
         .withMapper(IdentityMapper.class)
         .withReducer(TopNextSongsReducer.class)
         .withOutput(tableOutput).build();
