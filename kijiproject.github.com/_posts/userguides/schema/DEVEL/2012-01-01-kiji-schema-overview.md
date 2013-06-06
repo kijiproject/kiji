@@ -44,7 +44,7 @@ pom.xml in the `<dependencies>` block:
     <dependency>
       <groupId>org.kiji.platforms</groupId>
       <artifactId>kiji-cdh4-platform</artifactId>
-      <version>1.0.0</version>
+      <version>1.1.0</version>
       <scope>provided</scope>
     </dependency>
 

@@ -52,7 +52,7 @@ application code.
 
 ## Using KijiMR in Your Project
 
-You will need to include KijiSchema as a dependency in your project. If you're
+You will need to include KijiMR as a dependency in your project. If you're
 using Maven, this can be included as follows:
 
     <dependency>
@@ -71,6 +71,24 @@ need to include:
       <version>{{site.mrlib_DEVEL_version}}</version>
       <scope>provided</scope>
     </dependency>
+
+Different versions of Hadoop are incompatible with one another at a binary level. The version
+of KijiMR specified above can be used with Hadoop 2-based systems (e.g., CDH 4). You can use
+KijiMR with a Hadoop 1-based system by declaring a dependency on a different build of KijiMR
+without changing your source code. Just use the following dependency instead:
+
+    <dependency>
+      <groupId>org.kiji.mapreduce</groupId>
+      <artifactId>kiji-mapreduce</artifactId>
+      <version>{{site.mr_DEVEL_version}}</version>
+      <classifier>hadoop1</classifier>
+      <scope>provided</scope>
+    </dependency>
+
+You can also explicitly specify `<classifier>hadoop2</classifier>` if you'd like, although
+this is the default. If you use the `bin/kiji` command to launch your Kiji application,
+it will automatically detect which version of Hadoop is present and use the appropriate
+build of KijiMR at runtime without any changes to your code.
 
 * You will also need a dependency on KijiSchema. See [the KijiSchema
   documentation]({{site.userguide_schema_DEVEL}}/kiji-schema-overview/) for this information.
