@@ -109,6 +109,13 @@
       <version>${kiji-schema-shell.version}</version>
       <scope>provided</scope>
     </dependency>
+    <dependency>
+      <groupId>org.kiji.schema-shell</groupId>
+      <artifactId>kiji-schema-shell</artifactId>
+      <version>${kiji-schema-shell.version}</version>
+      <scope>test</scope>
+      <type>test-jar</type>
+    </dependency>
     <!--
       Keep this dependency in compile scope so that users can depend on the KijiExpress testing
       framework by only depending on the KijiExpress test jar.
@@ -239,6 +246,7 @@
             <org.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION>
               DISABLED
             </org.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION>
+            <jline.terminal>jline.UnsupportedTerminal</jline.terminal>
           </systemProperties>
         </configuration>
         <executions>
