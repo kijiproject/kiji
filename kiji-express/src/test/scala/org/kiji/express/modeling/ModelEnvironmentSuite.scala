@@ -91,11 +91,12 @@ class ModelEnvironmentSuite extends FunSuite {
     val extractEnv2 = ExtractEnvironment(
         dataRequest,
         Seq(FieldBindingSpec("tuplename", "storefieldname")),
-        Seq(KVStoreSpec("AVRO_KV", "storename", Map())))
+        Seq(KVStoreSpec("AVRO_KV", "storename", Map("path" -> "/some/great/path"))))
     val scoreEnv = ScoreEnvironment("outputFamily:qualifier", Seq())
     val scoreEnv2 = ScoreEnvironment(
         "outputFamily:qualifier",
-        Seq(KVStoreSpec("KIJI_TABLE", "myname", Map())))
+        Seq(KVStoreSpec("KIJI_TABLE", "myname", Map("uri" -> "kiji://.env/default/table",
+            "column" -> "info:email"))))
 
     val modelEnv = ModelEnvironment(
       "myname",

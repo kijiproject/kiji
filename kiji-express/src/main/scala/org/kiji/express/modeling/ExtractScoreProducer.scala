@@ -388,9 +388,6 @@ object ExtractScoreProducer {
           // Handle each type of kvstore differently.
           val jkvstore: JKeyValueStore[_, _] = kvstore.getStoreType() match {
             case KvStoreType.AVRO_KV => {
-              // TODO(EXP-65): Validate these properties upon ModelEnvironment creation.
-              // Ensure all necessary properties exist.
-              require(properties.contains("path"))
 
               // Open AvroKV.
               val builder = JAvroKVRecordKeyValueStore
@@ -406,11 +403,6 @@ object ExtractScoreProducer {
               }
             }
             case KvStoreType.AVRO_RECORD => {
-              // TODO(EXP-65): Validate these properties upon ModelEnvironment creation.
-              // Ensure all necessary properties exist.
-              require(properties.contains("path"))
-              require(properties.contains("key_field"))
-
               // Open AvroRecord.
               val builder = JAvroRecordKeyValueStore
                   .builder()
@@ -426,11 +418,6 @@ object ExtractScoreProducer {
               }
             }
             case KvStoreType.KIJI_TABLE => {
-              // TODO(EXP-65): Validate these properties upon ModelEnvironment creation.
-              // Ensure all necessary properties exist.
-              require(properties.contains("uri"))
-              require(properties.contains("column"))
-
               // Kiji table.
               val uri: KijiURI = KijiURI.newBuilder(properties("uri")).build()
               val columnName: KijiColumnName = new KijiColumnName(properties("column"))

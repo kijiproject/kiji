@@ -19,8 +19,6 @@
 
 package org.kiji.express.modeling
 
-import java.io.File
-
 import scala.collection.JavaConverters.seqAsJavaListConverter
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.collection.JavaConverters.collectionAsScalaIterableConverter
@@ -695,18 +693,67 @@ object ModelEnvironment {
   }
 
   /**
-   * Validates specified keyvalue stores in the model environment. Currently, this only validates
-   * the format of the name.
+   * Validates specified key-value stores in the model environment. This validates the format of
+   * the key-value store name, and validates that the correct properties for initializing the
+   * key-value store have been specified.
    *
    * @param kvstores to validate.
    */
   def validateKvstores(kvstores: Seq[KVStore]) {
     kvstores.foreach { kvStore: KVStore =>
+      // Validate the format of the key-value store name.
       if (!kvStore.getName.matches("^[a-zA-Z_][a-zA-Z0-9_]+$")) {
-        throw new ValidationException("The kvstore name must begin with a letter" +
-            " and contain only alphanumeric characters and underscores. The kvstore name you" +
-            " provided is " + kvStore.getName + " and the regex it must match is" +
+        throw new ValidationException("The key-value store name must begin with a letter" +
+            " and contain only alphanumeric characters and underscores. The key-value store name " +
+            "you provided is " + kvStore.getName + " and the regex it must match is" +
             " ^[a-zA-Z_][a-zA-Z0-9_]+$" )
+      }
+
+      // Validate properties specified to initialize the key-value store. Each type of key-value
+      // store requires different properties.
+      val properties: Iterable[Property] = kvStore.getProperties().asScala
+      def propertiesContains(name: String): Boolean = {
+        properties.count { property =>
+          property.getName() == name
+        } > 0
+      }
+
+      kvStore.getStoreType match {
+        case KvStoreType.AVRO_KV => {
+          if (!propertiesContains("path")) {
+            throw new ValidationException("To use an Avro key-value record key-value store, you "
+                + "must specify the HDFS path to the Avro container file to use to back the "
+                + "store. Use the property name 'path' to provide the path.")
+          }
+        }
+        case KvStoreType.AVRO_RECORD => {
+          if (!propertiesContains("path")) {
+            throw new ValidationException("To use an Avro record key-value store, you "
+                + "must specify the HDFS path to the Avro container file to use to back the "
+                + "store. Use the property name 'path' to provide the path.")
+          }
+          if (!propertiesContains("key_field")) {
+            throw new ValidationException("To use an Avro record key-value store, you "
+                + "must specify the name of a record field whose value should be used as the "
+                + "record's key. Use the property name 'key_field' to provide the field name. ")
+          }
+        }
+        case KvStoreType.KIJI_TABLE => {
+          if (!propertiesContains("uri")) {
+            throw new ValidationException("To use a Kiji table key-value store, you "
+                + "must specify a Kiji URI addressing the table to use to back the store. Use the "
+                + "property name 'uri' to provide the URI.")
+
+          }
+          if (!propertiesContains("column")) {
+            throw new ValidationException("To use a Kiji table key-value store, you must specify "
+                + "the qualified-name of the column whose most recent value will be used as the "
+                + "value associated with each entity id. Use the property name 'column' to "
+                + "specify the column name.")
+          }
+        }
+        case kvstoreType => throw new ValidationException("An unknown key-value store type was "
+            + "specified: " + kvstoreType.toString)
       }
     }
   }
