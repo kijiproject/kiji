@@ -38,7 +38,7 @@ import org.kiji.annotations.Inheritance;
  * #getRequiredStores()}. This will create a new store and reader each time, and the
  * reader may not be properly initialized to read, e.g., from the distributed cache.</p>
  *
- * <p> Look to the implementing class for details on how the class distinguishes betweeen
+ * <p> Look to the implementing class for details on how the class distinguishes between
  * defining the store configurations you require and opening an initialized
  * {@link KeyValueStoreReader} implementation. For example, KijiProducer and KijiGatherer
  * classes can use the <code>getStore(String storeName)</code> method of the Context

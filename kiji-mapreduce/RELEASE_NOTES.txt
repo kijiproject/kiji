@@ -3,6 +3,11 @@
                               KijiMR Release Notes
 
 Version 1.0.0-rc63
+  * KIJIMR-199. Adds an InMemoryMapKeyValueStore. This KVStore can be
+      used for passing small amounts of information to KijiProducers,
+      KijiGatherers, etc.
+  * KIJIMR-104. Bulk loads can now load either a full directory or the
+      individual partition within.
   * KIJIMR-115. Improves API of AvroMapReader. read() renamed to reload().
       Avro "map" automatically loaded when AvroMapReader created. Fixes
       several bugs in this class.
@@ -11,10 +16,9 @@ Version 1.0.0-rc63
   * KIJIMR-197. Publish sources and javadoc jars via Maven build.
   * KIJIMR-107. Removes the KijiDataRequester interface. KijiGatherer,
       KijiProducer, etc. no longer implement this interface.
-  * KIJIMR-123. MapReduceJobInput constructors are now package private and accessible via
-      org.kiji.mapreduce.input.MapReduceJobInputs static methods.
-  * KIJIMR-104. Bulk loads can now load either a full directory or the
-      individual partition within.
+  * KIJIMR-123. MapReduceJobInput constructors are now package private
+      and accessible via org.kiji.mapreduce.input.MapReduceJobInputs
+      static methods.
 
 Version 1.0.0-rc62
   * KIJIMR-132. Removes exists() and isNullFn() from util.Lists.
@@ -24,8 +28,8 @@ Version 1.0.0-rc62
   * KIJIMR-181. Document default values for KeyValueStores.
   * KIJIMR-171. Reorganize project structure for multiple Hadoop distributions.
       KijiMR jars are now placed in $KIJI_MR_HOME/lib/distribution/hadoop2/.
-      You can now optionally specify <classifier>hadoop2</classifer> on the KijiMR
-      artifact to make your distribution requirement explicit.
+      You can now optionally specify <classifier>hadoop2</classifer> on the
+      KijiMR artifact to make your distribution requirement explicit.
 
 Version 1.0.0-rc61
   * KIJIMR-180. Removes deprecated getEntityId() from ProducerContext.

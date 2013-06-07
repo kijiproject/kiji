@@ -52,8 +52,7 @@ import org.kiji.schema.util.ResourceUtils;
 /** Runs a gatherer job in-process against a fake HBase instance. */
 public class TestGatherer extends KijiClientTest {
   /**
-   * Producer intended to run on the generic KijiMR test layout. Uses resource
-   * org/kiji/mapreduce/layout/test.json.
+   * Gatherer intended to run on the generic KijiMR test layout.
    */
   public static class TestingGatherer extends KijiGatherer<LongWritable, Text> {
 
