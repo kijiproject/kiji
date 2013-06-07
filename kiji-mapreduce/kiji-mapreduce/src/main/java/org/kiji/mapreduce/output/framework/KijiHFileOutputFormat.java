@@ -35,7 +35,9 @@ import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.io.hfile.Compression;
 import org.apache.hadoop.hbase.io.hfile.HFile;
 import org.apache.hadoop.hbase.regionserver.StoreFile;
+import org.apache.hadoop.hbase.regionserver.TimeRangeTracker;
 import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.WritableUtils;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -142,6 +144,9 @@ public final class KijiHFileOutputFormat
       /** The current size of the HFile <code>mCurrentWriter</code> is writing to. */
       private long mCurrentHFileSize = 0;
 
+      /** A timerange tracker to compute time ranges. */
+      private TimeRangeTracker mTimeRangeTracker = new TimeRangeTracker();
+
       /** Key of the last written row. */
       private byte[] mCurrentRow = null;
 
@@ -202,6 +207,7 @@ public final class KijiHFileOutputFormat
         }
 
         mWriter.append(kv);
+        mTimeRangeTracker.includeTimestamp(kv);
         mCurrentHFileSize += recordLength;
 
         // Remember the row so we know when we are transitioning.
@@ -212,6 +218,13 @@ public final class KijiHFileOutputFormat
       @Override
       public void close(TaskAttemptContext context) throws IOException {
         if (null != mWriter) {
+          if (mCurrentHFileSize > 0) {
+            // Write out a timerange. This is the only Metadata we write out.
+            // See: HBASE-8055 and KIJIMR-204.
+            mWriter.appendFileInfo(StoreFile.TIMERANGE_KEY,
+                WritableUtils.toByteArray(mTimeRangeTracker));
+          }
+          mTimeRangeTracker = new TimeRangeTracker();
           closeWriter(mWriter);
         }
       }
