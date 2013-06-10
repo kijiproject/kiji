@@ -22,6 +22,7 @@ package org.kiji.scoring.impl;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
@@ -276,18 +277,16 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     mRecordWriteLock.lock();
     try {
       synchronized (mCapsuleCache) {
-        for (Map.Entry<KijiColumnName, KijiFreshnessPolicyRecord> entry
-            : mPolicyRecords.entrySet()) {
-          // Remove duplicate records from the new record map.
+        final Iterator<Map.Entry<KijiColumnName, KijiFreshnessPolicyRecord>> iterator =
+            mPolicyRecords.entrySet().iterator();
+        while (iterator.hasNext()) {
+          final Map.Entry<KijiColumnName, KijiFreshnessPolicyRecord> entry = iterator.next();
           if (newRecords.containsKey(entry.getKey())
-              && newRecords.get(entry.getKey()) == entry.getValue()) {
+              && newRecords.get(entry.getKey()).equals(entry.getValue())) {
             newRecords.remove(entry.getKey());
-          }
-          if (!newRecords.containsKey(entry.getKey())
-              || newRecords.get(entry.getKey()) != entry.getValue()) {
-            // Remove the policy record.
-            mPolicyRecords.remove(entry.getKey());
-            if (mCapsuleCache.containsKey(entry.getKey())) {
+          } else {
+            iterator.remove();
+             if (mCapsuleCache.containsKey(entry.getKey())) {
               mCapsuleCache.get(entry.getKey()).release();
               mCapsuleCache.remove(entry.getKey());
             }

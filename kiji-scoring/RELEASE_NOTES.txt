@@ -2,6 +2,7 @@
                               Kiji Scoring Release Notes
 
 Version 0.2.0
+  * SCORE-49. Fixes ConcurrentModificationException in FreshKijiTableReader.rereadPolicies().
   * SCORE-48. Updates pom.xml versions to latest released versions of dependencies.
   * SCORE-47. KijiFreshnessManager and FreshTool now support post-attachment validation of
       freshness policies.

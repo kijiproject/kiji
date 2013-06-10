@@ -559,9 +559,10 @@ public class TestInternalFreshKijiTableReader {
   }
 
   @Test
-  public void testReload() throws IOException {
+  public void testReread() throws IOException {
     final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
     manager.storePolicy("table", "family:qual0", TestProducer.class, new ShelfLife(10L));
+    manager.storePolicy("table", "family:qual1", TestProducer.class, new AlwaysFreshen());
     final InternalFreshKijiTableReader freshReader =
         (InternalFreshKijiTableReader) FreshKijiTableReaderBuilder.create()
         .withReaderType(FreshReaderType.LOCAL)
@@ -569,12 +570,20 @@ public class TestInternalFreshKijiTableReader {
         .withTimeout(100)
         .build();
 
-    assertTrue(freshReader.getCapsules(KijiDataRequest.create("family", "qual0"))
-        .containsKey(new KijiColumnName("family", "qual0")));
+    final KijiDataRequestBuilder builder = KijiDataRequest.builder();
+    builder.newColumnsDef().add("family", "qual0").add("family", "qual1");
+    final KijiDataRequest request = builder.build();
+
+    final Map<KijiColumnName, FreshnessCapsule> capsules =
+        freshReader.getCapsules(request);
+    assertTrue(capsules.containsKey(new KijiColumnName("family", "qual0")));
+    assertTrue(capsules.containsKey(new KijiColumnName("family", "qual1")));
     manager.removePolicy("table", "family:qual0");
     freshReader.rereadPolicies(false);
-    assertFalse(freshReader.getCapsules(KijiDataRequest.create("family", "qual0"))
-        .containsKey(new KijiColumnName("family", "qual0")));
+    final Map<KijiColumnName, FreshnessCapsule> capsules2 =
+        freshReader.getCapsules(request);
+    assertFalse(capsules2.containsKey(new KijiColumnName("family", "qual0")));
+    assertTrue(capsules2.containsKey(new KijiColumnName("family", "qual1")));
   }
 
   @Test
