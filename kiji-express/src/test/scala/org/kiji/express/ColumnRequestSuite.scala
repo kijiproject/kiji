@@ -34,36 +34,44 @@ class ColumnRequestSuite extends FunSuite {
   def opts: ColumnRequestOptions = new ColumnRequestOptions(1, Some(filter))
   val colFamily = "myfamily"
   val colQualifier = "myqualifier"
+  val qualifierSelector = "qualifierSym"
 
-  test("Fields of a family-only column are the same as those it is constructed with.") {
-    val col: ColumnFamily = new ColumnFamily(colFamily, opts)
+  test("Fields of a ColumnFamily (input) are the same as those it is constructed with.") {
+    val col: ColumnFamily = new ColumnFamily(colFamily, None, opts)
 
-    assert(colFamily == col.family)
-    assert(opts == col.options)
+    assert(colFamily === col.family)
+    assert(opts === col.options)
   }
 
-  test("Fields of a qualified column are the same as those it is constructed with.") {
+  test("Fields of a ColumnFamily (output) are the same as those it is constructed with.") {
+    val col: ColumnFamily = new ColumnFamily(colFamily, Some(qualifierSelector))
+
+    assert(colFamily === col.family)
+    assert(qualifierSelector === col.qualifierSelector.get)
+  }
+
+  test("Fields of a QualifiedColumn are the same as those it is constructed with.") {
     val col: QualifiedColumn = new QualifiedColumn(colFamily, colQualifier, opts)
 
-    assert(colFamily == col.family)
-    assert(colQualifier == col.qualifier)
-    assert(opts == col.options)
+    assert(colFamily === col.family)
+    assert(colQualifier === col.qualifier)
+    assert(opts === col.options)
   }
 
-  test("Two family-only columns with the same parameters are equal and hash to the same value.") {
-    val col1: ColumnFamily = new ColumnFamily(colFamily, opts)
-    val col2: ColumnFamily = new ColumnFamily(colFamily, opts)
+  test("Two ColumnFamilys with the same parameters are equal and hash to the same value.") {
+    val col1: ColumnFamily = new ColumnFamily(colFamily, None, opts)
+    val col2: ColumnFamily = new ColumnFamily(colFamily, None, opts)
 
-    assert(col1 == col2)
-    assert(col1.hashCode() == col2.hashCode())
+    assert(col1 === col2)
+    assert(col1.hashCode() === col2.hashCode())
   }
 
   test("Two qualified columns with the same parameters are equal and hash to the same value.") {
     val col1: QualifiedColumn = new QualifiedColumn(colFamily, colQualifier, opts)
     val col2: QualifiedColumn = new QualifiedColumn(colFamily, colQualifier, opts)
 
-    assert(col1 == col2)
-    assert(col1.hashCode() == col2.hashCode())
+    assert(col1 === col2)
+    assert(col1.hashCode() === col2.hashCode())
   }
 
   test("A column must be serializable.") {
@@ -78,6 +86,6 @@ class ColumnRequestSuite extends FunSuite {
     val in = new ObjectInputStream(bytesIn)
     val deserializedColumn = in.readObject()
 
-    assert(col == deserializedColumn)
+    assert(col === deserializedColumn)
   }
 }

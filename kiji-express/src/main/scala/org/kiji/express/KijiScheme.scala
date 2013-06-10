@@ -98,7 +98,7 @@ private[express] class KijiScheme(
 
   /** Set the fields that should be in a tuple when this source is used for reading and writing. */
   setSourceFields(buildSourceFields(columns.keys))
-  setSinkFields(buildSinkFields(columns.keys, timestampField))
+  setSinkFields(buildSinkFields(columns, timestampField))
 
   /**
    * Sets any configuration options that are required for running a MapReduce job
@@ -170,8 +170,13 @@ private[express] class KijiScheme(
     while (sourceCall.getInput().next(null, value)) {
     // scalastyle:on null
       val row: KijiRowData = value.get()
-      val result: Option[Tuple] = rowToTuple(columns, getSourceFields, timestampField, row,
-          tableUri, expressGenericTable)
+      val result: Option[Tuple] = rowToTuple(
+          columns,
+          getSourceFields,
+          timestampField,
+          row,
+          tableUri,
+          expressGenericTable)
 
       // If no fields were missing, set the result tuple and return from this method.
       result match {
@@ -267,7 +272,7 @@ private[express] class KijiScheme(
 
     // Write the tuple out.
     val output: TupleEntry = sinkCall.getOutgoingEntry()
-    putTuple(columns, getSinkFields(), timestampField, output, writer, layout)
+    putTuple(columns, timestampField, output, writer, layout)
   }
 
   /**
@@ -339,6 +344,8 @@ private[express] object KijiScheme {
    *     Use None if all values should be written at the current time.
    * @param row to convert to a tuple.
    * @param tableUri is the URI of the Kiji table.
+   * @param genericTable is an instance of ExpressGenericTable to use for reading/writing generic
+   *     AvroRecords.
    * @return a tuple containing the values contained in the specified row, or None if some columns
    *     didn't exist and no replacement was specified.
    */
@@ -365,7 +372,7 @@ private[express] object KijiScheme {
         .map { field => columns(field.toString) }
         // Build the tuple, by adding each requested value into result.
         .foreach {
-            case colReq @ ColumnFamily(family, ColumnRequestOptions(_, _, replacement)) => {
+            case colReq @ ColumnFamily(family, _, ColumnRequestOptions(_, _, replacement)) => {
               if (row.containsColumn(family)) {
                 result.add (KijiSlice(expressRow.iterator(family)))
               } else {
@@ -409,7 +416,6 @@ private[express] object KijiScheme {
    * This is used in KijiScheme's `sink` method.
    *
    * @param columns mapping field names to column definitions.
-   * @param fields names of incoming tuple elements.
    * @param timestampField is the optional name of a field containing the timestamp that all values
    *     in a tuple should be written to.
    *     Use None if all values should be written at the current time.
@@ -419,12 +425,11 @@ private[express] object KijiScheme {
    */
   private[express] def putTuple(
       columns: Map[String, ColumnRequest],
-      fields: Fields,
       timestampField: Option[Symbol],
       output: TupleEntry,
       writer: KijiTableWriter,
       layout: KijiTableLayout) {
-    val iterator = fields.iterator().asScala
+    val iterator = columns.keys.iterator
 
     // Get the entityId.
     val entityId: EntityId = output.getObject(entityIdField).asInstanceOf[EntityId]
@@ -438,26 +443,28 @@ private[express] object KijiScheme {
     }
 
     iterator
-        .filter { field => field.toString != entityIdField  }
-        .filter { field => field.toString != timestampField.getOrElse(Symbol("")).name }
         .foreach { fieldName =>
-          columns(fieldName.toString()) match {
-            case ColumnFamily(family, _) => {
-              // TODO CHOP-56 Design putTuple semantics for map type column families
-              throw new UnsupportedOperationException("Writing to a column family without a "
-                  + "qualifier is not supported.")
-            }
-            case QualifiedColumn(family, qualifier, _) => {
-              val kijiCol = new KijiColumnName(family, qualifier)
-              val value = output.getObject(fieldName.toString())
-              writer.put(
-                  entityId.toJavaEntityId(),
+            val value = output.getObject(fieldName.toString())
+            columns(fieldName.toString()) match {
+              case ColumnFamily(family, qualField, _) => {
+                require(
+                    qualField.isDefined,
+                    "You cannot write to a map family without specifying a qualifier field.")
+                writer.put(entityId.toJavaEntityId(),
                   family,
-                  qualifier,
+                  output.getObject(qualField.get).asInstanceOf[String],
                   timestamp,
                   AvroUtil.encodeToJava(value))
+              }
+              case QualifiedColumn(family, qualifier, _) => {
+                writer.put(
+                    entityId.toJavaEntityId(),
+                    family,
+                    qualifier,
+                    timestamp,
+                    AvroUtil.encodeToJava(value))
+              }
             }
-          }
         }
   }
 
@@ -473,18 +480,18 @@ private[express] object KijiScheme {
       columns: Iterable[ColumnRequest]): KijiDataRequest = {
     def addColumn(builder: KijiDataRequestBuilder, column: ColumnRequest) {
       column match {
-        case ColumnFamily(family, inputOptions) => {
+        case ColumnFamily(family, _, inputOptions) => {
           builder.newColumnsDef()
               .withMaxVersions(inputOptions.maxVersions)
               // scalastyle:off null
               .withFilter(inputOptions.filter.getOrElse(null))
               // scalastyle:on null
               .add(new KijiColumnName(family))
-        }
-        case QualifiedColumn(family, qualifier, inputOptions) => {
-          builder.newColumnsDef()
-              .withMaxVersions(inputOptions.maxVersions)
-              // scalastyle:off null
+         }
+         case QualifiedColumn(family, qualifier, inputOptions) => {
+           builder.newColumnsDef()
+               .withMaxVersions(inputOptions.maxVersions)
+               // scalastyle:off null
               .withFilter(inputOptions.filter.getOrElse(null))
               // scalastyle:on null
               .add(new KijiColumnName(family, qualifier))
@@ -504,15 +511,13 @@ private[express] object KijiScheme {
   }
 
   /**
-   * Gets a collection of fields by joining two lists of field names and transforming each name
-   * into a field.
+   * Transforms a list of field names into a collection of fields.
    *
-   * @param headNames is a list of field names.
-   * @param tailNames is a list of field names.
+   * @param field names is a list of field names.
    * @return a collection of fields created from the names.
    */
-  private def getFieldArray(headNames: Iterable[String], tailNames: Iterable[String]): Fields = {
-    Fields.join((headNames ++ tailNames).map { new Fields(_) }.toArray: _*)
+  private def getFieldArray(fieldNames: Iterable[String]): Fields = {
+    Fields.join(fieldNames.map { new Fields(_) }.toArray: _*)
   }
 
   /**
@@ -523,25 +528,40 @@ private[express] object KijiScheme {
    * @return is a collection of fields created from the names.
    */
   private[express] def buildSourceFields(fieldNames: Iterable[String]): Fields = {
-    getFieldArray(Seq(entityIdField), fieldNames)
+    getFieldArray(Seq(entityIdField) ++ fieldNames)
   }
 
   /**
    * Builds the list of tuple fields being written by a scheme. The special field name "entityId"
-   * will be included to hold entity ids that values should be written to. A timestamp field can
-   * also be included, identifying a timestamp that all values will be written to.
+   * will be included to hold entity ids that values should be written to. Any fields that are
+   * specified as qualifiers for a map-type column family will also be included. A timestamp field
+   * can also be included, identifying a timestamp that all values will be written to.
    *
-   * @param fieldNames is a list of field names that a scheme should write to.
+   * @param columns is the column requests for this Scheme, with the names of each of the fields
+   *     that contain data to write to Kiji.
    * @param timestampField is the optional name of a field containing the timestamp that all values
    *     in a tuple should be written to.
    *     Use None if all values should be written at the current time.
-   * @return is a collection of fields created from the names.
+   * @return a collection of fields created from the parameters.
    */
-  private[express] def buildSinkFields(fieldNames: Iterable[String],
+  private[express] def buildSinkFields(columns: Map[String, ColumnRequest],
       timestampField: Option[Symbol]): Fields = {
-    timestampField match {
-      case Some(field) => getFieldArray(Seq(entityIdField, field.name), fieldNames)
-      case None => getFieldArray(Seq(entityIdField), fieldNames)
-    }
+    getFieldArray(Seq(entityIdField)
+        ++ columns.keys
+        ++ extractQualifierSelectors(columns)
+        ++ timestampField.map { _.name } )
+  }
+
+  /**
+   * Extracts the names of qualifier selectors from the column requests for a Scheme.
+   *
+   * @param columns is the column requests for a Scheme.
+   * @return the names of fields that are qualifier selectors.
+   */
+  private[express] def extractQualifierSelectors(
+      columns: Map[String, ColumnRequest]): Seq[String] = {
+    columns.collect {
+      case (_, ColumnFamily(_, Some(qualField), _)) => qualField
+    }.toSeq
   }
 }

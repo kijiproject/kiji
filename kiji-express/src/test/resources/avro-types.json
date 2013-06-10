@@ -63,7 +63,14 @@
           value : "org.kiji.nonexistent.class"
         }
       }]
-    } ]
+    }, {
+      name : "searches",
+      description : "A map-type column family",
+      map_schema : {
+        type: "INLINE",
+        value: '"int"'
+      }
+    }]
   } ],
   version : "layout-1.0"
 }

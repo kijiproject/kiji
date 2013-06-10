@@ -436,7 +436,7 @@ class KijiSourceSuite
     val uri: String = doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
       table.getURI().toString()
     }
-    // Input tuples to use for version count tests.
+    // Input tuples to use for avro/scala conversion tests.
     val avroCheckerInput: List[(EntityId, KijiSlice[String])] = List(
         ( EntityId(uri)("row01"), slice("family:column1", (10L,"two"), (20L, "two")) ),
         ( EntityId(uri)("row02"), slice("family:column1",
@@ -514,6 +514,41 @@ class KijiSourceSuite
       .source(TextLine("inputFile"), genericWriteInput)
       .sink(KijiOutput(uri)('line -> "family:column4"))(validateGenericWrite)
   }
+
+  test ("A job that writes to map-type column families is run.") {
+    // URI of the Kiji table to use.
+    val uri: String = doAndRelease(makeTestKijiTable(avroLayout)) { table: KijiTable =>
+      table.getURI().toString()
+    }
+
+    // Input text.
+    val mapTypeInput: List[(String, String)] = List(
+        ("0", "dogs 4"),
+        ("1", "cats 5"),
+        ("2", "fish 3"))
+
+    // Validate output.
+    def validateMapWrite(outputBuffer: Buffer[(EntityId, KijiSlice[AvroRecord])]): Unit = {
+      assert (1 === outputBuffer.size)
+      val outputSlice = outputBuffer(0)._2
+      val outputSliceMap = outputSlice.groupByQualifier
+      assert (4 === outputSliceMap("dogs").getFirstValue)
+      assert (5 === outputSliceMap("cats").getFirstValue)
+      assert (3 === outputSliceMap("fish").getFirstValue)
+    }
+
+    // Create the JobTest for this test.
+    val jobTest = JobTest(new MapWriteJob(_))
+        .arg("input", "inputFile")
+        .arg("table", uri)
+        .source(TextLine("inputFile"), mapTypeInput)
+        .sink(KijiOutput(uri)(Map(MapFamily("searches")('terms) -> 'resultCount)))(validateMapWrite)
+
+    // Run the test.
+    jobTest.run.finish
+    // Run the test in hadoop mode.
+    jobTest.runHadoop.finish
+  }
 }
 
 /** Companion object for KijiSourceSuite. Contains helper functions and test jobs. */
@@ -527,7 +562,7 @@ object KijiSourceSuite extends KijiSuite {
    *     to the Kiji table the job should be run on, and "output", which specifies the output
    *     Tsv file.
    */
-  class WordCountJob(args: Args) extends Job(args) {
+  class WordCountJob(args: Args) extends KijiJob(args) {
     // Setup input to bind values from the "family:column1" column to the symbol 'word.
     KijiInput(args("input"))("family:column1" -> 'word)
         // Sanitize the word.
@@ -551,7 +586,7 @@ object KijiSourceSuite extends KijiSuite {
    *     to the Kiji table the job should be run on, and "output", which specifies the output
    *     Tsv file.
    */
-  class TwoColumnJob(args: Args) extends Job(args) {
+  class TwoColumnJob(args: Args) extends KijiJob(args) {
     // Setup input to bind values from the "family:column1" column to the symbol 'word.
     KijiInput(args("input"))("family:column1" -> 'word1, "family:column2" -> 'word2)
         .map('word1 -> 'pluralword) { words: KijiSlice[String] =>
@@ -570,7 +605,7 @@ object KijiSourceSuite extends KijiSuite {
   *     to the Kiji table the job should be run on, and "output", which specifies the output
   *     Tsv file.
   */
-  class PluralizeReplaceJob(args: Args) extends Job(args) {
+  class PluralizeReplaceJob(args: Args) extends KijiJob(args) {
     KijiInput(args("input"))(
         Map(
             Column("family:column1") -> 'word1,
@@ -593,7 +628,7 @@ object KijiSourceSuite extends KijiSuite {
    *     to the Kiji table the job should be run on, and "output", which specifies the output
    *     Tsv file.
    */
-  class VersionsJob(source: KijiSource)(args: Args) extends Job(args) {
+  class VersionsJob(source: KijiSource)(args: Args) extends KijiJob(args) {
     source
         // Count the size of words (number of versions).
         .map('words -> 'versioncount) { words: KijiSlice[String] =>
@@ -603,7 +638,7 @@ object KijiSourceSuite extends KijiSuite {
         .write(Tsv(args("output")))
   }
 
-  class MultipleTimestampsImportJob(args: Args) extends Job(args) {
+  class MultipleTimestampsImportJob(args: Args) extends KijiJob(args) {
     // Setup input.
     TextLine(args("input"))
         .read
@@ -625,7 +660,7 @@ object KijiSourceSuite extends KijiSuite {
    * @param args to the job. Two arguments are expected: "input", which specifies the path to a
    *     text file, and "output", which specifies the URI to a Kiji table.
    */
-  class ImportJob(args: Args) extends Job(args) {
+  class ImportJob(args: Args) extends KijiJob(args) {
     // Setup input.
     TextLine(args("input"))
         .read
@@ -646,7 +681,7 @@ object KijiSourceSuite extends KijiSuite {
    * @param args to the job. Two arguments are expected: "input", which specifies the path to a
    *     text file, and "output", which specifies the URI to a Kiji table.
    */
-  class ImportJobWithTime(args: Args) extends Job(args) {
+  class ImportJobWithTime(args: Args) extends KijiJob(args) {
     // Setup input.
     TextLine(args("input"))
         .read
@@ -662,7 +697,7 @@ object KijiSourceSuite extends KijiSuite {
    * @param source that the job will use.
    * @param args to the job. The input URI for the table and the output file.
    */
-  class AvroToScalaChecker(source: KijiSource)(args: Args) extends Job(args) {
+  class AvroToScalaChecker(source: KijiSource)(args: Args) extends KijiJob(args) {
     source
         .flatMap('word -> 'matches) { word: KijiSlice[String] =>
           word.cells.map { cell: Cell[String] =>
@@ -686,7 +721,7 @@ object KijiSourceSuite extends KijiSuite {
    *     to the Kiji table the job should be run on, and "output", which specifies the output
    *     Tsv file.
    */
-  class GenericAvroReadJob(args: Args) extends Job(args) {
+  class GenericAvroReadJob(args: Args) extends KijiJob(args) {
     KijiInput(args("input"))("family:column3" -> 'records)
     .map('records -> 'hashSizeField) { slice: KijiSlice[AvroValue] =>
         slice.getFirst match {
@@ -706,7 +741,7 @@ object KijiSourceSuite extends KijiSuite {
    * @param args to the job. Two arguments are expected: "input", which specifies the path to a
    *     text file, and "output", which specifies the URI to a Kiji table.
    */
-  class GenericAvroWriteJob(args: Args) extends Job(args) {
+  class GenericAvroWriteJob(args: Args) extends KijiJob(args) {
     val tableUri: String = args("output")
     TextLine(args("input"))
         .read
@@ -717,5 +752,26 @@ object KijiSourceSuite extends KijiSuite {
         }
         // Write the results to the "family:column1" column of a Kiji table.
         .write(KijiOutput(tableUri, 'offset)('line -> "family:column4"))
+  }
+
+  /**
+   * A job that writes to a map-type column family.  It takes text from the input and uses it as
+   * search terms and the number of results returned for that term.  All of them belong to the same
+   * entity, "my_eid".
+   *
+   * @param args to the job. Two arguments are expected: "input", which specifies the path to a
+   *     text file, and "output", which specifies the URI to a Kiji table.
+   */
+  class MapWriteJob(args: Args) extends KijiJob(args) {
+    TextLine(args("input"))
+        .read
+        // Create an entity ID for each line (always the same one, here)
+        .map('line -> 'entityId) { line: String => EntityId(args("table"))("my_eid") }
+        // Get the number of result for each search term
+        .map('line -> ('terms, 'resultCount)) { line: String =>
+          (line.split(" ")(0), line.split(" ")(1).toInt)
+        }
+        // Write the results to the "family:column1" column of a Kiji table.
+        .write(KijiOutput(args("table"))(Map(MapFamily("searches")('terms) -> 'resultCount)))
   }
 }

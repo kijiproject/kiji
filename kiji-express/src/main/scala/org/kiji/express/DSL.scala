@@ -72,6 +72,12 @@ import org.kiji.schema.filter.RegexQualifierColumnFilter
  *   myFamilyRequest = MapFamily("searches", versions = all)
  * }}}
  *
+ * When writing to a family, you must name which field in the tuple will specify the qualifier to
+ * write to.
+ * {{{
+ *  MapFamily("searches")('terms)
+ * }}}
+ *
  * === Getting input from a Kiji table. ===
  * The factory methods named `KijiInput` can be used to obtain a [[org.kiji.express.KijiSource]]
  * to process rows from the table (represented as tuples) using various operations. When using
@@ -141,7 +147,19 @@ object DSL {
       }
     }
 
-    new ColumnFamily(name, new ColumnRequestOptions(versions, filter))
+    new ColumnFamily(name, None, new ColumnRequestOptions(versions, filter))
+  }
+
+  /**
+   * Creates an output specification for a map-type column family in a Kiji table.
+   *
+   * @param name of the map-type column family being requested.
+   * @param qualifierSelector is the name of the field in the tuple that will contain the qualifier
+   *     in this column family to write to.
+   * @return a request for the map-type column family configured with the specified options.
+   */
+  def MapFamily(name: String)(qualifierSelector: Symbol): ColumnFamily = {
+    new ColumnFamily(name, Some(qualifierSelector.name))
   }
 
   /**

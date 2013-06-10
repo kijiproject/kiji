@@ -307,8 +307,8 @@ object KijiSource {
       case QualifiedColumn(family, qualifier, options) => {
         new QualifiedColumn(family, qualifier, emptyOptions)
       }
-      case ColumnFamily(family, options) => {
-        new ColumnFamily(family, emptyOptions)
+      case ColumnFamily(family, qualField, options) => {
+        new ColumnFamily(family, qualField, emptyOptions)
       }
     }
 
@@ -356,7 +356,7 @@ object KijiSource {
                 KijiScheme
                     .rowToTuple(
                         columnRequestsAllData(columns),
-                        getSinkFields(),
+                        getSourceFields(),
                         timestampField,
                         row,
                         table.getURI,

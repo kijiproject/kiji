@@ -115,9 +115,12 @@ private[express] class LocalKijiScheme(
     extends Scheme[Properties, InputStream, OutputStream, InputContext, OutputContext] {
   private val logger: Logger = LoggerFactory.getLogger(classOf[LocalKijiScheme])
 
+  /** The field names of all qualifier selectors. */
+  private val qualifierSelectors: Seq[String] = KijiScheme.extractQualifierSelectors(columns)
+
   /** Set the fields that should be in a tuple when this source is used for reading and writing. */
   setSourceFields(KijiScheme.buildSourceFields(columns.keys))
-  setSinkFields(KijiScheme.buildSinkFields(columns.keys, timestampField))
+  setSinkFields(KijiScheme.buildSinkFields(columns, timestampField))
 
   /**
    * Sets any configuration options that are required for running a local job
@@ -284,7 +287,11 @@ private[express] class LocalKijiScheme(
 
     // Write the tuple out.
     val output: TupleEntry = sinkCall.getOutgoingEntry()
-    KijiScheme.putTuple(columns, getSinkFields(), timestampField, output, writer, layout)
+    KijiScheme.putTuple(columns,
+        timestampField,
+        output,
+        writer,
+        layout)
   }
 
   /**

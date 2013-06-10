@@ -34,20 +34,28 @@ class DSLSuite extends FunSuite {
     }
   }
 
-  test("DSL should not let you create a maptype column with a qualifier.") {
+  test("DSL should not let you create a maptype column request with a qualifier in the col name.") {
     intercept[KijiInvalidNameException] {
       val colReq: ColumnRequest = MapFamily("info:word")
     }
+
+    intercept[KijiInvalidNameException] {
+      val colReq: ColumnRequest = MapFamily("info:word")('qualifierField)
+    }
   }
 
-  test("DSL should let you specify qualifier regex on maptype columns.") {
+  test("DSL should let you create an output maptype column specifying the qualifier field.") {
+    val colReq: ColumnRequest = MapFamily("searches")('terms)
+  }
+
+  test("DSL should let you specify qualifier regex on maptype columns requests.") {
     val colReq: ColumnFamily = MapFamily("search", qualifierMatches=""".*\.com""")
 
     // TODO: Test it filters keyvalues correctly.
     assert(colReq.options.filter.get.isInstanceOf[RegexQualifierColumnFilter])
   }
 
-  test("DSL should let you specify versions on maptype column without qualifier regex.") {
+  test("DSL should let you specify versions on maptype column requests without qualifier regex.") {
     val colReq: ColumnFamily = MapFamily("search", versions=2)
 
     assert(colReq.options.maxVersions == 2)
@@ -59,7 +67,7 @@ class DSLSuite extends FunSuite {
     assert(colReq.options.maxVersions == 3)
   }
 
-  test("DSL should have default versions of 1 for maptype and grouptype columns.") {
+  test("DSL should have default versions of 1 for maptype and grouptype column requests.") {
     val colReq1: QualifiedColumn = Column("info:word")
     val colReq2: ColumnFamily = MapFamily("searches")
 

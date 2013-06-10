@@ -108,6 +108,8 @@ final case class QualifiedColumn private[express] (
  * A request for cells from columns in a map-type column family in a Kiji table.
  *
  * @param family (map-type) of the Kiji table whose columns are being requested.
+ * @param qualifierSelector is the name of the field in the tuple that will contain the qualifier
+ *     to write to.
  * @param options that will be used to request cells from the columns of the family. If
  *     unspecified, default request options are used.
  */
@@ -115,16 +117,20 @@ final case class QualifiedColumn private[express] (
 @ApiStability.Experimental
 final case class ColumnFamily private[express] (
     family: String,
+    qualifierSelector: Option[String] = None,
     options: ColumnRequestOptions = ColumnRequestOptions())
     extends ColumnRequest {
   KijiNameValidator.validateLayoutName(family)
 
   override def replaceMissingWith(replacementSlice: KijiSlice[_]): ColumnRequest = {
-    return new ColumnFamily(family, options.newWithReplacement(Some(replacementSlice)))
+    return new ColumnFamily(
+        family,
+        qualifierSelector,
+        options.newWithReplacement(Some(replacementSlice)))
   }
 
   override def ignoreMissing(): ColumnRequest = {
-    return new ColumnFamily(family, options.newWithReplacement(None))
+    return new ColumnFamily(family, qualifierSelector, options.newWithReplacement(None))
   }
 
   override def getColumnName(): KijiColumnName = new KijiColumnName(family)

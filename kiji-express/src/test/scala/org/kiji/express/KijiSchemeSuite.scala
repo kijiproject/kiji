@@ -35,26 +35,36 @@ class KijiSchemeSuite extends KijiSuite {
 
     // Set up the columns and fields.
     val columns = Map("columnSymbol" -> QualifiedColumn("family", "column3"))
-    val fields = KijiScheme.buildSourceFields(columns.keys)
+    val sourceFields = KijiScheme.buildSourceFields(columns.keys)
+    val sinkFields = KijiScheme.buildSinkFields(columns, None)
 
-    // Create a dummy record with an entity ID to put in teh table.
+    // Create a dummy record with an entity ID to put in the table.
     val dummyEid = EntityId(uri.toString)("dummy")
     val record = AvroRecord(
         "hash_type" -> new AvroEnum("MD5"),
         "hash_size" -> 13,
         "suppress_key_materialization" -> false)
-    val writeValue = new TupleEntry(fields, new Tuple(dummyEid, record))
+    val writeValue = new TupleEntry(sourceFields, new Tuple(dummyEid, record))
 
     // Put the tuple.
-    KijiScheme.putTuple(columns, fields, None, writeValue, writer, tableLayout)
+    KijiScheme.putTuple(columns,
+        None,
+        writeValue,
+        writer,
+        tableLayout)
 
     // Read the tuple back.
     val rowData =
       reader.get(dummyEid.toJavaEntityId, KijiScheme.buildRequest(TimeRange.All, columns.values))
     val columnNames = columns.values.map { column => column.getColumnName() }
     val expressGenericTable = new ExpressGenericTable(uri, columnNames.toSeq)
-    val readValue: Option[Tuple] =
-        KijiScheme.rowToTuple(columns, fields, None, rowData, uri, expressGenericTable)
+    val readValue: Option[Tuple] = KijiScheme.rowToTuple(
+        columns,
+        sourceFields,
+        None,
+        rowData,
+        uri,
+        expressGenericTable)
     assert(readValue.isDefined)
 
     val readRecord = readValue.get.getObject(1).asInstanceOf[KijiSlice[_]].getFirstValue
