@@ -2,6 +2,8 @@
                               Kiji Scoring Release Notes
 
 Version 0.2.0
+  * SCORE-46. Freshness policies attached to qualified columns in map type families will now be
+      triggered by requests to the entire map type family.
   * SCORE-49. Fixes ConcurrentModificationException in FreshKijiTableReader.rereadPolicies().
   * SCORE-48. Updates pom.xml versions to latest released versions of dependencies.
   * SCORE-47. KijiFreshnessManager and FreshTool now support post-attachment validation of

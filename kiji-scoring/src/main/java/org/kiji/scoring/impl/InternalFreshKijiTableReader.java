@@ -449,6 +449,23 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
         final boolean containsQualifiedRecord = mPolicyRecords.containsKey(columnName);
         final boolean containsFamilyRecord = mPolicyRecords.containsKey(family);
 
+        if (!columnName.isFullyQualified() && !containsFamilyRecord) {
+          for (Map.Entry<KijiColumnName, KijiFreshnessPolicyRecord> entry
+              : mPolicyRecords.entrySet()) {
+            if (entry.getKey().getFamily().equals(columnName.getFamily())) {
+              synchronized (mCapsuleCache) {
+                if (mCapsuleCache.containsKey(entry.getKey())) {
+                  capsules.put(entry.getKey(), getCapsule(entry.getKey()));
+                } else {
+                  final FreshnessCapsule capsule = makeCapsule(entry.getKey());
+                  capsules.put(entry.getKey(), capsule);
+                  putCapsule(entry.getKey(), capsule);
+                }
+              }
+            }
+          }
+        }
+
         if (containsQualifiedRecord && containsFamilyRecord) {
           throw new InternalKijiError(String.format("Found freshness policy record for qualified "
               + "column: %s and family: %s only one may exist at a time.", columnName, family));

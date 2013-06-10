@@ -189,6 +189,19 @@ public class TestInternalFreshKijiTableReader {
     }
   }
 
+  private static final class TestQualifiedMapProducer extends KijiProducer {
+    public KijiDataRequest getDataRequest() {
+      return KijiDataRequest.create("map");
+    }
+    public String getOutputColumn() {
+      return null;
+    }
+    public void produce(final KijiRowData rowData, final ProducerContext producerContext)
+        throws IOException {
+      producerContext.put(10);
+    }
+  }
+
   private Kiji mKiji;
   private KijiTable mTable;
   private KijiTableReader mReader;
@@ -522,7 +535,7 @@ public class TestInternalFreshKijiTableReader {
         .build();
 
     assertEquals(
-       2, freshReader.get(eid, request).getMostRecentValue("map", "qualifier"));
+        2, freshReader.get(eid, request).getMostRecentValue("map", "qualifier"));
   }
 
   @Test
@@ -806,5 +819,21 @@ public class TestInternalFreshKijiTableReader {
     freshReader.get(eid, request);
     freshReader.get(eid, request);
     freshReader.get(eid, request);
+  }
+
+  @Test
+  public void testRequestFamily() throws IOException {
+    final EntityId eid = mTable.getEntityId("foo");
+    final KijiDataRequest request = KijiDataRequest.create("map");
+
+    // Create a KijiFreshnessManager and register a freshness policy.
+    final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
+    manager.storePolicy(
+        "table", "map:qualifier", TestQualifiedMapProducer.class, new AlwaysFreshen());
+
+    final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
+        .withTable(mTable).withTimeout(1000).build();
+
+    assertEquals(10, freshReader.get(eid, request).getMostRecentValue("map", "qualifier"));
   }
 }
