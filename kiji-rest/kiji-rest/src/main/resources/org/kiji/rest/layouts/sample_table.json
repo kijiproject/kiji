@@ -29,7 +29,7 @@
       "enabled": true,
       "description": "main storage",
       "in_memory": false,
-      "max_versions": 1,
+      "max_versions": 2147483647,
       "ttl_seconds": 2147483647,
       "compression_type": "GZ",
       "families": [
