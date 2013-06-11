@@ -74,6 +74,13 @@ public final class CheckinUtils {
   }
 
   /**
+   * @return the hidden kiji directory.
+   */
+  public static File getHiddenKijiDirectory() {
+    return new File(getHomeDirectory(), HIDDEN_KIJI_DIR);
+  }
+
+  /**
    * Convenience method to determine whether or not a file in the hidden kiji directory (which is
    * relative to the user's home directory) dedicated to storing special files related to the
    * checkin process.
@@ -82,7 +89,7 @@ public final class CheckinUtils {
    * @return whether or not the specified file exists.
    */
   public static boolean kijiFileExists(String fileName) {
-    File kijiDirectory = new File(getHomeDirectory(), HIDDEN_KIJI_DIR);
+    File kijiDirectory = getHiddenKijiDirectory();
     File desiredFile = new File(kijiDirectory, fileName);
     return desiredFile.exists();
   }
@@ -136,7 +143,6 @@ public final class CheckinUtils {
    * @return boolean indicating whether or not the checkin feature has been disabled or not.
    */
   public static boolean isCheckinDisabled() {
-
     boolean disableCheckinProp = Boolean.valueOf(System.getProperty(DISABLE_CHECKIN_PROP, "false"));
     return CheckinUtils.kijiFileExists(DISABLE_CHECKIN) || disableCheckinProp;
   }

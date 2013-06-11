@@ -117,10 +117,11 @@ public class CommandLogger {
     HttpClient httpClient = new DefaultHttpClient();
     CheckinClient client = new CheckinClient(httpClient, mCheckinServerUri);
     try {
+      LOG.debug("Logging " + command.toJSON() + " to " + mCheckinServerUri);
       client.postCommand(command);
       client.close();
     } catch (IOException ioe) {
-      // Do we want to do anything here?
+      LOG.debug("ERROR Logging " + command.toJSON() + " to " + mCheckinServerUri, ioe);
     }
   }
 }
