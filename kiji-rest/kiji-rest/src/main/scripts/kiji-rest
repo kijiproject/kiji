@@ -63,4 +63,13 @@ mkdir -p ${BASEDIR}/logs
 ${JAVA_HOME}/bin/java -cp ${kiji_rest_cp} org.kiji.rest.KijiRESTService server \
 ${BASEDIR}/conf/configuration.yml > ${BASEDIR}/logs/console.out 2>&1 &
 
-echo $! > $PIDFILE
+sleep 5
+
+# check if the backgrounded process truly started
+ps -p $! > /dev/null
+if [ 0 == $? ]; then
+  echo $! > $PIDFILE
+else
+  exit 1
+fi
+
