@@ -30,7 +30,7 @@ from [here](http://archive.kiji.org/tarballs/kiji-bento-albacore-1.0.1-release.t
 
 Setup
 ------
-    export $MUSIC_EXPRESS_HOME = <path/to/tutorial/root/dir>
+    export MUSIC_EXPRESS_HOME = <path/to/tutorial/root/dir>
 
 Install a Kiji instance.
 
