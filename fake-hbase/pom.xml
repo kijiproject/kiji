@@ -77,7 +77,6 @@
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase</artifactId>
       <scope>compile</scope>
-      <version>0.94.2-cdh4.2.1</version>
     </dependency>
 
     <!-- Hadoop -->
