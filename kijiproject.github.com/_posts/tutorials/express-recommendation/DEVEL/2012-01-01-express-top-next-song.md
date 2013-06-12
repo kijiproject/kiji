@@ -214,10 +214,3 @@ You should see:
 
 Notice that for each of these songs, there is now a info:top_next_songs column that contains a record “topSongs”, the list of top songs played after each of these, in order of popularity.  We now have the data necessary for a song recommendation model based on the most popular next songs.
 
-This concludes the tutorial of KijiExpress.  If you were using a bento cluster for this tutorial and are done with it, now is a good time shut it down:
-
-<div class="userinput">
-{% highlight bash %}
-    bento stop
-{% endhighlight %}
-</div>

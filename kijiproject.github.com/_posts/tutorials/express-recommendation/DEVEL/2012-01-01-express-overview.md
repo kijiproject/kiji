@@ -24,7 +24,7 @@ The tutorial gets you started with the beginnings of a music recommendation engi
 the form of JSON files that contain metadata about songs and users' listening history. We import this
 data into Kiji tables.
 
-We start by writing a simple program to the number of times a song is played.
+We start by writing a simple program to count the number of times a song is played.
 
 We then show how to calculate the most popular song played after a given song. We do this by
 splitting the users' listening history into bigrams of (song1, song2), where song2 was played right after
@@ -87,7 +87,7 @@ on the `'username`, `'stateId`, and `'totalSpent` fields by including the `'user
 and `'totalSpent` symbols in the first parameter group.
 
 When writing KijiExpress jobs, you will often use methods in your pipelines that take a first
-argument group in `()` parentheses that specifices a mapping from input field names to output field
+argument group in `()` parentheses that specifies a mapping from input field names to output field
 names.  You can then define a function in `{}` curly braces immediately following that defines how
 to map from the input fields to the output fields. The syntax looks like this:
 `input.method ('inputfield -> 'outputfield) {x => function(x) }`

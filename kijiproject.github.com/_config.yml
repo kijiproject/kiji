@@ -108,7 +108,7 @@ mr_DEVEL_branch : master
 mrlib_DEVEL_version : 1.0.0-rc62
 mrlib_DEVEL_branch : master
 
-express_DEVEL_version : 0.4.0
+express_DEVEL_version : 0.5.0
 express_DEVEL_branch : master
 
 phonebook_DEVEL_version : 1.0.0-rc61
@@ -116,7 +116,7 @@ phonebook_DEVEL_version : 1.0.0-rc61
 music_DEVEL_version : 1.0.0-rc62
 music_DEVEL_branch : master
 
-music_express_DEVEL_version : 0.3.0
+music_express_DEVEL_version : 0.5.0
 music_express_DEVEL_branch : master
 
 # All Jekyll-Bootstrap specific configurations are namespaced into this hash

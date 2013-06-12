@@ -106,7 +106,7 @@ most popular next song.
 
 <div class="userinput">
 {% highlight bash %}
-express job ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-0.2.0-SNAPSHOT.jar \
+express job ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_DEVEL_version}}.jar \
     org.kiji.express.music.SongRecommender --songs-table ${KIJI}/songs \
     --users-table ${KIJI}/users
 {% endhighlight %}
@@ -119,7 +119,7 @@ Alternately, you can also run these as scripts as follows:
 <div class="userinput">
 {% highlight bash %}
 express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
-    ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-0.2.0-SNAPSHOT.jar \
+    ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_DEVEL_version}}.jar \
     org.kiji.express.music.SongRecommender --songs-table ${KIJI}/songs \
     --users-table ${KIJI}/users
 {% endhighlight %}
@@ -143,3 +143,10 @@ You should see something like:
     entity-id=['user-41'] [1367023207962] info:next_song_rec
                                      song-41
 
+This concludes the tutorial of KijiExpress.  If you were using a bento cluster for this tutorial and are done with it, now is a good time to shut it down:
+
+<div class="userinput">
+{% highlight bash %}
+    bento stop
+{% endhighlight %}
+</div>
