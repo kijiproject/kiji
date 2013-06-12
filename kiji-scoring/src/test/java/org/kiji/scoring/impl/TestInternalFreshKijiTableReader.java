@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.junit.After;
@@ -164,6 +165,33 @@ public class TestInternalFreshKijiTableReader {
       return "";
     }
     public void deserialize(final String policyState) {}
+  }
+
+  private static final class TestUsesOwnRequestPolicy implements KijiFreshnessPolicy {
+    public boolean isFresh(final KijiRowData rowData, final PolicyContext policyContext) {
+      boolean retVal = false;
+      try {
+        retVal = rowData.getMostRecentValue("family", "qual2").equals("new@val.com");
+      } catch (IOException ioe) {
+        throw new RuntimeException(ioe);
+      }
+      return retVal;
+    }
+    public boolean shouldUseClientDataRequest() {
+      return false;
+    }
+    public KijiDataRequest getDataRequest() {
+      return KijiDataRequest.create("family", "qual2");
+    }
+    public Map<String, KeyValueStore<?, ?>> getRequiredStores() {
+      return Collections.emptyMap();
+    }
+    public String serialize() {
+      return "";
+    }
+    public void deserialize(final String policyState) {
+      Preconditions.checkArgument(policyState.isEmpty());
+    }
   }
 
   /** Dummy freshness policy for testing FreshKijiTableReader.preload(). */
@@ -835,5 +863,21 @@ public class TestInternalFreshKijiTableReader {
         .withTable(mTable).withTimeout(1000).build();
 
     assertEquals(10, freshReader.get(eid, request).getMostRecentValue("map", "qualifier"));
+  }
+
+  @Test
+  public void testUsesOwnRequest() throws IOException {
+    final EntityId eid = mTable.getEntityId("foo");
+    final KijiDataRequest request = KijiDataRequest.create("family", "qual0");
+
+    final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
+    manager.storePolicy(
+        "table", "family:qual0", TestProducer.class, new TestUsesOwnRequestPolicy());
+
+    final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
+        .withTable(mTable).withTimeout(1000).build();
+
+    assertEquals("new-val",
+        freshReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
   }
 }
