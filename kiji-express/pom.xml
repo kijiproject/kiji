@@ -28,7 +28,7 @@
     <scalatest.version>2.0.M5b</scalatest.version>
     <twitter-util.version>6.2.0</twitter-util.version>
     <kiji-schema.version>1.1.0-SNAPSHOT</kiji-schema.version>
-    <kiji-mapreduce.version>1.0.0-rc63-SNAPSHOT</kiji-mapreduce.version>
+    <kiji-mapreduce.version>1.0.0-SNAPSHOT</kiji-mapreduce.version>
     <fake-hbase.version>0.1.0-SNAPSHOT</fake-hbase.version>
   </properties>
 
