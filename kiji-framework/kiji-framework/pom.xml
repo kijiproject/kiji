@@ -39,7 +39,7 @@
       <dependency>
         <groupId>org.kiji.framework</groupId>
         <artifactId>kiji-framework</artifactId>
-        <version>1.0.0</version>
+        <version>1.1.0</version>
       </dependency>
 
     ... which will transitively include all Kiji framework components.
