@@ -21,7 +21,7 @@
 
   <groupId>org.kiji.mapreduce.lib</groupId>
   <artifactId>kiji-mapreduce-lib-root</artifactId>
-  <version>1.0.0-rc62-SNAPSHOT</version>
+  <version>1.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <parent>
@@ -39,8 +39,8 @@
     <kiji-delegation.version>1.0.0</kiji-delegation.version>
     <kiji-platforms.version>1.1.0-SNAPSHOT</kiji-platforms.version>
     <kiji-schema.version>1.1.0-SNAPSHOT</kiji-schema.version>
-    <kiji-schema-shell.version>1.0.0</kiji-schema-shell.version>
-    <kiji-mapreduce.version>1.0.0-rc63-SNAPSHOT</kiji-mapreduce.version>
+    <kiji-schema-shell.version>1.1.0-SNAPSHOT</kiji-schema-shell.version>
+    <kiji-mapreduce.version>1.0.0-SNAPSHOT</kiji-mapreduce.version>
     <fake-hbase.version>0.1.0-SNAPSHOT</fake-hbase.version>
   </properties>
 
