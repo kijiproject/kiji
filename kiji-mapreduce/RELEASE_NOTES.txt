@@ -2,7 +2,8 @@
 
                               KijiMR Release Notes
 
-Version 1.0.0-rc63
+Version 1.0.0
+  * KIJIMR-208. Buffer writes to Kiji tables coming from MapReduce jobs. 
   * KIJIMR-204. Adds time range metadata to Kiji-generated HFiles. This
       fixes a NPE in HBase 0.94.2.
   * KIJIMR-199. Adds an InMemoryMapKeyValueStore. This KVStore can be
