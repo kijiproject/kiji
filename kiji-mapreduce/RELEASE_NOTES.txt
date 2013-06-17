@@ -3,6 +3,9 @@
                               KijiMR Release Notes
 
 Version 1.0.0
+  * KIJIMR-205. KijiTableKeyValueStore now uses a KijiRowKeyComponents
+      object for its key. The static method getTableForReader() is no
+      longer required and has been removed.
   * KIJIMR-208. Buffer writes to Kiji tables coming from MapReduce jobs. 
   * KIJIMR-204. Adds time range metadata to Kiji-generated HFiles. This
       fixes a NPE in HBase 0.94.2.

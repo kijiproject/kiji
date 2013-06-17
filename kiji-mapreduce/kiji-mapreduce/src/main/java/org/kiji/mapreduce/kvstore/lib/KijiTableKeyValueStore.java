@@ -39,6 +39,7 @@ import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequestBuilder;
 import org.kiji.schema.KijiRowData;
+import org.kiji.schema.KijiRowKeyComponents;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.KijiURI;
@@ -49,7 +50,8 @@ import org.kiji.schema.util.ResourceUtils;
  * KeyValueStore lookup implementation based on a Kiji table.
  *
  * <p>Allows you to use a single fully-qualified column of a Kiji table as a
- * key-value store (using the EntityId associated with each row as the key).</p>
+ * key-value store (using a KijiRowKeyComponents that corresponds to the
+ * entity id associated with each row as the key).</p>
  *
  * <p>This operates over the most recent timestamped value (within the optionally-configured
  * timestamp range associated with the Store).</p>
@@ -88,7 +90,7 @@ import org.kiji.schema.util.ResourceUtils;
  *   <li>The minimum timestamp to read defaults to <tt>0</tt>.</li>
  *   <li>The maximum timestamp to read is "infinity" (no maximum). This can be specified
  *   as <tt>HConstants.FOREVER</tt>.</li>
- *   <li>The number of entityId-to-value mappings to cache locally defaults to 100. You
+ *   <li>The number of rowkey-to-value mappings to cache locally defaults to 100. You
  *   can disable caching by setting the cache size to 0.</li>
  *   <li>The Avro reader schema field is currently ignored. The reader schema from the
  *   table layout for that column will always be used as the reader schema. Support for
@@ -98,9 +100,8 @@ import org.kiji.schema.util.ResourceUtils;
  * @param <V> the value type returned by this key-value store.
  */
 @ApiAudience.Public
-public final class KijiTableKeyValueStore<V> implements Configurable, KeyValueStore<EntityId, V> {
-  // TODO(KIJIMR-94): Add a flag that allows users to specify hex-strings (pre-hashed entity ids)
-  // as keys instead of "vanilla" key strings.
+public final class KijiTableKeyValueStore<V>
+    implements Configurable, KeyValueStore<KijiRowKeyComponents, V> {
 
   /** Cache the most recent 100 lookups in memory. */
   private static final int DEFAULT_MAX_OBJECTS_TO_CACHE = 100;
@@ -410,7 +411,7 @@ public final class KijiTableKeyValueStore<V> implements Configurable, KeyValueSt
 
   /** {@inheritDoc} */
   @Override
-  public KeyValueStoreReader<EntityId, V> open() throws IOException {
+  public KeyValueStoreReader<KijiRowKeyComponents, V> open() throws IOException {
     mOpened = true;
     return new TableKVReader();
   }
@@ -477,7 +478,7 @@ public final class KijiTableKeyValueStore<V> implements Configurable, KeyValueSt
 
   /** KeyValueStoreReader implementation that reads from a Kiji table. */
   @ApiAudience.Private
-  private final class TableKVReader implements KeyValueStoreReader<EntityId, V> {
+  private final class TableKVReader implements KeyValueStoreReader<KijiRowKeyComponents, V> {
     /** Kiji instance to use. */
     private Kiji mKiji;
     /** Kiji Table instance to open. */
@@ -487,7 +488,7 @@ public final class KijiTableKeyValueStore<V> implements Configurable, KeyValueSt
     /** Data request to use for all lookups. */
     private final KijiDataRequest mDataReq;
     /** If the user has requested result caching, do this here. */
-    private final Map<EntityId, V> mResultCache;
+    private final Map<KijiRowKeyComponents, V> mResultCache;
 
     /**
      * Creates a new TableKVReader.
@@ -521,18 +522,19 @@ public final class KijiTableKeyValueStore<V> implements Configurable, KeyValueSt
 
     /** {@inheritDoc} */
     @Override
-    public V get(EntityId entityId) throws IOException {
+    public V get(KijiRowKeyComponents rowKey) throws IOException {
       if (!isOpen()) {
         throw new IOException("Closed");
       }
 
       // Check the cache first.
-      if (null != mResultCache && mResultCache.containsKey(entityId)) {
-        return mResultCache.get(entityId);
+      if (null != mResultCache && mResultCache.containsKey(rowKey)) {
+        return mResultCache.get(rowKey);
       }
 
       // Now do a full lookup.
-      KijiRowData rowData = mTableReader.get(entityId, mDataReq);
+      final EntityId eid = rowKey.getEntityIdForTable(mKijiTable);
+      KijiRowData rowData = mTableReader.get(eid, mDataReq);
 
       if (null == rowData) {
         return null;
@@ -543,13 +545,13 @@ public final class KijiTableKeyValueStore<V> implements Configurable, KeyValueSt
         // TODO: But we must actually use it if it's not null!
         V val = rowData.<V>getMostRecentValue(mColumn.getFamily(), mColumn.getQualifier());
         if (null != mResultCache) {
-          mResultCache.put(entityId, val);
+          mResultCache.put(rowKey, val);
         }
 
         return val;
       } else {
         if (null != mResultCache) {
-          mResultCache.put(entityId, null);
+          mResultCache.put(rowKey, null);
         }
         return null;
       }
@@ -557,16 +559,17 @@ public final class KijiTableKeyValueStore<V> implements Configurable, KeyValueSt
 
     /** {@inheritDoc} */
     @Override
-    public boolean containsKey(EntityId entityId) throws IOException {
+    public boolean containsKey(KijiRowKeyComponents rowKey) throws IOException {
       if (!isOpen()) {
         throw new IOException("Closed");
       }
 
-      if (null != mResultCache && mResultCache.containsKey(entityId)) {
+      if (null != mResultCache && mResultCache.containsKey(rowKey)) {
         return true; // Cache hit.
       }
 
-      KijiRowData rowData = mTableReader.get(entityId, mDataReq);
+      final EntityId eid = rowKey.getEntityIdForTable(mKijiTable);
+      KijiRowData rowData = mTableReader.get(eid, mDataReq);
 
       if (null == rowData) {
         return false;
@@ -588,33 +591,5 @@ public final class KijiTableKeyValueStore<V> implements Configurable, KeyValueSt
         mKiji = null;
       }
     }
-  }
-
-  /**
-   * A static method to retrieve a KijiTable from a reader, useful for generating EntityIds. The
-   * reader must be from a KijiTableKeyValueStore.
-   *
-   * <p>The table is the underlying one backing the reader. As such clients should not retain() it
-   * unless they need to use it after closing the reader. The behavior of releasing the table
-   * without first retaining it is undefined.</p>
-   *
-   * <p>The table should be used for generating EntityIds. Using it to get readers or writers is
-   * discouraged.</p>
-   *
-   * @param kvReader a key value store reader. Must come from a KijiTableKeyValueStore.
-   * @throws IllegalArgumentException if the key value reader is not a reader for a
-   * KijiTableKeyValueStore.
-   * @return a KijiTable.
-   */
-  public static KijiTable getTableForReader(KeyValueStoreReader<EntityId, ?> kvReader) {
-    if (null == kvReader) {
-      throw new IllegalArgumentException("kvReader may not be null.");
-    }
-    if (!(kvReader instanceof KijiTableKeyValueStore.TableKVReader)) {
-      throw new IllegalArgumentException("kvReader " + kvReader.toString() + " not a reader for a "
-          + "KijiTableKeyValueStore.");
-    }
-    KijiTableKeyValueStore.TableKVReader tkv = (KijiTableKeyValueStore.TableKVReader)kvReader;
-    return tkv.mKijiTable;
   }
 }
