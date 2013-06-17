@@ -353,9 +353,7 @@ object ExtractScoreProducer {
                   .asScala
                   .map { property => (property.getName(), property.getValue()) }
                   .toMap
-              val uri: KijiURI = KijiURI.newBuilder(properties("uri")).build()
-
-              new KijiTableKeyValueStore(jkvstoreReader, uri)
+              new KijiTableKeyValueStore(jkvstoreReader)
             }
           }
 

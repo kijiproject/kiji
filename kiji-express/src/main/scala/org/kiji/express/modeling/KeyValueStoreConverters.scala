@@ -19,11 +19,12 @@
 
 package org.kiji.express.modeling
 
+import scala.collection.JavaConverters.seqAsJavaListConverter
+
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.express.AvroUtil
-import org.kiji.express.EntityId
-import org.kiji.schema.KijiURI
+import org.kiji.schema.KijiRowKeyComponents
 
 /**
  * Converts keys specified as Scala types to equivalent keys as Java types compatible with the
@@ -70,27 +71,28 @@ private[express] trait JavaToScalaValueConverter[V] {
 }
 
 /**
- * Converts KijiExpress entity ids to KijiMR entity ids, suitable for use with a
- * `KijiTableKeyValueStore`.
+ * Converts a sequence of components for a Kiji entity id to an instance of
+ * `KijiRowKeyComponents` that can be used as a key to a Kiji table key-value store.
  */
 @ApiAudience.Private
 @ApiStability.Experimental
 private[express] trait EntityIdScalaToJavaKeyConverter extends ScalaToJavaKeyConverter[Seq[Any]] {
   /**
-   * URI addressing the Kiji table that these entityIds belong to. This must be overridden in any
-   * implementing classes.
-   */
-  def tableUri: KijiURI
-
-  /**
-   * Converts a KijiExpress [[org.kiji.express.EntityId]] to a KijiMR entity id,
-   * suitable for use with a `KijiTableKeyValueStore`.
+   * Converts a sequence of entity id components to an instance of `KijiRowKeyComponents`,
+   * suitable for use with a `KijiTableKeyValueStore`
    *
-   * @param keyWithScalaType is the KijiExpress entity id to convert.
-   * @return is the equivalent KijiMR entity id.
+   * @param keyWithScalaType is a sequence of entity id components.
+   * @return is the equivalent `KijiRowKeyComponents`.
    */
   override protected def keyConversion(keyWithScalaType: Seq[Any]): Any = {
-    EntityId.fromComponents(tableUri, keyWithScalaType).toJavaEntityId()
+    // KijiRowKeyComponents can use Java byte array, Java String, Java Long,
+    // or Java Integer as components. As long as we ensure all components are AnyRef,
+    // then Scala Array[Byte], Scala String, Scala Long, and Scala Int are usable to create a
+    // KijiRowKeyComponents. We do this conversion then create the KijiRowKeyComponents.
+    val components = keyWithScalaType
+        .map { component => component.asInstanceOf[AnyRef] }
+        .asJava
+    KijiRowKeyComponents.fromComponentsList(components)
   }
 }
 
