@@ -153,7 +153,7 @@ class KijiPipe(private val pipe: Pipe) extends TupleConversions {
     override def apply(entry: TupleEntry): AvroRecord = {
       val fieldMap: Map[String, AvroValue] =
           entry.getFields.asScala.toBuffer.map { field: Comparable[_] =>
-            (field.toString, AvroUtil.wrapGenericAvro(entry.getObject(field)))
+            (field.toString, AvroUtil.scalaToGenericAvro(entry.getObject(field)))
           }.toMap
       new AvroRecord(fieldMap)
     }
