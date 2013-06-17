@@ -22,7 +22,6 @@ package org.kiji.express.music
 import com.twitter.scalding._
 
 import org.kiji.express._
-import org.kiji.express.KijiJob
 import org.kiji.express.DSL._
 
 /**

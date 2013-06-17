@@ -19,13 +19,9 @@
 
 package org.kiji.express.music
 
-import scala.collection.JavaConverters._
-
 import com.twitter.scalding._
 
-import com.google.common.collect.Lists
 import org.kiji.express._
-import org.kiji.express.KijiJob
 import org.kiji.express.DSL._
 
 /**
@@ -41,15 +37,6 @@ import org.kiji.express.DSL._
  * @param args passed from the command line.
  */
 class TopNextSongs(args: Args) extends KijiJob(args) {
-  /**
-   * Transforms a Scala `List` into a Java `List`.
-   *
-   * @param ls is the list to transform.
-   * @tparam T is the type of data in the list.
-   * @return a Java `List` created from the original Scala `List`.
-   */
-  def scalaListToJavaList[T](ls: List[T]): java.util.List[T] = Lists.newArrayList[T](ls.asJava)
-
   /**
    * Transforms a slice of song ids into a collection of tuples `(s1,
    * s2)` signifying that `s2` appeared after `s1` in the slice, chronologically.
@@ -72,7 +59,7 @@ class TopNextSongs(args: Args) extends KijiJob(args) {
    * @return a group containing a list of song count records, sorted by count.
    */
   def sortNextSongs(nextSongs: GroupBuilder): GroupBuilder = {
-    nextSongs.sortBy('count).reverse.toList[AvroRecord]('songCount -> 'scalaTopSongs)
+    nextSongs.sortBy('count).reverse.toList[AvroRecord]('songCount -> 'topSongs)
   }
 
   // This Scalding pipeline does the following:
@@ -83,7 +70,6 @@ class TopNextSongs(args: Args) extends KijiJob(args) {
   // 4. Creates a song count Avro record from each bigram.
   // 5. For each song S, creates a list of songs sorted by the number of times the song was played
   //    after S.
-  // 6. Converts that list from a Scala list to a Java list.
   // 7. Packs each list into an Avro record.
   // 8. Creates an entity id for the songs table for each song.
   // 9. Writes each song's TopSongs record to Kiji.
@@ -92,7 +78,6 @@ class TopNextSongs(args: Args) extends KijiJob(args) {
       .groupBy(('firstSong, 'songId)) { _.size('count) }
       .packAvro(('songId, 'count) -> 'songCount)
       .groupBy('firstSong) { sortNextSongs }
-      .map('scalaTopSongs -> 'topSongs) { scalaListToJavaList }
       .packAvro('topSongs -> 'topNextSongs)
       .map('firstSong -> 'entityId) { firstSong: String =>
           EntityId(args("songs-table"))(firstSong) }

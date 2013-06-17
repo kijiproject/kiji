@@ -23,9 +23,8 @@ import scala.util.parsing.json.JSON
 
 import com.twitter.scalding._
 
-import org.kiji.express.KijiJob
+import org.kiji.express._
 import org.kiji.express.DSL._
-import org.kiji.express.EntityId
 
 /**
  * Imports metadata about songs into a Kiji table.
