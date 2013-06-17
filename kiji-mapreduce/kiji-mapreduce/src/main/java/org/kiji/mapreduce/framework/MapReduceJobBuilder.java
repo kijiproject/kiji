@@ -30,6 +30,7 @@ import java.util.Map;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
 import org.apache.avro.Schema;
 import org.apache.avro.mapred.AvroKey;
 import org.apache.avro.mapred.AvroValue;
@@ -39,6 +40,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.mapreduce.GenericTableMapReduceUtil;
+import org.apache.hadoop.hbase.mapreduce.TableMapReduceUtil;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -288,6 +290,9 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder<T>> {
     configureReducer(job);
     configureStores(job);
     configureJars(job);
+
+    // Obtain delegation tokens for the job
+    TableMapReduceUtil.initCredentials(job);
   }
 
   /**
