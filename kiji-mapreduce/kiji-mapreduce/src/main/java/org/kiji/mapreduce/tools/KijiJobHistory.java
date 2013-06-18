@@ -21,10 +21,9 @@ package org.kiji.mapreduce.tools;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.base.Preconditions;
 
@@ -51,6 +50,13 @@ public final class KijiJobHistory extends BaseTool {
 
   @Flag(name="verbose", usage="Include counters and configuration for a given job-id.")
   private boolean mVerbose = false;
+
+  @Flag(name="get-counter", usage="Get the named counter for this job-id. Name must"
+      + "be of the form group:counter-name.")
+  private String mCounterName = "";
+
+  @Flag(name="counter-names", usage="Get the names of existing counters for the job-id.")
+  private boolean mGetCounterNames = false;
 
   /** URI of the Kiji instance to query. */
   private KijiURI mKijiURI = null;
@@ -88,39 +94,22 @@ public final class KijiJobHistory extends BaseTool {
     final Kiji kiji = Kiji.Factory.open(mKijiURI);
     try {
       JobHistoryKijiTable jobHistoryTable = JobHistoryKijiTable.open(kiji);
-      if (!mJobId.isEmpty()) {
-        JobHistoryEntry data = jobHistoryTable.getJobDetails(mJobId);
-        printEntry(data);
-      } else {
-        KijiRowScanner jobScanner = jobHistoryTable.getJobScanner();
-        for (KijiRowData data : jobScanner) {
-          final Map<String, String> extendedInfo = new HashMap<String, String>();
-          for (String qualifier : data.getQualifiers("extendedInfo")) {
-            extendedInfo.put(
-                qualifier, data.getMostRecentValue("extendedInfo", qualifier).toString());
+      try {
+        if (!mJobId.isEmpty()) {
+          JobHistoryEntry data = jobHistoryTable.getJobDetails(mJobId);
+          printEntry(data);
+        } else {
+          KijiRowScanner jobScanner = jobHistoryTable.getJobScanner();
+          for (KijiRowData data : jobScanner) {
+            String jobid = data.getMostRecentValue("info", "jobId").toString();
+            printEntry(jobHistoryTable.getJobDetails(jobid));
+            getPrintStream().printf("%n");
           }
-          printEntry(JobHistoryEntry.newBuilder()
-              .setJobId(data.getMostRecentValue(JobHistoryKijiTable.JOB_HISTORY_FAMILY,
-                  JobHistoryKijiTable.JOB_HISTORY_ID_QUALIFIER).toString())
-              .setJobName(data.getMostRecentValue(JobHistoryKijiTable.JOB_HISTORY_FAMILY,
-                  JobHistoryKijiTable.JOB_HISTORY_NAME_QUALIFIER).toString())
-              .setJobStartTime(data.<Long>getMostRecentValue(JobHistoryKijiTable.JOB_HISTORY_FAMILY,
-                  JobHistoryKijiTable.JOB_HISTORY_START_TIME_QUALIFIER))
-              .setJobEndTime(data.<Long>getMostRecentValue(JobHistoryKijiTable.JOB_HISTORY_FAMILY,
-                  JobHistoryKijiTable.JOB_HISTORY_END_TIME_QUALIFIER))
-              .setJobEndStatus(data.getMostRecentValue(JobHistoryKijiTable.JOB_HISTORY_FAMILY,
-                  JobHistoryKijiTable.JOB_HISTORY_END_STATUS_QUALIFIER).toString())
-              .setJobCounters(data.getMostRecentValue(JobHistoryKijiTable.JOB_HISTORY_FAMILY,
-                  JobHistoryKijiTable.JOB_HISTORY_COUNTERS_QUALIFIER).toString())
-              .setJobConfiguration(data.getMostRecentValue(JobHistoryKijiTable.JOB_HISTORY_FAMILY,
-                  JobHistoryKijiTable.JOB_HISTORY_CONFIGURATION_QUALIFIER).toString())
-              .setExtendedInfo(extendedInfo)
-              .build());
-          getPrintStream().printf("%n");
+          jobScanner.close();
         }
-        jobScanner.close();
+      } finally {
+        jobHistoryTable.close();
       }
-      jobHistoryTable.close();
     } finally {
       kiji.release();
     }
@@ -142,8 +131,21 @@ public final class KijiJobHistory extends BaseTool {
     ps.printf("Ended:\t\t%s%n", new Date(entry.getJobEndTime()));
     ps.printf("End Status:\t\t%s%n", entry.getJobEndStatus());
     if (mVerbose) {
+      // we don't print individual counters, instead pretty print the counters string we stored.
       printCounters(entry);
       printConfiguration(entry);
+    }
+    if (mGetCounterNames) {
+      ps.println("Counters for this job:");
+      ps.println(Arrays.toString(entry.getCountersFamily().keySet().toArray()));
+    }
+    if (!mCounterName.isEmpty()) {
+      if (entry.getCountersFamily().containsKey(mCounterName)) {
+        ps.println("Value for counter " + mCounterName + ":");
+        ps.println(entry.getCountersFamily().get(mCounterName));
+      } else {
+        ps.println("Counter not found: " + mCounterName);
+      }
     }
   }
 

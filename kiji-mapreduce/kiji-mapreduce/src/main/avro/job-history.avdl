@@ -45,5 +45,8 @@ protocol JobHistoryTableRecords {
 
     /** Derived information. */
     map<string> extended_info = {};
+
+    /** Individual counters. */
+    map<long> counters_family = {};
   }
 }

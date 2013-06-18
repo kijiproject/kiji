@@ -77,10 +77,19 @@
             type : "INLINE",
             value : '"string"'
           }
+        },
+        {
+          name: "counters",
+          description: "Map family useful for storing job counters",
+          map_schema : {
+            type : "INLINE",
+            value : '"long"'
+          }
         }
       ]
     }
   ],
   version: "layout-1.1",
-  layout_id : "1"
+  layout_id : "2",
+  reference_layout : "1"
 }
