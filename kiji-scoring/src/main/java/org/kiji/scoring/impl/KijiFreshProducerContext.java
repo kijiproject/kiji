@@ -29,9 +29,8 @@ import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReaderFactory;
 import org.kiji.mapreduce.produce.ProducerContext;
 import org.kiji.schema.EntityId;
+import org.kiji.schema.KijiBufferedWriter;
 import org.kiji.schema.KijiColumnName;
-import org.kiji.schema.KijiTable;
-import org.kiji.schema.KijiTableWriter;
 
 /**
  * Producer context for freshening KijiProducers.  The context is responsible for providing access
@@ -41,44 +40,67 @@ import org.kiji.schema.KijiTableWriter;
 @ApiStability.Experimental
 public final class KijiFreshProducerContext implements ProducerContext {
 
-  private EntityId mEntityId;
-  private KeyValueStoreReaderFactory mFactory;
-  private String mFamily;
-  private String mQualifier;
-  private KijiTableWriter mWriter;
+  private final EntityId mEntityId;
+  private final KeyValueStoreReaderFactory mFactory;
+  private final String mFamily;
+  private final String mQualifier;
+  private final KijiBufferedWriter mWriter;
+  /**
+   * Set by InternalFreshKijiTableReader after Producer.producer() returns to indicate that there
+   * will be no further writes to this context and that its buffer may now be flushed.
+   */
+  private boolean mFinished;
 
   /**
    * Private constructor, use {@link KijiFreshProducerContext#create
-   * (org.kiji.schema.KijiTable, org.kiji.schema.KijiColumnName, org.kiji.schema.EntityId,
-   * org.kiji.mapreduce.kvstore.KeyValueStoreReaderFactory)}.
+   * (org.kiji.schema.KijiColumnName, org.kiji.schema.EntityId,
+   * org.kiji.mapreduce.kvstore.KeyValueStoreReaderFactory, org.kiji.schema.KijiBufferedWriter)}.
    *
-   * @param table the target table.
    * @param outputColumn the target column.
    * @param eid the target EntityId.
    * @param factory a factory of kv-serialize readers.
+   * @param writer the KijiBufferedWriter to be used by this Context to perform put() calls.  May be
+   * shared by multiple contexts if partial freshening is disallowed.
+   * @throws IOException in case of an error opening a connection to the underlying table.
    */
-  private KijiFreshProducerContext(KijiTable table, KijiColumnName outputColumn, EntityId eid,
-      KeyValueStoreReaderFactory factory) {
+  private KijiFreshProducerContext(
+      KijiColumnName outputColumn,
+      EntityId eid,
+      KeyValueStoreReaderFactory factory,
+      KijiBufferedWriter writer)
+      throws IOException {
     mEntityId = eid;
-    mWriter = table.openTableWriter();
+    if (writer != null) {
+      // Buffer indefinitely to control when writes become visible.
+      writer.setBufferSize(Long.MAX_VALUE);
+    }
+    mWriter = writer;
     mFamily = Preconditions.checkNotNull(outputColumn.getFamily());
     mQualifier = outputColumn.getQualifier();
     mFactory = Preconditions.checkNotNull(factory);
+    mFinished = false;
   }
 
   /**
-   * Create a new KijiFreshProducerContext configured to write to a specific column and row in a
-   * given KijiTable.
+   * Create a new KijiFreshProducerContext configured to write to a specific column and row using a
+   * given KijiBufferedWriter.
    *
-   * @param table the table to write into.
    * @param outputColumn the column to which to write.
    * @param eid the EntityId of the row to which to write.
    * @param factory a factory of kv-serialize readers.
-   * @return the new KijiFreshProducerContext.
+   * @param writer the KijiBufferedWriter to be used by this Context to perform put() calls.  May be
+   * shared by multiple contexts if partial freshening is disallowed.
+   * @return a new KijiFreshProducerContext configured to write to a specific column and row using a
+   * given KijiBufferedWriter.
+   * @throws IOException in case of an error opening a connection to the underlying table.
    */
-  public static KijiFreshProducerContext create(KijiTable table, KijiColumnName outputColumn,
-      EntityId eid, KeyValueStoreReaderFactory factory) {
-    return new KijiFreshProducerContext(table, outputColumn, eid, factory);
+  public static KijiFreshProducerContext create(
+      KijiColumnName outputColumn,
+      EntityId eid,
+      KeyValueStoreReaderFactory factory,
+      KijiBufferedWriter writer)
+      throws IOException {
+    return new KijiFreshProducerContext(outputColumn, eid, factory, writer);
   }
 
   /**
@@ -126,7 +148,7 @@ public final class KijiFreshProducerContext implements ProducerContext {
   public <T> void put(final String qualifier, final long timestamp, final T value)
       throws IOException {
     Preconditions.checkArgument(mQualifier == null, "Qualifier is already set in the "
-        + "ProducerContext, use KijiFreshProducerContext.put(timestamp, value)");
+        + "ProducerContext, use ProducerContext.put(timestamp, value)");
     mWriter.put(mEntityId, mFamily, qualifier, timestamp, value);
   }
 
@@ -134,6 +156,28 @@ public final class KijiFreshProducerContext implements ProducerContext {
   @Override
   public <K, V> KeyValueStoreReader<K, V> getStore(final String s) throws IOException {
     return mFactory.openStore(s);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public void flush() throws IOException {
+    mWriter.flush();
+  }
+
+  /**
+   * Called when the produce method using this context returns to indicate the buffer may be
+   * flushed.
+   */
+  void finish() {
+    mFinished = true;
+  }
+
+  /**
+   * Whether the produce method using this context has returned.
+   * @return Whether the produce method using this context has returned.
+   */
+  boolean isFinished() {
+    return mFinished;
   }
 
   /** {@inheritDoc} */
@@ -161,8 +205,4 @@ public final class KijiFreshProducerContext implements ProducerContext {
   /** {@inheritDoc} */
   @Override
   public void close() throws IOException { }
-
-  /** {@inheritDoc} */
-  @Override
-  public void flush() throws IOException { }
 }

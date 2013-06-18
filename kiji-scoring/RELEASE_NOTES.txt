@@ -2,6 +2,14 @@
                               Kiji Scoring Release Notes
 
 Version 0.2.0
+  * SCORE-44. Producer output from freshened get() requests are now committed atomically based on
+      the 'allow partial freshness' rule specified during table creation.  If partial freshness is
+      allowed each producer will commit all of its writes atomically after produce() returns.  If
+      partial freshness is not allowed, all writes will be cached until all producers associated
+      with the same request have finished.  Partial freshness requires a separate table connection
+      for each producer and does not guarantee that the output of one producer will not be used as
+      input to another.  Given the high cost of table connections, partial freshening is not
+      recommended and is disabled by default.
   * SCORE-46. Freshness policies attached to qualified columns in map type families will now be
       triggered by requests to the entire map type family.
   * SCORE-49. Fixes ConcurrentModificationException in FreshKijiTableReader.rereadPolicies().

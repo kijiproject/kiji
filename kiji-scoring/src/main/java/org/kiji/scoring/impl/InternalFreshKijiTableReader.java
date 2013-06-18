@@ -34,12 +34,14 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +53,7 @@ import org.kiji.mapreduce.kvstore.KeyValueStoreReaderFactory;
 import org.kiji.mapreduce.produce.KijiProducer;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.InternalKijiError;
+import org.kiji.schema.KijiBufferedWriter;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequest.Column;
@@ -96,8 +99,8 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   /** Whether to preload new freshness policies during rereadPolicies(). */
   private final boolean mPreloadOnAutoReread;
 
-  /** Whether to return partially freshened data when available. */
-  private final boolean mAllowPartial;
+  /** Whether to return and commit partially freshened data when available. */
+  private final boolean mAllowPartialFresh;
 
   /**
    * Map from column names to freshness policy records. Created on initialization of the
@@ -120,19 +123,30 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
    */
   private final Map<KijiColumnName, FreshnessCapsule> mCapsuleCache;
 
+  /** Id of the next get request. */
+  private final AtomicLong mGetId;
+  /**
+   * Map storing producer context objects mapped from getIds to allow atomic commitment of writes.
+   */
+  private final Map<String, List<KijiFreshProducerContext>> mContextMap;
+  /**
+   * BufferedWriter objects shared across KijiFreshProducerContexts for a given request. Used when
+   * mAllowPartialFresh is false.
+   */
+  private final Map<String, KijiBufferedWriter> mBuffers;
+
   /**
    * Container class for KijiFreshnessPolicy and associated KijiProducer and
    * KeyValueStoreReaderFactory.
    *
    * Package private for testing purposes only, should not be accessed externally.
    */
-  final class FreshnessCapsule implements ReferenceCountable<FreshnessCapsule> {
+  static final class FreshnessCapsule implements ReferenceCountable<FreshnessCapsule> {
     private final KijiFreshnessPolicy mPolicy;
     private final KijiProducer mProducer;
     private final KeyValueStoreReaderFactory mFactory;
     private final KijiColumnName mAttachedColumn;
     private final AtomicInteger mRetainCount;
-
 
     /**
      * Default Constructor.
@@ -178,6 +192,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
       return mFactory;
     }
 
+    /** {@inheritDoc} */
     @Override
     public FreshnessCapsule retain() {
       final int counter = mRetainCount.getAndIncrement();
@@ -187,6 +202,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
       return this;
     }
 
+    /** {@inheritDoc} */
     @Override
     public void release() throws IOException {
       final int counter = mRetainCount.decrementAndGet();
@@ -203,7 +219,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
      * @throws IOException in case of an error cleaning up the producer.
      */
     private void close() throws IOException {
-      mProducer.cleanup(KijiFreshProducerContext.create(mTable, mAttachedColumn, null, mFactory));
+      mProducer.cleanup(KijiFreshProducerContext.create(mAttachedColumn, null, mFactory, null));
       mFactory.close();
     }
   }
@@ -232,7 +248,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
    *   {@link #get(org.kiji.schema.EntityId, org.kiji.schema.KijiDataRequest)} calls.
    * @param rereadTime The time to wait in milliseconds between automatically rereading freshness
    * policies from the meta table.  To disable automatic rereading, set to 0.
-   * @param allowParial whether to allow returning partially freshened data when available.
+   * @param allowPartial whether to allow returning partially freshened data when available.
    * @param preloadOnAutoReread whether to preload new freshness policies during automatic calls
    * to {@link #rereadPolicies(boolean)}.  Requires rereadTime > 0.
    * @throws IOException if an error occurs communicating with the table or meta table.
@@ -241,7 +257,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
       final KijiTable table,
       final long timeout,
       final long rereadTime,
-      final boolean allowParial,
+      final boolean allowPartial,
       final boolean preloadOnAutoReread)
       throws IOException {
     mTable = table;
@@ -265,7 +281,10 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
       throw new IllegalArgumentException(
           String.format("Reload time must be >= 0, found: %d", rereadTime));
     }
-    mAllowPartial = allowParial;
+    mAllowPartialFresh = allowPartial;
+    mGetId = new AtomicLong(0);
+    mContextMap = new HashMap<String, List<KijiFreshProducerContext>>();
+    mBuffers = new HashMap<String, KijiBufferedWriter>();
   }
 
   /** {@inheritDoc} */
@@ -378,9 +397,9 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     KeyValueStoreReaderFactory factory = KeyValueStoreReaderFactory.create(kvMap);
 
     // Initialize the producer.
-    producer.setup(KijiFreshProducerContext.create(mTable, columnName, null, factory));
+    producer.setup(KijiFreshProducerContext.create(columnName, null, factory, null));
 
-    // Encapsulate the policy, producer, and factory and serialize them in a cache.
+    // Encapsulate the policy, producer, and factory.
     return new FreshnessCapsule(policy, producer, factory, columnName);
   }
 
@@ -527,6 +546,8 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
    *   Freshness policies which use the client data request will block on the return of this future.
    * @param eid The EntityId specified by the client's call to get().
    * @param clientRequest the client's original request.
+   * @param getId the internal Id of the get request which invokes this method.  This Id is used as
+   * a key to collect write caches for all producers associated with a single invokation of get().
    * @return A list of Future&lt;Boolean&gt; representing the need to reread data from the table
    *   to include producer output after freshening.
    *
@@ -536,13 +557,11 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
       final Map<KijiColumnName, FreshnessCapsule> capsules,
       final Future<KijiRowData> clientData,
       final EntityId eid,
-      final KijiDataRequest clientRequest) {
+      final KijiDataRequest clientRequest,
+      final String getId) {
     final List<Future<Boolean>> futures = Lists.newArrayList();
-
-    final Map<KijiColumnName, FreshnessCapsule> usesClientDataRequest =
-        new HashMap<KijiColumnName, FreshnessCapsule>();
-    final Map<KijiColumnName, FreshnessCapsule> usesOwnDataRequest =
-        new HashMap<KijiColumnName, FreshnessCapsule>();
+    final Map<KijiColumnName, FreshnessCapsule> usesClientDataRequest = Maps.newHashMap();
+    final Map<KijiColumnName, FreshnessCapsule> usesOwnDataRequest = Maps.newHashMap();
     for (Map.Entry<KijiColumnName, FreshnessCapsule> entry : capsules.entrySet()) {
       if (entry.getValue().getPolicy().shouldUseClientDataRequest()) {
         usesClientDataRequest.put(entry.getKey(), entry.getValue());
@@ -550,12 +569,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
         usesOwnDataRequest.put(entry.getKey(), entry.getValue());
       }
     }
-
     for (final KijiColumnName key: usesClientDataRequest.keySet()) {
-      if (clientData == null) {
-        throw new InternalKijiError(
-            "Freshness policy usesClientDataRequest, but client data is null.");
-      }
       final Future<Boolean> requiresReread = mExecutor.submit(new Callable<Boolean>() {
         public Boolean call() throws IOException {
           final PolicyContext policyContext =
@@ -582,13 +596,42 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
               return Boolean.FALSE;
             } else {
               final FreshnessCapsule capsule = usesClientDataRequest.get(key);
-              final KijiFreshProducerContext context =
-                  KijiFreshProducerContext.create(
-                      mTable, key, eid, capsule.getFactory());
-              final KijiProducer producer = capsule.getProducer();
+              final KijiFreshProducerContext context;
+              if (mAllowPartialFresh) {
+                context = KijiFreshProducerContext.create(
+                    key,
+                    eid,
+                    mCapsuleCache.get(key).getFactory(),
+                    mTable.getWriterFactory().openBufferedWriter());
+              } else {
+                context = KijiFreshProducerContext.create(
+                    key, eid, mCapsuleCache.get(key).getFactory(), mBuffers.get(getId));
+              }
+              synchronized (mContextMap) {
+                if (mContextMap.containsKey(getId)) {
+                  mContextMap.get(getId).add(context);
+                } else {
+                  mContextMap.put(getId, Lists.newArrayList(context));
+                }
+              }
+              final KijiProducer producer = mCapsuleCache.get(key).getProducer();
               producer.produce(mReader.get(eid, producer.getDataRequest()), context);
               capsule.release();
-
+              context.finish();
+              if (mAllowPartialFresh) {
+                context.flush();
+              } else {
+                if (mContextMap.get(getId).size() == capsules.size()) {
+                  boolean allFinished = true;
+                  for (KijiFreshProducerContext cont : mContextMap.get(getId)) {
+                    allFinished = allFinished && cont.isFinished();
+                  }
+                  if (allFinished) {
+                    mBuffers.get(getId).flush();
+                    mContextMap.remove(getId);
+                  }
+                }
+              }
               // If a producer runs, return true to indicate a reread is necessary.  This assumes
               // the producer will write to the requested cells, eventually it may be appropriate
               // to actually check if this is true.
@@ -615,13 +658,44 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
             return Boolean.FALSE;
           } else {
             final FreshnessCapsule capsule = usesOwnDataRequest.get(key);
-            final KijiFreshProducerContext context =
-                KijiFreshProducerContext.create(
-                    mTable, key, eid, capsule.getFactory());
-            final KijiProducer producer = capsule.getProducer();
+            final KijiFreshProducerContext context;
+            if (mAllowPartialFresh) {
+              context = KijiFreshProducerContext.create(
+                  key,
+                  eid,
+                  mCapsuleCache.get(key).getFactory(),
+                  mTable.getWriterFactory().openBufferedWriter());
+            } else {
+              context = KijiFreshProducerContext.create(
+                  key, eid, mCapsuleCache.get(key).getFactory(), mBuffers.get(getId));
+            }
+            synchronized (mContextMap) {
+              if (mContextMap.containsKey(getId)) {
+                mContextMap.get(getId).add(context);
+              } else {
+                mContextMap.put(getId, Lists.newArrayList(context));
+              }
+            }
+            final KijiProducer producer = mCapsuleCache.get(key).getProducer();
             producer.produce(mReader.get(eid, producer.getDataRequest()), context);
             capsule.release();
-
+            context.finish();
+            if (mAllowPartialFresh) {
+              context.flush();
+            } else {
+              // Ensure that all producers have added their Contexts to the Context map before
+              // checking if they are finished.
+              if (mContextMap.get(getId).size() == capsules.size()) {
+                boolean allFinished = true;
+                for (KijiFreshProducerContext cont : mContextMap.get(getId)) {
+                  allFinished = allFinished && cont.isFinished();
+                }
+                if (allFinished) {
+                  mBuffers.get(getId).flush();
+                  mContextMap.remove(getId);
+                }
+              }
+            }
             // If a producer runs, return true to indicate that a reread is necessary.  This assumes
             // the producer will write to the requested cells, eventually it may be appropriate
             // to actually check if this is true.
@@ -632,6 +706,45 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
       futures.add(requiresReread);
     }
     return futures;
+  }
+
+  /**
+   * Return the state of the world before any producers writes are committed. If a producer or all
+   * producers finish after the decision to return stale data and clientData is not done, this may
+   * return partially or entirely fresh data.
+   *
+   * @param eid The EntityId of the row from which stale data was collected.
+   * @param dataRequest The KijiDataRequest defining the KijiRowData returned.
+   * @param clientData A Future containing stale data retrieved before producers ran.
+   * @return the state of the world before and producer writes are committed.
+   * @throws IOException in case of an error reading from the table.
+   */
+  private KijiRowData returnStale(
+      EntityId eid,
+      KijiDataRequest dataRequest,
+      Future<KijiRowData> clientData) throws IOException {
+    if (clientData.isDone()) {
+      try {
+        // If clientData is ready to be retrieved, do so and return it.  This should never throw
+        // exceptions.
+        return clientData.get();
+      } catch (InterruptedException ie) {
+        throw new RuntimeException("Freshening thread interrupted.", ie);
+      } catch (ExecutionException ee) {
+        if (ee.getCause() instanceof IOException) {
+          // If there was an IOException reading from the table in the clientData thread, there will
+          // be no data present so we should read from the table.
+          return mReader.get(eid, dataRequest);
+        } else {
+          // Any other exception should terminate execution.
+          throw new RuntimeException(ee);
+        }
+      }
+    } else {
+      // if clientData is not ready to be retrieved, read data from the table.  This data may
+      // include the output of producers which finished after being checked earlier.
+      return mReader.get(eid, dataRequest);
+    }
   }
 
   /**
@@ -686,17 +799,22 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   @Override
   public KijiRowData get(final EntityId eid, final KijiDataRequest dataRequest, final long timeout)
       throws IOException {
+    final String getId = String.valueOf(mGetId.getAndIncrement());
 
     final Map<KijiColumnName, FreshnessCapsule> capsules = getCapsules(dataRequest);
     // If there are no freshness policies attached to the requested columns, return the requested
     // data.
-    if (capsules.size() == 0) {
+    if (capsules.isEmpty()) {
       return mReader.get(eid, dataRequest);
     }
 
     final Future<KijiRowData> clientData = getClientData(eid, dataRequest);
+    if (!mAllowPartialFresh) {
+      final KijiBufferedWriter writer = mTable.getWriterFactory().openBufferedWriter();
+      mBuffers.put(getId, writer);
+    }
     final List<Future<Boolean>> futures =
-        getFutures(capsules, clientData, eid, dataRequest);
+        getFutures(capsules, clientData, eid, dataRequest, getId);
 
     final Future<Boolean> superFuture = mExecutor.submit(new GetFuture(futures));
 
@@ -719,23 +837,18 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     } catch (TimeoutException te) {
       // If superFuture times out, read partially freshened data from the table or return the cached
       // data based on whether partial freshness is allowed.
-      if (mAllowPartial) {
-        return mReader.get(eid, dataRequest);
-      } else {
-        try {
-          return clientData.get(0L, TimeUnit.MILLISECONDS);
-        } catch (TimeoutException te2) {
-          // If clientData is not immediately available, read from the table.
-          return mReader.get(eid, dataRequest);
-        } catch (InterruptedException ie) {
-          throw new RuntimeException("Freshening thread interrupted.", ie);
-        } catch (ExecutionException ee) {
-          if (ee.getCause() instanceof IOException) {
+      if (mAllowPartialFresh) {
+        for (KijiFreshProducerContext context : mContextMap.get(getId)) {
+          // If any context is finished we should reread from the table.
+          if (context.isFinished()) {
             return mReader.get(eid, dataRequest);
-          } else {
-            throw new RuntimeException(ee);
           }
         }
+        // If no contexts are finished we do not need to read from the table and should return stale
+        // data.
+        return returnStale(eid, dataRequest, clientData);
+      } else {
+        return returnStale(eid, dataRequest, clientData);
       }
     }
   }

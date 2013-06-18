@@ -388,7 +388,8 @@ public class TestInternalFreshKijiTableReader {
     final Future<KijiRowData> clientData = freshReader.getClientData(eid, request);
 
     // Get an empty list of futures.
-    final List<Future<Boolean>> actual = freshReader.getFutures(capsules, clientData, eid, request);
+    final List<Future<Boolean>> actual =
+        freshReader.getFutures(capsules, clientData, eid, request, "0");
     assertEquals(0, actual.size());
 
     capsules.put(new KijiColumnName("family", "qual0"),
@@ -399,7 +400,7 @@ public class TestInternalFreshKijiTableReader {
     // Get a list of two futures, both are never freshen, so should return false to indicate no
     // reread.
     final List<Future<Boolean>> actual2 =
-        freshReader.getFutures(capsules, clientData, eid, request);
+        freshReader.getFutures(capsules, clientData, eid, request, "1");
     assertEquals(2, actual2.size());
     for (Future<Boolean> future : actual2) {
       assertEquals(false, future.get());
@@ -880,5 +881,57 @@ public class TestInternalFreshKijiTableReader {
 
     assertEquals("new-val",
         freshReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
+  }
+
+  @Test
+  public void testPartialFreshening() throws IOException, InterruptedException {
+    final EntityId eid = mTable.getEntityId("foo");
+    final KijiDataRequestBuilder builder = KijiDataRequest.builder();
+    builder.newColumnsDef().add("family", "qual1").add("family", "qual0");
+    final KijiDataRequest request = builder.build();
+
+    // Create a KijiFreshnessManager and register a freshness policy.
+    final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
+    manager.storePolicy("table", "family:qual0", TestProducer.class, new AlwaysFreshen());
+    manager.storePolicy("table", "family:qual1", TestTimeoutProducer.class, new AlwaysFreshen());
+
+    // Default partial freshening is false.
+    final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
+        .withTable(mTable).withTimeout(500).build();
+
+    final KijiTableWriter writer = mTable.openTableWriter();
+    writer.put(eid, "family", "qual0", "foo-val");
+    writer.put(eid, "family", "qual1", "foo-val");
+
+    assertEquals("foo-val",
+        freshReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
+    assertEquals("foo-val",
+        mReader.get(eid, request).getMostRecentValue("family", "qual1").toString());
+
+    Thread.sleep(1000);
+
+    assertEquals("new-val",
+        mReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
+    assertEquals("new-val",
+        mReader.get(eid, request).getMostRecentValue("family", "qual1").toString());
+
+    // Reset and try again with partial freshness allowed.
+    final FreshKijiTableReader freshReader2 = FreshKijiTableReaderBuilder.create()
+        .withTable(mTable).withTimeout(500).returnPartiallyFreshData(true).build();
+
+    writer.put(eid, "family", "qual0", "foo-val");
+    writer.put(eid, "family", "qual1", "foo-val");
+
+    assertEquals("new-val",
+        freshReader2.get(eid, request).getMostRecentValue("family", "qual0").toString());
+    assertEquals("foo-val",
+        mReader.get(eid, request).getMostRecentValue("family", "qual1").toString());
+
+    Thread.sleep(1000);
+
+    assertEquals("new-val",
+        mReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
+    assertEquals("new-val",
+        mReader.get(eid, request).getMostRecentValue("family", "qual1").toString());
   }
 }

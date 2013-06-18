@@ -93,13 +93,13 @@ public final class FreshKijiTableReaderBuilder {
    * policies from the meta table.
    */
   private long mRereadPeriod;
-  /** Whether the new reader will return partially fresh data when available. */
-  private Boolean mPartialFresh;
   /**
    * Whether to preload new freshness policies during automatic calls to
    * {@link FreshKijiTableReader#rereadPolicies(boolean)}.
    */
   private Boolean mPreloadOnAutoReread;
+  /** Whether or not the new reader will return and commit partially fresh data when available. */
+  private Boolean mAllowPartialFresh;
 
   /**
    * Select the type of FreshKijiTableReader to instantiate.  Types are enumerated in
@@ -175,17 +175,25 @@ public final class FreshKijiTableReaderBuilder {
 
   /**
    * Configure the FreshKijiTableReader to return partially fresh data when available.  This
-   * options may increase the time to return for certain calls to
+   * option may increase the time to return for certain calls to
    * {@link FreshKijiTableReader#get(org.kiji.schema.EntityId, org.kiji.schema.KijiDataRequest)}.
+   * If set to true, each producer will create its own table connection and all producer writes will
+   * be committed atomically when produce() returns.  If set to false, all producers for a single
+   * request will share a table connection and all writes will be cached until all producers for
+   * that request have returned.
    *
-   * @param partial whether the FreshKijiTableReader should return partially freshened data when
-   * available.
-   * @return this FreshKijiTableReaderBuilder configured allow returning partially freshened data.
+   * @param allowPartial whether the FreshKijiTableReader should return partially freshened data
+   * when available.  If set to true, each producer will create its own table connection and all
+   * producer writes will be committed atomically when produce() returns.  If set to false, all
+   * producers for a single request will share a table connection and all writes will be cached
+   * until all producers for that request have returned.
+   * @return this FreshKijiTableReaderBuilder configured to allow returning partially freshened
+   * data.
    */
-  public FreshKijiTableReaderBuilder returnPartiallyFreshData(boolean partial) {
+  public FreshKijiTableReaderBuilder returnPartiallyFreshData(boolean allowPartial) {
     Preconditions.checkArgument(
-        mPartialFresh == null, "Partial freshening is already set to: %s", mPartialFresh);
-    mPartialFresh = partial;
+        mAllowPartialFresh == null, "Partial freshening is already set to: %s", mAllowPartialFresh);
+    mAllowPartialFresh = allowPartial;
     return this;
   }
 
@@ -203,8 +211,8 @@ public final class FreshKijiTableReaderBuilder {
     if (mTimeout == 0) {
       mTimeout = DEFAULT_TIMEOUT;
     }
-    if (mPartialFresh == null) {
-      mPartialFresh = DEFAULT_PARTIAL_FRESHENING;
+    if (mAllowPartialFresh == null) {
+      mAllowPartialFresh = DEFAULT_PARTIAL_FRESHENING;
     }
     if (mPreloadOnAutoReread == null) {
       mPreloadOnAutoReread = DEFAULT_PRELOAD_ON_AUTO_REREAD;
@@ -212,7 +220,7 @@ public final class FreshKijiTableReaderBuilder {
     switch (mReaderType) {
       case LOCAL:
         return new InternalFreshKijiTableReader(
-            mTable, mTimeout, mRereadPeriod, mPartialFresh, mPreloadOnAutoReread);
+            mTable, mTimeout, mRereadPeriod, mAllowPartialFresh, mPreloadOnAutoReread);
       default:
         throw new InternalKijiError(String.format("Unknown reader type: %s", mReaderType));
     }
