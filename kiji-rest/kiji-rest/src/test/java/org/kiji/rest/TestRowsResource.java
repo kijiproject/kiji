@@ -24,17 +24,21 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriBuilder;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Sets;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import com.yammer.dropwizard.testing.ResourceTest;
+
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.commons.codec.binary.Hex;
@@ -281,8 +285,10 @@ public class TestRowsResource extends ResourceTest {
     String eid = getEntityIdString("sample_table", 12345L);
 
     // Test map qualifier, long type
-    String resourceURI = "/v1/instances/default/tables/sample_table/rows?eid=" + eid;
-    resourceURI = resourceURI + "&cols=longs:some%20other%20qualifier";
+    URI resourceURI = UriBuilder.fromResource(RowsResource.class)
+        .queryParam("eid", eid)
+        .queryParam("cols", "longs:some%20other%20qualifier")
+        .build("default", "sample_table");
 
     KijiRestRow returnRow = client().resource(resourceURI).get(KijiRestRow.class);
     assertEquals(1, returnRow.getCells().size());
@@ -399,14 +405,14 @@ public class TestRowsResource extends ResourceTest {
   public void testShouldSendAllRows() throws Exception {
     String resourceURI = "/v1/instances/default/tables/sample_table/rows";
     String out = client().resource(resourceURI).get(String.class);
-    assertEquals(3, out.split("\n").length);
+    assertEquals(3, out.split("\r\n").length);
   }
 
   @Test
   public void testShouldLimitRowsSent() throws Exception {
     String resourceURI = "/v1/instances/default/tables/sample_table/rows?limit=1";
     String out = client().resource(resourceURI).get(String.class);
-    assertEquals(1, out.split("\n").length);
+    assertEquals(1, out.split("\r\n").length);
   }
 
   @Test
@@ -472,16 +478,17 @@ public class TestRowsResource extends ResourceTest {
 
     // Post.
     String resourceURI = "/v1/instances/default/tables/sample_table/rows/";
-    Object target = client().resource(resourceURI).type(MediaType.APPLICATION_JSON)
-        .accept(MediaType.APPLICATION_JSON).post(Object.class, postRow);
+    @SuppressWarnings("unchecked")
+    Map<String, String> target = client().resource(resourceURI).type(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON).post(Map.class, postRow);
 
     // Retrieve.
     resourceURI = "/v1/instances/default/tables/sample_table/rows?eid=" + stringRowKey;
     KijiRestRow returnRow = client().resource(resourceURI).get(KijiRestRow.class);
 
     // Check.
-    assertTrue(target.toString()
-        .contains("/v1/instances/default/tables/sample_table/rows/" + hexRowKey));
+    assertEquals(target.get("target"),
+        "/v1/instances/default/tables/sample_table/rows/" + hexRowKey);
     assertEquals(123, returnRow.getCells().get(0).getValue());
     assertEquals("helloworld", returnRow.getCells().get(1).getValue());
     ObjectMapper mapper = new ObjectMapper();

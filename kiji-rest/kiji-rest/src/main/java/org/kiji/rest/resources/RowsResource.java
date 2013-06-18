@@ -43,19 +43,18 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
-import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.core.UriBuilder;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.yammer.metrics.annotation.Timed;
 
 import org.apache.avro.Schema;
-import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.hadoop.hbase.HConstants;
 
@@ -90,6 +89,8 @@ import org.kiji.schema.util.ResourceUtils;
 @Produces(MediaType.APPLICATION_JSON)
 @ApiAudience.Public
 public class RowsResource extends AbstractRowResource {
+  private static final String UNLIMITED_VERSIONS = "all";
+
   private final KijiClient mKijiClient;
 
   /**
@@ -159,7 +160,7 @@ public class RowsResource extends AbstractRowResource {
         while (it.hasNext() && (numRows < mNumRows || mNumRows == UNLIMITED_ROWS)
             && !clientClosed) {
           KijiRowData row = it.next();
-          KijiRestRow restRow = getKijiRow(row, mTable.getLayout(), mColsRequested);
+          KijiRestRow restRow = getKijiRestRow(row, mTable.getLayout(), mColsRequested);
           String jsonResult = mJsonObjectMapper.writeValueAsString(restRow);
           // Let's strip out any carriage return + line feeds and replace them with just
           // line feeds. Therefore we can safely delimit individual json messages on the
@@ -200,7 +201,7 @@ public class RowsResource extends AbstractRowResource {
    * @param jsonEntityId the entity_id of the row to return.
    * @param startHBaseRowKey the hex representation of the starting hbase row key.
    * @param endHBaseRowKey the hex representation of the ending hbase row key.
-   * @param limit the maximum number of rows to return.
+   * @param limit the maximum number of rows to return. Set to -1 to stream all rows.
    * @param columns is a comma separated list of columns (either family or family:qualifier) to
    *        fetch
    * @param maxVersionsString is the max versions per column to return.
@@ -224,18 +225,19 @@ public class RowsResource extends AbstractRowResource {
       @QueryParam("versions") @DefaultValue("1") String maxVersionsString,
       @QueryParam("timerange") String timeRange) {
     // CSON: ParameterNumberCheck - There are a bunch of query param options
-    Response rsp = null;
-    long[] timeRanges = null;
 
+    long[] timeRanges = null;
     KijiTable kijiTable = mKijiClient.getKijiTable(instance, table);
+    Iterable<KijiRowData> scanner = null;
+    int maxVersions;
+    KijiDataRequestBuilder dataBuilder = KijiDataRequest.builder();
 
     if (timeRange != null) {
       timeRanges = getTimestamps(timeRange);
     }
 
-    int maxVersions;
     try  {
-      if ("all".equals(maxVersionsString)) {
+      if (UNLIMITED_VERSIONS.equalsIgnoreCase(maxVersionsString)) {
         maxVersions = HConstants.ALL_VERSIONS;
       } else {
         maxVersions = Integer.parseInt(maxVersionsString);
@@ -244,7 +246,6 @@ public class RowsResource extends AbstractRowResource {
       throw new WebApplicationException(nfe, Status.BAD_REQUEST);
     }
 
-    KijiDataRequestBuilder dataBuilder = KijiDataRequest.builder();
     if (timeRange != null) {
       dataBuilder.withTimeRange(timeRanges[0], timeRanges[1]);
     }
@@ -262,9 +263,10 @@ public class RowsResource extends AbstractRowResource {
     try {
       if (jsonEntityId != null) {
         EntityId eid = ToolUtils.createEntityIdFromUserInputs(jsonEntityId, kijiTable.getLayout());
-        KijiRestRow returnRow = super.getKijiRow(kijiTable, eid.getHBaseRowKey(), timeRanges,
-            columns, maxVersions);
-        rsp = Response.ok(returnRow).build();
+        KijiRowData returnRow = super.getKijiRowData(kijiTable, eid, dataBuilder.build());
+        List<KijiRowData> tempRowList = Lists.newLinkedList();
+        tempRowList.add(returnRow);
+        scanner = tempRowList;
       } else {
         EntityIdFactory eidFactory = EntityIdFactory.getFactory(kijiTable.getLayout());
         final KijiScannerOptions scanOptions = new KijiScannerOptions();
@@ -282,18 +284,14 @@ public class RowsResource extends AbstractRowResource {
 
         final KijiTableReader reader = kijiTable.openTableReader();
 
-        final KijiRowScanner scanner = reader.getScanner(dataBuilder.build(), scanOptions);
-        rsp = Response.ok(new RowStreamer(scanner, kijiTable, limit, requestedColumns)).build();
+        scanner = reader.getScanner(dataBuilder.build(), scanOptions);
       }
-    } catch (IOException e) {
-      throw new WebApplicationException(e, Status.BAD_REQUEST);
-    } catch (DecoderException e) {
+    } catch (Exception e) {
       throw new WebApplicationException(e, Status.BAD_REQUEST);
     } finally {
       ResourceUtils.releaseOrLog(kijiTable);
     }
-
-    return rsp;
+    return Response.ok(new RowStreamer(scanner, kijiTable, limit, requestedColumns)).build();
   }
 
   /**
@@ -315,7 +313,6 @@ public class RowsResource extends AbstractRowResource {
    * @param instance in which the table resides
    * @param table in which the row resides
    * @param kijiRestRow POST-ed json data
-   * @param uriInfo containing query parameters
    * @return a message containing the rowkey of interest
    * @throws IOException when post fails
    */
@@ -324,8 +321,7 @@ public class RowsResource extends AbstractRowResource {
   @ApiStability.Experimental
   public Map<String, String> postCell(@PathParam(INSTANCE_PARAMETER) String instance,
       @PathParam(TABLE_PARAMETER) String table,
-      KijiRestRow kijiRestRow,
-      @Context UriInfo uriInfo)
+      KijiRestRow kijiRestRow)
       throws IOException {
     final KijiTable kijiTable = mKijiClient.getKijiTable(instance, table);
 
@@ -384,10 +380,12 @@ public class RowsResource extends AbstractRowResource {
 
     // Better output?
     Map<String, String> returnedTarget = Maps.newHashMap();
-    returnedTarget.put("target",
-        URI.create("/" + uriInfo.getPath() + "/")
-            .resolve(new String(Hex.encodeHex(entityId.getHBaseRowKey())))
-            .toString());
+
+    URI targetResource = UriBuilder.fromResource(RowResource.class).build(instance, table,
+        new String(Hex.encodeHex(entityId.getHBaseRowKey())));
+
+    returnedTarget.put("target", targetResource.toString());
+
     return returnedTarget;
 
   }

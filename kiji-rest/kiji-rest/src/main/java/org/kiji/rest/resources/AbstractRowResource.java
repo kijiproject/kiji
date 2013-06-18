@@ -27,12 +27,14 @@ import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericDatumReader;
@@ -42,11 +44,9 @@ import org.kiji.annotations.ApiAudience;
 import org.kiji.rest.representations.KijiRestCell;
 import org.kiji.rest.representations.KijiRestRow;
 import org.kiji.schema.EntityId;
-import org.kiji.schema.EntityIdFactory;
 import org.kiji.schema.KijiCell;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
-import org.kiji.schema.KijiDataRequestBuilder;
 import org.kiji.schema.KijiDataRequestBuilder.ColumnsDef;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
@@ -170,7 +170,7 @@ public class AbstractRowResource {
    *         Although this shouldn't happen as columns are assumed to have been validated before
    *         this method is invoked.
    */
-  protected final KijiRestRow getKijiRow(KijiRowData rowData, KijiTableLayout tableLayout,
+  protected final KijiRestRow getKijiRestRow(KijiRowData rowData, KijiTableLayout tableLayout,
       List<KijiColumnName> columnsRequested) throws IOException {
 
     KijiRestRow returnRow = new KijiRestRow(rowData.getEntityId());
@@ -231,36 +231,21 @@ public class AbstractRowResource {
   }
 
   /**
-   * Returns a KijiRestRow from a KijiTable.
+   * Returns a Kiji row object given the table, entity_id and data request.
    *
    * @param table is the table containing the row.
-   * @param hbaseRowKey is the hbase rowkey of the row to return.
-   * @param timeRange the timerange within which the cells should be
-   * @param columns the requested column (+ qualifier) to return
-   * @param maxVersions the maximum number of cells per column:qualifier to return
-   * @return the KijiRestRow representing the row requested.
+   * @param eid is the entity id of the row to return.
+   * @param request contains information about what to return.
+   * @return a Kiji row object conforming to the parameters of the request.
    */
-  protected final KijiRestRow getKijiRow(KijiTable table, byte[] hbaseRowKey, long[] timeRange,
-      String columns, int maxVersions) {
+  protected final KijiRowData getKijiRowData(KijiTable table, EntityId eid,
+      KijiDataRequest request) {
 
-    KijiRestRow returnRow = null;
+    KijiRowData returnRow = null;
     try {
       final KijiTableReader reader = table.openTableReader();
       try {
-        KijiDataRequestBuilder dataBuilder = KijiDataRequest.builder();
-        if (timeRange != null) {
-          dataBuilder.withTimeRange(timeRange[0], timeRange[1]);
-        }
-
-        ColumnsDef colsRequested = dataBuilder.newColumnsDef().withMaxVersions(maxVersions);
-        List<KijiColumnName> requestedColumns = addColumnDefs(table.getLayout(), colsRequested,
-            columns);
-
-        KijiDataRequest dataRequest = dataBuilder.build();
-        EntityIdFactory eidFactory = EntityIdFactory.getFactory(table.getLayout());
-        EntityId entityId = eidFactory.getEntityIdFromHBaseRowKey(hbaseRowKey);
-        KijiRowData row = reader.get(entityId, dataRequest);
-        returnRow = getKijiRow(row, table.getLayout(), requestedColumns);
+        returnRow = reader.get(eid, request);
 
       } finally {
         reader.close();
@@ -268,18 +253,19 @@ public class AbstractRowResource {
     } catch (IOException e) {
       throw new WebApplicationException(e, Status.INTERNAL_SERVER_ERROR);
     }
+
     return returnRow;
   }
 
   /**
    * A helper method to perform counter puts.
    *
-   * @param writer The table writer which will do the putting.
-   * @param entityId The entityId of the row to put to.
-   * @param valueString The value to put; should be convertible to long.
-   * @param column The column to put the cell to.
-   * @param timestamp The timestamp to put the cell at (default is cluster-side UNIX time).
-   * @throws IOException When the put fails.
+   * @param writer is the table writer which will do the putting.
+   * @param entityId is the entityId of the row to put to.
+   * @param valueString is the value to put; should be convertible to long.
+   * @param column is the column to put the cell to.
+   * @param timestamp is the timestamp to put the cell at (default is cluster-side UNIX time).
+   * @throws IOException if the put fails.
    */
   public static void putCounterCell(
       final KijiTableWriter writer,

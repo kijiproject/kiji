@@ -27,6 +27,7 @@ import static org.kiji.rest.RoutesConstants.TABLE_PARAMETER;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -45,6 +46,7 @@ import javax.ws.rs.core.UriInfo;
 
 import com.google.common.collect.Maps;
 import com.yammer.metrics.annotation.Timed;
+
 import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.Schema;
 import org.apache.commons.codec.DecoderException;
@@ -58,6 +60,10 @@ import org.kiji.rest.representations.KijiRestRow;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.EntityIdFactory;
 import org.kiji.schema.KijiColumnName;
+import org.kiji.schema.KijiDataRequest;
+import org.kiji.schema.KijiDataRequestBuilder;
+import org.kiji.schema.KijiDataRequestBuilder.ColumnsDef;
+import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableWriter;
 import org.kiji.schema.avro.SchemaType;
@@ -257,7 +263,7 @@ public class RowResource extends AbstractRowResource {
     }
 
     int maxVersions;
-    try  {
+    try {
       if ("all".equals(maxVersionsString)) {
         maxVersions = HConstants.ALL_VERSIONS;
       } else {
@@ -274,8 +280,26 @@ public class RowResource extends AbstractRowResource {
 
     final KijiTable table = mKijiClient.getKijiTable(instanceId, tableId);
     try {
-      KijiRestRow kijiRestRow = getKijiRow(table, hbaseRowKey, timeRanges, columns, maxVersions);
-      return kijiRestRow;
+      EntityIdFactory eidFactory = EntityIdFactory.getFactory(table.getLayout());
+      EntityId entityId = eidFactory.getEntityIdFromHBaseRowKey(hbaseRowKey);
+
+      KijiRestRow returnRow = null;
+
+      KijiDataRequestBuilder dataBuilder = KijiDataRequest.builder();
+      if (timeRange != null) {
+        dataBuilder.withTimeRange(timeRanges[0], timeRanges[1]);
+      }
+
+      ColumnsDef colsRequested = dataBuilder.newColumnsDef().withMaxVersions(maxVersions);
+      List<KijiColumnName> requestedColumns = addColumnDefs(table.getLayout(), colsRequested,
+          columns);
+
+      KijiRowData row = getKijiRowData(table, entityId, dataBuilder.build());
+      returnRow = getKijiRestRow(row, table.getLayout(), requestedColumns);
+
+      return returnRow;
+    } catch (IOException e) {
+      throw new WebApplicationException(e);
     } finally {
       ResourceUtils.releaseOrLog(table);
     }
