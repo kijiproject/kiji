@@ -430,7 +430,7 @@ object KijiSlice {
   * @tparam T is the type of the data stored in the underlying cells.
   * @return a KijiSlice that contains the data passed in through the cellIter.
   */
-  def apply[T](cellIter: Iterator[KijiCell[T]]): KijiSlice[T] = {
+  private[express] def apply[T](cellIter: Iterator[KijiCell[T]]): KijiSlice[T] = {
     val cells: Seq[Cell[T]] = cellIter.toSeq.map { kijiCell: KijiCell[T] => Cell[T](kijiCell) }
     new KijiSlice[T](cells)
   }
