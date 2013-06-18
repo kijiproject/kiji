@@ -286,6 +286,8 @@ public class RowsResource extends AbstractRowResource {
 
         scanner = reader.getScanner(dataBuilder.build(), scanOptions);
       }
+    } catch (RuntimeException e) {
+      throw new WebApplicationException(e, Status.BAD_REQUEST);
     } catch (Exception e) {
       throw new WebApplicationException(e, Status.BAD_REQUEST);
     } finally {
