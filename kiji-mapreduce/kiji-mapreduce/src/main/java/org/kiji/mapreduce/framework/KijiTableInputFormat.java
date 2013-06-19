@@ -53,6 +53,7 @@ import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.KijiTableReader.KijiScannerOptions;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.filter.KijiRowFilter;
+import org.kiji.schema.hbase.HBaseScanOptions;
 import org.kiji.schema.impl.HBaseKijiRowData;
 import org.kiji.schema.impl.HBaseKijiTable;
 import org.kiji.schema.util.ResourceUtils;
@@ -231,9 +232,15 @@ public final class KijiTableInputFormat
       final Configuration conf = context.getConfiguration();
       final KijiURI inputURI =
           KijiURI.newBuilder(conf.get(KijiConfKeys.KIJI_INPUT_TABLE_URI)).build();
+
+      // When using Kiji tables as an input to MapReduce jobs, turn off block caching.
+      final HBaseScanOptions hBaseScanOptions = new HBaseScanOptions();
+      hBaseScanOptions.setCacheBlocks(false);
+
       final KijiScannerOptions scannerOptions = new KijiScannerOptions()
           .setStartRow(HBaseEntityId.fromHBaseRowKey(mSplit.getStartRow()))
-          .setStopRow(HBaseEntityId.fromHBaseRowKey(mSplit.getEndRow()));
+          .setStopRow(HBaseEntityId.fromHBaseRowKey(mSplit.getEndRow()))
+          .setHBaseScanOptions(hBaseScanOptions);
       final String filterJson = conf.get(KijiConfKeys.KIJI_ROW_FILTER);
       if (null != filterJson) {
         KijiRowFilter filter = KijiRowFilter.toFilter(filterJson);
