@@ -39,7 +39,7 @@ import org.kiji.examples.music.gather.SongPlayCounter;
 import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.gather.KijiGatherJobBuilder;
 import org.kiji.mapreduce.lib.reduce.LongSumReducer;
-import org.kiji.mapreduce.output.SequenceFileMapReduceJobOutput;
+import org.kiji.mapreduce.output.MapReduceJobOutputs;
 import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.layout.KijiTableLayout;
@@ -85,7 +85,8 @@ public class TestSongPlayCounter extends KijiClientTest {
         .withReducer(LongSumReducer.class)
         .withInputTable(mTableURI)
         // Note: the local map/reduce job runner does not allow more than one reducer:
-        .withOutput(new SequenceFileMapReduceJobOutput(new Path("file://" + outputDir), 1))
+        .withOutput(MapReduceJobOutputs.newSequenceFileMapReduceJobOutput(
+            new Path("file://" + outputDir), 1))
         .build();
     assertTrue(mrjob.run());
 

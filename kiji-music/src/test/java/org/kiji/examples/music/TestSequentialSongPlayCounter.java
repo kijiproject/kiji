@@ -36,7 +36,7 @@ import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.gather.KijiGatherJobBuilder;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
 import org.kiji.mapreduce.kvstore.lib.AvroKVRecordKeyValueStore;
-import org.kiji.mapreduce.output.AvroKeyValueMapReduceJobOutput;
+import org.kiji.mapreduce.output.MapReduceJobOutputs;
 import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.layout.KijiTableLayout;
@@ -83,7 +83,8 @@ public class TestSequentialSongPlayCounter extends KijiClientTest {
         .withReducer(SequentialPlayCountReducer.class)
         .withInputTable(mUserTableURI)
         // Note: the local map/reduce job runner does not allow more than one reducer:
-        .withOutput(new AvroKeyValueMapReduceJobOutput(new Path("file://" + outputDir), 1))
+        .withOutput(MapReduceJobOutputs.newAvroKeyValueMapReduceJobOutput(
+            new Path("file://" + outputDir), 1))
         .build();
     assertTrue(mrjob.run());
 

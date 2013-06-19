@@ -40,8 +40,7 @@ import org.kiji.mapreduce.KijiMapReduceJobBuilder;
 import org.kiji.mapreduce.MapReduceJobOutput;
 import org.kiji.mapreduce.gather.KijiGatherJobBuilder;
 import org.kiji.mapreduce.input.MapReduceJobInputs;
-import org.kiji.mapreduce.output.AvroKeyValueMapReduceJobOutput;
-import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
+import org.kiji.mapreduce.output.MapReduceJobOutputs;
 import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequestBuilder.ColumnsDef;
@@ -136,10 +135,11 @@ public class TestTopNextSongsPipeline extends KijiClientTest {
         .withReducer(SequentialPlayCountReducer.class)
         .withInputTable(mUserTableURI)
         // Note: the local map/reduce job runner does not allow more than one reducer:
-        .withOutput(new AvroKeyValueMapReduceJobOutput(path, 1))
+        .withOutput(MapReduceJobOutputs.newAvroKeyValueMapReduceJobOutput(path, 1))
         .build();
     // Configure second job.
-    final MapReduceJobOutput tableOutput = new DirectKijiTableMapReduceJobOutput(mSongTableURI, 1);
+    final MapReduceJobOutput tableOutput =
+        MapReduceJobOutputs.newDirectKijiTableMapReduceJobOutput(mSongTableURI, 1);
     final KijiMapReduceJob mrjob2 = KijiMapReduceJobBuilder.create()
         .withConf(getConf())
         .withInput(MapReduceJobInputs.newAvroKeyValueMapReduceJobInput(path))

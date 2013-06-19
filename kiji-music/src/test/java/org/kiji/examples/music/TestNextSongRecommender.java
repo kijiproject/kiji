@@ -34,7 +34,7 @@ import org.kiji.examples.music.produce.NextSongRecommender;
 import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.MapReduceJobOutput;
 import org.kiji.mapreduce.kvstore.lib.KijiTableKeyValueStore;
-import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
+import org.kiji.mapreduce.output.MapReduceJobOutputs;
 import org.kiji.mapreduce.produce.KijiProduceJobBuilder;
 import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiDataRequest;
@@ -113,7 +113,8 @@ public class TestNextSongRecommender extends KijiClientTest {
 
   @Test
   public void testProducer() throws IOException, ClassNotFoundException, InterruptedException {
-    MapReduceJobOutput tableOutput = new DirectKijiTableMapReduceJobOutput(mUserTableURI, 1);
+    MapReduceJobOutput tableOutput =
+        MapReduceJobOutputs.newDirectKijiTableMapReduceJobOutput(mUserTableURI, 1);
     KijiTableKeyValueStore.Builder kvStoreBuilder = KijiTableKeyValueStore.builder();
     // Our default implementation will use the default kiji instance, and a table named songs.
     kvStoreBuilder.withColumn("info", "top_next_songs").withTable(mSongTableURI);
