@@ -45,75 +45,93 @@ public class TestKeyValueStoreConfiguration {
   @Test
   public void testStoreString() {
     Configuration parent = new Configuration(false);
-    KeyValueStoreConfiguration isolated = new KeyValueStoreConfiguration(parent, "the.namespace");
+    KeyValueStoreConfiguration isolated =
+        KeyValueStoreConfiguration.createInConfiguration(parent, 0);
     isolated.set("foo-key", "foo-value");
     assertEquals("foo-value", isolated.get("foo-key"));
 
     // Check that this value is stored in the namespace on the parent:
-    assertEquals("foo-value", isolated.getDelegate().get("the.namespace.foo-key"));
+    Configuration delegate = isolated.getDelegate();
+    assertEquals("foo-value",
+        delegate.get(KeyValueStoreConfiguration.confKeyAtIndex("foo-key", 0)));
   }
 
   @Test
   public void testStoreBoolean() {
     final boolean expected = true;
     Configuration parent = new Configuration(false);
-    KeyValueStoreConfiguration isolated = new KeyValueStoreConfiguration(parent, "the.namespace");
+    KeyValueStoreConfiguration isolated =
+        KeyValueStoreConfiguration.createInConfiguration(parent, 0);
     isolated.setBoolean("foo-key", expected);
     assertEquals(expected, isolated.getBoolean("foo-key", !expected));
 
     // Check that this value is stored in the namespace on the parent:
-    assertEquals(expected, isolated.getDelegate().getBoolean("the.namespace.foo-key", !expected));
+    Configuration delegate = isolated.getDelegate();
+    assertEquals(expected,
+        delegate.getBoolean(KeyValueStoreConfiguration.confKeyAtIndex("foo-key", 0), !expected));
   }
 
   @Test
   public void testStoreClass() {
     Configuration parent = new Configuration(false);
-    KeyValueStoreConfiguration isolated = new KeyValueStoreConfiguration(parent, "the.namespace");
+    KeyValueStoreConfiguration isolated =
+        KeyValueStoreConfiguration.createInConfiguration(parent, 0);
     isolated.setClass("foo-key", String.class, Object.class);
     assertEquals(String.class, isolated.getClass("foo-key", null));
     assertEquals(String.class, isolated.getClass("foo-key", null, Object.class));
 
     // Check that this value is stored in the namespace on the parent:
-    assertEquals(String.class, isolated.getDelegate().getClass("the.namespace.foo-key", null));
+    Configuration delegate = isolated.getDelegate();
+    assertEquals(String.class,
+        delegate.getClass(KeyValueStoreConfiguration.confKeyAtIndex("foo-key", 0), null));
   }
 
   @Test
   public void testStoreFloat() {
     Configuration parent = new Configuration(false);
-    KeyValueStoreConfiguration isolated = new KeyValueStoreConfiguration(parent, "the.namespace");
+    KeyValueStoreConfiguration isolated =
+        KeyValueStoreConfiguration.createInConfiguration(parent, 0);
     isolated.setFloat("foo-key", 3.14F);
     assertEquals(3.14F, isolated.getFloat("foo-key", 0.0F), 0.0F);
 
     // Check that this value is stored in the namespace on the parent:
-    assertEquals(3.14F, isolated.getDelegate().getFloat("the.namespace.foo-key", 0.0F), 0.0F);
+    Configuration delegate = isolated.getDelegate();
+    assertEquals(3.14F,
+        delegate.getFloat(KeyValueStoreConfiguration.confKeyAtIndex("foo-key", 0), 0.0F), 0.0F);
   }
 
   @Test
   public void testStoreInt() {
     Configuration parent = new Configuration(false);
-    KeyValueStoreConfiguration isolated = new KeyValueStoreConfiguration(parent, "the.namespace");
+    KeyValueStoreConfiguration isolated =
+        KeyValueStoreConfiguration.createInConfiguration(parent, 0);
     isolated.setInt("foo-key", 123);
     assertEquals(123, isolated.getInt("foo-key", 0));
 
     // Check that this value is stored in the namespace on the parent:
-    assertEquals(123, isolated.getDelegate().getInt("the.namespace.foo-key", 0));
+    Configuration delegate = isolated.getDelegate();
+    assertEquals(123, delegate.getInt(KeyValueStoreConfiguration.confKeyAtIndex("foo-key", 0), 0));
   }
 
   @Test
   public void testStoreLong() {
     Configuration parent = new Configuration(false);
-    KeyValueStoreConfiguration isolated = new KeyValueStoreConfiguration(parent, "the.namespace");
+    KeyValueStoreConfiguration isolated =
+        KeyValueStoreConfiguration.createInConfiguration(parent, 0);
     isolated.setLong("foo-key", 12345L);
     assertEquals(12345L, isolated.getLong("foo-key", 0L));
 
     // Check that this value is stored in the namespace on the parent:
-    assertEquals(12345L, isolated.getDelegate().getLong("the.namespace.foo-key", 0L));
+    Configuration delegate = isolated.getDelegate();
+    assertEquals(12345L,
+        delegate.getLong(KeyValueStoreConfiguration.confKeyAtIndex("foo-key", 0), 0L));
   }
 
   @Test
   public void testStoreStringArray() {
     Configuration parent = new Configuration(false);
-    KeyValueStoreConfiguration isolated = new KeyValueStoreConfiguration(parent, "the.namespace");
+    KeyValueStoreConfiguration isolated =
+        KeyValueStoreConfiguration.createInConfiguration(parent, 0);
     isolated.setStrings("foo-key", "first", "second", "third");
     assertTrue(Arrays.equals(new String[] {"first", "second", "third"},
         isolated.getStrings("foo-key")));
@@ -122,7 +140,8 @@ public class TestKeyValueStoreConfiguration {
         isolated.getStrings("foo-key", new String[0])));
 
     // Check that this value is stored in the namespace on the parent:
+    Configuration delegate = isolated.getDelegate();
     assertTrue(Arrays.equals(new String[] {"first", "second", "third"},
-        isolated.getDelegate().getStrings("the.namespace.foo-key")));
+        delegate.getStrings(KeyValueStoreConfiguration.confKeyAtIndex("foo-key", 0))));
   }
 }

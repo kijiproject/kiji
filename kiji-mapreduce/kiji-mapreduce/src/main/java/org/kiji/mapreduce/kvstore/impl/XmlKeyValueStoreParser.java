@@ -227,7 +227,8 @@ public final class XmlKeyValueStoreParser {
     } else if (numRealChildren == 0) {
       assert null == configurationNode;
       LOG.warn("No <configuration> supplied for store " + storeName);
-      store.initFromConf(new KeyValueStoreConfiguration(new Configuration(mConf), 0));
+      store.initFromConf(
+          KeyValueStoreConfiguration.createInConfiguration(new Configuration(mConf), 0));
     } else if (null == configurationNode) {
       // Got a single child element, but it wasn't a <configuration>.
       throw new IOException("Unrecognized XML schema for store " + storeName
@@ -245,7 +246,7 @@ public final class XmlKeyValueStoreParser {
         conf.set(entry.getKey(), entry.getValue());
       }
 
-      store.initFromConf(new KeyValueStoreConfiguration(conf, 0));
+      store.initFromConf(KeyValueStoreConfiguration.createInConfiguration(conf, 0));
     }
   }
 

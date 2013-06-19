@@ -79,7 +79,8 @@ public final class KeyValueStoreConfigSerializer {
       KeyValueStore<?, ?> store = entry.getValue();
 
       if (null != store) {
-        KeyValueStoreConfiguration kvStoreConf = new KeyValueStoreConfiguration(conf, i);
+        KeyValueStoreConfiguration kvStoreConf =
+            KeyValueStoreConfiguration.createInConfiguration(conf, i);
 
         // Set the default deserializer class to the same one that serialized it.
         // This is done first, so the store itself can override it.

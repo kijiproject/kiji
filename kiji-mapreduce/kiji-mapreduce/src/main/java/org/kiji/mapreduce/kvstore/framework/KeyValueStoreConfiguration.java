@@ -21,6 +21,7 @@ package org.kiji.mapreduce.kvstore.framework;
 
 import java.util.Map.Entry;
 
+import com.google.common.base.Preconditions;
 import org.apache.hadoop.conf.Configuration;
 
 import org.kiji.annotations.ApiAudience;
@@ -48,15 +49,21 @@ public final class KeyValueStoreConfiguration {
   /**
    * Factory method to wrap a Configuration in a KeyValueStoreConfiguration.
    *
-   * <p>The resulting KeyValueStoreConfiguration will have all key-value pairs that the
-   * parent does. The resulting KeyValueStoreConfiguration will write to the "0"'th
-   * KeyValueStore entry in the "kiji.job.kvstores" namespace (e.g., calling
-   * <code>set("foo", ...)</code> on the resulting namespace will set key
-   * <tt>kiji.job.kvstores.0.foo</tt> within the backing Configuration.</p>
+   * <p>The resulting KeyValueStoreConfiguration will have all key-value pairs
+   * that the Configuration does, stored as part of the "0"'th KeyValueStore
+   * entry in the "kiji.job.kvstores" namespace in a new Configuration object
+   * (e.g.,  calling <code>set("foo", ...)</code> on the returned object will
+   * set key <tt>kiji.job.kvstores.0.foo</tt>).
+   * </p>
+   *
+   * <p>Since this KeyValueStoreConfiguration will not be part of an existing
+   * Configuration, this method is mostly useful for writing tests or creating
+   * temporary key-value stores to merge into a Configuration later.</p>
    *
    * @param conf the Configuration to wrap in a KeyValueStoreConfiguration.
-   * @return A new KeyValueStoreConfiguration that is configured to write to
-   *     a namespace within the supplied Configuration.
+   * @return A new KeyValueStoreConfiguration containing the keys of the conf
+   *     conf parameter. It will be backed by a new Configuration without loaded
+   *     defaults.
    */
   public static KeyValueStoreConfiguration fromConf(Configuration conf) {
     KeyValueStoreConfiguration theConf = new KeyValueStoreConfiguration(
@@ -68,13 +75,49 @@ public final class KeyValueStoreConfiguration {
   }
 
   /**
+   * Factory method to create a KeyValueStoreConfiguration that is backed by a
+   * supplied Configuration.
+   *
+   * <p>The KeyValueStoreConfiguration will be created in the KeyValueStore namespace
+   * at the supplied storeIndex. For example if <code>storeIndex</code> is 3, then
+   * calling calling <code>set("foo", ...)</code> on the returned object will
+   * set key <tt>kiji.job.kvstores.3.foo</tt> in <code>conf</code>.</p>
+   *
+   * <p>If the Configuration contains keys set in the <code>storeIndex</code>th
+   * namespace, they will be reflected in the returned KeyValueStoreConfiguration.</p>
+   *
+   * @param conf The Configuration that will back the KeyValueStoreConfiguration.
+   * @param storeIndex The namespace index to write to. Must be non-negative.
+   * @return A KeyValueStoreConfiguration backed by <code>conf</code>.
+   */
+  public static KeyValueStoreConfiguration createInConfiguration(
+      Configuration conf,
+      int storeIndex) {
+    Preconditions.checkArgument(storeIndex >= 0, "storeIndex must be non-negative.");
+    return new KeyValueStoreConfiguration(conf, storeIndex);
+  }
+
+  /**
+   * Helper function to generate the Configuration key that would be used for a key
+   * in a KeyValueStoreConfiguration stored at a particular index. Useful for testing.
+   *
+   * @param key The key as it would be passed to a hypothetical
+   *     KeyValueStoreConfiguration.
+   * @param storeIndex The index of the hypothetical KeyValueStoreConfiguration.
+   * @return The key that would be used for a backing Configuration.
+   */
+  public static String confKeyAtIndex(String key, int storeIndex) {
+    return KEY_VALUE_STORE_NAMESPACE + storeIndex + "." + key;
+  }
+
+  /**
    * Creates a KeyValueStoreConfiguration that writes to the <code>storeIndex</code>th
    * KeyValueStore namespace.
    *
    * @param parent The parent Configuration to back data.
    * @param storeIndex The namespace index to write to.
    */
-  public KeyValueStoreConfiguration(Configuration parent, int storeIndex) {
+  private KeyValueStoreConfiguration(Configuration parent, int storeIndex) {
     this(parent, KEY_VALUE_STORE_NAMESPACE + storeIndex);
   }
 
@@ -85,7 +128,7 @@ public final class KeyValueStoreConfiguration {
    * @param parent The Configuration to back this KeyValueStoreConfiguration.
    * @param namespace The namespace to write to.
    */
-  public KeyValueStoreConfiguration(Configuration parent, String namespace) {
+  private KeyValueStoreConfiguration(Configuration parent, String namespace) {
     if (null == parent || null == namespace) {
       throw new IllegalArgumentException("Parent configuration and namespace must be non-null.");
     }

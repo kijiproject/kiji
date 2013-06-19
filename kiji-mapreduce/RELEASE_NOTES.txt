@@ -3,13 +3,16 @@
                               KijiMR Release Notes
 
 Version 1.0.0
+  * KIJIMR-121. KeyValueStoreConfiguration's constructors have been
+      made private. The static factory method createInConfiguration()
+      can now be used to create KeyValueStoreConfigurations.
   * KIJIMR-209. MapReduceJobOutput constructors are now package private
       and accessible via org.kiji.mapreduce.output.MapReduceJobOutputs
       static methods.
   * KIJIMR-205. KijiTableKeyValueStore now uses a KijiRowKeyComponents
       object for its key. The static method getTableForReader() is no
       longer required and has been removed.
-  * KIJIMR-208. Buffer writes to Kiji tables coming from MapReduce jobs. 
+  * KIJIMR-208. Buffer writes to Kiji tables coming from MapReduce jobs.
   * KIJIMR-204. Adds time range metadata to Kiji-generated HFiles. This
       fixes a NPE in HBase 0.94.2.
   * KIJIMR-199. Adds an InMemoryMapKeyValueStore. This KVStore can be

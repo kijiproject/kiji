@@ -88,7 +88,8 @@ public final class KeyValueStoreReaderFactory implements Closeable {
     int numKvStores = conf.getInt(KeyValueStoreConfigSerializer.CONF_KEY_VALUE_STORE_COUNT,
         KeyValueStoreConfigSerializer.DEFAULT_KEY_VALUE_STORE_COUNT);
     for (int i = 0; i < numKvStores; i++) {
-      KeyValueStoreConfiguration kvStoreConf = new KeyValueStoreConfiguration(conf, i);
+      KeyValueStoreConfiguration kvStoreConf =
+          KeyValueStoreConfiguration.createInConfiguration(conf, i);
 
       Class<? extends KeyValueStore> kvStoreClass = kvStoreConf
           .<KeyValueStore>getClass(KeyValueStoreConfigSerializer.CONF_CLASS,
