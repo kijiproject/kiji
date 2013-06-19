@@ -892,8 +892,8 @@ public class TestInternalFreshKijiTableReader {
 
     // Create a KijiFreshnessManager and register a freshness policy.
     final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
-    manager.storePolicy("table", "family:qual0", TestProducer.class, new AlwaysFreshen());
-    manager.storePolicy("table", "family:qual1", TestTimeoutProducer.class, new AlwaysFreshen());
+    manager.storePolicy(TABLE_NAME, "family:qual0", TestProducer.class, new AlwaysFreshen());
+    manager.storePolicy(TABLE_NAME, "family:qual1", TestTimeoutProducer.class, new AlwaysFreshen());
 
     // Default partial freshening is false.
     final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
