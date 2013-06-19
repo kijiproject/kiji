@@ -24,7 +24,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hive.serde.Constants;
@@ -34,9 +33,11 @@ import org.apache.hadoop.hive.serde2.SerDeStats;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 import org.apache.hadoop.io.Writable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import org.kiji.hive.io.KijiRowDataWritable;
 import org.kiji.hive.utils.KijiDataRequestSerializer;
-import org.kiji.schema.GenericCellDecoderFactory;
 
 /**
  * A read-only deserializer for reading from Kiji tables in Hive.
@@ -44,6 +45,8 @@ import org.kiji.schema.GenericCellDecoderFactory;
  * Main entry point for the Kiji Hive Adapter.
  */
 public class KijiTableSerDe implements SerDe {
+  private static final Logger LOG = LoggerFactory.getLogger(KijiTableSerDe.class);
+
   public static final String LIST_COLUMN_EXPRESSIONS = "kiji.columns";
 
   /**
@@ -64,21 +67,11 @@ public class KijiTableSerDe implements SerDe {
     final List<String> columnExpressions = readPropertyList(properties, LIST_COLUMN_EXPRESSIONS);
 
     final KijiTableInfo kijiTableInfo = new KijiTableInfo(properties);
-    try {
-      mHiveTableDescription = HiveTableDescription.newBuilder()
-          .withColumnNames(columnNames)
-          .withColumnTypes(TypeInfoUtils.getTypeInfosFromTypeString(columnTypes))
-          .withColumnExpressions(columnExpressions)
-          .withSchemaTable(kijiTableInfo.getSchemaTable())
-          .withTableLayout(kijiTableInfo.getTableLayout())
-          .withCellDecoderFactory(GenericCellDecoderFactory.get())
-          .build();
-    } catch (IOException e) {
-      throw new SerDeException("Unable to read kiji table information", e);
-    } finally {
-      IOUtils.closeQuietly(kijiTableInfo);
-    }
-
+    mHiveTableDescription = HiveTableDescription.newBuilder()
+        .withColumnNames(columnNames)
+        .withColumnTypes(TypeInfoUtils.getTypeInfosFromTypeString(columnTypes))
+        .withColumnExpressions(columnExpressions)
+        .build();
     try {
       conf.set(KijiTableInputFormat.CONF_KIJI_DATA_REQUEST,
           KijiDataRequestSerializer.serialize(mHiveTableDescription.getDataRequest()));
@@ -103,7 +96,7 @@ public class KijiTableSerDe implements SerDe {
   /** {@inheritDoc} */
   @Override
   public Object deserialize(Writable blob) throws SerDeException {
-    final Result result = (Result) blob;
+    final KijiRowDataWritable result = (KijiRowDataWritable) blob;
     try {
       return mHiveTableDescription.createDataObject(result);
     } catch (IOException e) {

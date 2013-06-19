@@ -2,6 +2,14 @@
 
                         Kiji Hive Adapter Release Notes
 
+Version 0.4.0
+  * KIJIHIVE-23. Updates to Kiji Hive Adapter to become compatible with 
+      KijiSchema 1.1.x.
+      - Kiji Hive Adapter now uses Hive 0.11, which is included in CDH 4.2.1.
+      - Refactored Kiji Hive Adapter to use Hadoop Writable objects internally
+        for transferring data around within Hive, this eliminates the need to
+        track the schema table for decoding of HBaseResults in evaluation.
+
 Version 0.3.0
   * KIJIHIVE-19. Allow ability to read entity ids up through to Hive. 
       Thanks Jeff!

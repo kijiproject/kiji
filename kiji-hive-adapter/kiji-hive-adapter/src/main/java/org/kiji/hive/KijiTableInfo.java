@@ -28,7 +28,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 
 import org.kiji.schema.Kiji;
-import org.kiji.schema.KijiSchemaTable;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.impl.HBaseKijiTable;
@@ -76,16 +75,6 @@ public class KijiTableInfo implements Closeable {
    */
   public KijiURI getKijiTableURI() {
     return mKijiURI;
-  }
-
-  /**
-   * Gets the Kiji schema table associated with the connection.
-   *
-   * @return the KijiSchemaTable associated with this connection.
-   * @throws IOException if there is an error.
-   */
-  public KijiSchemaTable getSchemaTable() throws IOException {
-    return getConnection().getSchemaTable();
   }
 
   /**
@@ -137,18 +126,6 @@ public class KijiTableInfo implements Closeable {
 
       mKiji = Kiji.Factory.open(kijiURI);
       mKijiTable = mKiji.openTable(kijiURI.getTable());
-    }
-
-    /**
-     * Gets a deep copy of the schema table for this connection so that it can be used without a
-     * Kiji connection.
-     *
-     * @return The schema table.
-     * @throws IOException if there was an error copying the schema table.
-     */
-    public KijiSchemaTable getSchemaTable() throws IOException {
-      KijiSchemaTable schemaTable =  new DeepCopiedReadOnlySchemaTable(mKiji.getSchemaTable());
-      return schemaTable;
     }
 
     /**

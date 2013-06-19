@@ -28,13 +28,12 @@ import java.sql.Timestamp;
 import java.util.List;
 
 import com.google.common.collect.Lists;
-import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.kiji.schema.GenericCellDecoderFactory;
+import org.kiji.hive.io.KijiRowDataWritable;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiDataRequest;
@@ -42,7 +41,6 @@ import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiRowScanner;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
-import org.kiji.schema.impl.HBaseKijiRowData;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.util.InstanceBuilder;
@@ -89,9 +87,6 @@ public class TestHiveTableDescription extends KijiClientTest {
         .withColumnNames(columnNames)
         .withColumnTypes(columnTypes)
         .withColumnExpressions(columnExpressions)
-        .withSchemaTable(mKiji.getSchemaTable())
-        .withTableLayout(mKiji.openTable("user").getLayout())
-        .withCellDecoderFactory(GenericCellDecoderFactory.get())
         .build();
   }
 
@@ -104,9 +99,6 @@ public class TestHiveTableDescription extends KijiClientTest {
         .withColumnNames(columnNames)
         .withColumnTypes(columnTypes)
         .withColumnExpressions(columnExpressions)
-        .withSchemaTable(mKiji.getSchemaTable())
-        .withTableLayout(mKiji.openTable("user").getLayout())
-        .withCellDecoderFactory(GenericCellDecoderFactory.get())
         .build();
 
     KijiDataRequest kijiDataRequest = hiveTableDescription.getDataRequest();
@@ -124,9 +116,6 @@ public class TestHiveTableDescription extends KijiClientTest {
         .withColumnNames(columnNames)
         .withColumnTypes(columnTypes)
         .withColumnExpressions(columnExpressions)
-        .withSchemaTable(mKiji.getSchemaTable())
-        .withTableLayout(mKiji.openTable("user").getLayout())
-        .withCellDecoderFactory(GenericCellDecoderFactory.get())
         .build();
 
     final KijiDataRequest kijiDataRequest = hiveTableDescription.getDataRequest();
@@ -146,17 +135,13 @@ public class TestHiveTableDescription extends KijiClientTest {
         .withColumnNames(columnNames)
         .withColumnTypes(columnTypes)
         .withColumnExpressions(columnExpressions)
-        .withSchemaTable(mKiji.getSchemaTable())
-        .withTableLayout(mKiji.openTable("user").getLayout())
-        .withCellDecoderFactory(GenericCellDecoderFactory.get())
         .build();
 
     final KijiDataRequest request = KijiDataRequest.create("info", "name");
     final KijiRowScanner scanner = mReader.getScanner(request);
 
     KijiRowData kijiRowData = scanner.iterator().next();
-    HBaseKijiRowData hbaseRowData = (HBaseKijiRowData) kijiRowData;
-    Result result = hbaseRowData.getHBaseResult();
+    KijiRowDataWritable result = new KijiRowDataWritable(kijiRowData);
 
     // array<>
     List<Object> decodedArray = (List) hiveTableDescription.createDataObject(result);

@@ -24,13 +24,13 @@ import java.util.Iterator;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Writables;
 import org.apache.hadoop.mapred.RecordReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.hive.io.KijiRowDataWritable;
 import org.kiji.hive.utils.KijiDataRequestSerializer;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
@@ -47,7 +47,8 @@ import org.kiji.schema.util.ResourceUtils;
 /**
  * Reads key-value records from a KijiTableInputSplit (usually 1 region in an HTable).
  */
-public class KijiTableRecordReader implements RecordReader<ImmutableBytesWritable, Result> {
+public class KijiTableRecordReader
+    implements RecordReader<ImmutableBytesWritable, KijiRowDataWritable> {
   private static final Logger LOG = LoggerFactory.getLogger(KijiTableRecordReader.class);
 
   private final Kiji mKiji;
@@ -110,8 +111,8 @@ public class KijiTableRecordReader implements RecordReader<ImmutableBytesWritabl
 
   /** {@inheritDoc} */
   @Override
-  public Result createValue() {
-    return new Result();
+  public KijiRowDataWritable createValue() {
+    return new KijiRowDataWritable();
   }
 
   /** {@inheritDoc} */
@@ -130,14 +131,14 @@ public class KijiTableRecordReader implements RecordReader<ImmutableBytesWritabl
 
   /** {@inheritDoc} */
   @Override
-  public boolean next(ImmutableBytesWritable key, Result value) throws IOException {
+  public boolean next(ImmutableBytesWritable key, KijiRowDataWritable value) throws IOException {
     if (!mIterator.hasNext()) {
       return false;
     }
     final HBaseKijiRowData rowData = (HBaseKijiRowData) mIterator.next();
+    final KijiRowDataWritable result = new KijiRowDataWritable(rowData);
 
-    final Result result = rowData.getHBaseResult();
-    key.set(result.getRow());
+    key.set(rowData.getHBaseResult().getRow());
     Writables.copyWritable(result, value);
     return true;
   }

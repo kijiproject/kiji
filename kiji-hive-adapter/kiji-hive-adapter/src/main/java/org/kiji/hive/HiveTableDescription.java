@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.base.Preconditions;
-import org.apache.hadoop.hbase.client.Result;
+import com.google.common.collect.Lists;
 import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
@@ -33,19 +33,18 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfoUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.hive.io.KijiRowDataWritable;
 import org.kiji.hive.utils.DataRequestOptimizer;
-import org.kiji.schema.KijiCellDecoderFactory;
 import org.kiji.schema.KijiDataRequest;
-import org.kiji.schema.KijiRowData;
-import org.kiji.schema.KijiSchemaTable;
-import org.kiji.schema.impl.HBaseKijiRowData;
-import org.kiji.schema.layout.KijiTableLayout;
 
 /**
  * Manages the description of the hive table providing the "view" of a KijiTable.
  */
 public final class HiveTableDescription {
   private static final Logger LOG = LoggerFactory.getLogger(HiveTableDescription.class);
+
+  // TODO: This class could be removed since it no longer persists the TableLayout information
+  // necessary for decoding.
 
   /** Describes the types of the columns in the table (it is a struct type). */
   private final StructTypeInfo mTypeInfo;
@@ -59,23 +58,11 @@ public final class HiveTableDescription {
   /** The data request we'll use to read from the kiji table. */
   private final KijiDataRequest mDataRequest;
 
-  /** The schema table of the kiji instance. */
-  private final KijiSchemaTable mSchemaTable;
-
-  /** The layout of the table we are reading from. */
-  private final KijiTableLayout mTableLayout;
-
-  /** A cell decoder factory the decodes Avro cells stored in Kiji using the Avro generic api. */
-  private final KijiCellDecoderFactory mCellDecoderFactory;
-
   /** Builder for constructing a HiveTableDescription. */
   public static final class HiveTableDescriptionBuilder {
     private List<String> mColumnNames;
     private List<TypeInfo> mColumnTypes;
     private List<String> mColumnExpressions;
-    private KijiSchemaTable mSchemaTable;
-    private KijiTableLayout mTableLayout;
-    private KijiCellDecoderFactory mCellDecoderFactory;
 
     /** True if we already built an object. */
     private boolean mIsBuilt = false;
@@ -113,43 +100,6 @@ public final class HiveTableDescription {
     public HiveTableDescriptionBuilder withColumnExpressions(List<String> columnExpressions) {
       checkNotBuilt();
       mColumnExpressions = columnExpressions;
-      return this;
-    }
-
-    /**
-     * Sets the Kiji schema table.
-     *
-     * @param schemaTable The schema table.
-     * @return This instance.
-     */
-    public HiveTableDescriptionBuilder withSchemaTable(KijiSchemaTable schemaTable) {
-      checkNotBuilt();
-      mSchemaTable = schemaTable;
-      return this;
-    }
-
-    /**
-     * Sets the Kiji table layout.
-     *
-     * @param tableLayout The layout.
-     * @return This instance.
-     */
-    public HiveTableDescriptionBuilder withTableLayout(KijiTableLayout tableLayout) {
-      checkNotBuilt();
-      mTableLayout = tableLayout;
-      return this;
-    }
-
-    /**
-     * Sets the Kiji cell decoder factory.
-     *
-     * @param cellDecoderFactory A cell decoder factory.
-     * @return This instance.
-     */
-    public HiveTableDescriptionBuilder withCellDecoderFactory(
-        KijiCellDecoderFactory cellDecoderFactory) {
-      checkNotBuilt();
-      mCellDecoderFactory = cellDecoderFactory;
       return this;
     }
 
@@ -209,9 +159,6 @@ public final class HiveTableDescription {
     }
 
     mDataRequest = DataRequestOptimizer.getDataRequest(mExpressions);
-    mSchemaTable = builder.mSchemaTable;
-    mTableLayout = builder.mTableLayout;
-    mCellDecoderFactory = builder.mCellDecoderFactory;
   }
 
   /**
@@ -240,23 +187,14 @@ public final class HiveTableDescription {
    * standard java inspector, the structure of the object returned
    * should match the data types specified in the hive table schema.</p>
    *
-   * @param result The HBase data from the row.
+   * @param kijiRowData The HBase data from the row.
    * @return An object representing the row.
    * @throws IOException If there is an IO error.
    */
-  public Object createDataObject(Result result) throws IOException {
+  public Object createDataObject(KijiRowDataWritable kijiRowData) throws IOException {
     // The top-level object needs to be a List because it represents
     // the columns in the row.
-    List<Object> columnData = new ArrayList<Object>();
-
-    // TODO: This should be done without a deprecated class, but this allows us to not duplicate
-    //code from the HBaseKijiRowData for decoding purposes.
-    final KijiRowData kijiRowData = new HBaseKijiRowData(
-        mDataRequest,
-        mCellDecoderFactory,
-        mTableLayout,
-        result,
-        mSchemaTable);
+    List<Object> columnData = Lists.newArrayList();
     for (KijiRowExpression expression : mExpressions) {
       columnData.add(expression.evaluate(kijiRowData));
     }

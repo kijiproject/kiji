@@ -24,12 +24,12 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.kiji.hive.io.KijiRowDataWritable;
 import org.kiji.hive.utils.KijiDataRequestSerializer;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiClientTest;
@@ -94,7 +94,7 @@ public class TestKijiTableRecordReader extends KijiClientTest {
 
     // Retrieve result
     ImmutableBytesWritable key = new ImmutableBytesWritable();
-    Result value = new Result();
+    KijiRowDataWritable value = new KijiRowDataWritable();
     int resultCount = 0;
     boolean hasResult = tableRecordReader.next(key, value);
     while (hasResult) {

@@ -39,14 +39,16 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.hive.io.EntityIdWritable;
+import org.kiji.hive.io.KijiRowDataWritable;
 import org.kiji.hive.utils.AvroTypeAdapter;
 import org.kiji.hive.utils.AvroTypeAdapter.IncompatibleTypeException;
-import org.kiji.hive.utils.HiveTypes.*;
-import org.kiji.schema.EntityId;
+import org.kiji.hive.utils.HiveTypes.HiveList;
+import org.kiji.hive.utils.HiveTypes.HiveMap;
+import org.kiji.hive.utils.HiveTypes.HiveStruct;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequestBuilder;
-import org.kiji.schema.KijiRowData;
 
 /**
  * A KijiRowExpression is a string that addresses a piece of data inside a KijiTable row.
@@ -87,7 +89,7 @@ public class KijiRowExpression {
    * @return The data addressed by the expression.
    * @throws IOException If there is an IO error.
    */
-  public Object evaluate(KijiRowData row) throws IOException {
+  public Object evaluate(KijiRowDataWritable row) throws IOException {
     return new Evaluator().evaluate(mExpression, row);
   }
 
@@ -124,7 +126,7 @@ public class KijiRowExpression {
      * @return The value.
      * @throws IOException If there is an IO error.
      */
-    Object getValue(KijiRowData row) throws IOException;
+    Object getValue(KijiRowDataWritable row) throws IOException;
 
     /**
      * Gets the operands of this operator.
@@ -252,8 +254,8 @@ public class KijiRowExpression {
 
     /** {@inheritDoc} */
     @Override
-    public Object getValue(KijiRowData row) throws IOException {
-      final EntityId entityId = row.getEntityId();
+    public Object getValue(KijiRowDataWritable row) throws IOException {
+      final EntityIdWritable entityId = row.getEntityId();
       return entityId.toShellString();
     }
 
@@ -319,9 +321,9 @@ public class KijiRowExpression {
 
     /** {@inheritDoc} */
     @Override
-    public Object getValue(KijiRowData row) throws IOException {
-      final EntityId entityId = row.getEntityId();
-      Object component = entityId.getComponentByIndex(mIndex);
+    public Object getValue(KijiRowDataWritable row) throws IOException {
+      final EntityIdWritable entityId = row.getEntityId();
+      Object component = entityId.getComponents().get(mIndex);
 
       switch (mTypeInfo.getPrimitiveCategory()) {
 
@@ -394,7 +396,7 @@ public class KijiRowExpression {
 
     /** {@inheritDoc} */
     @Override
-    public Object getValue(KijiRowData row) throws IOException {
+    public Object getValue(KijiRowDataWritable row) throws IOException {
       final HiveMap<String, HiveStruct> result = new HiveMap<String, HiveStruct>();
       if (!row.containsColumn(getFamily())) {
         // TODO: Consider logging LOG.warn("Nothing found for {}", getFamily());
@@ -421,7 +423,7 @@ public class KijiRowExpression {
         if (null != cell) {
           final HiveStruct struct = new HiveStruct();
           // Add the cell timestamp.
-          struct.add(new Timestamp(cell.getKey().longValue()));
+          struct.add(new Timestamp(cell.getKey()));
           // Add the cell value.
           struct.add(getAvroTypeAdapter().toHiveType(
               mCellTypeInfo,
@@ -477,7 +479,7 @@ public class KijiRowExpression {
 
     /** {@inheritDoc} */
     @Override
-    public Object getValue(KijiRowData row) throws IOException {
+    public Object getValue(KijiRowDataWritable row) throws IOException {
       final HiveMap<String, HiveList<HiveStruct>> result =
           new HiveMap<String, HiveList<HiveStruct>>();
       if (!row.containsColumn(getFamily())) {
@@ -492,7 +494,7 @@ public class KijiRowExpression {
         for (Map.Entry<Long, Object> cell : entry.getValue().entrySet()) {
           final HiveStruct struct = new HiveStruct();
           // Add the cell timestamp.
-          struct.add(new Timestamp(cell.getKey().longValue()));
+          struct.add(new Timestamp(cell.getKey()));
           // Add the cell value.
           struct.add(getAvroTypeAdapter().toHiveType(
               mCellTypeInfo,
@@ -554,7 +556,7 @@ public class KijiRowExpression {
 
     /** {@inheritDoc} */
     @Override
-    public Object getValue(KijiRowData row) throws IOException {
+    public Object getValue(KijiRowDataWritable row) throws IOException {
       final HiveStruct result = new HiveStruct();
       // Validate that the row contains data for the specified expression, and return empty struct
       // if nothing is found
@@ -572,7 +574,7 @@ public class KijiRowExpression {
       } else {
         final Iterator<Map.Entry<Long, Object>> cellIterator = cellMap.entrySet().iterator();
         for (int i = 0; i < mIndex && cellIterator.hasNext(); i++) {
-          cellIterator.next();
+          cell = cellIterator.next();
         }
         if (!cellIterator.hasNext()) {
           return null;
@@ -581,7 +583,7 @@ public class KijiRowExpression {
       }
 
       // Add the cell timestamp.
-      result.add(new Timestamp(cell.getKey().longValue()));
+      result.add(new Timestamp(cell.getKey()));
       // Add the cell value.
       result.add(getAvroTypeAdapter().toHiveType(
           mCellTypeInfo,
@@ -632,7 +634,7 @@ public class KijiRowExpression {
 
     /** {@inheritDoc} */
     @Override
-    public Object getValue(KijiRowData row) throws IOException {
+    public Object getValue(KijiRowDataWritable row) throws IOException {
       final HiveList<HiveStruct> result = new HiveList<HiveStruct>();
       // Validate that the row contains data for the specified expression, and return empty struct
       // if nothing is found
@@ -646,7 +648,7 @@ public class KijiRowExpression {
       for (Map.Entry<Long, Object> cell : cellMap.entrySet()) {
         final HiveStruct struct = new HiveStruct();
         // Add the cell timestamp.
-        struct.add(new Timestamp(cell.getKey().longValue()));
+        struct.add(new Timestamp(cell.getKey()));
         // Add the cell value.
         struct.add(getAvroTypeAdapter().toHiveType(
             mCellTypeInfo,
@@ -767,7 +769,7 @@ public class KijiRowExpression {
      * @return The evaluated expression data.
      * @throws IOException If there is an IO error reading from the Kiji row.
      */
-    public Object evaluate(Expression expression, KijiRowData row) throws IOException {
+    public Object evaluate(Expression expression, KijiRowDataWritable row) throws IOException {
       if (expression.isValue()) {
         return expression.getValue(row);
       }

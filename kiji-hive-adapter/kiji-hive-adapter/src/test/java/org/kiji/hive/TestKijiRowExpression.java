@@ -33,6 +33,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.kiji.hive.io.KijiRowDataWritable;
 import org.kiji.hive.utils.HiveTypes.HiveList;
 import org.kiji.hive.utils.HiveTypes.HiveMap;
 import org.kiji.hive.utils.HiveTypes.HiveStruct;
@@ -61,7 +62,7 @@ public class TestKijiRowExpression extends KijiClientTest {
     // expression types.
     mKiji = getKiji();
     mKiji.createTable(KijiTableLayouts.getLayout(KijiTableLayouts.ROW_DATA_TEST));
-    mTable = mKiji.openTable("table");
+    mTable = mKiji.openTable("row_data_test_table");
     mEntityId = mTable.getEntityId("row1");
     final KijiTableWriter writer = mTable.openTableWriter();
     try {
@@ -86,7 +87,7 @@ public class TestKijiRowExpression extends KijiClientTest {
   public final void teardownKijiInstance() throws IOException {
     mReader.close();
     mTable.release();
-    mKiji.deleteTable("table");
+    mKiji.deleteTable("row_data_test_table");
   }
 
   @Test
@@ -100,7 +101,8 @@ public class TestKijiRowExpression extends KijiClientTest {
 
     // Test that the data returned from this request is decoded properly
     KijiRowData kijiRowData = mReader.get(mEntityId, kijiDataRequest);
-    String result = (String) kijiRowExpression.evaluate(kijiRowData);
+    KijiRowDataWritable kijiRowDataWritable = new KijiRowDataWritable(kijiRowData);
+    String result = (String) kijiRowExpression.evaluate(kijiRowDataWritable);
     assertEquals(mEntityId.toShellString(), result);
   }
 
@@ -120,7 +122,8 @@ public class TestKijiRowExpression extends KijiClientTest {
 
     // Test that the data returned from this request is decoded properly
     KijiRowData kijiRowData = mReader.get(mEntityId, kijiDataRequest);
-    HiveMap resultMap = (HiveMap) kijiRowExpression.evaluate(kijiRowData);
+    KijiRowDataWritable kijiRowDataWritable = new KijiRowDataWritable(kijiRowData);
+    HiveMap resultMap = (HiveMap) kijiRowExpression.evaluate(kijiRowDataWritable);
     HiveList qualAList = (HiveList) resultMap.get("qualA");
     assertEquals(3, qualAList.size());
 
@@ -144,7 +147,8 @@ public class TestKijiRowExpression extends KijiClientTest {
 
     // Test that the data returned from this request is decoded properly
     KijiRowData kijiRowData = mReader.get(mEntityId, kijiDataRequest);
-    HiveMap resultMap = (HiveMap) kijiRowExpression.evaluate(kijiRowData);
+    KijiRowDataWritable kijiRowDataWritable = new KijiRowDataWritable(kijiRowData);
+    HiveMap resultMap = (HiveMap) kijiRowExpression.evaluate(kijiRowDataWritable);
     HiveStruct qualA = (HiveStruct) resultMap.get("qualA");
     assertEquals(new Date(3L), qualA.get(0));
     assertEquals(7, qualA.get(1));
@@ -171,7 +175,8 @@ public class TestKijiRowExpression extends KijiClientTest {
 
     // Test that the data returned from this request is decoded properly
     KijiRowData kijiRowData = mReader.get(mEntityId, kijiDataRequest);
-    HiveList resultList = (HiveList) kijiRowExpression.evaluate(kijiRowData);
+    KijiRowDataWritable kijiRowDataWritable = new KijiRowDataWritable(kijiRowData);
+    HiveList resultList = (HiveList) kijiRowExpression.evaluate(kijiRowDataWritable);
     assertEquals(3, resultList.size());
   }
 
@@ -192,7 +197,8 @@ public class TestKijiRowExpression extends KijiClientTest {
 
     // Test that the data returned from this request is decoded properly
     KijiRowData kijiRowData = mReader.get(mEntityId, kijiDataRequest);
-    HiveStruct resultStruct = (HiveStruct) kijiRowExpression.evaluate(kijiRowData);
+    KijiRowDataWritable kijiRowDataWritable = new KijiRowDataWritable(kijiRowData);
+    HiveStruct resultStruct = (HiveStruct) kijiRowExpression.evaluate(kijiRowDataWritable);
     assertEquals(new Date(3L), resultStruct.get(0));
     assertEquals("c", resultStruct.get(1));
   }
@@ -263,7 +269,8 @@ public class TestKijiRowExpression extends KijiClientTest {
 
     // Test that the data returned from this request is decoded properly
     KijiRowData kijiRowData = mReader.get(mEntityId, kijiDataRequest);
-    HiveStruct resultStruct = (HiveStruct) kijiRowExpression.evaluate(kijiRowData);
+    KijiRowDataWritable kijiRowDataWritable = new KijiRowDataWritable(kijiRowData);
+    HiveStruct resultStruct = (HiveStruct) kijiRowExpression.evaluate(kijiRowDataWritable);
     assertEquals(new Date(2L), resultStruct.get(0));
     assertEquals("b", resultStruct.get(1));
   }
@@ -284,7 +291,8 @@ public class TestKijiRowExpression extends KijiClientTest {
 
     // Test that the data returned from this request is decoded properly
     KijiRowData kijiRowData = mReader.get(mEntityId, kijiDataRequest);
-    HiveStruct resultStruct = (HiveStruct) kijiRowExpression.evaluate(kijiRowData);
+    KijiRowDataWritable kijiRowDataWritable = new KijiRowDataWritable(kijiRowData);
+    HiveStruct resultStruct = (HiveStruct) kijiRowExpression.evaluate(kijiRowDataWritable);
     assertEquals(new Date(1L), resultStruct.get(0));
     assertEquals("a", resultStruct.get(1));
   }

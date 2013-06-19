@@ -28,6 +28,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.kiji.hive.io.KijiRowDataWritable;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiClientTest;
@@ -102,7 +103,8 @@ public class TestKijiRowEntityIdExpression extends KijiClientTest {
 
     // Test that the data returned from this request is decoded properly
     KijiRowData kijiRowData = mReader.get(mEntityId, kijiDataRequest);
-    Object result = kijiRowExpression.evaluate(kijiRowData);
+    KijiRowDataWritable kijiRowDataWritable = new KijiRowDataWritable(kijiRowData);
+    Object result = kijiRowExpression.evaluate(kijiRowDataWritable);
     assertEquals(expectedResult, result);
   }
 }

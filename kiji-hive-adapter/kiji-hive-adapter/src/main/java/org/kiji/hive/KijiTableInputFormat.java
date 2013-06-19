@@ -25,7 +25,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.InputFormat;
@@ -36,6 +35,7 @@ import org.apache.hadoop.mapred.Reporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.hive.io.KijiRowDataWritable;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;
@@ -60,7 +60,8 @@ import org.kiji.schema.util.ResourceUtils;
  *   2-dimensional view of the row must be contained in the value (in this case, the HBase Result).
  * </p>
  */
-public class KijiTableInputFormat implements InputFormat<ImmutableBytesWritable, Result> {
+public class KijiTableInputFormat
+    implements InputFormat<ImmutableBytesWritable, KijiRowDataWritable> {
   private static final Logger LOG = LoggerFactory.getLogger(KijiTableInputFormat.class);
 
   public static final String CONF_KIJI_DATA_REQUEST = "kiji.data.request";
@@ -77,7 +78,7 @@ public class KijiTableInputFormat implements InputFormat<ImmutableBytesWritable,
    * @throws IOException If there is an error.
    */
   @Override
-  public RecordReader<ImmutableBytesWritable, Result> getRecordReader(
+  public RecordReader<ImmutableBytesWritable, KijiRowDataWritable> getRecordReader(
       InputSplit split, JobConf job, Reporter reporter) throws IOException {
     LOG.info("Getting record reader {}", split.getLocations());
     return new KijiTableRecordReader((KijiTableInputSplit) split, job);
