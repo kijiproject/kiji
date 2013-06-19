@@ -66,9 +66,10 @@ ${BASEDIR}/conf/configuration.yml > ${BASEDIR}/logs/console.out 2>&1 &
 sleep 5
 
 # check if the backgrounded process truly started
-ps -p $! > /dev/null
+rest_server_pid=$?
+ps -p ${rest_server_pid} > /dev/null
 if [ 0 == $? ]; then
-  echo $! > $PIDFILE
+  echo ${rest_server_pid} > $PIDFILE
 else
   exit 1
 fi
