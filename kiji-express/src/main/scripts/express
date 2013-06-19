@@ -100,7 +100,7 @@ if [ -z "${HADOOP_HOME}" -o ! -d "${HADOOP_HOME}" ]; then
   exit 1
 fi
 
-if [ -z ${1} ]; then
+if [ -z "${1}" ]; then
   echo "express: Tool launcher for KijiExpress."
   echo "Run 'express help' to see a list of available tools."
   exit 1
@@ -479,11 +479,10 @@ fi
 
 # Run it!
 if [ -z "${scalding_tool}" ]; then
+  # In this case the user is running an arbitrary jar with express code on the classpath.
   exec java \
     -cp "${express_cp}" ${java_opts} ${EXPRESS_JAVA_OPTS} \
-    -Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED \
-    "${class}" ${COMMAND_ARGS} \
-    -D mapred.child.java.opts="-Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED"
+    "${class}" ${COMMAND_ARGS}
 else
   canonical_user_target=$(resolve_symlink ${user_target})
   if [ -z "${canonical_user_target}" ]; then
@@ -491,20 +490,76 @@ else
     exit 1
   fi
 
+  # If the user has put any -Dhadoop.arg=value elements in their arguments ($COMMAND_ARGS),
+  # then we need to extract these left-justified arguments from COMMAND_ARGS and add them
+  # to HADOOP_ARGS to pass as argments to scalding_tool to be parsed by Hadoop's
+  # GenericOptionsParser. The remaining arguments must be delivered as the final arguments
+  # to scalding_tool after its other arguments.
+
+  # We define and then execute two methods on $COMMAND_ARGS to do this separation.
+
+  function get_hadoop_argv() {
+    out=""
+    while [ ! -z "$1" ]; do
+      if [ "$1" == "-D" ]; then
+        out="$out -D $2"
+        shift # Consume -D
+        shift # Consume prop=val
+      elif [[ "$1" == -D* ]]; then
+        # Argument matches -Dprop=val.
+        # Note [[ eval ]] and lack of "quotes" around -D*.
+        out="$out $1"
+        shift
+      else
+        break # Matched a non -D argument; stop parsing.
+      fi
+    done
+
+    # Echo all the -Dargs.
+    echo "$out"
+  }
+
+  # Return the part of COMMAND_ARGS that does not contain leading -D prop=val or -Dprop-val
+  function get_user_argv() {
+    while [ ! -z "$1" ]; do
+      if [ "$1" == "-D" ]; then
+        shift
+        shift # Consume this and the following prop=val
+      elif [[ "$1" == -D* ]]; then
+        shift # Consume -Dprop=val
+      else
+        break
+      fi
+    done
+
+    # Echo the remaining args
+    echo $*
+  }
+
+  hadoop_argv=`get_hadoop_argv $COMMAND_ARGS`
+  user_argv=`get_user_argv $COMMAND_ARGS`
+
   if [ -z "${class}" ]; then
+    # In this case the user is running an uncompiled script.
     exec java \
       -cp "${express_cp}" ${java_opts} ${EXPRESS_JAVA_OPTS} \
       -Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED \
       ${scalding_tool} \
-      "${canonical_user_target}" "${run_mode_flag}" ${COMMAND_ARGS}
-      -D mapred.child.java.opts="-Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED"
+      "-Dtmpjars=${tmpjars}" \
+      "-Dmapred.child.java.opts=-Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED"\
+      ${hadoop_argv} \
+      "${canonical_user_target}" "${run_mode_flag}" ${user_argv}
   else
-    java \
+    # In this case the user is running a compiled Scalding Job in a jar.
+    exec java \
+      -cp "${express_cp}" ${java_opts} ${EXPRESS_JAVA_OPTS} \
       -Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED \
-      -cp "${express_cp}" ${java_opts} ${EXPRESS_JAVA_OPTS} ${scalding_tool} \
+      ${scalding_tool} \
       "-Dtmpjars=file://${canonical_user_target},${tmpjars}" \
-      "${class}" "${run_mode_flag}" \
-      ${COMMAND_ARGS} \
-      -D mapred.child.java.opts="-Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED"
+      "-Dmapred.child.java.opts=-Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED"\
+      ${hadoop_argv} \
+      "${class}" \
+      "${run_mode_flag}" \
+      ${user_argv}
   fi
 fi
