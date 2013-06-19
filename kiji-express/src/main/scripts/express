@@ -425,6 +425,12 @@ case ${command} in
     # We'll add express dependencies to KIJI_CLASSPATH so that they are picked up by
     # kiji-schema-shell.
     export KIJI_CLASSPATH="${KIJI_CLASSPATH}:${express_cp}"
+    # Pass tmpjars to kiji-schema-shell using a JVM property, which express's kiji-schema-shell
+    # module knows to read and use to populate tmpjars for launched jobs.
+    JAVA_OPTS="${JAVA_OPTS} -Dexpress.tmpjars=${tmpjars}"
+    # Also specify that schema validation should be disabled.
+    JAVA_OPTS="${JAVA_OPTS} -Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED"
+    export JAVA_OPTS
     # Invoke the kiji-schema-shell command with the express modules preloaded.
     ${schema_shell_script} --modules=modeling ${COMMAND_ARGS}
     exit $?

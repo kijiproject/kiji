@@ -31,10 +31,12 @@ class LifecycleExecutionCommandSuite extends ShellExtSuite {
 
   test("A hadoop configuration can be obtained with tmpjars set.") {
     val command = new LifecycleExecutionCommand(null, null, null,
-      JobsConfiguration(List("file:///path1.jar", "file:///path2.jar"), Map()), null)
+      JobsConfiguration(List("path1.jar", "path2.jar"), Map()), null)
     val conf = command.hadoopConfiguration
     val libjars = conf.getStrings("tmpjars")
-    assert("file:///path1.jar" === libjars(0))
-    assert("file:///path2.jar" === libjars(1))
+    assert(libjars(0).startsWith("file:///"))
+    assert(libjars(1).startsWith("file:///"))
+    assert(libjars(0).endsWith("path1.jar"))
+    assert(libjars(1).endsWith("path2.jar"))
   }
 }

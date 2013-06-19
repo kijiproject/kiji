@@ -19,6 +19,10 @@
 
 package org.kiji.express.shellext
 
+import java.io.File
+
+import org.apache.hadoop.hbase.HBaseConfiguration
+
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.express.modeling.ExtractScoreJobBuilder
@@ -27,7 +31,6 @@ import org.kiji.express.modeling.ModelEnvironment
 import org.kiji.schema.shell.DDLException
 import org.kiji.schema.shell.Environment
 import org.kiji.schema.shell.ddl.DDLCommand
-import org.apache.hadoop.hbase.HBaseConfiguration
 
 /**
  * A DDL shell command capable of running a set of modeling lifecycle phases. An instance of this
@@ -79,18 +82,39 @@ private[express] final class LifecycleExecutionCommand (
    * @return the Hadoop configuration for jobs launched while executing lifecycle phases.
    */
   private[express] def hadoopConfiguration = {
+    // Extract libjars and arbitrary properties to set in the configuration, specified by the user.
     val JobsConfiguration(libjarsList, propertiesMap) = jobsConfiguration
-    // Add tmpjars to the config.
-    val jarConfig = libjarsList.foldLeft(HBaseConfiguration.create()) { (config, libjar) =>
-      config.set("tmpjars", config.get("tmpjars", "") + "," + libjar)
-      config
+    // The configuration we'll populate with user settings.
+    val config = HBaseConfiguration.create()
+
+    // Add properties specified in schema-shell command to the config.
+    propertiesMap.foreach { case(key, value) =>
+      config.set(key, value)
     }
 
-    // Add properties to the config.
-    propertiesMap.foldLeft(jarConfig) { (config, property) =>
-      config.set(property._1, property._2)
-      config
+    // Transform the paths to files on the local filesystem, into URIs of absolute paths to those
+    // files.
+    val libjarsURIs = libjarsList.map { libjar =>
+      val libjarFile = new File(libjar)
+      "file://" + libjarFile.getAbsolutePath()
     }
+
+    // Add each of the libjars to the "tmpjars" variable of the configuration,
+    // taking care not to overwrite any existing value.
+    libjarsURIs.foreach { libjar =>
+      config.set("tmpjars", config.get("tmpjars", "") + "," + libjar)
+    }
+
+    // Add express library jars specified through the system property express.tmpjars. This is
+    // set by the express script when launching kiji-schema-shell with the modeling module
+    // pre-loaded.
+    val expressTmpJars: String = System.getProperty("express.tmpjars", "")
+    config.set("tmpjars", config.get("tmpjars", "") + "," + expressTmpJars)
+
+    // Add to mapred.child.java.opts, to specify that schema-validation should be disabled.
+    config.set("mapred.child.java.opts", config.get("mapred.child.java.opts", "")
+        + "-Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED")
+    config
   }
 
   /**
