@@ -47,8 +47,7 @@ import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
 import org.kiji.mapreduce.kvstore.impl.KeyValueStoreConfigSerializer;
 import org.kiji.mapreduce.kvstore.lib.EmptyKeyValueStore;
 import org.kiji.mapreduce.kvstore.lib.UnconfiguredKeyValueStore;
-import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
-import org.kiji.mapreduce.output.TextMapReduceJobOutput;
+import org.kiji.mapreduce.output.MapReduceJobOutputs;
 import org.kiji.mapreduce.output.framework.KijiHFileOutputFormat;
 import org.kiji.mapreduce.reducer.IdentityReducer;
 import org.kiji.schema.KijiClientTest;
@@ -222,7 +221,7 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
         .withGatherer(SimpleGatherer.class)
         .withCombiner(MyCombiner.class)
         .withReducer(MyReducer.class)
-        .withOutput(new TextMapReduceJobOutput(new Path("mypath"), 10))
+        .withOutput(MapReduceJobOutputs.newTextMapReduceJobOutput(new Path("mypath"), 10))
         .build();
 
     // TODO: Verify that the MR Job was configured correctly.
@@ -239,7 +238,8 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
         .withConf(getConf())
         .withInputTable(mTable.getURI())
         .withGatherer(GatherToHFile.class)
-        .withOutput(new HFileMapReduceJobOutput(mTable.getURI(), getLocalTestPath("hfile"), 10))
+        .withOutput(MapReduceJobOutputs.newHFileMapReduceJobOutput(
+            mTable.getURI(), getLocalTestPath("hfile"), 10))
         .build();
 
     final Job job = gatherJob.getHadoopJob();
@@ -260,7 +260,8 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
         .withInputTable(mTable.getURI())
         .withGatherer(SimpleGatherer.class)
         .withReducer(ReducerToHFile.class)
-        .withOutput(new HFileMapReduceJobOutput(mTable.getURI(), getLocalTestPath("hfile"), 10))
+        .withOutput(MapReduceJobOutputs.newHFileMapReduceJobOutput(
+            mTable.getURI(), getLocalTestPath("hfile"), 10))
         .build();
 
     final Job job = gatherJob.getHadoopJob();
@@ -284,7 +285,7 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
         .withGatherer(UnconfiguredKVGatherer.class)
         .withCombiner(MyCombiner.class)
         .withReducer(MyReducer.class)
-        .withOutput(new TextMapReduceJobOutput(new Path("mypath"), 10))
+        .withOutput(MapReduceJobOutputs.newTextMapReduceJobOutput(new Path("mypath"), 10))
         .build();
       fail("Should have thrown an IOException.");
     } catch (IOException ioe) {
@@ -303,7 +304,7 @@ public class TestKijiGatherJobBuilder extends KijiClientTest {
         .withGatherer(UnconfiguredKVGatherer.class)
         .withCombiner(MyCombiner.class)
         .withReducer(MyReducer.class)
-        .withOutput(new TextMapReduceJobOutput(new Path("mypath"), 10))
+        .withOutput(MapReduceJobOutputs.newTextMapReduceJobOutput(new Path("mypath"), 10))
         .withStore("foostore", EmptyKeyValueStore.builder().build())
         .build();
 

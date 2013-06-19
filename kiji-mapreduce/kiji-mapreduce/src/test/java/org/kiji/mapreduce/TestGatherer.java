@@ -40,7 +40,7 @@ import org.junit.Test;
 import org.kiji.mapreduce.gather.GathererContext;
 import org.kiji.mapreduce.gather.KijiGatherJobBuilder;
 import org.kiji.mapreduce.gather.KijiGatherer;
-import org.kiji.mapreduce.output.TextMapReduceJobOutput;
+import org.kiji.mapreduce.output.MapReduceJobOutputs;
 import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
@@ -128,7 +128,8 @@ public class TestGatherer extends KijiClientTest {
         .withConf(getConf())
         .withGatherer(TestingGatherer.class)
         .withInputTable(mTable.getURI())
-        .withOutput(new TextMapReduceJobOutput(new Path(outputDir.toString()), numSplits))
+        .withOutput(MapReduceJobOutputs.newTextMapReduceJobOutput(
+            new Path(outputDir.toString()), numSplits))
         .build();
     assertTrue(job.run());
 

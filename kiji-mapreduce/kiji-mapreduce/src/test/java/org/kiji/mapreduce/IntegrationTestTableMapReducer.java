@@ -26,7 +26,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import org.kiji.mapreduce.gather.KijiGatherJobBuilder;
-import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
+import org.kiji.mapreduce.output.MapReduceJobOutputs;
 import org.kiji.mapreduce.testlib.SimpleTableMapReducer;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiTable;
@@ -70,7 +70,7 @@ public class IntegrationTestTableMapReducer extends AbstractKijiIntegrationTest 
             .withGatherer(SimpleTableMapReducer.TableMapper.class)
             .withReducer(SimpleTableMapReducer.TableReducer.class)
             .withInputTable(table.getURI())
-            .withOutput(new HFileMapReduceJobOutput(table.getURI(), output, 16))
+            .withOutput(MapReduceJobOutputs.newHFileMapReduceJobOutput(table.getURI(), output, 16))
             .build();
         if (!mrjob.run()) {
           Assert.fail("MapReduce job failed");

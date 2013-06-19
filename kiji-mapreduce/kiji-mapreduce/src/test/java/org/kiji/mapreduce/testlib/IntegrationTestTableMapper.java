@@ -42,8 +42,7 @@ import org.kiji.mapreduce.HFileLoader;
 import org.kiji.mapreduce.KijiMRTestLayouts;
 import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.gather.KijiGatherJobBuilder;
-import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
-import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
+import org.kiji.mapreduce.output.MapReduceJobOutputs;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequestBuilder;
@@ -160,7 +159,7 @@ public class IntegrationTestTableMapper extends AbstractKijiIntegrationTest {
         .withConf(mConf)
         .withGatherer(SimpleTableMapperAsGatherer.class)
         .withInputTable(mInputTable.getURI())
-        .withOutput(new DirectKijiTableMapReduceJobOutput(mOutputTable.getURI()))
+        .withOutput(MapReduceJobOutputs.newDirectKijiTableMapReduceJobOutput(mOutputTable.getURI()))
         .build();
     assertTrue(mrjob.run());
 
@@ -175,7 +174,8 @@ public class IntegrationTestTableMapper extends AbstractKijiIntegrationTest {
           .withConf(mConf)
           .withGatherer(SimpleTableMapperAsGatherer.class)
           .withInputTable(mInputTable.getURI())
-          .withOutput(new HFileMapReduceJobOutput(mOutputTable.getURI(), hfileDirPath, 1))
+          .withOutput(MapReduceJobOutputs.newHFileMapReduceJobOutput(
+              mOutputTable.getURI(), hfileDirPath, 1))
           .build();
       assertTrue(mrjob.run());
 

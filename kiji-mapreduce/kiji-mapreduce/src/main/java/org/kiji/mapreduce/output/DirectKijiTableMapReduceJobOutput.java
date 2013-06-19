@@ -53,7 +53,8 @@ import org.kiji.schema.KijiURI;
  * </p>
  * <pre>
  *   <code>
- *     final MapReduceJobOutput kijiTableOutput = new DirectKijiTableMapReduceJobOutput(myURI);
+ *     final MapReduceJobOutput kijiTableOutput =
+ *         MapReduceJobOutputs.newDirectKijiTableMapReduceJobOutput(myURI);
  *   </code>
  * </pre>
  * @see HFileMapReduceJobOutput
@@ -61,8 +62,8 @@ import org.kiji.schema.KijiURI;
 @ApiAudience.Public
 @Inheritance.Sealed
 public class DirectKijiTableMapReduceJobOutput extends KijiTableMapReduceJobOutput {
-  /** Default constructor. Do not use directly. */
-  public DirectKijiTableMapReduceJobOutput() {
+  /** Default constructor. Accessible via {@link MapReduceJobOutputs}. */
+  DirectKijiTableMapReduceJobOutput() {
   }
 
   /**
@@ -70,7 +71,7 @@ public class DirectKijiTableMapReduceJobOutput extends KijiTableMapReduceJobOutp
    *
    * @param tableURI The Kiji table to write to.
    */
-  public DirectKijiTableMapReduceJobOutput(KijiURI tableURI) {
+  DirectKijiTableMapReduceJobOutput(KijiURI tableURI) {
     this(tableURI, 0);
   }
 
@@ -80,7 +81,7 @@ public class DirectKijiTableMapReduceJobOutput extends KijiTableMapReduceJobOutp
    * @param tableURI The Kiji table to write to.
    * @param numReduceTasks The number of reduce tasks to use (use zero if using a producer).
    */
-  public DirectKijiTableMapReduceJobOutput(KijiURI tableURI, int numReduceTasks) {
+  DirectKijiTableMapReduceJobOutput(KijiURI tableURI, int numReduceTasks) {
     super(tableURI, numReduceTasks);
   }
 

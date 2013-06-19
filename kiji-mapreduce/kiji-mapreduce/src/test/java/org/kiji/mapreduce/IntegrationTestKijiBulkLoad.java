@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.mapreduce.bulkimport.KijiBulkImportJobBuilder;
 import org.kiji.mapreduce.input.MapReduceJobInputs;
-import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
+import org.kiji.mapreduce.output.MapReduceJobOutputs;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.layout.KijiTableLayout;
@@ -109,7 +109,8 @@ public class IntegrationTestKijiBulkLoad
         .withConf(getConf())
         .withInput(MapReduceJobInputs.newTextMapReduceJobInput(mBulkImportInputPath))
         .withBulkImporter(TestBulkImporter.SimpleBulkImporter.class)
-        .withOutput(new HFileMapReduceJobOutput(mOutputTable.getURI(), hfileDirPath))
+        .withOutput(MapReduceJobOutputs.newHFileMapReduceJobOutput(
+            mOutputTable.getURI(), hfileDirPath))
         .build();
     assertTrue(mrjob.run());
 
@@ -126,7 +127,8 @@ public class IntegrationTestKijiBulkLoad
         .withConf(getConf())
         .withInput(MapReduceJobInputs.newTextMapReduceJobInput(mBulkImportInputPath))
         .withBulkImporter(TestBulkImporter.SimpleBulkImporter.class)
-        .withOutput(new HFileMapReduceJobOutput(mOutputTable.getURI(), hfileDirPath))
+        .withOutput(MapReduceJobOutputs.newHFileMapReduceJobOutput(
+            mOutputTable.getURI(), hfileDirPath))
         .build();
     assertTrue(mrjob.run());
 
@@ -142,7 +144,8 @@ public class IntegrationTestKijiBulkLoad
         .withConf(getConf())
         .withInput(MapReduceJobInputs.newTextMapReduceJobInput(mBulkImportInputPath))
         .withBulkImporter(TestBulkImporter.SimpleBulkImporter.class)
-        .withOutput(new HFileMapReduceJobOutput(mOutputTable.getURI(), hfileDirPath, nSplits))
+        .withOutput(MapReduceJobOutputs.newHFileMapReduceJobOutput(
+            mOutputTable.getURI(), hfileDirPath, nSplits))
         .build();
     assertTrue(mrjob.run());
 

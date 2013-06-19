@@ -42,8 +42,7 @@ import org.kiji.mapreduce.KijiMRTestLayouts;
 import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.bulkimport.KijiBulkImportJobBuilder;
 import org.kiji.mapreduce.input.MapReduceJobInputs;
-import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
-import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
+import org.kiji.mapreduce.output.MapReduceJobOutputs;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
@@ -156,7 +155,7 @@ public class IntegrationTestSimpleBulkImporter extends AbstractKijiIntegrationTe
         .withConf(mConf)
         .withBulkImporter(SimpleBulkImporter.class)
         .withInput(MapReduceJobInputs.newTextMapReduceJobInput(mBulkImportInputPath))
-        .withOutput(new DirectKijiTableMapReduceJobOutput(mOutputTable.getURI()))
+        .withOutput(MapReduceJobOutputs.newDirectKijiTableMapReduceJobOutput(mOutputTable.getURI()))
         .build();
     assertTrue(mrjob.run());
 
@@ -171,7 +170,8 @@ public class IntegrationTestSimpleBulkImporter extends AbstractKijiIntegrationTe
           .withConf(mConf)
           .withBulkImporter(SimpleBulkImporter.class)
           .withInput(MapReduceJobInputs.newTextMapReduceJobInput(mBulkImportInputPath))
-          .withOutput(new HFileMapReduceJobOutput(mOutputTable.getURI(), hfileDirPath))
+          .withOutput(MapReduceJobOutputs.newHFileMapReduceJobOutput(
+              mOutputTable.getURI(), hfileDirPath))
           .build();
       assertTrue(mrjob.run());
 

@@ -38,7 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.mapreduce.framework.JobHistoryCounters;
-import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
+import org.kiji.mapreduce.output.MapReduceJobOutputs;
 import org.kiji.mapreduce.produce.KijiProduceJobBuilder;
 import org.kiji.mapreduce.produce.KijiProducer;
 import org.kiji.mapreduce.produce.ProducerContext;
@@ -129,7 +129,7 @@ public class TestProducer extends KijiClientTest {
         .withConf(getConf())
         .withProducer(SimpleProducer.class)
         .withInputTable(mTable.getURI())
-        .withOutput(new DirectKijiTableMapReduceJobOutput(mTable.getURI()))
+        .withOutput(MapReduceJobOutputs.newDirectKijiTableMapReduceJobOutput(mTable.getURI()))
         .build();
     assertTrue(job.run());
 
@@ -210,7 +210,7 @@ public class TestProducer extends KijiClientTest {
         .withConf(getConf())
         .withProducer(ProducerWorkflow.class)
         .withInputTable(mTable.getURI())
-        .withOutput(new DirectKijiTableMapReduceJobOutput(mTable.getURI()))
+        .withOutput(MapReduceJobOutputs.newDirectKijiTableMapReduceJobOutput(mTable.getURI()))
         .build();
     assertTrue(job.run());
 

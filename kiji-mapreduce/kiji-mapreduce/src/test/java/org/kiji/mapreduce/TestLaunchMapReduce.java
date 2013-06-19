@@ -38,7 +38,7 @@ import org.kiji.mapreduce.framework.HFileKeyValue;
 import org.kiji.mapreduce.impl.DirectKijiTableWriterContext;
 import org.kiji.mapreduce.input.KijiTableMapReduceJobInput.RowOptions;
 import org.kiji.mapreduce.input.MapReduceJobInputs;
-import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
+import org.kiji.mapreduce.output.MapReduceJobOutputs;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
@@ -156,7 +156,7 @@ public class TestLaunchMapReduce {
         .withMapper(ExampleMapper.class)
         .withInput(MapReduceJobInputs.newKijiTableMapReduceJobInput(
             mTable.getURI(), KijiDataRequest.create("info"), RowOptions.create()))
-        .withOutput(new DirectKijiTableMapReduceJobOutput(mTable.getURI()))
+        .withOutput(MapReduceJobOutputs.newDirectKijiTableMapReduceJobOutput(mTable.getURI()))
         .build();
     assertTrue(job.run());
 

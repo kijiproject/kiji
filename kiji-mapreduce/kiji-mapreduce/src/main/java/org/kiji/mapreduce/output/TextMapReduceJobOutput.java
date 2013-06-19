@@ -39,14 +39,15 @@ import org.kiji.annotations.ApiAudience;
  *     final Path outputPath = new Path("/path/to/output/folder");
  *
  *     // Create a text file job output with 10 splits.
- *     final MapReduceJobOutput textOutput = new TextMapReduceJobOutput(outputPath, 10);
+ *     final MapReduceJobOutput textOutput =
+ *         MapReduceJobOutputs.newTextMapReduceJobOutput(outputPath, 10);
  *   </code>
  * </pre>
  */
 @ApiAudience.Public
 public final class TextMapReduceJobOutput extends FileMapReduceJobOutput {
-  /** Default constructor. Do not use directly. */
-  public TextMapReduceJobOutput() {
+  /** Default constructor. Accessible via {@link MapReduceJobInputs}. */
+  TextMapReduceJobOutput() {
   }
 
   /**
@@ -55,7 +56,7 @@ public final class TextMapReduceJobOutput extends FileMapReduceJobOutput {
    * @param filePath Path to output folder.
    * @param numSplits Number of output file splits.
    */
-  public TextMapReduceJobOutput(Path filePath, int numSplits) {
+  TextMapReduceJobOutput(Path filePath, int numSplits) {
     super(filePath, numSplits);
   }
 

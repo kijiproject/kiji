@@ -40,7 +40,7 @@ import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.gather.GathererContext;
 import org.kiji.mapreduce.gather.KijiGatherJobBuilder;
 import org.kiji.mapreduce.gather.KijiGatherer;
-import org.kiji.mapreduce.output.SequenceFileMapReduceJobOutput;
+import org.kiji.mapreduce.output.MapReduceJobOutputs;
 import org.kiji.mapreduce.platform.KijiMRPlatformBridge;
 import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiDataRequest;
@@ -128,7 +128,8 @@ public class TestRegexQualifierColumnFilter extends KijiClientTest {
         .withConf(getConf())
         .withInputTable(mTable.getURI())
         .withGatherer(MyGatherer.class)
-        .withOutput(new SequenceFileMapReduceJobOutput(new Path(outputDir.getPath()), numSplits))
+        .withOutput(MapReduceJobOutputs.newSequenceFileMapReduceJobOutput(
+            new Path(outputDir.getPath()), numSplits))
         .build();
     assertTrue(gatherJob.run());
 

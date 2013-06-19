@@ -81,7 +81,7 @@ import org.kiji.schema.util.ResourceUtils;
  *     final Path hfileLocation = new Path("/path/to/hfile/output");
  *
  *     final MapReduceJobOutput kijiTableOutput =
- *         new HFileMapReduceJobOutput(tableURI, hfileLocation);
+ *         MapReduceJobOutputs.newHFileMapReduceJobOutput(tableURI, hfileLocation);
  *   </code>
  * </pre>
  * @see DirectKijiTableMapReduceJobOutput
@@ -99,8 +99,8 @@ public final class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
   /** The path to the directory to create the HFiles in. */
   private Path mPath;
 
-  /** Default constructor. Do not use directly. */
-  public HFileMapReduceJobOutput() {
+  /** Default constructor. Accessible via {@link MapReduceJobOutputs}. */
+  HFileMapReduceJobOutput() {
   }
 
   /** {@inheritDoc} */
@@ -111,19 +111,19 @@ public final class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
   }
 
   /**
-   * Create job output of HFiles that can be efficiently loaded into a Kiji table.
+   * Creates job output of HFiles that can be efficiently loaded into a Kiji table.
    * The number of HFiles created (which determines the number of reduce tasks) will
    * match the number of existing regions in the target Kiji table.
    *
    * @param tableURI The kiji table the resulting HFiles are intended for.
    * @param path The directory path to output the HFiles to.
    */
-  public HFileMapReduceJobOutput(KijiURI tableURI, Path path) {
+  HFileMapReduceJobOutput(KijiURI tableURI, Path path) {
     this(tableURI, path, NUM_SPLITS_AUTO);
   }
 
   /**
-   * Create job output of HFiles that can be efficiently loaded into a Kiji table.
+   * Creates job output of HFiles that can be efficiently loaded into a Kiji table.
    * The number of HFiles created (which determines the number of reduce tasks) is
    * specified with the <code>numSplits</code> argument.  Controlling the number of
    * splits is only possible when targeting a Kiji table with &lt;hashRowKeys&gt;
@@ -135,7 +135,7 @@ public final class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
    * @param path The directory path to output the HFiles to.
    * @param numSplits Number of splits (determines the number of reduce tasks).
    */
-  public HFileMapReduceJobOutput(KijiURI table, Path path, int numSplits) {
+  HFileMapReduceJobOutput(KijiURI table, Path path, int numSplits) {
     super(table, numSplits);
     mPath = path;
   }

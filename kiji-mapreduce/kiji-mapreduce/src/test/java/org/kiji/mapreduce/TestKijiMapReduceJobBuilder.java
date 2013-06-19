@@ -49,7 +49,7 @@ import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
 import org.kiji.mapreduce.kvstore.impl.KeyValueStoreConfigSerializer;
 import org.kiji.mapreduce.kvstore.lib.EmptyKeyValueStore;
 import org.kiji.mapreduce.kvstore.lib.SeqFileKeyValueStore;
-import org.kiji.mapreduce.output.TextMapReduceJobOutput;
+import org.kiji.mapreduce.output.MapReduceJobOutputs;
 import org.kiji.schema.util.Resources;
 import org.kiji.schema.util.TestingFileUtils;
 
@@ -135,7 +135,8 @@ public class TestKijiMapReduceJobBuilder {
         .withInput(MapReduceJobInputs.newTextMapReduceJobInput(new Path("/path/to/my/input")))
         .withMapper(MyMapper.class)
         .withReducer(MyReducer.class)
-        .withOutput(new TextMapReduceJobOutput(new Path("/path/to/my/output"), 16))
+        .withOutput(MapReduceJobOutputs.newTextMapReduceJobOutput(
+            new Path("/path/to/my/output"), 16))
         .build();
 
     final Job hadoopJob = job.getHadoopJob();
@@ -183,7 +184,8 @@ public class TestKijiMapReduceJobBuilder {
         .withInput(MapReduceJobInputs.newTextMapReduceJobInput(new Path("/path/to/my/input")))
         .withMapper(MyMapper.class)
         .withReducer(MyReducer.class)
-        .withOutput(new TextMapReduceJobOutput(new Path("/path/to/my/output"), 16))
+        .withOutput(MapReduceJobOutputs.newTextMapReduceJobOutput(
+            new Path("/path/to/my/output"), 16))
         .withStoreBindings(xmlStores)
         .build();
 

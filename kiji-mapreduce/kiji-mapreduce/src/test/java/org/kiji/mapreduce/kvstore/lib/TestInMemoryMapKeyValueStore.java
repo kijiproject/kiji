@@ -38,7 +38,7 @@ import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
 import org.kiji.mapreduce.kvstore.RequiredStores;
 import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
-import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
+import org.kiji.mapreduce.output.MapReduceJobOutputs;
 import org.kiji.mapreduce.produce.KijiProduceJobBuilder;
 import org.kiji.mapreduce.produce.KijiProducer;
 import org.kiji.mapreduce.produce.ProducerContext;
@@ -133,7 +133,7 @@ public class TestInMemoryMapKeyValueStore extends KijiClientTest {
         .withConf(getConf())
         .withProducer(TestingProducer.class)
         .withInputTable(tableURI)
-        .withOutput(new DirectKijiTableMapReduceJobOutput(tableURI))
+        .withOutput(MapReduceJobOutputs.newDirectKijiTableMapReduceJobOutput(tableURI))
         .withStore("small", InMemoryMapKeyValueStore.fromMap(smallMap))
         .withStore("large", InMemoryMapKeyValueStore.fromMap(largeMap))
         .build();

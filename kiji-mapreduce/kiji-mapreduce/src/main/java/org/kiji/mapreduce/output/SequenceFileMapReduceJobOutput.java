@@ -40,14 +40,15 @@ import org.kiji.avro.mapreduce.AvroSequenceFileOutputFormat;
  *     final Path outputPath = new Path("/path/to/output/folder");
  *
  *     // Create a sequence file job output with 10 splits.
- *     final MapReduceJobOutput textOutput = new SequenceFileMapReduceJobOutput(outputPath, 10);
+ *     final MapReduceJobOutput textOutput =
+ *         MapReduceJobOutputs.newSequenceFileMapReduceJobOutput(outputPath, 10);
  *   </code>
  * </pre>
  */
 @ApiAudience.Public
 public final class SequenceFileMapReduceJobOutput extends FileMapReduceJobOutput {
-  /** Default constructor. Do not use directly. */
-  public SequenceFileMapReduceJobOutput() {
+  /** Default constructor. Accessible via {@link MapReduceJobOutputs}. */
+  SequenceFileMapReduceJobOutput() {
   }
 
   /**
@@ -56,7 +57,7 @@ public final class SequenceFileMapReduceJobOutput extends FileMapReduceJobOutput
    * @param filePath The file system path for the output files.
    * @param numSplits The number of output file splits.
    */
-  public SequenceFileMapReduceJobOutput(Path filePath, int numSplits) {
+  SequenceFileMapReduceJobOutput(Path filePath, int numSplits) {
     super(filePath, numSplits);
   }
 

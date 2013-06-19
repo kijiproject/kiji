@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 import org.kiji.mapreduce.avro.generated.JobHistoryEntry;
 import org.kiji.mapreduce.framework.JobHistoryKijiTable;
 import org.kiji.mapreduce.framework.KijiConfKeys;
-import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
+import org.kiji.mapreduce.output.MapReduceJobOutputs;
 import org.kiji.mapreduce.produce.KijiProduceJobBuilder;
 import org.kiji.mapreduce.produce.KijiProducer;
 import org.kiji.mapreduce.produce.ProducerContext;
@@ -189,7 +189,7 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
             .withConf(jobConf)
             .withInputTable(fooTableURI)
             .withProducer(EmailDomainProducer.class)
-            .withOutput(new DirectKijiTableMapReduceJobOutput(fooTableURI));
+            .withOutput(MapReduceJobOutputs.newDirectKijiTableMapReduceJobOutput(fooTableURI));
         KijiMapReduceJob mrJob = builder.build();
 
         // Record the jobId and run the job.
@@ -250,7 +250,7 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
             .withConf(jobConf)
             .withInputTable(fooTableURI)
             .withProducer(BrokenEmailDomainProducer.class)
-            .withOutput(new DirectKijiTableMapReduceJobOutput(fooTableURI));
+            .withOutput(MapReduceJobOutputs.newDirectKijiTableMapReduceJobOutput(fooTableURI));
         KijiMapReduceJob mrJob = builder.build();
 
         // Record the jobId and run the job. Make sure it completes and failed.
@@ -291,7 +291,7 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
             .withConf(getConf())
             .withInputTable(fooTableURI)
             .withProducer(EmailDomainProducer.class)
-            .withOutput(new DirectKijiTableMapReduceJobOutput(fooTableURI));
+        .withOutput(MapReduceJobOutputs.newDirectKijiTableMapReduceJobOutput(fooTableURI));
         KijiMapReduceJob mrJob = builder.build();
 
         LOG.info("About to submit job: " + mrJob.getHadoopJob().getJobName());
@@ -332,7 +332,8 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
             .withConf(getConf())
             .withInputTable(fooTable.getURI())
             .withProducer(EmailDomainProducer.class)
-            .withOutput(new DirectKijiTableMapReduceJobOutput(fooTable.getURI()));
+            .withOutput(MapReduceJobOutputs.newDirectKijiTableMapReduceJobOutput(
+                fooTable.getURI()));
         final KijiMapReduceJob mrJob = builder.build();
         assertTrue(mrJob.run());
       } finally {
@@ -359,7 +360,7 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
           .withConf(jobConf)
           .withInputTable(fooTableURI)
           .withProducer(EmailDomainProducer.class)
-          .withOutput(new DirectKijiTableMapReduceJobOutput(fooTableURI));
+          .withOutput(MapReduceJobOutputs.newDirectKijiTableMapReduceJobOutput(fooTableURI));
       KijiMapReduceJob mrJobOne = builderEmailDomain.build();
       KijiMapReduceJob mrJobTwo = builderEmailDomain.build();
 

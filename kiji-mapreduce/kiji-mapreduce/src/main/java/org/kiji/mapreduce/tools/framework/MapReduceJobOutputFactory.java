@@ -24,13 +24,7 @@ import java.util.Map;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.MapReduceJobOutput;
-import org.kiji.mapreduce.output.AvroKeyMapReduceJobOutput;
-import org.kiji.mapreduce.output.AvroKeyValueMapReduceJobOutput;
-import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
-import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
-import org.kiji.mapreduce.output.MapFileMapReduceJobOutput;
-import org.kiji.mapreduce.output.SequenceFileMapReduceJobOutput;
-import org.kiji.mapreduce.output.TextMapReduceJobOutput;
+import org.kiji.mapreduce.output.MapReduceJobOutputs;
 import org.kiji.mapreduce.tools.framework.JobOutputSpec.Format;
 import org.kiji.schema.tools.SpaceSeparatedMapParser;
 
@@ -83,19 +77,19 @@ public final class MapReduceJobOutputFactory {
   private static MapReduceJobOutput createJobOutput(Format format) throws IOException {
     switch (format) {
     case TEXT:
-      return new TextMapReduceJobOutput();
+      return MapReduceJobOutputs.newTextMapReduceJobOutput();
     case SEQUENCE_FILE:
-      return new SequenceFileMapReduceJobOutput();
+      return MapReduceJobOutputs.newSequenceFileMapReduceJobOutput();
     case MAP_FILE:
-      return new MapFileMapReduceJobOutput();
+     return MapReduceJobOutputs.newMapFileMapReduceJobOutput();
     case AVRO:
-      return new AvroKeyMapReduceJobOutput();
+      return MapReduceJobOutputs.newAvroKeyMapReduceJobOutput();
     case AVRO_KV:
-      return new AvroKeyValueMapReduceJobOutput();
+      return MapReduceJobOutputs.newAvroKeyValueMapReduceJobOutput();
     case KIJI:
-      return new DirectKijiTableMapReduceJobOutput();
+      return MapReduceJobOutputs.newDirectKijiTableMapReduceJobOutput();
     case HFILE:
-      return new HFileMapReduceJobOutput();
+      return MapReduceJobOutputs.newHFileMapReduceJobOutput();
     default:
       throw new RuntimeException(String.format("Unhandled job output format: '%s'.", format));
     }

@@ -40,8 +40,7 @@ import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
 import org.kiji.mapreduce.kvstore.impl.KeyValueStoreConfigSerializer;
 import org.kiji.mapreduce.kvstore.lib.EmptyKeyValueStore;
 import org.kiji.mapreduce.kvstore.lib.UnconfiguredKeyValueStore;
-import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
-import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
+import org.kiji.mapreduce.output.MapReduceJobOutputs;
 import org.kiji.mapreduce.output.framework.KijiHFileOutputFormat;
 import org.kiji.mapreduce.produce.KijiProduceJobBuilder;
 import org.kiji.mapreduce.produce.KijiProducer;
@@ -115,7 +114,8 @@ public class TestKijiProduceJobBuilder extends KijiClientTest {
         .withConf(getConf())
         .withInputTable(mTable.getURI())
         .withProducer(MyProducer.class)
-        .withOutput(new HFileMapReduceJobOutput(mTable.getURI(), new Path("foo/bar"), 10))
+        .withOutput(MapReduceJobOutputs.newHFileMapReduceJobOutput(
+            mTable.getURI(), new Path("foo/bar"), 10))
         .build();
 
     // Verify that the MR Job was configured correctly.
@@ -139,7 +139,7 @@ public class TestKijiProduceJobBuilder extends KijiClientTest {
         .withConf(getConf())
         .withInputTable(mTable.getURI())
         .withProducer(UnconfiguredKVProducer.class)
-        .withOutput(new DirectKijiTableMapReduceJobOutput(mTable.getURI()))
+        .withOutput(MapReduceJobOutputs.newDirectKijiTableMapReduceJobOutput(mTable.getURI()))
         .build();
       fail("Should have thrown an IOException.");
     } catch (IOException ioe) {
@@ -157,7 +157,7 @@ public class TestKijiProduceJobBuilder extends KijiClientTest {
         .withInputTable(mTable.getURI())
         .withProducer(UnconfiguredKVProducer.class)
         .withStore("foostore", EmptyKeyValueStore.get())
-        .withOutput(new DirectKijiTableMapReduceJobOutput(mTable.getURI()))
+        .withOutput(MapReduceJobOutputs.newDirectKijiTableMapReduceJobOutput(mTable.getURI()))
         .build();
 
     // Verify that the MR Job was configured correctly.
@@ -186,7 +186,7 @@ public class TestKijiProduceJobBuilder extends KijiClientTest {
           .withConf(getConf())
           .withInputTable(mTable.getURI())
           .withProducer(MyProducer.class)
-          .withOutput(new DirectKijiTableMapReduceJobOutput(otherTable.getURI()))
+          .withOutput(MapReduceJobOutputs.newDirectKijiTableMapReduceJobOutput(otherTable.getURI()))
           .build();
       fail("Should have thrown a JobConfigurationException.");
     } catch (JobConfigurationException jce) {

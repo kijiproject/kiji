@@ -45,15 +45,16 @@ import org.kiji.avro.mapreduce.AvroKeyValueOutputFormat;
  *     final Path outputPath = new Path("/path/to/output/folder");
  *
  *     // Create a text file job output with 10 splits.
- *     final MapReduceJobOutput textOutput = new AvroKeyValueMapReduceJobOutput(outputPath, 10);
+ *     final MapReduceJobOutput textOutput = MapReduceJobOutputs.newAvroKeyValueMapReduceJobOutput(
+ *         outputPath, 10);
  *   </code>
  * </pre>
  * @see AvroKeyMapReduceJobOutput
  */
 @ApiAudience.Public
 public final class AvroKeyValueMapReduceJobOutput extends FileMapReduceJobOutput {
-  /** Default constructor. Do not use directly. */
-  public AvroKeyValueMapReduceJobOutput() {
+  /** Default constructor. Accessible via {@link MapReduceJobOutputs}. */
+  AvroKeyValueMapReduceJobOutput() {
   }
 
   /**
@@ -62,7 +63,7 @@ public final class AvroKeyValueMapReduceJobOutput extends FileMapReduceJobOutput
    * @param filePath The file system path for the output files.
    * @param numSplits The number of output file splits.
    */
-  public AvroKeyValueMapReduceJobOutput(Path filePath, int numSplits) {
+  AvroKeyValueMapReduceJobOutput(Path filePath, int numSplits) {
     super(filePath, numSplits);
   }
 

@@ -3,6 +3,9 @@
                               KijiMR Release Notes
 
 Version 1.0.0
+  * KIJIMR-209. MapReduceJobOutput constructors are now package private
+      and accessible via org.kiji.mapreduce.output.MapReduceJobOutputs
+      static methods.
   * KIJIMR-205. KijiTableKeyValueStore now uses a KijiRowKeyComponents
       object for its key. The static method getTableForReader() is no
       longer required and has been removed.
