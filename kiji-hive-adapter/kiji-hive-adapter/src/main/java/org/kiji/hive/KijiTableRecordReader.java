@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.hive.io.KijiRowDataWritable;
 import org.kiji.hive.utils.KijiDataRequestSerializer;
+import org.kiji.schema.HBaseEntityId;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequestException;
@@ -82,10 +83,10 @@ public class KijiTableRecordReader
 
       KijiScannerOptions scannerOptions = new KijiScannerOptions();
       if (inputSplit.getRegionStartKey().length > 0) {
-        scannerOptions.setStartRow(mKijiTable.getEntityId(inputSplit.getRegionStartKey()));
+        scannerOptions.setStartRow(HBaseEntityId.fromHBaseRowKey(inputSplit.getRegionStartKey()));
       }
       if (inputSplit.getRegionEndKey().length > 0) {
-        scannerOptions.setStopRow(mKijiTable.getEntityId(inputSplit.getRegionEndKey()));
+        scannerOptions.setStopRow(HBaseEntityId.fromHBaseRowKey(inputSplit.getRegionEndKey()));
       }
       mScanner = mKijiTableReader.getScanner(dataRequest, scannerOptions);
       mIterator = mScanner.iterator();
