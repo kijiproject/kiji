@@ -79,19 +79,19 @@ class TopNextSongsSuite extends KijiSuite {
     topSongForEachSong.foreach {
       case ("song-0", topSongs) => {
         assert(2 === topSongs.asList.size)
-        assert("song-1" === topSongs(0)("songId").asString)
+        assert("song-1" === topSongs(0)("song_id").asString)
         assert(2 === topSongs(0)("count").asLong)
-        assert("song-0" === topSongs(1)("songId").asString)
+        assert("song-0" === topSongs(1)("song_id").asString)
         assert(1 === topSongs(1)("count").asLong)
       }
       case ("song-1", topSongs) => {
         assert(1 === topSongs.asList.size)
-        assert("song-2" === topSongs(0)("songId").asString)
+        assert("song-2" === topSongs(0)("song_id").asString)
         assert(2 === topSongs(0)("count").asLong)
       }
       case ("song-2", topSongs) => {
         assert(1 === topSongs.asList.size)
-        assert("song-1" === topSongs(0)("songId").asString)
+        assert("song-1" === topSongs(0)("song_id").asString)
         assert(1 === topSongs(0)("count").asLong)
       }
     }
