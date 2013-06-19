@@ -236,8 +236,7 @@ object ScoreEnvironment {
  *       "max_timestamp" : 922347862,
  *       "column_definitions" : [ {
  *         "name" : "info:in",
- *         "max_versions" : 3,
- *         "filter" : null
+ *         "max_versions" : 3
  *       } ]
  *     },
  *     "kv_stores" : [ {
