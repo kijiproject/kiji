@@ -29,8 +29,7 @@ import org.apache.hadoop.hbase.HConstants;
 import org.kiji.mapreduce.HFileLoader;
 import org.kiji.mapreduce.MapReduceJobInput
 import org.kiji.mapreduce.MapReduceJobOutput
-import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput
-import org.kiji.mapreduce.output.HFileMapReduceJobOutput
+import org.kiji.mapreduce.output.MapReduceJobOutputs
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiURI
@@ -66,7 +65,7 @@ abstract class LoadVia {
 class LoadViaDirect extends LoadVia {
   /** {@inheritDoc} */
   override def outputToTable(tableURI: KijiURI): MapReduceJobOutput = {
-    return new DirectKijiTableMapReduceJobOutput(tableURI)
+    return MapReduceJobOutputs.newDirectKijiTableMapReduceJobOutput(tableURI)
   }
 
   /** {@inheritDoc} */
@@ -83,7 +82,8 @@ class LoadViaPath(val hdfsUri: String) extends LoadVia {
 
   /** {@inheritDoc} */
   override def outputToTable(tableURI: KijiURI): MapReduceJobOutput = {
-    return new HFileMapReduceJobOutput(tableURI, new Path(hdfsUri), AUTO_NUM_SPLITS)
+    return MapReduceJobOutputs.newHFileMapReduceJobOutput(
+        tableURI, new Path(hdfsUri), AUTO_NUM_SPLITS)
   }
 
   /** {@inheritDoc} */

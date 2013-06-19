@@ -38,7 +38,7 @@ import org.kiji.mapreduce.bulkimport.KijiBulkImportJobBuilder;
 import org.kiji.mapreduce.framework.JobHistoryCounters;
 import org.kiji.mapreduce.input.MapReduceJobInputs;
 import org.kiji.mapreduce.input.impl.XMLInputFormat;
-import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
+import org.kiji.mapreduce.output.MapReduceJobOutputs;
 import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowScanner;
@@ -91,7 +91,7 @@ public class TestXMLBulkImporter extends KijiClientTest {
         .withConf(conf)
         .withBulkImporter(XMLBulkImporter.class)
         .withInput(MapReduceJobInputs.newXMLMapReduceJobInput(new Path(inputFile.toString())))
-        .withOutput(new DirectKijiTableMapReduceJobOutput(mTable.getURI()))
+        .withOutput(MapReduceJobOutputs.newDirectKijiTableMapReduceJobOutput(mTable.getURI()))
         .build();
     assertTrue(job.run());
 
@@ -128,7 +128,7 @@ public class TestXMLBulkImporter extends KijiClientTest {
         .withConf(conf)
         .withBulkImporter(XMLBulkImporter.class)
         .withInput(MapReduceJobInputs.newXMLMapReduceJobInput(new Path(inputFile.toString())))
-        .withOutput(new DirectKijiTableMapReduceJobOutput(mTable.getURI()))
+        .withOutput(MapReduceJobOutputs.newDirectKijiTableMapReduceJobOutput(mTable.getURI()))
         .build();
     assertTrue(job.run());
 
@@ -169,7 +169,7 @@ public class TestXMLBulkImporter extends KijiClientTest {
         .withConf(conf)
         .withBulkImporter(XMLBulkImporter.class)
         .withInput(MapReduceJobInputs.newXMLMapReduceJobInput(new Path(inputFile.toString())))
-        .withOutput(new DirectKijiTableMapReduceJobOutput(table.getURI()))
+        .withOutput(MapReduceJobOutputs.newDirectKijiTableMapReduceJobOutput(table.getURI()))
         .build();
     assertTrue(job.run());
 

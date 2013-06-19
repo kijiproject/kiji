@@ -34,8 +34,7 @@ import org.kiji.mapreduce.KijiMapReduceJobBuilder;
 import org.kiji.mapreduce.gather.KijiGatherJobBuilder;
 import org.kiji.mapreduce.input.MapReduceJobInputs;
 import org.kiji.mapreduce.lib.reduce.IntSumReducer;
-import org.kiji.mapreduce.output.AvroKeyValueMapReduceJobOutput;
-import org.kiji.mapreduce.output.SequenceFileMapReduceJobOutput;
+import org.kiji.mapreduce.output.MapReduceJobOutputs;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;
@@ -136,7 +135,7 @@ public class EmailDomainPopularityJob extends Configured implements Tool {
         .withGatherer(EmailDomainCountGatherer.class)
         .withCombiner(IntSumReducer.class)
         .withReducer(IntSumReducer.class)
-        .withOutput(new SequenceFileMapReduceJobOutput(outputPath, numSplits));
+        .withOutput(MapReduceJobOutputs.newSequenceFileMapReduceJobOutput(outputPath, numSplits));
 
     LOG.info("Building the gather job...");
     KijiMapReduceJob job = jobBuilder.build();
@@ -164,7 +163,7 @@ public class EmailDomainPopularityJob extends Configured implements Tool {
         .withInput(MapReduceJobInputs.newSequenceFileMapReduceJobInput(inputPath))
         .withMapper(InvertCountMapper.class)
         .withReducer(TextListReducer.class)
-        .withOutput(new AvroKeyValueMapReduceJobOutput(outputPath, numSplits));
+        .withOutput(MapReduceJobOutputs.newAvroKeyValueMapReduceJobOutput(outputPath, numSplits));
 
     LOG.info("Building the transform job...");
     KijiMapReduceJob job = jobBuilder.build();

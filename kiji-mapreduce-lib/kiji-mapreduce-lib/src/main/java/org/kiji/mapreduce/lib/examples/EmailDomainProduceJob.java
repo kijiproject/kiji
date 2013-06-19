@@ -27,7 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.mapreduce.KijiMapReduceJob;
-import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
+import org.kiji.mapreduce.output.MapReduceJobOutputs;
 import org.kiji.mapreduce.produce.KijiProduceJobBuilder;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiTable;
@@ -75,7 +75,7 @@ public class EmailDomainProduceJob extends Configured implements Tool {
     KijiProduceJobBuilder jobBuilder = KijiProduceJobBuilder.create()
         .withInputTable(table.getURI())
         .withProducer(EmailDomainProducer.class)
-        .withOutput(new DirectKijiTableMapReduceJobOutput(table.getURI()));
+        .withOutput(MapReduceJobOutputs.newDirectKijiTableMapReduceJobOutput(table.getURI()));
 
     LOG.info("Building the produce job...");
     KijiMapReduceJob job = jobBuilder.build();

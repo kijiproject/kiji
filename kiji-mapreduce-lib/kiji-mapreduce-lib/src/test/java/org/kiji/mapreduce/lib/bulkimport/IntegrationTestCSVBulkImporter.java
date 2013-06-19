@@ -41,7 +41,7 @@ import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.TestingResources;
 import org.kiji.mapreduce.bulkimport.KijiBulkImportJobBuilder;
 import org.kiji.mapreduce.input.MapReduceJobInputs;
-import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
+import org.kiji.mapreduce.output.MapReduceJobOutputs;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowScanner;
@@ -122,7 +122,8 @@ public class IntegrationTestCSVBulkImporter
           .withConf(mConf)
           .withBulkImporter(CSVBulkImporter.class)
           .withInput(MapReduceJobInputs.newTextMapReduceJobInput(mBulkImportInputPath))
-          .withOutput(new HFileMapReduceJobOutput(mOutputTable.getURI(), hfileDirPath))
+          .withOutput(MapReduceJobOutputs.newHFileMapReduceJobOutput(
+              mOutputTable.getURI(), hfileDirPath))
           .build();
       assertTrue(mrjob.run());
 

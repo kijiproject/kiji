@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.gather.KijiGatherJobBuilder;
 import org.kiji.mapreduce.lib.reduce.IntSumReducer;
-import org.kiji.mapreduce.output.TextMapReduceJobOutput;
+import org.kiji.mapreduce.output.MapReduceJobOutputs;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;
@@ -84,7 +84,7 @@ public class EmailDomainCountGatherJob extends Configured implements Tool {
         .withGatherer(EmailDomainCountGatherer.class)
         .withCombiner(IntSumReducer.class)
         .withReducer(IntSumReducer.class)
-        .withOutput(new TextMapReduceJobOutput(outputPath, numSplits));
+        .withOutput(MapReduceJobOutputs.newTextMapReduceJobOutput(outputPath, numSplits));
 
     LOG.info("Building the gather job...");
     KijiMapReduceJob job = jobBuilder.build();
