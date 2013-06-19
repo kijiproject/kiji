@@ -23,7 +23,7 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
 
 import org.kiji.mapreduce.KijiMapReduceJob
-import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput
+import org.kiji.mapreduce.output.MapReduceJobOutputs
 import org.kiji.mapreduce.produce.KijiProduceJobBuilder
 import org.kiji.schema.KijiURI
 
@@ -54,7 +54,7 @@ object ExtractScoreJobBuilder {
         .withConf(conf)
         .withInputTable(uri)
         .withProducer(classOf[ExtractScoreProducer])
-        .withOutput(new DirectKijiTableMapReduceJobOutput(uri))
+        .withOutput(MapReduceJobOutputs.newDirectKijiTableMapReduceJobOutput(uri))
         .build()
   }
 
