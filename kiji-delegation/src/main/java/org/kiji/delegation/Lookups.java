@@ -1,5 +1,5 @@
 /**
- * (c) Copyright 2012 WibiData, Inc.
+ * (c) Copyright 2013 WibiData, Inc.
  *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
@@ -121,11 +121,37 @@ public final class Lookups {
    * @param <T> the type that this Lookup instance should provide.
    * @param clazz the abstract class or interface to lookup a provider for.
    * @param classLoader the classloader to use to resolve service lookups.
-   * @return a new Lookup instance that uses the current thread's context classloader.
+   * @return a new Lookup instance that uses the specified classLoader.
    */
   public static <T extends NamedProvider> NamedLookup<T> getNamed(
       Class<T> clazz, ClassLoader classLoader) {
     return new NamedLookup<T>(clazz, classLoader);
+  }
+
+
+  /**
+   * Creates a lookup instance that can resolve providers for the specified class
+   * or interface, by using a configuration file or resouce. See {@link ConfiguredProvider}.
+   *
+   * @param <T> the type that this Lookup instance should provide.
+   * @param clazz the abstract class or interface to lookup a provider for.
+   * @return a new Lookup instance that uses the current thread's context classloader.
+   */
+  public static <T> Lookup<T> getConfigured(Class<T> clazz) {
+    return getConfigured(clazz, Thread.currentThread().getContextClassLoader());
+  }
+
+  /**
+   * Creates a lookup instance that can resolve providers for the specified class
+   * or interface, by using a configuration file or resouce. See {@link ConfiguredProvider}.
+   *
+   * @param <T> the type that this Lookup instance should provide.
+   * @param clazz the abstract class or interface to lookup a provider for.
+   * @param classLoader the classloader to use to resolve service lookups.
+   * @return a new Lookup instance that uses the specified classLoader.
+   */
+  public static <T> Lookup<T> getConfigured(Class<T> clazz, ClassLoader classLoader) {
+    return new ConfiguredLookup<T>(clazz, classLoader);
   }
 
 }

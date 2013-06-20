@@ -1,5 +1,5 @@
 /**
- * (c) Copyright 2012 WibiData, Inc.
+ * (c) Copyright 2013 WibiData, Inc.
  *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
@@ -35,6 +35,16 @@ public final class NoSuchProviderException extends RuntimeException {
    */
   NoSuchProviderException(String message) {
     super(message);
+  }
+
+  /**
+   * Create a NoSuchProviderException with the specified message and cause.
+   *
+   * @param message the message to display in the exception.
+   * @param cause the underlying exception
+   */
+  NoSuchProviderException(String message, Throwable cause) {
+    super(message, cause);
   }
 
   /**
