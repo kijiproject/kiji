@@ -113,7 +113,9 @@ Each column in a group-type family has:
 *  a primary name, unique within the family, a description and optionally some name aliases;
 *  an Avro schema.
 
-All names must start with a letter and may only use letters, numbers, and underscores.
+Instance names must match the following regular expression: `[a-zA-z0-9_]+`
+All other names must match the expression: `[a-zA-Z_][a-zA-Z0-9_]*`
+Alises must match: `[a-zA-Z0-9_0]+`
 
 ### Group-type and map-type families
 
@@ -141,7 +143,7 @@ In KijiSchema, there are two kinds of column families:
 Within a table, Kiji cells are encoded according to their declared schema.
 There are three types of Kiji cell schemas, specified using the `type` field:
 
-*  `INLINE` - field `value` contains an the JSON representation of an Avro
+*  `INLINE` - field `value` contains the JSON representation of an Avro
    schema.  In the earlier example, all three columns contain a single Avro
    `"string"` field, but a column could also contain an array, record or other
    complex Avro data type.

@@ -139,7 +139,7 @@ to the following if it detects a hole in the region chain:
 $ hbase hbck -details
 ...
 
-Chain of regions in table kiji..table.tablename is broken; edges does not contain key
+Chain of regions in table kiji.instance.table.tablename is broken; edges does not contain key
 Table kiji..table.tablename is inconsistent.
 ...
 Status: INCONSISTENT

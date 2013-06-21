@@ -91,7 +91,7 @@ When a [`Kiji`]({{site.api_schema_DEVEL}}/Kiji.html) instance is created with `K
 or a ['KijiTable']({{site.api_schema_DEVEL}}/KijiTable.html) is opened with `Kiji.openTable(name)`,
 it has an automatic reference count of 1. You should call `kiji.release()` or `table.release()` or use
 [`ResourceUtils`]({{site.api_schema_DEVEL}}/util/ResourceUtils.html)`.releaseOrLog(kiji)` or
-ResourceUtils.releaseOrLog(table) to discard these reference.
+`ResourceUtils.releaseOrLog(table)` to discard these reference.
 
 If another class or method gets a reference to an already-opened Kiji instance,
 you should call `kiji.retain()` to increment its reference count. That same

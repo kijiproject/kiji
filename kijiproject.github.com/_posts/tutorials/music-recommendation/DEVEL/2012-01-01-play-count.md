@@ -119,7 +119,7 @@ Hadoop developers have a (perhaps now outdated) skepticism of garbage collection
 {% endhighlight %}
 
 #### Sum Values and Output Total
-Called once for each key, reduce() combines the
+Called once for each key, reduce() combines
 all of the values associated with a key by adding then together and writing the total for each key
 to the output collector.
 

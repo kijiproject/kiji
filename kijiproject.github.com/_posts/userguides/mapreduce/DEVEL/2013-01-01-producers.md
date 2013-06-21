@@ -44,12 +44,12 @@ implement the following three methods:
  * `String getOutputColumn()`. This method specifies the fully-qualified column or the column family
    being produced. It should return a string of the form "family:qualifier" or "family".
    Family-only output columns are only valid for map-type families (see the KijiSchema user guide).
+   The `produce()` method can use its `context` argument to output to this column as detailed below.
  * `void produce(KijiRowData input, ProducerContext context)`. This method contains the logic to
    produce the content for the output column for each input row. It will be called once per row
    processed by the task. `input` contains columns from the row as requested by the
    [`KijiDataRequest`]({{site.api_schema_DEVEL}}/KijiDataRequest.html) returned from
-   `getDataRequest()`. The `produce()` method can use its `context` argument to output to this
-   column as detailed below.
+   `getDataRequest()`.
 
 When producing new content for a row, the producer may combine the input row data with data from
 external stores through [`KeyValueStore`]({{site.api_mr_DEVEL}}/kvstore/KeyValueStore.html)s by

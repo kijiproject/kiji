@@ -115,7 +115,7 @@ avro provides for creating schemas of primitive types.
 count track plays in the `SongCount` example, but diverges when emitting key-value pairs.  Instead
 of passing the keys through the reducer, `SequentialPlayCountReducer` creates new keys based on the
 track IDs in the `SongBiGram` keys.  The new keys are simply the first track ID from each bi-gram,
-while the second track ID becomes part the `SongCount` value.
+while the second track ID becomes part of the `SongCount` value.
 
 {% highlight java %}
   protected void reduce(AvroKey<SongBiGram> key, Iterable<LongWritable> values, Context context)

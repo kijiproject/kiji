@@ -249,7 +249,7 @@ processing.
 As mentioned above, a bulk importer's `produce()` method has an `org.kiji.mapreduce.KijiTableContext`
 argument.  This class has methods needed to write data to Kiji: 
 
-* `EntityId getEntityId(String kijiRowKey)` returns the
+* `EntityId getEntityId(Object... components)` returns the
   [`EntityId`]({{site.api_schema_DEVEL}}/EntityId.html) for a row in a Kiji table given a string
   identifier.
 

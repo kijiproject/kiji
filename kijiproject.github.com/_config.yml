@@ -102,7 +102,7 @@ tutorial_music_DEVEL : /tutorials/music-recommendation/DEVEL
 schema_DEVEL_version : 1.1.0
 schema_DEVEL_branch : master
 
-mr_DEVEL_version : 1.0.0-rc63
+mr_DEVEL_version : 1.0.0
 mr_DEVEL_branch : master
 
 mrlib_DEVEL_version : 1.0.0-rc62

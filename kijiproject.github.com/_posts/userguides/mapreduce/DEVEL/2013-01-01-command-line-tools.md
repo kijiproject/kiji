@@ -32,7 +32,7 @@ Kiji commands bulk-import, produce and gather all recognize the following flags:
 *   `--start-row=` and `--limit-row=`:
     Restrict the range of rows to scan through.
     The start row is included in the scan while the limit row is excluded.
-    Start and limit rows are expressed in the same way as `--entity-id` for [`kiji get`]({{site.userguide_schema_1_0_1}}/tool-reference/#ref.get).
+    Start and limit rows are expressed in the same way as `--entity-id` for [`kiji get`]({{site.userguide_schema_DEVEL}}/tool-reference/#ref.get).
     For example as HBase encoded rows: `--start-row='hex:0088deadbeef'` or `--limit-row='utf8:the row key in UTF8'`.
 
 
@@ -80,6 +80,9 @@ Jobs inputs and outputs are specified with the following flags:
 
     * `text`: job input is a text file, each input record is a pair (position in the text file, line of text).
       Example: `--input="format=text file=hdfs://dfsmaster:9000/path/to/text-file/"`.
+
+    * `xml`: job input is an xml file, each input record is all data between a specified open and close tag.
+      Example: `--input=format=xml file=hdfs://dfsmaster:9000/path/to/xml-file/"`.
 
 *   `--output=...`: specifies the output of the job.
 

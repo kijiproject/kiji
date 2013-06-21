@@ -121,7 +121,7 @@ withStore() method of JobBuilders.
 {% endhighlight %}
 
 ### Running the Example
-When we run this example, we again need to need specify which
+When we run this example, we again need to specify which
 [`KijiTable`]({{site.api_schema_DEVEL}}/KijiTable.html) we want to use to back our
 KeyValueStore. This time, we will override the KeyValueStore binding from
 the command line using an XML configuration file (located at ${KIJI_HOME}/examples/music/KVStoreConfig.xml).

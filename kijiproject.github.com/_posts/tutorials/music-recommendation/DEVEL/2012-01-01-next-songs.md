@@ -103,7 +103,7 @@ value using SongCount's builder method.
 
 #### Write TopNextSongs to the songs table.
 We can write the list of top next songs to the "info:top_next_songs" column using context.put(). The
-only thing to remember witht his method, is that the first arguement is expected to be an entityId.
+only thing to remember with this method, is that the first arguement is expected to be an entityId.
 Luckily, context also contains methods for generating EntityIds.
 
 {% highlight java%}
@@ -122,7 +122,7 @@ Luckily, context also contains methods for generating EntityIds.
 
 <h3 style="margin-top:0px;padding-top:10px;"> TestTopNextSongsPipeline.java </h3>
 Two jobs are constructed during this test and run one after another. The first job outputs to an
-intermediate Avro container file (Add link to relevant userguide section) written to the local file system which is used as input by the
+intermediate Avro container file written to the local file system which is used as input by the
 second job. Each of the jobs is configured using a job builder:
 
 {% highlight java %}

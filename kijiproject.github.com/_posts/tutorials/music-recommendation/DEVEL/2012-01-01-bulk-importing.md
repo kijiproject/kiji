@@ -6,7 +6,7 @@ tags: [music]
 order : 3
 description: Bulk importing data into a Kiji table.
 ---
-Here at Pandforify, we have about a millenia of data collected about our users' listening patterns.
+Here at Pandforify, we have about a millenium of data collected about our users' listening patterns.
 This would take a huge amount of time to load into a Kiji table, when we used a single machine to
 issue writes to our table, one row at a time. Instead we will show you how to use MapReduce to
 efficiently import such large amounts of data into Kiji.
@@ -118,11 +118,11 @@ When the MapReduce bulk import job runs, KijiMR will warn you that jars are alre
 This is normal and not a cause for alarm.  Once the MapReduce job actually starts, you will
 receive periodic progress updates for the map and reduce phases of the job.  When the job
 completes, MapReduce will print a number of metrics describing the results of the job. You can also
-examine the output of your job at (the JobTracker Web UI : [http://localhost:50030](http://localhost:50030)).
+examine the output of your job at the JobTracker Web UI : [http://localhost:50030](http://localhost:50030).
 
 #### Verify
 
-Verify that the `user` table records were added properly by executing:
+Verify that the `songs` table records were added properly by executing:
 
 <div class="userinput">
 {% highlight bash %}

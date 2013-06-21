@@ -205,7 +205,7 @@ And several optional arguments:
 
 *  `--entity-id=<entity-id>` -
    Specifies the entity ID of a single row to delete or to delete from.
-   Requires the target Kiji URI to designate a Kiji table.
+   Requires the target Kiji URI to designate at least a Kiji table.
 
    The default is to not target a specific row, ie. to delete the entire Kiji table specified with `--target=...`.
 
