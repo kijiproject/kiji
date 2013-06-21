@@ -23,6 +23,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.InputFormat;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.avro.mapreduce.AvroKeyValueInputFormat;
 
 /**
@@ -45,6 +46,7 @@ import org.kiji.avro.mapreduce.AvroKeyValueInputFormat;
  * @see AvroKeyMapReduceJobInput
  */
 @ApiAudience.Public
+@ApiStability.Evolving
 public final class AvroKeyValueMapReduceJobInput extends FileMapReduceJobInput {
   /**
    * Constructs job input from a varargs of paths to Avro container files.  Accessible via

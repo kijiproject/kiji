@@ -22,9 +22,11 @@ package org.kiji.mapreduce.produce;
 import java.io.IOException;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 
 /** Thrown when a KijiProducer fails to produce output. */
 @ApiAudience.Public
+@ApiStability.Stable
 public final class KijiProducerOutputException extends IOException {
   /**
    * Creates a new <code>KijiProducerOutputException</code> instance.

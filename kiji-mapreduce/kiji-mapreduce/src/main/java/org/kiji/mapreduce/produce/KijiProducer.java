@@ -27,6 +27,7 @@ import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.annotations.Inheritance;
 import org.kiji.mapreduce.KijiContext;
 import org.kiji.mapreduce.kvstore.KeyValueStore;
@@ -95,6 +96,7 @@ import org.kiji.schema.KijiRowData;
  * For the entire code for this producer, check out EmailDomainProducer in KijiMR Lib.
  */
 @ApiAudience.Public
+@ApiStability.Stable
 @Inheritance.Extensible
 public abstract class KijiProducer
     implements Configurable, KeyValueStoreClient {

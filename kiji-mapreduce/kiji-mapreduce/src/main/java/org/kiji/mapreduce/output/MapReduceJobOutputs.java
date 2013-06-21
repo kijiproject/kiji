@@ -21,11 +21,15 @@ package org.kiji.mapreduce.output;
 
 import org.apache.hadoop.fs.Path;
 
+import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.schema.KijiURI;
 
 /**
  * Utility class for instantiating MapReduceJobOutputs.
  */
+@ApiAudience.Public
+@ApiStability.Evolving
 public final class MapReduceJobOutputs {
 
   /** Utility classes may not be instantiated. */

@@ -103,6 +103,7 @@ public final class InMemoryMapKeyValueStore<K, V> implements KeyValueStore<K, V>
    * and call build() to return a new instance.
    */
   @ApiAudience.Public
+  @ApiStability.Experimental
   public static final class Builder<K, V> {
     private Map<K, V> mMap;
 

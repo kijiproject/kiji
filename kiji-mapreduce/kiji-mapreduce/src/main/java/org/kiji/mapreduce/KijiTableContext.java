@@ -20,6 +20,7 @@
 package org.kiji.mapreduce;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.annotations.Inheritance;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.EntityIdFactory;
@@ -27,6 +28,7 @@ import org.kiji.schema.KijiPutter;
 
 /** Context for Kiji bulk-importers or reducers to output to a Kiji table. */
 @ApiAudience.Public
+@ApiStability.Evolving
 @Inheritance.Sealed
 public interface KijiTableContext extends KijiContext, KijiPutter {
   /** @return a factory to create entity IDs to write to the output Kiji table. */

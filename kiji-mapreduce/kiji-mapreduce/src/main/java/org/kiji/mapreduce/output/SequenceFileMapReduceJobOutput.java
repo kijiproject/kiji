@@ -24,6 +24,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.OutputFormat;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.avro.mapreduce.AvroSequenceFileOutputFormat;
 
 /**
@@ -46,6 +47,7 @@ import org.kiji.avro.mapreduce.AvroSequenceFileOutputFormat;
  * </pre>
  */
 @ApiAudience.Public
+@ApiStability.Evolving
 public final class SequenceFileMapReduceJobOutput extends FileMapReduceJobOutput {
   /** Default constructor. Accessible via {@link MapReduceJobOutputs}. */
   SequenceFileMapReduceJobOutput() {

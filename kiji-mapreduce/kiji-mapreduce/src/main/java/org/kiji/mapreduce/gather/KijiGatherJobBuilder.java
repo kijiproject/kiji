@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.JobConfigurationException;
 import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.KijiMapper;
@@ -64,6 +65,7 @@ import org.kiji.schema.KijiDataRequest;
  */
 @SuppressWarnings("rawtypes")
 @ApiAudience.Public
+@ApiStability.Evolving
 public final class KijiGatherJobBuilder extends KijiTableInputJobBuilder<KijiGatherJobBuilder> {
   private static final Logger LOG = LoggerFactory.getLogger(KijiGatherJobBuilder.class);
 

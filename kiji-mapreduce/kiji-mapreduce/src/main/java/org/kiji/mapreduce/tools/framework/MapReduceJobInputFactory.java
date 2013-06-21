@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.MapReduceJobInput;
 import org.kiji.mapreduce.input.MapReduceJobInputs;
 import org.kiji.mapreduce.tools.framework.JobInputSpec.Format;
@@ -34,6 +35,7 @@ import org.kiji.schema.tools.SpaceSeparatedMapParser;
  * See {@link JobInputSpec} for the full inputspec specification.
  */
 @ApiAudience.Framework
+@ApiStability.Evolving
 public final class MapReduceJobInputFactory {
   /**
    * Constructs a new factory for MapReduce job inputs.

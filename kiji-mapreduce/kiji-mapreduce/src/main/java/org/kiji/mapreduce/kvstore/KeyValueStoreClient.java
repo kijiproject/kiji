@@ -22,6 +22,7 @@ package org.kiji.mapreduce.kvstore;
 import java.util.Map;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.annotations.Inheritance;
 
 /**
@@ -51,6 +52,7 @@ import org.kiji.annotations.Inheritance;
  * Configuration object.</p>
  */
 @ApiAudience.Public
+@ApiStability.Stable
 @Inheritance.Extensible
 public interface KeyValueStoreClient {
   /**

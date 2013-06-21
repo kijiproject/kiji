@@ -22,11 +22,13 @@ package org.kiji.mapreduce.produce;
 import java.io.IOException;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.annotations.Inheritance;
 import org.kiji.mapreduce.KijiContext;
 
 /** Context for producers to output new cells in the currently processed row. */
 @ApiAudience.Public
+@ApiStability.Evolving
 @Inheritance.Sealed
 public interface ProducerContext extends KijiContext {
   /**

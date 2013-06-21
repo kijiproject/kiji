@@ -26,6 +26,7 @@ import org.apache.avro.mapred.AvroKey;
 import org.apache.hadoop.io.NullWritable;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.annotations.Inheritance;
 import org.kiji.mapreduce.KijiTableContext;
 import org.kiji.mapreduce.avro.AvroKeyReader;
@@ -40,6 +41,7 @@ import org.kiji.mapreduce.avro.AvroKeyReader;
  * @param <T> The type of the Avro data to be processed.
  */
 @ApiAudience.Public
+@ApiStability.Evolving
 @Inheritance.Extensible
 public abstract class AvroBulkImporter<T> extends KijiBulkImporter<AvroKey<T>, NullWritable>
     implements AvroKeyReader {

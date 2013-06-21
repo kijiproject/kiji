@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 
 /**
  * Convenient methods for assembling maps from names to KeyValueStore
@@ -43,6 +44,7 @@ import org.kiji.annotations.ApiAudience;
  * {@link org.kiji.mapreduce.produce.KijiProducer}
  */
 @ApiAudience.Public
+@ApiStability.Evolving
 public final class RequiredStores {
 
   /** Not a stateful class; cannot be instantiated. */
@@ -80,6 +82,7 @@ public final class RequiredStores {
    * to add multiple stores in a concise fashion.</p>
    */
   @ApiAudience.Public
+  @ApiStability.Stable
   public static final class StoreMap extends HashMap<String, KeyValueStore<?, ?>> {
     private static final long serialVersionUID = 1L;
 

@@ -23,6 +23,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.InputFormat;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.input.impl.XMLInputFormat;
 
 /**
@@ -45,6 +46,7 @@ import org.kiji.mapreduce.input.impl.XMLInputFormat;
  * </pre>
  */
 @ApiAudience.Public
+@ApiStability.Evolving
 public final class XMLMapReduceJobInput extends FileMapReduceJobInput {
   /**
    * Constructs job input from a varargs of paths to XML files.  Accessible via

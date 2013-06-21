@@ -25,6 +25,7 @@ import com.google.common.base.Preconditions;
 import org.apache.hadoop.conf.Configuration;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 
 /**
  * Used to serialize KeyValueStore information into a unique namespace
@@ -33,6 +34,7 @@ import org.kiji.annotations.ApiAudience;
  * instance (e.g., "ns.foo").
  */
 @ApiAudience.Framework
+@ApiStability.Evolving
 public final class KeyValueStoreConfiguration {
 
   /** The parent Configuration to write to. */

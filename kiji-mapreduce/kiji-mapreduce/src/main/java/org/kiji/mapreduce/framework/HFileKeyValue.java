@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 
 /**
  * A KeyValue-like object that implements WritableComparable.
@@ -51,6 +52,7 @@ import org.kiji.annotations.ApiAudience;
  * @see org.apache.hadoop.hbase.KeyValue
  */
 @ApiAudience.Framework
+@ApiStability.Evolving
 public final class HFileKeyValue implements WritableComparable<HFileKeyValue> {
   private static final Logger LOG = LoggerFactory.getLogger(HFileKeyValue.class);
 

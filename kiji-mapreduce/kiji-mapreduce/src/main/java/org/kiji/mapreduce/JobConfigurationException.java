@@ -20,9 +20,11 @@
 package org.kiji.mapreduce;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 
 /** Thrown when a MapReduceJob is being built, but it has missing or incomplete configuration. */
 @ApiAudience.Public
+@ApiStability.Stable
 public final class JobConfigurationException extends RuntimeException {
   /**
    * Creates a new <code>JobConfigurationException</code> instance.

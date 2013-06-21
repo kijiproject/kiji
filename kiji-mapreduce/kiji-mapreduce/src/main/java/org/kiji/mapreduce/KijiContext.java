@@ -24,11 +24,13 @@ import java.io.Flushable;
 import java.io.IOException;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.annotations.Inheritance;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
 
 /** Interface for contexts passed to KijiMR methods. */
 @ApiAudience.Public
+@ApiStability.Evolving
 @Inheritance.Sealed
 public interface KijiContext extends Closeable, Flushable {
   /**

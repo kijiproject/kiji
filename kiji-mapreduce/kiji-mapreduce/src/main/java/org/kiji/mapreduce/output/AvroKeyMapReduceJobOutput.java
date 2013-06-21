@@ -24,6 +24,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.OutputFormat;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.avro.mapreduce.AvroKeyOutputFormat;
 
 /**
@@ -52,6 +53,7 @@ import org.kiji.avro.mapreduce.AvroKeyOutputFormat;
  * @see AvroKeyValueMapReduceJobOutput
  */
 @ApiAudience.Public
+@ApiStability.Evolving
 public final class AvroKeyMapReduceJobOutput extends FileMapReduceJobOutput {
   /** Default constructor. Accessible via {@link MapReduceJobOutputs}. */
   AvroKeyMapReduceJobOutput() {

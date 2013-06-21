@@ -26,10 +26,12 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.OutputFormat;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.annotations.Inheritance;
 
 /** Describe class <code>MapReduceJobOutput</code> here. */
 @ApiAudience.Public
+@ApiStability.Evolving
 @Inheritance.Sealed
 public abstract class MapReduceJobOutput {
   /**

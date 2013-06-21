@@ -19,7 +19,12 @@
 
 package org.kiji.mapreduce.tools.framework;
 
+import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
+
 /** Configuration keys for Job input and output specifications. */
+@ApiAudience.Framework
+@ApiStability.Evolving
 public final class JobIOConfKeys {
   /** Format of the input or the ouptut. */
   public static final String FORMAT_KEY = "format";

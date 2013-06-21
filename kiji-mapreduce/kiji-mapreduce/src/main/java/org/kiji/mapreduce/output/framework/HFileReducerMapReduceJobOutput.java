@@ -29,6 +29,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.KijiTableContext;
 import org.kiji.mapreduce.MapReduceJobOutput;
 import org.kiji.mapreduce.framework.KijiConfKeys;
@@ -43,6 +44,7 @@ import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
  * (sorted) by an identity MapReduce in order to finally write HFiles.
  */
 @ApiAudience.Framework
+@ApiStability.Evolving
 public class HFileReducerMapReduceJobOutput extends MapReduceJobOutput {
   private final HFileMapReduceJobOutput mJobOutput;
 

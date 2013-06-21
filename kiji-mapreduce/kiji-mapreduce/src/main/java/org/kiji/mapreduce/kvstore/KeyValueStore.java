@@ -22,6 +22,7 @@ package org.kiji.mapreduce.kvstore;
 import java.io.IOException;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.annotations.Inheritance;
 import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
 
@@ -74,6 +75,7 @@ import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
  * @param <V> the value type expected to be accessed by the keys to this store.
  */
 @ApiAudience.Public
+@ApiStability.Stable
 @Inheritance.Extensible
 public interface KeyValueStore<K, V> {
 

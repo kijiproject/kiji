@@ -26,6 +26,7 @@ import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.Job;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.MapReduceJobInput;
 import org.kiji.mapreduce.framework.KijiTableInputFormat;
 import org.kiji.mapreduce.tools.framework.JobIOConfKeys;
@@ -65,6 +66,7 @@ import org.kiji.schema.filter.KijiRowFilter;
  * </pre>
  */
 @ApiAudience.Public
+@ApiStability.Evolving
 public final class KijiTableMapReduceJobInput extends MapReduceJobInput {
   /** URI of the input Kiji table. */
   private KijiURI mInputTableURI;

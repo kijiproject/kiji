@@ -40,6 +40,7 @@ import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.impl.KijiTableSplit;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.HBaseEntityId;
@@ -60,6 +61,7 @@ import org.kiji.schema.util.ResourceUtils;
 
 /** InputFormat for Hadoop MapReduce jobs reading from a Kiji table. */
 @ApiAudience.Framework
+@ApiStability.Evolving
 public final class KijiTableInputFormat
     extends InputFormat<EntityId, KijiRowData>
     implements Configurable {

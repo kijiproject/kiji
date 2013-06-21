@@ -32,6 +32,7 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.util.ReflectionUtils;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
 import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
@@ -61,6 +62,7 @@ import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
  * @param <V> The type of value field stored in the SequenceFile(s).
  */
 @ApiAudience.Public
+@ApiStability.Evolving
 public final class SeqFileKeyValueStore<K, V> implements Configurable, KeyValueStore<K, V> {
 
   /** Helper object to manage backing files. */
@@ -75,6 +77,7 @@ public final class SeqFileKeyValueStore<K, V> implements Configurable, KeyValueS
    * Call the build() method to return a new, configured SeqFileKeyValueStore instance.
    */
   @ApiAudience.Public
+  @ApiStability.Evolving
   public static final class Builder {
     private FileStoreHelper.Builder mFileBuilder;
 

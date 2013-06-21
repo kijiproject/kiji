@@ -29,6 +29,7 @@ import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HConstants;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
 import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
@@ -100,6 +101,7 @@ import org.kiji.schema.util.ResourceUtils;
  * @param <V> the value type returned by this key-value store.
  */
 @ApiAudience.Public
+@ApiStability.Evolving
 public final class KijiTableKeyValueStore<V>
     implements Configurable, KeyValueStore<KijiRowKeyComponents, V> {
 
@@ -132,6 +134,7 @@ public final class KijiTableKeyValueStore<V>
    * Call the build() method to return a new KijiTableKeyValueStore instance.
    */
   @ApiAudience.Public
+  @ApiStability.Evolving
   public static final class Builder {
     private KijiURI mTableUri;
     private KijiColumnName mColumn;

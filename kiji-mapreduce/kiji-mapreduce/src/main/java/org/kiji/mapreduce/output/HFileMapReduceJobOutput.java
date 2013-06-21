@@ -44,6 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.JobConfigurationException;
 import org.kiji.mapreduce.KijiTableContext;
 import org.kiji.mapreduce.framework.HFileKeyValue;
@@ -87,6 +88,7 @@ import org.kiji.schema.util.ResourceUtils;
  * @see DirectKijiTableMapReduceJobOutput
  */
 @ApiAudience.Public
+@ApiStability.Evolving
 public final class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
   private static final Logger LOG = LoggerFactory.getLogger(HFileMapReduceJobOutput.class);
 

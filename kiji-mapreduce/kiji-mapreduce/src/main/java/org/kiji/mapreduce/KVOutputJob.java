@@ -20,6 +20,7 @@
 package org.kiji.mapreduce;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.annotations.Inheritance;
 
 /**
@@ -31,6 +32,7 @@ import org.kiji.annotations.Inheritance;
  * than directly implementing this interface.
  */
 @ApiAudience.Public
+@ApiStability.Stable
 @Inheritance.Extensible
 public interface KVOutputJob {
   /** @return the type of keys emitted by this task. */

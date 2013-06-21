@@ -23,6 +23,7 @@ import java.io.Closeable;
 import java.io.IOException;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.annotations.Inheritance;
 
 /**
@@ -49,6 +50,7 @@ import org.kiji.annotations.Inheritance;
  * @param <V> the type associated with values in this store.
  */
 @ApiAudience.Public
+@ApiStability.Stable
 @Inheritance.Extensible
 public interface KeyValueStoreReader<K, V> extends Closeable {
 

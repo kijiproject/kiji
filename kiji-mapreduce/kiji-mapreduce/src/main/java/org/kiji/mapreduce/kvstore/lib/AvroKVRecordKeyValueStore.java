@@ -30,6 +30,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
 import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
@@ -75,6 +76,7 @@ import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
  * @param <V> The type of the value field.
  */
 @ApiAudience.Public
+@ApiStability.Evolving
 public final class AvroKVRecordKeyValueStore<K, V> implements Configurable, KeyValueStore<K, V> {
   /** A wrapped store for looking up an Avro record by its 'key' field. */
   private final AvroRecordKeyValueStore<K, GenericRecord> mStore;
@@ -88,6 +90,7 @@ public final class AvroKVRecordKeyValueStore<K, V> implements Configurable, KeyV
    * Call the build() method to return a new, configured AvroKVRecordKeyValueStore instance.
    */
   @ApiAudience.Public
+  @ApiStability.Evolving
   public static final class Builder {
     private AvroRecordKeyValueStore.Builder mAvroRecordStoreBuilder;
 

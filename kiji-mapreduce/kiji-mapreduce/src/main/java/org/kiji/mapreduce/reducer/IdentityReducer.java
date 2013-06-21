@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.KijiReducer;
 import org.kiji.mapreduce.avro.AvroKeyWriter;
 import org.kiji.mapreduce.avro.AvroValueWriter;
@@ -49,6 +50,7 @@ import org.kiji.mapreduce.avro.AvroValueWriter;
  * @param <V> The MapReduce input value type.
  */
 @ApiAudience.Public
+@ApiStability.Stable
 public final class IdentityReducer<K, V>
     extends KijiReducer<K, V, K, V>
     implements Configurable, AvroKeyWriter, AvroValueWriter {

@@ -24,6 +24,7 @@ import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 
 /**
  * The class TextMapReduceJobInput is used to indicate the usage of lines in text files
@@ -46,6 +47,7 @@ import org.kiji.annotations.ApiAudience;
  * @see WholeTextFileMapReduceJobInput
  */
 @ApiAudience.Public
+@ApiStability.Evolving
 public final class TextMapReduceJobInput extends FileMapReduceJobInput {
   /**
    * Constructs job input from a varargs of paths to text files.  Accessible via

@@ -27,6 +27,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.util.ReflectionUtils;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.JobConfigurationException;
 import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.KijiMapper;
@@ -44,6 +45,7 @@ import org.kiji.mapreduce.reducer.IdentityReducer;
 
 /** Builds a job that runs a KijiBulkImporter to import data into a Kiji table. */
 @ApiAudience.Public
+@ApiStability.Evolving
 public final class KijiBulkImportJobBuilder
     extends MapReduceJobBuilder<KijiBulkImportJobBuilder> {
 

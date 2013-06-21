@@ -30,6 +30,7 @@ import org.apache.hadoop.mapreduce.lib.map.KijiMultithreadedMapper;
 import org.apache.hadoop.util.ReflectionUtils;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.JobConfigurationException;
 import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.KijiMapper;
@@ -49,6 +50,7 @@ import org.kiji.schema.KijiTable;
 
 /** Builds jobs that run a producer over a Kiji table. */
 @ApiAudience.Public
+@ApiStability.Evolving
 public final class KijiProduceJobBuilder extends KijiTableInputJobBuilder<KijiProduceJobBuilder> {
 
   /** The default number of threads per mapper to use for running producers. */

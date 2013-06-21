@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.framework.JobHistoryKijiTable;
 import org.kiji.mapreduce.framework.KijiConfKeys;
 import org.kiji.schema.Kiji;
@@ -40,6 +41,7 @@ import org.kiji.schema.KijiURI;
 
 /** A runnable MapReduce job that interacts with Kiji tables. */
 @ApiAudience.Public
+@ApiStability.Evolving
 public final class KijiMapReduceJob {
   private static final Logger LOG = LoggerFactory.getLogger(KijiMapReduceJob.class);
 

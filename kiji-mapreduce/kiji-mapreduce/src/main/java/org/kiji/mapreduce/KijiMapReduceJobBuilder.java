@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.framework.MapReduceJobBuilder;
 import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.kvstore.KeyValueStoreClient;
@@ -40,6 +41,7 @@ import org.kiji.mapreduce.kvstore.KeyValueStoreClient;
  * {@link org.kiji.mapreduce.bulkimport.KijiBulkImportJobBuilder}.
  */
 @ApiAudience.Public
+@ApiStability.Evolving
 public final class KijiMapReduceJobBuilder extends MapReduceJobBuilder<KijiMapReduceJobBuilder> {
   private static final Logger LOG = LoggerFactory.getLogger(KijiMapReduceJobBuilder.class);
 

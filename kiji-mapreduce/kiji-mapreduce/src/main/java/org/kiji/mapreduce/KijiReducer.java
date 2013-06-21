@@ -22,6 +22,7 @@ package org.kiji.mapreduce;
 import org.apache.hadoop.mapreduce.Reducer;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.annotations.Inheritance;
 
 /**
@@ -33,6 +34,7 @@ import org.kiji.annotations.Inheritance;
  * @param <OUTVALUE> The type of the output value from the mapper.
  */
 @ApiAudience.Public
+@ApiStability.Stable
 @Inheritance.Extensible
 public abstract class KijiReducer<INKEY, INVALUE, OUTKEY, OUTVALUE>
     extends Reducer<INKEY, INVALUE, OUTKEY, OUTVALUE>

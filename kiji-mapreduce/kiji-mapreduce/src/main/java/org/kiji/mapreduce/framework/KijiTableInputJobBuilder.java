@@ -25,6 +25,7 @@ import com.google.common.base.Preconditions;
 import org.apache.hadoop.mapreduce.Job;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.annotations.Inheritance;
 import org.kiji.mapreduce.JobConfigurationException;
 import org.kiji.mapreduce.MapReduceJobInput;
@@ -46,6 +47,7 @@ import org.kiji.schema.util.ResourceUtils;
  * @param <T> Type of the builder class.
  */
 @ApiAudience.Framework
+@ApiStability.Evolving
 @Inheritance.Sealed
 public abstract class KijiTableInputJobBuilder<T extends KijiTableInputJobBuilder<T>>
     extends MapReduceJobBuilder<T> {

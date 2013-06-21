@@ -34,6 +34,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
 import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
@@ -79,6 +80,7 @@ import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
  * @param <V> The type of record in the Avro container file.
  */
 @ApiAudience.Public
+@ApiStability.Evolving
 public final class AvroRecordKeyValueStore<K, V extends IndexedRecord>
     implements Configurable, KeyValueStore<K, V> {
 
@@ -106,6 +108,7 @@ public final class AvroRecordKeyValueStore<K, V extends IndexedRecord>
    * Call the build() method to return a new, configured AvroRecordKeyValueStore instance.
    */
   @ApiAudience.Public
+  @ApiStability.Evolving
   public static final class Builder {
     private FileStoreHelper.Builder mFileBuilder;
     private Schema mReaderSchema;

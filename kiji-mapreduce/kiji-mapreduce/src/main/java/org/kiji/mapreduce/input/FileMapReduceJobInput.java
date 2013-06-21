@@ -30,12 +30,14 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.annotations.Inheritance;
 import org.kiji.mapreduce.MapReduceJobInput;
 import org.kiji.mapreduce.tools.framework.JobIOConfKeys;
 
 /** Base class for MapReduce job input that is read from files. */
 @ApiAudience.Public
+@ApiStability.Evolving
 @Inheritance.Sealed
 public abstract class FileMapReduceJobInput extends MapReduceJobInput {
   /** The path to the input files. */

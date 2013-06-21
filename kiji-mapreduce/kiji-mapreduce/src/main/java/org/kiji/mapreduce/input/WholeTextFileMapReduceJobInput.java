@@ -23,6 +23,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.InputFormat;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.input.impl.WholeFileInputFormat;
 
 /**
@@ -54,6 +55,7 @@ import org.kiji.mapreduce.input.impl.WholeFileInputFormat;
  * @see TextMapReduceJobInput
  */
 @ApiAudience.Public
+@ApiStability.Evolving
 public final class WholeTextFileMapReduceJobInput extends FileMapReduceJobInput {
 
   /**

@@ -27,6 +27,7 @@ import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.annotations.Inheritance;
 import org.kiji.mapreduce.KijiTableContext;
 import org.kiji.mapreduce.kvstore.KeyValueStore;
@@ -86,6 +87,7 @@ import org.kiji.mapreduce.kvstore.KeyValueStoreClient;
  * @param <V> The type of the MapReduce input value, which will depend on the input format used.
  */
 @ApiAudience.Public
+@ApiStability.Stable
 @Inheritance.Extensible
 public abstract class KijiBulkImporter<K, V>
     implements Configurable, KeyValueStoreClient {

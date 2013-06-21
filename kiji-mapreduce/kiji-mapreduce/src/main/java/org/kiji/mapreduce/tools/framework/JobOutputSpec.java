@@ -27,6 +27,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 
 /**
  * Describes the format and location for the output of a MapReduce job.
@@ -40,6 +41,7 @@ import org.kiji.annotations.ApiAudience;
  * be equal to the number of reducers, since each reducer writes one shard.</p>
  */
 @ApiAudience.Framework
+@ApiStability.Evolving
 public final class JobOutputSpec {
   /**
    * The job output formats supported by Kiji.  In the string

@@ -24,6 +24,7 @@ import java.io.IOException;
 import com.google.common.base.Preconditions;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.annotations.Inheritance;
 import org.kiji.common.flags.Flag;
 import org.kiji.mapreduce.framework.KijiTableInputJobBuilder;
@@ -40,6 +41,7 @@ import org.kiji.schema.util.ResourceUtils;
  * @param <B> The type of job builder to use.
  */
 @ApiAudience.Framework
+@ApiStability.Evolving
 @Inheritance.Extensible
 public abstract class KijiJobTool<B extends KijiTableInputJobBuilder> extends JobTool<B> {
   @Flag(name="start-row",

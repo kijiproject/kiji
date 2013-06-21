@@ -25,6 +25,7 @@ import org.apache.hadoop.mapreduce.OutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.MapFileOutputFormat;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 
 /**
  * The class MapFileMapReduceJobOutput is used to indicate the usage of Hadoop map files as
@@ -46,6 +47,7 @@ import org.kiji.annotations.ApiAudience;
  * </pre>
  */
 @ApiAudience.Public
+@ApiStability.Evolving
 public final class MapFileMapReduceJobOutput extends FileMapReduceJobOutput {
   /** Default constructor. Accessible via {@link MapReduceJobOutputs}. */
   MapFileMapReduceJobOutput() {

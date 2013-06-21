@@ -22,6 +22,7 @@ package org.kiji.mapreduce;
 import org.apache.hadoop.mapreduce.Mapper;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.annotations.Inheritance;
 
 /**
@@ -33,6 +34,7 @@ import org.kiji.annotations.Inheritance;
  * @param <OUTVALUE> The type of the output value from the mapper.
  */
 @ApiAudience.Public
+@ApiStability.Stable
 @Inheritance.Extensible
 public abstract class KijiMapper<INKEY, INVALUE, OUTKEY, OUTVALUE>
     extends Mapper<INKEY, INVALUE, OUTKEY, OUTVALUE>

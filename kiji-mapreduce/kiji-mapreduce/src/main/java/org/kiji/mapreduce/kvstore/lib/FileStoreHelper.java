@@ -39,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
 import org.kiji.mapreduce.util.Lists;
 
@@ -64,6 +65,7 @@ import org.kiji.mapreduce.util.Lists;
  * will be used.</p>
  */
 @ApiAudience.Public
+@ApiStability.Evolving
 public final class FileStoreHelper implements Configurable {
 
   private static final Logger LOG = LoggerFactory.getLogger(
@@ -119,6 +121,7 @@ public final class FileStoreHelper implements Configurable {
    * APIs.</p>
    */
   @ApiAudience.Public
+  @ApiStability.Evolving
   public static final class Builder {
     private Configuration mConf;
     private List<Path> mInputPaths;

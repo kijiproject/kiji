@@ -27,6 +27,7 @@ import org.apache.hadoop.mapreduce.OutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.NullOutputFormat;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.annotations.Inheritance;
 import org.kiji.mapreduce.KijiTableContext;
 import org.kiji.mapreduce.framework.KijiConfKeys;
@@ -60,6 +61,7 @@ import org.kiji.schema.KijiURI;
  * @see HFileMapReduceJobOutput
  */
 @ApiAudience.Public
+@ApiStability.Evolving
 @Inheritance.Sealed
 public class DirectKijiTableMapReduceJobOutput extends KijiTableMapReduceJobOutput {
   /** Default constructor. Accessible via {@link MapReduceJobOutputs}. */

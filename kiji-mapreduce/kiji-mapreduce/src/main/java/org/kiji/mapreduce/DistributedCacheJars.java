@@ -38,9 +38,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
+
 
 /** Utility class for dealing with Java JAR files and the hadoop distributed cache. */
 @ApiAudience.Public
+@ApiStability.Evolving
 public final class DistributedCacheJars {
   private static final Logger LOG = LoggerFactory.getLogger(DistributedCacheJars.class);
 

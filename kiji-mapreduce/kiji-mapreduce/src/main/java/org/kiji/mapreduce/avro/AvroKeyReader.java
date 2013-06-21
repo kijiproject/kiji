@@ -24,6 +24,7 @@ import java.io.IOException;
 import org.apache.avro.Schema;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.annotations.Inheritance;
 
 /**
@@ -32,6 +33,7 @@ import org.kiji.annotations.Inheritance;
  * as a means of specifying the Avro reader schema for their input key data.
  */
 @ApiAudience.Public
+@ApiStability.Stable
 @Inheritance.Extensible
 public interface AvroKeyReader {
   /**

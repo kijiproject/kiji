@@ -22,6 +22,7 @@ package org.kiji.mapreduce.gather;
 import java.io.IOException;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.annotations.Inheritance;
 import org.kiji.mapreduce.KijiContext;
 
@@ -32,6 +33,7 @@ import org.kiji.mapreduce.KijiContext;
  * @param <V> Type of the values to emit.
  */
 @ApiAudience.Public
+@ApiStability.Evolving
 @Inheritance.Sealed
 public interface GathererContext<K, V> extends KijiContext {
   /**

@@ -27,6 +27,7 @@ import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.Job;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.MapReduceJobInput;
 import org.kiji.mapreduce.impl.HTableInputFormat;
 import org.kiji.mapreduce.tools.framework.JobIOConfKeys;
@@ -48,6 +49,7 @@ import org.kiji.mapreduce.tools.framework.JobIOConfKeys;
  * </pre>
  */
 @ApiAudience.Public
+@ApiStability.Evolving
 public final class HTableMapReduceJobInput extends MapReduceJobInput {
   /** The name of the HTable to use as job input. */
   private String mTableName;

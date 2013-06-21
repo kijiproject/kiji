@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.annotations.Inheritance;
 import org.kiji.mapreduce.framework.HFileKeyValue;
 import org.kiji.mapreduce.impl.KijiTableContextFactory;
@@ -40,6 +41,7 @@ import org.kiji.mapreduce.impl.KijiTableContextFactory;
  * @param <V> Type of the reducer input values.
  */
 @ApiAudience.Public
+@ApiStability.Stable
 @Inheritance.Extensible
 public abstract class KijiTableReducer<K, V>
     extends KijiReducer<K, V, HFileKeyValue, NullWritable> {

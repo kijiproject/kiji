@@ -48,6 +48,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.annotations.Inheritance;
 import org.kiji.mapreduce.DistributedCacheJars;
 import org.kiji.mapreduce.JobConfigurationException;
@@ -73,6 +74,7 @@ import org.kiji.schema.Kiji;
  * implementation such as {@link org.kiji.mapreduce.gather.KijiGatherJobBuilder}.
  */
 @ApiAudience.Framework
+@ApiStability.Evolving
 @Inheritance.Sealed
 public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder<T>> {
   private static final Logger LOG = LoggerFactory.getLogger(MapReduceJobBuilder.class);

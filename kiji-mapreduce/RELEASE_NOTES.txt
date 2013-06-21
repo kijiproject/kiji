@@ -3,6 +3,7 @@
                               KijiMR Release Notes
 
 Version 1.0.0
+  * Added stability annotations to all public/framework classes.
   * KIJIMR-121. KeyValueStoreConfiguration's constructors have been
       made private. The static factory method createInConfiguration()
       can now be used to create KeyValueStoreConfigurations.

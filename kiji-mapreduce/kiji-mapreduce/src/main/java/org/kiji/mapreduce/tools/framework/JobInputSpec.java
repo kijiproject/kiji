@@ -26,6 +26,7 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 
 /**
  * <p>Describes the format and location of the input for a MapReduce job.</p>
@@ -41,6 +42,7 @@ import org.kiji.annotations.ApiAudience;
  * method.</p>
  */
 @ApiAudience.Framework
+@ApiStability.Evolving
 public final class JobInputSpec {
   /**
    * The Job input formats supported by Kiji.  In the string representation of a

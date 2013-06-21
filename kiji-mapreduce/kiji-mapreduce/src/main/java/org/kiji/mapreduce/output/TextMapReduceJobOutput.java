@@ -24,6 +24,7 @@ import org.apache.hadoop.mapreduce.OutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 
 /**
  * The class TextMapReduceJobOutput is used to indicate the usage of text files as output
@@ -45,6 +46,7 @@ import org.kiji.annotations.ApiAudience;
  * </pre>
  */
 @ApiAudience.Public
+@ApiStability.Evolving
 public final class TextMapReduceJobOutput extends FileMapReduceJobOutput {
   /** Default constructor. Accessible via {@link MapReduceJobInputs}. */
   TextMapReduceJobOutput() {

@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
 import org.kiji.mapreduce.kvstore.impl.KeyValueStoreConfigSerializer;
 
@@ -48,6 +49,7 @@ import org.kiji.mapreduce.kvstore.impl.KeyValueStoreConfigSerializer;
  * readers, or close them all individually.</p>
  */
 @ApiAudience.Public
+@ApiStability.Evolving
 public final class KeyValueStoreReaderFactory implements Closeable {
   private static final Logger LOG = LoggerFactory.getLogger(
       KeyValueStoreReaderFactory.class.getName());

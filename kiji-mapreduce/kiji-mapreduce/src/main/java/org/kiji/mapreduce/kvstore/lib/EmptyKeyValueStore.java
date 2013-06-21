@@ -20,6 +20,7 @@
 package org.kiji.mapreduce.kvstore.lib;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
 import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
@@ -33,6 +34,7 @@ import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
  * @param <V> the value type for the store.
  */
 @ApiAudience.Public
+@ApiStability.Evolving
 public final class EmptyKeyValueStore<K, V> implements KeyValueStore<K, V> {
   /** The single reader instance to return for all calls to open(). */
   private final EmptyKeyValueReader mReaderInstance;
@@ -46,6 +48,7 @@ public final class EmptyKeyValueStore<K, V> implements KeyValueStore<K, V> {
    * @param <V> The type of value field for the store.
    */
   @ApiAudience.Public
+  @ApiStability.Evolving
   public static final class Builder<K, V> {
     /**
      * Private, default constructor. Call the builder() method of this KeyValueStore

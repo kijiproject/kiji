@@ -34,6 +34,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
 import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
@@ -96,6 +97,7 @@ import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
  * </ul>
  */
 @ApiAudience.Public
+@ApiStability.Evolving
 public final class TextFileKeyValueStore implements Configurable, KeyValueStore<String, String> {
 
   /** The configuration variable for the delimiter. */
@@ -122,6 +124,7 @@ public final class TextFileKeyValueStore implements Configurable, KeyValueStore<
    * Call the build() method to return a new, configured TextFileKeyValueStore instance.
    */
   @ApiAudience.Public
+  @ApiStability.Evolving
   public static final class Builder {
     private FileStoreHelper.Builder mFileBuilder;
     private String mDelim;

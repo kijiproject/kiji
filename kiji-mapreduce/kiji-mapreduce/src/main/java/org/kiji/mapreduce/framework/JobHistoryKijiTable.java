@@ -30,6 +30,7 @@ import org.apache.hadoop.mapreduce.Counters;
 import org.apache.hadoop.mapreduce.Job;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.avro.generated.JobHistoryEntry;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
@@ -48,6 +49,7 @@ import org.kiji.schema.util.ResourceUtils;
  * Used in places like KijiMapReduceJob to record information about jobs run through Kiji.
  */
 @ApiAudience.Framework
+@ApiStability.Evolving
 public final class JobHistoryKijiTable implements Closeable {
   /** Every existing job history table has at least this version. */
   private static final String PREV_TABLE_LAYOUT_VERSION = "1";

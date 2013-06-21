@@ -26,10 +26,12 @@ import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.Job;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.annotations.Inheritance;
 
 /** Base class for types of input to a MapReduce job. */
 @ApiAudience.Public
+@ApiStability.Evolving
 @Inheritance.Sealed
 public abstract class MapReduceJobInput {
 

@@ -45,6 +45,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.framework.HFileKeyValue;
 import org.kiji.mapreduce.framework.KijiConfKeys;
 import org.kiji.schema.Kiji;
@@ -72,6 +73,7 @@ import org.kiji.schema.util.ResourceUtils;
  * {@link org.kiji.mapreduce.HFileLoader}.
  */
 @ApiAudience.Framework
+@ApiStability.Evolving
 public final class KijiHFileOutputFormat
     extends FileOutputFormat<HFileKeyValue, NullWritable> {
   private static final Logger LOG = LoggerFactory.getLogger(KijiHFileOutputFormat.class);

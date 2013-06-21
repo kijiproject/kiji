@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.schema.InternalKijiError;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.impl.HBaseKijiTable;
@@ -45,6 +46,7 @@ import org.kiji.schema.impl.HBaseKijiTable;
  * @see org.kiji.mapreduce.tools.KijiBulkLoad
  */
 @ApiAudience.Public
+@ApiStability.Evolving
 public final class HFileLoader {
   private static final Logger LOG = LoggerFactory.getLogger(HFileLoader.class);
 
