@@ -349,6 +349,50 @@ mv "$NEW_BENTO_ROOT"/* "$PREV_BENTO_ROOT"
 # After everything is safely moved over, disable the error recovery traps.
 trap do_nothing ERR
 
+# BENTO-21: If the codename is different (e.g., buri vs. albacore), rename the final
+# destination directory to match the new version, and add a symlink to the old one.
+prev_bento_codename=`basename "$PREV_BENTO_ROOT"`
+new_bento_codename=`basename "$NEW_BENTO_ROOT"`
+
+if [ "$prev_bento_codename" != "$new_bento_codename" ]; then
+  bento_target_parent=`cd "$PREV_BENTO_ROOT"/.. && pwd`
+  # Check for errors manually here. We're past the bail-out point in the script
+  # and will display the final success message in any case."
+  mv_failed=0
+  set +e
+  pushd "$bento_target_parent"
+  if [ `pwd` == "$bento_target_parent" ]; then
+    mv "$prev_bento_codename" "$new_bento_codename"
+    if [ "$?" != 0 ]; then
+      mv_failed=1
+    else
+      # Symlink the old name to the new target dir.
+      ln -s "$new_bento_codename" "$prev_bento_codename"
+      if [ "$?" != 0 ]; then
+        mv_failed=1
+      fi
+    fi
+    popd
+  fi
+  if [ "$mv_failed" == "0" ]; then
+    echo ""
+    echo "Your BentoBox used to be installed in:"
+    echo "$bento_target_parent/$prev_bento_codename"
+    echo "This upgrade has renamed the BentoBox directory to $new_bento_codename"
+    echo "A symlink from the old BentoBox home to the new one has been created."
+    echo ""
+  else
+    echo ""
+    echo "WARNING: Your BentoBox is installed in:"
+    echo "$bento_target_parent/$prev_bento_codename"
+    echo "As part of this upgrade, I tried to move this to $new_bento_codename"
+    echo "but that failed. (Maybe you do not own the parent directory?)"
+    echo "The upgrade has been successful, but this final rename step did not"
+    echo "take place. You may wish to do this manually."
+    echo ""
+  fi
+fi
+
 echo "Your BentoBox has been upgraded!"
 echo ""
 echo "Your previous BentoBox has been backed up to archive/$archive_dest_base,"
@@ -358,8 +402,5 @@ echo ""
 echo "You should 'source bin/kiji-env.sh' again to use the new environment."
 echo "Then type 'bento start' to start a BentoBox cluster."
 echo ""
-
-# TODO(BENTO-21): If the codename is different (e.g., buri vs. albacore), do we rename
-# the final dest dir? Need a determination here.
 
 exit 0

@@ -5,6 +5,7 @@
 Version 1.1.0-buri
   * Upgrade to CDH 4.2 (HBase 0.94)
   * Upgrade to KijiSchema 1.1.0
+  * BENTO-21. Rename top-level directory to "kiji-bento-buri" on upgrade.
 
 Version 1.0.4
   * BENTO-34. Include KijiExpress's example project.
