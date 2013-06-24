@@ -3,16 +3,9 @@ layout: post
 title: Recommendations Producer
 categories: [tutorials, express-recommendation, DEVEL]
 tags: [express-music]
-order: 6
+order: 7
 description: Generate recommendations per user.
 ---
-
-<div id="accordion-container">
-  <h2 class="accordion-header"> SongPlayCounter.express </h2>
-  <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-express-music/raw/{{site.music_express_DEVEL_branch}}/src/main/scala/org/kiji/express/music/SongRecommender.scala"> </script>
-  </div>
-</div>
 
 <h3 style="margin-top:0px;padding-top:10px;">Personalizing Recommendations</h3>
 
@@ -23,6 +16,9 @@ to and recommend the most popular song played after it.
 Specifically, the `songs-table` has information about the top next songs in its column
 `info:top_next_songs`. We have the latest song a user has played in the `users-table` in column info:track_plays.
 We now have to join these to get our result.
+
+The next sections walk through the pipeline line-by-line and describe the custom functions as they appear.
+The entire file is available at the [end of the page](#recommend-full-code).
 
 #### Get the most popular song played next
 
@@ -104,6 +100,8 @@ most popular next song.
 
 ### Running the Example
 
+* To run the SongRecommender job:
+
 <div class="userinput">
 {% highlight bash %}
 express job ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_DEVEL_version}}.jar \
@@ -114,14 +112,12 @@ express job ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_DE
 
 ### Alternative: Running as a script
 
-Alternately, you can also run these as scripts as follows:
+Alternately, you can also run the job as a script as follows:
 
 <div class="userinput">
 {% highlight bash %}
-express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
-    ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_DEVEL_version}}.jar \
-    org.kiji.express.music.SongRecommender --songs-table ${KIJI}/songs \
-    --users-table ${KIJI}/users
+express script --libjars "${MUSIC_EXPRESS_HOME}/lib/* \
+    ${MUSIC_EXPRESS_HOME}/scripts/SongRecommender.express --hdfs
 {% endhighlight %}
 </div>
 
@@ -143,10 +139,25 @@ You should see something like:
     entity-id=['user-41'] [1367023207962] info:next_song_rec
                                      song-41
 
-This concludes the tutorial of KijiExpress.  If you were using a bento cluster for this tutorial and are done with it, now is a good time to shut it down:
+### Shut down the cluster
+
+That's the end of the Express tutorial.
+
+*  Now is a good time to shut down the BentoBox cluster:
 
 <div class="userinput">
 {% highlight bash %}
     bento stop
 {% endhighlight %}
+</div>
+
+### Top Next Songs Job Content<a id="recommend-full-code"> </a>
+
+Here's the entire SongRecommender job:
+
+<div id="accordion-container">
+  <h2 class="accordion-header"> SongPlayCounter.express </h2>
+  <div class="accordion-content">
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-express-music/raw/{{site.music_express_DEVEL_branch}}/src/main/scala/org/kiji/express/music/SongRecommender.scala"> </script>
+  </div>
 </div>

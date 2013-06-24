@@ -3,37 +3,26 @@ layout: post
 title: Importing Data
 categories: [tutorials, express-recommendation, DEVEL]
 tags: [express-music]
-order: 3
+order: 4
 description: Importing data files into Kiji tables.
 ---
 
 
-In this section of the tutorial, we will import metadata about songs into the Kiji table `songs`,
+In this section of the tutorial, we will import metadata about songs into the Kiji table `songs`
 and import data about when users have listened to songs into the Kiji table `users`.
 
-### Stock Importers
-The user data can be imported using a stock Kiji bulk importer with the command:
 
-<div class="userinput">
-{% highlight bash %}
-kiji bulk-import
--Dkiji.import.text.input.descriptor.path=express-tutorial/song-plays-import-descriptor.json
---importer=org.kiji.mapreduce.lib.bulkimport.JSONBulkImporter
---output="format=kiji table=${KIJI}/users nsplits=1"     --input="format=text
-file=express-tutorial/song-plays.json"     --lib=${LIBS_DIR}
-{% endhighlight %}
-</div>
+### KijiExpress Custom Importers
 
+Kiji provides stock bulk importers that work for a number of standard use cases. However, 
+if you have to do any customization to these importers, they quickly become complicated.
+We've provided custom importers written in KijiExpress for importing the user data and song metadata.
 
-### Custom Importers in KijiExpress
-If Kiji's stock bulk importers don't fit your use case, you can also write import jobs in
-KijiExpress. This is what we've done to import the song metadata into the songs table.
+The source code for one of the importers is in included at the [bottom of this page](#importer-source).
 
-The source code for this importer is at the bottom of this page, for interested readers. The syntax
-will be explained more in-depth in the next section.
+#### Importing Tutorial Data
 
-KijiExpress programs or scripts can be run using the `express` command. Here, we'll demonstrate how
-to run the the song metadata importer as a precompiled job contained in a `jar` file:
+*  Run the the song metadata importer as a precompiled job contained in a `jar` file:
 
 <div class="userinput">
 {% highlight bash %}
@@ -45,11 +34,23 @@ express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
 {% endhighlight %}
 </div>
 
+*  Use a similar command to import the user data:
+
+<div class="userinput">
+{% highlight bash %}
+    express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
+    ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_DEVEL_version}}.jar \
+    org.kiji.express.music.SongPlaysImporter \
+    --input express-tutorial/song-plays.json \
+    --table-uri ${KIJI}/users --hdfs
+{% endhighlight %}
+</div>
+
 
 ### Verify Output
 
-After running the importer, you can verify that the Kiji table `songs` contains the imported data
-using the `kiji scan` command.
+*  After running the importers, verify that the Kiji table `songs` contains the imported data
+using the `kiji scan` command:
 
 <div class="userinput">
 {% highlight bash %}
@@ -61,21 +62,21 @@ You should see something like:
 
     Scanning kiji table: kiji://localhost:2181/kiji_express_music/songs/
     entity-id=['song-32'] [1365548283995] info:metadata
-                                     {"song_name": "song name-32", "artist_name": "artist-2", "album_name": "album-0", "genre": "genre1.0", "tempo": 120, "duration": 180}
+        {"song_name": "song name-32", "artist_name": "artist-2", "album_name": "album-0", "genre": "genre1.0", "tempo": 120, "duration": 180}
 
     entity-id=['song-49'] [1365548285203] info:metadata
-                                     {"song_name": "song name-49", "artist_name": "artist-3", "album_name": "album-1", "genre": "genre4.0", "tempo": 150, "duration": 180}
+        {"song_name": "song name-49", "artist_name": "artist-3", "album_name": "album-1", "genre": "genre4.0", "tempo": 150, "duration": 180}
 
     entity-id=['song-36'] [1365548284255] info:metadata
-                                     {"song_name": "song name-36", "artist_name": "artist-2", "album_name": "album-0", "genre": "genre1.0", "tempo": 90, "duration": 0}
+        {"song_name": "song name-36", "artist_name": "artist-2", "album_name": "album-0", "genre": "genre1.0", "tempo": 90, "duration": 0}
 
     entity-id=['song-10'] [1365548282517] info:metadata
-                                     {"song_name": "song name-10", "artist_name": "artist-1", "album_name": "album-0", "genre": "genre5.0", "tempo": 160, "duration": 240}
+        {"song_name": "song name-10", "artist_name": "artist-1", "album_name": "album-0", "genre": "genre5.0", "tempo": 160, "duration": 240}
 
     entity-id=['song-8'] [1365548282382] info:metadata
-                                     {"song_name": "song name-8", "artist_name": "artist-1", "album_name": "album-1", "genre": "genre5.0", "tempo": 140, "duration": 180}
+        {"song_name": "song name-8", "artist_name": "artist-1", "album_name": "album-1", "genre": "genre5.0", "tempo": 140, "duration": 180}
 
-We can also use the `kiji scan` command to verify the users table import was successful.
+*  Use the `kiji scan` command to verify the users table import was successful:
 
 <div class="userinput">
 {% highlight bash %}
@@ -109,7 +110,7 @@ Now that you've imported your data, we are ready to start analyzing it!  The sou
 song metadata importer is included below in case you are curious.  We will go over the syntax of
 writing your own jobs in more detail in following sections.
 
-### (Optional) Source Code for Scalding Importer
+### <a id="importer-source">(Optional) Source Code for Scalding Importer</a>
 
 The data is formatted with a JSON record on each line. Each record corresponds to a song, and
 provides the following metadata for the song:

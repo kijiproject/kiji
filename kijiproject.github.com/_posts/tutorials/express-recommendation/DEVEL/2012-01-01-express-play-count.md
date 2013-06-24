@@ -3,88 +3,47 @@ layout: post
 title: PlayCount
 categories: [tutorials, express-recommendation, DEVEL]
 tags: [express-music]
-order: 4
+order: 5
 description: A job that counts song plays.
 ---
-
-<div id="accordion-container">
-  <h2 class="accordion-header"> SongPlayCounter.scala </h2>
-  <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-express-music/raw/{{site.music_express_DEVEL_branch}}/src/main/scala/org/kiji/express/music/SongPlayCounter.scala"> </script>
-  </div>
-</div>
 
 <h3 style="margin-top:0px;padding-top:10px;">The 'Hello World!' of MapReduce</h3>
 
 To quote Scalding Developers
 [Hadoop is a distributed system for counting words.](https://github.com/twitter/scalding)
-While we may not have words to count, we do have the play history of users listening to many different songs.
+Unfortunately we are fresh out of words, but we do have the play history of
+bajillions of users listening to bazillions of songs.
 
 This MapReduce job uses the listening history of our users that we have stored in the "users" Kiji
 table to calculate the total number of times each song has been played. The result of this
 computation is written to a text file in HDFS.
 
-SongPlayCounter is an example of a KijiExpress flow that reads from a Kiji table and writes to a
-file on HDFS. SongPlayCounter proceeds through discrete stages:
+### Creating the Job
+
+`SongPlayCounter` is an example of a KijiExpress job that reads from a Kiji table and writes to a
+file on HDFS. SongPlayCounter proceeds through these stages:
 
 * Read the column "info:track_plays" from rows in a Kiji table.
 * Break each user's track play history into individual songs.
 * Count the number of times each song has been played.
-* Write each song id and play count to a file in HDFS.
+* Write each song ID and play count to a file in HDFS.
 
-The entire pipeline put together looks like this:
-{% highlight scala %}
-/**
- * Counts the number of times a song has been played by users.
- *
- * This importer expects to receive two command line arguments: `--table-uri` and `--output`. The
- * argument `--table-uri` should be set to the Kiji URI of a users table that contains a column
- * `info:track_plays` that contains a song id for each song a user has listened to. The argument
- * `--output` should be the HDFS path where a tab-delimited file listing song ids and play counts
- * should be written.
- *
- * @param args passed in from the command line.
- */
-class SongPlayCounter(args: Args) extends KijiJob(args) {
-
-  /**
-   * Gets the ids of songs a user has listened to.
-   *
-   * @param slice from the column `info:track_plays` that records all the songs a user has
-   *     listened to.
-   * @return the song ids that a user has listened to.
-   */
-  def songsListenedTo(slice: KijiSlice[String]): Seq[String] = {
-    slice.cells.map { cell => cell.datum }
-  }
-
-  // This Scalding pipeline does the following.
-  // 1. Reads the column "info:track_plays" from rows in a Kiji table.
-  // 2. Breaks each user's track plays history into individual songs.
-  // 3. Counts the number of times each song has been played.
-  // 4. Writes each song id and play count to a file in HDFS.
-  KijiInput(args("table-uri"))(Map(Column("info:track_plays", all) -> 'playlist))
-      .flatMapTo('playlist -> 'song) { songsListenedTo }
-      .groupBy('song) { _.size('songCount) }
-      .write(Tsv(args("output")))
-}
-{% endhighlight %}
-
+The tutorial includes the job already written for you in [Running the Job](#run-job) below; these sections 
+walk through how the job is created.
 
 #### Read "info:track_plays" from a Kiji table
 
-Data can be read from a Kiji table by using `KijiInput`. This factory method takes options specific
-to requesting slices of data from a Kiji table such as:
+Data can be read from a Kiji table by using [`KijiInput`](({{site.api_express_DEVEL}}/KijiInput.html)). 
+This factory method takes options specific to requesting slices of data from a Kiji table such as:
 
 * Which columns to retrieve from the table and the field names they should be given.
 * Number of versions of each cell to return.
 * Filters to apply to the requested data.
 
-More information about `KijiInput` can be found in the ScalaDocs of KijiExpress'
-[`DSL`]({{site.api_express_DEVEL}}/DSL$.html).
+For the tutorial:
 
-For our purposes, we will read all versions of the column "info:track_plays" from the provided Kiji
-table and bind the resulting value to the field named `'playlist` by calling `KijiInput`:
+* Call `KijiInput` to read all versions of the column "info:track_plays" from the provided Kiji
+table and bind the resulting value to the field named `'playlist`:
 
 {% highlight scala %}
 KijiInput(args("table-uri"))(Map(Column("info:track_plays", all) -> 'playlist))
@@ -96,33 +55,34 @@ Each cell in the "info:track_plays" column may contain multiple songs that the u
 this row has listened to. This data is manifested as a
 [`KijiSlice`]({{site.api_express_DEVEL}}/KijiSlice.html). For our purposes, we can imagine a
 [`KijiSlice`]({{site.api_express_DEVEL}}/KijiSlice.html) as a list of cells, each one a different
-version of the "info:track_plays" column. To unpack the data contained within each cell:
+version of the "info:track_plays" column. 
+
+*  Unpack the data contained within each cell:
 
 {% highlight scala %}
 /**
- * Gets the ids of songs a user has listened to.
+ * Gets the IDs of songs a user has listened to.
  *
  * @param slice from the column `info:track_plays` that records all the songs a user has
  *     listened to.
- * @return the song ids that a user has listened to.
+ * @return the song IDs that a user has listened to.
  */
 def songsListenedTo(slice: KijiSlice[String]): Seq[String] = {
   slice.cells.map { cell => cell.datum }
 }
 {% endhighlight %}
 
-Once the cells have been unpacked, we can then flatten the resulting list by calling `flatMapTo`.
-`flatMapTo` is very similar to the more common `map` operation. Instead of taking a function that
-produces one value per input value, `flatMapTo` takes a function that returns multiple values of the
-same type in a list. These values are all returned in a single, unnested "list." For more about the
-difference between map and flatMap, check out [this blog post](http://www.brunton-spall.co.uk/post/2011/12/02/map-map-and-flatmap-in-scala/).
+After the cells have been unpacked, we then flatten the resulting list by calling `flatMapTo`.
 
-You may have noticed that we are referencing operations named `flatMap` and `flatMapTo` (there are
-also `map` and `mapTo` operations). The tuples resulting from a `map` or `flatMap` operation
-contain the same fields as the tuples the operation was run against, as well as the output fields
-generated by the operation. With `mapTo` and `flatMapTo`, the tuples resulting from the
-operation contain only the output fields generated by the operation, and the fields contained in the
-original input tuples are dropped.
+`flatMapTo` is one of the set of map operations including `flatMap`, `map`, and `mapTo`. 
+The tuples resulting from a `map` or `flatMap` operation contain the same fields as the 
+tuples the operation was run against, as well as the output fields generated by the operation. 
+By contrast with `mapTo` and `flatMapTo`, the tuples resulting from the operation contain only the 
+output fields generated by the operation; the fields contained in the original input tuples are dropped.
+
+The output from `flatMapTo` are returned in a single, unnested "list." 
+
+* Run the following command to flatten the cell data:
 
 {% highlight scala %}
 .flatMapTo('playlist -> 'song) { songsListenedTo }
@@ -131,8 +91,9 @@ original input tuples are dropped.
 After this operation, the virtual "list" being operated on now contains all of the songs listened to
 by users.
 
-#### Count the occurrences of each song.
-Now that each played song has been seperated from the user that listened to it, we can calculate the
+#### Count the occurrences of each song
+
+Now that each played song has been separated from the user that listened to it, we can calculate the
 play count for each song. To achieve this, we will use the `groupBy` operation. `groupBy` takes two
 arguments:
 
@@ -142,7 +103,9 @@ arguments:
 
 In our case we want to group on the song name which will provide a list of tuples that contained the
 same song. This group will then be used to calculate its size which then gets bound to the field
-name `'songCount`:
+name `'songCount`.
+
+*  Run the following command to group songs and count each group:
 
 {% highlight scala %}
 .groupBy('song) { _.size('songCount) }
@@ -152,16 +115,26 @@ After this operation, the virtual "list" being operated on now contains a mappin
 (stored in the `'song` field) and its corresponding play count (stored in the `'songCount` field).
 
 #### Write the results to a file
-The last step to this stage is to write the calculated play counts to a TSV (Tab Separated Value)
-file on HDFS:
+*  Write the play counts to a TSV (tab-separated value) file on HDFS:
 
 {% highlight scala %}
 .write(Tsv(args("output")))
 {% endhighlight %}
 
-### Running the Job
+#### All Together Now
 
-Run the SongPlayCounter job.
+This code shows the entire pipeline put together:
+
+<div id="accordion-container">
+  <h2 class="accordion-header"> SongPlayCounter.scala </h2>
+  <div class="accordion-content">
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-express-music/raw/{{site.music_express_DEVEL_branch}}/src/main/scala/org/kiji/express/music/SongPlayCounter.scala"> </script>
+  </div>
+</div>
+
+### Running the Job<a id="run-job"> </a>
+
+*  Run the SongPlayCounter job:
 
 <div class="userinput">
 {% highlight bash %}
@@ -174,9 +147,9 @@ express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
 {% endhighlight %}
 </div>
 
-### Alternative: Running as a script
+### Alternative: Running the Job as a Script
 
-Or run it as a script:
+You can also run the SongPlayCounter job as a script:
 
 <div class="userinput">
 {% highlight bash %}
@@ -186,6 +159,8 @@ express script --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
 </div>
 
 ### Verify Output
+
+*  Run the following command to see the output of the job:
 
 <div class="userinput">
 {% highlight bash %}
