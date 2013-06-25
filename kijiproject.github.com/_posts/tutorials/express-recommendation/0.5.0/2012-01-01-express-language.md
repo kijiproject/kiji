@@ -8,7 +8,7 @@ description: Short introduction to the KijiExpress language.
 ---
 This section introduces Scala and the KijiExpress language. It does not have any tutorial steps.
 If you are already on board with Scala and the Scalding library for data processing,
-skip ahead to [Setup]({% capture nextOrder %}{{ page.order | plus:1 }}{% endcapture %});
+skip ahead to [Setup](../express-setup/);
 you can also refer back to the [summary](#summary) at the end of this page.
 
 
