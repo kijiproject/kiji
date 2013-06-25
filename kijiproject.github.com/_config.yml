@@ -99,24 +99,24 @@ userguide_mapreduce_DEVEL : /userguides/mapreduce/DEVEL
 tutorial_phonebook_DEVEL : /tutorials/phonebook-tutorial/DEVEL
 tutorial_music_DEVEL : /tutorials/music-recommendation/DEVEL
 
-schema_DEVEL_version : 1.1.0
+schema_DEVEL_version : 1.1.1
 schema_DEVEL_branch : master
 
-mr_DEVEL_version : 1.0.0
+mr_DEVEL_version : 1.0.1
 mr_DEVEL_branch : master
 
-mrlib_DEVEL_version : 1.0.0-rc62
+mrlib_DEVEL_version : 1.0.1
 mrlib_DEVEL_branch : master
 
-express_DEVEL_version : 0.5.0
+express_DEVEL_version : 0.6.0
 express_DEVEL_branch : master
 
-phonebook_DEVEL_version : 1.0.0-rc61
+phonebook_DEVEL_version : 1.0.1
 
-music_DEVEL_version : 1.0.0-rc62
+music_DEVEL_version : 1.0.1
 music_DEVEL_branch : master
 
-music_express_DEVEL_version : 0.5.0
+music_express_DEVEL_version : 0.6.0
 music_express_DEVEL_branch : master
 
 # All Jekyll-Bootstrap specific configurations are namespaced into this hash
@@ -221,3 +221,10 @@ api_express_0_3_0 : http://api-docs.kiji.org/kiji-express/0.3.0/org/kiji/express
 userguide_schema_1_0_4 : /userguides/schema/1.0.4
 api_schema_1_0_4 : http://api-docs.kiji.org/kiji-schema/1.0.4/org/kiji/schema
 api_express_0_4_0 : http://api-docs.kiji.org/kiji-express/0.4.0/org/kiji/express
+userguide_schema_1_1_0 : /userguides/schema/1.1.0
+api_schema_1_1_0 : http://api-docs.kiji.org/kiji-schema/1.1.0/org/kiji/schema
+api_mr_1_0_0 : http://api-docs.kiji.org/kiji-mapreduce/1.0.0/org/kiji/mapreduce
+userguide_mapreduce_1_0_0 : /userguides/mapreduce/1.0.0
+tutorial_phonebook_1_0_0 : /tutorials/phonebook-tutorial/1.0.0
+api_mrlib_1_0_0 : http://api-docs.kiji.org/kiji-mapreduce-lib/1.0.0/org/kiji/mapreduce
+api_express_0_5_0 : http://api-docs.kiji.org/kiji-express/0.5.0/org/kiji/express
