@@ -145,19 +145,6 @@ you can also select that with the more readable (and more verbose) syntax:
 
     schema> USE DEFAULT INSTANCE;
 
-You can create an instance by running:
-
-    schema> CREATE INSTANCE foo;
-
-Creating an instance will automatically `USE` the new instance.
-
-You can also drop an instance by running:
-
-    schema> DROP INSTANCE foo;
-
-This will drop all tables in the instance! You cannot drop the current instance.
-You must `USE` another instance first (or maybe create one with `CREATE INSTANCE`
-to move to).
 
 ### Listing and Describing Tables
 
@@ -217,7 +204,6 @@ The following are not allowed:
 
     CREATE TABLE t [WITH DESCRIPTION 'd']
     [ROW KEY FORMAT { HASHED | RAW | HASH PREFIXED(int) | formatted_key_spec }]
-    [PROPERTIES ( table_property, ... )]
     WITH locality_group [ , locality_group ...]*;
 
 This creates a table, sets its description, defines how row keys are formatted,
@@ -298,26 +284,6 @@ Example row keys:
 As a final word of caution, please note that after a table is created, its row key format
 cannot be altered.
 
-##### Table properties
-
-Some optional properties of tables can be specified:
-
-    MAX FILE SIZE = <n>
-
-Sets the maximum size in bytes for a file. `<n>` may be a long integer or `NULL`, in
-which case HBase's default size will be used.
-
-    MEMSTORE FLUSH SIZE = <n>
-
-Sets the size of the HBase memstore for the table in bytes, before it forces a flush.
-`<n>` may be a long integer or `NULL`, in which case HBase's default value will be used.
-
-    NUMREGIONS = <n>
-
-Specifies the initial region count when creating the table. The table will be split into `<n>`
-evenly-spaced regions. This cannot be used with a `RAW` row key format. This property is
-not preserved by a `DUMP DDL` statement.
-
 ##### Locality group definition syntax
 
 Each locality group is defined as follows:
@@ -331,14 +297,9 @@ valid properties are:
     INMEMORY = bool
     TTL = int
     COMPRESSED WITH (GZIP | LZO | SNAPPY | NONE)
-    BLOOM FILTER = (NONE | ROW | ROWCOL)
-    BLOCK SIZE = int
 
 Remember that you can use `INFINITY` and `FOREVER` when specifying integer
 values for `MAXVERSIONS` and `TTL` to make your statements more readable.
-
-You can also specify `BLOCK SIZE = NULL` in which case HBase's default value
-will be used.
 
 You can also specify map- and group-type column families in the properties
 list:
@@ -359,13 +320,11 @@ elements described in the previous section:
 
     schema> CREATE TABLE users WITH DESCRIPTION 'some data'
          -> ROW KEY FORMAT (username STRING, HASH(SIZE=3))
-         -> PROPERTIES (MAX FILE SIZE = 10000000000)
          -> WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
          ->     MAXVERSIONS = INFINITY,
          ->     TTL = FOREVER,
          ->     INMEMORY = false,
          ->     COMPRESSED WITH GZIP,
-         ->     BLOOM FILTER = ROW,
          ->     FAMILY info WITH DESCRIPTION 'basic information' (
          ->         name "string" WITH DESCRIPTION 'The user\'s name',
          ->         email "string",
@@ -413,8 +372,6 @@ Keywords or clauses in \[square brackets\] are optional in the examples below:
         | INMEMORY = bool
         | TTL = int
         | COMPRESSED WITH { GZIP | LZO | SNAPPY | NONE }
-        | BLOOM FILTER = { NONE | ROW | ROWCOL }
-        | BLOCK SIZE = int
     ... or a FAMILY definition (see the earlier section on the CREATE TABLE syntax)
 
     ALTER TABLE t RENAME LOCALITY GROUP lg [AS] lg2;
@@ -429,12 +386,10 @@ Keywords or clauses in \[square brackets\] are optional in the examples below:
     ALTER TABLE t SET SCHEMA = schema FOR COLUMN info:foo;
 
     ALTER TABLE t SET DESCRIPTION = 'desc';
-    ALTER TABLE t SET table_property = value;
-    ... Where 'table_property' is one of MAX FILE SIZE or MEMSTORE FLUSH SIZE.
 
     ALTER TABLE t SET DESCRIPTION = 'desc' FOR LOCALITY GROUP lg;
     ALTER TABLE t SET property FOR LOCALITY GROUP lg;
-    ... where 'property' is one of MAXVERSIONS, INMEMORY, TTL, etc. as above.
+    ... where 'property' is one of MAXVERSIONS, INMEMORY, TTL, or COMPRESSED WITH.
 
 
 ### Working With Scripts
