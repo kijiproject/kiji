@@ -1,6 +1,18 @@
 
                              Kiji Express Release Notes
 
+Version 0.5.0
+  * EXP-77. Allows Hadoop -D configuration flags to be passed from the
+      command line when running scripts and compiled jobs. 
+  * EXP-85. Fixes a bug in which the packAvro method used an incorrect
+      type conversion while building Avro records.
+  * EXP-4. Adds the ability to write to map-type column families using
+      a qualifier specified through a tuple field.
+  * EXP-46. Adds a kiji-schema-shell extension which can be launched
+      using the command `express schema-shell`. This extension can be
+      used to run model lifecycle phases. This commit also completes the
+      initial implementation of the KijiExpress model lifecycle.
+
 Version 0.4.0
   * EXP-48. AvroRecords can be created with the apply method on a map, for example:
       AvroRecord("fieldname1" -> "stringvalue", "fieldname2" -> 2L)
