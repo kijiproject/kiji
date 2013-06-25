@@ -22,7 +22,7 @@
 
   <groupId>org.kiji.examples.phonebook</groupId>
   <artifactId>kiji-phonebook</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>1.0.0</version>
   <packaging>jar</packaging>
 
   <parent>
