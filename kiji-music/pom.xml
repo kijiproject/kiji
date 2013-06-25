@@ -36,9 +36,9 @@
   <url>http://www.kiji.org</url>
 
   <properties>
-    <kiji-schema.version>1.1.0</kiji-schema.version>
-    <kiji-mapreduce.version>1.0.0</kiji-mapreduce.version>
-    <kiji-mapreduce-lib.version>1.0.0</kiji-mapreduce-lib.version>
+    <kiji-schema.version>1.1.1-SNAPSHOT</kiji-schema.version>
+    <kiji-mapreduce.version>1.0.1-SNAPSHOT</kiji-mapreduce.version>
+    <kiji-mapreduce-lib.version>1.0.1-SNAPSHOT</kiji-mapreduce-lib.version>
     <kiji-cdh4-platform.version>1.1.0</kiji-cdh4-platform.version>
     <fake-hbase.version>0.1.0</fake-hbase.version>
   </properties>
