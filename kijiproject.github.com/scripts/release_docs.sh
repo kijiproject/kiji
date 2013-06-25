@@ -32,24 +32,24 @@
 
 
 # KijiSchema version
-SCHEMA_FLAT_VER=1_0_4
-SCHEMA_VER=1.0.4
+SCHEMA_FLAT_VER=1_1_0
+SCHEMA_VER=1.1.0
 
 # KijiMR version
-KIJIMR_FLAT_VER=1_0_0_rc62
-KIJIMR_VER=1.0.0-rc62
+KIJIMR_FLAT_VER=1_0_0
+KIJIMR_VER=1.0.0
 
 # KijiMR Library version
-MRLIB_FLAT_VER=1_0_0_rc61
-MRLIB_VER=1.0.0-rc61
+MRLIB_FLAT_VER=1_0_0
+MRLIB_VER=1.0.0
 
 # KijiExpress version
-EXPRESS_FLAT_VER=0_4_0
-EXPRESS_VER=0.4.0
+EXPRESS_FLAT_VER=0_5_0
+EXPRESS_VER=0.5.0
 
 # Music Recommendation Tutorial version
-MUSIC_FLAT_VER=1_0_0_rc61
-MUSIC_VER=1.0.0-rc61
+MUSIC_FLAT_VER=1_0_0
+MUSIC_VER=1.0.0
 
 # Express Music Recommendation tutorial version
 # Currently version-linked to the KijiExpress version.
@@ -57,8 +57,8 @@ EXPRESS_MUSIC_FLAT_VER="$EXPRESS_FLAT_VER"
 EXPRESS_MUSIC_VER="$EXPRESS_VER"
 
 # Phonebook Tutorial version
-PHONEBOOK_FLAT_VER=1_0_0_rc6
-PHONEBOOK_VER=1.0.0-rc6
+PHONEBOOK_FLAT_VER=1_0_0
+PHONEBOOK_VER=1.0.0
 
 ### Ordinary configuration does not go past this line ###
 
