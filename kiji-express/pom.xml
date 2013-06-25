@@ -19,17 +19,17 @@
   <parent>
     <groupId>org.kiji.pom</groupId>
     <artifactId>root-pom</artifactId>
-    <version>1.1.0-SNAPSHOT</version>
+    <version>1.1.0</version>
   </parent>
 
   <properties>
     <scalding.version>0.8.3</scalding.version>
-    <kiji-schema-shell.version>1.1.0-SNAPSHOT</kiji-schema-shell.version>
+    <kiji-schema-shell.version>1.1.0</kiji-schema-shell.version>
     <scalatest.version>2.0.M5b</scalatest.version>
     <twitter-util.version>6.2.0</twitter-util.version>
-    <kiji-schema.version>1.1.0-SNAPSHOT</kiji-schema.version>
-    <kiji-mapreduce.version>1.0.0-SNAPSHOT</kiji-mapreduce.version>
-    <fake-hbase.version>0.1.0-SNAPSHOT</fake-hbase.version>
+    <kiji-schema.version>1.1.0</kiji-schema.version>
+    <kiji-mapreduce.version>1.0.0</kiji-mapreduce.version>
+    <fake-hbase.version>0.1.0</fake-hbase.version>
   </properties>
 
   <dependencies>
