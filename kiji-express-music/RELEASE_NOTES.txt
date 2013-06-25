@@ -2,6 +2,20 @@
 
                              Kiji Express Music Tutorial Release Notes
 
+Version 0.5.0
+  * EXP-80. Provides an example of using the extract and score model
+      lifecycle phases to make recommendations.
+  * EXP-84. Removes Scala-to-Java list conversions that are no longer
+      necessary from tutorial code.
+  * EXP-76. Fixes an incorrect $ in README instructions for exporting
+      environment variables.
+  * EXP-72. Updates all tutorial examples to use KijiJob instead of
+      Scalding's Job. KijiJob provides additional operations on pipes,
+      such as the methods packAvro and unpackAvro, which the tutorial is
+      also updated to employ.
+  * EXP-49. Includes the bulk import descriptor needed to import the
+      tutorial data.
+
 Version 0.4.0
   * EXP-37. Updates tutorial to use AvroRecord when reading from Kiji.
 
