@@ -1,6 +1,12 @@
 
-
                               KijiREST Release Notes
+
+Version 0.2.0
+  * REST-20. Update KijiREST to depend on KijiSchema v1.1.0.
+  * REST-10: Ensure that the /rows resource streams properly in all cases.
+  * REST-18. Adds KIJI_CLASSPATH to KijiREST classpath.
+  * REST-9. Allows users to GET with timerange=all.
+  * REST-11. Ignore cells with negative timestamps when POSTing.
 
 Version 0.1.0
   * Initial code commit.
