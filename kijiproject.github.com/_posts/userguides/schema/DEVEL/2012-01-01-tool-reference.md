@@ -295,7 +295,7 @@ command may return before the actual flush operation is complete.
 The `kiji ls` command is a basic tool used to explore a KijiSchema repository.
 It can list instances, tables, or even columns in the specified Kiji URI argument.
 Note that this tool takes Kiji URIs as unflagged arguments.
-If no URI argument is specified, then the tool assumes the default URI: `kiji://.env/default`.
+If no URI argument is specified, then the tool assumes the default URI: `kiji://.env`.
 
 You may list the Kiji instances existing in an HBase cluster by specifying the URI of an HBase cluster:
 {% highlight bash %}
