@@ -67,6 +67,7 @@
     <maven-site-plugin.version>3.1</maven-site-plugin.version>
     <maven-surefire-plugin.version>2.12</maven-surefire-plugin.version>
     <scalastyle-plugin.version>0.1.0</scalastyle-plugin.version>
+    <versions-maven-plugin.version>2.1</versions-maven-plugin.version>
   </properties>
 
   <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
@@ -74,6 +75,16 @@
   <build>
     <pluginManagement>
       <plugins>
+
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>versions-maven-plugin</artifactId>
+          <version>2.1</version>
+          <configuration>
+            <allowSnapshots>true</allowSnapshots>
+          </configuration>
+        </plugin>
+
 
         <plugin>
           <groupId>org.apache.avro</groupId>
@@ -616,12 +627,17 @@
   </repositories>
   <pluginRepositories>
     <pluginRepository>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
       <id>kiji-plugins</id>
       <name>kiji-plugins</name>
       <url>https://repo.wibidata.com/artifactory/kiji</url>
+    </pluginRepository>
+    <pluginRepository>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <id>kiji-plugins-nightly</id>
+      <name>kiji-plugins-nightly</name>
+      <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
     </pluginRepository>
   </pluginRepositories>
 
