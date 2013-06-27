@@ -19,6 +19,7 @@
 
 package org.kiji.express.modeling
 
+import scala.collection.mutable.Map
 import scala.io.Source
 
 import cascading.tuple.Fields
@@ -200,32 +201,60 @@ object ModelDefinition {
         .parse(avroModelDefinition.getProtocolVersion)
 
     // Attempt to load the Extractor class.
-    val extractor = try {
-      Class
+    val extractor: Class[Extractor] = try {
+      val checkClass = Class
           .forName(avroModelDefinition.getExtractorClass)
           .asInstanceOf[Class[Extractor]]
+      checkClass.newInstance().asInstanceOf[Extractor]
+      checkClass
     } catch {
       case _: ClassNotFoundException => {
         val extractorClass = avroModelDefinition.getExtractorClass
         val error = "The class \"%s\" could not be found.".format(extractorClass) +
-            " Please ensure that you have provided a valid class name and that it is available " +
-            "on your classpath."
+            " Please ensure that you have provided a valid class name and that it is available" +
+            " on your classpath."
         throw new ValidationException(error)
+      }
+      case _: ClassCastException => {
+        val extractorClass = avroModelDefinition.getExtractorClass
+        val error = "An instance of the class \"%s\" could not be cast".format(extractorClass) +
+            " as an instance of Extractor. Please ensure that you have provided a valid class" +
+            " that inherits from the Extractor class."
+        throw new ValidationException(error)
+      }
+      case e @ (_ : IllegalAccessException | _ : InstantiationException |
+          _ : ExceptionInInitializerError | _ : SecurityException) => {
+        val error = "Unable to instantiate instance of Extractor class: "
+        throw new ValidationException(error + e.toString)
       }
     }
 
     // Attempt to load the Scorer class.
-    val scorer = try {
-      Class
+    val scorer: Class[Scorer] = try {
+      val checkClass = Class
           .forName(avroModelDefinition.getScorerClass)
           .asInstanceOf[Class[Scorer]]
+      checkClass.newInstance().asInstanceOf[Scorer]
+      checkClass
     } catch {
       case _: ClassNotFoundException => {
         val scorerClass = avroModelDefinition.getScorerClass
         val error = "The class \"%s\" could not be found.".format(scorerClass) +
-            " Please ensure that you have provided a valid class name and that it is available " +
-            "on your classpath."
+            " Please ensure that you have provided a valid class name and that it is available" +
+            " on your classpath."
         throw new ValidationException(error)
+      }
+      case _: ClassCastException => {
+        val scorerClass = avroModelDefinition.getScorerClass
+        val error = "An instance of the class \"%s\" could not be cast".format(scorerClass) +
+            " as an instance of Scorer. Please ensure that you have provided a valid class" +
+            " that inherits from the Scorer class."
+        throw new ValidationException(error)
+      }
+      case e @ (_ : IllegalAccessException | _ : InstantiationException |
+          _ : ExceptionInInitializerError | _ : SecurityException) => {
+        val error = "Unable to instantiate instance of Scorer class: "
+        throw new ValidationException(error + e.toString)
       }
     }
 
@@ -254,45 +283,32 @@ object ModelDefinition {
   }
 
   /**
-   * Runs a block of code catching any validation exceptions that occur.
-   *
-   * @param fn to run.
-   * @return an exception if an error was thrown.
-   */
-  private def catchError(fn: => Unit): Option[ValidationException] = {
-    try {
-      fn
-      None
-    } catch {
-      case validationError: ValidationException => Some(validationError)
-    }
-  }
-
-  /**
    * Verifies that all fields in a model definition are valid. This validation method will
    * collect all validation errors into one exception.
    *
    * @param definition to validate.
-   * @throws ModelDefinitionValidationException if there are errors encountered while validating the
-   *     provided model definition.
+   * @throws a ModelDefinitionValidationException if there are errors encountered while
+   *     validating the provided model definition.
    */
   def validateModelDefinition(definition: ModelDefinition) {
-    val extractorClass = Option(definition.extractorClass)
-    val scorerClass = Option(definition.scorerClass)
+    val extractorClass: Class[_] = definition.extractorClass
+    val scorerClass: Class[_] = definition.scorerClass
 
-    // Collect errors from the other validation steps.
-    val errors: Seq[Option[ValidationException]] = Seq(
-        catchError(validateProtocolVersion(definition.protocolVersion)),
-        catchError(validateName(definition.name)),
-        catchError(validateVersion(definition.version)),
-        extractorClass
-            .flatMap { x => catchError(validateExtractorClass(x)) },
-        scorerClass
-            .flatMap { x => catchError(validateScorerClass(x)) },
-        catchError(validateExtractScoreBindings(extractorClass.get, scorerClass.get)))
+    val validationErrors: Seq[Option[ValidationException]] = Seq(
+        validateProtocolVersion(definition.protocolVersion),
+        validateName(definition.name),
+        validateVersion(definition.version)
+    )
+
+    val extractorFields: Set[String] = extractorOutputFieldNames(extractorClass)
+    val fieldMappingErrors: Seq[Option[ValidationException]] =
+      scorerInputFieldNames(scorerClass).map { inputFieldName: String =>
+        validateScorerInputInExtractorOutputs(inputFieldName, extractorFields)
+      }
 
     // Throw an exception if there were any validation errors.
-    val causes = errors.flatten
+    val allErrors = validationErrors ++ fieldMappingErrors
+    val causes = allErrors.flatten
     if (!causes.isEmpty) {
       throw new ModelDefinitionValidationException(causes, VALIDATION_MESSAGE)
     }
@@ -302,18 +318,21 @@ object ModelDefinition {
    * Verifies that a model definition's protocol version is supported.
    *
    * @param protocolVersion to validate.
+   * @return an optional ValidationException if there are errors encountered while validating the
+   *     protocol version.
    */
-  def validateProtocolVersion(protocolVersion: ProtocolVersion) {
+  private[express] def validateProtocolVersion(
+      protocolVersion: ProtocolVersion): Option[ValidationException] = {
     if (MAX_MODEL_DEF_VER.compareTo(protocolVersion) < 0) {
       val error = "\"%s\" is the maximum protocol version supported. ".format(MAX_MODEL_DEF_VER) +
           "The provided model definition is of protocol version: \"%s\"".format(protocolVersion)
-
-      throw new ValidationException(error)
+      Some(new ValidationException(error))
     } else if (MIN_MODEL_DEF_VER.compareTo(protocolVersion) > 0) {
       val error = "\"%s\" is the minimum protocol version supported. ".format(MIN_MODEL_DEF_VER) +
           "The provided model definition is of protocol version: \"%s\"".format(protocolVersion)
-
-      throw new ValidationException(error)
+      Some(new ValidationException(error))
+    } else {
+      None
     }
   }
 
@@ -321,14 +340,19 @@ object ModelDefinition {
    * Verifies that a model definition's name is valid.
    *
    * @param name to validate.
+   * @return an optional ValidationException if there are errors encountered while validating the
+   *     name of the model definition.
    */
-  def validateName(name: String) {
+  private[express] def validateName(name: String): Option[ValidationException] = {
     if (name.isEmpty) {
-      throw new ValidationException("The name of the model definition cannot be the empty string.")
+      val error = "The name of the model definition cannot be the empty string."
+      Some(new ValidationException(error))
     } else if (!KijiNameValidator.isValidAlias(name)) {
-      throw new ValidationException("The name \"%s\" is not valid. ".format(name) +
-          "Names must match the regex \"%s\"."
-              .format(KijiNameValidator.VALID_ALIAS_PATTERN.pattern))
+      val error = "The name \"%s\" is not valid. Names must match the regex \"%s\"."
+          .format(name, KijiNameValidator.VALID_ALIAS_PATTERN.pattern)
+      Some(new ValidationException(error))
+    } else {
+      None
     }
   }
 
@@ -336,88 +360,87 @@ object ModelDefinition {
    * Verifies that a model definition's version string is valid.
    *
    * @param version string to validate.
+   * @return an optional ValidationException if there are errors encountered while validating the
+   *     version string.
    */
-  def validateVersion(version: String) {
+  private[express] def validateVersion(version: String): Option[ValidationException] = {
     if (!version.matches(VERSION_REGEX)) {
       val error = "Model definition version strings must match the regex " +
           "\"%s\" (1.0.0 would be valid).".format(VERSION_REGEX)
-      throw new ValidationException(error)
+      Some(new ValidationException(error))
+    } else {
+      None
     }
   }
 
   /**
-   * Verifies that a model definition's extractor class is a valid class to use during the
-   * extract phase.
-   *
-   * @param extractorClass to validate.
-   */
-  def validateExtractorClass(extractorClass: Class[_]) {
-    if (!classOf[Extractor].isAssignableFrom(extractorClass)) {
-      val error = "The class \"%s\" does not implement the Extractor trait."
-          .format(extractorClass.getName)
-      throw new ValidationException(error)
+  * Provides a set of the names of output fields used by an extractor class.
+  * This is a helper function for validateScorerInputInExtractorOutputs.
+  *
+  * @param extractorClass from which to extract output fields.
+  * @return a set of the extractor's output field names.
+  */
+  private[express] def extractorOutputFieldNames(extractorClass: Class[_]): Set[String] = {
+    val extractor = extractorClass.newInstance()
+    val extractorOutputFields: Fields = extractor
+        .asInstanceOf[Extractor]
+        .extractFn
+        .fields
+        ._2
+    val extractorInputFields: Fields = extractor
+        .asInstanceOf[Extractor]
+        .extractFn
+        .fields
+        ._1
+
+    if (!extractorOutputFields.isResults()) {
+      Tuples
+          .fieldsToSeq(extractorOutputFields)
+          .toSet
+    }
+    else {
+      // If Results is true, use the extractor's input fields as output.
+      Tuples
+          .fieldsToSeq(extractorInputFields)
+          .toSet
     }
   }
 
   /**
-   * Verifies that a model definition's scorer class is a valid class to use during the score
-   * phase.
-   *
-   * @param scorerClass to validate.
-   */
-  def validateScorerClass(scorerClass: Class[_]) {
-    if (!classOf[Scorer].isAssignableFrom(scorerClass)) {
-      val error = "The class \"%s\" does not implement the Scorer trait."
-          .format(scorerClass.getName)
-      throw new ValidationException(error)
-    }
+  * Provides a set of the names of input fields used by a scorer class.
+  * This is a helper function for validateScorerInputInExtractorOutputs.
+  *
+  * @param scorerClass from which to extract input fields.
+  * @return a sequence of the scorer's input field names.
+  */
+  private[express] def scorerInputFieldNames(scorerClass: Class[_]): Seq[String] = {
+    val scorer = scorerClass.newInstance()
+    val scorerInputFields: Fields = scorer
+        .asInstanceOf[Scorer]
+        .scoreFn
+        .fields
+
+    Tuples
+        .fieldsToSeq(scorerInputFields)
   }
 
-  def validateExtractScoreBindings(extractorClass: Class[_], scorerClass: Class[_]) {
-    if (classOf[Extractor].isAssignableFrom(extractorClass) &&
-        classOf[Scorer].isAssignableFrom(scorerClass)) {
-      val extractor = try {
-        extractorClass.newInstance()
-      } catch {
-        case e: ClassNotFoundException => {
-          throw new ValidationException("Unable to create instance of extractor class. Make sure " +
-              "your extractor class is on the classpath.")
-        }
-      }
-      val scorer = try {
-        scorerClass.newInstance()
-      } catch {
-        case e: ClassNotFoundException => {
-          throw new ValidationException("Unable to create instance of scorer class. Make sure " +
-              "your scorer class is on the classpath.")
-        }
-      }
-
-      val extractorOutputFields: Fields = extractor
-          .asInstanceOf[Extractor]
-          .extractFn
-          .fields
-          ._2
-      val scorerInputFields: Fields = scorer
-          .asInstanceOf[Scorer]
-          .scoreFn
-          .fields
-
-      if (!extractorOutputFields.isResults()) {
-        val extractorOutputFieldNames: Set[String] = Tuples
-            .fieldsToSeq(extractorOutputFields)
-            .toSet
-        val scorerInputFieldNames: Seq[String] = Tuples
-            .fieldsToSeq(scorerInputFields)
-
-        scorerInputFieldNames
-            .foreach { field =>
-              if (!extractorOutputFieldNames.contains(field)) {
-                throw new ValidationException("Scorer uses a field not output by Extractor: " +
-                    "\"%s\"".format(field))
-              }
-            }
-      }
+  /**
+   * Verifies that a scorer input field also exists in a list of extractor output fields.
+   *
+   * @param scorerInputFieldName to validate.
+   * @param extractorOutputFieldNames to validate.
+   * @return an optional ValidationException if there are errors encountered while validating that
+   * a single scorer input field name exists among the extractor output field names.
+   */
+  private[express] def validateScorerInputInExtractorOutputs(
+      scorerInputFieldName: String, extractorOutputFieldNames: Set[String]):
+      Option[ValidationException] = {
+    if (!extractorOutputFieldNames.contains(scorerInputFieldName)
+        && !extractorOutputFieldNames.isEmpty) {
+      Some(new ValidationException("Scorer's input field \'" + scorerInputFieldName +
+          "\' does not match any extractor output fields."))
+    } else {
+      None
     }
   }
 }

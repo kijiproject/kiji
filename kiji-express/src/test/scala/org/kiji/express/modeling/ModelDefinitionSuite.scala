@@ -141,21 +141,23 @@ class ModelDefinitionSuite extends FunSuite {
   }
 
   test("ModelDefinition validates the extractor class") {
-    val thrown = intercept[ModelDefinitionValidationException] {
+    val thrown = intercept[ValidationException] {
       ModelDefinition.fromJsonFile(invalidExtractorDefinitionLocation)
     }
-    assert(ModelDefinition.VALIDATION_MESSAGE + "\nThe class " +
-        "\"org.kiji.express.modeling.ModelDefinitionSuite$MyBadExtractor\" does not implement " +
-        "the Extractor trait." === thrown.getMessage)
+    val badExtractor = "org.kiji.express.modeling.ModelDefinitionSuite$MyBadExtractor"
+    assert(thrown.getMessage.contains("An instance of the class \"%s\"".format(badExtractor) +
+            " could not be cast as an instance of Extractor. Please ensure that you have" +
+            " provided a valid class that inherits from the Extractor class."))
   }
 
   test("ModelDefinition validates the scorer class") {
-    val thrown = intercept[ModelDefinitionValidationException] {
+    val thrown = intercept[ValidationException] {
       ModelDefinition.fromJsonFile(invalidScorerDefinitionLocation)
     }
-    assert(ModelDefinition.VALIDATION_MESSAGE + "\nThe class " +
-        "\"org.kiji.express.modeling.ModelDefinitionSuite$MyBadScorer\" does not implement the " +
-        "Scorer trait." === thrown.getMessage)
+    val badScorer = "org.kiji.express.modeling.ModelDefinitionSuite$MyBadScorer"
+    assert(thrown.getMessage.contains("An instance of the class \"%s\"".format(badScorer) +
+            " could not be cast as an instance of Scorer. Please ensure that you have" +
+            " provided a valid class that inherits from the Scorer class."))
   }
 
   test("ModelDefinition validates the wire protocol") {

@@ -25,7 +25,7 @@ import org.kiji.annotations.ApiStability
 /**
  * This exception is thrown when an error is encountered during validation of a JSON specification.
  *
- * @param msg explaining why the validation error occured.
+ * @param msg explaining why the validation error occurred.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
@@ -34,6 +34,7 @@ class ValidationException(
     extends RuntimeException(msg)
 
 object ValidationException {
+
   private[express] def messageWithCauses(msg: String, causes: Seq[ValidationException]): String = {
     val causesMsg = causes
         .tail

@@ -40,6 +40,7 @@ import org.kiji.express.avro.Property
 import org.kiji.express.util.Resources.doAndClose
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiDataRequest
+import org.kiji.schema.KijiInvalidNameException
 import org.kiji.schema.util.FromJson
 import org.kiji.schema.util.KijiNameValidator
 import org.kiji.schema.util.ProtocolVersion
@@ -405,8 +406,8 @@ object ModelEnvironment {
   val VERSION_REGEX: String = "[0-9]+(.[0-9]+)*"
 
   /** Message to show the user when there is an error validating their model definition. */
-  private[express] val VALIDATION_MESSAGE = "One or more errors occurred while validating your " +
-      "model environment. Please correct the problems in your model environment and try again."
+  private[express] val VALIDATION_MESSAGE = "One or more errors occurred while validating your" +
+      " model environment. Please correct the problems in your model environment and try again."
 
   /**
    * Creates a new ModelEnvironment using the specified settings.
@@ -487,19 +488,22 @@ object ModelEnvironment {
    * @return a Kiji data request converted from the provided Avro data request.
    */
   private[express] def avroToKijiDataRequest(avroDataRequest: AvroDataRequest): KijiDataRequest = {
+    validateDataRequest(avroDataRequest)
+
     val builder = KijiDataRequest.builder()
         .withTimeRange(avroDataRequest.getMinTimestamp(), avroDataRequest.getMaxTimestamp())
 
+    // Add columns to the datarequest.
     avroDataRequest
         .getColumnDefinitions
         .asScala
         .foreach { columnSpec: ColumnSpec =>
-          val name = new KijiColumnName(columnSpec.getName())
-          val maxVersions = columnSpec.getMaxVersions()
-          // TODO(EXP-62): Add support for filters.
+      val name = new KijiColumnName(columnSpec.getName())
+      val maxVersions = columnSpec.getMaxVersions()
+      // TODO(EXP-62): Add support for filters.
 
-          builder.newColumnsDef().withMaxVersions(maxVersions).add(name)
-        }
+      builder.newColumnsDef().withMaxVersions(maxVersions).add(name)
+    }
 
     builder.build()
   }
@@ -534,44 +538,54 @@ object ModelEnvironment {
   }
 
   /**
-   * Runs a block of code catching any validation exceptions that occur.
-   *
-   * @param fn to run.
-   * @return an exception if an error was thrown.
-   */
-  private def catchError(fn: => Unit): Option[ValidationException] = {
-    try {
-      fn
-      None
-    } catch {
-      case validationError: ValidationException => Some(validationError)
-    }
-  }
-
-  /**
    * Verifies that all fields in a model environment are valid. This validation method will collect
    * all validation errors into one exception.
    *
    * @param environment to validate.
-   * @throws ModelEnvironmentValidationException if there are errors encountered while validating
+   * @throws a ModelEnvironmentValidationException if there are errors encountered while validating
    *     the provided model definition.
    */
   def validateModelEnvironment(environment: ModelEnvironment) {
-    val extractEnvironment = Option(environment.extractEnvironment)
-    val scoreEnvironment = Option(environment.scoreEnvironment)
+    val extractEnvironment = environment.extractEnvironment
+    val scoreEnvironment = environment.scoreEnvironment
+    val kvstores = extractEnvironment.kvstores
+
+    val fieldNames: Seq[String] = extractEnvironment.fieldBindings.map {
+      fieldBinding: FieldBinding => fieldBinding.getTupleFieldName
+    }
+    val columnNames: Seq[String] = extractEnvironment.fieldBindings.map {
+      fieldBinding: FieldBinding => fieldBinding.getStoreFieldName
+    }
 
     // Collect errors from other validation steps.
-    val errors: Seq[Option[ValidationException]] = Seq(
-        catchError(validateProtocolVersion(environment.protocolVersion)),
-        catchError(validateName(environment.name)),
-        catchError(validateVersion(environment.version)),
-        extractEnvironment
-            .flatMap { x => catchError(validateExtractEnvironment(x)) },
-        scoreEnvironment
-            .flatMap { x => catchError(validateScoreEnvironment(x)) })
+    val validationErrors: Seq[Option[ValidationException]] = Seq(
+        validateProtocolVersion(environment.protocolVersion),
+        validateName(environment.name),
+        validateVersion(environment.version),
+        validateFieldNames(fieldNames),
+        validateColumnNames(columnNames),
+        validateKijiColumnName(scoreEnvironment.outputColumn),
+        validateScoreOutputColumn(scoreEnvironment.outputColumn)
+    )
+
+    // Validate column names.
+    val columnNameErrors: Seq[Option[ValidationException]] = columnNames.map {
+      columnName: String =>
+        validateKijiColumnName(columnName)
+    }
+
+    // Collect KVStore errors.
+    val kvstoreNameErrors: Seq[Option[ValidationException]] = kvstores.map {
+      kvstore: KVStore => validateKvstoreName(kvstore)
+    }
+    val kvstorePropertiesErrors: Seq[Option[ValidationException]] = kvstores.map {
+      kvstore: KVStore => validateKvstoreProperties(kvstore)
+    }
+    val kvstoreErrors = kvstoreNameErrors ++ kvstorePropertiesErrors
 
     // Throw an exception if there were any validation errors.
-    val causes = errors.flatten
+    val allErrors = validationErrors ++ columnNameErrors ++ kvstoreErrors
+    val causes = allErrors.flatten
     if (!causes.isEmpty) {
       throw new ModelEnvironmentValidationException(causes)
     }
@@ -581,18 +595,20 @@ object ModelEnvironment {
    * Verifies that a model environment's protocol version is supported.
    *
    * @param protocolVersion to validate.
+   * @return an optional ValidationException if there are errors encountered while validating the
+   *     protocol version.
    */
-  def validateProtocolVersion(protocolVersion: ProtocolVersion) {
+  def validateProtocolVersion(protocolVersion: ProtocolVersion): Option[ValidationException] = {
     if (MAX_RUN_ENV_VER.compareTo(protocolVersion) < 0) {
       val error = "\"%s\" is the maximum protocol version supported. ".format(MAX_RUN_ENV_VER) +
           "The provided model environment is of protocol version: \"%s\"".format(protocolVersion)
-
-      throw new ValidationException(error)
+      Some(new ValidationException(error))
     } else if (MIN_RUN_ENV_VER.compareTo(protocolVersion) > 0) {
       val error = "\"%s\" is the minimum protocol version supported. ".format(MIN_RUN_ENV_VER) +
           "The provided model environment is of protocol version: \"%s\"".format(protocolVersion)
-
-      throw new ValidationException(error)
+      Some(new ValidationException(error))
+    } else {
+      None
     }
   }
 
@@ -600,15 +616,19 @@ object ModelEnvironment {
    * Verifies that a model environment's name is valid.
    *
    * @param name to validate.
+   * @return an optional ValidationException if there are errors encountered while validating the
+   *     name of the model environment.
    */
-  def validateName(name: String) {
+  def validateName(name: String): Option[ValidationException] = {
     if(name.isEmpty) {
-      throw new ValidationException("The name of the model environment can not be the empty " +
-          "string.")
+      val error = "The name of the model environment cannot be the empty string."
+      Some(new ValidationException(error))
     } else if (!KijiNameValidator.isValidAlias(name)) {
-      throw new ValidationException("The name \"%s\" is not valid. ".format(name) +
-          "Names must match the regex \"%s\"."
-              .format(KijiNameValidator.VALID_ALIAS_PATTERN.pattern))
+      val error = "The name \"%s\" is not valid. Names must match the regex \"%s\"."
+          .format(name, KijiNameValidator.VALID_ALIAS_PATTERN.pattern)
+      Some(new ValidationException(error))
+    } else {
+      None
     }
   }
 
@@ -616,74 +636,32 @@ object ModelEnvironment {
    * Verifies that a model definition's version string is valid.
    *
    * @param version to validate.
+   * @return an optional ValidationException if there are errors encountered while validating the
+   *     version string.
    */
-  def validateVersion(version: String) {
+  def validateVersion(version: String): Option[ValidationException] = {
     if (!version.matches(VERSION_REGEX)) {
       val error = "Model environment version strings must match the regex " +
           "\"%s\" (1.0.0 would be valid).".format(VERSION_REGEX)
-      throw new ValidationException(error)
+      Some(new ValidationException(error))
+    }
+    else {
+      None
     }
   }
 
   /**
-   * Validates fields in the extract model environment.
-   *
-   * @param extractEnvironment to validate.
-   */
-  def validateExtractEnvironment(extractEnvironment: ExtractEnvironment) {
-    val kvstores = Option(extractEnvironment.kvstores)
-
-    // Store errors that occur during other validation steps.
-    val errors = Seq(
-        catchError(validateExtractBindings(extractEnvironment.fieldBindings)),
-        kvstores
-            .flatMap { x => catchError(validateKvstores(x)) })
-
-    val causes = errors.flatten
-    if (!causes.isEmpty) {
-      throw new ModelEnvironmentValidationException(causes)
-    }
-  }
-
-  /**
-   * Validates fields in the score model environment.
-   *
-   * @param scoreEnvironment to validate.
-   */
-  def validateScoreEnvironment(scoreEnvironment: ScoreEnvironment) {
-    val kvstores = Option(scoreEnvironment.kvstores)
-
-    // Store errors that occur during other validation steps.
-    val errors = Seq(
-        catchError(validateScoreBinding(scoreEnvironment.outputColumn)),
-        kvstores
-            .flatMap { x => catchError(validateKvstores(x)) })
-
-    val causes = errors.flatten
-    if (!causes.isEmpty) {
-      throw new ModelEnvironmentValidationException(causes)
-    }
-  }
-
-  /**
-   * Validates a data request. Currently this only validates the format of the column name.
+   * Validates a data request. Currently this only validates the column names.
    *
    * @param dataRequest to validate.
+   * @throws a ModelEnvironmentValidationException if the column names are invalid.
    */
   def validateDataRequest(dataRequest: AvroDataRequest) {
     val errors = dataRequest
         .getColumnDefinitions
         .asScala
         .flatMap { column: ColumnSpec =>
-          if (!column.getName.matches("^[a-zA-Z_][a-zA-Z0-9_:]+$")) {
-            val error = "Columns names must begin with a letter and contain only alphanumeric " +
-                "characters and underscores. The column name you provided " +
-                "(%s) must match the regular expression ".format(column.getName) +
-                " /^[a-zA-Z_][a-zA-Z0-9_:]+$/ ."
-            Some(new ValidationException(error))
-          } else {
-            None
-          }
+          validateKijiColumnName(column.getName())
         }
 
     if (!errors.isEmpty) {
@@ -692,103 +670,130 @@ object ModelEnvironment {
   }
 
   /**
-   * Validates specified key-value stores in the model environment. This validates the format of
-   * the key-value store name, and validates that the correct properties for initializing the
-   * key-value store have been specified.
+   * Validate the name of a KVStore.
    *
-   * @param kvstores to validate.
+   * @param kvstore whose name should be validated.
+   * @return an optional ValidationException if the name provided is invalid.
    */
-  def validateKvstores(kvstores: Seq[KVStore]) {
-    kvstores.foreach { kvStore: KVStore =>
-      // Validate the format of the key-value store name.
-      if (!kvStore.getName.matches("^[a-zA-Z_][a-zA-Z0-9_]+$")) {
-        throw new ValidationException("The key-value store name must begin with a letter" +
-            " and contain only alphanumeric characters and underscores. The key-value store name " +
-            "you provided is " + kvStore.getName + " and the regex it must match is" +
-            " ^[a-zA-Z_][a-zA-Z0-9_]+$" )
-      }
-
-      // Validate properties specified to initialize the key-value store. Each type of key-value
-      // store requires different properties.
-      val properties: Iterable[Property] = kvStore.getProperties().asScala
-      def propertiesContains(name: String): Boolean = {
-        properties.count { property =>
-          property.getName() == name
-        } > 0
-      }
-
-      kvStore.getStoreType match {
-        case KvStoreType.AVRO_KV => {
-          if (!propertiesContains("path")) {
-            throw new ValidationException("To use an Avro key-value record key-value store, you "
-                + "must specify the HDFS path to the Avro container file to use to back the "
-                + "store. Use the property name 'path' to provide the path.")
-          }
-        }
-        case KvStoreType.AVRO_RECORD => {
-          if (!propertiesContains("path")) {
-            throw new ValidationException("To use an Avro record key-value store, you "
-                + "must specify the HDFS path to the Avro container file to use to back the "
-                + "store. Use the property name 'path' to provide the path.")
-          }
-          if (!propertiesContains("key_field")) {
-            throw new ValidationException("To use an Avro record key-value store, you "
-                + "must specify the name of a record field whose value should be used as the "
-                + "record's key. Use the property name 'key_field' to provide the field name. ")
-          }
-        }
-        case KvStoreType.KIJI_TABLE => {
-          if (!propertiesContains("uri")) {
-            throw new ValidationException("To use a Kiji table key-value store, you "
-                + "must specify a Kiji URI addressing the table to use to back the store. Use the "
-                + "property name 'uri' to provide the URI.")
-
-          }
-          if (!propertiesContains("column")) {
-            throw new ValidationException("To use a Kiji table key-value store, you must specify "
-                + "the qualified-name of the column whose most recent value will be used as the "
-                + "value associated with each entity id. Use the property name 'column' to "
-                + "specify the column name.")
-          }
-        }
-        case kvstoreType => throw new ValidationException("An unknown key-value store type was "
-            + "specified: " + kvstoreType.toString)
-      }
+  def validateKvstoreName(kvstore: KVStore): Option[ValidationException] = {
+    if (!kvstore.getName.matches("^[a-zA-Z_][a-zA-Z0-9_]+$")) {
+      val error = "The key-value store name must begin with a letter" +
+          " and contain only alphanumeric characters and underscores. The key-value store" +
+          " name you provided is " + kvstore.getName + " and the regex it must match is " +
+          "^[a-zA-Z_][a-zA-Z0-9_]+$"
+      Some(new ValidationException(error))
+    } else {
+      None
     }
   }
 
   /**
-   * Validates the tuple field names to data bindings in the extract phase. This checks that every
-   * field name is uniquely mapped to a column name and vice versa. This also verifies that the
-   * supplied column names are formatted correctly.
+   * Validate properties specified to initialize the key-value store. Each type of key-value store
+   * requires different properties.
    *
-   * @param bindings to validate.
+   * @param kvstore whose properties to validate.
+   * @return an optional ValidationException if any of the properties are invalid.
    */
-  def validateExtractBindings(bindings: Seq[FieldBinding]) {
-    val fieldNames: Seq[String] = bindings.map { fieldBinding: FieldBinding =>
-      fieldBinding.getTupleFieldName
+  def validateKvstoreProperties(kvstore: KVStore): Option[ValidationException] = {
+    val properties: Iterable[Property] = kvstore.getProperties().asScala
+    def propertiesContains(name: String): Boolean = {
+      properties.count { property =>
+        property.getName() == name
+      } > 0
     }
+
+    kvstore.getStoreType match {
+      case KvStoreType.AVRO_KV => {
+        if (!propertiesContains("path")) {
+          val error = "To use an Avro key-value record key-value store, you must specify the" +
+              " HDFS path to the Avro container file to use to back the store. Use the" +
+              " property name 'path' to provide the path."
+          return Some(new ValidationException(error))
+        }
+      }
+
+      case KvStoreType.AVRO_RECORD => {
+        // Construct an error message for a missing path, missing key_field, or both.
+        val pathError =
+          if (!propertiesContains("path")) {
+            "To use an Avro record key-value store, you must specify the HDFS path" +
+                " to the Avro container file to use to back the store. Use the property name" +
+                " 'path' to provide the path."
+          } else {
+            ""
+          }
+
+        val keyFieldError =
+          if (!propertiesContains("key_field")) {
+            "To use an Avro record key-value store, you must specify the name" +
+                " of a record field whose value should be used as the record's key. Use the" +
+                " property name 'key_field' to provide the field name."
+          } else {
+            ""
+          }
+
+        val errorMessage = pathError + keyFieldError
+        return Some(new ValidationException(errorMessage))
+      }
+
+      case KvStoreType.KIJI_TABLE => {
+        if (!propertiesContains("uri")) {
+          val error = "To use a Kiji table key-value store, you must specify a Kiji URI" +
+              " addressing the table to use to back the store. Use the property name 'url' to" +
+              " provide the URI."
+          return Some(new ValidationException(error))
+        }
+        if (!propertiesContains("column")) {
+          val error = "To use a Kiji table key-value store, you must specify the qualified-name" +
+              " of the column whose most recent value will be used as the value associated with" +
+              " each entity id. Use the property name 'column' to specify the column name."
+          return Some(new ValidationException(error))
+        }
+      }
+
+      case kvstoreType => {
+        val error = "An unknown key-value store type was specified: " + kvstoreType.toString
+        return Some(new ValidationException(error))
+      }
+    }
+
+    return None
+  }
+
+
+
+  /**
+   * Validates that the tuple field names are distinct and mapped to a unique column name.
+   *
+   * @param fieldNames to validate.
+   * @return an optional ValidationException if the tuple field names are invalid.
+   */
+  def validateFieldNames(fieldNames: Seq[String]): Option[ValidationException] = {
     if (fieldNames.distinct.size != fieldNames.size) {
-      throw new ValidationException("Every tuple field name must map to a" +
-          " unique column name. You have a field name that is associated with multiple columns.")
+      val duplicates = fieldNames.toList.filterNot(x => fieldNames.toList.distinct == x)
+      val error = "Every tuple field name must map to a unique column name. You have" +
+          " one or more field names that are associated with" +
+          " multiple columns: %s.".format(duplicates.mkString(" "))
+      Some(new ValidationException(error))
+    } else {
+      None
     }
-    val columnNames: Seq[String] = bindings.map { fieldBinding: FieldBinding =>
-      fieldBinding.getStoreFieldName
-    }
+  }
+
+  /**
+   * Validates that the supplied column names are distinct and mapped to a unique tuple field.
+   *
+   * @param columnNames to validate.
+   * @return an optional ValidationException if the column names are invalid.
+   */
+  def validateColumnNames(columnNames: Seq[String]): Option[ValidationException] = {
     if (columnNames.distinct.size != columnNames.size) {
-      throw new ValidationException("Every column name must map to a unique tuple" +
-          " field. You have a data field associated with multiple columns. ")
-    }
-    columnNames.foreach { columnName: String =>
-      if (!columnName.matches("^[a-zA-Z_][a-zA-Z0-9_:]+$")) {
-        throw new ValidationException("The column name provided as the data binding" +
-            " in the extract phase must begin with a letter and only consist of alphanumeric" +
-            " characters and underscores. The column name you provided is: " + columnName + " and" +
-            " the regex it must match is: ^[a-zA-Z_][a-zA-Z0-9_:]+$")
-      }
-      if (columnName.isEmpty) {
-        throw new ValidationException("Column names can not be the empty string.")
-      }
+      val duplicates = columnNames.toList.filterNot(x => columnNames.toList.distinct == x)
+      val error = "Every column name must map to a unique tuple field. You have a data " +
+          "field associated with multiple columns: %s".format(duplicates.mkString(" "))
+      Some(new ValidationException(error))
+    } else {
+      None
     }
   }
 
@@ -796,25 +801,40 @@ object ModelEnvironment {
    * Validates the specified output column for the score phase.
    *
    * @param outputColumn to validate.
+   * @return an optional ValidationException if the score output column is invalid.
    */
-  def validateScoreBinding(outputColumn: String) {
+  def validateScoreOutputColumn(outputColumn: String): Option[ValidationException] = {
     if (outputColumn.isEmpty) {
-      throw new ValidationException("The column to write out to in the score phase" +
-          "can not be the empty string.")
-    }
-    val columnName: KijiColumnName = try {
-      new KijiColumnName(outputColumn)
-    } catch {
-      case e: IllegalArgumentException => {
-        throw new ValidationException("Invalid output column: " + e.getMessage())
-      }
-    }
-    if (!columnName.isFullyQualified()) {
-      throw new ValidationException("The name provided as the data binding must identify a fully " +
-          "qualified column, not a column family.")
+      val error = "The column to write out to in the score phase cannot be the empty string."
+      Some(new ValidationException(error))
+    } else {
+      None
     }
   }
 
-  def validateColumnName(name: String) {
+  /**
+   * Validates a column name specified in the model environment as a fully qualified
+   * KijiColumnName.
+   *
+   * @param name is the string representation of the column name.
+   * @return an optional ValidationException if the name is invalid.
+   */
+  def validateKijiColumnName(name: String): Option[ValidationException] = {
+    try {
+      new KijiColumnName(name)
+    } catch {
+      case _: KijiInvalidNameException => {
+        val error = "The column name " + name + " is invalid."
+        return Some(new ValidationException(error))
+      }
+    }
+
+    val columnName = new KijiColumnName(name)
+    if (!columnName.isFullyQualified()) {
+      val error = "The name " + name + " provided as the data binding must identify a" +
+          " fully qualified column, not a column family."
+      return Some(new ValidationException(error))
+    }
+    None
   }
 }

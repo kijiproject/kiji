@@ -45,6 +45,19 @@ class ModelEnvironmentSuite extends FunSuite {
       "src/test/resources/modelEnvironments/invalid-name-model-environment.json"
   val invalidProtocolDefinitionLocation: String =
       "src/test/resources/modelEnvironments/invalid-protocol-version-model-environment.json"
+  val invalidNameAndVersionDefinitionLocation: String =
+      "src/test/resources/modelEnvironments/invalid-name-and-version-model-environment.json"
+  val invalidColumnsDefinitionLocation: String =
+      "src/test/resources/modelEnvironments/invalid-columns-model-environment.json"
+
+  // Expected error messages for validation tests.
+  val expectedNameError = "The name of the model environment cannot be the empty string."
+  val expectedVersionError =
+      "Model environment version strings must match the regex \"[0-9]+(.[0-9]+)*\" " +
+      "(1.0.0 would be valid)."
+  val expectedProtocolVersionError =
+      "\"model_environment-0.1.0\" is the maximum protocol version supported. " +
+      "The provided model environment is of protocol version: \"model_environment-0.2.0\""
 
   test("ModelEnvironment can be created from a path to a valid JSON file.") {
     val expectedRequest: KijiDataRequest = {
@@ -90,7 +103,7 @@ class ModelEnvironmentSuite extends FunSuite {
     val extractEnv = ExtractEnvironment(dataRequest, Seq(), Seq())
     val extractEnv2 = ExtractEnvironment(
         dataRequest,
-        Seq(FieldBindingSpec("tuplename", "storefieldname")),
+        Seq(FieldBindingSpec("tuplename", "info:storefieldname")),
         Seq(KVStoreSpec("AVRO_KV", "storename", Map("path" -> "/some/great/path"))))
     val scoreEnv = ScoreEnvironment("outputFamily:qualifier", Seq())
     val scoreEnv2 = ScoreEnvironment(
@@ -149,23 +162,68 @@ class ModelEnvironmentSuite extends FunSuite {
     val thrown = intercept[ModelEnvironmentValidationException] {
       ModelEnvironment.fromJsonFile(invalidVersionDefinitionLocation)
     }
-    assert("Model environment version strings must match the regex \"[0-9]+(.[0-9]+)*\" " +
-        "(1.0.0 would be valid)." === thrown.getMessage)
+    assert(expectedVersionError === thrown.getMessage)
   }
 
   test("ModelEnvironment can validate the name.") {
     val thrown = intercept[ModelEnvironmentValidationException] {
       ModelEnvironment.fromJsonFile(invalidNameDefinitionLocation)
     }
-    assert("The name of the model environment can not be the empty string." === thrown.getMessage)
+    assert(expectedNameError === thrown.getMessage)
   }
 
   test("ModelEnvironment can validate the protocol version.") {
     val thrown = intercept[ModelEnvironmentValidationException] {
       ModelEnvironment.fromJsonFile(invalidProtocolDefinitionLocation)
     }
-    assert("\"model_environment-0.1.0\" is the maximum protocol version supported. " +
-        "The provided model environment is of protocol version: \"model_environment-0.2.0\""
-        === thrown.getMessage)
+    assert(expectedProtocolVersionError === thrown.getMessage)
+  }
+
+  test("ModelEnvironment validates the name and version with an error message including both.") {
+    val thrown = intercept[ModelEnvironmentValidationException] {
+      ModelEnvironment.fromJsonFile(invalidNameAndVersionDefinitionLocation)
+    }
+    assert(thrown.getMessage.contains(expectedVersionError))
+    assert(thrown.getMessage.contains(expectedNameError))
+  }
+
+  test("ModelEnvironment validates column names when constructed from JSON.") {
+    val thrown = intercept[ValidationException] {
+      ModelEnvironment.fromJsonFile(invalidColumnsDefinitionLocation)
+    }
+    assert(thrown.getMessage.contains("invalid1"))
+    assert(thrown.getMessage.contains("invalid2"))
+    assert(!thrown.getMessage.contains("valid:column"))
+  }
+
+  test("ModelEnvironment validates extract field bindings when programmatically constructed.") {
+    val dataRequest: KijiDataRequest = {
+      val builder = KijiDataRequest.builder().withTimeRange(0, 38475687)
+      builder.newColumnsDef().withMaxVersions(3).add("info", "in")
+      builder.build()
+    }
+
+    val extractEnv = ExtractEnvironment(
+        dataRequest,
+        Seq(
+            FieldBindingSpec("tuplename", "info:storefieldname"),
+            FieldBindingSpec("tuplename", "info:storefield2"),
+            FieldBindingSpec("tuplename2", "*invalidcolumnname")),
+        Seq(KVStoreSpec("AVRO_KV", "storename", Map("path" -> "/some/great/path"))))
+    val scoreEnv = ScoreEnvironment(
+        "outputFamily:qualifier",
+        Seq(KVStoreSpec("KIJI_TABLE", "myname", Map("uri" -> "kiji://.env/default/table",
+            "column" -> "info:email"))))
+
+    val thrown = intercept[ModelEnvironmentValidationException] { ModelEnvironment(
+      "myname",
+      "1.0.0",
+      "kiji://myuri",
+      extractEnv,
+      scoreEnv)
+    }
+
+    assert(thrown.getMessage.contains("tuplename"))
+    assert(thrown.getMessage.contains("*invalidcolumnname"))
   }
 }
