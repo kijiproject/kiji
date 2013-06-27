@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.schema.EntityId;
 import org.kiji.schema.EntityIdException;
+import org.kiji.schema.util.ByteArrayFormatter;
 
 /**
  * Container class for the data stored within an entityId.
@@ -67,7 +68,13 @@ public class EntityIdWritable implements Writable {
    */
   public EntityIdWritable(EntityId entityId) {
     mHBaseRowKey = entityId.getHBaseRowKey();
-    mComponents = entityId.getComponents();
+    try {
+      mComponents = entityId.getComponents();
+    } catch (IllegalStateException ise) {
+      LOG.warn("Cannot retrieve EntityId components", ise.getMessage());
+      String asciiRowKey = ByteArrayFormatter.toHex(mHBaseRowKey);
+      mComponents = Collections.singletonList((Object) asciiRowKey);
+    }
     mShellString = entityId.toShellString();
   }
 
