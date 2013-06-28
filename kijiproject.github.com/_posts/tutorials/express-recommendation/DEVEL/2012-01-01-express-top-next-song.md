@@ -110,27 +110,24 @@ in this script. Here, sortNextSongs is a UDF we've defined:
  * @return a group containing a list of song count records, sorted by count.
  */
 def sortNextSongs(nextSongs: GroupBuilder): GroupBuilder = {
-  nextSongs.sortBy('count).reverse.toList[SongCount]('songCount -> 'scalaTopSongs)
+  nextSongs.sortBy('count).reverse.toList[SongCount]('songCount -> 'topSongs)
 }
 {% endhighlight %}
 
 A Scalding `GroupBuilder` is basically a group of named tuples, which have been grouped by
 a field, and that you can operate on inside a grouping operation.  Here, we've grouped by the
 `firstSong` field, and we sort the group by the number of times they've been played. The result is
-a list of songs in the order from most to least played, in the field `scalaTopSongs`.
+a list of songs in the order from most to least played, in the field `topSongs`.
 
-`scalaTopSongs` contains the data we want: the next top songs, sorted by
+`topSongs` contains the data we want: the next top songs, sorted by
 popularity, that follow any particular song.  The last few lines are the machinery required to put
 that into our songs table.
 
 #### Do some additional processing on the tuples
 
-We do a simple conversion of Scala Lists to Java Lists and pack that list into
-the TopSongs record in the topNextSongs field.  This uses a straightforward user-defined function
-that converts Scala Lists to Java Lists:
+Next, we convert the tuple in `topSongs` to an Avro record with one field `topNextSongs`.
 
 {% highlight scala %}
-    .map('scalaTopSongs -> 'topSongs) { scalaListToJavaList }
     .packAvro('topSongs -> 'topNextSongs)
 {% endhighlight %}
 
