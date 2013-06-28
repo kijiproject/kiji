@@ -498,21 +498,33 @@ class KijiSourceSuite
 
     // Input to use with Text source.
     val genericWriteInput: List[(String, String)] = List(
-        ( "0", "eid1 word1" ),
-        ( "1", "eid2 word2" ))
+        ( "0", "one" ),
+        ( "1", "two" ))
 
     // Validates the output buffer contains the same as the input buffer.
     def validateGenericWrite(outputBuffer: Buffer[(EntityId, KijiSlice[AvroRecord])]): Unit = {
       val outMap = outputBuffer.toMap
-      assert("word1" === outMap(EntityId(uri)("eid1")).getFirstValue()("contained_string").asString)
-      assert("word2" === outMap(EntityId(uri)("eid2")).getFirstValue()("contained_string").asString)
+      assert("word_one" === outMap(EntityId(uri)("one")).getFirstValue()("field1").asString)
+      assert("word_two" === outMap(EntityId(uri)("two")).getFirstValue()("field1").asString)
+
+      assert("one" === outMap(EntityId(uri)("one")).getFirstValue()("field2").asEnumName)
+      assert("two" === outMap(EntityId(uri)("two")).getFirstValue()("field2").asEnumName)
+
+      assert(null == outMap(EntityId(uri)("one")).getFirstValue()("field3"))
     }
 
-    JobTest(new GenericAvroWriteJob(_))
+    val jobTest = JobTest(new GenericAvroWriteJob(_))
       .arg("input", "inputFile")
       .arg("output", uri)
       .source(TextLine("inputFile"), genericWriteInput)
-      .sink(KijiOutput(uri)('line -> "family:column4"))(validateGenericWrite)
+      .sink(KijiOutput(uri)('genericRecord -> "family:column4"))(
+          validateGenericWrite)
+
+    // Run in local mode.
+    jobTest.run.finish
+
+    // Run in hadoop mode.
+    jobTest.runHadoop.finish
   }
 
   test ("A job that writes to map-type column families is run.") {
@@ -745,13 +757,17 @@ object KijiSourceSuite extends KijiSuite {
     val tableUri: String = args("output")
     TextLine(args("input"))
         .read
+        .map('offset -> 'timestamp) { offset: String => offset.toLong }
         // Generate an entityId for each line.
         .map('line -> 'entityId) { EntityId(tableUri)(_: String) }
         .map('line -> 'genericRecord) { text: String =>
-          AvroRecord("field1" -> text, "field2" -> AvroEnum(text))
+          AvroRecord(
+              "field1" -> "word_%s".format(text),
+              "field2" -> AvroEnum(text),
+              "field3" -> null)
         }
-        // Write the results to the "family:column1" column of a Kiji table.
-        .write(KijiOutput(tableUri, 'offset)('line -> "family:column4"))
+        // Write the results to the "family:column4" column of a Kiji table.
+        .write(KijiOutput(tableUri)('genericRecord -> "family:column4"))
   }
 
   /**

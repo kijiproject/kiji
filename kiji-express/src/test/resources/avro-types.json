@@ -53,7 +53,7 @@
         name : "column4",
         column_schema : {
           type : "INLINE",
-          value : '{"type": "record", "name": "stringcontainer", "doc": "A simple inline record that contains a string", "fields": [{"name": "contained_string", "type": "string"}]}'
+          value : '{"type": "record", "name": "stringcontainer", "doc": "A simple inline record that contains a string", "fields": [{"name": "contained_string", "type": "string", "id": "int"}]}'
         }
       }, {
         name : "column5",

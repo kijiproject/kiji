@@ -266,7 +266,7 @@ private[express] object AvroUtil {
       avroValue match {
         // If it's null, the schema is also null.
         // scalastyle:off null
-        case null => (null, null)
+        case null => (null, Schema.create(Schema.Type.NULL))
         // scalastyle:on null
         // AvroValues
         case AvroInt(i) => (scalaToJava(i), Schema.create(Schema.Type.INT))
