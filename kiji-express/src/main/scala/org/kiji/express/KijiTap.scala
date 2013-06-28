@@ -41,7 +41,10 @@ import org.kiji.annotations.ApiStability
 import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.Kiji
+import org.kiji.schema.KijiColumnName
+import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiURI
+import org.kiji.schema.layout.KijiTableLayout
 
 /**
  * A Kiji-specific implementation of a Cascading `Tap`, which defines the location of a Kiji table.
@@ -223,4 +226,72 @@ private[express] class KijiTap(
   }
 
   override def hashCode(): Int = Objects.hashCode(tableUri, scheme, id)
+
+  /**
+   * Checks whether the instance, tables, and columns this tap uses can be accessed.
+   *
+   * @throws KijiExpressValidationException if the tables and columns are not accessible when this
+   *    is called.
+   */
+  private[express] def validate(): Unit = {
+    val kijiUri: KijiURI = KijiURI.newBuilder(tableUri).build()
+    val columnNames: List[KijiColumnName] =
+        scheme.columns.values.map { column => column.getColumnName() }.toList
+    KijiTap.validate(kijiUri, columnNames)
+  }
+}
+
+object KijiTap {
+  /**
+   * Checks whether the instance, tables, and columns specified can be accessed.
+   *
+   * @throws KijiExpressValidationException if the tables and columns are not accessible when this
+   *    is called.
+   */
+  private[express] def validate(
+      kijiUri: KijiURI,
+      columnNames: List[KijiColumnName]) {
+    // Try to open the Kiji instance.
+    val kiji: Kiji =
+        try {
+          Kiji.Factory.open(kijiUri)
+        } catch {
+          case e: Exception =>
+            throw new InvalidKijiTapException(
+                "Error opening Kiji instance: %s\n".format(kijiUri.getInstance()) + e.getMessage)
+        }
+
+    // Try to open the table.
+    val table: KijiTable =
+        try {
+          kiji.openTable(kijiUri.getTable())
+        } catch {
+          case e: Exception =>
+            throw new InvalidKijiTapException(
+                "Error opening Kiji table: %s\n".format(kijiUri.getTable()) + e.getMessage)
+        } finally {
+          kiji.release() // Release the Kiji instance.
+        }
+
+    // Check the columns are valid
+    val tableLayout: KijiTableLayout = table.getLayout
+    table.release() // Release the KijiTable.
+
+    // Collect any errors from nonexistent column names.
+    val columnErrors: List[KijiColumnName] = columnNames.flatMap { column =>
+      if (tableLayout.exists(column)) {
+        None
+      } else {
+        Some(column)
+      }
+    }
+
+    // Squash any column name errors and throw it.
+    if (!columnErrors.isEmpty) {
+      throw new InvalidKijiTapException(
+          "One or more columns does not exist in the table %s: %s\n".format(
+              table.getName(),
+              columnErrors.map { _.getName() }.mkString(", ")) )
+    }
+  }
 }

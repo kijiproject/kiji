@@ -109,9 +109,9 @@ private[express] case class OutputContext(
 @ApiAudience.Framework
 @ApiStability.Experimental
 private[express] class LocalKijiScheme(
-    private val timeRange: TimeRange,
-    private val timestampField: Option[Symbol],
-    private val columns: Map[String, ColumnRequest])
+    private[express] val timeRange: TimeRange,
+    private[express] val timestampField: Option[Symbol],
+    private[express] val columns: Map[String, ColumnRequest])
     extends Scheme[Properties, InputStream, OutputStream, InputContext, OutputContext] {
   private val logger: Logger = LoggerFactory.getLogger(classOf[LocalKijiScheme])
 

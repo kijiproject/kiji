@@ -85,10 +85,10 @@ import org.kiji.schema.layout.KijiTableLayout
 @ApiAudience.Framework
 @ApiStability.Experimental
 private[express] class KijiScheme(
-    private val timeRange: TimeRange,
-    private val timestampField: Option[Symbol],
-    private val loggingInterval: Long,
-    private val columns: Map[String, ColumnRequest])
+    private[express] val timeRange: TimeRange,
+    private[express] val timestampField: Option[Symbol],
+    private[express] val loggingInterval: Long,
+    private[express] val columns: Map[String, ColumnRequest])
     extends Scheme[JobConf, RecordReader[KijiKey, KijiValue], OutputCollector[_, _],
         KijiSourceContext, KijiSinkContext] {
   import KijiScheme._

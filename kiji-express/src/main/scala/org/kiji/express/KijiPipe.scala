@@ -53,7 +53,7 @@ class KijiPipe(private val pipe: Pipe) extends TupleConversions {
    * @param args that should be used to construct the job.
    * @return a job that can be used to run the data pipeline.
    */
-  private[express] def getJob(args: Args): Job = new Job(args) {
+  private[express] def getJob(args: Args): Job = new KijiJob(args) {
     // The job's constructor should evaluate to the pipe to run.
     pipe
 

@@ -19,8 +19,12 @@
 
 package org.kiji.express
 
+import scala.collection.JavaConverters.collectionAsScalaIterableConverter
+
+import cascading.tap.Tap
 import com.twitter.scalding.Args
 import com.twitter.scalding.Job
+import com.twitter.scalding.Mode
 
 /**
  * KijiJob is KijiExpress's extension of Scalding's `Job`, and users should extend it when writing
@@ -30,4 +34,22 @@ import com.twitter.scalding.Job
  *     KijiJob, `args("input")` will evaluate to "SomeFile.txt" if your command line contained the
  *     argument `--input SomeFile.txt`
  */
-class KijiJob(args: Args) extends Job(args) with PipeConversions
+class KijiJob(args: Args) extends Job(args) with PipeConversions {
+  override def validateSources(mode: Mode): Unit = {
+    val taps: List[Tap[_, _, _]] =
+        flowDef.getSources.values.asScala.toList ++
+        flowDef.getSinks.values.asScala.toList
+
+    // Validate that the Kiji parts of the sources (tables, columns) are valid and exist.
+    taps.foreach { tap =>
+      tap match {
+        case kijiTap: KijiTap => kijiTap.validate()
+        case localKijiTap: LocalKijiTap => localKijiTap.validate()
+        case _ => // No Kiji parts to verify.
+      }
+    }
+
+    // Call any validation that scalding's Job class does.
+    super.validateSources(mode)
+  }
+}

@@ -40,7 +40,10 @@ import org.kiji.annotations.ApiStability
 import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.Kiji
+import org.kiji.schema.KijiColumnName
+import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiURI
+import org.kiji.schema.layout.KijiTableLayout
 
 /**
  * A Kiji-specific implementation of a Cascading `Tap`, which defines the location of a Kiji table.
@@ -212,4 +215,18 @@ private[express] class LocalKijiTap(
   }
 
   override def hashCode(): Int = Objects.hashCode(tableUri, scheme, id)
+
+  /**
+   * Checks whether the instance, tables, and columns this tap uses can be accessed.
+   *
+   * @throws KijiExpressValidationException if the tables and columns are not accessible when this
+   *    is called.
+   */
+  private[express] def validate(): Unit = {
+    val kijiUri: KijiURI = KijiURI.newBuilder(tableUri).build()
+    val columnNames: List[KijiColumnName] =
+        scheme.columns.values.map { column => column.getColumnName() }.toList
+
+    KijiTap.validate(kijiUri, columnNames)
+  }
 }
