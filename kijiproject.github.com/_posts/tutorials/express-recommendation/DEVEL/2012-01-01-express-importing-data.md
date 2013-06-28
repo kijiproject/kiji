@@ -14,11 +14,11 @@ and import data about when users have listened to songs into the Kiji table `use
 
 ### KijiExpress Custom Importers
 
-Kiji provides stock bulk importers that work for a number of standard use cases. However, 
+Kiji provides stock bulk importers that work for a number of standard use cases. However,
 if you have to do any customization to these importers, they quickly become complicated.
 We've provided custom importers written in KijiExpress for importing the user data and song metadata.
 
-The source code for one of the importers is in included at the [bottom of this page](#importer-source).
+The source code for one of the importers is included at the [bottom of this page](#importer-source).
 
 #### Importing Tutorial Data
 
@@ -38,7 +38,7 @@ express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
 
 <div class="userinput">
 {% highlight bash %}
-    express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
+express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
     ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_DEVEL_version}}.jar \
     org.kiji.express.music.SongPlaysImporter \
     --input express-tutorial/song-plays.json \
