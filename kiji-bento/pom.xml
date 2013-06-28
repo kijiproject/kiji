@@ -42,12 +42,12 @@
     <kiji-phonebook.version>1.0.0</kiji-phonebook.version>
     <kiji-mapreduce.version>1.0.0</kiji-mapreduce.version>
     <kiji-mapreduce-lib.version>1.0.0</kiji-mapreduce-lib.version>
-    <kiji-hive-adapter.version>0.3.0</kiji-hive-adapter.version>
+    <kiji-hive-adapter.version>0.4.1</kiji-hive-adapter.version>
     <kiji-music.version>1.0.0</kiji-music.version>
     <kiji-express.version>0.5.0</kiji-express.version>
     <kiji-express-music.version>0.5.0</kiji-express-music.version>
     <kiji-express-examples.version>0.3.0</kiji-express-examples.version>
-    <kiji-rest.version>0.1.0</kiji-rest.version>
+    <kiji-rest.version>0.2.0</kiji-rest.version>
   </properties>
 
   <modules>
