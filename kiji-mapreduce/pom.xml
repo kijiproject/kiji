@@ -50,6 +50,7 @@
     <module>kiji-mapreduce</module> <!-- hadoop2-based build -->
     <module>mr-hadoop1x</module> <!-- hadoop1-based build -->
     <module>dist</module>
+    <module>kiji-mapreduce-archetype</module>
   </modules>
 
   <build>
@@ -81,6 +82,11 @@
               <version>${project.version}</version>
             </dependency>
           </dependencies>
+        </plugin>
+
+        <plugin>
+          <artifactId>maven-archetype-plugin</artifactId>
+          <version>2.2</version>
         </plugin>
       </plugins>
     </pluginManagement>
