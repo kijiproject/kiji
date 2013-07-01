@@ -20,13 +20,15 @@
 package org.kiji.scoring.tools;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 import com.google.common.base.Preconditions;
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -366,15 +368,23 @@ public class FreshTool extends BaseTool {
    * @throws IOException in case of an error finding the file or reading from it.
    */
   private String readStateFromFile(String path) throws IOException {
-    final BufferedReader reader = new BufferedReader(new FileReader(path));
-    final StringBuilder builder = new StringBuilder();
-    String line = null;
-    final String seperator = System.getProperty("line.separator");
-    while ((line = reader.readLine()) != null) {
-      builder.append(line);
-      builder.append(seperator);
+    final FileInputStream input = new FileInputStream(path);
+    final InputStreamReader inputReader = new InputStreamReader(input, "UTF-8");
+    final BufferedReader bufferedReader = new BufferedReader(inputReader);
+    try {
+      final StringBuilder builder = new StringBuilder();
+      String line;
+      final String seperator = System.getProperty("line.separator");
+      while ((line = bufferedReader.readLine()) != null) {
+        builder.append(line);
+        builder.append(seperator);
+      }
+      return builder.toString();
+    } finally {
+      IOUtils.closeQuietly(input);
+      IOUtils.closeQuietly(inputReader);
+      IOUtils.closeQuietly(bufferedReader);
     }
-    return builder.toString();
   }
 
   /** {@inheritDoc} */
