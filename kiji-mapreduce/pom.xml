@@ -66,7 +66,9 @@
                                               # in the top-level pom file; don't recurse.
             mvn clean verify                  # Uses the new snapshot versions
             mvn versions:revert               # Revert the pom file to before update-properties.
-                                    # Do not check in new Kiji SNAPSHOT dependencies in the pom.
+
+            # Do not check in new Kiji SNAPSHOT dependencies in the pom.
+            # Call mvn versions:revert first to undo those changes.
         -->
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>versions-maven-plugin</artifactId>
