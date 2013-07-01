@@ -1,7 +1,7 @@
 ---
 layout: post
 title : Use Counters
-categories: [tutorials, phonebook-tutorial, DEVEL]
+categories: [tutorials, phonebook-tutorial, devel]
 tags: [phonebook]
 order : 7
 description: Use atomic increment in the Phonebook example to calculate talktime.
@@ -107,7 +107,7 @@ to the file in hdfs.
 <div class="userinput">
 {% highlight bash %}
 $KIJI_HOME/bin/kiji jar \
-    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-{{site.phonebook_DEVEL_version}}.jar \
+    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-{{site.phonebook_devel_version}}.jar \
     org.kiji.examples.phonebook.IncrementTalkTime /tmp/input-phone-log.txt
 {% endhighlight %}
 </div>

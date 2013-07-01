@@ -1,10 +1,10 @@
 ---
 layout: post
 title: KijiREST Examples
-categories: [userguides, rest, DEVEL]
+categories: [userguides, rest, devel]
 tags: [rest-ug]
 order: 4
-version: DEVEL
+version: devel
 description: Examples
 ---
 

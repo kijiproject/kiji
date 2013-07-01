@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Overview
-categories: [tutorials, phonebook-tutorial, DEVEL]
+categories: [tutorials, phonebook-tutorial, devel]
 tags: [phonebook]
 order: 1
 description: Quick tutorial to get up and running with Kiji Tables.
@@ -17,12 +17,12 @@ to bulk load this into your Kiji table.
 Example code for a more in depth look at these use cases exist in the directory
 `$KIJI_HOME/examples/phonebook/src/main/java`.  Instructions for how to build and use this
 example code can be found in the next section of this tutorial,
-[Setup]({{site.tutorial_phonebook_DEVEL}}/phonebook-setup).
+[Setup]({{site.tutorial_phonebook_devel}}/phonebook-setup).
 
 ### How to Use this Tutorial
 
 * **Links to Javadoc** - Class names link to the relevant Javadoc:
-[`EntityId`]({{site.api_schema_DEVEL}}/EntityId.html).
+[`EntityId`]({{site.api_schema_devel}}/EntityId.html).
 
 * **Code Walkthrough** - Code snippets are in gray boxes with language specific syntax highlighting:
 

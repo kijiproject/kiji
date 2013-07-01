@@ -1,7 +1,7 @@
 ---
 layout: post
 title : Derive Data
-categories: [tutorials, phonebook-tutorial, DEVEL]
+categories: [tutorials, phonebook-tutorial, devel]
 tags: [phonebook]
 order: 6
 description: Decompose an address into its individual fields.
@@ -11,7 +11,7 @@ description: Decompose an address into its individual fields.
   <h3>This page is deprecated.</h3>
   <p>
     For a more up-to-date look at how to derive data using Producers, see the
-    <a href="/tutorials/music-recommendation/DEVEL/music-overview/">Music
+    <a href="{{site.tutorial_music_devel}}/music-overview/">Music
     recommendation tutorial</a>.
     This section is preserved for your reference, but the APIs referenced herein
     are deprecated and may be removed in a future release of KijiSchema.
@@ -73,7 +73,7 @@ You can execute this example using the `kiji jar` command with the class name:
 <div class="userinput">
 {% highlight bash %}
 $KIJI_HOME/bin/kiji jar \
-    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-{{site.phonebook_DEVEL_version}}.jar \
+    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-{{site.phonebook_devel_version}}.jar \
     org.kiji.examples.phonebook.AddressFieldExtractor
 {% endhighlight %}
 </div>

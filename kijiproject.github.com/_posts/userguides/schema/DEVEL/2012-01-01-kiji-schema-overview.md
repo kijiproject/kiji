@@ -1,9 +1,9 @@
 ---
 layout: post
 title: What is KijiSchema?
-categories: [userguides, schema, DEVEL]
+categories: [userguides, schema, devel]
 tags : [schema-ug]
-version: DEVEL
+version: devel
 order : 1
 description: Overview.
 ---
@@ -37,7 +37,7 @@ pom.xml in the `<dependencies>` block:
     <dependency>
       <groupId>org.kiji.schema</groupId>
       <artifactId>kiji-schema</artifactId>
-      <version>{{site.schema_DEVEL_version}}</version>
+      <version>{{site.schema_devel_version}}</version>
       <scope>provided</scope>
     </dependency>
 

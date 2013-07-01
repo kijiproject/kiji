@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Setup
-categories: [tutorials, phonebook-tutorial, DEVEL]
+categories: [tutorials, phonebook-tutorial, devel]
 tags: [phonebook]
 order: 2
 description: Setup and compile instructions for the phonebook tutorial.
@@ -24,7 +24,7 @@ bento start
 
 If you have downloaded the Kiji Standalone BentoBox, the code for this tutorial
 is already compiled and located in the `$KIJI_HOME/examples/phonebook/lib/` directory.
-You can skip to [Create a Table]({{site.tutorial_phonebook_DEVEL}}/phonebook-create)
+You can skip to [Create a Table]({{site.tutorial_phonebook_devel}}/phonebook-create)
 if you want to get started playing with the example code.
 
 

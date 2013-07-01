@@ -1,7 +1,7 @@
 ---
 layout: post
 title: PlayCount
-categories: [tutorials, express-recommendation, DEVEL]
+categories: [tutorials, express-recommendation, devel]
 tags: [express-music]
 order: 5
 description: A job that counts song plays.
@@ -33,7 +33,7 @@ walk through how the job is created.
 
 #### Read "info:track_plays" from a Kiji table
 
-Data can be read from a Kiji table by using [`KijiInput`](({{site.api_express_DEVEL}}/KijiInput.html)).
+Data can be read from a Kiji table by using [`KijiInput`](({{site.api_express_devel}}/KijiInput.html)).
 This factory method takes options specific to requesting slices of data from a Kiji table such as:
 
 * Which columns to retrieve from the table and the field names they should be given.
@@ -53,8 +53,8 @@ KijiInput(args("table-uri"))(Map(Column("info:track_plays", all) -> 'playlist))
 
 Each cell in the "info:track_plays" column may contain multiple songs that the user represented by
 this row has listened to. This data is manifested as a
-[`KijiSlice`]({{site.api_express_DEVEL}}/KijiSlice.html). For our purposes, we can imagine a
-[`KijiSlice`]({{site.api_express_DEVEL}}/KijiSlice.html) as a list of cells, each one a different
+[`KijiSlice`]({{site.api_express_devel}}/KijiSlice.html). For our purposes, we can imagine a
+[`KijiSlice`]({{site.api_express_devel}}/KijiSlice.html) as a list of cells, each one a different
 version of the "info:track_plays" column.
 
 *  Unpack the data contained within each cell:
@@ -128,7 +128,7 @@ This code shows the entire pipeline put together:
 <div id="accordion-container">
   <h2 class="accordion-header"> SongPlayCounter.scala </h2>
   <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-express-music/raw/{{site.music_express_DEVEL_branch}}/src/main/scala/org/kiji/express/music/SongPlayCounter.scala"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-express-music/raw/{{site.music_express_devel_branch}}/src/main/scala/org/kiji/express/music/SongPlayCounter.scala"> </script>
   </div>
 </div>
 
@@ -139,7 +139,7 @@ This code shows the entire pipeline put together:
 <div class="userinput">
 {% highlight bash %}
 express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
-    ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_DEVEL_version}}.jar \
+    ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_devel_version}}.jar \
     org.kiji.express.music.SongPlayCounter \
     --table-uri ${KIJI}/users \
     --output express-tutorial/songcount-output \

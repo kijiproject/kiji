@@ -37,7 +37,7 @@ The documentation links in this section refer to works-in-progress for the next 
 of the software to be released. Documentation in this section may be incorrect or change
 before release.
 
-* [KijiSchema]({{site.userguide_url}}/schema/DEVEL/kiji-schema-overview/)
-* [KijiMR]({{site.userguide_url}}/mapreduce/DEVEL/kiji-mr-overview/)
-* [KijiREST]({{site.userguide_url}}/rest/DEVEL/rest-overview/)
+* [KijiSchema]({{site.userguide_schema_devel}}/kiji-schema-overview/)
+* [KijiMR]({{site.userguide_mapreduce_devel}}/kiji-mr-overview/)
+* [KijiREST]({{site.userguide_rest_devel}}/rest-overview/)
 

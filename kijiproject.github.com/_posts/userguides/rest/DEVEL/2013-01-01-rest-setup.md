@@ -1,10 +1,10 @@
 ---
 layout: post
 title: Setup
-categories: [userguides, rest, DEVEL]
+categories: [userguides, rest, devel]
 tags: [rest-ug]
 order: 5
-version: DEVEL
+version: devel
 description: Setup
 ---
 

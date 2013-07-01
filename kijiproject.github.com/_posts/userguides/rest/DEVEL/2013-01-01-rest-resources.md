@@ -1,10 +1,10 @@
 ---
 layout: post
 title: KijiREST Resources
-categories: [userguides, rest, DEVEL]
+categories: [userguides, rest, devel]
 tags: [rest-ug]
 order: 2
-version: DEVEL
+version: devel
 description: Resources
 ---
 

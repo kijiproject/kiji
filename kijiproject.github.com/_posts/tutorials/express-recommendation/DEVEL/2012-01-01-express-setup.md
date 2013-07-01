@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Setting up Kiji and HDFS
-categories: [tutorials, express-recommendation, DEVEL]
+categories: [tutorials, express-recommendation, devel]
 tags: [express-music]
 order: 3
 description: Setup for KijiExpress Tutorial
@@ -92,7 +92,7 @@ The file `music-schema.ddl` defines table layouts that are used in this tutorial
 <div id="accordion-container">
   <h2 class="accordion-header"> music-schema.ddl </h2>
   <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-express-music/raw/{{site.music_express_DEVEL_branch}}/src/main/resources/org/kiji/express/music/music-schema.ddl"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-express-music/raw/{{site.music_express_devel_branch}}/src/main/resources/org/kiji/express/music/music-schema.ddl"> </script>
   </div>
 </div>
 
@@ -138,7 +138,7 @@ hadoop fs -copyFromLocal ${MUSIC_EXPRESS_HOME}/example_data/*.json express-tutor
 {% endhighlight %}
 </div>
 
-You're now ready for the next step, [Importing Data]({{site.tutorial_express_DEVEL}}/express-importing-data).
+You're now ready for the next step, [Importing Data]({{site.tutorial_express_devel}}/express-importing-data).
 
 ### Kiji Administration Quick Reference
 

@@ -1,9 +1,9 @@
 ---
 layout: post
 title: What is KijiREST?
-categories: [userguides, rest, DEVEL]
+categories: [userguides, rest, devel]
 tags: [rest-ug]
-version: DEVEL
+version: devel
 order: 1
 description: Overview.
 ---

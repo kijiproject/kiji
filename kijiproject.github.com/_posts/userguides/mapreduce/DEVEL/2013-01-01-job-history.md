@@ -1,9 +1,9 @@
 ---
 layout: post
 title: Job History
-categories: [userguides, mapreduce, DEVEL]
+categories: [userguides, mapreduce, devel]
 tags : [mapreduce-ug]
-version: DEVEL
+version: devel
 order : 9
 description: Job History Table.
 ---
@@ -26,21 +26,21 @@ You can verify that the table was installed properly using the ls command:
 kiji ls kiji://.env/default/job_history
 {% endhighlight %}
 
-Jobs that extend [`KijiMapReduceJob`]({{site.api_mr_DEVEL}}/framework/KijiMapReduceJob.html) will automatically record metadata to the `job_history` table.
+Jobs that extend [`KijiMapReduceJob`]({{site.api_mr_devel}}/framework/KijiMapReduceJob.html) will automatically record metadata to the `job_history` table.
 
 ### Classes Overview
 
-The [`JobHistoryKijiTable`]({{site.api_mr_DEVEL}}/framework/JobHistoryKijiTable.html) class is the main class responsible for providing access to
+The [`JobHistoryKijiTable`]({{site.api_mr_devel}}/framework/JobHistoryKijiTable.html) class is the main class responsible for providing access to
 the `job_history` table.  Currently it provides the ability to record and retrieve job metadata.  This
 is a framework-audience class and subject to change between minor versions.
 
 ### Using the API
 
-The [`JobHistoryKijiTable`]({{site.api_mr_DEVEL}}/framework/JobHistoryKijiTable.html) class surfaces the calls `getJobDetails(String jobId)` and `getJobScanner()` for retrieving the recorded metadata.
+The [`JobHistoryKijiTable`]({{site.api_mr_devel}}/framework/JobHistoryKijiTable.html) class surfaces the calls `getJobDetails(String jobId)` and `getJobScanner()` for retrieving the recorded metadata.
 
 ### Example
 
-The `job_history` table is a Kiji table under the hood, and can thus be inspected using the `kiji ls`, `kiji scan`, and `kiji get` tools.  The [`EntityId`]({{site.api_schema_DEVEL}}/EntityId.html) associated with the `job_history` table is the jobId.  For example, to look at all of the jobIds that have been recorded:
+The `job_history` table is a Kiji table under the hood, and can thus be inspected using the `kiji ls`, `kiji scan`, and `kiji get` tools.  The [`EntityId`]({{site.api_schema_devel}}/EntityId.html) associated with the `job_history` table is the jobId.  For example, to look at all of the jobIds that have been recorded:
 
 {% highlight bash %}
 kiji scan kiji://.env/default/job_history/info:jobId

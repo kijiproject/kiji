@@ -2,9 +2,9 @@
 layout: post
 title: DDL Shell Reference
 id: userguide/ddl-ref
-categories: [userguides, schema, DEVEL]
+categories: [userguides, schema, devel]
 component: schema
-version: DEVEL
+version: devel
 order : 6
 tags: [schema-ug]
 description: An introduction to the DDL that manipulates table layouts.

@@ -1,24 +1,24 @@
 ---
 title: Accessing Data
 layout: post
-categories: [userguides, schema, DEVEL]
+categories: [userguides, schema, devel]
 tags: [schema-ug]
-version: DEVEL
+version: devel
 order : 4
 description: How to access data using KijiSchema.
 ---
 
-The [`KijiTableReader`]({{site.api_schema_DEVEL}}/KijiTableReader.html) class provides a `get(...)` method to read typed data from a Kiji table row.
-The row is addressed by its [`EntityId`]({{site.api_schema_DEVEL}}/EntityId.html)
-(which can be retrieved from the [`KijiTable`]({{site.api_schema_DEVEL}}/KijiTable.html) instance
-using the [`getEntityId()`]({{site.api_schema_DEVEL}}/KijiTable.html#getEntityId%28java.lang.String%29) method).
-Specify the desired cells from the rows with a [`KijiDataRequest`]({{site.api_schema_DEVEL}}/KijiDataRequest.html).
-See the [`KijiDataRequest`]({{site.api_schema_DEVEL}}/KijiDataRequest.html) documentation for details.
+The [`KijiTableReader`]({{site.api_schema_devel}}/KijiTableReader.html) class provides a `get(...)` method to read typed data from a Kiji table row.
+The row is addressed by its [`EntityId`]({{site.api_schema_devel}}/EntityId.html)
+(which can be retrieved from the [`KijiTable`]({{site.api_schema_devel}}/KijiTable.html) instance
+using the [`getEntityId()`]({{site.api_schema_devel}}/KijiTable.html#getEntityId%28java.lang.String%29) method).
+Specify the desired cells from the rows with a [`KijiDataRequest`]({{site.api_schema_devel}}/KijiDataRequest.html).
+See the [`KijiDataRequest`]({{site.api_schema_devel}}/KijiDataRequest.html) documentation for details.
 
-In general, [`Kiji`]({{site.api_schema_DEVEL}}/Kiji.html) and [`KijiTable`]({{site.api_schema_DEVEL}}/KijiTable.html) instances should only be opened once over the life of an application
-([`EntityIdFactory`]({{site.api_schema_DEVEL}}/EntityIdFactory.html)s should also be reused).
-[`KijiTablePool`]({{site.api_schema_DEVEL}}/KijiTablePool.html) can be used to maintain a pool of opened [`KijiTable`]({{site.api_schema_DEVEL}}/KijiTable.html) objects for reuse.
-To initially open a [`KijiTable`]({{site.api_schema_DEVEL}}/KijiTable.html):
+In general, [`Kiji`]({{site.api_schema_devel}}/Kiji.html) and [`KijiTable`]({{site.api_schema_devel}}/KijiTable.html) instances should only be opened once over the life of an application
+([`EntityIdFactory`]({{site.api_schema_devel}}/EntityIdFactory.html)s should also be reused).
+[`KijiTablePool`]({{site.api_schema_devel}}/KijiTablePool.html) can be used to maintain a pool of opened [`KijiTable`]({{site.api_schema_devel}}/KijiTable.html) objects for reuse.
+To initially open a [`KijiTable`]({{site.api_schema_devel}}/KijiTable.html):
 
 {% highlight java %}
 // URI for Kiji instance « kiji_instance_name » in your default HBase instance:
@@ -39,11 +39,11 @@ try {
 }
 {% endhighlight %}
 
-To read from an existing [`KijiTable`]({{site.api_schema_DEVEL}}/KijiTable.html),
-create a [`KijiDataRequest`]({{site.api_schema_DEVEL}}/KijiDataRequest.html) specifying the columns of data to return.
-Then, query for the desired [`EntityId`]({{site.api_schema_DEVEL}}/EntityId.html),
-using a [`KijiTableReader`]({{site.api_schema_DEVEL}}/KijiTableReader.html).
-You can get a [`KijiTableReader`]({{site.api_schema_DEVEL}}/KijiTableReader.html) for a [`KijiTable`]({{site.api_schema_DEVEL}}/KijiTable.html) using the [`openTableReader()`]({{site.api_schema_DEVEL}}/KijiTable.html#openTableReader%28%29) method.
+To read from an existing [`KijiTable`]({{site.api_schema_devel}}/KijiTable.html),
+create a [`KijiDataRequest`]({{site.api_schema_devel}}/KijiDataRequest.html) specifying the columns of data to return.
+Then, query for the desired [`EntityId`]({{site.api_schema_devel}}/EntityId.html),
+using a [`KijiTableReader`]({{site.api_schema_devel}}/KijiTableReader.html).
+You can get a [`KijiTableReader`]({{site.api_schema_devel}}/KijiTableReader.html) for a [`KijiTable`]({{site.api_schema_devel}}/KijiTable.html) using the [`openTableReader()`]({{site.api_schema_devel}}/KijiTable.html#openTableReader%28%29) method.
 
 For example:
 
@@ -64,13 +64,13 @@ try {
 }
 {% endhighlight %}
 
-The [`KijiTableReader`]({{site.api_schema_DEVEL}}/KijiTableReader.html) also implements a [`bulkGet(...)`]({{site.api_schema_DEVEL}}/KijiTableReader.html#bulkGet%28java.util.List%2C%20org.kiji.schema.KijiDataRequest%29) method
-for retrieving data for a list of [`EntityId`]({{site.api_schema_DEVEL}}/EntityId.html)s.
+The [`KijiTableReader`]({{site.api_schema_devel}}/KijiTableReader.html) also implements a [`bulkGet(...)`]({{site.api_schema_devel}}/KijiTableReader.html#bulkGet%28java.util.List%2C%20org.kiji.schema.KijiDataRequest%29) method
+for retrieving data for a list of [`EntityId`]({{site.api_schema_devel}}/EntityId.html)s.
 This is more efficient than a series of calls to `get(...)` because it uses a single RPC instead of one for each get.
 
 ## Row scanners<a id="scanner"> </a>
 
-If you need to process a range of rows, you may use a [`KijiRowScanner`]({{site.api_schema_DEVEL}}/KijiRowScanner.html):
+If you need to process a range of rows, you may use a [`KijiRowScanner`]({{site.api_schema_devel}}/KijiRowScanner.html):
 
 {% highlight java %}
 final KijiTableReader reader = table.openTableReader();
@@ -100,9 +100,9 @@ try {
 
 ## Modifying Data<a id="modifying-data"> </a>
 
-The [`KijiTableWriter`]({{site.api_schema_DEVEL}}/KijiTableWriter.html) class provides a `put(...)` method to write or update cells in a Kiji table.
+The [`KijiTableWriter`]({{site.api_schema_devel}}/KijiTableWriter.html) class provides a `put(...)` method to write or update cells in a Kiji table.
 The cell is addressed by its entity ID, column family, column qualifier, and timestamp.
-You can get a [`KijiTableWriter`]({{site.api_schema_DEVEL}}/KijiTableWriter.html) for a [`KijiTable`]({{site.api_schema_DEVEL}}/KijiTable.html) using the [`openTableWriter()`]({{site.api_schema_DEVEL}}/KijiTable.html#openTableWriter%28%29) method.
+You can get a [`KijiTableWriter`]({{site.api_schema_devel}}/KijiTableWriter.html) for a [`KijiTable`]({{site.api_schema_devel}}/KijiTable.html) using the [`openTableWriter()`]({{site.api_schema_devel}}/KijiTable.html#openTableWriter%28%29) method.
 
 {% highlight java %}
 final KijiTableWriter writer = table.openTableWriter();
@@ -122,13 +122,13 @@ Note: the type of the value being written to the cell must match the type of the
 
 ### Atomic Modifications<a id="atomic-modifications"> </a>
 
-The [`AtomicKijiPutter`]({{site.api_schema_DEVEL}}/AtomicKijiPutter.html) class provides the ability
+The [`AtomicKijiPutter`]({{site.api_schema_devel}}/AtomicKijiPutter.html) class provides the ability
 to perform atomic operations on Kiji tables.  The atomic putter uses a begin, put, commit workflow
 to construct transactions which are executed atomically by the underlying HBase table.  Addressing
 puts in the atomic writer is very similar to KijiTableWriter, except you do not need to specify an
 entityId for every put, because they all must target the same row.  When your transaction is ready,
 write it by using
-[`commit()`]({{site.api_schema_DEVEL}}/AtomicKijiPutter.html#commit%28%29).
+[`commit()`]({{site.api_schema_devel}}/AtomicKijiPutter.html#commit%28%29).
 
 {% highlight java %}
   KijiTable table = ...
@@ -151,7 +151,7 @@ write it by using
 {% endhighlight %}
 
 If you want to ensure that the table has not been modified while you accumulated puts, you can use
-[`checkAndCommit(family, qualifier, value)`]({{site.api_schema_DEVEL}}/AtomicKijiPutter.html#checkAndCommit%28java.lang.String%2C%20java.lang.String%2C%20T)
+[`checkAndCommit(family, qualifier, value)`]({{site.api_schema_devel}}/AtomicKijiPutter.html#checkAndCommit%28java.lang.String%2C%20java.lang.String%2C%20T)
 instead of commit().  This will write your puts and return true if the value in the
 specified cell matches the value to check, otherwise it will return false and your puts will remain
 in place so that you may attempt a new check.
@@ -187,14 +187,14 @@ in place so that you may attempt a new check.
 ### Batched Modifications<a id="batched-modifications"> </a>
 
 When working with high traffic tables, minimization of remote procedure calls is critical.  The
-[`KijiBufferedWriter`]({{site.api_schema_DEVEL}}/KijiBufferedWriter.html) class provides local buffering
+[`KijiBufferedWriter`]({{site.api_schema_devel}}/KijiBufferedWriter.html) class provides local buffering
 to reduce RPCs and improve table performance.  Using the buffered writer is very similar to the standard
 KijiTableWriter with a few small differences.  The buffered writer does not write put or delete operations
 until the buffer becomes full or the user calls
-[`flush`]({{site.api_schema_DEVEL}}/KijiBufferedWriter.html#flush%28%29) or
-[`close`]({{site.api_schema_DEVEL}}/KijiBufferedWriter.html#close%28%29). The size of the local
+[`flush`]({{site.api_schema_devel}}/KijiBufferedWriter.html#flush%28%29) or
+[`close`]({{site.api_schema_devel}}/KijiBufferedWriter.html#close%28%29). The size of the local
 buffer can be managed using
-[`setBufferSize`]({{site.api_schema_DEVEL}}/KijiBufferedWriter.html#setBufferSize%28long%29). The buffered
+[`setBufferSize`]({{site.api_schema_devel}}/KijiBufferedWriter.html#setBufferSize%28long%29). The buffered
 writer cannot buffer increment operations because increment requires an immediate connection to a live
 table.
 {% highlight java %}
@@ -228,12 +228,12 @@ Incrementing a counter value stored in a Kiji cell would normally require a
 locks can cause contention, Kiji exposes a feature of HBase to do this more
 efficiently by pushing the work to the server side. To increment a counter value in
 a Kiji cell, the column must be declared with a schema of type
-"counter". See [Managing Data]({{site.userguide_schema_DEVEL}}/managing-data#layouts)
+"counter". See [Managing Data]({{site.userguide_schema_devel}}/managing-data#layouts)
 for details on how to declare a counter in your table layout.
 
 Columns containing counters may be accessed like other columns; counters are exposed as long integers.
 In particular, the counter value may be retrieved using `KijiTableReader.get(...)` and written using `KijiTableWriter.put(...)`.
-In addition to that, the [`KijiTableWriter`]({{site.api_schema_DEVEL}}/KijiTableWriter.html) class also provides a method to atomically increment counter values.
+In addition to that, the [`KijiTableWriter`]({{site.api_schema_devel}}/KijiTableWriter.html) class also provides a method to atomically increment counter values.
 
 {% highlight java %}
 final KijiTableWriter writer = table.openTableWriter();
@@ -262,8 +262,8 @@ try {
   </div>
 </div>
 
-The [`KijiTableInputFormat`]({{site.api_schema_DEVEL}}/mapreduce/KijiTableInputFormat.html) provides the necessary functionality to read from a Kiji table in a
-MapReduce job. To configure a job to read from a Kiji table, use [`KijiTableInputFormat`]({{site.api_schema_DEVEL}}/mapreduce/KijiTableInputFormat.html)'s
+The [`KijiTableInputFormat`]({{site.api_schema_devel}}/mapreduce/KijiTableInputFormat.html) provides the necessary functionality to read from a Kiji table in a
+MapReduce job. To configure a job to read from a Kiji table, use [`KijiTableInputFormat`]({{site.api_schema_devel}}/mapreduce/KijiTableInputFormat.html)'s
 static `setOptions` method. For example:
 
 {% highlight java %}
@@ -288,7 +288,7 @@ job.setInputFormatClass(KijiTableInputFormat.class);
 The code contained within "// \*" is responsible for shipping Kiji resources to the DistributedCache.
 This is so that all nodes within your hadoop cluster will have access to Kiji dependencies.
 
-[`KijiTableInputFormat`]({{site.api_schema_DEVEL}}/mapreduce/KijiTableInputFormat.html) outputs keys of type [`EntityId`]({{site.api_schema_DEVEL}}/EntityId.html) and values of type [`KijiRowData`]({{site.api_schema_DEVEL}}/KijiRowData.html). This
+[`KijiTableInputFormat`]({{site.api_schema_devel}}/mapreduce/KijiTableInputFormat.html) outputs keys of type [`EntityId`]({{site.api_schema_devel}}/EntityId.html) and values of type [`KijiRowData`]({{site.api_schema_devel}}/KijiRowData.html). This
 data can be accessed from within a mapper:
 
 {% highlight java %}
@@ -299,7 +299,7 @@ public void map(EntityId entityId, KijiRowData row, Context context) {
 {% endhighlight %}
 
 To write to a Kiji table from a MapReduce job, you should use
-[`KijiTableWriter`]({{site.api_schema_DEVEL}}/KijiTableWriter.html) as before. You should also set
+[`KijiTableWriter`]({{site.api_schema_devel}}/KijiTableWriter.html) as before. You should also set
 your OutputFormat class to `NullOutputFormat`, so MapReduce doesn't expect to create
 a directory full of text files on your behalf.
 

@@ -1,7 +1,7 @@
 ---
 layout: post
 title : Bulk Importing
-categories: [tutorials, music-recommendation, DEVEL]
+categories: [tutorials, music-recommendation, devel]
 tags: [music]
 order : 3
 description: Bulk importing data into a Kiji table.
@@ -14,11 +14,11 @@ efficiently import such large amounts of data into Kiji.
 <div id="accordion-container">
   <h2 class="accordion-header"> SongMetadataBulkImporter.java </h2>
     <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/{{site.music_DEVEL_branch}}/src/main/java/org/kiji/examples/music/bulkimport/SongMetadataBulkImporter.java"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/{{site.music_devel_branch}}/src/main/java/org/kiji/examples/music/bulkimport/SongMetadataBulkImporter.java"> </script>
   </div>
   <h2 class="accordion-header"> JSONBulkImporter.java </h2>
     <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-mapreduce-lib/raw/{{site.mrlib_DEVEL_branch}}/kiji-mapreduce-lib/src/main/java/org/kiji/mapreduce/lib/bulkimport/JSONBulkImporter.java"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-mapreduce-lib/raw/{{site.mrlib_devel_branch}}/kiji-mapreduce-lib/src/main/java/org/kiji/mapreduce/lib/bulkimport/JSONBulkImporter.java"> </script>
   </div>
 </div>
 
@@ -44,7 +44,7 @@ example of a single row in our input file `song-metadata.json`.
 {% endhighlight %}
 
 The `SongMetadataBulkImporter` class extends `KijiBulkImporter`. It expects a
-[text input format]({{site.userguide_mapreduce_DEVEL}}/command-line-tools/#input) where the
+[text input format]({{site.userguide_mapreduce_devel}}/command-line-tools/#input) where the
 input keys are the byte offsets of each line in the input file and the input values are the lines
 of text described above.
 
@@ -69,7 +69,7 @@ record SongMetadata {
 }
 {% endhighlight %}
 
-Then build an [Avro]({{site.userguide_mapreduce_DEVEL}}/working-with-avro) metadata record from the parsed JSON.
+Then build an [Avro]({{site.userguide_mapreduce_devel}}/working-with-avro) metadata record from the parsed JSON.
 
 
 {% highlight java %}
@@ -83,7 +83,7 @@ final SongMetadata song = SongMetadata.newBuilder()
     .build();
 {% endhighlight %}
 
-We create an [`EntityId`]({{site.api_schema_DEVEL}}/EntityId.html) object in order to use the song ID
+We create an [`EntityId`]({{site.api_schema_devel}}/EntityId.html) object in order to use the song ID
 as the row key.
 
 {% highlight java %}

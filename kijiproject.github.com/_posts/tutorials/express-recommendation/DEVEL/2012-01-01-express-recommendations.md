@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Recommendations Producer
-categories: [tutorials, express-recommendation, DEVEL]
+categories: [tutorials, express-recommendation, devel]
 tags: [express-music]
 order: 7
 description: Generate recommendations per user.
@@ -104,7 +104,7 @@ most popular next song.
 
 <div class="userinput">
 {% highlight bash %}
-express job ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_DEVEL_version}}.jar \
+express job ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_devel_version}}.jar \
     org.kiji.express.music.SongRecommender --songs-table ${KIJI}/songs \
     --users-table ${KIJI}/users
 {% endhighlight %}
@@ -158,6 +158,6 @@ Here's the entire SongRecommender job:
 <div id="accordion-container">
   <h2 class="accordion-header"> SongPlayCounter.express </h2>
   <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-express-music/raw/{{site.music_express_DEVEL_branch}}/src/main/scala/org/kiji/express/music/SongRecommender.scala"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-express-music/raw/{{site.music_express_devel_branch}}/src/main/scala/org/kiji/express/music/SongRecommender.scala"> </script>
   </div>
 </div>

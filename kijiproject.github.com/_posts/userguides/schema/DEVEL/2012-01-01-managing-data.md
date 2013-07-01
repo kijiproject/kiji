@@ -1,9 +1,9 @@
 ---
 layout: post
 title: Managing Data
-categories: [userguides, schema, DEVEL]
+categories: [userguides, schema, devel]
 tags: [schema-ug]
-version: DEVEL
+version: devel
 order: 3
 description: How to manage data with KijiSchema.
 ---
@@ -204,7 +204,7 @@ locality_groups: [ {
 <a name="ref.table_layout_desc" id="ref.table_layout_desc"> </a>
 
 For reference, the Avro descriptor for table layout records is defined in
-[`src/main/avro/Layout.avdl`](https://github.com/kijiproject/kiji-schema/blob/{{site.schema_DEVEL_branch}}/kiji-schema/src/main/avro/Layout.avdl "Layout.avdl")
+[`src/main/avro/Layout.avdl`](https://github.com/kijiproject/kiji-schema/blob/{{site.schema_devel_branch}}/kiji-schema/src/main/avro/Layout.avdl "Layout.avdl")
 within the kiji-schema git project as follows:
 
 
@@ -212,7 +212,7 @@ within the kiji-schema git project as follows:
   <h2 class="accordion-header"> Layout.avdl </h2>
   <div class="accordion-content">
     <script
-    src="http://gist-it.appspot.com/github/kijiproject/kiji-schema/raw/{{site.schema_DEVEL_branch}}/kiji-schema/src/main/avro/Layout.avdl"> </script>
+    src="http://gist-it.appspot.com/github/kijiproject/kiji-schema/raw/{{site.schema_devel_branch}}/kiji-schema/src/main/avro/Layout.avdl"> </script>
   </div>
 </div>
 

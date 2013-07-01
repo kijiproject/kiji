@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Top Next Songs
-categories: [tutorials, express-recommendation, DEVEL]
+categories: [tutorials, express-recommendation, devel]
 tags: [express-music]
 order: 6
 description: Find the most popular song played after each song.
@@ -149,7 +149,7 @@ Finally, we create entity IDs using the `firstSong` field and put it in the `ent
 <div class="userinput">
 {% highlight bash %}
 express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
-    ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_DEVEL_version}}.jar \
+    ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_devel_version}}.jar \
     org.kiji.express.music.TopNextSongs --users-table ${KIJI}/users \
     --songs-table ${KIJI}/songs --hdfs
 {% endhighlight %}
@@ -199,6 +199,6 @@ Here's the entire TopNextSongs job:
 <div id="accordion-container">
   <h2 class="accordion-header"> TopNextSongs.scala </h2>
   <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-express-music/raw/{{site.music_express_DEVEL_branch}}/src/main/scala/org/kiji/express/music/TopNextSongs.scala"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-express-music/raw/{{site.music_express_devel_branch}}/src/main/scala/org/kiji/express/music/TopNextSongs.scala"> </script>
   </div>
 </div>

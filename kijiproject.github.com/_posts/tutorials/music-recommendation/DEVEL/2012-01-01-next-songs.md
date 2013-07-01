@@ -1,7 +1,7 @@
 ---
 layout: post
 title : NextTopSong
-categories: [tutorials, music-recommendation, DEVEL]
+categories: [tutorials, music-recommendation, devel]
 tags: [music]
 order : 6
 description: Outputing to a Kiji table in a MapReduce job.
@@ -13,11 +13,11 @@ the top songs played after each song (the key) to the corresponding row in the s
 <div id="accordion-container">
   <h2 class="accordion-header"> IdentityMapper.java </h2>
     <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/{{site.music_DEVEL_branch}}/src/main/java/org/kiji/examples/music/map/IdentityMapper.java"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/{{site.music_devel_branch}}/src/main/java/org/kiji/examples/music/map/IdentityMapper.java"> </script>
     </div>
   <h2 class="accordion-header"> TopNextSongsReducer.java </h2>
    <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/{{site.music_DEVEL_branch}}/src/main/java/org/kiji/examples/music/reduce/TopNextSongsReducer.java"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/{{site.music_devel_branch}}/src/main/java/org/kiji/examples/music/reduce/TopNextSongsReducer.java"> </script>
     </div>
 </div>
 
@@ -116,7 +116,7 @@ Luckily, context also contains methods for generating EntityIds.
 <div id="accordion-container">
   <h2 class="accordion-header"> TestTopNextSongsPipeline.java </h2>
     <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/{{site.music_DEVEL_branch}}/src/test/java/org/kiji/examples/music/TestTopNextSongsPipeline.java"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/{{site.music_devel_branch}}/src/test/java/org/kiji/examples/music/TestTopNextSongsPipeline.java"> </script>
   </div>
 </div>
 

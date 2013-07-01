@@ -1,9 +1,9 @@
 ---
 layout: post
 title: For Administrators
-categories: [userguides, schema, DEVEL]
+categories: [userguides, schema, devel]
 tags : [schema-ug]
-version: DEVEL
+version: devel
 order : 5
 description: Installation and maintenance of kiji-schema.
 ---
@@ -91,7 +91,7 @@ You should see output like the following:
     Successfully created kiji instance: kiji://localhost:2181/default/
 
 Now you can create some tables in the
-[DDL schema-shell]({{site.userguide_schema_DEVEL}}/schema-shell-ddl-ref), explore the
+[DDL schema-shell]({{site.userguide_schema_devel}}/schema-shell-ddl-ref), explore the
 [Phonebook example]({{site.tutorial_phonebook_1_0_0}}/phonebook-tutorial), and get started
 [building a Maven project](http://www.kiji.org/get-started-with-maven) with
 Kiji. See the

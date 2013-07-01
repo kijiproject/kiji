@@ -1,7 +1,7 @@
 ---
 layout: post
 title: KijiExpress Language
-categories: [tutorials, express-recommendation, DEVEL]
+categories: [tutorials, express-recommendation, devel]
 tags: [express-music]
 order: 2
 description: Short introduction to the KijiExpress language.

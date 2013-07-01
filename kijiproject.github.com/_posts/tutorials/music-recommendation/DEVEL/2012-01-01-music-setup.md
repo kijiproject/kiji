@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Setup
-categories: [tutorials, music-recommendation, DEVEL]
+categories: [tutorials, music-recommendation, devel]
 tags: [music]
 order: 2
 description: Setup and compile instructions for the music recommendation tutorial.
@@ -99,7 +99,7 @@ kiji-schema-shell --kiji=${KIJI} --file=${MUSIC_HOME}/music_schema.ddl
 
 This command uses [kiji-schema-shell](https://github.com/kijiproject/kiji-schema-shell)
 to create the tables using the KijiSchema DDL, which makes specifying table layouts easy.
-See [the KijiSchema DDL Shell reference]({{site.userguide_schema_DEVEL}}/schema-shell-ddl-ref)
+See [the KijiSchema DDL Shell reference]({{site.userguide_schema_devel}}/schema-shell-ddl-ref)
 for more information on the KijiSchema DDL.
 
 ##### (Optional) Generate Data

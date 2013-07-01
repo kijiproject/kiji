@@ -1,7 +1,7 @@
 ---
 layout: post
 title : SequentialPlayCount
-categories: [tutorials, music-recommendation, DEVEL]
+categories: [tutorials, music-recommendation, devel]
 tags: [music]
 order : 5
 description: Includes info on working with Avro
@@ -19,11 +19,11 @@ So, we need to count the number of times two songs have been played, one after a
 <div id="accordion-container">
   <h2 class="accordion-header"> SequentialPlayCounter.java </h2>
     <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/{{site.music_DEVEL_branch}}/src/main/java/org/kiji/examples/music/gather/SequentialPlayCounter.java"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/{{site.music_devel_branch}}/src/main/java/org/kiji/examples/music/gather/SequentialPlayCounter.java"> </script>
     </div>
   <h2 class="accordion-header"> SequentialPlayCountReducer.java </h2>
     <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/{{site.music_DEVEL_branch}}/src/main/java/org/kiji/examples/music/reduce/SequentialPlayCountReducer.java"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/{{site.music_devel_branch}}/src/main/java/org/kiji/examples/music/reduce/SequentialPlayCountReducer.java"> </script>
     </div>
 </div>
 
@@ -96,7 +96,7 @@ for the number of times it has been played after the initial song.
 This reducer takes `AvroKey` as input, and writes `AvroKey` and `AvroValue` as output, so it must
 implement `AvroKeyReader`, `AvroKeyWriter`, and `AvroValueWriter`. The keys we are emitting are just strings
 so we could use a [Text](link-to-text-key-docs) key. Instead, we made the choice to use an `AvroKey`
-so that we could use the Kiji defined [AvroKeyValue output format]({{site.userguide_mapreduce_DEVEL}}/command-line-tools/#output), which
+so that we could use the Kiji defined [AvroKeyValue output format]({{site.userguide_mapreduce_devel}}/command-line-tools/#output), which
 requires that you output `AvroKey` and `AvroValue`.
 
 The schema for our Avro key is so simple that we don't have to add a record to our avdl file
@@ -152,7 +152,7 @@ test:
 <div id="accordion-container">
   <h2 class="accordion-header"> TestSequentialSongPlayCounter.java </h2>
     <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/{{site.music_DEVEL_branch}}/src/test/java/org/kiji/examples/music/TestSequentialSongPlayCounter.java"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/{{site.music_devel_branch}}/src/test/java/org/kiji/examples/music/TestSequentialSongPlayCounter.java"> </script>
   </div>
 </div>
 

@@ -1,7 +1,7 @@
 ---
 layout: post
 title : PlayCount
-categories: [tutorials, music-recommendation, DEVEL]
+categories: [tutorials, music-recommendation, devel]
 tags: [music]
 order : 4
 description: Like WordCount, for songs.
@@ -20,18 +20,18 @@ is written to a text file in HDFS.
 <div id="accordion-container">
   <h2 class="accordion-header"> SongPlayCounter.java </h2>
      <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/{{site.music_DEVEL_branch}}/src/main/java/org/kiji/examples/music/gather/SongPlayCounter.java"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/{{site.music_devel_branch}}/src/main/java/org/kiji/examples/music/gather/SongPlayCounter.java"> </script>
      </div>
  <h2 class="accordion-header"> LongSumReducer.java </h2>
    <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-mapreduce-lib/raw/{{site.mrlib_DEVEL_branch}}/kiji-mapreduce-lib/src/main/java/org/kiji/mapreduce/lib/reduce/LongSumReducer.java"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-mapreduce-lib/raw/{{site.mrlib_devel_branch}}/kiji-mapreduce-lib/src/main/java/org/kiji/mapreduce/lib/reduce/LongSumReducer.java"> </script>
     </div>
 </div>
 
 <h3 style="margin-top:0px;padding-top:10px;"> SongPlayCounter </h3>
 
-The SongPlayCounter is an example of a [Gatherer]({{site.userguide_mapreduce_DEVEL}}/gatherers). A
-gatherer is essentially a mapper that gets input from a [`KijiTable`]({{site.api_schema_DEVEL}}/KijiTable.html).
+The SongPlayCounter is an example of a [Gatherer]({{site.userguide_mapreduce_devel}}/gatherers). A
+gatherer is essentially a mapper that gets input from a [`KijiTable`]({{site.api_schema_devel}}/KijiTable.html).
 
 SongPlayCounter proceeds through discrete stages:
 
@@ -59,7 +59,7 @@ corresponding cleanup() method.
 
 #### Read track play data from the table
 A gatherer takes input from a table, so it must declare what data it will need. It does this in the
-form of a [`KijiDataRequest`]({{site.api_schema_DEVEL}}/KijiDataRequest.html), which is defined in getDataRequest().
+form of a [`KijiDataRequest`]({{site.api_schema_devel}}/KijiDataRequest.html), which is defined in getDataRequest().
 For the song count job, we want to request all songs that have been played, for every user. In order
 to get *all* of the values written to the "info:track_plays" column, we must specify that the maximum
 number of versions we want. The special constant that specifies that you want all versions of data
@@ -144,7 +144,7 @@ To verify that SongPlayCounter performs as expected, SongPlayCounter's test:
 <div id="accordion-container">
   <h2 class="accordion-header"> TestSongPlayCounter.java </h2>
     <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/{{site.music_DEVEL_branch}}/src/test/java/org/kiji/examples/music/TestSongPlayCounter.java"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/{{site.music_devel_branch}}/src/test/java/org/kiji/examples/music/TestSongPlayCounter.java"> </script>
     </div>
 </div>
 

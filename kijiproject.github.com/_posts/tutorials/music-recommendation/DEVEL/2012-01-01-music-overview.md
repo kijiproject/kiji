@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Overview
-categories: [tutorials, music-recommendation, DEVEL]
+categories: [tutorials, music-recommendation, devel]
 tags: [music]
 order: 1
 description: A tutorial to get you using MapReduce with Kiji Tables.
@@ -20,16 +20,16 @@ In this tutorial, we demonstrate how to use KijiMR to leverage your data effecti
 
 * Efficiently import data into a KijiTable.
 * Manipulate data in and between Kiji and HDFS.
-* Use a [gatherer]({{ site.userguide_mapreduce_DEVEL }}/gatherers) to generate the next-song pairs,
+* Use a [gatherer]({{ site.userguide_mapreduce_devel }}/gatherers) to generate the next-song pairs,
   and use a generic MapReduce job to aggregate them into counts.
-* Use a [producer]({{ site.userguide_mapreduce_DEVEL }}/producers) and join together data sources, to
+* Use a [producer]({{ site.userguide_mapreduce_devel }}/producers) and join together data sources, to
   generate the recommendations for our users.
 
 
 ### How to Use this Tutorial
 
 * **Links to Javadoc** - Class names link to the relevant Javadoc:
-[`EntityId`]({{site.api_schema_DEVEL}}/EntityId.html).
+[`EntityId`]({{site.api_schema_devel}}/EntityId.html).
 
 * **Code Walkthrough** - Code snippets are in gray boxes with language specific syntax highlighting.
 

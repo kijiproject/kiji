@@ -43,7 +43,7 @@ The documents in this section reflect the working copy of the latest development
 These tutorials are not intended for new users; they are for the authors of the tutorials
 themselves. Documentation in this section may be incorrect or may change before release.
 
-* [Phone Book Tutorial](tutorials/phonebook-tutorial/DEVEL/phonebook-tutorial)
-* [Music Recommendation Tutorial](tutorials/music-recommendation/DEVEL/music-overview)
-* [KijiExpress Music Recommendation Tutorial](tutorials/express-recommendation/DEVEL/express-overview)
+* [Phone Book Tutorial]({{site.tutorial_phonebook_devel}}/phonebook-tutorial)
+* [Music Recommendation Tutorial]({{site.tutorial_music_devel}}/music-overview/)
+* [KijiExpress Music Recommendation Tutorial]({{site.tutorial_express_devel}}/express-overview)
 

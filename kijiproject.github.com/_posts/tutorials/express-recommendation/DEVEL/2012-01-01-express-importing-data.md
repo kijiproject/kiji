@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Importing Data
-categories: [tutorials, express-recommendation, DEVEL]
+categories: [tutorials, express-recommendation, devel]
 tags: [express-music]
 order: 4
 description: Importing data files into Kiji tables.
@@ -27,7 +27,7 @@ The source code for one of the importers is included at the [bottom of this page
 <div class="userinput">
 {% highlight bash %}
 express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
-    ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_DEVEL_version}}.jar \
+    ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_devel_version}}.jar \
     org.kiji.express.music.SongMetadataImporter \
     --input express-tutorial/song-metadata.json \
     --table-uri ${KIJI}/songs --hdfs
@@ -39,7 +39,7 @@ express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
 <div class="userinput">
 {% highlight bash %}
 express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
-    ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_DEVEL_version}}.jar \
+    ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_devel_version}}.jar \
     org.kiji.express.music.SongPlaysImporter \
     --input express-tutorial/song-plays.json \
     --table-uri ${KIJI}/users --hdfs
@@ -131,6 +131,6 @@ The importer looks like this:
 <div id="accordion-container">
   <h2 class="accordion-header"> SongMetadataImporter.scala </h2>
   <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-express-music/raw/{{site.music_express_DEVEL_branch}}/src/main/scala/org/kiji/express/music/SongMetadataImporter.scala"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-express-music/raw/{{site.music_express_devel_branch}}/src/main/scala/org/kiji/express/music/SongMetadataImporter.scala"> </script>
   </div>
 </div>

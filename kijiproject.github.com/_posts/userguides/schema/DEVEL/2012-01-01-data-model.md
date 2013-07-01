@@ -1,10 +1,10 @@
 ---
 layout: post
 title: Data Model
-categories: [userguides, schema, DEVEL]
+categories: [userguides, schema, devel]
 tags : [schema-ug]
 order : 2
-version: DEVEL
+version: devel
 description: KijiSchema's underlying data model.
 ---
 
@@ -29,7 +29,7 @@ columns.
 
 Unlike HBase, each cell in a Kiji table has a schema associated with it.
 Schemas in KijiSchema are versioned. The schema and layout system is
-described in greater detail in [Managing Data]({{site.userguide_schema_DEVEL}}/managing-data).
+described in greater detail in [Managing Data]({{site.userguide_schema_devel}}/managing-data).
 
 ### Entity-Centric Data Model
 KijiSchema’s data model is *entity-centric*. Each row typically holds

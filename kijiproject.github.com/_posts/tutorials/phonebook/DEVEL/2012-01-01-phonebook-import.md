@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Import Data
-categories: [tutorials, phonebook-tutorial, DEVEL]
+categories: [tutorials, phonebook-tutorial, devel]
 tags: [phonebook]
 order: 5
 description: How to import data into the phonebook table.
@@ -55,7 +55,7 @@ final JsonDecoder decoder =
 final Address streetAddr = datumReader.read(null, decoder);
 {% endhighlight %}
 
-Next we create a unique [`EntityId`]({{site.api_schema_DEVEL}}/EntityId.html) that will be used to reference this row.  As before, we will use
+Next we create a unique [`EntityId`]({{site.api_schema_devel}}/EntityId.html) that will be used to reference this row.  As before, we will use
 the combination of first and last name as a unique reference to this row:
 {% highlight java %}
 final EntityId user = table.getEntityId(firstName + "," + lastName);
@@ -78,7 +78,7 @@ example - using the `kiji jar` command.
 <div class="userinput">
 {% highlight bash %}
 $KIJI_HOME/bin/kiji jar \
-    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-{{site.phonebook_DEVEL_version}}.jar \
+    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-{{site.phonebook_devel_version}}.jar \
     org.kiji.examples.phonebook.StandalonePhonebookImporter \
     $KIJI_HOME/examples/phonebook/input-data.txt
 {% endhighlight %}
@@ -106,11 +106,11 @@ puts in a distributed fashion.
 Our example of importing data into a table with MapReduce can be found in the class
 `PhonebookImporter`. PhonebookImporter defines a special type of MapReduce job called a
 Kiji bulk import job that reads each line of our input file, parses it, and writes it to a table.
-Kiji bulk import jobs are created by implementing a [`KijiBulkImporter`]({{site.api_mr_DEVEL}}/bulkimport/KijiBulkImporter.html),
+Kiji bulk import jobs are created by implementing a [`KijiBulkImporter`]({{site.api_mr_devel}}/bulkimport/KijiBulkImporter.html),
 not a `Mapper` and `Reducer`. This API is provided by KijiMR. The
-[Music recommendation tutorial](/tutorials/music-recommendation/DEVEL/music-overview/)
+[Music recommendation tutorial]({{site.tutorial_music_devel}}/music-overview/)
 covers KijiMR in much greater detail, but we will take a look at using the
-[`KijiBulkImporter`]({{site.api_mr_DEVEL}}/bulkimport/KijiBulkImporter.html) API below.
+[`KijiBulkImporter`]({{site.api_mr_devel}}/bulkimport/KijiBulkImporter.html) API below.
 
 Instead of a `map()` method, we provide a `produce()` method definition; this method processes
 an input record from a file like an ordinary mapper, except its `context` argument is
@@ -118,7 +118,7 @@ specifically targeted to output to a row in a Kiji table.
 
 At the top of the `produce()` method, you'll see that we extract the fields from
 the lines as in the above example.  Then using the
-[`KijiTableContext`]({{site.api_mr_DEVEL}}/KijiTableContext.html) context argument,
+[`KijiTableContext`]({{site.api_mr_devel}}/KijiTableContext.html) context argument,
 we'll write all of the fields to the phonebook table:
 
 {% highlight java %}
@@ -135,7 +135,7 @@ public void produce(LongWritable byteOffset, Text line, KijiTableContext context
 {% endhighlight %}
 
 The `context.put()` calls are identical in form to using a
-[`KijiTableWriter`]({{site.api_schema_DEVEL}}/KijiTableWriter.html).
+[`KijiTableWriter`]({{site.api_schema_devel}}/KijiTableWriter.html).
 
 If you are writing a custom bulk importer and require specialized setup and teardown steps,
 these can be placed in `setup()` and `cleanup()` methods like in a Mapper. We don't need
@@ -145,7 +145,7 @@ The outer `PhonebookImporter` class contains `configureJob(...)` and `run(...)` 
 that handle the setup and execution
 of the MapReduce job.  Instead of constructing a Hadoop `Job` object directly, we use a
 `KijiBulkImportJobBuilder`. This builder object lets us specify Kiji-specific arguments,
-and construct a [`KijiMapReduceJob`]({{site.api_mr_DEVEL}}/KijiMapReduceJob.html) (A Kiji-specific wrapper around `Job`):
+and construct a [`KijiMapReduceJob`]({{site.api_mr_devel}}/KijiMapReduceJob.html) (A Kiji-specific wrapper around `Job`):
 
 {% highlight java %}
 KijiMapReduceJob configureJob(Path inputPath, KijiURI tableUri) throws IOException {
@@ -159,7 +159,7 @@ KijiMapReduceJob configureJob(Path inputPath, KijiURI tableUri) throws IOExcepti
 {% endhighlight %}
 
 The HDFS file path to the sample input data is set to the first command line argument.
-A [`KijiURI`]({{site.api_schema_DEVEL}}/KijiURI.html) is constructed that specifies the `phonebook` table as the target:
+A [`KijiURI`]({{site.api_schema_devel}}/KijiURI.html) is constructed that specifies the `phonebook` table as the target:
 
 {% highlight java %}
 public int run(String[] args) throws Exception {
@@ -173,16 +173,16 @@ public int run(String[] args) throws Exception {
 }
 {% endhighlight %}
 
-The [`TextMapReduceJobInput`]({{site.api_mr_DEVEL}}/input/TextMapReduceJobInput.html) and
-[`DirectKijiTableMapReduceJobOutput`]({{site.api_mr_DEVEL}}/output/DirectKijiTableMapReduceJobOutput.html)
+The [`TextMapReduceJobInput`]({{site.api_mr_devel}}/input/TextMapReduceJobInput.html) and
+[`DirectKijiTableMapReduceJobOutput`]({{site.api_mr_devel}}/output/DirectKijiTableMapReduceJobOutput.html)
 classes are abstractions that, under the hood, configure an `InputFormat` and `OutputFormat`
 for the MapReduce job. Different KijiMR job types (bulk importer, producer, or gatherer)
 support different subsets of available formats (files, tables, etc). These classes allow the
 system to ensure that the correct type is used. For example, bulk import jobs require that the
 target is a table. "Regular" MapReduce jobs configured through
-[`KijiMapReduceJobBuilder`]({{site.api_mr_DEVEL}}/KijiMapReduceJobBuilder.html) can use
-any [`MapReduceJobInput`]({{site.api_mr_DEVEL}}/MapReduceJobInput.html) and
-[`MapReduceJobOutput`]({{site.api_mr_DEVEL}}/MapReduceJobOutput.html) that makes sense
+[`KijiMapReduceJobBuilder`]({{site.api_mr_devel}}/KijiMapReduceJobBuilder.html) can use
+any [`MapReduceJobInput`]({{site.api_mr_devel}}/MapReduceJobInput.html) and
+[`MapReduceJobOutput`]({{site.api_mr_devel}}/MapReduceJobOutput.html) that makes sense
 in the context of the application.
 
 ### Running the Example
@@ -203,7 +203,7 @@ path to the `input-data.txt` file in HDFS.
 <div class="userinput">
 {% highlight bash %}
 $KIJI_HOME/bin/kiji jar \
-    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-{{site.phonebook_DEVEL_version}}.jar \
+    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-{{site.phonebook_devel_version}}.jar \
     org.kiji.examples.phonebook.PhonebookImporter \
     /tmp/input-data.txt
 {% endhighlight %}
@@ -230,8 +230,8 @@ $KIJI_HOME/bin/kiji bulk-import \
 </div>
 
 The `--input` and `--output` arguments specify in text form the same
-[`MapReduceJobInput`]({{site.api_mr_DEVEL}}/MapReduceJobInput.html) and
-[`MapReduceJobOutput`]({{site.api_mr_DEVEL}}/MapReduceJobOutput.html)
+[`MapReduceJobInput`]({{site.api_mr_devel}}/MapReduceJobInput.html) and
+[`MapReduceJobOutput`]({{site.api_mr_devel}}/MapReduceJobOutput.html)
 objects as are created programmatically in this example.
 
 #### Verify

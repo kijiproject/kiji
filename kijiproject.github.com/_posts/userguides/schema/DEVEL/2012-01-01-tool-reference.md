@@ -1,9 +1,9 @@
 ---
 layout: post
 title: Command-Line Tool Reference
-categories: [userguides, schema, DEVEL]
+categories: [userguides, schema, devel]
 component: schema
-version: DEVEL
+version: devel
 tags : [schema-ug]
 order : 7
 description: A reference of commands available for the schema command line tool.
@@ -167,7 +167,7 @@ This command has two mandatory arguments:
      It is an error for this table to already exist.
 *  `--layout=<path/to/layout.json>`
    - Path to a file a JSON file containing the table layout specification,
-     as described in [Managing Data]({{site.userguide_schema_DEVEL}}/managing-data#layouts).
+     as described in [Managing Data]({{site.userguide_schema_devel}}/managing-data#layouts).
 
 The following arguments are optional:
 

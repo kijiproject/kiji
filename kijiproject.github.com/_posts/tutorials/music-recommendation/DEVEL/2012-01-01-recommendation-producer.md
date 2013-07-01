@@ -1,7 +1,7 @@
 ---
 layout: post
 title : Music Recommendation Producer
-categories: [tutorials, music-recommendation, DEVEL]
+categories: [tutorials, music-recommendation, devel]
 tags: [music]
 order : 7
 description: Read and write to the same row of a table.
@@ -13,12 +13,12 @@ each row in the user table and apply our recommendation strategy to it.
 <div id="accordion-container">
   <h2 class="accordion-header"> NextSongRecommender.java </h2>
     <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/{{site.music_DEVEL_branch}}/src/main/java/org/kiji/examples/music/produce/NextSongRecommender.java"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/{{site.music_devel_branch}}/src/main/java/org/kiji/examples/music/produce/NextSongRecommender.java"> </script>
   </div>
 </div>
 
 <h3 style="margin-top:0px;padding-top:10px;"> NextSongRecommender </h3>
-The NextSongRecommender is an example of a [KijiProducer]({{site.userguide_mapreduce_DEVEL}}/producers).
+The NextSongRecommender is an example of a [KijiProducer]({{site.userguide_mapreduce_devel}}/producers).
 A producer operates on a single row of input data and generates new outputs that are written to the
 same row.  It can also refer to external sources of data via KeyValueStores in addition to the input from the row.
 For every row this producer processes, it will:
@@ -40,7 +40,7 @@ only want the most recent value from this column, so we can use the `create()` c
   }
 {% endhighlight %}
 
-In our `produce()` method, we then access our requested data through the [`KijiRowData`]({{site.api_schema_DEVEL}}/KijiRowData.html):
+In our `produce()` method, we then access our requested data through the [`KijiRowData`]({{site.api_schema_devel}}/KijiRowData.html):
 
 {% highlight java %}
   String mostRecentSong = input.<CharSequence>getMostRecentValue("info", "track_plays")
@@ -48,7 +48,7 @@ In our `produce()` method, we then access our requested data through the [`KijiR
 {% endhighlight %}
 
 #### Join External Data Sources
-[KeyValueStores]({{site.userguide_mapreduce_DEVEL}}/key-value-stores) allow you to access external data sources in a MapReduce job.
+[KeyValueStores]({{site.userguide_mapreduce_devel}}/key-value-stores) allow you to access external data sources in a MapReduce job.
 This is a common pattern in MapReduce jobs, as it allows us to integrate two sources of data. In this case, we will use the
 "top_next_songs" column of our "songs" table as a KeyValueStore.
 
@@ -99,7 +99,7 @@ the value we want to write as the parameter.
 <div id="accordion-container">
   <h2 class="accordion-header"> TestNextSongRecommender.java </h2>
     <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/{{site.music_DEVEL_branch}}/src/test/java/org/kiji/examples/music/TestNextSongRecommender.java"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/{{site.music_devel_branch}}/src/test/java/org/kiji/examples/music/TestNextSongRecommender.java"> </script>
   </div>
 </div>
 
@@ -122,7 +122,7 @@ withStore() method of JobBuilders.
 
 ### Running the Example
 When we run this example, we again need to specify which
-[`KijiTable`]({{site.api_schema_DEVEL}}/KijiTable.html) we want to use to back our
+[`KijiTable`]({{site.api_schema_devel}}/KijiTable.html) we want to use to back our
 KeyValueStore. This time, we will override the KeyValueStore binding from
 the command line using an XML configuration file (located at ${KIJI_HOME}/examples/music/KVStoreConfig.xml).
 The contents of the file are displayed below. If you are not using BentoBox, you may need to modify this

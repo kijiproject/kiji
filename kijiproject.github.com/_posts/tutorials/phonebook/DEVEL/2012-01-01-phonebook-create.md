@@ -1,7 +1,7 @@
 ---
 layout : post
 title : Create a Table
-categories: [tutorials, phonebook-tutorial, DEVEL]
+categories: [tutorials, phonebook-tutorial, devel]
 tags : [phonebook]
 order : 3
 description: To use a phonebook, you need a phonebook.
@@ -20,7 +20,7 @@ consult the [Get Started](http://www.kiji.org/getstarted) section of the Kiji we
 
 We have provided the phonebook layout in the `$KIJI_HOME/examples/phonebook/layout.ddl` file.
 For more information about how to create this file, see the
-[DDL Shell Reference]({{site.userguide_schema_DEVEL}}/schema-shell-ddl-ref/).
+[DDL Shell Reference]({{site.userguide_schema_devel}}/schema-shell-ddl-ref/).
 
 <div class="userinput">
 {% highlight bash %}
@@ -116,7 +116,7 @@ schema> quit;
 ### Using JSON
 
 A low level way of providing the layout is by using JSON. To learn more about specifying
-the layout in JSON, take a look at [Managing Data]({{site.userguide_schema_DEVEL}}/managing-data/).
+the layout in JSON, take a look at [Managing Data]({{site.userguide_schema_devel}}/managing-data/).
 
 The raw JSON view of table layouts is intended for use by system administrators, or
 for low-level debugging purposes. Most users should use the `kiji-schema-shell` DDL tool

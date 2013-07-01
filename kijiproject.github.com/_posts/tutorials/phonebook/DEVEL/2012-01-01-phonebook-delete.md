@@ -1,14 +1,14 @@
 ---
 layout: post
 title: Delete Contacts
-categories: [tutorials, phonebook-tutorial, DEVEL]
+categories: [tutorials, phonebook-tutorial, devel]
 tags: [phonebook]
 order: 8
 description: Examples of Point deletions.
 ---
 
 Deletions of Kiji table cells can be performed both within a MapReduce job and from
-non-distributed java programs. Both types of programs use [`KijiTableWriter`]({{site.api_schema_DEVEL}}/KijiTableWriter.html)s to
+non-distributed java programs. Both types of programs use [`KijiTableWriter`]({{site.api_schema_devel}}/KijiTableWriter.html)s to
 delete data.
 
 ## Point Deletions
@@ -21,7 +21,7 @@ to delete.
 
 ### DeleteEntry.java
 
-DeleteEntry uses a [`KijiTableWriter`]({{site.api_schema_DEVEL}}/KijiTableWriter.html) to perform point deletions on a kiji table:
+DeleteEntry uses a [`KijiTableWriter`]({{site.api_schema_devel}}/KijiTableWriter.html) to perform point deletions on a kiji table:
 
 {% highlight java %}
 // Connect to the Kiji table and open a writer.
@@ -72,7 +72,7 @@ Next, to perform the deletion of this contact using DeleteEntry:
 <div class="userinput">
 {% highlight bash %}
 $KIJI_HOME/bin/kiji jar \
-    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-{{site.phonebook_DEVEL_version}}.jar \
+    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-{{site.phonebook_devel_version}}.jar \
     org.kiji.examples.phonebook.DeleteEntry
 {% endhighlight %}
 </div>
@@ -115,7 +115,7 @@ sanitize your phonebook of any California contacts.
 
 ### DeleteEntriesByState.java
 
-Deletions from within a MapReduce job are also performed using a [`KijiTableWriter`]({{site.api_schema_DEVEL}}/KijiTableWriter.html).
+Deletions from within a MapReduce job are also performed using a [`KijiTableWriter`]({{site.api_schema_devel}}/KijiTableWriter.html).
 The DeleteEntriesByState example runs a MapReduce job that reads through the contacts
 in the phonebook table and deletes any entry that has an address from the specified
 state.
@@ -137,7 +137,7 @@ public void map(EntityId entityId, KijiRowData row, Context hadoopContext)
   final Address address = row.getMostRecentValue(Fields.INFO_FAMILY, Fields.ADDRESS);
 {% endhighlight %}
 
-A [`KijiTableWriter`]({{site.api_schema_DEVEL}}/KijiTableWriter.html) we opened in the `setup()` method is then used to delete
+A [`KijiTableWriter`]({{site.api_schema_devel}}/KijiTableWriter.html) we opened in the `setup()` method is then used to delete
 the row if the state matches:
 
 {% highlight java %}
@@ -155,7 +155,7 @@ You can run the DeleteEntriesByState MapReduce job by running:
 <div class="userinput">
 {% highlight bash %}
 $KIJI_HOME/bin/kiji jar \
-    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-{{site.phonebook_DEVEL_version}}.jar \
+    $KIJI_HOME/examples/phonebook/lib/kiji-phonebook-{{site.phonebook_devel_version}}.jar \
     org.kiji.examples.phonebook.DeleteEntriesByState --state=CA
 {% endhighlight %}
 </div>
@@ -184,7 +184,7 @@ bento stop
 </div>
 
 To learn more about Kiji, check out these other resources:
- - [User Guide]({{site.userguide_schema_DEVEL}}/kiji-schema-overview)
+ - [User Guide]({{site.userguide_schema_devel}}/kiji-schema-overview)
  - [API Docs](http://docs.kiji.org/apidocs)
  - [Source Code](http://github.com/kijiproject)
 
@@ -193,4 +193,4 @@ For information about the Kiji Project and user-to-user support:
 
 Hungry for more? To learn about KijiMR, Kiji's MapReduce integration library,
 check out the
-[Music recommendation tutorial](/tutorials/music-recommendation/DEVEL/music-overview/).
+[Music recommendation tutorial]({{site.tutorial_music_devel}}/music-overview/).

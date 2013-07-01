@@ -138,7 +138,7 @@ hadoop fs -copyFromLocal ${MUSIC_EXPRESS_HOME}/example_data/*.json express-tutor
 {% endhighlight %}
 </div>
 
-You're now ready for the next step, [Importing Data]({{site.tutorial_express_DEVEL}}/express-importing-data).
+You're now ready for the next step, [Importing Data]({{site.tutorial_express_devel}}/express-importing-data).
 
 ### Kiji Administration Quick Reference
 

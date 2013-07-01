@@ -1,10 +1,10 @@
 ---
 layout: post
 title: KijiREST Operations
-categories: [userguides, rest, DEVEL]
+categories: [userguides, rest, devel]
 tags: [rest-ug]
 order: 3
-version: DEVEL
+version: devel
 description: Operations
 ---
 
