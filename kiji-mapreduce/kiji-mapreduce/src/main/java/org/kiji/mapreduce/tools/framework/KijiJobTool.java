@@ -97,7 +97,7 @@ public abstract class KijiJobTool<B extends KijiTableInputJobBuilder> extends Jo
     // Configure job input:
     jobBuilder.withJobInput(mJobInput);
 
-    final Kiji kiji = Kiji.Factory.open(mJobInput.getInputTableURI());
+    final Kiji kiji = Kiji.Factory.open(mJobInput.getInputTableURI(), getConf());
     try {
       final KijiTable table = kiji.openTable(mJobInput.getInputTableURI().getTable());
       try {

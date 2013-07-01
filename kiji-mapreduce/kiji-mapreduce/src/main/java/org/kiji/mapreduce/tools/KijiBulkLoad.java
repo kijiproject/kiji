@@ -92,12 +92,20 @@ public final class KijiBulkLoad extends BaseTool {
   /** {@inheritDoc} */
   @Override
   protected int run(List<String> nonFlagArgs) throws Exception {
-    final Kiji kiji = Kiji.Factory.open(mTableURI);
+    final Kiji kiji = Kiji.Factory.open(mTableURI, getConf());
     try {
       final KijiTable table = kiji.openTable(mTableURI.getTable());
       try {
-        // Load the HFiles
-        // TODO(SCHEMA-188): Consolidate this logic in a single central place:
+        // Load the HFiles.
+        //
+        // TODO: Consolidate this logic in a single central place: We must consolidate the
+        // logic to properly initialize a Configuration object to target a specific HBase
+        // cluster (hence the manual override of the ZooKeeper quorum/client-port).
+        //
+        // The reason for this manual override here is : KijiBulkLoad needs a
+        // Configuration to create an HBaseLoader for the HBase instance targeted at from
+        // the table URI.  KijiTable does not expose its internal Configuration and
+        // Kiji.getConf() is deprecated, so we have to construct one externally.
         final Configuration conf = getConf();
         conf.set(HConstants.ZOOKEEPER_QUORUM,
             Joiner.on(",").join(mTableURI.getZookeeperQuorumOrdered()));

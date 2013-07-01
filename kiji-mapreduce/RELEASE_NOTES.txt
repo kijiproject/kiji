@@ -2,6 +2,10 @@
 
                               KijiMR Release Notes
 
+Version 1.0.1
+  * KIJIMR-210. All calls to Kiji.Factory.open() now allow parameterization
+      via the current Configuration object and through CLI "-Dprop=val" flags.
+
 Version 1.0.0
   * Added stability annotations to all public/framework classes.
   * KIJIMR-121. KeyValueStoreConfiguration's constructors have been

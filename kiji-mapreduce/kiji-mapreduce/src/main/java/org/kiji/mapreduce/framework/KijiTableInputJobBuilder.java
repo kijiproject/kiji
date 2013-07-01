@@ -165,7 +165,7 @@ public abstract class KijiTableInputJobBuilder<T extends KijiTableInputJobBuilde
 
     // Validate the Kiji data request against the current table layout:
     Preconditions.checkNotNull(mInputTableURI, "Input Kiji table was never set.");
-    final Kiji kiji = Kiji.Factory.open(mInputTableURI);
+    final Kiji kiji = Kiji.Factory.open(mInputTableURI, getConf());
     try {
       final KijiTable table = kiji.openTable(mInputTableURI.getTable());
       try {

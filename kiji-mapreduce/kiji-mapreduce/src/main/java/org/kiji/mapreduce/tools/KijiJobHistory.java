@@ -91,7 +91,7 @@ public final class KijiJobHistory extends BaseTool {
   /** {@inheritDoc} */
   @Override
   protected int run(List<String> nonFlagArgs) throws Exception {
-    final Kiji kiji = Kiji.Factory.open(mKijiURI);
+    final Kiji kiji = Kiji.Factory.open(mKijiURI, getConf());
     try {
       JobHistoryKijiTable jobHistoryTable = JobHistoryKijiTable.open(kiji);
       try {

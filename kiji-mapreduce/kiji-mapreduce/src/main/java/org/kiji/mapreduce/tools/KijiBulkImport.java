@@ -109,7 +109,7 @@ public final class KijiBulkImport extends JobTool<KijiBulkImportJobBuilder> {
   @Override
   protected void setup() throws Exception {
     super.setup();
-    mKiji = Kiji.Factory.open(mOutput.getOutputTableURI());
+    mKiji = Kiji.Factory.open(mOutput.getOutputTableURI(), getConf());
     mTable = mKiji.openTable(mOutput.getOutputTableURI().getTable());
   }
 
