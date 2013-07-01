@@ -45,11 +45,18 @@ public final class KijiFreshProducerContext implements ProducerContext {
   private final String mFamily;
   private final String mQualifier;
   private final KijiBufferedWriter mWriter;
+
   /**
    * Set by InternalFreshKijiTableReader after Producer.producer() returns to indicate that there
    * will be no further writes to this context and that its buffer may now be flushed.
    */
   private boolean mFinished;
+
+  /**
+   * Set to true by calls to put(), never set back to false.  Is used to indicate whether a reread
+   * from the table is appropriate after a producer finishes.
+   */
+  private boolean mHasReceivedWrites = false;
 
   /**
    * Private constructor, use {@link KijiFreshProducerContext#create
@@ -125,6 +132,7 @@ public final class KijiFreshProducerContext implements ProducerContext {
     mWriter.put(mEntityId, mFamily, Preconditions.checkNotNull(
         mQualifier, "Output column is a map type family, use put(qualifier, timestamp, value)"),
         timestamp, value);
+    mHasReceivedWrites = true;
   }
 
   /**
@@ -150,6 +158,7 @@ public final class KijiFreshProducerContext implements ProducerContext {
     Preconditions.checkArgument(mQualifier == null, "Qualifier is already set in the "
         + "ProducerContext, use ProducerContext.put(timestamp, value)");
     mWriter.put(mEntityId, mFamily, qualifier, timestamp, value);
+    mHasReceivedWrites = true;
   }
 
   /** {@inheritDoc} */
@@ -162,6 +171,15 @@ public final class KijiFreshProducerContext implements ProducerContext {
   @Override
   public void flush() throws IOException {
     mWriter.flush();
+  }
+
+  /**
+   * Whether this context has received at least one write.  Is used to indicate whether a reread
+   * from the table is appropriate.
+   * @return Whether this context has received at least one write.
+   */
+  public boolean hasReceivedWrites() {
+    return mHasReceivedWrites;
   }
 
   /**

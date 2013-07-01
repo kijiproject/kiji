@@ -77,6 +77,7 @@ public class TestInternalFreshKijiTableReader {
   private static String mPreloadState = "unloaded";
 
   private static final String TABLE_NAME = "row_data_test_table";
+
   /** Dummy &lt;? extends KijiProducer&gt; class for testing */
   public static final class TestProducer extends KijiProducer {
     public KijiDataRequest getDataRequest() {

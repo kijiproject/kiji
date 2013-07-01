@@ -592,7 +592,6 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
             final boolean isFresh =
                 usesClientDataRequest.get(key).getPolicy().isFresh(rowData, policyContext);
             if (isFresh) {
-              // If isFresh, return false to indicate a reread is not necessary.
               return Boolean.FALSE;
             } else {
               final FreshnessCapsule capsule = usesClientDataRequest.get(key);
@@ -605,7 +604,10 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
                     mTable.getWriterFactory().openBufferedWriter());
               } else {
                 context = KijiFreshProducerContext.create(
-                    key, eid, mCapsuleCache.get(key).getFactory(), mBuffers.get(getId));
+                    key,
+                    eid,
+                    mCapsuleCache.get(key).getFactory(),
+                    mBuffers.get(getId));
               }
               synchronized (mContextMap) {
                 if (mContextMap.containsKey(getId)) {
@@ -618,24 +620,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
               producer.produce(mReader.get(eid, producer.getDataRequest()), context);
               capsule.release();
               context.finish();
-              if (mAllowPartialFresh) {
-                context.flush();
-              } else {
-                if (mContextMap.get(getId).size() == capsules.size()) {
-                  boolean allFinished = true;
-                  for (KijiFreshProducerContext cont : mContextMap.get(getId)) {
-                    allFinished = allFinished && cont.isFinished();
-                  }
-                  if (allFinished) {
-                    mBuffers.get(getId).flush();
-                    mContextMap.remove(getId);
-                  }
-                }
-              }
-              // If a producer runs, return true to indicate a reread is necessary.  This assumes
-              // the producer will write to the requested cells, eventually it may be appropriate
-              // to actually check if this is true.
-              return Boolean.TRUE;
+              return shouldReread(context, getId, capsules.size());
             }
           } else {
             return Boolean.FALSE;
@@ -654,7 +639,6 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
           final boolean isFresh =
               usesOwnDataRequest.get(key).getPolicy().isFresh(rowData, policyContext);
           if (isFresh) {
-            // If isFresh, return false to indicate that a reread is not necessary.
             return Boolean.FALSE;
           } else {
             final FreshnessCapsule capsule = usesOwnDataRequest.get(key);
@@ -667,7 +651,10 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
                   mTable.getWriterFactory().openBufferedWriter());
             } else {
               context = KijiFreshProducerContext.create(
-                  key, eid, mCapsuleCache.get(key).getFactory(), mBuffers.get(getId));
+                  key,
+                  eid,
+                  mCapsuleCache.get(key).getFactory(),
+                  mBuffers.get(getId));
             }
             synchronized (mContextMap) {
               if (mContextMap.containsKey(getId)) {
@@ -680,32 +667,52 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
             producer.produce(mReader.get(eid, producer.getDataRequest()), context);
             capsule.release();
             context.finish();
-            if (mAllowPartialFresh) {
-              context.flush();
-            } else {
-              // Ensure that all producers have added their Contexts to the Context map before
-              // checking if they are finished.
-              if (mContextMap.get(getId).size() == capsules.size()) {
-                boolean allFinished = true;
-                for (KijiFreshProducerContext cont : mContextMap.get(getId)) {
-                  allFinished = allFinished && cont.isFinished();
-                }
-                if (allFinished) {
-                  mBuffers.get(getId).flush();
-                  mContextMap.remove(getId);
-                }
-              }
-            }
-            // If a producer runs, return true to indicate that a reread is necessary.  This assumes
-            // the producer will write to the requested cells, eventually it may be appropriate
-            // to actually check if this is true.
-            return Boolean.TRUE;
+            return shouldReread(context, getId, capsules.size());
           }
         }
       });
       futures.add(requiresReread);
     }
     return futures;
+  }
+
+  /**
+   * Called whenever a producer finishes.  Manages flushing buffers according to mAllowPartialFresh
+   * and returns whether any new data has been written.
+   *
+   * @param context the producer context of the producer which just finished.
+   * @param getId the ID of the request which triggered the producer.
+   * @param capsulesSize the number of freshness capsules associated with the given getId.
+   * @return whether data was written, requiring a reread.
+   * @throws IOException in case of an IO error.
+   */
+  private Boolean shouldReread(
+      KijiFreshProducerContext context,
+      String getId,
+      int capsulesSize)
+      throws IOException {
+    boolean shouldReread = false;
+    if (mAllowPartialFresh) {
+      if (context.hasReceivedWrites()) {
+        context.flush();
+        shouldReread = true;
+      }
+    } else {
+      // Ensure that all producers have added their Contexts to the Context map before
+      // checking if they are finished.
+      if (mContextMap.get(getId).size() == capsulesSize) {
+        boolean allFinished = true;
+        for (KijiFreshProducerContext cont : mContextMap.get(getId)) {
+          shouldReread = shouldReread || cont.hasReceivedWrites();
+          allFinished = allFinished && cont.isFinished();
+        }
+        if (allFinished) {
+          mBuffers.get(getId).flush();
+          mContextMap.remove(getId);
+        }
+      }
+    }
+    return shouldReread;
   }
 
   /**
