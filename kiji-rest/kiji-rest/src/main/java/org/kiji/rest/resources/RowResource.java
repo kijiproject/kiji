@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
@@ -81,7 +80,6 @@ import org.kiji.schema.util.ResourceUtils;
  */
 @Path(ROW_PATH)
 @Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
 @ApiAudience.Public
 public class RowResource extends AbstractRowResource {
   private final KijiClient mKijiClient;
