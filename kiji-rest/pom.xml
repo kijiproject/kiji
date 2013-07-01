@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.kiji.pom</groupId>
     <artifactId>root-pom</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.1-SNAPSHOT</version>
   </parent>
 
   <name>The Kiji REST Servlet top-level project</name>
@@ -53,6 +53,35 @@
   </modules>
 
   <build>
+    <plugins>
+      <plugin>
+        <!--
+            REST is built depending on the oldest version of KijiSchema that supports it.
+            To test whether the latest Kiji dependency SNAPSHOTs have introduced a regression:
+
+            Run the following commands in your shell
+
+            mvn versions:update-properties -N # Update the kiji-*.version properties
+                                              # in the top-level pom file; don't recurse.
+            mvn clean verify                  # Uses the new snapshot versions
+            mvn versions:revert               # Revert the pom file to before update-properties.
+                                    # Do not check in new Kiji SNAPSHOT dependencies in the pom.
+        -->
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>versions-maven-plugin</artifactId>
+        <configuration>
+          <includeProperties>kiji-schema.version</includeProperties>
+        </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>org.kiji.schema</groupId>
+            <artifactId>kiji-schema</artifactId>
+            <version>${kiji-schema.version}</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+    </plugins>
+
     <pluginManagement>
       <plugins>
         <plugin>
