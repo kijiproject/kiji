@@ -1,6 +1,7 @@
 
                               Kiji Scoring Release Notes
 Version 0.4.0
+  * SCORE-52. FreshTool now accepts File paths for policy state using the --policy-state-file flag.
   * SCORE-27. PolicyContext now supports a getStore(String) operation so that FreshnessPolicys can
       access KeyValue stores in calls to isFresh().
 

@@ -19,6 +19,8 @@
 
 package org.kiji.scoring.tools;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
@@ -90,10 +92,16 @@ public class FreshTool extends BaseTool {
   private String mPolicyClassFlag;
 
   @Flag(name="policy-state", usage="serialized state of the KijiFreshnessPolicy, will be passed "
-      + "to KijiFreshnessPolicy.deserialize().")
+      + "to KijiFreshnessPolicy.deserialize().  Specify exactly one of policy-state or "
+      + "policy-state-file")
   private String mPolicyStateFlag;
 
-  @Flag(name="producer-class", usage="fully qualified name of a KijiPRoducer class.")
+  @Flag(name="policy-state-file", usage="serialized state of the KijiFreshnessPolicy, will be "
+      + "passed to KijiFreshnessPolicy.deserialize().  Specify exactly one of policy-state or "
+      + "policy-state-file")
+  private String mPolicyStateFileFlag;
+
+  @Flag(name="producer-class", usage="fully qualified name of a KijiProducer class.")
   private String mProducerClassFlag;
 
   @Flag(name="as-strings", usage="set to true to write strings directly without checking for "
@@ -350,6 +358,25 @@ public class FreshTool extends BaseTool {
     }
   }
 
+  /**
+   * Reads FreshnessPolicy state from a given file path String.
+   *
+   * @param path path to the freshness policy state file.
+   * @return the sting contents of the freshness policy state.
+   * @throws IOException in case of an error finding the file or reading from it.
+   */
+  private String readStateFromFile(String path) throws IOException {
+    final BufferedReader reader = new BufferedReader(new FileReader(path));
+    final StringBuilder builder = new StringBuilder();
+    String line = null;
+    final String seperator = System.getProperty("line.separator");
+    while ((line = reader.readLine()) != null) {
+      builder.append(line);
+      builder.append(seperator);
+    }
+    return builder.toString();
+  }
+
   /** {@inheritDoc} */
   @Override
   public void validateFlags() throws Exception {
@@ -414,6 +441,13 @@ public class FreshTool extends BaseTool {
             return BaseTool.SUCCESS;
           }
           case REGISTER: {
+            Preconditions.checkArgument(!mURI.getColumns().isEmpty(), "Please specify at least one "
+                + "column to register.");
+            Preconditions.checkArgument((mPolicyStateFlag != null)
+                ^ (mPolicyStateFileFlag != null && !mPolicyStateFileFlag.isEmpty()),
+                "Specify only one of --policy-state and --policy-state-file.");
+            final String policyState = (mPolicyStateFlag != null) ? mPolicyStateFlag
+                : readStateFromFile(mPolicyStateFileFlag);
             boolean classesFound = true;
             KijiFreshnessPolicy policy = null;
             Class<? extends KijiProducer> producerClass = null;
@@ -421,7 +455,7 @@ public class FreshTool extends BaseTool {
               try {
                 policy = (KijiFreshnessPolicy) ReflectionUtils.newInstance(
                     Class.forName(mPolicyClassFlag), null);
-                policy.deserialize(mPolicyStateFlag);
+                policy.deserialize(policyState);
               } catch (ClassNotFoundException cnfe) {
                 classesFound = false;
                 if (mayProceed("KijiFreshnessPolicy class: %s not found on the classpath.  Do you "
@@ -465,7 +499,7 @@ public class FreshTool extends BaseTool {
             } else {
               for (KijiColumnName column : mURI.getColumns()) {
                 forceRegisterPolicy(mURI.getTable(), column.getName(),
-                    mPolicyClassFlag, mPolicyStateFlag, mProducerClassFlag);
+                    mPolicyClassFlag, policyState, mProducerClassFlag);
               }
               return BaseTool.SUCCESS;
             }

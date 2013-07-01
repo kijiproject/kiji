@@ -21,7 +21,10 @@ package org.kiji.scoring.tools;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 
@@ -38,6 +41,7 @@ import org.slf4j.LoggerFactory;
 import org.kiji.mapreduce.produce.KijiProducer;
 import org.kiji.mapreduce.produce.ProducerContext;
 import org.kiji.schema.KijiClientTest;
+import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiURI;
@@ -49,6 +53,7 @@ import org.kiji.scoring.KijiFreshnessPolicy;
 import org.kiji.scoring.avro.KijiFreshnessPolicyRecord;
 import org.kiji.scoring.lib.AlwaysFreshen;
 import org.kiji.scoring.lib.NeverFreshen;
+import org.kiji.scoring.lib.ShelfLife;
 
 public class TestFreshTool extends KijiClientTest {
   private static final Logger LOG = LoggerFactory.getLogger(TestFreshTool.class);
@@ -309,5 +314,29 @@ public class TestFreshTool extends KijiClientTest {
         mToolOutputLines[1]);
     assertEquals("NO_FAMILY_IN_TABLE: java.lang.IllegalArgumentException: Table: user does not "
         + "contain family: columnName", mToolOutputLines[2]);
+  }
+
+  @Test
+  public void testStateFromFile() throws Exception {
+    getKiji().createTable(KijiTableLayouts.getLayout(KijiTableLayouts.COUNTER_TEST));
+    final KijiFreshnessManager manager = KijiFreshnessManager.create(getKiji());
+    final String state = new ShelfLife(10L).serialize();
+    final File stateFile = File.createTempFile("state", "File", getLocalTempDir());
+    final FileWriter fileWriter = new FileWriter(stateFile.getAbsoluteFile());
+    final BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+    bufferedWriter.write(state);
+    bufferedWriter.close();
+
+    assertEquals(BaseTool.SUCCESS, runTool(new FreshTool(),
+        KijiURI.newBuilder(getKiji().getURI()).withTableName("user")
+            .addColumnName(new KijiColumnName("info", "name")).build().toString(),
+        "--do=register",
+        "--policy-class=org.kiji.scoring.lib.ShelfLife",
+        "--producer-class=org.kiji.scoring.tools.TestFreshTool$TestProducer",
+        "--policy-state-file=" + stateFile.getAbsolutePath()));
+
+    assertEquals("Freshness policy: org.kiji.scoring.lib.ShelfLife with state: {\"shelfLife\":10} "
+        + "and producer: org.kiji.scoring.tools.TestFreshTool$TestProducer\nattached to column: "
+        + "info:name in table: user", mToolOutputStr);
   }
 }
