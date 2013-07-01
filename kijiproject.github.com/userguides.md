@@ -39,4 +39,5 @@ before release.
 
 * [KijiSchema]({{site.userguide_url}}/schema/DEVEL/kiji-schema-overview/)
 * [KijiMR]({{site.userguide_url}}/mapreduce/DEVEL/kiji-mr-overview/)
+* [KijiREST]({{site.userguide_url}}/rest/DEVEL/rest-overview/)
 
