@@ -51,9 +51,9 @@ import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReaderFactory;
 import org.kiji.mapreduce.produce.KijiProducer;
+import org.kiji.schema.AtomicKijiPutter;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.InternalKijiError;
-import org.kiji.schema.KijiBufferedWriter;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequest.Column;
@@ -130,10 +130,10 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
    */
   private final Map<String, List<KijiFreshProducerContext>> mContextMap;
   /**
-   * BufferedWriter objects shared across KijiFreshProducerContexts for a given request. Used when
-   * mAllowPartialFresh is false.
+   * AtomcicKijiPutter objects shared across KijiFreshProducerContexts for a given request. Used
+   * when mAllowPartialFresh is false.
    */
-  private final Map<String, KijiBufferedWriter> mBuffers;
+  private final Map<String, AtomicKijiPutter> mBuffers;
 
   /**
    * Container class for KijiFreshnessPolicy and associated KijiProducer and
@@ -284,7 +284,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     mAllowPartialFresh = allowPartial;
     mGetId = new AtomicLong(0);
     mContextMap = new HashMap<String, List<KijiFreshProducerContext>>();
-    mBuffers = new HashMap<String, KijiBufferedWriter>();
+    mBuffers = new HashMap<String, AtomicKijiPutter>();
   }
 
   /** {@inheritDoc} */
@@ -597,11 +597,13 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
               final FreshnessCapsule capsule = usesClientDataRequest.get(key);
               final KijiFreshProducerContext context;
               if (mAllowPartialFresh) {
+                final AtomicKijiPutter writer = mTable.getWriterFactory().openAtomicPutter();
+                writer.begin(eid);
                 context = KijiFreshProducerContext.create(
                     key,
                     eid,
                     mCapsuleCache.get(key).getFactory(),
-                    mTable.getWriterFactory().openBufferedWriter());
+                    writer);
               } else {
                 context = KijiFreshProducerContext.create(
                     key,
@@ -644,11 +646,13 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
             final FreshnessCapsule capsule = usesOwnDataRequest.get(key);
             final KijiFreshProducerContext context;
             if (mAllowPartialFresh) {
+              final AtomicKijiPutter writer = mTable.getWriterFactory().openAtomicPutter();
+              writer.begin(eid);
               context = KijiFreshProducerContext.create(
                   key,
                   eid,
                   mCapsuleCache.get(key).getFactory(),
-                  mTable.getWriterFactory().openBufferedWriter());
+                  writer);
             } else {
               context = KijiFreshProducerContext.create(
                   key,
@@ -707,7 +711,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
           allFinished = allFinished && cont.isFinished();
         }
         if (allFinished) {
-          mBuffers.get(getId).flush();
+          mBuffers.get(getId).commit();
           mContextMap.remove(getId);
         }
       }
@@ -817,7 +821,8 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
 
     final Future<KijiRowData> clientData = getClientData(eid, dataRequest);
     if (!mAllowPartialFresh) {
-      final KijiBufferedWriter writer = mTable.getWriterFactory().openBufferedWriter();
+      final AtomicKijiPutter writer = mTable.getWriterFactory().openAtomicPutter();
+      writer.begin(eid);
       mBuffers.put(getId, writer);
     }
     final List<Future<Boolean>> futures =

@@ -28,8 +28,8 @@ import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReaderFactory;
 import org.kiji.mapreduce.produce.ProducerContext;
+import org.kiji.schema.AtomicKijiPutter;
 import org.kiji.schema.EntityId;
-import org.kiji.schema.KijiBufferedWriter;
 import org.kiji.schema.KijiColumnName;
 
 /**
@@ -40,11 +40,10 @@ import org.kiji.schema.KijiColumnName;
 @ApiStability.Experimental
 public final class KijiFreshProducerContext implements ProducerContext {
 
-  private final EntityId mEntityId;
   private final KeyValueStoreReaderFactory mFactory;
   private final String mFamily;
   private final String mQualifier;
-  private final KijiBufferedWriter mWriter;
+  private final AtomicKijiPutter mWriter;
 
   /**
    * Set by InternalFreshKijiTableReader after Producer.producer() returns to indicate that there
@@ -74,13 +73,8 @@ public final class KijiFreshProducerContext implements ProducerContext {
       KijiColumnName outputColumn,
       EntityId eid,
       KeyValueStoreReaderFactory factory,
-      KijiBufferedWriter writer)
+      AtomicKijiPutter writer)
       throws IOException {
-    mEntityId = eid;
-    if (writer != null) {
-      // Buffer indefinitely to control when writes become visible.
-      writer.setBufferSize(Long.MAX_VALUE);
-    }
     mWriter = writer;
     mFamily = Preconditions.checkNotNull(outputColumn.getFamily());
     mQualifier = outputColumn.getQualifier();
@@ -105,7 +99,7 @@ public final class KijiFreshProducerContext implements ProducerContext {
       KijiColumnName outputColumn,
       EntityId eid,
       KeyValueStoreReaderFactory factory,
-      KijiBufferedWriter writer)
+      AtomicKijiPutter writer)
       throws IOException {
     return new KijiFreshProducerContext(outputColumn, eid, factory, writer);
   }
@@ -129,7 +123,7 @@ public final class KijiFreshProducerContext implements ProducerContext {
    */
   @Override
   public <T> void put(final long timestamp, final T value) throws IOException {
-    mWriter.put(mEntityId, mFamily, Preconditions.checkNotNull(
+    mWriter.put(mFamily, Preconditions.checkNotNull(
         mQualifier, "Output column is a map type family, use put(qualifier, timestamp, value)"),
         timestamp, value);
     mHasReceivedWrites = true;
@@ -157,7 +151,7 @@ public final class KijiFreshProducerContext implements ProducerContext {
       throws IOException {
     Preconditions.checkArgument(mQualifier == null, "Qualifier is already set in the "
         + "ProducerContext, use ProducerContext.put(timestamp, value)");
-    mWriter.put(mEntityId, mFamily, qualifier, timestamp, value);
+    mWriter.put(mFamily, qualifier, timestamp, value);
     mHasReceivedWrites = true;
   }
 
@@ -170,7 +164,7 @@ public final class KijiFreshProducerContext implements ProducerContext {
   /** {@inheritDoc} */
   @Override
   public void flush() throws IOException {
-    mWriter.flush();
+    mWriter.commit();
   }
 
   /**
