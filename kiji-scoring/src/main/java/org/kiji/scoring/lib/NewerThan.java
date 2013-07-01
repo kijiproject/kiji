@@ -60,6 +60,17 @@ public class NewerThan implements KijiFreshnessPolicy {
     mNewerThanTimestamp = newerThan;
   }
 
+  /**
+   * Get the time in milliseconds since 1970 before which data should be considered stale for this
+   * freshness policy.
+   *
+   * @return the time in milliseconds since 1970 before which data should be considered stale for
+   * this freshness policy.
+   */
+  public long getNewerThanTimeInMillis() {
+    return mNewerThanTimestamp;
+  }
+
   /** {@inheritDoc} */
   @Override
   public boolean isFresh(KijiRowData rowData, PolicyContext policyContext) {

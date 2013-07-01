@@ -53,15 +53,6 @@ public final class ShelfLife implements KijiFreshnessPolicy {
   public ShelfLife() {}
 
   /**
-   * Get the number of milliseconds this shelf life is configured with.
-   *
-   * @return The 'shelf life' in milliseconds.
-   */
-  public long getShelfLifeInMillis() {
-    return mShelfLifeMillis;
-  }
-
-  /**
    * Constructor which initializes all state.  No call to {@link #deserialize(String)} is necessary.
    *
    * @param shelfLife the age in milliseconds beyond which data becomes stale.
@@ -71,6 +62,15 @@ public final class ShelfLife implements KijiFreshnessPolicy {
       throw new IllegalArgumentException("Shelf life must be a positive number of milliseconds.");
     }
     mShelfLifeMillis = shelfLife;
+  }
+
+  /**
+   * Get the number of milliseconds this shelf life is configured with.
+   *
+   * @return The 'shelf life' in milliseconds.
+   */
+  public long getShelfLifeInMillis() {
+    return mShelfLifeMillis;
   }
 
   /** {@inheritDoc} */
