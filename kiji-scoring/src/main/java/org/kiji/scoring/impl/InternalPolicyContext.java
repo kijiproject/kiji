@@ -18,10 +18,14 @@
  */
 package org.kiji.scoring.impl;
 
+import java.io.IOException;
+
 import org.apache.hadoop.conf.Configuration;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
+import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
+import org.kiji.mapreduce.kvstore.KeyValueStoreReaderFactory;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.scoring.PolicyContext;
@@ -36,6 +40,7 @@ public final class InternalPolicyContext implements PolicyContext {
   private final Configuration mConf;
   private final KijiColumnName mAttachedColumn;
   private KijiDataRequest mClientRequest;
+  private KeyValueStoreReaderFactory mKeyValueStoreReaderFactory;
 
   /**
    * Creates a new InternalPolicyContext to give freshness policies access to outside data.
@@ -44,12 +49,18 @@ public final class InternalPolicyContext implements PolicyContext {
    * @param attachedColumn The column to which the freshness policy is attached.
    * @param conf The Configuration from the Kiji instance housing the KijiTable from which this
    *   FreshKijiTableReader reads.
+   * @param factory a KeyValueStoreReaderFactory configured with KVStores from the FreshnessPolicy
+   *   and producer.
    */
   public InternalPolicyContext(
-      KijiDataRequest clientRequest, KijiColumnName attachedColumn, Configuration conf) {
+      KijiDataRequest clientRequest,
+      KijiColumnName attachedColumn,
+      Configuration conf,
+      KeyValueStoreReaderFactory factory) {
     mClientRequest = clientRequest;
     mAttachedColumn = attachedColumn;
     mConf = conf;
+    mKeyValueStoreReaderFactory = factory;
   }
 
   /** {@inheritDoc} */
@@ -68,5 +79,11 @@ public final class InternalPolicyContext implements PolicyContext {
   @Override
   public Configuration getConfiguration() {
     return mConf;
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public <K, V> KeyValueStoreReader<K, V> getStore(final String storeName) throws IOException {
+    return mKeyValueStoreReaderFactory.openStore(storeName);
   }
 }

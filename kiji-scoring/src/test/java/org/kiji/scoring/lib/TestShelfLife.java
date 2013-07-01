@@ -98,7 +98,8 @@ public class TestShelfLife {
     final KijiDataRequest request = KijiDataRequest.create("info", "name");
     final KijiRowData rowData = mReader.get(eid, request);
     final PolicyContext context =
-        new InternalPolicyContext(request, new KijiColumnName("info", "name"), mKiji.getConf());
+        new InternalPolicyContext(
+        request, new KijiColumnName("info", "name"), mKiji.getConf(), null);
     final ShelfLife policy = new ShelfLife();
     policy.deserialize(String.format("{\"shelfLife\":%d}", Long.MAX_VALUE));
 

@@ -573,7 +573,8 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
       final Future<Boolean> requiresReread = mExecutor.submit(new Callable<Boolean>() {
         public Boolean call() throws IOException {
           final PolicyContext policyContext =
-              new InternalPolicyContext(clientRequest, key, mTable.getKiji().getConf());
+              new InternalPolicyContext(clientRequest, key, mTable.getKiji().getConf(),
+                  usesClientDataRequest.get(key).getFactory());
           KijiRowData rowData = null;
           try {
             rowData = clientData.get();
@@ -637,7 +638,8 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
           final KijiRowData rowData =
               mReader.get(eid, usesOwnDataRequest.get(key).getPolicy().getDataRequest());
           final PolicyContext policyContext =
-              new InternalPolicyContext(clientRequest, key, mTable.getKiji().getConf());
+              new InternalPolicyContext(clientRequest, key, mTable.getKiji().getConf(),
+                  usesOwnDataRequest.get(key).getFactory());
           final boolean isFresh =
               usesOwnDataRequest.get(key).getPolicy().isFresh(rowData, policyContext);
           if (isFresh) {

@@ -99,7 +99,8 @@ public final class TestNewerThan extends KijiClientTest {
     final KijiDataRequest request = KijiDataRequest.create("info", "name");
     final KijiRowData rowData = mReader.get(eid, request);
     final PolicyContext context =
-        new InternalPolicyContext(request, new KijiColumnName("info", "name"), mKiji.getConf());
+        new InternalPolicyContext(
+        request, new KijiColumnName("info", "name"), mKiji.getConf(), null);
     final NewerThan policy = new NewerThan();
     policy.deserialize("{\"newerThan\":1}");
 

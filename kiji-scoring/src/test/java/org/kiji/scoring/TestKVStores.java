@@ -42,6 +42,7 @@ import org.kiji.mapreduce.produce.KijiProducer;
 import org.kiji.mapreduce.produce.ProducerContext;
 import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiDataRequest;
+import org.kiji.schema.KijiIOException;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.avro.TableLayoutDesc;
@@ -109,6 +110,70 @@ public class TestKVStores extends KijiClientTest {
     @Override
     public boolean isFresh(KijiRowData rowData, PolicyContext policyContext) {
       return false;
+    }
+
+    @Override
+    public boolean shouldUseClientDataRequest() {
+      return true;
+    }
+
+    @Override
+    public KijiDataRequest getDataRequest() {
+      // Never called so it doesn't matter.
+      return null;
+    }
+
+    @Override
+    public Map<String, KeyValueStore<?, ?>> getRequiredStores() {
+      Map<String, KeyValueStore<?, ?>> storeMap = new HashMap<String, KeyValueStore<?, ?>>();
+      Path path = new Path(mPathString);
+      storeMap.put("cats", TextFileKeyValueStore.builder().withInputPath(path).build());
+      return storeMap;
+    }
+
+    @Override
+    public String serialize() {
+      return mPathString;
+    }
+
+    @Override
+    public void deserialize(String policyState) {
+      mPathString = policyState;
+    }
+  }
+
+  /**
+   * This is a simple Freshness policy designed to provide a key value store, parameterized by
+   * a string path to the state.
+   */
+  private static final class KVStoreInIsFreshPolicy implements KijiFreshnessPolicy {
+    private String mPathString;
+
+    /** Empty constructor for reflection. */
+    public KVStoreInIsFreshPolicy() { }
+
+    public KVStoreInIsFreshPolicy(String path) {
+      super();
+      mPathString = path;
+    }
+
+    @Override
+    public boolean isFresh(KijiRowData rowData, PolicyContext policyContext) {
+      final KeyValueStoreReader<String, String> cats;
+      try {
+        cats = policyContext.getStore("cats");
+      } catch (IOException ioe) {
+        throw new KijiIOException(ioe);
+      }
+      if (cats != null) {
+        try {
+          return cats.get("Skimbleshanks").equals("Railway Cat");
+        } catch (IOException ioe) {
+          throw new KijiIOException(ioe);
+        }
+      } else {
+        throw new RuntimeException("Could not retrieve KVStoreReader \"cats\" test is broken.");
+      }
     }
 
     @Override
@@ -261,5 +326,25 @@ public class TestKVStores extends KijiClientTest {
     assertEquals("Old Gumbie Cat", data.getMostRecentValue("info", "name").toString());
   }
 
-  // TODO(SCORE-27) Add a unit test to ensure that policies can use KV stores in isFresh.
+  @Test
+  public void testKVStoreInIsFresh() throws IOException {
+    // Create a freshness policy that knows where to find the text file backed kv-store.
+    KijiFreshnessPolicy policy =
+        new KVStoreInIsFreshPolicy("file:" + new File(getLocalTempDir(), KV_FILENAME));
+    // Install a freshness policy.
+    KijiFreshnessManager manager = KijiFreshnessManager.create(getKiji());
+    manager.storePolicy("user", "info:name", UnconfiguredProducer.class, policy);
+    KijiTable userTable = getKiji().openTable("user");
+    FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
+        .withReaderType(FreshReaderType.LOCAL)
+        .withTable(userTable)
+        .withTimeout(10000)
+        .build();
+
+    // Read from the table to ensure that the user name is updated.
+    KijiRowData data =
+        freshReader.get(userTable.getEntityId("felix"), KijiDataRequest.create("info", "name"));
+    // IsFresh should have returned true, so nothing should be written.
+    assertEquals("Felis", data.getMostRecentValue("info", "name").toString());
+  }
 }

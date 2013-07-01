@@ -1,5 +1,8 @@
 
                               Kiji Scoring Release Notes
+Version 0.4.0
+  * SCORE-27. PolicyContext now supports a getStore(String) operation so that FreshnessPolicys can
+      access KeyValue stores in calls to isFresh().
 
 Version 0.3.0
   * SCORE-44. Producer output from freshened get() requests are now committed atomically based on
