@@ -123,10 +123,15 @@ public final class KijiFreshProducerContext implements ProducerContext {
    */
   @Override
   public <T> void put(final long timestamp, final T value) throws IOException {
-    mWriter.put(mFamily, Preconditions.checkNotNull(
-        mQualifier, "Output column is a map type family, use put(qualifier, timestamp, value)"),
-        timestamp, value);
-    mHasReceivedWrites = true;
+    if (mWriter == null) {
+      throw new UnsupportedOperationException("Writing in producer setup and cleanup methods is "
+          + "unsupported.");
+    } else {
+      mWriter.put(mFamily, Preconditions.checkNotNull(
+          mQualifier, "Output column is a map type family, use put(qualifier, timestamp, value)"),
+          timestamp, value);
+      mHasReceivedWrites = true;
+    }
   }
 
   /**
@@ -151,8 +156,13 @@ public final class KijiFreshProducerContext implements ProducerContext {
       throws IOException {
     Preconditions.checkArgument(mQualifier == null, "Qualifier is already set in the "
         + "ProducerContext, use ProducerContext.put(timestamp, value)");
-    mWriter.put(mFamily, qualifier, timestamp, value);
-    mHasReceivedWrites = true;
+    if (mWriter == null) {
+      throw new UnsupportedOperationException("Writing in producer setup and cleanup methods is "
+          + "unsupported.");
+    } else {
+      mWriter.put(mFamily, qualifier, timestamp, value);
+      mHasReceivedWrites = true;
+    }
   }
 
   /** {@inheritDoc} */

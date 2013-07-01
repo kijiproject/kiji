@@ -7,6 +7,11 @@ Version 0.4.0
   * SCORE-27. PolicyContext now supports a getStore(String) operation so that FreshnessPolicys can
       access KeyValue stores in calls to isFresh().
 
+Version 0.4.0
+  * SCORE-54. Writing using the ProducerContext in setup and cleanup will now produce an
+      UnsupportedOperationException.  If you wish to write during these methods, use a
+      KijiTableWriter instead.
+
 Version 0.3.0
   * SCORE-44. Producer output from freshened get() requests are now committed atomically based on
       the 'allow partial freshness' rule specified during table creation.  If partial freshness is
