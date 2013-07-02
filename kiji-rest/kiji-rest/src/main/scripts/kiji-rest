@@ -59,14 +59,25 @@ fi
 kiji_jar=$(echo ${BASEDIR}/kiji-rest*.jar)
 kiji_rest_cp="${kiji_jar}:${BASEDIR}/lib/*:${KIJI_CLASSPATH}"
 
+if [ -z "${KIJI_REST_CONF_DIR}" ]; then
+  KIJI_REST_CONF_DIR=${BASEDIR}/conf
+elif [ ! -d "${KIJI_REST_CONF_DIR}" ]; then
+  echo "KIJI_REST_CONF_DIR ($KIJI_REST_CONF_DIR) does not exist."
+  exit 1
+fi
+
+if [ -d "${KIJI_REST_CONF_DIR}" ]; then
+  kiji_rest_cp="${kiji_rest_cp}:${KIJI_REST_CONF_DIR}"
+fi
+
 mkdir -p ${BASEDIR}/logs
 ${JAVA_HOME}/bin/java -cp ${kiji_rest_cp} org.kiji.rest.KijiRESTService server \
 ${BASEDIR}/conf/configuration.yml > ${BASEDIR}/logs/console.out 2>&1 &
 
-sleep 5
+rest_server_pid=$!
 
 # check if the backgrounded process truly started
-rest_server_pid=$?
+sleep 5
 ps -p ${rest_server_pid} > /dev/null
 if [ 0 == $? ]; then
   echo ${rest_server_pid} > $PIDFILE
