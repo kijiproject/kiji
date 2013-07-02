@@ -24,8 +24,11 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
+
 import org.apache.avro.generic.GenericContainer;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.io.EncoderFactory;
@@ -45,9 +48,7 @@ public class AvroToJsonStringSerializer extends JsonSerializer<GenericContainer>
   @Override
   public void serialize(GenericContainer record, JsonGenerator generator,
       SerializerProvider provider) throws IOException {
-
-    String jsonString = getJsonString(record);
-    generator.writeString(jsonString);
+    generator.writeObject(getJsonNode(record));
   }
 
   /**
@@ -68,6 +69,19 @@ public class AvroToJsonStringSerializer extends JsonSerializer<GenericContainer>
     String jsonString = new String(os.toByteArray(), Charset.forName("UTF-8"));
     os.close();
     return jsonString;
+  }
+
+  /**
+   * Returns an encoded JSON object for the given Avro object.
+   *
+   * @param record is the record to encode
+   * @return the JSON object representing this Avro object.
+   *
+   * @throws IOException if there is an error.
+   */
+  public static JsonNode getJsonNode(GenericContainer record) throws IOException {
+    ObjectMapper mapper = new ObjectMapper();
+    return mapper.readTree(getJsonString(record));
   }
 
   /**

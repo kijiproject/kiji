@@ -33,6 +33,8 @@ import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.NavigableMap;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -49,6 +51,7 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriBuilder;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -82,8 +85,8 @@ import org.kiji.schema.util.ResourceUtils;
 /**
  * This REST resource interacts with Kiji tables.
  *
- * This resource is served for requests using the resource identifier:
- * <li>/v1/instances/&lt;instance&gt;/tables/&lt;table&gt;/rows
+ * This resource is served for requests using the resource identifier: <li>
+ * /v1/instances/&lt;instance&gt;/tables/&lt;table&gt;/rows
  */
 @Path(ROWS_PATH)
 @Produces(MediaType.APPLICATION_JSON)
@@ -236,7 +239,7 @@ public class RowsResource extends AbstractRowResource {
       timeRanges = getTimestamps(timeRange);
     }
 
-    try  {
+    try {
       if (UNLIMITED_VERSIONS.equalsIgnoreCase(maxVersionsString)) {
         maxVersions = HConstants.ALL_VERSIONS;
       } else {
@@ -335,43 +338,54 @@ public class RowsResource extends AbstractRowResource {
       entityId = ToolUtils.createEntityIdFromUserInputs(kijiRestRow.getEntityId(),
           kijiTable.getLayout());
     } else {
-      throw new WebApplicationException(new IllegalArgumentException("EntityId was not specified."),
-          Status.BAD_REQUEST);
+      throw new WebApplicationException(
+          new IllegalArgumentException("EntityId was not specified."), Status.BAD_REQUEST);
     }
 
     // Open writer and write.
     final KijiTableWriter writer = kijiTable.openTableWriter();
     try {
-      for (KijiRestCell kijiRestCell : kijiRestRow.getCells()) {
-        final KijiColumnName column = new KijiColumnName(kijiRestCell.getColumnFamily(),
-            kijiRestCell.getColumnQualifier());
-        if (!kijiTable.getLayout().exists(column)) {
-          throw new WebApplicationException(
-              new IllegalArgumentException("Specified column does not exist: " + column),
-              Response.Status.BAD_REQUEST);
-        }
-        final long timestamp;
-        if (null != kijiRestCell.getTimestamp()) {
-          timestamp = kijiRestCell.getTimestamp();
-        } else {
-          timestamp = globalTimestamp;
-        }
-        if (timestamp >= 0) {
-          // Put to either a counter or a regular cell.
-          if (SchemaType.COUNTER == kijiTable.getLayout().getCellSchema(column).getType()) {
-            // Write the counter cell.
-            putCounterCell(writer, entityId, kijiRestCell.getValue().toString(), column, timestamp);
-          } else {
-            // Set writer schema in preparation to write an Avro record.
-            final Schema schema;
-            try {
-              schema = kijiTable.getLayout().getSchema(column);
-            } catch (Exception e) {
-              throw new WebApplicationException(e, Response.Status.BAD_REQUEST);
+      for (Entry<String, NavigableMap<String, List<KijiRestCell>>> familyEntry :
+        kijiRestRow.getCells().entrySet()) {
+        String columnFamily = familyEntry.getKey();
+        NavigableMap<String, List<KijiRestCell>> qualifiedCells = familyEntry.getValue();
+        for (Entry<String, List<KijiRestCell>> q : qualifiedCells.entrySet()) {
+          final KijiColumnName column = new KijiColumnName(columnFamily, q.getKey());
+          if (!kijiTable.getLayout().exists(column)) {
+            throw new WebApplicationException(new IllegalArgumentException(
+                "Specified column does not exist: " + column), Response.Status.BAD_REQUEST);
+          }
+
+          for (KijiRestCell restCell : q.getValue()) {
+            final long timestamp;
+            if (null != restCell.getTimestamp()) {
+              timestamp = restCell.getTimestamp();
+            } else {
+              timestamp = globalTimestamp;
             }
-            // Write the cell.
-            putCell(writer, entityId, kijiRestCell.getValue().toString(),
-                column, timestamp, schema);
+            if (timestamp >= 0) {
+              // Put to either a counter or a regular cell.
+              if (SchemaType.COUNTER == kijiTable.getLayout().getCellSchema(column).getType()) {
+                // Write the counter cell.
+                putCounterCell(writer, entityId, restCell.getValue().toString(), column, timestamp);
+              } else {
+                // Set writer schema in preparation to write an Avro record.
+                final Schema schema;
+                try {
+                  schema = kijiTable.getLayout().getSchema(column);
+                } catch (Exception ec) {
+                  throw new WebApplicationException(ec, Response.Status.BAD_REQUEST);
+                }
+                // Write the cell.
+                String jsonValue = restCell.getValue().toString();
+                // TODO: This is ugly. Converting from Map to JSON to String.
+                if (restCell.getValue() instanceof Map<?, ?>) {
+                  JsonNode node = mJsonObjectMapper.valueToTree(restCell.getValue());
+                  jsonValue = node.toString();
+                }
+                putCell(writer, entityId, jsonValue, column, timestamp, schema);
+              }
+            }
           }
         }
       }

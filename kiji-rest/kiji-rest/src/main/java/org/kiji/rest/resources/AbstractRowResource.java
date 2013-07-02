@@ -21,10 +21,12 @@ package org.kiji.rest.resources;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,8 +43,8 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.io.DecoderFactory;
 
 import org.kiji.annotations.ApiAudience;
-import org.kiji.rest.representations.KijiRestCell;
 import org.kiji.rest.representations.KijiRestRow;
+import org.kiji.schema.DecodedCell;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiCell;
 import org.kiji.schema.KijiColumnName;
@@ -175,6 +177,12 @@ public class AbstractRowResource {
 
     KijiRestRow returnRow = new KijiRestRow(rowData.getEntityId());
     Map<String, FamilyLayout> familyLayoutMap = tableLayout.getFamilyMap();
+    NavigableMap<String, Object> returnRowMap = new TreeMap<String, Object>();
+
+    returnRowMap.put("entityId", rowData.getEntityId().toShellString());
+
+    // Let's sort this to keep the response consistent with what hbase would return.
+    Collections.sort(columnsRequested);
 
     for (KijiColumnName col : columnsRequested) {
       FamilyLayout familyInfo = familyLayoutMap.get(col.getFamily());
@@ -189,31 +197,37 @@ public class AbstractRowResource {
         // Avro API, we will have to require clients to load the rest server
         // with compiled
         // Avro schemas on the classpath.
-        returnRow.addCell(new KijiRestCell(-1L, col.getFamily(), col.getQualifier(),
-            "Error loading cell: " + e.getMessage()));
+        DecodedCell<String> decodedCell = new DecodedCell<String>(null, "Error loading cell: "
+            + e.getMessage());
+        String qualifier = "";
+        if (col.getQualifier() != null) {
+          qualifier = col.getQualifier();
+        }
+        returnRow.addCell(new KijiCell<String>(col.getFamily(), qualifier, -1L, decodedCell));
         continue;
       }
       if (spec.isCounter()) {
         if (col.isFullyQualified()) {
           KijiCell<Long> counter = rowData.getMostRecentCell(col.getFamily(), col.getQualifier());
           if (null != counter) {
-            returnRow.addCell(new KijiRestCell(counter));
+            returnRow.addCell(counter);
           }
         } else if (familyInfo.isMapType()) {
           // Only can print all qualifiers on map types
           for (String key : rowData.getQualifiers(col.getFamily())) {
             KijiCell<Long> counter = rowData.getMostRecentCell(col.getFamily(), key);
             if (null != counter) {
-              returnRow.addCell(new KijiRestCell(counter));
+              returnRow.addCell(counter);
             }
           }
         }
       } else {
+
         if (col.isFullyQualified()) {
           Map<Long, KijiCell<Object>> rowVals = rowData.getCells(col.getFamily(),
               col.getQualifier());
           for (Entry<Long, KijiCell<Object>> timestampedCell : rowVals.entrySet()) {
-            returnRow.addCell(new KijiRestCell(timestampedCell.getValue()));
+            returnRow.addCell(timestampedCell.getValue());
           }
         } else if (familyInfo.isMapType()) {
           Map<String, NavigableMap<Long, KijiCell<Object>>> rowVals = rowData.getCells(col
@@ -221,7 +235,7 @@ public class AbstractRowResource {
 
           for (Entry<String, NavigableMap<Long, KijiCell<Object>>> e : rowVals.entrySet()) {
             for (KijiCell<Object> timestampedCell : e.getValue().values()) {
-              returnRow.addCell(new KijiRestCell(timestampedCell));
+              returnRow.addCell(timestampedCell);
             }
           }
         }

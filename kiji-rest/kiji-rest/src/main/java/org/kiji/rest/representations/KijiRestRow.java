@@ -20,20 +20,23 @@
 package org.kiji.rest.representations;
 
 import java.util.List;
+import java.util.NavigableMap;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import org.apache.commons.codec.binary.Hex;
 
 import org.kiji.schema.EntityId;
+import org.kiji.schema.KijiCell;
 
 /**
  * Represents the Kiji row returned to the client.
  *
  */
-@JsonPropertyOrder({"entityId", "rowKey"})
+@JsonPropertyOrder({ "entityId", "rowKey" })
 public class KijiRestRow {
 
   @JsonProperty("entityId")
@@ -43,7 +46,7 @@ public class KijiRestRow {
   private String mHBaseRowKey;
 
   @JsonProperty("cells")
-  private List<KijiRestCell> mKijiCells;
+  private NavigableMap<String, NavigableMap<String, List<KijiRestCell>>> mKijiCellMap;
 
   /**
    * Dummy constructor required for Jackson to (de)serialize JSON properly.
@@ -59,16 +62,38 @@ public class KijiRestRow {
   public KijiRestRow(EntityId entityId) {
     mHumanReadableEntityId = entityId.toShellString();
     mHBaseRowKey = new String(Hex.encodeHex(entityId.getHBaseRowKey()));
-    mKijiCells = Lists.newArrayList();
+    mKijiCellMap = Maps.newTreeMap();
   }
 
   /**
-   * Adds a new KijiRestCell to the list of cells in the row.
+   * Convenience method to add a new cell (represented by the KijiCell) to the row.
    *
-   * @param cell is the cell to add to the row's list of cells.
+   * @param cell is the cell to add.
    */
-  public void addCell(KijiRestCell cell) {
-    mKijiCells.add(cell);
+  public void addCell(KijiCell<?> cell) {
+    addCell(cell.getFamily(), cell.getQualifier(), cell.getTimestamp(), cell.getData());
+  }
+
+  /**
+   * Adds a new cell (specified by the family, qualifier, timestamp and value) to the current row.
+   *
+   * @param family is the family of the cell to add.
+   * @param qualifier is the qualifier of the cell to add.
+   * @param timestamp is the timestamp of the cell to add.
+   * @param value is the value of the cell to add.
+   */
+  public void addCell(String family, String qualifier, Long timestamp, Object value) {
+    NavigableMap<String, List<KijiRestCell>> familyMap = mKijiCellMap.get(family);
+    if (familyMap == null) {
+      familyMap = Maps.newTreeMap();
+      mKijiCellMap.put(family, familyMap);
+    }
+    List<KijiRestCell> restCells = familyMap.get(qualifier);
+    if (restCells == null) {
+      restCells = Lists.newArrayList();
+      familyMap.put(qualifier, restCells);
+    }
+    restCells.add(new KijiRestCell(timestamp, value));
   }
 
   /**
@@ -76,7 +101,7 @@ public class KijiRestRow {
    * components).
    *
    * @return the human readable entity_id (i.e. a string representation of the list of
-   *     components).
+   *         components).
    */
   public String getEntityId() {
     return mHumanReadableEntityId;
@@ -92,11 +117,11 @@ public class KijiRestRow {
   }
 
   /**
-   * Returns the list of KijiRestCells contained in this row.
+   * Returns the map of cell data contained in this row.
    *
-   * @return the list of KijiRestCells contained in this row.
+   * @return the map of cell data contained in this row.
    */
-  public List<KijiRestCell> getCells() {
-    return mKijiCells;
+  public NavigableMap<String, NavigableMap<String, List<KijiRestCell>>> getCells() {
+    return mKijiCellMap;
   }
 }
