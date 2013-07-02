@@ -714,6 +714,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
         }
         if (allFinished) {
           mBuffers.get(getId).commit();
+          mBuffers.remove(getId);
           mContextMap.remove(getId);
         }
       }
