@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.rest.resources;
+package org.kiji.rest.util;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -34,6 +34,8 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
@@ -43,6 +45,7 @@ import org.apache.avro.generic.GenericDatumReader;
 import org.apache.avro.io.DecoderFactory;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.rest.representations.KijiRestCell;
 import org.kiji.rest.representations.KijiRestRow;
 import org.kiji.schema.DecodedCell;
 import org.kiji.schema.EntityId;
@@ -54,17 +57,26 @@ import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.KijiTableWriter;
+import org.kiji.schema.avro.SchemaType;
 import org.kiji.schema.layout.CellSpec;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayout.LocalityGroupLayout.FamilyLayout;
 import org.kiji.schema.layout.KijiTableLayout.LocalityGroupLayout.FamilyLayout.ColumnLayout;
 import org.kiji.schema.layout.SchemaClassNotFoundException;
+import org.kiji.schema.util.ResourceUtils;
 
 /**
- * Base class with helper methods for accessing KijiRow resources.
+ * Utility methods used for reading and writing REST row model objects to/from Kiji.
  */
 @ApiAudience.Framework
-public class AbstractRowResource {
+public final class RowResourceUtil {
+
+  private static final ObjectMapper BASIC_MAPPER = new ObjectMapper();
+
+  /**
+   * Blank constructor.
+   */
+  private RowResourceUtil() {}
 
   /**
    * Retrieves the Min..Max timestamp given the user specified time range. Min and Max represent
@@ -75,7 +87,7 @@ public class AbstractRowResource {
    *
    * @return A long 2-tuple containing the min and max timestamps (in ms since UNIX Epoch)
    */
-  protected final long[] getTimestamps(String timeRange) {
+  public static long[] getTimestamps(String timeRange) {
 
     long[] lReturn = new long[] { 0, Long.MAX_VALUE };
     final Pattern timestampPattern = Pattern.compile("([0-9]*)\\.\\.([0-9]*)");
@@ -105,7 +117,7 @@ public class AbstractRowResource {
    *         cases it could be less (in case of an invalid column/qualifier) or more in case of
    *         specifying only the family but no qualifiers.
    */
-  protected final List<KijiColumnName> addColumnDefs(KijiTableLayout tableLayout,
+  public static List<KijiColumnName> addColumnDefs(KijiTableLayout tableLayout,
       ColumnsDef columnsDef, String requestedColumns) {
 
     List<KijiColumnName> returnCols = Lists.newArrayList();
@@ -172,7 +184,7 @@ public class AbstractRowResource {
    *         Although this shouldn't happen as columns are assumed to have been validated before
    *         this method is invoked.
    */
-  protected final KijiRestRow getKijiRestRow(KijiRowData rowData, KijiTableLayout tableLayout,
+  public static KijiRestRow getKijiRestRow(KijiRowData rowData, KijiTableLayout tableLayout,
       List<KijiColumnName> columnsRequested) throws IOException {
 
     KijiRestRow returnRow = new KijiRestRow(rowData.getEntityId());
@@ -251,21 +263,19 @@ public class AbstractRowResource {
    * @param eid is the entity id of the row to return.
    * @param request contains information about what to return.
    * @return a Kiji row object conforming to the parameters of the request.
+   *
+   * @throws IOException if the retrieve fails.
    */
-  protected final KijiRowData getKijiRowData(KijiTable table, EntityId eid,
-      KijiDataRequest request) {
+  public static KijiRowData getKijiRowData(KijiTable table, EntityId eid,
+      KijiDataRequest request) throws IOException {
 
     KijiRowData returnRow = null;
+    final KijiTableReader reader = table.openTableReader();
     try {
-      final KijiTableReader reader = table.openTableReader();
-      try {
-        returnRow = reader.get(eid, request);
+      returnRow = reader.get(eid, request);
 
-      } finally {
-        reader.close();
-      }
-    } catch (IOException e) {
-      throw new WebApplicationException(e, Status.INTERNAL_SERVER_ERROR);
+    } finally {
+      reader.close();
     }
 
     return returnRow;
@@ -329,5 +339,70 @@ public class AbstractRowResource {
     }
     // Write the put.
     writer.put(entityId, column.getFamily(), column.getQualifier(), timestamp, datum);
+  }
+
+  /**
+   * Util method to write a rest row into Kiji.
+   * @param kijiTable is the table to write into.
+   * @param entityId is the entity id of the row to write.
+   * @param kijiRestRow is the row model to write to Kiji.
+   * @throws IOException if there a failure writing the row.
+   */
+  public static void writeRow(KijiTable kijiTable, EntityId entityId,
+      KijiRestRow kijiRestRow) throws IOException {
+    final KijiTableWriter writer = kijiTable.openTableWriter();
+    // Default global timestamp.
+    long globalTimestamp = System.currentTimeMillis();
+
+    try {
+      for (Entry<String, NavigableMap<String, List<KijiRestCell>>> familyEntry : kijiRestRow
+          .getCells().entrySet()) {
+        String columnFamily = familyEntry.getKey();
+        NavigableMap<String, List<KijiRestCell>> qualifiedCells = familyEntry.getValue();
+        for (Entry<String, List<KijiRestCell>> qualifiedCell : qualifiedCells.entrySet()) {
+          final KijiColumnName column = new KijiColumnName(columnFamily, qualifiedCell.getKey());
+          if (!kijiTable.getLayout().exists(column)) {
+            throw new WebApplicationException(new IllegalArgumentException(
+                "Specified column does not exist: " + column), Response.Status.BAD_REQUEST);
+          }
+
+          for (KijiRestCell restCell : qualifiedCell.getValue()) {
+            final long timestamp;
+            if (null != restCell.getTimestamp()) {
+              timestamp = restCell.getTimestamp();
+            } else {
+              timestamp = globalTimestamp;
+            }
+            if (timestamp >= 0) {
+              // Put to either a counter or a regular cell.
+              if (SchemaType.COUNTER == kijiTable.getLayout().getCellSchema(column).getType()) {
+                // Write the counter cell.
+                putCounterCell(writer, entityId, restCell.getValue().toString(), column, timestamp);
+              } else {
+                // Set writer schema in preparation to write an Avro record.
+                final Schema schema;
+                try {
+                  schema = kijiTable.getLayout().getSchema(column);
+                } catch (Exception ec) {
+                  throw new WebApplicationException(ec, Response.Status.BAD_REQUEST);
+                }
+                // Write the cell.
+                String jsonValue = restCell.getValue().toString();
+                // TODO: This is ugly. Converting from Map to JSON to String.
+                if (restCell.getValue() instanceof Map<?, ?>) {
+                  JsonNode node = BASIC_MAPPER.valueToTree(restCell.getValue());
+                  jsonValue = node.toString();
+                }
+                putCell(writer, entityId, jsonValue, column, timestamp, schema);
+              }
+            }
+          }
+        }
+      }
+    } finally {
+      ResourceUtils.closeOrLog(writer);
+      ResourceUtils.releaseOrLog(kijiTable);
+    }
+
   }
 }

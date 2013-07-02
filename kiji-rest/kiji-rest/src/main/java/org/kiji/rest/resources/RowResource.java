@@ -23,6 +23,12 @@ import static org.kiji.rest.RoutesConstants.HEX_ENTITY_ID_PARAMETER;
 import static org.kiji.rest.RoutesConstants.INSTANCE_PARAMETER;
 import static org.kiji.rest.RoutesConstants.ROW_PATH;
 import static org.kiji.rest.RoutesConstants.TABLE_PARAMETER;
+import static org.kiji.rest.util.RowResourceUtil.addColumnDefs;
+import static org.kiji.rest.util.RowResourceUtil.getKijiRestRow;
+import static org.kiji.rest.util.RowResourceUtil.getKijiRowData;
+import static org.kiji.rest.util.RowResourceUtil.getTimestamps;
+import static org.kiji.rest.util.RowResourceUtil.putCell;
+import static org.kiji.rest.util.RowResourceUtil.putCounterCell;
 
 import java.io.IOException;
 import java.util.List;
@@ -68,7 +74,6 @@ import org.kiji.schema.KijiTableWriter;
 import org.kiji.schema.avro.SchemaType;
 import org.kiji.schema.util.ByteArrayFormatter;
 import org.kiji.schema.util.ResourceUtils;
-
 /**
  * This REST resource interacts with a single Kiji row identified by its hbase rowkey (in hex).
  *
@@ -81,7 +86,7 @@ import org.kiji.schema.util.ResourceUtils;
 @Path(ROW_PATH)
 @Produces(MediaType.APPLICATION_JSON)
 @ApiAudience.Public
-public class RowResource extends AbstractRowResource {
+public class RowResource {
   private final KijiClient mKijiClient;
 
   /** Prefix for cell-specific schema parameter. */

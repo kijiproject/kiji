@@ -22,6 +22,10 @@ package org.kiji.rest.resources;
 import static org.kiji.rest.RoutesConstants.INSTANCE_PARAMETER;
 import static org.kiji.rest.RoutesConstants.ROWS_PATH;
 import static org.kiji.rest.RoutesConstants.TABLE_PARAMETER;
+import static org.kiji.rest.util.RowResourceUtil.addColumnDefs;
+import static org.kiji.rest.util.RowResourceUtil.getKijiRestRow;
+import static org.kiji.rest.util.RowResourceUtil.getKijiRowData;
+import static org.kiji.rest.util.RowResourceUtil.getTimestamps;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -33,8 +37,6 @@ import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.NavigableMap;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -51,21 +53,19 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriBuilder;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.yammer.metrics.annotation.Timed;
 
-import org.apache.avro.Schema;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.hadoop.hbase.HConstants;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
 import org.kiji.rest.KijiClient;
-import org.kiji.rest.representations.KijiRestCell;
 import org.kiji.rest.representations.KijiRestRow;
+import org.kiji.rest.util.RowResourceUtil;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.EntityIdFactory;
 import org.kiji.schema.KijiColumnName;
@@ -77,11 +77,8 @@ import org.kiji.schema.KijiRowScanner;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.KijiTableReader.KijiScannerOptions;
-import org.kiji.schema.KijiTableWriter;
-import org.kiji.schema.avro.SchemaType;
 import org.kiji.schema.tools.ToolUtils;
 import org.kiji.schema.util.ResourceUtils;
-
 /**
  * This REST resource interacts with Kiji tables.
  *
@@ -91,7 +88,7 @@ import org.kiji.schema.util.ResourceUtils;
 @Path(ROWS_PATH)
 @Produces(MediaType.APPLICATION_JSON)
 @ApiAudience.Public
-public class RowsResource extends AbstractRowResource {
+public class RowsResource {
   private static final String UNLIMITED_VERSIONS = "all";
 
   private final KijiClient mKijiClient;
@@ -266,7 +263,7 @@ public class RowsResource extends AbstractRowResource {
     try {
       if (jsonEntityId != null) {
         EntityId eid = ToolUtils.createEntityIdFromUserInputs(jsonEntityId, kijiTable.getLayout());
-        KijiRowData returnRow = super.getKijiRowData(kijiTable, eid, dataBuilder.build());
+        KijiRowData returnRow = getKijiRowData(kijiTable, eid, dataBuilder.build());
         List<KijiRowData> tempRowList = Lists.newLinkedList();
         tempRowList.add(returnRow);
         scanner = tempRowList;
@@ -324,14 +321,12 @@ public class RowsResource extends AbstractRowResource {
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @ApiStability.Experimental
-  public Map<String, String> postCell(@PathParam(INSTANCE_PARAMETER) String instance,
+  public Map<String, String> postRow(@PathParam(INSTANCE_PARAMETER) String instance,
       @PathParam(TABLE_PARAMETER) String table,
       KijiRestRow kijiRestRow)
       throws IOException {
     final KijiTable kijiTable = mKijiClient.getKijiTable(instance, table);
 
-    // Default global timestamp.
-    long globalTimestamp = System.currentTimeMillis();
 
     final EntityId entityId;
     if (null != kijiRestRow.getEntityId()) {
@@ -343,56 +338,7 @@ public class RowsResource extends AbstractRowResource {
     }
 
     // Open writer and write.
-    final KijiTableWriter writer = kijiTable.openTableWriter();
-    try {
-      for (Entry<String, NavigableMap<String, List<KijiRestCell>>> familyEntry :
-        kijiRestRow.getCells().entrySet()) {
-        String columnFamily = familyEntry.getKey();
-        NavigableMap<String, List<KijiRestCell>> qualifiedCells = familyEntry.getValue();
-        for (Entry<String, List<KijiRestCell>> q : qualifiedCells.entrySet()) {
-          final KijiColumnName column = new KijiColumnName(columnFamily, q.getKey());
-          if (!kijiTable.getLayout().exists(column)) {
-            throw new WebApplicationException(new IllegalArgumentException(
-                "Specified column does not exist: " + column), Response.Status.BAD_REQUEST);
-          }
-
-          for (KijiRestCell restCell : q.getValue()) {
-            final long timestamp;
-            if (null != restCell.getTimestamp()) {
-              timestamp = restCell.getTimestamp();
-            } else {
-              timestamp = globalTimestamp;
-            }
-            if (timestamp >= 0) {
-              // Put to either a counter or a regular cell.
-              if (SchemaType.COUNTER == kijiTable.getLayout().getCellSchema(column).getType()) {
-                // Write the counter cell.
-                putCounterCell(writer, entityId, restCell.getValue().toString(), column, timestamp);
-              } else {
-                // Set writer schema in preparation to write an Avro record.
-                final Schema schema;
-                try {
-                  schema = kijiTable.getLayout().getSchema(column);
-                } catch (Exception ec) {
-                  throw new WebApplicationException(ec, Response.Status.BAD_REQUEST);
-                }
-                // Write the cell.
-                String jsonValue = restCell.getValue().toString();
-                // TODO: This is ugly. Converting from Map to JSON to String.
-                if (restCell.getValue() instanceof Map<?, ?>) {
-                  JsonNode node = mJsonObjectMapper.valueToTree(restCell.getValue());
-                  jsonValue = node.toString();
-                }
-                putCell(writer, entityId, jsonValue, column, timestamp, schema);
-              }
-            }
-          }
-        }
-      }
-    } finally {
-      ResourceUtils.closeOrLog(writer);
-      ResourceUtils.releaseOrLog(kijiTable);
-    }
+    RowResourceUtil.writeRow(kijiTable, entityId, kijiRestRow);
 
     // Better output?
     Map<String, String> returnedTarget = Maps.newHashMap();
