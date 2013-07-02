@@ -88,7 +88,7 @@ public final class AvroRecordKeyValueStore<K, V extends IndexedRecord>
   private static final String CONF_READER_SCHEMA_KEY = "avro.reader.schema";
 
   /** The configuration variable for the name of the field to use as the lookup key. */
-  private static final String CONF_KEY_FIELD_KEY = "key.field";
+  static final String CONF_KEY_FIELD_KEY = "key.field";
 
   /** The schema to use for reading the Avro records. */
   private Schema mReaderSchema;

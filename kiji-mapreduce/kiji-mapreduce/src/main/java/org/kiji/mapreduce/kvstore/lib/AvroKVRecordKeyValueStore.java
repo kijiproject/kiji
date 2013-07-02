@@ -78,6 +78,9 @@ import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
 @ApiAudience.Public
 @ApiStability.Evolving
 public final class AvroKVRecordKeyValueStore<K, V> implements Configurable, KeyValueStore<K, V> {
+  /** The configuration variable for the name of the field to use as the lookup key. */
+  private static final String KEY_FIELD = "key";
+
   /** A wrapped store for looking up an Avro record by its 'key' field. */
   private final AvroRecordKeyValueStore<K, GenericRecord> mStore;
 
@@ -232,6 +235,10 @@ public final class AvroKVRecordKeyValueStore<K, V> implements Configurable, KeyV
       throw new IllegalStateException("Cannot reinitialize; already opened a reader.");
     }
 
+    // By convention, we always use "key" as the field to access in an AvroKVRecord-based store.
+    // When initializing the underlying AvroRecordKeyValueStore from our kvstores.xml,
+    // ensure that this field is set as such.
+    conf.set(AvroRecordKeyValueStore.CONF_KEY_FIELD_KEY, KEY_FIELD);
     mStore.initFromConf(conf);
   }
 

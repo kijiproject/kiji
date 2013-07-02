@@ -37,6 +37,7 @@ import org.junit.Test;
 import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
 import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
+import org.kiji.mapreduce.kvstore.lib.AvroKVRecordKeyValueStore;
 import org.kiji.mapreduce.kvstore.lib.EmptyKeyValueStore;
 import org.kiji.mapreduce.kvstore.lib.SeqFileKeyValueStore;
 import org.kiji.schema.KijiClientTest;
@@ -297,4 +298,21 @@ public class TestXmlKeyValueStoreParser extends KijiClientTest {
         + "  </store>\n"
         + "</stores>"));
   }
+
+  @Test
+  public void testAvroKVRecordKeyValueStore() throws IOException {
+      // Test that you can instantiate an AvroKVRecordKeyValueStore without specifying key.field or a schema
+      Map<String, KeyValueStore<?,?>> stores = XmlKeyValueStoreParser.get(mConf).loadStoresFromXml(
+          stringAsInputStream("<stores>\n"
+          + "  <store class=\"" + AvroKVRecordKeyValueStore.class.getName() + "\" name=\"meep\">\n"
+          + "    <configuration>\n"
+          + "      <property>\n"
+          + "        <name>paths</name>\n"
+          + "        <value>/some/path</value>\n"
+          + "      </property>\n"
+          + "    </configuration>\n"
+          + "  </store>\n"
+          + "</stores>"));
+      stores.get("meep").storeToConf(KeyValueStoreConfiguration.fromConf(new Configuration()));
+}
 }
