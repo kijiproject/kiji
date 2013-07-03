@@ -53,7 +53,9 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriBuilder;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.yammer.metrics.annotation.Timed;
@@ -297,19 +299,19 @@ public class RowsResource {
   }
 
   /**
-   * POSTs JSON file to row: performs create and update.
+   * Commits a KijiRestRow representation to the kiji table: performs create and update.
    * Note that the user-formatted entityId is required.
    * Also note that writer schema is not considered as of the latest version.
    * Following is an example of a postable JSON:
    * {
-   * "entityId" : "hbase=hex:8c2d2fcc2c150efb49ce0817e1823d46",
-   * "hbaseRowKey" : "8c2d2fcc2c150efb49ce0817e1823d46",
-   * "cells" : [ {
-   * "value" : "\"somevalue\"",
-   * "timestamp" : 123,
-   * "columnName" : "info",
-   * "columnQualifier" : "firstname"
-   * } ]
+   *   "entityId" : "hbase=hex:8c2d2fcc2c150efb49ce0817e1823d46",
+   *   "cells" : [ {
+   *       "value" : "\"somevalue\"",
+   *       "timestamp" : 123,
+   *       "columnName" : "info",
+   *       "columnQualifier" : "firstname"
+   *     }
+   *   ]
    * }
    *
    * @param instance in which the table resides
@@ -318,12 +320,9 @@ public class RowsResource {
    * @return a message containing the rowkey of interest
    * @throws IOException when post fails
    */
-  @POST
-  @Consumes(MediaType.APPLICATION_JSON)
-  @ApiStability.Experimental
-  public Map<String, String> postRow(@PathParam(INSTANCE_PARAMETER) String instance,
-      @PathParam(TABLE_PARAMETER) String table,
-      KijiRestRow kijiRestRow)
+  private Map<String, String> postRow(final String instance,
+      final String table,
+      final KijiRestRow kijiRestRow)
       throws IOException {
     final KijiTable kijiTable = mKijiClient.getKijiTable(instance, table);
 
@@ -350,5 +349,81 @@ public class RowsResource {
 
     return returnedTarget;
 
+  }
+
+  /**
+   * POSTs JSON body to row(s): performs create and update.
+   * The input JSON blob can be either represent a single KijiRestRow or a list of KijiRestRows.
+   *
+   * For example, a single KijiRestRow:
+   * {
+   * "entityId" : "hbase=hex:8c2d2fcc2c150efb49ce0817e1823d46",
+   * "hbaseRowKey" : "8c2d2fcc2c150efb49ce0817e1823d46",
+   * "cells" : [ {
+   * "value" : "\"somevalue\"",
+   * "timestamp" : 123,
+   * "columnName" : "info",
+   * "columnQualifier" : "firstname"
+   * } ]
+   * }
+   *
+   * A list of KijiRestRows:
+   * [ {
+   *   "entityId" : "hbase=hex:8c2d2fcc2c150efb49ce0817e1823d46",
+   *   "cells" : [ {
+   *       "value" : "\"somevalue\"",
+   *       "timestamp" : 123,
+   *       "columnName" : "info",
+   *       "columnQualifier" : "firstname"
+   *     } ]
+   *   },
+   *   {
+   *   "entityId" : "hbase=hex:acfbe1234567890987654321abcfdega",
+   *   "cells" : [ {
+   *       "value" : "\"another value\"",
+   *       "timestamp" : 12312345,
+   *       "columnName" : "derived",
+   *       "columnQualifier" : "recommendation"
+   *     } ]
+   * } ]
+   *
+   * Note that the user-formatted entityId is required.
+   * Also note that writer schema is not considered as of the latest version.
+   *
+   * @param instance in which the table resides
+   * @param table in which the row resides
+   * @param kijiRestRows POST-ed json data
+   * @return a message containing the rowkey of interest
+   * @throws IOException when post fails
+   */
+  @POST
+  @Consumes(MediaType.APPLICATION_JSON)
+  @ApiStability.Experimental
+  public Map<String, List<String>> postRows(@PathParam(INSTANCE_PARAMETER) final String instance,
+      @PathParam(TABLE_PARAMETER) final String table,
+      final JsonNode kijiRestRows)
+      throws IOException {
+    // We intend to return a JSON blob listing the row keys we are putting to.
+    // i.e. {targets : [..., ..., ...]}
+    final List<String> results = Lists.newLinkedList();
+
+    final Iterator<JsonNode> rowIterator;
+    if (kijiRestRows.isArray()) {
+      rowIterator = kijiRestRows.elements();
+    } else {
+      rowIterator = Iterators.singletonIterator(kijiRestRows);
+    }
+
+    // Put each row.
+    while (rowIterator.hasNext()) {
+      final KijiRestRow kijiRestRow = mJsonObjectMapper
+          .treeToValue(rowIterator.next(), KijiRestRow.class);
+      final Map<String, String> result = postRow(instance, table, kijiRestRow);
+      results.add(result.get("target"));
+    }
+
+    final Map<String, List<String>> returnedResults = Maps.newHashMap();
+    returnedResults.put("targets", results);
+    return returnedResults;
   }
 }
