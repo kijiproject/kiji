@@ -290,9 +290,7 @@ private[express] object AvroUtil {
           val (values, schemas) = l.map { elem => unwrapGenericWithSchema(elem) }.unzip
           val elementSchema = {
             if (schemas.isEmpty) {
-              // scalastyle:off null
-              null
-              // scalastyle:on null
+              Schema.create(Schema.Type.NULL)
             } else {
               // Require that if schemas is non-empty, all of them must be the same type.
               require(schemas.forall(_.getType == schemas.head.getType))
@@ -301,7 +299,6 @@ private[express] object AvroUtil {
           }
           (values.asJava, Schema.createArray(elementSchema))
         }
-        // map
         // TODO(EXP-51): revisit conversion of maps between java and scala
         case AvroMap(m: Map[_, _]) => {
           val convertedMap = m.map { case (key: String, value) => (key, unwrapGenericAvro(value)) }
@@ -310,9 +307,7 @@ private[express] object AvroUtil {
           val (_, schemas) = m.values.map(value => unwrapGenericWithSchema(value)).unzip
           val elementSchema = {
             if (schemas.isEmpty) {
-              // scalastyle:off null
-              null
-              // scalastyle:on null
+              Schema.create(Schema.Type.NULL)
             } else {
               // Require that if schemas is non-empty, all of them must be the same.
               require(schemas.forall(_ == schemas.head))
@@ -321,7 +316,6 @@ private[express] object AvroUtil {
           }
           (javaMap, Schema.createMap(elementSchema))
         }
-        // enum
         case AvroEnum(name: String) => {
           val enumSchema = Schema.createEnum(
               getRandomSchemaName(),
@@ -332,7 +326,6 @@ private[express] object AvroUtil {
               List(name).asJava)
           (new GenericData.EnumSymbol(enumSchema, name), enumSchema)
         }
-        // avro record or object
         case AvroRecord(map: Map[_, _]) => {
           val fields: List[Schema.Field] = map.map {
             case (fieldname, value) => {

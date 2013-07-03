@@ -511,6 +511,10 @@ class KijiSourceSuite
       assert("two" === outMap(EntityId(uri)("two")).getFirstValue()("field2").asEnumName)
 
       assert(null == outMap(EntityId(uri)("one")).getFirstValue()("field3"))
+
+      assert(0 === outMap(EntityId(uri)("one")).getFirstValue()("field4").asList.size)
+
+      assert(0 === outMap(EntityId(uri)("one")).getFirstValue()("field5").asMap.size)
     }
 
     val jobTest = JobTest(new GenericAvroWriteJob(_))
@@ -764,7 +768,9 @@ object KijiSourceSuite extends KijiSuite {
           AvroRecord(
               "field1" -> "word_%s".format(text),
               "field2" -> AvroEnum(text),
-              "field3" -> null)
+              "field3" -> null,
+              "field4" -> List[Int](),
+              "field5" -> Map[String, Int]())
         }
         // Write the results to the "family:column4" column of a Kiji table.
         .write(KijiOutput(tableUri)('genericRecord -> "family:column4"))
