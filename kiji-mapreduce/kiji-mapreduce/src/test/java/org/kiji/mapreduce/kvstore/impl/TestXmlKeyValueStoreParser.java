@@ -301,18 +301,21 @@ public class TestXmlKeyValueStoreParser extends KijiClientTest {
 
   @Test
   public void testAvroKVRecordKeyValueStore() throws IOException {
-      // Test that you can instantiate an AvroKVRecordKeyValueStore without specifying key.field or a schema
-      Map<String, KeyValueStore<?,?>> stores = XmlKeyValueStoreParser.get(mConf).loadStoresFromXml(
-          stringAsInputStream("<stores>\n"
-          + "  <store class=\"" + AvroKVRecordKeyValueStore.class.getName() + "\" name=\"meep\">\n"
-          + "    <configuration>\n"
-          + "      <property>\n"
-          + "        <name>paths</name>\n"
-          + "        <value>/some/path</value>\n"
-          + "      </property>\n"
-          + "    </configuration>\n"
-          + "  </store>\n"
-          + "</stores>"));
-      stores.get("meep").storeToConf(KeyValueStoreConfiguration.fromConf(new Configuration()));
-}
+    // Test that you can instantiate an AvroKVRecordKeyValueStore
+    // without specifying key.field or a schema
+    Map<String, KeyValueStore<?, ?>> stores =
+        XmlKeyValueStoreParser.get(mConf).loadStoresFromXml(stringAsInputStream(
+            "<stores>\n"
+            + ("  <store class=\"" + AvroKVRecordKeyValueStore.class.getName()
+               + "\" name=\"meep\">\n")
+            + "    <configuration>\n"
+            + "      <property>\n"
+            + "        <name>paths</name>\n"
+            + "        <value>/some/path</value>\n"
+            + "      </property>\n"
+            + "    </configuration>\n"
+            + "  </store>\n"
+            + "</stores>"));
+    stores.get("meep").storeToConf(KeyValueStoreConfiguration.fromConf(new Configuration()));
+  }
 }
