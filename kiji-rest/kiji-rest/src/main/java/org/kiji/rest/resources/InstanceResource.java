@@ -73,6 +73,7 @@ public class InstanceResource {
     try {
       MetadataBackup backup = MetadataBackup.newBuilder()
           .setLayoutVersion(kiji.getSystemTable().getDataVersion().toString())
+          .setSystemTable(kiji.getSystemTable().toBackup())
           .setSchemaTable(kiji.getSchemaTable().toBackup())
           .setMetaTable(kiji.getMetaTable().toBackup()).build();
       return backup;

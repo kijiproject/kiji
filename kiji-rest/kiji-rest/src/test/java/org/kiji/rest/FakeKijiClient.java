@@ -21,9 +21,13 @@ package org.kiji.rest;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.Map;
+
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
+
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiTable;
@@ -33,28 +37,40 @@ import org.kiji.schema.KijiURI;
  * Mocked KijiClient for use for testing KijiREST.  Only uses a single instance on fake-hbase.
  */
 public class FakeKijiClient implements KijiClient {
-  private final Kiji mKiji;
+  private final Map<String, Kiji> mKijis;
 
-  FakeKijiClient(Kiji kiji) {
-    mKiji = kiji;
+  FakeKijiClient() {
+    mKijis = Maps.newHashMap();
+  }
+
+  FakeKijiClient(Kiji... kijis) {
+    mKijis = Maps.newHashMap();
+    for (Kiji kiji : kijis) {
+      mKijis.put(kiji.getURI().getInstance(), kiji);
+    }
   }
 
   @Override
   public Kiji getKiji(String instance) {
     // Always returns the fake Kiji that this was initialized with.
-    return mKiji;
+    return mKijis.get(instance);
   }
 
   @Override
   public Collection<KijiURI> getInstances() {
     // Always return a singleton of the fake Kiji that this was initialized with.
-    return Collections.singleton(mKiji.getURI());
+    Collection<KijiURI> instances = Sets.newHashSet();
+    for (Kiji kiji : mKijis.values()) {
+      instances.add(kiji.getURI());
+    }
+
+    return instances;
   }
 
   @Override
   public KijiTable getKijiTable(String instance, String table) {
     try {
-      return mKiji.openTable(table);
+      return mKijis.get(instance).openTable(table);
     } catch (IOException e) {
       throw new WebApplicationException(e, Response.Status.INTERNAL_SERVER_ERROR);
     }
