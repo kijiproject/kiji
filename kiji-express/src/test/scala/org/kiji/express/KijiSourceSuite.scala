@@ -564,6 +564,42 @@ class KijiSourceSuite
     // Run the test in hadoop mode.
     jobTest.runHadoop.finish
   }
+
+  test ("A job that writes to map-type column families with numeric column qualifiers is run.") {
+    // URI of the Kiji table to use.
+    val uri: String = doAndRelease(makeTestKijiTable(avroLayout)) { table: KijiTable =>
+      table.getURI().toString()
+    }
+
+    // Create input using mapSlice.
+    val mapTypeInput: List[(EntityId, KijiSlice[String])] = List(
+        ( EntityId(uri)("0row"), mapSlice("animals", ("0column", 0L, "0 dogs")) ),
+        ( EntityId(uri)("1row"), mapSlice("animals", ("0column", 0L, "1 cat")) ),
+        ( EntityId(uri)("2row"), mapSlice("animals", ("0column", 0L, "2 fish")) ))
+
+    // Validate output.
+    def validateTest(outputBuffer: Buffer[Tuple1[String]]): Unit = {
+      assert(outputBuffer.size === 3)
+      val outputSet = outputBuffer.map { value: Tuple1[String] =>
+        value._1
+      }.toSet
+      assert (outputSet.contains("0 dogs"), "Failed on \"0 dogs\" test")
+      assert (outputSet.contains("1 cat"), "Failed on \"1 cat\" test")
+      assert (outputSet.contains("2 fish"), "Failed on \"2 fish\" test")
+    }
+
+    // Create the JobTest for this test.
+    val jobTest = JobTest(new MapSliceJob(_))
+        .arg("input", uri)
+        .arg("output", "outputFile")
+        .source(KijiInput(uri)("animals" -> 'terms), mapTypeInput)
+        .sink(Tsv("outputFile"))(validateTest)
+
+    // Run the test.
+    jobTest.run.finish
+    // Run the test in hadoop mode.
+    jobTest.runHadoop.finish
+  }
 }
 
 /** Companion object for KijiSourceSuite. Contains helper functions and test jobs. */
@@ -794,5 +830,18 @@ object KijiSourceSuite extends KijiSuite {
         }
         // Write the results to the "family:column1" column of a Kiji table.
         .write(KijiOutput(args("table"))(Map(MapFamily("searches")('terms) -> 'resultCount)))
+  }
+
+  /**
+   * A job that tests map-type column families using KijiSlice and outputs the results to a TSV.
+   *
+   * @param args to the job. Two arguments are expected: "input", which specifies the URI to a
+   *     Kiji table, and "output", which specifies the path to a text file.
+   */
+  class MapSliceJob(args: Args) extends KijiJob(args) {
+    KijiInput(args("input"))("animals" -> 'terms)
+        .map('terms -> 'values) { terms: KijiSlice[String] => terms.getFirstValue }
+        .project('values)
+        .write(Tsv(args("output")))
   }
 }

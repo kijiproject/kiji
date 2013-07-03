@@ -27,7 +27,6 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.filter.KijiColumnFilter
-import org.kiji.schema.util.KijiNameValidator
 
 /**
  * A trait that marks case classes that hold column-level options for cell requests to Kiji.
@@ -81,8 +80,6 @@ final case class QualifiedColumn private[express] (
     qualifier: String,
     options: ColumnRequestOptions = ColumnRequestOptions())
     extends ColumnRequest {
-  KijiNameValidator.validateLayoutName(family)
-  KijiNameValidator.validateLayoutName(qualifier)
 
   /**
    * Specifies a single value to be used as the default when reading rows missing a value for this
@@ -178,7 +175,6 @@ final case class ColumnFamily private[express] (
     qualifierSelector: Option[String] = None,
     options: ColumnRequestOptions = ColumnRequestOptions())
     extends ColumnRequest {
-  KijiNameValidator.validateLayoutName(family)
 
   /**
    * Specifies a single value, along with its qualifier, to be used as the default when reading rows

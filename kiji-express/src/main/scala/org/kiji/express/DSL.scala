@@ -23,6 +23,7 @@ import org.apache.hadoop.hbase.HConstants
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiInvalidNameException
 import org.kiji.schema.filter.KijiColumnFilter
 import org.kiji.schema.filter.RegexQualifierColumnFilter
@@ -134,6 +135,7 @@ object DSL {
    *     retrieved from columns in the map-type column family. By default only the most recent
    *     cell from columns in the map-type column family will be retrieved.
    * @return a request for the map-type column family configured with the specified options.
+   * @throws a KijiInvalidNameException if the map-type column name contains a qualifier.
    */
   def MapFamily(
       name: String,
@@ -147,6 +149,10 @@ object DSL {
       }
     }
 
+    if (name.contains(":")) {
+      throw new KijiInvalidNameException("Cannot create a map-type column request with a " +
+          "qualifier in the column name \'" + name + "\'.")
+    }
     new ColumnFamily(name, None, new ColumnRequestOptions(versions, filter))
   }
 
@@ -157,8 +163,13 @@ object DSL {
    * @param qualifierSelector is the name of the field in the tuple that will contain the qualifier
    *     in this column family to write to.
    * @return a request for the map-type column family configured with the specified options.
+   * @throws a KijiInvalidNameException if the map-type column name contains a qualifier.
    */
   def MapFamily(name: String)(qualifierSelector: Symbol): ColumnFamily = {
+    if (name.contains(":")) {
+      throw new KijiInvalidNameException("Cannot create a map-type column output specification " +
+          "with a qualifier in the column name \'" + name + "\'.")
+    }
     new ColumnFamily(name, Some(qualifierSelector.name))
   }
 
@@ -170,6 +181,7 @@ object DSL {
    *     retrieved from the column. By default only the most recent cell from the column will be
    *     retrieved.
    * @return a request for the column configured with the specified options.
+   * @throws a KijiInvalidNameException if the group-type column name is not fully qualified.
    */
   def Column(
       name: String,
@@ -209,7 +221,8 @@ object DSL {
    * @param loggingInterval to log skipped rows at. For example, if loggingInterval is 5000,
    *     every 5000th skipped row will be logged.
    */
-  class KijiInput(tableURI: String,
+  class KijiInput(
+      tableURI: String,
       timeRange: TimeRange,
       loggingInterval: Long) {
     /**
@@ -217,13 +230,19 @@ object DSL {
      *
      * @param columns are a series of pairs mapping column (or map-type column family) requests to
      *     tuple field names. Columns are specified as "family:qualifier" or, in the case of a
-     *     map-type column family, simply "familycolumn".
+     *     map-type column family, simply "family".
      * @return a source for data in the Kiji table, whose row tuples will contain fields with cell
      *     data from the requested columns and map-type column families.
      */
     def apply(columns: (String, Symbol)*): KijiSource = {
       val columnMap = columns
-          .map { case (col, field) => (field, Column(col).ignoreMissing) }
+          .map { case (col, field) =>
+            if (col.contains(":")) { // Group-type column
+              (field, Column(col).ignoreMissing)
+            } else { // Map-type column
+              (field, MapFamily(col, qualifierMatches="", versions=latest).ignoreMissing)
+            }
+          }
           .toMap
       new KijiSource(tableURI, timeRange, None, loggingInterval, columnMap)
     }

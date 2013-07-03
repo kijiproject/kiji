@@ -70,6 +70,13 @@
         type: "INLINE",
         value: '"int"'
       }
+    }, {
+      name : "animals",
+      description : "A map-type column family for testing numeric-initial strings",
+      map_schema : {
+        type: "INLINE",
+        value: '"string"'
+      }
     }]
   } ],
   version : "layout-1.0"
