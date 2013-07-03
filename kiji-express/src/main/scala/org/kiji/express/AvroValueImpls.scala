@@ -151,18 +151,30 @@ final case class AvroEnum(name: String)
 /**
  * Represents an AvroRecord from a KijiCell.  This is KijiExpress's generic Avro API. Fields are
  * accessed using the apply method, for example, to access a field that is an Int:
- * `myRecord("myField").asInt()`
+ * `myRecord("myField").asInt()`.
  *
- * @param record from the KijiCell.
+ * @param map from fields to values to put into the AvroRecord.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-final case class AvroRecord private[express](map: Map[String, AvroValue])
+final class AvroRecord private[express] (private[express] val map: Map[String, AvroValue])
     extends AvroValue(classOf[IndexedRecord]) {
+
   override def asRecord(): AvroRecord = this
 
   override def apply(field: String): AvroValue = {
     return map(field)
+  }
+
+  override def equals(other: Any): Boolean = {
+    other match {
+      case AvroRecord(otherMap) => otherMap == map
+      case _ => false
+    }
+  }
+
+  override def hashCode(): Int = {
+    map.hashCode
   }
 }
 
@@ -171,21 +183,52 @@ final case class AvroRecord private[express](map: Map[String, AvroValue])
  */
 object AvroRecord {
   /**
-   * Creates an AvroRecord with the keyValues provided.
+   * A factory method for creating an AvroRecord from a field mapping. The `fieldMap` argument can
+   * be a Map or a sequence of (key, value) tuples.  If there are any duplicate keys, the last key
+   * overrides all earlier keys.  If the ordering on fieldMap is undefined, then which duplicate
+   * key's value makes it into the record is undefined.
    *
-   * @param keyValues the AvroRecord will hold.
+   * @param fieldMap is the underlying field mapping to use for the AvroRecord.
+   * @return an AvroRecord with `fieldMap` as the field mapping.
    */
-  def apply(keyValues: (String, Any)*): AvroRecord = {
-    val recordFields = keyValues.map {
+  def apply(fieldMap: Traversable[(String, Any)]): AvroRecord = {
+    val recordFields = fieldMap.map {
       case (key, value) => (key, AvroUtil.scalaToGenericAvro(value))
     }.toMap[String, AvroValue]
 
     new AvroRecord(recordFields)
   }
+
+  /**
+   * A factory method for creating an AvroRecord from a field mapping.  This method allows the
+   * notation `AvroRecord("key1" -> value1, "key2" -> value2)` to construct an AvroRecord.
+   * If there are any duplicate keys, the last key overrides all earlier keys.
+   *
+   * @param fields is the underlying field mapping to use for the AvroRecord, in (key, value)
+   *    tuples.
+   * @return an AvroRecord with `fieldMap` as the field mapping.
+   */
+  def apply(fields: (String, Any)*): AvroRecord = {
+    val recordFields = fields.map {
+      case (key, value) => (key, AvroUtil.scalaToGenericAvro(value))
+    }.toMap[String, AvroValue]
+
+    new AvroRecord(recordFields)
+  }
+
+  /**
+   * Extracts the underlying field mapping from an AvroRecord.
+   *
+   * @param avroRecord to extract the field mapping from.
+   * @return the field mapping underlying `avroRecord`.
+   */
+  def unapply(avroRecord: AvroRecord): Option[Map[String, AvroValue]] = {
+    Some(avroRecord.map)
+  }
 }
 
 /**
- * Represents a Fixed (fixed-length byte array) from a Avro.
+ * Represents a Fixed (fixed-length byte array) from Avro.
  *
  * @param value wrapped by this AvroValue.
  */

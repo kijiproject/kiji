@@ -278,4 +278,16 @@ class AvroValueSuite extends FunSuite {
     assert(12 === avroRecord("hash_size").asInt)
     assert(true === avroRecord("suppress_key_materialization").asBoolean)
   }
+
+  test("An AvroRecord can be created from a map, sequence of key/values, or varargs.") {
+    val myRecord0: AvroRecord = AvroRecord("key1" -> 1)
+    val myRecord1: AvroRecord = AvroRecord(Map("key1" -> AvroInt(1)))
+    val myRecord2: AvroRecord = AvroRecord(List(("key1", 1)))
+    val myRecord3: AvroRecord = AvroRecord(Map("key1" -> 1))
+
+    assert(1 === myRecord0("key1").asInt)
+    assert(1 === myRecord1("key1").asInt)
+    assert(1 === myRecord2("key1").asInt)
+    assert(1 === myRecord3("key1").asInt)
+  }
 }

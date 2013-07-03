@@ -155,7 +155,7 @@ class KijiPipe(private val pipe: Pipe) extends TupleConversions {
           entry.getFields.asScala.toBuffer.map { field: Comparable[_] =>
             (field.toString, AvroUtil.scalaToGenericAvro(entry.getObject(field)))
           }.toMap
-      new AvroRecord(fieldMap)
+      AvroRecord(fieldMap)
     }
 
     // Arity is unknown.
