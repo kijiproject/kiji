@@ -407,8 +407,7 @@ class KijiSourceSuite
         Map(
           Column("family:column1") -> 'word1,
           Column("family:column2")
-      .replaceMissingWith(
-          slice("family:column2", (0L, "missing"))) -> 'word2)), missingValuesInput(uri))
+      .replaceMissingWith("missing") -> 'word2)), missingValuesInput(uri))
       .sink(Tsv("outputFile"))(validateMissingValuesReplaced)
     // Run the test job.
       .run
@@ -626,7 +625,7 @@ object KijiSourceSuite extends KijiSuite {
         Map(
             Column("family:column1") -> 'word1,
             Column("family:column2")
-                .replaceMissingWith(slice("family:column2", (0L, "missing"))) -> 'word2))
+                .replaceMissingWith("missing") -> 'word2))
     .map('word2 -> 'pluralword) { words: KijiSlice[String] =>
       words.getFirst().datum + "s"
     }

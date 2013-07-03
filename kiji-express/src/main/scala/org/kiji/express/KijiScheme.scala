@@ -372,14 +372,14 @@ private[express] object KijiScheme {
         .map { field => columns(field.toString) }
         // Build the tuple, by adding each requested value into result.
         .foreach {
-            case colReq @ ColumnFamily(family, _, ColumnRequestOptions(_, _, replacement)) => {
+            case ColumnFamily(family, _, ColumnRequestOptions(_, _, replacementOption)) => {
               if (row.containsColumn(family)) {
                 result.add (KijiSlice(expressRow.iterator(family)))
               } else {
-                replacement match {
+                replacementOption match {
                   // TODO convert replacement slice
-                  case Some(replacementSlice) => {
-                    result.add(replacementSlice)
+                  case Some(replacement) => {
+                    result.add(replacement)
                   }
                   case None =>
                     // this row cannot be converted to a tuple since this column is missing.
@@ -387,17 +387,17 @@ private[express] object KijiScheme {
                 }
               }
             }
-            case colReq @ QualifiedColumn(
+            case QualifiedColumn(
                 family,
                 qualifier,
-                ColumnRequestOptions(_, _, replacement)) => {
+                ColumnRequestOptions(_, _, replacementOption)) => {
               if (row.containsColumn(family, qualifier)) {
                 result.add(KijiSlice(expressRow.iterator(family, qualifier)))
               } else {
-                replacement match {
+                replacementOption match {
                   // TODO convert replacement slice
-                  case Some(replacementSlice) => {
-                    result.add(replacementSlice)
+                  case Some(replacement) => {
+                    result.add(replacement)
                   }
                   // this row cannot be converted to a tuple since this column is missing.
                   case None => return None

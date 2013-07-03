@@ -21,6 +21,8 @@ package org.kiji.express
 
 import java.io.Serializable
 
+import org.apache.hadoop.hbase.HConstants
+
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.schema.KijiColumnName
@@ -46,14 +48,6 @@ import org.kiji.schema.util.KijiNameValidator
 @ApiAudience.Public
 @ApiStability.Experimental
 private[express] sealed trait ColumnRequest extends Serializable {
-  /**
-   * Specifies what to replace any missing values on this column with.
-   *
-   * @param replacementSlice Replacement specification.
-   * @return this ColumnRequest with replacement configured.
-   */
-  def replaceMissingWith(replacementSlice: KijiSlice[_]): ColumnRequest
-
   /**
    * Specifies that missing values on this column mean the row should be skipped.
    * This is the default behavior in the DSL if neither this nor `replaceMissingWith` are called
@@ -90,11 +84,75 @@ final case class QualifiedColumn private[express] (
   KijiNameValidator.validateLayoutName(family)
   KijiNameValidator.validateLayoutName(qualifier)
 
-  override def replaceMissingWith(replacementSlice: KijiSlice[_]): ColumnRequest = {
+  /**
+   * Specifies a single value to be used as the default when reading rows missing a value for this
+   * column. The value will be used to create a slice for the column with the value at the current
+   * timestamp.
+   *
+   * @param datum to use if any row is missing this column.
+   * @return this ColumnRequest with replacement configured.
+   */
+  def replaceMissingWith[T](datum: T): ColumnRequest = {
+    val replacement: KijiSlice[T] =
+        new KijiSlice(List(Cell(family, qualifier, HConstants.LATEST_TIMESTAMP, datum)))
     return new QualifiedColumn(
         family,
         qualifier,
-        options.newWithReplacement(Some(replacementSlice)))
+        options.newWithReplacement(Some(replacement)))
+  }
+
+  /**
+   * Specifies a single value and its version to be used as the default when reading rows missing a
+   * value for this column. The value will be used to create a slice for the column with the value
+   * at the specified version.
+   *
+   * @param version of the datum to use if any row is missing this column.
+   * @param datum to use if any row is missing this column.
+   * @return this ColumnRequest with replacement configured.
+   */
+  def replaceMissingWithVersioned[T](version: Long, datum: T): ColumnRequest = {
+    val replacement: KijiSlice[T] =
+        new KijiSlice(List(Cell(family, qualifier, version, datum)))
+    return new QualifiedColumn(
+        family,
+        qualifier,
+        options.newWithReplacement(Some(replacement)))
+  }
+
+  /**
+   * Specifies a sequence of data to be used as the default when reading rows missing a value for
+   * this column. The data will be used to create a slice for the column with each value at the
+   * current timestamp.
+   *
+   * @param data to use if any row is missing this column.
+   * @return this ColumnRequest with replacement configured.
+   */
+  def replaceMissingWith[T](data: Seq[T]): ColumnRequest = {
+    val replacement: KijiSlice[T] =
+      new KijiSlice(data.map { datum: T =>
+        Cell(family, qualifier, HConstants.LATEST_TIMESTAMP, datum) })
+    return new QualifiedColumn(
+        family,
+        qualifier,
+        options.newWithReplacement(Some(replacement)))
+  }
+
+  /**
+   * Specifies a sequence of data, as (version, datum), to be used as the default when reading rows
+   * missing a value for this column. The data will be used to create a slice for the column with
+   * each datum at the specified version.
+   *
+   * @param data is tuples of (version, datum) to use if any row is missing this column.
+   * @return this ColumnRequest with replacement configured.
+   */
+  def replaceMissingWithVersioned[T](versionedData: Seq[(Long, T)]): ColumnRequest = {
+    val replacement: KijiSlice[_] =
+      new KijiSlice(versionedData.map { case (version: Long, datum: Any) =>
+        Cell(family, qualifier, version, datum) })
+    return new QualifiedColumn(
+        family,
+        qualifier,
+        options.newWithReplacement(Some(replacement)))
   }
 
   override def ignoreMissing(): ColumnRequest = {
@@ -122,11 +180,79 @@ final case class ColumnFamily private[express] (
     extends ColumnRequest {
   KijiNameValidator.validateLayoutName(family)
 
-  override def replaceMissingWith(replacementSlice: KijiSlice[_]): ColumnRequest = {
+  /**
+   * Specifies a single value, along with its qualifier, to be used as the default when reading rows
+   * missing a value for this column. The value will be used to create a slice for the column with
+   * the value at the specified qualifier and the current timestamp.
+   *
+   * @param qualifier of the data to use if any row is missing this column.
+   * @param datum to use if any row is missing this column.
+   * @return this ColumnRequest with replacement configured.
+   */
+  def replaceMissingWith[T](qualifier: String, datum: T): ColumnRequest = {
+    val replacement: KijiSlice[T] =
+        new KijiSlice(List(Cell(family, qualifier, HConstants.LATEST_TIMESTAMP, datum)))
     return new ColumnFamily(
         family,
         qualifierSelector,
-        options.newWithReplacement(Some(replacementSlice)))
+        options.newWithReplacement(Some(replacement)))
+  }
+
+  /**
+   * Specifies a single value, its qualifier, and its version to be used as the default when reading
+   * rows missing a value for this column. The value will be used to create a slice for the column
+   * with the value at the specified qualifier and version.
+   *
+   * @param qualifier of the data to use if any row is missing this column.
+   * @param version of the datum to use if any row is missing this column.
+   * @param datum to use if any row is missing this column.
+   * @return this ColumnRequest with replacement configured.
+   */
+  def replaceMissingWithVersioned[T](qualifier: String, version: Long, datum: T): ColumnRequest = {
+    val replacement: KijiSlice[T] =
+        new KijiSlice(List(Cell(family, qualifier, version, datum)))
+    return new ColumnFamily(
+        family,
+        qualifierSelector,
+        options.newWithReplacement(Some(replacement)))
+  }
+
+  /**
+   * Specifies a sequence of data along with qualifiers for each datum, as (qualifier, datum), to be
+   * used as the default when reading rows missing a value for this column. The data will be used to
+   * create a slice for the column with each value at the corresponding specified qualifier and the
+   * current timestamp.
+   *
+   * @param data to use if any row is missing this column. It is in (qualifier, datum) tuples.
+   * @return this ColumnRequest with replacement configured.
+   */
+  def replaceMissingWith[T](data: Seq[(String, T)]): ColumnRequest = {
+    val replacement: KijiSlice[_] =
+      new KijiSlice(data.map { case (qualifier: String, datum: Any) =>
+        Cell(family, qualifier, HConstants.LATEST_TIMESTAMP, datum) })
+    return new ColumnFamily(
+        family,
+        qualifierSelector,
+        options.newWithReplacement(Some(replacement)))
+  }
+
+  /**
+   * Specifies a sequence of data, as (qualifier, version, datum), to be used as the default when
+   * reading rows missing a value for this column. The data will be used to create a slice for the
+   * column with each datum at the specified qualifier and version.
+   *
+   * @param data is tuples of (qualifier, version, datum) to use if any row is missing this column.
+   * @return this ColumnRequest with replacement configured.
+   */
+  def replaceMissingWithVersioned[T](
+      versionedData: Seq[(String, Long, T)]): ColumnRequest = {
+    val replacement: KijiSlice[_] =
+      new KijiSlice(versionedData.map { case (qualifier: String, ts: Long, datum: Any) =>
+        Cell(family, qualifier, ts, datum) })
+    return new ColumnFamily(
+        family,
+        qualifierSelector,
+        options.newWithReplacement(Some(replacement)))
   }
 
   override def ignoreMissing(): ColumnRequest = {

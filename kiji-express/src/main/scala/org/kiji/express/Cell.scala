@@ -36,6 +36,7 @@ import org.kiji.schema.KijiCell
 @ApiAudience.Public
 @ApiStability.Experimental
 case class Cell[T] private[express] (family: String, qualifier: String, version: Long, datum: T)
+
 /**
 * A factory for creating cells used in KijiExpress from cells used in the Kiji Java API.
 */

@@ -133,6 +133,133 @@ class DSLSuite extends FunSuite {
         KijiInput(tableURI)(Map(MapFamily("searches", versions=1, qualifierMatches=".*") -> 'word))
   }
 
+  test("A qualified Column can specify a replacement that is a single value.") {
+    val col = Column("family:qualifier").replaceMissingWith("replacement")
+    assert(col.isInstanceOf[QualifiedColumn])
+
+    val qualifiedColumn = col.asInstanceOf[QualifiedColumn]
+    val replacementOption: Option[KijiSlice[_]] = qualifiedColumn.options.replacementSlice
+    assert(replacementOption.isDefined)
+
+    val replacement = replacementOption.get
+
+    assert(1 === replacement.cells.size)
+    assert("replacement" === replacement.getFirstValue())
+  }
+
+  test("A ColumnFamily can specify a replacement that is a single value.") {
+    val col = MapFamily("family")('qualifier).replaceMissingWith("qualifier", "replacement")
+    assert(col.isInstanceOf[ColumnFamily])
+
+    val columnFamily = col.asInstanceOf[ColumnFamily]
+    val replacementOption: Option[KijiSlice[_]] = columnFamily.options.replacementSlice
+    assert(replacementOption.isDefined)
+
+    val replacement = replacementOption.get
+
+    assert(1 === replacement.cells.size)
+    assert("replacement" === replacement.getFirstValue())
+  }
+
+  test("A qualified Column can specify a replacement that is a single value with a timestamp.") {
+    val col = Column("family:qualifier").replaceMissingWithVersioned(10L, "replacement")
+    assert(col.isInstanceOf[QualifiedColumn])
+
+    val qualifiedColumn = col.asInstanceOf[QualifiedColumn]
+    val replacementOption: Option[KijiSlice[_]] = qualifiedColumn.options.replacementSlice
+    assert(replacementOption.isDefined)
+
+    val replacement = replacementOption.get
+
+    assert(1 === replacement.cells.size)
+    assert("replacement" === replacement.getFirstValue())
+    assert(10L === replacement.getFirst().version)
+  }
+
+  test("A ColumnFamily can specify a replacement that is a single value with a timestamp.") {
+    val col = MapFamily("family")('qualifier).replaceMissingWithVersioned(
+        "qualifier",
+        10L,
+        "replacement")
+    assert(col.isInstanceOf[ColumnFamily])
+
+    val columnFamily = col.asInstanceOf[ColumnFamily]
+    val replacementOption: Option[KijiSlice[_]] = columnFamily.options.replacementSlice
+    assert(replacementOption.isDefined)
+
+    val replacement = replacementOption.get
+
+    assert(1 === replacement.cells.size)
+    assert("replacement" === replacement.getFirstValue())
+    assert(10L === replacement.getFirst().version)
+  }
+
+  test("A qualified Column can specify a replacement that is multiple values.") {
+    val col = Column("family:qualifier").replaceMissingWith(List("replacement1", "replacement2"))
+    assert(col.isInstanceOf[QualifiedColumn])
+
+    val qualifiedColumn = col.asInstanceOf[QualifiedColumn]
+    val replacementOption: Option[KijiSlice[_]] = qualifiedColumn.options.replacementSlice
+    assert(replacementOption.isDefined)
+
+    val replacementData = replacementOption.get.cells.map { _.datum }
+
+    assert(2 === replacementData.size)
+    assert(replacementData.contains("replacement1"))
+    assert(replacementData.contains("replacement2"))
+  }
+
+  test("A ColumnFamily can specify a replacement that is multiple values.") {
+    val col = MapFamily("family")('qualifier)
+        .replaceMissingWith(List(("qualifier1", "replacement1"), ("qualifier2", "replacement2")))
+    assert(col.isInstanceOf[ColumnFamily])
+
+    val columnFamily = col.asInstanceOf[ColumnFamily]
+    val replacementOption: Option[KijiSlice[_]] = columnFamily.options.replacementSlice
+    assert(replacementOption.isDefined)
+
+    val replacementData = replacementOption.get.cells.map { c: Cell[_] => (c.qualifier, c.datum) }
+
+    assert(2 === replacementData.size)
+    assert(replacementData.contains(("qualifier1", "replacement1")))
+    assert(replacementData.contains(("qualifier2", "replacement2")))
+  }
+
+  test("A qualified Column can specify a replacement that is multiple values with timestamps.") {
+    val col = Column("family:qualifier")
+        .replaceMissingWithVersioned(List((10L, "replacement1"), (20L, "replacement2")))
+    assert(col.isInstanceOf[QualifiedColumn])
+
+    val qualifiedColumn = col.asInstanceOf[QualifiedColumn]
+    val replacementOption: Option[KijiSlice[_]] = qualifiedColumn.options.replacementSlice
+    assert(replacementOption.isDefined)
+
+    val replacementData = replacementOption.get.cells.map { c: Cell[_] => (c.version, c.datum) }
+
+    assert(2 === replacementData.size)
+    assert(replacementData.contains((10L, "replacement1")))
+    assert(replacementData.contains((20L, "replacement2")))
+  }
+
+  test("A ColumnFamily can specify a replacement that is multiple values with timestamps.") {
+    val col = MapFamily("family")('qualifier)
+        .replaceMissingWithVersioned(List(
+            ("qualifier1", 10L, "replacement1"),
+            ("qualifier2", 20L, "replacement2")))
+    assert(col.isInstanceOf[ColumnFamily])
+
+    val columnFamily = col.asInstanceOf[ColumnFamily]
+    val replacementOption: Option[KijiSlice[_]] = columnFamily.options.replacementSlice
+    assert(replacementOption.isDefined)
+
+    val replacementData = replacementOption.get.cells.map { c: Cell[_] =>
+      (c.qualifier, c.version, c.datum) }
+
+    assert(2 === replacementData.size)
+    assert(replacementData.contains(("qualifier1", 10L, "replacement1")))
+    assert(replacementData.contains(("qualifier2", 20L, "replacement2")))
+  }
+
   test("DSL should let you specify different options for different columns.") {
     val input: KijiSource = KijiInput(tableURI)(
       Map(
