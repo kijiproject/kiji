@@ -27,7 +27,7 @@
   <parent>
     <groupId>org.kiji.pom</groupId>
     <artifactId>root-pom</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.1-SNAPSHOT</version>
   </parent>
 
   <name>Kiji BentoBox top-level project</name>
@@ -37,17 +37,17 @@
   <properties>
     <codename>buri</codename>
     <bento-cluster.version>1.1.0</bento-cluster.version>
-    <kiji-schema.version>1.1.0</kiji-schema.version>
+    <kiji-schema.version>1.1.1-SNAPSHOT</kiji-schema.version>
     <kiji-schema-shell.version>1.1.0</kiji-schema-shell.version>
     <kiji-phonebook.version>1.0.0</kiji-phonebook.version>
-    <kiji-mapreduce.version>1.0.0</kiji-mapreduce.version>
+    <kiji-mapreduce.version>1.0.1-SNAPSHOT</kiji-mapreduce.version>
     <kiji-mapreduce-lib.version>1.0.0</kiji-mapreduce-lib.version>
     <kiji-hive-adapter.version>0.4.1</kiji-hive-adapter.version>
     <kiji-music.version>1.0.0</kiji-music.version>
-    <kiji-express.version>0.5.0</kiji-express.version>
+    <kiji-express.version>0.6.0-SNAPSHOT</kiji-express.version>
     <kiji-express-music.version>0.5.0</kiji-express-music.version>
     <kiji-express-examples.version>0.3.0</kiji-express-examples.version>
-    <kiji-rest.version>0.2.0</kiji-rest.version>
+    <kiji-rest.version>0.3.0-SNAPSHOT</kiji-rest.version>
   </properties>
 
   <modules>
