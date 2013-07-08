@@ -302,17 +302,6 @@ public class RowsResource {
    * Commits a KijiRestRow representation to the kiji table: performs create and update.
    * Note that the user-formatted entityId is required.
    * Also note that writer schema is not considered as of the latest version.
-   * Following is an example of a postable JSON:
-   * {
-   *   "entityId" : "hbase=hex:8c2d2fcc2c150efb49ce0817e1823d46",
-   *   "cells" : [ {
-   *       "value" : "\"somevalue\"",
-   *       "timestamp" : 123,
-   *       "columnName" : "info",
-   *       "columnQualifier" : "firstname"
-   *     }
-   *   ]
-   * }
    *
    * @param instance in which the table resides
    * @param table in which the row resides
@@ -353,39 +342,52 @@ public class RowsResource {
 
   /**
    * POSTs JSON body to row(s): performs create and update.
-   * The input JSON blob can be either represent a single KijiRestRow or a list of KijiRestRows.
+   * The input JSON blob can either represent a single KijiRestRow or a list of KijiRestRows.
    *
    * For example, a single KijiRestRow:
    * {
-   * "entityId" : "hbase=hex:8c2d2fcc2c150efb49ce0817e1823d46",
-   * "hbaseRowKey" : "8c2d2fcc2c150efb49ce0817e1823d46",
-   * "cells" : [ {
-   * "value" : "\"somevalue\"",
-   * "timestamp" : 123,
-   * "columnName" : "info",
-   * "columnQualifier" : "firstname"
-   * } ]
+   *   "entityId" : "hbase=hex:8c2d2fcc2c150efb49ce0817e1823d46",
+   *   "cells" : {
+   *     "info" : {
+   *       "firstname" : [ {
+   *         "timestamp" : 123,
+   *         "value" : "John"
+   *       } ]
+   *     },
+   *     "info" : {
+   *       "lastname" : [ {
+   *         "timestamp" : 123,
+   *         "value" : "Smith"
+   *       } ]
+   *     }
+   *   }
    * }
    *
    * A list of KijiRestRows:
-   * [ {
-   *   "entityId" : "hbase=hex:8c2d2fcc2c150efb49ce0817e1823d46",
-   *   "cells" : [ {
-   *       "value" : "\"somevalue\"",
-   *       "timestamp" : 123,
-   *       "columnName" : "info",
-   *       "columnQualifier" : "firstname"
-   *     } ]
+   * [
+   *   {
+   *     "entityId" : "hbase=hex:8c2d2fcc2c150efb49ce0817e1823d46",
+   *     "cells" : {
+   *       "info" : {
+   *         "firstname" : [ {
+   *           "timestamp" : 123,
+   *           "value" : "John"
+   *         } ]
+   *       }
+   *     }
    *   },
    *   {
-   *   "entityId" : "hbase=hex:acfbe1234567890987654321abcfdega",
-   *   "cells" : [ {
-   *       "value" : "\"another value\"",
-   *       "timestamp" : 12312345,
-   *       "columnName" : "derived",
-   *       "columnQualifier" : "recommendation"
-   *     } ]
-   * } ]
+   *     "entityId" : "hbase=hex:acfbe1234567890987654321abcfdega",
+   *     "cells" : {
+   *       "info" : {
+   *         "firstname" : [ {
+   *           "timestamp" : 12312345,
+   *           "value" : "Jane"
+   *         } ]
+   *       }
+   *     }
+   *   }
+   * ]
    *
    * Note that the user-formatted entityId is required.
    * Also note that writer schema is not considered as of the latest version.

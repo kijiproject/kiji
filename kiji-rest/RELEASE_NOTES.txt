@@ -2,6 +2,7 @@
                               KijiREST Release Notes
 
 Version 0.3.0
+  * REST-21. Implements batch POST.
   * REST-8. Allow for the installation of custom HBase configuration via either
       $BASEDIR/conf or the KIJI_REST_CONF_DIR environment variable.
 
