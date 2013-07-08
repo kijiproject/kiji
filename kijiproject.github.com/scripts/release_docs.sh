@@ -32,20 +32,20 @@
 
 
 # KijiSchema version
-SCHEMA_FLAT_VER=1_1_0
-SCHEMA_VER=1.1.0
+SCHEMA_FLAT_VER=1_1_1
+SCHEMA_VER=1.1.1
 
 # KijiMR version
-KIJIMR_FLAT_VER=1_0_0
-KIJIMR_VER=1.0.0
+KIJIMR_FLAT_VER=1_0_1
+KIJIMR_VER=1.0.1
 
 # KijiMR Library version
 MRLIB_FLAT_VER=1_0_0
 MRLIB_VER=1.0.0
 
 # KijiExpress version
-EXPRESS_FLAT_VER=0_5_0
-EXPRESS_VER=0.5.0
+EXPRESS_FLAT_VER=0_6_0
+EXPRESS_VER=0.6.0
 
 # Music Recommendation Tutorial version
 MUSIC_FLAT_VER=1_0_0
