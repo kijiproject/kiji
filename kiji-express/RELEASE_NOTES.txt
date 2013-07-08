@@ -1,9 +1,28 @@
 
                              Kiji Express Release Notes
 
+Version 0.6.0
+  * EXP-89. Allows users to specify qualifiers for columns in a
+      map-type column family which need not start with an alphabetic
+      character.
+  * EXP-83. Adds additional methods to ColumnRequest that allow users
+      to better specify default values for missing columns when
+      reading rows from a Kiji table.
+  * EXP-94. Allows users to write empty Avro lists or maps to Kiji.
+  * EXP-95. Provides additional factory methods for creating an
+      AvroRecord. An AvroRecord can now be created by calling the
+      factory method AvroRecord, which may now accept a Map or a
+      collection of tuples to use to populate the Avro record created.
+  * EXP-96. Ensures that Kiji instances, tables, and columns used when
+      authoring a MapReduce flow exist before launching any jobs.
+  * EXP-93. Fixes a bug that prevented users from writing null values
+      to columns of a Kiji table, where the schema permits it.
+  * EXP-78. Ensures that all validation errors that exist in a model
+      definition and environment are reported to the user at once.
+
 Version 0.5.0
   * EXP-77. Allows Hadoop -D configuration flags to be passed from the
-      command line when running scripts and compiled jobs. 
+      command line when running scripts and compiled jobs.
   * EXP-85. Fixes a bug in which the packAvro method used an incorrect
       type conversion while building Avro records.
   * EXP-4. Adds the ability to write to map-type column families using
