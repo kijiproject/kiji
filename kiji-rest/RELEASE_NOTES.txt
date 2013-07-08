@@ -3,6 +3,9 @@
 
 Version 0.3.0
   * REST-21. Implements batch POST.
+  * REST-33. Bugfix: instances/<instance>/ throws an error retrieving metadata.
+  * REST-23. Expose methods to read and write REST row models.
+  * REST-12. Emit JSON that is properly navigable instead of a list of cells.
   * REST-8. Allow for the installation of custom HBase configuration via either
       $BASEDIR/conf or the KIJI_REST_CONF_DIR environment variable.
 
