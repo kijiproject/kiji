@@ -52,9 +52,8 @@ MUSIC_FLAT_VER=1_0_0
 MUSIC_VER=1.0.0
 
 # Express Music Recommendation tutorial version
-# Currently version-linked to the KijiExpress version.
-EXPRESS_MUSIC_FLAT_VER="$EXPRESS_FLAT_VER"
-EXPRESS_MUSIC_VER="$EXPRESS_VER"
+EXPRESS_MUSIC_FLAT_VER=0_5_0
+EXPRESS_MUSIC_VER=0.5.0
 
 # Phonebook Tutorial version
 PHONEBOOK_FLAT_VER=1_0_0
@@ -74,7 +73,7 @@ set -e
 # Change the DEVEL macros that point to the latest version under development
 # to the true version numbers that are consistent at the time of release.
 # For instance, KijiMR may refer to the KijiSchema userguide; this will not
-# point to userguide_schema_DEVEL, but userguide_schema_$SCHEMA_FLAT_VER instead.
+# point to userguide_schema_devel, but userguide_schema_$SCHEMA_FLAT_VER instead.
 #
 # This same process is applied to all newly-released documentation artifacts.
 fix_released_versions() {
@@ -87,24 +86,24 @@ fix_released_versions() {
   find . -name "*.md" -exec sed -i -e "s/api_schema_DEVEL/api_schema_$SCHEMA_FLAT_VER/g" {} \;
   find . -name "*.md" -exec sed -i -e "s/api_express_DEVEL/api_express_$EXPRESS_FLAT_VER/g" {} \;
   find . -name "*.md" -exec sed -i -e \
-      "s/userguide_mapreduce_DEVEL/userguide_mapreduce_$KIJIMR_FLAT_VER/g" {} \;
+      "s/userguide_mapreduce_devel/userguide_mapreduce_$KIJIMR_FLAT_VER/g" {} \;
   find . -name "*.md" -exec sed -i -e \
-      "s/userguide_schema_DEVEL/userguide_schema_$SCHEMA_FLAT_VER/g" {} \;
+      "s/userguide_schema_devel/userguide_schema_$SCHEMA_FLAT_VER/g" {} \;
 
   find . -name "*.md" -exec sed -i -e \
-      "s/tutorial_phonebook_DEVEL/tutorial_phonebook_$PHONEBOOK_FLAT_VER/g" {} \;
+      "s/tutorial_phonebook_devel/tutorial_phonebook_$PHONEBOOK_FLAT_VER/g" {} \;
 
   # Reify git tags that turn into code snippits and accordions.
   find . -name "*.md" -exec sed -i -e \
-      's/{{site.schema_DEVEL_branch}}/'"kiji-schema-root-$SCHEMA_VER/g" {} \;
+      's/{{site.schema_devel_branch}}/'"kiji-schema-root-$SCHEMA_VER/g" {} \;
   find . -name "*.md" -exec sed -i -e \
-      's/{{site.mr_DEVEL_branch}}/'"kiji-mapreduce-root-$KIJIMR_VER/g" {} \;
+      's/{{site.mr_devel_branch}}/'"kiji-mapreduce-root-$KIJIMR_VER/g" {} \;
   find . -name "*.md" -exec sed -i -e \
-      's/{{site.mrlib_DEVEL_branch}}/'"kiji-mapreduce-lib-root-$MRLIB_VER/g" {} \;
+      's/{{site.mrlib_devel_branch}}/'"kiji-mapreduce-lib-root-$MRLIB_VER/g" {} \;
   find . -name "*.md" -exec sed -i -e \
-      's/{{site.music_DEVEL_branch}}/'"kiji-music-$MUSIC_VER/g" {} \;
+      's/{{site.music_devel_branch}}/'"kiji-music-$MUSIC_VER/g" {} \;
   find . -name "*.md" -exec sed -i -e \
-      's/{{site.music_express_DEVEL_branch}}/'"kiji-express-music-$EXPRESS_MUSIC_VER/g" {} \;
+      's/{{site.music_express_devel_branch}}/'"kiji-express-music-$EXPRESS_MUSIC_VER/g" {} \;
 
   # Update HTML links to tutorial elements
   find . -name "*.md" -exec sed -i -e \
@@ -120,19 +119,19 @@ fix_released_versions() {
 
   # Reify release version numbers in the text.
   find . -name "*.md" -exec sed -i -e \
-      's/{{site.schema_DEVEL_version}}/'"$SCHEMA_VER/g" {} \;
+      's/{{site.schema_devel_version}}/'"$SCHEMA_VER/g" {} \;
   find . -name "*.md" -exec sed -i -e \
-      's/{{site.mr_DEVEL_version}}/'"$KIJIMR_VER/g" {} \;
+      's/{{site.mr_devel_version}}/'"$KIJIMR_VER/g" {} \;
   find . -name "*.md" -exec sed -i -e \
-      's/{{site.mrlib_DEVEL_version}}/'"$MRLIB_VER/g" {} \;
+      's/{{site.mrlib_devel_version}}/'"$MRLIB_VER/g" {} \;
   find . -name "*.md" -exec sed -i -e \
-      's/{{site.phonebook_DEVEL_version}}/'"$PHONEBOOK_VER/g" {} \;
+      's/{{site.phonebook_devel_version}}/'"$PHONEBOOK_VER/g" {} \;
   find . -name "*.md" -exec sed -i -e \
-      's/{{site.music_DEVEL_version}}/'"$MUSIC_VER/g" {} \;
+      's/{{site.music_devel_version}}/'"$MUSIC_VER/g" {} \;
   find . -name "*.md" -exec sed -i -e \
-      's/{{site.music_express_DEVEL_version}}/'"$EXPRESS_MUSIC_VER/g" {} \;
+      's/{{site.music_express_devel_version}}/'"$EXPRESS_MUSIC_VER/g" {} \;
   find . -name "*.md" -exec sed -i -e \
-      's/{{site.express_DEVEL_version}}/'"$EXPRESS_VER/g" {} \;
+      's/{{site.express_devel_version}}/'"$EXPRESS_VER/g" {} \;
 }
 
 
@@ -146,9 +145,9 @@ if [ ! -d "userguides/schema/$SCHEMA_VER" ]; then
 
   pushd "userguides/schema/$SCHEMA_VER"
 
-  # Replace DEVEL versioning with macros that reflect the release version.
-  find . -name "*.md" -exec sed -i -e "s/version: DEVEL/version: $SCHEMA_VER/" {} \;
-  find . -name "*.md" -exec sed -i -e "s/schema, DEVEL]/schema, $SCHEMA_VER]/" {} \;
+  # Replace devel versioning with macros that reflect the release version.
+  find . -name "*.md" -exec sed -i -e "s/version: devel/version: $SCHEMA_VER/" {} \;
+  find . -name "*.md" -exec sed -i -e "s/schema, devel]/schema, $SCHEMA_VER]/" {} \;
 
   # Replace links to development userguides and API documentation with the real latest
   # documentation artifact version macros (defined in /_config.yml).
@@ -170,11 +169,11 @@ if [ ! -d "userguides/mapreduce/$KIJIMR_VER" ]; then
 
   pushd "userguides/mapreduce/$KIJIMR_VER"
 
-  # Replace DEVEL versioning with macros that reflect the release version.
+  # Replace devel versioning with macros that reflect the release version.
   find . -name "*.md" -exec sed -i -e \
-      "s/version: DEVEL/version: $KIJIMR_VER/" {} \;
+      "s/version: devel/version: $KIJIMR_VER/" {} \;
   find . -name "*.md" -exec sed -i -e \
-      "s/mapreduce, DEVEL]/mapreduce, $KIJIMR_VER]/" {} \;
+      "s/mapreduce, devel]/mapreduce, $KIJIMR_VER]/" {} \;
 
   fix_released_versions
 
@@ -194,7 +193,7 @@ if [ ! -d "tutorials/phonebook/$PHONEBOOK_VER" ]; then
   pushd "tutorials/phonebook/$PHONEBOOK_VER"
 
   find . -name "*.md" -exec sed -i -e \
-      "s/phonebook-tutorial, DEVEL]/phonebook-tutorial, $PHONEBOOK_VER]/" {} \;
+      "s/phonebook-tutorial, devel]/phonebook-tutorial, $PHONEBOOK_VER]/" {} \;
 
   fix_released_versions
 
@@ -213,7 +212,7 @@ if [ ! -d "tutorials/music-recommendation/$MUSIC_VER" ]; then
 
   # Reify this version number
   find . -name "*.md" -exec sed -i -e \
-      "s/music-recommendation, DEVEL]/music-recommendation, $MUSIC_VER]/" {} \;
+      "s/music-recommendation, devel]/music-recommendation, $MUSIC_VER]/" {} \;
 
   fix_released_versions
 
@@ -233,7 +232,7 @@ if [ ! -d "tutorials/express-recommendation/$EXPRESS_MUSIC_VER" ]; then
 
   # Reify this version number
   find . -name "*.md" -exec sed -i -e \
-      "s/express-recommendation, DEVEL]/express-recommendation, $EXPRESS_MUSIC_VER]/" {} \;
+      "s/express-recommendation, devel]/express-recommendation, $EXPRESS_MUSIC_VER]/" {} \;
 
   fix_released_versions
 
@@ -269,7 +268,7 @@ echo ""
 echo "At this point you should:"
 echo " * Create new links in userguides.md, apidocs/index.md, and tutorials.md that"
 echo "   point to the newly released modules."
-echo " * Update the DEVEL macros in /_config.yml to point to the next versions."
+echo " * Update the devel macros in /_config.yml to point to the next versions."
 echo " * Commit these changes and push to master."
 echo ""
 
