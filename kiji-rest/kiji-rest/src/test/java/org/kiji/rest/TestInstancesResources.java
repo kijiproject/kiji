@@ -22,6 +22,8 @@ package org.kiji.rest;
 import static org.junit.Assert.assertEquals;
 
 import java.net.URI;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -73,6 +75,7 @@ public class TestInstancesResources extends ResourceTest {
    */
   @Override
   protected void setUpResources() throws Exception {
+    // This list must be constructed in alphabetical order by instance name.
     mFakeKijis = new Kiji[2];
     InstanceBuilder builder = new InstanceBuilder("default");
     mFakeKijis[0] = builder.build();
@@ -108,10 +111,34 @@ public class TestInstancesResources extends ResourceTest {
 
   @Test
   public void testShouldFetchAllAvailableInstances() throws Exception {
-    URI resourceURI = UriBuilder.fromResource(InstancesResource.class).build();
-    List<Map<String, String>> instances =
-        client().resource(resourceURI).get(List.class);
+    final URI resourceURI = UriBuilder.fromResource(InstancesResource.class).build();
+    @SuppressWarnings("unchecked") final List<Map<String, String>> instances =
+        (List<Map<String, String>>) client().resource(resourceURI).get(List.class);
+
+    /** Sort maps of instance metadata components by the "name" element. */
+    final Comparator<Map<String, String>> instanceMapComparator =
+        new Comparator<Map<String, String>>() {
+          @Override
+          public int compare(Map<String, String> instData1, Map<String, String> instData2) {
+            final String name1 = instData1.get("name");
+            final String name2 = instData2.get("name");
+
+            if (null == name1 && null != name2) {
+              return -1;
+            } else if (null == name2 && null != name1) {
+              return 1;
+            } else if (null == name1 && null == name2) {
+              return 0;
+            } else {
+              assert name1 != null;
+              assert name2 != null;
+              return name1.compareTo(name2);
+            }
+          }
+        };
+
     assertEquals(2, instances.size());
+    Collections.sort(instances, instanceMapComparator); // Sort the instance names for checking.
     assertEquals(instances.get(0).get("name"), mFakeKijis[0].getURI().getInstance());
     assertEquals(instances.get(1).get("name"), mFakeKijis[1].getURI().getInstance());
   }
