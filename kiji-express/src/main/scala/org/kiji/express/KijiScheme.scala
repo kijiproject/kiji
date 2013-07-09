@@ -23,8 +23,6 @@ import java.io.InvalidClassException
 import java.util.concurrent.atomic.AtomicLong
 
 import scala.collection.JavaConverters.asScalaIteratorConverter
-import scala.collection.JavaConverters.mapAsJavaMapConverter
-import scala.collection.JavaConverters.seqAsJavaListConverter
 
 import cascading.flow.FlowProcess
 import cascading.scheme.Scheme

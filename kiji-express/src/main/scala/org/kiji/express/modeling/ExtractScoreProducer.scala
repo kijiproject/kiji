@@ -154,6 +154,7 @@ final class ExtractScoreProducer
     val columns: Seq[KijiColumnName] = modelEnvironmentDef
         .extractEnvironment
         .dataRequest
+        .toKijiDataRequest()
         .getColumns
         .asScala
         .map { column => column.getColumnName() }
@@ -178,7 +179,7 @@ final class ExtractScoreProducer
    */
   override def getDataRequest(): KijiDataRequest = modelEnvironment
       .extractEnvironment
-      .dataRequest
+      .dataRequest.toKijiDataRequest()
 
   /**
    * Returns the name of the column this producer will write to.

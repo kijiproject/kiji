@@ -23,20 +23,19 @@ import scala.collection.JavaConverters.seqAsJavaListConverter
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.collection.JavaConverters.collectionAsScalaIterableConverter
 import scala.io.Source
+import scala.Some
 
 import com.google.common.base.Objects
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.express.avro.AvroDataRequest
-import org.kiji.express.avro.AvroExtractEnvironment
-import org.kiji.express.avro.AvroModelEnvironment
-import org.kiji.express.avro.AvroScoreEnvironment
-import org.kiji.express.avro.ColumnSpec
-import org.kiji.express.avro.KVStore
-import org.kiji.express.avro.KvStoreType
-import org.kiji.express.avro.FieldBinding
-import org.kiji.express.avro.Property
+import org.kiji.express.avro._
+import org.kiji.express.datarequest.AndFilter
+import org.kiji.express.datarequest.ColumnRangeFilter
+import org.kiji.express.datarequest.ExpressColumnFilter
+import org.kiji.express.datarequest.ExpressDataRequest
+import org.kiji.express.datarequest.OrFilter
+import org.kiji.express.datarequest.RegexQualifierFilter
 import org.kiji.express.util.Resources.doAndClose
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiDataRequest
@@ -71,7 +70,7 @@ case class FieldBindingSpec(tupleFieldName: String, storeFieldName: String) {
 @ApiAudience.Public
 @ApiStability.Experimental
 final class ExtractEnvironment private[express] (
-    val dataRequest: KijiDataRequest,
+    val dataRequest: ExpressDataRequest,
     val fieldBindings: Seq[FieldBinding],
     val kvstores: Seq[KVStore]) {
   override def equals(other: Any): Boolean = {
@@ -108,7 +107,7 @@ object ExtractEnvironment {
    * @return an ExtractEnvironment with the configuration specified.
    */
   def apply(
-      dataRequest: KijiDataRequest,
+      dataRequest: ExpressDataRequest,
       fieldBindings: Seq[FieldBindingSpec],
       kvstores: Seq[KVStoreSpec]): ExtractEnvironment = {
     new ExtractEnvironment(
@@ -203,11 +202,8 @@ object ScoreEnvironment {
  *
  * A ModelEnvironment can be created programmatically:
  * {{{
- * val myDataRequest: KijiDataRequest = {
- *   val builder = KijiDataRequest.builder().withTimeRange(0, 38475687)
- *   builder.newColumnsDef().withMaxVersions(3).add("info", "in")
- *   builder.build()
- * }
+ * val myDataRequest: ExpressDataRequest = new ExpressDataRequest(0, 38475687,
+ *     new ExpressColumnRequest("info:in", 3, None)::Nil)
  * val extractEnv = ExtractEnvironment(
  *     dataRequest = myDataRequest,
  *     fieldBindings = Seq(FieldBindingSpec("tuplename", "storefieldname")),
@@ -310,7 +306,7 @@ final class ModelEnvironment private[express] (
     // Build an AvroExtractEnvironment record.
     val avroExtractEnvironment: AvroExtractEnvironment = AvroExtractEnvironment
         .newBuilder()
-        .setDataRequest(ModelEnvironment.kijiToAvroDataRequest(extractEnvironment.dataRequest))
+        .setDataRequest(extractEnvironment.dataRequest.toAvro())
         .setKvStores(extractEnvironment.kvstores.asJava)
         .setFieldBindings(extractEnvironment.fieldBindings.asJava)
         .build()
@@ -443,11 +439,14 @@ object ModelEnvironment {
         .asInstanceOf[AvroModelEnvironment]
     val protocol = ProtocolVersion
         .parse(avroModelEnvironment.getProtocolVersion)
+    val avroDataRequest = avroModelEnvironment.getExtractEnvironment.getDataRequest
+
+    // Validate the Avro data request.
+    validateDataRequest(avroDataRequest)
 
     // Load the extractor's model environment.
     val extractEnvironment = new ExtractEnvironment(
-        dataRequest = avroToKijiDataRequest(
-            avroModelEnvironment.getExtractEnvironment.getDataRequest),
+        dataRequest = ExpressDataRequest(avroDataRequest),
         fieldBindings = avroModelEnvironment.getExtractEnvironment.getFieldBindings.asScala,
         kvstores = avroModelEnvironment.getExtractEnvironment.getKvStores.asScala)
 
@@ -498,43 +497,19 @@ object ModelEnvironment {
         .getColumnDefinitions
         .asScala
         .foreach { columnSpec: ColumnSpec =>
-      val name = new KijiColumnName(columnSpec.getName())
-      val maxVersions = columnSpec.getMaxVersions()
-      // TODO(EXP-62): Add support for filters.
-
-      builder.newColumnsDef().withMaxVersions(maxVersions).add(name)
-    }
+          val name = new KijiColumnName(columnSpec.getName())
+          val maxVersions = columnSpec.getMaxVersions()
+          if (columnSpec.getFilter != null) {
+            val filter = ExpressDataRequest
+                .filterFromAvro(columnSpec.getFilter)
+                .getKijiColumnFilter()
+            builder.newColumnsDef().withMaxVersions(maxVersions).withFilter(filter).add(name)
+          } else {
+            builder.newColumnsDef().withMaxVersions(maxVersions).add(name)
+          }
+        }
 
     builder.build()
-  }
-
-  /**
-   * Converts a Kiji data request to an Avro data request.
-   *
-   * @param kijiDataRequest to convert.
-   * @return an Avro data request converted from the provided Kiji data request.
-   */
-  private[express] def kijiToAvroDataRequest(kijiDataRequest: KijiDataRequest): AvroDataRequest = {
-    val columns: Seq[ColumnSpec] = kijiDataRequest
-        .getColumns()
-        .asScala
-        .map { column =>
-          ColumnSpec
-              .newBuilder()
-              .setName(column.getName())
-              .setMaxVersions(column.getMaxVersions())
-              // TODO(EXP-62): Add support for filters.
-              .build()
-        }
-        .toSeq
-
-    // Build an Avro data request.
-    AvroDataRequest
-        .newBuilder()
-        .setMinTimestamp(kijiDataRequest.getMinTimestamp())
-        .setMaxTimestamp(kijiDataRequest.getMaxTimestamp())
-        .setColumnDefinitions(columns.asJava)
-        .build()
   }
 
   /**

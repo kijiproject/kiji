@@ -1,6 +1,10 @@
 
                              Kiji Express Release Notes
 
+Version 0.7.0
+  * EXP-62. Adds support for column filters defined in a
+      ModelEnvironment.
+
 Version 0.6.0
   * EXP-89. Allows users to specify qualifiers for columns in a
       map-type column family which need not start with an alphabetic

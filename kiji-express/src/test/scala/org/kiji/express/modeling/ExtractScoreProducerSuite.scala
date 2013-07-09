@@ -29,6 +29,8 @@ import org.kiji.express.avro.FieldBinding
 import org.kiji.express.avro.KVStore
 import org.kiji.express.avro.KvStoreType
 import org.kiji.express.avro.Property
+import org.kiji.express.datarequest.ExpressColumnRequest
+import org.kiji.express.datarequest.ExpressDataRequest
 import org.kiji.express.modeling.lib.FirstValueExtractor
 import org.kiji.express.util.Resources.doAndClose
 import org.kiji.express.util.Resources.doAndRelease
@@ -61,7 +63,8 @@ class ExtractScoreProducerSuite
 
       // Update configuration object with appropriately serialized ModelDefinition/ModelEnvironment
       // JSON.
-      val request: KijiDataRequest = KijiDataRequest.create("family", "column1")
+      val request: ExpressDataRequest = new ExpressDataRequest(0, Long.MaxValue,
+          new ExpressColumnRequest("family:column1", 1, None) :: Nil)
       val sideDataPath: Path = KeyValueStoreImplSuite.generateAvroKVRecordKeyValueStore()
       val modelDefinition: ModelDefinition = ModelDefinition(
           name = "test-model-definition",
@@ -135,12 +138,9 @@ class ExtractScoreProducerSuite
 
       // Update configuration object with appropriately serialized ModelDefinition/ModelEnvironment
       // JSON.
-      val request: KijiDataRequest = {
-        val builder = KijiDataRequest.builder()
-        builder.newColumnsDef().add("family", "column1")
-        builder.newColumnsDef().add("family", "column2")
-        builder.build()
-      }
+      val request: ExpressDataRequest = new ExpressDataRequest(0, Long.MaxValue,
+          new ExpressColumnRequest("family:column1", 1, None) ::
+          new ExpressColumnRequest("family:column2", 1, None) :: Nil)
       val modelDefinition: ModelDefinition = ModelDefinition(
           name = "test-model-definition",
           version = "1.0",
@@ -204,7 +204,8 @@ class ExtractScoreProducerSuite
 
       // Update configuration object with appropriately serialized ModelDefinition/ModelEnvironment
       // JSON.
-      val request: KijiDataRequest = KijiDataRequest.create("family", "column1")
+      val request: ExpressDataRequest = new ExpressDataRequest(0, Long.MaxValue,
+          new ExpressColumnRequest("family:column1", 1, None) :: Nil)
       val sideDataPath: Path = KeyValueStoreImplSuite.generateAvroKVRecordKeyValueStore()
       val modelDefinition: ModelDefinition = ModelDefinition(
           name = "test-model-definition",

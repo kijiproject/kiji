@@ -29,7 +29,27 @@
         "name" : "info:in",
         "max_versions" : 3,
         "filter" : {
-          "regex" : "foo"
+          "org.kiji.express.avro.AndFilterSpec" : {
+            "and_filters" : [
+              {
+                "org.kiji.express.avro.RegexQualifierFilterSpec" : {
+                  "regex" : "foo"
+                }
+              },
+              {
+                "org.kiji.express.avro.ColumnRangeFilterSpec" : {
+                  "min_qualifier" : {
+                    "string" : "null"
+                  },
+                  "min_included" : true,
+                  "max_qualifier" : {
+                    "string" : "null"
+                  },
+                  "max_included" : true
+                }
+              }
+            ]
+          }
         }
       } ]
     },

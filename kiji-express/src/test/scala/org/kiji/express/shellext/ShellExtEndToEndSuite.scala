@@ -42,6 +42,7 @@ import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts
 import org.kiji.schema.util.InstanceBuilder
+import org.kiji.express.datarequest.{ExpressColumnRequest, ExpressDataRequest}
 
 /**
  * Provides end-to-end tests for KijiExpress extensions to the KijiSchema DDL Shell language.
@@ -69,7 +70,8 @@ class ShellExtEndToEnd extends ShellExtSuite {
         val uri: KijiURI = table.getURI()
 
         // Create a model definition and environment.
-        val request: KijiDataRequest = KijiDataRequest.create("family", "column1")
+        val request: ExpressDataRequest = new ExpressDataRequest(0, Long.MaxValue,
+            new ExpressColumnRequest("family:column1", 1, None) :: Nil)
         val modelDefinition: ModelDefinition = ModelDefinition(
             name = "test-model-definition",
             version = "1.0",
