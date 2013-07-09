@@ -10,8 +10,7 @@ Click a link below to select the version of the user guide appropriate
 to the Kiji version you are using.
 
 ## KijiSchema
-* [KijiSchema 1.1.1]({{site.userguide_url}}/schema/1.1.1/kiji-schema-overview/) (latest)
-* [KijiSchema 1.1.0]({{site.userguide_url}}/schema/1.1.0/kiji-schema-overview/)
+* [KijiSchema 1.1.0]({{site.userguide_url}}/schema/1.1.0/kiji-schema-overview/) (latest)
 * [KijiSchema 1.0.4]({{site.userguide_url}}/schema/1.0.4/kiji-schema-overview/)
 * [KijiSchema 1.0.3]({{site.userguide_url}}/schema/1.0.3/kiji-schema-overview/)
 * [KijiSchema 1.0.2]({{site.userguide_url}}/schema/1.0.2/kiji-schema-overview/)
@@ -25,8 +24,7 @@ to the Kiji version you are using.
 
 ## KijiMR
 
-* [KijiMR 1.0.1]({{site.userguide_url}}/mapreduce/1.0.1/kiji-mr-overview/) (latest)
-* [KijiMR 1.0.0]({{site.userguide_url}}/mapreduce/1.0.0/kiji-mr-overview/)
+* [KijiMR 1.0.0]({{site.userguide_url}}/mapreduce/1.0.0/kiji-mr-overview/) (latest)
 * [KijiMR 1.0.0-rc62]({{site.userguide_url}}/mapreduce/1.0.0-rc62/kiji-mr-overview/)
 * [KijiMR 1.0.0-rc61]({{site.userguide_url}}/mapreduce/1.0.0-rc61/kiji-mr-overview/)
 * [KijiMR 1.0.0-rc6]({{site.userguide_url}}/mapreduce/1.0.0-rc6/kiji-mr-overview/)
