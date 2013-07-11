@@ -33,6 +33,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
@@ -101,6 +102,8 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
 
   /** Whether to return and commit partially freshened data when available. */
   private final boolean mAllowPartialFresh;
+
+  private final AtomicBoolean mIsOpen = new AtomicBoolean(false);
 
   /**
    * Map from column names to freshness policy records. Created on initialization of the
@@ -285,6 +288,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     mGetId = new AtomicLong(0);
     mContextMap = new HashMap<String, List<KijiFreshProducerContext>>();
     mBuffers = new HashMap<String, AtomicKijiPutter>();
+    mIsOpen.set(true);
   }
 
   /** {@inheritDoc} */
@@ -973,6 +977,8 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   /** {@inheritDoc} */
   @Override
   public void close() throws IOException {
+    Preconditions.checkState(
+        mIsOpen.getAndSet(false), "Cannot close already closed FreshKijiTableReader.");
     // Release all cached freshness capsules, they will close when producers are finished with them.
     for (Map.Entry<KijiColumnName, FreshnessCapsule> entry : mCapsuleCache.entrySet()) {
       entry.getValue().release();
