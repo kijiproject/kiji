@@ -603,13 +603,13 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
                 context = KijiFreshProducerContext.create(
                     key,
                     eid,
-                    mCapsuleCache.get(key).getFactory(),
+                    capsule.getFactory(),
                     writer);
               } else {
                 context = KijiFreshProducerContext.create(
                     key,
                     eid,
-                    mCapsuleCache.get(key).getFactory(),
+                    capsule.getFactory(),
                     mBuffers.get(getId));
               }
               synchronized (mContextMap) {
@@ -619,7 +619,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
                   mContextMap.put(getId, Lists.newArrayList(context));
                 }
               }
-              final KijiProducer producer = mCapsuleCache.get(key).getProducer();
+              final KijiProducer producer = capsule.getProducer();
               producer.produce(mReader.get(eid, producer.getDataRequest()), context);
               capsule.release();
               context.finish();
@@ -653,13 +653,13 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
               context = KijiFreshProducerContext.create(
                   key,
                   eid,
-                  mCapsuleCache.get(key).getFactory(),
+                  capsule.getFactory(),
                   writer);
             } else {
               context = KijiFreshProducerContext.create(
                   key,
                   eid,
-                  mCapsuleCache.get(key).getFactory(),
+                  capsule.getFactory(),
                   mBuffers.get(getId));
             }
             synchronized (mContextMap) {
@@ -669,7 +669,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
                 mContextMap.put(getId, Lists.newArrayList(context));
               }
             }
-            final KijiProducer producer = mCapsuleCache.get(key).getProducer();
+            final KijiProducer producer = capsule.getProducer();
             producer.produce(mReader.get(eid, producer.getDataRequest()), context);
             capsule.release();
             context.finish();
