@@ -49,13 +49,23 @@ refer to the following example layout file throughout this section:
   name: "users",
   description: "A bunch of made-up users",
   version: "layout-1.1",
-  keys_format: {encoding: "HASH"},
+  keys_format: {
+    encoding : "FORMATTED",
+    salt : {
+      hash_size : 2
+    },
+    components : [ {
+      name : "uid",
+      type : "LONG"
+    }
+   ]
+  },
   locality_groups: [ {
     name: "default",
     description: "The default locality group",
     in_memory: false,
     max_versions: 1,
-    ttl_seconds: 7776000,
+    ttl_seconds: 2147483647,
     compression_type: "NONE",
     families: [ {
       name: "info",

@@ -3,7 +3,7 @@ layout: post
 title: KijiREST Operations
 categories: [userguides, rest, devel]
 tags: [rest-ug]
-order: 3
+order: 4
 version: devel
 description: Operations
 ---
@@ -36,33 +36,32 @@ The following sections describe these operations in two groups:
 <a id="ops-on-rows"> </a>
 ## Operations on Rows
 
-Entity IDs serve as resource endpoints for both tables and rows.
-
 <a id="entityID-get"> </a>
 ### Entity ID: GET
 
-Given a list of components that comprise a table’s entity ID, a GET request returns the
-hexadecimal representation (in ASCII) of the corresponding HBase row key:
+The GET request returns the hexadecimal representation (in ASCII) of the corresponding HBase
+row key given a list of components comprising a row's entity ID:
 
     GET /v1/instances/<instance>/tables/<table>/entityId
 
 #### Parameters:
 
 *  `eid` (single, required) - JSON array of the the components of the entity ID in order
-of their definition in the layout of the given table.
+of their definition in the layout of the given table. String components must be single quoted
+while numeric components must remain unquoted.
 
-Note: Each component value from the passed-in string will be properly cast to the right
-type as per the schema definition of the row key.
+#### Example:
 
-#### Examples:
+    GET /v1/instances/default/tables/users/entityId?eid=[1298404763]
 
-Get one whole row as indicated by the entity ID. In this example, the row comes from the
-“roster” table in the “training” instance.
-
-    GET /v1/instances/training/tables/roster/entityId?eid=["Seleukos","Nikator"]
-
+Returns:
+<pre>
+{
+  rowKey: "9ee9800000004d64159b"
+}
+</pre>
 <a id="row-get"> </a>
-### Row Hex Entity ID: GET
+### Row Resource: GET
 
 Retrieves a single JSON-encoded row from a Kiji table:
 
@@ -72,29 +71,31 @@ Retrieves a single JSON-encoded row from a Kiji table:
 
 * `cols` (single, optional, default=`*`) - A comma-separated list of column family or column
         family:qualifier to return. Specify `*` for all columns. Specifying just a column
-        family will yield values for all column family and qualifiers.
+        family will return values for all columns in the family and their qualifiers.
 
 * `versions` (single, optional, default=1) - An integer representing the number of versions
-        per cell to return for the given row.
+        per cell to return for the given row. Specify `versions=all` to retrieve all versions of
+        each column specified in the cols parameter.
 
 * `timerange` (single, optional) - A string denoting the time range
         to return. Specify the time range `min..max` where `min` and `max` are the ms since UNIX epoch.
         `min` and `max` are both optional; however, if a value is provided for this parameter,
-        at least one of min/max must be present.)
+        at least one of min/max must be present). Specifying no timerange returns the most recent value
+        for each column specified.
 
 #### Examples:
 
-Get one whole row.
+Get a single row:
 
-    GET /v1/instances/training/tables/roster/rows/85a9b957350d9dbf7218632dd53b8a41
+    GET /v1/instances/default/tables/users/rows/9ee9800000004d64159b
 
-Get only a few columns.
+Restrict to only return a few columns:
 
-    GET /v1/instances/training/tables/roster/rows/85a9b957350d9dbf7218632dd53b8a41?cols=info:age,info:location
+    GET /v1/instances/default/tables/users/rows/9ee9800000004d64159b?cols=info:name,info:email
 
-Timestamp range and versions.
+Restrict to return two cells per column within the specified timestamp range:
 
-    GET /v1/instances/training/tables/roster/rows/85a9b957350d9dbf7218632dd53b8a41?timerange=0..123&versions=2
+    GET /v1/instances/default/tables/users/rows/9ee9800000004d64159b?timerange=0..123&versions=2
 
 <a id="row-put"> </a>
 ### Row Hex Entity ID: PUT
@@ -106,7 +107,7 @@ columns that were inserted.
     PUT /v1/instances/<instance>/tables/<table>/rows/<hexEntityId>
 
 This operation will not replace the entire existing row but will replace cells and append
-where cells in the request aren’t present in the row to be updated. To enforce the
+where cells in the request aren't present in the row to be updated. To enforce the
 idempotency requirement of the [HTTP spec](http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html),
 cell timestamps are required so as to avoid the creation of multiple cells with new timestamps
 when multiple PUTs are invoked.
@@ -134,27 +135,29 @@ when multiple PUTs are invoked.
 #### Notes:
 
 `<family:qualifier>` is a required parameter with many of the keys in this call.
-It refers to the Kiji column in “family:qualifier” format that the value is associated with.
+It refers to the Kiji column in "family:qualifier" format that the value is associated with.
 
 #### Examples:
 
-Put a single cell.
+Put a single cell:
 
-    PUT /v1/instances/training/tables/roster/rows/85a9b957350d9dbf7218632dd53b8a41?info:name=”John Smith”&timestamp=0
+    PUT /v1/instances/default/tables/users/rows/9ee9800000004d64159b?info:name=John%20Smith&timestamp=0
 
-Put many cells. In this example, the hex entity ID for the row is indicated by “{row}”:
+Put many cells. In this example, the hex entity ID for the row is indicated by "{row}":
 
-    PUT /v1/instances/training/tables/roster/rows/{row}?info:name=”John Smith”&info:email=”john.smith@mail.com”&timestamp=0
+    PUT /v1/instances/default/tables/users/rows/9ee9800000004d64159b?info:name=John%20Smith&info:email=john.smith@mail.com&timestamp=0
 
 Put many cells while controlling the schema used for a given cell:
 
-    PUT /v1/instances/training/tables/roster/rows/{row}?info:name=”John Smith”&info:email=”john.smith@mail.com”&timestamp=0&schema.info:name="string"
+    PUT /v1/instances/default/tables/users/rows/9ee9800000004d64159b?info:name=John%20Smith&info:email=john.smith@mail.com&timestamp=0&schema.info:name="string"
 
 <a id="rows-get"> </a>
 ### Rows: GET
 
-Returns multiple Kiji rows. This request has similar results as the kiji `scan` command,
-rows bounded by the constraints.
+Returns (streams) multiple Kiji rows. This request has similar results as the kiji `scan` command,
+rows bounded by the constraints. Each row is a JSON clob delimited by the "\r\n" characters and
+all "\r\n" characters within each JSON clob are replaced with "\n" to avoid collision with the
+delimiter characters.
 
     GET /v1/instances/<instance>/tables/<table>/rows
 
@@ -162,19 +165,20 @@ rows bounded by the constraints.
 
 * `eid` (single, optional) - A JSON representation of the list of components (for example:
         `['string1', 2, 'string3']`) of the entity ID to retrieve. When specified, it returns
-        the row represented by the given entity ID.
+        the row represented by the given entity ID. If this is specified, then `start_rk`,
+        `end_rk`, and `limit` parameters are ignored.
 
-* `start_rk` (single, optional) - If executing a range query, this is the row key (specified as a
+* `start_rk` (single, optional) - If executing a range query, this is the HBase row key (specified as a
         hexadecimal string) to inclusively start from.
 
-* `end_rk` (single, optional) - If executing a range query, this is the row key (specified as
+* `end_rk` (single, optional) - If executing a range query, this is the HBase row key (specified as
         a hexadecimal string) to exclusively end with.
 
-* `limit` (single, optional, default=100) - The number of rows to return.
+* `limit` (single, optional, default=100) - The number of rows to return. Specify -1 to return all rows.
 
 * `cols` (single, optional, default=`*`) - A comma-separated list of column family
         (and qualifiers) to return. Specify `*` to indicate all columns. Specifying just a column
-        family will yield values for all columns in the family and their qualifiers.
+        family will return values for all columns in the family and their qualifiers.
 
 * `versions` (single, optional, default=1) - An integer representing the number of versions
         per cell to return for the given row.
@@ -184,41 +188,31 @@ rows bounded by the constraints.
         `min` and `max` are both optional; however, if a value is provided for this parameter,
         at least one of min/max must be present.)
 
-#### Notes:
-
-This API will stream the results to the client. Each resulting row will be sent as a single
-line of JSON terminated by “\r\n”. To ensure that clients can parse the streaming result
-properly, any new lines in the JSON message itself will be represented by “\n” (without
-the carriage return).
-
-If the `eid` parameter is specified, then `start_rk`, `end_rk`, and `limit` parameters will be ignored.
 
 #### Examples:
 
-In these examples, the rows returned are from the “roster” table in the "training" instance.
+Get the first 100 rows (the default number of rows) from the users table:
 
-Get many rows.
+    GET /v1/instances/default/tables/users/rows
 
-    GET /v1/instances/training/tables/roster/rows
+Get a single row identified by the entity_id:
 
-Get a row by formatted key.
+    GET /v1/instances/default/tables/users/rows?eid=[1298404763]
 
-    GET /v1/instances/training/tables/roster/rows?eid=["Seleukos","Nikator"]
+Retrieve the first 100 rows (the default number of rows) between start and end keys:
 
-Scan rows from start and end keys.
+    GET /v1/instances/default/tables/users/rows?start_rk=9ee9800000004d64159b&end_rk=fca9800000004d64159c
 
-    GET /v1/instances/training/tables/roster/rows?start_rk=a18fa1540bde9432&end_rk=b00bde940889a223
+Retrieve the first 100 rows starting from a particular key:
 
-Scan rows from a start key and limit count.
-
-    GET /v1/instances/training/tables/roster/rows?start_rk=a18fa1540bde9432&limit=10
+    GET /v1/instances/default/tables/users/rows?start_rk=9ee9800000004d64159b&limit=10
 
 <a id="rows-post"> </a>
 ### Rows: POST
 
 Creates or adds cells to a row in the table. The body of the request is the JSON
 representation of the entity and must contain the entity ID so as to identify the row to
-create/update. The request returns the entity ID of the newly created resource.
+create/update. The request returns the entity ID of the newly created/updated resource.
 
     POST /v1/instances/<instance>/tables/<table>/rows
 
@@ -236,17 +230,23 @@ will be returned.
 
 #### Example:
 
+    Content-Type: application/json
+    Body:
     {
-      "entityId": "['John', 'Smith']",
+      "entityId": "[12345]",
       "cells":
-      [
-          {
-              "columnFamily": "info",
-              "columnQualifier": "email",
-              "value": “john.smith@mail.com”,
-              "timestamp": 1
-          }
-      ]
+      {
+        "info":
+        {
+          "name":
+          [
+            {
+            "timestamp": 1,
+            "value": "Jane Smith"
+            }
+          ]
+        }
+      }
     }
 
 

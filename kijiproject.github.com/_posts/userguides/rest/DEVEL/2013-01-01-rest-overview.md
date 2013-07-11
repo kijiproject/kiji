@@ -15,13 +15,16 @@ GET, POST, PUT, and DELETE.
 Use this interface to pull data from Kiji tables into other applications, such as web pages
 making use of predictive modeling data to customize user interactions.
 
-There’s an example of a KijiREST client as a RubyGem in the GitHub project
-[kiji-rest-client](https://github.com/kijiproject/kiji-rest-client).
+There's an example of a KijiREST client as a RubyGem in the GitHub project
+[kiji-rest-client](https://github.com/kijiproject/kiji-rest-client) which can be installed
+by executing:
+
+    gem install kijirest-client
 
 ### REST Resources
 Every REST request is parametrized by a resource path that uniquely identifies a server-side
 resource. Other optional parameters relevant to the action are specified in the query and
-body sections of the request. For example, to retrieve row data from the ‘users’ table, a
+body sections of the request. For example, to retrieve row data from the 'users' table, a
 GET request might look like the following:
 
     GET /v1/instances/dev_instance/tables/users/rows/c51ce410c124a10e0db5e4b97fc2af39[?...]
@@ -35,8 +38,8 @@ items as well as how to setup and run KijiREST in your development and productio
 
 ### KijiREST Open Source Development Project
 
-The [kiji-rest](https://github.com/kijiproject/kiji-rest) is intended to evolve with Kiji users to arrive at its most comfortably
-useable state over time.
+The [kiji-rest](https://github.com/kijiproject/kiji-rest) project will evolve over time to
+ensure maximum user and developer benefit.
 
 #### Development Status
 The Kiji project encourages the use of Java annotations for indicating the stability of

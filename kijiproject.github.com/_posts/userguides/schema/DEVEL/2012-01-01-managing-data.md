@@ -49,13 +49,23 @@ refer to the following example layout file throughout this section:
   name: "users",
   description: "A bunch of made-up users",
   version: "layout-1.1",
-  keys_format: {encoding: "HASH"},
+  keys_format: {
+    encoding : "FORMATTED",
+    salt : {
+      hash_size : 2
+    },
+    components : [ {
+      name : "uid",
+      type : "LONG"
+    }
+   ]
+  },
   locality_groups: [ {
     name: "default",
     description: "The default locality group",
     in_memory: false,
     max_versions: 1,
-    ttl_seconds: 7776000,
+    ttl_seconds: 2147483647,
     compression_type: "NONE",
     families: [ {
       name: "info",
@@ -169,8 +179,8 @@ Locality groups control the physical properties of the underlying storage:
 
 *  `in_memory` - when this boolean flag is set, Kiji configures HBase to keep as
    much of this locality group in memory as possible.
-*  `ttl_seconds` - cells' time to live : cells older that this number of seconds
-   may be automatically discarded.
+*  `ttl_seconds` - cells' time to live : cells older than this number of seconds
+   will be automatically discarded.
 *  `max_versions` - maximum number of timestamped versions of cells to retain :
    as new versions of a cell are written, older versions are deleted to not
    exceed this limit.

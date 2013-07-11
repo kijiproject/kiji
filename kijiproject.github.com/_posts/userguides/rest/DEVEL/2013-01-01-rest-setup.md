@@ -3,33 +3,34 @@ layout: post
 title: Setup
 categories: [userguides, rest, devel]
 tags: [rest-ug]
-order: 5
+order: 2
 version: devel
 description: Setup
 ---
 
-KijiREST runs as part of the Kiji environment. A BentoBox cluster includes KijiREST: you don't
-need to download anything else, just enable the KijiREST server.
-If you want to run KijiREST on hardware separate from your
-cluster, the KijiREST package includes the Kiji libraries need to access the cluster remotely.
+KijiREST runs as part of the Kiji environment. A BentoBox cluster includes KijiREST meaning nothing else
+needs to be downloaded --  simply start the KijiREST server.
 
-## Setting up KijiREST on a Local Server
+To run KijiREST on hardware independent of the HBase cluster, the KijiREST package includes
+the necessary Kiji libraries required to access the cluster remotely.
 
-Follow these steps to get KijiREST running in your development environment. If you are ready
-to run KijiREST in a production environment, see [Setup and Run (Production)](#setup-production).
+## Setting up KijiREST on a local server
+
+To run KijiREST in a production environment, see [Setup and Run (Production)](#setup-production).
 
 ### Download the Package
 
-If you are already running a Kiji BentoBox, you can skip this step.
+Skip this step if running from within a Kiji BentoBox.
 
 The KijiREST tarball can be found on the Kiji [Downloads](http://www.kiji.org/getstarted/#Downloads)
 page. Unpacked, the KijiREST contents are:
 
-    ~/kiji-rest-0.1.0$  ls .
+    $ cd ~/kiji-rest-0.1.0
+    $ ls .
 
 <dl>
 <dt>  bin/ </dt>
-    <dd>Contains initialization/start/stop scripts that we will use to control the KijiREST application</dd>
+    <dd>Contains start/stop scripts to control the KijiREST application</dd>
 <dt>conf/ </dt>
     <dd>Basic KijiREST and Dropwizard configuration settings</dd>
 <dt>docs/ </dt>
@@ -45,20 +46,20 @@ page. Unpacked, the KijiREST contents are:
 ### Startup with Basic Configuration
 
 KijiREST configuration parameters are located in `kiji-rest/conf/configuration.yml`. This
-file is divided into two major sections: The top portion of the file contains configurations
-relevant to KijiREST and the bottom portion configures Dropwizard (including the HTTP and
-logging configurations).
+file is divided into two major sections:
+* The top portion of the file contains configurations relevant to KijiREST
+* The bottom portion configures Dropwizard (including the HTTP and logging configurations).
 
 To configure and run KijiREST for your cluster and instance:
 
 1.  Start HBase and Hadoop with a configured Kiji environment. Make sure necessary Avro
 classes are accessible either in `$KIJI_CLASSPATH` or in the `kiji-rest-0.1.0/lib/` directory.
 
-    If you are running a BentoBox, you can start Hadoop and HBase with `start bento`.
+    If you are running a BentoBox, start Hadoop and HBase with `bento start`.
 
-1.  Set the cluster key to the URI of our Kiji environment, e.g. `kiji://.env`.
+2.  Set the cluster key to the URI of our Kiji environment, e.g. `kiji://.env`.
 
-1.  Set the instance key to the list of instances we would like to surface through the REST
+3.  Set the instance key to the list of instances we would like to surface through the REST
 service, for example default, prod_instance, dev_instance:
 
         cluster: kiji://.env/
@@ -67,7 +68,7 @@ service, for example default, prod_instance, dev_instance:
          - prod_instance
          - dev_instance
 
-1.  Start KijiREST.
+4.  Start KijiREST.
 
         ~/kiji-rest-0.1.0$  ./bin/kiji-rest
 
@@ -80,7 +81,7 @@ You can find the process ID in the `kiji-rest.pid` file:
     1234
 
 ### Get Instance Status
-You can check on the status of Kiji instances using Dropwizard’s healthcheck portal
+You can check on the status of Kiji instances using Dropwizard's healthcheck portal
 (default port: 8081).
 
     $ curl http://localhost:8081/healthcheck
@@ -105,7 +106,6 @@ There are three types of logs in the logs directory:
 </dl>
 
 
-
 The logging options (console-logging, log files, syslog, archiving, etc.) are set in the
 Dropwizard section of `configuration.yml`. The available options and defaults are detailed
 in the [Dropwizard User Manual](http://dropwizard.codahale.com/manual/).
@@ -116,25 +116,20 @@ in the [Dropwizard User Manual](http://dropwizard.codahale.com/manual/).
 Installing KijiREST in a production environment has additional considerations beyond those
 described for development systems.
 
-1. Unpack the `kiji-rest` tarball as the `/opt/kiji/kiji-rest directory`:
+1. Unpack the `kiji-rest` tarball as the `/opt/wibi/kiji-rest directory`:
 
-        $ tar -xvzf kiji-rest-0.1.0-release.tar.gz -C /opt/kiji/
+        $ tar -xzf kiji-rest-0.1.0-release.tar.gz -C /opt/wibi/
         $ ln -s kiji-rest-0.1.0 kiji-rest
 
     The KijiREST package includes KijiSchema libraries need to be able to access Kiji tables.
 
-1. Add the KijiREST user (with appropriately limited permissions) named “kiji”.
+1. Add the KijiREST user (with appropriately limited permissions) named "kiji".
 
         $ sudo useradd kiji
 
-1. Edit `kiji-rest/bin/kiji-rest.initd` to update `KIJI_REST_HOME` and `KIJI_REST_USER`.
-
-        KIJI_REST_USER="kiji"
-        KIJI_REST_HOME="/opt/kiji/kiji-rest"
-
 1. Move this script to `/etc/init.d/kiji-rest` and register it as a service with `chkconfig`.
 
-        $ sudo cp /opt/kiji/kiji-rest/bin/kiji-rest.initd  /etc/init.d/kiji-rest
+        $ sudo cp /opt/wibi/kiji-rest/bin/kiji-rest.initd  /etc/init.d/kiji-rest
         $ chkconfig --add kiji-rest
 
 To start the service, run:
@@ -144,6 +139,3 @@ To start the service, run:
 To stop the service, run:
 
     $ /sbin/service kiji-rest stop
-
-Customize these scripts (found in `$KIJI_REST_HOME/src/main/scripts/kiji-rest.initd`) as necessary.
-
