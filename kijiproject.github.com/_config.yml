@@ -122,7 +122,7 @@ music_devel_branch : master
 music_express_devel_version : 0.6.0
 music_express_devel_branch : master
 
-rest_devel_version: 0.3.0
+rest_devel_version: 0.4.0
 rest_devel_branch : master
 
 # All Jekyll-Bootstrap specific configurations are namespaced into this hash
@@ -239,3 +239,4 @@ api_schema_1_1_1 : http://api-docs.kiji.org/kiji-schema/1.1.1/org/kiji/schema
 api_mr_1_0_1 : http://api-docs.kiji.org/kiji-mapreduce/1.0.1/org/kiji/mapreduce
 userguide_mapreduce_1_0_1 : /userguides/mapreduce/1.0.1
 api_express_0_6_0 : http://api-docs.kiji.org/kiji-express/0.6.0/org/kiji/express
+userguide_rest_0_3_0 : /userguides/rest/0.3.0

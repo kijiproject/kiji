@@ -33,6 +33,10 @@ to the Kiji version you are using.
 * [KijiMR 1.0.0-rc5]({{site.userguide_url}}/mapreduce/1.0.0-rc5/kiji-mr-overview/)
 * [KijiMR 1.0.0-rc4]({{site.userguide_url}}/mapreduce/1.0.0-rc4/kiji-mr-overview/)
 
+## KijiREST
+
+* [KijiREST 0.3.0]({{site.userguide_url}}/rest/0.3.0/rest-overview/) (latest)
+
 ### Documentation under development
 
 The documentation links in this section refer to works-in-progress for the next versions
