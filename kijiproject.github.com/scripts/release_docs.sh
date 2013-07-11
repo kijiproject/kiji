@@ -59,6 +59,10 @@ EXPRESS_MUSIC_VER=0.5.0
 PHONEBOOK_FLAT_VER=1_0_0
 PHONEBOOK_VER=1.0.0
 
+# REST Server version
+REST_FLAT_VER=0_3_0
+REST_VER=0.3.0
+
 ### Ordinary configuration does not go past this line ###
 
 # Constants used later in this script
@@ -89,6 +93,8 @@ fix_released_versions() {
       "s/userguide_mapreduce_devel/userguide_mapreduce_$KIJIMR_FLAT_VER/g" {} \;
   find . -name "*.md" -exec sed -i -e \
       "s/userguide_schema_devel/userguide_schema_$SCHEMA_FLAT_VER/g" {} \;
+  find . -name "*.md" -exec sed -i -e \
+      "s/userguide_rest_devel/userguide_rest_$REST_FLAT_VER/g" {} \;
 
   find . -name "*.md" -exec sed -i -e \
       "s/tutorial_phonebook_devel/tutorial_phonebook_$PHONEBOOK_FLAT_VER/g" {} \;
@@ -104,6 +110,8 @@ fix_released_versions() {
       's/{{site.music_devel_branch}}/'"kiji-music-$MUSIC_VER/g" {} \;
   find . -name "*.md" -exec sed -i -e \
       's/{{site.music_express_devel_branch}}/'"kiji-express-music-$EXPRESS_MUSIC_VER/g" {} \;
+  find . -name "*.md" -exec sed -i -e \
+      's/{{site.rest_devel_branch}}/'"kiji-rest-root-$REST_VER/g" {} \;
 
   # Update HTML links to tutorial elements
   find . -name "*.md" -exec sed -i -e \
@@ -116,6 +124,8 @@ fix_released_versions() {
       "s|music-recommendation/DEVEL|music-recommendation/$MUSIC_VER|g" {} \;
   find . -name "*.md" -exec sed -i -e \
       "s|express-recommendation/DEVEL|express-recommendation/$EXPRESS_MUSIC_VER|g" {} \;
+  find . -name "*.md" -exec sed -i -e \
+      "s|rest/DEVEL|rest/$REST_VER|g" {} \;
 
   # Reify release version numbers in the text.
   find . -name "*.md" -exec sed -i -e \
@@ -132,6 +142,8 @@ fix_released_versions() {
       's/{{site.music_express_devel_version}}/'"$EXPRESS_MUSIC_VER/g" {} \;
   find . -name "*.md" -exec sed -i -e \
       's/{{site.express_devel_version}}/'"$EXPRESS_VER/g" {} \;
+  find . -name "*.md" -exec sed -i -e \
+      's/{{site.rest_devel_version}}/'"$REST_VER/g" {} \;
 }
 
 
@@ -180,6 +192,27 @@ if [ ! -d "userguides/mapreduce/$KIJIMR_VER" ]; then
   echo "api_mr_$KIJIMR_FLAT_VER : $API/kiji-mapreduce/$KIJIMR_VER/org/kiji/mapreduce" \
       >> "$top/_config.yml"
   echo "userguide_mapreduce_$KIJIMR_FLAT_VER : /userguides/mapreduce/$KIJIMR_VER" \
+      >> "$top/_config.yml"
+
+  popd
+fi
+
+if [ ! -d "userguides/rest/$REST_VER" ]; then
+  # Create new REST documentation
+  echo "Creating new KijiREST user guide: $REST_VER"
+  cp -ra "userguides/rest/DEVEL" "userguides/rest/$REST_VER"
+
+  pushd "userguides/rest/$REST_VER"
+
+  # Replace devel versioning with macros that reflect the release version.
+  find . -name "*.md" -exec sed -i -e \
+      "s/version: devel/version: $REST_VER/" {} \;
+  find . -name "*.md" -exec sed -i -e \
+      "s/rest, devel]/rest, $REST_VER]/" {} \;
+
+  fix_released_versions
+
+  echo "userguide_rest_$REST_FLAT_VER : /userguides/rest/$REST_VER" \
       >> "$top/_config.yml"
 
   popd
@@ -263,7 +296,9 @@ if [ "$?" != "0" ]; then
 fi
 
 echo ""
-echo "Automated documentation release complete."
+echo "Automated documentation release steps complete."
+echo ""
+echo "There's still some manual work to be done - docs release is not complete yet!"
 echo ""
 echo "At this point you should:"
 echo " * Create new links in userguides.md, apidocs/index.md, and tutorials.md that"

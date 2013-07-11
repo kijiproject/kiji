@@ -122,6 +122,9 @@ music_devel_branch : master
 music_express_devel_version : 0.6.0
 music_express_devel_branch : master
 
+rest_devel_version: 0.3.0
+rest_devel_branch : master
+
 # All Jekyll-Bootstrap specific configurations are namespaced into this hash
 #
 JB :

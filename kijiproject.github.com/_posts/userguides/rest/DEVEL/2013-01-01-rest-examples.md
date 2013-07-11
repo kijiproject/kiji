@@ -37,7 +37,7 @@ and Kiji:
           "protocolName":"system"
        },
        "rest-version":"0.1.0",
-       "kiji-software-version":"0.1.0"
+       "kiji-software-version": "{{site.rest_devel_version}}"
     }
 
 ### Get Instances
