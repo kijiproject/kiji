@@ -23,12 +23,8 @@ import java.io.BufferedInputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.net.URLClassLoader
-import java.util.UUID
-import java.util.jar.Attributes
 import java.util.jar.JarEntry
 import java.util.jar.JarOutputStream
-import java.util.jar.Manifest
 
 import scala.io.Source
 
@@ -68,6 +64,7 @@ import org.kiji.express.util.Resources.doAndClose
  *       </path/to/script> [other options here]
  * }}}
  */
+@deprecated
 class ScriptRunner extends Tool {
   import ScriptRunner._
 
@@ -233,6 +230,7 @@ object ScriptRunner {
    *     be a path to the script to run. Any remaining flags get passed to the script itself.
    */
   def main(args: Array[String]) {
+    logger.warn("Running uncompiled scripts is deprecated and will be removed in a future release.")
     ToolRunner.run(HBaseConfiguration.create(), new ScriptRunner, args)
   }
 }

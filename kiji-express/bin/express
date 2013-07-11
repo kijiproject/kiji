@@ -21,14 +21,14 @@
 #   under the project's target directory. If no built development distribution exists, maven
 #   will be used to build one.
 
-bin=`dirname $0`
+bin=$(dirname ${0})
 
-release_dir=`ls -d -1 "${bin}"/../target/kiji-*-release/kiji-*/ | sort -r | head -1`
-if [ ! -d "$release_dir" ]; then
-  echo "No target directory found, so building KijiExpress with 'mvn install' first..."
-  mvn install -DskipTests -DskipVerify
-  release_dir=`ls -d -1 "${bin}"/../target/kiji-*-release/kiji-*/ | sort -r | head -1`
+release_dir=$(ls -d -1 "${bin}"/../target/kiji-*-release/kiji-*/ | sort -r | head -1)
+if [ ! -d "${release_dir}" ]; then
+  echo "No target directory found, so building KijiExpress with 'mvn package' first..."
+  mvn package -DskipTests -DskipVerify
+  release_dir=$(ls -d -1 "${bin}"/../target/kiji-*-release/kiji-*/ | sort -r | head -1)
 fi
-release=`cd ${release_dir} && pwd`
+release=$(cd ${release_dir} && pwd)
 
-exec $release/bin/express "$@"
+exec ${release}/bin/express "${@}"
