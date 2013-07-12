@@ -50,6 +50,7 @@
   <modules>
     <module>build-resources</module>
     <module>kiji-rest</module>
+    <module>load-testing</module>
   </modules>
 
   <build>
