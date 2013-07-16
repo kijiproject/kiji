@@ -113,7 +113,7 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
 
     //Add exception mappers to print better exception messages to the client than what
     //Dropwizard does by default.
-    environment.addProvider(new WebAppExceptionMapper());
+    environment.addProvider(new GeneralExceptionMapper());
     environment.addProvider(new IOExceptionMapper());
 
     // Load resources.

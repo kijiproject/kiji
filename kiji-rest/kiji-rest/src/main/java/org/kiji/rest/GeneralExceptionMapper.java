@@ -38,16 +38,24 @@ import org.kiji.rest.representations.ExceptionWrapper;
  */
 
 @Provider
-public class WebAppExceptionMapper implements ExceptionMapper<WebApplicationException> {
+public class GeneralExceptionMapper implements ExceptionMapper<RuntimeException> {
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public Response toResponse(WebApplicationException thrownException) {
+  public Response toResponse(RuntimeException thrownException) {
     ResponseBuilder builder = new ResponseBuilderImpl();
     builder.type(MediaType.APPLICATION_JSON);
-    Status status = Status.fromStatusCode(thrownException.getResponse().getStatus());
+
+    Status status = null;
+    if (thrownException instanceof WebApplicationException) {
+      WebApplicationException webAppException = (WebApplicationException)thrownException;
+      status = Status.fromStatusCode(webAppException.getResponse().getStatus());
+    }
+    if (status == null) {
+      status = Status.INTERNAL_SERVER_ERROR;
+    }
     builder.status(status);
     builder.entity(new ExceptionWrapper(status, thrownException));
     return builder.build();
