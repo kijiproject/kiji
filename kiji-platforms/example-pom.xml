@@ -29,7 +29,7 @@
 
   <properties>
     <kiji-schema.version>1.0.0</kiji-schema.version>
-    <kiji-platform.version>1.0.0</kiji-platform.version>
+    <kiji-platform.version>1.2.0</kiji-platform.version>
   </properties>
 
   <build>
