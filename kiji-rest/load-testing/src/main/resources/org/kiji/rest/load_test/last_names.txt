@@ -1,0 +1,13 @@
+# Represents the most common last names given by the census. First line is the total number of
+# occurrences, each subsequent line represents the name and a cumulative occurrence count (similar to a CDF)
+total 13156026
+Smith 2376206
+Johnson 4233366
+Williams 5767408
+Brown 7147553
+Jones 8510308
+Miller 9638111
+Davis 10710446
+Garcia 11568735
+Rodriguez 12372975
+Wilson 13156026
