@@ -71,7 +71,7 @@
     <dependency>
       <groupId>org.kiji.checkin</groupId>
       <artifactId>kiji-checkin</artifactId>
-      <version>1.0.0</version>
+      <version>${kiji-checkin.version}</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
