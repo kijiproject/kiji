@@ -78,21 +78,13 @@ class ModelEnvironmentSuite extends FunSuite {
       builder.build()
     }
 
-    val expectedKvstores: Seq[KVStore] = {
-      val property: Property = Property
-          .newBuilder()
-          .setName("path")
-          .setValue("/usr/src/and/so/on")
-          .build()
-      val store: KVStore = KVStore
-          .newBuilder()
-          .setName("side_data")
-          .setStoreType(KvStoreType.AVRO_KV)
-          .setProperties(Seq(property).asJava)
-          .build()
-
-      Seq(store)
-    }
+    val expectedKvstores: Seq[KVStore] = Seq(
+        KVStore(
+          name="side_data",
+          storeType="AVRO_KV",
+          properties=Map("path" -> "/usr/src/and/so/on")
+        )
+    )
 
     val environment: ModelEnvironment = ModelEnvironment.fromJsonFile(validDefinitionLocation)
 
@@ -112,12 +104,12 @@ class ModelEnvironmentSuite extends FunSuite {
     val extractEnv = ExtractEnvironment(dataRequest, Seq(), Seq())
     val extractEnv2 = ExtractEnvironment(
         dataRequest,
-        Seq(FieldBindingSpec("tuplename", "info:storefieldname")),
-        Seq(KVStoreSpec("AVRO_KV", "storename", Map("path" -> "/some/great/path"))))
+        Seq(FieldBinding("tuplename", "info:storefieldname")),
+        Seq(KVStore("AVRO_KV", "storename", Map("path" -> "/some/great/path"))))
     val scoreEnv = ScoreEnvironment("outputFamily:qualifier", Seq())
     val scoreEnv2 = ScoreEnvironment(
         "outputFamily:qualifier",
-        Seq(KVStoreSpec("KIJI_TABLE", "myname", Map("uri" -> "kiji://.env/default/table",
+        Seq(KVStore("KIJI_TABLE", "myname", Map("uri" -> "kiji://.env/default/table",
             "column" -> "info:email"))))
 
     val modelEnv = ModelEnvironment(
@@ -212,13 +204,13 @@ class ModelEnvironmentSuite extends FunSuite {
     val extractEnv = ExtractEnvironment(
         dataRequest,
         Seq(
-            FieldBindingSpec("tuplename", "info:storefieldname"),
-            FieldBindingSpec("tuplename", "info:storefield2"),
-            FieldBindingSpec("tuplename2", "*invalidcolumnname")),
-        Seq(KVStoreSpec("AVRO_KV", "storename", Map("path" -> "/some/great/path"))))
+            FieldBinding("tuplename", "info:storefieldname"),
+            FieldBinding("tuplename", "info:storefield2"),
+            FieldBinding("tuplename2", "*invalidcolumnname")),
+        Seq(KVStore("AVRO_KV", "storename", Map("path" -> "/some/great/path"))))
     val scoreEnv = ScoreEnvironment(
         "outputFamily:qualifier",
-        Seq(KVStoreSpec("KIJI_TABLE", "myname", Map("uri" -> "kiji://.env/default/table",
+        Seq(KVStore("KIJI_TABLE", "myname", Map("uri" -> "kiji://.env/default/table",
             "column" -> "info:email"))))
 
     val thrown = intercept[ModelEnvironmentValidationException] { ModelEnvironment(

@@ -52,9 +52,9 @@ import org.kiji.schema.util.ToJson
  * @param tupleFieldName is the name of the tuple field to associate with the `storeFieldName`.
  * @param storeFieldName is the name of the store field to associate with the `tupleFieldName`.
  */
-case class FieldBindingSpec(tupleFieldName: String, storeFieldName: String) {
-  def toAvroFieldBinding(): FieldBinding = {
-    new FieldBinding(tupleFieldName, storeFieldName)
+case class FieldBinding(tupleFieldName: String, storeFieldName: String) {
+  private[express] def toAvroFieldBinding(): AvroFieldBinding = {
+    new AvroFieldBinding(tupleFieldName, storeFieldName)
   }
 }
 
@@ -71,7 +71,7 @@ case class FieldBindingSpec(tupleFieldName: String, storeFieldName: String) {
 @ApiStability.Experimental
 final class ExtractEnvironment private[express] (
     val dataRequest: ExpressDataRequest,
-    val fieldBindings: Seq[FieldBinding],
+    val fieldBindings: Seq[AvroFieldBinding],
     val kvstores: Seq[KVStore]) {
   override def equals(other: Any): Boolean = {
     other match {
@@ -108,12 +108,12 @@ object ExtractEnvironment {
    */
   def apply(
       dataRequest: ExpressDataRequest,
-      fieldBindings: Seq[FieldBindingSpec],
-      kvstores: Seq[KVStoreSpec]): ExtractEnvironment = {
+      fieldBindings: Seq[FieldBinding],
+      kvstores: Seq[KVStore]): ExtractEnvironment = {
     new ExtractEnvironment(
         dataRequest,
         fieldBindings.map { fieldBindingSpec => fieldBindingSpec.toAvroFieldBinding },
-        kvstores.map { kvStoreSpec => kvStoreSpec.toAvroKVStore } )
+        kvstores)
   }
 }
 
@@ -125,7 +125,7 @@ object ExtractEnvironment {
  * @param name specified by the user as a shorthand identifier for this KVStore.
  * @param properties that may be needed to configure and instantiate a kv store reader.
  */
-case class KVStoreSpec(storeType: String, name: String, properties: Map[String, String]) {
+case class KVStore(storeType: String, name: String, properties: Map[String, String]) {
   // The allowed store types.
   val possibleStoreTypes = Set("AVRO_KV", "AVRO_RECORD", "KIJI_TABLE")
 
@@ -138,13 +138,13 @@ case class KVStoreSpec(storeType: String, name: String, properties: Map[String, 
    *
    * @return an [[org.kiji.express.avro.KVStore]] with its parameters from this specification.
    */
-  def toAvroKVStore(): KVStore = {
+  private[express] def toAvroKVStore(): AvroKVStore = {
     val kvStoreType: KvStoreType = Enum.valueOf(classOf[KvStoreType], storeType)
     val avroProperties: java.util.List[Property] =
         properties.map { case (name, value) =>
             new Property(name, value)
         }.toSeq.asJava
-    new KVStore(kvStoreType, name, avroProperties)
+    return new AvroKVStore(kvStoreType, name, avroProperties)
   }
 }
 
@@ -187,8 +187,8 @@ object ScoreEnvironment {
    * @param kvstores is the specification of the kv stores for usage during the score phase.
    * @return a ScoreEnvironment with the specified settings.
    */
-  def apply(outputColumn: String, kvstores: Seq[KVStoreSpec]): ScoreEnvironment = {
-    new ScoreEnvironment(outputColumn, kvstores.map { storeSpec => storeSpec.toAvroKVStore })
+  def apply(outputColumn: String, kvstores: Seq[KVStore]): ScoreEnvironment = {
+    new ScoreEnvironment(outputColumn, kvstores)
   }
 }
 
@@ -206,11 +206,11 @@ object ScoreEnvironment {
  *     new ExpressColumnRequest("info:in", 3, None)::Nil)
  * val extractEnv = ExtractEnvironment(
  *     dataRequest = myDataRequest,
- *     fieldBindings = Seq(FieldBindingSpec("tuplename", "storefieldname")),
- *     kvstores = Seq(KVStoreSpec("AVRO_KV", "storename", Map())))
+ *     fieldBindings = Seq(FieldBinding("tuplename", "storefieldname")),
+ *     kvstores = Seq(KVStore("AVRO_KV", "storename", Map())))
  * val scoreEnv2 = ScoreEnvironment(
  *     outputColumn = "outputFamily:qualifier",
- *     kvstores = Seq(KVStoreSpec("KIJI_TABLE", "myname", Map())))
+ *     kvstores = Seq(KVStore("KIJI_TABLE", "myname", Map())))
  * val modelEnv = ModelEnvironment(
  *   name = "myname",
  *   version = "1.0.0",
@@ -307,14 +307,14 @@ final class ModelEnvironment private[express] (
     val avroExtractEnvironment: AvroExtractEnvironment = AvroExtractEnvironment
         .newBuilder()
         .setDataRequest(extractEnvironment.dataRequest.toAvro())
-        .setKvStores(extractEnvironment.kvstores.asJava)
+        .setKvStores(extractEnvironment.kvstores.map { kvstore => kvstore.toAvroKVStore }.asJava)
         .setFieldBindings(extractEnvironment.fieldBindings.asJava)
         .build()
 
     // Build an AvroScoreEnvironment record.
     val avroScoreEnvironment: AvroScoreEnvironment = AvroScoreEnvironment
         .newBuilder()
-        .setKvStores(scoreEnvironment.kvstores.asJava)
+        .setKvStores(scoreEnvironment.kvstores.map { storeSpec => storeSpec.toAvroKVStore }.asJava)
         .setOutputColumn(scoreEnvironment.outputColumn)
         .build()
 
@@ -427,6 +427,19 @@ object ModelEnvironment {
   }
 
   /**
+   * Converts an Avro KVStore specification into a KVStore case class.
+   * @param avroKVStore is the Avro specification.
+   * @return the KVStore specification as a KVStore case class.
+   */
+  private def avroKVStoreToKVStore(avroKVStore: AvroKVStore): KVStore = {
+    return KVStore(
+        storeType=avroKVStore.getStoreType.toString,
+        name=avroKVStore.getName,
+        properties=propertiesToMap(avroKVStore.getProperties)
+    )
+  }
+
+  /**
    * Creates a ModelEnvironment given a JSON string. In the process, all fields are validated.
    *
    * @param json serialized model environment.
@@ -448,12 +461,14 @@ object ModelEnvironment {
     val extractEnvironment = new ExtractEnvironment(
         dataRequest = ExpressDataRequest(avroDataRequest),
         fieldBindings = avroModelEnvironment.getExtractEnvironment.getFieldBindings.asScala,
-        kvstores = avroModelEnvironment.getExtractEnvironment.getKvStores.asScala)
+        kvstores = avroModelEnvironment.getExtractEnvironment.getKvStores
+            .asScala.map { avro => avroKVStoreToKVStore(avro) })
 
     // Load the scorer's model environment.
     val scoreEnvironment = new ScoreEnvironment(
         outputColumn = avroModelEnvironment.getScoreEnvironment.getOutputColumn,
-        kvstores = avroModelEnvironment.getScoreEnvironment.getKvStores.asScala)
+        kvstores = avroModelEnvironment.getScoreEnvironment.getKvStores
+            .asScala.map { avro => avroKVStoreToKVStore(avro) })
 
     // Build a model environment.
     new ModelEnvironment(
@@ -526,10 +541,10 @@ object ModelEnvironment {
     val kvstores = extractEnvironment.kvstores
 
     val fieldNames: Seq[String] = extractEnvironment.fieldBindings.map {
-      fieldBinding: FieldBinding => fieldBinding.getTupleFieldName
+      fieldBinding: AvroFieldBinding => fieldBinding.getTupleFieldName
     }
     val columnNames: Seq[String] = extractEnvironment.fieldBindings.map {
-      fieldBinding: FieldBinding => fieldBinding.getStoreFieldName
+      fieldBinding: AvroFieldBinding => fieldBinding.getStoreFieldName
     }
 
     // Collect errors from other validation steps.
@@ -651,10 +666,10 @@ object ModelEnvironment {
    * @return an optional ValidationException if the name provided is invalid.
    */
   def validateKvstoreName(kvstore: KVStore): Option[ValidationException] = {
-    if (!kvstore.getName.matches("^[a-zA-Z_][a-zA-Z0-9_]+$")) {
+    if (!kvstore.name.matches("^[a-zA-Z_][a-zA-Z0-9_]+$")) {
       val error = "The key-value store name must begin with a letter" +
           " and contain only alphanumeric characters and underscores. The key-value store" +
-          " name you provided is " + kvstore.getName + " and the regex it must match is " +
+          " name you provided is " + kvstore.name + " and the regex it must match is " +
           "^[a-zA-Z_][a-zA-Z0-9_]+$"
       Some(new ValidationException(error))
     } else {
@@ -670,16 +685,11 @@ object ModelEnvironment {
    * @return an optional ValidationException if any of the properties are invalid.
    */
   def validateKvstoreProperties(kvstore: KVStore): Option[ValidationException] = {
-    val properties: Iterable[Property] = kvstore.getProperties().asScala
-    def propertiesContains(name: String): Boolean = {
-      properties.count { property =>
-        property.getName() == name
-      } > 0
-    }
+    val properties: Map[String, String] = kvstore.properties
 
-    kvstore.getStoreType match {
+    KvStoreType.valueOf(kvstore.storeType) match {
       case KvStoreType.AVRO_KV => {
-        if (!propertiesContains("path")) {
+        if (!properties.contains("path")) {
           val error = "To use an Avro key-value record key-value store, you must specify the" +
               " HDFS path to the Avro container file to use to back the store. Use the" +
               " property name 'path' to provide the path."
@@ -690,7 +700,7 @@ object ModelEnvironment {
       case KvStoreType.AVRO_RECORD => {
         // Construct an error message for a missing path, missing key_field, or both.
         val pathError =
-          if (!propertiesContains("path")) {
+          if (!properties.contains("path")) {
             "To use an Avro record key-value store, you must specify the HDFS path" +
                 " to the Avro container file to use to back the store. Use the property name" +
                 " 'path' to provide the path."
@@ -699,7 +709,7 @@ object ModelEnvironment {
           }
 
         val keyFieldError =
-          if (!propertiesContains("key_field")) {
+          if (!properties.contains("key_field")) {
             "To use an Avro record key-value store, you must specify the name" +
                 " of a record field whose value should be used as the record's key. Use the" +
                 " property name 'key_field' to provide the field name."
@@ -712,13 +722,13 @@ object ModelEnvironment {
       }
 
       case KvStoreType.KIJI_TABLE => {
-        if (!propertiesContains("uri")) {
+        if (!properties.contains("uri")) {
           val error = "To use a Kiji table key-value store, you must specify a Kiji URI" +
               " addressing the table to use to back the store. Use the property name 'url' to" +
               " provide the URI."
           return Some(new ValidationException(error))
         }
-        if (!propertiesContains("column")) {
+        if (!properties.contains("column")) {
           val error = "To use a Kiji table key-value store, you must specify the qualified-name" +
               " of the column whose most recent value will be used as the value associated with" +
               " each entity id. Use the property name 'column' to specify the column name."
@@ -734,8 +744,6 @@ object ModelEnvironment {
 
     return None
   }
-
-
 
   /**
    * Validates that the tuple field names are distinct and mapped to a unique column name.
@@ -811,5 +819,14 @@ object ModelEnvironment {
       return Some(new ValidationException(error))
     }
     None
+  }
+
+  /**
+   * Converts a Java list of Avro Property into a Scala map.
+   * @param properties is a Java list of Avro Property.
+   * @return the properties, as a Scala map.
+   */
+  private def propertiesToMap(properties: java.util.List[Property]): Map[String, String] = {
+    return properties.asScala.map { prop => (prop.getName, prop.getValue) }.toMap
   }
 }

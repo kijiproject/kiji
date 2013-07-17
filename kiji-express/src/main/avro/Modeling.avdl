@@ -89,7 +89,7 @@ protocol Modeling {
   /**
    * A specification of all the resources needed to surface data from a backing store.
    */
-  record KVStore {
+  record AvroKVStore {
     /**
      * One of the following valid KVStore types: {AVRO_KV, AVRO_RECORD, KIJI_TABLE}.
      * Required.
@@ -207,7 +207,7 @@ protocol Modeling {
   /**
    * An association between a tuple field name and a column.
    */
-  record FieldBinding {
+  record AvroFieldBinding {
     /**
      * The name of a tuple field to associate with the provided column. Required.
      */
@@ -235,12 +235,12 @@ protocol Modeling {
      * The KVStores needed during the extract phase. The default value of this field is the empty
      * list.
      */
-    array<KVStore> kv_stores = [];
+    array<AvroKVStore> kv_stores = [];
 
     /**
      * Associations between field names and column names. Required.
      */
-    array<FieldBinding> field_bindings;
+    array<AvroFieldBinding> field_bindings;
   }
 
   /**
@@ -254,7 +254,7 @@ protocol Modeling {
      * An array of KVStores needed during the score phase. The default value of this field is the
      * empty list.
      */
-    array<KVStore> kv_stores = [];
+    array<AvroKVStore> kv_stores = [];
 
     /**
      * A column name to write the output of the score phase to. Required.

@@ -25,8 +25,7 @@ import org.apache.hadoop.fs.Path
 
 import org.kiji.express.KijiSlice
 import org.kiji.express.KijiSuite
-import org.kiji.express.avro.FieldBinding
-import org.kiji.express.avro.KVStore
+import org.kiji.express.avro.AvroKVStore
 import org.kiji.express.avro.KvStoreType
 import org.kiji.express.avro.Property
 import org.kiji.express.datarequest.ExpressColumnRequest
@@ -78,9 +77,9 @@ class ExtractScoreProducerSuite
           extractEnvironment = ExtractEnvironment(
               dataRequest = request,
               fieldBindings = Seq(
-                  FieldBindingSpec(tupleFieldName = "field", storeFieldName = "family:column1")),
+                  FieldBinding(tupleFieldName = "field", storeFieldName = "family:column1")),
               kvstores = Seq(
-                  KVStoreSpec(
+                  KVStore(
                       storeType = "AVRO_KV",
                       name = "side_data",
                       properties = Map(
@@ -153,8 +152,8 @@ class ExtractScoreProducerSuite
           extractEnvironment = ExtractEnvironment(
               dataRequest = request,
               fieldBindings = Seq(
-                  FieldBindingSpec(tupleFieldName = "i1", storeFieldName = "family:column1"),
-                  FieldBindingSpec(tupleFieldName = "i2", storeFieldName = "family:column2")),
+                  FieldBinding(tupleFieldName = "i1", storeFieldName = "family:column1"),
+                  FieldBinding(tupleFieldName = "i2", storeFieldName = "family:column2")),
               kvstores = Seq()),
           scoreEnvironment = ScoreEnvironment(
               outputColumn = "family:column2",
@@ -219,7 +218,7 @@ class ExtractScoreProducerSuite
           extractEnvironment = ExtractEnvironment(
               dataRequest = request,
               fieldBindings = Seq(
-                  FieldBindingSpec(tupleFieldName = "feature", storeFieldName = "family:column1")),
+                  FieldBinding(tupleFieldName = "feature", storeFieldName = "family:column1")),
               kvstores = Seq()),
           scoreEnvironment = ScoreEnvironment(
               outputColumn = "family:column2",

@@ -27,7 +27,7 @@ import com.google.common.io.Files
 import org.kiji.express.KijiSlice
 import org.kiji.express.modeling.ExtractEnvironment
 import org.kiji.express.modeling.Extractor
-import org.kiji.express.modeling.FieldBindingSpec
+import org.kiji.express.modeling.FieldBinding
 import org.kiji.express.modeling.ModelDefinition
 import org.kiji.express.modeling.ModelEnvironment
 import org.kiji.express.modeling.ScoreEnvironment
@@ -83,7 +83,7 @@ class ShellExtEndToEnd extends ShellExtSuite {
             modelTableUri = uri.toString,
             extractEnvironment = ExtractEnvironment(
                 dataRequest = request,
-                fieldBindings = Seq(FieldBindingSpec("field", "family:column1")),
+                fieldBindings = Seq(FieldBinding("field", "family:column1")),
                 kvstores = Seq()),
             scoreEnvironment = new ScoreEnvironment(
                 outputColumn = "family:column2",

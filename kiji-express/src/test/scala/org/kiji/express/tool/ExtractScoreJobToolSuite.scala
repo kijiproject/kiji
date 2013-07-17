@@ -26,13 +26,12 @@ import com.google.common.io.Files
 
 import org.kiji.express.KijiSlice
 import org.kiji.express.KijiSuite
-import org.kiji.express.avro.FieldBinding
 import org.kiji.express.datarequest.ExpressColumnRequest
 import org.kiji.express.datarequest.ExpressDataRequest
 import org.kiji.express.modeling.ExtractEnvironment
 import org.kiji.express.modeling.ExtractScoreProducerSuite
 import org.kiji.express.modeling.Extractor
-import org.kiji.express.modeling.FieldBindingSpec
+import org.kiji.express.modeling.FieldBinding
 import org.kiji.express.modeling.ModelDefinition
 import org.kiji.express.modeling.ModelEnvironment
 import org.kiji.express.modeling.ScoreEnvironment
@@ -47,6 +46,7 @@ import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts
 import org.kiji.schema.util.InstanceBuilder
+
 
 class ExtractScoreJobToolSuite extends KijiSuite {
   test("ExtractScoreJobTool can run a job.") {
@@ -84,7 +84,7 @@ class ExtractScoreJobToolSuite extends KijiSuite {
             modelTableUri = uri.toString,
             extractEnvironment = ExtractEnvironment(
                 dataRequest = request,
-                fieldBindings = Seq(FieldBindingSpec("field", "family:column1")),
+                fieldBindings = Seq(FieldBinding("field", "family:column1")),
                 kvstores = Seq()),
             scoreEnvironment = new ScoreEnvironment(
                 outputColumn = "family:column2",

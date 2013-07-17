@@ -32,7 +32,6 @@ import org.kiji.express.ExpressGenericRow
 import org.kiji.express.ExpressGenericTable
 import org.kiji.express.KijiSlice
 import org.kiji.express.avro.ColumnSpec
-import org.kiji.express.avro.KVStore
 import org.kiji.express.avro.KvStoreType
 import org.kiji.express.util.Tuples
 import org.kiji.mapreduce.KijiContext
@@ -336,29 +335,17 @@ object ExtractScoreProducer {
   def wrapKvstoreReaders(
       kvstores: Seq[KVStore],
       context: KijiContext,
-      prefix: String = ""): Map[String, KeyValueStore[_, _]] = {
-    kvstores
+      prefix: String = ""
+  ): Map[String, KeyValueStore[_, _]] = {
+    return kvstores
         .map { kvstore: KVStore =>
-          val jkvstoreReader = context.getStore(prefix + kvstore.getName())
-
-          val wrapped: KeyValueStore[_, _] = kvstore.getStoreType() match {
-            case KvStoreType.AVRO_KV => {
-              new AvroKVRecordKeyValueStore(jkvstoreReader)
-            }
-            case KvStoreType.AVRO_RECORD => {
-              new AvroRecordKeyValueStore(jkvstoreReader)
-            }
-            case KvStoreType.KIJI_TABLE => {
-              val properties: Map[String, String] = kvstore
-                  .getProperties()
-                  .asScala
-                  .map { property => (property.getName(), property.getValue()) }
-                  .toMap
-              new KijiTableKeyValueStore(jkvstoreReader)
-            }
+          val jkvstoreReader = context.getStore(prefix + kvstore.name)
+          val wrapped: KeyValueStore[_, _] = KvStoreType.valueOf(kvstore.storeType) match {
+            case KvStoreType.AVRO_KV => new AvroKVRecordKeyValueStore(jkvstoreReader)
+            case KvStoreType.AVRO_RECORD => new AvroRecordKeyValueStore(jkvstoreReader)
+            case KvStoreType.KIJI_TABLE => new KijiTableKeyValueStore(jkvstoreReader)
           }
-
-          (kvstore.getName(), wrapped)
+          (kvstore.name, wrapped)
         }
         .toMap
   }
@@ -378,14 +365,10 @@ object ExtractScoreProducer {
     kvstores
         // Open the kvstores defined for the extract phase.
         .map { kvstore: KVStore =>
-          val properties: Map[String, String] = kvstore
-              .getProperties()
-              .asScala
-              .map { property => (property.getName(), property.getValue()) }
-              .toMap
+          val properties = kvstore.properties
 
           // Handle each type of kvstore differently.
-          val jkvstore: JKeyValueStore[_, _] = kvstore.getStoreType() match {
+          val jkvstore: JKeyValueStore[_, _] = KvStoreType.valueOf(kvstore.storeType) match {
             case KvStoreType.AVRO_KV => {
 
               // Open AvroKV.
@@ -432,7 +415,7 @@ object ExtractScoreProducer {
           }
 
           // Pack the kvstore into a tuple with its name.
-          (prefix + kvstore.getName(), jkvstore)
+          (prefix + kvstore.name, jkvstore)
         }
         .toMap
   }
