@@ -210,7 +210,6 @@
 
       <build>
         <plugins>
-
           <plugin>
             <groupId>org.kiji.maven.plugins</groupId>
             <artifactId>hbase-maven-plugin</artifactId>

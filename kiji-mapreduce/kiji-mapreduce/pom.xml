@@ -55,11 +55,6 @@
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
         <executions>
           <execution>
@@ -81,6 +76,11 @@
             </configuration>
           </execution>
         </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
       </plugin>
 
       <plugin>
@@ -261,6 +261,7 @@
       <build>
         <plugins>
           <!-- Activate integration tests for Hadoop 2 / CDH 4 -->
+
           <plugin>
             <groupId>org.kiji.maven.plugins</groupId>
             <artifactId>hbase-maven-plugin</artifactId>

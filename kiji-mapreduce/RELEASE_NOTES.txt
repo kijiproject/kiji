@@ -2,6 +2,9 @@
 
                               KijiMR Release Notes
 
+Version 1.0.2
+  * KIJIMR-219. Support for CDH 4.3.
+
 Version 1.0.1
   * KIJIMR-215. Fix bug deserializing AvroKVRecordKeyValueStore instances.
   * KIJIMR-210. All calls to Kiji.Factory.open() now allow parameterization
