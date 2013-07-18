@@ -23,3 +23,7 @@ target/
 build/
 logs/
 pids/
+
+# Compiled scripts
+*.pyc
+*.pyo

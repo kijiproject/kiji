@@ -1,0 +1,5 @@
+Job Name, Job ID, Task Attempt, Function Signature, Aggregate Time (nanoseconds), Number of Invocations, Time per call (nanoseconds)
+Kiji gather: TestingGatherer, job_local1059436820_0009, attempt_local1059436820_0009_m_000000_0, public synchronized void org.kiji.schema.impl.HBaseMetaTable.deleteTable(java.lang.String), 15989992,38, 420789.25
+Kiji gather: TestingGatherer, job_local1059436820_0009, attempt_local1059436820_0009_m_000000_0, public synchronized org.kiji.schema.layout.KijiTableLayout org.kiji.schema.impl.HBaseMetaTable.getTableLayout(java.lang.String), 343320082,83, 4136386.8
+Kiji gather: TestingGatherer, job_local1059436820_0009, attempt_local1059436820_0009_m_000000_0, public synchronized org.kiji.schema.KijiSchemaTable.SchemaEntry org.kiji.schema.impl.HBaseSchemaTable.getSchemaEntry(org.kiji.schema.util.BytesKey), 121478701,555, 218880.55
+Kiji gather: TestingGatherer, job_local1059436820_0009, attempt_local1059436820_0009_m_000000_0, public long org.kiji.schema.impl.HBaseSchemaTable.getOrCreateSchemaId(org.apache.avro.Schema), 130354737,312, 417803.66

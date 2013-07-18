@@ -1,0 +1,3 @@
+Job Name, Job ID, Task Attempt, Function Signature, Aggregate Time (nanoseconds), Number of Invocations, Time per call (nanoseconds)
+Kiji gather: MapFamilyGatherer, job_local627800236_0008, attempt_local627800236_0008_m_000000_0, public synchronized void org.kiji.schema.impl.HBaseMetaTable.deleteTable(java.lang.String), 15552364,36, 432010.12
+Kiji gather: MapFamilyGatherer, job_local627800236_0008, attempt_local627800236_0008_m_000000_0, public synchronized org.kiji.schema.layout.KijiTableLayout org.kiji.schema.impl.HBaseMetaTable.getTableLayout(java.lang.String), 323944436,77, 4207071.0

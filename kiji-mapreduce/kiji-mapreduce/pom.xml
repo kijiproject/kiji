@@ -36,6 +36,9 @@
 
   <properties>
     <kiji-avro.version>1.1.2-cdh4</kiji-avro.version>
+    <kiji-schema.classifier></kiji-schema.classifier>
+    <aspectj-maven-plugin.version>1.4</aspectj-maven-plugin.version>
+    <aspectjrt.version>1.7.2</aspectjrt.version>
   </properties>
 
   <build>
@@ -144,6 +147,7 @@
       <groupId>org.kiji.schema</groupId>
       <artifactId>kiji-schema</artifactId>
       <version>${kiji-schema.version}</version>
+      <classifier>${kiji-schema.classifier}</classifier>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -321,6 +325,96 @@
       </dependencies>
     </profile>
 
+    <profile>
+      <!--
+      This profile compiles kijiMR with profiling support compiled in.
+      You can run this with 'mvn clean verify -Pprofiling`
+      To deploy, you must run the following command:
+      mvn clean package deploy:deploy-file -Pprofiling -DrepositoryId=kiji-nightly \
+      -Durl=https://repo.wibidata.com/artifactory/kiji-nightly \
+      -Dfile=kiji-mapreduce/target/kiji-mapreduce-${project.version}-profiling.jar \
+      -DpomFile=kiji-mapreduce/pom.xml -Dclassifier=profiling -U
+      -->
+      <id>profiling</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <properties>
+        <kiji-schema.classifier>profiling</kiji-schema.classifier>
+      </properties>
+      <dependencies>
+        <dependency>
+          <groupId>org.aspectj</groupId>
+          <artifactId>aspectjrt</artifactId>
+          <version>${aspectjrt.version}</version>
+        </dependency>
+      </dependencies>
+      <build>
+        <plugins>
+          <!-- Add the profiling sources to the build -->
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <version>1.7</version>
+            <executions>
+              <execution>
+                <id>add-source</id>
+                <phase>generate-sources</phase>
+                <goals>
+                  <goal>add-source</goal>
+                </goals>
+                <configuration>
+                  <sources>
+                    <source>src/main/profiling/java/</source>
+                  </sources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <!-- Enable AspectJ's bytecode rewriting to include profiling point cuts -->
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>aspectj-maven-plugin</artifactId>
+            <version>${aspectj-maven-plugin.version}</version>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>compile</goal>
+                  <goal>test-compile</goal>
+                </goals>
+                <configuration>
+                  <source>${maven.compiler.source}</source>
+                  <target>${maven.compiler.target}</target>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <!-- Use the appropriate classifier -->
+          <plugin>
+            <artifactId>maven-jar-plugin</artifactId>
+            <executions>
+              <execution>
+                <phase>package</phase>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+                <configuration>
+                  <classifier>profiling</classifier>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <!-- AspectJ doesn't currently play nicely with findbugs. -->
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>findbugs-maven-plugin</artifactId>
+            <configuration>
+              <skip>true</skip>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
 
 </project>

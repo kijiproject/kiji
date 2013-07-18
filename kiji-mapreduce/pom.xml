@@ -38,7 +38,7 @@
     <annotations.version>1.0.0</annotations.version>
     <kiji-delegation.version>1.0.0</kiji-delegation.version>
     <kiji-platforms.version>1.2.0-SNAPSHOT</kiji-platforms.version>
-    <kiji-schema.version>1.1.0</kiji-schema.version>
+    <kiji-schema.version>1.1.2-SNAPSHOT</kiji-schema.version>
     <fake-hbase.version>0.1.1-SNAPSHOT</fake-hbase.version>
   </properties>
 
