@@ -16,6 +16,10 @@
   <description>Standalone "BentoBox" developer distribution of Kiji.</description>
   <inceptionYear>2012</inceptionYear>
 
+  <properties>
+    <aspectjrt.version>1.7.2</aspectjrt.version>
+  </properties>
+
   <build>
     <plugins>
       <plugin>
@@ -109,6 +113,14 @@
       <artifactId>kiji-schema</artifactId>
       <version>${kiji-schema.version}</version>
       <classifier>profiling</classifier>
+      <type>jar</type>
+    </dependency>
+    <dependency>
+      <!-- This is a dependency for the profiling system and will be moved along with -->
+      <!-- kiji-schema's profiling version above. See src/main/assembly/release.xml. -->
+      <groupId>org.aspectj</groupId>
+      <artifactId>aspectjrt</artifactId>
+      <version>${aspectjrt.version}</version>
       <type>jar</type>
     </dependency>
     <dependency>
