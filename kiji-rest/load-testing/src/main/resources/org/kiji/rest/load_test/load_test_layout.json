@@ -28,7 +28,7 @@
     "components": [
       {
         "name": "uid",
-        "type": "LONG"
+        "type": "INTEGER"
       }
     ]
   },
@@ -50,7 +50,7 @@
               "description": "user id",
               "column_schema": {
                 "type": "INLINE",
-                "value": "\"long\""
+                "value": "\"int\""
               }
             }, {
               "name": "name",
@@ -71,7 +71,7 @@
               "description": "The last set of products user clicked on",
               "column_schema": {
                 "type": "INLINE",
-                "value": "\"long\""
+                "value": "\"int\""
               }
             }
           ]
@@ -94,7 +94,7 @@
               "description": "user id",
               "column_schema": {
                 "type": "INLINE",
-                "value": "\"long\""
+                "value": "\"int\""
               }
             }
           ]

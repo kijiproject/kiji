@@ -166,7 +166,7 @@ public class RandomDataGenerator {
       lastName = mLastNames.ceilingEntry(lastNameRand).getValue();
       email = firstName.toLowerCase() + "." + lastName.toLowerCase() + "@email.com";
 
-      userId = mRandomNumberGenerator.nextInt(USER_ID_MAX);
+      userId = i;
 
       EntityId eid = table.getEntityId(userId);
       writer.put(eid, "info", "name", firstName + " " + lastName);
@@ -198,7 +198,7 @@ public class RandomDataGenerator {
     final KijiURI kijiURI = KijiURI.newBuilder("kiji://.env/default").build();
     final Kiji kiji = Kiji.Factory.open(kijiURI);
     KijiTable userTable = kiji.openTable("users");
-    gen.generateData(1000000, userTable);
+    gen.generateData(USER_ID_MAX, userTable);
     userTable.release();
     kiji.release();
   }

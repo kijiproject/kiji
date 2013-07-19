@@ -51,14 +51,14 @@
       <groupId>org.kiji.schema</groupId>
       <artifactId>kiji-schema</artifactId>
       <version>${kiji-schema.version}</version>
-      <scope>compile</scope>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase</artifactId>
       <version>${hbase.version}</version>
-      <scope>compile</scope>
+      <scope>provided</scope>
       <exclusions>
         <!-- Just to save some space in the final package -->
         <exclusion>
@@ -81,7 +81,7 @@
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-client</artifactId>
       <version>${hadoop.version}</version>
-      <scope>compile</scope>
+      <scope>provided</scope>
       <exclusions>
         <exclusion>
           <groupId>javax.servlet</groupId>
@@ -98,7 +98,7 @@
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-core</artifactId>
       <version>${hadoop.version}</version>
-      <scope>compile</scope>
+      <scope>provided</scope>
       <exclusions>
         <!--  These conflict with the servlet package in DropWizard -->
         <exclusion>
@@ -120,6 +120,22 @@
           <artifactId>jackson-core-asl</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.jmeter</groupId>
+      <artifactId>ApacheJMeter_core</artifactId>
+      <version>2.9</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.jmeter</groupId>
+      <artifactId>ApacheJMeter_java</artifactId>
+      <version>2.9</version>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.rest</groupId>
+      <artifactId>kiji-rest</artifactId>
+      <version>${project.version}</version>
+      <scope>provided</scope>
     </dependency>
   </dependencies>
 
