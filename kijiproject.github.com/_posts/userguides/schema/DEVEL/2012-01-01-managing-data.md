@@ -150,13 +150,27 @@ In KijiSchema, there are two kinds of column families:
 
 ### Kiji cell schema
 
-Within a table, Kiji cells are encoded according to their declared schema.
-There are three types of Kiji cell schemas, specified using the `type` field:
+Within a table, Kiji cells are stored using binary-encoded Avro. In addition to
+the encoded payload, the writer schema must also be stored in the cell. It would
+be inefficient to store the entire Avro representation of the schema in each
+cell, so Kiji offers three alternatives using the `storage` field:
 
-*  `INLINE` - field `value` contains the JSON representation of an Avro
-   schema.  In the earlier example, all three columns contain a single Avro
-   `"string"` field, but a column could also contain an array, record or other
-   complex Avro data type.
+*  `HASH` - Store the 128-bit MD5 hash of the writer schema in each encoded
+   cell. The full schema is stored in the KijiSchemaTable keyed by the hash.
+*  `UID` - Generate and store a unique identifier for each writer schema. This
+   numerical identifier is stored with a compact variable-length encoding. The
+   full schema is stored in the KijiSchemaTable keyed by the identifier.
+*  `FINAL` - Don't store the writer schema in each cell. Instead, the writer
+   schema is assumed to be the same as what is declared in the table
+   layout. This also means that you may never change the schema for the column.
+
+There are three ways to declare the reader schema of Kiji cells, specified using
+the `type` field:
+
+*  `INLINE` - field `value` contains the JSON representation of an Avro schema.
+   In the earlier example, all three columns contain a single Avro `"string"`
+   field, but a column could also contain an array, record or other complex Avro
+   data type.
 *  `CLASS` - field `value` contains the fully-qualified name of a Java class
    mapped by an Avro data type, like an implementation of `SpecificRecord`.  The
    user must ensure that the class is available on the classpath of any Kiji
