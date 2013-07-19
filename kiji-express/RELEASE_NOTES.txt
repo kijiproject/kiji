@@ -2,6 +2,8 @@
                              Kiji Express Release Notes
 
 Version 0.7.0
+  * EXP-151. Stop bundling KijiSchema in the tarball. This will
+      use the KijiSchema jar from $KIJI_HOME/lib.
   * EXP-146. Fall back to $HADOOP_HOME/lib/native/ for native libraries.
       Correctly detect native libraries in CDH 4.2 and CDH 4.3 packaging.
   * EXP-62. Adds support for column filters defined in a

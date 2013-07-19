@@ -81,6 +81,9 @@
       <scope>runtime</scope>
       <useTransitiveFiltering>true</useTransitiveFiltering>
       <fileMode>0644</fileMode>
+      <excludes>
+        <exclude>org.kiji.schema:kiji-schema</exclude>
+      </excludes>
     </dependencySet>
   </dependencySets>
 
