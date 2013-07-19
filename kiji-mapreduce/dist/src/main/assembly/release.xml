@@ -93,6 +93,18 @@
       </includes>
       <filtered>false</filtered>
     </fileSet>
+
+    <!-- profiling scripts -->
+    <fileSet>
+      <outputDirectory>bin/profiling</outputDirectory>
+      <directory>../kiji-mapreduce/src/main/profiling/scripts/</directory>
+      <fileMode>0755</fileMode>
+      <includes>
+        <include>*</include>
+      </includes>
+      <filtered>false</filtered>
+    </fileSet>
+
   </fileSets>
 
   <dependencySets>

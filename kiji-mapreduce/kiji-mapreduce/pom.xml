@@ -332,7 +332,7 @@
       To deploy, you must run the following command:
       mvn clean package deploy:deploy-file -Pprofiling -DrepositoryId=kiji-nightly \
       -Durl=https://repo.wibidata.com/artifactory/kiji-nightly \
-      -Dfile=kiji-mapreduce/target/kiji-mapreduce-${project.version}-profiling.jar \
+      -Dfile=kiji-mapreduce/target/kiji-mapreduce-hadoop2-${project.version}-profiling.jar \
       -DpomFile=kiji-mapreduce/pom.xml -Dclassifier=profiling -U
       -->
       <id>profiling</id>
