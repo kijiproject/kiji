@@ -84,6 +84,21 @@
       <useDefaultExcludes>false</useDefaultExcludes>
       <outputDirectory>bin</outputDirectory>
       <directory>target/prereqs-dir/kiji-schema-${kiji-schema.version}/bin</directory>
+      <excludes>
+        <!-- Don't put profiling enable/disable scripts in bin/. -->
+        <exclude>*-profiling.sh</exclude>
+      </excludes>
+      <filtered>false</filtered>
+      <fileMode>0755</fileMode>
+    </fileSet>
+    <fileSet>
+      <!-- kiji-schema profiling binaries go in $KIJI_HOME/bin/profiling/ -->
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <outputDirectory>bin/profiling</outputDirectory>
+      <directory>target/prereqs-dir/kiji-schema-${kiji-schema.version}/bin</directory>
+      <includes>
+        <include>*-profiling.sh</include>
+      </includes>
       <filtered>false</filtered>
       <fileMode>0755</fileMode>
     </fileSet>
@@ -213,6 +228,14 @@
       </excludes>
       <filtered>false</filtered>
       <fileMode>0644</fileMode>
+    </fileSet>
+    <fileSet>
+      <!-- KijiMR profiling binaries -->
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <outputDirectory>bin/profiling</outputDirectory>
+      <directory>target/prereqs-dir/kiji-mapreduce-${kiji-mapreduce.version}/bin/profiling</directory>
+      <filtered>false</filtered>
+      <fileMode>755</fileMode>
     </fileSet>
     <fileSet>
       <!-- kiji-mapreduce api docs -->
@@ -357,4 +380,17 @@
       <fileMode>0644</fileMode>
     </file>
   </files>
+  <dependencySets>
+    <!-- BENTO-51: Include KijiSchema / KijiMR jars specially-compiled w/ profiling aspects. -->
+    <dependencySet>
+      <outputDirectory>lib/profiling</outputDirectory>
+      <fileMode>0644</fileMode>
+      <includes>
+        <include>org.kiji.schema:kiji-schema:jar:profiling:${kiji-schema.version}</include>
+        <include>org.kiji.mapreduce:kiji-mapreduce-hadoop2:jar:profiling:${kiji-mapreduce.version}</include>
+      </includes>
+      <useProjectArtifact>false</useProjectArtifact>
+      <useTransitiveDependencies>false</useTransitiveDependencies>
+    </dependencySet>
+  </dependencySets>
 </assembly>
