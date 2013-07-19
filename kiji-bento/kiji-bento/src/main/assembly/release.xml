@@ -384,7 +384,7 @@
     <!-- BENTO-51: Include KijiSchema / KijiMR jars specially-compiled w/ profiling aspects. -->
     <dependencySet>
       <outputDirectory>lib/profiling</outputDirectory>
-      <outputFileNameMapping>${artifact.artifactId}-${artifact.baseVersion}.${artifact.extension}</outputFileNameMapping>
+      <outputFileNameMapping>${artifact.artifactId}-${artifact.baseVersion}${dashClassifier?}.${artifact.extension}</outputFileNameMapping>
       <fileMode>0644</fileMode>
       <includes>
         <include>org.kiji.schema:kiji-schema:jar:profiling:${kiji-schema.version}</include>
