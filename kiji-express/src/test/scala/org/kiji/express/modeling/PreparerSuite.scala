@@ -17,21 +17,20 @@
  * limitations under the License.
  */
 
-package org.kiji.express
+package org.kiji.express.modeling
 
-import cascading.pipe.Pipe
+import org.scalatest.FunSuite
 
-/**
- * PipeConversions contains implicit conversions necessary for KijiExpress that are not included in
- * Scalding's `Job`.
- */
-private[express] trait PipeConversions {
-  /**
-   * Converts a Cascading Pipe to a KijiExpress KijiPipe. This method permits implicit conversions
-   * from Pipe to KijiPipe.
-   *
-   * @param pipe to convert to a KijiPipe.
-   * @return a KijiPipe wrapping the specified Pipe.
-   */
-  implicit def pipeToKijiPipe(pipe: Pipe): KijiPipe = new KijiPipe(pipe)
+import com.twitter.scalding.RichPipe
+
+class TestPreparer extends Preparer {
+  override def prepare(input: RichPipe): RichPipe = {
+    input.map('input -> 'output) { input: String => input.length }
+  }
+}
+
+class PreparerSuite extends FunSuite {
+  test("A preparer can be constructed via reflection") {
+    classOf[TestPreparer].newInstance
+  }
 }

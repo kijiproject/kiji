@@ -23,10 +23,10 @@ import cascading.tuple.Fields
 import com.twitter.scalding.FieldConversions
 import com.twitter.scalding.TupleConversions
 import com.twitter.scalding.TupleConverter
-import com.twitter.scalding.TupleSetter
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 
 /**
  * Encapsulates both the computation and the data (addressed by field names) required for the Score
@@ -39,7 +39,7 @@ import org.kiji.annotations.ApiStability
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-case class ScoreFn[I, O] (
+final case class ScoreFn[I, O] (
     fields: Fields,
     fn: I => O)
 
@@ -62,6 +62,7 @@ case class ScoreFn[I, O] (
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Extensible
 trait Scorer
     extends KeyValueStores
     with FieldConversions
@@ -69,8 +70,6 @@ trait Scorer
   /**
    * Used to define the computation required for the Score phase of the model workflow.
    *
-   * @tparam I is the type of input data to the Score phase of this model workflow.
-   * @tparam O is the type of output data coming from Score phase of this model workflow.
    * @return the computation to perform during the Score phase of the model workflow.
    */
   def scoreFn: ScoreFn[_, _]
@@ -86,7 +85,7 @@ trait Scorer
    * @tparam I is the type of input data to the Score phase of this model workflow.
    * @tparam O is the type of output data coming from Score phase of this model workflow.
    */
-  def score[I, O]
+  protected final def score[I, O]
       (fields: Fields)
       (fn: I => O)
       (implicit converter: TupleConverter[I]): ScoreFn[I, O] = {

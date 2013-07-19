@@ -27,6 +27,7 @@ import com.twitter.scalding.TupleSetter
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 
 /**
  * Encapsulates both the computation and the data (addressed by field names) required for the
@@ -39,7 +40,7 @@ import org.kiji.annotations.ApiStability
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-case class ExtractFn[I, O] (
+final case class ExtractFn[I, O] (
     fields: (Fields, Fields),
     fn: I => O)
 
@@ -62,6 +63,7 @@ case class ExtractFn[I, O] (
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Extensible
 trait Extractor
     extends KeyValueStores
     with FieldConversions
@@ -69,8 +71,6 @@ trait Extractor
   /**
    * Used to define the computation required for the Extract phase of the model workflow.
    *
-   * @tparam I is the type of input data to the Extract phase of this model workflow.
-   * @tparam O is the type of output data coming from Extract phase of this model workflow.
    * @return the computation to perform during the Extract phase of the model workflow.
    */
   def extractFn: ExtractFn[_, _]
@@ -88,7 +88,7 @@ trait Extractor
    * @tparam I is the type of input data to the Extract phase of this model workflow.
    * @tparam O is the type of output data coming from Extract phase of this model workflow.
    */
-  def extract[I, O]
+  protected final def extract[I, O]
       (fields: (Fields, Fields))
       (fn: I => O)
       (implicit converter: TupleConverter[I], setter: TupleSetter[O]): ExtractFn[I, O] = {

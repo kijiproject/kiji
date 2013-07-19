@@ -23,11 +23,11 @@ import cascading.flow.FlowDef
 import cascading.pipe.Pipe
 import com.twitter.scalding.FieldConversions
 import com.twitter.scalding.IterableSource
+import com.twitter.scalding.RichPipe
+import com.twitter.scalding.Source
 import com.twitter.scalding.TupleConversions
 import com.twitter.scalding.TupleConverter
 import com.twitter.scalding.TupleSetter
-import com.twitter.scalding.RichPipe
-import com.twitter.scalding.Source
 
 import org.kiji.express.PipeConversions
 
@@ -106,7 +106,7 @@ object Implicits
   implicit def iterableToSource[T](
       iterable: Iterable[T])
       (implicit setter: TupleSetter[T],
-      converter: TupleConverter[T]): Source = {
+          converter: TupleConverter[T]): Source = {
     IterableSource[T](iterable)(setter, converter)
   }
 
@@ -121,7 +121,7 @@ object Implicits
   implicit def iterableToPipe[T](
       iterable: Iterable[T])
       (implicit setter: TupleSetter[T],
-      converter: TupleConverter[T]): Pipe = {
+          converter: TupleConverter[T]): Pipe = {
     iterableToSource(iterable)(setter, converter).read
   }
 
@@ -137,7 +137,7 @@ object Implicits
   implicit def iterableToRichPipe[T](
       iterable: Iterable[T])
       (implicit setter: TupleSetter[T],
-      converter: TupleConverter[T]): RichPipe = {
+          converter: TupleConverter[T]): RichPipe = {
     RichPipe(iterableToPipe(iterable)(setter, converter))
   }
 }
