@@ -2,6 +2,9 @@
 
                              Kiji Express Music Tutorial Release Notes
 
+Version 0.6.0
+  * EXP-107. Updated example code to agree with KijiExpress package reorganization.
+
 Version 0.5.0
   * EXP-80. Provides an example of using the extract and score model
       lifecycle phases to make recommendations.

@@ -22,7 +22,8 @@ package org.kiji.express.music
 import com.twitter.scalding._
 
 import org.kiji.express._
-import org.kiji.express.DSL._
+import org.kiji.express.flow._
+import org.kiji.express.flow.DSL._
 
 /**
  * For each song S, create a list of songs sorted by the number of times a song was played after

@@ -22,7 +22,8 @@ package org.kiji.express.music
 import com.twitter.scalding._
 
 import org.kiji.express._
-import org.kiji.express.DSL._
+import org.kiji.express.flow._
+import org.kiji.express.flow.DSL._
 
 /**
  * Counts the number of times a song has been played by users.

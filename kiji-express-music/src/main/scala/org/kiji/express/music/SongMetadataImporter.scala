@@ -24,7 +24,8 @@ import scala.util.parsing.json.JSON
 import com.twitter.scalding._
 
 import org.kiji.express._
-import org.kiji.express.DSL._
+import org.kiji.express.flow._
+import org.kiji.express.flow.DSL._
 
 /**
  * Imports metadata about songs into a Kiji table.

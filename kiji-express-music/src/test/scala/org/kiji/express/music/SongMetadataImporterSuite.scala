@@ -24,7 +24,7 @@ import scala.collection.mutable.Buffer
 import com.twitter.scalding.{JobTest, TextLine}
 
 import org.kiji.express._
-import org.kiji.express.DSL._
+import org.kiji.express.flow.DSL._
 import org.kiji.schema.EntityId
 
 /**

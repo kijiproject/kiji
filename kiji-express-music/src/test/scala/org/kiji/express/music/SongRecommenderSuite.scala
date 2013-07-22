@@ -19,12 +19,12 @@
 
 package org.kiji.express.music
 
-import com.google.common.collect.Lists
 import com.twitter.scalding.JobTest
 import scala.collection.mutable.Buffer
 
 import org.kiji.express._
-import org.kiji.express.DSL._
+import org.kiji.express.flow._
+import org.kiji.express.flow.DSL._
 import org.kiji.express.EntityId
 import org.kiji.express.KijiSlice
 
