@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.express
+package org.kiji.express.flow.framework
 
 import org.apache.hadoop.hbase.mapreduce.TableSplit
 import org.scalatest.FunSuite

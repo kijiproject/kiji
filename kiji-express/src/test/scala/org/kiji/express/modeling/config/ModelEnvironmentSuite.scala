@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.express.modeling
+package org.kiji.express.modeling.config
 
 import scala.collection.JavaConverters.seqAsJavaListConverter
 import scala.io.Source

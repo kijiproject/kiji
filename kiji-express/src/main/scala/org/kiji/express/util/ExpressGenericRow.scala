@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.express
+package org.kiji.express.util
 
 import scala.collection.JavaConverters.mapAsScalaMapConverter
 

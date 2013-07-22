@@ -19,7 +19,7 @@
 {
   "name" : "abandoned-cart-model",
   "version" : "1.0.0",
-  "extractor_class" : "org.kiji.express.modeling.ModelDefinitionSuite$MyBadExtractor",
-  "scorer_class" : "org.kiji.express.modeling.ModelDefinitionSuite$MyScorer",
+  "extractor_class" : "org.kiji.express.modeling.config.ModelDefinitionSuite$MyBadExtractor",
+  "scorer_class" : "org.kiji.express.modeling.config.ModelDefinitionSuite$MyScorer",
   "protocol_version" : "model_definition-0.1.0"
 }

@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.express.modeling
+package org.kiji.express.modeling.impl
 
 import org.apache.avro.generic.GenericRecord
 

@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.express
+package org.kiji.express.flow.framework
 
 import org.kiji.express.DSL._
 import org.kiji.schema.KijiURI

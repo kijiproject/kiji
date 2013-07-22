@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.express
+package org.kiji.express.flow
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability

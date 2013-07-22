@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.express
+package org.kiji.express.flow.framework
 
 import org.apache.commons.codec.binary.Base64
 import org.apache.commons.lang.SerializationUtils

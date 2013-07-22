@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.express
+package org.kiji.express.flow.framework
 
 import java.io.InvalidClassException
 import java.util.concurrent.atomic.AtomicLong

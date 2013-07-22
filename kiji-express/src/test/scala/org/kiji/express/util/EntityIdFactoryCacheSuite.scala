@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.express
+package org.kiji.express.util
 
 import org.kiji.express.util.Resources._
 import org.kiji.schema.KijiTable

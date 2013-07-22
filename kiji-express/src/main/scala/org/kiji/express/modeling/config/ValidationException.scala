@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.express.modeling
+package org.kiji.express.modeling.config
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability

@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.express
+package org.kiji.express.flow.framework
 
 import scala.collection.JavaConverters._
 import java.io.InputStream
