@@ -3,6 +3,8 @@
                               KijiMR Release Notes
 
 Version 1.0.2
+  * KIJIMR-222. Support for profiling. Use enable-profiling.sh in the BentoBox
+      to switch to a profiling-enabled jar.
   * KIJIMR-219. Support for CDH 4.3.
 
 Version 1.0.1
