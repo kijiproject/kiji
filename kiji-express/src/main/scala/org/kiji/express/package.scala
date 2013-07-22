@@ -28,7 +28,7 @@ package org.kiji
  *
  * === Getting started. ===
  * To use KijiExpress, import the Scalding library, the `express` library, and members of the
- * object [[org.kiji.express.DSL]].
+ * object [[org.kiji.express.flow.DSL]].
  * {{{
  *   import com.twitter.scalding._
  *   import org.kiji.express._
@@ -40,7 +40,7 @@ package org.kiji
  * === Working with data from a Kiji table. ===
  * Scalding represents distributed data sets as a collection of tuples with named fields.
  * Likewise, KijiExpress represents a row in a Kiji table as a tuple.
- * [[org.kiji.express.DSL]] provides several factory methods, named `KijiInput`,
+ * [[org.kiji.express.flow.DSL]] provides several factory methods, named `KijiInput`,
  * that make it easy to specify what columns you want to read from a Kiji table and what names
  * they should have in row tuples. For example, to read the value of a column named `info:text`
  * from a table named `postings` into the tuple field named `text`, you could write the following.
@@ -49,7 +49,7 @@ package org.kiji
  *   KijiInput("kiji://.env/default/postings")("info:text" -> "text")
  * }}}
  *
- * The result of the above expression is a [[org.kiji.express.KijiSource]] (an implementation
+ * The result of the above expression is a [[org.kiji.express.flow.KijiSource]] (an implementation
  * of Scalding's `Source`) which represents the rows of the Kiji table as a collection of tuples.
  * At this point, functional operators can be used to manipulate and analyze the data. For example,
  * to split the contents of the column `info:text` into individual words,

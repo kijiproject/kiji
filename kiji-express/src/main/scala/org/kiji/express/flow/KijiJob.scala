@@ -26,6 +26,10 @@ import com.twitter.scalding.Args
 import com.twitter.scalding.Job
 import com.twitter.scalding.Mode
 
+import org.kiji.express.flow.framework.KijiTap
+import org.kiji.express.flow.framework.LocalKijiTap
+import org.kiji.express.util.PipeConversions
+
 /**
  * KijiJob is KijiExpress's extension of Scalding's `Job`, and users should extend it when writing
  * their own jobs in KijiExpress.  It provides extra conversions that Express needs for KijiPipes.

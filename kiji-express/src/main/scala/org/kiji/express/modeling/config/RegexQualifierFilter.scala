@@ -18,11 +18,10 @@
  */
 
 
-package org.kiji.express.datarequest
+package org.kiji.express.modeling.config
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.express.avro.RegexQualifierFilterSpec
 import org.kiji.schema.filter.RegexQualifierColumnFilter
 import org.kiji.schema.filter.KijiColumnFilter
 

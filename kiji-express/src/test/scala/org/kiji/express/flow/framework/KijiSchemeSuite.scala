@@ -19,10 +19,17 @@
 
 package org.kiji.express.flow.framework
 
-import org.apache.avro.generic.IndexedRecord
-
 import cascading.tuple.Tuple
 import cascading.tuple.TupleEntry
+
+import org.kiji.express.AvroEnum
+import org.kiji.express.AvroRecord
+import org.kiji.express.EntityId
+import org.kiji.express.KijiSlice
+import org.kiji.express.KijiSuite
+import org.kiji.express.flow.QualifiedColumn
+import org.kiji.express.flow.TimeRange
+import org.kiji.express.util.ExpressGenericTable
 
 class KijiSchemeSuite extends KijiSuite {
   test("putTuple and rowToTuple can write and read a generic AvroRecord.") {

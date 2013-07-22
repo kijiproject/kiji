@@ -27,8 +27,9 @@ import com.twitter.scalding.TupleConversions
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
-import org.kiji.express.PipeConversions
+import org.kiji.express.modeling.impl.KeyValueStores
 import org.kiji.express.repl.Implicits
+import org.kiji.express.util.PipeConversions
 
 /**
  * Represents the Prepare phase of a model lifecycle. Users should extend this trait when defining a
@@ -37,7 +38,8 @@ import org.kiji.express.repl.Implicits
  *
  * To define a custom prepare phase, the prepare method of the must be overridden. This method takes
  * as a parameter an already configured pipe and is expected to return a pipe as well. Both input
- * and output configurations are stored in a [[org.kiji.express.modeling.ModelEnvironment]]. For
+ * and output configurations are stored in a
+ * [[org.kiji.express.modeling.config.ModelEnvironment]]. For
  * example:
  * {{{
  *   class MyPreparer extends Preparer {

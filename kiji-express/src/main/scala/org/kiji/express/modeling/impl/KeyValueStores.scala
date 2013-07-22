@@ -21,6 +21,7 @@ package org.kiji.express.modeling.impl
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.express.modeling.KeyValueStore
 
 /**
  * Provides access to key-value stores used by the modeling SPI workflow phases (like Extract and

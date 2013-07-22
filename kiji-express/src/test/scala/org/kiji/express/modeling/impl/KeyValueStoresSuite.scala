@@ -21,6 +21,8 @@ package org.kiji.express.modeling.impl
 
 import org.scalatest.FunSuite
 
+import org.kiji.express.modeling.KeyValueStore
+
 class TestKeyValueStores extends KeyValueStores
 
 class KeyValueStoresSuite extends FunSuite {

@@ -47,8 +47,8 @@ import org.kiji.schema.impl.HBaseKijiTable
  * MapReduce views a data set as a collection of key-value pairs divided into input splits,
  * where each input split is processed by a MapReduce task. This input format divides a Kiji
  * table into one input split per HBase region in the table. It also provides access to a record
- * reader (specifically [[org.kiji.express.KijiRecordReader]]) which knows how to read rows
- * from a Kiji table as key-value pairs.
+ * reader (specifically [[org.kiji.express.flow.framework.KijiRecordReader]]) which knows how to
+ * read rows from a Kiji table as key-value pairs.
  *
  * A MapReduce job reading from a Kiji table as part of the KijiExpress framework should be
  * configured with this input format. The job using this input format should have a configuration

@@ -21,21 +21,28 @@ package org.kiji.express.modeling.framework
 
 import scala.collection.JavaConverters._
 
-import cascading.tuple.Fields
-import org.apache.avro.Schema
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.express.ExpressGenericRow
-import org.kiji.express.ExpressGenericTable
 import org.kiji.express.KijiSlice
-import org.kiji.express.avro.ColumnSpec
 import org.kiji.express.avro.KvStoreType
+import org.kiji.express.modeling.ExtractFn
+import org.kiji.express.modeling.Extractor
+import org.kiji.express.modeling.KeyValueStore
+import org.kiji.express.modeling.ScoreFn
+import org.kiji.express.modeling.Scorer
+import org.kiji.express.modeling.config.ModelDefinition
+import org.kiji.express.modeling.config.ModelEnvironment
+import org.kiji.express.modeling.config.KVStore
+import org.kiji.express.modeling.impl.AvroKVRecordKeyValueStore
+import org.kiji.express.modeling.impl.AvroRecordKeyValueStore
+import org.kiji.express.modeling.impl.KijiTableKeyValueStore
+import org.kiji.express.util.ExpressGenericRow
+import org.kiji.express.util.ExpressGenericTable
 import org.kiji.express.util.Tuples
 import org.kiji.mapreduce.KijiContext
-import org.kiji.mapreduce.kvstore.RequiredStores
 import org.kiji.mapreduce.kvstore.{ KeyValueStore => JKeyValueStore }
 import org.kiji.mapreduce.kvstore.lib.{ AvroKVRecordKeyValueStore => JAvroKVRecordKeyValueStore }
 import org.kiji.mapreduce.kvstore.lib.{ AvroRecordKeyValueStore => JAvroRecordKeyValueStore }
@@ -44,12 +51,11 @@ import org.kiji.mapreduce.produce.KijiProducer
 import org.kiji.mapreduce.produce.ProducerContext
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiDataRequest
-import org.kiji.schema.KijiDataRequestBuilder
 import org.kiji.schema.KijiRowData
 import org.kiji.schema.KijiURI
 
 /**
- * A producer for running [[org.kiji.express.modeling.ModelDefinition]]s.
+ * A producer for running [[org.kiji.express.modeling.config.ModelDefinition]]s.
  *
  * This producer executes the extract and score phases of a model in series. The model that this
  * producer will run is loaded from the json configuration strings stored in configuration keys:
@@ -111,8 +117,8 @@ final class ExtractScoreProducer
    * Sets the Configuration for this KijiProducer to use. This function is guaranteed to be called
    * immediately after instantiation.
    *
-   * This method loads a [[org.kiji.express.modeling.ModelDefinition]] and a
-   * [[org.kiji.express.modeling.ModelEnvironment]] for ExtractScoreProducer to use.
+   * This method loads a [[org.kiji.express.modeling.config.ModelDefinition]] and a
+   * [[org.kiji.express.modeling.config.ModelEnvironment]] for ExtractScoreProducer to use.
    *
    * @param conf object that this producer should use.
    */
@@ -314,13 +320,13 @@ final class ExtractScoreProducer
 object ExtractScoreProducer {
   /**
    * Configuration key addressing the JSON description of a
-   * [[org.kiji.express.modeling.ModelDefinition]].
+   * [[org.kiji.express.modeling.config.ModelDefinition]].
    */
   val modelDefinitionConfKey: String = "org.kiji.express.model.definition"
 
   /**
    * Configuration key addressing the JSON configuration of a
-   * [[org.kiji.express.modeling.ModelEnvironment]].
+   * [[org.kiji.express.modeling.config.ModelEnvironment]].
    */
   val modelEnvironmentConfKey: String = "org.kiji.express.model.environment"
 

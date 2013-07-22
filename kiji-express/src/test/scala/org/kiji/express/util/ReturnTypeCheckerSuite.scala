@@ -21,12 +21,12 @@ package org.kiji.express.util
 
 import java.io.InvalidClassException
 
-import scala.collection.JavaConversions._
-
-import org.apache.avro.Schema
 import org.apache.avro.generic.GenericData
 import org.scalatest.FunSuite
 
+import org.kiji.express.AvroFixed
+import org.kiji.express.AvroRecord
+import org.kiji.express.flow.ColumnRequestOptions
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.avro.HashSpec
 import org.kiji.schema.avro.HashType

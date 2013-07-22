@@ -21,7 +21,7 @@ and runs the job locally on your machine.  In HDFS mode, the job runs on a clust
 Write a script:
 
     // This is a KijiExpress wordcount script!
-    import org.kiji.express.DSL._
+    import org.kiji.express.flow.DSL._
 
     // Read from the "columnfamily:inputqualifier" column of your Kiji table
     KijiInput("kiji://your/kiji/uri")("columnfamily:inputqualifier" -> 'word)
@@ -96,11 +96,11 @@ latest value from the column `info:track_plays` of a Kiji table and writes the r
 file.
 
     express> KijiInput("kiji://.env/default/users")("info:track_plays" -> 'playSlice)
-    res0: org.kiji.express.KijiSource = org.kiji.express.KijiSource@5f8f9190
+    res0: org.kiji.express.flow.KijiSource = org.kiji.express.flow.KijiSource@5f8f9190
     express> res0.mapTo('playSlice -> 'play) { slice: KijiSlice[String] => slice.getFirstValue() }
-    res1: cascading.pipe.Pipe = Each(org.kiji.express.KijiSource@5f8f9190)[MapFunction[decl:'play']]
+    res1: cascading.pipe.Pipe = Each(org.kiji.express.flow.KijiSource@5f8f9190)[MapFunction[decl:'play']]
     express> res1.write(Tsv("songPlays"))
-    res2: cascading.pipe.Pipe = Each(org.kiji.express.KijiSource@4791e9e6)[MapFunction[decl:'play']]
+    res2: cascading.pipe.Pipe = Each(org.kiji.express.flow.KijiSource@4791e9e6)[MapFunction[decl:'play']]
     express> res2.run
 
 ## More Examples ##

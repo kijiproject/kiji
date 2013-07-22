@@ -19,7 +19,6 @@
 
 package org.kiji.express.flow.framework
 
-import java.io.InvalidClassException
 import java.util.concurrent.atomic.AtomicLong
 
 import scala.collection.JavaConverters.asScalaIteratorConverter
@@ -33,7 +32,6 @@ import cascading.tuple.Fields
 import cascading.tuple.Tuple
 import cascading.tuple.TupleEntry
 import com.google.common.base.Objects
-import org.apache.avro.generic.IndexedRecord
 import org.apache.commons.codec.binary.Base64
 import org.apache.commons.lang.SerializationUtils
 import org.apache.hadoop.mapred.JobConf
@@ -44,6 +42,15 @@ import org.slf4j.LoggerFactory
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.express.EntityId
+import org.kiji.express.KijiSlice
+import org.kiji.express.flow.ColumnFamily
+import org.kiji.express.flow.ColumnRequest
+import org.kiji.express.flow.ColumnRequestOptions
+import org.kiji.express.flow.QualifiedColumn
+import org.kiji.express.flow.TimeRange
+import org.kiji.express.util.AvroUtil
+import org.kiji.express.util.ExpressGenericTable
 import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.Kiji
@@ -52,10 +59,8 @@ import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiDataRequestBuilder
 import org.kiji.schema.KijiRowData
 import org.kiji.schema.KijiTable
-import org.kiji.schema.KijiSchemaTable
 import org.kiji.schema.KijiTableWriter
 import org.kiji.schema.KijiURI
-import org.kiji.schema.layout.CellSpec
 import org.kiji.schema.layout.KijiTableLayout
 
 /**
@@ -68,9 +73,9 @@ import org.kiji.schema.layout.KijiTableLayout
  * data from a Cascading flow to a Kiji table
  * (see `sink(cascading.flow.FlowProcess, cascading.scheme.SinkCall)`).
  *
- * KijiScheme must be used with [[org.kiji.express.KijiTap]], since it expects the Tap to have
- * access to a Kiji table.  [[org.kiji.express.KijiSource]] handles the creation of both
- * KijiScheme and KijiTap in KijiExpress.
+ * KijiScheme must be used with [[org.kiji.express.flow.framework.KijiTap]],
+ * since it expects the Tap to have access to a Kiji table.  [[org.kiji.express.flow.KijiSource]]
+ * handles the creation of both KijiScheme and KijiTap in KijiExpress.
  *
  * @param timeRange to include from the Kiji table.
  * @param timestampField is the optional name of a field containing the timestamp that all values
@@ -511,7 +516,7 @@ private[express] object KijiScheme {
   /**
    * Transforms a list of field names into a collection of fields.
    *
-   * @param field names is a list of field names.
+   * @param fieldNames is a list of field names.
    * @return a collection of fields created from the names.
    */
   private def getFieldArray(fieldNames: Iterable[String]): Fields = {

@@ -17,11 +17,10 @@
  * limitations under the License.
  */
 
-package org.kiji.express.datarequest
+package org.kiji.express.modeling.config
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.express.avro.ColumnRangeFilterSpec
 import org.kiji.schema.filter.KijiColumnFilter
 import org.kiji.schema.filter.KijiColumnRangeFilter
 

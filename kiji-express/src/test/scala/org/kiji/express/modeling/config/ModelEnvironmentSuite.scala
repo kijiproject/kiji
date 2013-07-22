@@ -25,15 +25,7 @@ import scala.io.Source
 import org.scalatest.FunSuite
 
 import org.kiji.express.avro._
-import org.kiji.express.datarequest.AndFilter
-import org.kiji.express.datarequest.ColumnRangeFilter
-import org.kiji.express.datarequest.ExpressColumnFilter
-import org.kiji.express.datarequest.ExpressColumnRequest
-import org.kiji.express.datarequest.ExpressDataRequest
-import org.kiji.express.datarequest.OrFilter
-import org.kiji.express.datarequest.RegexQualifierFilter
 import org.kiji.express.util.Resources.doAndClose
-import org.kiji.express.util.Resources.resourceAsString
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiDataRequestBuilder

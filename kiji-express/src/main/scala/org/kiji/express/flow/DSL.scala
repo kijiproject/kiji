@@ -23,7 +23,6 @@ import org.apache.hadoop.hbase.HConstants
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiInvalidNameException
 import org.kiji.schema.filter.KijiColumnFilter
 import org.kiji.schema.filter.RegexQualifierColumnFilter
@@ -32,7 +31,7 @@ import org.kiji.schema.filter.RegexQualifierColumnFilter
  * Module providing the main language constructs for reading from and writing to Kiji tables.
  *
  * KijiExpress users should import the members of this module to gain access to factory
- * methods that produce [[org.kiji.express.KijiSource]]s that can perform data processing
+ * methods that produce [[org.kiji.express.flow.KijiSource]]s that can perform data processing
  * operations that read from or write to Kiji tables.
  * {{{
  *   import org.kiji.express.DSL._
@@ -80,10 +79,11 @@ import org.kiji.schema.filter.RegexQualifierColumnFilter
  * }}}
  *
  * === Getting input from a Kiji table. ===
- * The factory methods named `KijiInput` can be used to obtain a [[org.kiji.express.KijiSource]]
- * to process rows from the table (represented as tuples) using various operations. When using
- * `KijiInput`, users specify a table (using a Kiji URI) and use column requests and other options
- * to control how data is read from Kiji into tuple fields. Here are some examples.
+ * The factory methods named `KijiInput` can be used to obtain a
+ * [[org.kiji.express.flow.KijiSource]] to process rows from the table (represented as tuples)
+ * using various operations. When using `KijiInput`, users specify a table (using a Kiji URI) and
+ * use column requests and other options to control how data is read from Kiji into tuple fields.
+ * Here are some examples.
  * {{{
  *   // Read the most recent cells from columns "info:id" and "info:name" into tuple fields "id"
  *   // and "name".
@@ -97,7 +97,7 @@ import org.kiji.schema.filter.RegexQualifierColumnFilter
  *       KijiInput("kiji://.env/default/newsgroup_users")(Map(Column("info:id", all) -> 'id))
  * }}}
  *
- * See [[org.kiji.express.TimeRange]] for more information on how to create and use time
+ * See [[org.kiji.express.flow.TimeRange]] for more information on how to create and use time
  * ranges for requesting data.
  *
  * === Writing to a Kiji table. ===

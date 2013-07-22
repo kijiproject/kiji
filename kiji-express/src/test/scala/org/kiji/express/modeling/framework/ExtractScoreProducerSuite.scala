@@ -19,17 +19,23 @@
 
 package org.kiji.express.modeling.framework
 
-import scala.collection.JavaConverters._
-
 import org.apache.hadoop.fs.Path
 
 import org.kiji.express.KijiSlice
 import org.kiji.express.KijiSuite
-import org.kiji.express.avro.AvroKVStore
-import org.kiji.express.avro.KvStoreType
-import org.kiji.express.avro.Property
-import org.kiji.express.datarequest.ExpressColumnRequest
-import org.kiji.express.datarequest.ExpressDataRequest
+import org.kiji.express.modeling.Extractor
+import org.kiji.express.modeling.ExtractScoreJobBuilder
+import org.kiji.express.modeling.KeyValueStore
+import org.kiji.express.modeling.Scorer
+import org.kiji.express.modeling.config.ExpressColumnRequest
+import org.kiji.express.modeling.config.ExpressDataRequest
+import org.kiji.express.modeling.config.FieldBinding
+import org.kiji.express.modeling.config.ExtractEnvironment
+import org.kiji.express.modeling.config.KVStore
+import org.kiji.express.modeling.config.ModelDefinition
+import org.kiji.express.modeling.config.ModelEnvironment
+import org.kiji.express.modeling.config.ScoreEnvironment
+import org.kiji.express.modeling.impl.KeyValueStoreImplSuite
 import org.kiji.express.modeling.lib.FirstValueExtractor
 import org.kiji.express.util.Resources.doAndClose
 import org.kiji.express.util.Resources.doAndRelease

@@ -19,7 +19,6 @@
 
 package org.kiji.express.modeling.config
 
-import scala.collection.mutable.Map
 import scala.io.Source
 
 import cascading.tuple.Fields
@@ -27,8 +26,9 @@ import com.google.common.base.Objects
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.annotations.Inheritance
 import org.kiji.express.avro.AvroModelDefinition
+import org.kiji.express.modeling.Extractor
+import org.kiji.express.modeling.Scorer
 import org.kiji.express.util.Resources.doAndClose
 import org.kiji.express.util.Tuples
 import org.kiji.schema.util.FromJson

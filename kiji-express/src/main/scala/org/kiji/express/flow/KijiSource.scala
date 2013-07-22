@@ -47,18 +47,25 @@ import org.apache.hadoop.mapred.RecordReader
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.express.Cell
+import org.kiji.express.EntityId
+import org.kiji.express.KijiSlice
+import org.kiji.express.flow.framework.KijiScheme
+import org.kiji.express.flow.framework.KijiTap
+import org.kiji.express.flow.framework.LocalKijiScheme
+import org.kiji.express.flow.framework.LocalKijiTap
+import org.kiji.express.flow.framework.OutputContext
+import org.kiji.express.util.AvroUtil
+import org.kiji.express.util.ExpressGenericTable
 import org.kiji.express.util.Resources._
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.Kiji
-import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiRowData
 import org.kiji.schema.KijiRowScanner
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiTableReader
 import org.kiji.schema.KijiURI
-import org.kiji.schema.layout.CellSpec
-import org.kiji.schema.layout.KijiTableLayout
 
 /**
  * A read or write view of a Kiji table.
@@ -79,7 +86,7 @@ import org.kiji.schema.layout.KijiTableLayout
  * configurable field, and (optionally) a timestamp in a configurable field.
  *
  * End-users cannot directly obtain instances of `KijiSource`. Instead,
- * they should use the factory methods in [[org.kiji.express.DSL]].
+ * they should use the factory methods in [[org.kiji.express.flow.DSL]].
  *
  * @param tableAddress is a Kiji URI addressing the Kiji table to read or write to.
  * @param timeRange that cells read must belong to. Ignored when the source is used to write.
@@ -205,7 +212,7 @@ final class KijiSource private[express] (
 }
 
 /**
- * Contains a private, inner class used by [[org.kiji.express.KijiSource]] when working with
+ * Contains a private, inner class used by [[org.kiji.express.flow.KijiSource]] when working with
  * tests.
  */
 object KijiSource {

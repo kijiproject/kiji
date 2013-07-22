@@ -22,6 +22,9 @@ package org.kiji.express.modeling
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
 
+import org.kiji.express.modeling.config.ModelDefinition
+import org.kiji.express.modeling.config.ModelEnvironment
+import org.kiji.express.modeling.framework.ExtractScoreProducer
 import org.kiji.mapreduce.KijiMapReduceJob
 import org.kiji.mapreduce.output.MapReduceJobOutputs
 import org.kiji.mapreduce.produce.KijiProduceJobBuilder

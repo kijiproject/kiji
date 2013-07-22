@@ -37,6 +37,9 @@ import org.slf4j.LoggerFactory
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.express.flow.ColumnRequest
+import org.kiji.express.flow.TimeRange
+import org.kiji.express.util.ExpressGenericTable
 import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.Kiji
@@ -50,7 +53,7 @@ import org.kiji.schema.layout.KijiTableLayout
 
 /**
  * Encapsulates the state required to read from a Kiji table locally, for use in
- * [[org.kiji.express.LocalKijiScheme]].
+ * [[org.kiji.express.flow.framework.LocalKijiScheme]].
  *
  * @param reader that has an open connection to the desired Kiji table.
  * @param scanner that has an open connection to the desired Kiji table.
@@ -74,15 +77,15 @@ private[express] case class OutputContext(
     layout: KijiTableLayout)
 
 /**
- * A local version of [[org.kiji.express.KijiScheme]] that is meant to be used with Cascading's
- * local job runner. [[org.kiji.express.KijiScheme]] and LocalKijiScheme both define how to
- * read and write the data stored in a Kiji table.
+ * A local version of [[org.kiji.express.flow.framework.KijiScheme]] that is meant to be used with
+ * Cascading's local job runner. [[org.kiji.express.flow.framework.KijiScheme]] and
+ * LocalKijiScheme both define how to read and write the data stored in a Kiji table.
  *
- * This scheme is meant to be used with [[org.kiji.express.LocalKijiTap]] and
+ * This scheme is meant to be used with [[org.kiji.express.flow.framework.LocalKijiTap]] and
  * Cascading's local job runner. Jobs run with Cascading's local job runner execute on
  * your local machine instead of a cluster. This can be helpful for testing or quick jobs.
  *
- * In KijiExpress, LocalKijiScheme is used in tests.  See [[org.kiji.express.KijiSource]]'s
+ * In KijiExpress, LocalKijiScheme is used in tests.  See [[org.kiji.express.flow.KijiSource]]'s
  * `TestLocalKijiScheme` class.
  *
  * This scheme is responsible for converting rows from a Kiji table that are input to a
@@ -92,13 +95,13 @@ private[express] case class OutputContext(
  * (see `sink(cascading.flow.FlowProcess, cascading.scheme.SinkCall)`).
  *
  * Note: LocalKijiScheme logs every row that was skipped because of missing data in a column. It
- * lacks the parameter `loggingInterval` in [[org.kiji.express.KijiScheme]] that configures
- * how many skipped rows will be logged.
+ * lacks the parameter `loggingInterval` in [[org.kiji.express.flow.framework.KijiScheme]] that
+ * configures how many skipped rows will be logged.
  *
  * Note: Warnings about a missing serialVersionUID are ignored here. When KijiScheme is
  * serialized, the result is not persisted anywhere making serialVersionUID unnecessary.
  *
- * @see [[org.kiji.express.KijiScheme]]
+ * @see [[org.kiji.express.flow.framework.KijiScheme]]
  *
  * @param timeRange to include from the Kiji table.
  * @param timestampField is the optional name of a field containing the timestamp that all values

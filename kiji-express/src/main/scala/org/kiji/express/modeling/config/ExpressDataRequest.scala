@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.express.datarequest
+package org.kiji.express.modeling.config
 
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.collection.JavaConverters.seqAsJavaListConverter
@@ -25,7 +25,6 @@ import scala.collection.JavaConverters.seqAsJavaListConverter
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.express.avro._
-import org.kiji.express.modeling.ModelEnvironment
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiDataRequest
 

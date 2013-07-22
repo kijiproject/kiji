@@ -19,13 +19,14 @@
 
 package org.kiji.express.util
 
+import org.kiji.express.KijiSuite
 import org.kiji.express.util.Resources._
 import org.kiji.schema.KijiTable
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts
 
 /**
- * Unit tests for [[org.kiji.express.EntityIdFactoryCache]]
+ * Unit tests for [[org.kiji.express.util.EntityIdFactoryCache]]
  */
 class EntityIdFactoryCacheSuite extends KijiSuite {
   test("Test for caching for Row Key Format given Table Uri") {

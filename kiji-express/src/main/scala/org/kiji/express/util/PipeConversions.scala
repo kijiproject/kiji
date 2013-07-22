@@ -21,6 +21,8 @@ package org.kiji.express.util
 
 import cascading.pipe.Pipe
 
+import org.kiji.express.flow.KijiPipe
+
 /**
  * PipeConversions contains implicit conversions necessary for KijiExpress that are not included in
  * Scalding's `Job`.

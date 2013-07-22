@@ -23,14 +23,17 @@ import scala.collection.mutable.Buffer
 
 import java.util.UUID
 
-import org.apache.avro.Schema
-import org.apache.avro.generic.GenericData
-import org.apache.avro.generic.GenericRecord
 import com.twitter.scalding._
 
-import org.kiji.express.DSL._
+import org.kiji.express.AvroRecord
+import org.kiji.express.AvroEnum
+import org.kiji.express.AvroValue
+import org.kiji.express.Cell
+import org.kiji.express.EntityId
+import org.kiji.express.KijiSlice
+import org.kiji.express.KijiSuite
+import org.kiji.express.flow.DSL._
 import org.kiji.express.util.Resources.doAndRelease
-import org.kiji.schema.{EntityId => JEntityId}
 import org.kiji.schema.KijiTable
 import org.kiji.schema.avro.HashSpec
 import org.kiji.schema.avro.HashType
@@ -111,7 +114,7 @@ class KijiSourceSuite
       ( "3", "7 eid2 word4" ))
 
   /**
-   * Validates output from [[org.kiji.express.KijiSourceSuite.ImportJob]].
+   * Validates output from [[org.kiji.express.flow.KijiSourceSuite.ImportJob]].
    *
    * @param outputBuffer containing data that the Kiji table has in it after the job has been run.
    */
@@ -169,7 +172,7 @@ class KijiSourceSuite
       ( "1", "world hello   world      hello" ))
 
   /**
-   * Validates output from [[org.kiji.express.KijiSourceSuite.ImportJob]].
+   * Validates output from [[org.kiji.express.flow.KijiSourceSuite.ImportJob]].
    *
    * @param outputBuffer containing data that the Kiji table has in it after the job has been run.
    */
@@ -239,7 +242,7 @@ class KijiSourceSuite
   val importWithTimeInput = (0L, "Line-0") :: (1L, "Line-1") :: (2L, "Line-2") :: Nil
 
   /**
-   * Validates output from [[org.kiji.express.KijiSourceSuite.ImportJobWithTime]].
+   * Validates output from [[org.kiji.express.flow.KijiSourceSuite.ImportJobWithTime]].
    *
    * @param outputBuffer containing data that the Kiji table has in it after the job has been run.
    */

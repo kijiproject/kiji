@@ -50,16 +50,16 @@ import org.kiji.schema.KijiURI
  *
  * Key-value pairs are obtained from Kiji rows as follows. For each row read,
  * the row's entity id is used as key (by populating an instance of
- * [[org.kiji.express.KijiKey]]) and the row data itself is used as value (by populating an
- * instance of [[org.kiji.express.KijiValue]]). The classes [[org.kiji.express.KijiKey]]
- * and [[org.kiji.express.KijiValue]] are simply reusable containers wrapping entity ids and
- * row data.
+ * [[org.kiji.express.flow.framework.KijiKey]]) and the row data itself is used as value (by
+ * populating an instance of [[org.kiji.express.flow.framework.KijiValue]]). The classes
+ * [[org.kiji.express.flow.framework.KijiKey]] and [[org.kiji.express.flow.framework.KijiValue]]
+ * are simply reusable containers wrapping entity ids and row data.
  *
  * A MapReduce job reading from a Kiji table as part of the KijiExpress framework should be
- * configured to use [[org.kiji.express.KijiInputFormat]], which allow the job to use this
- * record reader. The job using this record reader should have a configuration
- * containing a serialized `KijiDataRequest` at the key `kiji.input.data.request` and a Kiji URI
- * addressing the target table at the key `kiji.input.table.uri`.
+ * configured to use [[org.kiji.express.flow.framework.KijiInputFormat]],
+ * which allow the job to use this record reader. The job using this record reader should have a
+ * configuration containing a serialized `KijiDataRequest` at the key `kiji.input.data.request`
+ * and a Kiji URI addressing the target table at the key `kiji.input.table.uri`.
  *
  * @param split identifying the HBase region of a Kiji table whose rows will be scanned.
  * @param configuration containing the Kiji URI of the target Kiji table, and a serialized data

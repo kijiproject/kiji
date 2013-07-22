@@ -34,7 +34,10 @@ import com.twitter.scalding.Tsv
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
 
-import org.kiji.express.DSL._
+import org.kiji.express.EntityId
+import org.kiji.express.KijiSlice
+import org.kiji.express.KijiSuite
+import org.kiji.express.flow.DSL._
 import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiURI

@@ -19,7 +19,10 @@
 
 package org.kiji.express.flow.framework
 
-import org.kiji.express.DSL._
+import org.kiji.express.KijiSuite
+import org.kiji.express.flow.DSL._
+import org.kiji.express.flow.InvalidKijiTapException
+import org.kiji.express.flow.TimeRange
 import org.kiji.schema.KijiURI
 
 class KijiTapSuite extends KijiSuite {

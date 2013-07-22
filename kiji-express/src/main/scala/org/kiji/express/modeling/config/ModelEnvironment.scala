@@ -21,7 +21,6 @@ package org.kiji.express.modeling.config
 
 import scala.collection.JavaConverters.seqAsJavaListConverter
 import scala.collection.JavaConverters.asScalaBufferConverter
-import scala.collection.JavaConverters.collectionAsScalaIterableConverter
 import scala.io.Source
 import scala.Some
 
@@ -30,12 +29,6 @@ import com.google.common.base.Objects
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.express.avro._
-import org.kiji.express.datarequest.AndFilter
-import org.kiji.express.datarequest.ColumnRangeFilter
-import org.kiji.express.datarequest.ExpressColumnFilter
-import org.kiji.express.datarequest.ExpressDataRequest
-import org.kiji.express.datarequest.OrFilter
-import org.kiji.express.datarequest.RegexQualifierFilter
 import org.kiji.express.util.Resources.doAndClose
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiDataRequest
@@ -136,7 +129,7 @@ case class KVStore(storeType: String, name: String, properties: Map[String, Stri
   /**
    * Creates an Avro KVStore from this specification.
    *
-   * @return an [[org.kiji.express.avro.KVStore]] with its parameters from this specification.
+   * @return an [[org.kiji.express.avro.AvroKVStore]] with its parameters from this specification.
    */
   private[express] def toAvroKVStore(): AvroKVStore = {
     val kvStoreType: KvStoreType = Enum.valueOf(classOf[KvStoreType], storeType)

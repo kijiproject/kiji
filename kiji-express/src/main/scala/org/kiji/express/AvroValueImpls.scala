@@ -19,12 +19,11 @@
 
 package org.kiji.express
 
-import scala.collection.JavaConverters.asScalaBufferConverter
-
 import org.apache.avro.generic.IndexedRecord
 
-import org.kiji.annotations.ApiAudience;
-import org.kiji.annotations.ApiStability;
+import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
+import org.kiji.express.util.AvroUtil
 
 /**
  * Represents an Int from an AvroRecord.
@@ -230,7 +229,7 @@ object AvroRecord {
 /**
  * Represents a Fixed (fixed-length byte array) from Avro.
  *
- * @param value wrapped by this AvroValue.
+ * @param fixedByteArray wrapped by this AvroValue.
  */
 final case class AvroFixed(fixedByteArray: Array[Byte])
     extends AvroValue(classOf[AvroFixed]) {

@@ -38,6 +38,7 @@ import org.apache.hadoop.util.ToolRunner
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import org.kiji.express.flow.KijiJob
 import org.kiji.express.util.Resources.doAndClose
 
 /**
@@ -60,7 +61,7 @@ import org.kiji.express.util.Resources.doAndClose
  *
  * To run a script using ScriptRunner call the express jar command with the following syntax.
  * {{{
- *   express jar </path/to/express/jar> org.kiji.express.ScriptRunner \
+ *   express jar </path/to/express/jar> org.kiji.express.tool.ScriptRunner \
  *       </path/to/script> [other options here]
  * }}}
  */
@@ -79,7 +80,9 @@ class ScriptRunner extends Tool {
   private[express] val imports: Seq[String] = Seq(
       "import com.twitter.scalding._",
       "import org.kiji.express._",
-      "import org.kiji.express.DSL._")
+      "import org.kiji.express.flow._",
+      "import org.kiji.express.flow.DSL._",
+      "import org.kiji.express.flow.TimeRange._")
 
   /** Code to insert before each script. */
   private[express] val before =

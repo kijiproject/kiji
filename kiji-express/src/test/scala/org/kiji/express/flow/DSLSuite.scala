@@ -21,7 +21,10 @@ package org.kiji.express.flow
 
 import org.scalatest.FunSuite
 
-import org.kiji.express.DSL._
+import org.kiji.express.Cell
+import org.kiji.express.KijiSlice
+import org.kiji.express.flow.DSL._
+import org.kiji.express.flow.framework.KijiScheme
 import org.kiji.schema.KijiInvalidNameException
 import org.kiji.schema.filter.RegexQualifierColumnFilter
 

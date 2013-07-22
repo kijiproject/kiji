@@ -121,7 +121,7 @@ object Resources {
    * Performs an operation with a closeable resource closing it upon completion of the operation.
    *
    * @tparam T is the return type of the operation.
-   * @tparam R is the type of resource, such as a Kiji table or instance.
+   * @tparam C is the type of resource, such as a Kiji table or instance.
    * @param resource is the closeable resource used by the operation.
    * @param fn is the operation to perform using the resource.
    * @return the result of the operation.

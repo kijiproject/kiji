@@ -23,7 +23,7 @@ import scala.collection.JavaConverters.seqAsJavaListConverter
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.express.AvroUtil
+import org.kiji.express.util.AvroUtil
 import org.kiji.schema.KijiRowKeyComponents
 
 /**

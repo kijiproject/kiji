@@ -38,6 +38,7 @@ import org.apache.hadoop.mapred.lib.NullOutputFormat
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.express.flow.InvalidKijiTapException
 import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.Kiji
@@ -52,9 +53,9 @@ import org.kiji.schema.layout.KijiTableLayout
  * KijiTap is responsible for configuring a MapReduce job with the correct input format for reading
  * from a Kiji table.
  *
- * KijiTap must be used with [[org.kiji.express.KijiScheme]] to perform decoding of cells in a
- * Kiji table. [[org.kiji.express.KijiSource]] handles the creation of both KijiScheme and
- * KijiTap in KijiExpress.
+ * KijiTap must be used with [[org.kiji.express.flow.framework.KijiScheme]] to perform decoding of
+ * cells in a Kiji table. [[org.kiji.express.flow.KijiSource]] handles the creation of both
+ * KijiScheme and KijiTap in KijiExpress.
  *
  * @param uri of the Kiji table to read or write from.
  * @param scheme that will convert data read from Kiji into Cascading's tuple model.
@@ -156,7 +157,8 @@ private[express] class KijiTap(
    * @param flow being run.
    * @param outputCollector that will write to the desired Kiji table. Note: This is ignored
    *     currently since writing to a Kiji table is currently implemented without using an output
-   *     format by writing to the table directly from [[org.kiji.express.KijiScheme]].
+   *     format by writing to the table directly from
+   *     [[org.kiji.express.flow.framework.KijiScheme]].
    * @return a collector that writes tuples to the desired Kiji table.
    */
   override def openForWrite(

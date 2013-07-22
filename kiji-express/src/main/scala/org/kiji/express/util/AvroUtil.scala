@@ -35,6 +35,19 @@ import org.apache.avro.specific.SpecificFixed
 import org.apache.avro.specific.SpecificRecord
 
 import org.kiji.annotations.ApiAudience
+import org.kiji.express.AvroBoolean
+import org.kiji.express.AvroByteArray
+import org.kiji.express.AvroDouble
+import org.kiji.express.AvroEnum
+import org.kiji.express.AvroFixed
+import org.kiji.express.AvroFloat
+import org.kiji.express.AvroInt
+import org.kiji.express.AvroList
+import org.kiji.express.AvroLong
+import org.kiji.express.AvroMap
+import org.kiji.express.AvroRecord
+import org.kiji.express.AvroString
+import org.kiji.express.AvroValue
 
 /**
  * A module with functions that can convert Java values (including Java API Avro values)

@@ -27,6 +27,7 @@ import com.twitter.scalding.TupleConverter
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
+import org.kiji.express.modeling.impl.KeyValueStores
 
 /**
  * Encapsulates both the computation and the data (addressed by field names) required for the Score

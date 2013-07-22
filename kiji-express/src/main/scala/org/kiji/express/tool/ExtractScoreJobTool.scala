@@ -19,8 +19,6 @@
 
 package org.kiji.express.tool
 
-import scala.collection.JavaConverters.asScalaBufferConverter
-
 import org.apache.hadoop.conf.Configured
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.util.Tool

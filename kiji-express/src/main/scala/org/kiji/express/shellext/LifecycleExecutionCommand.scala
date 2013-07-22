@@ -26,8 +26,8 @@ import org.apache.hadoop.hbase.HBaseConfiguration
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.express.modeling.ExtractScoreJobBuilder
-import org.kiji.express.modeling.ModelDefinition
-import org.kiji.express.modeling.ModelEnvironment
+import org.kiji.express.modeling.config.ModelDefinition
+import org.kiji.express.modeling.config.ModelEnvironment
 import org.kiji.schema.shell.DDLException
 import org.kiji.schema.shell.Environment
 import org.kiji.schema.shell.ddl.DDLCommand

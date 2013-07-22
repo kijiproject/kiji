@@ -26,6 +26,7 @@ import org.apache.avro.generic.GenericData
 import org.apache.avro.generic.GenericRecord
 import org.scalatest.FunSuite
 
+import org.kiji.express.util.AvroUtil
 import org.kiji.schema.avro.HashSpec
 import org.kiji.schema.avro.HashType
 

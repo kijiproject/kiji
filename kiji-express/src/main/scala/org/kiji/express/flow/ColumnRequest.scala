@@ -25,6 +25,8 @@ import org.apache.hadoop.hbase.HConstants
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.express.Cell
+import org.kiji.express.KijiSlice
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.filter.KijiColumnFilter
 
@@ -32,9 +34,9 @@ import org.kiji.schema.filter.KijiColumnFilter
  * A trait that marks case classes that hold column-level options for cell requests to Kiji.
  *
  * End-users receive instances of this trait, used to request cells from qualified columns or
- * map-type column families, using the factory methods [[org.kiji.express.DSL.Column()]] and
- * [[org.kiji.express.DSL.MapFamily()]]. They can then use these requests to obtain a
- * [[org.kiji.express.KijiSource]] that reads cells into tuples while obeying the specified
+ * map-type column families, using the factory methods [[org.kiji.express.flow.DSL.Column()]] and
+ * [[org.kiji.express.flow.DSL.MapFamily()]]. They can then use these requests to obtain a
+ * [[org.kiji.express.flow.KijiSource]] that reads cells into tuples while obeying the specified
  * request options.
  *
  * If desired, end-users can add information about how to handle missing values in this column,
@@ -139,7 +141,7 @@ final case class QualifiedColumn private[express] (
    * missing a value for this column. The data will be used to create a slice for the column with
    * each datum at the specified version.
    *
-   * @param data is tuples of (version, datum) to use if any row is missing this column.
+   * @param versionedData is tuples of (version, datum) to use if any row is missing this column.
    * @return this ColumnRequest with replacement configured.
    */
   def replaceMissingWithVersioned[T](versionedData: Seq[(Long, T)]): ColumnRequest = {
@@ -237,7 +239,8 @@ final case class ColumnFamily private[express] (
    * reading rows missing a value for this column. The data will be used to create a slice for the
    * column with each datum at the specified qualifier and version.
    *
-   * @param data is tuples of (qualifier, version, datum) to use if any row is missing this column.
+   * @param versionedData is tuples of (qualifier, version, datum) to use if any row is missing
+   *     this column.
    * @return this ColumnRequest with replacement configured.
    */
   def replaceMissingWithVersioned[T](

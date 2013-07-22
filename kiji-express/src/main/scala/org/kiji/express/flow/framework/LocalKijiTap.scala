@@ -41,9 +41,7 @@ import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiColumnName
-import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiURI
-import org.kiji.schema.layout.KijiTableLayout
 
 /**
  * A Kiji-specific implementation of a Cascading `Tap`, which defines the location of a Kiji table.
@@ -51,9 +49,9 @@ import org.kiji.schema.layout.KijiTableLayout
  * LocalKijiTap is responsible for configuring a local Cascading job with the settings necessary to
  * read from a Kiji table.
  *
- * LocalKijiTap must be used with [[org.kiji.express.LocalKijiScheme]] to perform decoding of cells
- * in a Kiji table. [[org.kiji.express.KijiSource]] handles the creation of both LocalKijiScheme and
- * LocalKijiTap in KijiExpress.
+ * LocalKijiTap must be used with [[org.kiji.express.flow.framework.LocalKijiScheme]] to perform
+ * decoding of cells in a Kiji table. [[org.kiji.express.flow.KijiSource]] handles the creation
+ * of both LocalKijiScheme and LocalKijiTap in KijiExpress.
  *
  * @param uri of the Kiji table to read or write from.
  * @param scheme that will convert data read from Kiji into Cascading's tuple model.
@@ -140,7 +138,8 @@ private[express] class LocalKijiTap(
    * @param flow being run.
    * @param output stream that will write to the desired Kiji table. Note: This is ignored
    *     currently since writing to a Kiji table is currently implemented without using an output
-   *     format by writing to the table directly from [[org.kiji.express.KijiScheme]].
+   *     format by writing to the table directly from
+   *     [[org.kiji.express.flow.framework.KijiScheme]].
    * @return a collector that writes tuples to the desired Kiji table.
    */
   override def openForWrite(

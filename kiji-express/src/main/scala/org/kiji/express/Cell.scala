@@ -21,6 +21,7 @@ package org.kiji.express
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.express.util.AvroUtil
 import org.kiji.schema.KijiCell
 
 /**

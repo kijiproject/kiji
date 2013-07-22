@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.express.datarequest
+package org.kiji.express.modeling.config
 
 import org.scalatest.FunSuite
 import org.kiji.schema.KijiDataRequest

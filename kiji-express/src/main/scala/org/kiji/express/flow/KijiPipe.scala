@@ -33,9 +33,12 @@ import com.twitter.scalding.TupleConversions
 import com.twitter.scalding.TupleConverter
 import com.twitter.scalding.TupleSetter
 
+import org.kiji.express.AvroRecord
+import org.kiji.express.AvroValue
 import org.kiji.express.repl.ExpressShell
 import org.kiji.express.repl.Implicits
 import org.kiji.express.repl.Implicits.pipeToRichPipe
+import org.kiji.express.util.AvroUtil
 
 /**
  * A class that adds Kiji-specific functionality to a Cascading pipe. This includes running pipes

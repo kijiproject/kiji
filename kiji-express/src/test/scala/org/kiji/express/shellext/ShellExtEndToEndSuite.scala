@@ -25,13 +25,15 @@ import java.io.FileWriter
 import com.google.common.io.Files
 
 import org.kiji.express.KijiSlice
-import org.kiji.express.modeling.ExtractEnvironment
 import org.kiji.express.modeling.Extractor
-import org.kiji.express.modeling.FieldBinding
-import org.kiji.express.modeling.ModelDefinition
-import org.kiji.express.modeling.ModelEnvironment
-import org.kiji.express.modeling.ScoreEnvironment
 import org.kiji.express.modeling.Scorer
+import org.kiji.express.modeling.config.ExpressColumnRequest
+import org.kiji.express.modeling.config.ExpressDataRequest
+import org.kiji.express.modeling.config.ExtractEnvironment
+import org.kiji.express.modeling.config.FieldBinding
+import org.kiji.express.modeling.config.ModelDefinition
+import org.kiji.express.modeling.config.ModelEnvironment
+import org.kiji.express.modeling.config.ScoreEnvironment
 import org.kiji.express.util.Resources.doAndClose
 import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.schema.Kiji
@@ -42,7 +44,6 @@ import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts
 import org.kiji.schema.util.InstanceBuilder
-import org.kiji.express.datarequest.{ExpressColumnRequest, ExpressDataRequest}
 
 /**
  * Provides end-to-end tests for KijiExpress extensions to the KijiSchema DDL Shell language.

@@ -2,6 +2,11 @@
                              Kiji Express Release Notes
 
 Version 0.7.0
+  * EXP-107. Package reorganization across the project. In particular,
+    users should import org.kiji.express.flow._,
+    org.kiji.express.flow.DSL._, and org.kiji.express.flow.TimeRange._
+    to write applications using the KijiExpress Flow API. User code
+    will need to be updated to agree with the package reorganization.
   * EXP-151. Stop bundling KijiSchema in the tarball. This will
       use the KijiSchema jar from $KIJI_HOME/lib.
   * EXP-146. Fall back to $HADOOP_HOME/lib/native/ for native libraries.

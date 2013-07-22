@@ -24,6 +24,7 @@ import java.util.Arrays
 
 import scala.collection.JavaConverters._
 
+import org.kiji.express.util.EntityIdFactoryCache
 import org.kiji.schema.{ EntityId => JEntityId }
 import org.kiji.schema.KijiURI
 

@@ -402,7 +402,7 @@ case ${command} in
       # Default run mode is local.
       run_mode_flag="--local"
     fi
-    scalding_tool="org.kiji.express.ScriptRunner"
+    scalding_tool="org.kiji.express.tool.ScriptRunner"
     ;;
 
   job)

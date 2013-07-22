@@ -26,7 +26,14 @@ import com.twitter.scalding.JobTest
 import com.twitter.scalding.TextLine
 import com.twitter.scalding.Tsv
 
-import org.kiji.express.DSL._
+import org.kiji.express.AvroBoolean
+import org.kiji.express.AvroEnum
+import org.kiji.express.AvroInt
+import org.kiji.express.AvroRecord
+import org.kiji.express.EntityId
+import org.kiji.express.KijiSlice
+import org.kiji.express.KijiSuite
+import org.kiji.express.flow.DSL._
 import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiURI
