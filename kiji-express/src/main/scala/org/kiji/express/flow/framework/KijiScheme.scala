@@ -141,7 +141,7 @@ private[express] class KijiScheme(
     // Construct an instance of ExpressGenericTable to reuse across all calls to the source method.
     val uri: KijiURI = KijiURI.newBuilder(tableUriProperty).build()
     val columnNames = columns.values.map { column => column.getColumnName() }
-    val expressGenericTable = new ExpressGenericTable(uri, columnNames.toSeq)
+    val expressGenericTable = new ExpressGenericTable(uri, flow.getConfigCopy, columnNames.toSeq)
     // Set the context of the sourcecall to include the single instance of ExpressGenericTable
     sourceCall.setContext(KijiSourceContext(
         sourceCall.getInput().createValue(),
@@ -250,9 +250,7 @@ private[express] class KijiScheme(
     val uriString: String = flow.getConfigCopy().get(KijiConfKeys.KIJI_OUTPUT_TABLE_URI)
     val uri: KijiURI = KijiURI.newBuilder(uriString).build()
 
-    // TODO: CHOP-72 Check and see if Kiji.Factory.open should be passed the configuration object in
-    //     flow.
-    doAndRelease(Kiji.Factory.open(uri)) { kiji: Kiji =>
+    doAndRelease(Kiji.Factory.open(uri, flow.getConfigCopy)) { kiji: Kiji =>
       doAndRelease(kiji.openTable(uri.getTable())) { table: KijiTable =>
         // Set the sink context to an opened KijiTableWriter.
         sinkCall.setContext(KijiSinkContext(table.openTableWriter(), table.getLayout))

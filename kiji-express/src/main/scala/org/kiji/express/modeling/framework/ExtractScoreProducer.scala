@@ -167,7 +167,7 @@ final class ExtractScoreProducer
     if (_genericTable.isDefined) {
       genericTable.close()
     }
-    _genericTable = Some(new ExpressGenericTable(uri, columns))
+    _genericTable = Some(new ExpressGenericTable(uri, conf, columns))
 
     // Finish setting the conf object.
     super.setConf(conf)

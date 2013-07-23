@@ -31,6 +31,7 @@ import cascading.tuple.TupleEntryCollector
 import cascading.tuple.TupleEntryIterator
 import com.google.common.base.Objects
 
+import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.mapred.JobConf
 import org.apache.hadoop.mapred.OutputCollector
 import org.apache.hadoop.mapred.RecordReader
@@ -205,7 +206,7 @@ private[express] class KijiTap(
   override def resourceExists(conf: JobConf): Boolean = {
     val uri: KijiURI = KijiURI.newBuilder(tableUri).build()
 
-    doAndRelease(Kiji.Factory.open(uri)) { kiji: Kiji =>
+    doAndRelease(Kiji.Factory.open(uri, conf)) { kiji: Kiji =>
       kiji.getTableNames().contains(uri.getTable())
     }
   }
@@ -235,11 +236,11 @@ private[express] class KijiTap(
    * @throws KijiExpressValidationException if the tables and columns are not accessible when this
    *    is called.
    */
-  private[express] def validate(): Unit = {
+  private[express] def validate(conf: JobConf): Unit = {
     val kijiUri: KijiURI = KijiURI.newBuilder(tableUri).build()
     val columnNames: List[KijiColumnName] =
         scheme.columns.values.map { column => column.getColumnName() }.toList
-    KijiTap.validate(kijiUri, columnNames)
+    KijiTap.validate(kijiUri, columnNames, conf)
   }
 }
 
@@ -252,11 +253,12 @@ object KijiTap {
    */
   private[express] def validate(
       kijiUri: KijiURI,
-      columnNames: List[KijiColumnName]) {
+      columnNames: List[KijiColumnName],
+      conf: Configuration) {
     // Try to open the Kiji instance.
     val kiji: Kiji =
         try {
-          Kiji.Factory.open(kijiUri)
+          Kiji.Factory.open(kijiUri, conf)
         } catch {
           case e: Exception =>
             throw new InvalidKijiTapException(

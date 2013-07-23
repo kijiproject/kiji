@@ -25,6 +25,7 @@ import java.io.OutputStream
 import java.util.Properties
 
 import cascading.flow.FlowProcess
+import cascading.flow.hadoop.util.HadoopUtil
 import cascading.scheme.Scheme
 import cascading.scheme.SinkCall
 import cascading.tap.Tap
@@ -41,6 +42,8 @@ import com.twitter.scalding.Read
 import com.twitter.scalding.Source
 import com.twitter.scalding.Test
 import com.twitter.scalding.Write
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.mapred.JobConf
 import org.apache.hadoop.mapred.OutputCollector
 import org.apache.hadoop.mapred.RecordReader
@@ -152,11 +155,11 @@ final class KijiSource private[express] (
       case Local(_) => new LocalKijiTap(tableUri, localKijiScheme).asInstanceOf[Tap[_, _, _]]
 
       // Test taps.
-      case HadoopTest(_, buffers) => {
+      case HadoopTest(conf, buffers) => {
         readOrWrite match {
           case Read => {
             val scheme = kijiScheme
-            populateTestTable(tableUri, buffers(this), scheme.getSourceFields())
+            populateTestTable(tableUri, buffers(this), scheme.getSourceFields(), conf)
 
             new KijiTap(tableUri, scheme).asInstanceOf[Tap[_, _, _]]
           }
@@ -175,7 +178,8 @@ final class KijiSource private[express] (
           // Use Kiji's local tap and scheme when reading.
           case Read => {
             val scheme = localKijiScheme
-            populateTestTable(tableUri, buffers(this), scheme.getSourceFields())
+            populateTestTable(tableUri, buffers(this), scheme.getSourceFields(),
+                HBaseConfiguration.create())
 
             new LocalKijiTap(tableUri, scheme).asInstanceOf[Tap[_, _, _]]
           }
@@ -234,24 +238,25 @@ object KijiSource {
    * @param rows Tuples to write to populate the table with.
    * @param fields Field names for elements in the tuple.
    */
-  private def populateTestTable(tableUri: KijiURI, rows: Buffer[Tuple], fields: Fields) {
+  private def populateTestTable(tableUri: KijiURI, rows: Buffer[Tuple], fields: Fields,
+      conf: Configuration) {
     // Open a table writer.
     val writer =
-        doAndRelease(Kiji.Factory.open(tableUri)) { kiji =>
+        doAndRelease(Kiji.Factory.open(tableUri, conf)) { kiji =>
           doAndRelease(kiji.openTable(tableUri.getTable())) { table =>
             table.openTableWriter()
           }
         }
 
     val tableLayout =
-        doAndRelease(Kiji.Factory.open(tableUri)) { kiji =>
+        doAndRelease(Kiji.Factory.open(tableUri, conf)) { kiji =>
           doAndRelease(kiji.openTable(tableUri.getTable())) { table =>
             table.getLayout()
           }
         }
 
     val schemaTable =
-        doAndRelease(Kiji.Factory.open(tableUri)) { kiji =>
+        doAndRelease(Kiji.Factory.open(tableUri, conf)) { kiji =>
           kiji.getSchemaTable()
         }
 
@@ -344,15 +349,17 @@ object KijiSource {
         process: FlowProcess[Properties],
         sinkCall: SinkCall[OutputContext, OutputStream]) {
       // Store the output table.
+      val conf: JobConf = HadoopUtil.createJobConf(process.getConfigCopy,
+          new JobConf(HBaseConfiguration.create()))
       val uri: KijiURI = KijiURI
-          .newBuilder(process.getConfigCopy().getProperty(KijiConfKeys.KIJI_OUTPUT_TABLE_URI))
+          .newBuilder(conf.get(KijiConfKeys.KIJI_OUTPUT_TABLE_URI))
           .build()
 
       // Read table into buffer.
-      doAndRelease(Kiji.Factory.open(uri)) { kiji: Kiji =>
+      doAndRelease(Kiji.Factory.open(uri, conf)) { kiji: Kiji =>
         doAndRelease(kiji.openTable(uri.getTable())) { table: KijiTable =>
           val columnNames = columns.values.map { column => column.getColumnName() }
-          val genericTable = new ExpressGenericTable(table.getURI, columnNames.toSeq)
+          val genericTable = new ExpressGenericTable(table.getURI, conf, columnNames.toSeq)
           doAndClose(table.openTableReader()) { reader: KijiTableReader =>
             // We also want the entire timerange, so the test can inspect all data in the table.
             val request: KijiDataRequest =

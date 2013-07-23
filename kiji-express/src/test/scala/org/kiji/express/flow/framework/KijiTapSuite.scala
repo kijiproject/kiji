@@ -19,6 +19,9 @@
 
 package org.kiji.express.flow.framework
 
+import org.apache.hadoop.hbase.HBaseConfiguration
+import org.apache.hadoop.mapred.JobConf
+
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow.DSL._
 import org.kiji.express.flow.InvalidKijiTapException
@@ -28,6 +31,7 @@ import org.kiji.schema.KijiURI
 class KijiTapSuite extends KijiSuite {
   val instanceName: String = "test_KijiTap_instance"
   val testKijiTableLayout = layout("avro-types.json")
+  val config = new JobConf(HBaseConfiguration.create())
 
   test("KijiTap validates a valid instance/table/column.") {
     val testTable = makeTestKijiTable(testKijiTableLayout, instanceName)
@@ -43,7 +47,7 @@ class KijiTapSuite extends KijiSuite {
 
     val testTap: KijiTap = new KijiTap(kijiURI, testScheme)
 
-    testTap.validate()
+    testTap.validate(config)
   }
 
   test("KijiTap validates a nonexistent instance.") {
@@ -65,7 +69,7 @@ class KijiTapSuite extends KijiSuite {
     val testTap: KijiTap = new KijiTap(testURI, testScheme)
 
     intercept[InvalidKijiTapException] {
-      testTap.validate()
+      testTap.validate(config)
     }
   }
 
@@ -88,7 +92,7 @@ class KijiTapSuite extends KijiSuite {
     val testTap: KijiTap = new KijiTap(testURI, testScheme)
 
     intercept[InvalidKijiTapException] {
-      testTap.validate()
+      testTap.validate(config)
     }
   }
 
@@ -107,7 +111,7 @@ class KijiTapSuite extends KijiSuite {
     val testTap: KijiTap = new KijiTap(kijiURI, testScheme)
 
     val exception = intercept[InvalidKijiTapException] {
-      testTap.validate()
+      testTap.validate(config)
     }
 
     assert(exception.getMessage.contains("nonexistent"))
@@ -128,7 +132,7 @@ class KijiTapSuite extends KijiSuite {
     val testTap: KijiTap = new KijiTap(kijiURI, testScheme)
 
     val exception = intercept[InvalidKijiTapException] {
-      testTap.validate()
+      testTap.validate(config)
     }
 
     assert(exception.getMessage.contains("nonexistent1"))

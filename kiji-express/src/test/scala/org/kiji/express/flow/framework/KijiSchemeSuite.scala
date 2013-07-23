@@ -21,6 +21,7 @@ package org.kiji.express.flow.framework
 
 import cascading.tuple.Tuple
 import cascading.tuple.TupleEntry
+import org.apache.hadoop.hbase.HBaseConfiguration
 
 import org.kiji.express.AvroEnum
 import org.kiji.express.AvroRecord
@@ -64,7 +65,8 @@ class KijiSchemeSuite extends KijiSuite {
     val rowData =
       reader.get(dummyEid.toJavaEntityId, KijiScheme.buildRequest(TimeRange.All, columns.values))
     val columnNames = columns.values.map { column => column.getColumnName() }
-    val expressGenericTable = new ExpressGenericTable(uri, columnNames.toSeq)
+    val expressGenericTable = new ExpressGenericTable(uri, HBaseConfiguration.create,
+      columnNames.toSeq)
     val readValue: Option[Tuple] = KijiScheme.rowToTuple(
         columns,
         sourceFields,

@@ -19,6 +19,7 @@
 
 package org.kiji.express.util
 
+import org.apache.hadoop.conf.Configuration
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -44,15 +45,17 @@ import org.kiji.schema.util.ResourceUtils
  * to allow decoding a generic cell from a rowdata.
  *
  * @param tableUri of the table to represent.
+ * @param configuration the job configuration
  * @param columns in this table that requested rows will include.
  */
 @ApiAudience.Private
-private[express] final class ExpressGenericTable(tableUri: KijiURI, columns: Seq[KijiColumnName]) {
+private[express] final class ExpressGenericTable(tableUri: KijiURI, configuration: Configuration,
+    columns: Seq[KijiColumnName]) {
   private val logger: Logger = LoggerFactory.getLogger(classOf[ExpressGenericTable])
 
   logger.debug("ExpressGenericTable being initialized for table %s and columns %s".format(
       tableUri, columns))
-  val kiji: Kiji = Kiji.Factory.open(tableUri)
+  val kiji: Kiji = Kiji.Factory.open(tableUri, configuration)
   val schemaTable: KijiSchemaTable = kiji.getSchemaTable()
 
   /** Mapping from column name to cell spec. */

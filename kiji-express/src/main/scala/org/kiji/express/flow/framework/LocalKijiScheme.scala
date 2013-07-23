@@ -25,6 +25,7 @@ import java.io.OutputStream
 import java.util.Properties
 
 import cascading.flow.FlowProcess
+import cascading.flow.hadoop.util.HadoopUtil
 import cascading.scheme.Scheme
 import cascading.scheme.SinkCall
 import cascading.scheme.SourceCall
@@ -32,6 +33,8 @@ import cascading.tap.Tap
 import cascading.tuple.Tuple
 import cascading.tuple.TupleEntry
 import com.google.common.base.Objects
+import org.apache.hadoop.hbase.HBaseConfiguration
+import org.apache.hadoop.mapred.JobConf
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -150,11 +153,13 @@ private[express] class LocalKijiScheme(
   override def sourcePrepare(
       process: FlowProcess[Properties],
       sourceCall: SourceCall[InputContext, InputStream]) {
-    val uriString: String = process.getConfigCopy().getProperty(KijiConfKeys.KIJI_INPUT_TABLE_URI)
+    val conf: JobConf = HadoopUtil.createJobConf(process.getConfigCopy,
+        new JobConf(HBaseConfiguration.create()))
+    val uriString: String = conf.get(KijiConfKeys.KIJI_INPUT_TABLE_URI)
     val uri: KijiURI = KijiURI.newBuilder(uriString).build()
 
     // Build the input context.
-    doAndRelease(Kiji.Factory.open(uri)) { kiji: Kiji =>
+    doAndRelease(Kiji.Factory.open(uri, conf)) { kiji: Kiji =>
       doAndRelease(kiji.openTable(uri.getTable())) { table: KijiTable =>
         val request = KijiScheme.buildRequest(timeRange, columns.values)
         val reader = table.openTableReader()
@@ -184,6 +189,8 @@ private[express] class LocalKijiScheme(
     // Return true as soon as a result tuple has been set,
     // or false if we reach the end of the RecordReader.
     val context: InputContext = sourceCall.getContext()
+    val conf: JobConf = HadoopUtil.createJobConf(process.getConfigCopy,
+        new JobConf(HBaseConfiguration.create()))
     while (context.iterator.hasNext) {
       // Get the current row.
       val row: KijiRowData = context.iterator.next()
@@ -195,7 +202,7 @@ private[express] class LocalKijiScheme(
               timestampField,
               row,
               context.tableUri,
-              new ExpressGenericTable(context.tableUri, columnNames.toSeq))
+              new ExpressGenericTable(context.tableUri, conf, columnNames.toSeq))
 
       // If no fields were missing, set the result tuple and return from this method.
       result match {
@@ -263,12 +270,12 @@ private[express] class LocalKijiScheme(
       process: FlowProcess[Properties],
       sinkCall: SinkCall[OutputContext, OutputStream]) {
     // Open a table writer.
-    val uriString: String = process.getConfigCopy().getProperty(KijiConfKeys.KIJI_OUTPUT_TABLE_URI)
+    val conf: JobConf = HadoopUtil.createJobConf(process.getConfigCopy,
+        new JobConf(HBaseConfiguration.create()))
+    val uriString: String = conf.get(KijiConfKeys.KIJI_OUTPUT_TABLE_URI)
     val uri: KijiURI = KijiURI.newBuilder(uriString).build()
 
-    // TODO: Check and see if Kiji.Factory.open should be passed the configuration object in
-    //     process.
-    doAndRelease(Kiji.Factory.open(uri)) { kiji: Kiji =>
+    doAndRelease(Kiji.Factory.open(uri, conf)) { kiji: Kiji =>
       doAndRelease(kiji.openTable(uri.getTable())) { table: KijiTable =>
         // Set the sink context to an opened KijiTableWriter.
         sinkCall.setContext(OutputContext(table.openTableWriter(), table.getLayout))

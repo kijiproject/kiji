@@ -27,6 +27,7 @@ import java.util.Properties
 import java.util.UUID
 
 import cascading.flow.FlowProcess
+import cascading.flow.hadoop.util.HadoopUtil
 import cascading.scheme.Scheme
 import cascading.tap.Tap
 import cascading.tuple.TupleEntryCollector
@@ -34,6 +35,8 @@ import cascading.tuple.TupleEntryIterator
 import cascading.tuple.TupleEntrySchemeCollector
 import cascading.tuple.TupleEntrySchemeIterator
 import com.google.common.base.Objects
+import org.apache.hadoop.hbase.HBaseConfiguration
+import org.apache.hadoop.mapred.JobConf
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
@@ -188,8 +191,9 @@ private[express] class LocalKijiTap(
    */
   override def resourceExists(conf: Properties): Boolean = {
     val uri: KijiURI = KijiURI.newBuilder(tableUri).build()
-
-    doAndRelease(Kiji.Factory.open(uri)) { kiji: Kiji =>
+    val jobConf: JobConf = HadoopUtil.createJobConf(conf,
+        new JobConf(HBaseConfiguration.create()))
+    doAndRelease(Kiji.Factory.open(uri, jobConf)) { kiji: Kiji =>
       kiji.getTableNames().contains(uri.getTable())
     }
   }
@@ -221,11 +225,11 @@ private[express] class LocalKijiTap(
    * @throws KijiExpressValidationException if the tables and columns are not accessible when this
    *    is called.
    */
-  private[express] def validate(): Unit = {
+  private[express] def validate(conf: Properties): Unit = {
     val kijiUri: KijiURI = KijiURI.newBuilder(tableUri).build()
     val columnNames: List[KijiColumnName] =
         scheme.columns.values.map { column => column.getColumnName() }.toList
-
-    KijiTap.validate(kijiUri, columnNames)
+    KijiTap.validate(kijiUri, columnNames, HadoopUtil.createJobConf(conf,
+        new JobConf(HBaseConfiguration.create())))
   }
 }

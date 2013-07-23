@@ -20,11 +20,15 @@
 package org.kiji.express.flow
 
 import scala.collection.JavaConverters.collectionAsScalaIterableConverter
+import java.util.Properties
 
+import cascading.flow.hadoop.util.HadoopUtil
 import cascading.tap.Tap
-import com.twitter.scalding.Args
-import com.twitter.scalding.Job
-import com.twitter.scalding.Mode
+import com.twitter.scalding._
+import com.twitter.scalding.Hdfs
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.hbase.HBaseConfiguration
+import org.apache.hadoop.mapred.JobConf
 
 import org.kiji.express.flow.framework.KijiTap
 import org.kiji.express.flow.framework.LocalKijiTap
@@ -44,11 +48,27 @@ class KijiJob(args: Args) extends Job(args) with PipeConversions {
         flowDef.getSources.values.asScala.toList ++
         flowDef.getSinks.values.asScala.toList
 
+    // Retrieve the configuration
+    var conf: Configuration = HBaseConfiguration.create()
+    implicitly[Mode] match {
+      case Hdfs(_, configuration) => {
+        conf = configuration
+      }
+      case HadoopTest(configuration, _) => {
+        conf = configuration
+      }
+      case _ =>
+    }
+
     // Validate that the Kiji parts of the sources (tables, columns) are valid and exist.
     taps.foreach { tap =>
       tap match {
-        case kijiTap: KijiTap => kijiTap.validate()
-        case localKijiTap: LocalKijiTap => localKijiTap.validate()
+        case kijiTap: KijiTap => kijiTap.validate(new JobConf(conf))
+        case localKijiTap: LocalKijiTap => {
+          val properties: Properties = new Properties()
+          properties.putAll(HadoopUtil.createProperties(conf))
+          localKijiTap.validate(properties)
+        }
         case _ => // No Kiji parts to verify.
       }
     }
