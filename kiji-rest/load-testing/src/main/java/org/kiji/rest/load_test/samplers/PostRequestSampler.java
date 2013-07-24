@@ -58,7 +58,7 @@ public class PostRequestSampler extends GetRequestSampler {
 
   /** {@inheritDoc} */
   @Override
-  public void setupTest(JavaSamplerContext context) {
+  protected void setup(JavaSamplerContext context) {
     final String rowPath = String.format(ROW_PATH_FORMAT,
         context.getParameter("domain"),
         context.getParameter("instance"),
@@ -110,7 +110,7 @@ public class PostRequestSampler extends GetRequestSampler {
 
   /** {@inheritDoc} */
   @Override
-  public SampleResult runTest(JavaSamplerContext context) {
+  public SampleResult run(JavaSamplerContext context) {
     final SampleResult result = new SampleResult();
     final StringWriter resultMessage = new StringWriter();
     result.sampleStart();

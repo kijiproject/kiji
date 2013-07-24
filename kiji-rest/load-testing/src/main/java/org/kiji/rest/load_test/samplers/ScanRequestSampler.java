@@ -33,7 +33,7 @@ public class ScanRequestSampler extends GetRequestSampler {
 
   /** {@inheritDoc} */
   @Override
-  public void setupTest(JavaSamplerContext context) {
+  protected void setup(JavaSamplerContext context) {
     final String rowPath = String.format(ROW_PATH_FORMAT,
         context.getParameter("domain"),
         context.getParameter("instance"),

@@ -61,9 +61,12 @@ public class GetRequestSampler extends AbstractJavaSamplerClient {
       return arguments;
   }
 
-  /** {@inheritDoc} */
-  @Override
-  public void setupTest(JavaSamplerContext context) {
+  /**
+   * Set up a random row path for every run.
+   *
+   * @param context of the sampler.
+   */
+  protected void setup(JavaSamplerContext context) {
     final String rowPath = String.format(ROW_PATH_FORMAT,
         context.getParameter("domain"),
         context.getParameter("instance"),
@@ -90,9 +93,13 @@ public class GetRequestSampler extends AbstractJavaSamplerClient {
     }
   }
 
-  /** {@inheritDoc} */
-  @Override
-  public SampleResult runTest(JavaSamplerContext context) {
+/**
+ * Run the sampler.
+ *
+ * @param context of the sampler.
+ * @return sample result.
+ */
+  protected SampleResult run(JavaSamplerContext context) {
     final SampleResult result = new SampleResult();
     final StringWriter resultMessage = new StringWriter();
     result.sampleStart();
@@ -128,5 +135,12 @@ public class GetRequestSampler extends AbstractJavaSamplerClient {
       }
     }
     return result;
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public SampleResult runTest(JavaSamplerContext context) {
+    setup(context);
+    return run(context);
   }
 }
