@@ -150,12 +150,6 @@
       <artifactId>ApacheJMeter_java</artifactId>
       <version>2.9</version>
     </dependency>
-    <dependency>
-      <groupId>org.kiji.rest</groupId>
-      <artifactId>kiji-rest</artifactId>
-      <version>${project.version}</version>
-      <scope>compile</scope>
-    </dependency>
   </dependencies>
 
 </project>
