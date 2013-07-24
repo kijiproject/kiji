@@ -37,7 +37,7 @@
   <properties>
     <codename>buri</codename>
     <bento-cluster.version>1.2.0</bento-cluster.version>
-    <kiji-checkin.version>1.0.1</kiji-checkin.version>
+    <kiji-checkin.version>1.0.2-SNAPSHOT</kiji-checkin.version>
     <kiji-schema.version>1.1.2</kiji-schema.version>
     <kiji-schema-shell.version>1.1.0</kiji-schema-shell.version>
     <kiji-phonebook.version>1.0.0</kiji-phonebook.version>
