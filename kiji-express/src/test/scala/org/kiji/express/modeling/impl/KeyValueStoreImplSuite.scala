@@ -60,9 +60,9 @@ class KeyValueStoreImplSuite extends KijiSuite {
       table.getURI()
     }
     // Create some sample data to populate the table with, and load it into the table.
-    val dataToLoad = Map(EntityId(uri)("1") -> "value1",
-        EntityId(uri)("2") -> "value2",
-        EntityId(uri)("3") -> "value3")
+    val dataToLoad = Map[EntityId, String](EntityId("1") -> "value1",
+        EntityId("2") -> "value2",
+        EntityId("3") -> "value3")
     populateTestKijiTable(uri, dataToLoad)
 
     // Now create a KijiMR key-value store hooked to the Kiji table.
@@ -76,9 +76,9 @@ class KeyValueStoreImplSuite extends KijiSuite {
     // Now create a KijiExpress key-value store backed by the KijiMR key-value store.
     // Use the key-value store to access values and verify they are correct.
     doAndClose(KeyValueStore[String](store)) { kvstore =>
-      assert("value1" === kvstore(Seq("1")))
-      assert("value2" === kvstore(Seq("2")))
-      assert("value3" === kvstore(Seq("3")))
+      assert("value1" === kvstore(EntityId("1")))
+      assert("value2" === kvstore(EntityId("2")))
+      assert("value3" === kvstore(EntityId("3")))
     }
   }
 
@@ -301,7 +301,7 @@ object KeyValueStoreImplSuite {
       // Write each value to the table.
       values.foreach { case(entityId, str) =>
         writer.put(
-          entityId.toJavaEntityId(),
+          entityId.toJavaEntityId(tableURI),
           "family",
           "column1",
           str

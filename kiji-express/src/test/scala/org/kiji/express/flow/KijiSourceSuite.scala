@@ -43,19 +43,19 @@ class KijiSourceSuite
     extends KijiSuite {
   import KijiSourceSuite._
 
-  /** Simple table layout to use for tests. */
+  /** Simple table layout to use for tests. The row keys are hashed. */
   val simpleLayout: KijiTableLayout = layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
 
-  /** Table layout using Avro schemas to use for tests. */
+  /** Table layout using Avro schemas to use for tests. The row keys are formatted. */
   val avroLayout: KijiTableLayout = layout("avro-types.json")
 
   /** Input tuples to use for word count tests. */
   def wordCountInput(uri: String): List[(EntityId, KijiSlice[String])] = {
     List(
-        ( EntityId(uri)("row01"), slice("family:column1", (1L, "hello")) ),
-        ( EntityId(uri)("row02"), slice("family:column1", (2L, "hello")) ),
-        ( EntityId(uri)("row03"), slice("family:column1", (1L, "world")) ),
-        ( EntityId(uri)("row04"), slice("family:column1", (3L, "hello")) ))
+        ( EntityId("row01"), slice("family:column1", (1L, "hello")) ),
+        ( EntityId("row02"), slice("family:column1", (2L, "hello")) ),
+        ( EntityId("row03"), slice("family:column1", (1L, "world")) ),
+        ( EntityId("row04"), slice("family:column1", (3L, "hello")) ))
   }
 
   /**
@@ -294,12 +294,12 @@ class KijiSourceSuite
   // Input tuples to use for version count tests.
   def versionCountInput(uri: String): List[(EntityId, KijiSlice[String])] = {
     List(
-        ( EntityId(uri)("row01"), slice("family:column1", (10L, "two"), (20L, "two")) ),
-        ( EntityId(uri)("row02"), slice("family:column1",
+        ( EntityId("row01"), slice("family:column1", (10L, "two"), (20L, "two")) ),
+        ( EntityId("row02"), slice("family:column1",
             (10L, "three"),
             (20L, "three"),
             (30L, "three") ) ),
-        ( EntityId(uri)("row03"), slice("family:column1", (10L, "hello")) ))
+        ( EntityId("row03"), slice("family:column1", (10L, "hello")) ))
   }
 
   test("a job that requests maxVersions gets them") {
@@ -354,14 +354,16 @@ class KijiSourceSuite
         .finish
   }
 
-  def missingValuesInput(uri: String): List[(EntityId, KijiSlice[String], KijiSlice[String])] = {
+  def missingValuesInput(
+      uri: String
+  ): List[(EntityId, KijiSlice[String], KijiSlice[String])] = {
     List(
-        (EntityId(uri)("row01"), slice("family:column1", (10L, "hello")),
+        (EntityId("row01"), slice("family:column1", (10L, "hello")),
             slice("family:column2", (10L, "hello")) ),
-        (EntityId(uri)("row02"), slice("family:column1", (10L, "hello")), missing() ),
-        (EntityId(uri)("row03"), slice("family:column1", (10L, "world")),
+        (EntityId("row02"), slice("family:column1", (10L, "hello")), missing() ),
+        (EntityId("row03"), slice("family:column1", (10L, "world")),
             slice("family:column2", (10L, "world")) ),
-        (EntityId(uri)("row04"), slice("family:column1", (10L, "hello")),
+        (EntityId("row04"), slice("family:column1", (10L, "hello")),
             slice("family:column2", (10L, "hello"))))
   }
 
@@ -393,14 +395,14 @@ class KijiSourceSuite
     val uri: String = doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
       table.getURI().toString()
     }
+
     def validateMissingValuesReplaced(outputBuffer: Buffer[(EntityId, String)]) {
       assert(4 === outputBuffer.size)
-      val eid_hello:EntityId = EntityId(uri)("row01")
-      val eid_missings: EntityId = EntityId(uri)("row02")
-      val outMap = outputBuffer.toMap
-      assert("hellos" == outMap(eid_hello))
-      assert("missings" == outMap(eid_missings))
+      val outValues = outputBuffer.map { _._2 }.toSeq
+      assert(outValues.contains("hellos"))
+      assert(outValues.contains("missings"))
     }
+
     // Build test job.
     JobTest(new PluralizeReplaceJob(_))
       .arg("input", uri)
@@ -411,17 +413,17 @@ class KijiSourceSuite
           Column("family:column2")
       .replaceMissingWith("missing") -> 'word2)), missingValuesInput(uri))
       .sink(Tsv("outputFile"))(validateMissingValuesReplaced)
-    // Run the test job.
+      // Run the test job.
       .run
       .finish
   }
 
-  // TODO(CHOP-39): Write this test.
+  // TODO(EXP-7): Write this test.
   test("a word-count job that uses the type-safe api is run") {
     pending
   }
 
-  // TODO(CHOP-40): Write this test.
+  // TODO(EXP-6): Write this test.
   test("a job that uses the matrix api is run") {
     pending
   }
@@ -439,12 +441,12 @@ class KijiSourceSuite
     }
     // Input tuples to use for avro/scala conversion tests.
     val avroCheckerInput: List[(EntityId, KijiSlice[String])] = List(
-        ( EntityId(uri)("row01"), slice("family:column1", (10L,"two"), (20L, "two")) ),
-        ( EntityId(uri)("row02"), slice("family:column1",
+        ( EntityId("row01"), slice("family:column1", (10L,"two"), (20L, "two")) ),
+        ( EntityId("row02"), slice("family:column1",
             (10L, "three"),
             (20L, "three"),
             (30L, "three") ) ),
-        ( EntityId(uri)("row03"), slice("family:column1", (10L, "hello")) ))
+        ( EntityId("row03"), slice("family:column1", (10L, "hello")) ))
     // Build test job.
     val testSource = KijiInput(uri)(Map((Column("family:column1", versions=all) -> 'word)))
     JobTest(new AvroToScalaChecker(testSource)(_))
@@ -468,7 +470,7 @@ class KijiSourceSuite
     specificRecord.setHashSize(13)
     specificRecord.setSuppressKeyMaterialization(true)
     def genericReadInput(uri: String): List[(EntityId, KijiSlice[HashSpec])] = {
-      List((EntityId(uri)("row01"), slice("family:column3", (10L, specificRecord))))
+      List((EntityId("row01"), slice("family:column3", (10L, specificRecord))))
     }
 
     def validateGenericRead(outputBuffer: Buffer[(Int, Int)]): Unit = {
@@ -503,19 +505,26 @@ class KijiSourceSuite
         ( "1", "two" ))
 
     // Validates the output buffer contains the same as the input buffer.
-    def validateGenericWrite(outputBuffer: Buffer[(EntityId, KijiSlice[AvroRecord])]): Unit = {
+    def validateGenericWrite(
+        outputBuffer: Buffer[(EntityId, KijiSlice[AvroRecord])]
+    ): Unit = {
       val outMap = outputBuffer.toMap
-      assert("word_one" === outMap(EntityId(uri)("one")).getFirstValue()("field1").asString)
-      assert("word_two" === outMap(EntityId(uri)("two")).getFirstValue()("field1").asString)
 
-      assert("one" === outMap(EntityId(uri)("one")).getFirstValue()("field2").asEnumName)
-      assert("two" === outMap(EntityId(uri)("two")).getFirstValue()("field2").asEnumName)
+      assert(
+          "word_one" === outMap(EntityId("one")).getFirstValue()("field1").asString)
+      assert(
+          "word_two" === outMap(EntityId("two")).getFirstValue()("field1").asString)
 
-      assert(null == outMap(EntityId(uri)("one")).getFirstValue()("field3"))
+      assert("one" === outMap(EntityId("one")).getFirstValue()("field2").asEnumName)
+      assert("two" === outMap(EntityId("two")).getFirstValue()("field2").asEnumName)
 
-      assert(0 === outMap(EntityId(uri)("one")).getFirstValue()("field4").asList.size)
+      // scalastyle:off null
+      assert(null == outMap(EntityId("one")).getFirstValue()("field3"))
+      // scalastyle:on null
 
-      assert(0 === outMap(EntityId(uri)("one")).getFirstValue()("field5").asMap.size)
+      assert(0 === outMap(EntityId("one")).getFirstValue()("field4").asList.size)
+
+      assert(0 === outMap(EntityId("one")).getFirstValue()("field5").asMap.size)
     }
 
     val jobTest = JobTest(new GenericAvroWriteJob(_))
@@ -545,7 +554,9 @@ class KijiSourceSuite
         ("2", "fish 3"))
 
     // Validate output.
-    def validateMapWrite(outputBuffer: Buffer[(EntityId, KijiSlice[AvroRecord])]): Unit = {
+    def validateMapWrite(
+        outputBuffer: Buffer[(EntityId, KijiSlice[AvroRecord])]
+    ): Unit = {
       assert (1 === outputBuffer.size)
       val outputSlice = outputBuffer(0)._2
       val outputSliceMap = outputSlice.groupByQualifier
@@ -575,9 +586,9 @@ class KijiSourceSuite
 
     // Create input using mapSlice.
     val mapTypeInput: List[(EntityId, KijiSlice[String])] = List(
-        ( EntityId(uri)("0row"), mapSlice("animals", ("0column", 0L, "0 dogs")) ),
-        ( EntityId(uri)("1row"), mapSlice("animals", ("0column", 0L, "1 cat")) ),
-        ( EntityId(uri)("2row"), mapSlice("animals", ("0column", 0L, "2 fish")) ))
+        ( EntityId("0row"), mapSlice("animals", ("0column", 0L, "0 dogs")) ),
+        ( EntityId("1row"), mapSlice("animals", ("0column", 0L, "1 cat")) ),
+        ( EntityId("2row"), mapSlice("animals", ("0column", 0L, "2 fish")) ))
 
     // Validate output.
     def validateTest(outputBuffer: Buffer[Tuple1[String]]): Unit = {
@@ -602,11 +613,46 @@ class KijiSourceSuite
     // Run the test in hadoop mode.
     jobTest.runHadoop.finish
   }
+
+  test("A job that joins two pipes, on string keys, is run in both local and hadoop mode.") {
+    // URI of the Kiji table to use.
+    val uri: String = doAndRelease(makeTestKijiTable(avroLayout)) { table: KijiTable =>
+      table.getURI().toString()
+    }
+
+    // Create input from Kiji table.
+    val joinKijiInput: List[(EntityId, KijiSlice[String])] = List(
+        ( EntityId("0row"), mapSlice("animals", ("0column", 0L, "0 dogs")) ),
+        ( EntityId("1row"), mapSlice("animals", ("0column", 0L, "1 cat")) ),
+        ( EntityId("2row"), mapSlice("animals", ("0column", 0L, "2 fish")) ))
+
+    // Create input from side data.
+    val sideInput: List[(String, String)] = List( ("0", "0row"), ("1", "2row") )
+
+    // Validate output.
+    def validateTest(outputBuffer: Buffer[Tuple1[String]]): Unit = {
+      assert(outputBuffer.size === 2)
+    }
+
+    // Create the JobTest for this test.
+    val jobTest = JobTest(new JoinOnStringsJob(_))
+        .arg("input", uri)
+        .arg("side-input", "sideInputFile")
+        .arg("output", "outputFile")
+        .source(KijiInput(uri)("animals" -> 'animals), joinKijiInput)
+        .source(TextLine("sideInputFile"), sideInput)
+        .sink(Tsv("outputFile"))(validateTest)
+
+    // Run the test in local mode.
+    jobTest.run.finish
+
+    // Run the test in hadoop mode.
+    jobTest.runHadoop.finish
+  }
 }
 
-/** Companion object for KijiSourceSuite. Contains helper functions and test jobs. */
+/** Companion object for KijiSourceSuite. Contains test jobs. */
 object KijiSourceSuite extends KijiSuite {
-
   /**
    * A job that extracts the most recent string value from the column "family:column1" for all rows
    * in a Kiji table, and then counts the number of occurrences of those strings across rows.
@@ -698,8 +744,7 @@ object KijiSourceSuite extends KijiSuite {
         // Get the words in each line.
         .map('line -> ('timestamp, 'entityId, 'word)) { line: String =>
           val Array(timestamp, eid, token) = line.split("\\s+")
-
-          (timestamp.toLong, EntityId(args("output"))(eid), token)
+          (timestamp.toLong, EntityId(eid), token)
         }
         // Write the results to the "family:column1" column of a Kiji table.
         .write(KijiOutput(args("output"), 'timestamp)('word -> "family:column1"))
@@ -721,7 +766,7 @@ object KijiSourceSuite extends KijiSuite {
         .flatMap('line -> 'word) { line : String => line.split("\\s+") }
         // Generate an entityId for each word.
         .map('word -> 'entityId) { _: String =>
-            EntityId(args("output"))(UUID.randomUUID().toString()) }
+            EntityId(UUID.randomUUID().toString()) }
         // Write the results to the "family:column1" column of a Kiji table.
         .write(KijiOutput(args("output"))('word -> "family:column1"))
   }
@@ -739,7 +784,7 @@ object KijiSourceSuite extends KijiSuite {
     TextLine(args("input"))
         .read
         // Generate an entityId for each line.
-        .map('line -> 'entityId) { EntityId(args("output"))(_: String) }
+        .map('line -> 'entityId) { EntityId(_: String) }
         // Write the results to the "family:column1" column of a Kiji table.
         .write(KijiOutput(args("output"), 'offset)('line -> "family:column1"))
   }
@@ -796,11 +841,12 @@ object KijiSourceSuite extends KijiSuite {
    */
   class GenericAvroWriteJob(args: Args) extends KijiJob(args) {
     val tableUri: String = args("output")
+    // scalastyle:off null
     TextLine(args("input"))
         .read
         .map('offset -> 'timestamp) { offset: String => offset.toLong }
         // Generate an entityId for each line.
-        .map('line -> 'entityId) { EntityId(tableUri)(_: String) }
+        .map('line -> 'entityId) { EntityId(_: String) }
         .map('line -> 'genericRecord) { text: String =>
           AvroRecord(
               "field1" -> "word_%s".format(text),
@@ -811,6 +857,7 @@ object KijiSourceSuite extends KijiSuite {
         }
         // Write the results to the "family:column4" column of a Kiji table.
         .write(KijiOutput(tableUri)('genericRecord -> "family:column4"))
+    // scalastyle:on null
   }
 
   /**
@@ -825,7 +872,7 @@ object KijiSourceSuite extends KijiSuite {
     TextLine(args("input"))
         .read
         // Create an entity ID for each line (always the same one, here)
-        .map('line -> 'entityId) { line: String => EntityId(args("table"))("my_eid") }
+        .map('line -> 'entityId) { line: String => EntityId("my_eid") }
         // Get the number of result for each search term
         .map('line -> ('terms, 'resultCount)) { line: String =>
           (line.split(" ")(0), line.split(" ")(1).toInt)
@@ -844,6 +891,25 @@ object KijiSourceSuite extends KijiSuite {
     KijiInput(args("input"))("animals" -> 'terms)
         .map('terms -> 'values) { terms: KijiSlice[String] => terms.getFirstValue }
         .project('values)
+        .write(Tsv(args("output")))
+  }
+
+  /**
+   * A job that tests joining two pipes, on String keys.
+   *
+   * @param args to the job. Two arguments are expected: "input", which specifies the URI to a
+   *     Kiji table, and "output", which specifies the path to a text file.
+   */
+  class JoinOnStringsJob(args: Args) extends KijiJob(args) {
+    val sidePipe = TextLine(args("side-input"))
+        .read
+        .map('line -> 'entityId) { line: String => EntityId(line) }
+
+    KijiInput(args("input"))("animals" -> 'animals)
+        .map('animals -> 'terms) { animals: KijiSlice[String] =>
+          animals.getFirstValue.split(" ")(0) + "row" }
+        .discard('entityId)
+        .joinWithSmaller('terms -> 'line, sidePipe)
         .write(Tsv(args("output")))
   }
 }

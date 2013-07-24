@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.express.EntityId
+import org.kiji.express.MaterializedEntityId
 import org.kiji.express.KijiSlice
 import org.kiji.express.flow.ColumnFamily
 import org.kiji.express.flow.ColumnRequest
@@ -137,9 +138,9 @@ private[express] class KijiScheme(
       flow: FlowProcess[JobConf],
       sourceCall: SourceCall[KijiSourceContext, RecordReader[KijiKey, KijiValue]]) {
     val tableUriProperty = flow.getStringProperty(KijiConfKeys.KIJI_INPUT_TABLE_URI)
+    val uri: KijiURI = KijiURI.newBuilder(tableUriProperty).build()
 
     // Construct an instance of ExpressGenericTable to reuse across all calls to the source method.
-    val uri: KijiURI = KijiURI.newBuilder(tableUriProperty).build()
     val columnNames = columns.values.map { column => column.getColumnName() }
     val expressGenericTable = new ExpressGenericTable(uri, flow.getConfigCopy, columnNames.toSeq)
     // Set the context of the sourcecall to include the single instance of ExpressGenericTable
@@ -253,7 +254,7 @@ private[express] class KijiScheme(
     doAndRelease(Kiji.Factory.open(uri, flow.getConfigCopy)) { kiji: Kiji =>
       doAndRelease(kiji.openTable(uri.getTable())) { table: KijiTable =>
         // Set the sink context to an opened KijiTableWriter.
-        sinkCall.setContext(KijiSinkContext(table.openTableWriter(), table.getLayout))
+        sinkCall.setContext(KijiSinkContext(table.openTableWriter(), uri, table.getLayout))
       }
     }
   }
@@ -269,11 +270,11 @@ private[express] class KijiScheme(
       flow: FlowProcess[JobConf],
       sinkCall: SinkCall[KijiSinkContext, OutputCollector[_, _]]) {
     // Retrieve writer from the scheme's context.
-    val KijiSinkContext(writer, layout) = sinkCall.getContext()
+    val KijiSinkContext(writer, tableUri, layout) = sinkCall.getContext()
 
     // Write the tuple out.
     val output: TupleEntry = sinkCall.getOutgoingEntry()
-    putTuple(columns, timestampField, output, writer, layout)
+    putTuple(columns, tableUri, timestampField, output, writer, layout)
   }
 
   /**
@@ -361,7 +362,8 @@ private[express] object KijiScheme {
     val iterator = fields.iterator().asScala
 
     // Add the row's EntityId to the tuple.
-    result.add(EntityId(tableUri.toString(), row.getEntityId()))
+    val entityId: EntityId = EntityId.fromJavaEntityId(tableUri, row.getEntityId())
+    result.add(entityId)
 
     val expressRow = genericTable.getRow(row)
 
@@ -378,7 +380,6 @@ private[express] object KijiScheme {
                 result.add (KijiSlice(expressRow.iterator(family)))
               } else {
                 replacementOption match {
-                  // TODO convert replacement slice
                   case Some(replacement) => {
                     result.add(replacement)
                   }
@@ -396,7 +397,6 @@ private[express] object KijiScheme {
                 result.add(KijiSlice(expressRow.iterator(family, qualifier)))
               } else {
                 replacementOption match {
-                  // TODO convert replacement slice
                   case Some(replacement) => {
                     result.add(replacement)
                   }
@@ -417,6 +417,7 @@ private[express] object KijiScheme {
    * This is used in KijiScheme's `sink` method.
    *
    * @param columns mapping field names to column definitions.
+   * @param tableUri of the Kiji table.
    * @param timestampField is the optional name of a field containing the timestamp that all values
    *     in a tuple should be written to.
    *     Use None if all values should be written at the current time.
@@ -426,6 +427,7 @@ private[express] object KijiScheme {
    */
   private[express] def putTuple(
       columns: Map[String, ColumnRequest],
+      tableUri: KijiURI,
       timestampField: Option[Symbol],
       output: TupleEntry,
       writer: KijiTableWriter,
@@ -433,7 +435,8 @@ private[express] object KijiScheme {
     val iterator = columns.keys.iterator
 
     // Get the entityId.
-    val entityId: EntityId = output.getObject(entityIdField).asInstanceOf[EntityId]
+    val entityId: MaterializedEntityId =
+        output.getObject(entityIdField).asInstanceOf[MaterializedEntityId]
 
     // Get a timestamp to write the values to, if it was specified by the user.
     val timestamp: Long = timestampField match {
@@ -451,7 +454,7 @@ private[express] object KijiScheme {
                 require(
                     qualField.isDefined,
                     "You cannot write to a map family without specifying a qualifier field.")
-                writer.put(entityId.toJavaEntityId(),
+                writer.put(entityId.toJavaEntityId(tableUri),
                   family,
                   output.getObject(qualField.get).asInstanceOf[String],
                   timestamp,
@@ -459,7 +462,7 @@ private[express] object KijiScheme {
               }
               case QualifiedColumn(family, qualifier, _) => {
                 writer.put(
-                    entityId.toJavaEntityId(),
+                    entityId.toJavaEntityId(tableUri),
                     family,
                     qualifier,
                     timestamp,

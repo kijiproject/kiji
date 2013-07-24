@@ -25,6 +25,7 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
 import org.kiji.express.AvroValue
+import org.kiji.express.MaterializedEntityId
 import org.kiji.express.modeling.impl.AvroKVRecordKeyValueStore
 import org.kiji.express.modeling.impl.AvroRecordKeyValueStore
 import org.kiji.express.modeling.impl.JavaToScalaValueConverter
@@ -167,7 +168,9 @@ private[express] object KeyValueStore {
    * @tparam V is the type of value retrieved from the key-value store.
    * @return a KijiExpress key-value store backed by a Kiji table.
    */
-  def apply[V](kvStore: JKijiTableKeyValueStore[_ <: Any]): KeyValueStore[Seq[Any], V] = {
+  def apply[V](
+      kvStore: JKijiTableKeyValueStore[_ <: Any]
+  ): KeyValueStore[MaterializedEntityId, V] = {
     new KijiTableKeyValueStore[V](kvStore.open())
   }
 

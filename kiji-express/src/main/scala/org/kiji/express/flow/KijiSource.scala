@@ -201,6 +201,19 @@ final class KijiSource private[express] (
     return tap
   }
 
+ override def toString(): String = {
+    "KijiSource(table: %s, timeRange: %s, timestampField: %s, loggingInterval: %s, columns: %s)"
+        .format(
+            tableAddress,
+            timeRange,
+            timestampField match {
+              case None => None
+              case Some(tsField) => tsField
+            },
+            loggingInterval,
+            columns)
+  }
+
   override def equals(other: Any): Boolean = {
     other match {
       case source: KijiSource =>
@@ -286,7 +299,7 @@ object KijiSource {
                 AvroUtil.encodeToJava(
                     cell.datum)
             writer.put(
-                entityId.toJavaEntityId(),
+                entityId.toJavaEntityId(tableUri),
                 cell.family,
                 cell.qualifier,
                 cell.version,

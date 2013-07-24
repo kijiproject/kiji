@@ -24,6 +24,7 @@ import org.apache.avro.generic.GenericRecord
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.express.AvroValue
+import org.kiji.express.MaterializedEntityId
 import org.kiji.express.modeling.KeyValueStore
 import org.kiji.mapreduce.kvstore.{ KeyValueStoreReader => JKeyValueStoreReader }
 import org.kiji.schema.KijiRowKeyComponents
@@ -39,7 +40,7 @@ import org.kiji.schema.KijiRowKeyComponents
 @ApiStability.Experimental
 private[express] final class KijiTableKeyValueStore[V](
     kvStoreReader: JKeyValueStoreReader[_ <: KijiRowKeyComponents, _ <: Any])
-    extends KeyValueStore[Seq[Any], V](kvStoreReader)
+    extends KeyValueStore[MaterializedEntityId, V](kvStoreReader)
     with EntityIdScalaToJavaKeyConverter
     with AvroJavaToScalaValueConverter[V]
 

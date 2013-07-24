@@ -73,10 +73,12 @@ private[express] case class InputContext(
  * Encapsulates the state required to write to a Kiji table.
  *
  * @param writer that has an open connection to the desired Kiji table.
+ * @param tableUri of the Kiji table.
  * @param layout of the kiji table.
  */
 private[express] case class OutputContext(
     writer: KijiTableWriter,
+    tableUri: KijiURI,
     layout: KijiTableLayout)
 
 /**
@@ -278,7 +280,7 @@ private[express] class LocalKijiScheme(
     doAndRelease(Kiji.Factory.open(uri, conf)) { kiji: Kiji =>
       doAndRelease(kiji.openTable(uri.getTable())) { table: KijiTable =>
         // Set the sink context to an opened KijiTableWriter.
-        sinkCall.setContext(OutputContext(table.openTableWriter(), table.getLayout))
+        sinkCall.setContext(OutputContext(table.openTableWriter(), uri, table.getLayout))
       }
     }
   }
@@ -293,11 +295,12 @@ private[express] class LocalKijiScheme(
       process: FlowProcess[Properties],
       sinkCall: SinkCall[OutputContext, OutputStream]) {
     // Retrieve writer from the scheme's context.
-    val OutputContext(writer, layout) = sinkCall.getContext()
+    val OutputContext(writer, tableUri, layout) = sinkCall.getContext()
 
     // Write the tuple out.
     val output: TupleEntry = sinkCall.getOutgoingEntry()
     KijiScheme.putTuple(columns,
+        tableUri,
         timestampField,
         output,
         writer,

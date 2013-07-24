@@ -22,6 +22,7 @@ package org.kiji.express.flow.framework
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.schema.KijiTableWriter
+import org.kiji.schema.KijiURI
 import org.kiji.schema.layout.KijiTableLayout
 
 /**
@@ -30,11 +31,13 @@ import org.kiji.schema.layout.KijiTableLayout
  * This is configured during the sink prepare operation.
  *
  * @param kijiTableWriter is a writer object for this Kiji table.
+ * @param tableUri of the Kiji table.
  * @param kijiLayout is the layout for this Kiji table.
  */
 @ApiAudience.Private
 @ApiStability.Experimental
 private[express] case class KijiSinkContext (
     kijiTableWriter: KijiTableWriter,
+    tableUri: KijiURI,
     kijiLayout: KijiTableLayout) {
 }

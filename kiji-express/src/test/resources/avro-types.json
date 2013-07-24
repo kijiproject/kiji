@@ -19,9 +19,14 @@
 {
   name : "table",
   keys_format : {
-    encoding : "HASH",
-    hash_type : "MD5",
-    hash_size : 16
+    encoding : "FORMATTED",
+    salt : {
+      hash_size : 2
+    },
+    components : [ {
+      name : "dummy",
+      type : "STRING"
+    }]
   },
   locality_groups : [ {
     name : "default",
@@ -79,5 +84,5 @@
       }
     }]
   } ],
-  version : "layout-1.0"
+  version : "layout-1.1.0"
 }

@@ -82,9 +82,8 @@ class KijiJobSuite extends KijiSuite {
     specificRecord.setHashSize(13)
     specificRecord.setSuppressKeyMaterialization(true)
 
-    def unpackingInput(uri: String): List[(EntityId, KijiSlice[HashSpec])] = {
-      List((EntityId(uri)("row01"), slice("family:column3", (10L, specificRecord))))
-    }
+    val unpackingInput: List[(EntityId, KijiSlice[HashSpec])] =
+      List((EntityId("row01"), slice("family:column3", (10L, specificRecord))))
 
     def validatePacking(outputBuffer: Buffer[(String, String, String)]) {
       assert(AvroEnum("MD5").toString === outputBuffer(0)._1)
@@ -103,7 +102,7 @@ class KijiJobSuite extends KijiSuite {
     val jobTest = JobTest(new UnpackTupleJob(_))
         .arg("input", uri)
         .arg("output", "outputFile")
-        .source(KijiInput(uri)(Map (Column("family:column3") -> 'slice)), unpackingInput(uri))
+        .source(KijiInput(uri)(Map (Column("family:column3") -> 'slice)), unpackingInput)
         .sink(Tsv("outputFile"))(validatePacking)
 
     // Run in local mode.
@@ -128,7 +127,7 @@ class KijiJobSuite extends KijiSuite {
   test("A KijiJob is not run if the Kiji instance in the output doesn't exist.") {
     class BasicJob(args: Args) extends KijiJob(args) {
       TextLine(args("input"))
-        .map ('line -> 'entityId) { line: String => EntityId(uri)(line) }
+        .map ('line -> 'entityId) { line: String => EntityId(line) }
         .write(KijiOutput(args("output"))('line -> "family:column1"))
     }
 

@@ -65,7 +65,9 @@ import org.kiji.express.util.Resources.doAndClose
  *       </path/to/script> [other options here]
  * }}}
  */
-@deprecated
+@deprecated(
+    message = "Use the KijiExpress shell instead.",
+    since = "0.7.0")
 class ScriptRunner extends Tool {
   import ScriptRunner._
 

@@ -39,10 +39,10 @@ class KijiPipeSuite extends KijiSuite {
   /** Input tuples to use for word count tests. */
   def wordCountInput(uri: String): List[(EntityId, KijiSlice[String])] = {
     List(
-      ( EntityId(uri)("row01"), slice("family:column1", (1L, "hello")) ),
-      ( EntityId(uri)("row02"), slice("family:column1", (2L, "hello")) ),
-      ( EntityId(uri)("row03"), slice("family:column1", (1L, "world")) ),
-      ( EntityId(uri)("row04"), slice("family:column1", (3L, "hello")) ))
+      ( EntityId("row01"), slice("family:column1", (1L, "hello")) ),
+      ( EntityId("row02"), slice("family:column1", (2L, "hello")) ),
+      ( EntityId("row03"), slice("family:column1", (1L, "world")) ),
+      ( EntityId("row04"), slice("family:column1", (3L, "hello")) ))
   }
 
   /**
@@ -148,7 +148,7 @@ class KijiPipeSuite extends KijiSuite {
     def packTupleJob(args: Args): Job = {
       val cascadingPipe = TextLine(args("input")).read
           .map ('line -> 'length) { line: String => line.length }
-          .map ('offset -> 'entityId) { offset: String => EntityId(args("output"))(offset) }
+          .map ('offset -> 'entityId) { offset: String => EntityId(offset) }
       new KijiPipe(cascadingPipe)
           .packAvro(('line, 'length) -> 'record)
           .write(KijiOutput(args("output"))('record -> "family:column5"))
@@ -179,8 +179,8 @@ class KijiPipeSuite extends KijiSuite {
     specificRecord.setHashSize(13)
     specificRecord.setSuppressKeyMaterialization(true)
 
-    def unpackingInput(uri: String): List[(EntityId, KijiSlice[HashSpec])] = {
-      List((EntityId(uri)("row01"), slice("family:column3", (10L, specificRecord))))
+    def unpackingInput(uri: String): List[(MaterializedEntityId, KijiSlice[HashSpec])] = {
+      List((EntityId("row01"), slice("family:column3", (10L, specificRecord))))
     }
 
     def validatePacking(outputBuffer: Buffer[(String, String, String)]) {

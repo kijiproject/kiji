@@ -83,14 +83,6 @@ class KijiPipe(private val pipe: Pipe) extends TupleConversions {
       /** Appends a comma to the end of a string. */
       def appendComma(str: Any): String = str.toString + ","
 
-      // Java system properties to mapreduce child processes.
-      val childJavaOptsConfig =
-          Map("mapred.child.java.opts" -> {
-              // Use any mapred.child.java.opts already in the configuration.
-              configuration.get("mapred.child.java.opts").map(appendComma).getOrElse("") +
-                  // Disable schema validation in any child mapreduce processes.
-                  "-Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED"
-          })
       // If the REPL is running, we should add tmpjars passed in from the command line,
       // and a jar of REPL code, to the distributed cache of jobs run through the REPL.
       val replCodeJar = ExpressShell.createReplCodeJar()
@@ -114,7 +106,7 @@ class KijiPipe(private val pipe: Pipe) extends TupleConversions {
           Map[String, String]()
         }
 
-      configuration ++ childJavaOptsConfig ++ tmpJarsConfig
+      configuration ++ tmpJarsConfig
     }
 
     /**

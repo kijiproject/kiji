@@ -41,29 +41,21 @@ import org.kiji.schema.KijiURI
  *
  * Users can retrieve the index'th element of an EntityId (0-based), as follows:
  * {{{
- * EntityId(index)
+ * MyEntityId(index)
  * }}}
+ *
+ * EntityIds can either be Materialized (in the case of EntityIds from tables with formatted row
+ * keys, and all user-created EntityIds), or Hashed (in the case of EntityIds from tables with
+ * hashed or materialization-suppressed row keys).
  */
-sealed trait EntityId extends Product {
+trait EntityId extends Product {
   /**
-   * The table URI for the Kiji table that this EntityId is associated with.
+   * Get the Java [[org.kiji.schema.EntityId]] associated with this Scala EntityId.
    *
-   * We need to be explicit about the table associated with this EntityId because we need to
-   * eliminate ambiguity in the cases where two entityIds with the same components have different
-   * row key formats. It is also required when a HashedEntityId (or one with materialization
-   * suppressed) is read from a Kiji table and compared to another that was created by a user from
-   * its components.
-   *
-   * @return URI of the table this EntityId is associated with.
+   * @param tableUri of the table the JavaEntityId will be associated with.
+   * @return the Java EntityId backing this EntityId.
    */
-  def tableUri: String
-
-  /**
-   * The hbase encoded version of this EntityId.
-   *
-   * @return the byte array representation of this EntityId.
-   */
-  private[express] def encoded: Array[Byte]
+   def toJavaEntityId(tableUri: KijiURI): JEntityId
 
   /**
    * Get the index'th component of the EntityId.
@@ -73,72 +65,112 @@ sealed trait EntityId extends Product {
    */
   def apply(index: Int): Any = productElement(index)
 
-  /**
-   * Get the Java [[org.kiji.schema.EntityId]] associated with this Scala EntityId.
-   *
-   * @return the Java EntityId backing this EntityId.
-   */
-  private[express] def toJavaEntityId(): JEntityId
-
   override def productPrefix: String = "EntityId"
-
-  override def hashCode: Int = Arrays.hashCode(encoded)
 
   override def canEqual(that: Any): Boolean = that.isInstanceOf[EntityId]
 
+  /**
+   * When comparing two EntityIds, if both are Materialized, then their components are compared.
+   * If both are Hashed, their table URIs and encoded values are compared.
+   * If one is Hashed and the other is Materialized, they are compared as if the
+   * MaterializedEntityId belongs to the same table as the HashedEntityId.  It is not possible to
+   * compare a MaterializedEntityId with more than one component with a HashedEntityId.
+   *
+   * @param other object to compare this to.
+   * @return whether the two objects are "equal" according to the definition in this scaladoc.
+   */
+  override def equals(other: Any): Boolean
+}
+
+/**
+ * Represents the components of an EntityId in KijiExpress.  An [[org.kiji.express.EntityId]] is
+ * fully defined by the table URI and its EntityIdComponents.
+ *
+ * @param components of an EntityId.
+ */
+case class MaterializedEntityId private[express](components: Seq[AnyRef]) extends EntityId {
+  override def productArity: Int = components.length
+
+  override def productElement(n: Int): Any = components(n)
+
+  override def toJavaEntityId(tableUri: KijiURI): JEntityId = {
+    val javaComponents: java.util.List[Object] =
+        components.map { component: Any => component.asInstanceOf[AnyRef] }.asJava
+    val eidFactory = EntityIdFactoryCache.getFactory(tableUri)
+    eidFactory.getEntityId(javaComponents)
+  }
+
   override def equals(other: Any): Boolean = {
     other match {
-      case eid: EntityId => eid.canEqual(this) && Arrays.equals(encoded, eid.encoded)
+      case MaterializedEntityId(otherComponents) =>{
+        components.equals(otherComponents)
+      }
+      case otherEntityId: HashedEntityId => {
+        otherEntityId.equals(MaterializedEntityId.this)
+      }
       case _ => false
     }
   }
 }
 
 /**
- * An EntityId that provides access to its components.
+ * An EntityId that does not provide access to its components.  We keep the table URI and the
+ * encoded representation, with which we can still do comparisons.
  *
- * @param tableUri for the table this EntityId is associated with.
- * @param encoded byte array representation of this EntityId.
- * @param components that compose this EntityId.
- */
-private[express] final class MaterializableEntityId(
-    override val tableUri: String,
-    private[express] override val encoded: Array[Byte],
-    private[express] val components: Seq[Any])
-    extends EntityId {
-  override def productArity: Int = components.length
-
-  override def productElement(n: Int): Any = components(n)
-
-  private[express] override def toJavaEntityId(): JEntityId = {
-    val eidFactory = EntityIdFactoryCache.getFactory(tableUri)
-    val javaComponents: java.util.List[Object] = components.toList
-        .map { elem => elem.asInstanceOf[AnyRef] }
-        .asJava
-    eidFactory.getEntityId(javaComponents)
-  }
-}
-
-/**
- * An EntityId that does not provide access to its components.
+ * These are never user-created.  They are constructed by KijiExpress when reading from a table with
+ * row key format HASHED or with suppress-materialization enabled.
  *
  * @param tableUri for the table this EntityId is associated with.
  * @param encoded byte array representation of this EntityId.
  */
-private[express] final class HashedEntityId(
-    override val tableUri: String,
-    private[express] override val encoded: Array[Byte])
+case class HashedEntityId private[express] (tableUri: String, encoded: Array[Byte])
     extends EntityId {
+  /** Error message used when trying to materialize this EntityId. */
   private val materializationError: String = ("Components for this entity Id were not materialized."
       + "This may be because you have suppressed materialization or used Hashed Entity Ids")
+
+  /** Lazily get the EntityIdFactory from the cache when necessary. */
+  private[express] lazy val eidFactory =
+      EntityIdFactoryCache.getFactory(KijiURI.newBuilder(tableUri).build())
 
   override def productArity: Int = sys.error(materializationError)
 
   override def productElement(n: Int): Any = sys.error(materializationError)
 
-  private[express] override def toJavaEntityId(): JEntityId = {
-    val eidFactory = EntityIdFactoryCache.getFactory(tableUri)
+  override def toJavaEntityId(tableUri: KijiURI): JEntityId = {
+    val toJavaEntityIdError: String = (
+            "This EntityId can only be used for the table %s.".format(tableUri.toString)
+            + "This may be because you have suppressed materialization or used Hashed Entity Ids. ")
+    require(tableUri.toString == this.tableUri, toJavaEntityIdError)
     eidFactory.getEntityIdFromHBaseRowKey(encoded)
+  }
+
+  override def toString(): String = {
+    "HashedEntityId(KijiTable: %s, encoded: %s)".format(tableUri, encoded.toSeq.mkString(","))
+  }
+
+  override def equals(other: Any): Boolean = {
+    other match {
+      case otherEid: EntityId => { otherEid match {
+        case HashedEntityId(thatTableUri, otherEncodedVal) => {
+          return this.tableUri == thatTableUri &&
+              encoded.toSeq.mkString("") == otherEncodedVal.toSeq.mkString("")
+        }
+        case that: MaterializedEntityId => {
+          // If the other is materialized with a single component, compare it with that as if it
+          // belonged to the same table as this.
+          if (that.components.length == 1) {
+            val thatEncoded =
+                that.toJavaEntityId(KijiURI.newBuilder(tableUri).build()).getHBaseRowKey
+            return encoded.toSeq.mkString("") == thatEncoded.toSeq.mkString("")
+          } else {
+              // An EntityId with more than one component can't be compared with a HashedEntityId.
+            return false
+          }
+        }
+      } }
+      case _ => return false
+    }
   }
 }
 
@@ -147,85 +179,40 @@ private[express] final class HashedEntityId(
  */
 object EntityId {
   /**
-   * Create an Express EntityId given a Kiji EntityId and tableUri. This method is used by the
-   * framework to create EntityIds after reading rows from a Kiji table.
+   * Creates a KijiExpress EntityId from a Java EntityId.  This is used internally to convert
+   * between kiji-schema and kiji-express, removing the need for table URIs when creating
+   * materialized EntityIdComponentss.
    *
-   * @param entityId is the Java [[org.kiji.schema.EntityId]].
-   * @return the Express representation of the Java EntityId.
+   * @param tableUri is the Java EntityId is from.
+   * @param entityId is the Java EntityId to convert.
    */
-  private[express] def apply(tableUri: String, entityId: JEntityId): EntityId = {
+  def fromJavaEntityId(
+      tableUri: KijiURI,
+      entityId: JEntityId): EntityId = {
     try {
-      val components: Seq[Any] = entityId
-          .getComponents
-          .asScala
-          .toSeq
-          .map { elem => elem.asInstanceOf[AnyRef] }
+      val javaComponents: java.util.List[Object] = entityId.getComponents
+      val components: Seq[AnyRef] = javaComponents.asScala.toSeq
 
-      new MaterializableEntityId(
-          tableUri,
-          entityId.getHBaseRowKey(),
-          components)
+      new MaterializedEntityId(components)
     } catch {
       // This is an exception thrown when we try to access components of an entityId which has
       // materialization suppressed. E.g. Hashed EntityIds. So we are unable to retrieve components,
       // but the behavior is legal.
       case ise: IllegalStateException => {
         new HashedEntityId(
-            tableUri,
+            tableUri.toString,
             entityId.getHBaseRowKey())
       }
     }
   }
 
   /**
-   * Create an Express representation of EntityId from the given list of components.
+   * Creates a new EntityId with the components specified by the user.  This only returns
+   * MaterializedEntityIds.  Users cannot created HashedEntityIds.
    *
-   * @param tableUri of the table this EntityId belongs to.
-   * @param components of the EntityId.
-   * @return a new EntityId addressing a row in the Kiji table specified.
+   * @param components of the EntityId to create.
    */
-  def fromComponents(tableUri: String, components: Seq[Any]): EntityId = {
-    val eidFactory = EntityIdFactoryCache.getFactory(tableUri)
-    val javaComponents: java.util.List[Object] = components
-        .map { elem => elem.asInstanceOf[AnyRef] }
-        .asJava
-
-    new MaterializableEntityId(
-        tableUri,
-        eidFactory.getEntityId(javaComponents).getHBaseRowKey,
-        components)
-  }
-
-  /**
-   * Create an Express representation of EntityId from the given list of components.
-   *
-   * @param tableUri of the table this EntityId belongs to.
-   * @param components of the EntityId.
-   * @return a new EntityId addressing a row in the Kiji table specified.
-   */
-  def fromComponents(tableUri: KijiURI, components: Seq[Any]): EntityId = {
-    fromComponents(tableUri.toString(), components)
-  }
-
-  /**
-   * Create an Express EntityId from the given components.
-   *
-   * @param tableUri of the table this EntityId belongs to.
-   * @param components of the EntityId.
-   * @return a new EntityId addressing a row in the Kiji table specified.
-   */
-  def apply(tableUri: String)(components: Any*): EntityId = {
-    fromComponents(tableUri, components.toSeq)
-  }
-
-  /**
-   * Create an Express EntityId from the given components.
-   *
-   * @param tableUri of the table this EntityId belongs to.
-   * @param components that compose this EntityId.
-   * @return a new EntityId addressing a row in the Kiji table specified.
-   */
-  def apply(tableUri: KijiURI)(components: Any*): EntityId = {
-    fromComponents(tableUri.toString(), components.toSeq)
+  def apply(components: Any*): MaterializedEntityId = {
+    new MaterializedEntityId(components.toSeq.map { _.asInstanceOf[AnyRef] })
   }
 }

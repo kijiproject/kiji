@@ -111,9 +111,6 @@ private[express] final class LifecycleExecutionCommand (
     val expressTmpJars: String = System.getProperty("express.tmpjars", "")
     config.set("tmpjars", config.get("tmpjars", "") + "," + expressTmpJars)
 
-    // Add to mapred.child.java.opts, to specify that schema-validation should be disabled.
-    config.set("mapred.child.java.opts", config.get("mapred.child.java.opts", "")
-        + "-Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED")
     config
   }
 

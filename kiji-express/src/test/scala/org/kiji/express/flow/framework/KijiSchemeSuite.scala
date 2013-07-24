@@ -47,7 +47,7 @@ class KijiSchemeSuite extends KijiSuite {
     val sinkFields = KijiScheme.buildSinkFields(columns, None)
 
     // Create a dummy record with an entity ID to put in the table.
-    val dummyEid = EntityId(uri.toString)("dummy")
+    val dummyEid = EntityId("dummy")
     val record = AvroRecord(
         "hash_type" -> new AvroEnum("MD5"),
         "hash_size" -> 13,
@@ -56,6 +56,7 @@ class KijiSchemeSuite extends KijiSuite {
 
     // Put the tuple.
     KijiScheme.putTuple(columns,
+        uri,
         None,
         writeValue,
         writer,
@@ -63,7 +64,9 @@ class KijiSchemeSuite extends KijiSuite {
 
     // Read the tuple back.
     val rowData =
-      reader.get(dummyEid.toJavaEntityId, KijiScheme.buildRequest(All, columns.values))
+      reader.get(
+          dummyEid.toJavaEntityId(uri),
+          KijiScheme.buildRequest(All, columns.values))
     val columnNames = columns.values.map { column => column.getColumnName() }
     val expressGenericTable = new ExpressGenericTable(uri, HBaseConfiguration.create,
       columnNames.toSeq)

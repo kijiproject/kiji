@@ -35,6 +35,7 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
 
 import org.kiji.express.EntityId
+import org.kiji.express.MaterializedEntityId
 import org.kiji.express.KijiSlice
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow._
@@ -64,11 +65,11 @@ class ScriptRunnerSuite extends KijiSuite {
   }
 
   /** Input tuples to use for word count tests. */
-  val wordCountInput: List[(EntityId, KijiSlice[String])] = List(
-      ( EntityId(uri)("row01"), slice("family:column1", (10L, "hello")) ),
-      ( EntityId(uri)("row02"), slice("family:column1", (10L, "hello")) ),
-      ( EntityId(uri)("row03"), slice("family:column1", (10L, "world")) ),
-      ( EntityId(uri)("row04"), slice("family:column1", (10L, "hello")) ))
+  val wordCountInput: List[(MaterializedEntityId, KijiSlice[String])] = List(
+      ( EntityId("row01"), slice("family:column1", (10L, "hello")) ),
+      ( EntityId("row02"), slice("family:column1", (10L, "hello")) ),
+      ( EntityId("row03"), slice("family:column1", (10L, "world")) ),
+      ( EntityId("row04"), slice("family:column1", (10L, "hello")) ))
 
   /**
    * Validates output from [[com.twitter.scalding.examples.WordCountJob]].
