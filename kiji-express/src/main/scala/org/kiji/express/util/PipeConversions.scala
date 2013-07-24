@@ -19,9 +19,12 @@
 
 package org.kiji.express.util
 
+import cascading.flow.FlowDef
 import cascading.pipe.Pipe
+import com.twitter.scalding.Mode
 
 import org.kiji.express.flow.KijiPipe
+import org.kiji.express.flow.KijiSource
 
 /**
  * PipeConversions contains implicit conversions necessary for KijiExpress that are not included in
@@ -36,4 +39,19 @@ private[express] trait PipeConversions {
    * @return a KijiPipe wrapping the specified Pipe.
    */
   implicit def pipeToKijiPipe(pipe: Pipe): KijiPipe = new KijiPipe(pipe)
+
+  /**
+   * Converts a KijiSource to a KijiExpress KijiPipe. This method permits implicit conversions
+   * from Source to KijiPipe.
+   *
+   * We expect flowDef and mode implicits to be in scope.  This should be true in the context of a
+   * Job, KijiJob, or inside the ShellRunner.
+   *
+   * @param source to convert to a KijiPipe
+   * @return a KijiPipe read from the specified source.
+   */
+  implicit def source2rp(
+      src: KijiSource)(
+      implicit flowDef: FlowDef,
+      mode: Mode): KijiPipe = new KijiPipe(src.read(flowDef, mode))
 }

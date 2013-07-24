@@ -112,6 +112,19 @@ class KijiJobSuite extends KijiSuite {
     jobTest.runHadoop.finish
   }
 
+  test("A KijiJob implicitly converts KijiSources to KijiPipes so you can call Kiji methods.") {
+    // This class won't actually run because slice will contain a KijiSlice which can't be
+    // unpacked.  This tests only tests that this compiles.  Eventually we may have methods
+    // on KijiPipe that we need to use directly after KijiInput (for example, we may decide to
+    // return only the first value in the slice if only 1 value is requested).
+    class UnpackTupleJob(args: Args) extends KijiJob(args) {
+      KijiInput(args("input"))("family:column3" -> 'slice)
+          .unpackAvro('slice -> ('hashtype, 'hashsize, 'suppress))
+          .project('hashtype, 'hashsize, 'suppress)
+          .write(Tsv(args("output")))
+    }
+  }
+
   test("A KijiJob is not run if the Kiji instance in the output doesn't exist.") {
     class BasicJob(args: Args) extends KijiJob(args) {
       TextLine(args("input"))
