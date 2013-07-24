@@ -102,14 +102,6 @@ public class CommandLogger {
         Thread commandLogger = new CommandLoggerThread(command);
         commandLogger.setDaemon(true);
         commandLogger.start();
-        // Give the command logger thread a chance to send its data. Else the JVM may terminate
-        // before the thread fires and we could risk the loss of a fair amount of user
-        // interactions. Not ideal but I don't want the tool's completion to depend on this.
-        try {
-          Thread.sleep(500);
-        } catch (InterruptedException ie) {
-          LOG.debug("Sleep error", ie);
-        }
       } else {
         doLog(command);
       }
