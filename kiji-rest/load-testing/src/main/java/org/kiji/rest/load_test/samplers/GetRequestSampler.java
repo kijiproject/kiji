@@ -104,7 +104,7 @@ public class GetRequestSampler extends AbstractJavaSamplerClient {
     final StringWriter resultMessage = new StringWriter();
     result.sampleStart();
     try {
-      final URLConnection connection = (URLConnection) mURL.openConnection();
+      final URLConnection connection = mURL.openConnection();
       final BufferedReader reader = new BufferedReader(
           new InputStreamReader(connection.getInputStream()));
       String resultLine = reader.readLine();

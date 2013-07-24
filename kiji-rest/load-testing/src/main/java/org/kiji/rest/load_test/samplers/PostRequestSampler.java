@@ -115,7 +115,7 @@ public class PostRequestSampler extends GetRequestSampler {
     final StringWriter resultMessage = new StringWriter();
     result.sampleStart();
     try {
-      final URLConnection connection = (URLConnection) mURL.openConnection();
+      final URLConnection connection = mURL.openConnection();
       connection.setRequestProperty("Content-Type", "application/json");
       connection.setDoOutput(true);
       OutputStreamWriter outsw = new OutputStreamWriter(connection.getOutputStream());
