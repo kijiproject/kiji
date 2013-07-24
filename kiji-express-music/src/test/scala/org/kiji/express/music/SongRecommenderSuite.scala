@@ -24,7 +24,6 @@ import scala.collection.mutable.Buffer
 
 import org.kiji.express._
 import org.kiji.express.flow._
-import org.kiji.express.flow.DSL._
 import org.kiji.express.EntityId
 import org.kiji.express.KijiSlice
 

@@ -23,7 +23,6 @@ import com.twitter.scalding._
 
 import org.kiji.express._
 import org.kiji.express.flow._
-import org.kiji.express.flow.DSL._
 
 
 /**

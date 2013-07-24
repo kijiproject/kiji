@@ -28,8 +28,7 @@ import com.twitter.scalding.IterableSource
 import org.kiji.express.AvroRecord
 import org.kiji.express.EntityId
 import org.kiji.express.KijiSuite
-import org.kiji.express.flow.DSL.KijiOutput
-import org.kiji.express.flow.KijiJob
+import org.kiji.express.flow._
 import org.kiji.express.modeling.ExtractScoreJobBuilder
 import org.kiji.express.modeling.config.ModelDefinition
 import org.kiji.express.modeling.config.ModelEnvironment

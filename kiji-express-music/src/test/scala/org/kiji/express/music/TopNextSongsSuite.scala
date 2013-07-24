@@ -24,7 +24,7 @@ import scala.collection.mutable.Buffer
 import com.twitter.scalding._
 
 import org.kiji.express._
-import org.kiji.express.flow.DSL._
+import org.kiji.express.flow._
 
 /**
  * A test for counting the number of times songs have been played by users.

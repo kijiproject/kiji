@@ -25,7 +25,6 @@ import com.twitter.scalding._
 
 import org.kiji.express._
 import org.kiji.express.flow._
-import org.kiji.express.flow.DSL._
 
 /**
  * Imports information about users playing tracks into a Kiji table.
