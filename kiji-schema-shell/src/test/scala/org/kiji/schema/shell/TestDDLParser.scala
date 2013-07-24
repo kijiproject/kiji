@@ -266,6 +266,18 @@ class TestDDLParser extends SpecificationWithJUnit {
       ctable.locGroups.head.props.tail.head.value mustEqual false
     }
 
+    "parse use jar statement" in {
+      val parser = getParser()
+      val res = parser.parseAll(parser.statementBody, "USE JAR INFILE '/path/to/file.jar'")
+      res.successful mustEqual true
+      val command = res.get
+      command must beAnInstanceOf[UseJarCommand]
+      val useJarCommand = command.asInstanceOf[UseJarCommand]
+      useJarCommand.newJar must beAnInstanceOf[LocalJarFile]
+      val LocalJarFile(path) = useJarCommand.newJar
+      path mustEqual "/path/to/file.jar"
+    }
+
     "unescaping strings should work correctly" in {
       val parser = getParser()
       parser.unescape("foo") mustEqual "foo"

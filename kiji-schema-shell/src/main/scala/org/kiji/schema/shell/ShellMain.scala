@@ -102,7 +102,7 @@ final class ShellMain {
 
     val uri = KijiURI.newBuilder(kijiURI).build()
     return preloadModules(new Environment(uri, Console.out, ShellMain.shellKijiSystem, input,
-        List(), isInteractive))
+        List(), isInteractive, Map(), List()))
   }
 
   /**
@@ -123,7 +123,7 @@ object ShellMain {
   val shellKijiSystem: AbstractKijiSystem = new KijiSystem
 
   /**
-   * @returns the version number associated with this software package.
+   * @return the version number associated with this software package.
    */
   def version(): String = {
     // Uses the value of 'Implementation-Version' in META-INF/MANIFEST.MF:
@@ -134,7 +134,7 @@ object ShellMain {
   /**
    * Main entry point for running the Kiji schema shell.
    *
-   * @param args Command line arguments.
+   * @param argv Command line arguments.
    */
   def main(argv: Array[String]) {
     val shellMain = new ShellMain()

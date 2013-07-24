@@ -3,6 +3,8 @@
                               Kiji Schema Shell Release Notes
 
 Version 1.1.1
+  * DDLSHELL-43. Add 'USE JAR INFILE...' command to add a collection of paths
+      to jar libraries to the environment.
   * DDLSHELL-45. Support extended environment attributes for dynamically-loaded
       modules through EnvironmentPlugin.
 

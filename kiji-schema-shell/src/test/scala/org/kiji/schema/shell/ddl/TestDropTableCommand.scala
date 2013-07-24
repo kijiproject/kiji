@@ -19,9 +19,7 @@
 
 package org.kiji.schema.shell.ddl
 
-import scala.collection.JavaConversions._
 import scala.collection.mutable.Map
-import org.specs2.mutable._
 
 import org.kiji.schema.shell.DDLException
 import org.kiji.schema.shell.ddl.key._

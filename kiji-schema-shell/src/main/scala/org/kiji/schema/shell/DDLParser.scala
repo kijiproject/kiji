@@ -20,25 +20,27 @@
 package org.kiji.schema.shell
 
 import scala.collection.mutable.Map
+import scala.util.parsing.combinator._
+
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.BloomType
-import org.kiji.schema.avro.HashType
-import org.kiji.schema.avro.RowKeyEncoding
-import org.kiji.schema.avro.RowKeyFormat
 import org.kiji.schema.KConstants
-
 import org.kiji.schema.shell.ddl._
 import org.kiji.schema.shell.ddl.CompressionTypeToken._
-import org.kiji.schema.shell.ddl.LocalityGroupPropName._
 import org.kiji.schema.shell.ddl.key._
 import org.kiji.schema.shell.ddl.key.RowKeyElemType._
 import org.kiji.schema.shell.spi.ParserPlugin
 import org.kiji.schema.shell.spi.ParserPluginFactory
 
-import org.kiji.schema.util.KijiNameValidator
+/**
+ * An abstract representation of where a jar library (to add to the environment's
+ * libjars list) might be held.
+ */
+private[shell] sealed trait JarLocation
 
-import scala.util.parsing.combinator._
+/** A single local file defined by a '/path/to/foo.jar' attribute. */
+private[shell] case class LocalJarFile(val path: String) extends JarLocation
 
 /**
  * Parser for a kiji-schema DDL command.
@@ -569,6 +571,25 @@ final class DDLParser(val env: Environment) extends JavaTokenParsers
   )
 
   /**
+   * Parser that recognizes a clause that specifies a jar location. Currently supports parsing
+   * 'INFILE (path-to-local-jar-file)'
+   *
+   * @return a parser for jar locations.
+   */
+  def jarLocationClause: Parser[JarLocation] = {
+    i("INFILE")~>singleQuotedString ^^ { path => LocalJarFile(path) }
+  }
+
+  /**
+   * Parser that recognizes a 'USE JAR (jar-location-clause)' statement.
+   *
+   * @return a parser for 'USE JAR ...' statements.
+   */
+  def useJar: Parser[DDLCommand] = {
+    i("USE")~>i("JAR")~>jarLocationClause ^^ {newJar => new UseJarCommand(env, newJar) }
+  }
+
+  /**
    * List available Kiji instances. Recognizes a SHOW INSTANCES statement.
    */
   def showInstances: Parser[DDLCommand] = (
@@ -656,6 +677,7 @@ final class DDLParser(val env: Environment) extends JavaTokenParsers
     | dumpTableDdl
     | dumpInstanceDdl
     | loadFile
+    | useJar
     | useInstance
     | useModule
     | showInstances
