@@ -53,8 +53,8 @@ import org.kiji.schema.KijiURI;
 public class RandomDataGenerator {
 
   private static final String TOTAL = "total";
-  private static final String FIRST_NAME = "/org/kiji/rest/load_test/first_names.txt";
-  private static final String LAST_NAME = "/org/kiji/rest/load_test/last_names.txt";
+  private static final String FIRST_NAME = "org/kiji/rest/load_test/first_names.txt";
+  private static final String LAST_NAME = "org/kiji/rest/load_test/last_names.txt";
 
   private static final String COMMENT = "#";
 
@@ -121,7 +121,7 @@ public class RandomDataGenerator {
    * @throws IOException if resource doesn't exist.
    */
   private static BufferedReader getReader(String resource) throws IOException {
-    InputStream is = System.class.getResourceAsStream(resource);
+    InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(resource);
     if (is != null) {
       return new BufferedReader(new InputStreamReader(is));
     } else {

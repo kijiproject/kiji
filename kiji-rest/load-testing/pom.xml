@@ -33,15 +33,34 @@
   <description>Tools for load testing KijiREST</description>
 
   <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
       </plugin>
-
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>1.2.1</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>java</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <mainClass>org.kiji.rest.load_test.RandomDataGenerator</mainClass>
+        </configuration>
       </plugin>
     </plugins>
   </build>
@@ -51,14 +70,14 @@
       <groupId>org.kiji.schema</groupId>
       <artifactId>kiji-schema</artifactId>
       <version>${kiji-schema.version}</version>
-      <scope>provided</scope>
+      <scope>compile</scope>
     </dependency>
 
     <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase</artifactId>
       <version>${hbase.version}</version>
-      <scope>provided</scope>
+      <scope>compile</scope>
       <exclusions>
         <!-- Just to save some space in the final package -->
         <exclusion>
@@ -81,7 +100,7 @@
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-client</artifactId>
       <version>${hadoop.version}</version>
-      <scope>provided</scope>
+      <scope>compile</scope>
       <exclusions>
         <exclusion>
           <groupId>javax.servlet</groupId>
@@ -98,7 +117,7 @@
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-core</artifactId>
       <version>${hadoop.version}</version>
-      <scope>provided</scope>
+      <scope>compile</scope>
       <exclusions>
         <!--  These conflict with the servlet package in DropWizard -->
         <exclusion>
@@ -135,7 +154,7 @@
       <groupId>org.kiji.rest</groupId>
       <artifactId>kiji-rest</artifactId>
       <version>${project.version}</version>
-      <scope>provided</scope>
+      <scope>compile</scope>
     </dependency>
   </dependencies>
 

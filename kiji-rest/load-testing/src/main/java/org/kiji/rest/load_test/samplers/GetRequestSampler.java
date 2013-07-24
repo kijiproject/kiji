@@ -21,9 +21,14 @@ package org.kiji.rest.load_test.samplers;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Random;
+
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.MediaType;
 
 import org.apache.jmeter.config.Arguments;
 import org.apache.jmeter.protocol.java.sampler.AbstractJavaSamplerClient;
@@ -89,18 +94,38 @@ public class GetRequestSampler extends AbstractJavaSamplerClient {
   @Override
   public SampleResult runTest(JavaSamplerContext context) {
     final SampleResult result = new SampleResult();
+    final StringWriter resultMessage = new StringWriter();
     result.sampleStart();
     try {
       final URLConnection connection = (URLConnection) mURL.openConnection();
       final BufferedReader reader = new BufferedReader(
           new InputStreamReader(connection.getInputStream()));
-      while (null != reader.readLine());
+      String resultLine = reader.readLine();
+      resultMessage.append(resultLine + "\n");
+      result.setLatency(result.currentTimeInMillis() - result.getStartTime());
+      while (null != (resultLine = reader.readLine())) {
+        resultMessage.append(resultLine + "\n");
+      }
       result.sampleEnd();
       result.setSuccessful(true);
+      result.setDataType(MediaType.APPLICATION_JSON);
+      result.setResponseMessage("OK");
+      result.setResponseData(resultMessage.toString(), null);
+      result.setResponseCodeOK();
       reader.close();
     } catch (Exception e) {
       result.sampleEnd();
       result.setSuccessful(false);
+      result.setResponseMessage(e.getMessage());
+      e.printStackTrace(new PrintWriter(resultMessage));
+      result.setResponseData(resultMessage.toString(), null);
+      result.setDataType(SampleResult.TEXT);
+      if (e instanceof WebApplicationException) {
+        result.setResponseCode(
+            Integer.toString(((WebApplicationException) e).getResponse().getStatus()));
+      } else {
+        result.setResponseCode("500");
+      }
     }
     return result;
   }
