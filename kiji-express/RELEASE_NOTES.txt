@@ -2,6 +2,11 @@
                              Kiji Express Release Notes
 
 Version 0.7.0
+  * EXP-154. The modules org.kiji.express.flow.DSL and
+    org.kiji.express.flow.TimeRange have been merged into the module
+    org.kiji.express.flow. Users should now only import
+    org.kiji.express.flow._ to write Scalding flows against Kiji
+    tables using KijiExpress.
   * EXP-107. Package reorganization across the project. In particular,
     users should import org.kiji.express.flow._,
     org.kiji.express.flow.DSL._, and org.kiji.express.flow.TimeRange._

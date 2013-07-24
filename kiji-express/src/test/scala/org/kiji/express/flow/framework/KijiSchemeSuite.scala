@@ -28,8 +28,8 @@ import org.kiji.express.AvroRecord
 import org.kiji.express.EntityId
 import org.kiji.express.KijiSlice
 import org.kiji.express.KijiSuite
+import org.kiji.express.flow.All
 import org.kiji.express.flow.QualifiedColumn
-import org.kiji.express.flow.TimeRange
 import org.kiji.express.util.ExpressGenericTable
 
 class KijiSchemeSuite extends KijiSuite {
@@ -63,7 +63,7 @@ class KijiSchemeSuite extends KijiSuite {
 
     // Read the tuple back.
     val rowData =
-      reader.get(dummyEid.toJavaEntityId, KijiScheme.buildRequest(TimeRange.All, columns.values))
+      reader.get(dummyEid.toJavaEntityId, KijiScheme.buildRequest(All, columns.values))
     val columnNames = columns.values.map { column => column.getColumnName() }
     val expressGenericTable = new ExpressGenericTable(uri, HBaseConfiguration.create,
       columnNames.toSeq)

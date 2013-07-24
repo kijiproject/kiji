@@ -28,11 +28,11 @@ package org.kiji
  *
  * === Getting started. ===
  * To use KijiExpress, import the Scalding library, the `express` library, and members of the
- * object [[org.kiji.express.flow.DSL]].
+ * flow module [[org.kiji.express.flow]].
  * {{{
  *   import com.twitter.scalding._
  *   import org.kiji.express._
- *   import org.kiji.express.DSL._
+ *   import org.kiji.express.flow._
  * }}}
  * Doing so will import several classes and functions that make it easy to author analysis
  * pipelines.
@@ -40,7 +40,7 @@ package org.kiji
  * === Working with data from a Kiji table. ===
  * Scalding represents distributed data sets as a collection of tuples with named fields.
  * Likewise, KijiExpress represents a row in a Kiji table as a tuple.
- * [[org.kiji.express.flow.DSL]] provides several factory methods, named `KijiInput`,
+ * [[org.kiji.express.flow]] provides a factory, named `KijiInput`,
  * that make it easy to specify what columns you want to read from a Kiji table and what names
  * they should have in row tuples. For example, to read the value of a column named `info:text`
  * from a table named `postings` into the tuple field named `text`, you could write the following.

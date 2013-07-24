@@ -23,9 +23,7 @@ import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.mapred.JobConf
 
 import org.kiji.express.KijiSuite
-import org.kiji.express.flow.DSL._
-import org.kiji.express.flow.InvalidKijiTapException
-import org.kiji.express.flow.TimeRange
+import org.kiji.express.flow._
 import org.kiji.schema.KijiURI
 
 class KijiTapSuite extends KijiSuite {
@@ -38,7 +36,7 @@ class KijiTapSuite extends KijiSuite {
     val kijiURI = testTable.getURI()
 
     val testScheme: KijiScheme = new KijiScheme(
-        timeRange = TimeRange.All,
+        timeRange = All,
         timestampField = None,
         loggingInterval = 1L,
         columns = Map(
@@ -55,7 +53,7 @@ class KijiTapSuite extends KijiSuite {
     val kijiURI = testTable.getURI()
 
     val testScheme: KijiScheme = new KijiScheme(
-        timeRange = TimeRange.All,
+        timeRange = All,
         timestampField = None,
         loggingInterval = 1L,
         columns = Map(
@@ -78,7 +76,7 @@ class KijiTapSuite extends KijiSuite {
     val kijiURI = testTable.getURI()
 
     val testScheme: KijiScheme = new KijiScheme(
-        timeRange = TimeRange.All,
+        timeRange = All,
         timestampField = None,
         loggingInterval = 1L,
         columns = Map(
@@ -101,7 +99,7 @@ class KijiTapSuite extends KijiSuite {
     val kijiURI = testTable.getURI()
 
     val testScheme: KijiScheme = new KijiScheme(
-        timeRange = TimeRange.All,
+        timeRange = All,
         timestampField = None,
         loggingInterval = 1L,
         columns = Map(
@@ -122,7 +120,7 @@ class KijiTapSuite extends KijiSuite {
     val kijiURI = testTable.getURI()
 
     val testScheme: KijiScheme = new KijiScheme(
-        timeRange = TimeRange.All,
+        timeRange = All,
         timestampField = None,
         loggingInterval = 1L,
         columns = Map(

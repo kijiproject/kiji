@@ -89,7 +89,7 @@ import org.kiji.schema.KijiURI
  * configurable field, and (optionally) a timestamp in a configurable field.
  *
  * End-users cannot directly obtain instances of `KijiSource`. Instead,
- * they should use the factory methods in [[org.kiji.express.flow.DSL]].
+ * they should use the factory methods provided as part of the [[org.kiji.express.flow]] module.
  *
  * @param tableAddress is a Kiji URI addressing the Kiji table to read or write to.
  * @param timeRange that cells read must belong to. Ignored when the source is used to write.
@@ -363,7 +363,7 @@ object KijiSource {
           doAndClose(table.openTableReader()) { reader: KijiTableReader =>
             // We also want the entire timerange, so the test can inspect all data in the table.
             val request: KijiDataRequest =
-                KijiScheme.buildRequest(TimeRange.All, columnRequestsAllData(columns).values)
+                KijiScheme.buildRequest(All, columnRequestsAllData(columns).values)
             doAndClose(reader.getScanner(request)) { scanner: KijiRowScanner =>
               val rows: Iterator[KijiRowData] = scanner.iterator().asScala
               rows.foreach { row: KijiRowData =>
@@ -401,7 +401,7 @@ object KijiSource {
       loggingInterval: Long,
       columns: Map[String, ColumnRequest])
       extends KijiScheme(
-          TimeRange.All,
+          All,
           timestampField,
           loggingInterval,
           columns)

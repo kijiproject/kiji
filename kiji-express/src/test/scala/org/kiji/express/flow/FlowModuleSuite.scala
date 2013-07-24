@@ -23,21 +23,20 @@ import org.scalatest.FunSuite
 
 import org.kiji.express.Cell
 import org.kiji.express.KijiSlice
-import org.kiji.express.flow.DSL._
 import org.kiji.express.flow.framework.KijiScheme
 import org.kiji.schema.KijiInvalidNameException
 import org.kiji.schema.filter.RegexQualifierColumnFilter
 
-class DSLSuite extends FunSuite {
+class FlowModuleSuite extends FunSuite {
   val tableURI = "kiji://.env/default/table"
 
-  test("DSL should not let you create a grouptype column without a qualifier.") {
+  test("Flow module forbids creating a group-type column without a qualifier.") {
     intercept[KijiInvalidNameException] {
       val colReq: ColumnRequest = Column("search")
     }
   }
 
-  test("DSL should not let you create a maptype column request with a qualifier in the col name.") {
+  test("Flow module forbids creating a map-type column with a qualifier in the column name.") {
     intercept[KijiInvalidNameException] {
       val colReq: ColumnRequest = MapFamily("info:word")
     }
@@ -47,30 +46,30 @@ class DSLSuite extends FunSuite {
     }
   }
 
-  test("DSL should let you create an output maptype column specifying the qualifier field.") {
+  test("Flow module permits creating an output map-type column specifying the qualifier field") {
     val colReq: ColumnRequest = MapFamily("searches")('terms)
   }
 
-  test("DSL should let you specify qualifier regex on maptype columns requests.") {
+  test("Flow module permits specifying a qualifier regex on map-type columns requests.") {
     val colReq: ColumnFamily = MapFamily("search", qualifierMatches=""".*\.com""")
 
     // TODO: Test it filters keyvalues correctly.
     assert(colReq.options.filter.get.isInstanceOf[RegexQualifierColumnFilter])
   }
 
-  test("DSL should let you specify versions on maptype column requests without qualifier regex.") {
+  test("Flow module permits specifying versions on map-type columns without qualifier regex.") {
     val colReq: ColumnFamily = MapFamily("search", versions=2)
 
     assert(colReq.options.maxVersions == 2)
   }
 
-  test("DSL should let you specify versions on a grouptype column.") {
+  test("Flow module permits specifying versions on a group-type column.") {
     val colReq: QualifiedColumn = Column("info:word", versions=3)
 
     assert(colReq.options.maxVersions == 3)
   }
 
-  test("DSL should have default versions of 1 for maptype and grouptype column requests.") {
+  test("Flow module uses default versions of 1 for map-type and group-type column requests.") {
     val colReq1: QualifiedColumn = Column("info:word")
     val colReq2: ColumnFamily = MapFamily("searches")
 
@@ -78,7 +77,7 @@ class DSLSuite extends FunSuite {
     assert(colReq2.options.maxVersions == 1)
   }
 
-  test("DSL should let you create inputs and outputs with no mappings.") {
+  test("Flow module permits creating inputs and outputs with no mappings.") {
     val input: KijiSource = KijiInput(tableURI)()
     val output: KijiSource = KijiOutput(tableURI)()
 
@@ -86,11 +85,11 @@ class DSLSuite extends FunSuite {
     assert(output.columns.isEmpty)
   }
 
-  test("DSL should let you create KijiSources as inputs with default options.") {
+  test("Flow module permits creating KijiSources as inputs with default options.") {
     val input: KijiSource = KijiInput(tableURI)("info:word" -> 'word)
     val expectedScheme: KijiScheme = {
       new KijiScheme(
-          TimeRange.All,
+          All,
           None,
           1000,
           Map("word" -> Column("info:word").ignoreMissing))
@@ -99,11 +98,11 @@ class DSLSuite extends FunSuite {
     assert(expectedScheme == input.hdfsScheme)
   }
 
-  test("DSL should let you specify timerange for KijiInput.") {
-    val input = KijiInput(tableURI, timeRange=TimeRange.Between(0L,40L))("info:word" -> 'word)
+  test("Flow module permits specifying timerange for KijiInput.") {
+    val input = KijiInput(tableURI, timeRange=Between(0L,40L))("info:word" -> 'word)
     val expectedScheme: KijiScheme = {
       new KijiScheme(
-          TimeRange.Between(0L, 40L),
+          Between(0L, 40L),
           None,
           1000,
           Map("word" -> Column("info:word").ignoreMissing))
@@ -112,11 +111,11 @@ class DSLSuite extends FunSuite {
     assert(expectedScheme == input.hdfsScheme)
   }
 
-  test("DSL should let you create KijiSources with multiple columns.") {
+  test("Flow module permits creating KijiSources with multiple columns.") {
     val input: KijiSource = KijiInput(tableURI)("info:word" -> 'word, "info:title" -> 'title)
     val expectedScheme: KijiScheme = {
       new KijiScheme(
-          TimeRange.All,
+          All,
           None,
           1000,
           Map(
@@ -127,7 +126,7 @@ class DSLSuite extends FunSuite {
     assert(expectedScheme == input.hdfsScheme)
   }
 
-  test("DSL should let you specify options for a column.") {
+  test("Flow module permits specifying options for a column.") {
     val input: KijiSource =
         KijiInput(tableURI)(Map(Column("info:word") -> 'word))
     val input2: KijiSource =
@@ -263,26 +262,26 @@ class DSLSuite extends FunSuite {
     assert(replacementData.contains(("qualifier2", 20L, "replacement2")))
   }
 
-  test("DSL should let you specify different options for different columns.") {
+  test("Flow module permits specifying different options for different columns.") {
     val input: KijiSource = KijiInput(tableURI)(
       Map(
         Column("info:word", versions=1) -> 'word,
         Column("info:title", versions=2) -> 'title))
   }
 
-  test("DSL should let you create KijiSource with the default timestamp field") {
+  test("Flow module permits creating KijiSource with the default timestamp field") {
     val output: KijiSource = KijiOutput(tableURI)('words -> "info:words")
     val expectedScheme: KijiScheme = {
-      new KijiScheme(TimeRange.All, None, 1000, Map("words" -> Column("info:words")))
+      new KijiScheme(All, None, 1000, Map("words" -> Column("info:words")))
     }
 
     assert(expectedScheme == output.hdfsScheme)
   }
 
-  test("DSL should let you create KijiSource with a timestamp field") {
+  test("Flow module permits creating KijiSource with a timestamp field") {
     val output: KijiSource = KijiOutput(tableURI, 'time)('words -> "info:words")
     val expectedScheme: KijiScheme = {
-      new KijiScheme(TimeRange.All, Some('time), 1000, Map("words" -> Column("info:words")))
+      new KijiScheme(All, Some('time), 1000, Map("words" -> Column("info:words")))
     }
 
     assert(expectedScheme == output.hdfsScheme)

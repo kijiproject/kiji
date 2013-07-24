@@ -26,7 +26,7 @@ import org.kiji.schema.KConstants
 class TimeRangeSuite extends FunSuite {
   test("TimeRange fails fast when invalid time range arguments are specified.") {
     val thrown: IllegalArgumentException = intercept[IllegalArgumentException] {
-      TimeRange.Between(10L, 1L)
+      Between(10L, 1L)
     }
 
     val expectedMessage = "requirement failed: Invalid time range specified: (%d, %d)"
@@ -35,35 +35,35 @@ class TimeRangeSuite extends FunSuite {
   }
 
   test("All constructs a TimeRange correctly") {
-    val range: TimeRange = TimeRange.All
+    val range: TimeRange = All
 
     assert(range.begin == KConstants.BEGINNING_OF_TIME)
     assert(range.end == KConstants.END_OF_TIME)
   }
 
   test("At constructs a TimeRange correctly") {
-    val range: TimeRange = TimeRange.At(42L)
+    val range: TimeRange = At(42L)
 
     assert(range.begin == 42L)
     assert(range.end == 42L)
   }
 
   test("After constructs a TimeRange correctly") {
-    val range: TimeRange = TimeRange.After(42L)
+    val range: TimeRange = After(42L)
 
     assert(range.begin == 42L)
     assert(range.end == KConstants.END_OF_TIME)
   }
 
   test("Before constructs a TimeRange correctly") {
-    val range: TimeRange = TimeRange.Before(42L)
+    val range: TimeRange = Before(42L)
 
     assert(range.begin == KConstants.BEGINNING_OF_TIME)
     assert(range.end == 42L)
   }
 
   test("Between constructs a TimeRange correctly") {
-    val range: TimeRange = TimeRange.Between(10L, 42L)
+    val range: TimeRange = Between(10L, 42L)
 
     assert(range.begin == 10L)
     assert(range.end == 42L)

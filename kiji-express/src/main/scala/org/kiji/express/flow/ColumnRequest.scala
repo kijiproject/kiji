@@ -34,8 +34,8 @@ import org.kiji.schema.filter.KijiColumnFilter
  * A trait that marks case classes that hold column-level options for cell requests to Kiji.
  *
  * End-users receive instances of this trait, used to request cells from qualified columns or
- * map-type column families, using the factory methods [[org.kiji.express.flow.DSL.Column()]] and
- * [[org.kiji.express.flow.DSL.MapFamily()]]. They can then use these requests to obtain a
+ * map-type column families, using the factories [[org.kiji.express.flow.Column]] and
+ * [[org.kiji.express.flow.MapFamily]]. They can then use these requests to obtain a
  * [[org.kiji.express.flow.KijiSource]] that reads cells into tuples while obeying the specified
  * request options.
  *
@@ -43,7 +43,7 @@ import org.kiji.schema.filter.KijiColumnFilter
  * with the methods `replaceMissingWith` or `ignoreMissing`, only one of which can be called before
  * the column request is used.
  *
- * If a ColumnRequest is used in the DSL without calling `replaceMissingWith` or `ignoreMissing`,
+ * If a ColumnRequest is used without calling `replaceMissingWith` or `ignoreMissing`,
  * `ignoreMissing` is the default.
  */
 @ApiAudience.Public
@@ -51,7 +51,7 @@ import org.kiji.schema.filter.KijiColumnFilter
 private[express] sealed trait ColumnRequest extends Serializable {
   /**
    * Specifies that missing values on this column mean the row should be skipped.
-   * This is the default behavior in the DSL if neither this nor `replaceMissingWith` are called
+   * This is the default behavior if neither this nor `replaceMissingWith` are called
    * on a ColumnRequest.
    *
    * @return this ColumnRequest with skipping behavior configured.

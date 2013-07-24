@@ -80,9 +80,7 @@ class ScriptRunner extends Tool {
   private[express] val imports: Seq[String] = Seq(
       "import com.twitter.scalding._",
       "import org.kiji.express._",
-      "import org.kiji.express.flow._",
-      "import org.kiji.express.flow.DSL._",
-      "import org.kiji.express.flow.TimeRange._")
+      "import org.kiji.express.flow._")
 
   /** Code to insert before each script. */
   private[express] val before =

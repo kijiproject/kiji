@@ -32,7 +32,6 @@ import org.kiji.express.Cell
 import org.kiji.express.EntityId
 import org.kiji.express.KijiSlice
 import org.kiji.express.KijiSuite
-import org.kiji.express.flow.DSL._
 import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.schema.KijiTable
 import org.kiji.schema.avro.HashSpec
@@ -345,7 +344,7 @@ class KijiSourceSuite
     }
 
     // Build test job.
-    val source = KijiInput(uri, timeRange=TimeRange.Between(15L, 25L))("family:column1" -> 'words)
+    val source = KijiInput(uri, timeRange=Between(15L, 25L))("family:column1" -> 'words)
     JobTest(new VersionsJob(source)(_))
         .arg("output", "outputFile")
         .source(source, versionCountInput(uri))
