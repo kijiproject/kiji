@@ -710,7 +710,10 @@ final class DDLParser(val env: Environment) extends JavaTokenParsers
           val result = parserPlugin.parseAll(parserPlugin.command, in)
           if (result.successful) {
             // This module matched! Use its result.
-            return Some(Success(result.get, result.next))
+            val command: DDLCommand = result.get
+            command.setCurrentPlugin(module) // Bind a ref to the plugin inside the DDLCommand
+                                             // in case it needs to access env extension data.
+            return Some(Success(command, result.next))
           } else {
             return None
           }

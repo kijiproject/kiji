@@ -34,6 +34,8 @@ import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.shell.DDLException
 import org.kiji.schema.shell.Environment
 import org.kiji.schema.shell.TableNotFoundException
+import org.kiji.schema.shell.spi.EnvironmentPlugin
+import org.kiji.schema.shell.spi.ParserPluginFactory
 
 /**
  * Abstract base class for DDL command implementations.
@@ -77,7 +79,7 @@ abstract class DDLCommand {
    * stdout, but can be redirected e.g. for testing.
    * @param s the string to emit.
    */
-  final protected def echoNoNL(s:String): Unit = {
+  final protected def echoNoNL(s: String): Unit = {
     env.printer.print(s)
   }
 
@@ -107,4 +109,75 @@ abstract class DDLCommand {
       }
     }
   }
+
+  // For cases where DDLCommand instances have been created by a ParserPlugin,
+  // keep a reference to the ParserPluginFactory. If it also extends EnvironmentPlugin,
+  // the command can use this in getExtensionState() and updateExtensionState()
+  // to access and update its additional environment data.
+  private var mCurrentExtensionModule: Option[ParserPluginFactory] = None
+
+  /**
+   * Returns the environment extension associated with the current extension module.
+   *
+   * <p>If this DDLCommand is the output of a ParserPlugin whose ParserPluginFactory
+   * is also an EnvironmentPlugin, return the environment extension data associated
+   * with the plugin. If this is not from a ParserPlugin, or the plugin does not extend
+   * the environment, throws DDLException.</p>
+   *
+   * @return the current plugin's environment extension data.
+   * @throws DDLException if this is not running in a plugin, or the plugin does not
+   *     extend EnvironmentPlugin.
+   *
+   */
+  final protected def getExtensionState[T](): T = {
+    mCurrentExtensionModule match {
+      case None => throw new DDLException("This DDLCommand is not being run from an extension")
+      case Some(pluginFactory) => {
+        if (pluginFactory.isInstanceOf[EnvironmentPlugin[_]]) {
+          try {
+            // This plugin has environment data; return it, typecasting to the user's
+            // specified state type.
+            return env.extensionMapping(pluginFactory.getName()).asInstanceOf[T]
+          } catch {
+            case nsee: NoSuchElementException =>
+              throw new DDLException("No extension data associated with plugin "
+                  + pluginFactory.getName())
+          }
+        } else {
+          throw new DDLException("The module " + pluginFactory.getName()
+              + " does not extend EnvironmentPlugin")
+        }
+      }
+    }
+  }
+
+  /**
+   * Updates the environment extension data associated with the current plugin.
+   *
+   * <p>This will return a new Environment object that contains the updated state information
+   * for the current module.</p>
+   *
+   * @return a new Environment containing the updated extension state for the plugin associated
+   *     with this DDLCommand.
+   * @throws DDLException if this is not being run from a plugin, or the plugin does not extend
+   *     EnvironmentPlugin.
+   */
+  final protected def setExtensionState[T](newState: T): Environment = {
+    mCurrentExtensionModule match {
+      case None => throw new DDLException("This DDLCommand is not being run from an extension")
+      case Some(pluginFactory) => {
+        if (pluginFactory.isInstanceOf[EnvironmentPlugin[_]]) {
+          return env.updateExtension(pluginFactory.asInstanceOf[EnvironmentPlugin[T]], newState)
+        } else {
+          throw new DDLException("The module " + pluginFactory.getName()
+              + " does not extend EnvironmentPlugin")
+        }
+      }
+    }
+  }
+
+  final def setCurrentPlugin(plugin: ParserPluginFactory): Unit = {
+    mCurrentExtensionModule = Some(plugin)
+  }
+
 }

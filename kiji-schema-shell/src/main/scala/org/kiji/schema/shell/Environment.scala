@@ -21,12 +21,15 @@ package org.kiji.schema.shell
 
 import java.io.PrintStream
 
+import scala.collection.immutable.Map
+
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.schema.KConstants
 import org.kiji.schema.KijiURI
 import org.kiji.schema.shell.input.JLineInputSource
 import org.kiji.schema.shell.input.InputSource
+import org.kiji.schema.shell.spi.EnvironmentPlugin
 import org.kiji.schema.shell.spi.ParserPluginFactory
 
 /**
@@ -41,26 +44,29 @@ final class Environment(
     val kijiSystem: AbstractKijiSystem = new KijiSystem,
     val inputSource: InputSource = new JLineInputSource,
     val modules: List[ParserPluginFactory] = List(),
-    val isInteractive: Boolean = false) {
+    val isInteractive: Boolean = false,
+    val extensionMapping: Map[String, Any] = Map()) {
 
   /**
    * @return a new Environment with the instance name replaced with 'newInstance'.
    */
   def withInstance(newInstance: String): Environment = {
     return new Environment(KijiURI.newBuilder(instanceURI).withInstanceName(newInstance).build(),
-        printer, kijiSystem, inputSource, modules, isInteractive)
+        printer, kijiSystem, inputSource, modules, isInteractive, extensionMapping)
   }
 
   /**
    * @return a new Environment with the printer replaced with 'newPrinter'.
    */
   def withPrinter(newPrinter: PrintStream): Environment = {
-    return new Environment(instanceURI, newPrinter, kijiSystem, inputSource, modules, isInteractive)
+    return new Environment(instanceURI, newPrinter, kijiSystem, inputSource, modules,
+        isInteractive, extensionMapping)
   }
 
   /** @return a new Environment with the InputSource replaced with newSource. */
   def withInputSource(newSource: InputSource): Environment = {
-    return new Environment(instanceURI, printer, kijiSystem, newSource, modules, isInteractive)
+    return new Environment(instanceURI, printer, kijiSystem, newSource, modules, isInteractive,
+        extensionMapping)
   }
 
   /**
@@ -78,7 +84,7 @@ final class Environment(
     } else {
       val newModules = modules :+ module // new list, with module appended to modules.
       return new Environment(instanceURI, printer, kijiSystem, inputSource,
-          newModules, isInteractive)
+          newModules, isInteractive, extensionMapping)
     }
   }
 
@@ -92,7 +98,23 @@ final class Environment(
    */
   def withInteractiveFlag(interactiveFlag: Boolean): Environment = {
     return new Environment(instanceURI, printer, kijiSystem, inputSource, modules,
-        interactiveFlag)
+        interactiveFlag, extensionMapping)
+  }
+
+  /**
+   * Return a new Environment with the extension state associated with a given plugin
+   * mapped to a new object. You should not call this method directly. Instead, in
+   * your DDLCommand instance, call {@link DDLCommand#setExtensionState}.
+   *
+   * @param plugin the EnvironmentPlugin instance that owns the state.
+   * @param state the state object to store.
+   * @return a new Environment with the plugin's current state (if any) replaced by the
+   *    new state object supplied as an argument.
+   */
+  def updateExtension[T](plugin: EnvironmentPlugin[T], state: T): Environment = {
+    val newMapping: Map[String, Any] = extensionMapping + (plugin.getName() -> state)
+    return new Environment(instanceURI, printer, kijiSystem, inputSource, modules,
+        isInteractive, newMapping)
   }
 
   /**

@@ -2,6 +2,10 @@
 
                               Kiji Schema Shell Release Notes
 
+Version 1.1.1
+  * DDLSHELL-45. Support extended environment attributes for dynamically-loaded
+      modules through EnvironmentPlugin.
+
 Version 1.1.0
   * DDLSHELL-33. DROP INSTANCE and DROP TABLE commands run on the shell require
       the user to type 'yes' at a prompt. API usage and scripts are not

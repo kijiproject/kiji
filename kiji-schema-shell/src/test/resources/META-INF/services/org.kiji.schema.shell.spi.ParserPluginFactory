@@ -1,2 +1,3 @@
 org.kiji.schema.shell.spi.PluginFactoryImpl1
 org.kiji.schema.shell.spi.PluginFactoryImpl2
+org.kiji.schema.shell.spi.EnvPluginFactoryImpl
