@@ -2,9 +2,14 @@
 
                               Kiji Schema Shell Release Notes
 
-Version 1.1.1
+Version 1.2.0
+  * DDLSHELL-44. Plugins can now define commands that execute Java subprocesses.
+      You can run a Java subprocess with the following commands:
+      MODULE 'fork';
+      FORK JVM 'com.example.MyMainClass' 'arg1' 'arg2' 'arg3...';
   * DDLSHELL-43. Add 'USE JAR INFILE...' command to add a collection of paths
-      to jar libraries to the environment.
+      to jar libraries to the environment. These will be provided to Java
+      subprocesses.
   * DDLSHELL-45. Support extended environment attributes for dynamically-loaded
       modules through EnvironmentPlugin.
 
