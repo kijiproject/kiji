@@ -20,7 +20,7 @@
   "name" : "song-recommender-env",
   "version" : "1.0.0",
   "model_table_uri" : "kiji://.env/default/users",
-  "protocol_version" : "model_environment-0.1.0",
+  "protocol_version" : "model_environment-0.1.1",
   "extract_environment" : {
     "data_request" : {
       "column_definitions" : [ {

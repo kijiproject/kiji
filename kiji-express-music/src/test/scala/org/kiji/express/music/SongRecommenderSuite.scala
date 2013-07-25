@@ -48,14 +48,14 @@ class SongRecommenderSuite extends KijiSuite {
   val topSongsForSong2 = AvroRecord("topSongs" -> AvroList(List(songFive)))
 
   val testUserInput =
-    (EntityId(usersURI)("user-1"),
+    (EntityId("user-1"),
       slice("info:track_plays", (2L, "song-2"), (3L, "song-1"))) ::
-      (EntityId(usersURI)("user-2"),
+      (EntityId("user-2"),
         slice("info:track_plays", (8L, "song-1"), (9L, "song-3"), (10L, "song-2"))) ::
       Nil
-   val testSongInput = (EntityId(songsURI)("song-1"),
+   val testSongInput = (EntityId("song-1"),
         slice("info:top_next_songs", (1L, topSongsForSong1))) ::
-      (EntityId(songsURI)("song-2"),
+      (EntityId("song-2"),
         slice("info:top_next_songs", (1L, topSongsForSong2))) ::
       Nil
   /**

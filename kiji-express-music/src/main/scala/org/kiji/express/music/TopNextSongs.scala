@@ -80,6 +80,6 @@ class TopNextSongs(args: Args) extends KijiJob(args) {
       .groupBy('firstSong) { sortNextSongs }
       .packAvro('topSongs -> 'topNextSongs)
       .map('firstSong -> 'entityId) { firstSong: String =>
-          EntityId(args("songs-table"))(firstSong) }
+          EntityId(firstSong) }
       .write(KijiOutput(args("songs-table"))('topNextSongs -> "info:top_next_songs"))
 }

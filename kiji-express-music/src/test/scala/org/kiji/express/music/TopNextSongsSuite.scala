@@ -43,11 +43,11 @@ class TopNextSongsSuite extends KijiSuite {
 
   // Create some fake track plays for three users.
   val testInput =
-      (EntityId(usersURI)("user-0"),
+      (EntityId("user-0"),
           slice("info:track_plays", (0L, "song-0"), (1L, "song-1"), (2L, "song-2"))) ::
-      (EntityId(usersURI)("user-1"),
+      (EntityId("user-1"),
           slice("info:track_plays", (0L, "song-0"), (1L, "song-0"), (2L, "song-1"))) ::
-      (EntityId(usersURI)("user-2"),
+      (EntityId("user-2"),
           slice("info:track_plays", (0L, "song-1"), (1L, "song-2"), (2L, "song-1"))) ::
       Nil
 

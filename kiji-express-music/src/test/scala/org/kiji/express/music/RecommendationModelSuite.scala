@@ -99,9 +99,9 @@ class RecommendationModelSuite extends KijiSuite {
   // Populate the user's table with some track play information to use in tests.
   val userTableImportResult = new KijiJob(new Args(Map())) {
     IterableSource(List(
-        (EntityId(usersTableURI)("user-0"), "song-0"),
-        (EntityId(usersTableURI)("user-1"), "song-1"),
-        (EntityId(usersTableURI)("user-2"), "song-2")), ('entityId, 'trackPlay)
+        (EntityId("user-0"), "song-0"),
+        (EntityId("user-1"), "song-1"),
+        (EntityId("user-2"), "song-2")), ('entityId, 'trackPlay)
     ).write(KijiOutput(usersTableURI)('trackPlay -> "info:track_plays"))
   }.run
   assert(userTableImportResult, "Failed to import track plays to user table in test setup.")
@@ -111,11 +111,11 @@ class RecommendationModelSuite extends KijiSuite {
   // after song-1, and so on.
   val songsTableImportResult = new KijiJob(new Args(Map())) {
     IterableSource(List(
-        (EntityId(songsTableURI)("song-0"),
+        (EntityId("song-0"),
             AvroRecord("topSongs" -> List(AvroRecord("song_id" -> "song-1")))),
-        (EntityId(songsTableURI)("song-1"),
+        (EntityId("song-1"),
             AvroRecord("topSongs" -> List(AvroRecord("song_id" -> "song-2")))),
-        (EntityId(songsTableURI)("song-2"),
+        (EntityId("song-2"),
             AvroRecord("topSongs" -> List(AvroRecord("song_id" -> "song-3"))))),
         ('entityId, 'topNextSongs)
     ).write(KijiOutput(songsTableURI)('topNextSongs -> "info:top_next_songs"))
