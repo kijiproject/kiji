@@ -47,6 +47,10 @@ MRLIB_VER=1.0.0
 EXPRESS_FLAT_VER=0_6_0
 EXPRESS_VER=0.6.0
 
+# Scoring version
+SCORING_FLAT_VER=0_3_0
+SCORING_VER=0.3.0
+
 # Music Recommendation Tutorial version
 MUSIC_FLAT_VER=1_0_0
 MUSIC_VER=1.0.0

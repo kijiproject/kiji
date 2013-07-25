@@ -51,6 +51,8 @@ APIs, but beware that they may change between minor versions.
   \[[0.2.0](http://api-docs.kiji.org/kiji-express/0.2.0/index.html)\]
   \[[0.1.0](http://api-docs.kiji.org/kiji-express/0.1.0/index.html)\]
 
+* [KijiScoring](http://api-docs.kiji.org/kiji-scoring/0.3.0/index.html) (latest)
+
 ## Extended Framework Tools
 Additional APIs for use by clients of the Kiji framework. Modules in this section
 are intended for testing, or as convenience APIs.
