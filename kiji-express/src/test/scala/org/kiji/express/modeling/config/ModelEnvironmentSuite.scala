@@ -93,6 +93,7 @@ class ModelEnvironmentSuite extends FunSuite {
       new ExpressColumnRequest("info:in", 3, None) :: Nil)
 
     // Extract and score environments to use in tests.
+    val prepareEnv = PrepareEnvironment(dataRequest, Seq(), Seq(), "col:out")
     val extractEnv = ExtractEnvironment(dataRequest, Seq(), Seq())
     val extractEnv2 = ExtractEnvironment(
         dataRequest,
@@ -108,6 +109,7 @@ class ModelEnvironmentSuite extends FunSuite {
       "myname",
       "1.0.0",
       "kiji://myuri",
+      prepareEnv,
       extractEnv,
       scoreEnv)
 
@@ -137,6 +139,34 @@ class ModelEnvironmentSuite extends FunSuite {
     assert(modelEnv5.name === modelEnv4.name)
     assert(modelEnv5.extractEnvironment === modelEnv4.extractEnvironment)
     assert(modelEnv5.scoreEnvironment === modelEnv4.scoreEnvironment)
+  }
+
+  test("A ModelEnvironment can be serialized and deserialized again.") {
+    val dataRequest: ExpressDataRequest = new ExpressDataRequest(0, 38475687,
+      new ExpressColumnRequest("info:in", 3, None) :: Nil)
+
+    // Prepare, extract and score environments to use in tests.
+    val prepareEnv = PrepareEnvironment(dataRequest, Seq(), Seq(), "col:out")
+    val extractEnv = ExtractEnvironment(
+      dataRequest,
+      Seq(FieldBinding("tuplename", "info:storefieldname")),
+      Seq(KVStore("AVRO_KV", "storename", Map("path" -> "/some/great/path"))))
+    val scoreEnv = ScoreEnvironment(
+      "outputFamily:qualifier",
+      Seq(KVStore("KIJI_TABLE", "myname", Map("uri" -> "kiji://.env/default/table",
+        "column" -> "info:email"))))
+
+    val modelEnv = ModelEnvironment(
+      "myname",
+      "1.0.0",
+      "kiji://myuri",
+      prepareEnv,
+      extractEnv,
+      scoreEnv)
+    val jsonModelEnv: String = modelEnv.toJson()
+    val returnedModelEnv: ModelEnvironment = ModelEnvironment.fromJson(jsonModelEnv)
+
+    assert(modelEnv === returnedModelEnv)
   }
 
   test("ModelEnvironment can write out JSON.") {
@@ -192,14 +222,14 @@ class ModelEnvironmentSuite extends FunSuite {
   test("ModelEnvironment validates extract field bindings when programmatically constructed.") {
     val dataRequest: ExpressDataRequest = new ExpressDataRequest(0, 38475687,
         new ExpressColumnRequest("info:in", 3, None) :: Nil)
-
+    val prepareEnv = PrepareEnvironment(dataRequest, Seq(), Seq(), "col:out")
     val extractEnv = ExtractEnvironment(
         dataRequest,
         Seq(
             FieldBinding("tuplename", "info:storefieldname"),
-            FieldBinding("tuplename", "info:storefield2"),
-            FieldBinding("tuplename2", "*invalidcolumnname")),
+            FieldBinding("tuplename", "info:storefield2")),
         Seq(KVStore("AVRO_KV", "storename", Map("path" -> "/some/great/path"))))
+
     val scoreEnv = ScoreEnvironment(
         "outputFamily:qualifier",
         Seq(KVStore("KIJI_TABLE", "myname", Map("uri" -> "kiji://.env/default/table",
@@ -209,12 +239,12 @@ class ModelEnvironmentSuite extends FunSuite {
       "myname",
       "1.0.0",
       "kiji://myuri",
+      prepareEnv,
       extractEnv,
       scoreEnv)
     }
 
     assert(thrown.getMessage.contains("tuplename"))
-    assert(thrown.getMessage.contains("*invalidcolumnname"))
   }
 
   test("ModelEnvironment can convert an Avro data request to a Kiji data request with a" +

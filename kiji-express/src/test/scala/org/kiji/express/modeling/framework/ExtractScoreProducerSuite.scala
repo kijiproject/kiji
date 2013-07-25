@@ -27,14 +27,7 @@ import org.kiji.express.modeling.Extractor
 import org.kiji.express.modeling.ExtractScoreJobBuilder
 import org.kiji.express.modeling.KeyValueStore
 import org.kiji.express.modeling.Scorer
-import org.kiji.express.modeling.config.ExpressColumnRequest
-import org.kiji.express.modeling.config.ExpressDataRequest
-import org.kiji.express.modeling.config.FieldBinding
-import org.kiji.express.modeling.config.ExtractEnvironment
-import org.kiji.express.modeling.config.KVStore
-import org.kiji.express.modeling.config.ModelDefinition
-import org.kiji.express.modeling.config.ModelEnvironment
-import org.kiji.express.modeling.config.ScoreEnvironment
+import org.kiji.express.modeling.config._
 import org.kiji.express.modeling.impl.KeyValueStoreImplSuite
 import org.kiji.express.modeling.lib.FirstValueExtractor
 import org.kiji.express.util.Resources.doAndClose
@@ -47,6 +40,9 @@ import org.kiji.schema.KijiURI
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts
 import org.kiji.schema.util.InstanceBuilder
+import org.kiji.express.modeling.config.FieldBinding
+import org.kiji.express.modeling.config.ExpressColumnRequest
+import org.kiji.express.modeling.config.KVStore
 
 class ExtractScoreProducerSuite
     extends KijiSuite {
@@ -80,6 +76,11 @@ class ExtractScoreProducerSuite
           name = "test-model-environment",
           version = "1.0",
           modelTableUri = uri.toString,
+          prepareEnvironment = PrepareEnvironment(
+              dataRequest = request,
+              fieldBindings = Seq(
+              FieldBinding(tupleFieldName = "field", storeFieldName = "family:column1")),
+              kvstores = Seq(), "col:out"),
           extractEnvironment = ExtractEnvironment(
               dataRequest = request,
               fieldBindings = Seq(
@@ -155,6 +156,11 @@ class ExtractScoreProducerSuite
           name = "test-model-environment",
           version = "1.0",
           modelTableUri = uri.toString,
+          prepareEnvironment = PrepareEnvironment(
+              dataRequest = request,
+              fieldBindings = Seq(
+              FieldBinding(tupleFieldName = "field", storeFieldName = "family:column1")),
+              kvstores = Seq(), "col:out"),
           extractEnvironment = ExtractEnvironment(
               dataRequest = request,
               fieldBindings = Seq(
@@ -221,6 +227,11 @@ class ExtractScoreProducerSuite
           name = "test-model-environment",
           version = "1.0",
           modelTableUri = uri.toString,
+          prepareEnvironment = PrepareEnvironment(
+              dataRequest = request,
+              fieldBindings = Seq(
+              FieldBinding(tupleFieldName = "field", storeFieldName = "family:column1")),
+              kvstores = Seq(), "col:out"),
           extractEnvironment = ExtractEnvironment(
               dataRequest = request,
               fieldBindings = Seq(

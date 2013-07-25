@@ -220,6 +220,36 @@ protocol Modeling {
   }
 
   /**
+   * Runtime resource bindings for the prepare phase.
+   *
+   * Note to developers: Please increment the 'protocol_version' field in AvroModelEnvironment when
+   *     modifying this record.
+   */
+  record AvroPrepareEnvironment {
+     /**
+      * Describes a request for columns of data to read from a Kiji table. Required.
+      * TODO(EXP-161): Accept inputs from multiple source types.
+      */
+     AvroDataRequest data_request;
+
+    /**
+     * The KVStores needed during the extract phase. The default value of this field is the empty
+     * list.
+     */
+    array<AvroKVStore> kv_stores = [];
+
+    /**
+     * Associations between field names and column names. Required.
+     */
+    array<AvroFieldBinding> field_bindings;
+
+    /**
+     * A column name to write the output of the score phase to. Required.
+     */
+    string output_column;
+  }
+
+  /**
    * Runtime resource bindings for the extract phase.
    *
    * Note to developers: Please increment the 'protocol_version' field in AvroModelEnvironment when
@@ -267,9 +297,9 @@ protocol Modeling {
    */
   record AvroModelEnvironment {
     /**
-     * Unique identifier for this model environment. The current version is model_environment-0.1.0.
+     * Unique identifier for this model environment. The current version is model_environment-0.1.1.
      */
-    string protocol_version = "model_environment-0.1.0";
+    string protocol_version = "model_environment-0.1.1";
 
     /**
      * User specified shorthand identifier for this model environment. Required.
@@ -285,6 +315,11 @@ protocol Modeling {
      * Kiji URI addressing the table that this model workflow will be run against. Required.
      */
     string model_table_uri;
+
+    /**
+     * Runtime bindings for data sources used in the prepare phase. Potentially null.
+     */
+    union { null, AvroPrepareEnvironment } prepare_environment = null;
 
     /**
      * Runtime bindings for data sources used in the extract phase. Potentially null.

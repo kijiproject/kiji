@@ -52,65 +52,6 @@ case class FieldBinding(tupleFieldName: String, storeFieldName: String) {
 }
 
 /**
- * A specification of the runtime bindings needed in the extract phase of a model.
- *
- * @param dataRequest describing the input columns required during the extract phase.
- * @param fieldBindings defining a mapping from columns requested to their corresponding field
- *     names. This determines how data that is requested for the extract phase is mapped onto named
- *     input fields.
- * @param kvstores for usage during the extract phase.
- */
-@ApiAudience.Public
-@ApiStability.Experimental
-final class ExtractEnvironment private[express] (
-    val dataRequest: ExpressDataRequest,
-    val fieldBindings: Seq[AvroFieldBinding],
-    val kvstores: Seq[KVStore]) {
-  override def equals(other: Any): Boolean = {
-    other match {
-      case environment: ExtractEnvironment => {
-        dataRequest == environment.dataRequest &&
-            fieldBindings == environment.fieldBindings &&
-            kvstores == environment.kvstores
-      }
-      case _ => false
-    }
-  }
-
-  override def hashCode(): Int =
-      Objects.hashCode(
-          dataRequest,
-          fieldBindings,
-          kvstores)
-}
-
-/**
- * Companion object to ExtractEnvironment containing factory methods.
- */
-object ExtractEnvironment {
-  /**
-   * Creates a new ExtractEnvironment, which is a specification of the runtime bindings needed in
-   * the extract phase of a model.
-   *
-   * @param dataRequest describing the input columns required during the extract phase.
-   * @param fieldBindings describing a mapping from columns requested to their corresponding field
-   *     names. This determines how data that is requested for the extract phase is mapped onto
-   *     named input fields.
-   * @param kvstores describing the kv stores for usage during the extract phase.
-   * @return an ExtractEnvironment with the configuration specified.
-   */
-  def apply(
-      dataRequest: ExpressDataRequest,
-      fieldBindings: Seq[FieldBinding],
-      kvstores: Seq[KVStore]): ExtractEnvironment = {
-    new ExtractEnvironment(
-        dataRequest,
-        fieldBindings.map { fieldBindingSpec => fieldBindingSpec.toAvroFieldBinding },
-        kvstores)
-  }
-}
-
-/**
  * A case class wrapper around the parameters necessary for an Avro KVStore.  This is a convenience
  * for users to define their KVStores when using the ModelEnvironment.
  *
@@ -138,50 +79,6 @@ case class KVStore(storeType: String, name: String, properties: Map[String, Stri
             new Property(name, value)
         }.toSeq.asJava
     return new AvroKVStore(kvStoreType, name, avroProperties)
-  }
-}
-
-/**
- * A specification of the runtime bindings for data sources required in the score phase of a model.
- *
- * @param outputColumn to write scores to.
- * @param kvstores for usage during the score phase.
- */
-@ApiAudience.Public
-@ApiStability.Experimental
-final class ScoreEnvironment private[express] (
-    val outputColumn: String,
-    val kvstores: Seq[KVStore]) {
-  override def equals(other: Any): Boolean = {
-    other match {
-      case environment: ScoreEnvironment => {
-        outputColumn == environment.outputColumn &&
-            kvstores == environment.kvstores
-      }
-      case _ => false
-    }
-  }
-
-  override def hashCode(): Int =
-      Objects.hashCode(
-          outputColumn,
-          kvstores)
-}
-
-/**
- * Companion object containing factory methods for ScoreEnvironment.
- */
-object ScoreEnvironment {
-  /**
-   * Creates a ScoreEnvironment, which is a specification of the runtime bindings for data sources
-   * required in the score phase of a model.
-   *
-   * @param outputColumn to write scores to.
-   * @param kvstores is the specification of the kv stores for usage during the score phase.
-   * @return a ScoreEnvironment with the specified settings.
-   */
-  def apply(outputColumn: String, kvstores: Seq[KVStore]): ScoreEnvironment = {
-    new ScoreEnvironment(outputColumn, kvstores)
   }
 }
 
@@ -271,6 +168,8 @@ object ScoreEnvironment {
  * @param version of the model environment.
  * @param modelTableUri is the URI of the Kiji table this model environment will read from and
  *     write to.
+ * @param prepareEnvironment defining configuration details specific to the Prepare phase of
+ *     a model.
  * @param extractEnvironment defining configuration details specific to the Extract phase of
  *     a model.
  * @param scoreEnvironment defining configuration details specific to the Score phase of a
@@ -283,6 +182,7 @@ final class ModelEnvironment private[express] (
     val name: String,
     val version: String,
     val modelTableUri: String,
+    val prepareEnvironment: PrepareEnvironment,
     val extractEnvironment: ExtractEnvironment,
     val scoreEnvironment: ScoreEnvironment,
     private[express] val protocolVersion: ProtocolVersion =
@@ -290,12 +190,26 @@ final class ModelEnvironment private[express] (
   // Ensure that all fields set for this model environment are valid.
   ModelEnvironment.validateModelEnvironment(this)
 
+
+  /**
+   * TODO(EXP-164): Allow the prepare phase to be optional.
+   */
+
   /**
    * Serializes this model environment into a JSON string.
    *
    * @return a JSON string that represents this model environment.
    */
   final def toJson(): String = {
+    // Build an AvroPrepareEnvironmentRecord.
+    val avroPrepareEnvironment: AvroPrepareEnvironment = AvroPrepareEnvironment
+        .newBuilder()
+        .setFieldBindings(prepareEnvironment.fieldBindings.asJava)
+        .setDataRequest(prepareEnvironment.dataRequest.toAvro)
+        .setKvStores(prepareEnvironment.kvstores.map { kvstore => kvstore.toAvroKVStore }.asJava)
+        .setOutputColumn(prepareEnvironment.outputColumn)
+        .build()
+
     // Build an AvroExtractEnvironment record.
     val avroExtractEnvironment: AvroExtractEnvironment = AvroExtractEnvironment
         .newBuilder()
@@ -318,6 +232,7 @@ final class ModelEnvironment private[express] (
         .setVersion(version)
         .setProtocolVersion(protocolVersion.toString)
         .setModelTableUri(modelTableUri)
+        .setPrepareEnvironment(avroPrepareEnvironment)
         .setExtractEnvironment(avroExtractEnvironment)
         .setScoreEnvironment(avroScoreEnvironment)
         .build()
@@ -334,6 +249,8 @@ final class ModelEnvironment private[express] (
    * @param version of the model environment.
    * @param modelTableUri is the URI of the Kiji table this model environment will read from and
    *     write to.
+   * @param prepareEnvironment defining configuration details specific to the Prepare phase of
+   *     a model.
    * @param extractEnvironment defining configuration details specific to the Extract phase of
    *     a model.
    * @param scoreEnvironment defining configuration details specific to the Score phase of a
@@ -343,12 +260,14 @@ final class ModelEnvironment private[express] (
       name: String = this.name,
       version: String = this.version,
       modelTableUri: String = this.modelTableUri,
+      prepareEnvironment: PrepareEnvironment = this.prepareEnvironment,
       extractEnvironment: ExtractEnvironment = this.extractEnvironment,
       scoreEnvironment: ScoreEnvironment = this.scoreEnvironment): ModelEnvironment = {
     new ModelEnvironment(
         name,
         version,
         modelTableUri,
+        prepareEnvironment,
         extractEnvironment,
         scoreEnvironment)
   }
@@ -359,6 +278,7 @@ final class ModelEnvironment private[express] (
         name == environment.name &&
             version == environment.version &&
             modelTableUri == environment.modelTableUri &&
+            prepareEnvironment == environment.prepareEnvironment &&
             extractEnvironment == environment.extractEnvironment &&
             scoreEnvironment == environment.scoreEnvironment &&
             protocolVersion == environment.protocolVersion
@@ -372,6 +292,7 @@ final class ModelEnvironment private[express] (
           name,
           version,
           modelTableUri,
+          prepareEnvironment,
           extractEnvironment,
           scoreEnvironment,
           protocolVersion)
@@ -404,6 +325,8 @@ object ModelEnvironment {
    * @param version of the model environment.
    * @param modelTableUri is the URI of the Kiji table this model environment will read from and
    *     write to.
+   * @param prepareEnvironment defining configuration details specific to the Prepare phase of
+   *     a model.
    * @param extractEnvironment defining configuration details specific to the Extract phase of
    *     a model.
    * @param scoreEnvironment defining configuration details specific to the Score phase of a
@@ -414,9 +337,11 @@ object ModelEnvironment {
       name: String,
       version: String,
       modelTableUri: String,
+      prepareEnvironment: PrepareEnvironment,
       extractEnvironment: ExtractEnvironment,
       scoreEnvironment: ScoreEnvironment): ModelEnvironment = {
-    new ModelEnvironment(name, version, modelTableUri, extractEnvironment, scoreEnvironment)
+    new ModelEnvironment(name, version, modelTableUri, prepareEnvironment, extractEnvironment,
+        scoreEnvironment)
   }
 
   /**
@@ -445,14 +370,21 @@ object ModelEnvironment {
         .asInstanceOf[AvroModelEnvironment]
     val protocol = ProtocolVersion
         .parse(avroModelEnvironment.getProtocolVersion)
-    val avroDataRequest = avroModelEnvironment.getExtractEnvironment.getDataRequest
-
+    val extractAvroDataRequest = avroModelEnvironment.getExtractEnvironment.getDataRequest
+    val prepareAvroDataRequest = avroModelEnvironment.getPrepareEnvironment.getDataRequest
     // Validate the Avro data request.
-    validateDataRequest(avroDataRequest)
+
+    // Load the preparer's model environment.
+    val prepareEnvironment = new PrepareEnvironment(
+      dataRequest = ExpressDataRequest(prepareAvroDataRequest),
+      fieldBindings = avroModelEnvironment.getPrepareEnvironment.getFieldBindings.asScala,
+      kvstores = avroModelEnvironment.getPrepareEnvironment.getKvStores
+          .asScala.map { avro => avroKVStoreToKVStore(avro) },
+      avroModelEnvironment.getPrepareEnvironment.getOutputColumn)
 
     // Load the extractor's model environment.
     val extractEnvironment = new ExtractEnvironment(
-        dataRequest = ExpressDataRequest(avroDataRequest),
+        dataRequest = ExpressDataRequest(extractAvroDataRequest),
         fieldBindings = avroModelEnvironment.getExtractEnvironment.getFieldBindings.asScala,
         kvstores = avroModelEnvironment.getExtractEnvironment.getKvStores
             .asScala.map { avro => avroKVStoreToKVStore(avro) })
@@ -468,6 +400,7 @@ object ModelEnvironment {
         name = avroModelEnvironment.getName,
         version = avroModelEnvironment.getVersion,
         modelTableUri = avroModelEnvironment.getModelTableUri,
+        prepareEnvironment = prepareEnvironment,
         extractEnvironment = extractEnvironment,
         scoreEnvironment = scoreEnvironment,
         protocolVersion = protocol)
@@ -495,8 +428,6 @@ object ModelEnvironment {
    * @return a Kiji data request converted from the provided Avro data request.
    */
   private[express] def avroToKijiDataRequest(avroDataRequest: AvroDataRequest): KijiDataRequest = {
-    validateDataRequest(avroDataRequest)
-
     val builder = KijiDataRequest.builder()
         .withTimeRange(avroDataRequest.getMinTimestamp(), avroDataRequest.getMaxTimestamp())
 
@@ -529,45 +460,19 @@ object ModelEnvironment {
    *     the provided model definition.
    */
   def validateModelEnvironment(environment: ModelEnvironment) {
-    val extractEnvironment = environment.extractEnvironment
-    val scoreEnvironment = environment.scoreEnvironment
-    val kvstores = extractEnvironment.kvstores
-
-    val fieldNames: Seq[String] = extractEnvironment.fieldBindings.map {
-      fieldBinding: AvroFieldBinding => fieldBinding.getTupleFieldName
-    }
-    val columnNames: Seq[String] = extractEnvironment.fieldBindings.map {
-      fieldBinding: AvroFieldBinding => fieldBinding.getStoreFieldName
-    }
-
     // Collect errors from other validation steps.
-    val validationErrors: Seq[Option[ValidationException]] = Seq(
+    val baseErrors: Seq[Option[ValidationException]] = Seq(
         validateProtocolVersion(environment.protocolVersion),
         validateName(environment.name),
-        validateVersion(environment.version),
-        validateFieldNames(fieldNames),
-        validateColumnNames(columnNames),
-        validateKijiColumnName(scoreEnvironment.outputColumn),
-        validateScoreOutputColumn(scoreEnvironment.outputColumn)
+        validateVersion(environment.version)
     )
 
-    // Validate column names.
-    val columnNameErrors: Seq[Option[ValidationException]] = columnNames.map {
-      columnName: String =>
-        validateKijiColumnName(columnName)
-    }
-
-    // Collect KVStore errors.
-    val kvstoreNameErrors: Seq[Option[ValidationException]] = kvstores.map {
-      kvstore: KVStore => validateKvstoreName(kvstore)
-    }
-    val kvstorePropertiesErrors: Seq[Option[ValidationException]] = kvstores.map {
-      kvstore: KVStore => validateKvstoreProperties(kvstore)
-    }
-    val kvstoreErrors = kvstoreNameErrors ++ kvstorePropertiesErrors
+    val prepareErrors = validatePrepareEnv(environment.prepareEnvironment)
+    val extractErrors = validateExtractEnv(environment.extractEnvironment)
+    val scoreErrors = validateScoreEnv(environment.scoreEnvironment)
 
     // Throw an exception if there were any validation errors.
-    val allErrors = validationErrors ++ columnNameErrors ++ kvstoreErrors
+    val allErrors = baseErrors ++ prepareErrors ++ extractErrors ++ scoreErrors
     val causes = allErrors.flatten
     if (!causes.isEmpty) {
       throw new ModelEnvironmentValidationException(causes)
@@ -616,7 +521,7 @@ object ModelEnvironment {
   }
 
   /**
-   * Verifies that a model definition's version string is valid.
+   * Verifies that a model environment's version string is valid.
    *
    * @param version to validate.
    * @return an optional ValidationException if there are errors encountered while validating the
@@ -634,22 +539,76 @@ object ModelEnvironment {
   }
 
   /**
+   * Verifies that a model environments's prepare phase is valid.
+   *
+   * @param prepareEnv to validate.
+   * @return an optional ValidationException if there are errors encountered while validating the
+   *     prepare phase.
+   */
+  def validatePrepareEnv(prepareEnv: PrepareEnvironment): Seq[Option[ValidationException]] = {
+    val fieldNames: Seq[String] = prepareEnv.fieldBindings.map {
+      fieldBinding: AvroFieldBinding => fieldBinding.getTupleFieldName
+    }
+    val columnNames: Seq[String] = prepareEnv.fieldBindings.map {
+      fieldBinding: AvroFieldBinding => fieldBinding.getStoreFieldName
+    }
+    val fieldBindingExcep = Seq(validateFieldNames(fieldNames), validateColumnNames(columnNames))
+    val kvStoreExcep = validateKvStores(prepareEnv.kvstores)
+    val dataReqExcep = validateDataRequest(prepareEnv.dataRequest)
+
+    val colNameExcep = Seq(validateKijiColumnName(prepareEnv.outputColumn))
+
+    fieldBindingExcep ++ kvStoreExcep ++ dataReqExcep ++ colNameExcep
+  }
+
+  /**
+   * Verifies that a model environments's extract phase is valid.
+   *
+   * @param extractEnv to validate.
+   * @return an optional ValidationException if there are errors encountered while validating the
+   *     extract phase.
+   */
+  def validateExtractEnv(extractEnv: ExtractEnvironment): Seq[Option[ValidationException]] = {
+    val fieldNames: Seq[String] = extractEnv.fieldBindings.map {
+      fieldBinding: AvroFieldBinding => fieldBinding.getTupleFieldName
+    }
+    val columnNames: Seq[String] = extractEnv.fieldBindings.map {
+      fieldBinding: AvroFieldBinding => fieldBinding.getStoreFieldName
+    }
+    val fieldBindingExcep = Seq(validateFieldNames(fieldNames), validateColumnNames(columnNames))
+    val kvStoreExcep = validateKvStores(extractEnv.kvstores)
+    val dataReqExcep = validateDataRequest(extractEnv.dataRequest)
+
+    fieldBindingExcep ++ kvStoreExcep ++ dataReqExcep
+  }
+
+  /**
+   * Verifies that a model environments's score phase is valid.
+   *
+   * @param scoreEnv to validate.
+   * @return an optional ValidationException if there are errors encountered while validating the
+   *     score phase.
+   */
+  def validateScoreEnv(scoreEnv: ScoreEnvironment): Seq[Option[ValidationException]] = {
+    val colNameExcep = Seq(validateKijiColumnName(scoreEnv.outputColumn))
+    val kvStoreExcep = validateKvStores(scoreEnv.kvstores)
+
+    colNameExcep ++ kvStoreExcep
+  }
+
+  /**
    * Validates a data request. Currently this only validates the column names.
    *
    * @param dataRequest to validate.
    * @throws a ModelEnvironmentValidationException if the column names are invalid.
    */
-  def validateDataRequest(dataRequest: AvroDataRequest) {
-    val errors = dataRequest
-        .getColumnDefinitions
-        .asScala
-        .flatMap { column: ColumnSpec =>
-          validateKijiColumnName(column.getName())
+  def validateDataRequest(dataRequest: ExpressDataRequest): Seq[Option[ValidationException]] = {
+    val kijiColNameErrors: Seq[Option[ValidationException]] = dataRequest
+        .columnRequests
+        .map { column: ExpressColumnRequest =>
+          validateKijiColumnName(column.name)
         }
-
-    if (!errors.isEmpty) {
-      throw new ModelEnvironmentValidationException(errors)
-    }
+    kijiColNameErrors
   }
 
   /**
@@ -739,6 +698,23 @@ object ModelEnvironment {
   }
 
   /**
+   * Validates all properties of Seq of KVStores.
+   *
+   * @param kvstores to validate
+   * @return validation exceptions generated while validate the KVStore specification.
+   */
+  def validateKvStores(kvstores: Seq[KVStore]): Seq[Option[ValidationException]] = {
+    // Collect KVStore errors.
+    val kvstoreNameErrors: Seq[Option[ValidationException]] = kvstores.map {
+      kvstore: KVStore => validateKvstoreName(kvstore)
+    }
+    val kvstorePropertiesErrors: Seq[Option[ValidationException]] = kvstores.map {
+      kvstore: KVStore => validateKvstoreProperties(kvstore)
+    }
+    kvstoreNameErrors ++ kvstorePropertiesErrors
+  }
+
+  /**
    * Validates that the tuple field names are distinct and mapped to a unique column name.
    *
    * @param fieldNames to validate.
@@ -789,7 +765,7 @@ object ModelEnvironment {
   }
 
   /**
-   * Validates a column name specified in the model environment as a fully qualified
+   * Validates a column name specified in the model environment is can be used to construct a
    * KijiColumnName.
    *
    * @param name is the string representation of the column name.
@@ -803,13 +779,6 @@ object ModelEnvironment {
         val error = "The column name " + name + " is invalid."
         return Some(new ValidationException(error))
       }
-    }
-
-    val columnName = new KijiColumnName(name)
-    if (!columnName.isFullyQualified()) {
-      val error = "The name " + name + " provided as the data binding must identify a" +
-          " fully qualified column, not a column family."
-      return Some(new ValidationException(error))
     }
     None
   }

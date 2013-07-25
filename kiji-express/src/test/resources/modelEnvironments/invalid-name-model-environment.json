@@ -21,6 +21,32 @@
   "version" : "1.0.0",
   "model_table_uri" : "kiji://.env/default/mytable",
   "protocol_version" : "model_environment-0.1.0",
+    "prepare_environment" : {
+      "data_request" : {
+        "min_timestamp" : 0,
+        "max_timestamp" : 38475687,
+        "column_definitions" : [ {
+          "name" : "info:in",
+          "max_versions" : 3,
+          "filter" : {
+            "regex" : "foo"
+          }
+        } ]
+      },
+      "kv_stores" : [ {
+        "store_type" : "AVRO_KV",
+        "name" : "side_data",
+        "properties" : [ {
+          "name" : "path",
+          "value" : "/usr/src/and/so/on"
+        } ]
+      } ],
+      "field_bindings" : [ {
+        "tuple_field_name" : "in",
+        "store_field_name" : "info:in"
+      } ],
+      "output_column" : "info:out"
+    },
   "extract_environment" : {
     "data_request" : {
       "min_timestamp" : 0,
