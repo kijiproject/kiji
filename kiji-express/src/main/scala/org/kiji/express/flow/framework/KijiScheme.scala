@@ -435,8 +435,8 @@ private[express] object KijiScheme {
     val iterator = columns.keys.iterator
 
     // Get the entityId.
-    val entityId: MaterializedEntityId =
-        output.getObject(entityIdField).asInstanceOf[MaterializedEntityId]
+    val entityId: EntityId =
+        output.getObject(entityIdField).asInstanceOf[EntityId]
 
     // Get a timestamp to write the values to, if it was specified by the user.
     val timestamp: Long = timestampField match {
