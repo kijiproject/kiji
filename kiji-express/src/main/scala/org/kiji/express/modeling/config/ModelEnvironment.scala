@@ -182,7 +182,7 @@ final class ModelEnvironment private[express] (
     val name: String,
     val version: String,
     val modelTableUri: String,
-    val prepareEnvironment: PrepareEnvironment,
+    val prepareEnvironment: Option[PrepareEnvironment],
     val extractEnvironment: ExtractEnvironment,
     val scoreEnvironment: ScoreEnvironment,
     private[express] val protocolVersion: ProtocolVersion =
@@ -202,13 +202,15 @@ final class ModelEnvironment private[express] (
    */
   final def toJson(): String = {
     // Build an AvroPrepareEnvironmentRecord.
-    val avroPrepareEnvironment: AvroPrepareEnvironment = AvroPrepareEnvironment
-        .newBuilder()
-        .setFieldBindings(prepareEnvironment.fieldBindings.asJava)
-        .setDataRequest(prepareEnvironment.dataRequest.toAvro)
-        .setKvStores(prepareEnvironment.kvstores.map { kvstore => kvstore.toAvroKVStore }.asJava)
-        .setOutputColumn(prepareEnvironment.outputColumn)
-        .build()
+    val avroPrepareEnvironment: Option[AvroPrepareEnvironment] = prepareEnvironment.map { env =>
+      AvroPrepareEnvironment
+          .newBuilder()
+          .setFieldBindings(env.fieldBindings.asJava)
+          .setDataRequest(env.dataRequest.toAvro)
+          .setKvStores(env.kvstores.map { kvstore => kvstore.toAvroKVStore }.asJava)
+          .setOutputColumn(env.outputColumn)
+          .build()
+    }
 
     // Build an AvroExtractEnvironment record.
     val avroExtractEnvironment: AvroExtractEnvironment = AvroExtractEnvironment
@@ -232,7 +234,7 @@ final class ModelEnvironment private[express] (
         .setVersion(version)
         .setProtocolVersion(protocolVersion.toString)
         .setModelTableUri(modelTableUri)
-        .setPrepareEnvironment(avroPrepareEnvironment)
+        .setPrepareEnvironment(avroPrepareEnvironment.getOrElse(null))
         .setExtractEnvironment(avroExtractEnvironment)
         .setScoreEnvironment(avroScoreEnvironment)
         .build()
@@ -260,7 +262,7 @@ final class ModelEnvironment private[express] (
       name: String = this.name,
       version: String = this.version,
       modelTableUri: String = this.modelTableUri,
-      prepareEnvironment: PrepareEnvironment = this.prepareEnvironment,
+      prepareEnvironment: Option[PrepareEnvironment] = this.prepareEnvironment,
       extractEnvironment: ExtractEnvironment = this.extractEnvironment,
       scoreEnvironment: ScoreEnvironment = this.scoreEnvironment): ModelEnvironment = {
     new ModelEnvironment(
@@ -304,7 +306,7 @@ final class ModelEnvironment private[express] (
  */
 object ModelEnvironment {
   /** Maximum model environment version we can recognize. */
-  val MAX_RUN_ENV_VER: ProtocolVersion = ProtocolVersion.parse("model_environment-0.1.0")
+  val MAX_RUN_ENV_VER: ProtocolVersion = ProtocolVersion.parse("model_environment-0.1.1")
 
   /** Minimum model environment version we can recognize. */
   val MIN_RUN_ENV_VER: ProtocolVersion = ProtocolVersion.parse("model_environment-0.1.0")
@@ -337,7 +339,7 @@ object ModelEnvironment {
       name: String,
       version: String,
       modelTableUri: String,
-      prepareEnvironment: PrepareEnvironment,
+      prepareEnvironment: Option[PrepareEnvironment],
       extractEnvironment: ExtractEnvironment,
       scoreEnvironment: ScoreEnvironment): ModelEnvironment = {
     new ModelEnvironment(name, version, modelTableUri, prepareEnvironment, extractEnvironment,
@@ -371,16 +373,18 @@ object ModelEnvironment {
     val protocol = ProtocolVersion
         .parse(avroModelEnvironment.getProtocolVersion)
     val extractAvroDataRequest = avroModelEnvironment.getExtractEnvironment.getDataRequest
-    val prepareAvroDataRequest = avroModelEnvironment.getPrepareEnvironment.getDataRequest
+    val prepareAvro = Option(avroModelEnvironment.getPrepareEnvironment)
     // Validate the Avro data request.
 
     // Load the preparer's model environment.
-    val prepareEnvironment = new PrepareEnvironment(
-      dataRequest = ExpressDataRequest(prepareAvroDataRequest),
-      fieldBindings = avroModelEnvironment.getPrepareEnvironment.getFieldBindings.asScala,
-      kvstores = avroModelEnvironment.getPrepareEnvironment.getKvStores
-          .asScala.map { avro => avroKVStoreToKVStore(avro) },
-      avroModelEnvironment.getPrepareEnvironment.getOutputColumn)
+    val prepareEnvironment = prepareAvro.map { prepare =>
+      new PrepareEnvironment(
+          dataRequest = ExpressDataRequest(prepare.getDataRequest),
+          fieldBindings = prepare.getFieldBindings.asScala,
+          kvstores = prepare.getKvStores
+              .asScala.map { avro => avroKVStoreToKVStore(avro) },
+          prepare.getOutputColumn)
+    }
 
     // Load the extractor's model environment.
     val extractEnvironment = new ExtractEnvironment(
@@ -467,7 +471,9 @@ object ModelEnvironment {
         validateVersion(environment.version)
     )
 
-    val prepareErrors = validatePrepareEnv(environment.prepareEnvironment)
+    val prepareErrors = environment.prepareEnvironment.map { env =>
+      validatePrepareEnv(env)
+    }.flatten
     val extractErrors = validateExtractEnv(environment.extractEnvironment)
     val scoreErrors = validateScoreEnv(environment.scoreEnvironment)
 

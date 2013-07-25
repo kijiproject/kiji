@@ -60,7 +60,7 @@ class ModelEnvironmentSuite extends FunSuite {
       "Model environment version strings must match the regex \"[0-9]+(.[0-9]+)*\" " +
       "(1.0.0 would be valid)."
   val expectedProtocolVersionError =
-      "\"model_environment-0.1.0\" is the maximum protocol version supported. " +
+      "\"model_environment-0.1.1\" is the maximum protocol version supported. " +
       "The provided model environment is of protocol version: \"model_environment-0.2.0\""
 
   test("ModelEnvironment can be created from a path to a valid JSON file.") {
@@ -93,7 +93,6 @@ class ModelEnvironmentSuite extends FunSuite {
       new ExpressColumnRequest("info:in", 3, None) :: Nil)
 
     // Extract and score environments to use in tests.
-    val prepareEnv = PrepareEnvironment(dataRequest, Seq(), Seq(), "col:out")
     val extractEnv = ExtractEnvironment(dataRequest, Seq(), Seq())
     val extractEnv2 = ExtractEnvironment(
         dataRequest,
@@ -109,7 +108,7 @@ class ModelEnvironmentSuite extends FunSuite {
       "myname",
       "1.0.0",
       "kiji://myuri",
-      prepareEnv,
+      None,
       extractEnv,
       scoreEnv)
 
@@ -160,7 +159,7 @@ class ModelEnvironmentSuite extends FunSuite {
       "myname",
       "1.0.0",
       "kiji://myuri",
-      prepareEnv,
+      Some(prepareEnv),
       extractEnv,
       scoreEnv)
     val jsonModelEnv: String = modelEnv.toJson()
@@ -222,7 +221,6 @@ class ModelEnvironmentSuite extends FunSuite {
   test("ModelEnvironment validates extract field bindings when programmatically constructed.") {
     val dataRequest: ExpressDataRequest = new ExpressDataRequest(0, 38475687,
         new ExpressColumnRequest("info:in", 3, None) :: Nil)
-    val prepareEnv = PrepareEnvironment(dataRequest, Seq(), Seq(), "col:out")
     val extractEnv = ExtractEnvironment(
         dataRequest,
         Seq(
@@ -239,7 +237,7 @@ class ModelEnvironmentSuite extends FunSuite {
       "myname",
       "1.0.0",
       "kiji://myuri",
-      prepareEnv,
+      None,
       extractEnv,
       scoreEnv)
     }

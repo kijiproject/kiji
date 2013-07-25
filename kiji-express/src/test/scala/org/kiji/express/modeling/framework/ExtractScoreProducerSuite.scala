@@ -76,11 +76,7 @@ class ExtractScoreProducerSuite
           name = "test-model-environment",
           version = "1.0",
           modelTableUri = uri.toString,
-          prepareEnvironment = PrepareEnvironment(
-              dataRequest = request,
-              fieldBindings = Seq(
-              FieldBinding(tupleFieldName = "field", storeFieldName = "family:column1")),
-              kvstores = Seq(), "col:out"),
+          prepareEnvironment = None,
           extractEnvironment = ExtractEnvironment(
               dataRequest = request,
               fieldBindings = Seq(
@@ -156,11 +152,7 @@ class ExtractScoreProducerSuite
           name = "test-model-environment",
           version = "1.0",
           modelTableUri = uri.toString,
-          prepareEnvironment = PrepareEnvironment(
-              dataRequest = request,
-              fieldBindings = Seq(
-              FieldBinding(tupleFieldName = "field", storeFieldName = "family:column1")),
-              kvstores = Seq(), "col:out"),
+          prepareEnvironment = None,
           extractEnvironment = ExtractEnvironment(
               dataRequest = request,
               fieldBindings = Seq(
@@ -227,11 +219,7 @@ class ExtractScoreProducerSuite
           name = "test-model-environment",
           version = "1.0",
           modelTableUri = uri.toString,
-          prepareEnvironment = PrepareEnvironment(
-              dataRequest = request,
-              fieldBindings = Seq(
-              FieldBinding(tupleFieldName = "field", storeFieldName = "family:column1")),
-              kvstores = Seq(), "col:out"),
+          prepareEnvironment = None,
           extractEnvironment = ExtractEnvironment(
               dataRequest = request,
               fieldBindings = Seq(
