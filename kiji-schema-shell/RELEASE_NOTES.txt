@@ -3,6 +3,8 @@
                               Kiji Schema Shell Release Notes
 
 Version 1.2.0
+  * DDLSHELL-47. Plugin modules can now provide 'help' text.
+  * DDLSHELL-36. Fix link to reference manual in 'help' command.
   * DDLSHELL-44. Plugins can now define commands that execute Java subprocesses.
       You can run a Java subprocess with the following commands:
       MODULE 'fork';

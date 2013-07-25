@@ -54,6 +54,10 @@ import org.kiji.schema.shell.Environment
  *       the pattern [a-zA-Z_][a-zA-Z0-9_]*.</li>
  *   <li>The {@link #create} method creates a new instance of the parser plugin.</li>
  * </ul>
+ *
+ * <p>This plugin SPI can be augmented by multiple optional SPI traits. See the
+ * {@link EnvironmentPlugin} and {@link HelpPlugin} traits in this module. You can incorporate
+ * these traits in your ParserPluginFactory implementation.</p>
  */
 @ApiAudience.Framework
 @ApiStability.Experimental

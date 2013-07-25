@@ -25,6 +25,7 @@ import org.kiji.schema.shell.Environment
 import org.kiji.schema.shell.DDLException
 import org.kiji.schema.shell.DDLParserHelpers
 import org.kiji.schema.shell.ddl.DDLCommand
+import org.kiji.schema.shell.spi.HelpPlugin
 import org.kiji.schema.shell.spi.ParserPlugin
 import org.kiji.schema.shell.spi.ParserPluginFactory
 import org.kiji.schema.shell.util.ForkJvm
@@ -37,13 +38,23 @@ import org.kiji.schema.shell.util.ForkJvm
  */
 @ApiAudience.Private
 @ApiStability.Experimental
-final class JvmParserPluginFactory extends ParserPluginFactory {
+final class JvmParserPluginFactory extends ParserPluginFactory with HelpPlugin {
   /** {@inheritDoc} */
   override def getName(): String = "fork"
 
   /** {@inheritDoc} */
   override def create(env: Environment): ParserPlugin = {
     return new JvmParserPlugin(env)
+  }
+
+  override def helpText(): String = {
+    return """Allows you to run Java subprocesses within the Kiji shell.
+             |
+             |The current classpath will be provided to the subprocess, along with
+             |any jars specified by the USE JAR command.
+             |
+             |Syntax: FORK JVM 'com.example.MyMainClass' ['myarg1' 'myarg2' ...];
+             |""".stripMargin
   }
 
   final class JvmParserPlugin(val env: Environment) extends ParserPlugin with DDLParserHelpers {

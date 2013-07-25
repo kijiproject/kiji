@@ -28,6 +28,8 @@ import org.kiji.annotations.ApiStability
 import org.kiji.schema.KijiInvalidNameException
 import org.kiji.schema.shell.ddl.DDLCommand
 import org.kiji.schema.shell.ddl.ErrorCommand
+import org.kiji.schema.shell.spi.HelpPlugin
+import org.kiji.schema.shell.spi.ParserPluginFactory
 
 /**
  * An object that processes user input.
@@ -156,12 +158,26 @@ final class InputProcessor(val throwOnSyntaxErr: Boolean = false) {
         |available online at:
         |""".stripMargin +
         "  http://docs.kiji.org/userguides/schema/" +
-        ShellMain.version() + "/schema-shell-ddl-ref/\n" +
+        org.kiji.schema.util.VersionInfo.getSoftwareVersion() + "/schema-shell-ddl-ref/\n" +
         """
         |For more information,see the README.md file distributed with this program.
         |If you got this in a BentoBox, this is in the 'schema-shell' directory.
         |""".stripMargin
-    printPages(helpLines, env)
+
+    val moduleHelpLines : String = env.modules.foldLeft("")({
+      (helpLines: String, module: ParserPluginFactory) =>
+        if (module.isInstanceOf[HelpPlugin]) {
+          val moduleWithHelp: HelpPlugin = module.asInstanceOf[HelpPlugin]
+          helpLines + """
+            |MODULE """.stripMargin + moduleWithHelp.getName + """:
+            |
+            |""".stripMargin + moduleWithHelp.helpText() + "\n"
+        } else {
+          helpLines
+        }
+    })
+
+    printPages(helpLines + moduleHelpLines, env)
   }
 
   /**
