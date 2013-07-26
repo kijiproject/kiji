@@ -23,8 +23,8 @@ import scala.collection.JavaConverters.seqAsJavaListConverter
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.express.impl.MaterializedEntityId
 import org.kiji.express.util.AvroUtil
-import org.kiji.express.MaterializedEntityId
 import org.kiji.schema.KijiRowKeyComponents
 
 /**

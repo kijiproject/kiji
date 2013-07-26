@@ -24,7 +24,7 @@ import org.apache.avro.generic.GenericRecord
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.express.AvroValue
-import org.kiji.express.MaterializedEntityId
+import org.kiji.express.impl.MaterializedEntityId
 import org.kiji.express.modeling.KeyValueStore
 import org.kiji.mapreduce.kvstore.{ KeyValueStoreReader => JKeyValueStoreReader }
 import org.kiji.schema.KijiRowKeyComponents

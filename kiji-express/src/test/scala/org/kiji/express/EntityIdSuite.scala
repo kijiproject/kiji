@@ -20,17 +20,12 @@
 package org.kiji.express
 
 import scala.collection.JavaConverters.seqAsJavaListConverter
-import scala.collection.mutable.Buffer
 
-import com.twitter.scalding._
-
-import org.kiji.express.flow._
-import org.kiji.express.flow.KijiJob
+import org.kiji.express.impl.HashedEntityId
 import org.kiji.express.util.Resources._
 import org.kiji.schema.{ EntityId => JEntityId }
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiURI
-import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts
 
 /**

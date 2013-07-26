@@ -20,11 +20,11 @@
 package org.kiji.express
 
 import java.lang.IllegalStateException
-import java.util.Arrays
 
 import scala.collection.JavaConverters._
 
-import org.kiji.express.util.EntityIdFactoryCache
+import org.kiji.express.impl.HashedEntityId
+import org.kiji.express.impl.MaterializedEntityId
 import org.kiji.schema.{ EntityId => JEntityId }
 import org.kiji.schema.KijiURI
 
@@ -80,98 +80,6 @@ trait EntityId extends Product {
    * @return whether the two objects are "equal" according to the definition in this scaladoc.
    */
   override def equals(other: Any): Boolean
-}
-
-/**
- * Represents the components of an EntityId in KijiExpress.  An [[org.kiji.express.EntityId]] is
- * fully defined by the table URI and its EntityIdComponents.
- *
- * @param components of an EntityId.
- */
-case class MaterializedEntityId private[express](components: Seq[AnyRef]) extends EntityId {
-  override def productArity: Int = components.length
-
-  override def productElement(n: Int): Any = components(n)
-
-  override def toJavaEntityId(tableUri: KijiURI): JEntityId = {
-    val javaComponents: java.util.List[Object] =
-        components.map { component: Any => component.asInstanceOf[AnyRef] }.asJava
-    val eidFactory = EntityIdFactoryCache.getFactory(tableUri)
-    eidFactory.getEntityId(javaComponents)
-  }
-
-  override def equals(other: Any): Boolean = {
-    other match {
-      case MaterializedEntityId(otherComponents) =>{
-        components.equals(otherComponents)
-      }
-      case otherEntityId: HashedEntityId => {
-        otherEntityId.equals(MaterializedEntityId.this)
-      }
-      case _ => false
-    }
-  }
-}
-
-/**
- * An EntityId that does not provide access to its components.  We keep the table URI and the
- * encoded representation, with which we can still do comparisons.
- *
- * These are never user-created.  They are constructed by KijiExpress when reading from a table with
- * row key format HASHED or with suppress-materialization enabled.
- *
- * @param tableUri for the table this EntityId is associated with.
- * @param encoded byte array representation of this EntityId.
- */
-case class HashedEntityId private[express] (tableUri: String, encoded: Array[Byte])
-    extends EntityId {
-  /** Error message used when trying to materialize this EntityId. */
-  private val materializationError: String = ("Components for this entity Id were not materialized."
-      + "This may be because you have suppressed materialization or used Hashed Entity Ids")
-
-  /** Lazily get the EntityIdFactory from the cache when necessary. */
-  private[express] lazy val eidFactory =
-      EntityIdFactoryCache.getFactory(KijiURI.newBuilder(tableUri).build())
-
-  override def productArity: Int = sys.error(materializationError)
-
-  override def productElement(n: Int): Any = sys.error(materializationError)
-
-  override def toJavaEntityId(tableUri: KijiURI): JEntityId = {
-    val toJavaEntityIdError: String = (
-            "This EntityId can only be used for the table %s.".format(tableUri.toString)
-            + "This may be because you have suppressed materialization or used Hashed Entity Ids. ")
-    require(tableUri.toString == this.tableUri, toJavaEntityIdError)
-    eidFactory.getEntityIdFromHBaseRowKey(encoded)
-  }
-
-  override def toString(): String = {
-    "HashedEntityId(KijiTable: %s, encoded: %s)".format(tableUri, encoded.toSeq.mkString(","))
-  }
-
-  override def equals(other: Any): Boolean = {
-    other match {
-      case otherEid: EntityId => { otherEid match {
-        case HashedEntityId(thatTableUri, otherEncodedVal) => {
-          return this.tableUri == thatTableUri &&
-              encoded.toSeq.mkString("") == otherEncodedVal.toSeq.mkString("")
-        }
-        case that: MaterializedEntityId => {
-          // If the other is materialized with a single component, compare it with that as if it
-          // belonged to the same table as this.
-          if (that.components.length == 1) {
-            val thatEncoded =
-                that.toJavaEntityId(KijiURI.newBuilder(tableUri).build()).getHBaseRowKey
-            return encoded.toSeq.mkString("") == thatEncoded.toSeq.mkString("")
-          } else {
-              // An EntityId with more than one component can't be compared with a HashedEntityId.
-            return false
-          }
-        }
-      } }
-      case _ => return false
-    }
-  }
 }
 
 /**

@@ -25,7 +25,7 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
 import org.kiji.express.AvroValue
-import org.kiji.express.MaterializedEntityId
+import org.kiji.express.impl.MaterializedEntityId
 import org.kiji.express.modeling.impl.AvroKVRecordKeyValueStore
 import org.kiji.express.modeling.impl.AvroRecordKeyValueStore
 import org.kiji.express.modeling.impl.JavaToScalaValueConverter

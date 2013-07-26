@@ -43,13 +43,13 @@ import org.slf4j.LoggerFactory
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.express.EntityId
-import org.kiji.express.MaterializedEntityId
 import org.kiji.express.KijiSlice
 import org.kiji.express.flow.ColumnFamily
 import org.kiji.express.flow.ColumnRequest
 import org.kiji.express.flow.ColumnRequestOptions
 import org.kiji.express.flow.QualifiedColumn
 import org.kiji.express.flow.TimeRange
+import org.kiji.express.impl.MaterializedEntityId
 import org.kiji.express.util.AvroUtil
 import org.kiji.express.util.ExpressGenericTable
 import org.kiji.express.util.Resources.doAndRelease
