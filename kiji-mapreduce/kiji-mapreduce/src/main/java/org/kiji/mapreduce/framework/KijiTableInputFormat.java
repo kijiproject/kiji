@@ -30,6 +30,7 @@ import org.apache.commons.lang.SerializationUtils;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HConstants;
+import org.apache.hadoop.hbase.client.HTableInterface;
 import org.apache.hadoop.hbase.mapreduce.TableSplit;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.mapreduce.InputFormat;
@@ -87,6 +88,23 @@ public final class KijiTableInputFormat
     return new KijiTableRecordReader(mConf);
   }
 
+  /**
+   * Reports the HBase table name for the specified Kiji table.
+   *
+   * @param table Kiji table to report the HBase table name of.
+   * @return the HBase table name for the specified Kiji table.
+   * @throws IOException on I/O error.
+   */
+  private static byte[] getHBaseTableName(KijiTable table) throws IOException {
+    final HBaseKijiTable htable = HBaseKijiTable.downcast(table);
+    final HTableInterface hti = htable.openHTableConnection();
+    try {
+      return hti.getTableName();
+    } finally {
+      hti.close();
+    }
+  }
+
   /** {@inheritDoc} */
   @Override
   public List<InputSplit> getSplits(JobContext context) throws IOException {
@@ -97,7 +115,7 @@ public final class KijiTableInputFormat
     try {
       final KijiTable table = kiji.openTable(inputTableURI.getTable());
       try {
-        final byte[] htableName = HBaseKijiTable.downcast(table).getHTable().getTableName();
+        final byte[] htableName = getHBaseTableName(table);
         final List<InputSplit> splits = Lists.newArrayList();
         byte[] scanStartKey = HConstants.EMPTY_START_ROW;
         if (null != conf.get(KijiConfKeys.KIJI_START_ROW_KEY)) {
