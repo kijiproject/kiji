@@ -39,10 +39,8 @@ import org.kiji.schema.shell.util.ForkJvm
 @ApiAudience.Private
 @ApiStability.Experimental
 final class JvmParserPluginFactory extends ParserPluginFactory with HelpPlugin {
-  /** {@inheritDoc} */
   override def getName(): String = "fork"
 
-  /** {@inheritDoc} */
   override def create(env: Environment): ParserPlugin = {
     return new JvmParserPlugin(env)
   }
@@ -70,6 +68,10 @@ final class JvmParserPluginFactory extends ParserPluginFactory with HelpPlugin {
 
   /**
    * A command that executes a main method in a Java subprocess.
+   *
+   * The subprocess' classpath will include the current process' classpath, along with any
+   * jars specified in the `libJars` element of the provided environment. `libJars` take
+   * precedence over inherited classpath jars.
    *
    * @param the shell environment.
    * @param mainClass to execute.

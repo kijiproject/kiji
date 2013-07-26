@@ -29,7 +29,7 @@ import org.kiji.schema.shell.Environment
  * implementations.
  *
  * <p>Create an instance of this class parameterized by the {@link Class} object
- * that represents your <tt>ParserPluginFactory</tt>. Then call the test methods
+ * that represents your `ParserPluginFactory`. Then call the test methods
  * to test different aspects of its functionality. Call {@link #testAll} to run
  * all test methods.</p>
  *

@@ -30,10 +30,8 @@ import org.kiji.schema.avro.RowKeyFormat2
  */
 @ApiAudience.Private
 final class FormattedKeySuppressFields extends FormattedKeyHashParam {
-  /** {@inheritDoc} */
   override def validate(names: Set[String]): Unit = { }
 
-  /** {@inheritDoc} */
   override def updateHashProperties(format: RowKeyFormat2.Builder): RowKeyFormat2.Builder = {
     format.getSalt().setSuppressKeyMaterialization(true)
     return format

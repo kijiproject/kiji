@@ -28,7 +28,7 @@ final class PlusFourChild
  */
 object PlusFourChild {
   def main(argv: Array[String]) {
-    val input: Int = Integer.parseInt(argv(0))
+    val input: Int = argv(0).toInt
     val sum: Int = input + 4
 
     System.out.println("Input is: " + input)

@@ -188,12 +188,10 @@ class FormattedKeySpec(val params: List[FormattedKeyParam]) {
  */
 object RawFormattedKeySpec extends FormattedKeySpec(List()) {
 
-  /** {@inheritDoc} */
   override def validate(): Unit = {
     // no validation required in RAW key. Other FORMATTED validation is inappropriate.
   }
 
-  /** {@inheritDoc} */
   override def createFormattedKey(): RowKeyFormat2 = {
     // Set the encoding to RAW. No other fields are needed.
     return RowKeyFormat2.newBuilder()

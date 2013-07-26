@@ -30,14 +30,12 @@ import org.kiji.schema.shell.DDLException
  */
 @ApiAudience.Private
 final class FormattedKeyHashSize(val size: Int) extends FormattedKeyHashParam {
-  /** {@inheritDoc} */
   override def validate(names: Set[String]): Unit = {
     if (size < 0 || size > 16) {
       throw new DDLException("Invalid size value: " + size)
     }
   }
 
-  /** {@inheritDoc} */
   override def updateHashProperties(format: RowKeyFormat2.Builder): RowKeyFormat2.Builder = {
     format.getSalt().setHashSize(size)
     return format

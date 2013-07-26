@@ -31,24 +31,24 @@ import org.kiji.schema.shell.ddl.DDLCommand
  * Plugin SPI that specifies a parser for new commands that should extend
  * the Kiji Schema shell.
  *
- * A <tt>ParserPlugin</tt> is created through a {@link ParserPluginFactory}. To
- * extend this interface, you must implement a <tt>ParserPluginFactory</tt> that
- * creates your <tt>ParserPlugin</tt> implementation.
+ * A `ParserPlugin` is created through a {@link ParserPluginFactory}. To
+ * extend this interface, you must implement a `ParserPluginFactory` that
+ * creates your `ParserPlugin` implementation.
  *
  * <p>
- * The <tt>command()</tt> method returns a parser that returns a <tt>DDLCommand</tt> instance
- * that implements the specified command. Your <tt>command()</tt> method can use the parser
- * "or" combinator (<tt>|</tt>) to match multiple commands, each of which returns a different
+ * The `command()` method returns a parser that returns a `DDLCommand` instance
+ * that implements the specified command. Your `command()` method can use the parser
+ * "or" combinator (`|`) to match multiple commands, each of which returns a different
  * DDLCommand implementation.
  * </p>
  *
- * <p>Your parser must match a statement which includes a trailing semicolon (<tt>';'</tt>)
+ * <p>Your parser must match a statement which includes a trailing semicolon (`';'`)
  * character.</p>
  */
 @ApiAudience.Framework
 @ApiStability.Experimental
 @Inheritance.Extensible
-abstract trait ParserPlugin extends RegexParsers {
+trait ParserPlugin extends RegexParsers {
 
   /**
    * The environment in which the parser and its generated AST components will operate.

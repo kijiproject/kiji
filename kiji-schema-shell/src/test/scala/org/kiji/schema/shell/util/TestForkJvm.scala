@@ -35,7 +35,7 @@ import org.kiji.schema.shell.spi._
 /** Tests that DDLCommands extended with ForkJvm work. */
 class TestForkJvm extends SpecificationWithJUnit {
   "Environment plugins" should {
-    "ForkTestPlugin test impl should past the PPTK" in {
+    "ForkTestPlugin test impl should pass the PPTK" in {
       new ParserPluginTestKit(classOf[ForkTestPluginFactoryImpl]).testAll
     }
 

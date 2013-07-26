@@ -34,11 +34,11 @@ import org.kiji.schema.shell.input.NullInputSource
 /** Tests that parser plugins work. */
 class TestParserPlugins extends SpecificationWithJUnit {
   "Parser plugin modules" should {
-    "Test impl1 should past the PPTK" in {
+    "Test impl1 should pass the PPTK" in {
       new ParserPluginTestKit(classOf[PluginFactoryImpl1]).testAll
     }
 
-    "Test impl2 should past the PPTK" in {
+    "Test impl2 should pass the PPTK" in {
       new ParserPluginTestKit(classOf[PluginFactoryImpl2]).testAll
     }
 

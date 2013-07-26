@@ -30,14 +30,14 @@ import org.kiji.delegation.NamedProvider
  *
  * <p>This SPI is a "decorator" SPI that should be attached to a {@link ParserPluginFactory}.
  * It declares that the ParserPluginFactory can also provide 'help' text specifying the module's
- * usage. If this module is loaded through a <tt>MODULE 'modname';</tt> command, this help
+ * usage. If this module is loaded through a `MODULE 'modname';` command, this help
  * text will be appended to the text displayed to the user if she requests help.</p>
  *
  */
 @ApiAudience.Framework
 @ApiStability.Experimental
 @Inheritance.Extensible
-abstract trait HelpPlugin extends NamedProvider {
+trait HelpPlugin extends NamedProvider {
 
   /**
    * Return text specifying how this plugin operates and what syntax it provides.

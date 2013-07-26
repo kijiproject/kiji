@@ -45,12 +45,12 @@ import scala.util.parsing.combinator._
  * grammar elements (for example, table names, column names, etc) may be of use to
  * authors of additional parser plugins that extend the language.
  *
- * <p>Elements like <tt>optionallyQuotedString</tt> should have somewhat obvious
+ * <p>Elements like `optionallyQuotedString` should have somewhat obvious
  * application; this matcher is also used in a more semantically-meaningful form
- * in the case of matchers like <tt>instanceName</tt>, <tt>tableName</tt>, etc.</p>
+ * in the case of matchers like `instanceName`, `tableName`, etc.</p>
  *
- * <p>Case-insensitive strings can be matched with <tt>i("SOMESTR")</tt>;
- * this will match input like <tt>SOMESTR</tt>, <tt>somestr</tt>, and <tt>SoMeStR</tt>, etc.
+ * <p>Case-insensitive strings can be matched with `i("SOMESTR")`;
+ * this will match input like `SOMESTR`, `somestr`, and `SoMeStR`, etc.
  * Uniform definitions of boolean values and integer values are also provided.</p>
  */
 @ApiAudience.Framework

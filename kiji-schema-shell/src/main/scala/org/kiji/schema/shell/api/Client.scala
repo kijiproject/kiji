@@ -42,20 +42,20 @@ import org.kiji.schema.util.ResourceUtils
  * An API used to programmatically execute Schema DDL commands.
  *
  * <p>Create a new instance of a Client, parameterized by a Kiji URI,
- * using the <tt>Client.newInstance(uri)</tt> method.</p>
+ * using the `Client.newInstance(uri)` method.</p>
  *
- * <p>Make one or more calls to <tt>executeStream()</tt> and <tt>executeUpdate()</tt>.
+ * <p>Make one or more calls to `executeStream()` and `executeUpdate()`.
  * Instances of this class are not internally synchronized and should be restricted to
  * a single client thread.</p>
  *
- * <p>Call the <tt>close()</tt> method when you are done with this to release system resources.</p>
+ * <p>Call the `close()` method when you are done with this to release system resources.</p>
  *
  * <p>A client is bound to a particular Kiji URI when it is created. Client instances
  * appear stateless between calls to one of the execute*() methods. So for instance, a
- * <tt>USE</tt> statement in <tt>executeUpdate()</tt> would not cause any specific effect.
+ * `USE` statement in `executeUpdate()` would not cause any specific effect.
  * You should create a client for the specific Kiji instance you want to connect to.
- * A <tt>USE</tt> statement or other environment-altering statement within a stream being
- * processed via <tt>executeStream()</tt> will have an effect on the remainder of the stream,
+ * A `USE` statement or other environment-altering statement within a stream being
+ * processed via `executeStream()` will have an effect on the remainder of the stream,
  * but is not persistent between streams.</p>
  */
 @ApiAudience.Public
@@ -145,7 +145,7 @@ object Client {
    * <p>Java programs should call Client.newInstance(uri).</p>
    *
    * @param uri the Kiji URI to connect to. This must specify a Kiji instance, not an
-   *     HBase cluster URI. (e.g., <tt>kiji://.env/myinstance</tt>.)
+   *     HBase cluster URI. (e.g., `kiji://.env/myinstance`.)
    * @return a new instance of a Client object.
    */
   def newInstance(uri: KijiURI): Client = {

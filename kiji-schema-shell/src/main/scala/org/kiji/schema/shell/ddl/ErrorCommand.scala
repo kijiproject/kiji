@@ -29,7 +29,7 @@ import org.kiji.schema.shell.Environment
  * @param env the environment in which this command is executed.
  * @param parseResult an error message returned by the parser, that should be shown
  *     in the course of "executing" this error-handling command.
- * @param throwOnErr if true, then this command throws a DDLException when its <tt>exec()</tt>
+ * @param throwOnErr if true, then this command throws a DDLException when its `exec()`
  *     method is called (since running this class implies that an error has occurred).
  */
 @ApiAudience.Private

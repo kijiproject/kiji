@@ -107,7 +107,6 @@ final class KijiSystem extends AbstractKijiSystem {
     }
   }
 
-  /** {@inheritDoc} */
   override def getTableNamesDescriptions(uri: KijiURI): Array[(String, String)] = {
     // Get all table names.
     val tableNames: List[String] = kijiCache(uri) match {
@@ -126,7 +125,6 @@ final class KijiSystem extends AbstractKijiSystem {
     }.toArray
   }
 
-  /** {@inheritDoc} */
   override def getTableLayout(uri: KijiURI, table: String): Option[KijiTableLayout] = {
     kijiMetaTable(uri) match {
       case Some(metaTable) => {
@@ -141,7 +139,6 @@ final class KijiSystem extends AbstractKijiSystem {
     }
   }
 
-  /** {@inheritDoc} */
   override def createTable(uri: KijiURI, layout: KijiTableLayout, numRegions: Int): Unit = {
     kijiCache(uri) match {
       case Some(kiji) => { kiji.createTable(layout.getDesc(), numRegions) }
@@ -149,7 +146,6 @@ final class KijiSystem extends AbstractKijiSystem {
     }
   }
 
-  /** {@inheritDoc} */
   override def applyLayout(uri: KijiURI, table: String, layout: TableLayoutDesc): Unit = {
     kijiCache(uri) match {
       case Some(kiji) => { kiji.modifyTableLayout(layout, false, Console.out) }
@@ -157,7 +153,6 @@ final class KijiSystem extends AbstractKijiSystem {
     }
   }
 
-  /** {@inheritDoc} */
   override def dropTable(uri: KijiURI, table: String): Unit = {
     kijiCache(uri) match {
       case Some(kiji) => { kiji.deleteTable(table) }
@@ -165,7 +160,6 @@ final class KijiSystem extends AbstractKijiSystem {
     }
   }
 
-  /** {@inheritDoc} */
   override def listInstances(): Set[String] = {
     def parseInstanceName(kijiTableName: String): Option[String] = {
       val parts: List[String] = StringUtils.split(kijiTableName, '.').toList
@@ -190,7 +184,6 @@ final class KijiSystem extends AbstractKijiSystem {
     return kijiInstanceNames
   }
 
-  /** {@inheritDoc} */
   override def shutdown(): Unit = {
     maybeHBaseAdmin match {
       case None => { /* do nothing. */ }

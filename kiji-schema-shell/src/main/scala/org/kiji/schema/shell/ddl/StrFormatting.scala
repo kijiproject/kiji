@@ -30,27 +30,27 @@ trait StrFormatting {
    * Format a string padded with right-justified space (' ') characters to the
    * 'len' limit, for use when printing formatted tables.
    *
-   * <p>More formally, this function returns <tt>str</tt> with 0 or more space
+   * <p>More formally, this function returns `str` with 0 or more space
    * characters appended to it; the number of space characters appended is
-   * <tt>len - str.length</tt>. This method will not truncate <tt>str</tt>.
+   * `len - str.length`. This method will not truncate `str`.
    * </p>
    *
    * <p>e.g., to print the following table:</p>
-   * <div><pre><tt>
+   * <div><pre>`
    * FOO  BAR
    * f1   b1
    * f2   b2
-   * </tt></pre></div>, use:
+   * `</pre></div>, use:
    *
-   * <div><pre><tt>val fLen = 5
+   * <div><pre>`val fLen = 5
    * val out = new StringBuilder
    * out.append(padTo("FOO", fLen).append("BAR\n")
    *    .append(padTo("f1", fLen)).append("b1\n")
    *    .append(padTo("f2", fLen)).append("b2\n")
-   * </tt></pre></div>
+   * `</pre></div>
    *
    * @param str the string to return in padded form; must not be null.
-   * @param len the maximum expected width of any value for <tt>str</tt>.
+   * @param len the maximum expected width of any value for `str`.
    * @return the padded string.
    */
   final protected def padTo(str: String, len: Int): String = {

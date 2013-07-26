@@ -29,37 +29,37 @@ import org.kiji.schema.shell.Environment
  * Plugin SPI that specifies an extension to the data tracked by the Environment
  * object in the Kiji shell.
  *
- * <p>This SPI is a "decorator" SPI that should be attached to a {@link ParserPluginFactory}.
+ * This SPI is a "decorator" SPI that should be attached to a {@link ParserPluginFactory}.
  * It declares that the ParserPluginFactory also creates an object to be placed in the
  * {@link Environment}. This object can hold any state required to facilitate your plugin's
  * operation over a session consisting of multiple commands. Within the Environment,
  * this is keyed by the same "name" returned by {@link #getName} as in the
- * ParserPluginFactory itself.</p>
+ * ParserPluginFactory itself.
  *
- * <p>The type argument to this class represents the type of object that holds your state.</p>
+ * The type argument to this class represents the type of object that holds your state.
  *
- * <h3>Best Practices Regarding Mutability</h3>
+ * ===Best Practices Regarding Mutability===
  *
- * <p>Changes to the Environment can only happen in the <tt>exec()</tt> method of a
- * <tt>DDLCommand</tt>. Your <tt>ParserPlugin</tt> will emit a <tt>DDLCommand</tt> that
- * represents the custom command to run. The DDLCommand's <tt>exec()</tt> method then
- * returns the Environment to feed forward into the next command.</p>
+ * Changes to the Environment can only happen in the `exec()` method of a
+ * `DDLCommand`. Your `ParserPlugin` will emit a `DDLCommand` that
+ * represents the custom command to run. The DDLCommand's `exec()` method then
+ * returns the Environment to feed forward into the next command.
  *
- * <p>The main <tt>Environment</tt> is an immutable object; "updates" to the Environment
- * are reflected by creating a new <tt>Environment</tt> object that differs from the previous
- * Environment only by a single field.</p>
+ * The main `Environment` is an immutable object; "updates" to the Environment
+ * are reflected by creating a new `Environment` object that differs from the previous
+ * Environment only by a single field.
  *
- * <p><em>It is recommended that you make your own environment extension immutable as well.</em>
+ * <em>It is recommended that you make your own environment extension immutable as well.</em>
  * When updating the state to propagate forward to subsequent commands, you should create a
  * new instance of your environment state class, holding the new information you need. You
  * can then call the {@link DDLCommand#setExtensionState} method to insert this new object in
  * the Environment (actually, this returns a new Environment that contains the updated extension
- * mapping). Your {@link DDLCommand#exec} method should then return this new Environment.</p>
+ * mapping). Your {@link DDLCommand#exec} method should then return this new Environment.
  */
 @ApiAudience.Framework
 @ApiStability.Experimental
 @Inheritance.Extensible
-abstract trait EnvironmentPlugin[EnvState] extends NamedProvider {
+trait EnvironmentPlugin[EnvState] extends NamedProvider {
 
   /**
    * Create the initial state held by your extension to the Environment. This will

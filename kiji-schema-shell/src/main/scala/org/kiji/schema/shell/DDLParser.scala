@@ -207,29 +207,29 @@ final class DDLParser(val env: Environment) extends JavaTokenParsers
    *
    * <p>Examples:</p>
    * <ul>
-   *   <li><tt>ROW KEY FORMAT (name STRING)</tt> - Hash-prefixed string field called "name"</li>
-   *   <li><tt>ROW KEY FORMAT (name)</tt> - Hash-prefixed string field called "name". Key
+   *   <li>`ROW KEY FORMAT (name STRING)` - Hash-prefixed string field called "name"</li>
+   *   <li>`ROW KEY FORMAT (name)` - Hash-prefixed string field called "name". Key
    *       fields are assumed to be strings if not otherwise specified.</li>
-   *   <li><tt>ROW KEY FORMAT (zip INT, name STRING)</tt> - A hash-prefixed pair of fields.
+   *   <li>`ROW KEY FORMAT (zip INT, name STRING)` - A hash-prefixed pair of fields.
    *       Only the "zip" field is hashed.
    *       The "name" field may be null (because it is not the first field).</li>
-   *   <li><tt>ROW KEY FORMAT (zip INT, name STRING NOT NULL)</tt> - Specifies that the
+   *   <li>`ROW KEY FORMAT (zip INT, name STRING NOT NULL)` - Specifies that the
    *       "name" field may not be null. If this property is applied to the <em>i</em>'th field,
    *       it must also be applied to all fields <em>0 &lt;= field_index &lt; i</em>.</li>
-   *   <li><tt>ROW KEY FORMAT (name STRING, HASH (SIZE = 4))</tt> - Specifies the size of
+   *   <li>`ROW KEY FORMAT (name STRING, HASH (SIZE = 4))` - Specifies the size of
    *       the hash prefix for the key in bytes. The default is 2. HASH SIZE must be between
    *       0 (disabled) and 16 bytes per key.</li>
-   *   <li><tt>ROW KEY FORMAT (name STRING, HASH (THROUGH name, SIZE = 4))</tt> - Synonym for the
+   *   <li>`ROW KEY FORMAT (name STRING, HASH (THROUGH name, SIZE = 4))` - Synonym for the
    *       previous example.</li>
-   *   <li><tt>ROW KEY FORMAT (firstname STRING, lastname STRING, HASH (THROUGH lastname))</tt>
-   *       - Specifies that the hash prefix covers both fields. The <tt>THROUGH</tt> clause
+   *   <li>`ROW KEY FORMAT (firstname STRING, lastname STRING, HASH (THROUGH lastname))`
+   *       - Specifies that the hash prefix covers both fields. The `THROUGH` clause
    *       specifies the right-most component included in the hash. All components to the left
    *       are also hashed.</li>
-   *   <li><tt>ROW KEY FORMAT (name STRING, HASH (SUPPRESS FIELDS))</tt> - Specifies that
+   *   <li>`ROW KEY FORMAT (name STRING, HASH (SUPPRESS FIELDS))` - Specifies that
    *       the actual "name" field will not be recorded: just its hash. This is identical
-   *       to the original <tt>ROW KEY FORMAT HASHED</tt> clause. If <tt>SUPPRESS
-   *       FIELDS</tt> is specified, the hash size is set to 16 unless explicitly set with
-   *       a <tt>SIZE = int</tt> clause. The "THROUGH" clause is implicitly set to include
+   *       to the original `ROW KEY FORMAT HASHED` clause. If `SUPPRESS
+   *       FIELDS` is specified, the hash size is set to 16 unless explicitly set with
+   *       a `SIZE = int` clause. The "THROUGH" clause is implicitly set to include
    *       all fields if it's not already set. If you explicitly set THROUGH, it must be
    *       through the last (right-most) field.</li>
    * </ul>
@@ -242,11 +242,11 @@ final class DDLParser(val env: Environment) extends JavaTokenParsers
   /**
    * Within a formatted row key, several properties can be specified:
    * <ul>
-   *   <li>a named, typed element. (e.g., <tt>foo STRING</tt>)</li>
-   *   <li>a named, untyped element. (e.g., <tt>bar</tt>) - Uses type "STRING"</li>
-   *   <li>an element with an optional <tt>NOT NULL</tt> qualifier (e.g., <tt>foo STRING NOT
-   *       NULL</tt>). The first element is always implicitly NOT NULL.</li>
-   *   <li>a <tt>HASH (...)</tt> component that specifies how the hash prefix works.<li>
+   *   <li>a named, typed element. (e.g., `foo STRING`)</li>
+   *   <li>a named, untyped element. (e.g., `bar`) - Uses type "STRING"</li>
+   *   <li>an element with an optional `NOT NULL` qualifier (e.g., `foo STRING NOT
+   *       NULL`). The first element is always implicitly NOT NULL.</li>
+   *   <li>a `HASH (...)` component that specifies how the hash prefix works.<li>
    * </ul>
    */
   def formattedKeyParam: Parser[FormattedKeyParam] = (
@@ -261,14 +261,14 @@ final class DDLParser(val env: Environment) extends JavaTokenParsers
    * parameters:
    *
    * <ul>
-   *   <li><tt>THROUGH <i>fieldname</i></tt> - Specify that the given field is the rightmost
+   *   <li>`THROUGH <i>fieldname</i>` - Specify that the given field is the rightmost
    *       field included in the calculation of the hash prefix. Key field names specified
    *       in this fashion represent a left prefix of the total key. That is, given fields
-   *       <tt>(a, b, c)</tt>, specifying <tt>HASH (THROUGH b)</tt> includes the first two
+   *       `(a, b, c)`, specifying `HASH (THROUGH b)` includes the first two
    *       fields in the hash. By default the left-most field is incorporated in this
    *       fashion implicitly.</li>
-   *   <li><tt>SIZE = n</tt> - specify how many bytes of hash prefixing to use. Default is 2</li>
-   *   <li><tt>SUPPRESS FIELDS</tt> - specify that no fields should be literally materialized;
+   *   <li>`SIZE = n` - specify how many bytes of hash prefixing to use. Default is 2</li>
+   *   <li>`SUPPRESS FIELDS` - specify that no fields should be literally materialized;
    *       only retain the hash itself. If no SIZE argument is specified, then the hash
    *       defaults to the full 16 bytes.</li>
    * </ul>

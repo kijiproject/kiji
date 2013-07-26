@@ -30,11 +30,10 @@ import org.kiji.schema.shell.DDLException
 
 /**
  * The name of the right-most row key component to include in the hash,
- * specified by a <tt>HASH (THROUGH <i>fieldname</i>, ...)</tt> clause.
+ * specified by a `HASH (THROUGH <i>fieldname</i>, ...)` clause.
  */
 @ApiAudience.Private
 final class FormattedKeyHashComponent(val name: String) extends FormattedKeyHashParam {
-  /** {@inheritDoc} */
   override def validate(names: Set[String]): Unit = {
     if (!names.contains(name)) {
       throw new DDLException("'" + name + "' does not represent a component already defined " +
@@ -42,7 +41,6 @@ final class FormattedKeyHashComponent(val name: String) extends FormattedKeyHash
     }
   }
 
-  /** {@inheritDoc} */
   override def updateHashProperties(format: RowKeyFormat2.Builder): RowKeyFormat2.Builder = {
     // This function moves the range_scan_start_index to the offset after the specified field.
     format.getComponents().zipWithIndex.foreach { case(component, idx) =>

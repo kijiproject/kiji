@@ -31,20 +31,21 @@ import org.kiji.schema.shell.Environment
  *
  * <p>You can register a new plugin by doing the following:</p>
  * <ul>
- *   <li>Extend the <tt>ParserPluginFactory</tt> abstract class.</li>
+ *   <li>Extend the `ParserPluginFactory` abstract class.</li>
  *   <li>Create a text file named
- *   <tt>src/main/resources/META-INF/services/org.kiji.schema.shell.spi.ParserPluginFactory</tt>.
+ *   `src/main/resources/META-INF/services/org.kiji.schema.shell.spi.ParserPluginFactory`.
  *       </li>
  *   <li>In this file, include the fully-qualified name of your factory class.</li>
- *   <li>Create a {@link ParserPlugin} implementation that extends the schema shell with
- *       new statement parsers. This <tt>ParserPluginFactory</tt> should create an instance
- *       of your <tt>ParserPlugin</tt> in the {@link #create} method.</li>
+ *   <li>Create a [[org.kiji.schema.shell.spi.ParserPlugin]] implementation that extends
+ *       the schema shell with
+ *       new statement parsers. This `ParserPluginFactory` should create an instance
+ *       of your `ParserPlugin` in the {@link #create} method.</li>
  * </ul>
  *
  * <p>Clients can use your plugin by doing the following:</p>
  * <ul>
  *   <li>Make sure your compiled jar file is on the classpath of the Kiji schema shell.</li>
- *   <li>Type <tt>MODULE &lt;module-name&gt;</tt>, where <em>&lt;module-name&gt;</em> is
+ *   <li>Type `MODULE &lt;module-name&gt;`, where <em>&lt;module-name&gt;</em> is
  *       the string returned by getModuleName().</li>
  *   <li>Use the new syntax from your parser plugin.</li>
  * </ul>
@@ -62,10 +63,10 @@ import org.kiji.schema.shell.Environment
 @ApiAudience.Framework
 @ApiStability.Experimental
 @Inheritance.Extensible
-abstract trait ParserPluginFactory extends NamedProvider {
+trait ParserPluginFactory extends NamedProvider {
   /**
    * Factory method that creates a new instance of your {@link ParserPlugin}
-   * class. You should return an instance of <tt>ParserPlugin</tt> parameterized
+   * class. You should return an instance of `ParserPlugin` parameterized
    * by the specified environment.
    *
    * @param env the environment under which your parser plugin will evaluate.

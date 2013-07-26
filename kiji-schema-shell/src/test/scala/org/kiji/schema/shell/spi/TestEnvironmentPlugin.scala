@@ -34,7 +34,7 @@ import org.kiji.schema.shell.input.NullInputSource
 /** Tests that parser plugins extended with EnvironmentPlugin work. */
 class TestEnvironmentPlugin extends SpecificationWithJUnit {
   "Environment plugins" should {
-    "EnvPlugin test impl should past the PPTK" in {
+    "EnvPlugin test impl should pass the PPTK" in {
       new ParserPluginTestKit(classOf[EnvPluginFactoryImpl]).testAll
     }
 

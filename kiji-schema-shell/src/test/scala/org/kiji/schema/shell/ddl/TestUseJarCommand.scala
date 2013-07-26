@@ -21,7 +21,8 @@ package org.kiji.schema.shell.ddl
 
 import java.io.File
 
-import org.kiji.schema.shell.{DDLException, LocalJarFile}
+import org.kiji.schema.shell.DDLException
+import org.kiji.schema.shell.LocalJarFile
 import com.google.common.io.Files
 
 class TestUseJarCommand extends CommandTestCase {

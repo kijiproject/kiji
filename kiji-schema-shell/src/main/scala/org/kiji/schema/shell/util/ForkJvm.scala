@@ -33,7 +33,7 @@ import org.kiji.schema.shell.LocalJarFile
 
 /**
  * Utility for DDLCommands that need to run code in a subprocess. This trait
- * defines one method <tt>forkJvm()</tt> that allows the caller to invoke
+ * defines one method `forkJvm()` that allows the caller to invoke
  * an arbitrary main() method in a Java subprocess.
  */
 @ApiAudience.Framework
@@ -46,8 +46,8 @@ trait ForkJvm {
    *
    * <p>This method spawns a Java process with the following specification:</p>
    * <ul>
-   *   <li>The Java process will be invoked from the <tt>bin/java</tt> program in
-   *       the <tt>java.home</tt> system property.</li>
+   *   <li>The Java process will be invoked from the `bin/java` program in
+   *       the `java.home` system property.</li>
    *   <li>The current operating system environment variables for this process will be sent
    *       to the subprocess.</li>
    *   <li>stdout and stderr will be forwarded from the current process' handles. stdin is
@@ -56,7 +56,7 @@ trait ForkJvm {
    *   <li>The classpath will include all libJars from the specified environment, followed
    *       by the entries in this process' java.class.path system property.</li>
    *   <li>No specific Java system properties are specified by default. System properties
-   *       may be set by specifying them using <tt>"-Dprop=val"</tt> entries in the jvmArgs
+   *       may be set by specifying them using `"-Dprop=val"` entries in the jvmArgs
    *       argument.</li>
    * </ul>
    *
@@ -65,7 +65,7 @@ trait ForkJvm {
    * @param env the current Kiji shell environment.
    * @param mainClass the name of the main Java class to run in the subprocess.
    * @param jvmArgs any arguments to specify to the JVM itself (e.g., system properties).
-   *     The <tt>-classpath</tt> argument will be provided by this method, but you may
+   *     The `-classpath` argument will be provided by this method, but you may
    *     include other arguments here if you wish.
    * @param userArgs the list of argv elements to forward to the main class.
    * @return the exit status from the child process. Per POSIX, 0 is success, nonzero is failure.
@@ -115,7 +115,7 @@ trait ForkJvm {
 
   /**
    * Process a set of JarLocation objects and reify this to a string suitable for use in
-   * a Java <tt>-classpath</tt> argument.
+   * a Java `-classpath` argument.
    *
    * @param a list of JarLocation objects to reify, i.e., from the current Environment.
    * @return a colon-separated list of paths to local jar files to load on the classpath.
