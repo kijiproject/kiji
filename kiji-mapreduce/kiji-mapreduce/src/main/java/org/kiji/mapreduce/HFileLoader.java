@@ -20,22 +20,14 @@
 package org.kiji.mapreduce;
 
 import java.io.IOException;
-import java.util.List;
 
-import com.google.common.collect.Lists;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.TableNotFoundException;
-import org.apache.hadoop.hbase.client.HTable;
-import org.apache.hadoop.hbase.mapreduce.LoadIncrementalHFiles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
-import org.kiji.schema.InternalKijiError;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.impl.HBaseKijiTable;
 
@@ -79,38 +71,6 @@ public final class HFileLoader {
    * @throws IOException If there is an error.
    */
   public void load(Path hfilePath, KijiTable table) throws IOException {
-    LoadIncrementalHFiles loader;
-    try {
-      loader = new LoadIncrementalHFiles(mConf); // throws Exception
-    } catch (Exception exn) {
-      throw new InternalKijiError(exn);
-    }
-
-    try {
-      // doBulkLoad() requires a concrete HTable instance:
-      final HTable htable = (HTable) HBaseKijiTable.downcast(table).getHTable();
-
-      List<Path> hfilePaths = Lists.newArrayList();
-
-      // Try to find any hfiles for partitions within the passed in path
-      final FileStatus[] hfiles = FileSystem.get(mConf).globStatus(new Path(hfilePath, "*"));
-      for (FileStatus hfile : hfiles) {
-        String partName = hfile.getPath().getName();
-        if (!partName.startsWith("_") && partName.endsWith(".hfile")) {
-          Path partHFile = new Path(hfilePath, partName);
-          hfilePaths.add(partHFile);
-        }
-      }
-      if (hfilePaths.isEmpty()) {
-        // If we didn't find any parts, add in the passed in parameter
-        hfilePaths.add(hfilePath);
-      }
-      for (Path path : hfilePaths) {
-        loader.doBulkLoad(path, htable);
-        LOG.info("Successfully loaded: " + path.toString());
-      }
-    } catch (TableNotFoundException tnfe) {
-      throw new InternalKijiError(tnfe);
-    }
+    HBaseKijiTable.downcast(table).bulkLoad(hfilePath);
   }
 }
