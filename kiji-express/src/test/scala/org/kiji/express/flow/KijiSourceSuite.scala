@@ -404,7 +404,7 @@ class KijiSourceSuite
     }
 
     // Build test job.
-    JobTest(new PluralizeReplaceJob(_))
+    val jobTest = JobTest(new PluralizeReplaceJob(_))
       .arg("input", uri)
       .arg("output", "outputFile")
       .source(KijiInput(uri)(
@@ -413,9 +413,9 @@ class KijiSourceSuite
           Column("family:column2")
       .replaceMissingWith("missing") -> 'word2)), missingValuesInput(uri))
       .sink(Tsv("outputFile"))(validateMissingValuesReplaced)
-      // Run the test job.
-      .run
-      .finish
+
+    jobTest.run.finish
+    jobTest.runHadoop.finish
   }
 
   // TODO(EXP-7): Write this test.

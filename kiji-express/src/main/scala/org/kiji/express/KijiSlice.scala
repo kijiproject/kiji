@@ -71,7 +71,7 @@ import org.kiji.schema.KijiCell
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-class KijiSlice[T] private[express] (val cells: Seq[Cell[T]]) {
+class KijiSlice[T] private[express] (val cells: Seq[Cell[T]]) extends Serializable {
   /**
    * Gets the first cell, as decided by the ordering of the slice.
    *
