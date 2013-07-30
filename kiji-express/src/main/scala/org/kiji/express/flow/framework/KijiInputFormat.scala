@@ -32,6 +32,7 @@ import org.apache.hadoop.mapred.Reporter
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.express.util.Resources.doAndClose
 import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.Kiji
@@ -78,32 +79,31 @@ final class KijiInputFormat
 
     doAndRelease(Kiji.Factory.open(inputTableURI, configuration)) { kiji: Kiji =>
       doAndRelease(kiji.openTable(inputTableURI.getTable())) { table: KijiTable =>
-        val htable: HTableInterface = HBaseKijiTable.downcast(table).getHTable()
-
-        table.getRegions().asScala
-            .map { region: KijiRegion =>
-              val startKey: Array[Byte] = region.getStartKey()
-              // TODO(KIJIMR-65): For now pick the first available location (ie. region server),
-              //     if any.
-              val location: String = {
-                if (region.getLocations().isEmpty()) {
-                  // scalastyle:off null
-                  null
-                  // scalastyle:on null
-                } else {
-                  region.getLocations().iterator().next()
-                }
+        doAndClose(HBaseKijiTable.downcast(table).openHTableConnection()) { htable =>
+          table.getRegions().asScala.map { region: KijiRegion =>
+            val startKey: Array[Byte] = region.getStartKey()
+            // TODO(KIJIMR-65): For now pick the first available location (ie. region server),
+            //     if any.
+            val location: String = {
+              if (region.getLocations().isEmpty()) {
+                // scalastyle:off null
+                null
+                // scalastyle:on null
+              } else {
+                region.getLocations().iterator().next()
               }
-              val tableSplit: TableSplit = {
-                new TableSplit(
-                    htable.getTableName(),
-                    startKey,
-                    region.getEndKey(),
-                    location)
-              }
-              new KijiTableSplit(tableSplit)
             }
-            .toArray
+            val tableSplit: TableSplit = {
+              new TableSplit(
+                  htable.getTableName(),
+                  startKey,
+                  region.getEndKey(),
+                  location)
+            }
+            new KijiTableSplit(tableSplit)
+          }
+          .toArray
+        }
       }
     }
   }
