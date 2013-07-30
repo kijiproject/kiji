@@ -38,6 +38,7 @@ import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiTableReader
 import org.kiji.schema.KijiTableReader.KijiScannerOptions
 import org.kiji.schema.KijiURI
+import org.kiji.schema.hbase.HBaseScanOptions
 
 /**
  * Reads rows from an HBase region of a Kiji table as key-value pairs that can be used with the
@@ -104,9 +105,12 @@ final class KijiRecordReader(
   }
   /** Used to scan a subset of rows from the table. */
   private val scanner: KijiRowScanner = {
+    val hbaseScannerOptions: HBaseScanOptions = new HBaseScanOptions()
+    hbaseScannerOptions.setCacheBlocks(false)
     val scannerOptions: KijiScannerOptions = new KijiScannerOptions()
         .setStartRow(HBaseEntityId.fromHBaseRowKey(split.getStartRow()))
         .setStopRow(HBaseEntityId.fromHBaseRowKey(split.getEndRow()))
+        .setHBaseScanOptions(hbaseScannerOptions)
 
     reader.getScanner(dataRequest, scannerOptions)
   }
