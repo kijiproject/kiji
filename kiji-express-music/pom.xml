@@ -11,7 +11,7 @@
   <parent>
     <groupId>org.kiji.pom</groupId>
     <artifactId>root-pom</artifactId>
-    <version>1.1.1</version>
+    <version>1.1.2</version>
   </parent>
 
   <licenses>
@@ -23,7 +23,7 @@
   </licenses>
 
   <properties>
-    <kiji.framework.version>1.1.0</kiji.framework.version>
+    <kiji.framework.version>1.1.1-SNAPSHOT</kiji.framework.version>
     <express.version>0.7.0-SNAPSHOT</express.version>
     <scalatest.version>2.0.M5b</scalatest.version>
   </properties>
