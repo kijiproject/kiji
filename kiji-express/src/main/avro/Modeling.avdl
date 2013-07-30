@@ -42,7 +42,15 @@ protocol Modeling {
      */
     string version;
 
-    // TODO(EXP-54): Make the default value of this 'org.kiji.express.modeling.IdentityExtractor'
+    /**
+     * Fully qualified class name of the class to use in the prepare phase. This class must
+     * implement the preparer trait. Set this field to null to specify that no prepare phase
+     * should be used.
+     */
+    union {null, string} preparer_class = null;
+
+    // TODO(EXP-54): Make the default value of this
+    //     'org.kiji.express.modeling.lib.IdentityExtractor'.
     /**
      * Fully qualified class name of the class to use in the extract phase. This class must
      * implement the extractor trait.

@@ -2,6 +2,7 @@
                              Kiji Express Release Notes
 
 Version 0.7.0
+  * EXP-121. Adds support for the prepare phase of the model lifecycle.
   * EXP-87. An EntityId no longer needs to be constructed using a
     a Kiji URI. Users should now need to only specify the EntityId
     components when creating an EntityId. For example,

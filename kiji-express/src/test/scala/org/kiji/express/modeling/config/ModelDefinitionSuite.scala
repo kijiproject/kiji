@@ -19,119 +19,139 @@
 
 package org.kiji.express.modeling.config
 
-import scala.io.Source
-
+import com.twitter.scalding.RichPipe
 import org.scalatest.FunSuite
 
 import org.kiji.express.avro.AvroModelDefinition
 import org.kiji.express.modeling.ExtractFn
 import org.kiji.express.modeling.Extractor
+import org.kiji.express.modeling.Preparer
 import org.kiji.express.modeling.ScoreFn
 import org.kiji.express.modeling.Scorer
-import org.kiji.express.util.Resources.doAndClose
+import org.kiji.express.util.Resources.resourceAsString
 import org.kiji.schema.util.FromJson
 import org.kiji.schema.util.ToJson
 
 class ModelDefinitionSuite extends FunSuite {
-  val validDefinitionLocation: String =
-      "src/test/resources/modelDefinitions/valid-model-definition.json"
-  val invalidVersionDefinitionLocation: String =
-      "src/test/resources/modelDefinitions/invalid-version-model-definition.json"
-  val invalidNameDefinitionLocation: String =
-      "src/test/resources/modelDefinitions/invalid-name-model-definition.json"
-  val invalidExtractorDefinitionLocation: String =
-      "src/test/resources/modelDefinitions/invalid-extractor-model-definition.json"
-  val invalidScorerDefinitionLocation: String =
-      "src/test/resources/modelDefinitions/invalid-scorer-model-definition.json"
-  val invalidProtocolDefinitionLocation: String =
-      "src/test/resources/modelDefinitions/invalid-protocol-model-definition.json"
-  val invalidExtractorClassName: String =
-      "src/test/resources/modelDefinitions/invalid-extractor-class-name.json"
-  val invalidScorerClassName: String =
-      "src/test/resources/modelDefinitions/invalid-scorer-class-name.json"
+  val validDefinition: String = resourceAsString(
+      "modelDefinitions/valid-model-definition.json")
+  val invalidVersionDefinition: String = resourceAsString(
+      "modelDefinitions/invalid-version-model-definition.json")
+  val invalidNameDefinition: String = resourceAsString(
+      "modelDefinitions/invalid-name-model-definition.json")
+  val invalidPreparerDefinition: String = resourceAsString(
+      "modelDefinitions/invalid-preparer-model-definition.json")
+  val invalidExtractorDefinition: String = resourceAsString(
+      "modelDefinitions/invalid-extractor-model-definition.json")
+  val invalidScorerDefinition: String = resourceAsString(
+      "modelDefinitions/invalid-scorer-model-definition.json")
+  val invalidProtocolDefinition: String = resourceAsString(
+      "modelDefinitions/invalid-protocol-model-definition.json")
+  val invalidPreparerClassNameDefinition: String = resourceAsString(
+      "modelDefinitions/invalid-preparer-class-name.json")
+  val invalidExtractorClassNameDefinition: String = resourceAsString(
+      "modelDefinitions/invalid-extractor-class-name.json")
+  val invalidScorerClassNameDefinition: String = resourceAsString(
+      "modelDefinitions/invalid-scorer-class-name.json")
 
   test("A ModelDefinition can be created from specified parameters.") {
-    val modelDefinition = ModelDefinition("name",
-        "1.0.0",
-        classOf[org.kiji.express.modeling.config.ModelDefinitionSuite.MyExtractor],
-        classOf[org.kiji.express.modeling.config.ModelDefinitionSuite.MyScorer])
+    val modelDefinition = ModelDefinition(
+        name = "name",
+        version = "1.0.0",
+        preparer = Some(classOf[ModelDefinitionSuite.MyPreparer]),
+        extractor = classOf[ModelDefinitionSuite.MyExtractor],
+        scorer = classOf[ModelDefinitionSuite.MyScorer])
+    // Validate the constructed definition.
     assert("name" === modelDefinition.name)
     assert("1.0.0" === modelDefinition.version)
-    assert(classOf[org.kiji.express.modeling.config.ModelDefinitionSuite.MyExtractor] ===
-        modelDefinition.extractorClass)
-    assert(classOf[org.kiji.express.modeling.config.ModelDefinitionSuite.MyScorer] ===
-        modelDefinition.scorerClass)
+    assert(classOf[ModelDefinitionSuite.MyPreparer] === modelDefinition.preparerClass.get)
+    assert(classOf[ModelDefinitionSuite.MyExtractor] === modelDefinition.extractorClass)
+    assert(classOf[ModelDefinitionSuite.MyScorer] === modelDefinition.scorerClass)
+
+    // Serialize and deserialize the definition.
+    val serialized = modelDefinition.toJson()
+    val deserialized = ModelDefinition.fromJson(serialized)
+
+    // Validated the deserialized definition.
+    assert("name" === deserialized.name)
+    assert("1.0.0" === deserialized.version)
+    assert(classOf[ModelDefinitionSuite.MyPreparer] === deserialized.preparerClass.get)
+    assert(classOf[ModelDefinitionSuite.MyExtractor] === deserialized.extractorClass)
+    assert(classOf[ModelDefinitionSuite.MyScorer] === deserialized.scorerClass)
   }
 
   test("Settings on a model definition can be modified.") {
-    val modelDefinition = ModelDefinition("name",
-      "1.0.0",
-      classOf[org.kiji.express.modeling.config.ModelDefinitionSuite.MyExtractor],
-      classOf[org.kiji.express.modeling.config.ModelDefinitionSuite.MyScorer])
+    val modelDefinition = ModelDefinition(
+        name = "name",
+        version = "1.0.0",
+        preparer = Some(classOf[ModelDefinitionSuite.MyPreparer]),
+        extractor = classOf[ModelDefinitionSuite.MyExtractor],
+        scorer = classOf[ModelDefinitionSuite.MyScorer])
 
     val modelDefinition2 = modelDefinition.withNewSettings(name = "name2")
     assert("name2" === modelDefinition2.name)
     assert("1.0.0" === modelDefinition2.version)
-    assert(classOf[org.kiji.express.modeling.config.ModelDefinitionSuite.MyExtractor] ===
-        modelDefinition2.extractorClass)
-    assert(classOf[org.kiji.express.modeling.config.ModelDefinitionSuite.MyScorer] ===
-        modelDefinition2.scorerClass)
+    assert(classOf[ModelDefinitionSuite.MyPreparer] === modelDefinition2.preparerClass.get)
+    assert(classOf[ModelDefinitionSuite.MyExtractor] === modelDefinition2.extractorClass)
+    assert(classOf[ModelDefinitionSuite.MyScorer] === modelDefinition2.scorerClass)
 
     val modelDefinition3 = modelDefinition2.withNewSettings(version = "2.0.0")
     assert("name2" === modelDefinition3.name)
     assert("2.0.0" === modelDefinition3.version)
-    assert(classOf[org.kiji.express.modeling.config.ModelDefinitionSuite.MyExtractor] ===
-        modelDefinition3.extractorClass)
-    assert(classOf[org.kiji.express.modeling.config.ModelDefinitionSuite.MyScorer] ===
-        modelDefinition3.scorerClass)
+    assert(classOf[ModelDefinitionSuite.MyPreparer] === modelDefinition3.preparerClass.get)
+    assert(classOf[ModelDefinitionSuite.MyExtractor] === modelDefinition3.extractorClass)
+    assert(classOf[ModelDefinitionSuite.MyScorer] === modelDefinition3.scorerClass)
 
     val modelDefinition4 = modelDefinition3.withNewSettings(
-        extractor =
-            classOf[org.kiji.express.modeling.config.ModelDefinitionSuite.AnotherExtractor])
+        preparer = Some(classOf[ModelDefinitionSuite.AnotherPreparer]))
     assert("name2" === modelDefinition4.name)
     assert("2.0.0" === modelDefinition4.version)
-    assert(classOf[org.kiji.express.modeling.config.ModelDefinitionSuite.AnotherExtractor] ===
-        modelDefinition4.extractorClass)
-    assert(classOf[org.kiji.express.modeling.config.ModelDefinitionSuite.MyScorer] ===
-        modelDefinition4.scorerClass)
+    assert(classOf[ModelDefinitionSuite.AnotherPreparer] === modelDefinition4.preparerClass.get)
+    assert(classOf[ModelDefinitionSuite.MyExtractor] === modelDefinition4.extractorClass)
+    assert(classOf[ModelDefinitionSuite.MyScorer] === modelDefinition4.scorerClass)
 
     val modelDefinition5 = modelDefinition4.withNewSettings(
-      scorer = classOf[org.kiji.express.modeling.config.ModelDefinitionSuite.AnotherScorer])
+        extractor = classOf[ModelDefinitionSuite.AnotherExtractor])
     assert("name2" === modelDefinition5.name)
     assert("2.0.0" === modelDefinition5.version)
-    assert(classOf[org.kiji.express.modeling.config.ModelDefinitionSuite.AnotherExtractor] ===
-        modelDefinition5.extractorClass)
-    assert(classOf[org.kiji.express.modeling.config.ModelDefinitionSuite.AnotherScorer] ===
-        modelDefinition5.scorerClass)
+    assert(classOf[ModelDefinitionSuite.AnotherPreparer] === modelDefinition5.preparerClass.get)
+    assert(classOf[ModelDefinitionSuite.AnotherExtractor] === modelDefinition5.extractorClass)
+    assert(classOf[ModelDefinitionSuite.MyScorer] === modelDefinition5.scorerClass)
+
+    val modelDefinition6 = modelDefinition5.withNewSettings(
+        scorer = classOf[ModelDefinitionSuite.AnotherScorer])
+    assert("name2" === modelDefinition6.name)
+    assert("2.0.0" === modelDefinition6.version)
+    assert(classOf[ModelDefinitionSuite.AnotherPreparer] === modelDefinition6.preparerClass.get)
+    assert(classOf[ModelDefinitionSuite.AnotherExtractor] === modelDefinition6.extractorClass)
+    assert(classOf[ModelDefinitionSuite.AnotherScorer] === modelDefinition6.scorerClass)
   }
 
   test("ModelDefinition can be created from a path to a valid JSON file.") {
     val definition: ModelDefinition = ModelDefinition
-        // TODO(EXP-53): Permit loading of configuration resources from a jar.
         .fromJsonFile("src/test/resources/modelDefinitions/valid-model-definition.json")
 
     assert("abandoned-cart-model" === definition.name)
     assert("1.0.0" === definition.version)
+    assert(classOf[ModelDefinitionSuite.MyPreparer].getName
+        === definition.preparerClass.get.getName)
     assert(classOf[ModelDefinitionSuite.MyExtractor].getName === definition.extractorClass.getName)
     assert(classOf[ModelDefinitionSuite.MyScorer].getName === definition.scorerClass.getName)
   }
 
   test("ModelDefinition can write out JSON") {
-    val originalJson: String = doAndClose(Source.fromFile(validDefinitionLocation)) { source =>
-      source.mkString
-    }
     val originalAvroObject: AvroModelDefinition = FromJson
-        .fromJsonString(originalJson, AvroModelDefinition.SCHEMA$)
+        .fromJsonString(validDefinition, AvroModelDefinition.SCHEMA$)
         .asInstanceOf[AvroModelDefinition]
 
-    val definition: ModelDefinition = ModelDefinition.fromJson(originalJson)
+    val definition: ModelDefinition = ModelDefinition.fromJson(validDefinition)
     val newJson: String = definition.toJson()
     assert(ToJson.toAvroJsonString(originalAvroObject) === newJson)
   }
 
   test("ModelDefinition validates the name property") {
     val thrown = intercept[ModelDefinitionValidationException] {
-      ModelDefinition.fromJsonFile(invalidNameDefinitionLocation)
+      ModelDefinition.fromJson(invalidNameDefinition)
     }
     assert(ModelDefinition.VALIDATION_MESSAGE + "\nThe name of the model definition cannot be " +
         "the empty string." === thrown.getMessage)
@@ -139,15 +159,25 @@ class ModelDefinitionSuite extends FunSuite {
 
   test("ModelDefinition validates the version format") {
     val thrown = intercept[ModelDefinitionValidationException] {
-      ModelDefinition.fromJsonFile(invalidVersionDefinitionLocation)
+      ModelDefinition.fromJson(invalidVersionDefinition)
     }
     assert(ModelDefinition.VALIDATION_MESSAGE + "\nModel definition version strings must match " +
         "the regex \"[0-9]+(.[0-9]+)*\" (1.0.0 would be valid)." === thrown.getMessage)
   }
 
+  test("ModelDefinition validates the preparer class") {
+    val thrown = intercept[ValidationException] {
+      ModelDefinition.fromJson(invalidPreparerDefinition)
+    }
+    val badPreparer = "org.kiji.express.modeling.config.ModelDefinitionSuite$MyBadPreparer"
+    assert(thrown.getMessage.contains("An instance of the class \"%s\"".format(badPreparer) +
+        " could not be cast as an instance of Preparer. Please ensure that you have" +
+        " provided a valid class that inherits from the Preparer class."))
+  }
+
   test("ModelDefinition validates the extractor class") {
     val thrown = intercept[ValidationException] {
-      ModelDefinition.fromJsonFile(invalidExtractorDefinitionLocation)
+      ModelDefinition.fromJson(invalidExtractorDefinition)
     }
     val badExtractor = "org.kiji.express.modeling.config.ModelDefinitionSuite$MyBadExtractor"
     assert(thrown.getMessage.contains("An instance of the class \"%s\"".format(badExtractor) +
@@ -157,7 +187,7 @@ class ModelDefinitionSuite extends FunSuite {
 
   test("ModelDefinition validates the scorer class") {
     val thrown = intercept[ValidationException] {
-      ModelDefinition.fromJsonFile(invalidScorerDefinitionLocation)
+      ModelDefinition.fromJson(invalidScorerDefinition)
     }
     val badScorer = "org.kiji.express.modeling.config.ModelDefinitionSuite$MyBadScorer"
     assert(thrown.getMessage.contains("An instance of the class \"%s\"".format(badScorer) +
@@ -167,16 +197,24 @@ class ModelDefinitionSuite extends FunSuite {
 
   test("ModelDefinition validates the wire protocol") {
     val thrown = intercept[ModelDefinitionValidationException] {
-      ModelDefinition.fromJsonFile(invalidProtocolDefinitionLocation)
+      ModelDefinition.fromJson(invalidProtocolDefinition)
     }
     assert(ModelDefinition.VALIDATION_MESSAGE + "\n\"model_definition-0.1.0\" is the maximum " +
         "protocol version supported. The provided model definition is of protocol version: " +
         "\"model_definition-0.2.0\"" === thrown.getMessage)
   }
 
+  test("ModelDefinition fails with a ValidationException given an invalid preparer class name") {
+    val thrown = intercept[ValidationException] {
+      ModelDefinition.fromJson(invalidPreparerClassNameDefinition)
+    }
+    assert("The class \"blah\" could not be found. Please ensure that you have provided a valid " +
+        "class name and that it is available on your classpath." === thrown.getMessage)
+  }
+
   test("ModelDefinition fails with a ValidationException given an invalid extractor class name") {
     val thrown = intercept[ValidationException] {
-      ModelDefinition.fromJsonFile(invalidExtractorClassName)
+      ModelDefinition.fromJson(invalidExtractorClassNameDefinition)
     }
     assert("The class \"blah\" could not be found. Please ensure that you have provided a valid " +
         "class name and that it is available on your classpath." === thrown.getMessage)
@@ -184,7 +222,7 @@ class ModelDefinitionSuite extends FunSuite {
 
   test("ModelDefinition fails with a ValidationException given an invalid scorer class name") {
     val thrown = intercept[ValidationException] {
-      ModelDefinition.fromJsonFile(invalidScorerClassName)
+      ModelDefinition.fromJson(invalidScorerClassNameDefinition)
     }
     assert("The class \"blah\" could not be found. Please ensure that you have provided a valid " +
         "class name and that it is available on your classpath." === thrown.getMessage)
@@ -192,6 +230,14 @@ class ModelDefinitionSuite extends FunSuite {
 }
 
 object ModelDefinitionSuite {
+  class MyPreparer extends Preparer {
+    def prepare(input: RichPipe): RichPipe = {
+      input
+    }
+  }
+
+  class AnotherPreparer extends MyPreparer
+
   class MyExtractor extends Extractor {
     def extractFn: ExtractFn[_, _] = extract('textLine -> 'first) { line: String =>
       line
@@ -211,6 +257,8 @@ object ModelDefinitionSuite {
   }
 
   class AnotherScorer extends MyScorer
+
+  class MyBadPreparer { def howTrue: Boolean = true }
 
   class MyBadExtractor { def howTrue: Boolean = true }
 

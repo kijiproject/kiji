@@ -28,6 +28,7 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.express.avro.AvroModelDefinition
 import org.kiji.express.modeling.Extractor
+import org.kiji.express.modeling.Preparer
 import org.kiji.express.modeling.Scorer
 import org.kiji.express.util.Resources.doAndClose
 import org.kiji.express.util.Tuples
@@ -82,6 +83,7 @@ import org.kiji.schema.util.ToJson
 final class ModelDefinition private[express] (
     val name: String,
     val version: String,
+    val preparerClass: Option[java.lang.Class[_ <: Preparer]],
     val extractorClass: java.lang.Class[_ <: Extractor],
     val scorerClass: java.lang.Class[_ <: Scorer],
     private[express] val protocolVersion: ProtocolVersion =
@@ -94,13 +96,14 @@ final class ModelDefinition private[express] (
    *
    * @return a JSON string that represents the model definition.
    */
-  final def toJson(): String = {
+  def toJson(): String = {
     // Build an AvroModelDefinition record.
     val definition: AvroModelDefinition = AvroModelDefinition
         .newBuilder()
         .setName(name)
         .setVersion(version)
         .setProtocolVersion(protocolVersion.toString)
+        .setPreparerClass(preparerClass.map { _.getName } .getOrElse(null))
         .setExtractorClass(extractorClass.getName)
         .setScorerClass(scorerClass.getName)
         .build()
@@ -120,11 +123,13 @@ final class ModelDefinition private[express] (
    * @param scorer used by the model definition.
    * @return a new model definition using the settings specified to this method.
    */
-  final def withNewSettings( name: String = this.name,
+  def withNewSettings(
+      name: String = this.name,
       version: String = this.version,
+      preparer: Option[Class[_ <: Preparer]] = this.preparerClass,
       extractor: Class[_ <: Extractor] = this.extractorClass,
       scorer: Class[_ <: Scorer] = this.scorerClass): ModelDefinition = {
-    new ModelDefinition(name, version, extractor, scorer, this.protocolVersion)
+    new ModelDefinition(name, version, preparer, extractor, scorer, this.protocolVersion)
   }
 
   override def equals(other: Any): Boolean = {
@@ -132,6 +137,7 @@ final class ModelDefinition private[express] (
       case definition: ModelDefinition => {
         name == definition.name &&
             version == definition.version &&
+            preparerClass == definition.preparerClass &&
             extractorClass == definition.extractorClass &&
             scorerClass == definition.scorerClass &&
             protocolVersion == definition.protocolVersion
@@ -144,6 +150,7 @@ final class ModelDefinition private[express] (
       Objects.hashCode(
           name,
           version,
+          preparerClass,
           extractorClass,
           scorerClass,
           protocolVersion)
@@ -181,9 +188,16 @@ object ModelDefinition {
    */
   def apply(name: String,
       version: String,
+      preparer: Option[Class[_ <: Preparer]] = None,
       extractor: Class[_ <: Extractor],
       scorer: Class[_ <: Scorer]): ModelDefinition = {
-    new ModelDefinition(name, version, extractor, scorer, ModelDefinition.CURRENT_MODEL_DEF_VER)
+    new ModelDefinition(
+        name = name,
+        version = version,
+        preparerClass = preparer,
+        extractorClass = extractor,
+        scorerClass = scorer,
+        protocolVersion = ModelDefinition.CURRENT_MODEL_DEF_VER)
   }
 
   /**
@@ -200,68 +214,69 @@ object ModelDefinition {
     val protocol = ProtocolVersion
         .parse(avroModelDefinition.getProtocolVersion)
 
-    // Attempt to load the Extractor class.
-    val extractor: Class[Extractor] = try {
-      val checkClass = Class
-          .forName(avroModelDefinition.getExtractorClass)
-          .asInstanceOf[Class[Extractor]]
-      checkClass.newInstance().asInstanceOf[Extractor]
+    /**
+     * Retrieves the class for the provided phase implementation class name handling errors
+     * properly.
+     *
+     * @param phaseImplName to build phase class from.
+     * @param phase that the resulting class should belong to.
+     * @tparam T is the type of the phase class.
+     * @return the phase implementation class.
+     */
+    def getClassForPhase[T](phaseImplName: String, phase: Class[T]): Class[T] = {
+      val checkClass: Class[T] = try {
+        Class.forName(phaseImplName).asInstanceOf[Class[T]]
+      } catch {
+        case _: ClassNotFoundException => {
+          val error = "The class \"%s\" could not be found.".format(phaseImplName) +
+              " Please ensure that you have provided a valid class name and that it is available" +
+              " on your classpath."
+          throw new ValidationException(error)
+        }
+      }
+
+      // Ensure that the class can be instantiated (force an early failure).
+      try {
+        if (!phase.isInstance(checkClass.newInstance())) {
+          val error = ("An instance of the class \"%s\" could not be cast as an instance of %s." +
+              " Please ensure that you have provided a valid class that inherits from the" +
+              " %s class.").format(phaseImplName, phase.getSimpleName, phase.getSimpleName)
+          throw new ValidationException(error)
+        }
+      } catch {
+        case e @ (_ : IllegalAccessException | _ : InstantiationException |
+                  _ : ExceptionInInitializerError | _ : SecurityException) => {
+          val error = "Unable to create instance of %s.".format(checkClass.getCanonicalName)
+          throw new ValidationException(error + e.toString)
+        }
+      }
+
       checkClass
-    } catch {
-      case _: ClassNotFoundException => {
-        val extractorClass = avroModelDefinition.getExtractorClass
-        val error = "The class \"%s\" could not be found.".format(extractorClass) +
-            " Please ensure that you have provided a valid class name and that it is available" +
-            " on your classpath."
-        throw new ValidationException(error)
-      }
-      case _: ClassCastException => {
-        val extractorClass = avroModelDefinition.getExtractorClass
-        val error = "An instance of the class \"%s\" could not be cast".format(extractorClass) +
-            " as an instance of Extractor. Please ensure that you have provided a valid class" +
-            " that inherits from the Extractor class."
-        throw new ValidationException(error)
-      }
-      case e @ (_ : IllegalAccessException | _ : InstantiationException |
-          _ : ExceptionInInitializerError | _ : SecurityException) => {
-        val error = "Unable to instantiate instance of Extractor class: "
-        throw new ValidationException(error + e.toString)
-      }
     }
 
-    // Attempt to load the Scorer class.
-    val scorer: Class[Scorer] = try {
-      val checkClass = Class
-          .forName(avroModelDefinition.getScorerClass)
-          .asInstanceOf[Class[Scorer]]
-      checkClass.newInstance().asInstanceOf[Scorer]
-      checkClass
-    } catch {
-      case _: ClassNotFoundException => {
-        val scorerClass = avroModelDefinition.getScorerClass
-        val error = "The class \"%s\" could not be found.".format(scorerClass) +
-            " Please ensure that you have provided a valid class name and that it is available" +
-            " on your classpath."
-        throw new ValidationException(error)
-      }
-      case _: ClassCastException => {
-        val scorerClass = avroModelDefinition.getScorerClass
-        val error = "An instance of the class \"%s\" could not be cast".format(scorerClass) +
-            " as an instance of Scorer. Please ensure that you have provided a valid class" +
-            " that inherits from the Scorer class."
-        throw new ValidationException(error)
-      }
-      case e @ (_ : IllegalAccessException | _ : InstantiationException |
-          _ : ExceptionInInitializerError | _ : SecurityException) => {
-        val error = "Unable to instantiate instance of Scorer class: "
-        throw new ValidationException(error + e.toString)
-      }
+    // Attempt to load the Preparer class.
+    val preparerClassName: Option[String] = Option(avroModelDefinition.getPreparerClass)
+    val preparer: Option[Class[Preparer]] = preparerClassName.map { className: String =>
+      getClassForPhase[Preparer](
+          phaseImplName = className,
+          phase = classOf[Preparer])
     }
+
+    // Attempt to load the Extractor class.
+    val extractor: Class[Extractor] = getClassForPhase[Extractor](
+        phaseImplName = avroModelDefinition.getExtractorClass,
+        phase = classOf[Extractor])
+
+    // Attempt to load the Scorer class.
+    val scorer: Class[Scorer] = getClassForPhase[Scorer](
+        phaseImplName = avroModelDefinition.getScorerClass,
+        phase = classOf[Scorer])
 
     // Build a model definition.
     new ModelDefinition(
         name = avroModelDefinition.getName,
         version = avroModelDefinition.getVersion,
+        preparerClass = preparer,
         extractorClass = extractor,
         scorerClass = scorer,
         protocolVersion = protocol)
@@ -393,7 +408,7 @@ object ModelDefinition {
         .fields
         ._1
 
-    if (!extractorOutputFields.isResults()) {
+    if (!extractorOutputFields.isResults) {
       Tuples
           .fieldsToSeq(extractorOutputFields)
           .toSet
