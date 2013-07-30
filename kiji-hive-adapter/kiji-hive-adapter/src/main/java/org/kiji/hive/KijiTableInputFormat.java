@@ -20,11 +20,11 @@
 package org.kiji.hive;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.hbase.HConstants;
-import org.apache.hadoop.hbase.client.HTable;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.InputFormat;
@@ -32,14 +32,15 @@ import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.hive.io.KijiRowDataWritable;
 import org.kiji.schema.Kiji;
+import org.kiji.schema.KijiRegion;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;
-import org.kiji.schema.impl.HBaseKijiTable;
 import org.kiji.schema.util.ResourceUtils;
 
 /**
@@ -106,22 +107,31 @@ public class KijiTableInputFormat
       kijiTable = kiji.openTable(kijiURI.getTable());
 
       // Get the start keys for each region in the table.
-      final HTable hbaseTable = (HTable) HBaseKijiTable.downcast(kijiTable).getHTable();
-      final byte[][] regionStartKeys = hbaseTable.getStartKeys();
-      LOG.info("RegionStartKeys {} ", regionStartKeys.length);
-      splits = new InputSplit[regionStartKeys.length];
-      for (int i = 0; i < regionStartKeys.length; i++) {
-        @SuppressWarnings("deprecation")
-        final String regionHost =
-            hbaseTable.getRegionLocation(regionStartKeys[i]).getHostname();
-        final byte[] regionEndKey = (i == regionStartKeys.length - 1)
-            ? HConstants.EMPTY_BYTE_ARRAY : regionStartKeys[i + 1];
+      List<KijiRegion> kijiRegions = kijiTable.getRegions();
+      splits = new InputSplit[kijiRegions.size()];
+      for (int i = 0; i < kijiRegions.size(); i++) {
+        KijiRegion kijiRegion = kijiRegions.get(i);
+        byte[] regionStartKey = kijiRegion.getStartKey();
+        byte[] regionEndKey = kijiRegion.getEndKey();
+
+        Collection<String> regionLocations = kijiRegion.getLocations();
+        String regionHost = null;
+        if (!regionLocations.isEmpty()) {
+          // TODO: Allow the usage of regions that aren't the first.
+          String regionLocation = regionLocations.iterator().next();
+          regionHost = regionLocation.substring(0, regionLocation.indexOf(":"));
+        } else {
+          LOG.warn("No locations found for region: {}", kijiRegion.toString());
+        }
         final Path dummyPath = FileInputFormat.getInputPaths(job)[0];
         splits[i] = new KijiTableInputSplit(kijiURI,
-            regionStartKeys[i], regionEndKey, regionHost, dummyPath);
+            regionStartKey, regionEndKey, regionHost, dummyPath);
       }
+    } catch (IOException e) {
+      LOG.warn("Unable to get region information.  Returning an empty list of splits.");
+      LOG.warn(StringUtils.stringifyException(e));
+      return new InputSplit[0];
     } finally {
-      LOG.warn("Unable to get region start keys");
       ResourceUtils.releaseOrLog(kijiTable);
       ResourceUtils.releaseOrLog(kiji);
     }
