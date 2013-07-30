@@ -146,8 +146,8 @@ import org.kiji.schema.KijiColumnName;
  *   final MapReduceJob job = KijiBulkImportJobBuilder.create()
         .withConf(conf)
         .withBulkImporter(XMLBulkImporter.class)
-        .withInput(new XMLMapReduceJobInput(new Path(inputFile.toString())))
-        .withOutput(new HFileMapReduceJobOutput(mOutputTable, hfileDirPath))
+        .withInput(MapReduceJobInputs.newXMLMapReduceJobInput(new Path(inputFile.toString())))
+        .withOutput(MapReduceJobOutputs.newHFileMapReduceJobOutput(mOutputTable, hfileDirPath))
         .build();
  * </code></pre>
  * <p>
@@ -155,7 +155,8 @@ import org.kiji.schema.KijiColumnName;
  *   <em>not recommended</em> because it generates individual puts for each cell that is being
  *   written. For small jobs or tests, a direct Kiji table output job can be created by modifying
  *   the .withOutput parameter to:
- *   <code>.withOutput(new DirectKijiTableMapReduceJobOutput(mOutputTableURI))</code>
+ *   <code>.withOutput(MapReduceJobOutputs
+ *       .newDirectKijiTableMapReduceJobOutput(mOutputTableURI))</code>
  * </p>
  * <h2> Launching an XML bulk import job from the command line:</h2>
  * <p>
