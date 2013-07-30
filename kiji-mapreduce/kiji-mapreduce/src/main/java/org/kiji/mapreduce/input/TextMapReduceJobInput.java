@@ -41,7 +41,8 @@ import org.kiji.annotations.ApiStability;
  * <pre>
  *   <code>
  *     final Path inputFile = new Path("/path/to/input");
- *     final MapReduceJobInput textJobInput = new TextMapReduceJobInput(inputFile);
+ *     final MapReduceJobInput textJobInput =
+ *         MapReduceJobInputs.newTextMapReduceJobInput(inputFile);
  *   </code>
  * </pre>
  * @see WholeTextFileMapReduceJobInput

@@ -48,7 +48,7 @@ import org.kiji.mapreduce.input.impl.WholeFileInputFormat;
  *
  *     // Configure the job input.
  *     final MapReduceJobInput wholeFileJobInput =
- *         new WholeTextFileMapReduceJobInput(paths.toArray());
+ *         MapReduceJobInputs.newWholeTextFileMapReduceJobInput(paths.toArray());
  *   </code>
  * </pre>
  *

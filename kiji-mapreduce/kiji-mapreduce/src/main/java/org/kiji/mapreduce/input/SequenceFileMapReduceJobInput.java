@@ -40,7 +40,8 @@ import org.kiji.avro.mapreduce.AvroSequenceFileInputFormat;
  * <pre>
  *   <code>
  *     final Path sequenceFile = new Path("/path/to/sequence/file");
- *     final MapReduceJobInput seqFileJobInput = new SequenceFileMapReduceJobInput(sequenceFile);
+ *     final MapReduceJobInput seqFileJobInput =
+ *         MapReduceJobInputs.newSequenceFileMapReduceJobInput(sequenceFile);
  *   </code>
  * </pre>
  */

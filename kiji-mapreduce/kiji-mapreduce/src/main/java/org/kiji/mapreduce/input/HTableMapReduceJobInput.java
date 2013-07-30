@@ -44,7 +44,8 @@ import org.kiji.mapreduce.tools.framework.JobIOConfKeys;
  * </p>
  * <pre>
  *   <code>
- *     final MapReduceJobInput htableJobInput = new HTableMapReduceJobInput("mytable");
+ *     final MapReduceJobInput htableJobInput =
+ *         MapReduceJobInputs.newHTableMapReduceJobInput("mytable");
  *   </code>
  * </pre>
  */

@@ -41,7 +41,7 @@ import org.kiji.mapreduce.input.impl.XMLInputFormat;
  * <pre>
  *   <code>
  *     final Path inputFile = new Path("/path/to/input");
- *     final MapReduceJobInput xmlJobInput = new XMLMapReduceJobInput(inputFile);
+ *     final MapReduceJobInput xmlJobInput = MapReduceJobInputs.newXMLMapReduceJobInput(inputFile);
  *   </code>
  * </pre>
  */

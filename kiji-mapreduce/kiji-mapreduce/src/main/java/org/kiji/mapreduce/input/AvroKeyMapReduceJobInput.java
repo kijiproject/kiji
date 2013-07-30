@@ -40,7 +40,8 @@ import org.kiji.avro.mapreduce.AvroKeyInputFormat;
  * <pre>
  *   <code>
  *     final Path avroContainerFile = new Path("/path/to/avro/container/file");
- *     final MapReduceJobInput avroJobInput = new AvroKeyMapReduceJobInput(avroContainerFile);
+ *     final MapReduceJobInput avroJobInput =
+ *         MapReduceJobInputs.newAvroKeyMapReduceJobInput(avroContainerFile);
  *   </code>
  * </pre>
  * @see AvroKeyValueMapReduceJobInput
