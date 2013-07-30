@@ -43,6 +43,14 @@
     </Or>
   </Match>
 
+  <!-- Double checking for null around synchronization is correct. -->
+  <Match>
+    <Class name="org.kiji.scoring.impl.InternalFreshKijiTableReader" />
+    <Or>
+      <Bug pattern="RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE" />
+    </Or>
+  </Match>
+
 
   <!--
     Other one-off exclusions should go below.

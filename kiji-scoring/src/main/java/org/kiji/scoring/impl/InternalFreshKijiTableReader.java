@@ -20,6 +20,7 @@
 package org.kiji.scoring.impl;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -611,6 +612,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
                     eid,
                     capsule.getFactory(),
                     mBuffer);
+                addContextToMap(context, getId);
               } else {
                 context = KijiFreshProducerContext.create(
                     getId,
@@ -618,14 +620,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
                     eid,
                     capsule.getFactory(),
                     mBuffer);
-              }
-              synchronized (mContextMap) {
-                final List<KijiFreshProducerContext> contexts = mContextMap.get(getId);
-                if (null != contexts) {
-                  contexts.add(context);
-                } else {
-                  mContextMap.put(getId, Lists.newArrayList(context));
-                }
+                addContextToMap(context, getId);
               }
               final KijiProducer producer = capsule.getProducer();
               producer.produce(mReader.get(eid, producer.getDataRequest()), context);
@@ -662,6 +657,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
                   eid,
                   capsule.getFactory(),
                   mBuffer);
+              addContextToMap(context, getId);
             } else {
               context = KijiFreshProducerContext.create(
                   getId,
@@ -669,14 +665,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
                   eid,
                   capsule.getFactory(),
                   mBuffer);
-            }
-            synchronized (mContextMap) {
-              final List<KijiFreshProducerContext> contexts = mContextMap.get(getId);
-              if (null != contexts) {
-                contexts.add(context);
-              } else {
-                mContextMap.put(getId, Lists.newArrayList(context));
-              }
+              addContextToMap(context, getId);
             }
             final KijiProducer producer = capsule.getProducer();
             producer.produce(mReader.get(eid, producer.getDataRequest()), context);
@@ -689,6 +678,29 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
       futures.add(requiresReread);
     }
     return futures;
+  }
+
+  /**
+   * Adds the given context to the ContextMap under the given getId.  If there is no entry in the
+   * Context map for the given Id this indicates that the get request which triggered the producer
+   * which will use this context has already timed out and that this context does not need to be
+   * saved in the map.
+   *
+   * @param context the KijiFreshProducerContext to add to the ContextMap.
+   * @param getId the key in the ContextMap under which to add the given context.
+   */
+  private void addContextToMap(KijiFreshProducerContext context, String getId) {
+    final List<KijiFreshProducerContext> contexts = mContextMap.get(getId);
+    // If contexts is null it indicates that the context list has already been removed from the
+    // map which means this context should be allowed to be garbage collected after its operations
+    // are finished.
+    if (null != contexts) {
+      synchronized (contexts) {
+        if (null != contexts) {
+          contexts.add(context);
+        }
+      }
+    }
   }
 
   /**
@@ -713,11 +725,12 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
         shouldReread = true;
       }
     } else {
+      final List<KijiFreshProducerContext> contexts = mContextMap.get(getId);
       // Ensure that all producers have added their Contexts to the Context map before
       // checking if they are finished.
-      if (mContextMap.get(getId).size() == capsulesSize) {
+      if (contexts.size() == capsulesSize) {
         boolean allFinished = true;
-        for (KijiFreshProducerContext cont : mContextMap.get(getId)) {
+        for (KijiFreshProducerContext cont : contexts) {
           shouldReread = shouldReread || cont.hasReceivedWrites();
           allFinished = allFinished && cont.isFinished();
         }
@@ -822,6 +835,11 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   public KijiRowData get(final EntityId eid, final KijiDataRequest dataRequest, final long timeout)
       throws IOException {
     final String getId = String.valueOf(mGetId.getAndIncrement());
+    // Create the ContextMap entry for this get request which will be populated later.  This is not
+    // instantiated lazily so that its existence can be used to indicate if new contexts should be
+    // added to the map, or if this request has finished and references to new contexts should be
+    // released so that the contexts can be garbage collected.
+    mContextMap.put(getId, new ArrayList<KijiFreshProducerContext>());
 
     final Map<KijiColumnName, FreshnessCapsule> capsules = getCapsules(dataRequest);
     // If there are no freshness policies attached to the requested columns, return the requested
@@ -856,12 +874,17 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
       // If superFuture times out, read partially freshened data from the table or return the cached
       // data based on whether partial freshness is allowed.
       if (mAllowPartialFresh) {
-        for (KijiFreshProducerContext context : mContextMap.get(getId)) {
+        final List<KijiFreshProducerContext> contexts = mContextMap.get(getId);
+        for (KijiFreshProducerContext context : contexts) {
           // If any context is finished we should reread from the table.
-          if (context.isFinished()) {
+          if (context.isFinished() && context.hasReceivedWrites()) {
             return mReader.get(eid, dataRequest);
           }
         }
+        // Because this request has timed out and writes made to these contexts flush on completion
+        // without the need for tracking, remove the list for this getId from the context map.
+        mContextMap.remove(getId);
+
         // If no contexts are finished we do not need to read from the table and should return stale
         // data.
         return returnStale(eid, dataRequest, clientData);

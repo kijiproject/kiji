@@ -219,6 +219,31 @@ public class TestInternalFreshKijiTableReader {
     }
   }
 
+  private static final class TestTimeoutPolicy implements KijiFreshnessPolicy {
+    public boolean isFresh(final KijiRowData rowData, final PolicyContext policyContext) {
+      try {
+        Thread.sleep(1000);
+      } catch (InterruptedException ie) {
+        throw new RuntimeException(ie);
+      }
+      return false;
+    }
+    public boolean shouldUseClientDataRequest() {
+      return true;
+    }
+    public KijiDataRequest getDataRequest() {
+      return null;
+    }
+    public Map<String, KeyValueStore<?, ?>> getRequiredStores() {
+      return Collections.emptyMap();
+    }
+    public String serialize() {
+      return "";
+    }
+    public void deserialize(final String policyState) {
+    }
+  }
+
   private static final class TestQualifiedMapProducer extends KijiProducer {
     public KijiDataRequest getDataRequest() {
       return KijiDataRequest.create("map");
@@ -934,5 +959,26 @@ public class TestInternalFreshKijiTableReader {
         mReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
     assertEquals("new-val",
         mReader.get(eid, request).getMostRecentValue("family", "qual1").toString());
+  }
+
+  @Test
+  public void testBrokenFreshnessPolicy() throws IOException, InterruptedException {
+    final EntityId eid = mTable.getEntityId("foo");
+    final KijiDataRequest request = KijiDataRequest.create("family", "qual0");
+    final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
+    manager.storePolicy(TABLE_NAME, "family:qual0", TestProducer.class, new TestTimeoutPolicy());
+
+    final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
+        .withTable(mTable).withTimeout(500).returnPartiallyFreshData(true).build();
+
+    // Nothing should have been written because the producer was blocked behind a slow policy.
+    assertEquals("foo-val",
+        freshReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
+
+    Thread.sleep(1000);
+
+    // The policy will finish eventually and the write will proceed.
+    assertEquals("new-val",
+        mReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
   }
 }
