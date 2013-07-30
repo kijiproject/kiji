@@ -52,6 +52,24 @@ case class FieldBinding(tupleFieldName: String, storeFieldName: String) {
 }
 
 /**
+ * The companion object to FieldBinding for factory methods.
+ */
+object FieldBinding {
+  /**
+   * Converts an Avro FieldBinding specification into a FieldBinding case class.
+   *
+   * @param avroFieldBinding is the Avro specification.
+   * @return the FieldBinding specification as a FieldBinding case class.
+   */
+  private[express] def apply(avroFieldBinding: AvroFieldBinding): FieldBinding = {
+    FieldBinding(
+      tupleFieldName = avroFieldBinding.getTupleFieldName.toString,
+      storeFieldName = avroFieldBinding.getStoreFieldName.toString
+    )
+  }
+}
+
+/**
  * A case class wrapper around the parameters necessary for an Avro KVStore.  This is a convenience
  * for users to define their KVStores when using the ModelEnvironment.
  *
@@ -79,6 +97,26 @@ case class KVStore(storeType: String, name: String, properties: Map[String, Stri
             new Property(name, value)
         }.toSeq.asJava
     return new AvroKVStore(kvStoreType, name, avroProperties)
+  }
+}
+
+/**
+ * The companion object to KVStore for factory methods.
+ */
+object KVStore {
+  /**
+   * Converts an Avro KVStore specification into a KVStore case class.
+   *
+   * @param avroKVStore is the Avro specification.
+   * @return the KVStore specification as a KVStore case class.
+   */
+  private[express] def apply(avroKVStore: AvroKVStore): KVStore = {
+    KVStore(
+      storeType = avroKVStore.getStoreType.toString,
+      name = avroKVStore.getName,
+      properties = avroKVStore.getProperties
+          .asScala.map { prop => (prop.getName, prop.getValue) }.toMap
+    )
   }
 }
 
@@ -205,7 +243,8 @@ final class ModelEnvironment private[express] (
     val avroPrepareEnvironment: Option[AvroPrepareEnvironment] = prepareEnvironment.map { env =>
       AvroPrepareEnvironment
           .newBuilder()
-          .setFieldBindings(env.fieldBindings.asJava)
+          .setFieldBindings(env.fieldBindings
+              .map { fieldBinding => fieldBinding.toAvroFieldBinding }.asJava)
           .setDataRequest(env.dataRequest.toAvro)
           .setKvStores(env.kvstores.map { kvstore => kvstore.toAvroKVStore }.asJava)
           .setOutputColumn(env.outputColumn)
@@ -217,7 +256,8 @@ final class ModelEnvironment private[express] (
         .newBuilder()
         .setDataRequest(extractEnvironment.dataRequest.toAvro())
         .setKvStores(extractEnvironment.kvstores.map { kvstore => kvstore.toAvroKVStore }.asJava)
-        .setFieldBindings(extractEnvironment.fieldBindings.asJava)
+        .setFieldBindings(extractEnvironment.fieldBindings
+            .map { fieldBinding => fieldBinding.toAvroFieldBinding }.asJava)
         .build()
 
     // Build an AvroScoreEnvironment record.
@@ -347,19 +387,6 @@ object ModelEnvironment {
   }
 
   /**
-   * Converts an Avro KVStore specification into a KVStore case class.
-   * @param avroKVStore is the Avro specification.
-   * @return the KVStore specification as a KVStore case class.
-   */
-  private def avroKVStoreToKVStore(avroKVStore: AvroKVStore): KVStore = {
-    return KVStore(
-        storeType=avroKVStore.getStoreType.toString,
-        name=avroKVStore.getName,
-        properties=propertiesToMap(avroKVStore.getProperties)
-    )
-  }
-
-  /**
    * Creates a ModelEnvironment given a JSON string. In the process, all fields are validated.
    *
    * @param json serialized model environment.
@@ -380,24 +407,26 @@ object ModelEnvironment {
     val prepareEnvironment = prepareAvro.map { prepare =>
       new PrepareEnvironment(
           dataRequest = ExpressDataRequest(prepare.getDataRequest),
-          fieldBindings = prepare.getFieldBindings.asScala,
+          fieldBindings = prepare.getFieldBindings
+              .asScala.map { avro => FieldBinding(avro) },
           kvstores = prepare.getKvStores
-              .asScala.map { avro => avroKVStoreToKVStore(avro) },
+              .asScala.map { avro => KVStore(avro) },
           prepare.getOutputColumn)
     }
 
     // Load the extractor's model environment.
     val extractEnvironment = new ExtractEnvironment(
         dataRequest = ExpressDataRequest(extractAvroDataRequest),
-        fieldBindings = avroModelEnvironment.getExtractEnvironment.getFieldBindings.asScala,
+        fieldBindings = avroModelEnvironment.getExtractEnvironment.getFieldBindings
+            .asScala.map { avro => FieldBinding(avro) },
         kvstores = avroModelEnvironment.getExtractEnvironment.getKvStores
-            .asScala.map { avro => avroKVStoreToKVStore(avro) })
+            .asScala.map { avro => KVStore(avro) })
 
     // Load the scorer's model environment.
     val scoreEnvironment = new ScoreEnvironment(
         outputColumn = avroModelEnvironment.getScoreEnvironment.getOutputColumn,
         kvstores = avroModelEnvironment.getScoreEnvironment.getKvStores
-            .asScala.map { avro => avroKVStoreToKVStore(avro) })
+            .asScala.map { avro => KVStore(avro) })
 
     // Build a model environment.
     new ModelEnvironment(
@@ -553,10 +582,10 @@ object ModelEnvironment {
    */
   def validatePrepareEnv(prepareEnv: PrepareEnvironment): Seq[Option[ValidationException]] = {
     val fieldNames: Seq[String] = prepareEnv.fieldBindings.map {
-      fieldBinding: AvroFieldBinding => fieldBinding.getTupleFieldName
+      fieldBinding: FieldBinding => fieldBinding.tupleFieldName
     }
     val columnNames: Seq[String] = prepareEnv.fieldBindings.map {
-      fieldBinding: AvroFieldBinding => fieldBinding.getStoreFieldName
+      fieldBinding: FieldBinding => fieldBinding.storeFieldName
     }
     val fieldBindingExcep = Seq(validateFieldNames(fieldNames), validateColumnNames(columnNames))
     val kvStoreExcep = validateKvStores(prepareEnv.kvstores)
@@ -576,10 +605,10 @@ object ModelEnvironment {
    */
   def validateExtractEnv(extractEnv: ExtractEnvironment): Seq[Option[ValidationException]] = {
     val fieldNames: Seq[String] = extractEnv.fieldBindings.map {
-      fieldBinding: AvroFieldBinding => fieldBinding.getTupleFieldName
+      fieldBinding: FieldBinding => fieldBinding.tupleFieldName
     }
     val columnNames: Seq[String] = extractEnv.fieldBindings.map {
-      fieldBinding: AvroFieldBinding => fieldBinding.getStoreFieldName
+      fieldBinding: FieldBinding => fieldBinding.storeFieldName
     }
     val fieldBindingExcep = Seq(validateFieldNames(fieldNames), validateColumnNames(columnNames))
     val kvStoreExcep = validateKvStores(extractEnv.kvstores)
@@ -787,14 +816,5 @@ object ModelEnvironment {
       }
     }
     None
-  }
-
-  /**
-   * Converts a Java list of Avro Property into a Scala map.
-   * @param properties is a Java list of Avro Property.
-   * @return the properties, as a Scala map.
-   */
-  private def propertiesToMap(properties: java.util.List[Property]): Map[String, String] = {
-    return properties.asScala.map { prop => (prop.getName, prop.getValue) }.toMap
   }
 }

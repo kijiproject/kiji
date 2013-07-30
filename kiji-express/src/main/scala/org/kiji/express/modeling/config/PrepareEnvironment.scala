@@ -21,8 +21,6 @@ package org.kiji.express.modeling.config
 
 import com.google.common.base.Objects
 
-import org.kiji.express.avro.AvroFieldBinding
-
 /**
  * A specification of the runtime bindings needed in the prepare phase of a model.
  *
@@ -35,10 +33,9 @@ import org.kiji.express.avro.AvroFieldBinding
  */
 final class PrepareEnvironment private[express](
     val dataRequest: ExpressDataRequest,
-    val fieldBindings: Seq[AvroFieldBinding],
+    val fieldBindings: Seq[FieldBinding],
     val kvstores: Seq[KVStore],
     val outputColumn: String) {
-  // TODO(EXP-162): Make use of avro and scala specific classes in model config consistent.
   override def equals(other: Any): Boolean = {
     other match {
       case environment: PrepareEnvironment => {
@@ -77,10 +74,9 @@ object PrepareEnvironment {
             fieldBindings: Seq[FieldBinding],
             kvstores: Seq[KVStore],
             outputColumn: String): PrepareEnvironment = {
-    // TODO(EXP-162): Make use of avro and scala specific classes in model config consistent.
     new PrepareEnvironment(
       dataRequest,
-      fieldBindings.map { fieldBindingSpec => fieldBindingSpec.toAvroFieldBinding },
+      fieldBindings,
       kvstores, outputColumn)
   }
 }

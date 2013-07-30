@@ -2,21 +2,23 @@
                              Kiji Express Release Notes
 
 Version 0.7.0
+  * EXP-162. Environment class now expose case classes as public fields
+      instead of Avro classes.
   * EXP-121. Adds support for the prepare phase of the model lifecycle.
   * EXP-87. An EntityId no longer needs to be constructed using a
-    a Kiji URI. Users should now need to only specify the EntityId
-    components when creating an EntityId. For example,
-    EntityId("myEntityIdComponent").
+      a Kiji URI. Users should now need to only specify the EntityId
+      components when creating an EntityId. For example,
+      EntityId("myEntityIdComponent").
   * EXP-154. The modules org.kiji.express.flow.DSL and
-    org.kiji.express.flow.TimeRange have been merged into the module
-    org.kiji.express.flow. Users should now only import
-    org.kiji.express.flow._ to write Scalding flows against Kiji
-    tables using KijiExpress.
+      org.kiji.express.flow.TimeRange have been merged into the module
+      org.kiji.express.flow. Users should now only import
+      org.kiji.express.flow._ to write Scalding flows against Kiji
+      tables using KijiExpress.
   * EXP-107. Package reorganization across the project. In particular,
-    users should import org.kiji.express.flow._,
-    org.kiji.express.flow.DSL._, and org.kiji.express.flow.TimeRange._
-    to write applications using the KijiExpress Flow API. User code
-    will need to be updated to agree with the package reorganization.
+      users should import org.kiji.express.flow._,
+      org.kiji.express.flow.DSL._, and org.kiji.express.flow.TimeRange._
+      to write applications using the KijiExpress Flow API. User code
+      will need to be updated to agree with the package reorganization.
   * EXP-151. Stop bundling KijiSchema in the tarball. This will
       use the KijiSchema jar from $KIJI_HOME/lib.
   * EXP-146. Fall back to $HADOOP_HOME/lib/native/ for native libraries.

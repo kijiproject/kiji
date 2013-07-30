@@ -23,8 +23,6 @@ import com.google.common.base.Objects
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.express.avro._
-
 
 /**
  * A specification of the runtime bindings needed in the extract phase of a model.
@@ -39,9 +37,8 @@ import org.kiji.express.avro._
 @ApiStability.Experimental
 final class ExtractEnvironment private[express] (
     val dataRequest: ExpressDataRequest,
-    val fieldBindings: Seq[AvroFieldBinding],
+    val fieldBindings: Seq[FieldBinding],
     val kvstores: Seq[KVStore]) {
-  // TODO(EXP-162): Make use of avro and scala specific classes in model config consistent.
   override def equals(other: Any): Boolean = {
     other match {
       case environment: ExtractEnvironment => {
@@ -78,10 +75,9 @@ object ExtractEnvironment {
   def apply(dataRequest: ExpressDataRequest,
       fieldBindings: Seq[FieldBinding],
       kvstores: Seq[KVStore]): ExtractEnvironment = {
-    // TODO(EXP-162): Make use of avro and scala specific classes in model config consistent.
     new ExtractEnvironment(
       dataRequest,
-      fieldBindings.map { fieldBindingSpec => fieldBindingSpec.toAvroFieldBinding },
+      fieldBindings,
       kvstores)
   }
 }

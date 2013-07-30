@@ -232,6 +232,9 @@
                 <arg>-explaintypes</arg>
               </args>
               <sendJavaToScalac>false</sendJavaToScalac>
+              <jvmArgs>
+                <jvmArg>-Xmx2048m</jvmArg>
+              </jvmArgs>
             </configuration>
           </execution>
           <execution>

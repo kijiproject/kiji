@@ -248,7 +248,7 @@ final class ExtractScoreProducer
         .extractEnvironment
         .fieldBindings
         .map { binding =>
-          (binding.getTupleFieldName(), new KijiColumnName(binding.getStoreFieldName()))
+          (binding.tupleFieldName, new KijiColumnName(binding.storeFieldName))
         }
         .toMap
     val extractInputFields: Seq[String] = {
