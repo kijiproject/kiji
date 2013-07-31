@@ -41,6 +41,7 @@ class TestFormattedKeySpec extends CommandTestCase {
       spec.validate()
       val components = ListBuffer()
       val expected = RowKeyFormat2.newBuilder().setEncoding(RowKeyEncoding.RAW)
+          .setSalt(null)
           .setComponents(components).build()
       spec.createFormattedKey() mustEqual expected
     }
