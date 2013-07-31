@@ -60,8 +60,8 @@ import org.kiji.schema.filter.KijiRowFilter;
  *     final EntityId limitRow = RawEntityId.getEntityId(Bytes.toBytes("there"));
  *     final KijiTableMapReduceJobInput.RowOptions rowOptions =
  *         new KijiTableMapReduceJobInput.RowOptions(startRow, limitRow, null);
- *     final MapReduceJobInput kijiTableJobInput =
- *         new KijiTableMapReduceJobInput(mTable.getURI(), dataRequest, rowOptions);
+ *     final MapReduceJobInput kijiTableJobInput = MapReduceJobInputs
+ *         .newKijiTableMapReduceJobInput(mTable.getURI(), dataRequest, rowOptions);
  *   </code>
  * </pre>
  */
