@@ -5,11 +5,9 @@
     "org.kiji.schema.avro.RowKeyFormat2": {
       "encoding": "FORMATTED",
       "salt": {
-        "org.kiji.schema.avro.HashSpec": {
-          "hash_type": "MD5",
-          "hash_size": 2,
-          "suppress_key_materialization": false
-        }
+        "hash_type": "MD5",
+        "hash_size": 2,
+        "suppress_key_materialization": false
       },
       "range_scan_start_index": 1,
       "nullable_start_index": 1,
