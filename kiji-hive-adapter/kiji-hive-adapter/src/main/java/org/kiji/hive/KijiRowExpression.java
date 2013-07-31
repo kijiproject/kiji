@@ -29,8 +29,14 @@ import java.util.NavigableMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.hbase.HConstants;
+import org.apache.hadoop.hive.serde2.objectinspector.ListObjectInspector;
+import org.apache.hadoop.hive.serde2.objectinspector.MapObjectInspector;
+import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
+import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.ListTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.MapTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
@@ -40,6 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.hive.io.EntityIdWritable;
+import org.kiji.hive.io.KijiCellWritable;
 import org.kiji.hive.io.KijiRowDataWritable;
 import org.kiji.hive.utils.AvroTypeAdapter;
 import org.kiji.hive.utils.AvroTypeAdapter.IncompatibleTypeException;
@@ -103,6 +110,30 @@ public class KijiRowExpression {
   }
 
   /**
+   * Converts a Hive object(with associated ObjectInspector) to a time series data that is more
+   * representative of a Kiji internal representation.
+   *
+   *
+   * @param objectInspector that defines the Hive format of the object.
+   * @param hiveObject containing the data that is to be converted into a time series format.
+   * @return timeseries data suitable for writing into Kiji.
+   */
+  public Map<KijiColumnName, NavigableMap<Long, KijiCellWritable>> convertToTimeSeries(
+      ObjectInspector objectInspector, Object hiveObject) {
+    return mExpression.convertToTimeSeries(objectInspector, hiveObject);
+  }
+
+  /**
+   * Determines whether this expression is mapped to KijiCell(s) or not(rowkey information would
+   * result in false for example).
+   *
+   * @return whether this expression is mapped to KijiCell(s).
+   */
+  public boolean isCellData() {
+    return mExpression instanceof ValueExpression;
+  }
+
+  /**
    * A parsed expression.
    *
    * <p>Row expression map into the implementations of this interface</p>
@@ -113,7 +144,7 @@ public class KijiRowExpression {
    */
   private interface Expression {
     /**
-     * Determies whether the expression represents a value (not an operator).
+     * Determines whether the expression represents a value (not an operator).
      *
      * @return Whether this expression is a value.
      */
@@ -143,6 +174,16 @@ public class KijiRowExpression {
      * @return The result.
      */
     Object eval(List<Object> operandValues);
+
+    /**
+     * Converts Hive object into timeseries data using the associated ObjectInspector.
+     *
+     * @param objectInspector that defines the format of the object passed in from Hive.
+     * @param hiveObject that contains the data to be translated into a timeseries.
+     * @return Timeseries data
+     */
+    Map<KijiColumnName, NavigableMap<Long, KijiCellWritable>> convertToTimeSeries(
+        ObjectInspector objectInspector, Object hiveObject);
 
     /**
      * Gets the data request required to evaluate this expression.
@@ -226,6 +267,15 @@ public class KijiRowExpression {
     protected String getQualifier() {
       return mKijiColumnName.getQualifier();
     }
+
+    /**
+     * Gets the full KijiColumnName.
+     *
+     * @return The full KijiColumnName.
+     */
+    protected KijiColumnName getKijiColumnName() {
+      return mKijiColumnName;
+    }
   }
 
   /**
@@ -276,6 +326,13 @@ public class KijiRowExpression {
     @Override
     public Object eval(List<Object> operandValues) {
       throw new UnsupportedOperationException();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Map<KijiColumnName, NavigableMap<Long, KijiCellWritable>> convertToTimeSeries(
+        ObjectInspector objectInspector, Object hiveObject) {
+      throw new UnsupportedOperationException("EntityId expressions do not map to a timeseries.");
     }
   }
 
@@ -356,6 +413,13 @@ public class KijiRowExpression {
     @Override
     public Object eval(List<Object> operandValues) {
       throw new UnsupportedOperationException();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Map<KijiColumnName, NavigableMap<Long, KijiCellWritable>> convertToTimeSeries(
+        ObjectInspector objectInspector, Object hiveObject) {
+      throw new UnsupportedOperationException("EntityId expressions do not map to a timeseries.");
     }
   }
 
@@ -450,6 +514,37 @@ public class KijiRowExpression {
       builder.newColumnsDef().withMaxVersions(maxVersions).addFamily(getFamily());
       return builder.build();
     }
+
+    /** {@inheritDoc} */
+    @Override
+    public Map<KijiColumnName, NavigableMap<Long, KijiCellWritable>> convertToTimeSeries(
+        ObjectInspector objectInspector, Object hiveObject) {
+      Map<KijiColumnName, NavigableMap<Long, KijiCellWritable>> expressionData = Maps.newHashMap();
+
+
+      MapObjectInspector mapObjectInspector = (MapObjectInspector) objectInspector;
+      Map mapData = mapObjectInspector.getMap(hiveObject);
+      for (Object key : mapData.keySet()) {
+        NavigableMap<Long, KijiCellWritable> timeseries = Maps.newTreeMap();
+
+        // Assumes that this key is a string.
+        Preconditions.checkState(key instanceof String, "Hive Map key must be a string");
+        String qualifier = (String) key;
+        StructObjectInspector structObjectInspector =
+            (StructObjectInspector) mapObjectInspector.getMapValueObjectInspector();
+
+        Object mapValueObject = mapObjectInspector.getMapValueElement(hiveObject, key);
+        KijiCellWritable kijiCellWritable =
+            new KijiCellWritable(structObjectInspector, mapValueObject);
+        if (kijiCellWritable.hasData()) {
+          timeseries.put(kijiCellWritable.getTimestamp(), kijiCellWritable);
+        }
+        KijiColumnName kijiColumnName = new KijiColumnName(getFamily(), qualifier);
+        expressionData.put(kijiColumnName, timeseries);
+      }
+
+      return expressionData;
+    }
   }
 
   /**
@@ -515,6 +610,38 @@ public class KijiRowExpression {
       builder.newColumnsDef().withMaxVersions(HConstants.ALL_VERSIONS)
           .addFamily(getFamily());
       return builder.build();
+    }
+
+    @Override
+    public Map<KijiColumnName, NavigableMap<Long, KijiCellWritable>> convertToTimeSeries(
+        ObjectInspector objectInspector, Object hiveObject) {
+      Map<KijiColumnName, NavigableMap<Long, KijiCellWritable>> expressionData = Maps.newHashMap();
+
+      MapObjectInspector familyAllValuesOI = (MapObjectInspector) objectInspector;
+      Map familyAllValuesMap = familyAllValuesOI.getMap(hiveObject);
+
+      for (Object qualifierObject : familyAllValuesMap.keySet()) {
+        String qualifier = (String) qualifierObject;
+
+        ListObjectInspector allValuesOI =
+             (ListObjectInspector) familyAllValuesOI.getMapValueObjectInspector();
+        List<Object> allValuesObjects =
+            (List<Object>) familyAllValuesOI.getMapValueElement(hiveObject, qualifierObject);
+        StructObjectInspector timestampedCellOI =
+            (StructObjectInspector) allValuesOI.getListElementObjectInspector();
+
+        NavigableMap<Long, KijiCellWritable> timeseries = Maps.newTreeMap();
+        for (Object obj : allValuesObjects) {
+          KijiCellWritable kijiCellWritable = new KijiCellWritable(timestampedCellOI, obj);
+          if (kijiCellWritable.hasData()) {
+            timeseries.put(kijiCellWritable.getTimestamp(), kijiCellWritable);
+          }
+        }
+        KijiColumnName kijiColumnName = new KijiColumnName(getFamily(), qualifier);
+        expressionData.put(kijiColumnName, timeseries);
+      }
+
+      return expressionData;
     }
   }
 
@@ -606,6 +733,24 @@ public class KijiRowExpression {
       builder.newColumnsDef().withMaxVersions(maxVersions).add(getFamily(), getQualifier());
       return builder.build();
     }
+
+    /** {@inheritDoc} */
+    @Override
+    public Map<KijiColumnName, NavigableMap<Long, KijiCellWritable>> convertToTimeSeries(
+        ObjectInspector objectInspector, Object hiveObject) {
+      Map<KijiColumnName, NavigableMap<Long, KijiCellWritable>> expressionData = Maps.newHashMap();
+
+      NavigableMap<Long, KijiCellWritable> timeseries = Maps.newTreeMap();
+
+      StructObjectInspector structObjectInspector = (StructObjectInspector) objectInspector;
+      KijiCellWritable kijiCellWritable = new KijiCellWritable(structObjectInspector, hiveObject);
+      if (kijiCellWritable.hasData()) {
+        timeseries.put(kijiCellWritable.getTimestamp(), kijiCellWritable);
+      }
+
+      expressionData.put(getKijiColumnName(), timeseries);
+      return expressionData;
+    }
   }
 
   /**
@@ -668,6 +813,29 @@ public class KijiRowExpression {
           .withMaxVersions(HConstants.ALL_VERSIONS)
           .add(getFamily(), getQualifier());
       return builder.build();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Map<KijiColumnName, NavigableMap<Long, KijiCellWritable>> convertToTimeSeries(
+        ObjectInspector objectInspector, Object hiveObject) {
+      Map<KijiColumnName, NavigableMap<Long, KijiCellWritable>> expressionData = Maps.newHashMap();
+
+      NavigableMap<Long, KijiCellWritable> timeseries = Maps.newTreeMap();
+
+      ListObjectInspector listObjectInspector = (ListObjectInspector) objectInspector;
+      List<Object> listObjects = (List<Object>) listObjectInspector.getList(hiveObject);
+      StructObjectInspector structObjectInspector =
+          (StructObjectInspector) listObjectInspector.getListElementObjectInspector();
+      for (Object obj : listObjects) {
+        KijiCellWritable kijiCellWritable = new KijiCellWritable(structObjectInspector, obj);
+        if (kijiCellWritable.hasData()) {
+          timeseries.put(kijiCellWritable.getTimestamp(), kijiCellWritable);
+        }
+      }
+
+      expressionData.put(getKijiColumnName(), timeseries);
+      return expressionData;
     }
   }
 

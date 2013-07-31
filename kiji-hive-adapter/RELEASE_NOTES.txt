@@ -4,6 +4,10 @@
 Version 0.5.0
   * KIJIHIVE-29. Updated KijiTableInputFormat to use Kiji interfaces for
       determining split information.
+  * KIJIHIVE-20. Kiji Hive Adapter now supports writing of primitive types.
+      Any tables that already exist in the Hive metastore need to be recreated
+      in order to take advantage of the new classes.  See README.md for more
+      details.
 
 Version 0.4.1
   * KIJIHIVE-26. Default to HBaseRowKey when EntityId components aren't present.

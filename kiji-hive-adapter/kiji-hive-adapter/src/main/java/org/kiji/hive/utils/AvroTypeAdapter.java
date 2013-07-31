@@ -37,12 +37,21 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericFixed;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.hadoop.hive.serde2.lazy.ByteArrayRef;
+import org.apache.hadoop.hive.serde2.objectinspector.ListObjectInspector;
+import org.apache.hadoop.hive.serde2.objectinspector.MapObjectInspector;
+import org.apache.hadoop.hive.serde2.objectinspector.ObjectInspector;
+import org.apache.hadoop.hive.serde2.objectinspector.PrimitiveObjectInspector;
+import org.apache.hadoop.hive.serde2.objectinspector.StructField;
+import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
+import org.apache.hadoop.hive.serde2.objectinspector.UnionObjectInspector;
 import org.apache.hadoop.hive.serde2.typeinfo.ListTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.MapTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.PrimitiveTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.StructTypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.hive.serde2.typeinfo.UnionTypeInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Converts an Avro data object to an in-memory representation for Hive.
@@ -53,6 +62,8 @@ import org.apache.hadoop.hive.serde2.typeinfo.UnionTypeInfo;
  * "Standard" for details about how each Hive type should be formatted.</p>
  */
 public final class AvroTypeAdapter {
+  private static final Logger LOG = LoggerFactory.getLogger(AvroTypeAdapter.class);
+
   /** Private constructor to prevent instantiation. Use get() to get an instance of this. */
   private AvroTypeAdapter() {}
 
@@ -107,7 +118,6 @@ public final class AvroTypeAdapter {
       return toHiveType((PrimitiveTypeInfo) hiveType, avro);
     case LIST:
       HiveList<Object> hiveList = new HiveList<Object>();
-      @SuppressWarnings("unchecked")
       final List<Object> avroList = (List<Object>) avro;
       final TypeInfo listElementType = ((ListTypeInfo) hiveType).getListElementTypeInfo();
       for (Object avroElement : avroList) {
@@ -163,7 +173,6 @@ public final class AvroTypeAdapter {
    */
   public Object toHiveType(PrimitiveTypeInfo primitiveType, Object avro) {
     switch (primitiveType.getPrimitiveCategory()) {
-
     case VOID: // Like the avro null type, right?
       return null;
 
@@ -209,6 +218,84 @@ public final class AvroTypeAdapter {
 
     default:
       throw new IncompatibleTypeException(primitiveType, avro);
+    }
+  }
+
+  /**
+   * Converts a ObjectInspector from Hive to the appropriate Avro schema.
+   *
+   * @param objectInspector Hive ObjectInspector to convert.
+   * @return Avro schema inferred from the PrimitiveObjectInspector.
+   */
+  public Schema toAvroSchema(ObjectInspector objectInspector) {
+    switch (objectInspector.getCategory()) {
+    case PRIMITIVE:
+      return toAvroSchema((PrimitiveObjectInspector) objectInspector);
+    case LIST:
+      ListObjectInspector listObjectInspector = (ListObjectInspector) objectInspector;
+      return Schema.createArray(
+          toAvroSchema(listObjectInspector.getListElementObjectInspector()));
+    case MAP:
+      MapObjectInspector mapObjectInspector = (MapObjectInspector) objectInspector;
+      return Schema.createMap(toAvroSchema(mapObjectInspector.getMapValueObjectInspector()));
+    case STRUCT:
+      List structFields = ((StructObjectInspector) objectInspector).getAllStructFieldRefs();
+      List<Schema.Field> fields = Lists.newArrayList();
+      for (Object structFieldObj : structFields) {
+        StructField structField = (StructField) structFieldObj;
+        String fieldName = structField.getFieldName();
+        String fieldComment = structField.getFieldComment();
+        Schema.Field field = new Schema.Field(fieldName,
+            toAvroSchema(structField.getFieldObjectInspector()),
+            fieldComment, null);
+        fields.add(field);
+      }
+      return Schema.createRecord(fields);
+    case UNION:
+      UnionObjectInspector unionObjectInspector = (UnionObjectInspector) objectInspector;
+      List<ObjectInspector> unionObjectInspectors = unionObjectInspector.getObjectInspectors();
+      List<Schema> unionTypes = Lists.newArrayList();
+      for (ObjectInspector unionSubObjectInspector : unionObjectInspectors) {
+        unionTypes.add(toAvroSchema(unionSubObjectInspector));
+      }
+      return Schema.createUnion(unionTypes);
+    default:
+      throw new UnsupportedOperationException("Unknown type: " + objectInspector);
+    }
+  }
+
+  /**
+   * Converts a PrimitiveObjectInspector from Hive to the appropriate Avro schema.
+   *
+   * @param primitiveObjectInspector Hive PrimitiveObjectInspector to convert.
+   * @return Avro schema inferred from the PrimitiveObjectInspector.
+   */
+  public Schema toAvroSchema(PrimitiveObjectInspector primitiveObjectInspector) {
+    switch (primitiveObjectInspector.getPrimitiveCategory()) {
+    case VOID: // Like the hiveObject null type, right?
+      return Schema.create(Schema.Type.NULL);
+    case BYTE:
+      return Schema.createFixed("BYTE", "", "", 1);
+    case SHORT:
+      return Schema.createFixed("SHORT", "", "", 2);
+    case BOOLEAN:
+      return Schema.create(Schema.Type.BOOLEAN);
+    case INT:
+      return Schema.create(Schema.Type.INT);
+    case LONG:
+      return Schema.create(Schema.Type.LONG);
+    case FLOAT:
+      return Schema.create(Schema.Type.FLOAT);
+    case DOUBLE:
+      return Schema.create(Schema.Type.DOUBLE);
+    case STRING:
+      return Schema.create(Schema.Type.STRING);
+    case TIMESTAMP:
+      return Schema.create(Schema.Type.LONG);
+    case BINARY:
+      return Schema.create(Schema.Type.BYTES);
+    default:
+      throw new UnsupportedOperationException("Unknown type: " + primitiveObjectInspector);
     }
   }
 }

@@ -22,9 +22,11 @@ package org.kiji.hive.io;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.avro.Schema;
@@ -32,6 +34,8 @@ import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.util.Utf8;
 import org.apache.hadoop.hive.serde2.io.DoubleWritable;
+import org.apache.hadoop.hive.serde2.objectinspector.StructField;
+import org.apache.hadoop.hive.serde2.objectinspector.StructObjectInspector;
 import org.apache.hadoop.io.BooleanWritable;
 import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.Writable;
@@ -40,6 +44,7 @@ import org.apache.hadoop.io.WritableUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.hive.utils.AvroTypeAdapter;
 import org.kiji.schema.KijiCell;
 
 /**
@@ -67,6 +72,32 @@ public class KijiCellWritable implements Writable {
   }
 
   /**
+   * Constructor for a KijiCellWritable from a Hive representation of a cell.  This is
+   * typically a Hive struct containing two fields, one for the timestamp and one for the object.
+   *
+   * @param timestampedCellObjectInspector StructObjectInspector for this Hive object
+   * @param hiveObj representing a struct containing a Hive timestamp and data pair.
+   */
+  public KijiCellWritable(StructObjectInspector timestampedCellObjectInspector, Object hiveObj) {
+    List<Object> timestampedCellFields =
+        timestampedCellObjectInspector.getStructFieldsDataAsList(hiveObj);
+    if (timestampedCellFields.isEmpty()) {
+      LOG.warn("Passed in Hive object is empty.  Returning an empty KijiCellWritable");
+      mData = null;
+    } else {
+      Preconditions.checkState(timestampedCellFields.size() == 2,
+          "KijiCellWritable must be created with exactly 2 fields.  Found %s",
+          timestampedCellFields.size());
+      Timestamp timestampObject = (Timestamp) timestampedCellFields.get(0);
+      mTimestamp = timestampObject.getTime();
+      mData = timestampedCellFields.get(1);
+    }
+
+    StructField dataStructField = timestampedCellObjectInspector.getAllStructFieldRefs().get(1);
+    mSchema = AvroTypeAdapter.get().toAvroSchema(dataStructField.getFieldObjectInspector());
+  }
+
+  /**
    * @return The timestamp associated with this cell.
    */
   public long getTimestamp() {
@@ -85,6 +116,13 @@ public class KijiCellWritable implements Writable {
    */
   public Object getData() {
     return mData;
+  }
+
+  /**
+   * @return if this cell has data in it.
+   */
+  public boolean hasData() {
+    return null != mData;
   }
 
   @Override

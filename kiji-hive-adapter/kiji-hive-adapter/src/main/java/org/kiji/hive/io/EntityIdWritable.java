@@ -78,6 +78,16 @@ public class EntityIdWritable implements Writable {
     mShellString = entityId.toShellString();
   }
 
+  /**
+   * Constructs an EntityIdWritable from a shell string.
+   * @param shellString associated with this EntityId.
+   */
+  public EntityIdWritable(String shellString) {
+    mHBaseRowKey = new byte[0];
+    mComponents = Lists.newArrayList();
+    mShellString = shellString;
+  }
+
   /** @return the HBase row key. */
   public byte[] getHBaseRowKey() {
     return Arrays.copyOf(mHBaseRowKey, mHBaseRowKey.length);

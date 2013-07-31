@@ -71,7 +71,7 @@ public class KijiTableInfo implements Closeable {
   /**
    * Gets the URI for this KijiTableInfo.
    *
-   * @return KijiURI associated with this KijiTableINfo
+   * @return KijiURI associated with this KijiTableInfo
    */
   public KijiURI getKijiTableURI() {
     return mKijiURI;

@@ -22,6 +22,7 @@ package org.kiji.hive.io;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.NavigableSet;
@@ -69,6 +70,18 @@ public class KijiRowDataWritable implements Writable {
   }
 
   /**
+   * Construct a KijiRowDataWritable from the Writable objects generated from Hive.
+   *
+   * @param entityIdWritable that maps to the row key.
+   * @param writableData of column to timeseries data.
+   */
+  public KijiRowDataWritable(EntityIdWritable entityIdWritable,
+      Map<KijiColumnName, NavigableMap<Long, KijiCellWritable>> writableData) {
+    mEntityId = entityIdWritable;
+    mWritableData = writableData;
+  }
+
+  /**
    * Constructs a KijiRowDataWritable from a existing KijiRowData.
    * @param rowData the source of the fields to copy.
    * @throws IOException if there is an error loading the table layout.
@@ -97,6 +110,16 @@ public class KijiRowDataWritable implements Writable {
         }
       }
     }
+  }
+
+  /**
+   * Returns an unmodifiable map of column names to timeseries of KijiCell data.  Note that the
+   * individual timeseries are mutable collections.
+   *
+   * @return map of KijiColumnName to timeseries of data.
+   */
+  public Map<KijiColumnName, NavigableMap<Long, KijiCellWritable>> getData() {
+    return Collections.unmodifiableMap(mWritableData);
   }
 
   /**

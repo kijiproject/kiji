@@ -24,7 +24,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
+import com.google.common.base.Preconditions;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hive.serde.Constants;
 import org.apache.hadoop.hive.serde2.SerDe;
@@ -40,17 +42,28 @@ import org.kiji.hive.io.KijiRowDataWritable;
 import org.kiji.hive.utils.KijiDataRequestSerializer;
 
 /**
- * A read-only deserializer for reading from Kiji tables in Hive.
+ * A serializer and deserializer for reading from and writing to Kiji tables in Hive.
  *
  * Main entry point for the Kiji Hive Adapter.
  */
 public class KijiTableSerDe implements SerDe {
   private static final Logger LOG = LoggerFactory.getLogger(KijiTableSerDe.class);
 
+  // Property for specifying which columns are used within a Hive view.
   public static final String LIST_COLUMN_EXPRESSIONS = "kiji.columns";
 
+  // Property for specifying which column represents the EntityId's shell string.
+  // Cannot be specified at the same time as LIST_ENTITY_ID_COMPONENTS.
+  public static final String ENTITY_ID_SHELL_STRING = "kiji.entity.id.shell.string";
+
+  // Property specifying a list of Hive columns which represent the EntityId.
+  // Cannot be specified at the same time as ENTITY_ID_SHELL_STRING.
+  // TODO(KIJIHIVE-30): this feature isn't yet supported, but can come as a later patch.
+  // Make a ticket and prioritize it accordingly.
+  public static final String LIST_ENTITY_ID_COMPONENTS = "kiji.entity.id.columns";
+
   /**
-   * This contains all the information about a Hive table we need to deserialize effectively.
+   * This contains all the information about a Hive table we need to interact with a Kiji table.
    */
   private HiveTableDescription mHiveTableDescription;
 
@@ -64,15 +77,39 @@ public class KijiTableSerDe implements SerDe {
     final String columnTypes = properties.getProperty(Constants.LIST_COLUMN_TYPES);
 
     // Read from a property we require that contains the expressions specifying the data to map.
+    Preconditions.checkArgument(properties.containsKey(LIST_COLUMN_EXPRESSIONS),
+        "SERDEPROPERTIES missing configuration for property: {}", LIST_COLUMN_EXPRESSIONS);
     final List<String> columnExpressions = readPropertyList(properties, LIST_COLUMN_EXPRESSIONS);
 
-    final KijiTableInfo kijiTableInfo = new KijiTableInfo(properties);
+    // Check that at least one of LIST_ENTITY_ID_COMPONENTS or ENTITY_ID_SHELL_STRING is
+    // unspecified.
+    Preconditions.checkArgument(!properties.containsKey(ENTITY_ID_SHELL_STRING)
+        || !properties.containsKey(LIST_ENTITY_ID_COMPONENTS),
+        "SERDEPROPERTIES cannot specify both: %s and %x.",
+        ENTITY_ID_SHELL_STRING,
+        LIST_ENTITY_ID_COMPONENTS);
+
+    // Read from an optional property that contains the shell string representing the EntityId to
+    // write back to Kiji with.
+    String entityIdShellString = properties.getProperty(ENTITY_ID_SHELL_STRING);
+
     mHiveTableDescription = HiveTableDescription.newBuilder()
         .withColumnNames(columnNames)
         .withColumnTypes(TypeInfoUtils.getTypeInfosFromTypeString(columnTypes))
         .withColumnExpressions(columnExpressions)
+        .withEntityIdShellStringColumn(entityIdShellString)
         .build();
+
+    if (!mHiveTableDescription.isWritable()) {
+      LOG.warn("Neither {} nor {} unspecified, so this Hive view of a KijiTable is read only.",
+          ENTITY_ID_SHELL_STRING,
+          LIST_ENTITY_ID_COMPONENTS);
+    }
+
     try {
+      if (null == conf) {
+        conf = new HBaseConfiguration();
+      }
       conf.set(KijiTableInputFormat.CONF_KIJI_DATA_REQUEST,
           KijiDataRequestSerializer.serialize(mHiveTableDescription.getDataRequest()));
     } catch (IOException e) {
@@ -89,8 +126,14 @@ public class KijiTableSerDe implements SerDe {
   /** {@inheritDoc} */
   @Override
   public Writable serialize(Object obj, ObjectInspector objInspector) throws SerDeException {
-    throw new UnsupportedOperationException(
-        getClass().getSimpleName() + " does not support writes.");
+    if (!mHiveTableDescription.isWritable()) {
+      throw new SerDeException("KijiTable has no EntityId mapping and is not writable.");
+    }
+    try {
+      return mHiveTableDescription.createWritableObject(obj, objInspector);
+    } catch (IOException e) {
+      throw new SerDeException("Error writing data from the HBase result", e);
+    }
   }
 
   /** {@inheritDoc} */
