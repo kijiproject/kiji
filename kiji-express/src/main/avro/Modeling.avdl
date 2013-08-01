@@ -44,10 +44,16 @@ protocol Modeling {
 
     /**
      * Fully qualified class name of the class to use in the prepare phase. This class must
-     * implement the preparer trait. Set this field to null to specify that no prepare phase
-     * should be used.
+     * implement the preparer trait. Set this field to null to specify that no prepare phase should
+     * be used.
      */
-    union {null, string} preparer_class = null;
+    union{null, string} preparer_class = null;
+
+    /**
+     * Fully qualified class name of the class to use in the train phase. This class must implement
+     * the trainer trait. Set this field to null to specify that no train phase should be used.
+     */
+    union{null, string} trainer_class = null;
 
     // TODO(EXP-54): Make the default value of this
     //     'org.kiji.express.modeling.lib.IdentityExtractor'.

@@ -20,6 +20,7 @@
 package org.kiji.express.modeling.config
 
 import com.twitter.scalding.RichPipe
+import com.twitter.scalding.Source
 import org.scalatest.FunSuite
 
 import org.kiji.express.avro.AvroModelDefinition
@@ -28,6 +29,7 @@ import org.kiji.express.modeling.Extractor
 import org.kiji.express.modeling.Preparer
 import org.kiji.express.modeling.ScoreFn
 import org.kiji.express.modeling.Scorer
+import org.kiji.express.modeling.Trainer
 import org.kiji.express.util.Resources.resourceAsString
 import org.kiji.schema.util.FromJson
 import org.kiji.schema.util.ToJson
@@ -41,6 +43,8 @@ class ModelDefinitionSuite extends FunSuite {
       "modelDefinitions/invalid-name-model-definition.json")
   val invalidPreparerDefinition: String = resourceAsString(
       "modelDefinitions/invalid-preparer-model-definition.json")
+  val invalidTrainerDefinition: String = resourceAsString(
+    "modelDefinitions/invalid-trainer-model-definition.json")
   val invalidExtractorDefinition: String = resourceAsString(
       "modelDefinitions/invalid-extractor-model-definition.json")
   val invalidScorerDefinition: String = resourceAsString(
@@ -48,7 +52,9 @@ class ModelDefinitionSuite extends FunSuite {
   val invalidProtocolDefinition: String = resourceAsString(
       "modelDefinitions/invalid-protocol-model-definition.json")
   val invalidPreparerClassNameDefinition: String = resourceAsString(
-      "modelDefinitions/invalid-preparer-class-name.json")
+    "modelDefinitions/invalid-preparer-class-name.json")
+  val invalidTrainerClassNameDefinition: String = resourceAsString(
+      "modelDefinitions/invalid-trainer-class-name.json")
   val invalidExtractorClassNameDefinition: String = resourceAsString(
       "modelDefinitions/invalid-extractor-class-name.json")
   val invalidScorerClassNameDefinition: String = resourceAsString(
@@ -59,12 +65,14 @@ class ModelDefinitionSuite extends FunSuite {
         name = "name",
         version = "1.0.0",
         preparer = Some(classOf[ModelDefinitionSuite.MyPreparer]),
+        trainer = Some(classOf[ModelDefinitionSuite.MyTrainer]),
         extractor = classOf[ModelDefinitionSuite.MyExtractor],
         scorer = classOf[ModelDefinitionSuite.MyScorer])
     // Validate the constructed definition.
     assert("name" === modelDefinition.name)
     assert("1.0.0" === modelDefinition.version)
     assert(classOf[ModelDefinitionSuite.MyPreparer] === modelDefinition.preparerClass.get)
+    assert(classOf[ModelDefinitionSuite.MyTrainer] === modelDefinition.trainerClass.get)
     assert(classOf[ModelDefinitionSuite.MyExtractor] === modelDefinition.extractorClass)
     assert(classOf[ModelDefinitionSuite.MyScorer] === modelDefinition.scorerClass)
 
@@ -76,6 +84,7 @@ class ModelDefinitionSuite extends FunSuite {
     assert("name" === deserialized.name)
     assert("1.0.0" === deserialized.version)
     assert(classOf[ModelDefinitionSuite.MyPreparer] === deserialized.preparerClass.get)
+    assert(classOf[ModelDefinitionSuite.MyTrainer] === deserialized.trainerClass.get)
     assert(classOf[ModelDefinitionSuite.MyExtractor] === deserialized.extractorClass)
     assert(classOf[ModelDefinitionSuite.MyScorer] === deserialized.scorerClass)
   }
@@ -85,6 +94,7 @@ class ModelDefinitionSuite extends FunSuite {
         name = "name",
         version = "1.0.0",
         preparer = Some(classOf[ModelDefinitionSuite.MyPreparer]),
+        trainer = Some(classOf[ModelDefinitionSuite.MyTrainer]),
         extractor = classOf[ModelDefinitionSuite.MyExtractor],
         scorer = classOf[ModelDefinitionSuite.MyScorer])
 
@@ -92,6 +102,7 @@ class ModelDefinitionSuite extends FunSuite {
     assert("name2" === modelDefinition2.name)
     assert("1.0.0" === modelDefinition2.version)
     assert(classOf[ModelDefinitionSuite.MyPreparer] === modelDefinition2.preparerClass.get)
+    assert(classOf[ModelDefinitionSuite.MyTrainer] === modelDefinition2.trainerClass.get)
     assert(classOf[ModelDefinitionSuite.MyExtractor] === modelDefinition2.extractorClass)
     assert(classOf[ModelDefinitionSuite.MyScorer] === modelDefinition2.scorerClass)
 
@@ -99,6 +110,7 @@ class ModelDefinitionSuite extends FunSuite {
     assert("name2" === modelDefinition3.name)
     assert("2.0.0" === modelDefinition3.version)
     assert(classOf[ModelDefinitionSuite.MyPreparer] === modelDefinition3.preparerClass.get)
+    assert(classOf[ModelDefinitionSuite.MyTrainer] === modelDefinition3.trainerClass.get)
     assert(classOf[ModelDefinitionSuite.MyExtractor] === modelDefinition3.extractorClass)
     assert(classOf[ModelDefinitionSuite.MyScorer] === modelDefinition3.scorerClass)
 
@@ -107,24 +119,36 @@ class ModelDefinitionSuite extends FunSuite {
     assert("name2" === modelDefinition4.name)
     assert("2.0.0" === modelDefinition4.version)
     assert(classOf[ModelDefinitionSuite.AnotherPreparer] === modelDefinition4.preparerClass.get)
+    assert(classOf[ModelDefinitionSuite.MyTrainer] === modelDefinition4.trainerClass.get)
     assert(classOf[ModelDefinitionSuite.MyExtractor] === modelDefinition4.extractorClass)
     assert(classOf[ModelDefinitionSuite.MyScorer] === modelDefinition4.scorerClass)
 
     val modelDefinition5 = modelDefinition4.withNewSettings(
-        extractor = classOf[ModelDefinitionSuite.AnotherExtractor])
+        trainer = Some(classOf[ModelDefinitionSuite.AnotherTrainer]))
     assert("name2" === modelDefinition5.name)
     assert("2.0.0" === modelDefinition5.version)
     assert(classOf[ModelDefinitionSuite.AnotherPreparer] === modelDefinition5.preparerClass.get)
-    assert(classOf[ModelDefinitionSuite.AnotherExtractor] === modelDefinition5.extractorClass)
+    assert(classOf[ModelDefinitionSuite.AnotherTrainer] === modelDefinition5.trainerClass.get)
+    assert(classOf[ModelDefinitionSuite.MyExtractor] === modelDefinition5.extractorClass)
     assert(classOf[ModelDefinitionSuite.MyScorer] === modelDefinition5.scorerClass)
 
     val modelDefinition6 = modelDefinition5.withNewSettings(
-        scorer = classOf[ModelDefinitionSuite.AnotherScorer])
+        extractor = classOf[ModelDefinitionSuite.AnotherExtractor])
     assert("name2" === modelDefinition6.name)
     assert("2.0.0" === modelDefinition6.version)
     assert(classOf[ModelDefinitionSuite.AnotherPreparer] === modelDefinition6.preparerClass.get)
+    assert(classOf[ModelDefinitionSuite.AnotherTrainer] === modelDefinition6.trainerClass.get)
     assert(classOf[ModelDefinitionSuite.AnotherExtractor] === modelDefinition6.extractorClass)
-    assert(classOf[ModelDefinitionSuite.AnotherScorer] === modelDefinition6.scorerClass)
+    assert(classOf[ModelDefinitionSuite.MyScorer] === modelDefinition6.scorerClass)
+
+    val modelDefinition7 = modelDefinition6.withNewSettings(
+        scorer = classOf[ModelDefinitionSuite.AnotherScorer])
+    assert("name2" === modelDefinition7.name)
+    assert("2.0.0" === modelDefinition7.version)
+    assert(classOf[ModelDefinitionSuite.AnotherPreparer] === modelDefinition7.preparerClass.get)
+    assert(classOf[ModelDefinitionSuite.AnotherTrainer] === modelDefinition7.trainerClass.get)
+    assert(classOf[ModelDefinitionSuite.AnotherExtractor] === modelDefinition7.extractorClass)
+    assert(classOf[ModelDefinitionSuite.AnotherScorer] === modelDefinition7.scorerClass)
   }
 
   test("ModelDefinition can be created from a path to a valid JSON file.") {
@@ -175,6 +199,16 @@ class ModelDefinitionSuite extends FunSuite {
         " provided a valid class that inherits from the Preparer class."))
   }
 
+  test("ModelDefinition validates the trainer class") {
+    val thrown = intercept[ValidationException] {
+      ModelDefinition.fromJson(invalidTrainerDefinition)
+    }
+    val badTrainer = "org.kiji.express.modeling.config.ModelDefinitionSuite$MyBadTrainer"
+    assert(thrown.getMessage.contains("An instance of the class \"%s\"".format(badTrainer) +
+        " could not be cast as an instance of Trainer. Please ensure that you have" +
+        " provided a valid class that inherits from the Trainer class."))
+  }
+
   test("ModelDefinition validates the extractor class") {
     val thrown = intercept[ValidationException] {
       ModelDefinition.fromJson(invalidExtractorDefinition)
@@ -212,6 +246,14 @@ class ModelDefinitionSuite extends FunSuite {
         "class name and that it is available on your classpath." === thrown.getMessage)
   }
 
+  test("ModelDefinition fails with a ValidationException given an invalid trainer class name") {
+    val thrown = intercept[ValidationException] {
+      ModelDefinition.fromJson(invalidTrainerClassNameDefinition)
+    }
+    assert("The class \"blah\" could not be found. Please ensure that you have provided a valid " +
+        "class name and that it is available on your classpath." === thrown.getMessage)
+  }
+
   test("ModelDefinition fails with a ValidationException given an invalid extractor class name") {
     val thrown = intercept[ValidationException] {
       ModelDefinition.fromJson(invalidExtractorClassNameDefinition)
@@ -238,6 +280,12 @@ object ModelDefinitionSuite {
 
   class AnotherPreparer extends MyPreparer
 
+  class MyTrainer extends Trainer {
+    override def train(inputs: Map[String, Source], outputs: Map[String, Source]) { }
+  }
+
+  class AnotherTrainer extends MyTrainer
+
   class MyExtractor extends Extractor {
     def extractFn: ExtractFn[_, _] = extract('textLine -> 'first) { line: String =>
       line
@@ -259,6 +307,8 @@ object ModelDefinitionSuite {
   class AnotherScorer extends MyScorer
 
   class MyBadPreparer { def howTrue: Boolean = true }
+
+  class MyBadTrainer { def howTrue: Boolean = true }
 
   class MyBadExtractor { def howTrue: Boolean = true }
 

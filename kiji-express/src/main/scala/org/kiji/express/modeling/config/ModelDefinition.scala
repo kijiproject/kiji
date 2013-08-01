@@ -30,6 +30,7 @@ import org.kiji.express.avro.AvroModelDefinition
 import org.kiji.express.modeling.Extractor
 import org.kiji.express.modeling.Preparer
 import org.kiji.express.modeling.Scorer
+import org.kiji.express.modeling.Trainer
 import org.kiji.express.util.Resources.doAndClose
 import org.kiji.express.util.Tuples
 import org.kiji.schema.util.FromJson
@@ -74,6 +75,8 @@ import org.kiji.schema.util.ToJson
  *
  * @param name of the model definition.
  * @param version of the model definition.
+ * @param preparerClass to be used in the prepare phase of the model definition. Optional.
+ * @param trainerClass to be used in the train phase of the model definition. Optional.
  * @param extractorClass to be used in the extract phase of the model definition.
  * @param scorerClass to be used in the score phase of the model definition.
  * @param protocolVersion this model definition was written for.
@@ -84,6 +87,7 @@ final class ModelDefinition private[express] (
     val name: String,
     val version: String,
     val preparerClass: Option[java.lang.Class[_ <: Preparer]],
+    val trainerClass: Option[java.lang.Class[_ <: Trainer]],
     val extractorClass: java.lang.Class[_ <: Extractor],
     val scorerClass: java.lang.Class[_ <: Scorer],
     private[express] val protocolVersion: ProtocolVersion =
@@ -104,6 +108,7 @@ final class ModelDefinition private[express] (
         .setVersion(version)
         .setProtocolVersion(protocolVersion.toString)
         .setPreparerClass(preparerClass.map { _.getName } .getOrElse(null))
+        .setTrainerClass(trainerClass.map { _.getName } .getOrElse { null })
         .setExtractorClass(extractorClass.getName)
         .setScorerClass(scorerClass.getName)
         .build()
@@ -119,6 +124,8 @@ final class ModelDefinition private[express] (
    *
    * @param name of the model definition.
    * @param version of the model definition.
+   * @param preparer used by the model definition.
+   * @param trainer used by the model definition.
    * @param extractor used by the model definition.
    * @param scorer used by the model definition.
    * @return a new model definition using the settings specified to this method.
@@ -127,9 +134,10 @@ final class ModelDefinition private[express] (
       name: String = this.name,
       version: String = this.version,
       preparer: Option[Class[_ <: Preparer]] = this.preparerClass,
+      trainer: Option[Class[_ <: Trainer]] = this.trainerClass,
       extractor: Class[_ <: Extractor] = this.extractorClass,
       scorer: Class[_ <: Scorer] = this.scorerClass): ModelDefinition = {
-    new ModelDefinition(name, version, preparer, extractor, scorer, this.protocolVersion)
+    new ModelDefinition(name, version, preparer, trainer, extractor, scorer, this.protocolVersion)
   }
 
   override def equals(other: Any): Boolean = {
@@ -138,6 +146,7 @@ final class ModelDefinition private[express] (
         name == definition.name &&
             version == definition.version &&
             preparerClass == definition.preparerClass &&
+            trainerClass == definition.trainerClass &&
             extractorClass == definition.extractorClass &&
             scorerClass == definition.scorerClass &&
             protocolVersion == definition.protocolVersion
@@ -151,6 +160,7 @@ final class ModelDefinition private[express] (
           name,
           version,
           preparerClass,
+          trainerClass,
           extractorClass,
           scorerClass,
           protocolVersion)
@@ -182,6 +192,8 @@ object ModelDefinition {
    *
    * @param name of the model definition.
    * @param version of the model definition.
+   * @param preparer used by the model definition.
+   * @param trainer used by the model definition.
    * @param extractor used by the model definition.
    * @param scorer used by the model definition.
    * @return a model definition using the specified settings.
@@ -189,12 +201,14 @@ object ModelDefinition {
   def apply(name: String,
       version: String,
       preparer: Option[Class[_ <: Preparer]] = None,
+      trainer: Option[Class[_ <: Trainer]] = None,
       extractor: Class[_ <: Extractor],
       scorer: Class[_ <: Scorer]): ModelDefinition = {
     new ModelDefinition(
         name = name,
         version = version,
         preparerClass = preparer,
+        trainerClass = trainer,
         extractorClass = extractor,
         scorerClass = scorer,
         protocolVersion = ModelDefinition.CURRENT_MODEL_DEF_VER)
@@ -262,6 +276,14 @@ object ModelDefinition {
           phase = classOf[Preparer])
     }
 
+    // Attempt to load the Trainer class.
+    val trainerClassName: Option[String] = Option(avroModelDefinition.getTrainerClass)
+    val trainer: Option[Class[Trainer]] = trainerClassName.map { className: String =>
+      getClassForPhase[Trainer](
+        phaseImplName = className,
+        phase = classOf[Trainer])
+    }
+
     // Attempt to load the Extractor class.
     val extractor: Class[Extractor] = getClassForPhase[Extractor](
         phaseImplName = avroModelDefinition.getExtractorClass,
@@ -277,6 +299,7 @@ object ModelDefinition {
         name = avroModelDefinition.getName,
         version = avroModelDefinition.getVersion,
         preparerClass = preparer,
+        trainerClass = trainer,
         extractorClass = extractor,
         scorerClass = scorer,
         protocolVersion = protocol)
