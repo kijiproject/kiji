@@ -390,6 +390,9 @@ public class IntegrationTestJobHistoryKijiTable extends AbstractKijiIntegrationT
         assertTrue(jobHistoryStdOut.contains(jobOneEntry.getJobConfiguration()));
         assertTrue(jobHistoryStdOut.contains(
             Arrays.toString(jobOneEntry.getCountersFamily().keySet().toArray())));
+        // check for a specific counter to guard against an empty array in the check above
+        assertTrue(jobHistoryStdOut.contains(
+            "org.kiji.mapreduce.framework.JobHistoryCounters:PRODUCER_ROWS_PROCESSED"));
 
         // Run the second produce job.
         String jobTwoName = mrJobTwo.getHadoopJob().getJobName();

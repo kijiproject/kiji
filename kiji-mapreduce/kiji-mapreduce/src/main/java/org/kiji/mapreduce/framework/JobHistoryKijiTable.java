@@ -35,6 +35,7 @@ import org.kiji.mapreduce.avro.generated.JobHistoryEntry;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiDataRequest;
+import org.kiji.schema.KijiDataRequestBuilder;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiRowScanner;
 import org.kiji.schema.KijiTable;
@@ -204,7 +205,11 @@ public final class JobHistoryKijiTable implements Closeable {
    */
   public JobHistoryEntry getJobDetails(String jobId) throws IOException {
     final KijiTableReader reader = mKijiTable.openTableReader();
-    final KijiDataRequest request = KijiDataRequest.create("info");
+    KijiDataRequestBuilder builder = KijiDataRequest.builder();
+    builder.newColumnsDef().addFamily("info")
+        .addFamily("counters")
+        .addFamily("extendedInfo");
+    final KijiDataRequest request = builder.build();
     final KijiRowData data;
     try {
       data = reader.get(mKijiTable.getEntityId(jobId), request);
