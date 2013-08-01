@@ -44,10 +44,10 @@
     <fake-hbase.version>0.1.0</fake-hbase.version>
     <kiji-common-flags.version>1.0.7</kiji-common-flags.version>
     <kiji-delegation.version>1.0.0</kiji-delegation.version>
-    <kiji-platforms.version>1.1.0</kiji-platforms.version>
-    <kiji-schema.version>1.1.2</kiji-schema.version>
-    <kiji-schema-shell.version>1.1.0</kiji-schema-shell.version>
-    <kiji-mapreduce.version>1.0.2</kiji-mapreduce.version>
+    <kiji-platforms.version>1.2.0</kiji-platforms.version>
+    <kiji-schema.version>1.2.0-SNAPSHOT</kiji-schema.version>
+    <kiji-schema-shell.version>1.2.0-SNAPSHOT</kiji-schema-shell.version>
+    <kiji-mapreduce.version>1.1.0-SNAPSHOT</kiji-mapreduce.version>
     <kiji-mapreduce-lib.version>1.0.0</kiji-mapreduce-lib.version>
   </properties>
 
@@ -130,6 +130,12 @@
       <dependency>
         <groupId>org.kiji.platforms</groupId>
         <artifactId>kiji-hadoop1-hbase92-platform</artifactId>
+        <version>${kiji-platforms.version}</version>
+        <scope>compile</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.kiji.platforms</groupId>
+        <artifactId>kiji-hadoop1-hbase94-platform</artifactId>
         <version>${kiji-platforms.version}</version>
         <scope>compile</scope>
       </dependency>
