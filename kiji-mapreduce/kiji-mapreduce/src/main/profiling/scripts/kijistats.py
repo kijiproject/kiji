@@ -38,6 +38,13 @@
     aggregate times spent in functions, number of invocations of functions
     and average time per function call for functions. This will be per task
     attempt or per function based on context.
+
+    NOTE: you may need to install some python libraries if they do not exist
+    on your system. (You can use either pip or easy_install for this.)
+
+    pip install matplotlib
+    pip install numpy
+
 '''
 
 import argparse
