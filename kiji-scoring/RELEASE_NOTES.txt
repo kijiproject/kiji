@@ -1,18 +1,18 @@
 
                               Kiji Scoring Release Notes
+
 Version 0.4.0
+  * SCORE-61. Resolve race conditions in InternalFreshKijiTableReader
   * SCORE-69. Local FreshKijiTableReader now creates only one table connection for all write
       operations.
+  * SCORE-54. Writing using the ProducerContext in setup and cleanup will now produce an
+      UnsupportedOperationException.  If you wish to write during these methods, use a
+      KijiTableWriter instead.
   * SCORE-32. NewerThan now exposes a getter getNewerThanTimeInMillis() to retrieve the configured
       time before which data is considered stale.
   * SCORE-52. FreshTool now accepts File paths for policy state using the --policy-state-file flag.
   * SCORE-27. PolicyContext now supports a getStore(String) operation so that FreshnessPolicys can
       access KeyValue stores in calls to isFresh().
-
-Version 0.4.0
-  * SCORE-54. Writing using the ProducerContext in setup and cleanup will now produce an
-      UnsupportedOperationException.  If you wish to write during these methods, use a
-      KijiTableWriter instead.
 
 Version 0.3.0
   * SCORE-44. Producer output from freshened get() requests are now committed atomically based on
