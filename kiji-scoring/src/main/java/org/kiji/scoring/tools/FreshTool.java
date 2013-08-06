@@ -62,7 +62,7 @@ import org.kiji.scoring.avro.KijiFreshnessPolicyRecord;
  *  kiji fresh kiji://.env/instance/table/family:qualifer --do=register \
  *    --policy-class=org.kiji.scoring.lib.ShelfLife \
  *    --policy-state={"shelfLife":10} \
- *    --producer-state=com.mycompany.freshening.RecommendingProducer
+ *    --producer-class=com.mycompany.freshening.RecommendingProducer
  *  // Unregister a freshness policy from a column
  *  kiji fresh kiji://.env/instance/table/family:qualifier --do=unregister
  *  // Validate the freshness policy attached to a column
