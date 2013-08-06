@@ -21,7 +21,7 @@
 
   <groupId>org.kiji.schema-shell</groupId>
   <artifactId>kiji-schema-shell</artifactId>
-  <version>1.2.0</version>
+  <version>1.2.1-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <parent>
