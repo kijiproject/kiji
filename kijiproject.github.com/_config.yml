@@ -102,16 +102,16 @@ tutorial_phonebook_devel : /tutorials/phonebook-tutorial/devel
 tutorial_music_devel : /tutorials/music-recommendation/devel
 tutorial_express_devel : /tutorials/express-recommendation/devel
 
-schema_devel_version : 1.1.3
+schema_devel_version : 1.2.1
 schema_devel_branch : master
 
-mr_devel_version : 1.0.3
+mr_devel_version : 1.1.1
 mr_devel_branch : master
 
 mrlib_devel_version : 1.0.1
 mrlib_devel_branch : master
 
-express_devel_version : 0.7.0
+express_devel_version : 0.8.0
 express_devel_branch : master
 
 phonebook_devel_version : 1.0.1
@@ -119,7 +119,7 @@ phonebook_devel_version : 1.0.1
 music_devel_version : 1.0.1
 music_devel_branch : master
 
-music_express_devel_version : 0.6.0
+music_express_devel_version : 0.7.0
 music_express_devel_branch : master
 
 rest_devel_version: 0.4.0
@@ -244,3 +244,9 @@ userguide_schema_1_1_2 : /userguides/schema/1.1.2
 api_schema_1_1_2 : http://api-docs.kiji.org/kiji-schema/1.1.2/org/kiji/schema
 api_mr_1_0_2 : http://api-docs.kiji.org/kiji-mapreduce/1.0.2/org/kiji/mapreduce
 userguide_mapreduce_1_0_2 : /userguides/mapreduce/1.0.2
+userguide_schema_1_2_0 : /userguides/schema/1.2.0
+api_schema_1_2_0 : http://api-docs.kiji.org/kiji-schema/1.2.0/org/kiji/schema
+api_mr_1_1_0 : http://api-docs.kiji.org/kiji-mapreduce/1.1.0/org/kiji/mapreduce
+userguide_mapreduce_1_1_0 : /userguides/mapreduce/1.1.0
+api_express_0_7_0 : http://api-docs.kiji.org/kiji-express/0.7.0/org/kiji/express
+
