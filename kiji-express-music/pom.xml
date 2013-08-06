@@ -23,8 +23,8 @@
   </licenses>
 
   <properties>
-    <kiji.framework.version>1.1.1-SNAPSHOT</kiji.framework.version>
-    <express.version>0.7.0-SNAPSHOT</express.version>
+    <kiji.framework.version>1.1.1</kiji.framework.version>
+    <express.version>0.7.0</express.version>
     <scalatest.version>2.0.M5b</scalatest.version>
   </properties>
 
