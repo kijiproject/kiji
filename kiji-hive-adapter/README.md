@@ -211,6 +211,10 @@ table. For primitive types, the relationship is obvious (e.g. an Avro
 Note that we special case union types with null to just return the raw
 Hive type, since Hive types are already nullable.
 
+For any types that aren't explicitly supported within Hive(like enumerations),
+the STRING type can be used in the Hive definition to use the type's toString()
+representation.
+
 There are two additional meta columns that are available to allow you to read
 the entity ID for a row.
 
