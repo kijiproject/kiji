@@ -1,6 +1,11 @@
 
                              Kiji Express Release Notes
 
+Version 0.8.0
+  * EXP-176. Avoids clobbering mapred.child.java.opts in the express
+      script. This will allow users to pick up a value for
+      mapred.child.java.opts from mapred-site.xml, or set a value from
+      the command line.
 Version 0.7.0
   * EXP-162. Environment class now expose case classes as public fields
       instead of Avro classes.

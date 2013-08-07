@@ -76,4 +76,14 @@ class KijiJob(args: Args) extends Job(args) with PipeConversions {
     // Call any validation that scalding's Job class does.
     super.validateSources(mode)
   }
+
+  override def config(implicit mode: Mode): Map[AnyRef, AnyRef] = {
+    // We configure as is done in Scalding's Job, but then append to mapred.child.java.opts to
+    // disable schema validation.
+    val baseConfig = super.config(mode)
+    val baseJavaOpts = baseConfig.get("mapred.child.java.opts").getOrElse("").toString()
+    val newJavaOpts = (baseJavaOpts
+        + " -Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED")
+    baseConfig ++ Map("mapred.child.java.opts" -> newJavaOpts)
+  }
 }

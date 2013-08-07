@@ -557,7 +557,6 @@ else
       -Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED \
       ${scalding_tool} \
       "-Dtmpjars=${tmpjars}" \
-      "-Dmapred.child.java.opts=-Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED"\
       ${hadoop_argv} \
       "${canonical_user_target}" "${run_mode_flag}" ${user_argv}
   else
@@ -567,7 +566,6 @@ else
       -Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED \
       ${scalding_tool} \
       "-Dtmpjars=file://${canonical_user_target},${tmpjars}" \
-      "-Dmapred.child.java.opts=-Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED"\
       ${hadoop_argv} \
       "${class}" \
       "${run_mode_flag}" \
