@@ -23,6 +23,7 @@ import com.google.common.base.Objects
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 
 /**
  * A specification of the runtime bindings needed in the extract phase of a model.
@@ -35,6 +36,7 @@ import org.kiji.annotations.ApiStability
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 final class ExtractEnvironment private[express] (
     val dataRequest: ExpressDataRequest,
     val fieldBindings: Seq[FieldBinding],
@@ -76,8 +78,8 @@ object ExtractEnvironment {
       fieldBindings: Seq[FieldBinding],
       kvstores: Seq[KVStore]): ExtractEnvironment = {
     new ExtractEnvironment(
-      dataRequest,
-      fieldBindings,
-      kvstores)
+        dataRequest,
+        fieldBindings,
+        kvstores)
   }
 }

@@ -26,21 +26,21 @@ import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
 
 /**
- * A specification of the runtime bindings needed in the prepare phase of a model.
+ * A specification of the runtime bindings needed in the train phase of a model.
  *
  * @param inputSpecs defining a mapping from input data source names to their configurations.
  * @param outputSpecs defining a mapping from output data sink names to their configurations.
- * @param kvstores for usage during the prepare phase.
+ * @param kvstores for usage during the train phase.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-final class PrepareEnvironment private[express](
+final class TrainEnvironment private[express](
     val inputSpecs: Map[String, InputSpec],
     val outputSpecs: Map[String, OutputSpec],
     val kvstores: Seq[KVStore]) {
   override def equals(other: Any): Boolean = {
     other match {
-      case environment: PrepareEnvironment => {
+      case environment: TrainEnvironment => {
         inputSpecs == environment.inputSpecs &&
             outputSpecs == environment.outputSpecs &&
             kvstores == environment.kvstores
@@ -57,23 +57,23 @@ final class PrepareEnvironment private[express](
 }
 
 /**
- * Companion object to PrepareEnvironment containing factory methods.
+ * Companion object to TrainEnvironment containing factory methods.
  */
-object PrepareEnvironment {
+object TrainEnvironment {
   /**
-   * Creates a new PrepareEnvironment, which is a specification of the runtime bindings needed in
-   * the prepare phase of a model.
+   * Creates a new TrainEnvironment, which is a specification of the runtime bindings needed in
+   * the train phase of a model.
    *
    * @param inputSpecs defining a mapping from input data source names to their configurations.
    * @param outputSpecs defining a mapping from output data sink names to their configurations.
-   * @param kvstores for usage during the prepare phase.
-   * @return an PrepareEnvironment with the specified configuration.
+   * @param kvstores for usage during the train phase.
+   * @return an TrainEnvironment with the specified configuration.
    */
   def apply(
       inputSpecs: Map[String, InputSpec],
       outputSpecs: Map[String, OutputSpec],
-      kvstores: Seq[KVStore]): PrepareEnvironment = {
-    new PrepareEnvironment(
+      kvstores: Seq[KVStore]): TrainEnvironment = {
+    new TrainEnvironment(
         inputSpecs,
         outputSpecs,
         kvstores)

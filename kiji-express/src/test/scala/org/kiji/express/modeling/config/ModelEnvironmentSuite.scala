@@ -53,6 +53,11 @@ class ModelEnvironmentSuite extends FunSuite {
       "src/test/resources/modelEnvironments/invalid-columns-model-environment.json"
   val validFiltersDefinitionLocation: String =
       "src/test/resources/modelEnvironments/valid-filters-model-environment.json"
+  val invalidPrepareEnvironmentLocation: String =
+    "src/test/resources/modelEnvironments/invalid-prepare-model-environment.json"
+  val invalidTrainEnvironmentLocation: String =
+    "src/test/resources/modelEnvironments/invalid-train-model-environment.json"
+
 
   // Expected error messages for validation tests.
   val expectedNameError = "The name of the model environment cannot be the empty string."
@@ -60,8 +65,8 @@ class ModelEnvironmentSuite extends FunSuite {
       "Model environment version strings must match the regex \"[0-9]+(.[0-9]+)*\" " +
       "(1.0.0 would be valid)."
   val expectedProtocolVersionError =
-      "\"model_environment-0.1.1\" is the maximum protocol version supported. " +
-      "The provided model environment is of protocol version: \"model_environment-0.2.0\""
+      "\"model_environment-0.2.0\" is the maximum protocol version supported. " +
+      "The provided model environment is of protocol version: \"model_environment-7.3.0\""
 
   test("ModelEnvironment can be created from a path to a valid JSON file.") {
     val expectedRequest: KijiDataRequest = {
@@ -109,6 +114,7 @@ class ModelEnvironmentSuite extends FunSuite {
       "1.0.0",
       "kiji://myuri",
       None,
+      None,
       extractEnv,
       scoreEnv)
 
@@ -144,8 +150,26 @@ class ModelEnvironmentSuite extends FunSuite {
     val dataRequest: ExpressDataRequest = new ExpressDataRequest(0, 38475687,
       new ExpressColumnRequest("info:in", 3, None) :: Nil)
 
-    // Prepare, extract and score environments to use in tests.
-    val prepareEnv = PrepareEnvironment(dataRequest, Seq(), Seq(), "col:out")
+    val inputSpec = new KijiInputSpec(
+        "kiji://.env/default/table",
+        dataRequest,
+        Seq(FieldBinding("tuplename", "info:storefieldname"))
+    )
+    val outputSpec = new KijiOutputSpec(
+        "kiji://.env/default/table",
+        Seq(FieldBinding("tuplename", "info:storefieldname"))
+    )
+    // Prepare, extract, train and score environments to use in tests.
+    val prepareEnv = PrepareEnvironment(
+        Map("myinput" -> inputSpec),
+        Map("myoutput" -> outputSpec),
+        Seq(KVStore("AVRO_KV", "storename", Map("path" -> "/some/great/path")))
+    )
+    val trainEnv = TrainEnvironment(
+      Map("myinput" -> inputSpec),
+      Map("myoutput" -> outputSpec),
+      Seq(KVStore("AVRO_KV", "storename", Map("path" -> "/some/great/path")))
+    )
     val extractEnv = ExtractEnvironment(
       dataRequest,
       Seq(FieldBinding("tuplename", "info:storefieldname")),
@@ -160,6 +184,7 @@ class ModelEnvironmentSuite extends FunSuite {
       "1.0.0",
       "kiji://myuri",
       Some(prepareEnv),
+      Some(trainEnv),
       extractEnv,
       scoreEnv)
     val jsonModelEnv: String = modelEnv.toJson()
@@ -237,6 +262,7 @@ class ModelEnvironmentSuite extends FunSuite {
       "myname",
       "1.0.0",
       "kiji://myuri",
+      None,
       None,
       extractEnv,
       scoreEnv)
@@ -501,5 +527,25 @@ class ModelEnvironmentSuite extends FunSuite {
 
     // Test for the expected Kiji data request containing the expected column filters.
     assert(kijiDataRequest === kijiDataReq)
+  }
+
+  test("ModelEnvironment validates prepare environment correctly.") {
+    val thrown = intercept[ModelEnvironmentValidationException] {
+      ModelEnvironment.fromJsonFile(invalidPrepareEnvironmentLocation)
+    }
+    assert(thrown.getMessage.contains("Use the property name 'path'"))
+    assert(thrown.getMessage.contains("minTimeStamp in the DataRequest"))
+    assert(thrown.getMessage.contains("maxTimeStamp in the DataRequest"))
+    assert(thrown.getMessage.contains("*BADCOL"))
+  }
+
+  test("ModelEnvironment validates train environment correctly.") {
+    val thrown = intercept[ModelEnvironmentValidationException] {
+      ModelEnvironment.fromJsonFile(invalidTrainEnvironmentLocation)
+    }
+    assert(thrown.getMessage.contains("Use the property name 'path'"))
+    assert(thrown.getMessage.contains("minTimeStamp in the DataRequest"))
+    assert(thrown.getMessage.contains("maxTimeStamp in the DataRequest"))
+    assert(thrown.getMessage.contains("*BADCOL"))
   }
 }

@@ -86,6 +86,7 @@ class ShellExtEndToEnd extends ShellExtSuite {
             version = "1.0",
             modelTableUri = uri.toString,
           prepareEnvironment = None,
+          trainEnvironment = None,
             extractEnvironment = ExtractEnvironment(
                 dataRequest = request,
                 fieldBindings = Seq(FieldBinding("field", "family:column1")),

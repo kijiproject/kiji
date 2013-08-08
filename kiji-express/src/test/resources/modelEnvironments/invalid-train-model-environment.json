@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 {
-  "name" : "",
+  "name" : "myRunProfile",
   "version" : "1.0.0",
   "model_table_uri" : "kiji://.env/default/mytable",
   "protocol_version" : "model_environment-0.2.0",
@@ -27,10 +27,10 @@
         "specification" : {
           "table_uri" : "kiji://.env/default/table",
           "data_request" : {
-            "min_timestamp" : 0,
-            "max_timestamp" : 38475687,
+            "min_timestamp" : 3,
+            "max_timestamp" : 3,
             "column_definitions" : [ {
-              "name" : "info:in",
+              "name" : "mycol",
               "max_versions" : 3,
               "filter" : {
                 "regex" : "foo"
@@ -70,10 +70,10 @@
         "specification" : {
           "table_uri" : "kiji://.env/default/table",
           "data_request" : {
-            "min_timestamp" : 0,
-            "max_timestamp" : 38475687,
+            "min_timestamp" : -3,
+            "max_timestamp" : -3,
             "column_definitions" : [ {
-              "name" : "info:in",
+              "name" : "*BADCOL",
               "max_versions" : 3,
               "filter" : {
                 "regex" : "foo"
@@ -102,7 +102,7 @@
       "store_type" : "AVRO_KV",
       "name" : "side_data",
       "properties" : [ {
-        "name" : "path",
+        "name" : "wrath",
         "value" : "/usr/src/and/so/on"
       } ]
     } ]
@@ -113,7 +113,10 @@
       "max_timestamp" : 38475687,
       "column_definitions" : [ {
         "name" : "info:in",
-        "max_versions" : 3
+        "max_versions" : 3,
+        "filter" : {
+          "regex" : "foo"
+        }
       } ]
     },
     "kv_stores" : [ {
