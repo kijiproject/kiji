@@ -22,8 +22,11 @@ package org.kiji.express.modeling
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
 
+import org.kiji.express.modeling.config.ExtractEnvironment
 import org.kiji.express.modeling.config.ModelDefinition
 import org.kiji.express.modeling.config.ModelEnvironment
+import org.kiji.express.modeling.config.ScoreEnvironment
+import org.kiji.express.modeling.config.ValidationException
 import org.kiji.express.modeling.framework.ExtractScoreProducer
 import org.kiji.mapreduce.KijiMapReduceJob
 import org.kiji.mapreduce.output.MapReduceJobOutputs
@@ -32,7 +35,7 @@ import org.kiji.schema.KijiURI
 
 /**
  * Used to build jobs for running the extract and score phases of a model in batch over an entire
- * input table.
+ * input table. Both the extract and score phases are required to build this job.
  */
 object ExtractScoreJobBuilder {
   /**
@@ -51,6 +54,19 @@ object ExtractScoreJobBuilder {
     // Serialize the model configuration objects.
     conf.set(ExtractScoreProducer.modelDefinitionConfKey, model.toJson())
     conf.set(ExtractScoreProducer.modelEnvironmentConfKey, environment.toJson())
+
+    // Validate that extract and score, which are optional phases, exist in the given
+    // model definition and model environment.
+    val extractModel: Option[Class[_]] = model.extractorClass
+    val extractEnv: Option[ExtractEnvironment] = environment.extractEnvironment
+    val scoreModel: Option[Class[_]] = model.scorerClass
+    val scoreEnv: Option[ScoreEnvironment] = environment.scoreEnvironment
+    if ((extractModel == None) || (extractEnv == None)
+        || (scoreModel == None) || (scoreEnv == None)) {
+      val error = "A model definition and model environment must include both the extract " +
+          "phase and the score phase in order to build an ExtractScoreProducer."
+      throw new ValidationException(error)
+    }
 
     // Build the produce job.
     KijiProduceJobBuilder.create()

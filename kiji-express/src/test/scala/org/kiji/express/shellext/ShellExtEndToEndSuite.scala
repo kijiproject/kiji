@@ -79,21 +79,24 @@ class ShellExtEndToEnd extends ShellExtSuite {
         val modelDefinition: ModelDefinition = ModelDefinition(
             name = "test-model-definition",
             version = "1.0",
-            extractor = classOf[ShellExtEndToEndSuite.DoublingExtractor],
-            scorer = classOf[ShellExtEndToEndSuite.UpperCaseScorer])
+            extractor = Some(classOf[ShellExtEndToEndSuite.DoublingExtractor]),
+            scorer = Some(classOf[ShellExtEndToEndSuite.UpperCaseScorer]))
         val modelEnvironment: ModelEnvironment = ModelEnvironment(
             name = "test-model-environment",
             version = "1.0",
             modelTableUri = uri.toString,
-          prepareEnvironment = None,
-          trainEnvironment = None,
-            extractEnvironment = ExtractEnvironment(
+            prepareEnvironment = None,
+            trainEnvironment = None,
+            extractEnvironment = Some(ExtractEnvironment(
                 dataRequest = request,
                 fieldBindings = Seq(FieldBinding("field", "family:column1")),
-                kvstores = Seq()),
-            scoreEnvironment = new ScoreEnvironment(
+                kvstores = Seq()
+            )),
+            scoreEnvironment = Some(new ScoreEnvironment(
                 outputColumn = "family:column2",
-                kvstores = Seq()))
+                kvstores = Seq()
+            ))
+        )
 
         // Write the created model definition and environment to disk.
         doAndClose(new FileWriter(modelDefFile)) { writer =>

@@ -70,32 +70,35 @@ class ExtractScoreProducerSuite
       val modelDefinition: ModelDefinition = ModelDefinition(
           name = "test-model-definition",
           version = "1.0",
-          extractor = classOf[ExtractScoreProducerSuite.DoublingExtractor],
-          scorer = classOf[ExtractScoreProducerSuite.UpperCaseScorer])
+          extractor = Some(classOf[ExtractScoreProducerSuite.DoublingExtractor]),
+          scorer = Some(classOf[ExtractScoreProducerSuite.UpperCaseScorer]))
       val modelEnvironment: ModelEnvironment = ModelEnvironment(
           name = "test-model-environment",
           version = "1.0",
           modelTableUri = uri.toString,
           prepareEnvironment = None,
           trainEnvironment = None,
-          extractEnvironment = ExtractEnvironment(
+          extractEnvironment = Some(ExtractEnvironment(
               dataRequest = request,
               fieldBindings = Seq(
                   FieldBinding(tupleFieldName = "field", storeFieldName = "family:column1")),
-              kvstores = Seq(
-                  KVStore(
-                      storeType = "AVRO_KV",
-                      name = "side_data",
-                      properties = Map(
-                          "path" -> sideDataPath.toString(),
-                          // The Distributed Cache is not supported when using LocalJobRunner in
-                          // Hadoop <= 0.21.0.
-                          // See https://issues.apache.org/jira/browse/MAPREDUCE-476 for more
-                          // information.
-                          "use_dcache" -> "false")))),
-          scoreEnvironment = ScoreEnvironment(
+              kvstores = Seq(KVStore(
+                  storeType = "AVRO_KV",
+                  name = "side_data",
+                  properties = Map(
+                      "path" -> sideDataPath.toString(),
+                      // The Distributed Cache is not supported when using LocalJobRunner in
+                      // Hadoop <= 0.21.0.
+                      // See https://issues.apache.org/jira/browse/MAPREDUCE-476 for more
+                      // information.
+                      "use_dcache" -> "false")
+              ))
+          )),
+          scoreEnvironment = Some(ScoreEnvironment(
               outputColumn = "family:column2",
-              kvstores = Seq()))
+              kvstores = Seq()
+          ))
+      )
 
       // Build the produce job.
       val produceJob = ExtractScoreJobBuilder.buildJob(
@@ -147,23 +150,26 @@ class ExtractScoreProducerSuite
       val modelDefinition: ModelDefinition = ModelDefinition(
           name = "test-model-definition",
           version = "1.0",
-          extractor = classOf[ExtractScoreProducerSuite.TwoArgDoublingExtractor],
-          scorer = classOf[ExtractScoreProducerSuite.TwoArgUpperCaseScorer])
+          extractor = Some(classOf[ExtractScoreProducerSuite.TwoArgDoublingExtractor]),
+          scorer = Some(classOf[ExtractScoreProducerSuite.TwoArgUpperCaseScorer]))
       val modelEnvironment: ModelEnvironment = ModelEnvironment(
           name = "test-model-environment",
           version = "1.0",
           modelTableUri = uri.toString,
           prepareEnvironment = None,
           trainEnvironment = None,
-          extractEnvironment = ExtractEnvironment(
+          extractEnvironment = Some(ExtractEnvironment(
               dataRequest = request,
               fieldBindings = Seq(
                   FieldBinding(tupleFieldName = "i1", storeFieldName = "family:column1"),
                   FieldBinding(tupleFieldName = "i2", storeFieldName = "family:column2")),
-              kvstores = Seq()),
-          scoreEnvironment = ScoreEnvironment(
+              kvstores = Seq()
+          )),
+          scoreEnvironment = Some(ScoreEnvironment(
               outputColumn = "family:column2",
-              kvstores = Seq()))
+              kvstores = Seq()
+          ))
+      )
 
       // Build the produce job.
       val produceJob = ExtractScoreJobBuilder.buildJob(
@@ -215,22 +221,25 @@ class ExtractScoreProducerSuite
       val modelDefinition: ModelDefinition = ModelDefinition(
           name = "test-model-definition",
           version = "1.0",
-          extractor = classOf[FirstValueExtractor],
-          scorer = classOf[ExtractScoreProducerSuite.UpperCaseScorer])
+          extractor = Some(classOf[FirstValueExtractor]),
+          scorer = Some(classOf[ExtractScoreProducerSuite.UpperCaseScorer]))
       val modelEnvironment: ModelEnvironment = ModelEnvironment(
           name = "test-model-environment",
           version = "1.0",
           modelTableUri = uri.toString,
           prepareEnvironment = None,
           trainEnvironment = None,
-          extractEnvironment = ExtractEnvironment(
+          extractEnvironment = Some(ExtractEnvironment(
               dataRequest = request,
               fieldBindings = Seq(
                   FieldBinding(tupleFieldName = "feature", storeFieldName = "family:column1")),
-              kvstores = Seq()),
-          scoreEnvironment = ScoreEnvironment(
+              kvstores = Seq()
+          )),
+          scoreEnvironment = Some(ScoreEnvironment(
               outputColumn = "family:column2",
-              kvstores = Seq()))
+              kvstores = Seq()
+          ))
+      )
 
       // Build the produce job.
       val produceJob = ExtractScoreJobBuilder.buildJob(

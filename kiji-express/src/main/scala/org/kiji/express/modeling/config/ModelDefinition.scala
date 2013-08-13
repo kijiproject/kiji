@@ -77,8 +77,8 @@ import org.kiji.schema.util.ToJson
  * @param version of the model definition.
  * @param preparerClass to be used in the prepare phase of the model definition. Optional.
  * @param trainerClass to be used in the train phase of the model definition. Optional.
- * @param extractorClass to be used in the extract phase of the model definition.
- * @param scorerClass to be used in the score phase of the model definition.
+ * @param extractorClass to be used in the extract phase of the model definition. Optional.
+ * @param scorerClass to be used in the score phase of the model definition. Optional.
  * @param protocolVersion this model definition was written for.
  */
 @ApiAudience.Public
@@ -88,8 +88,8 @@ final class ModelDefinition private[express] (
     val version: String,
     val preparerClass: Option[java.lang.Class[_ <: Preparer]],
     val trainerClass: Option[java.lang.Class[_ <: Trainer]],
-    val extractorClass: java.lang.Class[_ <: Extractor],
-    val scorerClass: java.lang.Class[_ <: Scorer],
+    val extractorClass: Option[java.lang.Class[_ <: Extractor]],
+    val scorerClass: Option[java.lang.Class[_ <: Scorer]],
     private[express] val protocolVersion: ProtocolVersion =
         ModelDefinition.CURRENT_MODEL_DEF_VER) {
   // Ensure that all fields set for this model definition are valid.
@@ -102,16 +102,18 @@ final class ModelDefinition private[express] (
    */
   def toJson(): String = {
     // Build an AvroModelDefinition record.
+    // scalastyle:off null
     val definition: AvroModelDefinition = AvroModelDefinition
         .newBuilder()
         .setName(name)
         .setVersion(version)
         .setProtocolVersion(protocolVersion.toString)
         .setPreparerClass(preparerClass.map { _.getName } .getOrElse(null))
-        .setTrainerClass(trainerClass.map { _.getName } .getOrElse { null })
-        .setExtractorClass(extractorClass.getName)
-        .setScorerClass(scorerClass.getName)
+        .setTrainerClass(trainerClass.map { _.getName } .getOrElse(null))
+        .setExtractorClass(extractorClass.map { _.getName } .getOrElse(null))
+        .setScorerClass(scorerClass.map { _.getName } .getOrElse(null))
         .build()
+    // scalastyle:on null
 
     // Encode it into JSON.
     ToJson.toAvroJsonString(definition)
@@ -135,8 +137,8 @@ final class ModelDefinition private[express] (
       version: String = this.version,
       preparer: Option[Class[_ <: Preparer]] = this.preparerClass,
       trainer: Option[Class[_ <: Trainer]] = this.trainerClass,
-      extractor: Class[_ <: Extractor] = this.extractorClass,
-      scorer: Class[_ <: Scorer] = this.scorerClass): ModelDefinition = {
+      extractor: Option[Class[_ <: Extractor]] = this.extractorClass,
+      scorer: Option[Class[_ <: Scorer]] = this.scorerClass): ModelDefinition = {
     new ModelDefinition(name, version, preparer, trainer, extractor, scorer, this.protocolVersion)
   }
 
@@ -202,8 +204,8 @@ object ModelDefinition {
       version: String,
       preparer: Option[Class[_ <: Preparer]] = None,
       trainer: Option[Class[_ <: Trainer]] = None,
-      extractor: Class[_ <: Extractor],
-      scorer: Class[_ <: Scorer]): ModelDefinition = {
+      extractor: Option[Class[_ <: Extractor]] = None,
+      scorer: Option[Class[_ <: Scorer]] = None): ModelDefinition = {
     new ModelDefinition(
         name = name,
         version = version,
@@ -285,14 +287,20 @@ object ModelDefinition {
     }
 
     // Attempt to load the Extractor class.
-    val extractor: Class[Extractor] = getClassForPhase[Extractor](
-        phaseImplName = avroModelDefinition.getExtractorClass,
+    val extractorClassName: Option[String] = Option(avroModelDefinition.getExtractorClass)
+    val extractor: Option[Class[Extractor]] = extractorClassName.map { className: String =>
+      getClassForPhase[Extractor](
+        phaseImplName = className,
         phase = classOf[Extractor])
+    }
 
     // Attempt to load the Scorer class.
-    val scorer: Class[Scorer] = getClassForPhase[Scorer](
-        phaseImplName = avroModelDefinition.getScorerClass,
+    val scorerClassName: Option[String] = Option(avroModelDefinition.getScorerClass)
+    val scorer: Option[Class[Scorer]] = scorerClassName.map { className: String =>
+      getClassForPhase[Scorer](
+        phaseImplName = className,
         phase = classOf[Scorer])
+    }
 
     // Build a model definition.
     new ModelDefinition(
@@ -329,8 +337,8 @@ object ModelDefinition {
    *     validating the provided model definition.
    */
   def validateModelDefinition(definition: ModelDefinition) {
-    val extractorClass: Class[_] = definition.extractorClass
-    val scorerClass: Class[_] = definition.scorerClass
+    val extractorClass: Option[Class[_]] = definition.extractorClass
+    val scorerClass: Option[Class[_]] = definition.scorerClass
 
     val validationErrors: Seq[Option[ValidationException]] = Seq(
         validateProtocolVersion(definition.protocolVersion),
@@ -338,13 +346,32 @@ object ModelDefinition {
         validateVersion(definition.version)
     )
 
-    val extractorFields: Set[String] = extractorOutputFieldNames(extractorClass)
-    val fieldMappingErrors: Seq[Option[ValidationException]] =
-      scorerInputFieldNames(scorerClass).map { inputFieldName: String =>
-        validateScorerInputInExtractorOutputs(inputFieldName, extractorFields)
-      }
+    if ((extractorClass.isDefined) && (scorerClass.isDefined)) {
+      val extractorFields: Set[String] = extractorOutputFieldNames(extractorClass.get)
+      val fieldMappingErrors: Seq[Option[ValidationException]] =
+          scorerInputFieldNames(scorerClass.get).map { inputFieldName: String =>
+            validateScorerInputInExtractorOutputs(inputFieldName, extractorFields)
+          }
+      aggregateErrors(validationErrors, fieldMappingErrors)
 
-    // Throw an exception if there were any validation errors.
+    } else {
+      val fieldMappingErrors = Seq(None)
+      aggregateErrors(validationErrors, fieldMappingErrors)
+    }
+  }
+
+  /**
+   * Collects ValidationExceptions thrown by validation procedures and throws an aggregate
+   * sequence of exceptions up the stack if necessary.
+   *
+   * @param validationErrors A sequence of optional ValidationException's from preliminary
+   *     validation of the model definition.
+   * @param fieldMappingErrors A sequence of optional ValidationException's from validating
+   *     the correct field mappings between the extractor and the scorer.
+   */
+  private[express] def aggregateErrors(
+      validationErrors: Seq[Option[ValidationException]],
+      fieldMappingErrors: Seq[Option[ValidationException]]) {
     val allErrors = validationErrors ++ fieldMappingErrors
     val causes = allErrors.flatten
     if (!causes.isEmpty) {
@@ -413,7 +440,6 @@ object ModelDefinition {
 
   /**
   * Provides a set of the names of output fields used by an extractor class.
-  * This is a helper function for validateScorerInputInExtractorOutputs.
   *
   * @param extractorClass from which to extract output fields.
   * @return a set of the extractor's output field names.
@@ -446,7 +472,6 @@ object ModelDefinition {
 
   /**
   * Provides a set of the names of input fields used by a scorer class.
-  * This is a helper function for validateScorerInputInExtractorOutputs.
   *
   * @param scorerClass from which to extract input fields.
   * @return a sequence of the scorer's input field names.

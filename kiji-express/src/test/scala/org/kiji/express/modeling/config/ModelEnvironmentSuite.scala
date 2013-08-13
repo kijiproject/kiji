@@ -87,10 +87,10 @@ class ModelEnvironmentSuite extends FunSuite {
 
     assert("myRunProfile" === environment.name)
     assert("1.0.0" === environment.version)
-    assert(expectedRequest === environment.extractEnvironment.dataRequest.toKijiDataRequest())
-    assert(expectedKvstores === environment.extractEnvironment.kvstores)
-    assert("info:out" === environment.scoreEnvironment.outputColumn)
-    assert(expectedKvstores === environment.scoreEnvironment.kvstores)
+    assert(expectedRequest === environment.extractEnvironment.get.dataRequest.toKijiDataRequest())
+    assert(expectedKvstores === environment.extractEnvironment.get.kvstores)
+    assert("info:out" === environment.scoreEnvironment.get.outputColumn)
+    assert(expectedKvstores === environment.scoreEnvironment.get.kvstores)
   }
 
   test("Settings on a model environment can be modified.") {
@@ -98,16 +98,18 @@ class ModelEnvironmentSuite extends FunSuite {
       new ExpressColumnRequest("info:in", 3, None) :: Nil)
 
     // Extract and score environments to use in tests.
-    val extractEnv = ExtractEnvironment(dataRequest, Seq(), Seq())
-    val extractEnv2 = ExtractEnvironment(
+    val extractEnv = Some(ExtractEnvironment(dataRequest, Seq(), Seq()))
+    val extractEnv2 = Some(ExtractEnvironment(
         dataRequest,
         Seq(FieldBinding("tuplename", "info:storefieldname")),
-        Seq(KVStore("AVRO_KV", "storename", Map("path" -> "/some/great/path"))))
-    val scoreEnv = ScoreEnvironment("outputFamily:qualifier", Seq())
-    val scoreEnv2 = ScoreEnvironment(
+        Seq(KVStore("AVRO_KV", "storename", Map("path" -> "/some/great/path")))
+    ))
+    val scoreEnv = Some(ScoreEnvironment("outputFamily:qualifier", Seq()))
+    val scoreEnv2 = Some(ScoreEnvironment(
         "outputFamily:qualifier",
         Seq(KVStore("KIJI_TABLE", "myname", Map("uri" -> "kiji://.env/default/table",
-            "column" -> "info:email"))))
+            "column" -> "info:email")))
+    ))
 
     val modelEnv = ModelEnvironment(
       "myname",
@@ -160,31 +162,33 @@ class ModelEnvironmentSuite extends FunSuite {
         Seq(FieldBinding("tuplename", "info:storefieldname"))
     )
     // Prepare, extract, train and score environments to use in tests.
-    val prepareEnv = PrepareEnvironment(
+    val prepareEnv = Some(PrepareEnvironment(
         Map("myinput" -> inputSpec),
         Map("myoutput" -> outputSpec),
         Seq(KVStore("AVRO_KV", "storename", Map("path" -> "/some/great/path")))
-    )
-    val trainEnv = TrainEnvironment(
+    ))
+    val trainEnv = Some(TrainEnvironment(
       Map("myinput" -> inputSpec),
       Map("myoutput" -> outputSpec),
       Seq(KVStore("AVRO_KV", "storename", Map("path" -> "/some/great/path")))
-    )
-    val extractEnv = ExtractEnvironment(
+    ))
+    val extractEnv = Some(ExtractEnvironment(
       dataRequest,
       Seq(FieldBinding("tuplename", "info:storefieldname")),
-      Seq(KVStore("AVRO_KV", "storename", Map("path" -> "/some/great/path"))))
-    val scoreEnv = ScoreEnvironment(
+      Seq(KVStore("AVRO_KV", "storename", Map("path" -> "/some/great/path")))
+    ))
+    val scoreEnv = Some(ScoreEnvironment(
       "outputFamily:qualifier",
       Seq(KVStore("KIJI_TABLE", "myname", Map("uri" -> "kiji://.env/default/table",
-        "column" -> "info:email"))))
+        "column" -> "info:email")))
+    ))
 
     val modelEnv = ModelEnvironment(
       "myname",
       "1.0.0",
       "kiji://myuri",
-      Some(prepareEnv),
-      Some(trainEnv),
+      prepareEnv,
+      trainEnv,
       extractEnv,
       scoreEnv)
     val jsonModelEnv: String = modelEnv.toJson()
@@ -246,17 +250,19 @@ class ModelEnvironmentSuite extends FunSuite {
   test("ModelEnvironment validates extract field bindings when programmatically constructed.") {
     val dataRequest: ExpressDataRequest = new ExpressDataRequest(0, 38475687,
         new ExpressColumnRequest("info:in", 3, None) :: Nil)
-    val extractEnv = ExtractEnvironment(
+    val extractEnv = Some(ExtractEnvironment(
         dataRequest,
         Seq(
             FieldBinding("tuplename", "info:storefieldname"),
             FieldBinding("tuplename", "info:storefield2")),
-        Seq(KVStore("AVRO_KV", "storename", Map("path" -> "/some/great/path"))))
+        Seq(KVStore("AVRO_KV", "storename", Map("path" -> "/some/great/path")))
+    ))
 
-    val scoreEnv = ScoreEnvironment(
+    val scoreEnv = Some(ScoreEnvironment(
         "outputFamily:qualifier",
         Seq(KVStore("KIJI_TABLE", "myname", Map("uri" -> "kiji://.env/default/table",
-            "column" -> "info:email"))))
+            "column" -> "info:email")))
+    ))
 
     val thrown = intercept[ModelEnvironmentValidationException] { ModelEnvironment(
       "myname",
@@ -496,7 +502,7 @@ class ModelEnvironmentSuite extends FunSuite {
     val expectedRequest: ExpressDataRequest = new ExpressDataRequest(0, 38475687,
         new ExpressColumnRequest("info:in", 3, Some(expAndFilter)) :: Nil)
 
-    assert(expectedRequest === modelEnv.extractEnvironment.dataRequest)
+    assert(expectedRequest === modelEnv.extractEnvironment.get.dataRequest)
   }
 
   // Integration test for Kiji column filters.
@@ -505,7 +511,7 @@ class ModelEnvironmentSuite extends FunSuite {
     val modelEnv: ModelEnvironment = ModelEnvironment.fromJsonFile(validFiltersDefinitionLocation)
 
     // Pull out the Kiji data request to test from the model environment.
-    val expDataReq: ExpressDataRequest = modelEnv.extractEnvironment.dataRequest
+    val expDataReq: ExpressDataRequest = modelEnv.extractEnvironment.get.dataRequest
     val kijiDataReq: KijiDataRequest = expDataReq.toKijiDataRequest()
 
     // Programmatically create the expected Kiji data request (with filters).
