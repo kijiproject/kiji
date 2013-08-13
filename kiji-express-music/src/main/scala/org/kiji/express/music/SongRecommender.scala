@@ -47,7 +47,7 @@ class SongRecommender(args: Args) extends KijiJob(args) {
     val songRecord = songs.getFirstValue
     val topSongs = songRecord("topSongs")
     val mostPopularSong = topSongs(0)
-    return mostPopularSong("songId").asString
+    return mostPopularSong("song_id").asString
   }
 
   /**

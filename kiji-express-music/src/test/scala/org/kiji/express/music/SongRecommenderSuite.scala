@@ -41,10 +41,10 @@ class SongRecommenderSuite extends KijiSuite {
 
   // Create some data (track plays and topSongs) for two users.
 
-  val songFour: AvroRecord = AvroRecord("songId" -> "song-4", "count" -> 10L)
+  val songFour: AvroRecord = AvroRecord("song_id" -> "song-4", "count" -> 10L)
   val topSongsForSong1 = AvroRecord("topSongs" -> AvroList(List(songFour)))
 
-  val songFive: AvroRecord = AvroRecord("songId" -> "song-5", "count" -> 9L)
+  val songFive: AvroRecord = AvroRecord("song_id" -> "song-5", "count" -> 9L)
   val topSongsForSong2 = AvroRecord("topSongs" -> AvroList(List(songFive)))
 
   val testUserInput =
