@@ -32,6 +32,7 @@ import com.google.common.collect.Maps;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.generic.IndexedRecord;
 import org.apache.avro.util.Utf8;
 import org.apache.hadoop.hive.serde2.io.DoubleWritable;
 import org.apache.hadoop.hive.serde2.objectinspector.StructField;
@@ -185,7 +186,7 @@ public class KijiCellWritable implements Writable {
         }
         break;
       case RECORD:
-        GenericRecord recordData = (GenericRecord) data;
+        IndexedRecord recordData = (IndexedRecord) data;
         WritableUtils.writeVInt(out, schema.getFields().size());
         for (Schema.Field field : schema.getFields()) {
           WritableUtils.writeString(out, field.name());

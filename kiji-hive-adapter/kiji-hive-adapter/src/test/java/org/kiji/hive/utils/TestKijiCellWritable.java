@@ -37,6 +37,7 @@ import org.junit.Test;
 import org.kiji.hive.io.KijiCellWritable;
 import org.kiji.schema.DecodedCell;
 import org.kiji.schema.KijiCell;
+import org.kiji.schema.avro.TestRecord;
 
 public class TestKijiCellWritable {
 
@@ -156,7 +157,7 @@ public class TestKijiCellWritable {
   }
 
   @Test
-  public void testRecordCell() throws IOException {
+  public void testGenericRecordCell() throws IOException {
     // Construct the Avro schema for testing
     List<Schema.Field> mFields = Lists.newArrayList(
         new Schema.Field("a", STRING_SCHEMA, null, null),
@@ -183,6 +184,26 @@ public class TestKijiCellWritable {
     GenericRecord decodedRecord = (GenericRecord) cell1Decoded.getData();
     for (Schema.Field field : mFields) {
       assertEquals(recordData.get(field.pos()), decodedRecord.get(field.pos()));
+    }
+  }
+
+  @Test
+  public void testSpecificRecordCell() throws IOException {
+
+    TestRecord testRecord = TestRecord.newBuilder().setA("a").setB(1).build();
+    Schema recordSchema = testRecord.getSchema();
+
+    final KijiCell<TestRecord> cell1 = new KijiCell<TestRecord>("family", "qualifier",
+            TIMESTAMP_VALUE, new DecodedCell<TestRecord>(recordSchema, testRecord));
+    KijiCellWritable cell1Writable = new KijiCellWritable(cell1);
+    byte[] cell1Bytes = ByteWritable.serialize(cell1Writable);
+    KijiCellWritable cell1Decoded = ByteWritable.asWritable(cell1Bytes, KijiCellWritable.class);
+
+    assertEquals(TIMESTAMP_VALUE, (Long) cell1Decoded.getTimestamp());
+    assertEquals(recordSchema, cell1Decoded.getSchema());
+    GenericRecord decodedNode = (GenericRecord) cell1Decoded.getData();
+    for (Schema.Field field : testRecord.getSchema().getFields()) {
+        assertEquals(testRecord.get(field.pos()), decodedNode.get(field.pos()));
     }
   }
 

@@ -63,8 +63,6 @@ public class KijiRowDataWritable implements Writable {
   // Schema data required decoding Avro data within cells.
   private Map<KijiColumnName, Schema> mSchemas;
 
-  private static Schema.Parser mSchemaParser = null;
-
   /** Required so that this can be built by WritableFactories. */
   public KijiRowDataWritable() {
   }
@@ -325,18 +323,9 @@ public class KijiRowDataWritable implements Writable {
     for (int c=0; c < numSchemas; c++) {
       String columnText = WritableUtils.readString(in);
       KijiColumnName column = new KijiColumnName(columnText);
-
       String schemaString = WritableUtils.readString(in);
-      Schema schema = getSchemaParser().parse(schemaString);
+      Schema schema = new Schema.Parser().parse(schemaString);
       mSchemas.put(column, schema);
     }
-  }
-
-  /** @return a singleton instance of a Avro Schema Parser. */
-  private static Schema.Parser getSchemaParser() {
-    if (null == mSchemaParser) {
-      mSchemaParser = new Schema.Parser();
-    }
-    return mSchemaParser;
   }
 }
