@@ -51,6 +51,7 @@ import org.kiji.schema.util.LoggingInfo;
 @ApiStability.Experimental
 @Aspect
 public class SerializeLoggerAspect {
+  private MRLogTimerAspect mMRLogTimerAspect;
   private LogTimerAspect mLogTimerAspect;
   private static final Logger LOG = LoggerFactory.getLogger(SerializeLoggerAspect.class);
   /**
@@ -67,6 +68,12 @@ public class SerializeLoggerAspect {
       mLogTimerAspect = Aspects.aspectOf(LogTimerAspect.class);
     } else {
       throw new RuntimeException("Log Timer aspect not found!");
+    }
+
+    if (Aspects.hasAspect(MRLogTimerAspect.class)) {
+      mMRLogTimerAspect = Aspects.aspectOf(MRLogTimerAspect.class);
+    } else {
+      throw new RuntimeException("MR Log Timer aspect not found!");
     }
   }
 
@@ -101,26 +108,51 @@ public class SerializeLoggerAspect {
     try {
       out.write("Job Name, Job ID, Task Attempt, Function Signature, Aggregate Time (nanoseconds), "
           + "Number of Invocations, Time per call (nanoseconds)\n");
+
       ConcurrentHashMap<String, LoggingInfo> signatureTimeMap =
           mLogTimerAspect.getSignatureTimeMap();
       for (Map.Entry<String, LoggingInfo> entrySet: signatureTimeMap.entrySet()) {
-        // ensure that files do not end up with x.yzE7 format for floats. Instead of 1.0E3, we want
-        // 1000.000
-        NumberFormat nf = NumberFormat.getInstance();
-        nf.setGroupingUsed(false);
-        nf.setMinimumFractionDigits(1);
-        nf.setMaximumFractionDigits(3);
+        writeProfileInformation(out, context, entrySet.getKey(), entrySet.getValue());
+      }
 
-        out.write(context.getJobName() + ", "
-            + context.getJobID() + ", "
-            + context.getTaskAttemptID() + ", "
-            + entrySet.getKey() + ", "
-            + entrySet.getValue().toString() + ", "
-            + nf.format(entrySet.getValue().perCallTime()) + "\n");
+      signatureTimeMap = mMRLogTimerAspect.getSignatureTimeMap();
+      for (Map.Entry<String, LoggingInfo> entrySet: signatureTimeMap.entrySet()) {
+        writeProfileInformation(out, context, entrySet.getKey(), entrySet.getValue());
       }
     } finally {
       out.close();
     }
+  }
+
+  /**
+   * Logic to write a profiling content for a single method signature to a file on HDFS.
+   * The format of the file is as follows: Job Name, Job ID, Task Attempt, Function Signature,
+   * Aggregate Time (nanoseconds), Number of Invocations, Time per call (nanoseconds)'\n'
+   *
+   * @param out The {@link OutputStreamWriter} for writing to the file.
+   * @param context The {@link TaskInputOutputContext} for this job.
+   * @param signature The method signature for the profile.
+   * @param loggingInfo The profiling information for the method.
+   * @throws IOException If the writes to HDFS fail.
+   */
+  private void writeProfileInformation(OutputStreamWriter out,
+                                       TaskInputOutputContext context,
+                                       String signature,
+                                       LoggingInfo loggingInfo)
+      throws IOException {
+    // ensure that files do not end up with x.yzE7 format for floats. Instead of 1.0E3, we want
+    // 1000.000
+    NumberFormat nf = NumberFormat.getInstance();
+    nf.setGroupingUsed(false);
+    nf.setMinimumFractionDigits(1);
+    nf.setMaximumFractionDigits(3);
+
+    out.write(context.getJobName() + ", "
+        + context.getJobID() + ", "
+        + context.getTaskAttemptID() + ", "
+        + signature + ", "
+        + loggingInfo.toString() + ", "
+        + nf.format(loggingInfo.perCallTime()) + "\n");
   }
 
   /**
