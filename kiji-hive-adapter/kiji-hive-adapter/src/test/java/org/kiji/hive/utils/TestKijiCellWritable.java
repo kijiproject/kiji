@@ -61,7 +61,6 @@ public class TestKijiCellWritable {
   private static final Schema BOOLEAN_SCHEMA = Schema.create(Schema.Type.BOOLEAN);
   private static final Schema NULL_SCHEMA = Schema.create(Schema.Type.NULL);
 
-
   @Test
   public void testIntegerCell() throws IOException {
     final KijiCell<Integer> cell1 =
@@ -309,5 +308,29 @@ public class TestKijiCellWritable {
     assertEquals(TIMESTAMP_VALUE, (Long) cell1Decoded.getTimestamp());
     assertEquals(NULL_SCHEMA, cell1Decoded.getSchema());
     assertEquals(null, cell1Decoded.getData());
+  }
+
+  // Enum necessary for the testEnumCell test.
+  static enum SAMPLE_ENUM { VAL1, VAL2, VAL3 }
+
+  @Test
+  public void testEnumCell() throws IOException {
+    List<String> enumValues = Lists.newArrayList();
+    for (SAMPLE_ENUM e : SAMPLE_ENUM.values()) {
+      enumValues.add(e.toString());
+    }
+    final Schema enumSchema = Schema.createEnum("name", "doc", "namespace", enumValues);
+
+    final KijiCell<SAMPLE_ENUM> cell1 =
+        new KijiCell<SAMPLE_ENUM>("family", "qualifier", TIMESTAMP_VALUE,
+            new DecodedCell<SAMPLE_ENUM>(enumSchema, SAMPLE_ENUM.VAL2));
+
+    KijiCellWritable cell1Writable = new KijiCellWritable(cell1);
+    byte[] cell1Bytes = ByteWritable.serialize(cell1Writable);
+    KijiCellWritable cell1Decoded = ByteWritable.asWritable(cell1Bytes, KijiCellWritable.class);
+
+    assertEquals(TIMESTAMP_VALUE, (Long) cell1Decoded.getTimestamp());
+    assertEquals(enumSchema, cell1Decoded.getSchema());
+    assertEquals("VAL2", cell1Decoded.getData());
   }
 }

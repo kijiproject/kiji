@@ -164,10 +164,15 @@ public class KijiCellWritable implements Writable {
         DoubleWritable doubleWritable = new DoubleWritable(doubleData);
         doubleWritable.write(out);
         break;
+      case ENUM:
       case STRING:
         String stringData;
         if (data instanceof Utf8) {
           stringData = ((Utf8) data).toString();
+        } else if (data instanceof Enum) {
+          // Enumerations are converted into Strings for Hive since it doesn't have the notion
+          // of enumerations.
+          stringData = data.toString();
         } else {
           stringData = (String) data;
         }
@@ -220,7 +225,6 @@ public class KijiCellWritable implements Writable {
         // Don't need to write anything for null.
         break;
       case FIXED:
-      case ENUM:
       default:
         throw new UnsupportedOperationException("Unsupported type: " + schema.getType());
     }
@@ -247,6 +251,7 @@ public class KijiCellWritable implements Writable {
             (DoubleWritable) WritableFactories.newInstance(DoubleWritable.class);
         doubleWritable.readFields(in);
         return doubleWritable.get();
+      case ENUM:
       case STRING:
         String stringData = WritableUtils.readString(in);
         return stringData;

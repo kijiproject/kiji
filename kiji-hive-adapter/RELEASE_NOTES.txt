@@ -5,6 +5,7 @@
 Version 0.6.0
   * KIJIHIVE-33. Fixed a ClassCastException issue when reading from a
       SpecificRecord.  Thanks Scott!
+  * KIJIHIVE-32. Added support for reading Avro enumerations as Strings.
 
 Version 0.5.0
   * KIJIHIVE-29. Updated KijiTableInputFormat to use Kiji interfaces for
