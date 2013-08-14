@@ -78,9 +78,8 @@ public class AvroToJsonStringSerializer extends JsonSerializer<GenericContainer>
     DatumWriter<GenericContainer> writer = new GenericDatumWriter<GenericContainer>();
     if (record instanceof SpecificRecord) {
       writer = new SpecificDatumWriter<GenericContainer>();
-    } else {
-      writer = new GenericDatumWriter<GenericContainer>();
     }
+
     writer.setSchema(record.getSchema());
     writer.write(record, encoder);
     encoder.flush();
