@@ -1,6 +1,12 @@
 
                               KijiREST Release Notes
 
+Version 0.4.0
+  * REST-40. Bugfix: Fix the issue where /instances/<instance> threw a
+      500 error. This was due to an issue in converting Avro to JSON using
+      the generic writer. Specific writers are now used when serializing a
+      specific record.
+
 Version 0.3.0
   * REST-21. Implements batch POST.
   * REST-33. Bugfix: instances/<instance>/ throws an error retrieving metadata.

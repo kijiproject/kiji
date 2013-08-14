@@ -29,10 +29,16 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 
+import org.apache.avro.AvroRuntimeException;
 import org.apache.avro.generic.GenericContainer;
 import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.io.DatumWriter;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.io.JsonEncoder;
+import org.apache.avro.specific.SpecificDatumWriter;
+import org.apache.avro.specific.SpecificRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Avro's specific types don't seem to serialize properly so this class provides
@@ -42,13 +48,20 @@ import org.apache.avro.io.JsonEncoder;
  */
 public class AvroToJsonStringSerializer extends JsonSerializer<GenericContainer> {
 
+  private static final Logger LOG = LoggerFactory.getLogger(AvroToJsonStringSerializer.class);
+
   /**
    * {@inheritDoc}
    */
   @Override
   public void serialize(GenericContainer record, JsonGenerator generator,
       SerializerProvider provider) throws IOException {
-    generator.writeObject(getJsonNode(record));
+    try {
+      generator.writeObject(getJsonNode(record));
+    } catch (AvroRuntimeException are) {
+      LOG.error("Error writing Avro record ", are);
+      throw are;
+    }
   }
 
   /**
@@ -62,7 +75,12 @@ public class AvroToJsonStringSerializer extends JsonSerializer<GenericContainer>
   public static String getJsonString(GenericContainer record) throws IOException {
     ByteArrayOutputStream os = new ByteArrayOutputStream();
     JsonEncoder encoder = EncoderFactory.get().jsonEncoder(record.getSchema(), os);
-    GenericDatumWriter<GenericContainer> writer = new GenericDatumWriter<GenericContainer>();
+    DatumWriter<GenericContainer> writer = new GenericDatumWriter<GenericContainer>();
+    if (record instanceof SpecificRecord) {
+      writer = new SpecificDatumWriter<GenericContainer>();
+    } else {
+      writer = new GenericDatumWriter<GenericContainer>();
+    }
     writer.setSchema(record.getSchema());
     writer.write(record, encoder);
     encoder.flush();
