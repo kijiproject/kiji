@@ -42,7 +42,6 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.express.flow.ColumnRequest
 import org.kiji.express.flow.TimeRange
-import org.kiji.express.util.ExpressGenericTable
 import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.Kiji
@@ -123,9 +122,6 @@ private[express] class LocalKijiScheme(
     extends Scheme[Properties, InputStream, OutputStream, InputContext, OutputContext] {
   private val logger: Logger = LoggerFactory.getLogger(classOf[LocalKijiScheme])
 
-  /** The field names of all qualifier selectors. */
-  private val qualifierSelectors: Seq[String] = KijiScheme.extractQualifierSelectors(columns)
-
   /** Set the fields that should be in a tuple when this source is used for reading and writing. */
   setSourceFields(KijiScheme.buildSourceFields(columns.keys))
   setSinkFields(KijiScheme.buildSinkFields(columns, timestampField))
@@ -191,20 +187,16 @@ private[express] class LocalKijiScheme(
     // Return true as soon as a result tuple has been set,
     // or false if we reach the end of the RecordReader.
     val context: InputContext = sourceCall.getContext()
-    val conf: JobConf = HadoopUtil.createJobConf(process.getConfigCopy,
-        new JobConf(HBaseConfiguration.create()))
     while (context.iterator.hasNext) {
       // Get the current row.
       val row: KijiRowData = context.iterator.next()
-      val columnNames = columns.values.map { column => column.getColumnName() }
       val result: Option[Tuple] =
           KijiScheme.rowToTuple(
               columns,
               getSourceFields,
               timestampField,
               row,
-              context.tableUri,
-              new ExpressGenericTable(context.tableUri, conf, columnNames.toSeq))
+              context.tableUri)
 
       // If no fields were missing, set the result tuple and return from this method.
       result match {

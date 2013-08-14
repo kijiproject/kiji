@@ -21,7 +21,6 @@ package org.kiji.express.flow.framework
 
 import cascading.tuple.Tuple
 import cascading.tuple.TupleEntry
-import org.apache.hadoop.hbase.HBaseConfiguration
 
 import org.kiji.express.AvroEnum
 import org.kiji.express.AvroRecord
@@ -30,7 +29,7 @@ import org.kiji.express.KijiSlice
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow.All
 import org.kiji.express.flow.QualifiedColumn
-import org.kiji.express.util.ExpressGenericTable
+import org.kiji.express.util.GenericCellSpecs
 
 class KijiSchemeSuite extends KijiSuite {
   test("putTuple and rowToTuple can write and read a generic AvroRecord.") {
@@ -39,12 +38,11 @@ class KijiSchemeSuite extends KijiSuite {
     val table = makeTestKijiTable(tableLayout)
     val uri = table.getURI()
     val writer = table.openTableWriter()
-    val reader = table.openTableReader()
+    val reader = table.getReaderFactory().openTableReader(GenericCellSpecs(table))
 
     // Set up the columns and fields.
     val columns = Map("columnSymbol" -> QualifiedColumn("family", "column3"))
     val sourceFields = KijiScheme.buildSourceFields(columns.keys)
-    val sinkFields = KijiScheme.buildSinkFields(columns, None)
 
     // Create a dummy record with an entity ID to put in the table.
     val dummyEid = EntityId("dummy")
@@ -67,19 +65,19 @@ class KijiSchemeSuite extends KijiSuite {
       reader.get(
           dummyEid.toJavaEntityId(uri),
           KijiScheme.buildRequest(All, columns.values))
-    val columnNames = columns.values.map { column => column.getColumnName() }
-    val expressGenericTable = new ExpressGenericTable(uri, HBaseConfiguration.create,
-      columnNames.toSeq)
     val readValue: Option[Tuple] = KijiScheme.rowToTuple(
         columns,
         sourceFields,
         None,
         rowData,
-        uri,
-        expressGenericTable)
+        uri)
     assert(readValue.isDefined)
 
-    val readRecord = readValue.get.getObject(1).asInstanceOf[KijiSlice[_]].getFirstValue
+    val readRecord = readValue.get.getObject(1).asInstanceOf[KijiSlice[_]].getFirstValue()
     assert(record === readRecord)
+
+    reader.close()
+    writer.close()
+    table.release()
   }
 }

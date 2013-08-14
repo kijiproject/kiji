@@ -33,7 +33,6 @@ import org.kiji.express.modeling.config.ExpressColumnRequest
 import org.kiji.express.modeling.config.ExtractEnvironment
 import org.kiji.express.modeling.config.ModelDefinition
 import org.kiji.express.modeling.config.ModelEnvironment
-import org.kiji.express.modeling.config.PrepareEnvironment
 import org.kiji.express.modeling.config.ScoreEnvironment
 
 import org.kiji.express.modeling.Scorer

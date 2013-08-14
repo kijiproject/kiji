@@ -19,12 +19,15 @@
 
 package org.kiji.express
 
+import scala.collection.JavaConverters.asScalaIteratorConverter
+
 import scala.annotation.implicitNotFound
 import scala.math.Numeric
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.schema.KijiCell
+import org.kiji.schema.KijiRowData
 
 /**
  * A collection of [[org.kiji.express.Cell]]s that can be grouped and ordered as needed. Cells are
@@ -426,6 +429,7 @@ object KijiSlice {
  /**
   * A factory method for instantiating a KijiSlice, given an iterator of
   * [[org.kiji.schema.KijiCell]]s.
+  *
   * @param cellIter an iterator over KijiCells to instantiate the slice with.
   * @tparam T is the type of the data stored in the underlying cells.
   * @return a KijiSlice that contains the data passed in through the cellIter.
@@ -433,5 +437,32 @@ object KijiSlice {
   private[express] def apply[T](cellIter: Iterator[KijiCell[T]]): KijiSlice[T] = {
     val cells: Seq[Cell[T]] = cellIter.toSeq.map { kijiCell: KijiCell[T] => Cell[T](kijiCell) }
     new KijiSlice[T](cells)
+  }
+
+  /**
+   * Creates a slice using the cells for a family in a row data.
+   *
+   * @param row containing cells for the slice.
+   * @param family whose cells should be used for the slice.
+   * @tparam T the type of data in the cells.
+   * @return a new slice of cells in the specified family.
+   */
+  private[express] def apply[T](row: KijiRowData, family: String): KijiSlice[T] = {
+    KijiSlice(row.asIterable[T](family).iterator().asScala)
+  }
+
+  /**
+   * Creates a slice using the cells for a column in a row data.
+   *
+   * @param row containing cells for the slice.
+   * @param family of the column whose cells should be used for the slice.
+   * @param qualifier of the column whose cells should be used for the slice.
+   * @tparam T the type of data in the cells.
+   * @return a new slice of cells in the specified family.
+   */
+  private[express] def apply[T](row: KijiRowData,
+      family: String,
+      qualifier: String): KijiSlice[T] = {
+    KijiSlice(row.asIterable[T](family, qualifier).iterator().asScala)
   }
 }

@@ -21,7 +21,6 @@ package org.kiji.express.flow.framework
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.express.util.ExpressGenericTable
 import org.kiji.schema.KijiURI
 
 /**
@@ -35,6 +34,5 @@ import org.kiji.schema.KijiURI
 @ApiStability.Experimental
 private[express] case class KijiSourceContext (
     rowContainer: KijiValue,
-    tableUri: KijiURI,
-    expressGenericTable: ExpressGenericTable) {
+    tableUri: KijiURI) {
 }

@@ -49,9 +49,7 @@ import org.kiji.express.flow.ColumnRequest
 import org.kiji.express.flow.ColumnRequestOptions
 import org.kiji.express.flow.QualifiedColumn
 import org.kiji.express.flow.TimeRange
-import org.kiji.express.impl.MaterializedEntityId
 import org.kiji.express.util.AvroUtil
-import org.kiji.express.util.ExpressGenericTable
 import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.Kiji
@@ -140,14 +138,10 @@ private[express] class KijiScheme(
     val tableUriProperty = flow.getStringProperty(KijiConfKeys.KIJI_INPUT_TABLE_URI)
     val uri: KijiURI = KijiURI.newBuilder(tableUriProperty).build()
 
-    // Construct an instance of ExpressGenericTable to reuse across all calls to the source method.
-    val columnNames = columns.values.map { column => column.getColumnName() }
-    val expressGenericTable = new ExpressGenericTable(uri, flow.getConfigCopy, columnNames.toSeq)
-    // Set the context of the sourcecall to include the single instance of ExpressGenericTable
+    // Set the context used when reading data from the source.
     sourceCall.setContext(KijiSourceContext(
         sourceCall.getInput().createValue(),
-        uri,
-        expressGenericTable))
+        uri))
   }
 
   /**
@@ -163,7 +157,7 @@ private[express] class KijiScheme(
       flow: FlowProcess[JobConf],
       sourceCall: SourceCall[KijiSourceContext, RecordReader[KijiKey, KijiValue]]): Boolean = {
     // Get the current key/value pair.
-    val KijiSourceContext(value, tableUri, expressGenericTable) = sourceCall.getContext()
+    val KijiSourceContext(value, tableUri) = sourceCall.getContext()
 
     // Get the first row where all the requested columns are present,
     // and use that to set the result tuple.
@@ -179,8 +173,7 @@ private[express] class KijiScheme(
           getSourceFields,
           timestampField,
           row,
-          tableUri,
-          expressGenericTable)
+          tableUri)
 
       // If no fields were missing, set the result tuple and return from this method.
       result match {
@@ -214,8 +207,6 @@ private[express] class KijiScheme(
   override def sourceCleanup(
       flow: FlowProcess[JobConf],
       sourceCall: SourceCall[KijiSourceContext, RecordReader[KijiKey, KijiValue]]) {
-    val KijiSourceContext(_, _, expressGenericTable) = sourceCall.getContext()
-    expressGenericTable.close()
     // scalastyle:off null
     sourceCall.setContext(null)
     // scalastyle:on null
@@ -346,8 +337,6 @@ private[express] object KijiScheme {
    *     Use None if all values should be written at the current time.
    * @param row to convert to a tuple.
    * @param tableUri is the URI of the Kiji table.
-   * @param genericTable is an instance of ExpressGenericTable to use for reading/writing generic
-   *     AvroRecords.
    * @return a tuple containing the values contained in the specified row, or None if some columns
    *     didn't exist and no replacement was specified.
    */
@@ -356,16 +345,13 @@ private[express] object KijiScheme {
       fields: Fields,
       timestampField: Option[Symbol],
       row: KijiRowData,
-      tableUri: KijiURI,
-      genericTable: ExpressGenericTable): Option[Tuple] = {
+      tableUri: KijiURI): Option[Tuple] = {
     val result: Tuple = new Tuple()
     val iterator = fields.iterator().asScala
 
     // Add the row's EntityId to the tuple.
     val entityId: EntityId = EntityId.fromJavaEntityId(tableUri, row.getEntityId())
     result.add(entityId)
-
-    val expressRow = genericTable.getRow(row)
 
     // Get rid of the entity id and timestamp fields, then map over each field to add a column
     // to the tuple.
@@ -377,7 +363,7 @@ private[express] object KijiScheme {
         .foreach {
             case ColumnFamily(family, _, ColumnRequestOptions(_, _, replacementOption)) => {
               if (row.containsColumn(family)) {
-                result.add (KijiSlice(expressRow.iterator(family)))
+                result.add(KijiSlice(row, family))
               } else {
                 replacementOption match {
                   case Some(replacement) => {
@@ -394,7 +380,7 @@ private[express] object KijiScheme {
                 qualifier,
                 ColumnRequestOptions(_, _, replacementOption)) => {
               if (row.containsColumn(family, qualifier)) {
-                result.add(KijiSlice(expressRow.iterator(family, qualifier)))
+                result.add(KijiSlice(row, family, qualifier))
               } else {
                 replacementOption match {
                   case Some(replacement) => {

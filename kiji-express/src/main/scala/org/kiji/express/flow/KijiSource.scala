@@ -59,7 +59,7 @@ import org.kiji.express.flow.framework.LocalKijiScheme
 import org.kiji.express.flow.framework.LocalKijiTap
 import org.kiji.express.flow.framework.OutputContext
 import org.kiji.express.util.AvroUtil
-import org.kiji.express.util.ExpressGenericTable
+import org.kiji.express.util.GenericCellSpecs
 import org.kiji.express.util.Resources._
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.Kiji
@@ -261,13 +261,6 @@ object KijiSource {
           }
         }
 
-    val tableLayout =
-        doAndRelease(Kiji.Factory.open(tableUri, conf)) { kiji =>
-          doAndRelease(kiji.openTable(tableUri.getTable())) { table =>
-            table.getLayout()
-          }
-        }
-
     val schemaTable =
         doAndRelease(Kiji.Factory.open(tableUri, conf)) { kiji =>
           kiji.getSchemaTable()
@@ -315,7 +308,7 @@ object KijiSource {
   }
 
   /**
-   * Returns a map from fieldname to column request where the column request has been
+   * Returns a map from field name to column request where the column request has been
    * configured as an output column.
    *
    * This is used in tests, when we use KijiScheme to read tuples from a Kiji table, and we want
@@ -371,9 +364,10 @@ object KijiSource {
       // Read table into buffer.
       doAndRelease(Kiji.Factory.open(uri, conf)) { kiji: Kiji =>
         doAndRelease(kiji.openTable(uri.getTable())) { table: KijiTable =>
-          val columnNames = columns.values.map { column => column.getColumnName() }
-          val genericTable = new ExpressGenericTable(table.getURI, conf, columnNames.toSeq)
-          doAndClose(table.openTableReader()) { reader: KijiTableReader =>
+          // Open a table reader that reads data using the generic api.
+          val readerFactory = table.getReaderFactory()
+          val genericSpecs = GenericCellSpecs(table)
+          doAndClose(readerFactory.openTableReader(genericSpecs)) { reader: KijiTableReader=>
             // We also want the entire timerange, so the test can inspect all data in the table.
             val request: KijiDataRequest =
                 KijiScheme.buildRequest(All, columnRequestsAllData(columns).values)
@@ -386,8 +380,7 @@ object KijiSource {
                         getSourceFields(),
                         timestampField,
                         row,
-                        table.getURI,
-                        genericTable)
+                        table.getURI)
                     .foreach { tuple => buffer += tuple }
               }
             }
