@@ -629,6 +629,40 @@ class TestFakeHTable extends FunSuite {
     }
   }
 
+  test("MaxTTL 32 bits overflow") {
+    // The following TTL is nearly 25 days, in seconds,
+    // and causes a 32 bits overflow when converted to ms:
+    //     2147484 * 1000 = -2147483296
+    // while:
+    //     2147484 * 1000L = 2147484000
+    //
+    val ttl = 2147484
+
+    val desc = new HTableDescriptor("table")
+    desc.addFamily(new HColumnDescriptor("family")
+        .setMaxVersions(HConstants.ALL_VERSIONS)  // retain all versions
+        .setTimeToLive(2147484)  // retain cells for ~25 days
+        .setMinVersions(0)  // no minimum number of versions to retain
+    )
+    val table = new FakeHTable(
+        name = "table",
+        conf = HBaseConfiguration.create(),
+        desc = desc
+    )
+
+    // Writes a cell whose timestamp is now.
+    // Since the TTL is ~25 days, the cell should not be discarded,
+    // unless the 32 bits overflow occurs when converting the TTL to ms.
+    // If the overflow occurs, the TTL becomes negative and all cells older than now + ~25 days
+    // are discarded.
+    val row = "row"
+    val nowMS = System.currentTimeMillis
+    table.put(new Put(row).add("family", "qualifier", nowMS, "value"))
+
+    val result = table.get(new Get(row))
+    expect("value")(Bytes.toString(result.getValue("family", "qualifier")))
+  }
+
   // -----------------------------------------------------------------------------------------------
 
   /**

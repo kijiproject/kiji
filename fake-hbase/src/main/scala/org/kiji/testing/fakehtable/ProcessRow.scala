@@ -117,7 +117,7 @@ object ProcessRow {
 
         val maxVersions = familyDesc.getMaxVersions
         val minVersions = familyDesc.getMinVersions
-        val minTimestamp = nowMS - (familyDesc.getTimeToLive * 1000)
+        val minTimestamp = nowMS - (familyDesc.getTimeToLive * 1000L)
 
         for ((qualifier, timeSeries) <- rowQMap.asScalaIterator) {
           while (timeSeries.size > maxVersions) {
