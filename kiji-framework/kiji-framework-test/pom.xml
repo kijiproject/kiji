@@ -1,0 +1,70 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <!--
+    (c) Copyright 2013 WibiData, Inc.
+
+    See the NOTICE file distributed with this work for additional
+    information regarding copyright ownership.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+  -->
+  <modelVersion>4.0.0</modelVersion>
+
+  <artifactId>kiji-framework-test</artifactId>
+  <packaging>jar</packaging>
+
+  <parent>
+    <groupId>org.kiji.framework</groupId>
+    <artifactId>framework-pom</artifactId>
+    <version>1.1.2-SNAPSHOT</version>
+    <relativePath>..</relativePath>
+  </parent>
+
+  <name>Kiji framework test dependencies</name>
+  <description>All test dependencies for projects requiring Kiji</description>
+  <inceptionYear>2013</inceptionYear>
+
+  <!--
+    You can specify a dependency like:
+
+      <dependency>
+        <groupId>org.kiji.framework</groupId>
+        <artifactId>kiji-framework-test</artifactId>
+        <version>1.1.2</version>
+        <scope>test</scope>
+      </dependency>
+
+    ... which will transitively include all Kiji framework test components
+    during the test phase. You should still include a dependency for
+    kiji-framework.
+  -->
+  <dependencies>
+    <!--
+      These have compile scope so that they're transitively inherited
+      when kiji-framework-test is depended on with test scope.
+    -->
+    <dependency>
+      <groupId>org.kiji.schema</groupId>
+      <artifactId>kiji-schema</artifactId>
+      <type>test-jar</type>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.testing</groupId>
+      <artifactId>fake-hbase</artifactId>
+      <scope>compile</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+  </build>
+</project>

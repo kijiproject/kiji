@@ -30,6 +30,7 @@
 
   <modules>
     <module>kiji-framework</module>
+    <module>kiji-framework-test</module>
   </modules>
 
   <properties>
@@ -41,7 +42,7 @@
 
     <!-- Versions for program dependencies -->
     <annotations.version>1.0.0</annotations.version>
-    <fake-hbase.version>0.1.0</fake-hbase.version>
+    <fake-hbase.version>0.1.1</fake-hbase.version>
     <kiji-common-flags.version>1.0.7</kiji-common-flags.version>
     <kiji-delegation.version>1.0.0</kiji-delegation.version>
     <kiji-platforms.version>1.2.0</kiji-platforms.version>

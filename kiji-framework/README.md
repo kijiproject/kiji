@@ -26,7 +26,7 @@ To depend on the entire framework:
       <dependency>
         <groupId>org.kiji.framework</groupId>
         <artifactId>kiji-framework</artifactId>
-        <version>1.0.0</version>
+        <version>1.1.2</version>
       </dependency>
 
       ...
@@ -47,8 +47,8 @@ a `<repositories>` block like so:
       </repository>
     </repositories>
 
-Note that if you need to depend on any Kiji test resources, you must do so
-explicitly; test dependencies cannot be used transitively.
+Note that if you need to depend on any Kiji test resources, you should
+also depend on the kiji-framework-test artifact.
 
 For example:
 
@@ -56,29 +56,20 @@ For example:
       ...
 
       <dependency>
-        <groupId>org.kiji.testing</groupId>
-        <artifactId>fake-hbase</artifactId>
-        <version>0.0.4</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.kiji.schema</groupId>
-        <artifactId>kiji-schema</artifactId>
-        <version>1.0.0</version>
-        <type>test-jar</type>
+        <groupId>org.kiji.framework</groupId>
+        <artifactId>kiji-framework-test</artifactId>
+        <version>1.1.2</version>
         <scope>test</scope>
       </dependency>
 
       ...
     </dependencies>
 
-If instead you used `framework-pom` as your parent pom, you could include these
-dependencies without explicitly specifying the version and scope, because of
-the shared `<dependencyManagement>` section.
-
-The `framework-pom` parent also allows you to pick and choose which Kiji modules you
-depend on (for example, KijiSchema but not KijiMR). See the next section for more
-details.
+If you want to pick and choose The `framework-pom` parent also allows you to
+pick and choose which Kiji modules you depend on (for example, KijiSchema but
+not KijiMR), you can do so by using `framework-pom` as your parent pom. This
+also lets you include Kiji modules without explicitly specifying the version
+and scope. See the next section for more details.
 
 
 Selecting Individual Components
@@ -90,7 +81,7 @@ project, you should declare the following as the parent pom:
     <parent>
       <groupId>org.kiji.framework</groupId>
       <artifactId>framework-pom</artifactId>
-      <version>1.0.0</version>
+      <version>1.1.2</version>
     </parent>
 
 
