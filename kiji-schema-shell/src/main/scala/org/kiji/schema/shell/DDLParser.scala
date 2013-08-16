@@ -654,7 +654,7 @@ final class DDLParser(val env: Environment) extends JavaTokenParsers
 
   /**
    * Parses optional flags that may qualify how a schema is being used in an
-   * DESCRIBE TABLE.. COLUMN .. SHOW .. SCHEMAS statement.
+   * DESCRIBE.. COLUMN .. SHOW .. SCHEMAS statement.
    *
    * <p>Valid options are:</p>
    * `READER | WRITER | RECORDED`
@@ -811,10 +811,10 @@ final class DDLParser(val env: Environment) extends JavaTokenParsers
   /**
    * A statement that prints a description of a specific column within a table:
    *
-   * DESCRIBE TABLE t COLUMN info:foo SHOW [n] { READER | WRITER | RECORDED } SCHEMAS
+   * DESCRIBE t COLUMN info:foo SHOW [n] { READER | WRITER | RECORDED } SCHEMAS
    */
   def describeColumn: Parser[DDLCommand] = (
-    i("DESCRIBE")~>i("TABLE")~>tableName~(i("COLUMN")~>colName)~descColShowSchemasClause
+    i("DESCRIBE")~>tableName~(i("COLUMN")~>colName)~descColShowSchemasClause
     ^^ ({ case tableName~columnName~Product2(numSchemas, schemaUsageFlags) =>
             new DescribeColumnSchemasCommand(env, tableName, columnName, numSchemas,
                 schemaUsageFlags)
@@ -877,8 +877,8 @@ final class DDLParser(val env: Environment) extends JavaTokenParsers
     | alterFamilyDropSchema
     | alterColumnDropSchema
     | createTable
-    | describeTable
     | describeColumn
+    | describeTable
     | dropTable
     | createInstance
     | dropInstance
