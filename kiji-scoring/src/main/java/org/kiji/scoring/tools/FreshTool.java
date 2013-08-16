@@ -80,14 +80,14 @@ public class FreshTool extends BaseTool {
 
   // Positional argument for the table or column
 
-  @Flag(name="do", required=true, usage=
+  @Flag(name="do", usage=
       "\"register (requires --policy-class and --producer-class, --policy-state will be assumed "
       + "empty unless specified.)\"; "
       + "\"unregister\"; "
       + "\"retrieve\"; "
-      + "\"retrieve-all\""
-      + "\"validate\""
-      + "\"validate-all\"")
+      + "\"retrieve-all\"; "
+      + "\"validate\"; "
+      + "\"validate-all\";")
   private String mDoFlag = "";
 
   @Flag(name="policy-class", usage="fully qualified name of a KijiFreshnessPolicy class.")
@@ -390,6 +390,9 @@ public class FreshTool extends BaseTool {
   /** {@inheritDoc} */
   @Override
   public void validateFlags() throws Exception {
+    Preconditions.checkArgument(null != mDoFlag && !mDoFlag.isEmpty(),
+        "--do flag is required. Please specify exactly one of: register, unregister, retrieve, "
+        + "retrieve-all, validate, validate-all");
     try {
       mDoMode = DoMode.valueOf(mDoFlag.toUpperCase(Locale.ROOT).replace("-", "_"));
     } catch (IllegalArgumentException iae) {
