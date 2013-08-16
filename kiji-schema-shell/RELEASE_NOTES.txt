@@ -2,6 +2,14 @@
 
                               Kiji Schema Shell Release Notes
 
+Version 1.2.1
+  * DDLSHELL-38. Support for validated reader/writer schemas in layout-1.3
+    ** Adds "ALTER TABLE.. { ADD | DROP } [ [DEFAULT] READER | WRITER ]
+       SCHEMA.. FOR { COLUMN | FAMILY }" command
+    ** CREATE TABLE now accepts a VALIDATION property with values:
+       { NONE | LEGACY | DEVELOPER | STRICT }
+    ** Adds "DESCRIBE TABLE t COLUMN c SHOW [n] { READER | WRITER } SCHEMAS"
+    
 Version 1.2.0
   * DDLSHELL-47. Plugin modules can now provide 'help' text.
   * DDLSHELL-36. Fix link to reference manual in 'help' command.
