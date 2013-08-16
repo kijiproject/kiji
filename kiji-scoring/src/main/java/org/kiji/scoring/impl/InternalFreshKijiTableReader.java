@@ -568,6 +568,15 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
       final KijiDataRequest clientRequest,
       final String getId) {
     final List<Future<Boolean>> futures = Lists.newArrayList();
+    // Create an empty ContextMap entry for this get request.  The entry will be lazily filled as
+    // ProducerContexts are created.  If mAllowPartial is true, this entry will be removed when the
+    // last producer for the request finishes or when the request times out.  If the request times
+    // out, ProducerContexts created after the timeout will not be added to this Map.  If
+    // mAllowPartial is false, this entry will be removed only when the last producer finishes.
+    mContextMap.put(getId, new ArrayList<KijiFreshProducerContext>());
+    // Track the number of fresheners remaining to tell when the entire request is finished.
+    // Decremented whenever a thread will terminate.
+    final AtomicInteger remainingFresheners = new AtomicInteger(capsules.size());
     final Map<KijiColumnName, FreshnessCapsule> usesClientDataRequest = Maps.newHashMap();
     final Map<KijiColumnName, FreshnessCapsule> usesOwnDataRequest = Maps.newHashMap();
     for (Map.Entry<KijiColumnName, FreshnessCapsule> entry : capsules.entrySet()) {
@@ -601,7 +610,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
             final boolean isFresh =
                 usesClientDataRequest.get(key).getPolicy().isFresh(rowData, policyContext);
             if (isFresh) {
-              return Boolean.FALSE;
+              return shouldReread(null, getId, remainingFresheners.decrementAndGet());
             } else {
               final FreshnessCapsule capsule = usesClientDataRequest.get(key);
               final KijiFreshProducerContext context;
@@ -626,10 +635,10 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
               producer.produce(mReader.get(eid, producer.getDataRequest()), context);
               capsule.release();
               context.finish();
-              return shouldReread(context, getId, capsules.size());
+              return shouldReread(context, getId, remainingFresheners.decrementAndGet());
             }
           } else {
-            return Boolean.FALSE;
+            return shouldReread(null, getId, remainingFresheners.decrementAndGet());
           }
         }
       });
@@ -646,7 +655,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
           final boolean isFresh =
               usesOwnDataRequest.get(key).getPolicy().isFresh(rowData, policyContext);
           if (isFresh) {
-            return Boolean.FALSE;
+            return shouldReread(null, getId, remainingFresheners.decrementAndGet());
           } else {
             final FreshnessCapsule capsule = usesOwnDataRequest.get(key);
             final KijiFreshProducerContext context;
@@ -671,7 +680,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
             producer.produce(mReader.get(eid, producer.getDataRequest()), context);
             capsule.release();
             context.finish();
-            return shouldReread(context, getId, capsules.size());
+            return shouldReread(context, getId, remainingFresheners.decrementAndGet());
           }
         }
       });
@@ -707,38 +716,39 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
    * Called whenever a producer finishes.  Manages flushing buffers according to mAllowPartialFresh
    * and returns whether any new data has been written.
    *
-   * @param context the producer context of the producer which just finished.
+   * @param context the producer context of the producer which just finished.  Null indicates that
+   *      a producer was not run.
    * @param getId the ID of the request which triggered the producer.
-   * @param capsulesSize the number of freshness capsules associated with the given getId.
+   * @param remainingFresheners the number of still outstanding fresheners.  0 indicates that a
+   *     request is finished and can be flushed if partial freshening is disabled.
    * @return whether data was written, requiring a reread.
    * @throws IOException in case of an IO error.
    */
   private Boolean shouldReread(
       KijiFreshProducerContext context,
       String getId,
-      int capsulesSize)
+      int remainingFresheners)
       throws IOException {
     boolean shouldReread = false;
     if (mAllowPartialFresh) {
-      if (context.hasReceivedWrites()) {
+      if (context != null && context.hasReceivedWrites()) {
         context.flush();
         shouldReread = true;
       }
     } else {
-      final List<KijiFreshProducerContext> contexts = mContextMap.get(getId);
-      // Ensure that all producers have added their Contexts to the Context map before
-      // checking if they are finished.
-      if (contexts.size() == capsulesSize) {
-        boolean allFinished = true;
+      if (remainingFresheners == 0) {
+        // If all fresheners are finished, check contexts for any writes and flush if appropriate.
+        final List<KijiFreshProducerContext> contexts = mContextMap.get(getId);
         for (KijiFreshProducerContext cont : contexts) {
           shouldReread = shouldReread || cont.hasReceivedWrites();
-          allFinished = allFinished && cont.isFinished();
         }
-        if (allFinished) {
+        if (shouldReread) {
           mBuffer.flush(getId);
-          mContextMap.remove(getId);
         }
+        // Now that the request is finished, remove the contexts from the map.
+        mContextMap.remove(getId);
       }
+
     }
     return shouldReread;
   }
@@ -835,11 +845,6 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   public KijiRowData get(final EntityId eid, final KijiDataRequest dataRequest, final long timeout)
       throws IOException {
     final String getId = String.valueOf(mGetId.getAndIncrement());
-    // Create the ContextMap entry for this get request which will be populated later.  This is not
-    // instantiated lazily so that its existence can be used to indicate if new contexts should be
-    // added to the map, or if this request has finished and references to new contexts should be
-    // released so that the contexts can be garbage collected.
-    mContextMap.put(getId, new ArrayList<KijiFreshProducerContext>());
 
     final Map<KijiColumnName, FreshnessCapsule> capsules = getCapsules(dataRequest);
     // If there are no freshness policies attached to the requested columns, return the requested
