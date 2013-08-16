@@ -36,7 +36,8 @@ final class MapFamilyInfo(val name: String, val schema: SchemaSpec, val desc: Op
    * Assumes that this family name does not exist elsewhere in the layout
    * (verified in AlterTableAddMapFamilyCommand.validateArguments()).
    */
-  def addToLocalityGroup(group: LocalityGroupDesc.Builder): Unit = {
+  def addToLocalityGroup(group: LocalityGroupDesc.Builder, cellSchemaContext: CellSchemaContext):
+      Unit = {
     val mapFamily = FamilyDesc.newBuilder()
     mapFamily.setName(name)
     mapFamily.setEnabled(true)
@@ -45,7 +46,7 @@ final class MapFamilyInfo(val name: String, val schema: SchemaSpec, val desc: Op
       case None => { mapFamily.setDescription("") }
     }
 
-    mapFamily.setMapSchema(schema.toColumnSchema())
+    mapFamily.setMapSchema(schema.toNewCellSchema(cellSchemaContext))
     mapFamily.setColumns(new ArrayList[ColumnDesc])
     mapFamily.setAliases(new ArrayList[String])
     group.getFamilies().add(mapFamily.build())

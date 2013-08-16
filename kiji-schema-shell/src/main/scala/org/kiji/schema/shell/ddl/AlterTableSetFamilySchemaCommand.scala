@@ -25,6 +25,7 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.TableLayoutDesc
 import org.kiji.schema.layout.KijiTableLayout
 
+import org.kiji.schema.shell.AddToAllSchemaUsageFlags
 import org.kiji.schema.shell.DDLException
 import org.kiji.schema.shell.Environment
 
@@ -41,7 +42,21 @@ final class AlterTableSetFamilySchemaCommand(
   }
 
   override def updateLayout(layout: TableLayoutDesc.Builder): Unit = {
-    getFamily(layout, familyName).getOrElse(throw new DDLException("Missing family"))
-        .setMapSchema(schema.toColumnSchema())
+
+    val cellSchemaContext: CellSchemaContext = CellSchemaContext.create(env, layout,
+        AddToAllSchemaUsageFlags)
+    if (cellSchemaContext.supportsLayoutValidation) {
+      echo("Deprecation warning: ALTER TABLE.. SET SCHEMA.. FOR FAMILY is deprecated.")
+      echo("New syntax: ALTER TABLE.. ADD SCHEMA.. FOR FAMILY")
+
+      // This class is deprecated in layout-1.3; run the AddSchema command's logic.
+      new AlterTableAddFamilySchemaCommand(env, tableName, AddToAllSchemaUsageFlags, familyName,
+          schema).updateLayout(layout)
+    } else {
+      // layout-1.2 or below: replace the CellSchema for the column.
+      getFamily(layout, familyName)
+          .getOrElse(throw new DDLException("Missing family: " + familyName))
+          .setMapSchema(schema.toNewCellSchema(cellSchemaContext))
+    }
   }
 }

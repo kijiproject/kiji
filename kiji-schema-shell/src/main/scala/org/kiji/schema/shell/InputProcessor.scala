@@ -89,13 +89,16 @@ final class InputProcessor(val throwOnSyntaxErr: Boolean = false) {
         |
         |  DESCRIBE <table>;
         |  DESCRIBE EXTENDED <table>;
+        |  DESCRIBE <table> COLUMN info:foo SHOW [n] { READER | WRITER | RECORDED } SCHEMAS;
         |
+        |  DROP TABLE <table>;
         |  CREATE TABLE <name> WITH DESCRIPTION 'description'
         |    ROW KEY FORMAT { HASHED | RAW | HASH PREFIXED(n) | (formatted--see below*) }
         |    [PROPERTIES (
         |      MAX FILE SIZE = <n>,
         |      MEMSTORE FLUSH SIZE = <n>,
-        |      NUMREGIONS = <n>
+        |      NUMREGIONS = <n>,
+        |      VALIDATION = { NONE | LEGACY | DEVELOPER | STRICT }
         |    )]
         |    WITH LOCALITY GROUP <group> WITH DESCRIPTION 'description' (
         |      MAXVERSIONS = <n>,
@@ -105,11 +108,10 @@ final class InputProcessor(val throwOnSyntaxErr: Boolean = false) {
         |      BLOOM FILTER = { NONE | ROW | ROWCOL },
         |      BLOCK SIZE = { NULL | <n> },
         |      GROUP TYPE FAMILY <family> WITH DESCRIPTION 'description' (
-        |        COLUMN <column> WITH SCHEMA schema WITH DESCRIPTION 'desc'
+        |        COLUMN <column> [WITH SCHEMA schema] WITH DESCRIPTION 'desc'
         |      ),
-        |      MAP TYPE FAMILY <family> WITH SCHEMA schema WITH DESCRIPTION 'desc'),
+        |      MAP TYPE FAMILY <family> [WITH SCHEMA schema] WITH DESCRIPTION 'desc'),
         |    WITH LOCALITY GROUP...;
-        |  DROP TABLE <table>;
         |
         |  ... "Formatted" (composite) row keys can be used in CREATE TABLE as follows:
         |  ROW KEY FORMAT (
@@ -146,13 +148,30 @@ final class InputProcessor(val throwOnSyntaxErr: Boolean = false) {
         |  ALTER TABLE t SET DESCRIPTION = 'desc' FOR COLUMN info:foo;
         |  ALTER TABLE t SET DESCRIPTION = 'desc' FOR LOCALITY GROUP lg;
         |
-        |  ALTER TABLE t SET SCHEMA = schema FOR [MAP TYPE] FAMILY f;
-        |  ALTER TABLE t SET SCHEMA = schema FOR COLUMN info:foo;
+        |  ALTER TABLE t ADD [ [DEFAULT] READER | WRITER ] SCHEMA schema FOR [MAP TYPE] FAMILY f;
+        |  ALTER TABLE t ADD [ [DEFAULT] READER | WRITER ] SCHEMA schema FOR COLUMN info:foo;
+        |  ALTER TABLE t DROP [ [DEFAULT] READER | WRITER ] SCHEMA schema FOR [MAP TYPE] FAMILY f;
+        |  ALTER TABLE t DROP [ [DEFAULT] READER | WRITER ] SCHEMA schema FOR COLUMN info:foo;
+        |
+        |  ... Where 'schema' is one of:
+        |       CLASS com.example.FooRecord
+        |     | COUNTER
+        |     | ID <schema-id> (see DESCRIBE table COLUMN info:foo..)
+        |     | <schema JSON>
+        |
+        |  (deprecated) ALTER TABLE t SET SCHEMA = schema FOR [MAP TYPE] FAMILY f;
+        |  (deprecated) ALTER TABLE t SET SCHEMA = schema FOR COLUMN info:foo;
+        |
         |  ALTER TABLE t SET property FOR LOCALITY GROUP lg;
         |  ... where 'property' is one of MAXVERSIONS, INMEMORY, TTL, or COMPRESSED WITH.
         |
         |  DUMP DDL [TO FILE '/path/to/foo.ddl'] [FOR TABLE <table>];
         |  LOAD FROM FILE '/path/to/foo.ddl';
+        |
+        |  USE JAR INFILE '/path/to/resource.jar';
+        |
+        |  MODULE 'modulename';
+        |  SHOW MODULES;
         |
         |For a full layout definition language reference, see the user guide
         |available online at:

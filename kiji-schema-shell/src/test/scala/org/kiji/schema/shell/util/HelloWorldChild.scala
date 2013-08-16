@@ -17,21 +17,19 @@
  * limitations under the License.
  */
 
-package org.kiji.schema.shell.ddl
+package org.kiji.schema.shell.util
 
-import scala.collection.JavaConversions._
-import org.specs2.mutable._
+final class HelloWorldChild
 
-class TestCounterSchemaSpec extends CommandTestCase {
-  "CounterSchemaSpec" should {
-    "have a null value" in {
-      val counterSpec = new CounterSchemaSpec
-      // For now, ok to provide null tableContext to this method; current implementation
-      // of CounterSchemaSpec.toNewCellSchema() doesn't actually use it.
-      // This may change in the future.
-      val cellSchema = counterSpec.toNewCellSchema(null)
-
-      cellSchema.getValue() must beNull
-    }
+/**
+ * A program to be run in a child process.
+ * It prints two lines to stdout:
+ *   hello\n
+ *   world\n
+ */
+object HelloWorldChild {
+  def main(argv: Array[String]) {
+    System.out.println("hello")
+    System.out.println("world")
   }
 }

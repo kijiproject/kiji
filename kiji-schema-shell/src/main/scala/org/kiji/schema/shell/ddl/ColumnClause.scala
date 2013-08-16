@@ -35,7 +35,7 @@ final class ColumnClause(
     val desc: Option[String]) {
 
   /** @return a new ColumnDesc that describes this column. */
-  def toAvroColumnDesc(): ColumnDesc = {
+  def toAvroColumnDesc(cellSchemaContext: CellSchemaContext): ColumnDesc = {
     return ColumnDesc.newBuilder()
         .setName(qualifier)
         .setAliases(new java.util.ArrayList[String])
@@ -44,7 +44,7 @@ final class ColumnClause(
             case Some(descStr) => descStr
             case None => ""
             })
-        .setColumnSchema(schema.toColumnSchema())
+        .setColumnSchema(schema.toNewCellSchema(cellSchemaContext))
         .build()
   }
 }

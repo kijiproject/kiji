@@ -52,7 +52,7 @@ final class AlterTableCreateLocalityGroupCommand(
 
   override def updateLayout(layout: TableLayoutDesc.Builder): Unit = {
     val avroLocGroupBuilder = newLocalityGroup()
-    locGroup.updateLocalityGroup(avroLocGroupBuilder)
+    locGroup.updateLocalityGroup(avroLocGroupBuilder, CellSchemaContext.create(env, layout))
     layout.getLocalityGroups().add(avroLocGroupBuilder.build())
   }
 }

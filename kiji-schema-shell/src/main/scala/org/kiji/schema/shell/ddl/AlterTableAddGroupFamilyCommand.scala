@@ -47,10 +47,12 @@ final class AlterTableAddGroupFamilyCommand(
   }
 
   override def updateLayout(layout: TableLayoutDesc.Builder): Unit = {
+    val cellSchemaContext: CellSchemaContext = CellSchemaContext.create(env, layout)
+
     // Add the new group-type column family to the locality group.
     val newGroups = layout.getLocalityGroups().map { localityGroup =>
       if (localityGroup.getName().equals(localityGroupName)) {
-        groupClause.apply(LocalityGroupDesc.newBuilder(localityGroup)).build()
+        groupClause.apply(LocalityGroupDesc.newBuilder(localityGroup), cellSchemaContext).build()
       } else {
         localityGroup
       }

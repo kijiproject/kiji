@@ -79,6 +79,31 @@ class TestForkJvm extends SpecificationWithJUnit {
 
       env2 mustEqual env // This command should not change the environment.
     }
+
+    "fork a child JVM and capture its stdout" in {
+      val parser = getParser(System.out)
+      val res = parser.parseAll(parser.statement, "MODULE fork;")
+      res.successful mustEqual true
+      res.get must beAnInstanceOf[UseModuleCommand]
+      val env = res.get.exec()
+
+      class ForkClass extends ForkJvm
+
+      val forker: ForkClass = new ForkClass
+      // This prints "hello\nworld\n" on stdout.
+      val mainClass: String = new HelloWorldChild().getClass().getName
+      val bytesOut: ByteArrayOutputStream = new ByteArrayOutputStream()
+      val outWrapper: PrintStream = new PrintStream(bytesOut)
+      val childRet: Int = forker.forkJvm(env, mainClass, List(), List(), outWrapper)
+
+      childRet mustEqual 0
+
+      outWrapper.close()
+      bytesOut.close()
+      val finalText = bytesOut.toString()
+      val expectedText = "hello\nworld\n"
+      finalText mustEqual expectedText
+    }
   }
 
   def getParser(out: OutputStream): DDLParser = {

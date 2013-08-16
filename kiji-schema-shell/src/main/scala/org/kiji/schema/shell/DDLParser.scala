@@ -26,6 +26,7 @@ import scala.util.parsing.combinator._
 import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.BloomType
 import org.kiji.schema.KConstants
+import org.kiji.schema.avro.AvroValidationPolicy
 import org.kiji.schema.shell.ddl._
 import org.kiji.schema.shell.ddl.CompressionTypeToken._
 import org.kiji.schema.shell.ddl.key._
@@ -41,6 +42,48 @@ private[shell] sealed trait JarLocation
 
 /** A single local file defined by a '/path/to/foo.jar' attribute. */
 private[shell] case class LocalJarFile(val path: String) extends JarLocation
+
+/**
+ * Internal representation of a preference for how validation flags are set on new columns
+ * in a table.
+ */
+private[shell] sealed class TableValidationPolicy(val name: String,
+    val avroValidationPolicy: AvroValidationPolicy)
+
+/** Schemas for columns in a table are not validated. */
+private[shell] case object NoTableValidationPolicy extends TableValidationPolicy("NONE",
+    AvroValidationPolicy.NONE)
+
+/** Schemas for columns in a table are not validated, per legacy (KijiSchema 1.0) compatibility. */
+private[shell] case object LegacyTableValidationPolicy extends TableValidationPolicy("LEGACY",
+    AvroValidationPolicy.SCHEMA_1_0)
+
+/** Schemas for columns in a table are strictly validated. */
+private[shell] case object StrictTableValidationPolicy extends TableValidationPolicy("STRICT",
+    AvroValidationPolicy.STRICT)
+
+/** Schemas for columns in a table are validated in "developer mode". */
+private[shell] case object DeveloperTableValidationPolicy
+    extends TableValidationPolicy("DEVELOPER", AvroValidationPolicy.DEVELOPER)
+
+/**
+ * A set of flags used by ALTER TABLE.. ADD SCHEMA that indicate whether a schema is
+ * to be used as a (default) reader, writer, or recorded schema. More than one flag
+ * may be set 'true' at a time.
+ */
+private[shell] case class SchemaUsageFlags(val defaultReader: Boolean,
+    val reader: Boolean, val writer: Boolean, val recorded: Boolean)
+
+/** Schema usage flags representing no specific input. */
+private[shell] object EmptySchemaUsageFlags
+    extends SchemaUsageFlags(false, false, false, false)
+
+/**
+ * Schema usage flags representing a deprecated "SET SCHEMA" command on a column;
+ * add the column as a reader and writer schema, and make it the default.
+ */
+private[shell] object AddToAllSchemaUsageFlags
+    extends SchemaUsageFlags(true, true, true, true)
 
 /**
  * Parser for a kiji-schema DDL command.
@@ -61,9 +104,23 @@ final class DDLParser(val env: Environment) extends JavaTokenParsers
       ^^ (parts => new ClassSchemaSpec(parts))
     | jsonValue ^^ (json => new JsonSchemaSpec(json))
     | i("COUNTER") ^^ (_ => new CounterSchemaSpec)
+    | i("ID")~>longValue ^^ (uid => new UidSchemaSpec(uid))
   )
 
-  def schemaClause: Parser[SchemaSpec] = opt(i("WITH")~>i("SCHEMA"))~>schema
+  /**
+   * Returns a SchemaSpec specifying the schema definition for a column or map family.
+   *
+   * Matches:
+   *  * WITH SCHEMA CLASS classname
+   *  * WITH SCHEMA jsonSchema
+   *  * WITH SCHEMA ID idNum
+   *  * WITH SCHEMA COUNTER
+   *  * (empty) -&gt; requires the user define a schema later with ALTER TABLE.. ADD SCHEMA..
+   */
+  def schemaClause: Parser[SchemaSpec] = (
+      opt(i("WITH")~>i("SCHEMA"))~>schema
+    | success[Any](None) ^^ (_ => new EmptySchemaSpec)
+  )
 
   /**
    * Matches one of the compression types supported by HBase.
@@ -298,6 +355,18 @@ final class DDLParser(val env: Environment) extends JavaTokenParsers
   | success[Any](None) ^^ (_ => true) // Default is nullable.
   )
 
+  /**
+   * Return a (String, Object) representing the "TableValidationPref" property
+   * and a TableValidationPolicy instance to use.
+   */
+  def tableValidationProperty: Parser[(String, Object)] = (
+    i("VALIDATION")~>"="~>i("NONE") ^^ (_ => (TableValidationPref, NoTableValidationPolicy))
+  | i("VALIDATION")~>"="~>i("LEGACY") ^^ (_ => (TableValidationPref, LegacyTableValidationPolicy))
+  | i("VALIDATION")~>"="~>i("STRICT") ^^ (_ => (TableValidationPref, StrictTableValidationPolicy))
+  | i("VALIDATION")~>"="~>i("DEVELOPER") ^^
+    (_ => (TableValidationPref, DeveloperTableValidationPolicy))
+
+  )
 
   /**
    * Return a (String, Object) pair representing a table property name and its value to set
@@ -310,6 +379,7 @@ final class DDLParser(val env: Environment) extends JavaTokenParsers
     ^^ (memStoreFlushSize => (MemStoreFlushSize, memStoreFlushSize))
   | i("NUMREGIONS")~>"="~>intValue
     ^^ (numRegions => (InitialRegionCount, numRegions.asInstanceOf[java.lang.Integer]))
+  | tableValidationProperty
   )
 
   /**
@@ -534,6 +604,8 @@ final class DDLParser(val env: Environment) extends JavaTokenParsers
   /**
    * Parser that recognizes an ALTER TABLE .. SET SCHEMA = .. FOR [MAP TYPE] FAMILY
    * statement.
+   *
+   * deprecated in layout-1.3; use ALTER TABLE.. ADD SCHEMA .. FOR COLUMN instead.
    */
   def alterFamilySchema: Parser[DDLCommand] = (
     i("ALTER")~>i("TABLE")~>tableName~i("SET")~i("SCHEMA")~"="~schema~i("FOR")
@@ -545,6 +617,8 @@ final class DDLParser(val env: Environment) extends JavaTokenParsers
 
   /**
    * Parser that recognizes an ALTER TABLE .. SET SCHEMA = .. FOR COLUMN statement.
+   *
+   * deprecated in layout-1.3; use ALTER TABLE.. ADD SCHEMA .. FOR COLUMN instead.
    */
   def alterColumnSchema: Parser[DDLCommand] = (
     i("ALTER")~>i("TABLE")~>tableName~i("SET")~i("SCHEMA")~"="~schema~i("FOR")
@@ -552,6 +626,107 @@ final class DDLParser(val env: Environment) extends JavaTokenParsers
     ^^ ({case ~(~(~(~(~(~(~(tableName, _), _), _), schema), _), _), colName) =>
         new AlterTableSetColumnSchemaCommand(env, tableName, colName, schema)
        })
+  )
+
+  /**
+   * Parses optional flags that may qualify how a schema is being used in an
+   * ALTER TABLE.. ADD SCHEMA .. FOR COLUMN statement.
+   *
+   * <p>Valid options are:</p>
+   * `[DEFAULT] READER | WRITER | RECORDED | (empty)`
+   *
+   * <p>empty means READER and WRITER.</p>
+   *
+   * @return a SchemaUsageFlags indicating the usages highlighted.
+   */
+  def addSchemaFlags: Parser[SchemaUsageFlags] = (
+    i("DEFAULT")~>i("READER") ^^
+    { _ => new SchemaUsageFlags(defaultReader=true, reader=true, writer=false, recorded=false) }
+  | i("READER") ^^
+    { _ => new SchemaUsageFlags(defaultReader=false, reader=true, writer=false, recorded=false) }
+  | i("WRITER") ^^
+    { _ => new SchemaUsageFlags(defaultReader=false, reader=false, writer=true, recorded=false) }
+  | i("RECORDED") ^^
+    { _ => new SchemaUsageFlags(defaultReader=false, reader=false, writer=false, recorded=true) }
+  | success[Any](None) ^^
+    { _ => new SchemaUsageFlags(defaultReader=false, reader=true, writer=true, recorded=false) }
+  )
+
+  /**
+   * Parses optional flags that may qualify how a schema is being used in an
+   * DESCRIBE TABLE.. COLUMN .. SHOW .. SCHEMAS statement.
+   *
+   * <p>Valid options are:</p>
+   * `READER | WRITER | RECORDED`
+   *
+   * @return a SchemaUsageFlags indicating the usages highlighted.
+   */
+  def showSchemaFlags: Parser[SchemaUsageFlags] = (
+    i("READER") ^^ { _ => new SchemaUsageFlags(false, true, false, false) }
+  | i("WRITER") ^^ { _ => new SchemaUsageFlags(false, false, true, false) }
+  | i("RECORDED") ^^ { _ => new SchemaUsageFlags(false, false, false, true) }
+  )
+
+  /**
+   * Parses optional flags that may qualify how a schema is being used in an
+   * ALTER TABLE.. DROP SCHEMA .. FOR COLUMN statement.
+   *
+   * <p>Valid options are:</p>
+   * `READER | WRITER | RECORDED | (empty)`
+   *
+   * <p>empty means READER and WRITER.</p>
+   *
+   * @return a SchemaUsageFlags indicating the usages highlighted.
+   */
+  def dropSchemaFlags: Parser[SchemaUsageFlags] = (
+    i("READER") ^^ { _ => new SchemaUsageFlags(true, true, false, false) }
+  | i("WRITER") ^^ { _ => new SchemaUsageFlags(false, false, true, false) }
+  | i("RECORDED") ^^ { _ => new SchemaUsageFlags(false, false, false, true) }
+  | success[Any](None) ^^ { _ => new SchemaUsageFlags(true, true, true, false) }
+  )
+
+  /**
+   * Parser that recognizes an ALTER TABLE .. ADD SCHEMA .. FOR FAMILY statement.
+   */
+  def alterFamilyAddSchema: Parser[DDLCommand] = (
+    i("ALTER")~>i("TABLE")~>tableName~i("ADD")~addSchemaFlags~i("SCHEMA")
+    ~schema~i("FOR")~i("FAMILY")~familyName
+    ^^ { case tableName ~ _ ~ schemaFlags ~ _ ~ schema ~ _ ~ _ ~ familyName =>
+        new AlterTableAddFamilySchemaCommand(env, tableName, schemaFlags, familyName, schema)
+    }
+  )
+
+  /**
+   * Parser that recognizes an ALTER TABLE .. ADD SCHEMA .. FOR COLUMN statement.
+   */
+  def alterColumnAddSchema: Parser[DDLCommand] = (
+    i("ALTER")~>i("TABLE")~>tableName~i("ADD")~addSchemaFlags~i("SCHEMA")
+    ~schema~i("FOR")~i("COLUMN")~colName
+    ^^ { case tableName ~ _ ~ schemaFlags ~ _ ~ schema ~ _ ~ _ ~ colName =>
+        new AlterTableAddColumnSchemaCommand(env, tableName, schemaFlags, colName, schema)
+    }
+  )
+
+  /**
+   * Parser that recognizes an ALTER TABLE .. DROP SCHEMA .. FOR FAMILY statement.
+   */
+  def alterFamilyDropSchema: Parser[DDLCommand] = (
+    i("ALTER")~>i("TABLE")~>tableName~i("DROP")~dropSchemaFlags~i("SCHEMA")
+    ~schema~i("FOR")~i("FAMILY")~familyName
+    ^^ { case tableName ~ _ ~ schemaFlags ~ _ ~ schema ~ _ ~ _ ~ familyName =>
+        new AlterTableDropFamilySchemaCommand(env, tableName, schemaFlags, familyName, schema)
+    }
+  )
+
+  /**
+   * Parser that recognizes an ALTER TABLE .. DROP SCHEMA .. FOR COLUMN statement.
+   */
+  def alterColumnDropSchema: Parser[DDLCommand] = (
+    i("ALTER")~>i("TABLE")~>tableName~i("DROP")~dropSchemaFlags~i("SCHEMA")
+    ~schema~i("FOR")~i("COLUMN")~colName
+    ^^ { case tableName ~ _ ~ schemaFlags ~ _ ~ schema ~ _ ~ _ ~ colName =>
+        new AlterTableDropColumnSchemaCommand(env, tableName, schemaFlags, colName, schema)
+    }
   )
 
   /**
@@ -611,11 +786,39 @@ final class DDLParser(val env: Environment) extends JavaTokenParsers
   /**
    * Parser that recognizes a DESCRIBE [EXTENDED] (table) statement.
    */
-  def descTable: Parser[DDLCommand] = (
+  def describeTable: Parser[DDLCommand] = (
       i("DESCRIBE")~>i("EXTENDED")~>tableName
       ^^ (id => new DescribeTableCommand(env, id, true))
     | i("DESCRIBE")~>tableName
       ^^ (id => new DescribeTableCommand(env, id, false))
+  )
+
+  /**
+   * Matcher for the set of schemas to show in a describeColumn command.
+   *
+   * SHOW [n] { READER | WRITER | RECORDED } SCHEMAS
+   *
+   * If `n` is not specified, default to showing up to 5 schemas.
+   */
+  def descColShowSchemasClause: Parser[(Int, SchemaUsageFlags)] = (
+    i("SHOW")~>intValue~showSchemaFlags<~i("SCHEMAS") ^^ ({
+      case intVal~schemaFlags  => (intVal, schemaFlags)
+    })
+  | i("SHOW")~>showSchemaFlags<~i("SCHEMAS") ^^ (schemaFlags => (5, schemaFlags))
+  )
+
+
+  /**
+   * A statement that prints a description of a specific column within a table:
+   *
+   * DESCRIBE TABLE t COLUMN info:foo SHOW [n] { READER | WRITER | RECORDED } SCHEMAS
+   */
+  def describeColumn: Parser[DDLCommand] = (
+    i("DESCRIBE")~>i("TABLE")~>tableName~(i("COLUMN")~>colName)~descColShowSchemasClause
+    ^^ ({ case tableName~columnName~Product2(numSchemas, schemaUsageFlags) =>
+            new DescribeColumnSchemasCommand(env, tableName, columnName, numSchemas,
+                schemaUsageFlags)
+       })
   )
 
   /**
@@ -669,8 +872,13 @@ final class DDLParser(val env: Environment) extends JavaTokenParsers
     | alterLocalityGroupProperty
     | alterFamilySchema
     | alterColumnSchema
+    | alterFamilyAddSchema
+    | alterColumnAddSchema
+    | alterFamilyDropSchema
+    | alterColumnDropSchema
     | createTable
-    | descTable
+    | describeTable
+    | describeColumn
     | dropTable
     | createInstance
     | dropInstance

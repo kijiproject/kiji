@@ -20,11 +20,14 @@
 package org.kiji.schema.shell.ddl
 
 import scala.collection.JavaConversions._
+import scala.collection.mutable.Buffer
 
 import java.io.File
 import java.io.FileOutputStream
 import java.io.PrintStream
+import java.util.ArrayList
 
+import org.apache.avro.Schema
 import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.CellSchema
 import org.kiji.schema.avro.ColumnDesc
@@ -47,14 +50,17 @@ import org.kiji.schema.layout.KijiTableLayout
  * to stdout or another file.
  */
 @ApiAudience.Private
-trait AbstractDumpDDLCommand {
+trait AbstractDumpDDLCommand extends TableProperties {
 
   // abstract methods implemented by DDLCommand that are required to use AbstractDumpDDLCommand.
 
   protected def echoNoNL(s:String): Unit
   protected def echo(s: String): Unit
+  protected def env(): Environment
 
   def dumpLayout(layout: TableLayoutDesc): Unit = {
+    val cellSchemaContext = CellSchemaContext.create(env, TableLayoutDesc.newBuilder(layout))
+
     echoNoNL("CREATE TABLE ")
     echo(quote(layout.getName()))
     echoNoNL("  ")
@@ -121,12 +127,26 @@ trait AbstractDumpDDLCommand {
       first = false
     }
     echo(";")
+
+    if (cellSchemaContext.supportsLayoutValidation()) {
+      dumpColumnSchemas(layout)
+    }
   }
 
   def dumpTableProperties(layout: TableLayoutDesc): Unit = {
+    val numRegions: String = env.kijiSystem.getMeta(env.instanceURI, layout.getName(),
+        RegionCountMetaKey).getOrElse("1")
+
     echo("  PROPERTIES (")
     echo("    MAX FILE SIZE = " + layout.getMaxFilesize() + ",")
-    echo("    MEMSTORE FLUSH SIZE = " + layout.getMemstoreFlushsize())
+    echo("    MEMSTORE FLUSH SIZE = " + layout.getMemstoreFlushsize() + ",")
+    val cellSchemaContext = CellSchemaContext.create(env, TableLayoutDesc.newBuilder(layout))
+    if (cellSchemaContext.supportsLayoutValidation()) {
+      val validationPolicy: String = env.kijiSystem.getMeta(env.instanceURI, layout.getName(),
+          TableValidationMetaKey).getOrElse(DefaultValidationPolicy)
+      echo("    VALIDATION = " + validationPolicy + ",")
+    }
+    echo("    NUMREGIONS = " + numRegions)
     echo("  )")
   }
 
@@ -171,7 +191,6 @@ trait AbstractDumpDDLCommand {
   def dumpMapFamily(family: FamilyDesc): Unit = {
     echoNoNL("    MAP TYPE FAMILY ")
     echo(quote(family.getName()))
-    echoNoNL("    WITH SCHEMA ")
     dumpSchema(family.getMapSchema())
     echoNoNL("    ")
     echo(dumpDescription(family))
@@ -196,7 +215,6 @@ trait AbstractDumpDDLCommand {
 
   def dumpColumn(col: ColumnDesc): Unit = {
     echoNoNL("      " + quote(col.getName()))
-    echoNoNL(" WITH SCHEMA ")
     dumpSchema(col.getColumnSchema())
     echoNoNL("      ")
     echoNoNL(dumpDescription(col))
@@ -205,15 +223,112 @@ trait AbstractDumpDDLCommand {
   def dumpSchema(schema: CellSchema): Unit = {
     // TODO(aaron): Do we support SchemaStorage methods anywhere?
     schema.getType() match {
-      case SchemaType.CLASS => { echo("CLASS " + schema.getValue().trim) }
-      case SchemaType.COUNTER => { echo("COUNTER") }
+      case SchemaType.CLASS => { echo("    WITH SCHEMA CLASS " + schema.getValue().trim) }
+      case SchemaType.COUNTER => { echo("    WITH SCHEMA COUNTER") }
       case SchemaType.INLINE => { echo(schema.getValue().trim) }
+      case SchemaType.AVRO => {
+        if (schema.getSpecificReaderSchemaClass() != null) {
+          echo("    WITH SCHEMA CLASS " + schema.getSpecificReaderSchemaClass())
+        } else if (schema.getDefaultReader() != null) {
+          val avroSchema: Schema =
+              env.kijiSystem.getSchemaForId(env.instanceURI, schema.getDefaultReader()).get
+          echo("    WITH SCHEMA " + avroSchema.toString())
+        } else {
+          // Do nothing right now; we add non-default schemas with ALTER TABLE statements.
+        }
+      }
     }
   }
 
   /** Returns the quoted description for an object with a getDescription() method. */
   def dumpDescription(d: { def getDescription(): String }): String = {
     return "WITH DESCRIPTION " + quote(Option(d.getDescription()).getOrElse("").trim)
+  }
+
+  /**
+   * Dump a series of ALTER TABLE .. ADD SCHEMA statements describing all the columns
+   * in the table.
+   *
+   * @param the layout of the table whose columns we should dump.
+   */
+  def dumpColumnSchemas(layout: TableLayoutDesc): Unit = {
+    layout.getLocalityGroups().foreach { group =>
+      group.getFamilies().foreach { family =>
+        Option(family.getMapSchema()) match {
+          case Some(mapSchema) => {
+            dumpAddSchema(layout.getName(), mapSchema, family.getName(), None)
+          } case None => {
+            // Iterate over all columns in the group-type family.
+            family.getColumns().foreach { col =>
+              dumpAddSchema(layout.getName(), col.getColumnSchema(),
+                  family.getName(), Some(col.getName()))
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Dump the ALTER TABLE .. ADD SCHEMA statements for an individual family or qualifier.
+   *
+   * @param the name of the table we're dumping.
+   * @param the CellSchema specifying the schema set to dump
+   * @param the family name to alter.
+   * @param the qualifier to alter. If None, implies a map-type family.
+   */
+  def dumpAddSchema(tableName: String, cellSchema: CellSchema, familyName: String,
+      qualifier: Option[String]): Unit = {
+    if (cellSchema.getType() != SchemaType.AVRO) {
+      // Nothing to do for COUNTER, INLINE, or CLASS.
+      return
+    }
+
+    // Format the column name we're modifying to a string.
+    val colName: String = {
+      qualifier match {
+        case Some(qual: String) => "COLUMN " + quote(familyName) + ":" + quote(qual)
+        case None => "FAMILY " + quote(familyName)
+      }
+    }
+
+    // Dump an ALTER TABLE to add each reader and writer schema in turn.
+    val readers: java.util.List[java.lang.Long] = Option(cellSchema.getReaders())
+        .getOrElse(new ArrayList[java.lang.Long]())
+    readers.foreach { readerId: java.lang.Long =>
+      val schema: Schema = env.kijiSystem.getSchemaForId(env.instanceURI, readerId).get
+      echo("ALTER TABLE " + quote(tableName) + " ADD READER SCHEMA " + schema + " FOR "
+          + colName + ";")
+    }
+
+    val writers: java.util.List[java.lang.Long] = Option(cellSchema.getWriters())
+        .getOrElse(new ArrayList[java.lang.Long]())
+    writers.foreach { writerId: java.lang.Long =>
+      val schema: Schema = env.kijiSystem.getSchemaForId(env.instanceURI, writerId).get
+      echo("ALTER TABLE " + quote(tableName) + " ADD WRITER SCHEMA " + schema + " FOR "
+          + colName + ";")
+    }
+
+    // Set the specific reader schema if available.
+
+    // Set the classname first. The resulting ALTER TABLE will set default_reader to
+    // use the schema from the class present on the end user's machine.
+    val specificClassName: Option[String] = Option(cellSchema.getSpecificReaderSchemaClass())
+    if (specificClassName.isDefined) {
+      echo("ALTER TABLE " + quote(tableName) + " ADD DEFAULT READER SCHEMA CLASS "
+          + specificClassName.get + " FOR " + colName + ";")
+    }
+
+    // If the original CellSchema had a JSON default_reader field set, we should set that
+    // as the final word on the default reader schema. This will override the JSON from the
+    // class-based definition, but not the class name (as long as this reader schema has the
+    // same class name as the class name).
+    val defaultReader: Option[Long] = Option(cellSchema.getDefaultReader())
+    if (defaultReader.isDefined) {
+      val schema: Schema = env.kijiSystem.getSchemaForId(env.instanceURI, defaultReader.get).get
+      echo("ALTER TABLE " + quote(tableName) + " ADD DEFAULT READER SCHEMA "
+          + schema.toString + " FOR " + colName + ";")
+    }
   }
 
   /**

@@ -28,6 +28,7 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.schema.KConstants
 import org.kiji.schema.KijiURI
+import org.kiji.schema.shell.AbstractKijiSystem
 import org.kiji.schema.shell.Environment
 import org.kiji.schema.shell.InputProcessor
 import org.kiji.schema.shell.KijiSystem
@@ -60,12 +61,11 @@ import org.kiji.schema.util.ResourceUtils
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-final class Client private(val kijiUri: KijiURI) extends Closeable {
+final class Client private(val kijiUri: KijiURI, val kijiSystem: AbstractKijiSystem)
+    extends Closeable {
 
   /** Output stream where stdout from DDL commands is redirected. */
   private val mStdoutBytes = new ByteArrayOutputStream
-
-  private val mKijiSystem = new KijiSystem
 
   /** Last environment returned by the input processor. */
   private var mLastEnv: Option[Environment] = None
@@ -110,7 +110,7 @@ final class Client private(val kijiUri: KijiURI) extends Closeable {
     try {
       val env = (mLastEnv match {
         case Some(last) => last.withPrinter(output).withInputSource(input)
-        case None => new Environment(kijiUri, output, mKijiSystem, input, List(), false)
+        case None => new Environment(kijiUri, output, kijiSystem, input, List(), false)
       })
       mLastEnv = Some(new InputProcessor(throwOnSyntaxErr=true)
           .processUserInput(new StringBuilder(), env))
@@ -135,7 +135,7 @@ final class Client private(val kijiUri: KijiURI) extends Closeable {
    * when you are done with the client.
    */
   def close(): Unit = {
-    mKijiSystem.shutdown()
+    kijiSystem.shutdown()
   }
 }
 
@@ -149,6 +149,22 @@ object Client {
    * @return a new instance of a Client object.
    */
   def newInstance(uri: KijiURI): Client = {
-    return new Client(uri)
+    return new Client(uri, new KijiSystem)
+  }
+
+  /**
+   * Create a new instance of a Client object.
+   *
+   * package-private method for internal testing use, allowing the user to override the
+   * KijiSystem implementation used. End-users should not try to pass a non-default argument
+   * for the KijiSystem implementation and should use `newInstance` instead.
+   *
+   * @param uri the Kiji URI to connect to. This must specify a Kiji instance, not an
+   *     HBase cluster URI. (e.g., `kiji://.env/myinstance`.)
+   * @param sys the AbstractKijiSystem implementation to use.
+   * @return a new instance of a Client object.
+   */
+  private[shell] def newInstanceWithSystem(uri: KijiURI, sys: AbstractKijiSystem): Client = {
+    return new Client(uri, sys)
   }
 }

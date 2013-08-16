@@ -22,38 +22,41 @@ package org.kiji.schema.shell.ddl
 import scala.collection.JavaConversions._
 
 import org.kiji.annotations.ApiAudience
+import org.kiji.schema.avro.CellSchema
+import org.kiji.schema.avro.ColumnDesc
 import org.kiji.schema.avro.TableLayoutDesc
 
 import org.kiji.schema.shell.DDLException
 import org.kiji.schema.shell.Environment
+import org.kiji.schema.shell.SchemaUsageFlags
 
-/** Add a column to a group-type family in a table. */
+/**
+ * Drop a reader or writer schema from the list of approved schemas for a column.
+ */
 @ApiAudience.Private
-final class AlterTableAddColumnCommand(
+final class AlterTableDropColumnSchemaCommand(
     val env: Environment,
     val tableName: String,
-    val colClause: ColumnClause) extends TableDDLCommand {
-
-  val familyName: String = (
-    // Extract the column family from the ColumnClause and verify its presence.
-    colClause.family.getOrElse {
-      throw new DDLException("Column clause must include column family name")
-    }
-  )
+    val schemaFlags: SchemaUsageFlags,
+    val columnName: ColumnName,
+    val schema: SchemaSpec) extends TableDDLCommand {
 
   override def validateArguments(): Unit = {
-    checkTableExists()
     val layout = getInitialLayout()
-    checkColFamilyExists(layout, familyName)
-    checkColFamilyIsGroupType(layout, familyName)
-    checkColumnMissing(layout, familyName, colClause.qualifier)
+    val cellSchemaContext: CellSchemaContext = CellSchemaContext.create(env, layout, schemaFlags)
+
+    checkColumnExists(layout, columnName.family, columnName.qualifier)
+    if (!cellSchemaContext.supportsLayoutValidation()) {
+      throw new DDLException("Cannot run ALTER TABLE.. DROP SCHEMA on a table layout "
+          + "that does not support schema validation.")
+    }
   }
 
   override def updateLayout(layout: TableLayoutDesc.Builder): Unit = {
-    val cellSchemaContext: CellSchemaContext = CellSchemaContext.create(env, layout)
-
-    // Get the group-type column family from the layout and add the column to its list.
-    getFamily(layout, familyName).getOrElse(throw new DDLException("Missing family!"))
-        .getColumns().add(colClause.toAvroColumnDesc(cellSchemaContext))
+    val cellSchemaContext: CellSchemaContext = CellSchemaContext.create(env, layout, schemaFlags)
+    val curColumnDesc: ColumnDesc = getColumn(layout, columnName)
+        .getOrElse(throw new DDLException("No such column: " + columnName))
+    val curCellSchema: CellSchema = curColumnDesc.getColumnSchema()
+    schema.dropFromCellSchema(curCellSchema, cellSchemaContext)
   }
 }

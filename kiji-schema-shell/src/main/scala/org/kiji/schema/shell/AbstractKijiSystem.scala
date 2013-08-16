@@ -24,6 +24,7 @@ import java.io.IOException
 import scala.collection.JavaConversions._
 import scala.collection.mutable.Map
 
+import org.apache.avro.Schema
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.client.HBaseAdmin
@@ -36,6 +37,7 @@ import org.kiji.schema.KijiMetaTable
 import org.kiji.schema.KijiURI
 import org.kiji.schema.avro.TableLayoutDesc
 import org.kiji.schema.layout.KijiTableLayout
+import org.kiji.schema.util.ProtocolVersion
 
 /**
  * Abstract base interface implemented by KijiSystem. Provides method signatures
@@ -71,6 +73,63 @@ abstract class AbstractKijiSystem {
 
   /** Drop a table. */
   def dropTable(uri: KijiURI, table: String): Unit
+
+  /**
+   * Return the instance data format (system version) of the specified Kiji instance.
+   *
+   * @param the KijiURI of the instance to open.
+   * @return the ProtocolVersion of the corresponding data format (e.g. "system-2.0")
+   */
+  def getSystemVersion(uri: KijiURI): ProtocolVersion
+
+  /**
+   * Return a schema id associated with a given schema, creating an association if necessary.
+   *
+   * @param the Kiji instance we are operating in
+   * @param the schema to lookup
+   * @return its existing uid, or a new id if this schema has not been encountered before.
+   */
+  def getOrCreateSchemaId(uri: KijiURI, schema: Schema): Long
+
+  /**
+   * Return a schema id associated with a given schema, or None if it's not already there.
+   *
+   * @param the Kiji instance we are operating in
+   * @param the schema to lookup
+   * @return its existing uid, or None if this schema has not been encountered before.
+   */
+  def getSchemaId(uri: KijiURI, schema: Schema): Option[Long]
+
+  /**
+   * Return a schema associated with a given schema id, or None if it's not already there.
+   *
+   * @param the Kiji instance we are operating in
+   * @param the schema id to lookup
+   * @return its existing schema, or None if this schema id has not been encountered before.
+   */
+  def getSchemaForId(uri: KijiURI, uid: Long): Option[Schema]
+
+  /**
+   * Set a metatable (key, val) pair for the specified table.
+   *
+   * @param the KijiURI of the Kiji instance.
+   * @param the name of the table owning the property.
+   * @param the key to set.
+   * @param the value to set it to.
+   * @throws IOException if there's an error opening the metatable.
+   */
+  def setMeta(uri: KijiURI, table: String, key: String, value: String): Unit
+
+  /**
+   * Get a metatable (key, val) pair for the specified table.
+   *
+   * @param the KijiURI of the Kiji instance.
+   * @param the name of the table owning the property.
+   * @param the key specifying the property to retrieve.
+   * @return the value of the property or None if it was not yet set.
+   * @throws IOException if there's an error opening the metatable.
+   */
+  def getMeta(uri: KijiURI, table: String, key: String): Option[String]
 
   /**
    * @return a list of all available Kiji instances.

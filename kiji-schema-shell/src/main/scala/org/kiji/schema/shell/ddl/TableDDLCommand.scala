@@ -44,7 +44,7 @@ abstract class TableDDLCommand extends DDLCommand {
    * The maximum version string we are comfortable operating on. Newer layers than
    * this must be modified with newer tools.
    */
-  val MAX_LAYOUT_VERSION = ProtocolVersion.parse("layout-1.2");
+  val MAX_LAYOUT_VERSION = ProtocolVersion.parse("layout-1.3");
 
   /** The name of the table being operated on. */
   val tableName: String;
@@ -57,6 +57,7 @@ abstract class TableDDLCommand extends DDLCommand {
     // Default behavior: Get the table layout, mutate it, and apply the new layout.
     validateArguments()
     val layoutBuilder = getInitialLayout()
+    applyMetaUpdates()
     updateLayout(layoutBuilder)
     applyUpdate(layoutBuilder.build())
     echo("OK.")
@@ -100,12 +101,20 @@ abstract class TableDDLCommand extends DDLCommand {
   def updateLayout(layout: TableLayoutDesc.Builder): Unit
 
   /**
+   * Apply any updates to the metatable necessary for this table DDL operation.
+   * These are performed before building and applying the table layout itself.
+   */
+  def applyMetaUpdates(): Unit = {
+    // Default implementation does nothing.
+  }
+
+  /**
    * Given a built table layout, apply it to the Kiji instance (e.g., by creating a table,
    * or updating an existing one.) The default behavior is to assume the table
    * already exists, and apply the layout to the table using KijiAdmin.
    */
   def applyUpdate(layout: TableLayoutDesc): Unit = {
-    getLayoutReferenceId() match {
+    Option(layout.getLayoutId()) match {
       case None => { } // No previous layout to refer to.
       case Some(ref) => {
         layout.setReferenceLayout(ref)
@@ -123,19 +132,6 @@ abstract class TableDDLCommand extends DDLCommand {
       }
     }
     env.kijiSystem.applyLayout(getKijiURI(), tableName, layout)
-  }
-
-  /**
-   * Look up the current layout in the table layout database and determine its id number.
-   * We need to set that as our reference id.
-   *
-   * @return Some(reference id) if there's an existing layout, or None if there isn't.
-   */
-  private def getLayoutReferenceId(): Option[String] = {
-    env.kijiSystem.getTableLayout(getKijiURI(), tableName) match {
-      case None => None // No existing layout. e.g., we're creating a new table.
-      case Some(layout) => Some(layout.getDesc().getLayoutId())
-    }
   }
 
   // Methods that check properties of tables for use in validateArguments().

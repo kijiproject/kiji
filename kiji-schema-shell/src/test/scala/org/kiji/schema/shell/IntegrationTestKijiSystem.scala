@@ -31,12 +31,13 @@ import org.kiji.schema.hbase.HBaseFactory
 import org.kiji.schema.hbase.KijiManagedHBaseTableName
 import org.kiji.schema.impl.DefaultHTableInterfaceFactory
 import org.kiji.schema.layout.KijiTableLayout
+import org.kiji.schema.shell.ddl.TableProperties
 import org.kiji.schema.shell.input.NullInputSource
 
 /** Tests that KijiSystem will connect to the correct Kiji instance and will
   * actually create, modify, and drop tables.
   */
-class IntegrationTestKijiSystem extends SpecificationWithJUnit {
+class IntegrationTestKijiSystem extends SpecificationWithJUnit with TableProperties {
   "KijiSystem" should {
     "create a table correctly" in {
       val uri = getNewInstanceURI()
@@ -244,6 +245,12 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
       hbaseAdmin.getTableRegions(hbaseTableName).size mustEqual 10
       hbaseAdmin.close()
 
+      // Verify that we properly set the initial region count in the meta table.
+      val regionCount: Option[String] = environment.kijiSystem.getMeta(uri, "foo",
+         RegionCountMetaKey /* from TableProperties */)
+      regionCount must beSome[String]
+      regionCount.get mustEqual "10"
+
       environment.kijiSystem.shutdown()
     }
 
@@ -339,6 +346,23 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
       val env8 = res7.get.exec()
 
       env8.kijiSystem.shutdown()
+    }
+
+    "use metatable entries correctly." in {
+      // We want to set and retrieve metatable key/value pairs here.
+      // We explicitly depend on the ability to set and retrieve these for tables that do
+      // not (yet) exist.
+      val uri = getNewInstanceURI()
+      installKiji(uri)
+
+      val instanceName = uri.getInstance()
+      val environment = env(uri)
+
+      environment.kijiSystem.getMeta(uri, "AnyTable", "AnyKey") must beNone
+      environment.kijiSystem.setMeta(uri, "AnyTable", "AnyKey", "AWellDefinedValue")
+      val ret: Option[String] = environment.kijiSystem.getMeta(uri, "AnyTable", "AnyKey")
+      ret must beSome[String]
+      ret.get mustEqual "AWellDefinedValue"
     }
   }
 

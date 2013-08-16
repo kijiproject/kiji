@@ -30,52 +30,46 @@ import org.kiji.schema.avro.SchemaStorage
 import org.kiji.schema.avro.SchemaType
 import org.kiji.schema.shell.DDLException
 
-/** A schema specified as its Avro json representation. */
+/**
+ * A SchemaSpec that references a schema by its uid in the schema table.
+ */
 @ApiAudience.Private
-final class JsonSchemaSpec(val json: String) extends SchemaSpec {
-  override def toString(): String = { json }
-
+final class UidSchemaSpec(uid: Long) extends SchemaSpec {
   override def toNewCellSchema(cellSchemaContext: CellSchemaContext): CellSchema = {
     if (cellSchemaContext.supportsLayoutValidation()) {
-      // layout-1.3 and up: use validation-enabled specification.
+      // layout-1.3 and up support layout validation.
       val avroValidationPolicy: AvroValidationPolicy =
           cellSchemaContext.getValidationPolicy().avroValidationPolicy
 
-      val avroSchema: Schema = new Schema.Parser().parse(json)
+      // Sanity check: does this UID exist?
+      cellSchemaContext.env.kijiSystem.getSchemaForId(cellSchemaContext.env.instanceURI, uid)
+          .getOrElse(throw new DDLException("Invalid schema id: " + uid))
 
-      // Use the schema table to find the actual uid associated with this schema.
-      val uidForSchema: Long = cellSchemaContext.env.kijiSystem.getOrCreateSchemaId(
-          cellSchemaContext.env.instanceURI, avroSchema)
-
-      // Register the specified class as a valid reader and writer schema as well as the
+      // Register the specified schema id as a valid reader and writer schema as well as the
       // default reader schema.
       val readers: ArrayList[java.lang.Long] = new ArrayList()
-      readers.add(uidForSchema)
+      readers.add(uid)
 
       val writers: ArrayList[java.lang.Long] = new ArrayList()
-      writers.add(uidForSchema)
+      writers.add(uid)
 
-      // For now (layout-1.3), adding to the writers list => adding to the "written" list.
       val written: ArrayList[java.lang.Long] = new ArrayList()
-      written.add(uidForSchema)
+      written.add(uid)
 
       return CellSchema.newBuilder()
           .setStorage(SchemaStorage.UID)
           .setType(SchemaType.AVRO)
           .setValue(null)
           .setAvroValidationPolicy(avroValidationPolicy)
-          .setDefaultReader(uidForSchema)
+          .setSpecificReaderSchemaClass(null)
+          .setDefaultReader(uid) // Set this as the default reader too.
           .setReaders(readers)
           .setWritten(written)
           .setWriters(writers)
           .build()
     } else {
-      // layout-1.2 and prior; use older specification.
-      val schema = CellSchema.newBuilder
-      schema.setType(SchemaType.INLINE)
-      schema.setStorage(SchemaStorage.UID)
-      schema.setValue(json)
-      return schema.build()
+      // Pre-validation layouts require a fully-defined schema at all times.
+      throw new DDLException("You must define a schema using WITH SCHEMA ... for this column")
     }
   }
 
@@ -87,7 +81,9 @@ final class JsonSchemaSpec(val json: String) extends SchemaSpec {
       throw new DDLException("SchemaSpec.addToCellSchema() can only be used on validating layouts")
     }
 
-    val avroSchema: Schema = new Schema.Parser().parse(json)
+    val avroSchema: Schema = cellSchemaContext.env.kijiSystem.getSchemaForId(
+        cellSchemaContext.env.instanceURI, uid)
+        .getOrElse(throw new DDLException("Invalid schema id: " + uid))
 
     // Add to the main reader/writer/etc lists.
     addAvroToCellSchema(avroSchema, cellSchema, cellSchemaContext.schemaUsageFlags,
@@ -106,18 +102,9 @@ final class JsonSchemaSpec(val json: String) extends SchemaSpec {
           + "on validating layouts")
     }
 
-    val avroSchema: Schema = new Schema.Parser().parse(json)
-
-    // Use the schema table to find the actual uid associated with this schema.
-    // If this returns "None" then the schema never existed -- do nothing.
-    val maybeUidForSchemaClass: Option[Long] =
-        cellSchemaContext.env.kijiSystem.getSchemaId(cellSchemaContext.env.instanceURI, avroSchema)
-    if (maybeUidForSchemaClass.isEmpty) {
-      // Nothing to do; this schema is not registered in the schema table.
-      return cellSchema
-    }
-
-    val uidForSchemaClass: Long = maybeUidForSchemaClass.get
+    val avroSchema: Schema = cellSchemaContext.env.kijiSystem.getSchemaForId(
+        cellSchemaContext.env.instanceURI, uid)
+        .getOrElse(throw new DDLException("Invalid schema id: " + uid))
 
     // Drop from the main reader/writer/etc lists.
     dropAvroFromCellSchema(avroSchema, cellSchema, cellSchemaContext.schemaUsageFlags,
@@ -126,4 +113,5 @@ final class JsonSchemaSpec(val json: String) extends SchemaSpec {
     return cellSchema
   }
 
+  override def toString(): String = { "(empty schema specification)" }
 }

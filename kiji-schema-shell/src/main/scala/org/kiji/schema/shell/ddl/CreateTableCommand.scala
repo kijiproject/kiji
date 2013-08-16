@@ -41,7 +41,15 @@ object CreateTableCommand {
    *
    * Must be &lt;= TableDDLCommand.MAX_LAYOUT_VERSION.
    */
-  val DDL_LAYOUT_VERSION = ProtocolVersion.parse("layout-1.2");
+  val DDL_LAYOUT_VERSION: ProtocolVersion = ProtocolVersion.parse("layout-1.3")
+
+  /**
+   * Maximum layout version we can support in the system-1.0 instance format.
+   */
+  val SYS_1_0_DDL_LAYOUT_VERSION: ProtocolVersion = ProtocolVersion.parse("layout-1.2")
+
+  /** The minimum instance format that supports schema validation (layout-1.3). */
+  val MIN_SYS_FOR_VALIDATION: ProtocolVersion = ProtocolVersion.parse("system-2.0")
 }
 
 /**
@@ -64,8 +72,22 @@ final class CreateTableCommand(val env: Environment,
 
   // We always operate on an empty layout when creating a new table.
   override def getInitialLayout(): TableLayoutDesc.Builder = {
+    val instanceFormat: ProtocolVersion = env.kijiSystem.getSystemVersion(env.instanceURI)
+
+    // Determine the layout version to use when creating the new table. If the instance data
+    // format supports validation (system-2.0 or greater), use the maximum layout version
+    // we can create. Otherwise, we're in a system-1.0 world; use the maximum layout
+    // version supported by system-1.0.
+    val layoutVersion: ProtocolVersion = (
+      if (instanceFormat.compareTo(CreateTableCommand.MIN_SYS_FOR_VALIDATION) >= 0) {
+        CreateTableCommand.DDL_LAYOUT_VERSION
+      } else {
+        CreateTableCommand.SYS_1_0_DDL_LAYOUT_VERSION
+      })
+
     return TableLayoutDesc.newBuilder()
-        .setVersion(CreateTableCommand.DDL_LAYOUT_VERSION.toString())
+        .setVersion(layoutVersion.toString())
+        .setLayoutId("0")
   }
 
   override def validateArguments(): Unit = {
@@ -94,6 +116,14 @@ final class CreateTableCommand(val env: Environment,
     rowKeySpec.validate()
   }
 
+  /**
+   * Set metatable properties associated with the table we're creating.
+   * In particular, set the user's validation preference.
+   */
+  override def applyMetaUpdates(): Unit = {
+    applyMetaUpdates(tableName, tableProps, env)
+  }
+
   override def updateLayout(layout: TableLayoutDesc.Builder): Unit = {
     layout.setName(tableName)
     desc match {
@@ -104,9 +134,12 @@ final class CreateTableCommand(val env: Environment,
     val keysFormat = rowKeySpec.createFormattedKey() // Assigns it a RowKeyFormat2.
     layout.setKeysFormat(keysFormat)
 
+    // Create a context object to pass in to column creation definitions.
+    val cellSchemaContext: CellSchemaContext = CellSchemaContext.create(env, layout)
+
     val localityGroupBuilders = locGroups.foldLeft[List[LocalityGroupDesc.Builder]](Nil)(
         (lst: List[LocalityGroupDesc.Builder], grpData: LocalityGroupClause) => {
-          grpData.updateLocalityGroup(newLocalityGroup()) :: lst
+          grpData.updateLocalityGroup(newLocalityGroup(), cellSchemaContext) :: lst
         })
     val localityGroups = localityGroupBuilders.map(builder => builder.build())
     layout.setLocalityGroups(localityGroups)

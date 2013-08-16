@@ -19,11 +19,15 @@
 
 package org.kiji.schema.shell.ddl
 
+import java.util.Collections
+
 import scala.collection.JavaConversions._
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonParser
+
+import org.apache.avro.Schema
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro._
@@ -159,12 +163,7 @@ final class DescribeTableCommand(
       val colDescription = column.getDescription()
           .trim().replaceAll("""\s+""", " ")
       echo("\tColumn " + groupFamilyName + ":" + colName + " (" + colDescription + ")")
-      if (column.getColumnSchema.getType.equals(SchemaType.COUNTER)) {
-        echo("\t\tSchema: (counter)")
-      } else {
-        val jsonSchema = jsonParser.parse(column.getColumnSchema.getValue)
-        echo("\t\tSchema: " + jsonSchema)
-      }
+      describeCellSchema(column.getColumnSchema(), 2)
       echo("")
     }
   }
@@ -178,12 +177,80 @@ final class DescribeTableCommand(
     val famDescription = mapFamily.getDescription()
         .trim().replaceAll("""\s+""", " ")
     echo("\tDescription: " + famDescription)
-    if (mapFamily.getMapSchema.getType.equals(SchemaType.COUNTER)) {
-        echo("\tSchema: (counter)")
-    } else {
-      val jsonSchema = jsonParser.parse(mapFamily.getMapSchema.getValue)
-      echo("\tSchema: " + jsonSchema)
-    }
+    describeCellSchema(mapFamily.getMapSchema(), 1)
     echo("")
   }
+
+  /**
+   * Describe the CellSchema associated with storing a column. This holds
+   * a class, json schema, "counter type" schema, etc.
+   *
+   * @param the CellSchema to describe
+   * @param the number of '\t' characters to indent output.
+   *
+   */
+  def describeCellSchema(cellSchema: CellSchema, numTabs: Int): Unit = {
+    cellSchema.getType() match {
+      case SchemaType.COUNTER => {
+        padEcho(numTabs, "Schema: (counter)")
+      }
+      case SchemaType.CLASS => {
+        padEcho(numTabs, "Schema: " + cellSchema.getValue())
+      }
+      case SchemaType.INLINE => {
+        val jsonSchema = jsonParser.parse(cellSchema.getValue())
+        padEcho(numTabs, "Schema: " + jsonSchema)
+      }
+      case SchemaType.AVRO => {
+        // CellSchema type introduced in layout-1.3.
+        // This CellSchema holds many kinds of schemas.
+        //   * Optionally, a distinguished "default" schema class name. Our first preference
+        //     is to display this if it's not null.
+        //   * Optionally, a distinguished "default" schema json. Our second preference is to
+        //     display this if it's not null.
+        //   * 0 or more approved reader schemas. Display the count of these.
+        //   * 0 or more approved writer schemas. Display the count of these.
+        //   * 0 or more actually-written schemas. Display the count of these in "Extended" mode.
+        if(cellSchema.getSpecificReaderSchemaClass() != null) {
+          padEcho(numTabs, "Default reader schema class name: "
+              + cellSchema.getSpecificReaderSchemaClass())
+        } else if (cellSchema.getDefaultReader() != null ) {
+          // Look up the schema for the default reader schema uid.
+          val maybeReaderSchema: Option[Schema] =
+              env.kijiSystem.getSchemaForId(env.instanceURI, cellSchema.getDefaultReader())
+          if (!maybeReaderSchema.isEmpty) {
+            val jsonSchema = jsonParser.parse(maybeReaderSchema.get.toString())
+            padEcho(numTabs, "Default reader schema: " + jsonSchema)
+          } else {
+            padEcho(numTabs,
+                "(Warning: default reader schema id is specified but matches no known schema)")
+          }
+        } else {
+          padEcho(numTabs, "(No default reader schema available)")
+        }
+
+        val numReaders: Int = Option(cellSchema.getReaders()).getOrElse(Collections.emptyList).size
+        padEcho(numTabs, numReaders + " reader schema(s) available.")
+
+        val numWriters: Int = Option(cellSchema.getWriters()).getOrElse(Collections.emptyList).size
+        padEcho(numTabs, numWriters + " writer schema(s) available.")
+
+        if (extended) {
+          val numWritten: Int = Option(cellSchema.getWritten()).getOrElse(Collections.emptyList)
+              .size
+          padEcho(numTabs, numWritten + " writer schema(s) recorded.")
+        }
+      }
+    }
+  }
+
+  private def padTabs(numTabs: Int): Unit = {
+    echoNoNL("\t" * numTabs)
+  }
+
+  private def padEcho(numTabs: Int, str: String): Unit = {
+    padTabs(numTabs)
+    echo(str)
+  }
+
 }

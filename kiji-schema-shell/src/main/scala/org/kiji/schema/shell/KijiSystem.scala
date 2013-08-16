@@ -25,6 +25,7 @@ import scala.collection.JavaConversions._
 import scala.collection.mutable.Map
 
 import com.google.common.collect.ImmutableList;
+import org.apache.avro.Schema
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.HTableDescriptor
 import org.apache.hadoop.hbase.client.HBaseAdmin
@@ -33,10 +34,14 @@ import org.apache.hadoop.util.StringUtils
 import org.kiji.annotations.ApiAudience
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiMetaTable
+import org.kiji.schema.KijiSchemaTable
+import org.kiji.schema.KijiSchemaTable.SchemaEntry
 import org.kiji.schema.KijiURI
 import org.kiji.schema.avro.TableLayoutDesc
 import org.kiji.schema.layout.KijiTableLayout
+import org.kiji.schema.util.ProtocolVersion
 import org.kiji.schema.util.ResourceUtils
+import org.kiji.schema.util.VersionInfo
 
 /**
  * Instances of this class provide the Kiji schema shell with access to KijiSchema.
@@ -78,6 +83,51 @@ final class KijiSystem extends AbstractKijiSystem {
     kijiCache(uri) match {
       case Some(theKiji) => Some(theKiji.getMetaTable())
       case None => None
+    }
+  }
+
+  override def getSystemVersion(uri: KijiURI): ProtocolVersion = {
+    return VersionInfo.getClusterDataVersion(
+        kijiCache(uri).getOrElse(throw new DDLException("Could not open" + uri)))
+  }
+
+  override def getOrCreateSchemaId(uri: KijiURI, schema: Schema): Long = {
+    val kiji: Kiji = kijiCache(uri).getOrElse(throw new DDLException("Could not open " + uri))
+    val schemaTable: KijiSchemaTable = kiji.getSchemaTable()
+    val id = schemaTable.getOrCreateSchemaId(schema)
+    schemaTable.flush()
+    return id
+  }
+
+  override def getSchemaId(uri: KijiURI, schema: Schema): Option[Long] = {
+    val kiji: Kiji = kijiCache(uri).getOrElse(throw new DDLException("Could not open " + uri))
+    val schemaTable: KijiSchemaTable = kiji.getSchemaTable()
+
+    // Look up the schema entry. If none exists, return None. Otherwise return Some(theId).
+    return Option(schemaTable.getSchemaEntry(schema)).map { _.getId}
+  }
+
+  override def getSchemaForId(uri: KijiURI, uid: Long): Option[Schema] = {
+    val kiji: Kiji = kijiCache(uri).getOrElse(throw new DDLException("Could not open " + uri))
+    val schemaTable: KijiSchemaTable = kiji.getSchemaTable()
+
+    return Option(schemaTable.getSchema(uid))
+  }
+
+  override def setMeta(uri: KijiURI, table: String, key: String, value: String): Unit = {
+    val metaTable: KijiMetaTable = kijiMetaTable(uri).getOrElse(
+        throw new IOException("Cannot get metatable for URI " + uri))
+    metaTable.putValue(table, key, value.getBytes())
+  }
+
+  override def getMeta(uri: KijiURI, table: String, key: String): Option[String] = {
+    val metaTable: KijiMetaTable = kijiMetaTable(uri).getOrElse(
+        throw new IOException("Cannot get metatable for URI " + uri))
+    try {
+      val bytes: Array[Byte] = metaTable.getValue(table, key)
+      return Some(new String(bytes, "UTF-8"))
+    } catch {
+      case ioe: IOException => return None // Key not found.
     }
   }
 

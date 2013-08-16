@@ -22,19 +22,31 @@ package org.kiji.schema.shell
 import scala.collection.mutable.Map
 import java.util.NoSuchElementException
 
+import org.apache.avro.Schema
 import org.kiji.schema.Kiji
 import org.kiji.schema.KConstants
 import org.kiji.schema.KijiMetaTable
 import org.kiji.schema.KijiURI
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.avro.TableLayoutDesc
+import org.kiji.schema.util.ProtocolVersion
+import org.kiji.schema.util.VersionInfo
 
 /**
  * A KijiSystem class that provides in-memory mappings from instance -&gt; table &gt; layout,
  * and does not communicate with HBase.
  */
 class MockKijiSystem extends AbstractKijiSystem {
+  /** Mappings from KijiURI -> table name -> KijiTableLayout */
   private val instanceData: Map[KijiURI, Map[String, KijiTableLayout]] = Map()
+
+  /** Mappings from KijiURI -> table name -> key -> value for the metatable. */
+  private val metaData: Map[KijiURI, Map[String, Map[String, String]]] = Map()
+
+  // A "schema table" holding schema <--> id bimappings.
+  private val idsForSchemas: Map[Schema, Long] = Map()
+  private val schemasForIds: Map[Long, Schema] = Map()
+  private var nextSchemaId: Int = 0
 
   {
     val defaultURI = KijiURI.newBuilder().withInstanceName(KConstants.DEFAULT_INSTANCE_NAME).build()
@@ -45,6 +57,58 @@ class MockKijiSystem extends AbstractKijiSystem {
     instanceData(defaultURI) = Map[String, KijiTableLayout]()
     instanceData(fooURI) = Map[String, KijiTableLayout]()
     instanceData(barURI) = Map[String, KijiTableLayout]()
+
+    metaData(defaultURI) = Map[String, Map[String, String]]()
+    metaData(fooURI) = Map[String, Map[String, String]]()
+    metaData(barURI) = Map[String, Map[String, String]]()
+  }
+
+  override def getOrCreateSchemaId(uri: KijiURI, schema: Schema): Long = {
+    if (!idsForSchemas.contains(schema)) {
+      val id = nextSchemaId
+      nextSchemaId += 1
+      idsForSchemas(schema) = id
+      schemasForIds(id) = schema
+    }
+
+    return idsForSchemas(schema)
+  }
+
+  override def getSchemaId(uri: KijiURI, schema: Schema): Option[Long] = {
+    return idsForSchemas.get(schema)
+  }
+
+  override def getSchemaForId(uri: KijiURI, schemaId: Long): Option[Schema] = {
+    return schemasForIds.get(schemaId)
+  }
+
+  override def getSystemVersion(uri: KijiURI): ProtocolVersion = {
+    // Just return the max data version supported by this version of Kiji.
+    return VersionInfo.getClientDataVersion()
+  }
+
+  override def setMeta(uri: KijiURI, table: String, key: String, value: String): Unit = {
+    if (!metaData.contains(uri)) {
+      metaData(uri) = Map[String, Map[String, String]]()
+    }
+
+    val instanceMap: Map[String, Map[String, String]] = metaData(uri)
+
+    if (!instanceMap.contains(table)) {
+      instanceMap(table) = Map[String, String]()
+    }
+
+    val tableMap = instanceMap(table)
+    tableMap(key) = value
+  }
+
+  override def getMeta(uri: KijiURI, table: String, key: String): Option[String] = {
+    try {
+      Some(metaData(uri)(table)(key))
+    } catch {
+      case nsee: NoSuchElementException => { return None }
+    }
+
   }
 
   override def getTableNamesDescriptions(uri: KijiURI): Array[(String, String)] = {

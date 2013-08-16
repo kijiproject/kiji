@@ -202,5 +202,15 @@ class TestMockKijiSystem extends SpecificationWithJUnit {
       (sys.getTableNamesDescriptions(defaultURI)
           mustEqual List(("t", "desc1")).toArray)
     }
+
+    "setMeta and getMeta should preserve values" in {
+      val sys = new MockKijiSystem
+      (sys.getMeta(defaultURI, "someTable", "myKey")) must beNone
+      sys.setMeta(defaultURI, "someTable", "myKey", "myVal")
+
+      val ret: Option[String] = sys.getMeta(defaultURI, "someTable", "myKey")
+      ret must beSome[String]
+      ret.get mustEqual "myVal"
+    }
   }
 }

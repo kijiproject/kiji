@@ -372,7 +372,7 @@ ALTER TABLE foo ADD COLUMN info:meep "string" WITH DESCRIPTION 'beep beep!';""")
       defaultLocGroup3.getFamilies().head.getColumns().foreach { col =>
         if (col.getName().toString().equals("meep")) {
           meepExists = true
-          col.getColumnSchema().getValue().toString() mustEqual "\"string\""
+          getSchemaTextForId(env3, col.getColumnSchema().getDefaultReader()) mustEqual "\"string\""
         }
       }
       meepExists mustEqual true
@@ -403,7 +403,8 @@ ALTER TABLE foo RENAME COLUMN info:email AS info:mail;""")
       defaultLocGroup3.getFamilies().head.getColumns().foreach { col =>
         if (col.getName().toString().equals("mail")) {
           mailExists = true
-          col.getColumnSchema().getValue().toString() mustEqual "\"string\""
+          col.getColumnSchema().getValue() must beNull
+          getSchemaTextForId(env3, col.getColumnSchema().getDefaultReader()) mustEqual "\"string\""
         } else if (col.getName().toString().equals("email")) {
           emailExists = true
         }
@@ -623,7 +624,7 @@ ALTER TABLE foo ADD MAP TYPE FAMILY ints "int" TO LOCALITY GROUP default;""")
       maybeMapFamily must beSome[FamilyDesc]
       val mapFamily = maybeMapFamily.get
       mapFamily.getName().toString mustEqual "ints"
-      mapFamily.getMapSchema().getValue().toString() mustEqual "\"int\""
+      getSchemaTextForId(env3, mapFamily.getMapSchema().getDefaultReader()) mustEqual "\"int\""
 
       // Set the new family's schema to "string".
       val parser3 = new DDLParser(env3)
@@ -642,7 +643,7 @@ ALTER TABLE foo SET SCHEMA = "string" FOR MAP TYPE FAMILY ints;""")
       val mapFamily2 = maybeMapFamily2.get
 
       mapFamily2.getName().toString mustEqual "ints"
-      mapFamily2.getMapSchema().getValue().toString() mustEqual "\"string\""
+      getSchemaTextForId(env4, mapFamily2.getMapSchema().getDefaultReader()) mustEqual "\"string\""
     }
 
     "alter a column schema" in {
@@ -664,7 +665,7 @@ ALTER TABLE foo SET SCHEMA = "int" FOR COLUMN info:email;""")
       locGroups2.head.getFamilies().head.getName().toString() mustEqual "info"
       locGroups2.head.getFamilies().head.getColumns().foreach { col =>
         if (col.getName().toString().equals("email")) {
-          col.getColumnSchema().getValue().toString() mustEqual "\"int\""
+          getSchemaTextForId(env3, col.getColumnSchema().getDefaultReader()) mustEqual "\"int\""
         }
       }
     }
@@ -701,12 +702,11 @@ ALTER TABLE foo SET SCHEMA = "int" FOR COLUMN info:email;""")
       maybeLayout2 must beNone
 
       // Recreate it using the auto-generated DDL.
-      val parser3 = new DDLParser(env4)
-      val res4 = parser3.parseAll(parser3.statement, generatedDdl)
-      res4.successful mustEqual true
-      val env5 = res4.get.exec()
+      val ddlInputSource = new StringInputSource(generatedDdl)
+      new InputProcessor().processUserInput(new StringBuilder(),
+          env4.withInputSource(ddlInputSource))
 
-      val maybeLayout3 = env5.kijiSystem.getTableLayout(
+      val maybeLayout3 = env4.kijiSystem.getTableLayout(
           defaultURI, "foo")
       maybeLayout3 must beSome[KijiTableLayout]
       val layout3 = maybeLayout3.get.getDesc
@@ -714,6 +714,15 @@ ALTER TABLE foo SET SCHEMA = "int" FOR COLUMN info:email;""")
       // Check that the table layout is exactly the same as the original layout.
       System.out.println("layout rkf: " + layout.getKeysFormat().toString())
       System.out.println("layout3 rkf: " + layout3.getKeysFormat().toString())
+
+      // The only place there will be differences, is in the layout id, which is governed
+      // internally. Just null these fields.
+      layout.setLayoutId(null)
+      layout.setReferenceLayout(null)
+
+      layout3.setLayoutId(null)
+      layout3.setReferenceLayout(null)
+
       layout mustEqual layout3
     }
 
@@ -946,6 +955,13 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage';""");
   }
 
   def getParser(): DDLParser = { new DDLParser(env) }
+
+  /**
+   * Given a schema id, turn it into its string representation.
+   */
+  def getSchemaTextForId(env: Environment, id: Long): String = {
+    return env.kijiSystem.getSchemaForId(env.instanceURI, id).get.toString
+  }
 
   /**
    * Create a table and return the Environment object where it exists.

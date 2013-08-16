@@ -35,8 +35,13 @@ final class LocalityGroupProp(val property: LocalityGroupPropName, val value: An
   /**
    * Apply this property info to the specified LocalityGroupDesc builder. Returns
    * the input LocalityGroupDesc builder, with updated fields.
+   *
+   * @param a builder for the locality group descriptor to modify.
+   * @param context about the table being modified.
+   * @return the updated locality group descriptor builder.
    */
-  def apply(group: LocalityGroupDesc.Builder): LocalityGroupDesc.Builder = {
+  def apply(group: LocalityGroupDesc.Builder, cellSchemaContext: CellSchemaContext):
+      LocalityGroupDesc.Builder = {
     property match {
       case LocalityGroupPropName.MaxVersions => { group.setMaxVersions(value.asInstanceOf[Int]) }
       case LocalityGroupPropName.InMemory => { group.setInMemory(value.asInstanceOf[Boolean]) }
@@ -46,10 +51,10 @@ final class LocalityGroupProp(val property: LocalityGroupPropName, val value: An
             value.asInstanceOf[CompressionTypeToken]))
       }
       case LocalityGroupPropName.MapFamily => {
-        value.asInstanceOf[MapFamilyInfo].addToLocalityGroup(group)
+        value.asInstanceOf[MapFamilyInfo].addToLocalityGroup(group, cellSchemaContext)
       }
       case LocalityGroupPropName.GroupFamily => {
-        value.asInstanceOf[GroupFamilyInfo].addToLocalityGroup(group)
+        value.asInstanceOf[GroupFamilyInfo].addToLocalityGroup(group, cellSchemaContext)
       }
       case LocalityGroupPropName.BlockSize => {
         value.asInstanceOf[Option[Int]] match {

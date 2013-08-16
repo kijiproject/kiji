@@ -34,9 +34,13 @@ final class LocalityGroupClause(val name: String,
    * Update a LocalityGroupDesc builder with the attributes associated with this locality
    * group clause.
    *
+   * @param a builder for the locality group descriptor to modify.
+   * @param context about the table being modified.
    * @return The same LocalityGroupDesc builder, modified with updated fields.
    */
-  def updateLocalityGroup(locGroup: LocalityGroupDesc.Builder): LocalityGroupDesc.Builder = {
+  def updateLocalityGroup(locGroup: LocalityGroupDesc.Builder,
+      cellSchemaContext: CellSchemaContext): LocalityGroupDesc.Builder = {
+
     Option(locGroup.getName()) match {
       case Some(existingName) => {
         if (!existingName.equals(name)) {
@@ -53,7 +57,7 @@ final class LocalityGroupClause(val name: String,
       case None => { } // Dono't overwrite the existing description.
     }
     props.foreach { prop =>
-      prop.apply(locGroup)
+      prop.apply(locGroup, cellSchemaContext)
     }
 
     return locGroup

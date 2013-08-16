@@ -41,9 +41,10 @@ final class AlterLocalityGroupPropertyCommand (
   }
 
   override def updateLayout(layout: TableLayoutDesc.Builder): Unit = {
+    val cellSchemaContext: CellSchemaContext = CellSchemaContext.create(env, layout)
     val newGroups = layout.getLocalityGroups().map { localityGroup =>
       if (localityGroup.getName().equals(localityGroupName)) {
-        property.apply(LocalityGroupDesc.newBuilder(localityGroup)).build()
+        property.apply(LocalityGroupDesc.newBuilder(localityGroup), cellSchemaContext).build()
       } else {
         localityGroup
       }

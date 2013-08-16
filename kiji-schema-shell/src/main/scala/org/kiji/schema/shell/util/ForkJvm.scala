@@ -20,6 +20,7 @@
 package org.kiji.schema.shell.util
 
 import java.io.File
+import java.io.PrintStream
 
 import scala.collection.mutable.Buffer
 import scala.sys.process._ // Include the process builder/execution DSL.
@@ -50,8 +51,9 @@ trait ForkJvm {
    *       the `java.home` system property.</li>
    *   <li>The current operating system environment variables for this process will be sent
    *       to the subprocess.</li>
-   *   <li>stdout and stderr will be forwarded from the current process' handles. stdin is
-   *       suppressed in the subprocess.</li>
+   *   <li>stdout and stderr will be forwarded from the current process' handles, although you
+   *       may override this and capture stdout if you specify the stdout argument to this method.
+   *       stdin is suppressed in the subprocess.</li>
    *   <li>The subprocess' main method will be specified by the mainMethod parameter.</li>
    *   <li>The classpath will include all libJars from the specified environment, followed
    *       by the entries in this process' java.class.path system property.</li>
@@ -68,10 +70,11 @@ trait ForkJvm {
    *     The `-classpath` argument will be provided by this method, but you may
    *     include other arguments here if you wish.
    * @param userArgs the list of argv elements to forward to the main class.
+   * @param stdout the PrintStream to use for stdout (e.g., System.out).
    * @return the exit status from the child process. Per POSIX, 0 is success, nonzero is failure.
    */
   def forkJvm(env: Environment, mainClass: String, jvmArgs: List[String],
-      userArgs: List[String]): Int = {
+      userArgs: List[String], stdout: PrintStream = System.out): Int = {
 
     val argv: Buffer[String] = Buffer() // Construct the argv to execute in this buffer.
 
@@ -107,10 +110,16 @@ trait ForkJvm {
     // $JAVA_HOME/bin/java -Xbootclasspath/a:...scala-rt.jar -classpath foo.jar:bar.jar \
     //     jvmarg1 jvmarg2 jvmarg3... MyMain arg1 arg2 arg3...
 
+    // Redirect the subprocess' stdout and stderr to our own, unless the caller of this method
+    // specified a non-default value for the "stdout" argument.
+    val outputLogger: ProcessLogger = ProcessLogger(
+        line => stdout.println(line),
+        line => System.err.println(line))
+
     // The ProcessBuilder object in the scala.sys.process package lets you run
     // someSeq! to block and return the exit code. The current OS environment variables
-    // are exported to the subprocess, and the I/O streams are redirected to the subprocess.
-    return argv.!
+    // are exported to the subprocess. and the I/O streams are redirected through the outputLogger.
+    return argv ! outputLogger
   }
 
   /**

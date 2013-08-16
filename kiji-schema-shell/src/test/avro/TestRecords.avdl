@@ -1,5 +1,5 @@
 /**
- * (c) Copyright 2013 WibiData, Inc.
+ * (c) Copyright 2012 WibiData, Inc.
  *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
@@ -17,21 +17,11 @@
  * limitations under the License.
  */
 
-package org.kiji.schema.shell.ddl
-
-import scala.collection.JavaConversions._
-import org.specs2.mutable._
-
-class TestCounterSchemaSpec extends CommandTestCase {
-  "CounterSchemaSpec" should {
-    "have a null value" in {
-      val counterSpec = new CounterSchemaSpec
-      // For now, ok to provide null tableContext to this method; current implementation
-      // of CounterSchemaSpec.toNewCellSchema() doesn't actually use it.
-      // This may change in the future.
-      val cellSchema = counterSpec.toNewCellSchema(null)
-
-      cellSchema.getValue() must beNull
-    }
+// Dummy records used in unit tests.
+@namespace("org.kiji.schema.shell.avro")
+protocol KijiShellTestRecords {
+  record XYRecord {
+    int x;
+    string y;
   }
 }

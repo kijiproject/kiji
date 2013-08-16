@@ -39,7 +39,8 @@ final class GroupFamilyInfo(val name: String, val desc: Option[String],
    * Assumes that this family name does not exist elsewhere in the layout
    * (verified in AlterTableAddGroupFamilyCommand.validateArguments()).
    */
-  def addToLocalityGroup(locGroup: LocalityGroupDesc.Builder): Unit = {
+  def addToLocalityGroup(locGroup: LocalityGroupDesc.Builder,
+      cellSchemaContext: CellSchemaContext): Unit = {
     val groupFamily = FamilyDesc.newBuilder()
     groupFamily.setName(name)
     groupFamily.setEnabled(true)
@@ -48,7 +49,7 @@ final class GroupFamilyInfo(val name: String, val desc: Option[String],
       case None => { groupFamily.setDescription("") }
     }
 
-    var avroCols = cols.map(c => c.toAvroColumnDesc())
+    var avroCols = cols.map(c => c.toAvroColumnDesc(cellSchemaContext))
     groupFamily.setColumns(avroCols)
     groupFamily.setAliases(new ArrayList[String])
     locGroup.getFamilies().add(groupFamily.build())

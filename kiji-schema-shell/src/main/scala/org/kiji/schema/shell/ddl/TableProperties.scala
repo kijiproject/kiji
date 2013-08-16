@@ -24,20 +24,37 @@ import scala.collection.mutable.Map
 import org.kiji.annotations.ApiAudience
 import org.kiji.schema.avro.TableLayoutDesc
 import org.kiji.schema.shell.DDLException
+import org.kiji.schema.shell.Environment
+import org.kiji.schema.shell.TableValidationPolicy
 
 /** Defines how to set various named properties on tables. */
 @ApiAudience.Private
 trait TableProperties {
 
   /** Key for the max file size of the table. Uses Option[Long] value. */
-  val MaxFileSize = "MaxFileSize"
+  final val MaxFileSize = "MaxFileSize"
 
   /** Key for the memstore flush size of the table. Uses Option[Long] value. */
-  val MemStoreFlushSize = "MemStoreFlushSize"
+  final val MemStoreFlushSize = "MemStoreFlushSize"
 
   /** Key specifying the number of regions to create the table with. Uses 'Int' value. */
-  val InitialRegionCount = "InitialRegionCount"
+  final val InitialRegionCount = "InitialRegionCount"
 
+  /** Key specifying the preferred validation setting for new columns in this table. */
+  final val TableValidationPref = "TableValidationPref"
+
+  /** Metatable key specifying the column validation policy to use. */
+  final val TableValidationMetaKey = "kiji.shell.column.validation"
+
+  /**
+   * The validation policy used if none is specified by the user when creating the table.
+   * This string value matches one of the case statements in
+   * CellSchemaContext.getValidationPolicy().
+   */
+  final val DefaultValidationPolicy: String = "DEVELOPER"
+
+  /** Metatable key specifying the initial region count for this table. */
+  final val RegionCountMetaKey = "kiji.shell.initial.region.count"
 
   /**
    * Returns the number of regions to create a table with, based on the table property
@@ -74,6 +91,38 @@ trait TableProperties {
           }
         }
         case InitialRegionCount => { /* Do nothing. Handled by the CREATE TABLE cmd itself. */ }
+        case TableValidationPref => { /* Do nothing. Applied in applyMetaUpdates(). */ }
+        case _ => throw new DDLException("Unknown table property: " + k)
+      }
+    }
+  }
+
+  /**
+   * Apply table properties that are handled through key-value pairs in the metatable,
+   * rather than a TableLayoutDesc.
+   *
+   * @param the name of the table being created/updated.
+   * @param tableProperties the name-to-value property mappings to apply.
+   * @param the environment to update the metatable within.
+   * @throws DDLException if there's an error like an invalid property name.
+   */
+  def applyMetaUpdates(tableName: String, tableProperties: Map[String, Object],
+      env: Environment): Unit = {
+
+    tableProperties.foreach { case (k, v) =>
+      k match {
+        case MaxFileSize => { /* Do nothing. */ }
+        case MemStoreFlushSize => { /* Do nothing. */ }
+        case InitialRegionCount => {
+          // Save this value for posterity (For recreating the table in DUMP DDL statements)
+          env.kijiSystem.setMeta(env.instanceURI, tableName, RegionCountMetaKey,
+              v.asInstanceOf[Int].toString())
+        }
+        case TableValidationPref => {
+          // Save this value for use in subsequent column creation statements.
+          env.kijiSystem.setMeta(env.instanceURI, tableName, RegionCountMetaKey,
+              v.asInstanceOf[TableValidationPolicy].name)
+        }
         case _ => throw new DDLException("Unknown table property: " + k)
       }
     }
