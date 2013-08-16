@@ -291,7 +291,11 @@ public class TestKVStores extends KijiClientTest {
     SimpleKVProducer.mInputPath = new Path("file:" + new File(getLocalTempDir(), KV_FILENAME));
     // Install a freshness policy.
     KijiFreshnessManager manager = KijiFreshnessManager.create(getKiji());
-    manager.storePolicy("user", "info:name", SimpleKVProducer.class, new AlwaysFreshen());
+    try {
+      manager.storePolicy("user", "info:name", SimpleKVProducer.class, new AlwaysFreshen());
+    } finally {
+      manager.close();
+    }
     KijiTable userTable = null;
     FreshKijiTableReader reader = null;
     try {
@@ -320,7 +324,11 @@ public class TestKVStores extends KijiClientTest {
         new ShadowingFreshening("file:" + new File(getLocalTempDir(), KV_FILENAME));
     // Install a freshness policy.
     KijiFreshnessManager manager = KijiFreshnessManager.create(getKiji());
-    manager.storePolicy("user", "info:name", UnconfiguredProducer.class, policy);
+    try {
+      manager.storePolicy("user", "info:name", UnconfiguredProducer.class, policy);
+    } finally {
+      manager.close();
+    }
     KijiTable userTable = null;
     FreshKijiTableReader reader = null;
     try {
@@ -348,7 +356,11 @@ public class TestKVStores extends KijiClientTest {
         new KVStoreInIsFreshPolicy("file:" + new File(getLocalTempDir(), KV_FILENAME));
     // Install a freshness policy.
     KijiFreshnessManager manager = KijiFreshnessManager.create(getKiji());
-    manager.storePolicy("user", "info:name", UnconfiguredProducer.class, policy);
+    try {
+      manager.storePolicy("user", "info:name", UnconfiguredProducer.class, policy);
+    } finally {
+      manager.close();
+    }
     KijiTable userTable = null;
     FreshKijiTableReader freshReader = null;
     try {

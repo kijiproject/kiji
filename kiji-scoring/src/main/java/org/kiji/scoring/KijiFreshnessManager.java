@@ -114,6 +114,8 @@ public final class KijiFreshnessManager implements Closeable {
         new SpecificDatumReader<KijiFreshnessPolicyRecord>(KijiFreshnessPolicyRecord.SCHEMA$);
     mEncoderFactory = EncoderFactory.get();
     mDecoderFactory = DecoderFactory.get();
+    // Retain the Kiji instance only if the rest of the constructor has succeeded.
+    mKiji.retain();
   }
 
   /**
@@ -658,7 +660,7 @@ public final class KijiFreshnessManager implements Closeable {
    * @throws IOException if an error occurs.
    */
   public void close() throws IOException {
-    mMetaTable.close();
+    mKiji.release();
   }
 
   /**

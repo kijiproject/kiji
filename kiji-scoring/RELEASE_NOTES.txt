@@ -1,5 +1,9 @@
 
                               Kiji Scoring Release Notes
+Version 0.5.0
+    * SCORE-77, SCORE-74. KijiScoring now properly releases all Kiji resources.
+        FreshKijiTableReaders and KijiFreshnessManagers must be closed to release resources.
+    * SCORE-76. FreshTool's --help option no longer requires a meaningless --do flag.
 
 Version 0.4.0
   * SCORE-61. Resolve race conditions in InternalFreshKijiTableReader

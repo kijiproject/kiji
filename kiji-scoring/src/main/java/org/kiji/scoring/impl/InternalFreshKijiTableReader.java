@@ -275,7 +275,11 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     mExecutor = FreshenerThreadPool.getInstance().getExecutorService();
     mTimeout = timeout;
     final KijiFreshnessManager manager = KijiFreshnessManager.create(table.getKiji());
-    mPolicyRecords = manager.retrievePolicies(mTable.getName());
+    try {
+      mPolicyRecords = manager.retrievePolicies(mTable.getName());
+    } finally {
+      manager.close();
+    }
     mCapsuleCache = new HashMap<KijiColumnName, FreshnessCapsule>();
     if (rereadTime > 0) {
       final Timer rereadTimer = new Timer();
@@ -298,8 +302,13 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   /** {@inheritDoc} */
   @Override
   public void rereadPolicies(final boolean withPreload) throws IOException {
-    final Map<KijiColumnName, KijiFreshnessPolicyRecord> newRecords =
-        KijiFreshnessManager.create(mTable.getKiji()).retrievePolicies(mTable.getName());
+    final KijiFreshnessManager manager = KijiFreshnessManager.create(mTable.getKiji());
+    final Map<KijiColumnName, KijiFreshnessPolicyRecord> newRecords;
+    try {
+       newRecords = manager.retrievePolicies(mTable.getName());
+    } finally {
+      manager.close();
+    }
 
     mRecordWriteLock.lock();
     try {
