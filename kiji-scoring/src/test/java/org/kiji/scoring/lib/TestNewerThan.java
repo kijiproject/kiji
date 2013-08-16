@@ -91,6 +91,7 @@ public final class TestNewerThan extends KijiClientTest {
     mReader.close();
     mFreshReader.close();
     mTable.release();
+    mKiji.release();
   }
 
   @Test

@@ -55,7 +55,6 @@ import org.kiji.schema.KijiTableWriter;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.util.InstanceBuilder;
-import org.kiji.schema.util.ResourceUtils;
 import org.kiji.scoring.FreshKijiTableReader;
 import org.kiji.scoring.FreshKijiTableReaderBuilder;
 import org.kiji.scoring.FreshKijiTableReaderBuilder.FreshReaderType;
@@ -296,10 +295,10 @@ public class TestInternalFreshKijiTableReader {
 
   @After
   public void cleanupTestInternalFreshKijiTableReader() throws Exception {
-    ResourceUtils.closeOrLog(mFreshReader);
-    ResourceUtils.closeOrLog(mReader);
-    ResourceUtils.releaseOrLog(mTable);
-    ResourceUtils.releaseOrLog(mKiji);
+    mFreshReader.close();
+    mReader.close();
+    mTable.release();
+    mKiji.release();
   }
 
   @Test
@@ -337,20 +336,23 @@ public class TestInternalFreshKijiTableReader {
         .withTable(mTable)
         .withTimeout(1000)
         .build();
-
-    assertEquals(2, freshReader.getCapsules(completeRequest).size());
-    assertEquals(AlwaysFreshen.class,
-        freshReader.getCapsules(completeRequest).get(new KijiColumnName("family", "qual0"))
-        .getPolicy().getClass());
-    assertEquals(TestProducer.class,
-        freshReader.getCapsules(completeRequest).get(new KijiColumnName("family", "qual0"))
-            .getProducer().getClass());
-    assertEquals(NeverFreshen.class,
-        freshReader.getCapsules(completeRequest).get(new KijiColumnName("family", "qual2"))
-        .getPolicy().getClass());
-    assertEquals(TestProducer.class,
-        freshReader.getCapsules(completeRequest).get(new KijiColumnName("family", "qual2"))
-            .getProducer().getClass());
+    try {
+      assertEquals(2, freshReader.getCapsules(completeRequest).size());
+      assertEquals(AlwaysFreshen.class,
+          freshReader.getCapsules(completeRequest).get(new KijiColumnName("family", "qual0"))
+              .getPolicy().getClass());
+      assertEquals(TestProducer.class,
+          freshReader.getCapsules(completeRequest).get(new KijiColumnName("family", "qual0"))
+              .getProducer().getClass());
+      assertEquals(NeverFreshen.class,
+          freshReader.getCapsules(completeRequest).get(new KijiColumnName("family", "qual2"))
+              .getPolicy().getClass());
+      assertEquals(TestProducer.class,
+          freshReader.getCapsules(completeRequest).get(new KijiColumnName("family", "qual2"))
+              .getProducer().getClass());
+    } finally {
+      freshReader.close();
+    }
   }
 
   @Test
@@ -369,10 +371,13 @@ public class TestInternalFreshKijiTableReader {
         .withTable(mTable)
         .withTimeout(100)
         .build();
-
-    assertEquals(1, freshReader.getCapsules(request).size());
-    assertEquals(NeverFreshen.class,
-        freshReader.getCapsules(request).get(new KijiColumnName("map")).getPolicy().getClass());
+    try {
+      assertEquals(1, freshReader.getCapsules(request).size());
+      assertEquals(NeverFreshen.class,
+          freshReader.getCapsules(request).get(new KijiColumnName("map")).getPolicy().getClass());
+    } finally {
+      freshReader.close();
+    }
   }
 
   @Test
@@ -410,26 +415,29 @@ public class TestInternalFreshKijiTableReader {
             .withTable(mTable)
             .withTimeout(1000)
             .build();
+    try {
+      final Future<KijiRowData> clientData = freshReader.getClientData(eid, request);
 
-    final Future<KijiRowData> clientData = freshReader.getClientData(eid, request);
+      // Get an empty list of futures.
+      final List<Future<Boolean>> actual =
+          freshReader.getFutures(capsules, clientData, eid, request, "0");
+      assertEquals(0, actual.size());
 
-    // Get an empty list of futures.
-    final List<Future<Boolean>> actual =
-        freshReader.getFutures(capsules, clientData, eid, request, "0");
-    assertEquals(0, actual.size());
+      capsules.put(new KijiColumnName("family", "qual0"),
+          freshReader.makeCapsule(new KijiColumnName("family", "qual0")));
+      capsules.put(new KijiColumnName("family", "qual2"),
+          freshReader.makeCapsule(new KijiColumnName("family", "qual2")));
 
-    capsules.put(new KijiColumnName("family", "qual0"),
-        freshReader.makeCapsule(new KijiColumnName("family", "qual0")));
-    capsules.put(new KijiColumnName("family", "qual2"),
-        freshReader.makeCapsule(new KijiColumnName("family", "qual2")));
-
-    // Get a list of two futures, both are never freshen, so should return false to indicate no
-    // reread.
-    final List<Future<Boolean>> actual2 =
-        freshReader.getFutures(capsules, clientData, eid, request, "1");
-    assertEquals(2, actual2.size());
-    for (Future<Boolean> future : actual2) {
-      assertEquals(false, future.get());
+      // Get a list of two futures, both are never freshen, so should return false to indicate no
+      // reread.
+      final List<Future<Boolean>> actual2 =
+          freshReader.getFutures(capsules, clientData, eid, request, "1");
+      assertEquals(2, actual2.size());
+      for (Future<Boolean> future : actual2) {
+        assertEquals(false, future.get());
+      }
+    } finally {
+      freshReader.close();
     }
   }
 
@@ -462,14 +470,17 @@ public class TestInternalFreshKijiTableReader {
         .withTable(mTable)
         .withTimeout(10000)
         .build();
-
-    // freshReader should return the same as regular reader because the data is fresh.
-    assertEquals(
-        mReader.get(eid, request).getMostRecentValue("family", "qual2"),
-        freshReader.get(eid, request).getMostRecentValue("family", "qual2"));
-    // Value should be unchanged.
-    assertEquals("foo@val.com",
-        mReader.get(eid, request).getMostRecentValue("family", "qual2").toString());
+    try {
+      // freshReader should return the same as regular reader because the data is fresh.
+      assertEquals(
+          mReader.get(eid, request).getMostRecentValue("family", "qual2"),
+          freshReader.get(eid, request).getMostRecentValue("family", "qual2"));
+      // Value should be unchanged.
+      assertEquals("foo@val.com",
+          mReader.get(eid, request).getMostRecentValue("family", "qual2").toString());
+    } finally {
+      freshReader.close();
+    }
   }
 
   @Test
@@ -489,14 +500,17 @@ public class TestInternalFreshKijiTableReader {
         .withTable(mTable)
         .withTimeout(10000)
         .build();
-
-    // freshReader should return different from regular reader because the data is stale.
-    assertFalse(
-        mReader.get(eid, request).getMostRecentValue("family", "qual0").equals(
-        freshReader.get(eid, request).getMostRecentValue("family", "qual0")));
-    // The new value should have been written.
-    assertEquals(
-        "new-val", mReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
+    try {
+      // freshReader should return different from regular reader because the data is stale.
+      assertFalse(
+          mReader.get(eid, request).getMostRecentValue("family", "qual0").equals(
+              freshReader.get(eid, request).getMostRecentValue("family", "qual0")));
+      // The new value should have been written.
+      assertEquals(
+          "new-val", mReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
+    } finally {
+      freshReader.close();
+    }
   }
 
   @Test
@@ -520,32 +534,35 @@ public class TestInternalFreshKijiTableReader {
         .withTable(mTable)
         .withTimeout(10000)
         .build();
+    try {
+      // Get the old data for comparison
+      final List<KijiRowData> oldData =
+          mReader.bulkGet(Lists.newArrayList(eidFoo, eidBar), completeRequest);
 
-    // Get the old data for comparison
-    final List<KijiRowData> oldData =
-        mReader.bulkGet(Lists.newArrayList(eidFoo, eidBar), completeRequest);
+      // Run a request which should return fresh.  nothing should be written.
+      final List<KijiRowData> newData =
+          freshReader.bulkGet(Lists.newArrayList(eidFoo, eidBar), freshRequest);
+      assertEquals(
+          oldData.get(0).getMostRecentValue("family", "qual2"),
+          newData.get(0).getMostRecentValue("family", "qual2"));
+      assertEquals(
+          oldData.get(1).getMostRecentValue("family", "qual2"),
+          newData.get(1).getMostRecentValue("family", "qual2"));
 
-    // Run a request which should return fresh.  nothing should be written.
-    final List<KijiRowData> newData =
-        freshReader.bulkGet(Lists.newArrayList(eidFoo, eidBar), freshRequest);
-    assertEquals(
-        oldData.get(0).getMostRecentValue("family", "qual2"),
-        newData.get(0).getMostRecentValue("family", "qual2"));
-    assertEquals(
-        oldData.get(1).getMostRecentValue("family", "qual2"),
-        newData.get(1).getMostRecentValue("family", "qual2"));
-
-    // Run a request which should return stale.  data should be written.
-    final List<KijiRowData> newData2 =
-        freshReader.bulkGet(Lists.newArrayList(eidFoo, eidBar), staleRequest);
-    assertFalse(
-        oldData.get(0).getMostRecentValue("family", "qual0").equals(
-        newData2.get(0).getMostRecentValue("family", "qual0")));
-    assertEquals("new-val", newData2.get(0).getMostRecentValue("family", "qual0").toString());
-    assertFalse(
-        oldData.get(1).getMostRecentValue("family", "qual0").equals(
-        newData2.get(1).getMostRecentValue("family", "qual0")));
-    assertEquals("new-val", newData2.get(1).getMostRecentValue("family", "qual0").toString());
+      // Run a request which should return stale.  data should be written.
+      final List<KijiRowData> newData2 =
+          freshReader.bulkGet(Lists.newArrayList(eidFoo, eidBar), staleRequest);
+      assertFalse(
+          oldData.get(0).getMostRecentValue("family", "qual0").equals(
+              newData2.get(0).getMostRecentValue("family", "qual0")));
+      assertEquals("new-val", newData2.get(0).getMostRecentValue("family", "qual0").toString());
+      assertFalse(
+          oldData.get(1).getMostRecentValue("family", "qual0").equals(
+              newData2.get(1).getMostRecentValue("family", "qual0")));
+      assertEquals("new-val", newData2.get(1).getMostRecentValue("family", "qual0").toString());
+    } finally {
+      freshReader.close();
+    }
   }
 
   @Test
@@ -557,6 +574,7 @@ public class TestInternalFreshKijiTableReader {
     final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
     manager.storePolicy(TABLE_NAME, "family:qual0", TestTimeoutProducer.class, new AlwaysFreshen());
 
+    mFreshReader.close();
     mFreshReader = (InternalFreshKijiTableReader) FreshKijiTableReaderBuilder.create()
         .withReaderType(FreshReaderType.LOCAL)
         .withTable(mTable)
@@ -589,9 +607,12 @@ public class TestInternalFreshKijiTableReader {
         .withTable(mTable)
         .withTimeout(1000)
         .build();
-
-    assertEquals(
-        2, freshReader.get(eid, request).getMostRecentValue("map", "qualifier"));
+    try {
+      assertEquals(
+          2, freshReader.get(eid, request).getMostRecentValue("map", "qualifier"));
+    } finally {
+      freshReader.close();
+    }
   }
 
   @Test
@@ -607,6 +628,7 @@ public class TestInternalFreshKijiTableReader {
     final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
     manager.storePolicy(TABLE_NAME, "map", TestFamilyProducer.class, new AlwaysFreshen());
 
+
     // Open a new reader to pull in the new freshness policy.
     final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
         .withReaderType(FreshReaderType.LOCAL)
@@ -614,17 +636,21 @@ public class TestInternalFreshKijiTableReader {
         .withTimeout(1000)
         .build();
 
-    // Check that each request freshens.
-    // Get the firstRequest which will update the visits column.
-    freshReader.get(eid, firstRequest);
-    // Get the firstRequest and expect the visits column has been incremented twice.
-    assertEquals(
-        3, freshReader.get(eid, secondRequest).getMostRecentValue("map", "qualifier"));
+    try {
+      // Check that each request freshens.
+      // Get the firstRequest which will update the visits column.
+      freshReader.get(eid, firstRequest);
+      // Get the firstRequest and expect the visits column has been incremented twice.
+      assertEquals(
+          3, freshReader.get(eid, secondRequest).getMostRecentValue("map", "qualifier"));
 
-    // Expect that the producer will only run one additional time despite two columns in the same
-    // request.
-    assertEquals(
-        4, freshReader.get(eid, completeRequest).getMostRecentValue("map", "qualifier"));
+      // Expect that the producer will only run one additional time despite two columns in the same
+      // request.
+      assertEquals(
+          4, freshReader.get(eid, completeRequest).getMostRecentValue("map", "qualifier"));
+    } finally {
+      freshReader.close();
+    }
   }
 
   @Test
@@ -638,21 +664,24 @@ public class TestInternalFreshKijiTableReader {
         .withTable(mTable)
         .withTimeout(100)
         .build();
+    try {
+      final KijiDataRequestBuilder builder = KijiDataRequest.builder();
+      builder.newColumnsDef().add("family", "qual0").add("family", "qual1");
+      final KijiDataRequest request = builder.build();
 
-    final KijiDataRequestBuilder builder = KijiDataRequest.builder();
-    builder.newColumnsDef().add("family", "qual0").add("family", "qual1");
-    final KijiDataRequest request = builder.build();
-
-    final Map<KijiColumnName, FreshnessCapsule> capsules =
-        freshReader.getCapsules(request);
-    assertTrue(capsules.containsKey(new KijiColumnName("family", "qual0")));
-    assertTrue(capsules.containsKey(new KijiColumnName("family", "qual1")));
-    manager.removePolicy(TABLE_NAME, "family:qual0");
-    freshReader.rereadPolicies(false);
-    final Map<KijiColumnName, FreshnessCapsule> capsules2 =
-        freshReader.getCapsules(request);
-    assertFalse(capsules2.containsKey(new KijiColumnName("family", "qual0")));
-    assertTrue(capsules2.containsKey(new KijiColumnName("family", "qual1")));
+      final Map<KijiColumnName, FreshnessCapsule> capsules =
+          freshReader.getCapsules(request);
+      assertTrue(capsules.containsKey(new KijiColumnName("family", "qual0")));
+      assertTrue(capsules.containsKey(new KijiColumnName("family", "qual1")));
+      manager.removePolicy(TABLE_NAME, "family:qual0");
+      freshReader.rereadPolicies(false);
+      final Map<KijiColumnName, FreshnessCapsule> capsules2 =
+          freshReader.getCapsules(request);
+      assertFalse(capsules2.containsKey(new KijiColumnName("family", "qual0")));
+      assertTrue(capsules2.containsKey(new KijiColumnName("family", "qual1")));
+    } finally {
+      freshReader.close();
+    }
   }
 
   @Test
@@ -670,20 +699,23 @@ public class TestInternalFreshKijiTableReader {
         .withTimeout(1000)
         .withAutomaticReread(1000)
         .build();
+    try {
+      // Register a new freshness policy
+      manager.storePolicy(
+          TABLE_NAME, "family:qual0", TestProducerTwo.class, new NewerThan(Long.MAX_VALUE));
 
-    // Register a new freshness policy
-    manager.storePolicy(
-        TABLE_NAME, "family:qual0", TestProducerTwo.class, new NewerThan(Long.MAX_VALUE));
+      // Assert that data is written according to the old freshness policy.
+      assertEquals("new-val",
+          freshReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
 
-    // Assert that data is written according to the old freshness policy.
-    assertEquals("new-val",
-        freshReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
-
-    // Wait until an automatic reload has happened then assert that data is written according to the
-    // new freshness policy.
-    Thread.sleep(1500);
-    assertEquals("two-val",
-        freshReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
+      // Wait until an automatic reload has happened then assert that data is written according to
+      // the new freshness policy.
+      Thread.sleep(1500);
+      assertEquals("two-val",
+          freshReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
+    } finally {
+      freshReader.close();
+    }
   }
 
   @Test
@@ -702,18 +734,21 @@ public class TestInternalFreshKijiTableReader {
 
     final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
         .withTable(mTable).withTimeout(100).build();
-
-    freshReader.get(eid, request0);
-    final long beforeTime = System.currentTimeMillis();
-    freshReader.get(eid, request1);
-    final long afterTime = System.currentTimeMillis();
-    LOG.info("get request sent at: {} result received at: {} total delay: {}",
-        beforeTime, afterTime, afterTime - beforeTime);
-    // Assert that we return quickly.
-    assertTrue(afterTime - beforeTime < 150);
-    // Assert that the producer has not finished.
-    assertEquals("foo-val",
-        mReader.get(eid, request0).getMostRecentValue("family", "qual0").toString());
+    try {
+      freshReader.get(eid, request0);
+      final long beforeTime = System.currentTimeMillis();
+      freshReader.get(eid, request1);
+      final long afterTime = System.currentTimeMillis();
+      LOG.info("get request sent at: {} result received at: {} total delay: {}",
+          beforeTime, afterTime, afterTime - beforeTime);
+      // Assert that we return quickly.
+      assertTrue(afterTime - beforeTime < 150);
+      // Assert that the producer has not finished.
+      assertEquals("foo-val",
+          mReader.get(eid, request0).getMostRecentValue("family", "qual0").toString());
+    } finally {
+      freshReader.close();
+    }
   }
 
   @Test
@@ -727,22 +762,25 @@ public class TestInternalFreshKijiTableReader {
 
     final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
         .withTable(mTable).withTimeout(100).build();
+    try {
+      // Read should return stale data.
+      assertEquals("foo-val",
+          freshReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
 
-    // Read should return stale data.
-    assertEquals("foo-val",
-        freshReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
+      // Wait for the freshener to finish, assert that it wrote, then reset.
+      Thread.sleep(1000);
+      assertEquals("new-val",
+          mReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
+      final KijiTableWriter writer = mTable.openTableWriter();
+      writer.put(eid, "family", "qual0", "foo-val");
+      writer.close();
 
-    // Wait for the freshener to finish, assert that it wrote, then reset.
-    Thread.sleep(1000);
-    assertEquals("new-val",
-        mReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
-    final KijiTableWriter writer = mTable.openTableWriter();
-    writer.put(eid, "family", "qual0", "foo-val");
-    writer.close();
-
-    // Read should return stale data given a longer timeout.
-    assertEquals("new-val",
-        freshReader.get(eid, request, 1200).getMostRecentValue("family", "qual0").toString());
+      // Read should return stale data given a longer timeout.
+      assertEquals("new-val",
+          freshReader.get(eid, request, 1200).getMostRecentValue("family", "qual0").toString());
+    } finally {
+      freshReader.close();
+    }
   }
 
   @Test
@@ -755,10 +793,13 @@ public class TestInternalFreshKijiTableReader {
 
     final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
         .withTable(mTable).build();
-
-    assertEquals("unloaded", mPreloadState);
-    freshReader.preload(request);
-    assertEquals("loaded", mPreloadState);
+    try {
+      assertEquals("unloaded", mPreloadState);
+      freshReader.preload(request);
+      assertEquals("loaded", mPreloadState);
+    } finally {
+      freshReader.close();
+    }
   }
 
   @Test
@@ -774,26 +815,31 @@ public class TestInternalFreshKijiTableReader {
     final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
         .withTable(mTable).withTimeout(100).build();
 
-    // Read should return stale data.
-    assertEquals("foo-val",
-        freshReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
+    try {
+      // Read should return stale data.
+      assertEquals("foo-val",
+          freshReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
 
-    Thread.sleep(100);
+      Thread.sleep(100);
 
-    manager.removePolicy(TABLE_NAME, "family:qual0");
-    freshReader.rereadPolicies(false);
+      manager.removePolicy(TABLE_NAME, "family:qual0");
+      freshReader.rereadPolicies(false);
 
-    final long startTime = System.currentTimeMillis();
-    assertEquals("foo-val",
-        freshReader.get(eid, request1).getMostRecentValue("family", "qual1").toString());
-    // A read with the old policy should time out, with the new policy it should return immediately.
-    assertTrue(System.currentTimeMillis() - startTime < 50L);
+      final long startTime = System.currentTimeMillis();
+      assertEquals("foo-val",
+          freshReader.get(eid, request1).getMostRecentValue("family", "qual1").toString());
+      // A read with the old policy should time out
+      // With the new policy it should return immediately.
+      assertTrue(System.currentTimeMillis() - startTime < 50L);
 
-    Thread.sleep(1000);
+      Thread.sleep(1000);
 
-    // The old producer should still finish.
-    assertEquals("new-val",
-        mReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
+      // The old producer should still finish.
+      assertEquals("new-val",
+          mReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
+    } finally {
+      freshReader.close();
+    }
   }
 
   @Test
@@ -808,16 +854,19 @@ public class TestInternalFreshKijiTableReader {
 
     final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
         .withTable(mTable).withTimeout(1000).build();
+    try {
+      // Get map:qualifier which populates the cache and ensure the producer ran.
+      assertEquals(2, freshReader.get(eid, request).getMostRecentValue("map", "qualifier"));
 
-    // Get map:qualifier which populates the cache and ensure the producer ran.
-    assertEquals(2, freshReader.get(eid, request).getMostRecentValue("map", "qualifier"));
+      manager.removePolicy(TABLE_NAME, "map:qualifier");
+      manager.storePolicy(TABLE_NAME, "map", TestFamilyProducer.class, new AlwaysFreshen());
+      freshReader.rereadPolicies(false);
 
-    manager.removePolicy(TABLE_NAME, "map:qualifier");
-    manager.storePolicy(TABLE_NAME, "map", TestFamilyProducer.class, new AlwaysFreshen());
-    freshReader.rereadPolicies(false);
-
-    // Get against with the new family wide freshness policy.
-    assertEquals(3, freshReader.get(eid, request).getMostRecentValue("map", "qualifier"));
+      // Get against with the new family wide freshness policy.
+      assertEquals(3, freshReader.get(eid, request).getMostRecentValue("map", "qualifier"));
+    } finally {
+      freshReader.close();
+    }
   }
 
   @Test
@@ -832,16 +881,19 @@ public class TestInternalFreshKijiTableReader {
 
     final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
         .withTable(mTable).withTimeout(1000).build();
-
-    freshReader.get(eid, request);
-    freshReader.get(eid, request);
-    freshReader.get(eid, request);
-    freshReader.get(eid, request);
-    freshReader.get(eid, request);
-    freshReader.get(eid, request);
-    freshReader.get(eid, request);
-    freshReader.get(eid, request);
-    freshReader.get(eid, request);
+    try {
+      freshReader.get(eid, request);
+      freshReader.get(eid, request);
+      freshReader.get(eid, request);
+      freshReader.get(eid, request);
+      freshReader.get(eid, request);
+      freshReader.get(eid, request);
+      freshReader.get(eid, request);
+      freshReader.get(eid, request);
+      freshReader.get(eid, request);
+    } finally {
+      freshReader.close();
+    }
   }
 
   @Test
@@ -855,26 +907,30 @@ public class TestInternalFreshKijiTableReader {
 
     final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
         .withTable(mTable).withTimeout(1000).build();
+    try {
+      freshReader.get(eid, request);
+      freshReader.get(eid, request);
+      freshReader.get(eid, request);
 
-    freshReader.get(eid, request);
-    freshReader.get(eid, request);
-    freshReader.get(eid, request);
+      manager.removePolicy(TABLE_NAME, "family:qual0");
+      manager.storePolicy(
+          TABLE_NAME, "family:qual0", TestTimeoutProducer.class, new NeverFreshen());
+      freshReader.rereadPolicies(false);
 
-    manager.removePolicy(TABLE_NAME, "family:qual0");
-    manager.storePolicy(TABLE_NAME, "family:qual0", TestTimeoutProducer.class, new NeverFreshen());
-    freshReader.rereadPolicies(false);
+      freshReader.get(eid, request);
+      freshReader.get(eid, request);
+      freshReader.get(eid, request);
 
-    freshReader.get(eid, request);
-    freshReader.get(eid, request);
-    freshReader.get(eid, request);
+      manager.removePolicy(TABLE_NAME, "family:qual0");
+      manager.storePolicy(TABLE_NAME, "family:qual0", TestProducer.class, new NeverFreshen());
+      freshReader.rereadPolicies(false);
 
-    manager.removePolicy(TABLE_NAME, "family:qual0");
-    manager.storePolicy(TABLE_NAME, "family:qual0", TestProducer.class, new NeverFreshen());
-    freshReader.rereadPolicies(false);
-
-    freshReader.get(eid, request);
-    freshReader.get(eid, request);
-    freshReader.get(eid, request);
+      freshReader.get(eid, request);
+      freshReader.get(eid, request);
+      freshReader.get(eid, request);
+    } finally {
+      freshReader.close();
+    }
   }
 
   @Test
@@ -890,7 +946,11 @@ public class TestInternalFreshKijiTableReader {
     final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
         .withTable(mTable).withTimeout(1000).build();
 
-    assertEquals(10, freshReader.get(eid, request).getMostRecentValue("map", "qualifier"));
+    try {
+      assertEquals(10, freshReader.get(eid, request).getMostRecentValue("map", "qualifier"));
+    } finally {
+      freshReader.close();
+    }
   }
 
   @Test
@@ -905,8 +965,12 @@ public class TestInternalFreshKijiTableReader {
     final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
         .withTable(mTable).withTimeout(1000).build();
 
-    assertEquals("new-val",
-        freshReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
+    try {
+      assertEquals("new-val",
+          freshReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
+    } finally {
+      freshReader.close();
+    }
   }
 
   @Test
@@ -921,44 +985,61 @@ public class TestInternalFreshKijiTableReader {
     manager.storePolicy(TABLE_NAME, "family:qual0", TestProducer.class, new AlwaysFreshen());
     manager.storePolicy(TABLE_NAME, "family:qual1", TestTimeoutProducer.class, new AlwaysFreshen());
 
+    final KijiTableWriter writer = mTable.openTableWriter();
+    try {
+      writer.put(eid, "family", "qual0", "foo-val");
+      writer.put(eid, "family", "qual1", "foo-val");
+    } finally {
+      writer.close();
+    }
+
+
     // Default partial freshening is false.
     final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
         .withTable(mTable).withTimeout(500).build();
+    try {
+      assertEquals("foo-val",
+          freshReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
+      assertEquals("foo-val",
+          mReader.get(eid, request).getMostRecentValue("family", "qual1").toString());
 
-    final KijiTableWriter writer = mTable.openTableWriter();
-    writer.put(eid, "family", "qual0", "foo-val");
-    writer.put(eid, "family", "qual1", "foo-val");
+      Thread.sleep(1000);
 
-    assertEquals("foo-val",
-        freshReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
-    assertEquals("foo-val",
-        mReader.get(eid, request).getMostRecentValue("family", "qual1").toString());
+      assertEquals("new-val",
+          mReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
+      assertEquals("new-val",
+          mReader.get(eid, request).getMostRecentValue("family", "qual1").toString());
+    } finally {
+      freshReader.close();
+    }
 
-    Thread.sleep(1000);
-
-    assertEquals("new-val",
-        mReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
-    assertEquals("new-val",
-        mReader.get(eid, request).getMostRecentValue("family", "qual1").toString());
+    final KijiTableWriter writer2 = mTable.openTableWriter();
+    try {
+      writer2.put(eid, "family", "qual0", "foo-val");
+      writer2.put(eid, "family", "qual1", "foo-val");
+    } finally {
+      writer2.close();
+    }
 
     // Reset and try again with partial freshness allowed.
     final FreshKijiTableReader freshReader2 = FreshKijiTableReaderBuilder.create()
         .withTable(mTable).withTimeout(500).returnPartiallyFreshData(true).build();
 
-    writer.put(eid, "family", "qual0", "foo-val");
-    writer.put(eid, "family", "qual1", "foo-val");
+    try {
+      assertEquals("new-val",
+          freshReader2.get(eid, request).getMostRecentValue("family", "qual0").toString());
+      assertEquals("foo-val",
+          mReader.get(eid, request).getMostRecentValue("family", "qual1").toString());
 
-    assertEquals("new-val",
-        freshReader2.get(eid, request).getMostRecentValue("family", "qual0").toString());
-    assertEquals("foo-val",
-        mReader.get(eid, request).getMostRecentValue("family", "qual1").toString());
+      Thread.sleep(1000);
 
-    Thread.sleep(1000);
-
-    assertEquals("new-val",
-        mReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
-    assertEquals("new-val",
-        mReader.get(eid, request).getMostRecentValue("family", "qual1").toString());
+      assertEquals("new-val",
+          mReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
+      assertEquals("new-val",
+          mReader.get(eid, request).getMostRecentValue("family", "qual1").toString());
+    } finally {
+      freshReader2.close();
+    }
   }
 
   @Test
@@ -971,14 +1052,18 @@ public class TestInternalFreshKijiTableReader {
     final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
         .withTable(mTable).withTimeout(500).returnPartiallyFreshData(true).build();
 
-    // Nothing should have been written because the producer was blocked behind a slow policy.
-    assertEquals("foo-val",
-        freshReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
+    try {
+      // Nothing should have been written because the producer was blocked behind a slow policy.
+      assertEquals("foo-val",
+          freshReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
 
-    Thread.sleep(1000);
+      Thread.sleep(1000);
 
-    // The policy will finish eventually and the write will proceed.
-    assertEquals("new-val",
-        mReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
+      // The policy will finish eventually and the write will proceed.
+      assertEquals("new-val",
+          mReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
+    } finally {
+      freshReader.close();
+    }
   }
 }

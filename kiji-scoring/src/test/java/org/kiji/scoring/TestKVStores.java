@@ -48,6 +48,7 @@ import org.kiji.schema.KijiTable;
 import org.kiji.schema.avro.TableLayoutDesc;
 import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.util.InstanceBuilder;
+import org.kiji.schema.util.ResourceUtils;
 import org.kiji.scoring.FreshKijiTableReaderBuilder.FreshReaderType;
 import org.kiji.scoring.lib.AlwaysFreshen;
 
@@ -291,17 +292,24 @@ public class TestKVStores extends KijiClientTest {
     // Install a freshness policy.
     KijiFreshnessManager manager = KijiFreshnessManager.create(getKiji());
     manager.storePolicy("user", "info:name", SimpleKVProducer.class, new AlwaysFreshen());
-    KijiTable userTable = getKiji().openTable("user");
-    FreshKijiTableReader reader = FreshKijiTableReaderBuilder.create()
-        .withReaderType(FreshReaderType.LOCAL)
-        .withTable(userTable)
-        .withTimeout(10000)
-        .build();
-
-    // Read from the table to ensure that the user name is updated.
-    KijiRowData data =
+    KijiTable userTable = null;
+    FreshKijiTableReader reader = null;
+    try {
+      userTable = getKiji().openTable("user");
+      reader = FreshKijiTableReaderBuilder.create()
+          .withReaderType(FreshReaderType.LOCAL)
+          .withTable(userTable)
+          .withTimeout(10000)
+          .build();
+      // Read from the table to ensure that the user name is updated.
+      KijiRowData data =
         reader.get(userTable.getEntityId("felix"), KijiDataRequest.create("info", "name"));
-    assertEquals("Railway Cat", data.getMostRecentValue("info", "name").toString());
+      assertEquals("Railway Cat", data.getMostRecentValue("info", "name").toString());
+    } finally {
+      ResourceUtils.closeOrLog(reader);
+      ResourceUtils.releaseOrLog(userTable);
+    }
+
   }
 
   /** A test to ensure that policies can mask the key value stores of their producers. */
@@ -313,17 +321,24 @@ public class TestKVStores extends KijiClientTest {
     // Install a freshness policy.
     KijiFreshnessManager manager = KijiFreshnessManager.create(getKiji());
     manager.storePolicy("user", "info:name", UnconfiguredProducer.class, policy);
-    KijiTable userTable = getKiji().openTable("user");
-    FreshKijiTableReader reader = FreshKijiTableReaderBuilder.create()
-        .withReaderType(FreshReaderType.LOCAL)
-        .withTable(userTable)
-        .withTimeout(10000)
-        .build();
+    KijiTable userTable = null;
+    FreshKijiTableReader reader = null;
+    try {
+      userTable = getKiji().openTable("user");
+      reader = FreshKijiTableReaderBuilder.create()
+          .withReaderType(FreshReaderType.LOCAL)
+          .withTable(userTable)
+          .withTimeout(10000)
+          .build();
 
-    // Read from the table to ensure that the user name is updated.
-    KijiRowData data =
-        reader.get(userTable.getEntityId("felix"), KijiDataRequest.create("info", "name"));
-    assertEquals("Old Gumbie Cat", data.getMostRecentValue("info", "name").toString());
+      // Read from the table to ensure that the user name is updated.
+      KijiRowData data =
+          reader.get(userTable.getEntityId("felix"), KijiDataRequest.create("info", "name"));
+      assertEquals("Old Gumbie Cat", data.getMostRecentValue("info", "name").toString());
+    } finally {
+      ResourceUtils.closeOrLog(reader);
+      ResourceUtils.releaseOrLog(userTable);
+    }
   }
 
   @Test
@@ -334,17 +349,24 @@ public class TestKVStores extends KijiClientTest {
     // Install a freshness policy.
     KijiFreshnessManager manager = KijiFreshnessManager.create(getKiji());
     manager.storePolicy("user", "info:name", UnconfiguredProducer.class, policy);
-    KijiTable userTable = getKiji().openTable("user");
-    FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
-        .withReaderType(FreshReaderType.LOCAL)
-        .withTable(userTable)
-        .withTimeout(10000)
-        .build();
+    KijiTable userTable = null;
+    FreshKijiTableReader freshReader = null;
+    try {
+      userTable = getKiji().openTable("user");
+      freshReader = FreshKijiTableReaderBuilder.create()
+          .withReaderType(FreshReaderType.LOCAL)
+          .withTable(userTable)
+          .withTimeout(10000)
+          .build();
 
-    // Read from the table to ensure that the user name is updated.
-    KijiRowData data =
-        freshReader.get(userTable.getEntityId("felix"), KijiDataRequest.create("info", "name"));
-    // IsFresh should have returned true, so nothing should be written.
-    assertEquals("Felis", data.getMostRecentValue("info", "name").toString());
+      // Read from the table to ensure that the user name is updated.
+      KijiRowData data =
+          freshReader.get(userTable.getEntityId("felix"), KijiDataRequest.create("info", "name"));
+      // IsFresh should have returned true, so nothing should be written.
+      assertEquals("Felis", data.getMostRecentValue("info", "name").toString());
+    } finally {
+      ResourceUtils.closeOrLog(freshReader);
+      ResourceUtils.releaseOrLog(userTable);
+    }
   }
 }

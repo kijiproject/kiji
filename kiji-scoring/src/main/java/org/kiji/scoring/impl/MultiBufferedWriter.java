@@ -19,6 +19,7 @@
 
 package org.kiji.scoring.impl;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -36,7 +37,7 @@ import org.kiji.schema.KijiTable;
  * are identified by a String buffer name and each must be flushed separately.
  */
 @ApiAudience.Private
-public final class MultiBufferedWriter {
+public final class MultiBufferedWriter implements Closeable {
   /** Delegate BufferedWriter to actually perform writes. */
   private final KijiBufferedWriter mWriter;
   /** Mapping from buffer name to list of fully qualified puts. */
@@ -148,5 +149,11 @@ public final class MultiBufferedWriter {
       mWriter.flush();
       mBuffers.remove(bufferId);
     }
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public void close() throws IOException {
+    mWriter.close();
   }
 }

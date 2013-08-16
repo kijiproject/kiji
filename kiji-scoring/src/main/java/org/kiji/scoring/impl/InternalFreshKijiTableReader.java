@@ -1016,5 +1016,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     // Closing the reader releases the underlying table reference, so we do not have to release it
     // manually.
     mReader.close();
+    // Closing the MultiBufferedWriter closes the underlying BufferedWriter and releases the table.
+    mBuffer.close();
   }
 }

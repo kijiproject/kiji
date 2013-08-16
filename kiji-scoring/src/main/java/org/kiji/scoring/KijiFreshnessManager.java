@@ -471,7 +471,13 @@ public final class KijiFreshnessManager implements Closeable {
             + "table.");
       }
       if (producerRequest != null) {
-        final KijiTableLayout layout = mKiji.openTable(tableName).getLayout();
+        final KijiTable table = mKiji.openTable(tableName);
+        final KijiTableLayout layout;
+        try {
+          layout = table.getLayout();
+        } finally {
+          table.release();
+        }
         for (Column column : producerRequest.getColumns()) {
           final KijiColumnName name = new KijiColumnName(column.getFamily(), column.getQualifier());
           if (!layout.exists(name)) {
@@ -567,8 +573,14 @@ public final class KijiFreshnessManager implements Closeable {
     }
     // Check that the table includes the specified column or family.
     final KijiTable table = mKiji.openTable(tableName);
-    final Set<KijiColumnName> columnsNames = table.getLayout().getColumnNames();
-    final Map<String, FamilyLayout> familyMap = table.getLayout().getFamilyMap();
+    final Set<KijiColumnName> columnNames;
+    final Map<String, FamilyLayout> familyMap;
+    try {
+      columnNames = table.getLayout().getColumnNames();
+      familyMap = table.getLayout().getFamilyMap();
+    } finally {
+      table.release();
+    }
     final Set<String> metadataKeySet = mMetaTable.keySet(tableName);
 
     // Check that the family exists in the table layout.
@@ -585,7 +597,7 @@ public final class KijiFreshnessManager implements Closeable {
     if (kcn.isFullyQualified()) {
       if (familyMap.get(kcn.getFamily()).isGroupType()) {
         // Check that the fully qualified group family column exists in the table layout.
-        if (!columnsNames.contains(kcn)) {
+        if (!columnNames.contains(kcn)) {
           failures.put(ValidationFailure.NO_QUALIFIED_COLUMN_IN_TABLE, new IllegalArgumentException(
               String.format("Table: %s does not contain specified column: %s",
               tableName, kcn.toString())));

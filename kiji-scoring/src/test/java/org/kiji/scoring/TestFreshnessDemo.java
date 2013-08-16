@@ -35,6 +35,7 @@ import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableWriter;
 import org.kiji.schema.layout.KijiTableLayouts;
+import org.kiji.schema.util.ResourceUtils;
 import org.kiji.scoring.FreshKijiTableReaderBuilder.FreshReaderType;
 import org.kiji.scoring.lib.ShelfLife;
 
@@ -63,43 +64,52 @@ public class TestFreshnessDemo extends KijiClientTest {
   public void testDemo() throws IOException {
     // Get a Kiji instance.
     final Kiji kiji = getKiji();
+
     // Create the "user" table.
     kiji.createTable(KijiTableLayouts.getLayout(KijiTableLayouts.COUNTER_TEST));
-    // Get a table from the Kiji instance.
-    final KijiTable table = kiji.openTable("user");
-    // Get a KijiFreshnessManager for the Kiji instance.
-    final KijiFreshnessManager manager = KijiFreshnessManager.create(kiji);
     // Create a ShelfLife freshness policy and deserialize a 1 day shelf life duration.
     final KijiFreshnessPolicy policy = new ShelfLife(86400000);
-    // Store the freshness policy in the meta table for the table "user" and column "info:visits"
-    // using the ShelfLife freshness policy created above and the DemoProducer.
-    manager.storePolicy("user", "info:visits", DemoProducer.class, policy);
-    // Open a FreshKijiTableReader for the table with a timeout of 100 milliseconds.
-    // Note: the FreshKijiTableReader must be opened after the freshness policy is registered.
-    final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
-        .withReaderType(FreshReaderType.LOCAL)
-        .withTable(table)
-        .withTimeout(500)
-        .build();
 
-    // Write an old value to the cell we plan to request with timestamp 1 and value 10.
-    final EntityId eid = table.getEntityId("foo");
-    final KijiTableWriter writer = table.openTableWriter();
-    writer.put(eid, "info", "visits", 1L, 10L);
-    writer.close();
+    KijiTable table = null;
+    KijiFreshnessManager manager = null;
+    FreshKijiTableReader freshReader = null;
+    try {
+      // Get a table from the Kiji instance.
+      table = kiji.openTable("user");
+      // Get a KijiFreshnessManager for the Kiji instance.
+      manager = KijiFreshnessManager.create(kiji);
+      // Store the freshness policy in the metatable for the table "user" and column "info:visits"
+      // using the ShelfLife freshness policy created above and the DemoProducer.
+      manager.storePolicy("user", "info:visits", DemoProducer.class, policy);
+      // Open a FreshKijiTableReader for the table with a timeout of 100 milliseconds.
+      // Note: the FreshKijiTableReader must be opened after the freshness policy is registered.
+      freshReader = FreshKijiTableReaderBuilder.create()
+          .withReaderType(FreshReaderType.LOCAL)
+          .withTable(table)
+          .withTimeout(500)
+          .build();
+      // Write an old value to the cell we plan to request with timestamp 1 and value 10.
+      final EntityId eid = table.getEntityId("foo");
+      final KijiTableWriter writer = table.openTableWriter();
+      try {
+        writer.put(eid, "info", "visits", 1L, 10L);
+      } finally {
+        writer.close();
+      }
 
-    // Create a data request for the desired column.
-    final KijiDataRequest request = KijiDataRequest.create("info", "visits");
+      // Create a data request for the desired column.
+      final KijiDataRequest request = KijiDataRequest.create("info", "visits");
 
-    // Read from the table and get back a freshened value because 1L is more than a day ago.
-    assertEquals(11L, freshReader.get(eid, request).getMostRecentValue("info", "visits"));
-    // Read again and get back the same value because the DemoProducer wrote a new value.
-    assertEquals(11L, freshReader.get(eid, request).getMostRecentValue("info", "visits"));
-
-    // Cleanup
-    freshReader.close();
-    manager.close();
-    table.release();
-    kiji.release();
+      // Read from the table and get back a freshened value because 1L is more than a day ago.
+      assertEquals(11L, freshReader.get(eid, request).getMostRecentValue("info", "visits"));
+      // Read again and get back the same value because the DemoProducer wrote a new value.
+      assertEquals(11L, freshReader.get(eid, request).getMostRecentValue("info", "visits"));
+    } finally {
+      // Cleanup
+      ResourceUtils.closeOrLog(freshReader);
+      ResourceUtils.closeOrLog(manager);
+      ResourceUtils.releaseOrLog(table);
+      // We do not release the Kiji instance because we did not retain it.
+    }
   }
 }
