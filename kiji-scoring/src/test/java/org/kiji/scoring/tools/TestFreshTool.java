@@ -129,7 +129,7 @@ public class TestFreshTool extends KijiClientTest {
       assertEquals(record, manager.retrievePolicy("user", "info:name"));
       assertEquals("Freshness policy: org.kiji.scoring.lib.ShelfLife with state: {\"shelfLife\":10}"
           + " and producer: org.kiji.scoring.tools.TestFreshTool$TestProducer\n"
-          + "attached to column: info:name in table: user", mToolOutputStr);
+          + "attached to column: info:name in table: user\n", mToolOutputStr);
 
       // Test another ordering for arguments
       assertEquals(BaseTool.SUCCESS, runTool(new FreshTool(),
@@ -151,7 +151,7 @@ public class TestFreshTool extends KijiClientTest {
       assertEquals(record2, manager.retrievePolicy("user", "info:visits"));
       assertEquals("Freshness policy: org.kiji.scoring.lib.ShelfLife with state: {\"shelfLife\":10}"
           + " and producer: org.kiji.scoring.tools.TestFreshTool$TestProducer\n"
-          + "attached to column: info:visits in table: user", mToolOutputStr);
+          + "attached to column: info:visits in table: user\n", mToolOutputStr);
     } finally {
       manager.close();
     }
@@ -201,7 +201,8 @@ public class TestFreshTool extends KijiClientTest {
           "--do=unregister"
       ));
       assertEquals(null, manager.retrievePolicy("user", "info:name"));
-      assertEquals("Freshness policy removed from column: info:name in table user", mToolOutputStr);
+      assertEquals("Freshness policy removed from column: info:name in table user\n",
+          mToolOutputStr);
     } finally {
       manager.close();
     }
@@ -226,7 +227,7 @@ public class TestFreshTool extends KijiClientTest {
     assertEquals(
         "Freshness policy class: org.kiji.scoring.lib.NeverFreshen\n"
         + "Freshness policy state: \n"
-        + "Producer class: org.kiji.scoring.tools.TestFreshTool$TestProducer",
+        + "Producer class: org.kiji.scoring.tools.TestFreshTool$TestProducer\n",
         mToolOutputStr);
   }
 
@@ -273,7 +274,7 @@ public class TestFreshTool extends KijiClientTest {
           "--do=unregister-all"
       ));
       assertEquals(0, manager.retrievePolicies("user").size());
-      assertEquals("All freshness policies removed from table: user", mToolOutputStr);
+      assertEquals("All freshness policies removed from table: user\n", mToolOutputStr);
     } finally {
       manager.close();
     }
@@ -287,7 +288,7 @@ public class TestFreshTool extends KijiClientTest {
             .withColumnNames(Lists.newArrayList("info:name")).build().toString(),
         "--do=retrieve"
     ));
-    assertEquals("There is no freshness policy attached to column: info:name in table: user",
+    assertEquals("There is no freshness policy attached to column: info:name in table: user\n",
         mToolOutputStr);
   }
 
@@ -298,7 +299,7 @@ public class TestFreshTool extends KijiClientTest {
         KijiURI.newBuilder(getKiji().getURI()).withTableName("user").build().toString(),
         "--do=retrieve-all"
     ));
-    assertEquals("There are no freshness policies attached to columns in table: user",
+    assertEquals("There are no freshness policies attached to columns in table: user\n",
         mToolOutputStr);
   }
 
@@ -360,6 +361,6 @@ public class TestFreshTool extends KijiClientTest {
 
     assertEquals("Freshness policy: org.kiji.scoring.lib.ShelfLife with state: {\"shelfLife\":10} "
         + "and producer: org.kiji.scoring.tools.TestFreshTool$TestProducer\nattached to column: "
-        + "info:name in table: user", mToolOutputStr);
+        + "info:name in table: user\n", mToolOutputStr);
   }
 }

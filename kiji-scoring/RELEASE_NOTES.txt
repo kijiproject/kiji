@@ -1,6 +1,8 @@
 
                               Kiji Scoring Release Notes
 Version 0.5.0
+    * SCORE-78. Prepares KijiScoring for BentoBox. Many unnecessary dependencies have been
+        removed. Missing newlines have been added in the FreshTool. README.md updated.
     * SCORE-77, SCORE-74. KijiScoring now properly releases all Kiji resources.
         FreshKijiTableReaders and KijiFreshnessManagers must be closed to release resources.
     * SCORE-76. FreshTool's --help option no longer requires a meaningless --do flag.

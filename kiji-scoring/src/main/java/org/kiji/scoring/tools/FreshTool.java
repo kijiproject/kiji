@@ -172,7 +172,7 @@ public class FreshTool extends BaseTool {
     if (failures == null) {
       if (isInteractive()) {
         getPrintStream().format("Freshness policy: %s with state: %s and producer: %s%n"
-            + "attached to column: %s in table: %s",
+            + "attached to column: %s in table: %s%n",
             policy.getClass().getName(), policy.serialize(), producerClass.getName(),
             columnName, tableName);
       }
@@ -216,7 +216,7 @@ public class FreshTool extends BaseTool {
     if (failures == null) {
       if (isInteractive()) {
         getPrintStream().format("Freshness policy: %s with state: %s and producer: %s%n"
-            + "attached to column: %s in table: %s without checks.",
+            + "attached to column: %s in table: %s without checks.%n",
             policyClass, policyState, producerClass,
             columnName, tableName);
       }
@@ -241,7 +241,7 @@ public class FreshTool extends BaseTool {
   private int unregisterPolicy(String tableName, String columnName) throws IOException {
     mManager.removePolicy(tableName, columnName);
     if (isInteractive()) {
-      getPrintStream().format("Freshness policy removed from column: %s in table %s",
+      getPrintStream().format("Freshness policy removed from column: %s in table %s%n",
           columnName, tableName);
     }
     return BaseTool.SUCCESS;
@@ -258,13 +258,13 @@ public class FreshTool extends BaseTool {
   private int retrievePolicy(String tableName, String columnName) throws IOException {
     final KijiFreshnessPolicyRecord record = mManager.retrievePolicy(tableName, columnName);
     if (record == null) {
-      getPrintStream().format("There is no freshness policy attached to column: %s in table: %s",
+      getPrintStream().format("There is no freshness policy attached to column: %s in table: %s%n",
           columnName, tableName);
     } else {
       getPrintStream().format(
           "Freshness policy class: %s%n"
           + "Freshness policy state: %s%n"
-          + "Producer class: %s",
+          + "Producer class: %s%n",
           record.getFreshnessPolicyClass(),
           record.getFreshnessPolicyState(),
           record.getProducerClass());
@@ -283,7 +283,7 @@ public class FreshTool extends BaseTool {
     final Map<KijiColumnName, KijiFreshnessPolicyRecord> records =
         mManager.retrievePolicies(tableName);
     if (records.isEmpty()) {
-      getPrintStream().format("There are no freshness policies attached to columns in table: %s",
+      getPrintStream().format("There are no freshness policies attached to columns in table: %s%n",
           tableName);
     } else {
       for (Map.Entry<KijiColumnName, KijiFreshnessPolicyRecord> entry : records.entrySet()) {
@@ -315,7 +315,7 @@ public class FreshTool extends BaseTool {
     final Map<ValidationFailure, Exception> failures =
         mManager.validatePolicy(tableName, columnName);
     if (failures.isEmpty()) {
-      getPrintStream().format("Freshness Policy attached to column: %s in table: %s is valid.",
+      getPrintStream().format("Freshness Policy attached to column: %s in table: %s is valid.%n",
           columnName, tableName);
       return BaseTool.SUCCESS;
     } else {
@@ -342,7 +342,7 @@ public class FreshTool extends BaseTool {
         mManager.validatePolicies(tableName);
     if (failures.isEmpty()) {
       getPrintStream().format("%d freshness policies found for table: %s%nAll freshness policies "
-          + "are valid.", numberOfPolicies, tableName);
+          + "are valid.%n", numberOfPolicies, tableName);
       return BaseTool.SUCCESS;
     } else {
       getPrintStream().format(
@@ -528,7 +528,7 @@ public class FreshTool extends BaseTool {
             mManager.removePolicies(mURI.getTable());
             if (isInteractive()) {
               getPrintStream().format(
-                  "All freshness policies removed from table: %s", mURI.getTable());
+                  "All freshness policies removed from table: %s%n", mURI.getTable());
             }
             return BaseTool.SUCCESS;
           }
