@@ -90,6 +90,7 @@ public class TestShelfLife {
     mReader.close();
     mFreshReader.close();
     mTable.release();
+    mKiji.release();
   }
 
   @Test
