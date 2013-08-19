@@ -48,7 +48,7 @@
     <kiji-platforms.version>1.2.0</kiji-platforms.version>
     <kiji-schema.version>1.2.1</kiji-schema.version>
     <kiji-schema-shell.version>1.2.0</kiji-schema-shell.version>
-    <kiji-mapreduce.version>1.1.1</kiji-mapreduce.version>
+    <kiji-mapreduce.version>1.1.0</kiji-mapreduce.version>
     <kiji-mapreduce-lib.version>1.0.0</kiji-mapreduce-lib.version>
   </properties>
 
