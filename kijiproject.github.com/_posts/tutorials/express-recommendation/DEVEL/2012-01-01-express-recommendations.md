@@ -136,8 +136,10 @@ You should see something like:
     Scanning kiji table: kiji://localhost:2181/kiji_express_music/users/
     entity-id=['user-41'] [1325762580000] info:track_plays
                                      song-41
-    entity-id=['user-41'] [1367023207962] info:next_song_rec
-                                     song-41
+    entity-id=['user-3'] [1325751420000] info:track_plays
+                                     song-0
+
+Where a recommendation is provided for each user.
 
 ### Shut down the cluster
 
