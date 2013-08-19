@@ -29,7 +29,7 @@ import org.kiji.express.AvroRecord
 import org.kiji.express.EntityId
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow._
-import org.kiji.express.modeling.ExtractScoreJobBuilder
+import org.kiji.express.modeling.ScoreProducerJobBuilder
 import org.kiji.express.modeling.config.ModelDefinition
 import org.kiji.express.modeling.config.ModelEnvironment
 import org.kiji.schema.KijiDataRequest
@@ -47,8 +47,12 @@ class RecommendationModelSuite extends KijiSuite {
       |{
       |  "name" : "song-recommender",
       |  "version" : "1.0.0",
-      |  "extractor_class" : "org.kiji.express.modeling.lib.FirstValueExtractor",
-      |  "scorer_class" : "org.kiji.express.music.SongRecommendingScorer"
+      |  "scorer":{
+      |   "org.kiji.express.avro.AvroPhaseSpec":{
+      |     "extractor_class":"org.kiji.express.modeling.lib.FirstValueExtractor",
+      |     "phase_class":"org.kiji.express.music.SongRecommendingScorer"
+      |   }
+      |  }
       |}
     """.stripMargin
 
@@ -58,33 +62,47 @@ class RecommendationModelSuite extends KijiSuite {
   val modelEnvironmentJSON =
     """
       |{
+      | "protocol_version":"model_environment-0.2.0",
       | "name" : "song-recommender-env",
       | "version" : "1.0.0",
-      | "model_table_uri" : "%s",
-      | "extract_environment" : {
-      | "data_request" : {
-      |   "column_definitions" : [ {
-      |     "name" : "info:track_plays"
-      |   } ]
-      |   },
-      |   "field_bindings" : [ {
-      |     "tuple_field_name" : "trackPlay",
-      |     "store_field_name" : "info:track_plays"
-      |   } ]
-      | },
-      | "score_environment" : {
-      |   "kv_stores" : [ {
-      |     "store_type" : "KIJI_TABLE",
-      |     "name" : "top_next_songs",
-      |     "properties" : [ {
-      |       "name" : "uri",
-      |       "value" : "%s"
-      |     }, {
-      |       "name" : "column",
-      |       "value" : "info:top_next_songs"
-      |     } ]
-      |   } ],
-      |   "output_column" : "info:next_song_rec"
+      | "score_environment":{
+      |   "org.kiji.express.avro.AvroScoreEnvironment":{
+      |     "input_config":{
+      |       "specification":{
+      |         "org.kiji.express.avro.AvroKijiInputSpec":{
+      |           "table_uri":"%s",
+      |           "data_request":{
+      |             "column_definitions":[{
+      |               "name":"info:track_plays"
+      |             } ]
+      |           },
+      |           "field_bindings":[{
+      |             "tuple_field_name":"trackPlay",
+      |             "store_field_name":"info:track_plays"
+      |           }]
+      |         }
+      |       }
+      |     },
+      |     "kv_stores":[{
+      |       "store_type":"KIJI_TABLE",
+      |       "name":"top_next_songs",
+      |       "properties":[{
+      |         "name":"uri",
+      |         "value":"%s"
+      |       }, {
+      |         "name":"column",
+      |         "value":"info:top_next_songs"
+      |       }]
+      |     }],
+      |     "output_config":{
+      |       "specification":{
+      |         "org.kiji.express.avro.AvroKijiSingleColumnOutputSpec":{
+      |           "table_uri":"%s",
+      |           "output_column":"info:next_song_rec"
+      |         }
+      |       }
+      |     }
+      |   }
       | }
       |}
     """.stripMargin
@@ -126,8 +144,8 @@ class RecommendationModelSuite extends KijiSuite {
     // Build a batch extract + score job from the model and run.
     val modelDefinition = ModelDefinition.fromJson(modelDefinitionJSON)
     val modelEnvironment = ModelEnvironment
-        .fromJson(modelEnvironmentJSON.format(usersTableURI, songsTableURI))
-    val extractScoreJob = ExtractScoreJobBuilder.buildJob(modelDefinition, modelEnvironment)
+        .fromJson(modelEnvironmentJSON.format(usersTableURI, songsTableURI, usersTableURI))
+    val extractScoreJob = ScoreProducerJobBuilder.buildJob(modelDefinition, modelEnvironment)
     assert(extractScoreJob.run(), "Extract+Score job failed to run.")
 
     // Verify the "scores" (song recommendations) produced by the model.
