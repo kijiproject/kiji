@@ -7,7 +7,7 @@ If running from inside a BentoBox, you'll want to add the `kiji-scoring/lib`
 directory to your KIJI\_CLASSPATH. Assuming `$KIJI_HOME` is set to the root
 of the BentoBox, you can execute the following:
 
-`export KIJI_CLASSPATH=${KIJI_HOME}/kiji-scoring/lib/*:${KIJI_CLASSPATH}`
+`export KIJI_CLASSPATH=${KIJI_HOME}/scoring/lib/*:${KIJI_CLASSPATH}`
 
 This will make the `kiji fresh` command available. The `fresh` tool takes in
 a KijiURI and requires a `--do=<command>` flag with one of the following
