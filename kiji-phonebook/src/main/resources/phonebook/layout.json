@@ -149,5 +149,6 @@
       } ]
     } ]
   } ],
-  "version" : "layout-1.2"
+  "version" : "layout-1.2",
+  "layout_id": "0"
 }
