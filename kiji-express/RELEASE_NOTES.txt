@@ -7,6 +7,10 @@ Version 0.8.0
       '*Spec' style to 'Avro*' to match other classes and distinguish
       from records like 'AvroInputSpec' (which legitimately should
       end in 'Spec').
+  * EXP-160. Extractors can now be configured on the appropriate
+      lifecycle phases.
+  * EXP-165. All model lifecycle phases are optional.
+  * EXP-125. Adds the train phase to model environments.
   * EXP-176. Avoids clobbering mapred.child.java.opts in the express
       script. This will allow users to pick up a value for
       mapred.child.java.opts from mapred-site.xml, or set a value from
