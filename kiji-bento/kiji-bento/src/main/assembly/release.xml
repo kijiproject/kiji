@@ -304,6 +304,18 @@
       <fileMode>0755</fileMode>
     </fileSet>
     <fileSet>
+      <!-- kiji-scoring -->
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <outputDirectory>scoring</outputDirectory>
+      <directory>target/prereqs-dir/kiji-scoring-${kiji-scoring.version}</directory>
+      <filtered>false</filtered>
+      <excludes>
+        <exclude>RELEASE_NOTES.txt</exclude>
+        <!-- Leave the apidocs in the subdirectory for now. -->
+      </excludes>
+      <fileMode>0644</fileMode>
+    </fileSet>
+    <fileSet>
       <!-- bento-checkin -->
       <useDefaultExcludes>false</useDefaultExcludes>
       <outputDirectory>.</outputDirectory>
@@ -377,6 +389,13 @@
       <source>target/prereqs-dir/kiji-mapreduce-lib-${kiji-mapreduce-lib.version}/RELEASE_NOTES.txt</source>
       <outputDirectory>release-notes</outputDirectory>
       <destName>MRLIB_RELEASE_NOTES.txt</destName>
+      <fileMode>0644</fileMode>
+    </file>
+    <file>
+      <!-- kiji-scoring release notes -->
+      <source>target/prereqs-dir/kiji-scoring-${kiji-scoring.version}/RELEASE_NOTES.txt</source>
+      <outputDirectory>release-notes</outputDirectory>
+      <destName>SCORING_RELEASE_NOTES.txt</destName>
       <fileMode>0644</fileMode>
     </file>
   </files>
