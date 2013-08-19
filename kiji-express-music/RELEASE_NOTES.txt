@@ -2,6 +2,10 @@
 
                              Kiji Express Music Tutorial Release Notes
 
+Version 0.7.0
+  * EXP-160. Update tutorial after changes in kiji-express extractors.
+  * EXP-181. Fix tutorial reference to song_id field in SongRecommender.scala.
+
 Version 0.6.0
   * EXP-87. Tutorial code has been updated to agree with recent
     changes in constructing entity ids.
