@@ -1,6 +1,9 @@
 
 
                               Kiji BentoBox Release Notes
+Version 1.1.6
+  * SCORE-65. Integrate KijiScoring with BentoBox.
+
 Version 1.1.5
   * Include KijiScoring.
 
