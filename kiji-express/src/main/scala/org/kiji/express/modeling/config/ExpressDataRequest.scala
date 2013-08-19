@@ -45,11 +45,11 @@ case class ExpressDataRequest(minTimeStamp: Long, maxTimeStamp: Long,
    * @return an Avro data request converted from the provided Kiji data request.
    */
   private[express] def toAvro(): AvroDataRequest = {
-    val columns: Seq[ColumnSpec] = columnRequests map {colRequest: ExpressColumnRequest =>
+    val columns: Seq[AvroColumn] = columnRequests map {colRequest: ExpressColumnRequest =>
       val avroFilter = colRequest.filter.flatMap { expFil:  ExpressColumnFilter =>
         Option(ExpressColumnFilter.expressToAvroFilter(expFil))
       }
-      ColumnSpec
+      AvroColumn
         .newBuilder()
         .setName(colRequest.name)
         .setMaxVersions(colRequest.maxVersions)
@@ -101,13 +101,13 @@ object ExpressDataRequest {
    * @return an Express data request converted from the provided Avro data request.
    */
   def apply(avroDataRequest: AvroDataRequest): ExpressDataRequest = {
-    val colSpecs: Seq[ColumnSpec] = avroDataRequest.getColumnDefinitions.asScala.toSeq
-    val colRequests: Seq[ExpressColumnRequest] = colSpecs.map { colSpec: ColumnSpec =>
-      if (null != colSpec.getFilter) {
-        new ExpressColumnRequest(colSpec.getName, colSpec.getMaxVersions,
-            Some(filterFromAvro(colSpec.getFilter)))
+    val columns: Seq[AvroColumn] = avroDataRequest.getColumnDefinitions.asScala.toSeq
+    val colRequests: Seq[ExpressColumnRequest] = columns.map { avroColumn: AvroColumn =>
+      if (null != avroColumn.getFilter) {
+        new ExpressColumnRequest(avroColumn.getName, avroColumn.getMaxVersions,
+            Some(filterFromAvro(avroColumn.getFilter)))
       } else {
-        new ExpressColumnRequest(colSpec.getName, colSpec.getMaxVersions, None)
+        new ExpressColumnRequest(avroColumn.getName, avroColumn.getMaxVersions, None)
       }
     }
     new ExpressDataRequest(avroDataRequest.getMinTimestamp(), avroDataRequest.getMaxTimestamp(),
@@ -127,11 +127,11 @@ object ExpressDataRequest {
     avroDataRequest
       .getColumnDefinitions
       .asScala
-      .foreach { columnSpec: ColumnSpec =>
-        val name = new KijiColumnName(columnSpec.getName())
-        val maxVersions = columnSpec.getMaxVersions()
-        if (columnSpec.getFilter != null) {
-          val filter = ExpressDataRequest.filterFromAvro(columnSpec.getFilter).getKijiColumnFilter()
+      .foreach { avroColumn: AvroColumn =>
+        val name = new KijiColumnName(avroColumn.getName())
+        val maxVersions = avroColumn.getMaxVersions()
+        if (avroColumn.getFilter != null) {
+          val filter = ExpressDataRequest.filterFromAvro(avroColumn.getFilter).getKijiColumnFilter()
           builder.newColumnsDef().withMaxVersions(maxVersions).withFilter(filter).add(name)
         } else {
           builder.newColumnsDef().withMaxVersions(maxVersions).add(name)
@@ -149,17 +149,17 @@ object ExpressDataRequest {
    */
   private[express] def filterFromAvro(filter: AnyRef): ExpressColumnFilter = {
     filter match {
-      case regexFilter: RegexQualifierFilterSpec => new RegexQualifierFilter(regexFilter.getRegex)
-      case colRangeFilter: ColumnRangeFilterSpec => {
+      case regexFilter: AvroRegexQualifierFilter => new RegexQualifierFilter(regexFilter.getRegex)
+      case colRangeFilter: AvroColumnRangeFilter => {
         new ColumnRangeFilter(colRangeFilter.getMinQualifier, colRangeFilter.getMinIncluded,
           colRangeFilter.getMaxQualifier, colRangeFilter.getMaxIncluded)
       }
-      case andFilter: AndFilterSpec => {
+      case andFilter: AvroAndFilter => {
         val filterList: List[ExpressColumnFilter] = andFilter.getAndFilters.asScala
             .toList map { filterFromAvro _ }
         new AndFilter(filterList)
       }
-      case orFilter: OrFilterSpec => {
+      case orFilter: AvroOrFilter => {
         val filterList: List[ExpressColumnFilter] = orFilter.getOrFilters.asScala
             .toList map { filterFromAvro _ }
         new OrFilter(filterList)

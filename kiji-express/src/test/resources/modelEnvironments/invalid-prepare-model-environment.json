@@ -33,7 +33,7 @@
                 "name":"*BADCOL",
                 "max_versions":3,
                 "filter":{
-                  "org.kiji.express.avro.RegexQualifierFilterSpec":{
+                  "org.kiji.express.avro.AvroRegexQualifierFilter":{
                     "regex":"foo"
                   }
                 }
@@ -80,7 +80,7 @@
                 "name":"info:in",
                 "max_versions":3,
                 "filter":{
-                  "org.kiji.express.avro.RegexQualifierFilterSpec":{
+                  "org.kiji.express.avro.AvroRegexQualifierFilter":{
                     "regex":"foo"
                   }
                 }
@@ -127,7 +127,7 @@
                 "name":"info:in",
                 "max_versions":3,
                 "filter":{
-                  "org.kiji.express.avro.RegexQualifierFilterSpec":{
+                  "org.kiji.express.avro.AvroRegexQualifierFilter":{
                     "regex":"foo"
                   }
                 }

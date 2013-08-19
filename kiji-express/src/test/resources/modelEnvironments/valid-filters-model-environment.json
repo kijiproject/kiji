@@ -33,15 +33,15 @@
                 "name":"info:in",
                 "max_versions":3,
                 "filter" : {
-                  "org.kiji.express.avro.AndFilterSpec" : {
+                  "org.kiji.express.avro.AvroAndFilter" : {
                     "and_filters" : [
                       {
-                        "org.kiji.express.avro.RegexQualifierFilterSpec" : {
+                        "org.kiji.express.avro.AvroRegexQualifierFilter" : {
                           "regex" : "foo"
                         }
                       },
                       {
-                        "org.kiji.express.avro.ColumnRangeFilterSpec" : {
+                        "org.kiji.express.avro.AvroColumnRangeFilter" : {
                           "min_qualifier" : {
                             "string" : "null"
                           },
@@ -98,7 +98,7 @@
                 "name":"info:in",
                 "max_versions":3,
                 "filter":{
-                  "org.kiji.express.avro.RegexQualifierFilterSpec":{
+                  "org.kiji.express.avro.AvroRegexQualifierFilter":{
                     "regex":"foo"
                   }
                 }
@@ -145,13 +145,13 @@
                 "name":"info:in",
                 "max_versions":3,
                 "filter" : {
-                  "org.kiji.express.avro.AndFilterSpec" : {
+                  "org.kiji.express.avro.AvroAndFilter" : {
                     "and_filters" : [ {
-                      "org.kiji.express.avro.RegexQualifierFilterSpec" : {
+                      "org.kiji.express.avro.AvroRegexQualifierFilter" : {
                         "regex" : "foo"
                       }
                     }, {
-                      "org.kiji.express.avro.ColumnRangeFilterSpec" : {
+                      "org.kiji.express.avro.AvroColumnRangeFilter" : {
                         "min_qualifier" : {
                           "string" : "null"
                         },

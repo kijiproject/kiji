@@ -30,6 +30,7 @@ import com.google.common.base.Objects
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.express.avro.AvroColumn
 import org.kiji.express.avro.AvroDataRequest
 import org.kiji.express.avro.AvroInputSpec
 import org.kiji.express.avro.AvroKijiInputSpec
@@ -40,7 +41,6 @@ import org.kiji.express.avro.AvroOutputSpec
 import org.kiji.express.avro.AvroPrepareEnvironment
 import org.kiji.express.avro.AvroScoreEnvironment
 import org.kiji.express.avro.AvroTrainEnvironment
-import org.kiji.express.avro.ColumnSpec
 import org.kiji.express.avro.KvStoreType
 import org.kiji.express.util.Resources.doAndClose
 import org.kiji.schema.KijiColumnName
@@ -470,12 +470,12 @@ object ModelEnvironment {
     avroDataRequest
         .getColumnDefinitions
         .asScala
-        .foreach { columnSpec: ColumnSpec =>
-          val name = new KijiColumnName(columnSpec.getName())
-          val maxVersions = columnSpec.getMaxVersions()
-          if (Option(columnSpec.getFilter).isDefined) {
+        .foreach { avroColumn: AvroColumn =>
+          val name = new KijiColumnName(avroColumn.getName())
+          val maxVersions = avroColumn.getMaxVersions()
+          if (Option(avroColumn.getFilter).isDefined) {
             val filter = ExpressDataRequest
-                .filterFromAvro(columnSpec.getFilter)
+                .filterFromAvro(avroColumn.getFilter)
                 .getKijiColumnFilter()
             builder.newColumnsDef().withMaxVersions(maxVersions).withFilter(filter).add(name)
           } else {

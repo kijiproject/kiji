@@ -140,7 +140,7 @@ protocol Modeling {
   /**
    * Specification of a ColumnRangeFilter.
    */
-  record ColumnRangeFilterSpec {
+  record AvroColumnRangeFilter {
     /** The minimum qualifier bound. null means none.*/
     union{null, string} min_qualifier;
 
@@ -157,7 +157,7 @@ protocol Modeling {
   /**
    * Specification of a RegexQualifierFilter.
    */
-   record RegexQualifierFilterSpec {
+   record AvroRegexQualifierFilter {
      /** The regular expression for qualifiers that should be
       *  accepted by this filter. The expression is matched against the full qualifier (as
       *  if it implicitly starts with '^' and ends with '$').
@@ -169,14 +169,14 @@ protocol Modeling {
     * Specification of an 'and' filter. This filter combines a list of column filters using a
     * logical AND operator.
     */
-   record AndFilterSpec {
+   record AvroAndFilter {
      /**
       * The filters to AND together.
       * NOTE: If you are hand-coding the JSON for this field, please ensure you follow the
       * appropriate encoding for unions http://avro.apache.org/docs/current/spec.html#json_encoding
       * in order to avoid potential decoding errors due to ambiguity in the required record type.
       */
-     array<union { RegexQualifierFilterSpec, ColumnRangeFilterSpec }>
+     array<union { AvroRegexQualifierFilter, AvroColumnRangeFilter }>
         and_filters;
    }
 
@@ -187,16 +187,16 @@ protocol Modeling {
     * appropriate encoding for unions http://avro.apache.org/docs/current/spec.html#json_encoding
     * in order to avoid potential decoding errors due to ambiguity in the required record type.
     */
-   record OrFilterSpec {
+   record AvroOrFilter {
      /** The filters to OR together. */
-     array<union { RegexQualifierFilterSpec, ColumnRangeFilterSpec }>
+     array<union { AvroRegexQualifierFilter, AvroColumnRangeFilter }>
         or_filters;
    }
 
   /**
    * Column level data request specifications.
    */
-  record ColumnSpec {
+  record AvroColumn {
     /**
      * The name of the column to request data from. Required.
      */
@@ -213,7 +213,7 @@ protocol Modeling {
      * appropriate encoding for unions http://avro.apache.org/docs/current/spec.html#json_encoding
      * in order to avoid potential decoding errors due to ambiguity in the required record type.
      */
-    union { null, AndFilterSpec, OrFilterSpec, ColumnRangeFilterSpec, RegexQualifierFilterSpec }
+    union { null, AvroAndFilter, AvroOrFilter, AvroColumnRangeFilter, AvroRegexQualifierFilter }
         filter = null;
   }
 
@@ -237,7 +237,7 @@ protocol Modeling {
     /**
      * An array of column level data request specifications. Required.
      */
-    array<ColumnSpec> column_definitions;
+    array<AvroColumn> column_definitions;
   }
 
   /**

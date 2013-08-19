@@ -24,10 +24,10 @@ import scala.collection.JavaConverters.seqAsJavaListConverter
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
-import org.kiji.express.avro.AndFilterSpec
-import org.kiji.express.avro.ColumnRangeFilterSpec
-import org.kiji.express.avro.RegexQualifierFilterSpec
-import org.kiji.express.avro.OrFilterSpec
+import org.kiji.express.avro.AvroAndFilter
+import org.kiji.express.avro.AvroColumnRangeFilter
+import org.kiji.express.avro.AvroRegexQualifierFilter
+import org.kiji.express.avro.AvroOrFilter
 import org.kiji.schema.filter.KijiColumnFilter
 
 /**
@@ -59,12 +59,12 @@ object ExpressColumnFilter {
   private[express] def expressToAvroFilter(filter: ExpressColumnFilter): AnyRef = {
     filter match {
       case regexFilter: RegexQualifierFilter => {
-        RegexQualifierFilterSpec.newBuilder()
+        AvroRegexQualifierFilter.newBuilder()
           .setRegex(regexFilter.regex)
           .build()
       }
       case rangeFilter: ColumnRangeFilter => {
-        ColumnRangeFilterSpec.newBuilder()
+        AvroColumnRangeFilter.newBuilder()
           .setMinQualifier(rangeFilter.minQualifier)
           .setMinIncluded(rangeFilter.minIncluded)
           .setMaxQualifier(rangeFilter.maxQualifier)
@@ -73,11 +73,11 @@ object ExpressColumnFilter {
       }
       case andFilter: AndFilter => {
         val expFilterList: List[AnyRef] = andFilter.filtersList map { expressToAvroFilter _ }
-        AndFilterSpec.newBuilder().setAndFilters(expFilterList.asJava).build()
+        AvroAndFilter.newBuilder().setAndFilters(expFilterList.asJava).build()
       }
       case orFilter: OrFilter => {
         val filterList: List[AnyRef] = orFilter.filtersList map { expressToAvroFilter _ }
-        OrFilterSpec.newBuilder().setOrFilters(filterList.asJava)
+        AvroOrFilter.newBuilder().setOrFilters(filterList.asJava)
       }
       case _ => throw new RuntimeException("The provided Express column filter is invalid.")
     }
