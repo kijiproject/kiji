@@ -10,7 +10,8 @@ Click a link below to select the version of the user guide appropriate
 to the Kiji version you are using.
 
 ## KijiSchema
-* [KijiSchema 1.2.0]({{site.userguide_url}}/schema/1.2.0/kiji-schema-overview/) (latest)
+* [KijiSchema 1.2.1]({{site.userguide_url}}/schema/1.2.1/kiji-schema-overview/) (latest)
+* [KijiSchema 1.2.0]({{site.userguide_url}}/schema/1.2.0/kiji-schema-overview/)
 * [KijiSchema 1.1.2]({{site.userguide_url}}/schema/1.1.2/kiji-schema-overview/)
 * [KijiSchema 1.1.1]({{site.userguide_url}}/schema/1.1.1/kiji-schema-overview/)
 * [KijiSchema 1.1.0]({{site.userguide_url}}/schema/1.1.0/kiji-schema-overview/)
@@ -39,7 +40,8 @@ to the Kiji version you are using.
 
 ## KijiREST
 
-* [KijiREST 0.3.0]({{site.userguide_url}}/rest/0.3.0/rest-overview/) (latest)
+* [KijiREST 0.4.0]({{site.userguide_url}}/rest/0.4.0/rest-overview/) (latest)
+* [KijiREST 0.3.0]({{site.userguide_url}}/rest/0.3.0/rest-overview/)
 
 ### Documentation under development
 

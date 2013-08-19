@@ -32,8 +32,8 @@
 
 
 # KijiSchema version
-SCHEMA_FLAT_VER=1_2_0
-SCHEMA_VER=1.2.0
+SCHEMA_FLAT_VER=1_2_1
+SCHEMA_VER=1.2.1
 
 # KijiMR version
 KIJIMR_FLAT_VER=1_1_0
@@ -44,20 +44,20 @@ MRLIB_FLAT_VER=1_0_0
 MRLIB_VER=1.0.0
 
 # KijiExpress version
-EXPRESS_FLAT_VER=0_7_0
-EXPRESS_VER=0.7.0
+EXPRESS_FLAT_VER=0_8_0
+EXPRESS_VER=0.8.0
 
 # Scoring version
-SCORING_FLAT_VER=0_4_0
-SCORING_VER=0.4.0
+SCORING_FLAT_VER=0_5_0
+SCORING_VER=0.5.0
 
 # Music Recommendation Tutorial version
 MUSIC_FLAT_VER=1_0_0
 MUSIC_VER=1.0.0
 
 # Express Music Recommendation tutorial version
-EXPRESS_MUSIC_FLAT_VER=0_6_0
-EXPRESS_MUSIC_VER=0.6.0
+EXPRESS_MUSIC_FLAT_VER=0_7_0
+EXPRESS_MUSIC_VER=0.7.0
 
 # Phonebook Tutorial version
 PHONEBOOK_FLAT_VER=1_0_0
