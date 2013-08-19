@@ -30,7 +30,18 @@ import com.google.common.base.Objects
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.express.avro._
+import org.kiji.express.avro.AvroDataRequest
+import org.kiji.express.avro.AvroInputSpec
+import org.kiji.express.avro.AvroKijiInputSpec
+import org.kiji.express.avro.AvroKijiOutputSpec
+import org.kiji.express.avro.AvroKijiSingleColumnOutputSpec
+import org.kiji.express.avro.AvroModelEnvironment
+import org.kiji.express.avro.AvroOutputSpec
+import org.kiji.express.avro.AvroPrepareEnvironment
+import org.kiji.express.avro.AvroScoreEnvironment
+import org.kiji.express.avro.AvroTrainEnvironment
+import org.kiji.express.avro.ColumnSpec
+import org.kiji.express.avro.KvStoreType
 import org.kiji.express.util.Resources.doAndClose
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiDataRequest
@@ -50,64 +61,83 @@ import org.kiji.schema.util.ToJson
  *
  * A ModelEnvironment can be created programmatically:
  * {{{
- * val myDataRequest: ExpressDataRequest = new ExpressDataRequest(0, 38475687,
- *     new ExpressColumnRequest("info:in", 3, None)::Nil)
- * val extractEnv = ExtractEnvironment(
- *     dataRequest = myDataRequest,
- *     fieldBindings = Seq(FieldBinding("tuplename", "storefieldname")),
- *     kvstores = Seq(KVStore("AVRO_KV", "storename", Map())))
- * val scoreEnv2 = ScoreEnvironment(
- *     outputColumn = "outputFamily:qualifier",
- *     kvstores = Seq(KVStore("KIJI_TABLE", "myname", Map())))
- * val modelEnv = ModelEnvironment(
- *   name = "myname",
- *   version = "1.0.0",
- *   modelTableUri = "kiji://myuri",
- *   extractEnvironment = extractEnv,
- *   scoreEnvironment = scoreEnv)
+ *   val dataRequest: ExpressDataRequest = new ExpressDataRequest(0, 38475687,
+ *     new ExpressColumnRequest("info:in", 3, None) :: Nil)
+ *
+ *   val inputSpec = KijiInputSpec("kiji://myuri",
+ *       dataRequest,
+ *       Seq(FieldBinding("tuplename", "info:storefieldname")))
+ *
+ *   val outputSpec = KijiSingleColumnOutputSpec("kiji://myuri", "outputFamily:qualifier")
+ *   val scoreEnv = Some(ScoreEnvironment(
+ *       inputSpec,
+ *       outputSpec,
+ *       Seq(KVStore("KIJI_TABLE", "myname", Map("uri" -> "kiji://.env/default/table",
+ *           "column" -> "info:email")),
+ *           KVStore("AVRO_KV", "storename", Map("path" -> "/some/great/path")))))
+ *
+ *   val modelEnv = ModelEnvironment(
+ *     "myname",
+ *     "1.0.0",
+ *     None,
+ *     None,
+ *     scoreEnv)
  * }}}
  *
  * Alternatively a ModelEnvironment can be created from JSON. JSON run specifications should
  * be written using the following format:
  * {{{
  * {
- *   "name" : "myRunProfile",
- *   "version" : "1.0.0",
- *   "model_table_uri" : "kiji://.env/default/mytable",
- *   "protocol_version" : "model_environment-0.1.0",
- *   "extract_model_environment" : {
- *     "data_request" : {
- *       "min_timestamp" : 0,
- *       "max_timestamp" : 922347862,
- *       "column_definitions" : [ {
- *         "name" : "info:in",
- *         "max_versions" : 3
- *       } ]
- *     },
- *     "kv_stores" : [ {
- *       "store_type" : "AVRO_KV",
- *       "name" : "side_data",
- *       "properties" : [ {
- *         "name" : "path",
- *         "value" : "/usr/src/and/so/on"
- *       } ]
- *     } ],
- *     "field_bindings" : [ {
- *       "tuple_field_name" : "in",
- *       "store_field_name" : "info:in"
- *     } ]
- *   },
- *   "score_model_environment" : {
- *     "kv_stores" : [ {
- *       "store_type" : "AVRO_KV",
- *       "name" : "side_data",
- *       "properties" : [ {
- *         "name" : "path",
- *         "value" : "/usr/src/and/so/on"
- *       } ]
- *     } ],
- *     "output_column" : "info:out"
- *   }
+ *  "protocol_version":"model_environment-0.2.0",
+ *  "name":"myRunProfile",
+ *  "version":"1.0.0",
+ *  "prepare_environment":{
+ *    "org.kiji.express.avro.AvroPrepareEnvironment":{
+ *      "input_config":{
+ *        "specification":{
+ *          "org.kiji.express.avro.AvroKijiInputSpec":{
+ *            "table_uri":"kiji://.env/default/table",
+ *            "data_request":{
+ *              "min_timestamp":0,
+ *              "max_timestamp":38475687,
+ *              "column_definitions":[{
+ *                "name":"info:in",
+ *                "max_versions":3,
+ *                "filter":{
+ *                  "org.kiji.express.avro.RegexQualifierFilterSpec":{
+ *                    "regex":"foo"
+ *                  }
+ *                }
+ *              }]
+ *            },
+ *            "field_bindings":[{
+ *              "tuple_field_name":"tuplename",
+ *              "store_field_name":"info:storefieldname"
+ *            }]
+ *          }
+ *        }
+ *      },
+ *      "output_config":{
+ *        "specification":{
+ *          "org.kiji.express.avro.AvroKijiOutputSpec":{
+ *            "table_uri":"kiji://myuri",
+ *            "field_bindings":[{
+ *              "tuple_field_name":"outputtuple",
+ *              "store_field_name":"info:out"
+ *            }]
+ *          }
+ *        }
+ *      },
+ *      "kv_stores":[{
+ *        "store_type":"AVRO_KV",
+ *        "name":"side_data",
+ *        "properties":[{
+ *          "name":"path",
+ *          "value":"/usr/src/and/so/on"
+ *        }]
+ *      }]
+ *    }
+ *  }
  * }
  * }}}
  *
@@ -124,14 +154,12 @@ import org.kiji.schema.util.ToJson
  *
  * @param name of the model environment.
  * @param version of the model environment.
- * @param modelTableUri is the URI of the Kiji table this model environment will read from and
- *     write to.
  * @param prepareEnvironment defining configuration details specific to the Prepare phase of a
- *     model.
+ *     model. Optional.
  * @param trainEnvironment defining configuration details specific to the Train phase of a model.
- * @param extractEnvironment defining configuration details specific to the Extract phase of a
- *     model.
+ *     Optional.
  * @param scoreEnvironment defining configuration details specific to the Score phase of a model.
+ *     Optional.
  * @param protocolVersion this model definition was written for.
  */
 @ApiAudience.Public
@@ -139,10 +167,8 @@ import org.kiji.schema.util.ToJson
 final class ModelEnvironment private[express] (
     val name: String,
     val version: String,
-    val modelTableUri: String,
     val prepareEnvironment: Option[PrepareEnvironment],
     val trainEnvironment: Option[TrainEnvironment],
-    val extractEnvironment: Option[ExtractEnvironment],
     val scoreEnvironment: Option[ScoreEnvironment],
     private[express] val protocolVersion: ProtocolVersion =
         ModelEnvironment.CURRENT_MODEL_DEF_VER) {
@@ -157,74 +183,62 @@ final class ModelEnvironment private[express] (
   def toJson(): String = {
     // Build an AvroPrepareEnvironment record.
     val avroPrepareEnvironment: Option[AvroPrepareEnvironment] = prepareEnvironment.map { env =>
-      val inputSpecs: java.util.Map[String, AvroInputSpec] = env
-          .inputSpecs
-          .mapValues { _.toAvroInputSpec }
-          .asJava
-      val outputSpecs: java.util.Map[String, AvroOutputSpec] = env
-          .outputSpecs
-          .mapValues { _.toAvroOutputSpec }
-          .asJava
+      val inputConfig: AvroInputSpec = env
+          .inputConfig
+          .toAvroInputSpec
+      val outputConfig: AvroOutputSpec = env
+          .outputConfig
+          .toAvroOutputSpec
       AvroPrepareEnvironment
           .newBuilder()
-          .setInputSpecs(inputSpecs)
-          .setOutputSpecs(outputSpecs)
+          .setInputConfig(inputConfig)
+          .setOutputConfig(outputConfig)
           .setKvStores(env.kvstores.map { kvstore => kvstore.toAvroKVStore }.asJava)
           .build()
     }
 
     // Build an AvroTrainEnvironment record.
     val avroTrainEnvironment: Option[AvroTrainEnvironment] = trainEnvironment.map { env =>
-      val inputSpecs: java.util.Map[String, AvroInputSpec] = env
-          .inputSpecs
-          .mapValues { _.toAvroInputSpec }
-          .asJava
-      val outputSpecs: java.util.Map[String, AvroOutputSpec] = env
-          .outputSpecs
-          .mapValues { _.toAvroOutputSpec }
-          .asJava
+      val inputConfig: AvroInputSpec = env
+          .inputConfig
+          .toAvroInputSpec
+      val outputConfig: AvroOutputSpec = env
+          .outputConfig
+          .toAvroOutputSpec
       AvroTrainEnvironment
           .newBuilder()
-          .setInputSpecs(inputSpecs)
-          .setOutputSpecs(outputSpecs)
-          .setKvStores(env.kvstores.map { kvstore => kvstore.toAvroKVStore }.asJava)
-          .build()
-    }
-
-    // Build an AvroExtractEnvironment record.
-    val avroExtractEnvironment: Option[AvroExtractEnvironment] = extractEnvironment.map { env =>
-      AvroExtractEnvironment
-          .newBuilder()
-          .setFieldBindings(env.fieldBindings
-              .map { fieldBinding => fieldBinding.toAvroFieldBinding }.asJava)
-          .setDataRequest(env.dataRequest.toAvro)
+          .setInputConfig(inputConfig)
+          .setOutputConfig(outputConfig)
           .setKvStores(env.kvstores.map { kvstore => kvstore.toAvroKVStore }.asJava)
           .build()
     }
 
     // Build an AvroScoreEnvironment record.
     val avroScoreEnvironment: Option[AvroScoreEnvironment] = scoreEnvironment.map { env =>
+      val inputConfig: AvroInputSpec = env
+          .inputConfig
+          .toAvroInputSpec
+      val outputConfig: AvroOutputSpec = env
+          .outputConfig
+          .toAvroOutputSpec
       AvroScoreEnvironment
           .newBuilder()
+          .setInputConfig(inputConfig)
+          .setOutputConfig(outputConfig)
           .setKvStores(env.kvstores.map { kvstore => kvstore.toAvroKVStore }.asJava)
-          .setOutputColumn(env.outputColumn)
           .build()
     }
 
     // Build an AvroModelEnvironment record.
-    // scalastyle:off null
     val environment: AvroModelEnvironment = AvroModelEnvironment
         .newBuilder()
         .setName(name)
         .setVersion(version)
         .setProtocolVersion(protocolVersion.toString)
-        .setModelTableUri(modelTableUri)
         .setPrepareEnvironment(avroPrepareEnvironment.getOrElse(null))
         .setTrainEnvironment(avroTrainEnvironment.getOrElse(null))
-        .setExtractEnvironment(avroExtractEnvironment.getOrElse(null))
         .setScoreEnvironment(avroScoreEnvironment.getOrElse(null))
         .build()
-    // scalastyle:on null
 
     ToJson.toAvroJsonString(environment)
   }
@@ -236,30 +250,22 @@ final class ModelEnvironment private[express] (
    *
    * @param name of the model environment.
    * @param version of the model environment.
-   * @param modelTableUri is the URI of the Kiji table this model environment will read from and
-   *     write to.
    * @param prepareEnvironment defining configuration details specific to the Prepare phase of a
    *     model.
    * @param trainEnvironment defining configuration details specific to the Train phase of a model.
-   * @param extractEnvironment defining configuration details specific to the Extract phase of a
-   *     model.
    * @param scoreEnvironment defining configuration details specific to the Score phase of a model.
    */
   def withNewSettings(
       name: String = this.name,
       version: String = this.version,
-      modelTableUri: String = this.modelTableUri,
       prepareEnvironment: Option[PrepareEnvironment] = this.prepareEnvironment,
       trainEnvironment: Option[TrainEnvironment] = this.trainEnvironment,
-      extractEnvironment: Option[ExtractEnvironment] = this.extractEnvironment,
       scoreEnvironment: Option[ScoreEnvironment] = this.scoreEnvironment): ModelEnvironment = {
     new ModelEnvironment(
         name,
         version,
-        modelTableUri,
         prepareEnvironment,
         trainEnvironment,
-        extractEnvironment,
         scoreEnvironment)
   }
 
@@ -268,10 +274,8 @@ final class ModelEnvironment private[express] (
       case environment: ModelEnvironment => {
         name == environment.name &&
             version == environment.version &&
-            modelTableUri == environment.modelTableUri &&
             prepareEnvironment == environment.prepareEnvironment &&
             trainEnvironment == environment.trainEnvironment &&
-            extractEnvironment == environment.extractEnvironment &&
             scoreEnvironment == environment.scoreEnvironment &&
             protocolVersion == environment.protocolVersion
       }
@@ -283,10 +287,8 @@ final class ModelEnvironment private[express] (
       Objects.hashCode(
           name,
           version,
-          modelTableUri,
           prepareEnvironment,
           trainEnvironment,
-          extractEnvironment,
           scoreEnvironment,
           protocolVersion)
 }
@@ -300,10 +302,10 @@ object ModelEnvironment {
   val MAX_RUN_ENV_VER: ProtocolVersion = ProtocolVersion.parse("model_environment-0.2.0")
 
   /** Minimum model environment version we can recognize. */
-  val MIN_RUN_ENV_VER: ProtocolVersion = ProtocolVersion.parse("model_environment-0.1.0")
+  val MIN_RUN_ENV_VER: ProtocolVersion = ProtocolVersion.parse("model_environment-0.2.0")
 
   /** Current ModelDefinition protocol version. */
-  val CURRENT_MODEL_DEF_VER: ProtocolVersion = ProtocolVersion.parse("model_environment-0.1.0")
+  val CURRENT_MODEL_DEF_VER: ProtocolVersion = ProtocolVersion.parse("model_environment-0.2.0")
 
   /** Regular expression used to validate a model environment version string. */
   val VERSION_REGEX: String = "[0-9]+(.[0-9]+)*"
@@ -316,11 +318,7 @@ object ModelEnvironment {
    * Creates a new ModelEnvironment using the specified settings.
    * @param name of the model environment.
    * @param version of the model environment.
-   * @param modelTableUri is the URI of the Kiji table this model environment will read from and
-   *     write to.
    * @param prepareEnvironment defining configuration details specific to the Prepare phase of
-   *     a model.
-   * @param extractEnvironment defining configuration details specific to the Extract phase of
    *     a model.
    * @param scoreEnvironment defining configuration details specific to the Score phase of a
    *     model.
@@ -329,18 +327,14 @@ object ModelEnvironment {
   def apply(
       name: String,
       version: String,
-      modelTableUri: String,
       prepareEnvironment: Option[PrepareEnvironment],
       trainEnvironment: Option[TrainEnvironment],
-      extractEnvironment: Option[ExtractEnvironment],
       scoreEnvironment: Option[ScoreEnvironment]): ModelEnvironment = {
     new ModelEnvironment(
         name,
         version,
-        modelTableUri,
         prepareEnvironment,
         trainEnvironment,
-        extractEnvironment,
         scoreEnvironment)
   }
 
@@ -374,7 +368,8 @@ object ModelEnvironment {
     // TODO(EXP-161): Accept outputs from multiple source types.
     specification match {
       case kijiSpec: AvroKijiOutputSpec => KijiOutputSpec(kijiSpec)
-        .asInstanceOf[OutputSpec]
+      case kijiSingleCol: AvroKijiSingleColumnOutputSpec =>
+          KijiSingleColumnOutputSpec(kijiSingleCol)
       case _ => throw new ValidationException(
         "Unsupported Output Configuration: " + specification.getClass.toString)
     }
@@ -395,81 +390,53 @@ object ModelEnvironment {
         .parse(avroModelEnvironment.getProtocolVersion)
     val prepareAvro = Option(avroModelEnvironment.getPrepareEnvironment)
     val trainAvro = Option(avroModelEnvironment.getTrainEnvironment)
-    val extractAvro = Option(avroModelEnvironment.getExtractEnvironment)
     val scoreAvro = Option(avroModelEnvironment.getScoreEnvironment)
 
     // Load the preparer's model environment.
     val prepareEnvironment = prepareAvro.map { prepare =>
-      val inputSpecs = prepare
-          .getInputSpecs
-          .asScala
-          .mapValues { spec: AvroInputSpec => avroInputSpecToInputSpec(spec) }
-          .toMap
-
-      val outputSpecs = prepare
-          .getOutputSpecs
-          .asScala
-          .mapValues { spec: AvroOutputSpec => avroOutputSpecToOutputSpec(spec) }
-          .toMap
+      val inputConfig = avroInputSpecToInputSpec(prepare.getInputConfig)
+      val outputConfig = avroOutputSpecToOutputSpec(prepare.getOutputConfig)
 
       new PrepareEnvironment(
-        inputSpecs = inputSpecs,
-        outputSpecs = outputSpecs,
+        inputConfig = inputConfig,
+        outputConfig = outputConfig,
         kvstores = prepare.getKvStores
           .asScala
           .map { avro => KVStore(avro) })
     }
 
-    // Load the trainers's model environment.
+      // Load the trainers's model environment.
     val trainEnvironment = trainAvro.map { train =>
-      val inputSpecs = train
-          .getInputSpecs
-          .asScala
-          .mapValues { spec: AvroInputSpec => avroInputSpecToInputSpec(spec) }
-          .toMap
-
-      val outputSpecs = train
-          .getOutputSpecs
-          .asScala
-          .mapValues { spec: AvroOutputSpec => avroOutputSpecToOutputSpec(spec) }
-          .toMap
+      val inputConfig = avroInputSpecToInputSpec(train.getInputConfig)
+      val outputConfig =  avroOutputSpecToOutputSpec(train.getOutputConfig)
 
       new TrainEnvironment(
-          inputSpecs = inputSpecs,
-          outputSpecs = outputSpecs,
+          inputConfig = inputConfig,
+          outputConfig = outputConfig,
           kvstores = train.getKvStores
               .asScala
               .map { avro => KVStore(avro) })
     }
 
-    // Load the extractor's model environment.
-    val extractEnvironment = extractAvro.map { extract =>
-      new ExtractEnvironment(
-        dataRequest = ExpressDataRequest(extract.getDataRequest),
-        fieldBindings = extract.getFieldBindings
-            .asScala.map { avro => FieldBinding(avro) },
-        kvstores = extract.getKvStores
-            .asScala.map { avro => KVStore(avro) }
-      )
-    }
-
     // Load the scorer's model environment.
     val scoreEnvironment = scoreAvro.map { score =>
+      val inputConfig = avroInputSpecToInputSpec(score.getInputConfig)
+      val outputConfig =  avroOutputSpecToOutputSpec(score.getOutputConfig)
+
       new ScoreEnvironment(
-        outputColumn = score.getOutputColumn,
-        kvstores = score.getKvStores
-            .asScala.map { avro => KVStore(avro) }
-      )
+          inputConfig = inputConfig,
+          outputConfig = outputConfig,
+          kvstores = score.getKvStores
+              .asScala
+              .map { avro => KVStore(avro) })
     }
 
     // Build a model environment.
     new ModelEnvironment(
         name = avroModelEnvironment.getName,
         version = avroModelEnvironment.getVersion,
-        modelTableUri = avroModelEnvironment.getModelTableUri,
         prepareEnvironment = prepareEnvironment,
         trainEnvironment = trainEnvironment,
-        extractEnvironment = extractEnvironment,
         scoreEnvironment = scoreEnvironment,
         protocolVersion = protocol)
   }
@@ -541,15 +508,12 @@ object ModelEnvironment {
     val trainErrors = environment.trainEnvironment.map { env =>
       validateTrainEnv(env)
     }.flatten
-    val extractErrors = environment.extractEnvironment.map { env =>
-      validateExtractEnv(env)
-    }.flatten
     val scoreErrors = environment.scoreEnvironment.map { env =>
       validateScoreEnv(env)
     }.flatten
 
     // Throw an exception if there were any validation errors.
-    val allErrors = baseErrors ++ prepareErrors ++ trainErrors ++ extractErrors ++ scoreErrors
+    val allErrors = baseErrors ++ prepareErrors ++ trainErrors ++ scoreErrors
     val causes = allErrors.flatten
     if (!causes.isEmpty) {
       throw new ModelEnvironmentValidationException(causes)
@@ -664,6 +628,9 @@ object ModelEnvironment {
       case kijiOutputSpec: KijiOutputSpec => {
         validateKijiInputOutputFieldBindings(kijiOutputSpec.fieldBindings)
       }
+      case kijiSingleColSpec: KijiSingleColumnOutputSpec => {
+        Seq(validateKijiColumnName(kijiSingleColSpec.outputColumn))
+      }
       // TODO(EXP-161): Accept outputs from multiple source types.
       case _ => Seq(Some(new ValidationException(
         "Unsupported OutputSpec type: %s".format(outputSpec.getClass))))
@@ -678,21 +645,13 @@ object ModelEnvironment {
    *     prepare phase.
    */
   def validatePrepareEnv(prepareEnv: PrepareEnvironment): Seq[Option[ValidationException]] = {
-    val inputFieldBindingExcep = prepareEnv.inputSpecs.mapValues {
-      inputSpec: InputSpec => validateInputSpec(inputSpec)
-    }
-    .flatMap(_._2)
-    .toSeq
+    val inputConfigExcep = validateInputSpec(prepareEnv.inputConfig)
 
-    val outputFieldBindingExcep = prepareEnv.outputSpecs.mapValues {
-      outputSpec: OutputSpec => validateOutputSpec(outputSpec)
-    }
-    .flatMap(_._2)
-    .toSeq
+    val outputConfigExcep = validateOutputSpec(prepareEnv.outputConfig)
 
     val kvStoreExcep = validateKvStores(prepareEnv.kvstores)
 
-    outputFieldBindingExcep ++ inputFieldBindingExcep ++ kvStoreExcep
+    outputConfigExcep ++ inputConfigExcep ++ kvStoreExcep
   }
 
   /**
@@ -703,57 +662,13 @@ object ModelEnvironment {
    *     prepare phase.
    */
   def validateTrainEnv(trainEnv: TrainEnvironment): Seq[Option[ValidationException]] = {
-    val inputFieldBindingExcep = trainEnv.inputSpecs.mapValues {
-      inputSpec: InputSpec => inputSpec match {
-        case kijiInputSpec: KijiInputSpec => {
-          validateKijiInputOutputFieldBindings(kijiInputSpec.fieldBindings) ++
-            validateDataRequest(kijiInputSpec.dataRequest)
-        }
-        // TODO(EXP-161): Accept inputs from multiple source types.
-        case _ => Seq(Some(new ValidationException(
-          "Unsupported InputSpec type: %s".format(inputSpec.getClass))))
-      }
-    }
-    .flatMap(_._2)
-    .toSeq
+    val inputConfigExcep = validateInputSpec(trainEnv.inputConfig)
 
-    val outputFieldBindingExcep = trainEnv.outputSpecs.mapValues {
-      outputSpec: OutputSpec => outputSpec match {
-        case kijiOutputSpec: KijiOutputSpec => {
-          validateKijiInputOutputFieldBindings(kijiOutputSpec.fieldBindings)
-        }
-        // TODO(EXP-161): Accept outputs from multiple source types.
-        case _ => Seq(Some(new ValidationException(
-          "Unsupported OutputSpec type: %s".format(outputSpec.getClass))))
-      }
-    }
-    .flatMap(_._2)
-    .toSeq
+    val outputConfigExcep = validateOutputSpec(trainEnv.outputConfig)
 
     val kvStoreExcep = validateKvStores(trainEnv.kvstores)
 
-    outputFieldBindingExcep ++ inputFieldBindingExcep ++ kvStoreExcep
-  }
-
-  /**
-   * Verifies that a model environment's extract phase is valid.
-   *
-   * @param extractEnv to validate.
-   * @return an optional ValidationException if there are errors encountered while validating the
-   *     extract phase.
-   */
-  def validateExtractEnv(extractEnv: ExtractEnvironment): Seq[Option[ValidationException]] = {
-    val fieldNames: Seq[String] = extractEnv.fieldBindings.map {
-      fieldBinding: FieldBinding => fieldBinding.tupleFieldName
-    }
-    val columnNames: Seq[String] = extractEnv.fieldBindings.map {
-      fieldBinding: FieldBinding => fieldBinding.storeFieldName
-    }
-    val fieldBindingExcep = Seq(validateFieldNames(fieldNames), validateColumnNames(columnNames))
-    val kvStoreExcep = validateKvStores(extractEnv.kvstores)
-    val dataReqExcep = validateDataRequest(extractEnv.dataRequest)
-
-    fieldBindingExcep ++ kvStoreExcep ++ dataReqExcep
+    outputConfigExcep ++ inputConfigExcep ++ kvStoreExcep
   }
 
   /**
@@ -764,10 +679,21 @@ object ModelEnvironment {
    *     score phase.
    */
   def validateScoreEnv(scoreEnv: ScoreEnvironment): Seq[Option[ValidationException]] = {
-    val colNameExcep = Seq(validateKijiColumnName(scoreEnv.outputColumn))
+    val inputConfigExcep = validateInputSpec(scoreEnv.inputConfig)
+
+    // For score, we only permit output to a single Kiji column. Hence we need to validate
+    // this as a special case.
+    val outputConfigExcep = scoreEnv.outputConfig match {
+      case scorePhaseOutputSpec: KijiSingleColumnOutputSpec => {
+        Seq(validateKijiColumnName(scorePhaseOutputSpec.outputColumn))
+      }
+      case _ => Seq(Some(new ValidationException(
+        "Unsupported OutputSpec type for Score Phase: %s".format(scoreEnv.outputConfig.getClass))))
+    }
+
     val kvStoreExcep = validateKvStores(scoreEnv.kvstores)
 
-    colNameExcep ++ kvStoreExcep
+    inputConfigExcep ++ outputConfigExcep ++ kvStoreExcep
   }
 
   /**

@@ -50,12 +50,7 @@ final private[express] class KijiTableSplit(
 
   /**
    * Returns the length of the split.
-   *
-   * This method does not currently examine the data in the region represented by the split. We
-   * assume that each split is 3/4 full (where "full" is defined as hbase.hregion.max.filesize).
-   * If the region had that many bytes in it, it would split in two, each containing 1/2 that many
-   * bytes. So we expect, on average, regions to be halfway between "newly split" and "just about
-   * to split."
+   * TODO: EXP-180: KijiTableSplit should return a better estimate in getLength
    *
    * @return the length of the split.
    * @see org.apache.hadoop.mapreduce.InputSplit#getLength()

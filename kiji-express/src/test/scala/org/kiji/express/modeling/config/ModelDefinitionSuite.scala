@@ -64,18 +64,19 @@ class ModelDefinitionSuite extends FunSuite {
     val modelDefinition = ModelDefinition(
         name = "name",
         version = "1.0.0",
+        prepareExtractor = Some(classOf[ModelDefinitionSuite.MyExtractor]),
         preparer = Some(classOf[ModelDefinitionSuite.MyPreparer]),
         trainer = Some(classOf[ModelDefinitionSuite.MyTrainer]),
-        extractor = Some(classOf[ModelDefinitionSuite.MyExtractor]),
-        scorer = Some(classOf[ModelDefinitionSuite.MyScorer])
-    )
+        scorer = Some(classOf[ModelDefinitionSuite.MyScorer]))
     // Validate the constructed definition.
     assert("name" === modelDefinition.name)
     assert("1.0.0" === modelDefinition.version)
     assert(classOf[ModelDefinitionSuite.MyPreparer] === modelDefinition.preparerClass.get)
     assert(classOf[ModelDefinitionSuite.MyTrainer] === modelDefinition.trainerClass.get)
-    assert(classOf[ModelDefinitionSuite.MyExtractor] === modelDefinition.extractorClass.get)
     assert(classOf[ModelDefinitionSuite.MyScorer] === modelDefinition.scorerClass.get)
+    assert(classOf[ModelDefinitionSuite.MyExtractor] === modelDefinition.prepareExtractor.get)
+    assert(None === modelDefinition.trainExtractor)
+    assert(None === modelDefinition.scoreExtractor)
 
     // Serialize and deserialize the definition.
     val serialized = modelDefinition.toJson()
@@ -86,7 +87,7 @@ class ModelDefinitionSuite extends FunSuite {
     assert("1.0.0" === deserialized.version)
     assert(classOf[ModelDefinitionSuite.MyPreparer] === deserialized.preparerClass.get)
     assert(classOf[ModelDefinitionSuite.MyTrainer] === deserialized.trainerClass.get)
-    assert(classOf[ModelDefinitionSuite.MyExtractor] === deserialized.extractorClass.get)
+    assert(classOf[ModelDefinitionSuite.MyExtractor] === deserialized.prepareExtractor.get)
     assert(classOf[ModelDefinitionSuite.MyScorer] === deserialized.scorerClass.get)
   }
 
@@ -96,16 +97,15 @@ class ModelDefinitionSuite extends FunSuite {
         version = "1.0.0",
         preparer = Some(classOf[ModelDefinitionSuite.MyPreparer]),
         trainer = Some(classOf[ModelDefinitionSuite.MyTrainer]),
-        extractor = Some(classOf[ModelDefinitionSuite.MyExtractor]),
-        scorer = Some(classOf[ModelDefinitionSuite.MyScorer])
-    )
+        scoreExtractor = Some(classOf[ModelDefinitionSuite.MyExtractor]),
+        scorer = Some(classOf[ModelDefinitionSuite.MyScorer]))
 
     val modelDefinition2 = modelDefinition.withNewSettings(name = "name2")
     assert("name2" === modelDefinition2.name)
     assert("1.0.0" === modelDefinition2.version)
     assert(classOf[ModelDefinitionSuite.MyPreparer] === modelDefinition2.preparerClass.get)
     assert(classOf[ModelDefinitionSuite.MyTrainer] === modelDefinition2.trainerClass.get)
-    assert(classOf[ModelDefinitionSuite.MyExtractor] === modelDefinition2.extractorClass.get)
+    assert(classOf[ModelDefinitionSuite.MyExtractor] === modelDefinition2.scoreExtractor.get)
     assert(classOf[ModelDefinitionSuite.MyScorer] === modelDefinition2.scorerClass.get)
 
     val modelDefinition3 = modelDefinition2.withNewSettings(version = "2.0.0")
@@ -113,7 +113,7 @@ class ModelDefinitionSuite extends FunSuite {
     assert("2.0.0" === modelDefinition3.version)
     assert(classOf[ModelDefinitionSuite.MyPreparer] === modelDefinition3.preparerClass.get)
     assert(classOf[ModelDefinitionSuite.MyTrainer] === modelDefinition3.trainerClass.get)
-    assert(classOf[ModelDefinitionSuite.MyExtractor] === modelDefinition3.extractorClass.get)
+    assert(classOf[ModelDefinitionSuite.MyExtractor] === modelDefinition3.scoreExtractor.get)
     assert(classOf[ModelDefinitionSuite.MyScorer] === modelDefinition3.scorerClass.get)
 
     val modelDefinition4 = modelDefinition3.withNewSettings(
@@ -122,7 +122,7 @@ class ModelDefinitionSuite extends FunSuite {
     assert("2.0.0" === modelDefinition4.version)
     assert(classOf[ModelDefinitionSuite.AnotherPreparer] === modelDefinition4.preparerClass.get)
     assert(classOf[ModelDefinitionSuite.MyTrainer] === modelDefinition4.trainerClass.get)
-    assert(classOf[ModelDefinitionSuite.MyExtractor] === modelDefinition4.extractorClass.get)
+    assert(classOf[ModelDefinitionSuite.MyExtractor] === modelDefinition4.scoreExtractor.get)
     assert(classOf[ModelDefinitionSuite.MyScorer] === modelDefinition4.scorerClass.get)
 
     val modelDefinition5 = modelDefinition4.withNewSettings(
@@ -131,16 +131,17 @@ class ModelDefinitionSuite extends FunSuite {
     assert("2.0.0" === modelDefinition5.version)
     assert(classOf[ModelDefinitionSuite.AnotherPreparer] === modelDefinition5.preparerClass.get)
     assert(classOf[ModelDefinitionSuite.AnotherTrainer] === modelDefinition5.trainerClass.get)
-    assert(classOf[ModelDefinitionSuite.MyExtractor] === modelDefinition5.extractorClass.get)
+    assert(classOf[ModelDefinitionSuite.MyExtractor] === modelDefinition5.scoreExtractor.get)
     assert(classOf[ModelDefinitionSuite.MyScorer] === modelDefinition5.scorerClass.get)
 
     val modelDefinition6 = modelDefinition5.withNewSettings(
-        extractor = Some(classOf[ModelDefinitionSuite.AnotherExtractor]))
+        prepareExtractor = Some(classOf[ModelDefinitionSuite.AnotherExtractor]))
     assert("name2" === modelDefinition6.name)
     assert("2.0.0" === modelDefinition6.version)
     assert(classOf[ModelDefinitionSuite.AnotherPreparer] === modelDefinition6.preparerClass.get)
     assert(classOf[ModelDefinitionSuite.AnotherTrainer] === modelDefinition6.trainerClass.get)
-    assert(classOf[ModelDefinitionSuite.AnotherExtractor] === modelDefinition6.extractorClass.get)
+    assert(classOf[ModelDefinitionSuite.AnotherExtractor] === modelDefinition6.prepareExtractor
+        .get)
     assert(classOf[ModelDefinitionSuite.MyScorer] === modelDefinition6.scorerClass.get)
 
     val modelDefinition7 = modelDefinition6.withNewSettings(
@@ -149,7 +150,8 @@ class ModelDefinitionSuite extends FunSuite {
     assert("2.0.0" === modelDefinition7.version)
     assert(classOf[ModelDefinitionSuite.AnotherPreparer] === modelDefinition7.preparerClass.get)
     assert(classOf[ModelDefinitionSuite.AnotherTrainer] === modelDefinition7.trainerClass.get)
-    assert(classOf[ModelDefinitionSuite.AnotherExtractor] === modelDefinition7.extractorClass.get)
+    assert(classOf[ModelDefinitionSuite.AnotherExtractor] === modelDefinition7.prepareExtractor
+        .get)
     assert(classOf[ModelDefinitionSuite.AnotherScorer] === modelDefinition7.scorerClass.get)
   }
 
@@ -157,12 +159,12 @@ class ModelDefinitionSuite extends FunSuite {
     val definition: ModelDefinition = ModelDefinition
         .fromJsonFile("src/test/resources/modelDefinitions/valid-model-definition.json")
 
-    assert("abandoned-cart-model" === definition.name)
+    assert("name" === definition.name)
     assert("1.0.0" === definition.version)
     assert(classOf[ModelDefinitionSuite.MyPreparer].getName
         === definition.preparerClass.get.getName)
-    assert(classOf[ModelDefinitionSuite.MyExtractor].getName
-        === definition.extractorClass.get.getName)
+    assert(classOf[ModelDefinitionSuite.MyExtractor].getName ===
+        definition.prepareExtractor.get.getName)
     assert(classOf[ModelDefinitionSuite.MyScorer].getName === definition.scorerClass.get.getName)
   }
 
@@ -236,9 +238,9 @@ class ModelDefinitionSuite extends FunSuite {
     val thrown = intercept[ModelDefinitionValidationException] {
       ModelDefinition.fromJson(invalidProtocolDefinition)
     }
-    assert(ModelDefinition.VALIDATION_MESSAGE + "\n\"model_definition-0.1.0\" is the maximum " +
+    assert(ModelDefinition.VALIDATION_MESSAGE + "\n\"model_definition-0.2.0\" is the maximum " +
         "protocol version supported. The provided model definition is of protocol version: " +
-        "\"model_definition-0.2.0\"" === thrown.getMessage)
+        "\"model_definition-7.3.0\"" === thrown.getMessage)
   }
 
   test("ModelDefinition fails with a ValidationException given an invalid preparer class name") {

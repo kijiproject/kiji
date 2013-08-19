@@ -23,26 +23,25 @@ import com.google.common.base.Objects
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.annotations.Inheritance
 
 /**
  * A specification of the runtime bindings needed in the train phase of a model.
  *
- * @param inputSpecs defining a mapping from input data source names to their configurations.
- * @param outputSpecs defining a mapping from output data sink names to their configurations.
+ * @param inputConfig defining a mapping from input data source names to their configurations.
+ * @param outputConfig defining a mapping from output data sink names to their configurations.
  * @param kvstores for usage during the train phase.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
 final class TrainEnvironment private[express](
-    val inputSpecs: Map[String, InputSpec],
-    val outputSpecs: Map[String, OutputSpec],
+    val inputConfig: InputSpec,
+    val outputConfig: OutputSpec,
     val kvstores: Seq[KVStore]) {
   override def equals(other: Any): Boolean = {
     other match {
       case environment: TrainEnvironment => {
-        inputSpecs == environment.inputSpecs &&
-            outputSpecs == environment.outputSpecs &&
+        inputConfig == environment.inputConfig &&
+            outputConfig == environment.outputConfig &&
             kvstores == environment.kvstores
       }
       case _ => false
@@ -51,8 +50,8 @@ final class TrainEnvironment private[express](
 
   override def hashCode(): Int =
       Objects.hashCode(
-          inputSpecs,
-          outputSpecs,
+          inputConfig,
+          outputConfig,
           kvstores)
 }
 
@@ -64,18 +63,18 @@ object TrainEnvironment {
    * Creates a new TrainEnvironment, which is a specification of the runtime bindings needed in
    * the train phase of a model.
    *
-   * @param inputSpecs defining a mapping from input data source names to their configurations.
-   * @param outputSpecs defining a mapping from output data sink names to their configurations.
+   * @param inputConfig defining a mapping from input data source names to their configurations.
+   * @param outputConfig defining a mapping from output data sink names to their configurations.
    * @param kvstores for usage during the train phase.
    * @return an TrainEnvironment with the specified configuration.
    */
   def apply(
-      inputSpecs: Map[String, InputSpec],
-      outputSpecs: Map[String, OutputSpec],
+      inputConfig: InputSpec,
+      outputConfig: OutputSpec,
       kvstores: Seq[KVStore]): TrainEnvironment = {
     new TrainEnvironment(
-        inputSpecs,
-        outputSpecs,
+        inputConfig,
+        outputConfig,
         kvstores)
   }
 }

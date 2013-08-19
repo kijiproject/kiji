@@ -20,6 +20,7 @@
 package org.kiji.express.modeling.framework
 
 import scala.collection.JavaConverters._
+import scala.Some
 
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
@@ -33,9 +34,11 @@ import org.kiji.express.modeling.Extractor
 import org.kiji.express.modeling.KeyValueStore
 import org.kiji.express.modeling.ScoreFn
 import org.kiji.express.modeling.Scorer
+import org.kiji.express.modeling.config.KijiInputSpec
+import org.kiji.express.modeling.config.KijiSingleColumnOutputSpec
+import org.kiji.express.modeling.config.KVStore
 import org.kiji.express.modeling.config.ModelDefinition
 import org.kiji.express.modeling.config.ModelEnvironment
-import org.kiji.express.modeling.config.KVStore
 import org.kiji.express.modeling.impl.AvroKVRecordKeyValueStore
 import org.kiji.express.modeling.impl.AvroRecordKeyValueStore
 import org.kiji.express.modeling.impl.KijiTableKeyValueStore
@@ -56,10 +59,8 @@ import org.kiji.schema.KijiURI
 /**
  * A producer for running [[org.kiji.express.modeling.config.ModelDefinition]]s.
  *
- * This producer executes the extract and score phases of a model in series. A precondition for
- * running this producer is having valid extract and score phases in the model definition and
- * model environment. The model that this producer will run is loaded from the json configuration
- * strings stored in configuration keys:
+ * This producer executes the score phase of a model. The model that this producer will run is
+ * loaded from the json configuration strings stored in configuration keys:
  * <ul>
  *   <li>`org.kiji.express.model.definition`</li>
  *   <li>`org.kiji.express.model.environment`</li>
@@ -67,14 +68,14 @@ import org.kiji.schema.KijiURI
  */
 @ApiAudience.Framework
 @ApiStability.Experimental
-final class ExtractScoreProducer
+final class ScoreProducer
     extends KijiProducer {
   /** The model definition. This variable must be initialized. */
   private[this] var _modelDefinition: Option[ModelDefinition] = None
   private[this] def modelDefinition: ModelDefinition = {
     _modelDefinition.getOrElse {
       throw new IllegalStateException(
-          "ExtractScoreProducer is missing its model definition. Did setConf get called?")
+          "ScoreProducer is missing its model definition. Did setConf get called?")
     }
   }
 
@@ -83,7 +84,7 @@ final class ExtractScoreProducer
   private[this] def modelEnvironment: ModelEnvironment = {
     _modelEnvironment.getOrElse {
       throw new IllegalStateException(
-          "ExtractScoreProducer is missing its run profile. Did setConf get called?")
+          "ScoreProducer is missing its run profile. Did setConf get called?")
     }
   }
 
@@ -92,7 +93,7 @@ final class ExtractScoreProducer
   private[this] def extractor: Extractor = {
     _extractor.getOrElse {
       throw new IllegalStateException(
-          "ExtractScoreProducer is missing its extractor. Did setConf get called?")
+          "ScoreProducer is missing its extractor. Did setConf get called?")
     }
   }
 
@@ -101,7 +102,7 @@ final class ExtractScoreProducer
   private[this] def scorer: Scorer = {
     _scorer.getOrElse {
       throw new IllegalStateException(
-          "ExtractScoreProducer is missing its scorer. Did setConf get called?")
+          "ScoreProducer is missing its scorer. Did setConf get called?")
     }
   }
 
@@ -119,13 +120,13 @@ final class ExtractScoreProducer
    * immediately after instantiation.
    *
    * This method loads a [[org.kiji.express.modeling.config.ModelDefinition]] and a
-   * [[org.kiji.express.modeling.config.ModelEnvironment]] for ExtractScoreProducer to use.
+   * [[org.kiji.express.modeling.config.ModelEnvironment]] for ScoreProducer to use.
    *
    * @param conf object that this producer should use.
    */
   override def setConf(conf: Configuration) {
     // Load model definition.
-    val modelDefinitionJson: String = conf.get(ExtractScoreProducer.modelDefinitionConfKey)
+    val modelDefinitionJson: String = conf.get(ScoreProducer.modelDefinitionConfKey)
     // scalastyle:off null
     require(
         modelDefinitionJson != null,
@@ -135,7 +136,7 @@ final class ExtractScoreProducer
     _modelDefinition = Some(modelDefinitionDef)
 
     // Load run profile.
-    val modelEnvironmentJson: String = conf.get(ExtractScoreProducer.modelEnvironmentConfKey)
+    val modelEnvironmentJson: String = conf.get(ScoreProducer.modelEnvironmentConfKey)
     // scalastyle:off null
     require(
         modelEnvironmentJson != null,
@@ -144,9 +145,9 @@ final class ExtractScoreProducer
     val modelEnvironmentDef = ModelEnvironment.fromJson(modelEnvironmentJson)
     _modelEnvironment = Some(modelEnvironmentDef)
 
-    // Make an instance of each required phase.
+    // Make an instance of each requires phase.
     val extractor = modelDefinitionDef
-        .extractorClass
+        .scoreExtractor
         .get
         .newInstance()
         .asInstanceOf[Extractor]
@@ -172,9 +173,12 @@ final class ExtractScoreProducer
    * @return a kiji data request.
    */
   override def getDataRequest(): KijiDataRequest = modelEnvironment
-      .extractEnvironment
+      .scoreEnvironment
       .get
-      .dataRequest.toKijiDataRequest()
+      .inputConfig
+      .asInstanceOf[KijiInputSpec]
+      .dataRequest
+      .toKijiDataRequest()
 
   /**
    * Returns the name of the column this producer will write to.
@@ -186,6 +190,8 @@ final class ExtractScoreProducer
   override def getOutputColumn(): String = modelEnvironment
       .scoreEnvironment
       .get
+      .outputConfig
+      .asInstanceOf[KijiSingleColumnOutputSpec]
       .outputColumn
 
   /**
@@ -195,46 +201,34 @@ final class ExtractScoreProducer
    * @return a mapping from kvstore names to opened kvstores.
    */
   override def getRequiredStores(): java.util.Map[String, JKeyValueStore[_, _]] = {
-    // Open the kvstores defined for the extract phase.
-    val extractStoreDefs: Seq[KVStore] = modelEnvironment
-        .extractEnvironment
-        .get
-        .kvstores
-    val extractStores: Map[String, JKeyValueStore[_, _]] = ExtractScoreProducer
-        .openJKvstores(extractStoreDefs, getConf(), "extract-")
-
     // Open the kvstores defined for the score phase.
     val scoreStoreDefs: Seq[KVStore] = modelEnvironment
         .scoreEnvironment
         .get
         .kvstores
-    val scoreStores: Map[String, JKeyValueStore[_, _]] = ExtractScoreProducer
-        .openJKvstores(scoreStoreDefs, getConf(), "score-")
-
-    // Combine the opened kvstores.
-    (extractStores ++ scoreStores)
-        .asJava
+    val scoreStores: Map[String, JKeyValueStore[_, _]] = ScoreProducer
+        .openJKvstores(scoreStoreDefs, getConf())
+    scoreStores.asJava
   }
 
   override def setup(context: KijiContext) {
-    // Setup the extract phase's kvstores.
-    val extractStoreDefs: Seq[KVStore] = modelEnvironment
-        .extractEnvironment
-        .get
-        .kvstores
-    extractor.kvstores = ExtractScoreProducer
-        .wrapKvstoreReaders(extractStoreDefs, context, "extract-")
-
     // Setup the score phase's kvstores.
     val scoreStoreDefs: Seq[KVStore] = modelEnvironment
         .scoreEnvironment
         .get
         .kvstores
-    scorer.kvstores = ExtractScoreProducer
-        .wrapKvstoreReaders(scoreStoreDefs, context, "score-")
+    extractor.kvstores = ScoreProducer
+        .wrapKvstoreReaders(scoreStoreDefs, context)
+    scorer.kvstores = extractor.kvstores
 
-    // Setup the row converter.
-    val uri = KijiURI.newBuilder(modelEnvironment.modelTableUri).build()
+  // Setup the row converter.
+    val uriString = modelEnvironment
+        .scoreEnvironment
+        .get
+        .inputConfig
+        .asInstanceOf[KijiInputSpec]
+        .tableUri
+    val uri = KijiURI.newBuilder(uriString).build()
     _rowConverter = Some(new GenericRowDataConverter(uri, getConf()))
   }
 
@@ -244,8 +238,10 @@ final class ExtractScoreProducer
 
     // Setup fields.
     val fieldMapping: Map[String, KijiColumnName] = modelEnvironment
-        .extractEnvironment
+        .scoreEnvironment
         .get
+        .inputConfig
+        .asInstanceOf[KijiInputSpec]
         .fieldBindings
         .map { binding =>
           (binding.tupleFieldName, new KijiColumnName(binding.storeFieldName))
@@ -310,7 +306,7 @@ final class ExtractScoreProducer
   }
 }
 
-object ExtractScoreProducer {
+object ScoreProducer {
   /**
    * Configuration key addressing the JSON description of a
    * [[org.kiji.express.modeling.config.ModelDefinition]].
@@ -328,17 +324,14 @@ object ExtractScoreProducer {
    *
    * @param kvstores to open.
    * @param context providing access to the opened kvstores.
-   * @param prefix prepended to the provided kvstore names.
    * @return a mapping from the kvstore's name to the wrapped kvstore.
    */
   def wrapKvstoreReaders(
       kvstores: Seq[KVStore],
-      context: KijiContext,
-      prefix: String = ""
-  ): Map[String, KeyValueStore[_, _]] = {
+      context: KijiContext): Map[String, KeyValueStore[_, _]] = {
     return kvstores
         .map { kvstore: KVStore =>
-          val jkvstoreReader = context.getStore(prefix + kvstore.name)
+          val jkvstoreReader = context.getStore(kvstore.name)
           val wrapped: KeyValueStore[_, _] = KvStoreType.valueOf(kvstore.storeType) match {
             case KvStoreType.AVRO_KV => new AvroKVRecordKeyValueStore(jkvstoreReader)
             case KvStoreType.AVRO_RECORD => new AvroRecordKeyValueStore(jkvstoreReader)
@@ -354,13 +347,11 @@ object ExtractScoreProducer {
    *
    * @param kvstores to open.
    * @param conf containing settings pertaining to the specified kvstores.
-   * @param prefix to prepend to the provided kvstore names.
    * @return a mapping from the kvstore's name to the opened kvstore.
    */
   def openJKvstores(
       kvstores: Seq[KVStore],
-      conf: Configuration,
-      prefix: String = ""): Map[String, JKeyValueStore[_, _]] = {
+      conf: Configuration): Map[String, JKeyValueStore[_, _]] = {
     kvstores
         // Open the kvstores defined for the extract phase.
         .map { kvstore: KVStore =>
@@ -414,7 +405,7 @@ object ExtractScoreProducer {
           }
 
           // Pack the kvstore into a tuple with its name.
-          (prefix + kvstore.name, jkvstore)
+          (kvstore.name, jkvstore)
         }
         .toMap
   }

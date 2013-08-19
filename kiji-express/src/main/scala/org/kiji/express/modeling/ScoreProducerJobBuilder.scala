@@ -22,64 +22,63 @@ package org.kiji.express.modeling
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
 
-import org.kiji.express.modeling.config.ExtractEnvironment
+import org.kiji.express.modeling.config.KijiInputSpec
 import org.kiji.express.modeling.config.ModelDefinition
 import org.kiji.express.modeling.config.ModelEnvironment
 import org.kiji.express.modeling.config.ScoreEnvironment
 import org.kiji.express.modeling.config.ValidationException
-import org.kiji.express.modeling.framework.ExtractScoreProducer
+import org.kiji.express.modeling.framework.ScoreProducer
 import org.kiji.mapreduce.KijiMapReduceJob
 import org.kiji.mapreduce.output.MapReduceJobOutputs
 import org.kiji.mapreduce.produce.KijiProduceJobBuilder
 import org.kiji.schema.KijiURI
 
 /**
- * Used to build jobs for running the extract and score phases of a model in batch over an entire
- * input table. Both the extract and score phases are required to build this job.
+ * Used to build jobs for running the score phase of a model in batch over an entire
+ * input table.
  */
-object ExtractScoreJobBuilder {
+object ScoreProducerJobBuilder {
   /**
-   * Builds a job for running the extract and score phases of a model in batch over an entire input
-   * table.
+   * Builds a job for running the score phase of a model in batch over an entire input table.
    *
-   * @param model containing the desired extract and score phases.
+   * @param model containing the desired score phase.
    * @param environment to run against.
    * @param conf to use with the job, defaults to creating a new HBaseConfiguration.
    * @return a MapReduce job.
    */
   def buildJob(model: ModelDefinition, environment: ModelEnvironment,
       conf: Configuration = HBaseConfiguration.create()): KijiMapReduceJob = {
-    val uri = KijiURI.newBuilder(environment.modelTableUri).build()
-
     // Serialize the model configuration objects.
-    conf.set(ExtractScoreProducer.modelDefinitionConfKey, model.toJson())
-    conf.set(ExtractScoreProducer.modelEnvironmentConfKey, environment.toJson())
+    conf.set(ScoreProducer.modelDefinitionConfKey, model.toJson())
+    conf.set(ScoreProducer.modelEnvironmentConfKey, environment.toJson())
 
-    // Validate that extract and score, which are optional phases, exist in the given
-    // model definition and model environment.
-    val extractModel: Option[Class[_]] = model.extractorClass
-    val extractEnv: Option[ExtractEnvironment] = environment.extractEnvironment
     val scoreModel: Option[Class[_]] = model.scorerClass
     val scoreEnv: Option[ScoreEnvironment] = environment.scoreEnvironment
-    if ((extractModel == None) || (extractEnv == None)
-        || (scoreModel == None) || (scoreEnv == None)) {
-      val error = "A model definition and model environment must include both the extract " +
-          "phase and the score phase in order to build an ExtractScoreProducer."
+    if ((scoreModel == None) || (scoreEnv == None)) {
+      val error = "A model definition and model environment must include" +
+          "the score phase in order to build a ScoreProducer."
       throw new ValidationException(error)
     }
+
+    val uri = KijiURI.newBuilder(environment
+      .scoreEnvironment
+      .get
+      .inputConfig
+      .asInstanceOf[KijiInputSpec]
+      .tableUri)
+      .build()
 
     // Build the produce job.
     KijiProduceJobBuilder.create()
         .withConf(conf)
         .withInputTable(uri)
-        .withProducer(classOf[ExtractScoreProducer])
+        .withProducer(classOf[ScoreProducer])
         .withOutput(MapReduceJobOutputs.newDirectKijiTableMapReduceJobOutput(uri))
         .build()
   }
 
   /**
-   * Builds a job for running the extract and score phases of a model in batch over an entire input
-   * table.
+   * Builds a job for running the score phase of a model in batch over an entire input table.
    *
    * @param modelDefPath to file containing the desired model definition file.
    * @param environmentPath to file containing the desired model environment file.

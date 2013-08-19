@@ -30,7 +30,7 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.common.flags.Flag
 import org.kiji.common.flags.FlagParser
-import org.kiji.express.modeling.ExtractScoreJobBuilder
+import org.kiji.express.modeling.ScoreProducerJobBuilder
 
 
 /**
@@ -43,7 +43,7 @@ import org.kiji.express.modeling.ExtractScoreJobBuilder
  */
 @ApiAudience.Private
 @ApiStability.Experimental
-final class ExtractScoreJobTool extends Configured with Tool {
+final class ScoreJobTool extends Configured with Tool {
   @Flag(name="model-def", usage="Path to a file containing a Model Definition JSON description. ")
   val mModelDefPath: String = ""
 
@@ -62,15 +62,15 @@ final class ExtractScoreJobTool extends Configured with Tool {
     // scalastyle:off null
     val nonFlagArgs = FlagParser.init(this, args)
     if (nonFlagArgs == null) {
-      ExtractScoreJobTool.LOGGER.info("Problems parsing command line flags.")
+      ScoreJobTool.LOGGER.info("Problems parsing command line flags.")
       return 1
     }
     // scalastyle:on null
     validateFlags()
-    ExtractScoreJobTool.LOGGER.info("Building Extract-Score batch job.")
-    val produceJob = ExtractScoreJobBuilder.buildJob(modelDefPath = mModelDefPath,
+    ScoreJobTool.LOGGER.info("Building Extract-Score batch job.")
+    val produceJob = ScoreProducerJobBuilder.buildJob(modelDefPath = mModelDefPath,
         environmentPath = mModelEnvPath, config = getConf())
-    ExtractScoreJobTool.LOGGER.info("Running Extract-Score batch job.")
+    ScoreJobTool.LOGGER.info("Running Extract-Score batch job.")
     produceJob.run() match {
       case true => 0
       case false => 1
@@ -79,10 +79,10 @@ final class ExtractScoreJobTool extends Configured with Tool {
 }
 
 /*
- * The companion object to ExtractScoreJobTool that only contains a main method.
+ * The companion object to ScoreJobTool that only contains a main method.
  */
-object ExtractScoreJobTool {
-  val LOGGER: Logger = LoggerFactory.getLogger(ExtractScoreJobTool.getClass)
+object ScoreJobTool {
+  val LOGGER: Logger = LoggerFactory.getLogger(ScoreJobTool.getClass)
   /**
    * The entry point into the tool.
    *
@@ -90,6 +90,6 @@ object ExtractScoreJobTool {
    * @return a return code that signals the success of the specified job.
    */
   def main(args: Array[String]) {
-    ToolRunner.run(HBaseConfiguration.create(), new ExtractScoreJobTool, args)
+    ToolRunner.run(HBaseConfiguration.create(), new ScoreJobTool, args)
   }
 }

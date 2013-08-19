@@ -26,8 +26,8 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
 import org.kiji.express.avro.AvroKijiOutputSpec
+import org.kiji.express.avro.AvroKijiSingleColumnOutputSpec
 import org.kiji.express.avro.AvroOutputSpec
-
 /**
  * Represents the configuration for an output data source for a phase of the model lifecycle.
  */
@@ -83,5 +83,49 @@ object KijiOutputSpec {
     KijiOutputSpec(
         tableUri = avroKijiOutputSpec.getTableUri,
         fieldBindings = avroKijiOutputSpec.getFieldBindings.asScala.map { FieldBinding(_) })
+  }
+}
+
+/**
+ * Configuration necessary to use a Kiji table column as the output. Used in the score phase.
+ *
+ * @param tableUri addressing the Kiji table to write to.
+ * @param outputColumn specifies the Kiji column for the output of the score phase.
+ */
+@ApiAudience.Public
+@ApiStability.Experimental
+final case class KijiSingleColumnOutputSpec(
+    tableUri: String,
+    outputColumn: String) extends OutputSpec{
+  private[express] override def toAvroOutputSpec(): AvroOutputSpec = {
+    val avroScorePhaseOutputSpec = AvroKijiSingleColumnOutputSpec
+      .newBuilder()
+      .setTableUri(tableUri)
+      .setOutputColumn(outputColumn)
+      .build()
+
+    AvroOutputSpec
+      .newBuilder()
+      .setSpecification(avroScorePhaseOutputSpec)
+      .build()
+  }
+}
+
+/**
+ * The companion object to KijiSingleColumnOutputSpec for factory methods.
+ */
+object KijiSingleColumnOutputSpec {
+  /**
+   * Converts an AvroKijiSingleColumnOutputSpec specification into a KijiSingleColumnOutputSpec
+   * case class.
+   *
+   * @param avroScorePhaseOutputSpec is the Avro specification.
+   * @return the avro KijiSingleColumnOutputSpec specification as a KijiOutputSpec case class.
+   */
+  private[express] def apply(avroScorePhaseOutputSpec: AvroKijiSingleColumnOutputSpec):
+      KijiSingleColumnOutputSpec = {
+    KijiSingleColumnOutputSpec(
+      tableUri = avroScorePhaseOutputSpec.getTableUri,
+      outputColumn = avroScorePhaseOutputSpec.getOutputColumn)
   }
 }

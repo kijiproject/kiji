@@ -21,21 +21,21 @@ package org.kiji.express.shellext
 
 import java.io.File
 import java.io.FileWriter
+import scala.Some
 
 import com.google.common.io.Files
 
 import org.kiji.express.KijiSlice
-import org.kiji.express.modeling.config.FieldBinding
 import org.kiji.express.modeling.config.ExpressDataRequest
 import org.kiji.express.modeling.config.ExpressColumnRequest
-import org.kiji.express.modeling.config.ExtractEnvironment
+import org.kiji.express.modeling.config.FieldBinding
+import org.kiji.express.modeling.config.KijiInputSpec
+import org.kiji.express.modeling.config.KijiSingleColumnOutputSpec
 import org.kiji.express.modeling.config.ModelDefinition
 import org.kiji.express.modeling.config.ModelEnvironment
-import org.kiji.express.modeling.config.PrepareEnvironment
 import org.kiji.express.modeling.config.ScoreEnvironment
 import org.kiji.express.modeling.Extractor
 import org.kiji.express.modeling.Scorer
-
 import org.kiji.express.util.Resources.doAndClose
 import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.schema.Kiji
@@ -79,24 +79,24 @@ class ShellExtEndToEnd extends ShellExtSuite {
         val modelDefinition: ModelDefinition = ModelDefinition(
             name = "test-model-definition",
             version = "1.0",
-            extractor = Some(classOf[ShellExtEndToEndSuite.DoublingExtractor]),
+            scoreExtractor = Some(classOf[ShellExtEndToEndSuite.DoublingExtractor]),
             scorer = Some(classOf[ShellExtEndToEndSuite.UpperCaseScorer]))
         val modelEnvironment: ModelEnvironment = ModelEnvironment(
             name = "test-model-environment",
             version = "1.0",
-            modelTableUri = uri.toString,
-            prepareEnvironment = None,
-            trainEnvironment = None,
-            extractEnvironment = Some(ExtractEnvironment(
-                dataRequest = request,
-                fieldBindings = Seq(FieldBinding("field", "family:column1")),
-                kvstores = Seq()
-            )),
-            scoreEnvironment = Some(new ScoreEnvironment(
-                outputColumn = "family:column2",
-                kvstores = Seq()
-            ))
-        )
+          prepareEnvironment = None,
+          trainEnvironment = None,
+          scoreEnvironment = Some(ScoreEnvironment(
+              KijiInputSpec(
+                  uri.toString,
+                  request,
+                fieldBindings = Seq(FieldBinding("field", "family:column1"))
+              ),
+              KijiSingleColumnOutputSpec(
+                  uri.toString,
+                  "family:column2"
+              ),
+              kvstores = Seq())))
 
         // Write the created model definition and environment to disk.
         doAndClose(new FileWriter(modelDefFile)) { writer =>

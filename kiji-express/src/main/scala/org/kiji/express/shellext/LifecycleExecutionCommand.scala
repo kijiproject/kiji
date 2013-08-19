@@ -25,7 +25,7 @@ import org.apache.hadoop.hbase.HBaseConfiguration
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.express.modeling.ExtractScoreJobBuilder
+import org.kiji.express.modeling.ScoreProducerJobBuilder
 import org.kiji.express.modeling.config.ModelDefinition
 import org.kiji.express.modeling.config.ModelEnvironment
 import org.kiji.schema.shell.DDLException
@@ -124,7 +124,7 @@ private[express] final class LifecycleExecutionCommand (
       echo("Building a Hadoop job to perform batch extract and score.")
       val modelDefinition = loadModelDefinition(modelDefConfigureVia)
       val modelEnvironment = loadModelEnvironment(modelEnvConfigureVia)
-      val extractScoreJob = ExtractScoreJobBuilder.buildJob(modelDefinition, modelEnvironment,
+      val extractScoreJob = ScoreProducerJobBuilder.buildJob(modelDefinition, modelEnvironment,
           hadoopConfiguration)
       echo("Running batch extract and score.")
       if (!extractScoreJob.run()) {

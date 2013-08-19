@@ -17,11 +17,27 @@
  * limitations under the License.
  */
 {
-  "name" : "abandoned-cart-model",
-  "version" : "1.0.0",
-  "preparer_class" : "org.kiji.express.modeling.config.ModelDefinitionSuite$MyPreparer",
-  "trainer_class" : "org.kiji.express.modeling.config.ModelDefinitionSuite$MyTrainer",
-  "extractor_class" : "org.kiji.express.modeling.config.ModelDefinitionSuite$MyExtractor",
-  "scorer_class" : "org.kiji.express.modeling.config.ModelDefinitionSuite$MyBadScorer",
-  "protocol_version" : "model_definition-0.1.0"
+  "name":"name",
+  "version":"1.0.0",
+  "preparer":{
+    "org.kiji.express.avro.AvroPhaseSpec":{
+      "extractor_class":{
+        "string":"org.kiji.express.modeling.config.ModelDefinitionSuite$MyExtractor"
+      },
+      "phase_class":"org.kiji.express.modeling.config.ModelDefinitionSuite$MyPreparer"
+    }
+  },
+  "trainer":{
+    "org.kiji.express.avro.AvroPhaseSpec":{
+      "extractor_class":null,
+      "phase_class":"org.kiji.express.modeling.config.ModelDefinitionSuite$MyTrainer"
+    }
+  },
+  "scorer":{
+    "org.kiji.express.avro.AvroPhaseSpec":{
+      "extractor_class":null,
+      "phase_class":"org.kiji.express.modeling.config.ModelDefinitionSuite$MyBadScorer"
+    }
+  },
+  "protocol_version":"model_definition-0.2.0"
 }

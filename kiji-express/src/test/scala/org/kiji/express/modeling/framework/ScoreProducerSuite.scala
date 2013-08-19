@@ -23,13 +23,21 @@ import org.apache.hadoop.fs.Path
 
 import org.kiji.express.KijiSlice
 import org.kiji.express.KijiSuite
+import org.kiji.express.modeling.config.ExpressColumnRequest
+import org.kiji.express.modeling.config.ExpressDataRequest
+import org.kiji.express.modeling.config.FieldBinding
+import org.kiji.express.modeling.config.KijiInputSpec
+import org.kiji.express.modeling.config.KijiSingleColumnOutputSpec
+import org.kiji.express.modeling.config.KVStore
+import org.kiji.express.modeling.config.ModelDefinition
+import org.kiji.express.modeling.config.ModelEnvironment
+import org.kiji.express.modeling.config.ScoreEnvironment
 import org.kiji.express.modeling.Extractor
-import org.kiji.express.modeling.ExtractScoreJobBuilder
-import org.kiji.express.modeling.KeyValueStore
-import org.kiji.express.modeling.Scorer
-import org.kiji.express.modeling.config._
 import org.kiji.express.modeling.impl.KeyValueStoreImplSuite
+import org.kiji.express.modeling.KeyValueStore
 import org.kiji.express.modeling.lib.FirstValueExtractor
+import org.kiji.express.modeling.ScoreProducerJobBuilder
+import org.kiji.express.modeling.Scorer
 import org.kiji.express.util.Resources.doAndClose
 import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.schema.Kiji
@@ -40,11 +48,8 @@ import org.kiji.schema.KijiURI
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts
 import org.kiji.schema.util.InstanceBuilder
-import org.kiji.express.modeling.config.FieldBinding
-import org.kiji.express.modeling.config.ExpressColumnRequest
-import org.kiji.express.modeling.config.KVStore
 
-class ExtractScoreProducerSuite
+class ScoreProducerSuite
     extends KijiSuite {
   test("An extract-score produce job can be run over a table.") {
     val testLayout: KijiTableLayout = layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
@@ -70,38 +75,34 @@ class ExtractScoreProducerSuite
       val modelDefinition: ModelDefinition = ModelDefinition(
           name = "test-model-definition",
           version = "1.0",
-          extractor = Some(classOf[ExtractScoreProducerSuite.DoublingExtractor]),
-          scorer = Some(classOf[ExtractScoreProducerSuite.UpperCaseScorer]))
+          scoreExtractor = Some(classOf[ScoreProducerSuite.DoublingExtractor]),
+          scorer = Some(classOf[ScoreProducerSuite.UpperCaseScorer]))
       val modelEnvironment: ModelEnvironment = ModelEnvironment(
           name = "test-model-environment",
           version = "1.0",
-          modelTableUri = uri.toString,
           prepareEnvironment = None,
           trainEnvironment = None,
-          extractEnvironment = Some(ExtractEnvironment(
-              dataRequest = request,
-              fieldBindings = Seq(
-                  FieldBinding(tupleFieldName = "field", storeFieldName = "family:column1")),
-              kvstores = Seq(KVStore(
-                  storeType = "AVRO_KV",
-                  name = "side_data",
-                  properties = Map(
-                      "path" -> sideDataPath.toString(),
-                      // The Distributed Cache is not supported when using LocalJobRunner in
-                      // Hadoop <= 0.21.0.
-                      // See https://issues.apache.org/jira/browse/MAPREDUCE-476 for more
-                      // information.
-                      "use_dcache" -> "false")
-              ))
-          )),
-          scoreEnvironment = Some(ScoreEnvironment(
-              outputColumn = "family:column2",
-              kvstores = Seq()
-          ))
-      )
+        scoreEnvironment = Some(ScoreEnvironment(
+              KijiInputSpec(
+                  uri.toString,
+                  dataRequest = request,
+                  fieldBindings = Seq(
+                      FieldBinding(tupleFieldName = "field", storeFieldName = "family:column1"))),
+              KijiSingleColumnOutputSpec(uri.toString, "family:column2"),
+              kvstores = Seq(
+                  KVStore(
+                      storeType = "AVRO_KV",
+                      name = "side_data",
+                      properties = Map(
+                          "path" -> sideDataPath.toString(),
+                          // The Distributed Cache is not supported when using LocalJobRunner in
+                          // Hadoop <= 0.21.0.
+                          // See https://issues.apache.org/jira/browse/MAPREDUCE-476 for more
+                          // information.
+                          "use_dcache" -> "false"))))))
 
       // Build the produce job.
-      val produceJob = ExtractScoreJobBuilder.buildJob(
+      val produceJob = ScoreProducerJobBuilder.buildJob(
           model = modelDefinition,
           environment = modelEnvironment)
 
@@ -150,29 +151,25 @@ class ExtractScoreProducerSuite
       val modelDefinition: ModelDefinition = ModelDefinition(
           name = "test-model-definition",
           version = "1.0",
-          extractor = Some(classOf[ExtractScoreProducerSuite.TwoArgDoublingExtractor]),
-          scorer = Some(classOf[ExtractScoreProducerSuite.TwoArgUpperCaseScorer]))
+          scoreExtractor = Some(classOf[ScoreProducerSuite.TwoArgDoublingExtractor]),
+          scorer = Some(classOf[ScoreProducerSuite.TwoArgUpperCaseScorer]))
       val modelEnvironment: ModelEnvironment = ModelEnvironment(
           name = "test-model-environment",
           version = "1.0",
-          modelTableUri = uri.toString,
           prepareEnvironment = None,
           trainEnvironment = None,
-          extractEnvironment = Some(ExtractEnvironment(
-              dataRequest = request,
-              fieldBindings = Seq(
-                  FieldBinding(tupleFieldName = "i1", storeFieldName = "family:column1"),
-                  FieldBinding(tupleFieldName = "i2", storeFieldName = "family:column2")),
-              kvstores = Seq()
-          )),
           scoreEnvironment = Some(ScoreEnvironment(
-              outputColumn = "family:column2",
-              kvstores = Seq()
-          ))
-      )
+              KijiInputSpec(
+                  uri.toString,
+                  dataRequest = request,
+                  fieldBindings = Seq(
+                      FieldBinding(tupleFieldName = "i1", storeFieldName = "family:column1"),
+                      FieldBinding(tupleFieldName = "i2", storeFieldName = "family:column2"))),
+              KijiSingleColumnOutputSpec(uri.toString, "family:column2"),
+              kvstores = Seq())))
 
       // Build the produce job.
-      val produceJob = ExtractScoreJobBuilder.buildJob(
+      val produceJob = ScoreProducerJobBuilder.buildJob(
           model = modelDefinition,
           environment = modelEnvironment)
 
@@ -221,28 +218,25 @@ class ExtractScoreProducerSuite
       val modelDefinition: ModelDefinition = ModelDefinition(
           name = "test-model-definition",
           version = "1.0",
-          extractor = Some(classOf[FirstValueExtractor]),
-          scorer = Some(classOf[ExtractScoreProducerSuite.UpperCaseScorer]))
+          scoreExtractor = Some(classOf[FirstValueExtractor]),
+          scorer = Some(classOf[ScoreProducerSuite.UpperCaseScorer]))
       val modelEnvironment: ModelEnvironment = ModelEnvironment(
           name = "test-model-environment",
           version = "1.0",
-          modelTableUri = uri.toString,
           prepareEnvironment = None,
           trainEnvironment = None,
-          extractEnvironment = Some(ExtractEnvironment(
-              dataRequest = request,
-              fieldBindings = Seq(
-                  FieldBinding(tupleFieldName = "feature", storeFieldName = "family:column1")),
-              kvstores = Seq()
-          )),
           scoreEnvironment = Some(ScoreEnvironment(
-              outputColumn = "family:column2",
-              kvstores = Seq()
-          ))
-      )
+              KijiInputSpec(
+                  uri.toString,
+                  request,
+                  Seq(
+                      FieldBinding(tupleFieldName = "feature", storeFieldName = "family:column1"))
+              ),
+              KijiSingleColumnOutputSpec(uri.toString, "family:column2"),
+              kvstores = Seq())))
 
       // Build the produce job.
-      val produceJob = ExtractScoreJobBuilder.buildJob(
+      val produceJob = ScoreProducerJobBuilder.buildJob(
           model = modelDefinition,
           environment = modelEnvironment)
 
@@ -266,7 +260,7 @@ class ExtractScoreProducerSuite
   }
 }
 
-object ExtractScoreProducerSuite {
+object ScoreProducerSuite {
   class DoublingExtractor extends Extractor {
     override val extractFn = extract('field -> 'feature) { field: KijiSlice[String] =>
       val str: String = field.getFirstValue
