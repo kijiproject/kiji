@@ -159,7 +159,6 @@ fi
   -Dscala.usejavacp=true \
   -Denv.emacs="${EMACS}" \
   -Dtmpjars="${TMPJARS}" \
-  -Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED \
   ${CYGWIN_JLINE_TERMINAL} \
   ${main_class} ${@} \
   -i "${imports_script}" \

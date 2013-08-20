@@ -51,7 +51,7 @@ private[express] trait PipeConversions {
    * @return a KijiPipe read from the specified source.
    */
   implicit def source2rp(
-      src: KijiSource)(
+      source: KijiSource)(
       implicit flowDef: FlowDef,
-      mode: Mode): KijiPipe = new KijiPipe(src.read(flowDef, mode))
+      mode: Mode): KijiPipe = new KijiPipe(source.read(flowDef, mode))
 }
