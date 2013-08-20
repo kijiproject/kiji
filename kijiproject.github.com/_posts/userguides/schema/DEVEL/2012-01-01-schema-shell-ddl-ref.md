@@ -318,6 +318,30 @@ Specifies the initial region count when creating the table. The table will be sp
 evenly-spaced regions. This cannot be used with a `RAW` row key format. This property is
 not preserved by a `DUMP DDL` statement.
 
+    VALIDATION = { NONE | LEGACY | DEVELOPER | STRICT }
+
+Specifies the preferred schema validation mode to apply to columns in this table. This
+affects what reader and writer schemas are legal to attach to a given column.
+
+* `NONE` - No validation; any combination of reader and writer schemas may be declared. At
+  write time, there is no enforcement that the actual writer schema is in the approved
+  list of writer schemas.
+* `LEGACY` - Performs validation according to the semantics of tables using `layout-1.2`
+  and below (as created by KijiSchema 1.2.0 and below). Primitive types are validated
+  against the approved writer schema at write time; incompatible changes to the table
+  layout are permitted.
+* `DEVELOPER` - Performs strong validation of reader and writer schema compatibility when
+  changing the layout of a table. Compatible writer schemas may be added on-demand at
+  write time by a new process. This is the default.
+* `STRICT` - Performs strong validation of reader and writer schema compatibility when
+  changing the layout of a table; you may not add any schemas that are incompatible with
+  currently-active reader and writer schemas (nor any previously-used "recorded" writer
+  schemas). At write time, the writer schema must match one of the schemas explicitly
+  added through the Kiji shell.
+
+Schema validation is discussed in greater detail further down in this document in the
+section "Managing Column Schemas."
+
 ##### Locality group definition syntax
 
 Each locality group is defined as follows:
@@ -421,12 +445,10 @@ Keywords or clauses in \[square brackets\] are optional in the examples below:
     ALTER TABLE t DROP LOCALITY GROUP lg;
 
     ALTER TABLE t SET DESCRIPTION = 'desc' FOR FAMILY f;
-    ALTER TABLE t SET SCHEMA = schema FOR [MAP TYPE] FAMILY fREATE TABLE ex1 ROW KEY FORMAT (a
-    STRING, b STRING) WITH LOCALITY GROUP...
-
+    ALTER TABLE t SET SCHEMA = schema FOR [MAP TYPE] FAMILY f; (deprecated)
 
     ALTER TABLE t SET DESCRIPTION = 'desc' FOR COLUMN info:foo;
-    ALTER TABLE t SET SCHEMA = schema FOR COLUMN info:foo;
+    ALTER TABLE t SET SCHEMA = schema FOR COLUMN info:foo; (deprecated)
 
     ALTER TABLE t SET DESCRIPTION = 'desc';
     ALTER TABLE t SET table_property = value;
@@ -435,6 +457,282 @@ Keywords or clauses in \[square brackets\] are optional in the examples below:
     ALTER TABLE t SET DESCRIPTION = 'desc' FOR LOCALITY GROUP lg;
     ALTER TABLE t SET property FOR LOCALITY GROUP lg;
     ... where 'property' is one of MAXVERSIONS, INMEMORY, TTL, etc. as above.
+
+
+### Managing Column Schemas
+
+Starting in KijiSchema 1.3.0, newly-created Kiji instances support table layouts with
+_validated schemas_ (using layout version `layout-1.3`).  This permits schema evolution in
+a flexible fashion, while respecting the requirements of existing components in a
+distributed Big Data Application.
+
+When you create a column, you typically apply a schema to it. e.g.:
+
+    ALTER TABLE t ADD COLUMN info:foo WITH SCHEMA "int";
+
+This sets the expected reader and writer schema for this column to be `"int"`. In practice,
+each column actually has several schemas associated with it:
+
+* A set of one or more acceptable reader schemas for applications to use.
+* A set of one or more acceptable writer schemas for applications to use.
+* A set of one or more _recorded_ schemas -- writer schemas which have been used before.
+* A _default reader schema_ (optional).
+* The name of a SpecificRecord class to use as a reader schema (optional).
+
+Schema validation ensures that new schemas added to the reader and writer lists are
+compatible with all other current readers and writers. In addition, they must be compatible
+with writer schemas which were actually used in the past to record data to the table. This
+allows applications to ensure they can always read and write all data in the table--but you
+do not need to update all applications simultaneously to manage a schema change.
+
+In the case of `info:foo` above, it would be legal to add `"long"` as a reader schema,
+since all `"int"` data stored by Avro can be read as `"long"`. It would not be legal
+to add `"long"` as a writer schema, since readers who expect to read this data as `"int"`
+could not convert any `long` value back to an `int`. To add `"long"` as a writer schema
+would require that you first unregister `"int"` as a valid reader schema, and add `"long"`
+as the new valid reader schema. This change would require that you first shut down any
+processes that expect to write data using the `"int"` reader schema.
+
+(Note: this enforcement logic affects tables with layout version `layout-1.3`, and
+`VALIDATION` set to `DEVELOPER` or `STRICT`. Tables using `VALIDATION = NONE` or
+`VALIDATION = LEGACY` may add any arbitrary set of reader and writer schemas, at their own
+peril. `layout-1.3` can only be used in Kiji instances with data version `system-2.0`,
+i.e. instances created by KijiSchema 1.3.0 or later. Tables in existing Kiji instances will not use
+the commands in this section; they should continue to use `ALTER TABLE.. SET SCHEMA =
+schema..`.)
+
+In addition to the lists of reader and writer schemas available, KijiSchema also allows
+you to provide applications with a _default reader schema_ for a column; if they don't
+have a preferred schema, they may rely on this suggestion from the table layout. It is
+recommended that you do not change this schema in an incompatible way, so that all
+applications continue to function. This compatibility is not enforced by the system on
+your behalf.
+
+Finally, you may provide a _default specific reader class_ for a column. Applications that
+prefer to use the Avro SpecificRecord API may use this class (assuming its on the
+application's classpath) to deserialize records from the table, in the same manner as the
+_default reader schema_ discussed above. Because the SpecificRecord class name listed
+in the table layout is not guaranteed to be available to every application at runtime,
+and because it may change while an application is live, we encourage you to explicitly
+specify the SpecificRecord class name you plan to use in your application, so you can
+be sure it's available on your application's classpath.
+
+#### Supported Validation Modes
+
+KijiSchema supports multiple levels of schema validation. When creating a table, you can
+set the validation mode to apply to its columns:
+
+    CREATE TABLE t
+        ROW KEY FORMAT...
+        PROPERTIES (
+          VALIDATION = { NONE | LEGACY | DEVELOPER | STRICT }
+        )
+        WITH LOCALITY GROUP...
+
+The `VALIDATION` property of the table specifies the preferred schema validation mode to
+apply to columns in this table. This affects what reader and writer schemas are legal to
+attach to a given column.
+
+* `NONE` - No validation; any combination of reader and writer schemas may be declared. At
+  write time, there is no enforcement that the actual writer schema is in the approved
+  list of writer schemas.
+* `LEGACY` - Performs validation according to the semantics of tables using `layout-1.2`
+  and below (as created by KijiSchema 1.2.0 and below). Primitive types are validated
+  against the approved writer schema at write time; incompatible changes to the table
+  layout are permitted.
+* `DEVELOPER` - Performs strong validation of reader and writer schema compatibility when
+  changing the layout of a table. Compatible writer schemas may be added on-demand at
+  write time by a new process. This is the default.
+* `STRICT` - Performs strong validation of reader and writer schema compatibility when
+  changing the layout of a table; you may not add any schemas that are incompatible with
+  currently-active reader and writer schemas (nor any previously-used "recorded" writer
+  schemas). At write time, the writer schema must match one of the schemas explicitly
+  added through the Kiji shell.
+
+##### Changing the Validation Semantics for a Table
+
+Changing the `VALIDATION` property for a table will only affect new columns going forward.
+Existing columns will use their current validation semantics:
+
+    ALTER TABLE t SET VALIDATION = STRICT;
+    ALTER TABLE t ADD COLUMN info:foo WITH SCHEMA "int"; // Strict validation semantics
+    ALTER TABLE t SET VALIDATION = NONE;
+    ALTER TABLE t ADD COLUMN info:bar WITH SCHEMA "long"; // No validation for this col.
+
+#### Listing Column Schemas
+
+The examples in the following few sections use the following single-column table:
+
+    schema> CREATE TABLE t WITH LOCALITY GROUP default (FAMILY info (foo "int"));
+    OK.
+
+By default this uses the `VALIDATION = DEVELOPER` table property.
+
+When you run a `DESCRIBE <tablename>` command to describe a table, it will print the
+default reader schema for each column, as well as tell you how many other schemas
+are present:
+
+    schema> DESCRIBE t;
+    Table: t ()
+    Row key:
+      key: STRING NOT NULL
+
+    Column family: info
+      Description:
+
+      Column info:foo ()
+        Default reader schema: "int"
+        1 reader schema(s) available.
+        1 writer schema(s) available.
+
+You may list the active reader and writer schemas, as well as previously-recorded writer
+schemas, using the commands:
+
+    DESCRIBE <table> COLUMN info:foo SHOW [n] READER SCHEMAS;
+    DESCRIBE <table> COLUMN info:foo SHOW [n] WRITER SCHEMAS;
+    DESCRIBE <table> COLUMN info:foo SHOW [n] RECORDED SCHEMAS;
+
+The parameter `n` is optional; you may use this to control the number of schemas returned.
+By default it will print the most recent 5 schemas added to the column. Each schema will
+be printed on a line by itself, prefixed by its unique identifier within KijiSchema:
+
+    schema> DESCRIBE t COLUMN info:foo SHOW READER SCHEMAS;
+    Table: t
+    Column: info:foo
+      Description:
+
+      Reader schemas:
+    (*) [2]: "int"
+
+The asterisk next to the schema denotes that `"int"` is the default reader schema.
+When manipulating lists of schemas, you may refer to schemas by their literal text
+(`"int"`), by a SpecificRecord class name (`CLASS com.example.MyRecord`), or by
+their id (`ID 2`). Schema ID numbers are not stable from instance to instance and
+should only be used when modifying data within a single Kiji instance.
+
+#### Adding compatible schemas
+
+You may add compatible reader and writer schemas to a column or map type family
+without changing any existing applications. A "compatible" reader schema is one
+that can read data written by all currently-active writer schemas, and any writer
+schemas previously used to record data to the table. A "compatible" writer schema
+is one which can be read by all currently-active reader schemas.
+
+In the example `info:foo` column above, we could add `"long"` as a reader schema:
+
+    schema> ALTER TABLE t ADD READER SCHEMA "long" FOR COLUMN info:foo;
+    ...
+    OK
+
+    schema> DESCRIBE t COLUMN info:foo SHOW READER SCHEMAS;
+    Table: t
+    Column: info:foo
+      Description:
+
+      Reader schemas:
+    [3]: "long"
+
+    (*) [2]: "int"
+
+
+Note that `"int"` remains the default reader schema for applications that are not
+specifically coded to use the new reader schema. Because some applications may expect
+to read data with schema `"int"`, the following will not work:
+
+    schema> ALTER TABLE t ADD WRITER SCHEMA "long" FOR COLUMN info:foo;
+    In column: 'info:foo' Reader schema: "int" is incompatible with writer schema: "long".
+
+The `ALTER TABLE.. ADD SCHEMA` command has the following syntax:
+
+    ALTER TABLE <tablename> ADD [ [DEFAULT] READER | WRITER ] SCHEMA <schema>
+    FOR COLUMN familyName:qualifier;
+
+You may add a schema to the readers list (`ADD READER SCHEMA`) or the writers list (`ADD
+WRITER SCHEMA`). If you do not specify these options, the schema will be added to both the
+approved reader and writer lists. You may also explicitly specify a schema as the default
+reader schema by running `..ADD DEFAULT READER SCHEMA..`.
+
+The schema may be specified as follows:
+
+    SCHEMA <json>
+    SCHEMA CLASS com.example.MySpecificRecord
+    SCHEMA ID <id>
+
+To refer to a schema by by its SpecificRecord class, you must make it available to the
+Kiji shell. All jar files in the `$KIJI_CLASSPATH` environment variable will be present.
+You can also load jars at runtime by using the command:
+
+    USE JAR INFILE '/path/to/my-local-jar-file.jar';
+
+#### Removing Deprecated Schemas
+
+Suppose our example application no longer reads data to `info:foo` as type `"int"`; we
+know that all readers are using the `"long"` reader schema. In this case, we may remove
+the unnecessary schema:
+
+    schema> ALTER TABLE t DROP READER SCHEMA "int" FOR COLUMN info:foo;
+    Warning: Removing default reader schema
+    ...
+    OK.
+
+Since `"int"` was the default reader schema, there is now no default reader schema
+present. We can verify this by running a `DESCRIBE` command:
+
+    schema> DESCRIBE t COLUMN info:foo SHOW READER SCHEMAS;
+    Table: t
+    Column: info:foo
+      Description:
+
+      Reader schemas:
+    [3]: "long"
+
+Note the lack of a `(*)` next to the `"long"` reader schema. You can specify that this is
+the default reader schema by running:
+
+    schema> ALTER TABLE t ADD DEFAULT READER SCHEMA ID 3 FOR COLUMN info:foo;
+    ...
+    OK
+    schema> DESCRIBE t COLUMN info:foo SHOW READER SCHEMAS;
+    Table: t
+    Column: info:foo
+      Description:
+
+      Reader schemas:
+    (*) [3]: "long"
+
+This example used `ID 3` to refer to the schema as above; you could also have used `...ADD
+DEFAULT READER SCHEMA "long"...` to accomplish the same.
+
+The `ALTER TABLE.. DROP SCHEMA` command has the following syntax:
+
+    ALTER TABLE <tablename> DROP [ [DEFAULT] READER | WRITER ] SCHEMA <schema>
+    FOR COLUMN familyName:qualifier;
+
+#### Schema Management Commands for Map-Type Families
+
+Schemas for map-type column families are managed in the same way as schemas for columns
+within a group-type family. The following syntax is supported for map-type family schema
+management:
+
+    ALTER TABLE <tablename> ADD [ [DEFAULT] READER | WRITER ] SCHEMA <schema>
+    FOR [MAP TYPE] FAMILY familyName;
+
+    ALTER TABLE <tablename> DROP [ [DEFAULT] READER | WRITER ] SCHEMA <schema>
+    FOR [MAP TYPE] FAMILY familyName;
+
+#### Deprecated Schema Management Statements
+
+The following commands are deprecated:
+
+    ALTER TABLE t SET SCHEMA = schema FOR COLUMN info:foo;
+    ALTER TABLE t SET SCHEMA = schema FOR [MAP TYPE] FAMILY f;
+
+In tables that support layout validation, running these commands will display a warning
+message, and they now operate like `ALTER TABLE t ADD SCHEMA...`.
+
+Tables in Kiji instances created by KijiSchema 1.2 or previous should continue to use
+these commands, as schema validation is only enforced in Kiji instances installed by
+KijiSchema 1.3 or above.
 
 
 ### Working With Scripts
