@@ -29,9 +29,10 @@ import org.kiji.express.flow._
 /**
  * Imports metadata about songs into a Kiji table.
  *
- * This importer expects two command line arguments: `--table-uri` and `--input`. The argument
- * `--table-uri` should be set to the Kiji URI of a songs table that the import will target. The
- * argument `--input` should be the HDFS path to a file containing JSON records of song meta data.
+ * This importer expects two command line arguments: `--table-uri` and `--input`. The
+ * argument `--table-uri` should be set to the Kiji URI of a songs table that the import will
+ * target. The argument `--input` should be the HDFS path to a file containing JSON records
+ * of song meta data.
  *
  * See the file `song-metadata.json` packaged with this tutorial for the structure of JSON
  * records imported.
@@ -40,8 +41,8 @@ import org.kiji.express.flow._
  */
 class SongMetadataImporter(args: Args) extends KijiJob(args) {
   /**
-   * Transforms a JSON record into a tuple whose fields correspond to the fields from the JSON
-   * record.
+   * Transforms a JSON record into a tuple whose fields correspond to the fields from the
+   * JSON record.
    *
    * @param json is the record to parse into a tuple.
    * @return a Scala tuple whose fields correspond to the fields from the JSON record.
@@ -62,13 +63,14 @@ class SongMetadataImporter(args: Args) extends KijiJob(args) {
   // 2. Flattens each JSON record into a tuple with fields corresponding to the song metadata
   //    extracted from the JSON record.
   // 3. Transforms the song id for each song into an entity id for the songs table.
-  // 4. Packs song name, album name, artist name, genre, tempo, and duration for the song into an
-  //    Avro record.
+  // 4. Packs song name, album name, artist name, genre, tempo, and duration for the song
+  //    into an Avro record.
   // 5. Writes the Avro records to the column "info:metadata" in a row for the song in a Kiji
   //    table.
   TextLine(args("input"))
       .map('line ->
-          ('songId, 'songName, 'albumName, 'artistName, 'genre, 'tempo,'duration)) { parseJson }
+          ('songId, 'songName, 'albumName, 'artistName, 'genre, 'tempo,'duration)) {
+          parseJson }
       .map('songId -> 'entityId) { songId: String => EntityId(songId) }
       .packAvro(('songName, 'albumName, 'artistName, 'genre, 'tempo, 'duration)
           -> 'metadata)

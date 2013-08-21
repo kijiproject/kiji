@@ -27,11 +27,11 @@ import org.kiji.express.flow._
 /**
  * Counts the number of times a song has been played by users.
  *
- * This importer expects to receive two command line arguments: `--table-uri` and `--output`. The
- * argument `--table-uri` should be set to the Kiji URI of a users table that contains a column
- * `info:track_plays` that contains a song id for each song a user has listened to. The argument
- * `--output` should be the HDFS path where a tab-delimited file listing song ids and play counts
- * should be written.
+ * This importer expects to receive two command line arguments: `--table-uri` and `--output`.
+ * The argument `--table-uri` should be set to the Kiji URI of a users table that contains
+ * a column `info:track_plays` that contains a song id for each song a user has listened to.
+ * The argument `--output` should be the HDFS path where a tab-delimited file listing
+ * song ids and play counts should be written.
  *
  * @param args passed in from the command line.
  */

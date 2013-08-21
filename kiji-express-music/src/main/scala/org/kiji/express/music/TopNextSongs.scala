@@ -25,14 +25,14 @@ import org.kiji.express._
 import org.kiji.express.flow._
 
 /**
- * For each song S, create a list of songs sorted by the number of times a song was played after
- * S.
+ * For each song S, create a list of songs sorted by the number of times a song was played
+ * after S.
  *
- * This job accepts two command line arguments, `--users-table` and `--songs-table` that should be
- * set to the Kiji URIs of a users and songs table in Kiji. The play histories of users (stored
- * in column `info:track_plays`) are used to compute how many times each song is played after
- * another. The top next songs for each song are written to the column `info:top_next_songs` of
- * the songs table.
+ * This job accepts two command line arguments, `--users-table` and `--songs-table` that
+ * should be set to the Kiji URIs of a users and songs table in Kiji. The play histories of
+ * users (stored in column `info:track_plays`) are used to compute how many times each song
+ * is played after another. The top next songs for each song are written to the column
+ * `info:top_next_songs` of the songs table.
  *
  * @param args passed from the command line.
  */
@@ -64,12 +64,12 @@ class TopNextSongs(args: Args) extends KijiJob(args) {
 
   // This Scalding pipeline does the following:
   // 1. Reads the column "info:track_plays" from a users table in Kiji.
-  // 2. Transforms each user's play history into a collection of bigrams that record when one song
-  //    was played after another.
+  // 2. Transforms each user's play history into a collection of bigrams that record when
+  //    one song was played after another.
   // 3. Counts the number of times each song was played after another.
   // 4. Creates a song count Avro record from each bigram.
-  // 5. For each song S, creates a list of songs sorted by the number of times the song was played
-  //    after S.
+  // 5. For each song S, creates a list of songs sorted by the number of times the song was
+  //    played after S.
   // 7. Packs each list into an Avro record.
   // 8. Creates an entity id for the songs table for each song.
   // 9. Writes each song's TopSongs record to Kiji.

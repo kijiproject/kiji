@@ -26,13 +26,13 @@ import org.kiji.express.EntityId
 import org.kiji.express.modeling.Scorer
 
 /**
- * Recommends the song most frequently played after the song a user has most recently listened to
- * as the next track the user should listen to. This Scorer uses the tuple field `trackPlay`,
- * provided by an extractor, which should contain the latest track a user has listened to. This
- * Scorer also expects to have access to a key-value store named `top_next_songs` that maps song
- * ids to a list of songs most frequently played after the song in question. The song most
- * frequently played after the song most recently listened to by the user is used as the
- * recommendation.
+ * Recommends the song most frequently played after the song a user has most recently
+ * listened to as the next track the user should listen to. This Scorer uses the tuple field
+ * `trackPlay`, provided by an extractor, which should contain the latest track a user has
+ * listened to. This Scorer also expects to have access to a key-value store named
+ * `top_next_songs` that maps song ids to a list of songs most frequently played after the
+ * song in question. The song most frequently played after the song most recently listened
+ * to by the user is used as the recommendation.
  */
 class SongRecommendingScorer extends Scorer {
 
@@ -43,17 +43,17 @@ class SongRecommendingScorer extends Scorer {
    * @return the song id of the track recommended for the user.
    */
   override def scoreFn = score('trackPlay) { trackPlay: String =>
-    // Retrieve the key-value store that maps song ids to a list of songs most frequently played
-    // after the song in question.
+    // Retrieve the key-value store that maps song ids to a list of songs most frequently
+    // played after the song in question.
     val topNextSongsKVStore = kvstore[EntityId, AvroRecord]("top_next_songs")
-    // "Optionally" retrieve a record containing a list of songs played most frequently after the
-    // most recent track a user has listened to. We say "optionally" because the key-value store
-    // may not be populated with a list of top next songs for a given track. If a record of top
-    // next songs is available, then a 'Some' wrapping the record is retrieved. Otherwise,
-    // a 'None' is retrieved.
+    // "Optionally" retrieve a record containing a list of songs played most frequently after
+    // the most recent track a user has listened to. We say "optionally" because the
+    // key-value store may not be populated with a list of top next songs for a given track.
+    // If a record of top next songs is available, then a 'Some' wrapping the record is
+    // retrieved. Otherwise, a 'None' is retrieved.
     val topNextSongs: Option[AvroRecord] = topNextSongsKVStore.get(EntityId(trackPlay))
-    // If topNextSongs contains 'Some' AvroRecord, transform that AvroRecord into 'Some' String that
-    // contains the name of the next song to listen to. If topNextSongs is 'None',
+    // If topNextSongs contains 'Some' AvroRecord, transform that AvroRecord into 'Some'
+    //  String that contains the name of the next song to listen to. If topNextSongs is 'None',
     // then this transformation will result in 'None'.
     val nextSong: Option[String] = topNextSongs.map { songsListRecord =>
       // Access the record field "topSongs", which contains a list of song count records,

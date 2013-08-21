@@ -29,10 +29,10 @@ import org.kiji.express.flow._
  * Generates recommendations for the next song each user might like to listen to.
  *
  * For each user, we write a recommendation for the next song into
- * the info:next_song_rec column, based on the most recent song recorded in info:track_plays. We
- * incorporate the information we generated about popular sequences of songs by joining tuples in
- * the recommendedNextSongs pipe with the tuples in the main pipe on the songId/latTrackPlayed
- * fields.
+ * the info:next_song_rec column, based on the most recent song recorded in info:track_plays.
+ * We incorporate the information we generated about popular sequences of songs by joining
+ * tuples in the recommendedNextSongs pipe with the tuples in the main pipe on the songId
+ * and lastTrackPlayed fields.
  *
  * @param args passed to this job from the command line.
  */
@@ -52,9 +52,10 @@ class SongRecommender(args: Args) extends KijiJob(args) {
 
   /**
    * This Scalding RichPipe does the following:
-   * 1. Reads the column "info:top_next_songs" from the songs table and emits a tuple for every row.
-   * 2. Retrieves the most popular song played (in the 'nextSong field) after every given song (in
-   *      the 'songId field.)
+   * 1. Reads the column "info:top_next_songs" from the songs table and emits a tuple for
+   *      every row.
+   * 2. Retrieves the most popular song played (in the 'nextSong field) after every given
+          song (in the 'songId field.)
    * 3. Emits tuples containing only the fields 'songId and 'nextSong.
    */
   val recommendedSong = KijiInput(args("songs-table"))("info:top_next_songs" -> 'topNextSongs)
@@ -66,8 +67,9 @@ class SongRecommender(args: Args) extends KijiJob(args) {
    * This Scalding pipeline does the following:
    * 1. Reads the column "info:track_plays" from the users table.
    * 2. Retrieves the song most recently played by a user.
-   * 3. Retrieve the TopNextSongs associated with the most recently played song by joining together
-   *      the tuples emitted from the nextSongs pipe with the the 'lastTrackPlayed field.
+   * 3. Retrieve the TopNextSongs associated with the most recently played song by joining
+          together the tuples emitted from the nextSongs pipe with the the 'lastTrackPlayed
+          field.
    */
   KijiInput(args("users-table"))("info:track_plays" -> 'trackPlays)
       .map('trackPlays -> 'lastTrackPlayed) {

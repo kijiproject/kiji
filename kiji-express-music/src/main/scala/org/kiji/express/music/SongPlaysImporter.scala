@@ -29,20 +29,20 @@ import org.kiji.express.flow._
 /**
  * Imports information about users playing tracks into a Kiji table.
  *
- * This importer expects to receive two command line arguments: `--table-uri` and `--input`. The
- * argument `--table-uri` should be set to the Kiji URI to a users table that the import will
- * target. The argument `--input` should be the HDFS path to a file containing JSON records
- * recording a song play by a user.
+ * This importer expects to receive two command line arguments: `--table-uri` and `--input`.
+ * The argument `--table-uri` should be set to the Kiji URI to a users table that the import
+ * will target. The argument `--input` should be the HDFS path to a file containing JSON
+ * records recording a song play by a user.
  *
- * See the file `song-plays.json` packaged with this tutorial for the structure of JSON records
- * imported.
+ * See the file `song-plays.json` packaged with this tutorial for the structure of JSON
+ * records imported.
  *
  * @param args passed in from the command line.
  */
 class SongPlaysImporter(args: Args) extends KijiJob(args) {
   /**
-   * Transforms a JSON record into a tuple whose fields correspond to the fields from the JSON
-   * record.
+   * Transforms a JSON record into a tuple whose fields correspond to the fields from the
+   * JSON record.
    *
    * @param json is the record to parse into a tuple.
    * @return a Scala tuple whose fields correspond to the fields from the JSON record.
@@ -56,11 +56,11 @@ class SongPlaysImporter(args: Args) extends KijiJob(args) {
 
   // This Scalding pipeline does the following:
   // 1. Reads JSON records from a file in HDFS.
-  // 2. Flattens each JSON record into a tuple with fields corresponding to information about a
-  //    playing a track.
+  // 2. Flattens each JSON record into a tuple with fields corresponding to information
+  //    about a playing track.
   // 3. Transforms the id for each user into an entity id for the users table.
-  // 4. Writes each track played by a user to the column "info:track_plays" in the user table,
-  //    at the timestamp when the user listened to the song, in the row for the user.
+  // 4. Writes each track played by a user to the column "info:track_plays" in the user
+  //    table, at the timestamp when the user listened to the song, in the row for the user.
   TextLine(args("input"))
       .map('line ->
           ('userId, 'playTime, 'songId)) { parseJson }
