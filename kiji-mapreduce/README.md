@@ -1,5 +1,5 @@
-KijiMR ${project.version}
-=========================
+KijiMR
+======
 
 KijiMR is a framework for writing MapReduce-based computation
 over data stored in KijiSchema.
