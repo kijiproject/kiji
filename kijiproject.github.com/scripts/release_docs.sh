@@ -64,8 +64,8 @@ PHONEBOOK_FLAT_VER=1_0_0
 PHONEBOOK_VER=1.0.0
 
 # REST Server version
-REST_FLAT_VER=0_3_0
-REST_VER=0.3.0
+REST_FLAT_VER=0_4_0
+REST_VER=0.4.0
 
 ### Ordinary configuration does not go past this line ###
 
