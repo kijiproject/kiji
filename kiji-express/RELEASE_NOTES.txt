@@ -1,6 +1,10 @@
 
                              Kiji Express Release Notes
 
+Version 0.8.1
+  * EXP-186. Update Scalding version used by KijiExpress. This fixes
+      some Scalding bugs in the matrix API.
+
 Version 0.8.0
   * EXP-168. Normalizes the names of modeling Avro classes. The names
       of Avro records for columns and filters have been changed from
