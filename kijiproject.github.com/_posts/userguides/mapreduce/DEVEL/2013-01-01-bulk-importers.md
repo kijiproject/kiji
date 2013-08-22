@@ -132,7 +132,7 @@ For example, to read from JSON:
 {% highlight text %}
 LOAD DATA INFILE '/users/patton/army.json' INTO TABLE troops
 THROUGH PATH '/users/patton/load_troops'
-USING 'org.kiji.mapreduce.bulkimport.JSONBulkImporter'
+USING 'org.kiji.mapreduce.lib.bulkimport.JSONBulkImporter'
 MAP FIELDS (enlistment_date, name, rank, serial_number) AS (
   DEFAULT FAMILY info,
   serial_number => info:serial_number,
