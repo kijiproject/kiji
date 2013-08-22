@@ -89,10 +89,10 @@ fix_released_versions() {
   # It is expected to be called within a specific directory to reify.
 
   # Reify references to module documentation.
-  find . -name "*.md" -exec sed -i -e "s/api_mrlib_DEVEL/api_mrlib_$MRLIB_FLAT_VER/g" {} \;
-  find . -name "*.md" -exec sed -i -e "s/api_mr_DEVEL/api_mr_$KIJIMR_FLAT_VER/g" {} \;
-  find . -name "*.md" -exec sed -i -e "s/api_schema_DEVEL/api_schema_$SCHEMA_FLAT_VER/g" {} \;
-  find . -name "*.md" -exec sed -i -e "s/api_express_DEVEL/api_express_$EXPRESS_FLAT_VER/g" {} \;
+  find . -name "*.md" -exec sed -i -e "s/api_mrlib_devel/api_mrlib_$MRLIB_FLAT_VER/g" {} \;
+  find . -name "*.md" -exec sed -i -e "s/api_mr_devel/api_mr_$KIJIMR_FLAT_VER/g" {} \;
+  find . -name "*.md" -exec sed -i -e "s/api_schema_devel/api_schema_$SCHEMA_FLAT_VER/g" {} \;
+  find . -name "*.md" -exec sed -i -e "s/api_express_devel/api_express_$EXPRESS_FLAT_VER/g" {} \;
   find . -name "*.md" -exec sed -i -e \
       "s/userguide_mapreduce_devel/userguide_mapreduce_$KIJIMR_FLAT_VER/g" {} \;
   find . -name "*.md" -exec sed -i -e \
@@ -287,7 +287,7 @@ grep "api_mrlib_$MRLIB_FLAT_VER :" "$top/_config.yml" >/dev/null
 if [ "$?" != "0" ]; then
   # We didn't find the API reference. Add KijiMR Library API docs reference to _config.yml.
   echo "Adding KijiMR Library API docs to _config.yml: $MRLIB_VER"
-  echo "api_mrlib_$MRLIB_FLAT_VER : $API/kiji-mapreduce-lib/$MRLIB_VER/org/kiji/mapreduce" \
+  echo "api_mrlib_$MRLIB_FLAT_VER : $API/kiji-mapreduce-lib/$MRLIB_VER/org/kiji/mapreduce/lib" \
       >> "$top/_config.yml"
 fi
 

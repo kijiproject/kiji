@@ -32,21 +32,21 @@ Kiji commands bulk-import, produce and gather all recognize the following flags:
 *   `--start-row=` and `--limit-row=`:
     Restrict the range of rows to scan through.
     The start row is included in the scan while the limit row is excluded.
-    Start and limit rows are expressed in the same way as `--entity-id` for [`kiji get`]({{site.userguide_schema_1_2_0}}/tool-reference/#ref.get).
+    Start and limit rows are expressed in the same way as `--entity-id` for [`kiji get`]({{site.userguide_schema_1_2_1}}/tool-reference/#ref.get).
     For example as HBase encoded rows: `--start-row='hex:0088deadbeef'` or `--limit-row='utf8:the row key in UTF8'`.
 
 
 Bulk importers must specify the name of the class providing the bulk-import logic:
 
-*   `--importer=java.package.BulkImporterClassName`: specifies the [`KijiBulkImporter`]({{site.api_mr_devel}}/bulkimport/KijiBulkImporter.html) class to use.
+*   `--importer=java.package.BulkImporterClassName`: specifies the [`KijiBulkImporter`]({{site.api_mr_1_1_0}}/bulkimport/KijiBulkImporter.html) class to use.
 
 Producers must specify the name of the class providing the producers logic:
 
-*   `--producer=java.package.ProducerClassName`: specifies the [`KijiProducer`]({{site.api_mr_devel}}/produce/KijiProducer.html) class to use.
+*   `--producer=java.package.ProducerClassName`: specifies the [`KijiProducer`]({{site.api_mr_1_1_0}}/produce/KijiProducer.html) class to use.
 
 Gatherer must specify the name of the class providing the gathering logic, and optionally a reducing logic:
 
-*   `--gatherer=java.package.GathererClassName`: specifies the [`KijiGatherer`]({{site.api_mr_devel}}/gather/KijiGatherer.html) class to use.
+*   `--gatherer=java.package.GathererClassName`: specifies the [`KijiGatherer`]({{site.api_mr_1_1_0}}/gather/KijiGatherer.html) class to use.
 
 *   `--combiner=java.package.CombinerClassName`: optionally specifies a Combiner class to use.
 

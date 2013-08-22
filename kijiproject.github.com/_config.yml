@@ -49,7 +49,7 @@ userguide_schema_rc3 : /userguides/schema/1.0.0-rc3
 # rc4
 api_schema_rc4 : http://api-docs.kiji.org/kiji-schema/1.0.0-rc4/org/kiji/schema
 api_mr_rc4 : http://api-docs.kiji.org/kiji-mapreduce/1.0.0-rc4/org/kiji/mapreduce
-api_mrlib_rc4 : http://api-docs.kiji.org/kiji-mapreduce-lib/1.0.0-rc4/org/kiji/mapreduce
+api_mrlib_rc4 : http://api-docs.kiji.org/kiji-mapreduce-lib/1.0.0-rc4/org/kiji/mapreduce/lib
 tutorial_phonebook_rc4 : /tutorials/phonebook-tutorial/1.0.0-rc4
 tutorial_music_rc4 : /tutorials/music-recommendation/1.0.0-rc4
 userguide_schema_rc4 : /userguides/schema/1.0.0-rc4
@@ -58,7 +58,7 @@ userguide_mapreduce_rc4 : /userguides/mapreduce/1.0.0-rc4
 # rc5
 api_schema_rc5 : http://api-docs.kiji.org/kiji-schema/1.0.0-rc5/org/kiji/schema
 api_mr_rc5 : http://api-docs.kiji.org/kiji-mapreduce/1.0.0-rc5/org/kiji/mapreduce
-api_mrlib_rc5 : http://api-docs.kiji.org/kiji-mapreduce-lib/1.0.0-rc5/org/kiji/mapreduce
+api_mrlib_rc5 : http://api-docs.kiji.org/kiji-mapreduce-lib/1.0.0-rc5/org/kiji/mapreduce/lib
 tutorial_phonebook_rc5 : /tutorials/phonebook-tutorial/1.0.0-rc5
 tutorial_music_rc5 : /tutorials/music-recommendation/1.0.0-rc5
 userguide_schema_rc5 : /userguides/schema/1.0.0-rc5
@@ -73,8 +73,8 @@ api_schema_1_0_1 : http://api-docs.kiji.org/kiji-schema/1.0.1/org/kiji/schema
 api_schema_1_0_2 : http://api-docs.kiji.org/kiji-schema/1.0.2/org/kiji/schema
 api_mr_rc6 : http://api-docs.kiji.org/kiji-mapreduce/1.0.0-rc6/org/kiji/mapreduce
 api_mr_rc61 : http://api-docs.kiji.org/kiji-mapreduce/1.0.0-rc61/org/kiji/mapreduce
-api_mrlib_rc6 : http://api-docs.kiji.org/kiji-mapreduce-lib/1.0.0-rc6/org/kiji/mapreduce
-api_mrlib_rc61 : http://api-docs.kiji.org/kiji-mapreduce-lib/1.0.0-rc61/org/kiji/mapreduce
+api_mrlib_rc6 : http://api-docs.kiji.org/kiji-mapreduce-lib/1.0.0-rc6/org/kiji/mapreduce/lib
+api_mrlib_rc61 : http://api-docs.kiji.org/kiji-mapreduce-lib/1.0.0-rc61/org/kiji/mapreduce/lib
 tutorial_phonebook_rc6 : /tutorials/phonebook-tutorial/1.0.0-rc6
 tutorial_music_rc6 : /tutorials/music-recommendation/1.0.0-rc6
 userguide_schema_1_0_0 : /userguides/schema/1.0.0
@@ -88,10 +88,10 @@ userguide_mapreduce_rc61 : /userguides/mapreduce/1.0.0-rc61
 # after the release version number and have their DEVEL macros finalized to the
 # latest release versions.
 
-api_schema_DEVEL : http://api-docs.kiji.org/kiji-schema/devel/org/kiji/schema
-api_mrlib_DEVEL : http://api-docs.kiji.org/kiji-mapreduce-lib/devel/org/kiji/mapreduce
-api_mr_DEVEL : http://api-docs.kiji.org/kiji-mapreduce/devel/org/kiji/mapreduce
-api_express_DEVEL : http://api-docs.kiji.org/kiji-express/devel/org/kiji/express
+api_schema_devel : http://api-docs.kiji.org/kiji-schema/devel/org/kiji/schema
+api_mrlib_devel : http://api-docs.kiji.org/kiji-mapreduce-lib/devel/org/kiji/mapreduce/lib
+api_mr_devel : http://api-docs.kiji.org/kiji-mapreduce/devel/org/kiji/mapreduce
+api_express_devel : http://api-docs.kiji.org/kiji-express/devel/org/kiji/express
 
 userguide_schema_devel : /userguides/schema/devel
 userguide_mapreduce_devel : /userguides/mapreduce/devel
@@ -232,7 +232,7 @@ api_schema_1_1_0 : http://api-docs.kiji.org/kiji-schema/1.1.0/org/kiji/schema
 api_mr_1_0_0 : http://api-docs.kiji.org/kiji-mapreduce/1.0.0/org/kiji/mapreduce
 userguide_mapreduce_1_0_0 : /userguides/mapreduce/1.0.0
 tutorial_phonebook_1_0_0 : /tutorials/phonebook-tutorial/1.0.0
-api_mrlib_1_0_0 : http://api-docs.kiji.org/kiji-mapreduce-lib/1.0.0/org/kiji/mapreduce
+api_mrlib_1_0_0 : http://api-docs.kiji.org/kiji-mapreduce-lib/1.0.0/org/kiji/mapreduce/lib
 api_express_0_5_0 : http://api-docs.kiji.org/kiji-express/0.5.0/org/kiji/express
 userguide_schema_1_1_1 : /userguides/schema/1.1.1
 api_schema_1_1_1 : http://api-docs.kiji.org/kiji-schema/1.1.1/org/kiji/schema
@@ -255,3 +255,5 @@ api_schema_1_2_1 : http://api-docs.kiji.org/kiji-schema/1.2.1/org/kiji/schema
 api_express_0_8_0 : http://api-docs.kiji.org/kiji-express/0.8.0/org/kiji/express
 api_express_0_8_1 : http://api-docs.kiji.org/kiji-express/0.8.1/org/kiji/express
 userguide_rest_0_4_0 : /userguides/rest/0.4.0
+api_mr_1_1_0 : http://api-docs.kiji.org/kiji-mapreduce/1.1.0/org/kiji/mapreduce
+userguide_mapreduce_1_1_0 : /userguides/mapreduce/1.1.0
