@@ -32,6 +32,7 @@ import org.kiji.express.Cell
 import org.kiji.express.EntityId
 import org.kiji.express.KijiSlice
 import org.kiji.express.KijiSuite
+import org.kiji.express.avro.SpecificRecordTest
 import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.schema.KijiTable
 import org.kiji.schema.avro.HashSpec
@@ -389,7 +390,6 @@ class KijiSourceSuite
         .finish
   }
 
-
   test("replacing missing values succeeds") {
     // Create test Kiji table.
     val uri: String = doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
@@ -485,6 +485,41 @@ class KijiSourceSuite
         .source(KijiInput(uri) (Map (Column("family:column3") -> 'records)),
             genericReadInput(uri))
         .sink(Tsv("outputFile"))(validateGenericRead)
+
+    // Run in local mode
+    jobTest.run.finish
+
+    // Run in hadoop mode
+    jobTest.runHadoop.finish
+  }
+
+  test("A job that reads using the specific API is run.") {
+    // Create test Kiji table.
+    val uri: String = doAndRelease(makeTestKijiTable(avroLayout)) { table: KijiTable =>
+      table.getURI().toString()
+    }
+
+    val specificRecord = new HashSpec()
+    specificRecord.setHashType(HashType.MD5)
+    specificRecord.setHashSize(13)
+    specificRecord.setSuppressKeyMaterialization(true)
+    def genericReadInput(uri: String): List[(EntityId, KijiSlice[HashSpec])] = {
+      List((EntityId("row01"), slice("family:column3", (10L, specificRecord))))
+    }
+
+    def validateSpecificRead(outputBuffer: Buffer[(Int, Int)]): Unit = {
+      assert (1 === outputBuffer.size)
+      // There exactly 1 record with hash_size of 13.
+      assert ((13, 1) === outputBuffer(0))
+    }
+
+    val jobTest = JobTest(new SpecificAvroReadJob(_))
+        .arg("input", uri)
+        .arg("output", "outputFile")
+        .source(KijiInput(uri)(
+      Map(Column("family:column3").withSpecificAvroClass(classOf[SpecificRecordTest]) -> 'records)),
+      genericReadInput(uri))
+        .sink(Tsv("outputFile"))(validateSpecificRead)
 
     // Run in local mode
     jobTest.run.finish
@@ -830,6 +865,18 @@ object KijiSourceSuite extends KijiSuite {
     }
     .groupBy('hashSizeField)(_.size)
     .write(Tsv(args("output")))
+  }
+
+  class SpecificAvroReadJob(args: Args) extends KijiJob(args) {
+    val inputOptions = Map(
+        Column("family:column3").withSpecificAvroClass(classOf[SpecificRecordTest]) -> 'records)
+    KijiInput(args("input"))(inputOptions)
+        .map('records -> 'hashSizeField) { slice: KijiSlice[AvroValue] =>
+          val Cell(_, _, _, record) = slice.getFirst
+          record("hash_size").asInt
+        }
+        .groupBy('hashSizeField)(_.size)
+        .write(Tsv(args("output")))
   }
 
   /**

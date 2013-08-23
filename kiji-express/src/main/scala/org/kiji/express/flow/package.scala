@@ -223,20 +223,20 @@ package object flow {
       name.split(":") match {
         case Array(family, qualifier) => {
           new QualifiedColumn(
-            family,
-            qualifier,
-            new ColumnRequestOptions(versions, None))
+              family,
+              qualifier,
+              new ColumnRequestOptions(versions))
         }
         case Array(family) => {
           throw new KijiInvalidNameException(
-            "Specify the fully qualified column name in the format "
-                + "\"family:qualifier\".\n"
-                + "If you want to specify a map-type column family only, "
-                + "use MapFamily instead of Column.")
+              "Specify the fully qualified column name in the format "
+              + "\"family:qualifier\".\n"
+              + "If you want to specify a map-type column family only, "
+              + "use MapFamily instead of Column.")
         }
         case _ => {
           throw new KijiInvalidNameException(
-            "Specify the fully qualified column name in the format \"family:qualifier\".")
+              "Specify the fully qualified column name in the format \"family:qualifier\".")
         }
       }
     }

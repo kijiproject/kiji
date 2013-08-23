@@ -21,6 +21,7 @@ package org.kiji.express.flow
 
 import java.io.Serializable
 
+import org.apache.avro.specific.SpecificRecord
 import org.apache.hadoop.hbase.HConstants
 
 import org.kiji.annotations.ApiAudience
@@ -154,6 +155,19 @@ final case class QualifiedColumn private[express] (
         options.newWithReplacement(Some(replacement)))
   }
 
+  /**
+   * Specifies an Avro class to use for reading values from this column.
+   *
+   * @param avroClass the Avro class to use as an override reader schema for this column.
+   * @return this ColumnRequest with the specified Avro class as its reader schema.
+   */
+  def withSpecificAvroClass(avroClass: Class[_ <: SpecificRecord]): ColumnRequest = {
+    return new QualifiedColumn(
+        family,
+        qualifier,
+        options.newWithAvroClass(Some(avroClass)))
+  }
+
   override def ignoreMissing(): ColumnRequest = {
     return new QualifiedColumn(family, qualifier, options.newWithReplacement(None))
   }
@@ -254,6 +268,19 @@ final case class ColumnFamily private[express] (
         options.newWithReplacement(Some(replacement)))
   }
 
+  /**
+   * Specifies an Avro class to use for reading values from this family.
+   *
+   * @param avroClass the Avro class to use as an override reader schema for this family.
+   * @return this ColumnRequest with the specified Avro class as its reader schema.
+   */
+  def withSpecificAvroClass(avroClass: Class[_ <: SpecificRecord]): ColumnRequest = {
+    return new ColumnFamily(
+        family,
+        qualifierSelector,
+        options.newWithAvroClass(Some(avroClass)))
+  }
+
   override def ignoreMissing(): ColumnRequest = {
     return new ColumnFamily(family, qualifierSelector, options.newWithReplacement(None))
   }
@@ -276,10 +303,23 @@ final case class ColumnRequestOptions private[express] (
     // Not accessible to end-users because the type is soon to be replaced by a
     // KijiExpress-specific implementation.
     private[express] val filter: Option[KijiColumnFilter] = None,
-    replacementSlice: Option[KijiSlice[_]] = None)
+    replacementSlice: Option[KijiSlice[_]] = None,
+    avroClass: Option[Class[_ <: SpecificRecord]] = None)
     extends Serializable {
-      def newWithReplacement(
-          newReplacement: Option[KijiSlice[_]]): ColumnRequestOptions = {
-        new ColumnRequestOptions(maxVersions, filter, newReplacement)
-      }
+  def newWithReplacement(
+      newReplacement: Option[KijiSlice[_]]): ColumnRequestOptions = {
+    return new ColumnRequestOptions(
+        maxVersions = maxVersions,
+        filter = filter,
+        replacementSlice = newReplacement)
+  }
+
+  def newWithAvroClass(
+      newAvroClass: Option[Class[_ <: SpecificRecord]]) : ColumnRequestOptions = {
+    return new ColumnRequestOptions(
+        maxVersions = maxVersions,
+        filter = filter,
+        replacementSlice = replacementSlice,
+        avroClass = newAvroClass)
+  }
 }

@@ -28,6 +28,7 @@ import org.apache.hadoop.mapred.RecordReader
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.express.util.GenericCellSpecs
+import org.kiji.express.util.SpecificCellSpecs
 import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.HBaseEntityId
@@ -100,7 +101,12 @@ final class KijiRecordReader(
   private val reader: KijiTableReader = {
     doAndRelease(Kiji.Factory.open(inputURI, configuration)) { kiji: Kiji =>
       doAndRelease(kiji.openTable(inputURI.getTable())) { table: KijiTable =>
-        table.getReaderFactory().openTableReader(GenericCellSpecs(table))
+        val serializedOverrides: String =
+            configuration.get(SpecificCellSpecs.CELLSPEC_OVERRIDE_CONF_KEY)
+        val cellSpecOverrides = SpecificCellSpecs.deserializeOverrides(table, serializedOverrides)
+        val completeCellSpecs =
+            SpecificCellSpecs.mergeCellSpecs(GenericCellSpecs(table), cellSpecOverrides)
+        table.getReaderFactory.openTableReader(completeCellSpecs)
       }
     }
   }

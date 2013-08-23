@@ -50,6 +50,7 @@ import org.kiji.express.flow.ColumnRequestOptions
 import org.kiji.express.flow.QualifiedColumn
 import org.kiji.express.flow.TimeRange
 import org.kiji.express.util.AvroUtil
+import org.kiji.express.util.SpecificCellSpecs
 import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.Kiji
@@ -123,6 +124,8 @@ private[express] class KijiScheme(
     conf.set(
         KijiConfKeys.KIJI_INPUT_DATA_REQUEST,
         Base64.encodeBase64String(SerializationUtils.serialize(request)))
+    conf.set(SpecificCellSpecs.CELLSPEC_OVERRIDE_CONF_KEY,
+        SpecificCellSpecs.serializeOverrides(columns))
   }
 
   /**
@@ -361,7 +364,7 @@ private[express] object KijiScheme {
         .map { field => columns(field.toString) }
         // Build the tuple, by adding each requested value into result.
         .foreach {
-            case ColumnFamily(family, _, ColumnRequestOptions(_, _, replacementOption)) => {
+            case ColumnFamily(family, _, ColumnRequestOptions(_, _, replacementOption, _)) => {
               if (row.containsColumn(family)) {
                 result.add(KijiSlice(row, family))
               } else {
@@ -378,7 +381,7 @@ private[express] object KijiScheme {
             case QualifiedColumn(
                 family,
                 qualifier,
-                ColumnRequestOptions(_, _, replacementOption)) => {
+                ColumnRequestOptions(_, _, replacementOption, _)) => {
               if (row.containsColumn(family, qualifier)) {
                 result.add(KijiSlice(row, family, qualifier))
               } else {
@@ -396,7 +399,7 @@ private[express] object KijiScheme {
     return Some(result)
   }
 
-  // TODO(CHOP-35): Use an output format that writes to HFiles.
+  // TODO(EXP-16): Use an output format that writes to HFiles.
   /**
    * Writes a Cascading tuple to a Kiji table.
    *

@@ -190,7 +190,9 @@
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>versions-maven-plugin</artifactId>
         <configuration>
-          <includeProperties>kiji-schema.version,kiji-schema-shell.version,kiji-mapreduce.version</includeProperties>
+          <includeProperties>
+            kiji-schema.version,kiji-schema-shell.version,kiji-mapreduce.version
+          </includeProperties>
         </configuration>
         <dependencies>
           <dependency>
@@ -298,9 +300,6 @@
           <filereports>WDF TestSuite.txt</filereports>
           <argLine>-Xmx2048m</argLine>
           <systemProperties>
-            <org.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION>
-              DISABLED
-            </org.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION>
             <jline.terminal>jline.UnsupportedTerminal</jline.terminal>
           </systemProperties>
         </configuration>
