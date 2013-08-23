@@ -31,7 +31,7 @@
 
     <!-- versions for program dependencies -->
     <annotations.version>1.0.0</annotations.version>
-    <avro.version>1.7.2</avro.version>
+    <avro.version>1.7.5</avro.version>
     <commons-io.version>2.1</commons-io.version>
     <commons-lang.version>2.6</commons-lang.version>
     <commons-lang3.version>3.0</commons-lang3.version>
