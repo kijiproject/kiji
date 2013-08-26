@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <!--
     (c) Copyright 2012 WibiData, Inc.
@@ -36,7 +37,7 @@
 
   <properties>
     <kiji-avro.version>1.1.2-cdh4</kiji-avro.version>
-    <kiji-schema.classifier />
+    <kiji-schema.classifier/>
     <aspectj-maven-plugin.version>1.4</aspectj-maven-plugin.version>
     <aspectjrt.version>1.7.2</aspectjrt.version>
   </properties>

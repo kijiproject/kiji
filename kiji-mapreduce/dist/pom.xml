@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <!--
     (c) Copyright 2013 WibiData, Inc.
@@ -59,13 +60,13 @@
                   <!-- Default (no classifier) jar artifact is Hadoop2-based, like now. -->
                   <file>../kiji-mapreduce/target/kiji-mapreduce-hadoop2-${project.version}.jar</file>
                   <type>jar</type>
-                  <classifier />
+                  <classifier/>
                 </artifact>
                 <artifact>
                   <!-- Our test-jar artifact is taken from kiji-mapreduce-hadoop2. -->
                   <file>../kiji-mapreduce/target/kiji-mapreduce-hadoop2-${project.version}-tests.jar</file>
                   <type>test-jar</type>
-                  <classifier />
+                  <classifier/>
                 </artifact>
                 <artifact>
                   <!-- Add a source jar... -->
