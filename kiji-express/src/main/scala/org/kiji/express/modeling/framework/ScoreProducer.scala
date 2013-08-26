@@ -20,7 +20,6 @@
 package org.kiji.express.modeling.framework
 
 import scala.collection.JavaConverters._
-import scala.Some
 
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
@@ -209,6 +208,10 @@ final class ScoreProducer
     val scoreStores: Map[String, JKeyValueStore[_, _]] = ScoreProducer
         .openJKvstores(scoreStoreDefs, getConf())
     scoreStores.asJava
+  }
+
+  override def cleanup(context: KijiContext) {
+    rowConverter.close()
   }
 
   override def setup(context: KijiContext) {
