@@ -30,6 +30,7 @@ import org.kiji.mapreduce.kvstore.KeyValueStoreReaderFactory;
 import org.kiji.mapreduce.produce.ProducerContext;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiColumnName;
+import org.kiji.scoring.impl.MultiBufferedWriter.SingleBuffer;
 
 /**
  * Producer context for freshening KijiProducers.  The context is responsible for providing access
@@ -42,9 +43,8 @@ public final class KijiFreshProducerContext implements ProducerContext {
   private final KeyValueStoreReaderFactory mFactory;
   private final String mFamily;
   private final String mQualifier;
-  private final MultiBufferedWriter mWriter;
+  private final SingleBuffer mWriter;
   private final EntityId mEntityId;
-  private final String mBufferName;
 
   /**
    * Set by InternalFreshKijiTableReader after Producer.producer() returns to indicate that there
@@ -63,25 +63,18 @@ public final class KijiFreshProducerContext implements ProducerContext {
    * (org.kiji.schema.KijiColumnName, org.kiji.schema.EntityId,
    * org.kiji.mapreduce.kvstore.KeyValueStoreReaderFactory, org.kiji.schema.KijiBufferedWriter)}.
    *
-   * @param bufferName the name of the buffer into which this context should write.  This buffer
-   * name should be shared by all contexts whose writes should be committed together.  When partial
-   * freshening is allowed each context should have a unique buffer name (generated in
-   * {@link InternalFreshKijiTableReader} by incrementing an AtomicLong).  When partial freshening
-   * is disallowed, all contexts for a single get() request will share a buffer name.
    * @param outputColumn the target column.
    * @param eid the target EntityId.
    * @param factory a factory of kv-serialize readers.
-   * @param writer the MultiBufferedWriter to be used by this Context to perform put() calls.
+   * @param writer the SingleBuffer to be used by this Context to perform put() calls.
    * @throws IOException in case of an error opening a connection to the underlying table.
    */
   private KijiFreshProducerContext(
-      final String bufferName,
       final KijiColumnName outputColumn,
       final EntityId eid,
       final KeyValueStoreReaderFactory factory,
-      final MultiBufferedWriter writer)
+      final SingleBuffer writer)
       throws IOException {
-    mBufferName = bufferName;
     mEntityId = eid;
     mWriter = writer;
     mFamily = Preconditions.checkNotNull(outputColumn.getFamily());
@@ -94,27 +87,21 @@ public final class KijiFreshProducerContext implements ProducerContext {
    * Create a new KijiFreshProducerContext configured to write to a specific column and row using a
    * given MultiBufferedWriter.
    *
-   * @param bufferName the name of the buffer into which this context should write.  This buffer
-   * name should be shared by all contexts whose writes should be committed together.  When partial
-   * freshening is allowed each context should have a unique buffer name (generated in
-   * {@link InternalFreshKijiTableReader} by incrementing an AtomicLong).  When partial freshening
-   * is disallowed, all contexts for a single get() request will share a buffer name.
    * @param outputColumn the column to which to write.
    * @param eid the EntityId of the row to which to write.
    * @param factory a factory of kv-serialize readers.
-   * @param writer the MultiBufferedWriter to be used by this Context to perform put() calls.
+   * @param writer the SingleBuffer to be used by this Context to perform put() calls.
    * @return a new KijiFreshProducerContext configured to write to a specific column and row using a
-   * given MultiBufferedWriter.
+   * given SingleBuffer.
    * @throws IOException in case of an error opening a connection to the underlying table.
    */
   public static KijiFreshProducerContext create(
-      final String bufferName,
       final KijiColumnName outputColumn,
       final EntityId eid,
       final KeyValueStoreReaderFactory factory,
-      final MultiBufferedWriter writer)
+      final SingleBuffer writer)
       throws IOException {
-    return new KijiFreshProducerContext(bufferName, outputColumn, eid, factory, writer);
+    return new KijiFreshProducerContext(outputColumn, eid, factory, writer);
   }
 
   /** {@inheritDoc} */
@@ -130,7 +117,7 @@ public final class KijiFreshProducerContext implements ProducerContext {
       throw new UnsupportedOperationException("Writing in producer setup and cleanup methods is "
           + "unsupported.");
     } else {
-      mWriter.put(mBufferName, mEntityId, mFamily, Preconditions.checkNotNull(
+      mWriter.put(mEntityId, mFamily, Preconditions.checkNotNull(
           mQualifier, "Output column is a map type family, use put(qualifier, timestamp, value)"),
           timestamp, value);
       mHasReceivedWrites = true;
@@ -153,7 +140,7 @@ public final class KijiFreshProducerContext implements ProducerContext {
       throw new UnsupportedOperationException("Writing in producer setup and cleanup methods is "
           + "unsupported.");
     } else {
-      mWriter.put(mBufferName, mEntityId, mFamily, qualifier, timestamp, value);
+      mWriter.put(mEntityId, mFamily, qualifier, timestamp, value);
       mHasReceivedWrites = true;
     }
   }
@@ -171,7 +158,7 @@ public final class KijiFreshProducerContext implements ProducerContext {
       throw new UnsupportedOperationException("Flushing in producer setup and cleanup methods is "
           + "unsupported.");
     } else {
-      mWriter.flush(mBufferName);
+      mWriter.flush();
     }
   }
 

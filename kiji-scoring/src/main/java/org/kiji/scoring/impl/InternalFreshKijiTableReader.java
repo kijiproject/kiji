@@ -70,6 +70,7 @@ import org.kiji.scoring.KijiFreshnessManager;
 import org.kiji.scoring.KijiFreshnessPolicy;
 import org.kiji.scoring.PolicyContext;
 import org.kiji.scoring.avro.KijiFreshnessPolicyRecord;
+import org.kiji.scoring.impl.MultiBufferedWriter.SingleBuffer;
 
 /**
  * Implementation of a Fresh Kiji Table Reader for HBase.
@@ -227,7 +228,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
      */
     private void close() throws IOException {
       mProducer.cleanup(
-          KijiFreshProducerContext.create(null, mAttachedColumn, null, mFactory, null));
+          KijiFreshProducerContext.create(mAttachedColumn, null, mFactory, null));
       mFactory.close();
     }
   }
@@ -414,7 +415,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     KeyValueStoreReaderFactory factory = KeyValueStoreReaderFactory.create(kvMap);
 
     // Initialize the producer.
-    producer.setup(KijiFreshProducerContext.create(null, columnName, null, factory, null));
+    producer.setup(KijiFreshProducerContext.create(columnName, null, factory, null));
 
     // Encapsulate the policy, producer, and factory.
     return new FreshnessCapsule(policy, producer, factory, columnName);
@@ -583,6 +584,8 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     // out, ProducerContexts created after the timeout will not be added to this Map.  If
     // mAllowPartial is false, this entry will be removed only when the last producer finishes.
     mContextMap.put(getId, new ArrayList<KijiFreshProducerContext>());
+    // Create a SingleBuffer for this request.  Will be used if partial freshening is disabled.
+    final SingleBuffer requestBuffer = mBuffer.openSingleBuffer();
     // Track the number of fresheners remaining to tell when the entire request is finished.
     // Decremented whenever a thread will terminate.
     final AtomicInteger remainingFresheners = new AtomicInteger(capsules.size());
@@ -619,35 +622,32 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
             final boolean isFresh =
                 usesClientDataRequest.get(key).getPolicy().isFresh(rowData, policyContext);
             if (isFresh) {
-              return shouldReread(null, getId, remainingFresheners.decrementAndGet());
+              return shouldReread(
+                  requestBuffer, null, getId, remainingFresheners.decrementAndGet());
             } else {
               final FreshnessCapsule capsule = usesClientDataRequest.get(key);
-              final KijiFreshProducerContext context;
+
+              final SingleBuffer buffer;
               if (mAllowPartialFresh) {
-                context = KijiFreshProducerContext.create(
-                    String.valueOf(mBufferId.getAndIncrement()),
-                    key,
-                    eid,
-                    capsule.getFactory(),
-                    mBuffer);
-                addContextToMap(context, getId);
+                buffer = mBuffer.openSingleBuffer();
               } else {
-                context = KijiFreshProducerContext.create(
-                    getId,
-                    key,
-                    eid,
-                    capsule.getFactory(),
-                    mBuffer);
-                addContextToMap(context, getId);
+                buffer = requestBuffer;
               }
+              final KijiFreshProducerContext context = KijiFreshProducerContext.create(
+                  key,
+                  eid,
+                  capsule.getFactory(),
+                  buffer);
+              addContextToMap(context, getId);
+
               final KijiProducer producer = capsule.getProducer();
               producer.produce(mReader.get(eid, producer.getDataRequest()), context);
               capsule.release();
               context.finish();
-              return shouldReread(context, getId, remainingFresheners.decrementAndGet());
+              return shouldReread(buffer, context, getId, remainingFresheners.decrementAndGet());
             }
           } else {
-            return shouldReread(null, getId, remainingFresheners.decrementAndGet());
+            return shouldReread(requestBuffer, null, getId, remainingFresheners.decrementAndGet());
           }
         }
       });
@@ -664,32 +664,28 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
           final boolean isFresh =
               usesOwnDataRequest.get(key).getPolicy().isFresh(rowData, policyContext);
           if (isFresh) {
-            return shouldReread(null, getId, remainingFresheners.decrementAndGet());
+            return shouldReread(requestBuffer, null, getId, remainingFresheners.decrementAndGet());
           } else {
             final FreshnessCapsule capsule = usesOwnDataRequest.get(key);
-            final KijiFreshProducerContext context;
+
+            final SingleBuffer buffer;
             if (mAllowPartialFresh) {
-              context = KijiFreshProducerContext.create(
-                  String.valueOf(mBufferId.getAndIncrement()),
-                  key,
-                  eid,
-                  capsule.getFactory(),
-                  mBuffer);
-              addContextToMap(context, getId);
+              buffer = mBuffer.openSingleBuffer();
             } else {
-              context = KijiFreshProducerContext.create(
-                  getId,
-                  key,
-                  eid,
-                  capsule.getFactory(),
-                  mBuffer);
-              addContextToMap(context, getId);
+              buffer = requestBuffer;
             }
+            final KijiFreshProducerContext context = KijiFreshProducerContext.create(
+                key,
+                eid,
+                capsule.getFactory(),
+                buffer);
+            addContextToMap(context, getId);
+
             final KijiProducer producer = capsule.getProducer();
             producer.produce(mReader.get(eid, producer.getDataRequest()), context);
             capsule.release();
             context.finish();
-            return shouldReread(context, getId, remainingFresheners.decrementAndGet());
+            return shouldReread(buffer, context, getId, remainingFresheners.decrementAndGet());
           }
         }
       });
@@ -725,6 +721,10 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
    * Called whenever a producer finishes.  Manages flushing buffers according to mAllowPartialFresh
    * and returns whether any new data has been written.
    *
+   * @param buffer the SingleBuffer which corresponds to the producer or freshness policy which
+   *     triggered this call.  If partial freshening is allowed this will be the buffer which
+   *     context uses to cache writes.  If partial freshening is not allowed this will be the global
+   *     buffer for the entire request.
    * @param context the producer context of the producer which just finished.  Null indicates that
    *      a producer was not run.
    * @param getId the ID of the request which triggered the producer.
@@ -734,6 +734,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
    * @throws IOException in case of an IO error.
    */
   private Boolean shouldReread(
+      SingleBuffer buffer,
       KijiFreshProducerContext context,
       String getId,
       int remainingFresheners)
@@ -752,7 +753,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
           shouldReread = shouldReread || cont.hasReceivedWrites();
         }
         if (shouldReread) {
-          mBuffer.flush(getId);
+          buffer.flush();
         }
         // Now that the request is finished, remove the contexts from the map.
         mContextMap.remove(getId);

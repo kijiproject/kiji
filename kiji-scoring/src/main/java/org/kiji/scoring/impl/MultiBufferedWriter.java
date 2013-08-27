@@ -21,9 +21,7 @@ package org.kiji.scoring.impl;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.collect.Lists;
 
@@ -33,26 +31,15 @@ import org.kiji.schema.KijiBufferedWriter;
 import org.kiji.schema.KijiTable;
 
 /**
- * Buffered writer supporting connection sharing to minimize opened writer connections. Buffers
- * are identified by a String buffer name and each must be flushed separately.
+ * Buffered writer supporting connection sharing to minimize opened writer connections.
+ * SingleBuffers retrieved from this class do not need to be closed when they are no longer needed.
  */
 @ApiAudience.Private
 public final class MultiBufferedWriter implements Closeable {
-  /** Delegate BufferedWriter to actually perform writes. */
-  private final KijiBufferedWriter mWriter;
-  /** Mapping from buffer name to list of fully qualified puts. */
-  private final Map<String, List<EFQTV>> mBuffers;
 
-  /**
-   * Default constructor.
-   *
-   * @param table the KijiTable to which these buffers write.
-   * @throws IOException in case of an error opening the writer connection.
-   */
-  public MultiBufferedWriter(final KijiTable table) throws IOException {
-    mWriter = table.getWriterFactory().openBufferedWriter();
-    mBuffers = new HashMap<String, List<EFQTV>>();
-  }
+  // -----------------------------------------------------------------------------------------------
+  // Inner classes
+  // -----------------------------------------------------------------------------------------------
 
   /**
    * Container class representing all data needed to perform a put operation.  EFQTV stands for
@@ -91,64 +78,90 @@ public final class MultiBufferedWriter implements Closeable {
   }
 
   /**
-   * Adds an EFQTV to the given buffer.
-   *
-   * @param bufferName the name of the buffer into which the EFQTV should be added.
-   * @param efqtv the EFQTV to put into the given buffer.
+   * A single buffer view of a MultiBufferedWriter.
    */
-  private void addToBuffer(final String bufferName, final EFQTV efqtv) {
-    synchronized (mBuffers) {
-      final List<EFQTV> buffer = mBuffers.get(bufferName);
-      if (null != buffer) {
-        buffer.add(efqtv);
-      } else {
-        mBuffers.put(bufferName, Lists.newArrayList(efqtv));
+  public final class SingleBuffer {
+
+    private final List<EFQTV> mBuffer = Lists.newArrayList();
+
+    /**
+     * Initialize a new SingleBuffer which delegates to a MultiBufferedWriter to flush data.
+     */
+    public SingleBuffer() { }
+
+    /**
+     * Put the given information into this buffer.
+     *
+     * @param entityId the row on which to write the value.
+     * @param family the family into which to write the value.
+     * @param qualifier the qualifier into which to write the value.
+     * @param timestamp the timestamp at which to write the value.
+     * @param value the value to write to the table.
+     * @param <V> the type of the value.
+     */
+    public <V> void put(
+        final EntityId entityId,
+        final String family,
+        final String qualifier,
+        final long timestamp,
+        final V value
+    ) {
+      synchronized (mBuffer) {
+        mBuffer.add(new EFQTV<V>(entityId, family, qualifier, timestamp, value));
+      }
+    }
+
+    /**
+     * Flush the contents of this buffer.
+     *
+     * @throws IOException in case of an error writing to the table.
+     */
+    public void flush() throws IOException {
+      synchronized (mBuffer) {
+        synchronized (mWriter) {
+          for (EFQTV efqtv : mBuffer) {
+            mWriter.put(
+                efqtv.mEntityId,
+                efqtv.mFamily,
+                efqtv.mQualifer,
+                efqtv.mTimestamp,
+                efqtv.mValue);
+          }
+          mWriter.flush();
+          mBuffer.clear();
+        }
       }
     }
   }
 
-  // Public Interface ------------------------------------------------------------------------------
+  // -----------------------------------------------------------------------------------------------
+  // State
+  // -----------------------------------------------------------------------------------------------
+
+  /** Delegate BufferedWriter to actually perform writes. */
+  private final KijiBufferedWriter mWriter;
 
   /**
-   * Put the given information into the specified buffer.
+   * Default constructor.
    *
-   * @param bufferName the name of the buffer into which to put the data.
-   * @param eid the EntityId of the target row.
-   * @param family the family of the target column.
-   * @param qualifier the qualifier of the target column.
-   * @param timestamp the timestamp for the target cell.
-   * @param value the value for the target cell.
-   * @param <V> the type of the value for the target cell.
+   * @param table the KijiTable to which these buffers write.
+   * @throws IOException in case of an error opening the writer connection.
    */
-  public <V> void put(
-      String bufferName,
-      EntityId eid,
-      String family,
-      String qualifier,
-      long timestamp,
-      V value) {
-    addToBuffer(bufferName, new EFQTV<V>(eid, family, qualifier, timestamp, value));
+  public MultiBufferedWriter(final KijiTable table) throws IOException {
+    mWriter = table.getWriterFactory().openBufferedWriter();
   }
 
+  // -----------------------------------------------------------------------------------------------
+  // Public Interface
+  // -----------------------------------------------------------------------------------------------
+
   /**
-   * Flush all writes from a given buffer.
+   * Get a new SingleBuffer view of this MultiBufferedWriter.
    *
-   * @param bufferId the ID of the buffer to flush.
-   * @throws IOException in case of an error writing to the table.
+   * @return a new SingleBuffer which delegates to this MultiBufferedWriter to flush data.
    */
-  public void flush(String bufferId) throws IOException {
-    synchronized (mWriter) {
-      for (EFQTV efqtv : mBuffers.get(bufferId)) {
-        mWriter.put(
-            efqtv.mEntityId,
-            efqtv.mFamily,
-            efqtv.mQualifer,
-            efqtv.mTimestamp,
-            efqtv.mValue);
-      }
-      mWriter.flush();
-      mBuffers.remove(bufferId);
-    }
+  public SingleBuffer openSingleBuffer() {
+    return new SingleBuffer();
   }
 
   /** {@inheritDoc} */
