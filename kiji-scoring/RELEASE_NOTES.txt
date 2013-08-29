@@ -1,5 +1,20 @@
 
                               Kiji Scoring Release Notes
+Version 0.6.0
+    * SCORE-75. InternalFreshKijiTableReader has been significantly refactored to improve
+        maintainability. FreshKijiTableReader.rereadPolicies() no longer takes a boolean parameter
+        to trigger preloading of KijiFreshnessPolicy and KijiProducer objects. Instead the reader
+        proactively instantiates all policy and producer objects at construction and on calls to
+        rereadPolicies. FreshKijiTableReader.preload(KijiDataRequest) has been removed as part of
+        this change. Users with many attached freshness policies may now use
+        FreshKijiTableReaderBuilder.withColumnsToFreshen(List<KijiColumnName>) to specify for which
+        columns the constructed reader should run freshening. This list of columns will be used by
+        calls to rereadPolicies() to determine which policies should be instantiated. This list of
+        columns is immutable and only policies attached to columns in this list will ever be
+        instantiated by this reader. Columns in this list may be fully qualified columns or
+        families. Including a family in this list will include all policies attached to qualified
+        columns within that family or the map family policy attached to the entire family.
+
 Version 0.5.0
     * SCORE-78. Prepares KijiScoring for BentoBox. Many unnecessary dependencies have been
         removed. Missing newlines have been added in the FreshTool. README.md updated.

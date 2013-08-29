@@ -50,8 +50,9 @@
  *
  * <h3>Creation of policies and producers:</h3>
  * <p>Each FreshKijiTableReader has its own copy of its producers and policies.</p>
- * <p>Producers and policies are created lazily as needed in response to the first request that
- *   requires their attached columns. The process of instantiation is as follows:
+ * <p>Producers and policies are created proactively on construction of the reader and on calls to
+ *   {@link org.kiji.scoring.FreshKijiTableReader#rereadPolicies()}.
+ *   The process of instantiation is as follows:
  *   <ol>
  *     <li>The freshness policy object is created using reflection utilities (calling the empty
  *     constructor.)</li>

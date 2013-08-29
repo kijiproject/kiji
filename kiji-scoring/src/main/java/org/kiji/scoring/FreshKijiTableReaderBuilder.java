@@ -20,12 +20,15 @@
 package org.kiji.scoring;
 
 import java.io.IOException;
+import java.util.List;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
 import org.kiji.schema.InternalKijiError;
+import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiTable;
 import org.kiji.scoring.impl.InternalFreshKijiTableReader;
 
@@ -65,8 +68,6 @@ public final class FreshKijiTableReaderBuilder {
   private static final FreshReaderType DEFAULT_READER_TYPE = FreshReaderType.LOCAL;
   /** Wait 100 milliseconds for freshening to occur by default. */
   private static final int DEFAULT_TIMEOUT = 100;
-  /** Do not preload freshness policies added by calls to rereadPolicies() by default. */
-  private static final Boolean DEFAULT_PRELOAD_ON_AUTO_REREAD = false;
 
   /**
    * Get a new instance of FreshKijiTableReaderBuilder.
@@ -93,13 +94,10 @@ public final class FreshKijiTableReaderBuilder {
    * policies from the meta table.
    */
   private long mRereadPeriod;
-  /**
-   * Whether to preload new freshness policies during automatic calls to
-   * {@link FreshKijiTableReader#rereadPolicies(boolean)}.
-   */
-  private Boolean mPreloadOnAutoReread;
   /** Whether or not the new reader will return and commit partially fresh data when available. */
   private Boolean mAllowPartialFresh;
+  /** Specifies which columns to freshen.  Default is all columns. */
+  private List<KijiColumnName> mColumnsToFreshen;
 
   /**
    * Select the type of FreshKijiTableReader to instantiate.  Types are enumerated in
@@ -161,19 +159,6 @@ public final class FreshKijiTableReaderBuilder {
   }
 
   /**
-   * Configure the FreshKijiTableReader to preload all new freshness policies added by automatic
-   * calls to {@link FreshKijiTableReader#rereadPolicies(boolean)}.  Has no effect without
-   * {@link #withAutomaticReread(long)}.
-   *
-   * @param withPreload whether to preload freshness policies added by automatic reread calls.
-   * @return this FreshKijiTableReaderBuilder configured to preload after reread if preload == true.
-   */
-  public FreshKijiTableReaderBuilder withPreloadOnAutomaticReread(boolean withPreload) {
-    mPreloadOnAutoReread = withPreload;
-    return this;
-  }
-
-  /**
    * Configure the FreshKijiTableReader to return partially fresh data when available.  This
    * option may increase the time to return for certain calls to
    * {@link FreshKijiTableReader#get(org.kiji.schema.EntityId, org.kiji.schema.KijiDataRequest)}.
@@ -198,6 +183,33 @@ public final class FreshKijiTableReaderBuilder {
   }
 
   /**
+   * Configure the FreshKijiTableReader to only freshen requests for a specific set of columns.
+   *
+   * <ul>
+   *   <li>Specifying a qualified column will enable the Freshener for that column only.</li>
+   *   <li>Specifying a map type family will enable the Freshener for that map type family if one
+   *     exists.</li>
+   *   <li>Specifying any family will enable all Fresheners for qualified columns within that
+   *     family.</li>
+   *   <li>Specifying a qualified column in a map type family when there is a Freshener attached to
+   *     the entire family will not enable the full family Freshener.</li>
+   * </ul>
+   *
+   * @param columnsToFreshen the columns which the reader should freshen.
+   * @return this FreshKijiTableReaderBuilder configured to read from a specific set of columns.
+   */
+  public FreshKijiTableReaderBuilder withColumnsToFreshen(List<KijiColumnName> columnsToFreshen) {
+    if (mColumnsToFreshen != null) {
+      final String columns = Joiner.on(", ").join(mColumnsToFreshen);
+      throw new IllegalArgumentException(
+          String.format("Columns to freshen are already set to: %s", columns));
+    } else {
+      mColumnsToFreshen = columnsToFreshen;
+    }
+    return this;
+  }
+
+  /**
    * Builds a FreshKijiTableReader with the configured options.
    *
    * @return a FreshKijiTableReader with the configured options.
@@ -214,13 +226,10 @@ public final class FreshKijiTableReaderBuilder {
     if (mAllowPartialFresh == null) {
       mAllowPartialFresh = DEFAULT_PARTIAL_FRESHENING;
     }
-    if (mPreloadOnAutoReread == null) {
-      mPreloadOnAutoReread = DEFAULT_PRELOAD_ON_AUTO_REREAD;
-    }
     switch (mReaderType) {
       case LOCAL:
         return new InternalFreshKijiTableReader(
-            mTable, mTimeout, mRereadPeriod, mAllowPartialFresh, mPreloadOnAutoReread);
+            mTable, mTimeout, mRereadPeriod, mAllowPartialFresh, mColumnsToFreshen);
       default:
         throw new InternalKijiError(String.format("Unknown reader type: %s", mReaderType));
     }

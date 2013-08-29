@@ -167,7 +167,7 @@ public final class KijiFreshProducerContext implements ProducerContext {
    * from the table is appropriate.
    * @return Whether this context has received at least one write.
    */
-  public boolean hasReceivedWrites() {
+  boolean hasReceivedWrites() {
     return mHasReceivedWrites;
   }
 

@@ -77,9 +77,7 @@ public final class MultiBufferedWriter implements Closeable {
     }
   }
 
-  /**
-   * A single buffer view of a MultiBufferedWriter.
-   */
+  /** A single buffer view of a MultiBufferedWriter. */
   public final class SingleBuffer {
 
     private final List<EFQTV> mBuffer = Lists.newArrayList();
