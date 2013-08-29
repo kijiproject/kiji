@@ -1096,4 +1096,45 @@ public class TestInternalFreshKijiTableReader {
     }
   }
 
+  @Test
+  public void testChangeColumnsToFreshen() throws IOException {
+    final EntityId eid = mTable.getEntityId("foo");
+    final KijiDataRequestBuilder builder = KijiDataRequest.builder();
+    builder.newColumnsDef().add("family", "qual0").add("family", "qual1");
+    final KijiDataRequest request = builder.build();
+
+    // Create a KijiFreshnessManager and register a freshness policy.
+    final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
+    try {
+      manager.storePolicy(
+          TABLE_NAME, "family:qual0", TestProducer.class, new AlwaysFreshen());
+      manager.storePolicy(
+          TABLE_NAME, "family:qual1", TestProducer.class, new AlwaysFreshen());
+    } finally {
+      manager.close();
+    }
+
+    final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
+        .withTable(mTable).withTimeout(500)
+        .withColumnsToFreshen(Lists.newArrayList(new KijiColumnName("family:qual0")))
+        .build();
+
+    try {
+      // Because family:qual0 is in columnsToFreshen only it will be refreshed.
+      final KijiRowData freshData = freshReader.get(eid, request);
+      assertEquals("new-val",
+          freshData.getMostRecentValue("family", "qual0").toString());
+      assertEquals("foo-val",
+          freshData.getMostRecentValue("family", "qual1").toString());
+
+      freshReader.rereadPolicies(Lists.newArrayList(new KijiColumnName("family:qual1")));
+
+      // Now family:qual1 should be refreshed because it is in columnsToFreshen.
+      assertEquals("new-val",
+          freshReader.get(eid, request).getMostRecentValue("family", "qual1").toString());
+    } finally {
+      freshReader.close();
+    }
+  }
+
 }

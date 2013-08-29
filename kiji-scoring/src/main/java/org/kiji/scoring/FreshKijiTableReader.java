@@ -25,6 +25,7 @@ import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
 import org.kiji.annotations.Inheritance;
 import org.kiji.schema.EntityId;
+import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTableReader;
@@ -171,9 +172,21 @@ public interface FreshKijiTableReader extends KijiTableReader {
   /**
    * Clear cached freshness policies and reload from the metatable.  This method replaces only those
    * Fresheners which have changed since the last call to rereadPolicies() or the construction of
-   * the table.
+   * the reader.
    *
    * @throws IOException in case of an error reading from the metatable.
    */
   void rereadPolicies() throws IOException;
+
+  /**
+   * Clear cached freshness policies and reload from the metatable. Replaces existing list of
+   * columns to freshen with the given list and instantiates any Fresheners applicable to added
+   * columns. This method replaces only those Fresheners which have changed since the last call to
+   * rereadPolicies or the construction of the reader.
+   *
+   * @param columnsToFreshen the new set of columnsToFreshen.  This list will replace the previous
+   *     list entirely.
+   * @throws IOException in case of an error reading from the metatable.
+   */
+  void rereadPolicies(List<KijiColumnName> columnsToFreshen) throws IOException;
 }

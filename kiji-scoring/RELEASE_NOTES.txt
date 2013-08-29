@@ -1,6 +1,9 @@
 
                               Kiji Scoring Release Notes
 Version 0.6.0
+    * SCORE-82. FreshKijiTableReader now supports rereadPolicies(List<KijiColumnName>) which causes
+        the reader to reread policies from the metatable according to a new list of columns to
+        freshen. The new list of columns to freshen permanently supercedes the previous list.
     * SCORE-75. InternalFreshKijiTableReader has been significantly refactored to improve
         maintainability. FreshKijiTableReader.rereadPolicies() no longer takes a boolean parameter
         to trigger preloading of KijiFreshnessPolicy and KijiProducer objects. Instead the reader

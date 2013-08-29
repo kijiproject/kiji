@@ -234,6 +234,37 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     }
   }
 
+  /**
+   * Container class for all state which can be modified by a call to {@link #rereadPolicies()} or
+   * {@link #rereadPolicies(java.util.List)}.
+   */
+  private static final class RereadableState {
+
+    private final ImmutableList<KijiColumnName> mColumnsToFreshen;
+    private final ImmutableMap<KijiColumnName, KijiFreshnessPolicyRecord> mPolicyRecords;
+    private final ImmutableMap<KijiColumnName, Freshener> mFresheners;
+
+    /**
+     * Initialize a new RereadableState.
+     *
+     * @param columnsToFreshen the columns which may be refreshed by the reader which holds this
+     *     RereadableState.
+     * @param policyRecords the KijiFreshnessPolicyRecords for the columnsToFreshen if there are any
+     *     attached.
+     * @param fresheners the cached Freshener objects which perform freshening.
+     */
+    private RereadableState(
+        final List<KijiColumnName> columnsToFreshen,
+        final Map<KijiColumnName, KijiFreshnessPolicyRecord> policyRecords,
+        final Map<KijiColumnName, Freshener> fresheners
+    ) {
+      mColumnsToFreshen = (null == columnsToFreshen) ? null
+          : ImmutableList.copyOf(columnsToFreshen);
+      mPolicyRecords = ImmutableMap.copyOf(policyRecords);
+      mFresheners = ImmutableMap.copyOf(fresheners);
+    }
+  }
+
   /** All state necessary to process a freshening 'get' request. */
   private static final class FresheningRequestContext {
 
@@ -622,7 +653,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
    */
   private static ImmutableMap<KijiColumnName, KijiFreshnessPolicyRecord> filterRecords(
       final Map<KijiColumnName, KijiFreshnessPolicyRecord> allRecords,
-      final ImmutableList<KijiColumnName> columnsToFreshen
+      final List<KijiColumnName> columnsToFreshen
   ) {
     if (null == columnsToFreshen || columnsToFreshen.isEmpty()) {
       // If no columns are specified, all records should be instantiated.
@@ -1026,23 +1057,10 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   private final long mTimeout;
   private final RereadTask mRereadTask;
   private final boolean mAllowPartial;
+  private final MultiBufferedWriter mBufferedWriter;
   private final ImmutableList<KijiColumnName> mColumnsToFreshen;
   private final KijiFreshnessManager mFreshnessManager;
-  private final MultiBufferedWriter mBufferedWriter;
-
-  /**
-   * Map of policy records.
-   * Contains only records corresponding to columns listed in {@link #mColumnsToFreshen}.
-   * This immutable object is replaced by calls to {@link #rereadPolicies()}.
-   */
-  private volatile ImmutableMap<KijiColumnName, KijiFreshnessPolicyRecord> mPolicyRecords;
-
-  /**
-   * Map of Instantiated Fresheners.
-   * Contains only Fresheners corresponding to the columns listed in {@link #mColumnsToFreshen}.
-   * This immutable object is replaced by calls to {@link #rereadPolicies()}.
-   */
-  private volatile ImmutableMap<KijiColumnName, Freshener> mFresheners;
+  private volatile RereadableState mRereadableState;
 
   /**
    * Initializes a new InternalFreshKijiTableReader.
@@ -1073,9 +1091,12 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     mColumnsToFreshen = (null != columnsToFreshen)
         ? ImmutableList.copyOf(columnsToFreshen) : ImmutableList.<KijiColumnName>of();
     mFreshnessManager = KijiFreshnessManager.create(mTable.getKiji());
-    mPolicyRecords =
+    final ImmutableMap<KijiColumnName, KijiFreshnessPolicyRecord> records =
         filterRecords(mFreshnessManager.retrievePolicies(mTable.getName()), mColumnsToFreshen);
-    mFresheners = createFresheners(mPolicyRecords, mTable.getKiji().getConf());
+    mRereadableState = new RereadableState(
+        columnsToFreshen,
+        records,
+        createFresheners(records, mTable.getKiji().getConf()));
 
     if (rereadPeriod > 0) {
       final Timer rereadTimer = new Timer();
@@ -1116,7 +1137,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
 
     // Collect the Fresheners applicable to this request.
     final ImmutableMap<KijiColumnName, Freshener> fresheners =
-        filterFresheners(getColumnsFromRequest(dataRequest), mFresheners);
+        filterFresheners(getColumnsFromRequest(dataRequest), mRereadableState.mFresheners);
     // If there are no Fresheners attached to the requested columns, return the requested data.
     if (fresheners.isEmpty()) {
       return mReader.get(entityId, dataRequest);
@@ -1225,19 +1246,26 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
    */
   @Override
   public void rereadPolicies() throws IOException {
+    rereadPolicies(mRereadableState.mColumnsToFreshen);
+  }
+
+  @Override
+  public void rereadPolicies(
+      final List<KijiColumnName> columnsToFreshen
+  ) throws IOException {
     mState.requireState(State.OPEN);
     // Collect and filter the current state of the meta table.
     final ImmutableMap<KijiColumnName, KijiFreshnessPolicyRecord> newRecords =
-        filterRecords(mFreshnessManager.retrievePolicies(mTable.getName()), mColumnsToFreshen);
+        filterRecords(mFreshnessManager.retrievePolicies(mTable.getName()), columnsToFreshen);
 
     final Map<KijiColumnName, Freshener> oldFresheners = Maps.newHashMap();
 
-    for (Map.Entry<KijiColumnName, Freshener> entry : mFresheners.entrySet()) {
+    for (Map.Entry<KijiColumnName, Freshener> entry : mRereadableState.mFresheners.entrySet()) {
       if (!newRecords.containsKey(entry.getKey())) {
         // If the column no longer has a freshness policy record, release the old capsule.
         entry.getValue().release();
       } else {
-        if (newRecords.get(entry.getKey()) != mPolicyRecords.get(entry.getKey())) {
+        if (newRecords.get(entry.getKey()) != mRereadableState.mPolicyRecords.get(entry.getKey())) {
           // If the column still has a freshness policy record and that record has changed, release
           // the old capsule.
           entry.getValue().release();
@@ -1248,10 +1276,11 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
       }
     }
 
-    // TODO do these need to be updated synchronously?
-    mFresheners =
-        fillFresheners(newRecords, mTable.getKiji().getConf(), ImmutableMap.copyOf(oldFresheners));
-    mPolicyRecords = newRecords;
+    mRereadableState = new RereadableState(
+        columnsToFreshen,
+        newRecords,
+        fillFresheners(newRecords, mTable.getKiji().getConf(), ImmutableMap.copyOf(oldFresheners))
+    );
   }
 
   /** {@inheritDoc} */
