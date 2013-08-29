@@ -46,9 +46,9 @@ import org.kiji.schema.util.ToJson
  * val modelDefinition = ModelDefinition(
  *   name = "name",
  *   version = "1.0.0",
- *   prepareExtractor = Some(classOf[MyExtractor]),
  *   preparer = Some(classOf[MyPreparer]),
  *   trainer = Some(classOf[MyTrainer]),
+ *   scoreExtractor = Some(classOf[MyExtractor]),
  *   scorer = Some(classOf[MyScorer])
  * )
  * }}}
@@ -59,20 +59,8 @@ import org.kiji.schema.util.ToJson
  * {
  *  "name":"name",
  *  "version":"1.0.0",
- *  "preparer":{
- *    "org.kiji.express.avro.AvroPhaseSpec":{
- *      "extractor_class":{
- *        "string":"org.kiji.express.modeling.config.MyExtractor"
- *      },
- *      "phase_class":"org.kiji.express.modeling.config.MyPreparer"
- *    }
- *  },
- *  "trainer":{
- *    "org.kiji.express.avro.AvroPhaseSpec":{
- *      "extractor_class":null,
- *      "phase_class":"org.kiji.express.modeling.config.MyTrainer"
- *    }
- *  },
+ *  "preparer": "org.kiji.express.modeling.config.MyPreparer",
+ *  "trainer": "org.kiji.express.modeling.config.MyTrainer",
  *  "scorer":{
  *    "org.kiji.express.avro.AvroPhaseSpec":{
  *      "extractor_class":null,
@@ -96,10 +84,7 @@ import org.kiji.schema.util.ToJson
  *
  * @param name of the model definition.
  * @param version of the model definition.
- * @param prepareExtractor is the extractor class that should be used for the prepare phase.
- *                         Optional.
  * @param preparerClass to be used in the prepare phase of the model definition. Optional.
- * @param trainExtractor is the extractor class that should be used for the train phase. Optional.
  * @param trainerClass to be used in the train phase of the model definition. Optional.
  * @param scoreExtractor is the extractor class that should be used for the score phase. Optional.
  * @param scorerClass to be used in the score phase of the model definition.
@@ -110,9 +95,7 @@ import org.kiji.schema.util.ToJson
 final class ModelDefinition private[express] (
     val name: String,
     val version: String,
-    val prepareExtractor: Option[java.lang.Class[_ <: Extractor]],
     val preparerClass: Option[java.lang.Class[_ <: Preparer]],
-    val trainExtractor: Option[java.lang.Class[_ <: Extractor]],
     val trainerClass: Option[java.lang.Class[_ <: Trainer]],
     val scoreExtractor: Option[java.lang.Class[_ <: Extractor]],
     val scorerClass: Option[java.lang.Class[_ <: Scorer]],
@@ -128,25 +111,9 @@ final class ModelDefinition private[express] (
    */
   def toJson(): String = {
     // Build an AvroModelDefinition record.
-    val avroPreparer = preparerClass
-      .map { pclass =>
-        AvroPhaseSpec
-            .newBuilder()
-            .setExtractorClass(prepareExtractor.map {_.getName} .getOrElse(null))
-            .setPhaseClass(pclass.getName)
-            .build()
-      }
-      .getOrElse(null)
+    val avroPreparer = preparerClass.map(_.getName).getOrElse(null)
 
-    val avroTrainer = trainerClass
-      .map { tclass =>
-        AvroPhaseSpec
-            .newBuilder()
-            .setExtractorClass(trainExtractor.map {_.getName} .getOrElse(null))
-            .setPhaseClass(tclass.getName)
-            .build()
-      }
-      .getOrElse(null)
+    val avroTrainer = trainerClass.map(_.getName).getOrElse(null)
 
     val avroScorer = scorerClass
       .map { sclass =>
@@ -181,9 +148,7 @@ final class ModelDefinition private[express] (
    *
    * @param name of the model definition.
    * @param version of the model definition.
-   * @param prepareExtractor used by the model definition.
    * @param preparer used by the model definition.
-   * @param trainExtractor used by the model definition.
    * @param trainer used by the model definition.
    * @param scoreExtractor used by the model definition.
    * @param scorer used by the model definition.
@@ -192,18 +157,14 @@ final class ModelDefinition private[express] (
   def withNewSettings(
       name: String = this.name,
       version: String = this.version,
-      prepareExtractor: Option[Class[_ <: Extractor]] = this.prepareExtractor,
       preparer: Option[Class[_ <: Preparer]] = this.preparerClass,
-      trainExtractor: Option[Class[_ <: Extractor]] = this.trainExtractor,
       trainer: Option[Class[_ <: Trainer]] = this.trainerClass,
       scoreExtractor: Option[Class[_ <: Extractor]] = this.scoreExtractor,
       scorer: Option[Class[_ <: Scorer]] = this.scorerClass): ModelDefinition = {
     new ModelDefinition(
         name,
         version,
-        prepareExtractor,
         preparer,
-        trainExtractor,
         trainer,
         scoreExtractor,
         scorer,
@@ -215,9 +176,7 @@ final class ModelDefinition private[express] (
       case definition: ModelDefinition => {
         name == definition.name &&
             version == definition.version &&
-            prepareExtractor == definition.prepareExtractor &&
             preparerClass == definition.preparerClass &&
-            trainExtractor == definition.trainExtractor &&
             trainerClass == definition.trainerClass &&
             scoreExtractor == definition.scoreExtractor &&
             scorerClass == definition.scorerClass &&
@@ -231,9 +190,7 @@ final class ModelDefinition private[express] (
       Objects.hashCode(
           name,
           version,
-          prepareExtractor,
           preparerClass,
-          trainExtractor,
           trainerClass,
           scoreExtractor,
           scorerClass,
@@ -266,9 +223,7 @@ object ModelDefinition {
    *
    * @param name of the model definition.
    * @param version of the model definition.
-   * @param prepareExtractor used by the model definition.
    * @param preparer used by the model definition.
-   * @param trainExtractor used by the model definition.
    * @param trainer used by the model definition.
    * @param scoreExtractor used by the model definition.
    * @param scorer used by the model definition.
@@ -276,18 +231,14 @@ object ModelDefinition {
    */
   def apply(name: String,
       version: String,
-      prepareExtractor: Option[Class[_ <: Extractor]] = None,
       preparer: Option[Class[_ <: Preparer]] = None,
-      trainExtractor: Option[Class[_ <: Extractor]] = None,
       trainer: Option[Class[_ <: Trainer]] = None,
       scoreExtractor: Option[Class[_ <: Extractor]] = None,
       scorer: Option[Class[_ <: Scorer]] = None): ModelDefinition = {
     new ModelDefinition(
         name = name,
         version = version,
-        prepareExtractor = prepareExtractor,
         preparerClass = preparer,
-        trainExtractor = trainExtractor,
         trainerClass = trainer,
         scoreExtractor = scoreExtractor,
         scorerClass = scorer,
@@ -349,41 +300,19 @@ object ModelDefinition {
     }
 
     // Attempt to load the Preparer class and corresponding Extractor.
-    val avroPreparerOption = Option(avroModelDefinition.getPreparer)
-    val preparerClassName: Option[String] = avroPreparerOption.map(_.getPhaseClass)
+    val preparerClassName: Option[String] = Option(avroModelDefinition.getPreparer)
     val preparer: Option[Class[Preparer]] = preparerClassName.map { className: String =>
       getClassForPhase[Preparer](
           phaseImplName = className,
           phase = classOf[Preparer])
     }
 
-    val prepareExtractorClassName: Option[String] = avroPreparerOption match {
-      case None => None
-      case Some(phaseSpec) => Option(phaseSpec.getExtractorClass)
-    }
-    val prepareExtractor: Option[Class[Extractor]] = prepareExtractorClassName
-        .map { className: String => getClassForPhase[Extractor](
-          phaseImplName = className,
-          phase = classOf[Extractor])
-        }
-
     // Attempt to load the Trainer class and corresponding Extractor.
-    val avroTrainerOption = Option(avroModelDefinition.getTrainer)
-    val trainerClassName: Option[String] = avroTrainerOption.map(_.getPhaseClass)
+    val trainerClassName: Option[String] = Option(avroModelDefinition.getTrainer)
     val trainer: Option[Class[Trainer]] = trainerClassName.map { className: String =>
       getClassForPhase[Trainer](
           phaseImplName = className,
           phase = classOf[Trainer])
-    }
-
-    val trainExtractorClassName: Option[String] = avroTrainerOption match {
-      case None => None
-      case Some(phaseSpec) => Option(phaseSpec.getExtractorClass)
-    }
-    val trainExtractor: Option[Class[Extractor]] = trainExtractorClassName
-      .map { className: String => getClassForPhase[Extractor](
-        phaseImplName = className,
-        phase = classOf[Extractor])
     }
 
     // Attempt to load the Scorer class and corresponding Extractor.
@@ -409,9 +338,7 @@ object ModelDefinition {
     new ModelDefinition(
         name = avroModelDefinition.getName,
         version = avroModelDefinition.getVersion,
-        prepareExtractor = prepareExtractor,
         preparerClass = preparer,
-        trainExtractor = trainExtractor,
         trainerClass = trainer,
         scoreExtractor = scoreExtractor,
         scorerClass = scorer,
@@ -464,23 +391,16 @@ object ModelDefinition {
         modelDefinition.scorerClass.isEmpty) {
       val error = "The model defines no phases. A valid definition requires at least one phase."
       Some(new ValidationException(error))
+    } else if (modelDefinition.preparerClass.isDefined &&
+        modelDefinition.trainerClass.isEmpty &&
+        modelDefinition.scorerClass.isDefined) {
+      Some(new ValidationException("Unsupported combination of phases. Prepare must be followed by "
+        + "train in order to be useful in to score."))
+
     } else {
       None
     }
-    val badPrepare = if (modelDefinition.prepareExtractor.isDefined
-        && modelDefinition.preparerClass.isEmpty) {
-      val error = "There is an extractor specified for a non-existent prepare class."
-      Some(new ValidationException(error))
-    } else {
-      None
-    }
-    val badTrain = if (modelDefinition.trainExtractor.isDefined
-        && modelDefinition.trainerClass.isEmpty) {
-      val error = "There is an extractor specified for a non-existent train phase."
-      Some(new ValidationException(error))
-    } else {
-      None
-    }
+
     val badScore = if (modelDefinition.scoreExtractor.isDefined
         && modelDefinition.scorerClass.isEmpty) {
       val error = "There is an extractor specified for a non-existent score phase."
@@ -488,7 +408,7 @@ object ModelDefinition {
     } else {
       None
     }
-    Seq(noPhases, badPrepare, badTrain, badScore)
+    Seq(noPhases, badScore)
   }
 
   /**

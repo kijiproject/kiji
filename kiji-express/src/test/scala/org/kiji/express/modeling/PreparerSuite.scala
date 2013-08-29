@@ -19,13 +19,20 @@
 
 package org.kiji.express.modeling
 
+import com.twitter.scalding.Source
 import org.scalatest.FunSuite
 
-import com.twitter.scalding.RichPipe
-
 class TestPreparer extends Preparer {
-  override def prepare(input: RichPipe): RichPipe = {
-    input.map('input -> 'output) { input: String => input.length }
+  class WordCountJob(input: Source, output: Source) extends PreparerJob {
+    input
+      .flatMap('line -> 'word) { line : String => line.split("\\s+") }
+      .groupBy('word) { _.size }
+      .write(output)
+  }
+
+  override def prepare(input: Source, output: Source): Boolean = {
+    new WordCountJob(input, output).run
+    true
   }
 }
 

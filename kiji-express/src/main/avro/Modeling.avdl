@@ -66,13 +66,13 @@ protocol Modeling {
      * Specification for the prepare phase. The class within must implement the preparer trait.
      * Set this field to null to specify that no prepare phase should be used.
      */
-    union{null, AvroPhaseSpec} preparer = null;
+    union{null, string} preparer = null;
 
     /**
      * Specification for the train phase. The class within must implement the trainer trait.
      * Set this field to null to specify that no train phase should be used.
      */
-    union{null, AvroPhaseSpec} trainer = null;
+    union{null, string} trainer = null;
 
     /**
      * Specification for the score phase. The class within must implement the scorer trait.
@@ -283,6 +283,11 @@ protocol Modeling {
      * Kiji URI addressing the table that this output spec will use. Required.
      */
     string table_uri;
+
+    /**
+     * Timestamp for the output cells.
+     */
+    union{null, string} time_stamp_field = null;
 
     /**
      * Associations between field names and column names. Required.

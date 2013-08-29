@@ -22,32 +22,24 @@ package org.kiji.express.modeling.framework
 import scala.collection.JavaConverters._
 
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.Path
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.express.KijiSlice
-import org.kiji.express.avro.KvStoreType
 import org.kiji.express.modeling.ExtractFn
 import org.kiji.express.modeling.Extractor
-import org.kiji.express.modeling.KeyValueStore
-import org.kiji.express.modeling.ScoreFn
-import org.kiji.express.modeling.Scorer
 import org.kiji.express.modeling.config.KijiInputSpec
-import org.kiji.express.modeling.config.KijiSingleColumnOutputSpec
 import org.kiji.express.modeling.config.KVStore
 import org.kiji.express.modeling.config.ModelDefinition
 import org.kiji.express.modeling.config.ModelEnvironment
-import org.kiji.express.modeling.impl.AvroKVRecordKeyValueStore
-import org.kiji.express.modeling.impl.AvroRecordKeyValueStore
-import org.kiji.express.modeling.impl.KijiTableKeyValueStore
+import org.kiji.express.modeling.impl.ModelJobUtils
+import org.kiji.express.modeling.impl.ModelJobUtils.PhaseType.SCORE
+import org.kiji.express.modeling.ScoreFn
+import org.kiji.express.modeling.Scorer
 import org.kiji.express.util.GenericRowDataConverter
 import org.kiji.express.util.Tuples
 import org.kiji.mapreduce.KijiContext
 import org.kiji.mapreduce.kvstore.{ KeyValueStore => JKeyValueStore }
-import org.kiji.mapreduce.kvstore.lib.{ AvroKVRecordKeyValueStore => JAvroKVRecordKeyValueStore }
-import org.kiji.mapreduce.kvstore.lib.{ AvroRecordKeyValueStore => JAvroRecordKeyValueStore }
-import org.kiji.mapreduce.kvstore.lib.{ KijiTableKeyValueStore => JKijiTableKeyValueStore }
 import org.kiji.mapreduce.produce.KijiProducer
 import org.kiji.mapreduce.produce.ProducerContext
 import org.kiji.schema.KijiColumnName
@@ -171,13 +163,9 @@ final class ScoreProducer
    *
    * @return a kiji data request.
    */
-  override def getDataRequest(): KijiDataRequest = modelEnvironment
-      .scoreEnvironment
+  override def getDataRequest(): KijiDataRequest = ModelJobUtils
+      .getDataRequest(modelEnvironment, SCORE)
       .get
-      .inputConfig
-      .asInstanceOf[KijiInputSpec]
-      .dataRequest
-      .toKijiDataRequest()
 
   /**
    * Returns the name of the column this producer will write to.
@@ -186,12 +174,8 @@ final class ScoreProducer
    *
    * @return the output column name.
    */
-  override def getOutputColumn(): String = modelEnvironment
-      .scoreEnvironment
-      .get
-      .outputConfig
-      .asInstanceOf[KijiSingleColumnOutputSpec]
-      .outputColumn
+  override def getOutputColumn(): String = ModelJobUtils
+      .getOutputColumn(modelEnvironment)
 
   /**
    * Opens the kvstores required for the extract and score phase. Reads kvstore configurations from
@@ -205,7 +189,7 @@ final class ScoreProducer
         .scoreEnvironment
         .get
         .kvstores
-    val scoreStores: Map[String, JKeyValueStore[_, _]] = ScoreProducer
+    val scoreStores: Map[String, JKeyValueStore[_, _]] = ModelJobUtils
         .openJKvstores(scoreStoreDefs, getConf())
     scoreStores.asJava
   }
@@ -220,7 +204,7 @@ final class ScoreProducer
         .scoreEnvironment
         .get
         .kvstores
-    extractor.kvstores = ScoreProducer
+    extractor.kvstores = ModelJobUtils
         .wrapKvstoreReaders(scoreStoreDefs, context)
     scorer.kvstores = extractor.kvstores
 
@@ -280,7 +264,7 @@ final class ScoreProducer
     val row = rowConverter(input)
     // Prepare input to the extract phase.
     val slices: Seq[KijiSlice[Any]] = extractInputFields
-        .map { field =>
+        .map { (field: String) =>
           val columnName: KijiColumnName = fieldMapping(field.toString)
 
           // Build a slice from each column within the row.
@@ -321,95 +305,4 @@ object ScoreProducer {
    * [[org.kiji.express.modeling.config.ModelEnvironment]].
    */
   val modelEnvironmentConfKey: String = "org.kiji.express.model.environment"
-
-  /**
-   * Wrap the provided kvstores in their scala counterparts.
-   *
-   * @param kvstores to open.
-   * @param context providing access to the opened kvstores.
-   * @return a mapping from the kvstore's name to the wrapped kvstore.
-   */
-  def wrapKvstoreReaders(
-      kvstores: Seq[KVStore],
-      context: KijiContext): Map[String, KeyValueStore[_, _]] = {
-    return kvstores
-        .map { kvstore: KVStore =>
-          val jkvstoreReader = context.getStore(kvstore.name)
-          val wrapped: KeyValueStore[_, _] = KvStoreType.valueOf(kvstore.storeType) match {
-            case KvStoreType.AVRO_KV => new AvroKVRecordKeyValueStore(jkvstoreReader)
-            case KvStoreType.AVRO_RECORD => new AvroRecordKeyValueStore(jkvstoreReader)
-            case KvStoreType.KIJI_TABLE => new KijiTableKeyValueStore(jkvstoreReader)
-          }
-          (kvstore.name, wrapped)
-        }
-        .toMap
-  }
-
-  /**
-   * Open the provided kvstore definitions.
-   *
-   * @param kvstores to open.
-   * @param conf containing settings pertaining to the specified kvstores.
-   * @return a mapping from the kvstore's name to the opened kvstore.
-   */
-  def openJKvstores(
-      kvstores: Seq[KVStore],
-      conf: Configuration): Map[String, JKeyValueStore[_, _]] = {
-    kvstores
-        // Open the kvstores defined for the extract phase.
-        .map { kvstore: KVStore =>
-          val properties = kvstore.properties
-
-          // Handle each type of kvstore differently.
-          val jkvstore: JKeyValueStore[_, _] = KvStoreType.valueOf(kvstore.storeType) match {
-            case KvStoreType.AVRO_KV => {
-
-              // Open AvroKV.
-              val builder = JAvroKVRecordKeyValueStore
-                  .builder()
-                  .withConfiguration(conf)
-                  .withInputPath(new Path(properties("path")))
-              if (properties.contains("use_dcache")) {
-                builder
-                    .withDistributedCache(properties("use_dcache") == "true")
-                    .build()
-              } else {
-                builder.build()
-              }
-            }
-            case KvStoreType.AVRO_RECORD => {
-              // Open AvroRecord.
-              val builder = JAvroRecordKeyValueStore
-                  .builder()
-                  .withConfiguration(conf)
-                  .withKeyFieldName(properties("key_field"))
-                  .withInputPath(new Path(properties("path")))
-              if (properties.contains("use_dcache")) {
-                builder
-                    .withDistributedCache(properties("use_dcache") == "true")
-                    .build()
-              } else {
-                builder.build()
-              }
-            }
-            case KvStoreType.KIJI_TABLE => {
-              // Kiji table.
-              val uri: KijiURI = KijiURI.newBuilder(properties("uri")).build()
-              val columnName: KijiColumnName = new KijiColumnName(properties("column"))
-              JKijiTableKeyValueStore
-                  .builder()
-                  .withConfiguration(conf)
-                  .withTable(uri)
-                  .withColumn(columnName.getFamily(), columnName.getQualifier())
-                  .build()
-            }
-            case kvstoreType => throw new UnsupportedOperationException(
-                "KeyValueStores of type \"%s\" are not supported".format(kvstoreType.toString))
-          }
-
-          // Pack the kvstore into a tuple with its name.
-          (kvstore.name, jkvstore)
-        }
-        .toMap
-  }
 }

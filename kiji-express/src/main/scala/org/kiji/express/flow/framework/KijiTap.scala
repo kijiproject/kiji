@@ -282,7 +282,7 @@ object KijiTap {
     table.release() // Release the KijiTable.
 
     // Collect any errors from nonexistent column names.
-    val columnErrors: List[KijiColumnName] = columnNames.flatMap { column =>
+    val columnErrors: List[KijiColumnName] = columnNames.flatMap { (column: KijiColumnName) =>
       if (tableLayout.exists(column)) {
         None
       } else {

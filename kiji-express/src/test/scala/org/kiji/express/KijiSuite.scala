@@ -21,7 +21,7 @@ package org.kiji.express
 
 import java.io.InputStream
 
-import com.twitter.scalding.TupleConversions
+import com.twitter.scalding.{Hdfs, TupleConversions}
 import org.scalatest.FunSuite
 
 import org.kiji.express.util.Resources._
@@ -35,6 +35,7 @@ import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts
 import org.kiji.schema.shell.api.Client
 import org.kiji.schema.util.InstanceBuilder
+import org.apache.hadoop.hbase.HBaseConfiguration
 
 /** Contains convenience methods for writing tests that use Kiji. */
 trait KijiSuite

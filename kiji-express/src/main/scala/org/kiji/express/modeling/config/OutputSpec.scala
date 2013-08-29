@@ -47,6 +47,7 @@ sealed trait OutputSpec {
  * Configuration necessary to use a Kiji table as a data sink.
  *
  * @param tableUri addressing the Kiji table that this output spec will write from.
+ * @param timeStampField the tuple field for the timestamp associated with the output.
  * @param fieldBindings defining a mapping from columns requested to their corresponding field
  *     names. This determines how output fields are mapped onto columns in a Kiji table.
  */
@@ -54,11 +55,13 @@ sealed trait OutputSpec {
 @ApiStability.Experimental
 final case class KijiOutputSpec(
     tableUri: String,
-    fieldBindings: Seq[FieldBinding]) extends OutputSpec{
+    fieldBindings: Seq[FieldBinding],
+    timeStampField: Option[String] = None) extends OutputSpec{
   private[express] override def toAvroOutputSpec(): AvroOutputSpec = {
     val avroKijiOutputSpec = AvroKijiOutputSpec
         .newBuilder()
         .setTableUri(tableUri)
+        .setTimeStampField(timeStampField.getOrElse(null))
         .setFieldBindings(fieldBindings.map { _.toAvroFieldBinding } .asJava)
         .build()
 
@@ -82,6 +85,7 @@ object KijiOutputSpec {
   private[express] def apply(avroKijiOutputSpec: AvroKijiOutputSpec): KijiOutputSpec = {
     KijiOutputSpec(
         tableUri = avroKijiOutputSpec.getTableUri,
+        timeStampField = Option(avroKijiOutputSpec.getTimeStampField),
         fieldBindings = avroKijiOutputSpec.getFieldBindings.asScala.map { FieldBinding(_) })
   }
 }
