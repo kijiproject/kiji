@@ -492,11 +492,10 @@ public class KijiRowExpression {
           struct.add(getAvroTypeAdapter().toHiveType(
               mCellTypeInfo,
               cell.getValue(),
-              row.getReaderSchema(getFamily(), getQualifier())));
+              row.getReaderSchema(getFamily(), entry.getKey())));
           result.put(entry.getKey(), struct);
         }
       }
-
       return result;
     }
 
@@ -594,7 +593,7 @@ public class KijiRowExpression {
           struct.add(getAvroTypeAdapter().toHiveType(
               mCellTypeInfo,
               cell.getValue(),
-              row.getReaderSchema(getFamily(), getQualifier())));
+              row.getReaderSchema(getFamily(), entry.getKey())));
           timeseries.add(struct);
         }
         result.put(entry.getKey(), timeseries);

@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericData;
@@ -112,6 +113,7 @@ public final class AvroTypeAdapter {
     if (null == avro) {
       return null;
     }
+    Preconditions.checkNotNull(schema, "Schema must not be null.");
 
     switch (hiveType.getCategory()) {
     case PRIMITIVE:
