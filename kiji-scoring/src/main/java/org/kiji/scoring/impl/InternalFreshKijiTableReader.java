@@ -493,38 +493,6 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   }
 
   /**
-   * Callable which aggregates the return values from a List of Boolean Futures. Returns true if any
-   * Future returns true, and false if all Futures return false.
-   */
-  private static final class BooleanAggregatingCallable implements Callable<Boolean> {
-
-    private final List<Future<Boolean>> mFutures;
-
-    /**
-     * Initialize a new BooleanAggregatingCallable.
-     *
-     * @param futures a list of Boolean Futures to be aggregated into a single Boolean value.
-     */
-    public BooleanAggregatingCallable(
-        final List<Future<Boolean>> futures
-    ) {
-      mFutures = futures;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public Boolean call() throws Exception {
-      boolean retVal = false;
-      for (Future<Boolean> future : mFutures) {
-        // Block on completion of each future and update the return value to true if any future
-        // returns true.
-        retVal = getFromFuture(future) || retVal;
-      }
-      return retVal;
-    }
-  }
-
-  /**
    * Callable which collects the return values from a list of Futures into a list of those values.
    */
   private static final class FutureAggregatingCallable<T> implements Callable<List<T>> {
@@ -1163,10 +1131,11 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
 
     final ImmutableList<Future<Boolean>> futures = getFuturesForFresheners(requestContext);
 
-    final Future<Boolean> superFuture = getFuture(new BooleanAggregatingCallable(futures));
+    final Future<List<Boolean>> superFuture =
+        getFuture(new FutureAggregatingCallable<Boolean>(futures));
 
     try {
-      if (getFromFuture(superFuture, timeout)) {
+      if (getFromFuture(superFuture, timeout).contains(true)) {
         // If all Fresheners return in time and at least one has written a new value, read from the
         // table.
         return mReader.get(entityId, dataRequest);
