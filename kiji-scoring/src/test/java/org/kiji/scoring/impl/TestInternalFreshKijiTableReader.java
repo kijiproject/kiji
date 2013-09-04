@@ -536,6 +536,7 @@ public class TestInternalFreshKijiTableReader {
           .build();
       try {
         // Register a new freshness policy
+        manager.removePolicy(TABLE_NAME, "family:qual0");
         manager.storePolicy(
             TABLE_NAME, "family:qual0", TestProducerTwo.class, new NewerThan(Long.MAX_VALUE));
 

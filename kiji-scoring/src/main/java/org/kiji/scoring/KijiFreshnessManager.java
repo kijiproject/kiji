@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.apache.avro.io.DatumReader;
 import org.apache.avro.io.DatumWriter;
@@ -234,13 +235,48 @@ public final class KijiFreshnessManager implements Closeable {
           .setFreshnessPolicyState(policyState)
           .build();
 
-      mOutputStream.reset();
-      Encoder encoder = mEncoderFactory.directBinaryEncoder(mOutputStream, null);
-      mRecordWriter.write(record, encoder);
-      mMetaTable.putValue(tableName, getMetaTableKey(columnName),
-          mOutputStream.toByteArray());
+      writeRecordToMetaTable(tableName, columnName, record);
     } else {
       throw new FreshnessValidationException(failures);
+    }
+  }
+
+  /**
+   * Attach several freshness policies to columns in the given table.
+   *
+   * @param tableName the name of the table in which to attach freshness policies.
+   * @param records a mapping from columns to records which will be attached to those columns.
+   * @param overwriteExisting whether or not to overwrite existing freshness policy records.
+   * @throws IOException in case of an error writing to the metatable.
+   */
+  public void storePolicies(
+      final String tableName,
+      final Map<KijiColumnName, KijiFreshnessPolicyRecord> records,
+      final boolean overwriteExisting
+  ) throws IOException {
+    final Set<String> keySet = mMetaTable.keySet(tableName);
+    final Map<KijiColumnName, Map<ValidationFailure, Exception>> failures = Maps.newHashMap();
+    for (Map.Entry<KijiColumnName, KijiFreshnessPolicyRecord> entry : records.entrySet()) {
+      final String metatableKey = getMetaTableKey(entry.getKey());
+      if (keySet.contains(metatableKey) && overwriteExisting) {
+        mMetaTable.removeValues(tableName, metatableKey);
+      }
+      final Map<ValidationFailure, Exception> individualFailures = validateAttachment(
+          tableName,
+          entry.getKey().getName(),
+          entry.getValue().getProducerClass(),
+          entry.getValue().getFreshnessPolicyClass(),
+          true);
+      if (!individualFailures.isEmpty()) {
+        failures.put(entry.getKey(), individualFailures);
+      }
+    }
+    if (!failures.isEmpty()) {
+      throw new MultiFreshnessValidationException(failures);
+    } else {
+      for (Map.Entry<KijiColumnName, KijiFreshnessPolicyRecord> entry : records.entrySet()) {
+        writeRecordToMetaTable(tableName, entry.getKey().toString(), entry.getValue());
+      }
     }
   }
 
@@ -369,7 +405,7 @@ public final class KijiFreshnessManager implements Closeable {
      */
     public FreshnessValidationException(Map<ValidationFailure, Exception> failures) {
       Preconditions.checkNotNull(failures, "Cannot build a FreshnessValidationException from a null"
-          + " map.");
+          + " failure map.");
       Preconditions.checkArgument(!failures.isEmpty(), "Cannot build a FreshnessValidationException"
           + " from an empty map.");
       mFailures = failures;
@@ -395,6 +431,54 @@ public final class KijiFreshnessManager implements Closeable {
      * exception.
      */
     public Map<ValidationFailure, Exception> getExceptions() {
+      return mFailures;
+    }
+  }
+
+  /** An aggregate exception representing validation failures for multiple columns. */
+  public static final class MultiFreshnessValidationException extends RuntimeException {
+
+    private final Map<KijiColumnName, Map<ValidationFailure, Exception>> mFailures;
+
+    /**
+     * Construct a new  MultiFreshnessValidationException from a map of validation failures.
+     *
+     * @param failures a map of validation failure with which to build this exception.
+     */
+    public MultiFreshnessValidationException(
+        final Map<KijiColumnName, Map<ValidationFailure, Exception>> failures
+    ) {
+      Preconditions.checkNotNull(failures, "Cannot build a MultiFreshnessValidationException from a"
+          + " null failure map.");
+      Preconditions.checkArgument(!failures.isEmpty(), "Cannot build a "
+          + "MultiFreshnessValidationException from an empty failure map.");
+      mFailures = failures;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String getMessage() {
+      final StringBuilder builder = new StringBuilder();
+      builder.append("There were validation failures.");
+      for (Map.Entry<KijiColumnName, Map<ValidationFailure, Exception>> entry
+          : mFailures.entrySet()) {
+        builder.append(String.format("%n%s:", entry.getKey()));
+        for (Map.Entry<ValidationFailure, Exception> innerEntry : entry.getValue().entrySet()) {
+          builder.append(String.format("%n%s: %s",
+              innerEntry.getKey().toString(), innerEntry.getValue().getMessage()));
+        }
+      }
+      return builder.toString();
+    }
+
+    /**
+     * Get the map from attached column to ValidationFailure to Exception that was used to construct
+     * this exception.
+     *
+     * @return the map from attached column to ValidationFailure to Exception that was used to
+     * construct this exception.
+     */
+    public Map<KijiColumnName, Map<ValidationFailure, Exception>> getExceptions() {
       return mFailures;
     }
   }
@@ -604,19 +688,18 @@ public final class KijiFreshnessManager implements Closeable {
               String.format("Table: %s does not contain specified column: %s",
               tableName, kcn.toString())));
         }
-      } else {
-        if (includeAttachmentOnlyChecks) {
-          // Check for a policy attached to kcn and kcn.getFamily();
-          if (metadataKeySet.contains(getMetaTableKey(kcn.getFamily()))) {
-            failures.put(ValidationFailure.FRESHENER_ALREADY_ATTACHED, new IllegalArgumentException(
-                String.format("There is already a freshness policy "
-                    + "attached to family: %s Freshness policies may not be attached to a map type "
-                    + "family and fully qualified columns within that family.", kcn.getFamily())));
-          } else if (metadataKeySet.contains(getMetaTableKey(kcn.getName()))) {
-            failures.put(ValidationFailure.FRESHENER_ALREADY_ATTACHED, new IllegalArgumentException(
-                String.format("There is already a freshness policy "
-                    + "attached to column: %s", kcn.getName())));
-          }
+      }
+      if (includeAttachmentOnlyChecks) {
+        // Check for a policy attached to kcn and kcn.getFamily();
+        if (metadataKeySet.contains(getMetaTableKey(kcn.getFamily()))) {
+          failures.put(ValidationFailure.FRESHENER_ALREADY_ATTACHED, new IllegalArgumentException(
+              String.format("There is already a freshness policy "
+                  + "attached to family: %s Freshness policies may not be attached to a map type "
+                  + "family and fully qualified columns within that family.", kcn.getFamily())));
+        } else if (metadataKeySet.contains(getMetaTableKey(kcn.getName()))) {
+          failures.put(ValidationFailure.FRESHENER_ALREADY_ATTACHED, new IllegalArgumentException(
+              String.format("There is already a freshness policy "
+                  + "attached to column: %s", kcn.getName())));
         }
       }
     } else {
@@ -674,6 +757,16 @@ public final class KijiFreshnessManager implements Closeable {
   }
 
   /**
+   * Helper method that constructs a meta table key for a column name.
+   *
+   * @param column the column for which to get a MetaTable key.
+   * @return the MetaTable key for the given column.
+   */
+  private String getMetaTableKey(KijiColumnName column) {
+    return METATABLE_KEY_PREFIX + column.getName();
+  }
+
+  /**
    * Helper method that constructs a KijiColumnNAme from a meta table key.
    *
    * @param metaTableKey the meta table key from which to get a column name.
@@ -681,5 +774,25 @@ public final class KijiFreshnessManager implements Closeable {
    */
   private KijiColumnName fromMetaTableKey(String metaTableKey) {
     return new KijiColumnName(metaTableKey.substring(METATABLE_KEY_PREFIX.length()));
+  }
+
+  /**
+   * Write an already validated KijiFreshnessPolicyRecord to the metatable without further checks.
+   *
+   * @param tableName the table in which the column lives.
+   * @param columnName the column to which the record is attached.
+   * @param record the record to attach to the column.
+   * @throws IOException in case of an error writing to the metatable.
+   */
+  private void writeRecordToMetaTable(
+      final String tableName,
+      final String columnName,
+      final KijiFreshnessPolicyRecord record
+  ) throws IOException {
+    mOutputStream.reset();
+    Encoder encoder = mEncoderFactory.directBinaryEncoder(mOutputStream, null);
+    mRecordWriter.write(record, encoder);
+    mMetaTable.putValue(tableName, getMetaTableKey(columnName),
+        mOutputStream.toByteArray());
   }
 }

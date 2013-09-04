@@ -1,6 +1,12 @@
 
                               Kiji Scoring Release Notes
 Version 0.6.0
+    * SCORE-81. KijiFreshnessManager now support writing multiple records with a single call. No
+        records will be written unless all records pass validation. Records to write together are
+        accepted in the same form that they are returned by retrievePolicies(tableName) to support
+        easy bulk modification of stored Freshener records.
+        This patch also fixes an error in attachment validation which was permitting records to be
+        attached to group type columns when another record was already attached.
     * SCORE-82. FreshKijiTableReader now supports rereadPolicies(List<KijiColumnName>) which causes
         the reader to reread policies from the metatable according to a new list of columns to
         freshen. The new list of columns to freshen permanently supercedes the previous list.

@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Map;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.junit.After;
 import org.junit.Before;
@@ -44,6 +45,8 @@ import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.util.InstanceBuilder;
 import org.kiji.scoring.KijiFreshnessManager.FreshnessValidationException;
+import org.kiji.scoring.KijiFreshnessManager.MultiFreshnessValidationException;
+import org.kiji.scoring.KijiFreshnessManager.ValidationFailure;
 import org.kiji.scoring.avro.KijiFreshnessPolicyRecord;
 import org.kiji.scoring.lib.AlwaysFreshen;
 import org.kiji.scoring.lib.ShelfLife;
@@ -249,5 +252,40 @@ public class TestKijiFreshnessManager {
         mFreshManager.removePolicies("user"));
 
     assertEquals(new HashSet<KijiColumnName>(), mFreshManager.removePolicies("user"));
+  }
+
+  @Test
+  public void testStorePolicies() throws IOException {
+    mFreshManager.storePolicy("user", "info:name", TestProducer.class, new AlwaysFreshen());
+    mFreshManager.storePolicy("user", "info:email", TestProducer.class, new AlwaysFreshen());
+    final Map<KijiColumnName, KijiFreshnessPolicyRecord> records =
+        mFreshManager.retrievePolicies("user");
+    assertEquals(2, records.size());
+
+    final Map<KijiColumnName, KijiFreshnessPolicyRecord> modifiedRecords = Maps.newHashMap(records);
+    for (Map.Entry<KijiColumnName, KijiFreshnessPolicyRecord> entry : modifiedRecords.entrySet()) {
+      entry.getValue().setFreshnessPolicyClass("org.kiji.scoring.lib.NeverFreshen");
+    }
+
+    mFreshManager.storePolicies("user", modifiedRecords, true);
+    assertEquals("org.kiji.scoring.lib.NeverFreshen",
+        mFreshManager.retrievePolicy("user", "info:name").getFreshnessPolicyClass());
+    assertEquals("org.kiji.scoring.lib.NeverFreshen",
+        mFreshManager.retrievePolicy("user", "info:email").getFreshnessPolicyClass());
+
+    try {
+      mFreshManager.storePolicies("user", records, false);
+      fail("storePolicies() should have thrown MultiFreshnessValidationException because of already"
+          + " attached fresheners.");
+    } catch (MultiFreshnessValidationException mfve) {
+      final Map<KijiColumnName, Map<ValidationFailure, Exception>> failures = mfve.getExceptions();
+      assertEquals(2, failures.size());
+      assertTrue(failures.containsKey(new KijiColumnName("info:name")));
+      assertTrue(failures.containsKey(new KijiColumnName("info:email")));
+      assertTrue(failures.get(new KijiColumnName("info:name"))
+          .containsKey(ValidationFailure.FRESHENER_ALREADY_ATTACHED));
+      assertTrue(failures.get(new KijiColumnName("info:email"))
+          .containsKey(ValidationFailure.FRESHENER_ALREADY_ATTACHED));
+    }
   }
 }
