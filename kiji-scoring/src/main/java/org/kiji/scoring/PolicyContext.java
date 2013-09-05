@@ -19,6 +19,7 @@
 package org.kiji.scoring;
 
 import java.io.IOException;
+import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
 
@@ -76,4 +77,34 @@ public interface PolicyContext {
    * @throws IOException if there is an error opening the underlying storage resource.
    */
   <K, V> KeyValueStoreReader<K, V> getStore(String storeName) throws IOException;
+
+  /**
+   * Get the configuration parameters for this PolicyContext.  This map will be initially populated
+   * with values from KijiFreshnessPolicyRecord's Parameters field.  Modification may be made to
+   * this map directly or by calling {@link #setParameter(String, String)}.  The values in this map
+   * will be propagated to the KijiProducer via the {@link Configuration} with which the Producer is
+   * configured.  If values in this map are modified during isFresh, the user must call
+   * {@link #reinitializeProducer()} or set KijiFreshnessPolicyRecord's reinitializeProducer field
+   * to true.
+   *
+   * @return the configuraiton parameters for this PolicyContext.
+   */
+  Map<String, String> getParameters();
+
+  /**
+   * Add a Key Value pair to the parameters for this PolicyContext, which will be propagated to the
+   * KijiProducer via the {@link Configuration} with which the Producer is configured.
+   *
+   * @param key the Configuration key at which to store the given value.
+   * @param value the Configuration value to store at the given key.
+   */
+  void setParameter(final String key, final String value);
+
+  /**
+   * Instructs the FreshKijiTableReader which manages the FreshnessPolicy which this Context serves
+   * that is should reinitialize the KijiProducer object to reflect new Configuration parameters.
+   *
+   * @param reinitializeProducer whether to reinitialize the KijiProducer object.
+   */
+  void reinitializeProducer(final boolean reinitializeProducer);
 }

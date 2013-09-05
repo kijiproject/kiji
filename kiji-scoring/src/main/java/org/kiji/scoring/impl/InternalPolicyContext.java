@@ -19,7 +19,9 @@
 package org.kiji.scoring.impl;
 
 import java.io.IOException;
+import java.util.Map;
 
+import com.google.common.collect.Maps;
 import org.apache.hadoop.conf.Configuration;
 
 import org.kiji.annotations.ApiAudience;
@@ -39,8 +41,10 @@ import org.kiji.scoring.PolicyContext;
 public final class InternalPolicyContext implements PolicyContext {
   private final Configuration mConf;
   private final KijiColumnName mAttachedColumn;
+  private final Map<String, String> mParameters = Maps.newHashMap();
   private KijiDataRequest mClientRequest;
   private KeyValueStoreReaderFactory mKeyValueStoreReaderFactory;
+  private boolean mReinitializeProducer;
 
   /**
    * Creates a new InternalPolicyContext to give freshness policies access to outside data.
@@ -51,12 +55,19 @@ public final class InternalPolicyContext implements PolicyContext {
    *   FreshKijiTableReader reads.
    * @param factory a KeyValueStoreReaderFactory configured with KVStores from the FreshnessPolicy
    *   and producer.
+   * @param parameters a key-value mapping of parameters retrieved from the
+   *   KijiFreshnessPolicyRecord, may be overridden during isFresh.
+   * @param reinitializeProducer default value for whether to reinitialize the KijiProducer object,
+   *   retrieved from the KijiFreshnessPolicyRecord.
    */
   public InternalPolicyContext(
-      KijiDataRequest clientRequest,
-      KijiColumnName attachedColumn,
-      Configuration conf,
-      KeyValueStoreReaderFactory factory) {
+      final KijiDataRequest clientRequest,
+      final KijiColumnName attachedColumn,
+      final Configuration conf,
+      final KeyValueStoreReaderFactory factory,
+      final Map<String, String> parameters,
+      final boolean reinitializeProducer
+  ) {
     mClientRequest = clientRequest;
     mAttachedColumn = attachedColumn;
     mConf = conf;
@@ -83,7 +94,43 @@ public final class InternalPolicyContext implements PolicyContext {
 
   /** {@inheritDoc} */
   @Override
-  public <K, V> KeyValueStoreReader<K, V> getStore(final String storeName) throws IOException {
+  public <K, V> KeyValueStoreReader<K, V> getStore(
+      final String storeName
+  ) throws IOException {
     return mKeyValueStoreReaderFactory.openStore(storeName);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public Map<String, String> getParameters() {
+    return mParameters;
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public void setParameter(
+      final String key,
+      final String value
+  ) {
+    mParameters.put(key, value);
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public void reinitializeProducer(
+      final boolean reinitializeProducer
+  ) {
+    mReinitializeProducer = reinitializeProducer;
+  }
+
+  /**
+   * Whether the FreshKijiTableReader which contains the FreshnessPolicy which this PolicyContext
+   * serves should reinitialize the KijiProducer object to reflect changes made to the Parameters
+   * map.
+   *
+   * @return whether to reinitialize the KijiProducer object.
+   */
+  public boolean shouldReinitializeProducer() {
+    return mReinitializeProducer;
   }
 }

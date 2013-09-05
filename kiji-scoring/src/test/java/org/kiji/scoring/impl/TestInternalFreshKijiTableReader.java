@@ -227,6 +227,42 @@ public class TestInternalFreshKijiTableReader {
     }
   }
 
+  public static final class TestConfigurableProducer extends KijiProducer {
+    public KijiDataRequest getDataRequest() {
+      return KijiDataRequest.create("family", "qual0");
+    }
+    public String getOutputColumn() {
+      return null;
+    }
+    public void produce(final KijiRowData input, final ProducerContext context) throws IOException {
+      context.put(getConf().get("test.kiji.configuration.key", "default"));
+    }
+  }
+
+  public static final class TestConfiguringPolicy implements KijiFreshnessPolicy {
+    private boolean mReinitializeProducer;
+    public boolean isFresh(final KijiRowData rowData, final PolicyContext policyContext) {
+      policyContext.setParameter("test.kiji.configuration.key", "new-name");
+      policyContext.reinitializeProducer(mReinitializeProducer);
+      return false;
+    }
+    public boolean shouldUseClientDataRequest() {
+      return true;
+    }
+    public KijiDataRequest getDataRequest() {
+      return null;
+    }
+    public Map<String, KeyValueStore<?, ?>> getRequiredStores() {
+      return Collections.EMPTY_MAP;
+    }
+    public String serialize() {
+      return String.valueOf(mReinitializeProducer);
+    }
+    public void deserialize(final String policyState) {
+      mReinitializeProducer = Boolean.parseBoolean(policyState);
+    }
+  }
+
   private Kiji mKiji;
   private KijiTable mTable;
   private KijiTableReader mReader;
@@ -1138,4 +1174,47 @@ public class TestInternalFreshKijiTableReader {
     }
   }
 
+  @Test
+  public void testReinitializeProducer() throws IOException {
+    final EntityId eid = mTable.getEntityId("foo");
+    final KijiDataRequest request = KijiDataRequest.create("family", "qual0");
+
+    final KijiFreshnessPolicy policy = new TestConfiguringPolicy();
+    policy.deserialize("false");
+
+    // Create a KijiFreshnessManager and register a freshness policy.
+    final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
+    try {
+      manager.storePolicy(
+          TABLE_NAME, "family:qual0", TestConfigurableProducer.class, policy);
+
+      final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
+          .withTable(mTable)
+          .withTimeout(500)
+          .build();
+
+      try {
+        // Because the FreshnessPolicy does not instruct the reader to reinitialize the producer,
+        // the producer does not see the updated configuration parameter and writes "default".
+        assertEquals("default",
+            freshReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
+
+        // reconfigure the policy to reinitialize the producer.
+        policy.deserialize("true");
+        manager.removePolicy(TABLE_NAME, "family:qual0");
+        manager.storePolicy(
+            TABLE_NAME, "family:qual0", TestConfigurableProducer.class, policy);
+        freshReader.rereadPolicies();
+
+        // Because the FreshnessPolicy does instruct the reader to reinitialize the producer, the
+        // producer does see the updated configuration parameter and writes "new-name".
+        assertEquals("new-name",
+            freshReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
+      } finally {
+        freshReader.close();
+      }
+    } finally {
+      manager.close();
+    }
+  }
 }

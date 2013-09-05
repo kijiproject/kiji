@@ -62,7 +62,6 @@ import org.kiji.schema.util.ReferenceCountable;
 import org.kiji.scoring.FreshKijiTableReader;
 import org.kiji.scoring.KijiFreshnessManager;
 import org.kiji.scoring.KijiFreshnessPolicy;
-import org.kiji.scoring.PolicyContext;
 import org.kiji.scoring.avro.KijiFreshnessPolicyRecord;
 import org.kiji.scoring.impl.InternalFreshKijiTableReader.ReaderState.State;
 import org.kiji.scoring.impl.MultiBufferedWriter.SingleBuffer;
@@ -168,6 +167,8 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     private final KeyValueStoreReaderFactory mFactory;
     private final KijiColumnName mAttachedColumn;
     private final AtomicInteger mRetainCounter = new AtomicInteger(1);
+    private final Map<String, String> mParameters;
+    private final boolean mReinitializeProducer;
 
     /**
      * Initialize a new Freshener.
@@ -176,17 +177,29 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
      * @param producer the KijiProducer which generates scores for this Freshener.
      * @param factory the KVStoreReaderFactory which services the policy and producer.
      * @param attachedColumn the column to which this Freshener is attached.
+     * @param parameters configuration parameters retrieved from the Freshener record which are
+     *     accessible and modifiable by the KijiFreshnessPolicy via
+     *     {@link org.kiji.scoring.PolicyContext#getParameters()} and
+     *     {@link org.kiji.scoring.PolicyContext#setParameter(String, String)}, and accessible by
+     *     the KijiProducer via {@link org.kiji.mapreduce.produce.KijiProducer#getConf()}.
+     * @param reinitializeProducer whether to reinitialize the KijiProducer object for each request.
+     *     This value is read from the KijiFreshnessPolicyRecord and treated as a default which may
+     *     be overridden by {@link org.kiji.scoring.PolicyContext#reinitializeProducer(boolean)}.
      */
     public Freshener(
         final KijiFreshnessPolicy policy,
         final KijiProducer producer,
         final KeyValueStoreReaderFactory factory,
-        final KijiColumnName attachedColumn
+        final KijiColumnName attachedColumn,
+        final Map<String, String> parameters,
+        final boolean reinitializeProducer
     ) {
       mPolicy = policy;
       mProducer = producer;
       mFactory = factory;
       mAttachedColumn = attachedColumn;
+      mParameters = parameters;
+      mReinitializeProducer = reinitializeProducer;
     }
 
     /** {@inheritDoc} */
@@ -442,11 +455,13 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     @Override
     public Boolean call() throws Exception {
       final Freshener freshener = mRequestContext.mFresheners.get(mAttachedColumn);
-      final PolicyContext policyContext = new InternalPolicyContext(
+      final InternalPolicyContext policyContext = new InternalPolicyContext(
           mRequestContext.mClientDataRequest,
           mAttachedColumn,
           mRequestContext.mConf,
-          freshener.mFactory);
+          freshener.mFactory,
+          freshener.mParameters,
+          freshener.mReinitializeProducer);
       final KijiRowData clientData = getFromFuture(mRowDataToCheckFuture);
       final boolean isFresh = freshener.mPolicy.isFresh(clientData, policyContext);
       if (isFresh) {
@@ -469,7 +484,15 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
             mRequestContext.mEntityId,
             freshener.mFactory,
             buffer);
-        freshener.mProducer.produce(mRequestContext.mReader.get(
+        final KijiProducer producer;
+        if (policyContext.shouldReinitializeProducer()) {
+          final Configuration confCopy =
+              copyConfandOverwrite(mRequestContext.mConf, policyContext.getParameters());
+          producer = producerForName(freshener.mProducer.getClass().getName(), confCopy);
+        } else {
+          producer = freshener.mProducer;
+        }
+        producer.produce(mRequestContext.mReader.get(
             mRequestContext.mEntityId,
             freshener.mProducer.getDataRequest()),
             context);
@@ -663,6 +686,24 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   }
 
   /**
+   * Deep copy a given configuration and populate it with values from a parameters map.
+   *
+   * @param confToPopulate the Configuration to copy and populate.
+   * @param parameters the key value pairs to put into the copied Configuration.
+   * @return the newly created Configuration including all parameter key value pairs.
+   */
+  private static Configuration copyConfandOverwrite(
+      final Configuration confToPopulate,
+      final Map<String, String> parameters
+  ) {
+    final Configuration confCopy = new Configuration(confToPopulate);
+    for (Map.Entry<String, String> entry : parameters.entrySet()) {
+      confCopy.set(entry.getKey(), entry.getValue());
+    }
+    return confCopy;
+  }
+
+  /**
    * Create a map of Fresheners from a map of KijiFreshnessPolicyRecords.  Freshener components
    * are proactively created.
    *
@@ -699,14 +740,17 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
       if (!oldFresheners.containsKey(entry.getKey())) {
         // If there is not already a Freshener for this record, make one.
 
+        // Deep copy the Configuration and populate it with parameters from the record.
+        final Configuration confCopy = copyConfandOverwrite(conf, entry.getValue().getParameters());
+
         // Instantiate the policy and load its state.
         final KijiFreshnessPolicy policy =
-            policyForName(entry.getValue().getFreshnessPolicyClass(), conf);
+            policyForName(entry.getValue().getFreshnessPolicyClass(), confCopy);
         policy.deserialize(entry.getValue().getFreshnessPolicyState());
 
         // Instantiate the producer.
         final KijiProducer producer =
-            producerForName(entry.getValue().getProducerClass(), conf);
+            producerForName(entry.getValue().getProducerClass(), confCopy);
 
         // Populate the KVStores map and instantiate the KVStoreReaderFactory from the map.
         final Map<String, KeyValueStore<?, ?>> kvMap = Maps.newHashMap();
@@ -718,7 +762,13 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
         producer.setup(KijiFreshProducerContext.create(entry.getKey(), null, factory, null));
 
         // Build the Freshener from initialized components.
-        final Freshener freshener = new Freshener(policy, producer, factory, entry.getKey());
+        final Freshener freshener = new Freshener(
+            policy,
+            producer,
+            factory,
+            entry.getKey(),
+            entry.getValue().getParameters(),
+            entry.getValue().getReinitializeProducer());
         fresheners.put(entry.getKey(), freshener);
       } else {
         // If there is already a Freshener for this key, save it.

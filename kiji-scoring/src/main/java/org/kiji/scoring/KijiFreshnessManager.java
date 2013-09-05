@@ -183,7 +183,8 @@ public final class KijiFreshnessManager implements Closeable {
    * @param parameters a string-string mapping of configuration parameters which will be available
    *     to the FreshnessPolicy and KijiProducer.
    * @param reinitializeProducer whether to reinitialize the KijiProducer for each request. This
-   *     value may be overridden by {@link org.kiji.scoring.PolicyContext#reinitializeProducer()}.
+   *     value may be overridden by
+   *     {@link org.kiji.scoring.PolicyContext#reinitializeProducer(boolean)}.
    * @throws IOException if there is an error saving the freshness policy or if the table is not
    *     found.
    */
@@ -301,7 +302,7 @@ public final class KijiFreshnessManager implements Closeable {
    *     KijiProducer.
    * @param reinitializeProducer whether to reinitialize the KijiProducer on each request.  This
    *     value may be overridden by the FreshnessPolicy using
-   *     {@link org.kiji.scoring.KijiFreshnessPolicy#reinitializeProducer()}.
+   *     {@link org.kiji.scoring.PolicyContext#reinitializeProducer(boolean)}.
    * @throws IOException in case of an error writing to the metatable.
    */
   public void storePolicyWithStrings(

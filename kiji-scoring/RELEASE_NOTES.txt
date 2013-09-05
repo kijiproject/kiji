@@ -1,7 +1,17 @@
 
                               Kiji Scoring Release Notes
 Version 0.6.0
-    * SCORE-85. KijiFreshnessPolicyRecord now support two optional fields, `parameters` which is a
+    * SCORE-83. InternalFreshKijiTableReader now respects KijiFreshnessPolicyRecord's `parameters`
+        and `reinitializeProducer` fields. KijiFreshnessPolicy objects may access and override
+        `parameters` via PolicyContext.getParameters() and setParameter(String, String). These will
+        be written into the Configuration used by the KijiProducer and are available to the
+        KijiProducer objects via KijiProducer.getConf(). `reinitializeProducer` will instruct the
+        FreshKijiTableReader to intialize a new KijiProducer object for each request and configure
+        the new producer to include values found in the possibly modified version of `parameters`
+        returned from PolicyContext.getParameters(). A freshness policy may override the specified
+        reinitialization behavior by calling PolicyContext.reinitializeProducer(boolean) during a
+        call to KijiFreshnessPolicy.isFresh(KijiRowData, PolicyContext).
+    * SCORE-85. KijiFreshnessPolicyRecord now support two optional fields, paramters which is a
         string-string mapping of configuration parameters which are made available to the policy
         via PolicyContext.getParameters() and the producer via KijiProducer.getConf(), and
         `reinitializeProducer` which is a boolean and instructs the FreshKijiTableReader to
