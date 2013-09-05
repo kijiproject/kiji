@@ -1,6 +1,12 @@
 
                               Kiji Scoring Release Notes
 Version 0.6.0
+    * SCORE-85. KijiFreshnessPolicyRecord now support two optional fields, `parameters` which is a
+        string-string mapping of configuration parameters which are made available to the policy
+        via PolicyContext.getParameters() and the producer via KijiProducer.getConf(), and
+        `reinitializeProducer` which is a boolean and instructs the FreshKijiTableReader to
+        initialize a new KijiProducer on each request in order to pass in new configuration
+        parameters safely.
     * SCORE-81. KijiFreshnessManager now support writing multiple records with a single call. No
         records will be written unless all records pass validation. Records to write together are
         accepted in the same form that they are returned by retrievePolicies(tableName) to support

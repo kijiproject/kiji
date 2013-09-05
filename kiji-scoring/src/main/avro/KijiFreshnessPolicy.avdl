@@ -38,5 +38,11 @@ protocol KijiFreshnessPolicyRecords {
 
     /** State of the KijiFreshnessPolicy to initialize the policy after creation. */
     string freshness_policy_state;
+
+    /** Whether to reinitialize the KijiProducer for each request. */
+    boolean reinitializeProducer = false;
+
+    /** Configuration parameters which will be passed to the FreshnessPolicy and Producer. */
+    map<string> parameters = {};
   }
 }

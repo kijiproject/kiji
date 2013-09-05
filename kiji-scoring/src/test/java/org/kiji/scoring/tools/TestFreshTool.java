@@ -118,7 +118,7 @@ public class TestFreshTool extends KijiClientTest {
     ));
 
     final KijiFreshnessPolicyRecord record = KijiFreshnessPolicyRecord.newBuilder()
-        .setRecordVersion("policyrecord-0.1.0")
+        .setRecordVersion(KijiFreshnessManager.CUR_FRESHNESS_RECORD_VER.toCanonicalString())
         .setProducerClass(TestProducer.class.getName())
         .setFreshnessPolicyClass(Class.forName("org.kiji.scoring.lib.ShelfLife")
             .asSubclass(KijiFreshnessPolicy.class).getName())
@@ -142,7 +142,7 @@ public class TestFreshTool extends KijiClientTest {
       ));
 
       final KijiFreshnessPolicyRecord record2 = KijiFreshnessPolicyRecord.newBuilder()
-          .setRecordVersion("policyrecord-0.1.0")
+          .setRecordVersion(KijiFreshnessManager.CUR_FRESHNESS_RECORD_VER.toCanonicalString())
           .setProducerClass(TestProducer.class.getName())
           .setFreshnessPolicyClass(Class.forName("org.kiji.scoring.lib.ShelfLife")
               .asSubclass(KijiFreshnessPolicy.class).getName())

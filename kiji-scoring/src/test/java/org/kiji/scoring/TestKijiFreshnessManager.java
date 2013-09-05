@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 
@@ -49,6 +50,7 @@ import org.kiji.scoring.KijiFreshnessManager.MultiFreshnessValidationException;
 import org.kiji.scoring.KijiFreshnessManager.ValidationFailure;
 import org.kiji.scoring.avro.KijiFreshnessPolicyRecord;
 import org.kiji.scoring.lib.AlwaysFreshen;
+import org.kiji.scoring.lib.NeverFreshen;
 import org.kiji.scoring.lib.ShelfLife;
 
 public class TestKijiFreshnessManager {
@@ -287,5 +289,55 @@ public class TestKijiFreshnessManager {
       assertTrue(failures.get(new KijiColumnName("info:email"))
           .containsKey(ValidationFailure.FRESHENER_ALREADY_ATTACHED));
     }
+  }
+
+  public void testOptionalFields() throws IOException {
+    final Map<String, String> params = Maps.newHashMap();
+    params.put("test-key", "test-value");
+    final KijiFreshnessPolicy policy = new NeverFreshen();
+
+    final KijiFreshnessPolicyRecord parametersRecord = KijiFreshnessPolicyRecord.newBuilder()
+        .setRecordVersion(KijiFreshnessManager.CUR_FRESHNESS_RECORD_VER.toCanonicalString())
+        .setProducerClass(TestProducer.class.getName())
+        .setFreshnessPolicyClass(NeverFreshen.class.getName())
+        .setFreshnessPolicyState("")
+        .setParameters(params)
+        .build();
+    assertEquals(false, parametersRecord.getReinitializeProducer());
+
+    final KijiFreshnessPolicyRecord reinitializeRecord = KijiFreshnessPolicyRecord.newBuilder()
+        .setRecordVersion(KijiFreshnessManager.CUR_FRESHNESS_RECORD_VER.toCanonicalString())
+        .setProducerClass(TestProducer.class.getName())
+        .setFreshnessPolicyClass(NeverFreshen.class.getName())
+        .setFreshnessPolicyState("")
+        .setReinitializeProducer(true)
+        .build();
+    assertTrue(reinitializeRecord.getParameters().isEmpty());
+
+    final KijiFreshnessPolicyRecord combinedRecord = KijiFreshnessPolicyRecord.newBuilder()
+        .setRecordVersion(KijiFreshnessManager.CUR_FRESHNESS_RECORD_VER.toCanonicalString())
+        .setProducerClass(TestProducer.class.getName())
+        .setFreshnessPolicyClass(NeverFreshen.class.getName())
+        .setFreshnessPolicyState("")
+        .setParameters(params)
+        .setReinitializeProducer(true)
+        .build();
+
+    mFreshManager.storePolicy("user", "info:name", TestProducer.class, policy, params, false);
+    assertEquals(parametersRecord, mFreshManager.retrievePolicy("user", "info:name"));
+    mFreshManager.removePolicy("user", "info:name");
+
+    mFreshManager.storePolicy(
+        "user",
+        "info:name",
+        TestProducer.class,
+        policy,
+        Collections.<String, String>emptyMap(),
+        true);
+    assertEquals(reinitializeRecord, mFreshManager.retrievePolicy("user", "info:name"));
+    mFreshManager.removePolicy("user", "info:name");
+
+    mFreshManager.storePolicy("user", "info:name", TestProducer.class, policy, params, true);
+    assertEquals(combinedRecord, mFreshManager.retrievePolicy("user", "info:name"));
   }
 }

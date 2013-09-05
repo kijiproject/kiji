@@ -22,6 +22,7 @@ package org.kiji.scoring;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -73,10 +74,9 @@ public final class KijiFreshnessManager implements Closeable {
       ProtocolVersion.parse("policyrecord-0.1");
   /** Maximum freshness version supported by this version of the KijiFreshnessManager. */
   private static final ProtocolVersion MAX_FRESHNESS_RECORD_VER =
-      ProtocolVersion.parse("policyrecord-0.1");
+      ProtocolVersion.parse("policyrecord-0.2");
   /** The freshness version that will be installed by this version of the KijiFreshnessManager. */
-  private static final ProtocolVersion CUR_FRESHNESS_RECORD_VER = MAX_FRESHNESS_RECORD_VER;
-
+  public static final ProtocolVersion CUR_FRESHNESS_RECORD_VER = MAX_FRESHNESS_RECORD_VER;
   /** The prefix we use for freshness policies stored in a meta table. */
   private static final String METATABLE_KEY_PREFIX = "kiji.scoring.fresh.";
 
@@ -148,13 +148,56 @@ public final class KijiFreshnessManager implements Closeable {
    * @throws IOException if there is an error saving the freshness policy or if the table is not
    * found.
    */
-  public void storePolicy(String tableName, String columnName,
-      Class<? extends KijiProducer> producerClass, KijiFreshnessPolicy policy)
-      throws IOException {
+  public void storePolicy(
+      String tableName,
+      String columnName,
+      Class<? extends KijiProducer> producerClass,
+      KijiFreshnessPolicy policy
+  ) throws IOException {
+    storePolicy(
+        tableName,
+        columnName,
+        producerClass,
+        policy,
+        Collections.<String, String>emptyMap(),
+        false);
+  }
 
+  /**
+   * Saves a freshness policy in the metatable using classes.  If possible, this method will ensure
+   * that the target attachment column and the producer's output column are compatible (both
+   * unqualified map type families, or both fully qualified columns) and that the producer's data
+   * request can be fulfilled by the target table.  If these checks pass, further checks will be
+   * performed according to {@link #storePolicyWithStrings(String, String, String, String, String,
+   * java.util.Map, boolean)}.
+   *
+   * @param tableName the table name with which the freshness policy should be associated. If the
+   *     table doesn't exist, an IOException will be thrown.
+   * @param columnName the name of the column to associate the freshness policy with. This may be
+   * either in the format of "family:qualifier" for a single column or "family" for an entire
+   *     map family.
+   * @param producerClass class of the producer to run if the data in the column is not fresh.
+   * @param policy an instance of a KijiFreshnessPolicy that will manage freshening behavior.  This
+   *     object's serialize method will be called and the return value used as the policy's saved
+   *     state.
+   * @param parameters a string-string mapping of configuration parameters which will be available
+   *     to the FreshnessPolicy and KijiProducer.
+   * @param reinitializeProducer whether to reinitialize the KijiProducer for each request. This
+   *     value may be overridden by {@link org.kiji.scoring.PolicyContext#reinitializeProducer()}.
+   * @throws IOException if there is an error saving the freshness policy or if the table is not
+   *     found.
+   */
+  public void storePolicy(
+      final String tableName,
+      final String columnName,
+      final Class<? extends KijiProducer> producerClass,
+      final KijiFreshnessPolicy policy,
+      final Map<String, String> parameters,
+      final boolean reinitializeProducer
+  ) throws IOException {
     final Map<ValidationFailure, Exception> failures =
         validateAttachment(tableName, columnName, producerClass.getName(),
-        policy.getClass().getName(), true);
+            policy.getClass().getName(), true);
 
     if (failures.isEmpty()) {
       // Collect the appropriate strings from the objects and write them with storePolicyWithStrings
@@ -163,7 +206,9 @@ public final class KijiFreshnessManager implements Closeable {
           columnName,
           producerClass.getName(),
           policy.getClass().getName(),
-          policy.serialize());
+          policy.serialize(),
+          parameters,
+          reinitializeProducer);
     } else {
       throw new FreshnessValidationException(failures);
     }
@@ -222,8 +267,52 @@ public final class KijiFreshnessManager implements Closeable {
       String columnName,
       String producerClass,
       String policyClass,
-      String policyState)
-      throws IOException {
+      String policyState
+  ) throws IOException {
+    storePolicyWithStrings(
+        tableName,
+        columnName,
+        producerClass,
+        policyClass,
+        policyState,
+        Collections.<String, String>emptyMap(),
+        false);
+  }
+
+  /**
+   * Saves a freshness policy in the metatable without requiring classes to be available on the
+   * classpath.  This method ensures that producer and policy class names are valid Java class
+   * identifiers, that the column exists in the table layout if it is a fully qualified member of a
+   * group type family, that the family exists if the specified columnName is not fully qualified,
+   * and that there is not a conflict between existing freshness policies and the new policy to
+   * attach (i.e. there may never be two freshness policies associated with the same fully qualified
+   * column.).
+   *
+   * @param tableName the table name with which the freshness policy should be associated.  Throws
+   * an IOException if the table does not exist.
+   * @param columnName the name of the column with which to associate the freshness policy.  This
+   * may be either a fully qualified column from a group type family, or an unqualified map type
+   * family name.
+   * @param producerClass the fully qualified class name of the producer to use for freshening.
+   * @param policyClass the fully qualified class name of the KijiFreshnessPolicy to attach to the
+   * column.
+   * @param policyState the serialized state of the policy class.
+   * @param parameters configuration parameters which will be available to the FreshnessPolicy and
+   *     KijiProducer.
+   * @param reinitializeProducer whether to reinitialize the KijiProducer on each request.  This
+   *     value may be overridden by the FreshnessPolicy using
+   *     {@link org.kiji.scoring.KijiFreshnessPolicy#reinitializeProducer()}.
+   * @throws IOException in case of an error writing to the metatable.
+   */
+  public void storePolicyWithStrings(
+      String tableName,
+      String columnName,
+      String producerClass,
+      String policyClass,
+      String policyState,
+      Map<String, String> parameters,
+      boolean reinitializeProducer
+  ) throws IOException {
     final Map<ValidationFailure, Exception> failures =
         validateAttachment(tableName, columnName, producerClass, policyClass, true);
 
@@ -233,6 +322,8 @@ public final class KijiFreshnessManager implements Closeable {
           .setProducerClass(producerClass)
           .setFreshnessPolicyClass(policyClass)
           .setFreshnessPolicyState(policyState)
+          .setParameters(parameters)
+          .setReinitializeProducer(reinitializeProducer)
           .build();
 
       writeRecordToMetaTable(tableName, columnName, record);
@@ -240,6 +331,7 @@ public final class KijiFreshnessManager implements Closeable {
       throw new FreshnessValidationException(failures);
     }
   }
+
 
   /**
    * Attach several freshness policies to columns in the given table.
