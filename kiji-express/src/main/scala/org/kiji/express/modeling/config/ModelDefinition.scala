@@ -270,7 +270,8 @@ object ModelDefinition {
      */
     def getClassForPhase[T](phaseImplName: String, phase: Class[T]): Class[T] = {
       val checkClass: Class[T] = try {
-        Class.forName(phaseImplName).asInstanceOf[Class[T]]
+        new java.lang.Thread().getContextClassLoader()
+            .loadClass(phaseImplName).asInstanceOf[Class[T]]
       } catch {
         case _: ClassNotFoundException => {
           val error = "The class \"%s\" could not be found.".format(phaseImplName) +

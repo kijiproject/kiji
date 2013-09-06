@@ -264,6 +264,9 @@
             <configuration>
               <outputDirectory>${project.build.directory}/apidocs</outputDirectory>
               <reportOutputDirectory>${project.build.directory}/apidocs</reportOutputDirectory>
+              <jvmArgs>
+                <jvmArg>-Xmx2048m</jvmArg>
+              </jvmArgs>
             </configuration>
           </execution>
         </executions>
