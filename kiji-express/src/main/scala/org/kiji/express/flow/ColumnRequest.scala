@@ -66,6 +66,17 @@ private[express] sealed trait ColumnRequest extends Serializable {
    * @return the name of the column this ColumnRequest specifies.
    */
   private[express] def getColumnName(): KijiColumnName
+
+  /**
+   * Specifies that we should page through the cells in the specified column. The data will be
+   * returned to as a seamless iterator over cells, but the maximum numbers of cells in-memory from
+   * this column will be the specified cellsPerPage. Tuples field associated with columns that have
+   * paging enabled will contain a [[org.kiji.express.PagedKijiSlice]].
+   *
+   * @param cellsPerPage is the maximum number of cells to retrieve and load at a time.
+   * @return this ColumnRequest with replacement configured.
+   */
+  def withPaging(cellsPerPage: Int): ColumnRequest
 }
 
 /**
@@ -173,6 +184,22 @@ final case class QualifiedColumn private[express] (
   }
 
   override def getColumnName(): KijiColumnName = new KijiColumnName(family, qualifier)
+
+  /**
+   * Specifies that we should page through the cells in the specified column. The data will be
+   * returned to as a seamless iterator over cells, but the maximum numbers of cells in-memory from
+   * this column will be the specified cellsPerPage. Tuples field associated with columns that have
+   * paging enabled will contain a [[org.kiji.express.PagedKijiSlice]].
+   *
+   * @param cellsPerPage is the maximum number of cells to retrieve and load at a time.
+   * @return this ColumnRequest with replacement configured.
+   */
+  override def withPaging(cellsPerPage: Int): ColumnRequest = {
+    return new QualifiedColumn(
+        family,
+        qualifier,
+        options.newWithPaging(Some(cellsPerPage)))
+  }
 }
 
 /**
@@ -286,6 +313,22 @@ final case class ColumnFamily private[express] (
   }
 
   override def getColumnName(): KijiColumnName = new KijiColumnName(family)
+
+  /**
+   * Specifies that we should page through the cells in the specified column. The data will be
+   * returned to as a seamless iterator over cells, but the maximum numbers of cells in-memory from
+   * this column will be the specified cellsPerPage. Tuples field associated with columns that have
+   * paging enabled will contain a [[org.kiji.express.PagedKijiSlice]].
+   *
+   * @param cellsPerPage is the maximum number of cells to retrieve and load at a time.
+   * @return the ColumnRequest with paging configured.
+   */
+  override def withPaging(cellsPerPage: Int): ColumnRequest = {
+    return new ColumnFamily(
+        family,
+        qualifierSelector,
+        options.newWithPaging(Some(cellsPerPage)))
+  }
 }
 
 /**
@@ -295,6 +338,8 @@ final case class ColumnFamily private[express] (
  *     retrieved for the column. By default only the most recent cell is retrieved.
  * @param filter that a cell must pass to be retrieved by the request. By default no filter is
  *     applied.
+ * @param pageSize is the maximum number of cells to maintain in memory when paging through a
+ *     column, if paging is enabled.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
@@ -304,8 +349,10 @@ final case class ColumnRequestOptions private[express] (
     // KijiExpress-specific implementation.
     private[express] val filter: Option[KijiColumnFilter] = None,
     replacementSlice: Option[KijiSlice[_]] = None,
-    avroClass: Option[Class[_ <: SpecificRecord]] = None)
+    avroClass: Option[Class[_ <: SpecificRecord]] = None,
+    pageSize: Option[Int] = None)
     extends Serializable {
+
   def newWithReplacement(
       newReplacement: Option[KijiSlice[_]]): ColumnRequestOptions = {
     return new ColumnRequestOptions(
@@ -321,5 +368,10 @@ final case class ColumnRequestOptions private[express] (
         filter = filter,
         replacementSlice = replacementSlice,
         avroClass = newAvroClass)
+  }
+
+  def newWithPaging(
+    newPageSize: Option[Int]): ColumnRequestOptions = {
+    new ColumnRequestOptions(maxVersions, filter, replacementSlice, avroClass, newPageSize)
   }
 }

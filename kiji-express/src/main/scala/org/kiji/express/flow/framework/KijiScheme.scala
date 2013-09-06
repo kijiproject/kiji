@@ -44,6 +44,7 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.express.EntityId
 import org.kiji.express.KijiSlice
+import org.kiji.express.PagedKijiSlice
 import org.kiji.express.flow.ColumnFamily
 import org.kiji.express.flow.ColumnRequest
 import org.kiji.express.flow.ColumnRequestOptions
@@ -52,7 +53,9 @@ import org.kiji.express.flow.TimeRange
 import org.kiji.express.util.AvroUtil
 import org.kiji.express.util.SpecificCellSpecs
 import org.kiji.express.util.Resources.doAndRelease
+
 import org.kiji.mapreduce.framework.KijiConfKeys
+import org.kiji.schema.ColumnVersionIterator
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiDataRequest
@@ -61,6 +64,7 @@ import org.kiji.schema.KijiRowData
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiTableWriter
 import org.kiji.schema.KijiURI
+import org.kiji.schema.MapFamilyVersionIterator
 import org.kiji.schema.layout.KijiTableLayout
 
 /**
@@ -318,9 +322,10 @@ private[express] object KijiScheme {
   private[express] val counterSuccess = "ROWS_SUCCESSFULLY_READ"
   /** Counter name for the number of rows skipped because of missing fields. */
   private[express] val counterMissingField = "ROWS_SKIPPED_WITH_MISSING_FIELDS"
-
   /** Field name containing a row's [[org.kiji.schema.EntityId]]. */
   private[express] val entityIdField: String = "entityId"
+  /** Default number of qualifiers to retrieve when paging in a map type family.*/
+  private val qualifierPageSize: Int = 1000;
 
   /**
    * Converts a KijiRowData to a Cascading tuple.
@@ -364,38 +369,52 @@ private[express] object KijiScheme {
         .map { field => columns(field.toString) }
         // Build the tuple, by adding each requested value into result.
         .foreach {
-            case ColumnFamily(family, _, ColumnRequestOptions(_, _, replacementOption, _)) => {
-              if (row.containsColumn(family)) {
-                result.add(KijiSlice(row, family))
-              } else {
-                replacementOption match {
-                  case Some(replacement) => {
-                    result.add(replacement)
+            case ColumnFamily(family, _, ColumnRequestOptions(_, _, replacementOption, _, pageSize))
+                => {
+                  if (row.containsColumn(family)) {
+                    pageSize match {
+                      case None => result.add(KijiSlice(row, family))
+                      case Some(nCells) => {
+                        val slice = PagedKijiSlice(family,
+                            new MapFamilyVersionIterator(row, family, qualifierPageSize, nCells))
+                        result.add(slice)
+                      }
+                    }
                   }
-                  case None =>
-                    // this row cannot be converted to a tuple since this column is missing.
+                  else {
+                    replacementOption match {
+                      case Some(replacement) => {
+                        result.add(replacement)
+                      }
+                    case None =>
+                      // this row cannot be converted to a tuple since this column is missing.
                     return None
+                  }
                 }
-              }
+
             }
             case QualifiedColumn(
-                family,
-                qualifier,
-                ColumnRequestOptions(_, _, replacementOption, _)) => {
+            family,
+            qualifier,
+            ColumnRequestOptions(_, _, replacementOption, _, pageSizeOption)) => {
               if (row.containsColumn(family, qualifier)) {
-                result.add(KijiSlice(row, family, qualifier))
+                pageSizeOption match {
+                  case None => result.add(KijiSlice(row, family, qualifier))
+                  case Some(pageSize) => {
+                    val slice = PagedKijiSlice(family, qualifier, new ColumnVersionIterator(row,
+                      family, qualifier, pageSize))
+                    result.add(slice)
+                  }
+                }
               } else {
                 replacementOption match {
-                  case Some(replacement) => {
-                    result.add(replacement)
-                  }
-                  // this row cannot be converted to a tuple since this column is missing.
+                  case Some(replacement) => result.add(replacement)
+                  // cannot be converted to a tuple since this column is missing.
                   case None => return None
                 }
               }
             }
-        }
-
+    }
     return Some(result)
   }
 
@@ -479,15 +498,17 @@ private[express] object KijiScheme {
               // scalastyle:off null
               .withFilter(inputOptions.filter.getOrElse(null))
               // scalastyle:on null
+              .withPageSize(inputOptions.pageSize.getOrElse(0))// a page size of 0 disables paging
               .add(new KijiColumnName(family))
          }
          case QualifiedColumn(family, qualifier, inputOptions) => {
            builder.newColumnsDef()
                .withMaxVersions(inputOptions.maxVersions)
                // scalastyle:off null
-              .withFilter(inputOptions.filter.getOrElse(null))
-              // scalastyle:on null
-              .add(new KijiColumnName(family, qualifier))
+               .withFilter(inputOptions.filter.getOrElse(null))
+               // scalastyle:on null
+               .withPageSize(inputOptions.pageSize.getOrElse(0))// a page size of 0 disables paging
+               .add(new KijiColumnName(family, qualifier))
         }
       }
     }
