@@ -19,7 +19,11 @@
 {
   "name" : "song-recommender",
   "version" : "1.0.0",
-  "extractor_class" : "org.kiji.express.modeling.lib.FirstValueExtractor",
-  "scorer_class" : "org.kiji.express.music.SongRecommendingScorer",
+  "scorer_phase" : {
+    "org.kiji.express.avro.AvroPhaseDefinition" : {
+      "extractor_class" : "org.kiji.express.modeling.lib.FirstValueExtractor",
+      "phase_class" : "org.kiji.express.music.SongRecommendingScorer"
+    }
+  },
   "protocol_version" : "model_definition-0.1.0"
 }

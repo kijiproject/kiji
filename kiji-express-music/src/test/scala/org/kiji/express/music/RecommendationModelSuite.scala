@@ -32,7 +32,7 @@ import org.kiji.express.flow._
 import org.kiji.express.modeling.ScoreProducerJobBuilder
 import org.kiji.express.modeling.config.ModelDefinition
 import org.kiji.express.modeling.config.ModelEnvironment
-import org.kiji.schema.KijiDataRequest
+import org.kiji.schema.{Kiji, KijiDataRequest}
 
 /**
  * Provides tests for the KijiExpress modeling workflow that makes song recommendations.
@@ -42,16 +42,16 @@ import org.kiji.schema.KijiDataRequest
 class RecommendationModelSuite extends KijiSuite {
 
   // The JSON for a model definition we will use during tests.
-  val modelDefinitionJSON =
+  val modelDefinitionJSON: String =
     """
       |{
       |  "name" : "song-recommender",
       |  "version" : "1.0.0",
-      |  "scorer":{
-      |   "org.kiji.express.avro.AvroPhaseSpec":{
-      |     "extractor_class":"org.kiji.express.modeling.lib.FirstValueExtractor",
-      |     "phase_class":"org.kiji.express.music.SongRecommendingScorer"
-      |   }
+      |  "scorer_phase":{
+      |    "org.kiji.express.avro.AvroPhaseDefinition":{
+      |      "extractor_class":"org.kiji.express.modeling.lib.FirstValueExtractor",
+      |      "phase_class":"org.kiji.express.music.SongRecommendingScorer"
+      |    }
       |  }
       |}
     """.stripMargin
@@ -59,7 +59,7 @@ class RecommendationModelSuite extends KijiSuite {
   // The JSON for a model environment we will use during tests. This environment needs to be
   // populated with the URI for a Kiji table to run the model against (a users table) and the URI
   // for a Kiji table to use as a key-value store during scoring.
-  val modelEnvironmentJSON =
+  val modelEnvironmentJSON: String =
     """
       |{
       | "protocol_version":"model_environment-0.2.0",
@@ -67,8 +67,8 @@ class RecommendationModelSuite extends KijiSuite {
       | "version" : "1.0.0",
       | "score_environment":{
       |   "org.kiji.express.avro.AvroScoreEnvironment":{
-      |     "input_config":{
-      |       "specification":{
+      |     "input_spec":{
+      |       "kiji_specification":{
       |         "org.kiji.express.avro.AvroKijiInputSpec":{
       |           "table_uri":"%s",
       |           "data_request":{
@@ -94,8 +94,8 @@ class RecommendationModelSuite extends KijiSuite {
       |         "value":"info:top_next_songs"
       |       }]
       |     }],
-      |     "output_config":{
-      |       "specification":{
+      |     "output_spec":{
+      |       "kiji_column_specification":{
       |         "org.kiji.express.avro.AvroKijiSingleColumnOutputSpec":{
       |           "table_uri":"%s",
       |           "output_column":"info:next_song_rec"
@@ -109,13 +109,13 @@ class RecommendationModelSuite extends KijiSuite {
 
   // We create a Kiji instance to use in tests, and run the schema-shell commands in music-schema
   // .ddl to create the kiji tables we'll use for tests.
-  val kiji = makeTestKiji("default")
-  val usersTableURI = kiji.getURI().toString + "/users"
-  val songsTableURI = kiji.getURI().toString + "/songs"
+  val kiji: Kiji = makeTestKiji("default")
+  val usersTableURI: String = kiji.getURI.toString + "/users"
+  val songsTableURI: String = kiji.getURI.toString + "/songs"
   executeDDLResource(kiji, "org/kiji/express/music/music-schema.ddl")
 
   // Populate the user's table with some track play information to use in tests.
-  val userTableImportResult = new KijiJob(new Args(Map())) {
+  val userTableImportResult: Boolean = new KijiJob(new Args(Map())) {
     IterableSource(List(
         (EntityId("user-0"), "song-0"),
         (EntityId("user-1"), "song-1"),
@@ -127,7 +127,7 @@ class RecommendationModelSuite extends KijiSuite {
   // Write some data to the songs table, where a list of top next songs is written for some
   // sample songs. song-1 is played most frequently after song-0, song-2 the most frequently
   // after song-1, and so on.
-  val songsTableImportResult = new KijiJob(new Args(Map())) {
+  val songsTableImportResult: Boolean = new KijiJob(new Args(Map())) {
     IterableSource(List(
         (EntityId("song-0"),
             AvroRecord("topSongs" -> List(AvroRecord("song_id" -> "song-1")))),
@@ -154,7 +154,7 @@ class RecommendationModelSuite extends KijiSuite {
         def getSongRecommendation(user: String): String = {
           reader.get(usersTable.getEntityId(user), KijiDataRequest.create("info", "next_song_rec"))
               .getMostRecentValue("info", "next_song_rec")
-              .toString()
+              .toString
         }
         val user0NextSong = getSongRecommendation("user-0")
         val user1NextSong = getSongRecommendation("user-1")

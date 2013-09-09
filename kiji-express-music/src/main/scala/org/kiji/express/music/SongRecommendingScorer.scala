@@ -43,14 +43,14 @@ class SongRecommendingScorer extends Scorer {
    * @return the song id of the track recommended for the user.
    */
   override def scoreFn = score('trackPlay) { trackPlay: String =>
-    // Retrieve the key-value store that maps song ids to a list of songs most frequently
-    // played after the song in question.
-    val topNextSongsKVStore = kvstore[EntityId, AvroRecord]("top_next_songs")
-    // "Optionally" retrieve a record containing a list of songs played most frequently after
-    // the most recent track a user has listened to. We say "optionally" because the
-    // key-value store may not be populated with a list of top next songs for a given track.
-    // If a record of top next songs is available, then a 'Some' wrapping the record is
-    // retrieved. Otherwise, a 'None' is retrieved.
+    // Retrieve the key-value store that maps song ids to a list of songs most frequently played
+    // after the song in question.
+    val topNextSongsKVStore = keyValueStore[EntityId, AvroRecord]("top_next_songs")
+    // "Optionally" retrieve a record containing a list of songs played most frequently after the
+    // most recent track a user has listened to. We say "optionally" because the key-value store
+    // may not be populated with a list of top next songs for a given track. If a record of top
+    // next songs is available, then a 'Some' wrapping the record is retrieved. Otherwise,
+    // a 'None' is retrieved.
     val topNextSongs: Option[AvroRecord] = topNextSongsKVStore.get(EntityId(trackPlay))
     // If topNextSongs contains 'Some' AvroRecord, transform that AvroRecord into 'Some'
     //  String that contains the name of the next song to listen to. If topNextSongs is 'None',
