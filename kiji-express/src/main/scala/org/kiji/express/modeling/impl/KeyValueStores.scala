@@ -25,8 +25,8 @@ import org.kiji.express.modeling.KeyValueStore
 
 /**
  * Provides access to key-value stores used by the modeling SPI workflow phases (like Extract and
- * Score). After a concrete instance of this trait has been constructed, its kvstores property must
- * be initialized.
+ * Score). After a concrete instance of this trait has been constructed, its keyValueStoreSpecs
+ * property must be initialized.
  */
 @ApiAudience.Framework
 @ApiStability.Experimental
@@ -35,7 +35,7 @@ trait KeyValueStores {
    * Container for the key-value stores accessible to this phase of the model workflow. This
    * property must be initialized by a model job runner.
    */
-  private[this] var _kvstores: Option[Map[String, KeyValueStore[_, _]]] = None
+  private[this] var _keyValueStores: Option[Map[String, KeyValueStore[_, _]]] = None
 
   /**
    * Gets the key-value stores accessible to this phase of the model workflow. Key-value stores can
@@ -43,8 +43,8 @@ trait KeyValueStores {
    *
    * @return the key-value stores accessible to this phase of the model workflow.
    */
-  final private[express] def kvstores: Map[String, KeyValueStore[_, _]] = {
-    _kvstores.getOrElse {
+  final private[express] def keyValueStores: Map[String, KeyValueStore[_, _]] = {
+    _keyValueStores.getOrElse {
       throw new IllegalStateException("This model phase has not been initialized properly. "
           + "Its key-value stores haven't been loaded yet.")
     }
@@ -58,8 +58,8 @@ trait KeyValueStores {
    * @tparam V is the type of the values.
    * @return the key-value store associated with the specified name.
    */
-  final protected[express] def kvstore[K, V](name: String): KeyValueStore[K, V] = {
-    val stores: Map[String, KeyValueStore[_, _]] = _kvstores.getOrElse {
+  final protected[express] def keyValueStore[K, V](name: String): KeyValueStore[K, V] = {
+    val stores: Map[String, KeyValueStore[_, _]] = _keyValueStores.getOrElse {
       throw new IllegalStateException("This model phase has not been initialized properly. "
         + "Its key-value stores haven't been loaded yet.")
     }
@@ -72,7 +72,7 @@ trait KeyValueStores {
    *
    * @param value to set this phase's key-value stores to.
    */
-  private[express] def kvstores_=(value: Map[String, KeyValueStore[_, _]]) {
-    _kvstores = Some(value)
+  private[express] def keyValueStores_=(value: Map[String, KeyValueStore[_, _]]) {
+    _keyValueStores = Some(value)
   }
 }

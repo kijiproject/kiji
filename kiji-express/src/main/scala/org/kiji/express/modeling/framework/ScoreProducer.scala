@@ -29,7 +29,7 @@ import org.kiji.express.KijiSlice
 import org.kiji.express.modeling.ExtractFn
 import org.kiji.express.modeling.Extractor
 import org.kiji.express.modeling.config.KijiInputSpec
-import org.kiji.express.modeling.config.KVStore
+import org.kiji.express.modeling.config.KeyValueStoreSpec
 import org.kiji.express.modeling.config.ModelDefinition
 import org.kiji.express.modeling.config.ModelEnvironment
 import org.kiji.express.modeling.impl.ModelJobUtils
@@ -138,7 +138,7 @@ final class ScoreProducer
 
     // Make an instance of each requires phase.
     val extractor = modelDefinitionDef
-        .scoreExtractor
+        .scoreExtractorClass
         .get
         .newInstance()
         .asInstanceOf[Extractor]
@@ -163,7 +163,7 @@ final class ScoreProducer
    *
    * @return a kiji data request.
    */
-  override def getDataRequest(): KijiDataRequest = ModelJobUtils
+  override def getDataRequest: KijiDataRequest = ModelJobUtils
       .getDataRequest(modelEnvironment, SCORE)
       .get
 
@@ -174,23 +174,23 @@ final class ScoreProducer
    *
    * @return the output column name.
    */
-  override def getOutputColumn(): String = ModelJobUtils
+  override def getOutputColumn: String = ModelJobUtils
       .getOutputColumn(modelEnvironment)
 
   /**
-   * Opens the kvstores required for the extract and score phase. Reads kvstore configurations from
-   * the provided model environment.
+   * Opens the key value stores required for the extract and score phase. Reads key value store spec
+   * configurations from the provided model environment.
    *
-   * @return a mapping from kvstore names to opened kvstores.
+   * @return a mapping from keyValueStoreSpec names to opened key value stores.
    */
-  override def getRequiredStores(): java.util.Map[String, JKeyValueStore[_, _]] = {
-    // Open the kvstores defined for the score phase.
-    val scoreStoreDefs: Seq[KVStore] = modelEnvironment
+  override def getRequiredStores: java.util.Map[String, JKeyValueStore[_, _]] = {
+    // Open the key value stores defined for the score phase.
+    val scoreStoreDefs: Seq[KeyValueStoreSpec] = modelEnvironment
         .scoreEnvironment
         .get
-        .kvstores
+        .keyValueStoreSpecs
     val scoreStores: Map[String, JKeyValueStore[_, _]] = ModelJobUtils
-        .openJKvstores(scoreStoreDefs, getConf())
+        .openJKvstores(scoreStoreDefs, getConf)
     scoreStores.asJava
   }
 
@@ -199,24 +199,24 @@ final class ScoreProducer
   }
 
   override def setup(context: KijiContext) {
-    // Setup the score phase's kvstores.
-    val scoreStoreDefs: Seq[KVStore] = modelEnvironment
+    // Setup the score phase's key value stores.
+    val scoreStoreDefs: Seq[KeyValueStoreSpec] = modelEnvironment
         .scoreEnvironment
         .get
-        .kvstores
-    extractor.kvstores = ModelJobUtils
+        .keyValueStoreSpecs
+    extractor.keyValueStores = ModelJobUtils
         .wrapKvstoreReaders(scoreStoreDefs, context)
-    scorer.kvstores = extractor.kvstores
+    scorer.keyValueStores = extractor.keyValueStores
 
-  // Setup the row converter.
+    // Setup the row converter.
     val uriString = modelEnvironment
         .scoreEnvironment
         .get
-        .inputConfig
+        .inputSpec
         .asInstanceOf[KijiInputSpec]
         .tableUri
     val uri = KijiURI.newBuilder(uriString).build()
-    _rowConverter = Some(new GenericRowDataConverter(uri, getConf()))
+    _rowConverter = Some(new GenericRowDataConverter(uri, getConf))
   }
 
   override def produce(input: KijiRowData, context: ProducerContext) {
@@ -227,7 +227,7 @@ final class ScoreProducer
     val fieldMapping: Map[String, KijiColumnName] = modelEnvironment
         .scoreEnvironment
         .get
-        .inputConfig
+        .inputSpec
         .asInstanceOf[KijiInputSpec]
         .fieldBindings
         .map { binding =>
@@ -237,7 +237,7 @@ final class ScoreProducer
     val extractInputFields: Seq[String] = {
       // If the field specified is the wildcard field, use all columns referenced in this model
       // environment's field bindings.
-      if (extractFields._1.isAll()) {
+      if (extractFields._1.isAll) {
         fieldMapping.keys.toSeq
       } else {
         Tuples.fieldsToSeq(extractFields._1)
@@ -245,7 +245,7 @@ final class ScoreProducer
     }
     val extractOutputFields: Seq[String] = {
       // If the field specified is the results field, use all input fields from the extract phase.
-      if (extractFields._2.isResults()) {
+      if (extractFields._2.isResults) {
         extractInputFields
       } else {
         Tuples.fieldsToSeq(extractFields._2)
@@ -253,7 +253,7 @@ final class ScoreProducer
     }
     val scoreInputFields: Seq[String] = {
       // If the field specified is the wildcard field, use all fields output by the extract phase.
-      if (scoreFields.isAll()) {
+      if (scoreFields.isAll) {
         extractOutputFields
       } else {
         Tuples.fieldsToSeq(scoreFields)
@@ -269,9 +269,9 @@ final class ScoreProducer
 
           // Build a slice from each column within the row.
           if (columnName.isFullyQualified) {
-            KijiSlice[Any](row, columnName.getFamily(), columnName.getQualifier())
+            KijiSlice[Any](row, columnName.getFamily, columnName.getQualifier)
           } else {
-            KijiSlice[Any](row, columnName.getFamily())
+            KijiSlice[Any](row, columnName.getFamily)
           }
         }
 

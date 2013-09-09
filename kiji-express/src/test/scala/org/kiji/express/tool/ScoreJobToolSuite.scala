@@ -59,7 +59,7 @@ class ScoreJobToolSuite extends KijiSuite {
       // Setup the test environment.
       val testLayout: KijiTableLayout = layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
       val kiji: Kiji = new InstanceBuilder("default")
-          .withTable(testLayout.getName(), testLayout)
+          .withTable(testLayout.getName, testLayout)
               .withRow("row1")
                   .withFamily("family")
                       .withQualifier("column1").withValue("foo")
@@ -68,8 +68,8 @@ class ScoreJobToolSuite extends KijiSuite {
                       .withQualifier("column1").withValue("bar")
           .build()
 
-      doAndRelease(kiji.openTable(testLayout.getName())) { table: KijiTable =>
-        val uri: KijiURI = table.getURI()
+      doAndRelease(kiji.openTable(testLayout.getName)) { table: KijiTable =>
+        val uri: KijiURI = table.getURI
 
         // Create a model definition and environment.
         val request: ExpressDataRequest = new ExpressDataRequest(0L, Long.MaxValue,
@@ -77,8 +77,8 @@ class ScoreJobToolSuite extends KijiSuite {
         val modelDefinition: ModelDefinition = ModelDefinition(
             name = "test-model-definition",
             version = "1.0",
-            scoreExtractor = Some(classOf[ScoreJobToolSuite.DoublingExtractor]),
-            scorer = Some(classOf[ScoreJobToolSuite.UpperCaseScorer]))
+            scoreExtractorClass = Some(classOf[ScoreJobToolSuite.DoublingExtractor]),
+            scorerClass = Some(classOf[ScoreJobToolSuite.UpperCaseScorer]))
         val modelEnvironment: ModelEnvironment = ModelEnvironment(
             name = "test-model-environment",
             version = "1.0",
@@ -94,14 +94,14 @@ class ScoreJobToolSuite extends KijiSuite {
                     uri.toString,
                   "family:column2"
                 ),
-                kvstores = Seq())))
+                keyValueStoreSpecs = Seq())))
 
         // Write the created model definition and environment to disk.
         doAndClose(new FileWriter(modelDefFile)) { writer =>
-          writer.write(modelDefinition.toJson())
+          writer.write(modelDefinition.toJson)
         }
         doAndClose(new FileWriter(modelEnvFile)) { writer =>
-          writer.write(modelEnvironment.toJson())
+          writer.write(modelEnvironment.toJson)
         }
 
         // Run the tool.

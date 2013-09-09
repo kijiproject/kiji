@@ -42,7 +42,7 @@ import org.kiji.express.util.PipeConversions
  *     KijiJob, `args("input")` will evaluate to "SomeFile.txt" if your command line contained the
  *     argument `--input SomeFile.txt`
  */
-class KijiJob(args: Args) extends Job(args) with PipeConversions {
+class KijiJob(args: Args = Args(Nil)) extends Job(args) with PipeConversions {
   override def validateSources(mode: Mode): Unit = {
     val taps: List[Tap[_, _, _]] =
         flowDef.getSources.values.asScala.toList ++

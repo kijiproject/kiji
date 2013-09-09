@@ -60,7 +60,7 @@ final case class ExtractFn[I, O] (
  * }}}
  *
  * This trait also provides access to outside data sources required for data extraction through the
- * `kvstores` property.
+ * `keyValueStoreSpecs` property.
  */
 @ApiAudience.Public
 @ApiStability.Experimental

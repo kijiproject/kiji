@@ -38,11 +38,14 @@ trait ShellExtSuite extends KijiSuite {
    */
   protected def getBaseParser(): DDLParser = {
     val kijiURI = makeTestKiji().getURI()
-    new DDLParser(new Environment(
-      kijiURI,
-      System.out,
-      new MockKijiSystem(),
-      new NullInputSource))
+    val environment = new Environment(
+        instanceURI = kijiURI,
+        printer = System.out,
+        kijiSystem = new MockKijiSystem(),
+        inputSource = new NullInputSource(),
+        modules = List(),
+        isInteractive = false)
+    new DDLParser(environment)
   }
 
   /**

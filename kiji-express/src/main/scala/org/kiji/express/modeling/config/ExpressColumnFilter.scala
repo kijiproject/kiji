@@ -19,16 +19,13 @@
 
 package org.kiji.express.modeling.config
 
-import scala.collection.JavaConverters.seqAsJavaListConverter
-
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
-import org.kiji.express.avro.AvroAndFilter
-import org.kiji.express.avro.AvroColumnRangeFilter
-import org.kiji.express.avro.AvroRegexQualifierFilter
-import org.kiji.express.avro.AvroOrFilter
+import org.kiji.schema.filter.Filters
 import org.kiji.schema.filter.KijiColumnFilter
+import org.kiji.schema.filter.KijiColumnRangeFilter
+import org.kiji.schema.filter.RegexQualifierColumnFilter
 
 /**
  * An extendable trait used for column filters in Express, which correspond to
@@ -37,49 +34,86 @@ import org.kiji.schema.filter.KijiColumnFilter
 @ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Sealed
-trait ExpressColumnFilter {
-  /**
-   * Returns a KijiColumnFilter that corresponds to the Express column filter.
-   */
-  def getKijiColumnFilter(): KijiColumnFilter
+sealed trait ExpressColumnFilter {
+  /** @return a KijiColumnFilter that corresponds to the Express column filter. */
+  def toKijiColumnFilter: KijiColumnFilter
 }
 
 /**
- * The companion object to ExpressColumnFilter, providing factory conversion methods.
+ * An Express column filter which combines a list of column filters using a logical "and" operator.
+ *
+ * @param filters to combine with a logical "and" operation.
  */
-object ExpressColumnFilter {
-  /**
-   * A utility method that allows us to recursively translate And and Or express filters
-   * into the corresponding Avro representation.
-   *
-   * @param filter to translate from Express into Avro.
-   * @return an Avro column filter converted from the provided Express column filter.
-   * @throws RuntimeException if the provided filter does not match any cases.
-   */
-  private[express] def expressToAvroFilter(filter: ExpressColumnFilter): AnyRef = {
-    filter match {
-      case regexFilter: RegexQualifierFilter => {
-        AvroRegexQualifierFilter.newBuilder()
-          .setRegex(regexFilter.regex)
-          .build()
-      }
-      case rangeFilter: ColumnRangeFilter => {
-        AvroColumnRangeFilter.newBuilder()
-          .setMinQualifier(rangeFilter.minQualifier)
-          .setMinIncluded(rangeFilter.minIncluded)
-          .setMaxQualifier(rangeFilter.maxQualifier)
-          .setMaxIncluded(rangeFilter.maxIncluded)
-          .build()
-      }
-      case andFilter: AndFilter => {
-        val expFilterList: List[AnyRef] = andFilter.filtersList map { expressToAvroFilter _ }
-        AvroAndFilter.newBuilder().setAndFilters(expFilterList.asJava).build()
-      }
-      case orFilter: OrFilter => {
-        val filterList: List[AnyRef] = orFilter.filtersList map { expressToAvroFilter _ }
-        AvroOrFilter.newBuilder().setOrFilters(filterList.asJava)
-      }
-      case _ => throw new RuntimeException("The provided Express column filter is invalid.")
-    }
+@ApiAudience.Public
+@ApiStability.Experimental
+@Inheritance.Sealed
+final case class AndFilter(filters: Seq[ExpressColumnFilter])
+    extends ExpressColumnFilter {
+  override def toKijiColumnFilter: KijiColumnFilter = {
+    val schemaFilters = filters
+        .map { filter: ExpressColumnFilter => filter.toKijiColumnFilter }
+        .toArray
+
+    Filters.and(schemaFilters: _*)
   }
+}
+
+/**
+ * An Express column filter which combines a list of column filters using a logical "or" operator.
+ *
+ * @param filters to combine with a logical "or" operation.
+ */
+@ApiAudience.Public
+@ApiStability.Experimental
+@Inheritance.Sealed
+final case class OrFilter(filters: Seq[ExpressColumnFilter])
+    extends ExpressColumnFilter {
+  override def toKijiColumnFilter: KijiColumnFilter = {
+    val orParams = filters
+        .map { filter: ExpressColumnFilter => filter.toKijiColumnFilter }
+        .toArray
+
+    Filters.or(orParams: _*)
+  }
+}
+
+/**
+ * An Express column filter based on the given minimum and maximum qualifier bounds.
+ *
+ * @param minimum qualifier bound.
+ * @param maximum qualifier bound.
+ * @param minimumIncluded determines if the lower bound is inclusive.
+ * @param maximumIncluded determines if the upper bound is inclusive.
+ */
+@ApiAudience.Public
+@ApiStability.Experimental
+@Inheritance.Sealed
+final case class ColumnRangeFilter(
+    minimum: Option[String] = None,
+    maximum: Option[String] = None,
+    minimumIncluded: Boolean = true,
+    maximumIncluded: Boolean = false)
+    extends ExpressColumnFilter {
+  override def toKijiColumnFilter: KijiColumnFilter = {
+    // scalastyle:off null
+    new KijiColumnRangeFilter(
+        minimum.getOrElse { null },
+        minimumIncluded,
+        maximum.getOrElse { null },
+        maximumIncluded)
+    // scalastyle:on null
+  }
+}
+
+/**
+ * An Express column filter which matches a regular expression against the full qualifier.
+ *
+ * @param regex to match on.
+ */
+@ApiAudience.Public
+@ApiStability.Experimental
+@Inheritance.Sealed
+final case class RegexQualifierFilter(regex: String)
+    extends ExpressColumnFilter {
+  override def toKijiColumnFilter: KijiColumnFilter = new RegexQualifierColumnFilter(regex)
 }

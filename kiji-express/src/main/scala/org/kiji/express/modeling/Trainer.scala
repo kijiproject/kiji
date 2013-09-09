@@ -54,7 +54,7 @@ import org.kiji.express.modeling.impl.KeyValueStores
  * }}}
  *
  * This trait also provides access to outside data sources required for the Train phase through
- * the `kvstores` property.
+ * the `keyValueStoreSpecs` property.
  */
 @ApiAudience.Public
 @ApiStability.Experimental

@@ -19,62 +19,21 @@
 
 package org.kiji.express.modeling.config
 
-import com.google.common.base.Objects
-
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 
 /**
  * A specification of the runtime bindings for data sources required in the score phase of a model.
  *
- * @param inputConfig defines the input data source name for this phase.
- * @param outputConfig defines the output data sink name.
- * @param kvstores for usage during the score phase.
+ * @param inputSpec defines the input data source name for this phase.
+ * @param outputSpec defines the output data sink name.
+ * @param keyValueStoreSpecs for usage during the score phase.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-final class ScoreEnvironment private[express] (
-    val inputConfig: InputSpec,
-    val outputConfig: OutputSpec,
-    val kvstores: Seq[KVStore]) {
-  override def equals(other: Any): Boolean = {
-    other match {
-      case environment: ScoreEnvironment => {
-        inputConfig == environment.inputConfig &&
-            outputConfig == environment.outputConfig &&
-            kvstores == environment.kvstores
-      }
-      case _ => false
-    }
-  }
-
-  override def hashCode(): Int =
-      Objects.hashCode(
-          inputConfig,
-          outputConfig,
-          kvstores)
-}
-
-/**
- * Companion object containing factory methods for ScoreEnvironment.
- */
-object ScoreEnvironment {
-  /**
-   * Creates a ScoreEnvironment, which is a specification of the runtime bindings for data sources
-   * required in the score phase of a model.
-   *
-   * @param inputConfig defines an input data source.
-   * @param outputConfig defines the output Kiji column for this phase.
-   * @param kvstores is the specification of the kv stores for usage during the score phase.
-   * @return a ScoreEnvironment with the specified settings.
-   */
-  def apply(
-      inputConfig: InputSpec,
-      outputConfig: OutputSpec,
-      kvstores: Seq[KVStore]): ScoreEnvironment = {
-    new ScoreEnvironment(
-        inputConfig,
-        outputConfig,
-        kvstores)
-  }
-}
+@Inheritance.Sealed
+final case class ScoreEnvironment(
+    inputSpec: InputSpec,
+    outputSpec: OutputSpec,
+    keyValueStoreSpecs: Seq[KeyValueStoreSpec])

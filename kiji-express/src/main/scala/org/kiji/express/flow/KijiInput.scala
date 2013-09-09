@@ -74,9 +74,8 @@ class KijiInput(
    *     data from the requested columns and map-type column families.
    */
   def apply(columns: Map[_ <: ColumnRequest, Symbol]): KijiSource = {
-    val columnMap = columns.map {
-      case (columnRequest, field) => (field, columnRequest)
-    }
+    val columnMap: Map[Symbol, ColumnRequest] = columns
+        .map { entry: (ColumnRequest, Symbol) => entry.swap }
     new KijiSource(tableURI, timeRange, None, loggingInterval, columnMap)
   }
 }

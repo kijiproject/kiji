@@ -19,37 +19,19 @@
 
 package org.kiji.express.modeling.config
 
-import scala.collection.JavaConverters.asScalaBufferConverter
-import scala.collection.JavaConverters.mapAsJavaMapConverter
-import scala.collection.JavaConverters.mapAsScalaMapConverter
-import scala.collection.JavaConverters.seqAsJavaListConverter
 import scala.io.Source
-import scala.Some
-
-import com.google.common.base.Objects
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.express.avro.AvroColumn
-import org.kiji.express.avro.AvroDataRequest
-import org.kiji.express.avro.AvroInputSpec
-import org.kiji.express.avro.AvroKijiInputSpec
-import org.kiji.express.avro.AvroKijiOutputSpec
-import org.kiji.express.avro.AvroKijiSingleColumnOutputSpec
 import org.kiji.express.avro.AvroModelEnvironment
-import org.kiji.express.avro.AvroOutputSpec
-import org.kiji.express.avro.AvroPrepareEnvironment
-import org.kiji.express.avro.AvroScoreEnvironment
-import org.kiji.express.avro.AvroTrainEnvironment
-import org.kiji.express.avro.KvStoreType
 import org.kiji.express.util.Resources.doAndClose
 import org.kiji.schema.KijiColumnName
-import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiInvalidNameException
 import org.kiji.schema.util.FromJson
 import org.kiji.schema.util.KijiNameValidator
 import org.kiji.schema.util.ProtocolVersion
 import org.kiji.schema.util.ToJson
+import org.kiji.express.modeling.framework.ModelConverters
 
 /**
  * A ModelEnvironment is a specification describing how to execute a linked model definition.
@@ -61,27 +43,38 @@ import org.kiji.schema.util.ToJson
  *
  * A ModelEnvironment can be created programmatically:
  * {{{
- *   val dataRequest: ExpressDataRequest = new ExpressDataRequest(0, 38475687,
- *     new ExpressColumnRequest("info:in", 3, None) :: Nil)
- *
- *   val inputSpec = KijiInputSpec("kiji://myuri",
- *       dataRequest,
- *       Seq(FieldBinding("tuplename", "info:storefieldname")))
- *
- *   val outputSpec = KijiSingleColumnOutputSpec("kiji://myuri", "outputFamily:qualifier")
- *   val scoreEnv = Some(ScoreEnvironment(
- *       inputSpec,
- *       outputSpec,
- *       Seq(KVStore("KIJI_TABLE", "myname", Map("uri" -> "kiji://.env/default/table",
- *           "column" -> "info:email")),
- *           KVStore("AVRO_KV", "storename", Map("path" -> "/some/great/path")))))
- *
  *   val modelEnv = ModelEnvironment(
- *     "myname",
- *     "1.0.0",
- *     None,
- *     None,
- *     scoreEnv)
+ *       name = "myname",
+ *       version = "1.0.0",
+ *       prepareEnvironment = None,
+ *       trainEnvironment = None,
+ *       scoreEnvironment = Some(ScoreEnvironment(
+ *           inputSpec = KijiInputSpec(
+ *               tableUri = "kiji://.env/default/mytable/",
+ *               dataRequest = ExpressDataRequest(
+ *                   minTimestamp = 0L
+ *                   maxTimestamp = 38475687L
+ *                   columnRequests = Seq(
+ *                       ExpressColumnRequest(
+ *                           name = "info:in",
+ *                           maxVersions = 3,
+ *                           filter = None))),
+ *               Seq(FieldBinding("tuplename", "info:storefieldname"))),
+ *           outputSpec = KijiSingleColumnOutputSpec(
+ *               tableUri = "kiji://.env/default/mytable/",
+ *               outputColumn = "outputFamily:qualifier"),
+ *           keyValueStoreSpecs = Seq(
+ *               KeyValueStore(
+ *                   storeType = "KIJI_TABLE",
+ *                   name = "myname",
+ *                   properties = Map(
+ *                       "uri" -> "kiji://.env/default/table",
+ *                       "column" -> "info:email")),
+ *               KeyValueStore(
+ *                   storeType = "AVRO_KV",
+ *                   name = "storename",
+ *                   properties = Map(
+ *                       "path" -> "/some/great/path"))))))
  * }}}
  *
  * Alternatively a ModelEnvironment can be created from JSON. JSON run specifications should
@@ -164,12 +157,12 @@ import org.kiji.schema.util.ToJson
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-final class ModelEnvironment private[express] (
-    val name: String,
-    val version: String,
-    val prepareEnvironment: Option[PrepareEnvironment],
-    val trainEnvironment: Option[TrainEnvironment],
-    val scoreEnvironment: Option[ScoreEnvironment],
+final case class ModelEnvironment(
+    name: String,
+    version: String,
+    prepareEnvironment: Option[PrepareEnvironment] = None,
+    trainEnvironment: Option[TrainEnvironment] = None,
+    scoreEnvironment: Option[ScoreEnvironment] = None,
     private[express] val protocolVersion: ProtocolVersion =
         ModelEnvironment.CURRENT_MODEL_DEF_VER) {
   // Ensure that all fields set for this model environment are valid.
@@ -180,65 +173,8 @@ final class ModelEnvironment private[express] (
    *
    * @return a JSON string that represents this model environment.
    */
-  def toJson(): String = {
-    // Build an AvroPrepareEnvironment record.
-    val avroPrepareEnvironment: Option[AvroPrepareEnvironment] = prepareEnvironment.map { env =>
-      val inputConfig: AvroInputSpec = env
-          .inputConfig
-          .toAvroInputSpec
-      val outputConfig: AvroOutputSpec = env
-          .outputConfig
-          .toAvroOutputSpec
-      AvroPrepareEnvironment
-          .newBuilder()
-          .setInputConfig(inputConfig)
-          .setOutputConfig(outputConfig)
-          .setKvStores(env.kvstores.map { kvstore => kvstore.toAvroKVStore }.asJava)
-          .build()
-    }
-
-    // Build an AvroTrainEnvironment record.
-    val avroTrainEnvironment: Option[AvroTrainEnvironment] = trainEnvironment.map { env =>
-      val inputConfig: AvroInputSpec = env
-          .inputConfig
-          .toAvroInputSpec
-      val outputConfig: AvroOutputSpec = env
-          .outputConfig
-          .toAvroOutputSpec
-      AvroTrainEnvironment
-          .newBuilder()
-          .setInputConfig(inputConfig)
-          .setOutputConfig(outputConfig)
-          .setKvStores(env.kvstores.map { kvstore => kvstore.toAvroKVStore }.asJava)
-          .build()
-    }
-
-    // Build an AvroScoreEnvironment record.
-    val avroScoreEnvironment: Option[AvroScoreEnvironment] = scoreEnvironment.map { env =>
-      val inputConfig: AvroInputSpec = env
-          .inputConfig
-          .toAvroInputSpec
-      val outputConfig: AvroOutputSpec = env
-          .outputConfig
-          .toAvroOutputSpec
-      AvroScoreEnvironment
-          .newBuilder()
-          .setInputConfig(inputConfig)
-          .setOutputConfig(outputConfig)
-          .setKvStores(env.kvstores.map { kvstore => kvstore.toAvroKVStore }.asJava)
-          .build()
-    }
-
-    // Build an AvroModelEnvironment record.
-    val environment: AvroModelEnvironment = AvroModelEnvironment
-        .newBuilder()
-        .setName(name)
-        .setVersion(version)
-        .setProtocolVersion(protocolVersion.toString)
-        .setPrepareEnvironment(avroPrepareEnvironment.getOrElse(null))
-        .setTrainEnvironment(avroTrainEnvironment.getOrElse(null))
-        .setScoreEnvironment(avroScoreEnvironment.getOrElse(null))
-        .build()
+  def toJson: String = {
+    val environment: AvroModelEnvironment = ModelConverters.modelEnvironmentToAvro(this)
 
     ToJson.toAvroJsonString(environment)
   }
@@ -268,29 +204,6 @@ final class ModelEnvironment private[express] (
         trainEnvironment,
         scoreEnvironment)
   }
-
-  override def equals(other: Any): Boolean = {
-    other match {
-      case environment: ModelEnvironment => {
-        name == environment.name &&
-            version == environment.version &&
-            prepareEnvironment == environment.prepareEnvironment &&
-            trainEnvironment == environment.trainEnvironment &&
-            scoreEnvironment == environment.scoreEnvironment &&
-            protocolVersion == environment.protocolVersion
-      }
-      case _ => false
-    }
-  }
-
-  override def hashCode(): Int =
-      Objects.hashCode(
-          name,
-          version,
-          prepareEnvironment,
-          trainEnvironment,
-          scoreEnvironment,
-          protocolVersion)
 }
 
 /**
@@ -315,67 +228,6 @@ object ModelEnvironment {
       " model environment. Please correct the problems in your model environment and try again."
 
   /**
-   * Creates a new ModelEnvironment using the specified settings.
-   * @param name of the model environment.
-   * @param version of the model environment.
-   * @param prepareEnvironment defining configuration details specific to the Prepare phase of
-   *     a model.
-   * @param scoreEnvironment defining configuration details specific to the Score phase of a
-   *     model.
-   * @return a model environment with the specified settings.
-   */
-  def apply(
-      name: String,
-      version: String,
-      prepareEnvironment: Option[PrepareEnvironment],
-      trainEnvironment: Option[TrainEnvironment],
-      scoreEnvironment: Option[ScoreEnvironment]): ModelEnvironment = {
-    new ModelEnvironment(
-        name,
-        version,
-        prepareEnvironment,
-        trainEnvironment,
-        scoreEnvironment)
-  }
-
-  /**
-   * Given a generic AvroInputSpec, convert it to the corresponding specific case class
-   * used within Express.
-   *
-   * @param spec is the avro input specification.
-   * @return the specific case class for the specification, such as KijiInputSpec.
-   */
-  def avroInputSpecToInputSpec(spec: AvroInputSpec): InputSpec = {
-    val specification: AnyRef = spec.getSpecification
-    // TODO(EXP-161): Accept inputs from multiple source types.
-    specification match {
-      case kijiSpec: AvroKijiInputSpec => KijiInputSpec(kijiSpec)
-          .asInstanceOf[InputSpec]
-      case _ => throw new ValidationException(
-          "Unsupported Input Configuration: " + specification.getClass.toString)
-    }
-  }
-
-  /**
-   * Given a generic AvroOutputSpec, convert it to the corresponding specific case class
-   * used within Express.
-   *
-   * @param spec is the avro output specification.
-   * @return the specific case class for the specification, such as KijiOutputSpec.
-   */
-  def avroOutputSpecToOutputSpec(spec: AvroOutputSpec): OutputSpec = {
-    val specification: AnyRef = spec.getSpecification
-    // TODO(EXP-161): Accept outputs from multiple source types.
-    specification match {
-      case kijiSpec: AvroKijiOutputSpec => KijiOutputSpec(kijiSpec)
-      case kijiSingleCol: AvroKijiSingleColumnOutputSpec =>
-          KijiSingleColumnOutputSpec(kijiSingleCol)
-      case _ => throw new ValidationException(
-        "Unsupported Output Configuration: " + specification.getClass.toString)
-    }
-  }
-
-  /**
    * Creates a ModelEnvironment given a JSON string. In the process, all fields are validated.
    *
    * @param json serialized model environment.
@@ -386,59 +238,9 @@ object ModelEnvironment {
     val avroModelEnvironment: AvroModelEnvironment = FromJson
         .fromJsonString(json, AvroModelEnvironment.SCHEMA$)
         .asInstanceOf[AvroModelEnvironment]
-    val protocol = ProtocolVersion
-        .parse(avroModelEnvironment.getProtocolVersion)
-    val prepareAvro = Option(avroModelEnvironment.getPrepareEnvironment)
-    val trainAvro = Option(avroModelEnvironment.getTrainEnvironment)
-    val scoreAvro = Option(avroModelEnvironment.getScoreEnvironment)
-
-    // Load the preparer's model environment.
-    val prepareEnvironment = prepareAvro.map { prepare =>
-      val inputConfig = avroInputSpecToInputSpec(prepare.getInputConfig)
-      val outputConfig = avroOutputSpecToOutputSpec(prepare.getOutputConfig)
-
-      new PrepareEnvironment(
-        inputConfig = inputConfig,
-        outputConfig = outputConfig,
-        kvstores = prepare.getKvStores
-          .asScala
-          .map { avro => KVStore(avro) })
-    }
-
-      // Load the trainers's model environment.
-    val trainEnvironment = trainAvro.map { train =>
-      val inputConfig = avroInputSpecToInputSpec(train.getInputConfig)
-      val outputConfig =  avroOutputSpecToOutputSpec(train.getOutputConfig)
-
-      new TrainEnvironment(
-          inputConfig = inputConfig,
-          outputConfig = outputConfig,
-          kvstores = train.getKvStores
-              .asScala
-              .map { avro => KVStore(avro) })
-    }
-
-    // Load the scorer's model environment.
-    val scoreEnvironment = scoreAvro.map { score =>
-      val inputConfig = avroInputSpecToInputSpec(score.getInputConfig)
-      val outputConfig =  avroOutputSpecToOutputSpec(score.getOutputConfig)
-
-      new ScoreEnvironment(
-          inputConfig = inputConfig,
-          outputConfig = outputConfig,
-          kvstores = score.getKvStores
-              .asScala
-              .map { avro => KVStore(avro) })
-    }
 
     // Build a model environment.
-    new ModelEnvironment(
-        name = avroModelEnvironment.getName,
-        version = avroModelEnvironment.getVersion,
-        prepareEnvironment = prepareEnvironment,
-        trainEnvironment = trainEnvironment,
-        scoreEnvironment = scoreEnvironment,
-        protocolVersion = protocol)
+    ModelConverters.modelEnvironmentFromAvro(avroModelEnvironment)
   }
 
   /**
@@ -449,41 +251,9 @@ object ModelEnvironment {
    * @return the validated model environment.
    */
   def fromJsonFile(path: String): ModelEnvironment = {
-    val json: String = doAndClose(Source.fromFile(path)) { source =>
-      source.mkString
-    }
+    val json: String = doAndClose(Source.fromFile(path)) { source => source.mkString }
 
     fromJson(json)
-  }
-
-  /**
-   * Converts an Avro data request to a Kiji data request.
-   *
-   * @param avroDataRequest to convert.
-   * @return a Kiji data request converted from the provided Avro data request.
-   */
-  private[express] def avroToKijiDataRequest(avroDataRequest: AvroDataRequest): KijiDataRequest = {
-    val builder = KijiDataRequest.builder()
-        .withTimeRange(avroDataRequest.getMinTimestamp(), avroDataRequest.getMaxTimestamp())
-
-    // Add columns to the datarequest.
-    avroDataRequest
-        .getColumnDefinitions
-        .asScala
-        .foreach { avroColumn: AvroColumn =>
-          val name = new KijiColumnName(avroColumn.getName())
-          val maxVersions = avroColumn.getMaxVersions()
-          if (Option(avroColumn.getFilter).isDefined) {
-            val filter = ExpressDataRequest
-                .filterFromAvro(avroColumn.getFilter)
-                .getKijiColumnFilter()
-            builder.newColumnsDef().withMaxVersions(maxVersions).withFilter(filter).add(name)
-          } else {
-            builder.newColumnsDef().withMaxVersions(maxVersions).add(name)
-          }
-        }
-
-    builder.build()
   }
 
   /**
@@ -496,25 +266,26 @@ object ModelEnvironment {
    */
   def validateModelEnvironment(environment: ModelEnvironment) {
     // Collect errors from other validation steps.
-    val baseErrors: Seq[Option[ValidationException]] = Seq(
-        validateProtocolVersion(environment.protocolVersion),
-        validateName(environment.name),
+    val baseErrors: Seq[ValidationException] =
+        validateProtocolVersion(environment.protocolVersion).toSeq ++
+        validateName(environment.name) ++
         validateVersion(environment.version)
-    )
 
-    val prepareErrors = environment.prepareEnvironment.map { env =>
-      validatePrepareEnv(env)
-    }.flatten
-    val trainErrors = environment.trainEnvironment.map { env =>
-      validateTrainEnv(env)
-    }.flatten
-    val scoreErrors = environment.scoreEnvironment.map { env =>
-      validateScoreEnv(env)
-    }.flatten
+    val prepareErrors: Seq[ValidationException] = environment
+        .prepareEnvironment
+        .map { env => validatePrepareEnv(env) }
+        .getOrElse(Seq())
+    val trainErrors: Seq[ValidationException] = environment
+        .trainEnvironment
+        .map { env => validateTrainEnv(env) }
+        .getOrElse(Seq())
+    val scoreErrors: Seq[ValidationException] = environment
+        .scoreEnvironment
+        .map { env => validateScoreEnv(env) }
+        .getOrElse(Seq())
 
     // Throw an exception if there were any validation errors.
-    val allErrors = baseErrors ++ prepareErrors ++ trainErrors ++ scoreErrors
-    val causes = allErrors.flatten
+    val causes = baseErrors ++ prepareErrors ++ trainErrors ++ scoreErrors
     if (!causes.isEmpty) {
       throw new ModelEnvironmentValidationException(causes)
     }
@@ -586,17 +357,21 @@ object ModelEnvironment {
    * @param fieldBindings are the associations between field names and Kiji column names.
    * @return an optional ValidationException if there are errors encountered.
    */
-  def validateKijiInputOutputFieldBindings(fieldBindings: Seq[FieldBinding]):
-      Seq[Option[ValidationException]] = {
-    val fieldNames: Seq[String] = fieldBindings.map {
-      fieldBinding: FieldBinding => fieldBinding.tupleFieldName
-    }
-    val columnNames: Seq[String] = fieldBindings.map {
-      fieldBinding: FieldBinding => fieldBinding.storeFieldName
-    }
-    columnNames.map {
-      columnName: String => validateKijiColumnName(columnName)
-    } ++ Seq(validateFieldNames(fieldNames), validateColumnNames(columnNames))
+  def validateKijiInputOutputFieldBindings(
+      fieldBindings: Seq[FieldBinding]): Seq[ValidationException] = {
+    // Validate column names.
+    val columnNames: Seq[String] = fieldBindings
+        .map { fieldBinding: FieldBinding => fieldBinding.storeFieldName }
+    val columnNameErrors = columnNames
+        .map { columnName: String => validateKijiColumnName(columnName) }
+        .flatten
+
+    // Validate field name bindings.
+    val fieldNames: Seq[String] = fieldBindings
+        .map { fieldBinding: FieldBinding => fieldBinding.tupleFieldName }
+    val fieldNameErrors = validateFieldNames(fieldNames).toSeq ++ validateColumnNames(columnNames)
+
+    columnNameErrors ++ fieldNameErrors
   }
 
   /**
@@ -605,15 +380,20 @@ object ModelEnvironment {
    * @param inputSpec to validate.
    * @return an optional ValidationException if there are errors encountered.
    */
-  def validateInputSpec(inputSpec: InputSpec): Seq[Option[ValidationException]] = {
+  def validateInputSpec(inputSpec: InputSpec): Seq[ValidationException] = {
     inputSpec match {
       case kijiInputSpec: KijiInputSpec => {
-        validateKijiInputOutputFieldBindings(kijiInputSpec.fieldBindings) ++
-          validateDataRequest(kijiInputSpec.dataRequest)
+        val fieldBindingErrors = validateKijiInputOutputFieldBindings(kijiInputSpec.fieldBindings)
+        val dataRequestErrors = validateDataRequest(kijiInputSpec.dataRequest)
+
+        fieldBindingErrors ++ dataRequestErrors
       }
       // TODO(EXP-161): Accept inputs from multiple source types.
-      case _ => Seq(Some(new ValidationException(
-        "Unsupported InputSpec type: %s".format(inputSpec.getClass))))
+      case _ => {
+        val error = "Unsupported InputSpec type: %s".format(inputSpec.getClass)
+
+        Seq(new ValidationException(error))
+      }
     }
   }
 
@@ -623,119 +403,128 @@ object ModelEnvironment {
    * @param outputSpec to validate.
    * @return an optional ValidationException if there are errors encountered.
    */
-  def validateOutputSpec(outputSpec: OutputSpec): Seq[Option[ValidationException]] = {
+  def validateOutputSpec(outputSpec: OutputSpec): Seq[ValidationException] = {
     outputSpec match {
       case kijiOutputSpec: KijiOutputSpec => {
         validateKijiInputOutputFieldBindings(kijiOutputSpec.fieldBindings)
       }
-      case kijiSingleColSpec: KijiSingleColumnOutputSpec => {
-        Seq(validateKijiColumnName(kijiSingleColSpec.outputColumn))
+      case kijiSingleColumnSpec: KijiSingleColumnOutputSpec => {
+        validateKijiColumnName(kijiSingleColumnSpec.outputColumn)
+            .toSeq
       }
       // TODO(EXP-161): Accept outputs from multiple source types.
-      case _ => Seq(Some(new ValidationException(
-        "Unsupported OutputSpec type: %s".format(outputSpec.getClass))))
+      case _ => {
+        val error = "Unsupported OutputSpec type: %s".format(outputSpec.getClass)
+
+        Seq(new ValidationException(error))
+      }
     }
   }
 
   /**
    * Verifies that a model environment's prepare phase is valid.
    *
-   * @param prepareEnv to validate.
+   * @param prepareEnvironment to validate.
    * @return an optional ValidationException if there are errors encountered while validating the
    *     prepare phase.
    */
-  def validatePrepareEnv(prepareEnv: PrepareEnvironment): Seq[Option[ValidationException]] = {
-    val inputConfigExcep = validateInputSpec(prepareEnv.inputConfig)
+  def validatePrepareEnv(prepareEnvironment: PrepareEnvironment): Seq[ValidationException] = {
+    val inputSpecErrors = validateInputSpec(prepareEnvironment.inputSpec)
+    val outputSpecErrors = validateOutputSpec(prepareEnvironment.outputSpec)
+    val kvStoreErrors = validateKvStores(prepareEnvironment.keyValueStoreSpecs)
 
-    val outputConfigExcep = validateOutputSpec(prepareEnv.outputConfig)
-
-    val kvStoreExcep = validateKvStores(prepareEnv.kvstores)
-
-    outputConfigExcep ++ inputConfigExcep ++ kvStoreExcep
+    inputSpecErrors ++ outputSpecErrors ++ kvStoreErrors
   }
 
   /**
    * Verifies that a model environment's train phase is valid.
    *
-   * @param trainEnv to validate.
+   * @param trainEnvironment to validate.
    * @return an optional ValidationException if there are errors encountered while validating the
    *     prepare phase.
    */
-  def validateTrainEnv(trainEnv: TrainEnvironment): Seq[Option[ValidationException]] = {
-    val inputConfigExcep = validateInputSpec(trainEnv.inputConfig)
+  def validateTrainEnv(trainEnvironment: TrainEnvironment): Seq[ValidationException] = {
+    val inputSpecErrors = validateInputSpec(trainEnvironment.inputSpec)
+    val outputSpecErrors = validateOutputSpec(trainEnvironment.outputSpec)
+    val kvStoreErrors = validateKvStores(trainEnvironment.keyValueStoreSpecs)
 
-    val outputConfigExcep = validateOutputSpec(trainEnv.outputConfig)
-
-    val kvStoreExcep = validateKvStores(trainEnv.kvstores)
-
-    outputConfigExcep ++ inputConfigExcep ++ kvStoreExcep
+    inputSpecErrors ++ outputSpecErrors ++ kvStoreErrors
   }
 
   /**
    * Verifies that a model environment's score phase is valid.
    *
-   * @param scoreEnv to validate.
+   * @param scoreEnvironment to validate.
    * @return an optional ValidationException if there are errors encountered while validating the
    *     score phase.
    */
-  def validateScoreEnv(scoreEnv: ScoreEnvironment): Seq[Option[ValidationException]] = {
-    val inputConfigExcep = validateInputSpec(scoreEnv.inputConfig)
-
-    // For score, we only permit output to a single Kiji column. Hence we need to validate
-    // this as a special case.
-    val outputConfigExcep = scoreEnv.outputConfig match {
+  def validateScoreEnv(scoreEnvironment: ScoreEnvironment): Seq[ValidationException] = {
+    val inputSpecErrors = validateInputSpec(scoreEnvironment.inputSpec)
+    // The score phase only supports the single column Kiji output.
+    val outputSpecErrors = scoreEnvironment.outputSpec match {
       case scorePhaseOutputSpec: KijiSingleColumnOutputSpec => {
-        Seq(validateKijiColumnName(scorePhaseOutputSpec.outputColumn))
+        validateKijiColumnName(scorePhaseOutputSpec.outputColumn)
+            .toSeq
       }
-      case _ => Seq(Some(new ValidationException(
-        "Unsupported OutputSpec type for Score Phase: %s".format(scoreEnv.outputConfig.getClass))))
+      case _ => {
+        val error = "Unsupported OutputSpec type for Score Phase: %s"
+            .format(scoreEnvironment.outputSpec.getClass)
+
+        Seq(new ValidationException(error))
+      }
     }
+    val kvStoreErrors = validateKvStores(scoreEnvironment.keyValueStoreSpecs)
 
-    val kvStoreExcep = validateKvStores(scoreEnv.kvstores)
-
-    inputConfigExcep ++ outputConfigExcep ++ kvStoreExcep
+    inputSpecErrors ++ outputSpecErrors ++ kvStoreErrors
   }
 
   /**
-   * Validates a data request. Currently this only validates the column names.
+   * Validates a data request.
    *
    * @param dataRequest to validate.
    * @throws a ModelEnvironmentValidationException if the column names are invalid.
    */
-  def validateDataRequest(dataRequest: ExpressDataRequest): Seq[Option[ValidationException]] = {
-    val kijiColNameErrors: Seq[Option[ValidationException]] = dataRequest
+  def validateDataRequest(dataRequest: ExpressDataRequest): Seq[ValidationException] = {
+    // Validate Kiji column names.
+    val kijiColumnNameErrors: Seq[ValidationException] = dataRequest
         .columnRequests
-        .map { column: ExpressColumnRequest =>
-          validateKijiColumnName(column.name)
+        .map { column: ExpressColumnRequest => validateKijiColumnName(column.name) }
+        .flatten
+
+    // Validate the minimum timestamp.
+    val minimumTimestampError: Option[ValidationException] =
+        if (dataRequest.minTimestamp < 0) {
+          val error = "minTimestamp in the DataRequest is " + dataRequest.minTimestamp +
+              " and must be greater than 0"
+          Some(new ValidationException(error))
+        } else {
+          None
         }
-    val minTSError: Option[ValidationException] = if (dataRequest.minTimeStamp < 0) {
-      val error = "minTimeStamp in the DataRequest is "+ dataRequest.minTimeStamp +
-          " and must be greater than 0"
-      Some(new ValidationException(error))
-    } else {
-      None
-    }
-    val maxTSError: Option[ValidationException] = if (dataRequest.maxTimeStamp < 0) {
-      val error = "maxTimeStamp in the DataRequest is "+ dataRequest.minTimeStamp +
-        " and must be greater than 0"
-      Some(new ValidationException(error))
-    } else {
-      None
-    }
-    kijiColNameErrors :+ minTSError :+ maxTSError
+
+    // Validate the maximum timestamp.
+    val maximumTimestampError: Option[ValidationException] =
+        if (dataRequest.maxTimestamp < 0) {
+          val error = "maxTimestamp in the DataRequest is " + dataRequest.minTimestamp +
+              " and must be greater than 0"
+          Some(new ValidationException(error))
+        } else {
+          None
+        }
+
+    kijiColumnNameErrors ++ minimumTimestampError ++ maximumTimestampError
   }
 
   /**
    * Validate the name of a KVStore.
    *
-   * @param kvstore whose name should be validated.
+   * @param keyValueStoreSpec whose name should be validated.
    * @return an optional ValidationException if the name provided is invalid.
    */
-  def validateKvstoreName(kvstore: KVStore): Option[ValidationException] = {
-    if (!kvstore.name.matches("^[a-zA-Z_][a-zA-Z0-9_]+$")) {
+  def validateKvstoreName(keyValueStoreSpec: KeyValueStoreSpec): Option[ValidationException] = {
+    if (!keyValueStoreSpec.name.matches("^[a-zA-Z_][a-zA-Z0-9_]+$")) {
       val error = "The key-value store name must begin with a letter" +
           " and contain only alphanumeric characters and underscores. The key-value store" +
-          " name you provided is " + kvstore.name + " and the regex it must match is " +
+          " name you provided is " + keyValueStoreSpec.name + " and the regex it must match is " +
           "^[a-zA-Z_][a-zA-Z0-9_]+$"
       Some(new ValidationException(error))
     } else {
@@ -747,14 +536,15 @@ object ModelEnvironment {
    * Validate properties specified to initialize the key-value store. Each type of key-value store
    * requires different properties.
    *
-   * @param kvstore whose properties to validate.
+   * @param keyValueStoreSpec whose properties to validate.
    * @return an optional ValidationException if any of the properties are invalid.
    */
-  def validateKvstoreProperties(kvstore: KVStore): Option[ValidationException] = {
-    val properties: Map[String, String] = kvstore.properties
+  def validateKvstoreProperties(
+      keyValueStoreSpec: KeyValueStoreSpec): Option[ValidationException] = {
+    val properties: Map[String, String] = keyValueStoreSpec.properties
 
-    KvStoreType.valueOf(kvstore.storeType) match {
-      case KvStoreType.AVRO_KV => {
+    keyValueStoreSpec.storeType match {
+      case "AVRO_KV" => {
         if (!properties.contains("path")) {
           val error = "To use an Avro key-value record key-value store, you must specify the" +
               " HDFS path to the Avro container file to use to back the store. Use the" +
@@ -763,7 +553,7 @@ object ModelEnvironment {
         }
       }
 
-      case KvStoreType.AVRO_RECORD => {
+      case "AVRO_RECORD" => {
         // Construct an error message for a missing path, missing key_field, or both.
         val pathError =
           if (!properties.contains("path")) {
@@ -787,7 +577,7 @@ object ModelEnvironment {
         return Some(new ValidationException(errorMessage))
       }
 
-      case KvStoreType.KIJI_TABLE => {
+      case "KIJI_TABLE" => {
         if (!properties.contains("uri")) {
           val error = "To use a Kiji table key-value store, you must specify a Kiji URI" +
               " addressing the table to use to back the store. Use the property name 'url' to" +
@@ -802,8 +592,8 @@ object ModelEnvironment {
         }
       }
 
-      case kvstoreType => {
-        val error = "An unknown key-value store type was specified: " + kvstoreType.toString
+      case keyValueStoreType => {
+        val error = "An unknown key-value store type was specified: " + keyValueStoreType
         return Some(new ValidationException(error))
       }
     }
@@ -814,18 +604,19 @@ object ModelEnvironment {
   /**
    * Validates all properties of Seq of KVStores.
    *
-   * @param kvstores to validate
+   * @param keyValueStoreSpecs to validate
    * @return validation exceptions generated while validate the KVStore specification.
    */
-  def validateKvStores(kvstores: Seq[KVStore]): Seq[Option[ValidationException]] = {
+  def validateKvStores(keyValueStoreSpecs: Seq[KeyValueStoreSpec]): Seq[ValidationException] = {
     // Collect KVStore errors.
-    val kvstoreNameErrors: Seq[Option[ValidationException]] = kvstores.map {
-      kvstore: KVStore => validateKvstoreName(kvstore)
-    }
-    val kvstorePropertiesErrors: Seq[Option[ValidationException]] = kvstores.map {
-      kvstore: KVStore => validateKvstoreProperties(kvstore)
-    }
-    kvstoreNameErrors ++ kvstorePropertiesErrors
+    val nameErrors: Seq[ValidationException] = keyValueStoreSpecs
+        .map { keyValueStore: KeyValueStoreSpec => validateKvstoreName(keyValueStore) }
+        .flatten
+    val propertiesErrors: Seq[ValidationException] = keyValueStoreSpecs
+        .map { keyValueStore: KeyValueStoreSpec => validateKvstoreProperties(keyValueStore) }
+        .flatten
+
+    nameErrors ++ propertiesErrors
   }
 
   /**

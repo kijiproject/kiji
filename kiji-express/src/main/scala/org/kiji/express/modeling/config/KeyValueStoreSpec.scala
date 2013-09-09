@@ -17,24 +17,32 @@
  * limitations under the License.
  */
 
-
 package org.kiji.express.modeling.config
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.schema.filter.RegexQualifierColumnFilter
-import org.kiji.schema.filter.KijiColumnFilter
+import org.kiji.annotations.Inheritance
 
 /**
- * An Express column filter which matches a regular expression against the full qualifier.
+ * A case class wrapper around the parameters necessary for an Avro KVStore.  This is a convenience
+ * for users to define their KVStores when using the ModelEnvironment.
  *
- * @param regex to match on.
+ * @param storeType of this KVStore.  Must be one of "AVRO_KV", "AVRO_RECORD", "KIJI_TABLE".
+ * @param name specified by the user as a shorthand identifier for this KVStore.
+ * @param properties that may be needed to configure and instantiate a kv store reader.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-case class RegexQualifierFilter(regex: String) extends ExpressColumnFilter {
-  /**
-   * Returns a concrete KijiColumnFilter that implements this express column filter.
-   */
-  def getKijiColumnFilter(): KijiColumnFilter = new RegexQualifierColumnFilter(regex)
+@Inheritance.Sealed
+final case class KeyValueStoreSpec(
+    storeType: String,
+    name: String,
+    properties: Map[String, String]) {
+
+  // The allowed store types.
+  val possibleStoreTypes = Set("AVRO_KV", "AVRO_RECORD", "KIJI_TABLE")
+
+  require(
+      possibleStoreTypes.contains(storeType),
+      "storeType must be one of %s, instead was %s".format(possibleStoreTypes, storeType))
 }

@@ -29,7 +29,7 @@ protocol Modeling {
    * implements the functionality of the phase and the corresponding extractor class that will be
    * used to treat the inputs to the phase.
    */
-  record AvroPhaseSpec {
+  record AvroPhaseDefinition {
     /**
      * Fully qualified class name of the class that will manipulate the input sources in this phase.
      * This class must implement the extractor trait. Optional.
@@ -66,19 +66,19 @@ protocol Modeling {
      * Specification for the prepare phase. The class within must implement the preparer trait.
      * Set this field to null to specify that no prepare phase should be used.
      */
-    union{null, string} preparer = null;
+    union{null, string} preparer_class = null;
 
     /**
      * Specification for the train phase. The class within must implement the trainer trait.
      * Set this field to null to specify that no train phase should be used.
      */
-    union{null, string} trainer = null;
+    union{null, string} trainer_class = null;
 
     /**
      * Specification for the score phase. The class within must implement the scorer trait.
      * Set this field to null to specify that no score phase should be used.
      */
-    union{null, AvroPhaseSpec} scorer = null;
+    union{null, AvroPhaseDefinition} scorer_phase = null;
 
     /**
      * Unique identifier for this model definition. The current version is model_definition-0.1.0.
@@ -89,7 +89,7 @@ protocol Modeling {
   /**
    * Arbitrary name-value pairs.
    */
-  record Property {
+  record AvroProperty {
     /**
      * An identifier for a property. Required.
      */
@@ -105,7 +105,7 @@ protocol Modeling {
   /**
    * An enumeration of supported types of KeyValueStores.
    */
-  enum KvStoreType {
+  enum AvroKeyValueStoreType {
     AVRO_KV,
     AVRO_RECORD,
     KIJI_TABLE
@@ -114,12 +114,11 @@ protocol Modeling {
   /**
    * A specification of all the resources needed to surface data from a backing store.
    */
-  record AvroKVStore {
+  record AvroKeyValueStoreSpec {
     /**
-     * One of the following valid KVStore types: {AVRO_KV, AVRO_RECORD, KIJI_TABLE}.
-     * Required.
+     * The type of this key-value store. Required.
      */
-    KvStoreType store_type;
+    AvroKeyValueStoreType store_type;
 
     /**
      * User specified shorthand identifier for a key value store. Required.
@@ -129,11 +128,11 @@ protocol Modeling {
     /**
      * Other properties that may be needed to instantiate and configure a kv store reader.
      */
-    array<Property> properties = [];
+    array<AvroProperty> properties = [];
   }
 
   /**
-   * Note: The following 5 record types defined below, relating to column filters,
+   * Note: The following 3 record types defined below, relating to column filters,
    * correspond to their respective HBase filters.
    */
 
@@ -157,41 +156,46 @@ protocol Modeling {
   /**
    * Specification of a RegexQualifierFilter.
    */
-   record AvroRegexQualifierFilter {
-     /** The regular expression for qualifiers that should be
-      *  accepted by this filter. The expression is matched against the full qualifier (as
-      *  if it implicitly starts with '^' and ends with '$').
-      */
-      string regex;
-   }
+  record AvroRegexQualifierFilter {
+    /**
+     * Regular expression for qualifiers that should be accepted by this filter. The expression is
+     * matched against the full qualifier (as if it implicitly starts with '^' and ends with '$').
+     */
+    string regex;
+  }
 
-   /**
-    * Specification of an 'and' filter. This filter combines a list of column filters using a
-    * logical AND operator.
-    */
-   record AvroAndFilter {
-     /**
-      * The filters to AND together.
-      * NOTE: If you are hand-coding the JSON for this field, please ensure you follow the
-      * appropriate encoding for unions http://avro.apache.org/docs/current/spec.html#json_encoding
-      * in order to avoid potential decoding errors due to ambiguity in the required record type.
-      */
-     array<union { AvroRegexQualifierFilter, AvroColumnRangeFilter }>
-        and_filters;
-   }
+  /**
+   * Specification of a filter. Only one of the fields in this record should not be null at any
+   * point.
+   *
+   * Note to developers: Please be sure to update any avro filter validation code when modifying
+   * this record.
+   */
+  record AvroFilter {
+    /**
+     * The 'and' filter specification. Filters out any fields that do not pass any of this 'and'
+     * filter's components. This should be null if this record does not represent an 'and' filter.
+     */
+    union{null, array<AvroFilter>} and_filter = null;
 
-   /**
-    * Specification of an 'or' filter. This filter combines a list of column filters using a
-    * logical OR operator.
-    * NOTE: If you are hand-coding the JSON for this field, please ensure you follow the
-    * appropriate encoding for unions http://avro.apache.org/docs/current/spec.html#json_encoding
-    * in order to avoid potential decoding errors due to ambiguity in the required record type.
-    */
-   record AvroOrFilter {
-     /** The filters to OR together. */
-     array<union { AvroRegexQualifierFilter, AvroColumnRangeFilter }>
-        or_filters;
-   }
+    /**
+     * The 'or' filter specification. Filters out any fields that do not pass all of this 'or'
+     * filter's components. This should be null if this record does not represent an 'or' filter.
+     */
+    union{null, array<AvroFilter>} or_filter = null;
+
+    /**
+     * The column range filter specification. This should be null if this record does not
+     * represent an column range filter.
+     */
+    union{null, AvroColumnRangeFilter} range_filter = null;
+
+    /**
+     * The regex filter specification. This should be null if this record does not represent
+     * an regex filter.
+     */
+    union{null, AvroRegexQualifierFilter} regex_filter = null;
+  }
 
   /**
    * Column level data request specifications.
@@ -209,12 +213,8 @@ protocol Modeling {
 
     /**
      * A ColumnFilter to attach to the column. Potentially null.
-     * NOTE: If you are hand-coding the JSON for this field, please ensure you follow the
-     * appropriate encoding for unions http://avro.apache.org/docs/current/spec.html#json_encoding
-     * in order to avoid potential decoding errors due to ambiguity in the required record type.
      */
-    union { null, AvroAndFilter, AvroOrFilter, AvroColumnRangeFilter, AvroRegexQualifierFilter }
-        filter = null;
+    union{null, AvroFilter} filter = null;
   }
 
   /**
@@ -287,7 +287,7 @@ protocol Modeling {
     /**
      * Timestamp for the output cells.
      */
-    union{null, string} time_stamp_field = null;
+    union{null, string} timestamp_field = null;
 
     /**
      * Associations between field names and column names. Required.
@@ -296,119 +296,118 @@ protocol Modeling {
   }
 
   /**
-     * Configuration necessary to specify a single output Kiji column. Typically used with the score
-     * phase.
+   * Configuration necessary to specify a single output Kiji column. Typically used with the score
+   * phase.
+   */
+  record AvroKijiSingleColumnOutputSpec {
+    /**
+     * Kiji URI addressing the table that this output spec will use. Required.
      */
-    record AvroKijiSingleColumnOutputSpec {
-      /**
-       * Kiji URI addressing the table that this output spec will use. Required.
-       */
-      string table_uri;
+    string table_uri;
 
-      /**
-       * The Kiji column to write the output of the phase to. Required.
-       */
-      string output_column;
-    }
+    /**
+     * The Kiji column to write the output of the phase to. Required.
+     */
+    string output_column;
+  }
 
   /**
    * Represents the configuration for an input data source.
+   *
+   * Note to developers: Please be sure to update any avro input spec validation code when modifying
+   * this record.
    */
   record AvroInputSpec {
     // TODO(EXP-161): Accept inputs from multiple source types.
-    /**
-     * Configuration for this input spec.
-     * NOTE: If you are hand-coding the JSON for this field, please ensure you follow the
-     * appropriate encoding for unions http://avro.apache.org/docs/current/spec.html#json_encoding
-     * in order to avoid potential decoding errors due to ambiguity in the required record type.
-     */
-    union{AvroKijiInputSpec} specification;
+    /** Configuration for this input spec if a Kiji input spec is being used. */
+    union{null, AvroKijiInputSpec} kiji_specification = null;
   }
 
   /**
    * Represents the configuration for an output data source.
+   *
+   * Note to developers: Please be sure to update any avro output spec validation code when
+   * modifying this record.
    */
   record AvroOutputSpec {
     // TODO(EXP-161): Accept outputs from multiple source types.
-    /**
-     * Configuration for this output spec.
-     * NOTE: If you are hand-coding the JSON for this field, please ensure you follow the
-     * appropriate encoding for unions http://avro.apache.org/docs/current/spec.html#json_encoding
-     * in order to avoid potential decoding errors due to ambiguity in the required record type.
-     */
-    union{AvroKijiOutputSpec, AvroKijiSingleColumnOutputSpec} specification;
+    /** Configuration for this output spec if a Kiji output spec is being used. */
+    union{null, AvroKijiOutputSpec} kiji_specification = null;
+
+    /** Configuration for this output spec if a Kiji single column output spec is being used. */
+    union{null, AvroKijiSingleColumnOutputSpec} kiji_column_specification = null;
   }
 
   /**
    * Runtime resource bindings for the prepare phase.
    *
    * Note to developers: Please increment the 'protocol_version' field in AvroModelEnvironment when
-   *     modifying this record.
+   * modifying this record.
    */
   record AvroPrepareEnvironment {
     /**
      * Defines the input data source that the prepare phase uses. Required.
      */
-    AvroInputSpec input_config;
+    AvroInputSpec input_spec;
 
     /**
      * Defines the output data source that the prepare phase uses. Required.
      */
-    AvroOutputSpec output_config;
+    AvroOutputSpec output_spec;
 
     /**
      * The KVStores needed during the prepare phase. The default value of this field is the empty
      * list.
      */
-    array<AvroKVStore> kv_stores = [];
+    array<AvroKeyValueStoreSpec> kv_stores = [];
   }
 
   /**
    * Runtime resource bindings for the train phase.
    *
    * Note to developers: Please increment the 'protocol_version' field in AvroModelEnvironment when
-   *     modifying this record.
+   * modifying this record.
    */
   record AvroTrainEnvironment {
     /**
      * Defines the input data source that the train phase uses. Required.
      */
-    AvroInputSpec input_config;
+    AvroInputSpec input_spec;
 
     /**
      * Defines the output data sources that the train phase uses. Required.
      */
-    AvroOutputSpec output_config;
+    AvroOutputSpec output_spec;
 
     /**
      * The KVStores needed during the train phase. The default value of this field is the empty
      * list.
      */
-    array<AvroKVStore> kv_stores = [];
+    array<AvroKeyValueStoreSpec> kv_stores = [];
   }
 
   /**
    * Runtime resource bindings for the score phase.
    *
    * Note to developers: Please increment the 'protocol_version' field in AvroModelEnvironment when
-   *     modifying this record.
+   * modifying this record.
    */
   record AvroScoreEnvironment {
     /**
      * Defines the input data source that the score phase uses. Required.
      */
-    AvroInputSpec input_config;
+    AvroInputSpec input_spec;
 
     /**
      * A Kiji column to write the output of the score phase to. Required.
      */
-    AvroOutputSpec output_config;
+    AvroOutputSpec output_spec;
 
     /**
      * An array of KVStores needed during the score phase. The default value of this field is the
      * empty list.
      */
-    array<AvroKVStore> kv_stores = [];
+    array<AvroKeyValueStoreSpec> kv_stores = [];
   }
 
   /**
@@ -433,16 +432,16 @@ protocol Modeling {
     /**
      * Runtime bindings for data sources used in the prepare phase. Potentially null.
      */
-    union { null, AvroPrepareEnvironment } prepare_environment = null;
+    union{null, AvroPrepareEnvironment} prepare_environment = null;
 
     /**
      * Runtime bindings for data sources used in the train phase. Potentially null.
      */
-    union { null, AvroTrainEnvironment } train_environment = null;
+    union{null, AvroTrainEnvironment} train_environment = null;
 
     /**
      * Runtime bindings for data sources used in the score phase. Potentially null.
      */
-    union { null, AvroScoreEnvironment } score_environment = null;
+    union{null, AvroScoreEnvironment} score_environment = null;
   }
 }

@@ -49,8 +49,8 @@ object ScoreProducerJobBuilder {
   def buildJob(model: ModelDefinition, environment: ModelEnvironment,
       conf: Configuration = HBaseConfiguration.create()): KijiMapReduceJob = {
     // Serialize the model configuration objects.
-    conf.set(ScoreProducer.modelDefinitionConfKey, model.toJson())
-    conf.set(ScoreProducer.modelEnvironmentConfKey, environment.toJson())
+    conf.set(ScoreProducer.modelDefinitionConfKey, model.toJson)
+    conf.set(ScoreProducer.modelEnvironmentConfKey, environment.toJson)
 
     val scoreModel: Option[Class[_]] = model.scorerClass
     val scoreEnv: Option[ScoreEnvironment] = environment.scoreEnvironment
@@ -60,13 +60,13 @@ object ScoreProducerJobBuilder {
       throw new ValidationException(error)
     }
 
-    val uri = KijiURI.newBuilder(environment
-      .scoreEnvironment
-      .get
-      .inputConfig
-      .asInstanceOf[KijiInputSpec]
-      .tableUri)
-      .build()
+    val uriString = environment
+        .scoreEnvironment
+        .get
+        .inputSpec
+        .asInstanceOf[KijiInputSpec]
+        .tableUri
+    val uri = KijiURI.newBuilder(uriString).build()
 
     // Build the produce job.
     KijiProduceJobBuilder.create()

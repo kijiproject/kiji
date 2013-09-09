@@ -19,62 +19,21 @@
 
 package org.kiji.express.modeling.config
 
-import com.google.common.base.Objects
-
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 
 /**
  * A specification of the runtime bindings needed in the train phase of a model.
  *
- * @param inputConfig defining a mapping from input data source names to their configurations.
- * @param outputConfig defining a mapping from output data sink names to their configurations.
- * @param kvstores for usage during the train phase.
+ * @param inputSpec defining a mapping from input data source names to their configurations.
+ * @param outputSpec defining a mapping from output data sink names to their configurations.
+ * @param keyValueStoreSpecs for usage during the train phase.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-final class TrainEnvironment private[express](
-    val inputConfig: InputSpec,
-    val outputConfig: OutputSpec,
-    val kvstores: Seq[KVStore]) {
-  override def equals(other: Any): Boolean = {
-    other match {
-      case environment: TrainEnvironment => {
-        inputConfig == environment.inputConfig &&
-            outputConfig == environment.outputConfig &&
-            kvstores == environment.kvstores
-      }
-      case _ => false
-    }
-  }
-
-  override def hashCode(): Int =
-      Objects.hashCode(
-          inputConfig,
-          outputConfig,
-          kvstores)
-}
-
-/**
- * Companion object to TrainEnvironment containing factory methods.
- */
-object TrainEnvironment {
-  /**
-   * Creates a new TrainEnvironment, which is a specification of the runtime bindings needed in
-   * the train phase of a model.
-   *
-   * @param inputConfig defining a mapping from input data source names to their configurations.
-   * @param outputConfig defining a mapping from output data sink names to their configurations.
-   * @param kvstores for usage during the train phase.
-   * @return an TrainEnvironment with the specified configuration.
-   */
-  def apply(
-      inputConfig: InputSpec,
-      outputConfig: OutputSpec,
-      kvstores: Seq[KVStore]): TrainEnvironment = {
-    new TrainEnvironment(
-        inputConfig,
-        outputConfig,
-        kvstores)
-  }
-}
+@Inheritance.Sealed
+final case class TrainEnvironment(
+    inputSpec: InputSpec,
+    outputSpec: OutputSpec,
+    keyValueStoreSpecs: Seq[KeyValueStoreSpec])

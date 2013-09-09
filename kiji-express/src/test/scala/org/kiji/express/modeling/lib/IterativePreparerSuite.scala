@@ -70,7 +70,7 @@ class IterativePreparerSuite extends KijiSuite {
     val modelDefinition: ModelDefinition = ModelDefinition(
         name = "iterative-prepare-model-def",
         version = "1.0",
-        preparer = Some(classOf[IterativePreparerSuite.IterativePreparer]))
+        preparerClass = Some(classOf[IterativePreparerSuite.IterativePreparer]))
 
     val request: ExpressDataRequest = new ExpressDataRequest(0, Long.MaxValue,
         new ExpressColumnRequest("family:column1", 1, None) :: Nil)
@@ -82,18 +82,18 @@ class IterativePreparerSuite extends KijiSuite {
           name = "prepare-model-environment",
           version = "1.0",
           prepareEnvironment = Some(PrepareEnvironment(
-              inputConfig = KijiInputSpec(
+              inputSpec = KijiInputSpec(
               tableUri.toString,
               dataRequest = request,
               fieldBindings = Seq(
                   FieldBinding(tupleFieldName = "word", storeFieldName = "family:column1"))
               ),
-              outputConfig = KijiOutputSpec(
+              outputSpec = KijiOutputSpec(
                   tableUri = tableUri.toString,
                   fieldBindings = Seq(
                     FieldBinding(tupleFieldName = "word", storeFieldName = "family:column2"))
               ),
-              kvstores = Seq()
+              keyValueStoreSpecs = Seq()
           )),
           trainEnvironment = None,
           scoreEnvironment = None
@@ -141,9 +141,10 @@ object IterativePreparerSuite {
       input
           .read
           .map('word -> 'cleanWord) { words: KijiSlice[String] =>
-             words.getFirstValue()
-            .toString()
-            .toLowerCase()
+             words
+                 .getFirstValue()
+                 .toString
+                 .toLowerCase
           }
           .map('cleanWord -> 'doubleWord) { cleanWord: String =>
             cleanWord.concat(cleanWord)

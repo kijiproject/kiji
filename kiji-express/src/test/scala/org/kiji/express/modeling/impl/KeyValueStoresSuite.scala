@@ -26,12 +26,12 @@ import org.kiji.express.modeling.KeyValueStore
 class TestKeyValueStores extends KeyValueStores
 
 class KeyValueStoresSuite extends FunSuite {
-  test("A concrete instance of KeyValueStores can have its kvstores property initialized") {
+  test("A concrete instance of KeyValueStores can have its key-value stores property initialized") {
     val kvstoresInstance: TestKeyValueStores = new TestKeyValueStores
     val expected: Map[String, KeyValueStore[_, _]] = Map()
 
-    kvstoresInstance.kvstores = expected
-    val actual = kvstoresInstance.kvstores
+    kvstoresInstance.keyValueStores = expected
+    val actual = kvstoresInstance.keyValueStores
 
     assert(expected === actual)
   }
@@ -39,7 +39,7 @@ class KeyValueStoresSuite extends FunSuite {
   test("An uninitialized instance of KeyValueStores will throw an IllegalStateException") {
     val kvstoresInstance: TestKeyValueStores = new TestKeyValueStores
     val thrown = intercept[IllegalStateException] {
-      kvstoresInstance.kvstores
+      kvstoresInstance.keyValueStores
     }
     assert("This model phase has not been initialized properly. "
         + "Its key-value stores haven't been loaded yet." === thrown.getMessage)

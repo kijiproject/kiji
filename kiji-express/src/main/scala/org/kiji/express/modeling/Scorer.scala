@@ -52,14 +52,14 @@ final case class ScoreFn[I, O] (
  * For example:
  * {{{
  * class MyScorer extends Scorer {
- *   override val scoreFn = score('textLine -> 'count) { textLine: KijiSlice[String] =>
+ *   override def scoreFn = score('textLine -> 'count) { textLine: KijiSlice[String] =>
  *     textLine.getFirstValue.split("""\s+""").size
  *   }
  * }
  * }}}
  *
  * This trait also provides access to outside data sources required for scoring through the
- * `kvstores` property.
+ * `keyValueStoreSpecs` property.
  */
 @ApiAudience.Public
 @ApiStability.Experimental

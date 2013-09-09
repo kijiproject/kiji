@@ -17,15 +17,15 @@
  * limitations under the License.
  */
 {
-  "name":"name",
-  "version":"1.0.0",
-  "preparer": "org.kiji.express.modeling.config.ModelDefinitionSuite$MyPreparer",
-  "trainer": "org.kiji.express.modeling.config.ModelDefinitionSuite$MyTrainer",
-  "scorer":{
-    "org.kiji.express.avro.AvroPhaseSpec":{
-      "extractor_class":null,
-      "phase_class":"org.kiji.express.modeling.config.ModelDefinitionSuite$MyScorer"
+  "name": "name",
+  "version": "1.0.0",
+  "preparer_class": "org.kiji.express.modeling.config.ModelDefinitionSuite$MyPreparer",
+  "trainer_class": "org.kiji.express.modeling.config.ModelDefinitionSuite$MyTrainer",
+  "scorer_phase": {
+    "org.kiji.express.avro.AvroPhaseDefinition": {
+      "extractor_class": null,
+      "phase_class": "org.kiji.express.modeling.config.ModelDefinitionSuite$MyScorer"
     }
   },
-  "protocol_version":"model_definition-7.3.0"
+  "protocol_version": "model_definition-7.3.0"
 }

@@ -24,7 +24,6 @@ import com.twitter.scalding.Source
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 
-import org.kiji.express.avro.KvStoreType
 import org.kiji.express.flow.Between
 import org.kiji.express.flow.ColumnFamily
 import org.kiji.express.flow.ColumnRequest
@@ -33,15 +32,15 @@ import org.kiji.express.flow.KijiInput
 import org.kiji.express.flow.KijiOutput
 import org.kiji.express.flow.QualifiedColumn
 import org.kiji.express.flow.TimeRange
+import org.kiji.express.modeling.KeyValueStore
 import org.kiji.express.modeling.config.ExpressColumnRequest
 import org.kiji.express.modeling.config.InputSpec
+import org.kiji.express.modeling.config.KeyValueStoreSpec
 import org.kiji.express.modeling.config.KijiInputSpec
 import org.kiji.express.modeling.config.KijiOutputSpec
 import org.kiji.express.modeling.config.KijiSingleColumnOutputSpec
-import org.kiji.express.modeling.config.KVStore
 import org.kiji.express.modeling.config.ModelEnvironment
 import org.kiji.express.modeling.config.OutputSpec
-import org.kiji.express.modeling.KeyValueStore
 import org.kiji.mapreduce.KijiContext
 import org.kiji.mapreduce.kvstore.{ KeyValueStore => JKeyValueStore }
 import org.kiji.mapreduce.kvstore.lib.{ AvroKVRecordKeyValueStore => JAvroKVRecordKeyValueStore }
@@ -83,26 +82,20 @@ object ModelJobUtils {
    * @param phase for which to retrieve the data request.
    * @return a kiji data request if the phase exists or None.
    */
-  def getDataRequest(modelEnvironment: ModelEnvironment,
+  def getDataRequest(
+      modelEnvironment: ModelEnvironment,
       phase: PhaseType): Option[KijiDataRequest] = {
-    val inputConfig: Option[InputSpec] = phase match {
-      case PhaseType.PREPARE => modelEnvironment.prepareEnvironment.map {
-        _.inputConfig
-      }
-      case PhaseType.TRAIN => modelEnvironment.trainEnvironment.map {
-        _.inputConfig
-      }
-      case PhaseType.SCORE => modelEnvironment.scoreEnvironment.map {
-        _.inputConfig
-      }
+    val inputSpec: Option[InputSpec] = phase match {
+      case PhaseType.PREPARE => modelEnvironment.prepareEnvironment.map { _.inputSpec }
+      case PhaseType.TRAIN => modelEnvironment.trainEnvironment.map { _.inputSpec }
+      case PhaseType.SCORE => modelEnvironment.scoreEnvironment.map { _.inputSpec }
     }
-    inputConfig match {
-      case Some(inputConfig) => inputConfig match {
-        case kijiInputSpec :KijiInputSpec => Some(kijiInputSpec.dataRequest.toKijiDataRequest())
-        case _ => throw new RuntimeException("Input Specification is not of type KijiInputSpec")
-      }
-      case _ => None
-    }
+
+    inputSpec
+        .map {
+          case KijiInputSpec(_, dataRequest, _) => dataRequest.toKijiDataRequest
+          case _ => throw new RuntimeException("Input Specification is not of type KijiInputSpec")
+        }
   }
 
   /**
@@ -116,56 +109,55 @@ object ModelJobUtils {
   def getOutputColumn(modelEnvironment: ModelEnvironment): String = modelEnvironment
       .scoreEnvironment
       .get
-      .outputConfig
+      .outputSpec
       .asInstanceOf[KijiSingleColumnOutputSpec]
       .outputColumn
 
   /**
-   * Wrap the provided kvstores in their scala counterparts.
+   * Wrap the provided key value stores in their scala counterparts.
    *
-   * @param kvstores to open.
-   * @param context providing access to the opened kvstores.
-   * @return a mapping from the kvstore's name to the wrapped kvstore.
+   * @param keyValueStoreSpecs to open.
+   * @param context providing access to the opened key value stores.
+   * @return a mapping from the keyValueStoreSpec's name to the wrapped keyValueStoreSpec.
    */
   def wrapKvstoreReaders(
-      kvstores: Seq[KVStore],
+      keyValueStoreSpecs: Seq[KeyValueStoreSpec],
       context: KijiContext): Map[String, KeyValueStore[_, _]] = {
-    return kvstores
-        .map { kvstore: KVStore =>
-          val jkvstoreReader = context.getStore(kvstore.name)
-          val wrapped: KeyValueStore[_, _] = KvStoreType.valueOf(kvstore.storeType) match {
-            case KvStoreType.AVRO_KV => new AvroKVRecordKeyValueStore(jkvstoreReader)
-            case KvStoreType.AVRO_RECORD => new AvroRecordKeyValueStore(jkvstoreReader)
-            case KvStoreType.KIJI_TABLE => new KijiTableKeyValueStore(jkvstoreReader)
+    keyValueStoreSpecs
+        .map { keyValueStoreSpec: KeyValueStoreSpec =>
+          val jKeyValueStoreReader = context.getStore(keyValueStoreSpec.name)
+          val wrapped: KeyValueStore[_, _] = keyValueStoreSpec.storeType match {
+            case "AVRO_KV" => new AvroKVRecordKeyValueStore(jKeyValueStoreReader)
+            case "AVRO_RECORD" => new AvroRecordKeyValueStore(jKeyValueStoreReader)
+            case "KIJI_TABLE" => new KijiTableKeyValueStore(jKeyValueStoreReader)
           }
-          (kvstore.name, wrapped)
+          (keyValueStoreSpec.name, wrapped)
         }
         .toMap
   }
 
   /**
-   * Open the provided kvstore definitions.
+   * Open the provided key value store specifications.
    *
-   * @param kvstores to open.
-   * @param conf containing settings pertaining to the specified kvstores.
-   * @return a mapping from the kvstore's name to the opened kvstore.
+   * @param keyValueStoreSpecs to open.
+   * @param configuration containing settings pertaining to the specified key value stores.
+   * @return a mapping from the key value store specification's name to the opened key value store.
    */
   def openJKvstores(
-      kvstores: Seq[KVStore],
-      conf: Configuration): Map[String, JKeyValueStore[_, _]] = {
-    kvstores
-        // Open the kvstores defined for the extract phase.
-        .map { kvstore: KVStore =>
-          val properties = kvstore.properties
+      keyValueStoreSpecs: Seq[KeyValueStoreSpec],
+      configuration: Configuration): Map[String, JKeyValueStore[_, _]] = {
+    keyValueStoreSpecs
+        // Open the key value stores defined for the extract phase.
+        .map { keyValueStoreSpec: KeyValueStoreSpec =>
+          val properties = keyValueStoreSpec.properties
 
-          // Handle each type of kvstore differently.
-          val jkvstore: JKeyValueStore[_, _] = KvStoreType.valueOf(kvstore.storeType) match {
-            case KvStoreType.AVRO_KV => {
-
+          // Handle each type of keyValueStoreSpec differently.
+          val jKeyValueStore: JKeyValueStore[_, _] = keyValueStoreSpec.storeType match {
+            case "AVRO_KV" => {
               // Open AvroKV.
               val builder = JAvroKVRecordKeyValueStore
                   .builder()
-                  .withConfiguration(conf)
+                  .withConfiguration(configuration)
                   .withInputPath(new Path(properties("path")))
               if (properties.contains("use_dcache")) {
                 builder
@@ -175,11 +167,11 @@ object ModelJobUtils {
                 builder.build()
               }
             }
-            case KvStoreType.AVRO_RECORD => {
+            case "AVRO_RECORD" => {
               // Open AvroRecord.
               val builder = JAvroRecordKeyValueStore
                   .builder()
-                  .withConfiguration(conf)
+                  .withConfiguration(configuration)
                   .withKeyFieldName(properties("key_field"))
                   .withInputPath(new Path(properties("path")))
               if (properties.contains("use_dcache")) {
@@ -190,23 +182,24 @@ object ModelJobUtils {
                 builder.build()
               }
             }
-            case KvStoreType.KIJI_TABLE => {
+            case "KIJI_TABLE" => {
               // Kiji table.
               val uri: KijiURI = KijiURI.newBuilder(properties("uri")).build()
               val columnName: KijiColumnName = new KijiColumnName(properties("column"))
               JKijiTableKeyValueStore
                   .builder()
-                  .withConfiguration(conf)
+                  .withConfiguration(configuration)
                   .withTable(uri)
-                  .withColumn(columnName.getFamily(), columnName.getQualifier())
+                  .withColumn(columnName.getFamily, columnName.getQualifier)
                   .build()
             }
-            case kvstoreType => throw new UnsupportedOperationException(
-                "KeyValueStores of type \"%s\" are not supported".format(kvstoreType.toString))
+            case keyValueStoreType => throw new UnsupportedOperationException(
+                "KeyValueStores of type \"%s\" are not supported"
+                    .format(keyValueStoreType.toString))
           }
 
-          // Pack the kvstore into a tuple with its name.
-          (kvstore.name, jkvstore)
+          // Pack the keyValueStoreSpec into a tuple with its name.
+          (keyValueStoreSpec.name, jKeyValueStore)
         }
         .toMap
   }
@@ -221,8 +214,9 @@ object ModelJobUtils {
   private def getTimeRange(inputSpec: InputSpec): TimeRange = {
     inputSpec match {
       case kijiInputSpec: KijiInputSpec =>
-        Between(kijiInputSpec.dataRequest.minTimeStamp,
-            kijiInputSpec.dataRequest.maxTimeStamp)
+        Between(
+            kijiInputSpec.dataRequest.minTimestamp,
+            kijiInputSpec.dataRequest.maxTimestamp)
       case _ => throw new IllegalStateException("Unsupported Input Specification")
     }
   }
@@ -234,27 +228,36 @@ object ModelJobUtils {
    * @return a map from the column requests to field names.
    */
   private def getInputColumnMap(inputSpec: KijiInputSpec): Map[ColumnRequest, Symbol] = {
-    val columnMap: Map[ColumnRequest, String] = inputSpec.dataRequest.columnRequests.map (
-        (columnReq: ExpressColumnRequest) => {
-          val options = new ColumnRequestOptions(columnReq.maxVersions, columnReq.filter.map {
-            _.getKijiColumnFilter()
-          })
-          val kijiColName = new KijiColumnName(columnReq.name)
-          val colReq: ColumnRequest = if (kijiColName.isFullyQualified) {
-            QualifiedColumn(kijiColName.getFamily, kijiColName.getQualifier, options)
-          } else {
-            // TODO specify regex matching for qualifier
-            ColumnFamily(kijiColName.getFamily, None, options)
-          }
-          (colReq -> columnReq.name)
+    val columnMap: Map[ColumnRequest, String] = inputSpec
+        .dataRequest
+        .columnRequests
+        .map { expressColumnRequest: ExpressColumnRequest =>
+          val options = new ColumnRequestOptions(
+              expressColumnRequest.maxVersions,
+              expressColumnRequest.filter.map { _.toKijiColumnFilter })
+          val kijiColumnName = new KijiColumnName(expressColumnRequest.name)
+          val columnRequest: ColumnRequest =
+              if (kijiColumnName.isFullyQualified) {
+                QualifiedColumn(
+                    kijiColumnName.getFamily,
+                    kijiColumnName.getQualifier,
+                    options)
+              } else {
+                // TODO specify regex matching for qualifier
+                ColumnFamily(
+                    kijiColumnName.getFamily,
+                    None,
+                    options)
+              }
+
+          columnRequest -> expressColumnRequest.name
         }
-    ).toMap
-    val bindingMap: Map[String, String] = inputSpec.fieldBindings.seq.map(
-        fieldBinding => {
-          fieldBinding.storeFieldName -> fieldBinding.tupleFieldName
-        }
-    ).toMap
-    columnMap.map{ case(k,v) => k -> Symbol(bindingMap(v)) }
+        .toMap
+    val bindingMap: Map[String, Symbol] = inputSpec
+        .fieldBindings
+        .map { fieldBinding => fieldBinding.storeFieldName -> Symbol(fieldBinding.tupleFieldName) }
+        .toMap
+    columnMap.mapValues { columnName: String => bindingMap(columnName) }
   }
 
   /**
@@ -267,31 +270,23 @@ object ModelJobUtils {
    * @return the input [[com.twitter.scalding.Source]] created for the given phase.
    */
   def inputSpecToSource(modelEnvironment: ModelEnvironment, phase: PhaseType): Source = {
-    val inputConfig: InputSpec = phase match {
+    val inputSpec: InputSpec = phase match {
       case PhaseType.PREPARE => modelEnvironment
           .prepareEnvironment
-          .getOrElse {
-            throw new IllegalArgumentException("Prepare environment does not exist")
-          }
-          .inputConfig
+          .getOrElse { throw new IllegalArgumentException("Prepare environment does not exist") }
+          .inputSpec
       case PhaseType.TRAIN => modelEnvironment
           .trainEnvironment
-          .getOrElse {
-            throw new IllegalArgumentException("Prepare environment does not exist")
-          }
-          .inputConfig
+          .getOrElse { throw new IllegalArgumentException("Prepare environment does not exist") }
+          .inputSpec
       case PhaseType.SCORE => modelEnvironment
           .scoreEnvironment
-          .getOrElse {
-            throw new IllegalArgumentException("Prepare environment does not exist")
-          }
-          .inputConfig
+          .getOrElse { throw new IllegalArgumentException("Prepare environment does not exist") }
+          .inputSpec
     }
-    inputConfig match {
-      case kijiInputSpec: KijiInputSpec => {
-        KijiInput(kijiInputSpec.tableUri,
-            getTimeRange(kijiInputSpec))
-            .apply(getInputColumnMap(kijiInputSpec))
+    inputSpec match {
+      case spec @ KijiInputSpec(tableUri, _, _) => {
+        KijiInput(tableUri, getTimeRange(spec))(getInputColumnMap(spec))
       }
       case _ => throw new IllegalArgumentException("Prepare environment does not exist")
     }
@@ -305,9 +300,9 @@ object ModelJobUtils {
    * @return a map from field name to string specifying the Kiji column.
    */
   private def getOutputColumnMap(kijiOutputSpec: KijiOutputSpec): Seq[(Symbol, String)] = {
-    kijiOutputSpec.fieldBindings.map(fieldBinding => {
-      (Symbol(fieldBinding.tupleFieldName), fieldBinding.storeFieldName)
-    })
+    kijiOutputSpec
+        .fieldBindings
+        .map { fieldBinding => Symbol(fieldBinding.tupleFieldName) -> fieldBinding.storeFieldName }
   }
 
   /**
@@ -322,33 +317,28 @@ object ModelJobUtils {
   def outputSpecToSource(modelEnvironment: ModelEnvironment, phase: PhaseType): Source = {
     val outputConfig: OutputSpec = phase match {
       case PhaseType.PREPARE => modelEnvironment
-        .prepareEnvironment
-        .getOrElse {
-          throw new IllegalArgumentException("Prepare environment does not exist")
-        }
-        .outputConfig
+          .prepareEnvironment
+          .getOrElse { throw new IllegalArgumentException("Prepare environment does not exist") }
+          .outputSpec
       case PhaseType.TRAIN => modelEnvironment
-        .trainEnvironment
-        .getOrElse {
-          throw new IllegalArgumentException("Prepare environment does not exist")
-        }
-        .outputConfig
+          .trainEnvironment
+          .getOrElse { throw new IllegalArgumentException("Prepare environment does not exist") }
+          .outputSpec
       case PhaseType.SCORE => modelEnvironment
-        .scoreEnvironment
-        .getOrElse {
-          throw new IllegalArgumentException("Prepare environment does not exist")
-        }
-        .outputConfig
+          .scoreEnvironment
+          .getOrElse { throw new IllegalArgumentException("Prepare environment does not exist") }
+          .outputSpec
     }
     outputConfig match {
-      case kijiOutputSpec: KijiOutputSpec => {
-        val kijiOutput: KijiOutput = if (kijiOutputSpec.timeStampField.isDefined) {
-          KijiOutput(kijiOutputSpec.tableUri,
-            Symbol(kijiOutputSpec.timeStampField.get))
-        } else {
-          KijiOutput(kijiOutputSpec.tableUri)
-        }
-        kijiOutput.apply(getOutputColumnMap(kijiOutputSpec):_*)
+      case spec @ KijiOutputSpec(tableUri, fieldBindings, timestampField) => {
+        val outputColumnMapping: Seq[(Symbol, String)] = getOutputColumnMap(spec)
+        val timestampSymbol: Symbol = timestampField
+            .map { field: String => Symbol(field) }
+            // scalastyle:off null
+            .getOrElse { null }
+            // scalastyle:on null
+
+        KijiOutput(tableUri, timestampSymbol)(outputColumnMapping: _*)
       }
       case _ => throw new IllegalArgumentException("Prepare environment does not exist")
     }

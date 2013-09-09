@@ -21,6 +21,7 @@ package org.kiji.express.shellext
 
 import java.io.File
 
+import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
 
 import org.kiji.annotations.ApiAudience
@@ -81,7 +82,7 @@ private[express] final class LifecycleExecutionCommand (
    *
    * @return the Hadoop configuration for jobs launched while executing lifecycle phases.
    */
-  private[express] def hadoopConfiguration = {
+  private[express] def hadoopConfiguration: Configuration = {
     // Extract libjars and arbitrary properties to set in the configuration, specified by the user.
     val JobsConfiguration(libjarsList, propertiesMap) = jobsConfiguration
     // The configuration we'll populate with user settings.
@@ -96,7 +97,7 @@ private[express] final class LifecycleExecutionCommand (
     // files.
     val libjarsURIs = libjarsList.map { libjar =>
       val libjarFile = new File(libjar)
-      "file://" + libjarFile.getAbsolutePath()
+      "file://" + libjarFile.getAbsolutePath
     }
 
     // Add each of the libjars to the "tmpjars" variable of the configuration,

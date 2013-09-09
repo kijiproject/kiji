@@ -37,7 +37,7 @@ class TestPreparer extends Preparer {
 }
 
 class PreparerSuite extends FunSuite {
-  test("A preparer can be constructed via reflection") {
+  test("A preparerClass can be constructed via reflection") {
     classOf[TestPreparer].newInstance
   }
 }

@@ -20,20 +20,28 @@
 package org.kiji.express.modeling.config
 
 import org.scalatest.FunSuite
+
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.filter.RegexQualifierColumnFilter
 
-class DataRequestTestSuite extends FunSuite {
+class ExpressDataRequestSuite extends FunSuite {
   test("ExpressDataRequest can be translated to a KijiDataRequest.") {
-    val startingDataRequest: ExpressDataRequest = new ExpressDataRequest(0, 100010L,
-        new ExpressColumnRequest("info:test", 2, Option(new RegexQualifierFilter("x*"))) :: Nil)
-    val transformed2KDR: KijiDataRequest = startingDataRequest.toKijiDataRequest()
+    val testDataRequest = ExpressDataRequest(
+        minTimestamp = 0,
+        maxTimestamp = 100010L,
+        columnRequests = Seq(
+            ExpressColumnRequest(
+                name = "info:test",
+                maxVersions = 2,
+                filter = Some(RegexQualifierFilter("x*")))))
 
-    assert(0 === transformed2KDR.getMinTimestamp)
-    assert(100010L === transformed2KDR.getMaxTimestamp)
-    val colReq: KijiDataRequest.Column = transformed2KDR.getColumn("info", "test")
-    assert("info:test" === colReq.getColumnName.getName)
-    assert(2 === colReq.getMaxVersions)
-    assert(colReq.getFilter.isInstanceOf[RegexQualifierColumnFilter])
+    val kijiDataRequest: KijiDataRequest = testDataRequest.toKijiDataRequest
+    assert(0 === kijiDataRequest.getMinTimestamp)
+    assert(100010L === kijiDataRequest.getMaxTimestamp)
+
+    val columnRequest: KijiDataRequest.Column = kijiDataRequest.getColumn("info", "test")
+    assert("info:test" === columnRequest.getColumnName.getName)
+    assert(2 === columnRequest.getMaxVersions)
+    assert(columnRequest.getFilter.isInstanceOf[RegexQualifierColumnFilter])
   }
 }

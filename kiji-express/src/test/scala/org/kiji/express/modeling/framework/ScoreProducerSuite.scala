@@ -28,7 +28,7 @@ import org.kiji.express.modeling.config.ExpressDataRequest
 import org.kiji.express.modeling.config.FieldBinding
 import org.kiji.express.modeling.config.KijiInputSpec
 import org.kiji.express.modeling.config.KijiSingleColumnOutputSpec
-import org.kiji.express.modeling.config.KVStore
+import org.kiji.express.modeling.config.KeyValueStoreSpec
 import org.kiji.express.modeling.config.ModelDefinition
 import org.kiji.express.modeling.config.ModelEnvironment
 import org.kiji.express.modeling.config.ScoreEnvironment
@@ -75,8 +75,8 @@ class ScoreProducerSuite
       val modelDefinition: ModelDefinition = ModelDefinition(
           name = "test-model-definition",
           version = "1.0",
-          scoreExtractor = Some(classOf[ScoreProducerSuite.DoublingExtractor]),
-          scorer = Some(classOf[ScoreProducerSuite.UpperCaseScorer]))
+          scoreExtractorClass = Some(classOf[ScoreProducerSuite.DoublingExtractor]),
+          scorerClass = Some(classOf[ScoreProducerSuite.UpperCaseScorer]))
       val modelEnvironment: ModelEnvironment = ModelEnvironment(
           name = "test-model-environment",
           version = "1.0",
@@ -89,8 +89,8 @@ class ScoreProducerSuite
                   fieldBindings = Seq(
                       FieldBinding(tupleFieldName = "field", storeFieldName = "family:column1"))),
               KijiSingleColumnOutputSpec(uri.toString, "family:column2"),
-              kvstores = Seq(
-                  KVStore(
+              keyValueStoreSpecs = Seq(
+                  KeyValueStoreSpec(
                       storeType = "AVRO_KV",
                       name = "side_data",
                       properties = Map(
@@ -151,8 +151,8 @@ class ScoreProducerSuite
       val modelDefinition: ModelDefinition = ModelDefinition(
           name = "test-model-definition",
           version = "1.0",
-          scoreExtractor = Some(classOf[ScoreProducerSuite.TwoArgDoublingExtractor]),
-          scorer = Some(classOf[ScoreProducerSuite.TwoArgUpperCaseScorer]))
+          scoreExtractorClass = Some(classOf[ScoreProducerSuite.TwoArgDoublingExtractor]),
+          scorerClass = Some(classOf[ScoreProducerSuite.TwoArgUpperCaseScorer]))
       val modelEnvironment: ModelEnvironment = ModelEnvironment(
           name = "test-model-environment",
           version = "1.0",
@@ -166,7 +166,7 @@ class ScoreProducerSuite
                       FieldBinding(tupleFieldName = "i1", storeFieldName = "family:column1"),
                       FieldBinding(tupleFieldName = "i2", storeFieldName = "family:column2"))),
               KijiSingleColumnOutputSpec(uri.toString, "family:column2"),
-              kvstores = Seq())))
+              keyValueStoreSpecs = Seq())))
 
       // Build the produce job.
       val produceJob = ScoreProducerJobBuilder.buildJob(
@@ -218,8 +218,8 @@ class ScoreProducerSuite
       val modelDefinition: ModelDefinition = ModelDefinition(
           name = "test-model-definition",
           version = "1.0",
-          scoreExtractor = Some(classOf[FirstValueExtractor]),
-          scorer = Some(classOf[ScoreProducerSuite.UpperCaseScorer]))
+          scoreExtractorClass = Some(classOf[FirstValueExtractor]),
+          scorerClass = Some(classOf[ScoreProducerSuite.UpperCaseScorer]))
       val modelEnvironment: ModelEnvironment = ModelEnvironment(
           name = "test-model-environment",
           version = "1.0",
@@ -233,7 +233,7 @@ class ScoreProducerSuite
                       FieldBinding(tupleFieldName = "feature", storeFieldName = "family:column1"))
               ),
               KijiSingleColumnOutputSpec(uri.toString, "family:column2"),
-              kvstores = Seq())))
+              keyValueStoreSpecs = Seq())))
 
       // Build the produce job.
       val produceJob = ScoreProducerJobBuilder.buildJob(
@@ -264,7 +264,7 @@ object ScoreProducerSuite {
   class DoublingExtractor extends Extractor {
     override val extractFn = extract('field -> 'feature) { field: KijiSlice[String] =>
       val str: String = field.getFirstValue
-      val sideData: KeyValueStore[Int, String] = kvstore("side_data")
+      val sideData: KeyValueStore[Int, String] = keyValueStore("side_data")
 
       str + str + sideData(1)
     }

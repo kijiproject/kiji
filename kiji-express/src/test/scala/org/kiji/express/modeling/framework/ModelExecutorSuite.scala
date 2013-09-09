@@ -37,7 +37,7 @@ import org.kiji.express.modeling.config.FieldBinding
 import org.kiji.express.modeling.config.KijiInputSpec
 import org.kiji.express.modeling.config.KijiOutputSpec
 import org.kiji.express.modeling.config.KijiSingleColumnOutputSpec
-import org.kiji.express.modeling.config.KVStore
+import org.kiji.express.modeling.config.KeyValueStoreSpec
 import org.kiji.express.modeling.config.ModelDefinition
 import org.kiji.express.modeling.config.ModelEnvironment
 import org.kiji.express.modeling.config.PrepareEnvironment
@@ -61,10 +61,10 @@ class ModelExecutorSuite extends KijiSuite {
     val modelDef: ModelDefinition = ModelDefinition(
         name = "test-model-definition",
         version = "1.0",
-        preparer = Some(classOf[ModelExecutorSuite.PrepareWordCounter]),
-        trainer = Some(classOf[ModelExecutorSuite.TrainWordCounter]),
-        scoreExtractor = Some(classOf[ScoreProducerSuite.DoublingExtractor]),
-        scorer = Some(classOf[ScoreProducerSuite.UpperCaseScorer]))
+        preparerClass = Some(classOf[ModelExecutorSuite.PrepareWordCounter]),
+        trainerClass = Some(classOf[ModelExecutorSuite.TrainWordCounter]),
+        scoreExtractorClass = Some(classOf[ScoreProducerSuite.DoublingExtractor]),
+        scorerClass = Some(classOf[ScoreProducerSuite.UpperCaseScorer]))
     val modelEnv = ModelEnvironment(
         "myname",
         "1.0.0",
@@ -98,8 +98,8 @@ class ModelExecutorSuite extends KijiSuite {
       val modelDefinition: ModelDefinition = ModelDefinition(
         name = "test-model-definition",
         version = "1.0",
-        scoreExtractor = Some(classOf[ScoreProducerSuite.DoublingExtractor]),
-        scorer = Some(classOf[ScoreProducerSuite.UpperCaseScorer]))
+        scoreExtractorClass = Some(classOf[ScoreProducerSuite.DoublingExtractor]),
+        scorerClass = Some(classOf[ScoreProducerSuite.UpperCaseScorer]))
       val modelEnvironment: ModelEnvironment = ModelEnvironment(
         name = "test-model-environment",
         version = "1.0",
@@ -112,8 +112,8 @@ class ModelExecutorSuite extends KijiSuite {
             fieldBindings = Seq(
               FieldBinding(tupleFieldName = "field", storeFieldName = "family:column1"))),
           KijiSingleColumnOutputSpec(uri.toString, "family:column2"),
-          kvstores = Seq(
-            KVStore(
+          keyValueStoreSpecs = Seq(
+            KeyValueStoreSpec(
               storeType = "AVRO_KV",
               name = "side_data",
               properties = Map(
@@ -170,33 +170,34 @@ class ModelExecutorSuite extends KijiSuite {
     val modelDefinition: ModelDefinition = ModelDefinition(
         name = "prepare-model-definition",
         version = "1.0",
-        preparer = Some(classOf[ModelExecutorSuite.PrepareWordCounter]))
+        preparerClass = Some(classOf[ModelExecutorSuite.PrepareWordCounter]))
 
     val request: ExpressDataRequest = new ExpressDataRequest(0, Long.MaxValue,
         new ExpressColumnRequest("family:column1", 1, None) :: Nil)
 
     val inputUri: KijiURI = doAndRelease(kiji.openTable("input_table")) { table: KijiTable =>
-      table.getURI()}
+      table.getURI
+    }
 
     doAndRelease(kiji.openTable("output_table")) { table: KijiTable =>
-      val outputUri: KijiURI = table.getURI()
+      val outputUri: KijiURI = table.getURI
 
       val modelEnvironment: ModelEnvironment = ModelEnvironment(
         name = "prepare-model-environment",
         version = "1.0",
         prepareEnvironment = Some(PrepareEnvironment(
-            inputConfig = KijiInputSpec(
+            inputSpec = KijiInputSpec(
                 inputUri.toString,
                 dataRequest = request,
                 fieldBindings = Seq(
                     FieldBinding(tupleFieldName = "word", storeFieldName = "family:column1"))
             ),
-            outputConfig = KijiOutputSpec(
+            outputSpec = KijiOutputSpec(
                 tableUri = outputUri.toString,
                 fieldBindings = Seq(
                     FieldBinding(tupleFieldName = "size", storeFieldName = "family:column"))
             ),
-            kvstores = Seq()
+            keyValueStoreSpecs = Seq()
         )),
         trainEnvironment = None,
         scoreEnvironment = None
@@ -241,49 +242,50 @@ class ModelExecutorSuite extends KijiSuite {
     outputLayoutDesc.setName("output_table")
 
     val kiji: Kiji = new InstanceBuilder("default")
-      .withTable(outputLayoutDesc)
-      .withTable(testLayoutDesc)
-      .withRow("row1")
-      .withFamily("family")
-      .withQualifier("column1").withValue("foo")
-      .withRow("row2")
-      .withFamily("family")
-      .withQualifier("column1").withValue("bar")
-      .withRow("row3")
-      .withFamily("family")
-      .withQualifier("column1").withValue("bar")
-      .build()
+        .withTable(outputLayoutDesc)
+        .withTable(testLayoutDesc)
+        .withRow("row1")
+        .withFamily("family")
+        .withQualifier("column1").withValue("foo")
+        .withRow("row2")
+        .withFamily("family")
+        .withQualifier("column1").withValue("bar")
+        .withRow("row3")
+        .withFamily("family")
+        .withQualifier("column1").withValue("bar")
+        .build()
 
     val modelDefinition: ModelDefinition = ModelDefinition(
       name = "prepare-model-definition",
       version = "1.0",
-      trainer = Some(classOf[ModelExecutorSuite.TrainWordCounter]))
+      trainerClass = Some(classOf[ModelExecutorSuite.TrainWordCounter]))
 
     val request: ExpressDataRequest = new ExpressDataRequest(0, Long.MaxValue,
       new ExpressColumnRequest("family:column1", 1, None) :: Nil)
 
     val inputUri: KijiURI = doAndRelease(kiji.openTable("input_table")) { table: KijiTable =>
-      table.getURI()}
+      table.getURI
+    }
 
     doAndRelease(kiji.openTable("output_table")) { table: KijiTable =>
-      val outputUri: KijiURI = table.getURI()
+      val outputUri: KijiURI = table.getURI
 
       val modelEnvironment: ModelEnvironment = ModelEnvironment(
         name = "prepare-model-environment",
         version = "1.0",
         trainEnvironment = Some(TrainEnvironment(
-          inputConfig = KijiInputSpec(
+          inputSpec = KijiInputSpec(
             inputUri.toString,
             dataRequest = request,
             fieldBindings = Seq(
               FieldBinding(tupleFieldName = "word", storeFieldName = "family:column1"))
           ),
-          outputConfig = KijiOutputSpec(
+          outputSpec = KijiOutputSpec(
             tableUri = outputUri.toString,
             fieldBindings = Seq(
               FieldBinding(tupleFieldName = "size", storeFieldName = "family:column"))
           ),
-          kvstores = Seq()
+          keyValueStoreSpecs = Seq()
         )),
         prepareEnvironment = None,
         scoreEnvironment = None
@@ -297,7 +299,9 @@ class ModelExecutorSuite extends KijiSuite {
       // their own jobs. This makes the test below run in HadoopTest mode instead
       // of Hadoop mode whenever it is run after another test that uses JobTest.
       // Remove this after the bug in Scalding is fixed.
-      com.twitter.scalding.Mode.mode = Hdfs(false, HBaseConfiguration.create())
+      com.twitter.scalding.Mode.mode = Hdfs(
+          strict = false,
+          conf = HBaseConfiguration.create())
 
       // Verify that everything went as expected.
       assert(modelExecutor.runTrainer())
@@ -317,124 +321,129 @@ class ModelExecutorSuite extends KijiSuite {
       }
     }
     kiji.release()
-
   }
 
   test("A prepare-train-score job can be run over a table") {
-    //  The prepare phase will count the number of occurences in of values in family:column1
-    //  column of the input_table and write this to the output_table.
-    //  The train phase will read the output_table and calculate an average of the counts, and
-    //  write this value to the output_table at a row with entityId "AVERAGE".
-    //  The score phase uses a doubling extractor and an upper case scorer. It takes as input
-    //  the average calculated by the trainer. It writes the output to the output_table at a row
-    //  with entityId "FINAL".
+    // The prepare phase will count the number of occurrences of values in the 'family:column1'
+    // column of the 'input_table' and write this to the 'family:column' column of the
+    // 'prepare_output_table'.
+    //
+    // The train phase will read the 'family:column' column of the 'prepare_output_table' and
+    // calculate an average of the generated counts, and write this value to the 'family:column1'
+    // column of the 'train_output_table' at a row with entityId "AVERAGE".
+    //
+    // The score phase uses an extractor that doubles the string it is passed and an scorer that
+    // takes a string and produces an upper case version of that string. It takes as input
+    // the average calculated by the trainerClass. It writes the output to the output_table at a row
+    // with entityId "FINAL".
 
-    val testLayoutDesc: TableLayoutDesc = layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS).getDesc
-    testLayoutDesc.setName("input_table")
+    // Setup the test environment.
+    val kiji: Kiji = {
+      val testLayoutDesc: TableLayoutDesc = layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS).getDesc
+      testLayoutDesc.setName("input_table")
 
-    val prepareOutputLayoutDesc: TableLayoutDesc = layout(KijiTableLayouts.SIMPLE).getDesc
-    prepareOutputLayoutDesc.setName("prepare_output_table")
+      val prepareOutputLayoutDesc: TableLayoutDesc = layout(KijiTableLayouts.SIMPLE).getDesc
+      prepareOutputLayoutDesc.setName("prepare_output_table")
 
-    val trainOutputLayoutDesc: TableLayoutDesc = layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS).getDesc
-    trainOutputLayoutDesc.setName("train_output_table")
+      val trainOutputLayoutDesc: TableLayoutDesc =
+          layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS).getDesc
+      trainOutputLayoutDesc.setName("train_output_table")
 
-    val kiji: Kiji = new InstanceBuilder("default")
-      .withTable(prepareOutputLayoutDesc)
-      .withTable(trainOutputLayoutDesc)
-      .withTable(testLayoutDesc)
-      .withRow("row1")
-      .withFamily("family")
-      .withQualifier("column1").withValue("foo")
-      .withRow("row2")
-      .withFamily("family")
-      .withQualifier("column1").withValue("bar")
-      .withRow("row3")
-      .withFamily("family")
-      .withQualifier("column1").withValue("bar")
-      .build()
+      new InstanceBuilder("default")
+          .withTable(prepareOutputLayoutDesc)
+          .withTable(trainOutputLayoutDesc)
+          .withTable(testLayoutDesc)
+          .withRow("row1")
+          .withFamily("family")
+          .withQualifier("column1").withValue("foo")
+          .withRow("row2")
+          .withFamily("family")
+          .withQualifier("column1").withValue("bar")
+          .withRow("row3")
+          .withFamily("family")
+          .withQualifier("column1").withValue("bar")
+          .build()
+    }
 
     val modelDefinition: ModelDefinition = ModelDefinition(
-      name = "prepare-model-definition",
-      version = "1.0",
-      preparer = Some(classOf[ModelExecutorSuite.PrepareWordCounter]),
-      trainer = Some(classOf[ModelExecutorSuite.AverageTrainer]),
-      scoreExtractor = Some(classOf[ScoreProducerSuite.DoublingExtractor]),
-      scorer = Some(classOf[ScoreProducerSuite.UpperCaseScorer])
-    )
+        name = "prepare-model-definition",
+        version = "1.0",
+        preparerClass = Some(classOf[ModelExecutorSuite.PrepareWordCounter]),
+        trainerClass = Some(classOf[ModelExecutorSuite.AverageTrainer]),
+        scoreExtractorClass = Some(classOf[ScoreProducerSuite.DoublingExtractor]),
+        scorerClass = Some(classOf[ScoreProducerSuite.UpperCaseScorer]))
 
-    val prepareRequest: ExpressDataRequest = new ExpressDataRequest(0, Long.MaxValue,
-      new ExpressColumnRequest("family:column1", 1, None) :: Nil)
-
-    val trainRequest: ExpressDataRequest = new ExpressDataRequest(0, Long.MaxValue,
-      new ExpressColumnRequest("family:column", 1, None) :: Nil)
-
-    val scoreRequest: ExpressDataRequest = new ExpressDataRequest(0, Long.MaxValue,
-      new ExpressColumnRequest("family:column1", 1, None) :: Nil)
+    val prepareRequest: ExpressDataRequest = ExpressDataRequest(
+        minTimestamp = 0,
+        maxTimestamp = Long.MaxValue,
+        columnRequests  = Seq(ExpressColumnRequest("family:column1", 1, None)))
+    val trainRequest: ExpressDataRequest = ExpressDataRequest(
+        minTimestamp = 0,
+        maxTimestamp = Long.MaxValue,
+        columnRequests = Seq(ExpressColumnRequest("family:column", 1, None)))
+    val scoreRequest: ExpressDataRequest = ExpressDataRequest(
+        minTimestamp = 0,
+        maxTimestamp = Long.MaxValue,
+        columnRequests = Seq(ExpressColumnRequest("family:column1", 1, None)))
 
     val sideDataPath: Path = KeyValueStoreImplSuite.generateAvroKVRecordKeyValueStore()
 
     val inputUri: KijiURI = doAndRelease(kiji.openTable("input_table")) { table: KijiTable =>
-      table.getURI()}
+      table.getURI
+    }
 
     val prepareOutputUri: KijiURI = doAndRelease(kiji.openTable("prepare_output_table")) {
-      table: KijiTable => table.getURI()}
+      table: KijiTable => table.getURI
+    }
 
     doAndRelease(kiji.openTable("train_output_table")) { table: KijiTable =>
-      val trainOutputUri: KijiURI = table.getURI()
+      val trainOutputUri: KijiURI = table.getURI
 
       val modelEnvironment: ModelEnvironment = ModelEnvironment(
         name = "prepare-model-environment",
         version = "1.0",
         prepareEnvironment = Some(PrepareEnvironment(
-          inputConfig = KijiInputSpec(
-            inputUri.toString,
-            dataRequest = prepareRequest,
-            fieldBindings = Seq(
-              FieldBinding(tupleFieldName = "word", storeFieldName = "family:column1"))
-          ),
-          outputConfig = KijiOutputSpec(
-            tableUri = prepareOutputUri.toString,
-            fieldBindings = Seq(
-              FieldBinding(tupleFieldName = "size", storeFieldName = "family:column"))
-          ),
-          kvstores = Seq()
-        )),
+            inputSpec = KijiInputSpec(
+                tableUri = inputUri.toString,
+                dataRequest = prepareRequest,
+                fieldBindings = Seq(
+                    FieldBinding(tupleFieldName = "word", storeFieldName = "family:column1"))),
+            outputSpec = KijiOutputSpec(
+                tableUri = prepareOutputUri.toString,
+                fieldBindings = Seq(
+                    FieldBinding(tupleFieldName = "size", storeFieldName = "family:column"))),
+            keyValueStoreSpecs = Seq())),
         trainEnvironment = Some(TrainEnvironment(
-          inputConfig = KijiInputSpec(
-            prepareOutputUri.toString,
-            dataRequest = trainRequest,
-            fieldBindings = Seq(
-              FieldBinding(tupleFieldName = "word", storeFieldName = "family:column"))
-          ),
-          outputConfig = KijiOutputSpec(
-            trainOutputUri.toString,
-            fieldBindings = Seq(
-              FieldBinding(tupleFieldName = "avgString", storeFieldName = "family:column1"))
-          ),
-          kvstores = Seq()
-        )),
+            inputSpec = KijiInputSpec(
+                tableUri = prepareOutputUri.toString,
+                dataRequest = trainRequest,
+                fieldBindings = Seq(
+                    FieldBinding(tupleFieldName = "word", storeFieldName = "family:column"))),
+            outputSpec = KijiOutputSpec(
+                tableUri = trainOutputUri.toString,
+                fieldBindings = Seq(
+                    FieldBinding(tupleFieldName = "avgString", storeFieldName = "family:column1"))),
+            keyValueStoreSpecs = Seq())),
         scoreEnvironment = Some(ScoreEnvironment(
-          inputConfig = KijiInputSpec(
-            trainOutputUri.toString,
-            dataRequest = scoreRequest,
-            fieldBindings = Seq(
-              FieldBinding(tupleFieldName = "field", storeFieldName = "family:column1"))
-          ),
-          outputConfig = KijiSingleColumnOutputSpec(
-            trainOutputUri.toString,
-            "family:column2"
-          ),
-          kvstores = Seq(
-              KVStore(
-                  storeType = "AVRO_KV",
-                  name = "side_data",
-                  properties = Map(
-                      "path" -> sideDataPath.toString(),
-                      // The Distributed Cache is not supported when using LocalJobRunner in
-                      // Hadoop <= 0.21.0.
-                      // See https://issues.apache.org/jira/browse/MAPREDUCE-476 for more
-                      // information.
-                      "use_dcache" -> "false")))
+            inputSpec = KijiInputSpec(
+                tableUri = trainOutputUri.toString,
+                dataRequest = scoreRequest,
+                fieldBindings = Seq(
+                    FieldBinding(tupleFieldName = "field", storeFieldName = "family:column1"))),
+            outputSpec = KijiSingleColumnOutputSpec(
+                tableUri = trainOutputUri.toString,
+                "family:column2"),
+            keyValueStoreSpecs = Seq(
+                KeyValueStoreSpec(
+                    storeType = "AVRO_KV",
+                    name = "side_data",
+                    properties = Map(
+                        "path" -> sideDataPath.toString,
+                        // The Distributed Cache is not supported when using LocalJobRunner in
+                        // Hadoop <= 0.21.0.
+                        // See https://issues.apache.org/jira/browse/MAPREDUCE-476 for more
+                        // information.
+                        "use_dcache" -> "false")))
         ))
       )
 
@@ -453,15 +462,14 @@ class ModelExecutorSuite extends KijiSuite {
 
       doAndClose(table.openTableReader()) { reader: KijiTableReader =>
         val v1 = reader
-          .get(table.getEntityId("AVERAGE"), KijiDataRequest.create("family", "column2"))
-          .getMostRecentValue("family", "column2")
-          .toString
+            .get(table.getEntityId("AVERAGE"), KijiDataRequest.create("family", "column2"))
+            .getMostRecentValue("family", "column2")
+            .toString
 
         assert("1.5 UNITS1.5 UNITSONE" === v1)
       }
     }
     kiji.release()
-
   }
 }
 
@@ -469,12 +477,13 @@ object ModelExecutorSuite {
   class PrepareWordCounter extends Preparer {
     class WordCountJob(input: Source, output: Source) extends PreparerJob {
       input
-        .flatMapTo('word -> 'countedWord) { slice: KijiSlice[String] =>
-            slice.cells.map { cell => cell.datum } }
-        .groupBy('countedWord) { _.size }
-        .map('countedWord -> 'entityId) {countedWord: String => EntityId(countedWord)}
-        .map('size -> 'size) {size: Long => size.toString}
-        .write(output)
+          .flatMapTo('word -> 'countedWord) { slice: KijiSlice[String] =>
+            slice.cells.map { cell => cell.datum }
+          }
+          .groupBy('countedWord) { _.size }
+          .map('countedWord -> 'entityId) { countedWord: String => EntityId(countedWord) }
+          .map('size -> 'size) { size: Long => size.toString }
+          .write(output)
     }
 
     override def prepare(input: Source, output: Source): Boolean = {
@@ -486,12 +495,13 @@ object ModelExecutorSuite {
   class TrainWordCounter extends Trainer {
     class WordCountJob(input: Source, output: Source) extends TrainerJob {
       input
-        .flatMapTo('word -> 'countedWord) { slice: KijiSlice[String] =>
-        slice.cells.map { cell => cell.datum } }
-        .groupBy('countedWord) { _.size }
-        .map('countedWord -> 'entityId) {countedWord: String => EntityId(countedWord)}
-        .map('size -> 'size) {size: Long => size.toString}
-        .write(output)
+          .flatMapTo('word -> 'countedWord) { slice: KijiSlice[String] =>
+            slice.cells.map { _.datum }
+          }
+          .groupBy('countedWord) { _.size }
+          .map('countedWord -> 'entityId) { countedWord: String => EntityId(countedWord) }
+          .map('size -> 'size) { size: Long => size.toString }
+          .write(output)
     }
 
     override def train(input: Source, output: Source): Boolean = {
@@ -503,13 +513,14 @@ object ModelExecutorSuite {
   class AverageTrainer extends Trainer {
     class AverageTrainerJob(input: Source, output: Source) extends TrainerJob {
       input
-        .flatMapTo('word -> 'countedWord) { slice: KijiSlice[String] =>
-        slice.cells.map { cell => cell.datum } }
-        .mapTo('countedWord -> 'number) {countedWord: String => countedWord.toLong}
-        .groupAll(_.average('number))
-        .mapTo('number -> 'avgString) {avg: Double => avg.toString + " units"}
-        .insert('entityId, EntityId("AVERAGE"))
-        .write(output)
+          .flatMapTo('word -> 'countedWord) { slice: KijiSlice[String] =>
+            slice.cells.map { _.datum }
+          }
+          .mapTo('countedWord -> 'number) { countedWord: String => countedWord.toLong }
+          .groupAll { _.average('number) }
+          .mapTo('number -> 'avgString) { avg: Double => avg.toString + " units" }
+          .insert('entityId, EntityId("AVERAGE"))
+          .write(output)
     }
 
     override def train(input: Source, output: Source): Boolean = {

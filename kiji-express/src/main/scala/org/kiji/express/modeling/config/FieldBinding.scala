@@ -22,7 +22,6 @@ package org.kiji.express.modeling.config
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
-import org.kiji.express.avro.AvroFieldBinding
 
 /**
  * A case class wrapper around the parameters necessary for an Avro FieldBinding, which is an
@@ -34,34 +33,7 @@ import org.kiji.express.avro.AvroFieldBinding
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 final case class FieldBinding(
     tupleFieldName: String,
-    storeFieldName: String) {
-
-  /**
-   * Builds an avro record corresponding to this field binding.
-   *
-   * @return an avro record corresponding to this field binding.
-   */
-  private[express] def toAvroFieldBinding(): AvroFieldBinding = {
-    new AvroFieldBinding(tupleFieldName, storeFieldName)
-  }
-}
-
-/**
- * The companion object to FieldBinding for factory methods.
- */
-object FieldBinding {
-  /**
-   * Converts an Avro FieldBinding specification into a FieldBinding case class.
-   *
-   * @param avroFieldBinding is the Avro specification.
-   * @return the FieldBinding specification as a FieldBinding case class.
-   */
-  private[express] def apply(avroFieldBinding: AvroFieldBinding): FieldBinding = {
-    FieldBinding(
-      tupleFieldName = avroFieldBinding.getTupleFieldName.toString,
-      storeFieldName = avroFieldBinding.getStoreFieldName.toString
-    )
-  }
-}
+    storeFieldName: String)

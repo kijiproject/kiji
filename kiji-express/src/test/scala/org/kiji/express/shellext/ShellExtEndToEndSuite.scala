@@ -79,8 +79,8 @@ class ShellExtEndToEnd extends ShellExtSuite {
         val modelDefinition: ModelDefinition = ModelDefinition(
             name = "test-model-definition",
             version = "1.0",
-            scoreExtractor = Some(classOf[ShellExtEndToEndSuite.DoublingExtractor]),
-            scorer = Some(classOf[ShellExtEndToEndSuite.UpperCaseScorer]))
+            scoreExtractorClass = Some(classOf[ShellExtEndToEndSuite.DoublingExtractor]),
+            scorerClass = Some(classOf[ShellExtEndToEndSuite.UpperCaseScorer]))
         val modelEnvironment: ModelEnvironment = ModelEnvironment(
             name = "test-model-environment",
             version = "1.0",
@@ -96,14 +96,14 @@ class ShellExtEndToEnd extends ShellExtSuite {
                   uri.toString,
                   "family:column2"
               ),
-              kvstores = Seq())))
+              keyValueStoreSpecs = Seq())))
 
         // Write the created model definition and environment to disk.
         doAndClose(new FileWriter(modelDefFile)) { writer =>
-          writer.write(modelDefinition.toJson())
+          writer.write(modelDefinition.toJson)
         }
         doAndClose(new FileWriter(modelEnvFile)) { writer =>
-          writer.write(modelEnvironment.toJson())
+          writer.write(modelEnvironment.toJson)
         }
 
         // Run a batch extract + score using the schema-shell.

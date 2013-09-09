@@ -19,21 +19,39 @@
 
 package org.kiji.express.shellext
 
-class LifecycleExecutionCommandSuite extends ShellExtSuite {
-
+class LifecycleExecutionCommandSuite
+    extends ShellExtSuite {
   test("A hadoop configuration can be obtained with key/value pairs set.") {
-    val command = new LifecycleExecutionCommand(null, null, null,
-        JobsConfiguration(Nil, Map("key1" -> "value1", "key2" -> "value2")), null)
+    // scalastyle:off null
+    // Build a new lifecycle command.
+    val command = new LifecycleExecutionCommand(
+        lifecyclePhases = null,
+        modelDefConfigureVia = null,
+        modelEnvConfigureVia = null,
+        jobsConfiguration = JobsConfiguration(Nil, Map("key1" -> "value1", "key2" -> "value2")),
+        env = null)
+    // scalastyle:on null
     val conf = command.hadoopConfiguration
+
+    // Validate the command.
     assert("value1" === conf.get("key1"))
     assert("value2" === conf.get("key2"))
   }
 
   test("A hadoop configuration can be obtained with tmpjars set.") {
-    val command = new LifecycleExecutionCommand(null, null, null,
-      JobsConfiguration(List("path1.jar", "path2.jar"), Map()), null)
+    // scalastyle:off null
+    // Build a new lifecycle command.
+    val command = new LifecycleExecutionCommand(
+        lifecyclePhases = null,
+        modelDefConfigureVia = null,
+        modelEnvConfigureVia = null,
+        jobsConfiguration = JobsConfiguration(List("path1.jar", "path2.jar"), Map()),
+        env = null)
+    // scalastyle:on null
     val conf = command.hadoopConfiguration
     val libjars = conf.getStrings("tmpjars")
+
+    // Validate the command.
     assert(libjars(0).startsWith("file:///"))
     assert(libjars(1).startsWith("file:///"))
     assert(libjars(0).endsWith("path1.jar"))

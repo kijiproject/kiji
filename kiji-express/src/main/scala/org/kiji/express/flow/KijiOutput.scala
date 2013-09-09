@@ -61,9 +61,8 @@ class KijiOutput(tableURI: String, tsField: Symbol) {
    * @return a source that can write tuple fields to a cell in columns of a Kiji table.
    */
   def apply(columns: Map[_ <: ColumnRequest, Symbol]): KijiSource = {
-    val columnMap = columns.map {
-      case (columnRequest, field) => (field, columnRequest)
-    }
+    val columnMap: Map[Symbol, ColumnRequest] = columns
+        .map { entry: (ColumnRequest, Symbol) => entry.swap }
     new KijiSource(tableURI, All, Option(tsField), 1000, columnMap)
   }
 }

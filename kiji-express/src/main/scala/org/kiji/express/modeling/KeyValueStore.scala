@@ -47,7 +47,7 @@ import org.kiji.mapreduce.kvstore.lib.{KijiTableKeyValueStore => JKijiTableKeyVa
  * and [[org.kiji.express.modeling.config.ModelEnvironment]] for more information. Once
  * configured, a key-value store can be obtained within implementations of modeling workflow
  * steps (like [[org.kiji.express.modeling.Extractor]] and [[org.kiji.express.modeling.Scorer]]
- * by using the method `#kvstores`.
+ * by using the method `#keyValueStoreSpecs`.
  *
  * A KijiExpress key-value store is in an opened state when constructed,
  * and must be closed after use. KijiExpress end-users are not responsible for opening or closing
