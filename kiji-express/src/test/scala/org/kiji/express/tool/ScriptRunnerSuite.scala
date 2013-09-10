@@ -60,7 +60,7 @@ class ScriptRunnerSuite extends KijiSuite {
   val layout: KijiTableLayout = layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
 
   // Create test Kiji table.
-  val uri: KijiURI = doAndRelease(makeTestKijiTable(layout)) { table: KijiTable =>
+  val uri: KijiURI = doAndRelease(makeTestKijiTable(layout, "blah")) { table: KijiTable =>
     table.getURI()
   }
 
@@ -181,8 +181,8 @@ KijiInput("%s")("family:column1" -> 'word)
    * the args via GenericOptionsParser but that would require a Scalding patch.
    */
   def addToClasspath(path:File) {
-    val method = classOf[URLClassLoader].getDeclaredMethod("addURL", (classOf[URL]));
-    method.setAccessible(true);
-    method.invoke(ClassLoader.getSystemClassLoader(), (path.toURI().toURL()));
+    val method = classOf[URLClassLoader].getDeclaredMethod("addURL", (classOf[URL]))
+    method.setAccessible(true)
+    method.invoke(ClassLoader.getSystemClassLoader(), (path.toURI().toURL()))
   }
 }
