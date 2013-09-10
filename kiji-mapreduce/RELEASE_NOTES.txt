@@ -3,6 +3,7 @@
                               KijiMR Release Notes
 
 Version 1.1.1
+  * SCHEMA-234. Bugfix: --lib argument cannot process "." as a directory name.
   * SCHEMA-485. Add profiling pointcuts for HBase reads/writes.
 
 Version 1.1.0

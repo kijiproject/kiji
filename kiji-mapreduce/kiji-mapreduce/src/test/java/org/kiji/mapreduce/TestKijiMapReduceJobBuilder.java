@@ -216,4 +216,34 @@ public class TestKijiMapReduceJobBuilder {
         confOut.get(KeyValueStoreConfiguration.KEY_VALUE_STORE_NAMESPACE + "1."
         + KeyValueStoreConfigSerializer.CONF_NAME));
   }
+
+  @Test
+  public void testLocalPathJarDir() {
+    // Tests of MapReduceJobBuilder.addJarDirectory() (For KIJIMR-234)
+
+    KijiMapReduceJobBuilder builder = KijiMapReduceJobBuilder.create();
+    builder.addJarDirectory(new File("/tmp"));
+    builder.addJarDirectory(new File("/"));
+    builder.addJarDirectory(new File("."));
+    builder.addJarDirectory(new File("some/subdir"));
+
+    builder.addJarDirectory(new Path("/tmp"));
+    builder.addJarDirectory(new Path("/"));
+    builder.addJarDirectory(new Path("."));
+    builder.addJarDirectory(new Path("./"));
+    builder.addJarDirectory(new Path("some/subdir"));
+    builder.addJarDirectory(new Path("./subdir"));
+    builder.addJarDirectory(new Path(".."));
+
+    builder.addJarDirectory(new Path("file:/tmp"));
+    builder.addJarDirectory(new Path("file:///tmp"));
+    builder.addJarDirectory(new Path("file:/"));
+    builder.addJarDirectory(new Path("file:///"));
+
+    builder.addJarDirectory("/tmp");
+    builder.addJarDirectory("/");
+    builder.addJarDirectory(".");
+    builder.addJarDirectory("some/subdir");
+    builder.addJarDirectory("./somedir");
+  }
 }

@@ -127,7 +127,7 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder<T>> {
    * @return This builder instance so you may chain configuration method calls.
    */
   public T addJarDirectory(File jarDirectory) {
-    return addJarDirectory("file:" + jarDirectory.toString());
+    return addJarDirectory("file:" + jarDirectory.getAbsolutePath());
   }
 
   /**
@@ -141,9 +141,19 @@ public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder<T>> {
    */
   @SuppressWarnings("unchecked")
   public T addJarDirectory(Path jarDirectory) {
-    final Path jarDirPath = (jarDirectory.toUri().getScheme() == null)
-        ? new Path("file:" + jarDirectory)
-        : jarDirectory;
+    Path jarDirPath = null;
+    try {
+      jarDirPath = (jarDirectory.toUri().getScheme() == null)
+          ? new Path("file:" + jarDirectory)
+          : jarDirectory;
+    } catch (IllegalArgumentException iae) {
+      // A URISyntaxException was thrown by the Path c'tor, wrapped in an
+      // IllegalArgumentException.  Meaning the Path is a relative path, not an absolute one,
+      // and contains no scheme identifier. Canonicalize the filename and add the "file:"
+      // scheme prefix to the canonizalized Path
+      jarDirPath = new Path("file:" + new File(jarDirectory.toString()).getAbsolutePath());
+    }
+
     mJarDirectories.add(jarDirPath);
     return (T) this;
   }
