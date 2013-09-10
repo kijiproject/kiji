@@ -19,9 +19,16 @@
 
 package org.kiji.schema.shell.ddl
 
+import scala.collection.JavaConverters._
+import scala.collection.mutable.Buffer
+
+import java.util.{List => JList}
+
 import org.apache.avro.Schema
 import org.kiji.annotations.ApiAudience
+import org.kiji.schema.avro.AvroSchema
 import org.kiji.schema.avro.CellSchema
+
 import org.kiji.schema.shell.Environment
 import org.kiji.schema.shell.SchemaUsageFlags
 
@@ -76,32 +83,36 @@ abstract class SchemaSpec {
    * Helper method for addToCellSchema() implementations. Given an Avro schema, add it to
    * the list of approved schemas in the CellSchema in accordance with the schemaUsageFlags.
    *
-   * @param the Avro schema to add
-   * @param the CellSchema to modify
-   * @param the flags specifying which contexts (reader, writer..) the schema should be added to.
-   * @param the operating Kiji shell environment.
+   * @param schema the Avro schema to add
+   * @param cellSchema the CellSchema to modify
+   * @param schemaUsageFlags the flags specifying which contexts (reader, writer..)
+   *     the schema should be added to.
+   * @param env the operating Kiji shell environment.
    * @return the modified CellSchema.
    */
-  protected def addAvroToCellSchema(avroSchema: Schema, cellSchema: CellSchema,
-      schemaUsageFlags: SchemaUsageFlags, env: Environment): CellSchema = {
+  protected def addAvroToCellSchema(
+      schema: Schema,
+      cellSchema: CellSchema,
+      schemaUsageFlags: SchemaUsageFlags,
+      env: Environment): CellSchema = {
 
     // Use the schema table to find the actual uid associated with this schema.
     // If this schema has not yet been encountered, register it and get a new uid.
-    val uidForSchemaClass: Long = env.kijiSystem.getOrCreateSchemaId(
-        env.instanceURI, avroSchema)
+    val uidForSchemaClass: Long = env.kijiSystem.getOrCreateSchemaId(env.instanceURI, schema)
+    val avroSchema = AvroSchema.newBuilder().setUid(uidForSchemaClass).build()
 
     if (schemaUsageFlags.defaultReader) {
       // Set this schema as the default reader schema.
-      cellSchema.setDefaultReader(uidForSchemaClass)
+      cellSchema.setDefaultReader(avroSchema)
 
-      if (avroSchema.getType() == Schema.Type.RECORD
-          || avroSchema.getType() == Schema.Type.FIXED
-          || avroSchema.getType() == Schema.Type.ENUM) {
+      if (schema.getType() == Schema.Type.RECORD
+          || schema.getType() == Schema.Type.FIXED
+          || schema.getType() == Schema.Type.ENUM) {
         // Setting the default reader schema to a named type sets the name of any
         // associated SpecificRecord to extract.
         val existingFullName: String =
             Option(cellSchema.getSpecificReaderSchemaClass()).getOrElse("")
-        val newFullName: String = avroSchema.getFullName()
+        val newFullName: String = schema.getFullName()
         if (newFullName != existingFullName) {
           env.printer.println("Warning: Changing specific reader schema class to " + newFullName)
           cellSchema.setSpecificReaderSchemaClass(newFullName)
@@ -117,17 +128,17 @@ abstract class SchemaSpec {
     if (schemaUsageFlags.reader || schemaUsageFlags.defaultReader) {
       // If this is a reader object (or defaultReader, which implies reader), add it
       // to the list of approved reader schemas.
-      val readers: java.util.List[java.lang.Long] = cellSchema.getReaders()
-      if (!readers.contains(uidForSchemaClass)) {
-        readers.add(uidForSchemaClass)
+      val readers: Buffer[AvroSchema] = cellSchema.getReaders().asScala
+      if (readers.filter { as => (as.getUid == uidForSchemaClass) }.isEmpty) {
+        readers += avroSchema
       }
     }
 
     if (schemaUsageFlags.writer) {
       // Add this class to the list of approved writer schemas.
-      val writers: java.util.List[java.lang.Long] = cellSchema.getWriters()
-      if (!writers.contains(uidForSchemaClass)) {
-        writers.add(uidForSchemaClass)
+      val writers: Buffer[AvroSchema] = cellSchema.getWriters().asScala
+      if (writers.filter { as => (as.getUid == uidForSchemaClass) }.isEmpty) {
+        writers += avroSchema
       }
     }
 
@@ -135,9 +146,9 @@ abstract class SchemaSpec {
       // If this is being specified as a "recorded" schema (or a writer schema, which implies
       // recorded), add it to the "written" list in the CellSchema.
 
-      val written: java.util.List[java.lang.Long] = cellSchema.getWritten()
-      if (!written.contains(uidForSchemaClass)) {
-        written.add(uidForSchemaClass)
+      val written: Buffer[AvroSchema] = cellSchema.getWritten().asScala
+      if (written.filter { as => (as.getUid == uidForSchemaClass) }.isEmpty) {
+        written += avroSchema
       }
     }
 
@@ -174,8 +185,8 @@ abstract class SchemaSpec {
 
       Option(cellSchema.getDefaultReader()) match {
         case None => { /* no default reader to remove */ }
-        case Some(curDefaultReader: java.lang.Long) => {
-          if (curDefaultReader == uidForSchemaClass) {
+        case Some(curDefaultReader: AvroSchema) => {
+          if (curDefaultReader.getUid == uidForSchemaClass) {
             // Detach this from being the default reader.
             env.printer.println("Warning: Removing default reader schema")
             cellSchema.setDefaultReader(null)
@@ -188,34 +199,24 @@ abstract class SchemaSpec {
       // If this is in the reader schemas list, drop it from the list of approved reader schemas.
       // Note: the shell will not redundantly add a schema, but a user may manually do so in the
       // layout. If he does this, we will only remove the first instance in the list.
-      val readers: java.util.List[java.lang.Long] = cellSchema.getReaders()
-      val uidReaderPos = readers.indexOf(uidForSchemaClass)
-      if (-1 != uidReaderPos) {
-        // If the uid is in the readers list, remove it here.
-        readers.remove(uidReaderPos)
-      }
+      val readers: Buffer[AvroSchema] = cellSchema.getReaders().asScala
+      val toRemove = readers.filter { as => (as.getUid == uidForSchemaClass) }
+      readers --= toRemove
     }
 
     if (schemaUsageFlags.writer) {
       // If this is in the writer schemas list, drop it from the list of approved writer schemas.
-      val writers: java.util.List[java.lang.Long] = cellSchema.getWriters()
-      val uidWriterPos = writers.indexOf(uidForSchemaClass)
-      if (-1 != uidWriterPos) {
-        // If the uid is in the writers list, remove it here.
-        writers.remove(uidWriterPos)
-      }
-
+      val writers: Buffer[AvroSchema] = cellSchema.getWriters().asScala
+      val toRemove = writers.filter { as => (as.getUid == uidForSchemaClass) }
+      writers --= toRemove
     }
 
     if (schemaUsageFlags.recorded) {
       // If this is being specified as a "recorded" schema
       // drop it from the "written" list in the CellSchema.
-      val written: java.util.List[java.lang.Long] = cellSchema.getWritten()
-      val uidWrittenPos = written.indexOf(uidForSchemaClass)
-      if (-1 != uidWrittenPos) {
-        // If the uid is in the written list, remove it here.
-        written.remove(uidWrittenPos)
-      }
+      val written: Buffer[AvroSchema] = cellSchema.getWritten().asScala
+      val toRemove = written.filter { as => (as.getUid == uidForSchemaClass) }
+      written --= toRemove
     }
 
     return cellSchema

@@ -372,7 +372,7 @@ ALTER TABLE foo ADD COLUMN info:meep "string" WITH DESCRIPTION 'beep beep!';""")
       defaultLocGroup3.getFamilies().head.getColumns().foreach { col =>
         if (col.getName().toString().equals("meep")) {
           meepExists = true
-          getSchemaTextForId(env3, col.getColumnSchema().getDefaultReader()) mustEqual "\"string\""
+          getSchemaTextFor(env3, col.getColumnSchema().getDefaultReader()) mustEqual "\"string\""
         }
       }
       meepExists mustEqual true
@@ -404,7 +404,7 @@ ALTER TABLE foo RENAME COLUMN info:email AS info:mail;""")
         if (col.getName().toString().equals("mail")) {
           mailExists = true
           col.getColumnSchema().getValue() must beNull
-          getSchemaTextForId(env3, col.getColumnSchema().getDefaultReader()) mustEqual "\"string\""
+          getSchemaTextFor(env3, col.getColumnSchema().getDefaultReader()) mustEqual "\"string\""
         } else if (col.getName().toString().equals("email")) {
           emailExists = true
         }
@@ -624,7 +624,7 @@ ALTER TABLE foo ADD MAP TYPE FAMILY ints "int" TO LOCALITY GROUP default;""")
       maybeMapFamily must beSome[FamilyDesc]
       val mapFamily = maybeMapFamily.get
       mapFamily.getName().toString mustEqual "ints"
-      getSchemaTextForId(env3, mapFamily.getMapSchema().getDefaultReader()) mustEqual "\"int\""
+      getSchemaTextFor(env3, mapFamily.getMapSchema().getDefaultReader()) mustEqual "\"int\""
 
       // Set the new family's schema to "string".
       val parser3 = new DDLParser(env3)
@@ -643,7 +643,7 @@ ALTER TABLE foo SET SCHEMA = "string" FOR MAP TYPE FAMILY ints;""")
       val mapFamily2 = maybeMapFamily2.get
 
       mapFamily2.getName().toString mustEqual "ints"
-      getSchemaTextForId(env4, mapFamily2.getMapSchema().getDefaultReader()) mustEqual "\"string\""
+      getSchemaTextFor(env4, mapFamily2.getMapSchema().getDefaultReader()) mustEqual "\"string\""
     }
 
     "alter a column schema" in {
@@ -665,7 +665,7 @@ ALTER TABLE foo SET SCHEMA = "int" FOR COLUMN info:email;""")
       locGroups2.head.getFamilies().head.getName().toString() mustEqual "info"
       locGroups2.head.getFamilies().head.getColumns().foreach { col =>
         if (col.getName().toString().equals("email")) {
-          getSchemaTextForId(env3, col.getColumnSchema().getDefaultReader()) mustEqual "\"int\""
+          getSchemaTextFor(env3, col.getColumnSchema().getDefaultReader()) mustEqual "\"int\""
         }
       }
     }
@@ -959,8 +959,8 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage';""");
   /**
    * Given a schema id, turn it into its string representation.
    */
-  def getSchemaTextForId(env: Environment, id: Long): String = {
-    return env.kijiSystem.getSchemaForId(env.instanceURI, id).get.toString
+  def getSchemaTextFor(env: Environment, avroSchema: AvroSchema): String = {
+    return env.kijiSystem.getSchemaFor(env.instanceURI, avroSchema).get.toString
   }
 
   /**

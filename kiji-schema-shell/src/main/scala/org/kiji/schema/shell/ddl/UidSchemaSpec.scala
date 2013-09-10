@@ -19,15 +19,19 @@
 
 package org.kiji.schema.shell.ddl
 
-import java.util.ArrayList
+import java.util.{List => JList}
+
+import com.google.common.collect.Lists
 
 import org.apache.avro.Schema
 
 import org.kiji.annotations.ApiAudience
+import org.kiji.schema.avro.AvroSchema
 import org.kiji.schema.avro.AvroValidationPolicy
 import org.kiji.schema.avro.CellSchema
 import org.kiji.schema.avro.SchemaStorage
 import org.kiji.schema.avro.SchemaType
+
 import org.kiji.schema.shell.DDLException
 
 /**
@@ -41,20 +45,17 @@ final class UidSchemaSpec(uid: Long) extends SchemaSpec {
       val avroValidationPolicy: AvroValidationPolicy =
           cellSchemaContext.getValidationPolicy().avroValidationPolicy
 
+      val avroSchema = AvroSchema.newBuilder().setUid(uid).build()
+
       // Sanity check: does this UID exist?
       cellSchemaContext.env.kijiSystem.getSchemaForId(cellSchemaContext.env.instanceURI, uid)
           .getOrElse(throw new DDLException("Invalid schema id: " + uid))
 
       // Register the specified schema id as a valid reader and writer schema as well as the
       // default reader schema.
-      val readers: ArrayList[java.lang.Long] = new ArrayList()
-      readers.add(uid)
-
-      val writers: ArrayList[java.lang.Long] = new ArrayList()
-      writers.add(uid)
-
-      val written: ArrayList[java.lang.Long] = new ArrayList()
-      written.add(uid)
+      val readers: JList[AvroSchema] = Lists.newArrayList(avroSchema)
+      val writers: JList[AvroSchema] = Lists.newArrayList(avroSchema)
+      val written: JList[AvroSchema] = Lists.newArrayList(avroSchema)
 
       return CellSchema.newBuilder()
           .setStorage(SchemaStorage.UID)
@@ -62,7 +63,7 @@ final class UidSchemaSpec(uid: Long) extends SchemaSpec {
           .setValue(null)
           .setAvroValidationPolicy(avroValidationPolicy)
           .setSpecificReaderSchemaClass(null)
-          .setDefaultReader(uid) // Set this as the default reader too.
+          .setDefaultReader(avroSchema) // Set this as the default reader too.
           .setReaders(readers)
           .setWritten(written)
           .setWriters(writers)

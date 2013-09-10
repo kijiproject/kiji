@@ -19,15 +19,19 @@
 
 package org.kiji.schema.shell.ddl
 
-import java.util.ArrayList
+import java.util.{List => JList}
 
 import org.apache.avro.Schema
 
+import com.google.common.collect.Lists
+
 import org.kiji.annotations.ApiAudience
+import org.kiji.schema.avro.AvroSchema
 import org.kiji.schema.avro.AvroValidationPolicy
 import org.kiji.schema.avro.CellSchema
 import org.kiji.schema.avro.SchemaStorage
 import org.kiji.schema.avro.SchemaType
+
 import org.kiji.schema.shell.DDLException
 
 /** A schema specified as its Avro json representation. */
@@ -41,41 +45,39 @@ final class JsonSchemaSpec(val json: String) extends SchemaSpec {
       val avroValidationPolicy: AvroValidationPolicy =
           cellSchemaContext.getValidationPolicy().avroValidationPolicy
 
-      val avroSchema: Schema = new Schema.Parser().parse(json)
+      val schema: Schema = new Schema.Parser().parse(json)
 
       // Use the schema table to find the actual uid associated with this schema.
       val uidForSchema: Long = cellSchemaContext.env.kijiSystem.getOrCreateSchemaId(
-          cellSchemaContext.env.instanceURI, avroSchema)
+          cellSchemaContext.env.instanceURI, schema)
+
+      val avroSchema = AvroSchema.newBuilder().setUid(uidForSchema).build()
 
       // Register the specified class as a valid reader and writer schema as well as the
       // default reader schema.
-      val readers: ArrayList[java.lang.Long] = new ArrayList()
-      readers.add(uidForSchema)
-
-      val writers: ArrayList[java.lang.Long] = new ArrayList()
-      writers.add(uidForSchema)
+      val readers: JList[AvroSchema] = Lists.newArrayList(avroSchema)
+      val writers: JList[AvroSchema] = Lists.newArrayList(avroSchema)
 
       // For now (layout-1.3), adding to the writers list => adding to the "written" list.
-      val written: ArrayList[java.lang.Long] = new ArrayList()
-      written.add(uidForSchema)
+      val written: JList[AvroSchema] = Lists.newArrayList(avroSchema)
 
       return CellSchema.newBuilder()
           .setStorage(SchemaStorage.UID)
           .setType(SchemaType.AVRO)
           .setValue(null)
           .setAvroValidationPolicy(avroValidationPolicy)
-          .setDefaultReader(uidForSchema)
+          .setDefaultReader(avroSchema)
           .setReaders(readers)
           .setWritten(written)
           .setWriters(writers)
           .build()
     } else {
       // layout-1.2 and prior; use older specification.
-      val schema = CellSchema.newBuilder
-      schema.setType(SchemaType.INLINE)
-      schema.setStorage(SchemaStorage.UID)
-      schema.setValue(json)
-      return schema.build()
+      return CellSchema.newBuilder
+          .setType(SchemaType.INLINE)
+          .setStorage(SchemaStorage.UID)
+          .setValue(json)
+          .build()
     }
   }
 

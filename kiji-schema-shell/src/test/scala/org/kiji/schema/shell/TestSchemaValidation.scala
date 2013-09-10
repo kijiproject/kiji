@@ -20,9 +20,7 @@
 package org.kiji.schema.shell
 
 import java.util.concurrent.atomic.AtomicInteger
-
 import scala.collection.JavaConversions._
-
 import org.specs2.mutable._
 import org.apache.avro.Schema
 import org.apache.hadoop.hbase.HBaseConfiguration
@@ -39,13 +37,14 @@ import org.kiji.schema.shell.api.Client
 import org.kiji.schema.shell.avro.XYRecord
 import org.kiji.schema.shell.input.NullInputSource
 import org.kiji.schema.util.ProtocolVersion
+import org.kiji.schema.avro.AvroSchema
 
 /**
  * Tests that DDL commands affecting column schemas respect validation requirements and
  * operate correctly on validationg layouts (&gt;= layout-1.3).
  */
 class TestSchemaValidation extends SpecificationWithJUnit {
-  "With schema validation enabled, clients should" should {
+  "With schema validation enabled, clients" should {
 
     "create a table correctly" in {
       val uri = getNewInstanceURI()
@@ -86,12 +85,12 @@ class TestSchemaValidation extends SpecificationWithJUnit {
       cellSchema.getWriters().size mustEqual 1
       cellSchema.getWritten().size mustEqual 1
 
-      val readerSchemaId: Long = cellSchema.getDefaultReader()
-      cellSchema.getReaders().head mustEqual readerSchemaId
-      cellSchema.getWriters().head mustEqual readerSchemaId
-      cellSchema.getWritten().head mustEqual readerSchemaId
+      val readerSchema: AvroSchema = cellSchema.getDefaultReader()
+      cellSchema.getReaders().head mustEqual readerSchema
+      cellSchema.getWriters().head mustEqual readerSchema
+      cellSchema.getWritten().head mustEqual readerSchema
 
-      (env.kijiSystem.getSchemaForId(env.instanceURI, readerSchemaId).get mustEqual
+      (env.kijiSystem.getSchemaFor(env.instanceURI, readerSchema).get mustEqual
           Schema.create(Schema.Type.STRING))
 
       client.close()
@@ -193,17 +192,17 @@ class TestSchemaValidation extends SpecificationWithJUnit {
       cellSchema.getWriters().size mustEqual 1 // Just "int"
       cellSchema.getWritten().size mustEqual 1
 
-      val readerSchemaId: Long = cellSchema.getDefaultReader() // Should be "int"
-      cellSchema.getReaders().head mustEqual readerSchemaId
-      cellSchema.getWriters().head mustEqual readerSchemaId
-      cellSchema.getWritten().head mustEqual readerSchemaId
+      val readerSchema: AvroSchema = cellSchema.getDefaultReader() // Should be "int"
+      cellSchema.getReaders().head mustEqual readerSchema
+      cellSchema.getWriters().head mustEqual readerSchema
+      cellSchema.getWritten().head mustEqual readerSchema
 
-      (env.kijiSystem.getSchemaForId(env.instanceURI, readerSchemaId).get mustEqual
+      (env.kijiSystem.getSchemaFor(env.instanceURI, readerSchema).get mustEqual
           Schema.create(Schema.Type.INT))
 
       // Check that "long" is the 2nd schema in the readers list.
-      val longSchemaId: Long = cellSchema.getReaders()(1)
-      (env.kijiSystem.getSchemaForId(env.instanceURI, longSchemaId).get mustEqual
+      val longSchema: AvroSchema = cellSchema.getReaders()(1)
+      (env.kijiSystem.getSchemaFor(env.instanceURI, longSchema).get mustEqual
           Schema.create(Schema.Type.LONG))
 
       client.close()
@@ -238,17 +237,17 @@ class TestSchemaValidation extends SpecificationWithJUnit {
       cellSchema.getWriters().size mustEqual 2 // Both "int" and "long".
       cellSchema.getWritten().size mustEqual 2
 
-      val readerSchemaId: Long = cellSchema.getDefaultReader() // Should be "long"
-      cellSchema.getReaders().head mustEqual readerSchemaId
-      cellSchema.getWriters().head mustEqual readerSchemaId
-      cellSchema.getWritten().head mustEqual readerSchemaId
+      val readerSchema: AvroSchema = cellSchema.getDefaultReader() // Should be "long"
+      cellSchema.getReaders().head mustEqual readerSchema
+      cellSchema.getWriters().head mustEqual readerSchema
+      cellSchema.getWritten().head mustEqual readerSchema
 
-      (env.kijiSystem.getSchemaForId(env.instanceURI, readerSchemaId).get mustEqual
+      (env.kijiSystem.getSchemaFor(env.instanceURI, readerSchema).get mustEqual
           Schema.create(Schema.Type.LONG))
 
       // Check that "int" is the 2nd schema in the writers list.
-      val intSchemaId: Long = cellSchema.getWriters()(1)
-      (env.kijiSystem.getSchemaForId(env.instanceURI, intSchemaId).get mustEqual
+      val intSchema: AvroSchema = cellSchema.getWriters()(1)
+      (env.kijiSystem.getSchemaFor(env.instanceURI, intSchema).get mustEqual
           Schema.create(Schema.Type.INT))
 
       client.close()
@@ -283,11 +282,11 @@ class TestSchemaValidation extends SpecificationWithJUnit {
       cellSchema.getWriters().size mustEqual 0 // nada.
       cellSchema.getWritten().size mustEqual 1 // "long" remains in the written list.
 
-      val readerSchemaId: Long = cellSchema.getDefaultReader() // Should be "long"
-      cellSchema.getReaders().head mustEqual readerSchemaId
-      cellSchema.getWritten().head mustEqual readerSchemaId
+      val readerSchema: AvroSchema = cellSchema.getDefaultReader() // Should be "long"
+      cellSchema.getReaders().head mustEqual readerSchema
+      cellSchema.getWritten().head mustEqual readerSchema
 
-      (env.kijiSystem.getSchemaForId(env.instanceURI, readerSchemaId).get mustEqual
+      (env.kijiSystem.getSchemaFor(env.instanceURI, readerSchema).get mustEqual
           Schema.create(Schema.Type.LONG))
 
       client.close()
@@ -330,24 +329,24 @@ class TestSchemaValidation extends SpecificationWithJUnit {
       cellSchema.getWriters().size mustEqual 2 // Both "int" and "long".
       cellSchema.getWritten().size mustEqual 2
 
-      val readerSchemaId: Long = cellSchema.getDefaultReader() // Should be "long"
-      cellSchema.getReaders().head mustEqual readerSchemaId
-      cellSchema.getWriters()(1) mustEqual readerSchemaId
-      cellSchema.getWritten()(1) mustEqual readerSchemaId
+      val readerSchema: AvroSchema = cellSchema.getDefaultReader() // Should be "long"
+      cellSchema.getReaders().head mustEqual readerSchema
+      cellSchema.getWriters()(1) mustEqual readerSchema
+      cellSchema.getWritten()(1) mustEqual readerSchema
 
-      (env.kijiSystem.getSchemaForId(env.instanceURI, readerSchemaId).get mustEqual
+      (env.kijiSystem.getSchemaFor(env.instanceURI, readerSchema).get mustEqual
           Schema.create(Schema.Type.LONG))
 
       // Check that "int" is the 1st schema in the writers list.
-      val intSchemaId: Long = cellSchema.getWriters()(0)
-      (env.kijiSystem.getSchemaForId(env.instanceURI, intSchemaId).get mustEqual
+      val intSchema: AvroSchema = cellSchema.getWriters()(0)
+      (env.kijiSystem.getSchemaFor(env.instanceURI, intSchema).get mustEqual
           Schema.create(Schema.Type.INT))
 
       client.close()
       env.kijiSystem.shutdown()
     }
 
-    "remove the default reader if it's also dropped as a reader schema" in {
+    "remove the default reader if it is also dropped as a reader schema" in {
       val uri = getNewInstanceURI()
       val kijiSystem = getKijiSystem()
       val client = Client.newInstanceWithSystem(uri, kijiSystem)
@@ -382,10 +381,10 @@ class TestSchemaValidation extends SpecificationWithJUnit {
 
       cellSchema.getDefaultReader() must beNull
 
-      val writerSchemaId: Long = cellSchema.getWriters()(0)
-      cellSchema.getWritten()(0) mustEqual writerSchemaId
+      val writerSchema: AvroSchema = cellSchema.getWriters()(0)
+      cellSchema.getWritten()(0) mustEqual writerSchema
 
-      (env.kijiSystem.getSchemaForId(env.instanceURI, writerSchemaId).get mustEqual
+      (env.kijiSystem.getSchemaFor(env.instanceURI, writerSchema).get mustEqual
           Schema.create(Schema.Type.INT))
 
       client.close()
@@ -442,12 +441,12 @@ class TestSchemaValidation extends SpecificationWithJUnit {
       // ADD SCHEMA will set the reader and writer, but not a default reader schema.
       cellSchema2.getDefaultReader() must beNull
 
-      val readerId: Long = cellSchema2.getReaders()(0)
-      (env.kijiSystem.getSchemaForId(env.instanceURI, readerId).get mustEqual
+      val reader: AvroSchema = cellSchema2.getReaders()(0)
+      (env.kijiSystem.getSchemaFor(env.instanceURI, reader).get mustEqual
           Schema.create(Schema.Type.INT))
 
-      readerId mustEqual cellSchema2.getWriters()(0)
-      readerId mustEqual cellSchema2.getWritten()(0)
+      reader mustEqual cellSchema2.getWriters()(0)
+      reader mustEqual cellSchema2.getWritten()(0)
 
       client.close()
       env.kijiSystem.shutdown()
@@ -487,16 +486,16 @@ class TestSchemaValidation extends SpecificationWithJUnit {
       cellSchema.getWriters().size mustEqual 1
       cellSchema.getWritten().size mustEqual 1
 
-      val readerId: Long = cellSchema.getDefaultReader()
+      val reader: AvroSchema = cellSchema.getDefaultReader()
 
-      cellSchema.getReaders().head mustEqual readerId
-      cellSchema.getWriters().head mustEqual readerId
-      cellSchema.getWritten().head mustEqual readerId
+      cellSchema.getReaders().head mustEqual reader
+      cellSchema.getWriters().head mustEqual reader
+      cellSchema.getWritten().head mustEqual reader
 
       val readerSchemaName: String = cellSchema.getSpecificReaderSchemaClass().toString()
       readerSchemaName mustEqual classOf[XYRecord].getName()
 
-      (env.kijiSystem.getSchemaForId(env.instanceURI, readerId).get mustEqual
+      (env.kijiSystem.getSchemaFor(env.instanceURI, reader).get mustEqual
           XYRecord.SCHEMA$)
 
       client.close()
@@ -532,12 +531,12 @@ class TestSchemaValidation extends SpecificationWithJUnit {
       cellSchema.getWriters().size mustEqual 1
       cellSchema.getWritten().size mustEqual 1
 
-      val readerSchemaId: Long = cellSchema.getDefaultReader() // Should be "int"
-      cellSchema.getReaders().head mustEqual readerSchemaId
-      cellSchema.getWriters().head mustEqual readerSchemaId
-      cellSchema.getWritten().head mustEqual readerSchemaId
+      val readerSchema: AvroSchema = cellSchema.getDefaultReader() // Should be "int"
+      cellSchema.getReaders().head mustEqual readerSchema
+      cellSchema.getWriters().head mustEqual readerSchema
+      cellSchema.getWritten().head mustEqual readerSchema
 
-      (env.kijiSystem.getSchemaForId(env.instanceURI, readerSchemaId).get mustEqual
+      (env.kijiSystem.getSchemaFor(env.instanceURI, readerSchema).get mustEqual
           Schema.create(Schema.Type.INT))
 
       client.close()
@@ -573,12 +572,12 @@ class TestSchemaValidation extends SpecificationWithJUnit {
       cellSchema.getWriters().size mustEqual 1
       cellSchema.getWritten().size mustEqual 1
 
-      val readerSchemaId: Long = cellSchema.getDefaultReader() // Should be "int"
-      cellSchema.getReaders().head mustEqual readerSchemaId
-      cellSchema.getWriters().head mustEqual readerSchemaId
-      cellSchema.getWritten().head mustEqual readerSchemaId
+      val readerSchema: AvroSchema = cellSchema.getDefaultReader() // Should be "int"
+      cellSchema.getReaders().head mustEqual readerSchema
+      cellSchema.getWriters().head mustEqual readerSchema
+      cellSchema.getWritten().head mustEqual readerSchema
 
-      (env.kijiSystem.getSchemaForId(env.instanceURI, readerSchemaId).get mustEqual
+      (env.kijiSystem.getSchemaFor(env.instanceURI, readerSchema).get mustEqual
           Schema.create(Schema.Type.INT))
 
       client.close()

@@ -25,10 +25,14 @@ import scala.collection.mutable.Buffer
 import java.io.File
 import java.io.FileOutputStream
 import java.io.PrintStream
-import java.util.ArrayList
+import java.util.{List => JList}
+
+import com.google.common.collect.Lists
 
 import org.apache.avro.Schema
+
 import org.kiji.annotations.ApiAudience
+import org.kiji.schema.avro.AvroSchema
 import org.kiji.schema.avro.CellSchema
 import org.kiji.schema.avro.ColumnDesc
 import org.kiji.schema.avro.ComponentType
@@ -40,9 +44,10 @@ import org.kiji.schema.avro.RowKeyEncoding
 import org.kiji.schema.avro.RowKeyFormat2
 import org.kiji.schema.avro.SchemaType
 import org.kiji.schema.avro.TableLayoutDesc
+import org.kiji.schema.layout.KijiTableLayout
+
 import org.kiji.schema.shell.DDLException
 import org.kiji.schema.shell.Environment
-import org.kiji.schema.layout.KijiTableLayout
 
 /**
  * Trait that is included by DDLCommand instances that implement
@@ -231,7 +236,7 @@ trait AbstractDumpDDLCommand extends TableProperties {
           echo("    WITH SCHEMA CLASS " + schema.getSpecificReaderSchemaClass())
         } else if (schema.getDefaultReader() != null) {
           val avroSchema: Schema =
-              env.kijiSystem.getSchemaForId(env.instanceURI, schema.getDefaultReader()).get
+              env.kijiSystem.getSchemaFor(env.instanceURI, schema.getDefaultReader()).get
           echo("    WITH SCHEMA " + avroSchema.toString())
         } else {
           // Do nothing right now; we add non-default schemas with ALTER TABLE statements.
@@ -293,18 +298,18 @@ trait AbstractDumpDDLCommand extends TableProperties {
     }
 
     // Dump an ALTER TABLE to add each reader and writer schema in turn.
-    val readers: java.util.List[java.lang.Long] = Option(cellSchema.getReaders())
-        .getOrElse(new ArrayList[java.lang.Long]())
-    readers.foreach { readerId: java.lang.Long =>
-      val schema: Schema = env.kijiSystem.getSchemaForId(env.instanceURI, readerId).get
+    val readers: JList[AvroSchema] = Option(cellSchema.getReaders())
+        .getOrElse(Lists.newArrayList())
+    readers.foreach { reader: AvroSchema =>
+      val schema: Schema = env.kijiSystem.getSchemaFor(env.instanceURI, reader).get
       echo("ALTER TABLE " + quote(tableName) + " ADD READER SCHEMA " + schema + " FOR "
           + colName + ";")
     }
 
-    val writers: java.util.List[java.lang.Long] = Option(cellSchema.getWriters())
-        .getOrElse(new ArrayList[java.lang.Long]())
-    writers.foreach { writerId: java.lang.Long =>
-      val schema: Schema = env.kijiSystem.getSchemaForId(env.instanceURI, writerId).get
+    val writers: JList[AvroSchema] = Option(cellSchema.getWriters())
+        .getOrElse(Lists.newArrayList())
+    writers.foreach { writer: AvroSchema =>
+      val schema: Schema = env.kijiSystem.getSchemaFor(env.instanceURI, writer).get
       echo("ALTER TABLE " + quote(tableName) + " ADD WRITER SCHEMA " + schema + " FOR "
           + colName + ";")
     }
@@ -323,11 +328,13 @@ trait AbstractDumpDDLCommand extends TableProperties {
     // as the final word on the default reader schema. This will override the JSON from the
     // class-based definition, but not the class name (as long as this reader schema has the
     // same class name as the class name).
-    val defaultReader: Option[Long] = Option(cellSchema.getDefaultReader())
-    if (defaultReader.isDefined) {
-      val schema: Schema = env.kijiSystem.getSchemaForId(env.instanceURI, defaultReader.get).get
-      echo("ALTER TABLE " + quote(tableName) + " ADD DEFAULT READER SCHEMA "
-          + schema.toString + " FOR " + colName + ";")
+    Option(cellSchema.getDefaultReader()) match {
+      case Some(defaultReader) => {
+        val schema: Schema = env.kijiSystem.getSchemaFor(env.instanceURI, defaultReader).get
+        echo("ALTER TABLE " + quote(tableName) + " ADD DEFAULT READER SCHEMA "
+            + schema.toString + " FOR " + colName + ";")
+      }
+      case None => ()
     }
   }
 

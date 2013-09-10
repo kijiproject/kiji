@@ -20,14 +20,17 @@
 package org.kiji.schema.shell
 
 import scala.collection.mutable.Map
+
 import java.util.NoSuchElementException
 
 import org.apache.avro.Schema
+
 import org.kiji.schema.Kiji
 import org.kiji.schema.KConstants
 import org.kiji.schema.KijiMetaTable
 import org.kiji.schema.KijiURI
 import org.kiji.schema.layout.KijiTableLayout
+import org.kiji.schema.avro.AvroSchema
 import org.kiji.schema.avro.TableLayoutDesc
 import org.kiji.schema.util.ProtocolVersion
 import org.kiji.schema.util.VersionInfo
@@ -80,6 +83,13 @@ class MockKijiSystem extends AbstractKijiSystem {
 
   override def getSchemaForId(uri: KijiURI, schemaId: Long): Option[Schema] = {
     return schemasForIds.get(schemaId)
+  }
+
+  override def getSchemaFor(uri: KijiURI, schema: AvroSchema): Option[Schema] = {
+    if (schema.getJson != null) {
+      return Some(new Schema.Parser().parse(schema.getJson))
+    }
+    return getSchemaForId(uri, schema.getUid)
   }
 
   override def getSystemVersion(uri: KijiURI): ProtocolVersion = {

@@ -20,17 +20,14 @@
 package org.kiji.schema.shell
 
 import java.io.IOException
-
 import scala.collection.JavaConversions._
 import scala.collection.mutable.Map
-
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList
 import org.apache.avro.Schema
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.HTableDescriptor
 import org.apache.hadoop.hbase.client.HBaseAdmin
 import org.apache.hadoop.util.StringUtils
-
 import org.kiji.annotations.ApiAudience
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiMetaTable
@@ -42,6 +39,7 @@ import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.util.ProtocolVersion
 import org.kiji.schema.util.ResourceUtils
 import org.kiji.schema.util.VersionInfo
+import org.kiji.schema.avro.AvroSchema
 
 /**
  * Instances of this class provide the Kiji schema shell with access to KijiSchema.
@@ -112,6 +110,14 @@ final class KijiSystem extends AbstractKijiSystem {
     val schemaTable: KijiSchemaTable = kiji.getSchemaTable()
 
     return Option(schemaTable.getSchema(uid))
+  }
+
+  override def getSchemaFor(uri: KijiURI, avroSchema: AvroSchema): Option[Schema] = {
+    if (avroSchema.getJson != null) {
+      val schema: Schema = new Schema.Parser().parse(avroSchema.getJson)
+      return Some(schema)
+    }
+    return getSchemaForId(uri, avroSchema.getUid)
   }
 
   override def setMeta(uri: KijiURI, table: String, key: String, value: String): Unit = {

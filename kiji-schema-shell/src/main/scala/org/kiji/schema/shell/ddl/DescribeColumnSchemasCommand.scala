@@ -19,9 +19,7 @@
 
 package org.kiji.schema.shell.ddl
 
-import java.util.ArrayList
-
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.collection.mutable.Buffer
 
 import com.google.gson.Gson
@@ -58,11 +56,11 @@ final class DescribeColumnSchemasCommand(
     val layout = getInitialLayout()
     echo("Table: " + tableName)
     echo("Column: " + columnName)
-    layout.getLocalityGroups().foreach { group =>
-      group.getFamilies().foreach { family =>
-        if (family.getName().toString() == columnName.family) {
-          family.getColumns().foreach { col =>
-            if (col.getName().toString() == columnName.qualifier) {
+    layout.getLocalityGroups.asScala.foreach { group =>
+      group.getFamilies.asScala.foreach { family =>
+        if (family.getName == columnName.family) {
+          family.getColumns.asScala.foreach { col =>
+            if (col.getName == columnName.qualifier) {
               dumpColumn(col) // Found it!
               return env // Stop searching.
             }
@@ -104,17 +102,17 @@ final class DescribeColumnSchemasCommand(
         if (schemaUsageFlags.reader) {
           // Show the N most recent reader schemas, most recent first.
           echo("  Reader schemas:")
-          showSchemas(cellSchema.getReaders().takeRight(numSchemas).reverse, cellSchema)
+          showSchemas(cellSchema.getReaders.asScala.takeRight(numSchemas).reverse, cellSchema)
         }
 
         if (schemaUsageFlags.writer) {
           echo("  Writer schemas:")
-          showSchemas(cellSchema.getWriters().takeRight(numSchemas).reverse, cellSchema)
+          showSchemas(cellSchema.getWriters.asScala.takeRight(numSchemas).reverse, cellSchema)
         }
 
         if (schemaUsageFlags.recorded) {
           echo("  Recorded schemas:")
-          showSchemas(cellSchema.getWritten().takeRight(numSchemas).reverse, cellSchema)
+          showSchemas(cellSchema.getWritten.asScala.takeRight(numSchemas).reverse, cellSchema)
         }
       }
     }
@@ -126,15 +124,17 @@ final class DescribeColumnSchemasCommand(
    * @param a list of schemas to display
    * @param the CellSchema they came from
    */
-  def showSchemas(schemas: Buffer[java.lang.Long], cellSchema: CellSchema): Unit = {
-    schemas.foreach { schemaId: java.lang.Long =>
-      val schema: Schema = env.kijiSystem.getSchemaForId(env.instanceURI, schemaId).get
+  def showSchemas(schemas: Buffer[AvroSchema], cellSchema: CellSchema): Unit = {
+    schemas.foreach { avroSchema: AvroSchema =>
+      val schema: Schema = env.kijiSystem.getSchemaFor(env.instanceURI, avroSchema).get
+      val defaultReader: Schema =
+          env.kijiSystem.getSchemaFor(env.instanceURI, cellSchema.getDefaultReader).get
       val jsonSchema = jsonParser.parse(schema.toString())
-      if (schemaId == cellSchema.getDefaultReader()) {
+      if (schema == defaultReader) {
         // Mark the default reader schema with an asterisk.
         echoNoNL("(*) ")
       }
-      echo("[" + schemaId + "]: " + jsonSchema)
+      echo("[" + schema + "]: " + jsonSchema)
       echo("")
     }
   }

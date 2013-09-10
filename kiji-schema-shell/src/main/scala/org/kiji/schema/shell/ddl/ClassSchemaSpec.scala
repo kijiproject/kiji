@@ -23,13 +23,17 @@ import java.io.ByteArrayOutputStream
 import java.io.PrintStream
 import java.util.ArrayList
 
+import com.google.common.collect.Lists
+
 import org.apache.avro.Schema
 
 import org.kiji.annotations.ApiAudience
+import org.kiji.schema.avro.AvroSchema
 import org.kiji.schema.avro.AvroValidationPolicy
 import org.kiji.schema.avro.CellSchema
 import org.kiji.schema.avro.SchemaStorage
 import org.kiji.schema.avro.SchemaType
+
 import org.kiji.schema.shell.DDLException
 import org.kiji.schema.shell.Environment
 import org.kiji.schema.shell.util.ForkJvm
@@ -64,23 +68,21 @@ final class ClassSchemaSpec(private val parts: List[String]) extends SchemaSpec 
       val avroValidationPolicy: AvroValidationPolicy =
           cellSchemaContext.getValidationPolicy().avroValidationPolicy
 
-      val avroSchema: Schema = getSchemaForClass(cellSchemaContext.env)
+      val schema: Schema = getSchemaForClass(cellSchemaContext.env)
 
       // Use the schema table to find the actual uid associated with this schema.
       val uidForSchemaClass: Long = cellSchemaContext.env.kijiSystem.getOrCreateSchemaId(
-          cellSchemaContext.env.instanceURI, avroSchema)
+          cellSchemaContext.env.instanceURI, schema)
+
+      val avroSchema = AvroSchema.newBuilder().setUid(uidForSchemaClass).build()
 
       // Register the specified class as a valid reader and writer schema as well as the
       // default reader schema.
-      val readers: ArrayList[java.lang.Long] = new ArrayList()
-      readers.add(uidForSchemaClass)
-
-      val writers: ArrayList[java.lang.Long] = new ArrayList()
-      writers.add(uidForSchemaClass)
+      val readers: ArrayList[AvroSchema] = Lists.newArrayList(avroSchema)
+      val writers: ArrayList[AvroSchema] = Lists.newArrayList(avroSchema)
 
       // For now (layout-1.3), adding to the writers list => adding to the "written" list.
-      val written: ArrayList[java.lang.Long] = new ArrayList()
-      written.add(uidForSchemaClass)
+      val written: ArrayList[AvroSchema] = Lists.newArrayList(avroSchema)
 
       return CellSchema.newBuilder()
           .setStorage(SchemaStorage.UID)
@@ -88,7 +90,7 @@ final class ClassSchemaSpec(private val parts: List[String]) extends SchemaSpec 
           .setValue(null)
           .setAvroValidationPolicy(avroValidationPolicy)
           .setSpecificReaderSchemaClass(className)
-          .setDefaultReader(uidForSchemaClass)
+          .setDefaultReader(avroSchema)
           .setReaders(readers)
           .setWritten(written)
           .setWriters(writers)

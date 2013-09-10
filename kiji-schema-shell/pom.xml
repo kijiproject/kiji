@@ -128,14 +128,7 @@
         </configuration>
       </plugin>
 
-      <plugin>
-        <!-- must supply src/main/findbugs/excludeFilter.xml and includeFilter.xml -->
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>findbugs-maven-plugin</artifactId>
-        <configuration>
-          <threshold>Default</threshold>
-        </configuration>
-      </plugin>
+      <!-- Do not run findbugs against Scala code -->
 
       <plugin>
         <!-- must supply a scalastyle_config.xml -->

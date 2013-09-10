@@ -217,7 +217,7 @@ final class DescribeTableCommand(
         } else if (cellSchema.getDefaultReader() != null ) {
           // Look up the schema for the default reader schema uid.
           val maybeReaderSchema: Option[Schema] =
-              env.kijiSystem.getSchemaForId(env.instanceURI, cellSchema.getDefaultReader())
+              env.kijiSystem.getSchemaFor(env.instanceURI, cellSchema.getDefaultReader())
           if (!maybeReaderSchema.isEmpty) {
             val jsonSchema = jsonParser.parse(maybeReaderSchema.get.toString())
             padEcho(numTabs, "Default reader schema: " + jsonSchema)
