@@ -27,8 +27,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import org.apache.commons.codec.binary.Hex;
-
 import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiCell;
 
@@ -41,9 +39,6 @@ public class KijiRestRow {
 
   @JsonProperty("entityId")
   private String mHumanReadableEntityId;
-
-  @JsonProperty("rowKey")
-  private String mHBaseRowKey;
 
   @JsonProperty("cells")
   private NavigableMap<String, NavigableMap<String, List<KijiRestCell>>> mKijiCellMap;
@@ -61,7 +56,6 @@ public class KijiRestRow {
    */
   public KijiRestRow(EntityId entityId) {
     mHumanReadableEntityId = entityId.toShellString();
-    mHBaseRowKey = new String(Hex.encodeHex(entityId.getHBaseRowKey()));
     mKijiCellMap = Maps.newTreeMap();
   }
 
@@ -105,15 +99,6 @@ public class KijiRestRow {
    */
   public String getEntityId() {
     return mHumanReadableEntityId;
-  }
-
-  /**
-   * Returns the hex encoding (in ASCII) of this row's hbase row key.
-   *
-   * @return the hex encoding (in ASCII) of this row's hbase row key.
-   */
-  public String getRowKey() {
-    return mHBaseRowKey;
   }
 
   /**

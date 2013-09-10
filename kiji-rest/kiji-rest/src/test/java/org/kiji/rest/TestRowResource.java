@@ -81,7 +81,6 @@ public class TestRowResource extends ResourceTest {
     final String hbaseAddress = String.format(".fake.%s-%d", "kiji_rest", 0);
     final KijiURI uri = KijiURI.newBuilder(String.format("kiji://%s/%s", hbaseAddress, "default"))
         .build();
-    // KijiInstaller.get().install(uri);
     final Kiji kiji = Kiji.Factory.open(uri);
 
     return kiji;
@@ -94,7 +93,6 @@ public class TestRowResource extends ResourceTest {
   protected void setUpResources() throws Exception {
     InstanceBuilder builder = new InstanceBuilder("default");
     mFakeKiji = builder.build();
-    // mFakeKiji = createTestKiji();
     Set<KijiURI> mValidInstances = Sets.newHashSet();
 
     TableLayoutDesc desc = KijiTableLayouts.getLayout("org/kiji/rest/layouts/sample_table.json");
