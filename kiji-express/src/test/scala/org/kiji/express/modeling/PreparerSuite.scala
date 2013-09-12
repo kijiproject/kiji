@@ -23,14 +23,14 @@ import com.twitter.scalding.Source
 import org.scalatest.FunSuite
 
 class TestPreparer extends Preparer {
-  class WordCountJob(input: Source, output: Source) extends PreparerJob {
-    input
+  class WordCountJob(input: Map[String, Source], output: Map[String, Source]) extends PreparerJob {
+    input("input")
       .flatMap('line -> 'word) { line : String => line.split("\\s+") }
       .groupBy('word) { _.size }
       .write(output)
   }
 
-  override def prepare(input: Source, output: Source): Boolean = {
+  override def prepare(input: Map[String, Source], output: Map[String, Source]): Boolean = {
     new WordCountJob(input, output).run
     true
   }

@@ -186,17 +186,19 @@ class ModelExecutorSuite extends KijiSuite {
         name = "prepare-model-environment",
         version = "1.0",
         prepareEnvironment = Some(PrepareEnvironment(
-            inputSpec = KijiInputSpec(
-                inputUri.toString,
-                dataRequest = request,
-                fieldBindings = Seq(
-                    FieldBinding(tupleFieldName = "word", storeFieldName = "family:column1"))
-            ),
-            outputSpec = KijiOutputSpec(
-                tableUri = outputUri.toString,
-                fieldBindings = Seq(
-                    FieldBinding(tupleFieldName = "size", storeFieldName = "family:column"))
-            ),
+            inputSpec = Map("input" ->
+                KijiInputSpec(
+                    inputUri.toString,
+                    dataRequest = request,
+                    fieldBindings = Seq(
+                        FieldBinding(tupleFieldName = "word", storeFieldName = "family:column1"))
+            )),
+            outputSpec = Map("output" ->
+                KijiOutputSpec(
+                    tableUri = outputUri.toString,
+                    fieldBindings = Seq(
+                        FieldBinding(tupleFieldName = "size", storeFieldName = "family:column"))
+            )),
             keyValueStoreSpecs = Seq()
         )),
         trainEnvironment = None,
@@ -274,17 +276,19 @@ class ModelExecutorSuite extends KijiSuite {
         name = "prepare-model-environment",
         version = "1.0",
         trainEnvironment = Some(TrainEnvironment(
-          inputSpec = KijiInputSpec(
-            inputUri.toString,
-            dataRequest = request,
-            fieldBindings = Seq(
-              FieldBinding(tupleFieldName = "word", storeFieldName = "family:column1"))
-          ),
-          outputSpec = KijiOutputSpec(
-            tableUri = outputUri.toString,
-            fieldBindings = Seq(
-              FieldBinding(tupleFieldName = "size", storeFieldName = "family:column"))
-          ),
+          inputSpec = Map("input" ->
+              KijiInputSpec(
+                  inputUri.toString,
+                  dataRequest = request,
+                  fieldBindings = Seq(
+                      FieldBinding(tupleFieldName = "word", storeFieldName = "family:column1"))
+          )),
+          outputSpec = Map("output" ->
+              KijiOutputSpec(
+                  tableUri = outputUri.toString,
+                  fieldBindings = Seq(
+                      FieldBinding(tupleFieldName = "size", storeFieldName = "family:column"))
+          )),
           keyValueStoreSpecs = Seq()
         )),
         prepareEnvironment = None,
@@ -403,26 +407,31 @@ class ModelExecutorSuite extends KijiSuite {
         name = "prepare-model-environment",
         version = "1.0",
         prepareEnvironment = Some(PrepareEnvironment(
-            inputSpec = KijiInputSpec(
-                tableUri = inputUri.toString,
-                dataRequest = prepareRequest,
-                fieldBindings = Seq(
-                    FieldBinding(tupleFieldName = "word", storeFieldName = "family:column1"))),
-            outputSpec = KijiOutputSpec(
-                tableUri = prepareOutputUri.toString,
-                fieldBindings = Seq(
-                    FieldBinding(tupleFieldName = "size", storeFieldName = "family:column"))),
+            inputSpec = Map("input" ->
+                KijiInputSpec(
+                    tableUri = inputUri.toString,
+                    dataRequest = prepareRequest,
+                    fieldBindings = Seq(
+                        FieldBinding(tupleFieldName = "word", storeFieldName = "family:column1")))),
+            outputSpec = Map("output" ->
+                KijiOutputSpec(
+                    tableUri = prepareOutputUri.toString,
+                    fieldBindings = Seq(
+                        FieldBinding(tupleFieldName = "size", storeFieldName = "family:column")))),
             keyValueStoreSpecs = Seq())),
         trainEnvironment = Some(TrainEnvironment(
-            inputSpec = KijiInputSpec(
-                tableUri = prepareOutputUri.toString,
-                dataRequest = trainRequest,
-                fieldBindings = Seq(
-                    FieldBinding(tupleFieldName = "word", storeFieldName = "family:column"))),
-            outputSpec = KijiOutputSpec(
-                tableUri = trainOutputUri.toString,
-                fieldBindings = Seq(
-                    FieldBinding(tupleFieldName = "avgString", storeFieldName = "family:column1"))),
+            inputSpec = Map("input" ->
+                KijiInputSpec(
+                    tableUri = prepareOutputUri.toString,
+                    dataRequest = trainRequest,
+                    fieldBindings = Seq(
+                        FieldBinding(tupleFieldName = "word", storeFieldName = "family:column")))),
+            outputSpec = Map("output" ->
+                KijiOutputSpec(
+                    tableUri = trainOutputUri.toString,
+                    fieldBindings = Seq(
+                        FieldBinding(tupleFieldName = "avgString",
+                            storeFieldName = "family:column1")))),
             keyValueStoreSpecs = Seq())),
         scoreEnvironment = Some(ScoreEnvironment(
             inputSpec = KijiInputSpec(
@@ -475,55 +484,57 @@ class ModelExecutorSuite extends KijiSuite {
 
 object ModelExecutorSuite {
   class PrepareWordCounter extends Preparer {
-    class WordCountJob(input: Source, output: Source) extends PreparerJob {
-      input
-          .flatMapTo('word -> 'countedWord) { slice: KijiSlice[String] =>
-            slice.cells.map { cell => cell.datum }
-          }
-          .groupBy('countedWord) { _.size }
-          .map('countedWord -> 'entityId) { countedWord: String => EntityId(countedWord) }
-          .map('size -> 'size) { size: Long => size.toString }
-          .write(output)
+    class WordCountJob(input: Map[String, Source], output: Map[String, Source]) extends
+        PreparerJob {
+      input("input")
+        .flatMapTo('word -> 'countedWord) { slice: KijiSlice[String] =>
+            slice.cells.map { cell => cell.datum } }
+        .groupBy('countedWord) { _.size }
+        .map('countedWord -> 'entityId) { countedWord: String => EntityId(countedWord) }
+        .map('size -> 'size) { size: Long => size.toString }
+        .write(output("output"))
     }
 
-    override def prepare(input: Source, output: Source): Boolean = {
+    override def prepare(input: Map[String, Source], output: Map[String, Source]): Boolean = {
       new WordCountJob(input, output).run
       true
     }
   }
 
   class TrainWordCounter extends Trainer {
-    class WordCountJob(input: Source, output: Source) extends TrainerJob {
-      input
-          .flatMapTo('word -> 'countedWord) { slice: KijiSlice[String] =>
-            slice.cells.map { _.datum }
-          }
-          .groupBy('countedWord) { _.size }
-          .map('countedWord -> 'entityId) { countedWord: String => EntityId(countedWord) }
-          .map('size -> 'size) { size: Long => size.toString }
-          .write(output)
+    class WordCountJob(input: Map[String, Source], output: Map[String,
+        Source]) extends TrainerJob {
+      input("input")
+        .flatMapTo('word -> 'countedWord) { slice: KijiSlice[String] =>
+          slice.cells.map { cell => cell.datum }
+        }
+        .groupBy('countedWord) { _.size }
+        .map('countedWord -> 'entityId) { countedWord: String => EntityId(countedWord) }
+        .map('size -> 'size) { size: Long => size.toString }
+        .write(output("output"))
     }
 
-    override def train(input: Source, output: Source): Boolean = {
+    override def train(input: Map[String, Source], output: Map[String, Source]): Boolean = {
       new WordCountJob(input, output).run
       true
     }
   }
 
   class AverageTrainer extends Trainer {
-    class AverageTrainerJob(input: Source, output: Source) extends TrainerJob {
-      input
-          .flatMapTo('word -> 'countedWord) { slice: KijiSlice[String] =>
-            slice.cells.map { _.datum }
-          }
-          .mapTo('countedWord -> 'number) { countedWord: String => countedWord.toLong }
-          .groupAll { _.average('number) }
-          .mapTo('number -> 'avgString) { avg: Double => avg.toString + " units" }
-          .insert('entityId, EntityId("AVERAGE"))
-          .write(output)
+    class AverageTrainerJob(input: Map[String, Source], output: Map[String, Source]) extends
+        TrainerJob {
+      input("input")
+        .flatMapTo('word -> 'countedWord) { slice: KijiSlice[String] =>
+          slice.cells.map { cell => cell.datum }
+        }
+        .mapTo('countedWord -> 'number) { countedWord: String => countedWord.toLong }
+        .groupAll(_.average('number))
+        .mapTo('number -> 'avgString) { avg: Double => avg.toString + " units" }
+        .insert('entityId, EntityId("AVERAGE"))
+        .write(output("output"))
     }
 
-    override def train(input: Source, output: Source): Boolean = {
+    override def train(input: Map[String, Source], output: Map[String, Source]): Boolean = {
       new AverageTrainerJob(input, output).run
       true
     }

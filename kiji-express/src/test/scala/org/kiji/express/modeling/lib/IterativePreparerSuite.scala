@@ -82,17 +82,19 @@ class IterativePreparerSuite extends KijiSuite {
           name = "prepare-model-environment",
           version = "1.0",
           prepareEnvironment = Some(PrepareEnvironment(
-              inputSpec = KijiInputSpec(
-              tableUri.toString,
-              dataRequest = request,
-              fieldBindings = Seq(
-                  FieldBinding(tupleFieldName = "word", storeFieldName = "family:column1"))
-              ),
-              outputSpec = KijiOutputSpec(
-                  tableUri = tableUri.toString,
-                  fieldBindings = Seq(
-                    FieldBinding(tupleFieldName = "word", storeFieldName = "family:column2"))
-              ),
+              inputSpec = Map("input" ->
+                  KijiInputSpec(
+                      tableUri.toString,
+                      dataRequest = request,
+                      fieldBindings = Seq(
+                          FieldBinding(tupleFieldName = "word", storeFieldName = "family:column1"))
+                  )),
+              outputSpec = Map("output" ->
+                  KijiOutputSpec(
+                      tableUri = tableUri.toString,
+                      fieldBindings = Seq(
+                          FieldBinding(tupleFieldName = "word", storeFieldName = "family:column2"))
+              )),
               keyValueStoreSpecs = Seq()
           )),
           trainEnvironment = None,
@@ -154,12 +156,12 @@ object IterativePreparerSuite {
           .write(output)
     }
 
-    override def prepare(input: Source, output: Source): Boolean = {
-      var inpToJob = input
-      var outToJob = output
+    override def prepare(input: Map[String, Source], output: Map[String, Source]): Boolean = {
+      var inpToJob = input("input")
+      var outToJob = output("output")
       for (i <- 1 to 2) {
         new IterativeJob(inpToJob, outToJob).run
-        inpToJob = output
+        inpToJob = output("output")
       }
       true
     }

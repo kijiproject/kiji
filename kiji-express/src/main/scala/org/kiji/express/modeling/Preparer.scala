@@ -42,12 +42,12 @@ import org.kiji.express.modeling.impl.KeyValueStores
  *   class MyPreparer extends Preparer {
  *     override def prepare(input: Source, output: Source): Boolean = {
  *       new PrepareJob {
- *         input
+ *         input("inputname")
  *             .map('inputField -> 'intermediateField) { inputColumn: KijiSlice[String] =>
  *               inputColumn.getFirstValue
  *             }
  *             .groupBy('intermediateField) { _.count('count) }
- *             .write(output)
+ *             .write(output("outputname"))
  *       }.run
  *     }
  *   }
@@ -70,11 +70,11 @@ trait Preparer
   /**
    * Used to define the computation required for the Prepare phase of the model lifecycle.
    *
-   * @param input data source used during the prepare phase.
-   * @param output data source used during the prepare phase.
+   * @param input data sources used during the prepare phase.
+   * @param output data sources used during the prepare phase.
    * @return true if job succeeds, false otherwise.
    */
   def prepare(
-      input: Source,
-      output: Source): Boolean
+      input: Map[String, Source],
+      output: Map[String, Source]): Boolean
 }

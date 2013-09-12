@@ -234,12 +234,12 @@ object ModelConverters {
    */
   def prepareEnvironmentFromAvro(environment: AvroPrepareEnvironment): PrepareEnvironment = {
     new PrepareEnvironment(
-      inputSpec = inputSpecFromAvro(environment.getInputSpec),
-      outputSpec = outputSpecFromAvro(environment.getOutputSpec),
-      keyValueStoreSpecs = environment
-          .getKvStores
-          .asScala
-          .map { keyValueStoreSpecFromAvro })
+        inputSpec = inputSpecsFromAvro(environment.getInputSpec),
+        outputSpec = outputSpecsFromAvro(environment.getOutputSpec),
+        keyValueStoreSpecs = environment
+            .getKvStores
+            .asScala
+            .map { keyValueStoreSpecFromAvro })
   }
 
   /**
@@ -251,8 +251,8 @@ object ModelConverters {
   def prepareEnvironmentToAvro(environment: PrepareEnvironment): AvroPrepareEnvironment = {
     AvroPrepareEnvironment
         .newBuilder()
-        .setInputSpec(inputSpecToAvro(environment.inputSpec))
-        .setOutputSpec(outputSpecToAvro(environment.outputSpec))
+        .setInputSpec(inputSpecsToAvro(environment.inputSpec))
+        .setOutputSpec(outputSpecsToAvro(environment.outputSpec))
         .setKvStores(environment.keyValueStoreSpecs.map { keyValueStoreSpecToAvro } .asJava)
         .build()
   }
@@ -265,8 +265,8 @@ object ModelConverters {
    */
   def trainEnvironmentFromAvro(environment: AvroTrainEnvironment): TrainEnvironment = {
     new TrainEnvironment(
-        inputSpec = inputSpecFromAvro(environment.getInputSpec),
-        outputSpec = outputSpecFromAvro(environment.getOutputSpec),
+        inputSpec = inputSpecsFromAvro(environment.getInputSpec),
+        outputSpec = outputSpecsFromAvro(environment.getOutputSpec),
         keyValueStoreSpecs = environment
             .getKvStores
             .asScala
@@ -282,8 +282,8 @@ object ModelConverters {
   def trainEnvironmentToAvro(environment: TrainEnvironment): AvroTrainEnvironment = {
     AvroTrainEnvironment
         .newBuilder()
-        .setInputSpec(inputSpecToAvro(environment.inputSpec))
-        .setOutputSpec(outputSpecToAvro(environment.outputSpec))
+        .setInputSpec(inputSpecsToAvro(environment.inputSpec))
+        .setOutputSpec(outputSpecsToAvro(environment.outputSpec))
         .setKvStores(environment.keyValueStoreSpecs.map { keyValueStoreSpecToAvro } .asJava)
         .build()
   }
@@ -320,6 +320,17 @@ object ModelConverters {
   }
 
   /**
+   * Builds a map of input specifications from its avro record representation.
+   *
+   * @param inputSpecs a map of avro input specifications to build from.
+   * @return a map of [[org.kiji.express.modeling.config.InputSpec]].
+   */
+  def inputSpecsFromAvro(inputSpecs: java.util.Map[String, AvroInputSpec]):
+      Map[String, InputSpec] = {
+    inputSpecs.asScala.mapValues(inputSpecFromAvro).map(kv => (kv._1,kv._2)).toMap
+  }
+
+  /**
    * Builds an input specification from its avro record representation.
    *
    * @param inputSpec to build from.
@@ -348,6 +359,17 @@ object ModelConverters {
   }
 
   /**
+   * Converts a map of [[org.kiji.express.modeling.config.InputSpec]] to its avro representation.
+   *
+   * @param inputSpecs to convert.
+   * @return a Java map of avro records.
+   */
+  def inputSpecsToAvro(inputSpecs: Map[String, InputSpec]):
+      java.util.Map[String, AvroInputSpec] = {
+    inputSpecs.mapValues(inputSpecToAvro).asJava
+  }
+
+  /**
    * Converts an input specification to its avro record representation.
    *
    * @param inputSpec to convert.
@@ -369,6 +391,17 @@ object ModelConverters {
             .build()
       }
     }
+  }
+
+  /**
+   * Builds a map of output specifications from its avro record representation.
+   *
+   * @param outputSpecs a map of avro output specifications to build from.
+   * @return a map of [[org.kiji.express.modeling.config.OutputSpec]].
+   */
+  def outputSpecsFromAvro(outputSpecs: java.util.Map[String, AvroOutputSpec]):
+      Map[String, OutputSpec] = {
+    outputSpecs.asScala.mapValues(outputSpecFromAvro).map(kv => (kv._1,kv._2)).toMap
   }
 
   /**
@@ -403,6 +436,17 @@ object ModelConverters {
 
     // Return the one valid specification.
     specifications.head
+  }
+
+  /**
+   * Converts a map of [[org.kiji.express.modeling.config.OutputSpec]] to its avro representation.
+   *
+   * @param outputSpecs to convert.
+   * @return a Java map of avro records.
+   */
+  def outputSpecsToAvro(outputSpecs: Map[String, OutputSpec]):
+      java.util.Map[String, AvroOutputSpec] = {
+    outputSpecs.mapValues(outputSpecToAvro).asJava
   }
 
   /**

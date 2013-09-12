@@ -287,13 +287,14 @@ class ModelDefinitionSuite extends FunSuite {
 
 object ModelDefinitionSuite {
   class MyPreparer extends Preparer {
-    override def prepare(input: Source, output: Source): Boolean = { true }
+    override def prepare(input: Map[String, Source], output: Map[String, Source]):
+        Boolean = { true }
   }
 
   class AnotherPreparer extends MyPreparer
 
   class MyTrainer extends Trainer {
-    override def train(input: Source, output: Source): Boolean = { true }
+    override def train(input: Map[String, Source], output: Map[String, Source]): Boolean = { true }
   }
 
   class AnotherTrainer extends MyTrainer

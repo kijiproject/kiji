@@ -172,27 +172,27 @@ class ModelEnvironmentSuite extends FunSuite {
 
     // Prepare, extract, train and score environments to use in tests.
     val prepareEnv = PrepareEnvironment(
-        inputSpec,
-        outputSpec,
+        Map("input" -> inputSpec),
+        Map("output" -> outputSpec),
         Seq(KeyValueStoreSpec("AVRO_KV", "storename", Map("path" -> "/some/great/path")))
     )
     val trainEnv = TrainEnvironment(
-      inputSpec,
-      outputSpec,
-      Seq(KeyValueStoreSpec("AVRO_KV", "storename", Map("path" -> "/some/great/path")))
+        Map("input" -> inputSpec),
+        Map("output" -> outputSpec),
+        Seq(KeyValueStoreSpec("AVRO_KV", "storename", Map("path" -> "/some/great/path")))
     )
     val scoreEnv = ScoreEnvironment(
-      inputSpec,
-      scoreOutputSpec,
-      Seq(KeyValueStoreSpec("KIJI_TABLE", "myname", Map("uri" -> "kiji://.env/default/table",
-        "column" -> "info:email"))))
+        inputSpec,
+        scoreOutputSpec,
+        Seq(KeyValueStoreSpec("KIJI_TABLE", "myname", Map("uri" -> "kiji://.env/default/table",
+            "column" -> "info:email"))))
 
     val modelEnv = ModelEnvironment(
-      "myname",
-      "1.0.0",
-      Some(prepareEnv),
-      Some(trainEnv),
-      Some(scoreEnv))
+        "myname",
+        "1.0.0",
+        Some(prepareEnv),
+        Some(trainEnv),
+        Some(scoreEnv))
     val jsonModelEnv: String = modelEnv.toJson
     val returnedModelEnv: ModelEnvironment = ModelEnvironment.fromJson(jsonModelEnv)
 

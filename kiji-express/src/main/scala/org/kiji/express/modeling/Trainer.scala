@@ -42,12 +42,12 @@ import org.kiji.express.modeling.impl.KeyValueStores
  *   class MyTrainer extends Trainer {
  *     override def train(input: Source, output: Source) {
  *       new TrainerJob {
- *         input
+ *         input("inputname")
  *             .map('inputField -> 'intermediateField) { inputColumn: KijiSlice[String] =>
  *               inputColumn.getFirstValue
  *             }
  *             .groupBy('intermediateField) { _.count('count) }
- *             .write(output)
+ *             .write(output("outputname"))
  *       }.run
  *     }
  *   }
@@ -70,11 +70,11 @@ trait Trainer
   /**
    * Used to define the computation required for the Train phase of the model lifecycle.
    *
-   * @param input data source used during the train phase.
-   * @param output data source used during the train phase.
+   * @param input data sources used during the train phase.
+   * @param output data sources used during the train phase.
    * @return true if job succeeds, false otherwise.
    */
   def train(
-      input: Source,
-      output: Source): Boolean
+      input: Map[String, Source],
+      output: Map[String, Source]): Boolean
 }

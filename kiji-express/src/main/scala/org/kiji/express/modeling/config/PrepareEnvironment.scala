@@ -34,6 +34,6 @@ import org.kiji.annotations.Inheritance
 @ApiStability.Experimental
 @Inheritance.Sealed
 final case class PrepareEnvironment(
-    inputSpec: InputSpec,
-    outputSpec: OutputSpec,
+    inputSpec: Map[String, InputSpec],
+    outputSpec: Map[String, OutputSpec],
     keyValueStoreSpecs: Seq[KeyValueStoreSpec])

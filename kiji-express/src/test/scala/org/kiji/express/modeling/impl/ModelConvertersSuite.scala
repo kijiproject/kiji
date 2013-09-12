@@ -132,10 +132,12 @@ object ModelConvertersSuite {
     override def extractFn: ExtractFn[_, _] = { null }
   }
   class TestPreparer extends Preparer {
-    override def prepare(inputs: Source, outputs: Source): Boolean = { true }
+    override def prepare(inputs: Map[String, Source], outputs: Map[String, Source]): Boolean = {
+      true }
   }
   class TestTrainer extends Trainer {
-    override def train(inputs: Source, outputs: Source): Boolean = { true }
+    override def train(inputs: Map[String, Source], outputs: Map[String,
+        Source]): Boolean = { true }
   }
   class TestScorer extends Scorer {
     override def scoreFn: ScoreFn[_, _] = { null }
@@ -172,12 +174,12 @@ object ModelConvertersSuite {
       tableUri = "kiji://.env/default/test3",
       outputColumn = "info:test")
   val testPrepareEnvironment: PrepareEnvironment = PrepareEnvironment(
-      inputSpec = testKijiInputSpec,
-      outputSpec = testKijiOutputSpec,
+      inputSpec = Map("input" -> testKijiInputSpec),
+      outputSpec = Map("output" -> testKijiOutputSpec),
       keyValueStoreSpecs = Seq(testKVStore))
   val testTrainEnvironment: TrainEnvironment = TrainEnvironment(
-      inputSpec = testKijiInputSpec,
-      outputSpec = testKijiOutputSpec,
+      inputSpec = Map("input" -> testKijiInputSpec),
+      outputSpec = Map("output" -> testKijiOutputSpec),
       keyValueStoreSpecs = Seq(testKVStore))
   val testScoreEnvironment: ScoreEnvironment = ScoreEnvironment(
       inputSpec = testKijiInputSpec,

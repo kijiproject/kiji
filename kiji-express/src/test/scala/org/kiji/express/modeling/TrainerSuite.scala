@@ -24,8 +24,8 @@ import org.scalatest.FunSuite
 
 class TestTrainer extends Trainer {
   override def train(
-      input: Source,
-      output: Source): Boolean = {
+      input: Map[String, Source],
+      output: Map[String, Source]): Boolean = {
     true
   }
 }

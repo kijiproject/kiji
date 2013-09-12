@@ -80,14 +80,19 @@ object ModelJobUtils {
    *
    * @param modelEnvironment from which to retrieve the data request.
    * @param phase for which to retrieve the data request.
+   * @param inputSpecName optional name specifying the input specification for which
+   *    to construct the data request. Used for the prepare and train phase.
    * @return a kiji data request if the phase exists or None.
    */
   def getDataRequest(
       modelEnvironment: ModelEnvironment,
-      phase: PhaseType): Option[KijiDataRequest] = {
+      phase: PhaseType,
+      inputSpecName: String = ""): Option[KijiDataRequest] = {
     val inputSpec: Option[InputSpec] = phase match {
-      case PhaseType.PREPARE => modelEnvironment.prepareEnvironment.map { _.inputSpec }
-      case PhaseType.TRAIN => modelEnvironment.trainEnvironment.map { _.inputSpec }
+      case PhaseType.PREPARE => modelEnvironment.prepareEnvironment.map { environment =>
+          environment.inputSpec.getOrElse(inputSpecName, null)}
+      case PhaseType.TRAIN => modelEnvironment.trainEnvironment.map { environment =>
+          environment.inputSpec.getOrElse(inputSpecName, null) }
       case PhaseType.SCORE => modelEnvironment.scoreEnvironment.map { _.inputSpec }
     }
 
@@ -261,24 +266,81 @@ object ModelJobUtils {
   }
 
   /**
+   * Convert a map of input specifications to the corresponding Scalding sources.
+   *
+   * @param modelEnvironment for the conversion.
+   * @param phase for the conversion.
+   * @return a map from the source name to the Scalding source.
+   */
+  def inputSpecsToSource(modelEnvironment: ModelEnvironment,
+      phase: PhaseType): Map[String, Source] = {
+    phase match {
+      case PhaseType.PREPARE => {
+        val prepareEnv = modelEnvironment.prepareEnvironment.getOrElse(
+            throw new IllegalArgumentException("Prepare environment does not exist") )
+        prepareEnv.inputSpec.map(kv => (kv._1, inputSpecToSource(modelEnvironment,
+            PhaseType.PREPARE, kv._1)))
+      }
+      case PhaseType.TRAIN => {
+        val trainEnv = modelEnvironment.trainEnvironment.getOrElse(
+            throw new IllegalArgumentException("Train environment does not exist"))
+        trainEnv.inputSpec.map(kv => (kv._1, inputSpecToSource(modelEnvironment,
+            PhaseType.TRAIN, kv._1)))
+      }
+      case _ => throw new IllegalArgumentException("Invalid phase type. Multiple specifications " +
+        "can only be used with a prepare and train phase. Did you mean to call inputSpecToSource?")
+    }
+  }
+
+  /**
+   * Convert a map of output specifications to the corresponding Scalding sources.
+   * @param modelEnvironment for the conversion.
+   * @param phase for the conversion.
+   * @return a map from the source name to the Scalding source.
+   */
+  def outputSpecsToSource(modelEnvironment: ModelEnvironment,
+      phase: PhaseType): Map[String, Source] = {
+    phase match {
+      case PhaseType.PREPARE => {
+        val prepareEnv = modelEnvironment.prepareEnvironment.getOrElse(
+            throw new IllegalArgumentException("Prepare environment does not exist") )
+        prepareEnv.outputSpec.map(kv => (kv._1, outputSpecToSource(modelEnvironment,
+            PhaseType.PREPARE, kv._1)))
+      }
+      case PhaseType.TRAIN => {
+        val trainEnv = modelEnvironment.trainEnvironment.getOrElse(
+            throw new IllegalArgumentException("Train environment does not exist"))
+        trainEnv.outputSpec.map(kv => (kv._1, outputSpecToSource(modelEnvironment,
+            PhaseType.TRAIN, kv._1)))
+      }
+      case _ => throw new IllegalArgumentException("Invalid phase type. Multiple specifications " +
+        "can only be used with a prepare and train phase. Did you mean to call inputSpecToSource?")
+    }
+  }
+
+  /**
    * Convert an input specification from a [[org.kiji.express.modeling.config.ModelEnvironment]]
    * into a Scalding [[com.twitter.scalding.Source]] that can be used by the phases of the model
    * lifecycle.
    *
    * @param modelEnvironment from which to retrieve the Source.
    * @param phase for which to create a Source.
+   * @param inputSpecName name specifying the input specification for which
+   *    to construct the source. Used for the prepare and train phase.
    * @return the input [[com.twitter.scalding.Source]] created for the given phase.
    */
-  def inputSpecToSource(modelEnvironment: ModelEnvironment, phase: PhaseType): Source = {
+  def inputSpecToSource(modelEnvironment: ModelEnvironment,
+      phase: PhaseType,
+      inputSpecName: String = null): Source = {
     val inputSpec: InputSpec = phase match {
       case PhaseType.PREPARE => modelEnvironment
           .prepareEnvironment
           .getOrElse { throw new IllegalArgumentException("Prepare environment does not exist") }
-          .inputSpec
+          .inputSpec(inputSpecName)
       case PhaseType.TRAIN => modelEnvironment
           .trainEnvironment
           .getOrElse { throw new IllegalArgumentException("Prepare environment does not exist") }
-          .inputSpec
+          .inputSpec(inputSpecName)
       case PhaseType.SCORE => modelEnvironment
           .scoreEnvironment
           .getOrElse { throw new IllegalArgumentException("Prepare environment does not exist") }
@@ -312,18 +374,23 @@ object ModelJobUtils {
    *
    * @param modelEnvironment from which to retrieve the Source.
    * @param phase for which to create a Source.
+   * @param outputSpecName optional name specifying the output specification for which
+   *                      to construct the source. Used for the prepare and train
+   *                      phase.
    * @return the output [[com.twitter.scalding.Source]] created for the given phase.
    */
-  def outputSpecToSource(modelEnvironment: ModelEnvironment, phase: PhaseType): Source = {
+  def outputSpecToSource(modelEnvironment: ModelEnvironment,
+      phase: PhaseType,
+      outputSpecName: String = null): Source = {
     val outputConfig: OutputSpec = phase match {
       case PhaseType.PREPARE => modelEnvironment
           .prepareEnvironment
           .getOrElse { throw new IllegalArgumentException("Prepare environment does not exist") }
-          .outputSpec
+          .outputSpec(outputSpecName)
       case PhaseType.TRAIN => modelEnvironment
           .trainEnvironment
           .getOrElse { throw new IllegalArgumentException("Prepare environment does not exist") }
-          .outputSpec
+          .outputSpec(outputSpecName)
       case PhaseType.SCORE => modelEnvironment
           .scoreEnvironment
           .getOrElse { throw new IllegalArgumentException("Prepare environment does not exist") }

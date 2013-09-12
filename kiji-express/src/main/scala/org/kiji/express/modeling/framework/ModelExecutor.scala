@@ -83,9 +83,11 @@ final case class ModelExecutor(
     val preparer: Option[Preparer] = newPhaseInstance[Preparer](modelDefinition.preparerClass)
     require(preparer.isDefined, "A preparerClass has not been provided in the Model Definition")
 
-    val input: Source = ModelJobUtils.inputSpecToSource(modelEnvironment, PhaseType.PREPARE)
-    val output: Source = ModelJobUtils.outputSpecToSource(modelEnvironment, PhaseType.PREPARE)
-    preparer.get.prepare(input, output)
+    val inputs: Map[String, Source] = ModelJobUtils.inputSpecsToSource(modelEnvironment,
+        PhaseType.PREPARE)
+    val outputs: Map[String, Source] = ModelJobUtils.outputSpecsToSource(modelEnvironment,
+        PhaseType.PREPARE)
+    preparer.get.prepare(inputs, outputs)
   }
 
 
@@ -100,8 +102,10 @@ final case class ModelExecutor(
     val trainer: Option[Trainer] = newPhaseInstance[Trainer](modelDefinition.trainerClass)
     require(trainer.isDefined, "A trainer has not been provided in the Model Definition.")
 
-    val input: Source = ModelJobUtils.inputSpecToSource(modelEnvironment, PhaseType.TRAIN)
-    val output: Source = ModelJobUtils.outputSpecToSource(modelEnvironment, PhaseType.TRAIN)
+    val input: Map[String, Source] = ModelJobUtils.inputSpecsToSource(modelEnvironment,
+        PhaseType.TRAIN)
+    val output: Map[String, Source] = ModelJobUtils.outputSpecsToSource(modelEnvironment,
+        PhaseType.TRAIN)
     trainer.get.train(input, output)
   }
 
