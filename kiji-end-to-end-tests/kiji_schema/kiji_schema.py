@@ -176,7 +176,6 @@ class Test(object):
         'mvn', 'clean', 'test',
         ('-DargLine=-Dorg.kiji.schema.KijiClientTest.HBASE_ADDRESS=%s'
          % self._bento.zookeeper_address),
-        '-Dtest=TestHBaseQualifierPager', '-DfailIfNoTests=false',
         work_dir=git_repo_dir,
     )
     if maven.exit_code == 0:
