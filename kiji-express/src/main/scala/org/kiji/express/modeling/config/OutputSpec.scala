@@ -29,7 +29,7 @@ import org.kiji.annotations.Inheritance
 @ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Sealed
-sealed trait OutputSpec
+trait OutputSpec
 
 /**
  * Configuration necessary to use a Kiji table as a data sink.

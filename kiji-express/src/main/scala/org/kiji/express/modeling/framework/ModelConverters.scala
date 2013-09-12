@@ -40,6 +40,7 @@ import org.kiji.express.avro.AvroPrepareEnvironment
 import org.kiji.express.avro.AvroProperty
 import org.kiji.express.avro.AvroRegexQualifierFilter
 import org.kiji.express.avro.AvroScoreEnvironment
+import org.kiji.express.avro.AvroTextSourceSpec
 import org.kiji.express.avro.AvroTrainEnvironment
 import org.kiji.express.modeling.Extractor
 import org.kiji.express.modeling.Preparer
@@ -63,6 +64,7 @@ import org.kiji.express.modeling.config.OutputSpec
 import org.kiji.express.modeling.config.PrepareEnvironment
 import org.kiji.express.modeling.config.RegexQualifierFilter
 import org.kiji.express.modeling.config.ScoreEnvironment
+import org.kiji.express.modeling.config.TextSourceSpec
 import org.kiji.express.modeling.config.TrainEnvironment
 import org.kiji.express.modeling.config.ValidationException
 import org.kiji.schema.util.ProtocolVersion
@@ -346,8 +348,13 @@ object ModelConverters {
               fieldBindings = avroSpec.getFieldBindings.asScala.map { fieldBindingFromAvro })
         }
 
+    val textSpecification: Option[InputSpec] = Option(inputSpec.getTextSpecification)
+        .map { avroSpec: AvroTextSourceSpec =>
+          TextSourceSpec(path = avroSpec.getFilePath)
+        }
+
     // Ensure that only one specification is available.
-    val specifications: Seq[InputSpec] = kijiSpecification.toSeq
+    val specifications: Seq[InputSpec] = kijiSpecification.toSeq ++ textSpecification
     if (specifications.length > 1) {
       throw new ValidationException("Multiple InputSpec types provided: %s".format(specifications))
     } else if (specifications.length == 0) {
@@ -390,6 +397,17 @@ object ModelConverters {
             .setKijiSpecification(spec)
             .build()
       }
+      case TextSourceSpec(path) => {
+        val spec = AvroTextSourceSpec
+            .newBuilder()
+            .setFilePath(path)
+            .build()
+
+        AvroInputSpec
+            .newBuilder()
+            .setTextSpecification(spec)
+            .build()
+      }
     }
   }
 
@@ -425,9 +443,14 @@ object ModelConverters {
               tableUri = avroSpec.getTableUri,
               outputColumn = avroSpec.getOutputColumn)
         }
+    val textSpecification: Option[OutputSpec] = Option(outputSpec.getTextSpecification)
+      .map { avroSpec: AvroTextSourceSpec =>
+        TextSourceSpec(path = avroSpec.getFilePath)
+      }
 
     // Ensure that only one specification is available.
-    val specifications: Seq[OutputSpec] = kijiSpecification.toSeq ++ kijiColumnSpecification
+    val specifications: Seq[OutputSpec] = kijiSpecification.toSeq ++ kijiColumnSpecification ++
+        textSpecification
     if (specifications.length > 1) {
       throw new ValidationException("Multiple InputSpec types provided: %s".format(specifications))
     } else if (specifications.length == 0) {
@@ -482,6 +505,17 @@ object ModelConverters {
         AvroOutputSpec
             .newBuilder()
             .setKijiColumnSpecification(spec)
+            .build()
+      }
+      case TextSourceSpec(path) => {
+        val spec = AvroTextSourceSpec
+            .newBuilder()
+            .setFilePath(path)
+            .build()
+
+        AvroOutputSpec
+            .newBuilder()
+            .setTextSpecification(spec)
             .build()
       }
     }

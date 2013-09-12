@@ -20,6 +20,7 @@
 package org.kiji.express.modeling.impl
 
 import com.twitter.scalding.Source
+import com.twitter.scalding.TextLine
 
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
@@ -41,6 +42,7 @@ import org.kiji.express.modeling.config.KijiOutputSpec
 import org.kiji.express.modeling.config.KijiSingleColumnOutputSpec
 import org.kiji.express.modeling.config.ModelEnvironment
 import org.kiji.express.modeling.config.OutputSpec
+import org.kiji.express.modeling.config.TextSourceSpec
 import org.kiji.mapreduce.KijiContext
 import org.kiji.mapreduce.kvstore.{ KeyValueStore => JKeyValueStore }
 import org.kiji.mapreduce.kvstore.lib.{ AvroKVRecordKeyValueStore => JAvroKVRecordKeyValueStore }
@@ -350,6 +352,9 @@ object ModelJobUtils {
       case spec @ KijiInputSpec(tableUri, _, _) => {
         KijiInput(tableUri, getTimeRange(spec))(getInputColumnMap(spec))
       }
+      case spec @ TextSourceSpec(path) => {
+        TextLine(path)
+      }
       case _ => throw new IllegalArgumentException("Prepare environment does not exist")
     }
   }
@@ -406,6 +411,9 @@ object ModelJobUtils {
             // scalastyle:on null
 
         KijiOutput(tableUri, timestampSymbol)(outputColumnMapping: _*)
+      }
+      case spec @ TextSourceSpec(path) => {
+        TextLine(path)
       }
       case _ => throw new IllegalArgumentException("Prepare environment does not exist")
     }

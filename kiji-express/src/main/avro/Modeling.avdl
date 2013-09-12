@@ -294,6 +294,16 @@ protocol Modeling {
   }
 
   /**
+   * Configuration necessary to use a Text file as a data source.
+   */
+  record AvroTextSourceSpec {
+    /**
+     * HDFS path to the text file that this spec will use. Required.
+     */
+    string file_path;
+  }
+
+  /**
    * Configuration necessary to use a Kiji table as a data sink.
    */
   record AvroKijiOutputSpec {
@@ -336,9 +346,11 @@ protocol Modeling {
    * this record.
    */
   record AvroInputSpec {
-    // TODO(EXP-161): Accept inputs from multiple source types.
     /** Configuration for this input spec if a Kiji input spec is being used. */
     union{null, AvroKijiInputSpec} kiji_specification = null;
+
+    /** Configuration for this input spec if a text file is being used. */
+    union{null, AvroTextSourceSpec} text_specification = null;
   }
 
   /**
@@ -348,12 +360,14 @@ protocol Modeling {
    * modifying this record.
    */
   record AvroOutputSpec {
-    // TODO(EXP-161): Accept outputs from multiple source types.
     /** Configuration for this output spec if a Kiji output spec is being used. */
     union{null, AvroKijiOutputSpec} kiji_specification = null;
 
     /** Configuration for this output spec if a Kiji single column output spec is being used. */
     union{null, AvroKijiSingleColumnOutputSpec} kiji_column_specification = null;
+
+    /** Configuration for this output spec if a text file is being used. */
+    union{null, AvroTextSourceSpec} text_specification = null;
   }
 
   /**
