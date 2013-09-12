@@ -45,19 +45,22 @@ class BentoCluster(object):
   Wraps a Bento cluster installation.
   """
 
-  def __init__(self, home):
+  def __init__(self, home, enable_log=True):
     """Initializes the Bento cluster object.
 
     Args:
       home: Bento install directory.
+      enable_log: True means capture the Bento logs in the file.
     """
     self._home = home
+    self._enable_log = enable_log
     assert os.path.exists(self._home), self._home
     assert os.path.exists(os.path.join(self._home, 'bin', 'bento')), (
       'Invalid Bento home dir: %s' % self._home)
     self._pid = None
     self._pid_file = os.path.join(self._home, 'state', 'bento-cluster.pid')
-    self._checkin_pid_file = os.path.join(self._home, 'state', 'checkin-daemon.pid')
+    self._checkin_pid_file = (
+      os.path.join(self._home, 'state', 'checkin-daemon.pid'))
 
     self._hdfs_address = None
     self._zk_address = None
@@ -77,10 +80,19 @@ class BentoCluster(object):
 
     if self._pid is None:
       # No PID file, start a Bento:
+
+      env = dict(os.environ)
+      if self._enable_log:
+        env['BENTO_LOG_ENABLE'] = '1'
+      else:
+        if 'BENTO_LOG_ENABLE' in env:
+          del env['BENTO_LOG_ENABLE']
+
       with open('/dev/null', 'r') as input_fd:
         proc = subprocess.Popen(
             args=['bin/bento', 'start'],
             stdin=input_fd,
+            env=env,
             cwd=self._home
         )
         proc.communicate()
