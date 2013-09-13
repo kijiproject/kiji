@@ -63,6 +63,13 @@ def GetFileSHA1(path):
 
 
 def GetFileFingerprints(path):
+  """Computes the MD5 and the SHA1 sums of a specified path.
+
+  Args:
+    path: Path of the file to sum.
+  Returns:
+    A pair (MD5, SHA1) with the sums of the specified file.
+  """
   assert os.path.exists(path)
   buffer_size = 128 * 1024
 
@@ -107,6 +114,9 @@ class RemoteRepository(object):
   def is_remote(self):
     """Returns: whether this Maven repository is remote."""
     return (self.path.startswith('http://') or self.path.startswith('https://'))
+
+  def __str__(self):
+    return 'RemoteRepository(path=%s)' % self.path
 
   def ReadFile(self, path):
     """Reads a file and returns its content as a byte array.
@@ -174,6 +184,13 @@ class RemoteRepository(object):
     return path
 
   def GetURL(self, **coordinate):
+    """Reports the full URL for the specified artifact coordinate.
+
+    Args:
+      **coordinate: Artifact coordinates.
+    Returns:
+      The Full URL for the specified artifact.
+    """
     return os.path.join(self.path, self.GetPath(**coordinate))
 
   def ReadMetadataFile(self, group, artifact, version=None):
@@ -217,6 +234,20 @@ class RemoteRepository(object):
       classifier=None,
       snapshot_version=None,
   ):
+    """Resolves an artifact coordinate into an absolute.
+
+    Resolves snapshot coordinates into absolute artifact coordinates.
+
+    Args:
+      group: Artifact coordinate.
+      artifact: Artifact coordinate.
+      version: Artifact coordinate.
+      type: Artifact coordinate.
+      classifier: Artifact coordinate.
+      snapshot_version: Artifact coordinate.
+    Returns:
+      The resolved artifact coordinate, as a dictionary.
+    """
     if version.endswith('-SNAPSHOT') and (snapshot_version is None):
       if self.is_remote:
         # Resolve remote snapshot version:
@@ -254,11 +285,25 @@ class RemoteRepository(object):
     return coordinate
 
   def ReadMD5File(self, path):
+    """Reads the MD5 sum file for a specified path.
+
+    Args:
+      path: Path of the file whose MD5 sum file to read.
+    Returns:
+      The MD5 sum, or None if the MD5 sum file does not exist.
+    """
     md5 = self.ReadFile('%s.md5' % path)
     if md5 is not None: md5 = md5.decode()
     return md5
 
   def ReadSHA1File(self, path):
+    """Reads the SHA1 sum file for a specified path.
+
+    Args:
+      path: Path of the file whose SHA1 sum file to read.
+    Returns:
+      The SHA1 sum, or None if the SHA1 sum file does not exist.
+    """
     sha1 = self.ReadFile('%s.sha1' % path)
     if sha1 is not None: sha1 = sha1.decode()
     return sha1
@@ -308,7 +353,7 @@ class RemoteRepository(object):
         raise err
 
   @staticmethod
-  def ReadToFile(http_reply, output_path, buffer_size=128*1024):
+  def ReadToFile(http_reply, output_path, buffer_size=1024*1024):
     output_dir = os.path.dirname(output_path)
     if not os.path.exists(output_dir): os.makedirs(output_dir)
 
@@ -337,7 +382,17 @@ class RemoteRepository(object):
 
 
 class MavenRepository(object):
-  """Maven repository."""
+  """Maven repository.
+
+  A Maven repository consists in:
+   - a main local (writable) repository,
+   - a set of "remote" (read-only) repositories.
+  A remote repository is specified via a URL (file:// or http[s]://).
+
+  Any artifact from a remote repository may be brought locally.
+  Snapshot artifacts are always checked for newer versions agaist the remote
+  repositories.
+  """
 
   def __init__(
       self,
@@ -375,6 +430,9 @@ class MavenRepository(object):
   def Get(self, group, artifact, version, type, classifier=None):
     """Retrieves an artifact locally.
 
+    If the artifact is a snapshot (version ends with '-SNAPSHOT'),
+    all remotes are checked for a newer version.
+
     Returns:
       The path of the artifact in the local repository.
     """
@@ -387,46 +445,97 @@ class MavenRepository(object):
     )
     path = self.local.GetPath(**coordinate)
     parsed = urllib.request.urlparse(self.local.GetURL(**coordinate))
-    assert parsed.scheme == 'file'
+    assert (parsed.scheme == 'file')
     local_path = parsed.path
     md5_path = '%s.md5' % local_path
     sha1_path = '%s.sha1' % local_path
 
-    if (os.path.exists(local_path)
-        and os.path.exists(md5_path) and os.path.exists(sha1_path)
-        and (GetFileFingerprints(local_path) ==
-             (self.local.ReadMD5File(path), self.local.ReadSHA1File(path)))):
-      return local_path
+    # Artifact is a snapshot, resolve it first:
+    if version.endswith('-SNAPSHOT'):
+      # Find the most recent snapshot version from all the remote repositories:
 
-    for remote in self.remotes:
+      def ScanRemotes():
+        for remote in self.remotes:
+          resolved = remote.Resolve(**coordinate)
+          if resolved is None: continue
+          if resolved['snapshot_version'] is None: continue
+          yield (resolved, remote)
+
+      best_remote = None
+      best_version = dict(snapshot_version='', **coordinate)
+      for (resolved, remote) in ScanRemotes():
+        if best_version['snapshot_version'] < resolved['snapshot_version']:
+          best_remote = remote
+          best_version = resolved
+
+      if best_remote is None:
+        logging.info('Artifact %s not found in remote repositories', coordinate)
+      else:
+        logging.info('Artifact resolved to %s in remote %s',
+                     best_version, best_remote)
+
+      (http_reply, md5, sha1) = best_remote.Open(**best_version)
+      try:
+        # Do we have this snapshot artifact locally already:
+        if (os.path.exists(local_path)
+            and os.path.exists(md5_path)
+            and os.path.exists(sha1_path)
+            and md5 == self.local.ReadMD5File(path)
+            and sha1 == self.local.ReadSHA1File(path)
+            and (GetFileFingerprints(local_path) ==
+                 (self.local.ReadMD5File(path), self.local.ReadSHA1File(path)))):
+          logging.info('Snapshot artifact found locally')
+          return local_path
+      finally:
+        http_reply.close()
+      logging.info('Snapshot artifact not found locally')
+      remotes = (best_remote,)
+
+    else:
+      # Do we have this non-snapshot artifact locally already:
+      if (os.path.exists(local_path)
+          and os.path.exists(md5_path) and os.path.exists(sha1_path)
+          and (GetFileFingerprints(local_path) ==
+               (self.local.ReadMD5File(path), self.local.ReadSHA1File(path)))):
+        return local_path
+      remotes = self.remotes
+
+    # Artifact does not exist locally.
+    # Try each remote repository on after another,
+    # pick the first that contains the artifact we are looking for:
+    for remote in remotes:
       try:
         open_result = remote.Open(**coordinate)
         if open_result is None: continue
         (http_reply, md5, sha1) = open_result
-        (actual_md5, actual_sha1) = RemoteRepository.ReadToFile(
-            http_reply=http_reply,
-            output_path=local_path,
-        )
-        if md5 != actual_md5:
-          logging.error(
-              'MD5 mismatch for %r from %r: expected %r, got %r',
-              local_path, remote.path, md5, actual_md5)
-        if sha1 != actual_sha1:
-          logging.error(
-              'SHA1 mismatch for %r from %r: expected %r, got %r',
-              local_path, remote.path, sha1, actual_sha1)
-        if (md5 == actual_md5) and (sha1 == actual_sha1):
-          with open(md5_path, 'w') as f:
-            f.write(md5)
-          with open(sha1_path, 'w') as f:
-            f.write(sha1)
-          return local_path
-        else:
-          os.remove(local_path)
+        try:
+          (actual_md5, actual_sha1) = RemoteRepository.ReadToFile(
+              http_reply=http_reply,
+              output_path=local_path,
+          )
+          if md5 != actual_md5:
+            logging.error(
+                'MD5 mismatch for %r from %r: expected %r, got %r',
+                local_path, remote.path, md5, actual_md5)
+          if sha1 != actual_sha1:
+            logging.error(
+                'SHA1 mismatch for %r from %r: expected %r, got %r',
+                local_path, remote.path, sha1, actual_sha1)
+          if (md5 == actual_md5) and (sha1 == actual_sha1):
+            with open(md5_path, 'w') as f:
+              f.write(md5)
+            with open(sha1_path, 'w') as f:
+              f.write(sha1)
+            return local_path
+          else:
+            os.remove(local_path)
+        finally:
+          http_reply.close()
 
       except urllib.error.HTTPError as err:
         logging.error('Error: %s', err.readlines())
 
+    # Artifact is nowhere to be found:
     return None
 
 
