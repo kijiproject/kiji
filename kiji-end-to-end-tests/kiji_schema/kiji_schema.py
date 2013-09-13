@@ -14,10 +14,9 @@ __path = os.path.dirname(os.path.dirname(os.path.abspath(sys.argv[0])))
 if __path not in sys.path:
   sys.path.append(__path)
 
-from kiji import base
-from kiji import bento_cluster
-from kiji import command
-from kiji import maven_fetcher
+from base import base
+from base import command
+from kiji import kiji_bento
 
 FLAGS = base.FLAGS
 LogLevel = base.LogLevel
@@ -93,7 +92,9 @@ class Test(object):
   """Runs the KijiMusic tutorial."""
 
   def __init__(
-      self, work_dir, version,
+      self,
+      work_dir,
+      version,
       maven_local_repo=None,
       maven_remote_repo=None):
     """Initializes the tutorial runner.
@@ -107,8 +108,25 @@ class Test(object):
     self._work_dir = work_dir
     self._run_id = base.NowMS()
     self._kiji_version = version
+
+    # TODO: Propagate these to KijiBento
     self._maven_local_repo = maven_local_repo
     self._maven_remote_repo = maven_remote_repo
+
+    self._kiji_bento = kiji_bento.KijiBento(
+      path=os.path.join(self._work_dir, 'kiji-bento-%s' % self._kiji_version),
+      version=self._kiji_version,
+    )
+
+  @property
+  def kiji_bento(self):
+    """Returns the KijiBento install."""
+    return self._kiji_bento
+
+  @property
+  def bento_cluster(self):
+    """Returns the BentoCluster install."""
+    return self.kiji_bento.bento_cluster
 
   def Setup(self):
     """Initializes the tutorial runner.
@@ -116,40 +134,8 @@ class Test(object):
     Fetches the KijiBento Maven artifact, unzip it, starts a Bento cluster,
     and prepares a working environment.
     """
-
-    archive_name = 'kiji-bento-%s-release.tar.gz' % self._kiji_version
-    archive = os.path.join(self._work_dir, archive_name)
-
-    if not os.path.exists(archive):
-      maven_fetcher.FetchMavenArtifact(
-        group_id='org.kiji.kiji-bento',
-        artifact_id='kiji-bento',
-        version=self._kiji_version,
-        type='tar.gz',
-        classifier='release',
-        transitive=False,
-        output_dir=self._work_dir,
-        local_repo=self._maven_local_repo,
-        remote_repo=self._maven_remote_repo,
-      )
-
-    self._kiji_bento_dir = (
-        os.path.join(self._work_dir, 'kiji-bento-%s' % self._kiji_version))
-    if not os.path.exists(self._kiji_bento_dir):
-      # Strip the first path component from the kiji-bento release archive:
-      # The top-level directory is "kiji-bento-<code-name>/",
-      # but we don't know the code-name at this point.
-      os.makedirs(self._kiji_bento_dir)
-      ExtractArchive(archive, work_dir=self._kiji_bento_dir, strip_components=1)
-    assert os.path.exists(self._kiji_bento_dir), (
-        'KijiBento root directory not found: %r' % self._kiji_bento_dir)
-
-    self._bento_cluster_dir = os.path.join(self._kiji_bento_dir, 'cluster')
-    assert os.path.exists(self._bento_cluster_dir), (
-        'BentoCluster root directory not found: %r' % self._bento_cluster_dir)
-
-    self._bento = bento_cluster.BentoCluster(home=self._bento_cluster_dir)
-    self._bento.Start()
+    self.kiji_bento.Install()
+    self.bento_cluster.Start()
 
   def Run(self):
     git_repo_name = 'kiji_schema'
@@ -175,7 +161,7 @@ class Test(object):
     maven = command.Command(
         'mvn', 'clean', 'test',
         ('-DargLine=-Dorg.kiji.schema.KijiClientTest.HBASE_ADDRESS=%s'
-         % self._bento.zookeeper_address),
+         % self.bento_cluster.zookeeper_address),
         work_dir=git_repo_dir,
     )
     if maven.exit_code == 0:
@@ -194,7 +180,7 @@ class Test(object):
   # Cleanup:
 
   def Cleanup(self):
-    self._bento.Stop()
+    self.bento_cluster.Stop()
     shutil.rmtree(self._work_dir)
 
 

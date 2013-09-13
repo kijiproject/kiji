@@ -9,7 +9,7 @@ import subprocess
 import sys
 import time
 
-from kiji import base
+from base import base
 
 FLAGS = base.FLAGS
 LogLevel = base.LogLevel
@@ -173,6 +173,12 @@ class Command(object):
     """Returns: the command exit code."""
     assert (self._process is not None), 'Command has not been started.'
     return self._process.returncode
+
+  @property
+  def pid(self):
+    """Returns: the process ID running this command."""
+    assert (self._process is not None), 'Command has not been started.'
+    return self._process.pid
 
 
 if __name__ == '__main__':

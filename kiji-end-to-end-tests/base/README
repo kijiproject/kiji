@@ -1,0 +1,5 @@
+The base/ module is maintainted separately in:
+    git://github.com/kryzthov/python-base.git
+Changes to the base/ module should be pushed to:
+    git://github.com/kryzthov/python-base.git
+and backported here.

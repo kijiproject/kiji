@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 # -*- mode: python -*-
 # -*- coding: utf-8 -*-
-"""Manages a Bento cluster.
-
-Wraps an external Bento installation.
-"""
+"""Manages a Bento cluster."""
 
 import logging
 import os
@@ -14,10 +11,18 @@ import subprocess
 import sys
 import xml.etree.ElementTree as etree
 
+from base import base
+from base import cli
+
+from kiji import maven_repo
+
 
 class Error(Exception):
   """Errors in this module."""
   pass
+
+
+# ------------------------------------------------------------------------------
 
 
 def Find(root, regex):
@@ -39,46 +44,122 @@ def Find(root, regex):
         yield os.path.join(dir_path, file_name)
 
 
+# ------------------------------------------------------------------------------
+
+
+def ExtractArchive(archive, work_dir, strip_components=0):
+  """Extracts a tar archive.
+
+  Args:
+    archive: Path to the tar archive to extract.
+    work_dir: Where to extract the archive.
+    strip_components: How many leading path components to strip.
+  """
+  assert os.path.exists(archive), (
+      'Archive %r does not exist', archive)
+  if not os.path.exists(work_dir):
+    os.makedirs(work_dir)
+  command = (
+      '/bin/tar xf {archive}'
+      ' --directory {dir}'
+      ' --strip-components={strip_components}'
+  ).format(
+      archive=archive,
+      dir=work_dir,
+      strip_components=strip_components,
+  )
+  logging.info('Running command: %r', command)
+  os.system(command)
+
+
+# ------------------------------------------------------------------------------
+
+
 class BentoCluster(object):
   """Bento cluster.
 
   Wraps a Bento cluster installation.
   """
 
-  def __init__(self, home, enable_log=True):
+  def __init__(self, path, version, enable_log=True):
     """Initializes the Bento cluster object.
 
     Args:
-      home: Bento install directory.
+      path: Path of the Bento install directory.
+      version: Bento version, eg. '1.0.1' or '1.0.2-SNAPSHOT'.
       enable_log: True means capture the Bento logs in the file.
     """
-    self._home = home
+    self._path = path
     self._enable_log = enable_log
-    assert os.path.exists(self._home), self._home
-    assert os.path.exists(os.path.join(self._home, 'bin', 'bento')), (
-      'Invalid Bento home dir: %s' % self._home)
-    self._pid = None
-    self._pid_file = os.path.join(self._home, 'state', 'bento-cluster.pid')
+
+    if not os.path.exists(os.path.join(self.path, 'bin', 'bento')):
+      self._Fetch(version=version)
+
+    self._pid_file = os.path.join(self.path, 'state', 'bento-cluster.pid')
+    self._pid = self._ReadPidFile(self._pid_file)
+
     self._checkin_pid_file = (
-      os.path.join(self._home, 'state', 'checkin-daemon.pid'))
+        os.path.join(self.path, 'state', 'checkin-daemon.pid'))
 
     self._hdfs_address = None
     self._zk_address = None
     self._mapred_address = None
 
+  @property
+  def path(self):
+    return self._path
+
+  @property
+  def is_running(self):
+    return self.pid is not None
+
+  @property
+  def pid(self):
+    return self._pid
+
+  def _Fetch(self, version):
+    """Fetches and installs the specified version of BentoCluster."""
+    repo = maven_repo.MavenRepository(
+        remotes=[
+            maven_repo.KIJI_PUBLIC_REPO,
+            maven_repo.KIJI_SNAPSHOT_REPO,
+        ],
+    )
+    local_path = repo.Get(
+        group='org.kiji.bento',
+        artifact='bento-cluster',
+        version=version,
+        classifier='release',
+        type='tar.gz',
+    )
+    ExtractArchive(archive=local_path, work_dir=self.path, strip_components=1)
+    assert os.path.exists(os.path.join(self.path, 'bin', 'bento'))
+
+  def _ReadPidFile(self, pid_file_path):
+    if not os.path.exists(pid_file_path):
+      return None
+
+    try:
+      with open(pid_file_path, 'r') as f:
+        pid = int(f.read())
+    except ValueError as err:
+      # Invalid PID file content:
+      os.remove(pid_file_path)
+      return None
+
+    if os.path.exists('/proc/%d' % pid):
+      return pid
+    else:
+      # Stale PID file, remove:
+      os.remove(pid_file_path)
+      return None
+
   def Start(self):
     """Starts the Bento cluster, if necessary."""
-    if os.path.exists(self._pid_file):
-      with open(self._pid_file, 'r') as f:
-        pid = int(f.read())
-      if os.path.exists('/proc/%d' % pid):
-        logging.info('Bento cluster already started as PID=%d', pid)
-        self._pid = pid
-      else:
-        # Stale PID file, remove and start a new Bento:
-        os.remove(self._pid_file)
-
-    if self._pid is None:
+    self._pid = self._ReadPidFile(self._pid_file)
+    if self._pid is not None:
+      logging.info('Bento cluster already started as PID=%d', self.pid)
+    else:
       # No PID file, start a Bento:
 
       env = dict(os.environ)
@@ -92,16 +173,20 @@ class BentoCluster(object):
         proc = subprocess.Popen(
             args=['bin/bento', 'start'],
             stdin=input_fd,
+            cwd=self.path,
             env=env,
-            cwd=self._home
         )
         proc.communicate()
 
-      assert (proc.returncode == 0), ('bento start returned %d' % proc.returncode)
+      assert (proc.returncode == 0), (
+          'bento start returned %d' % proc.returncode)
       with open(self._pid_file, 'r') as f:
         self._pid = int(f.read())
         logging.info('Bento cluster created and starter as PID=%d', self._pid)
 
+    self._ReadConfig()
+
+  def _ReadConfig(self):
     self._hdfs_address = self._GetHDFSAddress()
     self._zk_address = self._GetZooKeeperAddress()
     self._mapred_address = self._GetMapReduceAddress()
@@ -136,7 +221,7 @@ class BentoCluster(object):
 
   def Stop(self):
     """Stops the running Bento cluster, if necessary."""
-    if self._pid == None:
+    if self._pid is None:
       logging.info('Bento cluster not started, nothing to stop.')
       return
     logging.info('Killing Bento cluster running as PID=%d', self._pid)
@@ -160,7 +245,7 @@ class BentoCluster(object):
       os.remove(self._checkin_pid_file)
 
   def _GetConfigFile(self, file_name):
-    files = tuple(Find(self._home, file_name))
+    files = tuple(Find(self.path, file_name))
     assert len(files) == 1, files
     with open(files[0], 'r') as f:
       return f.read()
@@ -212,5 +297,47 @@ class BentoCluster(object):
     return 'kiji://%s' % self.zookeeper_address
 
 
+# ------------------------------------------------------------------------------
+
+
+class CLI(cli.Action):
+  def RegisterFlags(self):
+    self.flags.AddString(
+        name='install_dir',
+        default='/tmp/bento-cluster',
+        help='Path where BentoCluster is installed.',
+    )
+    self.flags.AddString(
+        name='version',
+        default='1.0.0',
+        help='BentoCluster version.',
+    )
+    self.flags.AddString(
+        name='do',
+        default='start',
+        help='Action to perform: start, stop or status.',
+    )
+
+  def Run(self, args):
+    cluster = BentoCluster(
+        path=self.flags.install_dir,
+        version=self.flags.version,
+    )
+    assert (len(args) == 0), ('Unexpected arguments: %r' % args)
+    if self.flags.do == 'install':
+      pass
+    elif self.flags.do == 'start':
+      cluster.Start()
+    elif self.flags.do == 'stop':
+      cluster.Stop()
+    else:
+      raise Error('Unknown action %r' % self.flags.do)
+
+
+def Main(args):
+  cli = CLI()
+  return cli(args)
+
+
 if __name__ == '__main__':
-  raise Error('%r cannot be used as a standalone script.' % args[0])
+  base.Run(Main)

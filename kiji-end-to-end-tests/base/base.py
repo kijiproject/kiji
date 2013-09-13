@@ -36,6 +36,12 @@ import tempfile
 import time
 
 
+# Constant to be used in place of None for default parameter values.
+# Useful when None is a valid parameter value and cannot be used
+# to mean "use the default".
+Default = object()
+
+
 class Error(Exception):
   """Errors used in this module."""
   pass
@@ -168,7 +174,7 @@ def StripOptionalPrefix(string, prefix):
   Returns:
     The given string with the prefix removed, if applicable.
   """
-  if string.startswith(suffix):
+  if string.startswith(prefix):
     string = string[len(prefix):]
   return string
 
@@ -214,6 +220,59 @@ def StripMargin(text, separator='|'):
   return '\n'.join(lines)
 
 
+def CamelCase(text, separator='_'):
+  """Camel-cases a given character sequence.
+
+  E.g. 'this_string' becomes 'ThisString'.
+
+  Args:
+    text: Sequence of characters to convert to camel-case.
+    separator: Separator to use to identify words.
+  Returns:
+    The camel-cased sequence of characters.
+  """
+  return ''.join(map(str.capitalize, text.split(separator)))
+
+
+def UnCamelCase(text, separator='_'):
+  """Un-camel-cases a camel-cased word.
+
+  For example:
+   - 'ThisString' becomes 'this_string',
+   - 'JIRA' becomes 'jira',
+   - 'JIRATool' becomes 'jira_tool'.
+
+  Args:
+    text: Camel-case sequence of characters.
+    separator: Separator to use to identify words.
+  Returns:
+    The un-camel-cased sequence of characters.
+  """
+  split = re.findall(r'[A-Z][a-z0-9]*', text)
+  split = map(str.lower, split)
+  split = list(split)
+
+  words = []
+
+  while len(split) > 0:
+    word = split[0]
+    split = split[1:]
+
+    if len(word) == 1:
+      while (len(split) > 0) and (len(split[0]) == 1):
+        word += split[0]
+        split = split[1:]
+
+    words.append(word)
+
+  return separator.join(words)
+
+
+def Truncate(text, width, ellipsis='..'):
+  if len(text) > width:
+    text = text[:(width - len(ellipsis))] + ellipsis
+  return text
+
 def GetProgramName():
   """Returns: this program's name."""
   return os.path.basename(sys.argv[0])
@@ -237,6 +296,21 @@ def ShellCommandOutput(command):
   assert process.returncode == 0, (
       'Shell command failed: %r : %s' % (command, output))
   return output
+
+
+def MakeDir(path):
+  """Creates a directory if necessary.
+
+  Args:
+    path: Path of the directory to create.
+  Returns:
+    True if the directory was created, false if it already existed.
+  """
+  if os.path.exists(path):
+    return False
+  else:
+    os.makedirs(path)
+    return True
 
 
 # ------------------------------------------------------------------------------
@@ -513,6 +587,29 @@ Terminal = _Terminal()
 # ------------------------------------------------------------------------------
 
 
+HttpMethod = MakeTuple('HttpMethod',
+  GET = 'GET',
+  POST = 'POST',
+  PUT = 'PUT',
+  DELETE = 'DELETE',
+  HEAD = 'HEAD',
+  OPTIONS = 'OPTIONS',
+  TRACE = 'TRACE',
+  CONNECT = 'CONNECT',
+)
+
+
+ContentType = MakeTuple('ContentType',
+  JSON = 'application/json',
+  XML = 'application/xml',
+  PATCH = 'text/x-patch',
+  PLAIN = 'text/plain',
+)
+
+
+# ------------------------------------------------------------------------------
+
+
 def Run(main):
   """Runs a Python program's Main() function.
 
@@ -570,3 +667,7 @@ def Run(main):
 
   # Run program:
   sys.exit(main(FLAGS.GetUnparsed()))
+
+
+if __name__ == '__main__':
+  raise Error('%r cannot be used as a standalone script.' % args[0])
