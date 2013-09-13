@@ -28,6 +28,7 @@ import java.util.Set;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import org.apache.avro.Schema;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -109,6 +110,16 @@ public abstract class DescribedInputTextBulkImporter extends KijiBulkImporter<Lo
           .put("\"string\"", String.class)
           .build();
 
+  private static final ImmutableMap<Schema.Type, Class<?>> KIJI_AVRO_TYPE_TO_CLASS_MAP =
+      new ImmutableMap.Builder<Schema.Type, Class<?>>()
+          .put(Schema.Type.BOOLEAN, Boolean.class)
+          .put(Schema.Type.INT, Integer.class)
+          .put(Schema.Type.LONG, Long.class)
+          .put(Schema.Type.FLOAT, Float.class)
+          .put(Schema.Type.DOUBLE, Double.class)
+          .put(Schema.Type.STRING, String.class)
+          .build();
+
   /** Number of lines to skip between reject/incomplete lines. */
   private Long mLogRate = 1000L;
 
@@ -173,6 +184,15 @@ public abstract class DescribedInputTextBulkImporter extends KijiBulkImporter<Lo
     for (KijiColumnName kijiColumnName : mTableImportDescriptor.getColumnNameSourceMap().keySet()) {
       CellSchema cellSchema = mOutputTableLayout.getCellSchema(kijiColumnName);
       switch(cellSchema.getType()) {
+        case AVRO:
+          Schema.Type schemaType = cellSchema.getSchema().getType();
+          if (KIJI_AVRO_TYPE_TO_CLASS_MAP.containsKey(schemaType)) {
+            columnNameClassMap.put(kijiColumnName,
+              KIJI_AVRO_TYPE_TO_CLASS_MAP.get(schemaType));
+          } else {
+            throw new IOException("Unsupported described output type: " + cellSchema.getValue());
+          }
+          break;
         case INLINE:
           if (KIJI_CELL_TYPE_TO_CLASS_MAP.containsKey(cellSchema.getValue())) {
             columnNameClassMap.put(kijiColumnName,
