@@ -37,13 +37,14 @@
 
   <properties>
     <hive.version>0.10.0-cdh4.3.0</hive.version>
-    <kiji-schema.version>1.2.1</kiji-schema.version>
+    <kiji-schema.version>1.2.2-SNAPSHOT</kiji-schema.version>
     <fake-hbase.version>0.1.2</fake-hbase.version>
   </properties>
 
   <modules>
     <module>build-resources</module>
     <module>kiji-hive-adapter</module>
+    <module>kiji-hive-tools</module>
   </modules>
 
   <build>

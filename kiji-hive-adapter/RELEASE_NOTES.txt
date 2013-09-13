@@ -5,6 +5,9 @@
 Version 0.7.0
   * KIJIHIVE-35. Fixed an NPE when fetching a non-primitive value from a map
       type family.
+  * KIJIHIVE-2. Improved the generation of CREATE EXTERNAL TABLE statements.
+      Complex data types should now be supported, and this functionality can be
+      invoked as part of the kiji CLI tool, or via the bento-hive.sh script.
 
 Version 0.6.0
   * KIJIHIVE-33. Fixed a ClassCastException issue when reading from a

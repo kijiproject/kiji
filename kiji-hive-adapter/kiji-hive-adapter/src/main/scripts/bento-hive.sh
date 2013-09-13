@@ -77,39 +77,11 @@ function generate_import_table_sql() {
   echo Generating import table SQL for ${TABLE_NAME}
   IMPORT_TABLE_SQL="${KIJI_HIVE_ADAPTER_HOME}${TABLE_NAME}-import.sql"
   if [ ! -z ${IMPORT_TABLE_URI} ]; then
-    COLUMNS=`kiji ls ${IMPORT_TABLE_URI} | sed -e 's/.*\/\(.*\)\//\1/g'`
     echo "-- GENERATED FILE DO NOT EDIT" > ${IMPORT_TABLE_SQL}
-    echo "CREATE EXTERNAL TABLE ${TABLE_NAME} (" >> ${IMPORT_TABLE_SQL}
-    FIRST=true
-    for x in ${COLUMNS}; do
-      if [ "$FIRST" != "true" ]; then
-        echo "," >> ${IMPORT_TABLE_SQL}
-        FIRST=false
-      fi
-      QUALIFIER=${x##*:}
-      echo -n "  ${QUALIFIER} STRUCT<ts: TIMESTAMP, value: STRING>" >> ${IMPORT_TABLE_SQL}
-      FIRST=false
-    done
-    echo >> ${IMPORT_TABLE_SQL}
-    echo ")" >> ${IMPORT_TABLE_SQL}
-    echo "STORED BY 'org.kiji.hive.KijiTableStorageHandler'" >> ${IMPORT_TABLE_SQL}
-    echo "WITH SERDEPROPERTIES (" >> ${IMPORT_TABLE_SQL}
-    echo -n "  'kiji.columns' = '" >> ${IMPORT_TABLE_SQL}
-    FIRST=true;
-    for x in ${COLUMNS}; do
-      if [ "${FIRST}" != "true" ]; then
-        echo -n "," >> ${IMPORT_TABLE_SQL}
-      fi
-      echo -n "$x[0]" >> ${IMPORT_TABLE_SQL}
-      FIRST=false
-    done
-    echo "'" >> ${IMPORT_TABLE_SQL}
-    echo ")" >> ${IMPORT_TABLE_SQL}
-    echo "TBLPROPERTIES (" >> ${IMPORT_TABLE_SQL}
-    echo "  'kiji.table.uri' = '${IMPORT_TABLE_URI}'" >> ${IMPORT_TABLE_SQL}
-    echo ");" >> ${IMPORT_TABLE_SQL}
-
-    echo "Wrote sample import table sql to ${IMPORT_TABLE_SQL}"
+    kiji generate-hive-table --kiji=${IMPORT_TABLE_URI} >> ${IMPORT_TABLE_SQL}
+    if [ $? -eq 0 ]; then
+      echo "Wrote sample import table sql to ${IMPORT_TABLE_SQL}"
+    fi
   fi
 }
 
