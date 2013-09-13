@@ -872,8 +872,8 @@ object KijiSourceSuite extends KijiSuite {
         Column("family:column3").withSpecificAvroClass(classOf[SpecificRecordTest]) -> 'records)
     KijiInput(args("input"))(inputOptions)
         .map('records -> 'hashSizeField) { slice: KijiSlice[AvroValue] =>
-          val Cell(_, _, _, record) = slice.getFirst
-          record("hash_size").asInt
+          val Cell(_, _, _, record) = slice.getFirst()
+          record.asSpecificRecord[SpecificRecordTest]().getHashSize
         }
         .groupBy('hashSizeField)(_.size)
         .write(Tsv(args("output")))

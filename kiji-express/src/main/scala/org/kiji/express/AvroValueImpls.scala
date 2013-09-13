@@ -19,7 +19,10 @@
 
 package org.kiji.express
 
+import scala.collection.JavaConverters.asScalaBufferConverter
+
 import org.apache.avro.generic.IndexedRecord
+import org.apache.avro.specific.SpecificRecord
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
@@ -148,6 +151,20 @@ final case class AvroEnum(name: String)
 }
 
 /**
+ * Represents an Avro SpecificRecord object.
+ *
+ * @param specificRecord wrapped by this AvroValue.
+ */
+@ApiAudience.Public
+@ApiStability.Experimental
+final case class AvroSpecificRecord(specificRecord: Any)
+    extends AvroValue(classOf[SpecificRecord]) {
+  override def asSpecificRecord[T <: SpecificRecord](): T = {
+    return specificRecord.asInstanceOf[T]
+  }
+}
+
+/**
  * Represents an AvroRecord from a KijiCell.  This is KijiExpress's generic Avro API. Fields are
  * accessed using the apply method, for example, to access a field that is an Int:
  * `myRecord("myField").asInt()`.
@@ -156,8 +173,9 @@ final case class AvroEnum(name: String)
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-final class AvroRecord private[express] (private[express] val map: Map[String, AvroValue])
-    extends AvroValue(classOf[IndexedRecord]) {
+final case class AvroRecord private[express] (
+    private[express] val map: Map[String, AvroValue]
+) extends AvroValue(classOf[IndexedRecord]) {
 
   override def asRecord(): AvroRecord = this
 
@@ -213,16 +231,6 @@ object AvroRecord {
     }.toMap[String, AvroValue]
 
     new AvroRecord(recordFields)
-  }
-
-  /**
-   * Extracts the underlying field mapping from an AvroRecord.
-   *
-   * @param avroRecord to extract the field mapping from.
-   * @return the field mapping underlying `avroRecord`.
-   */
-  def unapply(avroRecord: AvroRecord): Option[Map[String, AvroValue]] = {
-    Some(avroRecord.map)
   }
 }
 

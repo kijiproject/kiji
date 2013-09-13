@@ -19,10 +19,14 @@
 
 package org.kiji.express.flow.framework
 
-import scala.collection.JavaConverters._
 import java.io.InputStream
 import java.io.OutputStream
+import java.util.HashMap
+import java.util.{Map => JMap}
 import java.util.Properties
+
+import scala.collection.JavaConverters.mapAsJavaMapConverter
+import scala.collection.JavaConverters.asScalaIteratorConverter
 
 import cascading.flow.FlowProcess
 import cascading.flow.hadoop.util.HadoopUtil
@@ -42,15 +46,19 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.express.flow.ColumnRequest
 import org.kiji.express.flow.TimeRange
+import org.kiji.express.util.GenericCellSpecs
+import org.kiji.express.util.SpecificCellSpecs
 import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.Kiji
+import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiRowData
 import org.kiji.schema.KijiRowScanner
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiTableReader
 import org.kiji.schema.KijiTableWriter
 import org.kiji.schema.KijiURI
+import org.kiji.schema.layout.CellSpec
 import org.kiji.schema.layout.KijiTableLayout
 
 /**
@@ -160,7 +168,12 @@ private[express] class LocalKijiScheme(
     doAndRelease(Kiji.Factory.open(uri, conf)) { kiji: Kiji =>
       doAndRelease(kiji.openTable(uri.getTable())) { table: KijiTable =>
         val request = KijiScheme.buildRequest(timeRange, columns.values)
-        val reader = table.openTableReader()
+        val reader = {
+          val allCellSpecs: JMap[KijiColumnName, CellSpec] = new HashMap[KijiColumnName, CellSpec]()
+          allCellSpecs.putAll(GenericCellSpecs(table))
+          allCellSpecs.putAll(SpecificCellSpecs.buildCellSpecs(table.getLayout, columns).asJava)
+          table.getReaderFactory.openTableReader(allCellSpecs)
+        }
         val scanner = reader.getScanner(request)
         val tableUri = table.getURI
         val context = InputContext(reader, scanner, scanner.iterator.asScala, tableUri)

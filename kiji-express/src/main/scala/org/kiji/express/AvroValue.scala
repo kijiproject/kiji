@@ -19,8 +19,10 @@
 
 package org.kiji.express
 
-import org.kiji.annotations.ApiAudience;
-import org.kiji.annotations.ApiStability;
+import org.apache.avro.specific.SpecificRecord
+
+import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
 
 /**
  * An class which every AvroValue originally derived from an AvroRecord inherits from.  It defines
@@ -136,7 +138,7 @@ abstract class AvroValue private[express](classOfValue: Class[_]) {
    * @throws UnsupportedOperationException if this AvroValue is not an AvroRecord.
    */
   def asRecord(): AvroRecord = {
-    throw new UnsupportedOperationException(castErrorMessage.format("Record"))
+    throw new UnsupportedOperationException(castErrorMessage.format("Generic Record"))
   }
 
   /**
@@ -157,6 +159,17 @@ abstract class AvroValue private[express](classOfValue: Class[_]) {
    */
   def asFixedBytes(): Array[Byte] = {
     throw new UnsupportedOperationException(castErrorMessage.format("Fixed"))
+  }
+
+  /**
+   * Gets this AvroValue as a SpecificRecord if possible.
+   *
+   * @tparam T is the type of the SpecificRecord class contained in this AvroValue.
+   * @return this AvroValue as a SpecificRecord if possible.
+   * @throws UnsupportedOperationException if this AvroValue is not a SpecificRecord.
+   */
+  def asSpecificRecord[T <: SpecificRecord](): T = {
+    throw new UnsupportedOperationException(castErrorMessage.format("Specific Record"))
   }
 
   /**

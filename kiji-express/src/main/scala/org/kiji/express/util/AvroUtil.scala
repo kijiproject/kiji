@@ -46,6 +46,7 @@ import org.kiji.express.AvroList
 import org.kiji.express.AvroLong
 import org.kiji.express.AvroMap
 import org.kiji.express.AvroRecord
+import org.kiji.express.AvroSpecificRecord
 import org.kiji.express.AvroString
 import org.kiji.express.AvroValue
 
@@ -167,6 +168,9 @@ private[express] object AvroUtil {
   private[express] def wrapGenericAvro(x: Any): AvroValue = {
     x match {
       case v: AvroValue => v
+      case record: SpecificRecord => {
+        AvroSpecificRecord(record)
+      }
       case record: IndexedRecord => {
         // Construct a map from field names in this record to the Scala-converted values.
         val schema = record.getSchema
@@ -175,7 +179,7 @@ private[express] object AvroUtil {
                 field => (field.name, wrapGenericAvro(record.get(field.pos)))
             }.toMap[String, AvroValue]
         // Use that map to construct an AvroRecord.
-        new AvroRecord(recordMap)
+        AvroRecord(recordMap)
       }
       // Recursively convert lists or maps.
       case l: java.util.List[_] => new AvroList(l.asScala.toList.map(wrapGenericAvro(_)))
@@ -338,6 +342,9 @@ private[express] object AvroUtil {
               // scalastyle:on null
               List(name).asJava)
           (new GenericData.EnumSymbol(enumSchema, name), enumSchema)
+        }
+        case AvroSpecificRecord(specific: SpecificRecord) => {
+          (specific, specific.getSchema)
         }
         case AvroRecord(map: Map[_, _]) => {
           val fields: List[Schema.Field] = map.map {
