@@ -88,15 +88,15 @@ abstract class DDLCommand {
    * user returns an affirmative response. This throws DDLException if they don't.
    * A non-interactive environment will silently affirm.
    *
-   * @param the message to display to the user in an interactive terminal.
+   * @param message to display to the user in an interactive terminal.
    * @throws DDLException if the user responds 'no'.
    */
-  final protected def checkConfirmationPrompt(msg: String): Unit = {
+  final protected def checkConfirmationPrompt(message: String): Unit = {
     if (!env.isInteractive) {
       return // non-interactive user doesn't get a prompt.
     }
 
-    echo(msg)
+    echo(message)
     val maybeInput = env.inputSource.readLine("y/N> ")
     maybeInput match {
       case None => { throw new DDLException("User canceled operation.") /* out of input. */ }

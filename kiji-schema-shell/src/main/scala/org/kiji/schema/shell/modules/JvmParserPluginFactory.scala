@@ -73,7 +73,7 @@ final class JvmParserPluginFactory extends ParserPluginFactory with HelpPlugin {
    * jars specified in the `libJars` element of the provided environment. `libJars` take
    * precedence over inherited classpath jars.
    *
-   * @param the shell environment.
+   * @param env is the shell environment.
    * @param mainClass to execute.
    * @param maybeArgv is an optional list of arguments to the main class' main() method.
    */

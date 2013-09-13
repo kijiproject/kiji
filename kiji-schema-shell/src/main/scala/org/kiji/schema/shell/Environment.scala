@@ -104,8 +104,8 @@ final class Environment(
    * Returns a new Environment with the interactivity flag set to the value of the argument
    * to this method.
    *
-   * @param is true if this is run from an interactive terminal, false if from a script
-   *    or API usage.
+   * @param interactiveFlag is true if this is run from an interactive terminal, false if from a
+   *    script or API usage.
    * @return an Environment with the isInteractive flag set to the argument value.
    */
   def withInteractiveFlag(interactiveFlag: Boolean): Environment = {

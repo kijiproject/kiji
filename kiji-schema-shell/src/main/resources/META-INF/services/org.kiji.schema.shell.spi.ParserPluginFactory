@@ -1,1 +1,2 @@
 org.kiji.schema.shell.modules.JvmParserPluginFactory
+org.kiji.schema.shell.modules.SecurityParserPluginFactory

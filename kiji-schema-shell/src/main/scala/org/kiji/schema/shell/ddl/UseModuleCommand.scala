@@ -62,7 +62,7 @@ final class UseModuleCommand(val env: Environment, val moduleName: String) exten
    *
    * @param envWithModule the initial environment 'env', with the specified module loaded.
    * @param module the ParserPluginFactory module being loaded.
-   * @param T the free type parameter of the EnvironmentPlugin that the ParserPluginFactory
+   * @tparam T the free type parameter of the EnvironmentPlugin that the ParserPluginFactory
    *     is cast to.
    * @return the provided environment, augmented with any initial environment extension data
    *     supplied by the plugin.

@@ -38,6 +38,7 @@ import org.kiji.schema.KijiURI
 import org.kiji.schema.avro.AvroSchema
 import org.kiji.schema.avro.TableLayoutDesc
 import org.kiji.schema.layout.KijiTableLayout
+import org.kiji.schema.security.KijiSecurityManager
 import org.kiji.schema.util.ProtocolVersion
 
 /**
@@ -51,7 +52,7 @@ abstract class AbstractKijiSystem {
   /**
    * Gets a collection of Kiji table names and descriptions for the specified Kiji instance.
    *
-   * @param instance The Kiji whose tables should be listed.
+   * @param uri The Kiji instance whose tables should be listed.
    * @return An array of pairs, where each pair contains the name of a Kiji table and the
    *     description for that Kiji table.
    */
@@ -60,8 +61,8 @@ abstract class AbstractKijiSystem {
   /**
    * Gets the layout for the specified Kiji table.
    *
-   * @param uri is the Kiji instance containing the table.
-   * @param table is the table whose layout should be retrieved.
+   * @param uri of the Kiji instance containing the table.
+   * @param table whose layout should be retrieved.
    * @return The table layout, or None if the layout cannot be retrieved.
    */
   def getTableLayout(uri: KijiURI, table: String): Option[KijiTableLayout]
@@ -86,8 +87,8 @@ abstract class AbstractKijiSystem {
   /**
    * Return a schema id associated with a given schema, creating an association if necessary.
    *
-   * @param uri is the Kiji instance we are operating in
-   * @param schema is the schema to lookup
+   * @param uri of the Kiji instance we are operating in.
+   * @param schema to lookup.
    * @return its existing uid, or a new id if this schema has not been encountered before.
    */
   def getOrCreateSchemaId(uri: KijiURI, schema: Schema): Long
@@ -95,8 +96,8 @@ abstract class AbstractKijiSystem {
   /**
    * Return a schema id associated with a given schema, or None if it's not already there.
    *
-   * @param uri is the Kiji instance we are operating in
-   * @param schema is the schema to lookup
+   * @param uri of the Kiji instance we are operating in.
+   * @param schema to lookup.
    * @return its existing uid, or None if this schema has not been encountered before.
    */
   def getSchemaId(uri: KijiURI, schema: Schema): Option[Long]
@@ -104,8 +105,8 @@ abstract class AbstractKijiSystem {
   /**
    * Return a schema associated with a given schema id, or None if it's not already there.
    *
-   * @param uri is the Kiji instance we are operating in
-   * @param uid is the schema id to lookup
+   * @param uri of the Kiji instance we are operating in.
+   * @param uid of the schema id to lookup.
    * @return its existing schema, or None if this schema id has not been encountered before.
    */
   def getSchemaForId(uri: KijiURI, uid: Long): Option[Schema]
@@ -122,10 +123,10 @@ abstract class AbstractKijiSystem {
   /**
    * Set a metatable (key, val) pair for the specified table.
    *
-   * @param uri is the KijiURI of the Kiji instance.
+   * @param uri of the Kiji instance.
    * @param table is the name of the table owning the property.
-   * @param key is the key to set.
-   * @param value is the value to set it to.
+   * @param key to set.
+   * @param value to set it to.
    * @throws IOException if there's an error opening the metatable.
    */
   def setMeta(uri: KijiURI, table: String, key: String, value: String): Unit
@@ -133,13 +134,21 @@ abstract class AbstractKijiSystem {
   /**
    * Get a metatable (key, val) pair for the specified table.
    *
-   * @param uri is the KijiURI of the Kiji instance.
+   * @param uri of the Kiji instance.
    * @param table is the name of the table owning the property.
-   * @param key is the key specifying the property to retrieve.
+   * @param key specifying the property to retrieve.
    * @return the value of the property or None if it was not yet set.
    * @throws IOException if there's an error opening the metatable.
    */
   def getMeta(uri: KijiURI, table: String, key: String): Option[String]
+
+  /**
+   * Get the security manager for the specified instance.
+   *
+   * @param instanceURI is the KijiURI of the instance to get a security manager for.
+   * @return the security manager for the instance.
+   */
+  def getSecurityManager(instanceURI: KijiURI): KijiSecurityManager
 
   /**
    * @return a list of all available Kiji instances.

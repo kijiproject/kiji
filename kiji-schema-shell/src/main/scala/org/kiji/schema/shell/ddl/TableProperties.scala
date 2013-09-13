@@ -71,7 +71,7 @@ trait TableProperties {
    * Applies table properties to a TableLayoutDesc builder.
    *
    * @param tableProperties the name-to-value property mappings to apply.
-   * @param the table layout builder to modify.
+   * @param table layout builder to modify.
    * @throws DDLException if there's an error like an invalid property name.
    */
   def applyTableProperties(tableProperties: Map[String, Object], table: TableLayoutDesc.Builder):
@@ -101,9 +101,9 @@ trait TableProperties {
    * Apply table properties that are handled through key-value pairs in the metatable,
    * rather than a TableLayoutDesc.
    *
-   * @param the name of the table being created/updated.
+   * @param tableName of the table being created/updated.
    * @param tableProperties the name-to-value property mappings to apply.
-   * @param the environment to update the metatable within.
+   * @param env to update the metatable within.
    * @throws DDLException if there's an error like an invalid property name.
    */
   def applyMetaUpdates(tableName: String, tableProperties: Map[String, Object],

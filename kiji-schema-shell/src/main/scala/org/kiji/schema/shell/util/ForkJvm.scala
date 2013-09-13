@@ -126,7 +126,7 @@ trait ForkJvm {
    * Process a set of JarLocation objects and reify this to a string suitable for use in
    * a Java `-classpath` argument.
    *
-   * @param a list of JarLocation objects to reify, i.e., from the current Environment.
+   * @param libJars is list of JarLocation objects to reify, i.e., from the current Environment.
    * @return a colon-separated list of paths to local jar files to load on the classpath.
    *     If non-empty, this list will terminate with a ':' character.
    */

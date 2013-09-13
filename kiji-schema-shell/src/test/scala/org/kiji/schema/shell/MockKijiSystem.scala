@@ -24,6 +24,8 @@ import scala.collection.mutable.Map
 import java.util.NoSuchElementException
 
 import org.apache.avro.Schema
+import org.mockito.Mock
+import org.scalatest.mock.EasyMockSugar
 
 import org.kiji.schema.Kiji
 import org.kiji.schema.KConstants
@@ -34,12 +36,13 @@ import org.kiji.schema.avro.AvroSchema
 import org.kiji.schema.avro.TableLayoutDesc
 import org.kiji.schema.util.ProtocolVersion
 import org.kiji.schema.util.VersionInfo
+import org.kiji.schema.security.KijiSecurityManager
 
 /**
  * A KijiSystem class that provides in-memory mappings from instance -&gt; table &gt; layout,
  * and does not communicate with HBase.
  */
-class MockKijiSystem extends AbstractKijiSystem {
+class MockKijiSystem extends AbstractKijiSystem with EasyMockSugar {
   /** Mappings from KijiURI -> table name -> KijiTableLayout */
   private val instanceData: Map[KijiURI, Map[String, KijiTableLayout]] = Map()
 
@@ -50,6 +53,9 @@ class MockKijiSystem extends AbstractKijiSystem {
   private val idsForSchemas: Map[Schema, Long] = Map()
   private val schemasForIds: Map[Long, Schema] = Map()
   private var nextSchemaId: Int = 0
+
+  // A mock security manager.
+  private val mockSecurityManager = mock[KijiSecurityManager]
 
   {
     val defaultURI = KijiURI.newBuilder().withInstanceName(KConstants.DEFAULT_INSTANCE_NAME).build()
@@ -119,6 +125,11 @@ class MockKijiSystem extends AbstractKijiSystem {
       case nsee: NoSuchElementException => { return None }
     }
 
+  }
+
+  override def getSecurityManager(uri: KijiURI): KijiSecurityManager = {
+    // Return a mock security manager for testing purposes.
+    return mockSecurityManager
   }
 
   override def getTableNamesDescriptions(uri: KijiURI): Array[(String, String)] = {

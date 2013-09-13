@@ -4,3 +4,6 @@
 /build
 .classpath
 .project
+.idea
+kiji-schema-shell.iml
+.settings

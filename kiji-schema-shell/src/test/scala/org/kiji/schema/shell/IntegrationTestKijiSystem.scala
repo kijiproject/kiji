@@ -19,25 +19,28 @@
 
 package org.kiji.schema.shell
 
-import java.util.UUID
 import scala.collection.JavaConversions._
 
 import org.specs2.mutable._
 import org.apache.hadoop.hbase.HBaseConfiguration
-import org.kiji.schema.KijiInstaller
-import org.kiji.schema.KijiURI
+
 import org.kiji.schema.avro.FamilyDesc
 import org.kiji.schema.hbase.HBaseFactory
 import org.kiji.schema.hbase.KijiManagedHBaseTableName
-import org.kiji.schema.impl.DefaultHTableInterfaceFactory
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.shell.ddl.TableProperties
+import org.kiji.schema.shell.util.KijiTestHelpers
+import org.kiji.schema.KijiURI
 import org.kiji.schema.shell.input.NullInputSource
 
-/** Tests that KijiSystem will connect to the correct Kiji instance and will
-  * actually create, modify, and drop tables.
-  */
-class IntegrationTestKijiSystem extends SpecificationWithJUnit with TableProperties {
+/**
+ * Tests that KijiSystem will connect to the correct Kiji instance and will actually create,
+ * modify, and drop tables.
+ */
+class IntegrationTestKijiSystem
+    extends SpecificationWithJUnit
+    with TableProperties
+    with KijiTestHelpers {
   "KijiSystem" should {
     "create a table correctly" in {
       val uri = getNewInstanceURI()
@@ -367,37 +370,15 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
   }
 
   /**
-   * @return the name of a unique Kiji instance (that doesn't yet exist).
-   */
-  def getNewInstanceURI(): KijiURI = {
-    val instanceName = UUID.randomUUID().toString().replaceAll("-", "_");
-    return KijiURI.newBuilder("kiji://.env/" + instanceName).build()
-  }
-
-  /**
-   * Install a Kiji instance.
-   */
-  def installKiji(instanceURI: KijiURI): Unit = {
-    KijiInstaller.get().install(instanceURI, HBaseConfiguration.create())
-  }
-
-  /**
    * Get an Environment instance.
    */
   def env(instanceURI: KijiURI): Environment = {
     new Environment(
-        instanceURI,
-        System.out,
-        new KijiSystem,
-        new NullInputSource(),
-        List(),
-        false)
-  }
-
-  /**
-   * Get a new parser that's primed with the specified environment.
-   */
-  def getParser(environment: Environment): DDLParser = {
-    new DDLParser(environment)
+      instanceURI,
+      System.out,
+      new KijiSystem,
+      new NullInputSource(),
+      List(),
+      false)
   }
 }
