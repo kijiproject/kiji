@@ -97,6 +97,14 @@
     <dependencySet>
       <outputDirectory>.</outputDirectory>
       <includes>
+        <include>org.kiji.hive:kiji-hive-tools:tar.gz</include>
+      </includes>
+      <unpack>true</unpack>
+      <useProjectArtifact>false</useProjectArtifact>
+    </dependencySet>
+    <dependencySet>
+      <outputDirectory>.</outputDirectory>
+      <includes>
         <include>org.kiji.express:kiji-express:tar.gz</include>
       </includes>
       <unpack>true</unpack>

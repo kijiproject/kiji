@@ -175,6 +175,13 @@
       <type>tar.gz</type>
     </dependency>
     <dependency>
+      <groupId>org.kiji.hive</groupId>
+      <artifactId>kiji-hive-tools</artifactId>
+      <version>${kiji-hive-adapter.version}</version>
+      <classifier>release</classifier>
+      <type>tar.gz</type>
+    </dependency>
+    <dependency>
       <groupId>org.kiji.express</groupId>
       <artifactId>kiji-express</artifactId>
       <version>${kiji-express.version}</version>

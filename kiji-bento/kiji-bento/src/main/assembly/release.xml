@@ -285,6 +285,14 @@
       <fileMode>0755</fileMode>
     </fileSet>
     <fileSet>
+      <!-- kiji-hive-tools -->
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <outputDirectory>lib</outputDirectory>
+      <directory>target/prereqs-dir/kiji-hive-tools-${kiji-hive-adapter.version}/lib</directory>
+      <filtered>false</filtered>
+      <fileMode>0755</fileMode>
+    </fileSet>
+    <fileSet>
       <!-- kiji-rest -->
       <useDefaultExcludes>false</useDefaultExcludes>
       <outputDirectory>rest</outputDirectory>
