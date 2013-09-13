@@ -19,6 +19,8 @@
 
 package org.kiji.express.util
 
+import org.apache.hadoop.hbase.HBaseConfiguration
+
 import org.kiji.express.KijiSuite
 import org.kiji.express.util.Resources._
 import org.kiji.schema.KijiTable
@@ -34,10 +36,11 @@ class EntityIdFactoryCacheSuite extends KijiSuite {
     val tableLayout = KijiTableLayout.newLayout(
         KijiTableLayouts.getLayout(KijiTableLayouts.FORMATTED_RKF))
     val uri: String = doAndRelease(makeTestKijiTable(tableLayout)) { table: KijiTable =>
-      table.getURI().toString()
+      table.getURI.toString
     }
+    val configuration = HBaseConfiguration.create()
 
-    val eidFactory = EntityIdFactoryCache.getFactory(uri)
+    val eidFactory = EntityIdFactoryCache.getFactory(uri, configuration)
 
     val components = new java.util.ArrayList[Object]()
     components.add("a")
@@ -51,7 +54,7 @@ class EntityIdFactoryCacheSuite extends KijiSuite {
     val eid = eidFactory.getEntityId(components)
     assert(components == eid.getComponents)
 
-    val eidFactoryCached = EntityIdFactoryCache.getFactory(uri)
+    val eidFactoryCached = EntityIdFactoryCache.getFactory(uri, configuration)
     assert(eidFactory == eidFactoryCached)
   }
 }

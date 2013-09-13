@@ -19,6 +19,8 @@
 
 package org.kiji.express.util
 
+import org.apache.hadoop.conf.Configuration
+
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.express.util.Resources._
@@ -37,30 +39,37 @@ import org.kiji.schema.KijiURI
 @ApiStability.Experimental
 private[express] object EntityIdFactoryCache {
   /** Memoizes construction of EntityId factories. */
-  private val factoryCache = Memoize { tableUri: KijiURI =>
-    val tableLayout = doAndRelease(Kiji.Factory.open(tableUri)) { kiji: Kiji =>
-      doAndRelease(kiji.openTable(tableUri.getTable())) { table: KijiTable =>
-        table.getLayout()
+  private val factoryCache: Memoize[(KijiURI, Configuration), EntityIdFactory] =
+      Memoize { entry: (KijiURI, Configuration) =>
+        val (tableUri, conf) = entry
+
+        val tableLayout = doAndRelease(Kiji.Factory.open(tableUri, conf)) { kiji: Kiji =>
+          doAndRelease(kiji.openTable(tableUri.getTable)) { table: KijiTable =>
+            table.getLayout
+          }
+        }
+        EntityIdFactory.getFactory(tableLayout)
       }
-    }
-    EntityIdFactory.getFactory(tableLayout)
-  }
 
   /** Memoizes construction of KijiURIs. */
-  private val uriCache = Memoize { tableUri: String =>
-    KijiURI.newBuilder(tableUri).build()
-  }
+  private val uriCache: Memoize[String, KijiURI] =
+      Memoize { tableUri: String =>
+        KijiURI.newBuilder(tableUri).build()
+      }
 
   /**
    * Get an EntityIdFactory for the table specified. This method memoizes EntityId factory
    * construction and will not fetch the most up-to-date factory from the addressed table.
    *
    * @param tableUri of the Kiji table to fetch an EntityId factory from.
+   * @param conf identifying the cluster to use when building EntityIds.
    * @return an EntityIdFactory associated with the addressed table.
    */
-  private[express] def getFactory(tableUri: String): EntityIdFactory = {
+  private[express] def getFactory(
+      tableUri: String,
+      conf: Configuration): EntityIdFactory = {
     val uri: KijiURI = uriCache(tableUri)
-    getFactory(uri)
+    getFactory(uri, conf)
   }
 
   /**
@@ -68,7 +77,12 @@ private[express] object EntityIdFactoryCache {
    * construction and will not fetch the most up-to-date factory from the addressed table.
    *
    * @param tableUri of the Kiji table to fetch an EntityId factory from.
+   * @param conf identifying the cluster to use when building EntityIds.
    * @return an EntityIdFactory associated with the addressed table.
    */
-  private[express] def getFactory(tableUri: KijiURI): EntityIdFactory = factoryCache(tableUri)
+  private[express] def getFactory(
+      tableUri: KijiURI,
+      conf: Configuration): EntityIdFactory = {
+    factoryCache(tableUri, conf)
+  }
 }

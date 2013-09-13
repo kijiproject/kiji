@@ -34,6 +34,7 @@ import cascading.tuple.TupleEntry
 import com.google.common.base.Objects
 import org.apache.commons.codec.binary.Base64
 import org.apache.commons.lang.SerializationUtils
+import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.mapred.JobConf
 import org.apache.hadoop.mapred.OutputCollector
 import org.apache.hadoop.mapred.RecordReader
@@ -53,7 +54,6 @@ import org.kiji.express.flow.TimeRange
 import org.kiji.express.util.AvroUtil
 import org.kiji.express.util.SpecificCellSpecs
 import org.kiji.express.util.Resources.doAndRelease
-
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.ColumnVersionIterator
 import org.kiji.schema.Kiji
@@ -147,7 +147,7 @@ private[express] class KijiScheme(
 
     // Set the context used when reading data from the source.
     sourceCall.setContext(KijiSourceContext(
-        sourceCall.getInput().createValue(),
+        sourceCall.getInput.createValue(),
         uri))
   }
 
@@ -164,15 +164,14 @@ private[express] class KijiScheme(
       flow: FlowProcess[JobConf],
       sourceCall: SourceCall[KijiSourceContext, RecordReader[KijiKey, KijiValue]]): Boolean = {
     // Get the current key/value pair.
-    val KijiSourceContext(value, tableUri) = sourceCall.getContext()
+    val KijiSourceContext(value, tableUri) = sourceCall.getContext
 
-    // Get the first row where all the requested columns are present,
-    // and use that to set the result tuple.
-    // Return true as soon as a result tuple has been set,
-    // or false if we reach the end of the RecordReader.
+    // Get the first row where all the requested columns are present, and use that to set the result
+    // tuple. Return true as soon as a result tuple has been set, or false if we reach the end of
+    // the RecordReader.
 
     // scalastyle:off null
-    while (sourceCall.getInput().next(null, value)) {
+    while (sourceCall.getInput.next(null, value)) {
     // scalastyle:on null
       val row: KijiRowData = value.get()
       val result: Option[Tuple] = rowToTuple(
@@ -180,17 +179,19 @@ private[express] class KijiScheme(
           getSourceFields,
           timestampField,
           row,
-          tableUri)
+          tableUri,
+          flow.getConfigCopy)
 
-      // If no fields were missing, set the result tuple and return from this method.
       result match {
         case Some(tuple) => {
-          sourceCall.getIncomingEntry().setTuple(tuple)
+          // If no fields were missing, set the result tuple and return from this method.
+          sourceCall.getIncomingEntry.setTuple(tuple)
           flow.increment(counterGroupName, counterSuccess, 1)
-          return true // We set a result tuple, return true for success.
+
+          // We set a result tuple, return true for success.
+          return true
         }
         case None => {
-          // Otherwise, this row was missing fields.
           // Increment the counter for rows with missing fields.
           flow.increment(counterGroupName, counterMissingField, 1)
           if (skippedRows.getAndIncrement() % loggingInterval == 0) {
@@ -199,6 +200,7 @@ private[express] class KijiScheme(
           }
         }
       }
+
       // We didn't return true because this row was missing fields; continue the loop.
     }
     return false // We reached the end of the RecordReader.
@@ -246,11 +248,11 @@ private[express] class KijiScheme(
       flow: FlowProcess[JobConf],
       sinkCall: SinkCall[KijiSinkContext, OutputCollector[_, _]]) {
     // Open a table writer.
-    val uriString: String = flow.getConfigCopy().get(KijiConfKeys.KIJI_OUTPUT_TABLE_URI)
+    val uriString: String = flow.getConfigCopy.get(KijiConfKeys.KIJI_OUTPUT_TABLE_URI)
     val uri: KijiURI = KijiURI.newBuilder(uriString).build()
 
     doAndRelease(Kiji.Factory.open(uri, flow.getConfigCopy)) { kiji: Kiji =>
-      doAndRelease(kiji.openTable(uri.getTable())) { table: KijiTable =>
+      doAndRelease(kiji.openTable(uri.getTable)) { table: KijiTable =>
         // Set the sink context to an opened KijiTableWriter.
         sinkCall.setContext(KijiSinkContext(table.openTableWriter(), uri, table.getLayout))
       }
@@ -268,11 +270,18 @@ private[express] class KijiScheme(
       flow: FlowProcess[JobConf],
       sinkCall: SinkCall[KijiSinkContext, OutputCollector[_, _]]) {
     // Retrieve writer from the scheme's context.
-    val KijiSinkContext(writer, tableUri, layout) = sinkCall.getContext()
+    val KijiSinkContext(writer, tableUri, layout) = sinkCall.getContext
 
     // Write the tuple out.
-    val output: TupleEntry = sinkCall.getOutgoingEntry()
-    putTuple(columns, tableUri, timestampField, output, writer, layout)
+    val output: TupleEntry = sinkCall.getOutgoingEntry
+    putTuple(
+        columns,
+        tableUri,
+        timestampField,
+        output,
+        writer,
+        layout,
+        flow.getConfigCopy)
   }
 
   /**
@@ -286,7 +295,7 @@ private[express] class KijiScheme(
       flow: FlowProcess[JobConf],
       sinkCall: SinkCall[KijiSinkContext, OutputCollector[_, _]]) {
     // Close the writer.
-    sinkCall.getContext().kijiTableWriter.close()
+    sinkCall.getContext.kijiTableWriter.close()
     // scalastyle:off null
     sinkCall.setContext(null)
     // scalastyle:on null
@@ -325,7 +334,7 @@ private[express] object KijiScheme {
   /** Field name containing a row's [[org.kiji.schema.EntityId]]. */
   private[express] val entityIdField: String = "entityId"
   /** Default number of qualifiers to retrieve when paging in a map type family.*/
-  private val qualifierPageSize: Int = 1000;
+  private val qualifierPageSize: Int = 1000
 
   /**
    * Converts a KijiRowData to a Cascading tuple.
@@ -345,6 +354,7 @@ private[express] object KijiScheme {
    *     Use None if all values should be written at the current time.
    * @param row to convert to a tuple.
    * @param tableUri is the URI of the Kiji table.
+   * @param configuration identifying the cluster to use when building EntityIds.
    * @return a tuple containing the values contained in the specified row, or None if some columns
    *     didn't exist and no replacement was specified.
    */
@@ -353,12 +363,13 @@ private[express] object KijiScheme {
       fields: Fields,
       timestampField: Option[Symbol],
       row: KijiRowData,
-      tableUri: KijiURI): Option[Tuple] = {
+      tableUri: KijiURI,
+      configuration: Configuration): Option[Tuple] = {
     val result: Tuple = new Tuple()
     val iterator = fields.iterator().asScala
 
     // Add the row's EntityId to the tuple.
-    val entityId: EntityId = EntityId.fromJavaEntityId(tableUri, row.getEntityId())
+    val entityId: EntityId = EntityId.fromJavaEntityId(tableUri, row.getEntityId, configuration)
     result.add(entityId)
 
     // Get rid of the entity id and timestamp fields, then map over each field to add a column
@@ -432,6 +443,7 @@ private[express] object KijiScheme {
    * @param output to write out to Kiji.
    * @param writer to use for writing to Kiji.
    * @param layout Kiji table layout.
+   * @param configuration identifying the cluster to use when building EntityIds.
    */
   private[express] def putTuple(
       columns: Map[String, ColumnRequest],
@@ -439,7 +451,8 @@ private[express] object KijiScheme {
       timestampField: Option[Symbol],
       output: TupleEntry,
       writer: KijiTableWriter,
-      layout: KijiTableLayout) {
+      layout: KijiTableLayout,
+      configuration: Configuration) {
     val iterator = columns.keys.iterator
 
     // Get the entityId.
@@ -448,29 +461,27 @@ private[express] object KijiScheme {
 
     // Get a timestamp to write the values to, if it was specified by the user.
     val timestamp: Long = timestampField match {
-      case Some(field) => {
-        output.getObject(field.name).asInstanceOf[Long]
-      }
+      case Some(field) => output.getObject(field.name).asInstanceOf[Long]
       case None => System.currentTimeMillis()
     }
 
     iterator
         .foreach { fieldName =>
-            val value = output.getObject(fieldName.toString())
-            columns(fieldName.toString()) match {
+            val value = output.getObject(fieldName.toString)
+            columns(fieldName.toString) match {
               case ColumnFamily(family, qualField, _) => {
                 require(
                     qualField.isDefined,
                     "You cannot write to a map family without specifying a qualifier field.")
-                writer.put(entityId.toJavaEntityId(tableUri),
-                  family,
-                  output.getObject(qualField.get).asInstanceOf[String],
-                  timestamp,
-                  AvroUtil.encodeToJava(value))
+                writer.put(entityId.toJavaEntityId(tableUri, configuration),
+                    family,
+                    output.getObject(qualField.get).asInstanceOf[String],
+                    timestamp,
+                    AvroUtil.encodeToJava(value))
               }
               case QualifiedColumn(family, qualifier, _) => {
                 writer.put(
-                    entityId.toJavaEntityId(tableUri),
+                    entityId.toJavaEntityId(tableUri, configuration),
                     family,
                     qualifier,
                     timestamp,

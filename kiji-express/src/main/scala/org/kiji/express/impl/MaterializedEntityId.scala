@@ -21,6 +21,8 @@ package org.kiji.express.impl
 
 import scala.collection.JavaConverters._
 
+import org.apache.hadoop.conf.Configuration
+
 import org.kiji.express.EntityId
 import org.kiji.express.util.EntityIdFactoryCache
 import org.kiji.schema.{ EntityId => JEntityId }
@@ -32,26 +34,26 @@ import org.kiji.schema.KijiURI
  *
  * @param components of an EntityId.
  */
-private[express] case class MaterializedEntityId (components: Seq[AnyRef]) extends EntityId {
+private[express] case class MaterializedEntityId(
+    components: Seq[AnyRef])
+    extends EntityId {
   override def productArity: Int = components.length
 
   override def productElement(n: Int): Any = components(n)
 
-  override def toJavaEntityId(tableUri: KijiURI): JEntityId = {
-    val javaComponents: java.util.List[Object] =
-        components.map { component: Any => component.asInstanceOf[AnyRef] }.asJava
-    val eidFactory = EntityIdFactoryCache.getFactory(tableUri)
+  override def toJavaEntityId(tableUri: KijiURI, configuration: Configuration): JEntityId = {
+    val javaComponents: java.util.List[Object] = components
+        .map { component: Any => component.asInstanceOf[AnyRef] }
+        .asJava
+    val eidFactory = EntityIdFactoryCache.getFactory(tableUri, configuration)
+
     eidFactory.getEntityId(javaComponents)
   }
 
   override def equals(other: Any): Boolean = {
     other match {
-      case MaterializedEntityId(otherComponents) =>{
-        components.equals(otherComponents)
-      }
-      case otherEntityId: HashedEntityId => {
-        otherEntityId.equals(MaterializedEntityId.this)
-      }
+      case MaterializedEntityId(otherComponents) => components.equals(otherComponents)
+      case otherEntityId: HashedEntityId => otherEntityId.equals(MaterializedEntityId.this)
       case _ => false
     }
   }

@@ -21,11 +21,15 @@ package org.kiji.express
 
 import scala.collection.JavaConverters.seqAsJavaListConverter
 
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.hbase.HBaseConfiguration
+
 import org.kiji.express.impl.HashedEntityId
 import org.kiji.express.util.Resources._
 import org.kiji.schema.{ EntityId => JEntityId }
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiURI
+import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts
 
 /**
@@ -33,34 +37,29 @@ import org.kiji.schema.layout.KijiTableLayouts
  */
 class EntityIdSuite extends KijiSuite {
   /** Table layout with formatted entity IDs to use for tests. */
-  val formattedEntityIdLayout = layout(KijiTableLayouts.FORMATTED_RKF)
+  val formattedEntityIdLayout: KijiTableLayout = layout(KijiTableLayouts.FORMATTED_RKF)
   // Create a table to use for testing
-  val formattedTableUri: KijiURI = doAndRelease(makeTestKijiTable(formattedEntityIdLayout)) {
-    table: KijiTable => table.getURI
-  }
+  val formattedTableUri: KijiURI =
+      doAndRelease(makeTestKijiTable(formattedEntityIdLayout)) { table: KijiTable => table.getURI }
 
   /** Table layout with hashed entity IDs to use for tests. */
-  val hashedEntityIdLayout = layout(KijiTableLayouts.HASHED_FORMATTED_RKF)
+  val hashedEntityIdLayout: KijiTableLayout = layout(KijiTableLayouts.HASHED_FORMATTED_RKF)
   // Create a table to use for testing
-  val hashedTableUri: KijiURI = doAndRelease(makeTestKijiTable(hashedEntityIdLayout)) {
-    table: KijiTable => table.getURI
-  }
+  val hashedTableUri: KijiURI =
+      doAndRelease(makeTestKijiTable(hashedEntityIdLayout)) { table: KijiTable => table.getURI }
+
+  val configuration: Configuration = HBaseConfiguration.create()
 
   // ------- "Unit tests" for comparisons and creation. -------
   test("Create an Express EntityId from a Kiji EntityId and vice versa in a formatted table.") {
     val expressEid = EntityId("test", "1", "2", 1, 7L)
-    val kijiEid = expressEid.toJavaEntityId(formattedTableUri)
-    val expected: java.util.List[java.lang.Object] = List[java.lang.Object](
-        "test",
-        "1",
-        "2",
-        new java.lang.Integer(1),
-        new java.lang.Long(7))
-        .asJava
+    val kijiEid = expressEid.toJavaEntityId(formattedTableUri, configuration)
+    val expected: java.util.List[AnyRef] =
+        Seq[AnyRef]("test", "1", "2", 1: java.lang.Integer, 7L: java.lang.Long).asJava
 
     assert(expected === kijiEid.getComponents)
 
-    val recreate = EntityId.fromJavaEntityId(formattedTableUri, kijiEid)
+    val recreate = EntityId.fromJavaEntityId(formattedTableUri, kijiEid, configuration)
 
     assert(expressEid === recreate)
     assert(recreate(0) === "test")
@@ -75,19 +74,23 @@ class EntityIdSuite extends KijiSuite {
     assert(eid1 != otherEid)
 
     // get the Java EntityId
-    val jEntityId: JEntityId = eid1.toJavaEntityId(hashedTableUri)
+    val jEntityId: JEntityId = eid1.toJavaEntityId(hashedTableUri, configuration)
     // this is how it would look if it were read from a table
-    val tableEid: EntityId = EntityId.fromJavaEntityId(hashedTableUri, jEntityId)
+    val tableEid: EntityId = EntityId.fromJavaEntityId(hashedTableUri, jEntityId, configuration)
 
     assert(tableEid.isInstanceOf[HashedEntityId])
 
     // get the table version of the eid2, which should be the same
-    val tableEid2: EntityId =
-        EntityId.fromJavaEntityId(hashedTableUri, eid2.toJavaEntityId(hashedTableUri))
+    val tableEid2: EntityId = EntityId.fromJavaEntityId(
+        hashedTableUri,
+        eid2.toJavaEntityId(hashedTableUri, configuration),
+        configuration)
 
     // get the table version of the otherEid, which should be different
-    val tableEidOther: EntityId =
-        EntityId.fromJavaEntityId(hashedTableUri, otherEid.toJavaEntityId(hashedTableUri))
+    val tableEidOther: EntityId = EntityId.fromJavaEntityId(
+        hashedTableUri,
+        otherEid.toJavaEntityId(hashedTableUri, configuration),
+        configuration)
 
     // ensure equals works both ways between user and table EntityIds
     assert(tableEid === eid1)
@@ -106,7 +109,7 @@ class EntityIdSuite extends KijiSuite {
   test("Creating an EntityId from a Hashed table fails if there is more than one component.") {
     val eid: EntityId = EntityId("one", 2)
     val exception = intercept[org.kiji.schema.EntityIdException] {
-      eid.toJavaEntityId(hashedTableUri)
+      eid.toJavaEntityId(hashedTableUri, configuration)
     }
     assert(exception.getMessage.contains("Too many components"))
   }

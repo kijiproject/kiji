@@ -21,6 +21,8 @@ package org.kiji.express.flow.framework
 
 import cascading.tuple.Tuple
 import cascading.tuple.TupleEntry
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.hbase.HBaseConfiguration
 
 import org.kiji.express.AvroEnum
 import org.kiji.express.AvroRecord
@@ -34,11 +36,12 @@ import org.kiji.express.util.GenericCellSpecs
 class KijiSchemeSuite extends KijiSuite {
   test("putTuple and rowToTuple can write and read a generic AvroRecord.") {
     // Set up the table.
+    val configuration: Configuration = HBaseConfiguration.create()
     val tableLayout = layout("avro-types.json")
     val table = makeTestKijiTable(tableLayout)
-    val uri = table.getURI()
+    val uri = table.getURI
     val writer = table.openTableWriter()
-    val reader = table.getReaderFactory().openTableReader(GenericCellSpecs(table))
+    val reader = table.getReaderFactory.openTableReader(GenericCellSpecs(table))
 
     // Set up the columns and fields.
     val columns = Map("columnSymbol" -> QualifiedColumn("family", "column3"))
@@ -53,24 +56,26 @@ class KijiSchemeSuite extends KijiSuite {
     val writeValue = new TupleEntry(sourceFields, new Tuple(dummyEid, record))
 
     // Put the tuple.
-    KijiScheme.putTuple(columns,
+    KijiScheme.putTuple(
+        columns,
         uri,
         None,
         writeValue,
         writer,
-        tableLayout)
+        tableLayout,
+        configuration)
 
     // Read the tuple back.
-    val rowData =
-      reader.get(
-          dummyEid.toJavaEntityId(uri),
-          KijiScheme.buildRequest(All, columns.values))
+    val rowData = reader.get(
+        dummyEid.toJavaEntityId(uri, configuration),
+        KijiScheme.buildRequest(All, columns.values))
     val readValue: Option[Tuple] = KijiScheme.rowToTuple(
         columns,
         sourceFields,
         None,
         rowData,
-        uri)
+        uri,
+        configuration)
     assert(readValue.isDefined)
 
     val readRecord = readValue.get.getObject(1).asInstanceOf[KijiSlice[_]].getFirstValue()

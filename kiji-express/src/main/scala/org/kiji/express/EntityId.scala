@@ -21,7 +21,9 @@ package org.kiji.express
 
 import java.lang.IllegalStateException
 
-import scala.collection.JavaConverters._
+import scala.collection.JavaConverters.asScalaBufferConverter
+
+import org.apache.hadoop.conf.Configuration
 
 import org.kiji.express.impl.HashedEntityId
 import org.kiji.express.impl.MaterializedEntityId
@@ -53,9 +55,10 @@ trait EntityId extends Product {
    * Get the Java [[org.kiji.schema.EntityId]] associated with this Scala EntityId.
    *
    * @param tableUri of the table the JavaEntityId will be associated with.
+   * @param configuration identifying the cluster to use when building EntityIds.
    * @return the Java EntityId backing this EntityId.
    */
-   def toJavaEntityId(tableUri: KijiURI): JEntityId
+   def toJavaEntityId(tableUri: KijiURI, configuration: Configuration): JEntityId
 
   /**
    * Get the index'th component of the EntityId.
@@ -93,23 +96,28 @@ object EntityId {
    *
    * @param tableUri is the Java EntityId is from.
    * @param entityId is the Java EntityId to convert.
+   * @param configuration identifying the cluster to use when building EntityIds.
    */
   def fromJavaEntityId(
       tableUri: KijiURI,
-      entityId: JEntityId): EntityId = {
+      entityId: JEntityId,
+      configuration: Configuration): EntityId = {
     try {
-      val javaComponents: java.util.List[Object] = entityId.getComponents
-      val components: Seq[AnyRef] = javaComponents.asScala.toSeq
+      val components: Seq[AnyRef] = entityId
+          .getComponents
+          .asScala
+          .toSeq
 
-      new MaterializedEntityId(components)
+      MaterializedEntityId(components)
     } catch {
       // This is an exception thrown when we try to access components of an entityId which has
       // materialization suppressed. E.g. Hashed EntityIds. So we are unable to retrieve components,
       // but the behavior is legal.
       case ise: IllegalStateException => {
-        new HashedEntityId(
+        HashedEntityId(
             tableUri.toString,
-            entityId.getHBaseRowKey())
+            configuration,
+            entityId.getHBaseRowKey)
       }
     }
   }
@@ -121,6 +129,6 @@ object EntityId {
    * @param components of the EntityId to create.
    */
   def apply(components: Any*): MaterializedEntityId = {
-    new MaterializedEntityId(components.toSeq.map { _.asInstanceOf[AnyRef] })
+    MaterializedEntityId(components.toSeq.map { _.asInstanceOf[AnyRef] })
   }
 }

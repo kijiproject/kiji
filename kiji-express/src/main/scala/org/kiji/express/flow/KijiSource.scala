@@ -19,8 +19,9 @@
 
 package org.kiji.express.flow
 
-import scala.collection.JavaConverters._
+import scala.collection.JavaConverters.asScalaIteratorConverter
 import scala.collection.mutable.Buffer
+
 import java.io.OutputStream
 import java.util.Properties
 
@@ -62,12 +63,12 @@ import org.kiji.express.util.AvroUtil
 import org.kiji.express.util.GenericCellSpecs
 import org.kiji.express.util.Resources._
 import org.kiji.mapreduce.framework.KijiConfKeys
-import org.kiji.schema.Kiji
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiRowData
 import org.kiji.schema.KijiRowScanner
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiTableReader
+import org.kiji.schema.KijiTableWriter
 import org.kiji.schema.KijiURI
 
 /**
@@ -159,7 +160,7 @@ final class KijiSource private[express] (
         readOrWrite match {
           case Read => {
             val scheme = kijiScheme
-            populateTestTable(tableUri, buffers(this), scheme.getSourceFields(), conf)
+            populateTestTable(tableUri, buffers(this), scheme.getSourceFields, conf)
 
             new KijiTap(tableUri, scheme).asInstanceOf[Tap[_, _, _]]
           }
@@ -178,7 +179,10 @@ final class KijiSource private[express] (
           // Use Kiji's local tap and scheme when reading.
           case Read => {
             val scheme = localKijiScheme
-            populateTestTable(tableUri, buffers(this), scheme.getSourceFields(),
+            populateTestTable(
+                tableUri,
+                buffers(this),
+                scheme.getSourceFields,
                 HBaseConfiguration.create())
 
             new LocalKijiTap(tableUri, scheme).asInstanceOf[Tap[_, _, _]]
@@ -186,7 +190,10 @@ final class KijiSource private[express] (
 
           // After performing a write, use TestLocalKijiScheme to populate the output buffer.
           case Write => {
-            val scheme = new TestLocalKijiScheme(buffers(this), timeRange, timestampField,
+            val scheme = new TestLocalKijiScheme(
+                buffers(this),
+                timeRange,
+                timestampField,
                 convertColumnMap(columns))
 
             new LocalKijiTap(tableUri, scheme).asInstanceOf[Tap[_, _, _]]
@@ -250,60 +257,47 @@ object KijiSource {
    * @param tableUri of the table to populate.
    * @param rows Tuples to write to populate the table with.
    * @param fields Field names for elements in the tuple.
+   * @param configuration defining the cluster to use.
    */
-  private def populateTestTable(tableUri: KijiURI, rows: Buffer[Tuple], fields: Fields,
-      conf: Configuration) {
-    // Open a table writer.
-    val writer =
-        doAndRelease(Kiji.Factory.open(tableUri, conf)) { kiji =>
-          doAndRelease(kiji.openTable(tableUri.getTable())) { table =>
-            table.openTableWriter()
-          }
-        }
-
-    val schemaTable =
-        doAndRelease(Kiji.Factory.open(tableUri, conf)) { kiji =>
-          kiji.getSchemaTable()
-        }
-
+  private def populateTestTable(
+      tableUri: KijiURI,
+      rows: Buffer[Tuple],
+      fields: Fields,
+      configuration: Configuration) {
     // Write the desired rows to the table.
-    try {
+    withKijiTableWriter(tableUri, configuration) { writer: KijiTableWriter =>
       rows.foreach { row: Tuple =>
         val tupleEntry = new TupleEntry(fields, row)
         val iterator = fields.iterator()
 
         // Get the entity id field.
-        val entityIdField = iterator.next().toString()
+        val entityIdField = iterator.next().toString
         val entityId = tupleEntry
             .getObject(entityIdField)
             .asInstanceOf[EntityId]
 
         // Iterate through fields in the tuple, adding each one.
-        while (iterator.hasNext()) {
-          val field = iterator.next().toString()
+        while (iterator.hasNext) {
+          val field = iterator.next().toString
 
           // Get the timeline to be written.
-          val cells: Seq[Cell[Any]] = tupleEntry.getObject(field)
-              .asInstanceOf[KijiSlice[Any]].cells
+          val cells: Seq[Cell[Any]] = tupleEntry
+              .getObject(field)
+              .asInstanceOf[KijiSlice[Any]]
+              .cells
 
           // Write the timeline to the table.
-          cells.map { cell: Cell[Any] => {
-            val datum =
-                AvroUtil.encodeToJava(
-                    cell.datum)
+          cells.map { cell: Cell[Any] =>
+            val datum = AvroUtil.encodeToJava(cell.datum)
             writer.put(
-                entityId.toJavaEntityId(tableUri),
+                entityId.toJavaEntityId(tableUri, configuration),
                 cell.family,
                 cell.qualifier,
                 cell.version,
-                datum
-            )
-          }}
+                datum)
+          }
         }
       }
-    } finally {
-      writer.close()
-      schemaTable.close()
     }
   }
 
@@ -355,34 +349,34 @@ object KijiSource {
         process: FlowProcess[Properties],
         sinkCall: SinkCall[OutputContext, OutputStream]) {
       // Store the output table.
-      val conf: JobConf = HadoopUtil.createJobConf(process.getConfigCopy,
-          new JobConf(HBaseConfiguration.create()))
+      val conf: JobConf = HadoopUtil
+          .createJobConf(process.getConfigCopy, new JobConf(HBaseConfiguration.create()))
       val uri: KijiURI = KijiURI
           .newBuilder(conf.get(KijiConfKeys.KIJI_OUTPUT_TABLE_URI))
           .build()
 
       // Read table into buffer.
-      doAndRelease(Kiji.Factory.open(uri, conf)) { kiji: Kiji =>
-        doAndRelease(kiji.openTable(uri.getTable())) { table: KijiTable =>
-          // Open a table reader that reads data using the generic api.
-          val readerFactory = table.getReaderFactory()
-          val genericSpecs = GenericCellSpecs(table)
-          doAndClose(readerFactory.openTableReader(genericSpecs)) { reader: KijiTableReader=>
-            // We also want the entire timerange, so the test can inspect all data in the table.
-            val request: KijiDataRequest =
-                KijiScheme.buildRequest(All, columnRequestsAllData(columns).values)
-            doAndClose(reader.getScanner(request)) { scanner: KijiRowScanner =>
-              val rows: Iterator[KijiRowData] = scanner.iterator().asScala
-              rows.foreach { row: KijiRowData =>
-                KijiScheme
-                    .rowToTuple(
-                        columnRequestsAllData(columns),
-                        getSourceFields(),
-                        timestampField,
-                        row,
-                        table.getURI)
-                    .foreach { tuple => buffer += tuple }
-              }
+      withKijiTable(uri, conf) { table: KijiTable =>
+        // Open a table reader that reads data using the generic api.
+        val readerFactory = table.getReaderFactory
+        val genericSpecs = GenericCellSpecs(table)
+        doAndClose(readerFactory.openTableReader(genericSpecs)) { reader: KijiTableReader=>
+          // We also want the entire timerange, so the test can inspect all data in the table.
+          val request: KijiDataRequest = KijiScheme
+              .buildRequest(All, columnRequestsAllData(columns).values)
+
+          doAndClose(reader.getScanner(request)) { scanner: KijiRowScanner =>
+            val rows: Iterator[KijiRowData] = scanner.iterator().asScala
+            rows.foreach { row: KijiRowData =>
+              KijiScheme
+                  .rowToTuple(
+                      columnRequestsAllData(columns),
+                      getSourceFields,
+                      timestampField,
+                      row,
+                      table.getURI,
+                      conf)
+                  .foreach { tuple => buffer += tuple }
             }
           }
         }

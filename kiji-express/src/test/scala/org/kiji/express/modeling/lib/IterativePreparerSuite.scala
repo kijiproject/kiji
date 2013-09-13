@@ -36,7 +36,7 @@ import org.kiji.express.modeling.config.ModelEnvironment
 import org.kiji.express.modeling.config.PrepareEnvironment
 import org.kiji.express.modeling.framework.ModelExecutor
 import org.kiji.express.util.Resources.doAndClose
-import org.kiji.express.util.Resources.doAndRelease
+import org.kiji.express.util.Resources.withKijiTable
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiTable
@@ -75,8 +75,8 @@ class IterativePreparerSuite extends KijiSuite {
     val request: ExpressDataRequest = new ExpressDataRequest(0, Long.MaxValue,
         new ExpressColumnRequest("family:column1", 1, None) :: Nil)
 
-    doAndRelease(kiji.openTable("input_table")) { table: KijiTable =>
-      val tableUri: KijiURI = table.getURI()
+    withKijiTable(kiji, "input_table") { table: KijiTable =>
+      val tableUri: KijiURI = table.getURI
 
       val modelEnvironment: ModelEnvironment = ModelEnvironment(
           name = "prepare-model-environment",
@@ -116,9 +116,9 @@ class IterativePreparerSuite extends KijiSuite {
 
       doAndClose(table.openTableReader()) { reader: KijiTableReader =>
         val v1 = reader
-          .get(table.getEntityId("row1"), KijiDataRequest.create("family", "column2"))
-          .getMostRecentValue("family", "column2")
-          .toString
+            .get(table.getEntityId("row1"), KijiDataRequest.create("family", "column2"))
+            .getMostRecentValue("family", "column2")
+            .toString
 
         assert("foofoofoofoo" === v1)
       }

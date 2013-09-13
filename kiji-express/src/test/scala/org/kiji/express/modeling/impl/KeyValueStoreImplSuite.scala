@@ -57,7 +57,7 @@ class KeyValueStoreImplSuite extends KijiSuite {
     // Create a test Kiji instance containing a simple table.
     val simpleLayout: KijiTableLayout = layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
     val uri: KijiURI = doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
-      table.getURI()
+      table.getURI
     }
     // Create some sample data to populate the table with, and load it into the table.
     val dataToLoad = Map[EntityId, String](EntityId("1") -> "value1",
@@ -198,7 +198,7 @@ object KeyValueStoreImplSuite {
       }
     }
 
-    return new Path(file.getPath())
+    return new Path(file.getPath)
   }
 
   /**
@@ -277,7 +277,7 @@ object KeyValueStoreImplSuite {
       }
     }
 
-    return new Path(file.getPath())
+    return new Path(file.getPath)
   }
 
   /**
@@ -292,7 +292,7 @@ object KeyValueStoreImplSuite {
     // Open a table writer.
     val writer =
       doAndRelease(Kiji.Factory.open(tableURI)) { kiji =>
-        doAndRelease(kiji.openTable(tableURI.getTable())) { table =>
+        doAndRelease(kiji.openTable(tableURI.getTable)) { table =>
           table.openTableWriter()
         }
       }
@@ -301,7 +301,7 @@ object KeyValueStoreImplSuite {
       // Write each value to the table.
       values.foreach { case(entityId, str) =>
         writer.put(
-          entityId.toJavaEntityId(tableURI),
+          entityId.toJavaEntityId(tableURI, HBaseConfiguration.create()),
           "family",
           "column1",
           str

@@ -19,9 +19,14 @@
 
 package org.kiji.express.impl
 
+import java.util.Arrays
+
+import org.apache.hadoop.conf.Configuration
+
 import org.kiji.express.EntityId
 import org.kiji.express.util.EntityIdFactoryCache
-import org.kiji.schema.{ EntityId => JEntityId }
+import org.kiji.schema.{EntityId => JEntityId}
+import org.kiji.schema.EntityIdFactory
 import org.kiji.schema.KijiURI
 
 /**
@@ -32,54 +37,52 @@ import org.kiji.schema.KijiURI
  * row key format HASHED or with suppress-materialization enabled.
  *
  * @param tableUri for the table this EntityId is associated with.
+ * @param configuration identifying the cluster to use when building EntityIds.
  * @param encoded byte array representation of this EntityId.
  */
-private[express] case class HashedEntityId (tableUri: String, encoded: Array[Byte])
+private[express] case class HashedEntityId(
+    tableUri: String,
+    configuration: Configuration,
+    encoded: Array[Byte])
     extends EntityId {
   /** Error message used when trying to materialize this EntityId. */
   private val materializationError: String = ("Components for this entity Id were not materialized."
       + "This may be because you have suppressed materialization or used Hashed Entity Ids")
 
   /** Lazily get the EntityIdFactory from the cache when necessary. */
-  private[express] lazy val eidFactory =
-      EntityIdFactoryCache.getFactory(KijiURI.newBuilder(tableUri).build())
+  private[express] lazy val eidFactory: EntityIdFactory =
+      EntityIdFactoryCache.getFactory(KijiURI.newBuilder(tableUri).build(), configuration)
 
   override def productArity: Int = sys.error(materializationError)
 
   override def productElement(n: Int): Any = sys.error(materializationError)
 
-  override def toJavaEntityId(tableUri: KijiURI): JEntityId = {
+  override def toJavaEntityId(tableUri: KijiURI, configuration: Configuration): JEntityId = {
     val toJavaEntityIdError: String = (
-            "This EntityId can only be used for the table %s.".format(tableUri.toString)
-            + "This may be because you have suppressed materialization or used Hashed Entity Ids. ")
+        "This EntityId can only be used for the table %s.".format(tableUri.toString)
+        + "This may be because you have suppressed materialization or used Hashed Entity Ids. ")
     require(tableUri.toString == this.tableUri, toJavaEntityIdError)
     eidFactory.getEntityIdFromHBaseRowKey(encoded)
   }
 
-  override def toString(): String = {
+  override def toString: String = {
     "HashedEntityId(KijiTable: %s, encoded: %s)".format(tableUri, encoded.toSeq.mkString(","))
   }
 
   override def equals(other: Any): Boolean = {
     other match {
-      case otherEid: EntityId => { otherEid match {
-        case HashedEntityId(thatTableUri, otherEncodedVal) => {
-          this.tableUri == thatTableUri &&
-              encoded.toSeq.mkString("") == otherEncodedVal.toSeq.mkString("")
-        }
-        case that: MaterializedEntityId => {
-          // If the other is materialized with a single component, compare it with that as if it
-          // belonged to the same table as this.
-          if (that.components.length == 1) {
-            val thatEncoded =
-                that.toJavaEntityId(KijiURI.newBuilder(tableUri).build()).getHBaseRowKey
-            encoded.toSeq.mkString("") == thatEncoded.toSeq.mkString("")
-          } else {
-              // An EntityId with more than one component can't be compared with a HashedEntityId.
-            false
-          }
-        }
-      } }
+      case HashedEntityId(thatTableUri, _, otherEncodedVal) => {
+        this.tableUri == thatTableUri && Arrays.equals(encoded, otherEncodedVal)
+      }
+      // Matches an EntityId with only one component.
+      case that @ MaterializedEntityId(Seq(_)) => {
+        // Compare it with `that` as if it belonged to the same table as this.
+        val thatEncoded: Array[Byte] = that
+            .toJavaEntityId(KijiURI.newBuilder(tableUri).build(), configuration)
+            .getHBaseRowKey
+
+        Arrays.equals(encoded, thatEncoded)
+      }
       case _ => false
     }
   }

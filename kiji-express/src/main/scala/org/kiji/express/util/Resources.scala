@@ -21,9 +21,16 @@ package org.kiji.express.util
 
 import scala.io.Source
 
+import org.apache.hadoop.conf.Configuration
+
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.schema.util.ReferenceCountable
+import org.kiji.schema.Kiji
+import org.kiji.schema.KijiTable
+import org.kiji.schema.KijiTableReader
+import org.kiji.schema.KijiTableWriter
+import org.kiji.schema.KijiURI
 
 /**
  * The Resources object contains various convenience functions while dealing with
@@ -129,6 +136,105 @@ object Resources {
   def doAndClose[T, C <: { def close(): Unit }](resource: => C)(fn: C => T): T = {
     def after(c: C) { c.close() }
     doAnd(resource, after)(fn)
+  }
+
+  /**
+   * Performs an operation that uses a Kiji instance.
+   *
+   * @tparam T is the return type of the operation.
+   * @param uri of the Kiji instance to open.
+   * @param configuration identifying the cluster running Kiji.
+   * @param fn is the operation to perform.
+   * @return the result of the operation.
+   */
+  def withKiji[T](uri: KijiURI, configuration: Configuration)(fn: Kiji => T): T = {
+    doAndRelease(Kiji.Factory.open(uri, configuration))(fn)
+  }
+
+  /**
+   * Performs an operation that uses a Kiji table.
+   *
+   * @tparam T is the return type of the operation.
+   * @param kiji instance the desired table belongs to.
+   * @param table name of the Kiji table to open.
+   * @param fn is the operation to perform.
+   * @return the result of the operation.
+   */
+  def withKijiTable[T](kiji: Kiji, table: String)(fn: KijiTable => T): T = {
+    doAndRelease(kiji.openTable(table))(fn)
+  }
+
+  /**
+   * Performs an operation that uses a Kiji table.
+   *
+   * @tparam T is the return type of the operation.
+   * @param tableUri addressing the Kiji table to open.
+   * @param configuration identifying the cluster running Kiji.
+   * @param fn is the operation to perform.
+   * @return the result of the operation.
+   */
+  def withKijiTable[T](tableUri: KijiURI, configuration: Configuration)(fn: KijiTable => T): T = {
+    withKiji(tableUri, configuration) { kiji: Kiji =>
+      withKijiTable(kiji, tableUri.getTable)(fn)
+    }
+  }
+
+  /**
+   * Performs an operation that uses a Kiji table writer.
+   *
+   * @tparam T is the return type of the operation.
+   * @param table the desired Kiji table writer belongs to.
+   * @param fn is the operation to perform.
+   * @return the result of the operation.
+   */
+  def withKijiTableWriter[T](table: KijiTable)(fn: KijiTableWriter => T): T = {
+    doAndClose(table.openTableWriter)(fn)
+  }
+
+  /**
+   * Performs an operation that uses a Kiji table writer.
+   *
+   * @tparam T is the return type of the operation.
+   * @param tableUri addressing the Kiji table to open.
+   * @param configuration identifying the cluster running Kiji.
+   * @param fn is the operation to perform.
+   * @return the result of the operation.
+   */
+  def withKijiTableWriter[T](
+      tableUri: KijiURI,
+      configuration: Configuration)(fn: KijiTableWriter => T): T = {
+    withKijiTable(tableUri, configuration) { table: KijiTable =>
+      withKijiTableWriter(table)(fn)
+    }
+  }
+
+  /**
+   * Performs an operation that uses a Kiji table reader.
+   *
+   * @tparam T is the return type of the operation.
+   * @param table the desired Kiji table reader belongs to.
+   * @param fn is the operation to perform.
+   * @return the result of the operation.
+   */
+  def withKijiTableReader[T](table: KijiTable)(fn: KijiTableReader => T): T = {
+    doAndClose(table.openTableReader)(fn)
+  }
+
+  /**
+   * Performs an operation that uses a Kiji table reader.
+   *
+   * @tparam T is the return type of the operation.
+   * @param tableUri addressing the Kiji table to open.
+   * @param configuration identifying the cluster running Kiji.
+   * @param fn is the operation to perform.
+   * @return the result of the operation.
+   */
+  def withKijiTableReader[T](
+      tableUri: KijiURI,
+      configuration: Configuration)(fn: KijiTableReader => T): T = {
+    withKijiTable(tableUri, configuration) { table: KijiTable =>
+      withKijiTableReader(table)(fn)
+    }
   }
 
   /**

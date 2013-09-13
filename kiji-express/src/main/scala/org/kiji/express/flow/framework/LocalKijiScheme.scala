@@ -37,6 +37,7 @@ import cascading.tap.Tap
 import cascading.tuple.Tuple
 import cascading.tuple.TupleEntry
 import com.google.common.base.Objects
+import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.mapred.JobConf
 import org.slf4j.Logger
@@ -48,7 +49,7 @@ import org.kiji.express.flow.ColumnRequest
 import org.kiji.express.flow.TimeRange
 import org.kiji.express.util.GenericCellSpecs
 import org.kiji.express.util.SpecificCellSpecs
-import org.kiji.express.util.Resources.doAndRelease
+import org.kiji.express.util.Resources._
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiColumnName
@@ -74,7 +75,8 @@ private[express] case class InputContext(
     reader: KijiTableReader,
     scanner: KijiRowScanner,
     iterator: Iterator[KijiRowData],
-    tableUri: KijiURI)
+    tableUri: KijiURI,
+    configuration: Configuration)
 
 /**
  * Encapsulates the state required to write to a Kiji table.
@@ -86,7 +88,8 @@ private[express] case class InputContext(
 private[express] case class OutputContext(
     writer: KijiTableWriter,
     tableUri: KijiURI,
-    layout: KijiTableLayout)
+    layout: KijiTableLayout,
+    configuration: Configuration)
 
 /**
  * A local version of [[org.kiji.express.flow.framework.KijiScheme]] that is meant to be used with
@@ -159,27 +162,26 @@ private[express] class LocalKijiScheme(
   override def sourcePrepare(
       process: FlowProcess[Properties],
       sourceCall: SourceCall[InputContext, InputStream]) {
-    val conf: JobConf = HadoopUtil.createJobConf(process.getConfigCopy,
+    val conf: JobConf = HadoopUtil.createJobConf(
+        process.getConfigCopy,
         new JobConf(HBaseConfiguration.create()))
     val uriString: String = conf.get(KijiConfKeys.KIJI_INPUT_TABLE_URI)
-    val uri: KijiURI = KijiURI.newBuilder(uriString).build()
+    val kijiUri: KijiURI = KijiURI.newBuilder(uriString).build()
 
     // Build the input context.
-    doAndRelease(Kiji.Factory.open(uri, conf)) { kiji: Kiji =>
-      doAndRelease(kiji.openTable(uri.getTable())) { table: KijiTable =>
-        val request = KijiScheme.buildRequest(timeRange, columns.values)
-        val reader = {
-          val allCellSpecs: JMap[KijiColumnName, CellSpec] = new HashMap[KijiColumnName, CellSpec]()
-          allCellSpecs.putAll(GenericCellSpecs(table))
-          allCellSpecs.putAll(SpecificCellSpecs.buildCellSpecs(table.getLayout, columns).asJava)
-          table.getReaderFactory.openTableReader(allCellSpecs)
-        }
-        val scanner = reader.getScanner(request)
-        val tableUri = table.getURI
-        val context = InputContext(reader, scanner, scanner.iterator.asScala, tableUri)
-
-        sourceCall.setContext(context)
+    withKijiTable(kijiUri, conf) { table: KijiTable =>
+      val request = KijiScheme.buildRequest(timeRange, columns.values)
+      val reader = {
+        val allCellSpecs: JMap[KijiColumnName, CellSpec] = new HashMap[KijiColumnName, CellSpec]()
+        allCellSpecs.putAll(GenericCellSpecs(table))
+        allCellSpecs.putAll(SpecificCellSpecs.buildCellSpecs(table.getLayout, columns).asJava)
+        table.getReaderFactory.openTableReader(allCellSpecs)
       }
+      val scanner = reader.getScanner(request)
+      val tableUri = table.getURI
+      val context = InputContext(reader, scanner, scanner.iterator.asScala, tableUri, conf)
+
+      sourceCall.setContext(context)
     }
   }
 
@@ -199,7 +201,7 @@ private[express] class LocalKijiScheme(
     // and use that to set the result tuple.
     // Return true as soon as a result tuple has been set,
     // or false if we reach the end of the RecordReader.
-    val context: InputContext = sourceCall.getContext()
+    val context: InputContext = sourceCall.getContext
     while (context.iterator.hasNext) {
       // Get the current row.
       val row: KijiRowData = context.iterator.next()
@@ -209,12 +211,13 @@ private[express] class LocalKijiScheme(
               getSourceFields,
               timestampField,
               row,
-              context.tableUri)
+              context.tableUri,
+              context.configuration)
 
       // If no fields were missing, set the result tuple and return from this method.
       result match {
         case Some(tuple) => {
-          sourceCall.getIncomingEntry().setTuple(tuple)
+          sourceCall.getIncomingEntry.setTuple(tuple)
           process.increment(KijiScheme.counterGroupName, KijiScheme.counterSuccess, 1)
           return true // We set a result tuple, return true for success.
         }
@@ -241,7 +244,7 @@ private[express] class LocalKijiScheme(
   override def sourceCleanup(
       process: FlowProcess[Properties],
       sourceCall: SourceCall[InputContext, InputStream]) {
-    val context: InputContext = sourceCall.getContext()
+    val context: InputContext = sourceCall.getContext
     context.reader.close()
     context.scanner.close()
 
@@ -283,9 +286,9 @@ private[express] class LocalKijiScheme(
     val uri: KijiURI = KijiURI.newBuilder(uriString).build()
 
     doAndRelease(Kiji.Factory.open(uri, conf)) { kiji: Kiji =>
-      doAndRelease(kiji.openTable(uri.getTable())) { table: KijiTable =>
+      doAndRelease(kiji.openTable(uri.getTable)) { table: KijiTable =>
         // Set the sink context to an opened KijiTableWriter.
-        sinkCall.setContext(OutputContext(table.openTableWriter(), uri, table.getLayout))
+        sinkCall.setContext(OutputContext(table.openTableWriter(), uri, table.getLayout, conf))
       }
     }
   }
@@ -300,16 +303,18 @@ private[express] class LocalKijiScheme(
       process: FlowProcess[Properties],
       sinkCall: SinkCall[OutputContext, OutputStream]) {
     // Retrieve writer from the scheme's context.
-    val OutputContext(writer, tableUri, layout) = sinkCall.getContext()
+    val OutputContext(writer, tableUri, layout, configuration) = sinkCall.getContext
 
     // Write the tuple out.
-    val output: TupleEntry = sinkCall.getOutgoingEntry()
-    KijiScheme.putTuple(columns,
+    val output: TupleEntry = sinkCall.getOutgoingEntry
+    KijiScheme.putTuple(
+        columns,
         tableUri,
         timestampField,
         output,
         writer,
-        layout)
+        layout,
+        configuration)
   }
 
   /**
@@ -321,7 +326,7 @@ private[express] class LocalKijiScheme(
   override def sinkCleanup(
       process: FlowProcess[Properties],
       sinkCall: SinkCall[OutputContext, OutputStream]) {
-    sinkCall.getContext().writer.close()
+    sinkCall.getContext.writer.close()
     // Set the context to null so that we no longer hold any references to it.
     // scalastyle:off null
     sinkCall.setContext(null)
