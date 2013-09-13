@@ -69,6 +69,9 @@ import org.kiji.scoring.avro.KijiFreshnessPolicyRecord;
 public final class KijiFreshnessManager implements Closeable {
   private static final Logger LOG = LoggerFactory.getLogger(KijiFreshnessManager.class);
 
+  public static final Map<String, String> DEFAULT_PARAMETERS = Collections.emptyMap();
+  public static final boolean DEFAULT_REINITIALIZE = false;
+
   /** The minimum freshness version supported by this version of the KijiFreshnessManager. */
   private static final ProtocolVersion MIN_FRESHNESS_RECORD_VER =
       ProtocolVersion.parse("policyrecord-0.1");
@@ -159,8 +162,8 @@ public final class KijiFreshnessManager implements Closeable {
         columnName,
         producerClass,
         policy,
-        Collections.<String, String>emptyMap(),
-        false);
+        DEFAULT_PARAMETERS,
+        DEFAULT_REINITIALIZE);
   }
 
   /**
@@ -276,8 +279,8 @@ public final class KijiFreshnessManager implements Closeable {
         producerClass,
         policyClass,
         policyState,
-        Collections.<String, String>emptyMap(),
-        false);
+        DEFAULT_PARAMETERS,
+        DEFAULT_REINITIALIZE);
   }
 
   /**
@@ -723,9 +726,9 @@ public final class KijiFreshnessManager implements Closeable {
    * @param producerClass KijiProducer class name to validate.
    * @param policyClass KijiFreshnessPolicy class name to validate.
    * @param includeAttachmentOnlyChecks whether the checks are for attachment time (true) or taken
-   * from an existing attached freshness policy (false).
+   *     from an existing attached freshness policy (false).
    * @return a map from {@link ValidationFailure} mode to the Exception thrown by that validation
-   * failure.
+   *     failure.
    * @throws IOException in case of an error reading from the metatable.
    */
   private Map<ValidationFailure, Exception> validateAttachment(

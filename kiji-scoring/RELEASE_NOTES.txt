@@ -1,6 +1,16 @@
 
                               Kiji Scoring Release Notes
 Version 0.6.0
+    * SCORE-92. FreshTool now supports registering and retrieving the new optional record fields
+        `parameters` and `reinitializeProducer`. e.g.
+        kiji fresh \
+          kiji://.env/default/table/family:qualifier \
+          --do=register \
+          --policy-class=my.Policy \
+          --policy-state="" \
+          --producer-class=my.Producer \
+          --parameters={"key":"value"} \
+          --reinitialize-producer=true
     * SCORE-83. InternalFreshKijiTableReader now respects KijiFreshnessPolicyRecord's `parameters`
         and `reinitializeProducer` fields. KijiFreshnessPolicy objects may access and override
         `parameters` via PolicyContext.getParameters() and setParameter(String, String). These will

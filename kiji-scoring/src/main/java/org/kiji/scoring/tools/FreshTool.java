@@ -28,6 +28,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import com.google.common.base.Preconditions;
+import com.google.gson.Gson;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.slf4j.Logger;
@@ -63,12 +64,13 @@ import org.kiji.scoring.avro.KijiFreshnessPolicyRecord;
  *    --policy-class=org.kiji.scoring.lib.ShelfLife \
  *    --policy-state={"shelfLife":10} \
  *    --producer-class=com.mycompany.freshening.RecommendingProducer
+ *    --
  *  // Unregister a freshness policy from a column
  *  kiji fresh kiji://.env/instance/table/family:qualifier --do=unregister
  *  // Validate the freshness policy attached to a column
  *  kiji fresh kiji://.env/instance/table/family:qualifier --do=validate
  *  // Validate all freshness policies attached to a table
- *  kiji fresh kiji://.env/instance/table
+ *  kiji fresh kiji://.env/instance/table --do=validate-all
  *  </pre></p>
  *  <p>If the --as-strings flag (default = false) is not set, the kiji fresh tool will
  *  checks on class names to ensure classes are available on the classpath.  If --interactive
@@ -91,24 +93,35 @@ public class FreshTool extends BaseTool {
   private String mDoFlag = "";
 
   @Flag(name="policy-class", usage="fully qualified name of a KijiFreshnessPolicy class.")
-  private String mPolicyClassFlag;
+  private String mPolicyClassFlag = "";
 
   @Flag(name="policy-state", usage="serialized state of the KijiFreshnessPolicy, will be passed "
       + "to KijiFreshnessPolicy.deserialize().  Specify exactly one of policy-state or "
       + "policy-state-file")
-  private String mPolicyStateFlag;
+  private String mPolicyStateFlag = "";
 
   @Flag(name="policy-state-file", usage="serialized state of the KijiFreshnessPolicy, will be "
       + "passed to KijiFreshnessPolicy.deserialize().  Specify exactly one of policy-state or "
       + "policy-state-file")
-  private String mPolicyStateFileFlag;
+  private String mPolicyStateFileFlag = "";
 
   @Flag(name="producer-class", usage="fully qualified name of a KijiProducer class.")
-  private String mProducerClassFlag;
+  private String mProducerClassFlag = "";
+
+  @Flag(name="parameters", usage="A JSON representation of a string-string map of configuration "
+      + "parameters.")
+  private String mParametersFlag = "";
+
+  @Flag(name="reinitialize-producer", usage="Set whether to reinitialize the KijiProducer object "
+      + "for every freshening request.")
+  private boolean mReinitializeFlag = false;
 
   @Flag(name="as-strings", usage="set to true to write strings directly without checking for "
       + "classes on the classpath.")
   private Boolean mAsStringFlag = false;
+
+  /** GSON used for serializing and deserializing parameter maps. */
+  private static final Gson GSON = new Gson();
 
   /** URI of the Kiji table or column on which to perform an operation. */
   private KijiURI mURI = null;
@@ -152,18 +165,22 @@ public class FreshTool extends BaseTool {
    * @param columnName the name of the column to which to attach the freshness policy.
    * @param producerClass the KijiProducer to run when a freshness policy triggers.
    * @param policy the KijiFreshnessPolicy to register.
+   * @param parameters a string-string map of configuration parameters to register.
+   * @param reinitialize whether to reinitialize the producer for every freshening request.
    * @return the tool return code.
    * @throws IOException in case of an error writing to the metatable.
    */
   private int registerPolicy(
-      String tableName,
-      String columnName,
-      Class<? extends KijiProducer> producerClass,
-      KijiFreshnessPolicy policy)
-      throws IOException {
+      final String tableName,
+      final String columnName,
+      final Class<? extends KijiProducer> producerClass,
+      final KijiFreshnessPolicy policy,
+      final Map<String, String> parameters,
+      final boolean reinitialize
+  ) throws IOException {
     Map<ValidationFailure, Exception> failures;
     try {
-      mManager.storePolicy(tableName, columnName, producerClass, policy);
+      mManager.storePolicy(tableName, columnName, producerClass, policy, parameters, reinitialize);
       failures = null;
     } catch (FreshnessValidationException fve) {
       failures = fve.getExceptions();
@@ -171,10 +188,14 @@ public class FreshTool extends BaseTool {
 
     if (failures == null) {
       if (isInteractive()) {
-        getPrintStream().format("Freshness policy: %s with state: %s and producer: %s%n"
-            + "attached to column: %s in table: %s%n",
-            policy.getClass().getName(), policy.serialize(), producerClass.getName(),
-            columnName, tableName);
+        getPrintStream().print("New ");
+        printAttachment(
+            columnName,
+            policy.getClass().getName(),
+            policy.serialize(),
+            producerClass.getName(),
+            parameters,
+            reinitialize);
       }
       return BaseTool.SUCCESS;
     } else {
@@ -194,6 +215,8 @@ public class FreshTool extends BaseTool {
    * @param policyClass the KijiFreshnessPolicy class to register.
    * @param policyState the serialized state of the KijiFreshnessPolicy.
    * @param producerClass the KijiProducer class to run if data is stale.
+   * @param parameters a string-string map of configuration parameters to register.
+   * @param reinitialize whether to reinitialize the producer for every freshening request.
    * @return the tool return code.
    * @throws IOException in case of an error writing to the metatable.
    */
@@ -202,12 +225,14 @@ public class FreshTool extends BaseTool {
       final String columnName,
       final String policyClass,
       final String policyState,
-      final String producerClass)
-      throws IOException {
+      final String producerClass,
+      final Map<String, String> parameters,
+      final boolean reinitialize
+  ) throws IOException {
     Map<ValidationFailure, Exception> failures;
     try {
       mManager.storePolicyWithStrings(
-          tableName, columnName, producerClass, policyClass, policyState);
+          tableName, columnName, producerClass, policyClass, policyState, parameters, reinitialize);
       failures = null;
     } catch (FreshnessValidationException fve) {
       failures = fve.getExceptions();
@@ -215,10 +240,13 @@ public class FreshTool extends BaseTool {
 
     if (failures == null) {
       if (isInteractive()) {
-        getPrintStream().format("Freshness policy: %s with state: %s and producer: %s%n"
-            + "attached to column: %s in table: %s without checks.%n",
-            policyClass, policyState, producerClass,
-            columnName, tableName);
+        printAttachment(
+            columnName,
+            policyClass,
+            policyState,
+            producerClass,
+            parameters,
+            reinitialize);
       }
       return BaseTool.SUCCESS;
     } else {
@@ -238,10 +266,13 @@ public class FreshTool extends BaseTool {
    * @return the tool return code.
    * @throws IOException in case of an error writing to the metatable.
    */
-  private int unregisterPolicy(String tableName, String columnName) throws IOException {
+  private int unregisterPolicy(
+      final String tableName,
+      final String columnName
+  ) throws IOException {
     mManager.removePolicy(tableName, columnName);
     if (isInteractive()) {
-      getPrintStream().format("Freshness policy removed from column: %s in table %s%n",
+      getPrintStream().format("Freshener removed from column: %s in table %s%n",
           columnName, tableName);
     }
     return BaseTool.SUCCESS;
@@ -255,19 +286,22 @@ public class FreshTool extends BaseTool {
    * @return the tool return code.
    * @throws IOException in case of an error reading from the metatable.
    */
-  private int retrievePolicy(String tableName, String columnName) throws IOException {
+  private int retrievePolicy(
+      final String tableName,
+      final String columnName
+  ) throws IOException {
     final KijiFreshnessPolicyRecord record = mManager.retrievePolicy(tableName, columnName);
     if (record == null) {
       getPrintStream().format("There is no freshness policy attached to column: %s in table: %s%n",
           columnName, tableName);
     } else {
-      getPrintStream().format(
-          "Freshness policy class: %s%n"
-          + "Freshness policy state: %s%n"
-          + "Producer class: %s%n",
+      printAttachment(
+          columnName,
           record.getFreshnessPolicyClass(),
           record.getFreshnessPolicyState(),
-          record.getProducerClass());
+          record.getProducerClass(),
+          record.getParameters(),
+          record.getReinitializeProducer());
     }
     return BaseTool.SUCCESS;
   }
@@ -279,7 +313,9 @@ public class FreshTool extends BaseTool {
    * @return the tool return code.
    * @throws IOException in case of an error reading from the metatable.
    */
-  private int retrievePolicies(String tableName) throws IOException {
+  private int retrievePolicies(
+      final String tableName
+  ) throws IOException {
     final Map<KijiColumnName, KijiFreshnessPolicyRecord> records =
         mManager.retrievePolicies(tableName);
     if (records.isEmpty()) {
@@ -288,15 +324,13 @@ public class FreshTool extends BaseTool {
     } else {
       for (Map.Entry<KijiColumnName, KijiFreshnessPolicyRecord> entry : records.entrySet()) {
         final KijiFreshnessPolicyRecord record = entry.getValue();
-        getPrintStream().format(
-            "Freshness policy attached to column: %s%n"
-            + "  Freshness policy class: %s%n"
-            + "  Freshness policy state: %s%n"
-            + "  Producer class: %s%n",
+        printAttachment(
             entry.getKey().toString(),
             record.getFreshnessPolicyClass(),
             record.getFreshnessPolicyState(),
-            record.getProducerClass());
+            record.getProducerClass(),
+            record.getParameters(),
+            record.getReinitializeProducer());
       }
     }
     return BaseTool.SUCCESS;
@@ -311,7 +345,10 @@ public class FreshTool extends BaseTool {
    * @return the tool return code.
    * @throws IOException in case of an error reading from the metatable.
    */
-  private int validatePolicy(String tableName, String columnName) throws IOException {
+  private int validatePolicy(
+      final String tableName,
+      final String columnName
+  ) throws IOException {
     final Map<ValidationFailure, Exception> failures =
         mManager.validatePolicy(tableName, columnName);
     if (failures.isEmpty()) {
@@ -335,7 +372,9 @@ public class FreshTool extends BaseTool {
    * @return the tool return code.
    * @throws IOException in case of an error reading from the metatable.
    */
-  private int validatePolicies(String tableName) throws IOException {
+  private int validatePolicies(
+      final String tableName
+  ) throws IOException {
     final int numberOfPolicies = mManager.retrievePolicies(tableName).size();
 
     final Map<KijiColumnName, Map<ValidationFailure, Exception>> failures =
@@ -349,7 +388,7 @@ public class FreshTool extends BaseTool {
           "%d freshness policies found for table: %s%n", numberOfPolicies, tableName);
       for (Map.Entry<KijiColumnName, Map<ValidationFailure, Exception>> entry
           : failures.entrySet()) {
-        getPrintStream().format("Freshness policy attached to column: %s is not valid.%n",
+        getPrintStream().format("Freshener attached to column: %s is not valid.%n",
             entry.getKey().toString());
         for (Map.Entry<ValidationFailure, Exception> innerEntry : entry.getValue().entrySet()) {
           getPrintStream().format("%s: ", innerEntry.getKey().toString());
@@ -367,7 +406,9 @@ public class FreshTool extends BaseTool {
    * @return the sting contents of the freshness policy state.
    * @throws IOException in case of an error finding the file or reading from it.
    */
-  private String readStateFromFile(String path) throws IOException {
+  private static String readStateFromFile(
+      final String path
+  ) throws IOException {
     final FileInputStream input = new FileInputStream(path);
     final InputStreamReader inputReader = new InputStreamReader(input, "UTF-8");
     final BufferedReader bufferedReader = new BufferedReader(inputReader);
@@ -387,32 +428,63 @@ public class FreshTool extends BaseTool {
     }
   }
 
-  /** {@inheritDoc} */
-  @Override
-  public void validateFlags() throws Exception {
-    Preconditions.checkArgument(null != mDoFlag && !mDoFlag.isEmpty(),
-        "--do flag is required. Please specify exactly one of: register, unregister, retrieve, "
-        + "retrieve-all, validate, validate-all");
-    try {
-      mDoMode = DoMode.valueOf(mDoFlag.toUpperCase(Locale.ROOT).replace("-", "_"));
-    } catch (IllegalArgumentException iae) {
-      getPrintStream().printf("Invalid --do command: '%s'.%n", mDoFlag);
-      throw iae;
-    }
-    if (mDoMode == DoMode.REGISTER) {
-      Preconditions.checkArgument(mPolicyClassFlag != null && !mPolicyClassFlag.isEmpty(),
-          "--policy-class flag must be set to perform a freshness policy registration.");
-      Preconditions.checkArgument(mProducerClassFlag != null && !mProducerClassFlag.isEmpty(),
-          "--producer-class flag must be set to perform a freshness policy registration.");
-    }
+  /**
+   * Parse a string-string map from JSON.
+   *
+   * @param serializedMap the JSON serialized map.
+   * @return the deserialized version of the map.
+   */
+  private static Map<String, String> mapFromJSON(
+      final String serializedMap
+  ) {
+    return GSON.fromJson(serializedMap, Map.class);
   }
 
-  /** {@inheritDoc} */
-  @Override
-  protected int run(final List<String> nonFlagArgs) throws Exception {
+  /**
+   * Print details about an attached Freshener to the tool's printstream.
+   *
+   * @param column the column to which the Freshener is attached.
+   * @param policyClass the fully qualified class name of the freshness policy for the Freshener.
+   * @param policyState the serialized state of the freshness policy.
+   * @param producerClass the fully qualified class name of the producer for this Freshener.
+   * @param parameters string-string configuration parameters for this Freshener.
+   * @param reinitialize whether to reinitialize the producer object for every freshening request.
+   */
+  private void printAttachment(
+      final String column,
+      final String policyClass,
+      final String policyState,
+      final String producerClass,
+      final Map<String, String> parameters,
+      final boolean reinitialize
+  ) {
+    getPrintStream().format(
+        "Freshener attached to column: %s%n"
+        + "  Freshness policy class: %s%n"
+        + "  Freshness policy state: %s%n"
+        + "  Producer class: %s%n"
+        + "  Parameters: %s%n"
+        + "  Reinitialize producer: %s%n",
+        column,
+        policyClass,
+        policyState,
+        producerClass,
+        GSON.toJson(parameters, Map.class),
+        reinitialize);
+  }
+
+  /**
+   * Validate that non-flag arguments are present and conform to requirements.
+   *
+   * @param nonFlagArgs the arguments to validate.
+   * @return whether non-flag arguments passed validation and it is safe to proceed.
+   */
+  protected int validateNonFlagArguments(
+      final List<String> nonFlagArgs
+  ) {
     Preconditions.checkNotNull(nonFlagArgs,
         "Specify a Kiji table or column with \"kiji fresh kiji://hbase-address/kiji-instance/"
-        + "kiji-table/[optional-kiji-column]\"");
+            + "kiji-table/[optional-kiji-column]\"");
     Preconditions.checkArgument(nonFlagArgs.size() >= 1,
         "Specify a Kiji table or column with \"kiji fresh kiji://hbase-address/kiji-instance/"
             + "kiji-table/[optional-kiji-column]\"");
@@ -433,11 +505,42 @@ public class FreshTool extends BaseTool {
     } else if (mDoMode != DoMode.RETRIEVE_ALL
         && mDoMode != DoMode.UNREGISTER_ALL
         && mDoMode != DoMode.VALIDATE_ALL
-        && (mURI.getColumns() == null)) {
+        && (mURI.getColumns().isEmpty())) {
       getPrintStream().format("Retrieve, register, unregister, and validate require a KijiURI with "
           + "a specified column.");
       return BaseTool.FAILURE;
     }
+    // If we get to here, return SUCCESS to indicate it is safe to proceed.
+    return BaseTool.SUCCESS;
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  protected void validateFlags() throws Exception {
+    Preconditions.checkArgument(null != mDoFlag && !mDoFlag.isEmpty(),
+        "--do flag is required. Please specify exactly one of: register, unregister, retrieve, "
+        + "retrieve-all, validate, validate-all");
+    try {
+      mDoMode = DoMode.valueOf(mDoFlag.toUpperCase(Locale.ROOT).replace("-", "_"));
+    } catch (IllegalArgumentException iae) {
+      getPrintStream().printf("Invalid --do command: '%s'.%n", mDoFlag);
+      throw iae;
+    }
+    if (mDoMode == DoMode.REGISTER) {
+      Preconditions.checkArgument(mPolicyClassFlag != null && !mPolicyClassFlag.isEmpty(),
+          "--policy-class flag must be set to perform a freshness policy registration.");
+      Preconditions.checkArgument(mProducerClassFlag != null && !mProducerClassFlag.isEmpty(),
+          "--producer-class flag must be set to perform a freshness policy registration.");
+    }
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  protected int run(final List<String> nonFlagArgs) throws Exception {
+    if (validateNonFlagArguments(nonFlagArgs) == BaseTool.FAILURE) {
+      return BaseTool.FAILURE;
+    }
+    // If validateNonFlagArguments returns SUCCESS, it is safe to proceed.
     mKiji = Kiji.Factory.open(mURI);
     try {
       mManager = KijiFreshnessManager.create(mKiji);
@@ -456,11 +559,12 @@ public class FreshTool extends BaseTool {
           case REGISTER: {
             Preconditions.checkArgument(!mURI.getColumns().isEmpty(), "Please specify at least one "
                 + "column to register.");
-            Preconditions.checkArgument((mPolicyStateFlag != null)
-                ^ (mPolicyStateFileFlag != null && !mPolicyStateFileFlag.isEmpty()),
-                "Specify only one of --policy-state and --policy-state-file.");
-            final String policyState = (mPolicyStateFlag != null) ? mPolicyStateFlag
-                : readStateFromFile(mPolicyStateFileFlag);
+            Preconditions.checkArgument(!(!mPolicyStateFlag.isEmpty()
+                && !mPolicyStateFileFlag.isEmpty()),
+                "Specify no more than one of --policy-state and --policy-state-file.");
+            final String policyState = (!mPolicyStateFileFlag.isEmpty())
+                ? readStateFromFile(mPolicyStateFileFlag)
+                : mPolicyStateFlag;
             boolean classesFound = true;
             KijiFreshnessPolicy policy = null;
             Class<? extends KijiProducer> producerClass = null;
@@ -493,26 +597,47 @@ public class FreshTool extends BaseTool {
                 }
               }
             }
+            final Map<String, String> parameters =
+                (mParametersFlag.isEmpty()) ? KijiFreshnessManager.DEFAULT_PARAMETERS
+                : mapFromJSON(mParametersFlag);
             if (classesFound && !mAsStringFlag) {
               for (KijiColumnName column : mURI.getColumns()) {
                 if (mManager.retrievePolicy(mURI.getTable(), column.getName()) != null) {
                   if (mayProceed("There is already a freshness policy attached to column: %s in"
                       + "table: %s. Do you want to overwrite it?",
                       column.getName(), mURI.getTable())) {
-                    registerPolicy(mURI.getTable(), column.getName(), producerClass, policy);
+                    registerPolicy(
+                        mURI.getTable(),
+                        column.getName(),
+                        producerClass,
+                        policy,
+                        parameters,
+                        mReinitializeFlag);
                   } else {
                     getPrintStream().println("Registration aborted.");
                     return BaseTool.FAILURE;
                   }
                 } else {
-                  registerPolicy(mURI.getTable(), column.getName(), producerClass, policy);
+                  registerPolicy(
+                      mURI.getTable(),
+                      column.getName(),
+                      producerClass,
+                      policy,
+                      parameters,
+                      mReinitializeFlag);
                 }
               }
               return BaseTool.SUCCESS;
             } else {
               for (KijiColumnName column : mURI.getColumns()) {
-                forceRegisterPolicy(mURI.getTable(), column.getName(),
-                    mPolicyClassFlag, policyState, mProducerClassFlag);
+                forceRegisterPolicy(
+                    mURI.getTable(),
+                    column.getName(),
+                    mPolicyClassFlag,
+                    policyState,
+                    mProducerClassFlag,
+                    parameters,
+                    mReinitializeFlag);
               }
               return BaseTool.SUCCESS;
             }
