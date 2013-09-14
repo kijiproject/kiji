@@ -511,16 +511,32 @@ else
 
   function get_hadoop_argv() {
     out=""
-    while [ ! -z "$1" ]; do
-      if [ "$1" == "-D" ]; then
-        out="$out -D $2"
+    while [ ! -z "${1}" ]; do
+      if [ "${1}" == "-D" ]; then
+        out="${out} -D ${2}"
         shift # Consume -D
         shift # Consume prop=val
-      elif [[ "$1" == -D* ]]; then
+      elif [[ "${1}" == -D* ]]; then
         # Argument matches -Dprop=val.
         # Note [[ eval ]] and lack of "quotes" around -D*.
-        out="$out $1"
+        out="${out} ${1}"
         shift
+      elif [ "${1}" == "-conf" ]; then
+        out="${out} -conf ${2}"
+        shift # Consume -conf
+        shift # Consume <configuration file>
+      elif [ "${1}" == "-fs" ]; then
+        out="${out} -fs ${2}"
+        shift # Consume -fs
+        shift # Consume <local|namenode:port>
+      elif [ "${1}" == "-jt" ]; then
+        out="${out} -jt ${2}"
+        shift # Consume -jt
+        shift # Consume <local|jobtracker:port>
+      elif [ "${1}" == "-archives" ]; then
+        out="${out} -archives ${2}"
+        shift # Consume -archives
+        shift # Consume <comma separated list of jars>
       else
         break # Matched a non -D argument; stop parsing.
       fi
@@ -532,12 +548,24 @@ else
 
   # Return the part of COMMAND_ARGS that does not contain leading -D prop=val or -Dprop-val
   function get_user_argv() {
-    while [ ! -z "$1" ]; do
-      if [ "$1" == "-D" ]; then
+    while [ ! -z "${1}" ]; do
+      if [ "${1}" == "-D" ]; then
         shift
         shift # Consume this and the following prop=val
-      elif [[ "$1" == -D* ]]; then
+      elif [[ "${1}" == -D* ]]; then
         shift # Consume -Dprop=val
+      elif [ "${1}" == "-conf" ]; then
+        shift # Consume -conf
+        shift # Consume <configuration file>
+      elif [ "${1}" == "-fs" ]; then
+        shift # Consume -fs
+        shift # Consume <local|namenode:port>
+      elif [ "${1}" == "-jt" ]; then
+        shift # Consume -jt
+        shift # Consume <local|jobtracker:port>
+      elif [ "${1}" == "-archives" ]; then
+        shift # Consume -archives
+        shift # Consume <comma separated list of jars>
       else
         break
       fi
@@ -547,8 +575,8 @@ else
     echo $*
   }
 
-  hadoop_argv=`get_hadoop_argv $COMMAND_ARGS`
-  user_argv=`get_user_argv $COMMAND_ARGS`
+  hadoop_argv=$(get_hadoop_argv $COMMAND_ARGS)
+  user_argv=$(get_user_argv $COMMAND_ARGS)
 
   if [ -z "${class}" ]; then
     # In this case the user is running an uncompiled script.
@@ -558,7 +586,9 @@ else
       ${scalding_tool} \
       "-Dtmpjars=${tmpjars}" \
       ${hadoop_argv} \
-      "${canonical_user_target}" "${run_mode_flag}" ${user_argv}
+      "${canonical_user_target}" \
+      "${run_mode_flag}" \
+      ${user_argv}
   else
     # In this case the user is running a compiled Scalding Job in a jar.
     exec java \
