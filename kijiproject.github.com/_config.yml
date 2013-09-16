@@ -196,7 +196,7 @@ JB :
   analytics :
     provider : google
     google :
-        tracking_id : 'UA-35866189-1'
+        tracking_id : 'UA-REMOVED-DONT-COMMIT'
 
   # Settings for sharing helper.
   # Sharing is for things like tweet, plusone, like, reddit buttons etc.

@@ -25,7 +25,7 @@ The source code for one of the importers is included at the [bottom of this page
 To run a KijiExpress job, you specify the precompiled job as a jar file and the class you
 want to run. For this example, we also use command-line options to specify the input JSON
 file and the target Kiji table. Additional options indicate that the job is running against
-the Hadoop closer (`--hdfs`) rather than running in Cascading's local environment and that
+the Hadoop cluster (`--hdfs`) rather than running in Cascading's local environment and that
 there are additional library jar files to pull from the `/lib` directory.
 
 *  Run the the song metadata importer as a precompiled job contained in a `jar` file:
