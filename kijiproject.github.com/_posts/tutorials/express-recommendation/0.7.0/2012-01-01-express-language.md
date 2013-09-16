@@ -192,11 +192,11 @@ val importantCustomerData = userData.filter('totalSpent) { totalSpent: String =>
 {% endhighlight %}
 
 After this line, "importantCustomerData" can be thought of as a collection of named tuples,
-where each has the same 4 fields as "userData" does: `line`, `username`, `stateId`, and
-`totalSpent`.  The difference is that not all the tuples from "userData" are included: only the
-ones for which the function we provide to the "filter" operation evaluates to "true" are
-included.  So, "importantCustomerData" includes only the data for the users who have spent
-more than 2 dollars on our service.
+where each has the same 3 fields as "userData" does: `username`, `stateId`, and `totalSpent`.  The
+difference is that not all the tuples from "userData" are included: only the ones for which the
+function we provide to the "filter" operation evaluates to "true" are included.  So,
+"importantCustomerData" includes only the data for the users who have spent more than 2 dollars on
+our service.
 
 #### Join
 
