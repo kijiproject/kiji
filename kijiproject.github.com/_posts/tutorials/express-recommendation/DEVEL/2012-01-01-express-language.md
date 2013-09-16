@@ -126,6 +126,7 @@ val sideData = TextLine("state-names.txt")
         // the line.
         (line.split(" ")(0), line.split(" ")(1))
     }
+
 // Join the pipelines on the field stateId from "importantCustomerData" and numericalStateId
 // from "sideData".
 val importantCustomerDataWithStateNames =
@@ -208,6 +209,7 @@ val sideData = TextLine("state-names.txt")
         // the line.
         (line.split(" ")(0), line.split(" ")(1))
     }
+
 // Join the pipelines on the field 'stateId from "importantCustomerData" and 'numericalStateId
 // from "sideData".
 val importantCustomerDataWithStateNames =

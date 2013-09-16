@@ -135,9 +135,14 @@ You should see something like:
 
     Scanning kiji table: kiji://localhost:2181/kiji_express_music/users/
     entity-id=['user-41'] [1325762580000] info:track_plays
-                                     song-41
+                                 song-41
+    entity-id=['user-41'] [1379354039975] info:next_song_rec
+                                 song-41
+
     entity-id=['user-3'] [1325751420000] info:track_plays
-                                     song-0
+                                 song-0
+    entity-id=['user-3'] [1379354034880] info:next_song_rec
+                                 song-0
 
 Where a recommendation is provided for each user.
 
