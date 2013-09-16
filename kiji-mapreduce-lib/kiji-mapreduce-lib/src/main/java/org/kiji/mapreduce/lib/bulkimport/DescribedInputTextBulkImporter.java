@@ -48,8 +48,10 @@ import org.kiji.mapreduce.framework.JobHistoryCounters;
 import org.kiji.mapreduce.framework.KijiConfKeys;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiColumnName;
+import org.kiji.schema.KijiSchemaTable;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;
+import org.kiji.schema.avro.AvroSchema;
 import org.kiji.schema.avro.CellSchema;
 import org.kiji.schema.layout.KijiTableLayout;
 
@@ -185,7 +187,20 @@ public abstract class DescribedInputTextBulkImporter extends KijiBulkImporter<Lo
       CellSchema cellSchema = mOutputTableLayout.getCellSchema(kijiColumnName);
       switch(cellSchema.getType()) {
         case AVRO:
-          Schema.Type schemaType = cellSchema.getSchema().getType();
+          // Since this is for prepackaged generic bulk importers, we can assume that we want to
+          // to use the default reader schema for determining the type to write as.
+          Schema.Type schemaType;
+          AvroSchema as = cellSchema.getDefaultReader();
+          if (as.getUid() != null) {
+            KijiSchemaTable schemaTable = kiji.getSchemaTable();
+            Schema schema = schemaTable.getSchema(as.getUid());
+            schemaType = schema.getType();
+          } else if (as.getJson() != null) {
+            Schema schema = new Schema.Parser().parse(as.getJson());
+            schemaType = schema.getType();
+          } else {
+            throw new IOException("Schema is not a UID or JSON type.");
+          }
           if (KIJI_AVRO_TYPE_TO_CLASS_MAP.containsKey(schemaType)) {
             columnNameClassMap.put(kijiColumnName,
               KIJI_AVRO_TYPE_TO_CLASS_MAP.get(schemaType));
