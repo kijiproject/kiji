@@ -19,16 +19,17 @@
 
 package org.kiji.examples.phonebook;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
-import java.io.InputStream;
 
 import org.junit.Test;
 
 import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiURI;
+import org.kiji.schema.avro.TableLayoutDesc;
 import org.kiji.schema.layout.KijiTableLayout;
+import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.shell.api.Client;
 import org.kiji.schema.util.Resources;
 
@@ -57,9 +58,8 @@ public class TestLayouts extends KijiClientTest {
    */
   @Test
   public void testJSONFileIsValid() throws IOException {
-    InputStream jsonStream = Resources.openSystemResource("phonebook/layout.json");
-    KijiTableLayout layout = KijiTableLayout.createFromEffectiveJson(jsonStream);
-    getKiji().createTable("phonebook", layout); // Test that it works...
+    TableLayoutDesc layout = KijiTableLayouts.getLayout("phonebook/layout.json");
+    getKiji().createTable(layout);
   }
 
   /**
@@ -84,9 +84,8 @@ public class TestLayouts extends KijiClientTest {
 
     // ... So we can create a new one via the JSON file
 
-    InputStream jsonStream = Resources.openSystemResource("phonebook/layout.json");
-    KijiTableLayout layout = KijiTableLayout.createFromEffectiveJson(jsonStream);
-    getKiji().createTable("phonebook", layout); // Test that it works...
+    TableLayoutDesc layout = KijiTableLayouts.getLayout("phonebook/layout.json");
+    getKiji().createTable(layout);
 
     // Test that the two have equivalent representations.
 

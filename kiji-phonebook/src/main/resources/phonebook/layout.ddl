@@ -1,5 +1,5 @@
 CREATE TABLE phonebook WITH DESCRIPTION 'A collection of phone book entries'
-ROW KEY FORMAT HASHED
+ROW KEY FORMAT HASH PREFIXED(2)
 WITH LOCALITY GROUP default
   WITH DESCRIPTION 'Main locality group' (
   MAXVERSIONS = 10,

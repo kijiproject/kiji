@@ -37,7 +37,7 @@
   <url>http://www.kiji.org</url>
 
   <properties>
-    <kiji-schema.version>1.2.1-SNAPSHOT</kiji-schema.version>
+    <kiji-schema.version>1.3.0-SNAPSHOT</kiji-schema.version>
     <kiji-schema-shell.version>1.2.1-SNAPSHOT</kiji-schema-shell.version>
     <kiji-cdh4-platform.version>1.1.0</kiji-cdh4-platform.version>
     <kiji-mapreduce.version>1.1.1-SNAPSHOT</kiji-mapreduce.version>
