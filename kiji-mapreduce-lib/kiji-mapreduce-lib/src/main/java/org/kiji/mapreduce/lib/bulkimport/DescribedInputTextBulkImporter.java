@@ -54,6 +54,7 @@ import org.kiji.schema.KijiURI;
 import org.kiji.schema.avro.AvroSchema;
 import org.kiji.schema.avro.CellSchema;
 import org.kiji.schema.layout.KijiTableLayout;
+import org.kiji.schema.util.ResourceUtils;
 
 /**
  * DescribedInputTextBulkImporter is an abstract class that provides methods to bulk importers for
@@ -167,6 +168,7 @@ public abstract class DescribedInputTextBulkImporter extends KijiBulkImporter<Lo
     final KijiURI uri = KijiURI.newBuilder(conf.get(KijiConfKeys.KIJI_OUTPUT_TABLE_URI)).build();
 
     final Kiji kiji = Kiji.Factory.open(uri, conf);
+    final KijiSchemaTable schemaTable = kiji.getSchemaTable();
     try {
       final KijiTable table = kiji.openTable(uri.getTable());
       try {
@@ -174,55 +176,56 @@ public abstract class DescribedInputTextBulkImporter extends KijiBulkImporter<Lo
       } finally {
         table.release();
       }
-    } finally {
-      kiji.release();
-    }
 
-    Preconditions.checkNotNull(mOutputTableLayout);
-    mTableImportDescriptor.validateDestination(mOutputTableLayout);
+      Preconditions.checkNotNull(mOutputTableLayout);
+      mTableImportDescriptor.validateDestination(mOutputTableLayout);
 
-    // Retrieve the classes for all of the imported columns.
-    Map<KijiColumnName, Class> columnNameClassMap = Maps.newHashMap();
-    for (KijiColumnName kijiColumnName : mTableImportDescriptor.getColumnNameSourceMap().keySet()) {
-      CellSchema cellSchema = mOutputTableLayout.getCellSchema(kijiColumnName);
-      switch(cellSchema.getType()) {
-        case AVRO:
-          // Since this is for prepackaged generic bulk importers, we can assume that we want to
-          // to use the default reader schema for determining the type to write as.
-          Schema.Type schemaType;
-          AvroSchema as = cellSchema.getDefaultReader();
-          if (as.getUid() != null) {
-            KijiSchemaTable schemaTable = kiji.getSchemaTable();
-            Schema schema = schemaTable.getSchema(as.getUid());
-            schemaType = schema.getType();
-          } else if (as.getJson() != null) {
-            Schema schema = new Schema.Parser().parse(as.getJson());
-            schemaType = schema.getType();
-          } else {
-            throw new IOException("Schema is not a UID or JSON type.");
-          }
-          if (KIJI_AVRO_TYPE_TO_CLASS_MAP.containsKey(schemaType)) {
-            columnNameClassMap.put(kijiColumnName,
-              KIJI_AVRO_TYPE_TO_CLASS_MAP.get(schemaType));
-          } else {
-            throw new IOException("Unsupported described output type: " + cellSchema.getValue());
-          }
-          break;
-        case INLINE:
-          if (KIJI_CELL_TYPE_TO_CLASS_MAP.containsKey(cellSchema.getValue())) {
-            columnNameClassMap.put(kijiColumnName,
-              KIJI_CELL_TYPE_TO_CLASS_MAP.get(cellSchema.getValue()));
-          } else {
-            throw new IOException("Unsupported described output type: " + cellSchema.getValue());
-          }
-          break;
-        case CLASS:
-          throw new IOException("Unsupported described output type: " + cellSchema.getType());
-        default:
-          throw new IOException("Unsupported described output type: " + cellSchema.getType());
+      // Retrieve the classes for all of the imported columns.
+      Map<KijiColumnName, Class> columnNameClassMap = Maps.newHashMap();
+      for (KijiColumnName kijiColumnName
+          : mTableImportDescriptor.getColumnNameSourceMap().keySet()) {
+        CellSchema cellSchema = mOutputTableLayout.getCellSchema(kijiColumnName);
+        switch(cellSchema.getType()) {
+          case AVRO:
+            // Since this is for prepackaged generic bulk importers, we can assume that we want to
+            // to use the default reader schema for determining the type to write as.
+            Schema.Type schemaType;
+            AvroSchema as = cellSchema.getDefaultReader();
+            if (as.getUid() != null) {
+              Schema schema = schemaTable.getSchema(as.getUid());
+              schemaType = schema.getType();
+            } else if (as.getJson() != null) {
+              Schema schema = new Schema.Parser().parse(as.getJson());
+              schemaType = schema.getType();
+            } else {
+              throw new IOException("Schema is not a UID or JSON type.");
+            }
+            if (KIJI_AVRO_TYPE_TO_CLASS_MAP.containsKey(schemaType)) {
+              columnNameClassMap.put(kijiColumnName,
+                KIJI_AVRO_TYPE_TO_CLASS_MAP.get(schemaType));
+            } else {
+              throw new IOException("Unsupported described output type: " + cellSchema.getValue());
+            }
+            break;
+          case INLINE:
+            if (KIJI_CELL_TYPE_TO_CLASS_MAP.containsKey(cellSchema.getValue())) {
+              columnNameClassMap.put(kijiColumnName,
+                KIJI_CELL_TYPE_TO_CLASS_MAP.get(cellSchema.getValue()));
+            } else {
+              throw new IOException("Unsupported described output type: " + cellSchema.getValue());
+            }
+            break;
+          case CLASS:
+            throw new IOException("Unsupported described output type: " + cellSchema.getType());
+          default:
+            throw new IOException("Unsupported described output type: " + cellSchema.getType());
+        }
       }
+      mColumnNameClassMap = ImmutableMap.copyOf(columnNameClassMap);
+    } finally {
+      ResourceUtils.closeOrLog(schemaTable);
+      ResourceUtils.releaseOrLog(kiji);
     }
-    mColumnNameClassMap = ImmutableMap.copyOf(columnNameClassMap);
 
     setupImporter(context);
   }
