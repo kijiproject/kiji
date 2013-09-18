@@ -23,13 +23,18 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
+import org.kiji.schema.Kiji;
+import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiColumnName;
+import org.kiji.schema.KijiSchemaTable;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayouts;
 
-public class TestCreateHiveTableTool {
+public class TestCreateHiveTableTool extends KijiClientTest {
 
   private static final KijiColumnName BOOLEAN_COLUMN =
       new KijiColumnName("primitive:boolean_column");
@@ -58,11 +63,29 @@ public class TestCreateHiveTableTool {
   private static final KijiColumnName BYTES_MAP_FAMILY = new KijiColumnName("bytes_map");
   private static final KijiColumnName STRING_MAP_FAMILY = new KijiColumnName("string_map");
 
+  private Kiji mKiji;
+  private KijiSchemaTable mSchemaTable;
+
   // Allow the constructor of this class to throw an exception to load the mLayout from the file
   public TestCreateHiveTableTool() throws IOException {}
 
   private final KijiTableLayout mLayout = KijiTableLayout.newLayout(
       KijiTableLayouts.getLayout("org/kiji/schema/layout/all-types-schema.json"));
+
+  @Before
+  public final void setupKijiInstance() throws IOException {
+    // Sets up an instance with data at multiple timestamps to utilize the different row
+    // expression types.
+    mKiji = getKiji();
+    mKiji.createTable(mLayout.getDesc());
+    mSchemaTable = mKiji.getSchemaTable();
+  }
+
+  @After
+  public final void teardownKijiInstance() throws IOException {
+    mSchemaTable.close();
+    mKiji.deleteTable("all_types_table");
+  }
 
   @Test
   public void testPrimitivesSchemas() throws IOException {
@@ -85,19 +108,19 @@ public class TestCreateHiveTableTool {
   @Test
   public void testPrimitiveLayouts() throws IOException {
     assertEquals("STRUCT<ts: TIMESTAMP, value: BOOLEAN>",
-        CreateHiveTableTool.getHiveType(BOOLEAN_COLUMN, mLayout));
+        CreateHiveTableTool.getHiveType(BOOLEAN_COLUMN, mLayout, mSchemaTable));
     assertEquals("STRUCT<ts: TIMESTAMP, value: INT>",
-        CreateHiveTableTool.getHiveType(INT_COLUMN, mLayout));
+        CreateHiveTableTool.getHiveType(INT_COLUMN, mLayout, mSchemaTable));
     assertEquals("STRUCT<ts: TIMESTAMP, value: BIGINT>",
-        CreateHiveTableTool.getHiveType(LONG_COLUMN, mLayout));
+        CreateHiveTableTool.getHiveType(LONG_COLUMN, mLayout, mSchemaTable));
     assertEquals("STRUCT<ts: TIMESTAMP, value: FLOAT>",
-        CreateHiveTableTool.getHiveType(FLOAT_COLUMN, mLayout));
+        CreateHiveTableTool.getHiveType(FLOAT_COLUMN, mLayout, mSchemaTable));
     assertEquals("STRUCT<ts: TIMESTAMP, value: DOUBLE>",
-        CreateHiveTableTool.getHiveType(DOUBLE_COLUMN, mLayout));
+        CreateHiveTableTool.getHiveType(DOUBLE_COLUMN, mLayout, mSchemaTable));
     assertEquals("STRUCT<ts: TIMESTAMP, value: BINARY>",
-        CreateHiveTableTool.getHiveType(BYTES_COLUMN, mLayout));
+        CreateHiveTableTool.getHiveType(BYTES_COLUMN, mLayout, mSchemaTable));
     assertEquals("STRUCT<ts: TIMESTAMP, value: STRING>",
-        CreateHiveTableTool.getHiveType(STRING_COLUMN, mLayout));
+        CreateHiveTableTool.getHiveType(STRING_COLUMN, mLayout, mSchemaTable));
   }
 
   @Test
@@ -121,25 +144,25 @@ public class TestCreateHiveTableTool {
   @Test
   public void testPrimitiveMaps() throws IOException {
     assertEquals("MAP<STRING, STRUCT<ts: TIMESTAMP, value: BOOLEAN>>",
-        CreateHiveTableTool.getHiveType(BOOLEAN_MAP_FAMILY, mLayout));
+        CreateHiveTableTool.getHiveType(BOOLEAN_MAP_FAMILY, mLayout, mSchemaTable));
     assertEquals("MAP<STRING, STRUCT<ts: TIMESTAMP, value: INT>>",
-        CreateHiveTableTool.getHiveType(INT_MAP_FAMILY, mLayout));
+        CreateHiveTableTool.getHiveType(INT_MAP_FAMILY, mLayout, mSchemaTable));
     assertEquals("MAP<STRING, STRUCT<ts: TIMESTAMP, value: BIGINT>>",
-        CreateHiveTableTool.getHiveType(LONG_MAP_FAMILY, mLayout));
+        CreateHiveTableTool.getHiveType(LONG_MAP_FAMILY, mLayout, mSchemaTable));
     assertEquals("MAP<STRING, STRUCT<ts: TIMESTAMP, value: FLOAT>>",
-        CreateHiveTableTool.getHiveType(FLOAT_MAP_FAMILY, mLayout));
+        CreateHiveTableTool.getHiveType(FLOAT_MAP_FAMILY, mLayout, mSchemaTable));
     assertEquals("MAP<STRING, STRUCT<ts: TIMESTAMP, value: DOUBLE>>",
-        CreateHiveTableTool.getHiveType(DOUBLE_MAP_FAMILY, mLayout));
+        CreateHiveTableTool.getHiveType(DOUBLE_MAP_FAMILY, mLayout, mSchemaTable));
     assertEquals("MAP<STRING, STRUCT<ts: TIMESTAMP, value: BINARY>>",
-        CreateHiveTableTool.getHiveType(BYTES_MAP_FAMILY, mLayout));
+        CreateHiveTableTool.getHiveType(BYTES_MAP_FAMILY, mLayout, mSchemaTable));
     assertEquals("MAP<STRING, STRUCT<ts: TIMESTAMP, value: STRING>>",
-        CreateHiveTableTool.getHiveType(STRING_MAP_FAMILY, mLayout));
+        CreateHiveTableTool.getHiveType(STRING_MAP_FAMILY, mLayout, mSchemaTable));
   }
 
   @Test
   public void testRecord() throws IOException {
     assertEquals("STRUCT<ts: TIMESTAMP, value: STRUCT<numerator: INT, denominator: INT>>",
-        CreateHiveTableTool.getHiveType(RECORD_COLUMN, mLayout));
+        CreateHiveTableTool.getHiveType(RECORD_COLUMN, mLayout, mSchemaTable));
   }
 
   @Test
@@ -147,37 +170,37 @@ public class TestCreateHiveTableTool {
     assertEquals(
       "STRUCT<ts: TIMESTAMP, value: STRUCT<value: BIGINT, next: "
       + "STRUCT<value: BIGINT, next: STRING>>>",
-      CreateHiveTableTool.getHiveType(RECURSIVE_RECORD_COLUMN, mLayout));
+      CreateHiveTableTool.getHiveType(RECURSIVE_RECORD_COLUMN, mLayout, mSchemaTable));
   }
 
   @Test
   public void testEnum() throws IOException {
     assertEquals("STRUCT<ts: TIMESTAMP, value: STRING>",
-        CreateHiveTableTool.getHiveType(ENUM_COLUMN, mLayout));
+        CreateHiveTableTool.getHiveType(ENUM_COLUMN, mLayout, mSchemaTable));
   }
 
   @Test
   public void testArray() throws IOException {
     assertEquals("STRUCT<ts: TIMESTAMP, value: ARRAY<STRING>>",
-        CreateHiveTableTool.getHiveType(ARRAY_COLUMN, mLayout));
+        CreateHiveTableTool.getHiveType(ARRAY_COLUMN, mLayout, mSchemaTable));
   }
 
   @Test
   public void testMap() throws IOException {
     assertEquals("STRUCT<ts: TIMESTAMP, value: MAP<STRING, BIGINT>>",
-        CreateHiveTableTool.getHiveType(MAP_COLUMN, mLayout));
+        CreateHiveTableTool.getHiveType(MAP_COLUMN, mLayout, mSchemaTable));
   }
 
   @Test
   public void testUnion() throws IOException {
     assertEquals("STRUCT<ts: TIMESTAMP, value: STRING>",
-        CreateHiveTableTool.getHiveType(UNION_COLUMN, mLayout));
+        CreateHiveTableTool.getHiveType(UNION_COLUMN, mLayout, mSchemaTable));
   }
 
   @Test
   public void testFixed() throws IOException {
     assertEquals("STRUCT<ts: TIMESTAMP, value: BINARY>",
-        CreateHiveTableTool.getHiveType(FIXED_COLUMN, mLayout));
+        CreateHiveTableTool.getHiveType(FIXED_COLUMN, mLayout, mSchemaTable));
   }
 
   @Test
@@ -193,7 +216,7 @@ public class TestCreateHiveTableTool {
             + "annotations: MAP<STRING, STRING>>>, " //end target1
           + "annotations: MAP<STRING, STRING>>>"; //end edges1
     assertEquals(nodeClassHiveType,
-        CreateHiveTableTool.getHiveType(CLASS_COLUMN, mLayout));
+        CreateHiveTableTool.getHiveType(CLASS_COLUMN, mLayout, mSchemaTable));
   }
 
   @Test

@@ -29,14 +29,18 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.apache.avro.Schema;
+import org.apache.avro.specific.SpecificRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.common.flags.Flag;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiColumnName;
+import org.kiji.schema.KijiSchemaTable;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;
+import org.kiji.schema.avro.AvroSchema;
+import org.kiji.schema.avro.CellSchema;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayout.LocalityGroupLayout.FamilyLayout;
 import org.kiji.schema.tools.BaseTool;
@@ -115,12 +119,17 @@ public class CreateHiveTableTool extends BaseTool {
    *
    * @param kijiColumnName  that specifices which column to build the Hive type from.
    * @param kijiTableLayout where the column resides.
+   * @param schemaTable of the Kiji instance for type mappings
    * @return String representing the corresponding Hive type for a cell within the table's layout.
    * @throws IOException if there is an issue retrieving the schema of a particular column.
    */
   protected static String getHiveType(KijiColumnName kijiColumnName,
-                                      KijiTableLayout kijiTableLayout) throws IOException {
-    Schema schema = kijiTableLayout.getSchema(kijiColumnName);
+                                      KijiTableLayout kijiTableLayout,
+                                      KijiSchemaTable schemaTable)
+      throws IOException {
+    CellSchema cellSchema = kijiTableLayout.getCellSchema(kijiColumnName);
+    Schema schema = getSchemaFromCellSchema(cellSchema, schemaTable);
+
     String hiveType = "";
     if (null != schema) {
       hiveType = convertSchemaToHiveType(schema);
@@ -133,6 +142,45 @@ public class CreateHiveTableTool extends BaseTool {
       LOG.warn(kijiColumnName.toString() + " has a null schema and is unsupported within Hive.");
     }
     return hiveType;
+  }
+
+  /**
+   * Retrieves the relevant Schema from a CellSchema by either parsing it from the relevant String,
+   * or retrieving it from the passed in SchemaTable.
+   *
+   * @param cellSchema that defines the desired Schema.
+   * @param schemaTable of the Kiji instance to look up this schema for.
+   * @return Schema referenced by the CellSchema.
+   * @throws IOException if there is an issue with retrieving the schema of a particular column.
+   */
+  private static Schema getSchemaFromCellSchema(CellSchema cellSchema, KijiSchemaTable schemaTable)
+      throws IOException {
+    Schema.Parser parser = new Schema.Parser();
+    switch (cellSchema.getType()) {
+      case INLINE:
+        return parser.parse(cellSchema.getValue());
+      case AVRO:
+        AvroSchema avroSchema = cellSchema.getDefaultReader();
+        if (avroSchema.getUid() != null) {
+          return schemaTable.getSchema(avroSchema.getUid());
+        } else if (avroSchema.getJson() != null) {
+          return parser.parse(avroSchema.getJson());
+        }
+        throw new IOException("Unable to find Schema for AVRO CellSchema.");
+      case CLASS:
+        String className = cellSchema.getValue();
+        try {
+          SpecificRecord clazz = (SpecificRecord) Class.forName(className).newInstance();
+          return clazz.getSchema();
+        } catch (Exception e) {
+          throw new IOException("Unable to find/instantiate class: " + className, e);
+        }
+      case COUNTER:
+      case RAW_BYTES:
+      default:
+        throw new UnsupportedOperationException(
+            "CellSchema " + cellSchema.getType() + " unsupported.");
+    }
   }
 
   /**
@@ -282,10 +330,13 @@ public class CreateHiveTableTool extends BaseTool {
    *
    * @param kijiURI of the table which define the connection parameters used within the DDL.
    * @param kijiTableLayout layout of the table whose schema should be used for the DDL.
+   * @param schemaTable of the Kiji instance for type mappings
    * @return String representing the DDL statement that Hive use to materialize
    * @throws IOException if there is an issue retrieving columns from the layout.
    */
-  private static String generateHiveDDLStatement(KijiURI kijiURI, KijiTableLayout kijiTableLayout)
+  private static String generateHiveDDLStatement(KijiURI kijiURI,
+                                                 KijiTableLayout kijiTableLayout,
+                                                 KijiSchemaTable schemaTable)
       throws IOException {
     Collection<KijiColumnName> kijiColumnNames = getKijiColumns(kijiTableLayout);
     Set<KijiColumnName> kijiCounterColumns = Sets.newHashSet();
@@ -299,7 +350,7 @@ public class CreateHiveTableTool extends BaseTool {
     sb.append("  entity_id STRING");
 
     for (KijiColumnName kijiColumnName : kijiColumnNames) {
-      String hiveType = getHiveType(kijiColumnName, kijiTableLayout);
+      String hiveType = getHiveType(kijiColumnName, kijiTableLayout, schemaTable);
 
       // Counters aren't explicitly supported in Hive yet, so skip over these columns.
       if (!hiveType.isEmpty()) {
@@ -308,7 +359,7 @@ public class CreateHiveTableTool extends BaseTool {
         sb.append("  ")
           .append(getDefaultHiveColumnName(kijiColumnName))
           .append(" ")
-          .append(getHiveType(kijiColumnName, kijiTableLayout));
+          .append(getHiveType(kijiColumnName, kijiTableLayout, schemaTable));
       } else {
         kijiCounterColumns.add(kijiColumnName);
       }
@@ -343,11 +394,13 @@ public class CreateHiveTableTool extends BaseTool {
   protected int run(List<String> nonFlagArgs) throws Exception {
     Kiji kiji = null;
     KijiTable kijiTable = null;
+    KijiSchemaTable schemaTable = null;
     try {
       kiji = Kiji.Factory.open(mTableURI);
       kijiTable = kiji.openTable(mTableURI.getTable());
       KijiTableLayout kijiTableLayout = kijiTable.getLayout();
-      getPrintStream().println(generateHiveDDLStatement(mTableURI, kijiTableLayout));
+      schemaTable = kiji.getSchemaTable();
+      getPrintStream().println(generateHiveDDLStatement(mTableURI, kijiTableLayout, schemaTable));
     } catch (IOException ioe) {
       LOG.warn(ioe.getMessage());
       return FAILURE;
