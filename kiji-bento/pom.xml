@@ -58,6 +58,109 @@
     <module>kiji-bento</module>
   </modules>
 
+  <build>
+    <plugins>
+      <plugin>
+        <!--
+            After the release is complete, this plugin can be used to update the BentoBox
+            so the master branch builds a BentoBox that incorporates the most recent
+            SNAPSHOT of each Kiji module.
+
+            To update the BentoBox to use the latest SNAPSHOT versions of everything:
+
+            mvn versions:update-properties -N # Update the kiji-*.version properties
+                                              # in the top-level pom file; don't recurse.
+            git add pom.xml                   # ... and commit the change.
+            git commit -m "Updated pom to latest Kiji module SNAPSHOTs."
+            rm pom.xml.versionsBackup         # Remove temp file left behind by maven.
+        -->
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>versions-maven-plugin</artifactId>
+        <configuration>
+          <includeProperties>bento-cluster.version,kiji-checkin.version,kiji-schema.version,kiji-schema-shell.version,kiji-phonebook.version,kiji-mapreduce.version,kiji-mapreduce-lib.version,kiji-hive-adapter.version,kiji-music.version,kiji-express.version,kiji-express-music.version,kiji-express-examples.version,kiji-rest.version,kiji-scoring.version</includeProperties>
+        </configuration>
+        <dependencies>
+          <!--
+            The "true" Kiji project dependencies are kept in kiji-bento/pom.xml. This
+            list includes an artifact associated with each version-property string (e.g.,
+            the kiji-schema.version property) so that versions-maven-plugin can search
+            for the latest SNAPSHOT version of each.
+
+            If you add a dependency to kiji-bento/pom.xml that includes a property at
+            this level, add it below as well. (It's ok to use the jar instead of the tar.gz
+            in this list.)
+          -->
+          <!-- Kiji project dependencies -->
+          <dependency>
+            <groupId>org.kiji.examples.music</groupId>
+            <artifactId>kiji-music</artifactId>
+            <version>${kiji-music.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.kiji.express</groupId>
+            <artifactId>kiji-express-music</artifactId>
+            <version>${kiji-express-music.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.kiji.express</groupId>
+            <artifactId>kiji-express-examples</artifactId>
+            <version>${kiji-express-examples.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.kiji.examples.phonebook</groupId>
+            <artifactId>kiji-phonebook</artifactId>
+            <version>${kiji-phonebook.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.kiji.schema</groupId>
+            <artifactId>kiji-schema</artifactId>
+            <version>${kiji-schema.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.kiji.schema-shell</groupId>
+            <artifactId>kiji-schema-shell</artifactId>
+            <version>${kiji-schema-shell.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.kiji.bento</groupId>
+            <artifactId>bento-cluster</artifactId>
+            <version>${bento-cluster.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.kiji.mapreduce</groupId>
+            <artifactId>kiji-mapreduce</artifactId>
+            <version>${kiji-mapreduce.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.kiji.mapreduce.lib</groupId>
+            <artifactId>kiji-mapreduce-lib</artifactId>
+            <version>${kiji-mapreduce-lib.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.kiji.hive</groupId>
+            <artifactId>kiji-hive-adapter</artifactId>
+            <version>${kiji-hive-adapter.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.kiji.express</groupId>
+            <artifactId>kiji-express</artifactId>
+            <version>${kiji-express.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.kiji.rest</groupId>
+            <artifactId>kiji-rest</artifactId>
+            <version>${kiji-rest.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.kiji.scoring</groupId>
+            <artifactId>kiji-scoring</artifactId>
+            <version>${kiji-scoring.version}</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+    </plugins>
+  </build>
+
   <repositories>
     <repository>
       <id>kiji-repos</id>
