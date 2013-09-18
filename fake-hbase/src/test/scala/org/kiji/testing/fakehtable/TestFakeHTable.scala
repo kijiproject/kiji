@@ -288,6 +288,14 @@ class TestFakeHTable extends FunSuite {
     expect(null)(iterator.next())
   }
 
+  test("ResultScanner with stop key on empty table ") {
+    val table = new FakeHTable(name = "table", desc = null)
+    val scanner = table.getScanner(new Scan().setStopRow("stop"))
+    val iterator = scanner.iterator()
+    expect(false)(iterator.hasNext())
+    expect(null)(iterator.next())
+  }
+
   test("ResultScanner.hasNext") {
     val table = new FakeHTable(name = "table", desc = null)
     table.put(new Put("key")

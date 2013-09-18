@@ -845,7 +845,7 @@ class FakeHTable(
       }
     }
     if (!scan.getStopRow.isEmpty
-       && (BytesComparator.compare(key, scan.getStopRow) >= 0)) {
+       && (key == null || BytesComparator.compare(key, scan.getStopRow) >= 0)) {
       key = null
     }
 
