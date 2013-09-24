@@ -69,10 +69,17 @@
         <configuration>
           <createDependencyReducedPom>false</createDependencyReducedPom>
           <minimizeJar>true</minimizeJar>
-          <!-- Forcibly include KijiSchema to keep impls from being filtered by minimizeJar. -->
           <filters>
             <filter>
+              <!-- Forcibly include KijiSchema to keep impls from being filtered by minimizeJar. -->
               <artifact>org.kiji.schema:kiji-schema</artifact>
+              <includes>
+                <include>**</include>
+              </includes>
+            </filter>
+            <filter>
+              <!-- Forcibly include Guava so that this jar can appear first on the classpath. -->
+              <artifact>com.google.guava:guava</artifact>
               <includes>
                 <include>**</include>
               </includes>

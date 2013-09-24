@@ -42,11 +42,19 @@
       </includes>
       <filtered>true</filtered>
     </fileSet>
+
     <fileSet>
       <useDefaultExcludes>false</useDefaultExcludes>
       <outputDirectory>bin</outputDirectory>
       <directory>src/main/scripts</directory>
       <fileMode>0755</fileMode>
+      <filtered>true</filtered>
+    </fileSet>
+
+    <fileSet>
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <outputDirectory>conf</outputDirectory>
+      <directory>src/main/conf</directory>
       <filtered>true</filtered>
     </fileSet>
   </fileSets>

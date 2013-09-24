@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<!--
+  The bento-hive-site.xml configuration for use within the bento-hive.sh script
+  within the Kiji Hive Adapter.  This is used to force that user jars on the
+  classpath take precedence.
+
+  If you are running into NoClassDefFoundErrors for Avro classes, there is
+  like an Avro version mismatch.  To prioritize the version of Avro that Kiji
+  depends on, set the mapreduce.task.classpath.user.precedence property as
+  below.
+-->
+
+<configuration>
+  <property>
+    <name>mapreduce.task.classpath.user.precedence</name>
+    <value>true</value>
+  </property>
+</configuration>

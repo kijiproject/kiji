@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<!--
+  The core-site.xml configuration for use within the bento-hive.sh script
+  within the Kiji Hive Adapter.  Primarily this sets the defaultFS for
+  use for creating a Hive warehouse.
+-->
+
+<configuration>
+
+  <property>
+    <name>fs.defaultFS</name>
+    <value>hdfs://localhost:8020</value>
+  </property>
+
+</configuration>

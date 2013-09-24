@@ -10,7 +10,7 @@ data stored in Kiji tables from Hive.
    * Hadoop 2.0.0-mr1-cdh4.3.0
    * HBase 0.94.6-cdh4.3.0
    * Hive 0.10.0-cdh4.3.0
-   * KijiSchema 1.1.x
+   * KijiSchema 1.3.x
 
 ## Automatic Hive Shell
 The included bin/bento-hive.sh script can be executed to automatically start a Hive shell
@@ -37,6 +37,14 @@ commands to your path:
 
     $ export HIVE_HOME=/path/to/hive-0.10.0-cdh4.3.0
     $ export PATH=$PATH:$HIVE_HOME/bin
+
+If you are seeing NoClassDefFoundErrors for an Avro class, likely the issue is a result of a
+classpath ordering issue on your cluster (many Hadoop distributions include a version of Avro
+which may be incompatible with the one included as part of the Kiji Hive Adapter).  To get
+around this, the configuration property 'mapreduce.task.classpath.user.precedence' must be set
+to true.  This can be done either as part of the Hive configuration (see the source for the
+bento-hive.sh script for an example) or as part of the cluster configuration (by modifying the
+appropriate site.xml configuration).
 
 ## Manual Setup
 

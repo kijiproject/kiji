@@ -149,6 +149,12 @@ HIVE_BINARY="${HIVE_HOME}/bin/hive"
 KIJI_HIVE_LIB="${KIJI_HIVE_ADAPTER_LIB}/kiji-hive-adapter-${KIJI_HIVE_ADAPTER_VERSION}.jar"
 export HADOOP_CLASSPATH="${KIJI_HIVE_LIB}:${HADOOP_CLASSPATH}"
 
+# Use user classpath precedence for jobs created in MapReduce mode.
+export HADOOP_CONF_DIR="${KIJI_HIVE_ADAPTER_HOME}/conf"
+
+# Force user classpath precedence for jobs created in local mode.
+export HADOOP_USER_CLASSPATH_FIRST=true
+
 HBASE_LIB="${HBASE_HOME}/${HBASE_JAR}"
 HIVERC="${KIJI_HIVE_ADAPTER_HOME}.hiverc"
 
