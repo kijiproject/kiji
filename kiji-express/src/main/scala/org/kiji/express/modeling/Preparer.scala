@@ -21,6 +21,7 @@ package org.kiji.express.modeling
 
 import com.twitter.scalding.Args
 import com.twitter.scalding.Source
+import com.twitter.scalding.TupleConversions
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
@@ -60,7 +61,7 @@ import org.kiji.express.modeling.impl.KeyValueStores
 @ApiStability.Experimental
 @Inheritance.Extensible
 trait Preparer
-    extends KeyValueStores {
+    extends KeyValueStores with TupleConversions {
 
   /**
    * Override this class to implement a MapReduce flow for the prepare phase.
