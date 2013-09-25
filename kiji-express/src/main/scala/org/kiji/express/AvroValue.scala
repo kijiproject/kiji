@@ -183,6 +183,7 @@ abstract class AvroValue private[express](classOfValue: Class[_]) {
   def apply(recordFieldOrMapKey: String): AvroValue = {
     val errorMessage =
         "This AvroValue is a %s, not a Record or Map; it does not have fields to access."
+        .format(classOfValue.getName)
     throw new UnsupportedOperationException(errorMessage)
   }
 

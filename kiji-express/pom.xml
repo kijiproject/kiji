@@ -4,7 +4,7 @@
 
   <groupId>org.kiji.express</groupId>
   <artifactId>kiji-express</artifactId>
-  <version>0.9.0-renuka</version>
+  <version>0.9.0-SNAPSHOT</version>
   <packaging>jar</packaging>
   <inceptionYear>2013</inceptionYear>
 
