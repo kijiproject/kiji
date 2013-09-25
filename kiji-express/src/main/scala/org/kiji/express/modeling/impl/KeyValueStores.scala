@@ -35,7 +35,7 @@ trait KeyValueStores {
    * Container for the key-value stores accessible to this phase of the model workflow. This
    * property must be initialized by a model job runner.
    */
-  private[this] var _keyValueStores: Option[Map[String, KeyValueStore[_, _]]] = None
+  private var _keyValueStores: Option[Map[String, KeyValueStore[_, _]]] = None
 
   /**
    * Gets the key-value stores accessible to this phase of the model workflow. Key-value stores can

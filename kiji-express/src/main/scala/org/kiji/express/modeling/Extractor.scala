@@ -28,6 +28,7 @@ import com.twitter.scalding.TupleSetter
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
+import org.kiji.express.modeling.impl.CommandLineArgs
 import org.kiji.express.modeling.impl.KeyValueStores
 
 /**
@@ -67,6 +68,7 @@ final case class ExtractFn[I, O] (
 @Inheritance.Extensible
 trait Extractor
     extends KeyValueStores
+    with CommandLineArgs
     with FieldConversions
     with TupleConversions {
   /**

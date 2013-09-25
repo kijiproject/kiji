@@ -71,6 +71,7 @@ class LMToolSuite extends KijiSuite {
         "--attribute-column", attrCol,
         "--target-column", targetCol,
         "--output", outputParams,
+        "--max-iter", "1",
         "--hdfs"))
 
     kiji.release()

@@ -22,6 +22,7 @@ package org.kiji.express.modeling.lib
 import java.io.File
 
 import com.google.common.io.Files
+import com.twitter.scalding.Args
 import com.twitter.scalding.Hdfs
 
 import org.apache.commons.io.FileUtils
@@ -124,7 +125,7 @@ class LMTrainerSuite extends KijiSuite {
       com.twitter.scalding.Mode.mode = Hdfs(false, HBaseConfiguration.create())
 
       // Verify that everything went as expected.
-      assert(modelExecutor.runTrainer())
+      assert(modelExecutor.runTrainer(new Args(Map("max-iter" -> List("1")))))
     }
     kiji.release()
     val lines = scala.io.Source.fromFile(outputParams + "/part-00000").mkString

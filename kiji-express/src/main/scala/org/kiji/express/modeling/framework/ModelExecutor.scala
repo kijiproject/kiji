@@ -19,6 +19,7 @@
 
 package org.kiji.express.modeling.framework
 
+import com.twitter.scalding.Args
 import com.twitter.scalding.Source
 
 import org.apache.hadoop.conf.Configuration
@@ -60,6 +61,7 @@ import org.kiji.express.modeling.impl.ModelJobUtils.PhaseType
 final case class ModelExecutor(
     modelDefinition: ModelDefinition,
     modelEnvironment: ModelEnvironment,
+    args: Args = Args(Nil),
     hadoopConfiguration: Configuration = HBaseConfiguration.create()) {
   /**
    * Creates an instance of the specified phase class.
@@ -77,9 +79,11 @@ final case class ModelExecutor(
    * to this [[org.kiji.express.modeling.framework.ModelExecutor]]. It is illegal to call this
    * when the prepare phase is not defined.
    *
+   * @param currentArgs are arguments you would like to pass to this run of the preparer (overrides
+   *     the args set on the model lifecycle).
    * @return true if prepare phase succeeds, false otherwise.
    */
-  def runPreparer(): Boolean = {
+  def runPreparer(currentArgs: Args = Args(Nil)): Boolean = {
     val preparer: Option[Preparer] = newPhaseInstance[Preparer](modelDefinition.preparerClass)
     require(preparer.isDefined, "A preparerClass has not been provided in the Model Definition")
 
@@ -87,6 +91,12 @@ final case class ModelExecutor(
         PhaseType.PREPARE)
     val outputs: Map[String, Source] = ModelJobUtils.outputSpecsToSource(modelEnvironment,
         PhaseType.PREPARE)
+
+    if (!currentArgs.equals(Args(Nil))) {
+      preparer.get.addArgs(currentArgs)
+    } else if (!args.equals(Args(Nil))) {
+      preparer.get.addArgs(args)
+    }
     preparer.get.prepare(inputs, outputs)
   }
 
@@ -96,9 +106,11 @@ final case class ModelExecutor(
    * this [[org.kiji.express.modeling.framework.ModelExecutor]]. It is illegal to call this when the
    * train phase is not defined.
    *
+   * @param currentArgs are arguments you would like to pass to this run of the trainer (overrides
+   *     the args set on the model lifecycle).
    * @return true if the train phase succeeds, false otherwise.
    */
-  def runTrainer(): Boolean = {
+  def runTrainer(currentArgs: Args = Args(Nil)): Boolean = {
     val trainer: Option[Trainer] = newPhaseInstance[Trainer](modelDefinition.trainerClass)
     require(trainer.isDefined, "A trainer has not been provided in the Model Definition.")
 
@@ -106,6 +118,12 @@ final case class ModelExecutor(
         PhaseType.TRAIN)
     val output: Map[String, Source] = ModelJobUtils.outputSpecsToSource(modelEnvironment,
         PhaseType.TRAIN)
+
+    if (!currentArgs.equals(Args(Nil))) {
+      trainer.get.addArgs(currentArgs)
+    } else if (!args.equals(Args(Nil))) {
+      trainer.get.addArgs(args)
+    }
     trainer.get.train(input, output)
   }
 
@@ -114,9 +132,12 @@ final case class ModelExecutor(
    * provided to this [[org.kiji.express.modeling.framework.ModelExecutor]]. It is illegal to call
    * this when the score phase is not defined.
    *
+   * @param currentArgs are arguments you would like to pass to this run of the extractor/scorer
+   *     (overrides the args set on the model lifecycle).
    * @return true if the score phase succeeds, false otherwise.
    */
-  def runScorer(): Boolean = {
+  def runScorer(currentArgs: Args = Args(Nil)): Boolean = {
+    // TODO Add ability to pass arguments to scorer depending on how KijiScoring decides to do it.
     ScoreProducerJobBuilder
         .buildJob(modelDefinition, modelEnvironment, hadoopConfiguration)
         .run()
@@ -125,11 +146,13 @@ final case class ModelExecutor(
   /**
    * Runs all the phases defined by the [[org.kiji.express.modeling.config.ModelDefinition]].
    *
+   * @param currentArgs are arguments you would like to pass to this run of model lifecycle
+   *     (overrides the args set on the model lifecycle).
    * @return true if all the phases succeed, false otherwise.
    */
-  def run(): Boolean = {
-    (modelDefinition.preparerClass.isEmpty || runPreparer()) &&
-        (modelDefinition.trainerClass.isEmpty || runTrainer()) &&
-        (modelDefinition.scorerClass.isEmpty || runScorer())
+  def run(currentArgs: Args = Args(Nil)): Boolean = {
+    (modelDefinition.preparerClass.isEmpty || runPreparer(args)) &&
+        (modelDefinition.trainerClass.isEmpty || runTrainer(args)) &&
+        (modelDefinition.scorerClass.isEmpty || runScorer(args))
   }
 }

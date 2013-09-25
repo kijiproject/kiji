@@ -19,6 +19,7 @@
 
 package org.kiji.express.tool
 
+import com.twitter.scalding.Args
 import com.twitter.scalding.Mode
 import com.twitter.scalding.Tool
 
@@ -44,7 +45,7 @@ final class LMTool extends Tool {
   // parse arguments, create trainer and run it.
   override def run(args: Array[String]): Int = {
     // TODO EXP-204, pass the mode argument to the model executor
-    val (mode, jobArgs) = parseModeArgs(args)
+    val (mode: Mode, jobArgs: Args) = parseModeArgs(args)
     Mode.mode = mode
 
     val datasetTableURI: String = jobArgs("dataset")
@@ -98,7 +99,7 @@ final class LMTool extends Tool {
     // Remove this after the bug in Scalding is fixed.
     // com.twitter.scalding.Mode.mode = Hdfs(false, HBaseConfiguration.create())
 
-    val modelExecutor = ModelExecutor(modelDefinition, modelEnvironment)
+    val modelExecutor = ModelExecutor(modelDefinition, modelEnvironment, jobArgs)
     modelExecutor.runTrainer() match {
       case true => 0
       case false => 1

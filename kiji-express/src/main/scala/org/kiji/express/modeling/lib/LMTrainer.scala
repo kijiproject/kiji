@@ -68,6 +68,14 @@ import org.kiji.express.modeling.Trainer
  *         keyValueStoreSpecs = Seq()
  *       ))
  * }}}
+ * <p>
+ *  This class accepts the following optional arguments:
+ *  <ol>
+ *    <li>learning-rate is the step size in the direction of the gradient for gradient descent</li>
+ *    <li>max-iter is the maximum number of iterations the training phase should perform</li>
+ *    <li>epsilon is the value of the acceptable error threshold.</li>
+ *  </ol>
+ * </p>
  */
 @ApiAudience.Public
 @ApiStability.Experimental
@@ -130,7 +138,7 @@ final case class LMTrainer() extends Trainer {
       output: Map[String, Source],
       val parameters:IndexedSeq[Double],
       numFeatures:Int = 1,
-      val learningRate: Double = 0.25)
+      val learningRate: Double = args.optional("learning-rate").getOrElse("0.25").toDouble)
       extends TrainerJob {
     input.getOrElse("dataset", null)
         .mapTo(('attributes, 'target) -> 'gradient) {
@@ -184,8 +192,8 @@ final case class LMTrainer() extends Trainer {
     var outputSource: TextLine = output.getOrElse("parameters", null).asInstanceOf[TextLine]
 
     // TODO EXP-203 Accept the values below from Args and change this to an appropriate default.
-    val max_iter = 1
-    val epsilon = 0.001
+    val max_iter = args.optional("max-iter").getOrElse("100").toInt
+    val epsilon = args.optional("epsilon").getOrElse("0.001").toDouble
 
     var previousDerivativeVector: IndexedSeq[Double] = null
     var dist: Double = Double.MaxValue

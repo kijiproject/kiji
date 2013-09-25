@@ -27,8 +27,8 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
 import org.kiji.express.flow.KijiJob
+import org.kiji.express.modeling.impl.CommandLineArgs
 import org.kiji.express.modeling.impl.KeyValueStores
-
 
 /**
  * Represents the Prepare phase of a model lifecycle. Users should extend this trait when defining a
@@ -61,7 +61,9 @@ import org.kiji.express.modeling.impl.KeyValueStores
 @ApiStability.Experimental
 @Inheritance.Extensible
 trait Preparer
-    extends KeyValueStores with TupleConversions {
+    extends KeyValueStores
+    with TupleConversions
+    with CommandLineArgs {
 
   /**
    * Override this class to implement a MapReduce flow for the prepare phase.
