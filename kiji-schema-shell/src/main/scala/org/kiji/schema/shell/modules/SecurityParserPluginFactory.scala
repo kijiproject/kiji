@@ -47,11 +47,11 @@ class SecurityParserPluginFactory  extends ParserPluginFactory with HelpPlugin {
              |
              |   GRANT { READ | WRITE | GRANT } [PRIVILEGES]
              |        ON INSTANCE 'kiji://instance_uri'
-             |        TO [ USER ] user_name
+             |        TO [ USER ] user_name;
              |
              |    REVOKE { READ | WRITE | GRANT } [PRIVILEGES]
              |        ON INSTANCE 'kiji://instance_uri'
-             |        FROM [ USER ] 'user_name'
+             |        FROM [ USER ] 'user_name';
              |""".stripMargin
   }
 
