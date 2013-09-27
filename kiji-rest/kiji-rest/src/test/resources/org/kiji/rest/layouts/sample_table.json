@@ -71,6 +71,21 @@
               "renamed_from": null
             }, {
               "id": 3,
+              "name": "union_qualifier",
+              "aliases": [],
+              "enabled": true,
+              "description": "",
+              "column_schema": {
+                "storage": "UID",
+                "type": "INLINE",
+                "value": {
+                  "string": "[\"string\", \"null\"]"
+                }
+              },
+              "delete": false,
+              "renamed_from": null
+            }, {
+              "id": 4,
               "name": "team_qualifier",
               "aliases": [],
               "enabled": true,
@@ -85,7 +100,7 @@
               "delete": false,
               "renamed_from": null
             }, {
-              "id": 4,
+              "id": 5,
               "name": "inline_record",
               "aliases": [],
               "enabled": true,

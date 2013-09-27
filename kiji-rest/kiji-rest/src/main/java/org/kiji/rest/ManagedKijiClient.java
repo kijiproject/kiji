@@ -23,15 +23,18 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
 import com.google.common.collect.Maps;
 import com.yammer.dropwizard.lifecycle.Managed;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.schema.Kiji;
+import org.kiji.schema.KijiSchemaTable;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTablePool;
 import org.kiji.schema.KijiURI;
@@ -43,19 +46,17 @@ import org.kiji.schema.util.ResourceUtils;
 public class ManagedKijiClient implements KijiClient, Managed {
   private static final Logger LOG = LoggerFactory.getLogger(ManagedKijiClient.class);
 
-  private final KijiURI mCluster;
   private final Set<KijiURI> mInstances;
   private Map<String, Kiji> mKijiMap;
   private Map<String, KijiTablePool> mKijiTablePoolMap;
+  private Map<String, KijiSchemaTable> mKijiSchemaTableMap;
 
   /**
    * Constructs a ManagedKijiClient with the specified cluster and instances.
    *
-   * @param clusterURI Kiji cluster for this client to connect to.
    * @param instances set of available instances available to this client.
    */
-  public ManagedKijiClient(KijiURI clusterURI, Set<KijiURI> instances) {
-    mCluster = clusterURI;
+  public ManagedKijiClient(Set<KijiURI> instances) {
     mInstances = instances;
   }
 
@@ -63,6 +64,8 @@ public class ManagedKijiClient implements KijiClient, Managed {
   public void start() throws Exception {
     mKijiMap = Maps.newHashMap();
     mKijiTablePoolMap = Maps.newHashMap();
+    mKijiSchemaTableMap = Maps.newHashMap();
+
     for (KijiURI instance : mInstances) {
       final String instanceName = instance.getInstance();
       final Kiji kiji = Kiji.Factory.open(instance);
@@ -70,8 +73,14 @@ public class ManagedKijiClient implements KijiClient, Managed {
 
       final KijiTablePool tablePool = KijiTablePool.newBuilder(kiji).build();
       mKijiTablePoolMap.put(instanceName, tablePool);
+      mKijiSchemaTableMap.put(instanceName, kiji.getSchemaTable());
     }
     LOG.info("Successfully started ManagedKijiClient!");
+  }
+
+  @Override
+  public KijiSchemaTable getKijiSchemaTable(String instance) {
+    return mKijiSchemaTableMap.get(instance);
   }
 
   @Override

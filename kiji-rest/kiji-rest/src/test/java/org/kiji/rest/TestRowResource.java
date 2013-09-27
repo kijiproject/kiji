@@ -69,24 +69,6 @@ public class TestRowResource extends ResourceTest {
   private Kiji mFakeKiji = null;
 
   /**
-   * Opens a new unique test Kiji instance, creating it if necessary.
-   *
-   * Each call to this method returns a fresh new Kiji instance.
-   * All generated Kiji instances are automatically cleaned up by KijiClientTest.
-   *
-   * @return a fresh new Kiji instance.
-   * @throws Exception on error.
-   */
-  public Kiji createTestKiji() throws Exception {
-    final String hbaseAddress = String.format(".fake.%s-%d", "kiji_rest", 0);
-    final KijiURI uri = KijiURI.newBuilder(String.format("kiji://%s/%s", hbaseAddress, "default"))
-        .build();
-    final Kiji kiji = Kiji.Factory.open(uri);
-
-    return kiji;
-  }
-
-  /**
    * {@inheritDoc}
    */
   @Override
@@ -157,7 +139,8 @@ public class TestRowResource extends ResourceTest {
     fakeTable.release();
 
     KijiRESTService.registerSerializers(this.getObjectMapperFactory());
-    KijiClient kijiClient = new FakeKijiClient(mFakeKiji);
+    ManagedKijiClient kijiClient = new ManagedKijiClient(Sets.newHashSet(mFakeKiji.getURI()));
+    kijiClient.start();
     RowResource resource = new RowResource(kijiClient);
     addResource(resource);
   }
@@ -410,6 +393,29 @@ public class TestRowResource extends ResourceTest {
     } catch (UniformInterfaceException e) {
       assertEquals(400, e.getResponse().getStatus());
     }
+  }
+
+  @Test
+  public void testShouldReadUnionType() throws Exception {
+
+    String hexRowKey = getHBaseRowKeyHex("sample_table", 12345L);
+    KijiTable table = mFakeKiji.openTable("sample_table");
+    EntityId eid = table.getEntityId(12345L);
+
+    KijiTableWriter writer = table.openTableWriter();
+    writer.put(eid, "group_family", "union_qualifier", "Some String");
+    writer.close();
+    table.release();
+
+    URI resourceURI = UriBuilder.fromResource(RowResource.class)
+        .queryParam("cols", "group_family:union_qualifier")
+        .queryParam("versions", "1")
+        .build("default", "sample_table", hexRowKey);
+
+    KijiRestRow returnRow = client().resource(resourceURI).get(KijiRestRow.class);
+    assertEquals(1, returnRow.getCells().size());
+    assertEquals("Some String", returnRow.getCells().get("group_family").get("union_qualifier")
+        .get(0).getValue());
   }
 
   @Test

@@ -32,6 +32,7 @@ import com.yammer.dropwizard.config.Environment;
 import com.yammer.dropwizard.json.ObjectMapperFactory;
 
 import org.kiji.rest.health.InstanceHealthCheck;
+import org.kiji.rest.representations.SchemaOption;
 import org.kiji.rest.resources.EntityIdResource;
 import org.kiji.rest.resources.InstanceResource;
 import org.kiji.rest.resources.InstancesResource;
@@ -41,6 +42,8 @@ import org.kiji.rest.resources.RowsResource;
 import org.kiji.rest.resources.TableResource;
 import org.kiji.rest.resources.TablesResource;
 import org.kiji.rest.serializers.AvroToJsonStringSerializer;
+import org.kiji.rest.serializers.JsonToSchemaOption;
+import org.kiji.rest.serializers.SchemaOptionToJson;
 import org.kiji.rest.serializers.TableLayoutToJsonSerializer;
 import org.kiji.rest.serializers.Utf8ToJsonSerializer;
 import org.kiji.schema.Kiji;
@@ -84,6 +87,9 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
     module.addSerializer(new AvroToJsonStringSerializer());
     module.addSerializer(new Utf8ToJsonSerializer());
     module.addSerializer(new TableLayoutToJsonSerializer());
+    module.addSerializer(new SchemaOptionToJson());
+    module.addSerializer(new SchemaOptionToJson());
+    module.addDeserializer(SchemaOption.class, new JsonToSchemaOption());
     mapperFactory.registerModule(module);
   }
 
@@ -108,7 +114,7 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
       environment.addHealthCheck(new InstanceHealthCheck(instanceURI));
     }
 
-    ManagedKijiClient kijiClient = new ManagedKijiClient(clusterURI, instances);
+    ManagedKijiClient kijiClient = new ManagedKijiClient(instances);
     environment.manage(kijiClient);
 
     //Add exception mappers to print better exception messages to the client than what

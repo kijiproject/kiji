@@ -298,7 +298,8 @@ public class RowResource {
           columns);
 
       KijiRowData row = getKijiRowData(table, entityId, dataBuilder.build());
-      returnRow = getKijiRestRow(row, table.getLayout(), requestedColumns);
+      returnRow = getKijiRestRow(row, table.getLayout(), requestedColumns,
+          mKijiClient.getKijiSchemaTable(instanceId));
 
       return returnRow;
     } catch (IOException e) {

@@ -22,6 +22,7 @@ package org.kiji.rest;
 import java.util.Collection;
 
 import org.kiji.schema.Kiji;
+import org.kiji.schema.KijiSchemaTable;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;
 
@@ -52,4 +53,12 @@ public interface KijiClient {
    * @throws javax.ws.rs.WebApplicationException if there is an error.
    */
   KijiTable getKijiTable(String instance, String table);
+
+  /**
+   * Returns the Kiji schema table for the given instance.
+   *
+   * @param instance is the instance for which the schema table should be retrieved.
+   * @return the schema table for the specified instance.
+   */
+  KijiSchemaTable getKijiSchemaTable(String instance);
 }

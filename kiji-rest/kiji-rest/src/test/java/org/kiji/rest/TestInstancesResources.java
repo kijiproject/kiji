@@ -77,20 +77,24 @@ public class TestInstancesResources extends ResourceTest {
   protected void setUpResources() throws Exception {
     // This list must be constructed in alphabetical order by instance name.
     mFakeKijis = new Kiji[2];
+    Set<KijiURI> mValidInstances = Sets.newHashSet();
+
     InstanceBuilder builder = new InstanceBuilder("default");
     mFakeKijis[0] = builder.build();
-    Set<KijiURI> mValidInstances = Sets.newHashSet();
 
     TableLayoutDesc desc = KijiTableLayouts.getLayout("org/kiji/rest/layouts/sample_table.json");
 
     mFakeKijis[0].createTable(desc);
-    mValidInstances.add(mFakeKijis[0].getURI());
 
     builder = new InstanceBuilder("other");
     mFakeKijis[1] = builder.build();
 
+    mValidInstances.add(mFakeKijis[0].getURI());
+    mValidInstances.add(mFakeKijis[1].getURI());
+
     KijiRESTService.registerSerializers(this.getObjectMapperFactory());
-    KijiClient kijiClient = new FakeKijiClient(mFakeKijis);
+    KijiClient kijiClient = new ManagedKijiClient(mValidInstances);
+
     InstanceResource instanceResource = new InstanceResource(kijiClient);
     InstancesResource instancesResource = new InstancesResource(kijiClient);
     addResource(instanceResource);

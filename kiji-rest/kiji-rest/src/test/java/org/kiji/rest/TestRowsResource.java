@@ -43,12 +43,14 @@ import com.sun.jersey.api.client.UniformInterfaceException;
 import com.yammer.dropwizard.testing.ResourceTest;
 
 import org.apache.avro.Schema;
+import org.apache.avro.Schema.Type;
 import org.apache.avro.generic.GenericData;
 import org.apache.commons.codec.binary.Hex;
 import org.junit.After;
 import org.junit.Test;
 
 import org.kiji.rest.representations.KijiRestRow;
+import org.kiji.rest.representations.SchemaOption;
 import org.kiji.rest.resources.RowsResource;
 import org.kiji.rest.sample_avro.PickBan;
 import org.kiji.rest.sample_avro.Team;
@@ -58,6 +60,7 @@ import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiCell;
 import org.kiji.schema.KijiColumnName;
+import org.kiji.schema.KijiSchemaTable;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableWriter;
 import org.kiji.schema.KijiURI;
@@ -75,10 +78,15 @@ import org.kiji.schema.util.InstanceBuilder;
 public class TestRowsResource extends ResourceTest {
 
   private Kiji mFakeKiji = null;
+  private KijiSchemaTable mSchemaTable = null;
 
   private static final URI DEFAULT_ROWS_RESOURCE = UriBuilder
       .fromResource(RowsResource.class)
       .build("default", "sample_table");
+
+  // Some commonly used schema options.
+  private SchemaOption mStringOption = null;
+  private SchemaOption mLongOption = null;
 
   /**
    * Opens a new unique test Kiji instance, creating it if necessary.
@@ -105,6 +113,14 @@ public class TestRowsResource extends ResourceTest {
   protected void setUpResources() throws Exception {
     InstanceBuilder builder = new InstanceBuilder("default");
     mFakeKiji = builder.build();
+
+    mSchemaTable = mFakeKiji.getSchemaTable();
+
+    mStringOption = new SchemaOption(Schema.create(Type.STRING).toString());
+
+    mLongOption = new SchemaOption(Schema.create(Type.LONG).toString());
+
+
     Set<KijiURI> mValidInstances = Sets.newHashSet();
 
     TableLayoutDesc desc = KijiTableLayouts.getLayout("org/kiji/rest/layouts/sample_table.json");
@@ -169,7 +185,9 @@ public class TestRowsResource extends ResourceTest {
     fakeTable.release();
 
     KijiRESTService.registerSerializers(this.getObjectMapperFactory());
-    KijiClient kijiClient = new FakeKijiClient(mFakeKiji);
+    ManagedKijiClient kijiClient = new ManagedKijiClient(Sets.newHashSet(mFakeKiji.getURI()));
+    kijiClient.start();
+
     RowsResource resource = new RowsResource(kijiClient, this.getObjectMapperFactory().build());
     addResource(resource);
   }
@@ -490,12 +508,13 @@ public class TestRowsResource extends ResourceTest {
     String stringRowKey = getEntityIdString("sample_table", 54321L);
 
     KijiCell<String> postCell = fromInputs("group_family", "string_qualifier", 314592L,
-        "helloworld");
+        "helloworld", Schema.create(Type.STRING));
 
     KijiRestRow postRow = new KijiRestRow(ToolUtils.createEntityIdFromUserInputs(
         URLDecoder.decode(stringRowKey, "UTF-8"),
         KijiTableLayouts.getTableLayout("org/kiji/rest/layouts/sample_table.json")));
-    postRow.addCell(postCell);
+
+    addCellToRow(postRow, postCell);
 
     // Post.
     Object target = client().resource(DEFAULT_ROWS_RESOURCE).type(MediaType.APPLICATION_JSON)
@@ -515,14 +534,41 @@ public class TestRowsResource extends ResourceTest {
   }
 
   @Test
+  public void testShouldPostUnionType() throws Exception {
+    String stringRowKey = getEntityIdString("sample_table", 54321L);
+
+    KijiCell<String> postCell = fromInputs("group_family", "union_qualifier", 314592L,
+        "helloworld", Schema.create(Type.STRING));
+
+    KijiRestRow postRow = new KijiRestRow(ToolUtils.createEntityIdFromUserInputs(
+        URLDecoder.decode(stringRowKey, "UTF-8"),
+        KijiTableLayouts.getTableLayout("org/kiji/rest/layouts/sample_table.json")));
+    addCellToRow(postRow, postCell);
+
+    // Post.
+    client().resource(DEFAULT_ROWS_RESOURCE).type(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON).post(Object.class, postRow);
+
+    // Retrieve from rows resource.
+    URI resourceURI = UriBuilder.fromResource(RowsResource.class)
+        .queryParam("eid", stringRowKey)
+        .build("default", "sample_table");
+    KijiRestRow returnRow = client().resource(resourceURI).get(KijiRestRow.class);
+
+    assertEquals("helloworld", returnRow.getCells()
+        .get("group_family").get("union_qualifier").get(0).getValue());
+  }
+
+  @Test
   public void testMultipleCellPost() throws Exception {
     // Set up.
     String hexRowKey = getHBaseRowKeyHex("sample_table", 54323L);
     String stringRowKey = getEntityIdString("sample_table", 54323L);
 
     KijiCell<String> postCell1 = fromInputs("group_family", "string_qualifier", 314592L,
-        "helloworld");
-    KijiCell<Long> postCell2 = fromInputs("group_family", "long_qualifier", 314592L, 123L);
+        "helloworld", Schema.create(Type.STRING));
+    KijiCell<Long> postCell2 = fromInputs("group_family", "long_qualifier", 314592L, 123L,
+        Schema.create(Type.LONG));
 
     Team postTeam = new Team();
     postTeam.setBarracksStatus(94103L);
@@ -530,14 +576,15 @@ public class TestRowsResource extends ResourceTest {
     postTeam.setName("Windrunners");
 
     KijiCell<JsonNode> postCell3 = fromInputs("group_family", "team_qualifier", 314592L,
-        AvroToJsonStringSerializer.getJsonNode(postTeam));
+        AvroToJsonStringSerializer.getJsonNode(postTeam), postTeam.getSchema());
 
     KijiRestRow postRow = new KijiRestRow(ToolUtils
         .createEntityIdFromUserInputs(URLDecoder.decode(stringRowKey, "UTF-8"),
             KijiTableLayouts.getTableLayout("org/kiji/rest/layouts/sample_table.json")));
-    postRow.addCell(postCell1);
-    postRow.addCell(postCell2);
-    postRow.addCell(postCell3);
+
+    addCellToRow(postRow, postCell1);
+    addCellToRow(postRow, postCell2);
+    addCellToRow(postRow, postCell3);
 
     // Post.
     @SuppressWarnings("unchecked")
@@ -577,11 +624,11 @@ public class TestRowsResource extends ResourceTest {
     genericRecord.put("username", "gumshoe");
     genericRecord.put("num_purchases", 5647382910L);
     KijiCell<JsonNode> postCell = fromInputs("group_family", "inline_record", 3141592L,
-        AvroToJsonStringSerializer.getJsonNode(genericRecord));
+        AvroToJsonStringSerializer.getJsonNode(genericRecord), spec.getAvroSchema());
     KijiRestRow postRow = new KijiRestRow(ToolUtils.createEntityIdFromUserInputs(
         URLDecoder.decode(stringRowKey, "UTF-8"),
         KijiTableLayouts.getTableLayout("org/kiji/rest/layouts/sample_table.json")));
-    postRow.addCell(postCell);
+    addCellToRow(postRow, postCell);
 
     // Post.
     URI resourceURI = UriBuilder.fromResource(RowsResource.class).build("default", "sample_table");
@@ -611,10 +658,11 @@ public class TestRowsResource extends ResourceTest {
     String hexRowKey = getHBaseRowKeyHex("sample_table", 54325L);
     String stringRowKey = getEntityIdString("sample_table", 54325L);
     KijiCell<String> postCell1 = fromInputs("strings", TestRowResource.EXTENSIVE_COLUMN_TEST,
-        3141592L, "helloworld");
+        3141592L, "helloworld", Schema.create(Type.STRING));
     String longsColumnDec = " ";
 
-    KijiCell<Long> postCell2 = fromInputs("longs", longsColumnDec, 3141592L, 987654567890L);
+    KijiCell<Long> postCell2 = fromInputs("longs", longsColumnDec, 3141592L, 987654567890L,
+        Schema.create(Type.LONG));
     String bansColumnDec = "harkonnen:.:.?&;& ";
 
     PickBan postBan = new PickBan();
@@ -624,14 +672,15 @@ public class TestRowsResource extends ResourceTest {
     postBan.setTeam(7654L);
 
     KijiCell<JsonNode> postCell3 = fromInputs("pick_bans", bansColumnDec, 3141592L,
-        AvroToJsonStringSerializer.getJsonNode(postBan));
+        AvroToJsonStringSerializer.getJsonNode(postBan), postBan.getSchema());
 
     KijiRestRow postRow = new KijiRestRow(ToolUtils.createEntityIdFromUserInputs(
         URLDecoder.decode(stringRowKey, "UTF-8"),
         KijiTableLayouts.getTableLayout("org/kiji/rest/layouts/sample_table.json")));
-    postRow.addCell(postCell1);
-    postRow.addCell(postCell2);
-    postRow.addCell(postCell3);
+
+    addCellToRow(postRow, postCell1);
+    addCellToRow(postRow, postCell2);
+    addCellToRow(postRow, postCell3);
 
     // Post.
     URI resourceURI = UriBuilder.fromResource(RowsResource.class).build("default", "sample_table");
@@ -670,11 +719,12 @@ public class TestRowsResource extends ResourceTest {
   public void testNonexistentColumnPost() throws Exception {
     // Set up.
     String stringRowKey = getEntityIdString("sample_table", 54322L);
-    KijiCell<String> postCell = fromInputs("nonfamily", "noncolumn", 314592L, "hagar");
+    KijiCell<String> postCell = fromInputs("nonfamily", "noncolumn", 314592L, "hagar",
+        Schema.create(Type.STRING));
     KijiRestRow postRow = new KijiRestRow(ToolUtils.createEntityIdFromUserInputs(
         URLDecoder.decode(stringRowKey, "UTF-8"),
         KijiTableLayouts.getTableLayout("org/kiji/rest/layouts/sample_table.json")));
-    postRow.addCell(postCell);
+    addCellToRow(postRow, postCell);
 
     // Post.
     try {
@@ -696,15 +746,18 @@ public class TestRowsResource extends ResourceTest {
     String stringRowKey = getEntityIdString("sample_table", 55025L);
 
     KijiCell<String> postCell1 = fromInputs("strings", TestRowResource.EXTENSIVE_COLUMN_TEST, 2L,
-        "sample_string");
-    KijiCell<Long> postCell2 = fromInputs("group_family", "long_qualifier", 3141591L, 123L);
+        "sample_string", Schema.create(Type.STRING));
+    KijiCell<Long> postCell2 = fromInputs("group_family", "long_qualifier", 3141591L, 123L,
+        Schema.create(Type.LONG));
 
     KijiRestRow postRow = new KijiRestRow(ToolUtils
         .createEntityIdFromUserInputs(URLDecoder.decode(stringRowKey, "UTF-8"),
             KijiTableLayouts.getTableLayout("org/kiji/rest/layouts/sample_table.json")));
-    postRow.addCell(postCell1);
-    postRow.addCell(postCell2);
-    postRow.addCell("group_family", "string_qualifier", null, "helloworld");
+
+    addCellToRow(postRow, postCell1);
+    addCellToRow(postRow, postCell2);
+
+    postRow.addCell("group_family", "string_qualifier", null, "helloworld", mStringOption);
 
     // Post.
     URI resourceURI = UriBuilder.fromResource(RowsResource.class)
@@ -768,8 +821,8 @@ public class TestRowsResource extends ResourceTest {
   }
 
   private static <T> KijiCell<T> fromInputs(String family, String qualifier,
-      Long timestamp, T value) {
-    return new KijiCell<T>(family, qualifier, timestamp, new DecodedCell<T>(null, value));
+      Long timestamp, T value, Schema writerSchema) {
+    return new KijiCell<T>(family, qualifier, timestamp, new DecodedCell<T>(writerSchema, value));
   }
 
   @Test
@@ -778,12 +831,14 @@ public class TestRowsResource extends ResourceTest {
     String hexRowKey = getHBaseRowKeyHex("sample_table", 55025L);
     String stringRowKey = getEntityIdString("sample_table", 55025L);
     String stringsColumn = TestRowResource.EXTENSIVE_COLUMN_TEST;
-    KijiCell<String> postCell1 = fromInputs("strings", stringsColumn, 2L, "sample_string");
-    KijiCell<Integer> postCell2 = fromInputs("group_family", "long_qualifier", 3141591L, 123);
+    KijiCell<String> postCell1 = fromInputs("strings", stringsColumn, 2L, "sample_string",
+        Schema.create(Type.STRING));
+    KijiCell<Integer> postCell2 = fromInputs("group_family", "long_qualifier", 3141591L, 123,
+        Schema.create(Type.LONG));
     KijiRestRow postRow = new KijiRestRow(ToolUtils
         .createEntityIdFromUserInputs(URLDecoder.decode(stringRowKey, "UTF-8"),
         KijiTableLayouts.getTableLayout("org/kiji/rest/layouts/sample_table.json")));
-    postRow.addCell(postCell1);
+    addCellToRow(postRow, postCell1);
 
     List<KijiRestRow> postRows = Lists.newLinkedList();
     postRows.add(postRow);
@@ -791,13 +846,14 @@ public class TestRowsResource extends ResourceTest {
     postRow = new KijiRestRow(ToolUtils
         .createEntityIdFromUserInputs(URLDecoder.decode(stringRowKey, "UTF-8"),
         KijiTableLayouts.getTableLayout("org/kiji/rest/layouts/sample_table.json")));
-    postRow.addCell(postCell2);
+    addCellToRow(postRow, postCell2);
     postRows.add(postRow);
 
     postRow = new KijiRestRow(ToolUtils
         .createEntityIdFromUserInputs(URLDecoder.decode(stringRowKey, "UTF-8"),
         KijiTableLayouts.getTableLayout("org/kiji/rest/layouts/sample_table.json")));
-    postRow.addCell("group_family", "string_qualifier", null, "helloworld");
+    postRow.addCell("group_family", "string_qualifier", null, "helloworld",
+        mStringOption);
     postRows.add(postRow);
 
     // Post.
@@ -859,5 +915,11 @@ public class TestRowsResource extends ResourceTest {
         returnRow.getCells().get("strings").get(TestRowResource.EXTENSIVE_COLUMN_TEST).get(0)
             .getValue());
     assertEquals(1, returnRow.getCells().size());
+  }
+
+  private void addCellToRow(KijiRestRow rowToModify, KijiCell<?> cellToPost) throws IOException {
+    long schemaId = mSchemaTable.getOrCreateSchemaId(cellToPost.getWriterSchema());
+    SchemaOption option = new SchemaOption(schemaId);
+    rowToModify.addCell(cellToPost, option);
   }
 }

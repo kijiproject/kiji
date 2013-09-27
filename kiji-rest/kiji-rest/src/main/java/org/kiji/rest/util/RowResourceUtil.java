@@ -47,6 +47,7 @@ import org.apache.avro.io.DecoderFactory;
 import org.kiji.annotations.ApiAudience;
 import org.kiji.rest.representations.KijiRestCell;
 import org.kiji.rest.representations.KijiRestRow;
+import org.kiji.rest.representations.SchemaOption;
 import org.kiji.schema.DecodedCell;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiCell;
@@ -54,6 +55,7 @@ import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequestBuilder.ColumnsDef;
 import org.kiji.schema.KijiRowData;
+import org.kiji.schema.KijiSchemaTable;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.KijiTableWriter;
@@ -76,7 +78,8 @@ public final class RowResourceUtil {
   /**
    * Blank constructor.
    */
-  private RowResourceUtil() {}
+  private RowResourceUtil() {
+  }
 
   /**
    * Retrieves the Min..Max timestamp given the user specified time range. Min and Max represent
@@ -179,13 +182,15 @@ public final class RowResourceUtil {
    * @param rowData is the actual row data fetched from Kiji
    * @param tableLayout the layout of the underlying Kiji table itself.
    * @param columnsRequested is the list of columns requested by the client
+   * @param schemaTable is the handle to the schema table used to resolve the writer's schema into
+   *        the Kiji specific UID.
    * @return The Kiji row data POJO to be sent to the client
    * @throws IOException when trying to request the specs of a column family that doesn't exist.
    *         Although this shouldn't happen as columns are assumed to have been validated before
    *         this method is invoked.
    */
   public static KijiRestRow getKijiRestRow(KijiRowData rowData, KijiTableLayout tableLayout,
-      List<KijiColumnName> columnsRequested) throws IOException {
+      List<KijiColumnName> columnsRequested, KijiSchemaTable schemaTable) throws IOException {
 
     KijiRestRow returnRow = new KijiRestRow(rowData.getEntityId());
     Map<String, FamilyLayout> familyLayoutMap = tableLayout.getFamilyMap();
@@ -215,21 +220,28 @@ public final class RowResourceUtil {
         if (col.getQualifier() != null) {
           qualifier = col.getQualifier();
         }
-        returnRow.addCell(new KijiCell<String>(col.getFamily(), qualifier, -1L, decodedCell));
+        // Error condition.
+        SchemaOption schemaOption = new SchemaOption(-1);
+        returnRow.addCell(new KijiCell<String>(col.getFamily(), qualifier, -1L, decodedCell),
+            schemaOption);
         continue;
       }
       if (spec.isCounter()) {
         if (col.isFullyQualified()) {
           KijiCell<Long> counter = rowData.getMostRecentCell(col.getFamily(), col.getQualifier());
           if (null != counter) {
-            returnRow.addCell(counter);
+            SchemaOption schemaOption = new SchemaOption(schemaTable.
+                getOrCreateSchemaId(counter.getWriterSchema()));
+            returnRow.addCell(counter, schemaOption);
           }
         } else if (familyInfo.isMapType()) {
           // Only can print all qualifiers on map types
           for (String key : rowData.getQualifiers(col.getFamily())) {
             KijiCell<Long> counter = rowData.getMostRecentCell(col.getFamily(), key);
             if (null != counter) {
-              returnRow.addCell(counter);
+              SchemaOption schemaOption = new SchemaOption(schemaTable.
+                  getOrCreateSchemaId(counter.getWriterSchema()));
+              returnRow.addCell(counter, schemaOption);
             }
           }
         }
@@ -239,7 +251,10 @@ public final class RowResourceUtil {
           Map<Long, KijiCell<Object>> rowVals = rowData.getCells(col.getFamily(),
               col.getQualifier());
           for (Entry<Long, KijiCell<Object>> timestampedCell : rowVals.entrySet()) {
-            returnRow.addCell(timestampedCell.getValue());
+            KijiCell<Object> kijiCell = timestampedCell.getValue();
+            SchemaOption schemaOption = new SchemaOption(schemaTable.
+                getOrCreateSchemaId(kijiCell.getWriterSchema()));
+            returnRow.addCell(kijiCell, schemaOption);
           }
         } else if (familyInfo.isMapType()) {
           Map<String, NavigableMap<Long, KijiCell<Object>>> rowVals = rowData.getCells(col
@@ -247,7 +262,9 @@ public final class RowResourceUtil {
 
           for (Entry<String, NavigableMap<Long, KijiCell<Object>>> e : rowVals.entrySet()) {
             for (KijiCell<Object> timestampedCell : e.getValue().values()) {
-              returnRow.addCell(timestampedCell);
+              SchemaOption schemaOption = new SchemaOption(schemaTable.
+                  getOrCreateSchemaId(timestampedCell.getWriterSchema()));
+              returnRow.addCell(timestampedCell, schemaOption);
             }
           }
         }
@@ -343,13 +360,16 @@ public final class RowResourceUtil {
 
   /**
    * Util method to write a rest row into Kiji.
+   *
    * @param kijiTable is the table to write into.
    * @param entityId is the entity id of the row to write.
    * @param kijiRestRow is the row model to write to Kiji.
+   * @param schemaTable is the handle to the schema table used to resolve the KijiRestCell's
+   *        writer schema if it was specified as a UID.
    * @throws IOException if there a failure writing the row.
    */
   public static void writeRow(KijiTable kijiTable, EntityId entityId,
-      KijiRestRow kijiRestRow) throws IOException {
+      KijiRestRow kijiRestRow, KijiSchemaTable schemaTable) throws IOException {
     final KijiTableWriter writer = kijiTable.openTableWriter();
     // Default global timestamp.
     long globalTimestamp = System.currentTimeMillis();
@@ -379,13 +399,6 @@ public final class RowResourceUtil {
                 // Write the counter cell.
                 putCounterCell(writer, entityId, restCell.getValue().toString(), column, timestamp);
               } else {
-                // Set writer schema in preparation to write an Avro record.
-                final Schema schema;
-                try {
-                  schema = kijiTable.getLayout().getSchema(column);
-                } catch (Exception ec) {
-                  throw new WebApplicationException(ec, Response.Status.BAD_REQUEST);
-                }
                 // Write the cell.
                 String jsonValue = restCell.getValue().toString();
                 // TODO: This is ugly. Converting from Map to JSON to String.
@@ -393,7 +406,11 @@ public final class RowResourceUtil {
                   JsonNode node = BASIC_MAPPER.valueToTree(restCell.getValue());
                   jsonValue = node.toString();
                 }
-                putCell(writer, entityId, jsonValue, column, timestamp, schema);
+                Schema actualWriter = restCell.getWriterSchema(schemaTable);
+                if(actualWriter == null) {
+                  throw new IOException("Unrecognized schema " + restCell.getValue());
+                }
+                putCell(writer, entityId, jsonValue, column, timestamp, actualWriter);
               }
             }
           }

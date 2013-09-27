@@ -76,11 +76,13 @@ import org.kiji.schema.KijiDataRequestBuilder;
 import org.kiji.schema.KijiDataRequestBuilder.ColumnsDef;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiRowScanner;
+import org.kiji.schema.KijiSchemaTable;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.KijiTableReader.KijiScannerOptions;
 import org.kiji.schema.tools.ToolUtils;
 import org.kiji.schema.util.ResourceUtils;
+
 /**
  * This REST resource interacts with Kiji tables.
  *
@@ -127,6 +129,8 @@ public class RowsResource {
 
     private Iterable<KijiRowData> mScanner = null;
     private final KijiTable mTable;
+    private final KijiSchemaTable mSchemaTable;
+
     private int mNumRows = 0;
     private final List<KijiColumnName> mColsRequested;
 
@@ -137,13 +141,16 @@ public class RowsResource {
      * @param table the table from which the rows originate.
      * @param numRows is the maximum number of rows to stream.
      * @param columns are the columns requested by the client.
+     * @param schemaTable is the handle to the KijiSchemaTable used to encode the cell's writer
+     *        schema as a UID.
      */
     public RowStreamer(Iterable<KijiRowData> scanner, KijiTable table, int numRows,
-        List<KijiColumnName> columns) {
+        List<KijiColumnName> columns, KijiSchemaTable schemaTable) {
       mScanner = scanner;
       mTable = table;
       mNumRows = numRows;
       mColsRequested = columns;
+      mSchemaTable = schemaTable;
     }
 
     /**
@@ -162,7 +169,8 @@ public class RowsResource {
         while (it.hasNext() && (numRows < mNumRows || mNumRows == UNLIMITED_ROWS)
             && !clientClosed) {
           KijiRowData row = it.next();
-          KijiRestRow restRow = getKijiRestRow(row, mTable.getLayout(), mColsRequested);
+          KijiRestRow restRow = getKijiRestRow(row, mTable.getLayout(), mColsRequested,
+              mSchemaTable);
           String jsonResult = mJsonObjectMapper.writeValueAsString(restRow);
           // Let's strip out any carriage return + line feeds and replace them with just
           // line feeds. Therefore we can safely delimit individual json messages on the
@@ -295,7 +303,9 @@ public class RowsResource {
     } finally {
       ResourceUtils.releaseOrLog(kijiTable);
     }
-    return Response.ok(new RowStreamer(scanner, kijiTable, limit, requestedColumns)).build();
+    KijiSchemaTable schemaTable = mKijiClient.getKijiSchemaTable(instance);
+    return Response.ok(new RowStreamer(scanner, kijiTable, limit, requestedColumns,
+        schemaTable)).build();
   }
 
   /**
@@ -315,7 +325,6 @@ public class RowsResource {
       throws IOException {
     final KijiTable kijiTable = mKijiClient.getKijiTable(instance, table);
 
-
     final EntityId entityId;
     if (null != kijiRestRow.getEntityId()) {
       entityId = ToolUtils.createEntityIdFromUserInputs(kijiRestRow.getEntityId(),
@@ -326,7 +335,8 @@ public class RowsResource {
     }
 
     // Open writer and write.
-    RowResourceUtil.writeRow(kijiTable, entityId, kijiRestRow);
+    RowResourceUtil.writeRow(kijiTable, entityId, kijiRestRow,
+        mKijiClient.getKijiSchemaTable(instance));
 
     // Better output?
     Map<String, String> returnedTarget = Maps.newHashMap();
@@ -346,47 +356,55 @@ public class RowsResource {
    *
    * For example, a single KijiRestRow:
    * {
-   *   "entityId" : "hbase=hex:8c2d2fcc2c150efb49ce0817e1823d46",
-   *   "cells" : {
-   *     "info" : {
-   *       "firstname" : [ {
-   *         "timestamp" : 123,
-   *         "value" : "John"
-   *       } ]
-   *     },
-   *     "info" : {
-   *       "lastname" : [ {
-   *         "timestamp" : 123,
-   *         "value" : "Smith"
-   *       } ]
-   *     }
-   *   }
+   *   "entityId":"hbase=hex:8c2d2fcc2c150efb49ce0817e1823d46",
+   *   "cells":{
+   *       "info":{
+   *          "firstname":[
+   *             {
+   *                "timestamp":123,
+   *                "value":"John"
+   *             }
+   *          ]
+   *       },
+   *       "info":{
+   *          "lastname":[
+   *             {
+   *                "timestamp":123,
+   *                "value":"Smith"
+   *             }
+   *          ]
+   *       }
+   *    }
    * }
    *
    * A list of KijiRestRows:
    * [
-   *   {
-   *     "entityId" : "hbase=hex:8c2d2fcc2c150efb49ce0817e1823d46",
-   *     "cells" : {
-   *       "info" : {
-   *         "firstname" : [ {
-   *           "timestamp" : 123,
-   *           "value" : "John"
-   *         } ]
+   *    {
+   *       "entityId":"hbase=hex:8c2d2fcc2c150efb49ce0817e1823d46",
+   *       "cells":{
+   *          "info":{
+   *             "firstname":[
+   *                {
+   *                   "timestamp":123,
+   *                   "value":"John"
+   *                }
+   *             ]
+   *          }
    *       }
-   *     }
-   *   },
-   *   {
-   *     "entityId" : "hbase=hex:acfbe1234567890987654321abcfdega",
-   *     "cells" : {
-   *       "info" : {
-   *         "firstname" : [ {
-   *           "timestamp" : 12312345,
-   *           "value" : "Jane"
-   *         } ]
+   *    },
+   *    {
+   *       "entityId":"hbase=hex:acfbe1234567890987654321abcfdega",
+   *       "cells":{
+   *          "info":{
+   *             "firstname":[
+   *                {
+   *                   "timestamp":12312345,
+   *                   "value":"Jane"
+   *                }
+   *             ]
+   *          }
    *       }
-   *     }
-   *   }
+   *    }
    * ]
    *
    * Note that the user-formatted entityId is required.

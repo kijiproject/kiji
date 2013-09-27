@@ -63,9 +63,11 @@ public class KijiRestRow {
    * Convenience method to add a new cell (represented by the KijiCell) to the row.
    *
    * @param cell is the cell to add.
+   * @param schemaOption is the writer schema (contained as an option: either as a string or uid)
    */
-  public void addCell(KijiCell<?> cell) {
-    addCell(cell.getFamily(), cell.getQualifier(), cell.getTimestamp(), cell.getData());
+  public void addCell(KijiCell<?> cell, SchemaOption schemaOption) {
+    addCell(cell.getFamily(), cell.getQualifier(), cell.getTimestamp(), cell.getData(),
+        schemaOption);
   }
 
   /**
@@ -75,8 +77,11 @@ public class KijiRestRow {
    * @param qualifier is the qualifier of the cell to add.
    * @param timestamp is the timestamp of the cell to add.
    * @param value is the value of the cell to add.
+   * @param writerSchema is the writer schema (contained as an option: either as a string or uid)
+   *        of the cell's value.
    */
-  public void addCell(String family, String qualifier, Long timestamp, Object value) {
+  public void addCell(String family, String qualifier, Long timestamp, Object value,
+      SchemaOption writerSchema) {
     NavigableMap<String, List<KijiRestCell>> familyMap = mKijiCellMap.get(family);
     if (familyMap == null) {
       familyMap = Maps.newTreeMap();
@@ -87,7 +92,7 @@ public class KijiRestRow {
       restCells = Lists.newArrayList();
       familyMap.put(qualifier, restCells);
     }
-    restCells.add(new KijiRestCell(timestamp, value));
+    restCells.add(new KijiRestCell(timestamp, value, writerSchema));
   }
 
   /**
