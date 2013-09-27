@@ -20,6 +20,8 @@
 package org.kiji.express.modeling.lib
 
 import scala.collection.mutable.ArrayBuffer
+import scala.util.control.Breaks.break
+import scala.util.control.Breaks.breakable
 
 import com.twitter.scalding.Source
 import com.twitter.scalding.TextLine
@@ -96,19 +98,14 @@ final case class LMTrainer() extends Trainer {
   }
 
   /**
-   * Calculates the error or change between the newly calculated partial derivatives and the ones
-   * from the previous iteration (L2-norm of difference).
+   * Calculates the L2-norm of the partial derivatives.
    *
-   * @param param1 is an ordered sequence of doubles containing one set of partial derivatives.
-   * @param param2 is ordered sequence of doubles containing the other set of partial derivatives.
-   * @return the L2-norm of the difference between the two.
+   * @param partials is an ordered sequence of doubles containing the partial derivatives.
+   * @return the L2-norm of vector.
    */
-  def calculateError(param1: IndexedSeq[Double], param2: IndexedSeq[Double]): Double = {
-    require(param1.length == param2.length)
-    math.sqrt(param1.zip(param2)
-        .map {
-          case (t1: Double, t2: Double) => math.pow(t1 - t2, 2)
-        }
+  def calculateError(partials: IndexedSeq[Double]): Double = {
+    math.sqrt(partials
+        .map(math.pow(_, 2))
         .reduce(_ + _))
   }
 
@@ -195,24 +192,23 @@ final case class LMTrainer() extends Trainer {
     val max_iter = args.optional("max-iter").getOrElse("100").toInt
     val epsilon = args.optional("epsilon").getOrElse("0.001").toDouble
 
-    var previousDerivativeVector: IndexedSeq[Double] = null
     var dist: Double = Double.MaxValue
-    var index = 0
-    while (index < max_iter && dist > epsilon) {
-      val (parameters:IndexedSeq[Double], partialDerivatives: IndexedSeq[Double]) =
-          vectorizeParameters(parameterSource)
-      logger.debug("parameters: " + parameters)
-      if (previousDerivativeVector != null) {
-        dist = calculateError(previousDerivativeVector, partialDerivatives)
+    breakable {
+      for (index <- 1 to max_iter) {
+        val (parameters:IndexedSeq[Double], partialDerivatives: IndexedSeq[Double]) =
+            vectorizeParameters(parameterSource)
+        logger.debug("parameters: " + parameters)
+        dist = calculateError(partialDerivatives)
         logger.debug("error: " + dist)
+        if (dist < epsilon) {
+          logger.debug("iterations = " + index)
+          break()
+        }
+        new LMJob(input, output, parameters).run
+        // Use the newly calculated thetas in the next iteration.
+        parameterSource = outputSource
       }
-      new LMJob(input, output, parameters).run
-      previousDerivativeVector = partialDerivatives
-      // Use the newly calculated thetas in the next iteration.
-      parameterSource = outputSource
-      index += 1
     }
-    logger.debug("iterations = " + index)
     // TODO report - number of iterations, error, etc.
     true
   }
