@@ -48,7 +48,11 @@ public class JsonToSchemaOption extends JsonDeserializer<SchemaOption> {
     if (schemaNode.isInt()) {
       returnSchema = new SchemaOption(schemaNode.asLong());
     } else {
-      returnSchema = new SchemaOption(schemaNode.textValue());
+      String schemaString = schemaNode.toString();
+      if (schemaNode.isTextual()) {
+        schemaString = schemaNode.textValue();
+      }
+      returnSchema = new SchemaOption(schemaString);
     }
 
     return returnSchema;

@@ -79,6 +79,7 @@ public class TestRowsResource extends ResourceTest {
 
   private Kiji mFakeKiji = null;
   private KijiSchemaTable mSchemaTable = null;
+  private ManagedKijiClient mKijiClient = null;
 
   private static final URI DEFAULT_ROWS_RESOURCE = UriBuilder
       .fromResource(RowsResource.class)
@@ -185,10 +186,10 @@ public class TestRowsResource extends ResourceTest {
     fakeTable.release();
 
     KijiRESTService.registerSerializers(this.getObjectMapperFactory());
-    ManagedKijiClient kijiClient = new ManagedKijiClient(Sets.newHashSet(mFakeKiji.getURI()));
-    kijiClient.start();
+    mKijiClient = new ManagedKijiClient(Sets.newHashSet(mFakeKiji.getURI()));
+    mKijiClient.start();
 
-    RowsResource resource = new RowsResource(kijiClient, this.getObjectMapperFactory().build());
+    RowsResource resource = new RowsResource(mKijiClient, this.getObjectMapperFactory().build());
     addResource(resource);
   }
 
@@ -216,6 +217,7 @@ public class TestRowsResource extends ResourceTest {
   @After
   public void afterTest() throws Exception {
     mFakeKiji.release();
+    mKijiClient.stop();
   }
 
   @Test
