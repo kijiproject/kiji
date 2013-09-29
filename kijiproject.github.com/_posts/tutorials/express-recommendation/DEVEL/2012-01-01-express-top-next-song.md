@@ -155,17 +155,6 @@ express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
 {% endhighlight %}
 </div>
 
-### Alternative: Running as a script ###
-
-Or run it as a script:
-
-<div class="userinput">
-{% highlight bash %}
-express script --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
-    ${MUSIC_EXPRESS_HOME}/scripts/TopNextSongs.express --hdfs
-{% endhighlight %}
-</div>
-
 ### Verify the Output ###
 
 *  To see the output from the job:

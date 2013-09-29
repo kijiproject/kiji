@@ -50,5 +50,3 @@ echo "Hello Kiji"
 
     Hello Kiji
 
-You can run KijiExpress on compiled jobs or uncompiled scripts. This tutorial will focus on running
-compiled jobs, but runnable scripts that do the same work as the compiled classes will also be available.

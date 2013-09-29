@@ -110,17 +110,6 @@ express job ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_de
 {% endhighlight %}
 </div>
 
-### Alternative: Running as a script
-
-Alternately, you can also run the job as a script as follows:
-
-<div class="userinput">
-{% highlight bash %}
-express script --libjars "${MUSIC_EXPRESS_HOME}/lib/* \
-    ${MUSIC_EXPRESS_HOME}/scripts/SongRecommender.express --hdfs
-{% endhighlight %}
-</div>
-
 ### Verify Output
 
 You can verify the output by scanning the `users-table`.

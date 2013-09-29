@@ -147,17 +147,6 @@ express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
 {% endhighlight %}
 </div>
 
-### Alternative: Running the Job as a Script
-
-You can also run the SongPlayCounter job as a script:
-
-<div class="userinput">
-{% highlight bash %}
-express script --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
-    ${MUSIC_EXPRESS_HOME}/scripts/SongPlayCounter.express --hdfs
-{% endhighlight %}
-</div>
-
 ### Verify Output
 
 *  Run the following command to see the output of the job:
