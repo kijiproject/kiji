@@ -106,7 +106,11 @@ class KijiPipe(private val pipe: Pipe) extends TupleConversions {
           Map[String, String]()
         }
 
-      configuration ++ tmpJarsConfig
+      val userClassPathFirstConfig = Map("mapreduce.job.user.classpath.first" -> "true",
+        "mapreduce.user.classpath.first" -> "true",
+        "mapreduce.task.classpath.user.precedence" -> "true")
+
+      configuration ++ tmpJarsConfig ++ userClassPathFirstConfig
     }
 
     /**

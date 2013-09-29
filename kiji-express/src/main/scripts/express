@@ -585,6 +585,7 @@ else
       -Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED \
       ${scalding_tool} \
       "-Dtmpjars=${tmpjars}" \
+      "-Dmapreduce.task.user.classpath.first=true" \
       ${hadoop_argv} \
       "${canonical_user_target}" \
       "${run_mode_flag}" \
@@ -596,6 +597,7 @@ else
       -Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED \
       ${scalding_tool} \
       "-Dtmpjars=file://${canonical_user_target},${tmpjars}" \
+      "-Dmapreduce.task.classpath.user.precedence=true" \
       ${hadoop_argv} \
       "${class}" \
       "${run_mode_flag}" \
