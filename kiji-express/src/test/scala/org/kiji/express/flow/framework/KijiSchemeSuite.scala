@@ -37,8 +37,9 @@ class KijiSchemeSuite extends KijiSuite {
   test("putTuple and rowToTuple can write and read a generic AvroRecord.") {
     // Set up the table.
     val configuration: Configuration = HBaseConfiguration.create()
-    val tableLayout = layout("avro-types.json")
+    val tableLayout = layout("layout/avro-types.json")
     val table = makeTestKijiTable(tableLayout)
+    val kiji = table.getKiji
     val uri = table.getURI
     val writer = table.openTableWriter()
     val reader = table.getReaderFactory.openTableReader(GenericCellSpecs(table))
@@ -59,6 +60,7 @@ class KijiSchemeSuite extends KijiSuite {
     KijiScheme.putTuple(
         columns,
         uri,
+        kiji,
         None,
         writeValue,
         writer,

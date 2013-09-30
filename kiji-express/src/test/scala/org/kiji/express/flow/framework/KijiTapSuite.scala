@@ -28,7 +28,7 @@ import org.kiji.schema.KijiURI
 
 class KijiTapSuite extends KijiSuite {
   val instanceName: String = "test_KijiTap_instance"
-  val testKijiTableLayout = layout("avro-types.json")
+  val testKijiTableLayout = layout("layout/avro-types.json")
   val config = new JobConf(HBaseConfiguration.create())
 
   test("KijiTap validates a valid instance/table/column.") {

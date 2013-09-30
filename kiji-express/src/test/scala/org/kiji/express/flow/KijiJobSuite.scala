@@ -41,7 +41,7 @@ import org.kiji.schema.avro.HashType
 import org.kiji.schema.layout.KijiTableLayout
 
 class KijiJobSuite extends KijiSuite {
-  val avroLayout: KijiTableLayout = layout("avro-types.json")
+  val avroLayout: KijiTableLayout = layout("layout/avro-types.json")
   val uri: String = doAndRelease(makeTestKijiTable(avroLayout)) { table: KijiTable =>
     table.getURI().toString()
   }

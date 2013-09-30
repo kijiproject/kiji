@@ -32,6 +32,7 @@ import cascading.tuple.Fields
 import cascading.tuple.Tuple
 import cascading.tuple.TupleEntry
 import com.google.common.base.Objects
+import org.apache.avro.Schema
 import org.apache.commons.codec.binary.Base64
 import org.apache.commons.lang.SerializationUtils
 import org.apache.hadoop.conf.Configuration
@@ -49,23 +50,30 @@ import org.kiji.express.PagedKijiSlice
 import org.kiji.express.flow.ColumnFamily
 import org.kiji.express.flow.ColumnRequest
 import org.kiji.express.flow.ColumnRequestOptions
-import org.kiji.express.flow.QualifiedColumn
+import org.kiji.express.flow.InvalidKijiTapException
 import org.kiji.express.flow.TimeRange
+import org.kiji.express.flow.WriterSchemaSpec
+import org.kiji.express.flow.QualifiedColumn
 import org.kiji.express.util.AvroUtil
 import org.kiji.express.util.SpecificCellSpecs
 import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.mapreduce.framework.KijiConfKeys
+import org.kiji.schema.avro.AvroValidationPolicy
+import org.kiji.schema.avro.AvroSchema
 import org.kiji.schema.ColumnVersionIterator
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiColumnName
-import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiDataRequestBuilder
-import org.kiji.schema.KijiRowData
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiTableWriter
+import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiURI
+import org.kiji.schema.KijiRowData
+import org.kiji.schema.KijiSchemaTable
 import org.kiji.schema.MapFamilyVersionIterator
 import org.kiji.schema.layout.KijiTableLayout
+import org.kiji.schema.util.ProtocolVersion
+import org.kiji.schema.impl.Versions
 
 /**
  * A Kiji-specific implementation of a Cascading `Scheme`, which defines how to read and write the
@@ -251,11 +259,11 @@ private[express] class KijiScheme(
     val uriString: String = flow.getConfigCopy.get(KijiConfKeys.KIJI_OUTPUT_TABLE_URI)
     val uri: KijiURI = KijiURI.newBuilder(uriString).build()
 
-    doAndRelease(Kiji.Factory.open(uri, flow.getConfigCopy)) { kiji: Kiji =>
-      doAndRelease(kiji.openTable(uri.getTable)) { table: KijiTable =>
-        // Set the sink context to an opened KijiTableWriter.
-        sinkCall.setContext(KijiSinkContext(table.openTableWriter(), uri, table.getLayout))
-      }
+    val kiji: Kiji = Kiji.Factory.open(uri, flow.getConfigCopy)
+    doAndRelease(kiji.openTable(uri.getTable)) { table: KijiTable =>
+      // Set the sink context to an opened KijiTableWriter.
+      sinkCall.setContext(
+          KijiSinkContext(table.openTableWriter(), uri, kiji, table.getLayout))
     }
   }
 
@@ -270,13 +278,14 @@ private[express] class KijiScheme(
       flow: FlowProcess[JobConf],
       sinkCall: SinkCall[KijiSinkContext, OutputCollector[_, _]]) {
     // Retrieve writer from the scheme's context.
-    val KijiSinkContext(writer, tableUri, layout) = sinkCall.getContext
+    val KijiSinkContext(writer, tableUri, kiji, layout) = sinkCall.getContext
 
     // Write the tuple out.
     val output: TupleEntry = sinkCall.getOutgoingEntry
     putTuple(
         columns,
         tableUri,
+        kiji,
         timestampField,
         output,
         writer,
@@ -294,7 +303,7 @@ private[express] class KijiScheme(
   override def sinkCleanup(
       flow: FlowProcess[JobConf],
       sinkCall: SinkCall[KijiSinkContext, OutputCollector[_, _]]) {
-    // Close the writer.
+    sinkCall.getContext.kiji.release()
     sinkCall.getContext.kijiTableWriter.close()
     // scalastyle:off null
     sinkCall.setContext(null)
@@ -380,8 +389,10 @@ private[express] object KijiScheme {
         .map { field => columns(field.toString) }
         // Build the tuple, by adding each requested value into result.
         .foreach {
-            case ColumnFamily(family, _, ColumnRequestOptions(_, _, replacementOption, _, pageSize))
-                => {
+            case ColumnFamily(
+                family,
+                _,
+                ColumnRequestOptions(_, _, replacementOption, _, pageSize, _)) => {
                   if (row.containsColumn(family)) {
                     pageSize match {
                       case None => result.add(KijiSlice(row, family))
@@ -407,7 +418,7 @@ private[express] object KijiScheme {
             case QualifiedColumn(
             family,
             qualifier,
-            ColumnRequestOptions(_, _, replacementOption, _, pageSizeOption)) => {
+            ColumnRequestOptions(_, _, replacementOption, _, pageSizeOption, _)) => {
               if (row.containsColumn(family, qualifier)) {
                 pageSizeOption match {
                   case None => result.add(KijiSlice(row, family, qualifier))
@@ -437,6 +448,7 @@ private[express] object KijiScheme {
    *
    * @param columns mapping field names to column definitions.
    * @param tableUri of the Kiji table.
+   * @param kiji is the Kiji instance the table belongs to.
    * @param timestampField is the optional name of a field containing the timestamp that all values
    *     in a tuple should be written to.
    *     Use None if all values should be written at the current time.
@@ -448,6 +460,7 @@ private[express] object KijiScheme {
   private[express] def putTuple(
       columns: Map[String, ColumnRequest],
       tableUri: KijiURI,
+      kiji: Kiji,
       timestampField: Option[Symbol],
       output: TupleEntry,
       writer: KijiTableWriter,
@@ -465,30 +478,99 @@ private[express] object KijiScheme {
       case None => System.currentTimeMillis()
     }
 
+    val layoutVersion = ProtocolVersion.parse(layout.getDesc.getVersion)
+    val validationEnabled =  { layoutVersion.compareTo(Versions.LAYOUT_1_3_0) >= 0 }
+    val schemaTable = kiji.getSchemaTable
+
+    /**
+     * Gets the schema from the schemaIdOption if it exists, otherwise tries to resolve the default
+     * reader schema for the table.  Returns None if neither of those are possible.
+     *
+     * @param columnName of the column to try to get the schema for.
+     * @param schemaSpecOption of the schema to try to resolve.
+     * @return a schema to use for writing, if possible.
+     */
+    def getSchemaIfPossible(
+        columnName: KijiColumnName,
+        schemaSpecOption: Option[WriterSchemaSpec]
+    ): Option[Schema] = {
+      schemaSpecOption match {
+        case Some(schemaSpec) => {
+          if (schemaSpec.useDefaultReader) {
+            return Some(layout.getCellSpec(columnName).getDefaultReaderSchema)
+          } else {
+            return Some(schemaTable.getSchema(schemaSpec.schemaId.get))
+          }
+        }
+        case None => { // The only situation in which no schemaId specified is okay
+          // is if avro validation policy is schema-1.0 compatibility mode.
+          if (
+              validationEnabled &&
+              layout.getCellSpec(columnName).getCellSchema.getAvroValidationPolicy
+                  !=  AvroValidationPolicy.SCHEMA_1_0) {
+            throw new InvalidKijiTapException(
+              "Column '%s' must have a schema specified.".format(columnName))
+          } else {
+            return None
+          }
+        }
+      }
+    }
+
     iterator
         .foreach { fieldName =>
             val value = output.getObject(fieldName.toString)
             columns(fieldName.toString) match {
-              case ColumnFamily(family, qualField, _) => {
+              case cf @ ColumnFamily(
+                  family,
+                  qualField,
+                  ColumnRequestOptions(_, _, _, _, _, schemaSpec)) => {
                 require(
                     qualField.isDefined,
                     "You cannot write to a map family without specifying a qualifier field.")
+                val qualifier = output.getObject(qualField.get).asInstanceOf[String]
+                val schema: Option[Schema] = getSchemaIfPossible(cf.getColumnName(), schemaSpec)
                 writer.put(entityId.toJavaEntityId(tableUri, configuration),
                     family,
-                    output.getObject(qualField.get).asInstanceOf[String],
+                    qualifier,
                     timestamp,
-                    AvroUtil.encodeToJava(value))
+                    AvroUtil.encodeToJava(value, schema))
               }
-              case QualifiedColumn(family, qualifier, _) => {
+              case qc @ QualifiedColumn(
+                  family,
+                  qualifier,
+                  ColumnRequestOptions(_, _, _, _, _, schemaSpec)) => {
+                val schema: Option[Schema] = getSchemaIfPossible(qc.getColumnName(), schemaSpec)
                 writer.put(
                     entityId.toJavaEntityId(tableUri, configuration),
                     family,
                     qualifier,
                     timestamp,
-                    AvroUtil.encodeToJava(value))
+                    AvroUtil.encodeToJava(value, schema))
               }
             }
         }
+  }
+
+  /**
+   * Gets a schema from the reader schema.
+   *
+   * @param readerSchema to find the schema for.
+   * @param schemaTable to look up IDs in.
+   * @return the resolved Schema.
+   */
+  private[express] def resolveSchemaFromJSONOrUid(
+      readerSchema: AvroSchema,
+      schemaTable: KijiSchemaTable): Schema = {
+    Option(readerSchema.getJson) match {
+      case None => {
+        schemaTable.getSchema(readerSchema.getUid)
+      }
+      case Some (json) => {
+        val parser = new Schema.Parser
+        parser.parse(json)
+      }
+    }
   }
 
   /**

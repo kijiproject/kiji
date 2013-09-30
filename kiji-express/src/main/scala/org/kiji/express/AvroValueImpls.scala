@@ -154,11 +154,14 @@ final case class AvroEnum(name: String)
  * Represents an Avro SpecificRecord object.
  *
  * @param specificRecord wrapped by this AvroValue.
+ * @throws IllegalArgumentException if specificRecord is not an
+ *     org.apache.avro.specific.SpecificRecord
  */
 @ApiAudience.Public
 @ApiStability.Experimental
 final case class AvroSpecificRecord(specificRecord: Any)
     extends AvroValue(classOf[SpecificRecord]) {
+  require(specificRecord.isInstanceOf[SpecificRecord])
   override def asSpecificRecord[T <: SpecificRecord](): T = {
     return specificRecord.asInstanceOf[T]
   }

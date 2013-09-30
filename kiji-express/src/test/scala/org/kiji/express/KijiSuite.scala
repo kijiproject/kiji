@@ -20,27 +20,26 @@
 package org.kiji.express
 
 import java.io.InputStream
+import java.util.concurrent.atomic.AtomicInteger
 
-import com.twitter.scalding.{Hdfs, TupleConversions}
+import com.twitter.scalding.TupleConversions
 import org.scalatest.FunSuite
 
 import org.kiji.express.util.Resources._
-import org.kiji.schema.{EntityId => JEntityId}
-import org.kiji.schema.EntityIdFactory
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiTable
-import org.kiji.schema.avro.RowKeyEncoding;
-import org.kiji.schema.avro.RowKeyFormat2;
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts
 import org.kiji.schema.shell.api.Client
 import org.kiji.schema.util.InstanceBuilder
-import org.apache.hadoop.hbase.HBaseConfiguration
 
 /** Contains convenience methods for writing tests that use Kiji. */
 trait KijiSuite
     extends FunSuite
     with TupleConversions {
+  // Counter for incrementing instance names by.
+  val counter: AtomicInteger = new AtomicInteger(0)
+
   /**
    * Builds a slice containing no values.  This can be used to test for behavior of missing
    * values.
@@ -112,8 +111,8 @@ trait KijiSuite
    */
   def makeTestKijiTable(
       layout: KijiTableLayout,
-      instanceName: String = "default"): KijiTable = {
-    val tableName = layout.getName()
+      instanceName: String = "default_%s".format(counter.addAndGet(1))): KijiTable = {
+    val tableName = layout.getName
     val kiji: Kiji = new InstanceBuilder(instanceName)
         .withTable(tableName, layout)
         .build()

@@ -48,7 +48,7 @@ class KijiSourceSuite
   val simpleLayout: KijiTableLayout = layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
 
   /** Table layout using Avro schemas to use for tests. The row keys are formatted. */
-  val avroLayout: KijiTableLayout = layout("avro-types.json")
+  val avroLayout: KijiTableLayout = layout("layout/avro-types.json")
 
   /** Input tuples to use for word count tests. */
   def wordCountInput(uri: String): List[(EntityId, KijiSlice[String])] = {
@@ -605,7 +605,7 @@ class KijiSourceSuite
         .arg("input", "inputFile")
         .arg("table", uri)
         .source(TextLine("inputFile"), mapTypeInput)
-        .sink(KijiOutput(uri)(Map(MapFamily("searches")('terms) -> 'resultCount)))(validateMapWrite)
+        .sink(KijiOutput(uri)(Map('resultCount -> MapFamily("searches")('terms))))(validateMapWrite)
 
     // Run the test.
     jobTest.run.finish
@@ -925,7 +925,7 @@ object KijiSourceSuite extends KijiSuite {
           (line.split(" ")(0), line.split(" ")(1).toInt)
         }
         // Write the results to the "family:column1" column of a Kiji table.
-        .write(KijiOutput(args("table"))(Map(MapFamily("searches")('terms) -> 'resultCount)))
+        .write(KijiOutput(args("table"))(Map('resultCount -> MapFamily("searches")('terms))))
   }
 
   /**

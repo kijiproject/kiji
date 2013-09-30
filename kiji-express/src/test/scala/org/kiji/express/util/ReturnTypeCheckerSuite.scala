@@ -27,13 +27,10 @@ import org.scalatest.FunSuite
 import org.kiji.express.AvroFixed
 import org.kiji.express.AvroRecord
 import org.kiji.express.flow.ColumnRequestOptions
-import org.kiji.schema.KijiColumnName
 import org.kiji.schema.avro.HashSpec
 import org.kiji.schema.avro.HashType
 import org.kiji.schema.avro.RowKeyEncoding
 import org.kiji.schema.filter.RegexQualifierColumnFilter
-import org.kiji.schema.layout.KijiTableLayout
-import org.kiji.schema.layout.KijiTableLayouts
 
 /**
  * Test for converting back and forth between Java and Scala for values
@@ -107,8 +104,6 @@ class ReturnTypeCheckerSuite extends FunSuite {
     assert(res.isInstanceOf[Array[Byte]])
     assert(Array(17, 18).deep === res.asInstanceOf[Array[Byte]].deep)
     // Scala => Java
-    val tableLayout = KijiTableLayout.newLayout(KijiTableLayouts.getLayout("avro-types.json"))
-    val columnName = new KijiColumnName("family", "column2")
     val resJava = AvroUtil.encodeToJava(res)
     assert(resJava.isInstanceOf[java.nio.ByteBuffer])
     assert(resJava === bytes)

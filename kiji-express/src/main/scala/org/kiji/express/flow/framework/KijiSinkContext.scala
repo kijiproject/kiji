@@ -22,6 +22,7 @@ package org.kiji.express.flow.framework
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.schema.KijiTableWriter
+import org.kiji.schema.Kiji
 import org.kiji.schema.KijiURI
 import org.kiji.schema.layout.KijiTableLayout
 
@@ -32,6 +33,7 @@ import org.kiji.schema.layout.KijiTableLayout
  *
  * @param kijiTableWriter is a writer object for this Kiji table.
  * @param tableUri of the Kiji table.
+ * @param kiji is the Kiji instance for this table, used to access the schema table.
  * @param kijiLayout is the layout for this Kiji table.
  */
 @ApiAudience.Private
@@ -39,5 +41,6 @@ import org.kiji.schema.layout.KijiTableLayout
 private[express] case class KijiSinkContext (
     kijiTableWriter: KijiTableWriter,
     tableUri: KijiURI,
+    kiji: Kiji,
     kijiLayout: KijiTableLayout) {
 }

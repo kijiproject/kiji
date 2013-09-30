@@ -39,14 +39,21 @@ import org.apache.hadoop.mapred.lib.NullOutputFormat
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.schema.avro.AvroValidationPolicy
+import org.kiji.express.flow.ColumnFamily
+import org.kiji.express.flow.ColumnRequest
+import org.kiji.express.flow.ColumnRequestOptions
 import org.kiji.express.flow.InvalidKijiTapException
+import org.kiji.express.flow.QualifiedColumn
 import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiURI
+import org.kiji.schema.impl.Versions
 import org.kiji.schema.layout.KijiTableLayout
+import org.kiji.schema.util.ProtocolVersion
 
 /**
  * A Kiji-specific implementation of a Cascading `Tap`, which defines the location of a Kiji table.
@@ -240,7 +247,7 @@ private[express] class KijiTap(
     val kijiUri: KijiURI = KijiURI.newBuilder(tableUri).build()
     val columnNames: List[KijiColumnName] =
         scheme.columns.values.map { column => column.getColumnName() }.toList
-    KijiTap.validate(kijiUri, columnNames, conf)
+    KijiTap.validate(kijiUri, scheme.columns, conf)
   }
 }
 
@@ -253,7 +260,7 @@ object KijiTap {
    */
   private[express] def validate(
       kijiUri: KijiURI,
-      columnNames: List[KijiColumnName],
+      columns: Map[String, ColumnRequest],
       conf: Configuration) {
     // Try to open the Kiji instance.
     val kiji: Kiji =
@@ -281,8 +288,12 @@ object KijiTap {
     val tableLayout: KijiTableLayout = table.getLayout
     table.release() // Release the KijiTable.
 
+    val layoutVersion = ProtocolVersion.parse(tableLayout.getDesc.getVersion)
+    val validationEnabled = { layoutVersion.compareTo(Versions.LAYOUT_1_3_0) >= 0 }
+
     // Collect any errors from nonexistent column names.
-    val columnErrors: List[KijiColumnName] = columnNames.flatMap { (column: KijiColumnName) =>
+    val columnNames = columns.values.map { column => column.getColumnName() }.toList
+    val nonexistentColumns: List[KijiColumnName] = columnNames.flatMap { (column: KijiColumnName) =>
       if (tableLayout.exists(column)) {
         None
       } else {
@@ -290,12 +301,70 @@ object KijiTap {
       }
     }
 
-    // Squash any column name errors and throw it.
-    if (!columnErrors.isEmpty) {
-      throw new InvalidKijiTapException(
-          "One or more columns does not exist in the table %s: %s\n".format(
-              table.getName(),
-              columnErrors.map { _.getName() }.mkString(", ")) )
+    /**
+     * Generates Some(errorMessage) containing an error message if there are any errors in a
+     * ColumnRequest, and None if there are no errors.
+     *
+     * @param columnName of the column to validate.
+     * @param options of the column to validate.
+     * @return None if there are no errors, and Some(errorMessage) if there are.
+     */
+    def generateColumnRequestErrors(
+        columnName: KijiColumnName,
+        options: ColumnRequestOptions
+    ): Option[String] = {
+      val schemaValidationError =
+        "Writer schema required for column '%s', " +
+          "which has compatibility mode '%s' in table '%s'." +
+          "Specify a writer schema using 'ColumnRequest.setWriterSchemaId'" +
+          "or 'ColumnRequest.setUseDefaultWriterSchema."
+
+      if (validationEnabled) {
+        options.writerSchemaSpec match {
+          case None => {
+            tableLayout.getCellSchema(columnName).getAvroValidationPolicy match {
+              case AvroValidationPolicy.SCHEMA_1_0 => None // No error in compatibility mode.
+              case policy @ _ => {
+                Some(schemaValidationError.format(columnName, policy, table.getURI))
+              }
+            }
+          }
+          case Some(schemaId) => None
+        }
+      } else {
+        None
+      }
+    }
+
+    // Make sure all columns that need writer schemas set have it set.
+    val columnSchemaErrorsStrings: List[String] =
+        columns.values.flatMap {columnRequest: ColumnRequest => {
+            columnRequest match {
+              case qc @ QualifiedColumn(_, _, options) => {
+                generateColumnRequestErrors(qc.getColumnName(), options)
+              }
+              case cf @ ColumnFamily(_, _, options) => {
+                generateColumnRequestErrors(cf.getColumnName(), options)
+              }
+            }
+        }}.toList
+
+    // Squash any column name errors, if any.
+    val columnsNotExistErrorString: Option[String] =
+        if (nonexistentColumns.isEmpty) {
+          None
+        } else {
+          Some("One or more columns does not exist in the table %s: %s\n".format(
+            table.getName(),
+            nonexistentColumns.map { _.getName() }.mkString(", ")))
+        }
+
+    // Combine all error strings.
+    val allErrors: List[String] = columnSchemaErrorsStrings ++ columnsNotExistErrorString
+    if (!allErrors.isEmpty) {
+      throw new InvalidKijiTapException("Errors found in validating Tap: %s".format(
+        allErrors.mkString(", \n")
+      ))
     }
   }
 }

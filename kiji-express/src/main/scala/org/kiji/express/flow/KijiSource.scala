@@ -35,14 +35,15 @@ import cascading.tuple.Tuple
 import cascading.tuple.TupleEntry
 import com.google.common.base.Objects
 import com.twitter.scalding.AccessMode
+import com.twitter.scalding.Test
 import com.twitter.scalding.HadoopTest
 import com.twitter.scalding.Hdfs
 import com.twitter.scalding.Local
 import com.twitter.scalding.Mode
 import com.twitter.scalding.Read
 import com.twitter.scalding.Source
-import com.twitter.scalding.Test
 import com.twitter.scalding.Write
+import org.apache.avro.Schema
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.mapred.JobConf
@@ -63,6 +64,8 @@ import org.kiji.express.util.AvroUtil
 import org.kiji.express.util.GenericCellSpecs
 import org.kiji.express.util.Resources._
 import org.kiji.mapreduce.framework.KijiConfKeys
+import org.kiji.schema.Kiji
+import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiRowData
 import org.kiji.schema.KijiRowScanner
@@ -264,37 +267,56 @@ object KijiSource {
       rows: Buffer[Tuple],
       fields: Fields,
       configuration: Configuration) {
-    // Write the desired rows to the table.
-    withKijiTableWriter(tableUri, configuration) { writer: KijiTableWriter =>
-      rows.foreach { row: Tuple =>
-        val tupleEntry = new TupleEntry(fields, row)
-        val iterator = fields.iterator()
+    doAndRelease(Kiji.Factory.open(tableUri)) { kiji: Kiji =>
+      val schemaTable = kiji.getSchemaTable
 
-        // Get the entity id field.
-        val entityIdField = iterator.next().toString
-        val entityId = tupleEntry
+      // Layout to get the default reader schemas from.
+      val layout = withKijiTable(tableUri, configuration) { table: KijiTable =>
+        table.getLayout
+      }
+
+      // Write the desired rows to the table.
+      withKijiTableWriter(tableUri, configuration) { writer: KijiTableWriter =>
+        rows.foreach { row: Tuple =>
+          val tupleEntry = new TupleEntry(fields, row)
+          val iterator = fields.iterator()
+
+          // Get the entity id field.
+          val entityIdField = iterator.next().toString
+          val entityId = tupleEntry
             .getObject(entityIdField)
             .asInstanceOf[EntityId]
 
-        // Iterate through fields in the tuple, adding each one.
-        while (iterator.hasNext) {
-          val field = iterator.next().toString
+          // Iterate through fields in the tuple, adding each one.
+          while (iterator.hasNext) {
+            val field = iterator.next().toString
 
-          // Get the timeline to be written.
-          val cells: Seq[Cell[Any]] = tupleEntry
+            // Get the timeline to be written.
+            val cells: Seq[Cell[Any]] = tupleEntry
               .getObject(field)
               .asInstanceOf[KijiSlice[Any]]
               .cells
 
-          // Write the timeline to the table.
-          cells.map { cell: Cell[Any] =>
-            val datum = AvroUtil.encodeToJava(cell.datum)
-            writer.put(
+            // Write the timeline to the table.
+            cells.map { cell: Cell[Any] =>
+              val readerSchema = layout
+                .getCellSchema(new KijiColumnName(cell.family, cell.qualifier))
+                .getDefaultReader
+              val schema: Option[Schema] =
+                Option(readerSchema) match {
+                  case Some(defaultSchema) =>
+                    Some(KijiScheme.resolveSchemaFromJSONOrUid(defaultSchema, schemaTable))
+                  case None => None
+                }
+
+              val datum = AvroUtil.encodeToJava(cell.datum, schema)
+              writer.put(
                 entityId.toJavaEntityId(tableUri, configuration),
                 cell.family,
                 cell.qualifier,
                 cell.version,
                 datum)
+            }
           }
         }
       }
@@ -315,12 +337,35 @@ object KijiSource {
       columns: Map[String, ColumnRequest]): Map[String, ColumnRequest] = {
     val emptyOptions: ColumnRequestOptions =
         new ColumnRequestOptions(Integer.MAX_VALUE, None, None)
+
+    /**
+     * Transform a ColumnRequestOptions into one that contains all versions, to use for populating
+     * test tables.
+     *
+     * @param options is the original options.
+     * @return the derived options for populating test tables.
+     */
+    def optionsForTestPopulating(options: ColumnRequestOptions): ColumnRequestOptions = {
+      options.writerSchemaSpec match {
+        case Some(WriterSchemaSpec(useDefault, schemaId)) => {
+          if (useDefault) {
+            emptyOptions.newWithUseDefaultReaderSchema()
+          } else {
+            emptyOptions.newWithSchemaId(schemaId.get)
+          }
+        }
+        case None => {
+          emptyOptions
+        }
+      }
+    }
+
     val modifiedColumns = columns.mapValues {
       case QualifiedColumn(family, qualifier, options) => {
-        new QualifiedColumn(family, qualifier, emptyOptions)
+        new QualifiedColumn(family, qualifier, optionsForTestPopulating(options))
       }
       case ColumnFamily(family, qualField, options) => {
-        new ColumnFamily(family, qualField, emptyOptions)
+        new ColumnFamily(family, qualField, optionsForTestPopulating(options))
       }
     }
 

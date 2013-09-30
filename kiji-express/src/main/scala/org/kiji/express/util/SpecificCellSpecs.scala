@@ -132,10 +132,13 @@ object SpecificCellSpecs {
   ): Map[KijiColumnName, Class[_ <: SpecificRecord]] = {
     return columns
         .collect {
-          case (_, cr @ ColumnFamily(_, _, ColumnRequestOptions(_, _, _, Some(avroClass), _))) =>
+          case (_, cr @ ColumnFamily(_, _, ColumnRequestOptions(_, _, _, Some(avroClass), _, _))) =>
               (cr.getColumnName(), avroClass)
-          case (_, cr @ QualifiedColumn(_, _, ColumnRequestOptions(_, _, _, Some(avroClass), _))) =>
-              (cr.getColumnName(), avroClass)
+          case (
+              _,
+              cr @ QualifiedColumn(_, _, ColumnRequestOptions(_, _, _, Some(avroClass), _, _))) => {
+            (cr.getColumnName(), avroClass)
+          }
         }
         .toMap
   }

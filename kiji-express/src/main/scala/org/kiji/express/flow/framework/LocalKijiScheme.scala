@@ -88,6 +88,7 @@ private[express] case class InputContext(
 private[express] case class OutputContext(
     writer: KijiTableWriter,
     tableUri: KijiURI,
+    kiji: Kiji,
     layout: KijiTableLayout,
     configuration: Configuration)
 
@@ -285,11 +286,11 @@ private[express] class LocalKijiScheme(
     val uriString: String = conf.get(KijiConfKeys.KIJI_OUTPUT_TABLE_URI)
     val uri: KijiURI = KijiURI.newBuilder(uriString).build()
 
-    doAndRelease(Kiji.Factory.open(uri, conf)) { kiji: Kiji =>
-      doAndRelease(kiji.openTable(uri.getTable)) { table: KijiTable =>
-        // Set the sink context to an opened KijiTableWriter.
-        sinkCall.setContext(OutputContext(table.openTableWriter(), uri, table.getLayout, conf))
-      }
+    val kiji = Kiji.Factory.open(uri)
+    doAndRelease(kiji.openTable(uri.getTable)) { table: KijiTable =>
+      // Set the sink context to an opened KijiTableWriter.
+      sinkCall
+        .setContext(OutputContext(table.openTableWriter(), uri, kiji, table.getLayout, conf))
     }
   }
 
@@ -303,13 +304,14 @@ private[express] class LocalKijiScheme(
       process: FlowProcess[Properties],
       sinkCall: SinkCall[OutputContext, OutputStream]) {
     // Retrieve writer from the scheme's context.
-    val OutputContext(writer, tableUri, layout, configuration) = sinkCall.getContext
+    val OutputContext(writer, tableUri, kiji, layout, configuration) = sinkCall.getContext
 
     // Write the tuple out.
     val output: TupleEntry = sinkCall.getOutgoingEntry
     KijiScheme.putTuple(
         columns,
         tableUri,
+        kiji,
         timestampField,
         output,
         writer,
@@ -327,6 +329,7 @@ private[express] class LocalKijiScheme(
       process: FlowProcess[Properties],
       sinkCall: SinkCall[OutputContext, OutputStream]) {
     sinkCall.getContext.writer.close()
+    sinkCall.getContext.kiji.release()
     // Set the context to null so that we no longer hold any references to it.
     // scalastyle:off null
     sinkCall.setContext(null)

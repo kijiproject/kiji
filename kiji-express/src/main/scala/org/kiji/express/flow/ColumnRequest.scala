@@ -21,6 +21,7 @@ package org.kiji.express.flow
 
 import java.io.Serializable
 
+import org.apache.avro.Schema
 import org.apache.avro.specific.SpecificRecord
 import org.apache.hadoop.hbase.HConstants
 
@@ -77,6 +78,23 @@ private[express] sealed trait ColumnRequest extends Serializable {
    * @return this ColumnRequest with replacement configured.
    */
   def withPaging(cellsPerPage: Int): ColumnRequest
+
+  /**
+   * Specifies the ID of the schema to be used for writing out to this column.
+   *
+   * @param schemaId of the schema to use for writing out data to this column.
+   * @return this ColumnRequest with schema configured.
+   */
+  def withSchemaId(schemaId: Long): ColumnRequest
+
+  /**
+   * Specifies that the default reader schema is to be used for writing out to this column.
+   *
+   * This expects the table layout specifies a default reader schema for this column.
+   *
+   * @return this ColumnRequest with schema configured to use the default reader schema.
+   */
+  def useDefaultReaderSchema(): ColumnRequest
 }
 
 /**
@@ -177,6 +195,20 @@ final case class QualifiedColumn private[express] (
         family,
         qualifier,
         options.newWithAvroClass(Some(avroClass)))
+  }
+
+  override def withSchemaId(schemaId: Long): ColumnRequest = {
+    return new QualifiedColumn(
+        family,
+        qualifier,
+        options.newWithSchemaId(schemaId))
+  }
+
+  override def useDefaultReaderSchema(): ColumnRequest = {
+    return new QualifiedColumn(
+        family,
+        qualifier,
+        options.newWithUseDefaultReaderSchema())
   }
 
   override def ignoreMissing(): ColumnRequest = {
@@ -308,6 +340,20 @@ final case class ColumnFamily private[express] (
         options.newWithAvroClass(Some(avroClass)))
   }
 
+  override def withSchemaId(schemaId: Long): ColumnRequest = {
+    return new ColumnFamily(
+        family,
+        qualifierSelector,
+        options.newWithSchemaId(schemaId))
+  }
+
+  override def useDefaultReaderSchema(): ColumnRequest = {
+    return new ColumnFamily(
+        family,
+        qualifierSelector,
+        options.newWithUseDefaultReaderSchema())
+  }
+
   override def ignoreMissing(): ColumnRequest = {
     return new ColumnFamily(family, qualifierSelector, options.newWithReplacement(None))
   }
@@ -332,14 +378,34 @@ final case class ColumnFamily private[express] (
 }
 
 /**
+ * Specifies what to use for the writer schema for a column.  Either useDefaultReader should be
+ * true, or schemaId should exist.
+ *
+ * @param useDefaultReader whether to use the default reader to write.
+ * @param schemaId to use to write.
+ */
+case class WriterSchemaSpec private[express] (
+    useDefaultReader: Boolean = false,
+    schemaId: Option[Long] = None) {
+  require(useDefaultReader || schemaId.isDefined)
+}
+
+/**
  * The column-level options for cell requests to Kiji.
+ *
+ * maxVersions, filter, and pageSize are used in Kiji inputs only.
+ *
+ * avroClass and schema are used in Kiji outputs only.
  *
  * @param maxVersions is the maximum number of cells (from the most recent) that will be
  *     retrieved for the column. By default only the most recent cell is retrieved.
  * @param filter that a cell must pass to be retrieved by the request. By default no filter is
  *     applied.
+ * @param avroClass is the class the result will be, if forcing the result to be a SpecificRecord.
  * @param pageSize is the maximum number of cells to maintain in memory when paging through a
  *     column, if paging is enabled.
+ * @param writerSchemaSpec of the schema to use to write to Kiji.  If the validation version >
+ *     1.3, this must be set. If validation version < 1.3 this option does not need to be set.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
@@ -350,7 +416,8 @@ final case class ColumnRequestOptions private[express] (
     private[express] val filter: Option[KijiColumnFilter] = None,
     replacementSlice: Option[KijiSlice[_]] = None,
     avroClass: Option[Class[_ <: SpecificRecord]] = None,
-    pageSize: Option[Int] = None)
+    pageSize: Option[Int] = None,
+    writerSchemaSpec: Option[WriterSchemaSpec] = None)
     extends Serializable {
 
   def newWithReplacement(
@@ -358,7 +425,8 @@ final case class ColumnRequestOptions private[express] (
     return new ColumnRequestOptions(
         maxVersions = maxVersions,
         filter = filter,
-        replacementSlice = newReplacement)
+        replacementSlice = newReplacement,
+        writerSchemaSpec = writerSchemaSpec)
   }
 
   def newWithAvroClass(
@@ -367,11 +435,36 @@ final case class ColumnRequestOptions private[express] (
         maxVersions = maxVersions,
         filter = filter,
         replacementSlice = replacementSlice,
-        avroClass = newAvroClass)
+        avroClass = newAvroClass,
+        writerSchemaSpec = writerSchemaSpec)
   }
 
   def newWithPaging(
     newPageSize: Option[Int]): ColumnRequestOptions = {
-    new ColumnRequestOptions(maxVersions, filter, replacementSlice, avroClass, newPageSize)
+    new ColumnRequestOptions(
+      maxVersions,
+      filter,
+      replacementSlice,
+      avroClass,
+      newPageSize,
+      writerSchemaSpec)
+  }
+
+  def newWithSchemaId(schemaId: Long): ColumnRequestOptions = {
+    return new ColumnRequestOptions(
+      maxVersions = maxVersions,
+      filter = filter,
+      replacementSlice = replacementSlice,
+      avroClass = avroClass,
+      writerSchemaSpec = Some(WriterSchemaSpec(useDefaultReader = false, Some(schemaId))))
+  }
+
+  def newWithUseDefaultReaderSchema(): ColumnRequestOptions = {
+    return new ColumnRequestOptions(
+      maxVersions = maxVersions,
+      filter = filter,
+      replacementSlice = replacementSlice,
+      avroClass = avroClass,
+      writerSchemaSpec = Some(WriterSchemaSpec(useDefaultReader = true, None)))
   }
 }

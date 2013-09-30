@@ -131,7 +131,7 @@ class KijiPipeSuite extends KijiSuite {
   }
 
   test("A KijiPipe can pack tuples into AvroRecords when the table layout has a 'CLASS' type.") {
-    val avroLayout: KijiTableLayout = layout("avro-types.json")
+    val avroLayout: KijiTableLayout = layout("layout/avro-types.json")
 
     val uri: String = doAndRelease(makeTestKijiTable(avroLayout)) { table: KijiTable =>
       table.getURI().toString()
@@ -169,7 +169,7 @@ class KijiPipeSuite extends KijiSuite {
   }
 
   test("A KijiPipe can unpack tuples from AvroRecords.") {
-    val avroLayout: KijiTableLayout = layout("avro-types.json")
+    val avroLayout: KijiTableLayout = layout("layout/avro-types.json")
 
     val uri: String = doAndRelease(makeTestKijiTable(avroLayout)) { table: KijiTable =>
       table.getURI().toString()

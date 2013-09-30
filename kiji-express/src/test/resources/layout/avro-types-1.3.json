@@ -1,0 +1,93 @@
+/**
+ * (c) Copyright 2013 WibiData, Inc.
+ *
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+{
+  name : "table",
+  keys_format : {
+    encoding : "FORMATTED",
+    salt : {
+      hash_size : 2
+    },
+    components : [ {
+      name : "dummy",
+      type : "STRING"
+    }]
+  },
+  locality_groups : [ {
+    name : "default",
+    in_memory : false,
+    max_versions : 2147483647,
+    ttl_seconds : 2147483647,
+    compression_type : "GZ",
+    families : [ {
+      name : "family",
+      columns : [ {
+        name : "column1",
+        column_schema : {
+          type : "INLINE",
+          value : '{"type": "fixed", "size": 16, "name": "md5"}'
+        }
+      }, {
+        name : "column2",
+        column_schema : {
+          type : "INLINE",
+          value : '"bytes"'
+        }
+      }, {
+        name : "column3",
+        column_schema : {
+          type : "AVRO",
+          default_reader: {
+            json: "{\"type\":\"record\",\"name\":\"HashSpec\",\"namespace\":\"org.kiji.schema.avro\",\"fields\":[{\"name\":\"hash_type\",\"type\":{\"type\":\"enum\",\"name\":\"HashType\",\"doc\":\"MD5 hashing (16 bytes).\",\"symbols\":[\"MD5\"]},\"default\":\"MD5\"},{\"name\":\"hash_size\",\"type\":\"int\",\"default\":16},{\"name\":\"suppress_key_materialization\",\"type\":\"boolean\",\"default\":false}]}"
+          }
+        }
+      }, {
+        name : "column_validated",
+        column_schema : {
+          type : "AVRO",
+          avro_validation_policy : "DEVELOPER",
+          default_reader : {
+            json: '{"type": "record", "name": "stringcontainer", "doc": "A simple inline record that contains a string", "fields": [{"name": "contained_string", "type": "string", "id": "int"}]}'
+          }
+        }
+      }, {
+        name : "column_compatibility",
+        column_schema : {
+          avro_validation_policy : "SCHEMA_1_0",
+          type : "INLINE",
+          value : '{"type": "record", "name": "stringcontainer", "doc": "A simple inline record that contains a string", "fields": [{"name": "contained_string", "type": "string", "id": "int"}]}'
+        }
+      }]
+    }, {
+      name : "searches",
+      description : "A map-type column family",
+      map_schema : {
+        type: "INLINE",
+        value: '"int"'
+      }
+    }, {
+      name : "animals",
+      description : "A map-type column family for testing numeric-initial strings",
+      map_schema : {
+        type: "INLINE",
+        value: '"string"'
+      }
+    }]
+  } ],
+  version : "layout-1.3.0"
+}

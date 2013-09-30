@@ -28,6 +28,7 @@ import scala.collection.JavaConverters.mapAsScalaMapConverter
 import scala.collection.JavaConverters.seqAsJavaListConverter
 
 import org.apache.avro.Schema
+import org.apache.avro.generic.GenericRecordBuilder
 import org.apache.avro.generic.GenericData
 import org.apache.avro.generic.GenericRecord
 import org.apache.avro.generic.IndexedRecord
@@ -123,15 +124,22 @@ private[express] object AvroUtil {
   }
 
   /**
-   * Convert Scala types from Express (including generic AvroValue types) into corresponding
-   * Java types, to write back to Kiji.
+   * Convert Scala types from Express (including generic AvroValue types), into corresponding
+   * Java types, to write back to Kiji, using the schema specified.
    *
    * @param x is the object to change into a Kiji-writable type.
+   * @param schema of the Kiji-writable type this object should be, if any specific schema should
+   *     be forced.
    * @return the Java object that can be written to Kiji.
    */
-  private[express] def encodeToJava(x: Any): Any = {
+  private[express] def encodeToJava(x: Any, schema: Option[Schema] = None): Any = {
     x match {
-      case genericValue: AvroValue => unwrapGenericAvro(genericValue)
+      case genericValue: AvroValue => {
+        schema match {
+          case Some(schema) => unwrapWithSchema(genericValue, schema)
+          case None => unwrapGenericAvro(genericValue)
+        }
+      }
       case nongeneric => scalaToJava(nongeneric)
     }
   }
@@ -260,6 +268,71 @@ private[express] object AvroUtil {
         val errorMsgFormat = "Read an unrecognized Java object %s with type %s from Kiji that " +
             "could not be converted to a scala type for use with KijiExpress."
         throw new InvalidClassException(errorMsgFormat.format(javaValue, javaValue.getClass))
+      }
+    }
+  }
+
+  /**
+   * Unwraps an AvroValue according to the schema specified.
+   *
+   * @param genericValue to unwrap.
+   * @param schema to use to unwrap it.
+   * @return A java object unwrapped according to the schema.
+   * @throws IllegalArgumentException if the schema cannot be used to unwrap the genericValue.
+   */
+  private[express] def unwrapWithSchema(genericValue: AvroValue, schema: Schema): Any = {
+    genericValue match {
+      case AvroInt(i) => {
+        require(schema.getType == Schema.Type.INT)
+        scalaToJava(i)
+      }
+      case AvroBoolean(b) => {
+        require(schema.getType == Schema.Type.BOOLEAN)
+        scalaToJava(b)
+      }
+      case AvroLong(l) => {
+        require(schema.getType == Schema.Type.LONG)
+        scalaToJava(l)
+      }
+      case AvroFloat(f) => {
+        require(schema.getType == Schema.Type.FLOAT)
+        scalaToJava(f)
+      }
+      case AvroDouble(d) => {
+        require(schema.getType == Schema.Type.DOUBLE)
+        scalaToJava(d)
+      }
+      case AvroString(s) => {
+        require(schema.getType == Schema.Type.STRING)
+        scalaToJava(s)
+      }
+      case AvroList(l) => {
+        require(schema.getType == Schema.Type.ARRAY)
+        scalaToJava(l)
+      }
+      case AvroByteArray(b) => {
+        require(schema.getType == Schema.Type.BYTES)
+        scalaToJava(b)
+      }
+      case AvroEnum(e) => {
+        require(schema.getType == Schema.Type.ENUM)
+        scalaToJava(e)
+      }
+      case AvroFixed(f) => {
+        require(schema.getType == Schema.Type.FIXED)
+        scalaToJava(f)
+      }
+      case AvroSpecificRecord(s) => {
+        require(s.asInstanceOf[SpecificRecord].getSchema == schema)
+        s
+      }
+      case AvroRecord(fieldMapping) => {
+        require(schema.getType == Schema.Type.RECORD)
+        val recordBuilder = new GenericRecordBuilder(schema)
+        schema.getFields.asScala.foreach { field: Schema.Field => {
+          val unwrapped = unwrapWithSchema(fieldMapping(field.name), field.schema())
+          recordBuilder.set(field, unwrapped) } }
+        recordBuilder.build()
       }
     }
   }
