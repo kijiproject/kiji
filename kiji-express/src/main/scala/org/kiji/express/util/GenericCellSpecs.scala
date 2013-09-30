@@ -45,12 +45,6 @@ import org.kiji.schema.layout.KijiTableLayout
 object GenericCellSpecs {
 
   /**
-   * A cache for generic cell specifications for columns in a particular table layout. This cache
-   * exists to prevent us from generating these cell spec maps multiple times for the same layout.
-   */
-  private val specMapCache = MMap[KijiTableLayout, JMap[KijiColumnName, CellSpec]]()
-
-  /**
    * Gets a generic cell specification mapping for a Kiji table.
    *
    * @param table used to get the generic cell specification mapping.
@@ -69,13 +63,7 @@ object GenericCellSpecs {
    *     columns.
    */
   def apply(layout: KijiTableLayout): JMap[KijiColumnName, CellSpec] = {
-    // Get the cell specification map cached for the layout, or generate a new one which is then
-    // cached and returned.
-    return specMapCache.get(layout).getOrElse {
-      val specMap = createCellSpecMap(layout)
-      specMapCache.put(layout, specMap)
-      specMap
-    }
+    return createCellSpecMap(layout)
   }
 
   /**

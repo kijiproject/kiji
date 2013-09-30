@@ -129,7 +129,7 @@ private[express] final class GenericRowDataConverter(uri: KijiURI, conf: Configu
         .getColumnNames()
         .asScala
         .foldLeft(new HashMap[KijiColumnName, CellSpec]()) { (specMap, columnName) =>
-          specMap.put(columnName, layout.getCellSpec(columnName).setReaderSchema(null))
+          specMap.put(columnName, layout.getCellSpec(columnName).setUseWriterSchema())
           specMap
         }
     // scalastyle:on null
