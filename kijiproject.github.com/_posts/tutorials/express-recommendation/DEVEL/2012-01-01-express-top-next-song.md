@@ -138,7 +138,7 @@ Finally, we create entity IDs using the `firstSong` field and put it in the `ent
 
 {% highlight scala %}
     .map('firstSong -> 'entityId) { firstSong: String =>
-        EntityId(args("songs-table"))(firstSong) }
+        EntityId(firstSong) }
     .write(KijiOutput(args("songs-table"))('topNextSongs -> "info:top_next_songs"))
 {% endhighlight %}
 
