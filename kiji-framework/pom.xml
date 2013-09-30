@@ -21,7 +21,7 @@
 
   <groupId>org.kiji.framework</groupId>
   <artifactId>framework-pom</artifactId>
-  <version>1.1.3</version>
+  <version>1.2.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Kiji framework dependency definitions</name>
@@ -46,8 +46,8 @@
     <kiji-common-flags.version>1.0.7</kiji-common-flags.version>
     <kiji-delegation.version>1.0.0</kiji-delegation.version>
     <kiji-platforms.version>1.2.0</kiji-platforms.version>
-    <kiji-schema.version>1.2.1</kiji-schema.version>
-    <kiji-schema-shell.version>1.2.0</kiji-schema-shell.version>
+    <kiji-schema.version>1.3.0-SNAPSHOT</kiji-schema.version>
+    <kiji-schema-shell.version>1.3.0-SNAPSHOT</kiji-schema-shell.version>
     <kiji-mapreduce.version>1.1.0</kiji-mapreduce.version>
     <kiji-mapreduce-lib.version>1.0.0</kiji-mapreduce-lib.version>
   </properties>
