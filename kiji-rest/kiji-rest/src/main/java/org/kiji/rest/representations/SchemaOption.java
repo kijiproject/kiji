@@ -83,7 +83,7 @@ public class SchemaOption {
    */
   public Object getOptionValue() {
     if (mSchemaUid >= 0) {
-      return new Long(mSchemaUid);
+      return Long.valueOf(mSchemaUid);
     } else if (mParsedSchema != null) {
       return mParsedSchema.toString();
     } else {
