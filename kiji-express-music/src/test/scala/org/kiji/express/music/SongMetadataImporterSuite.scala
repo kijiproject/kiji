@@ -61,9 +61,9 @@ class SongMetadataImporterSuite extends KijiSuite {
     // Get the first song metadata record written.
     val metadata = generatedMetadata(0)._2.getFirstValue()
     // And confirm it contains the fields we expect.
-    assert("song name-0" === metadata("songName").asString)
-    assert("artist-1" === metadata("artistName").asString)
-    assert("album-1" === metadata("albumName").asString)
+    assert("song name-0" === metadata("song_name").asString)
+    assert("artist-1" === metadata("artist_name").asString)
+    assert("album-1" === metadata("album_name").asString)
     assert("genre5.0" === metadata("genre").asString)
     assert(100L === metadata("tempo").asLong)
     assert(240L === metadata("duration").asLong)

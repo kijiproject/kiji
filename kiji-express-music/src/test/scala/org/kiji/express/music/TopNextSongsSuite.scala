@@ -73,7 +73,7 @@ class TopNextSongsSuite extends KijiSuite {
     val topSongForEachSong = topNextSongs
         .map { case(entityId, slice) =>
             (entityId(0).toString, slice) }
-        .map { case(id, slice) => (id, slice.getFirstValue()("topSongs")) }
+        .map { case(id, slice) => (id, slice.getFirstValue()("top_songs")) }
 
     topSongForEachSong.foreach {
       case ("song-0", topSongs) => {
@@ -101,7 +101,7 @@ class TopNextSongsSuite extends KijiSuite {
         .arg("users-table", usersURI)
         .arg("songs-table", songsURI)
         .source(KijiInput(usersURI)(Map(Column("info:track_plays", all) -> 'playlist)), testInput)
-        .sink(KijiOutput(songsURI)('topNextSongs -> "info:top_next_songs")) { validateTest }
+        .sink(KijiOutput(songsURI)('top_next_songs -> "info:top_next_songs")) { validateTest }
         .run
         .finish
   }
@@ -111,7 +111,7 @@ class TopNextSongsSuite extends KijiSuite {
         .arg("users-table", usersURI)
         .arg("songs-table", songsURI)
         .source(KijiInput(usersURI)(Map(Column("info:track_plays", all) -> 'playlist)), testInput)
-        .sink(KijiOutput(songsURI)('topNextSongs -> "info:top_next_songs")) { validateTest }
+        .sink(KijiOutput(songsURI)('top_next_songs -> "info:top_next_songs")) { validateTest }
         .runHadoop
         .finish
   }

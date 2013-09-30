@@ -39,13 +39,13 @@ class SongRecommenderSuite extends KijiSuite {
   // tutorial.
   executeDDLResource(kiji, "org/kiji/express/music/music-schema.ddl")
 
-  // Create some data (track plays and topSongs) for two users.
+  // Create some data (track plays and top songs) for two users.
 
   val songFour: AvroRecord = AvroRecord("song_id" -> "song-4", "count" -> 10L)
-  val topSongsForSong1 = AvroRecord("topSongs" -> AvroList(List(songFour)))
+  val topSongsForSong1 = AvroRecord("top_songs" -> AvroList(List(songFour)))
 
   val songFive: AvroRecord = AvroRecord("song_id" -> "song-5", "count" -> 9L)
-  val topSongsForSong2 = AvroRecord("topSongs" -> AvroList(List(songFive)))
+  val topSongsForSong2 = AvroRecord("top_songs" -> AvroList(List(songFive)))
 
   val testUserInput =
     (EntityId("user-1"),

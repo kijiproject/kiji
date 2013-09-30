@@ -32,7 +32,8 @@ import org.kiji.express.flow._
 import org.kiji.express.modeling.ScoreProducerJobBuilder
 import org.kiji.express.modeling.config.ModelDefinition
 import org.kiji.express.modeling.config.ModelEnvironment
-import org.kiji.schema.{Kiji, KijiDataRequest}
+import org.kiji.schema.Kiji
+import org.kiji.schema.KijiDataRequest
 
 /**
  * Provides tests for the KijiExpress modeling workflow that makes song recommendations.
@@ -130,11 +131,11 @@ class RecommendationModelSuite extends KijiSuite {
   val songsTableImportResult: Boolean = new KijiJob(new Args(Map())) {
     IterableSource(List(
         (EntityId("song-0"),
-            AvroRecord("topSongs" -> List(AvroRecord("song_id" -> "song-1")))),
+            AvroRecord("top_songs" -> List(AvroRecord("song_id" -> "song-1", "count" -> 1L)))),
         (EntityId("song-1"),
-            AvroRecord("topSongs" -> List(AvroRecord("song_id" -> "song-2")))),
+            AvroRecord("top_songs" -> List(AvroRecord("song_id" -> "song-2", "count" -> 2L)))),
         (EntityId("song-2"),
-            AvroRecord("topSongs" -> List(AvroRecord("song_id" -> "song-3"))))),
+            AvroRecord("top_songs" -> List(AvroRecord("song_id" -> "song-3", "count" -> 3L))))),
         ('entityId, 'topNextSongs)
     ).write(KijiOutput(songsTableURI)('topNextSongs -> "info:top_next_songs"))
   }.run

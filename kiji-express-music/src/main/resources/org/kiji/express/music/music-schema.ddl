@@ -21,8 +21,31 @@ WITH LOCALITY GROUP default
   INMEMORY = false,
   COMPRESSED WITH NONE,
   FAMILY info WITH DESCRIPTION 'Information about a song' (
-    metadata CLASS org.kiji.examples.music.SongMetadata WITH DESCRIPTION 'Song metadata',
-    top_next_songs CLASS org.kiji.examples.music.TopSongs
-       WITH DESCRIPTION 'The most likely next songs to be played, and their counts'
+    metadata { "type" : "record", "name" : "SongMetadata", "fields" :
+        [{"name" : "song_name", "type" : "string"},
+         {"name" : "album_name", "type" : "string"},
+         {"name" : "artist_name", "type" : "string"},
+         {"name" : "genre", "type" : "string"},
+         {"name" : "tempo", "type" : "long"},
+         {"name" : "duration", "type" : "long"}] } WITH DESCRIPTION 'Song metadata',
+    top_next_songs WITH SCHEMA { "type" : "record", "name" : "TopSongs", "fields" :
+        [{"name" : "top_songs", "type" :
+            {"type" : "array", "items" : { "type" : "record", "name" : "song_count", "fields" :
+                [{"name" : "song_id", "type" : "string"},
+                 {"name" : "count", "type" : "long"}]
+            } }
+        } ]
+    } WITH DESCRIPTION 'The most likely next songs to be played, and their counts.'
   )
 );
+
+ALTER TABLE 'songs' ADD DEFAULT READER SCHEMA
+{ "type" : "record", "name" : "TopSongs", "fields" :
+    [{"name" : "top_songs", "type" :
+        {"type" : "array", "items" : { "type" : "record", "name" : "song_count", "fields" :
+            [{"name" : "song_id", "type" : "string"},
+             {"name" : "count", "type" : "long"}]
+        } }
+    } ]
+}
+FOR COLUMN 'info':'top_next_songs';

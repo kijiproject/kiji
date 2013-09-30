@@ -59,7 +59,7 @@ class TopNextSongs(args: Args) extends KijiJob(args) {
    * @return a group containing a list of song count records, sorted by count.
    */
   def sortNextSongs(nextSongs: GroupBuilder): GroupBuilder = {
-    nextSongs.sortBy('count).reverse.toList[AvroRecord]('songCount -> 'topSongs)
+    nextSongs.sortBy('count).reverse.toList[AvroRecord]('song_count -> 'top_songs)
   }
 
   // This Scalding pipeline does the following:
@@ -74,12 +74,12 @@ class TopNextSongs(args: Args) extends KijiJob(args) {
   // 8. Creates an entity id for the songs table for each song.
   // 9. Writes each song's TopSongs record to Kiji.
   KijiInput(args("users-table"))(Map(Column("info:track_plays", all) -> 'playlist))
-      .flatMap('playlist -> ('firstSong, 'song_id)) { bigrams }
-      .groupBy(('firstSong, 'song_id)) { _.size('count) }
-      .packAvro(('song_id, 'count) -> 'songCount)
-      .groupBy('firstSong) { sortNextSongs }
-      .packAvro('topSongs -> 'topNextSongs)
-      .map('firstSong -> 'entityId) { firstSong: String =>
+      .flatMap('playlist -> ('first_song, 'song_id)) { bigrams }
+      .groupBy(('first_song, 'song_id)) { _.size('count) }
+      .packAvro(('song_id, 'count) -> 'song_count)
+      .groupBy('first_song) { sortNextSongs }
+      .packAvro('top_songs -> 'top_next_songs)
+      .map('first_song -> 'entityId) { firstSong: String =>
           EntityId(firstSong) }
-      .write(KijiOutput(args("songs-table"))('topNextSongs -> "info:top_next_songs"))
+      .write(KijiOutput(args("songs-table"))('top_next_songs -> "info:top_next_songs"))
 }

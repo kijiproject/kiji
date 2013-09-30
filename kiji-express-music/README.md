@@ -5,8 +5,8 @@ KijiExpress provides a simple data analysis language using
 [KijiSchema](https://github.com/kijiproject/kiji-schema/) and
 [Scalding](https://github.com/twitter/scalding/).
 
-You can access the full text of the tutorial 
-[here](http://docs.kiji.org/tutorials/express-recommendation/0.1.0/music-overview/).
+You can access the full text of the tutorial
+[here](http://docs.kiji.org/tutorials/express-recommendation/${project.version}/music-overview/).
 
 In this tutorial, you will learn to create a simple music recommender. To this end, you will
 learn to:
@@ -19,7 +19,7 @@ learn to:
 Download & Start Bento
 ----------------------
 Download the BentoBox, a development environment with Hadoop, HBase and all Kiji components
-from [here](http://archive.kiji.org/tarballs/kiji-bento-albacore-1.0.1-release.tar.gz).
+from [here](http://www.kiji.org/getstarted/#Downloads).
 
     tar xzf kiji-bento-*.tar.gz
 

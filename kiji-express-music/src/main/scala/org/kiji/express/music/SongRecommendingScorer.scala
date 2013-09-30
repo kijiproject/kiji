@@ -60,7 +60,7 @@ class SongRecommendingScorer extends Scorer {
       // then get the first record in that list and extract the field "song_id" from it. This
       // will be the id of the song most frequently played after the user's most recently
       // listened to track.
-      songsListRecord("topSongs").asList()(0)("song_id").asString()
+      songsListRecord("top_songs").asList()(0)("song_id").asString()
     }
     // If nextSong is 'Some' recommendation, return that recommendation,
     // if it's 'None' generate a random song name and use that as the recommendation.
