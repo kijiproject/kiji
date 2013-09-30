@@ -407,7 +407,7 @@ public final class RowResourceUtil {
                   jsonValue = node.toString();
                 }
                 Schema actualWriter = restCell.getWriterSchema(schemaTable);
-                if(actualWriter == null) {
+                if (actualWriter == null) {
                   throw new IOException("Unrecognized schema " + restCell.getValue());
                 }
                 putCell(writer, entityId, jsonValue, column, timestamp, actualWriter);
