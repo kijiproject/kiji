@@ -74,5 +74,6 @@ class SongMetadataImporter(args: Args) extends KijiJob(args) {
       .map('song_id -> 'entityId) { songId: String => EntityId(songId) }
       .packAvro(('song_name, 'album_name, 'artist_name, 'genre, 'tempo, 'duration)
           -> 'metadata)
-      .write(KijiOutput(args("table-uri"))('metadata -> "info:metadata"))
+      .write(KijiOutput(args("table-uri"))(Map('metadata ->
+          Column("info:metadata").useDefaultReaderSchema())))
 }

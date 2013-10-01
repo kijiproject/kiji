@@ -86,9 +86,12 @@ class SongRecommenderSuite extends KijiSuite {
     }
   }
 
-  val userSource: KijiSource = KijiInput(usersURI)("info:track_plays" -> 'trackPlays)
-  val songSource: KijiSource = KijiInput(songsURI)("info:top_next_songs" -> 'topNextSongs)
-  val userSourceOut: KijiSource = KijiOutput(usersURI)('nextSong -> "info:next_song_rec")
+  val userSource: KijiSource = KijiInput(usersURI)(Map(
+      Column("info:track_plays").useDefaultReaderSchema() -> 'trackPlays))
+  val songSource: KijiSource = KijiInput(songsURI)(
+      Map(Column("info:top_next_songs").useDefaultReaderSchema() -> 'topNextSongs))
+  val userSourceOut: KijiSource = KijiOutput(usersURI)(
+      Map('nextSong -> Column("info:next_song_rec").useDefaultReaderSchema()))
 
   test("songRecommender computes a recommendation for the next song to listen to. (Local)") {
     JobTest(new SongRecommender(_))
@@ -96,7 +99,7 @@ class SongRecommenderSuite extends KijiSuite {
       .arg("songs-table", songsURI)
       .source(userSource, testUserInput)
       .source(songSource, testSongInput)
-      .sink(KijiOutput(usersURI)('nextSong -> "info:next_song_rec")) { validateTest }
+      .sink(userSourceOut) { validateTest }
       .run
       .finish
   }

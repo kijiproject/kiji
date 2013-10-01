@@ -121,7 +121,8 @@ class RecommendationModelSuite extends KijiSuite {
         (EntityId("user-0"), "song-0"),
         (EntityId("user-1"), "song-1"),
         (EntityId("user-2"), "song-2")), ('entityId, 'trackPlay)
-    ).write(KijiOutput(usersTableURI)('trackPlay -> "info:track_plays"))
+    ).write(KijiOutput(usersTableURI)(Map('trackPlay ->
+        Column("info:track_plays").useDefaultReaderSchema())))
   }.run
   assert(userTableImportResult, "Failed to import track plays to user table in test setup.")
 
@@ -137,7 +138,8 @@ class RecommendationModelSuite extends KijiSuite {
         (EntityId("song-2"),
             AvroRecord("top_songs" -> List(AvroRecord("song_id" -> "song-3", "count" -> 3L))))),
         ('entityId, 'topNextSongs)
-    ).write(KijiOutput(songsTableURI)('topNextSongs -> "info:top_next_songs"))
+    ).write(KijiOutput(songsTableURI)(Map('topNextSongs ->
+        Column("info:top_next_songs").useDefaultReaderSchema())))
   }.run
   assert(songsTableImportResult, "Failed to import top next songs lists in test setup.")
 

@@ -100,8 +100,10 @@ class TopNextSongsSuite extends KijiSuite {
     JobTest(new TopNextSongs(_))
         .arg("users-table", usersURI)
         .arg("songs-table", songsURI)
-        .source(KijiInput(usersURI)(Map(Column("info:track_plays", all) -> 'playlist)), testInput)
-        .sink(KijiOutput(songsURI)('top_next_songs -> "info:top_next_songs")) { validateTest }
+        .source(KijiInput(usersURI)(
+            Map(Column("info:track_plays", all).useDefaultReaderSchema() -> 'playlist)), testInput)
+        .sink(KijiOutput(songsURI)(Map('top_next_songs ->
+            Column("info:top_next_songs").useDefaultReaderSchema()))) { validateTest }
         .run
         .finish
   }
@@ -110,8 +112,10 @@ class TopNextSongsSuite extends KijiSuite {
     JobTest(new TopNextSongs(_))
         .arg("users-table", usersURI)
         .arg("songs-table", songsURI)
-        .source(KijiInput(usersURI)(Map(Column("info:track_plays", all) -> 'playlist)), testInput)
-        .sink(KijiOutput(songsURI)('top_next_songs -> "info:top_next_songs")) { validateTest }
+        .source(KijiInput(usersURI)(
+            Map(Column("info:track_plays", all).useDefaultReaderSchema() -> 'playlist)), testInput)
+        .sink(KijiOutput(songsURI)(Map('top_next_songs ->
+            Column("info:top_next_songs").useDefaultReaderSchema()))) { validateTest }
         .runHadoop
         .finish
   }

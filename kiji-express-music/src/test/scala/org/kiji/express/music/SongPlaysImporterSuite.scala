@@ -68,13 +68,16 @@ class SongPlaysImporterSuite extends KijiSuite {
     }
   }
 
+  val jobOutput = KijiOutput(tableURI, 'playTime)(Map('songId ->
+      Column("info:track_plays").useDefaultReaderSchema()))
+
   // Run a test of the import job, running in Cascading's local runner.
   test("SongPlaysImporter puts JSON play records into the user table using local mode.") {
     JobTest(new SongPlaysImporter(_))
         .arg("table-uri", tableURI)
         .arg("input", "song-plays.json")
         .source(TextLine("song-plays.json"), testInput)
-        .sink(KijiOutput(tableURI, 'playTime)('songId -> "info:track_plays"))(validateTest)
+        .sink(jobOutput)(validateTest)
         .run
         .finish
   }
@@ -85,7 +88,7 @@ class SongPlaysImporterSuite extends KijiSuite {
     .arg("table-uri", tableURI)
     .arg("input", "song-plays.json")
     .source(TextLine("song-plays.json"), testInput)
-    .sink(KijiOutput(tableURI, 'playTime)('songId -> "info:track_plays"))(validateTest)
+    .sink(jobOutput)(validateTest)
     .runHadoop
     .finish
   }
