@@ -21,14 +21,13 @@ package org.kiji.express.modeling.config
 
 import java.io.File
 
-import com.twitter.scalding.Hdfs
 import com.twitter.scalding.Source
 import org.apache.commons.io.FileUtils
-import org.apache.hadoop.hbase.HBaseConfiguration
 import org.scalatest.FunSuite
 
 import org.kiji.express.modeling.Trainer
 import org.kiji.express.modeling.framework.ModelExecutor
+import org.kiji.express.util.Resources.doAndClose
 
 class IOSpecSuite extends FunSuite {
   val textSourceLocation: String = "src/test/resources/sources/TextSource"
@@ -48,15 +47,11 @@ class IOSpecSuite extends FunSuite {
             keyValueStoreSpecs = Seq()
         )),
         scoreEnvironment = None)
-    // Hack to set the mode correctly. Scalding sets the mode in JobTest
-    // which creates a problem for running the prepare/train phases, which run
-    // their own jobs. This makes the test below run in HadoopTest mode instead
-    // of Hadoop mode whenever it is run after another test that uses JobTest.
-    // Remove this after the bug in Scalding is fixed.
-    com.twitter.scalding.Mode.mode = Hdfs(false, HBaseConfiguration.create())
 
     ModelExecutor(modelDef, modelEnv).runTrainer()
-    val lines = scala.io.Source.fromFile(textSourceOutput + "/part-00000").mkString
+    val lines = doAndClose(scala.io.Source.fromFile(textSourceOutput + "/part-00000")) {
+      source: scala.io.Source => source.mkString
+    }
     assert(lines.split("""\s+""").deep == Array("kiji", "3").deep)
     FileUtils.deleteDirectory(new File(textSourceOutput))
   }

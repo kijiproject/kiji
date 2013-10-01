@@ -23,10 +23,8 @@ import java.io.File
 
 import com.google.common.io.Files
 import com.twitter.scalding.Args
-import com.twitter.scalding.Hdfs
 
 import org.apache.commons.io.FileUtils
-import org.apache.hadoop.hbase.HBaseConfiguration
 
 import org.kiji.express.KijiSuite
 import org.kiji.express.modeling.config.ExpressColumnRequest
@@ -38,6 +36,7 @@ import org.kiji.express.modeling.config.ModelEnvironment
 import org.kiji.express.modeling.config.TextSourceSpec
 import org.kiji.express.modeling.config.TrainEnvironment
 import org.kiji.express.modeling.framework.ModelExecutor
+import org.kiji.express.util.Resources.doAndClose
 import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiTable
@@ -117,18 +116,14 @@ class LMTrainerSuite extends KijiSuite {
       // Build the produce job.
       val modelExecutor = ModelExecutor(modelDefinition, modelEnvironment)
 
-      // Hack to set the mode correctly. Scalding sets the mode in JobTest
-      // which creates a problem for running the prepare/train phases, which run
-      // their own jobs. This makes the test below run in HadoopTest mode instead
-      // of Hadoop mode whenever it is run after another test that uses JobTest.
-      // Remove this after the bug in Scalding is fixed.
-      com.twitter.scalding.Mode.mode = Hdfs(false, HBaseConfiguration.create())
-
       // Verify that everything went as expected.
       assert(modelExecutor.runTrainer(new Args(Map("max-iter" -> List("1")))))
     }
     kiji.release()
-    val lines = scala.io.Source.fromFile(outputParams + "/part-00000").mkString
+    val lines = doAndClose(scala.io.Source.fromFile(outputParams + "/part-00000")) {
+      source: scala.io.Source => source.mkString
+    }
+
     // Theta values after a single iteration.
     assert(lines.split("""\s+""").map(_.toDouble).deep ===
         Array(0.0, 0.75, 3.0, 1.0, 1.25, 5.0).deep)

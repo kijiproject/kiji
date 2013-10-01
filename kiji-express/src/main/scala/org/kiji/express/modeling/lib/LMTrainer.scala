@@ -33,6 +33,7 @@ import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
 import org.kiji.express.KijiSlice
 import org.kiji.express.modeling.Trainer
+import org.kiji.express.util.Resources.doAndClose
 
 /**
  * Trainer to perform across-table linear regression. This currently only supports univariate

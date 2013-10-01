@@ -25,6 +25,7 @@ import com.google.common.io.Files
 import org.apache.commons.io.FileUtils
 
 import org.kiji.express.KijiSuite
+import org.kiji.express.util.Resources.doAndClose
 import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiTable
@@ -75,7 +76,9 @@ class LMToolSuite extends KijiSuite {
         "--hdfs"))
 
     kiji.release()
-    val lines = scala.io.Source.fromFile(outputParams + "/part-00000").mkString
+    val lines = doAndClose(scala.io.Source.fromFile(outputParams + "/part-00000")) {
+      source: scala.io.Source => source.mkString
+    }
     // Theta values after a single iteration.
     assert(lines.split("""\s+""").map(_.toDouble).deep ===
         Array(0.0, 0.75, 3.0, 1.0, 1.25, 5.0).deep)

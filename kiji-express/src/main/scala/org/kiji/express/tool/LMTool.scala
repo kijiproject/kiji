@@ -92,13 +92,6 @@ final class LMTool extends Tool {
       scoreEnvironment = None
     )
 
-    // Hack to set the mode correctly. Scalding sets the mode in JobTest
-    // which creates a problem for running the prepare/train phases, which run
-    // their own jobs. This makes the test below run in HadoopTest mode instead
-    // of Hadoop mode whenever it is run after another test that uses JobTest.
-    // Remove this after the bug in Scalding is fixed.
-    // com.twitter.scalding.Mode.mode = Hdfs(false, HBaseConfiguration.create())
-
     val modelExecutor = ModelExecutor(modelDefinition, modelEnvironment, jobArgs)
     modelExecutor.runTrainer() match {
       case true => 0

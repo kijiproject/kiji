@@ -1,0 +1,11 @@
+{
+  "name":"lr-model-def",
+  "version":"1.0",
+  "protocol_version":"model_definition-0.2.0",
+  "preparer_class":null,
+  "trainer_class":{
+    "string":"org.kiji.express.modeling.lib.LMTrainer"
+  },
+  "scorer_phase":null,
+  "pmml_file":null
+}

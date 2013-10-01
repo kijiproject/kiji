@@ -20,6 +20,8 @@
 package org.kiji.express.modeling.framework
 
 import com.twitter.scalding.Args
+import com.twitter.scalding.Hdfs
+import com.twitter.scalding.Mode
 import com.twitter.scalding.Source
 
 import org.apache.hadoop.conf.Configuration
@@ -62,7 +64,11 @@ final case class ModelExecutor(
     modelDefinition: ModelDefinition,
     modelEnvironment: ModelEnvironment,
     args: Args = Args(Nil),
+    mode: Mode = Hdfs(false, HBaseConfiguration.create()),
     hadoopConfiguration: Configuration = HBaseConfiguration.create()) {
+  // This is an implicit variable for the entire lifecycle
+  Mode.mode = mode
+
   /**
    * Creates an instance of the specified phase class.
    *
