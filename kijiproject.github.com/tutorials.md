@@ -11,7 +11,8 @@ to the Kiji version you are using.
 # KijiSchema
 Covers the core functionality of Kiji; creating, writing, and reading from tables.
 
-* [Phone Book Tutorial](tutorials/phonebook-tutorial/1.0.0/phonebook-tutorial) (latest)
+* [Phone Book Tutorial](tutorials/phonebook-tutorial/1.1.0/phonebook-tutorial) (latest)
+* [Phone Book Tutorial 1.0.0](tutorials/phonebook-tutorial/1.0.0/phonebook-tutorial)
 * [Phone Book Tutorial 1.0.0-rc6](tutorials/phonebook-tutorial/1.0.0-rc6/phonebook-tutorial)
 * [Phone Book Tutorial 1.0.0-rc5](tutorials/phonebook-tutorial/1.0.0-rc5/phonebook-tutorial)
 * [Phone Book Tutorial 1.0.0-rc4](tutorials/phonebook-tutorial/1.0.0-rc4/phonebook-tutorial)
@@ -21,7 +22,8 @@ Covers the core functionality of Kiji; creating, writing, and reading from table
 Covers how to build and run MapReduce jobs that use Kiji tables as input and/or output. This is
 the word count of recommendation systems.
 
-* [Music Recommendation Tutorial](tutorials/music-recommendation/1.0.0/music-overview) (latest)
+* [Music Recommendation Tutorial](tutorials/music-recommendation/1.1.0/music-overview) (latest)
+* [Music Recommendation Tutorial 1.0.0](tutorials/music-recommendation/1.0.0/music-overview)
 * [Music Recommendation Tutorial 1.0.0-rc61](tutorials/music-recommendation/1.0.0-rc61/music-overview)
 * [Music Recommendation Tutorial 1.0.0-rc6](tutorials/music-recommendation/1.0.0-rc6/music-overview)
 * [Music Recommendation Tutorial 1.0.0-rc5](tutorials/music-recommendation/1.0.0-rc5/music-overview)
@@ -31,7 +33,8 @@ the word count of recommendation systems.
 Covers how to build and run Express jobs that use Kiji tables as input and/or output. This is the
 word count of recommendation systems.  This tutorial mirrors the KijiMR music tutorial closely.
 
-* [KijiExpress Tutorial](tutorials/express-recommendation/0.7.0/express-overview) (latest)
+* [KijiExpress Tutorial](tutorials/express-recommendation/0.8.0/express-overview) (latest)
+* [KijiExpress Tutorial 0.7.0](tutorials/express-recommendation/0.7.0/express-overview)
 * [KijiExpress Tutorial 0.6.0](tutorials/express-recommendation/0.6.0/express-overview)
 * [KijiExpress Tutorial 0.5.0](tutorials/express-recommendation/0.5.0/express-overview)
 * [KijiExpress Tutorial 0.4.0](tutorials/express-recommendation/0.4.0/express-overview)
