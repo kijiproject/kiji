@@ -21,16 +21,19 @@ package org.kiji.express.modeling.config
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.annotations.Inheritance
 
 /**
- * Configuration necessary to use a text file as a data source.
+ * Configuration necessary to use a sequence file as a data source.
  *
  * @param path to the HDFS location for this file.
+ * @param keyField that keys from this sequence file should be bound to.
+ * @param valueField that values from this sequence file should be bound to.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-@Inheritance.Sealed
-final case class TextSourceSpec(path: String)
+final case class SequenceFileSourceSpec(
+    path: String,
+    keyField: Option[String],
+    valueField: Option[String])
     extends InputSpec
     with OutputSpec

@@ -295,7 +295,7 @@ protocol Modeling {
   }
 
   /**
-   * Configuration necessary to use a Text file as a data source.
+   * Configuration necessary to use a Text file as a data source or sink.
    */
   record AvroTextSourceSpec {
     /**
@@ -341,6 +341,28 @@ protocol Modeling {
   }
 
   /**
+   * Configuration necessary to use a Sequence file as a data source or sink.
+   */
+  record AvroSequenceFileSourceSpec {
+    /**
+     * HDFS path to the text file that this spec will use. Required.
+     */
+    string file_path;
+
+    /**
+     * Field that keys from this sequence file should be bound to. Both 'key_field' and
+     * 'value_field' should be specified together.
+     */
+    union{null, string} key_field = null;
+
+    /**
+     * Field that values from this sequence file should be bound to. Both 'key_field' and
+     * 'value_field' should be specified together.
+     */
+    union{null, string} value_field = null;
+  }
+
+  /**
    * Represents the configuration for an input data source.
    *
    * Note to developers: Please be sure to update any avro input spec validation code when modifying
@@ -352,6 +374,9 @@ protocol Modeling {
 
     /** Configuration for this input spec if a text file is being used. */
     union{null, AvroTextSourceSpec} text_specification = null;
+
+    /** Configuration for this input spec if a sequence file is being used. */
+    union{null, AvroSequenceFileSourceSpec} sequence_file_specification = null;
   }
 
   /**
@@ -369,6 +394,9 @@ protocol Modeling {
 
     /** Configuration for this output spec if a text file is being used. */
     union{null, AvroTextSourceSpec} text_specification = null;
+
+    /** Configuration for this output spec if a sequence file is being used. */
+    union{null, AvroSequenceFileSourceSpec} sequence_file_specification = null;
   }
 
   /**

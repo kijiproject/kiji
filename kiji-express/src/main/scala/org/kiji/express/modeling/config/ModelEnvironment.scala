@@ -401,6 +401,15 @@ object ModelEnvironment {
       case textSpecification: TextSourceSpec => {
         Seq()
       }
+      case SequenceFileSourceSpec(_, keyFieldOption, valueFieldOption) => {
+        if (keyFieldOption.isEmpty == valueFieldOption.isEmpty) {
+          val error = "Both a key field and a value field must be specified."
+
+          Seq(new ValidationException(error))
+        } else {
+          Seq()
+        }
+      }
       case _ => {
         val error = "Unsupported InputSpec type: %s".format(inputSpec.getClass)
 
@@ -436,6 +445,15 @@ object ModelEnvironment {
       }
       case textSpecification: TextSourceSpec => {
         Seq()
+      }
+      case SequenceFileSourceSpec(_, keyFieldOption, valueFieldOption) => {
+        if (keyFieldOption.isEmpty == valueFieldOption.isEmpty) {
+          val error = "Both a key field and a value field must be specified."
+
+          Seq(new ValidationException(error))
+        } else {
+          Seq()
+        }
       }
       // TODO(EXP-161): Accept outputs from multiple source types.
       case _ => {

@@ -21,7 +21,6 @@ package org.kiji.express.modeling.impl
 
 import org.scalatest.FunSuite
 
-import com.twitter.scalding.RichPipe
 import com.twitter.scalding.Source
 
 import org.kiji.express.modeling.ExtractFn
@@ -37,10 +36,12 @@ import org.kiji.express.modeling.config.ExpressColumnRequest
 import org.kiji.express.modeling.config.ExpressDataRequest
 import org.kiji.express.modeling.config.FieldBinding
 import org.kiji.express.modeling.config.InputSpec
+import org.kiji.express.modeling.config.KeyValueStoreSpec
 import org.kiji.express.modeling.config.KijiInputSpec
 import org.kiji.express.modeling.config.KijiOutputSpec
 import org.kiji.express.modeling.config.KijiSingleColumnOutputSpec
-import org.kiji.express.modeling.config.KeyValueStoreSpec
+import org.kiji.express.modeling.config.SequenceFileSourceSpec
+import org.kiji.express.modeling.config.TextSourceSpec
 import org.kiji.express.modeling.config.ModelDefinition
 import org.kiji.express.modeling.config.ModelEnvironment
 import org.kiji.express.modeling.config.OutputSpec
@@ -89,11 +90,27 @@ class ModelConvertersSuite extends SerDeSuite {
     ModelConverters.inputSpecFromAvro(ModelConverters.inputSpecToAvro(input))
   }
 
+  serDeTest[InputSpec]("TextInputSpec", "Avro", testTextSpec) { input =>
+    ModelConverters.inputSpecFromAvro(ModelConverters.inputSpecToAvro(input))
+  }
+
+  serDeTest[InputSpec]("SequenceFileInputSpec", "Avro", testSequenceFileSpec) { input =>
+    ModelConverters.inputSpecFromAvro(ModelConverters.inputSpecToAvro(input))
+  }
+
   serDeTest[OutputSpec]("KijiOutputSpec", "Avro", testKijiOutputSpec) { input =>
     ModelConverters.outputSpecFromAvro(ModelConverters.outputSpecToAvro(input))
   }
 
   serDeTest[OutputSpec]("ColumnOutputSpec", "Avro", testColumnOutputSpec) { input =>
+    ModelConverters.outputSpecFromAvro(ModelConverters.outputSpecToAvro(input))
+  }
+
+  serDeTest[OutputSpec]("TextOutputSpec", "Avro", testTextSpec) { input =>
+    ModelConverters.outputSpecFromAvro(ModelConverters.outputSpecToAvro(input))
+  }
+
+  serDeTest[OutputSpec]("SequenceFileOutputSpec", "Avro", testSequenceFileSpec) { input =>
     ModelConverters.outputSpecFromAvro(ModelConverters.outputSpecToAvro(input))
   }
 
@@ -167,6 +184,12 @@ object ModelConvertersSuite {
       tableUri = "kiji://.env/default/test",
       dataRequest = testDataRequest,
       fieldBindings = Seq(testFieldBinding))
+  val testTextSpec: TextSourceSpec = TextSourceSpec(
+      path = "hdfs://test")
+  val testSequenceFileSpec: SequenceFileSourceSpec = SequenceFileSourceSpec(
+      path = "hdfs://test",
+      keyField = Some("key"),
+      valueField = Some("value"))
   val testKijiOutputSpec: KijiOutputSpec = KijiOutputSpec(
       tableUri = "kiji://.env/default/test2",
       fieldBindings = Seq(testFieldBinding))

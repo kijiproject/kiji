@@ -40,6 +40,7 @@ import org.kiji.express.avro.AvroPrepareEnvironment
 import org.kiji.express.avro.AvroProperty
 import org.kiji.express.avro.AvroRegexQualifierFilter
 import org.kiji.express.avro.AvroScoreEnvironment
+import org.kiji.express.avro.AvroSequenceFileSourceSpec
 import org.kiji.express.avro.AvroTextSourceSpec
 import org.kiji.express.avro.AvroTrainEnvironment
 import org.kiji.express.modeling.Extractor
@@ -64,6 +65,7 @@ import org.kiji.express.modeling.config.OutputSpec
 import org.kiji.express.modeling.config.PrepareEnvironment
 import org.kiji.express.modeling.config.RegexQualifierFilter
 import org.kiji.express.modeling.config.ScoreEnvironment
+import org.kiji.express.modeling.config.SequenceFileSourceSpec
 import org.kiji.express.modeling.config.TextSourceSpec
 import org.kiji.express.modeling.config.TrainEnvironment
 import org.kiji.express.modeling.config.ValidationException
@@ -383,8 +385,18 @@ object ModelConverters {
           TextSourceSpec(path = avroSpec.getFilePath)
         }
 
+    val seqFileSpecification: Option[InputSpec] = Option(inputSpec.getSequenceFileSpecification)
+        .map { avroSpec: AvroSequenceFileSourceSpec =>
+          SequenceFileSourceSpec(
+              path = avroSpec.getFilePath,
+              keyField = Option(avroSpec.getKeyField),
+              valueField = Option(avroSpec.getValueField))
+        }
+
     // Ensure that only one specification is available.
-    val specifications: Seq[InputSpec] = kijiSpecification.toSeq ++ textSpecification
+    val specifications: Seq[InputSpec] = kijiSpecification.toSeq ++
+        textSpecification ++
+        seqFileSpecification
     if (specifications.length > 1) {
       throw new ValidationException("Multiple InputSpec types provided: %s".format(specifications))
     } else if (specifications.length == 0) {
@@ -438,6 +450,19 @@ object ModelConverters {
             .setTextSpecification(spec)
             .build()
       }
+      case SequenceFileSourceSpec(path, keyFieldOption, valueFieldOption) => {
+        val spec = AvroSequenceFileSourceSpec
+            .newBuilder()
+            .setFilePath(path)
+            .setKeyField(keyFieldOption.getOrElse(null))
+            .setValueField(valueFieldOption.getOrElse(null))
+            .build()
+
+        AvroInputSpec
+            .newBuilder()
+            .setSequenceFileSpecification(spec)
+            .build()
+      }
     }
   }
 
@@ -474,13 +499,22 @@ object ModelConverters {
               outputColumn = avroSpec.getOutputColumn)
         }
     val textSpecification: Option[OutputSpec] = Option(outputSpec.getTextSpecification)
-      .map { avroSpec: AvroTextSourceSpec =>
-        TextSourceSpec(path = avroSpec.getFilePath)
-      }
+        .map { avroSpec: AvroTextSourceSpec =>
+          TextSourceSpec(path = avroSpec.getFilePath)
+        }
+    val seqFileSpecification: Option[OutputSpec] = Option(outputSpec.getSequenceFileSpecification)
+        .map { avroSpec: AvroSequenceFileSourceSpec =>
+          SequenceFileSourceSpec(
+              path = avroSpec.getFilePath,
+              keyField = Option(avroSpec.getKeyField),
+              valueField = Option(avroSpec.getValueField))
+        }
 
     // Ensure that only one specification is available.
-    val specifications: Seq[OutputSpec] = kijiSpecification.toSeq ++ kijiColumnSpecification ++
-        textSpecification
+    val specifications: Seq[OutputSpec] = kijiSpecification.toSeq ++
+        kijiColumnSpecification ++
+        textSpecification ++
+        seqFileSpecification
     if (specifications.length > 1) {
       throw new ValidationException("Multiple InputSpec types provided: %s".format(specifications))
     } else if (specifications.length == 0) {
@@ -546,6 +580,19 @@ object ModelConverters {
         AvroOutputSpec
             .newBuilder()
             .setTextSpecification(spec)
+            .build()
+      }
+      case SequenceFileSourceSpec(path, keyFieldOption, valueFieldOption) => {
+        val spec = AvroSequenceFileSourceSpec
+            .newBuilder()
+            .setFilePath(path)
+            .setKeyField(keyFieldOption.getOrElse(null))
+            .setValueField(valueFieldOption.getOrElse(null))
+            .build()
+
+        AvroOutputSpec
+            .newBuilder()
+            .setSequenceFileSpecification(spec)
             .build()
       }
     }
