@@ -297,9 +297,22 @@ object ModelConverters {
    * @return a populated score environment.
    */
   def scoreEnvironmentFromAvro(environment: AvroScoreEnvironment): ScoreEnvironment = {
+    val inputSpec: KijiInputSpec = {
+      val avroInputSpec = environment.getInputSpec
+      KijiInputSpec(
+          tableUri = avroInputSpec.getTableUri,
+          dataRequest = dataRequestFromAvro(avroInputSpec.getDataRequest),
+          fieldBindings = avroInputSpec.getFieldBindings.asScala.map { fieldBindingFromAvro })
+    }
+    val outputSpec: KijiSingleColumnOutputSpec = {
+      val avroOutputSpec = environment.getOutputSpec
+      KijiSingleColumnOutputSpec(
+          tableUri = avroOutputSpec.getTableUri,
+          outputColumn = avroOutputSpec.getOutputColumn)
+    }
     new ScoreEnvironment(
-        inputSpec = inputSpecFromAvro(environment.getInputSpec),
-        outputSpec = outputSpecFromAvro(environment.getOutputSpec),
+        inputSpec = inputSpec,
+        outputSpec = outputSpec,
         keyValueStoreSpecs = environment
             .getKvStores
             .asScala
@@ -313,10 +326,27 @@ object ModelConverters {
    * @return an avro record.
    */
   def scoreEnvironmentToAvro(environment: ScoreEnvironment): AvroScoreEnvironment = {
+    val avroInputSpec: AvroKijiInputSpec = {
+      val inputSpec = environment.inputSpec
+      AvroKijiInputSpec
+          .newBuilder()
+          .setTableUri(inputSpec.tableUri)
+          .setDataRequest(dataRequestToAvro(inputSpec.dataRequest))
+          .setFieldBindings(inputSpec.fieldBindings.map { fieldBindingToAvro } .asJava)
+          .build()
+    }
+    val avroOutputSpec: AvroKijiSingleColumnOutputSpec = {
+      val outputSpec = environment.outputSpec
+      AvroKijiSingleColumnOutputSpec
+          .newBuilder()
+          .setTableUri(outputSpec.tableUri)
+          .setOutputColumn(outputSpec.outputColumn)
+          .build()
+    }
     AvroScoreEnvironment
         .newBuilder()
-        .setInputSpec(inputSpecToAvro(environment.inputSpec))
-        .setOutputSpec(outputSpecToAvro(environment.outputSpec))
+        .setInputSpec(avroInputSpec)
+        .setOutputSpec(avroOutputSpec)
         .setKvStores(environment.keyValueStoreSpecs.map { keyValueStoreSpecToAvro } .asJava)
         .build()
   }

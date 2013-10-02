@@ -34,6 +34,6 @@ import org.kiji.annotations.Inheritance
 @ApiStability.Experimental
 @Inheritance.Sealed
 final case class ScoreEnvironment(
-    inputSpec: InputSpec,
-    outputSpec: OutputSpec,
+    inputSpec: KijiInputSpec,
+    outputSpec: KijiSingleColumnOutputSpec,
     keyValueStoreSpecs: Seq[KeyValueStoreSpec])

@@ -81,11 +81,9 @@ class ModelEnvironmentSuite extends FunSuite {
 
     val expectedKvstores: Seq[KeyValueStoreSpec] = Seq(
         KeyValueStoreSpec(
-          name="side_data",
-          storeType="AVRO_KV",
-          properties=Map("path" -> "/usr/src/and/so/on")
-        )
-    )
+            name="side_data",
+            storeType="AVRO_KV",
+            properties=Map("path" -> "/usr/src/and/so/on")))
 
     val environment: ModelEnvironment = ModelEnvironment.fromJson(validDefinitionLocation)
 

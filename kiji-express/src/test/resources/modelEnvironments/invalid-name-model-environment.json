@@ -133,32 +133,28 @@
   "score_environment":{
     "org.kiji.express.avro.AvroScoreEnvironment":{
       "input_spec":{
-        "kiji_specification":{
-          "org.kiji.express.avro.AvroKijiInputSpec":{
-            "table_uri":"kiji://.env/default/table",
-            "data_request":{
-              "min_timestamp":0,
-              "max_timestamp":38475687,
-              "column_definitions":[{
-                "name":"info:in",
-                "max_versions":3,
-                "filter":{
-                  "org.kiji.express.avro.AvroFilter":{
-                    "regex_filter":{
-                      "org.kiji.express.avro.AvroRegexQualifierFilter":{
-                        "regex":"foo"
-                      }
-                    }
+        "table_uri":"kiji://.env/default/table",
+        "data_request":{
+          "min_timestamp":0,
+          "max_timestamp":38475687,
+          "column_definitions":[{
+            "name":"info:in",
+            "max_versions":3,
+            "filter":{
+              "org.kiji.express.avro.AvroFilter":{
+                "regex_filter":{
+                  "org.kiji.express.avro.AvroRegexQualifierFilter":{
+                    "regex":"foo"
                   }
                 }
-              }]
-            },
-            "field_bindings":[{
-              "tuple_field_name":"tuplename",
-              "store_field_name":"info:storefieldname"
-            }]
-          }
-        }
+              }
+            }
+          }]
+        },
+        "field_bindings":[{
+          "tuple_field_name":"tuplename",
+          "store_field_name":"info:storefieldname"
+        }]
       },
       "kv_stores":[{
         "store_type":"AVRO_KV",
@@ -169,12 +165,8 @@
         }]
       }],
       "output_spec":{
-        "kiji_column_specification":{
-          "org.kiji.express.avro.AvroKijiSingleColumnOutputSpec":{
-            "table_uri":"kiji://myuri",
-            "output_column":"info:out"
-          }
-        }
+        "table_uri":"kiji://myuri",
+        "output_column":"info:out"
       }
     }
   }

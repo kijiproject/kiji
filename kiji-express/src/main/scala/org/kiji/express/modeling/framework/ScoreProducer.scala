@@ -25,7 +25,9 @@ import org.apache.hadoop.conf.Configuration
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.express.EntityId
 import org.kiji.express.KijiSlice
+import org.kiji.express.flow.framework.KijiScheme
 import org.kiji.express.modeling.ExtractFn
 import org.kiji.express.modeling.Extractor
 import org.kiji.express.modeling.config.KijiInputSpec
@@ -263,15 +265,22 @@ final class ScoreProducer
     // Configure the row data input to decode its data generically.
     val row = rowConverter(input)
     // Prepare input to the extract phase.
-    val slices: Seq[KijiSlice[Any]] = extractInputFields
+    val slices: Seq[Any] = extractInputFields
         .map { (field: String) =>
-          val columnName: KijiColumnName = fieldMapping(field.toString)
-
-          // Build a slice from each column within the row.
-          if (columnName.isFullyQualified) {
-            KijiSlice[Any](row, columnName.getFamily, columnName.getQualifier)
+          if (field == KijiScheme.entityIdField) {
+            val uri = KijiURI
+                .newBuilder(modelEnvironment.scoreEnvironment.get.inputSpec.tableUri)
+                .build()
+            EntityId.fromJavaEntityId(uri, row.getEntityId, getConf)
           } else {
-            KijiSlice[Any](row, columnName.getFamily)
+            val columnName: KijiColumnName = fieldMapping(field.toString)
+
+            // Build a slice from each column within the row.
+            if (columnName.isFullyQualified) {
+              KijiSlice[Any](row, columnName.getFamily, columnName.getQualifier)
+            } else {
+              KijiSlice[Any](row, columnName.getFamily)
+            }
           }
         }
 

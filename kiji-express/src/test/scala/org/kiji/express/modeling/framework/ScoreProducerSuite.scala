@@ -21,6 +21,7 @@ package org.kiji.express.modeling.framework
 
 import org.apache.hadoop.fs.Path
 
+import org.kiji.express.EntityId
 import org.kiji.express.KijiSlice
 import org.kiji.express.KijiSuite
 import org.kiji.express.modeling.config.ExpressColumnRequest
@@ -55,7 +56,7 @@ class ScoreProducerSuite
     val testLayout: KijiTableLayout = layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
 
     val kiji: Kiji = new InstanceBuilder("default")
-        .withTable(testLayout.getName(), testLayout)
+        .withTable(testLayout.getName, testLayout)
             .withRow("row1")
                 .withFamily("family")
                     .withQualifier("column1").withValue("foo")
@@ -64,8 +65,8 @@ class ScoreProducerSuite
                     .withQualifier("column1").withValue("bar")
         .build()
 
-    doAndRelease(kiji.openTable(testLayout.getName())) { table: KijiTable =>
-      val uri: KijiURI = table.getURI()
+    doAndRelease(kiji.openTable(testLayout.getName)) { table: KijiTable =>
+      val uri: KijiURI = table.getURI
 
       // Update configuration object with appropriately serialized ModelDefinition/ModelEnvironment
       // JSON.
@@ -94,7 +95,7 @@ class ScoreProducerSuite
                       storeType = "AVRO_KV",
                       name = "side_data",
                       properties = Map(
-                          "path" -> sideDataPath.toString(),
+                          "path" -> sideDataPath.toString,
                           // The Distributed Cache is not supported when using LocalJobRunner in
                           // Hadoop <= 0.21.0.
                           // See https://issues.apache.org/jira/browse/MAPREDUCE-476 for more
@@ -129,7 +130,7 @@ class ScoreProducerSuite
     val testLayout: KijiTableLayout = layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
 
     val kiji: Kiji = new InstanceBuilder("default")
-        .withTable(testLayout.getName(), testLayout)
+        .withTable(testLayout.getName, testLayout)
             .withRow("row1")
                 .withFamily("family")
                     .withQualifier("column1").withValue("foo")
@@ -140,8 +141,8 @@ class ScoreProducerSuite
                     .withQualifier("column2").withValue("foo")
         .build()
 
-    doAndRelease(kiji.openTable(testLayout.getName())) { table: KijiTable =>
-      val uri: KijiURI = table.getURI()
+    doAndRelease(kiji.openTable(testLayout.getName)) { table: KijiTable =>
+      val uri: KijiURI = table.getURI
 
       // Update configuration object with appropriately serialized ModelDefinition/ModelEnvironment
       // JSON.
@@ -192,11 +193,90 @@ class ScoreProducerSuite
     kiji.release()
   }
 
+  test("An extract-score produce job using an entityId field can be run over a table.") {
+    val testLayout: KijiTableLayout = layout(KijiTableLayouts.FORMATTED_RKF)
+
+    val kiji: Kiji = new InstanceBuilder("default")
+        .withTable(testLayout.getName, testLayout)
+            .withRow("cmpA1", "cmpB1", "cmpC1", 1: java.lang.Integer, 1L: java.lang.Long)
+                .withFamily("family")
+                    .withQualifier("column")
+                        .withValue("foo")
+                        .withValue("baz")
+            .withRow("cmpA2", "cmpB2", "cmpC2", 2: java.lang.Integer, 2L: java.lang.Long)
+                .withFamily("family")
+                    .withQualifier("column")
+                        .withValue("bar")
+                        .withValue("foo")
+        .build()
+
+    doAndRelease(kiji.openTable(testLayout.getName)) { table: KijiTable =>
+      val uri: KijiURI = table.getURI
+
+      // Update configuration object with appropriately serialized ModelDefinition/ModelEnvironment
+      // JSON.
+      val request: ExpressDataRequest = new ExpressDataRequest(0, Long.MaxValue,
+          new ExpressColumnRequest("family:column", 1, None) :: Nil)
+      val modelDefinition: ModelDefinition = ModelDefinition(
+          name = "test-model-definition",
+          version = "1.0",
+          scoreExtractorClass = Some(classOf[ScoreProducerSuite.EntityIdExtractor]),
+          scorerClass = Some(classOf[ScoreProducerSuite.TwoArgUpperCaseScorer]))
+      val modelEnvironment: ModelEnvironment = ModelEnvironment(
+          name = "test-model-environment",
+          version = "1.0",
+          prepareEnvironment = None,
+          trainEnvironment = None,
+          scoreEnvironment = Some(ScoreEnvironment(
+              KijiInputSpec(
+                  uri.toString,
+                  dataRequest = request,
+                  fieldBindings = Seq(
+                      FieldBinding(tupleFieldName = "i1", storeFieldName = "family:column"))),
+              KijiSingleColumnOutputSpec(uri.toString, "family:column"),
+              keyValueStoreSpecs = Seq())))
+
+      // Build the produce job.
+      val produceJob = ScoreProducerJobBuilder.buildJob(
+          model = modelDefinition,
+          environment = modelEnvironment)
+
+      // Verify that everything went as expected.
+      assert(produceJob.run())
+      doAndClose(table.openTableReader()) { reader: KijiTableReader =>
+        val eid1 = table.getEntityId(
+            "cmpA1",
+            "cmpB1",
+            "cmpC1",
+            1: java.lang.Integer,
+            1L: java.lang.Long)
+        val eid2 = table.getEntityId(
+            "cmpA2",
+            "cmpB2",
+            "cmpC2",
+            2: java.lang.Integer,
+            2L: java.lang.Long)
+        val v1 = reader
+            .get(eid1, KijiDataRequest.create("family", "column"))
+            .getMostRecentValue("family", "column")
+            .toString
+        val v2 = reader
+            .get(eid2, KijiDataRequest.create("family", "column"))
+            .getMostRecentValue("family", "column")
+            .toString
+
+        assert("CMPA1CMPB1" === v1)
+        assert("CMPA2CMPB2" === v2)
+      }
+    }
+    kiji.release()
+  }
+
   test("An extract-score produce job using SelectorExtractor can be run over a table.") {
     val testLayout: KijiTableLayout = layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
 
     val kiji: Kiji = new InstanceBuilder("default")
-        .withTable(testLayout.getName(), testLayout)
+        .withTable(testLayout.getName, testLayout)
             .withRow("row1")
                 .withFamily("family")
                     .withQualifier("column1").withValue(1L, "foo1")
@@ -207,8 +287,8 @@ class ScoreProducerSuite
                     .withQualifier("column1").withValue(2L, "bar2")
         .build()
 
-    doAndRelease(kiji.openTable(testLayout.getName())) { table: KijiTable =>
-      val uri: KijiURI = table.getURI()
+    doAndRelease(kiji.openTable(testLayout.getName)) { table: KijiTable =>
+      val uri: KijiURI = table.getURI
 
       // Update configuration object with appropriately serialized ModelDefinition/ModelEnvironment
       // JSON.
@@ -290,6 +370,12 @@ object ScoreProducerSuite {
       val (x1, x2) = features
 
       x1.toUpperCase + x2.toUpperCase
+    }
+  }
+
+  class EntityIdExtractor extends Extractor {
+    override val extractFn = extract('entityId -> ('x1, 'x2)) { input: EntityId =>
+      (input(0), input(1))
     }
   }
 }

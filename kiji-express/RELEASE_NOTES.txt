@@ -2,6 +2,7 @@
                              Kiji Express Release Notes
 
 Version 0.10.0
+  * EXP-207. EntityIds can now be accessed from extractors/scorers.
   * EXP-52. Adds support for text file based key-value stores.
 
 Version 0.9.0

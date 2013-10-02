@@ -429,12 +429,12 @@ protocol Modeling {
     /**
      * Defines the input data source that the score phase uses. Required.
      */
-    AvroInputSpec input_spec;
+    AvroKijiInputSpec input_spec;
 
     /**
      * A Kiji column to write the output of the score phase to. Required.
      */
-    AvroOutputSpec output_spec;
+    AvroKijiSingleColumnOutputSpec output_spec;
 
     /**
      * An array of KVStores needed during the score phase. The default value of this field is the
