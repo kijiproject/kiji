@@ -31,10 +31,12 @@ import org.kiji.express.modeling.impl.AvroRecordKeyValueStore
 import org.kiji.express.modeling.impl.JavaToScalaValueConverter
 import org.kiji.express.modeling.impl.KijiTableKeyValueStore
 import org.kiji.express.modeling.impl.ScalaToJavaKeyConverter
+import org.kiji.express.modeling.impl.TextFileKeyValueStore
 import org.kiji.mapreduce.kvstore.{KeyValueStoreReader => JKeyValueStoreReader}
 import org.kiji.mapreduce.kvstore.lib.{AvroKVRecordKeyValueStore => JAvroKVRecordKeyValueStore}
 import org.kiji.mapreduce.kvstore.lib.{AvroRecordKeyValueStore => JAvroRecordKeyValueStore}
 import org.kiji.mapreduce.kvstore.lib.{KijiTableKeyValueStore => JKijiTableKeyValueStore}
+import org.kiji.mapreduce.kvstore.lib.{TextFileKeyValueStore => JTextFileKeyValueStore}
 
 /**
  * A map from keys to values backed by a data store. KijiExpress end-users can configure and use
@@ -185,8 +187,8 @@ private[express] object KeyValueStore {
    * @return a KijiExpress key-value store backed by a KijiMR `AvroRecordKeyValueStore`.
    */
   def apply[K](
-      kvStore: JAvroRecordKeyValueStore[_ <: Any, _ <: GenericRecord])
-      : KeyValueStore[K, AvroValue] = {
+      kvStore: JAvroRecordKeyValueStore[_ <: Any, _ <: GenericRecord]
+  ): KeyValueStore[K, AvroValue] = {
     new AvroRecordKeyValueStore[K](kvStore.open())
   }
 
@@ -202,8 +204,23 @@ private[express] object KeyValueStore {
    * @tparam V is the type of value retrieved from the key-value store.
    * @return a KijiExpress key-value store backed by a KijiMR `AvroKVRecordKeyValueStore`.
    */
-  def apply[K,V](kvStore: JAvroKVRecordKeyValueStore[_ <: Any, _ <: Any]): KeyValueStore[K, V] = {
+  def apply[K,V](
+      kvStore: JAvroKVRecordKeyValueStore[_ <: Any, _ <: Any]
+  ): KeyValueStore[K, V] = {
     new AvroKVRecordKeyValueStore[K, V](kvStore.open())
   }
-}
 
+  /**
+   * Creates a new KijiExpress key-value store backed by a KijiMR `TextFileKeyValueStore`.
+   * Such a key-value store allows users to access values contained in a text file by distinguishing
+   * keys from values with a text delimiter.
+   *
+   * @param kvStore from KijiMR that will back the KijiExpress key-value store.
+   * @return a KijiExpress key-value store backed by a KijiMR `TextFileKeyValueStore`.
+   */
+  def apply(
+      kvStore: JTextFileKeyValueStore
+  ): KeyValueStore[String, String] = {
+    new TextFileKeyValueStore(kvStore.open())
+  }
+}

@@ -76,3 +76,21 @@ private[express] final class AvroKVRecordKeyValueStore[K,V](
     extends KeyValueStore[K, V](kvStoreReader)
     with AvroScalaToJavaKeyConverter[K]
     with AvroJavaToScalaValueConverter[V]
+
+/**
+ * A KijiExpress key-value store backed by a KijiMR `TextFileKeyValueStore`.
+ *
+ * @param kvStoreReader is an opened KijiMR key-value store used to back the new KijiExpress
+ *     key-value store.
+ */
+@ApiAudience.Private
+@ApiStability.Experimental
+private[express] final class TextFileKeyValueStore(
+    kvStoreReader: JKeyValueStoreReader[String, String])
+    extends KeyValueStore[String, String](kvStoreReader) {
+  protected override def keyConversion(keyWithScalaType: String): Any = keyWithScalaType
+
+  protected override def valueConversion(valueWithJavaType: Any): String = {
+    valueWithJavaType.asInstanceOf[String]
+  }
+}

@@ -93,7 +93,6 @@ private[express] trait EntityIdScalaToJavaKeyConverter
     // KijiRowKeyComponents. We do this conversion then create the KijiRowKeyComponents.
     val components = keyWithScalaType
         .components
-        .map { component => component.asInstanceOf[AnyRef] }
         .asJava
     KijiRowKeyComponents.fromComponentsList(components)
   }

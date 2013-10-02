@@ -20,6 +20,7 @@
 package org.kiji.express.modeling.impl
 
 import java.io.File
+import java.io.PrintWriter
 
 import scala.collection.JavaConverters.seqAsJavaListConverter
 
@@ -40,6 +41,7 @@ import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.mapreduce.kvstore.lib.{ AvroRecordKeyValueStore => JAvroRecordKeyValueStore }
 import org.kiji.mapreduce.kvstore.lib.{ AvroKVRecordKeyValueStore => JAvroKVRecordKeyValueStore }
 import org.kiji.mapreduce.kvstore.lib.{ KijiTableKeyValueStore => JKijiTableKeyValueStore }
+import org.kiji.mapreduce.kvstore.lib.{ TextFileKeyValueStore => JTextFileKeyValueStore }
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiURI
@@ -137,6 +139,23 @@ class KeyValueStoreImplSuite extends KijiSuite {
     doAndClose(KeyValueStore[AvroRecord](store)) { kvstore =>
       assert("one" === kvstore(AvroRecord("innerkey" -> 1))("value").asString)
       assert("two" === kvstore(AvroRecord("innerkey" -> 2))("value").asString)
+    }
+  }
+
+  test("Using a KijiExpress KVStore backed by a KijiMR TextFileKeyValueStore") {
+    // Get the Java key-value store.
+    val csvFilePath: Path = generateTextFileKeyValueStore()
+    val conf = HBaseConfiguration.create()
+    val store = JTextFileKeyValueStore
+        .builder()
+        .withConfiguration(conf)
+        .withInputPath(csvFilePath)
+        .withDelimiter(",")
+        .build()
+
+    doAndClose(KeyValueStore(store)) { kvstore =>
+      assert("value1" === kvstore("key1"))
+      assert("value2" === kvstore("key2"))
     }
   }
 }
@@ -275,6 +294,21 @@ object KeyValueStoreImplSuite {
         record.put("value", "deux")
         writer.append(record)
       }
+    }
+
+    return new Path(file.getPath)
+  }
+
+  /**
+   * Writes a csv file with string key value pairs.
+   *
+   * @return the path to the file written.
+   */
+  private[express] def generateTextFileKeyValueStore(): Path = {
+    val file: File = File.createTempFile("generic-csv", ".txt")
+    doAndClose(new PrintWriter(file, "UTF-8")) { fileWriter =>
+      fileWriter.println("key1,value1")
+      fileWriter.println("key2,value2")
     }
 
     return new Path(file.getPath)

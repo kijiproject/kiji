@@ -617,6 +617,20 @@ object ModelEnvironment {
         }
       }
 
+      case "TEXT_FILE" => {
+        if (!properties.contains("path")) {
+          val error = "To use a text-file based store, you must specify the HDFS path to the text" +
+              " file to use to back the store. Use the property name 'path' to provide the path."
+          return Some(new ValidationException(error))
+        }
+        if (!properties.contains("delimiter")) {
+          val error = "To use a text-file based store, you must specify the text delimiter" +
+              " separating keys from values. Use the property name 'delimiter' to specify the" +
+              " delimiter."
+          return Some(new ValidationException(error))
+        }
+      }
+
       case keyValueStoreType => {
         val error = "An unknown key-value store type was specified: " + keyValueStoreType
         return Some(new ValidationException(error))

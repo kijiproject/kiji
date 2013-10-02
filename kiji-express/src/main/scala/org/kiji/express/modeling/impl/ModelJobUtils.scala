@@ -45,9 +45,11 @@ import org.kiji.express.modeling.config.OutputSpec
 import org.kiji.express.modeling.config.TextSourceSpec
 import org.kiji.mapreduce.KijiContext
 import org.kiji.mapreduce.kvstore.{ KeyValueStore => JKeyValueStore }
+import org.kiji.mapreduce.kvstore.{ KeyValueStoreReader => JKeyValueStoreReader }
 import org.kiji.mapreduce.kvstore.lib.{ AvroKVRecordKeyValueStore => JAvroKVRecordKeyValueStore }
 import org.kiji.mapreduce.kvstore.lib.{ AvroRecordKeyValueStore => JAvroRecordKeyValueStore }
 import org.kiji.mapreduce.kvstore.lib.{ KijiTableKeyValueStore => JKijiTableKeyValueStore }
+import org.kiji.mapreduce.kvstore.lib.{ TextFileKeyValueStore => JTextFileKeyValueStore }
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiURI
@@ -137,6 +139,8 @@ object ModelJobUtils {
             case "AVRO_KV" => new AvroKVRecordKeyValueStore(jKeyValueStoreReader)
             case "AVRO_RECORD" => new AvroRecordKeyValueStore(jKeyValueStoreReader)
             case "KIJI_TABLE" => new KijiTableKeyValueStore(jKeyValueStoreReader)
+            case "TEXT_FILE" => new TextFileKeyValueStore(
+                jKeyValueStoreReader.asInstanceOf[JKeyValueStoreReader[String, String]])
           }
           (keyValueStoreSpec.name, wrapped)
         }
@@ -199,6 +203,20 @@ object ModelJobUtils {
                   .withTable(uri)
                   .withColumn(columnName.getFamily, columnName.getQualifier)
                   .build()
+            }
+            case "TEXT_FILE" => {
+              val builder = JTextFileKeyValueStore
+                  .builder()
+                  .withConfiguration(configuration)
+                  .withDelimiter(properties("delimiter"))
+                  .withInputPath(new Path(properties("path")))
+              if (properties.contains("use_dcache")) {
+                builder
+                    .withDistributedCache(properties("use_dcache") == "true")
+                    .build()
+              } else {
+                builder.build()
+              }
             }
             case keyValueStoreType => throw new UnsupportedOperationException(
                 "KeyValueStores of type \"%s\" are not supported"

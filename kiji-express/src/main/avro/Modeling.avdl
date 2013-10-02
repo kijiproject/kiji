@@ -126,7 +126,8 @@ protocol Modeling {
   enum AvroKeyValueStoreType {
     AVRO_KV,
     AVRO_RECORD,
-    KIJI_TABLE
+    KIJI_TABLE,
+    TEXT_FILE
   }
 
   /**
