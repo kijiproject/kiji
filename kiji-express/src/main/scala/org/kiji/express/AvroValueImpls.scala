@@ -35,7 +35,7 @@ import org.kiji.express.util.AvroUtil
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-final case class AvroInt private[express](value: Int) extends AvroValue(classOf[Int]) {
+final case class AvroInt (value: Int) extends AvroValue(classOf[Int]) {
   override def asInt(): Int = value
 }
 
@@ -46,7 +46,7 @@ final case class AvroInt private[express](value: Int) extends AvroValue(classOf[
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-final case class AvroBoolean private[express](value: Boolean) extends AvroValue(classOf[Boolean]) {
+final case class AvroBoolean (value: Boolean) extends AvroValue(classOf[Boolean]) {
   override def asBoolean(): Boolean = value
 }
 
@@ -57,7 +57,7 @@ final case class AvroBoolean private[express](value: Boolean) extends AvroValue(
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-final case class AvroLong private[express](value: Long) extends AvroValue(classOf[Long]) {
+final case class AvroLong (value: Long) extends AvroValue(classOf[Long]) {
   override def asLong(): Long = value
 }
 
@@ -68,7 +68,7 @@ final case class AvroLong private[express](value: Long) extends AvroValue(classO
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-final case class AvroDouble private[express](value: Double) extends AvroValue(classOf[Double]) {
+final case class AvroDouble (value: Double) extends AvroValue(classOf[Double]) {
   override def asDouble(): Double = value
 }
 
@@ -79,7 +79,7 @@ final case class AvroDouble private[express](value: Double) extends AvroValue(cl
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-final case class AvroFloat private[express](value: Float) extends AvroValue(classOf[Float]) {
+final case class AvroFloat (value: Float) extends AvroValue(classOf[Float]) {
   override def asFloat(): Float = value
 }
 
@@ -90,7 +90,7 @@ final case class AvroFloat private[express](value: Float) extends AvroValue(clas
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-final case class AvroString private[express](value: String) extends AvroValue(classOf[String]) {
+final case class AvroString (value: String) extends AvroValue(classOf[String]) {
   override def asString(): String = value
 }
 
@@ -101,7 +101,7 @@ final case class AvroString private[express](value: String) extends AvroValue(cl
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-final case class AvroByteArray private[express](value: Array[Byte])
+final case class AvroByteArray (value: Array[Byte])
     extends AvroValue(classOf[Array[Byte]]) {
   override def asBytes(): Array[Byte] = value
 }
@@ -114,7 +114,7 @@ final case class AvroByteArray private[express](value: Array[Byte])
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-final case class AvroList private[express](value: List[AvroValue])
+final case class AvroList (value: List[AvroValue])
     extends AvroValue(classOf[List[AvroValue]]) {
   override def asList(): List[AvroValue] = value
 
@@ -131,7 +131,7 @@ final case class AvroList private[express](value: List[AvroValue])
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-final case class AvroMap private[express](value: Map[String, AvroValue])
+final case class AvroMap (value: Map[String, AvroValue])
     extends AvroValue(classOf[Map[String, AvroValue]]) {
   override def asMap(): Map[String, AvroValue] = value
 
