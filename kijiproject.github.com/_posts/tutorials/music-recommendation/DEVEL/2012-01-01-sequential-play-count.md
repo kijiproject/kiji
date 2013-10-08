@@ -185,7 +185,7 @@ table.
 
 #### Run and verify SequentialPlayCounter and SequentialPlayCountReducer
 `KijiGatherJobBuilder` is used to create a test MapReduce job. This job builder can be used outside
-the context of a test to configure and run jobs programatically. The job is then run using Hadoop's
+the context of a test to configure and run jobs programmatically. The job is then run using Hadoop's
 local job runner. The resulting output sequence file is then validated.
 
 {% highlight java %}

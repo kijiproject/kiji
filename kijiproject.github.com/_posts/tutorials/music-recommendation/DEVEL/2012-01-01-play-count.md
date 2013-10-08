@@ -79,7 +79,7 @@ public KijiDataRequest getDataRequest() {
 
 #### Process track play data into key-value pairs for occurrences
 Called once for each row in the Kiji table, gather() retrieves all the values in the
-"info:track_plays" column, and for each value, sets the Text object we are resuing to contain the
+"info:track_plays" column, and for each value, sets the Text object we are reusing to contain the
 current value, writes the key-value pairs using `context.write(mText, ONE)` and then clears the Text
 object before the next call to gather.
 {% highlight java %}
