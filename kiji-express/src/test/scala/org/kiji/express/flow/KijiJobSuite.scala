@@ -92,7 +92,7 @@ class KijiJobSuite extends KijiSuite {
     }
 
     class UnpackTupleJob(args: Args) extends KijiJob(args) {
-      KijiInput(args("input"))("family:column3" -> 'slice)
+      KijiInput(args("input"), "family:column3" -> 'slice)
           .map('slice -> 'record) { slice: KijiSlice[AvroRecord] => slice.getFirstValue }
           .unpackAvro('record -> ('hashtype, 'hashsize, 'suppress))
           .project('hashtype, 'hashsize, 'suppress)
@@ -102,7 +102,7 @@ class KijiJobSuite extends KijiSuite {
     val jobTest = JobTest(new UnpackTupleJob(_))
         .arg("input", uri)
         .arg("output", "outputFile")
-        .source(KijiInput(uri)(Map (Column("family:column3") -> 'slice)), unpackingInput)
+        .source(KijiInput(uri, Map (Column("family:column3") -> 'slice)), unpackingInput)
         .sink(Tsv("outputFile"))(validatePacking)
 
     // Run in local mode.
@@ -117,7 +117,7 @@ class KijiJobSuite extends KijiSuite {
     // on KijiPipe that we need to use directly after KijiInput (for example, we may decide to
     // return only the first value in the slice if only 1 value is requested).
     class UnpackTupleJob(args: Args) extends KijiJob(args) {
-      KijiInput(args("input"))("family:column3" -> 'slice)
+      KijiInput(args("input"), "family:column3" -> 'slice)
           .unpackAvro('slice -> ('hashtype, 'hashsize, 'suppress))
           .project('hashtype, 'hashsize, 'suppress)
           .write(Tsv(args("output")))

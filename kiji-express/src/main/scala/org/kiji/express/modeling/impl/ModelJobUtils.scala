@@ -391,7 +391,7 @@ object ModelJobUtils {
       inputSpec: InputSpec): Source = {
     inputSpec match {
       case spec @ KijiInputSpec(tableUri, _, _) => {
-        KijiInput(tableUri, getTimeRange(spec))(getInputColumnMap(spec))
+        KijiInput(tableUri, getTimeRange(spec), getInputColumnMap(spec))
       }
       case spec @ TextSourceSpec(path) => {
         TextLine(path)

@@ -78,7 +78,7 @@ class FlowModuleSuite extends FunSuite {
   }
 
   test("Flow module permits creating inputs and outputs with no mappings.") {
-    val input: KijiSource = KijiInput(tableURI)()
+    val input: KijiSource = KijiInput(tableURI)
     val output: KijiSource = KijiOutput(tableURI)()
 
     assert(input.columns.isEmpty)
@@ -86,7 +86,7 @@ class FlowModuleSuite extends FunSuite {
   }
 
   test("Flow module permits creating KijiSources as inputs with default options.") {
-    val input: KijiSource = KijiInput(tableURI)("info:word" -> 'word)
+    val input: KijiSource = KijiInput(tableURI, "info:word" -> 'word)
     val expectedScheme: KijiScheme = {
       new KijiScheme(
           All,
@@ -99,7 +99,7 @@ class FlowModuleSuite extends FunSuite {
   }
 
   test("Flow module permits specifying timerange for KijiInput.") {
-    val input = KijiInput(tableURI, timeRange=Between(0L,40L))("info:word" -> 'word)
+    val input = KijiInput(tableURI, Between(0L, 40L), ("info:word", 'word))
     val expectedScheme: KijiScheme = {
       new KijiScheme(
           Between(0L, 40L),
@@ -112,7 +112,7 @@ class FlowModuleSuite extends FunSuite {
   }
 
   test("Flow module permits creating KijiSources with multiple columns.") {
-    val input: KijiSource = KijiInput(tableURI)("info:word" -> 'word, "info:title" -> 'title)
+    val input: KijiSource = KijiInput(tableURI, "info:word" -> 'word, "info:title" -> 'title)
     val expectedScheme: KijiScheme = {
       new KijiScheme(
           All,
@@ -128,11 +128,11 @@ class FlowModuleSuite extends FunSuite {
 
   test("Flow module permits specifying options for a column.") {
     val input: KijiSource =
-        KijiInput(tableURI)(Map(Column("info:word") -> 'word))
+        KijiInput(tableURI, Map(Column("info:word") -> 'word))
     val input2: KijiSource =
-        KijiInput(tableURI)(Map(Column("info:word", versions = 1) -> 'word))
+        KijiInput(tableURI, Map(Column("info:word", versions = 1) -> 'word))
     val input3: KijiSource =
-        KijiInput(tableURI)(Map(MapFamily("searches", versions=1, qualifierMatches=".*") -> 'word))
+        KijiInput(tableURI, Map(MapFamily("searches", versions=1, qualifierMatches=".*") -> 'word))
   }
 
   test("A qualified Column can specify a replacement that is a single value.") {
@@ -263,7 +263,7 @@ class FlowModuleSuite extends FunSuite {
   }
 
   test("Flow module permits specifying different options for different columns.") {
-    val input: KijiSource = KijiInput(tableURI)(
+    val input: KijiSource = KijiInput(tableURI,
       Map(
         Column("info:word", versions=1) -> 'word,
         Column("info:title", versions=2) -> 'title))

@@ -87,7 +87,7 @@ class ScriptRunnerSuite extends KijiSuite {
   /** Test script to run. */
   val scriptString: String =
 """
-KijiInput("%s")("family:column1" -> 'word)
+KijiInput("%s", "family:column1" -> 'word)
     // Sanitize the word.
     .map('word -> 'cleanword) { words: KijiSlice[String] =>
       words
@@ -117,7 +117,7 @@ KijiInput("%s")("family:column1" -> 'word)
 
     // Build test job.
     JobTest(jobc _)
-        .source(KijiInput(uri.toString)("family:column1" -> 'word), wordCountInput)
+        .source(KijiInput(uri.toString, "family:column1" -> 'word), wordCountInput)
         .sink(Tsv("outputFile"))(validateWordCount)
         // Run the test job.
         .run
@@ -133,7 +133,7 @@ KijiInput("%s")("family:column1" -> 'word)
     // Build test job.
     addToClasspath(runner.compileFolder)
     JobTest(jobc _)
-        .source(KijiInput(uri.toString)("family:column1" -> 'word), wordCountInput)
+        .source(KijiInput(uri.toString, "family:column1" -> 'word), wordCountInput)
         .sink(Tsv("outputFile"))(validateWordCount)
         .runHadoop
         .finish

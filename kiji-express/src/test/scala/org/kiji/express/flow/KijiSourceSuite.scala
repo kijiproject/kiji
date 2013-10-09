@@ -82,7 +82,7 @@ class KijiSourceSuite
     JobTest(new WordCountJob(_))
         .arg("input", uri)
         .arg("output", "outputFile")
-        .source(KijiInput(uri)("family:column1" -> 'word), wordCountInput(uri))
+        .source(KijiInput(uri, "family:column1" -> 'word), wordCountInput(uri))
         .sink(Tsv("outputFile"))(validateWordCount)
         // Run the test job.
         .run
@@ -99,7 +99,7 @@ class KijiSourceSuite
     JobTest(new WordCountJob(_))
         .arg("input", uri)
         .arg("output", "outputFile")
-        .source(KijiInput(uri)("family:column1" -> 'word), wordCountInput(uri))
+        .source(KijiInput(uri, "family:column1" -> 'word), wordCountInput(uri))
         .sink(Tsv("outputFile"))(validateWordCount)
         // Run the test job.
         .runHadoop
@@ -319,7 +319,7 @@ class KijiSourceSuite
 
     // Build test job.
     val source =
-        KijiInput(uri)(Map((Column("family:column1", versions=2) -> 'words)))
+        KijiInput(uri, Map((Column("family:column1", versions=2) -> 'words)))
     JobTest(new VersionsJob(source)(_))
         .arg("output", "outputFile")
         .source(source, versionCountInput(uri))
@@ -345,7 +345,7 @@ class KijiSourceSuite
     }
 
     // Build test job.
-    val source = KijiInput(uri, timeRange=Between(15L, 25L))("family:column1" -> 'words)
+    val source = KijiInput(uri, Between(15L, 25L), "family:column1" -> 'words)
     JobTest(new VersionsJob(source)(_))
         .arg("output", "outputFile")
         .source(source, versionCountInput(uri))
@@ -382,7 +382,7 @@ class KijiSourceSuite
     JobTest(new TwoColumnJob(_))
         .arg("input", uri)
         .arg("output", "outputFile")
-        .source(KijiInput(uri)("family:column1" -> 'word1, "family:column2" -> 'word2),
+        .source(KijiInput(uri, "family:column1" -> 'word1, "family:column2" -> 'word2),
             missingValuesInput(uri))
         .sink(Tsv("outputFile"))(validateMissingValuesSize)
         // Run the test job.
@@ -407,7 +407,7 @@ class KijiSourceSuite
     val jobTest = JobTest(new PluralizeReplaceJob(_))
       .arg("input", uri)
       .arg("output", "outputFile")
-      .source(KijiInput(uri)(
+      .source(KijiInput(uri,
         Map(
           Column("family:column1") -> 'word1,
           Column("family:column2")
@@ -448,7 +448,7 @@ class KijiSourceSuite
             (30L, "three") ) ),
         ( EntityId("row03"), slice("family:column1", (10L, "hello")) ))
     // Build test job.
-    val testSource = KijiInput(uri)(Map((Column("family:column1", versions=all) -> 'word)))
+    val testSource = KijiInput(uri, Map((Column("family:column1", versions=all) -> 'word)))
     JobTest(new AvroToScalaChecker(testSource)(_))
       .arg("input", uri)
       .arg("output", "outputFile")
@@ -482,7 +482,7 @@ class KijiSourceSuite
     val jobTest = JobTest(new GenericAvroReadJob(_))
         .arg("input", uri)
         .arg("output", "outputFile")
-        .source(KijiInput(uri) (Map (Column("family:column3") -> 'records)),
+        .source(KijiInput(uri, Map (Column("family:column3") -> 'records)),
             genericReadInput(uri))
         .sink(Tsv("outputFile"))(validateGenericRead)
 
@@ -516,7 +516,7 @@ class KijiSourceSuite
     val jobTest = JobTest(new SpecificAvroReadJob(_))
         .arg("input", uri)
         .arg("output", "outputFile")
-        .source(KijiInput(uri)(
+        .source(KijiInput(uri,
       Map(Column("family:column3").withSpecificAvroClass(classOf[SpecificRecordTest]) -> 'records)),
       genericReadInput(uri))
         .sink(Tsv("outputFile"))(validateSpecificRead)
@@ -640,7 +640,7 @@ class KijiSourceSuite
     val jobTest = JobTest(new MapSliceJob(_))
         .arg("input", uri)
         .arg("output", "outputFile")
-        .source(KijiInput(uri)("animals" -> 'terms), mapTypeInput)
+        .source(KijiInput(uri, "animals" -> 'terms), mapTypeInput)
         .sink(Tsv("outputFile"))(validateTest)
 
     // Run the test.
@@ -674,7 +674,7 @@ class KijiSourceSuite
         .arg("input", uri)
         .arg("side-input", "sideInputFile")
         .arg("output", "outputFile")
-        .source(KijiInput(uri)("animals" -> 'animals), joinKijiInput)
+        .source(KijiInput(uri, "animals" -> 'animals), joinKijiInput)
         .source(TextLine("sideInputFile"), sideInput)
         .sink(Tsv("outputFile"))(validateTest)
 
@@ -698,7 +698,7 @@ object KijiSourceSuite extends KijiSuite {
    */
   class WordCountJob(args: Args) extends KijiJob(args) {
     // Setup input to bind values from the "family:column1" column to the symbol 'word.
-    KijiInput(args("input"))("family:column1" -> 'word)
+    KijiInput(args("input"), "family:column1" -> 'word)
         // Sanitize the word.
         .map('word -> 'cleanword) { words: KijiSlice[String] =>
           words.getFirstValue()
@@ -722,7 +722,7 @@ object KijiSourceSuite extends KijiSuite {
    */
   class TwoColumnJob(args: Args) extends KijiJob(args) {
     // Setup input to bind values from the "family:column1" column to the symbol 'word.
-    KijiInput(args("input"))("family:column1" -> 'word1, "family:column2" -> 'word2)
+    KijiInput(args("input"), "family:column1" -> 'word1, "family:column2" -> 'word2)
         .map('word1 -> 'pluralword) { words: KijiSlice[String] =>
           words.getFirstValue().toString() + "s"
         }
@@ -740,7 +740,7 @@ object KijiSourceSuite extends KijiSuite {
   *     Tsv file.
   */
   class PluralizeReplaceJob(args: Args) extends KijiJob(args) {
-    KijiInput(args("input"))(
+    KijiInput(args("input"),
         Map(
             Column("family:column1") -> 'word1,
             Column("family:column2")
@@ -855,7 +855,7 @@ object KijiSourceSuite extends KijiSuite {
    *     Tsv file.
    */
   class GenericAvroReadJob(args: Args) extends KijiJob(args) {
-    KijiInput(args("input"))("family:column3" -> 'records)
+    KijiInput(args("input"), "family:column3" -> 'records)
     .map('records -> 'hashSizeField) { slice: KijiSlice[AvroValue] =>
         slice.getFirst match {
           case Cell(_, _, _, record: AvroRecord) => {
@@ -870,7 +870,7 @@ object KijiSourceSuite extends KijiSuite {
   class SpecificAvroReadJob(args: Args) extends KijiJob(args) {
     val inputOptions = Map(
         Column("family:column3").withSpecificAvroClass(classOf[SpecificRecordTest]) -> 'records)
-    KijiInput(args("input"))(inputOptions)
+    KijiInput(args("input"), inputOptions)
         .map('records -> 'hashSizeField) { slice: KijiSlice[AvroValue] =>
           val Cell(_, _, _, record) = slice.getFirst()
           record.asSpecificRecord[SpecificRecordTest]().getHashSize
@@ -935,7 +935,7 @@ object KijiSourceSuite extends KijiSuite {
    *     Kiji table, and "output", which specifies the path to a text file.
    */
   class MapSliceJob(args: Args) extends KijiJob(args) {
-    KijiInput(args("input"))("animals" -> 'terms)
+    KijiInput(args("input"), "animals" -> 'terms)
         .map('terms -> 'values) { terms: KijiSlice[String] => terms.getFirstValue }
         .project('values)
         .write(Tsv(args("output")))
@@ -952,7 +952,7 @@ object KijiSourceSuite extends KijiSuite {
         .read
         .map('line -> 'entityId) { line: String => EntityId(line) }
 
-    KijiInput(args("input"))("animals" -> 'animals)
+    KijiInput(args("input"), "animals" -> 'animals)
         .map('animals -> 'terms) { animals: KijiSlice[String] =>
           animals.getFirstValue.split(" ")(0) + "row" }
         .discard('entityId)

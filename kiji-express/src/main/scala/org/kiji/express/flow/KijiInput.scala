@@ -23,80 +23,210 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 
 /**
- * KijiInput is a class that can be applied to a column -> field mapping in order to create a
- * `Source` for reading row data from a Kiji table.
- *
- * A Scalding `Source` can be used to process a distributed data set and views the entries in
- * the data set as tuples. This factory method can be used to obtain a `Source` which views
- * rows in a Kiji table as tuples, with cells from columns or map-type column families provided
- * as entries in the tuple.
- *
- * @param tableURI is a Kiji URI that addresses a table in a Kiji instance.
- * @param timeRange that cells must fall into to be retrieved.
- * @param loggingInterval to log skipped rows at. For example, if loggingInterval is 5000,
- *     every 5000th skipped row will be logged.
+ * Factory object with overloaded factory methods for creating [[org.kiji.express.flow.KijiSource]]s
+ * for use asinputs of a KijiExpress flow.
  */
-@ApiAudience.Public
-@ApiStability.Experimental
-class KijiInput(
-    tableURI: String,
-    timeRange: TimeRange,
-    loggingInterval: Long) {
+object KijiInput {
+  /** Default time range for KijiSource */
+  private val DEFAULT_TIME_RANGE: TimeRange = All
+
+  /** Default logging interval for KijiSource */
+  private val DEFAULT_LOGGING_INTERVAL: Long = 1000
+
   /**
-   * Applies this input specification to a column mapping, returning a scalding `Source`.
+   * An internal factory method for creating a [[org.kiji.express.flow.KijiSource]] for reading
+   * cells from a Kiji table.
    *
+   * @param tableUri addressing a table in a Kiji instance.
+   * @param timeRange that cells must fall into to be retrieved.
+   * @param loggingInterval to log skipped rows at. For example, if loggingInterval is 5000,
+   *     every 5000th skipped row will be logged.
    * @param columns are a series of pairs mapping column (or map-type column family) requests to
    *     tuple field names. Columns are specified as "family:qualifier" or, in the case of a
    *     map-type column family, simply "family".
    * @return a source for data in the Kiji table, whose row tuples will contain fields with cell
    *     data from the requested columns and map-type column families.
    */
-  def apply(columns: (String, Symbol)*): KijiSource = {
+  private def applyAllArgsSym(
+      tableUri: String,
+      timeRange: TimeRange,
+      loggingInterval: Long,
+      columns: (String, Symbol)*): KijiSource = {
+
     val columnMap = columns
-                    .map { case (col, field) =>
-      if (col.contains(":")) { // Group-type column
-        (field, Column(col).ignoreMissing)
-      } else { // Map-type column
-        (field, MapFamily(col, qualifierMatches="", versions=latest).ignoreMissing)
-      }
-    }
-                    .toMap
-    new KijiSource(tableURI, timeRange, None, loggingInterval, columnMap)
+        .map {
+          case (col, field) =>
+          if (col.contains(":")) { // Group-type column
+            (field, Column(col).ignoreMissing)
+          } else { // Map-type column
+            (field, MapFamily(col, qualifierMatches="", versions=latest).ignoreMissing)
+          }
+        }
+        .toMap
+    new KijiSource(tableUri, timeRange, None, loggingInterval, columnMap)
   }
 
   /**
-   * Applies this input specification to a column mapping, returning a scalding `Source`.
+   * An internal factory method for creating a [[org.kiji.express.flow.KijiSource]] for reading
+   * cells from a Kiji table.
    *
-   * @param columns are a series of pairs mapping column (or map-type column family) requests to
-   *     tuple field names. Use factory methods `MapFamily` and `Column` to create column
-   *     requests.
-   * @return a source for data in the Kiji table, whose row tuples will contain fields with cell
-   *     data from the requested columns and map-type column families.
-   */
-  def apply(columns: Map[_ <: ColumnRequest, Symbol]): KijiSource = {
-    val columnMap: Map[Symbol, ColumnRequest] = columns
-        .map { entry: (ColumnRequest, Symbol) => entry.swap }
-    new KijiSource(tableURI, timeRange, None, loggingInterval, columnMap)
-  }
-}
-
-/**
- * Companion object for KijiInput that contains a factory method.
- */
-object KijiInput {
-  /**
-   * A factory method for instantiating KijiInputs.
-   *
-   * @param tableURI is a Kiji URI that addresses a table in a Kiji instance.
+   * @param tableUri addressing a table in a Kiji instance.
    * @param timeRange that cells must fall into to be retrieved.
    * @param loggingInterval to log skipped rows at. For example, if loggingInterval is 5000,
    *     every 5000th skipped row will be logged.
-   * @return a KijiInput that can be applied to columns.
+   * @param columns are a series of pairs mapping column (or map-type column family) requests to
+   *     tuple field names. Columns are specified as "family:qualifier" or, in the case of a
+   *     map-type column family, simply "family".
+   * @return a source for data in the Kiji table, whose row tuples will contain fields with cell
+   *     data from the requested columns and map-type column families.
+   */
+  private def applyAllArgsMap(
+      tableUri: String,
+      timeRange: TimeRange,
+      loggingInterval: Long,
+      columns: Map[_ <: ColumnRequest, Symbol]): KijiSource = {
+    val columnMap: Map[Symbol, ColumnRequest] = columns
+        .map { entry: (ColumnRequest, Symbol) => entry.swap }
+    new KijiSource(tableUri, timeRange, None, loggingInterval, columnMap)
+  }
+
+  /**
+   * A factory method for creating a KijiSource.
+   *
+   * @param tableUri addressing a table in a Kiji instance.
+   * @param columns are a series of pairs mapping column (or map-type column family) requests to
+   *     tuple field names. Columns are specified as "family:qualifier" or, in the case of a
+   *     map-type column family, simply "family".
+   * @return a source for data in the Kiji table, whose row tuples will contain fields with cell
+   *     data from the requested columns and map-type column families.
    */
   def apply(
-      tableURI: String,
-      timeRange: TimeRange = All,
-      loggingInterval: Long = 1000): KijiInput = {
-    new KijiInput(tableURI, timeRange, loggingInterval)
-  }
+      tableUri: String,
+      columns: (String, Symbol)*): KijiSource =
+    applyAllArgsSym(tableUri, DEFAULT_TIME_RANGE, DEFAULT_LOGGING_INTERVAL, columns: _*)
+
+  /**
+   * A factory method for creating a KijiSource.
+   *
+   * @param tableUri addressing a table in a Kiji instance.
+   * @param timeRange that cells must fall into to be retrieved.
+   * @param columns are a series of pairs mapping column (or map-type column family) requests to
+   *     tuple field names. Columns are specified as "family:qualifier" or, in the case of a
+   *     map-type column family, simply "family".
+   * @return a source for data in the Kiji table, whose row tuples will contain fields with cell
+   *     data from the requested columns and map-type column families.
+   */
+  def apply(
+      tableUri: String,
+      timeRange: TimeRange,
+      columns: (String, Symbol)*): KijiSource =
+    applyAllArgsSym(tableUri, timeRange, DEFAULT_LOGGING_INTERVAL, columns: _*)
+
+  /**
+   * A factory method for creating a KijiSource.
+   *
+   * @param tableUri addressing a table in a Kiji instance.
+   * @param loggingInterval to log skipped rows at. For example, if loggingInterval is 5000,
+   *     every 5000th skipped row will be logged.
+   * @param columns are a series of pairs mapping column (or map-type column family) requests to
+   *     tuple field names. Columns are specified as "family:qualifier" or, in the case of a
+   *     map-type column family, simply "family".
+   * @return a source for data in the Kiji table, whose row tuples will contain fields with cell
+   *     data from the requested columns and map-type column families.
+   */
+  def apply(
+      tableUri: String,
+      loggingInterval: Long,
+      columns: (String, Symbol)*): KijiSource =
+    applyAllArgsSym(tableUri, DEFAULT_TIME_RANGE, loggingInterval, columns: _*)
+
+  /**
+   * A factory method for creating a KijiSource.
+   *
+   * @param tableUri addressing a table in a Kiji instance.
+   * @param timeRange that cells must fall into to be retrieved.
+   * @param loggingInterval to log skipped rows at. For example, if loggingInterval is 5000,
+   *     every 5000th skipped row will be logged.
+   * @param columns are a series of pairs mapping column (or map-type column family) requests to
+   *     tuple field names. Columns are specified as "family:qualifier" or, in the case of a
+   *     map-type column family, simply "family".
+   * @return a source for data in the Kiji table, whose row tuples will contain fields with cell
+   *     data from the requested columns and map-type column families.
+   */
+  def apply(
+      tableUri: String,
+      timeRange: TimeRange,
+      loggingInterval: Long,
+      columns: (String, Symbol)*): KijiSource =
+    applyAllArgsSym(tableUri, timeRange, loggingInterval, columns: _*)
+
+  /**
+   * A factory method for creating a KijiSource.
+   *
+   * @param tableUri addressing a table in a Kiji instance.
+   * @param columns are a series of pairs mapping column (or map-type column family) requests to
+   *     tuple field names. Columns are specified as "family:qualifier" or, in the case of a
+   *     map-type column family, simply "family".
+   * @return a source for data in the Kiji table, whose row tuples will contain fields with cell
+   *     data from the requested columns and map-type column families.
+   */
+  def apply(
+      tableUri: String,
+      columns: Map[_ <: ColumnRequest, Symbol]): KijiSource =
+    applyAllArgsMap(tableUri, DEFAULT_TIME_RANGE, DEFAULT_LOGGING_INTERVAL, columns)
+
+  /**
+   * A factory method for creating a KijiSource.
+   *
+   * @param tableUri addressing a table in a Kiji instance.
+   * @param timeRange that cells must fall into to be retrieved.
+   * @param columns are a series of pairs mapping column (or map-type column family) requests to
+   *     tuple field names. Columns are specified as "family:qualifier" or, in the case of a
+   *     map-type column family, simply "family".
+   * @return a source for data in the Kiji table, whose row tuples will contain fields with cell
+   *     data from the requested columns and map-type column families.
+   */
+  def apply(
+      tableUri: String,
+      timeRange: TimeRange,
+      columns: Map[_ <: ColumnRequest, Symbol]): KijiSource =
+    applyAllArgsMap(tableUri, timeRange, DEFAULT_LOGGING_INTERVAL, columns)
+
+  /**
+   * A factory method for creating a KijiSource.
+   *
+   * @param tableUri addressing a table in a Kiji instance.
+   * @param loggingInterval to log skipped rows at. For example, if loggingInterval is 5000,
+   *     every 5000th skipped row will be logged.
+   * @param columns are a series of pairs mapping column (or map-type column family) requests to
+   *     tuple field names. Columns are specified as "family:qualifier" or, in the case of a
+   *     map-type column family, simply "family".
+   * @return a source for data in the Kiji table, whose row tuples will contain fields with cell
+   *     data from the requested columns and map-type column families.
+   */
+  def apply(
+      tableUri: String,
+      loggingInterval: Long,
+      columns: Map[_ <: ColumnRequest, Symbol]): KijiSource =
+    applyAllArgsMap(tableUri, DEFAULT_TIME_RANGE, loggingInterval, columns)
+
+  /**
+   * A factory method for creating a KijiSource.
+   *
+   * @param tableUri addressing a table in a Kiji instance.
+   * @param timeRange that cells must fall into to be retrieved.
+   * @param loggingInterval to log skipped rows at. For example, if loggingInterval is 5000,
+   *     every 5000th skipped row will be logged.
+   * @param columns are a series of pairs mapping column (or map-type column family) requests to
+   *     tuple field names. Columns are specified as "family:qualifier" or, in the case of a
+   *     map-type column family, simply "family".
+   * @return a source for data in the Kiji table, whose row tuples will contain fields with cell
+   *     data from the requested columns and map-type column families.
+   */
+  def apply(
+      tableUri: String,
+      timeRange: TimeRange,
+      loggingInterval: Long,
+      columns: Map[_ <: ColumnRequest, Symbol]): KijiSource =
+    applyAllArgsMap(tableUri, timeRange, loggingInterval, columns)
 }

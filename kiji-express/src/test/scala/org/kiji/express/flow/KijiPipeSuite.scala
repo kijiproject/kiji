@@ -71,7 +71,7 @@ class KijiPipeSuite extends KijiSuite {
   // a Scalding Job from the pipe.
   def jobToRun(args: Args): Job = {
     // Setup input to bind values from the "family:column1" column to the symbol 'word.
-    KijiInput(uri)("family:column1" -> 'word)
+    KijiInput(uri, "family:column1" -> 'word)
     // Sanitize the word.
     .map('word -> 'cleanword) { words: KijiSlice[String] =>
       words.getFirstValue()
@@ -87,7 +87,7 @@ class KijiPipeSuite extends KijiSuite {
 
   /** The job tester we'll use to run the test job in either local or hadoop mode. */
   val jobTest = JobTest(jobToRun(_))
-      .source(KijiInput(uri)("family:column1" -> 'word), wordCountInput(uri))
+      .source(KijiInput(uri, "family:column1" -> 'word), wordCountInput(uri))
       .sink(Tsv("outputFile"))(validateWordCount)
 
   test("A KijiPipe can be used to obtain a Scalding job that is run in local mode.") {
@@ -191,7 +191,7 @@ class KijiPipeSuite extends KijiSuite {
     }
 
     def unpackTupleJob(args: Args): Job = {
-      val cascadingPipe = KijiInput(args("input"))("family:column3" -> 'slice)
+      val cascadingPipe = KijiInput(args("input"), "family:column3" -> 'slice)
           .map('slice -> 'record) { slice: KijiSlice[AvroRecord] => slice.getFirstValue }
       new KijiPipe(cascadingPipe)
           .unpackAvro('record -> ('hashtype, 'hashsize, 'suppress))
@@ -203,7 +203,7 @@ class KijiPipeSuite extends KijiSuite {
     val jobTest = JobTest(unpackTupleJob(_))
         .arg("input", uri)
         .arg("output", "outputFile")
-        .source(KijiInput(uri)(Map (Column("family:column3") -> 'slice)), unpackingInput(uri))
+        .source(KijiInput(uri, Map (Column("family:column3") -> 'slice)), unpackingInput(uri))
         .sink(Tsv("outputFile"))(validatePacking)
 
     // Run in local mode.
