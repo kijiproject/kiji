@@ -25,5 +25,5 @@
       "phase_class" : "org.kiji.express.music.SongRecommendingScorer"
     }
   },
-  "protocol_version" : "model_definition-0.1.0"
+  "protocol_version" : "model_definition-0.2.0"
 }

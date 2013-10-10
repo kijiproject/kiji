@@ -19,8 +19,7 @@
 {
   "name" : "song-recommender-env",
   "version" : "1.0.0",
-  "model_table_uri" : "kiji://.env/default/users",
-  "protocol_version" : "model_environment-0.1.1",
+  "protocol_version" : "model_environment-0.2.0",
   "score_environment" : {
     "org.kiji.express.avro.AvroScoreEnvironment":{
       "input_spec":{
@@ -38,7 +37,7 @@
             } ]
           }
         }
-      }
+      },
       "kv_stores" : [ {
         "store_type" : "KIJI_TABLE",
         "name" : "top_next_songs",
