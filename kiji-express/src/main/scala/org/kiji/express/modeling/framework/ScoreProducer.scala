@@ -83,11 +83,8 @@ final class ScoreProducer
 
   /** Extractor to use for this model definition. This variable must be initialized. */
   private[this] var _extractor: Option[Extractor] = None
-  private[this] def extractor: Extractor = {
-    _extractor.getOrElse {
-      throw new IllegalStateException(
-          "ScoreProducer is missing its extractor. Did setConf get called?")
-    }
+  private[this] def extractor: Option[Extractor] = {
+    _extractor
   }
 
   /** Scorer to use for this model definition. This variable must be initialized. */
@@ -139,17 +136,14 @@ final class ScoreProducer
     _modelEnvironment = Some(modelEnvironmentDef)
 
     // Make an instance of each requires phase.
-    val extractor = modelDefinitionDef
+    _extractor = modelDefinitionDef
         .scoreExtractorClass
-        .get
-        .newInstance()
-        .asInstanceOf[Extractor]
+        .map { _.newInstance() }
+
     val scorer = modelDefinitionDef
         .scorerClass
         .get
         .newInstance()
-        .asInstanceOf[Scorer]
-    _extractor = Some(extractor)
     _scorer = Some(scorer)
 
     // Finish setting the conf object.
@@ -206,9 +200,9 @@ final class ScoreProducer
         .scoreEnvironment
         .get
         .keyValueStoreSpecs
-    extractor.keyValueStores = ModelJobUtils
+    scorer.keyValueStores = ModelJobUtils
         .wrapKvstoreReaders(scoreStoreDefs, context)
-    scorer.keyValueStores = extractor.keyValueStores
+    extractor.map { e => e.keyValueStores = scorer.keyValueStores }
 
     // Setup the row converter.
     val uriString = modelEnvironment
@@ -222,7 +216,6 @@ final class ScoreProducer
   }
 
   override def produce(input: KijiRowData, context: ProducerContext) {
-    val ExtractFn(extractFields, extract) = extractor.extractFn
     val ScoreFn(scoreFields, score) = scorer.scoreFn
 
     // Setup fields.
@@ -236,41 +229,17 @@ final class ScoreProducer
           (binding.tupleFieldName, new KijiColumnName(binding.storeFieldName))
         }
         .toMap
-    val extractInputFields: Seq[String] = {
-      // If the field specified is the wildcard field, use all columns referenced in this model
-      // environment's field bindings.
-      if (extractFields._1.isAll) {
-        fieldMapping.keys.toSeq
-      } else {
-        Tuples.fieldsToSeq(extractFields._1)
-      }
-    }
-    val extractOutputFields: Seq[String] = {
-      // If the field specified is the results field, use all input fields from the extract phase.
-      if (extractFields._2.isResults) {
-        extractInputFields
-      } else {
-        Tuples.fieldsToSeq(extractFields._2)
-      }
-    }
-    val scoreInputFields: Seq[String] = {
-      // If the field specified is the wildcard field, use all fields output by the extract phase.
-      if (scoreFields.isAll) {
-        extractOutputFields
-      } else {
-        Tuples.fieldsToSeq(scoreFields)
-      }
-    }
 
     // Configure the row data input to decode its data generically.
     val row = rowConverter(input)
+
     // Prepare input to the extract phase.
-    val slices: Seq[Any] = extractInputFields
+    def getSlices(inputFields: Seq[String]): Seq[Any] = inputFields
         .map { (field: String) =>
           if (field == KijiScheme.entityIdField) {
             val uri = KijiURI
-                .newBuilder(modelEnvironment.scoreEnvironment.get.inputSpec.tableUri)
-                .build()
+              .newBuilder(modelEnvironment.scoreEnvironment.get.inputSpec.tableUri)
+              .build()
             EntityId.fromJavaEntityId(uri, row.getEntityId, getConf)
           } else {
             val columnName: KijiColumnName = fieldMapping(field.toString)
@@ -284,16 +253,76 @@ final class ScoreProducer
           }
         }
 
-    // Get output from the extract phase.
-    val featureVector: Product = Tuples.fnResultToTuple(
-        extract(Tuples.tupleToFnArg(Tuples.seqToTuple(slices))))
-    val featureMapping: Map[String, Any] = extractOutputFields
-        .zip(featureVector.productIterator.toIterable)
-        .toMap
+    val extractFnOption: Option[ExtractFn[_, _]] = extractor.map { _.extractFn }
+    val scoreInput = extractFnOption match {
 
-    // Get a score from the score phase.
-    val scoreInput: Seq[Any] = scoreInputFields
-        .map { field => featureMapping(field) }
+      // If there is an extractor, use its extractFn to set up the correct input and output fields
+      case Some(ExtractFn(extractFields, extract)) => {
+        val extractInputFields: Seq[String] = {
+          // If the field specified is the wildcard field, use all columns referenced in this model
+          // environment's field bindings.
+          if (extractFields._1.isAll) {
+            fieldMapping.keys.toSeq
+          } else {
+            Tuples.fieldsToSeq(extractFields._1)
+          }
+        }
+        val extractOutputFields: Seq[String] = {
+          // If the field specified is the results field, use all input fields from the extract
+          // phase.
+          if (extractFields._2.isResults) {
+            extractInputFields
+          } else {
+            Tuples.fieldsToSeq(extractFields._2)
+          }
+        }
+
+        val scoreInputFields: Seq[String] = {
+          // If the field specified is the wildcard field, use all fields output by the extract
+          // phase.
+          if (scoreFields.isAll) {
+            extractOutputFields
+          } else {
+            Tuples.fieldsToSeq(scoreFields)
+          }
+        }
+
+        // Prepare input to the extract phase.
+        val slices = getSlices(extractInputFields)
+
+        // Get output from the extract phase.
+        val featureVector: Product = Tuples.fnResultToTuple(
+          extract(Tuples.tupleToFnArg(Tuples.seqToTuple(slices))))
+        val featureMapping: Map[String, Any] = extractOutputFields
+            .zip(featureVector.productIterator.toIterable)
+            .toMap
+
+        // Get a score from the score phase.
+        val scoreInput: Seq[Any] = scoreInputFields
+          .map { field => featureMapping(field) }
+
+        scoreInput
+      }
+      // If there's no extractor, use default input and output fields
+      case None => {
+        val scoreInputFields = Tuples.fieldsToSeq(scoreFields)
+        val inputOutputFields = fieldMapping.keys.toSeq
+        val slices = getSlices(inputOutputFields)
+
+        // Get output from the extract phase.
+        val featureVector: Product = Tuples.seqToTuple(slices)
+        val featureMapping: Map[String, Any] = inputOutputFields
+          .zip(featureVector.productIterator.toIterable)
+          .toMap
+
+        // Get a score from the score phase.
+        val scoreInput: Seq[Any] = scoreInputFields
+          .map { field => featureMapping(field) }
+
+        scoreInput
+      }
+    }
+
     val scoreValue: Any =
         score(Tuples.tupleToFnArg(Tuples.seqToTuple(scoreInput)))
 

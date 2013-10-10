@@ -2,6 +2,7 @@
                              Kiji Express Release Notes
 
 Version 0.10.0
+  * EXP-185. Extractor in ScoreProducer is now optional.
   * EXP-197. Adds support for sequence file based flow sources.
   * EXP-207. EntityIds can now be accessed from extractors/scorers.
   * EXP-52. Adds support for text file based key-value stores.

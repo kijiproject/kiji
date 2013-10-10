@@ -338,6 +338,80 @@ class ScoreProducerSuite
     }
     kiji.release()
   }
+
+  test("Extractor is not required") {
+    val testLayout: KijiTableLayout = layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
+
+    val kiji: Kiji = new InstanceBuilder("default")
+        .withTable(testLayout.getName, testLayout)
+            .withRow("row1")
+                .withFamily("family")
+                    .withQualifier("column1").withValue("foo")
+            .withRow("row2")
+                .withFamily("family")
+                    .withQualifier("column1").withValue("bar")
+        .build()
+
+    doAndRelease(kiji.openTable(testLayout.getName)) { table: KijiTable =>
+      val uri: KijiURI = table.getURI
+
+      // Update configuration object with appropriately serialized ModelDefinition/ModelEnvironment
+      // JSON.
+      val request: ExpressDataRequest = new ExpressDataRequest(0, Long.MaxValue,
+        new ExpressColumnRequest("family:column1", 1, None) :: Nil)
+      val sideDataPath: Path = KeyValueStoreImplSuite.generateAvroKVRecordKeyValueStore()
+      val modelDefinition: ModelDefinition = ModelDefinition(
+        name = "test-model-definition",
+        version = "1.0",
+        scoreExtractorClass = None,
+        scorerClass = Some(classOf[ScoreProducerSuite.KijiSliceScorer]))
+      val modelEnvironment: ModelEnvironment = ModelEnvironment(
+        name = "test-model-environment",
+        version = "1.0",
+        prepareEnvironment = None,
+        trainEnvironment = None,
+        scoreEnvironment = Some(ScoreEnvironment(
+          KijiInputSpec(
+            uri.toString,
+            dataRequest = request,
+            fieldBindings = Seq(
+              FieldBinding(tupleFieldName = "field", storeFieldName = "family:column1"))),
+          KijiSingleColumnOutputSpec(uri.toString, "family:column2"),
+          keyValueStoreSpecs = Seq(
+            KeyValueStoreSpec(
+              storeType = "AVRO_KV",
+              name = "side_data",
+              properties = Map(
+                "path" -> sideDataPath.toString,
+                // The Distributed Cache is not supported when using LocalJobRunner in
+                // Hadoop <= 0.21.0.
+                // See https://issues.apache.org/jira/browse/MAPREDUCE-476 for more
+                // information.
+                "use_dcache" -> "false"))))))
+
+      // Build the produce job.
+      val produceJob = ScoreProducerJobBuilder.buildJob(
+        model = modelDefinition,
+        environment = modelEnvironment)
+
+      // Verify that everything went as expected.
+      assert(produceJob.run())
+      doAndClose(table.openTableReader()) { reader: KijiTableReader =>
+        val v1 = reader
+          .get(table.getEntityId("row1"), KijiDataRequest.create("family", "column2"))
+          .getMostRecentValue("family", "column2")
+          .toString
+        val v2 = reader
+          .get(table.getEntityId("row2"), KijiDataRequest.create("family", "column2"))
+          .getMostRecentValue("family", "column2")
+          .toString
+
+        assert("foo" === v1)
+        assert("bar" === v2)
+      }
+    }
+    kiji.release()
+  }
 }
 
 object ScoreProducerSuite {
@@ -353,6 +427,12 @@ object ScoreProducerSuite {
   class UpperCaseScorer extends Scorer {
     override val scoreFn = score('feature) { feature: String =>
       feature.toUpperCase
+    }
+  }
+
+  class KijiSliceScorer extends Scorer {
+    override val scoreFn = score('field) { field: KijiSlice[String] =>
+      field.getFirstValue
     }
   }
 
