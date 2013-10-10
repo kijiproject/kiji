@@ -83,7 +83,6 @@ public class TestCreateHiveTableTool extends KijiClientTest {
 
   @After
   public final void teardownKijiInstance() throws IOException {
-    mSchemaTable.close();
     mKiji.deleteTable("all_types_table");
   }
 
