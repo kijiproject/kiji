@@ -21,8 +21,6 @@ package org.kiji.mapreduce.tools;
 
 import java.io.IOException;
 
-import org.apache.hadoop.conf.Configuration;
-
 import org.kiji.annotations.ApiAudience;
 import org.kiji.common.flags.Flag;
 import org.kiji.mapreduce.KijiMapReduceJobBuilder;
@@ -84,7 +82,7 @@ public final class KijiLaunchMapReduce extends JobTool<KijiMapReduceJobBuilder> 
     super.configure(jobBuilder);
 
     jobBuilder
-        .withConf(new Configuration())  // use MapReduce cluster from local environment
+        .withConf(getConf())
         .withInput(MapReduceJobInputFactory.create().fromSpaceSeparatedMap(mInputFlag))
         .withOutput(MapReduceJobOutputFactory.create().fromSpaceSeparatedMap(mOutputFlag))
         .withMapper(KijiMappers.forName(mMapperName));
