@@ -19,6 +19,12 @@
 
 package org.kiji.express.util
 
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.DataInputStream
+import java.io.DataOutputStream
+import java.nio.ByteBuffer
+
 import org.apache.hadoop.conf.Configuration
 
 import org.kiji.annotations.ApiAudience
@@ -38,10 +44,14 @@ import org.kiji.schema.KijiURI
 @ApiAudience.Private
 @ApiStability.Experimental
 private[express] object EntityIdFactoryCache {
-  /** Memoizes construction of EntityId factories. */
-  private val factoryCache: Memoize[(KijiURI, Configuration), EntityIdFactory] =
-      Memoize { entry: (KijiURI, Configuration) =>
-        val (tableUri, conf) = entry
+  /**
+   * Memoizes construction of EntityId factories. The conf is represented as a ByteBuffer for proper
+   * comparison.
+   */
+  private val factoryCache: Memoize[(KijiURI, ByteBuffer), EntityIdFactory] =
+      Memoize { entry: (KijiURI, ByteBuffer) =>
+        val (tableUri, serializedConf) = entry
+        val conf = deserializeConf(serializedConf)
 
         val tableLayout = doAndRelease(Kiji.Factory.open(tableUri, conf)) { kiji: Kiji =>
           doAndRelease(kiji.openTable(tableUri.getTable)) { table: KijiTable =>
@@ -83,6 +93,34 @@ private[express] object EntityIdFactoryCache {
   private[express] def getFactory(
       tableUri: KijiURI,
       conf: Configuration): EntityIdFactory = {
-    factoryCache(tableUri, conf)
+    factoryCache(tableUri, serializeConf(conf))
+  }
+
+  /**
+   * Serializes a configuration into a string.
+   *
+   * @param conf to serialize.
+   * @return the serialized configuration.
+   */
+  private[express] def serializeConf(conf: Configuration): ByteBuffer = {
+    val confOutputStreamWriter = new ByteArrayOutputStream()
+    val dataOutputStream = new DataOutputStream(confOutputStreamWriter)
+    conf.write(dataOutputStream)
+    dataOutputStream.close
+    return ByteBuffer.wrap(confOutputStreamWriter.toByteArray)
+  }
+
+  /**
+   * Deserializes a conf from a string.
+   *
+   * @param serializedConf to deserialize
+   * @return A configuration deserialized from `serializedConf`.
+   */
+  private[express] def deserializeConf(serializedConf: ByteBuffer): Configuration = {
+    val in = new ByteArrayInputStream(serializedConf.array())
+    val conf = new Configuration()
+    conf.readFields(new DataInputStream(in))
+    in.close()
+    return conf
   }
 }
