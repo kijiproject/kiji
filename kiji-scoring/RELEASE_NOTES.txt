@@ -9,7 +9,11 @@ Version 0.7.0
         support the new record type. FreshTool was also changed to reflect the new records and SPIs.
         FreshKijiTableBuiler has also seen several changes to support the new SPIs. Details of these
         new classes can be found in the JavaDoc for each.
+
 Version 0.6.0
+    * SCORE-40. FreshKijiTableReader now supports a `getStatistics()` method which returns
+        statistics about Fresheners run by the reader. Statistics gathering and logging can be
+        configured via `FreshKijiTableReaderBuilder.withStatisticsGathering()`.
     * SCORE-92. FreshTool now supports registering and retrieving the new optional record fields
         `parameters` and `reinitializeProducer`. e.g.
         kiji fresh \

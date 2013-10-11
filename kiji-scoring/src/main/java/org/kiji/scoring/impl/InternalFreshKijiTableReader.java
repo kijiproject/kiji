@@ -25,9 +25,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -60,6 +62,7 @@ import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.RuntimeInterruptedException;
 import org.kiji.schema.util.ReferenceCountable;
 import org.kiji.scoring.FreshKijiTableReader;
+import org.kiji.scoring.FreshKijiTableReaderBuilder.StatisticGatheringMode;
 import org.kiji.scoring.FreshenerContext;
 import org.kiji.scoring.KijiFreshnessManager;
 import org.kiji.scoring.KijiFreshnessPolicy;
@@ -67,10 +70,10 @@ import org.kiji.scoring.ScoreFunction;
 import org.kiji.scoring.avro.KijiFreshenerRecord;
 import org.kiji.scoring.impl.InternalFreshKijiTableReader.ReaderState.State;
 import org.kiji.scoring.impl.MultiBufferedWriter.SingleBuffer;
+import org.kiji.scoring.statistics.FreshKijiTableReaderStatistics;
+import org.kiji.scoring.statistics.FreshenerSingleRunStatistics;
 
-/**
- * Local implementation of FreshKijiTableReader.
- */
+/** Local implementation of FreshKijiTableReader. */
 @ApiAudience.Private
 public final class InternalFreshKijiTableReader implements FreshKijiTableReader {
 
@@ -280,10 +283,12 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   /** All state necessary to process a freshening 'get' request. */
   private static final class FresheningRequestContext {
 
+    /** Time in milliseconds since the epoch at which this request started. */
+    private final long mStartTime;
     /**
      * Fresheners applicable to this request. These Fresheners should be released when they are no
      * longer needed.
-     * */
+     */
     private final ImmutableMap<KijiColumnName, Freshener> mFresheners;
     /**
      * FreshenerContexts associated with Fresheners used in this request. These contexts are fully
@@ -313,22 +318,28 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     private final SingleBuffer mRequestBuffer;
     /** Whether this request allows partial freshening. */
     private final boolean mAllowPartial;
-    /**
-     * A counter representing the number of unfinished Fresheners.  The request will end when this
-     * counter reaches 0.
-     */
-    private final AtomicInteger mFreshenersRemaining;
+    /** The set of Fresheners which have not finished. */
+    private final Map<KijiColumnName, KijiFreshenerRecord> mFreshenersRemaining;
+    /** Statistics about individual completed Fresheners. */
+    private final BlockingQueue<FreshenerSingleRunStatistics> mFreshenerSingleRunStatistics;
     /**
      * Whether any Freshener has written into a buffer for this request. This value may only move
      * from false to true.
      */
     private boolean mHasReceivedWrites = false;
+    /**
+     * Whether the request managed by this context has timed out. This value may only move from
+     * false to true.
+     */
+    private boolean mHasTimedOut = false;
 
     /**
      * Initialize a new FresheningRequestContext.
      *
+     * @param startTime the time in milliseconds since the epoch at which this request started.
      * @param fresheners Fresheners which should be run to fulfill this request.
      * @param freshenerContexts InternalFreshenerContext which service fresheners in this request.
+     * @param freshenerRecords Freshener records for Fresheners applicable to this request.
      * @param reader the regular KijiTableReader to which to delegate table reads.
      * @param entityId the row from which to read.
      * @param dataRequest the section of the row which should be refreshed.
@@ -337,27 +348,35 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
      * @param bufferedWriter the MultiBufferedWriter used by this context to buffer and commit
      *     writes.
      * @param allowPartial whether this context allows partial freshening.
+     * @param statisticsQueue Queue for communicating statistics about completed Fresheners to the
+     *     statistics gathering thread. This queue is thread safe and ordering of statistics in the
+     *     queue does not matter.
      */
     // CSOFF: Parameter count
     public FresheningRequestContext(
+        final long startTime,
         final ImmutableMap<KijiColumnName, Freshener> fresheners,
         final ImmutableMap<KijiColumnName, InternalFreshenerContext> freshenerContexts,
+        final ImmutableMap<KijiColumnName, KijiFreshenerRecord> freshenerRecords,
         final KijiTableReader reader,
         final EntityId entityId,
         final KijiDataRequest dataRequest,
         final Future<KijiRowData> clientDataFuture,
         final MultiBufferedWriter bufferedWriter,
-        final boolean allowPartial
+        final boolean allowPartial,
+        final BlockingQueue<FreshenerSingleRunStatistics> statisticsQueue
     ) {
       // CSON
+      mStartTime = startTime;
+      mFresheners = fresheners;
       mReader = reader;
       mEntityId = entityId;
       mClientDataRequest = dataRequest;
       mClientDataFuture = clientDataFuture;
-      mFresheners = fresheners;
       mFreshenerContexts = freshenerContexts;
       mBufferedWriter = bufferedWriter;
       mAllowPartial = allowPartial;
+      mFreshenerSingleRunStatistics = statisticsQueue;
       if (mAllowPartial) {
         // Each Freshener will have its own buffer when partial freshening is enabled, so the
         // request buffer is not needed.
@@ -367,17 +386,31 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
         // number of Fresheners.
         mRequestBuffer = bufferedWriter.openSingleBuffer(fresheners.size());
       }
-      mFreshenersRemaining = new AtomicInteger(mFresheners.size());
+      mFreshenersRemaining = Maps.newHashMap(freshenerRecords);
     }
 
     /**
-     * Signal the context that a Freshener has finished.  Only used when partial freshening is
-     * disabled.
+     * Signal the context that a Freshener has finished.
      *
+     * @param attachedColumn the column to which the finishing Freshener is attached.
+     * @param scoreFunctionRan whether a ScoreFunction was run for the Freshener which finished.
      * @return the number of unfinished Fresheners.
      */
-    public int finishFreshener() {
-      final int remaining = mFreshenersRemaining.decrementAndGet();
+    public int finishFreshener(
+        final KijiColumnName attachedColumn,
+        final boolean scoreFunctionRan
+    ) {
+      final long finishTime = System.nanoTime();
+      mFreshenerSingleRunStatistics.add(FreshenerSingleRunStatistics.create(
+          mHasTimedOut,
+          finishTime - mStartTime,
+          scoreFunctionRan,
+          mFreshenersRemaining.get(attachedColumn)));
+      final int remaining;
+      synchronized (mFreshenersRemaining) {
+        mFreshenersRemaining.remove(attachedColumn);
+        remaining = mFreshenersRemaining.size();
+      }
       if (remaining < 0) {
         throw new InternalKijiError("More Fresheners have finished than were started.");
       } else {
@@ -403,6 +436,14 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
      */
     public void freshenerWrote() {
       mHasReceivedWrites = true;
+    }
+
+    /**
+     * Marks this request as having timed out. Fresheners which finished after this method is called
+     * will be recorded as having timed out.
+     */
+    public void timeOut() {
+      mHasTimedOut = true;
     }
   }
 
@@ -498,7 +539,8 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
         final KijiRowData clientData = getFromFuture(mRowDataToCheckFuture);
         final boolean isFresh = freshener.mPolicy.isFresh(clientData, freshenerContext);
         if (isFresh) {
-          if (!mRequestContext.mAllowPartial && 0 == mRequestContext.finishFreshener()) {
+          if (!mRequestContext.mAllowPartial
+              && 0 == mRequestContext.finishFreshener(mAttachedColumn, false)) {
             // If this is the last thread, check for writes, flush, and indicate that data was
             // written
             if (mRequestContext.mHasReceivedWrites) {
@@ -530,13 +572,14 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
                       freshener.mScoreFunction.getDataRequest(freshenerContext)),
                   freshenerContext));
           mRequestContext.freshenerWrote();
+          final int remainingFresheners = mRequestContext.finishFreshener(mAttachedColumn, true);
           if (mRequestContext.mAllowPartial) {
             // If partial freshening is enabled, flush the buffer immediately and indicate that data
             // was written.
             buffer.flush();
             return WROTE;
           } else {
-            if (0 == mRequestContext.finishFreshener()) {
+            if (0 == remainingFresheners) {
               // If this is the last thread to finish, flush the request buffer and indicate that
               // data was written.
               mRequestContext.mRequestBuffer.flush();
@@ -618,6 +661,126 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
         LOG.warn("Failed to reread Freshener records for FreshKijiTableReader: {}.  Failure "
             + "occurred at {}. Will attempt again in {} milliseconds",
             mReader, scheduledExecutionTime(), mRereadPeriod);
+      }
+    }
+  }
+
+  /** Daemon thread which collects and aggregates FreshenerStatistics. */
+  private final class StatisticsGathererThread extends Thread {
+
+    /** TimerTask for periodically logging gathered statistics. */
+    private final class StatisticsLoggerTask extends TimerTask {
+
+      private final long mLoggingInterval;
+
+      /**
+       * Initialize a new StatisticsLoggerTask.
+       *
+       * @param loggingInterval time in milliseconds between log messages.
+       */
+      private StatisticsLoggerTask(
+          final long loggingInterval
+      ) {
+        mLoggingInterval = loggingInterval;
+      }
+
+      /**
+       * Get the logging interval for this logger.
+       *
+       * @return the logging interval for this logger.
+       */
+      public long getLoggingInterval() {
+        return mLoggingInterval;
+      }
+
+      /** {@inheritDoc} */
+      @Override
+      public void run() {
+        LOG.info("{}", mAggregatedStatistics);
+      }
+    }
+
+    private final StatisticsLoggerTask mStatisticsLoggerTask;
+    private final FreshKijiTableReaderStatistics mAggregatedStatistics =
+        FreshKijiTableReaderStatistics.create(mStatisticGatheringMode);
+    private volatile boolean mShutdown = false;
+
+    /**
+     * Initialize a new StatisticsGathererThread.
+     *
+     * @param loggingInterval the time in milliseconds between automatic logging of gathered
+     *     statistics.  0 indicates no automatic logging.
+     */
+    private StatisticsGathererThread(
+        final long loggingInterval
+    ) {
+      if (0 < loggingInterval) {
+        final Timer timer = new Timer();
+        mStatisticsLoggerTask = new StatisticsLoggerTask(loggingInterval);
+        timer.scheduleAtFixedRate(mStatisticsLoggerTask, loggingInterval, loggingInterval);
+      } else if (0 == loggingInterval) {
+        mStatisticsLoggerTask = null;
+      } else {
+        throw new IllegalArgumentException(String.format(
+            "Statistics logging interval cannot be less than 0, found: %d", loggingInterval));
+      }
+    }
+
+    /** Collect and save a FreshenerSingleRunStatistics from the reader's StatisticsQueue. */
+    private void collectStat() {
+      try {
+        final FreshenerSingleRunStatistics stats = mStatisticsQueue.take();
+        // This switch is redundant right now because this thread is only created if the mode is ALL
+        // but future modes will require it.
+        switch (mStatisticGatheringMode) {
+          case ALL: {
+            mAggregatedStatistics.addFreshenerRunStatistics(stats);
+            return;
+          }
+          case NONE: return;
+          default:
+        }
+      } catch (InterruptedException ie) {
+        throw new RuntimeInterruptedException(ie);
+      }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void run() {
+      while (!mShutdown) {
+        collectStat();
+      }
+    }
+
+    /** Stop gathering statistics. */
+    public void shutdown() {
+      mShutdown = true;
+      if (null != mStatisticsLoggerTask) {
+        mStatisticsLoggerTask.cancel();
+      }
+    }
+
+    /**
+     * Get statistics gathered by this thread.
+     *
+     * @return statistics gathered by this thread.
+     */
+    public FreshKijiTableReaderStatistics getStatistics() {
+      return mAggregatedStatistics;
+    }
+
+    /**
+     * Get the logging interval for statistics gathered by this Thread.
+     *
+     * @return the logging interval for statistics gathered by this Thread.
+     */
+    public long getLoggingInterval() {
+      if (null != mStatisticsLoggerTask) {
+        return mStatisticsLoggerTask.getLoggingInterval();
+      } else {
+        // 0 indicates no logging.
+        return 0;
       }
     }
   }
@@ -1094,6 +1257,13 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   private final KijiFreshnessManager mFreshnessManager;
   /** All mutable state which may be modified by a called to {@link #rereadFreshenerRecords()}. */
   private volatile RereadableState mRereadableState;
+  /** Level of statistics gathering (e.g. ALL, NONE). */
+  private final StatisticGatheringMode mStatisticGatheringMode;
+  /** Thread responsible for gathering and aggregating statistics. */
+  private final StatisticsGathererThread mStatisticsGathererThread;
+  /** Queue through which statistics about completed Fresheners are passed to the gatherer. */
+  private final BlockingQueue<FreshenerSingleRunStatistics> mStatisticsQueue =
+      new LinkedBlockingQueue<FreshenerSingleRunStatistics>();
 
   /**
    * Initializes a new InternalFreshKijiTableReader.
@@ -1104,6 +1274,9 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
    *     A value of 0 indicates no automatic rereads.
    * @param allowPartial whether to allow returning partially freshened data when available.
    * @param columnsToFreshen the set of columns which this reader will attempt to freshen.
+   * @param statisticGatheringMode specifies what statistics to gather.
+   * @param statisticsLoggingInterval time in milliseconds between automatic logging of statistics.
+   *     0 indicates no automatic logging.
    * @throws IOException in case of an error reading from the metatable or setting up producers.
    */
   public InternalFreshKijiTableReader(
@@ -1111,7 +1284,9 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
       final long timeout,
       final long rereadPeriod,
       final boolean allowPartial,
-      final List<KijiColumnName> columnsToFreshen
+      final List<KijiColumnName> columnsToFreshen,
+      final StatisticGatheringMode statisticGatheringMode,
+      final long statisticsLoggingInterval
   ) throws IOException {
     // Initializing the reader state must be the first line of the constructor.
     mState = new ReaderState();
@@ -1131,20 +1306,56 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
         innerColumnsToFreshen,
         records,
         createFresheners(records));
+    mStatisticGatheringMode = statisticGatheringMode;
 
+    mStatisticsGathererThread = startStatisticsGatherer(statisticsLoggingInterval);
+    mRereadTask = startPeriodicRereader(rereadPeriod);
+
+    // Opening the reader must be the last line of the constructor.
+    mState.finishInitializingAndOpen();
+  }
+
+  /**
+   * Start a new StatisticsGathererThread if the reader's statistics gathering mode is not NONE.
+   *
+   * @param statisticsLoggingInterval time in milliseconds between logging statistics. 0 indicates
+   *     no automatic logging.
+   * @return a new StatisticsGathererThread, already started.
+   */
+  private StatisticsGathererThread startStatisticsGatherer(
+      final long statisticsLoggingInterval
+  ) {
+    final StatisticsGathererThread gatherer;
+    if (StatisticGatheringMode.NONE != mStatisticGatheringMode) {
+      gatherer = new StatisticsGathererThread(statisticsLoggingInterval);
+      gatherer.start();
+    } else {
+      gatherer = null;
+    }
+    return gatherer;
+  }
+
+  /**
+   * Start a new periodic reread task with the given period.
+   *
+   * @param rereadPeriod the period in milliseconds between rereads.
+   * @return a new periodic reread task with the given period, already started.
+   */
+  private RereadTask startPeriodicRereader(
+      final long rereadPeriod
+  ) {
+    final RereadTask task;
     if (rereadPeriod > 0) {
       final Timer rereadTimer = new Timer();
-      mRereadTask = new RereadTask(rereadPeriod);
-      rereadTimer.scheduleAtFixedRate(mRereadTask, rereadPeriod, rereadPeriod);
+      task = new RereadTask(rereadPeriod);
+      rereadTimer.scheduleAtFixedRate(task, rereadPeriod, rereadPeriod);
     } else if (rereadPeriod == 0) {
-      mRereadTask = null;
+      task = null;
     } else {
       throw new IllegalArgumentException(
           String.format("Reread time must be >= 0, found: %d", rereadPeriod));
     }
-
-    // Opening the reader must be the last line of the constructor.
-    mState.finishInitializingAndOpen();
+    return task;
   }
 
   // -----------------------------------------------------------------------------------------------
@@ -1169,9 +1380,18 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   ) throws IOException {
     mState.requireState(State.OPEN);
 
-    // Collect the Fresheners applicable to this request.
+    // Get the start time for the request.
+    final long startTime = System.nanoTime();
+
+    // Get a snapshot of the rereadable state.
+    final RereadableState rereadableState = mRereadableState;
+
+    // Collect the Fresheners and Records applicable to this request.
+    final ImmutableList<KijiColumnName> requestColumns = getColumnsFromRequest(dataRequest);
     final ImmutableMap<KijiColumnName, Freshener> fresheners =
-        filterFresheners(getColumnsFromRequest(dataRequest), mRereadableState.mFresheners);
+        filterFresheners(requestColumns, rereadableState.mFresheners);
+    final ImmutableMap<KijiColumnName, KijiFreshenerRecord> records =
+        filterRecords(rereadableState.mFreshenerRecords, requestColumns);
     // If there are no Fresheners attached to the requested columns, return the requested data.
     if (fresheners.isEmpty()) {
       return mReader.get(entityId, dataRequest);
@@ -1189,14 +1409,17 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
         getFuture(new TableReadCallable(mReader, entityId, dataRequest));
 
     final FresheningRequestContext requestContext = new FresheningRequestContext(
+        startTime,
         fresheners,
         freshenerContexts,
+        records,
         mReader,
         entityId,
         dataRequest,
         clientDataFuture,
         mBufferedWriter,
-        mAllowPartial);
+        mAllowPartial,
+        mStatisticsQueue);
 
     final ImmutableList<Future<Boolean>> futures = getFuturesForFresheners(requestContext);
 
@@ -1209,6 +1432,8 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
         // table.
         return mReader.get(entityId, dataRequest);
       } else {
+        // If all Fresheners return in time, but none have written new values, do not read from the
+        // table.
         try {
           return getFromFuture(clientDataFuture, 0L);
         } catch (TimeoutException te) {
@@ -1217,6 +1442,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
         }
       }
     } catch (TimeoutException te) {
+      requestContext.timeOut();
       // If superFuture times out, read partially freshened data from the table or return the cached
       // data based on whether partial freshness is allowed.
       return checkAndRead(requestContext);
@@ -1276,6 +1502,19 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
 
   /** {@inheritDoc} */
   @Override
+  public FreshKijiTableReaderStatistics getStatistics() {
+    return mStatisticsGathererThread.getStatistics();
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>
+   *   This implementation of FreshKijiTableReader ignores the withPreload parameter and always
+   *   proactively instantiates objects needed for freshening.
+   * </p>
+   */
+  @Override
   public void rereadFreshenerRecords() throws IOException {
     rereadFreshenerRecords(mRereadableState.mColumnsToFreshen);
   }
@@ -1321,6 +1560,10 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     // beginClosing() must be the first line of close().
     mState.beginClosing();
 
+    if (null != mStatisticsGathererThread) {
+      mStatisticsGathererThread.shutdown();
+    }
+
     if (null != mRereadTask) {
       mRereadTask.cancel();
     }
@@ -1338,11 +1581,14 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   public String toString() {
     return Objects.toStringHelper(InternalFreshKijiTableReader.class)
         .add("table", mTable)
-        .add("timeout", mTable)
+        .add("timeout", mTimeout)
         .add("automatic_reread_period",
-            (mRereadTask != null) ? mRereadTask.getRereadPeriod() : "no_automatic_reread")
+            (null != mRereadTask) ? mRereadTask.getRereadPeriod() : "no_automatic_reread")
         .add("allows_partial_freshening", mAllowPartial)
         .add("freshens_columns", Joiner.on(", ").join(mRereadableState.mColumnsToFreshen))
+        .add("statistics_gathering_mode", mStatisticGatheringMode)
+        .add("statistics_logging_period", (null != mStatisticsGathererThread)
+            ? mStatisticsGathererThread.getLoggingInterval() : "no_statistics_gathered")
         .addValue(mState)
         .toString();
   }

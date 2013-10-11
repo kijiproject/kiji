@@ -113,8 +113,7 @@ public class TestKijiFreshnessManager {
     assertEquals(SCORE_FUNCTION.getClass().getName(), record.getScoreFunctionClass());
     assertEquals(POLICY.getClass().getName(), record.getFreshnessPolicyClass());
     final ShelfLife policyToLoad = new ShelfLife();
-    policyToLoad.setup(InternalFreshenerContext.create(
-        null, POLICY.serializeToParameters()));
+    policyToLoad.setup(InternalFreshenerContext.create(INFO_NAME, POLICY.serializeToParameters()));
     assertEquals(POLICY.getShelfLifeInMillis(), policyToLoad.getShelfLifeInMillis());
   }
 

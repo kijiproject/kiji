@@ -51,13 +51,17 @@ import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.util.InstanceBuilder;
 import org.kiji.scoring.FreshKijiTableReader;
 import org.kiji.scoring.FreshKijiTableReaderBuilder;
+import org.kiji.scoring.FreshKijiTableReaderBuilder.StatisticGatheringMode;
 import org.kiji.scoring.FreshenerContext;
 import org.kiji.scoring.KijiFreshnessManager;
 import org.kiji.scoring.KijiFreshnessPolicy;
 import org.kiji.scoring.ScoreFunction;
+import org.kiji.scoring.avro.KijiFreshenerRecord;
 import org.kiji.scoring.lib.AlwaysFreshen;
 import org.kiji.scoring.lib.NeverFreshen;
 import org.kiji.scoring.lib.NewerThan;
+import org.kiji.scoring.statistics.FreshKijiTableReaderStatistics;
+import org.kiji.scoring.statistics.FreshenerStatistics;
 
 /** Tests InternalFreshKijiTableReader. */
 public class TestInternalFreshKijiTableReader {
@@ -1089,6 +1093,143 @@ public class TestInternalFreshKijiTableReader {
       // Now family:qual1 should be refreshed because it is in columnsToFreshen.
       assertEquals("new-val",
           freshReader.get(eid, request).getMostRecentValue("family", "qual1").toString());
+    } finally {
+      freshReader.close();
+    }
+  }
+
+  @Test
+  public void testStatistics() throws IOException, InterruptedException {
+    final EntityId eid = mTable.getEntityId("foo");
+    final KijiDataRequest request = KijiDataRequest.create("family", "qual0");
+    final KijiFreshenerRecord record;
+    final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
+    try {
+      manager.registerFreshener(
+          TABLE_NAME, FAMILY_QUAL0, ALWAYS, TEST_SCORE_FN, EMPTY_PARAMS, false, false);
+      record = manager.retrieveFreshenerRecord(TABLE_NAME, FAMILY_QUAL0);
+    } finally {
+      manager.close();
+    }
+
+    final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
+        .withTable(mTable)
+        .withTimeout(500)
+        .withStatisticsGathering(StatisticGatheringMode.ALL, 0)
+        .build();
+
+    try {
+      freshReader.get(eid, request);
+      // Sleep to give the statistics gatherer time to gather.
+      Thread.sleep(100);
+
+      final FreshKijiTableReaderStatistics stats = freshReader.getStatistics();
+      assertTrue(1 == stats.getRawFreshenerRunStatistics().size());
+      final FreshenerStatistics freshenerStatistics =
+          stats.getAggregatedFreshenerStatistics().get(record);
+
+      assertTrue(1 == freshenerStatistics.getScoreFunctionRanPercent().getMean());
+      assertTrue(1 == freshenerStatistics.getScoreFunctionRanPercent().getCount());
+      assertTrue(0 == freshenerStatistics.getTimedOutPercent().getMean());
+      assertTrue(1 == freshenerStatistics.getTimedOutPercent().getCount());
+      assertTrue(600000000 > freshenerStatistics.getMeanFresheningDuration().getMean());
+      assertTrue(1 == freshenerStatistics.getMeanFresheningDuration().getCount());
+
+      freshReader.get(eid, request);
+      // Sleep to give the statistics gatherer time to gather.
+      Thread.sleep(100);
+
+      assertTrue(2 == stats.getRawFreshenerRunStatistics().size());
+      assertTrue(1 == freshenerStatistics.getScoreFunctionRanPercent().getMean());
+      assertTrue(2 == freshenerStatistics.getScoreFunctionRanPercent().getCount());
+      assertTrue(0 == freshenerStatistics.getTimedOutPercent().getMean());
+      assertTrue(2 == freshenerStatistics.getTimedOutPercent().getCount());
+      assertTrue(600000000 > freshenerStatistics.getMeanFresheningDuration().getMean());
+      assertTrue(2 == freshenerStatistics.getMeanFresheningDuration().getCount());
+    } finally {
+      freshReader.close();
+    }
+  }
+
+  @Test
+  public void testTimedOutStatistics() throws IOException, InterruptedException {
+    final EntityId eid = mTable.getEntityId("foo");
+    final KijiDataRequest request = KijiDataRequest.create("family", "qual0");
+    final KijiFreshenerRecord record;
+    final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
+    try {
+      manager.registerFreshener(
+          TABLE_NAME, FAMILY_QUAL0, ALWAYS, TEST_TIMEOUT_SCORE_FN, EMPTY_PARAMS, false, false);
+      record = manager.retrieveFreshenerRecord(TABLE_NAME, FAMILY_QUAL0);
+    } finally {
+      manager.close();
+    }
+
+    final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
+        .withTable(mTable)
+        .withTimeout(500)
+        .withStatisticsGathering(StatisticGatheringMode.ALL, 0)
+        .build();
+    try {
+      freshReader.get(eid, request);
+      // Sleep to give the Freshener time to finish and the statistics gatherer time to gather.
+      Thread.sleep(1000);
+
+      final FreshKijiTableReaderStatistics stats = freshReader.getStatistics();
+      assertTrue(1 == stats.getRawFreshenerRunStatistics().size());
+      final FreshenerStatistics freshenerStatistics =
+          stats.getAggregatedFreshenerStatistics().get(record);
+
+      assertTrue(1 == freshenerStatistics.getScoreFunctionRanPercent().getMean());
+      assertTrue(1 == freshenerStatistics.getScoreFunctionRanPercent().getCount());
+      assertTrue(1 == freshenerStatistics.getTimedOutPercent().getMean());
+      assertTrue(1 == freshenerStatistics.getTimedOutPercent().getCount());
+      assertTrue(1300000000 > freshenerStatistics.getMeanFresheningDuration().getMean());
+      assertTrue(1 == freshenerStatistics.getMeanFresheningDuration().getCount());
+
+      freshReader.get(eid, request);
+      // Sleep to give the Freshener time to finish and the statistics gatherer time to gather.
+      Thread.sleep(1000);
+
+      assertTrue(2 == stats.getRawFreshenerRunStatistics().size());
+      assertTrue(1 == freshenerStatistics.getScoreFunctionRanPercent().getMean());
+      assertTrue(2 == freshenerStatistics.getScoreFunctionRanPercent().getCount());
+      assertTrue(1 == freshenerStatistics.getTimedOutPercent().getMean());
+      assertTrue(2 == freshenerStatistics.getTimedOutPercent().getCount());
+      assertTrue(1300000000 > freshenerStatistics.getMeanFresheningDuration().getMean());
+      assertTrue(2 == freshenerStatistics.getMeanFresheningDuration().getCount());
+    } finally {
+      freshReader.close();
+    }
+  }
+
+  // This is a brief test of using the new statistics gathering to do benchmarking.
+  //@Test
+  public void benchmark() throws IOException {
+    final EntityId eid = mTable.getEntityId("foo");
+    final KijiDataRequest request = KijiDataRequest.create("family", "qual0");
+    final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
+    try {
+      manager.registerFreshener(
+          TABLE_NAME, FAMILY_QUAL0, ALWAYS, TEST_SCORE_FN, EMPTY_PARAMS, false, false);
+    } finally {
+      manager.close();
+    }
+
+    final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
+        .withTable(mTable)
+        .withTimeout(500)
+        .withStatisticsGathering(StatisticGatheringMode.ALL, 0)
+        .build();
+
+    try {
+      for (int x = 0; x < 1000000; x++) {
+        if (x % 10000 == 0) {
+          LOG.info("{} records read", x);
+        }
+        freshReader.get(eid, request);
+      }
+      LOG.info(freshReader.getStatistics().toString());
     } finally {
       freshReader.close();
     }

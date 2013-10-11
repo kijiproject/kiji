@@ -29,6 +29,7 @@ import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTableReader;
+import org.kiji.scoring.statistics.FreshKijiTableReaderStatistics;
 
 /**
  * Interface for reading freshened data from a Kiji Table.
@@ -172,4 +173,11 @@ public interface FreshKijiTableReader extends KijiTableReader {
    * @throws IOException in case of an error reading from the meta table.
    */
   void rereadFreshenerRecords(List<KijiColumnName> columnsToFreshen) throws IOException;
+
+  /**
+   * Get all statistics gathered by this reader about its Fresheners.
+   *
+   * @return all statistics gathered by this reader about its Fresheners.
+   */
+  FreshKijiTableReaderStatistics getStatistics();
 }

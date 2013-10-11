@@ -34,8 +34,8 @@ import org.kiji.schema.KijiRowData;
 
 /**
  * SPI for custom scoring functions. Clients may extend this abstract class to create their own
- * ScoreFunctions or use the {@link org.kiji.scoring.server.ScoringServerScoreFunction} to provide
- * scores via the Kiji ScoringServer.
+ * ScoreFunctions or use the {@link org.kiji.scoring.lib.server.ScoringServerScoreFunction} to
+ * provide scores via the Kiji ScoringServer.
  *
  * <p>
  *   A ScoreFunction is essentially a function that accepts a KijiRowData as input and returns a

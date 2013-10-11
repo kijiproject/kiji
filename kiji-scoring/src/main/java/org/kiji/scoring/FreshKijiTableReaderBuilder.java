@@ -69,6 +69,14 @@ public final class FreshKijiTableReaderBuilder {
   private static final long DEFAULT_REREAD_PERIOD = 0;
   /** By default, freshen all columns. */
   private static final List<KijiColumnName> DEFAULT_COLUMNS_TO_FRESHEN = Collections.emptyList();
+  /** By default, do not gather statistics. */
+  private static final StatisticGatheringMode DEFAULT_STATISTICS_MODE = StatisticGatheringMode.NONE;
+  /** By default, log statistics every 10 minutes. */
+  private static final long DEFAULT_STATISTICS_LOGGING_INTERVAL = 10 * 60 * 1000;
+  /** Enumeration of possible modes of statistics gathering. */
+  public static enum StatisticGatheringMode {
+    NONE, ALL
+  }
 
   /**
    * Get a new instance of FreshKijiTableReaderBuilder.
@@ -98,6 +106,10 @@ public final class FreshKijiTableReaderBuilder {
   private Boolean mAllowPartialFresh = null;
   /** Specifies which columns to freshen.  Default is all columns. */
   private List<KijiColumnName> mColumnsToFreshen = null;
+  /** Specifies what statistics to gather. */
+  private StatisticGatheringMode mStatisticGatheringMode = null;
+  /** Time in milliseconds between logging collected statistics. */
+  private Long mStatisticsLoggingInterval = null;
 
   /**
    * Configure the FreshKijiTableReader to read from the given KijiTable.
@@ -105,7 +117,10 @@ public final class FreshKijiTableReaderBuilder {
    * @param table the KijiTable from which to read.
    * @return this FreshKijiTableReaderBuilder configured to read from the given table.
    */
-  public FreshKijiTableReaderBuilder withTable(KijiTable table) {
+  public FreshKijiTableReaderBuilder withTable(
+      final KijiTable table
+  ) {
+    Preconditions.checkNotNull(table, "Specified KijiTable may not be null.");
     Preconditions.checkState(null == mTable, "KijiTable already set to: %s", mTable);
     mTable = table;
     return this;
@@ -122,7 +137,9 @@ public final class FreshKijiTableReaderBuilder {
    * @return this FreshKijiTableReaderBuilder configured to wait the given number of milliseconds
    * before returning stale data.
    */
-  public FreshKijiTableReaderBuilder withTimeout(long timeout) {
+  public FreshKijiTableReaderBuilder withTimeout(
+      final long timeout
+  ) {
     Preconditions.checkArgument(0 < timeout, "Timeout must be positive, got: %d", timeout);
     Preconditions.checkState(null == mTimeout, "Timeout is already set to: %d", mTimeout);
     mTimeout = timeout;
@@ -139,7 +156,9 @@ public final class FreshKijiTableReaderBuilder {
    * @return this FreshKijiTableReaderBuilder configured to automatically reread on the given
    * interval.
    */
-  public FreshKijiTableReaderBuilder withAutomaticReread(long rereadPeriod) {
+  public FreshKijiTableReaderBuilder withAutomaticReread(
+      final long rereadPeriod
+  ) {
     Preconditions.checkArgument(
         0 < rereadPeriod, "Reread time must be positive, got: %s", rereadPeriod);
     Preconditions.checkState(
@@ -165,7 +184,9 @@ public final class FreshKijiTableReaderBuilder {
    * @return this FreshKijiTableReaderBuilder configured to allow returning partially freshened
    * data.
    */
-  public FreshKijiTableReaderBuilder withPartialFreshening(boolean allowPartial) {
+  public FreshKijiTableReaderBuilder withPartialFreshening(
+      final boolean allowPartial
+  ) {
     Preconditions.checkState(
         null == mAllowPartialFresh, "Partial freshening is already set to: %s", mAllowPartialFresh);
     mAllowPartialFresh = allowPartial;
@@ -188,7 +209,9 @@ public final class FreshKijiTableReaderBuilder {
    * @param columnsToFreshen the columns which the reader should freshen.
    * @return this FreshKijiTableReaderBuilder configured to read from a specific set of columns.
    */
-  public FreshKijiTableReaderBuilder withColumnsToFreshen(List<KijiColumnName> columnsToFreshen) {
+  public FreshKijiTableReaderBuilder withColumnsToFreshen(
+      final List<KijiColumnName> columnsToFreshen
+  ) {
     if (null != mColumnsToFreshen) {
       final String columns = Joiner.on(", ").join(mColumnsToFreshen);
       throw new IllegalStateException(
@@ -200,27 +223,65 @@ public final class FreshKijiTableReaderBuilder {
   }
 
   /**
+   * Configure the FreshKijiTableReader to gather statistics about freshening requests.
+   *
+   * <p>Modes:</p>
+   * <ul>
+   *   <li>NONE - gather no statistics.</li>
+   *   <li>ALL - preserve all statistics, aggregates and all individual request statistics will be
+   *       saved.</li>
+   * </ul>
+   *
+   * @param mode the statistics gathering mode.
+   * @param loggingInterval time in milliseconds between logging collected statistics. 0 indicates
+   *     no automatic logging.
+   * @return this FreshKijiTableReaderBuilder configured to collect and log statistics.
+   */
+  public FreshKijiTableReaderBuilder withStatisticsGathering(
+      final StatisticGatheringMode mode,
+      final long loggingInterval
+  ) {
+    Preconditions.checkState(null == mStatisticGatheringMode,
+        String.format("Statistics gathering mode is already set to: %s", mStatisticGatheringMode));
+    Preconditions.checkArgument(0 <= loggingInterval,
+        "Logging interval must be greater than or equal to 0. 0 indicates no logging.");
+    mStatisticGatheringMode = mode;
+    mStatisticsLoggingInterval = loggingInterval;
+    return this;
+  }
+
+  /**
    * Builds a FreshKijiTableReader with the configured options.
    *
    * @return a FreshKijiTableReader with the configured options.
    * @throws IOException in case of an error creating the FreshKijiTableReader.
    */
   public FreshKijiTableReader build() throws IOException {
-    Preconditions.checkState(mTable != null, "Target table must be set in order to build.");
+    Preconditions.checkState(null != mTable, "Target table must be set in order to build.");
     if (null == mTimeout) {
       mTimeout = DEFAULT_TIMEOUT;
-    }
-    if (null == mAllowPartialFresh) {
-      mAllowPartialFresh = DEFAULT_PARTIAL_FRESHENING;
     }
     if (null == mRereadPeriod) {
       mRereadPeriod = DEFAULT_REREAD_PERIOD;
     }
+    if (null == mAllowPartialFresh) {
+      mAllowPartialFresh = DEFAULT_PARTIAL_FRESHENING;
+    }
     if (null == mColumnsToFreshen) {
       mColumnsToFreshen = DEFAULT_COLUMNS_TO_FRESHEN;
     }
+    if (null == mStatisticGatheringMode) {
+      mStatisticGatheringMode = DEFAULT_STATISTICS_MODE;
+      mStatisticsLoggingInterval = DEFAULT_STATISTICS_LOGGING_INTERVAL;
+    }
 
     return new InternalFreshKijiTableReader(
-            mTable, mTimeout, mRereadPeriod, mAllowPartialFresh, mColumnsToFreshen);
+        mTable,
+        mTimeout,
+        mRereadPeriod,
+        mAllowPartialFresh,
+        mColumnsToFreshen,
+        mStatisticGatheringMode,
+        mStatisticsLoggingInterval);
   }
 }

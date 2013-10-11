@@ -22,6 +22,7 @@ package org.kiji.scoring.lib;
 import java.util.Map;
 import java.util.NavigableSet;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 
 import org.kiji.annotations.ApiAudience;
@@ -91,14 +92,11 @@ public class NewerThan extends KijiFreshnessPolicy {
   /** {@inheritDoc} */
   @Override
   public boolean isFresh(KijiRowData rowData, FreshenerContext context) {
+    Preconditions.checkState(-1 != mNewerThanTimestamp,
+        "Newer than timestamp not set. Did you call NewerThan.setup?");
+
     final KijiColumnName columnName = context.getAttachedColumn();
-    if (mNewerThanTimestamp == -1) {
-      throw new RuntimeException(
-          "Newer than timestamp not set.  Did you call NewerThan.setup?");
-    }
-    if (columnName == null) {
-      throw new RuntimeException("Target column was not set in the FreshenerContext.");
-    }
+
     // If the column does not exist in the row data, it is not fresh.
     if (!rowData.containsColumn(columnName.getFamily(), columnName.getQualifier())) {
       return false;

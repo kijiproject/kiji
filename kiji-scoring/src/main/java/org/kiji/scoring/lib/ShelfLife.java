@@ -21,6 +21,7 @@ package org.kiji.scoring.lib;
 import java.util.Map;
 import java.util.NavigableSet;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 
 import org.kiji.annotations.ApiAudience;
@@ -92,10 +93,10 @@ public final class ShelfLife extends KijiFreshnessPolicy {
   /** {@inheritDoc} */
   @Override
   public boolean isFresh(KijiRowData rowData, FreshenerContext context) {
+    Preconditions.checkState(-1 != mShelfLifeMillis,
+        "Shelf life not set. Did you call ShelfLife.setup()?");
+
     final KijiColumnName columnName = context.getAttachedColumn();
-    if (mShelfLifeMillis == -1) {
-      throw new RuntimeException("Shelf life not set.  Did you call ShelfLife.setup()?");
-    }
 
     // If the column does not exist in the row data, it is not fresh.
     if (!rowData.containsColumn(columnName.getFamily(), columnName.getQualifier())) {
