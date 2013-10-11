@@ -58,10 +58,14 @@ checkstatusofproc(){
 start() {
 
   echo "Starting ${DESC}: "
-  su -s /bin/bash -c "PIDFILE=${KIJI_REST_HOME}/kiji-rest.pid ${KIJI_REST_HOME}/bin/kiji-rest" \
-                    ${KIJI_REST_USER}
+  su -s /bin/bash -c "${KIJI_REST_HOME}/bin/kiji-rest" ${KIJI_REST_USER}
 
-  mv ${KIJI_REST_HOME}/kiji-rest.pid ${RUNDIR}
+  pidfile_orig=${KIJI_REST_HOME}/kiji-rest.pid
+  if [ -e ${pidfile_orig} ]; then
+    mv ${pidfile_orig} ${RUNDIR}
+  else
+    return 1
+  fi
 
   #Check that the server came up properly.
   for second in {30..0}
