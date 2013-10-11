@@ -22,13 +22,13 @@ package org.kiji.express
 import java.lang.IllegalStateException
 
 import scala.collection.JavaConverters.asScalaBufferConverter
-
-import org.apache.hadoop.conf.Configuration
+import scala.collection.JavaConverters.seqAsJavaListConverter
+import scala.math.Ordered
 
 import org.kiji.express.impl.HashedEntityId
 import org.kiji.express.impl.MaterializedEntityId
-import org.kiji.schema.{ EntityId => JEntityId }
-import org.kiji.schema.KijiURI
+import org.kiji.schema.{EntityId => JEntityId}
+import org.kiji.schema.EntityIdFactory
 
 /**
  * An entity id or row key that can be used to address a row in a Kiji table. This is the
@@ -50,15 +50,15 @@ import org.kiji.schema.KijiURI
  * keys, and all user-created EntityIds), or Hashed (in the case of EntityIds from tables with
  * hashed or materialization-suppressed row keys).
  */
-trait EntityId extends Product {
+trait EntityId extends Product with Ordered[EntityId] {
   /**
    * Get the Java [[org.kiji.schema.EntityId]] associated with this Scala EntityId.
    *
-   * @param tableUri of the table the JavaEntityId will be associated with.
-   * @param configuration identifying the cluster to use when building EntityIds.
+   * @param eidFactory is the EntityIdFactory used to convert the underlying components to a Java
+   *     EntityId.
    * @return the Java EntityId backing this EntityId.
    */
-   def toJavaEntityId(tableUri: KijiURI, configuration: Configuration): JEntityId
+  private[express] def toJavaEntityId(eidFactory: EntityIdFactory): JEntityId
 
   /**
    * Get the index'th component of the EntityId.
@@ -66,7 +66,7 @@ trait EntityId extends Product {
    * @param index of the component to retrieve.
    * @return the component at index.
    */
-  def apply(index: Int): Any = productElement(index)
+  def apply(index: Int): Any = components(index)
 
   override def productPrefix: String = "EntityId"
 
@@ -82,7 +82,65 @@ trait EntityId extends Product {
    * @param other object to compare this to.
    * @return whether the two objects are "equal" according to the definition in this scaladoc.
    */
-  override def equals(other: Any): Boolean
+  override def equals(other: Any): Boolean = {
+    if(other.isInstanceOf[EntityId]) {
+      compare(other.asInstanceOf[EntityId]) == 0
+    } else {
+      false
+    }
+  }
+
+  /**
+   * Returns the hashcode of the underlying entityId. For a materialized entity id it returns
+   * the hashcode of the underlying list of components. For a hashed entityId it, it returns
+   * the hashcode of the encoded byte array wrapped as a string.
+   *
+   * @return entityId hashcode.
+   */
+  override def hashCode(): Int
+
+  /**
+   * Returns the underlying components of this entityId. For a materialized entityId, this will
+   * be the list of components. For a hashed entityId, this will be a singleton list containing
+   * the encoded byte[].
+   *
+   * @return a list of the underlying components.
+   */
+  def components: Seq[AnyRef]
+
+  /**
+   * Returns the comparison result ( > 0, 0, < 0).
+   *
+   * @return the comparison result ( > 0, 0, < 0).
+   */
+  override def compare(rhs: EntityId): Int = {
+    val zipped = this.components.zip(rhs.components)
+    // Compare each element lexicographically.
+    zipped.foreach {
+      case (mine, theirs) => {
+        try {
+          val compareResult =
+            if (mine.isInstanceOf[Array[Byte]] && theirs.isInstanceOf[Array[Byte]]) {
+              val myArray = mine.asInstanceOf[Array[Byte]]
+              val rhsArray = theirs.asInstanceOf[Array[Byte]]
+              new String(myArray).compareTo(new String(rhsArray))
+            } else {
+              mine.asInstanceOf[Comparable[Any]].compareTo(theirs)
+            }
+          if (compareResult != 0) {
+            // Return out of the function if these two elements are not equal.
+            return compareResult
+          }
+          // Otherwise, continue.
+        } catch {
+          case e: ClassCastException =>
+            throw new EntityIdFormatMismatchException(components, rhs.components)
+        }
+      }
+    }
+    // If all elements in "zipped" were equal, we compare the lengths.
+    this.components.length.compare(rhs.components.length)
+  }
 }
 
 /**
@@ -98,37 +156,33 @@ object EntityId {
    * @param entityId is the Java EntityId to convert.
    * @param configuration identifying the cluster to use when building EntityIds.
    */
-  def fromJavaEntityId(
-      tableUri: KijiURI,
-      entityId: JEntityId,
-      configuration: Configuration): EntityId = {
-    try {
-      val components: Seq[AnyRef] = entityId
-          .getComponents
-          .asScala
-          .toSeq
+  def fromJavaEntityId(entityId: JEntityId): EntityId = {
+    val hbaseKey = entityId.getHBaseRowKey()
 
+    try {
+      val components = entityId
+        .getComponents
+        .asScala
+        .toSeq
       MaterializedEntityId(components)
     } catch {
       // This is an exception thrown when we try to access components of an entityId which has
       // materialization suppressed. E.g. Hashed EntityIds. So we are unable to retrieve components,
       // but the behavior is legal.
       case ise: IllegalStateException => {
-        HashedEntityId(
-            tableUri.toString,
-            configuration,
-            entityId.getHBaseRowKey)
+        HashedEntityId(hbaseKey)
       }
     }
   }
 
   /**
-   * Creates a new EntityId with the components specified by the user.  This only returns
-   * MaterializedEntityIds.  Users cannot created HashedEntityIds.
+   * Creates a new EntityId with the components specified by the user.
    *
    * @param components of the EntityId to create.
+   *
+   * @return the created entity id.
    */
-  def apply(components: Any*): MaterializedEntityId = {
+  def apply(components: Any*): EntityId = {
     MaterializedEntityId(components.toSeq.map { _.asInstanceOf[AnyRef] })
   }
 }

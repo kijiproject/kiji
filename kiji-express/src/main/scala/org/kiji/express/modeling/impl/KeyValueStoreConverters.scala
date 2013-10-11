@@ -23,7 +23,7 @@ import scala.collection.JavaConverters.seqAsJavaListConverter
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.express.impl.MaterializedEntityId
+import org.kiji.express.EntityId
 import org.kiji.express.util.AvroUtil
 import org.kiji.schema.KijiRowKeyComponents
 
@@ -78,7 +78,7 @@ private[express] trait JavaToScalaValueConverter[V] {
 @ApiAudience.Private
 @ApiStability.Experimental
 private[express] trait EntityIdScalaToJavaKeyConverter
-    extends ScalaToJavaKeyConverter[MaterializedEntityId] {
+    extends ScalaToJavaKeyConverter[EntityId] {
   /**
    * Converts a sequence of entity id components to an instance of `KijiRowKeyComponents`,
    * suitable for use with a `KijiTableKeyValueStore`
@@ -86,7 +86,7 @@ private[express] trait EntityIdScalaToJavaKeyConverter
    * @param keyWithScalaType is an EntityId to convert to a scala type.
    * @return is the equivalent `KijiRowKeyComponents`.
    */
-  override protected def keyConversion(keyWithScalaType: MaterializedEntityId): Any = {
+  override protected def keyConversion(keyWithScalaType: EntityId): Any = {
     // KijiRowKeyComponents can use Java byte array, Java String, Java Long,
     // or Java Integer as components. As long as we ensure all components are AnyRef,
     // then Scala Array[Byte], Scala String, Scala Long, and Scala Int are usable to create a

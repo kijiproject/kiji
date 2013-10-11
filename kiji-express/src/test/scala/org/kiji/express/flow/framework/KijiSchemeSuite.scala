@@ -21,6 +21,7 @@ package org.kiji.express.flow.framework
 
 import cascading.tuple.Tuple
 import cascading.tuple.TupleEntry
+
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
 
@@ -32,6 +33,7 @@ import org.kiji.express.KijiSuite
 import org.kiji.express.flow.All
 import org.kiji.express.flow.QualifiedColumn
 import org.kiji.express.util.GenericCellSpecs
+import org.kiji.schema.EntityIdFactory
 
 class KijiSchemeSuite extends KijiSuite {
   test("putTuple and rowToTuple can write and read a generic AvroRecord.") {
@@ -56,6 +58,8 @@ class KijiSchemeSuite extends KijiSuite {
         "suppress_key_materialization" -> false)
     val writeValue = new TupleEntry(sourceFields, new Tuple(dummyEid, record))
 
+    val eidFactory = EntityIdFactory.getFactory(tableLayout)
+
     // Put the tuple.
     KijiScheme.putTuple(
         columns,
@@ -69,7 +73,7 @@ class KijiSchemeSuite extends KijiSuite {
 
     // Read the tuple back.
     val rowData = reader.get(
-        dummyEid.toJavaEntityId(uri, configuration),
+        dummyEid.toJavaEntityId(eidFactory),
         KijiScheme.buildRequest(All, columns.values))
     val readValue: Option[Tuple] = KijiScheme.rowToTuple(
         columns,

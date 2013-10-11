@@ -240,7 +240,7 @@ final class ScoreProducer
             val uri = KijiURI
               .newBuilder(modelEnvironment.scoreEnvironment.get.inputSpec.tableUri)
               .build()
-            EntityId.fromJavaEntityId(uri, row.getEntityId, getConf)
+            EntityId.fromJavaEntityId(row.getEntityId())
           } else {
             val columnName: KijiColumnName = fieldMapping(field.toString)
 

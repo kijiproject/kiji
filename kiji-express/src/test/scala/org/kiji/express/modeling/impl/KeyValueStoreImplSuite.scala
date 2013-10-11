@@ -19,16 +19,17 @@
 
 package org.kiji.express.modeling.impl
 
+import scala.collection.JavaConverters.seqAsJavaListConverter
+
 import java.io.File
 import java.io.PrintWriter
-
-import scala.collection.JavaConverters.seqAsJavaListConverter
 
 import org.apache.avro.Schema
 import org.apache.avro.file.DataFileWriter
 import org.apache.avro.generic.GenericData
 import org.apache.avro.generic.GenericDatumWriter
 import org.apache.avro.generic.GenericRecord
+
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.hbase.HBaseConfiguration
 
@@ -36,12 +37,12 @@ import org.kiji.express.AvroRecord
 import org.kiji.express.EntityId
 import org.kiji.express.KijiSuite
 import org.kiji.express.modeling.KeyValueStore
-import org.kiji.express.util.Resources.doAndClose
-import org.kiji.express.util.Resources.doAndRelease
-import org.kiji.mapreduce.kvstore.lib.{ AvroRecordKeyValueStore => JAvroRecordKeyValueStore }
+import org.kiji.express.util.Resources._
 import org.kiji.mapreduce.kvstore.lib.{ AvroKVRecordKeyValueStore => JAvroKVRecordKeyValueStore }
+import org.kiji.mapreduce.kvstore.lib.{ AvroRecordKeyValueStore => JAvroRecordKeyValueStore }
 import org.kiji.mapreduce.kvstore.lib.{ KijiTableKeyValueStore => JKijiTableKeyValueStore }
 import org.kiji.mapreduce.kvstore.lib.{ TextFileKeyValueStore => JTextFileKeyValueStore }
+import org.kiji.schema.EntityIdFactory
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiURI
@@ -331,15 +332,21 @@ object KeyValueStoreImplSuite {
         }
       }
 
+    // Layout to get the default reader schemas from.
+    val layout = withKijiTable(tableURI, HBaseConfiguration.create()) { table: KijiTable =>
+      table.getLayout
+    }
+
+    val eidFactory = EntityIdFactory.getFactory(layout)
     try {
       // Write each value to the table.
-      values.foreach { case(entityId, str) =>
-        writer.put(
-          entityId.toJavaEntityId(tableURI, HBaseConfiguration.create()),
-          "family",
-          "column1",
-          str
-        )
+      values.foreach {
+        case (entityId, str) =>
+          writer.put(
+            entityId.toJavaEntityId(eidFactory),
+            "family",
+            "column1",
+            str)
       }
     } finally {
       writer.close()

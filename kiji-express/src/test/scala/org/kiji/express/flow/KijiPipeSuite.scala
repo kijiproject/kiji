@@ -24,7 +24,6 @@ import scala.collection.mutable.Buffer
 import com.twitter.scalding._
 
 import org.kiji.express._
-import org.kiji.express.impl.MaterializedEntityId
 import org.kiji.express.repl.Implicits._
 import org.kiji.express.util.Resources._
 import org.kiji.schema.avro.HashSpec
@@ -180,7 +179,7 @@ class KijiPipeSuite extends KijiSuite {
     specificRecord.setHashSize(13)
     specificRecord.setSuppressKeyMaterialization(true)
 
-    def unpackingInput(uri: String): List[(MaterializedEntityId, KijiSlice[HashSpec])] = {
+    def unpackingInput(uri: String): List[(EntityId, KijiSlice[HashSpec])] = {
       List((EntityId("row01"), slice("family:column3", (10L, specificRecord))))
     }
 

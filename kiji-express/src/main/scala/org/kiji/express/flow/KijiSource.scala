@@ -33,6 +33,7 @@ import cascading.tap.Tap
 import cascading.tuple.Fields
 import cascading.tuple.Tuple
 import cascading.tuple.TupleEntry
+
 import com.google.common.base.Objects
 import com.twitter.scalding.AccessMode
 import com.twitter.scalding.Test
@@ -43,6 +44,7 @@ import com.twitter.scalding.Mode
 import com.twitter.scalding.Read
 import com.twitter.scalding.Source
 import com.twitter.scalding.Write
+
 import org.apache.avro.Schema
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
@@ -64,6 +66,7 @@ import org.kiji.express.util.AvroUtil
 import org.kiji.express.util.GenericCellSpecs
 import org.kiji.express.util.Resources._
 import org.kiji.mapreduce.framework.KijiConfKeys
+import org.kiji.schema.EntityIdFactory
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiDataRequest
@@ -275,6 +278,8 @@ object KijiSource {
         table.getLayout
       }
 
+      val eidFactory = EntityIdFactory.getFactory(layout)
+
       // Write the desired rows to the table.
       withKijiTableWriter(tableUri, configuration) { writer: KijiTableWriter =>
         rows.foreach { row: Tuple =>
@@ -311,7 +316,7 @@ object KijiSource {
 
               val datum = AvroUtil.encodeToJava(cell.datum, schema)
               writer.put(
-                entityId.toJavaEntityId(tableUri, configuration),
+                entityId.toJavaEntityId(eidFactory),
                 cell.family,
                 cell.qualifier,
                 cell.version,

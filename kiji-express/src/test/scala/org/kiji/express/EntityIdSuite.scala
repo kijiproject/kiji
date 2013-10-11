@@ -20,22 +20,32 @@
 package org.kiji.express
 
 import scala.collection.JavaConverters.seqAsJavaListConverter
-
+import scala.collection.mutable.Buffer
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
-
-import org.kiji.express.impl.HashedEntityId
-import org.kiji.express.util.Resources._
-import org.kiji.schema.{ EntityId => JEntityId }
+import org.kiji.express.EntityIdSuite.convertToEqualizer
+import org.kiji.express.EntityIdSuite.tuple1Converter
+import org.kiji.express.flow.KijiInput
+import org.kiji.express.flow.KijiJob
+import org.kiji.express.util.Resources.doAndRelease
+import org.kiji.schema.EntityIdFactory
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiURI
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts
+import com.twitter.scalding.Args
+import com.twitter.scalding.JobTest
+import com.twitter.scalding.TextLine
+import com.twitter.scalding.Tsv
+import org.kiji.express.impl.HashedEntityId
 
 /**
  * Unit tests for [[org.kiji.express.EntityId]].
  */
 class EntityIdSuite extends KijiSuite {
+
+  import org.kiji.express.EntityIdSuite._
+
   /** Table layout with formatted entity IDs to use for tests. */
   val formattedEntityIdLayout: KijiTableLayout = layout(KijiTableLayouts.FORMATTED_RKF)
   // Create a table to use for testing
@@ -50,66 +60,38 @@ class EntityIdSuite extends KijiSuite {
 
   val configuration: Configuration = HBaseConfiguration.create()
 
+  val formattedEidFactory = EntityIdFactory.getFactory(formattedEntityIdLayout)
+  val hashedEidFactory = EntityIdFactory.getFactory(hashedEntityIdLayout)
+
   // ------- "Unit tests" for comparisons and creation. -------
   test("Create an Express EntityId from a Kiji EntityId and vice versa in a formatted table.") {
     val expressEid = EntityId("test", "1", "2", 1, 7L)
-    val kijiEid = expressEid.toJavaEntityId(formattedTableUri, configuration)
+    val kijiEid = expressEid.toJavaEntityId(formattedEidFactory)
     val expected: java.util.List[AnyRef] =
         Seq[AnyRef]("test", "1", "2", 1: java.lang.Integer, 7L: java.lang.Long).asJava
 
     assert(expected === kijiEid.getComponents)
 
-    val recreate = EntityId.fromJavaEntityId(formattedTableUri, kijiEid, configuration)
+    val recreate = EntityId.fromJavaEntityId(kijiEid)
 
     assert(expressEid === recreate)
     assert(recreate(0) === "test")
   }
 
-  test("Test creation, comparison, and equality between hashed EntityIds from users and tables.") {
-    val eid1: EntityId = EntityId("test")
-    val eid2: EntityId = EntityId("test")
-    val otherEid = EntityId("other")
+  test("Create an Express EntityId from a Kiji EntityId and vice versa in a hashed table.") {
+    val origKijiEid = hashedEidFactory.getEntityId("test")
 
-    assert(eid1 === eid2)
-    assert(eid1 != otherEid)
+    val expressEid = HashedEntityId(origKijiEid.getHBaseRowKey())
+    val expressToKijiEid = expressEid.toJavaEntityId(hashedEidFactory)
 
-    // get the Java EntityId
-    val jEntityId: JEntityId = eid1.toJavaEntityId(hashedTableUri, configuration)
-    // this is how it would look if it were read from a table
-    val tableEid: EntityId = EntityId.fromJavaEntityId(hashedTableUri, jEntityId, configuration)
-
-    assert(tableEid.isInstanceOf[HashedEntityId])
-
-    // get the table version of the eid2, which should be the same
-    val tableEid2: EntityId = EntityId.fromJavaEntityId(
-        hashedTableUri,
-        eid2.toJavaEntityId(hashedTableUri, configuration),
-        configuration)
-
-    // get the table version of the otherEid, which should be different
-    val tableEidOther: EntityId = EntityId.fromJavaEntityId(
-        hashedTableUri,
-        otherEid.toJavaEntityId(hashedTableUri, configuration),
-        configuration)
-
-    // ensure equals works both ways between user and table EntityIds
-    assert(tableEid === eid1)
-    assert(eid1 === tableEid)
-
-    assert(otherEid != eid1)
-    assert(otherEid != tableEid)
-
-    // ensure the table versions were correctly generated.
-    assert(tableEid === tableEid2)
-    assert(tableEid2 === tableEid)
-    assert(tableEid != tableEidOther)
-
+    val recreate = EntityId.fromJavaEntityId(expressToKijiEid)
+    assert(recreate.components.equals(List(origKijiEid.getHBaseRowKey())))
   }
 
   test("Creating an EntityId from a Hashed table fails if there is more than one component.") {
     val eid: EntityId = EntityId("one", 2)
     val exception = intercept[org.kiji.schema.EntityIdException] {
-      eid.toJavaEntityId(hashedTableUri, configuration)
+      eid.toJavaEntityId(hashedEidFactory)
     }
     assert(exception.getMessage.contains("Too many components"))
   }
@@ -121,4 +103,345 @@ class EntityIdSuite extends KijiSuite {
     assert(eidComponents1 === eidComponents2)
     assert(eidComponents2 === eidComponents1)
   }
+
+  test("Test comparison between two EntityIds.") {
+    val eidComponents1: EntityId = EntityId("test", 2)
+    val eidComponents2: EntityId = EntityId("test", 3)
+
+    assert(eidComponents2 > eidComponents1)
+    assert(eidComponents1 < eidComponents2)
+  }
+
+  test("Test comparison between two EntityIds with different lengths.") {
+    val eidComponents1: EntityId = EntityId("test", 2)
+    val eidComponents2: EntityId = EntityId("test", 2, 1)
+
+    assert(eidComponents2 > eidComponents1)
+    assert(eidComponents1 < eidComponents2)
+  }
+
+  test("Test comparison between two EntityIds with different formats fails.") {
+    val eidComponents1: EntityId = EntityId("test", 2)
+    val eidComponents2: EntityId = EntityId("test", 2L)
+
+    val exception = intercept[EntityIdFormatMismatchException] {
+      eidComponents1 < eidComponents2
+    }
+
+    // Exception message should be something like:
+    // Mismatched Formats: Components: [java.lang.String,java.lang.Integer] and  Components:
+    // [java.lang.String,java.lang.Long] do not match.
+
+    assert(exception.getMessage.contains("String"))
+    assert(exception.getMessage.contains("Integer"))
+    assert(exception.getMessage.contains("Long"))
+  }
+
+  // ------- "integration tests" for joins. -------
+  /** Simple table layout to use for tests. The row keys are hashed. */
+  val simpleLayout: KijiTableLayout = layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
+
+  /** Table layout using Avro schemas to use for tests. The row keys are formatted. */
+  val avroLayout: KijiTableLayout = layout("layout/avro-types.json")
+
+  test("Runs a job that joins two pipes, on user-created EntityIds.") {
+    // Create main input.
+    val mainInput: List[(String, String)] = List(
+      ("0", "0row"),
+      ("1", "1row"),
+      ("2", "2row"))
+
+    // Create input from side data.
+    val sideInput: List[(String, String)] = List(("0", "0row"), ("1", "2row"))
+
+    // Validate output.
+    def validateTest(outputBuffer: Buffer[Tuple1[String]]): Unit = {
+      assert(outputBuffer.size === 2)
+    }
+
+    // Create the JobTest for this test.
+    val jobTest = JobTest(new JoinUserEntityIdsJob(_))
+      .arg("input", "mainInputFile")
+      .arg("side-input", "sideInputFile")
+      .arg("output", "outputFile")
+      .source(TextLine("mainInputFile"), mainInput)
+      .source(TextLine("sideInputFile"), sideInput)
+      .sink(Tsv("outputFile"))(validateTest)
+
+    // Run the test in local mode.
+    jobTest.run.finish
+
+    // Run the test in hadoop mode.
+    jobTest.runHadoop.finish
+  }
+
+  test("Runs a job that joins two pipes, on user-created and from a table (formatted) EntityIds.") {
+    // URI of the Kiji table to use.
+    val uri: String = doAndRelease(makeTestKijiTable(avroLayout)) { table: KijiTable =>
+      table.getURI().toString()
+    }
+
+    // Create input from Kiji table.
+    val joinKijiInput: List[(EntityId, KijiSlice[String])] = List(
+      (EntityId("0row"), mapSlice("animals", ("0column", 0L, "0 dogs"))),
+      (EntityId("1row"), mapSlice("animals", ("0column", 0L, "1 cat"))),
+      (EntityId("2row"), mapSlice("animals", ("0column", 0L, "2 fish"))))
+
+    // Create input from side data.
+    val sideInput: List[(String, String)] = List(("0", "0row"), ("1", "2row"))
+
+    // Validate output.
+    def validateTest(outputBuffer: Buffer[Tuple1[String]]): Unit = {
+      assert(outputBuffer.size === 2)
+    }
+
+    // Create the JobTest for this test.
+    val jobTest = JobTest(new JoinUserAndFormattedFromTableJob(_))
+      .arg("input", uri)
+      .arg("side-input", "sideInputFile")
+      .arg("output", "outputFile")
+      .source(KijiInput(uri, ("animals" -> 'animals)), joinKijiInput)
+      .source(TextLine("sideInputFile"), sideInput)
+      .sink(Tsv("outputFile"))(validateTest)
+
+    // Run the test in local mode.
+    jobTest.run.finish
+
+
+    // Run the test in hadoop mode.
+    jobTest.runHadoop.finish
+  }
+
+  test("Runs a job that joins two pipes, on EntityIds from a table (hashed), in local mode.") {
+    // URI of the hashed Kiji table to use.
+    val uri: String = doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
+      table.getURI().toString()
+    }
+
+    // Create input from hashed Kiji table.
+    val joinInput1: List[(EntityId, KijiSlice[String])] = List(
+      (EntityId("0row"), slice("family:column1", (0L, "0 dogs"))),
+      (EntityId("1row"), slice("family:column1", (0L, "1 cat"))),
+      (EntityId("2row"), slice("family:column1", (0L, "2 fish"))))
+
+
+    // Create input from hashed Kiji table.
+    val joinInput2: List[(EntityId, KijiSlice[String])] = List(
+      (EntityId("0row"), slice("family:column2", (0L, "0 boop"))),
+      (EntityId("2row"), slice("family:column2", (1L, "1 cat")))
+      )
+
+    // Validate output.
+    def validateTest(outputBuffer: Buffer[Tuple1[String]]): Unit = {
+      assert(outputBuffer.size === 2)
+    }
+
+    // Create the JobTest for this test.
+    val jobTest = JobTest(new JoinHashedEntityIdsJob(_))
+      .arg("input1", uri)
+      .arg("input2", uri)
+      .arg("output", "outputFile")
+      .source(KijiInput(uri, ("family:column1" -> 'animals)), joinInput1)
+      .source(KijiInput(uri, ("family:column2" -> 'slice)), joinInput2)
+      .sink(Tsv("outputFile"))(validateTest)
+
+    // Run the test in local mode.
+    jobTest.run.finish
+  }
+
+  test("Runs a job that joins two pipes, on EntityIds from a table (hashed), in hadoop mode.") {
+    // URI of the hashed Kiji table to use.
+    val uri: String = doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
+      table.getURI().toString()
+    }
+
+    // Create input from hashed Kiji table.
+    val joinInput1: List[(EntityId, KijiSlice[String])] = List(
+      (EntityId("0row"), slice("family:column1", (0L, "0 dogs"))),
+      (EntityId("1row"), slice("family:column1", (0L, "1 cat"))),
+      (EntityId("2row"), slice("family:column1", (0L, "2 fish"))))
+
+    // Create input from hashed Kiji table.
+    val joinInput2: List[(EntityId, KijiSlice[String])] = List(
+      (EntityId("0row"), slice("family:column2", (0L, "0 boop"))),
+      (EntityId("2row"), slice("family:column2", (0L, "2 beep"))))
+
+    // Validate output.
+    def validateTest(outputBuffer: Buffer[Tuple1[String]]): Unit = {
+      assert(outputBuffer.size === 2)
+    }
+
+    // Create the JobTest for this test.
+    val jobTest = JobTest(new JoinHashedEntityIdsJob(_))
+      .arg("input1", uri)
+      .arg("input2", uri)
+      .arg("output", "outputFile")
+      .source(KijiInput(uri, ("family:column1" -> 'animals)), joinInput1)
+      .source(KijiInput(uri, ("family:column2" -> 'slice)), joinInput2)
+      .sink(Tsv("outputFile"))(validateTest)
+
+    // Run the test in hadoop mode.
+    jobTest.runHadoop.finish
+  }
+
+  test("A job that joins two pipes, on EntityIds from a table (formatted) in local mode.") {
+    // URI of a formatted Kiji table to use.
+    val uri: String = doAndRelease(makeTestKijiTable(avroLayout)) { table: KijiTable =>
+      table.getURI().toString()
+    }
+
+    // Create input from formatted Kiji table.
+    val joinInput1: List[(EntityId, KijiSlice[Int])] = List(
+      (EntityId("0row"), mapSlice("searches", ("0column", 0L, 0))),
+      (EntityId("2row"), mapSlice("searches", ("0column", 0L, 2))))
+
+    // Create input from formatted Kiji table.
+    val joinInput2: List[(EntityId, KijiSlice[String])] = List(
+      (EntityId("0row"), mapSlice("animals", ("0column", 0L, "0 dogs"))),
+      (EntityId("1row"), mapSlice("animals", ("0column", 0L, "1 cat"))),
+      (EntityId("2row"), mapSlice("animals", ("0column", 0L, "2 fish"))))
+
+    // Validate output.
+    def validateTest(outputBuffer: Buffer[Tuple1[String]]): Unit = {
+      assert(outputBuffer.size === 2)
+    }
+
+    // Create the JobTest for this test.
+    val jobTest = JobTest(new JoinFormattedEntityIdsJob(_))
+      .arg("input1", uri)
+      .arg("input2", uri)
+      .arg("output", "outputFile")
+      .source(KijiInput(uri, ("searches" -> 'searches)), joinInput1)
+      .source(KijiInput(uri, ("animals" -> 'animals)), joinInput2)
+      .sink(Tsv("outputFile"))(validateTest)
+
+    // Run the test in local mode.
+    jobTest.run.finish
+  }
+
+  test("A job that joins two pipes, on EntityIds from a table (formatted) in hadoop mode.") {
+    // URI of a formatted Kiji table to use.
+    val uri: String = doAndRelease(makeTestKijiTable(avroLayout)) { table: KijiTable =>
+      table.getURI().toString()
+    }
+
+    // Create input from formatted Kiji table.
+    val joinInput1: List[(EntityId, KijiSlice[Int])] = List(
+      (EntityId("0row"), mapSlice("searches", ("0column", 0L, 0))),
+      (EntityId("2row"), mapSlice("searches", ("0column", 0L, 2))))
+
+    // Create input from formatted Kiji table.
+    val joinInput2: List[(EntityId, KijiSlice[String])] = List(
+      (EntityId("0row"), mapSlice("animals", ("0column", 0L, "0 dogs"))),
+      (EntityId("1row"), mapSlice("animals", ("0column", 0L, "1 cat"))),
+      (EntityId("2row"), mapSlice("animals", ("0column", 0L, "2 fish"))))
+
+    // Validate output.
+    def validateTest(outputBuffer: Buffer[Tuple1[String]]): Unit = {
+      assert(outputBuffer.size === 2)
+    }
+
+    // Create the JobTest for this test.
+    val jobTest = JobTest(new JoinFormattedEntityIdsJob(_))
+      .arg("input1", uri)
+      .arg("input2", uri)
+      .arg("output", "outputFile")
+      .source(KijiInput(uri, ("searches" -> 'searches)), joinInput1)
+      .source(KijiInput(uri, ("animals" -> 'animals)), joinInput2)
+      .sink(Tsv("outputFile"))(validateTest)
+
+    // Run the test in hadoop mode.
+    jobTest.runHadoop.finish
+  }
+}
+
+/** Companion object for EntityIdSuite. Contains test jobs. */
+object EntityIdSuite extends KijiSuite {
+  /**
+   * A job that tests joining two pipes, on user-constructed EntityIds.
+   *
+   * @param args to the job. Two arguments are expected: "input", which specifies the URI to a
+   *     Kiji table, and "output", which specifies the path to a text file.
+   */
+  class JoinUserEntityIdsJob(args: Args) extends KijiJob(args) {
+    val sidePipe = TextLine(args("side-input"))
+      .read
+      .map('line -> 'entityId) { line: String => EntityId(line) }
+      .project('entityId)
+
+    TextLine(args("input"))
+      .map('line -> 'entityId) { line: String => EntityId(line) }
+      .joinWithSmaller('entityId -> 'entityId, sidePipe)
+      .write(Tsv(args("output")))
+  }
+
+  /**
+   * A job that tests joining two pipes, one with a user-constructed EntityId and one with
+   * a formatted EntityId from a Kiji table.
+   *
+   * @param args to the job. Two arguments are expected: "input", which specifies the URI to a
+   *     Kiji table, and "output", which specifies the path to a text file.
+   */
+  class JoinUserAndFormattedFromTableJob(args: Args) extends KijiJob(args) {
+    val sidePipe = TextLine(args("side-input"))
+      .read
+      .map('line -> 'entityId) { line: String => EntityId(line) }
+
+    KijiInput(args("input"), ("animals" -> 'animals))
+      .map('animals -> 'terms) { animals: KijiSlice[String] => animals }
+      .joinWithSmaller('entityId -> 'entityId, sidePipe)
+      .write(Tsv(args("output")))
+  }
+
+  /**
+   * A job that tests joining two pipes, one with a user-constructed EntityId and one with
+   * a hashed EntityId from a Kiji table.
+   *
+   * @param args to the job. Two arguments are expected: "input", which specifies the URI to a
+   *     Kiji table, and "output", which specifies the path to a text file.
+   */
+  class JoinUserAndHashedFromTableJob(args: Args) extends KijiJob(args) {
+    val sidePipe = TextLine(args("side-input"))
+      .read
+      .map('line -> 'entityId) { line: String => EntityId(line) }
+      .project('entityId)
+
+    KijiInput(args("input"), ("family:column1" -> 'slice))
+      .map('slice -> 'terms) { slice: KijiSlice[String] => slice.getFirstValue }
+      .joinWithSmaller('entityId -> 'entityId, sidePipe)
+      .write(Tsv(args("output")))
+  }
+
+  /**
+   * A job that tests joining two pipes, on EntityIds from a table with row key format HASHED.
+   *
+   * @param args to the job. Two arguments are expected: "input", which specifies the URI to a
+   *     Kiji table, and "output", which specifies the path to a text file.
+   */
+  class JoinHashedEntityIdsJob(args: Args) extends KijiJob(args) {
+    val pipe1 = KijiInput(args("input1"), ("family:column1" -> 'animals))
+      .map('animals -> 'animal) { slice: KijiSlice[String] => slice.getFirstValue }
+
+    KijiInput(args("input2"), ("family:column2" -> 'slice))
+      .map('slice -> 'terms) { slice: KijiSlice[String] => slice.getFirstValue }
+      .joinWithSmaller('entityId -> 'entityId, pipe1)
+      .write(Tsv(args("output")))
+  }
+
+  /**
+   * A job that tests joining two pipes, on EntityIds from a table with row key format formatted.
+   *
+   * @param args to the job. Two arguments are expected: "input", which specifies the URI to a
+   *     Kiji table, and "output", which specifies the path to a text file.
+   */
+  class JoinFormattedEntityIdsJob(args: Args) extends KijiJob(args) {
+    val pipe1 = KijiInput(args("input1"), ("searches" -> 'searches))
+      .map('searches -> 'term) { slice: KijiSlice[Int] => slice.getFirstValue }
+
+    KijiInput(args("input2"), ("animals" -> 'animals))
+      .map('animals -> 'animal) { slice: KijiSlice[String] => slice.getFirstValue }
+      .joinWithSmaller('entityId -> 'entityId, pipe1)
+      .write(Tsv(args("output")))
+  }
+
 }

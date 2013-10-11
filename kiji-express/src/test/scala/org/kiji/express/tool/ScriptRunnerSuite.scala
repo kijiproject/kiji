@@ -38,7 +38,6 @@ import org.kiji.express.EntityId
 import org.kiji.express.KijiSlice
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow._
-import org.kiji.express.impl.MaterializedEntityId
 import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiURI
@@ -65,7 +64,7 @@ class ScriptRunnerSuite extends KijiSuite {
   }
 
   /** Input tuples to use for word count tests. */
-  val wordCountInput: List[(MaterializedEntityId, KijiSlice[String])] = List(
+  val wordCountInput: List[(EntityId, KijiSlice[String])] = List(
       ( EntityId("row01"), slice("family:column1", (10L, "hello")) ),
       ( EntityId("row02"), slice("family:column1", (10L, "hello")) ),
       ( EntityId("row03"), slice("family:column1", (10L, "world")) ),

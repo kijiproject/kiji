@@ -31,7 +31,9 @@ import cascading.tap.Tap
 import cascading.tuple.Fields
 import cascading.tuple.Tuple
 import cascading.tuple.TupleEntry
+
 import com.google.common.base.Objects
+
 import org.apache.avro.Schema
 import org.apache.commons.codec.binary.Base64
 import org.apache.commons.lang.SerializationUtils
@@ -39,6 +41,7 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.mapred.JobConf
 import org.apache.hadoop.mapred.OutputCollector
 import org.apache.hadoop.mapred.RecordReader
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -51,29 +54,32 @@ import org.kiji.express.flow.ColumnFamily
 import org.kiji.express.flow.ColumnRequest
 import org.kiji.express.flow.ColumnRequestOptions
 import org.kiji.express.flow.InvalidKijiTapException
+import org.kiji.express.flow.QualifiedColumn
 import org.kiji.express.flow.TimeRange
 import org.kiji.express.flow.WriterSchemaSpec
-import org.kiji.express.flow.QualifiedColumn
 import org.kiji.express.util.AvroUtil
-import org.kiji.express.util.SpecificCellSpecs
 import org.kiji.express.util.Resources.doAndRelease
+import org.kiji.express.util.SpecificCellSpecs
 import org.kiji.mapreduce.framework.KijiConfKeys
-import org.kiji.schema.avro.AvroValidationPolicy
-import org.kiji.schema.avro.AvroSchema
 import org.kiji.schema.ColumnVersionIterator
+import org.kiji.schema.EntityIdFactory
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiColumnName
-import org.kiji.schema.KijiDataRequestBuilder
-import org.kiji.schema.KijiTable
-import org.kiji.schema.KijiTableWriter
 import org.kiji.schema.KijiDataRequest
-import org.kiji.schema.KijiURI
+import org.kiji.schema.KijiDataRequestBuilder
 import org.kiji.schema.KijiRowData
 import org.kiji.schema.KijiSchemaTable
+import org.kiji.schema.KijiTable
+import org.kiji.schema.KijiTableWriter
+import org.kiji.schema.KijiURI
 import org.kiji.schema.MapFamilyVersionIterator
+import org.kiji.schema.avro.AvroSchema
+import org.kiji.schema.avro.AvroValidationPolicy
+import org.kiji.schema.impl.Versions
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.util.ProtocolVersion
-import org.kiji.schema.impl.Versions
+
+
 
 /**
  * A Kiji-specific implementation of a Cascading `Scheme`, which defines how to read and write the
@@ -378,7 +384,7 @@ private[express] object KijiScheme {
     val iterator = fields.iterator().asScala
 
     // Add the row's EntityId to the tuple.
-    val entityId: EntityId = EntityId.fromJavaEntityId(tableUri, row.getEntityId, configuration)
+    val entityId: EntityId = EntityId.fromJavaEntityId(row.getEntityId())
     result.add(entityId)
 
     // Get rid of the entity id and timestamp fields, then map over each field to add a column
@@ -482,6 +488,8 @@ private[express] object KijiScheme {
     val validationEnabled =  { layoutVersion.compareTo(Versions.LAYOUT_1_3_0) >= 0 }
     val schemaTable = kiji.getSchemaTable
 
+    val eidFactory = EntityIdFactory.getFactory(layout)
+
     /**
      * Gets the schema from the schemaIdOption if it exists, otherwise tries to resolve the default
      * reader schema for the table.  Returns None if neither of those are possible.
@@ -530,7 +538,7 @@ private[express] object KijiScheme {
                     "You cannot write to a map family without specifying a qualifier field.")
                 val qualifier = output.getObject(qualField.get).asInstanceOf[String]
                 val schema: Option[Schema] = getSchemaIfPossible(cf.getColumnName(), schemaSpec)
-                writer.put(entityId.toJavaEntityId(tableUri, configuration),
+                writer.put(entityId.toJavaEntityId(eidFactory),
                     family,
                     qualifier,
                     timestamp,
@@ -542,7 +550,7 @@ private[express] object KijiScheme {
                   ColumnRequestOptions(_, _, _, _, _, schemaSpec)) => {
                 val schema: Option[Schema] = getSchemaIfPossible(qc.getColumnName(), schemaSpec)
                 writer.put(
-                    entityId.toJavaEntityId(tableUri, configuration),
+                    entityId.toJavaEntityId(eidFactory),
                     family,
                     qualifier,
                     timestamp,

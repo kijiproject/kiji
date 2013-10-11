@@ -25,18 +25,18 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
 import org.kiji.express.AvroValue
-import org.kiji.express.impl.MaterializedEntityId
+import org.kiji.express.EntityId
 import org.kiji.express.modeling.impl.AvroKVRecordKeyValueStore
 import org.kiji.express.modeling.impl.AvroRecordKeyValueStore
 import org.kiji.express.modeling.impl.JavaToScalaValueConverter
 import org.kiji.express.modeling.impl.KijiTableKeyValueStore
 import org.kiji.express.modeling.impl.ScalaToJavaKeyConverter
 import org.kiji.express.modeling.impl.TextFileKeyValueStore
-import org.kiji.mapreduce.kvstore.{KeyValueStoreReader => JKeyValueStoreReader}
 import org.kiji.mapreduce.kvstore.lib.{AvroKVRecordKeyValueStore => JAvroKVRecordKeyValueStore}
 import org.kiji.mapreduce.kvstore.lib.{AvroRecordKeyValueStore => JAvroRecordKeyValueStore}
 import org.kiji.mapreduce.kvstore.lib.{KijiTableKeyValueStore => JKijiTableKeyValueStore}
 import org.kiji.mapreduce.kvstore.lib.{TextFileKeyValueStore => JTextFileKeyValueStore}
+import org.kiji.mapreduce.kvstore.{KeyValueStoreReader => JKeyValueStoreReader}
 
 /**
  * A map from keys to values backed by a data store. KijiExpress end-users can configure and use
@@ -172,7 +172,7 @@ private[express] object KeyValueStore {
    */
   def apply[V](
       kvStore: JKijiTableKeyValueStore[_ <: Any]
-  ): KeyValueStore[MaterializedEntityId, V] = {
+  ): KeyValueStore[EntityId, V] = {
     new KijiTableKeyValueStore[V](kvStore.open())
   }
 
