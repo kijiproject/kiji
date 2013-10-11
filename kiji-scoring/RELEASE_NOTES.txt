@@ -1,5 +1,14 @@
 
                               Kiji Scoring Release Notes
+Version 0.7.0
+    * SCORE-97. KijiScoring has undergone significant API changes. The KijiFreshnessPolicy SPI has
+        been redesigned and KijiProducer has been replaced by a new SPI called ScoreFunction. These
+        SPIs are designed specifically to support the use-case of real time scoring in a multi
+        threaded environment. To support the new SPIs KijiFreshnessPolicyRecord has been replaced
+        with KijiFreshenerRecord and KijiFreshnessManager has undergone a complete API revamp to
+        support the new record type. FreshTool was also changed to reflect the new records and SPIs.
+        FreshKijiTableBuiler has also seen several changes to support the new SPIs. Details of these
+        new classes can be found in the JavaDoc for each.
 Version 0.6.0
     * SCORE-92. FreshTool now supports registering and retrieving the new optional record fields
         `parameters` and `reinitializeProducer`. e.g.

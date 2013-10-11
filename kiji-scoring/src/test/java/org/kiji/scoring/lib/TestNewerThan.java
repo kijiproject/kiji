@@ -19,10 +19,12 @@
 
 package org.kiji.scoring.lib;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Map;
+
+import com.google.common.collect.Maps;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,9 +44,8 @@ import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.util.InstanceBuilder;
 import org.kiji.scoring.FreshKijiTableReader;
 import org.kiji.scoring.FreshKijiTableReaderBuilder;
-import org.kiji.scoring.FreshKijiTableReaderBuilder.FreshReaderType;
-import org.kiji.scoring.PolicyContext;
-import org.kiji.scoring.impl.InternalPolicyContext;
+import org.kiji.scoring.FreshenerContext;
+import org.kiji.scoring.impl.InternalFreshenerContext;
 
 /**
  * Test the behavior of the stock NewerThan KijiFreshnessPolicy.
@@ -80,7 +81,6 @@ public final class TestNewerThan extends KijiClientTest {
     mTable = mKiji.openTable("user");
     mReader = mTable.openTableReader();
     mFreshReader = FreshKijiTableReaderBuilder.create()
-        .withReaderType(FreshReaderType.LOCAL)
         .withTable(mTable)
         .withTimeout(1000)
         .build();
@@ -99,29 +99,22 @@ public final class TestNewerThan extends KijiClientTest {
     final EntityId eid = mTable.getEntityId("foo");
     final KijiDataRequest request = KijiDataRequest.create("info", "name");
     final KijiRowData rowData = mReader.get(eid, request);
-    final PolicyContext context =
-        new InternalPolicyContext(
-        request, new KijiColumnName("info", "name"), mKiji.getConf(), null, null, false);
+    final Map<String, String> parameters = Maps.newHashMap();
+    parameters.put(NewerThan.NEWER_THAN_KEY, String.valueOf(1));
+    final FreshenerContext context1 = InternalFreshenerContext.create(
+        new KijiColumnName("info", "name"),
+        parameters);
     final NewerThan policy = new NewerThan();
-    policy.deserialize("{\"newerThan\":1}");
+    policy.setup(context1);
 
-    assertTrue(policy.isFresh(rowData, context));
+    assertTrue(policy.isFresh(rowData, context1));
 
-    policy.deserialize("{\"newerThan\":10}");
-    assertFalse(policy.isFresh(rowData, context));
-  }
+    parameters.put(NewerThan.NEWER_THAN_KEY, String.valueOf(10));
+    final FreshenerContext context10 = InternalFreshenerContext.create(
+        new KijiColumnName("info", "name"),
+        parameters);
 
-  @Test
-  public void testSerializeDeserialize() {
-    final NewerThan policy = new NewerThan(10);
-    // Serialize the state of the policy.
-    final String state = policy.serialize();
-    LOG.info(state);
-    // Deserialize the state back into the policy.
-    policy.deserialize(state);
-    // Serialize the newly stored state from the policy.
-    final String loopedState = policy.serialize();
-    // Assert that the loop has not mutated the state.
-    assertEquals(state, loopedState);
+    policy.setup(context10);
+    assertFalse(policy.isFresh(rowData, context10));
   }
 }

@@ -20,6 +20,7 @@
 package org.kiji.scoring;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -27,7 +28,6 @@ import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Map;
 
 import com.google.common.collect.Maps;
@@ -36,8 +36,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.kiji.mapreduce.produce.KijiProducer;
-import org.kiji.mapreduce.produce.ProducerContext;
+import org.kiji.mapreduce.TestProducer;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
@@ -45,11 +44,11 @@ import org.kiji.schema.KijiRowData;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.util.InstanceBuilder;
-import org.kiji.scoring.KijiFreshnessManager.FreshnessValidationException;
-import org.kiji.scoring.KijiFreshnessManager.MultiFreshnessValidationException;
+import org.kiji.scoring.KijiFreshnessManager.FreshenerValidationException;
+import org.kiji.scoring.KijiFreshnessManager.MultiFreshenerValidationException;
 import org.kiji.scoring.KijiFreshnessManager.ValidationFailure;
-import org.kiji.scoring.avro.KijiFreshnessPolicyRecord;
-import org.kiji.scoring.lib.AlwaysFreshen;
+import org.kiji.scoring.avro.KijiFreshenerRecord;
+import org.kiji.scoring.impl.InternalFreshenerContext;
 import org.kiji.scoring.lib.NeverFreshen;
 import org.kiji.scoring.lib.ShelfLife;
 
@@ -58,29 +57,14 @@ public class TestKijiFreshnessManager {
   private Kiji mKiji;
   private KijiFreshnessManager mFreshManager;
 
-  private static final class TestProducer extends KijiProducer {
-    public KijiDataRequest getDataRequest() {
+  private static final class TestScoreFunction extends ScoreFunction {
+    public KijiDataRequest getDataRequest(final FreshenerContext context) throws IOException {
       return KijiDataRequest.create("info", "name");
     }
-    public String getOutputColumn() {
-      return "info:name";
-    }
-    public void produce(
-        final KijiRowData kijiRowData, final ProducerContext producerContext) throws IOException {
-      producerContext.put("new-val");
-    }
-  }
-
-  private static final class TestFamilyProducer extends KijiProducer {
-    public KijiDataRequest getDataRequest() {
-      return KijiDataRequest.create("info", "name");
-    }
-    public String getOutputColumn() {
-      return "networks";
-    }
-    public void produce(
-        final KijiRowData kijiRowData, final ProducerContext producerContext) throws IOException {
-      producerContext.put("qualifier", "new-val");
+    public String score(
+        final KijiRowData dataToScore, final FreshenerContext context
+    ) throws IOException {
+      return "new-val";
     }
   }
 
@@ -113,180 +97,164 @@ public class TestKijiFreshnessManager {
     mKiji.release();
   }
 
+  private static final ShelfLife POLICY = new ShelfLife(100);
+  private static final ScoreFunction SCORE_FUNCTION = new TestScoreFunction();
+  private static final KijiColumnName INFO_NAME = new KijiColumnName("info", "name");
+  private static final KijiColumnName INFO_EMAIL = new KijiColumnName("info", "email");
+  private static final KijiColumnName INFO_INVALID = new KijiColumnName("info", "invalid");
+  private static final Map<String, String> EMPTY_PARAMS = Collections.emptyMap();
+
   /** Tests that we can store a policy and retrieve it. */
   @Test
-  public void testStorePolicy() throws Exception {
-    ShelfLife policy = new ShelfLife(100);
-    mFreshManager.storePolicy("user", "info:name", TestProducer.class, policy);
-    KijiFreshnessPolicyRecord mPolicyRecord = mFreshManager.retrievePolicy("user", "info:name");
-    assertEquals(mPolicyRecord.getProducerClass(), TestProducer.class.getName());
-    assertEquals(mPolicyRecord.getFreshnessPolicyClass(), ShelfLife.class.getName());
-    ShelfLife policyLoaded = new ShelfLife();
-    policyLoaded.deserialize(mPolicyRecord.getFreshnessPolicyState());
-    assertEquals(policy.getShelfLifeInMillis(), policyLoaded.getShelfLifeInMillis());
+  public void testRegisterFreshener() throws Exception {
+    mFreshManager.registerFreshener(
+        "user", INFO_NAME, POLICY, SCORE_FUNCTION, EMPTY_PARAMS, false, false);
+    final KijiFreshenerRecord record = mFreshManager.retrieveFreshenerRecord("user", INFO_NAME);
+    assertEquals(SCORE_FUNCTION.getClass().getName(), record.getScoreFunctionClass());
+    assertEquals(POLICY.getClass().getName(), record.getFreshnessPolicyClass());
+    final ShelfLife policyToLoad = new ShelfLife();
+    policyToLoad.setup(InternalFreshenerContext.create(
+        null, POLICY.serializeToParameters()));
+    assertEquals(POLICY.getShelfLifeInMillis(), policyToLoad.getShelfLifeInMillis());
   }
 
   /** Test that we can store a policy and state using unchecked strings. */
   @Test
-  public void testStorePolicyWithStrings() throws Exception {
-    String policyClassString = "org.kiji.imaginary.Policy"; // Doesn't exist.
-    String policyState = "SomeState";
-    String producerClassString = "org.kiji.imaginary.Producer";
-    mFreshManager.storePolicyWithStrings(
-        "user", "info:name", producerClassString, policyClassString, policyState);
-    KijiFreshnessPolicyRecord mPolicyRecord = mFreshManager.retrievePolicy("user", "info:name");
-    assertEquals(mPolicyRecord.getProducerClass(), producerClassString);
-    assertEquals(mPolicyRecord.getFreshnessPolicyClass(), policyClassString);
-    assertEquals(mPolicyRecord.getFreshnessPolicyState(), policyState);
+  public void testRegisterFreshenerWithStrings() throws Exception {
+    final String policyClassString = "org.kiji.imaginary.Policy"; // Doesn't exist.
+    final String scoreFunctionClassString = "org.kiji.imaginary.ScoreFunction";
+    mFreshManager.registerFreshener(
+        "user",
+        INFO_NAME,
+        policyClassString,
+        scoreFunctionClassString,
+        EMPTY_PARAMS,
+        false,
+        false,
+        false);
+    KijiFreshenerRecord record = mFreshManager.retrieveFreshenerRecord("user", INFO_NAME);
+    assertEquals(scoreFunctionClassString, record.getScoreFunctionClass());
+    assertEquals(policyClassString, record.getFreshnessPolicyClass());
   }
 
   /** Tests that we can store multiple policies and retrieve them. */
   @Test
   public void testRetrievePolicies() throws Exception {
-    ShelfLife policy = new ShelfLife(100);
-    mFreshManager.storePolicy("user", "info:name", TestProducer.class, policy);
-    mFreshManager.storePolicy("user", "info:email", TestProducer.class, policy);
-    mFreshManager.storePolicy("user", "networks", TestFamilyProducer.class, policy);
-    Map<KijiColumnName, KijiFreshnessPolicyRecord> policies =
-        mFreshManager.retrievePolicies("user");
-    assertEquals(3, policies.size());
-    assertTrue(policies.containsKey(new KijiColumnName("info", "name")));
-    assertTrue(policies.containsKey(new KijiColumnName("info", "email")));
-    assertTrue(policies.containsKey(new KijiColumnName("networks")));
+    mFreshManager.registerFreshener(
+        "user", INFO_NAME, POLICY, SCORE_FUNCTION, EMPTY_PARAMS, false, false);
+    mFreshManager.registerFreshener(
+        "user", INFO_EMAIL, POLICY, SCORE_FUNCTION, EMPTY_PARAMS, false, false);
+    Map<KijiColumnName, KijiFreshenerRecord> records =
+        mFreshManager.retrieveFreshenerRecords("user");
+    assertEquals(2, records.size());
+    assertTrue(records.containsKey(INFO_NAME));
+    assertTrue(records.containsKey(INFO_EMAIL));
   }
 
   /** Tests that retrieving a policy that doesn't exist returns null. */
   @Test
   public void testEmptyRetrieve() throws Exception {
-    assertNull(mFreshManager.retrievePolicy("user", "info:name"));
+    assertNull(mFreshManager.retrieveFreshenerRecord("user", INFO_NAME));
   }
 
   /** Tests that we can remove policies correctly. */
   @Test
   public void testPolicyRemoval() throws Exception {
-    ShelfLife policy = new ShelfLife(100);
-    mFreshManager.storePolicy("user", "info:name", TestProducer.class, policy);
-    KijiFreshnessPolicyRecord mPolicyRecord = mFreshManager.retrievePolicy("user", "info:name");
-    assertNotNull(mPolicyRecord);
-    mFreshManager.removePolicy("user", "info:name");
-    mPolicyRecord = mFreshManager.retrievePolicy("user", "info:name");
-    assertNull(mPolicyRecord);
+    mFreshManager.registerFreshener(
+        "user", INFO_NAME, POLICY, SCORE_FUNCTION, EMPTY_PARAMS, false, false);
+    final KijiFreshenerRecord record = mFreshManager.retrieveFreshenerRecord("user", INFO_NAME);
+    assertNotNull(record);
+    mFreshManager.removeFreshener("user", INFO_NAME);
+    assertNull(mFreshManager.retrieveFreshenerRecord("user", INFO_NAME));
   }
 
   @Test
   public void testInvalidColumnAttachment() throws IOException {
-    final ShelfLife policy = new ShelfLife(100);
-
     try {
-      mFreshManager.storePolicy("user", "info:invalid", TestProducer.class, policy);
-      fail();
-    } catch (FreshnessValidationException fve) {
-      assertEquals("There were validation failures.\nNO_QUALIFIED_COLUMN_IN_TABLE: Table: user does"
-          + " not contain specified column: info:invalid", fve.getMessage());
+      mFreshManager.registerFreshener(
+          "user", INFO_INVALID, POLICY, SCORE_FUNCTION, EMPTY_PARAMS, false, false);
+      fail("registerFreshener should have thrown FreshenerValidationException because the column "
+          + "does not exist.");
+    } catch (FreshenerValidationException fve) {
+      assertEquals(1, fve.getExceptions().size());
+      assertTrue(fve.getExceptions().containsKey(ValidationFailure.NO_COLUMN_IN_TABLE));
     }
 
     try {
-      mFreshManager.storePolicy("user", "info", TestFamilyProducer.class, policy);
-      fail();
-    } catch (FreshnessValidationException fve) {
-      assertEquals("There were validation failures.\nGROUP_TYPE_FAMILY_ATTACHMENT: Specified "
-          + "family: info is not a valid Map Type family in the table: user", fve.getMessage());
+      mFreshManager.registerFreshener("user",
+          new KijiColumnName("networks"), POLICY, SCORE_FUNCTION, EMPTY_PARAMS, false, false);
+      fail("registerFreshener should have thrown FreshenerValidationException because the column "
+          + "is not fully qualified.");
+    } catch (FreshenerValidationException fve) {
+      assertEquals(1, fve.getExceptions().size());
+      assertTrue(
+          fve.getExceptions().containsKey(ValidationFailure.ATTACHMENT_COLUMN_NOT_QUALIFIED));
     }
 
-    mFreshManager.storePolicy("user", "networks", TestFamilyProducer.class, policy);
+    mFreshManager.registerFreshener(
+        "user", INFO_NAME, POLICY, SCORE_FUNCTION, EMPTY_PARAMS, false, false);
     try {
-      mFreshManager.storePolicy("user", "networks:qualifier", TestProducer.class, policy);
-    } catch (FreshnessValidationException fve) {
-      assertEquals("There were validation failures.\nFRESHENER_ALREADY_ATTACHED: There is already a"
-          + " freshness policy attached to family: networks Freshness "
-          + "policies may not be attached to a map type family and fully qualified columns within "
-          + "that family.", fve.getMessage());
+      mFreshManager.registerFreshener(
+          "user", INFO_NAME, POLICY, SCORE_FUNCTION, EMPTY_PARAMS, false, false);
+      fail("registerFreshener should have thrown FreshenerValidationException because there is "
+          + "already a Freshener attached.");
+    } catch (FreshenerValidationException fve) {
+      assertEquals(1, fve.getExceptions().size());
+      assertTrue(fve.getExceptions().containsKey(ValidationFailure.FRESHENER_ALREADY_ATTACHED));
     }
-
-
-    mFreshManager.removePolicy("user", "networks");
-    mFreshManager.storePolicy("user", "networks:qualifier", TestProducer.class, policy);
-    try {
-      mFreshManager.storePolicy("user", "networks", TestFamilyProducer.class, policy);
-    } catch (FreshnessValidationException fve) {
-      assertEquals("There were validation failures.\nFRESHENER_ALREADY_ATTACHED: There is already a"
-          + " freshness policy attached to a fully qualified column in "
-          + "family: networks Freshness policies may not be attached to a map type family and fully"
-          + " qualified columns within that family. To view a list of attached freshness policies "
-          + "check log files for KijiFreshnessManager.", fve.getMessage());
-    }
-    // This should pass.
-    mFreshManager.storePolicy("user", "info:name", TestProducer.class, policy);
   }
 
   @Test
   public void testJavaIdentifiers() throws IOException {
-    try {
-      mFreshManager.storePolicyWithStrings(
-          "user", "networks", "kiji..producer", "kiji.policy.policy", "");
-      fail();
-    } catch (FreshnessValidationException fve) {
-      assertEquals("There were validation failures.\nBAD_PRODUCER_NAME: Producer class name: "
-          + "kiji..producer is not a valid Java class identifier.", fve.getMessage());
-    }
-
-    try {
-      mFreshManager.storePolicyWithStrings("user", "networks", "kiji.a.producer", "kiji.", "");
-    } catch (FreshnessValidationException fve) {
-      assertEquals("There were validation failures.\nBAD_POLICY_NAME: Policy class name: kiji. is "
-          + "not a valid Java class identifier.", fve.getMessage());
-    }
-
-    try {
-      mFreshManager.storePolicyWithStrings("user", "networks", "kiji.a.producer", ".kiji", "");
-    } catch (FreshnessValidationException fve) {
-      assertEquals("There were validation failures.\nBAD_POLICY_NAME: Policy class name: .kiji is "
-          + "not a valid Java class identifier.", fve.getMessage());
-    }
+    assertFalse(KijiFreshnessManager.isValidClassName("kiji..policy"));
+    assertFalse(KijiFreshnessManager.isValidClassName("kiji."));
+    assertFalse(KijiFreshnessManager.isValidClassName(".kiji"));
+    assertTrue(KijiFreshnessManager.isValidClassName(TestScoreFunction.class.getName()));
   }
 
   @Test
   public void testRemovePolicies() throws IOException {
-    mFreshManager.storePolicy("user", "info:name", TestProducer.class, new AlwaysFreshen());
-    mFreshManager.storePolicy("user", "info:email", TestProducer.class, new AlwaysFreshen());
-    assertEquals(
-        Sets.newHashSet(new KijiColumnName("info:name"), new KijiColumnName("info:email")),
-        mFreshManager.removePolicies("user"));
-
-    assertEquals(new HashSet<KijiColumnName>(), mFreshManager.removePolicies("user"));
+    mFreshManager.registerFreshener(
+        "user", INFO_NAME, POLICY, SCORE_FUNCTION, EMPTY_PARAMS, false, false);
+    mFreshManager.registerFreshener(
+        "user", INFO_EMAIL, POLICY, SCORE_FUNCTION, EMPTY_PARAMS, false, false);
+    assertEquals(Sets.newHashSet(INFO_NAME, INFO_EMAIL), mFreshManager.removeFresheners("user"));
+    assertEquals(Collections.<KijiColumnName>emptySet(), mFreshManager.removeFresheners("user"));
   }
 
   @Test
   public void testStorePolicies() throws IOException {
-    mFreshManager.storePolicy("user", "info:name", TestProducer.class, new AlwaysFreshen());
-    mFreshManager.storePolicy("user", "info:email", TestProducer.class, new AlwaysFreshen());
-    final Map<KijiColumnName, KijiFreshnessPolicyRecord> records =
-        mFreshManager.retrievePolicies("user");
+    mFreshManager.registerFreshener(
+        "user", INFO_NAME, POLICY, SCORE_FUNCTION, EMPTY_PARAMS, false, false);
+    mFreshManager.registerFreshener(
+        "user", INFO_EMAIL, POLICY, SCORE_FUNCTION, EMPTY_PARAMS, false, false);
+    final Map<KijiColumnName, KijiFreshenerRecord> records =
+        mFreshManager.retrieveFreshenerRecords("user");
     assertEquals(2, records.size());
 
-    final Map<KijiColumnName, KijiFreshnessPolicyRecord> modifiedRecords = Maps.newHashMap(records);
-    for (Map.Entry<KijiColumnName, KijiFreshnessPolicyRecord> entry : modifiedRecords.entrySet()) {
+    final Map<KijiColumnName, KijiFreshenerRecord> modifiedRecords = Maps.newHashMap(records);
+    for (Map.Entry<KijiColumnName, KijiFreshenerRecord> entry : modifiedRecords.entrySet()) {
       entry.getValue().setFreshnessPolicyClass("org.kiji.scoring.lib.NeverFreshen");
     }
 
-    mFreshManager.storePolicies("user", modifiedRecords, true);
+    mFreshManager.registerFresheners("user", modifiedRecords, true, false, false);
     assertEquals("org.kiji.scoring.lib.NeverFreshen",
-        mFreshManager.retrievePolicy("user", "info:name").getFreshnessPolicyClass());
+        mFreshManager.retrieveFreshenerRecord("user", INFO_NAME).getFreshnessPolicyClass());
     assertEquals("org.kiji.scoring.lib.NeverFreshen",
-        mFreshManager.retrievePolicy("user", "info:email").getFreshnessPolicyClass());
+        mFreshManager.retrieveFreshenerRecord("user", INFO_EMAIL).getFreshnessPolicyClass());
 
     try {
-      mFreshManager.storePolicies("user", records, false);
-      fail("storePolicies() should have thrown MultiFreshnessValidationException because of already"
+      mFreshManager.registerFresheners("user", records, false, false, false);
+      fail("storePolicies() should have thrown MultiFreshenerValidationException because of already"
           + " attached fresheners.");
-    } catch (MultiFreshnessValidationException mfve) {
+    } catch (MultiFreshenerValidationException mfve) {
       final Map<KijiColumnName, Map<ValidationFailure, Exception>> failures = mfve.getExceptions();
       assertEquals(2, failures.size());
-      assertTrue(failures.containsKey(new KijiColumnName("info:name")));
-      assertTrue(failures.containsKey(new KijiColumnName("info:email")));
-      assertTrue(failures.get(new KijiColumnName("info:name"))
+      assertTrue(failures.containsKey(INFO_NAME));
+      assertTrue(failures.containsKey(INFO_EMAIL));
+      assertTrue(failures.get(INFO_NAME)
           .containsKey(ValidationFailure.FRESHENER_ALREADY_ATTACHED));
-      assertTrue(failures.get(new KijiColumnName("info:email"))
+      assertTrue(failures.get(INFO_EMAIL)
           .containsKey(ValidationFailure.FRESHENER_ALREADY_ATTACHED));
     }
   }
@@ -294,50 +262,16 @@ public class TestKijiFreshnessManager {
   public void testOptionalFields() throws IOException {
     final Map<String, String> params = Maps.newHashMap();
     params.put("test-key", "test-value");
-    final KijiFreshnessPolicy policy = new NeverFreshen();
 
-    final KijiFreshnessPolicyRecord parametersRecord = KijiFreshnessPolicyRecord.newBuilder()
-        .setRecordVersion(KijiFreshnessManager.CUR_FRESHNESS_RECORD_VER.toCanonicalString())
-        .setProducerClass(TestProducer.class.getName())
+    final KijiFreshenerRecord parametersRecord = KijiFreshenerRecord.newBuilder()
+        .setRecordVersion(KijiFreshnessManager.CUR_FRESHENER_RECORD_VER.toCanonicalString())
         .setFreshnessPolicyClass(NeverFreshen.class.getName())
-        .setFreshnessPolicyState("")
-        .setParameters(params)
+        .setScoreFunctionClass(TestProducer.class.getName())
         .build();
-    assertEquals(false, parametersRecord.getReinitializeProducer());
+    assertEquals(EMPTY_PARAMS, parametersRecord.getParameters());
 
-    final KijiFreshnessPolicyRecord reinitializeRecord = KijiFreshnessPolicyRecord.newBuilder()
-        .setRecordVersion(KijiFreshnessManager.CUR_FRESHNESS_RECORD_VER.toCanonicalString())
-        .setProducerClass(TestProducer.class.getName())
-        .setFreshnessPolicyClass(NeverFreshen.class.getName())
-        .setFreshnessPolicyState("")
-        .setReinitializeProducer(true)
-        .build();
-    assertTrue(reinitializeRecord.getParameters().isEmpty());
-
-    final KijiFreshnessPolicyRecord combinedRecord = KijiFreshnessPolicyRecord.newBuilder()
-        .setRecordVersion(KijiFreshnessManager.CUR_FRESHNESS_RECORD_VER.toCanonicalString())
-        .setProducerClass(TestProducer.class.getName())
-        .setFreshnessPolicyClass(NeverFreshen.class.getName())
-        .setFreshnessPolicyState("")
-        .setParameters(params)
-        .setReinitializeProducer(true)
-        .build();
-
-    mFreshManager.storePolicy("user", "info:name", TestProducer.class, policy, params, false);
-    assertEquals(parametersRecord, mFreshManager.retrievePolicy("user", "info:name"));
-    mFreshManager.removePolicy("user", "info:name");
-
-    mFreshManager.storePolicy(
-        "user",
-        "info:name",
-        TestProducer.class,
-        policy,
-        Collections.<String, String>emptyMap(),
-        true);
-    assertEquals(reinitializeRecord, mFreshManager.retrievePolicy("user", "info:name"));
-    mFreshManager.removePolicy("user", "info:name");
-
-    mFreshManager.storePolicy("user", "info:name", TestProducer.class, policy, params, true);
-    assertEquals(combinedRecord, mFreshManager.retrievePolicy("user", "info:name"));
+    mFreshManager.registerFreshener(
+        "user", INFO_NAME, POLICY, SCORE_FUNCTION, params, false, false);
+    assertEquals(parametersRecord, mFreshManager.retrieveFreshenerRecord("user", INFO_NAME));
   }
 }

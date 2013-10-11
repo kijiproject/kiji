@@ -18,57 +18,37 @@
  */
 package org.kiji.scoring.lib;
 
-import java.util.Collections;
-import java.util.Map;
-
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
-import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
+import org.kiji.scoring.FreshenerContext;
 import org.kiji.scoring.KijiFreshnessPolicy;
-import org.kiji.scoring.PolicyContext;
 
 /**
- * A stock {@link org.kiji.scoring.KijiFreshnessPolicy} which returns fresh for any KijiRowData.
+ * A stock {@link org.kiji.scoring.KijiFreshnessPolicy} which returns fresh for every KijiRowData.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-public final class NeverFreshen implements KijiFreshnessPolicy {
+public final class NeverFreshen extends KijiFreshnessPolicy {
+
+  // per-request methods ---------------------------------------------------------------------------
+
   /** {@inheritDoc} */
   @Override
-  public boolean isFresh(KijiRowData rowData, PolicyContext policyContext) {
+  public boolean shouldUseClientDataRequest(FreshenerContext context) {
+    return false;
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public KijiDataRequest getDataRequest(FreshenerContext context) {
+    return EMPTY_REQUEST;
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public boolean isFresh(KijiRowData rowData, FreshenerContext context) {
     return true;
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public boolean shouldUseClientDataRequest() {
-    return true;
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public KijiDataRequest getDataRequest() {
-    return null;
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public Map<String, KeyValueStore<?, ?>> getRequiredStores() {
-    return Collections.emptyMap();
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public String serialize() {
-    // Return the empty string because NeverFreshen requires no state.
-    return "";
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public void deserialize(String policyState) {
-    // empty because this policy has no state.
   }
 }

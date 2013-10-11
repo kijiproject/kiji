@@ -19,10 +19,12 @@
 
 package org.kiji.scoring.lib;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Map;
+
+import com.google.common.collect.Maps;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,9 +43,8 @@ import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.util.InstanceBuilder;
 import org.kiji.scoring.FreshKijiTableReader;
 import org.kiji.scoring.FreshKijiTableReaderBuilder;
-import org.kiji.scoring.FreshKijiTableReaderBuilder.FreshReaderType;
-import org.kiji.scoring.PolicyContext;
-import org.kiji.scoring.impl.InternalPolicyContext;
+import org.kiji.scoring.FreshenerContext;
+import org.kiji.scoring.impl.InternalFreshenerContext;
 
 /**
  * Test the behavior of the stock ShelfLife KijiFreshnessPolicy.
@@ -79,7 +80,6 @@ public class TestShelfLife {
     mTable = mKiji.openTable("user");
     mReader = mTable.openTableReader();
     mFreshReader = FreshKijiTableReaderBuilder.create()
-        .withReaderType(FreshReaderType.LOCAL)
         .withTable(mTable)
         .withTimeout(1000)
         .build();
@@ -98,29 +98,22 @@ public class TestShelfLife {
     final EntityId eid = mTable.getEntityId("foo");
     final KijiDataRequest request = KijiDataRequest.create("info", "name");
     final KijiRowData rowData = mReader.get(eid, request);
-    final PolicyContext context =
-        new InternalPolicyContext(
-        request, new KijiColumnName("info", "name"), mKiji.getConf(), null, null, false);
+    final Map<String, String> parameters = Maps.newHashMap();
+    parameters.put(ShelfLife.SHELF_LIFE_KEY, String.valueOf(Long.MAX_VALUE));
+    final FreshenerContext contextMax = InternalFreshenerContext.create(
+        new KijiColumnName("info", "name"),
+        parameters);
     final ShelfLife policy = new ShelfLife();
-    policy.deserialize(String.format("{\"shelfLife\":%d}", Long.MAX_VALUE));
+    policy.setup(contextMax);
 
-    assertTrue(policy.isFresh(rowData, context));
+    assertTrue(policy.isFresh(rowData, contextMax));
 
-    policy.deserialize(String.format("{\"shelfLife\":%d}", Long.MIN_VALUE));
-    assertFalse(policy.isFresh(rowData, context));
-  }
+    parameters.put(ShelfLife.SHELF_LIFE_KEY, String.valueOf(Long.MIN_VALUE));
+    final FreshenerContext contextMin = InternalFreshenerContext.create(
+        new KijiColumnName("info", "name"),
+        parameters);
 
-  @Test
-  public void testSerializeDeserialize() {
-    final ShelfLife policy = new ShelfLife(10);
-    // Serialize the state of the policy.
-    final String state = policy.serialize();
-    LOG.info(state);
-    // Deserialize the state back into the policy.
-    policy.deserialize(state);
-    // Serialize the newly stored state from the policy.
-    final String loopedState = policy.serialize();
-    // Assert that the loop has not mutated the state.
-    assertEquals(state, loopedState);
+    policy.setup(contextMin);
+    assertFalse(policy.isFresh(rowData, contextMax));
   }
 }

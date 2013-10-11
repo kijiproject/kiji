@@ -17,7 +17,5 @@
  * limitations under the License.
  */
 
-/**
- * Package containing stock implementations of KijiFreshnessPolicy.
- */
+/** Package containing stock implementations of KijiFreshnessPolicy. */
 package org.kiji.scoring.lib;

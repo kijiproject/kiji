@@ -16,7 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.kiji.scoring;
 
 import static org.junit.Assert.assertEquals;
@@ -26,21 +25,21 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.common.collect.Maps;
 import org.apache.hadoop.fs.Path;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.kiji.mapreduce.KijiContext;
 import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
 import org.kiji.mapreduce.kvstore.lib.TextFileKeyValueStore;
 import org.kiji.mapreduce.kvstore.lib.UnconfiguredKeyValueStore;
-import org.kiji.mapreduce.produce.KijiProducer;
-import org.kiji.mapreduce.produce.ProducerContext;
 import org.kiji.schema.KijiClientTest;
+import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiIOException;
 import org.kiji.schema.KijiRowData;
@@ -49,13 +48,12 @@ import org.kiji.schema.avro.TableLayoutDesc;
 import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.util.InstanceBuilder;
 import org.kiji.schema.util.ResourceUtils;
-import org.kiji.scoring.FreshKijiTableReaderBuilder.FreshReaderType;
 import org.kiji.scoring.lib.AlwaysFreshen;
 
 /**
- * Tests that KVStores are available to both producers and policies and that policies can mask the
- * kvstores of producers.
- */
+* Tests that KVStores are available to both producers and policies and that policies can mask the
+* kvstores of producers.
+*/
 public class TestKVStores extends KijiClientTest {
   /** The name of a file to back a text file key value store. */
   private static final String KV_FILENAME = "cats.txt";
@@ -64,14 +62,14 @@ public class TestKVStores extends KijiClientTest {
    * A producer which registers an unconfigured key value store, to be replaced with a key value
    * store from the freshness policy.
    */
-  private static final class UnconfiguredProducer extends KijiProducer {
+  private static final class UnconfiguredScoreFunction extends ScoreFunction {
     @Override
-    public KijiDataRequest getDataRequest() {
+    public KijiDataRequest getDataRequest(FreshenerContext context) {
       return KijiDataRequest.builder().build();
     }
 
     @Override
-    public Map<String, KeyValueStore<?, ?>> getRequiredStores() {
+    public Map<String, KeyValueStore<?, ?>> getRequiredStores(FreshenerGetStoresContext context) {
       Map<String, KeyValueStore<?, ?>> storeMap =
           new HashMap<String, KeyValueStore<?, ?>>();
       storeMap.put("cats", UnconfiguredKeyValueStore.get());
@@ -79,17 +77,11 @@ public class TestKVStores extends KijiClientTest {
     }
 
     @Override
-    public String getOutputColumn() {
-      return "info:name";
-    }
-
-    @Override
-    public void produce(KijiRowData input, ProducerContext context) throws IOException {
+    public String score(KijiRowData input, FreshenerContext context) throws IOException {
       KeyValueStoreReader<String, String> reader = context.getStore("cats");
       String newName = reader.get("Jennyanydots");
-      reader.close();
       assertEquals("Old Gumbie Cat", newName);
-      context.put(newName);
+      return newName;
     }
   }
 
@@ -97,7 +89,10 @@ public class TestKVStores extends KijiClientTest {
    * This is a simple Freshness policy designed to provide a key value store, parameterized by
    * a string path to the state.
    */
-  private static final class ShadowingFreshening implements KijiFreshnessPolicy {
+  private static final class ShadowingFreshening extends KijiFreshnessPolicy {
+    public static final String PARAMETER_KEY =
+        "org.kiji.scoring.TestKVStores$ShadowingFreshening.path_string";
+
     private String mPathString;
 
     /** Empty constructor for reflection. */
@@ -109,37 +104,28 @@ public class TestKVStores extends KijiClientTest {
     }
 
     @Override
-    public boolean isFresh(KijiRowData rowData, PolicyContext policyContext) {
+    public Map<String, String> serializeToParameters() {
+      final Map<String, String> serialized = Maps.newHashMap();
+      serialized.put(PARAMETER_KEY, mPathString);
+      return serialized;
+    }
+
+    @Override
+    public boolean isFresh(KijiRowData rowData, FreshenerContext context) {
       return false;
     }
 
     @Override
-    public boolean shouldUseClientDataRequest() {
-      return true;
-    }
-
-    @Override
-    public KijiDataRequest getDataRequest() {
-      // Never called so it doesn't matter.
-      return null;
-    }
-
-    @Override
-    public Map<String, KeyValueStore<?, ?>> getRequiredStores() {
+    public Map<String, KeyValueStore<?, ?>> getRequiredStores(FreshenerGetStoresContext context) {
       Map<String, KeyValueStore<?, ?>> storeMap = new HashMap<String, KeyValueStore<?, ?>>();
-      Path path = new Path(mPathString);
+      Path path = new Path(context.getParameter(PARAMETER_KEY));
       storeMap.put("cats", TextFileKeyValueStore.builder().withInputPath(path).build());
       return storeMap;
     }
 
     @Override
-    public String serialize() {
-      return mPathString;
-    }
-
-    @Override
-    public void deserialize(String policyState) {
-      mPathString = policyState;
+    public void setup(FreshenerSetupContext context) {
+      mPathString = context.getParameter(PARAMETER_KEY);
     }
   }
 
@@ -147,7 +133,10 @@ public class TestKVStores extends KijiClientTest {
    * This is a simple Freshness policy designed to provide a key value store, parameterized by
    * a string path to the state.
    */
-  private static final class KVStoreInIsFreshPolicy implements KijiFreshnessPolicy {
+  private static final class KVStoreInIsFreshPolicy extends KijiFreshnessPolicy {
+    public static final String PARAMETER_KEY =
+        "org.kiji.scoring.TestKVStores$KVStoreInIsFreshPolicy.path_string";
+
     private String mPathString;
 
     /** Empty constructor for reflection. */
@@ -159,10 +148,17 @@ public class TestKVStores extends KijiClientTest {
     }
 
     @Override
-    public boolean isFresh(KijiRowData rowData, PolicyContext policyContext) {
+    public Map<String, String> serializeToParameters() {
+      final Map<String, String> serialized = Maps.newHashMap();
+      serialized.put(PARAMETER_KEY, mPathString);
+      return serialized;
+    }
+
+    @Override
+    public boolean isFresh(KijiRowData rowData, FreshenerContext context) {
       final KeyValueStoreReader<String, String> cats;
       try {
-        cats = policyContext.getStore("cats");
+        cats = context.getStore("cats");
       } catch (IOException ioe) {
         throw new KijiIOException(ioe);
       }
@@ -178,85 +174,49 @@ public class TestKVStores extends KijiClientTest {
     }
 
     @Override
-    public boolean shouldUseClientDataRequest() {
-      return true;
-    }
-
-    @Override
-    public KijiDataRequest getDataRequest() {
-      // Never called so it doesn't matter.
-      return null;
-    }
-
-    @Override
-    public Map<String, KeyValueStore<?, ?>> getRequiredStores() {
+    public Map<String, KeyValueStore<?, ?>> getRequiredStores(FreshenerGetStoresContext context) {
       Map<String, KeyValueStore<?, ?>> storeMap = new HashMap<String, KeyValueStore<?, ?>>();
-      Path path = new Path(mPathString);
+      Path path = new Path(context.getParameter(PARAMETER_KEY));
       storeMap.put("cats", TextFileKeyValueStore.builder().withInputPath(path).build());
       return storeMap;
     }
 
     @Override
-    public String serialize() {
-      return mPathString;
-    }
-
-    @Override
-    public void deserialize(String policyState) {
-      mPathString = policyState;
+    public void setup(FreshenerSetupContext context) {
+      mPathString = context.getParameter(PARAMETER_KEY);
     }
   }
 
-  /**
-   * A producer that sets up a kvstore and then reads from it for its value.
-   */
-  private static final class SimpleKVProducer extends KijiProducer {
-    /** A reader for our key value store. */
+  private static final class SimpleKVScoreFunction extends ScoreFunction {
+
+    private static final String PARAMETER_KEY =
+        "org.kiji.scoring.TestKVStores$SimpleKVScoreFunction.input_path";
     private KeyValueStoreReader<String, String> mReader;
 
-    /**
-     * This is a bit of a hack: We're going to use this static member to permit proper creation
-     * of the kvstore from a static context, where we don't have access to getLocalTempDir.
-     * This class must be static due to reflection utils.
-     *
-     * This member will be set by the test so this class must NOT be used by multiple tests or
-     * they will fail in a multithreaded environment.
-     */
-    private static Path mInputPath;
-
     @Override
-    public KijiDataRequest getDataRequest() {
-      return KijiDataRequest.builder().build();
-    }
-
-    @Override
-    public Map<String, KeyValueStore<?, ?>> getRequiredStores() {
+    public Map<String, KeyValueStore<?, ?>> getRequiredStores(FreshenerGetStoresContext context) {
       Map<String, KeyValueStore<?, ?>> storeMap =
           new HashMap<String, KeyValueStore<?, ?>>();
-      storeMap.put("cats", TextFileKeyValueStore.builder().withInputPath(mInputPath).build());
+      storeMap.put("cats", TextFileKeyValueStore.builder().withInputPath(
+          new Path(context.getParameter(PARAMETER_KEY))).build());
       return storeMap;
     }
 
     @Override
-    public String getOutputColumn() {
-      return "info:name";
+    public KijiDataRequest getDataRequest(FreshenerContext context) {
+      return KijiDataRequest.builder().build();
     }
 
     @Override
-    public void setup(KijiContext context) throws IOException {
+    public void setup(FreshenerSetupContext context) throws IOException {
       mReader = context.getStore("cats");
     }
 
     @Override
-    public void cleanup(KijiContext context) throws IOException {
-      mReader.close();
-    }
-
-    @Override
-    public void produce(KijiRowData input, ProducerContext context) throws IOException {
-      String newName = mReader.get("Skimbleshanks");
+    public String score(KijiRowData input, FreshenerContext context) throws IOException {
+      final String newName = mReader.get("Skimbleshanks");
       assertEquals("Railway Cat", newName);
-      context.put(newName);
+      return newName;
     }
   }
 
@@ -288,32 +248,42 @@ public class TestKVStores extends KijiClientTest {
   /** A test to make sure that producers run inside of freshening can access key value stores. */
   @Test
   public void testSimpleKVStore() throws IOException {
-    SimpleKVProducer.mInputPath = new Path("file:" + new File(getLocalTempDir(), KV_FILENAME));
+    final String path = new Path("file:" + new File(getLocalTempDir(), KV_FILENAME)).toString();
+    final Map<String, String> params = Maps.newHashMap();
+    params.put(SimpleKVScoreFunction.PARAMETER_KEY, path);
+
     // Install a freshness policy.
     KijiFreshnessManager manager = KijiFreshnessManager.create(getKiji());
     try {
-      manager.storePolicy("user", "info:name", SimpleKVProducer.class, new AlwaysFreshen());
+      manager.registerFreshener(
+          "user",
+          new KijiColumnName("info", "name"),
+          AlwaysFreshen.class.getName(),
+          SimpleKVScoreFunction.class.getName(),
+          params,
+          true,
+          false,
+          false);
     } finally {
       manager.close();
     }
-    KijiTable userTable = null;
-    FreshKijiTableReader reader = null;
+    final KijiTable userTable = getKiji().openTable("user");
     try {
-      userTable = getKiji().openTable("user");
-      reader = FreshKijiTableReaderBuilder.create()
-          .withReaderType(FreshReaderType.LOCAL)
+      final FreshKijiTableReader reader = FreshKijiTableReaderBuilder.create()
           .withTable(userTable)
           .withTimeout(10000)
           .build();
-      // Read from the table to ensure that the user name is updated.
-      KijiRowData data =
-        reader.get(userTable.getEntityId("felix"), KijiDataRequest.create("info", "name"));
-      assertEquals("Railway Cat", data.getMostRecentValue("info", "name").toString());
+      try {
+        // Read from the table to ensure that the user name is updated.
+        KijiRowData data =
+            reader.get(userTable.getEntityId("felix"), KijiDataRequest.create("info", "name"));
+        assertEquals("Railway Cat", data.getMostRecentValue("info", "name").toString());
+      } finally {
+        reader.close();
+      }
     } finally {
-      ResourceUtils.closeOrLog(reader);
-      ResourceUtils.releaseOrLog(userTable);
+      userTable.release();
     }
-
   }
 
   /** A test to ensure that policies can mask the key value stores of their producers. */
@@ -325,27 +295,33 @@ public class TestKVStores extends KijiClientTest {
     // Install a freshness policy.
     KijiFreshnessManager manager = KijiFreshnessManager.create(getKiji());
     try {
-      manager.storePolicy("user", "info:name", UnconfiguredProducer.class, policy);
+      manager.registerFreshener(
+          "user",
+          new KijiColumnName("info", "name"),
+          policy,
+          new UnconfiguredScoreFunction(),
+          Collections.<String, String>emptyMap(),
+          true,
+          false);
     } finally {
       manager.close();
     }
-    KijiTable userTable = null;
-    FreshKijiTableReader reader = null;
+    final KijiTable userTable = getKiji().openTable("user");
     try {
-      userTable = getKiji().openTable("user");
-      reader = FreshKijiTableReaderBuilder.create()
-          .withReaderType(FreshReaderType.LOCAL)
+      final FreshKijiTableReader reader = FreshKijiTableReaderBuilder.create()
           .withTable(userTable)
           .withTimeout(10000)
           .build();
-
-      // Read from the table to ensure that the user name is updated.
-      KijiRowData data =
-          reader.get(userTable.getEntityId("felix"), KijiDataRequest.create("info", "name"));
-      assertEquals("Old Gumbie Cat", data.getMostRecentValue("info", "name").toString());
+      try {
+        // Read from the table to ensure that the user name is updated.
+        KijiRowData data =
+            reader.get(userTable.getEntityId("felix"), KijiDataRequest.create("info", "name"));
+        assertEquals("Old Gumbie Cat", data.getMostRecentValue("info", "name").toString());
+      } finally {
+        reader.close();
+      }
     } finally {
-      ResourceUtils.closeOrLog(reader);
-      ResourceUtils.releaseOrLog(userTable);
+      userTable.release();
     }
   }
 
@@ -357,7 +333,14 @@ public class TestKVStores extends KijiClientTest {
     // Install a freshness policy.
     KijiFreshnessManager manager = KijiFreshnessManager.create(getKiji());
     try {
-      manager.storePolicy("user", "info:name", UnconfiguredProducer.class, policy);
+      manager.registerFreshener(
+          "user",
+          new KijiColumnName("info", "name"),
+          policy,
+          new UnconfiguredScoreFunction(),
+          Collections.<String, String>emptyMap(),
+          true,
+          false);
     } finally {
       manager.close();
     }
@@ -366,7 +349,6 @@ public class TestKVStores extends KijiClientTest {
     try {
       userTable = getKiji().openTable("user");
       freshReader = FreshKijiTableReaderBuilder.create()
-          .withReaderType(FreshReaderType.LOCAL)
           .withTable(userTable)
           .withTimeout(10000)
           .build();

@@ -16,39 +16,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.kiji.scoring.lib;
+package org.kiji.scoring;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
+import org.kiji.annotations.Inheritance;
 import org.kiji.schema.KijiDataRequest;
-import org.kiji.schema.KijiRowData;
-import org.kiji.scoring.FreshenerContext;
-import org.kiji.scoring.KijiFreshnessPolicy;
 
 /**
- * A stock {@link org.kiji.scoring.KijiFreshnessPolicy} which returns stale for every KijiRowData.
+ * Interface defining operations available to {@link org.kiji.scoring.KijiFreshnessPolicy} and
+ * {@link org.kiji.scoring.ScoreFunction} per-request methods.
+ *
+ * <p>
+ *   Also extends {@link FreshenerGetStoresContext}.
+ * </p>
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-public final class AlwaysFreshen extends KijiFreshnessPolicy {
+@Inheritance.Sealed
+public interface FreshenerContext extends FreshenerSetupContext {
 
-  // per-request methods ---------------------------------------------------------------------------
-
-  /** {@inheritDoc} */
-  @Override
-  public boolean shouldUseClientDataRequest(FreshenerContext context) {
-    return false;
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public KijiDataRequest getDataRequest(FreshenerContext context) {
-    return EMPTY_REQUEST;
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public boolean isFresh(KijiRowData rowData, FreshenerContext context) {
-    return false;
-  }
+  /**
+   * Get the KijiDataRequest issued by the client which triggered the Freshener serviced by this
+   * context.
+   *
+   * @return the KijiDataRequest issued by the client which triggered the Freshener serviced by this
+   *     context.
+   */
+  KijiDataRequest getClientRequest();
 }

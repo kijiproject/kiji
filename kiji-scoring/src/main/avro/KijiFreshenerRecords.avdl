@@ -19,30 +19,24 @@
 
 @namespace("org.kiji.scoring.avro")
 /**
- * Avro records for storing KjiiFreshnessPolicy entries.
+ * Avro records for storing KjiiFreshener entries.
  */
-protocol KijiFreshnessPolicyRecords {
+protocol KijiFreshenerRecords {
 
   /**
    * Record that encapsulates everything needed to perform freshening.  Stored in a KijiMetaTable.
    */
-  record KijiFreshnessPolicyRecord {
+  record KijiFreshenerRecord {
     /** Version string, for future compatibility. */
-    string record_version;
-
-    /** Fully qualified class of the producer to run if data is stale. */
-    string producer_class;
+    string record_version = null;
 
     /** Fully qualified class of the KijiFreshnessPolicy to use to check for freshness. */
-    string freshness_policy_class;
+    union { null, string } freshness_policy_class = null;
 
-    /** State of the KijiFreshnessPolicy to initialize the policy after creation. */
-    string freshness_policy_state;
+    /** Fully qualified class of the ScoreFunction to run if data is stale. */
+    union { null, string } score_function_class = null;
 
-    /** Whether to reinitialize the KijiProducer for each request. */
-    boolean reinitializeProducer = false;
-
-    /** Configuration parameters which will be passed to the FreshnessPolicy and Producer. */
+    /** Configuration parameters which will be passed to the freshness policy and score function. */
     map<string> parameters = {};
   }
 }

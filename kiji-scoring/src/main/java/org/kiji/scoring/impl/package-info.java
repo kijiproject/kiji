@@ -17,7 +17,5 @@
  * limitations under the License.
  */
 
-/**
- * Package containing private implementation classes for KijiScoring.
- */
+/** Package containing private implementation classes for KijiScoring. */
 package org.kiji.scoring.impl;

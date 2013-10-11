@@ -19,22 +19,18 @@
 
 package org.kiji.scoring.lib;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.NavigableSet;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonPrimitive;
+import com.google.common.collect.Maps;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
-import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.schema.KijiColumnName;
-import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
+import org.kiji.scoring.FreshenerContext;
+import org.kiji.scoring.FreshenerSetupContext;
 import org.kiji.scoring.KijiFreshnessPolicy;
-import org.kiji.scoring.PolicyContext;
 
 /**
  * A stock {@link org.kiji.scoring.KijiFreshnessPolicy} which returns fresh if requested data was
@@ -42,17 +38,20 @@ import org.kiji.scoring.PolicyContext;
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-public class NewerThan implements KijiFreshnessPolicy {
+public class NewerThan extends KijiFreshnessPolicy {
+
+  public static final String NEWER_THAN_KEY = "org.kiji.scoring.lib.NewerThan.newer_than";
+
   private long mNewerThanTimestamp = -1;
 
   /**
-   * Default empty constructor for automatic construction. User must call
-   * {@link #deserialize(String)} to initialize state.
+   * Default empty constructor for automatic construction. This is for reflection utils. Users
+   * should use {@link #NewerThan(long)} instead.
    */
   public NewerThan() {}
 
   /**
-   * Constructor which initializes all state.  No call to {@link #deserialize(String)} is necessary.
+   * Constructor which initializes all state.
    *
    * @param newerThan the unix time in milliseconds before which data is stale.
    */
@@ -71,16 +70,34 @@ public class NewerThan implements KijiFreshnessPolicy {
     return mNewerThanTimestamp;
   }
 
+  // One-time setup methods ------------------------------------------------------------------------
+
   /** {@inheritDoc} */
   @Override
-  public boolean isFresh(KijiRowData rowData, PolicyContext policyContext) {
-    final KijiColumnName columnName = policyContext.getAttachedColumn();
+  public Map<String, String> serializeToParameters() {
+    final Map<String, String> serialized = Maps.newHashMap();
+    serialized.put(NEWER_THAN_KEY, String.valueOf(mNewerThanTimestamp));
+    return serialized;
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public void setup(FreshenerSetupContext context) {
+    mNewerThanTimestamp = Long.valueOf(context.getParameter(NEWER_THAN_KEY));
+  }
+
+  // per-request methods ---------------------------------------------------------------------------
+
+  /** {@inheritDoc} */
+  @Override
+  public boolean isFresh(KijiRowData rowData, FreshenerContext context) {
+    final KijiColumnName columnName = context.getAttachedColumn();
     if (mNewerThanTimestamp == -1) {
       throw new RuntimeException(
-          "Newer than timestamp not set.  Did you call NewerThan.deserialize()?");
+          "Newer than timestamp not set.  Did you call NewerThan.setup?");
     }
     if (columnName == null) {
-      throw new RuntimeException("Target column was not set in the PolicyContext.");
+      throw new RuntimeException("Target column was not set in the FreshenerContext.");
     }
     // If the column does not exist in the row data, it is not fresh.
     if (!rowData.containsColumn(columnName.getFamily(), columnName.getQualifier())) {
@@ -92,42 +109,5 @@ public class NewerThan implements KijiFreshnessPolicy {
     // If there are no values in the column in the row data, it is not fresh.  If there are values
     // but the newest value is older than mNewerThanTimestamp, it is not fresh.
     return !timestamps.isEmpty() && timestamps.first() >= mNewerThanTimestamp;
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public boolean shouldUseClientDataRequest() {
-    return true;
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public KijiDataRequest getDataRequest() {
-    return null;
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public Map<String, KeyValueStore<?, ?>> getRequiredStores() {
-    return Collections.emptyMap();
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public String serialize() {
-    // The only required state is the newer than timestamp.
-    final JsonObject jsonObject = new JsonObject();
-    jsonObject.add("newerThan", new JsonPrimitive(mNewerThanTimestamp));
-
-    return jsonObject.toString();
-  }
-
-  /** {@inheritDoc} */
-  @Override
-  public void deserialize(String policyState) {
-    final JsonParser parser = new JsonParser();
-    final JsonObject jsonObject = (JsonObject) parser.parse(policyState);
-    // Load the newer than timestamp from the policy state.
-    mNewerThanTimestamp = jsonObject.get("newerThan").getAsLong();
   }
 }

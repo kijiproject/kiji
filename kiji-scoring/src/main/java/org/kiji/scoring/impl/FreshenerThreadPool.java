@@ -22,16 +22,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.kiji.annotations.ApiAudience;
-import org.kiji.annotations.ApiStability;
 
 /**
  * Singleton class providing a cached thread pool for Freshening table reads.
  */
 @ApiAudience.Private
-@ApiStability.Experimental
 public final class FreshenerThreadPool {
   /** Default number of threads. */
-  public static final int DEFAULT_THREAD_POOL_SIZE = 10;
+  public static final int DEFAULT_THREAD_POOL_SIZE = 100;
 
   private static FreshenerThreadPool mPool;
   private final ExecutorService mExecutor;
@@ -80,6 +78,6 @@ public final class FreshenerThreadPool {
    * @return The singleton's executor.
    */
   public ExecutorService getExecutorService() {
-    return getInstance(0).mExecutor;
+    return mExecutor;
   }
 }

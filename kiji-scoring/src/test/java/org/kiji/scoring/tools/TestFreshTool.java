@@ -19,29 +19,23 @@
 
 package org.kiji.scoring.tools;
 
+import static junit.framework.Assert.assertNull;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Collections;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import org.apache.avro.io.DatumWriter;
-import org.apache.avro.io.Encoder;
-import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.kiji.mapreduce.produce.KijiProducer;
-import org.kiji.mapreduce.produce.ProducerContext;
 import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
@@ -49,25 +43,25 @@ import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.tools.BaseTool;
-import org.kiji.schema.util.ProtocolVersion;
+import org.kiji.scoring.FreshenerContext;
 import org.kiji.scoring.KijiFreshnessManager;
-import org.kiji.scoring.avro.KijiFreshnessPolicyRecord;
-import org.kiji.scoring.lib.AlwaysFreshen;
+import org.kiji.scoring.KijiFreshnessPolicy;
+import org.kiji.scoring.ScoreFunction;
+import org.kiji.scoring.avro.KijiFreshenerRecord;
 import org.kiji.scoring.lib.NeverFreshen;
 import org.kiji.scoring.lib.ShelfLife;
 
 public class TestFreshTool extends KijiClientTest {
   private static final Logger LOG = LoggerFactory.getLogger(TestFreshTool.class);
 
-  /** Dummy KijiProducer for testing. */
-  public static final class TestProducer extends KijiProducer {
-    public KijiDataRequest getDataRequest() {
+  private static final class TestScoreFunction extends ScoreFunction {
+    public KijiDataRequest getDataRequest(final FreshenerContext context) throws IOException {
       return null;
     }
-    public String getOutputColumn() {
+    public Object score(
+        final KijiRowData dataToScore, final FreshenerContext context
+    ) throws IOException {
       return null;
-    }
-    public void produce(final KijiRowData input, final ProducerContext context) throws IOException {
     }
   }
 
@@ -106,61 +100,69 @@ public class TestFreshTool extends KijiClientTest {
 
   //------------------------------------------------------------------------------------------------
 
+  private static final KijiColumnName INFO_NAME = new KijiColumnName("info", "name");
+  private static final KijiColumnName INFO_VISITS = new KijiColumnName("info", "visits");
+  private static final String SHELF_LIFE_STRING = "org.kiji.scoring.lib.ShelfLife";
+  private static final String SCORE_FN_STRING =
+      "org.kiji.scoring.tools.TestFreshTool$TestScoreFunction";
+  private static final String POLICY_STRING = "org.kiji.scoring.lib.NeverFreshen";
+  private static final Map<String, String> PARAMS = Maps.newHashMap();
+  static {
+    PARAMS.put(ShelfLife.SHELF_LIFE_KEY, "10");
+  }
+  private static final Map<String, String> EMPTY_PARAMS = Collections.emptyMap();
+  private static final String PARAMS_STRING =
+      String.format("{\"%s\":\"10\"}", ShelfLife.SHELF_LIFE_KEY);
+  private static final String EMPTY_PARAMS_STRING = "{}";
+  private static final KijiFreshnessPolicy NEVER = new NeverFreshen();
+  private static final ScoreFunction SCORE_FN = new TestScoreFunction();
+
+  private KijiURI getUserURI() throws IOException {
+    return KijiURI.newBuilder(getKiji().getURI()).withTableName("user").build();
+  }
+
+  private KijiURI getNameURI() throws IOException {
+    return KijiURI.newBuilder(getKiji().getURI())
+        .withTableName("user").withColumnNames(Lists.newArrayList(INFO_NAME)).build();
+  }
+
+  private KijiURI getVisitsURI() throws IOException {
+    return KijiURI.newBuilder(getKiji().getURI())
+        .withTableName("user").withColumnNames(Lists.newArrayList(INFO_VISITS)).build();
+  }
+
   @Test
   public void testRegister() throws Exception {
     getKiji().createTable(KijiTableLayouts.getLayout(KijiTableLayouts.COUNTER_TEST));
+
     assertEquals(BaseTool.SUCCESS, runTool(new FreshTool(),
-        KijiURI.newBuilder(getKiji().getURI()).withTableName("user")
-            .withColumnNames(Lists.newArrayList("info:name")).build().toString(),
+        "--target=" + getNameURI(),
         "--do=register",
-        "--policy-class=org.kiji.scoring.lib.ShelfLife",
-        "--policy-state={\"shelfLife\":10}",
-        "--producer-class=org.kiji.scoring.tools.TestFreshTool$TestProducer"
+        "--policy-class=" + SHELF_LIFE_STRING,
+        "--score-function-class=" + SCORE_FN_STRING,
+        "--parameters=" + PARAMS_STRING
     ));
 
-    final KijiFreshnessPolicyRecord record = KijiFreshnessPolicyRecord.newBuilder()
-        .setRecordVersion(KijiFreshnessManager.CUR_FRESHNESS_RECORD_VER.toCanonicalString())
-        .setProducerClass(TestProducer.class.getName())
-        .setFreshnessPolicyClass("org.kiji.scoring.lib.ShelfLife")
-        .setFreshnessPolicyState("{\"shelfLife\":10}")
+    final KijiFreshenerRecord record = KijiFreshenerRecord.newBuilder()
+        .setRecordVersion(KijiFreshnessManager.CUR_FRESHENER_RECORD_VER.toCanonicalString())
+        .setFreshnessPolicyClass(SHELF_LIFE_STRING)
+        .setScoreFunctionClass(SCORE_FN_STRING)
+        .setParameters(PARAMS)
         .build();
     final KijiFreshnessManager manager = KijiFreshnessManager.create(getKiji());
     try {
-      assertEquals(record, manager.retrievePolicy("user", "info:name"));
-      assertEquals(
-          "New Freshener attached to column: info:name\n"
-          + "  Freshness policy class: org.kiji.scoring.lib.ShelfLife\n"
-          + "  Freshness policy state: {\"shelfLife\":10}\n"
-          + "  Producer class: org.kiji.scoring.tools.TestFreshTool$TestProducer\n"
-          + "  Parameters: {}\n"
-          + "  Reinitialize producer: false\n"
-          , mToolOutputStr);
+      assertEquals(record, manager.retrieveFreshenerRecord("user", INFO_NAME));
 
       // Test another ordering for arguments
       assertEquals(BaseTool.SUCCESS, runTool(new FreshTool(),
           "--do=register",
-          KijiURI.newBuilder(getKiji().getURI()).withTableName("user")
-              .withColumnNames(Lists.newArrayList("info:visits")).build().toString(),
-          "--policy-state={\"shelfLife\":10}",
-          "--producer-class=org.kiji.scoring.tools.TestFreshTool$TestProducer",
-          "--policy-class=org.kiji.scoring.lib.ShelfLife"
+          "--target=" + getVisitsURI(),
+          "--policy-class=" + SHELF_LIFE_STRING,
+          "--parameters=" + PARAMS_STRING,
+          "--score-function-class=" + SCORE_FN_STRING
       ));
 
-      final KijiFreshnessPolicyRecord record2 = KijiFreshnessPolicyRecord.newBuilder()
-          .setRecordVersion(KijiFreshnessManager.CUR_FRESHNESS_RECORD_VER.toCanonicalString())
-          .setProducerClass(TestProducer.class.getName())
-          .setFreshnessPolicyClass("org.kiji.scoring.lib.ShelfLife")
-          .setFreshnessPolicyState("{\"shelfLife\":10}")
-          .build();
-      assertEquals(record2, manager.retrievePolicy("user", "info:visits"));
-      assertEquals(
-          "New Freshener attached to column: info:visits\n"
-          + "  Freshness policy class: org.kiji.scoring.lib.ShelfLife\n"
-          + "  Freshness policy state: {\"shelfLife\":10}\n"
-          + "  Producer class: org.kiji.scoring.tools.TestFreshTool$TestProducer\n"
-          + "  Parameters: {}\n"
-          + "  Reinitialize producer: false\n"
-          , mToolOutputStr);
+      assertEquals(record, manager.retrieveFreshenerRecord("user", INFO_VISITS));
     } finally {
       manager.close();
     }
@@ -170,31 +172,27 @@ public class TestFreshTool extends KijiClientTest {
   public void testIllegalRegister() throws Exception {
     getKiji().createTable(KijiTableLayouts.getLayout(KijiTableLayouts.COUNTER_TEST));
 
-    runTool(new FreshTool(),
-        KijiURI.newBuilder(getKiji().getURI()).withTableName("user")
-            .withColumnNames(Lists.newArrayList("info:name")).build().toString(),
+    assertEquals(BaseTool.FAILURE, runTool(new FreshTool(),
+        "--target=" + getNameURI(),
         "--do=register",
         "--policy-class=org.kiji..badname",
-        "--policy-state={\"shelfLife\":10}",
-        "--producer-class=org.kiji.scoring.tools.TestFreshTool$TestProducer",
-        "--interactive=false");
+        "--score-function-class=" + SCORE_FN_STRING));
 
-    assertEquals("BAD_POLICY_NAME: java.lang.IllegalArgumentException: Policy class name: "
-        + "org.kiji..badname is not a valid Java class identifier.", mToolOutputLines[0]);
+    assertEquals("There were validation failures in column: info:name", mToolOutputLines[0]);
+    assertEquals("  BAD_POLICY_NAME: KijiFreshnessPolicy class name is not a valid Java identifier."
+        + " Found: org.kiji..badname", mToolOutputLines[1]);
 
 
-    runTool(new FreshTool(),
-        KijiURI.newBuilder(getKiji().getURI()).withTableName("user")
-            .withColumnNames(Lists.newArrayList("info:name")).build().toString(),
+    assertEquals(BaseTool.FAILURE, runTool(new FreshTool(),
+        "--target=" + getNameURI(),
         "--do=register",
         "--policy-class=org.kiji.class",
-        "--policy-state={\"shelfLife\":10}",
-        "--producer-class=org.kiji.scoring.tools.TestFreshTool$TestProducer.",
-        "--interactive=false");
+        "--score-function-class=org.kiji.scoring.tools.TestFreshTool$TestScoreFunction."));
 
-    assertEquals("BAD_PRODUCER_NAME: java.lang.IllegalArgumentException: Producer class name: org."
-        + "kiji.scoring.tools.TestFreshTool$TestProducer. is not a valid Java class identifier.",
-        mToolOutputLines[0]);
+    assertEquals("There were validation failures in column: info:name", mToolOutputLines[0]);
+    assertEquals("  BAD_SCORE_FUNCTION_NAME: ScoreFunction class name is not a valid Java "
+        + "identifier. Found: org.kiji.scoring.tools.TestFreshTool$TestScoreFunction.",
+        mToolOutputLines[1]);
   }
 
   @Test
@@ -202,15 +200,15 @@ public class TestFreshTool extends KijiClientTest {
     getKiji().createTable(KijiTableLayouts.getLayout(KijiTableLayouts.COUNTER_TEST));
     final KijiFreshnessManager manager = KijiFreshnessManager.create(getKiji());
     try {
-      manager.storePolicy("user", "info:name", TestProducer.class, new NeverFreshen());
+      manager.registerFreshener(
+          "user", INFO_NAME, NEVER, SCORE_FN, EMPTY_PARAMS, false, false);
 
       assertEquals(BaseTool.SUCCESS, runTool(new FreshTool(),
-          KijiURI.newBuilder(getKiji().getURI()).withTableName("user")
-              .withColumnNames(Lists.newArrayList("info:name")).build().toString(),
-          "--do=unregister"
+          "--target=" + getNameURI(),
+          "--do=remove"
       ));
-      assertEquals(null, manager.retrievePolicy("user", "info:name"));
-      assertEquals("Freshener removed from column: info:name in table user\n",
+      assertNull(manager.retrieveFreshenerRecord("user", INFO_NAME));
+      assertEquals("Fresheners removed from:\n  info:name\n",
           mToolOutputStr);
     } finally {
       manager.close();
@@ -222,24 +220,21 @@ public class TestFreshTool extends KijiClientTest {
     getKiji().createTable(KijiTableLayouts.getLayout(KijiTableLayouts.COUNTER_TEST));
     final KijiFreshnessManager manager = KijiFreshnessManager.create(getKiji());
     try {
-      manager.storePolicy("user", "info:name", TestProducer.class, new NeverFreshen());
+      manager.registerFreshener(
+          "user", INFO_NAME, NEVER, SCORE_FN, EMPTY_PARAMS, false, false);
     } finally {
       manager.close();
     }
 
     assertEquals(BaseTool.SUCCESS, runTool(new FreshTool(),
-        KijiURI.newBuilder(getKiji().getURI()).withTableName("user")
-            .withColumnNames(Lists.newArrayList("info:name")).build().toString(),
+        "--target=" + getNameURI(),
         "--do=retrieve"
     ));
 
-    assertEquals(
-        "Freshener attached to column: info:name\n"
-        + "  Freshness policy class: org.kiji.scoring.lib.NeverFreshen\n"
-        + "  Freshness policy state: \n"
-        + "  Producer class: org.kiji.scoring.tools.TestFreshTool$TestProducer\n"
-        + "  Parameters: {}\n"
-        + "  Reinitialize producer: false\n",
+    assertEquals("Freshener attached to column: 'info:name' in table: 'user'\n"
+        + "  KijiFreshnessPolicy class: 'org.kiji.scoring.lib.NeverFreshen'\n"
+        + "  ScoreFunction class: 'org.kiji.scoring.tools.TestFreshTool$TestScoreFunction'\n"
+        + "  Parameters: {}\n",
         mToolOutputStr);
   }
 
@@ -248,33 +243,29 @@ public class TestFreshTool extends KijiClientTest {
     getKiji().createTable(KijiTableLayouts.getLayout(KijiTableLayouts.COUNTER_TEST));
     final KijiFreshnessManager manager = KijiFreshnessManager.create(getKiji());
     try {
-      manager.storePolicy("user", "info:name", TestProducer.class, new NeverFreshen());
-      manager.storePolicy("user", "info:visits", TestProducer.class, new NeverFreshen());
+      manager.registerFreshener("user", INFO_NAME, NEVER, SCORE_FN, EMPTY_PARAMS, false, false);
+      manager.registerFreshener("user", INFO_VISITS, NEVER, SCORE_FN, EMPTY_PARAMS, false, false);
     } finally {
       manager.close();
     }
 
-    LOG.info(KijiURI.newBuilder(getKiji().getURI()).withTableName("user").build().toString());
-
     assertEquals(BaseTool.SUCCESS, runTool(new FreshTool(),
-        KijiURI.newBuilder(getKiji().getURI()).withTableName("user").build().toString(),
-        "--do=retrieve-all"
-    ));
+        "--target=" + getUserURI(),
+        "--do=retrieve"));
 
-    assertEquals(
-        "Freshener attached to column: info:visits\n"
-        + "  Freshness policy class: org.kiji.scoring.lib.NeverFreshen\n"
-        + "  Freshness policy state: \n"
-        + "  Producer class: org.kiji.scoring.tools.TestFreshTool$TestProducer\n"
-        + "  Parameters: {}\n"
-        + "  Reinitialize producer: false\n"
-        + "Freshener attached to column: info:name\n"
-        + "  Freshness policy class: org.kiji.scoring.lib.NeverFreshen\n"
-        + "  Freshness policy state: \n"
-        + "  Producer class: org.kiji.scoring.tools.TestFreshTool$TestProducer\n"
-        + "  Parameters: {}\n"
-        + "  Reinitialize producer: false\n",
-        mToolOutputStr);
+    final String nameOutput = String.format("Freshener attached to column: '%s' in table: '%s'%n"
+        + "  KijiFreshnessPolicy class: '%s'%n"
+        + "  ScoreFunction class: '%s'%n"
+        + "  Parameters: %s%n",
+        INFO_NAME, "user", POLICY_STRING, SCORE_FN_STRING, EMPTY_PARAMS_STRING);
+
+    final String visitsOutput = String.format("Freshener attached to column: '%s' in table: '%s'%n"
+        + "  KijiFreshnessPolicy class: '%s'%n"
+        + "  ScoreFunction class: '%s'%n"
+        + "  Parameters: %s%n",
+        INFO_VISITS, "user", POLICY_STRING, SCORE_FN_STRING, EMPTY_PARAMS_STRING);
+
+    assertTrue(mToolOutputStr.contains(nameOutput) && mToolOutputStr.contains(visitsOutput));
   }
 
   @Test
@@ -282,15 +273,17 @@ public class TestFreshTool extends KijiClientTest {
     getKiji().createTable(KijiTableLayouts.getLayout(KijiTableLayouts.COUNTER_TEST));
     final KijiFreshnessManager manager = KijiFreshnessManager.create(getKiji());
     try {
-      manager.storePolicy("user", "info:name", TestProducer.class, new NeverFreshen());
-      manager.storePolicy("user", "info:visits", TestProducer.class, new NeverFreshen());
+      manager.registerFreshener("user", INFO_NAME, NEVER, SCORE_FN, EMPTY_PARAMS, false, false);
+      manager.registerFreshener("user", INFO_VISITS, NEVER, SCORE_FN, EMPTY_PARAMS, false, false);
 
       assertEquals(BaseTool.SUCCESS, runTool(new FreshTool(),
-          KijiURI.newBuilder(getKiji().getURI()).withTableName("user").build().toString(),
-          "--do=unregister-all"
+          "--target=" + getUserURI(),
+          "--do=remove"
       ));
-      assertEquals(0, manager.retrievePolicies("user").size());
-      assertEquals("All freshness policies removed from table: user\n", mToolOutputStr);
+      assertTrue(manager.retrieveFreshenerRecords("user").isEmpty());
+      assertEquals("Fresheners removed from:", mToolOutputLines[0]);
+      assertTrue(mToolOutputStr.contains(String.format("  %s%n", INFO_NAME))
+              && mToolOutputStr.contains(String.format("  %s%n", INFO_VISITS)));
     } finally {
       manager.close();
     }
@@ -300,11 +293,10 @@ public class TestFreshTool extends KijiClientTest {
   public void testRetrieveEmpty() throws Exception {
     getKiji().createTable(KijiTableLayouts.getLayout(KijiTableLayouts.COUNTER_TEST));
     assertEquals(BaseTool.SUCCESS, runTool(new FreshTool(),
-        KijiURI.newBuilder(getKiji().getURI()).withTableName("user")
-            .withColumnNames(Lists.newArrayList("info:name")).build().toString(),
+        "--target=" + getNameURI(),
         "--do=retrieve"
     ));
-    assertEquals("There is no freshness policy attached to column: info:name in table: user\n",
+    assertEquals("No Freshener attached to column: 'info:name' in table: 'user'\n",
         mToolOutputStr);
   }
 
@@ -312,142 +304,33 @@ public class TestFreshTool extends KijiClientTest {
   public void testRetrieveAllEmpty() throws Exception {
     getKiji().createTable(KijiTableLayouts.getLayout(KijiTableLayouts.COUNTER_TEST));
     assertEquals(BaseTool.SUCCESS, runTool(new FreshTool(),
-        KijiURI.newBuilder(getKiji().getURI()).withTableName("user").build().toString(),
-        "--do=retrieve-all"
+        "--target=" + getUserURI(),
+        "--do=retrieve"
     ));
-    assertEquals("There are no freshness policies attached to columns in table: user\n",
+    assertEquals("No Fresheners attached to columns in table: 'user'\n",
         mToolOutputStr);
-  }
-
-  @Test
-  public void testValidate() throws Exception {
-    getKiji().createTable(KijiTableLayouts.getLayout(KijiTableLayouts.COUNTER_TEST));
-    final KijiFreshnessManager manager = KijiFreshnessManager.create(getKiji());
-    try {
-      manager.storePolicy("user", "info:name", TestProducer.class, new AlwaysFreshen());
-    } finally {
-      manager.close();
-    }
-    assertEquals(BaseTool.SUCCESS, runTool(new FreshTool(),
-        KijiURI.newBuilder(getKiji().getURI()).withTableName("user").build().toString(),
-        "--do=validate-all"));
-
-    KijiFreshnessPolicyRecord record = KijiFreshnessPolicyRecord.newBuilder()
-        .setRecordVersion(ProtocolVersion.parse("policyrecord-0.1").toCanonicalString())
-            .setProducerClass(TestProducer.class.getName())
-            .setFreshnessPolicyClass(AlwaysFreshen.class.getName())
-            .setFreshnessPolicyState("")
-            .build();
-
-    final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    final EncoderFactory encoderFactory = EncoderFactory.get();
-    Encoder encoder = encoderFactory.directBinaryEncoder(outputStream, null);
-    final DatumWriter<KijiFreshnessPolicyRecord> recordWriter =
-        new SpecificDatumWriter<KijiFreshnessPolicyRecord>(KijiFreshnessPolicyRecord.SCHEMA$);
-    recordWriter.write(record, encoder);
-    getKiji().getMetaTable().putValue("user", "kiji.scoring.fresh.columnName",
-        outputStream.toByteArray());
-
-    assertEquals(BaseTool.FAILURE, runTool(new FreshTool(),
-        KijiURI.newBuilder(getKiji().getURI()).withTableName("user").build().toString(),
-        "--do=validate-all"));
-    assertEquals("Freshener attached to column: columnName is not valid.",
-        mToolOutputLines[1]);
-    assertEquals("NO_FAMILY_IN_TABLE: java.lang.IllegalArgumentException: Table: user does not "
-        + "contain family: columnName", mToolOutputLines[2]);
-  }
-
-  @Test
-  public void testStateFromFile() throws Exception {
-    getKiji().createTable(KijiTableLayouts.getLayout(KijiTableLayouts.COUNTER_TEST));
-    final String state = new ShelfLife(10L).serialize();
-    final File stateFile = File.createTempFile("state", "File", getLocalTempDir());
-    final FileWriter fileWriter = new FileWriter(stateFile.getAbsoluteFile());
-    final BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
-    bufferedWriter.write(state);
-    bufferedWriter.close();
-
-    assertEquals(BaseTool.SUCCESS, runTool(new FreshTool(),
-        KijiURI.newBuilder(getKiji().getURI()).withTableName("user")
-            .addColumnName(new KijiColumnName("info", "name")).build().toString(),
-        "--do=register",
-        "--policy-class=org.kiji.scoring.lib.ShelfLife",
-        "--producer-class=org.kiji.scoring.tools.TestFreshTool$TestProducer",
-        "--policy-state-file=" + stateFile.getAbsolutePath()));
-
-    assertEquals(
-        "New Freshener attached to column: info:name\n"
-        + "  Freshness policy class: org.kiji.scoring.lib.ShelfLife\n"
-        + "  Freshness policy state: {\"shelfLife\":10}\n"
-        + "  Producer class: org.kiji.scoring.tools.TestFreshTool$TestProducer\n"
-        + "  Parameters: {}\n"
-        + "  Reinitialize producer: false\n"
-        , mToolOutputStr);
   }
 
   @Test
   public void testOptionalParameters() throws Exception {
     getKiji().createTable(KijiTableLayouts.getLayout(KijiTableLayouts.COUNTER_TEST));
 
-    // Test parameters.
     assertEquals(BaseTool.SUCCESS, runTool(new FreshTool(),
-        KijiURI.newBuilder(getKiji().getURI()).withTableName("user")
-            .withColumnNames(Lists.newArrayList("info:name")).build().toString(),
+        "--target=" + getNameURI(),
         "--do=register",
-        "--policy-class=org.kiji.scoring.lib.ShelfLife",
-        "--policy-state={\"shelfLife\":10}",
-        "--producer-class=org.kiji.scoring.tools.TestFreshTool$TestProducer",
-        "--parameters={\"a\":\"b\"}"
-    ));
+        "--policy-class=" + POLICY_STRING,
+        "--score-function-class=" + SCORE_FN_STRING));
 
-    final Map<String, String> params = Maps.newHashMap();
-    params.put("a", "b");
-    final KijiFreshnessPolicyRecord record = KijiFreshnessPolicyRecord.newBuilder()
-        .setRecordVersion(KijiFreshnessManager.CUR_FRESHNESS_RECORD_VER.toCanonicalString())
-        .setProducerClass(TestProducer.class.getName())
-        .setFreshnessPolicyClass("org.kiji.scoring.lib.ShelfLife")
-        .setFreshnessPolicyState("{\"shelfLife\":10}")
-        .setParameters(params)
+    final KijiFreshenerRecord record = KijiFreshenerRecord.newBuilder()
+        .setRecordVersion(KijiFreshnessManager.CUR_FRESHENER_RECORD_VER.toCanonicalString())
+        .setFreshnessPolicyClass(POLICY_STRING)
+        .setScoreFunctionClass(SCORE_FN_STRING)
+        .setParameters(EMPTY_PARAMS)
         .build();
+
     final KijiFreshnessManager manager = KijiFreshnessManager.create(getKiji());
     try {
-      assertEquals(record, manager.retrievePolicy("user", "info:name"));
-      assertEquals(
-          "New Freshener attached to column: info:name\n"
-              + "  Freshness policy class: org.kiji.scoring.lib.ShelfLife\n"
-              + "  Freshness policy state: {\"shelfLife\":10}\n"
-              + "  Producer class: org.kiji.scoring.tools.TestFreshTool$TestProducer\n"
-              + "  Parameters: {\"a\":\"b\"}\n"
-              + "  Reinitialize producer: false\n"
-          , mToolOutputStr);
-
-      // Test reinitialize.
-      assertEquals(BaseTool.SUCCESS, runTool(new FreshTool(),
-          "--do=register",
-          KijiURI.newBuilder(getKiji().getURI()).withTableName("user")
-              .withColumnNames(Lists.newArrayList("info:visits")).build().toString(),
-          "--policy-state={\"shelfLife\":10}",
-          "--producer-class=org.kiji.scoring.tools.TestFreshTool$TestProducer",
-          "--policy-class=org.kiji.scoring.lib.ShelfLife",
-          "--reinitialize-producer=true"
-      ));
-
-      final KijiFreshnessPolicyRecord record2 = KijiFreshnessPolicyRecord.newBuilder()
-          .setRecordVersion(KijiFreshnessManager.CUR_FRESHNESS_RECORD_VER.toCanonicalString())
-          .setProducerClass(TestProducer.class.getName())
-          .setFreshnessPolicyClass("org.kiji.scoring.lib.ShelfLife")
-          .setFreshnessPolicyState("{\"shelfLife\":10}")
-          .setReinitializeProducer(true)
-          .build();
-      assertEquals(record2, manager.retrievePolicy("user", "info:visits"));
-      assertEquals(
-          "New Freshener attached to column: info:visits\n"
-              + "  Freshness policy class: org.kiji.scoring.lib.ShelfLife\n"
-              + "  Freshness policy state: {\"shelfLife\":10}\n"
-              + "  Producer class: org.kiji.scoring.tools.TestFreshTool$TestProducer\n"
-              + "  Parameters: {}\n"
-              + "  Reinitialize producer: true\n"
-          , mToolOutputStr);
+      assertEquals(record, manager.retrieveFreshenerRecord("user", INFO_NAME));
     } finally {
       manager.close();
     }

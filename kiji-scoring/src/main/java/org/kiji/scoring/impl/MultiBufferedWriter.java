@@ -55,7 +55,7 @@ public final class MultiBufferedWriter implements Closeable {
     private final V mValue;
 
     /**
-     * Default constructor.
+     * Initialize a new EFQTV.
      *
      * @param entityId the EntityId to store in this container.
      * @param family the family name to store in this container.
@@ -80,12 +80,18 @@ public final class MultiBufferedWriter implements Closeable {
   /** A single buffer view of a MultiBufferedWriter. */
   public final class SingleBuffer {
 
-    private final List<EFQTV> mBuffer = Lists.newArrayList();
+    private final List<EFQTV> mBuffer;
 
     /**
      * Initialize a new SingleBuffer which delegates to a MultiBufferedWriter to flush data.
+     *
+     * @param initialBufferSize the initial size (in number of puts) of the buffer array.
      */
-    public SingleBuffer() { }
+    public SingleBuffer(
+        final int initialBufferSize
+    ) {
+      mBuffer = Lists.newArrayListWithCapacity(initialBufferSize);
+    }
 
     /**
      * Put the given information into this buffer.
@@ -110,13 +116,22 @@ public final class MultiBufferedWriter implements Closeable {
     }
 
     /**
+     * Whether this SingleBuffer has outstanding unwritten data.
+     *
+     * @return whether this SingleBuffer has outstanding unwritten data.
+     */
+    public boolean hasReceivedWrites() {
+      return !mBuffer.isEmpty();
+    }
+
+    /**
      * Flush the contents of this buffer.
      *
      * @throws IOException in case of an error writing to the table.
      */
     public void flush() throws IOException {
-      synchronized (mBuffer) {
-        synchronized (mWriter) {
+      synchronized (mWriter) {
+        synchronized (mBuffer) {
           for (EFQTV efqtv : mBuffer) {
             mWriter.put(
                 efqtv.mEntityId,
@@ -156,10 +171,13 @@ public final class MultiBufferedWriter implements Closeable {
   /**
    * Get a new SingleBuffer view of this MultiBufferedWriter.
    *
+   * @param initialBufferSize size (in number of puts) to which to initialize the buffer array.
    * @return a new SingleBuffer which delegates to this MultiBufferedWriter to flush data.
    */
-  public SingleBuffer openSingleBuffer() {
-    return new SingleBuffer();
+  public SingleBuffer openSingleBuffer(
+      final int initialBufferSize
+  ) {
+    return new SingleBuffer(initialBufferSize);
   }
 
   /** {@inheritDoc} */

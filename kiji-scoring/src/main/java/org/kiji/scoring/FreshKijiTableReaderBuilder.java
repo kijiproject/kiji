@@ -20,6 +20,7 @@
 package org.kiji.scoring;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 import com.google.common.base.Joiner;
@@ -27,7 +28,6 @@ import com.google.common.base.Preconditions;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
-import org.kiji.schema.InternalKijiError;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiTable;
 import org.kiji.scoring.impl.InternalFreshKijiTableReader;
@@ -51,7 +51,6 @@ import org.kiji.scoring.impl.InternalFreshKijiTableReader;
  * </p>
  * <p><pre>
  *   final FreshKijiTableReader = FreshKijiTableReaderBuilder.create()
- *       .withReaderType(FreshReaderType.LOCAL)
  *       .withTable(myTable)
  *       .withTimeout(100)
  *       .withAutomaticReread(3600000)
@@ -62,12 +61,14 @@ import org.kiji.scoring.impl.InternalFreshKijiTableReader;
 @ApiAudience.Public
 @ApiStability.Experimental
 public final class FreshKijiTableReaderBuilder {
-  /** Do not allow returning partially fresh data by default. */
+  /** By default, do not allow returning partially fresh data. */
   private static final Boolean DEFAULT_PARTIAL_FRESHENING = false;
-  /** Create local FreshKijiTableReaders by default. */
-  private static final FreshReaderType DEFAULT_READER_TYPE = FreshReaderType.LOCAL;
-  /** Wait 100 milliseconds for freshening to occur by default. */
-  private static final int DEFAULT_TIMEOUT = 100;
+  /** By default, Wait 100 milliseconds for freshening to occur. */
+  private static final long DEFAULT_TIMEOUT = 100;
+  /** By default, do not automatically reread. */
+  private static final long DEFAULT_REREAD_PERIOD = 0;
+  /** By default, freshen all columns. */
+  private static final List<KijiColumnName> DEFAULT_COLUMNS_TO_FRESHEN = Collections.emptyList();
 
   /**
    * Get a new instance of FreshKijiTableReaderBuilder.
@@ -78,39 +79,25 @@ public final class FreshKijiTableReaderBuilder {
     return new FreshKijiTableReaderBuilder();
   }
 
-  /** Enumeration of types of fresh readers. */
-  public static enum FreshReaderType {
-    LOCAL
-  }
-
-  /** The type of FreshKijiTableReader to build. */
-  private FreshReaderType mReaderType;
   /** The KijiTable from which the new reader will read. */
-  private KijiTable mTable;
-  /** The time in milliseconds the new reader will wait for freshening to occur. */
-  private long mTimeout;
+  private KijiTable mTable = null;
   /**
-   * The time in milliseconds the new reader will wait between automatically rereading freshness
-   * policies from the meta table.
+   * The time in milliseconds the new reader will wait for freshening to occur. Default is 100
+   * milliseconds.
    */
-  private long mRereadPeriod;
-  /** Whether or not the new reader will return and commit partially fresh data when available. */
-  private Boolean mAllowPartialFresh;
+  private Long mTimeout = null;
+  /**
+   * The time in milliseconds the new reader will wait between automatically rereading Freshener
+   * records from the meta table. Default is to not automatically reread.
+   */
+  private Long mRereadPeriod = null;
+  /**
+   * Whether or not the new reader will return and commit partially fresh data when available.
+   * Default is to not allow partial freshening.
+   */
+  private Boolean mAllowPartialFresh = null;
   /** Specifies which columns to freshen.  Default is all columns. */
-  private List<KijiColumnName> mColumnsToFreshen;
-
-  /**
-   * Select the type of FreshKijiTableReader to instantiate.  Types are enumerated in
-   * FreshKijiTableReaderBuilder.FreshReaderType.
-   *
-   * @param type the type of reader to instantiate.
-   * @return this FreshKijiTableReaderBuilder configured to build the given type of reader.
-   */
-  public FreshKijiTableReaderBuilder withReaderType(FreshReaderType type) {
-    Preconditions.checkArgument(mReaderType == null, "Reader type already set to: %s", mReaderType);
-    mReaderType = type;
-    return this;
-  }
+  private List<KijiColumnName> mColumnsToFreshen = null;
 
   /**
    * Configure the FreshKijiTableReader to read from the given KijiTable.
@@ -119,7 +106,7 @@ public final class FreshKijiTableReaderBuilder {
    * @return this FreshKijiTableReaderBuilder configured to read from the given table.
    */
   public FreshKijiTableReaderBuilder withTable(KijiTable table) {
-    Preconditions.checkArgument(mTable == null, "KijiTable already set to: %s", mTable);
+    Preconditions.checkState(null == mTable, "KijiTable already set to: %s", mTable);
     mTable = table;
     return this;
   }
@@ -128,13 +115,16 @@ public final class FreshKijiTableReaderBuilder {
    * Configure the FreshKijiTableReader to wait a given number of milliseconds before returning
    * stale data.
    *
-   * @param timeout the duration in milliseconds to wait before returning stale data.
+   * @param timeout the default duration in milliseconds to wait before returning stale data. This
+   *     may be overriden at request time by using
+   *     {@link FreshKijiTableReader#get(org.kiji.schema.EntityId, org.kiji.schema.KijiDataRequest,
+   *     long)}.
    * @return this FreshKijiTableReaderBuilder configured to wait the given number of milliseconds
    * before returning stale data.
    */
-  public FreshKijiTableReaderBuilder withTimeout(int timeout) {
-    Preconditions.checkArgument(timeout > 0, "Timeout must be positive, got: %d", timeout);
-    Preconditions.checkArgument(mTimeout == 0, "Timeout is already set to: %d", mTimeout);
+  public FreshKijiTableReaderBuilder withTimeout(long timeout) {
+    Preconditions.checkArgument(0 < timeout, "Timeout must be positive, got: %d", timeout);
+    Preconditions.checkState(null == mTimeout, "Timeout is already set to: %d", mTimeout);
     mTimeout = timeout;
     return this;
   }
@@ -151,9 +141,9 @@ public final class FreshKijiTableReaderBuilder {
    */
   public FreshKijiTableReaderBuilder withAutomaticReread(long rereadPeriod) {
     Preconditions.checkArgument(
-        rereadPeriod > 0, "Reread time must be positive, got: %s", rereadPeriod);
-    Preconditions.checkArgument(
-        mRereadPeriod == 0, "Reread time is already set to: %d", mRereadPeriod);
+        0 < rereadPeriod, "Reread time must be positive, got: %s", rereadPeriod);
+    Preconditions.checkState(
+        null == mRereadPeriod, "Reread time is already set to: %d", mRereadPeriod);
     mRereadPeriod = rereadPeriod;
     return this;
   }
@@ -175,9 +165,9 @@ public final class FreshKijiTableReaderBuilder {
    * @return this FreshKijiTableReaderBuilder configured to allow returning partially freshened
    * data.
    */
-  public FreshKijiTableReaderBuilder returnPartiallyFreshData(boolean allowPartial) {
-    Preconditions.checkArgument(
-        mAllowPartialFresh == null, "Partial freshening is already set to: %s", mAllowPartialFresh);
+  public FreshKijiTableReaderBuilder withPartialFreshening(boolean allowPartial) {
+    Preconditions.checkState(
+        null == mAllowPartialFresh, "Partial freshening is already set to: %s", mAllowPartialFresh);
     mAllowPartialFresh = allowPartial;
     return this;
   }
@@ -199,9 +189,9 @@ public final class FreshKijiTableReaderBuilder {
    * @return this FreshKijiTableReaderBuilder configured to read from a specific set of columns.
    */
   public FreshKijiTableReaderBuilder withColumnsToFreshen(List<KijiColumnName> columnsToFreshen) {
-    if (mColumnsToFreshen != null) {
+    if (null != mColumnsToFreshen) {
       final String columns = Joiner.on(", ").join(mColumnsToFreshen);
-      throw new IllegalArgumentException(
+      throw new IllegalStateException(
           String.format("Columns to freshen are already set to: %s", columns));
     } else {
       mColumnsToFreshen = columnsToFreshen;
@@ -217,21 +207,20 @@ public final class FreshKijiTableReaderBuilder {
    */
   public FreshKijiTableReader build() throws IOException {
     Preconditions.checkState(mTable != null, "Target table must be set in order to build.");
-    if (mReaderType == null) {
-      mReaderType = DEFAULT_READER_TYPE;
-    }
-    if (mTimeout == 0) {
+    if (null == mTimeout) {
       mTimeout = DEFAULT_TIMEOUT;
     }
-    if (mAllowPartialFresh == null) {
+    if (null == mAllowPartialFresh) {
       mAllowPartialFresh = DEFAULT_PARTIAL_FRESHENING;
     }
-    switch (mReaderType) {
-      case LOCAL:
-        return new InternalFreshKijiTableReader(
-            mTable, mTimeout, mRereadPeriod, mAllowPartialFresh, mColumnsToFreshen);
-      default:
-        throw new InternalKijiError(String.format("Unknown reader type: %s", mReaderType));
+    if (null == mRereadPeriod) {
+      mRereadPeriod = DEFAULT_REREAD_PERIOD;
     }
+    if (null == mColumnsToFreshen) {
+      mColumnsToFreshen = DEFAULT_COLUMNS_TO_FRESHEN;
+    }
+
+    return new InternalFreshKijiTableReader(
+            mTable, mTimeout, mRereadPeriod, mAllowPartialFresh, mColumnsToFreshen);
   }
 }

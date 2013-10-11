@@ -22,41 +22,41 @@ package org.kiji.scoring;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
+import java.util.Collections;
 
 import org.junit.Test;
 
-import org.kiji.mapreduce.produce.KijiProducer;
-import org.kiji.mapreduce.produce.ProducerContext;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiClientTest;
+import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableWriter;
 import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.util.ResourceUtils;
-import org.kiji.scoring.FreshKijiTableReaderBuilder.FreshReaderType;
 import org.kiji.scoring.lib.ShelfLife;
 
 /**
- * Demo of KijiScoring freshening.
- */
+* Demo of KijiScoring freshening.
+*/
 public class TestFreshnessDemo extends KijiClientTest {
 
-  private static final class DemoProducer extends KijiProducer {
+  private static final class DemoScoreFunction extends ScoreFunction {
 
-    public KijiDataRequest getDataRequest() {
+    @Override
+    public KijiDataRequest getDataRequest(final FreshenerContext context) throws IOException {
       return KijiDataRequest.create("info", "visits");
     }
 
-    public String getOutputColumn() {
-      return "info:visits";
-    }
-
-    public void produce(final KijiRowData input, final ProducerContext context) throws IOException {
-      final Long oldValue = input.getMostRecentValue("info", "visits");
-      context.put(oldValue + 1L);
+    // TODO how does this overriding work?
+    @Override
+    public Long score(
+        final KijiRowData dataToScore, final FreshenerContext context
+    ) throws IOException {
+      final Long oldValue = dataToScore.getMostRecentValue("info", "visits");
+      return oldValue + 1L;
     }
   }
 
@@ -67,8 +67,10 @@ public class TestFreshnessDemo extends KijiClientTest {
 
     // Create the "user" table.
     kiji.createTable(KijiTableLayouts.getLayout(KijiTableLayouts.COUNTER_TEST));
-    // Create a ShelfLife freshness policy and deserialize a 1 day shelf life duration.
+    // Create a ShelfLife freshness policy with a 1 day shelf life duration.
     final KijiFreshnessPolicy policy = new ShelfLife(86400000);
+
+    final KijiColumnName column = new KijiColumnName("info", "visits");
 
     KijiTable table = null;
     KijiFreshnessManager manager = null;
@@ -78,13 +80,19 @@ public class TestFreshnessDemo extends KijiClientTest {
       table = kiji.openTable("user");
       // Get a KijiFreshnessManager for the Kiji instance.
       manager = KijiFreshnessManager.create(kiji);
-      // Store the freshness policy in the metatable for the table "user" and column "info:visits"
-      // using the ShelfLife freshness policy created above and the DemoProducer.
-      manager.storePolicy("user", "info:visits", DemoProducer.class, policy);
-      // Open a FreshKijiTableReader for the table with a timeout of 100 milliseconds.
-      // Note: the FreshKijiTableReader must be opened after the freshness policy is registered.
+      // Store the Freshener in the meta table for the table "user" and column "info:visits"
+      // using the ShelfLife freshness policy created above and the DemoScoreFunction.
+      manager.registerFreshener(
+          table.getName(),
+          column,
+          policy,
+          new DemoScoreFunction(),
+          Collections.<String, String>emptyMap(),
+          false,
+          false);
+      // Open a FreshKijiTableReader for the table with a timeout of 500 milliseconds.
+      // Note: the FreshKijiTableReader must be opened after the Freshener is registered.
       freshReader = FreshKijiTableReaderBuilder.create()
-          .withReaderType(FreshReaderType.LOCAL)
           .withTable(table)
           .withTimeout(500)
           .build();

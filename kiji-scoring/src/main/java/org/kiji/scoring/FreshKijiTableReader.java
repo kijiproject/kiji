@@ -35,8 +35,10 @@ import org.kiji.schema.KijiTableReader;
  *
  * <p>
  *   Utilizes {@link org.kiji.schema.EntityId} and {@link org.kiji.schema.KijiDataRequest}
- *   to return {@link org.kiji.schema.KijiRowData}.  Accessible via
- *   {@link org.kiji.scoring.FreshKijiTableReaderBuilder#create()}.
+ *   to return {@link org.kiji.schema.KijiRowData}.
+ * </p>
+ * <p>
+ *   Accessible via {@link org.kiji.scoring.FreshKijiTableReaderBuilder#create()}.
  * </p>
  *
  * <p>
@@ -46,10 +48,9 @@ import org.kiji.schema.KijiTableReader;
  * </p>
  *
  * <p>
- *   Freshening describes the process of conditionally applying a
- *   {@link org.kiji.mapreduce.produce.KijiProducer} to a row in response to user queries for data
- *   in that row.  Consequently, methods of a FreshKijiTableReader have the possibility of
- *   generating side effect writes to the rows users query.
+ *   Freshening describes the process of conditionally applying a {@link ScoreFunction} to a row in
+ *   response to user queries for data in that row.  Consequently, methods of a FreshKijiTableReader
+ *   have the possibility of generating side effect writes to the rows users query.
  * </p>
  *
  * <p>
@@ -58,33 +59,32 @@ import org.kiji.schema.KijiTableReader;
  * </p>
  * <p>
  *   To get the three most recent versions of cell data from a column <code>bar</code> from
- *   the family <code>foo</code> within the time range (123, 456):
+ *   the family <code>foo</code>:
  * <pre>
  *   KijiDataRequestBuilder builder = KijiDataRequest.builder()
- *     .withTimeRange(123L, 456L);
  *     .newColumnsDef()
  *     .withMaxVersions(3)
  *     .add("foo", "bar");
  *   final KijiDataRequest request = builder.build();
  *
  *   final KijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
- *       .withReaderType(FreshReaderType.LOCAL)
  *       .withTable(table)
  *       .withTimeout(100)
  *       .build();
  *   final KijiRowData data = freshReader.get(myEntityId, request);
  * </pre>
  *   This code will return the three most recent values including newly generated values output by
- *   the producer if it ran.
+ *   the ScoreFunction if it ran.
  * </p>
  *
  * <p>
- *   Instances of this reader are not threadsafe and should be restricted to use in a single thread.
- *   Because this class maintains a connection to the underlying KijiTable and other resources,
- *   users should call {@link #close()} when done using a reader.
+ *   Instances of this reader are thread safe and may be used across multiple threads. Because this
+ *   class maintains a connection to the underlying KijiTable and other resources, users should call
+ *   {@link #close()} when done using a reader.
  * </p>
  *
  * @see org.kiji.scoring.KijiFreshnessPolicy
+ * @see org.kiji.scoring.ScoreFunction
  */
 @ApiAudience.Public
 @ApiStability.Experimental
@@ -92,9 +92,9 @@ import org.kiji.schema.KijiTableReader;
 public interface FreshKijiTableReader extends KijiTableReader {
 
   /**
-   * Freshens data as needed before returning.  If freshening has not completed with the configured
-   * timeout, will return stale or partially freshened data depending on the configuration of the
-   * reader.  Behaves the same as
+   * Freshens data as needed before returning. If freshening has not completed within the
+   * configured timeout, will return stale or partially freshened data depending on the
+   * configuration of the reader.  Behaves the same as
    * {@link org.kiji.schema.KijiTableReader#get(org.kiji.schema.EntityId,
    * org.kiji.schema.KijiDataRequest)} except for the possibility of freshening.
    *
@@ -107,7 +107,7 @@ public interface FreshKijiTableReader extends KijiTableReader {
   KijiRowData get(EntityId entityId, KijiDataRequest dataRequest) throws IOException;
 
   /**
-   * Freshens data as needed before returning.  If freshening has not completed within the specified
+   * Freshens data as needed before returning. If freshening has not completed within the specified
    * timeout, will return stale or partially freshened data depending on the configuration of the
    * reader.  Behaves the same as
    * {@link org.kiji.schema.KijiTableReader#get(org.kiji.schema.EntityId,
@@ -123,22 +123,13 @@ public interface FreshKijiTableReader extends KijiTableReader {
   KijiRowData get(EntityId entityId, KijiDataRequest dataRequest, long timeout) throws IOException;
 
   /**
-   * Attempts to freshen all data requested in parallel before returning.  If freshening has not
+   * Attempts to freshen all data requested in parallel before returning. If freshening has not
    * completed within the configured timeout, will return stale or partially freshened data
    * depending on the configuration of the reader.
    *
-   * <p>A thread will be launched for every EntityId in parallel, but all threads will share
-   * the KijiFreshnessPolicy and KijiProducer objects. For this reason, do not use bulkGet
-   * if your {@link KijiFreshnessPolicy#getDataRequest()},
-   * {@link KijiFreshnessPolicy#isFresh(org.kiji.schema.KijiRowData, PolicyContext)},
-   * {@link org.kiji.mapreduce.produce.KijiProducer#getDataRequest()}, or
-   * {@link org.kiji.mapreduce.produce.KijiProducer#produce(KijiRowData,
-   * org.kiji.mapreduce.produce.ProducerContext)}
-   * are not thread-safe.</p>
-   *
    * @param entityIds A list of EntityIds for the rows to query.
    * @param dataRequest What data to retrieve from each row.
-   * @return a list of KijiRowData corresponding the the EntityIds and data request after
+   * @return a list of KijiRowData corresponding to the EntityIds and data request after
    *   freshening.
    * @throws IOException in case of an error reading from the table.
    */
@@ -150,14 +141,6 @@ public interface FreshKijiTableReader extends KijiTableReader {
    * Attempts to freshen all data requested in parallel before returning.  If freshening has not
    * completed with the specified timeout, will return stale or partially freshened data depending
    * on the configuration of the reader.
-   * <p>A thread will be launched for every EntityId in parallel, but all threads will share
-   * the KijiFreshnessPolicy and KijiProducer objects. For this reason, do not use bulkGet
-   * if your {@link KijiFreshnessPolicy#getDataRequest()},
-   * {@link KijiFreshnessPolicy#isFresh(org.kiji.schema.KijiRowData, PolicyContext)},
-   * {@link org.kiji.mapreduce.produce.KijiProducer#getDataRequest()}, or
-   * {@link org.kiji.mapreduce.produce.KijiProducer#produce(KijiRowData,
-   * org.kiji.mapreduce.produce.ProducerContext)}
-   * are not thread-safe.</p>
    *
    * @param entityIds a list of EntityIds for the rows to query.
    * @param dataRequest what data to retrieve from each row.
@@ -170,23 +153,23 @@ public interface FreshKijiTableReader extends KijiTableReader {
       throws IOException;
 
   /**
-   * Clear cached freshness policies and reload from the metatable.  This method replaces only those
-   * Fresheners which have changed since the last call to rereadPolicies() or the construction of
-   * the reader.
+   * Clear cached Fresheners and reload from the meta table. This method replaces only those
+   * Fresheners which have changed since the last call to rereadFreshenerRecords() or the
+   * construction of the reader.
    *
-   * @throws IOException in case of an error reading from the metatable.
+   * @throws IOException in case of an error reading from the meta table.
    */
-  void rereadPolicies() throws IOException;
+  void rereadFreshenerRecords() throws IOException;
 
   /**
-   * Clear cached freshness policies and reload from the metatable. Replaces existing list of
+   * Clear cached Fresheners and reload from the meta table. Replaces existing list of
    * columns to freshen with the given list and instantiates any Fresheners applicable to added
    * columns. This method replaces only those Fresheners which have changed since the last call to
-   * rereadPolicies or the construction of the reader.
+   * rereadFreshenerRecords or the construction of the reader.
    *
    * @param columnsToFreshen the new set of columnsToFreshen.  This list will replace the previous
-   *     list entirely.
-   * @throws IOException in case of an error reading from the metatable.
+   *     list permanently.
+   * @throws IOException in case of an error reading from the meta table.
    */
-  void rereadPolicies(List<KijiColumnName> columnsToFreshen) throws IOException;
+  void rereadFreshenerRecords(List<KijiColumnName> columnsToFreshen) throws IOException;
 }
