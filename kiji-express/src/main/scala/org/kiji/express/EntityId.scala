@@ -185,4 +185,16 @@ object EntityId {
   def apply(components: Any*): EntityId = {
     MaterializedEntityId(components.toSeq.map { _.asInstanceOf[AnyRef] })
   }
+
+  /**
+   * Creates a new EntityId given an array of bytes representing the raw
+   * HBase rowkey.
+   *
+   * @param encoded is the raw hbase rowkey.
+   *
+   * @return the created entity id.
+   */
+  def apply(encoded: Array[Byte]): EntityId = {
+    HashedEntityId(encoded)
+  }
 }
