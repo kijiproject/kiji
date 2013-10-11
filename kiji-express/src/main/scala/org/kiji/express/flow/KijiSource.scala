@@ -211,7 +211,7 @@ final class KijiSource private[express] (
     return tap
   }
 
- override def toString(): String = {
+ override def toString: String = {
     "KijiSource(table: %s, timeRange: %s, timestampField: %s, loggingInterval: %s, columns: %s)"
         .format(
             tableAddress,

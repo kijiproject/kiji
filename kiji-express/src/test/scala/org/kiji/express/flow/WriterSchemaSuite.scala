@@ -69,7 +69,7 @@ class WriterSchemaSuite extends KijiSuite {
       .arg("input", "inputFile")
       .arg("output", uri)
       .source(TextLine("inputFile"), writeInput)
-      .sink(KijiOutput(uri)(
+      .sink(KijiOutput(uri,
           Map('genericRecord -> Column("family:column_validated").useDefaultReaderSchema))
       )(validateWrite)
 
@@ -118,7 +118,7 @@ class WriterSchemaSuite extends KijiSuite {
       .arg("input", "inputFile")
       .arg("output", uri.toString)
       .source(TextLine("inputFile"), writeInput)
-      .sink(KijiOutput(uri)(
+      .sink(KijiOutput(uri,
           Map('genericRecord ->
               Column("family:column_validated").withSchemaId(userDefinedSchemaId)))
       )(validateWrite)
@@ -165,7 +165,7 @@ class WriterSchemaSuite extends KijiSuite {
       .arg("input", "inputFile")
       .arg("output", uri)
       .source(TextLine("inputFile"), writeInput)
-      .sink(KijiOutput(uri)('genericRecord -> "family:column_compatibility"))(validateWrite)
+      .sink(KijiOutput(uri, 'genericRecord -> "family:column_compatibility"))(validateWrite)
 
     // Run in local mode.
     jobTest.run.finish
@@ -209,7 +209,7 @@ class WriterSchemaSuite extends KijiSuite {
       .arg("input", "inputFile")
       .arg("output", uri)
       .source(TextLine("inputFile"), writeInput)
-      .sink(KijiOutput(uri)('genericRecord -> "family:column_validated"))(validateWrite)
+      .sink(KijiOutput(uri, 'genericRecord -> "family:column_validated"))(validateWrite)
 
     // Run in local mode.
     val localException = intercept[InvalidKijiTapException] { jobTest.run.finish}
@@ -247,7 +247,7 @@ object WriterSchemaSuite {
     }
       // Write the results to the "family:column_validated" column of a Kiji table using the
       // default schema.
-      .write(KijiOutput(tableUri)(
+      .write(KijiOutput(tableUri,
           Map('genericRecord -> Column("family:column_validated").useDefaultReaderSchema)))
   }
 
@@ -291,7 +291,7 @@ object WriterSchemaSuite {
       )
     }
       // Write the results to the "family:column_validated" column of a Kiji table.
-      .write(KijiOutput(tableUri)(
+      .write(KijiOutput(tableUri,
           Map('genericRecord ->
               Column("family:column_validated").withSchemaId(userDefinedSchemaId))))
   }
@@ -317,7 +317,7 @@ object WriterSchemaSuite {
       )
     }
       // Write the results to the "family:column_compatbility" column of a Kiji table.
-      .write(KijiOutput(tableUri)('genericRecord -> "family:column_compatibility"))
+      .write(KijiOutput(tableUri, 'genericRecord -> "family:column_compatibility"))
   }
 
   /**
@@ -342,6 +342,6 @@ object WriterSchemaSuite {
       )
     }
       // Write the results to the "family:column_compatbility" column of a Kiji table.
-      .write(KijiOutput(tableUri)('genericRecord -> "family:column_validated"))
+      .write(KijiOutput(tableUri, 'genericRecord -> "family:column_validated"))
   }
 }

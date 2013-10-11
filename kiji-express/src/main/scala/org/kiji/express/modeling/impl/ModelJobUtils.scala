@@ -19,12 +19,10 @@
 
 package org.kiji.express.modeling.impl
 
-import scala.collection.JavaConverters.asJavaCollectionConverter
-
+import cascading.tuple.Fields
 import com.twitter.scalding.SequenceFile
 import com.twitter.scalding.Source
 import com.twitter.scalding.TextLine
-
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 
@@ -38,6 +36,7 @@ import org.kiji.express.flow.QualifiedColumn
 import org.kiji.express.flow.TimeRange
 import org.kiji.express.modeling.KeyValueStore
 import org.kiji.express.modeling.config.ExpressColumnRequest
+import org.kiji.express.modeling.config.FieldBinding
 import org.kiji.express.modeling.config.InputSpec
 import org.kiji.express.modeling.config.KeyValueStoreSpec
 import org.kiji.express.modeling.config.KijiInputSpec
@@ -57,7 +56,6 @@ import org.kiji.mapreduce.kvstore.lib.{ TextFileKeyValueStore => JTextFileKeyVal
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiURI
-import cascading.tuple.Fields
 
 /**
  * Utility object for the model lifecycle. Transforms the various input, output and key-value
@@ -414,10 +412,18 @@ object ModelJobUtils {
    * @param kijiOutputSpec is the [[org.kiji.express.modeling.config.KijiOutputSpec]] for the phase.
    * @return a map from field name to string specifying the Kiji column.
    */
-  private def getOutputColumnMap(kijiOutputSpec: KijiOutputSpec): Seq[(Symbol, String)] = {
+  private def getOutputColumnMap(kijiOutputSpec: KijiOutputSpec): Map[Symbol, ColumnRequest] = {
     kijiOutputSpec
         .fieldBindings
-        .map { fieldBinding => Symbol(fieldBinding.tupleFieldName) -> fieldBinding.storeFieldName }
+        .map { (fieldBinding: FieldBinding) =>
+          val Array(family, columnQualifier) = fieldBinding.storeFieldName.split(":", 2)
+
+          val field = Symbol(fieldBinding.tupleFieldName)
+          val column = QualifiedColumn(family, columnQualifier)
+
+          (field, column)
+        }
+        .toMap
   }
 
   /**
@@ -436,14 +442,12 @@ object ModelJobUtils {
       outputSpec: OutputSpec): Source = {
     outputSpec match {
       case spec @ KijiOutputSpec(tableUri, _, timestampField) => {
-        val outputColumnMapping: Seq[(Symbol, String)] = getOutputColumnMap(spec)
-        val timestampSymbol: Symbol = timestampField
-            .map { field: String => Symbol(field) }
-            // scalastyle:off null
-            .getOrElse(null)
-            // scalastyle:on null
+        val outputColumnMapping = getOutputColumnMap(spec)
 
-        KijiOutput(tableUri, timestampSymbol)(outputColumnMapping: _*)
+        timestampField match {
+          case Some(field) => KijiOutput(tableUri, Symbol(field), outputColumnMapping)
+          case None => KijiOutput(tableUri, outputColumnMapping)
+        }
       }
       case TextSourceSpec(path) => {
         TextLine(path)

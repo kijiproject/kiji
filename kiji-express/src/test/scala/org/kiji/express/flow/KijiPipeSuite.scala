@@ -152,7 +152,7 @@ class KijiPipeSuite extends KijiSuite {
           .map ('offset -> 'entityId) { offset: String => EntityId(offset) }
       new KijiPipe(cascadingPipe)
           .packAvro(('line, 'length) -> 'record)
-          .write(KijiOutput(args("output"))('record -> "family:column5"))
+          .write(KijiOutput(args("output"), 'record -> "family:column5"))
           .getJob(args)
     }
 
@@ -160,7 +160,7 @@ class KijiPipeSuite extends KijiSuite {
         .arg("input", "inputFile")
         .arg("output", uri)
         .source(TextLine("inputFile"), packingInput)
-        .sink(KijiOutput(uri)('record -> "family:column5"))(validatePacking)
+        .sink(KijiOutput(uri, 'record -> "family:column5"))(validatePacking)
 
     // Run in local mode.
     jobTest.run.finish

@@ -143,7 +143,7 @@ class KijiSourceSuite
         .arg("input", "inputFile")
         .arg("output", uri)
         .source(TextLine("inputFile"), importMultipleTimestamps)
-        .sink(KijiOutput(uri, 'timestamp)('word -> "family:column1"))(validateMultipleTimestamps)
+        .sink(KijiOutput(uri, 'timestamp, 'word -> "family:column1"))(validateMultipleTimestamps)
         // Run the test job.
         .run
         .finish
@@ -160,7 +160,7 @@ class KijiSourceSuite
         .arg("input", "inputFile")
         .arg("output", uri)
         .source(TextLine("inputFile"), importMultipleTimestamps)
-        .sink(KijiOutput(uri, 'timestamp)('word -> "family:column1"))(validateMultipleTimestamps)
+        .sink(KijiOutput(uri, 'timestamp, 'word -> "family:column1"))(validateMultipleTimestamps)
         // Run the test job.
         .run
         .finish
@@ -216,7 +216,7 @@ class KijiSourceSuite
         .arg("input", "inputFile")
         .arg("output", uri)
         .source(TextLine("inputFile"), importInput)
-        .sink(KijiOutput(uri)('word -> "family:column1"))(validateImport)
+        .sink(KijiOutput(uri, 'word -> "family:column1"))(validateImport)
         // Run the test job.
         .run
         .finish
@@ -233,7 +233,7 @@ class KijiSourceSuite
         .arg("input", "inputFile")
         .arg("output", uri)
         .source(TextLine("inputFile"), importInput)
-        .sink(KijiOutput(uri)('word -> "family:column1"))(validateImport)
+        .sink(KijiOutput(uri, 'word -> "family:column1"))(validateImport)
         // Run the test job.
         .runHadoop
         .finish
@@ -269,7 +269,7 @@ class KijiSourceSuite
     .arg("input", "inputFile")
     .arg("output", uri)
     .source(TextLine("inputFile"), importWithTimeInput)
-    .sink(KijiOutput(uri, 'offset)('line -> "family:column1"))(validateImportWithTime)
+    .sink(KijiOutput(uri, 'offset, 'line -> "family:column1"))(validateImportWithTime)
     // Run the test job.
     .run
     .finish
@@ -286,7 +286,7 @@ class KijiSourceSuite
     .arg("input", "inputFile")
     .arg("output", uri)
     .source(TextLine("inputFile"), importWithTimeInput)
-    .sink(KijiOutput(uri, 'offset)('line -> "family:column1"))(validateImportWithTime)
+    .sink(KijiOutput(uri, 'offset, 'line -> "family:column1"))(validateImportWithTime)
     // Run the test job.
     .runHadoop
     .finish
@@ -566,7 +566,7 @@ class KijiSourceSuite
       .arg("input", "inputFile")
       .arg("output", uri)
       .source(TextLine("inputFile"), genericWriteInput)
-      .sink(KijiOutput(uri)('genericRecord -> "family:column4"))(
+      .sink(KijiOutput(uri, 'genericRecord -> "family:column4"))(
           validateGenericWrite)
 
     // Run in local mode.
@@ -605,7 +605,7 @@ class KijiSourceSuite
         .arg("input", "inputFile")
         .arg("table", uri)
         .source(TextLine("inputFile"), mapTypeInput)
-        .sink(KijiOutput(uri)(Map('resultCount -> MapFamily("searches")('terms))))(validateMapWrite)
+        .sink(KijiOutput(uri, Map('resultCount -> MapFamily("searches")('terms))))(validateMapWrite)
 
     // Run the test.
     jobTest.run.finish
@@ -782,7 +782,7 @@ object KijiSourceSuite extends KijiSuite {
           (timestamp.toLong, EntityId(eid), token)
         }
         // Write the results to the "family:column1" column of a Kiji table.
-        .write(KijiOutput(args("output"), 'timestamp)('word -> "family:column1"))
+        .write(KijiOutput(args("output"), 'timestamp, 'word -> "family:column1"))
   }
 
   /**
@@ -803,7 +803,7 @@ object KijiSourceSuite extends KijiSuite {
         .map('word -> 'entityId) { _: String =>
             EntityId(UUID.randomUUID().toString()) }
         // Write the results to the "family:column1" column of a Kiji table.
-        .write(KijiOutput(args("output"))('word -> "family:column1"))
+        .write(KijiOutput(args("output"), 'word -> "family:column1"))
   }
 
   /**
@@ -821,7 +821,7 @@ object KijiSourceSuite extends KijiSuite {
         // Generate an entityId for each line.
         .map('line -> 'entityId) { EntityId(_: String) }
         // Write the results to the "family:column1" column of a Kiji table.
-        .write(KijiOutput(args("output"), 'offset)('line -> "family:column1"))
+        .write(KijiOutput(args("output"), 'offset, 'line -> "family:column1"))
   }
 
   /**
@@ -903,7 +903,7 @@ object KijiSourceSuite extends KijiSuite {
               "field5" -> Map[String, Int]())
         }
         // Write the results to the "family:column4" column of a Kiji table.
-        .write(KijiOutput(tableUri)('genericRecord -> "family:column4"))
+        .write(KijiOutput(tableUri, 'genericRecord -> "family:column4"))
     // scalastyle:on null
   }
 
@@ -925,7 +925,7 @@ object KijiSourceSuite extends KijiSuite {
           (line.split(" ")(0), line.split(" ")(1).toInt)
         }
         // Write the results to the "family:column1" column of a Kiji table.
-        .write(KijiOutput(args("table"))(Map('resultCount -> MapFamily("searches")('terms))))
+        .write(KijiOutput(args("table"), Map('resultCount -> MapFamily("searches")('terms))))
   }
 
   /**

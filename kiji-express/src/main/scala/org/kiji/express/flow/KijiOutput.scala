@@ -23,65 +23,123 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 
 /**
- * KijiOutput is a class that can be applied to a field -> column mapping in order to create a
- * `Source` for writing cells to a Kiji table.
+ * Factory methods for constructing [[org.kiji.express.flow.KijiSource]]s that will be used as
+ * outputs of a KijiExpress flow. Two basic APIs are provided with differing complexity.
  *
- * A Scalding `Source` can be used to output data in a collection of tuples to some data store.
- * This factory method can be used to obtain a `Source` which will write the value in a field
- * of a tuple as a cell at the current time to a column in a Kiji table. Tuples being written
- * must have a field named "entityId" which contains an entity id for the row in the Kiji table
- * that tuple fields should be written to.
+ * Simple:
+ * {{{
+ *   // Create a KijiOutput that reads from the table named `mytable` putting timestamps in the
+ *   // `'timestamps` field and reading two columns: `info:column1` and `info:column2`.
+ *   KijiOutput(
+ *       tableUri = "kiji://localhost:2181/default/mytable",
+ *       timestampField = 'timestamps,
+ *       'column1 -> "info:column1",
+ *       'column2 -> "info:column2")
+ * }}}
  *
- * @param tableURI is a Kiji URI that addresses a table in a Kiji instance.
- * @param tsField is the name of a tuple field that contains a timestamp all cells should be
- *     written with. If unspecified, cells will be written with the current time.
- */
-@ApiAudience.Public
-@ApiStability.Experimental
-class KijiOutput(tableURI: String, tsField: Symbol) {
-  /**
-   * Applies this output specification to a column mapping, returning a scalding `Source`.
-   *
-   * @param columns are a series of pairs mapping tuple field names to Kiji column names. When
-   *     naming columns, use the format `family:qualifier`.
-   * @return a source that can write tuple fields to a cell in columns of a Kiji table.
-   */
-  def apply(columns: (Symbol, String)*): KijiSource = {
-    val columnMap = columns
-        .toMap
-        .mapValues(Column(_).ignoreMissing)
-    new KijiSource(tableURI, All, Option(tsField), 1000, columnMap)
-  }
-
-  /**
-   * Applies this output specification to a column mapping, returning a scalding `Source`.
-   *
-   * @param columns are a series of pairs mapping tuple field names to Kiji column names. Use
-   * factory methods `MapFamily` and `Column` to name columns.
-   * @return a source that can write tuple fields to a cell in columns of a Kiji table.
-   */
-  def apply(columns: Map[Symbol, _ <: ColumnRequest]): KijiSource = {
-    new KijiSource(tableURI, All, Option(tsField), 1000, columns)
-  }
-}
-
-/**
- * Companion object for KijiOutput that contains a factory method.
+ * Verbose:
+ * {{{
+ *   // Create a KijiOutput that reads from the table named `mytable` putting timestamps in the
+ *   // `'timestamps` field and reading two columns: `info:column1` and `info:column2`.
+ *   KijiOutput(
+ *       tableUri = "kiji://localhost:2181/default/mytable",
+ *       timestampField = 'timestamps,
+ *       columns = Map(
+ *           // Enable paging for `info:column1`.
+ *           'column1 -> QualifiedColumn("info", "column1").withPaging(cellsPerPage = 100),
+ *           'column2 -> QualifiedColumn("info", "column2")))
+ * }}}
  */
 @ApiAudience.Public
 @ApiStability.Experimental
 object KijiOutput {
   /**
-   * A factory method for instantiating KijiOutputs.
+   * A factory method for instantiating [[org.kiji.express.flow.KijiSource]]s used as sinks. This
+   * method permits specifying the full range of read options for each column. Values written will
+   * be tagged with the current time at write.
    *
-   * @param tableURI is a Kiji URI that addresses a table in a Kiji instance.
+   * @param tableUri that addresses a table in a Kiji instance.
+   * @param columns is a mapping specifying what column to write each field value to.
+   * @return a source that can write tuple field values to columns of a Kiji table.
    */
   def apply(
-      tableURI: String,
-      // scalastyle:off null
-      tsField: Symbol = null): KijiOutput = {
-    // scalastyle:on null
-    new KijiOutput(tableURI, tsField)
+      tableUri: String,
+      columns: Map[Symbol, _ <: ColumnRequest]
+  ): KijiSource = {
+    new KijiSource(
+        tableAddress = tableUri,
+        timeRange = All,
+        timestampField = None,
+        loggingInterval = 1000,
+        columns = columns)
+  }
+
+  /**
+   * A factory method for instantiating [[org.kiji.express.flow.KijiSource]]s used as sinks. This
+   * method permits specifying the full range of read options for each column.
+   *
+   * @param tableUri that addresses a table in a Kiji instance.
+   * @param columns is a mapping specifying what column to write each field value to.
+   * @param timestampField is the name of a tuple field that will contain cell timestamps when the
+   *     source is used for writing.
+   * @return a source that can write tuple field values to columns of a Kiji table.
+   */
+  def apply(
+      tableUri: String,
+      timestampField: Symbol,
+      columns: Map[Symbol, _ <: ColumnRequest]
+  ): KijiSource = {
+    require(timestampField != null)
+
+    new KijiSource(
+        tableAddress = tableUri,
+        timeRange = All,
+        timestampField = Some(timestampField),
+        loggingInterval = 1000,
+        columns = columns)
+  }
+
+  /**
+   * A factory method for instantiating [[org.kiji.express.flow.KijiSource]]s used as sinks. Values
+   * written will be tagged with the current time at write.
+   *
+   * @param tableUri that addresses a table in a Kiji instance.
+   * @param columns are a series of pairs mapping tuple field names to Kiji column names. When
+   *     naming columns, use the format `"family:qualifier"`.
+   * @return a source that can write tuple field values to columns of a Kiji table.
+   */
+  def apply(
+      tableUri: String,
+      columns: (Symbol, String)*
+  ): KijiSource = {
+    val columnMap = columns
+        .toMap
+        .mapValues(Column(_).ignoreMissing)
+
+    KijiOutput(tableUri, columnMap)
+  }
+
+  /**
+   * A factory method for instantiating [[org.kiji.express.flow.KijiSource]]s used as sinks.
+   *
+   * @param tableUri that addresses a table in a Kiji instance.
+   * @param columns are a series of pairs mapping tuple field names to Kiji column names. When
+   *     naming columns, use the format `"family:qualifier"`.
+   * @param timestampField is the name of a tuple field that will contain cell timestamps when the
+   *     source is used for writing.
+   * @return a source that can write tuple field values to columns of a Kiji table.
+   */
+  def apply(
+      tableUri: String,
+      timestampField: Symbol,
+      columns: (Symbol, String)*
+  ): KijiSource = {
+    require(timestampField != null)
+
+    val columnMap = columns
+        .toMap
+        .mapValues(Column(_).ignoreMissing)
+
+    KijiOutput(tableUri, timestampField, columnMap)
   }
 }
-

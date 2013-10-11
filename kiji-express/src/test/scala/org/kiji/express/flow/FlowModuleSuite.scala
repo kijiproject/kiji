@@ -79,7 +79,7 @@ class FlowModuleSuite extends FunSuite {
 
   test("Flow module permits creating inputs and outputs with no mappings.") {
     val input: KijiSource = KijiInput(tableURI)
-    val output: KijiSource = KijiOutput(tableURI)()
+    val output: KijiSource = KijiOutput(tableURI)
 
     assert(input.columns.isEmpty)
     assert(output.columns.isEmpty)
@@ -270,7 +270,7 @@ class FlowModuleSuite extends FunSuite {
   }
 
   test("Flow module permits creating KijiSource with the default timestamp field") {
-    val output: KijiSource = KijiOutput(tableURI)('words -> "info:words")
+    val output: KijiSource = KijiOutput(tableURI, 'words -> "info:words")
     val expectedScheme: KijiScheme = {
       new KijiScheme(All, None, 1000, Map("words" -> Column("info:words")))
     }
@@ -279,7 +279,7 @@ class FlowModuleSuite extends FunSuite {
   }
 
   test("Flow module permits creating KijiSource with a timestamp field") {
-    val output: KijiSource = KijiOutput(tableURI, 'time)('words -> "info:words")
+    val output: KijiSource = KijiOutput(tableURI, 'time, 'words -> "info:words")
     val expectedScheme: KijiScheme = {
       new KijiScheme(All, Some('time), 1000, Map("words" -> Column("info:words")))
     }

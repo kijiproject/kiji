@@ -128,7 +128,7 @@ class KijiJobSuite extends KijiSuite {
     class BasicJob(args: Args) extends KijiJob(args) {
       TextLine(args("input"))
         .map ('line -> 'entityId) { line: String => EntityId(line) }
-        .write(KijiOutput(args("output"))('line -> "family:column1"))
+        .write(KijiOutput(args("output"), 'line -> "family:column1"))
     }
 
     val nonexistentInstanceURI: String = KijiURI.newBuilder(uri)
@@ -144,7 +144,7 @@ class KijiJobSuite extends KijiSuite {
         .arg("input", "inputFile")
         .arg("output", nonexistentInstanceURI)
         .source(TextLine("inputFile"), basicInput)
-        .sink(KijiOutput(nonexistentInstanceURI)('line -> "family:column1"))(validateBasicJob)
+        .sink(KijiOutput(nonexistentInstanceURI, 'line -> "family:column1"))(validateBasicJob)
 
     val hadoopException = intercept[InvalidKijiTapException] { jobTest.runHadoop.finish }
     val localException = intercept[InvalidKijiTapException] { jobTest.run.finish }
@@ -156,7 +156,7 @@ class KijiJobSuite extends KijiSuite {
   test("A KijiJob is not run if the Kiji table in the output doesn't exist.") {
     class BasicJob(args: Args) extends KijiJob(args) {
       TextLine(args("input"))
-        .write(KijiOutput(args("output"))('line -> "family:column1"))
+        .write(KijiOutput(args("output"), 'line -> "family:column1"))
     }
 
     val nonexistentTableURI: String = KijiURI.newBuilder(uri)
@@ -172,7 +172,7 @@ class KijiJobSuite extends KijiSuite {
         .arg("input", "inputFile")
         .arg("output", nonexistentTableURI)
         .source(TextLine("inputFile"), basicInput)
-        .sink(KijiOutput(nonexistentTableURI)('line -> "family:column1"))(validateBasicJob)
+        .sink(KijiOutput(nonexistentTableURI, 'line -> "family:column1"))(validateBasicJob)
 
     val localException = intercept[InvalidKijiTapException] { jobTest.run.finish }
     val hadoopException = intercept[InvalidKijiTapException] { jobTest.runHadoop.finish }
@@ -184,7 +184,7 @@ class KijiJobSuite extends KijiSuite {
   test("A KijiJob is not run if any of the columns don't exist.") {
     class BasicJob(args: Args) extends KijiJob(args) {
       TextLine(args("input"))
-        .write(KijiOutput(args("output"))('line -> "family:nonexistent_column"))
+        .write(KijiOutput(args("output"), 'line -> "family:nonexistent_column"))
     }
 
     val basicInput: List[(String, String)] = List[(String, String)]()
@@ -195,7 +195,7 @@ class KijiJobSuite extends KijiSuite {
         .arg("input", "inputFile")
         .arg("output", uri)
         .source(TextLine("inputFile"), basicInput)
-        .sink(KijiOutput(uri)('line -> "family:nonexistent_column"))(validateBasicJob)
+        .sink(KijiOutput(uri, 'line -> "family:nonexistent_column"))(validateBasicJob)
 
     val localException = intercept[InvalidKijiTapException] { jobTest.run.finish }
     val hadoopException = intercept[InvalidKijiTapException] { jobTest.runHadoop.finish }
