@@ -70,7 +70,7 @@ class SongPlayCounterSuite extends KijiSuite {
     JobTest(new SongPlayCounter(_))
         .arg("table-uri", tableURI)
         .arg("output", "counts.tsv")
-        .source(KijiInput(tableURI)(Map(Column("info:track_plays", all).useDefaultReaderSchema() ->
+        .source(KijiInput(tableURI, Map(Column("info:track_plays", all).useDefaultReaderSchema() ->
             'playlist)), testInput)
         .sink(Tsv("counts.tsv")) { validateTest }
         .run
@@ -81,7 +81,7 @@ class SongPlayCounterSuite extends KijiSuite {
     JobTest(new SongPlayCounter(_))
         .arg("table-uri", tableURI)
         .arg("output", "counts.tsv")
-        .source(KijiInput(tableURI)(Map(Column("info:track_plays", all).useDefaultReaderSchema() ->
+        .source(KijiInput(tableURI, Map(Column("info:track_plays", all).useDefaultReaderSchema() ->
             'playlist)), testInput)
         .sink(Tsv("counts.tsv")) { validateTest }
         .runHadoop

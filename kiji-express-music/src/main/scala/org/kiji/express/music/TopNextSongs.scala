@@ -73,15 +73,14 @@ class TopNextSongs(args: Args) extends KijiJob(args) {
   // 7. Packs each list into an Avro record.
   // 8. Creates an entity id for the songs table for each song.
   // 9. Writes each song's TopSongs record to Kiji.
-  KijiInput(args("users-table"))(
+  KijiInput(args("users-table"),
       Map(Column("info:track_plays", all).useDefaultReaderSchema() -> 'playlist))
       .flatMap('playlist -> ('first_song, 'song_id)) { bigrams }
       .groupBy(('first_song, 'song_id)) { _.size('count) }
       .packAvro(('song_id, 'count) -> 'song_count)
       .groupBy('first_song) { sortNextSongs }
       .packAvro('top_songs -> 'top_next_songs)
-      .map('first_song -> 'entityId) { firstSong: String =>
-          EntityId(firstSong) }
-      .write(KijiOutput(args("songs-table"))(
+      .map('first_song -> 'entityId) { firstSong: String => EntityId(firstSong) }
+      .write(KijiOutput(args("songs-table"),
           Map('top_next_songs -> Column("info:top_next_songs").useDefaultReaderSchema())))
 }

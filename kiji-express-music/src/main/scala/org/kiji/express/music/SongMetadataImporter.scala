@@ -68,12 +68,12 @@ class SongMetadataImporter(args: Args) extends KijiJob(args) {
   // 5. Writes the Avro records to the column "info:metadata" in a row for the song in a Kiji
   //    table.
   TextLine(args("input"))
-      .map('line ->
-          ('song_id, 'song_name, 'album_name, 'artist_name, 'genre, 'tempo,'duration)) {
-          parseJson }
+      .map('line -> ('song_id, 'song_name, 'album_name, 'artist_name, 'genre, 'tempo, 'duration)) {
+        parseJson
+      }
       .map('song_id -> 'entityId) { songId: String => EntityId(songId) }
-      .packAvro(('song_name, 'album_name, 'artist_name, 'genre, 'tempo, 'duration)
-          -> 'metadata)
-      .write(KijiOutput(args("table-uri"))(Map('metadata ->
-          Column("info:metadata").useDefaultReaderSchema())))
+      .packAvro(('song_name, 'album_name, 'artist_name, 'genre, 'tempo, 'duration) -> 'metadata)
+      .write(KijiOutput(
+          args("table-uri"),
+          Map('metadata -> Column("info:metadata").useDefaultReaderSchema())))
 }

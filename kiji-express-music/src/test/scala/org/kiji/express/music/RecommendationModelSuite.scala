@@ -69,20 +69,16 @@ class RecommendationModelSuite extends KijiSuite {
       | "score_environment":{
       |   "org.kiji.express.avro.AvroScoreEnvironment":{
       |     "input_spec":{
-      |       "kiji_specification":{
-      |         "org.kiji.express.avro.AvroKijiInputSpec":{
-      |           "table_uri":"%s",
-      |           "data_request":{
-      |             "column_definitions":[{
-      |               "name":"info:track_plays"
-      |             } ]
-      |           },
-      |           "field_bindings":[{
-      |             "tuple_field_name":"trackPlay",
-      |             "store_field_name":"info:track_plays"
-      |           }]
-      |         }
-      |       }
+      |       "table_uri":"%s",
+      |       "data_request":{
+      |         "column_definitions":[{
+      |           "name":"info:track_plays"
+      |         } ]
+      |       },
+      |       "field_bindings":[{
+      |         "tuple_field_name":"trackPlay",
+      |         "store_field_name":"info:track_plays"
+      |       }]
       |     },
       |     "kv_stores":[{
       |       "store_type":"KIJI_TABLE",
@@ -96,12 +92,8 @@ class RecommendationModelSuite extends KijiSuite {
       |       }]
       |     }],
       |     "output_spec":{
-      |       "kiji_column_specification":{
-      |         "org.kiji.express.avro.AvroKijiSingleColumnOutputSpec":{
-      |           "table_uri":"%s",
-      |           "output_column":"info:next_song_rec"
-      |         }
-      |       }
+      |       "table_uri":"%s",
+      |       "output_column":"info:next_song_rec"
       |     }
       |   }
       | }
@@ -121,7 +113,7 @@ class RecommendationModelSuite extends KijiSuite {
         (EntityId("user-0"), "song-0"),
         (EntityId("user-1"), "song-1"),
         (EntityId("user-2"), "song-2")), ('entityId, 'trackPlay)
-    ).write(KijiOutput(usersTableURI)(Map('trackPlay ->
+    ).write(KijiOutput(usersTableURI, Map('trackPlay ->
         Column("info:track_plays").useDefaultReaderSchema())))
   }.run
   assert(userTableImportResult, "Failed to import track plays to user table in test setup.")
@@ -138,7 +130,7 @@ class RecommendationModelSuite extends KijiSuite {
         (EntityId("song-2"),
             AvroRecord("top_songs" -> List(AvroRecord("song_id" -> "song-3", "count" -> 3L))))),
         ('entityId, 'topNextSongs)
-    ).write(KijiOutput(songsTableURI)(Map('topNextSongs ->
+    ).write(KijiOutput(songsTableURI, Map('topNextSongs ->
         Column("info:top_next_songs").useDefaultReaderSchema())))
   }.run
   assert(songsTableImportResult, "Failed to import top next songs lists in test setup.")

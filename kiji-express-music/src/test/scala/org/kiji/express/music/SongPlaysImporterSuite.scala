@@ -68,7 +68,7 @@ class SongPlaysImporterSuite extends KijiSuite {
     }
   }
 
-  val jobOutput = KijiOutput(tableURI, 'playTime)(Map('songId ->
+  val jobOutput = KijiOutput(tableURI, 'playTime, Map('songId ->
       Column("info:track_plays").useDefaultReaderSchema()))
 
   // Run a test of the import job, running in Cascading's local runner.
