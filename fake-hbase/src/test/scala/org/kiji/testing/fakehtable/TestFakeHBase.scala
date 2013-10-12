@@ -23,49 +23,58 @@ import scala.collection.JavaConverters.asScalaBufferConverter
 
 import org.apache.commons.codec.binary.Hex
 import org.apache.hadoop.hbase.HTableDescriptor
-import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.client.HTable
+import org.junit.Assert
+import org.junit.Test
 
-@RunWith(classOf[JUnitRunner])
-class TestFakeHBase extends FunSuite {
+/** Tests for the FakeHBase class. */
+class TestFakeHBase {
 
-  test("FakeHBase") {
+  /** Test the basic API of FakeHBase. */
+  @Test
+  def testFakeHBase(): Unit = {
     val hbase = new FakeHBase()
     val desc = new HTableDescriptor("table-name")
     hbase.Admin.createTable(desc)
 
     val tables = hbase.Admin.listTables()
-    expect(1)(tables.length)
-    expect("table-name")(tables(0).getNameAsString())
+    Assert.assertEquals(1, tables.length)
+    Assert.assertEquals("table-name", tables(0).getNameAsString())
   }
 
-  test("Simple region split") {
+  /** Test the fake implementation of HBaseAdmin.getTableRegions(). */
+  @Test
+  def testSimpleRegionSplit(): Unit = {
     val hbase = new FakeHBase()
     val desc = new HTableDescriptor("table-name")
     hbase.Admin.createTable(desc, null, null, numRegions = 2)
 
     val regions = hbase.Admin.getTableRegions("table-name".getBytes).asScala
-    expect(2)(regions.size)
+    Assert.assertEquals(2, regions.size)
     assert(regions.head.getStartKey.isEmpty)
     assert(regions.last.getEndKey.isEmpty)
     for (i <- 0 until regions.size - 1) {
-      expect(regions(i).getEndKey.toSeq)(regions(i + 1).getStartKey.toSeq)
+      Assert.assertEquals(
+          regions(i).getEndKey.toSeq,
+          regions(i + 1).getStartKey.toSeq)
     }
-    expect("7fffffffffffffffffffffffffffffff")(Hex.encodeHexString(regions(0).getEndKey))
+    Assert.assertEquals(
+        "7fffffffffffffffffffffffffffffff",
+        Hex.encodeHexString(regions(0).getEndKey))
   }
 
-  test("FakeHTable.asInstanceOf[HTable]") {
+  /** Tests that FakeHTable instances appear as valid instances of HTable. */
+  @Test
+  def testFakeHTableAsInstanceOfHTable(): Unit = {
     val hbase = new FakeHBase()
     val desc = new HTableDescriptor("table")
     hbase.Admin.createTable(desc)
     val conf = HBaseConfiguration.create()
-    val htable = hbase.InterfaceFactory.create(conf, "table").asInstanceOf[HTable]
+    val htable: HTable = hbase.InterfaceFactory.create(conf, "table").asInstanceOf[HTable]
     val locations = htable.getRegionLocations()
-    expect(1)(locations.size)
+    Assert.assertEquals(1, locations.size)
     val location = htable.getRegionLocation("row key")
-    expect(locations.keySet.iterator.next)(location.getRegionInfo)
+    Assert.assertEquals(locations.keySet.iterator.next, location.getRegionInfo)
   }
 }

@@ -39,7 +39,6 @@
   <properties>
     <!-- Override scala version to 2.9.3 until POM-23 is completed. -->
     <scala.version>2.9.3</scala.version>
-    <scalatest.version>1.9.2</scalatest.version>
   </properties>
 
   <build>
@@ -102,12 +101,6 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.scalatest</groupId>
-      <artifactId>scalatest_${scala.version}</artifactId>
-      <version>${scalatest.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
