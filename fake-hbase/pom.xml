@@ -36,6 +36,12 @@
   </description>
   <url>http://www.kiji.org</url>
 
+  <properties>
+    <!-- Override scala version to 2.9.3 until POM-23 is completed. -->
+    <scala.version>2.9.3</scala.version>
+    <scalatest.version>1.9.2</scalatest.version>
+  </properties>
+
   <build>
     <plugins>
       <plugin>
@@ -54,7 +60,6 @@
               <args>
                 <arg>-unchecked</arg>
                 <arg>-deprecation</arg>
-                <arg>-explaintypes</arg>
               </args>
               <sendJavaToScalac>true</sendJavaToScalac>
             </configuration>
@@ -102,6 +107,7 @@
     <dependency>
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest_${scala.version}</artifactId>
+      <version>${scalatest.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -111,11 +117,15 @@
       <id>kiji-repos</id>
       <name>kiji-repos</name>
       <url>https://repo.wibidata.com/artifactory/kiji</url>
+      <snapshots> <enabled>false</enabled> </snapshots>
+      <releases> <enabled>true</enabled> </releases>
     </repository>
     <repository>
       <id>kiji-nightly</id>
       <name>kiji-nightly</name>
       <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
+      <snapshots> <enabled>true</enabled> </snapshots>
+      <releases> <enabled>false</enabled> </releases>
     </repository>
   </repositories>
 
