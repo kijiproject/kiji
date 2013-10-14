@@ -582,7 +582,7 @@ public class TestInternalFreshKijiTableReader {
 
     final FreshKijiTableReader freshReader = FreshKijiTableReader.Builder.create()
         .withTable(mTable)
-        .withTimeout(100)
+        .withTimeout(500)
         .build();
     try {
       // Read should return stale data.

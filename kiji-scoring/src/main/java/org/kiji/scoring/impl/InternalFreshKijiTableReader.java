@@ -251,11 +251,12 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
    * Container class for all state which can be modified by a call to
    * {@link #rereadFreshenerRecords()} or {@link #rereadFreshenerRecords(java.util.List)}.
    */
-  private static final class RereadableState {
+  private static final class RereadableState implements ReferenceCountable<RereadableState> {
 
     private final ImmutableList<KijiColumnName> mColumnsToFreshen;
     private final ImmutableMap<KijiColumnName, KijiFreshenerRecord> mFreshenerRecords;
     private final ImmutableMap<KijiColumnName, Freshener> mFresheners;
+    private final AtomicInteger mRetainCounter = new AtomicInteger(1);
 
     /**
      * Initialize a new RereadableState.
@@ -274,6 +275,39 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
       mColumnsToFreshen = ImmutableList.copyOf(columnsToFreshen);
       mFreshenerRecords = ImmutableMap.copyOf(freshenerRecords);
       mFresheners = ImmutableMap.copyOf(fresheners);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public RereadableState retain() {
+      final int counter = mRetainCounter.getAndIncrement();
+      Preconditions.checkState(counter >= 1,
+          "Cannot retain closed RereadableState: %s retain counter was %s.",
+          toString(), counter);
+      return this;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void release() throws IOException {
+      final int counter = mRetainCounter.decrementAndGet();
+      Preconditions.checkState(counter >= 0,
+          "Cannot release closed RereadableState: %s retain counter is now %s.",
+          toString(), counter);
+      if (counter == 0) {
+        close();
+      }
+    }
+
+    /**
+     * Release underlying resources.
+     *
+     * @throws IOException in case of an error releasing resources.
+     */
+    private void close() throws IOException {
+      for (Freshener freshener : mFresheners.values()) {
+        freshener.release();
+      }
     }
   }
 
@@ -1403,6 +1437,28 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     return task;
   }
 
+  /**
+   * Attempts to get and retain the reader's RereadableState until retain succeeds.
+   *
+   * @return a retained RereadableState which should be released when it is no longer needed.
+   */
+  private RereadableState getRereadableState() {
+    RereadableState state = null;
+    while (null == state) {
+      try {
+        state = mRereadableState.retain();
+      } catch (IllegalStateException ise) {
+        if (ise.getMessage().contains("Cannot retain closed RereadableState:")) {
+          // Pass and try again.
+          continue;
+        } else {
+          throw ise;
+        }
+      }
+    }
+    return state;
+  }
+
   // -----------------------------------------------------------------------------------------------
   // Public interface.
   // -----------------------------------------------------------------------------------------------
@@ -1429,27 +1485,30 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     // Get the start time for the request.
     final long startTime = System.nanoTime();
 
-    // If the options specify timeout of -1 this indicates we should use the configured timeout.
-    final long timeout = (-1 == options.getTimeout()) ? mTimeout : options.getTimeout();
 
-    // Get a snapshot of the rereadable state.
-    final RereadableState rereadableState = mRereadableState;
-
-    // Collect the Fresheners and Records applicable to this request.
     final ImmutableList<KijiColumnName> requestColumns = getColumnsFromRequest(dataRequest);
-    final ImmutableMap<KijiColumnName, Freshener> fresheners =
-        filterFresheners(requestColumns, rereadableState.mFresheners);
-    final ImmutableMap<KijiColumnName, KijiFreshenerRecord> records =
-        filterRecords(rereadableState.mFreshenerRecords, requestColumns);
-    // If there are no Fresheners attached to the requested columns, return the requested data.
-    if (fresheners.isEmpty()) {
-      return mReader.get(entityId, dataRequest);
-    } else {
-      // Retain the Fresheners so that they cannot be cleaned up while in use.
-      for (Map.Entry<KijiColumnName, Freshener> freshenerEntry : fresheners.entrySet()) {
-        freshenerEntry.getValue().retain();
+
+    final ImmutableMap<KijiColumnName, Freshener> fresheners;
+    final ImmutableMap<KijiColumnName, KijiFreshenerRecord> records;
+    // Get a retained snapshot of the rereadable state.
+    final RereadableState rereadableState = getRereadableState();
+    try {
+      // Collect the Fresheners and Records applicable to this request.
+      fresheners = filterFresheners(requestColumns, rereadableState.mFresheners);
+      records = filterRecords(rereadableState.mFreshenerRecords, requestColumns);
+      // If there are no Fresheners attached to the requested columns, return the requested data.
+      if (fresheners.isEmpty()) {
+        return mReader.get(entityId, dataRequest);
+      } else {
+        // Retain the Fresheners so that they cannot be cleaned up while in use.
+        for (Map.Entry<KijiColumnName, Freshener> freshenerEntry : fresheners.entrySet()) {
+          freshenerEntry.getValue().retain();
+        }
       }
+    } finally {
+      rereadableState.release();
     }
+
 
     final ImmutableMap<KijiColumnName, InternalFreshenerContext> freshenerContexts =
         createFreshenerContexts(dataRequest, fresheners, options.getParameters());
@@ -1475,6 +1534,8 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     final Future<List<Boolean>> superFuture =
         getFuture(new FutureAggregatingCallable<Boolean>(futures));
 
+    // If the options specify timeout of -1 this indicates we should use the configured timeout.
+    final long timeout = (-1 == options.getTimeout()) ? mTimeout : options.getTimeout();
     try {
       if (getFromFuture(superFuture, timeout).contains(true)) {
         // If all Fresheners return in time and at least one has written a new value, read from the
@@ -1621,6 +1682,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     mFreshnessManager.close();
     mReader.close();
     mBufferedWriter.close();
+    mRereadableState.release();
 
     // finishClosing() must be the last line of close().
     mState.finishClosing();
