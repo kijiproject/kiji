@@ -1,6 +1,9 @@
 
                               Kiji Scoring Release Notes
 Version 0.7.0
+    * SCORE-111. FreshKijiTableReaderBuilder has been moved into the FreshKijiTableReader interface
+        and is now FreshKijiTableReader.Builder. All other FreshKijiTableReaderBuilder APIs remain
+        the same.
     * SCORE-97. KijiScoring has undergone significant API changes. The KijiFreshnessPolicy SPI has
         been redesigned and KijiProducer has been replaced by a new SPI called ScoreFunction. These
         SPIs are designed specifically to support the use-case of real time scoring in a multi

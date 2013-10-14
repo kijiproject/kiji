@@ -62,7 +62,7 @@ import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.RuntimeInterruptedException;
 import org.kiji.schema.util.ReferenceCountable;
 import org.kiji.scoring.FreshKijiTableReader;
-import org.kiji.scoring.FreshKijiTableReaderBuilder.StatisticGatheringMode;
+import org.kiji.scoring.FreshKijiTableReader.Builder.StatisticGatheringMode;
 import org.kiji.scoring.FreshenerContext;
 import org.kiji.scoring.KijiFreshnessManager;
 import org.kiji.scoring.KijiFreshnessPolicy;

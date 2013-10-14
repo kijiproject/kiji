@@ -28,7 +28,7 @@ import com.google.common.collect.Maps;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
-import org.kiji.scoring.FreshKijiTableReaderBuilder.StatisticGatheringMode;
+import org.kiji.scoring.FreshKijiTableReader.Builder.StatisticGatheringMode;
 import org.kiji.scoring.avro.KijiFreshenerRecord;
 
 /** Container representing statistics about Fresheners run by a single FreshKijiTableReader. */

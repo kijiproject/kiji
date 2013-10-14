@@ -269,7 +269,7 @@ public class TestKVStores extends KijiClientTest {
     }
     final KijiTable userTable = getKiji().openTable("user");
     try {
-      final FreshKijiTableReader reader = FreshKijiTableReaderBuilder.create()
+      final FreshKijiTableReader reader = FreshKijiTableReader.Builder.create()
           .withTable(userTable)
           .withTimeout(10000)
           .build();
@@ -308,7 +308,7 @@ public class TestKVStores extends KijiClientTest {
     }
     final KijiTable userTable = getKiji().openTable("user");
     try {
-      final FreshKijiTableReader reader = FreshKijiTableReaderBuilder.create()
+      final FreshKijiTableReader reader = FreshKijiTableReader.Builder.create()
           .withTable(userTable)
           .withTimeout(10000)
           .build();
@@ -348,7 +348,7 @@ public class TestKVStores extends KijiClientTest {
     FreshKijiTableReader freshReader = null;
     try {
       userTable = getKiji().openTable("user");
-      freshReader = FreshKijiTableReaderBuilder.create()
+      freshReader = FreshKijiTableReader.Builder.create()
           .withTable(userTable)
           .withTimeout(10000)
           .build();

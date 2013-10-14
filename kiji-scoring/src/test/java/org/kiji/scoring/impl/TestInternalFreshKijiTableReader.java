@@ -50,8 +50,7 @@ import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.util.InstanceBuilder;
 import org.kiji.scoring.FreshKijiTableReader;
-import org.kiji.scoring.FreshKijiTableReaderBuilder;
-import org.kiji.scoring.FreshKijiTableReaderBuilder.StatisticGatheringMode;
+import org.kiji.scoring.FreshKijiTableReader.Builder.StatisticGatheringMode;
 import org.kiji.scoring.FreshenerContext;
 import org.kiji.scoring.KijiFreshnessManager;
 import org.kiji.scoring.KijiFreshnessPolicy;
@@ -267,7 +266,7 @@ public class TestInternalFreshKijiTableReader {
     final EntityId eid = mTable.getEntityId("foo");
     final KijiDataRequest request = KijiDataRequest.create("family", "qual0");
 
-    final FreshKijiTableReader reader = FreshKijiTableReaderBuilder.create()
+    final FreshKijiTableReader reader = FreshKijiTableReader.Builder.create()
         .withTable(mTable)
         .build();
 
@@ -298,7 +297,7 @@ public class TestInternalFreshKijiTableReader {
     }
     // Open a new reader to pull in the new freshness policies. Allow 10 seconds so it is very
     // unlikely to timeout.
-    final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
+    final FreshKijiTableReader freshReader = FreshKijiTableReader.Builder.create()
         .withTable(mTable)
         .withTimeout(10000)
         .build();
@@ -335,7 +334,7 @@ public class TestInternalFreshKijiTableReader {
       manager.close();
     }
     // Open a new reader to pull in the new freshness policies.
-    final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
+    final FreshKijiTableReader freshReader = FreshKijiTableReader.Builder.create()
         .withTable(mTable)
         .withTimeout(10000)
         .build();
@@ -385,7 +384,7 @@ public class TestInternalFreshKijiTableReader {
       manager.close();
     }
     // Open a new reader to pull in the new Fresheners.
-    final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
+    final FreshKijiTableReader freshReader = FreshKijiTableReader.Builder.create()
         .withTable(mTable)
         .withTimeout(10000)
         .build();
@@ -440,7 +439,7 @@ public class TestInternalFreshKijiTableReader {
       manager.close();
     }
 
-    final FreshKijiTableReader reader = FreshKijiTableReaderBuilder.create()
+    final FreshKijiTableReader reader = FreshKijiTableReader.Builder.create()
         .withTable(mTable)
         .withTimeout(500)
         .build();
@@ -473,7 +472,7 @@ public class TestInternalFreshKijiTableReader {
           false,
           false);
 
-      FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
+      FreshKijiTableReader freshReader = FreshKijiTableReader.Builder.create()
           .withTable(mTable)
           .withTimeout(1000)
           .withAutomaticReread(1000)
@@ -538,7 +537,7 @@ public class TestInternalFreshKijiTableReader {
     // Set the pool size to 2.
     FreshenerThreadPool.getInstance(2);
 
-    final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
+    final FreshKijiTableReader freshReader = FreshKijiTableReader.Builder.create()
         .withTable(mTable)
         .withTimeout(100)
         .build();
@@ -579,7 +578,7 @@ public class TestInternalFreshKijiTableReader {
       manager.close();
     }
 
-    final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
+    final FreshKijiTableReader freshReader = FreshKijiTableReader.Builder.create()
         .withTable(mTable)
         .withTimeout(100)
         .build();
@@ -621,7 +620,7 @@ public class TestInternalFreshKijiTableReader {
           false,
           false);
 
-      final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
+      final FreshKijiTableReader freshReader = FreshKijiTableReader.Builder.create()
           .withTable(mTable)
           .withTimeout(100)
           .build();
@@ -674,7 +673,7 @@ public class TestInternalFreshKijiTableReader {
           false,
           false);
 
-      final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
+      final FreshKijiTableReader freshReader = FreshKijiTableReader.Builder.create()
           .withTable(mTable).withTimeout(1000).build();
       try {
         assertEquals(2, freshReader.get(eid, request).getMostRecentValue("map", "qualifier"));
@@ -709,7 +708,7 @@ public class TestInternalFreshKijiTableReader {
       manager.close();
     }
 
-    final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
+    final FreshKijiTableReader freshReader = FreshKijiTableReader.Builder.create()
         .withTable(mTable)
         .withTimeout(1000)
         .build();
@@ -745,7 +744,7 @@ public class TestInternalFreshKijiTableReader {
           false,
           false);
 
-      final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
+      final FreshKijiTableReader freshReader = FreshKijiTableReader.Builder.create()
           .withTable(mTable).withTimeout(1000).build();
       try {
         freshReader.get(eid, request);
@@ -806,7 +805,7 @@ public class TestInternalFreshKijiTableReader {
       manager.close();
     }
 
-    final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
+    final FreshKijiTableReader freshReader = FreshKijiTableReader.Builder.create()
         .withTable(mTable)
         .withTimeout(1000)
         .build();
@@ -859,7 +858,7 @@ public class TestInternalFreshKijiTableReader {
 
 
     // Default partial freshening is false.
-    final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
+    final FreshKijiTableReader freshReader = FreshKijiTableReader.Builder.create()
         .withTable(mTable)
         .withTimeout(500)
         .build();
@@ -888,7 +887,7 @@ public class TestInternalFreshKijiTableReader {
     }
 
     // Reset and try again with partial freshness allowed.
-    final FreshKijiTableReader freshReader2 = FreshKijiTableReaderBuilder.create()
+    final FreshKijiTableReader freshReader2 = FreshKijiTableReader.Builder.create()
         .withTable(mTable)
         .withTimeout(900)
         .withPartialFreshening(true)
@@ -929,7 +928,7 @@ public class TestInternalFreshKijiTableReader {
       manager.close();
     }
 
-    final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
+    final FreshKijiTableReader freshReader = FreshKijiTableReader.Builder.create()
         .withTable(mTable).withTimeout(500).withPartialFreshening(true).build();
 
     try {
@@ -977,7 +976,7 @@ public class TestInternalFreshKijiTableReader {
       manager.close();
     }
 
-    final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
+    final FreshKijiTableReader freshReader = FreshKijiTableReader.Builder.create()
         .withTable(mTable)
         .withTimeout(500)
         .withColumnsToFreshen(Lists.newArrayList(FAMILY_QUAL0))
@@ -1025,7 +1024,7 @@ public class TestInternalFreshKijiTableReader {
       manager.close();
     }
 
-    final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
+    final FreshKijiTableReader freshReader = FreshKijiTableReader.Builder.create()
         .withTable(mTable)
         .withTimeout(500)
         .withColumnsToFreshen(Lists.newArrayList(new KijiColumnName("family")))
@@ -1074,7 +1073,7 @@ public class TestInternalFreshKijiTableReader {
       manager.close();
     }
 
-    final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
+    final FreshKijiTableReader freshReader = FreshKijiTableReader.Builder.create()
         .withTable(mTable)
         .withTimeout(500)
         .withColumnsToFreshen(Lists.newArrayList(FAMILY_QUAL0))
@@ -1112,7 +1111,7 @@ public class TestInternalFreshKijiTableReader {
       manager.close();
     }
 
-    final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
+    final FreshKijiTableReader freshReader = FreshKijiTableReader.Builder.create()
         .withTable(mTable)
         .withTimeout(500)
         .withStatisticsGathering(StatisticGatheringMode.ALL, 0)
@@ -1165,7 +1164,7 @@ public class TestInternalFreshKijiTableReader {
       manager.close();
     }
 
-    final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
+    final FreshKijiTableReader freshReader = FreshKijiTableReader.Builder.create()
         .withTable(mTable)
         .withTimeout(500)
         .withStatisticsGathering(StatisticGatheringMode.ALL, 0)
@@ -1216,7 +1215,7 @@ public class TestInternalFreshKijiTableReader {
       manager.close();
     }
 
-    final FreshKijiTableReader freshReader = FreshKijiTableReaderBuilder.create()
+    final FreshKijiTableReader freshReader = FreshKijiTableReader.Builder.create()
         .withTable(mTable)
         .withTimeout(500)
         .withStatisticsGathering(StatisticGatheringMode.ALL, 0)

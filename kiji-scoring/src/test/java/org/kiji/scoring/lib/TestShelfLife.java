@@ -42,7 +42,6 @@ import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.util.InstanceBuilder;
 import org.kiji.scoring.FreshKijiTableReader;
-import org.kiji.scoring.FreshKijiTableReaderBuilder;
 import org.kiji.scoring.FreshenerContext;
 import org.kiji.scoring.impl.InternalFreshenerContext;
 
@@ -79,7 +78,7 @@ public class TestShelfLife {
     // Fill local variables.
     mTable = mKiji.openTable("user");
     mReader = mTable.openTableReader();
-    mFreshReader = FreshKijiTableReaderBuilder.create()
+    mFreshReader = FreshKijiTableReader.Builder.create()
         .withTable(mTable)
         .withTimeout(1000)
         .build();

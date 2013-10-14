@@ -92,7 +92,7 @@ public class TestFreshnessDemo extends KijiClientTest {
           false);
       // Open a FreshKijiTableReader for the table with a timeout of 500 milliseconds.
       // Note: the FreshKijiTableReader must be opened after the Freshener is registered.
-      freshReader = FreshKijiTableReaderBuilder.create()
+      freshReader = FreshKijiTableReader.Builder.create()
           .withTable(table)
           .withTimeout(500)
           .build();
