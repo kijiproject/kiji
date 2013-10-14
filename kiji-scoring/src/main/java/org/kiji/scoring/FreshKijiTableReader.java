@@ -21,9 +21,11 @@ package org.kiji.scoring;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
@@ -213,7 +215,7 @@ public interface FreshKijiTableReader extends KijiTableReader {
      * @param timeout the default duration in milliseconds to wait before returning stale data. This
      *     may be overriden at request time by using
      *     {@link FreshKijiTableReader#get(org.kiji.schema.EntityId,
-     *     org.kiji.schema.KijiDataRequest, long)}.
+     *     org.kiji.schema.KijiDataRequest, FreshRequestOptions)}.
      * @return this Builder configured to wait the given number of milliseconds
      * before returning stale data.
      */
@@ -364,6 +366,168 @@ public interface FreshKijiTableReader extends KijiTableReader {
   }
 
   /**
+   * Options which affect the behavior of a single freshening request. Used via
+   * {@link #get(org.kiji.schema.EntityId, org.kiji.schema.KijiDataRequest,
+   * org.kiji.scoring.FreshKijiTableReader.FreshRequestOptions)}
+   */
+  @ApiStability.Experimental
+  public static final class FreshRequestOptions {
+
+    /** Builder for FreshRequestOptions. */
+    @ApiStability.Experimental
+    public static final class Builder {
+
+      /** -1 is a code for the FreshKijiTableReader to use its configured default timeout. */
+      private static final long DEFAULT_TIMEOUT = -1;
+      private static final Map<String, String> DEFAULT_PARAMETERS = Collections.emptyMap();
+
+      private Long mTimeout = null;
+      private Map<String, String> mParameters = null;
+
+      /** Private constructor. */
+      private Builder() { }
+
+      /**
+       * Create a new FreshRequestOptions.Builder.
+       *
+       * @return a new FreshRequestOptions.Builder.
+       */
+      public static Builder create() {
+        return new Builder();
+      }
+
+      /**
+       * Configure the FreshRequestOptions to include the given timeout.
+       *
+       * @param timeout time in milliseconds to wait for this freshening request to finish.
+       * @return this builder configured to include the given timeout.
+       */
+      public Builder withTimeout(
+          final long timeout
+      ) {
+        Preconditions.checkArgument(0 < timeout, "Timeout must be positive, got: %s", timeout);
+        Preconditions.checkState(null == mTimeout, "Timeout is already set to: %s", mTimeout);
+        mTimeout = timeout;
+        return this;
+      }
+
+      /**
+       * Configure the FreshRequestOptions to include the given configuration parameters.
+       *
+       * @param parameters configuration parameters to include in the FreshRequestOptions.
+       * @return this builder configured to include the given configuration parameters.
+       */
+      public Builder withParameters(
+          final Map<String, String> parameters
+      ) {
+        Preconditions.checkNotNull(parameters, "Parameters may not be null.");
+        Preconditions.checkState(
+            null == mParameters, "Parameters are already set to: %s", mParameters);
+        mParameters = Maps.newHashMap(parameters);
+        return this;
+      }
+
+      /**
+       * Add the given parameters to the set of parameters included in this FreshRequestOptions.
+       *
+       * @param parameters configuration parameters to add. These values will override existing
+       *     values in this builder.
+       * @return this builder configured to include the given configuration parameters.
+       */
+      public Builder addParameters(
+          final Map<String, String> parameters
+      ) {
+        Preconditions.checkNotNull(parameters, "Parameters may not be null.");
+        if (null == mParameters) {
+          mParameters = Maps.newHashMap(parameters);
+        } else {
+          mParameters.putAll(parameters);
+        }
+        return null;
+      }
+
+      /**
+       * Build a FreshRequestOptions from the configured state and default values.
+       *
+       * @return a new FreshRequestOptions from the configured state and default values.
+       */
+      public FreshRequestOptions build() {
+        if (null == mTimeout) {
+          mTimeout = DEFAULT_TIMEOUT;
+        }
+        if (null == mParameters) {
+          mParameters = DEFAULT_PARAMETERS;
+        }
+
+        return new FreshRequestOptions(mTimeout, mParameters);
+      }
+    }
+
+    /**
+     * Convenience method for creating a FreshRequestOptions with the given timeout and default
+     * parameters. Default parameters are empty.
+     *
+     * @param timeout time in milliseconds to wait for this freshening request to finish.
+     * @return a new FreshRequestOptions with the given timeout and default parameters.
+     */
+    public static FreshRequestOptions withTimeout(
+        final long timeout
+    ) {
+      return Builder.create().withTimeout(timeout).build();
+    }
+
+    /**
+     * Convenience method for creating a FreshRequestOptions with the given parameters and default
+     * timeout.
+     *
+     * @param parameters configuration parameters which will be available to all Fresheners run in
+     *     response to this request.
+     * @return a new FreshRequestOptions with the given parameters and default timeout.
+     */
+    public static FreshRequestOptions withParameters(
+        final Map<String, String> parameters
+    ) {
+      return Builder.create().withParameters(parameters).build();
+    }
+
+    private final long mTimeout;
+    private final Map<String, String> mParameters;
+
+    /**
+     * Initialize a new FreshRequestOptions with the given timeout and parameters.
+     *
+     * @param timeout time in milliseconds to wait for this freshening request to finish.
+     * @param parameters configuration parameters which will be available to all Fresheners run in
+     *     response to this request.
+     */
+    private FreshRequestOptions(
+        final long timeout,
+        final Map<String, String> parameters
+    ) {
+      mTimeout = timeout;
+      mParameters = parameters;
+    }
+
+    /**
+     * Get the timeout from this FreshRequestOptions.
+     *
+     * @return the timeout from this FreshRequestOptions.
+     */
+    public long getTimeout() {
+      return mTimeout;
+    }
+
+    /**
+     * Get configuration parameters from this FreshRequestOptions.
+     *
+     * @return configuration parameters from this FreshRequestOptions.
+     */
+    public Map<String, String> getParameters() {
+      return mParameters;
+    }
+  }
+
+  /**
    * Freshens data as needed before returning. If freshening has not completed within the
    * configured timeout, will return stale or partially freshened data depending on the
    * configuration of the reader.  Behaves the same as
@@ -387,12 +551,12 @@ public interface FreshKijiTableReader extends KijiTableReader {
    *
    * @param entityId the EntityId of the row to query.
    * @param dataRequest what data to retrieve.
-   * @param timeout how long (in milliseconds) to wait before returning stale or partially fresh
-   * data.
+   * @param options options which affect the behavior of this freshening request only.
    * @return the data requested after freshening.
    * @throws IOException in case of an error reading from the table.
    */
-  KijiRowData get(EntityId entityId, KijiDataRequest dataRequest, long timeout) throws IOException;
+  KijiRowData get(EntityId entityId, KijiDataRequest dataRequest, FreshRequestOptions options)
+      throws IOException;
 
   /**
    * Attempts to freshen all data requested in parallel before returning. If freshening has not
@@ -416,13 +580,15 @@ public interface FreshKijiTableReader extends KijiTableReader {
    *
    * @param entityIds a list of EntityIds for the rows to query.
    * @param dataRequest what data to retrieve from each row.
-   * @param timeout the time (in milliseconds) to wait before returning stale or partially freshened
-   * data.
+   * @param options options which affect the behavior of this freshening request only.
    * @return a list of KijiRowData corresponding to the EntityIds and data request after freshening.
    * @throws IOException in case of an error reading from the table.
    */
-  List<KijiRowData> bulkGet(List<EntityId> entityIds, KijiDataRequest dataRequest, long timeout)
-      throws IOException;
+  List<KijiRowData> bulkGet(
+      List<EntityId> entityIds,
+      KijiDataRequest dataRequest,
+      FreshRequestOptions options
+  ) throws IOException;
 
   /**
    * Clear cached Fresheners and reload from the meta table. This method replaces only those

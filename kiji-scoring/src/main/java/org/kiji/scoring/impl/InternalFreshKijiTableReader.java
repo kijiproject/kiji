@@ -20,7 +20,6 @@
 package org.kiji.scoring.impl;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
@@ -477,6 +476,46 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     @Override
     public KijiRowData call() throws Exception {
       return mReader.get(mEntityId, mDataRequest);
+    }
+  }
+
+  // -----------------------------------------------------------------------------------------------
+
+  /**
+   * Callable which performs a freshened read from a table. Used in a Future to freshen
+   * asynchronously.
+   */
+  private static final class FreshTableReadCallable implements Callable<KijiRowData> {
+
+    private final FreshKijiTableReader mReader;
+    private final EntityId mEntityId;
+    private final KijiDataRequest mDataRequest;
+    private final FreshRequestOptions mOptions;
+
+    /**
+     * Initialize a new FreshTableReadCallable.
+     *
+     * @param reader the FreshKijiTableReader to use to perform the read.
+     * @param entityId the EntityId of the row from which to read and freshen data.
+     * @param dataRequest the KijiDataRequest defining the data to read and freshen from the row.
+     * @param options options applicable to the freshening request.
+     */
+    public FreshTableReadCallable(
+        final FreshKijiTableReader reader,
+        final EntityId entityId,
+        final KijiDataRequest dataRequest,
+        final FreshRequestOptions options
+    ) {
+      mReader = reader;
+      mEntityId = entityId;
+      mDataRequest = dataRequest;
+      mOptions = options;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public KijiRowData call() throws Exception {
+      return mReader.get(mEntityId, mDataRequest, mOptions);
     }
   }
 
@@ -1077,12 +1116,15 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
    *     contexts.
    * @param fresheners the Fresheners applicable to the client request, which will consume the
    *     contexts.
+   * @param parameterOverrides overriding configuration specified with {@link FreshRequestOptions}
+   *     passed to the request which requires these contexts.
    * @return a mapping from attached column to InternalFreshenerContext corresponding to the input
    *     Fresheners.
    */
   private static ImmutableMap<KijiColumnName, InternalFreshenerContext> createFreshenerContexts(
       final KijiDataRequest clientRequest,
-      final Map<KijiColumnName, Freshener> fresheners
+      final Map<KijiColumnName, Freshener> fresheners,
+      final Map<String, String> parameterOverrides
   ) {
     final Map<KijiColumnName, InternalFreshenerContext> collectedContexts = Maps.newHashMap();
 
@@ -1091,7 +1133,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
           clientRequest,
           freshenerEntry.getValue().mAttachedColumn,
           freshenerEntry.getValue().mParameters,
-          Collections.<String, String>emptyMap(), // TODO add support for request time parameters.
+          parameterOverrides,
           freshenerEntry.getValue().mFactory);
       collectedContexts.put(freshenerEntry.getKey(), context);
     }
@@ -1159,18 +1201,21 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
    * @param entityIds the rows to freshen.
    * @param dataRequest the data to retrieve from each row.
    * @param freshReader the FreshKijiTableReader to use to perform each freshening read.
+   * @param options options applicable to all requests made asynchronously in returned futures.
    * @return a list of Futures corresponding to the values of freshening data on each row in
    *     entityIds.
    */
   private static ImmutableList<Future<KijiRowData>> getFuturesForEntities(
       final List<EntityId> entityIds,
       final KijiDataRequest dataRequest,
-      final FreshKijiTableReader freshReader
+      final FreshKijiTableReader freshReader,
+      final FreshRequestOptions options
   ) {
     final List<Future<KijiRowData>> collectedFutures = Lists.newArrayList();
 
     for (EntityId entityId : entityIds) {
-      collectedFutures.add(getFuture(new TableReadCallable(freshReader, entityId, dataRequest)));
+      collectedFutures.add(getFuture(new FreshTableReadCallable(
+          freshReader, entityId, dataRequest, options)));
     }
 
     return ImmutableList.copyOf(collectedFutures);
@@ -1368,7 +1413,8 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
       final EntityId entityId,
       final KijiDataRequest dataRequest
   ) throws IOException {
-    return get(entityId, dataRequest, mTimeout);
+    return get(
+        entityId, dataRequest, FreshKijiTableReader.FreshRequestOptions.withTimeout(mTimeout));
   }
 
   /** {@inheritDoc} */
@@ -1376,12 +1422,15 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   public KijiRowData get(
       final EntityId entityId,
       final KijiDataRequest dataRequest,
-      final long timeout
+      final FreshRequestOptions options
   ) throws IOException {
     mState.requireState(State.OPEN);
 
     // Get the start time for the request.
     final long startTime = System.nanoTime();
+
+    // If the options specify timeout of -1 this indicates we should use the configured timeout.
+    final long timeout = (-1 == options.getTimeout()) ? mTimeout : options.getTimeout();
 
     // Get a snapshot of the rereadable state.
     final RereadableState rereadableState = mRereadableState;
@@ -1403,7 +1452,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     }
 
     final ImmutableMap<KijiColumnName, InternalFreshenerContext> freshenerContexts =
-        createFreshenerContexts(dataRequest, fresheners);
+        createFreshenerContexts(dataRequest, fresheners, options.getParameters());
 
     final Future<KijiRowData> clientDataFuture =
         getFuture(new TableReadCallable(mReader, entityId, dataRequest));
@@ -1455,7 +1504,8 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
       final List<EntityId> entityIds,
       final KijiDataRequest dataRequest
   ) throws IOException {
-    return bulkGet(entityIds, dataRequest, mTimeout);
+    return bulkGet(
+        entityIds, dataRequest, FreshKijiTableReader.FreshRequestOptions.withTimeout(mTimeout));
   }
 
   /** {@inheritDoc} */
@@ -1463,18 +1513,18 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   public List<KijiRowData> bulkGet(
       final List<EntityId> entityIds,
       final KijiDataRequest dataRequest,
-      final long timeout
+      final FreshRequestOptions options
   ) throws IOException {
     mState.requireState(State.OPEN);
 
     final ImmutableList<Future<KijiRowData>> futures =
-        getFuturesForEntities(entityIds, dataRequest, this);
+        getFuturesForEntities(entityIds, dataRequest, this, options);
 
     final Future<List<KijiRowData>> superDuperFuture =
         getFuture(new FutureAggregatingCallable<KijiRowData>(futures));
 
     try {
-      return getFromFuture(superDuperFuture, timeout);
+      return getFromFuture(superDuperFuture, options.getTimeout());
     } catch (TimeoutException te) {
       // If the request times out, read from the table.
       return mReader.bulkGet(entityIds, dataRequest);

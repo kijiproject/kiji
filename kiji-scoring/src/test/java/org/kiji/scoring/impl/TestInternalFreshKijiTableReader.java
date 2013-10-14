@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.junit.After;
 import org.junit.Before;
@@ -51,6 +52,7 @@ import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.util.InstanceBuilder;
 import org.kiji.scoring.FreshKijiTableReader;
 import org.kiji.scoring.FreshKijiTableReader.Builder.StatisticGatheringMode;
+import org.kiji.scoring.FreshKijiTableReader.FreshRequestOptions;
 import org.kiji.scoring.FreshenerContext;
 import org.kiji.scoring.KijiFreshnessManager;
 import org.kiji.scoring.KijiFreshnessPolicy;
@@ -342,7 +344,7 @@ public class TestInternalFreshKijiTableReader {
       // freshReader should return different from regular reader because the data is stale.
       assertFalse(
           mReader.get(eid, request).getMostRecentValue("family", "qual0").equals(
-          freshReader.get(eid, request).getMostRecentValue("family", "qual0")));
+              freshReader.get(eid, request).getMostRecentValue("family", "qual0")));
       // The new value should have been written.
       assertEquals(
           "new-val", mReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
@@ -597,9 +599,42 @@ public class TestInternalFreshKijiTableReader {
 
       // Read should return fresh data given a longer timeout.
       assertEquals("new-val",
-          freshReader.get(eid, request, 1200).getMostRecentValue("family", "qual0").toString());
+          freshReader.get(eid, request, FreshKijiTableReader.FreshRequestOptions.withTimeout(1200))
+              .getMostRecentValue("family", "qual0").toString());
     } finally {
       freshReader.close();
+    }
+  }
+
+  @Test
+  public void testSpecifyParameterOverrides() throws IOException {
+    final EntityId eid = mTable.getEntityId("foo");
+    final KijiDataRequest request = FAMILY_QUAL0_R;
+    final Map<String, String> params = Maps.newHashMap();
+    params.put(NewerThan.NEWER_THAN_KEY, String.valueOf(100));
+
+    final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
+    try {
+      // The value in family:qual0 is newer than one, so it should not freshen.
+      manager.registerFreshener(
+          TABLE_NAME, FAMILY_QUAL0, new NewerThan(1), TEST_SCORE_FN, EMPTY_PARAMS, false, false);
+    } finally {
+      manager.close();
+    }
+
+    final FreshKijiTableReader reader = FreshKijiTableReader.Builder.create()
+        .withTable(mTable)
+        .withTimeout(500)
+        .build();
+    try {
+      // Should not freshen.
+      assertEquals("foo-val",
+          reader.get(eid, request).getMostRecentValue("family", "qual0").toString());
+      // Should freshen.
+      assertEquals("new-val", reader.get(eid, request, FreshRequestOptions.withParameters(params))
+          .getMostRecentValue("family", "qual0").toString());
+    } finally {
+      reader.close();
     }
   }
 

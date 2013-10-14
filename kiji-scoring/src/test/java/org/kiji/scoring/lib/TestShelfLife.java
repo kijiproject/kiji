@@ -113,6 +113,6 @@ public class TestShelfLife {
         parameters);
 
     policy.setup(contextMin);
-    assertFalse(policy.isFresh(rowData, contextMax));
+    assertFalse(policy.isFresh(rowData, contextMin));
   }
 }

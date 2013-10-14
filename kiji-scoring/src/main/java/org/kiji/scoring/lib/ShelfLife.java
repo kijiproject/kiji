@@ -93,8 +93,9 @@ public final class ShelfLife extends KijiFreshnessPolicy {
   /** {@inheritDoc} */
   @Override
   public boolean isFresh(KijiRowData rowData, FreshenerContext context) {
-    Preconditions.checkState(-1 != mShelfLifeMillis,
-        "Shelf life not set. Did you call ShelfLife.setup()?");
+    final String shelfLifeString = context.getParameter(SHELF_LIFE_KEY);
+    Preconditions.checkNotNull(shelfLifeString, "ShelfLife parameter unset.");
+    final long shelfLife = Long.valueOf(shelfLifeString);
 
     final KijiColumnName columnName = context.getAttachedColumn();
 
@@ -107,6 +108,6 @@ public final class ShelfLife extends KijiFreshnessPolicy {
     // If there are no values in the column in the row data, it is not fresh.  If there are values,
     // but the newest is more than mShelfLifeMillis old, it is not fresh.
     return !timestamps.isEmpty()
-        && System.currentTimeMillis() - timestamps.first() <= mShelfLifeMillis;
+        && System.currentTimeMillis() - timestamps.first() <= shelfLife;
   }
 }

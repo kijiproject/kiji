@@ -1,6 +1,11 @@
 
                               Kiji Scoring Release Notes
 Version 0.7.0
+    * SCORE-112. FreshKijiTableReader.get(EntityId, KijiDataRequest, long) has been replaced by
+        get(EntityId, KijiDataRequest, org.kiji.scoring.FreshKijiTableReader.FreshRequestOptions)
+        which allows for the specification of an overriding timestamp and string-string parameters
+        which will override parameters available to the KijiFreshnessPolicy and ScoreFunction for
+        this request only.
     * SCORE-111. FreshKijiTableReaderBuilder has been moved into the FreshKijiTableReader interface
         and is now FreshKijiTableReader.Builder. All other FreshKijiTableReaderBuilder APIs remain
         the same.
