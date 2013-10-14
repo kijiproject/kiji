@@ -20,10 +20,7 @@ package org.kiji.scoring;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
-
-import org.apache.avro.Schema;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
@@ -58,9 +55,9 @@ import org.kiji.schema.KijiRowData;
  *     <li>Per-request methods</li>
  *   </ul>
  *   Methods in each category are run at different times. Attachment time methods are run during
- *   Freshener attachment only; this includes {@link #serializeToParameters()} and
- *   {@link #getOutputSchemas()}. One-time setup and cleanup methods are run when Fresheners are
- *   constructed during initialization of a FreshKijiTableReader or during a call to
+ *   Freshener attachment only; this includes {@link #serializeToParameters()}. One-time setup and
+ *   cleanup methods are run when Fresheners are constructed during initialization of a
+ *   FreshKijiTableReader or during a call to
  *   {@link org.kiji.scoring.FreshKijiTableReader#rereadFreshenerRecords()} for setup, and when a
  *   Freshener has been unloaded from a FreshKijiTableReader or the reader is closed for cleanup;
  *   this includes {@link #getRequiredStores(FreshenerGetStoresContext)},
@@ -82,19 +79,6 @@ import org.kiji.schema.KijiRowData;
 public abstract class ScoreFunction<T> {
 
   // Attachment time methods -----------------------------------------------------------------------
-
-  /**
-   * Optionally specify the Avro Schema or schemas of the value returned by
-   * {@link #score(org.kiji.schema.KijiRowData, FreshenerContext)}. These Schemas will be used to
-   * verify compatibility between the output value and the column to which the Freshener is
-   * attached. If the list is null or empty, no validation will be performed.
-   *
-   * @return the Avro Schema of all possible return values of
-   *     {@link #score(org.kiji.schema.KijiRowData, FreshenerContext)}.
-   */
-  public List<Schema> getOutputSchemas() {
-    return Collections.emptyList();
-  }
 
   /**
    * Serialize any state required by this ScoreFunction to a string-string parameters map for
