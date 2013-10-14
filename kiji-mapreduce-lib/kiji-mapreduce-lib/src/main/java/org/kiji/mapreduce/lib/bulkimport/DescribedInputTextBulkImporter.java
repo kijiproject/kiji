@@ -223,7 +223,6 @@ public abstract class DescribedInputTextBulkImporter extends KijiBulkImporter<Lo
       }
       mColumnNameClassMap = ImmutableMap.copyOf(columnNameClassMap);
     } finally {
-      ResourceUtils.closeOrLog(schemaTable);
       ResourceUtils.releaseOrLog(kiji);
     }
 
