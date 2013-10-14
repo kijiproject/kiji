@@ -1,6 +1,10 @@
 
                               Kiji Scoring Release Notes
 Version 0.7.0
+    * SCORE-113. KijiScoring now includes a KijiProducer implementation called
+        org.kiji.scoring.lib.produce.ScoreFunctionProducer which can run a ScoreFunction in batch.
+        ScoreFunctions to be run in batch must meet certain requirements which are detailed in
+        ScoreFunctionProducer's JavaDoc.
     * SCORE-112. FreshKijiTableReader.get(EntityId, KijiDataRequest, long) has been replaced by
         get(EntityId, KijiDataRequest, org.kiji.scoring.FreshKijiTableReader.FreshRequestOptions)
         which allows for the specification of an overriding timestamp and string-string parameters
