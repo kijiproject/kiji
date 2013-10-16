@@ -20,9 +20,12 @@
 package org.kiji.express.tool
 
 import java.io.File
+
 import scala.io.Source
 
 import org.apache.commons.io.FileUtils
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.KijiSuite
 import org.kiji.express.util.Resources.doAndClose
@@ -32,6 +35,7 @@ import org.kiji.schema.KijiTable
 import org.kiji.schema.avro.TableLayoutDesc
 import org.kiji.schema.util.InstanceBuilder
 
+@RunWith(classOf[JUnitRunner])
 class ModelLifecycleToolSuite extends KijiSuite {
   test("ModelLifecycleTool works properly") {
     val inputTable: String = "two-double-columns.json"

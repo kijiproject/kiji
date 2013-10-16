@@ -20,10 +20,13 @@
 package org.kiji.express.modeling.impl
 
 import com.twitter.scalding.Args
+import org.junit.runner.RunWith
 import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
 
 class TestCommandLineArgs extends CommandLineArgs
 
+@RunWith(classOf[JUnitRunner])
 class CommandLineArgsSuite extends FunSuite {
   test("A concrete instance of CommandLineArgs can have its args properly initialized") {
     val commandLineArgsInstance: TestCommandLineArgs = new TestCommandLineArgs

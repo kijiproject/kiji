@@ -294,26 +294,16 @@
 
       <!-- ScalaTest -->
       <plugin>
-        <groupId>org.scalatest</groupId>
-        <artifactId>scalatest-maven-plugin</artifactId>
-        <version>1.0-M2</version>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
-          <junitxml>.</junitxml>
-          <filereports>WDF TestSuite.txt</filereports>
-          <argLine>-Xmx2048m -XX:MaxPermSize=512m</argLine>
-          <systemProperties>
-            <jline.terminal>jline.UnsupportedTerminal</jline.terminal>
-          </systemProperties>
+          <argLine>-Xmx2G -XX:MaxPermSize=512m</argLine>
+          <includes>
+            <include>**/*Suite.scala</include>
+            <include>%regex[.*/.*Suite.class]</include>
+          </includes>
+          <forkMode>once</forkMode>
         </configuration>
-        <executions>
-          <execution>
-            <id>test</id>
-            <goals>
-              <goal>test</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
     </plugins>
   </build>

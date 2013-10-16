@@ -19,9 +19,10 @@
 
 package org.kiji.express.modeling.impl
 
-import org.scalatest.FunSuite
-
 import com.twitter.scalding.Source
+import org.junit.runner.RunWith
+import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.modeling.ExtractFn
 import org.kiji.express.modeling.Extractor
@@ -40,15 +41,15 @@ import org.kiji.express.modeling.config.KeyValueStoreSpec
 import org.kiji.express.modeling.config.KijiInputSpec
 import org.kiji.express.modeling.config.KijiOutputSpec
 import org.kiji.express.modeling.config.KijiSingleColumnOutputSpec
-import org.kiji.express.modeling.config.SequenceFileSourceSpec
-import org.kiji.express.modeling.config.TextSourceSpec
 import org.kiji.express.modeling.config.ModelDefinition
 import org.kiji.express.modeling.config.ModelEnvironment
-import org.kiji.express.modeling.config.OutputSpec
 import org.kiji.express.modeling.config.OrFilter
+import org.kiji.express.modeling.config.OutputSpec
 import org.kiji.express.modeling.config.PrepareEnvironment
 import org.kiji.express.modeling.config.RegexQualifierFilter
 import org.kiji.express.modeling.config.ScoreEnvironment
+import org.kiji.express.modeling.config.SequenceFileSourceSpec
+import org.kiji.express.modeling.config.TextSourceSpec
 import org.kiji.express.modeling.config.TrainEnvironment
 import org.kiji.express.modeling.framework.ModelConverters
 
@@ -63,6 +64,7 @@ trait SerDeSuite extends FunSuite {
   }
 }
 
+@RunWith(classOf[JUnitRunner])
 class ModelConvertersSuite extends SerDeSuite {
   import ModelConvertersSuite._
 

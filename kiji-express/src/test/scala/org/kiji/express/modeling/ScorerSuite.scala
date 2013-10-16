@@ -19,7 +19,9 @@
 
 package org.kiji.express.modeling
 
+import org.junit.runner.RunWith
 import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
 
 class TestScorer extends Scorer {
   override val scoreFn = score('textLine) { line: String =>
@@ -45,6 +47,7 @@ class TestMultipleArgumentScorer extends Scorer {
   }
 }
 
+@RunWith(classOf[JUnitRunner])
 class ScorerSuite extends FunSuite {
   test("An scorer can be constructed via reflection") {
     val actual: Scorer = classOf[TestScorer].newInstance

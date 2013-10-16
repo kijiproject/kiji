@@ -19,7 +19,9 @@
 
 package org.kiji.express.modeling
 
+import org.junit.runner.RunWith
 import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
 
 class TestExtractor extends Extractor {
   override val extractFn = extract('textLine -> 'count) { line: String =>
@@ -55,6 +57,7 @@ class TestMultipleReturnValuesExtractor extends Extractor {
   }
 }
 
+@RunWith(classOf[JUnitRunner])
 class ExtractorSuite extends FunSuite {
   test("An extractor can be constructed via reflection") {
     val actual: Extractor = classOf[TestExtractor].newInstance

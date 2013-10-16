@@ -19,14 +19,16 @@
 
 package org.kiji.express.flow
 
-import scala.collection.mutable.Buffer
-
 import java.util.UUID
 
-import com.twitter.scalding._
+import scala.collection.mutable.Buffer
 
-import org.kiji.express.AvroRecord
+import com.twitter.scalding._
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
+
 import org.kiji.express.AvroEnum
+import org.kiji.express.AvroRecord
 import org.kiji.express.AvroValue
 import org.kiji.express.Cell
 import org.kiji.express.EntityId
@@ -40,6 +42,7 @@ import org.kiji.schema.avro.HashType
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts
 
+@RunWith(classOf[JUnitRunner])
 class KijiSourceSuite
     extends KijiSuite {
   import KijiSourceSuite._
@@ -687,7 +690,7 @@ class KijiSourceSuite
 }
 
 /** Companion object for KijiSourceSuite. Contains test jobs. */
-object KijiSourceSuite extends KijiSuite {
+object KijiSourceSuite {
   /**
    * A job that extracts the most recent string value from the column "family:column1" for all rows
    * in a Kiji table, and then counts the number of occurrences of those strings across rows.

@@ -19,11 +19,14 @@
 
 package org.kiji.express.flow.framework
 
+import org.junit.runner.RunWith
 import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.mock.EasyMockSugar
 
 import org.kiji.schema.KijiRowData
 
+@RunWith(classOf[JUnitRunner])
 class KijiValueSuite extends FunSuite with EasyMockSugar {
   test("KijiValue should get the same RowData you put in.") {
     val value = new KijiValue()

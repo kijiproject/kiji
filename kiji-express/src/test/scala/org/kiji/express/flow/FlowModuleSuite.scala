@@ -19,7 +19,9 @@
 
 package org.kiji.express.flow
 
+import org.junit.runner.RunWith
 import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.Cell
 import org.kiji.express.KijiSlice
@@ -27,6 +29,7 @@ import org.kiji.express.flow.framework.KijiScheme
 import org.kiji.schema.KijiInvalidNameException
 import org.kiji.schema.filter.RegexQualifierColumnFilter
 
+@RunWith(classOf[JUnitRunner])
 class FlowModuleSuite extends FunSuite {
   val tableURI = "kiji://.env/default/table"
 

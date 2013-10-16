@@ -23,8 +23,9 @@ import java.io.File
 
 import com.google.common.io.Files
 import com.twitter.scalding.Args
-
 import org.apache.commons.io.FileUtils
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.KijiSuite
 import org.kiji.express.modeling.config.ExpressColumnRequest
@@ -47,6 +48,7 @@ import org.kiji.schema.util.InstanceBuilder
 /**
  * Tests the Linear Regression Trainer.
  */
+@RunWith(classOf[JUnitRunner])
 class LMTrainerSuite extends KijiSuite {
   /**
    * Tests that LMTrainer can calculate the equation for line y = x.

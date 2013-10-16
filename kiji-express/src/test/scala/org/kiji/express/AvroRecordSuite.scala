@@ -19,8 +19,11 @@
 
 package org.kiji.express
 
+import org.junit.runner.RunWith
 import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
 
+@RunWith(classOf[JUnitRunner])
 class AvroRecordSuite extends FunSuite {
   test("AvroRecord's apply method works for an empty record.") {
     val record = AvroRecord()

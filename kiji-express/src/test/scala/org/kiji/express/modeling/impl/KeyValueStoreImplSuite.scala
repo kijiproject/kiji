@@ -29,19 +29,20 @@ import org.apache.avro.file.DataFileWriter
 import org.apache.avro.generic.GenericData
 import org.apache.avro.generic.GenericDatumWriter
 import org.apache.avro.generic.GenericRecord
-
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.hbase.HBaseConfiguration
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.AvroRecord
 import org.kiji.express.EntityId
 import org.kiji.express.KijiSuite
 import org.kiji.express.modeling.KeyValueStore
 import org.kiji.express.util.Resources._
-import org.kiji.mapreduce.kvstore.lib.{ AvroKVRecordKeyValueStore => JAvroKVRecordKeyValueStore }
-import org.kiji.mapreduce.kvstore.lib.{ AvroRecordKeyValueStore => JAvroRecordKeyValueStore }
-import org.kiji.mapreduce.kvstore.lib.{ KijiTableKeyValueStore => JKijiTableKeyValueStore }
-import org.kiji.mapreduce.kvstore.lib.{ TextFileKeyValueStore => JTextFileKeyValueStore }
+import org.kiji.mapreduce.kvstore.lib.{AvroKVRecordKeyValueStore => JAvroKVRecordKeyValueStore}
+import org.kiji.mapreduce.kvstore.lib.{AvroRecordKeyValueStore => JAvroRecordKeyValueStore}
+import org.kiji.mapreduce.kvstore.lib.{KijiTableKeyValueStore => JKijiTableKeyValueStore}
+import org.kiji.mapreduce.kvstore.lib.{TextFileKeyValueStore => JTextFileKeyValueStore}
 import org.kiji.schema.EntityIdFactory
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiTable
@@ -53,6 +54,7 @@ import org.kiji.schema.layout.KijiTableLayouts
  * Tests the functionality of [[org.kiji.express.modeling.KeyValueStore]] when backed by specific
  * key-value store implementations from KijiMR.
  */
+@RunWith(classOf[JUnitRunner])
 class KeyValueStoreImplSuite extends KijiSuite {
   import KeyValueStoreImplSuite._
 

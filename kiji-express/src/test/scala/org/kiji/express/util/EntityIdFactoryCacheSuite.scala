@@ -20,6 +20,8 @@
 package org.kiji.express.util
 
 import org.apache.hadoop.hbase.HBaseConfiguration
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.KijiSuite
 import org.kiji.express.util.Resources._
@@ -30,6 +32,7 @@ import org.kiji.schema.layout.KijiTableLayouts
 /**
  * Unit tests for [[org.kiji.express.util.EntityIdFactoryCache]]
  */
+@RunWith(classOf[JUnitRunner])
 class EntityIdFactoryCacheSuite extends KijiSuite {
   test("Test serializing/deserializing configurations") {
     val configuration = HBaseConfiguration.create()

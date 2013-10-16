@@ -20,7 +20,9 @@
 package org.kiji.express.modeling
 
 import com.twitter.scalding.Source
+import org.junit.runner.RunWith
 import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
 
 class TestPreparer extends Preparer {
   class WordCountJob(input: Map[String, Source], output: Map[String, Source]) extends PreparerJob {
@@ -36,6 +38,7 @@ class TestPreparer extends Preparer {
   }
 }
 
+@RunWith(classOf[JUnitRunner])
 class PreparerSuite extends FunSuite {
   test("A preparerClass can be constructed via reflection") {
     classOf[TestPreparer].newInstance

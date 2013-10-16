@@ -21,10 +21,13 @@ package org.kiji.express.util
 
 import java.io.Closeable
 
+import org.junit.runner.RunWith
 import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.util.Resources._
 
+@RunWith(classOf[JUnitRunner])
 class ResourcesSuite extends FunSuite {
   test("doAnd runs an operation") {
     var isClosed = false

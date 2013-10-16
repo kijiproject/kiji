@@ -21,13 +21,16 @@ package org.kiji.express.util
 
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericRecord
+import org.junit.runner.RunWith
 import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
 
-import org.kiji.schema.avro.HashSpec
-import org.kiji.express.AvroInt
 import org.kiji.express.AvroEnum
+import org.kiji.express.AvroInt
 import org.kiji.express.AvroRecord
+import org.kiji.schema.avro.HashSpec
 
+@RunWith(classOf[JUnitRunner])
 class AvroUtilWithSchemaSuite extends FunSuite {
   test("Test unwrapToSpecific with an Int.") {
     val genericInt = AvroInt(1)

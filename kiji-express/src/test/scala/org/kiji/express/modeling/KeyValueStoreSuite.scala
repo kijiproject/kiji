@@ -19,7 +19,9 @@
 
 package org.kiji.express.modeling
 
+import org.junit.runner.RunWith
 import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.mock.EasyMockSugar
 
 import org.kiji.mapreduce.kvstore.{KeyValueStore => JKeyValueStore}
@@ -29,6 +31,7 @@ import org.kiji.mapreduce.kvstore.{KeyValueStoreReader => JKeyValueStoreReader}
  * Tests the basic functionality of [[org.kiji.express.modeling.KeyValueStore]]. These tests do
  * not include tests that use specific backing KijiSchema key-value stores.
  */
+@RunWith(classOf[JUnitRunner])
 class KeyValueStoreSuite extends FunSuite with EasyMockSugar {
 
   /**

@@ -19,6 +19,10 @@
 
 package org.kiji.express.shellext
 
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
+
+@RunWith(classOf[JUnitRunner])
 class LifecycleExecutionCommandSuite
     extends ShellExtSuite {
   test("A hadoop configuration can be obtained with key/value pairs set.") {

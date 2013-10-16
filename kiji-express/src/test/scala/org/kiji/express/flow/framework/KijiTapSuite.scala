@@ -21,11 +21,14 @@ package org.kiji.express.flow.framework
 
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.mapred.JobConf
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow._
 import org.kiji.schema.KijiURI
 
+@RunWith(classOf[JUnitRunner])
 class KijiTapSuite extends KijiSuite {
   val instanceName: String = "test_KijiTap_instance"
   val testKijiTableLayout = layout("layout/avro-types.json")

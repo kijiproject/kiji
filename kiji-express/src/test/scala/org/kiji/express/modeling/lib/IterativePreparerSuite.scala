@@ -22,6 +22,8 @@ package org.kiji.express.modeling.lib
 import com.twitter.scalding.Hdfs
 import com.twitter.scalding.Source
 import org.apache.hadoop.hbase.HBaseConfiguration
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.KijiSlice
 import org.kiji.express.KijiSuite
@@ -49,6 +51,7 @@ import org.kiji.schema.util.InstanceBuilder
 /**
  * This tests the flow of a very basic iterative preparer.
  */
+@RunWith(classOf[JUnitRunner])
 class IterativePreparerSuite extends KijiSuite {
   test("An iterative preparer works properly") {
     val testLayoutDesc: TableLayoutDesc = layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS).getDesc

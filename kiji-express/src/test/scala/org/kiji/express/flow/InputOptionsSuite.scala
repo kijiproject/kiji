@@ -19,10 +19,13 @@
 
 package org.kiji.express.flow
 
+import org.junit.runner.RunWith
 import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
 
 import org.kiji.schema.filter.RegexQualifierColumnFilter
 
+@RunWith(classOf[JUnitRunner])
 class InputOptionsSuite extends FunSuite {
   // TODO(CHOP-37): Test with different filters once the new method of specifying filters
   // correctly implements the .equals() and hashCode() methods.

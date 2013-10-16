@@ -19,12 +19,16 @@
 
 package org.kiji.express.shellext
 
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
+
 import org.kiji.schema.shell.ddl.UseModuleCommand
 
 /**
  * Tests parsing clauses for the KijiExpress extension to KijiSchema DDL Shell. Such parsers are
  * defined in [[org.kiji.express.shellext.ModelingParserPlugin]].
  */
+@RunWith(classOf[JUnitRunner])
 class ModelingParserPluginSuite extends ShellExtSuite {
 
   private def verifyConfigureViaFile(configureViaParsed: ConfigureVia, expectedPath: String) {

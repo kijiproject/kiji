@@ -19,11 +19,14 @@
 
 package org.kiji.express.modeling.config
 
+import org.junit.runner.RunWith
 import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
 
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.filter.RegexQualifierColumnFilter
 
+@RunWith(classOf[JUnitRunner])
 class ExpressDataRequestSuite extends FunSuite {
   test("ExpressDataRequest can be translated to a KijiDataRequest.") {
     val testDataRequest = ExpressDataRequest(

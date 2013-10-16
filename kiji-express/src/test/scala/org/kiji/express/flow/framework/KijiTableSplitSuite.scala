@@ -20,8 +20,11 @@
 package org.kiji.express.flow.framework
 
 import org.apache.hadoop.hbase.mapreduce.TableSplit
+import org.junit.runner.RunWith
 import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
 
+@RunWith(classOf[JUnitRunner])
 class KijiTableSplitSuite extends FunSuite {
   val hTableSplit =
       new TableSplit("name".getBytes, "startrow".getBytes, "endrow".getBytes, "location")

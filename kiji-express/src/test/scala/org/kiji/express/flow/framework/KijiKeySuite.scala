@@ -19,13 +19,16 @@
 
 package org.kiji.express.flow.framework
 
+import org.junit.runner.RunWith
 import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
 
-import org.kiji.schema.{EntityId => JEntityId}
 import org.kiji.schema.EntityIdFactory
-import org.kiji.schema.avro.RowKeyFormat
 import org.kiji.schema.avro.RowKeyEncoding
+import org.kiji.schema.avro.RowKeyFormat
+import org.kiji.schema.{EntityId => JEntityId}
 
+@RunWith(classOf[JUnitRunner])
 class KijiKeySuite extends FunSuite {
   test("KijiKey should get the same EntityId you put in.") {
     val entityIdFactory = EntityIdFactory.getFactory(

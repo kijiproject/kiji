@@ -111,7 +111,8 @@ trait KijiSuite
    */
   def makeTestKijiTable(
       layout: KijiTableLayout,
-      instanceName: String = "default_%s".format(counter.addAndGet(1))): KijiTable = {
+      instanceName: String = "default_%s".format(counter.incrementAndGet())
+  ): KijiTable = {
     val tableName = layout.getName
     val kiji: Kiji = new InstanceBuilder(instanceName)
         .withTable(tableName, layout)
@@ -119,7 +120,7 @@ trait KijiSuite
 
     val table: KijiTable = kiji.openTable(tableName)
     kiji.release()
-    table
+    return table
   }
 
   /**

@@ -19,12 +19,12 @@
 
 package org.kiji.express.modeling.framework
 
-import scala.Some
-
 import com.twitter.scalding.Hdfs
 import com.twitter.scalding.Source
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.hbase.HBaseConfiguration
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.EntityId
 import org.kiji.express.KijiSlice
@@ -34,10 +34,10 @@ import org.kiji.express.modeling.Trainer
 import org.kiji.express.modeling.config.ExpressColumnRequest
 import org.kiji.express.modeling.config.ExpressDataRequest
 import org.kiji.express.modeling.config.FieldBinding
+import org.kiji.express.modeling.config.KeyValueStoreSpec
 import org.kiji.express.modeling.config.KijiInputSpec
 import org.kiji.express.modeling.config.KijiOutputSpec
 import org.kiji.express.modeling.config.KijiSingleColumnOutputSpec
-import org.kiji.express.modeling.config.KeyValueStoreSpec
 import org.kiji.express.modeling.config.ModelDefinition
 import org.kiji.express.modeling.config.ModelEnvironment
 import org.kiji.express.modeling.config.PrepareEnvironment
@@ -56,6 +56,7 @@ import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts
 import org.kiji.schema.util.InstanceBuilder
 
+@RunWith(classOf[JUnitRunner])
 class ModelExecutorSuite extends KijiSuite {
   test("A ModelExecutor is properly created") {
     val modelDef: ModelDefinition = ModelDefinition(

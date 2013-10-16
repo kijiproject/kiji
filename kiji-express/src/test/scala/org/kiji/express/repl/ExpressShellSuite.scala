@@ -19,12 +19,14 @@
 
 package org.kiji.express.repl
 
+import org.junit.runner.RunWith
 import org.scalatest._
-import scala.tools.nsc.interpreter.ILoop
+import org.scalatest.junit.JUnitRunner
 
 /**
  * Tests the functionality of [[org.kiji.express.repl.ExpressShell]].
  */
+@RunWith(classOf[JUnitRunner])
 class ExpressShellSuite extends FunSuite {
   test("The shell can start a REPL using command line arguments.") {
     pending

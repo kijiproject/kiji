@@ -21,27 +21,30 @@ package org.kiji.express
 
 import scala.collection.JavaConverters.seqAsJavaListConverter
 import scala.collection.mutable.Buffer
+
+import com.twitter.scalding.Args
+import com.twitter.scalding.JobTest
+import com.twitter.scalding.TextLine
+import com.twitter.scalding.Tsv
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
-import org.kiji.express.EntityIdSuite.convertToEqualizer
-import org.kiji.express.EntityIdSuite.tuple1Converter
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
+
 import org.kiji.express.flow.KijiInput
 import org.kiji.express.flow.KijiJob
+import org.kiji.express.impl.HashedEntityId
 import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.schema.EntityIdFactory
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiURI
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts
-import com.twitter.scalding.Args
-import com.twitter.scalding.JobTest
-import com.twitter.scalding.TextLine
-import com.twitter.scalding.Tsv
-import org.kiji.express.impl.HashedEntityId
 
 /**
  * Unit tests for [[org.kiji.express.EntityId]].
  */
+@RunWith(classOf[JUnitRunner])
 class EntityIdSuite extends KijiSuite {
 
   import org.kiji.express.EntityIdSuite._
@@ -213,6 +216,12 @@ class EntityIdSuite extends KijiSuite {
   }
 
   test("Runs a job that joins two pipes, on EntityIds from a table (hashed), in local mode.") {
+    for (_ <- 1 until 10) {
+      runTest()
+    }
+  }
+
+  def runTest() {
     // URI of the hashed Kiji table to use.
     val uri: String = doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
       table.getURI().toString()
@@ -356,7 +365,7 @@ class EntityIdSuite extends KijiSuite {
 }
 
 /** Companion object for EntityIdSuite. Contains test jobs. */
-object EntityIdSuite extends KijiSuite {
+object EntityIdSuite {
   /**
    * A job that tests joining two pipes, on user-constructed EntityIds.
    *

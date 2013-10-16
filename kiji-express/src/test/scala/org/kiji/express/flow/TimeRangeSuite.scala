@@ -19,10 +19,13 @@
 
 package org.kiji.express.flow
 
+import org.junit.runner.RunWith
 import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
 
 import org.kiji.schema.KConstants
 
+@RunWith(classOf[JUnitRunner])
 class TimeRangeSuite extends FunSuite {
   test("TimeRange fails fast when invalid time range arguments are specified.") {
     val thrown: IllegalArgumentException = intercept[IllegalArgumentException] {

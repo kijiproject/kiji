@@ -20,7 +20,9 @@
 package org.kiji.express.modeling
 
 import com.twitter.scalding.Source
+import org.junit.runner.RunWith
 import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
 
 class TestTrainer extends Trainer {
   override def train(
@@ -30,6 +32,7 @@ class TestTrainer extends Trainer {
   }
 }
 
+@RunWith(classOf[JUnitRunner])
 class TrainerSuite extends FunSuite {
   test("A trainer can be constructed via reflection") {
     classOf[TestTrainer].newInstance

@@ -19,12 +19,15 @@
 
 package org.kiji.express.modeling.impl
 
+import org.junit.runner.RunWith
 import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.modeling.KeyValueStore
 
 class TestKeyValueStores extends KeyValueStores
 
+@RunWith(classOf[JUnitRunner])
 class KeyValueStoresSuite extends FunSuite {
   test("A concrete instance of KeyValueStores can have its key-value stores property initialized") {
     val kvstoresInstance: TestKeyValueStores = new TestKeyValueStores

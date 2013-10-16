@@ -22,16 +22,19 @@ package org.kiji.express.flow
 import scala.collection.mutable.Buffer
 
 import com.twitter.scalding._
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express._
 import org.kiji.express.repl.Implicits._
 import org.kiji.express.util.Resources._
+import org.kiji.schema.KijiTable
 import org.kiji.schema.avro.HashSpec
 import org.kiji.schema.avro.HashType
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts
-import org.kiji.schema.KijiTable
 
+@RunWith(classOf[JUnitRunner])
 class KijiPipeSuite extends KijiSuite {
   /** Table layout to use for tests. */
   val layout: KijiTableLayout = layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)

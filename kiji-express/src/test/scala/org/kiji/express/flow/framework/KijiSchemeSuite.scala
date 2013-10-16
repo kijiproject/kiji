@@ -21,9 +21,10 @@ package org.kiji.express.flow.framework
 
 import cascading.tuple.Tuple
 import cascading.tuple.TupleEntry
-
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.AvroEnum
 import org.kiji.express.AvroRecord
@@ -35,6 +36,7 @@ import org.kiji.express.flow.QualifiedColumn
 import org.kiji.express.util.GenericCellSpecs
 import org.kiji.schema.EntityIdFactory
 
+@RunWith(classOf[JUnitRunner])
 class KijiSchemeSuite extends KijiSuite {
   test("putTuple and rowToTuple can write and read a generic AvroRecord.") {
     // Set up the table.

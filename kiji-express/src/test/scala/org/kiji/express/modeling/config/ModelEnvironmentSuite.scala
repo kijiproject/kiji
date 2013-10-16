@@ -21,7 +21,9 @@ package org.kiji.express.modeling.config
 
 import scala.collection.JavaConverters.seqAsJavaListConverter
 
+import org.junit.runner.RunWith
 import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.avro.AvroColumn
 import org.kiji.express.avro.AvroColumnRangeFilter
@@ -43,6 +45,7 @@ import org.kiji.schema.filter.RegexQualifierColumnFilter
 import org.kiji.schema.util.FromJson
 import org.kiji.schema.util.ToJson
 
+@RunWith(classOf[JUnitRunner])
 class ModelEnvironmentSuite extends FunSuite {
   val validDefinitionLocation: String = resourceAsString(
       "modelEnvironments/valid-model-environment.json")

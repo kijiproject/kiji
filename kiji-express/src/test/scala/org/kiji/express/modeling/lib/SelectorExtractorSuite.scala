@@ -20,11 +20,14 @@
 package org.kiji.express.modeling.lib
 
 import cascading.tuple.Fields
+import org.junit.runner.RunWith
 import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.Cell
 import org.kiji.express.KijiSlice
 
+@RunWith(classOf[JUnitRunner])
 class SelectorExtractorSuite extends FunSuite {
   val slice1 = new KijiSlice(Seq(
       new Cell("family", "qualifier", 3L, "bar1"),

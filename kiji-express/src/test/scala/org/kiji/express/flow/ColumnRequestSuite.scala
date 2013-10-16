@@ -24,11 +24,14 @@ import java.io.ByteArrayOutputStream
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 
+import org.junit.runner.RunWith
 import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
 
 import org.kiji.schema.filter.KijiColumnFilter
 import org.kiji.schema.filter.RegexQualifierColumnFilter
 
+@RunWith(classOf[JUnitRunner])
 class ColumnRequestSuite extends FunSuite {
   def filter: KijiColumnFilter = new RegexQualifierColumnFilter(".*")
   def opts: ColumnRequestOptions = new ColumnRequestOptions(1, Some(filter))

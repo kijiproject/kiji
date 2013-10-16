@@ -19,11 +19,12 @@
 
 package org.kiji.express
 
-import scala.collection.immutable.List
-
+import org.junit.runner.RunWith
 import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
 import org.scalatest.matchers.ShouldMatchers
 
+@RunWith(classOf[JUnitRunner])
 class KijiSliceSuite extends FunSuite with ShouldMatchers {
   val cell0 = Cell[Long]("info", "number", 0L, 0L)
   val cell1 = Cell[Long]("info", "number", 1L, 1L)

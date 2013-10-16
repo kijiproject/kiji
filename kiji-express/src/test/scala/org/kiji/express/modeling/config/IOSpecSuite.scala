@@ -23,12 +23,15 @@ import java.io.File
 
 import com.twitter.scalding.Source
 import org.apache.commons.io.FileUtils
+import org.junit.runner.RunWith
 import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.modeling.Trainer
 import org.kiji.express.modeling.framework.ModelExecutor
 import org.kiji.express.util.Resources.doAndClose
 
+@RunWith(classOf[JUnitRunner])
 class IOSpecSuite extends FunSuite {
   val textSourceLocation: String = "src/test/resources/sources/TextSource"
   val textSourceOutput: String = "src/test/resources/sources/TextOutput/"

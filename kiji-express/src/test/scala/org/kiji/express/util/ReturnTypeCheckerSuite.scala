@@ -22,7 +22,9 @@ package org.kiji.express.util
 import java.io.InvalidClassException
 
 import org.apache.avro.generic.GenericData
+import org.junit.runner.RunWith
 import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.AvroFixed
 import org.kiji.express.AvroRecord
@@ -36,6 +38,7 @@ import org.kiji.schema.filter.RegexQualifierColumnFilter
  * Test for converting back and forth between Java and Scala for values
  * that are read/written from a Kiji column.
  */
+@RunWith(classOf[JUnitRunner])
 class ReturnTypeCheckerSuite extends FunSuite {
   val int: java.lang.Integer = new java.lang.Integer(10)
   test("Test conversion of Integers from Java, to Scala, and back again.") {

@@ -19,8 +19,11 @@
 
 package org.kiji.express.util
 
+import org.junit.runner.RunWith
 import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
 
+@RunWith(classOf[JUnitRunner])
 class MemoizeSuite extends FunSuite {
   test("Test for memoization") {
     // outer class without equals defined

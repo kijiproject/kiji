@@ -21,9 +21,12 @@ package org.kiji.express.tool
 
 import java.io.File
 
-import org.scalatest.FunSuite
 import com.google.common.io.Files
+import org.junit.runner.RunWith
+import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
 
+@RunWith(classOf[JUnitRunner])
 class TmpJarsToolSuite extends FunSuite {
 
   test("entryToFile transforms string paths to files.") {

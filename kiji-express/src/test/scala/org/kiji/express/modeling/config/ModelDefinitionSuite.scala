@@ -20,7 +20,9 @@
 package org.kiji.express.modeling.config
 
 import com.twitter.scalding.Source
+import org.junit.runner.RunWith
 import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.avro.AvroModelDefinition
 import org.kiji.express.modeling.ExtractFn
@@ -33,6 +35,7 @@ import org.kiji.express.util.Resources.resourceAsString
 import org.kiji.schema.util.FromJson
 import org.kiji.schema.util.ToJson
 
+@RunWith(classOf[JUnitRunner])
 class ModelDefinitionSuite extends FunSuite {
   val validDefinition: String = resourceAsString(
       "modelDefinitions/valid-model-definition.json")

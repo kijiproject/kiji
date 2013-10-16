@@ -20,17 +20,23 @@
 package org.kiji.express.flow
 
 import scala.collection.JavaConverters.seqAsJavaListConverter
+import scala.collection.mutable.Buffer
 
+import com.twitter.scalding.Args
+import com.twitter.scalding.JobTest
+import com.twitter.scalding.TextLine
 import org.apache.avro.Schema
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
-import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.express._
 import org.kiji.express.util.Resources._
-import org.kiji.schema.{KijiURI, Kiji, KijiTable}
-import scala.collection.mutable.Buffer
-import com.twitter.scalding.{Args, JobTest}
-import com.twitter.scalding.TextLine
+import org.kiji.schema.Kiji
+import org.kiji.schema.KijiTable
+import org.kiji.schema.KijiURI
+import org.kiji.schema.layout.KijiTableLayout
 
+@RunWith(classOf[JUnitRunner])
 class WriterSchemaSuite extends KijiSuite {
   import WriterSchemaSuite._
 

@@ -25,6 +25,8 @@ import com.twitter.scalding.Args
 import com.twitter.scalding.JobTest
 import com.twitter.scalding.TextLine
 import com.twitter.scalding.Tsv
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.AvroBoolean
 import org.kiji.express.AvroEnum
@@ -40,6 +42,7 @@ import org.kiji.schema.avro.HashSpec
 import org.kiji.schema.avro.HashType
 import org.kiji.schema.layout.KijiTableLayout
 
+@RunWith(classOf[JUnitRunner])
 class KijiJobSuite extends KijiSuite {
   val avroLayout: KijiTableLayout = layout("layout/avro-types.json")
   val uri: String = doAndRelease(makeTestKijiTable(avroLayout)) { table: KijiTable =>

@@ -21,34 +21,35 @@ package org.kiji.express.tool
 
 import java.io.File
 import java.io.FileWriter
-import scala.Some
 
 import com.google.common.io.Files
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.KijiSlice
 import org.kiji.express.KijiSuite
 import org.kiji.express.modeling.Extractor
-import org.kiji.express.modeling.config.ExpressDataRequest
+import org.kiji.express.modeling.Scorer
 import org.kiji.express.modeling.config.ExpressColumnRequest
+import org.kiji.express.modeling.config.ExpressDataRequest
 import org.kiji.express.modeling.config.FieldBinding
 import org.kiji.express.modeling.config.KijiInputSpec
 import org.kiji.express.modeling.config.KijiSingleColumnOutputSpec
 import org.kiji.express.modeling.config.ModelDefinition
 import org.kiji.express.modeling.config.ModelEnvironment
 import org.kiji.express.modeling.config.ScoreEnvironment
-import org.kiji.express.modeling.Scorer
 import org.kiji.express.util.Resources.doAndClose
 import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.schema.Kiji
+import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiTableReader
 import org.kiji.schema.KijiURI
-import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts
 import org.kiji.schema.util.InstanceBuilder
 
-
+@RunWith(classOf[JUnitRunner])
 class ScoreJobToolSuite extends KijiSuite {
   test("ScoreJobTool can run a job.") {
     val tmpDir: File = Files.createTempDir()

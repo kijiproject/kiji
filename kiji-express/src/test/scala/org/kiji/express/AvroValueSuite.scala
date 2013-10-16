@@ -19,17 +19,20 @@
 
 package org.kiji.express
 
-import scala.collection.JavaConverters.seqAsJavaListConverter
 import scala.collection.JavaConverters.mapAsJavaMapConverter
+import scala.collection.JavaConverters.seqAsJavaListConverter
 
 import org.apache.avro.generic.GenericData
 import org.apache.avro.generic.GenericRecord
+import org.junit.runner.RunWith
 import org.scalatest.FunSuite
+import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.util.AvroUtil
 import org.kiji.schema.avro.HashSpec
 import org.kiji.schema.avro.HashType
 
+@RunWith(classOf[JUnitRunner])
 class AvroValueSuite extends FunSuite {
   test("AvroInt throws unsupported exceptions when converting to the wrong type.") {
     val int: java.lang.Integer = new java.lang.Integer(10)

@@ -19,19 +19,20 @@
 
 package org.kiji.express.flow
 
-import org.kiji.express.util.Resources.doAndRelease
-
 import scala.collection.mutable.Buffer
 
 import com.twitter.scalding.Args
 import com.twitter.scalding.JobTest
 import com.twitter.scalding.Tsv
+import org.junit.runner.RunWith
+import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.Cell
 import org.kiji.express.EntityId
 import org.kiji.express.KijiSlice
 import org.kiji.express.KijiSuite
 import org.kiji.express.PagedKijiSlice
+import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.schema.KijiTable
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts
@@ -80,6 +81,7 @@ class WordCountFlatMapJob(args: Args) extends KijiJob(args) {
 }
 
 
+@RunWith(classOf[JUnitRunner])
 class PagedKijiSliceSuite extends KijiSuite {
   /** Simple table layout to use for tests. The row keys are hashed. */
   val simpleLayout: KijiTableLayout = layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
