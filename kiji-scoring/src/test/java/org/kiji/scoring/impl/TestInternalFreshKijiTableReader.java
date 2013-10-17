@@ -85,14 +85,25 @@ public class TestInternalFreshKijiTableReader {
   private static final ScoreFunction TEST_SCORE_FN2 = new TestScoreFunctionTwo();
   private static final ScoreFunction TEST_TIMEOUT_SCORE_FN = new TestTimeoutScoreFunction();
 
+  public static final class TestTimestampScoreFunction extends ScoreFunction {
+    public KijiDataRequest getDataRequest(final FreshenerContext context) throws IOException {
+      return KijiDataRequest.builder().build();
+    }
+    public TimestampedValue score(
+        final KijiRowData dataToScore, final FreshenerContext context
+    ) throws IOException {
+      return TimestampedValue.create(2L, "new-val");
+    }
+  }
+
   public static final class TestScoreFunction extends ScoreFunction {
     public KijiDataRequest getDataRequest(final FreshenerContext context) throws IOException {
       return FAMILY_QUAL0_R;
     }
-    public String score(
+    public TimestampedValue<String> score(
         final KijiRowData dataToScore, final FreshenerContext context
     ) throws IOException {
-      return "new-val";
+      return TimestampedValue.create("new-val");
     }
   }
 
@@ -100,10 +111,10 @@ public class TestInternalFreshKijiTableReader {
     public KijiDataRequest getDataRequest(final FreshenerContext context) throws IOException {
       return FAMILY_QUAL0_R;
     }
-    public String score(
+    public TimestampedValue<String> score(
         final KijiRowData dataToScore, final FreshenerContext context
     ) throws IOException {
-      return "two-val";
+      return TimestampedValue.create("two-val");
     }
   }
 
@@ -111,7 +122,7 @@ public class TestInternalFreshKijiTableReader {
     public KijiDataRequest getDataRequest(final FreshenerContext context) throws IOException {
       return FAMILY_QUAL0_R;
     }
-    public String score(
+    public TimestampedValue<String> score(
         final KijiRowData dataToScore, final FreshenerContext context
     ) throws IOException {
       try {
@@ -119,7 +130,7 @@ public class TestInternalFreshKijiTableReader {
       } catch (InterruptedException ie) {
         throw new RuntimeException(ie);
       }
-      return "new-val";
+      return TimestampedValue.create("new-val");
     }
   }
 
@@ -127,11 +138,12 @@ public class TestInternalFreshKijiTableReader {
     public KijiDataRequest getDataRequest(final FreshenerContext context) throws IOException {
       return MAP_QUALIFIER_R;
     }
-    public Integer score(
+    public TimestampedValue<Integer> score(
         final KijiRowData dataToScore,
         final FreshenerContext context
     ) throws IOException {
-      return dataToScore.<Integer>getMostRecentValue("map", "qualifier") + 1;
+      return TimestampedValue.create(
+          dataToScore.<Integer>getMostRecentValue("map", "qualifier") + 1);
     }
   }
 
@@ -206,10 +218,10 @@ public class TestInternalFreshKijiTableReader {
     }
 
     @Override
-    public String score(
+    public TimestampedValue<String> score(
         final KijiRowData dataToScore, final FreshenerContext context
     ) throws IOException {
-      return context.getParameter(TEST_PARAMETER_KEY);
+      return TimestampedValue.create(context.getParameter(TEST_PARAMETER_KEY));
     }
   }
 
@@ -1264,6 +1276,41 @@ public class TestInternalFreshKijiTableReader {
         freshReader.get(eid, request);
       }
       LOG.info(freshReader.getStatistics().toString());
+    } finally {
+      freshReader.close();
+    }
+  }
+
+  @Test
+  public void testReturnWithTimestamp() throws IOException {
+    final EntityId eid = mTable.getEntityId("foo");
+    final KijiDataRequestBuilder builder = KijiDataRequest.builder();
+    builder.newColumnsDef().withMaxVersions(Integer.MAX_VALUE).add("family", "qual0");
+    final KijiDataRequest request = builder.build();
+    final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
+    try {
+      manager.registerFreshener(
+          TABLE_NAME,
+          FAMILY_QUAL0,
+          ALWAYS,
+          new TestTimestampScoreFunction(),
+          EMPTY_PARAMS,
+          false,
+          false);
+    } finally {
+      manager.close();
+    }
+
+    final FreshKijiTableReader freshReader = FreshKijiTableReader.Builder.create()
+        .withTable(mTable)
+        .withTimeout(500)
+        .build();
+    try {
+      final KijiRowData freshenedData = freshReader.get(eid, request);
+      // The newest value should not have changed.
+      assertEquals("foo-val", freshenedData.getMostRecentValue("family", "qual0").toString());
+      // The older value should have.
+      assertEquals("new-val", freshenedData.getValue("family", "qual0", 2).toString());
     } finally {
       freshReader.close();
     }

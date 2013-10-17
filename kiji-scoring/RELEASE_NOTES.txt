@@ -1,6 +1,8 @@
 
                               Kiji Scoring Release Notes
 Version 0.7.0
+    * SCORE-117. ScoreFunction.score() now returns a TimestampedValue which optionally specifies the
+        timestamp at which the value should be written to Kiji.
     * SCORE-113. KijiScoring now includes a KijiProducer implementation called
         org.kiji.scoring.lib.produce.ScoreFunctionProducer which can run a ScoreFunction in batch.
         ScoreFunctions to be run in batch must meet certain requirements which are detailed in

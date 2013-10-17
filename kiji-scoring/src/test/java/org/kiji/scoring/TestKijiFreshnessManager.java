@@ -61,10 +61,10 @@ public class TestKijiFreshnessManager {
     public KijiDataRequest getDataRequest(final FreshenerContext context) throws IOException {
       return KijiDataRequest.create("info", "name");
     }
-    public String score(
+    public TimestampedValue<String> score(
         final KijiRowData dataToScore, final FreshenerContext context
     ) throws IOException {
-      return "new-val";
+      return TimestampedValue.create("new-val");
     }
   }
 

@@ -41,7 +41,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,6 +65,7 @@ import org.kiji.scoring.FreshenerContext;
 import org.kiji.scoring.KijiFreshnessManager;
 import org.kiji.scoring.KijiFreshnessPolicy;
 import org.kiji.scoring.ScoreFunction;
+import org.kiji.scoring.ScoreFunction.TimestampedValue;
 import org.kiji.scoring.avro.KijiFreshenerRecord;
 import org.kiji.scoring.impl.InternalFreshKijiTableReader.ReaderState.State;
 import org.kiji.scoring.impl.MultiBufferedWriter.SingleBuffer;
@@ -634,16 +634,17 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
           } else {
             buffer = mRequestContext.mRequestBuffer;
           }
+          final TimestampedValue score = freshener.mScoreFunction.score(
+              mRequestContext.mReader.get(
+                  mRequestContext.mEntityId,
+                  freshener.mScoreFunction.getDataRequest(freshenerContext)),
+              freshenerContext);
           buffer.put(
               mRequestContext.mEntityId,
               mAttachedColumn.getFamily(),
               mAttachedColumn.getQualifier(),
-              HConstants.LATEST_TIMESTAMP,
-              freshener.mScoreFunction.score(
-                  mRequestContext.mReader.get(
-                      mRequestContext.mEntityId,
-                      freshener.mScoreFunction.getDataRequest(freshenerContext)),
-                  freshenerContext));
+              score.getTimestamp(),
+              score.getValue());
           mRequestContext.freshenerWrote();
           final int remainingFresheners = mRequestContext.finishFreshener(mAttachedColumn, true);
           if (mRequestContext.mAllowPartial) {

@@ -77,11 +77,14 @@ public class TestKVStores extends KijiClientTest {
     }
 
     @Override
-    public String score(KijiRowData input, FreshenerContext context) throws IOException {
+    public TimestampedValue<String> score(
+        KijiRowData input,
+        FreshenerContext context
+    ) throws IOException {
       KeyValueStoreReader<String, String> reader = context.getStore("cats");
       String newName = reader.get("Jennyanydots");
       assertEquals("Old Gumbie Cat", newName);
-      return newName;
+      return TimestampedValue.create(newName);
     }
   }
 
@@ -213,10 +216,13 @@ public class TestKVStores extends KijiClientTest {
     }
 
     @Override
-    public String score(KijiRowData input, FreshenerContext context) throws IOException {
+    public TimestampedValue<String> score(
+        KijiRowData input,
+        FreshenerContext context
+    ) throws IOException {
       final String newName = mReader.get("Skimbleshanks");
       assertEquals("Railway Cat", newName);
-      return newName;
+      return TimestampedValue.create(newName);
     }
   }
 

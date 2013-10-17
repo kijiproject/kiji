@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 
+import org.apache.hadoop.hbase.HConstants;
+
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
 import org.kiji.annotations.Inheritance;
@@ -77,6 +79,77 @@ import org.kiji.schema.KijiRowData;
 @ApiStability.Experimental
 @Inheritance.Extensible
 public abstract class ScoreFunction<T> {
+
+  /**
+   * A Tuple class containing a <code>long</code> timestamp and a value of any type.
+   *
+   * @param <V> the type of the value.
+   */
+  public static final class TimestampedValue<V> {
+
+    private final long mTimestamp;
+    private final V mValue;
+
+    /**
+     * Initialize a new TimestampedValue with the given timestamp and value.
+     *
+     * @param timestamp the time in milliseconds since the epoch at which to mark the given value.
+     * @param value the value to mark with a timestamp.
+     */
+    private TimestampedValue(
+        final long timestamp,
+        final V value
+    ) {
+      mTimestamp = timestamp;
+      mValue = value;
+    }
+
+    /**
+     * Get the timestamp from this TimestampedValue.
+     *
+     * @return the timestamp from this TimestampedValue.
+     */
+    public long getTimestamp() {
+      return mTimestamp;
+    }
+
+    /**
+     * Get the value from this TimestampedValue.
+     *
+     * @return the value from this TimestampedValue.
+     */
+    public V getValue() {
+      return mValue;
+    }
+
+    /**
+     * Create a new TimestampedValue with the given timestamp and value.
+     *
+     * @param timestamp the time in milliseconds since the epoch at which to mark the given value.
+     * @param value the value to mark with a timestamp.
+     * @param <U> the type of the value.
+     * @return a new TimestampedValue with the given timestamp and value.
+     */
+    public static <U> TimestampedValue<U> create(
+        final long timestamp,
+        final U value
+    ) {
+      return new TimestampedValue<U>(timestamp, value);
+    }
+
+    /**
+     * Create a new TimestampedValue with the default timestamp and given value.
+     *
+     * @param value the value to mark with a timestamp.
+     * @param <U> the type of the value.
+     * @return a new TimestampedValue with the default timestamp and given value.
+     */
+    public static <U> TimestampedValue<U> create(
+        final U value
+    ) {
+      return new TimestampedValue<U>(HConstants.LATEST_TIMESTAMP, value);
+    }
+  }
 
   // Attachment time methods -----------------------------------------------------------------------
 
@@ -240,5 +313,8 @@ public abstract class ScoreFunction<T> {
    * @return the calculated score.
    * @throws IOException in case of an error calculating the score.
    */
-  public abstract T score(KijiRowData dataToScore, FreshenerContext context) throws IOException;
+  public abstract TimestampedValue<T> score(
+      KijiRowData dataToScore,
+      FreshenerContext context
+  ) throws IOException;
 }

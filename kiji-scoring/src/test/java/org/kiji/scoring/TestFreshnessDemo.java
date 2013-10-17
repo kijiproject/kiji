@@ -50,13 +50,12 @@ public class TestFreshnessDemo extends KijiClientTest {
       return KijiDataRequest.create("info", "visits");
     }
 
-    // TODO how does this overriding work?
     @Override
-    public Long score(
+    public TimestampedValue<Long> score(
         final KijiRowData dataToScore, final FreshenerContext context
     ) throws IOException {
       final Long oldValue = dataToScore.getMostRecentValue("info", "visits");
-      return oldValue + 1L;
+      return TimestampedValue.create(oldValue + 1L);
     }
   }
 

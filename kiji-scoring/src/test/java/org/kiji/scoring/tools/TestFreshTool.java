@@ -58,10 +58,10 @@ public class TestFreshTool extends KijiClientTest {
     public KijiDataRequest getDataRequest(final FreshenerContext context) throws IOException {
       return null;
     }
-    public Object score(
+    public TimestampedValue<Object> score(
         final KijiRowData dataToScore, final FreshenerContext context
     ) throws IOException {
-      return null;
+      return TimestampedValue.create(null);
     }
   }
 
