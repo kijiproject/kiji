@@ -609,8 +609,8 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
       try {
         final FreshenerContext freshenerContext =
             mRequestContext.mFreshenerContexts.get(mAttachedColumn);
-        final KijiRowData clientData = getFromFuture(mRowDataToCheckFuture);
-        final boolean isFresh = freshener.mPolicy.isFresh(clientData, freshenerContext);
+        final KijiRowData dataToCheck = getFromFuture(mRowDataToCheckFuture);
+        final boolean isFresh = freshener.mPolicy.isFresh(dataToCheck, freshenerContext);
         if (isFresh) {
           if (!mRequestContext.mAllowPartial
               && 0 == mRequestContext.finishFreshener(mAttachedColumn, false)) {
