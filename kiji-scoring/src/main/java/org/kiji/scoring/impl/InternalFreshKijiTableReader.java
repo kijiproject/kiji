@@ -800,21 +800,20 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     }
 
     /** Collect and save a FreshenerSingleRunStatistics from the reader's StatisticsQueue. */
-    private void collectStat() {
-      try {
-        final FreshenerSingleRunStatistics stats = mStatisticsQueue.take();
-        // This switch is redundant right now because this thread is only created if the mode is ALL
-        // but future modes will require it.
-        switch (mStatisticGatheringMode) {
-          case ALL: {
-            mAggregatedStatistics.addFreshenerRunStatistics(stats);
-            return;
+    private void collectStats() {
+      final List<FreshenerSingleRunStatistics> stats = Lists.newArrayList();
+      mStatisticsQueue.drainTo(stats);
+      // This switch is redundant right now because this thread is only created if the mode is ALL
+      // but future modes will require it.
+      switch (mStatisticGatheringMode) {
+        case ALL: {
+          for (FreshenerSingleRunStatistics stat : stats) {
+            mAggregatedStatistics.addFreshenerRunStatistics(stat);
           }
-          case NONE: return;
-          default:
+          return;
         }
-      } catch (InterruptedException ie) {
-        throw new RuntimeInterruptedException(ie);
+        case NONE: return;
+        default:
       }
     }
 
@@ -822,8 +821,10 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     @Override
     public void run() {
       while (!mShutdown) {
-        collectStat();
+        collectStats();
       }
+      // When shutdown, collect final stats then quit.
+      collectStats();
     }
 
     /** Stop gathering statistics. */
