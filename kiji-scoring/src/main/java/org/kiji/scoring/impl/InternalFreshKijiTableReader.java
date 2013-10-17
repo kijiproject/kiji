@@ -385,7 +385,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
      *     statistics gathering thread. This queue is thread safe and ordering of statistics in the
      *     queue does not matter.
      */
-    // CSOFF: Parameter count
+    // CSOFF: ParameterNumber
     public FresheningRequestContext(
         final long startTime,
         final ImmutableMap<KijiColumnName, Freshener> fresheners,
@@ -399,7 +399,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
         final boolean allowPartial,
         final BlockingQueue<FreshenerSingleRunStatistics> statisticsQueue
     ) {
-      // CSON
+      // CSON: ParameterNumber
       mStartTime = startTime;
       mFresheners = fresheners;
       mReader = reader;
