@@ -46,10 +46,11 @@ protocol Modeling {
   /**
    * A specification of the computational phases defining a model workflow.
    *
-   * Currently this consists of three phases:
+   * Currently this consists of four phases:
    * - Prepare
    * - Train
    * - Score
+   * - Evaluate
    */
   record AvroModelDefinition {
     // Shared fields -------------------------------------------------------------------------------
@@ -64,9 +65,9 @@ protocol Modeling {
     string version;
 
     /**
-     * Unique identifier for this model definition. The current version is model_definition-0.1.0.
+     * Unique identifier for this model definition. The current version is model_definition-0.3.0.
      */
-    string protocol_version = "model_definition-0.2.0";
+    string protocol_version = "model_definition-0.3.0";
 
     // Model lifecycle fields ----------------------------------------------------------------------
     /**
@@ -92,6 +93,14 @@ protocol Modeling {
      * Note: This field should be null if using a PMML defined model.
      */
     union{null, AvroPhaseDefinition} scorer_phase = null;
+
+     /**
+      * Specification for the evaluate phase. The class within must implement the DistanceFn
+      * object. Set this field to null to specify that no evaluator phase should be used.
+      *
+      * Note: This field should be null if using a PMML defined model.
+      */
+    union{null, string} evaluator_class = null;
 
     // PMML fields ---------------------------------------------------------------------------------
     /**

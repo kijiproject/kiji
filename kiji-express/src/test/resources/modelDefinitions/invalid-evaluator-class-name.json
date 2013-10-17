@@ -23,10 +23,10 @@
   "trainer_class": "org.kiji.express.modeling.config.ModelDefinitionSuite$MyTrainer",
   "scorer_phase": {
     "org.kiji.express.avro.AvroPhaseDefinition": {
-      "extractor_class": "org.kiji.express.modeling.config.ModelDefinitionSuite$MyBadExtractor",
+      "extractor_class": null,
       "phase_class": "org.kiji.express.modeling.config.ModelDefinitionSuite$MyScorer"
     }
   },
-  "evaluator_class": "org.kiji.express.modeling.config.ModelDefinitionSuite$MyEvaluator",
+  "evaluator_class": "blah",
   "protocol_version": "model_definition-0.3.0"
 }

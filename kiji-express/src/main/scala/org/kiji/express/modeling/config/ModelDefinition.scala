@@ -25,6 +25,7 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
 import org.kiji.express.avro.AvroModelDefinition
+import org.kiji.express.modeling.Evaluator
 import org.kiji.express.modeling.Extractor
 import org.kiji.express.modeling.Preparer
 import org.kiji.express.modeling.Scorer
@@ -47,6 +48,7 @@ import org.kiji.schema.util.ToJson
  *     version = "1.0.0",
  *     preparerClass = Some(classOf[MyPreparer]),
  *     trainerClass = Some(classOf[MyTrainer]),
+ *     evaluatorClass = Some(classOf[MyEvaluator]),
  *     scoreExtractorClass = Some(classOf[MyExtractor]),
  *     scorerClass = Some(classOf[MyScorer]))
  * }}}
@@ -59,6 +61,7 @@ import org.kiji.schema.util.ToJson
  *   "version": "1.0.0",
  *   "preparerClass": "org.kiji.express.modeling.config.MyPreparer",
  *   "trainerClass": "org.kiji.express.modeling.config.MyTrainer",
+ *   "evaluatorClass": "org.kiji.express.modeling.config.MyEvaluator",
  *   "scorerClass": {
  *     "org.kiji.express.avro.AvroPhaseDefinition": {
  *       "extractor_class": null,
@@ -85,7 +88,8 @@ import org.kiji.schema.util.ToJson
  * @param preparerClass to be used in the prepare phase of the model definition. Optional.
  * @param trainerClass to be used in the train phase of the model definition. Optional.
  * @param scoreExtractorClass that should be used for the score phase. Optional.
- * @param scorerClass to be used in the score phase of the model definition.
+ * @param scorerClass to be used in the score phase of the model definition. Optional.
+ * @param evaluatorClass to be used in the evaluate phase of the model defintion. Optional.
  * @param protocolVersion this model definition was written for.
  */
 @ApiAudience.Public
@@ -98,6 +102,7 @@ final case class ModelDefinition(
     trainerClass: Option[java.lang.Class[_ <: Trainer]] = None,
     scoreExtractorClass: Option[java.lang.Class[_ <: Extractor]] = None,
     scorerClass: Option[java.lang.Class[_ <: Scorer]] = None,
+    evaluatorClass: Option[java.lang.Class[_ <: Evaluator]] = None,
     private[express] val protocolVersion: ProtocolVersion =
         ModelDefinition.CURRENT_MODEL_DEF_VER) {
   // Ensure that all fields set for this model definition are valid.
@@ -126,6 +131,7 @@ final case class ModelDefinition(
    * @param trainerClass used by the model definition.
    * @param scoreExtractorClass used by the model definition.
    * @param scorerClass used by the model definition.
+   * @param evaluatorClass used by the model definition.
    * @return a new model definition using the settings specified to this method.
    */
   def withNewSettings(
@@ -134,7 +140,8 @@ final case class ModelDefinition(
       preparerClass: Option[Class[_ <: Preparer]] = this.preparerClass,
       trainerClass: Option[Class[_ <: Trainer]] = this.trainerClass,
       scoreExtractorClass: Option[Class[_ <: Extractor]] = this.scoreExtractorClass,
-      scorerClass: Option[Class[_ <: Scorer]] = this.scorerClass): ModelDefinition = {
+      scorerClass: Option[Class[_ <: Scorer]] = this.scorerClass,
+      evaluatorClass: Option[Class[_ <: Evaluator]] = this.evaluatorClass): ModelDefinition = {
     new ModelDefinition(
         name,
         version,
@@ -142,6 +149,7 @@ final case class ModelDefinition(
         trainerClass,
         scoreExtractorClass,
         scorerClass,
+        evaluatorClass,
         this.protocolVersion)
   }
 }
@@ -152,13 +160,13 @@ final case class ModelDefinition(
  */
 object ModelDefinition {
   /** Maximum model definition version we can recognize. */
-  val MAX_MODEL_DEF_VER: ProtocolVersion = ProtocolVersion.parse("model_definition-0.2.0")
+  val MAX_MODEL_DEF_VER: ProtocolVersion = ProtocolVersion.parse("model_definition-0.3.0")
 
   /** Minimum model definition version we can recognize. */
   val MIN_MODEL_DEF_VER: ProtocolVersion = ProtocolVersion.parse("model_definition-0.2.0")
 
   /** Current model definition protocol version. */
-  val CURRENT_MODEL_DEF_VER: ProtocolVersion = ProtocolVersion.parse("model_definition-0.2.0")
+  val CURRENT_MODEL_DEF_VER: ProtocolVersion = ProtocolVersion.parse("model_definition-0.3.0")
 
   /** Regular expression used to validate a model definition version string. */
   val VERSION_REGEX: String = "[0-9]+(.[0-9]+)*"
@@ -220,13 +228,20 @@ object ModelDefinition {
     }
   }
 
+  /**
+   * Verifies that a contiguous set of phases is defined.
+   *
+   * @param modelDefinition to validate.
+   * @throws a ValidationException if an invalid combination of states is specified.
+   */
   private[express] def validatePhases(
       modelDefinition: ModelDefinition): Seq[ValidationException] = {
     val noPhases =
         if (
             modelDefinition.preparerClass.isEmpty &&
             modelDefinition.trainerClass.isEmpty &&
-            modelDefinition.scorerClass.isEmpty) {
+            modelDefinition.scorerClass.isEmpty &&
+            modelDefinition.evaluatorClass.isEmpty) {
           val error = "The model defines no phases. A valid definition requires at least one phase."
           Some(new ValidationException(error))
         } else if (
@@ -234,7 +249,22 @@ object ModelDefinition {
             modelDefinition.trainerClass.isEmpty &&
             modelDefinition.scorerClass.isDefined) {
           val error = "Unsupported combination of phases. Prepare must be followed by train in " +
-              "order to be useful in to score."
+              "order to be useful to score."
+          Some(new ValidationException(error))
+        }  else if (
+            modelDefinition.preparerClass.isDefined &&
+            (modelDefinition.trainerClass.isEmpty ||
+            modelDefinition.scorerClass.isEmpty) &&
+            modelDefinition.evaluatorClass.isDefined) {
+          val error = "Unsupported combination of phases. Prepare must be followed by train and " +
+            "score in order to evaluate."
+          Some(new ValidationException(error))
+        } else if (
+            modelDefinition.trainerClass.isDefined &&
+            modelDefinition.scorerClass.isEmpty &&
+            modelDefinition.evaluatorClass.isDefined) {
+          val error = "Unsupported combination of phases. Train must be followed by score in " +
+            "order to evaluate."
           Some(new ValidationException(error))
         } else {
           None

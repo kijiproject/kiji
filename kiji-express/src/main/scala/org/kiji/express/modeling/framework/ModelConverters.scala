@@ -43,6 +43,7 @@ import org.kiji.express.avro.AvroScoreEnvironment
 import org.kiji.express.avro.AvroSequenceFileSourceSpec
 import org.kiji.express.avro.AvroTextSourceSpec
 import org.kiji.express.avro.AvroTrainEnvironment
+import org.kiji.express.modeling.Evaluator
 import org.kiji.express.modeling.Extractor
 import org.kiji.express.modeling.Preparer
 import org.kiji.express.modeling.Scorer
@@ -86,7 +87,7 @@ object ModelConverters {
     val protocolVersion = ProtocolVersion
         .parse(modelDefinition.getProtocolVersion)
 
-    // Attempt to load the Preparer class and corresponding Extractor.
+    // Attempt to load the Preparer class.
     val preparerClass: Option[Class[Preparer]] = Option(modelDefinition.getPreparerClass)
         .map { className: String =>
           getClassForPhase[Preparer](
@@ -94,7 +95,7 @@ object ModelConverters {
               phase = classOf[Preparer])
         }
 
-    // Attempt to load the Trainer class and corresponding Extractor.
+    // Attempt to load the Trainer class.
     val trainerClass: Option[Class[Trainer]] = Option(modelDefinition.getTrainerClass)
         .map { className: String =>
           getClassForPhase[Trainer](
@@ -118,6 +119,15 @@ object ModelConverters {
               phase = classOf[Extractor])
         }
 
+    // Attempt to load the Evaluator class.
+    val evaluatorClass: Option[Class[Evaluator]] = Option(modelDefinition.getEvaluatorClass)
+        .map { className: String =>
+          getClassForPhase[Evaluator](
+              phaseImplName = className,
+              phase = classOf[Evaluator])
+        }
+
+
     // Build a model definition.
     new ModelDefinition(
         name = modelDefinition.getName,
@@ -126,6 +136,7 @@ object ModelConverters {
         trainerClass = trainerClass,
         scoreExtractorClass = scoreExtractorClass,
         scorerClass = scorerClass,
+        evaluatorClass = evaluatorClass,
         protocolVersion = protocolVersion)
   }
 
@@ -155,6 +166,12 @@ object ModelConverters {
         phaseClass = modelDefinition.scorerClass,
         extractorClass = modelDefinition.scoreExtractorClass)
 
+    // Build the Evaluator phase's definition.
+    val avroEvaluatorClass = modelDefinition
+        .evaluatorClass
+        .map { _.getName }
+        .getOrElse(null)
+
     // Build the model definition.
     AvroModelDefinition
         .newBuilder()
@@ -164,6 +181,7 @@ object ModelConverters {
         .setPreparerClass(avroPreparerClass)
         .setTrainerClass(avroTrainerClass)
         .setScorerPhase(avroScorerClass)
+        .setEvaluatorClass(avroEvaluatorClass)
         .build()
   }
 

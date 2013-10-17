@@ -27,5 +27,6 @@
       "phase_class": "blah"
     }
   },
-  "protocol_version": "model_definition-0.2.0"
+  "evaluator_class": "org.kiji.express.modeling.config.ModelDefinitionSuite$MyEvaluator",
+  "protocol_version": "model_definition-0.3.0"
 }
