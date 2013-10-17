@@ -72,7 +72,79 @@ import org.kiji.scoring.impl.MultiBufferedWriter.SingleBuffer;
 import org.kiji.scoring.statistics.FreshKijiTableReaderStatistics;
 import org.kiji.scoring.statistics.FreshenerSingleRunStatistics;
 
-/** Local implementation of FreshKijiTableReader. */
+/**
+ * Local implementation of FreshKijiTableReader.
+ *
+ * <p>
+ *   InternalFreshKijiTableReader employs {@link Future}s to perform asynchronous and parallel
+ *   computation. When a reader receives a request it launches a Future for each column in that
+ *   request which has a Freshener attached. These Futures return a booleans which indicate whether
+ *   they committed any data to Kiji before returning, which allows the reader to read from the
+ *   table again before returning to provide the freshened data, or simply return the stale data
+ *   cached earlier without another round trip to the table. Freshener Futures are tracked by a
+ *   single aggregating Future which collects the boolean return values and itself returns a boolean
+ *   which indicates whether any Freshener Future returned true. If all Fresheners finish within the
+ *   allotted timeout, the return value of this aggregating Future is used to determine which data
+ *   should be returned to the user. If any Freshener has not finished within the allotted timeout,
+ *   the reader determines what data to return to the user by consulting the Context object specific
+ *   to this request.
+ * </p>
+ *
+ * <p>
+ *   InternalFreshKijiTableReader is thread safe. Thread safety is accomplished primarily through
+ *   the use of static methods with no side effects and compartmentalizing state into Context
+ *   objects which persist only for the duration of a single request. Nearly all top level state in
+ *   the reader is immutable and the state that is not is modified atomically through a single
+ *   volatile reference which uses reference counting to ensure safety.
+ * </p>
+ *
+ * <p>
+ *   InternalFreshKijiTableReader optionally gathers metrics about the performance of its
+ *   Fresheners. These metrics are collected by a background thread running within the reader using
+ *   a producer/consumer queue system. Each Freshener Future commits basic information about its own
+ *   performance to a queue which the {@link StatisticsGathererThread} collects and aggregates into
+ *   statistics by Freshener.
+ * </p>
+ *
+ * <p>
+ *   Important inner classes:
+ *   <ul>
+ *     <li>
+ *       {@link RereadableState}: Immutable container for state which is required by each request.
+ *       A reader holds a single instance of this class at a time and all requests use a snapshot
+ *       view of one such instance to ensure internal consistency. This instance may be replaced by
+ *       a called to {@link #rereadFreshenerRecords()} or
+ *       {@link #rereadFreshenerRecords(java.util.List)}.
+ *     </li>
+ *     <li>
+ *       {@link FresheningRequestContext}: Context created for each freshening request to maintain
+ *       isolation of state. This context is built by filtering immutable reader state and state
+ *       from a snapshot of the RereadableState along with request time values such as the client's
+ *       data request and any optional parameters.
+ *     </li>
+ *     <li>
+ *       {@link Freshener}: Immutable container representing a single Freshener attachment.
+ *     </li>
+ *     <li>
+ *       {@link FreshenerCallable}: Callable responsible for running a Freshener asynchronously in a
+ *       Future. Returns a boolean which indicates whether the Freshener committed any writes to
+ *       Kiji.
+ *     </li>
+ *     <li>
+ *       {@link StatisticsGathererThread}: Optionally collects performance metrics from completed
+ *       Fresheners and aggregates them by Freshener run. These statistics can be accessed via
+ *       {@link #getStatistics()}. This option is controlled via FreshKijiTableReader
+ *       {@link Builder}'s withStatisticsGathering method.
+ *     </li>
+ *     <li>
+ *       {@link RereadTask}: A TimerTask which optionally periodically calls
+ *       {@link #rereadFreshenerRecords()} to ensure the reader is operating on the most recently
+ *       attached Fresheners. This option is controled via FreshKijiTableReader {@link Builder}'s
+ *       withAutomaticReread method.
+ *     </li>
+ *   </ul>
+ * </p>
+ */
 @ApiAudience.Private
 public final class InternalFreshKijiTableReader implements FreshKijiTableReader {
 
@@ -886,7 +958,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
    *
    * @param scoreFunctionClassName the fully qualified class name of the ScoreFunction subclass to
    *     instantiate.
-   * @return An instance of the named producer.
+   * @return An instance of the named ScoreFunction.
    */
   private static ScoreFunction scoreFunctionForName(
       final String scoreFunctionClassName
@@ -970,7 +1042,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
    *
    * @param records the records from which to create Fresheners.
    * @return a mapping from KijiColumnNames to associated Fresheners.
-   * @throws IOException in case of an error setting up a producer.
+   * @throws IOException in case of an error setting up a KijiFreshnessPolicy or ScoreFunction.
    */
   private static ImmutableMap<KijiColumnName, Freshener> createFresheners(
       final ImmutableMap<KijiColumnName, KijiFreshenerRecord> records
@@ -986,7 +1058,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
    * @param oldFresheners a partially filled map of Fresheners to be completed with new Fresheners
    *    built from the records map.
    * @return a map of Fresheners for each KijiFreshenerRecord in records.
-   * @throws IOException in case of an error setting up a producer.
+   * @throws IOException in case of an error setting up a KijiFreshnessPolicy or ScoreFunction.
    */
   private static ImmutableMap<KijiColumnName, Freshener> fillFresheners(
       final ImmutableMap<KijiColumnName, KijiFreshenerRecord> records,
@@ -1336,8 +1408,6 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   private final MultiBufferedWriter mBufferedWriter;
   /** The KijiFreshnessManager used to retrieve updated Freshener records. */
   private final KijiFreshnessManager mFreshnessManager;
-  /** All mutable state which may be modified by a called to {@link #rereadFreshenerRecords()}. */
-  private volatile RereadableState mRereadableState;
   /** Level of statistics gathering (e.g. ALL, NONE). */
   private final StatisticGatheringMode mStatisticGatheringMode;
   /** Thread responsible for gathering and aggregating statistics. */
@@ -1345,6 +1415,8 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   /** Queue through which statistics about completed Fresheners are passed to the gatherer. */
   private final BlockingQueue<FreshenerSingleRunStatistics> mStatisticsQueue =
       new LinkedBlockingQueue<FreshenerSingleRunStatistics>();
+  /** All mutable state which may be modified by a called to {@link #rereadFreshenerRecords()}. */
+  private volatile RereadableState mRereadableState;
 
   /**
    * Initializes a new InternalFreshKijiTableReader.
@@ -1358,7 +1430,8 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
    * @param statisticGatheringMode specifies what statistics to gather.
    * @param statisticsLoggingInterval time in milliseconds between automatic logging of statistics.
    *     0 indicates no automatic logging.
-   * @throws IOException in case of an error reading from the metatable or setting up producers.
+   * @throws IOException in case of an error reading from the meta table or setting up a
+   *     KijiFreshnessPolicy or ScoreFunction.
    */
   public InternalFreshKijiTableReader(
       final KijiTable table,
