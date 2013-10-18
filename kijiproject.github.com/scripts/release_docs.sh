@@ -32,8 +32,8 @@
 
 
 # KijiSchema version
-SCHEMA_FLAT_VER=1_3_0
-SCHEMA_VER=1.3.0
+SCHEMA_FLAT_VER=1_3_1
+SCHEMA_VER=1.3.1
 
 # KijiMR version
 KIJIMR_FLAT_VER=1_2_0

@@ -102,7 +102,7 @@ tutorial_phonebook_devel : /tutorials/phonebook-tutorial/devel
 tutorial_music_devel : /tutorials/music-recommendation/devel
 tutorial_express_devel : /tutorials/express-recommendation/devel
 
-schema_devel_version : 1.3.1
+schema_devel_version : 1.3.2
 schema_devel_branch : master
 
 mr_devel_version : 1.2.1
@@ -265,3 +265,5 @@ userguide_rest_0_5_0 : /userguides/rest/0.5.0
 tutorial_phonebook_1_1_0 : /tutorials/phonebook-tutorial/1.1.0
 api_mrlib_1_1_0 : http://api-docs.kiji.org/kiji-mapreduce-lib/1.1.0/org/kiji/mapreduce/lib
 api_express_0_9_0 : http://api-docs.kiji.org/kiji-express/0.9.0/org/kiji/express
+userguide_schema_1_3_1 : /userguides/schema/1.3.1
+api_schema_1_3_1 : http://api-docs.kiji.org/kiji-schema/1.3.1/org/kiji/schema

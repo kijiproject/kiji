@@ -13,7 +13,8 @@ only depend on APIs listed as <tt>@ApiAudience.Public</tt>. Contributors
 to other Kiji framework components may use <tt>@ApiAudience.Framework</tt>
 APIs, but beware that they may change between minor versions.
 
-* [KijiSchema](http://api-docs.kiji.org/kiji-schema/1.3.0/index.html) (latest)
+* [KijiSchema](http://api-docs.kiji.org/kiji-schema/1.3.1/index.html) (latest)
+  \[[1.3.1](http://api-docs.kiji.org/kiji-schema/1.3.1/index.html)\]
   \[[1.3.0](http://api-docs.kiji.org/kiji-schema/1.3.0/index.html)\]
   \[[1.2.1](http://api-docs.kiji.org/kiji-schema/1.2.1/index.html)\]
   \[[1.2.0](http://api-docs.kiji.org/kiji-schema/1.2.0/index.html)\]
