@@ -28,8 +28,9 @@ import org.kiji.annotations.ApiStability
  *
  * Simple:
  * {{{
- *   // Create a KijiOutput that reads from the table named `mytable` putting timestamps in the
- *   // `'timestamps` field and reading two columns: `info:column1` and `info:column2`.
+ *   // Create a KijiOutput that writes to the table named `mytable` putting timestamps in the
+ *   // `'timestamps` field and writing the fields `'column1` and `'column2` to the columns
+ *   // `info:column1` and `info:column2`.
  *   KijiOutput(
  *       tableUri = "kiji://localhost:2181/default/mytable",
  *       timestampField = 'timestamps,
@@ -39,8 +40,9 @@ import org.kiji.annotations.ApiStability
  *
  * Verbose:
  * {{{
- *   // Create a KijiOutput that reads from the table named `mytable` putting timestamps in the
- *   // `'timestamps` field and reading two columns: `info:column1` and `info:column2`.
+ *   // Create a KijiOutput that writes to the table named `mytable` putting timestamps in the
+ *   // `'timestamps` field and writing the fields `'column1` and `'column2` to the columns
+ *   // `info:column1` and `info:column2`.
  *   KijiOutput(
  *       tableUri = "kiji://localhost:2181/default/mytable",
  *       timestampField = 'timestamps,

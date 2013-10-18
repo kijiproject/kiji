@@ -23,9 +23,32 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 
 /**
- * Factory object with overloaded factory methods for creating [[org.kiji.express.flow.KijiSource]]s
- * for use asinputs of a KijiExpress flow.
+ * Factory methods for constructing [[org.kiji.express.flow.KijiSource]]s that will be used as
+ * inputs to a KijiExpress flow. Two basic APIs are provided with differing complexity.
+ *
+ * Simple:
+ * {{{
+ *   // Create a KijiInput that reads from the table named `mytable` reading the columns
+ *   // `info:column1` and `info:column2` to the fields `'column1` and `'column2`.
+ *   KijiInput(
+ *       tableUri = "kiji://localhost:2181/default/mytable",
+ *       "info:column1" -> 'column1,
+ *       "info:column2" -> 'column2)
+ * }}}
+ *
+ * Verbose:
+ * {{{
+ *   // Create a KijiInput that reads from the table named `mytable` reading the columns
+ *   // `info:column1` and `info:column2` to the fields `'column1` and `'column2`.
+ *   KijiInput(
+ *       tableUri = "kiji://localhost:2181/default/mytable",
+ *       columns = Map(
+ *           QualifiedColumn("info", "column1") -> 'column1,
+ *           QualifiedColumn("info", "column2") -> 'column2)
+ * }}}
  */
+@ApiAudience.Public
+@ApiStability.Experimental
 object KijiInput {
   /** Default time range for KijiSource */
   private val DEFAULT_TIME_RANGE: TimeRange = All
