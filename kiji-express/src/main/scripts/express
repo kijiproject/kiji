@@ -491,9 +491,13 @@ fi
 # Run it!
 if [ -z "${scalding_tool}" ]; then
   # In this case the user is running an arbitrary jar with express code on the classpath.
+  # TODO EXP-243: Once we have an express keyword to run the model lifecycle, remove the two
+  # Hadoop flags -Dtmpjars and -Dmapreduce... that are being passed to `express jar`. Until
+  # then, we use `express jar` to run the model lifecycle tool and hence need the flags.
   exec java \
     -cp "${express_cp}" ${java_opts} ${EXPRESS_JAVA_OPTS} \
-    "${class}" "-Dtmpjars=${tmpjars}" ${COMMAND_ARGS}
+    "${class}" "-Dtmpjars=${tmpjars}" "-Dmapreduce.task.classpath.user.precedence=true" \
+    ${COMMAND_ARGS}
 else
   canonical_user_target=$(resolve_symlink ${user_target})
   if [ -z "${canonical_user_target}" ]; then
@@ -585,7 +589,7 @@ else
       -Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED \
       ${scalding_tool} \
       "-Dtmpjars=${tmpjars}" \
-      "-Dmapreduce.task.user.classpath.first=true" \
+      "-Dmapreduce.task.classpath.user.precedence=true" \
       ${hadoop_argv} \
       "${canonical_user_target}" \
       "${run_mode_flag}" \
