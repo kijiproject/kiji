@@ -213,6 +213,7 @@ The following are not allowed:
     some-dashed-name
     this$uses!special(characters_)
 
+<a id="create_table_syntax"> </a>
 #### `CREATE TABLE` Syntax
 
     CREATE TABLE t [WITH DESCRIPTION 'd']
@@ -458,7 +459,7 @@ Keywords or clauses in \[square brackets\] are optional in the examples below:
     ALTER TABLE t SET property FOR LOCALITY GROUP lg;
     ... where 'property' is one of MAXVERSIONS, INMEMORY, TTL, etc. as above.
 
-
+<a id="managing_col_schemas"> </a>
 ### Managing Column Schemas
 
 Starting in KijiSchema 1.3.0, newly-created Kiji instances support table layouts with
