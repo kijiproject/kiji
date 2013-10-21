@@ -25,6 +25,7 @@ import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiSchemaTable;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;
+import org.kiji.scoring.FreshKijiTableReader;
 
 /**
  * Interface for Kiji clients that are utilized by KijiREST resources.
@@ -55,10 +56,21 @@ public interface KijiClient {
   KijiTable getKijiTable(String instance, String table);
 
   /**
-   * Returns the Kiji schema table for the given instance.
+   * Returns the Kiji schema table for the given instance.  Caller should not close the schema
+   * table.
    *
    * @param instance is the instance for which the schema table should be retrieved.
    * @return the schema table for the specified instance.
    */
   KijiSchemaTable getKijiSchemaTable(String instance);
+
+  /**
+   * Gets a FreshKijiTableReader.  Caller should not close the fresh table reader.
+   *
+   * @param instance in which this table reader resides
+   * @param table name of the table to read
+   * @return FreshKijiTableReader object
+   * @throws javax.ws.rs.WebApplicationException if there is an error.
+   */
+  FreshKijiTableReader getFreshKijiTableReader(String instance, String table);
 }

@@ -1,0 +1,101 @@
+{
+  "name": "py_table",
+  "description": "A table for testing Kiji Rest with Freshening",
+  "keys_format": {
+    "org.kiji.schema.avro.RowKeyFormat2": {
+      "encoding": "FORMATTED",
+      "salt": {
+        "hash_type": "MD5",
+        "hash_size": 2,
+        "suppress_key_materialization": false
+      },
+      "range_scan_start_index": 1,
+      "nullable_start_index": 1,
+      "components": [
+        {
+          "name": "triangle_name",
+          "type": "STRING"
+        }
+      ]
+    }
+  },
+  "locality_groups": [
+    {
+      "id": 1,
+      "name": "default",
+      "aliases": [],
+      "enabled": true,
+      "description": "main storage",
+      "in_memory": false,
+      "max_versions": 2147483647,
+      "ttl_seconds": 2147483647,
+      "compression_type": "GZ",
+      "families": [
+        {
+          "id": 1,
+          "name": "trifam",
+          "aliases": [],
+          "enabled": true,
+          "description": "stores triangles",
+          "map_schema": null,
+          "columns": [
+            {
+              "id": 1,
+              "name": "a",
+              "aliases": [],
+              "enabled": true,
+              "description": "",
+              "column_schema": {
+                "storage": "UID",
+                "type": "INLINE",
+                "value": {
+                  "string": "\"long\""
+                }
+              },
+              "delete": false,
+              "renamed_from": null
+            }, {
+              "id": 2,
+              "name": "b",
+              "aliases": [],
+              "enabled": true,
+              "description": "",
+              "column_schema": {
+                "storage": "UID",
+                "type": "INLINE",
+                "value": {
+                  "string": "\"long\""
+                }
+              },
+              "delete": false,
+              "renamed_from": null
+            }, {
+              "id": 3,
+              "name": "c",
+              "aliases": [],
+              "enabled": true,
+              "description": "",
+              "column_schema": {
+                "storage": "UID",
+                "type": "INLINE",
+                "value": {
+                  "string": "\"long\""
+                }
+              },
+              "delete": false,
+              "renamed_from": null
+            }
+          ],
+          "delete": false,
+          "renamed_from": null
+        }
+      ],
+      "delete": false,
+      "renamed_from": null
+    }
+  ],
+  "version": "layout-1.1",
+  "layout_id": {
+    "string": "1"
+  }
+}

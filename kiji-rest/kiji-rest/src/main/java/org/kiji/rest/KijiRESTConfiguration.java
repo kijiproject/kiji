@@ -26,6 +26,8 @@ import com.yammer.dropwizard.config.Configuration;
 
 import org.hibernate.validator.constraints.NotEmpty;
 
+import org.kiji.rest.config.FresheningConfiguration;
+
 /**
  * The Java object which is deserialized from the YAML configuration file.
  * This parametrizes the KijiRESTService.
@@ -41,6 +43,10 @@ public class KijiRESTConfiguration extends Configuration {
   @JsonProperty("instances")
   private List<String> mInstances;
 
+  /** Subconfiguration for freshening. */
+  @JsonProperty("freshening")
+  private FresheningConfiguration mFresheningConfiguration = new FresheningConfiguration();
+
   /** @return The cluster address. */
   public final String getClusterURI() {
     return mCluster;
@@ -49,5 +55,10 @@ public class KijiRESTConfiguration extends Configuration {
   /** @return The list of instance names. */
   public final List<String> getInstances() {
     return mInstances;
+  }
+
+  /** @return The freshening configuration. */
+  public FresheningConfiguration getFresheningConfiguration() {
+    return mFresheningConfiguration;
   }
 }

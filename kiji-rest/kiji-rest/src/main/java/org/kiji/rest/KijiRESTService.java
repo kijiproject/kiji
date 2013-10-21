@@ -129,7 +129,8 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
     environment.addResource(new TableResource(kijiClient));
     environment.addResource(new TablesResource(kijiClient));
     environment.addResource(new RowsResource(kijiClient,
-        environment.getObjectMapperFactory().build()));
+        environment.getObjectMapperFactory().build(),
+        configuration.getFresheningConfiguration()));
     environment.addResource(new RowResource(kijiClient));
     environment.addResource(new EntityIdResource(kijiClient));
   }

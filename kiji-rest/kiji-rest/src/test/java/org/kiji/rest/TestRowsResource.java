@@ -49,6 +49,7 @@ import org.apache.commons.codec.binary.Hex;
 import org.junit.After;
 import org.junit.Test;
 
+import org.kiji.rest.config.FresheningConfiguration;
 import org.kiji.rest.representations.KijiRestRow;
 import org.kiji.rest.representations.SchemaOption;
 import org.kiji.rest.resources.RowsResource;
@@ -189,7 +190,8 @@ public class TestRowsResource extends ResourceTest {
     mKijiClient = new ManagedKijiClient(Sets.newHashSet(mFakeKiji.getURI()));
     mKijiClient.start();
 
-    RowsResource resource = new RowsResource(mKijiClient, this.getObjectMapperFactory().build());
+    RowsResource resource = new RowsResource(mKijiClient, this.getObjectMapperFactory().build(),
+        new FresheningConfiguration(false, 0));
     addResource(resource);
   }
 

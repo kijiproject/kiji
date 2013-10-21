@@ -55,6 +55,7 @@ import javax.ws.rs.core.UriBuilder;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -66,6 +67,7 @@ import org.apache.hadoop.hbase.HConstants;
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
 import org.kiji.rest.KijiClient;
+import org.kiji.rest.config.FresheningConfiguration;
 import org.kiji.rest.representations.KijiRestRow;
 import org.kiji.rest.util.RowResourceUtil;
 import org.kiji.schema.EntityId;
@@ -82,6 +84,7 @@ import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.KijiTableReader.KijiScannerOptions;
 import org.kiji.schema.tools.ToolUtils;
 import org.kiji.schema.util.ResourceUtils;
+import org.kiji.scoring.FreshKijiTableReader;
 
 /**
  * This REST resource interacts with Kiji tables.
@@ -110,15 +113,23 @@ public class RowsResource {
   private final ObjectMapper mJsonObjectMapper;
 
   /**
+   * Configuration values to use while freshening.
+   */
+  private final FresheningConfiguration mFreshenConfig;
+
+  /**
    * Default constructor.
    *
    * @param kijiClient that this should use for connecting to Kiji.
    * @param jsonObjectMapper is the ObjectMapper used by DropWizard to convert from Java
    *        objects to JSON.
+   * @param freshenConfig to use with freshening reader.
    */
-  public RowsResource(KijiClient kijiClient, ObjectMapper jsonObjectMapper) {
+  public RowsResource(KijiClient kijiClient, ObjectMapper jsonObjectMapper,
+      FresheningConfiguration freshenConfig) {
     mKijiClient = kijiClient;
     mJsonObjectMapper = jsonObjectMapper;
+    mFreshenConfig = freshenConfig;
   }
 
   /**
@@ -219,6 +230,9 @@ public class RowsResource {
    * @param timeRange is the time range of cells to return (specified by min..max where min/max is
    *        the ms since UNIX epoch. min and max are both optional; however, if something is
    *        specified, at least one of min/max must be present.)
+   * @param freshen determines whether freshening should be done as part of the request.
+   * @param timeout amount of time in ms to wait for freshening to finish before returning the
+   *                old/stale/previous value of the column(s).
    * @return the Response object containing the rows requested in JSON
    */
   @GET
@@ -233,7 +247,9 @@ public class RowsResource {
       @QueryParam("limit") @DefaultValue("100") int limit,
       @QueryParam("cols") @DefaultValue("*") String columns,
       @QueryParam("versions") @DefaultValue("1") String maxVersionsString,
-      @QueryParam("timerange") String timeRange) {
+      @QueryParam("timerange") String timeRange,
+      @QueryParam("freshen") Boolean freshen,
+      @QueryParam("timeout") Long timeout) {
     // CSON: ParameterNumberCheck - There are a bunch of query param options
 
     long[] timeRanges = null;
@@ -269,14 +285,26 @@ public class RowsResource {
           + "Specified both jsonEntityId and start/end HBase row keys."), Status.BAD_REQUEST);
     }
 
-    // We will honor eid over start/end rk.
     try {
       if (jsonEntityId != null) {
         EntityId eid = ToolUtils.createEntityIdFromUserInputs(jsonEntityId, kijiTable.getLayout());
-        KijiRowData returnRow = getKijiRowData(kijiTable, eid, dataBuilder.build());
-        List<KijiRowData> tempRowList = Lists.newLinkedList();
-        tempRowList.add(returnRow);
-        scanner = tempRowList;
+        KijiDataRequest request = dataBuilder.build();
+        KijiRowData rowData;
+        // TODO: add FreshRequestOptions to disable freshening and simplify below - WDSCORE-75
+        // Give priority to request freshness parameter; if not set use default
+        if (freshen != null ? freshen : mFreshenConfig.isFreshen()) {
+          // Do freshening
+          FreshKijiTableReader reader = mKijiClient.getFreshKijiTableReader(instance, table);
+          FreshKijiTableReader.FreshRequestOptions freshOpts =
+              FreshKijiTableReader.FreshRequestOptions.Builder.create()
+              .withTimeout(timeout != null ? timeout : mFreshenConfig.getTimeout())
+              .build();
+          rowData = reader.get(eid, request, freshOpts);
+        } else {
+          // Don't freshen
+          rowData = getKijiRowData(kijiTable, eid, request);
+        }
+        scanner = ImmutableList.of(rowData);
       } else {
         EntityIdFactory eidFactory = EntityIdFactory.getFactory(kijiTable.getLayout());
         final KijiScannerOptions scanOptions = new KijiScannerOptions();
