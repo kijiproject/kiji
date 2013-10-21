@@ -160,15 +160,15 @@ public class TestCreateHiveTableTool extends KijiClientTest {
 
   @Test
   public void testRecord() throws IOException {
-    assertEquals("STRUCT<ts: TIMESTAMP, value: STRUCT<numerator: INT, denominator: INT>>",
+    assertEquals("STRUCT<ts: TIMESTAMP, value: STRUCT<`numerator`: INT, `denominator`: INT>>",
         CreateHiveTableTool.getHiveType(RECORD_COLUMN, mLayout, mSchemaTable));
   }
 
   @Test
   public void testRecursiveRecord() throws IOException {
     assertEquals(
-      "STRUCT<ts: TIMESTAMP, value: STRUCT<value: BIGINT, next: "
-      + "STRUCT<value: BIGINT, next: STRING>>>",
+      "STRUCT<ts: TIMESTAMP, value: STRUCT<`value`: BIGINT, `next`: "
+      + "STRUCT<`value`: BIGINT, `next`: STRING>>>",
       CreateHiveTableTool.getHiveType(RECURSIVE_RECORD_COLUMN, mLayout, mSchemaTable));
   }
 
@@ -205,15 +205,15 @@ public class TestCreateHiveTableTool extends KijiClientTest {
   @Test
   public void testClassColumn() throws IOException {
     String nodeClassHiveType =
-        "STRUCT<ts: TIMESTAMP, value: STRUCT<label: STRING, weight: DOUBLE, "
-          + "edges: ARRAY<STRUCT<label: STRING, weight: DOUBLE, " // begin edges1
-            + "target: STRUCT<label: STRING, weight: DOUBLE, " // begin target1
-              + "edges: ARRAY<STRUCT<label: STRING, weight: DOUBLE, " // begin edges2
-                + "target: STRING, " // begin target2
-                + "annotations: MAP<STRING, STRING>>>, " // end target2
-              + "annotations: MAP<STRING, STRING>>, " // end edges2
-            + "annotations: MAP<STRING, STRING>>>, " //end target1
-          + "annotations: MAP<STRING, STRING>>>"; //end edges1
+        "STRUCT<ts: TIMESTAMP, value: STRUCT<`label`: STRING, `weight`: DOUBLE, "
+          + "`edges`: ARRAY<STRUCT<`label`: STRING, `weight`: DOUBLE, " // begin edges1
+            + "`target`: STRUCT<`label`: STRING, `weight`: DOUBLE, " // begin target1
+              + "`edges`: ARRAY<STRUCT<`label`: STRING, `weight`: DOUBLE, " // begin edges2
+                + "`target`: STRING, " // begin target2
+                + "`annotations`: MAP<STRING, STRING>>>, " // end target2
+              + "`annotations`: MAP<STRING, STRING>>, " // end edges2
+            + "`annotations`: MAP<STRING, STRING>>>, " //end target1
+          + "`annotations`: MAP<STRING, STRING>>>"; //end edges1
     assertEquals(nodeClassHiveType,
         CreateHiveTableTool.getHiveType(CLASS_COLUMN, mLayout, mSchemaTable));
   }

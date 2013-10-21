@@ -258,8 +258,9 @@ public class CreateHiveTableTool extends BaseTool {
           if (field.pos() != 0) {
             sb.append(", ");
           }
+          sb.append("`"); // We wrap all field names with backticks to avoid Hive reserved words
           sb.append(field.name());
-          sb.append(": ");
+          sb.append("`: ");
           sb.append(convertSchemaToHiveTypeSB(field.schema(), recordCount));
         }
         sb.append(">");
