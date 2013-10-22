@@ -20,6 +20,9 @@
 package org.kiji.express.util
 
 import scala.collection.mutable
+import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 
 /**
  * Class used to wrap a function with a single parameter, caching parameter/return value
@@ -55,6 +58,9 @@ import scala.collection.mutable
  * @tparam T is the input type of the wrapped function.
  * @tparam R is the return type of the wrapped function.
  */
+@ApiAudience.Private
+@ApiStability.Experimental
+@Inheritance.Sealed
 class Memoize[-T, +R](f: T => R) extends (T => R) {
   /** Mutable map used to store already computed parameter/return value combinations. */
   private[this] val cache = mutable.Map.empty[T, R]

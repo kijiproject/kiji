@@ -47,6 +47,7 @@ import org.slf4j.LoggerFactory
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 import org.kiji.express.EntityId
 import org.kiji.express.KijiSlice
 import org.kiji.express.PagedKijiSlice
@@ -105,6 +106,7 @@ import org.kiji.schema.util.ProtocolVersion
  */
 @ApiAudience.Framework
 @ApiStability.Experimental
+@Inheritance.Sealed
 private[express] class KijiScheme(
     private[express] val timeRange: TimeRange,
     private[express] val timestampField: Option[Symbol],

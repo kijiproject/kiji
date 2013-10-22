@@ -22,7 +22,6 @@ package org.kiji.express.flow.framework
 import scala.collection.JavaConverters._
 
 import com.google.common.base.Preconditions.checkNotNull
-import org.apache.hadoop.hbase.client.HTableInterface
 import org.apache.hadoop.hbase.mapreduce.TableSplit
 import org.apache.hadoop.mapred.InputFormat
 import org.apache.hadoop.mapred.InputSplit
@@ -32,6 +31,7 @@ import org.apache.hadoop.mapred.Reporter
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 import org.kiji.express.util.Resources.doAndClose
 import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.mapreduce.framework.KijiConfKeys
@@ -62,6 +62,7 @@ import org.kiji.schema.impl.HBaseKijiTable
  */
 @ApiAudience.Framework
 @ApiStability.Experimental
+@Inheritance.Sealed
 final class KijiInputFormat
     extends InputFormat[KijiKey, KijiValue] {
   /**

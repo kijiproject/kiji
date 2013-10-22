@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 import org.kiji.express.flow.ColumnRequest
 import org.kiji.express.flow.TimeRange
 import org.kiji.express.util.GenericCellSpecs
@@ -71,6 +72,9 @@ import org.kiji.schema.layout.KijiTableLayout
  * @param iterator that maintains the current row pointer.
  * @param tableUri of the kiji table.
  */
+@ApiAudience.Private
+@ApiStability.Experimental
+@Inheritance.Sealed
 private[express] case class InputContext(
     reader: KijiTableReader,
     scanner: KijiRowScanner,
@@ -85,7 +89,10 @@ private[express] case class InputContext(
  * @param tableUri of the Kiji table.
  * @param layout of the kiji table.
  */
-private[express] case class OutputContext(
+@ApiAudience.Framework
+@ApiStability.Experimental
+@Inheritance.Sealed
+final private[express] case class OutputContext(
     writer: KijiTableWriter,
     tableUri: KijiURI,
     kiji: Kiji,
@@ -125,8 +132,9 @@ private[express] case class OutputContext(
  *     Use None if all values should be written at the current time.
  * @param columns mapping tuple field names to requests for Kiji columns.
  */
-@ApiAudience.Framework
+@ApiAudience.Private
 @ApiStability.Experimental
+@Inheritance.Sealed
 private[express] class LocalKijiScheme(
     private[express] val timeRange: TimeRange,
     private[express] val timestampField: Option[Symbol],

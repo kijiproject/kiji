@@ -21,6 +21,7 @@ package org.kiji.express
 
 import org.apache.avro.specific.SpecificRecord
 
+import org.kiji.annotations.Inheritance
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 
@@ -36,6 +37,7 @@ import org.kiji.annotations.ApiStability
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 abstract class AvroValue private[express](classOfValue: Class[_]) {
   /** An error message used for primitives being cast to the wrong types. */
   private val castErrorMessage: String =

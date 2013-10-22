@@ -21,6 +21,7 @@ package org.kiji.express.flow
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 import org.kiji.schema.KConstants
 
 /**
@@ -28,6 +29,7 @@ import org.kiji.schema.KConstants
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 sealed trait TimeRange extends Serializable {
   /** Earliest timestamp of the TimeRange, inclusive. */
   def begin: Long
@@ -41,6 +43,7 @@ sealed trait TimeRange extends Serializable {
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 final case object All extends TimeRange {
   override val begin: Long = KConstants.BEGINNING_OF_TIME
   override val end: Long = KConstants.END_OF_TIME
@@ -51,6 +54,9 @@ final case object All extends TimeRange {
  *
  * @param timestamp to request.
  */
+@ApiAudience.Public
+@ApiStability.Experimental
+@Inheritance.Sealed
 final case class At(timestamp: Long) extends TimeRange {
   override val begin: Long = timestamp
   override val end: Long = timestamp
@@ -63,6 +69,7 @@ final case class At(timestamp: Long) extends TimeRange {
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 final case class After(override val begin: Long) extends TimeRange {
   override val end: Long = KConstants.END_OF_TIME
 }
@@ -74,6 +81,7 @@ final case class After(override val begin: Long) extends TimeRange {
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 final case class Before(override val end: Long) extends TimeRange {
   override val begin: Long = KConstants.BEGINNING_OF_TIME
 }
@@ -87,6 +95,7 @@ final case class Before(override val end: Long) extends TimeRange {
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 final case class Between(
     override val begin: Long,
     override val end: Long) extends TimeRange {

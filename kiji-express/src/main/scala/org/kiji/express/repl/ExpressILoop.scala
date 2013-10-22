@@ -23,6 +23,7 @@ import scala.tools.nsc.interpreter.ILoop
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 import org.kiji.schema.shell.ShellMain
 
 /**
@@ -30,6 +31,7 @@ import org.kiji.schema.shell.ShellMain
  */
 @ApiAudience.Private
 @ApiStability.Experimental
+@Inheritance.Sealed
 private[express] class ExpressILoop extends ILoop {
   /**
    * Commands specific to the KijiExpress REPL. To define a new command use one of the following

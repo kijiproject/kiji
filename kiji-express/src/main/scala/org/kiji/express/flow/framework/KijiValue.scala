@@ -21,6 +21,7 @@ package org.kiji.express.flow.framework
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
+import org.kiji.annotations.Inheritance
 import org.kiji.schema.KijiRowData;
 
 /**
@@ -35,6 +36,7 @@ import org.kiji.schema.KijiRowData;
  */
 @ApiAudience.Private
 @ApiStability.Experimental
+@Inheritance.Sealed
 final class KijiValue {
   /** The row data being wrapped by this instance. */
   // scalastyle:off null

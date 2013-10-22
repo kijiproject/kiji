@@ -33,6 +33,9 @@ import org.apache.hadoop.mapred.JobConf
 import org.kiji.express.flow.framework.KijiTap
 import org.kiji.express.flow.framework.LocalKijiTap
 import org.kiji.express.util.PipeConversions
+import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 
 /**
  * KijiJob is KijiExpress's extension of Scalding's `Job`, and users should extend it when writing
@@ -42,6 +45,9 @@ import org.kiji.express.util.PipeConversions
  *     KijiJob, `args("input")` will evaluate to "SomeFile.txt" if your command line contained the
  *     argument `--input SomeFile.txt`
  */
+@ApiAudience.Public
+@ApiStability.Experimental
+@Inheritance.Extensible
 class KijiJob(args: Args = Args(Nil)) extends Job(args) with PipeConversions {
   override def validateSources(mode: Mode): Unit = {
     val taps: List[Tap[_, _, _]] =

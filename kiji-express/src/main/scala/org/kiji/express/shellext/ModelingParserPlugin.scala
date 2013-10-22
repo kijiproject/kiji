@@ -21,6 +21,7 @@ package org.kiji.express.shellext
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 import org.kiji.schema.shell.DDLParserHelpers
 import org.kiji.schema.shell.Environment
 import org.kiji.schema.shell.ddl.DDLCommand
@@ -31,6 +32,7 @@ import org.kiji.schema.shell.spi.ParserPlugin
  */
 @ApiAudience.Private
 @ApiStability.Experimental
+@Inheritance.Sealed
 private[express] sealed trait LifeCyclePhase
 
 /**
@@ -38,6 +40,7 @@ private[express] sealed trait LifeCyclePhase
  */
 @ApiAudience.Private
 @ApiStability.Experimental
+@Inheritance.Sealed
 private[express] object ExtractPhase extends LifeCyclePhase
 
 /**
@@ -45,6 +48,7 @@ private[express] object ExtractPhase extends LifeCyclePhase
  */
 @ApiAudience.Private
 @ApiStability.Experimental
+@Inheritance.Sealed
 private[express] object ScorePhase extends LifeCyclePhase
 
 /**
@@ -53,6 +57,7 @@ private[express] object ScorePhase extends LifeCyclePhase
  */
 @ApiAudience.Private
 @ApiStability.Experimental
+@Inheritance.Sealed
 private[express] sealed trait ConfigureVia
 
 /**
@@ -60,10 +65,12 @@ private[express] sealed trait ConfigureVia
  */
 @ApiAudience.Private
 @ApiStability.Experimental
+@Inheritance.Sealed
 private[express] case class ConfigureViaFile(val filePath: String) extends ConfigureVia
 
 @ApiAudience.Private
 @ApiStability.Experimental
+@Inheritance.Sealed
 private[express] case class JobsConfiguration(
     val libjars: List[String],
     val configurationProperties: Map[String, String]
@@ -77,6 +84,7 @@ private[express] case class JobsConfiguration(
  */
 @ApiAudience.Private
 @ApiStability.Experimental
+@Inheritance.Sealed
 final class ModelingParserPlugin(val env: Environment) extends ParserPlugin with DDLParserHelpers {
 
   /**

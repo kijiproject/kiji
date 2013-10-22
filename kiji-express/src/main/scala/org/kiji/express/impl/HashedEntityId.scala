@@ -19,15 +19,12 @@
 
 package org.kiji.express.impl
 
-import java.util.Arrays
-
-import org.apache.hadoop.conf.Configuration
-
+import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 import org.kiji.express.EntityId
-import org.kiji.express.util.EntityIdFactoryCache
 import org.kiji.schema.{EntityId => JEntityId}
 import org.kiji.schema.EntityIdFactory
-import org.kiji.schema.KijiURI
 
 /**
  * An EntityId that does not provide access to its components.  We keep the table URI and the
@@ -38,6 +35,9 @@ import org.kiji.schema.KijiURI
  *
  * @param encoded byte array representation of this EntityId.
  */
+@ApiAudience.Private
+@ApiStability.Experimental
+@Inheritance.Sealed
 private[express] case class HashedEntityId(encoded: Array[Byte])
     extends EntityId {
 

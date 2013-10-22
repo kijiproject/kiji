@@ -42,7 +42,7 @@ class ModelLifecycleToolSuite extends KijiSuite {
     val modelEnvPath: String = "src/test/resources/modelEnvironments/lm-trainer-env.json"
     val modelDefPath: String = "src/test/resources/modelDefinitions/lm-trainer-def.json"
     val outputFilePath: String = "/tmp/1380326524231-0"
-    val tempFile: File = File.createTempFile("/tmp", ".json")
+    val tempFile: File = File.createTempFile("modelenv", ".json")
 
     val testLayoutDesc: TableLayoutDesc = layout(inputTable).getDesc
     testLayoutDesc.setName("lr_table")

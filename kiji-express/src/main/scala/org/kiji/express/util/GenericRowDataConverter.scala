@@ -27,6 +27,9 @@ import scala.collection.mutable.{Map => MMap}
 
 import org.apache.hadoop.conf.Configuration
 
+import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 import org.kiji.schema.GenericCellDecoderFactory
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiColumnName
@@ -45,6 +48,9 @@ import org.kiji.schema.util.ResourceUtils
  * @param uri to a Kiji instance for rows that will be converted.
  * @param conf is the hadoop configuration used when accessing Kiji.
  */
+@ApiAudience.Private
+@ApiStability.Experimental
+@Inheritance.Sealed
 private[express] final class GenericRowDataConverter(uri: KijiURI, conf: Configuration) {
 
   /**

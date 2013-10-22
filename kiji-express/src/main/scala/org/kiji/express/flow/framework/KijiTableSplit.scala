@@ -27,6 +27,7 @@ import org.apache.hadoop.mapred.InputSplit
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 
 /**
  * An input split that specifies a region of rows from a Kiji table to be processed by a MapReduce
@@ -37,6 +38,7 @@ import org.kiji.annotations.ApiStability
  */
 @ApiAudience.Private
 @ApiStability.Experimental
+@Inheritance.Sealed
 final private[express] class KijiTableSplit(
     split: TableSplit)
     extends InputSplit {

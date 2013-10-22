@@ -23,6 +23,7 @@ import cascading.tuple.Fields
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 import org.kiji.express.KijiSlice
 import org.kiji.express.modeling.Extractor
 import org.kiji.express.util.Tuples
@@ -44,6 +45,7 @@ import org.kiji.express.util.Tuples
  */
 @ApiAudience.Framework
 @ApiStability.Experimental
+@Inheritance.Sealed
 sealed abstract class SelectorExtractor[R](
     val selectFn: KijiSlice[Any] => R)
     extends Extractor {
@@ -68,6 +70,7 @@ sealed abstract class SelectorExtractor[R](
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 final class FirstValueExtractor
     extends SelectorExtractor[Any](FirstValueExtractor.selectFirstValue)
 private[express] object FirstValueExtractor {
@@ -79,6 +82,7 @@ private[express] object FirstValueExtractor {
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 final class LastValueExtractor
     extends SelectorExtractor[Any](LastValueExtractor.selectLastValue)
 private[express] object LastValueExtractor {
@@ -91,6 +95,7 @@ private[express] object LastValueExtractor {
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 final class SliceExtractor
     extends SelectorExtractor[Seq[Any]](SliceExtractor.selectSlice)
 private[express] object SliceExtractor {

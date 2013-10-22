@@ -41,6 +41,7 @@ import org.kiji.express.modeling.impl.KeyValueStores
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 final case class ScoreFn[I, O] (
     fields: Fields,
     fn: I => O)

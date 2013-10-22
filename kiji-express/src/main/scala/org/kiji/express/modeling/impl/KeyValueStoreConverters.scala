@@ -23,6 +23,7 @@ import scala.collection.JavaConverters.seqAsJavaListConverter
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 import org.kiji.express.EntityId
 import org.kiji.express.util.AvroUtil
 import org.kiji.schema.KijiRowKeyComponents
@@ -39,6 +40,7 @@ import org.kiji.schema.KijiRowKeyComponents
  */
 @ApiAudience.Private
 @ApiStability.Experimental
+@Inheritance.Sealed
 private[express] trait ScalaToJavaKeyConverter[K] {
   /**
    * Converts a key specified as a Scala type to an equivalent key as a Java type compatible with
@@ -61,6 +63,7 @@ private[express] trait ScalaToJavaKeyConverter[K] {
  */
 @ApiAudience.Private
 @ApiStability.Experimental
+@Inheritance.Sealed
 private[express] trait JavaToScalaValueConverter[V] {
   /**
    * Converts a value specified as a Java type to an equivalent value as a native Scala type.
@@ -77,6 +80,7 @@ private[express] trait JavaToScalaValueConverter[V] {
  */
 @ApiAudience.Private
 @ApiStability.Experimental
+@Inheritance.Sealed
 private[express] trait EntityIdScalaToJavaKeyConverter
     extends ScalaToJavaKeyConverter[EntityId] {
   /**
@@ -106,6 +110,7 @@ private[express] trait EntityIdScalaToJavaKeyConverter
  */
 @ApiAudience.Private
 @ApiStability.Experimental
+@Inheritance.Sealed
 private[express] trait AvroScalaToJavaKeyConverter[K] extends ScalaToJavaKeyConverter[K] {
   /**
    * Converts a key specified as a Scala/KijiExpress type to an equivalent key with type
@@ -126,6 +131,7 @@ private[express] trait AvroScalaToJavaKeyConverter[K] extends ScalaToJavaKeyConv
  */
 @ApiAudience.Private
 @ApiStability.Experimental
+@Inheritance.Sealed
 private[express] trait AvroJavaToScalaValueConverter[V] extends JavaToScalaValueConverter[V] {
   /**
    * Converts a value specified as a Java/Avro type to an equivalent value with a native Scala

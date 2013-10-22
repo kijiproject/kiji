@@ -21,6 +21,7 @@ package org.kiji.express.modeling.config
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 
 /**
  * Configuration necessary to use a sequence file as a data source.
@@ -31,6 +32,7 @@ import org.kiji.annotations.ApiStability
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 final case class SequenceFileSourceSpec(
     path: String,
     keyField: Option[String],

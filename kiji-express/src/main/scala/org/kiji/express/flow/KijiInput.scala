@@ -21,6 +21,7 @@ package org.kiji.express.flow
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 
 /**
  * Factory methods for constructing [[org.kiji.express.flow.KijiSource]]s that will be used as
@@ -49,6 +50,7 @@ import org.kiji.annotations.ApiStability
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 object KijiInput {
   /** Default time range for KijiSource */
   private val DEFAULT_TIME_RANGE: TimeRange = All

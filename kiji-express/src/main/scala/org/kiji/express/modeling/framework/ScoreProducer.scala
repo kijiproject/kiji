@@ -25,6 +25,7 @@ import org.apache.hadoop.conf.Configuration
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 import org.kiji.express.EntityId
 import org.kiji.express.KijiSlice
 import org.kiji.express.flow.framework.KijiScheme
@@ -61,6 +62,7 @@ import org.kiji.schema.KijiURI
  */
 @ApiAudience.Framework
 @ApiStability.Experimental
+@Inheritance.Sealed
 final class ScoreProducer
     extends KijiProducer {
   /** The model definition. This variable must be initialized. */

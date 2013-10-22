@@ -36,6 +36,7 @@ import org.apache.avro.specific.SpecificFixed
 import org.apache.avro.specific.SpecificRecord
 
 import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
 import org.kiji.express.AvroBoolean
 import org.kiji.express.AvroByteArray
 import org.kiji.express.AvroDouble
@@ -78,7 +79,8 @@ import org.kiji.express.AvroValue
  *       byte array.</li>
  * <ul>
  */
- @ApiAudience.Private
+@ApiAudience.Private
+@ApiStability.Experimental
 private[express] object AvroUtil {
   /**
    * Convert Java types (that came from Avro-deserialized Kiji columns) into corresponding Scala

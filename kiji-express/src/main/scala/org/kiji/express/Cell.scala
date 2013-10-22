@@ -19,6 +19,7 @@
 
 package org.kiji.express
 
+import org.kiji.annotations.Inheritance
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.express.util.AvroUtil
@@ -36,7 +37,9 @@ import org.kiji.schema.KijiCell
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-case class Cell[T] private[express] (family: String,
+@Inheritance.Sealed
+case class
+Cell[T] private[express] (family: String,
     qualifier: String,
     version: Long,
     datum: T)

@@ -39,6 +39,9 @@ import org.kiji.express.repl.ExpressShell
 import org.kiji.express.repl.Implicits
 import org.kiji.express.repl.Implicits.pipeToRichPipe
 import org.kiji.express.util.AvroUtil
+import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 
 /**
  * A class that adds Kiji-specific functionality to a Cascading pipe. This includes running pipes
@@ -49,6 +52,9 @@ import org.kiji.express.util.AvroUtil
  *
  * @param pipe enriched with extra functionality.
  */
+@ApiAudience.Public
+@ApiStability.Experimental
+@Inheritance.Sealed
 class KijiPipe(private val pipe: Pipe) extends TupleConversions {
   /**
    * Gets a job that can be used to run the data pipeline.

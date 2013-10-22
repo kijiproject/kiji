@@ -39,6 +39,7 @@ import org.apache.hadoop.mapred.lib.NullOutputFormat
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 import org.kiji.schema.avro.AvroValidationPolicy
 import org.kiji.express.flow.ColumnFamily
 import org.kiji.express.flow.ColumnRequest
@@ -70,6 +71,7 @@ import org.kiji.schema.util.ProtocolVersion
  */
 @ApiAudience.Framework
 @ApiStability.Experimental
+@Inheritance.Sealed
 private[express] class KijiTap(
     // This is not a val because KijiTap needs to be serializable and KijiURI is not.
     uri: KijiURI,

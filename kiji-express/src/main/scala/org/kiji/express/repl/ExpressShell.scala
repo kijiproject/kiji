@@ -33,6 +33,7 @@ import com.google.common.io.Files
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 import org.kiji.express.util.Resources._
 
 /**
@@ -41,6 +42,7 @@ import org.kiji.express.util.Resources._
  */
 @ApiAudience.Private
 @ApiStability.Experimental
+@Inheritance.Sealed
 private[express] object ExpressShell extends MainGenericRunner {
 
   /**

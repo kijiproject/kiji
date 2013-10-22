@@ -24,6 +24,7 @@ import scala.collection.JavaConverters.asScalaBufferConverter
 import org.apache.avro.generic.IndexedRecord
 import org.apache.avro.specific.SpecificRecord
 
+import org.kiji.annotations.Inheritance
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.express.util.AvroUtil
@@ -46,6 +47,7 @@ final case class AvroInt (value: Int) extends AvroValue(classOf[Int]) {
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 final case class AvroBoolean (value: Boolean) extends AvroValue(classOf[Boolean]) {
   override def asBoolean(): Boolean = value
 }
@@ -57,6 +59,7 @@ final case class AvroBoolean (value: Boolean) extends AvroValue(classOf[Boolean]
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 final case class AvroLong (value: Long) extends AvroValue(classOf[Long]) {
   override def asLong(): Long = value
 }
@@ -68,6 +71,7 @@ final case class AvroLong (value: Long) extends AvroValue(classOf[Long]) {
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 final case class AvroDouble (value: Double) extends AvroValue(classOf[Double]) {
   override def asDouble(): Double = value
 }
@@ -79,6 +83,7 @@ final case class AvroDouble (value: Double) extends AvroValue(classOf[Double]) {
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 final case class AvroFloat (value: Float) extends AvroValue(classOf[Float]) {
   override def asFloat(): Float = value
 }
@@ -90,6 +95,7 @@ final case class AvroFloat (value: Float) extends AvroValue(classOf[Float]) {
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 final case class AvroString (value: String) extends AvroValue(classOf[String]) {
   override def asString(): String = value
 }
@@ -101,6 +107,7 @@ final case class AvroString (value: String) extends AvroValue(classOf[String]) {
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 final case class AvroByteArray (value: Array[Byte])
     extends AvroValue(classOf[Array[Byte]]) {
   override def asBytes(): Array[Byte] = value
@@ -114,6 +121,7 @@ final case class AvroByteArray (value: Array[Byte])
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 final case class AvroList (value: List[AvroValue])
     extends AvroValue(classOf[List[AvroValue]]) {
   override def asList(): List[AvroValue] = value
@@ -131,6 +139,7 @@ final case class AvroList (value: List[AvroValue])
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 final case class AvroMap (value: Map[String, AvroValue])
     extends AvroValue(classOf[Map[String, AvroValue]]) {
   override def asMap(): Map[String, AvroValue] = value
@@ -145,6 +154,7 @@ final case class AvroMap (value: Map[String, AvroValue])
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 final case class AvroEnum(name: String)
     extends AvroValue(classOf[java.lang.Enum[_]]) {
   override def asEnumName(): String = name
@@ -159,6 +169,7 @@ final case class AvroEnum(name: String)
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 final case class AvroSpecificRecord(specificRecord: Any)
     extends AvroValue(classOf[SpecificRecord]) {
   require(specificRecord.isInstanceOf[SpecificRecord])
@@ -176,6 +187,7 @@ final case class AvroSpecificRecord(specificRecord: Any)
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 final case class AvroRecord private[express] (
     private[express] val map: Map[String, AvroValue]
 ) extends AvroValue(classOf[IndexedRecord]) {

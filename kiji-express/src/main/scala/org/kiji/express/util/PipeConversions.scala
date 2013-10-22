@@ -23,6 +23,9 @@ import cascading.flow.FlowDef
 import cascading.pipe.Pipe
 import com.twitter.scalding.Mode
 
+import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 import org.kiji.express.flow.KijiPipe
 import org.kiji.express.flow.KijiSource
 
@@ -30,6 +33,9 @@ import org.kiji.express.flow.KijiSource
  * PipeConversions contains implicit conversions necessary for KijiExpress that are not included in
  * Scalding's `Job`.
  */
+@ApiAudience.Private
+@ApiStability.Experimental
+@Inheritance.Sealed
 private[express] trait PipeConversions {
   /**
    * Converts a Cascading Pipe to a KijiExpress KijiPipe. This method permits implicit conversions

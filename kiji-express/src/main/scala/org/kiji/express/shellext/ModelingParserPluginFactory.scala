@@ -21,6 +21,7 @@ package org.kiji.express.shellext
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 import org.kiji.schema.shell.Environment
 import org.kiji.schema.shell.spi.ParserPlugin
 import org.kiji.schema.shell.spi.ParserPluginFactory
@@ -31,6 +32,7 @@ import org.kiji.schema.shell.spi.ParserPluginFactory
  */
 @ApiAudience.Private
 @ApiStability.Experimental
+@Inheritance.Sealed
 final class ModelingParserPluginFactory extends ParserPluginFactory {
 
   override def getName(): String = "modeling"

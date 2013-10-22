@@ -20,12 +20,12 @@
 package org.kiji.express.impl
 
 import scala.collection.JavaConverters._
-import org.apache.hadoop.conf.Configuration
+import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 import org.kiji.express.EntityId
-import org.kiji.express.util.EntityIdFactoryCache
 import org.kiji.schema.{ EntityId => JEntityId }
 import org.kiji.schema.EntityIdFactory
-import org.kiji.schema.KijiURI
 
 /**
  * Represents the components of an EntityId in KijiExpress.  An [[org.kiji.express.EntityId]] is
@@ -33,6 +33,9 @@ import org.kiji.schema.KijiURI
  *
  * @param components of an EntityId.
  */
+@ApiAudience.Public
+@ApiStability.Experimental
+@Inheritance.Sealed
 private[express] case class MaterializedEntityId(override val components: Seq[AnyRef])
     extends EntityId {
 

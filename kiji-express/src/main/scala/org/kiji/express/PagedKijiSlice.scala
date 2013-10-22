@@ -24,6 +24,9 @@ import java.lang.{Long => JLong}
 
 import org.kiji.schema.ColumnVersionIterator
 import org.kiji.schema.MapFamilyVersionIterator
+import org.kiji.annotations.Inheritance
+import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
 
 /**
  * A collection of [[org.kiji.express.Cell]]s, retrieved in pages, that can be seamlessly iterated
@@ -43,7 +46,10 @@ import org.kiji.schema.MapFamilyVersionIterator
  * @param cells that can be iterated over for processing.
  * @tparam T is the type of the data contained in the underlying cells.
  */
-case class PagedKijiSlice[T] private (cells: Iterator[Cell[T]]) extends Iterable[Cell[T]]
+@ApiAudience.Public
+@ApiStability.Experimental
+@Inheritance.Sealed
+final case class PagedKijiSlice[T] private (cells: Iterator[Cell[T]]) extends Iterable[Cell[T]]
     with java.io.Serializable {
   override def iterator: Iterator[Cell[T]] = cells
 }

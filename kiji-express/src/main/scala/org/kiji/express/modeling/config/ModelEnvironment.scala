@@ -23,6 +23,7 @@ import scala.io.Source
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 import org.kiji.express.avro.AvroModelEnvironment
 import org.kiji.express.util.Resources.doAndClose
 import org.kiji.schema.KijiColumnName
@@ -157,6 +158,7 @@ import org.kiji.express.modeling.framework.ModelConverters
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 final case class ModelEnvironment(
     name: String,
     version: String,

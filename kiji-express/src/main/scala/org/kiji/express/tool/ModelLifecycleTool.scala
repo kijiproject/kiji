@@ -28,6 +28,7 @@ import org.apache.hadoop.hbase.HBaseConfiguration
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 import org.kiji.express.modeling.config.ModelDefinition
 import org.kiji.express.modeling.config.ModelEnvironment
 import org.kiji.express.modeling.framework.ModelExecutor
@@ -49,6 +50,7 @@ import org.kiji.express.modeling.framework.ModelExecutor
  */
 @ApiAudience.Private
 @ApiStability.Experimental
+@Inheritance.Sealed
 class ModelLifecycleTool extends Tool {
   // parse arguments, create trainer and run it.
   override def run(args: Array[String]): Int = {

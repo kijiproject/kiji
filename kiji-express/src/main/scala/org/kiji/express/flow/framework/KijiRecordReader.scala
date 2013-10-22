@@ -27,6 +27,7 @@ import org.apache.hadoop.mapred.RecordReader
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 import org.kiji.express.util.GenericCellSpecs
 import org.kiji.express.util.SpecificCellSpecs
 import org.kiji.express.util.Resources.doAndRelease
@@ -70,6 +71,7 @@ import org.kiji.schema.hbase.HBaseScanOptions
  */
 @ApiAudience.Framework
 @ApiStability.Experimental
+@Inheritance.Sealed
 final class KijiRecordReader(
     private val split: KijiTableSplit,
     private val configuration: Configuration)

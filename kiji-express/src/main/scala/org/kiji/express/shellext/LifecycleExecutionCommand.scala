@@ -26,6 +26,7 @@ import org.apache.hadoop.hbase.HBaseConfiguration
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 import org.kiji.express.modeling.ScoreProducerJobBuilder
 import org.kiji.express.modeling.config.ModelDefinition
 import org.kiji.express.modeling.config.ModelEnvironment
@@ -45,6 +46,7 @@ import org.kiji.schema.shell.ddl.DDLCommand
  */
 @ApiAudience.Private
 @ApiStability.Experimental
+@Inheritance.Sealed
 private[express] final class LifecycleExecutionCommand (
     val lifecyclePhases: List[LifeCyclePhase],
     val modelDefConfigureVia: ConfigureVia,

@@ -19,8 +19,7 @@
 
 package org.kiji.express.modeling.impl
 
-import org.kiji.annotations.ApiAudience
-import org.kiji.annotations.ApiStability
+import org.kiji.annotations.{Inheritance, ApiAudience, ApiStability}
 import org.kiji.express.modeling.KeyValueStore
 
 /**
@@ -30,6 +29,7 @@ import org.kiji.express.modeling.KeyValueStore
  */
 @ApiAudience.Framework
 @ApiStability.Experimental
+@Inheritance.Sealed
 trait KeyValueStores {
   /**
    * Container for the key-value stores accessible to this phase of the model workflow. This

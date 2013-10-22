@@ -23,6 +23,8 @@ import com.twitter.scalding.Args
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
+
 
 /**
  * Provides access to command-line arguments used by the modeling SPI workflow phases (like Extract
@@ -31,6 +33,7 @@ import org.kiji.annotations.ApiStability
  */
 @ApiAudience.Framework
 @ApiStability.Experimental
+@Inheritance.Extensible
 trait CommandLineArgs {
   /** Private field backing the command-line args accessor. */
   private var _args: Args = new Args(Map())

@@ -21,6 +21,7 @@ package org.kiji.express.flow.framework
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 import org.kiji.schema.{EntityId => JEntityId}
 
 /**
@@ -35,6 +36,7 @@ import org.kiji.schema.{EntityId => JEntityId}
  */
 @ApiAudience.Private
 @ApiStability.Experimental
+@Inheritance.Sealed
 final class KijiKey {
   /** The entity id contained by this instance. */
   // scalastyle:off null

@@ -28,6 +28,7 @@ import org.apache.hadoop.util.ToolRunner
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 import org.kiji.express.modeling.config.ExpressColumnRequest
 import org.kiji.express.modeling.config.ExpressDataRequest
 import org.kiji.express.modeling.config.FieldBinding
@@ -41,6 +42,7 @@ import org.kiji.express.modeling.lib.LMTrainer
 
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 final class LMTool extends Tool {
   // parse arguments, create trainer and run it.
   override def run(args: Array[String]): Int = {

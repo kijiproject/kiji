@@ -52,6 +52,7 @@ import org.apache.hadoop.mapred.JobConf
 import org.apache.hadoop.mapred.OutputCollector
 import org.apache.hadoop.mapred.RecordReader
 
+import org.kiji.annotations.Inheritance
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.express.Cell
@@ -110,6 +111,7 @@ import org.kiji.schema.KijiURI
  */
 @ApiAudience.Framework
 @ApiStability.Experimental
+@Inheritance.Sealed
 final class KijiSource private[express] (
     val tableAddress: String,
     val timeRange: TimeRange,

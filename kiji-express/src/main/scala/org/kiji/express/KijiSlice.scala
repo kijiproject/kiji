@@ -24,6 +24,7 @@ import scala.collection.JavaConverters.asScalaIteratorConverter
 import scala.annotation.implicitNotFound
 import scala.math.Numeric
 
+import org.kiji.annotations.Inheritance
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.schema.KijiCell
@@ -74,6 +75,7 @@ import org.kiji.schema.KijiRowData
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 class KijiSlice[T] private[express] (val cells: Seq[Cell[T]]) extends Serializable {
   /**
    * Gets the first cell, as decided by the ordering of the slice.

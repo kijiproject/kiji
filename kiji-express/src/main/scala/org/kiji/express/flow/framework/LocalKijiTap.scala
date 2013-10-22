@@ -40,6 +40,7 @@ import org.apache.hadoop.mapred.JobConf
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.Kiji
@@ -61,6 +62,7 @@ import org.kiji.schema.KijiURI
  */
 @ApiAudience.Framework
 @ApiStability.Experimental
+@Inheritance.Sealed
 private[express] class LocalKijiTap(
     uri: KijiURI,
     private val scheme: LocalKijiScheme)

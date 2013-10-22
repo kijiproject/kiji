@@ -29,6 +29,9 @@ import org.kiji.express.impl.HashedEntityId
 import org.kiji.express.impl.MaterializedEntityId
 import org.kiji.schema.{EntityId => JEntityId}
 import org.kiji.schema.EntityIdFactory
+import org.kiji.annotations.Inheritance
+import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
 
 /**
  * An entity id or row key that can be used to address a row in a Kiji table. This is the
@@ -50,6 +53,9 @@ import org.kiji.schema.EntityIdFactory
  * keys, and all user-created EntityIds), or Hashed (in the case of EntityIds from tables with
  * hashed or materialization-suppressed row keys).
  */
+@ApiAudience.Public
+@ApiStability.Experimental
+@Inheritance.Sealed
 trait EntityId extends Product with Ordered[EntityId] {
   /**
    * Get the Java [[org.kiji.schema.EntityId]] associated with this Scala EntityId.

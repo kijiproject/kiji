@@ -21,6 +21,7 @@ package org.kiji.express.flow
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 
 /**
  * This exception is thrown when a KijiTap cannot validate that the Kiji tables or columns it
@@ -28,5 +29,6 @@ import org.kiji.annotations.ApiStability
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 final class InvalidKijiTapException(message: String)
     extends RuntimeException(message)

@@ -21,7 +21,7 @@ package org.kiji.express.modeling.config
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-
+import org.kiji.annotations.Inheritance
 /**
  * This exception is thrown when an error is encountered during validation of a JSON specification.
  *
@@ -29,6 +29,7 @@ import org.kiji.annotations.ApiStability
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 class ValidationException(
     msg: String)
     extends RuntimeException(msg)
@@ -56,6 +57,7 @@ object ValidationException {
  */
 @ApiAudience.Framework
 @ApiStability.Experimental
+@Inheritance.Sealed
 class ModelDefinitionValidationException(
     causes: Seq[ValidationException],
     msg: String = "")
@@ -69,6 +71,7 @@ class ModelDefinitionValidationException(
  */
 @ApiAudience.Framework
 @ApiStability.Experimental
+@Inheritance.Sealed
 class ModelEnvironmentValidationException(
     causes: Seq[ValidationException],
     msg: String = "")

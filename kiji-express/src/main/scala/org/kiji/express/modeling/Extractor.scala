@@ -42,6 +42,7 @@ import org.kiji.express.modeling.impl.KeyValueStores
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 final case class ExtractFn[I, O] (
     fields: (Fields, Fields),
     fn: I => O)

@@ -21,6 +21,7 @@ package org.kiji.express.flow
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 
 /**
  * Factory methods for constructing [[org.kiji.express.flow.KijiSource]]s that will be used as
@@ -54,6 +55,7 @@ import org.kiji.annotations.ApiStability
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 object KijiOutput {
   /**
    * A factory method for instantiating [[org.kiji.express.flow.KijiSource]]s used as sinks. This

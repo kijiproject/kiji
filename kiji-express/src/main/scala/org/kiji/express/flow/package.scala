@@ -21,6 +21,7 @@ package org.kiji.express
 
 import org.apache.hadoop.hbase.HConstants
 
+import org.kiji.annotations.Inheritance
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.schema.KConstants
@@ -150,6 +151,7 @@ package object flow {
    */
   @ApiAudience.Public
   @ApiStability.Experimental
+  @Inheritance.Sealed
   object MapFamily {
     /**
      * Creates a request for the cells in columns of a map-type column family in a Kiji table.

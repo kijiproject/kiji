@@ -21,6 +21,7 @@ package org.kiji.express.modeling.config
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiDataRequest
 
@@ -33,6 +34,7 @@ import org.kiji.schema.KijiDataRequest
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 final case class ExpressDataRequest(
     minTimestamp: Long,
     maxTimestamp: Long,
@@ -69,6 +71,7 @@ final case class ExpressDataRequest(
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 final case class ExpressColumnRequest(
     name: String,
     maxVersions: Int,

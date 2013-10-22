@@ -27,6 +27,7 @@ import org.apache.hadoop.hbase.HConstants
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 import org.kiji.express.Cell
 import org.kiji.express.KijiSlice
 import org.kiji.schema.KijiColumnName
@@ -50,6 +51,7 @@ import org.kiji.schema.filter.KijiColumnFilter
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 private[express] sealed trait ColumnRequest extends Serializable {
   /**
    * Specifies that missing values on this column mean the row should be skipped.
@@ -107,6 +109,7 @@ private[express] sealed trait ColumnRequest extends Serializable {
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 final case class QualifiedColumn private[express] (
     family: String,
     qualifier: String,
@@ -245,6 +248,7 @@ final case class QualifiedColumn private[express] (
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 final case class ColumnFamily private[express] (
     family: String,
     qualifierSelector: Option[String] = None,
@@ -384,6 +388,9 @@ final case class ColumnFamily private[express] (
  * @param useDefaultReader whether to use the default reader to write.
  * @param schemaId to use to write.
  */
+@ApiAudience.Public
+@ApiStability.Experimental
+@Inheritance.Sealed
 case class WriterSchemaSpec private[express] (
     useDefaultReader: Boolean = false,
     schemaId: Option[Long] = None) {
@@ -409,6 +416,7 @@ case class WriterSchemaSpec private[express] (
  */
 @ApiAudience.Public
 @ApiStability.Experimental
+@Inheritance.Sealed
 final case class ColumnRequestOptions private[express] (
     maxVersions: Int = 1,
     // Not accessible to end-users because the type is soon to be replaced by a

@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 import org.kiji.common.flags.Flag
 import org.kiji.common.flags.FlagParser
 import org.kiji.express.modeling.ScoreProducerJobBuilder
@@ -43,6 +44,7 @@ import org.kiji.express.modeling.ScoreProducerJobBuilder
  */
 @ApiAudience.Private
 @ApiStability.Experimental
+@Inheritance.Sealed
 final class ScoreJobTool extends Configured with Tool {
   @Flag(name="model-def", usage="Path to a file containing a Model Definition JSON description. ")
   val mModelDefPath: String = ""
