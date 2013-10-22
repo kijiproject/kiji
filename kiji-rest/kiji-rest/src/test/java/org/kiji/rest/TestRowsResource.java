@@ -463,6 +463,94 @@ public class TestRowsResource extends ResourceTest {
   }
 
   @Test
+  public void testShouldPrintWildcardedColumn() throws Exception {
+    // Set up table and data.
+    final KijiTableLayout layout =
+        KijiTableLayouts.getTableLayout("org/kiji/rest/layouts/players_table.json");
+    mFakeKiji.createTable(layout.getDesc());
+    final KijiTable table = mFakeKiji.openTable("players");
+    final KijiTableWriter writer = table.openTableWriter();
+    writer.put(
+        table.getEntityId("seleukos", "asia.central"), "info", "fullname", "Seleukos Nikator");
+    writer.put(
+        table.getEntityId("seleukos", "makedonia"), "info", "fullname", "Seleukos of Macedon");
+    writer.put(
+        table.getEntityId("cassander", "greece"), "info", "fullname", "Cassander");
+    writer.put(
+        table.getEntityId("antipater", "makedonia"), "info", "fullname", "Antipater");
+    writer.put(
+        table.getEntityId("ptolemaios", "africa.north"), "info", "fullname", "Ptolemy Soter");
+    writer.close();
+    table.release();
+
+    // Request partial entity id.
+    String eid = "[[],\"makedonia\"]";
+    URI resourceURI = UriBuilder.fromResource(RowsResource.class)
+        .queryParam("eid", eid)
+        .queryParam("cols", "info:fullname")
+        .queryParam("versions", "1")
+        .queryParam("timerange", "0..")
+        .build("default", "players");
+
+    // Check output.
+    String returnRows = client().resource(resourceURI).get(String.class);
+    assertTrue(returnRows.contains("antipater"));
+    assertTrue(returnRows.contains("seleukos"));
+    assertTrue(!returnRows.contains("ptolemaios"));
+    assertTrue(!returnRows.contains("cassander"));
+
+    // Request partial entity id.
+    eid = "[\"seleukos\", []]";
+    resourceURI = UriBuilder.fromResource(RowsResource.class)
+        .queryParam("eid", eid)
+        .queryParam("cols", "info:fullname")
+        .queryParam("versions", "1")
+        .queryParam("timerange", "0..")
+        .build("default", "players");
+
+    // Check output.
+    returnRows = client().resource(resourceURI).get(String.class);
+    assertTrue(returnRows.contains("seleukos"));
+    assertTrue(returnRows.contains("makedonia"));
+    assertTrue(returnRows.contains("asia.central"));
+    assertTrue(!returnRows.contains("antipater"));
+    assertTrue(!returnRows.contains("africa.north"));
+  }
+
+  @Test
+  public void  testShouldFailOnMalformedEids() throws Exception {
+    // Try non-empty array element.
+    String eid = "[[123]]";
+    URI resourceURI = UriBuilder.fromResource(RowsResource.class)
+        .queryParam("eid", eid)
+        .queryParam("cols", "group_family:string_qualifier")
+        .queryParam("timerange", "2..3")
+        .queryParam("versions", "1")
+        .build("default", "sample_table");
+    try {
+      client().resource(resourceURI).get(KijiRestRow.class);
+      fail("GET succeeded when it should have failed because of a malformed eid.");
+    } catch (UniformInterfaceException e) {
+      assertEquals(400, e.getResponse().getStatus());
+    }
+
+    // Try unbalanced parentheses.
+    eid = "[[]";
+    resourceURI = UriBuilder.fromResource(RowsResource.class)
+        .queryParam("eid", eid)
+        .queryParam("cols", "group_family:string_qualifier")
+        .queryParam("timerange", "2..3")
+        .queryParam("versions", "1")
+        .build("default", "sample_table");
+    try {
+      client().resource(resourceURI).get(KijiRestRow.class);
+      fail("GET succeeded when it should have failed because of a malformed eid.");
+    } catch (UniformInterfaceException e) {
+      assertEquals(400, e.getResponse().getStatus());
+    }
+  }
+
+  @Test
   public void testShouldThrowExceptionWhenAllColumnsRequestedNotPresent() throws Exception {
     String eid = getEntityIdString("sample_table", 56789L);
 

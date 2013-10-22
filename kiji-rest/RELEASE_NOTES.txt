@@ -1,6 +1,10 @@
 
                               KijiREST Release Notes
 
+Version 0.5.0
+  * REST-32. Supports scanning with partially specified entity ids.
+  * REST-49. Adds freshening/scoring parameter to KijiREST.
+
 Version 0.4.0
   * REST-40. Bugfix: Fix the issue where /instances/<instance> threw a
       500 error. This was due to an issue in converting Avro to JSON using
