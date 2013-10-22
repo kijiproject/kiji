@@ -25,6 +25,8 @@ import java.util.Map;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 
 import org.kiji.annotations.ApiAudience;
@@ -139,6 +141,8 @@ public interface FreshKijiTableReader extends KijiTableReader {
    *       .returnPartialFreshData(true)
    *       build();
    * </pre></p>
+   *
+   * <p>Instance of this builder are not thread safe.</p>
    */
   @ApiStability.Experimental
   public static final class Builder {
@@ -209,6 +213,15 @@ public interface FreshKijiTableReader extends KijiTableReader {
     }
 
     /**
+     * Get the configured table from this builder or null if the table has not been specified.
+     *
+     * @return the configured table from this builder or null if the table has not been specified.
+     */
+    public KijiTable getTable() {
+      return mTable;
+    }
+
+    /**
      * Configure the FreshKijiTableReader to wait a given number of milliseconds before returning
      * stale data.
      *
@@ -226,6 +239,16 @@ public interface FreshKijiTableReader extends KijiTableReader {
       Preconditions.checkState(null == mTimeout, "Timeout is already set to: %d", mTimeout);
       mTimeout = timeout;
       return this;
+    }
+
+    /**
+     * Get the configured timeout from this builder or null if the timeout has not been specified.
+     *
+     * @return the configured timeout from this builder or null if the timeout has not been
+     *     specified.
+     */
+    public long getTimeout() {
+      return mTimeout;
     }
 
     /**
@@ -247,6 +270,16 @@ public interface FreshKijiTableReader extends KijiTableReader {
           null == mRereadPeriod, "Reread time is already set to: %d", mRereadPeriod);
       mRereadPeriod = rereadPeriod;
       return this;
+    }
+
+    /**
+     * Get the configured automatic reread period or null if none has been set. If this value is 0,
+     * this indicates that automatic rereading has been set to disabled.
+     *
+     * @return the configured automatic reread period or null if none has been set.
+     */
+    public long getAutomaticRereadPeriod() {
+      return mRereadPeriod;
     }
 
     /**
@@ -276,6 +309,15 @@ public interface FreshKijiTableReader extends KijiTableReader {
     }
 
     /**
+     * Get the configured partial freshening or null if none has been set.
+     *
+     * @return the configured partial freshening or null if none has been set.
+     */
+    public boolean getPartialFreshening() {
+      return mAllowPartialFresh;
+    }
+
+    /**
      * Configure the FreshKijiTableReader to only freshen requests for a specific set of columns.
      *
      * <ul>
@@ -299,6 +341,16 @@ public interface FreshKijiTableReader extends KijiTableReader {
         mColumnsToFreshen = columnsToFreshen;
       }
       return this;
+    }
+
+    /**
+     * Get the configured columns to freshen or null if none have been set. The list returned by
+     * this method is immutable. Any attempt to mutate it will throw an exception.
+     *
+     * @return the configured columns to freshen or null if none have been set.
+     */
+    public List<KijiColumnName> getColumnsToFreshen() {
+      return ImmutableList.copyOf(mColumnsToFreshen);
     }
 
     /**
@@ -327,6 +379,24 @@ public interface FreshKijiTableReader extends KijiTableReader {
       mStatisticGatheringMode = mode;
       mStatisticsLoggingInterval = loggingInterval;
       return this;
+    }
+
+    /**
+     * Get the configured statistics gathering mode or null if none has been set.
+     *
+     * @return the configured statistics gathering mode or null if none has been set.
+     */
+    public StatisticGatheringMode getStatisticGatheringMode() {
+      return mStatisticGatheringMode;
+    }
+
+    /**
+     * Get the statistics logging interval or null if none has been set.
+     *
+     * @return the statistics logging interval or null if none has been set.
+     */
+    public long getStatisticsLoggingInterval() {
+      return mStatisticsLoggingInterval;
     }
 
     /**
@@ -373,7 +443,7 @@ public interface FreshKijiTableReader extends KijiTableReader {
   @ApiStability.Experimental
   public static final class FreshRequestOptions {
 
-    /** Builder for FreshRequestOptions. */
+    /** Builder for FreshRequestOptions. Instance of this builder are not thread safe. */
     @ApiStability.Experimental
     public static final class Builder {
 
@@ -412,6 +482,15 @@ public interface FreshKijiTableReader extends KijiTableReader {
       }
 
       /**
+       * Get the configured timeout or null if none has been set.
+       *
+       * @return the configured timeout or null if none has been set.
+       */
+      public long getTimeout() {
+        return mTimeout;
+      }
+
+      /**
        * Configure the FreshRequestOptions to include the given configuration parameters.
        *
        * @param parameters configuration parameters to include in the FreshRequestOptions.
@@ -444,6 +523,16 @@ public interface FreshKijiTableReader extends KijiTableReader {
           mParameters.putAll(parameters);
         }
         return null;
+      }
+
+      /**
+       * Get the configured parameters or null if none have been set. The map returned by this
+       * method is immutable. Any attempt to mutate it will throw an exception.
+       *
+       * @return the configured parameters or null if none have been set.
+       */
+      public Map<String, String> getParameters() {
+        return ImmutableMap.copyOf(mParameters);
       }
 
       /**
