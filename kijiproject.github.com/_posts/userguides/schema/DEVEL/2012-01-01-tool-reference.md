@@ -458,18 +458,23 @@ To aid in the insertion of small data sets, debugging, and testing, the
 The following arguments are required:
 
 *  `--target=<column-uri>`     - [Kiji URI](#ref.kiji_uri) specifying a single column to write.
-*  `--entity-id=<entity>`      - Target row id (an unhashed, human-readable string)
+*  `--entity-id=<entity>`      - Target row id (an unhashed, human-readable string).
 *  `--value=<JSON value>`      - The value to insert. The value is specified as a
-   JSON string according to [the Avro JSON encoding specification](http://avro.apache.org/docs/current/spec.html#json_encoding)
+   JSON string according to [the Avro JSON encoding specification](http://avro.apache.org/docs/current/spec.html#json_encoding).
+*  `--schema=Avro schema`      - By default, KijiSchema will use the reader schema
+   attached to a column in its layout to decode the JSON and encode the binary
+   data for insertion in the table. If there is no schema attached to the column 
+   or if you want to use an alternate writer schema, specify this option. While it is not 
+   strictly required, you should specify this option as there are few cases where there 
+   is a sensible default. The option
+   value is a JSON representation of an Avro Schema. To ensure this value can contain
+   escaped quoted strings, wrap the entire JSON in single quotes: `'"string"'` (that's
+   single quotes around double quotes around the word string).
 
 See [`kiji ls`](#ref.ls) for how to specify entity IDs.
 
-The following arguments are optional:
+The following argument is optional:
 
-*  `--schema=Avro schema`      - By default, KijiSchema will use the reader schema
-   attached to a column in its layout to decode the JSON and encode the binary
-   data for insertion in the table. This argument allows you to use an alternate
-   writer schema.
 *  `--timestamp=long`          - Specifies a timestamp (in milliseconds since the Epoch) other than "now".
 
 
