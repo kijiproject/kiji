@@ -84,6 +84,21 @@
               },
               "delete": false,
               "renamed_from": null
+            }, {
+              "id": 4,
+              "name": "norm",
+              "aliases": [],
+              "enabled": true,
+              "description": "",
+              "column_schema": {
+                "storage": "UID",
+                "type": "INLINE",
+                "value": {
+                  "string": "\"double\""
+                }
+              },
+              "delete": false,
+              "renamed_from": null
             }
           ],
           "delete": false,

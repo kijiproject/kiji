@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 
 import javax.ws.rs.core.UriBuilder;
@@ -65,6 +66,7 @@ public class TestRowsResourceFreshening extends ResourceTest {
   private static final String A = "a";
   private static final String B = "b";
   private static final String C = "c";
+  private static final String NORM = "norm";
 
   private Kiji mKiji;
   private KijiTable mTable;
@@ -85,6 +87,15 @@ public class TestRowsResourceFreshening extends ResourceTest {
         new KijiColumnName(FAMILY, C),
         new AlwaysFreshen(),
         new PythagoreanFunction(),
+        ImmutableMap.<String, String>of(),
+        true,
+        false
+    );
+    manager.registerFreshener(
+        TABLE,
+        new KijiColumnName(FAMILY, NORM),
+        new AlwaysFreshen(),
+        new LPNorm(),
         ImmutableMap.<String, String>of(),
         true,
         false
@@ -170,6 +181,54 @@ public class TestRowsResourceFreshening extends ResourceTest {
     assertEquals(0, row.getCells().size());
   }
 
+  @Test
+  public void testFreshReadWithParameter() throws Exception {
+    EntityId eid = mTable.getEntityId("testFreshReadWithParameter");
+    String eidString = URLEncoder.encode(eid.toShellString(), "UTF-8");
+
+    mWriter.put(eid, FAMILY, A, 3L);
+    mWriter.put(eid, FAMILY, B, 4L);
+
+    URI uri = UriBuilder
+        .fromResource(RowsResource.class)
+        .queryParam("eid", eidString)
+        .queryParam("cols", FAMILY + ":" + NORM)
+        .queryParam("fresh.power", "200")
+        .build(INSTANCE, TABLE);
+
+    KijiRestRow row = client().resource(uri).get(KijiRestRow.class);
+    assertEquals(1, row.getCells().size());
+    // L_Infinity.
+    assertEquals(4.0, row.getCells().get(FAMILY).get(NORM).get(0).getValue());
+  }
+
+  @Test
+  public void testFreshReadWithURLEncodedParameter() throws Exception {
+    EntityId eid = mTable.getEntityId("testFreshReadWithURLEncodedParameter");
+    String eidString = URLEncoder.encode(eid.toShellString(), "UTF-8");
+
+    mWriter.put(eid, FAMILY, A, 3L);
+    mWriter.put(eid, FAMILY, B, 4L);
+
+    // Use URLEncoded strings.
+    final String freshPower = "%66%72%65%73%68%2E%70%6F%77%65%72";
+    final String twoHundred = "%32%30%30";
+    assertEquals("fresh.power", URLDecoder.decode(freshPower));
+    assertEquals("200", URLDecoder.decode(twoHundred));
+
+    URI uri = UriBuilder
+        .fromResource(RowsResource.class)
+        .queryParam("eid", eidString)
+        .queryParam("cols", FAMILY + ":" + NORM)
+        .queryParam(freshPower, twoHundred)
+        .build(INSTANCE, TABLE);
+
+    KijiRestRow row = client().resource(uri).get(KijiRestRow.class);
+    assertEquals(1, row.getCells().size());
+    // L_Infinity.
+    assertEquals(4.0, row.getCells().get(FAMILY).get(NORM).get(0).getValue());
+  }
+
   private static final class PythagoreanFunction extends ScoreFunction {
     @Override
     public KijiDataRequest getDataRequest(FreshenerContext context) throws IOException {
@@ -177,12 +236,30 @@ public class TestRowsResourceFreshening extends ResourceTest {
     }
 
     @Override
-    public TimestampedValue score(KijiRowData dataToScore, FreshenerContext context)
+    public TimestampedValue<Long> score(KijiRowData dataToScore, FreshenerContext context)
         throws IOException {
       KijiCell<Long> cellA = dataToScore.getMostRecentCell(FAMILY, A);
       KijiCell<Long> cellB = dataToScore.getMostRecentCell(FAMILY, B);
       return TimestampedValue.create(Math.max(cellA.getTimestamp(), cellB.getTimestamp()),
           Math.round(Math.sqrt(Math.pow(cellA.getData(), 2) + Math.pow(cellB.getData(), 2))));
+    }
+  }
+
+  private static final class LPNorm extends ScoreFunction {
+    @Override
+    public KijiDataRequest getDataRequest(FreshenerContext context) throws IOException {
+      return KijiDataRequest.create(FAMILY);
+    }
+
+    @Override
+    public TimestampedValue<Double> score(KijiRowData dataToScore, FreshenerContext context)
+        throws IOException {
+      double power = Double.parseDouble(context.getParameter("power"));
+      KijiCell<Long> cellA = dataToScore.getMostRecentCell(FAMILY, A);
+      KijiCell<Long> cellB = dataToScore.getMostRecentCell(FAMILY, B);
+      return TimestampedValue.create(Math.max(cellA.getTimestamp(), cellB.getTimestamp()),
+          Math.pow(Math.pow(cellA.getData(), power) + Math.pow(cellB.getData(), power),
+              1.0 / power));
     }
   }
 }

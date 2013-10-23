@@ -46,17 +46,23 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
 
 import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonParser.Feature;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
@@ -219,6 +225,33 @@ public class RowsResource {
     }
   }
 
+  /** Prefix for per-request freshening parameters. */
+  private static final String FRESH_PARAMETER_PREFIX = "fresh.";
+
+  /**
+   * Extracts map of freshening parameters out of REST query.
+   *
+   * @param queryParameters of request from which to extract the freshening parameters.
+   * @return a map of strings to strings of freshening parameters.
+   */
+  private Map<String, String> getFresheningParameters(
+      final MultivaluedMap<String, String> queryParameters) {
+    final Map<String, String> fresheningParameters = Maps.newHashMap();
+    for (final Map.Entry<String, List<String>> query : queryParameters.entrySet()) {
+      final String queryKey = query.getKey();
+      if (queryKey.startsWith(FRESH_PARAMETER_PREFIX)) {
+        // Make sure the parameter was constructed acceptably, i.e.: fresh.key=value
+        Preconditions.checkNotNull(query.getValue());
+        Preconditions.checkArgument(1 == query.getValue().size());
+        final String queryValue = query.getValue().get(0);
+        fresheningParameters.put(
+            queryKey.substring(FRESH_PARAMETER_PREFIX.length()),
+            queryValue);
+      }
+    }
+    return fresheningParameters;
+  }
+
   /**
    * GETs a list of Kiji rows.
    *
@@ -238,6 +271,7 @@ public class RowsResource {
    * @param freshen determines whether freshening should be done as part of the request.
    * @param timeout amount of time in ms to wait for freshening to finish before returning the
    *                old/stale/previous value of the column(s).
+   * @param uriInfo contains all the query parameters.
    * @return the Response object containing the rows requested in JSON
    */
   @GET
@@ -254,7 +288,8 @@ public class RowsResource {
       @QueryParam("versions") @DefaultValue("1") String maxVersionsString,
       @QueryParam("timerange") String timeRange,
       @QueryParam("freshen") Boolean freshen,
-      @QueryParam("timeout") Long timeout) {
+      @QueryParam("timeout") Long timeout,
+      @Context UriInfo uriInfo) {
     // CSON: ParameterNumberCheck - There are a bunch of query param options
 
     long[] timeRanges = null;
@@ -290,7 +325,6 @@ public class RowsResource {
           + "Specified both jsonEntityId and start/end HBase row keys."), Status.BAD_REQUEST);
     }
 
-    // We will honor eid over start/end rk.
     try {
       if (jsonEntityId != null) {
         // Attempt to parse eid for potential wildcards.
@@ -311,25 +345,29 @@ public class RowsResource {
             // No wildcards found, but valid json entity id. Continue scanning point row.
             EntityId eid = kijiTable.getEntityId(components.getComponents());
             KijiDataRequest request = dataBuilder.build();
+            // Give priority to request freshness parameter; if not set use default
             scanner = ImmutableList.of(getKijiRowData(
                 kijiTable,
                 eid,
                 request,
                 freshen != null ? freshen : mFreshenConfig.isFreshen(),
-                timeout != null ? timeout : mFreshenConfig.getTimeout()));
+                timeout != null ? timeout : mFreshenConfig.getTimeout(),
+                getFresheningParameters(uriInfo.getQueryParameters())));
           }
-        } catch (IOException io) {
+        } catch (JsonProcessingException io) {
           // Eid could not be parsed as a json. Try parsing as a byte array through ToolUtils.
           EntityId eid = ToolUtils.createEntityIdFromUserInputs(
               jsonEntityId,
               kijiTable.getLayout());
           KijiDataRequest request = dataBuilder.build();
+          // Give priority to request freshness parameter; if not set use default
           scanner = ImmutableList.of(getKijiRowData(
               kijiTable,
               eid,
               request,
               freshen != null ? freshen : mFreshenConfig.isFreshen(),
-              timeout != null ? timeout : mFreshenConfig.getTimeout()));
+              timeout != null ? timeout : mFreshenConfig.getTimeout(),
+              getFresheningParameters(uriInfo.getQueryParameters())));
         }
       } else {
         // Json array eid not found. Continue with a rowkey scan.
@@ -356,7 +394,7 @@ public class RowsResource {
     } catch (Exception e) {
       throw new WebApplicationException(e, Status.BAD_REQUEST);
     } finally {
-      // TODO(REST-51): Close the above reader.
+      // TODO(REST-51): Some of the above readers may need to be closed.
       ResourceUtils.releaseOrLog(kijiTable);
     }
     KijiSchemaTable schemaTable = mKijiClient.getKijiSchemaTable(instance);
@@ -377,7 +415,8 @@ public class RowsResource {
      * specifies whether there are wildcards (with nulls array elements).
      *
      * @param json string of components of entity id.
-     * @throws IOException if entity id can not be resolved as a json array.
+     * @throws JsonProcessingException if entity id can not be resolved as a json array.
+     * @throws IOException if parsing failed for some other reason.
      */
     public EntityIdComponents(final String json) throws IOException {
       final List<Object> components = Lists.newArrayList();
@@ -439,9 +478,9 @@ public class RowsResource {
      *
      * @param node JSON string, integer numeric, or wildcard (empty array) node.
      * @return the JSON value, as a String, an Integer, a Long, a WILDCARD, or null.
-     * @throws IOException if the JSON node is not a String, Integer, Long, WILDCARD, or null.
+     * @throws JsonParseException if the JSON node is not String, Integer, Long, WILDCARD, or null.
      */
-    private static Object getNodeValue(JsonNode node) throws IOException {
+    private static Object getNodeValue(JsonNode node) throws JsonParseException {
       if (node.isInt()) {
         return node.asInt();
       } else if (node.isLong()) {
@@ -454,8 +493,9 @@ public class RowsResource {
       } else if (node.isNull()) {
         return null;
       } else {
-        throw new IOException(String.format(
-            "Invalid JSON value: '%s', expecting string, int, long, null, or wildcard [].", node));
+        throw new JsonParseException(String.format(
+            "Invalid JSON value: '%s', expecting string, int, long, null, or wildcard [].", node),
+            null);
       }
     }
   }
@@ -468,6 +508,7 @@ public class RowsResource {
    * @param request for data.
    * @param freshen is true iff we prefer to freshen.
    * @param timeout at which the freshener returns preexisting data.
+   * @param fresheningParameters is the map of strings to strings of freshening parameters.
    * @return row data.
    * @throws IOException in case the data can not be fetched.
    */
@@ -476,10 +517,10 @@ public class RowsResource {
       final EntityId eid,
       final KijiDataRequest request,
       final boolean freshen,
-      final long timeout) throws IOException {
+      final long timeout,
+      final Map<String, String> fresheningParameters) throws IOException {
     KijiRowData rowData;
     // TODO: add FreshRequestOptions to disable freshening and simplify below - WDSCORE-75
-    // Give priority to request freshness parameter; if not set use default
     if (freshen) {
       // Do freshening
       FreshKijiTableReader reader = mKijiClient.getFreshKijiTableReader(
@@ -488,6 +529,7 @@ public class RowsResource {
       FreshKijiTableReader.FreshRequestOptions freshOpts =
           FreshKijiTableReader.FreshRequestOptions.Builder.create()
           .withTimeout(timeout)
+          .withParameters(fresheningParameters)
           .build();
       rowData = reader.get(eid, request, freshOpts);
     } else {
