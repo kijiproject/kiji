@@ -22,6 +22,7 @@ package org.kiji.express.util
 import cascading.flow.FlowDef
 import cascading.pipe.Pipe
 import com.twitter.scalding.Mode
+import com.twitter.scalding.RichPipe
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
@@ -45,6 +46,23 @@ private[express] trait PipeConversions {
    * @return a KijiPipe wrapping the specified Pipe.
    */
   implicit def pipeToKijiPipe(pipe: Pipe): KijiPipe = new KijiPipe(pipe)
+
+  /**
+   * Converts a [[org.kiji.express.flow.KijiPipe]] to a [[cascading.pipe.Pipe]].  This
+   * method permits implicit conversion from KijiPipe to Pipe.
+   *
+   * @param kijiPipe to convert to [[cascading.pipe.Pipe]].
+   * @return Pipe instance wrapped by the input KijiPipe.
+   */
+  implicit def kijiPipeToPipe(kijiPipe: KijiPipe): Pipe = kijiPipe.pipe
+
+  /**
+   * Converts a [[org.kiji.express.flow.KijiPipe]] to a [[com.twitter.scalding.RichPipe]].  This
+   * method permits implicit conversion from KijiPipe to RichPipe.
+   * @param kijiPipe to convert to [[com.twitter.scalding.RichPipe]].
+   * @return RichPipe instance of Pipe wrapped by input KijiPipe.
+   */
+  implicit def kijiPipeToRichPipe(kijiPipe: KijiPipe): RichPipe = new RichPipe(kijiPipe.pipe)
 
   /**
    * Converts a KijiSource to a KijiExpress KijiPipe. This method permits implicit conversions

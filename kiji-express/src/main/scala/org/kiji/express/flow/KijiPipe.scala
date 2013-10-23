@@ -55,7 +55,7 @@ import org.kiji.annotations.Inheritance
 @ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Sealed
-class KijiPipe(private val pipe: Pipe) extends TupleConversions {
+class KijiPipe(private[express] val pipe: Pipe) extends TupleConversions {
   /**
    * Gets a job that can be used to run the data pipeline.
    *
