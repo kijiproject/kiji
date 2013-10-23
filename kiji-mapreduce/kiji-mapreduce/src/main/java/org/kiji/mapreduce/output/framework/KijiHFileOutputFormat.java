@@ -28,6 +28,7 @@ import java.util.Map;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -147,7 +148,7 @@ public final class KijiHFileOutputFormat
       private long mCurrentHFileSize = 0;
 
       /** A timerange tracker to compute time ranges. */
-      private TimeRangeTracker mTimeRangeTracker = new TimeRangeTracker();
+      private TimeRangeTracker mTimeRangeTracker = null;
 
       /** Key of the last written row. */
       private byte[] mCurrentRow = null;
@@ -219,16 +220,7 @@ public final class KijiHFileOutputFormat
       /** {@inheritDoc} */
       @Override
       public void close(TaskAttemptContext context) throws IOException {
-        if (null != mWriter) {
-          if (mCurrentHFileSize > 0) {
-            // Write out a timerange. This is the only Metadata we write out.
-            // See: HBASE-8055 and KIJIMR-204.
-            mWriter.appendFileInfo(StoreFile.TIMERANGE_KEY,
-                WritableUtils.toByteArray(mTimeRangeTracker));
-          }
-          mTimeRangeTracker = new TimeRangeTracker();
-          closeWriter(mWriter);
-        }
+        closeWriter(mWriter);
       }
 
       /**
@@ -252,6 +244,7 @@ public final class KijiHFileOutputFormat
             SchemaPlatformBridge.get().createHFileWriter(mConf, mFileSystem, hfilePath,
                 mBlockSizeBytes, mCompressionType, KeyValue.KEY_COMPARATOR);
 
+        mTimeRangeTracker = new TimeRangeTracker();
         // Reset the current file size.
         mCurrentHFileSize = 0L;
         return hfileWriter;
@@ -273,7 +266,12 @@ public final class KijiHFileOutputFormat
         hfileWriter.appendFileInfo(StoreFile.BULKLOAD_TASK_KEY, toBytes(taskAttemptID));
         hfileWriter.appendFileInfo(StoreFile.MAJOR_COMPACTION_KEY, toBytes(true));
 
-        ResourceUtils.closeOrLog(hfileWriter);
+        // Write out a timerange.
+        // See: HBASE-8055 and KIJIMR-204.
+        hfileWriter.appendFileInfo(StoreFile.TIMERANGE_KEY,
+            WritableUtils.toByteArray(mTimeRangeTracker));
+
+        hfileWriter.close();
       }
     }
 

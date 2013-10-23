@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.TreeSet;
 
 import com.google.common.collect.Lists;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.FileSystem;
@@ -181,9 +182,9 @@ public final class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
    * @return a list of split start keys, as HFileKeyValue (with no value, just the keys).
    * @throws IOException on I/O error.
    */
-  private static List<HFileKeyValue> makeTableKeySplit(KijiURI tableURI,
-                                                       int nsplits,
-                                                       Configuration conf)
+  public static List<HFileKeyValue> makeTableKeySplit(KijiURI tableURI,
+      int nsplits,
+      Configuration conf)
       throws IOException {
     final Kiji kiji = Kiji.Factory.open(tableURI, conf);
     try {
@@ -250,7 +251,7 @@ public final class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
    *     for the sorted map output records.
    * @throws IOException If there is an error.
    */
-  private static void configurePartitioner(Job job, List<HFileKeyValue> startKeys)
+  public static void configurePartitioner(Job job, List<HFileKeyValue> startKeys)
       throws IOException {
     job.setPartitionerClass(TotalOrderPartitioner.class);
 
@@ -289,7 +290,7 @@ public final class HFileMapReduceJobOutput extends KijiTableMapReduceJobOutput {
    * @param startKeys the region start keys to use as the partitions.
    * @throws IOException If there is an error.
    */
-  private static void writePartitionFile(
+  public static void writePartitionFile(
       Configuration conf, Path partitionsPath, List<HFileKeyValue> startKeys)
       throws IOException {
     if (startKeys.isEmpty()) {
