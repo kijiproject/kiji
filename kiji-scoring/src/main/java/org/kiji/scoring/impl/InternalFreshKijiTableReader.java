@@ -41,7 +41,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import org.apache.hadoop.util.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -937,37 +936,77 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   // -----------------------------------------------------------------------------------------------
 
   /**
-   * Gets an instance of a KijiFreshnessPolicy from a String class name.
+   * Get a future from a given callable.  This method uses the singleton FreshenerThreadPool to run
+   * threads responsible for carrying out the operation of the Future.
    *
-   * @param policyClassName The name of the freshness policy class to instantiate.
-   * @return a new instance of a KijiFreshnessPolicy from a String class name.
+   * @param callable the callable to run in the new Future.
+   * @param <RETVAL> the return type of the callable and Future.
+   * @return a new Future representing asynchronous execution of the given callable.
    */
-  private static KijiFreshnessPolicy policyForName(
-      final String policyClassName
+  public static <RETVAL> Future<RETVAL> getFuture(
+      Callable<RETVAL> callable
+  ) {
+    return FreshenerThreadPool.getInstance().getExecutorService().submit(callable);
+  }
+
+  /**
+   * Get the value from a given Future.  This blocks until the Future is complete.
+   *
+   * @param future the Future from which to get the resultant value.
+   * @param <RETVAL> the type of the value returned by the Future.
+   * @return the return value of the given Future.
+   */
+  public static <RETVAL> RETVAL getFromFuture(
+      final Future<RETVAL> future
   ) {
     try {
-      return ReflectionUtils.newInstance(
-          Class.forName(policyClassName).asSubclass(KijiFreshnessPolicy.class), null);
-    } catch (ClassNotFoundException cnfe) {
-      throw new RuntimeException(cnfe);
+      return future.get();
+    } catch (InterruptedException ie) {
+      throw new RuntimeInterruptedException(ie);
+    } catch (ExecutionException ee) {
+      throw new RuntimeException(ee);
     }
   }
 
   /**
-   * Gets an instance of a ScoreFunction from a String class name.
+   * Get the value from a given Future with a timeout.  This blocks until the Future is complete or
+   * the timeout expires.
    *
-   * @param scoreFunctionClassName the fully qualified class name of the ScoreFunction subclass to
-   *     instantiate.
-   * @return An instance of the named ScoreFunction.
+   * @param future the Future from which to get the resultant value.
+   * @param timeout the time to wait (in milliseconds) before a TimeoutException.
+   * @param <RETVAL> the type of the value returned by the Future.
+   * @return the return value of the given Future.
+   * @throws TimeoutException if the Future does not return before the timeout period elapses.
    */
-  private static ScoreFunction scoreFunctionForName(
-      final String scoreFunctionClassName
-  ) {
+  public static <RETVAL> RETVAL getFromFuture(
+      final Future<RETVAL> future,
+      final long timeout
+  ) throws TimeoutException {
+    return getFromFuture(future, timeout, TimeUnit.MILLISECONDS);
+  }
+
+  /**
+   * Get the value from a given Future with a timeout.  This blocks until the Future is complete or
+   * the timeout expires.
+   *
+   * @param future the Future from which to get the resultant value.
+   * @param timeout the time to wait (in units defined by timeUnit) before a TimeoutException.
+   * @param timeUnit the unit of time to use for the timeout.
+   * @param <RETVAL> the type of the value returned by the Future.
+   * @return the return value of the given Future.
+   * @throws TimeoutException if the Future does not return before the timeout period elapses.
+   */
+  public static <RETVAL> RETVAL getFromFuture(
+      final Future<RETVAL> future,
+      final long timeout,
+      final TimeUnit timeUnit
+  ) throws TimeoutException {
     try {
-      return ReflectionUtils.newInstance(
-          Class.forName(scoreFunctionClassName).asSubclass(ScoreFunction.class), null);
-    } catch (ClassNotFoundException cnfe) {
-      throw new RuntimeException(cnfe);
+      return future.get(timeout, timeUnit);
+    } catch (InterruptedException ie) {
+      throw new RuntimeInterruptedException(ie);
+    } catch (ExecutionException ee) {
+      throw new RuntimeException(ee);
     }
   }
 
@@ -1076,8 +1115,10 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
             InternalFreshenerContext.create(entry.getKey(), record.getParameters());
 
         // Instantiate the policy and score function.
-        final KijiFreshnessPolicy policy = policyForName(record.getFreshnessPolicyClass());
-        final ScoreFunction scoreFunction = scoreFunctionForName(record.getScoreFunctionClass());
+        final KijiFreshnessPolicy policy =
+            ScoringUtils.policyForName(record.getFreshnessPolicyClass());
+        final ScoreFunction scoreFunction =
+            ScoringUtils.scoreFunctionForName(record.getScoreFunctionClass());
 
         // Create the KVStoreReaderFactory from the required stores of the score function and
         // policy, and add the factory to the Freshener context.
@@ -1104,81 +1145,6 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     }
 
     return ImmutableMap.copyOf(fresheners);
-  }
-
-  /**
-   * Get a future from a given callable.  This method uses the singleton Executor to run threads
-   * responsible for carrying out the operation of the Future.
-   *
-   * @param callable the callable to run in the new Future.
-   * @param <RETVAL> the return type of the callable and Future.
-   * @return a new Future representing asynchronous execution of the given callable.
-   */
-  private static <RETVAL> Future<RETVAL> getFuture(
-      Callable<RETVAL> callable
-  ) {
-    return FreshenerThreadPool.getInstance().getExecutorService().submit(callable);
-  }
-
-  /**
-   * Get the value from a given Future.  This blocks until the Future is complete.
-   *
-   * @param future the Future from which to get the resultant value.
-   * @param <RETVAL> the type of the value returned by the Future.
-   * @return the return value of the given Future.
-   */
-  private static <RETVAL> RETVAL getFromFuture(
-      final Future<RETVAL> future
-  ) {
-    try {
-      return future.get();
-    } catch (InterruptedException ie) {
-      throw new RuntimeInterruptedException(ie);
-    } catch (ExecutionException ee) {
-      throw new RuntimeException(ee);
-    }
-  }
-
-  /**
-   * Get the value from a given Future with a timeout.  This blocks until the Future is complete or
-   * the timeout expires.
-   *
-   * @param future the Future from which to get the resultant value.
-   * @param timeout the time to wait (in milliseconds) before a TimeoutException.
-   * @param <RETVAL> the type of the value returned by the Future.
-   * @return the return value of the given Future.
-   * @throws TimeoutException if the Future does not return before the timeout period elapses.
-   */
-  private static <RETVAL> RETVAL getFromFuture(
-      final Future<RETVAL> future,
-      final long timeout
-  ) throws TimeoutException {
-    return getFromFuture(future, timeout, TimeUnit.MILLISECONDS);
-  }
-
-  /**
-   * Get the value from a given Future with a timeout.  This blocks until the Future is complete or
-   * the timeout expires.
-   *
-   * @param future the Future from which to get the resultant value.
-   * @param timeout the time to wait (in units defined by timeUnit) before a TimeoutException.
-   * @param timeUnit the unit of time to use for the timeout.
-   * @param <RETVAL> the type of the value returned by the Future.
-   * @return the return value of the given Future.
-   * @throws TimeoutException if the Future does not return before the timeout period elapses.
-   */
-  private static <RETVAL> RETVAL getFromFuture(
-      final Future<RETVAL> future,
-      final long timeout,
-      final TimeUnit timeUnit
-  ) throws TimeoutException {
-    try {
-      return future.get(timeout, timeUnit);
-    } catch (InterruptedException ie) {
-      throw new RuntimeInterruptedException(ie);
-    } catch (ExecutionException ee) {
-      throw new RuntimeException(ee);
-    }
   }
 
   /**

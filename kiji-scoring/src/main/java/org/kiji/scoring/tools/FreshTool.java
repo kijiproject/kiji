@@ -391,7 +391,7 @@ public class FreshTool extends BaseTool {
     final Collection<KijiColumnName> columns = mURI.getColumns();
     if (columns.isEmpty()) {
       final Map<KijiColumnName, Map<ValidationFailure, Exception>> failures =
-          mManager.validateFresheners(mURI.getTable(), mInstantiateClassesFlag);
+          mManager.validateFresheners(mURI.getTable());
       if (failures.isEmpty()) {
         getPrintStream().printf(
             "All Fresheners attached to columns in table: %s are valid.%n", mURI.getTable());
@@ -404,7 +404,7 @@ public class FreshTool extends BaseTool {
       boolean validationFailed = false;
       for (KijiColumnName column : columns) {
         final Map<ValidationFailure, Exception> failures =
-            mManager.validateFreshener(mURI.getTable(), column, mInstantiateClassesFlag);
+            mManager.validateFreshener(mURI.getTable(), column);
         if (failures.isEmpty()) {
           getPrintStream().printf("%s is valid.%n", column);
         } else {

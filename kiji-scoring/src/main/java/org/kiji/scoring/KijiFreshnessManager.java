@@ -36,7 +36,6 @@ import org.apache.avro.io.Encoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.avro.specific.SpecificDatumWriter;
-import org.apache.hadoop.util.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,6 +52,7 @@ import org.kiji.schema.util.ProtocolVersion;
 import org.kiji.scoring.avro.KijiFreshenerRecord;
 import org.kiji.scoring.impl.InternalFreshKijiTableReader;
 import org.kiji.scoring.impl.InternalFreshenerContext;
+import org.kiji.scoring.impl.ScoringUtils;
 
 /**
  * This class is responsible for registering, retrieving removing, and validating Freshener records.
@@ -287,41 +287,6 @@ public final class KijiFreshnessManager implements Closeable {
       }
     }
     return true;
-  }
-
-  /**
-   * Gets an instance of a KijiFreshnessPolicy from a String class name.
-   *
-   * @param policyClassName The name of the freshness policy class to instantiate.
-   * @return a new instance of a KijiFreshnessPolicy from a String class name.
-   */
-  private static KijiFreshnessPolicy policyForName(
-      final String policyClassName
-  ) {
-    try {
-      return ReflectionUtils.newInstance(
-          Class.forName(policyClassName).asSubclass(KijiFreshnessPolicy.class), null);
-    } catch (ClassNotFoundException cnfe) {
-      throw new RuntimeException(cnfe);
-    }
-  }
-
-  /**
-   * Gets an instance of a ScoreFunction from a String class name.
-   *
-   * @param scoreFunctionClassName the fully qualified class name of the ScoreFunction subclass to
-   *     instantiate.
-   * @return An instance of the named producer.
-   */
-  private static ScoreFunction scoreFunctionForName(
-      final String scoreFunctionClassName
-  ) {
-    try {
-      return ReflectionUtils.newInstance(
-          Class.forName(scoreFunctionClassName).asSubclass(ScoreFunction.class), null);
-    } catch (ClassNotFoundException cnfe) {
-      throw new RuntimeException(cnfe);
-    }
   }
 
   // -----------------------------------------------------------------------------------------------
@@ -624,8 +589,8 @@ public final class KijiFreshnessManager implements Closeable {
   ) throws IOException {
     // CSON: ParameterNumber
     if (instantiateClasses) {
-      final KijiFreshnessPolicy policy = policyForName(policyClass);
-      final ScoreFunction scoreFunction = scoreFunctionForName(scoreFunctionClass);
+      final KijiFreshnessPolicy policy = ScoringUtils.policyForName(policyClass);
+      final ScoreFunction scoreFunction = ScoringUtils.scoreFunctionForName(scoreFunctionClass);
 
       registerFreshener(
           tableName,
@@ -674,8 +639,10 @@ public final class KijiFreshnessManager implements Closeable {
       final boolean setupClasses
   ) throws IOException {
     if (instantiateClasses) {
-      final KijiFreshnessPolicy policy = policyForName(record.getFreshnessPolicyClass());
-      final ScoreFunction scoreFunction = scoreFunctionForName(record.getScoreFunctionClass());
+      final KijiFreshnessPolicy policy =
+          ScoringUtils.policyForName(record.getFreshnessPolicyClass());
+      final ScoreFunction scoreFunction =
+          ScoringUtils.scoreFunctionForName(record.getScoreFunctionClass());
 
       registerFreshener(
           tableName,
@@ -730,9 +697,9 @@ public final class KijiFreshnessManager implements Closeable {
     for (Map.Entry<KijiColumnName, KijiFreshenerRecord> recordEntry : records.entrySet()) {
       if (instantiateClasses) {
         final KijiFreshnessPolicy policy =
-            policyForName(recordEntry.getValue().getFreshnessPolicyClass());
+            ScoringUtils.policyForName(recordEntry.getValue().getFreshnessPolicyClass());
         final ScoreFunction scoreFunction =
-            scoreFunctionForName(recordEntry.getValue().getScoreFunctionClass());
+            ScoringUtils.scoreFunctionForName(recordEntry.getValue().getScoreFunctionClass());
 
         registerFreshener(
             tableName,
@@ -875,9 +842,6 @@ public final class KijiFreshnessManager implements Closeable {
    *
    * @param tableName the name of the table which holds the column whose attachment to validate.
    * @param columnName the name of the column whose attachment to validate.
-   * @param instantiateClasses whether to instantiate classes to enable validation which requires
-   *     class objects. This validation is more thorough, but requires classes to be available on
-   *     the classpath.
    * @return a map from {@link ValidationFailure} to
    *     {@link org.kiji.scoring.KijiFreshnessManager.FreshenerValidationException}. This map will
    *     be populated with items for failed validation checks only. An empty map indicates no
@@ -886,8 +850,7 @@ public final class KijiFreshnessManager implements Closeable {
    */
   public Map<ValidationFailure, Exception> validateFreshener(
       final String tableName,
-      final KijiColumnName columnName,
-      final boolean instantiateClasses
+      final KijiColumnName columnName
   ) throws IOException {
     if (!mKiji.getMetaTable().tableExists(tableName)) {
       throw new KijiTableNotFoundException(
@@ -904,9 +867,6 @@ public final class KijiFreshnessManager implements Closeable {
    * restrictions imposed on Freshener attachment.
    *
    * @param tableName the name of the table for which to validate Freshener attachments.
-   * @param instantiateClasses whether to instantiate classes to enable validation which requires
-   *     class objects. This validation is more thorough, but requires classes to be available on
-   *     the classpath.
    * @return a map from column name attachment points to a map from {@link ValidationFailure} types
    *     to {@link org.kiji.scoring.KijiFreshnessManager.FreshenerValidationException}. This map
    *     will be populated with items for failed validation checks only. An empty map indicates no
@@ -914,8 +874,7 @@ public final class KijiFreshnessManager implements Closeable {
    * @throws IOException in case of an error reading from the meta table.
    */
   public Map<KijiColumnName, Map<ValidationFailure, Exception>> validateFresheners(
-      final String tableName,
-      final boolean instantiateClasses
+      final String tableName
   ) throws IOException {
     if (!mKiji.getMetaTable().tableExists(tableName)) {
       throw new KijiTableNotFoundException(
@@ -930,7 +889,7 @@ public final class KijiFreshnessManager implements Closeable {
         if (isKFMMetaTableKey(key)) {
           final KijiColumnName column = fromMetaTableKey(key);
           final Map<ValidationFailure, Exception> individualFailures =
-              validateFreshener(tableName, column, instantiateClasses);
+              validateFreshener(tableName, column);
           if (!individualFailures.isEmpty()) {
             combinedFailures.put(column, individualFailures);
           }
