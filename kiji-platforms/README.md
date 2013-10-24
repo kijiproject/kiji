@@ -30,7 +30,7 @@ example, to run on CDH4:
       <dependency>
         <groupId>org.kiji.platforms</groupId>
         <artifactId>kiji-cdh4-platform</artifactId>
-        <version>1.2.0</version>
+        <version>1.3.0</version>
         <scope>provided</scope>
       </dependency>
     </dependencies>
@@ -44,6 +44,7 @@ against a Hadoop version specified in a Kiji platform definition. The
 following platform definitions are provided:
 
 * kiji-cdh4-platform (Latest Kiji-supported CDH4 release)
+* kiji-cdh4-4-platform (Latest CDH4.4 update)
 * kiji-cdh4-3-platform (Latest CDH4.3 update)
 * kiji-cdh4-2-platform (Latest CDH4.2 update)
 * kiji-cdh4-1-platform (Latest CDH4.1 update)

@@ -22,7 +22,7 @@
 
   <groupId>org.kiji.platforms</groupId>
   <artifactId>kiji-platforms</artifactId>
-  <version>1.2.1-SNAPSHOT</version>
+  <version>1.3.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <parent>
@@ -39,6 +39,7 @@
     <module>kiji-cdh4-1-platform</module>
     <module>kiji-cdh4-2-platform</module>
     <module>kiji-cdh4-3-platform</module>
+    <module>kiji-cdh4-4-platform</module>
     <module>kiji-cdh4-platform</module>
 
     <module>kiji-hadoop1-hbase94-platform</module>
