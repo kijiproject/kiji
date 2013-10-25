@@ -56,8 +56,7 @@ if [ -z "$PIDFILE" ]; then
   PIDFILE=${BASEDIR}/kiji-rest.pid
 fi
 
-kiji_jar=$(echo ${BASEDIR}/kiji-rest*.jar)
-kiji_rest_cp="${kiji_jar}:${BASEDIR}/lib/*:${KIJI_CLASSPATH}"
+kiji_rest_cp="${BASEDIR}/lib/*:${KIJI_CLASSPATH}"
 
 if [ -z "${KIJI_REST_CONF_DIR}" ]; then
   KIJI_REST_CONF_DIR=${BASEDIR}/conf
