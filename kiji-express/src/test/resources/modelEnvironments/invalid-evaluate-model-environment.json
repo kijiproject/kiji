@@ -19,7 +19,7 @@
 {
   "protocol_version":"model_environment-0.3.0",
   "name":"myRunProfile",
-  "version":"1.0.0",
+  "version":"2.0.0",
   "prepare_environment":{
     "org.kiji.express.avro.AvroPrepareEnvironment":{
       "input_spec":{
@@ -35,7 +35,7 @@
                   "max_versions":3,
                   "filter":{
                     "org.kiji.express.avro.AvroFilter":{
-                      "regex_filter":{
+                      "regex_filter" : {
                         "org.kiji.express.avro.AvroRegexQualifierFilter":{
                           "regex":"foo"
                         }
@@ -90,7 +90,7 @@
                   "max_versions":3,
                   "filter":{
                     "org.kiji.express.avro.AvroFilter":{
-                      "regex_filter":{
+                      "regex_filter" : {
                         "org.kiji.express.avro.AvroRegexQualifierFilter":{
                           "regex":"foo"
                         }
@@ -107,7 +107,7 @@
           }
         }
       },
-      "output_spec": {
+      "output_spec":{
         "kijitableoutput" : {
           "kiji_specification":{
             "org.kiji.express.avro.AvroKijiOutputSpec":{
@@ -142,7 +142,7 @@
             "max_versions":3,
             "filter":{
               "org.kiji.express.avro.AvroFilter":{
-                "regex_filter":{
+                "regex_filter" : {
                   "org.kiji.express.avro.AvroRegexQualifierFilter":{
                     "regex":"foo"
                   }
@@ -175,14 +175,14 @@
       "input_spec":{
         "table_uri":"kiji://.env/default/table",
         "data_request":{
-          "min_timestamp":0,
-          "max_timestamp":38475687,
+          "min_timestamp":-3,
+          "max_timestamp":-3,
           "column_definitions":[{
-            "name":"info:in",
+            "name":"*BADCOL",
             "max_versions":3,
             "filter":{
               "org.kiji.express.avro.AvroFilter":{
-                "regex_filter" : {
+                "regex_filter":{
                   "org.kiji.express.avro.AvroRegexQualifierFilter":{
                     "regex":"foo"
                   }
@@ -211,7 +211,7 @@
         "store_type":"AVRO_KV",
         "name":"side_data",
         "properties":[{
-          "name":"path",
+          "name":"wrath",
           "value":"/usr/src/and/so/on"
         }]
       }]

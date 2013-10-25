@@ -481,13 +481,37 @@ protocol Modeling {
   }
 
   /**
+   * Runtime resource bindings for the evaluate phase.
+   *
+   * Note to developers: Please increment the 'protocol_version' field in AvroModelEnvironment when
+   * modifying this record.
+   */
+  record AvroEvaluateEnvironment {
+    /**
+     * Defines the input data source that the evaluate phase uses. Required.
+     */
+    AvroKijiInputSpec input_spec;
+
+    /**
+     * Defines the output data sources that the evaluate phase uses. Required.
+     */
+    AvroOutputSpec output_spec;
+
+    /**
+     * An array of KVStores needed during the evaluate phase. The default value of this field is
+     * the empty list.
+     */
+    array<AvroKeyValueStoreSpec> kv_stores = [];
+  }
+
+  /**
    * Runtime resource bindings for a model definition.
    */
   record AvroModelEnvironment {
     /**
-     * Unique identifier for this model environment. The current version is model_environment-0.1.1.
+     * Unique identifier for this model environment. The current version is model_environment-0.3.0.
      */
-    string protocol_version = "model_environment-0.2.0";
+    string protocol_version = "model_environment-0.3.0";
 
     /**
      * User specified shorthand identifier for this model environment. Required.
@@ -513,5 +537,10 @@ protocol Modeling {
      * Runtime bindings for data sources used in the score phase. Potentially null.
      */
     union{null, AvroScoreEnvironment} score_environment = null;
+
+    /**
+     * Runtime bindings for data sources used in the evaluate phase. Potentially null.
+     */
+    union{null, AvroEvaluateEnvironment} evaluate_environment = null;
   }
 }

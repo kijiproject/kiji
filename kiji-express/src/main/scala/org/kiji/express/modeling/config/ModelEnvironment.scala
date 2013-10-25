@@ -154,6 +154,8 @@ import org.kiji.express.modeling.framework.ModelConverters
  *     Optional.
  * @param scoreEnvironment defining configuration details specific to the Score phase of a model.
  *     Optional.
+ * @param evaluateEnvironment defining configuration details specific to the Evaluate phase of a
+ *     model. Optional.
  * @param protocolVersion this model definition was written for.
  */
 @ApiAudience.Public
@@ -165,6 +167,7 @@ final case class ModelEnvironment(
     prepareEnvironment: Option[PrepareEnvironment] = None,
     trainEnvironment: Option[TrainEnvironment] = None,
     scoreEnvironment: Option[ScoreEnvironment] = None,
+    evaluateEnvironment: Option[EvaluateEnvironment] = None,
     private[express] val protocolVersion: ProtocolVersion =
         ModelEnvironment.CURRENT_MODEL_DEF_VER) {
   // Ensure that all fields set for this model environment are valid.
@@ -192,19 +195,24 @@ final case class ModelEnvironment(
    *     model.
    * @param trainEnvironment defining configuration details specific to the Train phase of a model.
    * @param scoreEnvironment defining configuration details specific to the Score phase of a model.
+   * @param evaluateEnvironment defining configuration details specific to the Evaluate phase of a
+   *     model.
    */
   def withNewSettings(
       name: String = this.name,
       version: String = this.version,
       prepareEnvironment: Option[PrepareEnvironment] = this.prepareEnvironment,
       trainEnvironment: Option[TrainEnvironment] = this.trainEnvironment,
-      scoreEnvironment: Option[ScoreEnvironment] = this.scoreEnvironment): ModelEnvironment = {
+      scoreEnvironment: Option[ScoreEnvironment] = this.scoreEnvironment,
+      evaluateEnvironment: Option[EvaluateEnvironment] = this.evaluateEnvironment
+  ): ModelEnvironment = {
     new ModelEnvironment(
         name,
         version,
         prepareEnvironment,
         trainEnvironment,
-        scoreEnvironment)
+        scoreEnvironment,
+        evaluateEnvironment)
   }
 }
 
@@ -214,13 +222,13 @@ final case class ModelEnvironment(
  */
 object ModelEnvironment {
   /** Maximum model environment version we can recognize. */
-  val MAX_RUN_ENV_VER: ProtocolVersion = ProtocolVersion.parse("model_environment-0.2.0")
+  val MAX_RUN_ENV_VER: ProtocolVersion = ProtocolVersion.parse("model_environment-0.3.0")
 
   /** Minimum model environment version we can recognize. */
   val MIN_RUN_ENV_VER: ProtocolVersion = ProtocolVersion.parse("model_environment-0.2.0")
 
   /** Current ModelDefinition protocol version. */
-  val CURRENT_MODEL_DEF_VER: ProtocolVersion = ProtocolVersion.parse("model_environment-0.2.0")
+  val CURRENT_MODEL_DEF_VER: ProtocolVersion = ProtocolVersion.parse("model_environment-0.3.0")
 
   /** Regular expression used to validate a model environment version string. */
   val VERSION_REGEX: String = "[0-9]+(.[0-9]+)*"
@@ -285,9 +293,13 @@ object ModelEnvironment {
         .scoreEnvironment
         .map { env => validateScoreEnv(env) }
         .getOrElse(Seq())
+    val evaluateErrors: Seq[ValidationException] = environment
+        .evaluateEnvironment
+        .map { env => validateEvaluateEnv(env) }
+        .getOrElse(Seq())
 
     // Throw an exception if there were any validation errors.
-    val causes = baseErrors ++ prepareErrors ++ trainErrors ++ scoreErrors
+    val causes = baseErrors ++ prepareErrors ++ trainErrors ++ scoreErrors ++ evaluateErrors
     if (!causes.isEmpty) {
       throw new ModelEnvironmentValidationException(causes)
     }
@@ -486,7 +498,7 @@ object ModelEnvironment {
    *
    * @param trainEnvironment to validate.
    * @return an optional ValidationException if there are errors encountered while validating the
-   *     prepare phase.
+   *     train phase.
    */
   def validateTrainEnv(trainEnvironment: TrainEnvironment): Seq[ValidationException] = {
     val inputSpecErrors = validateInputSpecs(trainEnvironment.inputSpec)
@@ -519,6 +531,21 @@ object ModelEnvironment {
       }
     }
     val kvStoreErrors = validateKvStores(scoreEnvironment.keyValueStoreSpecs)
+
+    inputSpecErrors ++ outputSpecErrors ++ kvStoreErrors
+  }
+
+  /**
+   * Verifies that a model environment's evaluate phase is valid.
+   *
+   * @param evaluateEnvironment to validate.
+   * @return an optional ValidationException if there are errors encountered while validating the
+   *     evaluate phase.
+   */
+  def validateEvaluateEnv(evaluateEnvironment: EvaluateEnvironment): Seq[ValidationException] = {
+    val inputSpecErrors = validateInputSpec(evaluateEnvironment.inputSpec)
+    val outputSpecErrors = validateOutputSpec(evaluateEnvironment.outputSpec)
+    val kvStoreErrors = validateKvStores(evaluateEnvironment.keyValueStoreSpecs)
 
     inputSpecErrors ++ outputSpecErrors ++ kvStoreErrors
   }

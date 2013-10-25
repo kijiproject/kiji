@@ -1,5 +1,5 @@
 {
-  "protocol_version":"model_environment-0.2.0",
+  "protocol_version":"model_environment-0.3.0",
   "name":"lr-train-model-environment",
   "version":"1.0",
   "prepare_environment":null,
@@ -57,5 +57,6 @@
       "kv_stores":[]
     }
   },
-  "score_environment":null
+  "score_environment":null,
+  "evaluate_environment":null
 }

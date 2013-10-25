@@ -24,6 +24,7 @@ import scala.collection.JavaConverters._
 import org.kiji.express.avro.AvroColumn
 import org.kiji.express.avro.AvroColumnRangeFilter
 import org.kiji.express.avro.AvroDataRequest
+import org.kiji.express.avro.AvroEvaluateEnvironment
 import org.kiji.express.avro.AvroFieldBinding
 import org.kiji.express.avro.AvroFilter
 import org.kiji.express.avro.AvroInputSpec
@@ -50,6 +51,7 @@ import org.kiji.express.modeling.Scorer
 import org.kiji.express.modeling.Trainer
 import org.kiji.express.modeling.config.AndFilter
 import org.kiji.express.modeling.config.ColumnRangeFilter
+import org.kiji.express.modeling.config.EvaluateEnvironment
 import org.kiji.express.modeling.config.ExpressColumnFilter
 import org.kiji.express.modeling.config.ExpressColumnRequest
 import org.kiji.express.modeling.config.ExpressDataRequest
@@ -127,7 +129,6 @@ object ModelConverters {
               phase = classOf[Evaluator])
         }
 
-
     // Build a model definition.
     new ModelDefinition(
         name = modelDefinition.getName,
@@ -201,6 +202,8 @@ object ModelConverters {
         .map { trainEnvironmentFromAvro }
     val scoreEnvironment = Option(environment.getScoreEnvironment)
         .map { scoreEnvironmentFromAvro }
+    val evaluateEnvironment = Option(environment.getEvaluateEnvironment)
+        .map { evaluateEnvironmentFromAvro }
 
     // Build a model environment.
     new ModelEnvironment(
@@ -209,6 +212,7 @@ object ModelConverters {
         prepareEnvironment = prepareEnvironment,
         trainEnvironment = trainEnvironment,
         scoreEnvironment = scoreEnvironment,
+        evaluateEnvironment = evaluateEnvironment,
         protocolVersion = protocol)
   }
 
@@ -234,6 +238,11 @@ object ModelConverters {
         .scoreEnvironment
         .map { scoreEnvironmentToAvro }
 
+    // Build an AvroEvaluateEnvironment record.
+    val avroEvaluateEnvironment: Option[AvroEvaluateEnvironment] = environment
+        .evaluateEnvironment
+        .map { evaluateEnvironmentToAvro }
+
     // scalastyle:off null
     // Build an AvroModelEnvironment record.
     AvroModelEnvironment
@@ -244,6 +253,7 @@ object ModelConverters {
         .setPrepareEnvironment(avroPrepareEnvironment.getOrElse(null))
         .setTrainEnvironment(avroTrainEnvironment.getOrElse(null))
         .setScoreEnvironment(avroScoreEnvironment.getOrElse(null))
+        .setEvaluateEnvironment(avroEvaluateEnvironment.getOrElse(null))
         .build()
     // scalastyle:on null
   }
@@ -370,6 +380,56 @@ object ModelConverters {
         .setKvStores(environment.keyValueStoreSpecs.map { keyValueStoreSpecToAvro } .asJava)
         .build()
   }
+
+  /**
+   * Builds an evaluate environment from its avro record representation.
+   *
+   * @param environment to build from.
+   * @return a populated evaluate environment.
+   */
+  def evaluateEnvironmentFromAvro(environment: AvroEvaluateEnvironment): EvaluateEnvironment = {
+    val inputSpec: KijiInputSpec = {
+      val avroInputSpec = environment.getInputSpec
+      KijiInputSpec(
+        tableUri = avroInputSpec.getTableUri,
+        dataRequest = dataRequestFromAvro(avroInputSpec.getDataRequest),
+        fieldBindings = avroInputSpec.getFieldBindings.asScala.map { fieldBindingFromAvro })
+    }
+
+    new EvaluateEnvironment(
+      inputSpec = inputSpec,
+      outputSpec = outputSpecFromAvro(environment.getOutputSpec),
+      keyValueStoreSpecs = environment
+        .getKvStores
+        .asScala
+        .map { keyValueStoreSpecFromAvro })
+  }
+
+  /**
+   * Converts an evaluate environment to its avro record representation.
+   *
+   * @param environment to convert.
+   * @return an avro record.
+   */
+  def evaluateEnvironmentToAvro(environment: EvaluateEnvironment): AvroEvaluateEnvironment = {
+    val avroInputSpec: AvroKijiInputSpec = {
+      val inputSpec = environment.inputSpec
+      AvroKijiInputSpec
+        .newBuilder()
+        .setTableUri(inputSpec.tableUri)
+        .setDataRequest(dataRequestToAvro(inputSpec.dataRequest))
+        .setFieldBindings(inputSpec.fieldBindings.map { fieldBindingToAvro } .asJava)
+        .build()
+    }
+
+    AvroEvaluateEnvironment
+      .newBuilder()
+      .setInputSpec(avroInputSpec)
+      .setOutputSpec(outputSpecToAvro(environment.outputSpec))
+      .setKvStores(environment.keyValueStoreSpecs.map { keyValueStoreSpecToAvro } .asJava)
+      .build()
+  }
+
 
   /**
    * Builds a map of input specifications from its avro record representation.

@@ -65,6 +65,8 @@ class ModelEnvironmentSuite extends FunSuite {
       "modelEnvironments/invalid-prepare-model-environment.json")
   val invalidTrainEnvironmentLocation: String = resourceAsString(
       "modelEnvironments/invalid-train-model-environment.json")
+  val invalidEvaluateEnvironmentLocation: String = resourceAsString(
+    "modelEnvironments/invalid-evaluate-model-environment.json")
 
   // Expected error messages for validation tests.
   val expectedNameError: String = "The name of the model environment cannot be the empty string."
@@ -72,7 +74,7 @@ class ModelEnvironmentSuite extends FunSuite {
       "Model environment version strings must match the regex \"[0-9]+(.[0-9]+)*\" " +
       "(1.0.0 would be valid)."
   val expectedProtocolVersionError: String =
-      "\"model_environment-0.2.0\" is the maximum protocol version supported. " +
+      "\"model_environment-0.3.0\" is the maximum protocol version supported. " +
       "The provided model environment is of protocol version: \"model_environment-7.3.0\""
 
   test("ModelEnvironment can be created from a path to a valid JSON file.") {
@@ -187,13 +189,19 @@ class ModelEnvironmentSuite extends FunSuite {
         scoreOutputSpec,
         Seq(KeyValueStoreSpec("KIJI_TABLE", "myname", Map("uri" -> "kiji://.env/default/table",
             "column" -> "info:email"))))
+    val evaluateEnv = EvaluateEnvironment(
+        inputSpec,
+        outputSpec,
+        Seq(KeyValueStoreSpec("AVRO_KV", "storename", Map("path" -> "/some/great/path")))
+    )
 
     val modelEnv = ModelEnvironment(
         "myname",
         "1.0.0",
         Some(prepareEnv),
         Some(trainEnv),
-        Some(scoreEnv))
+        Some(scoreEnv),
+        Some(evaluateEnv))
     val jsonModelEnv: String = modelEnv.toJson
     val returnedModelEnv: ModelEnvironment = ModelEnvironment.fromJson(jsonModelEnv)
 
@@ -621,6 +629,16 @@ class ModelEnvironmentSuite extends FunSuite {
   test("ModelEnvironment validates train environment correctly.") {
     val thrown = intercept[ModelEnvironmentValidationException] {
       ModelEnvironment.fromJson(invalidTrainEnvironmentLocation)
+    }
+    assert(thrown.getMessage.contains("Use the property name 'path'"))
+    assert(thrown.getMessage.contains("minTimestamp in the DataRequest"))
+    assert(thrown.getMessage.contains("maxTimestamp in the DataRequest"))
+    assert(thrown.getMessage.contains("*BADCOL"))
+  }
+
+  test("ModelEnvironment validates evaluate environment correctly.") {
+    val thrown = intercept[ModelEnvironmentValidationException] {
+      ModelEnvironment.fromJson(invalidEvaluateEnvironmentLocation)
     }
     assert(thrown.getMessage.contains("Use the property name 'path'"))
     assert(thrown.getMessage.contains("minTimestamp in the DataRequest"))
