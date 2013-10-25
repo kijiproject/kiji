@@ -5,6 +5,8 @@
 Version 0.7.1
   * KIJIHIVE-40. Escape all inferred class names from complex types to avoid
       Hive reserved words in DDL statement generation.
+  * Fixed misconfiguration where intermediate results were not persisted in a
+      usable location for subsequent jobs.
 
 Version 0.7.0
   * KIJIHIVE-35. Fixed an NPE when fetching a non-primitive value from a map

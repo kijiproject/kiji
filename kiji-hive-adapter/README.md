@@ -1,10 +1,11 @@
 Introduction
 ============
 
-The official Hive adapter for Kiji Schema 1.x.
+The official Hive adapter for Kiji Schema 1.3.x.
 
-The Kiji Hive Adapter can be used to for read-only access to
-data stored in Kiji tables from Hive.
+The Kiji Hive Adapter can be used to for access to data stored in Kiji tables
+from Hive.  For write access do be aware of some of the caveats specified in
+the Write Access Caveats section below.
 
 ## Requirements
    * Hadoop 2.0.0-mr1-cdh4.3.0

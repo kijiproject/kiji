@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+<!--
+  The mapred-site.xml configuration for use within the bento-hive.sh script
+  within the Kiji Hive Adapter.  Primarily this sets the JobTracker for
+  use for creating a MapReduce jobs.
+-->
+
+<configuration>
+
+  <property>
+    <name>mapred.job.tracker</name>
+    <value>localhost:8021</value>
+  </property>
+
+  <property>
+    <name>mapred.job.tracker.http.address</name>
+    <value>localhost:50030</value>
+  </property>
+
+</configuration>
