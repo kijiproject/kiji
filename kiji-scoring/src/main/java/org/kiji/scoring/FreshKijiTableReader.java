@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -613,6 +614,15 @@ public interface FreshKijiTableReader extends KijiTableReader {
      */
     public Map<String, String> getParameters() {
       return mParameters;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+      return Objects.toStringHelper(FreshRequestOptions.class)
+          .add("timeout", mTimeout)
+          .add("parameter_overrides", mParameters)
+          .toString();
     }
   }
 

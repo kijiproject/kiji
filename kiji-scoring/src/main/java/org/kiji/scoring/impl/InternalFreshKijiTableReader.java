@@ -32,6 +32,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.google.common.base.Joiner;
@@ -57,6 +58,7 @@ import org.kiji.schema.KijiRowScanner;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.RuntimeInterruptedException;
+import org.kiji.schema.util.JvmId;
 import org.kiji.schema.util.ReferenceCountable;
 import org.kiji.scoring.FreshKijiTableReader;
 import org.kiji.scoring.FreshKijiTableReader.Builder.StatisticGatheringMode;
@@ -387,6 +389,8 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   /** All state necessary to process a freshening 'get' request. */
   private static final class FresheningRequestContext {
 
+    /** Unique identifier for the request served by this context. */
+    private final String mId;
     /** Time in milliseconds since the epoch at which this request started. */
     private final long mStartTime;
     /**
@@ -424,6 +428,8 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     private final boolean mAllowPartial;
     /** The set of Fresheners which have not finished. */
     private final Map<KijiColumnName, KijiFreshenerRecord> mFreshenersRemaining;
+    /** What level of statistics should be gathered about Fresheners run as part of this request. */
+    private final StatisticGatheringMode mStatisticGatheringMode;
     /** Statistics about individual completed Fresheners. */
     private final BlockingQueue<FreshenerSingleRunStatistics> mFreshenerSingleRunStatistics;
     /**
@@ -440,6 +446,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     /**
      * Initialize a new FresheningRequestContext.
      *
+     * @param id unique identifier for the request served by this context.
      * @param startTime the time in milliseconds since the epoch at which this request started.
      * @param fresheners Fresheners which should be run to fulfill this request.
      * @param freshenerContexts InternalFreshenerContext which service fresheners in this request.
@@ -452,12 +459,15 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
      * @param bufferedWriter the MultiBufferedWriter used by this context to buffer and commit
      *     writes.
      * @param allowPartial whether this context allows partial freshening.
+     * @param statisticGatheringMode what level of statistics should be gathered about Fresheners
+     *     run as part of this request.
      * @param statisticsQueue Queue for communicating statistics about completed Fresheners to the
      *     statistics gathering thread. This queue is thread safe and ordering of statistics in the
      *     queue does not matter.
      */
     // CSOFF: ParameterNumber
     public FresheningRequestContext(
+        final String id,
         final long startTime,
         final ImmutableMap<KijiColumnName, Freshener> fresheners,
         final ImmutableMap<KijiColumnName, InternalFreshenerContext> freshenerContexts,
@@ -468,9 +478,11 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
         final Future<KijiRowData> clientDataFuture,
         final MultiBufferedWriter bufferedWriter,
         final boolean allowPartial,
+        final StatisticGatheringMode statisticGatheringMode,
         final BlockingQueue<FreshenerSingleRunStatistics> statisticsQueue
     ) {
       // CSON: ParameterNumber
+      mId = id;
       mStartTime = startTime;
       mFresheners = fresheners;
       mReader = reader;
@@ -480,6 +492,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
       mFreshenerContexts = freshenerContexts;
       mBufferedWriter = bufferedWriter;
       mAllowPartial = allowPartial;
+      mStatisticGatheringMode = statisticGatheringMode;
       mFreshenerSingleRunStatistics = statisticsQueue;
       if (mAllowPartial) {
         // Each Freshener will have its own buffer when partial freshening is enabled, so the
@@ -505,11 +518,13 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
         final boolean scoreFunctionRan
     ) {
       final long finishTime = System.nanoTime();
-      mFreshenerSingleRunStatistics.add(FreshenerSingleRunStatistics.create(
-          mHasTimedOut,
-          finishTime - mStartTime,
-          scoreFunctionRan,
-          mFreshenersRemaining.get(attachedColumn)));
+      if (StatisticGatheringMode.NONE != mStatisticGatheringMode) {
+        mFreshenerSingleRunStatistics.add(FreshenerSingleRunStatistics.create(
+            mHasTimedOut,
+            finishTime - mStartTime,
+            scoreFunctionRan,
+            mFreshenersRemaining.get(attachedColumn)));
+      }
       final int remaining;
       synchronized (mFreshenersRemaining) {
         mFreshenersRemaining.remove(attachedColumn);
@@ -683,6 +698,9 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
         final KijiRowData dataToCheck = getFromFuture(mRowDataToCheckFuture);
         final boolean isFresh = freshener.mPolicy.isFresh(dataToCheck, freshenerContext);
         if (isFresh) {
+          LOG.debug(
+              "{} Freshener attached to: {} returned fresh and will not run its ScoreFunction",
+              mRequestContext.mId, mAttachedColumn);
           if (!mRequestContext.mAllowPartial
               && 0 == mRequestContext.finishFreshener(mAttachedColumn, false)) {
             // If this is the last thread, check for writes, flush, and indicate that data was
@@ -699,6 +717,8 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
             return DID_NOT_WRITE;
           }
         } else {
+          LOG.debug("{} Freshener attached to: {} returned stale and will run its ScoreFunction",
+              mRequestContext.mId, mAttachedColumn);
           final SingleBuffer buffer;
           if (mRequestContext.mAllowPartial) {
             buffer = mRequestContext.openUniqueBuffer();
@@ -862,6 +882,8 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
       if (0 < loggingInterval) {
         final Timer timer = new Timer();
         mStatisticsLoggerTask = new StatisticsLoggerTask(loggingInterval);
+        LOG.debug("{} starting automatic statistics logging timer with period: {}",
+            mReaderUID, loggingInterval);
         timer.scheduleAtFixedRate(mStatisticsLoggerTask, loggingInterval, loggingInterval);
       } else if (0 == loggingInterval) {
         mStatisticsLoggerTask = null;
@@ -928,6 +950,22 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
         // 0 indicates no logging.
         return 0;
       }
+    }
+  }
+
+  // -----------------------------------------------------------------------------------------------
+
+  /** Generator for simple unique IDs. */
+  private static final class UniqueIdGenerator {
+    private final AtomicLong mNext = new AtomicLong(0);
+
+    /**
+     * Get the next unique identifier.
+     *
+     * @return the next unique identifier.
+     */
+    public String getNextUniqueId() {
+      return String.valueOf(mNext.getAndIncrement());
     }
   }
 
@@ -1079,20 +1117,23 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
    * Create a map of Fresheners from a map of KijiFreshenerRecords.  Freshener components
    * are proactively created.
    *
+   * @param readerUID unique identifier for the reader which called this method. Used for logging.
    * @param records the records from which to create Fresheners.
    * @return a mapping from KijiColumnNames to associated Fresheners.
    * @throws IOException in case of an error setting up a KijiFreshnessPolicy or ScoreFunction.
    */
   private static ImmutableMap<KijiColumnName, Freshener> createFresheners(
+      final String readerUID,
       final ImmutableMap<KijiColumnName, KijiFreshenerRecord> records
   ) throws IOException {
-    return fillFresheners(records, ImmutableMap.<KijiColumnName, Freshener>of());
+    return fillFresheners(readerUID, records, ImmutableMap.<KijiColumnName, Freshener>of());
   }
 
   /**
    * Fills a partial map of Fresheners by creating new Fresheners for each record not already
    * reflected by the fresheners map.
    *
+   * @param readerUID unique identifier for the reader which called this method. Used for logging.
    * @param records a map of records for which to create Fresheners.
    * @param oldFresheners a partially filled map of Fresheners to be completed with new Fresheners
    *    built from the records map.
@@ -1100,6 +1141,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
    * @throws IOException in case of an error setting up a KijiFreshnessPolicy or ScoreFunction.
    */
   private static ImmutableMap<KijiColumnName, Freshener> fillFresheners(
+      final String readerUID,
       final ImmutableMap<KijiColumnName, KijiFreshenerRecord> records,
       final ImmutableMap<KijiColumnName, Freshener> oldFresheners
   ) throws IOException {
@@ -1137,10 +1179,13 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
             factory,
             entry.getKey(),
             entry.getValue().getParameters());
+        LOG.debug("{} loading new Freshener: {}", readerUID, freshener);
         fresheners.put(entry.getKey(), freshener);
       } else {
         // If there is already a Freshener for this key, save it.
-        fresheners.put(entry.getKey(), oldFresheners.get(entry.getKey()));
+        final Freshener oldFreshener = oldFresheners.get(entry.getKey());
+        LOG.debug("{} preserving old Freshener: {}", readerUID, oldFreshener);
+        fresheners.put(entry.getKey(), oldFreshener);
       }
     }
 
@@ -1312,9 +1357,12 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   ) throws IOException {
     if (context.mAllowPartial && context.mHasReceivedWrites) {
       // If any writes have been cached, read from the table.
+      LOG.debug("{} allows partial freshening and data was written. Reading from the table.",
+          context.mId);
       return context.mReader.get(context.mEntityId, context.mClientDataRequest);
     }
     // If no writes have been cached or allowPartial is false, return stale data.
+    LOG.debug("{} does not allow partial freshening. Returning stale data.", context.mId);
     return getStaleData(
         context.mClientDataFuture,
         context.mReader,
@@ -1360,6 +1408,13 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
 
   /** The current state of the reader (e.g. OPEN, CLOSED). */
   private final ReaderState mState;
+
+  /**
+   * Unique identifier for this FreshKijiTableReader. Composed of the
+   * {@link org.kiji.schema.util.JvmId}, system identity hashcode, and the time at which the reader
+   * was created.
+   */
+  private final String mReaderUID;
   /** The table from which the reader reads. */
   private final KijiTable mTable;
   /** A Regular KijiTableReader used for retrieving data to check for freshness and score. */
@@ -1381,6 +1436,8 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   /** Queue through which statistics about completed Fresheners are passed to the gatherer. */
   private final BlockingQueue<FreshenerSingleRunStatistics> mStatisticsQueue =
       new LinkedBlockingQueue<FreshenerSingleRunStatistics>();
+  /** Unique ID generator for differentiating requests in logs. */
+  private final UniqueIdGenerator mUniqueIdGenerator = new UniqueIdGenerator();
   /** All mutable state which may be modified by a called to {@link #rereadFreshenerRecords()}. */
   private volatile RereadableState mRereadableState;
 
@@ -1411,6 +1468,9 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     // Initializing the reader state must be the first line of the constructor.
     mState = new ReaderState();
 
+    mReaderUID = String.format("%s;InternalFreshKijiTableReader@%s@%s",
+        JvmId.get(), System.identityHashCode(this), System.currentTimeMillis());
+
     mTable = table;
     // Opening a reader retains the table.
     mReader = table.openTableReader();
@@ -1425,12 +1485,13 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     mRereadableState = new RereadableState(
         innerColumnsToFreshen,
         records,
-        createFresheners(records));
+        createFresheners(mReaderUID, records));
     mStatisticGatheringMode = statisticGatheringMode;
 
     mStatisticsGathererThread = startStatisticsGatherer(statisticsLoggingInterval);
     mRereadTask = startPeriodicRereader(rereadPeriod);
 
+    LOG.debug("Opening reader with UID: {}", mReaderUID);
     // Opening the reader must be the last line of the constructor.
     mState.finishInitializingAndOpen();
   }
@@ -1448,6 +1509,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     final StatisticsGathererThread gatherer;
     if (StatisticGatheringMode.NONE != mStatisticGatheringMode) {
       gatherer = new StatisticsGathererThread(statisticsLoggingInterval);
+      LOG.debug("{} starting statistics gathering thread.", mReaderUID);
       gatherer.start();
     } else {
       gatherer = null;
@@ -1468,6 +1530,8 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     if (rereadPeriod > 0) {
       final Timer rereadTimer = new Timer();
       task = new RereadTask(rereadPeriod);
+      LOG.debug("{} starting automatic reread timer with period: {}.",
+          mReaderUID, rereadPeriod);
       rereadTimer.scheduleAtFixedRate(task, rereadPeriod, rereadPeriod);
     } else if (rereadPeriod == 0) {
       task = null;
@@ -1522,10 +1586,12 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
       final FreshRequestOptions options
   ) throws IOException {
     mState.requireState(State.OPEN);
-
     // Get the start time for the request.
     final long startTime = System.nanoTime();
 
+    final String id = String.format("%s#%s", mReaderUID, mUniqueIdGenerator.getNextUniqueId());
+    LOG.debug("{} starting with EntityId: {} data request: {} request options: {}",
+        id, entityId, dataRequest, options);
 
     final ImmutableList<KijiColumnName> requestColumns = getColumnsFromRequest(dataRequest);
 
@@ -1550,6 +1616,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
       rereadableState.release();
     }
 
+    LOG.debug("{} will run Fresheners: {}", id, fresheners.values());
 
     final ImmutableMap<KijiColumnName, InternalFreshenerContext> freshenerContexts =
         createFreshenerContexts(dataRequest, fresheners, options.getParameters());
@@ -1558,6 +1625,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
         getFuture(new TableReadCallable(mReader, entityId, dataRequest));
 
     final FresheningRequestContext requestContext = new FresheningRequestContext(
+        id,
         startTime,
         fresheners,
         freshenerContexts,
@@ -1568,6 +1636,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
         clientDataFuture,
         mBufferedWriter,
         mAllowPartial,
+        mStatisticGatheringMode,
         mStatisticsQueue);
 
     final ImmutableList<Future<Boolean>> futures = getFuturesForFresheners(requestContext);
@@ -1581,10 +1650,12 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
       if (getFromFuture(superFuture, timeout).contains(true)) {
         // If all Fresheners return in time and at least one has written a new value, read from the
         // table.
+        LOG.debug("{} completed on time and data was written.", id);
         return mReader.get(entityId, dataRequest);
       } else {
         // If all Fresheners return in time, but none have written new values, do not read from the
         // table.
+        LOG.debug("{} completed on time and no data was written.", id);
         try {
           return getFromFuture(clientDataFuture, 0L);
         } catch (TimeoutException te) {
@@ -1596,6 +1667,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
       requestContext.timeOut();
       // If superFuture times out, read partially freshened data from the table or return the cached
       // data based on whether partial freshness is allowed.
+      LOG.debug("{} timed out, checking for partial writes.");
       return checkAndRead(requestContext);
     }
   }
@@ -1618,6 +1690,8 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
       final FreshRequestOptions options
   ) throws IOException {
     mState.requireState(State.OPEN);
+
+    LOG.debug("{} starting bulk get request.");
 
     final ImmutableList<Future<KijiRowData>> futures =
         getFuturesForEntities(entityIds, dataRequest, this, options);
@@ -1658,14 +1732,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     return mStatisticsGathererThread.getStatistics();
   }
 
-  /**
-   * {@inheritDoc}
-   *
-   * <p>
-   *   This implementation of FreshKijiTableReader ignores the withPreload parameter and always
-   *   proactively instantiates objects needed for freshening.
-   * </p>
-   */
+  /** {@inheritDoc} */
   @Override
   public void rereadFreshenerRecords() throws IOException {
     rereadFreshenerRecords(mRereadableState.mColumnsToFreshen);
@@ -1676,6 +1743,8 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
       final List<KijiColumnName> columnsToFreshen
   ) throws IOException {
     mState.requireState(State.OPEN);
+    LOG.debug("{} rereading Freshener records with columnsToFreshen: {}",
+        mReaderUID, columnsToFreshen);
     // Collect and filter the current state of the meta table.
     final ImmutableMap<KijiColumnName, KijiFreshenerRecord> newRecords = filterRecords(
         mFreshnessManager.retrieveFreshenerRecords(mTable.getName()), columnsToFreshen);
@@ -1685,15 +1754,18 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     for (Map.Entry<KijiColumnName, Freshener> entry : mRereadableState.mFresheners.entrySet()) {
       if (!newRecords.containsKey(entry.getKey())) {
         // If the column no longer has a freshness policy record, release the old capsule.
+        LOG.debug("{} releasing invalid Freshener: {}", mReaderUID, entry.getValue());
         entry.getValue().release();
       } else {
         if (newRecords.get(entry.getKey())
             != mRereadableState.mFreshenerRecords.get(entry.getKey())) {
           // If the column still has a freshness policy record and that record has changed, release
           // the old capsule.
+          LOG.debug("{} releasing invalid Freshener: {}", mReaderUID, entry.getValue());
           entry.getValue().release();
         } else {
           // If the record has not changed, keep the old Freshener.
+          LOG.debug("{} preserving valid Freshener: {}", mReaderUID, entry.getValue());
           oldFresheners.put(entry.getKey(), entry.getValue());
         }
       }
@@ -1702,8 +1774,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     mRereadableState = new RereadableState(
         columnsToFreshen,
         newRecords,
-        fillFresheners(newRecords, ImmutableMap.copyOf(oldFresheners))
-    );
+        fillFresheners(mReaderUID, newRecords, ImmutableMap.copyOf(oldFresheners)));
   }
 
   /** {@inheritDoc} */

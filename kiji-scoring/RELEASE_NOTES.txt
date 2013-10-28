@@ -1,6 +1,8 @@
 
                               Kiji Scoring Release Notes
 Version 0.7.0
+    * SCORE-118. InternalFreshKijiTableReader now includes DEBUG level log messages for important
+        events. Enable these messages through your slf4j configuration.
     * SCORE-117. ScoreFunction.score() now returns a TimestampedValue which optionally specifies the
         timestamp at which the value should be written to Kiji.
     * SCORE-113. KijiScoring now includes a KijiProducer implementation called
