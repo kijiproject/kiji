@@ -2,7 +2,14 @@
                              Kiji Express Release Notes
 
 Version 0.10.0
+  * EXP-129. Add evaluation phase to model environment.
+  * EXP-128. Add evaluation phase to model definition.
+  * EXP-153. Support joining pipes on entity_ids and add a factory method
+      to create a hashed entityId.
+  * EXP-220. Finalize KijiOutput API for 1.0 release.
   * EXP-185. Extractor in ScoreProducer is now optional.
+  * EXP-219. Finalize KijiInput API for 1.0 release.
+  * EXP-223. Make constructors for generic AvroValues public.
   * EXP-197. Adds support for sequence file based flow sources.
   * EXP-207. EntityIds can now be accessed from extractors/scorers.
   * EXP-52. Adds support for text file based key-value stores.
