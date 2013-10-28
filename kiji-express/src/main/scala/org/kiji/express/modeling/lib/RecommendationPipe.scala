@@ -54,11 +54,14 @@ class RecommendationPipe(val pipe: Pipe)
   def prepareItemSets[T](
       fieldSpec: (Fields, Fields),
       minSetSize: Int = 2,
-      maxSetSize: Int = 5): Pipe = {
+      maxSetSize: Int = 5)
+      (implicit ordering: Ordering[T]): Pipe = {
     val (fromFields, toFields) = fieldSpec
     pipe
         .flatMapTo(fromFields -> toFields) {
-          basket: Seq[T] => (minSetSize to maxSetSize).flatMap(basket.combinations)
+          basket: Seq[T] => {
+            (minSetSize to maxSetSize).flatMap(basket.sorted.combinations)
+          }
         }
         .map(toFields -> toFields) { itemSets: Seq[T] => itemSets.mkString(",") }
   }

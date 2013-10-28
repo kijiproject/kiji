@@ -96,15 +96,15 @@ class RecommendationPipeSuite extends KijiSuite {
     }
     val expectedOutput = Array(
         "butter,flour",
-        "milk,bread",
-        "milk,butter",
-        "milk,flour",
         "bread,butter",
         "bread,flour",
+        "bread,milk",
         "butter,flour",
-        "milk,bread",
-        "milk,coke",
-        "bread,coke"
+        "butter,milk",
+        "flour,milk",
+        "bread,coke",
+        "bread,milk",
+        "coke,milk"
     )
     assert(expectedOutput.sameElements(lines.split("\n")))
     FileUtils.deleteDirectory(outputDir)
@@ -173,8 +173,8 @@ class RecommendationPipeSuite extends KijiSuite {
     val lines = doAndClose(scala.io.Source.fromFile(outputDir.getAbsolutePath + "/part-00000")) {
         source: scala.io.Source => source.mkString
     }
-    val expected = Array("butter,flour\t2\t3.0\t0.6666666666666666",
-        "milk,bread\t2\t3.0\t0.6666666666666666")
+    val expected = Array("bread,milk\t2\t3.0\t0.6666666666666666",
+        "butter,flour\t2\t3.0\t0.6666666666666666")
     assert(lines.split("\n").sameElements(expected))
     FileUtils.deleteDirectory(outputDir)
   }
@@ -201,8 +201,8 @@ class RecommendationPipeSuite extends KijiSuite {
     val lines = doAndClose(scala.io.Source.fromFile(outputDir.getAbsolutePath + "/part-00000")) {
       source: scala.io.Source => source.mkString
     }
-    val expected = Array("butter,flour\t2\t3\t0.6666666666666666",
-        "milk,bread\t2\t3\t0.6666666666666666")
+    val expected = Array("bread,milk\t2\t3\t0.6666666666666666",
+        "butter,flour\t2\t3\t0.6666666666666666")
     assert(lines.split("\n").sameElements(expected))
     FileUtils.deleteDirectory(outputDir)
   }
