@@ -56,13 +56,6 @@ Every table contains a collection named "rows".
 
     /v1/instances/<instance>/tables/<table>/rows/
 
-#### /v1/instances/&lt;instance&gt;/tables/&lt;table&gt;/rows/&lt;hexRowKeyId&gt;
-
-Each row is identified by the ASCII encoding of its hexadecimal entity ID. Rows are the
-deepest identifiable resource.
-
-    /v1/instances/<instance>/tables/<table>/rows/<hex_hbase_row_id>
-
 #### /v1/version
 
 Every KijiREST service is associated with a single Kiji cluster and the cluster may be

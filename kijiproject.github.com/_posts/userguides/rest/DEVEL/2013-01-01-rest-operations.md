@@ -26,8 +26,6 @@ The HTTP operations supported by the KijiREST API are the following:
 
 * /v1/instances/&lt;instance&gt;/tables/&lt;table&gt;/rows	[GET](#rows-get), [POST](#rows-post)
 
-* /v1/instances/&lt;instance&gt;/tables/&lt;table&gt;/rows/&lt;row&gt;	[GET](#row-get), [PUT](#row-put)
-
 The following sections describe these operations in two groups:
 
 * [Operations on rows](#ops-on-rows)
@@ -60,97 +58,6 @@ Returns:
   rowKey: "9ee9800000004d64159b"
 }
 </pre>
-<a id="row-get"> </a>
-### Row Resource: GET
-
-Retrieves a single JSON-encoded row from a Kiji table:
-
-    GET /v1/instances/<instance>/tables/<table>/rows/<hexEntityId>
-
-#### Parameters:
-
-* `cols` (single, optional, default=`*`) - A comma-separated list of column family or column
-        family:qualifier to return. Specify `*` for all columns. Specifying just a column
-        family will return values for all columns in the family and their qualifiers.
-
-* `versions` (single, optional, default=1) - An integer representing the number of versions
-        per cell to return for the given row. Specify `versions=all` to retrieve all versions of
-        each column specified in the cols parameter.
-
-* `timerange` (single, optional) - A string denoting the time range
-        to return. Specify the time range `min..max` where `min` and `max` are the ms since UNIX epoch.
-        `min` and `max` are both optional; however, if a value is provided for this parameter,
-        at least one of min/max must be present). Specifying no timerange returns the most recent value
-        for each column specified.
-
-#### Examples:
-
-Get a single row:
-
-    GET /v1/instances/default/tables/users/rows/9ee9800000004d64159b
-
-Restrict to only return a few columns:
-
-    GET /v1/instances/default/tables/users/rows/9ee9800000004d64159b?cols=info:name,info:email
-
-Restrict to return two cells per column within the specified timestamp range:
-
-    GET /v1/instances/default/tables/users/rows/9ee9800000004d64159b?timerange=0..123&versions=2
-
-<a id="row-put"> </a>
-### Row Hex Entity ID: PUT
-
-A PUT request to a row's hex entity ID inserts or updates data in the identified
-row in a Kiji table. The request returns the row with only the most recent version of the
-columns that were inserted.
-
-    PUT /v1/instances/<instance>/tables/<table>/rows/<hexEntityId>
-
-This operation will not replace the entire existing row but will replace cells and append
-where cells in the request aren't present in the row to be updated. To enforce the
-idempotency requirement of the [HTTP spec](http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html),
-cell timestamps are required so as to avoid the creation of multiple cells with new timestamps
-when multiple PUTs are invoked.
-
-#### Parameters:
-
-* `<family:qualifier>` (multiple, required) - value (as a JSON string) to put into the
-        specified <family:qualifier> column.  At least one needs to be specified for a valid PUT.
-
-*  `timestamp` (single, required) - global timestamp for each cell in this PUT.
-        This parameter is overruled by the `timestamp.<family:qualifier>` parameter for
-        individual columns.
-
-* `timestamp.<family:qualifier>` (multiple, optional) - specific timestamp to use for
-        putting the `<family:qualifier>` column in this put.  Note: this overrides the global
-        timestamp specified by the `timestamp` parameter.
-
-* `schema.<family:qualifier>` (multiple, optional, defaults to schema specified in the
-        table layout) - When an application is manually managing one or more
-        schemas applied to a cell in a Kiji table, a KijiREST operation writing to a
-        cell can specify which schema to use using this parameter. It is the schema
-        (as a JSON string) of the cell to be to put into the specified
-        `<family:qualifier>` column.
-
-#### Notes:
-
-`<family:qualifier>` is a required parameter with many of the keys in this call.
-It refers to the Kiji column in "family:qualifier" format that the value is associated with.
-
-#### Examples:
-
-Put a single cell:
-
-    PUT /v1/instances/default/tables/users/rows/9ee9800000004d64159b?info:name=John%20Smith&timestamp=0
-
-Put many cells. In this example, the hex entity ID for the row is indicated by "{row}":
-
-    PUT /v1/instances/default/tables/users/rows/9ee9800000004d64159b?info:name=John%20Smith&info:email=john.smith@mail.com&timestamp=0
-
-Put many cells while controlling the schema used for a given cell:
-
-    PUT /v1/instances/default/tables/users/rows/9ee9800000004d64159b?info:name=John%20Smith&info:email=john.smith@mail.com&timestamp=0&schema.info:name="string"
-
 <a id="rows-get"> </a>
 ### Rows: GET
 
