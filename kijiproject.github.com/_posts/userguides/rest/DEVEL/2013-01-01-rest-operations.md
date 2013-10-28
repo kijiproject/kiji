@@ -145,8 +145,7 @@ being modified and sent back, this can be left alone; however for new cells, it'
 the actual JSON schema of the cell.
 #### Example:
 
-    Content-Type: application/json
-    Body:
+{% highlight js %}
     {
       "entityId": "[12345]",
       "cells":
@@ -164,7 +163,7 @@ the actual JSON schema of the cell.
         }
       }
     }
-
+{% endhighlight %}
 
 <a id="ops-on-non-rows"> </a>
 ## Operations on non-row resources
