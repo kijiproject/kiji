@@ -27,7 +27,10 @@ import com.twitter.scalding.TupleConversions
 import org.kiji.express.repl.Implicits.pipeToRichPipe
 
 /**
- * This class provides extensions to Scalding's RichPipe in order to perform recommendations.
+ * This class provides extensions to Scalding's RichPipe in order to perform recommendations. There
+ * must be an [[scala.math.Ordering]] defined for the IDs used for recommendations
+ * (e.g. product IDs), i.e. there must be a way to compare them. For most commonly used data
+ * types (e.g. Int, String, etc.) this is already provided by Scala.
  *
  * @param pipe is the underlying Cascading Pipe.
  */
