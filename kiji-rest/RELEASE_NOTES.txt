@@ -1,10 +1,21 @@
 
                               KijiREST Release Notes
 
-Version 0.5.0
+Version 0.6.0
+  * REST-55. Remove an old servlet dependency. Also change the release artifact
+     to not contain a single fat jar but house the runtime dependencies in the
+     lib/ directory.
   * REST-54. Supports per-request freshening parameters.
+  * REST-53. Remove the row endpoint. Can be accessed by /rows?eid=.
   * REST-32. Supports scanning with partially specified entity ids.
   * REST-49. Adds freshening/scoring parameter to KijiREST.
+
+Version 0.5.0
+  * REST-44. Remove the rowkey element from the output of the row.
+  * REST-45. Output the writer schema_id on GET. Force the specification of the
+      writer schema (either id or JSON) on POST to ensure that data specified can
+      be written without throwing exceptions because of data being written
+      according to the wrong writer schema.
 
 Version 0.4.0
   * REST-40. Bugfix: Fix the issue where /instances/<instance> threw a

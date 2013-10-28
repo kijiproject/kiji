@@ -85,6 +85,7 @@ public class TestRowsResource extends ResourceTest {
   private static final URI DEFAULT_ROWS_RESOURCE = UriBuilder
       .fromResource(RowsResource.class)
       .build("default", "sample_table");
+  private static final String EXTENSIVE_COLUMN_TEST = ":.:.?&;& /\\\n~!@#$%^&*()_+{}|[]\\;';'\"\"";
 
   // Some commonly used schema options.
   private SchemaOption mStringOption = null;
@@ -119,9 +120,7 @@ public class TestRowsResource extends ResourceTest {
     mSchemaTable = mFakeKiji.getSchemaTable();
 
     mStringOption = new SchemaOption(Schema.create(Type.STRING).toString());
-
     mLongOption = new SchemaOption(Schema.create(Type.LONG).toString());
-
 
     Set<KijiURI> mValidInstances = Sets.newHashSet();
 
@@ -203,10 +202,15 @@ public class TestRowsResource extends ResourceTest {
     return hexRowKey;
   }
 
+  protected final String getUrlEncodedEntityIdString(String table, Object... components)
+      throws IOException {
+    return URLEncoder.encode(getEntityIdString(table, components), "UTF-8");
+  }
+
   protected final String getEntityIdString(String table, Object... components) throws IOException {
     KijiTable fakeTable = mFakeKiji.openTable(table);
     EntityId eid = fakeTable.getEntityId(components);
-    String entityIdString = URLEncoder.encode(eid.toShellString(), "UTF-8");
+    String entityIdString = eid.toShellString();
     fakeTable.release();
     return entityIdString;
   }
@@ -224,7 +228,7 @@ public class TestRowsResource extends ResourceTest {
 
   @Test
   public void testShouldFetchAllCellsForGivenRow() throws Exception {
-    String eid = getEntityIdString("sample_table", 12345L);
+    String eid = getUrlEncodedEntityIdString("sample_table", 12345L);
     URI resourceURI = UriBuilder
         .fromResource(RowsResource.class)
         .queryParam("eid", eid)
@@ -236,7 +240,7 @@ public class TestRowsResource extends ResourceTest {
   @Test
   public void testShouldFetchASingleStringCellFromGroupFamily() throws Exception {
 
-    String eid = getEntityIdString("sample_table", 12345L);
+    String eid = getUrlEncodedEntityIdString("sample_table", 12345L);
     // Test group qualifier, string type
     URI resourceURI = UriBuilder
         .fromResource(RowsResource.class)
@@ -253,7 +257,7 @@ public class TestRowsResource extends ResourceTest {
   @Test
   public void testShouldFetchASingleLongCellFromGroupFamily() throws Exception {
 
-    String eid = getEntityIdString("sample_table", 12345L);
+    String eid = getUrlEncodedEntityIdString("sample_table", 12345L);
 
     // Test group qualifier, long type
     URI resourceURI = UriBuilder
@@ -271,7 +275,7 @@ public class TestRowsResource extends ResourceTest {
   @Test
   public void testShouldFetchASingleSpecificAvroCellFromGroupFamily() throws Exception {
 
-    String eid = getEntityIdString("sample_table", 12345L);
+    String eid = getUrlEncodedEntityIdString("sample_table", 12345L);
 
     // Test group qualifier, specific avro type
 
@@ -293,7 +297,7 @@ public class TestRowsResource extends ResourceTest {
   @Test
   public void testShouldFetchASingleGenericAvroCellFromGroupFamily() throws Exception {
 
-    String eid = getEntityIdString("sample_table", 12345L);
+    String eid = getUrlEncodedEntityIdString("sample_table", 12345L);
 
     // Test group qualifier, generic avro type
     URI resourceURI = UriBuilder
@@ -314,7 +318,7 @@ public class TestRowsResource extends ResourceTest {
   @Test
   public void testShouldFetchASingleStringCellFromMapFamily() throws Exception {
 
-    String eid = getEntityIdString("sample_table", 12345L);
+    String eid = getUrlEncodedEntityIdString("sample_table", 12345L);
 
     // Test map qualifier, string type
     URI resourceURI = UriBuilder
@@ -332,7 +336,7 @@ public class TestRowsResource extends ResourceTest {
   @Test
   public void testShouldFetchASingleLongCellFromMapFamily() throws Exception {
 
-    String eid = getEntityIdString("sample_table", 12345L);
+    String eid = getUrlEncodedEntityIdString("sample_table", 12345L);
 
     // Test map qualifier, long type
     URI resourceURI = UriBuilder.fromResource(RowsResource.class)
@@ -349,7 +353,7 @@ public class TestRowsResource extends ResourceTest {
   @Test
   public void testShouldFetchASingleSpecificAvroCellFromMapFamily() throws Exception {
 
-    String eid = getEntityIdString("sample_table", 12345L);
+    String eid = getUrlEncodedEntityIdString("sample_table", 12345L);
 
     // Test map qualifier, specific Avro
     URI resourceURI = UriBuilder.fromResource(RowsResource.class)
@@ -369,7 +373,7 @@ public class TestRowsResource extends ResourceTest {
   @Test
   public void testShouldFetchAllQualifiersForAGroupFamily() throws Exception {
 
-    String eid = getEntityIdString("sample_table", 12345L);
+    String eid = getUrlEncodedEntityIdString("sample_table", 12345L);
 
     URI resourceURI = UriBuilder.fromResource(RowsResource.class)
         .queryParam("eid", eid)
@@ -383,7 +387,7 @@ public class TestRowsResource extends ResourceTest {
   @Test
   public void testShouldFetchAllQualifiersForAMapFamily() throws Exception {
 
-    String eid = getEntityIdString("sample_table", 12345L);
+    String eid = getUrlEncodedEntityIdString("sample_table", 12345L);
 
     URI resourceURI = UriBuilder.fromResource(RowsResource.class)
         .queryParam("eid", eid)
@@ -397,7 +401,7 @@ public class TestRowsResource extends ResourceTest {
   @Test
   public void testShouldFetchAllVersions() throws Exception {
 
-    String eid = getEntityIdString("sample_table", 2345L);
+    String eid = getUrlEncodedEntityIdString("sample_table", 2345L);
 
     URI resourceURI = UriBuilder.fromResource(RowsResource.class)
         .queryParam("eid", eid)
@@ -412,7 +416,7 @@ public class TestRowsResource extends ResourceTest {
   @Test
   public void testShouldFetchTheLatestVersion() throws Exception {
 
-    String eid = getEntityIdString("sample_table", 2345L);
+    String eid = getUrlEncodedEntityIdString("sample_table", 2345L);
 
     URI resourceURI = UriBuilder.fromResource(RowsResource.class)
         .queryParam("eid", eid)
@@ -429,7 +433,7 @@ public class TestRowsResource extends ResourceTest {
   @Test
   public void testShouldFetchAllCellsByTime() throws Exception {
 
-    String eid = getEntityIdString("sample_table", 56789L);
+    String eid = getUrlEncodedEntityIdString("sample_table", 56789L);
 
     URI resourceURI = UriBuilder.fromResource(RowsResource.class)
         .queryParam("eid", eid)
@@ -447,7 +451,7 @@ public class TestRowsResource extends ResourceTest {
   @Test
   public void testShouldFetchSingleCellByTime() throws Exception {
 
-    String eid = getEntityIdString("sample_table", 56789L);
+    String eid = getUrlEncodedEntityIdString("sample_table", 56789L);
 
     URI resourceURI = UriBuilder.fromResource(RowsResource.class)
         .queryParam("eid", eid)
@@ -552,7 +556,7 @@ public class TestRowsResource extends ResourceTest {
 
   @Test
   public void testShouldThrowExceptionWhenAllColumnsRequestedNotPresent() throws Exception {
-    String eid = getEntityIdString("sample_table", 56789L);
+    String eid = getUrlEncodedEntityIdString("sample_table", 56789L);
 
     URI resourceURI = UriBuilder.fromResource(RowsResource.class)
         .queryParam("eid", eid)
@@ -596,8 +600,8 @@ public class TestRowsResource extends ResourceTest {
   @Test
   public void testSingleCellPost() throws Exception {
     // Set up.
-    String hexRowKey = getHBaseRowKeyHex("sample_table", 54321L);
     String stringRowKey = getEntityIdString("sample_table", 54321L);
+    String encodedEid = URLEncoder.encode(stringRowKey, "UTF-8");
 
     KijiCell<String> postCell = fromInputs("group_family", "string_qualifier", 314592L,
         "helloworld", Schema.create(Type.STRING));
@@ -614,20 +618,20 @@ public class TestRowsResource extends ResourceTest {
 
     // Retrieve.
     URI resourceURI = UriBuilder.fromResource(RowsResource.class)
-        .queryParam("eid", stringRowKey)
+        .queryParam("eid", encodedEid)
         .build("default", "sample_table");
     KijiRestRow returnRow = client().resource(resourceURI).get(KijiRestRow.class);
 
     // Check.
     assertTrue(target.toString().contains(
-        "/v1/instances/default/tables/sample_table/rows/" + hexRowKey));
+        "/v1/instances/default/tables/sample_table/rows?eid=" + stringRowKey));
     assertEquals("helloworld", returnRow.getCells().get("group_family").get("string_qualifier")
         .get(0).getValue());
   }
 
   @Test
   public void testShouldPostUnionType() throws Exception {
-    String stringRowKey = getEntityIdString("sample_table", 54321L);
+    String stringRowKey = getUrlEncodedEntityIdString("sample_table", 54321L);
 
     KijiCell<String> postCell = fromInputs("group_family", "union_qualifier", 314592L,
         "helloworld", Schema.create(Type.STRING));
@@ -654,8 +658,8 @@ public class TestRowsResource extends ResourceTest {
   @Test
   public void testMultipleCellPost() throws Exception {
     // Set up.
-    String hexRowKey = getHBaseRowKeyHex("sample_table", 54323L);
     String stringRowKey = getEntityIdString("sample_table", 54323L);
+    String encodedRowKey = URLEncoder.encode(stringRowKey, "UTF-8");
 
     KijiCell<String> postCell1 = fromInputs("group_family", "string_qualifier", 314592L,
         "helloworld", Schema.create(Type.STRING));
@@ -685,13 +689,13 @@ public class TestRowsResource extends ResourceTest {
         .post(Map.class, postRow);
 
     // Retrieve.
-    URI resourceURI = UriBuilder.fromResource(RowsResource.class).queryParam("eid", stringRowKey)
+    URI resourceURI = UriBuilder.fromResource(RowsResource.class).queryParam("eid", encodedRowKey)
         .build("default", "sample_table");
     KijiRestRow returnRow = client().resource(resourceURI).get(KijiRestRow.class);
 
     // Check.
-    assertEquals(target.get("targets").get(0), "/v1/instances/default/tables/sample_table/rows/"
-        + hexRowKey);
+    assertEquals(target.get("targets").get(0), "/v1/instances/default/tables/sample_table/rows?eid="
+        + stringRowKey);
     assertEquals(123, returnRow.getCells().get("group_family").get("long_qualifier").get(0)
         .getValue());
     assertEquals("helloworld", returnRow.getCells().get("group_family").get("string_qualifier")
@@ -707,8 +711,9 @@ public class TestRowsResource extends ResourceTest {
   @Test
   public void testGenericAvroPost() throws Exception {
     // Set up.
-    String hexRowKey = getHBaseRowKeyHex("sample_table", 54324L);
     String stringRowKey = getEntityIdString("sample_table", 54324L);
+    String encodedRowKey = URLEncoder.encode(stringRowKey, "UTF-8");
+
     KijiTableLayout layout = KijiTableLayouts
         .getTableLayout("org/kiji/rest/layouts/sample_table.json");
     CellSpec spec = layout.getCellSpec(new KijiColumnName("group_family:inline_record"));
@@ -718,7 +723,7 @@ public class TestRowsResource extends ResourceTest {
     KijiCell<JsonNode> postCell = fromInputs("group_family", "inline_record", 3141592L,
         AvroToJsonStringSerializer.getJsonNode(genericRecord), spec.getAvroSchema());
     KijiRestRow postRow = new KijiRestRow(ToolUtils.createEntityIdFromUserInputs(
-        URLDecoder.decode(stringRowKey, "UTF-8"),
+        stringRowKey,
         KijiTableLayouts.getTableLayout("org/kiji/rest/layouts/sample_table.json")));
     addCellToRow(postRow, postCell);
 
@@ -729,14 +734,14 @@ public class TestRowsResource extends ResourceTest {
 
     // Retrieve.
     resourceURI = UriBuilder.fromResource(RowsResource.class)
-        .queryParam("eid", stringRowKey)
+        .queryParam("eid", encodedRowKey)
         .build("default", "sample_table");
 
     KijiRestRow returnRow = client().resource(resourceURI).get(KijiRestRow.class);
 
     // Check.
     assertTrue(target.toString().contains(
-        "/v1/instances/default/tables/sample_table/rows/" + hexRowKey));
+        "/v1/instances/default/tables/sample_table/rows?eid=" + stringRowKey));
     ObjectMapper mapper = new ObjectMapper();
     JsonNode node = mapper.valueToTree(returnRow.getCells().get("group_family")
         .get("inline_record").get(0).getValue());
@@ -747,9 +752,10 @@ public class TestRowsResource extends ResourceTest {
   @Test
   public void testMapColumnPost() throws Exception {
     // Set up.
-    String hexRowKey = getHBaseRowKeyHex("sample_table", 54325L);
     String stringRowKey = getEntityIdString("sample_table", 54325L);
-    KijiCell<String> postCell1 = fromInputs("strings", TestRowResource.EXTENSIVE_COLUMN_TEST,
+    String encodedRowKey = URLEncoder.encode(stringRowKey, "UTF-8");
+
+    KijiCell<String> postCell1 = fromInputs("strings", EXTENSIVE_COLUMN_TEST,
         3141592L, "helloworld", Schema.create(Type.STRING));
     String longsColumnDec = " ";
 
@@ -767,7 +773,7 @@ public class TestRowsResource extends ResourceTest {
         AvroToJsonStringSerializer.getJsonNode(postBan), postBan.getSchema());
 
     KijiRestRow postRow = new KijiRestRow(ToolUtils.createEntityIdFromUserInputs(
-        URLDecoder.decode(stringRowKey, "UTF-8"),
+        stringRowKey,
         KijiTableLayouts.getTableLayout("org/kiji/rest/layouts/sample_table.json")));
 
     addCellToRow(postRow, postCell1);
@@ -781,20 +787,20 @@ public class TestRowsResource extends ResourceTest {
 
     // Retrieve.
     resourceURI = UriBuilder.fromResource(RowsResource.class)
-        .queryParam("eid", stringRowKey)
+        .queryParam("eid", encodedRowKey)
         .build("default", "sample_table");
     KijiRestRow returnRow = client().resource(resourceURI).get(KijiRestRow.class);
 
     // Check.
     assertTrue(target.toString().contains(
-        "/v1/instances/default/tables/sample_table/rows/" + hexRowKey));
+        "/v1/instances/default/tables/sample_table/rows?eid=" + stringRowKey));
     assertTrue(returnRow.getCells().get("longs").containsKey(longsColumnDec));
     assertEquals(987654567890L, returnRow.getCells().get("longs").get(longsColumnDec).get(0)
         .getValue());
     assertTrue(returnRow.getCells().get("strings")
-        .containsKey(TestRowResource.EXTENSIVE_COLUMN_TEST));
+        .containsKey(EXTENSIVE_COLUMN_TEST));
     assertEquals("helloworld",
-        returnRow.getCells().get("strings").get(TestRowResource.EXTENSIVE_COLUMN_TEST).get(0)
+        returnRow.getCells().get("strings").get(EXTENSIVE_COLUMN_TEST).get(0)
             .getValue());
     assertTrue(returnRow.getCells().get("pick_bans").containsKey(bansColumnDec));
 
@@ -810,7 +816,7 @@ public class TestRowsResource extends ResourceTest {
   @Test
   public void testNonexistentColumnPost() throws Exception {
     // Set up.
-    String stringRowKey = getEntityIdString("sample_table", 54322L);
+    String stringRowKey = getUrlEncodedEntityIdString("sample_table", 54322L);
     KijiCell<String> postCell = fromInputs("nonfamily", "noncolumn", 314592L, "hagar",
         Schema.create(Type.STRING));
     KijiRestRow postRow = new KijiRestRow(ToolUtils.createEntityIdFromUserInputs(
@@ -834,10 +840,10 @@ public class TestRowsResource extends ResourceTest {
   @Test
   public void testTimestampedPost() throws Exception {
     // Set up.
-    String hexRowKey = getHBaseRowKeyHex("sample_table", 55025L);
     String stringRowKey = getEntityIdString("sample_table", 55025L);
+    String encodedRowKey = URLEncoder.encode(stringRowKey, "UTF-8");
 
-    KijiCell<String> postCell1 = fromInputs("strings", TestRowResource.EXTENSIVE_COLUMN_TEST, 2L,
+    KijiCell<String> postCell1 = fromInputs("strings", EXTENSIVE_COLUMN_TEST, 2L,
         "sample_string", Schema.create(Type.STRING));
     KijiCell<Long> postCell2 = fromInputs("group_family", "long_qualifier", 3141591L, 123L,
         Schema.create(Type.LONG));
@@ -859,14 +865,14 @@ public class TestRowsResource extends ResourceTest {
 
     // Retrieve.
     resourceURI = UriBuilder.fromResource(RowsResource.class)
-        .queryParam("eid", stringRowKey)
+        .queryParam("eid", encodedRowKey)
         .queryParam("timerange", "3141592..")
         .build("default", "sample_table");
     KijiRestRow returnRow = client().resource(resourceURI).get(KijiRestRow.class);
 
     // Check.
     assertTrue(target.toString().contains(
-        "/v1/instances/default/tables/sample_table/rows/" + hexRowKey));
+        "/v1/instances/default/tables/sample_table/rows?eid=" + stringRowKey));
     assertTrue(returnRow.getCells().get("group_family").containsKey("string_qualifier"));
     assertTrue(returnRow.getCells().get("group_family").get("string_qualifier").get(0)
         .getTimestamp() > System.currentTimeMillis() - 3000);
@@ -877,14 +883,14 @@ public class TestRowsResource extends ResourceTest {
 
     // Retrieve.
     resourceURI = UriBuilder.fromResource(RowsResource.class)
-        .queryParam("eid", stringRowKey)
+        .queryParam("eid", encodedRowKey)
         .queryParam("timerange", "3141591..3141592")
         .build("default", "sample_table");
     returnRow = client().resource(resourceURI).get(KijiRestRow.class);
 
     // Check.
     assertTrue(target.toString().contains(
-        "/v1/instances/default/tables/sample_table/rows/" + hexRowKey));
+        "/v1/instances/default/tables/sample_table/rows?eid=" + stringRowKey));
     assertTrue(returnRow.getCells().get("group_family").containsKey("long_qualifier"));
     assertEquals(3141591L, returnRow.getCells().get("group_family").get("long_qualifier").get(0)
         .getTimestamp().longValue());
@@ -901,13 +907,13 @@ public class TestRowsResource extends ResourceTest {
 
     // Check.
     assertTrue(target.toString().contains(
-        "/v1/instances/default/tables/sample_table/rows/" + hexRowKey));
+        "/v1/instances/default/tables/sample_table/rows?eid=" + stringRowKey));
     assertTrue(returnRow.getCells().get("strings")
-        .containsKey(TestRowResource.EXTENSIVE_COLUMN_TEST));
-    assertEquals(2L, returnRow.getCells().get("strings").get(TestRowResource.EXTENSIVE_COLUMN_TEST)
+        .containsKey(EXTENSIVE_COLUMN_TEST));
+    assertEquals(2L, returnRow.getCells().get("strings").get(EXTENSIVE_COLUMN_TEST)
         .get(0).getTimestamp().longValue());
     assertEquals("sample_string",
-        returnRow.getCells().get("strings").get(TestRowResource.EXTENSIVE_COLUMN_TEST).get(0)
+        returnRow.getCells().get("strings").get(EXTENSIVE_COLUMN_TEST).get(0)
             .getValue());
     assertEquals(1, returnRow.getCells().size());
   }
@@ -920,15 +926,16 @@ public class TestRowsResource extends ResourceTest {
   @Test
   public void testBatchPost() throws Exception {
     // Set up.
-    String hexRowKey = getHBaseRowKeyHex("sample_table", 55025L);
     String stringRowKey = getEntityIdString("sample_table", 55025L);
-    String stringsColumn = TestRowResource.EXTENSIVE_COLUMN_TEST;
+    String encodedRowKey = URLEncoder.encode(stringRowKey, "UTF-8");
+
+    String stringsColumn = EXTENSIVE_COLUMN_TEST;
     KijiCell<String> postCell1 = fromInputs("strings", stringsColumn, 2L, "sample_string",
         Schema.create(Type.STRING));
     KijiCell<Integer> postCell2 = fromInputs("group_family", "long_qualifier", 3141591L, 123,
         Schema.create(Type.LONG));
     KijiRestRow postRow = new KijiRestRow(ToolUtils
-        .createEntityIdFromUserInputs(URLDecoder.decode(stringRowKey, "UTF-8"),
+        .createEntityIdFromUserInputs(stringRowKey,
         KijiTableLayouts.getTableLayout("org/kiji/rest/layouts/sample_table.json")));
     addCellToRow(postRow, postCell1);
 
@@ -936,13 +943,13 @@ public class TestRowsResource extends ResourceTest {
     postRows.add(postRow);
 
     postRow = new KijiRestRow(ToolUtils
-        .createEntityIdFromUserInputs(URLDecoder.decode(stringRowKey, "UTF-8"),
+        .createEntityIdFromUserInputs(stringRowKey,
         KijiTableLayouts.getTableLayout("org/kiji/rest/layouts/sample_table.json")));
     addCellToRow(postRow, postCell2);
     postRows.add(postRow);
 
     postRow = new KijiRestRow(ToolUtils
-        .createEntityIdFromUserInputs(URLDecoder.decode(stringRowKey, "UTF-8"),
+        .createEntityIdFromUserInputs(stringRowKey,
         KijiTableLayouts.getTableLayout("org/kiji/rest/layouts/sample_table.json")));
     postRow.addCell("group_family", "string_qualifier", null, "helloworld",
         mStringOption);
@@ -956,14 +963,14 @@ public class TestRowsResource extends ResourceTest {
 
     // Retrieve.
     resourceURI = UriBuilder.fromResource(RowsResource.class)
-        .queryParam("eid", stringRowKey)
+        .queryParam("eid", encodedRowKey)
         .queryParam("timerange", "3141592..")
         .build("default", "sample_table");
     KijiRestRow returnRow = client().resource(resourceURI).get(KijiRestRow.class);
 
     // Check.
     assertTrue(target.toString().contains(
-        "/v1/instances/default/tables/sample_table/rows/" + hexRowKey));
+        "/v1/instances/default/tables/sample_table/rows?eid=" + stringRowKey));
     assertTrue(returnRow.getCells().get("group_family").containsKey("string_qualifier"));
     assertTrue(returnRow.getCells().get("group_family").get("string_qualifier").get(0)
         .getTimestamp() > System.currentTimeMillis() - 3000);
@@ -974,14 +981,14 @@ public class TestRowsResource extends ResourceTest {
 
     // Retrieve.
     resourceURI = UriBuilder.fromResource(RowsResource.class)
-        .queryParam("eid", stringRowKey)
+        .queryParam("eid", encodedRowKey)
         .queryParam("timerange", "3141591..3141592")
         .build("default", "sample_table");
     returnRow = client().resource(resourceURI).get(KijiRestRow.class);
 
     // Check.
     assertTrue(target.toString().contains(
-        "/v1/instances/default/tables/sample_table/rows/" + hexRowKey));
+        "/v1/instances/default/tables/sample_table/rows?eid=" + stringRowKey));
     assertTrue(returnRow.getCells().get("group_family").containsKey("long_qualifier"));
     assertEquals(3141591L, returnRow.getCells().get("group_family").get("long_qualifier").get(0)
         .getTimestamp().longValue());
@@ -991,20 +998,20 @@ public class TestRowsResource extends ResourceTest {
 
     // Retrieve.
     resourceURI = UriBuilder.fromResource(RowsResource.class)
-        .queryParam("eid", stringRowKey)
+        .queryParam("eid", encodedRowKey)
         .queryParam("timerange", "0..3")
         .build("default", "sample_table");
     returnRow = client().resource(resourceURI).get(KijiRestRow.class);
 
     // Check.
     assertTrue(target.toString().contains(
-        "/v1/instances/default/tables/sample_table/rows/" + hexRowKey));
+        "/v1/instances/default/tables/sample_table/rows?eid=" + stringRowKey));
     assertTrue(returnRow.getCells().get("strings")
-        .containsKey(TestRowResource.EXTENSIVE_COLUMN_TEST));
-    assertEquals(2L, returnRow.getCells().get("strings").get(TestRowResource.EXTENSIVE_COLUMN_TEST)
+        .containsKey(EXTENSIVE_COLUMN_TEST));
+    assertEquals(2L, returnRow.getCells().get("strings").get(EXTENSIVE_COLUMN_TEST)
         .get(0).getTimestamp().longValue());
     assertEquals("sample_string",
-        returnRow.getCells().get("strings").get(TestRowResource.EXTENSIVE_COLUMN_TEST).get(0)
+        returnRow.getCells().get("strings").get(EXTENSIVE_COLUMN_TEST).get(0)
             .getValue());
     assertEquals(1, returnRow.getCells().size());
   }

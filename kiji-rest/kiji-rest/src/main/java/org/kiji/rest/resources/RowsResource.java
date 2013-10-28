@@ -572,10 +572,10 @@ public class RowsResource {
     // Better output?
     Map<String, String> returnedTarget = Maps.newHashMap();
 
-    URI targetResource = UriBuilder.fromResource(RowResource.class).build(instance, table,
-        new String(Hex.encodeHex(entityId.getHBaseRowKey())));
+    URI targetResource = UriBuilder.fromResource(RowsResource.class).build(instance, table);
+    String eidString = entityId.toShellString();
 
-    returnedTarget.put("target", targetResource.toString());
+    returnedTarget.put("target", targetResource.toString() + "?eid=" + eidString);
 
     return returnedTarget;
 

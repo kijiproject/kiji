@@ -37,7 +37,6 @@ import org.kiji.rest.resources.EntityIdResource;
 import org.kiji.rest.resources.InstanceResource;
 import org.kiji.rest.resources.InstancesResource;
 import org.kiji.rest.resources.KijiRESTResource;
-import org.kiji.rest.resources.RowResource;
 import org.kiji.rest.resources.RowsResource;
 import org.kiji.rest.resources.TableResource;
 import org.kiji.rest.resources.TablesResource;
@@ -131,7 +130,6 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
     environment.addResource(new RowsResource(kijiClient,
         environment.getObjectMapperFactory().build(),
         configuration.getFresheningConfiguration()));
-    environment.addResource(new RowResource(kijiClient));
     environment.addResource(new EntityIdResource(kijiClient));
   }
 }
