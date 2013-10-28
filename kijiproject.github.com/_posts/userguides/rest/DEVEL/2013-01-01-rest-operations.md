@@ -228,6 +228,14 @@ Cell timestamps are optional and if not specified, will be specified by the serv
 To avoid a heavy return payload, only a reference to the newly created/updated resource
 will be returned.
 
+The writer_schema field was recently introduced in KijiREST 0.5.0. This is required to ensure that data
+returned by the server can be modified and sent back. In Kiji, there are two representations of the
+writer schema:
+
+1. __JSON__ - This is standard JSON representation of an Avro schema.
+2. __Integer ID__ - This is the internal Kiji representation of the specified Avro schema. For cells
+being modified and sent back, this can be left alone; however for new cells, it's better to specify
+the actual JSON schema of the cell.
 #### Example:
 
     Content-Type: application/json
@@ -242,7 +250,8 @@ will be returned.
           [
             {
             "timestamp": 1,
-            "value": "Jane Smith"
+            "value": "Jane Smith",
+            "writer_schema": "string"
             }
           ]
         }
