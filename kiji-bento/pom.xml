@@ -42,7 +42,7 @@
     <kiji-schema.version>1.3.2</kiji-schema.version>
     <kiji-schema-shell.version>1.3.0</kiji-schema-shell.version>
     <kiji-phonebook.version>1.1.0</kiji-phonebook.version>
-    <kiji-mapreduce.version>1.2.0</kiji-mapreduce.version>
+    <kiji-mapreduce.version>1.2.1</kiji-mapreduce.version>
     <kiji-mapreduce-lib.version>1.1.0</kiji-mapreduce-lib.version>
     <kiji-hive-adapter.version>0.7.1</kiji-hive-adapter.version>
     <kiji-music.version>1.1.0</kiji-music.version>
