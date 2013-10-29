@@ -172,6 +172,12 @@ public class ManagedKijiClient implements KijiClient, Managed {
           Response.Status.FORBIDDEN);
     }
     try {
+      // Verify that this table still exists in this instance.  If not, invalidate the entry in
+      // the cache (REST-50).
+      if (!mKijiMap.get(instance).getTableNames().contains(table)) {
+        mKijiTableMap.get(instance).invalidate(table);
+        mFreshKijiTableReaderMap.get(instance).invalidate(table);
+      }
       return mKijiTableMap.get(instance).get(table).retain();
     } catch (ExecutionException e) {
       Throwable cause = e.getCause();

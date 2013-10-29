@@ -1,6 +1,10 @@
 
                               KijiREST Release Notes
 
+Version 1.0.0
+  * REST-50. Check that the table still exists before returning it in 
+      ManagedKijiClient.
+
 Version 0.6.0
   * REST-55. Remove an old servlet dependency. Also change the release artifact
      to not contain a single fat jar but house the runtime dependencies in the
