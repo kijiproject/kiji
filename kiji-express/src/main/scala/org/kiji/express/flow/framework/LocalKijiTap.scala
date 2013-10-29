@@ -40,7 +40,6 @@ import org.apache.hadoop.mapred.JobConf
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.annotations.Inheritance
 import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.Kiji
@@ -62,7 +61,6 @@ import org.kiji.schema.KijiURI
  */
 @ApiAudience.Framework
 @ApiStability.Experimental
-@Inheritance.Sealed
 private[express] class LocalKijiTap(
     uri: KijiURI,
     private val scheme: LocalKijiScheme)
@@ -229,7 +227,7 @@ private[express] class LocalKijiTap(
    */
   private[express] def validate(conf: Properties): Unit = {
     val kijiUri: KijiURI = KijiURI.newBuilder(tableUri).build()
-    KijiTap.validate(kijiUri, scheme.columns, HadoopUtil.createJobConf(conf,
+    KijiTap.validate(kijiUri, scheme.icolumns, scheme.ocolumns, HadoopUtil.createJobConf(conf,
         new JobConf(HBaseConfiguration.create())))
   }
 }

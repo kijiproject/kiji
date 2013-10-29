@@ -105,7 +105,9 @@ class KijiJobSuite extends KijiSuite {
     val jobTest = JobTest(new UnpackTupleJob(_))
         .arg("input", uri)
         .arg("output", "outputFile")
-        .source(KijiInput(uri, Map (Column("family:column3") -> 'slice)), unpackingInput)
+        .source(
+            KijiInput(uri, Map(ColumnRequestInput("family:column3") -> 'slice)),
+            unpackingInput)
         .sink(Tsv("outputFile"))(validatePacking)
 
     // Run in local mode.

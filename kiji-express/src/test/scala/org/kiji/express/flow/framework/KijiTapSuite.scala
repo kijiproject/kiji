@@ -42,9 +42,9 @@ class KijiTapSuite extends KijiSuite {
         timeRange = All,
         timestampField = None,
         loggingInterval = 1L,
-        columns = Map(
-            "dummy_field1" -> MapFamily("searches"),
-            "dummy_field2" -> Column("family:column1")))
+        inputColumns = Map(
+            "dummy_field1" -> ColumnRequestInput("searches"),
+            "dummy_field2" -> ColumnRequestInput("family:column1")))
 
     val testTap: KijiTap = new KijiTap(kijiURI, testScheme)
 
@@ -59,9 +59,9 @@ class KijiTapSuite extends KijiSuite {
         timeRange = All,
         timestampField = None,
         loggingInterval = 1L,
-        columns = Map(
-            "dummy_field1" -> MapFamily("searches"),
-            "dummy_field2" -> Column("family:column1")))
+        inputColumns = Map(
+            "dummy_field1" -> ColumnRequestInput("searches"),
+            "dummy_field2" -> ColumnRequestInput("family:column1")))
 
     val testURI: KijiURI = KijiURI.newBuilder(kijiURI)
         .withInstanceName("nonexistent_instance")
@@ -82,9 +82,9 @@ class KijiTapSuite extends KijiSuite {
         timeRange = All,
         timestampField = None,
         loggingInterval = 1L,
-        columns = Map(
-            "dummy_field1" -> MapFamily("searches"),
-            "dummy_field2" -> Column("family:column1")))
+        inputColumns = Map(
+            "dummy_field1" -> ColumnRequestInput("searches"),
+            "dummy_field2" -> ColumnRequestInput("family:column1")))
 
     val testURI: KijiURI = KijiURI.newBuilder(kijiURI)
         .withTableName("nonexistent_table")
@@ -105,9 +105,9 @@ class KijiTapSuite extends KijiSuite {
         timeRange = All,
         timestampField = None,
         loggingInterval = 1L,
-        columns = Map(
-            "dummy_field1" -> MapFamily("searches"),
-            "dummy_field2" -> Column("family:nonexistent")))
+        inputColumns = Map(
+            "dummy_field1" -> ColumnRequestInput("searches"),
+            "dummy_field2" -> ColumnRequestInput("family:nonexistent")))
 
     val testTap: KijiTap = new KijiTap(kijiURI, testScheme)
 
@@ -126,9 +126,9 @@ class KijiTapSuite extends KijiSuite {
         timeRange = All,
         timestampField = None,
         loggingInterval = 1L,
-        columns = Map(
-            "dummy_field1" -> MapFamily("nonexistent1"),
-            "dummy_field2" -> Column("family:nonexistent2")))
+        inputColumns = Map(
+            "dummy_field1" -> ColumnRequestInput("nonexistent1"),
+            "dummy_field2" -> ColumnRequestInput("family:nonexistent2")))
 
     val testTap: KijiTap = new KijiTap(kijiURI, testScheme)
 

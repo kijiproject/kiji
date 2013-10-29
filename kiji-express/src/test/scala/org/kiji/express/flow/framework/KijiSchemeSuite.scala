@@ -32,7 +32,8 @@ import org.kiji.express.EntityId
 import org.kiji.express.KijiSlice
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow.All
-import org.kiji.express.flow.QualifiedColumn
+import org.kiji.express.flow.ColumnRequestInput
+import org.kiji.express.flow.ColumnRequestOutput
 import org.kiji.express.util.GenericCellSpecs
 import org.kiji.schema.EntityIdFactory
 
@@ -49,8 +50,9 @@ class KijiSchemeSuite extends KijiSuite {
     val reader = table.getReaderFactory.openTableReader(GenericCellSpecs(table))
 
     // Set up the columns and fields.
-    val columns = Map("columnSymbol" -> QualifiedColumn("family", "column3"))
-    val sourceFields = KijiScheme.buildSourceFields(columns.keys)
+    val columnsOutput = Map("columnSymbol" -> ColumnRequestOutput("family:column3"))
+    val columnsInput = Map("columnSymbol" -> ColumnRequestInput("family:column3"))
+    val sourceFields = KijiScheme.buildSourceFields(columnsOutput.keys)
 
     // Create a dummy record with an entity ID to put in the table.
     val dummyEid = EntityId("dummy")
@@ -64,7 +66,7 @@ class KijiSchemeSuite extends KijiSuite {
 
     // Put the tuple.
     KijiScheme.putTuple(
-        columns,
+        columnsOutput,
         uri,
         kiji,
         None,
@@ -76,9 +78,9 @@ class KijiSchemeSuite extends KijiSuite {
     // Read the tuple back.
     val rowData = reader.get(
         dummyEid.toJavaEntityId(eidFactory),
-        KijiScheme.buildRequest(All, columns.values))
+        KijiScheme.buildRequest(All, columnsInput.values))
     val readValue: Option[Tuple] = KijiScheme.rowToTuple(
-        columns,
+        columnsInput,
         sourceFields,
         None,
         rowData,

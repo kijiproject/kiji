@@ -48,7 +48,9 @@ import org.kiji.schema.layout.KijiTableLayouts
  */
 class WordConcatJob(args: Args) extends KijiJob(args) {
   // Setup input to bind values from the "family:column1" column to the symbol 'word.
-  KijiInput(args("input"), Map(Column("family:column1", all).withPaging(3) -> 'word))
+  KijiInput(
+      args("input"),
+      Map(ColumnRequestInput("family:column1", all, pageSize=Some(3)) -> 'word))
     // Sanitize the word.
     .map('word -> 'cleanword) { words: PagedKijiSlice[CharSequence] =>
       words.foldLeft("")((a: String, b: Cell[CharSequence]) => a + b.datum.toString)
@@ -69,7 +71,10 @@ class WordConcatJob(args: Args) extends KijiJob(args) {
  */
 class WordCountFlatMapJob(args: Args) extends KijiJob(args) {
   // Setup input to bind values from the "family:column1" column to the symbol 'word.
-  KijiInput(args("input"), Map(Column("family:column1", all).withPaging(3) -> 'word))
+  KijiInput(
+      args("input"),
+      Map(ColumnRequestInput("family:column1", all, pageSize=Some(3)) -> 'word))
+
       // Sanitize the word.
       .flatMap('word -> 'word) { words: PagedKijiSlice[CharSequence] =>
           words
@@ -112,7 +117,10 @@ class PagedKijiSliceSuite extends KijiSuite {
     JobTest(new WordConcatJob(_))
       .arg("input", uri)
       .arg("output", "outputFile")
-      .source(KijiInput(uri, Map(Column("family:column1", all).withPaging(3) -> 'word)),
+      .source(
+          KijiInput(
+            uri,
+            Map(ColumnRequestInput("family:column1", all, pageSize=Some(3)) -> 'word)),
           wordCountInput(uri))
       .sink(Tsv("outputFile"))(validateWordConcat)
       // Run the test job.
@@ -154,8 +162,11 @@ class PagedKijiSliceSuite extends KijiSuite {
     JobTest(new WordCountFlatMapJob(_))
         .arg("input", uri)
         .arg("output", "outputFile")
-        .source(KijiInput(uri, Map(Column("family:column1", all).withPaging(3) -> 'word)),
-      wordCountInput(uri))
+        .source(
+            KijiInput(
+                uri,
+                Map(ColumnRequestInput("family:column1", all, pageSize=Some(3)) -> 'word)),
+            wordCountInput(uri))
         .sink(Tsv("outputFile"))(validateWordCount)
         // Run the test job.
         .runHadoop

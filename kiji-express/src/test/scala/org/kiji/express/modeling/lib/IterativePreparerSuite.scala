@@ -75,29 +75,37 @@ class IterativePreparerSuite extends KijiSuite {
         version = "1.0",
         preparerClass = Some(classOf[IterativePreparerSuite.IterativePreparer]))
 
-    val request: ExpressDataRequest = new ExpressDataRequest(0, Long.MaxValue,
+    // TODO: Fix data request being for only column1
+    val request1: ExpressDataRequest = new ExpressDataRequest(0, Long.MaxValue,
         new ExpressColumnRequest("family:column1", 1, None) :: Nil)
+    val request2: ExpressDataRequest = new ExpressDataRequest(0, Long.MaxValue,
+        new ExpressColumnRequest("family:column2", 1, None) :: Nil)
 
     withKijiTable(kiji, "input_table") { table: KijiTable =>
       val tableUri: KijiURI = table.getURI
+
+      val fieldB1 = Seq(FieldBinding(tupleFieldName = "word", storeFieldName = "family:column1"))
+      val fieldB2 = Seq(FieldBinding(tupleFieldName = "word", storeFieldName = "family:column2"))
 
       val modelEnvironment: ModelEnvironment = ModelEnvironment(
           name = "prepare-model-environment",
           version = "1.0",
           prepareEnvironment = Some(PrepareEnvironment(
-              inputSpec = Map("input" ->
-                  KijiInputSpec(
+              inputSpec = Map(
+                  "input1" -> KijiInputSpec(
                       tableUri.toString,
-                      dataRequest = request,
-                      fieldBindings = Seq(
-                          FieldBinding(tupleFieldName = "word", storeFieldName = "family:column1"))
-                  )),
-              outputSpec = Map("output" ->
-                  KijiOutputSpec(
+                      dataRequest = request1,
+                      fieldBindings = fieldB1),
+                  "input2" -> KijiInputSpec(
+                      tableUri.toString,
+                      dataRequest = request2,
+                      fieldBindings = fieldB2)
+              ),
+              outputSpec = Map(
+                  "output" -> KijiOutputSpec(
                       tableUri = tableUri.toString,
-                      fieldBindings = Seq(
-                          FieldBinding(tupleFieldName = "word", storeFieldName = "family:column2"))
-              )),
+                      fieldBindings = fieldB2)
+              ),
               keyValueStoreSpecs = Seq()
           )),
           trainEnvironment = None,
@@ -160,12 +168,8 @@ object IterativePreparerSuite {
     }
 
     override def prepare(input: Map[String, Source], output: Map[String, Source]): Boolean = {
-      var inpToJob = input("input")
-      var outToJob = output("output")
-      for (i <- 1 to 2) {
-        new IterativeJob(inpToJob, outToJob).run
-        inpToJob = output("output")
-      }
+      new IterativeJob(input("input1"), output("output")).run
+      new IterativeJob(input("input2"), output("output")).run
       true
     }
   }

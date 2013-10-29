@@ -45,8 +45,8 @@ import org.slf4j.LoggerFactory
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.annotations.Inheritance
-import org.kiji.express.flow.ColumnRequest
+import org.kiji.express.flow.ColumnRequestInput
+import org.kiji.express.flow.ColumnRequestOutput
 import org.kiji.express.flow.TimeRange
 import org.kiji.express.util.GenericCellSpecs
 import org.kiji.express.util.SpecificCellSpecs
@@ -72,9 +72,6 @@ import org.kiji.schema.layout.KijiTableLayout
  * @param iterator that maintains the current row pointer.
  * @param tableUri of the kiji table.
  */
-@ApiAudience.Private
-@ApiStability.Experimental
-@Inheritance.Sealed
 private[express] case class InputContext(
     reader: KijiTableReader,
     scanner: KijiRowScanner,
@@ -89,10 +86,7 @@ private[express] case class InputContext(
  * @param tableUri of the Kiji table.
  * @param layout of the kiji table.
  */
-@ApiAudience.Framework
-@ApiStability.Experimental
-@Inheritance.Sealed
-final private[express] case class OutputContext(
+private[express] case class OutputContext(
     writer: KijiTableWriter,
     tableUri: KijiURI,
     kiji: Kiji,
@@ -132,19 +126,19 @@ final private[express] case class OutputContext(
  *     Use None if all values should be written at the current time.
  * @param columns mapping tuple field names to requests for Kiji columns.
  */
-@ApiAudience.Private
+@ApiAudience.Framework
 @ApiStability.Experimental
-@Inheritance.Sealed
 private[express] class LocalKijiScheme(
     private[express] val timeRange: TimeRange,
     private[express] val timestampField: Option[Symbol],
-    private[express] val columns: Map[String, ColumnRequest])
+    private[express] val icolumns: Map[String, ColumnRequestInput] = Map(),
+    private[express] val ocolumns: Map[String, ColumnRequestOutput] = Map())
     extends Scheme[Properties, InputStream, OutputStream, InputContext, OutputContext] {
   private val logger: Logger = LoggerFactory.getLogger(classOf[LocalKijiScheme])
 
   /** Set the fields that should be in a tuple when this source is used for reading and writing. */
-  setSourceFields(KijiScheme.buildSourceFields(columns.keys))
-  setSinkFields(KijiScheme.buildSinkFields(columns, timestampField))
+  setSourceFields(KijiScheme.buildSourceFields(icolumns.keys ++ ocolumns.keys))
+  setSinkFields(KijiScheme.buildSinkFields(ocolumns, timestampField))
 
   /**
    * Sets any configuration options that are required for running a local job
@@ -179,11 +173,11 @@ private[express] class LocalKijiScheme(
 
     // Build the input context.
     withKijiTable(kijiUri, conf) { table: KijiTable =>
-      val request = KijiScheme.buildRequest(timeRange, columns.values)
+      val request = KijiScheme.buildRequest(timeRange, icolumns.values)
       val reader = {
         val allCellSpecs: JMap[KijiColumnName, CellSpec] = new HashMap[KijiColumnName, CellSpec]()
         allCellSpecs.putAll(GenericCellSpecs(table))
-        allCellSpecs.putAll(SpecificCellSpecs.buildCellSpecs(table.getLayout, columns).asJava)
+        allCellSpecs.putAll(SpecificCellSpecs.buildCellSpecs(table.getLayout, icolumns).asJava)
         table.getReaderFactory.openTableReader(allCellSpecs)
       }
       val scanner = reader.getScanner(request)
@@ -216,7 +210,7 @@ private[express] class LocalKijiScheme(
       val row: KijiRowData = context.iterator.next()
       val result: Option[Tuple] =
           KijiScheme.rowToTuple(
-              columns,
+              icolumns,
               getSourceFields,
               timestampField,
               row,
@@ -317,7 +311,7 @@ private[express] class LocalKijiScheme(
     // Write the tuple out.
     val output: TupleEntry = sinkCall.getOutgoingEntry
     KijiScheme.putTuple(
-        columns,
+        ocolumns,
         tableUri,
         kiji,
         timestampField,
@@ -347,7 +341,8 @@ private[express] class LocalKijiScheme(
   override def equals(other: Any): Boolean = {
     other match {
       case scheme: LocalKijiScheme => {
-        columns == scheme.columns &&
+        icolumns == scheme.icolumns &&
+        ocolumns == scheme.ocolumns &&
             timestampField == scheme.timestampField &&
             timeRange == scheme.timeRange
       }
@@ -355,5 +350,5 @@ private[express] class LocalKijiScheme(
     }
   }
 
-  override def hashCode(): Int = Objects.hashCode(columns, timestampField, timeRange)
+  override def hashCode(): Int = Objects.hashCode(icolumns, ocolumns, timestampField, timeRange)
 }

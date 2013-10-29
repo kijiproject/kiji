@@ -30,16 +30,12 @@ import scala.collection.JavaConverters.mapAsJavaMapConverter
 
 import org.apache.avro.specific.SpecificRecord
 
-import org.kiji.annotations.ApiAudience
-import org.kiji.annotations.ApiStability
-import org.kiji.express.flow.{ColumnRequestOptions, ColumnFamily, ColumnRequest, QualifiedColumn}
+import org.kiji.express.flow._
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiTable
 import org.kiji.schema.layout.CellSpec
 import org.kiji.schema.layout.KijiTableLayout
 
-@ApiAudience.Public
-@ApiStability.Experimental
 object SpecificCellSpecs {
   val CELLSPEC_OVERRIDE_CONF_KEY: String = "kiji.express.input.cellspec.overrides"
 
@@ -54,7 +50,7 @@ object SpecificCellSpecs {
    * @return a serialized form of a map from column name to AvroRecord class name.
    */
   def serializeOverrides(
-      columns: Map[String, ColumnRequest]
+      columns: Map[String, ColumnRequestInput]
   ): String = {
     val serializableOverrides = collectOverrides(columns)
         .map { entry: (KijiColumnName, Class[_ <: SpecificRecord]) =>
@@ -115,7 +111,7 @@ object SpecificCellSpecs {
    */
   def buildCellSpecs(
       layout: KijiTableLayout,
-      columns: Map[String, ColumnRequest]
+      columns: Map[String, ColumnRequestInput]
   ): Map[KijiColumnName, CellSpec] = {
     return innerBuildCellSpecs(layout, collectOverrides(columns))
   }
@@ -126,24 +122,17 @@ object SpecificCellSpecs {
    * map values will be AvroRecord classes to use as overriding reader schemas for associated
    * columns.
    *
-   * @param columns a mapping from field name to ColumnRequest.  field names will be ignored and
-   *     output keys and values will be taken from the ColumnRequest.
+   * @param columns a mapping from field name to ColumnRequestInput.
    * @return a mapping from column name to the AvroRecord class to use as the reader schema when
    *     reading values from that column.
    */
   private def collectOverrides(
-      columns: Map[String, ColumnRequest]
+      columns: Map[String, ColumnRequestInput]
   ): Map[KijiColumnName, Class[_ <: SpecificRecord]] = {
-    return columns
-        .collect {
-          case (_, cr @ ColumnFamily(_, _, ColumnRequestOptions(_, _, _, Some(avroClass), _, _))) =>
-              (cr.getColumnName(), avroClass)
-          case (
-              _,
-              cr @ QualifiedColumn(_, _, ColumnRequestOptions(_, _, _, Some(avroClass), _, _))) => {
-            (cr.getColumnName(), avroClass)
-          }
-        }
+    columns.values
+        // Need only those columns that have specific Avro classes defined
+        .filter { _.avroClass.isDefined }
+        .map { col => (col.getColumnName, col.avroClass.get) }
         .toMap
   }
 

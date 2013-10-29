@@ -76,7 +76,9 @@ class WriterSchemaSuite extends KijiSuite {
       .arg("output", uri)
       .source(TextLine("inputFile"), writeInput)
       .sink(KijiOutput(uri,
-          Map('genericRecord -> Column("family:column_validated").useDefaultReaderSchema))
+          Map('genericRecord -> ColumnRequestOutput(
+              "family:column_validated",
+              useDefaultReaderSchema=true)))
       )(validateWrite)
 
     // Run in local mode.
@@ -126,7 +128,7 @@ class WriterSchemaSuite extends KijiSuite {
       .source(TextLine("inputFile"), writeInput)
       .sink(KijiOutput(uri,
           Map('genericRecord ->
-              Column("family:column_validated").withSchemaId(userDefinedSchemaId)))
+              ColumnRequestOutput("family:column_validated", schemaId=Some(userDefinedSchemaId))))
       )(validateWrite)
 
     // Run in local mode.
@@ -254,7 +256,9 @@ object WriterSchemaSuite {
       // Write the results to the "family:column_validated" column of a Kiji table using the
       // default schema.
       .write(KijiOutput(tableUri,
-          Map('genericRecord -> Column("family:column_validated").useDefaultReaderSchema)))
+          Map('genericRecord -> ColumnRequestOutput(
+              "family:column_validated",
+              useDefaultReaderSchema = true))))
   }
 
   // User-defined schema for use in UserSpecifiedSchemaWriteJob.
@@ -299,7 +303,7 @@ object WriterSchemaSuite {
       // Write the results to the "family:column_validated" column of a Kiji table.
       .write(KijiOutput(tableUri,
           Map('genericRecord ->
-              Column("family:column_validated").withSchemaId(userDefinedSchemaId))))
+              ColumnRequestOutput("family:column_validated", schemaId=Some(userDefinedSchemaId)))))
   }
 
   /**

@@ -322,7 +322,7 @@ class KijiSourceSuite
 
     // Build test job.
     val source =
-        KijiInput(uri, Map((Column("family:column1", versions=2) -> 'words)))
+        KijiInput(uri, Map((ColumnRequestInput("family:column1", maxVersions=2) -> 'words)))
     JobTest(new VersionsJob(source)(_))
         .arg("output", "outputFile")
         .source(source, versionCountInput(uri))
@@ -412,8 +412,8 @@ class KijiSourceSuite
       .arg("output", "outputFile")
       .source(KijiInput(uri,
         Map(
-          Column("family:column1") -> 'word1,
-          Column("family:column2")
+          ColumnRequestInput("family:column1") -> 'word1,
+          new QualifiedColumnRequestInput("family", "column2")
       .replaceMissingWith("missing") -> 'word2)), missingValuesInput(uri))
       .sink(Tsv("outputFile"))(validateMissingValuesReplaced)
 
@@ -451,7 +451,9 @@ class KijiSourceSuite
             (30L, "three") ) ),
         ( EntityId("row03"), slice("family:column1", (10L, "hello")) ))
     // Build test job.
-    val testSource = KijiInput(uri, Map((Column("family:column1", versions=all) -> 'word)))
+    val testSource = KijiInput(
+        uri,
+        Map((ColumnRequestInput("family:column1", maxVersions=all) -> 'word)))
     JobTest(new AvroToScalaChecker(testSource)(_))
       .arg("input", uri)
       .arg("output", "outputFile")
@@ -485,7 +487,7 @@ class KijiSourceSuite
     val jobTest = JobTest(new GenericAvroReadJob(_))
         .arg("input", uri)
         .arg("output", "outputFile")
-        .source(KijiInput(uri, Map (Column("family:column3") -> 'records)),
+        .source(KijiInput(uri, Map (ColumnRequestInput("family:column3") -> 'records)),
             genericReadInput(uri))
         .sink(Tsv("outputFile"))(validateGenericRead)
 
@@ -516,12 +518,23 @@ class KijiSourceSuite
       assert ((13, 1) === outputBuffer(0))
     }
 
+    // Defining the KijiSource directly like this is unfortunate, but necessary to make sure that
+    // the KijiSource referenced here and the one used within SpecificAvroReadJob are identical (the
+    // KijiSources are used as keys for a map of buffers for test code).
+    val ksource = new KijiSource(
+        tableAddress = uri,
+        timeRange = All,
+        timestampField = None,
+        loggingInterval = 1000,
+        inputColumns = Map('records -> ColumnRequestInput(
+          "family:column3", avroClass=Some(classOf[SpecificRecordTest]))),
+        outputColumns = Map('records -> ColumnRequestOutput(
+          "family:column3")))
+
     val jobTest = JobTest(new SpecificAvroReadJob(_))
         .arg("input", uri)
         .arg("output", "outputFile")
-        .source(KijiInput(uri,
-      Map(Column("family:column3").withSpecificAvroClass(classOf[SpecificRecordTest]) -> 'records)),
-      genericReadInput(uri))
+        .source(ksource, genericReadInput(uri))
         .sink(Tsv("outputFile"))(validateSpecificRead)
 
     // Run in local mode
@@ -608,7 +621,8 @@ class KijiSourceSuite
         .arg("input", "inputFile")
         .arg("table", uri)
         .source(TextLine("inputFile"), mapTypeInput)
-        .sink(KijiOutput(uri, Map('resultCount -> MapFamily("searches")('terms))))(validateMapWrite)
+        .sink(KijiOutput(uri, Map('resultCount ->
+            new ColumnFamilyRequestOutput("searches", "terms"))))(validateMapWrite)
 
     // Run the test.
     jobTest.run.finish
@@ -745,8 +759,8 @@ object KijiSourceSuite {
   class PluralizeReplaceJob(args: Args) extends KijiJob(args) {
     KijiInput(args("input"),
         Map(
-            Column("family:column1") -> 'word1,
-            Column("family:column2")
+            ColumnRequestInput("family:column1") -> 'word1,
+            new QualifiedColumnRequestInput("family", "column2")
                 .replaceMissingWith("missing") -> 'word2))
     .map('word2 -> 'pluralword) { words: KijiSlice[String] =>
       words.getFirst().datum + "s"
@@ -779,7 +793,7 @@ object KijiSourceSuite {
     // Setup input.
     TextLine(args("input"))
         .read
-        // Get the words in each line.
+        // new  the words in each line.
         .map('line -> ('timestamp, 'entityId, 'word)) { line: String =>
           val Array(timestamp, eid, token) = line.split("\\s+")
           (timestamp.toLong, EntityId(eid), token)
@@ -800,7 +814,7 @@ object KijiSourceSuite {
     // Setup input.
     TextLine(args("input"))
         .read
-        // Get the words in each line.
+        // new  the words in each line.
         .flatMap('line -> 'word) { line : String => line.split("\\s+") }
         // Generate an entityId for each word.
         .map('word -> 'entityId) { _: String =>
@@ -871,9 +885,17 @@ object KijiSourceSuite {
   }
 
   class SpecificAvroReadJob(args: Args) extends KijiJob(args) {
-    val inputOptions = Map(
-        Column("family:column3").withSpecificAvroClass(classOf[SpecificRecordTest]) -> 'records)
-    KijiInput(args("input"), inputOptions)
+    // Want to read some data out to 'records and then write it back to a Tsv
+    val ksource = new KijiSource(
+        tableAddress = args("input"),
+        timeRange = All,
+        timestampField = None,
+        loggingInterval = 1000,
+        inputColumns = Map('records -> ColumnRequestInput(
+          "family:column3", avroClass=Some(classOf[SpecificRecordTest]))),
+        outputColumns = Map('records -> ColumnRequestOutput(
+          "family:column3")))
+    ksource
         .map('records -> 'hashSizeField) { slice: KijiSlice[AvroValue] =>
           val Cell(_, _, _, record) = slice.getFirst()
           record.asSpecificRecord[SpecificRecordTest]().getHashSize
@@ -923,12 +945,13 @@ object KijiSourceSuite {
         .read
         // Create an entity ID for each line (always the same one, here)
         .map('line -> 'entityId) { line: String => EntityId("my_eid") }
-        // Get the number of result for each search term
+        // new  the number of result for each search term
         .map('line -> ('terms, 'resultCount)) { line: String =>
           (line.split(" ")(0), line.split(" ")(1).toInt)
         }
         // Write the results to the "family:column1" column of a Kiji table.
-        .write(KijiOutput(args("table"), Map('resultCount -> MapFamily("searches")('terms))))
+        .write(KijiOutput(args("table"), Map('resultCount ->
+          new ColumnFamilyRequestOutput("searches", "terms"))))
   }
 
   /**

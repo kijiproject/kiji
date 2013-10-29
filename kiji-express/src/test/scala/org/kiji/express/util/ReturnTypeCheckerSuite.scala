@@ -28,7 +28,6 @@ import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.AvroFixed
 import org.kiji.express.AvroRecord
-import org.kiji.express.flow.ColumnRequestOptions
 import org.kiji.schema.avro.HashSpec
 import org.kiji.schema.avro.HashType
 import org.kiji.schema.avro.RowKeyEncoding
@@ -273,12 +272,13 @@ class ReturnTypeCheckerSuite extends FunSuite {
     assert(resJava.isInstanceOf[java.util.List[_]])
     assert(resJava === nestedList)
   }
-  val filter = new RegexQualifierColumnFilter(".*")
-  val maxVersions = 2
-  val badRecord: ColumnRequestOptions = new ColumnRequestOptions(maxVersions, Some(filter))
+
   test("Test for exception when converting unsupported an Avro class.") {
+    case class NotARecord(dummyArg: Int)
+    val badRecord = NotARecord(0)
     intercept[InvalidClassException] {
       AvroUtil.decodeGenericFromJava(badRecord)
     }
   }
+
 }

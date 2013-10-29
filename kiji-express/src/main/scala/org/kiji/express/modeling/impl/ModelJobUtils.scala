@@ -26,33 +26,16 @@ import com.twitter.scalding.TextLine
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 
-import org.kiji.express.flow.Between
-import org.kiji.express.flow.ColumnFamily
-import org.kiji.express.flow.ColumnRequest
-import org.kiji.express.flow.ColumnRequestOptions
-import org.kiji.express.flow.KijiInput
-import org.kiji.express.flow.KijiOutput
-import org.kiji.express.flow.QualifiedColumn
-import org.kiji.express.flow.TimeRange
+import org.kiji.express.flow._
 import org.kiji.express.modeling.KeyValueStore
-import org.kiji.express.modeling.config.ExpressColumnRequest
-import org.kiji.express.modeling.config.FieldBinding
-import org.kiji.express.modeling.config.InputSpec
-import org.kiji.express.modeling.config.KeyValueStoreSpec
-import org.kiji.express.modeling.config.KijiInputSpec
-import org.kiji.express.modeling.config.KijiOutputSpec
-import org.kiji.express.modeling.config.KijiSingleColumnOutputSpec
-import org.kiji.express.modeling.config.ModelEnvironment
-import org.kiji.express.modeling.config.OutputSpec
-import org.kiji.express.modeling.config.SequenceFileSourceSpec
-import org.kiji.express.modeling.config.TextSourceSpec
+import org.kiji.express.modeling.config._
 import org.kiji.mapreduce.KijiContext
-import org.kiji.mapreduce.kvstore.{ KeyValueStore => JKeyValueStore }
-import org.kiji.mapreduce.kvstore.{ KeyValueStoreReader => JKeyValueStoreReader }
 import org.kiji.mapreduce.kvstore.lib.{ AvroKVRecordKeyValueStore => JAvroKVRecordKeyValueStore }
 import org.kiji.mapreduce.kvstore.lib.{ AvroRecordKeyValueStore => JAvroRecordKeyValueStore }
 import org.kiji.mapreduce.kvstore.lib.{ KijiTableKeyValueStore => JKijiTableKeyValueStore }
 import org.kiji.mapreduce.kvstore.lib.{ TextFileKeyValueStore => JTextFileKeyValueStore }
+import org.kiji.mapreduce.kvstore.{ KeyValueStore => JKeyValueStore }
+import org.kiji.mapreduce.kvstore.{ KeyValueStoreReader => JKeyValueStoreReader }
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiURI
@@ -255,29 +238,15 @@ object ModelJobUtils {
    * @param inputSpec of a phase in the [[org.kiji.express.modeling.config.ModelEnvironment]].
    * @return a map from the column requests to field names.
    */
-  private def getInputColumnMap(inputSpec: KijiInputSpec): Map[ColumnRequest, Symbol] = {
-    val columnMap: Map[ColumnRequest, String] = inputSpec
+  private def getInputColumnMap(inputSpec: KijiInputSpec): Map[ColumnRequestInput, Symbol] = {
+    val columnMap: Map[ColumnRequestInput, String] = inputSpec
         .dataRequest
         .columnRequests
         .map { expressColumnRequest: ExpressColumnRequest =>
-          val options = new ColumnRequestOptions(
-              expressColumnRequest.maxVersions,
-              expressColumnRequest.filter.map { _.toKijiColumnFilter })
-          val kijiColumnName = new KijiColumnName(expressColumnRequest.name)
-          val columnRequest: ColumnRequest =
-              if (kijiColumnName.isFullyQualified) {
-                QualifiedColumn(
-                    kijiColumnName.getFamily,
-                    kijiColumnName.getQualifier,
-                    options)
-              } else {
-                // TODO specify regex matching for qualifier
-                ColumnFamily(
-                    kijiColumnName.getFamily,
-                    None,
-                    options)
-              }
-
+          val columnRequest = ColumnRequestInput(
+            columnName = expressColumnRequest.name,
+            maxVersions = expressColumnRequest.maxVersions,
+            filter = expressColumnRequest.filter.map { _.toKijiColumnFilter })
           columnRequest -> expressColumnRequest.name
         }
         .toMap
@@ -412,15 +381,16 @@ object ModelJobUtils {
    * @param kijiOutputSpec is the [[org.kiji.express.modeling.config.KijiOutputSpec]] for the phase.
    * @return a map from field name to string specifying the Kiji column.
    */
-  private def getOutputColumnMap(kijiOutputSpec: KijiOutputSpec): Map[Symbol, ColumnRequest] = {
+  private def getOutputColumnMap(
+      kijiOutputSpec: KijiOutputSpec): Map[Symbol, ColumnRequestOutput] = {
     kijiOutputSpec
         .fieldBindings
         .map { (fieldBinding: FieldBinding) =>
-          val Array(family, columnQualifier) = fieldBinding.storeFieldName.split(":", 2)
-
           val field = Symbol(fieldBinding.tupleFieldName)
-          val column = QualifiedColumn(family, columnQualifier)
-
+          val kijiColumn = new KijiColumnName(fieldBinding.storeFieldName)
+          val column = new QualifiedColumnRequestOutput(
+              family = kijiColumn.getFamily(),
+              qualifier = kijiColumn.getQualifier())
           (field, column)
         }
         .toMap

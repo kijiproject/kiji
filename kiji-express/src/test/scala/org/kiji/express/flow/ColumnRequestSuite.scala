@@ -34,44 +34,89 @@ import org.kiji.schema.filter.RegexQualifierColumnFilter
 @RunWith(classOf[JUnitRunner])
 class ColumnRequestSuite extends FunSuite {
   def filter: KijiColumnFilter = new RegexQualifierColumnFilter(".*")
-  def opts: ColumnRequestOptions = new ColumnRequestOptions(1, Some(filter))
   val colFamily = "myfamily"
   val colQualifier = "myqualifier"
   val qualifierSelector = "qualifierSym"
 
-  test("Fields of a ColumnFamily (input) are the same as those it is constructed with.") {
-    val col: ColumnFamily = new ColumnFamily(colFamily, None, opts)
+  // TODO(CHOP-37): Test with different filters once the new method of specifying filters
+  // correctly implements the .equals() and hashCode() methods.
+  // Should be able to change the following line to:
+  // def filter = new RegexQualifierColumnFilter(".*")
+  val maxVersions = 2
 
+  val colWithOptions: QualifiedColumnRequestInput = QualifiedColumnRequestInput(
+      family = colFamily,
+      qualifier = colQualifier,
+      maxVersions = maxVersions,
+      filter = Some(filter)
+  ).asInstanceOf[QualifiedColumnRequestInput]
+
+  test("Fields of a ColumnFamilyRequestInput are the same as those it is constructed with.") {
+    val col: ColumnFamilyRequestInput = new ColumnFamilyRequestInput(family = colFamily)
     assert(colFamily === col.family)
-    assert(opts === col.options)
   }
 
-  test("Fields of a ColumnFamily (output) are the same as those it is constructed with.") {
-    val col: ColumnFamily = new ColumnFamily(colFamily, Some(qualifierSelector))
-
-    assert(colFamily === col.family)
-    assert(qualifierSelector === col.qualifierSelector.get)
+  test("ColumnRequestInput factory method creates ColumnFamilyRequestInput.") {
+    val col = ColumnRequestInput(colFamily)
+    assert(col.isInstanceOf[ColumnFamilyRequestInput])
+    assert(colFamily === col.asInstanceOf[ColumnFamilyRequestInput].family)
   }
 
-  test("Fields of a QualifiedColumn are the same as those it is constructed with.") {
-    val col: QualifiedColumn = new QualifiedColumn(colFamily, colQualifier, opts)
+  test("Fields of a ColumnFamilyRequestOutput are the same as those it is constructed with.") {
+    val col: ColumnFamilyRequestOutput = new ColumnFamilyRequestOutput(
+        family = colFamily,
+        qualifierSelector = qualifierSelector
+    )
+    assert(colFamily === col.family)
+    assert(qualifierSelector === col.qualifierSelector)
+  }
+
+  test("ColumnRequestOutput factory method creates ColumnFamilyRequestOutput.") {
+    val col = ColumnRequestOutput(colFamily, qualifierSelector=Some(qualifierSelector))
+    assert(col.isInstanceOf[ColumnFamilyRequestOutput])
+    assert(colFamily === col.asInstanceOf[ColumnFamilyRequestOutput].family)
+  }
+
+  test("Fields of a QualifiedColumnRequestInput are the same as those it is constructed with.") {
+    val col: QualifiedColumnRequestInput = new QualifiedColumnRequestInput(colFamily, colQualifier)
 
     assert(colFamily === col.family)
     assert(colQualifier === col.qualifier)
-    assert(opts === col.options)
+  }
+
+  test("ColumnRequestInput factory method creates QualifiedColumnRequestInput.") {
+    val col = QualifiedColumnRequestInput(colFamily, colQualifier)
+    assert(col.isInstanceOf[QualifiedColumnRequestInput])
+    assert(colFamily === col.asInstanceOf[QualifiedColumnRequestInput].family)
+    assert(colQualifier === col.asInstanceOf[QualifiedColumnRequestInput].qualifier)
+  }
+
+  test("Fields of a QualifiedColumnRequestOutput are the same as those it is constructed with.") {
+    val col: QualifiedColumnRequestOutput =
+        new QualifiedColumnRequestOutput(colFamily, colQualifier)
+
+    assert(colFamily === col.family)
+    assert(colQualifier === col.qualifier)
+  }
+
+  test("ColumnRequestOutput factory method creates QualifiedColumnRequestOutput.") {
+    val col = QualifiedColumnRequestOutput(colFamily, colQualifier)
+    assert(col.isInstanceOf[QualifiedColumnRequestOutput])
+    assert(colQualifier === col.asInstanceOf[QualifiedColumnRequestOutput].qualifier)
+    assert(colFamily === col.asInstanceOf[QualifiedColumnRequestOutput].family)
   }
 
   test("Two ColumnFamilys with the same parameters are equal and hash to the same value.") {
-    val col1: ColumnFamily = new ColumnFamily(colFamily, None, opts)
-    val col2: ColumnFamily = new ColumnFamily(colFamily, None, opts)
+    val col1 = new ColumnFamilyRequestInput(colFamily)
+    val col2 = new ColumnFamilyRequestInput(colFamily)
 
     assert(col1 === col2)
     assert(col1.hashCode() === col2.hashCode())
   }
 
   test("Two qualified columns with the same parameters are equal and hash to the same value.") {
-    val col1: QualifiedColumn = new QualifiedColumn(colFamily, colQualifier, opts)
-    val col2: QualifiedColumn = new QualifiedColumn(colFamily, colQualifier, opts)
+    val col1 = new QualifiedColumnRequestInput(colFamily, colQualifier)
+    val col2 = new QualifiedColumnRequestInput(colFamily, colQualifier)
 
     assert(col1 === col2)
     assert(col1.hashCode() === col2.hashCode())
@@ -79,8 +124,7 @@ class ColumnRequestSuite extends FunSuite {
 
   test("A column must be serializable.") {
     // Serialize and deserialize using java ObjectInputStream and ObjectOutputStream.
-    val col: QualifiedColumn =
-        new QualifiedColumn(colFamily, colQualifier, opts)
+    val col = new QualifiedColumnRequestInput(colFamily, colQualifier)
     val bytesOut = new ByteArrayOutputStream()
     val out = new ObjectOutputStream(bytesOut)
     out.writeObject(col)
@@ -90,5 +134,29 @@ class ColumnRequestSuite extends FunSuite {
     val deserializedColumn = in.readObject()
 
     assert(col === deserializedColumn)
+  }
+
+  test("maxVersions is the same as constructed with.") {
+    assert(maxVersions == colWithOptions.maxVersions)
+  }
+
+  test("Default maxVersions is 1.") {
+    assert(1 == QualifiedColumnRequestInput(colFamily, colQualifier).maxVersions)
+  }
+
+  test("Filter is the same as constructed with.") {
+    assert(Some(filter) == colWithOptions.filter)
+  }
+
+  test("ColumnRequestInput with the same maxVersions & filter are equal and hash to the same "
+      + "value.") {
+
+    val col2: QualifiedColumnRequestInput = new QualifiedColumnRequestInput(
+        colFamily, colQualifier,
+        filter = Some(filter),
+        maxVersions = maxVersions
+    )
+    assert(col2 === colWithOptions)
+    assert(col2.hashCode() === colWithOptions.hashCode())
   }
 }
