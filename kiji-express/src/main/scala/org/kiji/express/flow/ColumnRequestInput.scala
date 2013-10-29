@@ -240,7 +240,9 @@ final case class ColumnFamilyRequestInput (
 }
 
 /** Factory object for creating group- and map-type column input requests. */
-private[express] object ColumnRequestInput {
+@ApiAudience.Public
+@ApiStability.Experimental
+object ColumnRequestInput {
 
   /**
    * Factory method for `QualifiedColumnRequestInput` and `ColumnFamilyRequestInput`.
@@ -261,7 +263,7 @@ private[express] object ColumnRequestInput {
    * @return A `QualifiedColumnRequestInput` or `ColumnFamilyRequestInput` object (depending
    *     on the presence of a `:` in `columnName`) with its fields populated per the parameters.
    */
-  private[express] def apply(
+  def apply(
     columnName: String,
     maxVersions: Int = latest,
     filter: Option[KijiColumnFilter] = None,

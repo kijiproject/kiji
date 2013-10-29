@@ -169,7 +169,9 @@ final case class ColumnFamilyRequestOutput (
 }
 
 /** Factory object for creating group- and map-type column output requests. */
-private[express] object ColumnRequestOutput {
+@ApiAudience.Public
+@ApiStability.Experimental
+object ColumnRequestOutput {
   /**
    * Factory method for ``QualifiedColumnRequestOutput`` and ``ColumnFamilyRequestOutput``.
    *
@@ -190,7 +192,7 @@ private[express] object ColumnRequestOutput {
    * @return A ``QualifiedColumnRequestOutput`` or ``ColumnFamilyRequestOutput`` object (depending
    *     on the presence of a ``:`` in ``columnName``) with its fields populated per the parameters.
    */
-  private[express] def apply(
+  def apply(
     columnName: String,
     schemaId: Option[Long] = None,
     useDefaultReaderSchema: Boolean = false,
