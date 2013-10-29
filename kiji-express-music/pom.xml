@@ -4,7 +4,7 @@
 
   <groupId>org.kiji.express</groupId>
   <artifactId>kiji-express-music</artifactId>
-  <version>0.9.0</version>
+  <version>0.10.0-SNAPSHOT</version>
   <packaging>jar</packaging>
   <inceptionYear>2013</inceptionYear>
 
