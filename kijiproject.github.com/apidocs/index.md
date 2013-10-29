@@ -13,7 +13,8 @@ only depend on APIs listed as <tt>@ApiAudience.Public</tt>. Contributors
 to other Kiji framework components may use <tt>@ApiAudience.Framework</tt>
 APIs, but beware that they may change between minor versions.
 
-* [KijiSchema](http://api-docs.kiji.org/kiji-schema/1.3.1/index.html) (latest)
+* [KijiSchema](http://api-docs.kiji.org/kiji-schema/1.3.2/index.html) (latest)
+  \[[1.3.2](http://api-docs.kiji.org/kiji-schema/1.3.2/index.html)\]
   \[[1.3.1](http://api-docs.kiji.org/kiji-schema/1.3.1/index.html)\]
   \[[1.3.0](http://api-docs.kiji.org/kiji-schema/1.3.0/index.html)\]
   \[[1.2.1](http://api-docs.kiji.org/kiji-schema/1.2.1/index.html)\]
@@ -32,7 +33,8 @@ APIs, but beware that they may change between minor versions.
   \[[1.0.0-rc2](http://api-docs.kiji.org/kiji-schema/1.0.0-rc2/index.html)\]
   \[[1.0.0-rc1](http://api-docs.kiji.org/kiji-schema/1.0.0-rc1/index.html)\]
 
-* [KijiMR](http://api-docs.kiji.org/kiji-mapreduce/1.2.0/index.html) (latest)
+* [KijiMR](http://api-docs.kiji.org/kiji-mapreduce/1.2.1/index.html) (latest)
+  \[[1.2.1](http://api-docs.kiji.org/kiji-mapreduce/1.2.1/index.html)\]
   \[[1.2.0](http://api-docs.kiji.org/kiji-mapreduce/1.2.0/index.html)\]
   \[[1.1.0](http://api-docs.kiji.org/kiji-mapreduce/1.1.0/index.html)\]
   \[[1.0.2](http://api-docs.kiji.org/kiji-mapreduce/1.0.2/index.html)\]
@@ -52,7 +54,8 @@ APIs, but beware that they may change between minor versions.
   \[[1.0.0-rc5](http://api-docs.kiji.org/kiji-mapreduce-lib/1.0.0-rc5/index.html)\]
   \[[1.0.0-rc4](http://api-docs.kiji.org/kiji-mapreduce-lib/1.0.0-rc4/index.html)\]
 
-* [KijiExpress](http://api-docs.kiji.org/kiji-express/0.9.0/index.html) (latest)
+* [KijiExpress](http://api-docs.kiji.org/kiji-express/0.10.0/index.html) (latest)
+  \[[0.10.0](http://api-docs.kiji.org/kiji-express/0.10.0/index.html)\]
   \[[0.9.0](http://api-docs.kiji.org/kiji-express/0.9.0/index.html)\]
   \[[0.8.1](http://api-docs.kiji.org/kiji-express/0.8.1/index.html)\]
   \[[0.8.0](http://api-docs.kiji.org/kiji-express/0.8.0/index.html)\]
@@ -64,7 +67,8 @@ APIs, but beware that they may change between minor versions.
   \[[0.2.0](http://api-docs.kiji.org/kiji-express/0.2.0/index.html)\]
   \[[0.1.0](http://api-docs.kiji.org/kiji-express/0.1.0/index.html)\]
 
-* [KijiScoring](http://api-docs.kiji.org/kiji-scoring/0.6.0/index.html) (latest)
+* [KijiScoring](http://api-docs.kiji.org/kiji-scoring/0.7.0/index.html) (latest)
+  \[[0.7.0](http://api-docs.kiji.org/kiji-scoring/0.7.0/index.html)\]
   \[[0.6.0](http://api-docs.kiji.org/kiji-scoring/0.6.0/index.html)\]
   \[[0.5.0](http://api-docs.kiji.org/kiji-scoring/0.5.0/index.html)\]
   \[[0.4.0](http://api-docs.kiji.org/kiji-scoring/0.4.0/index.html)\]
