@@ -2,6 +2,9 @@
 
                               KijiMR Release Notes
 
+Version 1.2.1
+  * KIJIMR-242. Fix NPE on region servers with missing timestamp.
+
 Version 1.1.1
   * SCHEMA-234. Bugfix: --lib argument cannot process "." as a directory name.
   * SCHEMA-485. Add profiling pointcuts for HBase reads/writes.
