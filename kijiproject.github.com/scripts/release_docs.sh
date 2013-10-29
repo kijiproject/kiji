@@ -40,8 +40,8 @@ KIJIMR_FLAT_VER=1_2_1
 KIJIMR_VER=1.2.1
 
 # KijiMR Library version
-MRLIB_FLAT_VER=1_1_0
-MRLIB_VER=1.1.0
+MRLIB_FLAT_VER=1_1_1
+MRLIB_VER=1.1.1
 
 # KijiExpress version
 EXPRESS_FLAT_VER=0_10_0
@@ -52,8 +52,8 @@ SCORING_FLAT_VER=0_7_0
 SCORING_VER=0.7.0
 
 # Music Recommendation Tutorial version
-MUSIC_FLAT_VER=1_1_0
-MUSIC_VER=1.1.0
+MUSIC_FLAT_VER=1_1_1
+MUSIC_VER=1.1.1
 
 # Express Music Recommendation tutorial version
 EXPRESS_MUSIC_FLAT_VER=0_9_0
