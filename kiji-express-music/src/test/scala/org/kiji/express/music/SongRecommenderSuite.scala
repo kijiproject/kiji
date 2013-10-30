@@ -32,7 +32,9 @@ class SongRecommenderSuite extends KijiSuite {
   // Get a Kiji to use for the test and record the Kiji URI of the users and songs tables we'll
   // test against.
   val kiji = makeTestKiji("SongRecommenderSuite")
+  @transient
   val usersURI = kiji.getURI().toString + "/users"
+  @transient
   val songsURI = kiji.getURI().toString + "/songs"
 
   // Execute the DDL shell commands in music-schema.ddl to create the tables for the music
@@ -87,11 +89,12 @@ class SongRecommenderSuite extends KijiSuite {
   }
 
   val userSource: KijiSource = KijiInput(usersURI,
-      Map(Column("info:track_plays").useDefaultReaderSchema() -> 'trackPlays))
+      Map(QualifiedColumnRequestInput("info", "track_plays") -> 'trackPlays))
   val songSource: KijiSource = KijiInput(songsURI,
-      Map(Column("info:top_next_songs").useDefaultReaderSchema() -> 'topNextSongs))
+      Map(QualifiedColumnRequestInput("info", "top_next_songs") -> 'topNextSongs))
   val userSourceOut: KijiSource = KijiOutput(usersURI,
-      Map('nextSong -> Column("info:next_song_rec").useDefaultReaderSchema()))
+      Map('nextSong ->
+        QualifiedColumnRequestOutput("info", "next_song_rec", useDefaultReaderSchema = true)))
 
   test("songRecommender computes a recommendation for the next song to listen to. (Local)") {
     JobTest(new SongRecommender(_))
@@ -113,5 +116,6 @@ class SongRecommenderSuite extends KijiSuite {
       .sink(userSourceOut) { validateTest }
       .runHadoop
       .finish
+      println("Finished Hadoop job!!!")
   }
 }

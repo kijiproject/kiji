@@ -75,5 +75,8 @@ class SongMetadataImporter(args: Args) extends KijiJob(args) {
       .packAvro(('song_name, 'album_name, 'artist_name, 'genre, 'tempo, 'duration) -> 'metadata)
       .write(KijiOutput(
           args("table-uri"),
-          Map('metadata -> Column("info:metadata").useDefaultReaderSchema())))
+          Map('metadata -> QualifiedColumnRequestOutput(
+              "info",
+              "metadata",
+              useDefaultReaderSchema = true))))
 }

@@ -101,9 +101,12 @@ class TopNextSongsSuite extends KijiSuite {
         .arg("users-table", usersURI)
         .arg("songs-table", songsURI)
         .source(KijiInput(usersURI,
-            Map(Column("info:track_plays", all).useDefaultReaderSchema() -> 'playlist)), testInput)
+            Map(QualifiedColumnRequestInput("info", "track_plays", all) -> 'playlist)), testInput)
         .sink(KijiOutput(songsURI, Map('top_next_songs ->
-            Column("info:top_next_songs").useDefaultReaderSchema()))) { validateTest }
+            QualifiedColumnRequestOutput(
+                "info",
+                "top_next_songs",
+                useDefaultReaderSchema = true)))) { validateTest }
         .run
         .finish
   }
@@ -113,9 +116,15 @@ class TopNextSongsSuite extends KijiSuite {
         .arg("users-table", usersURI)
         .arg("songs-table", songsURI)
         .source(KijiInput(usersURI,
-            Map(Column("info:track_plays", all).useDefaultReaderSchema() -> 'playlist)), testInput)
+            Map(QualifiedColumnRequestInput(
+                "info",
+                "track_plays",
+                all) -> 'playlist)), testInput)
         .sink(KijiOutput(songsURI, Map('top_next_songs ->
-            Column("info:top_next_songs").useDefaultReaderSchema()))) { validateTest }
+            QualifiedColumnRequestOutput(
+                "info",
+                "top_next_songs",
+                useDefaultReaderSchema = true)))) { validateTest }
         .runHadoop
         .finish
   }

@@ -24,7 +24,7 @@
 
   <properties>
     <kiji.framework.version>1.2.1</kiji.framework.version>
-    <express.version>0.10.0</express.version>
+    <express.version>0.11.0-SNAPSHOT</express.version>
     <scalatest.version>2.0.M5b</scalatest.version>
   </properties>
 
@@ -130,6 +130,7 @@
         <artifactId>scalatest-maven-plugin</artifactId>
         <version>1.0-M2</version>
         <configuration>
+          <argLine>-Xmx2048m</argLine>
           <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
           <junitxml>.</junitxml>
           <filereports>WDF TestSuite.txt</filereports>
