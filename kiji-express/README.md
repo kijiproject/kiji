@@ -24,7 +24,7 @@ Write a script:
     import org.kiji.express.flow.DSL._
 
     // Read from the "columnfamily:inputqualifier" column of your Kiji table
-    KijiInput("kiji://your/kiji/uri")("columnfamily:inputqualifier" -> 'word)
+    KijiInput("kiji://your/kiji/uri", "columnfamily:inputqualifier" -> 'word)
         // Group by the count of each word
         .groupBy('word) { words => words.size('count) }
         // Write the counts out to an output file
@@ -95,7 +95,7 @@ Scalding flows created in the REPL must be explicitly run. For example, this REP
 latest value from the column `info:track_plays` of a Kiji table and writes the results to a TSV
 file.
 
-    express> KijiInput("kiji://.env/default/users")("info:track_plays" -> 'playSlice)
+    express> KijiInput("kiji://.env/default/users", "info:track_plays" -> 'playSlice)
     res0: org.kiji.express.flow.KijiSource = org.kiji.express.flow.KijiSource@5f8f9190
     express> res0.mapTo('playSlice -> 'play) { slice: KijiSlice[String] => slice.getFirstValue() }
     res1: cascading.pipe.Pipe = Each(org.kiji.express.flow.KijiSource@5f8f9190)[MapFunction[decl:'play']]
