@@ -22,7 +22,9 @@ package org.kiji.rest.serializers;
 import java.io.IOException;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 
 import org.apache.avro.AvroRuntimeException;
@@ -38,6 +40,7 @@ import org.kiji.rest.representations.SchemaOption;
 public class SchemaOptionToJson extends JsonSerializer<SchemaOption> {
 
   private static final Logger LOG = LoggerFactory.getLogger(SchemaOptionToJson.class);
+  private ObjectMapper mMapper = new ObjectMapper();
 
   /**
    * {@inheritDoc}
@@ -46,7 +49,8 @@ public class SchemaOptionToJson extends JsonSerializer<SchemaOption> {
   public void serialize(SchemaOption record, JsonGenerator generator,
       SerializerProvider provider) throws IOException {
     try {
-      generator.writeObject(record.getOptionValue());
+      JsonNode node = mMapper.readTree(record.getOptionValue().toString());
+      generator.writeTree(node); // Ensures that we can write actual JSON not a string escaped JSON
     } catch (AvroRuntimeException are) {
       LOG.error("Error writing Avro record ", are);
       throw are;

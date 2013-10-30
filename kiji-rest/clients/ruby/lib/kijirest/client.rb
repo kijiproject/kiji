@@ -170,7 +170,14 @@ module KijiRest
     #            "entityId" : "[//Component Array]",
     #            "cells" : {
     #               "family" : {
-    #                   "qualifier" : [{ "timestamp" : <timestamp>, "value": <JSON representation of object to post>}...]
+    #                   "qualifier" : [
+    #                                     {
+    #                                       "timestamp" : <timestamp>,
+    #                                       "value": <JSON representation of object to post>,
+    #                                       "writer_schema": <JSON representation of the writer_schema (Avro) OR the Kiji ID of the schema>
+    #                                     },
+    #                                       ...
+    #                                   ]
     #                }
     #              }
     #         }

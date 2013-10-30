@@ -4,6 +4,8 @@
 Version 1.0.0
   * REST-50. Check that the table still exists before returning it in 
       ManagedKijiClient.
+  * REST-59. Ensure that if the writer_schema is JSON, that the server will
+     accept the schema and parse it properly.
 
 Version 0.6.0
   * REST-55. Remove an old servlet dependency. Also change the release artifact

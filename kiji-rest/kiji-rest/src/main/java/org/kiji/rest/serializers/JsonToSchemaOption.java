@@ -49,9 +49,6 @@ public class JsonToSchemaOption extends JsonDeserializer<SchemaOption> {
       returnSchema = new SchemaOption(schemaNode.asLong());
     } else {
       String schemaString = schemaNode.toString();
-      if (schemaNode.isTextual()) {
-        schemaString = schemaNode.textValue();
-      }
       returnSchema = new SchemaOption(schemaString);
     }
 
