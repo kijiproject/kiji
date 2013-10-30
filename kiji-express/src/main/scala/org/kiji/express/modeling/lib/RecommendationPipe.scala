@@ -136,6 +136,6 @@ class RecommendationPipe(val pipe: Pipe)
             frequency/normalizer
           }
         }
-        .filter(resultField) { support: Double => support > supportThreshold }
+        .filter(resultField) { support: Double => (support >= supportThreshold) }
   }
 }
