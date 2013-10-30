@@ -2,6 +2,7 @@
                               KijiREST Release Notes
 
 Version 1.0.0
+  * REST-60. Removes the entityId endpoint of tables.
   * REST-50. Check that the table still exists before returning it in 
       ManagedKijiClient.
   * REST-59. Ensure that if the writer_schema is JSON, that the server will
