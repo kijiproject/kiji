@@ -94,11 +94,13 @@ import org.kiji.schema.util.ProtocolVersion
  *     Use None if all values should be written at the current time.
  * @param loggingInterval to log skipped rows on. For example, if loggingInterval is 1000,
  *     then every 1000th skipped row will be logged.
- * @param columns mapping tuple field names to requests for Kiji columns.
+ * @param inputColumns mapping tuple field names to requests for Kiji columns.
+ * @param outputColumns mapping tuple field names to specifications for Kiji columns to write out
+ *     to.
  */
 @ApiAudience.Framework
 @ApiStability.Experimental
-private[express] class KijiScheme(
+class KijiScheme(
     private[express] val timeRange: TimeRange,
     private[express] val timestampField: Option[Symbol],
     private[express] val loggingInterval: Long,
@@ -337,7 +339,9 @@ private[express] class KijiScheme(
  * Contains constants and helper methods for converting between Kiji rows and Cascading tuples,
  * building Kiji data requests, and some utility methods for handling Cascading fields.
  */
-private[express] object KijiScheme {
+@ApiAudience.Framework
+@ApiStability.Experimental
+object KijiScheme {
   private val logger: Logger = LoggerFactory.getLogger(classOf[KijiScheme])
 
   /** Hadoop mapred counter group for KijiExpress. */
@@ -347,7 +351,7 @@ private[express] object KijiScheme {
   /** Counter name for the number of rows skipped because of missing fields. */
   private[express] val counterMissingField = "ROWS_SKIPPED_WITH_MISSING_FIELDS"
   /** Field name containing a row's [[org.kiji.schema.EntityId]]. */
-  private[express] val entityIdField: String = "entityId"
+  val entityIdField: String = "entityId"
   /** Default number of qualifiers to retrieve when paging in a map type family.*/
   private val qualifierPageSize: Int = 1000
 

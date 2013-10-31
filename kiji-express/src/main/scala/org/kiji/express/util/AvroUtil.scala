@@ -79,9 +79,9 @@ import org.kiji.express.AvroValue
  *       byte array.</li>
  * <ul>
  */
-@ApiAudience.Private
+@ApiAudience.Framework
 @ApiStability.Experimental
-private[express] object AvroUtil {
+object AvroUtil {
   /**
    * Convert Java types (that came from Avro-deserialized Kiji columns) into corresponding Scala
    * types, using the generic API, for usage within KijiExpress.
@@ -94,7 +94,7 @@ private[express] object AvroUtil {
    * @return the corresponding value converted to a Scala type using the generic AvroValue API if
    *     necessary.
    */
-  private[express] def decodeGenericFromJava(x: Any): Any = {
+  def decodeGenericFromJava(x: Any): Any = {
     x match {
       case record: IndexedRecord => wrapGenericAvro(record)
       case enumSymbol: GenericData.EnumSymbol => {
@@ -111,7 +111,7 @@ private[express] object AvroUtil {
    * @param x is the value originally read from the Kiji column.
    * @return the corresponding value converted to a Scala type.
    */
-  private[express] def decodeSpecificFromJava(x: Any): Any = {
+  def decodeSpecificFromJava(x: Any): Any = {
     x match {
       // specific record already on the classpath
       case record: SpecificRecord => record
@@ -134,7 +134,7 @@ private[express] object AvroUtil {
    *     be forced.
    * @return the Java object that can be written to Kiji.
    */
-  private[express] def encodeToJava(x: Any, schema: Option[Schema] = None): Any = {
+  def encodeToJava(x: Any, schema: Option[Schema] = None): Any = {
     x match {
       case genericValue: AvroValue => {
         schema match {

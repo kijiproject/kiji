@@ -19,19 +19,11 @@
 
 package org.kiji.express.flow
 
-import java.io.Serializable
-
-import org.apache.avro.Schema
-import org.apache.avro.specific.SpecificRecord
-import org.apache.hadoop.hbase.HConstants
-
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.express.Cell
-import org.kiji.express.KijiSlice
+import org.kiji.annotations.Inheritance
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiInvalidNameException
-import org.kiji.schema.filter.KijiColumnFilter
 
 /** Convenience class for specifying the schema to use for writes. */
 private[express] case class WriterSchemaSpec (
@@ -50,7 +42,10 @@ private[express] case class WriterSchemaSpec (
  * Note that the subclasses of ColumnRequestOutput are case classes, and so they override
  * ColumnRequestOutput's abstract methods (e.g., ``schemaId``) with vals.
  */
-private[express] trait ColumnRequestOutput {
+@ApiAudience.Framework
+@ApiStability.Experimental
+@Inheritance.Sealed
+trait ColumnRequestOutput {
 
   /** Specifies the schema to use during a write (default is ``None``). */
   private[express] def schemaId: Option[Long]

@@ -19,20 +19,17 @@
 
 package org.kiji.express.flow
 
-import java.io.Serializable
-
-import org.apache.avro.Schema
 import org.apache.avro.specific.SpecificRecord
 import org.apache.hadoop.hbase.HConstants
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 import org.kiji.express.Cell
 import org.kiji.express.KijiSlice
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiInvalidNameException
 import org.kiji.schema.filter.KijiColumnFilter
-import org.kiji.schema.filter.RegexQualifierColumnFilter
 
 /**
  * Shared interface for all (group- and map-type) ColumnRequestInput objects.  Useful for any code
@@ -43,7 +40,10 @@ import org.kiji.schema.filter.RegexQualifierColumnFilter
  * output requests using the factory methods `object ColumnRequestInput.`
  *
  */
-private[express] trait ColumnRequestInput {
+@ApiAudience.Framework
+@ApiStability.Experimental
+@Inheritance.Sealed
+trait ColumnRequestInput {
 
   // Note that the subclasses of ColumnRequestInput are case classes, and so they override
   // ColumnRequestInput's abstract methods (e.g., `maxVersions`) with vals.

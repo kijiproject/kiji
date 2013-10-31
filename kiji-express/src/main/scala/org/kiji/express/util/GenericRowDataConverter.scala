@@ -48,10 +48,10 @@ import org.kiji.schema.util.ResourceUtils
  * @param uri to a Kiji instance for rows that will be converted.
  * @param conf is the hadoop configuration used when accessing Kiji.
  */
-@ApiAudience.Private
+@ApiAudience.Framework
 @ApiStability.Experimental
 @Inheritance.Sealed
-private[express] final class GenericRowDataConverter(uri: KijiURI, conf: Configuration) {
+final class GenericRowDataConverter(uri: KijiURI, conf: Configuration) {
 
   /**
    * The Kiji instance containing the tables whose rows will be converted.

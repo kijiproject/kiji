@@ -64,7 +64,7 @@ trait EntityId extends Product with Ordered[EntityId] {
    *     EntityId.
    * @return the Java EntityId backing this EntityId.
    */
-  private[express] def toJavaEntityId(eidFactory: EntityIdFactory): JEntityId
+  def toJavaEntityId(eidFactory: EntityIdFactory): JEntityId
 
   /**
    * Get the index'th component of the EntityId.

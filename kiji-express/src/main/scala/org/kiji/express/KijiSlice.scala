@@ -76,7 +76,7 @@ import org.kiji.schema.KijiRowData
 @ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Sealed
-class KijiSlice[T] private[express] (val cells: Seq[Cell[T]]) extends Serializable {
+class KijiSlice[T] (val cells: Seq[Cell[T]]) extends Serializable {
   /**
    * Gets the first cell, as decided by the ordering of the slice.
    *
@@ -427,6 +427,8 @@ class KijiSlice[T] private[express] (val cells: Seq[Cell[T]]) extends Serializab
 /**
  * A factory for KijiSlices.
  */
+@ApiAudience.Framework
+@ApiStability.Experimental
 object KijiSlice {
  /**
   * A factory method for instantiating a KijiSlice, given an iterator of
@@ -436,7 +438,7 @@ object KijiSlice {
   * @tparam T is the type of the data stored in the underlying cells.
   * @return a KijiSlice that contains the data passed in through the cellIter.
   */
-  private[express] def apply[T](cellIter: Iterator[KijiCell[T]]): KijiSlice[T] = {
+  def apply[T](cellIter: Iterator[KijiCell[T]]): KijiSlice[T] = {
     val cells: Seq[Cell[T]] = cellIter.toSeq.map { kijiCell: KijiCell[T] => Cell[T](kijiCell) }
     new KijiSlice[T](cells)
   }
@@ -449,7 +451,7 @@ object KijiSlice {
    * @tparam T the type of data in the cells.
    * @return a new slice of cells in the specified family.
    */
-  private[express] def apply[T](row: KijiRowData, family: String): KijiSlice[T] = {
+  def apply[T](row: KijiRowData, family: String): KijiSlice[T] = {
     KijiSlice(row.asIterable[T](family).iterator().asScala)
   }
 
@@ -462,7 +464,7 @@ object KijiSlice {
    * @tparam T the type of data in the cells.
    * @return a new slice of cells in the specified family.
    */
-  private[express] def apply[T](row: KijiRowData,
+  def apply[T](row: KijiRowData,
       family: String,
       qualifier: String): KijiSlice[T] = {
     KijiSlice(row.asIterable[T](family, qualifier).iterator().asScala)

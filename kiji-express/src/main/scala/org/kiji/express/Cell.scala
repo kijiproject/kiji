@@ -39,7 +39,7 @@ import org.kiji.schema.KijiCell
 @ApiStability.Experimental
 @Inheritance.Sealed
 case class
-Cell[T] private[express] (family: String,
+Cell[T] (family: String,
     qualifier: String,
     version: Long,
     datum: T)
