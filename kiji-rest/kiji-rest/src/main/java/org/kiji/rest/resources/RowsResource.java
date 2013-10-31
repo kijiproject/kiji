@@ -59,7 +59,6 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonParser.Feature;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
@@ -69,7 +68,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.yammer.metrics.annotation.Timed;
 
-import org.apache.commons.codec.binary.Hex;
 import org.apache.hadoop.hbase.HConstants;
 
 import org.kiji.annotations.ApiAudience;
@@ -79,7 +77,6 @@ import org.kiji.rest.config.FresheningConfiguration;
 import org.kiji.rest.representations.KijiRestRow;
 import org.kiji.rest.util.RowResourceUtil;
 import org.kiji.schema.EntityId;
-import org.kiji.schema.EntityIdFactory;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequestBuilder;
@@ -258,8 +255,8 @@ public class RowsResource {
    * @param instance is the instance where the table resides.
    * @param table is the table where the rows from which the rows will be streamed
    * @param jsonEntityId the entity_id of the row to return.
-   * @param startHBaseRowKey the hex representation of the starting hbase row key.
-   * @param endHBaseRowKey the hex representation of the ending hbase row key.
+   * @param startEidString the left endpoint eid of the range scan.
+   * @param endEidString the right endpoint eid of the range scan.
    * @param limit the maximum number of rows to return. Set to -1 to stream all rows.
    * @param columns is a comma separated list of columns (either family or family:qualifier) to
    *        fetch
@@ -281,8 +278,8 @@ public class RowsResource {
   public Response getRows(@PathParam(INSTANCE_PARAMETER) String instance,
       @PathParam(TABLE_PARAMETER) String table,
       @QueryParam("eid") String jsonEntityId,
-      @QueryParam("start_rk") String startHBaseRowKey,
-      @QueryParam("end_rk") String endHBaseRowKey,
+      @QueryParam("start_eid") String startEidString,
+      @QueryParam("end_eid") String endEidString,
       @QueryParam("limit") @DefaultValue("100") int limit,
       @QueryParam("cols") @DefaultValue("*") String columns,
       @QueryParam("versions") @DefaultValue("1") String maxVersionsString,
@@ -291,17 +288,14 @@ public class RowsResource {
       @QueryParam("timeout") Long timeout,
       @Context UriInfo uriInfo) {
     // CSON: ParameterNumberCheck - There are a bunch of query param options
-
     long[] timeRanges = null;
     KijiTable kijiTable = mKijiClient.getKijiTable(instance, table);
     Iterable<KijiRowData> scanner = null;
     int maxVersions;
     KijiDataRequestBuilder dataBuilder = KijiDataRequest.builder();
-
     if (timeRange != null) {
       timeRanges = getTimestamps(timeRange);
     }
-
     try {
       if (UNLIMITED_VERSIONS.equalsIgnoreCase(maxVersionsString)) {
         maxVersions = HConstants.ALL_VERSIONS;
@@ -311,25 +305,21 @@ public class RowsResource {
     } catch (NumberFormatException nfe) {
       throw new WebApplicationException(nfe, Status.BAD_REQUEST);
     }
-
     if (timeRange != null) {
       dataBuilder.withTimeRange(timeRanges[0], timeRanges[1]);
     }
-
     ColumnsDef colsRequested = dataBuilder.newColumnsDef().withMaxVersions(maxVersions);
     List<KijiColumnName> requestedColumns = addColumnDefs(kijiTable.getLayout(), colsRequested,
         columns);
-
-    if (jsonEntityId != null && (startHBaseRowKey != null || endHBaseRowKey != null)) {
+    if (jsonEntityId != null && (startEidString != null || endEidString != null)) {
       throw new WebApplicationException(new IllegalArgumentException("Ambiguous request. "
-          + "Specified both jsonEntityId and start/end HBase row keys."), Status.BAD_REQUEST);
+          + "Specified both jsonEntityId and start/end entity Ids."), Status.BAD_REQUEST);
     }
-
     try {
       if (jsonEntityId != null) {
-        // Attempt to parse eid for potential wildcards.
-        // Construction of EntityIdComponents fails if jsonEntityId is not a valid.
-        try {
+        if (!jsonEntityId.startsWith(ToolUtils.HBASE_ROW_KEY_SPEC_PREFIX)
+            && !jsonEntityId.startsWith(ToolUtils.KIJI_ROW_KEY_SPEC_PREFIX)) {
+          // Parse components for potential wildcards.
           final EntityIdComponents components = new EntityIdComponents(jsonEntityId);
           if (components.isWildcarded()) {
             // Wildcards were found, continue with FormattedEntityIdRowFilter.
@@ -354,7 +344,7 @@ public class RowsResource {
                 timeout != null ? timeout : mFreshenConfig.getTimeout(),
                 getFresheningParameters(uriInfo.getQueryParameters())));
           }
-        } catch (JsonProcessingException io) {
+        } else {
           // Eid could not be parsed as a json. Try parsing as a byte array through ToolUtils.
           EntityId eid = ToolUtils.createEntityIdFromUserInputs(
               jsonEntityId,
@@ -370,23 +360,15 @@ public class RowsResource {
               getFresheningParameters(uriInfo.getQueryParameters())));
         }
       } else {
-        // Json array eid not found. Continue with a rowkey scan.
-        EntityIdFactory eidFactory = EntityIdFactory.getFactory(kijiTable.getLayout());
+        // Single eid not provided. Continue with a range scan.
         final KijiScannerOptions scanOptions = new KijiScannerOptions();
-        if (startHBaseRowKey != null) {
-          EntityId eid = eidFactory.getEntityIdFromHBaseRowKey(Hex.decodeHex(startHBaseRowKey
-              .toCharArray()));
-          scanOptions.setStartRow(eid);
+        if (startEidString != null) {
+          scanOptions.setStartRow(getEntityIdFromString(startEidString, kijiTable));
         }
-
-        if (endHBaseRowKey != null) {
-          EntityId eid = eidFactory.getEntityIdFromHBaseRowKey(Hex.decodeHex(endHBaseRowKey
-              .toCharArray()));
-          scanOptions.setStopRow(eid);
+        if (endEidString != null) {
+          scanOptions.setStopRow(getEntityIdFromString(endEidString, kijiTable));
         }
-
         final KijiTableReader reader = kijiTable.openTableReader();
-
         scanner = reader.getScanner(dataBuilder.build(), scanOptions);
       }
     } catch (RuntimeException e) {
@@ -403,6 +385,32 @@ public class RowsResource {
   }
 
   /**
+   * Construct eid from a non-wildcarded eid string.
+   *
+   * @param eidString of the row and is not wild-carded.
+   * @param table in which the eid exists.
+   * @return the eid.
+   * @throws IOException if the eid can not be properly constructed.
+   */
+  private static EntityId getEntityIdFromString(
+      final String eidString,
+      final KijiTable table) throws IOException {
+    if (!eidString.startsWith(ToolUtils.HBASE_ROW_KEY_SPEC_PREFIX)
+      && !eidString.startsWith(ToolUtils.KIJI_ROW_KEY_SPEC_PREFIX)) {
+      // Attempt to parse the components.
+      EntityIdComponents endEidComponents = new EntityIdComponents(eidString);
+      if (endEidComponents.isWildcarded()) {
+        throw new IllegalArgumentException("Range-scan entity id "
+            + "must be fully specified, without wildcards.");
+      }
+      return table.getEntityId(endEidComponents.getComponents());
+    } else {
+      // Attempt to parse the byte array.
+      return ToolUtils.createEntityIdFromUserInputs(eidString, table.getLayout());
+    }
+  }
+
+  /**
    * Maintains list of components which can be formed into an entityId (isWildcarded is false);
    * or fed into FormattedEntityIdRowFilter (isWildcarded is true).
    */
@@ -415,7 +423,6 @@ public class RowsResource {
      * specifies whether there are wildcards (with nulls array elements).
      *
      * @param json string of components of entity id.
-     * @throws JsonProcessingException if entity id can not be resolved as a json array.
      * @throws IOException if parsing failed for some other reason.
      */
     public EntityIdComponents(final String json) throws IOException {

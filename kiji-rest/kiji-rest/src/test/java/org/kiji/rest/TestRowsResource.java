@@ -20,6 +20,7 @@
 package org.kiji.rest;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -185,6 +186,41 @@ public class TestRowsResource extends ResourceTest {
     writer.close();
     fakeTable.release();
 
+    // Build another table with multi-component Eids.
+    // Set up table and data.
+    final KijiTableLayout playersTableLayout =
+        KijiTableLayouts.getTableLayout("org/kiji/rest/layouts/players_table.json");
+    mFakeKiji.createTable(playersTableLayout.getDesc());
+    final KijiTable playersTable = mFakeKiji.openTable("players");
+    final KijiTableWriter playersTableWriter = playersTable.openTableWriter();
+    playersTableWriter.put(
+        playersTable.getEntityId("seleukos", "asia.central"),
+        "info",
+        "fullname",
+        "Seleukos Nikator");
+    playersTableWriter.put(
+        playersTable.getEntityId("seleukos", "makedonia"),
+        "info",
+        "fullname",
+        "Seleukos of Macedon");
+    playersTableWriter.put(
+        playersTable.getEntityId("cassander", "greece"),
+        "info",
+        "fullname",
+        "Cassander");
+    playersTableWriter.put(
+        playersTable.getEntityId("antipater", "makedonia"),
+        "info",
+        "fullname",
+        "Antipater");
+    playersTableWriter.put(
+        playersTable.getEntityId("ptolemaios", "africa.north"),
+        "info",
+        "fullname",
+        "Ptolemy Soter");
+    playersTableWriter.close();
+    playersTable.release();
+
     KijiRESTService.registerSerializers(this.getObjectMapperFactory());
     mKijiClient = new ManagedKijiClient(Sets.newHashSet(mFakeKiji.getURI()));
     mKijiClient.start();
@@ -199,7 +235,7 @@ public class TestRowsResource extends ResourceTest {
     EntityId eid = fakeTable.getEntityId(components);
     String hexRowKey = Hex.encodeHexString(eid.getHBaseRowKey());
     fakeTable.release();
-    return hexRowKey;
+    return "hbase=hex:" + hexRowKey;
   }
 
   protected final String getUrlEncodedEntityIdString(String table, Object... components)
@@ -468,25 +504,6 @@ public class TestRowsResource extends ResourceTest {
 
   @Test
   public void testShouldPrintWildcardedColumn() throws Exception {
-    // Set up table and data.
-    final KijiTableLayout layout =
-        KijiTableLayouts.getTableLayout("org/kiji/rest/layouts/players_table.json");
-    mFakeKiji.createTable(layout.getDesc());
-    final KijiTable table = mFakeKiji.openTable("players");
-    final KijiTableWriter writer = table.openTableWriter();
-    writer.put(
-        table.getEntityId("seleukos", "asia.central"), "info", "fullname", "Seleukos Nikator");
-    writer.put(
-        table.getEntityId("seleukos", "makedonia"), "info", "fullname", "Seleukos of Macedon");
-    writer.put(
-        table.getEntityId("cassander", "greece"), "info", "fullname", "Cassander");
-    writer.put(
-        table.getEntityId("antipater", "makedonia"), "info", "fullname", "Antipater");
-    writer.put(
-        table.getEntityId("ptolemaios", "africa.north"), "info", "fullname", "Ptolemy Soter");
-    writer.close();
-    table.release();
-
     // Request partial entity id.
     String eid = "[[],\"makedonia\"]";
     URI resourceURI = UriBuilder.fromResource(RowsResource.class)
@@ -589,12 +606,53 @@ public class TestRowsResource extends ResourceTest {
     String eid = getHBaseRowKeyHex("sample_table", 12345L);
 
     URI resourceURI = UriBuilder.fromResource(RowsResource.class)
-        .queryParam("start_rk", eid)
-        .queryParam("end_rk", "44018000000000003040")
+        .queryParam("start_eid", eid)
+        .queryParam("end_eid", "hbase=hex:44018000000000003040")
         .build("default", "sample_table");
 
     KijiRestRow row = client().resource(resourceURI).get(KijiRestRow.class);
     assertEquals("[12345]", row.getEntityId());
+  }
+
+  @Test
+  public void testShouldReturnRangeFromMulticomponentKeyTable() throws Exception {
+    URI resourceURI = UriBuilder.fromResource(RowsResource.class)
+        .queryParam("start_eid", "[\"seleukos\", \"a\"]")
+        .queryParam("end_eid", "[\"seleukos\", \"z\"]")
+        .build("default", "players");
+    String returnRows = client().resource(resourceURI).get(String.class);
+    assertTrue(returnRows.contains("asia.central"));
+    assertTrue(returnRows.contains("makedonia"));
+  }
+
+  @Test
+  public void testShouldReturnRangeWhenRightEndpointIsNotSpecified() throws Exception {
+    URI resourceURI = UriBuilder.fromResource(RowsResource.class)
+        .queryParam("start_eid", "[\"antipater\"]")
+        .build("default", "players");
+    String returnRows = client().resource(resourceURI).get(String.class);
+    // Contains antipater's and seleukos' data.
+    assertTrue(returnRows.contains("asia.central"));
+    assertTrue(returnRows.contains("antipater"));
+    assertTrue(returnRows.contains("asia.central"));
+    assertTrue(returnRows.contains("seleukos"));
+    // Does not contain ptolemaios' and cassander's data.
+    assertFalse(returnRows.contains("cassander"));
+    assertFalse(returnRows.contains("ptolemaios"));
+  }
+
+  @Test
+  public void testShouldReturnRangeWhenLeftEndpointIsNotSpecified() throws Exception {
+    URI resourceURI = UriBuilder.fromResource(RowsResource.class)
+        .queryParam("end_eid", "[\"antipater\", \"makedonia\"]")
+        .build("default", "players");
+    String returnRows = client().resource(resourceURI).get(String.class);
+    // Contains cassander's and ptolemaios' data.
+    assertTrue(returnRows.contains("cassander"));
+    assertTrue(returnRows.contains("ptolemaios"));
+    // Does not contain seleukos' and antipater's data.
+    assertFalse(returnRows.contains("seleukos"));
+    assertFalse(returnRows.contains("antipater"));
   }
 
   @Test

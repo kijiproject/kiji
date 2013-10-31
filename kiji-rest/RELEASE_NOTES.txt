@@ -2,6 +2,7 @@
                               KijiREST Release Notes
 
 Version 1.0.0
+  * REST-48. Adds start_eid/end_eid and removes start_rk/end_rk.
   * REST-60. Removes the entityId endpoint of tables.
   * REST-50. Check that the table still exists before returning it in 
       ManagedKijiClient.
