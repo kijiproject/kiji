@@ -315,6 +315,7 @@ public class RowsResource {
       throw new WebApplicationException(new IllegalArgumentException("Ambiguous request. "
           + "Specified both jsonEntityId and start/end entity Ids."), Status.BAD_REQUEST);
     }
+    KijiTableReader reader = null;
     try {
       if (jsonEntityId != null) {
         if (!jsonEntityId.startsWith(ToolUtils.HBASE_ROW_KEY_SPEC_PREFIX)
@@ -327,7 +328,7 @@ public class RowsResource {
                 new FormattedEntityIdRowFilter(
                     (RowKeyFormat2) kijiTable.getLayout().getDesc().getKeysFormat(),
                     components.getComponents());
-            final KijiTableReader reader = kijiTable.openTableReader();
+            reader = kijiTable.openTableReader();
             final KijiScannerOptions scanOptions = new KijiScannerOptions();
             scanOptions.setKijiRowFilter(entityIdRowFilter);
             scanner = reader.getScanner(dataBuilder.build(), scanOptions);
@@ -368,7 +369,7 @@ public class RowsResource {
         if (endEidString != null) {
           scanOptions.setStopRow(getEntityIdFromString(endEidString, kijiTable));
         }
-        final KijiTableReader reader = kijiTable.openTableReader();
+        reader = kijiTable.openTableReader();
         scanner = reader.getScanner(dataBuilder.build(), scanOptions);
       }
     } catch (RuntimeException e) {
@@ -376,7 +377,10 @@ public class RowsResource {
     } catch (Exception e) {
       throw new WebApplicationException(e, Status.BAD_REQUEST);
     } finally {
-      // TODO(REST-51): Some of the above readers may need to be closed.
+      // If reader was used, close it.
+      if (null != reader) {
+        ResourceUtils.closeOrLog(reader);
+      }
       ResourceUtils.releaseOrLog(kijiTable);
     }
     KijiSchemaTable schemaTable = mKijiClient.getKijiSchemaTable(instance);
