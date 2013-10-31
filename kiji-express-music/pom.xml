@@ -25,6 +25,7 @@
   <properties>
     <kiji.framework.version>1.2.1</kiji.framework.version>
     <express.version>0.11.0-SNAPSHOT</express.version>
+    <modeling.version>0.1.0-SNAPSHOT</modeling.version>
     <scalatest.version>2.0.M5b</scalatest.version>
   </properties>
 
@@ -42,6 +43,12 @@
       <groupId>org.kiji.express</groupId>
       <artifactId>kiji-express</artifactId>
       <version>${express.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.modeling</groupId>
+      <artifactId>kiji-modeling</artifactId>
+      <version>${modeling.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
@@ -68,6 +75,13 @@
       <groupId>org.kiji.express</groupId>
       <artifactId>kiji-express</artifactId>
       <version>${express.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.modeling</groupId>
+      <artifactId>kiji-modeling</artifactId>
+      <version>${modeling.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>

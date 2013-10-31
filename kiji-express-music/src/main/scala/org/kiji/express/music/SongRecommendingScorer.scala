@@ -23,7 +23,7 @@ import java.util.Random
 
 import org.kiji.express.AvroRecord
 import org.kiji.express.EntityId
-import org.kiji.express.modeling.Scorer
+import org.kiji.modeling.Scorer
 
 /**
  * Recommends the song most frequently played after the song a user has most recently

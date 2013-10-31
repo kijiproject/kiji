@@ -29,9 +29,9 @@ import org.kiji.express.AvroRecord
 import org.kiji.express.EntityId
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow._
-import org.kiji.express.modeling.ScoreProducerJobBuilder
-import org.kiji.express.modeling.config.ModelDefinition
-import org.kiji.express.modeling.config.ModelEnvironment
+import org.kiji.modeling.ScoreProducerJobBuilder
+import org.kiji.modeling.config.ModelDefinition
+import org.kiji.modeling.config.ModelEnvironment
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiDataRequest
 
@@ -49,8 +49,8 @@ class RecommendationModelSuite extends KijiSuite {
       |  "name" : "song-recommender",
       |  "version" : "1.0.0",
       |  "scorer_phase":{
-      |    "org.kiji.express.avro.AvroPhaseDefinition":{
-      |      "extractor_class":"org.kiji.express.modeling.lib.FirstValueExtractor",
+      |    "org.kiji.modeling.avro.AvroPhaseDefinition":{
+      |      "extractor_class":"org.kiji.modeling.lib.FirstValueExtractor",
       |      "phase_class":"org.kiji.express.music.SongRecommendingScorer"
       |    }
       |  }
@@ -67,7 +67,7 @@ class RecommendationModelSuite extends KijiSuite {
       | "name" : "song-recommender-env",
       | "version" : "1.0.0",
       | "score_environment":{
-      |   "org.kiji.express.avro.AvroScoreEnvironment":{
+      |   "org.kiji.modeling.avro.AvroScoreEnvironment":{
       |     "input_spec":{
       |       "table_uri":"%s",
       |       "data_request":{

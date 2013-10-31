@@ -21,10 +21,10 @@
   "version" : "1.0.0",
   "protocol_version" : "model_environment-0.2.0",
   "score_environment" : {
-    "org.kiji.express.avro.AvroScoreEnvironment":{
+    "org.kiji.modeling.avro.AvroScoreEnvironment":{
       "input_spec":{
         "kiji_specification":{
-          "org.kiji.express.avro.AvroKijiInputSpec":{
+          "org.kiji.modeling.avro.AvroKijiInputSpec":{
             "table_uri" : "kiji://.env/default/users",
             "data_request" : {
               "column_definitions" : [ {
@@ -51,7 +51,7 @@
       } ],
       "output_spec" : {
         "kiji_column_specification" : {
-          "org.kiji.express.avro.AvroKijiSingleColumnOutputSpec" : {
+          "org.kiji.modeling.avro.AvroKijiSingleColumnOutputSpec" : {
             "table_uri": "kiji://.env/default/users",
             "output_column" : "info:next_song_rec"
           }

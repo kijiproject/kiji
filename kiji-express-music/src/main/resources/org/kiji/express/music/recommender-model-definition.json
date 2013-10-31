@@ -20,8 +20,8 @@
   "name" : "song-recommender",
   "version" : "1.0.0",
   "scorer_phase" : {
-    "org.kiji.express.avro.AvroPhaseDefinition" : {
-      "extractor_class" : "org.kiji.express.modeling.lib.FirstValueExtractor",
+    "org.kiji.modeling.avro.AvroPhaseDefinition" : {
+      "extractor_class" : "org.kiji.modeling.lib.FirstValueExtractor",
       "phase_class" : "org.kiji.express.music.SongRecommendingScorer"
     }
   },
