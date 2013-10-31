@@ -90,39 +90,4 @@ trait ShellExtSuite extends KijiSuite {
   protected def getLoadedParser(): DDLParser = {
     new DDLParser(getLoadedEnvironment())
   }
-
-  /**
-   * Executes a series of KijiSchema Shell DDL commands, separated by `;`.
-   *
-   * @param kiji to execute the commands against.
-   * @param commands to execute against the Kiji instance.
-   */
-  def executeDDLString(kiji: Kiji, commands: String) {
-    doAndClose(Client.newInstance(kiji.getURI)) { ddlClient =>
-      ddlClient.executeUpdate(commands)
-    }
-  }
-
-  /**
-   * Executes a series of KijiSchema Shell DDL commands, separated by `;`.
-   *
-   * @param kiji to execute the commands against.
-   * @param stream to read a series of commands to execute against the Kiji instance.
-   */
-  def executeDDLStream(kiji: Kiji, stream: InputStream) {
-    doAndClose(Client.newInstance(kiji.getURI)) { ddlClient =>
-      ddlClient.executeStream(stream)
-    }
-  }
-
-  /**
-   * Executes a series of KijiSchema Shell DDL commands, separated by `;`.
-   *
-   * @param kiji to execute the commands against.
-   * @param resourcePath to the classpath resource that a series of commands to execute
-   *     against the Kiji instance will be read from.
-   */
-  def executeDDLResource(kiji: Kiji, resourcePath: String) {
-    executeDDLStream(kiji, getClass.getClassLoader.getResourceAsStream(resourcePath))
-  }
 }
