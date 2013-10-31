@@ -1,0 +1,220 @@
+/**
+ * (c) Copyright 2013 WibiData, Inc.
+ *
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+{
+  "protocol_version":"model_environment-0.3.0",
+  "name":"myRunProfile",
+  "version":"1.0.0",
+  "prepare_environment":{
+    "org.kiji.modeling.avro.AvroPrepareEnvironment":{
+      "input_spec":{
+        "kijitableinput" : {
+          "kiji_specification":{
+            "org.kiji.modeling.avro.AvroKijiInputSpec":{
+              "table_uri":"kiji://.env/default/table",
+              "data_request":{
+                "min_timestamp":0,
+                "max_timestamp":38475687,
+                "column_definitions":[{
+                  "name":"info:in",
+                  "max_versions":3,
+                  "filter":{
+                    "org.kiji.modeling.avro.AvroFilter":{
+                      "regex_filter":{
+                        "org.kiji.modeling.avro.AvroRegexQualifierFilter":{
+                          "regex":"foo"
+                        }
+                      }
+                    }
+                  }
+                }]
+              },
+              "field_bindings":[{
+                "tuple_field_name":"tuplename",
+                "store_field_name":"info:storefieldname"
+              }]
+            }
+          }
+        }
+      },
+      "output_spec":{
+        "kijitableoutput" : {
+          "kiji_specification":{
+            "org.kiji.modeling.avro.AvroKijiOutputSpec":{
+              "table_uri":"kiji://myuri",
+              "field_bindings":[{
+                "tuple_field_name":"outputtuple",
+                "store_field_name":"info:out"
+              }]
+            }
+          }
+        }
+      },
+      "kv_stores":[{
+        "store_type":"AVRO_KV",
+        "name":"side_data",
+        "properties":[{
+          "name":"path",
+          "value":"/usr/src/and/so/on"
+        }]
+      }]
+    }
+  },
+  "train_environment":{
+    "org.kiji.modeling.avro.AvroTrainEnvironment":{
+      "input_spec":{
+        "kijitableinput" : {
+          "kiji_specification":{
+            "org.kiji.modeling.avro.AvroKijiInputSpec":{
+              "table_uri":"kiji://.env/default/table",
+              "data_request":{
+                "min_timestamp":0,
+                "max_timestamp":38475687,
+                "column_definitions":[{
+                  "name":"info:in",
+                  "max_versions":3,
+                  "filter":{
+                    "org.kiji.modeling.avro.AvroFilter":{
+                      "regex_filter":{
+                        "org.kiji.modeling.avro.AvroRegexQualifierFilter":{
+                          "regex":"foo"
+                        }
+                      }
+                    }
+                  }
+                }]
+              },
+              "field_bindings":[{
+                "tuple_field_name":"tuplename",
+                "store_field_name":"info:storefieldname"
+              }]
+            }
+          }
+        }
+      },
+      "output_spec": {
+        "kijitableoutput" : {
+          "kiji_specification":{
+            "org.kiji.modeling.avro.AvroKijiOutputSpec":{
+              "table_uri":"kiji://myuri",
+              "field_bindings":[{
+                "tuple_field_name":"outputtuple",
+                "store_field_name":"info:out"
+              }]
+            }
+          }
+        }
+      },
+      "kv_stores":[{
+        "store_type":"AVRO_KV",
+        "name":"side_data",
+        "properties":[{
+          "name":"path",
+          "value":"/usr/src/and/so/on"
+        }]
+      }]
+    }
+  },
+  "score_environment":{
+    "org.kiji.modeling.avro.AvroScoreEnvironment":{
+      "input_spec":{
+        "table_uri":"kiji://.env/default/table",
+        "data_request":{
+          "min_timestamp":0,
+          "max_timestamp":38475687,
+          "column_definitions":[{
+            "name":"info:in",
+            "max_versions":3,
+            "filter":{
+              "org.kiji.modeling.avro.AvroFilter":{
+                "regex_filter":{
+                  "org.kiji.modeling.avro.AvroRegexQualifierFilter":{
+                    "regex":"foo"
+                  }
+                }
+              }
+            }
+          }]
+        },
+        "field_bindings":[{
+          "tuple_field_name":"tuplename",
+          "store_field_name":"info:storefieldname"
+        }]
+      },
+      "kv_stores":[{
+        "store_type":"AVRO_KV",
+        "name":"side_data",
+        "properties":[{
+          "name":"path",
+          "value":"/usr/src/and/so/on"
+        }]
+      }],
+      "output_spec":{
+        "table_uri":"kiji://myuri",
+        "output_column":"info:out"
+      }
+    }
+  },
+  "evaluate_environment":{
+    "org.kiji.modeling.avro.AvroEvaluateEnvironment":{
+      "input_spec":{
+        "table_uri":"kiji://.env/default/table",
+        "data_request":{
+          "min_timestamp":0,
+          "max_timestamp":38475687,
+          "column_definitions":[{
+            "name":"info:in",
+            "max_versions":3,
+            "filter":{
+              "org.kiji.modeling.avro.AvroFilter":{
+                "regex_filter" : {
+                  "org.kiji.modeling.avro.AvroRegexQualifierFilter":{
+                    "regex":"foo"
+                  }
+                }
+              }
+            }
+          }]
+        },
+        "field_bindings":[{
+          "tuple_field_name":"tuplename",
+          "store_field_name":"info:storefieldname"
+        }]
+      },
+      "output_spec": {
+        "kiji_specification":{
+          "org.kiji.modeling.avro.AvroKijiOutputSpec":{
+            "table_uri":"kiji://myuri",
+            "field_bindings":[{
+              "tuple_field_name":"outputtuple",
+              "store_field_name":"info:out"
+            }]
+          }
+        }
+      },
+      "kv_stores":[{
+        "store_type":"AVRO_KV",
+        "name":"side_data",
+        "properties":[{
+          "name":"path",
+          "value":"/usr/src/and/so/on"
+        }]
+      }]
+    }
+  }
+}
