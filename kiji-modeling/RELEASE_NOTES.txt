@@ -1,0 +1,5 @@
+
+                             KijiModeling Release Notes
+
+Version 0.1.0
+  * EXP-249. Moved KijiModeling to its own project.
