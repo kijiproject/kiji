@@ -5,7 +5,7 @@ categories: [userguides, schema, devel]
 component: schema
 version: devel
 tags : [schema-ug]
-order : 7
+order : 8
 description: A reference of commands available for the schema command line tool.
 ---
 

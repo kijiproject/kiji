@@ -5,7 +5,7 @@ id: userguide/ddl-ref
 categories: [userguides, schema, devel]
 component: schema
 version: devel
-order : 6
+order : 7
 tags: [schema-ug]
 description: An introduction to the DDL that manipulates table layouts.
 ---

@@ -28,6 +28,22 @@ kiji ls kiji://.env/default/job_history
 
 Jobs that extend [`KijiMapReduceJob`]({{site.api_mr_devel}}/framework/KijiMapReduceJob.html) will automatically record metadata to the `job_history` table.
 
+#### Security
+For more information on Kiji security, see the KijiSchema userguide. If you have a secure Kiji
+instance, KijiMR should "just work", except that users without WRITE permissions on the instance
+will not have their jobs recorded in the Job History Table, and you will see a non-fatal error even
+if the job ran successfully.  For example, users with only READ permissions on the instance will be
+able to run Gatherers, but those jobs will not be recorded.
+
+You can grant WRITE permissions on an instance, if you have GRANT permission, as follows:
+
+{% highlight bash %}
+kiji-schema-shell
+schema > MODULE security;
+schema > GRANT WRITE PRIVILEGES ON INSTANCE 'kiji://myzk:2181/myinstance' TO USER 'ada';
+OK.
+{% endhighlight %}
+
 ### Classes Overview
 
 The [`JobHistoryKijiTable`]({{site.api_mr_devel}}/framework/JobHistoryKijiTable.html) class is the main class responsible for providing access to
