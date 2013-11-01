@@ -366,7 +366,7 @@ object KijiScheme {
    * This is used in the `source` method of KijiScheme, for reading rows from Kiji into
    * KijiExpress tuples.
    *
-   * @param columns Mapping from field name to column definition.
+   * @param inputColumns Mapping from field name to column definition.
    * @param fields Field names of desired tuple elements.
    * @param timestampField is the optional name of a field containing the timestamp that all values
    *     in a tuple should be written to.
@@ -469,7 +469,7 @@ object KijiScheme {
    *
    * This is used in KijiScheme's `sink` method.
    *
-   * @param columns mapping field names to column definitions.
+   * @param outputColumns mapping field names to column definitions.
    * @param tableUri of the Kiji table.
    * @param kiji is the Kiji instance the table belongs to.
    * @param timestampField is the optional name of a field containing the timestamp that all values
@@ -511,7 +511,7 @@ object KijiScheme {
      * Gets the schema from the schemaIdOption if it exists, otherwise tries to resolve the default
      * reader schema for the table.  Returns None if neither of those are possible.
      *
-     * @param getColumnName() of the column to try to get the schema for.
+     * @param columnName of the column to try to get the schema for.
      * @param schemaSpecOption of the schema to try to resolve.
      * @return a schema to use for writing, if possible.
      */
@@ -649,7 +649,7 @@ object KijiScheme {
    * specified as qualifiers for a map-type column family will also be included. A timestamp field
    * can also be included, identifying a timestamp that all values will be written to.
    *
-   * @param columns is the column requests for this Scheme, with the names of each of the fields
+   * @param outputColumns is the column requests for this Scheme, with the names of each of the fields
    *     that contain data to write to Kiji.
    * @param timestampField is the optional name of a field containing the timestamp that all values
    *     in a tuple should be written to.

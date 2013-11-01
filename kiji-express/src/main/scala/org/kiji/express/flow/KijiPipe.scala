@@ -140,6 +140,9 @@ class KijiPipe(private[express] val pipe: Pipe) extends TupleConversions {
    */
   def run() {
     getJob(new Args(Map())).run(Mode.mode)
+
+    // Clear the REPL state after running a job.
+    Implicits.resetFlowDef()
   }
 
   /**

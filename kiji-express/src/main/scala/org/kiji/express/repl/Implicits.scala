@@ -45,7 +45,7 @@ object Implicits
   /**
    * Sets the flow definition in implicit scope to an empty flow definition.
    */
-  private[express] def resetFlowDef() {
+  def resetFlowDef() {
     flowDef = getEmptyFlowDef
   }
 
