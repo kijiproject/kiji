@@ -284,7 +284,7 @@ object KijiSource {
    * @param columnMap Mapping from field name to Kiji column name.
    * @return Java map from field name to column definition.
    */
-  private def convertKeysToStrings[T <: Any](columnMap: Map[Symbol, T])
+  private[express] def convertKeysToStrings[T <: Any](columnMap: Map[Symbol, T])
       : Map[String, T] = {
     columnMap.map { case (symbol, column) => (symbol.name, column) }
   }

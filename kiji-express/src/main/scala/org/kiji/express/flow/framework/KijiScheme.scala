@@ -342,6 +342,9 @@ class KijiScheme(
 @ApiAudience.Framework
 @ApiStability.Experimental
 object KijiScheme {
+
+  type HadoopScheme = Scheme[JobConf, RecordReader[_, _], OutputCollector[_, _], _, _]
+
   private val logger: Logger = LoggerFactory.getLogger(classOf[KijiScheme])
 
   /** Hadoop mapred counter group for KijiExpress. */

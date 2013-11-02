@@ -139,7 +139,7 @@ final case class ColumnFamilyRequestOutput (
   // TODO: Require a schema (EXP-248)
   //require(useDefaultReaderSchema || schemaId.isDefined)
   if (family.contains(':')) {
-    throw new KijiInvalidNameException("Cannot hae a : in family name for map-type request")
+    throw new KijiInvalidNameException("Cannot have a : in family name for map-type request")
   }
 
   /** Returns name (``family``) for requested column as KijiColumnName. */

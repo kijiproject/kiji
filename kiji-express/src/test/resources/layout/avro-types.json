@@ -49,6 +49,12 @@
           value : '"bytes"'
         }
       }, {
+        name : "double_column",
+        column_schema : {
+          type : "INLINE",
+          value : '"double"'
+        }
+      }, {
         name : "column3",
         column_schema : {
           type : "CLASS",
