@@ -649,8 +649,8 @@ object KijiScheme {
    * specified as qualifiers for a map-type column family will also be included. A timestamp field
    * can also be included, identifying a timestamp that all values will be written to.
    *
-   * @param outputColumns is the column requests for this Scheme, with the names of each of the fields
-   *     that contain data to write to Kiji.
+   * @param outputColumns is the column requests for this Scheme, with the names of each of the
+   *     fields that contain data to write to Kiji.
    * @param timestampField is the optional name of a field containing the timestamp that all values
    *     in a tuple should be written to.
    *     Use None if all values should be written at the current time.
