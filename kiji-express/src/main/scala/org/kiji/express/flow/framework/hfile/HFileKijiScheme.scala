@@ -48,7 +48,6 @@ import org.kiji.express.flow.QualifiedColumnRequestOutput
 import org.kiji.express.flow.TimeRange
 import org.kiji.express.flow.framework.KijiScheme
 import org.kiji.express.flow.framework.KijiSourceContext
-import org.kiji.express.mapreduce.output.HFileCell
 import org.kiji.express.util.Resources
 import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.mapreduce.HFileLoader
@@ -246,6 +245,22 @@ private[express] case class HFileKijiSinkContext (
   layout: KijiTableLayout,
   columnTranslator: ColumnNameTranslator
 )
+
+/**
+ * A cell from a Kiji table containing some datum, addressed by a family, qualifier,
+ * and version timestamp.
+ *
+ * @param family of the Kiji table cell.
+ * @param qualifier of the Kiji table cell.
+ * @param version  of the Kiji table cell.
+ * @param datum in the Kiji table cell.
+ * @tparam T is the type of the datum in the cell.
+ */
+private[express] case class HFileCell private[express] (
+  entity_id: EntityId,
+  col_request: QualifiedColumnRequestOutput,
+  timestamp: Long,
+  datum: AnyRef)
 
 object HFileKijiScheme {
   type HFileScheme = NullScheme[JobConf, RecordReader[_, _],

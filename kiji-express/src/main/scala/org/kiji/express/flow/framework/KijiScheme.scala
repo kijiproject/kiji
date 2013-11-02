@@ -38,6 +38,7 @@ import org.apache.avro.Schema
 import org.apache.commons.codec.binary.Base64
 import org.apache.commons.lang.SerializationUtils
 import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.hbase.HConstants
 import org.apache.hadoop.mapred.JobConf
 import org.apache.hadoop.mapred.OutputCollector
 import org.apache.hadoop.mapred.RecordReader
@@ -501,7 +502,7 @@ object KijiScheme {
     // Get a timestamp to write the values to, if it was specified by the user.
     val timestamp: Long = timestampField match {
       case Some(field) => output.getObject(field.name).asInstanceOf[Long]
-      case None => System.currentTimeMillis()
+      case None => HConstants.LATEST_TIMESTAMP
     }
 
     val layoutVersion = ProtocolVersion.parse(layout.getDesc.getVersion)
