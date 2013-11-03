@@ -59,21 +59,24 @@ import org.kiji.mapreduce.framework.HFileKeyValue
  *
  * @param args to the job. These get parsed in from the command line by Scalding.
  *
- *     NOTE: To properly work with dumping to HFiles, the argument --hFileOutput must be provided
+ *     NOTE: To properly work with dumping to HFiles, the argument --hfile-output must be provided
  *     which specifies the location where the HFiles will be written upon job completion. Also
  *     required is the --output flag which is the Kiji table to use to obtain layout information
  *     to properly format the HFiles for bulk loading.
  */
 class HFileKijiJob(args: Args) extends KijiJob(args) {
+  /** Name of the command-line argument that specifies the temporary HFile root directory. */
+  final val HFileOutputArgName: String = "hfile-output"
 
-  val HFILE_OUTPUT_ARG = "hFileOutput"
+  /** Name of the command-line argument that specifies the target output table. */
+  final val TableOutputArgName: String = "output"
 
   // Force the check to ensure that a value has been provided for the hFileOutput
-  args(HFILE_OUTPUT_ARG)
-  args("output")
+  args(HFileOutputArgName)
+  args(TableOutputArgName)
 
   @transient
-  lazy private val jobConf = implicitly[Mode] match {
+  lazy private val jobConf: Configuration = implicitly[Mode] match {
     case Hdfs(_, configuration) => {
       configuration
     }
@@ -134,7 +137,7 @@ class HFileKijiJob(args: Args) extends KijiJob(args) {
 private final class HFileMapJob(args: Args) extends HFileKijiJob(args) {
 
   override def next: Option[Job] = {
-      val conf = implicitly[Mode] match {
+    val conf: Configuration = implicitly[Mode] match {
       case Hdfs(_, configuration) => {
         configuration
       }
@@ -143,12 +146,12 @@ private final class HFileMapJob(args: Args) extends HFileKijiJob(args) {
       }
       case _ => new JobConf()
     }
-      val fs = FileSystem.get(conf)
-      val input = args("input")
-      fs.delete(new Path(input), true)
-      None
-    }
+    val fs = FileSystem.get(conf)
+    val input = args("input")
+    fs.delete(new Path(input), true)
+    None
+  }
 
   WritableSequenceFile[HFileKeyValue, NullWritable](args("input"), ('keyValue, 'bogus))
-    .write(new HFileSource(args("output"),args("hFileOutput")))
+      .write(new HFileSource(args(TableOutputArgName),args(HFileOutputArgName)))
 }
