@@ -1,0 +1,74 @@
+<!--
+    (c) Copyright 2013 WibiData, Inc.
+
+    See the NOTICE file distributed with this work for additional
+    information regarding copyright ownership.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<scalastyle>
+  <name>Kiji scalastyle configuration</name>
+  <check enabled="true" class="org.scalastyle.file.FileLineLengthChecker" level="error">
+    <parameters>
+      <parameter name="maxLineLength"><![CDATA[100]]></parameter>
+      <parameter name="tabSize"><![CDATA[2]]></parameter>
+    </parameters>
+  </check>
+  <check enabled="true" class="org.scalastyle.file.FileTabChecker" level="error"></check>
+  <check enabled="true" class="org.scalastyle.file.HeaderMatchesChecker" level="error">
+    <parameters>
+      <parameter name="header"><![CDATA[/**
+ * (c) Copyright 2013 WibiData, Inc.
+ *
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */]]>
+      </parameter>
+    </parameters>
+  </check>
+  <check enabled="true" class="org.scalastyle.file.NewLineAtEofChecker" level="error"></check>
+  <check enabled="true" class="org.scalastyle.file.WhitespaceEndOfLineChecker" level="error"></check>
+  <check enabled="true" class="org.scalastyle.scalariform.ClassNamesChecker" level="error">
+    <parameters>
+      <parameter name="regex"><![CDATA[^[A-Z][A-Za-z0-9]*$]]></parameter>
+    </parameters>
+  </check>
+  <check enabled="true" class="org.scalastyle.scalariform.ObjectNamesChecker" level="error">
+    <parameters>
+      <parameter name="regex"><![CDATA[^[A-Z][A-Za-z0-9]*$]]></parameter>
+    </parameters>
+  </check>
+  <check enabled="true" class="org.scalastyle.scalariform.PackageObjectNamesChecker" level="error">
+    <parameters>
+      <parameter name="regex"><![CDATA[^[a-z][A-Za-z0-9]*$]]></parameter>
+    </parameters>
+  </check>
+  <check enabled="true" class="org.scalastyle.scalariform.IfBraceChecker" level="error"></check>
+  <check enabled="true" class="org.scalastyle.scalariform.NoFinalizeChecker" level="error"></check>
+  <check enabled="true" class="org.scalastyle.scalariform.NoWhitespaceAfterLeftBracketChecker" level="error"></check>
+  <check enabled="true" class="org.scalastyle.scalariform.NoWhitespaceBeforeLeftBracketChecker" level="error"></check>
+  <check enabled="true" class="org.scalastyle.scalariform.NullChecker" level="warning"></check>
+  <check enabled="true" class="org.scalastyle.scalariform.PublicMethodsHaveTypeChecker" level="error"></check>
+</scalastyle>

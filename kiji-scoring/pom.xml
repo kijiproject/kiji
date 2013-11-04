@@ -1,11 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <!--
+    (c) Copyright 2012 WibiData, Inc.
+
+    See the NOTICE file distributed with this work for additional
+    information regarding copyright ownership.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+  -->
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.kiji.scoring</groupId>
-  <artifactId>kiji-scoring</artifactId>
+  <artifactId>kiji-scoring-root</artifactId>
   <version>0.8.0-SNAPSHOT</version>
-  <packaging>jar</packaging>
+  <packaging>pom</packaging>
 
   <parent>
     <groupId>org.kiji.pom</groupId>
@@ -13,160 +31,49 @@
     <version>1.1.3</version>
   </parent>
 
-  <name>kiji-scoring</name>
-  <url>http://maven.apache.org</url>
+  <name>KijiScoring top-level project</name>
+  <description>A library for real time model scoring</description>
+  <inceptionYear>2013</inceptionYear>
 
-  <properties>
-    <kiji-delegation.version>1.0.0</kiji-delegation.version>
-    <kiji-platforms.version>1.1.0</kiji-platforms.version>
-    <kiji-schema.version>1.3.2</kiji-schema.version>
-    <kiji-mapreduce.version>1.0.0</kiji-mapreduce.version>
-    <fake-hbase.version>0.1.0</fake-hbase.version>
-    <jackson.version>1.9.13</jackson.version>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
+  <modules>
+    <module>build-resources</module>
+    <module>kiji-scoring</module>
+    <module>kiji-scoring-server</module>
+  </modules>
 
   <build>
-    <plugins>
-      <plugin>
-        <!--
-            Scoring depends on the oldest version of KijiSchema / KIJIMR that supports it.
-            To test whether the latest Kiji dependency SNAPSHOTs have introduced a regression:
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <!-- must supply build-resources module with checkstyle/checkstyle.xml
+               and suppressions.xml to use this -->
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-checkstyle-plugin</artifactId>
+          <dependencies>
+            <dependency>
+              <groupId>org.kiji.scoring</groupId>
+              <artifactId>build-resources</artifactId>
+              <version>${project.version}</version>
+            </dependency>
+          </dependencies>
+        </plugin>
 
-            Run the following commands in your shell
-
-            mvn versions:update-properties -N # Update the kiji-*.version properties
-                                              # in the top-level pom file; don't recurse.
-            mvn clean verify                  # Uses the new snapshot versions
-            mvn versions:revert               # Revert the pom file to before update-properties.
-                                    # Do not check in new Kiji SNAPSHOT dependencies in the pom.
-        -->
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>versions-maven-plugin</artifactId>
-        <configuration>
-          <includeProperties>kiji-schema.version,kiji-mapreduce.version</includeProperties>
-        </configuration>
-        <dependencies>
-          <dependency>
-            <groupId>org.kiji.schema</groupId>
-            <artifactId>kiji-schema</artifactId>
-            <version>${kiji-schema.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.kiji.mapreduce</groupId>
-            <artifactId>kiji-mapreduce</artifactId>
-            <version>${kiji-mapreduce.version}</version>
-          </dependency>
-        </dependencies>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.avro</groupId>
-        <artifactId>avro-maven-plugin</artifactId>
-        <configuration>
-          <!-- Avro string compiled to java.lang.String instead of CharSequence -->
-          <stringType>String</stringType>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jar-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <!-- configured with files in the src/main/assembly/ directory -->
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-assembly-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-checkstyle-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>findbugs-maven-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-enforcer-plugin</artifactId>
-        <version>1.2</version>
-        <executions>
-          <execution>
-            <id>enforce-file-size</id>
-            <phase>verify</phase>
-            <goals>
-              <goal>enforce</goal>
-            </goals>
-            <configuration>
-              <rules>
-                <requireFilesSize>
-                  <maxsize>0</maxsize>
-                  <files>
-                    <file>target/cleanup.log</file>
-                  </files>
-                </requireFilesSize>
-              </rules>
-              <fail>true</fail>
-              <skip>${skipTests}</skip>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
+        <plugin>
+          <!-- must supply build-resources module with findbugs/includeFilter.xml
+               and excludeFilter.xml to use this -->
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>findbugs-maven-plugin</artifactId>
+          <dependencies>
+            <dependency>
+              <groupId>org.kiji.scoring</groupId>
+              <artifactId>build-resources</artifactId>
+              <version>${project.version}</version>
+            </dependency>
+          </dependencies>
+        </plugin>
+      </plugins>
+    </pluginManagement>
   </build>
-
-
-  <dependencies>
-    <dependency>
-      <groupId>org.kiji.schema</groupId>
-      <artifactId>kiji-schema</artifactId>
-      <version>${kiji-schema.version}</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.kiji.schema</groupId>
-      <artifactId>kiji-schema</artifactId>
-      <version>${kiji-schema.version}</version>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.kiji.testing</groupId>
-      <artifactId>fake-hbase</artifactId>
-      <version>${fake-hbase.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <!-- Needed for kiji-schema's test layouts. -->
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-mapper-asl</artifactId>
-      <version>${jackson.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.kiji.mapreduce</groupId>
-      <artifactId>kiji-mapreduce</artifactId>
-      <version>${kiji-mapreduce.version}</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.kiji.mapreduce</groupId>
-      <artifactId>kiji-mapreduce</artifactId>
-      <version>${kiji-mapreduce.version}</version>
-      <type>test-jar</type>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
 
   <repositories>
     <repository>

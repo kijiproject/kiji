@@ -51,6 +51,10 @@
     </Or>
   </Match>
 
+  <Match>
+    <Package name="~org[.]kiji[.]scoring[.]server*" />
+  </Match>
+
 
   <!--
     Other one-off exclusions should go below.

@@ -1,0 +1,45 @@
+{
+  name: "users",
+  description: "A bunch of made-up users",
+  version: "layout-1.1",
+  keys_format: {
+    encoding : "FORMATTED",
+    salt : {
+      hash_size : 2
+    },
+    components : [ {
+      name : "uid",
+      type : "LONG"
+    }
+   ]
+  },
+  locality_groups: [ {
+    name: "default",
+    description: "The default locality group",
+    in_memory: false,
+    max_versions: 1,
+    ttl_seconds: 2147483647,
+    compression_type: "NONE",
+    families: [ {
+      name: "info",
+      description: "A bunch of fields",
+      columns: [ {
+        name: "id",
+        description: "user id hash",
+        column_schema: {type: "INLINE", value: '"string"'}
+      }, {
+        name: "name",
+        description: "The person's name",
+        column_schema: {type: "INLINE", value: '"string"'}
+      }, {
+        name: "email",
+        description: "The person's email",
+        column_schema: {type: "INLINE", value: '"string"'}
+      } ]
+    }, {
+      name: "searches",
+      description: "The recent search queries the user has made",
+      map_schema: {type: "INLINE", value: '"string"'}
+    } ]
+  } ]
+}
