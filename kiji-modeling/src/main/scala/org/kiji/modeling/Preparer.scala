@@ -60,6 +60,10 @@ import org.kiji.modeling.impl.KeyValueStores
 @ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Extensible
+@deprecated(
+  message = "The Preparer trait is subject to heavy change or removal in upcoming versions.  It "
+    + "is not recommended for use until this deprecation warning is removed.",
+  since = "0.1.0")
 trait Preparer
     extends KeyValueStores
     with TupleConversions

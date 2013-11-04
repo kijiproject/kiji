@@ -67,6 +67,10 @@ final case class ExtractFn[I, O] (
 @ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Extensible
+@deprecated(
+  message = "The Extractor trait is subject to heavy change or removal in upcoming versions.  It "
+    + "is not recommended for use until this deprecation warning is removed.",
+  since = "0.1.0")
 trait Extractor
     extends KeyValueStores
     with CommandLineArgs

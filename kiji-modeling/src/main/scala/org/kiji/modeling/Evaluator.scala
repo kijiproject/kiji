@@ -137,6 +137,8 @@ object AggregationFn {
 }
 
 /**
+ * This trait is still under heavy development!  Expect the SPI to change in upcoming versions.
+ *
  * Represents the Evaluate phase of a model workflow. Users should extend this trait when defining
  * an Evaluate phase. The Evaluation phase of a model workflow is responsible for calculating
  * precision or error of a model.
