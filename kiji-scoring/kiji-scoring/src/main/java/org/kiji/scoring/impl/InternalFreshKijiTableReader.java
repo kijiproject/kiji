@@ -27,6 +27,7 @@ import java.util.TimerTask;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -431,6 +432,8 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     private final StatisticGatheringMode mStatisticGatheringMode;
     /** Statistics about individual completed Fresheners. */
     private final BlockingQueue<FreshenerSingleRunStatistics> mFreshenerSingleRunStatistics;
+    /** Executor to get Futures within this request. */
+    private final ExecutorService mExecutorService;
     /**
      * Whether any Freshener has written into a buffer for this request. This value may only move
      * from false to true.
@@ -463,6 +466,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
      * @param statisticsQueue Queue for communicating statistics about completed Fresheners to the
      *     statistics gathering thread. This queue is thread safe and ordering of statistics in the
      *     queue does not matter.
+     * @param executorService ExecutorService to use for creating Futures within this request.
      */
     // CSOFF: ParameterNumber
     public FresheningRequestContext(
@@ -478,7 +482,8 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
         final MultiBufferedWriter bufferedWriter,
         final boolean allowPartial,
         final StatisticGatheringMode statisticGatheringMode,
-        final BlockingQueue<FreshenerSingleRunStatistics> statisticsQueue
+        final BlockingQueue<FreshenerSingleRunStatistics> statisticsQueue,
+        final ExecutorService executorService
     ) {
       // CSON: ParameterNumber
       mId = id;
@@ -493,6 +498,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
       mAllowPartial = allowPartial;
       mStatisticGatheringMode = statisticGatheringMode;
       mFreshenerSingleRunStatistics = statisticsQueue;
+      mExecutorService = executorService;
       if (mAllowPartial) {
         // Each Freshener will have its own buffer when partial freshening is enabled, so the
         // request buffer is not needed.
@@ -982,14 +988,16 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
    * Get a future from a given callable.  This method uses the singleton FreshenerThreadPool to run
    * threads responsible for carrying out the operation of the Future.
    *
+   * @param executorService ExecutorService to use to get the Future.
    * @param callable the callable to run in the new Future.
    * @param <RETVAL> the return type of the callable and Future.
    * @return a new Future representing asynchronous execution of the given callable.
    */
   public static <RETVAL> Future<RETVAL> getFuture(
+      ExecutorService executorService,
       Callable<RETVAL> callable
   ) {
-    return FreshenerThreadPool.Singleton.GET.getExecutorService().submit(callable);
+    return executorService.submit(callable);
   }
 
   /**
@@ -1327,7 +1335,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
       } else {
         final KijiTableReader reader = getPooledReader(requestContext.mReaderPool);
         try {
-          rowDataToCheckFuture = getFuture(new TableReadCallable(
+          rowDataToCheckFuture = getFuture(requestContext.mExecutorService, new TableReadCallable(
               reader,
               requestContext.mEntityId,
               entry.getValue().mPolicy.getDataRequest(context)));
@@ -1335,10 +1343,8 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
           reader.close();
         }
       }
-      final Future<Boolean> future = getFuture(new FreshenerCallable(
-          requestContext,
-          entry.getKey(),
-          rowDataToCheckFuture));
+      final Future<Boolean> future = getFuture(requestContext.mExecutorService,
+          new FreshenerCallable(requestContext, entry.getKey(), rowDataToCheckFuture));
       collectedFutures.add(future);
     }
     return ImmutableList.copyOf(collectedFutures);
@@ -1353,6 +1359,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
    * @param dataRequest the data to retrieve from each row.
    * @param freshReader the FreshKijiTableReader to use to perform each freshening read.
    * @param options options applicable to all requests made asynchronously in returned futures.
+   * @param executorService ExecutorService from which to get Futures.
    * @return a list of Futures corresponding to the values of freshening data on each row in
    *     entityIds.
    */
@@ -1360,12 +1367,13 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
       final List<EntityId> entityIds,
       final KijiDataRequest dataRequest,
       final FreshKijiTableReader freshReader,
-      final FreshRequestOptions options
+      final FreshRequestOptions options,
+      final ExecutorService executorService
   ) {
     final List<Future<KijiRowData>> collectedFutures = Lists.newArrayList();
 
     for (EntityId entityId : entityIds) {
-      collectedFutures.add(getFuture(new FreshTableReadCallable(
+      collectedFutures.add(getFuture(executorService, new FreshTableReadCallable(
           freshReader, entityId, dataRequest, options)));
     }
 
@@ -1476,6 +1484,8 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
       new LinkedBlockingQueue<FreshenerSingleRunStatistics>();
   /** Unique ID generator for differentiating requests in logs. */
   private final UniqueIdGenerator mUniqueIdGenerator = new UniqueIdGenerator();
+  /** ExecutorService from which to get Futures. */
+  private final ExecutorService mExecutorService;
   /** All mutable state which may be modified by a called to {@link #rereadFreshenerRecords()}. */
   private volatile RereadableState mRereadableState;
 
@@ -1491,9 +1501,11 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
    * @param statisticGatheringMode specifies what statistics to gather.
    * @param statisticsLoggingInterval time in milliseconds between automatic logging of statistics.
    *     0 indicates no automatic logging.
+   * @param executorService ExecutorService to use for getting Futures.
    * @throws IOException in case of an error reading from the meta table or setting up a
    *     KijiFreshnessPolicy or ScoreFunction.
    */
+  // CSOFF: ParameterNumberCheck
   public InternalFreshKijiTableReader(
       final KijiTable table,
       final long timeout,
@@ -1501,8 +1513,10 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
       final boolean allowPartial,
       final List<KijiColumnName> columnsToFreshen,
       final StatisticGatheringMode statisticGatheringMode,
-      final long statisticsLoggingInterval
+      final long statisticsLoggingInterval,
+      final ExecutorService executorService
   ) throws IOException {
+    // CSON: ParameterNumberCheck
     // Initializing the reader state must be the first line of the constructor.
     mState = new ReaderState();
 
@@ -1531,6 +1545,8 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
 
     mStatisticsGathererThread = startStatisticsGatherer(statisticsLoggingInterval);
     mRereadTask = startPeriodicRereader(rereadPeriod);
+
+    mExecutorService = executorService;
 
     LOG.debug("Opening reader with UID: {}", mReaderUID);
     // Retain the table once everything else has succeeded.
@@ -1667,7 +1683,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
           createFreshenerContexts(dataRequest, fresheners, options.getParameters());
 
       final Future<KijiRowData> clientDataFuture =
-          getFuture(new TableReadCallable(requestReader, entityId, dataRequest));
+          getFuture(mExecutorService, new TableReadCallable(requestReader, entityId, dataRequest));
 
       final FresheningRequestContext requestContext = new FresheningRequestContext(
           id,
@@ -1682,12 +1698,13 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
           mBufferedWriter,
           mAllowPartial,
           mStatisticGatheringMode,
-          mStatisticsQueue);
+          mStatisticsQueue,
+          mExecutorService);
 
       final ImmutableList<Future<Boolean>> futures = getFuturesForFresheners(requestContext);
 
       final Future<List<Boolean>> superFuture =
-          getFuture(new FutureAggregatingCallable<Boolean>(futures));
+          getFuture(mExecutorService, new FutureAggregatingCallable<Boolean>(futures));
 
       // If the options specify timeout of -1 this indicates we should use the configured timeout.
       final long timeout = (-1 == options.getTimeout()) ? mTimeout : options.getTimeout();
@@ -1743,10 +1760,10 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     LOG.debug("{} starting bulk get request.");
 
     final ImmutableList<Future<KijiRowData>> futures =
-        getFuturesForEntities(entityIds, dataRequest, this, options);
+        getFuturesForEntities(entityIds, dataRequest, this, options, mExecutorService);
 
     final Future<List<KijiRowData>> superDuperFuture =
-        getFuture(new FutureAggregatingCallable<KijiRowData>(futures));
+        getFuture(mExecutorService, new FutureAggregatingCallable<KijiRowData>(futures));
 
     try {
       return getFromFuture(superDuperFuture, options.getTimeout());

@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
@@ -39,6 +40,7 @@ import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
+import org.kiji.scoring.impl.FreshenerThreadPool;
 import org.kiji.scoring.impl.InternalFreshKijiTableReader;
 import org.kiji.scoring.statistics.FreshKijiTableReaderStatistics;
 
@@ -160,6 +162,8 @@ public interface FreshKijiTableReader extends KijiTableReader {
         StatisticGatheringMode.NONE;
     /** By default, log statistics every 10 minutes. */
     private static final long DEFAULT_STATISTICS_LOGGING_INTERVAL = 10 * 60 * 1000;
+    private static final ExecutorService DEFAULT_EXECUTOR_SERVICE =
+        FreshenerThreadPool.Singleton.GET.getExecutorService();
     /** Enumeration of possible modes of statistics gathering. */
     public static enum StatisticGatheringMode {
       NONE, ALL
@@ -197,6 +201,8 @@ public interface FreshKijiTableReader extends KijiTableReader {
     private StatisticGatheringMode mStatisticGatheringMode = null;
     /** Time in milliseconds between logging collected statistics. */
     private Long mStatisticsLoggingInterval = null;
+    /** ExecutorService to use for running threads internal to the fresh reader. */
+    private ExecutorService mExecutorService = null;
 
     /**
      * Configure the FreshKijiTableReader to read from the given KijiTable.
@@ -401,6 +407,32 @@ public interface FreshKijiTableReader extends KijiTableReader {
     }
 
     /**
+     * Configure the FreshKijiTableReader to use the given {@link ExecutorService} to perform
+     * asynchronous computation.
+     *
+     * @param executorService service to use for getting {@link java.util.concurrent.Future}s.
+     * @return this Builder configured to use the given ExecutorService.
+     */
+    public Builder withExecutorService(
+        final ExecutorService executorService
+    ) {
+      Preconditions.checkState(null == mExecutorService,
+          "Executor service is already set to: %s", mExecutorService);
+      Preconditions.checkNotNull(executorService, "Executor service may not be null.");
+      mExecutorService = executorService;
+      return this;
+    }
+
+    /**
+     * Get the configured ExecutorService or null if none has been set.
+     *
+     * @return the configured ExecutorService or null if none has been set.
+     */
+    public ExecutorService getExecutorService() {
+      return mExecutorService;
+    }
+
+    /**
      * Builds a FreshKijiTableReader with the configured options.
      *
      * @return a FreshKijiTableReader with the configured options.
@@ -424,6 +456,9 @@ public interface FreshKijiTableReader extends KijiTableReader {
         mStatisticGatheringMode = DEFAULT_STATISTICS_MODE;
         mStatisticsLoggingInterval = DEFAULT_STATISTICS_LOGGING_INTERVAL;
       }
+      if (null == mExecutorService) {
+        mExecutorService = DEFAULT_EXECUTOR_SERVICE;
+      }
 
       return new InternalFreshKijiTableReader(
           mTable,
@@ -432,7 +467,8 @@ public interface FreshKijiTableReader extends KijiTableReader {
           mAllowPartialFresh,
           mColumnsToFreshen,
           mStatisticGatheringMode,
-          mStatisticsLoggingInterval);
+          mStatisticsLoggingInterval,
+          mExecutorService);
     }
   }
 

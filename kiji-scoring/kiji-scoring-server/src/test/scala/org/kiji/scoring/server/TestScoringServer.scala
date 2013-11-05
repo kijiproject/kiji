@@ -97,7 +97,7 @@ class TestScoringServer extends JUnitSuite {
     KijiInstaller.get().uninstall(FAKE_URI, HBASE_CONF)
   }
 
-//  @Test
+  @Test
   def testShouldDeployAndRunSingleLifecycle() {
     val jarFile = File.createTempFile("temp_artifact", ".jar")
     val jarOS = new JarOutputStream(new FileOutputStream(jarFile))
@@ -123,7 +123,7 @@ class TestScoringServer extends JUnitSuite {
     scoringServer.releaseResources()
   }
 
-//  @Test
+  @Test
   def testShouldHotUndeployModelLifecycle() {
     val jarFile = File.createTempFile("temp_artifact", ".jar")
     val jarOS = new JarOutputStream(new FileOutputStream(jarFile))

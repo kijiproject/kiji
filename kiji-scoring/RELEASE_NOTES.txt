@@ -1,5 +1,10 @@
 
                               Kiji Scoring Release Notes
+Version 0.8.0
+    * SCORE-120. FreshKijiTableReader now supports providing an ExecutorService to use as the
+        thread pool backing the reader. If unspecified, the reader will use the singleton service
+        defined in FreshenerThreadPool.
+
 Version 0.7.0
     * SCORE-128. InternalFreshKijiTableReader now uses a reader pool to read data to check for
         freshness and score in order to guarantee thread safety. The pool size defaults to the same

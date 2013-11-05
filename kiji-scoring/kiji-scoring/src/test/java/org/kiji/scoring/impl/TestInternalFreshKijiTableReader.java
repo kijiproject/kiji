@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -520,9 +521,7 @@ public class TestInternalFreshKijiTableReader {
     }
   }
 
-  // TODO SCORE-120 this test is temporarily disabled due to changes in the FreshenerThreadPool API.
-  // It can be reenabled when InternalFreshKijiTableReader supports custom executors.
-//  @Test
+  @Test
   public void testFullPool() throws IOException {
     final EntityId eid = mTable.getEntityId("foo");
     final KijiDataRequest request0 = KijiDataRequest.create("family", "qual0");
@@ -550,12 +549,12 @@ public class TestInternalFreshKijiTableReader {
     } finally {
       manager.close();
     }
-    // Set the pool size to 2.
-//    FreshenerThreadPool.getInstance(2);
 
     final FreshKijiTableReader freshReader = FreshKijiTableReader.Builder.create()
         .withTable(mTable)
         .withTimeout(100)
+        // Set the pool size to 2.
+        .withExecutorService(Executors.newFixedThreadPool(2))
         .build();
     try {
       freshReader.get(eid, request0);
