@@ -1,2 +1,18 @@
+# Eclipse things
+.classpath
+.project
+.settings/
+
+# Idea things
 *.iml
-target/*
+.idea/
+atlassian-ide-plugin.xml
+
+# Maven things
+target/
+dependency-reduced-pom.xml
+
+# Vim things
+*.swp
+*.swo
+.cache
