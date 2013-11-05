@@ -1729,7 +1729,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
         requestContext.timeOut();
         // If superFuture times out, read partially freshened data from the table or return the
         // cached data based on whether partial freshness is allowed.
-        LOG.debug("{} timed out, checking for partial writes.");
+        LOG.debug("{} timed out, checking for partial writes.", id);
         return checkAndRead(requestContext);
       }
     } finally {
@@ -1757,7 +1757,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   ) throws IOException {
     mState.requireState(State.OPEN);
 
-    LOG.debug("{} starting bulk get request.");
+    LOG.debug("{} starting bulk get request.", mReaderUID);
 
     final ImmutableList<Future<KijiRowData>> futures =
         getFuturesForEntities(entityIds, dataRequest, this, options, mExecutorService);
