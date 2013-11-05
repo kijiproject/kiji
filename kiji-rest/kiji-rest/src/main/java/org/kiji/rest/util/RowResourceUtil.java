@@ -231,7 +231,7 @@ public final class RowResourceUtil {
           KijiCell<Long> counter = rowData.getMostRecentCell(col.getFamily(), col.getQualifier());
           if (null != counter) {
             SchemaOption schemaOption = new SchemaOption(schemaTable.
-                getOrCreateSchemaId(counter.getWriterSchema()));
+                getOrCreateSchemaId(Schema.create(Schema.Type.LONG)));
             returnRow.addCell(counter, schemaOption);
           }
         } else if (familyInfo.isMapType()) {

@@ -86,6 +86,9 @@ public class TestRowsResource extends ResourceTest {
   private static final URI DEFAULT_ROWS_RESOURCE = UriBuilder
       .fromResource(RowsResource.class)
       .build("default", "sample_table");
+  private static final URI PLAYERS_ROWS_RESOURCE = UriBuilder
+      .fromResource(RowsResource.class)
+      .build("default", "players");
   private static final String EXTENSIVE_COLUMN_TEST = ":.:.?&;& /\\\n~!@#$%^&*()_+{}|[]\\;';'\"\"";
 
   // Some commonly used schema options.
@@ -682,7 +685,7 @@ public class TestRowsResource extends ResourceTest {
 
     // Check.
     assertTrue(target.toString().contains(
-        "/v1/instances/default/tables/sample_table/rows?eid=" + stringRowKey));
+        "/v1/instances/default/tables/sample_table/rows?eid=" + URLEncoder.encode(stringRowKey)));
     assertEquals("helloworld", returnRow.getCells().get("group_family").get("string_qualifier")
         .get(0).getValue());
   }
@@ -753,7 +756,7 @@ public class TestRowsResource extends ResourceTest {
 
     // Check.
     assertEquals(target.get("targets").get(0), "/v1/instances/default/tables/sample_table/rows?eid="
-        + stringRowKey);
+        + URLEncoder.encode(stringRowKey));
     assertEquals(123, returnRow.getCells().get("group_family").get("long_qualifier").get(0)
         .getValue());
     assertEquals("helloworld", returnRow.getCells().get("group_family").get("string_qualifier")
@@ -799,7 +802,7 @@ public class TestRowsResource extends ResourceTest {
 
     // Check.
     assertTrue(target.toString().contains(
-        "/v1/instances/default/tables/sample_table/rows?eid=" + stringRowKey));
+        "/v1/instances/default/tables/sample_table/rows?eid=" + URLEncoder.encode(stringRowKey)));
     ObjectMapper mapper = new ObjectMapper();
     JsonNode node = mapper.valueToTree(returnRow.getCells().get("group_family")
         .get("inline_record").get(0).getValue());
@@ -851,7 +854,7 @@ public class TestRowsResource extends ResourceTest {
 
     // Check.
     assertTrue(target.toString().contains(
-        "/v1/instances/default/tables/sample_table/rows?eid=" + stringRowKey));
+        "/v1/instances/default/tables/sample_table/rows?eid=" + URLEncoder.encode(stringRowKey)));
     assertTrue(returnRow.getCells().get("longs").containsKey(longsColumnDec));
     assertEquals(987654567890L, returnRow.getCells().get("longs").get(longsColumnDec).get(0)
         .getValue());
@@ -930,7 +933,7 @@ public class TestRowsResource extends ResourceTest {
 
     // Check.
     assertTrue(target.toString().contains(
-        "/v1/instances/default/tables/sample_table/rows?eid=" + stringRowKey));
+        "/v1/instances/default/tables/sample_table/rows?eid=" + URLEncoder.encode(stringRowKey)));
     assertTrue(returnRow.getCells().get("group_family").containsKey("string_qualifier"));
     assertTrue(returnRow.getCells().get("group_family").get("string_qualifier").get(0)
         .getTimestamp() > System.currentTimeMillis() - 3000);
@@ -948,7 +951,7 @@ public class TestRowsResource extends ResourceTest {
 
     // Check.
     assertTrue(target.toString().contains(
-        "/v1/instances/default/tables/sample_table/rows?eid=" + stringRowKey));
+        "/v1/instances/default/tables/sample_table/rows?eid=" + URLEncoder.encode(stringRowKey)));
     assertTrue(returnRow.getCells().get("group_family").containsKey("long_qualifier"));
     assertEquals(3141591L, returnRow.getCells().get("group_family").get("long_qualifier").get(0)
         .getTimestamp().longValue());
@@ -965,7 +968,7 @@ public class TestRowsResource extends ResourceTest {
 
     // Check.
     assertTrue(target.toString().contains(
-        "/v1/instances/default/tables/sample_table/rows?eid=" + stringRowKey));
+        "/v1/instances/default/tables/sample_table/rows?eid=" + URLEncoder.encode(stringRowKey)));
     assertTrue(returnRow.getCells().get("strings")
         .containsKey(EXTENSIVE_COLUMN_TEST));
     assertEquals(2L, returnRow.getCells().get("strings").get(EXTENSIVE_COLUMN_TEST)
@@ -1028,7 +1031,7 @@ public class TestRowsResource extends ResourceTest {
 
     // Check.
     assertTrue(target.toString().contains(
-        "/v1/instances/default/tables/sample_table/rows?eid=" + stringRowKey));
+        "/v1/instances/default/tables/sample_table/rows?eid=" + URLEncoder.encode(stringRowKey)));
     assertTrue(returnRow.getCells().get("group_family").containsKey("string_qualifier"));
     assertTrue(returnRow.getCells().get("group_family").get("string_qualifier").get(0)
         .getTimestamp() > System.currentTimeMillis() - 3000);
@@ -1046,7 +1049,7 @@ public class TestRowsResource extends ResourceTest {
 
     // Check.
     assertTrue(target.toString().contains(
-        "/v1/instances/default/tables/sample_table/rows?eid=" + stringRowKey));
+        "/v1/instances/default/tables/sample_table/rows?eid=" + URLEncoder.encode(stringRowKey)));
     assertTrue(returnRow.getCells().get("group_family").containsKey("long_qualifier"));
     assertEquals(3141591L, returnRow.getCells().get("group_family").get("long_qualifier").get(0)
         .getTimestamp().longValue());
@@ -1063,7 +1066,7 @@ public class TestRowsResource extends ResourceTest {
 
     // Check.
     assertTrue(target.toString().contains(
-        "/v1/instances/default/tables/sample_table/rows?eid=" + stringRowKey));
+        "/v1/instances/default/tables/sample_table/rows?eid=" + URLEncoder.encode(stringRowKey)));
     assertTrue(returnRow.getCells().get("strings")
         .containsKey(EXTENSIVE_COLUMN_TEST));
     assertEquals(2L, returnRow.getCells().get("strings").get(EXTENSIVE_COLUMN_TEST)
@@ -1072,6 +1075,35 @@ public class TestRowsResource extends ResourceTest {
         returnRow.getCells().get("strings").get(EXTENSIVE_COLUMN_TEST).get(0)
             .getValue());
     assertEquals(1, returnRow.getCells().size());
+  }
+
+  @Test
+  public void testShouldPostAndGetCounterCell() throws Exception {
+    KijiCell<Long> postCell = fromInputs("info",
+        "logins",
+        0L,
+        1234567890987L,
+        Schema.create(Type.LONG));
+    String eid = "['menandros', 'asia.minor']";
+    KijiRestRow postRow = new KijiRestRow(ToolUtils.createEntityIdFromUserInputs(
+        eid,
+        KijiTableLayouts.getTableLayout("org/kiji/rest/layouts/players_table.json")));
+    addCellToRow(postRow, postCell);
+
+    // Post.
+    Object target = client().resource(PLAYERS_ROWS_RESOURCE).type(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON).post(Object.class, postRow);
+
+    // Retrieve.
+    URI resourceURI = UriBuilder.fromResource(RowsResource.class)
+        .queryParam("eid", eid)
+        .build("default", "players");
+    KijiRestRow returnRow = client().resource(resourceURI).get(KijiRestRow.class);
+
+    // Check.
+    assertTrue(target.toString().contains(
+        "/v1/instances/default/tables/players/rows?eid=" + URLEncoder.encode(eid)));
+    assertEquals(1234567890987L, returnRow.getCells().get("info").get("logins").get(0).getValue());
   }
 
   private void addCellToRow(KijiRestRow rowToModify, KijiCell<?> cellToPost) throws IOException {

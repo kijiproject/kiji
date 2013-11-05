@@ -57,6 +57,12 @@
           "type" : "INLINE",
           "value" : "\"int\""
         }
+      }, {
+        "name" : "logins",
+        "column_schema" : {
+          "type" : "COUNTER",
+          "storage" : "FINAL"
+        }
       } ]
     }, {
       "name" : "quest_progress",

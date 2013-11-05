@@ -32,6 +32,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.List;
@@ -584,7 +585,7 @@ public class RowsResource {
     Map<String, String> returnedTarget = Maps.newHashMap();
 
     URI targetResource = UriBuilder.fromResource(RowsResource.class).build(instance, table);
-    String eidString = entityId.toShellString();
+    String eidString = URLEncoder.encode(entityId.toShellString(), "UTF-8");
 
     returnedTarget.put("target", targetResource.toString() + "?eid=" + eidString);
 
