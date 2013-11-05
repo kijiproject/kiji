@@ -33,14 +33,14 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.util.ReflectionUtils
 
-import org.kiji.express.avro.AvroModelDefinition
-import org.kiji.express.avro.AvroModelEnvironment
-import org.kiji.express.modeling.framework.ScoreProducer
 import org.kiji.express.util.Resources.doAndClose
 import org.kiji.express.util.Resources.withKiji
 import org.kiji.express.util.Resources.withKijiTableReader
 import org.kiji.mapreduce.kvstore.KeyValueStoreReaderFactory
 import org.kiji.mapreduce.produce.KijiProducer
+import org.kiji.modeling.avro.AvroModelDefinition
+import org.kiji.modeling.avro.AvroModelEnvironment
+import org.kiji.modeling.framework.ScoreProducer
 import org.kiji.modelrepo.ArtifactName
 import org.kiji.modelrepo.KijiModelRepository
 import org.kiji.modelrepo.ModelLifeCycle
@@ -96,10 +96,9 @@ class GenericScoringServlet extends HttpServlet {
 
         val avroDefinition: AvroModelDefinition = modelLifeCycle.getDefinition
         val avroEnvironment: AvroModelEnvironment = modelLifeCycle.getEnvironment
-        // TODO: Is is alright that I am getting the input spec directly through the Avro
-        // record as opposed to through the KijiExpress wrapper classes?
+
         val inputURIString: String =
-            avroEnvironment.getScoreEnvironment.getInputSpec.getKijiSpecification.getTableUri
+            avroEnvironment.getScoreEnvironment.getInputSpec.getTableUri
         val inputURI: KijiURI = KijiURI.newBuilder(inputURIString).build()
         mInputKiji = Kiji.Factory.open(inputURI)
         mInputTable = mInputKiji.openTable(inputURI.getTable)

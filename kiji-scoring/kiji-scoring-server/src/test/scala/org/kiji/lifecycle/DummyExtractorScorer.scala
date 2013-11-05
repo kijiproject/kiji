@@ -20,12 +20,8 @@
 package org.kiji.lifecycle
 
 import org.kiji.express.KijiSlice
-import org.kiji.express.modeling.Extractor
-import org.kiji.express.modeling.Scorer
-
-import org.kiji.express.KijiSlice
-import org.kiji.express.modeling.Extractor
-import org.kiji.express.modeling.Scorer
+import org.kiji.modeling.Extractor
+import org.kiji.modeling.Scorer
 
 /**
  * Simple implementation of the extractor and scorer phases of the model lifecycle. This simply
