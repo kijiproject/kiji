@@ -989,7 +989,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   public static <RETVAL> Future<RETVAL> getFuture(
       Callable<RETVAL> callable
   ) {
-    return FreshenerThreadPool.getInstance().getExecutorService().submit(callable);
+    return FreshenerThreadPool.Singleton.GET.getExecutorService().submit(callable);
   }
 
   /**

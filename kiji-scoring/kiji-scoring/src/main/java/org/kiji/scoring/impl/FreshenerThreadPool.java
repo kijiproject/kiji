@@ -31,53 +31,33 @@ public final class FreshenerThreadPool {
   /** Default number of threads. */
   public static final int DEFAULT_THREAD_POOL_SIZE = 100;
 
-  private static FreshenerThreadPool mPool;
-  private final ExecutorService mExecutor;
+  /** Enum used to guarantee that only a single thread pool is created. */
+  public enum Singleton {
+    GET(Executors.newFixedThreadPool(DEFAULT_THREAD_POOL_SIZE));
 
-  /**
-   * Private constructor.
-   *
-   * @param poolSize the size of the FixedThreadPool to create.
-   */
-  private FreshenerThreadPool(int poolSize) {
-    mExecutor = Executors.newFixedThreadPool(poolSize);
-  }
+    private final ExecutorService mExecutorService;
 
-  /**
-   * Get the singleton instance, creating it if necessary.  If an instance is created it will be
-   * created with the default number of threads.
-   *
-   * @return the singleton instance.
-   */
-  public static FreshenerThreadPool getInstance() {
-    return getInstance(DEFAULT_THREAD_POOL_SIZE);
-  }
-
-  /**
-   * Gets the singleton instance, creating it if necessary.  If an instance is created, it will be
-   * created with the specified number of threads.
-   *
-   * @param poolSize the size of the thread pool to create if there is not already an active
-   * instance.
-   * @return The singleton instance.
-   */
-  public static FreshenerThreadPool getInstance(int poolSize) {
-    if (mPool == null) {
-      synchronized (FreshenerThreadPool.class) {
-        if (mPool == null) {
-          mPool = new FreshenerThreadPool(poolSize);
-        }
-      }
+    /**
+     * Initialize the singleton.
+     *
+     * @param executorService the ExecutorService to store in this singleton.
+     */
+    Singleton(
+        final ExecutorService executorService
+    ) {
+      mExecutorService = executorService;
     }
-    return mPool;
+
+    /**
+     * Get the ExecutorService stored in this singleton.
+     *
+     * @return the ExecutorService stored in this singleton.
+     */
+    public ExecutorService getExecutorService() {
+      return mExecutorService;
+    }
   }
 
-  /**
-   * Gets the execution engine for this singleton.
-   *
-   * @return The singleton's executor.
-   */
-  public ExecutorService getExecutorService() {
-    return mExecutor;
-  }
+  /** Utility classes may not be instantiated. */
+  private FreshenerThreadPool() { }
 }
