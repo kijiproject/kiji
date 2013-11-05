@@ -25,6 +25,7 @@ import static org.kiji.rest.RoutesConstants.VERSION_ENDPOINT;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -78,9 +79,25 @@ public class KijiRESTResource {
   @ApiStability.Evolving
   public Map<String, Object> getVersion() throws IOException {
     Map<String, Object> version = Maps.newHashMap();
-    version.put("kiji-client-data-version", VersionInfo.getClientDataVersion());
+    version.put("kiji-client-data-version", VersionInfo.getClientDataVersion().toCanonicalString());
     version.put("kiji-software-version", VersionInfo.getSoftwareVersion());
-    version.put("rest-version", "0.1.0");
+    version.put("rest-version", getSoftwareVersion());
     return version;
+  }
+
+  /**
+   * Gets the version of KijiREST.
+   *
+   * @return The version string.
+   * @throws IOException on I/O error.
+   */
+  private static String getSoftwareVersion() throws IOException {
+    final String version = KijiRESTResource.class.getPackage().getImplementationVersion();
+    if (version != null) {
+      // Proper release: use the value of 'Implementation-Version' in META-INF/MANIFEST.MF:
+      return version;
+    } else {
+      return "development";
+    }
   }
 }
