@@ -221,6 +221,14 @@ function extract_classpath() {
   # version. Only load at most one such set of jars.
   extract_hadoop_major_version
 
+  # If MODELING_HOME is set, add kiji-modeling jars to the classpath to enable using the express
+  # script with kiji-modeling.  THIS IS A HACK!
+  # TODO(EXP-265): Remove this when kiji-modeling has its own tool launcher.
+  modeling_libjars=""
+  if [[ -n "${MODELING_HOME}" ]]; then
+    modeling_libjars="${MODELING_HOME}/lib/*"
+  fi
+
   # Add KijiMR distribution specific jars.
   if [[ -n "${KIJI_MR_HOME}" && "${KIJI_HOME}" != "${KIJI_MR_HOME}" ]]; then
     mr_libjars="${KIJI_MR_HOME}/lib/*"
@@ -238,7 +246,7 @@ function extract_classpath() {
   fi
 
   # Compose everything together into a classpath.
-  libjars="${express_libjars}:${mr_distrojars}:${mr_libjars}:${schema_distrojars}:${schema_libjars}:${schema_shell_libjars}"
+  libjars="${express_libjars}:${mr_distrojars}:${mr_libjars}:${schema_distrojars}:${schema_libjars}:${schema_shell_libjars}:${modeling_libjars}"
 
   # Gather the HBase classpath.
   hbase_cp=$(${HBASE_HOME}/bin/hbase classpath)
