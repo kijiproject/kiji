@@ -107,6 +107,13 @@
       <type>tar.gz</type>
     </dependency>
     <dependency>
+      <groupId>org.kiji.modeling</groupId>
+      <artifactId>kiji-modeling</artifactId>
+      <version>${kiji-modeling.version}</version>
+      <classifier>release</classifier>
+      <type>tar.gz</type>
+    </dependency>
+    <dependency>
       <!-- This is packed into lib/profiling/ in its own dependencySet by assembly:single -->
       <!-- See src/main/assembly/release.xml. -->
       <groupId>org.kiji.schema</groupId>

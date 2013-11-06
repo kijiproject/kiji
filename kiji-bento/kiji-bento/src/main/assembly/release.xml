@@ -159,6 +159,19 @@
       <fileMode>0644</fileMode>
     </fileSet>
     <fileSet>
+      <!-- kiji-modeling -->
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <outputDirectory>modeling</outputDirectory>
+      <directory>target/prereqs-dir/kiji-modeling-${kiji-modeling.version}</directory>
+      <filtered>false</filtered>
+      <excludes>
+        <!-- This is already included by schema-shell/express. -->
+        <exclude>lib/scala-library*.jar</exclude>
+        <exclude>bin/**</exclude>
+      </excludes>
+      <fileMode>0644</fileMode>
+    </fileSet>
+    <fileSet>
       <!-- kiji-music examples -->
       <useDefaultExcludes>false</useDefaultExcludes>
       <outputDirectory>examples/music</outputDirectory>
@@ -397,6 +410,20 @@
       <source>target/prereqs-dir/kiji-mapreduce-lib-${kiji-mapreduce-lib.version}/RELEASE_NOTES.txt</source>
       <outputDirectory>release-notes</outputDirectory>
       <destName>MRLIB_RELEASE_NOTES.txt</destName>
+      <fileMode>0644</fileMode>
+    </file>
+    <file>
+      <!-- kiji-express release notes -->
+      <source>target/prereqs-dir/kiji-express-${kiji-express.version}/RELEASE_NOTES.txt</source>
+      <outputDirectory>release-notes</outputDirectory>
+      <destName>EXPRESS_RELEASE_NOTES.txt</destName>
+      <fileMode>0644</fileMode>
+    </file>
+    <file>
+      <!-- kiji-modeling release notes -->
+      <source>target/prereqs-dir/kiji-modeling-${kiji-modeling.version}/RELEASE_NOTES.txt</source>
+      <outputDirectory>release-notes</outputDirectory>
+      <destName>MODELING_RELEASE_NOTES.txt</destName>
       <fileMode>0644</fileMode>
     </file>
     <file>

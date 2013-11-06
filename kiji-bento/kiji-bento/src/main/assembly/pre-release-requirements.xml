@@ -65,6 +65,14 @@
     <dependencySet>
       <outputDirectory>.</outputDirectory>
       <includes>
+        <include>org.kiji.modeling:kiji-modeling:tar.gz</include>
+      </includes>
+      <unpack>true</unpack>
+      <useProjectArtifact>false</useProjectArtifact>
+    </dependencySet>
+    <dependencySet>
+      <outputDirectory>.</outputDirectory>
+      <includes>
         <include>org.kiji.bento:bento-cluster:tar.gz</include>
       </includes>
       <unpack>true</unpack>

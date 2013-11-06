@@ -75,9 +75,13 @@ EXPRESS_HOME="${KIJI_HOME}/express"
 export EXPRESS_HOME
 echo "Set EXPRESS_HOME=${EXPRESS_HOME}"
 
+MODELING_HOME="${KIJI_HOME}/modeling"
+export MODELING_HOME
+echo "Set MODELING_HOME=${MODELING_HOME}"
+
 PATH="${KIJI_HOME}/bin:${KIJI_HOME}/schema-shell/bin:${EXPRESS_HOME}/bin:${PATH}"
 export PATH
-echo "Added kiji and kiji-schema-shell binaries to PATH."
+echo "Added kiji, kiji-mr, kiji-schema-shell, and kiji-express binaries to PATH."
 
 # Source the bento-env.sh script to configure the rest of the environment.
 source "${KIJI_HOME}/cluster/bin/bento-env.sh"
