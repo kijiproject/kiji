@@ -26,10 +26,9 @@ import com.twitter.scalding.TupleConversions
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
-import org.kiji.express.flow.KijiJob
 import org.kiji.modeling.impl.CommandLineArgs
 import org.kiji.modeling.impl.KeyValueStores
-import org.kiji.modeling.framework.ModelPipeConversions
+import org.kiji.modeling.framework.KijiModelingJob
 
 // TODO(EXP-167): Update documentation to include an iterative example.
 /**
@@ -70,7 +69,7 @@ trait Trainer
   /**
    * Override this class to implement a MapReduce flow for the train phase.
    */
-  abstract class TrainerJob extends KijiJob(Args(Nil)) with ModelPipeConversions
+  abstract class TrainerJob extends KijiModelingJob(Args(Nil))
 
   /**
    * Used to define the computation required for the Train phase of the model lifecycle.
