@@ -51,7 +51,7 @@
     <kiji-express-music.version>0.9.0</kiji-express-music.version>
     <kiji-express-examples.version>0.7.0</kiji-express-examples.version>
     <kiji-rest.version>0.6.0</kiji-rest.version>
-    <kiji-scoring.version>0.8.0</kiji-scoring.version>
+    <kiji-scoring.version>0.8.1</kiji-scoring.version>
   </properties>
 
   <modules>
