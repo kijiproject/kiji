@@ -28,23 +28,25 @@ import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
 import org.kiji.express.EntityId
 import org.kiji.express.KijiSlice
+import org.kiji.express.flow.ColumnRequestInput
+import org.kiji.express.flow.ColumnRequestOutput
 import org.kiji.express.flow.framework.KijiScheme
-import org.kiji.modeling.ExtractFn
-import org.kiji.modeling.Extractor
-import org.kiji.modeling.config.KijiInputSpec
-import org.kiji.modeling.config.KeyValueStoreSpec
-import org.kiji.modeling.config.ModelDefinition
-import org.kiji.modeling.config.ModelEnvironment
-import org.kiji.modeling.impl.ModelJobUtils
-import org.kiji.modeling.impl.ModelJobUtils.PhaseType.SCORE
-import org.kiji.modeling.ScoreFn
-import org.kiji.modeling.Scorer
 import org.kiji.express.util.GenericRowDataConverter
 import org.kiji.express.util.Tuples
 import org.kiji.mapreduce.KijiContext
 import org.kiji.mapreduce.kvstore.{ KeyValueStore => JKeyValueStore }
 import org.kiji.mapreduce.produce.KijiProducer
 import org.kiji.mapreduce.produce.ProducerContext
+import org.kiji.modeling.ExtractFn
+import org.kiji.modeling.Extractor
+import org.kiji.modeling.ScoreFn
+import org.kiji.modeling.Scorer
+import org.kiji.modeling.config.KeyValueStoreSpec
+import org.kiji.modeling.config.KijiInputSpec
+import org.kiji.modeling.config.ModelDefinition
+import org.kiji.modeling.config.ModelEnvironment
+import org.kiji.modeling.impl.ModelJobUtils
+import org.kiji.modeling.impl.ModelJobUtils.PhaseType.SCORE
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiRowData
@@ -226,10 +228,12 @@ final class ScoreProducer
         .get
         .inputSpec
         .asInstanceOf[KijiInputSpec]
-        .fieldBindings
-        .map { binding =>
-          (binding.tupleFieldName, new KijiColumnName(binding.storeFieldName))
-        }
+        .columnsToFields
+        .toList
+        // List of (ColumnRequestInput, Symbol) pairs
+        .map { case (column: ColumnRequestInput, field: Symbol) => {
+          (field.name, column.getColumnName)
+        }}
         .toMap
 
     // Configure the row data input to decode its data generically.

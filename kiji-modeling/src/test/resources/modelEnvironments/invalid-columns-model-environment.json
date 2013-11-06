@@ -46,7 +46,7 @@
               },
               "field_bindings":[{
                 "tuple_field_name":"tuplename",
-                "store_field_name":"info:storefieldname"
+                "store_field_name":"*invalid1"
               }]
             }
           }
@@ -101,7 +101,7 @@
               },
               "field_bindings":[{
                 "tuple_field_name":"tuplename",
-                "store_field_name":"info:storefieldname"
+                "store_field_name":"info:in"
               }]
             }
           }
@@ -153,7 +153,7 @@
         },
         "field_bindings":[{
           "tuple_field_name":"tuplename",
-          "store_field_name":"info:storefieldname"
+          "store_field_name":"info:in"
         }]
       },
       "kv_stores":[{
@@ -193,7 +193,7 @@
         },
         "field_bindings":[{
           "tuple_field_name":"tuplename",
-          "store_field_name":"info:storefieldname"
+          "store_field_name":"info:in"
         }]
       },
       "output_spec": {

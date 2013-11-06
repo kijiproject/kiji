@@ -29,10 +29,13 @@ import org.scalatest.junit.JUnitRunner
 import org.kiji.express.EntityId
 import org.kiji.express.KijiSlice
 import org.kiji.express.KijiSuite
+import org.kiji.express.flow.All
+import org.kiji.express.flow.ColumnRequestInput
+import org.kiji.express.flow.QualifiedColumnRequestInput
+import org.kiji.express.flow.ColumnFamilyRequestInput
+import org.kiji.express.flow.ColumnRequestOutput
 import org.kiji.modeling.Preparer
 import org.kiji.modeling.Trainer
-import org.kiji.modeling.config.ExpressColumnRequest
-import org.kiji.modeling.config.ExpressDataRequest
 import org.kiji.modeling.config.FieldBinding
 import org.kiji.modeling.config.KeyValueStoreSpec
 import org.kiji.modeling.config.KijiInputSpec
@@ -93,8 +96,6 @@ class ModelExecutorSuite extends KijiSuite {
 
       // Update configuration object with appropriately serialized ModelDefinition/ModelEnvironment
       // JSON.
-      val request: ExpressDataRequest = new ExpressDataRequest(0, Long.MaxValue,
-        new ExpressColumnRequest("family:column1", 1, None) :: Nil)
       val sideDataPath: Path = KeyValueStoreImplSuite.generateAvroKVRecordKeyValueStore()
       val modelDefinition: ModelDefinition = ModelDefinition(
         name = "test-model-definition",
@@ -109,10 +110,9 @@ class ModelExecutorSuite extends KijiSuite {
         scoreEnvironment = Some(ScoreEnvironment(
           KijiInputSpec(
             uri.toString,
-            dataRequest = request,
-            fieldBindings = Seq(
-              FieldBinding(tupleFieldName = "field", storeFieldName = "family:column1"))),
-          KijiSingleColumnOutputSpec(uri.toString, "family:column2"),
+            timeRange=All,
+            columnsToFields = Map(QualifiedColumnRequestInput("family", "column1") -> 'field)),
+          KijiSingleColumnOutputSpec(uri.toString, ColumnRequestOutput("family:column2")),
           keyValueStoreSpecs = Seq(
             KeyValueStoreSpec(
               storeType = "AVRO_KV",
@@ -173,9 +173,6 @@ class ModelExecutorSuite extends KijiSuite {
         version = "1.0",
         preparerClass = Some(classOf[ModelExecutorSuite.PrepareWordCounter]))
 
-    val request: ExpressDataRequest = new ExpressDataRequest(0, Long.MaxValue,
-        new ExpressColumnRequest("family:column1", 1, None) :: Nil)
-
     val inputUri: KijiURI = doAndRelease(kiji.openTable("input_table")) { table: KijiTable =>
       table.getURI
     }
@@ -189,16 +186,14 @@ class ModelExecutorSuite extends KijiSuite {
         prepareEnvironment = Some(PrepareEnvironment(
             inputSpec = Map("input" ->
                 KijiInputSpec(
-                    inputUri.toString,
-                    dataRequest = request,
-                    fieldBindings = Seq(
-                        FieldBinding(tupleFieldName = "word", storeFieldName = "family:column1"))
-            )),
+                  inputUri.toString,
+                  timeRange=All,
+                  columnsToFields =
+                      Map(QualifiedColumnRequestInput("family", "column1") -> 'word))),
             outputSpec = Map("output" ->
                 KijiOutputSpec(
                     tableUri = outputUri.toString,
-                    fieldBindings = Seq(
-                        FieldBinding(tupleFieldName = "size", storeFieldName = "family:column"))
+                    fieldsToColumns = Map('size -> ColumnRequestOutput("family:column"))
             )),
             keyValueStoreSpecs = Seq()
         )),
@@ -263,9 +258,6 @@ class ModelExecutorSuite extends KijiSuite {
       version = "1.0",
       trainerClass = Some(classOf[ModelExecutorSuite.TrainWordCounter]))
 
-    val request: ExpressDataRequest = new ExpressDataRequest(0, Long.MaxValue,
-      new ExpressColumnRequest("family:column1", 1, None) :: Nil)
-
     val inputUri: KijiURI = doAndRelease(kiji.openTable("input_table")) { table: KijiTable =>
       table.getURI
     }
@@ -280,15 +272,13 @@ class ModelExecutorSuite extends KijiSuite {
           inputSpec = Map("input" ->
               KijiInputSpec(
                   inputUri.toString,
-                  dataRequest = request,
-                  fieldBindings = Seq(
-                      FieldBinding(tupleFieldName = "word", storeFieldName = "family:column1"))
-          )),
+                  timeRange=All,
+                  columnsToFields =
+                      Map(QualifiedColumnRequestInput("family", "column1") -> 'word))),
           outputSpec = Map("output" ->
               KijiOutputSpec(
                   tableUri = outputUri.toString,
-                  fieldBindings = Seq(
-                      FieldBinding(tupleFieldName = "size", storeFieldName = "family:column"))
+                  fieldsToColumns = Map('size -> ColumnRequestOutput("family:column"))
           )),
           keyValueStoreSpecs = Seq()
         )),
@@ -378,19 +368,6 @@ class ModelExecutorSuite extends KijiSuite {
         scoreExtractorClass = Some(classOf[ScoreProducerSuite.DoublingExtractor]),
         scorerClass = Some(classOf[ScoreProducerSuite.UpperCaseScorer]))
 
-    val prepareRequest: ExpressDataRequest = ExpressDataRequest(
-        minTimestamp = 0,
-        maxTimestamp = Long.MaxValue,
-        columnRequests  = Seq(ExpressColumnRequest("family:column1", 1, None)))
-    val trainRequest: ExpressDataRequest = ExpressDataRequest(
-        minTimestamp = 0,
-        maxTimestamp = Long.MaxValue,
-        columnRequests = Seq(ExpressColumnRequest("family:column", 1, None)))
-    val scoreRequest: ExpressDataRequest = ExpressDataRequest(
-        minTimestamp = 0,
-        maxTimestamp = Long.MaxValue,
-        columnRequests = Seq(ExpressColumnRequest("family:column1", 1, None)))
-
     val sideDataPath: Path = KeyValueStoreImplSuite.generateAvroKVRecordKeyValueStore()
 
     val inputUri: KijiURI = doAndRelease(kiji.openTable("input_table")) { table: KijiTable =>
@@ -411,38 +388,35 @@ class ModelExecutorSuite extends KijiSuite {
             inputSpec = Map("input" ->
                 KijiInputSpec(
                     tableUri = inputUri.toString,
-                    dataRequest = prepareRequest,
-                    fieldBindings = Seq(
-                        FieldBinding(tupleFieldName = "word", storeFieldName = "family:column1")))),
+                    timeRange=All,
+                    columnsToFields =
+                        Map(QualifiedColumnRequestInput("family", "column1") -> 'word))),
             outputSpec = Map("output" ->
                 KijiOutputSpec(
                     tableUri = prepareOutputUri.toString,
-                    fieldBindings = Seq(
-                        FieldBinding(tupleFieldName = "size", storeFieldName = "family:column")))),
+                    fieldsToColumns = Map('size -> ColumnRequestOutput("family:column")))),
             keyValueStoreSpecs = Seq())),
         trainEnvironment = Some(TrainEnvironment(
             inputSpec = Map("input" ->
                 KijiInputSpec(
                     tableUri = prepareOutputUri.toString,
-                    dataRequest = trainRequest,
-                    fieldBindings = Seq(
-                        FieldBinding(tupleFieldName = "word", storeFieldName = "family:column")))),
+                    timeRange=All,
+                    columnsToFields =
+                        Map(QualifiedColumnRequestInput("family", "column") -> 'word))),
             outputSpec = Map("output" ->
                 KijiOutputSpec(
                     tableUri = trainOutputUri.toString,
-                    fieldBindings = Seq(
-                        FieldBinding(tupleFieldName = "avgString",
-                            storeFieldName = "family:column1")))),
+                    fieldsToColumns = Map('avgString -> ColumnRequestOutput("family:column1")))),
             keyValueStoreSpecs = Seq())),
         scoreEnvironment = Some(ScoreEnvironment(
             inputSpec = KijiInputSpec(
                 tableUri = trainOutputUri.toString,
-                dataRequest = scoreRequest,
-                fieldBindings = Seq(
-                    FieldBinding(tupleFieldName = "field", storeFieldName = "family:column1"))),
+                timeRange=All,
+                columnsToFields =
+                    Map(QualifiedColumnRequestInput("family", "column1") -> 'field)),
             outputSpec = KijiSingleColumnOutputSpec(
                 tableUri = trainOutputUri.toString,
-                "family:column2"),
+                ColumnRequestOutput("family:column2")),
             keyValueStoreSpecs = Seq(
                 KeyValueStoreSpec(
                     storeType = "AVRO_KV",

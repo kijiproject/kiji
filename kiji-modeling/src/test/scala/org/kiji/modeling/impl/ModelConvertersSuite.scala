@@ -24,17 +24,22 @@ import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
+import org.kiji.express.flow.AndFilter
+import org.kiji.express.flow.Between
+import org.kiji.express.flow.ColumnFamilyRequestInput
+import org.kiji.express.flow.ColumnRangeFilter
+import org.kiji.express.flow.ColumnRequestInput
+import org.kiji.express.flow.ColumnRequestOutput
+import org.kiji.express.flow.ExpressColumnFilter
+import org.kiji.express.flow.OrFilter
+import org.kiji.express.flow.QualifiedColumnRequestInput
+import org.kiji.express.flow.RegexQualifierFilter
 import org.kiji.modeling.ExtractFn
 import org.kiji.modeling.Extractor
 import org.kiji.modeling.Preparer
 import org.kiji.modeling.ScoreFn
 import org.kiji.modeling.Scorer
 import org.kiji.modeling.Trainer
-import org.kiji.modeling.config.AndFilter
-import org.kiji.modeling.config.ColumnRangeFilter
-import org.kiji.modeling.config.ExpressColumnFilter
-import org.kiji.modeling.config.ExpressColumnRequest
-import org.kiji.modeling.config.ExpressDataRequest
 import org.kiji.modeling.config.FieldBinding
 import org.kiji.modeling.config.InputSpec
 import org.kiji.modeling.config.KeyValueStoreSpec
@@ -43,10 +48,8 @@ import org.kiji.modeling.config.KijiOutputSpec
 import org.kiji.modeling.config.KijiSingleColumnOutputSpec
 import org.kiji.modeling.config.ModelDefinition
 import org.kiji.modeling.config.ModelEnvironment
-import org.kiji.modeling.config.OrFilter
 import org.kiji.modeling.config.OutputSpec
 import org.kiji.modeling.config.PrepareEnvironment
-import org.kiji.modeling.config.RegexQualifierFilter
 import org.kiji.modeling.config.ScoreEnvironment
 import org.kiji.modeling.config.SequenceFileSourceSpec
 import org.kiji.modeling.config.TextSourceSpec
@@ -116,9 +119,12 @@ class ModelConvertersSuite extends SerDeSuite {
     ModelConverters.outputSpecFromAvro(ModelConverters.outputSpecToAvro(input))
   }
 
+  /*
+  // TODO: Replace this with a KijiInputSpec test?
   serDeTest("DataRequest", "Avro",testDataRequest) { input =>
     ModelConverters.dataRequestFromAvro(ModelConverters.dataRequestToAvro(input))
   }
+  */
 
   serDeTest("KVStore", "Avro",testKVStore) { input =>
     ModelConverters.keyValueStoreSpecFromAvro(ModelConverters.keyValueStoreSpecToAvro(input))
@@ -178,14 +184,13 @@ object ModelConvertersSuite {
       properties = Map(
           "uri" -> "kiji://.env/default/test4",
           "column" -> "info:test"))
-  val testDataRequest: ExpressDataRequest = ExpressDataRequest(
-      minTimestamp = 0L,
-      maxTimestamp = Long.MaxValue - 1,
-      columnRequests = Seq(ExpressColumnRequest("info:test", 1, Some(testAndFilter))))
   val testKijiInputSpec: KijiInputSpec = KijiInputSpec(
       tableUri = "kiji://.env/default/test",
-      dataRequest = testDataRequest,
-      fieldBindings = Seq(testFieldBinding))
+      timeRange = Between(0L, Long.MaxValue - 1),
+      columnsToFields = Map(QualifiedColumnRequestInput(
+          "info",
+          "test",
+          filter = Some(testAndFilter)) -> 'testField))
   val testTextSpec: TextSourceSpec = TextSourceSpec(
       path = "hdfs://test")
   val testSequenceFileSpec: SequenceFileSourceSpec = SequenceFileSourceSpec(
@@ -194,10 +199,10 @@ object ModelConvertersSuite {
       valueField = Some("value"))
   val testKijiOutputSpec: KijiOutputSpec = KijiOutputSpec(
       tableUri = "kiji://.env/default/test2",
-      fieldBindings = Seq(testFieldBinding))
+      fieldsToColumns = Map('testField -> ColumnRequestOutput("info:test")))
   val testColumnOutputSpec: KijiSingleColumnOutputSpec = KijiSingleColumnOutputSpec(
       tableUri = "kiji://.env/default/test3",
-      outputColumn = "info:test")
+      outputColumn = ColumnRequestOutput("info:test"))
   val testPrepareEnvironment: PrepareEnvironment = PrepareEnvironment(
       inputSpec = Map("input" -> testKijiInputSpec),
       outputSpec = Map("output" -> testKijiOutputSpec),

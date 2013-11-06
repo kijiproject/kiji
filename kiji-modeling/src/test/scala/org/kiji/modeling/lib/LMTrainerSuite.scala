@@ -28,8 +28,11 @@ import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.KijiSuite
-import org.kiji.modeling.config.ExpressColumnRequest
-import org.kiji.modeling.config.ExpressDataRequest
+import org.kiji.express.flow.All
+import org.kiji.express.flow.ColumnFamilyRequestInput
+import org.kiji.express.flow.ColumnRequestInput
+import org.kiji.express.flow.ColumnRequestOutput
+import org.kiji.express.flow.QualifiedColumnRequestInput
 import org.kiji.modeling.config.FieldBinding
 import org.kiji.modeling.config.KijiInputSpec
 import org.kiji.modeling.config.ModelDefinition
@@ -82,10 +85,6 @@ class LMTrainerSuite extends KijiSuite {
       version = "1.0",
       trainerClass = Some(classOf[LMTrainer]))
 
-    val request: ExpressDataRequest = new ExpressDataRequest(0, Long.MaxValue,
-        Seq(new ExpressColumnRequest("family:column1", 1, None),
-            new ExpressColumnRequest("family:column2", 1, None)))
-
     doAndRelease(kiji.openTable("lr_table")) { table: KijiTable =>
       val tableUri: KijiURI = table.getURI()
 
@@ -96,13 +95,10 @@ class LMTrainerSuite extends KijiSuite {
               inputSpec = Map(
                   "dataset" -> KijiInputSpec(
                       tableUri.toString,
-                      dataRequest = request,
-                      fieldBindings = Seq(
-                          FieldBinding(tupleFieldName = "attributes",
-                              storeFieldName = "family:column1"),
-                          FieldBinding(tupleFieldName = "target",
-                              storeFieldName = "family:column2"))
-                  ),
+                      timeRange=All,
+                      columnsToFields = Map(
+                          QualifiedColumnRequestInput("family", "column1") -> 'attributes,
+                          QualifiedColumnRequestInput("family", "column2") -> 'target)),
                   "parameters" -> TextSourceSpec(
                       path = paramsFile
                   )

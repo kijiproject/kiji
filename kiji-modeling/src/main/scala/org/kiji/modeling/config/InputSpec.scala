@@ -22,6 +22,8 @@ package org.kiji.modeling.config
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
+import org.kiji.schema.KijiDataRequestBuilder
+import org.kiji.schema.KijiDataRequest
 
 /**
  * Represents the configuration for an input data source for a phase of the model lifecycle.
@@ -30,21 +32,3 @@ import org.kiji.annotations.Inheritance
 @ApiStability.Experimental
 @Inheritance.Sealed
 trait InputSpec
-
-/**
- * Configuration necessary to use a Kiji table as a data source.
- *
- * @param tableUri addressing the Kiji table that this input spec will read from.
- * @param dataRequest describing the input columns required by this input spec.
- * @param fieldBindings defining a mapping from columns requested to their corresponding field
- *     names. This determines how data that is requested for the extract phase is mapped onto named
- *     input fields.
- */
-@ApiAudience.Public
-@ApiStability.Experimental
-@Inheritance.Sealed
-final case class KijiInputSpec(
-    tableUri: String,
-    dataRequest: ExpressDataRequest,
-    fieldBindings: Seq[FieldBinding])
-    extends InputSpec

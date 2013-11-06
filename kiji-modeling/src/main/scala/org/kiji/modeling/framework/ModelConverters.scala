@@ -21,6 +21,15 @@ package org.kiji.modeling.framework
 
 import scala.collection.JavaConverters._
 
+import org.kiji.express.flow.AndFilter
+import org.kiji.express.flow.Between
+import org.kiji.express.flow.ColumnRangeFilter
+import org.kiji.express.flow.ColumnRequestInput
+import org.kiji.express.flow.ColumnRequestOutput
+import org.kiji.express.flow.ExpressColumnFilter
+import org.kiji.express.flow.OrFilter
+import org.kiji.express.flow.RegexQualifierFilter
+
 import org.kiji.modeling.Evaluator
 import org.kiji.modeling.Extractor
 import org.kiji.modeling.Preparer
@@ -49,12 +58,7 @@ import org.kiji.modeling.avro.AvroScoreEnvironment
 import org.kiji.modeling.avro.AvroSequenceFileSourceSpec
 import org.kiji.modeling.avro.AvroTextSourceSpec
 import org.kiji.modeling.avro.AvroTrainEnvironment
-import org.kiji.modeling.config.AndFilter
-import org.kiji.modeling.config.ColumnRangeFilter
 import org.kiji.modeling.config.EvaluateEnvironment
-import org.kiji.modeling.config.ExpressColumnFilter
-import org.kiji.modeling.config.ExpressColumnRequest
-import org.kiji.modeling.config.ExpressDataRequest
 import org.kiji.modeling.config.FieldBinding
 import org.kiji.modeling.config.InputSpec
 import org.kiji.modeling.config.KeyValueStoreSpec
@@ -63,15 +67,14 @@ import org.kiji.modeling.config.KijiOutputSpec
 import org.kiji.modeling.config.KijiSingleColumnOutputSpec
 import org.kiji.modeling.config.ModelDefinition
 import org.kiji.modeling.config.ModelEnvironment
-import org.kiji.modeling.config.OrFilter
 import org.kiji.modeling.config.OutputSpec
 import org.kiji.modeling.config.PrepareEnvironment
-import org.kiji.modeling.config.RegexQualifierFilter
 import org.kiji.modeling.config.ScoreEnvironment
 import org.kiji.modeling.config.SequenceFileSourceSpec
 import org.kiji.modeling.config.TextSourceSpec
 import org.kiji.modeling.config.TrainEnvironment
 import org.kiji.modeling.config.ValidationException
+import org.kiji.schema.filter.KijiColumnFilter
 import org.kiji.schema.util.ProtocolVersion
 
 /**
@@ -327,18 +330,12 @@ object ModelConverters {
    * @return a populated score environment.
    */
   def scoreEnvironmentFromAvro(environment: AvroScoreEnvironment): ScoreEnvironment = {
-    val inputSpec: KijiInputSpec = {
-      val avroInputSpec = environment.getInputSpec
-      KijiInputSpec(
-          tableUri = avroInputSpec.getTableUri,
-          dataRequest = dataRequestFromAvro(avroInputSpec.getDataRequest),
-          fieldBindings = avroInputSpec.getFieldBindings.asScala.map { fieldBindingFromAvro })
-    }
+    val inputSpec: KijiInputSpec = kijiInputSpecFromAvro(environment.getInputSpec)
     val outputSpec: KijiSingleColumnOutputSpec = {
       val avroOutputSpec = environment.getOutputSpec
       KijiSingleColumnOutputSpec(
           tableUri = avroOutputSpec.getTableUri,
-          outputColumn = avroOutputSpec.getOutputColumn)
+          outputColumn = ColumnRequestOutput(avroOutputSpec.getOutputColumn))
     }
     new ScoreEnvironment(
         inputSpec = inputSpec,
@@ -356,21 +353,13 @@ object ModelConverters {
    * @return an avro record.
    */
   def scoreEnvironmentToAvro(environment: ScoreEnvironment): AvroScoreEnvironment = {
-    val avroInputSpec: AvroKijiInputSpec = {
-      val inputSpec = environment.inputSpec
-      AvroKijiInputSpec
-          .newBuilder()
-          .setTableUri(inputSpec.tableUri)
-          .setDataRequest(dataRequestToAvro(inputSpec.dataRequest))
-          .setFieldBindings(inputSpec.fieldBindings.map { fieldBindingToAvro } .asJava)
-          .build()
-    }
+    val avroInputSpec: AvroKijiInputSpec = kijiInputSpecToAvro(environment.inputSpec)
     val avroOutputSpec: AvroKijiSingleColumnOutputSpec = {
       val outputSpec = environment.outputSpec
       AvroKijiSingleColumnOutputSpec
           .newBuilder()
           .setTableUri(outputSpec.tableUri)
-          .setOutputColumn(outputSpec.outputColumn)
+          .setOutputColumn(outputSpec.outputColumn.getColumnName.toString)
           .build()
     }
     AvroScoreEnvironment
@@ -388,13 +377,7 @@ object ModelConverters {
    * @return a populated evaluate environment.
    */
   def evaluateEnvironmentFromAvro(environment: AvroEvaluateEnvironment): EvaluateEnvironment = {
-    val inputSpec: KijiInputSpec = {
-      val avroInputSpec = environment.getInputSpec
-      KijiInputSpec(
-        tableUri = avroInputSpec.getTableUri,
-        dataRequest = dataRequestFromAvro(avroInputSpec.getDataRequest),
-        fieldBindings = avroInputSpec.getFieldBindings.asScala.map { fieldBindingFromAvro })
-    }
+    val inputSpec: KijiInputSpec = kijiInputSpecFromAvro(environment.getInputSpec)
 
     new EvaluateEnvironment(
       inputSpec = inputSpec,
@@ -412,15 +395,7 @@ object ModelConverters {
    * @return an avro record.
    */
   def evaluateEnvironmentToAvro(environment: EvaluateEnvironment): AvroEvaluateEnvironment = {
-    val avroInputSpec: AvroKijiInputSpec = {
-      val inputSpec = environment.inputSpec
-      AvroKijiInputSpec
-        .newBuilder()
-        .setTableUri(inputSpec.tableUri)
-        .setDataRequest(dataRequestToAvro(inputSpec.dataRequest))
-        .setFieldBindings(inputSpec.fieldBindings.map { fieldBindingToAvro } .asJava)
-        .build()
-    }
+    val avroInputSpec: AvroKijiInputSpec = kijiInputSpecToAvro(environment.inputSpec)
 
     AvroEvaluateEnvironment
       .newBuilder()
@@ -451,12 +426,7 @@ object ModelConverters {
   def inputSpecFromAvro(inputSpec: AvroInputSpec): InputSpec = {
     // Get provided specifications (only one should be not null).
     val kijiSpecification: Option[InputSpec] = Option(inputSpec.getKijiSpecification)
-        .map { avroSpec: AvroKijiInputSpec =>
-          KijiInputSpec(
-              tableUri = avroSpec.getTableUri,
-              dataRequest = dataRequestFromAvro(avroSpec.getDataRequest),
-              fieldBindings = avroSpec.getFieldBindings.asScala.map { fieldBindingFromAvro })
-        }
+        .map { avroSpec: AvroKijiInputSpec => kijiInputSpecFromAvro(avroSpec) }
 
     val textSpecification: Option[InputSpec] = Option(inputSpec.getTextSpecification)
         .map { avroSpec: AvroTextSourceSpec =>
@@ -504,14 +474,8 @@ object ModelConverters {
    */
   def inputSpecToAvro(inputSpec: InputSpec): AvroInputSpec = {
     inputSpec match {
-      case KijiInputSpec(uri, dataRequest, bindings) => {
-        val spec = AvroKijiInputSpec
-            .newBuilder()
-            .setTableUri(uri)
-            .setDataRequest(dataRequestToAvro(dataRequest))
-            .setFieldBindings(bindings.map { fieldBindingToAvro } .asJava)
-            .build()
-
+      case x: KijiInputSpec => {
+        val spec = kijiInputSpecToAvro(x)
         AvroInputSpec
             .newBuilder()
             .setKijiSpecification(spec)
@@ -564,17 +528,12 @@ object ModelConverters {
   def outputSpecFromAvro(outputSpec: AvroOutputSpec): OutputSpec = {
     // Get provided specifications (only one should be not null).
     val kijiSpecification: Option[OutputSpec] = Option(outputSpec.getKijiSpecification)
-        .map { avroSpec: AvroKijiOutputSpec =>
-          KijiOutputSpec(
-              tableUri = avroSpec.getTableUri,
-              fieldBindings = avroSpec.getFieldBindings.asScala.map { fieldBindingFromAvro },
-              timestampField = Option(avroSpec.getTimestampField))
-        }
+        .map { avroSpec: AvroKijiOutputSpec => kijiOutputSpecFromAvro(avroSpec) }
     val kijiColumnSpecification: Option[OutputSpec] = Option(outputSpec.getKijiColumnSpecification)
         .map { avroSpec: AvroKijiSingleColumnOutputSpec =>
           KijiSingleColumnOutputSpec(
               tableUri = avroSpec.getTableUri,
-              outputColumn = avroSpec.getOutputColumn)
+              outputColumn = ColumnRequestOutput(avroSpec.getOutputColumn))
         }
     val textSpecification: Option[OutputSpec] = Option(outputSpec.getTextSpecification)
         .map { avroSpec: AvroTextSourceSpec =>
@@ -622,26 +581,14 @@ object ModelConverters {
    */
   def outputSpecToAvro(outputSpec: OutputSpec): AvroOutputSpec = {
     outputSpec match {
-      case KijiOutputSpec(uri, bindings, timestampField) => {
-        val spec = AvroKijiOutputSpec
-            .newBuilder()
-            .setTableUri(uri)
-            .setFieldBindings(bindings.map { fieldBindingToAvro } .asJava)
-            // scalastyle:off null
-            .setTimestampField(timestampField.getOrElse(null))
-            // scalastyle:on null
-            .build()
-
-        AvroOutputSpec
-            .newBuilder()
-            .setKijiSpecification(spec)
-            .build()
+      case spec: KijiOutputSpec => {
+        kijiOutputSpecToAvro(spec)
       }
       case KijiSingleColumnOutputSpec(uri, outputColumn) => {
         val spec = AvroKijiSingleColumnOutputSpec
             .newBuilder()
             .setTableUri(uri)
-            .setOutputColumn(outputColumn)
+            .setOutputColumn(outputColumn.getColumnName.toString)
             .build()
 
         AvroOutputSpec
@@ -674,67 +621,6 @@ object ModelConverters {
             .build()
       }
     }
-  }
-
-  /**
-   * Builds a data request from its avro record representation.
-   *
-   * @param request to build from.
-   * @return a populated data request.
-   */
-  def dataRequestFromAvro(request: AvroDataRequest): ExpressDataRequest = {
-    // Build the avro column requests for this data request.
-    val columns = request
-        .getColumnDefinitions
-        .asScala
-        .map { avroColumn: AvroColumn =>
-          val filter = Option(avroColumn.getFilter)
-              .map { filterFromAvro }
-
-          new ExpressColumnRequest(
-              name = avroColumn.getName,
-              maxVersions = avroColumn.getMaxVersions,
-              filter = filter)
-        }
-
-    // Build an express data request.
-    new ExpressDataRequest(
-        minTimestamp = request.getMinTimestamp,
-        maxTimestamp = request.getMaxTimestamp,
-        columnRequests = columns)
-  }
-
-  /**
-   * Converts a data request to its avro record representation.
-   *
-   * @param request to convert.
-   * @return an avro record.
-   */
-  def dataRequestToAvro(request: ExpressDataRequest): AvroDataRequest = {
-    val columns: java.util.List[AvroColumn] = request
-        .columnRequests
-        .map { expressColumn: ExpressColumnRequest =>
-          val filter = expressColumn
-              .filter
-              .map { filterToAvro }
-
-          // scalastyle:off null
-          AvroColumn
-              .newBuilder()
-              .setName(expressColumn.name)
-              .setMaxVersions(expressColumn.maxVersions)
-              .setFilter(filter.getOrElse(null))
-              .build()
-          // scalastyle:on null
-        }
-        .asJava
-
-    AvroDataRequest
-        .newBuilder()
-        .setMinTimestamp(request.minTimestamp)
-        .setMaxTimestamp(request.maxTimestamp)
-        .setColumnDefinitions(columns)
-        .build()
   }
 
   /**
@@ -964,5 +850,189 @@ object ModelConverters {
         }
         .getOrElse(null)
     // scalastyle:on null
+  }
+
+  /**
+   * Create a KijiInputSpec from an Avro description.
+   *
+   * @param avroInputSpec The avro description of the input spec.
+   * @return The same input spec, but as a [[org.kiji.modeling.config.KijiInputSpec]]
+   */
+  def kijiInputSpecFromAvro(avroInputSpec: AvroKijiInputSpec): KijiInputSpec = {
+    // URI
+    val tableUri: String = avroInputSpec.getTableUri
+
+    // TimeRange
+    val avroDataRequest = avroInputSpec.getDataRequest
+    val timeRange = Between(avroDataRequest.getMinTimestamp, avroDataRequest.getMaxTimestamp)
+
+    // Field bindings
+    val fieldBindings = avroInputSpec.getFieldBindings.asScala
+    val columnNamesToFieldNames: Map[String, String] = fieldBindings
+        .map { x => (x.getStoreFieldName, x.getTupleFieldName) }
+        .toMap
+
+    // Columns
+    val columns: Map[_ <: ColumnRequestInput, Symbol] = avroDataRequest
+        .getColumnDefinitions
+        .asScala
+        .map { avroColumn: AvroColumn =>
+          val filter = Option(avroColumn.getFilter)
+              .map { x => filterFromAvro(x) }
+
+          val columnName = avroColumn.getName
+
+          val column = ColumnRequestInput(
+              columnName = columnName,
+              maxVersions = avroColumn.getMaxVersions,
+              filter = filter)
+
+          // TODO (EXP-264): Errors of this type used to be caught by the validation code, after a
+          // KijiInputSpec had been constructed from Avro.  Here we cannot even get to the
+          // validation phase, because we no longer can construct a KijiInputSpec containing columns
+          // without field bindings.  We need to determine whether just throwing a
+          // ValidationException here is okay, or if we need to do something else.
+          if (!columnNamesToFieldNames.contains(columnName)) {
+            val msg = "Specified AvroKijiInputSpec with column " + columnName +
+                ", but without a valid field binding."
+            throw new ValidationException(msg)
+          }
+
+          val fieldName: String = columnNamesToFieldNames(columnName)
+
+          (column, Symbol(fieldName))
+        }
+        .toMap
+
+    KijiInputSpec(
+        tableUri = tableUri,
+        timeRange = timeRange,
+        columnsToFields = columns)
+  }
+
+  /**
+   * Create an Avro representation of a KijiInputSpec.
+   *
+   * @param inputSpec The [[org.kiji.modeling.config.KijiInputSpec]] to transform with Avro.
+   * @return an Avro version of the input spec.
+   */
+  def kijiInputSpecToAvro(inputSpec: KijiInputSpec): AvroKijiInputSpec = {
+    // Turn a flow ColumnRequestInput into a modeling ExpressColumnRequest
+    def columnRequestInputToAvroColumn(column: ColumnRequestInput): AvroColumn = {
+      AvroColumn
+          .newBuilder()
+          .setName(column.getColumnName.toString)
+          .setMaxVersions(column.maxVersions)
+          .setFilter(column.filter.map{filterToAvro}.getOrElse(null))
+          .build()
+    }
+
+    // Create an AvroDataRequest from the KijiInputSpec
+    def getAvroDataRequest: AvroDataRequest = {
+      val columns: java.util.List[AvroColumn] = inputSpec
+          .columnsToFields
+          .keys
+          .toList
+          .map { columnRequestInputToAvroColumn }
+          .asJava
+
+      AvroDataRequest
+          .newBuilder()
+          .setMinTimestamp(inputSpec.timeRange.begin)
+          .setMaxTimestamp(inputSpec.timeRange.end)
+          .setColumnDefinitions(columns)
+          .build()
+    }
+
+    // Create FieldBindings (that will become AvroFieldBindings) from the KijiInputSpec.
+    def getBindings: Seq[FieldBinding] = {
+      inputSpec
+          .columnsToFields
+          .toList
+          // Now we have a list of (ColumnRequestInput, Symbol) tuples
+          .map { case (column: ColumnRequestInput, field: Symbol) => {
+            val tupleFieldName = field.name
+            val storeFieldName = column.getColumnName.toString
+            FieldBinding(tupleFieldName, storeFieldName)
+          }}
+    }
+
+  AvroKijiInputSpec
+      .newBuilder()
+      .setTableUri(inputSpec.tableUri)
+      .setDataRequest(getAvroDataRequest)
+      .setFieldBindings(getBindings.map { fieldBindingToAvro } .asJava)
+      .build()
+
+  }
+
+  /**
+   * Create a KijiOutputSpec from an Avro description.
+   *
+   * @param avroOutputSpec The avro description of the output spec.
+   * @return The same output spec, but as a [[org.kiji.modeling.config.KijiOutputSpec]]
+   */
+  def kijiOutputSpecFromAvro(avroOutputSpec: AvroKijiOutputSpec): KijiOutputSpec = {
+    // URI
+    val tableUri: String = avroOutputSpec.getTableUri
+
+    // Field bindings
+    val fieldBindings = avroOutputSpec.getFieldBindings.asScala
+
+    // Field to use as timestamp
+    val timestampField = avroOutputSpec.getTimestampField match {
+      case null => None
+      case timestampField: String => Some(Symbol(timestampField))
+    }
+
+    // Avro spec does not yet support any fancy stuff for output column
+    val columns: Map[Symbol, _ <: ColumnRequestOutput] = fieldBindings
+        .map { fieldBinding => {
+          // Convert store field name into ColumnRequestOutput
+          val column = ColumnRequestOutput(fieldBinding.getStoreFieldName)
+          (Symbol(fieldBinding.getTupleFieldName), column)
+        }}
+        .toMap
+
+    KijiOutputSpec(
+        tableUri = tableUri,
+        fieldsToColumns = columns,
+        timestampField = timestampField)
+  }
+
+  /**
+   * Create an Avro representation of a KijiOutputSpec.
+   *
+   * @param outputSpec The [[org.kiji.modeling.config.KijiOutputSpec]] to transform with Avro.
+   * @return an Avro version of the output spec.
+   */
+  def kijiOutputSpecToAvro(outputSpec: KijiOutputSpec): AvroOutputSpec = {
+
+    // Extract field bindings from column requests
+    def getBindings: Seq[FieldBinding] = {
+      outputSpec
+          .fieldsToColumns
+          .toList
+          // Now we have a list of (ColumnRequestInput, Symbol) tuples
+          .map { case (field: Symbol, column: ColumnRequestOutput) => {
+            val tupleFieldName = field.name
+            val storeFieldName = column.getColumnName.toString
+            FieldBinding(tupleFieldName, storeFieldName)
+          }}
+    }
+
+    val timestampField: Option[String] = outputSpec.timestampField.map(_.name)
+
+    val spec = AvroKijiOutputSpec
+        .newBuilder()
+        .setTableUri(outputSpec.tableUri)
+        .setFieldBindings(getBindings.map { fieldBindingToAvro } .asJava)
+        .setTimestampField(timestampField.getOrElse(null))
+        .build()
+
+    AvroOutputSpec
+        .newBuilder()
+        .setKijiSpecification(spec)
+        .build()
   }
 }

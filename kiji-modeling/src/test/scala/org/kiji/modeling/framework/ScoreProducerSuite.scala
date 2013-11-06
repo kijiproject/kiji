@@ -26,12 +26,16 @@ import org.scalatest.junit.JUnitRunner
 import org.kiji.express.EntityId
 import org.kiji.express.KijiSlice
 import org.kiji.express.KijiSuite
+import org.kiji.express.flow.All
+import org.kiji.express.flow.ColumnRequestInput
+import org.kiji.express.flow.ColumnRequestOutput
+import org.kiji.express.flow.QualifiedColumnRequestInput
+import org.kiji.express.util.Resources.doAndClose
+import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.modeling.Extractor
 import org.kiji.modeling.KeyValueStore
 import org.kiji.modeling.ScoreProducerJobBuilder
 import org.kiji.modeling.Scorer
-import org.kiji.modeling.config.ExpressColumnRequest
-import org.kiji.modeling.config.ExpressDataRequest
 import org.kiji.modeling.config.FieldBinding
 import org.kiji.modeling.config.KeyValueStoreSpec
 import org.kiji.modeling.config.KijiInputSpec
@@ -41,8 +45,6 @@ import org.kiji.modeling.config.ModelEnvironment
 import org.kiji.modeling.config.ScoreEnvironment
 import org.kiji.modeling.impl.KeyValueStoreImplSuite
 import org.kiji.modeling.lib.FirstValueExtractor
-import org.kiji.express.util.Resources.doAndClose
-import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiTable
@@ -73,8 +75,6 @@ class ScoreProducerSuite
 
       // Update configuration object with appropriately serialized ModelDefinition/ModelEnvironment
       // JSON.
-      val request: ExpressDataRequest = new ExpressDataRequest(0, Long.MaxValue,
-          new ExpressColumnRequest("family:column1", 1, None) :: Nil)
       val sideDataPath: Path = KeyValueStoreImplSuite.generateAvroKVRecordKeyValueStore()
       val modelDefinition: ModelDefinition = ModelDefinition(
           name = "test-model-definition",
@@ -89,10 +89,10 @@ class ScoreProducerSuite
         scoreEnvironment = Some(ScoreEnvironment(
               KijiInputSpec(
                   uri.toString,
-                  dataRequest = request,
-                  fieldBindings = Seq(
-                      FieldBinding(tupleFieldName = "field", storeFieldName = "family:column1"))),
-              KijiSingleColumnOutputSpec(uri.toString, "family:column2"),
+                  timeRange=All,
+                  columnsToFields =
+                      Map(QualifiedColumnRequestInput("family", "column1") -> 'field)),
+              KijiSingleColumnOutputSpec(uri.toString, ColumnRequestOutput("family:column2")),
               keyValueStoreSpecs = Seq(
                   KeyValueStoreSpec(
                       storeType = "AVRO_KV",
@@ -149,9 +149,6 @@ class ScoreProducerSuite
 
       // Update configuration object with appropriately serialized ModelDefinition/ModelEnvironment
       // JSON.
-      val request: ExpressDataRequest = new ExpressDataRequest(0, Long.MaxValue,
-          new ExpressColumnRequest("family:column1", 1, None) ::
-          new ExpressColumnRequest("family:column2", 1, None) :: Nil)
       val modelDefinition: ModelDefinition = ModelDefinition(
           name = "test-model-definition",
           version = "1.0",
@@ -165,11 +162,11 @@ class ScoreProducerSuite
           scoreEnvironment = Some(ScoreEnvironment(
               KijiInputSpec(
                   uri.toString,
-                  dataRequest = request,
-                  fieldBindings = Seq(
-                      FieldBinding(tupleFieldName = "i1", storeFieldName = "family:column1"),
-                      FieldBinding(tupleFieldName = "i2", storeFieldName = "family:column2"))),
-              KijiSingleColumnOutputSpec(uri.toString, "family:column2"),
+                  timeRange=All,
+                  columnsToFields = Map(
+                      QualifiedColumnRequestInput("family", "column1") -> 'i1,
+                      QualifiedColumnRequestInput("family", "column2") -> 'i2)),
+              KijiSingleColumnOutputSpec(uri.toString, ColumnRequestOutput("family:column2")),
               keyValueStoreSpecs = Seq())))
 
       // Build the produce job.
@@ -218,8 +215,6 @@ class ScoreProducerSuite
 
       // Update configuration object with appropriately serialized ModelDefinition/ModelEnvironment
       // JSON.
-      val request: ExpressDataRequest = new ExpressDataRequest(0, Long.MaxValue,
-          new ExpressColumnRequest("family:column", 1, None) :: Nil)
       val modelDefinition: ModelDefinition = ModelDefinition(
           name = "test-model-definition",
           version = "1.0",
@@ -233,10 +228,9 @@ class ScoreProducerSuite
           scoreEnvironment = Some(ScoreEnvironment(
               KijiInputSpec(
                   uri.toString,
-                  dataRequest = request,
-                  fieldBindings = Seq(
-                      FieldBinding(tupleFieldName = "i1", storeFieldName = "family:column"))),
-              KijiSingleColumnOutputSpec(uri.toString, "family:column"),
+                  timeRange=All,
+                  columnsToFields = Map(QualifiedColumnRequestInput("family", "column") -> 'i1)),
+              KijiSingleColumnOutputSpec(uri.toString, ColumnRequestOutput("family:column")),
               keyValueStoreSpecs = Seq())))
 
       // Build the produce job.
@@ -295,8 +289,6 @@ class ScoreProducerSuite
 
       // Update configuration object with appropriately serialized ModelDefinition/ModelEnvironment
       // JSON.
-      val request: ExpressDataRequest = new ExpressDataRequest(0, Long.MaxValue,
-          new ExpressColumnRequest("family:column1", 1, None) :: Nil)
       val sideDataPath: Path = KeyValueStoreImplSuite.generateAvroKVRecordKeyValueStore()
       val modelDefinition: ModelDefinition = ModelDefinition(
           name = "test-model-definition",
@@ -311,11 +303,10 @@ class ScoreProducerSuite
           scoreEnvironment = Some(ScoreEnvironment(
               KijiInputSpec(
                   uri.toString,
-                  request,
-                  Seq(
-                      FieldBinding(tupleFieldName = "feature", storeFieldName = "family:column1"))
-              ),
-              KijiSingleColumnOutputSpec(uri.toString, "family:column2"),
+                  timeRange=All,
+                  columnsToFields =
+                      Map(QualifiedColumnRequestInput("family", "column1") -> 'feature)),
+              KijiSingleColumnOutputSpec(uri.toString, ColumnRequestOutput("family:column2")),
               keyValueStoreSpecs = Seq())))
 
       // Build the produce job.
@@ -360,8 +351,6 @@ class ScoreProducerSuite
 
       // Update configuration object with appropriately serialized ModelDefinition/ModelEnvironment
       // JSON.
-      val request: ExpressDataRequest = new ExpressDataRequest(0, Long.MaxValue,
-        new ExpressColumnRequest("family:column1", 1, None) :: Nil)
       val sideDataPath: Path = KeyValueStoreImplSuite.generateAvroKVRecordKeyValueStore()
       val modelDefinition: ModelDefinition = ModelDefinition(
         name = "test-model-definition",
@@ -376,10 +365,9 @@ class ScoreProducerSuite
         scoreEnvironment = Some(ScoreEnvironment(
           KijiInputSpec(
             uri.toString,
-            dataRequest = request,
-            fieldBindings = Seq(
-              FieldBinding(tupleFieldName = "field", storeFieldName = "family:column1"))),
-          KijiSingleColumnOutputSpec(uri.toString, "family:column2"),
+            timeRange=All,
+            columnsToFields = Map(QualifiedColumnRequestInput("family", "column1") -> 'field)),
+          KijiSingleColumnOutputSpec(uri.toString, ColumnRequestOutput("family:column2")),
           keyValueStoreSpecs = Seq(
             KeyValueStoreSpec(
               storeType = "AVRO_KV",

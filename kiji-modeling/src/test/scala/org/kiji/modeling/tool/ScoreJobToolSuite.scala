@@ -28,10 +28,12 @@ import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.KijiSlice
 import org.kiji.express.KijiSuite
+import org.kiji.express.flow.All
+import org.kiji.express.flow.ColumnRequestInput
+import org.kiji.express.flow.ColumnRequestOutput
+import org.kiji.express.flow.QualifiedColumnRequestInput
 import org.kiji.modeling.Extractor
 import org.kiji.modeling.Scorer
-import org.kiji.modeling.config.ExpressColumnRequest
-import org.kiji.modeling.config.ExpressDataRequest
 import org.kiji.modeling.config.FieldBinding
 import org.kiji.modeling.config.KijiInputSpec
 import org.kiji.modeling.config.KijiSingleColumnOutputSpec
@@ -73,8 +75,6 @@ class ScoreJobToolSuite extends KijiSuite {
         val uri: KijiURI = table.getURI
 
         // Create a model definition and environment.
-        val request: ExpressDataRequest = new ExpressDataRequest(0L, Long.MaxValue,
-            new ExpressColumnRequest("family:column1", 1, None) :: Nil)
         val modelDefinition: ModelDefinition = ModelDefinition(
             name = "test-model-definition",
             version = "1.0",
@@ -88,12 +88,13 @@ class ScoreJobToolSuite extends KijiSuite {
             scoreEnvironment = Some(ScoreEnvironment(
                 KijiInputSpec(
                     uri.toString,
-                    request,
-                  Seq(FieldBinding("field", "family:column1"))
+                    timeRange=All,
+                    columnsToFields =
+                        Map(QualifiedColumnRequestInput("family", "column1") -> 'field)
                 ),
                 KijiSingleColumnOutputSpec(
                     uri.toString,
-                  "family:column2"
+                  ColumnRequestOutput("family:column2")
                 ),
                 keyValueStoreSpecs = Seq())))
 

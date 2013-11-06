@@ -29,8 +29,8 @@ import org.apache.hadoop.util.ToolRunner
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
-import org.kiji.modeling.config.ExpressColumnRequest
-import org.kiji.modeling.config.ExpressDataRequest
+import org.kiji.express.flow.All
+import org.kiji.express.flow.ColumnRequestInput
 import org.kiji.modeling.config.FieldBinding
 import org.kiji.modeling.config.KijiInputSpec
 import org.kiji.modeling.config.ModelDefinition
@@ -61,11 +61,6 @@ final class LMTool extends Tool {
       version = "1.0",
       trainerClass = Some(classOf[LMTrainer]))
 
-    val request: ExpressDataRequest = new ExpressDataRequest(0, Long.MaxValue,
-        Seq(new ExpressColumnRequest(attributesColumn, 1, None),
-            new ExpressColumnRequest(targetColumn, 1, None))
-    )
-
     val modelEnvironment: ModelEnvironment = ModelEnvironment(
         name = "lmtool",
         version = "1.0",
@@ -74,12 +69,11 @@ final class LMTool extends Tool {
             inputSpec = Map(
                 "dataset" -> KijiInputSpec(
                     datasetTableURI,
-                    dataRequest = request,
-                    fieldBindings = Seq(
-                        FieldBinding(tupleFieldName = "attributes",
-                            storeFieldName = attributesColumn),
-                        FieldBinding(tupleFieldName = "target",
-                            storeFieldName = targetColumn))),
+                    timeRange = All,
+                    columnsToFields = Map(
+                      ColumnRequestInput(columnName = attributesColumn) -> 'attributes,
+                      ColumnRequestInput(columnName = targetColumn) -> 'target
+                    )),
                 "parameters" -> TextSourceSpec(
                     path = paramsFilePath
                 )

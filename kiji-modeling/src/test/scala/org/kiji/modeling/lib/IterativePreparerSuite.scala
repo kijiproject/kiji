@@ -27,9 +27,12 @@ import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.KijiSlice
 import org.kiji.express.KijiSuite
+import org.kiji.express.flow.All
+import org.kiji.express.flow.ColumnFamilyRequestInput
+import org.kiji.express.flow.ColumnRequestInput
+import org.kiji.express.flow.ColumnRequestOutput
+import org.kiji.express.flow.QualifiedColumnRequestInput
 import org.kiji.modeling.Preparer
-import org.kiji.modeling.config.ExpressColumnRequest
-import org.kiji.modeling.config.ExpressDataRequest
 import org.kiji.modeling.config.FieldBinding
 import org.kiji.modeling.config.KijiInputSpec
 import org.kiji.modeling.config.KijiOutputSpec
@@ -75,12 +78,6 @@ class IterativePreparerSuite extends KijiSuite {
         version = "1.0",
         preparerClass = Some(classOf[IterativePreparerSuite.IterativePreparer]))
 
-    // TODO: Fix data request being for only column1
-    val request1: ExpressDataRequest = new ExpressDataRequest(0, Long.MaxValue,
-        new ExpressColumnRequest("family:column1", 1, None) :: Nil)
-    val request2: ExpressDataRequest = new ExpressDataRequest(0, Long.MaxValue,
-        new ExpressColumnRequest("family:column2", 1, None) :: Nil)
-
     withKijiTable(kiji, "input_table") { table: KijiTable =>
       val tableUri: KijiURI = table.getURI
 
@@ -94,17 +91,19 @@ class IterativePreparerSuite extends KijiSuite {
               inputSpec = Map(
                   "input1" -> KijiInputSpec(
                       tableUri.toString,
-                      dataRequest = request1,
-                      fieldBindings = fieldB1),
+                      timeRange=All,
+                      columnsToFields =
+                          Map(QualifiedColumnRequestInput("family", "column1") -> 'word)),
                   "input2" -> KijiInputSpec(
                       tableUri.toString,
-                      dataRequest = request2,
-                      fieldBindings = fieldB2)
+                      timeRange=All,
+                      columnsToFields =
+                          Map(QualifiedColumnRequestInput("family", "column2") -> 'word))
               ),
               outputSpec = Map(
                   "output" -> KijiOutputSpec(
                       tableUri = tableUri.toString,
-                      fieldBindings = fieldB2)
+                      fieldsToColumns = Map('word -> ColumnRequestOutput("family:column2")))
               ),
               keyValueStoreSpecs = Seq()
           )),

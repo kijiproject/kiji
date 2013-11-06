@@ -24,6 +24,10 @@ import scala.io.Source
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
+import org.kiji.express.flow.ColumnFamilyRequestInput
+import org.kiji.express.flow.ColumnRequestInput
+import org.kiji.express.flow.ColumnRequestOutput
+import org.kiji.express.flow.QualifiedColumnRequestInput
 import org.kiji.express.util.Resources.doAndClose
 import org.kiji.modeling.avro.AvroModelEnvironment
 import org.kiji.modeling.framework.ModelConverters
@@ -52,18 +56,12 @@ import org.kiji.schema.util.ToJson
  *       scoreEnvironment = Some(ScoreEnvironment(
  *           inputSpec = KijiInputSpec(
  *               tableUri = "kiji://.env/default/mytable/",
- *               dataRequest = ExpressDataRequest(
- *                   minTimestamp = 0L
- *                   maxTimestamp = 38475687L
- *                   columnRequests = Seq(
- *                       ExpressColumnRequest(
- *                           name = "info:in",
- *                           maxVersions = 3,
- *                           filter = None))),
- *               Seq(FieldBinding("tuplename", "info:storefieldname"))),
+ *               timeRange = Between(0L, 38475687L),
+ *               columnsToFields = Map(
+ *                   QualifiedColumnRequestInput("info", "in", maxVersions = 3) -> 'tuplename)),
  *           outputSpec = KijiSingleColumnOutputSpec(
  *               tableUri = "kiji://.env/default/mytable/",
- *               outputColumn = "outputFamily:qualifier"),
+ *               outputColumn = ColumnRequestOutput("outputFamily:qualifier")),
  *           keyValueStoreSpecs = Seq(
  *               KeyValueStore(
  *                   storeType = "KIJI_TABLE",
@@ -365,24 +363,29 @@ object ModelEnvironment {
   }
 
   /**
-   * Verifies that the given sequence of FieldBindings is valid with respect to the field names and
-   * column names contained therein.
+   * Verifies that the given collection of bindings between Scalding field names and column requests
+   * is valid with respect to the field names and column names contained therein.
    *
-   * @param fieldBindings are the associations between field names and Kiji column names.
+   * @param columns is a map from field names to [[org.kiji.express.flow.ColumnRequestOutput]]
+   *     objects.
    * @return an optional ValidationException if there are errors encountered.
    */
-  def validateKijiInputOutputFieldBindings(
-      fieldBindings: Seq[FieldBinding]): Seq[ValidationException] = {
+  def validateKijiOutputFieldBindings(
+      columns: Map[Symbol, _ <: ColumnRequestOutput]): Seq[ValidationException] = {
     // Validate column names.
-    val columnNames: Seq[String] = fieldBindings
-        .map { fieldBinding: FieldBinding => fieldBinding.storeFieldName }
+    val columnNames: Seq[String] = columns
+        .values
+        .toList
+        .map { _.getColumnName.toString }
     val columnNameErrors = columnNames
         .map { columnName: String => validateKijiColumnName(columnName) }
         .flatten
 
     // Validate field name bindings.
-    val fieldNames: Seq[String] = fieldBindings
-        .map { fieldBinding: FieldBinding => fieldBinding.tupleFieldName }
+    val fieldNames: Seq[String] = columns
+        .keys
+        .toList
+        .map { field: Symbol => field.name }
     val fieldNameErrors = validateFieldNames(fieldNames).toSeq ++ validateColumnNames(columnNames)
 
     columnNameErrors ++ fieldNameErrors
@@ -407,10 +410,7 @@ object ModelEnvironment {
   def validateInputSpec(inputSpec: InputSpec): Seq[ValidationException] = {
     inputSpec match {
       case kijiInputSpec: KijiInputSpec => {
-        val fieldBindingErrors = validateKijiInputOutputFieldBindings(kijiInputSpec.fieldBindings)
-        val dataRequestErrors = validateDataRequest(kijiInputSpec.dataRequest)
-
-        fieldBindingErrors ++ dataRequestErrors
+        validateKijiInputSpec(kijiInputSpec)
       }
       case textSpecification: TextSourceSpec => {
         Seq()
@@ -432,6 +432,37 @@ object ModelEnvironment {
     }
   }
 
+  def validateKijiInputSpec(kijiInputSpec: KijiInputSpec): Seq[ValidationException] = {
+    // Check the column names
+    val nameExceptions = kijiInputSpec
+        .columnsToFields
+        .keys
+        .toList
+        .map { _.getColumnName.toString }
+        .map { validateKijiColumnName }
+        .flatten
+
+    val beginException: Option[ValidationException] =
+        if (kijiInputSpec.timeRange.begin < 0) {
+          val error = "timeRange.begin is " + kijiInputSpec.timeRange.begin +
+              " but must be greater than zero"
+          Some(new ValidationException(error))
+        } else {
+          None
+        }
+
+    val endException: Option[ValidationException] =
+        if (kijiInputSpec.timeRange.end < 0) {
+          val error = "timeRange.end is " + kijiInputSpec.timeRange.end +
+              " but must be greater than zero"
+          Some(new ValidationException(error))
+        } else {
+          None
+        }
+
+    nameExceptions ++ beginException ++ endException
+  }
+
   /**
    * Wrapper function for validating the output specification map for the prepare and train phase.
    *
@@ -451,10 +482,10 @@ object ModelEnvironment {
   def validateOutputSpec(outputSpec: OutputSpec): Seq[ValidationException] = {
     outputSpec match {
       case kijiOutputSpec: KijiOutputSpec => {
-        validateKijiInputOutputFieldBindings(kijiOutputSpec.fieldBindings)
+        validateKijiOutputFieldBindings(kijiOutputSpec.fieldsToColumns)
       }
       case kijiSingleColumnSpec: KijiSingleColumnOutputSpec => {
-        validateKijiColumnName(kijiSingleColumnSpec.outputColumn)
+        validateKijiColumnName(kijiSingleColumnSpec.outputColumn.getColumnName.toString)
             .toSeq
       }
       case textSpecification: TextSourceSpec => {
@@ -520,7 +551,7 @@ object ModelEnvironment {
     // The score phase only supports the single column Kiji output.
     val outputSpecErrors = scoreEnvironment.outputSpec match {
       case scorePhaseOutputSpec: KijiSingleColumnOutputSpec => {
-        validateKijiColumnName(scorePhaseOutputSpec.outputColumn)
+        validateKijiColumnName(scorePhaseOutputSpec.outputColumn.getColumnName.toString)
             .toSeq
       }
       case _ => {
@@ -548,42 +579,6 @@ object ModelEnvironment {
     val kvStoreErrors = validateKvStores(evaluateEnvironment.keyValueStoreSpecs)
 
     inputSpecErrors ++ outputSpecErrors ++ kvStoreErrors
-  }
-
-  /**
-   * Validates a data request.
-   *
-   * @param dataRequest to validate.
-   * @throws a ModelEnvironmentValidationException if the column names are invalid.
-   */
-  def validateDataRequest(dataRequest: ExpressDataRequest): Seq[ValidationException] = {
-    // Validate Kiji column names.
-    val kijiColumnNameErrors: Seq[ValidationException] = dataRequest
-        .columnRequests
-        .map { column: ExpressColumnRequest => validateKijiColumnName(column.name) }
-        .flatten
-
-    // Validate the minimum timestamp.
-    val minimumTimestampError: Option[ValidationException] =
-        if (dataRequest.minTimestamp < 0) {
-          val error = "minTimestamp in the DataRequest is " + dataRequest.minTimestamp +
-              " and must be greater than 0"
-          Some(new ValidationException(error))
-        } else {
-          None
-        }
-
-    // Validate the maximum timestamp.
-    val maximumTimestampError: Option[ValidationException] =
-        if (dataRequest.maxTimestamp < 0) {
-          val error = "maxTimestamp in the DataRequest is " + dataRequest.minTimestamp +
-              " and must be greater than 0"
-          Some(new ValidationException(error))
-        } else {
-          None
-        }
-
-    kijiColumnNameErrors ++ minimumTimestampError ++ maximumTimestampError
   }
 
   /**

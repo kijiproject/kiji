@@ -26,9 +26,8 @@ import com.twitter.scalding.TextLine
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 
-import org.kiji.express.flow._
-import org.kiji.modeling.KeyValueStore
-import org.kiji.modeling.config._
+import org.kiji.express.flow.KijiInput
+import org.kiji.express.flow.KijiOutput
 import org.kiji.mapreduce.KijiContext
 import org.kiji.mapreduce.kvstore.lib.{ AvroKVRecordKeyValueStore => JAvroKVRecordKeyValueStore }
 import org.kiji.mapreduce.kvstore.lib.{ AvroRecordKeyValueStore => JAvroRecordKeyValueStore }
@@ -36,8 +35,19 @@ import org.kiji.mapreduce.kvstore.lib.{ KijiTableKeyValueStore => JKijiTableKeyV
 import org.kiji.mapreduce.kvstore.lib.{ TextFileKeyValueStore => JTextFileKeyValueStore }
 import org.kiji.mapreduce.kvstore.{ KeyValueStore => JKeyValueStore }
 import org.kiji.mapreduce.kvstore.{ KeyValueStoreReader => JKeyValueStoreReader }
+import org.kiji.modeling.KeyValueStore
+import org.kiji.modeling.config.InputSpec
+import org.kiji.modeling.config.KeyValueStoreSpec
+import org.kiji.modeling.config.KijiInputSpec
+import org.kiji.modeling.config.KijiOutputSpec
+import org.kiji.modeling.config.KijiSingleColumnOutputSpec
+import org.kiji.modeling.config.ModelEnvironment
+import org.kiji.modeling.config.OutputSpec
+import org.kiji.modeling.config.SequenceFileSourceSpec
+import org.kiji.modeling.config.TextSourceSpec
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiDataRequest
+import org.kiji.schema.KijiDataRequestBuilder
 import org.kiji.schema.KijiURI
 
 /**
@@ -62,38 +72,6 @@ object ModelJobUtils {
   }
 
   /**
-   * Returns a KijiDataRequest that describes which input columns need to be available to the
-   * producer.
-   *
-   * This method reads the Extract phase's data request configuration from this model's run profile
-   * and builds a KijiDataRequest from it.
-   *
-   * @param modelEnvironment from which to retrieve the data request.
-   * @param phase for which to retrieve the data request.
-   * @param inputSpecName optional name specifying the input specification for which
-   *    to construct the data request. Used for the prepare and train phase.
-   * @return a kiji data request if the phase exists or None.
-   */
-  def getDataRequest(
-      modelEnvironment: ModelEnvironment,
-      phase: PhaseType,
-      inputSpecName: String = ""): Option[KijiDataRequest] = {
-    val inputSpec: Option[InputSpec] = phase match {
-      case PhaseType.PREPARE => modelEnvironment.prepareEnvironment.map { environment =>
-          environment.inputSpec.getOrElse(inputSpecName, null)}
-      case PhaseType.TRAIN => modelEnvironment.trainEnvironment.map { environment =>
-          environment.inputSpec.getOrElse(inputSpecName, null) }
-      case PhaseType.SCORE => modelEnvironment.scoreEnvironment.map { _.inputSpec }
-    }
-
-    inputSpec
-        .map {
-          case KijiInputSpec(_, dataRequest, _) => dataRequest.toKijiDataRequest
-          case _ => throw new RuntimeException("Input Specification is not of type KijiInputSpec")
-        }
-  }
-
-  /**
    * Returns the name of the Kiji column this phase will write to.
    *
    * This method reads the Score phase's output column from this model's run profile and returns it.
@@ -107,6 +85,8 @@ object ModelJobUtils {
       .outputSpec
       .asInstanceOf[KijiSingleColumnOutputSpec]
       .outputColumn
+      .getColumnName
+      .toString
 
   /**
    * Wrap the provided key value stores in their scala counterparts.
@@ -216,48 +196,6 @@ object ModelJobUtils {
   }
 
   /**
-   * Get the [[org.kiji.express.flow.TimeRange]] for the given input specification to the model
-   * environment.
-   *
-   * @param inputSpec of a phase in the [[org.kiji.modeling.config.ModelEnvironment]].
-   * @return a [[org.kiji.express.flow.TimeRange]] instance for the data request.
-   */
-  private def getTimeRange(inputSpec: InputSpec): TimeRange = {
-    inputSpec match {
-      case kijiInputSpec: KijiInputSpec =>
-        Between(
-            kijiInputSpec.dataRequest.minTimestamp,
-            kijiInputSpec.dataRequest.maxTimestamp)
-      case _ => throw new IllegalStateException("Unsupported Input Specification")
-    }
-  }
-
-  /**
-   * Get the map from input columns to field names from an input specification.
-   *
-   * @param inputSpec of a phase in the [[org.kiji.modeling.config.ModelEnvironment]].
-   * @return a map from the column requests to field names.
-   */
-  private def getInputColumnMap(inputSpec: KijiInputSpec): Map[ColumnRequestInput, Symbol] = {
-    val columnMap: Map[ColumnRequestInput, String] = inputSpec
-        .dataRequest
-        .columnRequests
-        .map { expressColumnRequest: ExpressColumnRequest =>
-          val columnRequest = ColumnRequestInput(
-            columnName = expressColumnRequest.name,
-            maxVersions = expressColumnRequest.maxVersions,
-            filter = expressColumnRequest.filter.map { _.toKijiColumnFilter })
-          columnRequest -> expressColumnRequest.name
-        }
-        .toMap
-    val bindingMap: Map[String, Symbol] = inputSpec
-        .fieldBindings
-        .map { fieldBinding => fieldBinding.storeFieldName -> Symbol(fieldBinding.tupleFieldName) }
-        .toMap
-    columnMap.mapValues { columnName: String => bindingMap(columnName) }
-  }
-
-  /**
    * Convert a map of input specifications to the corresponding Scalding sources.
    *
    * @param modelEnvironment for the conversion.
@@ -277,7 +215,7 @@ object ModelJobUtils {
             .inputSpec
             .map { entry: (String, InputSpec) =>
               val (inputName, spec) = entry
-              val inputSource = inputSpecToSource(modelEnvironment, PhaseType.PREPARE, spec)
+              val inputSource = inputSpecToSource(spec)
 
               (inputName, inputSource)
             }
@@ -290,7 +228,7 @@ object ModelJobUtils {
             .inputSpec
             .map { entry: (String, InputSpec) =>
               val (inputName, spec) = entry
-              val inputSource = inputSpecToSource(modelEnvironment, PhaseType.TRAIN, spec)
+              val inputSource = inputSpecToSource(spec)
 
               (inputName, inputSource)
             }
@@ -343,22 +281,83 @@ object ModelJobUtils {
   }
 
   /**
-   * Convert an input specification from a [[org.kiji.modeling.config.ModelEnvironment]]
+   * Convert an output specification from a [[org.kiji.modeling.config.ModelEnvironment]]
    * into a Scalding [[com.twitter.scalding.Source]] that can be used by the phases of the model
    * lifecycle.
    *
    * @param modelEnvironment from which to retrieve the Source.
    * @param phase for which to create a Source.
-   * @param inputSpec with which to construct the source. Used for the prepare and train phase.
-   * @return the input [[com.twitter.scalding.Source]] created for the given phase.
+   * @param outputSpec with which to construct the source. Used for the prepare and train phase.
+   * @return the output [[com.twitter.scalding.Source]] created for the given phase.
    */
-  def inputSpecToSource(
+  def outputSpecToSource(
       modelEnvironment: ModelEnvironment,
       phase: PhaseType,
-      inputSpec: InputSpec): Source = {
+      outputSpec: OutputSpec): Source = {
+    outputSpec match {
+      case spec: KijiOutputSpec => {
+        spec.timestampField match {
+          case Some(field) => KijiOutput(spec.tableUri, field, spec.fieldsToColumns)
+          case None => KijiOutput(spec.tableUri, spec.fieldsToColumns)
+        }
+      }
+
+      case TextSourceSpec(path) => {
+        TextLine(path)
+      }
+      case SequenceFileSourceSpec(path, Some(keyField), Some(valueField)) => {
+        val fields = new Fields(keyField, valueField)
+        SequenceFile(path, fields)
+      }
+      case SequenceFileSourceSpec(path, None, None) => {
+        SequenceFile(path)
+      }
+      case _ => throw new IllegalArgumentException("Prepare environment does not exist")
+    }
+  }
+
+  /**
+   * Create a KijiDataRequest from a model environment.
+   *
+   * @param modelEnvironment from which to generate the data request.
+   * @param phase in the model lifecycle in which to find the input spec corresponding to the data
+   *     request.
+   * @param inputSpecName The name of the input spec corresponding to the data request.  Not
+   *     necessary if `phase` is `PhaseType.SCORE.`
+   * @return An `Option[KijiDataRequest]` that will request the data described in the input spec
+   *     indicated by `modelEnvironment`, `phase`, and `inputSpecName`.
+   */
+  def getDataRequest(
+      modelEnvironment: ModelEnvironment,
+      phase: PhaseType,
+      inputSpecName: String = ""): Option[KijiDataRequest] = {
+
+    val inputSpec: Option[InputSpec] = phase match {
+      case PhaseType.PREPARE => modelEnvironment.prepareEnvironment.map { environment =>
+          environment.inputSpec.getOrElse(inputSpecName, null)}
+      case PhaseType.TRAIN => modelEnvironment.trainEnvironment.map { environment =>
+          environment.inputSpec.getOrElse(inputSpecName, null) }
+      case PhaseType.SCORE => modelEnvironment.scoreEnvironment.map { _.inputSpec }
+    }
+
+    inputSpec
+        .map {
+          case x: KijiInputSpec => x.toKijiDataRequest
+          case _ => throw new RuntimeException("Input Specification is not of type KijiInputSpec")
+        }
+  }
+
+  /**
+   * Get a Scalding Source from an InputSpec.
+   *
+   * @param inputSpec containing the specification for the Scaling source.
+   * @return a Scalding source.
+   */
+  def inputSpecToSource(inputSpec: InputSpec): Source = {
     inputSpec match {
-      case spec @ KijiInputSpec(tableUri, _, _) => {
-        KijiInput(tableUri, getTimeRange(spec), getInputColumnMap(spec))
+      // After refactoring for EXP-232, KijiInputSpec members match up perfectly with KijiInput
+      case spec @ KijiInputSpec(tableUri, timeRange, columns, loggingInterval) => {
+        KijiInput(tableUri, timeRange, loggingInterval, columns)
       }
       case spec @ TextSourceSpec(path) => {
         TextLine(path)
@@ -374,62 +373,4 @@ object ModelJobUtils {
     }
   }
 
-  /**
-   * Get a map from field names to output columns for a given output specification for a phase of
-   * the model lifecycle.
-   *
-   * @param kijiOutputSpec is the [[org.kiji.modeling.config.KijiOutputSpec]] for the phase.
-   * @return a map from field name to string specifying the Kiji column.
-   */
-  private def getOutputColumnMap(
-      kijiOutputSpec: KijiOutputSpec): Map[Symbol, ColumnRequestOutput] = {
-    kijiOutputSpec
-        .fieldBindings
-        .map { (fieldBinding: FieldBinding) =>
-          val field = Symbol(fieldBinding.tupleFieldName)
-          val kijiColumn = new KijiColumnName(fieldBinding.storeFieldName)
-          val column = new QualifiedColumnRequestOutput(
-              family = kijiColumn.getFamily(),
-              qualifier = kijiColumn.getQualifier())
-          (field, column)
-        }
-        .toMap
-  }
-
-  /**
-   * Convert an output specification from a [[org.kiji.modeling.config.ModelEnvironment]]
-   * into a Scalding [[com.twitter.scalding.Source]] that can be used by the phases of the model
-   * lifecycle.
-   *
-   * @param modelEnvironment from which to retrieve the Source.
-   * @param phase for which to create a Source.
-   * @param outputSpec with which to construct the source. Used for the prepare and train phase.
-   * @return the output [[com.twitter.scalding.Source]] created for the given phase.
-   */
-  def outputSpecToSource(
-      modelEnvironment: ModelEnvironment,
-      phase: PhaseType,
-      outputSpec: OutputSpec): Source = {
-    outputSpec match {
-      case spec @ KijiOutputSpec(tableUri, _, timestampField) => {
-        val outputColumnMapping = getOutputColumnMap(spec)
-
-        timestampField match {
-          case Some(field) => KijiOutput(tableUri, Symbol(field), outputColumnMapping)
-          case None => KijiOutput(tableUri, outputColumnMapping)
-        }
-      }
-      case TextSourceSpec(path) => {
-        TextLine(path)
-      }
-      case SequenceFileSourceSpec(path, Some(keyField), Some(valueField)) => {
-        val fields = new Fields(keyField, valueField)
-        SequenceFile(path, fields)
-      }
-      case SequenceFileSourceSpec(path, None, None) => {
-        SequenceFile(path)
-      }
-      case _ => throw new IllegalArgumentException("Prepare environment does not exist")
-    }
-  }
 }
