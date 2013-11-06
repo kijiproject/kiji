@@ -73,7 +73,7 @@ trait ColumnRequestOutput {
    *
    * @return the name of the column this ColumnRequest specifies.
    */
-  private[express] def getColumnName: KijiColumnName
+  def getColumnName: KijiColumnName
 }
 
 /**

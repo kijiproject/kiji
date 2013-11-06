@@ -29,7 +29,6 @@ import org.kiji.express.Cell
 import org.kiji.express.KijiSlice
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiInvalidNameException
-import org.kiji.schema.filter.KijiColumnFilter
 
 /**
  * Shared interface for all (group- and map-type) ColumnRequestInput objects.  Useful for any code
@@ -52,42 +51,56 @@ trait ColumnRequestInput {
    * Specifies the maximum number of cells (from the most recent) to retrieve from a column.
    *
    * By default, only the most recent cell is retrieved.
+   *
+   * @return the maximum number of cells (from the most recent) to retrieve from a column.
    */
-  private[express] def maxVersions: Int
+  def maxVersions: Int
 
   /**
    * Specifies a filter that a cell must pass for this request to retrieve it.
    *
    * By default, there is no filter.
+   *
+   * @return If there is a filter for this column, `Some(filter)`, otherwise `None`.
    */
-  private[express] def filter: Option[KijiColumnFilter]
+  def filter: Option[ExpressColumnFilter]
 
   /**
    * Specifies a default value to use for missing cells during a read.
    *
    * By default (or if this field is set to `None`), rows with missing values are ignored.
+   *
+   * @return If there is a default value specified for this column, `Some(default)`, otherwise
+   *     `None`.
    */
-  private[express] def default: Option[KijiSlice[_]]
+  def default: Option[KijiSlice[_]]
 
   /**
    * Specifies the maximum number of cells to maintain in memory when paging through a column.
    *
    * By default (or if this field is set to
    * [[org.kiji.express.flow.ColumnRequestInput.PageSizePagingOff]]), paging is disabled.
+   *
+   * @return If there is a page size specified for this column, `Some(pageSize)`, otherwise `None`.
    */
-  private[express] def pageSize: Option[Int]
+  def pageSize: Option[Int]
 
   /**
    * Specifies the class of data returned by a read, if forcing the results to be a SpecificRecord.
    *
    * By default (or if this field is set to None), results are not forced to be a SpecificRecord.
+   *
+   * @return if there is an avro class specified for this column, `Some(avroClass)`, otherwise
+   *     `None`.
    */
-  private[express] def avroClass: Option[Class[_ <: SpecificRecord]]
+  def avroClass: Option[Class[_ <: SpecificRecord]]
 
   /**
    * Creates a copy of this column request with `maxVersions` set appropriately for testing.
    *
    * Used within Express for testing infrastructure.
+   *
+   * @return A copy of the given column, but with `maxVersions` set appropriately for testing.
    */
   private[express] def newGetAllData: ColumnRequestInput
 
@@ -95,9 +108,9 @@ trait ColumnRequestInput {
    * Returns the standard KijiColumnName representation of the name of the column this
    * ColumnRequests is for.
    *
-   * @return the name of the column this ColumnRequestInput specifies.
+   * @return the name of the column this `ColumnRequestInput` specifies.
    */
-  private[express] def getColumnName: KijiColumnName
+  def getColumnName: KijiColumnName
 
 }
 
@@ -116,7 +129,7 @@ final case class QualifiedColumnRequestInput (
     val family: String,
     val qualifier: String,
     val maxVersions: Int = latest,
-    val filter: Option[KijiColumnFilter] = None,
+    val filter: Option[ExpressColumnFilter] = None,
     val default: Option[KijiSlice[_]] = None,
     val pageSize: Option[Int] = None,
     val avroClass: Option[Class[_ <: SpecificRecord]] = None
@@ -162,6 +175,8 @@ final case class QualifiedColumnRequestInput (
    * Creates a copy of this column request with `maxVersions` set appropriately for testing.
    *
    * Used within Express for testing infrastructure.
+   *
+   * @return A copy of this column, but with `maxVerisons` set to `Integer.MAX_VALUE`.
    */
   private[express] def newGetAllData: QualifiedColumnRequestInput =
       copy(maxVersions = Integer.MAX_VALUE)
@@ -183,7 +198,7 @@ final case class QualifiedColumnRequestInput (
 final case class ColumnFamilyRequestInput (
     val family: String,
     val maxVersions: Int = latest,
-    val filter: Option[KijiColumnFilter] = None,
+    val filter: Option[ExpressColumnFilter] = None,
     val default: Option[KijiSlice[_]] = None,
     val pageSize: Option[Int] = None,
     val avroClass: Option[Class[_ <: SpecificRecord]] = None
@@ -234,6 +249,8 @@ final case class ColumnFamilyRequestInput (
    * Creates a copy of this column request with `maxVersions` set appropriately for testing.
    *
    * Used within Express for testing infrastructure.
+   *
+   * @return A copy of this column, but with `maxVerisons` set to `Integer.MAX_VALUE`.
    */
   private[express] def newGetAllData: ColumnFamilyRequestInput =
       copy(maxVersions = Integer.MAX_VALUE)
@@ -266,7 +283,7 @@ object ColumnRequestInput {
   def apply(
     columnName: String,
     maxVersions: Int = latest,
-    filter: Option[KijiColumnFilter] = None,
+    filter: Option[ExpressColumnFilter] = None,
     default: Option[KijiSlice[_]] = None,
     pageSize: Option[Int] = None,
     avroClass: Option[Class[_ <: SpecificRecord]] = None

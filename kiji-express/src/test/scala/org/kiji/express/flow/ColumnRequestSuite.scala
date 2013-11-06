@@ -33,7 +33,7 @@ import org.kiji.schema.filter.RegexQualifierColumnFilter
 
 @RunWith(classOf[JUnitRunner])
 class ColumnRequestSuite extends FunSuite {
-  def filter: KijiColumnFilter = new RegexQualifierColumnFilter(".*")
+  val filter = RegexQualifierFilter(".*")
   val colFamily = "myfamily"
   val colQualifier = "myqualifier"
   val qualifierSelector = "qualifierSym"

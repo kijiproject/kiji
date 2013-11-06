@@ -51,7 +51,15 @@ import org.kiji.annotations.ApiStability
 import org.kiji.express.EntityId
 import org.kiji.express.KijiSlice
 import org.kiji.express.PagedKijiSlice
-import org.kiji.express.flow._
+import org.kiji.express.flow.ColumnFamilyRequestInput
+import org.kiji.express.flow.ColumnFamilyRequestOutput
+import org.kiji.express.flow.ColumnRequestInput
+import org.kiji.express.flow.ColumnRequestOutput
+import org.kiji.express.flow.InvalidKijiTapException
+import org.kiji.express.flow.QualifiedColumnRequestInput
+import org.kiji.express.flow.QualifiedColumnRequestOutput
+import org.kiji.express.flow.TimeRange
+import org.kiji.express.flow.WriterSchemaSpec
 import org.kiji.express.util.AvroUtil
 import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.express.util.SpecificCellSpecs
@@ -70,10 +78,14 @@ import org.kiji.schema.KijiURI
 import org.kiji.schema.MapFamilyVersionIterator
 import org.kiji.schema.avro.AvroSchema
 import org.kiji.schema.avro.AvroValidationPolicy
+import org.kiji.schema.avro.AvroValidationPolicy
+import org.kiji.schema.filter.KijiColumnFilter
+import org.kiji.schema.impl.Versions
 import org.kiji.schema.impl.Versions
 import org.kiji.schema.layout.KijiTableLayout
+import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.util.ProtocolVersion
-
+import org.kiji.schema.util.ProtocolVersion
 
 /**
  * A Kiji-specific implementation of a Cascading `Scheme`, which defines how to read and write the
@@ -607,12 +619,15 @@ object KijiScheme {
     def addColumn(
         builder: KijiDataRequestBuilder,
         column: ColumnRequestInput): KijiDataRequestBuilder.ColumnsDef = {
+      val kijiFilter: KijiColumnFilter = column.filter match {
+        case None => null
+        case Some(filter) => filter.toKijiColumnFilter
+      }
       builder.newColumnsDef()
           .withMaxVersions(column.maxVersions)
-          .withFilter(column.filter.getOrElse(null))
+          .withFilter(kijiFilter)
           .withPageSize(column.pageSize.getOrElse(0))
           .add(column.getColumnName)
-        //case _ => builder.newColumnsDef().add(column.getColumnName())
       }
 
     val requestBuilder: KijiDataRequestBuilder = KijiDataRequest.builder()

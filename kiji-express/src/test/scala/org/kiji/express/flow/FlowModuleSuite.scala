@@ -28,7 +28,6 @@ import org.kiji.express.Cell
 import org.kiji.express.KijiSlice
 import org.kiji.express.flow.framework.KijiScheme
 import org.kiji.schema.KijiInvalidNameException
-import org.kiji.schema.filter.RegexQualifierColumnFilter
 
 @RunWith(classOf[JUnitRunner])
 class FlowModuleSuite extends FunSuite {
@@ -55,20 +54,20 @@ class FlowModuleSuite extends FunSuite {
   test("Flow module permits specifying a qualifier regex on map-type columns requests.") {
     val colReq = new ColumnFamilyRequestInput(
         "search",
-        filter = Some(new RegexQualifierColumnFilter(""".*\.com"""))
+        filter = Some(RegexQualifierFilter(""".*\.com"""))
     )
 
     // TODO: Test it filters keyvalues correctly.
-    assert(colReq.filter.get.isInstanceOf[RegexQualifierColumnFilter])
+    assert(colReq.filter.get.isInstanceOf[RegexQualifierFilter])
   }
 
   test("Flow module permits specifying a qualifier regex (with filter) on map-type column "
       + "requests.") {
     val colReq = new ColumnFamilyRequestInput("search",
-      filter=Some(new RegexQualifierColumnFilter(""".*\.com""")))
+      filter=Some(RegexQualifierFilter(""".*\.com""")))
 
     // TODO: Test it filters keyvalues correctly.
-    assert(colReq.filter.get.isInstanceOf[RegexQualifierColumnFilter])
+    assert(colReq.filter.get.isInstanceOf[RegexQualifierFilter])
   }
 
   test("Flow module permits specifying versions on map-type columns without qualifier regex.") {
@@ -148,7 +147,7 @@ class FlowModuleSuite extends FunSuite {
     val input3: KijiSource = KijiInput(tableURI, Map( new ColumnFamilyRequestInput(
         "searches",
         maxVersions = 1,
-        filter = Some(new RegexQualifierColumnFilter(".*"))) -> 'word))
+        filter = Some(new RegexQualifierFilter(".*"))) -> 'word))
   }
 
   test("A qualified Column can specify a replacement that is a single value.") {
