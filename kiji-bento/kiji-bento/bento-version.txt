@@ -7,17 +7,18 @@ release-date: ${timestamp}
 
 # This SDK version includes the following components:
 
-kiji-schema: ${kiji-schema.version}
-kiji-schema-shell: ${kiji-schema-shell.version}
+bento-cluster: ${bento-cluster.version}
+kiji-express: ${kiji-express.version}
+kiji-express-examples: ${kiji-express-examples.version}
+kiji-express-music: ${kiji-express-music.version}
+kiji-hive-adapter: ${kiji-hive-adapter.version}
 kiji-mapreduce: ${kiji-mapreduce.version}
 kiji-mapreduce-lib: ${kiji-mapreduce-lib.version}
-kiji-phonebook: ${kiji-phonebook.version}
-kiji-music: ${kiji-music.version}
+kiji-model-repository: ${kiji-modelrepo.version}
 kiji-modeling: ${kiji-modeling.version}
-bento-cluster: ${bento-cluster.version}
-kiji-hive-adapter: ${kiji-hive-adapter.version}
-kiji-express: ${kiji-express.version}
-kiji-express-music: ${kiji-express-music.version}
-kiji-express-examples: ${kiji-express-examples.version}
+kiji-music: ${kiji-music.version}
+kiji-phonebook: ${kiji-phonebook.version}
 kiji-rest: ${kiji-rest.version}
+kiji-schema: ${kiji-schema.version}
+kiji-schema-shell: ${kiji-schema-shell.version}
 kiji-scoring: ${kiji-scoring.version}

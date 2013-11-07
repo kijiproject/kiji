@@ -31,6 +31,17 @@ This kiji-bento release (${project.version}) includes:
 * `kiji-express` ${kiji-express.version}: Included in the `express`
   directory, kiji-express provides a Scala DSL for analyzing and modeling
   data stored in Kiji.
+* `kiji-modeling` ${kiji-modeling.version}: Included in the `modeling`
+  directory, kiji-modeling provides a formalization for training, applying,
+  and evaluation machine learning models built on top of kiji-express.
+* `kiji-scoring` ${kiji-scoring.version}: Included in the `scoring` directory,
+  kiji-scoring is a library and server that supports the real-time per-row
+  calculations on kiji tables.
+* `kiji-model-repository` {kiji-modelrepo.version}: Included in the
+  `model-repo` directory, the kiji-model-repository is a library which permits
+  storage of trained kiji-modeling in a maven repository, indexed by a kiji
+  table. kiji-scoring can use this models stored in this repository to for its
+  scoring.
 * `kiji-phonebook` ${kiji-phonebook.version}: Included in the
   `examples/phonebook` directory, kiji-phonebook is an example standalone
   application (with source code) that stores, processes, and retrieves data

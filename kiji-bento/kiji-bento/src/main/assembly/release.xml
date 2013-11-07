@@ -337,6 +337,17 @@
       <fileMode>0644</fileMode>
     </fileSet>
     <fileSet>
+      <!-- kiji-model-repository -->
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <outputDirectory>model-repo</outputDirectory>
+      <directory>target/prereqs-dir/kiji-model-repository-${kiji-modelrepo.version}</directory>
+      <filtered>false</filtered>
+      <excludes>
+        <exclude>RELEASE_NOTES.txt</exclude>
+      </excludes>
+      <fileMode>0644</fileMode>
+    </fileSet>
+    <fileSet>
       <!-- bento-checkin -->
       <useDefaultExcludes>false</useDefaultExcludes>
       <outputDirectory>.</outputDirectory>
@@ -431,6 +442,13 @@
       <source>target/prereqs-dir/kiji-scoring-${kiji-scoring.version}/RELEASE_NOTES.txt</source>
       <outputDirectory>release-notes</outputDirectory>
       <destName>SCORING_RELEASE_NOTES.txt</destName>
+      <fileMode>0644</fileMode>
+    </file>
+    <file>
+      <!-- kiji-model-repository release notes -->
+      <source>target/prereqs-dir/kiji-model-repository-${kiji-modelrepo.version}/RELEASE_NOTES.txt</source>
+      <outputDirectory>release-notes</outputDirectory>
+      <destName>MODEL_REPO_RELEASE_NOTES.txt</destName>
       <fileMode>0644</fileMode>
     </file>
   </files>

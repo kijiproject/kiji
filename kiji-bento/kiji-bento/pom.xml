@@ -210,6 +210,13 @@
       <type>tar.gz</type>
     </dependency>
     <dependency>
+      <groupId>org.kiji.modelrepo</groupId>
+      <artifactId>kiji-model-repository</artifactId>
+      <version>${kiji-modelrepo.version}</version>
+      <classifier>release</classifier>
+      <type>tar.gz</type>
+    </dependency>
+    <dependency>
       <groupId>org.kiji.kiji-bento</groupId>
       <artifactId>bento-checkin</artifactId>
       <version>${project.version}</version>
