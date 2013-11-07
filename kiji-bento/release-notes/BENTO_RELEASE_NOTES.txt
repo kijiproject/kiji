@@ -1,6 +1,10 @@
 
 
                               Kiji BentoBox Release Notes
+Version 1.2.6
+  * Include KijiScoringServer.
+  * Include KijiModelRepository.
+
 Version 1.1.6
   * EXP-186. Update Scalding version used by KijiExpress and update BentoBox
       to match.
