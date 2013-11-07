@@ -34,13 +34,11 @@
     <fileSet>
       <useDefaultExcludes>true</useDefaultExcludes>
       <outputDirectory></outputDirectory>
-      <directory>../</directory>
+      <directory>${project.basedir}/../</directory>
       <fileMode>0644</fileMode>
       <includes>
-        <include>NOTICE.txt</include>
         <include>RELEASE_NOTES.txt</include>
         <include>README.md</include>
-        <include>LICENSE.txt</include>
       </includes>
       <filtered>true</filtered>
     </fileSet>

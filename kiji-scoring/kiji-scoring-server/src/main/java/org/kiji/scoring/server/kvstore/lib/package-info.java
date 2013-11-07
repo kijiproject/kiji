@@ -18,6 +18,6 @@
  */
 
 /**
- * Contains classes to aid in the web functionality of the scoring server.
+ * Contains kvstores required for the functionality of the scoring server.
  */
-package org.kiji.web;
+package org.kiji.scoring.server.kvstore.lib;

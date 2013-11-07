@@ -1,5 +1,8 @@
 
                               Kiji Scoring Release Notes
+Version 0.9.0
+    * SCORE-130. Adds a mutable, per thread kvstore to scoring server.
+
 Version 0.8.0
     * SCORE-120. FreshKijiTableReader now supports providing an ExecutorService to use as the
         thread pool backing the reader. If unspecified, the reader will use the singleton service

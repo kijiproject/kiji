@@ -51,9 +51,9 @@ import org.kiji.schema.util.ResourceUtils;
 import org.kiji.scoring.lib.AlwaysFreshen;
 
 /**
-* Tests that KVStores are available to both producers and policies and that policies can mask the
-* kvstores of producers.
-*/
+ * Tests that KVStores are available to both score functions and policies and that policies can mask
+ * the kvstores of score functions.
+ */
 public class TestKVStores extends KijiClientTest {
   /** The name of a file to back a text file key value store. */
   private static final String KV_FILENAME = "cats.txt";
