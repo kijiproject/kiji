@@ -19,6 +19,8 @@
 
 package org.kiji.mapreduce.kvstore;
 
+import com.google.common.collect.Maps;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Collections;
@@ -58,7 +60,7 @@ public final class KeyValueStoreReaderFactory implements Closeable {
   private final Map<String, KeyValueStore<?, ?>> mKeyValueStores;
 
   /** A cache of opened key-value stores we may use and modify. */
-  private final Map<String, KeyValueStoreReader<?, ?>> mStoreReaders;
+  private final Map<String, KeyValueStoreReader<?, ?>> mKVStoreReaderCache;
 
   /** Creates an empty KeyValueStoreReaderFactory. */
   private KeyValueStoreReaderFactory() {
@@ -74,7 +76,7 @@ public final class KeyValueStoreReaderFactory implements Closeable {
   private KeyValueStoreReaderFactory(Map<String, KeyValueStore<?, ?>> storeBindings) {
     mKeyValueStores = Collections.unmodifiableMap(
         new HashMap<String, KeyValueStore<?, ?>>(storeBindings));
-    mStoreReaders = Collections.synchronizedMap(new HashMap<String, KeyValueStoreReader<?, ?>>());
+    mKVStoreReaderCache = Maps.newConcurrentMap();
   }
 
   /**
@@ -113,7 +115,7 @@ public final class KeyValueStoreReaderFactory implements Closeable {
     }
 
     mKeyValueStores = Collections.unmodifiableMap(keyValueStores);
-    mStoreReaders = Collections.synchronizedMap(new HashMap<String, KeyValueStoreReader<?, ?>>());
+    mKVStoreReaderCache = Maps.newConcurrentMap();
   }
 
   /**
@@ -154,7 +156,7 @@ public final class KeyValueStoreReaderFactory implements Closeable {
    */
   @Override
   public void close() {
-    for (KeyValueStoreReader<?, ?> reader : mStoreReaders.values()) {
+    for (KeyValueStoreReader<?, ?> reader : mKVStoreReaderCache.values()) {
       if (null != reader && reader.isOpen()) {
         IOUtils.closeQuietly(reader);
       }
@@ -164,12 +166,15 @@ public final class KeyValueStoreReaderFactory implements Closeable {
   /**
    * Opens a KeyValueStore associated with storeName for read-access.
    *
-   * <p>You should close() the store instance returned by this method
-   * when you are done with it. (Or close this KeyValueStoreReaderFactory
-   * when you are done with all stores.)</p>
-   *
    * <p>Calling openStore() multiple times on the same name will reuse the same
    * reader unless it is closed.</p>
+   *
+   * <p>Note: this method is thread safe as long as readers are only being created
+   * and opened - two threads requesting the same reader will receive the same one.
+   * In a multi-threaded environment, a closed reader may still be returned. You
+   * can prevent this by avoiding calling close() on individual readers returned
+   * from this method. Instead, call close() on the KeyValueStoreReaderFactory when
+   * you are done with all stores, and all readers will be closed.</p>
    *
    * @param <K> The key type for the KeyValueStore.
    * @param <V> The value type for the KeyValueStore.
@@ -181,17 +186,17 @@ public final class KeyValueStoreReaderFactory implements Closeable {
   @SuppressWarnings("unchecked")
   public <K, V> KeyValueStoreReader<K, V> openStore(String storeName)
       throws IOException {
-    assert null != mStoreReaders && null != mKeyValueStores;
-    if (null == mStoreReaders.get(storeName) || !mStoreReaders.get(storeName).isOpen()) {
-      // In the first case, add a store because none existed before,
-      // in the second case, replace the store because this one has been closed.
-      KeyValueStoreReader<K, V> reader = null;
-      if (null != mKeyValueStores.get(storeName)) {
-        KeyValueStore<K, V> store = (KeyValueStore<K, V>) mKeyValueStores.get(storeName);
-        reader = store.open();
+    KeyValueStore<K, V> store = (KeyValueStore<K, V>) mKeyValueStores.get(storeName);
+    KeyValueStoreReader<?, ?> reader = mKVStoreReaderCache.get(storeName);
+    if (null != store && (null == reader || !reader.isOpen())) {
+      synchronized (store) {
+        reader = mKVStoreReaderCache.get(storeName);
+        if (null == reader || !reader.isOpen()) {
+          reader = store.open();
+          mKVStoreReaderCache.put(storeName, reader);
+        }
       }
-      mStoreReaders.put(storeName, reader);
     }
-    return (KeyValueStoreReader<K, V>) mStoreReaders.get(storeName);
+    return (KeyValueStoreReader<K, V>) reader;
   }
 }
