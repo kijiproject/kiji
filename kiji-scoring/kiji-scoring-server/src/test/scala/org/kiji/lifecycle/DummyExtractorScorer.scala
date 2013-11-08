@@ -28,11 +28,11 @@ import org.kiji.modeling.Scorer
  * take the input tuple and returns the string length.
  */
 class DummyExtractorScorer extends Extractor with Scorer {
-  override val extractFn = extract('email_address -> 'word) { line: KijiSlice[String] =>
+  override val extractFn = extract('email_address -> 'word) { line: KijiSlice[CharSequence] =>
     line.cells(0).datum
   }
 
-  override val scoreFn = score('word) { line: String =>
+  override val scoreFn = score('word) { line: CharSequence =>
    line.length()
   }
 }
