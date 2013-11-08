@@ -27,10 +27,10 @@ import org.scalatest.junit.JUnitRunner
 import org.kiji.express.flow.AndFilter
 import org.kiji.express.flow.Between
 import org.kiji.express.flow.ColumnRangeFilter
-import org.kiji.express.flow.ColumnRequestOutput
 import org.kiji.express.flow.ExpressColumnFilter
 import org.kiji.express.flow.OrFilter
 import org.kiji.express.flow.QualifiedColumnRequestInput
+import org.kiji.express.flow.QualifiedColumnRequestOutput
 import org.kiji.express.flow.RegexQualifierFilter
 import org.kiji.modeling.ExtractFn
 import org.kiji.modeling.Extractor
@@ -197,10 +197,10 @@ object ModelConvertersSuite {
       valueField = Some("value"))
   val testKijiOutputSpec: KijiOutputSpec = KijiOutputSpec(
       tableUri = "kiji://.env/default/test2",
-      fieldsToColumns = Map('testField -> ColumnRequestOutput("info:test")))
+      fieldsToColumns = Map('testField -> QualifiedColumnRequestOutput("info:test")))
   val testColumnOutputSpec: KijiSingleColumnOutputSpec = KijiSingleColumnOutputSpec(
       tableUri = "kiji://.env/default/test3",
-      outputColumn = ColumnRequestOutput("info:test"))
+      outputColumn = QualifiedColumnRequestOutput("info:test"))
   val testPrepareEnvironment: PrepareEnvironment = PrepareEnvironment(
       inputSpec = Map("input" -> testKijiInputSpec),
       outputSpec = Map("output" -> testKijiOutputSpec),

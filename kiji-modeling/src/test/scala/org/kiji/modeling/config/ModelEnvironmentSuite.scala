@@ -30,10 +30,10 @@ import org.kiji.express.flow.AndFilter
 import org.kiji.express.flow.Between
 import org.kiji.express.flow.ColumnRangeFilter
 import org.kiji.express.flow.ColumnRequestInput
-import org.kiji.express.flow.ColumnRequestOutput
 import org.kiji.express.flow.ExpressColumnFilter
 import org.kiji.express.flow.OrFilter
 import org.kiji.express.flow.QualifiedColumnRequestInput
+import org.kiji.express.flow.QualifiedColumnRequestOutput
 import org.kiji.express.flow.RegexQualifierFilter
 import org.kiji.express.util.Resources.resourceAsString
 import org.kiji.modeling.avro.AvroColumn
@@ -119,7 +119,7 @@ class ModelEnvironmentSuite extends FunSuite {
         .outputSpec
         .asInstanceOf[KijiSingleColumnOutputSpec]
         .outputColumn
-        .getColumnName
+        .columnName
         .toString)
     assert(expectedKvstores === environment.scoreEnvironment.get.keyValueStoreSpecs)
   }
@@ -134,7 +134,7 @@ class ModelEnvironmentSuite extends FunSuite {
 
     val outputSpec = KijiSingleColumnOutputSpec(
         "kiji://myuri",
-        ColumnRequestOutput("outputFamily:qualifier"))
+        QualifiedColumnRequestOutput("outputFamily:qualifier"))
     val scoreEnv = Some(ScoreEnvironment(inputSpec, outputSpec, Seq()))
     val scoreEnv2 = Some(ScoreEnvironment(
         inputSpec2,
@@ -175,11 +175,11 @@ class ModelEnvironmentSuite extends FunSuite {
     val inputSpec = new KijiInputSpec("kiji://.env/default/table", timeRange, columns)
     val outputSpec = new KijiOutputSpec(
         "kiji://.env/default/table",
-        Map('tuplename -> ColumnRequestOutput("info:storefieldname"))
+        Map('tuplename -> QualifiedColumnRequestOutput("info:storefieldname"))
     )
     val scoreOutputSpec = new KijiSingleColumnOutputSpec(
       "kiji://.env/default/table",
-      ColumnRequestOutput("info:scoreoutput")
+      QualifiedColumnRequestOutput("info:scoreoutput")
     )
 
     // Prepare, extract, train and score environments to use in tests.
@@ -299,7 +299,7 @@ class ModelEnvironmentSuite extends FunSuite {
     kijiInputSpec
         .columnsToFields
         .keys
-        .map { column: ColumnRequestInput => (column.getColumnName.toString, column) }
+        .map { column: ColumnRequestInput => (column.columnName.toString, column) }
         .toMap
   }
 
@@ -325,7 +325,7 @@ class ModelEnvironmentSuite extends FunSuite {
     assert(columns.contains("info:null"))
     val colReq: QualifiedColumnRequestInput =
         columns("info:null").asInstanceOf[QualifiedColumnRequestInput]
-    assert("info:null" === colReq.getColumnName.toString)
+    assert("info:null" === colReq.columnName.toString)
     assert(1 === colReq.maxVersions)
   }
 
@@ -365,7 +365,7 @@ class ModelEnvironmentSuite extends FunSuite {
     assert(1 === columns.size)
     val colReq: QualifiedColumnRequestInput =
         columns("info:columnRangeFilter").asInstanceOf[QualifiedColumnRequestInput]
-    assert("info:columnRangeFilter" === colReq.getColumnName.toString)
+    assert("info:columnRangeFilter" === colReq.columnName.toString)
     assert(1 === colReq.maxVersions)
     assert(colReq.filter.get.isInstanceOf[ColumnRangeFilter], "incorrect filter type")
   }
@@ -403,7 +403,7 @@ class ModelEnvironmentSuite extends FunSuite {
     assert(1 === columns.size)
     val colReq: QualifiedColumnRequestInput =
         columns("info:regexQualifierFilter").asInstanceOf[QualifiedColumnRequestInput]
-    assert("info:regexQualifierFilter" === colReq.getColumnName.toString)
+    assert("info:regexQualifierFilter" === colReq.columnName.toString)
     assert(1 === colReq.maxVersions)
     assert(colReq.filter.get.isInstanceOf[RegexQualifierFilter], "incorrect filter type")
   }

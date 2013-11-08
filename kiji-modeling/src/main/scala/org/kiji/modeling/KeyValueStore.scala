@@ -19,24 +19,21 @@
 
 package org.kiji.modeling
 
-import org.apache.avro.generic.GenericRecord
+import scala.collection.JavaConverters.seqAsJavaListConverter
+
+import org.apache.avro.generic.IndexedRecord
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
-import org.kiji.express.AvroValue
 import org.kiji.express.EntityId
-import org.kiji.modeling.impl.AvroKVRecordKeyValueStore
-import org.kiji.modeling.impl.AvroRecordKeyValueStore
-import org.kiji.modeling.impl.JavaToScalaValueConverter
-import org.kiji.modeling.impl.KijiTableKeyValueStore
-import org.kiji.modeling.impl.ScalaToJavaKeyConverter
-import org.kiji.modeling.impl.TextFileKeyValueStore
+import org.kiji.mapreduce.kvstore.KeyValueStoreReader
 import org.kiji.mapreduce.kvstore.lib.{AvroKVRecordKeyValueStore => JAvroKVRecordKeyValueStore}
 import org.kiji.mapreduce.kvstore.lib.{AvroRecordKeyValueStore => JAvroRecordKeyValueStore}
 import org.kiji.mapreduce.kvstore.lib.{KijiTableKeyValueStore => JKijiTableKeyValueStore}
 import org.kiji.mapreduce.kvstore.lib.{TextFileKeyValueStore => JTextFileKeyValueStore}
-import org.kiji.mapreduce.kvstore.{KeyValueStoreReader => JKeyValueStoreReader}
+import org.kiji.modeling.impl.ForwardingKeyValueStore
+import org.kiji.schema.KijiRowKeyComponents
 
 /**
  * A map from keys to values backed by a data store. KijiExpress end-users can configure and use
@@ -56,88 +53,54 @@ import org.kiji.mapreduce.kvstore.{KeyValueStoreReader => JKeyValueStoreReader}
  * key-value stores; rather, KijiExpress is responsible for closing a key-value store for
  * end-users after the execution of a modeling workflow step.
  *
- * Implementation-wise, a KijiExpress key-value store is Scala-friendly face on the Java
- * key-value stores provided by the KijiMR library. A KijiExpress key-value store implements
- * the traits [[org.kiji.modeling.impl.ScalaToJavaKeyConverter]] and
- * [[org.kiji.modeling.impl.JavaToScalaValueConverter]], which provide a means for
- * converting
- * keys specified as Scala types to equivalent Java types (used to access the underlying
- * KijiMR key-value store), and values specified as Java types to equivalent Scala types
- * (used to make values retrieved from KijiMR user).
+ * Developers should see the `ForwardingKeyValueStore` for implementing this trait over an existing
+ * KijiMR key-value store.
  *
- * Developers should see `KeyValueStoreConverters.scala` for predefined key-value converters,
- * and `KeyValueStoreImpl.scala` for concrete implementations of key-value stores backed by
- * various KijiMR key-value stores.
- *
- * @param javaKeyValueStoreReader a KijiMR key-value store that will back this KijiExpress key-value
- *     store.
- * @tparam K is the type of key users will specify when accessing the key-value store.
- * @tparam V is the type of value users will retrieve when accessing the key-value store.
+ * Users should see the companion object for creating instances of this trait based on existing
+ * KijiMR key-value store implementations.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Sealed
-abstract class KeyValueStore[K, V] protected[modeling] (
-    javaKeyValueStoreReader: JKeyValueStoreReader[_,_])
-    extends ScalaToJavaKeyConverter[K]
-    with JavaToScalaValueConverter[V] {
-  /** A reader for the KijiMR key-value store backing this KijiExpress key-value store. */
-  private val kvStoreReader: JKeyValueStoreReader[Any, Any] = javaKeyValueStoreReader
-      .asInstanceOf[JKeyValueStoreReader[Any, Any]]
-
-  /**
-   * Closes all resources used by this key-value store.
-   */
-  private[modeling] def close() {
-    // scalastyle:off null
-    if (kvStoreReader != null) {
-      kvStoreReader.close()
-    }
-    // scalastyle:on null
-  }
-
-  /**
-   * Retrieves the value associated with a key from this key-value store.
-   *
-   * The key specified must be non-`null`. This method will return `null` if there is no value
-   * associated with the key specified. Use the method `#containsKey` to determine whether a key
-   * is associated with a value in a key-value store.
-   *
-   * @param key whose value should be retrieved from the key-value store. Must be non-`null`.
-   * @return the value associated with the specified key, or `null` if no such value exists.
-   */
+trait KeyValueStore[K,V] {
+/**
+ * Retrieves the value associated with a key from this key-value store.
+ *
+ * The key specified must be non-`null`. This method will return `null` if there is no value
+ * associated with the key specified. Use the method `#containsKey` to determine whether a key
+ * is associated with a value in a key-value store.
+ *
+ * @param key whose value should be retrieved from the key-value store. Must be non-`null`.
+ * @return the value associated with the specified key, or `null` if no such value exists.
+ */
   def apply(key: K): V = {
-    val retrievedValue: Option[V] = get(key)
-    if (retrievedValue.isDefined) {
-      retrievedValue.get
-    } else {
-      throw new NoSuchElementException(("No value exists in this KeyValueStore for key '%s' " +
-          "Use either the method get() on this KeyValueStore to retrieve optional values, or " +
-          "first check that the key is defined using the method containsKey() before using " +
-          "this method to lookup the key.").format(key.toString))
-    }
+    get(key).getOrElse(
+        throw new NoSuchElementException(("No value exists in this KeyValueStore for key '%s' " +
+            "Use either the method get() on this KeyValueStore to retrieve optional values, or " +
+            "first check that the key is defined using the method containsKey() before using " +
+            "this method to lookup the key.").format(key.toString)))
   }
 
-  /**
-   * Retrieves an optional value associated with a key from this key-value store.
-   *
-   * The key specified must be non-`null`. This method will return `None` if there is no value
-   * associated with the key specified. Use the method `#containsKey` to determine whether a key
-   * is associated with a value in a key-value store.
-   *
-   * @param key whose value should be retrieved from the key-value store. Must be non-`null`.
-   * @return an optional value associated with the specified key.
-   */
-  def get(key: K): Option[V] = {
-    // scalastyle:off null
-    if (key == null) {
-      throw new IllegalArgumentException("A null key was used to access a value from a "
-          + "KeyValueStore")
-    }
-    val rawValue: Any = kvStoreReader.get(keyConversion(key))
-    if (rawValue == null) None else Some(valueConversion(rawValue))
-    // scalastyle:on null
-  }
+/**
+ * Retrieves an optional value associated with a key from this key-value store.
+ *
+ * The key specified must be non-`null`. This method will return `None` if there is no value
+ * associated with the key specified. Use the method `#containsKey` to determine whether a key
+ * is associated with a value in a key-value store.
+ *
+ * @param key whose value should be retrieved from the key-value store. Must be non-`null`.
+ * @return an optional value associated with the specified key.
+ */
+  def get(key: K): Option[V]
+
+/**
+ * Returns the value associated with a key, or a default value if the key is not contained in
+ * the map.
+ *
+ * @param key whose value should be retrieved, if possible.
+ * @param default value to return if key is not contained in the key value store.
+ */
+  def getOrElse(key: K, default: V): V =  get(key).getOrElse(default)
 
   /**
    * Determines if the specified key is associated with a value by the key-value store.
@@ -146,34 +109,69 @@ abstract class KeyValueStore[K, V] protected[modeling] (
    * @return `true` if the specified key is associated with a value by the key-value store,
    *     `false` otherwise.
    */
-  def containsKey(key: K): Boolean = {
-    // scalastyle:off null
-    if (key == null) {
-      throw new IllegalArgumentException("A null key was used when checking if a key is a " +
-          "associated with a value in a key-value store.")
-    }
-    // scalastyle:on null
-    kvStoreReader.containsKey(keyConversion(key))
-  }
+  def containsKey(key: K): Boolean
+
+  /**
+   * Closes all resources used by this key-value store.
+   */
+  private[modeling] def close(): Unit
 }
 
 /**
  * A factory for key-value stores backed by specific KijiMR key-value store implementations.
  */
 private[modeling] object KeyValueStore {
+
+  /**
+   * Creates a new KijiExpress key-value store backed by a KijiMR key-value store reader.  This
+   * KeyValueStore does no conversion between keys and values.
+   *
+   * @param kvStoreReader of underlying KijiMR key-value store.
+   * @tparam K type of keys
+   * @tparam V type of values
+   * @return KeyValueStore backed by a KijiMR key-value store.
+   */
+  def apply[K, V](
+      kvStoreReader: KeyValueStoreReader[K, V]
+  ): KeyValueStore[K, V] = {
+    new ForwardingKeyValueStore[K, V, K, V](kvStoreReader, identity, identity)
+  }
+
   /**
    * Creates a new KijiExpress key-value store backed by a KijiMR key-value store backed by a
    * Kiji table. Such a key-value store allows users to access the latest value in a column of a
    * Kiji table, by using the qualified column name as key.
    *
-   * @param kvStore from KijiMR that will back the KijiExpress key-value store.
+   * @param kvStoreReader of backing `KijiTableKeyValueStore`.
+   * @tparam V is the type of value retrieved from the key-value store.
+   * @return a KijiExpress key-value store backed by a Kiji table.
+   */
+  def kijiTableKeyValueStore[V](
+      kvStoreReader: KeyValueStoreReader[KijiRowKeyComponents, V]
+  ): KeyValueStore[EntityId, V] = {
+    new ForwardingKeyValueStore[EntityId, V, KijiRowKeyComponents, V](
+        kvStoreReader,
+        eidConverter,
+        identity)
+  }
+
+  /**
+   * Creates a new KijiExpress key-value store backed by a KijiMR key-value store backed by a
+   * Kiji table. Such a key-value store allows users to access the latest value in a column of a
+   * Kiji table, by using the qualified column name as key.
+   *
+   * @param kvStore of backing `KijiTableKeyValueStore`.
    * @tparam V is the type of value retrieved from the key-value store.
    * @return a KijiExpress key-value store backed by a Kiji table.
    */
   def apply[V](
-      kvStore: JKijiTableKeyValueStore[_ <: Any]
+      kvStore: JKijiTableKeyValueStore[V]
   ): KeyValueStore[EntityId, V] = {
-    new KijiTableKeyValueStore[V](kvStore.open())
+
+    new ForwardingKeyValueStore[EntityId, V, KijiRowKeyComponents, V](
+        kvStore.open(),
+        eidConverter,
+        identity)
   }
 
   /**
@@ -182,14 +180,14 @@ private[modeling] object KeyValueStore {
    * by distinguishing a record field as the key field. Note that the KijiMR key-value store
    * used to create the KijiExpress key-value store should not have a reader schema configured.
    *
-   * @param kvStore from KijiMR that will back the KijiExpress key-value store.
+   * @param kvStore of backing `AvroRecordKeyValueStore`.
    * @tparam K is the type of key used to access values from the key-value store.
    * @return a KijiExpress key-value store backed by a KijiMR `AvroRecordKeyValueStore`.
    */
-  def apply[K](
-      kvStore: JAvroRecordKeyValueStore[_ <: Any, _ <: GenericRecord]
-  ): KeyValueStore[K, AvroValue] = {
-    new AvroRecordKeyValueStore[K](kvStore.open())
+  def apply[K, V <: IndexedRecord](
+      kvStore: JAvroRecordKeyValueStore[K, V]
+  ): KeyValueStore[K, V] = {
+    new ForwardingKeyValueStore[K, V, K, V](kvStore.open(), identity, identity)
   }
 
   /**
@@ -205,9 +203,9 @@ private[modeling] object KeyValueStore {
    * @return a KijiExpress key-value store backed by a KijiMR `AvroKVRecordKeyValueStore`.
    */
   def apply[K,V](
-      kvStore: JAvroKVRecordKeyValueStore[_ <: Any, _ <: Any]
+      kvStore: JAvroKVRecordKeyValueStore[K, V]
   ): KeyValueStore[K, V] = {
-    new AvroKVRecordKeyValueStore[K, V](kvStore.open())
+    new ForwardingKeyValueStore[K, V, K, V](kvStore.open(), identity, identity)
   }
 
   /**
@@ -221,6 +219,21 @@ private[modeling] object KeyValueStore {
   def apply(
       kvStore: JTextFileKeyValueStore
   ): KeyValueStore[String, String] = {
-    new TextFileKeyValueStore(kvStore.open())
+    new ForwardingKeyValueStore[String, String, String, String](kvStore.open(), identity, identity)
+  }
+
+  /**
+   * Converts an [[org.kiji.express.EntityId]] to a java KV-store compatible
+   * [[org.kiji.schema.KijiRowKeyComponents]].
+   *
+   * @param eid to convert.
+   * @return the equivalent `KijiRowKeyComponents`.
+   */
+  private def eidConverter(eid: EntityId): KijiRowKeyComponents = {
+    // KijiRowKeyComponents can use Java byte array, Java String, Java Long,
+    // or Java Integer as components. As long as we ensure all components are AnyRef,
+    // then Scala Array[Byte], Scala String, Scala Long, and Scala Int are usable to create a
+    // KijiRowKeyComponents. We do this conversion then create the KijiRowKeyComponents.
+    KijiRowKeyComponents.fromComponentsList(eid.components.asJava)
   }
 }

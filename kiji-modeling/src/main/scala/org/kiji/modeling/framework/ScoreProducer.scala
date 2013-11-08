@@ -232,7 +232,7 @@ final class ScoreProducer
         .toList
         // List of (ColumnRequestInput, Symbol) pairs
         .map { case (column: ColumnRequestInput, field: Symbol) => {
-          (field.name, column.getColumnName)
+          (field.name, column.columnName)
         }}
         .toMap
 

@@ -47,6 +47,7 @@ import org.kiji.modeling.config.SequenceFileSourceSpec
 import org.kiji.modeling.config.TextSourceSpec
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiDataRequest
+import org.kiji.schema.KijiRowKeyComponents
 import org.kiji.schema.KijiURI
 
 /**
@@ -84,7 +85,7 @@ object ModelJobUtils {
       .outputSpec
       .asInstanceOf[KijiSingleColumnOutputSpec]
       .outputColumn
-      .getColumnName
+      .columnName
       .toString
 
   /**
@@ -101,11 +102,11 @@ object ModelJobUtils {
         .map { keyValueStoreSpec: KeyValueStoreSpec =>
           val jKeyValueStoreReader = context.getStore(keyValueStoreSpec.name)
           val wrapped: KeyValueStore[_, _] = keyValueStoreSpec.storeType match {
-            case "AVRO_KV" => new AvroKVRecordKeyValueStore(jKeyValueStoreReader)
-            case "AVRO_RECORD" => new AvroRecordKeyValueStore(jKeyValueStoreReader)
-            case "KIJI_TABLE" => new KijiTableKeyValueStore(jKeyValueStoreReader)
-            case "TEXT_FILE" => new TextFileKeyValueStore(
-                jKeyValueStoreReader.asInstanceOf[JKeyValueStoreReader[String, String]])
+            case "KIJI_TABLE" => { // special conversions are needed here
+              KeyValueStore.kijiTableKeyValueStore(jKeyValueStoreReader
+                  .asInstanceOf[JKeyValueStoreReader[KijiRowKeyComponents, _]])
+            }
+            case _ => KeyValueStore(jKeyValueStoreReader.asInstanceOf[JKeyValueStoreReader[_, _]])
           }
           (keyValueStoreSpec.name, wrapped)
         }

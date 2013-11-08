@@ -28,10 +28,10 @@ import org.scalatest.junit.JUnitRunner
 import org.kiji.express.KijiSlice
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow.All
-import org.kiji.express.flow.ColumnFamilyRequestInput
-import org.kiji.express.flow.ColumnRequestInput
-import org.kiji.express.flow.ColumnRequestOutput
 import org.kiji.express.flow.QualifiedColumnRequestInput
+import org.kiji.express.flow.QualifiedColumnRequestOutput
+import org.kiji.express.util.Resources.doAndClose
+import org.kiji.express.util.Resources.withKijiTable
 import org.kiji.modeling.Preparer
 import org.kiji.modeling.config.FieldBinding
 import org.kiji.modeling.config.KijiInputSpec
@@ -40,8 +40,6 @@ import org.kiji.modeling.config.ModelDefinition
 import org.kiji.modeling.config.ModelEnvironment
 import org.kiji.modeling.config.PrepareEnvironment
 import org.kiji.modeling.framework.ModelExecutor
-import org.kiji.express.util.Resources.doAndClose
-import org.kiji.express.util.Resources.withKijiTable
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiTable
@@ -103,7 +101,8 @@ class IterativePreparerSuite extends KijiSuite {
               outputSpec = Map(
                   "output" -> KijiOutputSpec(
                       tableUri = tableUri.toString,
-                      fieldsToColumns = Map('word -> ColumnRequestOutput("family:column2")))
+                      fieldsToColumns = Map('word ->
+                          QualifiedColumnRequestOutput("family:column2")))
               ),
               keyValueStoreSpecs = Seq()
           )),
@@ -138,7 +137,7 @@ class IterativePreparerSuite extends KijiSuite {
 }
 
 /**
- * Companion object for [[org.kiji.express.modeling.lib.IterativePreparerSuite]].
+ * Companion object for [[org.kiji.modeling.lib.IterativePreparerSuite]].
  */
 object IterativePreparerSuite {
   /**
@@ -152,7 +151,7 @@ object IterativePreparerSuite {
     class IterativeJob(input: Source, output: Source) extends PreparerJob {
       input
           .read
-          .map('word -> 'cleanWord) { words: KijiSlice[String] =>
+          .map('word -> 'cleanWord) { words: KijiSlice[CharSequence] =>
              words
                  .getFirstValue()
                  .toString

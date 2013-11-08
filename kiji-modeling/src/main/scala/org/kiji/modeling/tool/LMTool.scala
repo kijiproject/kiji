@@ -71,8 +71,8 @@ final class LMTool extends Tool {
                     datasetTableURI,
                     timeRange = All,
                     columnsToFields = Map(
-                      ColumnRequestInput(columnName = attributesColumn) -> 'attributes,
-                      ColumnRequestInput(columnName = targetColumn) -> 'target
+                      ColumnRequestInput(column = attributesColumn) -> 'attributes,
+                      ColumnRequestInput(column = targetColumn) -> 'target
                     )),
                 "parameters" -> TextSourceSpec(
                     path = paramsFilePath

@@ -26,9 +26,10 @@ import org.scalatest.mock.EasyMockSugar
 
 import org.kiji.mapreduce.kvstore.{KeyValueStore => JKeyValueStore}
 import org.kiji.mapreduce.kvstore.{KeyValueStoreReader => JKeyValueStoreReader}
+import org.kiji.modeling.impl.ForwardingKeyValueStore
 
 /**
- * Tests the basic functionality of [[org.kiji.express.modeling.KeyValueStore]]. These tests do
+ * Tests the basic functionality of [[org.kiji.modeling.KeyValueStore]]. These tests do
  * not include tests that use specific backing KijiSchema key-value stores.
  */
 @RunWith(classOf[JUnitRunner])
@@ -38,28 +39,12 @@ class KeyValueStoreSuite extends FunSuite with EasyMockSugar {
    * A key-value store that can be instantiated using a mock KijiSchema key-value store. This
    * implementation is used in the tests below.
    */
-  private class DummyKVStore(kvStore: JKeyValueStore[_, _])
-      extends KeyValueStore[String, Int](kvStore.open()) {
-    /**
-     * Converts a key specified as a Scala type to an equivalent key as a Java type compatible
-     * with the KijiSchema key-value store API.
-     *
-     * @param keyWithScalaType is the key to convert.
-     * @return the key, as a Java type suitable for use with a KijiSchema key-value store.
-     */
-    protected def keyConversion(keyWithScalaType: String): Any = {
-      keyWithScalaType.asInstanceOf[java.lang.String]
-    }
-
-    /**
-     * Converts a value specified as a Java type to an equivalent value as a native Scala type.
-     *
-     * @param valueWithJavaType the value to convert.
-     * @return the value, as a native Scala type.
-     */
-    protected def valueConversion(valueWithJavaType: Any): Int = {
-      valueWithJavaType.asInstanceOf[Int]
-    }
+  private def dummyKVStore(kvStore: JKeyValueStore[String, Integer]): KeyValueStore[String, Int] = {
+    def convertValue(value: Integer): Int = value
+    new ForwardingKeyValueStore[String, Int, String, Integer](
+        kvStore.open(),
+        identity,
+        convertValue)
   }
 
   /**
@@ -84,7 +69,7 @@ class KeyValueStoreSuite extends FunSuite with EasyMockSugar {
   test("A KijiExpress KeyValueStore can be instantiated from a KijiSchema KeyValueStore.") {
     val (mockJKeyValueStore, mockJKeyValueStoreReader) = getMocks
     whenExecuting(mockJKeyValueStore, mockJKeyValueStoreReader) {
-      new DummyKVStore(mockJKeyValueStore)
+      dummyKVStore(mockJKeyValueStore)
     }
   }
 
@@ -94,7 +79,7 @@ class KeyValueStoreSuite extends FunSuite with EasyMockSugar {
       mockJKeyValueStoreReader.close()
     }
     whenExecuting(mockJKeyValueStore, mockJKeyValueStoreReader) {
-      val kvStore = new DummyKVStore(mockJKeyValueStore)
+      val kvStore = dummyKVStore(mockJKeyValueStore)
       kvStore.close()
     }
   }
@@ -109,7 +94,7 @@ class KeyValueStoreSuite extends FunSuite with EasyMockSugar {
           .andReturn(valueRetrieved.asInstanceOf[java.lang.Integer])
     }
     whenExecuting(mockJKeyValueStore, mockJKeyValueStoreReader) {
-      val kvStore = new DummyKVStore(mockJKeyValueStore)
+      val kvStore = dummyKVStore(mockJKeyValueStore)
       val actualValueRetrieved = kvStore(keyToLookup)
       assert(valueRetrieved === actualValueRetrieved,
           "Unexpected value retrieved from KeyValueStore.")
@@ -127,7 +112,7 @@ class KeyValueStoreSuite extends FunSuite with EasyMockSugar {
     }
     // scalastyle:on null
     whenExecuting(mockJKeyValueStore, mockJKeyValueStoreReader) {
-      val kvStore = new DummyKVStore(mockJKeyValueStore)
+      val kvStore = dummyKVStore(mockJKeyValueStore)
       val thrown = intercept[NoSuchElementException] {
         kvStore(keyToLookup)
       }
@@ -145,7 +130,7 @@ class KeyValueStoreSuite extends FunSuite with EasyMockSugar {
       .andReturn(valueRetrieved.asInstanceOf[java.lang.Integer])
     }
     whenExecuting(mockJKeyValueStore, mockJKeyValueStoreReader) {
-      val kvStore = new DummyKVStore(mockJKeyValueStore)
+      val kvStore = dummyKVStore(mockJKeyValueStore)
       val actualValueRetrieved: Option[Int] = kvStore.get(keyToLookup)
       assert(actualValueRetrieved.isDefined, "Could not retrieve defined value from KeyValueStore")
       assert(valueRetrieved === actualValueRetrieved.get,
@@ -164,7 +149,7 @@ class KeyValueStoreSuite extends FunSuite with EasyMockSugar {
     }
     // scalastyle:on null
     whenExecuting(mockJKeyValueStore, mockJKeyValueStoreReader) {
-      val kvStore = new DummyKVStore(mockJKeyValueStore)
+      val kvStore = dummyKVStore(mockJKeyValueStore)
       val actualValueRetrieved: Option[Int] = kvStore.get(keyToLookup)
       assert(!actualValueRetrieved.isDefined,
         "Some value retrieved from KeyValueStore for key that does not exist.")
@@ -174,26 +159,28 @@ class KeyValueStoreSuite extends FunSuite with EasyMockSugar {
   test("A KeyValueStore throws an IllegalArgumentException if a null key is passed to apply.") {
     val (mockJKeyValueStore, mockJKeyValueStoreReader) = getMocks
     whenExecuting(mockJKeyValueStore, mockJKeyValueStoreReader) {
-      val kvStore = new DummyKVStore(mockJKeyValueStore)
+      val kvStore = dummyKVStore(mockJKeyValueStore)
       val thrown = intercept[IllegalArgumentException] {
         // scalastyle:off null
         kvStore(null)
         // scalastyle:on null
       }
-      assert("A null key was used to access a value from a KeyValueStore" === thrown.getMessage)
+      assert(thrown.getMessage.contains(
+          "A null key was used to access a value from a KeyValueStore"))
     }
   }
 
   test("A KeyValueStore throws an IllegalArgumentException if a null key is passed to get.") {
     val (mockJKeyValueStore, mockJKeyValueStoreReader) = getMocks
     whenExecuting(mockJKeyValueStore, mockJKeyValueStoreReader) {
-      val kvStore = new DummyKVStore(mockJKeyValueStore)
+      val kvStore = dummyKVStore(mockJKeyValueStore)
       val thrown = intercept[IllegalArgumentException] {
         // scalastyle:off null
         kvStore.get(null)
         // scalastyle:on null
       }
-      assert("A null key was used to access a value from a KeyValueStore" === thrown.getMessage)
+      assert(thrown.getMessage.contains(
+          "A null key was used to access a value from a KeyValueStore"))
     }
   }
 
@@ -206,7 +193,7 @@ class KeyValueStoreSuite extends FunSuite with EasyMockSugar {
           .andReturn(true)
     }
     whenExecuting(mockJKeyValueStore, mockJKeyValueStoreReader) {
-      val kvStore = new DummyKVStore(mockJKeyValueStore)
+      val kvStore = dummyKVStore(mockJKeyValueStore)
       assert(kvStore.containsKey(keyToLookup),
           "KeyValueStore reports that it does not contain a key which it does.")
     }
@@ -221,7 +208,7 @@ class KeyValueStoreSuite extends FunSuite with EasyMockSugar {
           .andReturn(false)
     }
     whenExecuting(mockJKeyValueStore, mockJKeyValueStoreReader) {
-      val kvStore = new DummyKVStore(mockJKeyValueStore)
+      val kvStore = dummyKVStore(mockJKeyValueStore)
       assert(!kvStore.containsKey(keyToLookup),
           "KeyValueStore reports that it contains a key which it does not.")
     }

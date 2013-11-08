@@ -83,7 +83,8 @@ class RecommendationPipeSuite extends KijiSuite {
     class PrepareItemsetsJob(args: Args) extends KijiModelingJob(args) {
       KijiInput(args("input"), "family:column" -> 'slice)
         .map('slice -> 'order) {
-          slice: KijiSlice[String] => slice.getFirstValue().split(",").map(_.trim).toList
+          slice: KijiSlice[CharSequence] =>
+              slice.getFirstValue().toString.split(",").map(_.trim).toList
         }
         .prepareItemSets[String]('order -> 'itemset, 2, 2)
         .write(TextLine(args("output")))
@@ -121,7 +122,7 @@ class RecommendationPipeSuite extends KijiSuite {
     class JoinWithGroupCountJob(args: Args) extends KijiModelingJob(args) {
       KijiInput(args("input"), "family:column" -> 'slice)
         .flatMap('slice -> 'product) {
-          slice: KijiSlice[String] => slice.getFirstValue().split(",").map(_.trim)
+          slice: KijiSlice[CharSequence] => slice.getFirstValue().toString.split(",").map(_.trim)
         }
         .joinWithGroupCount('product -> 'count)
         .write(TextLine(args("output")))
@@ -163,7 +164,8 @@ class RecommendationPipeSuite extends KijiSuite {
     class FrequentItemsetFinderJob(args: Args) extends KijiModelingJob(args) {
       KijiInput(args("input"), "family:column" -> 'slice)
           .map('slice -> 'order) {
-            slice: KijiSlice[String] => slice.getFirstValue().split(",").map(_.trim).toList
+            slice: KijiSlice[CharSequence] =>
+                slice.getFirstValue().toString.split(",").map(_.trim).toList
           }
           .prepareItemSets[String]('order -> 'itemset, 2, 2)
           .filterBySupport('itemset -> 'support, None, Some(3.0), 'norm, 0.5)
@@ -192,7 +194,8 @@ class RecommendationPipeSuite extends KijiSuite {
 
       KijiInput(args("input"), "family:column" -> 'slice)
           .map('slice -> 'order) {
-            slice: KijiSlice[String] => slice.getFirstValue().split(",").map(_.trim).toList
+            slice: KijiSlice[CharSequence] =>
+                slice.getFirstValue().toString.split(",").map(_.trim).toList
           }
         .prepareItemSets[String]('order -> 'itemset, 2, 2)
         .filterBySupport('itemset -> 'support, Some(totalOrders), None, 'norm, 0.5)
@@ -215,7 +218,8 @@ class RecommendationPipeSuite extends KijiSuite {
     class JaccardDistanceCalculator(args: Args) extends KijiModelingJob(args) {
       KijiInput(args("input"), "family:column" -> 'slice)
         .map('slice -> 'userPurchases) {
-          slice: KijiSlice[String] => slice.getFirstValue().split(",").map(_.trim).toList
+          slice: KijiSlice[CharSequence] =>
+              slice.getFirstValue().toString.split(",").map(_.trim).toList
         }
         .simpleItemItemJaccardSimilarity[String]('userPurchases -> 'result)
         .write(TextLine(args("output")))

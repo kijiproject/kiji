@@ -28,6 +28,7 @@ import org.kiji.express.flow.ColumnRequestInput
 import org.kiji.express.flow.ColumnRequestOutput
 import org.kiji.express.flow.ExpressColumnFilter
 import org.kiji.express.flow.OrFilter
+import org.kiji.express.flow.QualifiedColumnRequestOutput
 import org.kiji.express.flow.RegexQualifierFilter
 import org.kiji.modeling.Evaluator
 import org.kiji.modeling.Extractor
@@ -333,7 +334,7 @@ object ModelConverters {
       val avroOutputSpec = environment.getOutputSpec
       KijiSingleColumnOutputSpec(
           tableUri = avroOutputSpec.getTableUri,
-          outputColumn = ColumnRequestOutput(avroOutputSpec.getOutputColumn))
+          outputColumn = QualifiedColumnRequestOutput(avroOutputSpec.getOutputColumn))
     }
     new ScoreEnvironment(
         inputSpec = inputSpec,
@@ -357,7 +358,7 @@ object ModelConverters {
       AvroKijiSingleColumnOutputSpec
           .newBuilder()
           .setTableUri(outputSpec.tableUri)
-          .setOutputColumn(outputSpec.outputColumn.getColumnName.toString)
+          .setOutputColumn(outputSpec.outputColumn.columnName.toString)
           .build()
     }
     AvroScoreEnvironment
@@ -531,7 +532,7 @@ object ModelConverters {
         .map { avroSpec: AvroKijiSingleColumnOutputSpec =>
           KijiSingleColumnOutputSpec(
               tableUri = avroSpec.getTableUri,
-              outputColumn = ColumnRequestOutput(avroSpec.getOutputColumn))
+              outputColumn = QualifiedColumnRequestOutput(avroSpec.getOutputColumn))
         }
     val textSpecification: Option[OutputSpec] = Option(outputSpec.getTextSpecification)
         .map { avroSpec: AvroTextSourceSpec =>
@@ -586,7 +587,7 @@ object ModelConverters {
         val spec = AvroKijiSingleColumnOutputSpec
             .newBuilder()
             .setTableUri(uri)
-            .setOutputColumn(outputColumn.getColumnName.toString)
+            .setOutputColumn(outputColumn.columnName.toString)
             .build()
 
         AvroOutputSpec
@@ -881,7 +882,7 @@ object ModelConverters {
           val columnName = avroColumn.getName
 
           val column = ColumnRequestInput(
-              columnName = columnName,
+              column = columnName,
               maxVersions = avroColumn.getMaxVersions,
               filter = filter)
 
@@ -919,7 +920,7 @@ object ModelConverters {
     def columnRequestInputToAvroColumn(column: ColumnRequestInput): AvroColumn = {
       AvroColumn
           .newBuilder()
-          .setName(column.getColumnName.toString)
+          .setName(column.columnName.toString)
           .setMaxVersions(column.maxVersions)
           .setFilter(column.filter.map{filterToAvro}.getOrElse(null))
           .build()
@@ -950,7 +951,7 @@ object ModelConverters {
           // Now we have a list of (ColumnRequestInput, Symbol) tuples
           .map { case (column: ColumnRequestInput, field: Symbol) => {
             val tupleFieldName = field.name
-            val storeFieldName = column.getColumnName.toString
+            val storeFieldName = column.columnName.toString
             FieldBinding(tupleFieldName, storeFieldName)
           }}
     }
@@ -987,7 +988,7 @@ object ModelConverters {
     val columns: Map[Symbol, _ <: ColumnRequestOutput] = fieldBindings
         .map { fieldBinding => {
           // Convert store field name into ColumnRequestOutput
-          val column = ColumnRequestOutput(fieldBinding.getStoreFieldName)
+          val column = QualifiedColumnRequestOutput(fieldBinding.getStoreFieldName)
           (Symbol(fieldBinding.getTupleFieldName), column)
         }}
         .toMap
@@ -1014,7 +1015,7 @@ object ModelConverters {
           // Now we have a list of (ColumnRequestInput, Symbol) tuples
           .map { case (field: Symbol, column: ColumnRequestOutput) => {
             val tupleFieldName = field.name
-            val storeFieldName = column.getColumnName.toString
+            val storeFieldName = column.columnName.toString
             FieldBinding(tupleFieldName, storeFieldName)
           }}
     }

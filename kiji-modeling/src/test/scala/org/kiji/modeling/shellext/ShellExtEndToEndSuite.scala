@@ -28,20 +28,17 @@ import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.KijiSlice
 import org.kiji.express.flow.All
-import org.kiji.express.flow.ColumnFamilyRequestInput
-import org.kiji.express.flow.ColumnRequestInput
-import org.kiji.express.flow.ColumnRequestOutput
 import org.kiji.express.flow.QualifiedColumnRequestInput
+import org.kiji.express.flow.QualifiedColumnRequestOutput
+import org.kiji.express.util.Resources.doAndClose
+import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.modeling.Extractor
 import org.kiji.modeling.Scorer
-import org.kiji.modeling.config.FieldBinding
 import org.kiji.modeling.config.KijiInputSpec
 import org.kiji.modeling.config.KijiSingleColumnOutputSpec
 import org.kiji.modeling.config.ModelDefinition
 import org.kiji.modeling.config.ModelEnvironment
 import org.kiji.modeling.config.ScoreEnvironment
-import org.kiji.express.util.Resources.doAndClose
-import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiTable
@@ -96,7 +93,7 @@ class ShellExtEndToEnd extends ShellExtSuite {
               ),
               KijiSingleColumnOutputSpec(
                   uri.toString,
-                  ColumnRequestOutput("family:column2")
+                  QualifiedColumnRequestOutput("family:column2")
               ),
               keyValueStoreSpecs = Seq())))
 

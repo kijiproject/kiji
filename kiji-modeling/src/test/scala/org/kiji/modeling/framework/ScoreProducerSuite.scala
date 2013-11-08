@@ -27,16 +27,14 @@ import org.kiji.express.EntityId
 import org.kiji.express.KijiSlice
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow.All
-import org.kiji.express.flow.ColumnRequestInput
-import org.kiji.express.flow.ColumnRequestOutput
 import org.kiji.express.flow.QualifiedColumnRequestInput
+import org.kiji.express.flow.QualifiedColumnRequestOutput
 import org.kiji.express.util.Resources.doAndClose
 import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.modeling.Extractor
 import org.kiji.modeling.KeyValueStore
 import org.kiji.modeling.ScoreProducerJobBuilder
 import org.kiji.modeling.Scorer
-import org.kiji.modeling.config.FieldBinding
 import org.kiji.modeling.config.KeyValueStoreSpec
 import org.kiji.modeling.config.KijiInputSpec
 import org.kiji.modeling.config.KijiSingleColumnOutputSpec
@@ -92,7 +90,8 @@ class ScoreProducerSuite
                   timeRange=All,
                   columnsToFields =
                       Map(QualifiedColumnRequestInput("family", "column1") -> 'field)),
-              KijiSingleColumnOutputSpec(uri.toString, ColumnRequestOutput("family:column2")),
+              KijiSingleColumnOutputSpec(uri.toString,
+                  QualifiedColumnRequestOutput("family:column2")),
               keyValueStoreSpecs = Seq(
                   KeyValueStoreSpec(
                       storeType = "AVRO_KV",
@@ -166,7 +165,8 @@ class ScoreProducerSuite
                   columnsToFields = Map(
                       QualifiedColumnRequestInput("family", "column1") -> 'i1,
                       QualifiedColumnRequestInput("family", "column2") -> 'i2)),
-              KijiSingleColumnOutputSpec(uri.toString, ColumnRequestOutput("family:column2")),
+              KijiSingleColumnOutputSpec(uri.toString,
+                  QualifiedColumnRequestOutput("family:column2")),
               keyValueStoreSpecs = Seq())))
 
       // Build the produce job.
@@ -230,7 +230,8 @@ class ScoreProducerSuite
                   uri.toString,
                   timeRange=All,
                   columnsToFields = Map(QualifiedColumnRequestInput("family", "column") -> 'i1)),
-              KijiSingleColumnOutputSpec(uri.toString, ColumnRequestOutput("family:column")),
+              KijiSingleColumnOutputSpec(uri.toString,
+                  QualifiedColumnRequestOutput("family:column")),
               keyValueStoreSpecs = Seq())))
 
       // Build the produce job.
@@ -306,7 +307,8 @@ class ScoreProducerSuite
                   timeRange=All,
                   columnsToFields =
                       Map(QualifiedColumnRequestInput("family", "column1") -> 'feature)),
-              KijiSingleColumnOutputSpec(uri.toString, ColumnRequestOutput("family:column2")),
+              KijiSingleColumnOutputSpec(uri.toString,
+                  QualifiedColumnRequestOutput("family:column2")),
               keyValueStoreSpecs = Seq())))
 
       // Build the produce job.
@@ -367,7 +369,7 @@ class ScoreProducerSuite
             uri.toString,
             timeRange=All,
             columnsToFields = Map(QualifiedColumnRequestInput("family", "column1") -> 'field)),
-          KijiSingleColumnOutputSpec(uri.toString, ColumnRequestOutput("family:column2")),
+          KijiSingleColumnOutputSpec(uri.toString, QualifiedColumnRequestOutput("family:column2")),
           keyValueStoreSpecs = Seq(
             KeyValueStoreSpec(
               storeType = "AVRO_KV",
@@ -407,8 +409,8 @@ class ScoreProducerSuite
 
 object ScoreProducerSuite {
   class DoublingExtractor extends Extractor {
-    override val extractFn = extract('field -> 'feature) { field: KijiSlice[String] =>
-      val str: String = field.getFirstValue
+    override val extractFn = extract('field -> 'feature) { field: KijiSlice[CharSequence] =>
+      val str: String = field.getFirstValue.toString
       val sideData: KeyValueStore[Int, String] = keyValueStore("side_data")
 
       str + str + sideData(1)
@@ -416,23 +418,24 @@ object ScoreProducerSuite {
   }
 
   class UpperCaseScorer extends Scorer {
-    override val scoreFn = score('feature) { feature: String =>
-      feature.toUpperCase
+    override val scoreFn = score('feature) { feature: CharSequence =>
+      feature.toString.toUpperCase
     }
   }
 
   class KijiSliceScorer extends Scorer {
-    override val scoreFn = score('field) { field: KijiSlice[String] =>
-      field.getFirstValue
+    override val scoreFn = score('field) { field: KijiSlice[CharSequence] =>
+      field.getFirstValue.toString
     }
   }
 
   class TwoArgDoublingExtractor extends Extractor {
     override val extractFn =
-        extract(('i1, 'i2) -> ('x1, 'x2)) { input: (KijiSlice[String], KijiSlice[String]) =>
-          val (i1, i2) = input
+        extract(('i1, 'i2) -> ('x1, 'x2)) { t: (KijiSlice[CharSequence], KijiSlice[CharSequence]) =>
+          val (i1, i2) = t
 
-          (i1.getFirstValue + i1.getFirstValue, i2.getFirstValue + i2.getFirstValue)
+          (i1.getFirstValue.toString + i1.getFirstValue.toString,
+           i2.getFirstValue.toString + i2.getFirstValue.toString)
         }
   }
 

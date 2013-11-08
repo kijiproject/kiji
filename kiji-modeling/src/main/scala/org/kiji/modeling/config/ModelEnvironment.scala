@@ -373,7 +373,7 @@ object ModelEnvironment {
     val columnNames: Seq[String] = columns
         .values
         .toList
-        .map { _.getColumnName.toString }
+        .map { _.columnName.toString }
     val columnNameErrors = columnNames
         .map { columnName: String => validateKijiColumnName(columnName) }
         .flatten
@@ -435,7 +435,7 @@ object ModelEnvironment {
         .columnsToFields
         .keys
         .toList
-        .map { _.getColumnName.toString }
+        .map { _.columnName.toString }
         .map { validateKijiColumnName }
         .flatten
 
@@ -482,7 +482,7 @@ object ModelEnvironment {
         validateKijiOutputFieldBindings(kijiOutputSpec.fieldsToColumns)
       }
       case kijiSingleColumnSpec: KijiSingleColumnOutputSpec => {
-        validateKijiColumnName(kijiSingleColumnSpec.outputColumn.getColumnName.toString)
+        validateKijiColumnName(kijiSingleColumnSpec.outputColumn.columnName.toString)
             .toSeq
       }
       case textSpecification: TextSourceSpec => {
@@ -548,7 +548,7 @@ object ModelEnvironment {
     // The score phase only supports the single column Kiji output.
     val outputSpecErrors = scoreEnvironment.outputSpec match {
       case scorePhaseOutputSpec: KijiSingleColumnOutputSpec => {
-        validateKijiColumnName(scorePhaseOutputSpec.outputColumn.getColumnName.toString)
+        validateKijiColumnName(scorePhaseOutputSpec.outputColumn.columnName.toString)
             .toSeq
       }
       case _ => {

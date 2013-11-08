@@ -47,7 +47,7 @@ final case class KijiInputSpec(
     loggingInterval: Long = 1000) extends InputSpec {
 
   /**
-   * Create a [[org.kiji.schma.KijiDataRequest]] for this `KijiInputSpec.`
+   * Create a [[org.kiji.schema.KijiDataRequest]] for this `KijiInputSpec.`
    *
    * @return a `KijiDataRequest` that will request the columns specified by this `KijiInputSpec.`
    */
@@ -61,7 +61,7 @@ final case class KijiInputSpec(
           .withMaxVersions(column.maxVersions)
           .withFilter(column.filter.map{ _.toKijiColumnFilter }.getOrElse(null))
           .withPageSize(column.pageSize.getOrElse(0))
-          .add(column.getColumnName)
+          .add(column.columnName)
     }
 
     val requestBuilder: KijiDataRequestBuilder = KijiDataRequest.builder()

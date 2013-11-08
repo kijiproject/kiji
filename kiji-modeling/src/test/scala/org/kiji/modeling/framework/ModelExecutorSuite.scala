@@ -30,13 +30,12 @@ import org.kiji.express.EntityId
 import org.kiji.express.KijiSlice
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow.All
-import org.kiji.express.flow.ColumnRequestInput
 import org.kiji.express.flow.QualifiedColumnRequestInput
-import org.kiji.express.flow.ColumnFamilyRequestInput
-import org.kiji.express.flow.ColumnRequestOutput
+import org.kiji.express.flow.QualifiedColumnRequestOutput
+import org.kiji.express.util.Resources.doAndClose
+import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.modeling.Preparer
 import org.kiji.modeling.Trainer
-import org.kiji.modeling.config.FieldBinding
 import org.kiji.modeling.config.KeyValueStoreSpec
 import org.kiji.modeling.config.KijiInputSpec
 import org.kiji.modeling.config.KijiOutputSpec
@@ -47,8 +46,6 @@ import org.kiji.modeling.config.PrepareEnvironment
 import org.kiji.modeling.config.ScoreEnvironment
 import org.kiji.modeling.config.TrainEnvironment
 import org.kiji.modeling.impl.KeyValueStoreImplSuite
-import org.kiji.express.util.Resources.doAndClose
-import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiTable
@@ -112,7 +109,7 @@ class ModelExecutorSuite extends KijiSuite {
             uri.toString,
             timeRange=All,
             columnsToFields = Map(QualifiedColumnRequestInput("family", "column1") -> 'field)),
-          KijiSingleColumnOutputSpec(uri.toString, ColumnRequestOutput("family:column2")),
+          KijiSingleColumnOutputSpec(uri.toString, QualifiedColumnRequestOutput("family:column2")),
           keyValueStoreSpecs = Seq(
             KeyValueStoreSpec(
               storeType = "AVRO_KV",
@@ -193,7 +190,7 @@ class ModelExecutorSuite extends KijiSuite {
             outputSpec = Map("output" ->
                 KijiOutputSpec(
                     tableUri = outputUri.toString,
-                    fieldsToColumns = Map('size -> ColumnRequestOutput("family:column"))
+                    fieldsToColumns = Map('size -> QualifiedColumnRequestOutput("family:column"))
             )),
             keyValueStoreSpecs = Seq()
         )),
@@ -278,7 +275,7 @@ class ModelExecutorSuite extends KijiSuite {
           outputSpec = Map("output" ->
               KijiOutputSpec(
                   tableUri = outputUri.toString,
-                  fieldsToColumns = Map('size -> ColumnRequestOutput("family:column"))
+                  fieldsToColumns = Map('size -> QualifiedColumnRequestOutput("family:column"))
           )),
           keyValueStoreSpecs = Seq()
         )),
@@ -394,7 +391,7 @@ class ModelExecutorSuite extends KijiSuite {
             outputSpec = Map("output" ->
                 KijiOutputSpec(
                     tableUri = prepareOutputUri.toString,
-                    fieldsToColumns = Map('size -> ColumnRequestOutput("family:column")))),
+                    fieldsToColumns = Map('size -> QualifiedColumnRequestOutput("family:column")))),
             keyValueStoreSpecs = Seq())),
         trainEnvironment = Some(TrainEnvironment(
             inputSpec = Map("input" ->
@@ -406,7 +403,8 @@ class ModelExecutorSuite extends KijiSuite {
             outputSpec = Map("output" ->
                 KijiOutputSpec(
                     tableUri = trainOutputUri.toString,
-                    fieldsToColumns = Map('avgString -> ColumnRequestOutput("family:column1")))),
+                    fieldsToColumns = Map('avgString ->
+                        QualifiedColumnRequestOutput("family:column1")))),
             keyValueStoreSpecs = Seq())),
         scoreEnvironment = Some(ScoreEnvironment(
             inputSpec = KijiInputSpec(
@@ -416,7 +414,7 @@ class ModelExecutorSuite extends KijiSuite {
                     Map(QualifiedColumnRequestInput("family", "column1") -> 'field)),
             outputSpec = KijiSingleColumnOutputSpec(
                 tableUri = trainOutputUri.toString,
-                ColumnRequestOutput("family:column2")),
+                QualifiedColumnRequestOutput("family:column2")),
             keyValueStoreSpecs = Seq(
                 KeyValueStoreSpec(
                     storeType = "AVRO_KV",
@@ -462,8 +460,8 @@ object ModelExecutorSuite {
     class WordCountJob(input: Map[String, Source], output: Map[String, Source]) extends
         PreparerJob {
       input("input")
-        .flatMapTo('word -> 'countedWord) { slice: KijiSlice[String] =>
-            slice.cells.map { cell => cell.datum } }
+        .flatMapTo('word -> 'countedWord) { slice: KijiSlice[CharSequence] =>
+            slice.cells.map { cell => cell.datum.toString } }
         .groupBy('countedWord) { _.size }
         .map('countedWord -> 'entityId) { countedWord: String => EntityId(countedWord) }
         .map('size -> 'size) { size: Long => size.toString }
@@ -480,8 +478,8 @@ object ModelExecutorSuite {
     class WordCountJob(input: Map[String, Source], output: Map[String,
         Source]) extends TrainerJob {
       input("input")
-        .flatMapTo('word -> 'countedWord) { slice: KijiSlice[String] =>
-          slice.cells.map { cell => cell.datum }
+        .flatMapTo('word -> 'countedWord) { slice: KijiSlice[CharSequence] =>
+          slice.cells.map { cell => cell.datum.toString }
         }
         .groupBy('countedWord) { _.size }
         .map('countedWord -> 'entityId) { countedWord: String => EntityId(countedWord) }
@@ -499,8 +497,8 @@ object ModelExecutorSuite {
     class AverageTrainerJob(input: Map[String, Source], output: Map[String, Source]) extends
         TrainerJob {
       input("input")
-        .flatMapTo('word -> 'countedWord) { slice: KijiSlice[String] =>
-          slice.cells.map { cell => cell.datum }
+        .flatMapTo('word -> 'countedWord) { slice: KijiSlice[CharSequence] =>
+          slice.cells.map { cell => cell.datum.toString }
         }
         .mapTo('countedWord -> 'number) { countedWord: String => countedWord.toLong }
         .groupAll(_.average('number))
