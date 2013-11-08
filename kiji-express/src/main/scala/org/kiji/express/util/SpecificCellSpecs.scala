@@ -30,7 +30,9 @@ import scala.collection.JavaConverters.mapAsJavaMapConverter
 
 import org.apache.avro.specific.SpecificRecord
 
-import org.kiji.express.flow._
+import org.kiji.express.flow.{SchemaSpec, ColumnRequestInput}
+import SchemaSpec.Specific
+import org.kiji.express.flow.ColumnRequestInput
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiTable
 import org.kiji.schema.layout.CellSpec
@@ -131,8 +133,8 @@ object SpecificCellSpecs {
   ): Map[KijiColumnName, Class[_ <: SpecificRecord]] = {
     columns.values
         // Need only those columns that have specific Avro classes defined
-        .filter { _.avroClass.isDefined }
-        .map { col => (col.getColumnName, col.avroClass.get) }
+        .map { col => (col.columnName, col.schema) }
+        .collect { case (name, Specific(klass)) => (name, klass) }
         .toMap
   }
 

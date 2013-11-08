@@ -19,339 +19,296 @@
 
 package org.kiji.express.flow
 
-import scala.collection.JavaConverters.seqAsJavaListConverter
-import scala.collection.mutable.Buffer
+import scala.collection.JavaConversions
 
+import cascading.tuple.Fields
 import com.twitter.scalding.Args
-import com.twitter.scalding.JobTest
-import com.twitter.scalding.TextLine
+import com.twitter.scalding.IterableSource
+import com.twitter.scalding.Mode
+import com.twitter.scalding.TupleConverter
+import com.twitter.scalding.TupleSetter
 import org.apache.avro.Schema
+import org.apache.avro.generic.GenericData
+import org.apache.avro.generic.GenericData.Fixed
+import org.apache.hadoop.conf.Configuration
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
-import org.kiji.express._
-import org.kiji.express.util.Resources._
+import org.kiji.express.EntityId
+import org.kiji.express.KijiSuite
+import org.kiji.express.flow.SchemaSpec.Writer
+import org.kiji.express.util.AvroTypesComplete
 import org.kiji.schema.Kiji
+import org.kiji.schema.KijiClientTest
+import org.kiji.schema.KijiColumnName
+import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiTable
-import org.kiji.schema.KijiURI
-import org.kiji.schema.layout.KijiTableLayout
+import org.kiji.schema.KijiTableReader
+import org.kiji.schema.KijiTableWriter
+import org.kiji.schema.{EntityId => SchemaEntityId}
+
 
 @RunWith(classOf[JUnitRunner])
-class WriterSchemaSuite extends KijiSuite {
+class WriterSchemaSuite extends KijiClientTest with KijiSuite {
   import WriterSchemaSuite._
+  import AvroTypesComplete._
 
-  /** Table layout using Avro schemas to use for tests. The row keys are formatted. */
-  val avroLayout1_3: KijiTableLayout = layout("layout/avro-types-1.3.json")
+  // TODO: These non-test things can be moved to the companion object after SCHEMA-539 fix
+  setupKijiTest()
+  val kiji: Kiji = createTestKiji()
+  val table: KijiTable = {
+    kiji.createTable(AvroTypesComplete.layout.getDesc)
+    kiji.openTable(AvroTypesComplete.layout.getName)
+  }
+  val conf: Configuration = getConf
+  val uri = table.getURI.toString
+  val reader: KijiTableReader = table.openTableReader()
+  val writer: KijiTableWriter = table.openTableWriter()
 
-  test("A job that writes to a layout-1.3 table and uses the default schema runs.") {
-    // Create test Kiji table.
-    val uri: String = doAndRelease(makeTestKijiTable(avroLayout1_3)) { table: KijiTable =>
-      table.getURI().toString()
-    }
-
-    // Input to use with Text source.
-    val writeInput: List[(String, String)] = List(
-      ( "0", "one" ),
-      ( "1", "two" ))
-
-    // Validates the output buffer contains the records written with the default schema.
-    def validateWrite(outputBuffer: Buffer[(EntityId, KijiSlice[AvroRecord])]): Unit = {
-      val outMap = outputBuffer.toMap
-
-      val record1 = outMap(EntityId("one")).getFirstValue()
-      val record2 = outMap(EntityId("two")).getFirstValue()
-
-      assert(
-        "word_one" === record1("contained_string").asString)
-      assert(
-        "word_two" === record2("contained_string").asString)
-
-      // Check that other fields don't exist (they were written with the default reader schema):
-      assert(!record1.map.contains("field2"))
-      assert(!record1.map.contains("field3"))
-    }
-
-    val jobTest = JobTest(new DefaultSchemaWriteJob(_))
-      .arg("input", "inputFile")
-      .arg("output", uri)
-      .source(TextLine("inputFile"), writeInput)
-      .sink(KijiOutput(uri,
-          Map('genericRecord -> ColumnRequestOutput(
-              "family:column_validated",
-              useDefaultReaderSchema=true)))
-      )(validateWrite)
-
-    // Run in local mode.
-    jobTest.run.finish
-
-    // Run in hadoop mode.
-    jobTest.runHadoop.finish
+  /**
+   * Get value from HBase.
+   * @param eid string of row
+   * @param column column containing requested value
+   * @tparam T expected type of value
+   * @return the value
+   */
+  def getValue[T](eid: String, column: KijiColumnName): T = {
+    def entityId(s: String): SchemaEntityId = table.getEntityId(s)
+    val (family, qualifier) = column.getFamily -> column.getQualifier
+    val get = reader.get(entityId(eid), KijiDataRequest.create(family, qualifier))
+    require(get.containsColumn(family, qualifier)) // Require the cell exists for null case
+    get.getMostRecentValue(family, qualifier)
   }
 
-  test("A job that writes to a layout-1.3 table and specifies a user schema runs.") {
-    // Create test Kiji table.
-    val uri: String = doAndRelease(makeTestKijiTable(avroLayout1_3)) { table: KijiTable =>
-      table.getURI.toString
+  /**
+   * Verify that the inputs have been persisted into the Kiji column.  Checks that the types and
+   * values match.
+   * @param inputs to check against
+   * @param column column that the inputs are stored in
+   * @tparam T expected return type of value in HBase
+   */
+  def verify[T](inputs: Iterable[(EntityId, T)],
+                column: KijiColumnName,
+                verifier: (T, T) => Unit): Unit = {
+    inputs.foreach { input: (EntityId, T) =>
+      val (eid, value) = input
+      val retrieved: T = getValue(eid.components.head.toString, column)
+      verifier(value, retrieved)
     }
-
-    // Get the ID of the user defined schema.
-    val userDefinedSchemaId: Long = doAndRelease(
-      Kiji.Factory.open(KijiURI.newBuilder(uri).build())) { kiji: Kiji =>
-      kiji.getSchemaTable.getOrCreateSchemaId(userDefinedSchema)
-    }
-
-    // Input to use with Text source.
-    val writeInput: List[(String, String)] = List(
-      ( "0", "one" ),
-      ( "1", "two" ))
-
-    // Validates the output buffer contains the records written with the default schema.
-    def validateWrite(outputBuffer: Buffer[(EntityId, KijiSlice[AvroRecord])]): Unit = {
-      val outMap = outputBuffer.toMap
-
-      val record1 = outMap(EntityId("one")).getFirstValue()
-      val record2 = outMap(EntityId("two")).getFirstValue()
-
-      assert(
-        "word_one" === record1("contained_string").asString)
-      assert(
-        "word_two" === record2("contained_string").asString)
-
-      // Check that field2 exists but field3 doesn't (it's not in the specified writer schema):
-      assert(record1.map.contains("field2"))
-      assert(!record1.map.contains("field3"))
-    }
-
-    val jobTest = JobTest(new UserSpecifiedSchemaWriteJob(_))
-      .arg("input", "inputFile")
-      .arg("output", uri.toString)
-      .source(TextLine("inputFile"), writeInput)
-      .sink(KijiOutput(uri,
-          Map('genericRecord ->
-              ColumnRequestOutput("family:column_validated", schemaId=Some(userDefinedSchemaId))))
-      )(validateWrite)
-
-    // Run in local mode.
-    jobTest.run.finish
-
-    // Run in hadoop mode.
-    jobTest.runHadoop.finish
   }
 
-  test("A job that writes to a layout-1.3 table column without a default schema runs.") {
-    // Create test Kiji table.
-    val uri: String = doAndRelease(makeTestKijiTable(avroLayout1_3)) { table: KijiTable =>
-      table.getURI().toString()
-    }
-
-    // Input to use with Text source.
-    val writeInput: List[(String, String)] = List(
-      ( "0", "one" ),
-      ( "1", "two" ))
-
-    // Validates the output buffer contains the records written with the default schema.
-    def validateWrite(outputBuffer: Buffer[(EntityId, KijiSlice[AvroRecord])]): Unit = {
-      val outMap = outputBuffer.toMap
-
-      val record1 = outMap(EntityId("one")).getFirstValue()
-      val record2 = outMap(EntityId("two")).getFirstValue()
-
-      assert(
-        "word_one" === record1("contained_string").asString)
-      assert(
-        "word_two" === record2("contained_string").asString)
-
-      // Check that other fields exist (they were written with the writer schema):
-      assert(record1.map.contains("field2"))
-      assert(record1.map.contains("field3"))
-
-      assert(record1("field2").asInt === 1)
-      assert(record1("field3").asEnumName === "three")
-    }
-
-    val jobTest = JobTest(new NoDefaultWriteJob(_))
-      .arg("input", "inputFile")
-      .arg("output", uri)
-      .source(TextLine("inputFile"), writeInput)
-      .sink(KijiOutput(uri, 'genericRecord -> "family:column_compatibility"))(validateWrite)
-
-    // Run in local mode.
-    jobTest.run.finish
-
-    // Run in hadoop mode.
-    jobTest.runHadoop.finish
+  def valueVerifier[T](input: T, retrieved: T): Unit = {
+    assert(input === retrieved)
   }
 
-  test("A KijiExpress job will not run if a writer schema should be specified and isn't.") {
-    // Create test Kiji table.
-    val uri: String = doAndRelease(makeTestKijiTable(avroLayout1_3)) { table: KijiTable =>
-      table.getURI().toString()
-    }
+  def nullVerifier(input: Any, retrieved: Any): Unit = {
+    assert(input === null)
+    assert(retrieved === null)
+  }
 
-    // Input to use with Text source.
-    val writeInput: List[(String, String)] = List(
-      ( "0", "one" ),
-      ( "1", "two" ))
+  def arrayVerifier[T](input: T, retrieved: T): Unit = {
+    assert(retrieved.isInstanceOf[GenericData.Array[_]])
+    val ret = JavaConversions.JListWrapper(retrieved.asInstanceOf[GenericData.Array[_]]).toSeq
+    assert(input.asInstanceOf[Iterable[_]].toSeq === ret)
+  }
 
-    // Validates the output buffer contains the records written with the default schema.
-    def validateWrite(outputBuffer: Buffer[(EntityId, KijiSlice[AvroRecord])]): Unit = {
-      val outMap = outputBuffer.toMap
+  def fixedVerifier[T](input: T, retrieved: T): Unit = {
+    assert(retrieved.isInstanceOf[Fixed])
+    assert(input === retrieved.asInstanceOf[Fixed].bytes())
+  }
 
-      val record1 = outMap(EntityId("one")).getFirstValue()
-      val record2 = outMap(EntityId("two")).getFirstValue()
+  def enumVerifier[T](schema: Schema)(input: T, retrieved: T): Unit = {
+    assert(retrieved.isInstanceOf[GenericData.EnumSymbol])
+    assert(
+        retrieved.asInstanceOf[GenericData.EnumSymbol] ===
+        new GenericData().createEnum(input.toString, schema))
+  }
 
-      assert(
-        "word_one" === record1("contained_string").asString)
-      assert(
-        "word_two" === record2("contained_string").asString)
+  /**
+   * Write provided values with express into an HBase column with options as specified in output,
+   * and verify that the values have been persisted correctly.
+   * @param values to test
+   * @param output options to write with
+   * @tparam T type of values to write
+   * @return
+   */
+  def testWrite[T](values: Iterable[T],
+                   output: ColumnRequestOutput,
+                   verifier: (T, T) => Unit =  valueVerifier _) {
+    val outputSource = KijiOutput(uri, Map('value -> output))
+    val inputs = eids.zip(values)
+    expressWrite(conf, new Fields("entityId", "value"), inputs, outputSource)
+    verify(inputs, output.columnName, verifier)
+  }
 
-      // Check that other fields exist (they were written with the writer schema):
-      assert(record1.map.contains("field2"))
-      assert(record1.map.contains("field3"))
+  test("A KijiJob can write to a counter column with a Writer schema spec.") {
+    testWrite(longs, QualifiedColumnRequestOutput(family, counterColumn, Writer))
+  }
 
-      assert(record1("field2").asInt === 1)
-      assert(record1("field3").asEnumName === "three")
-    }
+  test("A KijiJob can write to a raw bytes column with a Writer schema spec.") {
+    testWrite(bytes, QualifiedColumnRequestOutput(family, rawColumn, Writer))
+  }
 
-    val jobTest = JobTest(new NoSchemaSpecifiedWriteJob(_))
-      .arg("input", "inputFile")
-      .arg("output", uri)
-      .source(TextLine("inputFile"), writeInput)
-      .sink(KijiOutput(uri, 'genericRecord -> "family:column_validated"))(validateWrite)
+  test("A KijiJob can write to an Avro null column with a Generic schema spec.") {
+    testWrite(nulls, QualifiedColumnRequestOutput(family, nullColumn, nullSchema), nullVerifier)
+  }
 
-    // Run in local mode.
-    val localException = intercept[InvalidKijiTapException] { jobTest.run.finish}
+  test("A KijiJob can write to an Avro null column with a Writer schema spec.") {
+    testWrite(nulls, QualifiedColumnRequestOutput(family, nullColumn), nullVerifier)
+  }
 
-    // Run in hadoop mode.
-    val hadoopException = intercept[InvalidKijiTapException] { jobTest.runHadoop.finish }
+  test("A KijiJob can write to an Avro boolean column with a Generic schema spec.") {
+    testWrite(booleans, QualifiedColumnRequestOutput(family, booleanColumn, booleanSchema))
+  }
 
-    assert(localException.getMessage === hadoopException.getMessage)
+  test("A KijiJob can write to an Avro boolean column with a Writer schema spec.") {
+    testWrite(booleans, QualifiedColumnRequestOutput(family, booleanColumn, Writer))
+  }
 
-    // Check the message includes the problem column.
-    assert(localException.getMessage.contains("family:column_validated"))
+  test("A KijiJob can write to an Avro int column with a Generic schema spec.") {
+    testWrite(ints, QualifiedColumnRequestOutput(family, intColumn, intSchema))
+  }
+
+  test("A KijiJob can write to an Avro int column with a Writer schema spec.") {
+    testWrite(ints, QualifiedColumnRequestOutput(family, intColumn, Writer))
+  }
+
+  test("A KijiJob can write to an Avro long column with a Generic schema spec.") {
+    testWrite(longs, QualifiedColumnRequestOutput(family, longColumn, longSchema))
+  }
+
+  test("A KijiJob can write to an Avro long column with a Writer schema spec.") {
+    testWrite(longs, QualifiedColumnRequestOutput(family, longColumn, Writer))
+  }
+
+  test("A KijiJob can write ints to an Avro long column with an int schema.") {
+    testWrite(ints, QualifiedColumnRequestOutput(family, longColumn, intSchema))
+  }
+
+  test("A KijiJob can write to an Avro float column with a Generic schema spec.") {
+    testWrite(floats, QualifiedColumnRequestOutput(family, floatColumn, floatSchema))
+  }
+
+  test("A KijiJob can write to an Avro float column with a Writer schema spec.") {
+    testWrite(floats, QualifiedColumnRequestOutput(family, floatColumn, Writer))
+  }
+
+  test("A KijiJob can write to an Avro double column with a Generic schema spec.") {
+    testWrite(doubles, QualifiedColumnRequestOutput(family, doubleColumn, doubleSchema))
+  }
+
+  test("A KijiJob can write to an Avro double column with a Writer schema spec.") {
+    testWrite(doubles, QualifiedColumnRequestOutput(family, doubleColumn, Writer))
+  }
+
+  test("A KijiJob can write floats to an Avro double column with a float schema.") {
+    testWrite(floats, QualifiedColumnRequestOutput(family, doubleColumn, intSchema))
+  }
+
+  /** TODO: reenable when Schema-594 is fixed. */
+  ignore("A KijiJob can write to an Avro bytes column with a Generic schema spec.") {
+    testWrite(bytes, QualifiedColumnRequestOutput(family, bytesColumn, bytesSchema))
+  }
+
+  /** TODO: reenable when Schema-594 is fixed. */
+  ignore("A KijiJob can write to an Avro bytes column with a Writer schema spec.") {
+    testWrite(bytes, QualifiedColumnRequestOutput(family, bytesColumn, Writer))
+  }
+
+  test("A KijiJob can write to an Avro string column with a Generic schema spec.") {
+    testWrite(strings, QualifiedColumnRequestOutput(family, stringColumn, stringSchema))
+  }
+
+  test("A KijiJob can write to an Avro string column with a Writer schema spec.") {
+    testWrite(strings, QualifiedColumnRequestOutput(family, stringColumn, Writer))
+  }
+
+  test("A KijiJob can write to an Avro specific record column with a Generic schema spec.") {
+    testWrite(specificRecords, QualifiedColumnRequestOutput(family, specificColumn, specificSchema))
+  }
+
+  test("A KijiJob can write to an Avro specific record column with a Writer schema spec.") {
+    testWrite(specificRecords, QualifiedColumnRequestOutput(family, specificColumn, Writer))
+  }
+
+  test("A KijiJob can write to a generic record column with a Generic schema spec.") {
+    testWrite(genericRecords, QualifiedColumnRequestOutput(family, genericColumn, genericSchema))
+  }
+
+  test("A KijiJob can write to a generic record column with a Writer schema spec.") {
+    testWrite(genericRecords, QualifiedColumnRequestOutput(family, genericColumn, Writer))
+  }
+
+  test("A KijiJob can write to an enum column with a Generic schema spec.") {
+    testWrite(enums, QualifiedColumnRequestOutput(family, enumColumn, enumSchema))
+  }
+
+  test("A KijiJob can write to an enum column with a Writer schema spec.") {
+    testWrite(enums, QualifiedColumnRequestOutput(family, enumColumn, Writer))
+  }
+
+  test("A KijiJob can write a string to an enum column with a Generic schema spec.") {
+    testWrite(enumStrings, QualifiedColumnRequestOutput(family, enumColumn, enumSchema),
+      enumVerifier(enumSchema))
+  }
+
+  test("A KijiJob can write an avro array to an array column with a Generic schema spec.") {
+    testWrite(avroArrays, QualifiedColumnRequestOutput(family, arrayColumn, arraySchema))
+  }
+
+  test("A KijiJob can write an avro array to an array column with a Writer schema spec."){
+    testWrite(avroArrays, QualifiedColumnRequestOutput(family, arrayColumn, Writer))
+  }
+
+  test("A KijiJob can write an Iterable to an array column with a Generic schema spec.") {
+    testWrite(arrays, QualifiedColumnRequestOutput(family, arrayColumn, arraySchema), arrayVerifier)
+  }
+
+  test("A KijiJob can write to a union column with a Generic schema spec.") {
+    testWrite(unions, QualifiedColumnRequestOutput(family, unionColumn, unionSchema))
+  }
+
+  test("A KijiJob can write to a union column with a Writer schema spec.") {
+    testWrite(unions, QualifiedColumnRequestOutput(family, unionColumn, Writer))
+  }
+
+  test("A KijiJob can write to a fixed column with a Generic schema spec.") {
+    testWrite(fixeds, QualifiedColumnRequestOutput(family, fixedColumn, fixedSchema))
+  }
+
+  test("A KijiJob can write to a fixed column with a Writer schema spec.") {
+    testWrite(fixeds, QualifiedColumnRequestOutput(family, fixedColumn, Writer))
+  }
+
+  test("A KijiJob can write a byte array to a fixed column with a Generic schema spec.") {
+    testWrite(fixedByteArrays, QualifiedColumnRequestOutput(family, fixedColumn, fixedSchema),
+      fixedVerifier)
   }
 }
 
 object WriterSchemaSuite {
   /**
-   * A job that writes out to a Kiji table, using the default reader schema.
-   *
-   * @param args to the job. Two arguments are expected: "input", which specifies the path to a
-   *     text file, and "output", which specifies the URI to a Kiji table.
+   * Writes inputs to outputSource with Express.
+   * @param fs fields contained in the input tuples.
+   * @param inputs contains tuples to write to HBase with Express.
+   * @param outputSource KijiSource with options for how to write values to HBase.
+   * @param setter necessary for some implicit shenanigans.  Don't explicitly pass in.
+   * @tparam A type of values to be written.
    */
-  class DefaultSchemaWriteJob(args: Args) extends KijiJob(args) {
-    val tableUri: String = args("output")
-    TextLine(args("input"))
-      .read
-      .map('offset -> 'timestamp) { offset: String => offset.toLong }
-      // Generate an entityId for each line.
-      .map('line -> 'entityId) { EntityId(_: String) }
-      .map('line -> 'genericRecord) { text: String =>
-      AvroRecord(
-        "contained_string" -> "word_%s".format(text),
-        "field2" -> { if (text.equals("one")) 1; else 2; },
-        "field3" -> AvroEnum("three")
-      )
-    }
-      // Write the results to the "family:column_validated" column of a Kiji table using the
-      // default schema.
-      .write(KijiOutput(tableUri,
-          Map('genericRecord -> ColumnRequestOutput(
-              "family:column_validated",
-              useDefaultReaderSchema = true))))
-  }
-
-  // User-defined schema for use in UserSpecifiedSchemaWriteJob.
-  val userDefinedSchema = {
-    val fields: List[Schema.Field] = List(
-        new Schema.Field("contained_string", Schema.create(Schema.Type.STRING), "contained", null),
-        new Schema.Field("field2", Schema.create(Schema.Type.INT), "field 2", null))
-    val record =
-        Schema.createRecord("stringcontainer", "user-created schema", "org.kiji.schema.avro", false)
-    record.setFields(fields.toSeq.asJava)
-    record
-  }
-
-  /**
-   * A job that writes out to a Kiji table, not using the default reader schema even though it
-   * exists, and using a user-specified schema instead.
-   *
-   * @param args to the job. Two arguments are expected: "input", which specifies the path to a
-   *     text file, and "output", which specifies the URI to a Kiji table.
-   */
-  class UserSpecifiedSchemaWriteJob(args: Args) extends KijiJob(args) {
-    val tableUri: String = args("output")
-
-    // Get the ID of the user defined schema.
-    val userDefinedSchemaId: Long = doAndRelease(
-        Kiji.Factory.open(KijiURI.newBuilder(tableUri).build())) { kiji: Kiji =>
-      kiji.getSchemaTable.getOrCreateSchemaId(userDefinedSchema)
-    }
-
-    TextLine(args("input"))
-      .read
-      .map('offset -> 'timestamp) { offset: String => offset.toLong }
-      // Generate an entityId for each line.
-      .map('line -> 'entityId) { EntityId(_: String) }
-      .map('line -> 'genericRecord) { text: String =>
-      AvroRecord(
-        "contained_string" -> "word_%s".format(text),
-        "field2" -> { if (text.equals("one")) 1; else 2; },
-        "field3" -> AvroEnum("three")
-      )
-    }
-      // Write the results to the "family:column_validated" column of a Kiji table.
-      .write(KijiOutput(tableUri,
-          Map('genericRecord ->
-              ColumnRequestOutput("family:column_validated", schemaId=Some(userDefinedSchemaId)))))
-  }
-
-  /**
-   * A job that writes out to a Kiji table, to a column without a default reader schema.
-   *
-   * @param args to the job. Two arguments are expected: "input", which specifies the path to a
-   *     text file, and "output", which specifies the URI to a Kiji table.
-   */
-  class NoDefaultWriteJob(args: Args) extends KijiJob(args) {
-    val tableUri: String = args("output")
-    TextLine(args("input"))
-      .read
-      .map('offset -> 'timestamp) { offset: String => offset.toLong }
-      // Generate an entityId for each line.
-      .map('line -> 'entityId) { EntityId(_: String) }
-      .map('line -> 'genericRecord) { text: String =>
-      AvroRecord(
-        "contained_string" -> "word_%s".format(text),
-        "field2" -> { if (text.equals("one")) 1; else 2; },
-        "field3" -> AvroEnum("three")
-      )
-    }
-      // Write the results to the "family:column_compatbility" column of a Kiji table.
-      .write(KijiOutput(tableUri, 'genericRecord -> "family:column_compatibility"))
-  }
-
-  /**
-   * A job that writes out to a Kiji table, to a column without a default reader schema,
-   * without specifying a writer schema.
-   *
-   * @param args to the job. Two arguments are expected: "input", which specifies the path to a
-   *     text file, and "output", which specifies the URI to a Kiji table.
-   */
-  class NoSchemaSpecifiedWriteJob(args: Args) extends KijiJob(args) {
-    val tableUri: String = args("output")
-    TextLine(args("input"))
-      .read
-      .map('offset -> 'timestamp) { offset: String => offset.toLong }
-      // Generate an entityId for each line.
-      .map('line -> 'entityId) { EntityId(_: String) }
-      .map('line -> 'genericRecord) { text: String =>
-      AvroRecord(
-        "contained_string" -> "word_%s".format(text),
-        "field2" -> { if (text.equals("one")) 1; else 2; },
-        "field3" -> AvroEnum("three")
-      )
-    }
-      // Write the results to the "family:column_compatbility" column of a Kiji table.
-      .write(KijiOutput(tableUri, 'genericRecord -> "family:column_validated"))
+  def expressWrite[A](conf: Configuration,
+                      fs: Fields,
+                      inputs: Iterable[A],
+                      outputSource: KijiSource)
+                     (implicit setter: TupleSetter[A]): Boolean = {
+    val args = Args("--hdfs")
+    Mode.mode = Mode(args, conf) // HDFS mode
+    new IdentityJob(fs, inputs, outputSource, args).run
   }
 }
+
+// Must be its own top-level class for mystical serialization reasons
+class IdentityJob[A](fs: Fields, inputs: Iterable[A], output: KijiSource, args: Args)
+                    (implicit setter: TupleSetter[A]) extends KijiJob(args) {
+  IterableSource(inputs, fs)(setter, implicitly[TupleConverter[A]]).write(output)
+}
+

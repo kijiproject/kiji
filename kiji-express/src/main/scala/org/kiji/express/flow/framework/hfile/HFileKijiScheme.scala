@@ -283,13 +283,13 @@ object HFileKijiScheme {
 
     columns.foreach(kv => {
       val (fieldName, colRequest) = kv
-      val colValue = output.getObject(fieldName).asInstanceOf[AnyRef]
+      val colValue = output.getObject(fieldName)
       val newColRequest = colRequest match {
-        case cf @ ColumnFamilyRequestOutput(family, qualField, schemaId, useDefaultReader) => {
-          val qualifier = output.getObject(qualField).asInstanceOf[String]
-          QualifiedColumnRequestOutput(family, qualifier, schemaId, useDefaultReader)
+        case cf @ ColumnFamilyRequestOutput(family, qualField, schemaId) => {
+          val qualifier = output.getString(qualField.toString)
+          QualifiedColumnRequestOutput(family, qualifier)
         }
-        case qc @ QualifiedColumnRequestOutput(_, _, _, _) => qc
+        case qc @ QualifiedColumnRequestOutput(_, _, _) => qc
       }
       val cell = HFileCell(entityId, newColRequest, timestamp, colValue)
       cellHandler(cell)

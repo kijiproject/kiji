@@ -78,6 +78,7 @@ import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiTableReader
 import org.kiji.schema.KijiTableWriter
 import org.kiji.schema.KijiURI
+import org.kiji.schema.filter.KijiColumnFilter
 
 /**
  * A read or write view of a Kiji table.
@@ -174,14 +175,9 @@ final class KijiSource private[express] (
           convertKeysToStrings(inputColumns))
       val testingInputColumnsFromWrites = inputColumnRequestsAllData(
           convertKeysToStrings(outputColumns)
-          .mapValues { x: ColumnRequestOutput => ColumnRequestInput(x.getColumnName.toString) })
+          .mapValues { x: ColumnRequestOutput => ColumnRequestInput(x.columnName.toString) })
       testingInputColumnsFromReads ++ testingInputColumnsFromWrites
     }
-
-    def getInputColumnsToCheckWrites(icols: Map[String, ColumnRequestOutput]):
-        Map[String, ColumnRequestInput] = { icols.mapValues( { x: ColumnRequestOutput =>
-            ColumnRequestInput(x.getColumnName.toString())
-        })}
 
     val tap: Tap[_, _, _] = mode match {
       // Production taps.
@@ -202,7 +198,7 @@ final class KijiSource private[express] (
                 timestampField,
                 loggingInterval,
                 getInputColumnsForTesting,
-                outputColumnRequestsAllData(convertKeysToStrings(outputColumns)))
+                convertKeysToStrings(outputColumns))
 
             new KijiTap(tableUri, scheme).asInstanceOf[Tap[_, _, _]]
           }
@@ -229,7 +225,7 @@ final class KijiSource private[express] (
                 timeRange,
                 timestampField,
                 getInputColumnsForTesting,
-                outputColumnRequestsAllData(convertKeysToStrings(outputColumns)))
+                convertKeysToStrings(outputColumns))
 
             new LocalKijiTap(tableUri, scheme).asInstanceOf[Tap[_, _, _]]
           }
@@ -336,28 +332,27 @@ object KijiSource {
 
             // Write the timeline to the table.
             cells.map { cell: Cell[Any] =>
-              val readerSchema = layout
-                .getCellSchema(new KijiColumnName(cell.family, cell.qualifier))
-                .getDefaultReader
-              val schema: Option[Schema] =
-                Option(readerSchema) match {
-                  case Some(defaultSchema) =>
-                    Some(KijiScheme.resolveSchemaFromJSONOrUid(defaultSchema, schemaTable))
-                  case None => None
-                }
-
-              val datum = AvroUtil.encodeToJava(cell.datum, schema)
               writer.put(
                 entityId.toJavaEntityId(eidFactory),
                 cell.family,
                 cell.qualifier,
                 cell.version,
-                datum)
+                cell.datum)
             }
           }
         }
       }
     }
+  }
+
+  private[express] def newGetAllData(col: ColumnRequestInput): ColumnRequestInput = {
+    ColumnRequestInput(
+        col.columnName.toString,
+        Integer.MAX_VALUE,
+        col.filter,
+        col.default,
+        col.pageSize,
+        col.schema)
   }
 
   /**
@@ -373,14 +368,7 @@ object KijiSource {
    */
   private def inputColumnRequestsAllData(
       columns: Map[String, ColumnRequestInput]): Map[String, ColumnRequestInput] = {
-    columns.mapValues(_.newGetAllData)
-        // Need this to make the Map serializable (issue with mapValues)
-        .map(identity)
-  }
-
-  private def outputColumnRequestsAllData(
-      columns: Map[String, ColumnRequestOutput]): Map[String, ColumnRequestOutput] = {
-    columns.mapValues(_.newGetAllData)
+    columns.mapValues(newGetAllData)
         // Need this to make the Map serializable (issue with mapValues)
         .map(identity)
   }
@@ -406,7 +394,7 @@ object KijiSource {
           timeRange,
           timestampField,
           inputColumnRequestsAllData(inputColumns),
-          outputColumnRequestsAllData(outputColumns)) {
+          outputColumns) {
     override def sinkCleanup(
         process: FlowProcess[Properties],
         sinkCall: SinkCall[OutputContext, OutputStream]) {

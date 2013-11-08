@@ -19,199 +19,253 @@
 
 package org.kiji.express.flow
 
+import org.apache.avro.Schema
+import org.apache.avro.specific.SpecificRecord
+
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
+import org.kiji.express.flow.SchemaSpec.Generic
+import org.kiji.express.flow.SchemaSpec.Specific
+import org.kiji.express.flow.SchemaSpec.Writer
+import org.kiji.express.util.AvroUtil
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiInvalidNameException
 
-/** Convenience class for specifying the schema to use for writes. */
-private[express] case class WriterSchemaSpec (
-    useDefaultReader: Boolean = false,
-    schemaId: Option[Long] = None) {
-  require(useDefaultReader || schemaId.isDefined)
-}
-
 /**
- * Interface for all (group- and map-type) ColumnRequestOutput objects.
+ * Interface for all column output request specification objects. ColumnRequestOutput
+ * implementations specify how to write individual fields in an Express flow to a Kiji column or
+ * column family.
  *
- * Except for ``getColumnName,`` The entire API is read-only (outside of [[org.kiji.express]]).  We
- * assume that users will specify output requests using the factory methods ``object
- * ColumnRequestOutput.``
+ * Use the [[org.kiji.express.flow.QualifiedColumnRequestOutput]] to write a field to an individual
+ * Kiji column.
+ *
+ * Use the [[org.kiji.express.flow.ColumnFamilyRequestOutput]] to write a field to a column
+ * family, with a qualifier determined as part of the flow.  The qualifier should be written to a
+ * field specified as part of the ColumnFamilyRequestOutput.
  *
  * Note that the subclasses of ColumnRequestOutput are case classes, and so they override
- * ColumnRequestOutput's abstract methods (e.g., ``schemaId``) with vals.
+ * ColumnRequestOutput's abstract methods (e.g., schema) with vals.
  */
-@ApiAudience.Framework
+@ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Sealed
 trait ColumnRequestOutput {
 
-  /** Specifies the schema to use during a write (default is ``None``). */
-  private[express] def schemaId: Option[Long]
-
-  /** Indicates whether to use the default reader schema to write. */
-  private[express] def useDefaultReaderSchema: Boolean
-
-  /** Legacy method to get the writer schema. */
-  private[express] def writerSchemaSpec: Option[WriterSchemaSpec] =
-    (useDefaultReaderSchema, schemaId) match {
-      case (false, None) => None
-      case _ => Some(WriterSchemaSpec(useDefaultReaderSchema, schemaId))
-    }
+  /**
+   * Family which this [[org.kiji.express.flow.ColumnRequestOutput]] belongs to.
+   *
+   * @return family name of output column.
+   */
+  def family: String
 
   /**
-   * Creates a copy of this column request with the writer schema set up for testing.
+   * [[org.kiji.schema.KijiColumnName]] of this [[org.kiji.express.flow.ColumnRequestOutput]].
    *
-   * Used within Express for testing infrastructure.
+   *  @return the name of the column this ColumnRequest specifies.
    */
-  private[express] def newGetAllData: ColumnRequestOutput
+  def columnName: KijiColumnName
 
   /**
-   * Returns the standard KijiColumnName representation of the name of the column this
-   * ColumnRequests is for.
-   *
-   * @return the name of the column this ColumnRequest specifies.
+   * Specifies the schema of data to be written to the column.
+   * @return the schema specification of data written to the column.
    */
-  def getColumnName: KijiColumnName
-}
-
-/**
- * Specification for writing to a qualified column in a Kiji table.
- *
- * Note that you must specify a ``schemaId`` or set ``useDefaultReaderSchema=true`` or else
- * [[org.kiji.express.flow.framework.KijiScheme]] will raise a ``InvalidKijiTapException`` (unless
- * you are writing a test case, in which case not specifying a scheme is okay).
- *
- * @param family The requested column family name.
- * @param qualifier The requested column qualifier name.
- * @param schemaId The specific schema for writes (default is ``None``).
- * @param useDefaultReaderSchema Use the default reader schema during a write (default is false).
- */
-final case class QualifiedColumnRequestOutput (
-    val family: String,
-    val qualifier: String,
-    val schemaId: Option[Long] = None,
-    val useDefaultReaderSchema: Boolean = false
-) extends ColumnRequestOutput {
-  // TODO: Require a schema (EXP-248)
-  //require(useDefaultReaderSchema || schemaId.isDefined)
-
-  /** Returns name (``family:qualifier``) for requested column as KijiColumnName. */
-  override def getColumnName(): KijiColumnName = new KijiColumnName(family, qualifier)
+  def schemaSpec: SchemaSpec
 
   /**
-   * Creates a copy of this column request with the writer schema set up for testing.
-   *
-   * Used within Express for testing infrastructure.
+   * Make a best effort attempt to encode a provided value to a type that will be compatible with
+   * the column.  If no such conversion can be made, the original value will be returned.
    */
-  private[express] def newGetAllData: QualifiedColumnRequestOutput = {
-    writerSchemaSpec match {
-      case Some(spec) =>
-        if (spec.useDefaultReader) {
-          copy(useDefaultReaderSchema = true)
-        } else {
-          copy(schemaId=Some(spec.schemaId.get))
-        }
-      case None => this
-    }
+  private[express] def encode: Any => Any = {
+    schemaSpec.schema.map(AvroUtil.avroEncoder).getOrElse(identity)
   }
 }
 
 /**
- * Specification for writing to a map-type column family in a Kiji table.
+ * Specification for writing to a Kiji column.
  *
- * Note that you must specify a ``schemaId`` or set ``useDefaultReaderSchema=true`` or else
- * [[org.kiji.express.flow.framework.KijiScheme]] will raise a ``InvalidKijiTapException`` (unless
- * you are writing a test case, in which case not specifying a scheme is okay).
- *
- * @param family The requested column family name.
- * @param qualifierSelector The qualifier to write to in the specified map-type family.
- * @param schemaId The specific schema for writes (default is ``None``).
- * @param useDefaultReaderSchema Use the default reader schema during a write (default is false).
+ * @param family of the output column.
+ * @param qualifier of the output column.
+ * @param schemaSpec The schema specification with which to write values. By default uses
+ *     [[org.kiji.express.flow.SchemaSpec.Writer]].
  */
-final case class ColumnFamilyRequestOutput (
-    val family: String,
-    val qualifierSelector: String,
-    val schemaId: Option[Long] = None,
-    val useDefaultReaderSchema: Boolean = false
+@ApiAudience.Private
+@ApiStability.Experimental
+@Inheritance.Sealed
+final case class QualifiedColumnRequestOutput(
+    family: String,
+    qualifier: String,
+    schemaSpec: SchemaSpec = Writer
 ) extends ColumnRequestOutput {
-  // TODO: Require a schema (EXP-248)
-  //require(useDefaultReaderSchema || schemaId.isDefined)
-  if (family.contains(':')) {
-    throw new KijiInvalidNameException("Cannot have a : in family name for map-type request")
-  }
-
-  /** Returns name (``family``) for requested column as KijiColumnName. */
-  override def getColumnName(): KijiColumnName = new KijiColumnName(family)
-
-  /**
-   * Creates a copy of this column request with the writer schema set up for testing.
-   *
-   * Used within Express for testing infrastructure.
-   */
-  private[express] def newGetAllData: ColumnFamilyRequestOutput = {
-    writerSchemaSpec match {
-      case Some(spec) =>
-        if (spec.useDefaultReader) {
-          copy(useDefaultReaderSchema = true)
-        } else {
-          copy(schemaId=Some(spec.schemaId.get))
-        }
-      case None => this
-    }
-  }
+  override val columnName: KijiColumnName = new KijiColumnName(family, qualifier)
 }
 
-/** Factory object for creating group- and map-type column output requests. */
+/**
+ * Provides factory functions for creating [[org.kiji.express.flow.QualifiedColumnRequestOutput]]
+ * instances.
+ */
 @ApiAudience.Public
 @ApiStability.Experimental
-object ColumnRequestOutput {
+@Inheritance.Sealed
+object QualifiedColumnRequestOutput {
   /**
-   * Factory method for ``QualifiedColumnRequestOutput`` and ``ColumnFamilyRequestOutput``.
+   * Factory function for creating a [[org.kiji.express.flow.QualifiedColumnRequestOutput]] with a
+   * generic Avro writer schema.
    *
-   * Will choose to create a group or map-type request appropriately depending on whether the
-   * specified ``columnName`` contains a ``:`` or not.
-   *
-   * Note that you must specify a ``schemaId`` or set ``useDefaultReaderSchema=true`` or else
-   * [[org.kiji.express.flow.framework.KijiScheme]] will raise a ``InvalidKijiTapException`` (unless
-   * you are writing a test case, in which case not specifying a scheme is okay).
-   *
-   * @param columnName name of the requested column.  Requests for group-type columns should be of
-   *     the form ``family:qualifier``.  Requests for map-type columns should be of the form
-   *     ``family``.
-   * @param schemaId The specific schema for writes (default is ``None``).
-   * @param useDefaultReaderSchema Use the default reader schema during a write (default is false).
-   * @param qualifierSelector The qualifier to write to if using a map-type family (if specified for
-   *     a group-type family, will cause an ``IllegalArgumentException``.
-   * @return A ``QualifiedColumnRequestOutput`` or ``ColumnFamilyRequestOutput`` object (depending
-   *     on the presence of a ``:`` in ``columnName``) with its fields populated per the parameters.
+   * @param family of the output column.
+   * @param qualifier of the output column.
+   * @param schema with which to write data.
    */
   def apply(
-    columnName: String,
-    schemaId: Option[Long] = None,
-    useDefaultReaderSchema: Boolean = false,
-    qualifierSelector: Option[String] = None
-  ): ColumnRequestOutput = {
-    val kijiColumn = new KijiColumnName(columnName)
-    if (kijiColumn.isFullyQualified) {
-      if (qualifierSelector.isDefined) {
-        throw new IllegalArgumentException(
-            "Cannot specify a qualifierSelector for a group-type column." )
-      }
-      new QualifiedColumnRequestOutput(
-        family = kijiColumn.getFamily(),
-        qualifier = kijiColumn.getQualifier(),
-        schemaId = schemaId,
-        useDefaultReaderSchema = useDefaultReaderSchema)
-    } else {
-      assert(qualifierSelector.isDefined)
-      new ColumnFamilyRequestOutput(
-        family = kijiColumn.getFamily(),
-        schemaId = schemaId,
-        useDefaultReaderSchema = useDefaultReaderSchema,
-        qualifierSelector = qualifierSelector.get
-      )
+    family: String,
+    qualifier: String,
+    schema: Schema
+  ): QualifiedColumnRequestOutput = {
+    QualifiedColumnRequestOutput(family, qualifier, Generic(schema))
+  }
+
+  /**
+   * Factory function for creating a [[org.kiji.express.flow.QualifiedColumnRequestOutput]] with a
+   * specific Avro record writer schema.
+   *
+   * @param family of the output column.
+   * @param qualifier of the output column.
+   * @param specificClass of Avro record with which to write.
+   */
+  def apply(
+    family: String,
+    qualifier: String,
+    specificClass: Class[_ <: SpecificRecord]
+  ): QualifiedColumnRequestOutput = {
+    QualifiedColumnRequestOutput(family, qualifier, Specific(specificClass))
+  }
+
+  /**
+   * Factory function for creating a [[org.kiji.express.flow.QualifiedColumnRequestOutput]].
+   * This constructor takes a column string which must contain the column family and qualifier
+   * in the form 'family:qualifier'.
+   *
+   * @param column The output family and column in format 'family:column'.
+   * @param schemaSpec specification with which to write data.
+   */
+  def apply(
+      column: String,
+      schemaSpec: SchemaSpec
+  ): QualifiedColumnRequestOutput = {
+    column.split(':').toList match {
+      case family :: qualifier :: Nil => QualifiedColumnRequestOutput(family, qualifier, schemaSpec)
+      case _ => throw new IllegalArgumentException(
+          "Must specify column to GroupTypeOutputColumnSpec in the format 'family:qualifier'.")
     }
   }
+
+  /**
+   * Factory function for creating a [[org.kiji.express.flow.QualifiedColumnRequestOutput]] with
+   * a generic Avro writer schema. This constructor takes a column string which must contain the
+   * column family and qualifier in the form 'family:qualifier'.
+   *
+   * @param column The output family and column in format 'family:column'.
+   * @param schema with which to write data.
+   */
+  def apply(
+      column: String,
+      schema: Schema
+  ): QualifiedColumnRequestOutput = {
+    QualifiedColumnRequestOutput(column, Generic(schema))
+  }
+
+  /**
+   * Factory function for creating a [[org.kiji.express.flow.QualifiedColumnRequestOutput]] with
+   * a generic Avro writer schema. This constructor takes a column string which must contain the
+   * column family and qualifier in the form 'family:qualifier'.
+   *
+   * @param column The output family and column in format 'family:column'.
+   * @param specificClass of Avro record with which to write.
+   */
+  def apply(
+    column: String,
+    specificClass: Class[_ <: SpecificRecord]
+  ): QualifiedColumnRequestOutput = {
+    QualifiedColumnRequestOutput(column, Specific(specificClass))
+  }
+
+  /**
+   * Factory function for creating a [[org.kiji.express.flow.QualifiedColumnRequestOutput]] with
+   * the [[org.kiji.express.flow.SchemaSpec.Writer]] schema spec. This constructor takes a column
+   * string which must contain the column family and qualifier in the form 'family:qualifier'.
+   *
+   * @param column The output family and column in format 'family:column'.
+   */
+  def apply(
+    column: String
+  ): QualifiedColumnRequestOutput = {
+    QualifiedColumnRequestOutput(column, Writer)
+  }
 }
+
+/**
+ * Specification for writing to a Kiji column family.
+ *
+ * @param family of the output column.
+ * @param qualifierSelector The field in the Express flow indicating the qualifier of the
+ *     output column.
+ * @param schemaSpec The schema spec to use for writing data. By default uses
+ *     [[org.kiji.express.flow.SchemaSpec.Writer]].
+ */
+@ApiAudience.Public
+@ApiStability.Experimental
+@Inheritance.Sealed
+final case class ColumnFamilyRequestOutput(
+    family: String,
+    qualifierSelector: Symbol,
+    schemaSpec: SchemaSpec = Writer
+) extends ColumnRequestOutput {
+  if (family.contains(':')) {
+    throw new KijiInvalidNameException("Cannot have a ':' in family name for column family request")
+  }
+  override val columnName: KijiColumnName = new KijiColumnName(family)
+}
+
+/**
+ * Provides factory functions for creating [[org.kiji.express.flow.ColumnFamilyRequestOutput]]
+ * instances.
+ */
+@ApiAudience.Public
+@ApiStability.Experimental
+@Inheritance.Sealed
+object ColumnFamilyRequestOutput {
+  /**
+   * Factory function for creating a [[org.kiji.express.flow.ColumnFamilyRequestOutput]] with a
+   * generic Avro writer schema.
+   *
+   * @param family of the output column.
+   * @param qualifierSelector The field in the Express flow indicating the qualifier of the
+   *     output column.
+   * @param schema The schema to use for writing values.
+   */
+  def apply(
+      family: String,
+      qualifierSelector: Symbol,
+      schema: Schema
+  ): ColumnFamilyRequestOutput = {
+    ColumnFamilyRequestOutput(family, qualifierSelector, Generic(schema))
+  }
+
+  /**
+   * Factory function for creating a [[org.kiji.express.flow.ColumnFamilyRequestOutput]] with a
+   * specific Avro record writer schema.
+   *
+   * @param family of the output column.
+   * @param qualifierSelector The field in the Express flow indicating the qualifier of the
+   *     output column.
+   * @param specificClass The specific record class to use for writes.
+   */
+  def apply(
+    family: String,
+    qualifierSelector: Symbol,
+    specificClass: Class[_ <: SpecificRecord]
+  ): ColumnFamilyRequestOutput = {
+    ColumnFamilyRequestOutput(family, qualifierSelector, Specific(specificClass))
+  }
+}
+

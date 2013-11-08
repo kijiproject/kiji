@@ -29,6 +29,7 @@ import com.twitter.scalding.TupleConversions
 import com.twitter.scalding.TupleConverter
 import com.twitter.scalding.TupleSetter
 
+import org.kiji.express.util.AvroTupleConversions
 import org.kiji.express.util.PipeConversions
 
 /**
@@ -38,7 +39,8 @@ import org.kiji.express.util.PipeConversions
 object Implicits
     extends PipeConversions
     with TupleConversions
-    with FieldConversions {
+    with FieldConversions
+    with AvroTupleConversions {
   /** Implicit flowDef for this KijiExpress shell session. */
   implicit var flowDef: FlowDef = getEmptyFlowDef
 

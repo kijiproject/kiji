@@ -23,19 +23,20 @@ import cascading.tuple.Tuple
 import cascading.tuple.TupleEntry
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
+import org.apache.avro.generic.GenericRecord
+import org.apache.avro.generic.GenericRecordBuilder
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
-import org.kiji.express.AvroEnum
-import org.kiji.express.AvroRecord
 import org.kiji.express.EntityId
 import org.kiji.express.KijiSlice
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow.All
 import org.kiji.express.flow.ColumnRequestInput
-import org.kiji.express.flow.ColumnRequestOutput
+import org.kiji.express.flow.QualifiedColumnRequestOutput
 import org.kiji.express.util.GenericCellSpecs
 import org.kiji.schema.EntityIdFactory
+import org.kiji.schema.avro.{HashSpec, HashType}
 
 @RunWith(classOf[JUnitRunner])
 class KijiSchemeSuite extends KijiSuite {
@@ -50,16 +51,19 @@ class KijiSchemeSuite extends KijiSuite {
     val reader = table.getReaderFactory.openTableReader(GenericCellSpecs(table))
 
     // Set up the columns and fields.
-    val columnsOutput = Map("columnSymbol" -> ColumnRequestOutput("family:column3"))
+    val columnsOutput = Map("columnSymbol" -> QualifiedColumnRequestOutput("family:column3"))
     val columnsInput = Map("columnSymbol" -> ColumnRequestInput("family:column3"))
     val sourceFields = KijiScheme.buildSourceFields(columnsOutput.keys)
 
     // Create a dummy record with an entity ID to put in the table.
     val dummyEid = EntityId("dummy")
-    val record = AvroRecord(
-        "hash_type" -> new AvroEnum("MD5"),
-        "hash_size" -> 13,
-        "suppress_key_materialization" -> false)
+    val record: GenericRecord = {
+      val builder = new GenericRecordBuilder(HashSpec.getClassSchema)
+      builder.set("hash_type", HashType.MD5)
+      builder.set("hash_size", 13)
+      builder.set("suppress_key_materialization", false)
+      builder.build()
+    }
     val writeValue = new TupleEntry(sourceFields, new Tuple(dummyEid, record))
 
     val eidFactory = EntityIdFactory.getFactory(tableLayout)

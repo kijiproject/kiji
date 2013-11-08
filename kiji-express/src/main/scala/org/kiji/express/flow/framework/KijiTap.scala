@@ -46,10 +46,7 @@ import org.kiji.schema.Kiji
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiURI
-import org.kiji.schema.avro.AvroValidationPolicy
-import org.kiji.schema.impl.Versions
 import org.kiji.schema.layout.KijiTableLayout
-import org.kiji.schema.util.ProtocolVersion
 
 /**
  * A Kiji-specific implementation of a Cascading `Tap`, which defines the location of a Kiji table.
@@ -283,62 +280,24 @@ object KijiTap {
     val tableLayout: KijiTableLayout = table.getLayout
     table.release() // Release the KijiTable.
 
-    val layoutVersion = ProtocolVersion.parse(tableLayout.getDesc.getVersion)
-    val validationEnabled = { layoutVersion.compareTo(Versions.LAYOUT_1_3_0) >= 0 }
-
     // Get a list of columns that don't exist
-    val inputColumnNames: Seq[KijiColumnName] = inputColumns.values.map( _.getColumnName ).toList
-    val outputColumnNames: Seq[KijiColumnName] = outputColumns.values.map( _.getColumnName ).toList
+    val inputColumnNames: Seq[KijiColumnName] = inputColumns.values.map(_.columnName).toList
+    val outputColumnNames: Seq[KijiColumnName] = outputColumns.values.map(_.columnName).toList
 
-
-    val nonexistentColumns: Seq[KijiColumnName] = (inputColumnNames ++ outputColumnNames)
+    val nonExistentColumnErrors = (inputColumnNames ++ outputColumnNames)
         // Filter for columns that don't exist
         .filter( { case colname => !tableLayout.exists(colname) } )
-
-    // Make sure the writer schema is okay
-    def getSchemaValidationErrors(col: ColumnRequestOutput): Option[String] = {
-      val schemaValidationError =
-        "Writer schema required for column '%s', " +
-          "which has compatibility mode '%s' in table '%s'." +
-          "Specify a writer schema using 'column.copy(setSchemaId=schemaId)'" +
-          "or 'column.copy(useDefaultReaderSchema=true)."
-
-      if (!validationEnabled) { None } else {
-        col.writerSchemaSpec match {
-          case Some(schemaId) => None
-          case None => {
-            tableLayout.getCellSchema(col.getColumnName).getAvroValidationPolicy match {
-              case AvroValidationPolicy.SCHEMA_1_0 => None // No error in compatibility mode.
-              case policy @ _ =>
-                  Some(schemaValidationError.format(col.getColumnName, policy, table.getURI))
-            }
-          }
+        .map { column =>
+            "One or more columns does not exist in the table %s: %s\n".format(table.getName, column)
         }
-      }
-    }
 
-    // Make sure all columns that need writer schemas set have it set.
-    val columnSchemaErrorsStrings: List[String] =
-        outputColumns
-        .values
-        .map(getSchemaValidationErrors)
-        .toList
-        // flatten will remove all of the None elements and then extract the Some(x) elements
-        .flatten
-
-    val allErrors: List[String] = nonexistentColumns match {
-      case Nil => columnSchemaErrorsStrings
-      case _ => columnSchemaErrorsStrings :+
-              "One or more columns does not exist in the table %s: %s\n".format(
-                  table.getName(),
-                  nonexistentColumns.map { _.getName() }.mkString(", "))
-    }
+    val allErrors = nonExistentColumnErrors
 
     // Combine all error strings.
     if (!allErrors.isEmpty) {
-      throw new InvalidKijiTapException("Errors found in validating Tap: %s".format(
-        allErrors.mkString(", \n")
-      ))
+      throw new InvalidKijiTapException(
+          "Errors found in validating Tap: %s".format(allErrors.mkString(", \n"))
+      )
     }
   }
 }

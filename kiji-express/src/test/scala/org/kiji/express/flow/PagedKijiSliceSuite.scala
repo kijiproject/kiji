@@ -37,7 +37,6 @@ import org.kiji.schema.KijiTable
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts
 
-
 /**
  * A job that extracts the most recent string value from the column "family:column1" for all rows
  * in a Kiji table, and then concatenates those strings into a single word.

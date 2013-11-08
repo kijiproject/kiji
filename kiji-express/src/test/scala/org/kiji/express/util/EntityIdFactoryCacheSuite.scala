@@ -19,6 +19,7 @@
 
 package org.kiji.express.util
 
+
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner

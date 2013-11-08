@@ -131,7 +131,7 @@ object KijiOutput {
   ): KijiSource = {
     val columnMap = columns
         .toMap
-        .mapValues(ColumnRequestOutput(_))
+        .mapValues(QualifiedColumnRequestOutput(_))
 
     KijiOutput(tableUri, columnMap)
   }
@@ -155,7 +155,7 @@ object KijiOutput {
 
     val columnMap = columns
         .toMap
-        .mapValues(ColumnRequestOutput(_))
+        .mapValues(QualifiedColumnRequestOutput(_))
 
     KijiOutput(tableUri, timestampField, columnMap)
   }

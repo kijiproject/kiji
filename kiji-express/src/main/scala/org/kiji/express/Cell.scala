@@ -19,6 +19,8 @@
 
 package org.kiji.express
 
+import org.apache.hadoop.hbase.HConstants
+
 import org.kiji.annotations.Inheritance
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
@@ -62,6 +64,25 @@ object Cell {
         cell.getFamily,
         cell.getQualifier,
         cell.getTimestamp.longValue,
-        AvroUtil.decodeGenericFromJava(cell.getData).asInstanceOf[T])
+        AvroUtil.avroToScala(cell.getData).asInstanceOf[T])
+  }
+
+  /**
+   * Creates a [[org.kiji.express.Cell]] with the latest timestamp.
+   *
+   * @param family of the Kiji table cell.
+   * @param qualifier of the Kiji table cell.
+   * @param datum in the Kiji table cell.
+   * @tparam T is the type of the datum in the cell.
+   * @return a cell for use in KijiExpress, with the same family, qualifier, timestamp,
+   *     and datum as cell produced by the Java API.
+   */
+  private[express] def apply[T](family: String, qualifier: String, datum: T): Cell[T] = {
+    new Cell[T](
+        family,
+        qualifier,
+        HConstants.LATEST_TIMESTAMP,
+        datum
+    )
   }
 }

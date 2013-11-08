@@ -19,39 +19,53 @@
 
 package org.kiji.express.util
 
+import scala.collection.JavaConverters.seqAsJavaListConverter
+
 import org.apache.avro.Schema
-import org.apache.avro.generic.GenericRecord
+import org.apache.avro.SchemaBuilder
+import org.apache.avro.generic.GenericData
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
-import org.kiji.express.AvroEnum
-import org.kiji.express.AvroInt
-import org.kiji.express.AvroRecord
-import org.kiji.schema.avro.HashSpec
-
 @RunWith(classOf[JUnitRunner])
 class AvroUtilWithSchemaSuite extends FunSuite {
-  test("Test unwrapToSpecific with an Int.") {
-    val genericInt = AvroInt(1)
-    val specific = AvroUtil.unwrapWithSchema(genericInt, Schema.create(Schema.Type.INT))
 
-    assert(specific === 1)
+  test("avroToScala will convert an Avro GenericArray to a Scala equivalent") {
+    val list = List("foo", "bar", "baz")
+    val schema = SchemaBuilder.array.items(Schema.create(Schema.Type.STRING))
+    val glist = new GenericData.Array(schema, list.asJava)
+    assert(list === AvroUtil.avroToScala(glist))
   }
 
-  test("Test unwrapToSpecific with a HashSpec.") {
-    val genericRecord = AvroRecord(
-        "hash_type" -> AvroEnum("MD5"),
-        "hash_size" -> 15,
-        "suppress_key_materialization" -> false,
-        "unused_field" -> "hi")
-    val schema = HashSpec.SCHEMA$
-
-    val specific = AvroUtil.unwrapWithSchema(genericRecord, schema)
-    assert(specific.isInstanceOf[GenericRecord])
-    assert(specific.asInstanceOf[GenericRecord].get("hash_size") === 15)
-    assert(specific.asInstanceOf[GenericRecord].get("suppress_key_materialization") === false)
-    // Trying to get a field that's not in the record should return null.
-    assert(specific.asInstanceOf[GenericRecord].get("unused_field") === null)
+  test("avroToScala will convert a GenericFixed to a Array[Byte]") {
+    val bytes = "foo bar, baz?".getBytes
+    val schema = SchemaBuilder.fixed("name").size(bytes.length)
+    val fixed = new GenericData.Fixed(schema, bytes)
+    assert(bytes === AvroUtil.avroToScala(fixed))
   }
+
+  test("avroToScala will convert a GenericEnumSymbol to the String equivalent") {
+    val name = "CACTUS"
+    val schema = SchemaBuilder.enumeration("name").symbols("CACTUS", "CHERRY", "PIZZA")
+    val enum = new GenericData.EnumSymbol(schema, name)
+    assert(name === AvroUtil.avroToScala(enum))
+  }
+
+  /** TODO: implement once Avro generic map object exists. */
+  ignore("avroToScala will convert a GenericMap to the Scala equivalent.") { }
+
+  test("avroToScala will recursively convert a GenericArray to the Scala equivalents.") {
+    val names = List("CACTUS", "CHERRY", "CHERRY", "PIZZA")
+    val enumSchema = SchemaBuilder.enumeration("name").symbols("CACTUS", "CHERRY", "PIZZA")
+    val listSchema = SchemaBuilder.array.items(enumSchema)
+
+    val glist = new GenericData.Array(listSchema,
+        names.map(new GenericData.EnumSymbol(enumSchema, _)).asJava)
+
+    assert(names === AvroUtil.avroToScala(glist))
+  }
+
+  /** TODO: implement once Avro generic map object exists. */
+  ignore("avroToScala will recursively convert a GenericMap's values to the Scala equivalent.") { }
 }

@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-
 /** This protocol defines avro objects used for testing. */
 @namespace("org.kiji.express.avro")
 protocol Testing {
@@ -25,5 +24,11 @@ protocol Testing {
   record SpecificRecordTest {
     /** hash_size field exists in HasSpec, so we are able to read it with this specific record. */
     int hash_size;
+  }
+
+  record SimpleRecord {
+    long l;
+    string s;
+    string o = "default-value";
   }
 }

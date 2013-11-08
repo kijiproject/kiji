@@ -26,6 +26,7 @@ import com.twitter.scalding.Args
 import com.twitter.scalding.JobTest
 import com.twitter.scalding.TextLine
 import com.twitter.scalding.Tsv
+import org.apache.avro.util.Utf8
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.junit.runner.RunWith
@@ -216,12 +217,6 @@ class EntityIdSuite extends KijiSuite {
   }
 
   test("Runs a job that joins two pipes, on EntityIds from a table (hashed), in local mode.") {
-    for (_ <- 1 until 10) {
-      runTest()
-    }
-  }
-
-  def runTest() {
     // URI of the hashed Kiji table to use.
     val uri: String = doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
       table.getURI().toString()
@@ -397,7 +392,7 @@ object EntityIdSuite {
       .map('line -> 'entityId) { line: String => EntityId(line) }
 
     KijiInput(args("input"), ("animals" -> 'animals))
-      .map('animals -> 'terms) { animals: KijiSlice[String] => animals }
+      .map('animals -> 'terms) { animals: KijiSlice[Utf8] => animals.toString }
       .joinWithSmaller('entityId -> 'entityId, sidePipe)
       .write(Tsv(args("output")))
   }
@@ -416,7 +411,7 @@ object EntityIdSuite {
       .project('entityId)
 
     KijiInput(args("input"), ("family:column1" -> 'slice))
-      .map('slice -> 'terms) { slice: KijiSlice[String] => slice.getFirstValue }
+      .map('slice -> 'terms) { slice: KijiSlice[Utf8] => slice.getFirstValue.toString }
       .joinWithSmaller('entityId -> 'entityId, sidePipe)
       .write(Tsv(args("output")))
   }
@@ -429,10 +424,10 @@ object EntityIdSuite {
    */
   class JoinHashedEntityIdsJob(args: Args) extends KijiJob(args) {
     val pipe1 = KijiInput(args("input1"), ("family:column1" -> 'animals))
-      .map('animals -> 'animal) { slice: KijiSlice[String] => slice.getFirstValue }
+      .map('animals -> 'animal) { slice: KijiSlice[Utf8] => slice.getFirstValue.toString }
 
     KijiInput(args("input2"), ("family:column2" -> 'slice))
-      .map('slice -> 'terms) { slice: KijiSlice[String] => slice.getFirstValue }
+      .map('slice -> 'terms) { slice: KijiSlice[Utf8] => slice.getFirstValue.toString }
       .joinWithSmaller('entityId -> 'entityId, pipe1)
       .write(Tsv(args("output")))
   }
@@ -448,9 +443,8 @@ object EntityIdSuite {
       .map('searches -> 'term) { slice: KijiSlice[Int] => slice.getFirstValue }
 
     KijiInput(args("input2"), ("animals" -> 'animals))
-      .map('animals -> 'animal) { slice: KijiSlice[String] => slice.getFirstValue }
+      .map('animals -> 'animal) { slice: KijiSlice[Utf8] => slice.getFirstValue.toString }
       .joinWithSmaller('entityId -> 'entityId, pipe1)
       .write(Tsv(args("output")))
   }
-
 }

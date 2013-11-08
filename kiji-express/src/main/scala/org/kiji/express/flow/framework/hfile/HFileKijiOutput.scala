@@ -23,14 +23,14 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
 import org.kiji.express.flow.All
-import org.kiji.express.flow.KijiOutput
 import org.kiji.express.flow.ColumnRequestOutput
+import org.kiji.express.flow.QualifiedColumnRequestOutput
 
 /**
  * Factory methods for constructing [[org.kiji.express.flow.framework.hfile.HFileKijiSource]]s that
  * will be used as outputs of a KijiExpress flow. Two basic APIs are provided with differing
- * complexity. These are similar to the [[org.kiji.express.flow.framework.HFileKijiSource]] APIs
- * except that an extra parameter for the HFile output location is required.
+ * complexity. These are similar to the [[org.kiji.express.flow.framework.hfile.HFileKijiSource]]
+ * APIs except that an extra parameter for the HFile output location is required.
  *
  * Simple:
  * {{{
@@ -112,7 +112,7 @@ object HFileKijiOutput {
 
     val columnMap = columns
         .toMap
-        .mapValues(ColumnRequestOutput(_))
+        .mapValues(QualifiedColumnRequestOutput(_))
     new HFileKijiSource(
         tableAddress = tableUri,
         hFileOutput = hFileOutput,
@@ -167,7 +167,7 @@ object HFileKijiOutput {
   ): HFileKijiSource = {
     val columnMap = columns
         .toMap
-        .mapValues(ColumnRequestOutput(_))
+        .mapValues(QualifiedColumnRequestOutput(_))
 
     HFileKijiOutput(tableUri, hFileOutput, columnMap)
   }

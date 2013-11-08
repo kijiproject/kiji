@@ -1,0 +1,191 @@
+/**
+ * (c) Copyright 2013 WibiData, Inc.
+ *
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+{
+  name: "avro_types_complete",
+  keys_format: {
+    encoding: "FORMATTED",
+    salt: {
+      hash_size: 2
+    },
+    components: [ {
+      name: "dummy",
+      type: "STRING"
+    } ]
+  },
+  locality_groups:  [ {
+    name: "default",
+    in_memory: false,
+    max_versions: 2147483647,
+    ttl_seconds: 2147483647,
+    bloom_type: "ROW",
+    compression_type: "GZ",
+    families: [ {
+      name: "strict",
+      columns: [ {
+        name: "counter",
+        column_schema: {
+          storage: "FINAL",
+          type: "COUNTER"
+        }
+      }, {
+        name: "raw",
+        column_schema: {
+          type: "RAW_BYTES"
+        }
+      },{
+        name: "null",
+        column_schema: {
+          type: "AVRO",
+          avro_validation_policy: "STRICT",
+          default_reader: {json: '"null"'},
+          readers: [{json: '"null"'}],
+          writers: [{json: '"null"'}]
+        }
+      },{
+        name: "boolean",
+        column_schema: {
+          type: "AVRO",
+          avro_validation_policy: "STRICT",
+          default_reader: {json: '"boolean"'},
+          readers: [{json: '"boolean"'}],
+          writers: [{json: '"boolean"'}]
+        }
+      }, {
+        name: "int",
+        column_schema: {
+          type: "AVRO",
+          avro_validation_policy: "STRICT",
+          default_reader: {json: '"int"'},
+          readers: [{json: '["int", "long"]'}],
+          writers: [{json: '"int"'}]
+        }
+      }, {
+        name: "long",
+        column_schema: {
+          type: "AVRO",
+          avro_validation_policy: "STRICT",
+          default_reader: {json: '"long"'},
+          readers: [{json: '"long"'}],
+          writers: [{json: '["int", "long"]'}]
+        }
+      }, {
+        name: "float",
+        column_schema: {
+          type: "AVRO",
+          avro_validation_policy: "STRICT",
+          default_reader: {json: '"float"'},
+          readers: [{json: '["float", "double"]'}],
+          writers: [{json: '"float"'}]
+        }
+      }, {
+        name: "double",
+        column_schema: {
+          type: "AVRO",
+          avro_validation_policy: "STRICT",
+          default_reader: {json: '"double"'},
+          readers: [{json: '"double"'}],
+          writers: [{json: '["float", "double"]'}]
+        }
+        }, {
+        name: "bytes",
+        column_schema: {
+          type: "AVRO",
+          avro_validation_policy: "STRICT",
+          default_reader: {json: '"bytes"'},
+          readers: [{json: '"bytes"'}],
+          writers: [{json: '"bytes"'}]
+        }
+      }, {
+        name: "string",
+        column_schema: {
+          type: "AVRO",
+          avro_validation_policy: "STRICT",
+          default_reader: {json: '{ "type": "string", "avro.java.string": "String" }'},
+          readers: [{json: '{ "type": "string", "avro.java.string": "String" }'}],
+          writers: [{json: '{ "type": "string" }'}]
+        }
+      }, {
+        name: "specific",
+        column_schema: {
+          type: "AVRO",
+          avro_validation_policy: "STRICT",
+          specific_reader_schema_class: "org.kiji.express.avro.SimpleRecord",
+          readers: [{json: '{"type":"record","name":"SimpleRecord","namespace":"org.kiji.express.avro","fields":[{"name":"l","type":"long"},{"name":"s","type":{"type":"string","avro.java.string":"String"}},{"name":"o","type":{"type":"string","avro.java.string":"String"},"default":"default-value"}]}'}],
+          writers: [{json: '{"type":"record","name":"SimpleRecord","namespace":"org.kiji.express.avro","fields":[{"name":"l","type":"long"},{"name":"s","type":{"type":"string","avro.java.string":"String"}},{"name":"o","type":{"type":"string","avro.java.string":"String"},"default":"default-value"}]}'}]
+        }
+      }, {
+        name: "generic",
+        column_schema: {
+          type: "AVRO",
+          avro_validation_policy: "STRICT",
+          default_reader: {json: '{"type": "record", "name": "Vector", "fields": [{"name": "length", "type": "int"}, {"name": "angle", "type": "float"}]}'},
+          readers: [{json: '{"type": "record", "name": "Vector", "fields": [{"name": "length", "type": "int"}, {"name": "angle", "type": "float"}]}'}],
+          writers: [{json: '{"type": "record", "name": "Vector", "fields": [{"name": "length", "type": "int"}, {"name": "angle", "type": "float"}]}'}]
+        }
+      }, {
+        name: "enum",
+        column_schema: {
+          type: "AVRO",
+          avro_validation_policy: "STRICT",
+          default_reader: {json: '{"type": "enum", "name": "Direction", "symbols": ["NORTH", "EAST", "SOUTH", "WEST"]}'},
+          readers: [{json: '{"type": "enum", "name": "Direction", "symbols": ["NORTH", "EAST", "SOUTH", "WEST"]}'}],
+          writers: [{json: '{"type": "enum", "name": "Direction", "symbols": ["NORTH", "EAST", "SOUTH", "WEST"]}'}]
+        }
+      }, {
+        name: "array",
+        column_schema: {
+          type: "AVRO",
+          avro_validation_policy: "STRICT",
+          default_reader: {json: '{"type": "array", "items": { "type": "string", "avro.java.string": "String" }}'},
+          readers: [{json: '{"type": "array", "items": { "type": "string", "avro.java.string": "String" }}'}],
+          writers: [{json: '{"type": "array", "items": { "type": "string", "avro.java.string": "String" }}'}]
+        }
+      }, {
+        name: "map",
+        column_schema: {
+          type: "AVRO",
+          avro_validation_policy: "STRICT",
+          default_reader: {json: '{"type": "map", "values": "int"}'},
+          readers: [{json: '{"type": "map", "values": "int"}'}],
+          writers: [{json: '{"type": "map", "values": "int"}'}]
+        }
+      }, {
+        name: "union",
+        column_schema: {
+          type: "AVRO",
+          avro_validation_policy: "STRICT",
+          default_reader: {json: '[{ "type": "string", "avro.java.string": "String" }, "int"]'},
+          readers: [{json: '[{ "type": "string", "avro.java.string": "String" }, "int"]'}],
+          writers: [{json: '["string", "int"]'}]
+        }
+      }, {
+        name: "fixed",
+        column_schema: {
+          type: "AVRO",
+          avro_validation_policy: "STRICT",
+          default_reader: {json: '{"type": "fixed", "size": 10, "name": "hash"}'},
+          readers: [{json: '{"type": "fixed", "size": 10, "name": "hash"}'}],
+          writers: [{json: '{"type": "fixed", "size": 10, "name": "hash"}'}]
+        }
+      } ]
+    } ]
+  } ],
+  version: "layout-1.3.0"
+}

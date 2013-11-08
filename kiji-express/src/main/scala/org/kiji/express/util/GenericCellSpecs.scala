@@ -77,16 +77,19 @@ object GenericCellSpecs {
   private def createCellSpecMap(layout: KijiTableLayout): JMap[KijiColumnName, CellSpec] = {
     // Fold the column names in the layout into a map from column name to a generic cell
     // specification for the column.
+    val specMap = new java.util.HashMap[KijiColumnName, CellSpec]()
     layout
-        .getColumnNames()
+        .getColumnNames
         .asScala
-        .foldLeft(new HashMap[KijiColumnName, CellSpec]()) { (specMap, columnName) =>
+        .foreach { columnName: KijiColumnName =>
           val cellSpec = layout
               .getCellSpec(columnName)
-              .setUseWriterSchema()
               .setDecoderFactory(GenericCellDecoderFactory.get())
+          if (cellSpec.isAvro) {
+            cellSpec.setUseWriterSchema()
+          }
           specMap.put(columnName, cellSpec)
-          specMap
         }
+    specMap
   }
 }
