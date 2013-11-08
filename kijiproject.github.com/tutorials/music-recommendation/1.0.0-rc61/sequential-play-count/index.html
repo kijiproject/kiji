@@ -1,0 +1,2610 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>SequentialPlayCount</title>
+    <meta name="description" content="Includes info on working with Avro">
+    <meta name="author" content="WibiData">
+    <link href="/assets/themes/twitter/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/assets/themes/twitter/css/style.css" rel="stylesheet" type="text/css" media="all">
+    <link href="/assets/themes/twitter/css/github.css" rel="stylesheet" type="text/css" media="all">
+    <script src="http://code.jquery.com/jquery-latest.js" type="text/javascript"></script>
+    <script src="/assets/themes/twitter/vallenato/vallenato.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="/assets/themes/twitter/css/vallenato.css" type="text/css" media="screen">
+  </head>
+
+  <body>
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container-fluid">
+          <a class="brand" href="http://www.kiji.org">Kiji Community</a>
+          <ul class="nav">
+            <li class="dropdown">
+              <a href="http://www.kiji.org">The Kiji Project</a>
+              <ul class="dropdown-menu">
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/features">Features</a>
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="http://www.kiji.org/architecture">Architecture</a>
+            </li>
+            <li class="dropdown">
+              <a href="http://www.kiji.org/getstarted/">Get Started</a>
+              <ul class="dropdown-menu">
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getstarted/#Downloads">Downloads</a>
+                </li>
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getstarted/#Installation">Installation</a>
+                </li>
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getstarted/#Quick_Start_Guide">Quick Start Guide</a>
+                </li>
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/get-started-with-maven">Getting Started with Maven</a>
+                </li>
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getstarted/#Training_Services">
+                    Training & Services
+                  </a>
+                </li>
+              </ul>
+            </li>
+            <li class="dropdown">
+              <a href="http://www.kiji.org/getinvolved">Get Involved</a>
+              <ul class="dropdown-menu">
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getinvolved/#Mailing_Lists">Mailing Lists</a>
+                </li>
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getinvolved/#Source_Code">Source Code</a>
+                </li>
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getinvolved/#Issue_Tracker">Issue Tracking</a>
+                </li>
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getinvolved/#Contributing_to_Kiji">
+                    Contributing to Kiji
+                  </a>
+                </li>
+              </ul>
+            </li>
+            <li class="dropdown active">
+              <a href="/">Documentation</a>
+              <ul class="dropdown-menu">
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getstarted/#Quick_Start_Guide">Quick Start Guide</a>
+                </li>
+                <li class="menu-item">
+                  <a href="/tutorials.html">Tutorials</a>
+                </li>
+                <li class="menu-item">
+                  <a href="/userguides.html">
+                    User Guides
+                  </a>
+                </li>
+                <li class="menu-item">
+                  <a href="/apidocs">API Reference</a>
+                </li>
+                <li class="menu-item">
+                  <a href="https://github.com/kijiproject/wiki/wiki">Wiki</a>
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="http://www.kiji.org/blog/">Blog</a>
+            </li>
+            <li>
+              <a href="http://www.kiji.org/aboutkiji">About Kiji</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="container-fluid">
+      <div class="content">
+        
+<div class="row-fluid">
+  <div class="span9">
+    <div class="page-header">
+      <h1>SequentialPlayCount</h1>
+    </div>
+
+    <div class="pagination">
+      <ul>
+    
+      
+      
+    
+      
+
+      
+        
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+              <li class="prev">
+                <a href="/tutorials/music-recommendation/1.0.0-rc61/play-count" title="PlayCount">
+                &larr; Previous
+                </a>
+              </li>
+            
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+      
+
+      
+      
+        
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+            
+            
+              <li class="next">
+                <a href="/tutorials/music-recommendation/1.0.0-rc61/next-songs" title="NextTopSong">
+                Next &rarr;
+                </a>
+              </li>
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+      
+      </ul>
+    </div>
+
+    <p>Instead of recommending the most popular songs to everyone using Pandorify, we want to tailor our recommendations based on user&#8217;s listening history. For every user, we will look up the most recent song they have listened to and then recommend the song most frequently played after it. In order to do that, we need to create an index so that for each song, we can quickly look up what the most popular songs to listen to afterwards are.</p>
+
+<p>So, we need to count the number of times two songs have been played, one after another. The <code>SequentialPlayCounter</code> and <code>SequentialPlayCountReducer</code> allow us to do that.</p>
+<div id='accordion-container'>
+  <h2 class='accordion-header'> SequentialPlayCounter.java </h2>
+    <div class='accordion-content'>
+    <script src='http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/kiji-music-1.0.0-rc61/src/main/java/org/kiji/examples/music/gather/SequentialPlayCounter.java'> </script>
+    </div>
+  <h2 class='accordion-header'> SequentialPlayCountReducer.java </h2>
+    <div class='accordion-content'>
+    <script src='http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/kiji-music-1.0.0-rc61/src/main/java/org/kiji/examples/music/reduce/SequentialPlayCountReducer.java'> </script>
+    </div>
+</div><h3 style='margin-top:0px;padding-top:10px;'> SequentialPlayCounter </h3>
+<p><code>SequentialPlayCounter</code> operates in much the same way that <code>SongPlayCounter</code> does, but it requires a more complex key structure to store both the song played and the song that followed. The easiest way work with complex keys in Kiji is to use <a href='http://avro.apache.org'>Avro</a>. We define a <code>SongBiGram</code>, which will be our key, as a pair of songs played sequentially by a single user.</p>
+<div class='highlight'><pre><code class='java'>  <span class='cm'>/** Song play bigram. */</span>
+  <span class='n'>record</span> <span class='n'>SongBiGram</span> <span class='o'>{</span>
+    <span class='cm'>/** The ID of the first song played in a sequence. */</span>
+    <span class='n'>string</span> <span class='n'>first_song_played</span><span class='o'>;</span>
+
+    <span class='cm'>/** The ID of the song played immediately after it. */</span>
+    <span class='n'>string</span> <span class='n'>second_song_played</span><span class='o'>;</span>
+  <span class='o'>}</span>
+</code></pre></div>
+<p>Whereas <code>SongPlayCounter</code>&#8217;s output value class was <code>Text.class</code>, <code>SequentialPlayCounter</code> uses <code>AvroKey.class</code> which requires that we also implement <code>AvroKeyWriter</code> and override <code>getAvroKeyWriterSchema()</code> to fully define the Avro key format.</p>
+
+<p><code>SequentialPlayCounter</code> executes the same basic stages as <code>SongPlayCounter</code>, but with a more complex gather operation.</p>
+
+<h4 id='read_track_play_data_and_compose_complex_keys'>Read track play data and compose complex keys</h4>
+
+<p><code>SequentialPlayCounter</code> reads the same data as <code>SongPlayCounter</code>, but maintains a &#8220;sliding window&#8221; of the most recent two track ids. For each song after the first, <code>gather()</code> emits a key-value pair where the key is a <code>SongBiGram</code> of the two most recently played songs, and the value is one (1) as a tally.</p>
+
+<p><div class='highlight'><pre><code class='java'>  <span class='cm'>/** {@inheritDoc} */</span>
+  <span class='nd'>@Override</span>
+  <span class='kd'>public</span> <span class='kt'>void</span> <span class='nf'>gather</span><span class='o'>(</span><span class='n'>KijiRowData</span> <span class='n'>input</span><span class='o'>,</span> <span class='n'>GathererContext</span><span class='o'>&lt;</span><span class='n'>AvroKey</span><span class='o'>&lt;</span><span class='n'>SongBiGram</span><span class='o'>&gt;,</span> <span class='n'>LongWritable</span><span class='o'>&gt;</span> <span class='n'>context</span><span class='o'>)</span>
+      <span class='kd'>throws</span> <span class='n'>IOException</span> <span class='o'>{</span>
+    <span class='c1'>// Here we use a sliding window to build bigrams that represent pairs of songs that have</span>
+    <span class='c1'>// ever been played one following another.</span>
+    <span class='c1'>// The variables firstSong and secondSong slide along as we iterate through the track plays.</span>
+    <span class='n'>CharSequence</span> <span class='n'>firstSong</span> <span class='o'>=</span> <span class='kc'>null</span><span class='o'>;</span>
+    <span class='n'>CharSequence</span> <span class='n'>nextSong</span> <span class='o'>=</span> <span class='kc'>null</span><span class='o'>;</span>
+    <span class='n'>NavigableMap</span><span class='o'>&lt;</span><span class='n'>Long</span><span class='o'>,</span> <span class='n'>CharSequence</span><span class='o'>&gt;</span> <span class='n'>trackPlays</span> <span class='o'>=</span> <span class='n'>input</span><span class='o'>.</span><span class='na'>getValues</span><span class='o'>(</span><span class='s'>&quot;info&quot;</span><span class='o'>,</span> <span class='s'>&quot;track_plays&quot;</span><span class='o'>);</span>
+    <span class='k'>for</span> <span class='o'>(</span><span class='n'>CharSequence</span> <span class='n'>trackId</span> <span class='o'>:</span> <span class='n'>trackPlays</span><span class='o'>.</span><span class='na'>values</span><span class='o'>())</span> <span class='o'>{</span> <span class='c1'>// Iterate through this user&#39;s track plays.</span>
+      <span class='c1'>// Slide the window one song over.</span>
+      <span class='n'>firstSong</span> <span class='o'>=</span> <span class='n'>nextSong</span><span class='o'>;</span>
+      <span class='n'>nextSong</span> <span class='o'>=</span> <span class='n'>trackId</span><span class='o'>;</span>
+      <span class='c1'>// If firstSong is null, we are at the beginning of the list and our sliding window</span>
+      <span class='c1'>// only contains one song, so don&#39;t output it. Otherwise...</span>
+      <span class='k'>if</span> <span class='o'>(</span><span class='kc'>null</span> <span class='o'>!=</span> <span class='n'>firstSong</span><span class='o'>)</span> <span class='o'>{</span>
+        <span class='c1'>// Create the bigram of these two songs.</span>
+        <span class='n'>mBiGram</span><span class='o'>.</span><span class='na'>setFirstSongPlayed</span><span class='o'>(</span><span class='n'>firstSong</span><span class='o'>);</span>
+        <span class='n'>mBiGram</span><span class='o'>.</span><span class='na'>setSecondSongPlayed</span><span class='o'>(</span><span class='n'>nextSong</span><span class='o'>);</span>
+        <span class='c1'>// Emit the bigram of these two songs.</span>
+        <span class='n'>context</span><span class='o'>.</span><span class='na'>write</span><span class='o'>(</span><span class='k'>new</span> <span class='n'>AvroKey</span><span class='o'>&lt;</span><span class='n'>SongBiGram</span><span class='o'>&gt;(</span><span class='n'>mBiGram</span><span class='o'>),</span> <span class='n'>ONE</span><span class='o'>);</span>
+      <span class='o'>}</span>
+    <span class='o'>}</span>
+  <span class='o'>}</span>
+</code></pre></div></p>
+
+<h3 id='sequentialplaycountreducer'>SequentialPlayCountReducer</h3>
+
+<p>This reducer takes in pairs of songs that have been played sequentially and the number one. It then computes the number of times those songs have been played together, and emits the ID of the first song as the key, and a <code>SongCount</code> record representing the song played after the first as the value. A <code>SongCount</code> record has a field containing the ID of the subsequent song and a field for the number of times it has been played after the initial song.</p>
+
+<p>This reducer takes <code>AvroKey</code> as input, and writes <code>AvroKey</code> and <code>AvroValue</code> as output, so it must implement <code>AvroKeyReader</code>, <code>AvroKeyWriter</code>, and <code>AvroValueWriter</code>. The keys we are emitting are just strings so we could use a <a href='link-to-text-key-docs'>Text</a> key. Instead, we made the choice to use an <code>AvroKey</code> so that we could use the Kiji defined <a href='/userguides/mapreduce/1.0.0-rc62/command-line-tools/#output'>AvroKeyValue output format</a>, which requires that you output <code>AvroKey</code> and <code>AvroValue</code>.</p>
+
+<p>The schema for our Avro key is so simple that we don&#8217;t have to add a record to our avdl file in order to return the correct schema in <code>getWriterSchema()</code>. Instead, we can use the static methods avro provides for creating schemas of primitive types.</p>
+<div class='highlight'><pre><code class='java'>  <span class='kd'>public</span> <span class='n'>Schema</span> <span class='nf'>getAvroKeyWriterSchema</span><span class='o'>()</span> <span class='kd'>throws</span> <span class='n'>IOException</span> <span class='o'>{</span>
+    <span class='c1'>// Since we are writing AvroKeys, we need to specify the schema.</span>
+    <span class='k'>return</span> <span class='n'>SongBiGram</span><span class='o'>.</span><span class='na'>SCHEMA</span><span class='n'>$</span><span class='o'>;</span>
+  <span class='o'>}</span>
+</code></pre></div>
+<h4 id='sum_sequential_plays'>Sum Sequential Plays</h4>
+
+<p><code>SequentialPlayCountReducer</code> starts with the same reduction operation that <code>LongSumReducer</code> used to count track plays in the <code>SongCount</code> example, but diverges when emitting key-value pairs. Instead of passing the keys through the reducer, <code>SequentialPlayCountReducer</code> creates new keys based on the track IDs in the <code>SongBiGram</code> keys. The new keys are simply the first track ID from each bi-gram, while the second track ID becomes part the <code>SongCount</code> value.</p>
+<div class='highlight'><pre><code class='java'>  <span class='kd'>protected</span> <span class='kt'>void</span> <span class='nf'>reduce</span><span class='o'>(</span><span class='n'>AvroKey</span><span class='o'>&lt;</span><span class='n'>SongBiGram</span><span class='o'>&gt;</span> <span class='n'>key</span><span class='o'>,</span> <span class='n'>Iterable</span><span class='o'>&lt;</span><span class='n'>LongWritable</span><span class='o'>&gt;</span> <span class='n'>values</span><span class='o'>,</span> <span class='n'>Context</span> <span class='n'>context</span><span class='o'>)</span>
+      <span class='kd'>throws</span> <span class='n'>IOException</span><span class='o'>,</span> <span class='n'>InterruptedException</span> <span class='o'>{</span>
+    <span class='c1'>// Initialize sum to zero.</span>
+    <span class='kt'>long</span> <span class='n'>sum</span> <span class='o'>=</span> <span class='mi'>0L</span><span class='o'>;</span>
+    <span class='c1'>// Add up all the values.  When this reducer is used after SongPlayCounter, every value</span>
+    <span class='c1'>// should be the number 1, so we are just counting the number of times the second song</span>
+    <span class='c1'>// was played after the first (the key).</span>
+    <span class='k'>for</span> <span class='o'>(</span><span class='n'>LongWritable</span> <span class='n'>value</span> <span class='o'>:</span> <span class='n'>values</span><span class='o'>)</span> <span class='o'>{</span>
+      <span class='n'>sum</span> <span class='o'>+=</span> <span class='n'>value</span><span class='o'>.</span><span class='na'>get</span><span class='o'>();</span>
+    <span class='o'>}</span>
+
+    <span class='c1'>// Set values for this count.</span>
+    <span class='kd'>final</span> <span class='n'>SongBiGram</span> <span class='n'>songPair</span> <span class='o'>=</span> <span class='n'>key</span><span class='o'>.</span><span class='na'>datum</span><span class='o'>();</span>
+    <span class='kd'>final</span> <span class='n'>SongCount</span> <span class='n'>nextSongCount</span> <span class='o'>=</span> <span class='n'>SongCount</span><span class='o'>.</span><span class='na'>newBuilder</span><span class='o'>()</span>
+        <span class='o'>.</span><span class='na'>setCount</span><span class='o'>(</span><span class='n'>sum</span><span class='o'>)</span>
+        <span class='o'>.</span><span class='na'>setSongId</span><span class='o'>(</span><span class='n'>songPair</span><span class='o'>.</span><span class='na'>getSecondSongPlayed</span><span class='o'>())</span>
+        <span class='o'>.</span><span class='na'>build</span><span class='o'>();</span>
+    <span class='c1'>// Write out result for this song.</span>
+    <span class='n'>context</span><span class='o'>.</span><span class='na'>write</span><span class='o'>(</span>
+        <span class='k'>new</span> <span class='n'>AvroKey</span><span class='o'>&lt;</span><span class='n'>CharSequence</span><span class='o'>&gt;(</span><span class='n'>songPair</span><span class='o'>.</span><span class='na'>getFirstSongPlayed</span><span class='o'>().</span><span class='na'>toString</span><span class='o'>()),</span>
+        <span class='k'>new</span> <span class='n'>AvroValue</span><span class='o'>&lt;</span><span class='n'>SongCount</span><span class='o'>&gt;(</span><span class='n'>nextSongCount</span><span class='o'>));</span>
+  <span class='o'>}</span>
+</code></pre></div>
+<h3 id='testsequentialsongplaycounter'>TestSequentialSongPlayCounter</h3>
+
+<p>To verify that <code>SequentialPlayCounter</code> and <code>SequentialPlayCountReducer</code> function as expected, their test:</p>
+
+<ul>
+<li>Creates and populates an in-memory Kiji instance</li>
+
+<li>Runs a MapReduce job with <code>SequentialPlayCounter</code> as the gatherer and <code>SequentialPlayCountReducer</code> as the reducer</li>
+
+<li>Verifies that the output is as expected</li>
+</ul>
+<div id='accordion-container'>
+  <h2 class='accordion-header'> TestSequentialSongPlayCounter.java </h2>
+    <div class='accordion-content'>
+    <script src='http://gist-it.appspot.com/github/kijiproject/kiji-music/raw/kiji-music-1.0.0-rc61/src/test/java/org/kiji/examples/music/TestSequentialSongPlayCounter.java'> </script>
+  </div>
+</div><h4 style='margin-top:0px;padding-top:10px;'> Create an in-memory Kiji instance </h4>
+<p>The InstanceBuilder class provides methods for populating a test Kiji instance. Once the test instance has been defined, its build method is called, creating the in-memory instance and table.</p>
+<div class='highlight'><pre><code class='java'>  <span class='kd'>public</span> <span class='kd'>final</span> <span class='kt'>void</span> <span class='nf'>setup</span><span class='o'>()</span> <span class='kd'>throws</span> <span class='n'>Exception</span> <span class='o'>{</span>
+    <span class='kd'>final</span> <span class='n'>KijiTableLayout</span> <span class='n'>userLayout</span> <span class='o'>=</span>
+        <span class='n'>KijiTableLayout</span><span class='o'>.</span><span class='na'>createFromEffectiveJsonResource</span><span class='o'>(</span><span class='s'>&quot;/layout/users.json&quot;</span><span class='o'>);</span>
+    <span class='kd'>final</span> <span class='n'>String</span> <span class='n'>userTableName</span> <span class='o'>=</span> <span class='n'>userLayout</span><span class='o'>.</span><span class='na'>getName</span><span class='o'>();</span>
+    <span class='n'>mUserTableURI</span> <span class='o'>=</span> <span class='n'>KijiURI</span><span class='o'>.</span><span class='na'>newBuilder</span><span class='o'>(</span><span class='n'>getKiji</span><span class='o'>().</span><span class='na'>getURI</span><span class='o'>()).</span><span class='na'>withTableName</span><span class='o'>(</span><span class='n'>userTableName</span><span class='o'>).</span><span class='na'>build</span><span class='o'>();</span>
+
+    <span class='k'>new</span> <span class='nf'>InstanceBuilder</span><span class='o'>(</span><span class='n'>getKiji</span><span class='o'>())</span>
+        <span class='o'>.</span><span class='na'>withTable</span><span class='o'>(</span><span class='n'>userTableName</span><span class='o'>,</span> <span class='n'>userLayout</span><span class='o'>)</span>
+            <span class='o'>.</span><span class='na'>withRow</span><span class='o'>(</span><span class='s'>&quot;user-1&quot;</span><span class='o'>).</span><span class='na'>withFamily</span><span class='o'>(</span><span class='s'>&quot;info&quot;</span><span class='o'>).</span><span class='na'>withQualifier</span><span class='o'>(</span><span class='s'>&quot;track_plays&quot;</span><span class='o'>)</span>
+                <span class='o'>.</span><span class='na'>withValue</span><span class='o'>(</span><span class='mi'>2L</span><span class='o'>,</span> <span class='s'>&quot;song-2&quot;</span><span class='o'>)</span>
+                <span class='o'>.</span><span class='na'>withValue</span><span class='o'>(</span><span class='mi'>3L</span><span class='o'>,</span> <span class='s'>&quot;song-1&quot;</span><span class='o'>)</span>
+            <span class='o'>.</span><span class='na'>withRow</span><span class='o'>(</span><span class='s'>&quot;user-2&quot;</span><span class='o'>).</span><span class='na'>withFamily</span><span class='o'>(</span><span class='s'>&quot;info&quot;</span><span class='o'>).</span><span class='na'>withQualifier</span><span class='o'>(</span><span class='s'>&quot;track_plays&quot;</span><span class='o'>)</span>
+                <span class='o'>.</span><span class='na'>withValue</span><span class='o'>(</span><span class='mi'>2L</span><span class='o'>,</span> <span class='s'>&quot;song-3&quot;</span><span class='o'>)</span>
+                <span class='o'>.</span><span class='na'>withValue</span><span class='o'>(</span><span class='mi'>3L</span><span class='o'>,</span> <span class='s'>&quot;song-2&quot;</span><span class='o'>)</span>
+                <span class='o'>.</span><span class='na'>withValue</span><span class='o'>(</span><span class='mi'>4L</span><span class='o'>,</span> <span class='s'>&quot;song-1&quot;</span><span class='o'>)</span>
+            <span class='o'>.</span><span class='na'>withRow</span><span class='o'>(</span><span class='s'>&quot;user-3&quot;</span><span class='o'>).</span><span class='na'>withFamily</span><span class='o'>(</span><span class='s'>&quot;info&quot;</span><span class='o'>).</span><span class='na'>withQualifier</span><span class='o'>(</span><span class='s'>&quot;track_plays&quot;</span><span class='o'>)</span>
+                <span class='o'>.</span><span class='na'>withValue</span><span class='o'>(</span><span class='mi'>1L</span><span class='o'>,</span> <span class='s'>&quot;song-5&quot;</span><span class='o'>)</span>
+        <span class='o'>.</span><span class='na'>build</span><span class='o'>();</span>
+  <span class='o'>}</span>
+</code></pre></div>
+<h4 id='run_and_verify_sequentialplaycounter_and_sequentialplaycountreducer'>Run and verify SequentialPlayCounter and SequentialPlayCountReducer</h4>
+
+<p><code>KijiGatherJobBuilder</code> is used to create a test MapReduce job. This job builder can be used outside the context of a test to configure and run jobs programatically. The job is then run using Hadoop&#8217;s local job runner. The resulting output sequence file is then validated.</p>
+<div class='highlight'><pre><code class='java'>  <span class='c1'>// Configure and run job.</span>
+  <span class='kd'>final</span> <span class='n'>File</span> <span class='n'>outputDir</span> <span class='o'>=</span> <span class='k'>new</span> <span class='n'>File</span><span class='o'>(</span><span class='n'>getLocalTempDir</span><span class='o'>(),</span> <span class='s'>&quot;output.sequence_file&quot;</span><span class='o'>);</span>
+  <span class='kd'>final</span> <span class='n'>Path</span> <span class='n'>path</span> <span class='o'>=</span> <span class='k'>new</span> <span class='n'>Path</span><span class='o'>(</span><span class='s'>&quot;file://&quot;</span> <span class='o'>+</span> <span class='n'>outputDir</span><span class='o'>);</span>
+  <span class='kd'>final</span> <span class='n'>KijiMapReduceJob</span> <span class='n'>mrjob</span> <span class='o'>=</span> <span class='n'>KijiGatherJobBuilder</span><span class='o'>.</span><span class='na'>create</span><span class='o'>()</span>
+      <span class='o'>.</span><span class='na'>withConf</span><span class='o'>(</span><span class='n'>getConf</span><span class='o'>())</span>
+      <span class='o'>.</span><span class='na'>withGatherer</span><span class='o'>(</span><span class='n'>SequentialPlayCounter</span><span class='o'>.</span><span class='na'>class</span><span class='o'>)</span>
+      <span class='o'>.</span><span class='na'>withReducer</span><span class='o'>(</span><span class='n'>SequentialPlayCountReducer</span><span class='o'>.</span><span class='na'>class</span><span class='o'>)</span>
+      <span class='o'>.</span><span class='na'>withInputTable</span><span class='o'>(</span><span class='n'>mUserTableURI</span><span class='o'>)</span>
+      <span class='c1'>// Note: the local map/reduce job runner does not allow more than one reducer:</span>
+      <span class='o'>.</span><span class='na'>withOutput</span><span class='o'>(</span><span class='k'>new</span> <span class='n'>AvroKeyValueMapReduceJobOutput</span><span class='o'>(</span><span class='k'>new</span> <span class='n'>Path</span><span class='o'>(</span><span class='s'>&quot;file://&quot;</span> <span class='o'>+</span> <span class='n'>outputDir</span><span class='o'>),</span> <span class='mi'>1</span><span class='o'>))</span>
+      <span class='o'>.</span><span class='na'>build</span><span class='o'>();</span>
+  <span class='n'>assertTrue</span><span class='o'>(</span><span class='n'>mrjob</span><span class='o'>.</span><span class='na'>run</span><span class='o'>());</span>
+</code></pre></div>
+<p>Reading back files is easy with normal file or table readers, currently avrokv files can be read in a limited way using a KeyValueStoreReader.</p>
+<div class='highlight'><pre><code class='java'>  <span class='n'>AvroKVRecordKeyValueStore</span><span class='o'>.</span><span class='na'>Builder</span> <span class='n'>kvStoreBuilder</span> <span class='o'>=</span> <span class='n'>AvroKVRecordKeyValueStore</span><span class='o'>.</span><span class='na'>builder</span><span class='o'>()</span>
+      <span class='o'>.</span><span class='na'>withInputPath</span><span class='o'>(</span><span class='n'>path</span><span class='o'>).</span><span class='na'>withConfiguration</span><span class='o'>(</span><span class='n'>getConf</span><span class='o'>());</span>
+  <span class='kd'>final</span> <span class='n'>AvroKVRecordKeyValueStore</span> <span class='n'>outputKeyValueStore</span> <span class='o'>=</span> <span class='n'>kvStoreBuilder</span><span class='o'>.</span><span class='na'>build</span><span class='o'>();</span>
+  <span class='n'>KeyValueStoreReader</span> <span class='n'>reader</span> <span class='o'>=</span> <span class='n'>outputKeyValueStore</span><span class='o'>.</span><span class='na'>open</span><span class='o'>();</span>
+
+  <span class='c1'>// Check that our results are correct.</span>
+  <span class='n'>assertTrue</span><span class='o'>(</span><span class='n'>reader</span><span class='o'>.</span><span class='na'>containsKey</span><span class='o'>(</span><span class='s'>&quot;song-1&quot;</span><span class='o'>));</span>
+  <span class='n'>SongCount</span> <span class='n'>song1Result</span> <span class='o'>=</span> <span class='o'>(</span><span class='n'>SongCount</span><span class='o'>)</span> <span class='n'>reader</span><span class='o'>.</span><span class='na'>get</span><span class='o'>(</span><span class='s'>&quot;song-1&quot;</span><span class='o'>);</span>
+  <span class='n'>assertEquals</span><span class='o'>(</span><span class='mi'>2L</span><span class='o'>,</span> <span class='n'>song1Result</span><span class='o'>.</span><span class='na'>getCount</span><span class='o'>().</span><span class='na'>longValue</span><span class='o'>());</span>
+  <span class='c1'>// Avro strings are deserialized to CharSequences in Java, .toString() allows junit to correctly</span>
+  <span class='c1'>// compare the expected and actual values.</span>
+
+  <span class='n'>assertEquals</span><span class='o'>(</span><span class='s'>&quot;song-2&quot;</span><span class='o'>,</span> <span class='n'>song1Result</span><span class='o'>.</span><span class='na'>getSongId</span><span class='o'>().</span><span class='na'>toString</span><span class='o'>());</span>
+  <span class='n'>assertTrue</span><span class='o'>(</span><span class='n'>reader</span><span class='o'>.</span><span class='na'>containsKey</span><span class='o'>(</span><span class='s'>&quot;song-2&quot;</span><span class='o'>));</span>
+  <span class='n'>SongCount</span> <span class='n'>song2Result</span> <span class='o'>=</span> <span class='o'>(</span><span class='n'>SongCount</span><span class='o'>)</span> <span class='n'>reader</span><span class='o'>.</span><span class='na'>get</span><span class='o'>(</span><span class='s'>&quot;song-2&quot;</span><span class='o'>);</span>
+  <span class='n'>assertEquals</span><span class='o'>(</span><span class='mi'>1L</span><span class='o'>,</span> <span class='n'>song2Result</span><span class='o'>.</span><span class='na'>getCount</span><span class='o'>().</span><span class='na'>longValue</span><span class='o'>());</span>
+  <span class='c1'>// Avro strings are deserialized to CharSequences in Java, .toString() allows junit to correctly</span>
+  <span class='c1'>// compare the expected and actual values.</span>
+  <span class='n'>assertEquals</span><span class='o'>(</span><span class='s'>&quot;song-3&quot;</span><span class='o'>,</span> <span class='n'>song2Result</span><span class='o'>.</span><span class='na'>getSongId</span><span class='o'>().</span><span class='na'>toString</span><span class='o'>());</span>
+</code></pre></div>
+<h3 id='running_the_example'>Running the Example</h3>
+<div class='userinput'>
+
+<div class='highlight'><pre><code class='bash'>kiji gather <span class='se'>\</span>
+    --gatherer<span class='o'>=</span>org.kiji.examples.music.gather.SequentialPlayCounter <span class='se'>\</span>
+    --reducer<span class='o'>=</span>org.kiji.examples.music.reduce.SequentialPlayCountReducer <span class='se'>\</span>
+    --input<span class='o'>=</span><span class='s2'>&quot;format=kiji table=${KIJI}/users&quot;</span> <span class='se'>\</span>
+    --output<span class='o'>=</span><span class='s2'>&quot;format=avrokv file=output.sequentialPlayCount nsplits=2&quot;</span> <span class='se'>\</span>
+    --lib<span class='o'>=</span><span class='k'>${</span><span class='nv'>LIBS_DIR</span><span class='k'>}</span>
+</code></pre></div>
+
+</div>
+<h4 id='verify'>Verify</h4>
+
+<p>Because this job outputs Avro key-value files, which are binary and hard to read directly, we can use the Hadoop job tracker to verify the success of the job. Using your favorite browser, navigate to the JobTracker page (<a href='http://localhost:50030'>localhost:50030 by default</a>). This is where you can monitor all your Hadoop jobs. Locate the Kiji gather: <code>SequentialPlayCounter</code> / <code>SequentialPlayCountReducer</code> job and navigate to the job page by clicking on the Job ID. On the job page, check that Map output records number roughly 7000.</p>
+
+    <div class="pagination">
+      <ul>
+    
+      
+      
+    
+      
+
+      
+        
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+              <li class="prev">
+                <a href="/tutorials/music-recommendation/1.0.0-rc61/play-count" title="PlayCount">
+                &larr; Previous
+                </a>
+              </li>
+            
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+      
+
+      
+      
+        
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+            
+            
+              <li class="next">
+                <a href="/tutorials/music-recommendation/1.0.0-rc61/next-songs" title="NextTopSong">
+                Next &rarr;
+                </a>
+              </li>
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+      
+      </ul>
+    </div>
+  </div>
+
+  <div class="span3">
+    
+      
+      
+    
+    <div class="side-toc">
+    <div class="side-toc-inner">
+      <h3>Music Recommendation Tutorial</h3>
+      <ul>
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+              
+                <li>
+                  
+                    <a href="/tutorials/music-recommendation/1.0.0-rc61/music-overview">Overview</a>
+                  
+                </li>
+              
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+              
+                <li>
+                  
+                    <a href="/tutorials/music-recommendation/1.0.0-rc61/music-setup">Setup</a>
+                  
+                </li>
+              
+            
+          
+            
+              
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+              
+            
+          
+            
+              
+                <li>
+                  
+                    <a href="/tutorials/music-recommendation/1.0.0-rc61/bulk-importing">Bulk Importing</a>
+                  
+                </li>
+              
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+              
+                <li>
+                  
+                    <a href="/tutorials/music-recommendation/1.0.0-rc61/play-count">PlayCount</a>
+                  
+                </li>
+              
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+              
+            
+          
+            
+              
+                <li>
+                  
+                    <b>SequentialPlayCount</b>
+                  
+                </li>
+              
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+              
+                <li>
+                  
+                    <a href="/tutorials/music-recommendation/1.0.0-rc61/next-songs">NextTopSong</a>
+                  
+                </li>
+              
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+              
+                <li>
+                  
+                    <a href="/tutorials/music-recommendation/1.0.0-rc61/recommendation-producer">Music Recommendation Producer</a>
+                  
+                </li>
+              
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+              
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+      </ul>
+      <h3>Need Help?</h3>
+      <ul>
+        <li>
+      <a class="btn btn-info"  href="https://groups.google.com/a/kiji.org/forum/?fromgroups#!forum/user">User Group Mailing List</a>
+        </li>
+        <li>
+      <a class="btn btn-warning" href="https://jira.kiji.org/secure/CreateIssueDetails!init.jspa?pid=10004&issuetype=1&priority=3&components=10010&summary=Reported%20Docs%20Error:%20SequentialPlayCount&description=Please%20describe%20the%20issue.%0a%0aurl:%20/tutorials/music-recommendation/1.0.0-rc61/sequential-play-count"> Report an Error in Docs </a> 
+        </li>
+    </ul>
+    </div>
+</div>
+
+  </div>
+</div>
+
+
+      </div>
+
+      <footer>
+        <hr/>
+        <p>&copy; Kiji Community</p>
+      </footer>
+    </div>
+
+    
+
+
+  <script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-REMOVED-DONT-COMMIT']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+
+
+  </body>
+</html>
+

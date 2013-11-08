@@ -1,0 +1,1665 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>KijiREST Operations</title>
+    <meta name="description" content="Operations">
+    <meta name="author" content="WibiData">
+    <link href="/assets/themes/twitter/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/assets/themes/twitter/css/style.css" rel="stylesheet" type="text/css" media="all">
+    <link href="/assets/themes/twitter/css/github.css" rel="stylesheet" type="text/css" media="all">
+    <script src="http://code.jquery.com/jquery-latest.js" type="text/javascript"></script>
+    <script src="/assets/themes/twitter/vallenato/vallenato.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="/assets/themes/twitter/css/vallenato.css" type="text/css" media="screen">
+  </head>
+
+  <body>
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container-fluid">
+          <a class="brand" href="http://www.kiji.org">Kiji Community</a>
+          <ul class="nav">
+            <li class="dropdown">
+              <a href="http://www.kiji.org">The Kiji Project</a>
+              <ul class="dropdown-menu">
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/features">Features</a>
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="http://www.kiji.org/architecture">Architecture</a>
+            </li>
+            <li class="dropdown">
+              <a href="http://www.kiji.org/getstarted/">Get Started</a>
+              <ul class="dropdown-menu">
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getstarted/#Downloads">Downloads</a>
+                </li>
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getstarted/#Installation">Installation</a>
+                </li>
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getstarted/#Quick_Start_Guide">Quick Start Guide</a>
+                </li>
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/get-started-with-maven">Getting Started with Maven</a>
+                </li>
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getstarted/#Training_Services">
+                    Training & Services
+                  </a>
+                </li>
+              </ul>
+            </li>
+            <li class="dropdown">
+              <a href="http://www.kiji.org/getinvolved">Get Involved</a>
+              <ul class="dropdown-menu">
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getinvolved/#Mailing_Lists">Mailing Lists</a>
+                </li>
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getinvolved/#Source_Code">Source Code</a>
+                </li>
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getinvolved/#Issue_Tracker">Issue Tracking</a>
+                </li>
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getinvolved/#Contributing_to_Kiji">
+                    Contributing to Kiji
+                  </a>
+                </li>
+              </ul>
+            </li>
+            <li class="dropdown active">
+              <a href="/">Documentation</a>
+              <ul class="dropdown-menu">
+                <li class="menu-item">
+                  <a href="http://www.kiji.org/getstarted/#Quick_Start_Guide">Quick Start Guide</a>
+                </li>
+                <li class="menu-item">
+                  <a href="/tutorials.html">Tutorials</a>
+                </li>
+                <li class="menu-item">
+                  <a href="/userguides.html">
+                    User Guides
+                  </a>
+                </li>
+                <li class="menu-item">
+                  <a href="/apidocs">API Reference</a>
+                </li>
+                <li class="menu-item">
+                  <a href="https://github.com/kijiproject/wiki/wiki">Wiki</a>
+                </li>
+              </ul>
+            </li>
+            <li>
+              <a href="http://www.kiji.org/blog/">Blog</a>
+            </li>
+            <li>
+              <a href="http://www.kiji.org/aboutkiji">About Kiji</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="container-fluid">
+      <div class="content">
+        
+<div class="row-fluid">
+  <div class="span9">
+    <div class="page-header">
+      <h1>KijiREST Operations</h1>
+    </div>
+
+    <div class="pagination">
+      <ul>
+    
+      
+      
+    
+      
+
+      
+        
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+              <li class="prev">
+                <a href="/userguides/rest/0.3.0/rest-resources" title="KijiREST Resources">
+                &larr; Previous
+                </a>
+              </li>
+            
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+      
+
+      
+      
+        
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+            
+            
+              <li class="next">
+                <a href="/userguides/rest/0.3.0/rest-examples" title="KijiREST Examples">
+                Next &rarr;
+                </a>
+              </li>
+            
+          
+        
+          
+        
+          
+        
+      
+      </ul>
+    </div>
+
+    <p>The HTTP operations supported by the KijiREST API are the following:</p>
+
+<ul>
+<li>
+<p>/v1</p>
+</li>
+
+<li>
+<p>/v1/version <a href='#version-get'>GET</a></p>
+</li>
+
+<li>
+<p>/v1/instances <a href='#instances-get'>GET</a></p>
+</li>
+
+<li>
+<p>/v1/instances/&#60;instance&#62; <a href='#instance-get'>GET</a></p>
+</li>
+
+<li>
+<p>/v1/instances/&#60;instance&#62;/tables <a href='#tables-get'>GET</a></p>
+</li>
+
+<li>
+<p>/v1/instances/&#60;instance&#62;/tables/&#60;table&#62; <a href='#table-get'>GET</a></p>
+</li>
+
+<li>
+<p>/v1/instances/&#60;instance&#62;/tables/&#60;table&#62;/entityId <a href='#entityID-get'>GET</a></p>
+</li>
+
+<li>
+<p>/v1/instances/&#60;instance&#62;/tables/&#60;table&#62;/rows <a href='#rows-get'>GET</a>, <a href='#rows-post'>POST</a></p>
+</li>
+
+<li>
+<p>/v1/instances/&#60;instance&#62;/tables/&#60;table&#62;/rows/&#60;row&#62; <a href='#row-get'>GET</a>, <a href='#row-put'>PUT</a></p>
+</li>
+</ul>
+
+<p>The following sections describe these operations in two groups:</p>
+
+<ul>
+<li><a href='#ops-on-rows'>Operations on rows</a></li>
+
+<li><a href='#ops-on-non-rows'>Operations on non-row resources</a></li>
+</ul>
+<a id='ops-on-rows'> </a>
+<h2 id='operations_on_rows'>Operations on Rows</h2>
+<a id='entityID-get'> </a>
+<h3 id='entity_id_get'>Entity ID: GET</h3>
+
+<p>The GET request returns the hexadecimal representation (in ASCII) of the corresponding HBase row key given a list of components comprising a row&#8217;s entity ID:</p>
+
+<pre><code>GET /v1/instances/&lt;instance&gt;/tables/&lt;table&gt;/entityId</code></pre>
+
+<h4 id='parameters'>Parameters:</h4>
+
+<ul>
+<li><code>eid</code> (single, required) - JSON array of the the components of the entity ID in order of their definition in the layout of the given table. String components must be single quoted while numeric components must remain unquoted.</li>
+</ul>
+
+<h4 id='example'>Example:</h4>
+
+<pre><code>GET /v1/instances/default/tables/users/entityId?eid=[1298404763]</code></pre>
+
+<p>Returns: <pre>
+{
+  rowKey: "9ee9800000004d64159b"
+}
+</pre> <a id='row-get'> </a></p>
+
+<h3 id='row_resource_get'>Row Resource: GET</h3>
+
+<p>Retrieves a single JSON-encoded row from a Kiji table:</p>
+
+<pre><code>GET /v1/instances/&lt;instance&gt;/tables/&lt;table&gt;/rows/&lt;hexEntityId&gt;</code></pre>
+
+<h4 id='parameters'>Parameters:</h4>
+
+<ul>
+<li>
+<p><code>cols</code> (single, optional, default=<code>*</code>) - A comma-separated list of column family or column family:qualifier to return. Specify <code>*</code> for all columns. Specifying just a column family will return values for all columns in the family and their qualifiers.</p>
+</li>
+
+<li>
+<p><code>versions</code> (single, optional, default=1) - An integer representing the number of versions per cell to return for the given row. Specify <code>versions=all</code> to retrieve all versions of each column specified in the cols parameter.</p>
+</li>
+
+<li>
+<p><code>timerange</code> (single, optional) - A string denoting the time range to return. Specify the time range <code>min..max</code> where <code>min</code> and <code>max</code> are the ms since UNIX epoch. <code>min</code> and <code>max</code> are both optional; however, if a value is provided for this parameter, at least one of min/max must be present). Specifying no timerange returns the most recent value for each column specified.</p>
+</li>
+</ul>
+
+<h4 id='examples'>Examples:</h4>
+
+<p>Get a single row:</p>
+
+<pre><code>GET /v1/instances/default/tables/users/rows/9ee9800000004d64159b</code></pre>
+
+<p>Restrict to only return a few columns:</p>
+
+<pre><code>GET /v1/instances/default/tables/users/rows/9ee9800000004d64159b?cols=info:name,info:email</code></pre>
+
+<p>Restrict to return two cells per column within the specified timestamp range:</p>
+
+<pre><code>GET /v1/instances/default/tables/users/rows/9ee9800000004d64159b?timerange=0..123&amp;versions=2</code></pre>
+<a id='row-put'> </a>
+<h3 id='row_hex_entity_id_put'>Row Hex Entity ID: PUT</h3>
+
+<p>A PUT request to a row&#8217;s hex entity ID inserts or updates data in the identified row in a Kiji table. The request returns the row with only the most recent version of the columns that were inserted.</p>
+
+<pre><code>PUT /v1/instances/&lt;instance&gt;/tables/&lt;table&gt;/rows/&lt;hexEntityId&gt;</code></pre>
+
+<p>This operation will not replace the entire existing row but will replace cells and append where cells in the request aren&#8217;t present in the row to be updated. To enforce the idempotency requirement of the <a href='http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html'>HTTP spec</a>, cell timestamps are required so as to avoid the creation of multiple cells with new timestamps when multiple PUTs are invoked.</p>
+
+<h4 id='parameters'>Parameters:</h4>
+
+<ul>
+<li>
+<p><code>&lt;family:qualifier&gt;</code> (multiple, required) - value (as a JSON string) to put into the specified <a href='family:qualifier'>family:qualifier</a> column. At least one needs to be specified for a valid PUT.</p>
+</li>
+
+<li>
+<p><code>timestamp</code> (single, required) - global timestamp for each cell in this PUT. This parameter is overruled by the <code>timestamp.&lt;family:qualifier&gt;</code> parameter for individual columns.</p>
+</li>
+
+<li>
+<p><code>timestamp.&lt;family:qualifier&gt;</code> (multiple, optional) - specific timestamp to use for putting the <code>&lt;family:qualifier&gt;</code> column in this put. Note: this overrides the global timestamp specified by the <code>timestamp</code> parameter.</p>
+</li>
+
+<li>
+<p><code>schema.&lt;family:qualifier&gt;</code> (multiple, optional, defaults to schema specified in the table layout) - When an application is manually managing one or more schemas applied to a cell in a Kiji table, a KijiREST operation writing to a cell can specify which schema to use using this parameter. It is the schema (as a JSON string) of the cell to be to put into the specified <code>&lt;family:qualifier&gt;</code> column.</p>
+</li>
+</ul>
+
+<h4 id='notes'>Notes:</h4>
+
+<p><code>&lt;family:qualifier&gt;</code> is a required parameter with many of the keys in this call. It refers to the Kiji column in &#8220;family:qualifier&#8221; format that the value is associated with.</p>
+
+<h4 id='examples'>Examples:</h4>
+
+<p>Put a single cell:</p>
+
+<pre><code>PUT /v1/instances/default/tables/users/rows/9ee9800000004d64159b?info:name=John%20Smith&amp;timestamp=0</code></pre>
+
+<p>Put many cells. In this example, the hex entity ID for the row is indicated by &#8220;{row}&#8221;:</p>
+
+<pre><code>PUT /v1/instances/default/tables/users/rows/9ee9800000004d64159b?info:name=John%20Smith&amp;info:email=john.smith@mail.com&amp;timestamp=0</code></pre>
+
+<p>Put many cells while controlling the schema used for a given cell:</p>
+
+<pre><code>PUT /v1/instances/default/tables/users/rows/9ee9800000004d64159b?info:name=John%20Smith&amp;info:email=john.smith@mail.com&amp;timestamp=0&amp;schema.info:name=&quot;string&quot;</code></pre>
+<a id='rows-get'> </a>
+<h3 id='rows_get'>Rows: GET</h3>
+
+<p>Returns (streams) multiple Kiji rows. This request has similar results as the kiji <code>scan</code> command, rows bounded by the constraints. Each row is a JSON clob delimited by the &#8220;\r\n&#8221; characters and all &#8220;\r\n&#8221; characters within each JSON clob are replaced with &#8220;\n&#8221; to avoid collision with the delimiter characters.</p>
+
+<pre><code>GET /v1/instances/&lt;instance&gt;/tables/&lt;table&gt;/rows</code></pre>
+
+<h4 id='parameters'>Parameters:</h4>
+
+<ul>
+<li>
+<p><code>eid</code> (single, optional) - A JSON representation of the list of components (for example: <code>[&#39;string1&#39;, 2, &#39;string3&#39;]</code>) of the entity ID to retrieve. When specified, it returns the row represented by the given entity ID. If this is specified, then <code>start_rk</code>, <code>end_rk</code>, and <code>limit</code> parameters are ignored.</p>
+</li>
+
+<li>
+<p><code>start_rk</code> (single, optional) - If executing a range query, this is the HBase row key (specified as a hexadecimal string) to inclusively start from.</p>
+</li>
+
+<li>
+<p><code>end_rk</code> (single, optional) - If executing a range query, this is the HBase row key (specified as a hexadecimal string) to exclusively end with.</p>
+</li>
+
+<li>
+<p><code>limit</code> (single, optional, default=100) - The number of rows to return. Specify -1 to return all rows.</p>
+</li>
+
+<li>
+<p><code>cols</code> (single, optional, default=<code>*</code>) - A comma-separated list of column family (and qualifiers) to return. Specify <code>*</code> to indicate all columns. Specifying just a column family will return values for all columns in the family and their qualifiers.</p>
+</li>
+
+<li>
+<p><code>versions</code> (single, optional, default=1) - An integer representing the number of versions per cell to return for the given row.</p>
+</li>
+
+<li>
+<p><code>timerange</code> (single, optional) - A string denoting the time range to return. Specify the time range <code>min..max</code> where <code>min</code> and <code>max</code> are the ms since UNIX epoch. <code>min</code> and <code>max</code> are both optional; however, if a value is provided for this parameter, at least one of min/max must be present.)</p>
+</li>
+</ul>
+
+<h4 id='examples'>Examples:</h4>
+
+<p>Get the first 100 rows (the default number of rows) from the users table:</p>
+
+<pre><code>GET /v1/instances/default/tables/users/rows</code></pre>
+
+<p>Get a single row identified by the entity_id:</p>
+
+<pre><code>GET /v1/instances/default/tables/users/rows?eid=[1298404763]</code></pre>
+
+<p>Retrieve the first 100 rows (the default number of rows) between start and end keys:</p>
+
+<pre><code>GET /v1/instances/default/tables/users/rows?start_rk=9ee9800000004d64159b&amp;end_rk=fca9800000004d64159c</code></pre>
+
+<p>Retrieve the first 100 rows starting from a particular key:</p>
+
+<pre><code>GET /v1/instances/default/tables/users/rows?start_rk=9ee9800000004d64159b&amp;limit=10</code></pre>
+<a id='rows-post'> </a>
+<h3 id='rows_post'>Rows: POST</h3>
+
+<p>Creates or adds cells to a row in the table. The body of the request is the JSON representation of the entity and must contain the entity ID so as to identify the row to create/update. The request returns the entity ID of the newly created/updated resource.</p>
+
+<pre><code>POST /v1/instances/&lt;instance&gt;/tables/&lt;table&gt;/rows</code></pre>
+
+<h4 id='parameters'>Parameters:</h4>
+
+<p>None. Uses the POSTed JSON blob for a row as the input. The blob is identical to the JSON returned by GETting rows.</p>
+
+<h4 id='notes'>Notes:</h4>
+
+<p>To create or update a record, the entity ID (<code>entityId</code>) must be specified in the JSON body. Cell timestamps are optional and if not specified, will be specified by the server. To avoid a heavy return payload, only a reference to the newly created/updated resource will be returned.</p>
+
+<h4 id='example'>Example:</h4>
+
+<pre><code>Content-Type: application/json
+Body:
+{
+  &quot;entityId&quot;: &quot;[12345]&quot;,
+  &quot;cells&quot;:
+  {
+    &quot;info&quot;:
+    {
+      &quot;name&quot;:
+      [
+        {
+        &quot;timestamp&quot;: 1,
+        &quot;value&quot;: &quot;Jane Smith&quot;
+        }
+      ]
+    }
+  }
+}</code></pre>
+<a id='ops-on-non-rows'> </a>
+<h2 id='operations_on_nonrow_resources'>Operations on non-row resources</h2>
+<a id='version-get'> </a>
+<h3 id='version_get'>Version: GET</h3>
+
+<p>Returns version information for the cluster and REST server.</p>
+
+<pre><code>GET /v1/version</code></pre>
+<a id='instances-get'> </a>
+<h3 id='instances_get'>Instances: GET</h3>
+
+<p>Returns a map of visible instances to their URIs.</p>
+
+<pre><code>GET /v1/instances</code></pre>
+<a id='instance-get'> </a>
+<h3 id='specific_instance_get'>Specific Instance: GET</h3>
+
+<p>Returns the metadata (as JSON) for the given instance.</p>
+
+<pre><code>GET /v1/instances/&lt;instance&gt;</code></pre>
+<a id='tables-get'> </a>
+<h3 id='tables_get'>Tables: GET</h3>
+
+<p>Returns list of tables within the instance in the cluster.</p>
+
+<pre><code>GET /v1/instances/&lt;instance&gt;/tables</code></pre>
+<a id='table-get'> </a>
+<h3 id='specific_table_get'>Specific Table: GET</h3>
+
+<p>Returns the layout of the table &#60;table&#62;.</p>
+
+<pre><code>GET /v1/instances/&lt;instance&gt;/tables/&lt;table&gt;</code></pre>
+
+    <div class="pagination">
+      <ul>
+    
+      
+      
+    
+      
+
+      
+        
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+              <li class="prev">
+                <a href="/userguides/rest/0.3.0/rest-resources" title="KijiREST Resources">
+                &larr; Previous
+                </a>
+              </li>
+            
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+      
+
+      
+      
+        
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+            
+            
+          
+        
+          
+        
+          
+            
+            
+              <li class="next">
+                <a href="/userguides/rest/0.3.0/rest-examples" title="KijiREST Examples">
+                Next &rarr;
+                </a>
+              </li>
+            
+          
+        
+          
+        
+          
+        
+      
+      </ul>
+    </div>
+  </div>
+
+  <div class="span3">
+    
+      
+      
+    
+    <div class="side-toc">
+    <div class="side-toc-inner">
+      <h3>KijiREST User Guide</h3>
+      <ul>
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+              
+            
+          
+            
+              
+                <li>
+                  
+                    <a href="/userguides/rest/0.3.0/rest-overview">What is KijiREST?</a>
+                  
+                </li>
+              
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+              
+                <li>
+                  
+                    <a href="/userguides/rest/0.3.0/rest-setup">Setup</a>
+                  
+                </li>
+              
+            
+          
+            
+              
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+              
+                <li>
+                  
+                    <a href="/userguides/rest/0.3.0/rest-resources">KijiREST Resources</a>
+                  
+                </li>
+              
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+            
+              
+                <li>
+                  
+                    <b>KijiREST Operations</b>
+                  
+                </li>
+              
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+              
+            
+          
+            
+              
+                <li>
+                  
+                    <a href="/userguides/rest/0.3.0/rest-examples">KijiREST Examples</a>
+                  
+                </li>
+              
+            
+          
+            
+              
+            
+          
+            
+              
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+          
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+        
+      </ul>
+      <h3>Need Help?</h3>
+      <ul>
+        <li>
+      <a class="btn btn-info"  href="https://groups.google.com/a/kiji.org/forum/?fromgroups#!forum/user">User Group Mailing List</a>
+        </li>
+        <li>
+      <a class="btn btn-warning" href="https://jira.kiji.org/secure/CreateIssueDetails!init.jspa?pid=10004&issuetype=1&priority=3&components=10010&summary=Reported%20Docs%20Error:%20KijiREST Operations&description=Please%20describe%20the%20issue.%0a%0aurl:%20/userguides/rest/0.3.0/rest-operations"> Report an Error in Docs </a> 
+        </li>
+    </ul>
+    </div>
+</div>
+
+  </div>
+</div>
+
+
+      </div>
+
+      <footer>
+        <hr/>
+        <p>&copy; Kiji Community</p>
+      </footer>
+    </div>
+
+    
+
+
+  <script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-REMOVED-DONT-COMMIT']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+
+
+  </body>
+</html>
+

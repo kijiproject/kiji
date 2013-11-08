@@ -3,14 +3,22 @@ layout: page
 title: Kiji User Guide Index
 ---
 
-The Kiji framework comes with a user guide that describes the main
+The Kiji framework comes with user guides that describe the main
 theory and practice behind developing Big Data applications with Kiji.
 
-Click a link below to select the version of the user guide appropriate
-to the Kiji version you are using.
+## Current Versions
+The most recent version of each of the user guides is available here:
 
-## KijiSchema
-* [KijiSchema 1.3.2]({{site.userguide_url}}/schema/1.3.2/kiji-schema-overview/) (latest)
+* [KijiSchema User Guide]({{site.userguide_url}}/schema/1.3.2/kiji-schema-overview/)
+* [KijiMR User Guide]({{site.userguide_url}}/mapreduce/1.2.1/kiji-mr-overview/)
+* [KijiREST User Guide]({{site.userguide_url}}/rest/0.6.0/rest-overview/)
+
+## Previous Versions
+
+If you are using an earlier version of Kiji, user guides appropriate
+to the Kiji version you are using are available here:
+
+#### KijiSchema User Guide
 * [KijiSchema 1.3.1]({{site.userguide_url}}/schema/1.3.1/kiji-schema-overview/)
 * [KijiSchema 1.3.0]({{site.userguide_url}}/schema/1.3.0/kiji-schema-overview/)
 * [KijiSchema 1.2.1]({{site.userguide_url}}/schema/1.2.1/kiji-schema-overview/)
@@ -29,9 +37,8 @@ to the Kiji version you are using.
 * [KijiSchema 1.0.0-rc2]({{site.userguide_url}}/schema/1.0.0-rc2/kiji-schema-overview/)
 * [KijiSchema 1.0.0-rc1]({{site.userguide_url}}/schema/1.0.0-rc1/kiji-schema-overview/)
 
-## KijiMR
+#### KijiMR User Guide
 
-* [KijiMR 1.2.1]({{site.userguide_url}}/mapreduce/1.2.1/kiji-mr-overview/) (latest)
 * [KijiMR 1.2.0]({{site.userguide_url}}/mapreduce/1.2.0/kiji-mr-overview/)
 * [KijiMR 1.1.0]({{site.userguide_url}}/mapreduce/1.1.0/kiji-mr-overview/)
 * [KijiMR 1.0.2]({{site.userguide_url}}/mapreduce/1.0.2/kiji-mr-overview/)
@@ -43,20 +50,19 @@ to the Kiji version you are using.
 * [KijiMR 1.0.0-rc5]({{site.userguide_url}}/mapreduce/1.0.0-rc5/kiji-mr-overview/)
 * [KijiMR 1.0.0-rc4]({{site.userguide_url}}/mapreduce/1.0.0-rc4/kiji-mr-overview/)
 
-## KijiREST
+#### KijiREST User Guide
 
-* [KijiREST 0.6.0]({{site.userguide_url}}/rest/0.6.0/rest-overview/) (latest)
 * [KijiREST 0.5.0]({{site.userguide_url}}/rest/0.5.0/rest-overview/)
 * [KijiREST 0.4.0]({{site.userguide_url}}/rest/0.4.0/rest-overview/)
 * [KijiREST 0.3.0]({{site.userguide_url}}/rest/0.3.0/rest-overview/)
 
-### Documentation under development
+## Development Versions
 
 The documentation links in this section refer to works-in-progress for the next versions
-of the software to be released. Documentation in this section may be incorrect or change
+of the software to be released. Documentation in this section may be incorrect or may change
 before release.
 
-* [KijiSchema]({{site.userguide_schema_devel}}/kiji-schema-overview/)
-* [KijiMR]({{site.userguide_mapreduce_devel}}/kiji-mr-overview/)
-* [KijiREST]({{site.userguide_rest_devel}}/rest-overview/)
+* [KijiSchema User Guide]({{site.userguide_schema_devel}}/kiji-schema-overview/)
+* [KijiMR User Guide]({{site.userguide_mapreduce_devel}}/kiji-mr-overview/)
+* [KijiREST User Guide]({{site.userguide_rest_devel}}/rest-overview/)
 
