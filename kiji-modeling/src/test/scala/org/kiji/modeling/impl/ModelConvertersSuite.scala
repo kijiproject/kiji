@@ -26,9 +26,7 @@ import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.flow.AndFilter
 import org.kiji.express.flow.Between
-import org.kiji.express.flow.ColumnFamilyRequestInput
 import org.kiji.express.flow.ColumnRangeFilter
-import org.kiji.express.flow.ColumnRequestInput
 import org.kiji.express.flow.ColumnRequestOutput
 import org.kiji.express.flow.ExpressColumnFilter
 import org.kiji.express.flow.OrFilter

@@ -28,7 +28,6 @@ import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.flow.AndFilter
 import org.kiji.express.flow.Between
-import org.kiji.express.flow.ColumnFamilyRequestInput
 import org.kiji.express.flow.ColumnRangeFilter
 import org.kiji.express.flow.ColumnRequestInput
 import org.kiji.express.flow.ColumnRequestOutput
@@ -46,16 +45,13 @@ import org.kiji.modeling.avro.AvroKijiInputSpec
 import org.kiji.modeling.avro.AvroModelEnvironment
 import org.kiji.modeling.avro.AvroRegexQualifierFilter
 import org.kiji.modeling.framework.ModelConverters
-import org.kiji.modeling.impl.ModelJobUtils
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiDataRequestBuilder
 import org.kiji.schema.KijiInvalidNameException
-import org.kiji.schema.filter.AndColumnFilter
 import org.kiji.schema.filter.Filters
 import org.kiji.schema.filter.KijiColumnFilter
 import org.kiji.schema.filter.KijiColumnRangeFilter
-import org.kiji.schema.filter.OrColumnFilter
 import org.kiji.schema.filter.RegexQualifierColumnFilter
 import org.kiji.schema.util.FromJson
 import org.kiji.schema.util.ToJson

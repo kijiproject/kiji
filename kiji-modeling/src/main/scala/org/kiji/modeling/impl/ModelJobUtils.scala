@@ -47,7 +47,6 @@ import org.kiji.modeling.config.SequenceFileSourceSpec
 import org.kiji.modeling.config.TextSourceSpec
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiDataRequest
-import org.kiji.schema.KijiDataRequestBuilder
 import org.kiji.schema.KijiURI
 
 /**

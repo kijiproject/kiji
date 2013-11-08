@@ -24,10 +24,7 @@ import scala.io.Source
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
-import org.kiji.express.flow.ColumnFamilyRequestInput
-import org.kiji.express.flow.ColumnRequestInput
 import org.kiji.express.flow.ColumnRequestOutput
-import org.kiji.express.flow.QualifiedColumnRequestInput
 import org.kiji.express.util.Resources.doAndClose
 import org.kiji.modeling.avro.AvroModelEnvironment
 import org.kiji.modeling.framework.ModelConverters

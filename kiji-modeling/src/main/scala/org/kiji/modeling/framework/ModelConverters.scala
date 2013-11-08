@@ -29,7 +29,6 @@ import org.kiji.express.flow.ColumnRequestOutput
 import org.kiji.express.flow.ExpressColumnFilter
 import org.kiji.express.flow.OrFilter
 import org.kiji.express.flow.RegexQualifierFilter
-
 import org.kiji.modeling.Evaluator
 import org.kiji.modeling.Extractor
 import org.kiji.modeling.Preparer
@@ -74,7 +73,6 @@ import org.kiji.modeling.config.SequenceFileSourceSpec
 import org.kiji.modeling.config.TextSourceSpec
 import org.kiji.modeling.config.TrainEnvironment
 import org.kiji.modeling.config.ValidationException
-import org.kiji.schema.filter.KijiColumnFilter
 import org.kiji.schema.util.ProtocolVersion
 
 /**

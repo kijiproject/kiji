@@ -111,10 +111,11 @@ class RecommendationPipeSuite extends KijiSuite {
   }
 
   /**
-   * This test goes over the orders, groups them by product. It then joins the orders
-   * with the size the groups of constituent products. Thus an order like {bread, flour} will
-   * result in two tuples: {bread, flour}, bread, #of orders with bread and {bread, flour}, flour,
-   * #of orders containing flour.
+   * Assumes every row in the table above represents an order. This test goes over the orders,
+   * groups them by product. It then joins the orders with the size the groups of constituent
+   * products. Thus an order like {bread, flour} will result in two tuples:
+   * {bread, flour}, bread, #of orders with bread; and
+   * {bread, flour}, flour, #of orders containing flour.
    */
   test("Joining with Group Count works properly") {
     class JoinWithGroupCountJob(args: Args) extends KijiModelingJob(args) {
@@ -155,7 +156,8 @@ class RecommendationPipeSuite extends KijiSuite {
   }
 
   /**
-   * This tests runs a frequent itemset miner with the total number of orders provided.
+   * This tests runs a frequent itemset miner with the total number of orders provided. Assumes
+   * every row in the table above represents an order.
    */
   test("Filter by Support works with Constant Normalizer") {
     class FrequentItemsetFinderJob(args: Args) extends KijiModelingJob(args) {
@@ -180,7 +182,8 @@ class RecommendationPipeSuite extends KijiSuite {
   }
 
   /**
-   * This test runs an actual frequent itemset miner.
+   * This test runs an actual frequent itemset miner. Assumes every row in the table above
+   * represents an order.
    */
   test("Filter by Support works with Normalizing Pipe") {
     class FrequentItemsetFinderJob(args: Args) extends KijiModelingJob(args) {
@@ -203,6 +206,34 @@ class RecommendationPipeSuite extends KijiSuite {
     }
     val expected = Array("bread,milk\t2\t3\t0.6666666666666666",
         "butter,flour\t2\t3\t0.6666666666666666")
+    assert(lines.split("\n").sameElements(expected))
+    FileUtils.deleteDirectory(outputDir)
+  }
+
+  // Assumes every row in the Kiji table above represents a user.
+  test("Jaccard distance works correctly") {
+    class JaccardDistanceCalculator(args: Args) extends KijiModelingJob(args) {
+      KijiInput(args("input"), "family:column" -> 'slice)
+        .map('slice -> 'userPurchases) {
+          slice: KijiSlice[String] => slice.getFirstValue().split(",").map(_.trim).toList
+        }
+        .simpleItemItemJaccardSimilarity[String]('userPurchases -> 'result)
+        .write(TextLine(args("output")))
+    }
+    val outputDir: File = Files.createTempDir()
+    new JaccardDistanceCalculator(Args("--input " + inputUri.toString + " --output " +
+        outputDir.getAbsolutePath)).run
+    val lines = doAndClose(scala.io.Source.fromFile(outputDir.getAbsolutePath + "/part-00000")) {
+      source: scala.io.Source => source.mkString
+    }
+    val expected = Array("bread\tbutter\t1\t2\t2\t3\t0.3333333333333333",
+        "bread\tcoke\t1\t2\t1\t2\t0.5",
+        "bread\tflour\t1\t2\t2\t3\t0.3333333333333333",
+        "butter\tflour\t2\t2\t2\t2\t1.0",
+        "bread\tmilk\t2\t2\t2\t2\t1.0",
+        "butter\tmilk\t1\t2\t2\t3\t0.3333333333333333",
+        "coke\tmilk\t1\t1\t2\t2\t0.5",
+        "flour\tmilk\t1\t2\t2\t3\t0.3333333333333333")
     assert(lines.split("\n").sameElements(expected))
     FileUtils.deleteDirectory(outputDir)
   }
