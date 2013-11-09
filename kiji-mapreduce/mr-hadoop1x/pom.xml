@@ -76,6 +76,13 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <!--
+            Increase heap space to fix failing test (org.kiji.mapreduce.TestGathererReducer)
+            on OSX - see KIJIMR-247.
+          -->
+          <argLine>-Xmx2048m</argLine>
+        </configuration>
       </plugin>
 
       <plugin>
