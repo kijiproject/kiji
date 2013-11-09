@@ -134,35 +134,41 @@ private[express] case class AvroSpecificTupleConverter[T](fs: Fields, m: Manifes
 
   override def arity: Int = -1
 
-  private def toLowerFirst(s : String) = s(0).toLower + s.substring(1)
-  private def setterToFieldName(setter : Method) = toLowerFirst(setter.getName.substring(3))
+  /**
+   * Attempts to translate an avro field name (e.g. count, my_count, should_be_snake_case) to an
+   * Avro record setter name (e.g., setCount, setMyCount, setShouldBeSnakeCase).
+   * @param field to translate to setter format.
+   * @return setter of given field.
+   */
+  private def fieldToSetter(field: String): String = {
+    field.split('_').map(_.capitalize).mkString("set", "", "")
+  }
 
   // Precompute as much of the reflection business as possible
-  val avroClass = m.erasure
-  val builderClass = avroClass.getDeclaredClasses.find(_.getSimpleName == "Builder").get
-  @transient val newBuilderMethod = avroClass.getMethod("newBuilder")
-  @transient val buildMethod = builderClass.getMethod("build")
+  private val avroClass = m.erasure
+  private val builderClass = avroClass.getDeclaredClasses.find(_.getSimpleName == "Builder").get
+  private val newBuilderMethod = avroClass.getMethod("newBuilder")
+  private val buildMethod = builderClass.getMethod("build")
 
-  val fields = fs
-      .iterator
-      .toList
-      .map(_.toString)
+  /**
+   * Map of field name to setter method.
+   */
+  private val fieldSetters: Map[String, Method] = {
+    val fields: List[String] = fs.iterator.map(_.toString).toList
+    val setters: Map[String, Method] = builderClass
+        .getDeclaredMethods
+        .map { m => (m.getName, m) }
+        .toMap
 
-  @transient val setters = builderClass
-      .getDeclaredMethods
-      .filter(_.getName.startsWith("set"))
-      .groupBy(setterToFieldName)
-      .mapValues(_.head)
-      .filterKeys(fields.contains)
+    fields
+        .zip(fields.map(fieldToSetter))
+        .toMap
+        .mapValues(setters)
+  }
 
   override def apply(entry: TupleEntry): T = {
     val builder = newBuilderMethod.invoke(avroClass)
-
-    setters.foreach { fs =>
-      val (field, setter) = fs
-      setter.invoke(builder, entry.getObject(field))
-    }
-
+    fieldSetters.foreach { case (field, setter) => setter.invoke(builder, entry.getObject(field)) }
     buildMethod.invoke(builder).asInstanceOf[T]
   }
 }

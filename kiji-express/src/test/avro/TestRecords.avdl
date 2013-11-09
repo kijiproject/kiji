@@ -31,4 +31,11 @@ protocol Testing {
     string s;
     string o = "default-value";
   }
+
+  record NameFormats {
+    int snake_case_ugh;
+    int CamelCaseEvenWorse;
+    int camelPupCase;
+    int SCREAMING_SNAKE_CASE_YAH;
+  }
 }
