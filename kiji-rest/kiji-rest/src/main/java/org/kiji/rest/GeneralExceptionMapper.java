@@ -29,35 +29,43 @@ import javax.ws.rs.ext.Provider;
 
 import com.sun.jersey.core.spi.factory.ResponseBuilderImpl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.kiji.rest.representations.ExceptionWrapper;
 
 /**
- * A somewhat catch-all mapper to map RuntimeExceptions to something readable. Most other
+ * A somewhat catch-all mapper to map Throwables to something readable. Most other
  * exceptions are mapped via the WebApplicationException.
- *
  */
 
 @Provider
-public class GeneralExceptionMapper implements ExceptionMapper<RuntimeException> {
+public class GeneralExceptionMapper implements ExceptionMapper<Throwable> {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(GeneralExceptionMapper.class);
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public Response toResponse(RuntimeException thrownException) {
+  public Response toResponse(Throwable thrownException) {
     ResponseBuilder builder = new ResponseBuilderImpl();
     builder.type(MediaType.APPLICATION_JSON);
 
     Status status = null;
     if (thrownException instanceof WebApplicationException) {
-      WebApplicationException webAppException = (WebApplicationException)thrownException;
+      WebApplicationException webAppException = (WebApplicationException) thrownException;
       status = Status.fromStatusCode(webAppException.getResponse().getStatus());
     }
     if (status == null) {
       status = Status.INTERNAL_SERVER_ERROR;
     }
+    if (status == Status.INTERNAL_SERVER_ERROR) {
+      LOGGER.error("ERROR", thrownException);
+    }
     builder.status(status);
     builder.entity(new ExceptionWrapper(status, thrownException));
+
     return builder.build();
   }
 }

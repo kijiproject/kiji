@@ -79,7 +79,7 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
    */
   public static final void registerSerializers(ObjectMapperFactory mapperFactory) {
     // TODO: Add a module to convert btw Avro's specific types and JSON. The default
-    //mapping seems to throw an exception.
+    // mapping seems to throw an exception.
     SimpleModule module = new SimpleModule("KijiRestModule", new Version(1, 0, 0, null,
         "org.kiji.rest", "avroToJson"));
     module.addSerializer(new AvroToJsonStringSerializer());
@@ -91,7 +91,9 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
     mapperFactory.registerModule(module);
   }
 
-  /** {@inheritDoc}
+  /**
+   * {@inheritDoc}
+   *
    * @throws IOException when instance in configuration can not be opened and closed.
    */
   @Override
@@ -115,10 +117,22 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
     ManagedKijiClient kijiClient = new ManagedKijiClient(instances);
     environment.manage(kijiClient);
 
-    //Add exception mappers to print better exception messages to the client than what
-    //Dropwizard does by default.
+    // Add exception mappers to print better exception messages to the client than what
+    // Dropwizard does by default.
     environment.addProvider(new GeneralExceptionMapper());
-    environment.addProvider(new IOExceptionMapper());
+
+    // Remove the in built Dropwizard LoggingExceptionHandler and use a custom one that logs
+    // JSON and also ensures that it's logged to the log file.
+    Set<Object> jerseySingletons = environment.getJerseyResourceConfig().getSingletons();
+    Object oldLoggingHandler = null;
+
+    for (Object o : jerseySingletons) {
+      if (o.getClass().getName().contains("DropwizardResourceConfig")) {
+        oldLoggingHandler = o;
+      }
+    }
+
+    jerseySingletons.remove(oldLoggingHandler);
 
     // Load resources.
     environment.addResource(new KijiRESTResource());

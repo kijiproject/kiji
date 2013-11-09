@@ -2,6 +2,9 @@
                               KijiREST Release Notes
 
 Version 1.0.0
+  * REST-64. Fix the exception handling to ensure that all exceptions
+      are converted to JSON objects, stacktraces included and logged
+      to the application log file on the server.
   * REST-48. Adds start_eid/end_eid and removes start_rk/end_rk.
   * REST-60. Removes the entityId endpoint of tables.
   * REST-50. Check that the table still exists before returning it in 

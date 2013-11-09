@@ -21,6 +21,10 @@ package org.kiji.rest.representations;
 
 import javax.ws.rs.core.Response.Status;
 
+import org.apache.hadoop.util.StringUtils;
+
+
+
 /**
  * Class that encapsulates the exception information to be sent back to the client
  * (in JSON) so that it's both parseable by a JSON client as well as human readable in the
@@ -74,5 +78,13 @@ public final class ExceptionWrapper {
    */
   public int getStatus() {
     return mStatus.getStatusCode();
+  }
+
+  /**
+   * Returns the stacktrace of the underlying exception.
+   * @return the stacktrace of the underlying exception.
+   */
+  public String getTrace() {
+    return StringUtils.stringifyException(mWrappedException);
   }
 }

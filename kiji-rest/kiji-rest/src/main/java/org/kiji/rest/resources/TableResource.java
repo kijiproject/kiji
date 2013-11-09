@@ -24,6 +24,7 @@ import static org.kiji.rest.RoutesConstants.TABLE_PARAMETER;
 import static org.kiji.rest.RoutesConstants.TABLE_PATH;
 
 import java.io.IOException;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
