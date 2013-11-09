@@ -43,7 +43,7 @@ trait KeyValueStores {
    *
    * @return the key-value stores accessible to this phase of the model workflow.
    */
-  final private[modeling] def keyValueStores: Map[String, KeyValueStore[_, _]] = {
+  final private[kiji] def keyValueStores: Map[String, KeyValueStore[_, _]] = {
     _keyValueStores.getOrElse {
       throw new IllegalStateException("This model phase has not been initialized properly. "
           + "Its key-value stores haven't been loaded yet.")
@@ -58,7 +58,7 @@ trait KeyValueStores {
    * @tparam V is the type of the values.
    * @return the key-value store associated with the specified name.
    */
-  final protected[modeling] def keyValueStore[K, V](name: String): KeyValueStore[K, V] = {
+  final protected[kiji] def keyValueStore[K, V](name: String): KeyValueStore[K, V] = {
     val stores: Map[String, KeyValueStore[_, _]] = _keyValueStores.getOrElse {
       throw new IllegalStateException("This model phase has not been initialized properly. "
         + "Its key-value stores haven't been loaded yet.")
@@ -72,7 +72,7 @@ trait KeyValueStores {
    *
    * @param value to set this phase's key-value stores to.
    */
-  private[modeling] def keyValueStores_=(value: Map[String, KeyValueStore[_, _]]) {
+  private[kiji] def keyValueStores_=(value: Map[String, KeyValueStore[_, _]]) {
     _keyValueStores = Some(value)
   }
 }
