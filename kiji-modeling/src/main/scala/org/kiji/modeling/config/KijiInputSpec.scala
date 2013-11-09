@@ -60,7 +60,7 @@ final case class KijiInputSpec(
       builder.newColumnsDef()
           .withMaxVersions(column.maxVersions)
           .withFilter(column.filter.map{ _.toKijiColumnFilter }.getOrElse(null))
-          .withPageSize(column.pageSize.getOrElse(0))
+          .withPageSize(column.paging.cellsPerPage.getOrElse(0))
           .add(column.columnName)
     }
 
