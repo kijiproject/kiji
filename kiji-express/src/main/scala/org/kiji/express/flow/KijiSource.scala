@@ -107,9 +107,10 @@ import org.kiji.schema.filter.KijiColumnFilter
  *     source is used for writing. Specify `None` to write all
  *     cells at the current time.
  * @param loggingInterval The interval at which to log skipped rows.
- * @param columns is a one-to-one mapping from field names to Kiji columns. When reading,
- *     the columns in the map will be read into their associated tuple fields. When
- *     writing, values from the tuple fields will be written to their associated column.
+ * @param inputColumns is a one-to-one mapping from field names to Kiji columns. The columns in the
+ *     map will be read into their associated tuple fields.
+ * @param outputColumns is a one-to-one mapping from field names to Kiji columns. Values from the
+ *     tuple fields will be written to their associated column.
  */
 @ApiAudience.Framework
 @ApiStability.Experimental
@@ -119,8 +120,8 @@ final class KijiSource private[express] (
     val timestampField: Option[Symbol],
     val loggingInterval: Long,
     val inputColumns: Map[Symbol, ColumnRequestInput] = Map(),
-    val outputColumns: Map[Symbol, ColumnRequestOutput] = Map())
-    extends Source {
+    val outputColumns: Map[Symbol, ColumnRequestOutput] = Map()
+) extends Source {
   import KijiSource._
 
   private type HadoopScheme = Scheme[JobConf, RecordReader[_, _], OutputCollector[_, _], _, _]
@@ -130,17 +131,22 @@ final class KijiSource private[express] (
 
   /** A Kiji scheme intended to be used with Scalding/Cascading's hdfs mode. */
   private val kijiScheme: KijiScheme =
-      new KijiScheme(timeRange, timestampField, loggingInterval, convertKeysToStrings(inputColumns),
-        convertKeysToStrings(outputColumns))
+      new KijiScheme(
+          timeRange,
+          timestampField,
+          loggingInterval,
+          convertKeysToStrings(inputColumns),
+          convertKeysToStrings(outputColumns)
+      )
 
   /** A Kiji scheme intended to be used with Scalding/Cascading's local mode. */
-  private val localKijiScheme: LocalKijiScheme = {
-    new LocalKijiScheme(
-      timeRange,
-      timestampField,
-      convertKeysToStrings(inputColumns),
-      convertKeysToStrings(outputColumns))
-  }
+  private val localKijiScheme: LocalKijiScheme =
+      new LocalKijiScheme(
+          timeRange,
+          timestampField,
+          convertKeysToStrings(inputColumns),
+          convertKeysToStrings(outputColumns)
+      )
 
   /**
    * Creates a Scheme that writes to/reads from a Kiji table for usage with
@@ -167,7 +173,6 @@ final class KijiSource private[express] (
    * @return A tap to use for this data source.
    */
   override def createTap(readOrWrite: AccessMode)(implicit mode: Mode): Tap[_, _, _] = {
-
     /** Combination of normal input columns and input versions of the output columns (the latter are
      * needed for reading back written results) */
     def getInputColumnsForTesting: Map[String, ColumnRequestInput] = {
@@ -351,7 +356,7 @@ object KijiSource {
         Integer.MAX_VALUE,
         col.filter,
         col.default,
-        col.pageSize,
+        col.paging,
         col.schema)
   }
 

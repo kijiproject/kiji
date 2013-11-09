@@ -1,6 +1,9 @@
 
                              Kiji Express Release Notes
 
+Version 0.12.0
+  * EXP-279. Change paging options to use PagingSpec.
+
 Version 0.10.0
   * EXP-129. Add evaluation phase to model environment.
   * EXP-128. Add evaluation phase to model definition.

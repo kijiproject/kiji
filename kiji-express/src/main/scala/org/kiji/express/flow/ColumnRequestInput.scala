@@ -26,9 +26,6 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
 import org.kiji.express.KijiSlice
-import org.kiji.express.flow.SchemaSpec.Generic
-import org.kiji.express.flow.SchemaSpec.Specific
-import org.kiji.express.flow.SchemaSpec.Writer
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiInvalidNameException
 
@@ -50,8 +47,7 @@ import org.kiji.schema.KijiInvalidNameException
 @ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Sealed
-trait ColumnRequestInput {
-
+sealed trait ColumnRequestInput {
   /**
    * Specifies the maximum number of cells (from the most recent) to retrieve from a column.
    *
@@ -82,11 +78,9 @@ trait ColumnRequestInput {
   /**
    * Specifies the maximum number of cells to maintain in memory when paging through a column.
    *
-   * If `None`, paging is disabled.
-   *
-   * @return `Some[pageSize]` or `None`.
+   * @return the paging specification for this column.
    */
-  def pageSize: Option[Int]
+  def paging: PagingSpec
 
   /**
    * Specifies the schema of data to be read from the column.
@@ -106,7 +100,6 @@ trait ColumnRequestInput {
    * The [[org.kiji.schema.KijiColumnName]] of the column.
    */
   def columnName: KijiColumnName
-
 }
 
 /**
@@ -116,7 +109,6 @@ trait ColumnRequestInput {
 @ApiStability.Experimental
 @Inheritance.Sealed
 object ColumnRequestInput {
-
   /**
    * Convenience function for creating a [[org.kiji.express.flow.ColumnRequestInput]].  The input
    * spec will be for a qualified column if the column parameter contains a ':',
@@ -127,19 +119,33 @@ object ColumnRequestInput {
    * @return ColumnRequestInput with supplied options.
    */
   def apply(
-    column: String,
-    maxVersions: Int = latest,
-    filter: Option[ExpressColumnFilter] = None,
-    default: Option[KijiSlice[_]] = None,
-    pageSize: Option[Int] = None,
-    schema: SchemaSpec = Writer
+      column: String,
+      maxVersions: Int = latest,
+      filter: Option[ExpressColumnFilter] = None,
+      default: Option[KijiSlice[_]] = None,
+      paging: PagingSpec = PagingSpec.Off,
+      schema: SchemaSpec = SchemaSpec.Writer
   ): ColumnRequestInput = {
-    column.split(':').toList match {
-      case family :: qualifier :: Nil =>
-        QualifiedColumnRequestInput(family, qualifier, maxVersions, filter, default, pageSize,
-            schema)
-      case family :: Nil =>
-        ColumnFamilyRequestInput(family, maxVersions, filter, default, pageSize, schema)
+    column.split(':') match {
+      case Array(family, qualifier) =>
+          QualifiedColumnRequestInput(
+              family,
+              qualifier,
+              maxVersions,
+              filter,
+              default,
+              paging,
+              schema
+          )
+      case Array(family) =>
+          ColumnFamilyRequestInput(
+              family,
+              maxVersions,
+              filter,
+              default,
+              paging,
+              schema
+          )
       case _ => throw new IllegalArgumentException("column name must contain 'family:qualifier'" +
           " for a group-type, or 'family' for a map-type column.")
     }
@@ -159,7 +165,7 @@ object ColumnRequestInput {
       column: String,
       specificRecord: Class[_ <: SpecificRecord]
   ): ColumnRequestInput = {
-    ColumnRequestInput(column, schema = Specific(specificRecord))
+    ColumnRequestInput(column, schema = SchemaSpec.Specific(specificRecord))
   }
 
   /**
@@ -173,10 +179,10 @@ object ColumnRequestInput {
    * @return ColumnRequestInput with supplied options.
    */
   def apply(
-    column: String,
-    schema: Schema
+      column: String,
+      schema: Schema
   ): ColumnRequestInput = {
-    ColumnRequestInput(column, schema = Generic(schema))
+    ColumnRequestInput(column, schema = SchemaSpec.Generic(schema))
   }
 }
 
@@ -188,7 +194,7 @@ object ColumnRequestInput {
  * @param maxVersions The maximum number of versions to read back (default is only most recent).
  * @param filter Filter to use when reading back cells (default is `None`).
  * @param default Default KijiSlice to return in case column is empty in row.
- * @param pageSize Maximum number of cells to request from HBase per RPC.
+ * @param paging Maximum number of cells to request from HBase per RPC.
  * @param schema Reader schema specification.  Defaults to the default reader schema.
  */
 @ApiAudience.Public
@@ -200,8 +206,8 @@ final case class QualifiedColumnRequestInput(
     maxVersions: Int = latest,
     filter: Option[ExpressColumnFilter] = None,
     default: Option[KijiSlice[_]] = None,
-    pageSize: Option[Int] = None,
-    schema: SchemaSpec = Writer
+    paging: PagingSpec = PagingSpec.Off,
+    schema: SchemaSpec = SchemaSpec.Writer
 ) extends ColumnRequestInput {
   override val columnName: KijiColumnName = new KijiColumnName(family, qualifier)
 }
@@ -227,8 +233,8 @@ object QualifiedColumnRequestInput {
       family: String,
       qualifier: String,
       specificRecord: Class[_ <: SpecificRecord]
-  ) : QualifiedColumnRequestInput = {
-    QualifiedColumnRequestInput(family, qualifier, schema = Specific(specificRecord))
+  ): QualifiedColumnRequestInput = {
+    QualifiedColumnRequestInput(family, qualifier, schema = SchemaSpec.Specific(specificRecord))
   }
 
   /**
@@ -245,7 +251,7 @@ object QualifiedColumnRequestInput {
       qualifier: String,
       schema: Schema
   ): QualifiedColumnRequestInput = {
-    QualifiedColumnRequestInput(family, qualifier, schema = Generic(schema))
+    QualifiedColumnRequestInput(family, qualifier, schema = SchemaSpec.Generic(schema))
   }
 }
 
@@ -256,7 +262,7 @@ object QualifiedColumnRequestInput {
  * @param maxVersions The maximum number of versions to read back (default is only most recent).
  * @param filter Filter to use when reading back cells (default is `None`).
  * @param default Default KijiSlice to return in case column is empty in row.
- * @param pageSize Maximum number of cells to request from HBase per RPC.
+ * @param paging Maximum number of cells to request from HBase per RPC.
  * @param schema Reader schema specification.  Defaults to
  *               [[org.kiji.express.flow.SchemaSpec.Writer]].
  */
@@ -268,8 +274,8 @@ final case class ColumnFamilyRequestInput(
     maxVersions: Int = latest,
     filter: Option[ExpressColumnFilter] = None,
     default: Option[KijiSlice[_]] = None,
-    pageSize: Option[Int] = None,
-    schema: SchemaSpec = Writer
+    paging: PagingSpec = PagingSpec.Off,
+    schema: SchemaSpec = SchemaSpec.Writer
 ) extends ColumnRequestInput {
   if (family.contains(':')) {
     throw new KijiInvalidNameException("Cannot have a ':' in family name for column family request")
@@ -297,7 +303,7 @@ object ColumnFamilyRequestInput {
       family: String,
       specificRecord: Class[_ <: SpecificRecord]
   ): ColumnFamilyRequestInput = {
-    ColumnFamilyRequestInput(family, schema = Specific(specificRecord))
+    ColumnFamilyRequestInput(family, schema = SchemaSpec.Specific(specificRecord))
   }
 
   /**
@@ -312,7 +318,7 @@ object ColumnFamilyRequestInput {
       family: String,
       genericSchema: Schema
   ): ColumnFamilyRequestInput = {
-    ColumnFamilyRequestInput(family, schema = Generic(genericSchema))
+    ColumnFamilyRequestInput(family, schema = SchemaSpec.Generic(genericSchema))
   }
 }
 

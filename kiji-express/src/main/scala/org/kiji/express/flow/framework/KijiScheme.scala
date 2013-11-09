@@ -52,6 +52,7 @@ import org.kiji.express.flow.ColumnFamilyRequestInput
 import org.kiji.express.flow.ColumnFamilyRequestOutput
 import org.kiji.express.flow.ColumnRequestInput
 import org.kiji.express.flow.ColumnRequestOutput
+import org.kiji.express.flow.PagingSpec
 import org.kiji.express.flow.QualifiedColumnRequestInput
 import org.kiji.express.flow.QualifiedColumnRequestOutput
 import org.kiji.express.flow.TimeRange
@@ -397,7 +398,8 @@ object KijiScheme {
       timestampField: Option[Symbol],
       row: KijiRowData,
       tableUri: KijiURI,
-      configuration: Configuration): Option[Tuple] = {
+      configuration: Configuration
+  ): Option[Tuple] = {
     val result: Tuple = new Tuple()
 
     // Add the row's EntityId to the tuple.
@@ -429,9 +431,9 @@ object KijiScheme {
 
     def rowToTupleColumnFamily(cf: ColumnFamilyRequestInput): Unit = {
       if (row.containsColumn(cf.family)) {
-        cf.pageSize match {
-          case None => result.add(KijiSlice(row, cf.family))
-          case Some(pageSize) => {
+        cf.paging match {
+          case PagingSpec.Off => result.add(KijiSlice(row, cf.family))
+          case PagingSpec.Cells(pageSize) => {
             val slice = PagedKijiSlice(cf.family,
                 new MapFamilyVersionIterator(row, cf.family, qualifierPageSize, pageSize))
             result.add(slice)
@@ -445,10 +447,9 @@ object KijiScheme {
 
     def rowToTupleQualifiedColumn(qc: QualifiedColumnRequestInput): Unit = {
       if (row.containsColumn(qc.family, qc.qualifier)) {
-        qc.pageSize match {
-          case None =>
-              result.add(KijiSlice(row, qc.family, qc.qualifier))
-          case Some(pageSize) => {
+        qc.paging match {
+          case PagingSpec.Off => result.add(KijiSlice(row, qc.family, qc.qualifier))
+          case PagingSpec.Cells(pageSize) => {
             val slice = PagedKijiSlice(qc.family, qc.qualifier,
                 new ColumnVersionIterator(row, qc.family, qc.qualifier, pageSize))
             result.add(slice)
@@ -498,8 +499,8 @@ object KijiScheme {
       output: TupleEntry,
       writer: KijiTableWriter,
       layout: KijiTableLayout,
-      configuration: Configuration) {
-
+      configuration: Configuration
+  ) {
     // Get the entityId.
     val entityId = output
         .getObject(entityIdField)
@@ -535,15 +536,11 @@ object KijiScheme {
    */
   private[express] def resolveSchemaFromJSONOrUid(
       readerSchema: AvroSchema,
-      schemaTable: KijiSchemaTable): Schema = {
+      schemaTable: KijiSchemaTable
+  ): Schema = {
     Option(readerSchema.getJson) match {
-      case None => {
-        schemaTable.getSchema(readerSchema.getUid)
-      }
-      case Some (json) => {
-        val parser = new Schema.Parser
-        parser.parse(json)
-      }
+      case None => schemaTable.getSchema(readerSchema.getUid)
+      case Some(json) => new Schema.Parser().parse(json)
     }
   }
 
@@ -556,17 +553,22 @@ object KijiScheme {
    */
   private[express] def buildRequest(
       timeRange: TimeRange,
-      columns: Iterable[ColumnRequestInput]): KijiDataRequest = {
+      columns: Iterable[ColumnRequestInput]
+  ): KijiDataRequest = {
     def addColumn(
         builder: KijiDataRequestBuilder,
-        column: ColumnRequestInput): KijiDataRequestBuilder.ColumnsDef = {
-      val kijiFilter: KijiColumnFilter = column.filter.map(_.toKijiColumnFilter).getOrElse(null)
+        column: ColumnRequestInput
+    ): KijiDataRequestBuilder.ColumnsDef = {
+      val kijiFilter: KijiColumnFilter = column
+          .filter
+          .map { _.toKijiColumnFilter }
+          .getOrElse(null)
       builder.newColumnsDef()
           .withMaxVersions(column.maxVersions)
           .withFilter(kijiFilter)
-          .withPageSize(column.pageSize.getOrElse(0))
+          .withPageSize(column.paging.cellsPerPage.getOrElse(0))
           .add(column.columnName)
-      }
+    }
 
     val requestBuilder: KijiDataRequestBuilder = KijiDataRequest.builder()
         .withTimeRange(timeRange.begin, timeRange.end)
@@ -613,8 +615,10 @@ object KijiScheme {
    *     Use None if all values should be written at the current time.
    * @return a collection of fields created from the parameters.
    */
-  private[express] def buildSinkFields(columns: Map[String, ColumnRequestOutput],
-      timestampField: Option[Symbol]): Fields = {
+  private[express] def buildSinkFields(
+      columns: Map[String, ColumnRequestOutput],
+      timestampField: Option[Symbol]
+  ): Fields = {
     toField(Seq(entityIdField)
         ++ columns.keys
         ++ extractQualifierSelectors(columns)
@@ -627,7 +631,9 @@ object KijiScheme {
    * @param columns is the column requests for a Scheme.
    * @return the names of fields that are qualifier selectors.
    */
-  private[express] def extractQualifierSelectors(columns: Map[String, ColumnRequestOutput]) = {
+  private[express] def extractQualifierSelectors(
+      columns: Map[String, ColumnRequestOutput]
+  ): Iterator[String] = {
     columns.valuesIterator.collect {
       case x: ColumnFamilyRequestOutput => x.qualifierSelector.name
     }
