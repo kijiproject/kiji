@@ -74,16 +74,16 @@ class ReaderSchemaSuite extends KijiClientTest with KijiSuite {
   private def testExpressReadWrite[T](
       column: String,
       value: Any,
-      schema: SchemaSpec,
+      schemaSpec: SchemaSpec,
       overrideSchema: Option[SchemaSpec] = None
   ) = {
     val readEid = column + "-in"
     val writeEid = column + "-out"
     writeValue(readEid, column, value)
 
-    val outputSchema = overrideSchema.getOrElse(schema)
+    val outputSchema = overrideSchema.getOrElse(schemaSpec)
 
-    val inputCol = QualifiedColumnRequestInput(family, column, schema = schema)
+    val inputCol = QualifiedColumnRequestInput(family, column, schemaSpec = schemaSpec)
     val outputCol = QualifiedColumnRequestOutput(family, column, outputSchema)
 
     val args = Args("--hdfs")

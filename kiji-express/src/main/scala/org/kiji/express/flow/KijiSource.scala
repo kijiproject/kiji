@@ -357,7 +357,7 @@ object KijiSource {
         col.filter,
         col.default,
         col.paging,
-        col.schema)
+        col.schemaSpec)
   }
 
   /**

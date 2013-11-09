@@ -527,7 +527,7 @@ class KijiSourceSuite
         timestampField = None,
         loggingInterval = 1000,
         inputColumns = Map('records -> ColumnRequestInput(
-          "family:column3", schema = Specific(classOf[HashSpec]))),
+          "family:column3", schemaSpec = Specific(classOf[HashSpec]))),
         outputColumns = Map('records -> QualifiedColumnRequestOutput("family:column3"))
     )
 
@@ -887,7 +887,7 @@ object KijiSourceSuite {
         timestampField = None,
         loggingInterval = 1000,
         inputColumns = Map('records -> ColumnRequestInput(
-            "family:column3", schema = Specific(classOf[HashSpec]))),
+            "family:column3", schemaSpec = Specific(classOf[HashSpec]))),
         outputColumns = Map('records -> QualifiedColumnRequestOutput("family:column3")))
     ksource
         .map('records -> 'hashSizeField) { slice: KijiSlice[HashSpec] =>

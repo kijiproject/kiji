@@ -2,7 +2,10 @@
                              Kiji Express Release Notes
 
 Version 0.12.0
+  * EXP-286. rename ColumnRequestInput#schema -> schemaSpec.
+  * EXP-282. Cannot pack to specific objects with snake_case fields
   * EXP-279. Change paging options to use PagingSpec.
+  * EXP-222. Improve generic Avro APIs.
 
 Version 0.10.0
   * EXP-129. Add evaluation phase to model environment.
