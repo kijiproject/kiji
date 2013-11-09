@@ -3,6 +3,8 @@
                               KijiMR Release Notes
 
 Version 1.2.1
+  * KIJIMR-244. Make KeyValueStoreReader's open method threadsafe for
+      concurrent opens.
   * KIJIMR-242. Fix NPE on region servers with missing timestamp.
 
 Version 1.1.1

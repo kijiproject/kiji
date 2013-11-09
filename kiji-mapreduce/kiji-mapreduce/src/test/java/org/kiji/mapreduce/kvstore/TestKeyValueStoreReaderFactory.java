@@ -22,27 +22,28 @@ package org.kiji.mapreduce.kvstore;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-
-import org.apache.hadoop.conf.Configuration;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
-import org.kiji.mapreduce.kvstore.lib.InMemoryMapKeyValueStore;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import org.apache.hadoop.conf.Configuration;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import org.kiji.mapreduce.kvstore.framework.KeyValueStoreConfiguration;
+import org.kiji.mapreduce.kvstore.lib.InMemoryMapKeyValueStore;
+
 public class TestKeyValueStoreReaderFactory {
-  final int mNumThreads = 30;
-  CyclicBarrier mBarrier;
-  Collection<ReaderFetcher> mReaderFetchers;
-  List<Future<KeyValueStoreReader>> mKVStoreReaderFutures;
-  KeyValueStoreReaderFactory mFactory;
+  private final int mNumThreads = 30;
+  private CyclicBarrier mBarrier;
+  private Collection<ReaderFetcher> mReaderFetchers;
+  private List<Future<KeyValueStoreReader>> mKVStoreReaderFutures;
+  private KeyValueStoreReaderFactory mFactory;
 
   @Before
   public void setup() throws Exception {
@@ -102,17 +103,17 @@ public class TestKeyValueStoreReaderFactory {
   }
 
   private class ReaderFetcher implements Callable<KeyValueStoreReader> {
-    KeyValueStoreReaderFactory factory;
+    private KeyValueStoreReaderFactory mReaderFetcherFactory;
 
     ReaderFetcher(KeyValueStoreReaderFactory factory) {
-      this.factory = factory;
+      this.mReaderFetcherFactory = factory;
     }
 
     public KeyValueStoreReader call() throws Exception {
 
       // Waits for all threads to hit this point before having them all openStore() at once.
       mBarrier.await();
-      return factory.openStore("myStore");
+      return mReaderFetcherFactory.openStore("myStore");
     }
   }
 }

@@ -19,13 +19,13 @@
 
 package org.kiji.mapreduce.kvstore;
 
-import com.google.common.collect.Maps;
-
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.google.common.collect.Maps;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
