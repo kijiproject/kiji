@@ -85,7 +85,7 @@ class ModelEnvironmentSuite extends FunSuite {
       "Model environment version strings must match the regex \"[0-9]+(.[0-9]+)*\" " +
       "(1.0.0 would be valid)."
   val expectedProtocolVersionError: String =
-      "\"model_environment-0.3.0\" is the maximum protocol version supported. " +
+      "\"model_environment-0.4.0\" is the maximum protocol version supported. " +
       "The provided model environment is of protocol version: \"model_environment-7.3.0\""
 
   test("ModelEnvironment can be created from a path to a valid JSON file.") {

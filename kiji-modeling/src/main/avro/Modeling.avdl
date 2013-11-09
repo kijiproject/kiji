@@ -65,52 +65,34 @@ protocol Modeling {
     string version;
 
     /**
-     * Unique identifier for this model definition. The current version is model_definition-0.3.0.
+     * Unique identifier for this model definition.
      */
-    string protocol_version = "model_definition-0.3.0";
+    string protocol_version = "model_definition-0.4.0";
 
     // Model lifecycle fields ----------------------------------------------------------------------
     /**
      * Specification for the prepare phase. The class within must implement the preparer trait.
      * Set this field to null to specify that no prepare phase should be used.
-     *
-     * Note: This field should be null if using a PMML defined model.
      */
     union{null, string} preparer_class = null;
 
     /**
      * Specification for the train phase. The class within must implement the trainer trait.
      * Set this field to null to specify that no train phase should be used.
-     *
-     * Note: This field should be null if using a PMML defined model.
      */
     union{null, string} trainer_class = null;
 
     /**
      * Specification for the score phase. The class within must implement the scorer trait.
      * Set this field to null to specify that no score phase should be used.
-     *
-     * Note: This field should be null if using a PMML defined model.
      */
     union{null, AvroPhaseDefinition} scorer_phase = null;
 
-     /**
-      * Specification for the evaluate phase. The class within must implement the DistanceFn
-      * object. Set this field to null to specify that no evaluator phase should be used.
-      *
-      * Note: This field should be null if using a PMML defined model.
-      */
-    union{null, string} evaluator_class = null;
-
-    // PMML fields ---------------------------------------------------------------------------------
     /**
-     * Specifies the location of a pmml file to load a model from.
-     *
-     * Note: This field should be null if not using a PMML defined model.
+     * Specification for the evaluate phase. The class within must implement the DistanceFn
+     * object. Set this field to null to specify that no evaluator phase should be used.
      */
-    // QUESTION FOR REVIEWER: Does this property belong in the ModelDefinition, or should we create
-    // another layer of abstraction so that no paths are directly stored in a ModelDefinition?
-    union{null, string} pmml_file = null;
+    union{null, string} evaluator_class = null;
   }
 
   /**
@@ -509,9 +491,9 @@ protocol Modeling {
    */
   record AvroModelEnvironment {
     /**
-     * Unique identifier for this model environment. The current version is model_environment-0.3.0.
+     * Unique identifier for this model environment.
      */
-    string protocol_version = "model_environment-0.3.0";
+    string protocol_version = "model_environment-0.4.0";
 
     /**
      * User specified shorthand identifier for this model environment. Required.

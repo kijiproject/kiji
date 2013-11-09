@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 {
-  "protocol_version":"model_environment-0.3.0",
+  "protocol_version":"model_environment-0.4.0",
   "name":"myRunProfile",
   "version":"1.0.0",
   "prepare_environment":{

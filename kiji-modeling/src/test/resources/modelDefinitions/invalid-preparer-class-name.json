@@ -28,5 +28,5 @@
     }
   },
   "evaluator_class": "org.kiji.modeling.config.ModelDefinitionSuite$MyEvaluator",
-  "protocol_version": "model_definition-0.3.0"
+  "protocol_version": "model_definition-0.4.0"
 }

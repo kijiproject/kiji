@@ -160,13 +160,13 @@ final case class ModelDefinition(
  */
 object ModelDefinition {
   /** Maximum model definition version we can recognize. */
-  val MAX_MODEL_DEF_VER: ProtocolVersion = ProtocolVersion.parse("model_definition-0.3.0")
+  val MAX_MODEL_DEF_VER: ProtocolVersion = ProtocolVersion.parse("model_definition-0.4.0")
 
   /** Minimum model definition version we can recognize. */
-  val MIN_MODEL_DEF_VER: ProtocolVersion = ProtocolVersion.parse("model_definition-0.2.0")
+  val MIN_MODEL_DEF_VER: ProtocolVersion = ProtocolVersion.parse("model_definition-0.4.0")
 
   /** Current model definition protocol version. */
-  val CURRENT_MODEL_DEF_VER: ProtocolVersion = ProtocolVersion.parse("model_definition-0.3.0")
+  val CURRENT_MODEL_DEF_VER: ProtocolVersion = ProtocolVersion.parse("model_definition-0.4.0")
 
   /** Regular expression used to validate a model definition version string. */
   val VERSION_REGEX: String = "[0-9]+(.[0-9]+)*"

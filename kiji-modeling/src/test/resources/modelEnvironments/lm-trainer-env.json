@@ -1,5 +1,5 @@
 {
-  "protocol_version":"model_environment-0.3.0",
+  "protocol_version":"model_environment-0.4.0",
   "name":"lr-train-model-environment",
   "version":"1.0",
   "prepare_environment":null,

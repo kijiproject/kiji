@@ -217,20 +217,21 @@ final case class ModelEnvironment(
  */
 object ModelEnvironment {
   /** Maximum model environment version we can recognize. */
-  val MAX_RUN_ENV_VER: ProtocolVersion = ProtocolVersion.parse("model_environment-0.3.0")
+  val MAX_RUN_ENV_VER: ProtocolVersion = ProtocolVersion.parse("model_environment-0.4.0")
 
   /** Minimum model environment version we can recognize. */
-  val MIN_RUN_ENV_VER: ProtocolVersion = ProtocolVersion.parse("model_environment-0.2.0")
+  val MIN_RUN_ENV_VER: ProtocolVersion = ProtocolVersion.parse("model_environment-0.4.0")
 
   /** Current ModelDefinition protocol version. */
-  val CURRENT_MODEL_DEF_VER: ProtocolVersion = ProtocolVersion.parse("model_environment-0.3.0")
+  val CURRENT_MODEL_DEF_VER: ProtocolVersion = ProtocolVersion.parse("model_environment-0.4.0")
 
   /** Regular expression used to validate a model environment version string. */
   val VERSION_REGEX: String = "[0-9]+(.[0-9]+)*"
 
   /** Message to show the user when there is an error validating their model definition. */
-  private[modeling] val VALIDATION_MESSAGE = "One or more errors occurred while validating your" +
-      " model environment. Please correct the problems in your model environment and try again."
+  private[modeling] val VALIDATION_MESSAGE: String = "One or more errors occurred while" +
+      " validating your model environment. Please correct the problems in your model environment" +
+      " and try again."
 
   /**
    * Creates a ModelEnvironment given a JSON string. In the process, all fields are validated.

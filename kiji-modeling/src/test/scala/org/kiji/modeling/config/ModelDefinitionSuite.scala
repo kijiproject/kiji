@@ -279,7 +279,7 @@ class ModelDefinitionSuite extends FunSuite {
     val thrown = intercept[ModelDefinitionValidationException] {
       ModelDefinition.fromJson(invalidProtocolDefinition)
     }
-    assert(ModelDefinition.VALIDATION_MESSAGE + "\n\"model_definition-0.3.0\" is the maximum " +
+    assert(ModelDefinition.VALIDATION_MESSAGE + "\n\"model_definition-0.4.0\" is the maximum " +
         "protocol version supported. The provided model definition is of protocol version: " +
         "\"model_definition-7.3.0\"" === thrown.getMessage)
   }
