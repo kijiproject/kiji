@@ -163,7 +163,7 @@ final case class ModelEnvironment(
     trainEnvironment: Option[TrainEnvironment] = None,
     scoreEnvironment: Option[ScoreEnvironment] = None,
     evaluateEnvironment: Option[EvaluateEnvironment] = None,
-    private[modeling] val protocolVersion: ProtocolVersion =
+    private[kiji] val protocolVersion: ProtocolVersion =
         ModelEnvironment.CURRENT_MODEL_DEF_VER) {
   // Ensure that all fields set for this model environment are valid.
   ModelEnvironment.validateModelEnvironment(this)
@@ -229,7 +229,7 @@ object ModelEnvironment {
   val VERSION_REGEX: String = "[0-9]+(.[0-9]+)*"
 
   /** Message to show the user when there is an error validating their model definition. */
-  private[modeling] val VALIDATION_MESSAGE: String = "One or more errors occurred while" +
+  private[kiji] val VALIDATION_MESSAGE: String = "One or more errors occurred while" +
       " validating your model environment. Please correct the problems in your model environment" +
       " and try again."
 

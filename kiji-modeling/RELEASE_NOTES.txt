@@ -1,5 +1,9 @@
 
                              KijiModeling Release Notes
 
+Version 0.2.0
+  * EXP-285. Changed access modifiers on framework-level classes from private[modeling]
+      to private[kiji] and protected[modeling] to protected[kiji].
+
 Version 0.1.0
   * EXP-249. Moved KijiModeling to its own project.

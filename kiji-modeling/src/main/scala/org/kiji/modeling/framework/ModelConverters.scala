@@ -789,7 +789,7 @@ object ModelConverters {
    * @tparam T is the type of the phase class.
    * @return the phase implementation class.
    */
-  private[modeling] def getClassForPhase[T](phaseImplName: String, phase: Class[T]): Class[T] = {
+  private[kiji] def getClassForPhase[T](phaseImplName: String, phase: Class[T]): Class[T] = {
     val checkClass: Class[T] = try {
       new java.lang.Thread()
           .getContextClassLoader
@@ -830,7 +830,7 @@ object ModelConverters {
    * @param extractorClass to pack in the resulting Avro record.
    * @return An Avro phase definition record.
    */
-  private[modeling] def phaseDefinitionToAvro(
+  private[kiji] def phaseDefinitionToAvro(
       phaseClass: Option[Class[_]],
       extractorClass: Option[Class[_]]): AvroPhaseDefinition = {
     // scalastyle:off null

@@ -36,7 +36,7 @@ class ValidationException(
 
 object ValidationException {
 
-  private[modeling] def messageWithCauses(msg: String, causes: Seq[ValidationException]): String = {
+  private[kiji] def messageWithCauses(msg: String, causes: Seq[ValidationException]): String = {
     val causesMsg = causes
         .tail
         .foldLeft(causes.head.getMessage) { _ + "\n" + _.getMessage }

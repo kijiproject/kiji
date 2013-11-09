@@ -41,7 +41,7 @@ import org.kiji.modeling.KeyValueStore
 @ApiAudience.Private
 @ApiStability.Experimental
 @Inheritance.Sealed
-private[modeling] class ForwardingKeyValueStore[K, V, UK, UV](
+private[kiji] class ForwardingKeyValueStore[K, V, UK, UV](
     kvStoreReader: JKeyValueStoreReader[UK, UV],
     keyConverter: K => UK,
     valueConverter: UV => V
@@ -50,7 +50,7 @@ private[modeling] class ForwardingKeyValueStore[K, V, UK, UV](
   require(keyConverter != null)
   require(valueConverter != null)
 
-  override private[modeling] def close(): Unit = kvStoreReader.close()
+  override private[kiji] def close(): Unit = kvStoreReader.close()
 
   override def get(key: K): Option[V] = {
     require(key != null, "A null key was used to access a value from a KeyValueStore.")

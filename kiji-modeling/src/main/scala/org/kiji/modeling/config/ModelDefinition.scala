@@ -103,7 +103,7 @@ final case class ModelDefinition(
     scoreExtractorClass: Option[java.lang.Class[_ <: Extractor]] = None,
     scorerClass: Option[java.lang.Class[_ <: Scorer]] = None,
     evaluatorClass: Option[java.lang.Class[_ <: Evaluator]] = None,
-    private[modeling] val protocolVersion: ProtocolVersion =
+    private[kiji] val protocolVersion: ProtocolVersion =
         ModelDefinition.CURRENT_MODEL_DEF_VER) {
   // Ensure that all fields set for this model definition are valid.
   ModelDefinition.validateModelDefinition(this)
@@ -172,7 +172,7 @@ object ModelDefinition {
   val VERSION_REGEX: String = "[0-9]+(.[0-9]+)*"
 
   /** Message to show the user when there is an error validating their model definition. */
-  private[modeling] val VALIDATION_MESSAGE: String = "One or more errors occurred while " +
+  private[kiji] val VALIDATION_MESSAGE: String = "One or more errors occurred while " +
       "validating your model definition. Please correct the problems in your model definition " +
       "and try again."
 
@@ -234,7 +234,7 @@ object ModelDefinition {
    * @param modelDefinition to validate.
    * @throws a ValidationException if an invalid combination of states is specified.
    */
-  private[modeling] def validatePhases(
+  private[kiji] def validatePhases(
       modelDefinition: ModelDefinition): Seq[ValidationException] = {
     val noPhases =
         if (
@@ -289,7 +289,7 @@ object ModelDefinition {
    * @return an optional ValidationException if there are errors encountered while validating the
    *     protocol version.
    */
-  private[modeling] def validateProtocolVersion(
+  private[kiji] def validateProtocolVersion(
       protocolVersion: ProtocolVersion): Option[ValidationException] = {
     if (MAX_MODEL_DEF_VER.compareTo(protocolVersion) < 0) {
       val error = "\"%s\" is the maximum protocol version supported. ".format(MAX_MODEL_DEF_VER) +
@@ -311,7 +311,7 @@ object ModelDefinition {
    * @return an optional ValidationException if there are errors encountered while validating the
    *     name of the model definition.
    */
-  private[modeling] def validateName(name: String): Option[ValidationException] = {
+  private[kiji] def validateName(name: String): Option[ValidationException] = {
     if (name.isEmpty) {
       val error = "The name of the model definition cannot be the empty string."
       Some(new ValidationException(error))
@@ -331,7 +331,7 @@ object ModelDefinition {
    * @return an optional ValidationException if there are errors encountered while validating the
    *     version string.
    */
-  private[modeling] def validateVersion(version: String): Option[ValidationException] = {
+  private[kiji] def validateVersion(version: String): Option[ValidationException] = {
     if (!version.matches(VERSION_REGEX)) {
       val error = "Model definition version strings must match the regex " +
           "\"%s\" (1.0.0 would be valid).".format(VERSION_REGEX)

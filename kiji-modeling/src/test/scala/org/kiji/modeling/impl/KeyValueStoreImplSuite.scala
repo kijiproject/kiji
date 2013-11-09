@@ -150,7 +150,7 @@ object KeyValueStoreImplSuite {
    *
    * @return the path to the file written.
    */
-  private[modeling] def generateAvroKVRecordKeyValueStore(): Path = {
+  private[kiji] def generateAvroKVRecordKeyValueStore(): Path = {
     // Build the schema associated with this key-value store.
     // scalastyle:off null
     val writerSchema: Schema = {
@@ -288,7 +288,7 @@ object KeyValueStoreImplSuite {
    *
    * @return the path to the file written.
    */
-  private[modeling] def generateTextFileKeyValueStore(): Path = {
+  private[kiji] def generateTextFileKeyValueStore(): Path = {
     val file: File = File.createTempFile("generic-csv", ".txt")
     doAndClose(new PrintWriter(file, "UTF-8")) { fileWriter =>
       fileWriter.println("key1,value1")

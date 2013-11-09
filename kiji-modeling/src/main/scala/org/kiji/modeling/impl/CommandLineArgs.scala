@@ -51,7 +51,7 @@ trait CommandLineArgs {
    *
    * @param otherArgs to add to the current set of arguments.
    */
-  private[modeling] def addArgs(otherArgs: Args) {
+  private[kiji] def addArgs(otherArgs: Args) {
     otherArgs
         .m
         .iterator
@@ -63,5 +63,5 @@ trait CommandLineArgs {
    *
    * @param cliString containing command-line arguments to add.
    */
-  private[modeling] def addArgs(cliString: String) { addArgs(Args(cliString)) }
+  private[kiji] def addArgs(cliString: String) { addArgs(Args(cliString)) }
 }

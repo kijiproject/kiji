@@ -114,13 +114,13 @@ trait KeyValueStore[K,V] {
   /**
    * Closes all resources used by this key-value store.
    */
-  private[modeling] def close(): Unit
+  private[kiji] def close(): Unit
 }
 
 /**
  * A factory for key-value stores backed by specific KijiMR key-value store implementations.
  */
-private[modeling] object KeyValueStore {
+private[kiji] object KeyValueStore {
 
   /**
    * Creates a new KijiExpress key-value store backed by a KijiMR key-value store reader.  This
