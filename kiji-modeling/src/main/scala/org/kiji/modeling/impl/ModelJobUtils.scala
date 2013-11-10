@@ -356,8 +356,8 @@ object ModelJobUtils {
   def inputSpecToSource(inputSpec: InputSpec): Source = {
     inputSpec match {
       // After refactoring for EXP-232, KijiInputSpec members match up perfectly with KijiInput
-      case spec @ KijiInputSpec(tableUri, timeRange, columns, loggingInterval) => {
-        KijiInput(tableUri, timeRange, loggingInterval, columns)
+      case spec @ KijiInputSpec(tableUri, timeRange, columns) => {
+        KijiInput(tableUri, timeRange, columns)
       }
       case spec @ TextSourceSpec(path) => {
         TextLine(path)

@@ -42,9 +42,8 @@ import org.kiji.schema.KijiDataRequest
 final case class KijiInputSpec(
     tableUri: String,
     timeRange: TimeRange,
-    // TODO: Should the user be allowed to specify this?  it is part of KijiInput...
-    columnsToFields: Map[_ <: ColumnRequestInput, Symbol],
-    loggingInterval: Long = 1000) extends InputSpec {
+    columnsToFields: Map[_ <: ColumnRequestInput, Symbol]
+) extends InputSpec {
 
   /**
    * Create a [[org.kiji.schema.KijiDataRequest]] for this `KijiInputSpec.`
