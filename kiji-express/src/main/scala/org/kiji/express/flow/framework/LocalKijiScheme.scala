@@ -200,15 +200,11 @@ private[express] class LocalKijiScheme(
   override def source(
       process: FlowProcess[Properties],
       sourceCall: SourceCall[InputContext, InputStream]): Boolean = {
-    // Get the first row where all the requested columns are present,
-    // and use that to set the result tuple.
-    // Return true as soon as a result tuple has been set,
-    // or false if we reach the end of the RecordReader.
     val context: InputContext = sourceCall.getContext
-    while (context.iterator.hasNext) {
+    if (context.iterator.hasNext) {
       // Get the current row.
       val row: KijiRowData = context.iterator.next()
-      val result: Option[Tuple] =
+      val result: Tuple =
           KijiScheme.rowToTuple(
               icolumns,
               getSourceFields,
@@ -217,25 +213,13 @@ private[express] class LocalKijiScheme(
               context.tableUri,
               context.configuration)
 
-      // If no fields were missing, set the result tuple and return from this method.
-      result match {
-        case Some(tuple) => {
-          sourceCall.getIncomingEntry.setTuple(tuple)
-          process.increment(KijiScheme.counterGroupName, KijiScheme.counterSuccess, 1)
-          return true // We set a result tuple, return true for success.
-        }
-        case None => {
-          // Otherwise, this row was missing fields.
-          // Increment the counter for rows with missing fields.
-          process.increment(KijiScheme.counterGroupName, KijiScheme.counterMissingField, 1)
-          // Log for every missing row; we are in local mode.
-          logger.warn("Row %s skipped because of missing field(s)."
-              .format(row.getEntityId.toShellString))
-        }
-      }
-      // We didn't return true because this row was missing fields; continue the loop.
+      // Set the result tuple and return from this method.
+      sourceCall.getIncomingEntry.setTuple(result)
+      process.increment(KijiScheme.counterGroupName, KijiScheme.counterSuccess, 1)
+      return true // We set a result tuple, return true for success.
+    } else {
+      return false // We reached the end of the input.
     }
-    return false // We reached the end of the input.
   }
 
   /**
@@ -252,9 +236,7 @@ private[express] class LocalKijiScheme(
     context.scanner.close()
 
     // Set the context to null so that we no longer hold any references to it.
-    // scalastyle:off null
     sourceCall.setContext(null)
-    // scalastyle:on null
   }
 
   /**
@@ -333,9 +315,7 @@ private[express] class LocalKijiScheme(
     sinkCall.getContext.writer.close()
     sinkCall.getContext.kiji.release()
     // Set the context to null so that we no longer hold any references to it.
-    // scalastyle:off null
     sinkCall.setContext(null)
-    // scalastyle:off null
   }
 
   override def equals(other: Any): Boolean = {

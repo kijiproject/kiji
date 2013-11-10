@@ -87,7 +87,6 @@ object KijiOutput {
         tableAddress = tableUri,
         timeRange = All,
         timestampField = None,
-        loggingInterval = 1000,
         outputColumns = columns)
   }
 
@@ -112,7 +111,6 @@ object KijiOutput {
         tableAddress = tableUri,
         timeRange = All,
         timestampField = Some(timestampField),
-        loggingInterval = 1000,
         outputColumns = columns)
   }
 

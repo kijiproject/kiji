@@ -25,7 +25,6 @@ import org.apache.avro.specific.SpecificRecord
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
-import org.kiji.express.KijiSlice
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiInvalidNameException
 
@@ -41,8 +40,8 @@ import org.kiji.schema.KijiInvalidNameException
  * into a field of a flow.  Each row in the KijiTable will be a new tuple, with each field in the
  * tuple containing a stream of [[org.kiji.express.Cell]]s.
  *
- * Note that the subclasses of ColumnRequestInput are case classes, and so they override
- * ColumnRequestInput's abstract methods (e.g., schema) with vals.
+ * Note: Subclasses of ColumnRequestInput are case classes that override ColumnRequestInput's
+ * abstract methods (e.g., `schema`) with `val`s.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
@@ -65,15 +64,6 @@ sealed trait ColumnRequestInput {
    * @return `Some(filter)` or `None`.
    */
   def filter: Option[ExpressColumnFilter]
-
-  /**
-   * Specifies a default value to use for missing cells during a read.
-   *
-   * If `None`, rows with missing values are ignored.
-   *
-   * @return `Some(KijiSlice[_])` or `None`.
-   */
-  def default: Option[KijiSlice[_]]
 
   /**
    * Specifies the maximum number of cells to maintain in memory when paging through a column.
@@ -115,6 +105,9 @@ object ColumnRequestInput {
    * otherwise the input will assumed to be for a column family.
    *
    * @param column The requested column name.
+   * @param maxVersions The maximum number of versions to read back (default is only most recent).
+   * @param filter Filter to use when reading back cells (default is `None`).
+   * @param paging Maximum number of cells to request from HBase per page.
    * @param schemaSpec Reader schema specification.  Defaults to
    *     [[org.kiji.express.flow.SchemaSpec.Writer]].
    * @return ColumnRequestInput with supplied options.
@@ -123,7 +116,6 @@ object ColumnRequestInput {
       column: String,
       maxVersions: Int = latest,
       filter: Option[ExpressColumnFilter] = None,
-      default: Option[KijiSlice[_]] = None,
       paging: PagingSpec = PagingSpec.Off,
       schemaSpec: SchemaSpec = SchemaSpec.Writer
   ): ColumnRequestInput = {
@@ -134,7 +126,6 @@ object ColumnRequestInput {
               qualifier,
               maxVersions,
               filter,
-              default,
               paging,
               schemaSpec
           )
@@ -143,7 +134,6 @@ object ColumnRequestInput {
               family,
               maxVersions,
               filter,
-              default,
               paging,
               schemaSpec
           )
@@ -194,9 +184,8 @@ object ColumnRequestInput {
  * @param qualifier The requested column qualifier name.
  * @param maxVersions The maximum number of versions to read back (default is only most recent).
  * @param filter Filter to use when reading back cells (default is `None`).
- * @param default Default KijiSlice to return in case column is empty in row.
- * @param paging Maximum number of cells to request from HBase per RPC.
- * @param schemaSpec Reader schema specification.  Defaults to
+ * @param paging Maximum number of cells to request from HBase per page.
+ * @param schemaSpec Reader schema specification. Defaults to
  *     [[org.kiji.express.flow.SchemaSpec.Writer]].
  */
 @ApiAudience.Public
@@ -207,7 +196,6 @@ final case class QualifiedColumnRequestInput(
     qualifier: String,
     maxVersions: Int = latest,
     filter: Option[ExpressColumnFilter] = None,
-    default: Option[KijiSlice[_]] = None,
     paging: PagingSpec = PagingSpec.Off,
     schemaSpec: SchemaSpec = SchemaSpec.Writer
 ) extends ColumnRequestInput {
@@ -263,9 +251,8 @@ object QualifiedColumnRequestInput {
  * @param family The requested column family name.
  * @param maxVersions The maximum number of versions to read back (default is only most recent).
  * @param filter Filter to use when reading back cells (default is `None`).
- * @param default Default KijiSlice to return in case column is empty in row.
  * @param paging Maximum number of cells to request from HBase per RPC.
- * @param schemaSpec Reader schema specification.  Defaults to
+ * @param schemaSpec Reader schema specification. Defaults to
  *     [[org.kiji.express.flow.SchemaSpec.Writer]].
  */
 @ApiAudience.Public
@@ -275,7 +262,6 @@ final case class ColumnFamilyRequestInput(
     family: String,
     maxVersions: Int = latest,
     filter: Option[ExpressColumnFilter] = None,
-    default: Option[KijiSlice[_]] = None,
     paging: PagingSpec = PagingSpec.Off,
     schemaSpec: SchemaSpec = SchemaSpec.Writer
 ) extends ColumnRequestInput {

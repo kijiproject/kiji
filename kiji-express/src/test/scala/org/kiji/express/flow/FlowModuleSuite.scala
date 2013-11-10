@@ -19,13 +19,10 @@
 
 package org.kiji.express.flow
 
-import org.apache.hadoop.hbase.HConstants
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
-import org.kiji.express.Cell
-import org.kiji.express.KijiSlice
 import org.kiji.express.flow.framework.KijiScheme
 import org.kiji.schema.KijiInvalidNameException
 
@@ -36,19 +33,19 @@ class FlowModuleSuite extends FunSuite {
   test("Flow module forbids creating an input map-type column with a qualifier in the column "
       + "name.") {
     intercept[KijiInvalidNameException] {
-      val colReq = new ColumnFamilyRequestInput("info:word")
+      new ColumnFamilyRequestInput("info:word")
     }
   }
 
   test("Flow module forbids creating an output map-type column with a qualifier in the column "
       + "name.") {
     intercept[KijiInvalidNameException] {
-      val colReq = new ColumnFamilyRequestOutput("info:word", 'foo)
+      new ColumnFamilyRequestOutput("info:word", 'foo)
     }
   }
 
   test("Flow module permits creating an output map-type column specifying the qualifier field") {
-    val colReq = new ColumnFamilyRequestOutput("searches", 'terms)
+    new ColumnFamilyRequestOutput("searches", 'terms)
   }
 
   test("Flow module permits specifying a qualifier regex on map-type columns requests.") {
@@ -103,7 +100,6 @@ class FlowModuleSuite extends FunSuite {
     val expectedScheme = new KijiScheme(
         timeRange = All,
         timestampField = None,
-        loggingInterval = 1000,
         inputColumns = Map("word" -> QualifiedColumnRequestInput("info", "word")))
 
     assert(expectedScheme === input.hdfsScheme)
@@ -114,7 +110,6 @@ class FlowModuleSuite extends FunSuite {
     val expectedScheme = new KijiScheme(
         Between(0L, 40L),
         None,
-        1000,
         Map("word" -> QualifiedColumnRequestInput("info", "word")))
 
     assert(expectedScheme === input.hdfsScheme)
@@ -126,7 +121,6 @@ class FlowModuleSuite extends FunSuite {
       new KijiScheme(
           All,
           None,
-          1000,
           Map(
               "word" -> QualifiedColumnRequestInput("info", "word"),
               "title" -> QualifiedColumnRequestInput("info", "title")))
@@ -136,168 +130,34 @@ class FlowModuleSuite extends FunSuite {
   }
 
   test("Flow module permits specifying options for a column.") {
-    val input: KijiSource =
-        KijiInput(tableURI, Map(QualifiedColumnRequestInput("info", "word") -> 'word))
+    KijiInput(
+        tableURI,
+        Map(QualifiedColumnRequestInput("info", "word") -> 'word)
+    )
 
-    val input2: KijiSource =
-        KijiInput(
-            tableURI,
-            Map(QualifiedColumnRequestInput("info", "word", maxVersions = 1) -> 'word))
+    KijiInput(
+        tableURI,
+        Map(QualifiedColumnRequestInput("info", "word", maxVersions = 1) -> 'word)
+    )
 
-    val input3: KijiSource = KijiInput(tableURI, Map( new ColumnFamilyRequestInput(
-        "searches",
-        maxVersions = 1,
-        filter = Some(new RegexQualifierFilter(".*"))) -> 'word))
-  }
-
-  test("A qualified Column can specify a replacement that is a single value.") {
-    val defaultVal = "replacement"
-    val col = QualifiedColumnRequestInput(
-        "family", "qualifier",
-        default = Some(new KijiSlice(List(Cell(
-            "family",
-            "qualifier",
-            HConstants.LATEST_TIMESTAMP,
-            defaultVal)))))
-    assert(col.isInstanceOf[QualifiedColumnRequestInput])
-
-    val qualifiedColumn = col.asInstanceOf[QualifiedColumnRequestInput]
-    val replacementOption: Option[KijiSlice[_]] = qualifiedColumn.default
-    assert(replacementOption.isDefined)
-
-    val replacement = replacementOption.get
-
-    assert(1 === replacement.cells.size)
-    assert(defaultVal === replacement.getFirstValue())
-  }
-
-  test("A ColumnFamily can specify a replacement that is a single value.") {
-    val slice = new KijiSlice(List(Cell("family", "qualifier", "replacement")))
-    val col = new ColumnFamilyRequestInput("family", default = Some(slice))
-    assert(col.isInstanceOf[ColumnFamilyRequestInput])
-
-    val columnFamily = col.asInstanceOf[ColumnFamilyRequestInput]
-    val replacementOption: Option[KijiSlice[_]] = columnFamily.default
-    assert(replacementOption.isDefined)
-
-    val replacement = replacementOption.get
-
-    assert(1 === replacement.cells.size)
-    assert("replacement" === replacement.getFirstValue())
-  }
-
-  test("A qualified Column can specify a replacement that is a single value with a timestamp.") {
-    val defaultSlice = new KijiSlice(List(Cell("family", "qualifier", 10L, "replacement")))
-    val col = QualifiedColumnRequestInput("family", "qualifier", default = Some(defaultSlice))
-    assert(col.isInstanceOf[QualifiedColumnRequestInput])
-
-    val qualifiedColumn = col.asInstanceOf[QualifiedColumnRequestInput]
-    val replacementOption: Option[KijiSlice[_]] = qualifiedColumn.default
-    assert(replacementOption.isDefined)
-
-    val replacement = replacementOption.get
-
-    assert(1 === replacement.cells.size)
-    assert("replacement" === replacement.getFirstValue())
-    assert(10L === replacement.getFirst().version)
-  }
-
-  test("A ColumnFamily can specify a replacement that is a single value with a timestamp.") {
-    val defaultSlice = new KijiSlice(List(Cell("family", "qualifier", 10L, "replacement")))
-    val col = new ColumnFamilyRequestInput("family", default = Some(defaultSlice))
-    assert(col.isInstanceOf[ColumnFamilyRequestInput])
-
-    val columnFamily = col.asInstanceOf[ColumnFamilyRequestInput]
-    val replacementOption: Option[KijiSlice[_]] = columnFamily.default
-    assert(replacementOption.isDefined)
-
-    val replacement = replacementOption.get
-
-    assert(1 === replacement.cells.size)
-    assert("replacement" === replacement.getFirstValue())
-    assert(10L === replacement.getFirst().version)
-  }
-
-  test("A qualified Column can specify a replacement that is multiple values.") {
-    val defaultSlice = new KijiSlice(List(
-        Cell("family", "qualifier", HConstants.LATEST_TIMESTAMP, "replacement1"),
-        Cell("family", "qualifier", HConstants.LATEST_TIMESTAMP, "replacement2")))
-
-    val col = QualifiedColumnRequestInput("family", "qualifier", default=Some(defaultSlice))
-    assert(col.isInstanceOf[QualifiedColumnRequestInput])
-
-    val qualifiedColumn = col.asInstanceOf[QualifiedColumnRequestInput]
-    val replacementOption: Option[KijiSlice[_]] = qualifiedColumn.default
-    assert(replacementOption.isDefined)
-
-    val replacementData = replacementOption.get.cells.map { _.datum }
-
-    assert(2 === replacementData.size)
-    assert(replacementData.contains("replacement1"))
-    assert(replacementData.contains("replacement2"))
-  }
-
-  test("A ColumnFamily can specify a replacement that is multiple values.") {
-    val defaultSlice = new KijiSlice(List(
-        Cell("family", "qualifier1", HConstants.LATEST_TIMESTAMP, "replacement1"),
-        Cell("family", "qualifier2", HConstants.LATEST_TIMESTAMP, "replacement2")))
-
-    //val col = new ColumnFamilyRequestInput("family", 'qualifier, default = Some(defaultSlice))
-    val col = new ColumnFamilyRequestInput("family", default = Some(defaultSlice))
-    assert(col.isInstanceOf[ColumnFamilyRequestInput])
-
-    val columnFamily = col.asInstanceOf[ColumnFamilyRequestInput]
-    val replacementOption: Option[KijiSlice[_]] = columnFamily.default
-    assert(replacementOption.isDefined)
-
-    val replacementData = replacementOption.get.cells.map { c: Cell[_] => (c.qualifier, c.datum) }
-
-    assert(2 === replacementData.size)
-    assert(replacementData.contains(("qualifier1", "replacement1")))
-    assert(replacementData.contains(("qualifier2", "replacement2")))
-  }
-
-  test("A QualifiedColumnRequestInput can specify a replacement that is multiple values with "
-      + "timestamps.") {
-    val slice = new KijiSlice(List(Cell("family", "qualifier", 10L, "replacement1"),
-                                   Cell("family", "qualifier", 20L, "replacement2")))
-    val col = ColumnRequestInput("family:qualifier", default = Some(slice))
-    assert(col.isInstanceOf[QualifiedColumnRequestInput])
-
-    val replacementOption: Option[KijiSlice[_]] = col.default
-    assert(replacementOption.isDefined)
-
-    val replacementData = replacementOption.get.cells.map { c: Cell[_] => (c.version, c.datum) }
-
-    assert(2 === replacementData.size)
-    assert(replacementData.contains((10L, "replacement1")))
-    assert(replacementData.contains((20L, "replacement2")))
-  }
-
-  test("A ColumnFamilyRequestInput can specify a replacement that is multiple values with "
-      + "timestamps.") {
-    val slice = new KijiSlice(List(Cell("family", "qualifier1", 10L, "replacement1"),
-                                   Cell("family", "qualifier2", 20L, "replacement2")))
-    val columnFamily = ColumnRequestInput("family", default = Some(slice))
-    assert(columnFamily.isInstanceOf[ColumnFamilyRequestInput])
-
-    val replacementOption: Option[KijiSlice[_]] = columnFamily.default
-    assert(replacementOption.isDefined)
-
-    val replacementData = replacementOption.get.cells.map { c: Cell[_] =>
-      (c.qualifier, c.version, c.datum) }
-
-    assert(2 === replacementData.size)
-    assert(replacementData.contains(("qualifier1", 10L, "replacement1")))
-    assert(replacementData.contains(("qualifier2", 20L, "replacement2")))
+    KijiInput(
+        tableURI,
+        Map(
+            ColumnFamilyRequestInput(
+                "searches",
+                maxVersions = 1,
+                filter = Some(new RegexQualifierFilter(".*"))
+            ) -> 'word
+        )
+    )
   }
 
   test("Flow module permits specifying different options for different columns.") {
-    val input: KijiSource = KijiInput(
+    KijiInput(
         tableURI,
         Map(
-            QualifiedColumnRequestInput("info", "word", maxVersions=1) -> 'word,
-            QualifiedColumnRequestInput("info", "title", maxVersions=2) -> 'title))
+            QualifiedColumnRequestInput("info", "word", maxVersions = 1) -> 'word,
+            QualifiedColumnRequestInput("info", "title", maxVersions = 2) -> 'title))
   }
 
   test("Flow module permits creating KijiSource with the default timestamp field") {
@@ -305,7 +165,6 @@ class FlowModuleSuite extends FunSuite {
     val expectedScheme: KijiScheme = new KijiScheme(
         timeRange = All,
         timestampField = None,
-        loggingInterval = 1000,
         outputColumns = Map("words" -> QualifiedColumnRequestOutput("info", "words")))
     assert(expectedScheme === output.hdfsScheme)
   }
@@ -315,7 +174,6 @@ class FlowModuleSuite extends FunSuite {
     val expectedScheme: KijiScheme = new KijiScheme(
         timeRange = All,
         timestampField = Some('time),
-        loggingInterval = 1000,
         outputColumns = Map("words" -> QualifiedColumnRequestOutput("info", "words")))
     assert(expectedScheme === output.hdfsScheme)
   }

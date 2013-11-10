@@ -19,8 +19,6 @@
 
 package org.kiji.express.flow.framework
 
-import java.util.concurrent.atomic.AtomicLong
-
 import scala.collection.JavaConverters.asScalaIteratorConverter
 
 import cascading.flow.FlowProcess
@@ -93,8 +91,6 @@ import org.kiji.schema.layout.KijiTableLayout
  * @param timestampField is the optional name of a field containing the timestamp that all values
  *     in a tuple should be written to.
  *     Use None if all values should be written at the current time.
- * @param loggingInterval to log skipped rows on. For example, if loggingInterval is 1000,
- *     then every 1000th skipped row will be logged.
  * @param inputColumns mapping tuple field names to requests for Kiji columns.
  * @param outputColumns mapping tuple field names to specifications for Kiji columns to write out
  *     to.
@@ -104,7 +100,6 @@ import org.kiji.schema.layout.KijiTableLayout
 class KijiScheme(
     private[express] val timeRange: TimeRange,
     private[express] val timestampField: Option[Symbol],
-    private[express] val loggingInterval: Long,
     @transient private[express] val inputColumns: Map[String, ColumnRequestInput] = Map(),
     @transient private[express] val outputColumns: Map[String, ColumnRequestOutput] = Map())
     extends Scheme[JobConf, RecordReader[KijiKey, KijiValue], OutputCollector[_, _],
@@ -120,9 +115,6 @@ class KijiScheme(
   // Everything else should instead use _inputColumns.get and _outputColumns.get.
   private val _inputColumns = KijiLocker(inputColumns)
   private val _outputColumns = KijiLocker(outputColumns)
-
-  /** Keeps track of how many rows have been skipped, for logging purposes. */
-  private val skippedRows: AtomicLong = new AtomicLong()
 
   // Including output column keys here because we might need to read back outputs during test
   // TODO (EXP-250): Ideally we should include outputColumns.keys here only during tests.
@@ -188,44 +180,29 @@ class KijiScheme(
     // Get the current key/value pair.
     val KijiSourceContext(value, tableUri) = sourceCall.getContext
 
-    // Get the first row where all the requested columns are present, and use that to set the result
-    // tuple. Return true as soon as a result tuple has been set, or false if we reach the end of
-    // the RecordReader.
-
-    // scalastyle:off null
-    while (sourceCall.getInput.next(null, value)) {
-    // scalastyle:on null
+    // Get the next row.
+    if (sourceCall.getInput.next(null, value)) {
       val row: KijiRowData = value.get()
-      val result: Option[Tuple] = rowToTuple(
+
+      // Build a tuple from this row.
+      val result: Tuple = rowToTuple(
           _inputColumns.get,
           getSourceFields,
           timestampField,
           row,
           tableUri,
-          flow.getConfigCopy)
+          flow.getConfigCopy
+      )
 
-      result match {
-        case Some(tuple) => {
-          // If no fields were missing, set the result tuple and return from this method.
-          sourceCall.getIncomingEntry.setTuple(tuple)
-          flow.increment(counterGroupName, counterSuccess, 1)
+      // If no fields were missing, set the result tuple and return from this method.
+      sourceCall.getIncomingEntry.setTuple(result)
+      flow.increment(counterGroupName, counterSuccess, 1)
 
-          // We set a result tuple, return true for success.
-          return true
-        }
-        case None => {
-          // Increment the counter for rows with missing fields.
-          flow.increment(counterGroupName, counterMissingField, 1)
-          if (skippedRows.getAndIncrement() % loggingInterval == 0) {
-            logger.warn("Row %s skipped because of missing field(s)."
-                .format(row.getEntityId.toShellString))
-          }
-        }
-      }
-
-      // We didn't return true because this row was missing fields; continue the loop.
+      // We set a result tuple, return true for success.
+      return true
+    } else {
+      return false // We reached the end of the RecordReader.
     }
-    return false // We reached the end of the RecordReader.
   }
 
   /**
@@ -238,9 +215,7 @@ class KijiScheme(
   override def sourceCleanup(
       flow: FlowProcess[JobConf],
       sourceCall: SourceCall[KijiSourceContext, RecordReader[KijiKey, KijiValue]]) {
-    // scalastyle:off null
     sourceCall.setContext(null)
-    // scalastyle:on null
   }
 
   /**
@@ -319,9 +294,7 @@ class KijiScheme(
       sinkCall: SinkCall[KijiSinkContext, OutputCollector[_, _]]) {
     sinkCall.getContext.kiji.release()
     sinkCall.getContext.kijiTableWriter.close()
-    // scalastyle:off null
     sinkCall.setContext(null)
-    // scalastyle:on null
   }
 
   override def equals(other: Any): Boolean = {
@@ -340,8 +313,7 @@ class KijiScheme(
       _inputColumns.get,
       _outputColumns.get,
       timeRange,
-      timestampField,
-      loggingInterval: java.lang.Long)
+      timestampField)
 }
 
 /**
@@ -362,8 +334,6 @@ object KijiScheme {
   private[express] val counterGroupName = "kiji-express"
   /** Counter name for the number of rows successfully read. */
   private[express] val counterSuccess = "ROWS_SUCCESSFULLY_READ"
-  /** Counter name for the number of rows skipped because of missing fields. */
-  private[express] val counterMissingField = "ROWS_SKIPPED_WITH_MISSING_FIELDS"
   /** Field name containing a row's [[org.kiji.schema.EntityId]]. */
   val entityIdField: String = "entityId"
   /** Default number of qualifiers to retrieve when paging in a map type family.*/
@@ -372,10 +342,8 @@ object KijiScheme {
   /**
    * Converts a KijiRowData to a Cascading tuple.
    *
-   * If there is no data in a column in this row, the value of that field in the tuple will be the
-   * replacement specified in the request for that column.
-   *
-   * Returns None if one of the columns didn't exist and no replacement for it was specified.
+   * If there is no data in a column in this row, the value of that field in the tuple will be an
+   * empty iterable of cells.
    *
    * This is used in the `source` method of KijiScheme, for reading rows from Kiji into
    * KijiExpress tuples.
@@ -388,10 +356,8 @@ object KijiScheme {
    * @param row to convert to a tuple.
    * @param tableUri is the URI of the Kiji table.
    * @param configuration identifying the cluster to use when building EntityIds.
-   * @return a tuple containing the values contained in the specified row, or None if some columns
-   *     didn't exist and no replacement was specified.
+   * @return a tuple containing the values contained in the specified row.
    */
-  // TODO: BREAK UP INTO SMALL FUNCTIONS / ORGANIZE BETTER
   private[express] def rowToTuple(
       columns: Map[String, ColumnRequestInput],
       fields: Fields,
@@ -399,35 +365,12 @@ object KijiScheme {
       row: KijiRowData,
       tableUri: KijiURI,
       configuration: Configuration
-  ): Option[Tuple] = {
+  ): Tuple = {
     val result: Tuple = new Tuple()
 
     // Add the row's EntityId to the tuple.
     val entityId: EntityId = EntityId.fromJavaEntityId(row.getEntityId)
     result.add(entityId)
-
-    def rowHasDataOrDefaultForColumnRequest(col: ColumnRequestInput): Boolean = {
-      col match {
-        case cf: ColumnFamilyRequestInput => row.containsColumn(cf.family) || cf.default.isDefined
-        case qc: QualifiedColumnRequestInput =>
-          row.containsColumn(qc.family, qc.qualifier) || qc.default.isDefined
-      }
-    }
-
-    // If there are any missing fields for which the column requests do not specify a replacement,
-    // then return None (ignore this row)
-    val bHaveAllData = fields.iterator().asScala
-        // Get rid of entity Id and timestamp
-        .filter { field => field.toString != entityIdField  }
-        .filter { field => field.toString != timestampField.getOrElse("") }
-        // Get the column requests for the specified fields
-        .map { field => columns(field.toString) }
-        // If any column request lacks a default value and points to an element of the KijiRowData
-        // without a value, then return None for the entire row
-        .map { colreq => rowHasDataOrDefaultForColumnRequest(colreq) }
-        .forall(identity)
-
-    if (!bHaveAllData) return None
 
     def rowToTupleColumnFamily(cf: ColumnFamilyRequestInput): Unit = {
       if (row.containsColumn(cf.family)) {
@@ -440,8 +383,7 @@ object KijiScheme {
           }
         }
       } else {
-        assert (cf.default.isDefined)
-        result.add(cf.default.get)
+        result.add(Seq())
       }
     }
 
@@ -456,25 +398,27 @@ object KijiScheme {
           }
         }
       } else {
-        assert (qc.default.isDefined)
-        result.add(qc.default.get)
+        result.add(Seq())
       }
     }
+
     // Get rid of the entity id and timestamp fields, then map over each field to add a column
     // to the tuple.
-    fields.iterator().asScala
-        .filter { field => field.toString != entityIdField  }
+    fields
+        .iterator()
+        .asScala
+        .filter { field => field.toString != entityIdField }
         .filter { field => field.toString != timestampField.getOrElse("") }
         .map { field => columns(field.toString) }
         // Build the tuple, by adding each requested value into result.
         .foreach {
-          case cf: ColumnFamilyRequestInput => { rowToTupleColumnFamily(cf) }
-          case qc: QualifiedColumnRequestInput => { rowToTupleQualifiedColumn(qc) }
+          case cf: ColumnFamilyRequestInput => rowToTupleColumnFamily(cf)
+          case qc: QualifiedColumnRequestInput => rowToTupleQualifiedColumn(qc)
         }
-    return Some(result)
+
+    return result
   }
 
-  // TODO(EXP-16): Use an output format that writes to HFiles.
   /**
    * Writes a Cascading tuple to a Kiji table.
    *

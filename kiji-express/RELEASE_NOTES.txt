@@ -2,8 +2,10 @@
                              Kiji Express Release Notes
 
 Version 0.12.0
-  * EXP-286. rename ColumnRequestInput#schema -> schemaSpec.
-  * EXP-282. Cannot pack to specific objects with snake_case fields
+  * EXP-275. Removed default values option. Columns with missing values
+      will instead be represented with an emtpy slice.
+  * EXP-286. Rename ColumnRequestInput#schema -> schemaSpec.
+  * EXP-282. Cannot pack to specific objects with snake_case fields.
   * EXP-279. Change paging options to use PagingSpec.
   * EXP-222. Improve generic Avro APIs.
 
@@ -30,7 +32,7 @@ Version 0.9.0
   * EXP-105. The DSL syntax for KijiOutput has changed from
       KijiOutput(Map(Column("family:qualifier") -> 'fieldname)) to
       KijiOutput(Map('fieldname -> Column("family:qualifier"))) in
-      order to match the syntax for KijiOutput('fieldname -> "fam:qual")
+      order to match the syntax for KijiOutput('fieldname -> "fam:qual").
 
 Version 0.8.1
   * EXP-186. Update Scalding version used by KijiExpress. This fixes

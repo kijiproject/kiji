@@ -23,7 +23,10 @@ import java.util.UUID
 
 import scala.collection.mutable.Buffer
 
-import com.twitter.scalding._
+import com.twitter.scalding.Args
+import com.twitter.scalding.JobTest
+import com.twitter.scalding.TextLine
+import com.twitter.scalding.Tsv
 import org.apache.avro.generic.GenericRecord
 import org.apache.avro.util.Utf8
 import org.junit.runner.RunWith
@@ -357,70 +360,6 @@ class KijiSourceSuite
         .finish
   }
 
-  def missingValuesInput(
-      uri: String
-  ): List[(EntityId, KijiSlice[String], KijiSlice[String])] = {
-    List(
-        (EntityId("row01"), slice("family:column1", (10L, "hello")),
-            slice("family:column2", (10L, "hello")) ),
-        (EntityId("row02"), slice("family:column1", (10L, "hello")), missing() ),
-        (EntityId("row03"), slice("family:column1", (10L, "world")),
-            slice("family:column2", (10L, "world")) ),
-        (EntityId("row04"), slice("family:column1", (10L, "hello")),
-            slice("family:column2", (10L, "hello"))))
-  }
-
-  test("Default for missing values is skipping the row.") {
-    // Create test Kiji table.
-    val uri: String = doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
-      table.getURI().toString()
-    }
-
-    def validateMissingValuesSize(outputBuffer: Buffer[(String, String)]) {
-      assert(3 === outputBuffer.size)
-    }
-
-    // Build test job.
-    JobTest(new TwoColumnJob(_))
-        .arg("input", uri)
-        .arg("output", "outputFile")
-        .source(KijiInput(uri, "family:column1" -> 'word1, "family:column2" -> 'word2),
-            missingValuesInput(uri))
-        .sink(Tsv("outputFile"))(validateMissingValuesSize)
-        // Run the test job.
-        .runHadoop
-        .finish
-  }
-
-  test("replacing missing values succeeds") {
-    // Create test Kiji table.
-    val uri: String = doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
-      table.getURI().toString()
-    }
-
-    def validateMissingValuesReplaced(outputBuffer: Buffer[(EntityId, String)]) {
-      assert(4 === outputBuffer.size)
-      val outValues = outputBuffer.map { _._2.toString }.toSeq
-      assert(outValues.contains("hellos"))
-      assert(outValues.contains("missings"))
-    }
-
-    val slice = new KijiSlice(List(Cell("family", "column2", new Utf8("missing"))))
-    val col = new QualifiedColumnRequestInput("family", "column2", default = Some(slice))
-
-    // Build test job.
-    val jobTest = JobTest(new PluralizeReplaceJob(_))
-      .arg("input", uri)
-      .arg("output", "outputFile")
-      .source(
-          KijiInput(uri, Map(ColumnRequestInput("family:column1") -> 'word1, col -> 'word2)),
-          missingValuesInput(uri))
-      .sink(Tsv("outputFile"))(validateMissingValuesReplaced)
-
-    jobTest.run.finish
-    jobTest.runHadoop.finish
-  }
-
   // TODO(EXP-7): Write this test.
   test("a word-count job that uses the type-safe api is run") {
     pending
@@ -525,7 +464,6 @@ class KijiSourceSuite
         tableAddress = uri,
         timeRange = All,
         timestampField = None,
-        loggingInterval = 1000,
         inputColumns = Map('records -> ColumnRequestInput(
           "family:column3", schemaSpec = Specific(classOf[HashSpec]))),
         outputColumns = Map('records -> QualifiedColumnRequestOutput("family:column3"))
@@ -737,27 +675,6 @@ object KijiSourceSuite {
         .write(Tsv(args("output")))
   }
 
-
- /**
-  * A job that takes the most recent string value from the column "family:column1" and adds
-  * the letter 's' to the end of it. It passes through the column "family:column2" without
-  * any changes, replacing missing values with the string "missing".
-  *
-  * @param args to the job. Two arguments are expected: "input", which should specify the URI
-  *     to the Kiji table the job should be run on, and "output", which specifies the output
-  *     Tsv file.
-  */
-  class PluralizeReplaceJob(args: Args) extends KijiJob(args) {
-
-    val slice = new KijiSlice(List(Cell("family", "column2", new Utf8("missing"))))
-    KijiInput(args("input"),
-        Map(ColumnRequestInput("family:column1") -> 'word1,
-            QualifiedColumnRequestInput("family", "column2", default = Some(slice)) -> 'word2))
-    .map('word2 -> 'pluralword) { words: KijiSlice[Utf8] => words.getFirst.datum.toString + "s" }
-    .discard(('word1, 'word2))
-    .write(Tsv(args("output")))
-  }
-
   /**
    * A job that requests specific number of versions and buckets the results by the number of
    * versions.  The result is pairs of number of versions and the number of rows with that number
@@ -885,7 +802,6 @@ object KijiSourceSuite {
         tableAddress = args("input"),
         timeRange = All,
         timestampField = None,
-        loggingInterval = 1000,
         inputColumns = Map('records -> ColumnRequestInput(
             "family:column3", schemaSpec = Specific(classOf[HashSpec]))),
         outputColumns = Map('records -> QualifiedColumnRequestOutput("family:column3")))

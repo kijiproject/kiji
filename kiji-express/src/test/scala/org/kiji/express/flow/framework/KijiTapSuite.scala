@@ -25,23 +25,25 @@ import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.KijiSuite
-import org.kiji.express.flow._
+import org.kiji.express.flow.All
+import org.kiji.express.flow.ColumnRequestInput
+import org.kiji.express.flow.InvalidKijiTapException
 import org.kiji.schema.KijiURI
+import org.kiji.schema.layout.KijiTableLayout
 
 @RunWith(classOf[JUnitRunner])
 class KijiTapSuite extends KijiSuite {
   val instanceName: String = "test_KijiTap_instance"
-  val testKijiTableLayout = layout("layout/avro-types.json")
-  val config = new JobConf(HBaseConfiguration.create())
+  val testKijiTableLayout: KijiTableLayout = layout("layout/avro-types.json")
+  val config: JobConf = new JobConf(HBaseConfiguration.create())
 
   test("KijiTap validates a valid instance/table/column.") {
     val testTable = makeTestKijiTable(testKijiTableLayout, instanceName)
-    val kijiURI = testTable.getURI()
+    val kijiURI = testTable.getURI
 
     val testScheme: KijiScheme = new KijiScheme(
         timeRange = All,
         timestampField = None,
-        loggingInterval = 1L,
         inputColumns = Map(
             "dummy_field1" -> ColumnRequestInput("searches"),
             "dummy_field2" -> ColumnRequestInput("family:column1")))
@@ -53,12 +55,11 @@ class KijiTapSuite extends KijiSuite {
 
   test("KijiTap validates a nonexistent instance.") {
     val testTable = makeTestKijiTable(testKijiTableLayout, instanceName)
-    val kijiURI = testTable.getURI()
+    val kijiURI = testTable.getURI
 
     val testScheme: KijiScheme = new KijiScheme(
         timeRange = All,
         timestampField = None,
-        loggingInterval = 1L,
         inputColumns = Map(
             "dummy_field1" -> ColumnRequestInput("searches"),
             "dummy_field2" -> ColumnRequestInput("family:column1")))
@@ -76,12 +77,11 @@ class KijiTapSuite extends KijiSuite {
 
   test("KijiTap validates a nonexistent table.") {
     val testTable = makeTestKijiTable(testKijiTableLayout, instanceName)
-    val kijiURI = testTable.getURI()
+    val kijiURI = testTable.getURI
 
     val testScheme: KijiScheme = new KijiScheme(
         timeRange = All,
         timestampField = None,
-        loggingInterval = 1L,
         inputColumns = Map(
             "dummy_field1" -> ColumnRequestInput("searches"),
             "dummy_field2" -> ColumnRequestInput("family:column1")))
@@ -99,12 +99,11 @@ class KijiTapSuite extends KijiSuite {
 
   test("KijiTap validates a nonexistent column.") {
     val testTable = makeTestKijiTable(testKijiTableLayout, instanceName)
-    val kijiURI = testTable.getURI()
+    val kijiURI = testTable.getURI
 
     val testScheme: KijiScheme = new KijiScheme(
         timeRange = All,
         timestampField = None,
-        loggingInterval = 1L,
         inputColumns = Map(
             "dummy_field1" -> ColumnRequestInput("searches"),
             "dummy_field2" -> ColumnRequestInput("family:nonexistent")))
@@ -120,12 +119,11 @@ class KijiTapSuite extends KijiSuite {
 
   test("KijiTap validates multiple nonexistent columns.") {
     val testTable = makeTestKijiTable(testKijiTableLayout, instanceName)
-    val kijiURI = testTable.getURI()
+    val kijiURI = testTable.getURI
 
     val testScheme: KijiScheme = new KijiScheme(
         timeRange = All,
         timestampField = None,
-        loggingInterval = 1L,
         inputColumns = Map(
             "dummy_field1" -> ColumnRequestInput("nonexistent1"),
             "dummy_field2" -> ColumnRequestInput("family:nonexistent2")))

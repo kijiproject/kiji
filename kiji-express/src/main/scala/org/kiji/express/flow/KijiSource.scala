@@ -24,7 +24,6 @@ import scala.collection.mutable.Buffer
 
 import java.io.OutputStream
 import java.util.Properties
-import java.util.NoSuchElementException
 
 import cascading.flow.FlowProcess
 import cascading.flow.hadoop.util.HadoopUtil
@@ -46,8 +45,6 @@ import com.twitter.scalding.Read
 import com.twitter.scalding.Source
 import com.twitter.scalding.Write
 
-import org.apache.avro.Schema
-import org.apache.avro.specific.SpecificRecord
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.mapred.JobConf
@@ -64,13 +61,11 @@ import org.kiji.express.flow.framework.KijiTap
 import org.kiji.express.flow.framework.LocalKijiScheme
 import org.kiji.express.flow.framework.LocalKijiTap
 import org.kiji.express.flow.framework.OutputContext
-import org.kiji.express.util.AvroUtil
 import org.kiji.express.util.GenericCellSpecs
 import org.kiji.express.util.Resources._
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.EntityIdFactory
 import org.kiji.schema.Kiji
-import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiRowData
 import org.kiji.schema.KijiRowScanner
@@ -78,7 +73,6 @@ import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiTableReader
 import org.kiji.schema.KijiTableWriter
 import org.kiji.schema.KijiURI
-import org.kiji.schema.filter.KijiColumnFilter
 
 /**
  * A read or write view of a Kiji table.
@@ -106,7 +100,6 @@ import org.kiji.schema.filter.KijiColumnFilter
  * @param timestampField is the name of a tuple field that will contain cell timestamp when the
  *     source is used for writing. Specify `None` to write all
  *     cells at the current time.
- * @param loggingInterval The interval at which to log skipped rows.
  * @param inputColumns is a one-to-one mapping from field names to Kiji columns. The columns in the
  *     map will be read into their associated tuple fields.
  * @param outputColumns is a one-to-one mapping from field names to Kiji columns. Values from the
@@ -118,7 +111,6 @@ final class KijiSource private[express] (
     val tableAddress: String,
     val timeRange: TimeRange,
     val timestampField: Option[Symbol],
-    val loggingInterval: Long,
     val inputColumns: Map[Symbol, ColumnRequestInput] = Map(),
     val outputColumns: Map[Symbol, ColumnRequestOutput] = Map()
 ) extends Source {
@@ -134,7 +126,6 @@ final class KijiSource private[express] (
       new KijiScheme(
           timeRange,
           timestampField,
-          loggingInterval,
           convertKeysToStrings(inputColumns),
           convertKeysToStrings(outputColumns)
       )
@@ -201,7 +192,6 @@ final class KijiSource private[express] (
           case Write => {
             val scheme = new TestKijiScheme(
                 timestampField,
-                loggingInterval,
                 getInputColumnsForTesting,
                 convertKeysToStrings(outputColumns))
 
@@ -245,7 +235,7 @@ final class KijiSource private[express] (
   }
 
  override def toString: String = {
-    ("KijiSource(table: %s, timeRange: %s, timestampField: %s, loggingInterval: %s, " +
+    ("KijiSource(table: %s, timeRange: %s, timestampField: %s, " +
         "inputColumns: %s, outputColumns: %s)").format(
             tableAddress,
             timeRange,
@@ -253,7 +243,6 @@ final class KijiSource private[express] (
               case None => None
               case Some(tsField) => tsField
             },
-            loggingInterval,
             inputColumns,
             outputColumns)
   }
@@ -355,7 +344,6 @@ object KijiSource {
         col.columnName.toString,
         Integer.MAX_VALUE,
         col.filter,
-        col.default,
         col.paging,
         col.schemaSpec)
   }
@@ -403,8 +391,6 @@ object KijiSource {
     override def sinkCleanup(
         process: FlowProcess[Properties],
         sinkCall: SinkCall[OutputContext, OutputStream]) {
-
-
       // Store the output table.
       val conf: JobConf = HadoopUtil
           .createJobConf(process.getConfigCopy, new JobConf(HBaseConfiguration.create()))
@@ -424,7 +410,7 @@ object KijiSource {
           doAndClose(reader.getScanner(request)) { scanner: KijiRowScanner =>
             val rows: Iterator[KijiRowData] = scanner.iterator().asScala
             rows.foreach { row: KijiRowData =>
-              KijiScheme
+              buffer += KijiScheme
                   .rowToTuple(
                       // Use input columns that are based on the output columns
                       inputColumns,
@@ -433,7 +419,6 @@ object KijiSource {
                       row,
                       table.getURI,
                       conf)
-                  .foreach { tuple => buffer += tuple }
             }
           }
         }
@@ -450,18 +435,15 @@ object KijiSource {
    * @param timestampField is the name of a tuple field that will contain cell timestamp when the
    *                       source is used for writing. Specify the empty field name to write all
    *                       cells at the current time.
-   * @param loggingInterval The interval at which to log skipped rows.
    * @param columns Scalding field name to Kiji column name mapping.
    */
   private class TestKijiScheme(
       timestampField: Option[Symbol],
-      loggingInterval: Long,
       inputColumns: Map[String, ColumnRequestInput],
       outputColumns: Map[String, ColumnRequestOutput])
       extends KijiScheme(
           All,
           timestampField,
-          loggingInterval,
           inputColumns,
           outputColumns)
 }

@@ -83,16 +83,15 @@ class KijiSchemeSuite extends KijiSuite {
     val rowData = reader.get(
         dummyEid.toJavaEntityId(eidFactory),
         KijiScheme.buildRequest(All, columnsInput.values))
-    val readValue: Option[Tuple] = KijiScheme.rowToTuple(
+    val readValue: Tuple = KijiScheme.rowToTuple(
         columnsInput,
         sourceFields,
         None,
         rowData,
         uri,
         configuration)
-    assert(readValue.isDefined)
 
-    val readRecord = readValue.get.getObject(1).asInstanceOf[KijiSlice[_]].getFirstValue()
+    val readRecord = readValue.getObject(1).asInstanceOf[KijiSlice[_]].getFirstValue()
     assert(record === readRecord)
 
     reader.close()
