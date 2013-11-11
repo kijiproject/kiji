@@ -36,6 +36,9 @@ import java.util.Set;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriBuilder;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
@@ -252,6 +255,15 @@ public class TestRowsResource extends ResourceTest {
     String entityIdString = eid.toShellString();
     fakeTable.release();
     return entityIdString;
+  }
+
+  protected final JsonNode stringToJsonNode(String input) throws IOException {
+    ObjectMapper mapper = new ObjectMapper();
+    final JsonParser parser = new JsonFactory().createJsonParser(input)
+        .enable(Feature.ALLOW_COMMENTS)
+        .enable(Feature.ALLOW_SINGLE_QUOTES)
+        .enable(Feature.ALLOW_UNQUOTED_FIELD_NAMES);
+    return mapper.readTree(parser);
   }
 
   /**
@@ -668,8 +680,8 @@ public class TestRowsResource extends ResourceTest {
         "helloworld", Schema.create(Type.STRING));
 
     KijiRestRow postRow = new KijiRestRow(
-        KijiRestEntityId.create(
-        URLDecoder.decode(stringRowKey, "UTF-8")));
+        KijiRestEntityId.create(stringToJsonNode(
+        URLDecoder.decode(stringRowKey, "UTF-8"))));
 
     addCellToRow(postRow, postCell);
 
@@ -698,8 +710,8 @@ public class TestRowsResource extends ResourceTest {
         "helloworld", Schema.create(Type.STRING));
 
     KijiRestRow postRow = new KijiRestRow(
-        KijiRestEntityId.create(
-        URLDecoder.decode(stringRowKey, "UTF-8")));
+        KijiRestEntityId.create(stringToJsonNode(
+        URLDecoder.decode(stringRowKey, "UTF-8"))));
     addCellToRow(postRow, postCell);
 
     // Post.
@@ -736,8 +748,8 @@ public class TestRowsResource extends ResourceTest {
         AvroToJsonStringSerializer.getJsonNode(postTeam), postTeam.getSchema());
 
     KijiRestRow postRow = new KijiRestRow(
-        KijiRestEntityId.create(
-        URLDecoder.decode(stringRowKey, "UTF-8")));
+        KijiRestEntityId.create(stringToJsonNode(
+        URLDecoder.decode(stringRowKey, "UTF-8"))));
 
     addCellToRow(postRow, postCell1);
     addCellToRow(postRow, postCell2);
@@ -784,8 +796,8 @@ public class TestRowsResource extends ResourceTest {
     KijiCell<JsonNode> postCell = fromInputs("group_family", "inline_record", 3141592L,
         AvroToJsonStringSerializer.getJsonNode(genericRecord), spec.getAvroSchema());
     KijiRestRow postRow = new KijiRestRow(
-        KijiRestEntityId.create(
-        URLDecoder.decode(stringRowKey, "UTF-8")));
+        KijiRestEntityId.create(stringToJsonNode(
+        URLDecoder.decode(stringRowKey, "UTF-8"))));
     addCellToRow(postRow, postCell);
 
     // Post.
@@ -834,8 +846,8 @@ public class TestRowsResource extends ResourceTest {
         AvroToJsonStringSerializer.getJsonNode(postBan), postBan.getSchema());
 
     KijiRestRow postRow = new KijiRestRow(
-        KijiRestEntityId.create(
-        URLDecoder.decode(stringRowKey, "UTF-8")));
+        KijiRestEntityId.create(stringToJsonNode(
+        URLDecoder.decode(stringRowKey, "UTF-8"))));
 
     addCellToRow(postRow, postCell1);
     addCellToRow(postRow, postCell2);
@@ -881,8 +893,8 @@ public class TestRowsResource extends ResourceTest {
     KijiCell<String> postCell = fromInputs("nonfamily", "noncolumn", 314592L, "hagar",
         Schema.create(Type.STRING));
     KijiRestRow postRow = new KijiRestRow(
-        KijiRestEntityId.create(
-        URLDecoder.decode(stringRowKey, "UTF-8")));
+        KijiRestEntityId.create(stringToJsonNode(
+        URLDecoder.decode(stringRowKey, "UTF-8"))));
     addCellToRow(postRow, postCell);
 
     // Post.
@@ -910,8 +922,8 @@ public class TestRowsResource extends ResourceTest {
         Schema.create(Type.LONG));
 
     KijiRestRow postRow = new KijiRestRow(
-        KijiRestEntityId.create(
-        URLDecoder.decode(stringRowKey, "UTF-8")));
+        KijiRestEntityId.create(stringToJsonNode(
+        URLDecoder.decode(stringRowKey, "UTF-8"))));
 
     addCellToRow(postRow, postCell1);
     addCellToRow(postRow, postCell2);
@@ -996,22 +1008,22 @@ public class TestRowsResource extends ResourceTest {
     KijiCell<Integer> postCell2 = fromInputs("group_family", "long_qualifier", 3141591L, 123,
         Schema.create(Type.LONG));
     KijiRestRow postRow = new KijiRestRow(
-        KijiRestEntityId.create(
-        URLDecoder.decode(stringRowKey, "UTF-8")));
+        KijiRestEntityId.create(stringToJsonNode(
+        URLDecoder.decode(stringRowKey, "UTF-8"))));
     addCellToRow(postRow, postCell1);
 
     List<KijiRestRow> postRows = Lists.newLinkedList();
     postRows.add(postRow);
 
     postRow = new KijiRestRow(
-        KijiRestEntityId.create(
-        URLDecoder.decode(stringRowKey, "UTF-8")));
+        KijiRestEntityId.create(stringToJsonNode(
+        URLDecoder.decode(stringRowKey, "UTF-8"))));
     addCellToRow(postRow, postCell2);
     postRows.add(postRow);
 
     postRow = new KijiRestRow(
-        KijiRestEntityId.create(
-        URLDecoder.decode(stringRowKey, "UTF-8")));
+        KijiRestEntityId.create(stringToJsonNode(
+        URLDecoder.decode(stringRowKey, "UTF-8"))));
     postRow.addCell("group_family", "string_qualifier", null, "helloworld",
         mStringOption);
     postRows.add(postRow);
@@ -1085,7 +1097,7 @@ public class TestRowsResource extends ResourceTest {
         1234567890987L,
         Schema.create(Type.LONG));
     String eid = "[\"menandros\",\"asia.minor\"]";
-    KijiRestRow postRow = new KijiRestRow(KijiRestEntityId.create(eid));
+    KijiRestRow postRow = new KijiRestRow(KijiRestEntityId.create(stringToJsonNode(eid)));
     addCellToRow(postRow, postCell);
 
     // Post.

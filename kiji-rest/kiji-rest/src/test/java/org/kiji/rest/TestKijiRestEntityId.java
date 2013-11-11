@@ -85,7 +85,7 @@ public class TestKijiRestEntityId {
     assertEquals(originalEid, restEid3.resolve(layout));
 
     // Component representation of entities should work.
-    final KijiRestEntityId restEid4 = KijiRestEntityId.create(SINGLE_COMPONENT_EID);
+    final KijiRestEntityId restEid4 = KijiRestEntityId.createFromUrl(SINGLE_COMPONENT_EID);
     final EntityId resolvedEid = restEid4.resolve(layout);
     final String recoveredComponent = Bytes.toString(
         Bytes.toBytesBinary(
@@ -122,7 +122,7 @@ public class TestKijiRestEntityId {
     assertEquals(originalEid, restEid3.resolve(layout));
 
     // Component representation of entities should work.
-    final KijiRestEntityId restEid4 = KijiRestEntityId.create(SINGLE_COMPONENT_EID);
+    final KijiRestEntityId restEid4 = KijiRestEntityId.createFromUrl(SINGLE_COMPONENT_EID);
     final EntityId resolvedEid = restEid4.resolve(layout);
     final String recoveredComponent = Bytes.toString(
         Bytes.toBytesBinary(
@@ -157,7 +157,6 @@ public class TestKijiRestEntityId {
       final TableLayoutDesc desc =
           KijiTableLayouts.getLayout("org/kiji/rest/layouts/rkf2_suppressed.json");
       final KijiTableLayout layout = KijiTableLayout.newLayout(desc);
-      final EntityIdFactory factory = EntityIdFactory.getFactory(layout);
 
       // Construct complex entity id.
       final String eidString = String.format("[%s,%s,%s,%d,%d]",
@@ -168,7 +167,7 @@ public class TestKijiRestEntityId {
           Long.MAX_VALUE);
       final EntityId originalEid = ToolUtils.createEntityIdFromUserInputs(eidString, layout);
       final KijiRestEntityId restEid1 = KijiRestEntityId.create(originalEid, layout);
-      final KijiRestEntityId restEid2 = KijiRestEntityId.create(eidString);
+      final KijiRestEntityId restEid2 = KijiRestEntityId.createFromUrl(eidString);
       final KijiRestEntityId restEid3 = KijiRestEntityId.create(
           String.format("hbase_hex=%s",
               new String(Hex.encodeHex((originalEid.getHBaseRowKey())))));
@@ -187,7 +186,6 @@ public class TestKijiRestEntityId {
       final TableLayoutDesc desc =
           KijiTableLayouts.getLayout("org/kiji/rest/layouts/rkf2_suppressed.json");
       final KijiTableLayout layout = KijiTableLayout.newLayout(desc);
-      final EntityIdFactory factory = EntityIdFactory.getFactory(layout);
 
       // Construct complex entity id.
       final String eidString = String.format("[%s,%s,%s,%d,%d]",
@@ -198,7 +196,7 @@ public class TestKijiRestEntityId {
           Long.MAX_VALUE);
       final EntityId originalEid = ToolUtils.createEntityIdFromUserInputs(eidString, layout);
       final KijiRestEntityId restEid1 = KijiRestEntityId.create(originalEid, layout);
-      final KijiRestEntityId restEid2 = KijiRestEntityId.create(eidString);
+      final KijiRestEntityId restEid2 = KijiRestEntityId.createFromUrl(eidString);
       final KijiRestEntityId restEid3 = KijiRestEntityId.create(
           String.format("hbase_hex=%s",
               new String(Hex.encodeHex((originalEid.getHBaseRowKey())))));

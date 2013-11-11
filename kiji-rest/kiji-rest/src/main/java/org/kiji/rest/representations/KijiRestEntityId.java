@@ -105,14 +105,27 @@ public final class KijiRestEntityId {
   }
 
   /**
-   * Create KijiRestEntityId from a string input, which can be a json string or a raw hbase rowKey.
-   * This function can accept {@link EntityId#toString()}.
+   * Create KijiRestEntityId from a string input, which can be a raw hbase rowKey prefixed by
+   * 'hbase=' or 'hbase_hex=' (the former for bytes-encoding and the latter for ASCII encoding).
    *
    * @param entityId string of the row.
    * @return a properly constructed KijiRestEntityId.
    * @throws IOException if KijiRestEntityId can not be properly constructed.
    */
   public static KijiRestEntityId create(
+      final String entityId) throws IOException {
+    return new KijiRestEntityId(entityId);
+  }
+
+  /**
+   * Create KijiRestEntityId from a string input, which can be a json string or a raw hbase rowKey.
+   * This method is used for entity ids specified from the URL.
+   *
+   * @param entityId string of the row.
+   * @return a properly constructed KijiRestEntityId.
+   * @throws IOException if KijiRestEntityId can not be properly constructed.
+   */
+  public static KijiRestEntityId createFromUrl(
       final String entityId) throws IOException {
     if (entityId.startsWith(HBASE_ROW_KEY_PREFIX)
         || entityId.startsWith(HBASE_HEX_ROW_KEY_PREFIX)) {
@@ -199,13 +212,10 @@ public final class KijiRestEntityId {
         }
       }
       return new KijiRestEntityId(components, wildCarded);
-    } else if (node.isObject()) {
-      // TODO: Implement map row key specifications:
-      throw new RuntimeException("Map row key specifications are not implemented yet.");
     } else {
-      // Currently this branch is not accessible in practice.
-      // All string entity ids must be rowkeys and should use the alternative constructor.
-      return new KijiRestEntityId(new Object[] { getNodeValue(node) }, false);
+      // Disallow non-arrays.
+      throw new IllegalArgumentException(
+          "Provide components wrapped as a JSON array or provide the row key.");
     }
   }
 
