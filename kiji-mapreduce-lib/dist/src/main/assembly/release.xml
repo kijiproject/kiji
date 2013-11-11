@@ -67,6 +67,7 @@
         <exclude>org.apache.hbase</exclude>
         <exclude>org.apache.avro</exclude>
         <exclude>org.kiji.mapreduce:</exclude>
+        <exclude>org.kiji.avro:kiji-avro:</exclude>
         <exclude>org.slf4j:</exclude>
         <exclude>log4j:</exclude>
       </excludes>
