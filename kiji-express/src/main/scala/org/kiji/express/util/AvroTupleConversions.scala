@@ -144,16 +144,17 @@ private[express] case class AvroSpecificTupleConverter[T](fs: Fields, m: Manifes
     field.split('_').map(_.capitalize).mkString("set", "", "")
   }
 
-  // Precompute as much of the reflection business as possible
+  // Precompute as much of the reflection business as possible.  Method objects do not serialize,
+  // so any val containing a method in it must be lazy.
   private val avroClass = m.erasure
   private val builderClass = avroClass.getDeclaredClasses.find(_.getSimpleName == "Builder").get
-  private val newBuilderMethod = avroClass.getMethod("newBuilder")
-  private val buildMethod = builderClass.getMethod("build")
+  lazy private val newBuilderMethod = avroClass.getMethod("newBuilder")
+  lazy private val buildMethod = builderClass.getMethod("build")
 
   /**
    * Map of field name to setter method.
    */
-  private val fieldSetters: Map[String, Method] = {
+  lazy private val fieldSetters: Map[String, Method] = {
     val fields: List[String] = fs.iterator.map(_.toString).toList
     val setters: Map[String, Method] = builderClass
         .getDeclaredMethods

@@ -73,6 +73,13 @@
           type : "CLASS",
           value : "org.kiji.nonexistent.class"
         }
+      }, {
+        name : "simple",
+        column_schema : {
+          avro_validation_policy : "SCHEMA_1_0",
+          type : "INLINE",
+          value : "{\"type\":\"record\",\"name\":\"SimpleRecord\",\"namespace\":\"org.kiji.express.avro\",\"fields\":[{\"name\":\"l\",\"type\":\"long\"},{\"name\":\"s\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"}},{\"name\":\"o\",\"type\":{\"type\":\"string\",\"avro.java.string\":\"String\"},\"default\":\"default-value\"}]}"
+        }
       }]
     }, {
       name : "searches",

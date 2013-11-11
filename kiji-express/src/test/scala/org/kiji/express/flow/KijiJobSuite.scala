@@ -19,16 +19,19 @@
 
 package org.kiji.express.flow
 
-import scala.collection.mutable.Buffer
+import scala.collection.mutable
 
 import com.twitter.scalding.Args
 import com.twitter.scalding.JobTest
 import com.twitter.scalding.TextLine
 import com.twitter.scalding.Tsv
 import org.apache.avro.generic.GenericRecord
+import org.apache.avro.generic.GenericRecordBuilder
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
+import cascading.tuple.Fields
+import org.apache.avro.specific.SpecificRecord
 import org.kiji.express.Cell
 import org.kiji.express.EntityId
 import org.kiji.express.KijiSlice
@@ -37,8 +40,6 @@ import org.kiji.express.avro.SimpleRecord
 import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiURI
-import org.kiji.schema.avro.HashSpec
-import org.kiji.schema.avro.HashType
 import org.kiji.schema.layout.KijiTableLayout
 
 @RunWith(classOf[JUnitRunner])
@@ -48,26 +49,94 @@ class KijiJobSuite extends KijiSuite {
     table.getURI().toString()
   }
 
-  test("A KijiJob can run with a pipe that uses packAvro.") {
-    val packingInput: List[(String, String)] = List(
-        ( "0", "length 8" ),
-        ( "1", "length  9" ),
-        ( "2", "length  10" ),
-        ( "3", "length   11" ))
+  val rawInputs: List[(Long, String)] = List(
+    (1, "input 1"),
+    (2, "input 2"),
+    (3, "input 3"),
+    (4, "input 4"),
+    (5, "input 5"))
 
-    def validatePacking(outputBuffer: Buffer[(Int, String, String)]) {
-      val inputMap = packingInput.unzip._2.groupBy(_.length).mapValues(_.head)
-      outputBuffer.foreach { t =>
-        assert(inputMap(t._1) === t._2)
-        assert(t._3 === "default-value")
+  val eids: List[EntityId] = List("row-1", "row-2", "row-3", "row-4", "row-5").map(EntityId(_))
+
+  val genericInputs: List[GenericRecord] = {
+    val builder = new GenericRecordBuilder(SimpleRecord.getClassSchema)
+    rawInputs.map { case (l: Long, s: String) => builder.set("l", l).set("s", s).build }
+  }
+
+  val specificInputs: List[SimpleRecord] = {
+    val builder = SimpleRecord.newBuilder()
+    rawInputs.map { case (l: Long, s: String) => builder.setL(l).setS(s).build }
+  }
+
+  def validateUnpacking(output: mutable.Buffer[(Long, String, String)]): Unit = {
+    val inputMap = rawInputs.toMap
+    output.foreach { case (l: Long, s: String, o: String) =>
+      assert(inputMap(l) === s)
+      assert("default-value" === o)
+    }
+  }
+
+  test("A KijiJob can pack a generic Avro record.") {
+    def validatePacking(outputs: mutable.Buffer[(EntityId, KijiSlice[GenericRecord])]) {
+      val inputMap = rawInputs.toMap
+      outputs.foreach { case (_: EntityId, slice: KijiSlice[GenericRecord]) =>
+        val record = slice.getFirstValue()
+        assert(inputMap(record.get("l").asInstanceOf[Long]) === record.get("s"))
+        assert("default-value" === record.get("o"))
       }
     }
 
-    val jobTest = JobTest(new PackTupleJob(_))
+    val jobTest = JobTest(new PackGenericRecordJob(_))
         .arg("input", "inputFile")
+        .arg("uri", uri)
+        .source(Tsv("inputFile", fields = new Fields("l", "s")), rawInputs)
+        .sink(KijiOutput(uri, 'record -> "family:simple"))(validatePacking)
+
+    // Run in local mode.
+    jobTest.run.finish
+    // Run in hadoop mode.
+    jobTest.runHadoop.finish
+  }
+
+  // TODO: EXP-290 - Fix testing support for outputting specific avro records
+  ignore("A KijiJob can pack a specific Avro record.") {
+    def validatePacking(outputs: mutable.Buffer[(EntityId, KijiSlice[SimpleRecord])]) {
+      val inputMap = rawInputs.toMap
+      outputs.foreach { case (_: EntityId, slice: KijiSlice[SimpleRecord]) =>
+        val record = slice.getFirstValue()
+        assert(inputMap(record.getL) === record.getS)
+        assert("default-value" === record.getO)
+      }
+    }
+
+    val jobTest = JobTest(new PackSpecificRecordJob(_))
+        .arg("input", "inputFile")
+        .arg("uri", uri)
+        .source(Tsv("inputFile", fields = new Fields("l", "s")), rawInputs)
+        .sink(KijiOutput(uri,
+            Map('record ->
+                QualifiedColumnRequestOutput("family", "simple", classOf[SimpleRecord]))))(
+                    validatePacking)
+
+    // Run in local mode.
+    jobTest.run.finish
+    // Run in hadoop mode.
+    jobTest.runHadoop.finish
+  }
+
+  test("A KijiJob can unpack a generic record.") {
+    val slices: List[KijiSlice[GenericRecord]] = genericInputs.map { record: GenericRecord =>
+      new KijiSlice(List(Cell("family", "simple", record)))
+    }
+    val input: List[(EntityId, KijiSlice[GenericRecord])] = eids.zip(slices)
+
+    val jobTest = JobTest(new UnpackGenericRecordJob(_))
+        .arg("input", uri)
         .arg("output", "outputFile")
-        .source(TextLine("inputFile"), packingInput)
-        .sink(Tsv("outputFile"))(validatePacking)
+        .source(KijiInput(uri,
+            Map(QualifiedColumnRequestInput("family", "simple", SimpleRecord.getClassSchema)
+                -> 'slice)), input)
+        .sink(Tsv("outputFile"))(validateUnpacking)
 
     // Run in local mode.
     jobTest.run.finish
@@ -76,38 +145,23 @@ class KijiJobSuite extends KijiSuite {
   }
 
   test("A KijiJob can unpack a specific record.") {
-
-    val specificRecord = new HashSpec(HashType.MD5, 13, true)
-    val entityId = EntityId("row01")
-    val slice = new KijiSlice(Seq(Cell("family", "column3", 10L, specificRecord)))
-    val input = List(entityId -> slice)
-
-    def validate(outputBuffer: Buffer[(String, Int, Boolean)]) {
-      val t = outputBuffer.head
-      assert(HashType.MD5.toString === t._1)
-      assert(13 === t._2)
-      assert(true === t._3)
+    val slices: List[KijiSlice[SpecificRecord]] = specificInputs.map { record: SpecificRecord =>
+      new KijiSlice(List(Cell("family", "simple", record)))
     }
+    val input: List[(EntityId, KijiSlice[SpecificRecord])] = eids.zip(slices)
 
-    val jobTest = JobTest(new UnpackTupleJob(_))
+    val jobTest = JobTest(new UnpackSpecificRecordJob(_))
         .arg("input", uri)
         .arg("output", "outputFile")
-        .source(KijiInput(uri, Map(ColumnRequestInput("family:column3") -> 'slice)), input)
-        .sink(Tsv("outputFile"))(validate)
+        .source(KijiInput(uri,
+      Map(QualifiedColumnRequestInput("family", "simple", classOf[SimpleRecord])
+          -> 'slice)), input)
+        .sink(Tsv("outputFile"))(validateUnpacking)
 
     // Run in local mode.
     jobTest.run.finish
     // Run in hadoop mode.
     jobTest.runHadoop.finish
-  }
-
-  test("A KijiJob implicitly converts KijiSources to KijiPipes so you can call Kiji methods.") {
-    class UnpackTupleJob(args: Args) extends KijiJob(args) {
-      KijiInput(args("input"), "family:column3" -> 'slice)
-          .map('slice -> 'record) { slice: KijiSlice[GenericRecord] => slice.getFirstValue() }
-          .unpackTo('record -> ('hashtype, 'hashsize, 'suppress))
-          .write(Tsv(args("output")))
-    }
   }
 
   test("A KijiJob is not run if the Kiji instance in the output doesn't exist.") {
@@ -124,7 +178,7 @@ class KijiJobSuite extends KijiSuite {
 
     val basicInput: List[(String, String)] = List[(String, String)]()
 
-    def validateBasicJob(outputBuffer: Buffer[String]) { /** Nothing to validate. */ }
+    def validateBasicJob(outputBuffer: mutable.Buffer[String]) { /** Nothing to validate. */ }
 
     val jobTest = JobTest(new BasicJob(_))
         .arg("input", "inputFile")
@@ -152,7 +206,7 @@ class KijiJobSuite extends KijiSuite {
 
     val basicInput: List[(String, String)] = List[(String, String)]()
 
-    def validateBasicJob(outputBuffer: Buffer[String]) { /** Nothing to validate. */ }
+    def validateBasicJob(outputBuffer: mutable.Buffer[String]) { /** Nothing to validate. */ }
 
     val jobTest = JobTest(new BasicJob(_))
         .arg("input", "inputFile")
@@ -175,7 +229,7 @@ class KijiJobSuite extends KijiSuite {
 
     val basicInput: List[(String, String)] = List[(String, String)]()
 
-    def validateBasicJob(outputBuffer: Buffer[String]) { /** Nothing to validate. */ }
+    def validateBasicJob(outputBuffer: mutable.Buffer[String]) { /** Nothing to validate. */ }
 
     val jobTest = JobTest(new BasicJob(_))
         .arg("input", "inputFile")
@@ -191,20 +245,33 @@ class KijiJobSuite extends KijiSuite {
   }
 }
 
-class PackTupleJob(args: Args) extends KijiJob(args) {
-  TextLine(args("input")).read
-      .map ('line -> 'l) { line: String => line.length }
-      .rename('line -> 's)
+class PackGenericRecordJob(args: Args) extends KijiJob(args) {
+  Tsv(args("input"), fields = ('l, 's)).read
       .packGenericRecordTo(('l, 's) -> 'record)(SimpleRecord.getClassSchema)
-      .unpackTo('record -> ('l, 's, 'o))
+      .insert('entityId, EntityId("foo"))
+      .write(KijiOutput(args("uri"), 'record -> "family:simple"))
+}
+
+class PackSpecificRecordJob(args: Args) extends KijiJob(args) {
+  Tsv(args("input"), fields = ('l, 's)).read
+      .packTo[SimpleRecord](('l, 's) -> 'record)
+      .insert('entityId, EntityId("foo"))
+      .write(KijiOutput(args("uri"),
+          Map('record -> QualifiedColumnRequestOutput("family", "simple", classOf[SimpleRecord]))))
+}
+
+class UnpackGenericRecordJob(args: Args) extends KijiJob(args) {
+  KijiInput(args("input"),
+      Map(QualifiedColumnRequestInput("family", "simple", SimpleRecord.getClassSchema) -> 'slice))
+      .mapTo('slice -> 'record) { slice: KijiSlice[GenericRecord] => slice.getFirstValue() }
+      .unpackTo[GenericRecord]('record -> ('l, 's, 'o))
       .write(Tsv(args("output")))
 }
 
-class UnpackTupleJob(args: Args) extends KijiJob(args) {
-  KijiInput(args("input"), "family:column3" -> 'slice)
-      .map('slice -> 'record) { slice: KijiSlice[GenericRecord] => slice.getFirstValue }
-      .unpackTo[GenericRecord]('record -> ('hash_type, 'hash_size,
-      'suppress_key_materialization))
+class UnpackSpecificRecordJob(args: Args) extends KijiJob(args) {
+  KijiInput(args("input"),
+      Map(QualifiedColumnRequestInput("family", "simple", classOf[SimpleRecord]) -> 'slice))
+      .map('slice -> 'record) { slice: KijiSlice[SimpleRecord] => slice.getFirstValue }
+      .unpackTo[SimpleRecord]('record -> ('l, 's, 'o))
       .write(Tsv(args("output")))
 }
-
