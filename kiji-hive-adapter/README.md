@@ -106,9 +106,9 @@ If you'd like to load this automatically you can run the script:
     bin/bento-hive.sh import kiji://.env/kiji_music/users
 
 against a Bento cluster where this table has already been created and has the data populated.
-This script only works with string object types, but this could be a baseline for a custom
-`CREATE EXTERNAL TABLE` statement.
+This functionality is also available in the kiji CLI tool via the command:
 
+    kiji generate-hive-table --kiji=kiji://.env/kiji_music/users
 
 ### Sample Queries
 
@@ -153,8 +153,60 @@ use the write functionality to copy rows between these:
 
     INSERT INTO TABLE new_users SELECT * FROM USERS;
 
+Or alternately if you want to save the intermediate results of computations 
+that are done in Hive, you can create a temporary table with:
+
+    CREATE TABLE temporary_results AS <YOUR QUERY>
+
+This table can then be queried/joined as part of future queries.
+
 If you want more inspiration for queries take a look here:
 https://cwiki.apache.org/Hive/tutorial.html#Tutorial-UsageandExamples
+
+### Exporting results to CSV
+
+In many cases, you’ll want to use results of a Hive query in another tool
+that’s more conducive for analysis.  Depending on the size of the results,
+CSVs are often the best choice for this.  The first command ensures that the
+output isn’t compressed, and then you can prepend the CSV definition to your
+query as follows: 
+
+    set hive.exec.compress.output=false;
+    create table outputcsv ROW FORMAT DELIMITED FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' as 
+    <YOUR QUERY>;
+
+These commands won’t actually overwrite any such data that you’ve already
+written out, if you get an error message like: 
+“Table already exists: outputcsv”, you’ll have to either select a new
+destination, or remove the existing table by dropping it:
+
+    DROP TABLE outputcsv;
+
+Now to copy this over to your local machine, you can use hadoop’s getmerge
+functionality(which will combine potentially numerous files into a single
+result as well):
+
+    !hadoop fs -getmerge /user/hive/warehouse/outputcsv/ output.csv;
+    
+### Using data in other tools
+
+#### Importing data into R
+
+Now that the data exists in a CSV format, loading it into R is the same as
+for any other CSV:
+
+    mydata <- read.table("output.csv", sep=",")
+
+#### Importing data into Kiji Express
+
+If the data is on your local machine, processing can be done within the Kiji
+Express as a CSV input using the standard split methods:
+
+    val input = TextLine("output.csv")
+    val userSongs = input.map('line -> ('user, 'song)) { 
+        line: String => (line.split(",")(0), 
+                         line.split(",")(1)) 
+    }
 
 ### Mapping Kiji Table Data into Hive
 
