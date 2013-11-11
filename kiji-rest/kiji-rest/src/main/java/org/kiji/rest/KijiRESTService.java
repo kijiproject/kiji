@@ -20,8 +20,11 @@
 package org.kiji.rest;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+
+import javax.ws.rs.ext.ExceptionMapper;
 
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -127,16 +130,16 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
 
     // Remove the in built Dropwizard LoggingExceptionHandler and use a custom one that logs
     // JSON and also ensures that it's logged to the log file.
-    Set<Object> jerseySingletons = environment.getJerseyResourceConfig().getSingletons();
-    Object oldLoggingHandler = null;
-
-    for (Object o : jerseySingletons) {
-      if (o.getClass().getName().contains("DropwizardResourceConfig")) {
-        oldLoggingHandler = o;
+    // Inspired by Jeremy Whitlock's suggestion on thoughtspark.org.
+    Set<Object> jerseyResources = environment.getJerseyResourceConfig().getSingletons();
+    Iterator<Object> jerseyResourcesIterator = jerseyResources.iterator();
+    while (jerseyResourcesIterator.hasNext()) {
+      Object jerseyResource = jerseyResourcesIterator.next();
+      if (jerseyResource instanceof ExceptionMapper
+          && jerseyResource.getClass().getName().startsWith("com.yammer.dropwizard.jersey")) {
+        jerseyResourcesIterator.remove();
       }
     }
-
-    jerseySingletons.remove(oldLoggingHandler);
 
     // Load resources.
     environment.addResource(new KijiRESTResource());
