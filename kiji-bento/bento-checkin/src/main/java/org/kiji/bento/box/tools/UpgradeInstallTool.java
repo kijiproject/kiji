@@ -111,7 +111,6 @@ public final class UpgradeInstallTool {
     }
 
     // Create a client for the upgrade server, to get the latest version info.
-
     final URI checkinServerURI = UpgradeDaemonTool.getUpgradeServerURI(mUpgradeServerURL);
     final HttpClient httpClient = new DefaultHttpClient();
     final CheckinClient upgradeClient =

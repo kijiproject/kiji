@@ -57,9 +57,6 @@ public final class UpgradeDaemonTool {
   /** The name of the file where upgrade information should be written. */
   private static final String UPGRADE_FILE_NAME = ".kiji-bento-upgrade";
 
-  /** The name of the file where the user's unique and anonymous ID is stored. */
-  private static final String UUID_FILE_NAME = UUIDTools.UUID_FILE_NAME;
-
   /** The name of the file that stores a PID for this process. */
   private static final String PID_FILE_NAME = "checkin-daemon.pid";
 
@@ -309,10 +306,13 @@ public final class UpgradeDaemonTool {
     }
 
     // Create a check-in thread and start it.
-    mCheckinThread = new CheckinThread(uuid, timestampFile, upgradeInfoFile, mCheckinPeriodMillis,
+    mCheckinThread = new CheckinThread(
+        uuid,
+        timestampFile,
+        upgradeInfoFile,
+        mCheckinPeriodMillis,
         upgradeClient);
     mCheckinThread.start();
-
 
     // Wait until the shutdown hook stops the thread.
     waitForCheckinThreadShutdown();

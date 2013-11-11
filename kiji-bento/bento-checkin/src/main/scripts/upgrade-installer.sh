@@ -82,7 +82,8 @@ kiji_bento_conf_dir="${bento_root}/conf"
 tool_classpath="${kiji_bento_lib_dir}/*"
 
 # Run the tool. stdout and stderr both print to the screen.
-java -cp "${tool_classpath}:${kiji_bento_conf_dir}" org.kiji.bento.box.tools.UpgradeInstallTool \
+java \
+  -cp "${tool_classpath}:${kiji_bento_conf_dir}" org.kiji.bento.box.tools.UpgradeInstallTool \
   --bento-root="$bento_root" \
   --upgrade-server-url="$BENTO_CHECKIN_SERVER" \
   --tmp-dir="$BENTO_TMP_DIR" "$@"

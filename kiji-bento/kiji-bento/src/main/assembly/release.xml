@@ -52,6 +52,7 @@
         <include>README.md</include>
         <!-- log4j override to suppress hbase warnings -->
         <include>conf/log4j.properties</include>
+        <include>conf/project-name.properties</include>
         <include>release-notes/**</include>
       </includes>
       <filtered>true</filtered>

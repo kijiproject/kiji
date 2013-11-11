@@ -76,7 +76,7 @@ $(create_missing_dir "${bento_cluster_state_dir}")
 upgrade_daemon_log_file="${bento_cluster_state_dir}/bento-upgrade-daemon.log"
 
 # Everything in the kiji-bento lib dir should go on the classpath.
-tool_classpath="${kiji_bento_lib_dir}/*"
+tool_classpath="${kiji_bento_lib_dir}/*:${kiji_bento_conf_dir}/*"
 
 # We'll check-in with the upgrade server every 12 hours.
 let "checkin_period_millis=12*60*60*1000"
