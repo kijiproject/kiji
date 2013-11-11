@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
-import org.kiji.express.KijiSlice
+import org.kiji.express.Cell
 import org.kiji.modeling.Trainer
 
 /**
@@ -90,10 +90,10 @@ final case class LMTrainer() extends Trainer {
    * @param attributes contains the x-values from the input table.
    * @return an ordered sequence of double x-values, with x_0 prepended.
    */
-  def vectorizeDataPoint(attributes: KijiSlice[Double]): IndexedSeq[Double] = {
+  def vectorizeDataPoint(attributes: Seq[Cell[Double]]): IndexedSeq[Double] = {
     // TODO Decide how the input source will look like for data with more than one attribute.
     val vectorizedAttributes  = new ArrayBuffer[Double]
-    vectorizedAttributes.append(1.0, attributes.getFirstValue())
+    vectorizedAttributes.append(1.0, attributes.head.datum)
     vectorizedAttributes.toIndexedSeq
   }
 
@@ -139,11 +139,11 @@ final case class LMTrainer() extends Trainer {
       extends TrainerJob {
     input.getOrElse("dataset", null)
         .mapTo(('attributes, 'target) -> 'gradient) {
-          dataPoint: (KijiSlice[Double], KijiSlice[Double]) => {
+          dataPoint: (Seq[Cell[Double]], Seq[Cell[Double]]) => {
             // X
             val attributes: IndexedSeq[Double] = vectorizeDataPoint(dataPoint._1)
             // y
-            val target: Double = dataPoint._2.getFirstValue()
+            val target: Double = dataPoint._2.head.datum
             // y - (theta)'(X)
             val delta: Double = target -
                 parameters.zip(attributes).map(x => x._1 * x._2).reduce(_ + _)

@@ -26,10 +26,9 @@ import org.apache.hadoop.conf.Configuration
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
+import org.kiji.express.Cell
 import org.kiji.express.EntityId
-import org.kiji.express.KijiSlice
 import org.kiji.express.flow.ColumnRequestInput
-import org.kiji.express.flow.ColumnRequestOutput
 import org.kiji.express.flow.framework.KijiScheme
 import org.kiji.express.util.GenericRowDataConverter
 import org.kiji.express.util.Tuples
@@ -47,6 +46,7 @@ import org.kiji.modeling.config.ModelDefinition
 import org.kiji.modeling.config.ModelEnvironment
 import org.kiji.modeling.impl.ModelJobUtils
 import org.kiji.modeling.impl.ModelJobUtils.PhaseType.SCORE
+import org.kiji.schema.KijiCell
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiRowData
@@ -121,21 +121,17 @@ final class ScoreProducer
   override def setConf(conf: Configuration) {
     // Load model definition.
     val modelDefinitionJson: String = conf.get(ScoreProducer.modelDefinitionConfKey)
-    // scalastyle:off null
     require(
         modelDefinitionJson != null,
         "A ModelDefinition was not specified!")
-    // scalastyle:on null
     val modelDefinitionDef = ModelDefinition.fromJson(modelDefinitionJson)
     _modelDefinition = Some(modelDefinitionDef)
 
     // Load run profile.
     val modelEnvironmentJson: String = conf.get(ScoreProducer.modelEnvironmentConfKey)
-    // scalastyle:off null
     require(
         modelEnvironmentJson != null,
         "A ModelEnvironment was not specified!")
-    // scalastyle:on null
     val modelEnvironmentDef = ModelEnvironment.fromJson(modelEnvironmentJson)
     _modelEnvironment = Some(modelEnvironmentDef)
 
@@ -231,9 +227,9 @@ final class ScoreProducer
         .columnsToFields
         .toList
         // List of (ColumnRequestInput, Symbol) pairs
-        .map { case (column: ColumnRequestInput, field: Symbol) => {
+        .map { case (column: ColumnRequestInput, field: Symbol) =>
           (field.name, column.columnName)
-        }}
+        }
         .toMap
 
     // Configure the row data input to decode its data generically.
@@ -250,11 +246,24 @@ final class ScoreProducer
           } else {
             val columnName: KijiColumnName = fieldMapping(field.toString)
 
+            // TODO(EXP-283/EXP-208): This should use KijiScheme#rowToTuple.
             // Build a slice from each column within the row.
             if (columnName.isFullyQualified) {
-              KijiSlice[Any](row, columnName.getFamily, columnName.getQualifier)
+              val slice = row
+                  .iterator(columnName.getFamily, columnName.getQualifier)
+                  .asScala
+                  .toIterable
+                  .map { kijiCell: KijiCell[_] => Cell(kijiCell) }
+
+              slice
             } else {
-              KijiSlice[Any](row, columnName.getFamily)
+              val slice = row
+                  .iterator(columnName.getFamily)
+                  .asScala
+                  .toIterable
+                  .map { kijiCell: KijiCell[_] => Cell(kijiCell) }
+
+              slice
             }
           }
         }

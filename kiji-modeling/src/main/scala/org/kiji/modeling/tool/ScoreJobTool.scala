@@ -61,13 +61,11 @@ final class ScoreJobTool extends Configured with Tool {
   }
 
   override def run(args: Array[String]): Int = {
-    // scalastyle:off null
     val nonFlagArgs = FlagParser.init(this, args)
     if (nonFlagArgs == null) {
       ScoreJobTool.LOGGER.info("Problems parsing command line flags.")
       return 1
     }
-    // scalastyle:on null
     validateFlags()
     ScoreJobTool.LOGGER.info("Building Extract-Score batch job.")
     val produceJob = ScoreProducerJobBuilder.buildJob(modelDefPath = mModelDefPath,

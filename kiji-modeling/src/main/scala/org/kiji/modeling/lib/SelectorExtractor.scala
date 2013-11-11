@@ -24,13 +24,14 @@ import cascading.tuple.Fields
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
-import org.kiji.express.KijiSlice
-import org.kiji.modeling.Extractor
+import org.kiji.express.Cell
 import org.kiji.express.util.Tuples
+import org.kiji.modeling.ExtractFn
+import org.kiji.modeling.Extractor
 
 /**
- * Base class for prebuilt extractors for performing simple selection tasks from a
- * [[org.kiji.express.KijiSlice]]. Currently three simple selection extractors are provided:
+ * Base class for prebuilt extractors for performing simple selection tasks from a slice of a Kiji
+ * table. Currently three simple selection extractors are provided:
  * <ul>
  *   <li>[[org.kiji.modeling.lib.FirstValueExtractor]] -
  *       Selects the first value of a slice.</li>
@@ -47,21 +48,19 @@ import org.kiji.express.util.Tuples
 @ApiStability.Experimental
 @Inheritance.Sealed
 sealed abstract class SelectorExtractor[R](
-    val selectFn: KijiSlice[Any] => R)
+    val selectFn: Seq[Cell[Any]] => R)
     extends Extractor {
-  override val extractFn = extract(Fields.ALL -> Fields.RESULTS) { data: Any =>
-    data match {
-      case tuple: Product => {
-        val returnValues: Seq[R] = tuple
-            .productIterator
-            .toSeq
-            .asInstanceOf[Seq[KijiSlice[Any]]]
-            .map { slice: KijiSlice[Any] => selectFn(slice) }
+  override val extractFn: ExtractFn[Any, R] = extract(Fields.ALL -> Fields.RESULTS) {
+    case tuple: Product => {
+      val returnValues: Seq[R] = tuple
+          .productIterator
+          .asInstanceOf[Iterator[Seq[Cell[Any]]]]
+          .map { slice: Seq[Cell[Any]] => selectFn(slice) }
+          .toSeq
 
-        Tuples.seqToTuple(returnValues)
-      }
-      case slice: KijiSlice[_] => selectFn(slice.asInstanceOf[KijiSlice[Any]])
+      Tuples.seqToTuple(returnValues)
     }
+    case slice: Seq[Cell[_]] => selectFn(slice.asInstanceOf[Seq[Cell[Any]]])
   }
 }
 
@@ -73,8 +72,8 @@ sealed abstract class SelectorExtractor[R](
 @Inheritance.Sealed
 final class FirstValueExtractor
     extends SelectorExtractor[Any](FirstValueExtractor.selectFirstValue)
-private[modeling] object FirstValueExtractor {
-  def selectFirstValue(slice: KijiSlice[Any]): Any = slice.getFirstValue
+private object FirstValueExtractor {
+  def selectFirstValue(slice: Seq[Cell[Any]]): Any = slice.head.datum
 }
 
 /**
@@ -85,8 +84,8 @@ private[modeling] object FirstValueExtractor {
 @Inheritance.Sealed
 final class LastValueExtractor
     extends SelectorExtractor[Any](LastValueExtractor.selectLastValue)
-private[modeling] object LastValueExtractor {
-  def selectLastValue(slice: KijiSlice[Any]): Any = slice.getLastValue
+private object LastValueExtractor {
+  def selectLastValue(slice: Seq[Cell[Any]]): Any = slice.last.datum
 }
 
 /**
@@ -97,11 +96,10 @@ private[modeling] object LastValueExtractor {
 @ApiStability.Experimental
 @Inheritance.Sealed
 final class SliceExtractor
-    extends SelectorExtractor[Seq[Any]](SliceExtractor.selectSlice)
-private[modeling] object SliceExtractor {
-  def selectSlice(slice: KijiSlice[Any]): Seq[Any] = {
+    extends SelectorExtractor[Iterable[Any]](SliceExtractor.selectSlice)
+private object SliceExtractor {
+  def selectSlice(slice: Seq[Cell[Any]]): Iterable[Any] = {
     slice
-        .cells
         .map { cell => cell.datum }
   }
 }

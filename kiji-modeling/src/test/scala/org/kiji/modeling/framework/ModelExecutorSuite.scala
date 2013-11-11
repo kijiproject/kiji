@@ -26,8 +26,8 @@ import org.apache.hadoop.hbase.HBaseConfiguration
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
+import org.kiji.express.Cell
 import org.kiji.express.EntityId
-import org.kiji.express.KijiSlice
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow.All
 import org.kiji.express.flow.QualifiedColumnRequestInput
@@ -461,8 +461,8 @@ object ModelExecutorSuite {
     class WordCountJob(input: Map[String, Source], output: Map[String, Source]) extends
         PreparerJob {
       input("input")
-        .flatMapTo('word -> 'countedWord) { slice: KijiSlice[CharSequence] =>
-            slice.cells.map { cell => cell.datum.toString } }
+        .flatMapTo('word -> 'countedWord) { slice: Seq[Cell[CharSequence]] =>
+            slice.map { cell => cell.datum.toString } }
         .groupBy('countedWord) { _.size }
         .map('countedWord -> 'entityId) { countedWord: String => EntityId(countedWord) }
         .map('size -> 'size) { size: Long => size.toString }
@@ -479,8 +479,8 @@ object ModelExecutorSuite {
     class WordCountJob(input: Map[String, Source], output: Map[String,
         Source]) extends TrainerJob {
       input("input")
-        .flatMapTo('word -> 'countedWord) { slice: KijiSlice[CharSequence] =>
-          slice.cells.map { cell => cell.datum.toString }
+        .flatMapTo('word -> 'countedWord) { slice: Seq[Cell[CharSequence]] =>
+          slice.map { cell => cell.datum.toString }
         }
         .groupBy('countedWord) { _.size }
         .map('countedWord -> 'entityId) { countedWord: String => EntityId(countedWord) }
@@ -498,8 +498,8 @@ object ModelExecutorSuite {
     class AverageTrainerJob(input: Map[String, Source], output: Map[String, Source]) extends
         TrainerJob {
       input("input")
-        .flatMapTo('word -> 'countedWord) { slice: KijiSlice[CharSequence] =>
-          slice.cells.map { cell => cell.datum.toString }
+        .flatMapTo('word -> 'countedWord) { slice: Seq[Cell[CharSequence]] =>
+          slice.map { cell => cell.datum.toString }
         }
         .mapTo('countedWord -> 'number) { countedWord: String => countedWord.toLong }
         .groupAll(_.average('number))

@@ -174,7 +174,6 @@ class ModelConvertersSuite extends SerDeSuite {
 }
 
 object ModelConvertersSuite {
-  // scalastyle:off null
   class TestExtractor extends Extractor {
     override def extractFn: ExtractFn[_, _] = { null }
   }
@@ -189,7 +188,6 @@ object ModelConvertersSuite {
   class TestScorer extends Scorer {
     override def scoreFn: ScoreFn[_, _] = { null }
   }
-  // scalastyle:on null
 
   val testRangeFilter: ColumnRangeFilter = ColumnRangeFilter(
       minimum = Some("0min"),

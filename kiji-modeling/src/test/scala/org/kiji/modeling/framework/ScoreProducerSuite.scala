@@ -23,8 +23,8 @@ import org.apache.hadoop.fs.Path
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
+import org.kiji.express.Cell
 import org.kiji.express.EntityId
-import org.kiji.express.KijiSlice
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow.All
 import org.kiji.express.flow.QualifiedColumnRequestInput
@@ -51,7 +51,6 @@ import org.kiji.schema.KijiURI
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts
 import org.kiji.schema.util.InstanceBuilder
-import org.apache.avro.util.Utf8
 
 @RunWith(classOf[JUnitRunner])
 class ScoreProducerSuite
@@ -410,8 +409,8 @@ class ScoreProducerSuite
 
 object ScoreProducerSuite {
   class DoublingExtractor extends Extractor {
-    override val extractFn = extract('field -> 'feature) { field: KijiSlice[CharSequence] =>
-      val str: String = field.getFirstValue.toString
+    override val extractFn = extract('field -> 'feature) { field: Seq[Cell[CharSequence]] =>
+      val str: String = field.head.datum.toString
       val sideData: KeyValueStore[Int, String] = keyValueStore("side_data")
 
       str + str + sideData(1)
@@ -425,18 +424,20 @@ object ScoreProducerSuite {
   }
 
   class KijiSliceScorer extends Scorer {
-    override val scoreFn = score('field) { field: KijiSlice[CharSequence] =>
-      field.getFirstValue.toString
+    override val scoreFn = score('field) { field: Seq[Cell[CharSequence]] =>
+      field.head.datum.toString
     }
   }
 
   class TwoArgDoublingExtractor extends Extractor {
     override val extractFn =
-        extract(('i1, 'i2) -> ('x1, 'x2)) { t: (KijiSlice[CharSequence], KijiSlice[CharSequence]) =>
+        extract(('i1, 'i2) -> ('x1, 'x2)) {
+          t: (Seq[Cell[CharSequence]], Seq[Cell[CharSequence]]) =>
+
           val (i1, i2) = t
 
-          (i1.getFirstValue.toString + i1.getFirstValue.toString,
-           i2.getFirstValue.toString + i2.getFirstValue.toString)
+          (i1.head.datum.toString + i1.head.datum.toString,
+           i2.head.datum.toString + i2.head.datum.toString)
         }
   }
 

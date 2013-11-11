@@ -152,7 +152,6 @@ object KeyValueStoreImplSuite {
    */
   private[kiji] def generateAvroKVRecordKeyValueStore(): Path = {
     // Build the schema associated with this key-value store.
-    // scalastyle:off null
     val writerSchema: Schema = {
       val schema: Schema = Schema.createRecord("record", null, null, false)
       val fields: Seq[Schema.Field] = Seq(
@@ -162,7 +161,6 @@ object KeyValueStoreImplSuite {
       schema.setFields(fields.asJava)
       schema
     }
-    // scalastyle:on null
 
     // Open a writer.
     val file: File = File.createTempFile("generic-kv", ".avro")
@@ -212,7 +210,6 @@ object KeyValueStoreImplSuite {
    */
   private def generateAvroKVRecordKeyValueStoreWithRecordKey(): Path = {
     // Build the schema associated with this key-value store.
-    // scalastyle:off null
     val keySchema: Schema =
         Schema.createRecord(
             "key_record",
@@ -235,7 +232,6 @@ object KeyValueStoreImplSuite {
       schema.setFields(fields.asJava)
       schema
     }
-    // scalastyle:on null
 
     // Open a writer.
     val file: File = File.createTempFile("generic-kv", ".avro")

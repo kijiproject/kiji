@@ -442,7 +442,7 @@ object ModelEnvironment {
   /**
    * Verifies that the KijiInputSpec of the train or prepare phase is valid.
    *
-   * @param inputSpec The KijiInputSpec to validate.
+   * @param kijiInputSpec The KijiInputSpec to validate.
    * @return an optional ValidationException if there are errors encountered.
    */
   def validateKijiInputSpec(kijiInputSpec: KijiInputSpec): Seq[ValidationException] = {

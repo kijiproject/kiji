@@ -104,13 +104,11 @@ class KeyValueStoreSuite extends FunSuite with EasyMockSugar {
   test("KeyValueStore throws NoSuchElementException when using apply with non-existent key.") {
     val (mockJKeyValueStore, mockJKeyValueStoreReader) = getMocks
     val keyToLookup: String = "key"
-    // scalastyle:off null
     expecting {
       mockJKeyValueStoreReader
       .get(keyToLookup.asInstanceOf[java.lang.String])
       .andReturn(null)
     }
-    // scalastyle:on null
     whenExecuting(mockJKeyValueStore, mockJKeyValueStoreReader) {
       val kvStore = dummyKVStore(mockJKeyValueStore)
       val thrown = intercept[NoSuchElementException] {
@@ -141,13 +139,11 @@ class KeyValueStoreSuite extends FunSuite with EasyMockSugar {
   test("A KeyValueStore retrieves None for a key that does not exist using get.") {
     val (mockJKeyValueStore, mockJKeyValueStoreReader) = getMocks
     val keyToLookup: String = "key"
-    // scalastyle:off null
     expecting {
       mockJKeyValueStoreReader
       .get(keyToLookup.asInstanceOf[java.lang.String])
       .andReturn(null)
     }
-    // scalastyle:on null
     whenExecuting(mockJKeyValueStore, mockJKeyValueStoreReader) {
       val kvStore = dummyKVStore(mockJKeyValueStore)
       val actualValueRetrieved: Option[Int] = kvStore.get(keyToLookup)
@@ -161,9 +157,7 @@ class KeyValueStoreSuite extends FunSuite with EasyMockSugar {
     whenExecuting(mockJKeyValueStore, mockJKeyValueStoreReader) {
       val kvStore = dummyKVStore(mockJKeyValueStore)
       val thrown = intercept[IllegalArgumentException] {
-        // scalastyle:off null
         kvStore(null)
-        // scalastyle:on null
       }
       assert(thrown.getMessage.contains(
           "A null key was used to access a value from a KeyValueStore"))
@@ -175,9 +169,7 @@ class KeyValueStoreSuite extends FunSuite with EasyMockSugar {
     whenExecuting(mockJKeyValueStore, mockJKeyValueStoreReader) {
       val kvStore = dummyKVStore(mockJKeyValueStore)
       val thrown = intercept[IllegalArgumentException] {
-        // scalastyle:off null
         kvStore.get(null)
-        // scalastyle:on null
       }
       assert(thrown.getMessage.contains(
           "A null key was used to access a value from a KeyValueStore"))

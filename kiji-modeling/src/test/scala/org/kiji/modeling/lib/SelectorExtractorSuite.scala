@@ -25,18 +25,17 @@ import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.Cell
-import org.kiji.express.KijiSlice
 
 @RunWith(classOf[JUnitRunner])
 class SelectorExtractorSuite extends FunSuite {
-  val slice1 = new KijiSlice(Seq(
+  val slice1 = Seq(
       new Cell("family", "qualifier", 3L, "bar1"),
       new Cell("family", "qualifier", 2L, "baz1"),
-      new Cell("family", "qualifier", 1L, "foo1")))
-  val slice2 = new KijiSlice(Seq(
+      new Cell("family", "qualifier", 1L, "foo1"))
+  val slice2 = Seq(
       new Cell("family", "qualifier", 3L, "bar2"),
       new Cell("family", "qualifier", 2L, "baz2"),
-      new Cell("family", "qualifier", 1L, "foo2")))
+      new Cell("family", "qualifier", 1L, "foo2"))
   val firstValueExtractor = new FirstValueExtractor
   val lastValueExtractor = new LastValueExtractor
   val sliceExtractor = new SliceExtractor
@@ -56,7 +55,7 @@ class SelectorExtractorSuite extends FunSuite {
   }
 
   test("FirstValueExtractor should select the first value of a KijiSlice") {
-    assert("bar1" === firstValueExtractor.extractFn.fn(slice1))
+    assert(Tuple1("bar1") === firstValueExtractor.extractFn.fn(Tuple1(slice1)))
   }
 
   test("FirstValueExtractor should select the first values of a tuple of KijiSlices") {
@@ -64,7 +63,7 @@ class SelectorExtractorSuite extends FunSuite {
   }
 
   test("LastValueExtractor should select the last value of a KijiSlice") {
-    assert("foo1" === lastValueExtractor.extractFn.fn(slice1))
+    assert(Tuple1("foo1") === lastValueExtractor.extractFn.fn(Tuple1(slice1)))
   }
 
   test("LastValueExtractor should select the last values of a tuple of KijiSlices") {
@@ -72,8 +71,8 @@ class SelectorExtractorSuite extends FunSuite {
   }
 
   test("SliceExtractor should select the values in a KijiSlice") {
-    val expected = Seq("bar1", "baz1", "foo1")
-    assert(expected === sliceExtractor.extractFn.fn(slice1))
+    val expected = Tuple1(Seq("bar1", "baz1", "foo1"))
+    assert(expected === sliceExtractor.extractFn.fn(Tuple1(slice1)))
   }
 
   test("SliceExtractor should select the values in a tuple of KijiSlices") {

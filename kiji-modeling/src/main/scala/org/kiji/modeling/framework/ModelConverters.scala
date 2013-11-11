@@ -74,7 +74,6 @@ import org.kiji.modeling.avro.AvroTextSourceSpec
 import org.kiji.modeling.avro.AvroTimeRange
 import org.kiji.modeling.avro.AvroTrainEnvironment
 import org.kiji.modeling.config.EvaluateEnvironment
-import org.kiji.modeling.config.FieldBinding
 import org.kiji.modeling.config.InputSpec
 import org.kiji.modeling.config.KeyValueStoreSpec
 import org.kiji.modeling.config.KijiInputSpec
@@ -166,7 +165,6 @@ object ModelConverters {
    */
   def modelDefinitionToAvro(modelDefinition: ModelDefinition): AvroModelDefinition = {
     // Build the Prepare phase's definition.
-    // scalastyle:off null
     val avroPreparerClass = modelDefinition
         .preparerClass
         .map { _.getName }
@@ -177,7 +175,6 @@ object ModelConverters {
         .trainerClass
         .map { _.getName }
         .getOrElse(null)
-    // scalastyle:on null
 
     // Build the Score phase's definition.
     val avroScorerClass = phaseDefinitionToAvro(
@@ -1001,7 +998,6 @@ object ModelConverters {
             .build()
       }
       case ColumnRangeFilter(minimum, maximum, minimumIncluded, maximumIncluded) => {
-        // scalastyle:off null
         val rangeFilter = AvroColumnRangeFilter
             .newBuilder()
             .setMinQualifier(minimum.getOrElse(null))
@@ -1009,7 +1005,6 @@ object ModelConverters {
             .setMinIncluded(minimumIncluded)
             .setMaxIncluded(maximumIncluded)
             .build()
-        // scalastyle:on null
 
         AvroFilter
             .newBuilder()
