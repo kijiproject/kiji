@@ -499,13 +499,13 @@ fi
 # Run it!
 if [ -z "${scalding_tool}" ]; then
   # In this case the user is running an arbitrary jar with express code on the classpath.
-  # TODO EXP-243: Once we have an express keyword to run the model lifecycle, remove the two
-  # Hadoop flags -Dtmpjars and -Dmapreduce... that are being passed to `express jar`. Until
-  # then, we use `express jar` to run the model lifecycle tool and hence need the flags.
+  # TODO EXP-243: Until we add a keyword in the express/modeling projects to run a model
+  # lifecycle tool, we use `express jar` to run it. You may need to add the following
+  # flags for this to work: "-Dtmpjars=${tmpjars}" and
+  # "-Dmapreduce.task.classpath.user.precedence=true"
   exec java \
     -cp "${express_cp}" ${java_opts} ${EXPRESS_JAVA_OPTS} \
-    "${class}" "-Dtmpjars=${tmpjars}" "-Dmapreduce.task.classpath.user.precedence=true" \
-    ${COMMAND_ARGS}
+    "${class}" ${COMMAND_ARGS}
 else
   canonical_user_target=$(resolve_symlink ${user_target})
   if [ -z "${canonical_user_target}" ]; then
