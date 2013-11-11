@@ -32,6 +32,7 @@ import com.yammer.dropwizard.config.Environment;
 import com.yammer.dropwizard.json.ObjectMapperFactory;
 
 import org.kiji.rest.health.InstanceHealthCheck;
+import org.kiji.rest.representations.KijiRestEntityId;
 import org.kiji.rest.representations.SchemaOption;
 import org.kiji.rest.resources.InstanceResource;
 import org.kiji.rest.resources.InstancesResource;
@@ -40,7 +41,9 @@ import org.kiji.rest.resources.RowsResource;
 import org.kiji.rest.resources.TableResource;
 import org.kiji.rest.resources.TablesResource;
 import org.kiji.rest.serializers.AvroToJsonStringSerializer;
+import org.kiji.rest.serializers.JsonToKijiRestEntityId;
 import org.kiji.rest.serializers.JsonToSchemaOption;
+import org.kiji.rest.serializers.KijiRestEntityIdToJson;
 import org.kiji.rest.serializers.SchemaOptionToJson;
 import org.kiji.rest.serializers.TableLayoutToJsonSerializer;
 import org.kiji.rest.serializers.Utf8ToJsonSerializer;
@@ -86,8 +89,9 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
     module.addSerializer(new Utf8ToJsonSerializer());
     module.addSerializer(new TableLayoutToJsonSerializer());
     module.addSerializer(new SchemaOptionToJson());
-    module.addSerializer(new SchemaOptionToJson());
     module.addDeserializer(SchemaOption.class, new JsonToSchemaOption());
+    module.addSerializer(new KijiRestEntityIdToJson());
+    module.addDeserializer(KijiRestEntityId.class, new JsonToKijiRestEntityId());
     mapperFactory.registerModule(module);
   }
 

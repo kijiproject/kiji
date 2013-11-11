@@ -56,10 +56,6 @@ import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
@@ -75,6 +71,7 @@ import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
 import org.kiji.rest.KijiClient;
 import org.kiji.rest.config.FresheningConfiguration;
+import org.kiji.rest.representations.KijiRestEntityId;
 import org.kiji.rest.representations.KijiRestRow;
 import org.kiji.rest.util.RowResourceUtil;
 import org.kiji.schema.EntityId;
@@ -91,7 +88,7 @@ import org.kiji.schema.KijiTableReader.KijiScannerOptions;
 import org.kiji.schema.avro.RowKeyFormat2;
 import org.kiji.schema.filter.FormattedEntityIdRowFilter;
 import org.kiji.schema.filter.KijiRowFilter;
-import org.kiji.schema.tools.ToolUtils;
+import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.util.ResourceUtils;
 import org.kiji.scoring.FreshKijiTableReader;
 
@@ -291,6 +288,7 @@ public class RowsResource {
     // CSON: ParameterNumberCheck - There are a bunch of query param options
     long[] timeRanges = null;
     KijiTable kijiTable = mKijiClient.getKijiTable(instance, table);
+    KijiTableLayout layout = kijiTable.getLayout();
     Iterable<KijiRowData> scanner = null;
     int maxVersions;
     KijiDataRequestBuilder dataBuilder = KijiDataRequest.builder();
@@ -310,7 +308,7 @@ public class RowsResource {
       dataBuilder.withTimeRange(timeRanges[0], timeRanges[1]);
     }
     ColumnsDef colsRequested = dataBuilder.newColumnsDef().withMaxVersions(maxVersions);
-    List<KijiColumnName> requestedColumns = addColumnDefs(kijiTable.getLayout(), colsRequested,
+    List<KijiColumnName> requestedColumns = addColumnDefs(layout, colsRequested,
         columns);
     if (jsonEntityId != null && (startEidString != null || endEidString != null)) {
       throw new WebApplicationException(new IllegalArgumentException("Ambiguous request. "
@@ -319,39 +317,23 @@ public class RowsResource {
     KijiTableReader reader = null;
     try {
       if (jsonEntityId != null) {
-        if (!jsonEntityId.startsWith(ToolUtils.HBASE_ROW_KEY_SPEC_PREFIX)
-            && !jsonEntityId.startsWith(ToolUtils.KIJI_ROW_KEY_SPEC_PREFIX)) {
-          // Parse components for potential wildcards.
-          final EntityIdComponents components = new EntityIdComponents(jsonEntityId);
-          if (components.isWildcarded()) {
-            // Wildcards were found, continue with FormattedEntityIdRowFilter.
-            final KijiRowFilter entityIdRowFilter =
-                new FormattedEntityIdRowFilter(
-                    (RowKeyFormat2) kijiTable.getLayout().getDesc().getKeysFormat(),
-                    components.getComponents());
-            reader = kijiTable.openTableReader();
-            final KijiScannerOptions scanOptions = new KijiScannerOptions();
-            scanOptions.setKijiRowFilter(entityIdRowFilter);
-            scanner = reader.getScanner(dataBuilder.build(), scanOptions);
-          } else {
-            // No wildcards found, but valid json entity id. Continue scanning point row.
-            EntityId eid = kijiTable.getEntityId(components.getComponents());
-            KijiDataRequest request = dataBuilder.build();
-            // Give priority to request freshness parameter; if not set use default
-            scanner = ImmutableList.of(getKijiRowData(
-                kijiTable,
-                eid,
-                request,
-                freshen != null ? freshen : mFreshenConfig.isFreshen(),
-                timeout != null ? timeout : mFreshenConfig.getTimeout(),
-                getFresheningParameters(uriInfo.getQueryParameters())));
-          }
+        final KijiRestEntityId kijiRestEntityId =
+            KijiRestEntityId.create(jsonEntityId);
+        if (kijiRestEntityId.isWildcarded()) {
+          // Wildcards were found, continue with FormattedEntityIdRowFilter.
+          final KijiRowFilter entityIdRowFilter =
+              new FormattedEntityIdRowFilter(
+                  (RowKeyFormat2) layout.getDesc().getKeysFormat(),
+                  kijiRestEntityId.getComponents());
+          reader = kijiTable.openTableReader();
+          final KijiScannerOptions scanOptions = new KijiScannerOptions();
+          scanOptions.setKijiRowFilter(entityIdRowFilter);
+          scanner = reader.getScanner(dataBuilder.build(), scanOptions);
         } else {
-          // Eid could not be parsed as a json. Try parsing as a byte array through ToolUtils.
-          EntityId eid = ToolUtils.createEntityIdFromUserInputs(
-              jsonEntityId,
-              kijiTable.getLayout());
-          KijiDataRequest request = dataBuilder.build();
+          // No wildcards found, but potentially valid entity id.
+          // Continue scanning point row.
+          final EntityId eid = kijiRestEntityId.resolve(layout);
+          final KijiDataRequest request = dataBuilder.build();
           // Give priority to request freshness parameter; if not set use default
           scanner = ImmutableList.of(getKijiRowData(
               kijiTable,
@@ -365,10 +347,14 @@ public class RowsResource {
         // Single eid not provided. Continue with a range scan.
         final KijiScannerOptions scanOptions = new KijiScannerOptions();
         if (startEidString != null) {
-          scanOptions.setStartRow(getEntityIdFromString(startEidString, kijiTable));
+          final EntityId eid =
+              KijiRestEntityId.create(startEidString).resolve(layout);
+          scanOptions.setStartRow(eid);
         }
         if (endEidString != null) {
-          scanOptions.setStopRow(getEntityIdFromString(endEidString, kijiTable));
+          final EntityId eid =
+              KijiRestEntityId.create(endEidString).resolve(layout);
+          scanOptions.setStopRow(eid);
         }
         reader = kijiTable.openTableReader();
         scanner = reader.getScanner(dataBuilder.build(), scanOptions);
@@ -387,129 +373,6 @@ public class RowsResource {
     KijiSchemaTable schemaTable = mKijiClient.getKijiSchemaTable(instance);
     return Response.ok(new RowStreamer(scanner, kijiTable, limit, requestedColumns,
         schemaTable)).build();
-  }
-
-  /**
-   * Construct eid from a non-wildcarded eid string.
-   *
-   * @param eidString of the row and is not wild-carded.
-   * @param table in which the eid exists.
-   * @return the eid.
-   * @throws IOException if the eid can not be properly constructed.
-   */
-  private static EntityId getEntityIdFromString(
-      final String eidString,
-      final KijiTable table) throws IOException {
-    if (!eidString.startsWith(ToolUtils.HBASE_ROW_KEY_SPEC_PREFIX)
-      && !eidString.startsWith(ToolUtils.KIJI_ROW_KEY_SPEC_PREFIX)) {
-      // Attempt to parse the components.
-      EntityIdComponents endEidComponents = new EntityIdComponents(eidString);
-      if (endEidComponents.isWildcarded()) {
-        throw new IllegalArgumentException("Range-scan entity id "
-            + "must be fully specified, without wildcards.");
-      }
-      return table.getEntityId(endEidComponents.getComponents());
-    } else {
-      // Attempt to parse the byte array.
-      return ToolUtils.createEntityIdFromUserInputs(eidString, table.getLayout());
-    }
-  }
-
-  /**
-   * Maintains list of components which can be formed into an entityId (isWildcarded is false);
-   * or fed into FormattedEntityIdRowFilter (isWildcarded is true).
-   */
-  private static class EntityIdComponents {
-    private final Object[] mComponents;
-    private boolean mIsWildcarded = false;
-
-    /**
-     * Given a json entity id, constructs an object encapsulating an array of components and
-     * specifies whether there are wildcards (with nulls array elements).
-     *
-     * @param json string of components of entity id.
-     * @throws IOException if parsing failed for some other reason.
-     */
-    public EntityIdComponents(final String json) throws IOException {
-      final List<Object> components = Lists.newArrayList();
-      final ObjectMapper mapper = new ObjectMapper();
-      final JsonParser parser = new JsonFactory().createJsonParser(json)
-          .enable(Feature.ALLOW_COMMENTS)
-          .enable(Feature.ALLOW_SINGLE_QUOTES)
-          .enable(Feature.ALLOW_UNQUOTED_FIELD_NAMES);
-      final JsonNode node = mapper.readTree(parser);
-
-      if (node.isArray()) {
-        for (int i = 0; i < node.size(); i++) {
-          final Object component = getNodeValue(node.get(i));
-          if (component.equals(WildcardSingleton.INSTANCE)) {
-            // Replace wildcards with nulls in order to feed into FormattedEntityIdRowFilter
-            mIsWildcarded = true;
-            components.add(null);
-          } else {
-            components.add(component);
-          }
-        }
-      } else if (node.isObject()) {
-        // TODO: Implement map row key specifications:
-        throw new RuntimeException("Map row key specifications are not implemented yet.");
-      } else {
-        components.add(getNodeValue(node));
-      }
-      mComponents = components.toArray();
-    }
-
-    /**
-     * Gets the array of components.
-     *
-     * @return array of components.
-     */
-    public Object[] getComponents() {
-      return mComponents;
-    }
-
-    /**
-     * Are any of the components wildcarded...
-     *
-     * @return true iff at least one component is a wildcard (indicated by a null).
-     */
-    public boolean isWildcarded() {
-      return mIsWildcarded;
-    }
-
-    /**
-     * Singleton object to use to represent a wildcard.
-     */
-    private static enum WildcardSingleton {
-      INSTANCE;
-    }
-
-    /**
-     * Converts a JSON string, integer, or wildcard (empty array)
-     * node into a Java object (String, Integer, Long, WILDCARD, or null).
-     *
-     * @param node JSON string, integer numeric, or wildcard (empty array) node.
-     * @return the JSON value, as a String, an Integer, a Long, a WILDCARD, or null.
-     * @throws JsonParseException if the JSON node is not String, Integer, Long, WILDCARD, or null.
-     */
-    private static Object getNodeValue(JsonNode node) throws JsonParseException {
-      if (node.isInt()) {
-        return node.asInt();
-      } else if (node.isLong()) {
-        return node.asLong();
-      } else if (node.isTextual()) {
-        return node.asText();
-      } else if (node.isArray() && node.size() == 0) {
-        // An empty array token indicates a wildcard.
-        return WildcardSingleton.INSTANCE;
-      } else if (node.isNull()) {
-        return null;
-      } else {
-        throw new JsonParseException(String.format(
-            "Invalid JSON value: '%s', expecting string, int, long, null, or wildcard [].", node),
-            null);
-      }
-    }
   }
 
   /**
@@ -570,8 +433,7 @@ public class RowsResource {
 
     final EntityId entityId;
     if (null != kijiRestRow.getEntityId()) {
-      entityId = ToolUtils.createEntityIdFromUserInputs(kijiRestRow.getEntityId(),
-          kijiTable.getLayout());
+      entityId = kijiRestRow.getEntityId().resolve(kijiTable.getLayout());
     } else {
       throw new WebApplicationException(
           new IllegalArgumentException("EntityId was not specified."), Status.BAD_REQUEST);
@@ -585,7 +447,7 @@ public class RowsResource {
     Map<String, String> returnedTarget = Maps.newHashMap();
 
     URI targetResource = UriBuilder.fromResource(RowsResource.class).build(instance, table);
-    String eidString = URLEncoder.encode(entityId.toShellString(), "UTF-8");
+    String eidString = URLEncoder.encode(kijiRestRow.getEntityId().toString(), "UTF-8");
 
     returnedTarget.put("target", targetResource.toString() + "?eid=" + eidString);
 

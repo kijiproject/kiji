@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
-import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -46,6 +45,7 @@ import org.apache.avro.io.DecoderFactory;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.rest.representations.KijiRestCell;
+import org.kiji.rest.representations.KijiRestEntityId;
 import org.kiji.rest.representations.KijiRestRow;
 import org.kiji.rest.representations.SchemaOption;
 import org.kiji.schema.DecodedCell;
@@ -191,12 +191,10 @@ public final class RowResourceUtil {
    */
   public static KijiRestRow getKijiRestRow(KijiRowData rowData, KijiTableLayout tableLayout,
       List<KijiColumnName> columnsRequested, KijiSchemaTable schemaTable) throws IOException {
-
-    KijiRestRow returnRow = new KijiRestRow(rowData.getEntityId());
+    // The entityId is materialized based on the row key format.
+    KijiRestRow returnRow = new KijiRestRow(
+        KijiRestEntityId.create(rowData.getEntityId(), tableLayout));
     Map<String, FamilyLayout> familyLayoutMap = tableLayout.getFamilyMap();
-    NavigableMap<String, Object> returnRowMap = new TreeMap<String, Object>();
-
-    returnRowMap.put("entityId", rowData.getEntityId().toShellString());
 
     // Let's sort this to keep the response consistent with what hbase would return.
     Collections.sort(columnsRequested);

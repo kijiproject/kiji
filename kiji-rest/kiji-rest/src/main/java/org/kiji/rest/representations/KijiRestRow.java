@@ -27,7 +27,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiCell;
 
 /**
@@ -38,7 +37,7 @@ import org.kiji.schema.KijiCell;
 public class KijiRestRow {
 
   @JsonProperty("entityId")
-  private String mHumanReadableEntityId;
+  private KijiRestEntityId mKijiRestEntityId;
 
   @JsonProperty("cells")
   private NavigableMap<String, NavigableMap<String, List<KijiRestCell>>> mKijiCellMap;
@@ -54,8 +53,8 @@ public class KijiRestRow {
    *
    * @param entityId is the entity id of the row.
    */
-  public KijiRestRow(EntityId entityId) {
-    mHumanReadableEntityId = entityId.toShellString();
+  public KijiRestRow(KijiRestEntityId entityId) {
+    mKijiRestEntityId = entityId;
     mKijiCellMap = Maps.newTreeMap();
   }
 
@@ -102,8 +101,8 @@ public class KijiRestRow {
    * @return the human readable entity_id (i.e. a string representation of the list of
    *         components).
    */
-  public String getEntityId() {
-    return mHumanReadableEntityId;
+  public KijiRestEntityId getEntityId() {
+    return mKijiRestEntityId;
   }
 
   /**

@@ -51,6 +51,7 @@ import org.junit.After;
 import org.junit.Test;
 
 import org.kiji.rest.config.FresheningConfiguration;
+import org.kiji.rest.representations.KijiRestEntityId;
 import org.kiji.rest.representations.KijiRestRow;
 import org.kiji.rest.representations.SchemaOption;
 import org.kiji.rest.resources.RowsResource;
@@ -70,7 +71,6 @@ import org.kiji.schema.avro.TableLayoutDesc;
 import org.kiji.schema.layout.CellSpec;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayouts;
-import org.kiji.schema.tools.ToolUtils;
 import org.kiji.schema.util.InstanceBuilder;
 
 /**
@@ -238,7 +238,7 @@ public class TestRowsResource extends ResourceTest {
     EntityId eid = fakeTable.getEntityId(components);
     String hexRowKey = Hex.encodeHexString(eid.getHBaseRowKey());
     fakeTable.release();
-    return "hbase=hex:" + hexRowKey;
+    return "hbase_hex=" + hexRowKey;
   }
 
   protected final String getUrlEncodedEntityIdString(String table, Object... components)
@@ -610,11 +610,11 @@ public class TestRowsResource extends ResourceTest {
 
     URI resourceURI = UriBuilder.fromResource(RowsResource.class)
         .queryParam("start_eid", eid)
-        .queryParam("end_eid", "hbase=hex:44018000000000003040")
+        .queryParam("end_eid", "hbase_hex=44018000000000003040")
         .build("default", "sample_table");
 
     KijiRestRow row = client().resource(resourceURI).get(KijiRestRow.class);
-    assertEquals("[12345]", row.getEntityId());
+    assertEquals("[12345]", row.getEntityId().getJsonEntityId().toString());
   }
 
   @Test
@@ -667,9 +667,9 @@ public class TestRowsResource extends ResourceTest {
     KijiCell<String> postCell = fromInputs("group_family", "string_qualifier", 314592L,
         "helloworld", Schema.create(Type.STRING));
 
-    KijiRestRow postRow = new KijiRestRow(ToolUtils.createEntityIdFromUserInputs(
-        URLDecoder.decode(stringRowKey, "UTF-8"),
-        KijiTableLayouts.getTableLayout("org/kiji/rest/layouts/sample_table.json")));
+    KijiRestRow postRow = new KijiRestRow(
+        KijiRestEntityId.create(
+        URLDecoder.decode(stringRowKey, "UTF-8")));
 
     addCellToRow(postRow, postCell);
 
@@ -697,9 +697,9 @@ public class TestRowsResource extends ResourceTest {
     KijiCell<String> postCell = fromInputs("group_family", "union_qualifier", 314592L,
         "helloworld", Schema.create(Type.STRING));
 
-    KijiRestRow postRow = new KijiRestRow(ToolUtils.createEntityIdFromUserInputs(
-        URLDecoder.decode(stringRowKey, "UTF-8"),
-        KijiTableLayouts.getTableLayout("org/kiji/rest/layouts/sample_table.json")));
+    KijiRestRow postRow = new KijiRestRow(
+        KijiRestEntityId.create(
+        URLDecoder.decode(stringRowKey, "UTF-8")));
     addCellToRow(postRow, postCell);
 
     // Post.
@@ -735,9 +735,9 @@ public class TestRowsResource extends ResourceTest {
     KijiCell<JsonNode> postCell3 = fromInputs("group_family", "team_qualifier", 314592L,
         AvroToJsonStringSerializer.getJsonNode(postTeam), postTeam.getSchema());
 
-    KijiRestRow postRow = new KijiRestRow(ToolUtils
-        .createEntityIdFromUserInputs(URLDecoder.decode(stringRowKey, "UTF-8"),
-            KijiTableLayouts.getTableLayout("org/kiji/rest/layouts/sample_table.json")));
+    KijiRestRow postRow = new KijiRestRow(
+        KijiRestEntityId.create(
+        URLDecoder.decode(stringRowKey, "UTF-8")));
 
     addCellToRow(postRow, postCell1);
     addCellToRow(postRow, postCell2);
@@ -783,9 +783,9 @@ public class TestRowsResource extends ResourceTest {
     genericRecord.put("num_purchases", 5647382910L);
     KijiCell<JsonNode> postCell = fromInputs("group_family", "inline_record", 3141592L,
         AvroToJsonStringSerializer.getJsonNode(genericRecord), spec.getAvroSchema());
-    KijiRestRow postRow = new KijiRestRow(ToolUtils.createEntityIdFromUserInputs(
-        stringRowKey,
-        KijiTableLayouts.getTableLayout("org/kiji/rest/layouts/sample_table.json")));
+    KijiRestRow postRow = new KijiRestRow(
+        KijiRestEntityId.create(
+        URLDecoder.decode(stringRowKey, "UTF-8")));
     addCellToRow(postRow, postCell);
 
     // Post.
@@ -833,9 +833,9 @@ public class TestRowsResource extends ResourceTest {
     KijiCell<JsonNode> postCell3 = fromInputs("pick_bans", bansColumnDec, 3141592L,
         AvroToJsonStringSerializer.getJsonNode(postBan), postBan.getSchema());
 
-    KijiRestRow postRow = new KijiRestRow(ToolUtils.createEntityIdFromUserInputs(
-        stringRowKey,
-        KijiTableLayouts.getTableLayout("org/kiji/rest/layouts/sample_table.json")));
+    KijiRestRow postRow = new KijiRestRow(
+        KijiRestEntityId.create(
+        URLDecoder.decode(stringRowKey, "UTF-8")));
 
     addCellToRow(postRow, postCell1);
     addCellToRow(postRow, postCell2);
@@ -880,9 +880,9 @@ public class TestRowsResource extends ResourceTest {
     String stringRowKey = getUrlEncodedEntityIdString("sample_table", 54322L);
     KijiCell<String> postCell = fromInputs("nonfamily", "noncolumn", 314592L, "hagar",
         Schema.create(Type.STRING));
-    KijiRestRow postRow = new KijiRestRow(ToolUtils.createEntityIdFromUserInputs(
-        URLDecoder.decode(stringRowKey, "UTF-8"),
-        KijiTableLayouts.getTableLayout("org/kiji/rest/layouts/sample_table.json")));
+    KijiRestRow postRow = new KijiRestRow(
+        KijiRestEntityId.create(
+        URLDecoder.decode(stringRowKey, "UTF-8")));
     addCellToRow(postRow, postCell);
 
     // Post.
@@ -909,9 +909,9 @@ public class TestRowsResource extends ResourceTest {
     KijiCell<Long> postCell2 = fromInputs("group_family", "long_qualifier", 3141591L, 123L,
         Schema.create(Type.LONG));
 
-    KijiRestRow postRow = new KijiRestRow(ToolUtils
-        .createEntityIdFromUserInputs(URLDecoder.decode(stringRowKey, "UTF-8"),
-            KijiTableLayouts.getTableLayout("org/kiji/rest/layouts/sample_table.json")));
+    KijiRestRow postRow = new KijiRestRow(
+        KijiRestEntityId.create(
+        URLDecoder.decode(stringRowKey, "UTF-8")));
 
     addCellToRow(postRow, postCell1);
     addCellToRow(postRow, postCell2);
@@ -995,23 +995,23 @@ public class TestRowsResource extends ResourceTest {
         Schema.create(Type.STRING));
     KijiCell<Integer> postCell2 = fromInputs("group_family", "long_qualifier", 3141591L, 123,
         Schema.create(Type.LONG));
-    KijiRestRow postRow = new KijiRestRow(ToolUtils
-        .createEntityIdFromUserInputs(stringRowKey,
-        KijiTableLayouts.getTableLayout("org/kiji/rest/layouts/sample_table.json")));
+    KijiRestRow postRow = new KijiRestRow(
+        KijiRestEntityId.create(
+        URLDecoder.decode(stringRowKey, "UTF-8")));
     addCellToRow(postRow, postCell1);
 
     List<KijiRestRow> postRows = Lists.newLinkedList();
     postRows.add(postRow);
 
-    postRow = new KijiRestRow(ToolUtils
-        .createEntityIdFromUserInputs(stringRowKey,
-        KijiTableLayouts.getTableLayout("org/kiji/rest/layouts/sample_table.json")));
+    postRow = new KijiRestRow(
+        KijiRestEntityId.create(
+        URLDecoder.decode(stringRowKey, "UTF-8")));
     addCellToRow(postRow, postCell2);
     postRows.add(postRow);
 
-    postRow = new KijiRestRow(ToolUtils
-        .createEntityIdFromUserInputs(stringRowKey,
-        KijiTableLayouts.getTableLayout("org/kiji/rest/layouts/sample_table.json")));
+    postRow = new KijiRestRow(
+        KijiRestEntityId.create(
+        URLDecoder.decode(stringRowKey, "UTF-8")));
     postRow.addCell("group_family", "string_qualifier", null, "helloworld",
         mStringOption);
     postRows.add(postRow);
@@ -1084,10 +1084,8 @@ public class TestRowsResource extends ResourceTest {
         0L,
         1234567890987L,
         Schema.create(Type.LONG));
-    String eid = "['menandros', 'asia.minor']";
-    KijiRestRow postRow = new KijiRestRow(ToolUtils.createEntityIdFromUserInputs(
-        eid,
-        KijiTableLayouts.getTableLayout("org/kiji/rest/layouts/players_table.json")));
+    String eid = "[\"menandros\",\"asia.minor\"]";
+    KijiRestRow postRow = new KijiRestRow(KijiRestEntityId.create(eid));
     addCellToRow(postRow, postCell);
 
     // Post.
