@@ -22,10 +22,11 @@ package org.kiji.checkin.models;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
-
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
 import org.kiji.checkin.VersionInfo;
@@ -42,6 +43,14 @@ import org.kiji.checkin.VersionInfo;
  * transformed to JSON by calling {@link #toJSON()}.</p>
  */
 public final class UpgradeCheckin implements JsonBeanInterface {
+  /** The name of the config file containing the project name. */
+  private static final String CONFIG_FILE_NAME = "project-name.properties";
+
+  /** The property key for the project name. This key should be in the config file. */
+  private static final String PROJECT_NAME_PROPERTY = "project-name";
+
+  /** The default project name if the config file is not found. */
+  private static final String DEFAULT_PROJECT_NAME = "kiji";
 
   /** The type of this message (used by the upgrade server). */
   @SerializedName("type")
@@ -74,6 +83,10 @@ public final class UpgradeCheckin implements JsonBeanInterface {
   @SerializedName("id")
   private final String mId;
 
+  /** The name of the project, "kiji", or "wibi", which differentiates enterprise releases. */
+  @SerializedName("project_name")
+  private final String mProjectName;
+
   /**
    * Constructs a new check-in message using values in the specified builder.
    *
@@ -87,6 +100,7 @@ public final class UpgradeCheckin implements JsonBeanInterface {
     mJavaVersion = builder.mJavaVersion;
     mLastUsedMillis = builder.mLastUsedMillis;
     mId = builder.mId;
+    mProjectName = builder.mProjectName;
   }
 
   /**
@@ -112,7 +126,8 @@ public final class UpgradeCheckin implements JsonBeanInterface {
         && mBentoVersion.equals(that.getBentoVersion())
         && mJavaVersion.equals(that.getJavaVersion())
         && mLastUsedMillis == that.getLastUsedMillis()
-        && mId.equals(that.getId());
+        && mId.equals(that.getId())
+        && mProjectName.equals(that.getProjectName());
   }
 
   /** {@inheritDoc} */
@@ -126,6 +141,7 @@ public final class UpgradeCheckin implements JsonBeanInterface {
         .append(mJavaVersion)
         .append(mLastUsedMillis)
         .append(mId)
+        .append(mProjectName)
         .toHashCode();
   }
 
@@ -180,6 +196,13 @@ public final class UpgradeCheckin implements JsonBeanInterface {
   }
 
   /**
+   * @return the project name included with this message.
+   */
+  public String getProjectName() {
+    return mProjectName;
+  }
+
+  /**
    * <p>Can be used to build an upgrade check-in message. Clients should use the "with"
    * methods of this builder to configure message parameters, and then call {@link #build()} to
    * obtain an instance of {@link UpgradeCheckin} with content equivalent to the values
@@ -214,6 +237,8 @@ public final class UpgradeCheckin implements JsonBeanInterface {
     /** The unique and anonymous user identifier to include with the message. */
     private String mId;
 
+    private String mProjectName;
+
     /** Operating system identifier. */
     private String mOperatingSystem;
 
@@ -236,7 +261,7 @@ public final class UpgradeCheckin implements JsonBeanInterface {
      * information.
      */
     public Builder(Class<?> versionInfoClass) {
-      mVersionInfoClass=versionInfoClass;
+      mVersionInfoClass = versionInfoClass;
     }
 
     /**
@@ -295,6 +320,34 @@ public final class UpgradeCheckin implements JsonBeanInterface {
     }
 
     /**
+     * Gets the project name for this project from the expected configuration file.  Returns "kiji"
+     * if the expected config file does not exist.
+     *
+     * @return the project name for this project from the expected configuration file.  Returns
+     *     "kiji" if the expected config file does not exist.
+     */
+    private String getProjectName() {
+      Properties prop = new Properties();
+      try {
+        InputStream resource = Thread
+            .currentThread()
+            .getContextClassLoader()
+            .getResourceAsStream(CONFIG_FILE_NAME);
+        if (resource == null) {
+          return DEFAULT_PROJECT_NAME;
+        } else {
+          prop.load(Thread
+              .currentThread()
+              .getContextClassLoader()
+              .getResourceAsStream(CONFIG_FILE_NAME));
+          return prop.getProperty(PROJECT_NAME_PROPERTY);
+        }
+      } catch (IOException e) {
+        return DEFAULT_PROJECT_NAME;
+      }
+    }
+
+    /**
      * Creates a new check-in message using values configured through this builder and the values
      * of system properties.
      *
@@ -305,13 +358,14 @@ public final class UpgradeCheckin implements JsonBeanInterface {
     public UpgradeCheckin build()
         throws IOException {
       // Ensure the client has completely configured the builder.
-      checkNotNull(mId, "User id not supplied to check-in message builder.");
+      checkNotNull(mId, "User id not supplied to checkin message builder.");
       checkNotNull(mLastUsedMillis, "Last usage timestamp for kiji script not supplied to "
           + "check-in message builder.");
       // Get other message parameters using system properties.
       mType = MESSAGE_TYPE;
       mFormat = MESSAGE_FORMAT;
       mOperatingSystem = getOperatingSystem();
+      mProjectName = getProjectName();
       mBentoVersion = VersionInfo.getSoftwareVersion(mVersionInfoClass);
       mJavaVersion = getSystemProperty("java.version");
       return new UpgradeCheckin(this);

@@ -43,6 +43,7 @@ public class TestUpgradeCheckin {
       System.getProperty("os.arch"));
   private static final String EXPECTED_JAVA_VERSION = System.getProperty("java.version");
   private static final String EXPECTED_ID = "12345";
+  private static final String EXPECTED_PROJECT_NAME = "kiji";
   private static final long EXPECTED_TS = 4951L;
   private static final String JSON_FORMAT =
       "{\"type\":\"%s\","
@@ -51,12 +52,13 @@ public class TestUpgradeCheckin {
       + "\"bento_version\":\"%s\","
       + "\"java_version\":\"%s\","
       + "\"last_used\":%d,"
-      + "\"id\":\"%s\"}";
+      + "\"id\":\"%s\","
+      + "\"project_name\":\"%s\"}";
 
   private String getExpectedJSON() throws IOException {
     return String.format(JSON_FORMAT, EXPECTED_TYPE, EXPECTED_FORMAT, EXPECTED_OS,
         VersionInfo.getSoftwareVersion(this.getClass()), EXPECTED_JAVA_VERSION,
-        EXPECTED_TS, EXPECTED_ID);
+        EXPECTED_TS, EXPECTED_ID, EXPECTED_PROJECT_NAME);
   }
 
   @Test
