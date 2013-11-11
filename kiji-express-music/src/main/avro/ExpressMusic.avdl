@@ -1,0 +1,21 @@
+@namespace("org.kiji.express.music.avro")
+protocol ExpressMusic {
+
+  record SongCount {
+    string song_id;
+    long count;
+  }
+
+  record TopSongs {
+    array<SongCount> top_songs;
+  }
+
+  record SongMetadata {
+    string song_name;
+    string album_name;
+    string artist_name;
+    string genre;
+    long tempo;
+    long duration;
+  }
+}

@@ -24,8 +24,8 @@
 
   <properties>
     <kiji.framework.version>1.2.1</kiji.framework.version>
-    <express.version>0.11.0-SNAPSHOT</express.version>
-    <modeling.version>0.1.0-SNAPSHOT</modeling.version>
+    <express.version>0.12.0-SNAPSHOT</express.version>
+    <modeling.version>0.2.0-SNAPSHOT</modeling.version>
     <scalatest.version>2.0.M5b</scalatest.version>
   </properties>
 
@@ -115,6 +115,11 @@
             </configuration>
           </execution>
         </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.avro</groupId>
+        <artifactId>avro-maven-plugin</artifactId>
       </plugin>
 
       <plugin>

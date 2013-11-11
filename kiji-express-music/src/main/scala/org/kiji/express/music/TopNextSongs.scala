@@ -19,10 +19,13 @@
 
 package org.kiji.express.music
 
+import scala.collection.JavaConverters.seqAsJavaListConverter
+
 import com.twitter.scalding._
 
 import org.kiji.express._
 import org.kiji.express.flow._
+import org.kiji.express.music.avro._
 
 /**
  * For each song S, create a list of songs sorted by the number of times a song was played
@@ -38,8 +41,8 @@ import org.kiji.express.flow._
  */
 class TopNextSongs(args: Args) extends KijiJob(args) {
   /**
-   * Transforms a slice of song ids into a collection of tuples `(s1,
-   * s2)` signifying that `s2` appeared after `s1` in the slice, chronologically.
+   * Transforms a slice of song ids into a collection of tuples `(s1, s2)` signifying that `s2`
+   * appeared after `s1` in the slice, chronologically.
    *
    * @param slice of song ids representing a user's play history.
    * @return a list of song bigrams.
@@ -59,7 +62,7 @@ class TopNextSongs(args: Args) extends KijiJob(args) {
    * @return a group containing a list of song count records, sorted by count.
    */
   def sortNextSongs(nextSongs: GroupBuilder): GroupBuilder = {
-    nextSongs.sortBy('count).reverse.toList[AvroRecord]('song_count -> 'top_songs)
+    nextSongs.sortBy('count).reverse.toList[SongCount]('song_count -> 'top_songs)
   }
 
   // This Scalding pipeline does the following:
@@ -70,6 +73,7 @@ class TopNextSongs(args: Args) extends KijiJob(args) {
   // 4. Creates a song count Avro record from each bigram.
   // 5. For each song S, creates a list of songs sorted by the number of times the song was
   //    played after S.
+  // 6. Converts each list of SongCount records into an Avro-compatible java.util.List.
   // 7. Packs each list into an Avro record.
   // 8. Creates an entity id for the songs table for each song.
   // 9. Writes each song's TopSongs record to Kiji.
@@ -77,13 +81,14 @@ class TopNextSongs(args: Args) extends KijiJob(args) {
       Map(QualifiedColumnRequestInput("info", "track_plays", all) -> 'playlist))
       .flatMap('playlist -> ('first_song, 'song_id)) { bigrams }
       .groupBy(('first_song, 'song_id)) { _.size('count) }
-      .packAvro(('song_id, 'count) -> 'song_count)
+      .pack[SongCount](('song_id, 'count) -> 'song_count)
       .groupBy('first_song) { sortNextSongs }
-      .packAvro('top_songs -> 'top_next_songs)
+      .map('top_songs -> 'top_songs) { ts: List[SongCount] => ts.asJava }
+      .pack[TopSongs]('top_songs -> 'top_next_songs)
       .map('first_song -> 'entityId) { firstSong: String => EntityId(firstSong) }
       .write(KijiOutput(args("songs-table"),
           Map('top_next_songs -> QualifiedColumnRequestOutput(
               "info",
               "top_next_songs",
-              useDefaultReaderSchema = true))))
+              schemaSpec = SchemaSpec.Specific(classOf[TopSongs])))))
 }

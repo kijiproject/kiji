@@ -17,13 +17,18 @@
  * limitations under the License.
  */
 {
-  "name" : "song-recommender",
-  "version" : "1.0.0",
-  "scorer_phase" : {
-    "org.kiji.modeling.avro.AvroPhaseDefinition" : {
-      "extractor_class" : "org.kiji.modeling.lib.FirstValueExtractor",
-      "phase_class" : "org.kiji.express.music.SongRecommendingScorer"
+  "name": "song-recommender",
+  "version": "1.0.0",
+  "protocol_version": "model_definition-0.4.0",
+  "preparer_class": null,
+  "trainer_class": null,
+  "scorer_phase": {
+    "org.kiji.modeling.avro.AvroPhaseDefinition": {
+      "extractor_class": {
+        "string": "org.kiji.modeling.lib.FirstValueExtractor"
+      },
+      "phase_class": "org.kiji.express.music.SongRecommendingScorer"
     }
   },
-  "protocol_version" : "model_definition-0.2.0"
+  "evaluator_class": null
 }

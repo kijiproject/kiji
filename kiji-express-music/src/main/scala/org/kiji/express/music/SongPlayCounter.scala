@@ -44,8 +44,8 @@ class SongPlayCounter(args: Args) extends KijiJob(args) {
    *     listened to.
    * @return the song ids that a user has listened to.
    */
-  def songsListenedTo(slice: KijiSlice[String]): Seq[String] = {
-    slice.cells.map { cell => cell.datum }
+  def songsListenedTo(slice: KijiSlice[CharSequence]): Seq[String] = {
+    slice.cells.map { cell => cell.datum.toString }
   }
 
   // This Scalding pipeline does the following.
@@ -54,10 +54,7 @@ class SongPlayCounter(args: Args) extends KijiJob(args) {
   // 3. Counts the number of times each song has been played.
   // 4. Writes each song id and play count to a file in HDFS.
   KijiInput(args("table-uri"),
-      Map(QualifiedColumnRequestInput(
-          "info",
-          "track_plays",
-          maxVersions = all) -> 'playlist))
+      Map(QualifiedColumnRequestInput("info", "track_plays", maxVersions = all) -> 'playlist))
       .flatMapTo('playlist -> 'song) { songsListenedTo }
       .groupBy('song) { _.size('songCount) }
       .write(Tsv(args("output")))

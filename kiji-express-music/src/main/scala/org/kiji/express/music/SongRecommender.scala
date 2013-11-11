@@ -23,7 +23,7 @@ import com.twitter.scalding._
 
 import org.kiji.express._
 import org.kiji.express.flow._
-
+import org.kiji.express.music.avro._
 
 /**
  * Generates recommendations for the next song each user might like to listen to.
@@ -43,11 +43,8 @@ class SongRecommender(args: Args) extends KijiJob(args) {
    * @param songs from the TopNextSongs record.
    * @return the most popular song.
    */
-  def getMostPopularSong(songs: KijiSlice[AvroRecord]): String = {
-    val songRecord = songs.getFirstValue
-    val topSongs = songRecord("top_songs")
-    val mostPopularSong = topSongs(0)
-    return mostPopularSong("song_id").asString
+  def getMostPopularSong(songs: KijiSlice[TopSongs]): String = {
+    songs.getFirstValue().getTopSongs.get(0).getSongId.toString
   }
 
   /**
@@ -59,9 +56,10 @@ class SongRecommender(args: Args) extends KijiJob(args) {
    * 3. Emits tuples containing only the fields 'songId and 'nextSong.
    */
   val recommendedSong = KijiInput(args("songs-table"),
-      Map(QualifiedColumnRequestInput("info", "top_next_songs") -> 'topNextSongs))
+      Map(QualifiedColumnRequestInput("info", "top_next_songs", classOf[TopSongs])
+          -> 'topNextSongs))
       .map('entityId -> 'songId) { eId: EntityId => eId(0) }
-      .map('topNextSongs -> 'nextSong) { getMostPopularSong}
+      .map('topNextSongs -> 'nextSong) { getMostPopularSong }
       .project('songId, 'nextSong)
 
   /**
@@ -75,11 +73,8 @@ class SongRecommender(args: Args) extends KijiJob(args) {
   KijiInput(args("users-table"),
       Map(QualifiedColumnRequestInput("info", "track_plays") -> 'trackPlays))
       .map('trackPlays -> 'lastTrackPlayed) {
-           slice: KijiSlice[String] => slice.getFirstValue()}
+           slice: KijiSlice[CharSequence] => slice.getFirstValue().toString }
       .joinWithSmaller('lastTrackPlayed -> 'songId, recommendedSong)
-      .write(KijiOutput(args("users-table"), Map('nextSong ->
-          QualifiedColumnRequestOutput
-            ("info",
-            "next_song_rec",
-            useDefaultReaderSchema = true))))
+      .write(KijiOutput(args("users-table"),
+          Map('nextSong -> QualifiedColumnRequestOutput("info", "next_song_rec"))))
 }

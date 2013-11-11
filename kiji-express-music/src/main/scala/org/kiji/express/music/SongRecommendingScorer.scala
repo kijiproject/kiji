@@ -21,9 +21,9 @@ package org.kiji.express.music
 
 import java.util.Random
 
-import org.kiji.express.AvroRecord
 import org.kiji.express.EntityId
 import org.kiji.modeling.Scorer
+import org.kiji.express.music.avro.TopSongs
 
 /**
  * Recommends the song most frequently played after the song a user has most recently
@@ -42,16 +42,16 @@ class SongRecommendingScorer extends Scorer {
    *
    * @return the song id of the track recommended for the user.
    */
-  override def scoreFn = score('trackPlay) { trackPlay: String =>
+  override def scoreFn = score('trackPlay) { trackPlay: CharSequence =>
     // Retrieve the key-value store that maps song ids to a list of songs most frequently played
     // after the song in question.
-    val topNextSongsKVStore = keyValueStore[EntityId, AvroRecord]("top_next_songs")
+    val topNextSongsKVStore = keyValueStore[EntityId, TopSongs]("top_next_songs")
     // "Optionally" retrieve a record containing a list of songs played most frequently after the
     // most recent track a user has listened to. We say "optionally" because the key-value store
     // may not be populated with a list of top next songs for a given track. If a record of top
     // next songs is available, then a 'Some' wrapping the record is retrieved. Otherwise,
     // a 'None' is retrieved.
-    val topNextSongs: Option[AvroRecord] = topNextSongsKVStore.get(EntityId(trackPlay))
+    val topNextSongs: Option[TopSongs] = topNextSongsKVStore.get(EntityId(trackPlay.toString))
     // If topNextSongs contains 'Some' AvroRecord, transform that AvroRecord into 'Some'
     //  String that contains the name of the next song to listen to. If topNextSongs is 'None',
     // then this transformation will result in 'None'.
@@ -60,7 +60,7 @@ class SongRecommendingScorer extends Scorer {
       // then get the first record in that list and extract the field "song_id" from it. This
       // will be the id of the song most frequently played after the user's most recently
       // listened to track.
-      songsListRecord("top_songs").asList()(0)("song_id").asString()
+      songsListRecord.getTopSongs.get(0).getSongId.toString
     }
     // If nextSong is 'Some' recommendation, return that recommendation,
     // if it's 'None' generate a random song name and use that as the recommendation.

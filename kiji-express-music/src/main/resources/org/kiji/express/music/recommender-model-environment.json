@@ -17,46 +17,62 @@
  * limitations under the License.
  */
 {
-  "name" : "song-recommender-env",
-  "version" : "1.0.0",
-  "protocol_version" : "model_environment-0.2.0",
-  "score_environment" : {
-    "org.kiji.modeling.avro.AvroScoreEnvironment":{
-      "input_spec":{
-        "kiji_specification":{
-          "org.kiji.modeling.avro.AvroKijiInputSpec":{
-            "table_uri" : "kiji://.env/default/users",
-            "data_request" : {
-              "column_definitions" : [ {
-                "name" : "info:track_plays"
-              } ]
+  "protocol_version": "model_environment-0.4.0",
+  "name": "song-recommender-env",
+  "version": "1.0.0",
+  "prepare_environment": null,
+  "train_environment": null,
+  "score_environment": {
+    "org.kiji.modeling.avro.AvroScoreEnvironment": {
+      "input_spec": {
+        "table_uri": "kiji://.env/default/users",
+        "time_range": {
+          "min_timestamp": 0,
+          "max_timestamp": 9223372036854776000
+        },
+        "columns_to_fields": [
+          {
+            "column": {
+              "org.kiji.modeling.avro.AvroQualifiedColumnRequestInput": {
+                "family": "info",
+                "qualifier": "track_plays",
+                "max_versions": 2147483647,
+                "filter": null,
+                "page_size": 0,
+                "schema_spec": null
+              }
             },
-            "field_bindings" : [ {
-              "tuple_field_name" : "trackPlay",
-              "store_field_name" : "info:track_plays"
-            } ]
+            "tuple_field_name": "trackPlay"
+          }
+        ]
+      },
+      "output_spec": {
+        "table_uri": "kiji://.env/default/users",
+        "output_column": {
+          "org.kiji.modeling.avro.AvroQualifiedColumnRequestOutput": {
+            "family": "info",
+            "qualifier": "next_song_rec",
+            "schema_spec": null
           }
         }
       },
-      "kv_stores" : [ {
-        "store_type" : "KIJI_TABLE",
-        "name" : "top_next_songs",
-        "properties" : [ {
-          "name" : "uri",
-          "value" : "kiji://.env/default/songs"
-          }, {
-          "name" : "column",
-          "value" : "info:top_next_songs"
-        } ]
-      } ],
-      "output_spec" : {
-        "kiji_column_specification" : {
-          "org.kiji.modeling.avro.AvroKijiSingleColumnOutputSpec" : {
-            "table_uri": "kiji://.env/default/users",
-            "output_column" : "info:next_song_rec"
-          }
+      "kv_stores": [
+        {
+          "store_type": "KIJI_TABLE",
+          "name": "top_next_songs",
+          "properties": [
+            {
+              "name": "uri",
+              "value": "kiji://.env/default/songs"
+            },
+            {
+              "name": "column",
+              "value": "info:top_next_songs"
+            }
+          ]
         }
-      }
+      ]
     }
-  }
+  },
+  "evaluate_environment": null
 }

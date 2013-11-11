@@ -21,10 +21,18 @@ package org.kiji.express.music
 
 import scala.collection.mutable.Buffer
 
-import com.twitter.scalding._
+import com.twitter.scalding.JobTest
 
-import org.kiji.express._
-import org.kiji.express.flow._
+import org.kiji.express.EntityId
+import org.kiji.express.KijiSlice
+import org.kiji.express.KijiSuite
+import org.kiji.express.flow
+import org.kiji.express.flow.KijiInput
+import org.kiji.express.flow.KijiOutput
+import org.kiji.express.flow.QualifiedColumnRequestInput
+import org.kiji.express.flow.QualifiedColumnRequestOutput
+import org.kiji.express.flow.SchemaSpec
+import org.kiji.express.music.avro.TopSongs
 
 /**
  * A test for counting the number of times songs have been played by users.
@@ -69,29 +77,27 @@ class TopNextSongsSuite extends KijiSuite {
    * @param topNextSongs contains three tuples for three songs, each containing a record of the
    *     top next songs played.
    */
-  def validateTest(topNextSongs: Buffer[(EntityId, KijiSlice[AvroRecord])]) {
+  def validateTest(topNextSongs: Buffer[(EntityId, KijiSlice[TopSongs])]) {
     val topSongForEachSong = topNextSongs
-        .map { case(entityId, slice) =>
-            (entityId(0).toString, slice) }
-        .map { case(id, slice) => (id, slice.getFirstValue()("top_songs")) }
+        .map { case(eid, slice) => (eid(0).toString, slice.getFirstValue().getTopSongs) }
 
     topSongForEachSong.foreach {
       case ("song-0", topSongs) => {
-        assert(2 === topSongs.asList.size)
-        assert("song-1" === topSongs(0)("song_id").asString)
-        assert(2 === topSongs(0)("count").asLong)
-        assert("song-0" === topSongs(1)("song_id").asString)
-        assert(1 === topSongs(1)("count").asLong)
+        assert(2 === topSongs.size)
+        assert("song-1" === topSongs.get(0).getSongId.toString)
+        assert(2 === topSongs.get(0).getCount)
+        assert("song-0" === topSongs.get(1).getSongId.toString)
+        assert(1 === topSongs.get(1).getCount)
       }
       case ("song-1", topSongs) => {
-        assert(1 === topSongs.asList.size)
-        assert("song-2" === topSongs(0)("song_id").asString)
-        assert(2 === topSongs(0)("count").asLong)
+        assert(1 === topSongs.size)
+        assert("song-2" === topSongs.get(0).getSongId.toString)
+        assert(2 === topSongs.get(0).getCount)
       }
       case ("song-2", topSongs) => {
-        assert(1 === topSongs.asList.size)
-        assert("song-1" === topSongs(0)("song_id").asString)
-        assert(1 === topSongs(0)("count").asLong)
+        assert(1 === topSongs.size)
+        assert("song-1" === topSongs.get(0).getSongId.toString)
+        assert(1 === topSongs.get(0).getCount)
       }
     }
   }
@@ -101,12 +107,13 @@ class TopNextSongsSuite extends KijiSuite {
         .arg("users-table", usersURI)
         .arg("songs-table", songsURI)
         .source(KijiInput(usersURI,
-            Map(QualifiedColumnRequestInput("info", "track_plays", all) -> 'playlist)), testInput)
+            Map(QualifiedColumnRequestInput("info", "track_plays", flow.all)
+                -> 'playlist)), testInput)
         .sink(KijiOutput(songsURI, Map('top_next_songs ->
             QualifiedColumnRequestOutput(
                 "info",
                 "top_next_songs",
-                useDefaultReaderSchema = true)))) { validateTest }
+                schemaSpec = SchemaSpec.Specific(classOf[TopSongs])))))(validateTest)
         .run
         .finish
   }
@@ -116,15 +123,14 @@ class TopNextSongsSuite extends KijiSuite {
         .arg("users-table", usersURI)
         .arg("songs-table", songsURI)
         .source(KijiInput(usersURI,
-            Map(QualifiedColumnRequestInput(
-                "info",
-                "track_plays",
-                all) -> 'playlist)), testInput)
+            Map(QualifiedColumnRequestInput("info", "track_plays", maxVersions = flow.all)
+                -> 'playlist)),
+            testInput)
         .sink(KijiOutput(songsURI, Map('top_next_songs ->
             QualifiedColumnRequestOutput(
                 "info",
                 "top_next_songs",
-                useDefaultReaderSchema = true)))) { validateTest }
+                schemaSpec = SchemaSpec.Specific(classOf[TopSongs]))))) { validateTest }
         .runHadoop
         .finish
   }

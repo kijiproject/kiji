@@ -58,21 +58,18 @@ class SongPlaysImporterSuite extends KijiSuite {
    *
    * @param generatedPlays contains a tuple for each row written to by the importer.
    */
-  def validateTest(generatedPlays: Buffer[(EntityId, KijiSlice[String])]) {
+  def validateTest(generatedPlays: Buffer[(EntityId, KijiSlice[CharSequence])]) {
     // One row for one user.
     assert(1 === generatedPlays.size)
     // Check contents of playlist.
     val playlist = generatedPlays(0)._2
     playlist.orderChronologically().cells.foreach { cell =>
-      assert("song-" + cell.version === cell.datum)
+      assert("song-" + cell.version === cell.datum.toString)
     }
   }
 
   val jobOutput = KijiOutput(tableURI, 'playTime, Map('songId ->
-      QualifiedColumnRequestOutput(
-          "info",
-          "track_plays",
-          useDefaultReaderSchema = true)))
+      QualifiedColumnRequestOutput("info", "track_plays")))
 
   // Run a test of the import job, running in Cascading's local runner.
   test("SongPlaysImporter puts JSON play records into the user table using local mode.") {

@@ -19,16 +19,21 @@
 
 package org.kiji.express.music
 
+import scala.collection.JavaConverters.seqAsJavaListConverter
+
 import org.kiji.express.util.Resources.doAndClose
 import org.kiji.express.util.Resources.doAndRelease
 
 import com.twitter.scalding.Args
 import com.twitter.scalding.IterableSource
 
-import org.kiji.express.AvroRecord
 import org.kiji.express.EntityId
 import org.kiji.express.KijiSuite
-import org.kiji.express.flow._
+import org.kiji.express.flow.KijiJob
+import org.kiji.express.flow.KijiOutput
+import org.kiji.express.flow.QualifiedColumnRequestOutput
+import org.kiji.express.music.avro.SongCount
+import org.kiji.express.music.avro.TopSongs
 import org.kiji.modeling.ScoreProducerJobBuilder
 import org.kiji.modeling.config.ModelDefinition
 import org.kiji.modeling.config.ModelEnvironment
@@ -63,40 +68,64 @@ class RecommendationModelSuite extends KijiSuite {
   val modelEnvironmentJSON: String =
     """
       |{
-      | "protocol_version":"model_environment-0.2.0",
-      | "name" : "song-recommender-env",
-      | "version" : "1.0.0",
-      | "score_environment":{
-      |   "org.kiji.modeling.avro.AvroScoreEnvironment":{
-      |     "input_spec":{
-      |       "table_uri":"%s",
-      |       "data_request":{
-      |         "column_definitions":[{
-      |           "name":"info:track_plays"
-      |         } ]
-      |       },
-      |       "field_bindings":[{
-      |         "tuple_field_name":"trackPlay",
-      |         "store_field_name":"info:track_plays"
-      |       }]
-      |     },
-      |     "kv_stores":[{
-      |       "store_type":"KIJI_TABLE",
-      |       "name":"top_next_songs",
-      |       "properties":[{
-      |         "name":"uri",
-      |         "value":"%s"
-      |       }, {
-      |         "name":"column",
-      |         "value":"info:top_next_songs"
-      |       }]
-      |     }],
-      |     "output_spec":{
-      |       "table_uri":"%s",
-      |       "output_column":"info:next_song_rec"
-      |     }
-      |   }
-      | }
+      |  "protocol_version": "model_environment-0.4.0",
+      |  "name": "song-recommender-env",
+      |  "version": "1.0.0",
+      |  "prepare_environment": null,
+      |  "train_environment": null,
+      |  "score_environment": {
+      |    "org.kiji.modeling.avro.AvroScoreEnvironment": {
+      |      "input_spec": {
+      |        "table_uri": "%s",
+      |        "time_range": {
+      |          "min_timestamp": 0,
+      |          "max_timestamp": 9223372036854775807
+      |        },
+      |        "columns_to_fields": [
+      |          {
+      |            "column": {
+      |              "org.kiji.modeling.avro.AvroQualifiedColumnRequestInput": {
+      |                "family": "info",
+      |                "qualifier": "track_plays",
+      |                "max_versions": 2147483647,
+      |                "filter": null,
+      |                "page_size": 0,
+      |                "schema_spec": null
+      |              }
+      |            },
+      |            "tuple_field_name": "trackPlay"
+      |          }
+      |        ]
+      |      },
+      |      "output_spec": {
+      |        "table_uri": "%s",
+      |        "output_column": {
+      |          "org.kiji.modeling.avro.AvroQualifiedColumnRequestOutput": {
+      |            "family": "info",
+      |            "qualifier": "next_song_rec",
+      |            "schema_spec": null
+      |          }
+      |        }
+      |      },
+      |      "kv_stores": [
+      |        {
+      |          "store_type": "KIJI_TABLE",
+      |          "name": "top_next_songs",
+      |          "properties": [
+      |            {
+      |              "name": "uri",
+      |              "value": "%s"
+      |            },
+      |            {
+      |              "name": "column",
+      |              "value": "info:top_next_songs"
+      |            }
+      |          ]
+      |        }
+      |      ]
+      |    }
+      |  },
+      |  "evaluate_environment": null
       |}
     """.stripMargin
 
@@ -114,7 +143,7 @@ class RecommendationModelSuite extends KijiSuite {
         (EntityId("user-1"), "song-1"),
         (EntityId("user-2"), "song-2")), ('entityId, 'trackPlay)
     ).write(KijiOutput(usersTableURI, Map('trackPlay ->
-        QualifiedColumnRequestOutput("info", "track_plays", useDefaultReaderSchema = true))))
+        QualifiedColumnRequestOutput("info", "track_plays"))))
   }.run
   assert(userTableImportResult, "Failed to import track plays to user table in test setup.")
 
@@ -122,16 +151,14 @@ class RecommendationModelSuite extends KijiSuite {
   // sample songs. song-1 is played most frequently after song-0, song-2 the most frequently
   // after song-1, and so on.
   val songsTableImportResult: Boolean = new KijiJob(new Args(Map())) {
-    IterableSource(List(
-        (EntityId("song-0"),
-            AvroRecord("top_songs" -> List(AvroRecord("song_id" -> "song-1", "count" -> 1L)))),
-        (EntityId("song-1"),
-            AvroRecord("top_songs" -> List(AvroRecord("song_id" -> "song-2", "count" -> 2L)))),
-        (EntityId("song-2"),
-            AvroRecord("top_songs" -> List(AvroRecord("song_id" -> "song-3", "count" -> 3L))))),
+    IterableSource(
+        List(
+            (EntityId("song-0"), new TopSongs(List(new SongCount("song-1", 1L)).asJava)),
+            (EntityId("song-1"), new TopSongs(List(new SongCount("song-2", 2L)).asJava)),
+            (EntityId("song-2"), new TopSongs(List(new SongCount("song-3", 3L)).asJava))),
         ('entityId, 'topNextSongs)
     ).write(KijiOutput(songsTableURI, Map('topNextSongs ->
-        QualifiedColumnRequestOutput("info", "top_next_songs", useDefaultReaderSchema = true))))
+        QualifiedColumnRequestOutput("info", "top_next_songs"))))
   }.run
   assert(songsTableImportResult, "Failed to import top next songs lists in test setup.")
 
@@ -139,7 +166,7 @@ class RecommendationModelSuite extends KijiSuite {
     // Build a batch extract + score job from the model and run.
     val modelDefinition = ModelDefinition.fromJson(modelDefinitionJSON)
     val modelEnvironment = ModelEnvironment
-        .fromJson(modelEnvironmentJSON.format(usersTableURI, songsTableURI, usersTableURI))
+        .fromJson(modelEnvironmentJSON.format(usersTableURI, songsTableURI, songsTableURI))
     val extractScoreJob = ScoreProducerJobBuilder.buildJob(modelDefinition, modelEnvironment)
     assert(extractScoreJob.run(), "Extract+Score job failed to run.")
 
