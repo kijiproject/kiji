@@ -98,8 +98,7 @@ class KijiJobSuite extends KijiSuite {
     jobTest.runHadoop.finish
   }
 
-  // TODO: EXP-290 - Fix testing support for outputting specific avro records
-  ignore("A KijiJob can pack a specific Avro record.") {
+  test("A KijiJob can pack a specific Avro record.") {
     def validatePacking(outputs: mutable.Buffer[(EntityId, KijiSlice[SimpleRecord])]) {
       val inputMap = rawInputs.toMap
       outputs.foreach { case (_: EntityId, slice: KijiSlice[SimpleRecord]) =>

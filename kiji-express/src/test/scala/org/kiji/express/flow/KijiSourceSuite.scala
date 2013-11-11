@@ -23,6 +23,7 @@ import java.util.UUID
 
 import scala.collection.mutable.Buffer
 
+import cascading.tuple.Fields
 import com.twitter.scalding.Args
 import com.twitter.scalding.JobTest
 import com.twitter.scalding.TextLine
@@ -39,11 +40,17 @@ import org.kiji.express.KijiSuite
 import org.kiji.express.avro.SimpleRecord
 import org.kiji.express.flow.SchemaSpec.Specific
 import org.kiji.express.util.Resources.doAndRelease
+import org.kiji.schema.Kiji
+import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiTable
+import org.kiji.schema.avro.AvroValidationPolicy
 import org.kiji.schema.avro.HashSpec
 import org.kiji.schema.avro.HashType
+import org.kiji.schema.avro.TableLayoutDesc
+import org.kiji.schema.avro.TestRecord
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts
+import org.kiji.schema.layout.TableLayoutBuilder
 
 @RunWith(classOf[JUnitRunner])
 class KijiSourceSuite
@@ -357,6 +364,96 @@ class KijiSourceSuite
         .sink(Tsv("outputFile"))(validateVersionCount)
         // Run the test job.
         .run
+        .finish
+  }
+
+  test("Specific records can be returned to JobTest's validate method") {
+    val uri: String = doAndRelease(makeTestKiji()) { kiji: Kiji =>
+      val baseDesc: TableLayoutDesc = KijiTableLayouts.getLayout(KijiTableLayouts.SCHEMA_REG_TEST)
+      baseDesc.setVersion("layout-1.3.0")
+
+      val desc = new TableLayoutBuilder(baseDesc, kiji)
+          .withAvroValidationPolicy(new KijiColumnName("info:fullname"), AvroValidationPolicy.NONE)
+          .build()
+
+      // Create test Kiji table.
+      doAndRelease {
+        kiji.createTable(desc)
+        kiji.openTable(desc.getName)
+      } { table: KijiTable =>
+        table.getURI.toString
+      }
+    }
+
+    // Build test job.
+    class TestSpecificRecordWriteJob(args: Args) extends KijiJob(args) {
+      Tsv(args("input"), ('entityId, 'fullname))
+          .write(
+              KijiOutput(
+                  tableUri = args("output"),
+                  columns = Map(
+                      'fullname -> QualifiedColumnRequestOutput(
+                          family = "info",
+                          qualifier = "fullname",
+                          schemaSpec = SchemaSpec.Specific(classOf[TestRecord])
+                      )
+                  )
+              )
+          )
+    }
+
+    val inputRecord1 = TestRecord
+        .newBuilder()
+        .setA("foo")
+        .setB(2)
+        .setC(4)
+        .build()
+    val inputRecord2 = TestRecord
+        .newBuilder()
+        .setA("bar")
+        .setB(1)
+        .setC(3)
+        .build()
+    val inputRecord3 = TestRecord
+        .newBuilder()
+        .setA("baz")
+        .setB(9)
+        .setC(8)
+        .build()
+    val inputRecords = Seq(
+        (EntityId("row01"), inputRecord1),
+        (EntityId("row02"), inputRecord2),
+        (EntityId("row03"), inputRecord3)
+    )
+
+    def validateSpecificWrite(outputBuffer: Buffer[(EntityId, KijiSlice[TestRecord])]) {
+      val outputMap = outputBuffer.toMap
+      assert(outputMap(EntityId("row01")).cells.head.datum.getClass === classOf[TestRecord])
+      assert(outputMap(EntityId("row02")).cells.head.datum.getClass === classOf[TestRecord])
+      assert(outputMap(EntityId("row03")).cells.head.datum.getClass === classOf[TestRecord])
+      assert(outputMap(EntityId("row01")).cells.head.datum === inputRecord1)
+      assert(outputMap(EntityId("row02")).cells.head.datum === inputRecord2)
+      assert(outputMap(EntityId("row03")).cells.head.datum === inputRecord3)
+    }
+
+    JobTest(new TestSpecificRecordWriteJob(_))
+        .arg("input", "inputFile")
+        .arg("output", uri)
+        .source(Tsv("inputFile", new Fields("entityId", "fullname")), inputRecords)
+        .sink(
+            KijiOutput(
+                uri,
+                Map(
+                    'fullname -> QualifiedColumnRequestOutput(
+                        family = "info",
+                        qualifier = "fullname",
+                        schemaSpec = SchemaSpec.Specific(classOf[TestRecord])
+                    )
+                )
+            )
+        ) (validateSpecificWrite)
+        .run
+        .runHadoop
         .finish
   }
 

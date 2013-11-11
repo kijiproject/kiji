@@ -20,6 +20,7 @@
 package org.kiji.express.flow
 
 import scala.collection.JavaConverters.asScalaIteratorConverter
+import scala.collection.JavaConverters.mapAsJavaMapConverter
 import scala.collection.mutable.Buffer
 
 import java.io.OutputStream
@@ -33,7 +34,7 @@ import cascading.tap.Tap
 import cascading.tuple.Fields
 import cascading.tuple.Tuple
 import cascading.tuple.TupleEntry
-
+import com.google.common.collect.Maps
 import com.google.common.base.Objects
 import com.twitter.scalding.AccessMode
 import com.twitter.scalding.Test
@@ -44,7 +45,6 @@ import com.twitter.scalding.Mode
 import com.twitter.scalding.Read
 import com.twitter.scalding.Source
 import com.twitter.scalding.Write
-
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.mapred.JobConf
@@ -66,6 +66,7 @@ import org.kiji.express.util.Resources._
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.EntityIdFactory
 import org.kiji.schema.Kiji
+import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiRowData
 import org.kiji.schema.KijiRowScanner
@@ -73,6 +74,7 @@ import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiTableReader
 import org.kiji.schema.KijiTableWriter
 import org.kiji.schema.KijiURI
+import org.kiji.schema.layout.CellSpec
 
 /**
  * A read or write view of a Kiji table.
@@ -400,10 +402,35 @@ object KijiSource {
 
       // Read table into buffer.
       withKijiTable(uri, conf) { table: KijiTable =>
+        val layout = table.getLayout
+
+        // Determine what type of record to use (generic, specific).
+        val cellSpecOverrides: Map[KijiColumnName, CellSpec] = outputColumns
+            .values
+            .map { column => (column.columnName, column.schemaSpec) }
+            .collect {
+              case (name, SchemaSpec.DefaultReader) => {
+                val cellSpec = layout.getCellSpec(name).setUseDefaultReaderSchema()
+                (name, cellSpec)
+              }
+              case (name, SchemaSpec.Writer) => {
+                val cellSpec = layout.getCellSpec(name).setUseWriterSchema()
+                (name, cellSpec)
+              }
+              case (name, SchemaSpec.Generic(avroSchema)) => {
+                val cellSpec = layout.getCellSpec(name).setReaderSchema(avroSchema)
+                (name, cellSpec)
+              }
+              case (name, SchemaSpec.Specific(avroClass)) => {
+                val cellSpec = layout.getCellSpec(name).setSpecificRecord(avroClass)
+                (name, cellSpec)
+              }
+            }
+            .toMap
+
         // Open a table reader that reads data using the generic api.
         val readerFactory = table.getReaderFactory
-        val genericSpecs = GenericCellSpecs(table)
-        doAndClose(readerFactory.openTableReader(genericSpecs)) { reader: KijiTableReader=>
+        doAndClose(readerFactory.openTableReader(cellSpecOverrides.asJava)) { reader =>
           // We also want the entire timerange, so the test can inspect all data in the table.
           val request: KijiDataRequest = KijiScheme.buildRequest(All, inputColumns.values)
 
@@ -429,6 +456,37 @@ object KijiSource {
   }
 
   /**
+   * Merges an input column mapping with an output column mapping producing an input column mapping.
+   * This is used to configure input columns for reading back written data on a source that has just
+   * been used as a sink.
+   *
+   * @param inputs describing which columns to request and what fields to associate them with.
+   * @param outputs describing which columns fields should be output to.
+   * @return a merged mapping from field names to input column requests.
+   */
+  private def mergeColumnMapping(
+      inputs: Map[String, ColumnRequestInput],
+      outputs: Map[String, ColumnRequestOutput]
+  ): Map[String, ColumnRequestInput] = {
+    def mergeEntry(
+        inputs: Map[String, ColumnRequestInput],
+        entry: (String, ColumnRequestOutput)
+    ): Map[String, ColumnRequestInput] = {
+      val (fieldName, columnRequest) = entry
+      val input = ColumnRequestInput(
+          column = columnRequest.columnName.getName,
+          maxVersions = Int.MaxValue,
+          schemaSpec = columnRequest.schemaSpec
+      )
+
+      inputs + ((fieldName, input))
+    }
+
+    outputs
+        .foldLeft(inputs)(mergeEntry)
+  }
+
+  /**
    * A KijiScheme that loads rows in a table into the provided buffer. This class should only be
    * used during tests.
    *
@@ -444,6 +502,7 @@ object KijiSource {
       extends KijiScheme(
           All,
           timestampField,
-          inputColumns,
-          outputColumns)
+          mergeColumnMapping(inputColumns, outputColumns),
+          outputColumns) {
+  }
 }
