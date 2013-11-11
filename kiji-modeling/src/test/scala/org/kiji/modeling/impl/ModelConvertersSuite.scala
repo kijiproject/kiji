@@ -20,6 +20,8 @@
 package org.kiji.modeling.impl
 
 import com.twitter.scalding.Source
+import org.apache.avro.Schema
+import org.apache.avro.specific.SpecificRecord
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
@@ -32,12 +34,17 @@ import org.kiji.express.flow.OrFilter
 import org.kiji.express.flow.QualifiedColumnRequestInput
 import org.kiji.express.flow.QualifiedColumnRequestOutput
 import org.kiji.express.flow.RegexQualifierFilter
+import org.kiji.express.flow.SchemaSpec
 import org.kiji.modeling.ExtractFn
 import org.kiji.modeling.Extractor
 import org.kiji.modeling.Preparer
 import org.kiji.modeling.ScoreFn
 import org.kiji.modeling.Scorer
 import org.kiji.modeling.Trainer
+import org.kiji.modeling.avro.AvroOtherSimpleRecordTest
+import org.kiji.modeling.avro.AvroSchemaSpec
+import org.kiji.modeling.avro.AvroSimpleRecordTest
+import org.kiji.modeling.avro.AvroSpecificSchemaSpec
 import org.kiji.modeling.config.FieldBinding
 import org.kiji.modeling.config.InputSpec
 import org.kiji.modeling.config.KeyValueStoreSpec
@@ -52,6 +59,7 @@ import org.kiji.modeling.config.ScoreEnvironment
 import org.kiji.modeling.config.SequenceFileSourceSpec
 import org.kiji.modeling.config.TextSourceSpec
 import org.kiji.modeling.config.TrainEnvironment
+import org.kiji.modeling.config.ValidationException
 import org.kiji.modeling.framework.ModelConverters
 
 trait SerDeSuite extends FunSuite {
@@ -117,19 +125,8 @@ class ModelConvertersSuite extends SerDeSuite {
     ModelConverters.outputSpecFromAvro(ModelConverters.outputSpecToAvro(input))
   }
 
-  /*
-  // TODO: Replace this with a KijiInputSpec test?
-  serDeTest("DataRequest", "Avro",testDataRequest) { input =>
-    ModelConverters.dataRequestFromAvro(ModelConverters.dataRequestToAvro(input))
-  }
-  */
-
   serDeTest("KVStore", "Avro",testKVStore) { input =>
     ModelConverters.keyValueStoreSpecFromAvro(ModelConverters.keyValueStoreSpecToAvro(input))
-  }
-
-  serDeTest("FieldBinding", "Avro",testFieldBinding) { input =>
-    ModelConverters.fieldBindingFromAvro(ModelConverters.fieldBindingToAvro(input))
   }
 
   serDeTest[ExpressColumnFilter]("AndFilter", "Avro", testAndFilter) { input =>
@@ -146,6 +143,33 @@ class ModelConvertersSuite extends SerDeSuite {
 
   serDeTest[ExpressColumnFilter]("RegexFilter", "Avro", testRegexFilter) { input =>
     ModelConverters.filterFromAvro(ModelConverters.filterToAvro(input))
+  }
+
+  serDeTest[SchemaSpec]("Generic SchemaSpec", "Avro", testGenericSchemaSpec) { input =>
+    ModelConverters.schemaSpecFromAvro(ModelConverters.schemaSpecToAvro(input))
+  }
+
+  serDeTest[SchemaSpec]("Specific SchemaSpec", "Avro", testSpecificSchemaSpec) { input =>
+    ModelConverters.schemaSpecFromAvro(ModelConverters.schemaSpecToAvro(input))
+  }
+
+  test("Conversion of AvroSpecificSchema checks previous schema versus current schema") {
+    val avroSpecificSchemaSpec = AvroSpecificSchemaSpec
+        .newBuilder()
+        // Intentionally use wrong class name here so that we can later test having different
+        // schemas for the same class name.
+        .setClassName("AvroSimpleRecordTest")
+        .setSchemaString((new AvroOtherSimpleRecordTest()).getSchema.toString)
+        .build()
+
+      val avroSchemaSpec = AvroSchemaSpec
+          .newBuilder()
+          .setSpecific(avroSpecificSchemaSpec)
+          .build()
+
+      intercept[ValidationException] {
+        ModelConverters.schemaSpecFromAvro(avroSchemaSpec)
+      }
   }
 }
 
@@ -175,6 +199,10 @@ object ModelConvertersSuite {
   val testRegexFilter: RegexQualifierFilter = RegexQualifierFilter(".*")
   val testAndFilter: AndFilter = AndFilter(Seq(testRangeFilter, testRegexFilter))
   val testOrFilter: OrFilter = OrFilter(Seq(testRangeFilter, testRegexFilter))
+
+  val testGenericSchemaSpec: SchemaSpec = SchemaSpec.Generic(Schema.create(Schema.Type.LONG))
+  val testSpecificSchemaSpec: SchemaSpec = SchemaSpec.Specific(classOf[AvroSimpleRecordTest])
+
   val testFieldBinding: FieldBinding = FieldBinding("testField", "info:test")
   val testKVStore: KeyValueStoreSpec = KeyValueStoreSpec(
       storeType = "KIJI_TABLE",

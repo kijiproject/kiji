@@ -75,45 +75,54 @@ import org.kiji.schema.util.ToJson
  *
  * Alternatively a ModelEnvironment can be created from JSON. JSON run specifications should
  * be written using the following format:
- * {{{
- * {
- *  "protocol_version":"model_environment-0.2.0",
+ *
+ *{{{
+ *{
+ *  "protocol_version":"model_environment-0.3.0",
  *  "name":"myRunProfile",
  *  "version":"1.0.0",
  *  "prepare_environment":{
- *    "org.kiji.express.avro.AvroPrepareEnvironment":{
- *      "input_config":{
- *        "specification":{
- *          "org.kiji.express.avro.AvroKijiInputSpec":{
- *            "table_uri":"kiji://.env/default/table",
- *            "data_request":{
- *              "min_timestamp":0,
- *              "max_timestamp":38475687,
- *              "column_definitions":[{
- *                "name":"info:in",
- *                "max_versions":3,
- *                "filter":{
- *                  "org.kiji.express.avro.RegexQualifierFilterSpec":{
- *                    "regex":"foo"
+ *    "org.kiji.modeling.avro.AvroPrepareEnvironment":{
+ *      "input_spec":{
+ *        "kijitableinput" : {
+ *          "kiji_specification":{
+ *            "org.kiji.modeling.avro.AvroKijiInputSpec":{
+ *              "table_uri":"kiji://.env/default/table",
+ *              "time_range" : { "min_timestamp" : 0, "max_timestamp" : 38475687 },
+ *              "columns_to_fields" : [ {
+ *                "tuple_field_name" : "tuplename",
+ *                "column" : { "org.kiji.modeling.avro.AvroQualifiedColumnRequestInput" : {
+ *                  "family" : "info",
+ *                  "qualifier" : "in",
+ *                  "max_versions" : 3,
+ *                  "filter":{
+ *                    "org.kiji.modeling.avro.AvroFilter":{
+ *                      "regex_filter":{
+ *                        "org.kiji.modeling.avro.AvroRegexQualifierFilter":{
+ *                          "regex":"foo"
+ *                        }
+ *                      }
+ *                    }
  *                  }
- *                }
+ *                }}
  *              }]
- *            },
- *            "field_bindings":[{
- *              "tuple_field_name":"tuplename",
- *              "store_field_name":"info:storefieldname"
- *            }]
+ *            }
  *          }
  *        }
  *      },
- *      "output_config":{
- *        "specification":{
- *          "org.kiji.express.avro.AvroKijiOutputSpec":{
- *            "table_uri":"kiji://myuri",
- *            "field_bindings":[{
- *              "tuple_field_name":"outputtuple",
- *              "store_field_name":"info:out"
- *            }]
+ *      "output_spec":{
+ *        "kijitableoutput" : {
+ *          "kiji_specification":{
+ *            "org.kiji.modeling.avro.AvroKijiOutputSpec":{
+ *              "table_uri":"kiji://myuri",
+ *              "fields_to_columns" : [ {
+ *                "tuple_field_name" : "outputtuple",
+ *                "column" : { "org.kiji.modeling.avro.AvroQualifiedColumnRequestOutput" : {
+ *                  "family" : "info",
+ *                  "qualifier" : "out"
+ *                }}
+ *              }]
+ *            }
  *          }
  *        }
  *      },
@@ -126,8 +135,7 @@ import org.kiji.schema.util.ToJson
  *        }]
  *      }]
  *    }
- *  }
- * }
+ *  }}
  * }}}
  *
  * To load a JSON model environment:
@@ -430,6 +438,13 @@ object ModelEnvironment {
     }
   }
 
+
+  /**
+   * Verifies that the KijiInputSpec of the train or prepare phase is valid.
+   *
+   * @param inputSpec The KijiInputSpec to validate.
+   * @return an optional ValidationException if there are errors encountered.
+   */
   def validateKijiInputSpec(kijiInputSpec: KijiInputSpec): Seq[ValidationException] = {
     // Check the column names
     val nameExceptions = kijiInputSpec

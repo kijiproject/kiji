@@ -55,6 +55,7 @@ import org.kiji.schema.avro.TableLayoutDesc
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts
 import org.kiji.schema.util.InstanceBuilder
+import org.apache.avro.util.Utf8
 
 @RunWith(classOf[JUnitRunner])
 class ModelExecutorSuite extends KijiSuite {

@@ -28,27 +28,26 @@ import org.kiji.modeling.KeyValueStore
 /**
  * Implementation-wise, a KijiExpress key-value store is Scala-friendly face on the Java key-value
  * stores provided by the KijiMR library.  This class composes together a KijiMR key-value store and
- * functions that convert keys and values.  These key and value conversion function allow  the
- * KeyValueStore to provides keys and values of Scala-convenient types, and have them automatically
- * converted to the underlying key-value store's key and value types.
+ * functions that convert keys and values (by default, the identity function).  These key and
+ * value conversion function allow you to return a KeyValueStore that provides keys and values of
+ * Scala-convenient types, and have them automatically converted to the underlying key-value
+ * store's key and value types.
  *
  * @tparam K is the type of key users will specify when accessing the key-value store.
  * @tparam V is the type of value users will retrieve when accessing the key-value store.
  * @tparam UK is the underlying KijiMR kv-store's key type.
- * @tparam UV is the underlying KijiMR kv-store's value type.
+ * @tparam UV is the underlying KijiMR kv-store's key type.
  * @param kvStoreReader a KijiMR key-value store that will back this KijiExpress key-value store.
  */
-@ApiAudience.Private
+@ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Sealed
 private[kiji] class ForwardingKeyValueStore[K, V, UK, UV](
     kvStoreReader: JKeyValueStoreReader[UK, UV],
     keyConverter: K => UK,
     valueConverter: UV => V
-) extends KeyValueStore[K, V] {
+    ) extends KeyValueStore[K, V] {
   require(kvStoreReader != null)
-  require(keyConverter != null)
-  require(valueConverter != null)
 
   override private[kiji] def close(): Unit = kvStoreReader.close()
 

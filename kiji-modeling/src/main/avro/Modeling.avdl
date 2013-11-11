@@ -207,30 +207,71 @@ protocol Modeling {
     union{null, AvroRegexQualifierFilter} regex_filter = null;
   }
 
-  /**
-   * Column level data request specifications.
-   */
-  record AvroColumn {
-    /**
-     * The name of the column to request data from. Required.
-     */
-    string name;
+  /** Schema for Avro Specific Records.  Need to save class name and schema. */
+  record AvroSpecificSchemaSpec {
+    string class_name;
+    string schema_string;
+  }
+
+  /** Schema spec for column requests */
+  record AvroSchemaSpec {
+    // a null schema spec => use SchemaSpec.Writer (therefore no boolean field for "writer" here)
+    boolean default_reader = false;
+    union{null, string} generic = null;
+    union{null, AvroSpecificSchemaSpec} specific = null;
+  }
+
+  /** Specification for fetching data from fully-qualified columns. */
+  record AvroQualifiedColumnRequestInput {
+    /** The name of the column family */
+    string family;
+
+    /** The name of the column qualifier */
+    string qualifier;
 
     /**
      * Maximum number of the most recent versions of a particular column to return. Default is 1.
      */
     int max_versions = 1;
 
-    /**
-     * A ColumnFilter to attach to the column. Potentially null.
-     */
+    /** A ColumnFilter to attach to the column. Potentially null. */
     union{null, AvroFilter} filter = null;
+
+    /**
+     * The maximum number of cells to keep in memory when paging.  Paging is
+     * disabled by default, or when page_size = 0.
+     */
+    int page_size = 0;
+
+    /** Schema spec.  Default is writer schema. */
+    union{null, AvroSchemaSpec} schema_spec = null;
   }
 
-  /**
-   * Describes a request for columns of data to read from a Kiji table.
-   */
-  record AvroDataRequest {
+  /** Specification for fetching data for a column family. */
+  record AvroColumnFamilyRequestInput {
+    /** The name of the column family */
+    string family;
+
+    /**
+     * Maximum number of the most recent versions of a particular column to return. Default is 1.
+     */
+    int max_versions = 1;
+
+    /** A ColumnFilter to attach to the column. Potentially null. */
+    union{null, AvroFilter} filter = null;
+
+    /**
+     * The maximum number of cells to keep in memory when paging.  Paging is
+     * disabled by default, or when page_size = 0.
+     */
+    int page_size = 0;
+
+    /** Schema spec.  Default is writer schema. */
+    union{null, AvroSchemaSpec} schema_spec = null;
+  }
+
+  /** The range for cell timestamps to use when retrieving data. */
+  record AvroTimeRange {
     /**
      * Defines the smallest timestamp that cells returned should have, inclusive. This field may be
      * 0 if no lower bound on timestamps should be imposed. The default value of this field is 0.
@@ -243,46 +284,87 @@ protocol Modeling {
      * be imposed. The default value of this field is 9223372036854775807.
      */
     long max_timestamp = 9223372036854775807;
-
-    /**
-     * An array of column level data request specifications. Required.
-     */
-    array<AvroColumn> column_definitions;
   }
 
-  /**
-   * An association between a tuple field name and a column.
-   */
-  record AvroFieldBinding {
-    /**
-     * The name of a tuple field to associate with the provided column. Required.
-     */
+  /** The mapping from input columns to Scalding fields. */
+  record AvroInputFieldBinding {
+    /** The input column (fully-qualified or a family).  Required. */
+    union{AvroQualifiedColumnRequestInput, AvroColumnFamilyRequestInput} column;
+
+    /** The Scaling field.  Required. */
     string tuple_field_name;
-
-    /**
-     * The name of the column to associated with the provided tuple field. Required.
-     */
-    string store_field_name;
   }
 
-  /**
-   * Configuration necessary to use a Kiji table as a data source.
-   */
+  /** Configuration necessary to use a Kiji table as a data source. */
   record AvroKijiInputSpec {
-    /**
-     * Kiji URI addressing the table that this input spec will use. Required.
-     */
+    /** Kiji URI addressing the table that this input spec will use. Required. */
     string table_uri;
 
-    /**
-     * Request describing the input columns required by this input spec.
-     */
-    AvroDataRequest data_request;
+    /** Timestamp range into which cells must exist to be retrieved.  Required. */
+    AvroTimeRange time_range;
+
+    /** Associations between input column specifications and field names.  Required. */
+    array<AvroInputFieldBinding> columns_to_fields;
+  }
+
+  /** Specification for fetching data for a column family. */
+  record AvroQualifiedColumnRequestOutput {
+    /** The name of the column family */
+    string family;
+
+    /** The name of the column qualifier */
+    string qualifier;
+
+    /** Schema spec.  Default is writer schema. */
+    union{null, AvroSchemaSpec} schema_spec = null;
+  }
+
+  /** Specification for fetching data for a column family. */
+  record AvroColumnFamilyRequestOutput {
+    /** The name of the column family */
+    string family;
 
     /**
-     * Associations between field names and column names. Required.
+     * Specifies a Scalding field that contains the name of the qualifier to
+     * write the data to. Required.
      */
-    array<AvroFieldBinding> field_bindings;
+    string qualifier_selector;
+
+    /** Schema spec.  Default is writer schema. */
+    union{null, AvroSchemaSpec} schema_spec = null;
+  }
+
+  /** The mapping from input columns to Scalding fields. */
+  record AvroOutputFieldBinding {
+    /** The Scaling field.  Required. */
+    string tuple_field_name;
+
+    /** The output column (fully-qualified or a family).  Required. */
+    union{AvroQualifiedColumnRequestOutput, AvroColumnFamilyRequestOutput} column;
+  }
+
+  /** Configuration necessary to use a Kiji table as a data sink. */
+  record AvroKijiOutputSpec {
+    /** Kiji URI addressing the table that this output spec will use. Required. */
+    string table_uri;
+
+    /** Timestamp for the output cells. */
+    union{null, string} timestamp_field = null;
+
+    /** Associations between field names and output column specifications.  Required. */
+    array<AvroOutputFieldBinding> fields_to_columns;
+  }
+
+  /**
+   * Configuration necessary to specify a single output Kiji column. Typically used with the score
+   * phase.
+   */
+  record AvroKijiSingleColumnOutputSpec {
+    /** Kiji URI addressing the table that this output spec will use. Required. */
+    string table_uri;
+
+    /** The Kiji column to write the output of the phase to. Required. */
+    union{AvroQualifiedColumnRequestOutput, AvroColumnFamilyRequestOutput} output_column;
   }
 
   /**
@@ -293,42 +375,6 @@ protocol Modeling {
      * HDFS path to the text file that this spec will use. Required.
      */
     string file_path;
-  }
-
-  /**
-   * Configuration necessary to use a Kiji table as a data sink.
-   */
-  record AvroKijiOutputSpec {
-    /**
-     * Kiji URI addressing the table that this output spec will use. Required.
-     */
-    string table_uri;
-
-    /**
-     * Timestamp for the output cells.
-     */
-    union{null, string} timestamp_field = null;
-
-    /**
-     * Associations between field names and column names. Required.
-     */
-    array<AvroFieldBinding> field_bindings;
-  }
-
-  /**
-   * Configuration necessary to specify a single output Kiji column. Typically used with the score
-   * phase.
-   */
-  record AvroKijiSingleColumnOutputSpec {
-    /**
-     * Kiji URI addressing the table that this output spec will use. Required.
-     */
-    string table_uri;
-
-    /**
-     * The Kiji column to write the output of the phase to. Required.
-     */
-    string output_column;
   }
 
   /**
@@ -525,4 +571,5 @@ protocol Modeling {
      */
     union{null, AvroEvaluateEnvironment} evaluate_environment = null;
   }
+
 }
