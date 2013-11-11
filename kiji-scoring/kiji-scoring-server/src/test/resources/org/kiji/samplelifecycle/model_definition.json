@@ -24,6 +24,6 @@
       "phase_class": "org.kiji.lifecycle.DummyExtractorScorer"
     }
   },
-  "protocol_version": "model_definition-0.3.0"
+  "protocol_version": "model_definition-0.4.0"
 }
 

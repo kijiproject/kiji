@@ -16,34 +16,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */ {
-  "protocol_version": "model_environment-0.3.0",
+  "protocol_version": "model_environment-0.4.0",
   "name": "myRunProfile",
   "version": "1.0.0",
   "score_environment": {
     "org.kiji.modeling.avro.AvroScoreEnvironment": {
       "input_spec": {
         "table_uri": "kiji://.fake.scoreserver:2181/default/users",
-        "data_request": {
+        "time_range" : {
           "min_timestamp": 0,
-          "max_timestamp": 9223372036854775807,
-          "column_definitions": [
-            {
-              "name": "info:email",
-              "max_versions": 1
-            }
-          ]
+          "max_timestamp": 9223372036854775807
         },
-        "field_bindings": [
+        "columns_to_fields": [
           {
             "tuple_field_name": "email_address",
-            "store_field_name": "info:email"
+            "column": { "org.kiji.modeling.avro.AvroQualifiedColumnRequestInput" : {
+              "family": "info",
+              "qualifier": "email",
+              "max_versions": 1
+            }}
           }
         ]
       },
       "kv_stores": [],
       "output_spec": {
         "table_uri": "kiji://.fake.scoreserver:2181/default/users",
-        "output_column": "info:out"
+        "output_column" : { "org.kiji.modeling.avro.AvroQualifiedColumnRequestOutput" : {
+          "family" : "info",
+          "qualifier" : "out"
+        }}
       }
     }
   }
