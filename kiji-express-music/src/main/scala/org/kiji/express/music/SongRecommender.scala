@@ -43,16 +43,16 @@ class SongRecommender(args: Args) extends KijiJob(args) {
    * @param songs from the TopNextSongs record.
    * @return the most popular song.
    */
-  def getMostPopularSong(songs: KijiSlice[TopSongs]): String = {
-    songs.getFirstValue().getTopSongs.get(0).getSongId.toString
+  def getMostPopularSong(songs: Seq[Cell[TopSongs]]): String = {
+    songs.head.datum.getTopSongs.get(0).getSongId.toString
   }
 
   /**
    * This Scalding RichPipe does the following:
    * 1. Reads the column "info:top_next_songs" from the songs table and emits a tuple for
-   *      every row.
+   *     every row.
    * 2. Retrieves the most popular song played (in the 'nextSong field) after every given
-          song (in the 'songId field.)
+   *     song (in the 'songId field.)
    * 3. Emits tuples containing only the fields 'songId and 'nextSong.
    */
   val recommendedSong = KijiInput(args("songs-table"),
@@ -67,13 +67,13 @@ class SongRecommender(args: Args) extends KijiJob(args) {
    * 1. Reads the column "info:track_plays" from the users table.
    * 2. Retrieves the song most recently played by a user.
    * 3. Retrieve the TopNextSongs associated with the most recently played song by joining
-          together the tuples emitted from the nextSongs pipe with the the 'lastTrackPlayed
-          field.
+   *     together the tuples emitted from the nextSongs pipe with the the 'lastTrackPlayed
+   *     field.
    */
   KijiInput(args("users-table"),
       Map(QualifiedColumnRequestInput("info", "track_plays") -> 'trackPlays))
       .map('trackPlays -> 'lastTrackPlayed) {
-           slice: KijiSlice[CharSequence] => slice.getFirstValue().toString }
+          slice: Seq[Cell[CharSequence]] => slice.head.datum.toString }
       .joinWithSmaller('lastTrackPlayed -> 'songId, recommendedSong)
       .write(KijiOutput(args("users-table"),
           Map('nextSong -> QualifiedColumnRequestOutput("info", "next_song_rec"))))

@@ -58,14 +58,14 @@ class SongPlaysImporterSuite extends KijiSuite {
    *
    * @param generatedPlays contains a tuple for each row written to by the importer.
    */
-  def validateTest(generatedPlays: Buffer[(EntityId, KijiSlice[CharSequence])]) {
+  def validateTest(generatedPlays: Buffer[(EntityId, Seq[Cell[CharSequence]])]) {
     // One row for one user.
     assert(1 === generatedPlays.size)
     // Check contents of playlist.
     val playlist = generatedPlays(0)._2
-    playlist.orderChronologically().cells.foreach { cell =>
-      assert("song-" + cell.version === cell.datum.toString)
-    }
+    playlist
+        .sortBy { _.version }
+        .foreach { cell => assert("song-" + cell.version === cell.datum.toString) }
   }
 
   val jobOutput = KijiOutput(tableURI, 'playTime, Map('songId ->

@@ -47,8 +47,10 @@ class TopNextSongs(args: Args) extends KijiJob(args) {
    * @param slice of song ids representing a user's play history.
    * @return a list of song bigrams.
    */
-  def bigrams(slice: KijiSlice[String]): List[(String, String)] = {
-    slice.orderChronologically().cells.sliding(2)
+  def bigrams(slice: Seq[Cell[String]]): List[(String, String)] = {
+    slice
+        .sortBy { _.version }
+        .sliding(2)
         .map { itr => itr.iterator }
         .map { itr => (itr.next().datum, itr.next().datum) }
         .toList

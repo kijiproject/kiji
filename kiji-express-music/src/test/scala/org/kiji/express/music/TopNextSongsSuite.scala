@@ -23,8 +23,8 @@ import scala.collection.mutable.Buffer
 
 import com.twitter.scalding.JobTest
 
+import org.kiji.express.Cell
 import org.kiji.express.EntityId
-import org.kiji.express.KijiSlice
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow
 import org.kiji.express.flow.KijiInput
@@ -77,9 +77,9 @@ class TopNextSongsSuite extends KijiSuite {
    * @param topNextSongs contains three tuples for three songs, each containing a record of the
    *     top next songs played.
    */
-  def validateTest(topNextSongs: Buffer[(EntityId, KijiSlice[TopSongs])]) {
+  def validateTest(topNextSongs: Buffer[(EntityId, Seq[Cell[TopSongs]])]) {
     val topSongForEachSong = topNextSongs
-        .map { case(eid, slice) => (eid(0).toString, slice.getFirstValue().getTopSongs) }
+        .map { case(eid, slice) => (eid(0).toString, slice.head.datum.getTopSongs) }
 
     topSongForEachSong.foreach {
       case ("song-0", topSongs) => {
