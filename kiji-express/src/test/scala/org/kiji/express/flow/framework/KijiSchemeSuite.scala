@@ -28,15 +28,16 @@ import org.apache.avro.generic.GenericRecordBuilder
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
+import org.kiji.express.Cell
 import org.kiji.express.EntityId
-import org.kiji.express.KijiSlice
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow.All
 import org.kiji.express.flow.ColumnRequestInput
 import org.kiji.express.flow.QualifiedColumnRequestOutput
 import org.kiji.express.util.GenericCellSpecs
 import org.kiji.schema.EntityIdFactory
-import org.kiji.schema.avro.{HashSpec, HashType}
+import org.kiji.schema.avro.HashSpec
+import org.kiji.schema.avro.HashType
 
 @RunWith(classOf[JUnitRunner])
 class KijiSchemeSuite extends KijiSuite {
@@ -91,7 +92,7 @@ class KijiSchemeSuite extends KijiSuite {
         uri,
         configuration)
 
-    val readRecord = readValue.getObject(1).asInstanceOf[KijiSlice[_]].getFirstValue()
+    val readRecord = readValue.getObject(1).asInstanceOf[Seq[Cell[_]]].head.datum
     assert(record === readRecord)
 
     reader.close()

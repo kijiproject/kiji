@@ -55,7 +55,6 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.express.Cell
 import org.kiji.express.EntityId
-import org.kiji.express.KijiSlice
 import org.kiji.express.flow.framework.KijiScheme
 import org.kiji.express.flow.framework.KijiTap
 import org.kiji.express.flow.framework.LocalKijiScheme
@@ -237,26 +236,25 @@ final class KijiSource private[express] (
   }
 
  override def toString: String = {
-    ("KijiSource(table: %s, timeRange: %s, timestampField: %s, " +
-        "inputColumns: %s, outputColumns: %s)").format(
-            tableAddress,
-            timeRange,
-            timestampField match {
-              case None => None
-              case Some(tsField) => tsField
-            },
-            inputColumns,
-            outputColumns)
+   Objects
+       .toStringHelper(this)
+       .add("tableAddress", tableAddress)
+       .add("timeRange", timeRange)
+       .add("timestampField", timestampField)
+       .add("inputColumns", inputColumns)
+       .add("outputColumns", outputColumns)
+       .toString
   }
 
   override def equals(other: Any): Boolean = {
     other match {
-      case source: KijiSource =>
+      case source: KijiSource => {
         Objects.equal(tableAddress, source.tableAddress) &&
         Objects.equal(inputColumns, source.inputColumns) &&
         Objects.equal(outputColumns, source.outputColumns) &&
         Objects.equal(timestampField, source.timestampField) &&
         Objects.equal(timeRange, source.timeRange)
+      }
       case _ => false
     }
   }
@@ -295,8 +293,6 @@ object KijiSource {
       fields: Fields,
       configuration: Configuration) {
     doAndRelease(Kiji.Factory.open(tableUri)) { kiji: Kiji =>
-      val schemaTable = kiji.getSchemaTable
-
       // Layout to get the default reader schemas from.
       val layout = withKijiTable(tableUri, configuration) { table: KijiTable =>
         table.getLayout
@@ -322,18 +318,18 @@ object KijiSource {
 
             // Get the timeline to be written.
             val cells: Seq[Cell[Any]] = tupleEntry
-              .getObject(field)
-              .asInstanceOf[KijiSlice[Any]]
-              .cells
+                .getObject(field)
+                .asInstanceOf[Seq[Cell[Any]]]
 
             // Write the timeline to the table.
-            cells.map { cell: Cell[Any] =>
+            cells.foreach { cell: Cell[Any] =>
               writer.put(
-                entityId.toJavaEntityId(eidFactory),
-                cell.family,
-                cell.qualifier,
-                cell.version,
-                cell.datum)
+                  entityId.toJavaEntityId(eidFactory),
+                  cell.family,
+                  cell.qualifier,
+                  cell.version,
+                  cell.datum
+              )
             }
           }
         }
@@ -437,7 +433,7 @@ object KijiSource {
           doAndClose(reader.getScanner(request)) { scanner: KijiRowScanner =>
             val rows: Iterator[KijiRowData] = scanner.iterator().asScala
             rows.foreach { row: KijiRowData =>
-              buffer += KijiScheme
+              val tuple = KijiScheme
                   .rowToTuple(
                       // Use input columns that are based on the output columns
                       inputColumns,
@@ -445,7 +441,23 @@ object KijiSource {
                       timestampField,
                       row,
                       table.getURI,
-                      conf)
+                      conf
+                  )
+
+              val newTupleValues = tuple
+                  .iterator()
+                  .asScala
+                  .map {
+                    // This converts stream into a list to force the stream to compute all of the
+                    // transformations that have been applied lazily to it. This is necessary
+                    // because some of the transformations applied in KijiScheme#rowToTuple have
+                    // dependencies on an open connection to a schema table.
+                    case stream: Stream[_] => stream.toList
+                    case x => x
+                  }
+                  .toSeq
+
+              buffer += new Tuple(newTupleValues: _*)
             }
           }
         }

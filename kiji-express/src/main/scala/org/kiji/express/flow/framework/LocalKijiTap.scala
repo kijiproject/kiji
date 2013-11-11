@@ -129,9 +129,7 @@ private[express] class LocalKijiTap(
     return new TupleEntrySchemeIterator[Properties, InputStream](
         flow,
         getScheme(),
-        // scalastyle:off null
         if (null == input) new ByteArrayInputStream(Array()) else input,
-        // scalastyle:on null
         getIdentifier());
   }
 
@@ -151,9 +149,7 @@ private[express] class LocalKijiTap(
     return new TupleEntrySchemeCollector[Properties, OutputStream](
         flow,
         getScheme(),
-        // scalastyle:off null
         if (null == output) new ByteArrayOutputStream() else output,
-        // scalastyle:on null
         getIdentifier());
   }
 

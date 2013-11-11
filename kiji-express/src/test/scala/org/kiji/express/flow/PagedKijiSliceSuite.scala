@@ -29,9 +29,7 @@ import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.Cell
 import org.kiji.express.EntityId
-import org.kiji.express.KijiSlice
 import org.kiji.express.KijiSuite
-import org.kiji.express.PagedKijiSlice
 import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.schema.KijiTable
 import org.kiji.schema.layout.KijiTableLayout
@@ -51,7 +49,7 @@ class WordConcatJob(args: Args) extends KijiJob(args) {
       args("input"),
       Map(ColumnRequestInput("family:column1", all, paging = PagingSpec.Cells(3)) -> 'word))
     // Sanitize the word.
-    .map('word -> 'cleanword) { words: PagedKijiSlice[CharSequence] =>
+    .map('word -> 'cleanword) { words: Seq[Cell[CharSequence]] =>
       words.foldLeft("")((a: String, b: Cell[CharSequence]) => a + b.datum.toString)
     }
     // Count the occurrences of each word.
@@ -75,7 +73,7 @@ class WordCountFlatMapJob(args: Args) extends KijiJob(args) {
       Map(ColumnRequestInput("family:column1", all, paging = PagingSpec.Cells(3)) -> 'word))
 
       // Sanitize the word.
-      .flatMap('word -> 'word) { words: PagedKijiSlice[CharSequence] =>
+      .flatMap('word -> 'word) { words: Seq[Cell[CharSequence]] =>
           words
       }.map('word -> 'cleanword) {word: Cell[CharSequence] => word.datum.toString}
       // Count the occurrences of each word.
@@ -96,7 +94,7 @@ class PagedKijiSliceSuite extends KijiSuite {
     }
 
     /** Input tuples to use for word count tests. */
-    def wordCountInput(uri: String): List[(EntityId, KijiSlice[String])] = {
+    def wordCountInput(uri: String): List[(EntityId, Seq[Cell[String]])] = {
       List((EntityId("row01"), slice("family:column1",(1L, "hello"), (2L, "world"),(3L, "hello"),
           (4L, "hello"))))
     }
@@ -133,7 +131,7 @@ class PagedKijiSliceSuite extends KijiSuite {
     }
 
     /** Input tuples to use for word count tests. */
-    def wordCountInput(uri: String): List[(EntityId, KijiSlice[String])] = {
+    def wordCountInput(uri: String): List[(EntityId, Seq[Cell[String]])] = {
       List((EntityId("row01"), slice("family:column1",(1L, "hello"), (2L, "world"),(3L, "hello"),
         (4L, "hello"))))
     }

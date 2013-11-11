@@ -19,11 +19,13 @@
 
 package org.kiji.express
 
+import scala.annotation.implicitNotFound
+
 import org.apache.hadoop.hbase.HConstants
 
-import org.kiji.annotations.Inheritance
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 import org.kiji.express.util.AvroUtil
 import org.kiji.schema.KijiCell
 
@@ -40,26 +42,26 @@ import org.kiji.schema.KijiCell
 @ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Sealed
-case class
-Cell[T] (family: String,
+case class Cell[T] (
+    family: String,
     qualifier: String,
-    version: Long,
+    version: Long = HConstants.LATEST_TIMESTAMP,
     datum: T)
 
 /**
-* A factory for creating cells used in KijiExpress from cells used in the Kiji Java API.
-*/
+ * A factory for creating cells used in KijiExpress from cells used in the Kiji Java API.
+ */
 object Cell {
   /**
-   * Creates a new cell (for use in KijiExpress) from the contents of a cell produced by the
-   * Kiji Java API.
+   * Creates a new cell (for use in KijiExpress) from the contents of a cell produced by the Kiji
+   * Java API.
    *
    * @param cell from a Kiji table produced by the Java API.
    * @tparam T is the type of the datum that this cell contains.
    * @return a cell for use in KijiExpress, with the same family, qualifier, timestamp,
    *     and datum as cell produced by the Java API.
    */
-  private[express] def apply[T](cell: KijiCell[T]): Cell[T] = {
+  private[kiji] def apply[T](cell: KijiCell[T]): Cell[T] = {
     new Cell[T](
         cell.getFamily,
         cell.getQualifier,
@@ -68,21 +70,47 @@ object Cell {
   }
 
   /**
-   * Creates a [[org.kiji.express.Cell]] with the latest timestamp.
+   * Provides an implementation of the `scala.Ordering` trait that sorts [[org.kiji.express.Cell]]s
+   * by value.
    *
-   * @param family of the Kiji table cell.
-   * @param qualifier of the Kiji table cell.
-   * @param datum in the Kiji table cell.
-   * @tparam T is the type of the datum in the cell.
-   * @return a cell for use in KijiExpress, with the same family, qualifier, timestamp,
-   *     and datum as cell produced by the Java API.
+   * @tparam T is the type of the datum in the [[org.kiji.express.Cell]].
+   * @return an ordering that sorts cells by their value.
    */
-  private[express] def apply[T](family: String, qualifier: String, datum: T): Cell[T] = {
-    new Cell[T](
-        family,
-        qualifier,
-        HConstants.LATEST_TIMESTAMP,
-        datum
-    )
+  @implicitNotFound("type of the datum in the cells is not Orderable.")
+  implicit def valueOrder[T](implicit order: Ordering[T]): Ordering[Cell[T]] = {
+    Ordering.by { cell: Cell[T] => cell.datum }
+  }
+
+  /**
+   * Provides an implementation of the `scala.Ordering` trait that sorts [[org.kiji.express.Cell]]s
+   * by timestamp/version.
+   *
+   * @tparam T is the type of the datum in the [[org.kiji.express.Cell]].
+   * @return an ordering that sorts cells by timestamp.
+   */
+  def versionOrder[T]: Ordering[Cell[T]] = {
+    Ordering.by { cell: Cell[T] => cell.version }
+  }
+
+  /**
+   * Provides an implementation of the `scala.Ordering` trait that sorts [[org.kiji.express.Cell]]s
+   * by timestamp/version.
+   *
+   * @tparam T is the type of the datum in the [[org.kiji.express.Cell]].
+   * @return an ordering that sorts cells by timestamp.
+   */
+  def timestampOrder[T]: Ordering[Cell[T]] = versionOrder[T]
+
+  /**
+   * Provides an implementation of the `scala.Ordering` trait that sorts [[org.kiji.express.Cell]]s
+   * by qualifier.
+   *
+   * @tparam T is the type of the datum in the [[org.kiji.express.Cell]].
+   * @return an ordering that sorts cells by qualifier.
+   */
+  def qualifierOrder[T]: Ordering[Cell[T]] = {
+    Ordering.by { cell: Cell[T] =>
+      (cell.family, cell.qualifier)
+    }
   }
 }

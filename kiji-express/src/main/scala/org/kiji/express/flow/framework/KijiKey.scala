@@ -39,9 +39,7 @@ import org.kiji.schema.{EntityId => JEntityId}
 @Inheritance.Sealed
 final class KijiKey {
   /** The entity id contained by this instance. */
-  // scalastyle:off null
   private var currentKey: JEntityId = null
-  // scalastyle:on null
 
   /**
    *  Retrieves the [[org.kiji.schema.EntityId]] wrapped by this instance.

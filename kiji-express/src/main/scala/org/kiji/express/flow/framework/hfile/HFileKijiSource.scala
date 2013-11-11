@@ -19,69 +19,23 @@
 
 package org.kiji.express.flow.framework.hfile
 
-import java.io.OutputStream
 import java.lang.UnsupportedOperationException
-import java.util.Properties
 
-import scala.collection.JavaConverters.asScalaIteratorConverter
-import scala.collection.mutable.Buffer
-
-import cascading.flow.FlowProcess
-import cascading.flow.hadoop.util.HadoopUtil
-import cascading.scheme.Scheme
-import cascading.scheme.SinkCall
-import cascading.scheme.hadoop.WritableSequenceFile
 import cascading.tap.Tap
-import cascading.tuple.Fields
-import cascading.tuple.Tuple
-import cascading.tuple.TupleEntry
 import com.google.common.base.Objects
 import com.twitter.scalding.AccessMode
 import com.twitter.scalding.HadoopTest
 import com.twitter.scalding.Hdfs
-import com.twitter.scalding.Local
 import com.twitter.scalding.Mode
-import com.twitter.scalding.Read
 import com.twitter.scalding.Source
-import com.twitter.scalding.Test
 import com.twitter.scalding.Write
-import org.apache.avro.Schema
-import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.hbase.HBaseConfiguration
-import org.apache.hadoop.io.NullWritable
-import org.apache.hadoop.io.Writable
-import org.apache.hadoop.mapred.JobConf
-import org.apache.hadoop.mapred.OutputCollector
-import org.apache.hadoop.mapred.RecordReader
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.express.Cell
-import org.kiji.express.EntityId
-import org.kiji.express.KijiSlice
 import org.kiji.express.flow.All
 import org.kiji.express.flow.ColumnRequestOutput
 import org.kiji.express.flow.TimeRange
 import org.kiji.express.flow.framework.KijiScheme
-import org.kiji.express.flow.framework.KijiTap
-import org.kiji.express.flow.framework.LocalKijiScheme
-import org.kiji.express.flow.framework.LocalKijiTap
-import org.kiji.express.flow.framework.OutputContext
-import org.kiji.express.util.AvroUtil
-import org.kiji.express.util.GenericCellSpecs
-import org.kiji.express.util.Resources._
-import org.kiji.mapreduce.framework.HFileKeyValue
-import org.kiji.mapreduce.framework.KijiConfKeys
-import org.kiji.schema.EntityIdFactory
-import org.kiji.schema.Kiji
-import org.kiji.schema.KijiColumnName
-import org.kiji.schema.KijiDataRequest
-import org.kiji.schema.KijiRowData
-import org.kiji.schema.KijiRowScanner
-import org.kiji.schema.KijiTable
-import org.kiji.schema.KijiTableReader
-import org.kiji.schema.KijiTableWriter
-import org.kiji.schema.KijiURI
 
 /**
  * A read or write view of a Kiji table.
@@ -117,14 +71,13 @@ import org.kiji.schema.KijiURI
 @ApiAudience.Framework
 @ApiStability.Experimental
 class HFileKijiSource private[express] (
-  val tableAddress: String,
-  val hFileOutput: String,
-  val timeRange: TimeRange,
-  val timestampField: Option[Symbol],
-  val loggingInterval: Long,
-  val columns: Map[Symbol, ColumnRequestOutput])
-    extends Source {
-
+    val tableAddress: String,
+    val hFileOutput: String,
+    val timeRange: TimeRange,
+    val timestampField: Option[Symbol],
+    val loggingInterval: Long,
+    val columns: Map[Symbol, ColumnRequestOutput]
+) extends Source {
   import org.kiji.express.flow.KijiSource._
 
   /**
@@ -166,45 +119,45 @@ class HFileKijiSource private[express] (
   }
 
   override def toString: String = {
-    "HFKijiSource(table: %s, timeRange: %s, timestampField: %s, loggingInterval: %s, columns: %s)"
-      .format(
-        tableAddress,
-        timeRange,
-        timestampField match {
-          case None          => None
-          case Some(tsField) => tsField
-        },
-        loggingInterval,
-        columns)
+    Objects
+        .toStringHelper(this)
+        .add("tableAddress", tableAddress)
+        .add("timeRange", timeRange)
+        .add("timestampField", timestampField)
+        .add("loggingInterval", loggingInterval)
+        .add("columns", columns)
+        .toString
   }
 
   override def equals(other: Any): Boolean = {
     other match {
-      case source: HFileKijiSource =>
+      case source: HFileKijiSource => {
         Objects.equal(tableAddress, source.tableAddress) &&
-          Objects.equal(hFileOutput, source.hFileOutput) &&
-          Objects.equal(columns, source.columns) &&
-          Objects.equal(timestampField, source.timestampField) &&
-          Objects.equal(timeRange, source.timeRange)
+        Objects.equal(hFileOutput, source.hFileOutput) &&
+        Objects.equal(columns, source.columns) &&
+        Objects.equal(timestampField, source.timestampField) &&
+        Objects.equal(timeRange, source.timeRange)
+      }
       case _ => false
     }
   }
 
   override def hashCode(): Int =
-    Objects.hashCode(tableAddress, hFileOutput, columns, timestampField, timeRange)
+      Objects.hashCode(tableAddress, hFileOutput, columns, timestampField, timeRange)
 }
 
 /**
  * Private Scalding source implementation whose scheme is the SemiNullScheme that
  * simply sinks tuples to an output for later writing to HFiles.
  */
-private final class HFileSource(override val tableAddress: String,
-                                override val hFileOutput: String)
-    extends HFileKijiSource(tableAddress, hFileOutput, All, None, 0, Map()) {
-
+private final class HFileSource(
+    override val tableAddress: String,
+    override val hFileOutput: String
+) extends HFileKijiSource(tableAddress, hFileOutput, All, None, 0, Map()) {
   /**
    * Creates a Scheme that writes to/reads from a Kiji table for usage with
    * the hadoop runner.
    */
-  override val hdfsScheme = new SemiNullScheme().asInstanceOf[KijiScheme.HadoopScheme]
+  override val hdfsScheme: KijiScheme.HadoopScheme =
+      new SemiNullScheme().asInstanceOf[KijiScheme.HadoopScheme]
 }

@@ -19,14 +19,18 @@
 
 package org.kiji.express.util
 
-import org.kiji.express.KijiSuite
+import cascading.tuple.Fields
+import cascading.tuple.Tuple
+import cascading.tuple.TupleEntry
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
-import cascading.tuple.{Tuple, TupleEntry, Fields}
+
+import org.kiji.express.KijiSuite
 import org.kiji.express.avro.NameFormats
 
 @RunWith(classOf[JUnitRunner])
-class AvroTupleConversionsSuite extends KijiSuite {
+class AvroTupleConversionsSuite
+    extends KijiSuite {
 
   test("Specific records get packed correctly with any variable name style.") {
     val inputs = Map(

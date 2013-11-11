@@ -172,9 +172,7 @@ private[express] class HFileKijiScheme(
     val HFileKijiSinkContext(kiji, _, _, _) = sinkCall.getContext()
 
     kiji.release()
-    // scalastyle:off null
     sinkCall.setContext(null)
-    // scalastyle:on null
 
   }
 

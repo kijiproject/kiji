@@ -39,9 +39,7 @@ import org.kiji.schema.KijiRowData;
 @Inheritance.Sealed
 final class KijiValue {
   /** The row data being wrapped by this instance. */
-  // scalastyle:off null
   private var currentValue: KijiRowData = null
-  // scalastyle:on null
 
   /**
    * Retrieves the [[org.kiji.schema.KijiRowData]] wrapped by this instance.

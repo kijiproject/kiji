@@ -25,12 +25,11 @@ import com.twitter.scalding.Args
 import com.twitter.scalding.Job
 import com.twitter.scalding.JobTest
 import com.twitter.scalding.Tsv
-import org.apache.avro.util.Utf8
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.EntityId
-import org.kiji.express.KijiSlice
+import org.kiji.express.Cell
 import org.kiji.express.KijiSuite
 import org.kiji.express.repl.Implicits._
 import org.kiji.express.util.Resources._
@@ -44,7 +43,7 @@ class KijiPipeSuite extends KijiSuite {
   val layout: KijiTableLayout = layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
 
   /** Input tuples to use for word count tests. */
-  def wordCountInput(uri: String): List[(EntityId, KijiSlice[String])] = {
+  def wordCountInput(uri: String): List[(EntityId, Seq[Cell[String]])] = {
     List(
       ( EntityId("row01"), slice("family:column1", (1L, "hello")) ),
       ( EntityId("row02"), slice("family:column1", (2L, "hello")) ),
@@ -79,8 +78,8 @@ class KijiPipeSuite extends KijiSuite {
     // Setup input to bind values from the "family:column1" column to the symbol 'word.
     KijiInput(uri, "family:column1" -> 'word)
     // Sanitize the word.
-    .map('word -> 'cleanword) { words: KijiSlice[Utf8] =>
-      words.getFirstValue()
+    .map('word -> 'cleanword) { words: Seq[Cell[CharSequence]] =>
+      words.head.datum
           .toString()
           .toLowerCase()
     }

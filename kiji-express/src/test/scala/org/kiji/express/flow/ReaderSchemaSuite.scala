@@ -28,13 +28,14 @@ import org.apache.hadoop.conf.Configuration
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
+import org.kiji.express.Cell
 import org.kiji.express.EntityId
-import org.kiji.express.KijiSlice
 import org.kiji.express.KijiSuite
 import org.kiji.express.avro.SimpleRecord
 import org.kiji.express.flow.SchemaSpec.Generic
 import org.kiji.express.flow.SchemaSpec.Specific
 import org.kiji.express.flow.SchemaSpec.Writer
+import org.kiji.schema.{ EntityId => JEntityId }
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiClientTest
 import org.kiji.schema.KijiDataRequest
@@ -54,13 +55,13 @@ class ReaderSchemaSuite extends KijiClientTest with KijiSuite {
     kiji.openTable(layout.getName)
   }
   val conf: Configuration = getConf
-  val uri = table.getURI.toString
+  val uri: String = table.getURI.toString
   val reader: KijiTableReader = table.openTableReader()
   val writer: KijiTableWriter = table.openTableWriter()
 
-  private def entityId(s: String) = table.getEntityId(s)
+  private def entityId(s: String): JEntityId = { table.getEntityId(s) }
 
-  private def writeValue(eid: String, column: String, value: Any) = {
+  private def writeValue(eid: String, column: String, value: Any) {
     writer.put(entityId(eid), family, column, value)
     writer.flush()
   }
@@ -76,7 +77,7 @@ class ReaderSchemaSuite extends KijiClientTest with KijiSuite {
       value: Any,
       schemaSpec: SchemaSpec,
       overrideSchema: Option[SchemaSpec] = None
-  ) = {
+  ) {
     val readEid = column + "-in"
     val writeEid = column + "-out"
     writeValue(readEid, column, value)
@@ -234,14 +235,14 @@ class ReadWriteJob[T](
 ) extends KijiJob(args) {
 
   /**
-   * Unwraps latest value from [[org.kiji.express.KijiSlice]] and verifies that the type is as
-   * expected.
-   * @param slice [[org.kiji.express.KijiSlice]] containing value to unwrap.
+   * Unwraps the latest value from an iterable of cells and verifies that the type is as expected.
+   *
+   * @param slice containing the value to unwrap.
    * @return unwrapped value of type T.
    */
-  private def unwrap(slice: KijiSlice[T]): (T, Long) = {
+  private def unwrap(slice: Seq[Cell[T]]): (T, Long) = {
     require(slice.size == 1)
-    val cell = slice.getFirst()
+    val cell = slice.head
     (cell.datum, cell.version)
   }
 

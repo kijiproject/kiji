@@ -19,6 +19,8 @@
 
 package org.kiji.express.flow
 
+import com.google.common.base.Objects
+
 import org.apache.avro.Schema
 import org.apache.avro.specific.SpecificRecord
 
@@ -29,9 +31,8 @@ import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiInvalidNameException
 
 /**
- * Interface for all column input request specification objects. ColumnRequestInput
- * implementations specify how to read Kiji columns or column families into individual fields in
- * an Express flow.
+ * Interface for all column input request specification objects. ColumnRequestInput implementations
+ * specify how to read Kiji columns or column families into individual fields in an Express flow.
  *
  * Use the [[org.kiji.express.flow.QualifiedColumnRequestInput]] to retrieve an individual Kiji
  * column into a single field in a flow.
@@ -88,6 +89,8 @@ sealed trait ColumnRequestInput {
 
   /**
    * The [[org.kiji.schema.KijiColumnName]] of the column.
+   *
+   * @return the name of this column.
    */
   def columnName: KijiColumnName
 }
@@ -138,7 +141,7 @@ object ColumnRequestInput {
               schemaSpec
           )
       case _ => throw new IllegalArgumentException("column name must contain 'family:qualifier'" +
-          " for a group-type, or 'family' for a map-type column.")
+        " for a group-type, or 'family' for a map-type column.")
     }
   }
 
@@ -309,4 +312,3 @@ object ColumnFamilyRequestInput {
     ColumnFamilyRequestInput(family, schemaSpec = SchemaSpec.Generic(schema))
   }
 }
-

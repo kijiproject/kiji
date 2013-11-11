@@ -87,9 +87,7 @@ final class KijiInputFormat
             //     if any.
             val location: String = {
               if (region.getLocations().isEmpty()) {
-                // scalastyle:off null
                 null
-                // scalastyle:on null
               } else {
                 region.getLocations().iterator().next()
               }

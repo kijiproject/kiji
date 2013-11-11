@@ -128,7 +128,6 @@ final class GenericRowDataConverter(uri: KijiURI, conf: Configuration) {
    * @return a map from columns in the layout to cell specifications without reader schema.
    */
   private def createCellSpecMap(layout: KijiTableLayout): JMap[KijiColumnName, CellSpec] = {
-    // scalastyle:off null
     // Fold the columns in the layout into a map from columns to cell specifications without a
     // reader schema.
     layout
@@ -138,6 +137,5 @@ final class GenericRowDataConverter(uri: KijiURI, conf: Configuration) {
           specMap.put(columnName, layout.getCellSpec(columnName).setUseWriterSchema())
           specMap
         }
-    // scalastyle:on null
   }
 }

@@ -43,9 +43,8 @@ import org.slf4j.LoggerFactory
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.express.Cell
 import org.kiji.express.EntityId
-import org.kiji.express.KijiSlice
-import org.kiji.express.PagedKijiSlice
 import org.kiji.express.flow.ColumnFamilyRequestInput
 import org.kiji.express.flow.ColumnFamilyRequestOutput
 import org.kiji.express.flow.ColumnRequestInput
@@ -55,12 +54,14 @@ import org.kiji.express.flow.QualifiedColumnRequestInput
 import org.kiji.express.flow.QualifiedColumnRequestOutput
 import org.kiji.express.flow.TimeRange
 import org.kiji.express.flow.framework.serialization.KijiLocker
+import org.kiji.express.util.AvroUtil
 import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.express.util.SpecificCellSpecs
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.ColumnVersionIterator
 import org.kiji.schema.EntityIdFactory
 import org.kiji.schema.Kiji
+import org.kiji.schema.KijiCell
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiDataRequestBuilder
 import org.kiji.schema.KijiRowData
@@ -325,7 +326,6 @@ class KijiScheme(
 @ApiAudience.Framework
 @ApiStability.Experimental
 object KijiScheme {
-
   type HadoopScheme = Scheme[JobConf, RecordReader[_, _], OutputCollector[_, _], _, _]
 
   private val logger: Logger = LoggerFactory.getLogger(classOf[KijiScheme])
@@ -375,11 +375,28 @@ object KijiScheme {
     def rowToTupleColumnFamily(cf: ColumnFamilyRequestInput): Unit = {
       if (row.containsColumn(cf.family)) {
         cf.paging match {
-          case PagingSpec.Off => result.add(KijiSlice(row, cf.family))
+          case PagingSpec.Off => {
+            val stream: Seq[Cell[_]] = row
+                .iterator(cf.family)
+                .asScala
+                .toSeq
+                .map({ kijiCell: KijiCell[_] => Cell(kijiCell) })
+            result.add(stream)
+          }
           case PagingSpec.Cells(pageSize) => {
-            val slice = PagedKijiSlice(cf.family,
-                new MapFamilyVersionIterator(row, cf.family, qualifierPageSize, pageSize))
-            result.add(slice)
+            result.add(
+                new MapFamilyVersionIterator(row, cf.family, qualifierPageSize, pageSize)
+                    .asScala
+                    .toStream
+                    .map { entry: MapFamilyVersionIterator.Entry[_] =>
+                      Cell(
+                          cf.family,
+                          entry.getQualifier,
+                          entry.getTimestamp,
+                          AvroUtil.avroToScala(entry.getValue)
+                      )
+                    }
+            )
           }
         }
       } else {
@@ -390,11 +407,28 @@ object KijiScheme {
     def rowToTupleQualifiedColumn(qc: QualifiedColumnRequestInput): Unit = {
       if (row.containsColumn(qc.family, qc.qualifier)) {
         qc.paging match {
-          case PagingSpec.Off => result.add(KijiSlice(row, qc.family, qc.qualifier))
+          case PagingSpec.Off => {
+            val stream: Seq[Cell[_]] = row
+                .iterator(qc.family, qc.qualifier)
+                .asScala
+                .toSeq
+                .map { kijiCell: KijiCell[_] => Cell(kijiCell) }
+            result.add(stream)
+          }
           case PagingSpec.Cells(pageSize) => {
-            val slice = PagedKijiSlice(qc.family, qc.qualifier,
-                new ColumnVersionIterator(row, qc.family, qc.qualifier, pageSize))
-            result.add(slice)
+            result.add(
+                new ColumnVersionIterator(row, qc.family, qc.qualifier, pageSize)
+                    .asScala
+                    .toStream
+                    .map { entry: java.util.Map.Entry[java.lang.Long,_] =>
+                      Cell(
+                          qc.family,
+                          qc.qualifier,
+                          entry.getKey,
+                          AvroUtil.avroToScala(entry.getValue)
+                      )
+                    }
+            )
           }
         }
       } else {

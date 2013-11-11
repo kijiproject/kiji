@@ -20,11 +20,7 @@
 package org.kiji.express.flow.framework.hfile
 
 import java.io.File
-import java.util.Random
 
-import scala.collection.JavaConverters._
-
-import cascading.pipe.Pipe
 import com.twitter.scalding.Args
 import com.twitter.scalding.TextLine
 import com.twitter.scalding.Tool
@@ -35,14 +31,10 @@ import org.junit.After
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.EntityId
 import org.kiji.express.util.Resources
 import org.kiji.mapreduce.HFileLoader
-import org.kiji.mapreduce.tools.KijiBulkLoad
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiDataRequestBuilder

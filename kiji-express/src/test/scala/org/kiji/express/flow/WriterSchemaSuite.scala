@@ -120,11 +120,11 @@ class WriterSchemaSuite extends KijiClientTest with KijiSuite {
   def enumVerifier[T](schema: Schema)(input: T, retrieved: T): Unit = {
     assert(retrieved.isInstanceOf[GenericData.EnumSymbol])
     assert(
-        retrieved.asInstanceOf[GenericData.EnumSymbol] ===
+      retrieved.asInstanceOf[GenericData.EnumSymbol] ===
         new GenericData().createEnum(input.toString, schema))
   }
 
-  /**
+  /**                                                                         bfffff
    * Write provided values with express into an HBase column with options as specified in output,
    * and verify that the values have been persisted correctly.
    * @param values to test
@@ -145,7 +145,7 @@ class WriterSchemaSuite extends KijiClientTest with KijiSuite {
     testWrite(longs, QualifiedColumnRequestOutput(family, counterColumn, Writer))
   }
 
-  test("A KijiJob can write to a raw bytes column with a Writer schema spec.") {
+  test("A KijiJob can write to a raw bytes column with a Writer schema spec.")    {
     testWrite(bytes, QualifiedColumnRequestOutput(family, rawColumn, Writer))
   }
 
@@ -311,4 +311,3 @@ class IdentityJob[A](fs: Fields, inputs: Iterable[A], output: KijiSource, args: 
                     (implicit setter: TupleSetter[A]) extends KijiJob(args) {
   IterableSource(inputs, fs)(setter, implicitly[TupleConverter[A]]).write(output)
 }
-

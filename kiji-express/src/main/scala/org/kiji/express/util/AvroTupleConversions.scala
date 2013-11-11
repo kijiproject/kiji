@@ -87,7 +87,7 @@ trait AvroTupleConversions {
   private[express] class AvroGenericTupleSetter(fs: Fields) extends TupleSetter[GenericRecord] {
     override def arity: Int = fs.size
 
-    private val fields = fs.iterator.map(_.toString).toList
+    private val fields: List[String] = fs.iterator.map(_.toString).toList
 
     override def apply(arg: GenericRecord): Tuple = {
       new Tuple(fields.map(arg.get): _*)
@@ -146,10 +146,11 @@ private[express] case class AvroSpecificTupleConverter[T](fs: Fields, m: Manifes
 
   // Precompute as much of the reflection business as possible.  Method objects do not serialize,
   // so any val containing a method in it must be lazy.
-  private val avroClass = m.erasure
-  private val builderClass = avroClass.getDeclaredClasses.find(_.getSimpleName == "Builder").get
-  lazy private val newBuilderMethod = avroClass.getMethod("newBuilder")
-  lazy private val buildMethod = builderClass.getMethod("build")
+  private val avroClass: Class[_] = m.erasure
+  private val builderClass: Class[_] =
+      avroClass.getDeclaredClasses.find(_.getSimpleName == "Builder").get
+  lazy private val newBuilderMethod: Method = avroClass.getMethod("newBuilder")
+  lazy private val buildMethod: Method = builderClass.getMethod("build")
 
   /**
    * Map of field name to setter method.
