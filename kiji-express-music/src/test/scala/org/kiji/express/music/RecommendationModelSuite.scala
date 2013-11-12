@@ -84,7 +84,7 @@ class RecommendationModelSuite extends KijiSuite {
       |        "columns_to_fields": [
       |          {
       |            "column": {
-      |              "org.kiji.modeling.avro.AvroQualifiedColumnRequestInput": {
+      |              "org.kiji.modeling.avro.AvroQualifiedColumnInputSpec": {
       |                "family": "info",
       |                "qualifier": "track_plays",
       |                "max_versions": 2147483647,
@@ -100,7 +100,7 @@ class RecommendationModelSuite extends KijiSuite {
       |      "output_spec": {
       |        "table_uri": "%s",
       |        "output_column": {
-      |          "org.kiji.modeling.avro.AvroQualifiedColumnRequestOutput": {
+      |          "org.kiji.modeling.avro.AvroQualifiedColumnOutputSpec": {
       |            "family": "info",
       |            "qualifier": "next_song_rec",
       |            "schema_spec": null
