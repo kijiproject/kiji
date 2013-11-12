@@ -36,7 +36,7 @@ import org.apache.hadoop.hbase.HConstants
 
 import org.kiji.express.Cell
 import org.kiji.express.EntityId
-import org.kiji.express.flow.ColumnRequestInput
+import org.kiji.express.flow.ColumnInputSpec
 import org.kiji.express.flow.framework.KijiScheme
 import org.kiji.express.util.GenericRowDataConverter
 import org.kiji.express.util.Tuples
@@ -159,7 +159,7 @@ class GenericScoringServlet extends HttpServlet {
       .columnsToFields
       .toList
       // List of (ColumnRequestInput, Symbol) pairs
-      .map { case (column: ColumnRequestInput, field: Symbol) => {
+      .map { case (column: ColumnInputSpec, field: Symbol) => {
       (field.name, column.columnName)
     }}
       .toMap
