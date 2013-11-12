@@ -19,20 +19,21 @@
 
 package org.kiji.lifecycle
 
-import org.kiji.express.KijiSlice
+import org.kiji.express.Cell
 import org.kiji.modeling.Extractor
 import org.kiji.modeling.Scorer
 
 /**
  * Simple implementation of the extractor and scorer phases of the model lifecycle. This simply
- * take the input tuple and returns the string length.
+ * take the input tuple and returns the string length, unless a freshener parameter called
+ * 'jennyanydots' is set, in which case the length of its value is returned instead.
  */
 class DummyExtractorScorer extends Extractor with Scorer {
-  override val extractFn = extract('email_address -> 'word) { line: KijiSlice[CharSequence] =>
-    line.cells(0).datum
+  override val extractFn = extract('email_address -> 'word) { line: Seq[Cell[CharSequence]] =>
+    line.head.datum
   }
 
   override val scoreFn = score('word) { line: CharSequence =>
-   line.length()
+    keyValueStore("freshener_parameters").getOrElse("jennyanydots", line).length
   }
 }

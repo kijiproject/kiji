@@ -19,8 +19,11 @@
 package org.kiji.scoring.lib.server;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.util.Map;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -103,16 +106,35 @@ public final class ScoringServerScoreFunction extends ScoreFunction {
    * @param baseURL the use of the ScoringServer to use to produce a score.
    * @param modelId the modelId to use to score.
    * @param eid the entity to score.
+   * @param params an optional map of per-request parameters to be passed to the server.
+   *
    * @return the URL from which to retrieve a score.
    * @throws MalformedURLException in case the URL cannot be created.
    */
   private static URL getScoringServerEndpoint(
       final String baseURL,
       final String modelId,
-      final EntityId eid
+      final EntityId eid,
+      final Map<String, String> params
   ) throws MalformedURLException {
-    return new URL(
-        String.format("%s/%s?eid=%s", baseURL, getModelURLExtension(modelId), eid.toShellString()));
+     StringBuilder urlStringBuilder = new StringBuilder(String.format(
+        "%s/%s?eid=%s",
+        baseURL,
+        getModelURLExtension(modelId),
+        eid.toShellString()
+    ));
+    for (Map.Entry<String, String> entry : params.entrySet()) {
+      try {
+        urlStringBuilder.append(String.format(
+            "&fresh.%s=%s",
+            URLEncoder.encode(entry.getKey(), "UTF-8"),
+            URLEncoder.encode(entry.getValue(), "UTF-8")
+        ));
+      } catch (UnsupportedEncodingException e) {
+        LOG.debug("Couldn't URL encode parameter: %s", entry.toString());
+      }
+    }
+    return new URL(urlStringBuilder.toString());
   }
 
   private String mScoringServerBaseURL;
@@ -144,8 +166,12 @@ public final class ScoringServerScoreFunction extends ScoreFunction {
   public TimestampedValue<Object> score(
       final KijiRowData dataToScore, final FreshenerContext context
   ) throws IOException {
-    final URL scoringServerEndpoint =
-        getScoringServerEndpoint(mScoringServerBaseURL, mModelId, dataToScore.getEntityId());
+    final URL scoringServerEndpoint = getScoringServerEndpoint(
+        mScoringServerBaseURL,
+        mModelId,
+        dataToScore.getEntityId(),
+        context.getParameters()
+    );
 
     final String scoreJSON = IOUtils.toString(scoringServerEndpoint.openStream(), "UTF-8");
 

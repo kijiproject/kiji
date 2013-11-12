@@ -170,6 +170,33 @@ class TestScoringServer extends JUnitSuite {
     scoringServer.releaseResources()
   }
 
+  @Test
+  def testCanPassFreshParameters() {
+    val jarFile = File.createTempFile("temp_artifact", ".jar")
+    val jarOS = new JarOutputStream(new FileOutputStream(jarFile))
+    mExtracterScorerClasses.foreach(addToJar(_, jarOS))
+    jarOS.close()
+
+    TestUtils.deploySampleLifecycle(mFakeKiji, jarFile.getAbsolutePath, "0.0.1")
+
+    val scoringServer = ScoringServer(mTempHome.getCanonicalFile)
+    scoringServer.start()
+
+    val connector = scoringServer.server.getConnectors()(0)
+    // TODO: Eventually remove this sleep but since Jetty right now is set to scan a directory
+    // for changes every second, this has to be here until we can control the deployment
+    // synchronously (i.e. upon a change in the model repo, complete the deployment to and through
+    // registering with Jetty this new application).
+    Thread.sleep(5000)
+
+    // "%3D%3D%3D is a url encoding of '==='.
+    val response = TestUtils.scoringServerResponse(connector.getLocalPort,
+      "org/kiji/test/sample_model/0.0.1/?eid=[12345]&fresh.jennyanydots=%3D%3D%3D")
+    scoringServer.stop()
+    assert(Integer.parseInt(response.getValue.toString) == "===".length())
+    scoringServer.releaseResources()
+  }
+
   /**
    * Adds the given classFile to the target JAR output stream. The classFile is assumed to
    * be a resource on the classpath.
