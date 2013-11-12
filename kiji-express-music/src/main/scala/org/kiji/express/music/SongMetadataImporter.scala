@@ -84,5 +84,5 @@ class SongMetadataImporter(args: Args) extends KijiJob(args) {
               metadataSchema)
       .write(KijiOutput(
           args("table-uri"),
-          Map('metadata -> QualifiedColumnRequestOutput("info", "metadata"))))
+          Map('metadata -> QualifiedColumnOutputSpec("info", "metadata"))))
 }

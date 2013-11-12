@@ -31,7 +31,7 @@ import org.kiji.express.EntityId
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow.KijiJob
 import org.kiji.express.flow.KijiOutput
-import org.kiji.express.flow.QualifiedColumnRequestOutput
+import org.kiji.express.flow.QualifiedColumnOutputSpec
 import org.kiji.express.music.avro.SongCount
 import org.kiji.express.music.avro.TopSongs
 import org.kiji.modeling.ScoreProducerJobBuilder
@@ -143,7 +143,7 @@ class RecommendationModelSuite extends KijiSuite {
         (EntityId("user-1"), "song-1"),
         (EntityId("user-2"), "song-2")), ('entityId, 'trackPlay)
     ).write(KijiOutput(usersTableURI, Map('trackPlay ->
-        QualifiedColumnRequestOutput("info", "track_plays"))))
+        QualifiedColumnOutputSpec("info", "track_plays"))))
   }.run
   assert(userTableImportResult, "Failed to import track plays to user table in test setup.")
 
@@ -158,7 +158,7 @@ class RecommendationModelSuite extends KijiSuite {
             (EntityId("song-2"), new TopSongs(List(new SongCount("song-3", 3L)).asJava))),
         ('entityId, 'topNextSongs)
     ).write(KijiOutput(songsTableURI, Map('topNextSongs ->
-        QualifiedColumnRequestOutput("info", "top_next_songs"))))
+        QualifiedColumnOutputSpec("info", "top_next_songs"))))
   }.run
   assert(songsTableImportResult, "Failed to import top next songs lists in test setup.")
 

@@ -77,7 +77,7 @@ class SongMetadataImporterSuite extends KijiSuite {
         .arg("input", "song-metadata.json")
         .source(TextLine("song-metadata.json"), testInput)
         .sink(KijiOutput(tableURI, Map('metadata ->
-            QualifiedColumnRequestOutput("info", "metadata"))))(validateTest)
+            QualifiedColumnOutputSpec("info", "metadata"))))(validateTest)
         .run
         .finish
   }
@@ -89,7 +89,7 @@ class SongMetadataImporterSuite extends KijiSuite {
         .arg("input", "song-metadata.json")
         .source(TextLine("song-metadata.json"), testInput)
         .sink(KijiOutput(tableURI, Map('metadata ->
-            QualifiedColumnRequestOutput("info", "metadata"))))(validateTest)
+            QualifiedColumnOutputSpec("info", "metadata"))))(validateTest)
         .runHadoop
         .finish
   }

@@ -71,7 +71,7 @@ class SongPlayCounterSuite extends KijiSuite {
         .arg("table-uri", tableURI)
         .arg("output", "counts.tsv")
         .source(KijiInput(tableURI, Map(
-            QualifiedColumnRequestInput("info", "track_plays", all) -> 'playlist)),
+            QualifiedColumnInputSpec("info", "track_plays", all) -> 'playlist)),
             testInput)
         .sink(Tsv("counts.tsv")) { validateTest }
         .run
@@ -83,7 +83,7 @@ class SongPlayCounterSuite extends KijiSuite {
         .arg("table-uri", tableURI)
         .arg("output", "counts.tsv")
         .source(KijiInput(tableURI, Map(
-            QualifiedColumnRequestInput("info", "track_plays", all) -> 'playlist)), testInput)
+            QualifiedColumnInputSpec("info", "track_plays", all) -> 'playlist)), testInput)
         .sink(Tsv("counts.tsv")) { validateTest }
         .runHadoop
         .finish

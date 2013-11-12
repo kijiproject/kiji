@@ -56,7 +56,7 @@ class SongRecommender(args: Args) extends KijiJob(args) {
    * 3. Emits tuples containing only the fields 'songId and 'nextSong.
    */
   val recommendedSong = KijiInput(args("songs-table"),
-      Map(QualifiedColumnRequestInput("info", "top_next_songs", classOf[TopSongs])
+      Map(QualifiedColumnInputSpec("info", "top_next_songs", classOf[TopSongs])
           -> 'topNextSongs))
       .map('entityId -> 'songId) { eId: EntityId => eId(0) }
       .map('topNextSongs -> 'nextSong) { getMostPopularSong }
@@ -71,10 +71,10 @@ class SongRecommender(args: Args) extends KijiJob(args) {
    *     field.
    */
   KijiInput(args("users-table"),
-      Map(QualifiedColumnRequestInput("info", "track_plays") -> 'trackPlays))
+      Map(QualifiedColumnInputSpec("info", "track_plays") -> 'trackPlays))
       .map('trackPlays -> 'lastTrackPlayed) {
           slice: Seq[Cell[CharSequence]] => slice.head.datum.toString }
       .joinWithSmaller('lastTrackPlayed -> 'songId, recommendedSong)
       .write(KijiOutput(args("users-table"),
-          Map('nextSong -> QualifiedColumnRequestOutput("info", "next_song_rec"))))
+          Map('nextSong -> QualifiedColumnOutputSpec("info", "next_song_rec"))))
 }

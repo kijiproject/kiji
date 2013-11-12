@@ -68,5 +68,5 @@ class SongPlaysImporter(args: Args) extends KijiJob(args) {
       .write(KijiOutput(
           args("table-uri"),
           'playTime,
-          Map('songId -> QualifiedColumnRequestOutput("info", "track_plays"))))
+          Map('songId -> QualifiedColumnOutputSpec("info", "track_plays"))))
 }

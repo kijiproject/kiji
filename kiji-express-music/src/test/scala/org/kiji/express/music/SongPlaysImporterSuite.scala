@@ -69,7 +69,7 @@ class SongPlaysImporterSuite extends KijiSuite {
   }
 
   val jobOutput = KijiOutput(tableURI, 'playTime, Map('songId ->
-      QualifiedColumnRequestOutput("info", "track_plays")))
+      QualifiedColumnOutputSpec("info", "track_plays")))
 
   // Run a test of the import job, running in Cascading's local runner.
   test("SongPlaysImporter puts JSON play records into the user table using local mode.") {

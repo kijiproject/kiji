@@ -30,8 +30,8 @@ import org.kiji.express.KijiSuite
 import org.kiji.express.flow.KijiInput
 import org.kiji.express.flow.KijiOutput
 import org.kiji.express.flow.KijiSource
-import org.kiji.express.flow.QualifiedColumnRequestInput
-import org.kiji.express.flow.QualifiedColumnRequestOutput
+import org.kiji.express.flow.QualifiedColumnInputSpec
+import org.kiji.express.flow.QualifiedColumnOutputSpec
 import org.kiji.express.music.avro.SongCount
 import org.kiji.express.music.avro.TopSongs
 
@@ -93,12 +93,12 @@ class SongRecommenderSuite extends KijiSuite {
   }
 
   val userSource: KijiSource = KijiInput(usersURI,
-      Map(QualifiedColumnRequestInput("info", "track_plays") -> 'trackPlays))
+      Map(QualifiedColumnInputSpec("info", "track_plays") -> 'trackPlays))
   val songSource: KijiSource = KijiInput(songsURI,
-      Map(QualifiedColumnRequestInput("info", "top_next_songs", classOf[TopSongs])
+      Map(QualifiedColumnInputSpec("info", "top_next_songs", classOf[TopSongs])
           -> 'topNextSongs))
   val userSourceOut: KijiSource = KijiOutput(usersURI,
-      Map('nextSong -> QualifiedColumnRequestOutput("info", "next_song_rec")))
+      Map('nextSong -> QualifiedColumnOutputSpec("info", "next_song_rec")))
 
   test("songRecommender computes a recommendation for the next song to listen to. (Local)") {
     JobTest(new SongRecommender(_))

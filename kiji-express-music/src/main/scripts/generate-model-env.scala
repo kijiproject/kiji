@@ -18,8 +18,8 @@
  */
 
 import org.kiji.express.flow.All
-import org.kiji.express.flow.QualifiedColumnRequestInput
-import org.kiji.express.flow.QualifiedColumnRequestOutput
+import org.kiji.express.flow.QualifiedColumnInputSpec
+import org.kiji.express.flow.QualifiedColumnOutputSpec
 import org.kiji.modeling.config.ModelEnvironment
 import org.kiji.modeling.config.KeyValueStoreSpec
 import org.kiji.modeling.config.KijiInputSpec
@@ -59,7 +59,7 @@ val jsonEnvironment: String =
                     tableUri = "kiji://.env/default/users",
                     timeRange = All,
                     columnsToFields = Map(
-                        QualifiedColumnRequestInput(
+                        QualifiedColumnInputSpec(
                             "info",
                             "track_plays",
                             maxVersions = Int.MaxValue
@@ -68,7 +68,7 @@ val jsonEnvironment: String =
                 ),
                 outputSpec = KijiSingleColumnOutputSpec(
                     tableUri = "kiji://.env/default/users",
-                    outputColumn = QualifiedColumnRequestOutput(
+                    outputColumn = QualifiedColumnOutputSpec(
                         family = "info",
                         qualifier = "next_song_rec"
                     )

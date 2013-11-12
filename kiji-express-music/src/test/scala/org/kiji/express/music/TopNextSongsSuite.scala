@@ -29,8 +29,8 @@ import org.kiji.express.KijiSuite
 import org.kiji.express.flow
 import org.kiji.express.flow.KijiInput
 import org.kiji.express.flow.KijiOutput
-import org.kiji.express.flow.QualifiedColumnRequestInput
-import org.kiji.express.flow.QualifiedColumnRequestOutput
+import org.kiji.express.flow.QualifiedColumnInputSpec
+import org.kiji.express.flow.QualifiedColumnOutputSpec
 import org.kiji.express.flow.SchemaSpec
 import org.kiji.express.music.avro.TopSongs
 
@@ -107,10 +107,10 @@ class TopNextSongsSuite extends KijiSuite {
         .arg("users-table", usersURI)
         .arg("songs-table", songsURI)
         .source(KijiInput(usersURI,
-            Map(QualifiedColumnRequestInput("info", "track_plays", flow.all)
+            Map(QualifiedColumnInputSpec("info", "track_plays", flow.all)
                 -> 'playlist)), testInput)
         .sink(KijiOutput(songsURI, Map('top_next_songs ->
-            QualifiedColumnRequestOutput(
+            QualifiedColumnOutputSpec(
                 "info",
                 "top_next_songs",
                 schemaSpec = SchemaSpec.Specific(classOf[TopSongs])))))(validateTest)
@@ -123,11 +123,11 @@ class TopNextSongsSuite extends KijiSuite {
         .arg("users-table", usersURI)
         .arg("songs-table", songsURI)
         .source(KijiInput(usersURI,
-            Map(QualifiedColumnRequestInput("info", "track_plays", maxVersions = flow.all)
+            Map(QualifiedColumnInputSpec("info", "track_plays", maxVersions = flow.all)
                 -> 'playlist)),
             testInput)
         .sink(KijiOutput(songsURI, Map('top_next_songs ->
-            QualifiedColumnRequestOutput(
+            QualifiedColumnOutputSpec(
                 "info",
                 "top_next_songs",
                 schemaSpec = SchemaSpec.Specific(classOf[TopSongs]))))) { validateTest }
