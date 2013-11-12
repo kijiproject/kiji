@@ -29,6 +29,8 @@ import com.twitter.scalding.TupleConversions
 import com.twitter.scalding.TupleConverter
 import com.twitter.scalding.TupleSetter
 
+import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
 import org.kiji.express.util.AvroTupleConversions
 import org.kiji.express.util.PipeConversions
 
@@ -36,6 +38,8 @@ import org.kiji.express.util.PipeConversions
  * Object containing various implicit conversions required to create Scalding flows in the REPL.
  * Most of these conversions come from Scalding's Job class.
  */
+@ApiAudience.Framework
+@ApiStability.Experimental
 object Implicits
     extends PipeConversions
     with TupleConversions

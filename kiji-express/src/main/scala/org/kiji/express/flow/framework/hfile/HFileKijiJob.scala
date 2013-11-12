@@ -19,35 +19,38 @@
 
 package org.kiji.express.flow.framework.hfile
 
-import com.twitter.scalding._
-import com.twitter.scalding.Hdfs
-import org.apache.hadoop.mapred.JobConf
-import org.apache.hadoop.fs.Path
-import cascading.tap.hadoop.Hfs
-import cascading.util.Util
-import org.kiji.mapreduce.framework.HFileKeyValue
-import org.apache.hadoop.io.NullWritable
-import org.apache.hadoop.fs.FileSystem
-import cascading.flow.Flow
-import scala.transient
-import cascading.flow.Flow
-import cascading.util.Util
-import java.util.Properties
 import scala.collection.JavaConverters.collectionAsScalaIterableConverter
+import scala.transient
+import java.util.Properties
 
+import cascading.flow.Flow
+import cascading.flow.Flow
 import cascading.flow.Flow
 import cascading.flow.FlowListener
 import cascading.tap.hadoop.Hfs
+import cascading.tap.hadoop.Hfs
+import cascading.util.Util
+import cascading.util.Util
 import cascading.util.Util
 import com.twitter.scalding.HadoopMode
 import com.twitter.scalding.Hdfs
+import com.twitter.scalding.Hdfs
+import com.twitter.scalding._
 import com.twitter.scalding._
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.FileSystem
+import org.apache.hadoop.fs.FileSystem
+import org.apache.hadoop.fs.Path
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.io.NullWritable
+import org.apache.hadoop.io.NullWritable
 import org.apache.hadoop.mapred.JobConf
+import org.apache.hadoop.mapred.JobConf
+import org.kiji.mapreduce.framework.HFileKeyValue
 
+import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 import org.kiji.express.flow.KijiJob
 import org.kiji.express.flow.framework.LocalKijiTap
 import org.kiji.express.util.PipeConversions
@@ -64,6 +67,9 @@ import org.kiji.mapreduce.framework.HFileKeyValue
  *     required is the --output flag which is the Kiji table to use to obtain layout information
  *     to properly format the HFiles for bulk loading.
  */
+@ApiAudience.Public
+@ApiStability.Experimental
+@Inheritance.Extensible
 class HFileKijiJob(args: Args) extends KijiJob(args) {
   /** Name of the command-line argument that specifies the temporary HFile root directory. */
   final val HFileOutputArgName: String = "hfile-output"
@@ -134,6 +140,8 @@ class HFileKijiJob(args: Args) extends KijiJob(args) {
  * sequence files to the final HFiles. This is done only if the first job had a Cascading
  * configured reducer.
  */
+@ApiAudience.Private
+@ApiStability.Experimental
 private final class HFileMapJob(args: Args) extends HFileKijiJob(args) {
 
   override def next: Option[Job] = {

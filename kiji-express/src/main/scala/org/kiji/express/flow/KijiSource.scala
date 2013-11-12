@@ -107,7 +107,7 @@ import org.kiji.schema.layout.CellSpec
  *     tuple fields will be written to their associated column.
  */
 @ApiAudience.Framework
-@ApiStability.Experimental
+@ApiStability.Stable
 final class KijiSource private[express] (
     val tableAddress: String,
     val timeRange: TimeRange,
@@ -267,7 +267,9 @@ final class KijiSource private[express] (
  * Contains a private, inner class used by [[org.kiji.express.flow.KijiSource]] when working with
  * tests.
  */
-object KijiSource {
+@ApiAudience.Framework
+@ApiStability.Stable
+private[express] object KijiSource {
   /**
    * Convert scala columns definition into its corresponding java variety.
    *

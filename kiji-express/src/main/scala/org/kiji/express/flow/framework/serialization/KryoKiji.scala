@@ -25,10 +25,17 @@ import org.apache.avro.Schema
 import org.apache.avro.generic.GenericContainer
 import org.apache.avro.specific.SpecificRecord
 
+import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
+
 /**
  * Kryo specification that adds avro schema, generic record, and specific record serialization
  * support. Used with [[org.kiji.express.flow.KijiJob]].
  */
+@ApiAudience.Private
+@ApiStability.Experimental
+@Inheritance.Sealed
 class KryoKiji extends KryoHadoop {
   override def decorateKryo(kryo: Kryo) {
     super.decorateKryo(kryo)

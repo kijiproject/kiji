@@ -41,6 +41,7 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiAudience.Framework
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.ApiStability.Experimental
+import org.kiji.annotations.Inheritance
 import org.kiji.express.EntityId
 import org.kiji.express.flow.ColumnFamilyOutputSpec
 import org.kiji.express.flow.ColumnOutputSpec
@@ -217,6 +218,8 @@ private[express] class HFileKijiScheme(
  * sinks data. This is used in the secondary M/R job that takes intermediate HFile Key/Values
  * from a sequence files and outputs them to the KijiHFileOutputFormat ultimately going to HFiles.
  */
+@ApiAudience.Framework
+@ApiStability.Experimental
 private[express] final class SemiNullScheme extends HFileKijiScheme.HFileScheme {
   /**
    * Converts and writes a Cascading Tuple to a Kiji table. This method is called once
@@ -241,6 +244,9 @@ private[express] final class SemiNullScheme extends HFileKijiScheme.HFileScheme 
  * Context housing information necessary for the scheme to interact
  * with the Kiji table.
  */
+@ApiAudience.Framework
+@ApiStability.Experimental
+@Inheritance.Sealed
 private[express] case class HFileKijiSinkContext (
   kiji: Kiji,
   kijiUri: KijiURI,
@@ -258,6 +264,9 @@ private[express] case class HFileKijiSinkContext (
  * @param datum in the Kiji table cell.
  * @tparam T is the type of the datum in the cell.
  */
+@ApiAudience.Framework
+@ApiStability.Experimental
+@Inheritance.Sealed
 private[express] case class HFileCell private[express] (
   entity_id: EntityId,
   col_request: QualifiedColumnOutputSpec,

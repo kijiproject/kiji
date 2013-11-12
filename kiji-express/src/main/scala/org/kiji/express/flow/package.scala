@@ -28,8 +28,6 @@ import org.kiji.schema.KijiInvalidNameException
 import org.kiji.schema.filter.KijiColumnFilter
 import org.kiji.schema.filter.RegexQualifierColumnFilter
 
-//TODO: Update docs when we change qualifierSelector to be a symbol, not a string
-
 /**
  * Module providing the ability to write Scalding using data stored in Kiji tables.
  *

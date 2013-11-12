@@ -48,7 +48,7 @@ import org.kiji.schema.KijiInvalidNameException
  * ColumnOutputSpec's abstract methods (e.g., schema) with vals.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 @Inheritance.Sealed
 trait ColumnOutputSpec {
 
@@ -89,8 +89,8 @@ trait ColumnOutputSpec {
  * @param schemaSpec The schema specification with which to write values. By default uses
  *     [[org.kiji.express.flow.SchemaSpec.Writer]].
  */
-@ApiAudience.Private
-@ApiStability.Experimental
+@ApiAudience.Public
+@ApiStability.Stable
 @Inheritance.Sealed
 final case class QualifiedColumnOutputSpec(
     family: String,
@@ -105,7 +105,7 @@ final case class QualifiedColumnOutputSpec(
  * instances.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 @Inheritance.Sealed
 object QualifiedColumnOutputSpec {
   /**
@@ -213,7 +213,7 @@ object QualifiedColumnOutputSpec {
  *     [[org.kiji.express.flow.SchemaSpec.Writer]].
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 @Inheritance.Sealed
 final case class ColumnFamilyOutputSpec(
     family: String,
@@ -232,7 +232,7 @@ final case class ColumnFamilyOutputSpec(
  * instances.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 @Inheritance.Sealed
 object ColumnFamilyOutputSpec {
   /**

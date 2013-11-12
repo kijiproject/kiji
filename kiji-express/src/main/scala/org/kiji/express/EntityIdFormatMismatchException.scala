@@ -19,12 +19,19 @@
 
 package org.kiji.express
 
+import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
+
 /**
  * A runtime exception thrown when two EntityIds with different formats are compared.
  *
  * @param thisComponents components of one of the EntityIds that is mismatched.
  * @param thatComponents components of the other of the EntityIds that is mismatched.
  */
+@ApiAudience.Public
+@ApiStability.Stable
+@Inheritance.Sealed
 class EntityIdFormatMismatchException(thisComponents: Seq[Any],thatComponents: Seq[Any])
     extends RuntimeException("Mismatched Formats: %s and  %s do not match.".format(
         "Components: [%s]".format(thisComponents.map { _.getClass.getName }.mkString(",")),

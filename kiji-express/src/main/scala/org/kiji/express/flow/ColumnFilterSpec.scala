@@ -32,7 +32,7 @@ import org.kiji.schema.filter.RegexQualifierColumnFilter
  * Kiji and HBase column filters.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 @Inheritance.Sealed
 sealed trait ColumnFilterSpec {
   /** @return a KijiColumnFilter that corresponds to the Express column filter. */
@@ -45,7 +45,7 @@ sealed trait ColumnFilterSpec {
  * @param filters to combine with a logical "and" operation.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 @Inheritance.Sealed
 final case class AndFilterSpec(filters: Seq[ColumnFilterSpec])
     extends ColumnFilterSpec {
@@ -64,7 +64,7 @@ final case class AndFilterSpec(filters: Seq[ColumnFilterSpec])
  * @param filters to combine with a logical "or" operation.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 @Inheritance.Sealed
 final case class OrFilterSpec(filters: Seq[ColumnFilterSpec])
     extends ColumnFilterSpec {
@@ -86,7 +86,7 @@ final case class OrFilterSpec(filters: Seq[ColumnFilterSpec])
  * @param maximumIncluded determines if the upper bound is inclusive.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 @Inheritance.Sealed
 final case class ColumnRangeFilterSpec(
     minimum: Option[String] = None,
@@ -109,7 +109,7 @@ final case class ColumnRangeFilterSpec(
  * @param regex to match on.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 @Inheritance.Sealed
 final case class RegexQualifierFilterSpec(regex: String)
     extends ColumnFilterSpec {

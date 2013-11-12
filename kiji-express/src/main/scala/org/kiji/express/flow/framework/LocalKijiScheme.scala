@@ -45,12 +45,13 @@ import org.slf4j.LoggerFactory
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 import org.kiji.express.flow.ColumnInputSpec
 import org.kiji.express.flow.ColumnOutputSpec
 import org.kiji.express.flow.TimeRange
 import org.kiji.express.util.GenericCellSpecs
-import org.kiji.express.util.SpecificCellSpecs
 import org.kiji.express.util.Resources._
+import org.kiji.express.util.SpecificCellSpecs
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiColumnName
@@ -72,6 +73,9 @@ import org.kiji.schema.layout.KijiTableLayout
  * @param iterator that maintains the current row pointer.
  * @param tableUri of the kiji table.
  */
+@ApiAudience.Private
+@ApiStability.Experimental
+@Inheritance.Sealed
 private[express] case class InputContext(
     reader: KijiTableReader,
     scanner: KijiRowScanner,
@@ -86,6 +90,9 @@ private[express] case class InputContext(
  * @param tableUri of the Kiji table.
  * @param layout of the kiji table.
  */
+@ApiAudience.Private
+@ApiStability.Experimental
+@Inheritance.Sealed
 private[express] case class OutputContext(
     writer: KijiTableWriter,
     tableUri: KijiURI,

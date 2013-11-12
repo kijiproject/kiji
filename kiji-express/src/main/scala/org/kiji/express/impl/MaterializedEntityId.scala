@@ -33,7 +33,7 @@ import org.kiji.schema.EntityIdFactory
  *
  * @param components of an EntityId.
  */
-@ApiAudience.Public
+@ApiAudience.Private
 @ApiStability.Experimental
 @Inheritance.Sealed
 private[express] case class MaterializedEntityId(override val components: Seq[AnyRef])

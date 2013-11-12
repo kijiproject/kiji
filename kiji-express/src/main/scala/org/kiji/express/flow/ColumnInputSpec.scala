@@ -43,7 +43,7 @@ import org.kiji.schema.KijiInvalidNameException
  * abstract methods (e.g., `schema`) with `val`s.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 @Inheritance.Sealed
 sealed trait ColumnInputSpec {
   /**
@@ -97,7 +97,7 @@ sealed trait ColumnInputSpec {
  * Provides factory functions for creating [[org.kiji.express.flow.ColumnInputSpec]] instances.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 @Inheritance.Sealed
 object ColumnInputSpec {
   /**
@@ -190,7 +190,7 @@ object ColumnInputSpec {
  *     [[org.kiji.express.flow.SchemaSpec.Writer]].
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 @Inheritance.Sealed
 final case class QualifiedColumnInputSpec(
     family: String,
@@ -208,7 +208,7 @@ final case class QualifiedColumnInputSpec(
  * instances.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 @Inheritance.Sealed
 object QualifiedColumnInputSpec {
   /**
@@ -257,7 +257,7 @@ object QualifiedColumnInputSpec {
  *     [[org.kiji.express.flow.SchemaSpec.Writer]].
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 @Inheritance.Sealed
 final case class ColumnFamilyInputSpec(
     family: String,
@@ -277,7 +277,7 @@ final case class ColumnFamilyInputSpec(
  * instances.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 @Inheritance.Sealed
 object ColumnFamilyInputSpec {
   /**

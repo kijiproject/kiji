@@ -28,7 +28,7 @@ import org.kiji.annotations.Inheritance
  * requires exist.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 @Inheritance.Sealed
 final class InvalidKijiTapException(message: String)
     extends RuntimeException(message)

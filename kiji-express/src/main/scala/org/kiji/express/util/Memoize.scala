@@ -89,6 +89,9 @@ class Memoize[-T, +R](f: T => R) extends (T => R) {
 /**
  * Companion object for memoization wrapper that contains factory methods.
  */
+@ApiAudience.Private
+@ApiStability.Experimental
+@Inheritance.Sealed
 object Memoize {
   /**
    * Wraps a function with Memoize.

@@ -68,7 +68,7 @@ import org.kiji.annotations.ApiStability
  * }}}
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 object KijiOutput {
   /**
    * A factory method for instantiating [[org.kiji.express.flow.KijiSource]]s used as sinks. This

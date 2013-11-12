@@ -129,6 +129,9 @@ trait AvroTupleConversions {
  *           names of the Avro record type.  There must be only one result field.
  * @param m [[scala.reflect.Manifest]] of the target type.  Implicitly provided.
  */
+@ApiAudience.Private
+@ApiStability.Experimental
+@Inheritance.Sealed
 private[express] case class AvroSpecificTupleConverter[T](fs: Fields, m: Manifest[T])
     extends TupleConverter[T] {
 
@@ -182,6 +185,9 @@ private[express] case class AvroSpecificTupleConverter[T](fs: Fields, m: Manifes
  *
  * @param schemaLocker wrapping the schema of the target record
  */
+@ApiAudience.Private
+@ApiStability.Experimental
+@Inheritance.Sealed
 private[express] class AvroGenericTupleConverter(schemaLocker: KijiLocker[Schema])
     extends TupleConverter[GenericRecord] with TupleConversions {
 

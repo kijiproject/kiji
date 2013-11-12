@@ -21,8 +21,12 @@ package org.kiji.express.tool
 
 import java.io.File
 
-import org.kiji.mapreduce.util.Jars
 import org.apache.hadoop.hbase.HBaseConfiguration
+
+import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
+import org.kiji.mapreduce.util.Jars
 
 /**
  * Reads a colon-separated list of classpath entries and outputs comma-separated list of
@@ -45,6 +49,9 @@ import org.apache.hadoop.hbase.HBaseConfiguration
  * This tool accepts one command line argument: a string containing a colon-separated list of
  * classpath entries.
  */
+@ApiAudience.Public
+@ApiStability.Experimental
+@Inheritance.Sealed
 object TmpJarsTool {
 
   /**

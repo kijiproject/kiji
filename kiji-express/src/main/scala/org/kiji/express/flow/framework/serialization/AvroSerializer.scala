@@ -33,9 +33,17 @@ import org.apache.avro.specific.SpecificDatumReader
 import org.apache.avro.specific.SpecificDatumWriter
 import org.apache.avro.specific.SpecificRecord
 
+import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
+
 /**
  * Provides serialization for Avro schemas while using Kryo serialization.
  */
+@ApiAudience.Private
+@ApiStability.Experimental
+@Inheritance.Sealed
+// TODO (EXP-295): Should these maybe be Framework?
 class AvroSchemaSerializer
     extends Serializer[Schema] {
   setAcceptsNull(false)
@@ -63,6 +71,10 @@ class AvroSchemaSerializer
  * Provides serialization for Avro generic records while using Kryo serialization. Record schemas
  * are prepended to the encoded generic record data.
  */
+@ApiAudience.Private
+@ApiStability.Experimental
+@Inheritance.Sealed
+// TODO (EXP-295): Should these maybe be Framework?
 class AvroGenericSerializer
     extends Serializer[GenericContainer] {
   // TODO(EXP-269): Cache encoders per schema.

@@ -51,6 +51,8 @@ case class Cell[T] (
 /**
  * A factory for creating cells used in KijiExpress from cells used in the Kiji Java API.
  */
+@ApiAudience.Public
+@ApiStability.Stable
 object Cell {
   /**
    * Creates a new cell (for use in KijiExpress) from the contents of a cell produced by the Kiji

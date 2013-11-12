@@ -40,6 +40,9 @@ import org.apache.hadoop.mapred.lib.KeyFieldBasedComparator
 import org.apache.hadoop.mapred.lib.TotalOrderPartitioner
 import org.apache.hadoop.mapreduce.JobContext
 
+import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 import org.kiji.mapreduce.framework.HFileKeyValue
 import org.kiji.mapreduce.framework.HFileKeyValue.FastComparator
 import org.kiji.mapreduce.output.HFileMapReduceJobOutput
@@ -63,6 +66,9 @@ import org.kiji.schema.mapreduce.KijiConfKeys
  * </ol>
  *
  */
+@ApiAudience.Framework
+@ApiStability.Experimental
+@Inheritance.Sealed
 class HFileFlowStepStrategy extends FlowStepStrategy[JobConf] {
 
   override def apply(flow: Flow[JobConf],

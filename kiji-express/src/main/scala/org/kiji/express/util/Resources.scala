@@ -25,6 +25,7 @@ import org.apache.hadoop.conf.Configuration
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 import org.kiji.schema.util.ReferenceCountable
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiTable
@@ -48,6 +49,7 @@ object Resources {
    * @param msg is the message to include with the exception.
    * @param errors causing this exception.
    */
+  @Inheritance.Sealed
   final case class CompoundException(msg: String, errors: Seq[Exception]) extends Exception
 
   /**

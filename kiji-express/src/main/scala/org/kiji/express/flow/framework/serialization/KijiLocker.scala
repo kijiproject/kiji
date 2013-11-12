@@ -25,10 +25,18 @@ import com.twitter.chill.KryoBase
 import com.twitter.chill.KryoInjectionInstance
 import org.objenesis.strategy.StdInstantiatorStrategy
 
+import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
+
 /**
  * Provides a constructor function for a
  * [[org.kiji.express.flow.framework.serialization.KijiLocker]].
  */
+@ApiAudience.Private
+@ApiStability.Experimental
+@Inheritance.Sealed
+// TODO (EXP-295): Should these maybe be Framework?
 object KijiLocker {
   def apply[T <: AnyRef](t: T): KijiLocker[T] = new KijiLocker(t)
 }
@@ -37,6 +45,10 @@ object KijiLocker {
  * A clone of Chill's [[com.twitter.chill.MeatLocker]] with serialization provided by our custom
  * [[org.kiji.express.flow.framework.serialization.KryoKiji]].
  */
+@ApiAudience.Private
+@ApiStability.Experimental
+@Inheritance.Sealed
+// TODO (EXP-295): Should these maybe be Framework?
 class KijiLocker[T <: AnyRef](@transient private var t: T) extends java.io.Serializable {
 
   /**

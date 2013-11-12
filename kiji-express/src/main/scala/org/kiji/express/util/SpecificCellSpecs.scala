@@ -30,14 +30,19 @@ import scala.collection.JavaConverters.mapAsJavaMapConverter
 
 import org.apache.avro.specific.SpecificRecord
 
-import org.kiji.express.flow.{SchemaSpec, ColumnInputSpec}
-import SchemaSpec.Specific
+import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
 import org.kiji.express.flow.ColumnInputSpec
+import org.kiji.express.flow.SchemaSpec
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiTable
 import org.kiji.schema.layout.CellSpec
 import org.kiji.schema.layout.KijiTableLayout
 
+import SchemaSpec.Specific
+
+@ApiAudience.Framework
+@ApiStability.Experimental
 object SpecificCellSpecs {
   val CELLSPEC_OVERRIDE_CONF_KEY: String = "kiji.express.input.cellspec.overrides"
 

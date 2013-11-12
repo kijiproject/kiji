@@ -240,6 +240,8 @@ private[express] class KijiTap(
   }
 }
 
+@ApiAudience.Framework
+@ApiStability.Experimental
 object KijiTap {
   /**
    * Checks whether the instance, tables, and columns specified can be accessed.

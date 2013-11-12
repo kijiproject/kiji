@@ -49,7 +49,7 @@ import org.kiji.express.util.AvroGenericTupleConverter
  * @param pipe enriched with extra functionality.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 @Inheritance.Sealed
 class KijiPipe(private[express] val pipe: Pipe) extends TupleConversions {
   /**

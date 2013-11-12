@@ -38,6 +38,9 @@ import org.apache.hadoop.util.ToolRunner
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 import org.kiji.express.flow.KijiJob
 import org.kiji.express.util.Resources.doAndClose
 
@@ -223,6 +226,9 @@ class ScriptRunner extends Tool {
  * The companion object for ScriptRunner, which compiles and runs KijiExpress scripts. This contains
  * the main method, which is the program entry point.
  */
+@ApiAudience.Framework
+@ApiStability.Experimental
+@Inheritance.Sealed
 object ScriptRunner {
   private val logger: Logger = LoggerFactory.getLogger(classOf[ScriptRunner])
 
