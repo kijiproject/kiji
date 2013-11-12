@@ -347,6 +347,14 @@
           <configuration>
             <skip>${skipVerify}</skip>
             <configLocation>src/main/checkstyle/checkstyle.xml</configLocation>
+            <!-- Configuring suppressions.xml location here does not work for projects without a
+                 build-resources module. Instead, include the following lines in the checkstyle.xml
+                 file to enable proper suppression.
+
+                 <module name="SuppressionFilter">
+                   <property name="file" value="src/main/checkstyle/suppressions.xml"/>
+                 </module>
+             -->
             <suppressionsLocation>src/main/checkstyle/suppressions.xml</suppressionsLocation>
             <headerLocation>src/main/checkstyle/header-file.txt</headerLocation>
             <includeTestSourceDirectory>true</includeTestSourceDirectory>
