@@ -292,10 +292,6 @@ function jar_usage() {
   echo "       express job <jarFile> <jobClass> [args...]"
 }
 
-function script_usage() {
-  echo "Usage: express script <scriptFile> [args...]"
-}
-
 function jar_command() {
   if [[ ${#} > 0 && ${1} == "--help" ]]; then
     jar_usage
@@ -324,27 +320,6 @@ function jar_command() {
   express_cp="${user_target}:${express_cp}"
 }
 
-function script_command() {
-  if [[ ${#} > 0 && ${1} == "--help" ]]; then
-    script_usage
-    echo
-    exit 0
-  fi
-  user_target=${1}
-  shift
-  COMMAND_ARGS=${@}
-  if [ -z "${user_target}" ]; then
-    echo "Error: no script file specified."
-    script_usage
-    exit 1
-  fi
-  if [ ! -f "${user_target}" ]; then
-    echo "Error: cannot find script file ${user_target}"
-    script_usage
-    exit 1
-  fi
-}
-
 function print_tool_usage() {
   echo 'The express script can run programs written using KijiExpress.'
   echo
@@ -357,7 +332,6 @@ function print_tool_usage() {
   echo '  help          - Displays this help message. Use --verbose for more information.'
   echo '  shell         - Starts an interactive shell for running KijiExpress code.'
   echo '  schema-shell  - Starts KijiSchema Shell loaded with KijiExpress extensions.'
-  echo '  script        - Runs a raw KijiExpress script. This operation is deprecated and will be' \
     'removed in a future release.'
   echo '  job           - Runs a compiled KijiExpress job.'
   echo '  jar           - Runs an arbitrary Scala or Java program.'
@@ -400,17 +374,6 @@ case ${command} in
     extract_classpath "${@}"
     echo "${express_cp}"
     exit 0
-    ;;
-
-  script)
-    shift  # pop off the command
-    extract_classpath "${@}"
-    script_command ${COMMAND_ARGS}
-    if [[ "${COMMAND_ARGS}" != *--hdfs* ]] && [[ "${COMMAND_ARGS}" != *--local* ]]; then
-      # Default run mode is local.
-      run_mode_flag="--local"
-    fi
-    scalding_tool="org.kiji.express.flow.tool.ScriptRunner"
     ;;
 
   job)

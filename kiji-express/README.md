@@ -9,40 +9,11 @@ and other data stores.
 ## Getting Started ##
 
 There are a couple different ways to get started with KijiExpress.  The easiest way is running a
-script using the uncompiled scripts runner.  You can also run KijiExpress on compiled jobs, or on
+script using KijiExpress shell.  You can also run KijiExpress on compiled jobs, or on
 arbitrary jar files.
 
 You can run KijiExpress in either local mode or HDFS mode.  Local mode uses Scalding's local mode
 and runs the job locally on your machine.  In HDFS mode, the job runs on a cluster.
-
-
-### Running Uncompiled Scripts ###
-
-Write a script:
-
-    // This is a KijiExpress wordcount script!
-    import org.kiji.express.flow.DSL._
-
-    // Read from the "columnfamily:inputqualifier" column of your Kiji table
-    KijiInput("kiji://your/kiji/uri", "columnfamily:inputqualifier" -> 'word)
-        // Group by the count of each word
-        .groupBy('word) { words => words.size('count) }
-        // Write the counts out to an output file
-        .write(Tsv("outputFile"))
-
-To run a script, use the command:
-
-    express script /path/to/scriptfile
-
-or, to run it in hdfs mode:
-
-    express script /path/to/scriptfile --hdfs
-
-
-In addition to the KijiInput and KijiOutput functions provided in our DSL (see the scaladocs of
-the DSL object for more about reading from and writing to Kiji tables), you can use any of
-[Scalding's provided sources](https://github.com/twitter/scalding/wiki/Scalding-Sources), which
-includes useful sources that can read from and write to TSV, CSV, and other file formats.
 
 
 ### Running Compiled Jobs ###
