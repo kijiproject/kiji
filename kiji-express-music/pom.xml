@@ -23,9 +23,9 @@
   </licenses>
 
   <properties>
-    <kiji.framework.version>1.2.6-SNAPSHOT</kiji.framework.version>
-    <express.version>0.12.0-SNAPSHOT</express.version>
-    <modeling.version>0.2.0-SNAPSHOT</modeling.version>
+    <kiji.framework.version>1.2.6</kiji.framework.version>
+    <express.version>0.12.0</express.version>
+    <modeling.version>0.2.0</modeling.version>
     <scalatest.version>2.0.M5b</scalatest.version>
   </properties>
 
