@@ -147,7 +147,7 @@ object AggregationFn {
  * {{{
  * class MyEvaluator extends Evaluator {
  *   override val distanceFn = DistanceFn(('c1, 'c2) -> 'count) {
- *     columns: (KijiSlice[Double], KijiSlice[Double]) => {
+ *     columns: (Seq[Cell[Double]], Seq[Cell[Double]]) => {
  *       abs(columns._1.getFirstValue - columns._2.getFirstValue)
  *     }
  *   }

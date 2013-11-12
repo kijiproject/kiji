@@ -54,28 +54,28 @@ class SelectorExtractorSuite extends FunSuite {
     assert(Fields.RESULTS === sliceExtractor.extractFn.fields._2)
   }
 
-  test("FirstValueExtractor should select the first value of a KijiSlice") {
+  test("FirstValueExtractor should select the first value of a sequence of cells") {
     assert(Tuple1("bar1") === firstValueExtractor.extractFn.fn(Tuple1(slice1)))
   }
 
-  test("FirstValueExtractor should select the first values of a tuple of KijiSlices") {
+  test("FirstValueExtractor should select the first values of a tuple of sequences of cells") {
     assert(("bar1", "bar2") === firstValueExtractor.extractFn.fn((slice1, slice2)))
   }
 
-  test("LastValueExtractor should select the last value of a KijiSlice") {
+  test("LastValueExtractor should select the last value of a sequence of cells") {
     assert(Tuple1("foo1") === lastValueExtractor.extractFn.fn(Tuple1(slice1)))
   }
 
-  test("LastValueExtractor should select the last values of a tuple of KijiSlices") {
+  test("LastValueExtractor should select the last values of a tuple of sequences of cells") {
     assert(("foo1", "foo2") === lastValueExtractor.extractFn.fn((slice1, slice2)))
   }
 
-  test("SliceExtractor should select the values in a KijiSlice") {
+  test("SliceExtractor should select the values in a sequence of cells") {
     val expected = Tuple1(Seq("bar1", "baz1", "foo1"))
     assert(expected === sliceExtractor.extractFn.fn(Tuple1(slice1)))
   }
 
-  test("SliceExtractor should select the values in a tuple of KijiSlices") {
+  test("SliceExtractor should select the values in a tuple of sequences of cells") {
     val expected = (Seq("bar1", "baz1", "foo1"), Seq("bar2", "baz2", "foo2"))
     assert(expected === sliceExtractor.extractFn.fn((slice1, slice2)))
   }

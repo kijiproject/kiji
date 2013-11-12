@@ -44,7 +44,7 @@ import org.kiji.modeling.impl.KeyValueStores
  *     override def prepare(input: Source, output: Source): Boolean = {
  *       new PrepareJob {
  *         input("inputname")
- *             .map('inputField -> 'intermediateField) { inputColumn: KijiSlice[String] =>
+ *             .map('inputField -> 'intermediateField) { inputColumn: Seq[Cell[String]] =>
  *               inputColumn.getFirstValue
  *             }
  *             .groupBy('intermediateField) { _.count('count) }

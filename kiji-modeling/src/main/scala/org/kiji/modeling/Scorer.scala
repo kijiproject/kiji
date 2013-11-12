@@ -54,7 +54,7 @@ final case class ScoreFn[I, O] (
  * For example:
  * {{{
  * class MyScorer extends Scorer {
- *   override def scoreFn = score('textLine -> 'count) { textLine: KijiSlice[String] =>
+ *   override def scoreFn = score('textLine -> 'count) { textLine: Seq[Cell[String]] =>
  *     textLine.getFirstValue.split("""\s+""").size
  *   }
  * }
