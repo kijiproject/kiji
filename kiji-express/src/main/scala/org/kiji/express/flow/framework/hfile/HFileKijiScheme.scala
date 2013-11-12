@@ -42,9 +42,9 @@ import org.kiji.annotations.ApiAudience.Framework
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.ApiStability.Experimental
 import org.kiji.express.EntityId
-import org.kiji.express.flow.ColumnFamilyRequestOutput
-import org.kiji.express.flow.ColumnRequestOutput
-import org.kiji.express.flow.QualifiedColumnRequestOutput
+import org.kiji.express.flow.ColumnFamilyOutputSpec
+import org.kiji.express.flow.ColumnOutputSpec
+import org.kiji.express.flow.QualifiedColumnOutputSpec
 import org.kiji.express.flow.TimeRange
 import org.kiji.express.flow.framework.KijiScheme
 import org.kiji.express.flow.framework.KijiSourceContext
@@ -94,7 +94,7 @@ private[express] class HFileKijiScheme(
   private[express] val timeRange: TimeRange,
   private[express] val timestampField: Option[Symbol],
   private[express] val loggingInterval: Long,
-  private[express] val columns: Map[String, ColumnRequestOutput])
+  private[express] val columns: Map[String, ColumnOutputSpec])
     extends HFileKijiScheme.HFileScheme {
 
   import KijiScheme._
@@ -260,7 +260,7 @@ private[express] case class HFileKijiSinkContext (
  */
 private[express] case class HFileCell private[express] (
   entity_id: EntityId,
-  col_request: QualifiedColumnRequestOutput,
+  col_request: QualifiedColumnOutputSpec,
   timestamp: Long,
   datum: AnyRef)
 
@@ -270,7 +270,7 @@ object HFileKijiScheme {
 
   private[express] def outputCells(output: TupleEntry,
                                    timestampField: Option[Symbol],
-                                   columns: Map[String, ColumnRequestOutput])(
+                                   columns: Map[String, ColumnOutputSpec])(
                                      cellHandler: HFileCell => Unit) {
 
     // Get a timestamp to write the values to, if it was specified by the user.
@@ -287,11 +287,11 @@ object HFileKijiScheme {
       val (fieldName, colRequest) = kv
       val colValue = output.getObject(fieldName)
       val newColRequest = colRequest match {
-        case cf @ ColumnFamilyRequestOutput(family, qualField, schemaId) => {
+        case cf @ ColumnFamilyOutputSpec(family, qualField, schemaId) => {
           val qualifier = output.getString(qualField.name)
-          QualifiedColumnRequestOutput(family, qualifier)
+          QualifiedColumnOutputSpec(family, qualifier)
         }
-        case qc @ QualifiedColumnRequestOutput(_, _, _) => qc
+        case qc @ QualifiedColumnOutputSpec(_, _, _) => qc
       }
       val cell = HFileCell(entityId, newColRequest, timestamp, colValue)
       cellHandler(cell)

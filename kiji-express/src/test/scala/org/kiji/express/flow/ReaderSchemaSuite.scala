@@ -84,8 +84,8 @@ class ReaderSchemaSuite extends KijiClientTest with KijiSuite {
 
     val outputSchema = overrideSchema.getOrElse(schemaSpec)
 
-    val inputCol = QualifiedColumnRequestInput(family, column, schemaSpec = schemaSpec)
-    val outputCol = QualifiedColumnRequestOutput(family, column, outputSchema)
+    val inputCol = QualifiedColumnInputSpec(family, column, schemaSpec = schemaSpec)
+    val outputCol = QualifiedColumnOutputSpec(family, column, outputSchema)
 
     val args = Args("--hdfs")
     Mode.mode = Mode(args, conf)
@@ -228,8 +228,8 @@ class ReaderSchemaSuite extends KijiClientTest with KijiSuite {
 // Must be its own top-level class for mystical serialization reasons
 class ReadWriteJob[T](
     uri: String,
-    input: ColumnRequestInput,
-    output: ColumnRequestOutput,
+    input: ColumnInputSpec,
+    output: ColumnOutputSpec,
     writeEid: String,
     args: Args
 ) extends KijiJob(args) {

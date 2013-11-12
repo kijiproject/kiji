@@ -334,7 +334,7 @@ class KijiSourceSuite
 
     // Build test job.
     val source =
-        KijiInput(uri, Map((ColumnRequestInput("family:column1", maxVersions=2) -> 'words)))
+        KijiInput(uri, Map((ColumnInputSpec("family:column1", maxVersions=2) -> 'words)))
     JobTest(new VersionsJob(source)(_))
         .arg("output", "outputFile")
         .source(source, versionCountInput(uri))
@@ -395,7 +395,7 @@ class KijiSourceSuite
               KijiOutput(
                   tableUri = args("output"),
                   columns = Map(
-                      'fullname -> QualifiedColumnRequestOutput(
+                      'fullname -> QualifiedColumnOutputSpec(
                           family = "info",
                           qualifier = "fullname",
                           schemaSpec = SchemaSpec.Specific(classOf[TestRecord])
@@ -447,7 +447,7 @@ class KijiSourceSuite
             KijiOutput(
                 uri,
                 Map(
-                    'fullname -> QualifiedColumnRequestOutput(
+                    'fullname -> QualifiedColumnOutputSpec(
                         family = "info",
                         qualifier = "fullname",
                         schemaSpec = SchemaSpec.Specific(classOf[TestRecord])
@@ -492,7 +492,7 @@ class KijiSourceSuite
     // Build test job.
     val testSource = KijiInput(
         uri,
-        Map(ColumnRequestInput("family:column1", maxVersions=all) -> 'word))
+        Map(ColumnInputSpec("family:column1", maxVersions=all) -> 'word))
     JobTest(new AvroToScalaChecker(testSource)(_))
       .arg("input", uri)
       .arg("output", "outputFile")
@@ -526,7 +526,7 @@ class KijiSourceSuite
     val jobTest = JobTest(new GenericAvroReadJob(_))
         .arg("input", uri)
         .arg("output", "outputFile")
-        .source(KijiInput(uri, Map (ColumnRequestInput("family:column3") -> 'records)),
+        .source(KijiInput(uri, Map (ColumnInputSpec("family:column3") -> 'records)),
             genericReadInput(uri))
         .sink(Tsv("outputFile"))(validateGenericRead)
 
@@ -564,9 +564,9 @@ class KijiSourceSuite
         tableAddress = uri,
         timeRange = All,
         timestampField = None,
-        inputColumns = Map('records -> ColumnRequestInput(
+        inputColumns = Map('records -> ColumnInputSpec(
           "family:column3", schemaSpec = Specific(classOf[HashSpec]))),
-        outputColumns = Map('records -> QualifiedColumnRequestOutput("family:column3"))
+        outputColumns = Map('records -> QualifiedColumnOutputSpec("family:column3"))
     )
 
     val jobTest = JobTest(new SpecificAvroReadJob(_))
@@ -651,7 +651,7 @@ class KijiSourceSuite
         .arg("table", uri)
         .source(TextLine("inputFile"), mapTypeInput)
         .sink(KijiOutput(uri, Map('resultCount ->
-            new ColumnFamilyRequestOutput("searches", 'terms))))(validateMapWrite)
+            new ColumnFamilyOutputSpec("searches", 'terms))))(validateMapWrite)
 
     // Run the test.
     jobTest.run.finish
@@ -903,9 +903,9 @@ object KijiSourceSuite {
         tableAddress = args("input"),
         timeRange = All,
         timestampField = None,
-        inputColumns = Map('records -> ColumnRequestInput(
+        inputColumns = Map('records -> ColumnInputSpec(
             "family:column3", schemaSpec = Specific(classOf[HashSpec]))),
-        outputColumns = Map('records -> QualifiedColumnRequestOutput("family:column3")))
+        outputColumns = Map('records -> QualifiedColumnOutputSpec("family:column3")))
     ksource
         .map('records -> 'hashSizeField) { slice: Seq[Cell[HashSpec]] =>
           val Cell(_, _, _, record) = slice.head
@@ -956,7 +956,7 @@ object KijiSourceSuite {
         }
         // Write the results to the "family:column1" column of a Kiji table.
         .write(KijiOutput(args("table"), Map('resultCount ->
-          new ColumnFamilyRequestOutput("searches", 'terms))))
+          new ColumnFamilyOutputSpec("searches", 'terms))))
   }
 
   /**

@@ -45,13 +45,13 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.express.Cell
 import org.kiji.express.EntityId
-import org.kiji.express.flow.ColumnFamilyRequestInput
-import org.kiji.express.flow.ColumnFamilyRequestOutput
-import org.kiji.express.flow.ColumnRequestInput
-import org.kiji.express.flow.ColumnRequestOutput
+import org.kiji.express.flow.ColumnFamilyInputSpec
+import org.kiji.express.flow.ColumnFamilyOutputSpec
+import org.kiji.express.flow.ColumnInputSpec
+import org.kiji.express.flow.ColumnOutputSpec
 import org.kiji.express.flow.PagingSpec
-import org.kiji.express.flow.QualifiedColumnRequestInput
-import org.kiji.express.flow.QualifiedColumnRequestOutput
+import org.kiji.express.flow.QualifiedColumnInputSpec
+import org.kiji.express.flow.QualifiedColumnOutputSpec
 import org.kiji.express.flow.TimeRange
 import org.kiji.express.flow.framework.serialization.KijiLocker
 import org.kiji.express.util.AvroUtil
@@ -101,13 +101,13 @@ import org.kiji.schema.layout.KijiTableLayout
 class KijiScheme(
     private[express] val timeRange: TimeRange,
     private[express] val timestampField: Option[Symbol],
-    @transient private[express] val inputColumns: Map[String, ColumnRequestInput] = Map(),
-    @transient private[express] val outputColumns: Map[String, ColumnRequestOutput] = Map())
+    @transient private[express] val inputColumns: Map[String, ColumnInputSpec] = Map(),
+    @transient private[express] val outputColumns: Map[String, ColumnOutputSpec] = Map())
     extends Scheme[JobConf, RecordReader[KijiKey, KijiValue], OutputCollector[_, _],
         KijiSourceContext, KijiSinkContext] {
   import KijiScheme._
 
-  // ColumnRequestInput and ColumnRequestOutput objects cannot be correctly serialized via
+  // ColumnInputSpec and ColumnOutputSpec objects cannot be correctly serialized via
   // java.io.Serializable.  Chiefly, Avro objects including Schema and all of the Generic types
   // are not Serializable.  By making the inputColumns and outputColumns transient and wrapping
   // them in KijiLocker objects (which handle serialization correctly),
@@ -359,7 +359,7 @@ object KijiScheme {
    * @return a tuple containing the values contained in the specified row.
    */
   private[express] def rowToTuple(
-      columns: Map[String, ColumnRequestInput],
+      columns: Map[String, ColumnInputSpec],
       fields: Fields,
       timestampField: Option[Symbol],
       row: KijiRowData,
@@ -372,7 +372,7 @@ object KijiScheme {
     val entityId: EntityId = EntityId.fromJavaEntityId(row.getEntityId)
     result.add(entityId)
 
-    def rowToTupleColumnFamily(cf: ColumnFamilyRequestInput): Unit = {
+    def rowToTupleColumnFamily(cf: ColumnFamilyInputSpec): Unit = {
       if (row.containsColumn(cf.family)) {
         cf.paging match {
           case PagingSpec.Off => {
@@ -404,7 +404,7 @@ object KijiScheme {
       }
     }
 
-    def rowToTupleQualifiedColumn(qc: QualifiedColumnRequestInput): Unit = {
+    def rowToTupleQualifiedColumn(qc: QualifiedColumnInputSpec): Unit = {
       if (row.containsColumn(qc.family, qc.qualifier)) {
         qc.paging match {
           case PagingSpec.Off => {
@@ -446,8 +446,8 @@ object KijiScheme {
         .map { field => columns(field.toString) }
         // Build the tuple, by adding each requested value into result.
         .foreach {
-          case cf: ColumnFamilyRequestInput => rowToTupleColumnFamily(cf)
-          case qc: QualifiedColumnRequestInput => rowToTupleQualifiedColumn(qc)
+          case cf: ColumnFamilyInputSpec => rowToTupleColumnFamily(cf)
+          case qc: QualifiedColumnInputSpec => rowToTupleQualifiedColumn(qc)
         }
 
     return result
@@ -470,7 +470,7 @@ object KijiScheme {
    * @param configuration identifying the cluster to use when building EntityIds.
    */
   private[express] def putTuple(
-      columns: Map[String, ColumnRequestOutput],
+      columns: Map[String, ColumnOutputSpec],
       tableUri: KijiURI,
       kiji: Kiji,
       timestampField: Option[Symbol],
@@ -494,11 +494,11 @@ object KijiScheme {
     columns.keys.iterator
         .foreach { field =>
           val value = output.getObject(field)
-          val col: ColumnRequestOutput = columns(field)
+          val col: ColumnOutputSpec = columns(field)
 
           val qualifier = col match {
-            case qc: QualifiedColumnRequestOutput => qc.qualifier
-            case cf: ColumnFamilyRequestOutput => output.getString(cf.qualifierSelector.name)
+            case qc: QualifiedColumnOutputSpec => qc.qualifier
+            case cf: ColumnFamilyOutputSpec => output.getString(cf.qualifierSelector.name)
           }
 
           writer.put(entityId, col.family, qualifier, timestamp, col.encode(value))
@@ -531,11 +531,11 @@ object KijiScheme {
    */
   private[express] def buildRequest(
       timeRange: TimeRange,
-      columns: Iterable[ColumnRequestInput]
+      columns: Iterable[ColumnInputSpec]
   ): KijiDataRequest = {
     def addColumn(
         builder: KijiDataRequestBuilder,
-        column: ColumnRequestInput
+        column: ColumnInputSpec
     ): KijiDataRequestBuilder.ColumnsDef = {
       val kijiFilter: KijiColumnFilter = column
           .filter
@@ -594,7 +594,7 @@ object KijiScheme {
    * @return a collection of fields created from the parameters.
    */
   private[express] def buildSinkFields(
-      columns: Map[String, ColumnRequestOutput],
+      columns: Map[String, ColumnOutputSpec],
       timestampField: Option[Symbol]
   ): Fields = {
     toField(Set(entityIdField)
@@ -610,10 +610,10 @@ object KijiScheme {
    * @return the names of fields that are qualifier selectors.
    */
   private[express] def extractQualifierSelectors(
-      columns: Map[String, ColumnRequestOutput]
+      columns: Map[String, ColumnOutputSpec]
   ): Iterator[String] = {
     columns.valuesIterator.collect {
-      case x: ColumnFamilyRequestOutput => x.qualifierSelector.name
+      case x: ColumnFamilyOutputSpec => x.qualifierSelector.name
     }
   }
 }

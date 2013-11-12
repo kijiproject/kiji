@@ -30,9 +30,9 @@ import scala.collection.JavaConverters.mapAsJavaMapConverter
 
 import org.apache.avro.specific.SpecificRecord
 
-import org.kiji.express.flow.{SchemaSpec, ColumnRequestInput}
+import org.kiji.express.flow.{SchemaSpec, ColumnInputSpec}
 import SchemaSpec.Specific
-import org.kiji.express.flow.ColumnRequestInput
+import org.kiji.express.flow.ColumnInputSpec
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiTable
 import org.kiji.schema.layout.CellSpec
@@ -42,17 +42,17 @@ object SpecificCellSpecs {
   val CELLSPEC_OVERRIDE_CONF_KEY: String = "kiji.express.input.cellspec.overrides"
 
   /**
-   * Convert a map from field names to column requests into a serialized map from column names to
+   * Convert a map from field names to column input spec into a serialized map from column names to
    * specific AvroRecord class names to use as overriding reader schemas when reading from those
    * columns.
    *
-   * @param columns a mapping from field name to column request. The column name and overriding
-   *     AvroRecord class name from each column request will be used to populate the output
+   * @param columns a mapping from field name to column input spec. The column name and overriding
+   *     AvroRecord class name from each column input spec will be used to populate the output
    *     serialized map.
    * @return a serialized form of a map from column name to AvroRecord class name.
    */
   def serializeOverrides(
-      columns: Map[String, ColumnRequestInput]
+      columns: Map[String, ColumnInputSpec]
   ): String = {
     val serializableOverrides = collectOverrides(columns)
         .map { entry: (KijiColumnName, Class[_ <: SpecificRecord]) =>
@@ -105,31 +105,31 @@ object SpecificCellSpecs {
   }
 
   /**
-   * Build overridden CellSpecs for a given set of ColumnRequests.
+   * Build overridden CellSpecs for a given set of ColumnInputSpec.
    *
    * @param layout is the layout of the KijiTable from which base CellSpecs are drawn.
-   * @param columns are the ColumnRequests from which to build overriding CellSpecs.
+   * @param columns are the ColumnInputSpecs from which to build overriding CellSpecs.
    * @return a mapping from KijiColumnName to overriding CellSpec for that column.
    */
   def buildCellSpecs(
       layout: KijiTableLayout,
-      columns: Map[String, ColumnRequestInput]
+      columns: Map[String, ColumnInputSpec]
   ): Map[KijiColumnName, CellSpec] = {
     return innerBuildCellSpecs(layout, collectOverrides(columns))
   }
 
   /**
    * Collects specific AvroRecord classes to use as overriding reader schemas. Input map keys are
-   * ignored.  Output map keys will be column names retrieved from input ColumnRequest and output
+   * ignored.  Output map keys will be column names retrieved from the ColumnInputSpec and output
    * map values will be AvroRecord classes to use as overriding reader schemas for associated
    * columns.
    *
-   * @param columns a mapping from field name to ColumnRequestInput.
+   * @param columns a mapping from field name to ColumnInputSpec.
    * @return a mapping from column name to the AvroRecord class to use as the reader schema when
    *     reading values from that column.
    */
   private def collectOverrides(
-      columns: Map[String, ColumnRequestInput]
+      columns: Map[String, ColumnInputSpec]
   ): Map[KijiColumnName, Class[_ <: SpecificRecord]] = {
     columns.values
         // Need only those columns that have specific Avro classes defined

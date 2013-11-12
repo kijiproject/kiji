@@ -27,9 +27,6 @@ import org.kiji.schema.filter.KijiColumnFilter
 import org.kiji.schema.filter.KijiColumnRangeFilter
 import org.kiji.schema.filter.RegexQualifierColumnFilter
 
-// TODO (EXP-262): Make names for these filters more distinguishable from the names for the
-// equivalent KijiSchema filters.  Will use "Spec" suffix as naming convention.
-
 /**
  * An extendable trait used for column filters in Express, which correspond to
  * Kiji and HBase column filters.
@@ -37,7 +34,7 @@ import org.kiji.schema.filter.RegexQualifierColumnFilter
 @ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Sealed
-sealed trait ExpressColumnFilter {
+sealed trait ColumnFilterSpec {
   /** @return a KijiColumnFilter that corresponds to the Express column filter. */
   def toKijiColumnFilter: KijiColumnFilter
 }
@@ -50,11 +47,11 @@ sealed trait ExpressColumnFilter {
 @ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Sealed
-final case class AndFilter(filters: Seq[ExpressColumnFilter])
-    extends ExpressColumnFilter {
+final case class AndFilterSpec(filters: Seq[ColumnFilterSpec])
+    extends ColumnFilterSpec {
   override def toKijiColumnFilter: KijiColumnFilter = {
     val schemaFilters = filters
-        .map { filter: ExpressColumnFilter => filter.toKijiColumnFilter }
+        .map { filter: ColumnFilterSpec => filter.toKijiColumnFilter }
         .toArray
 
     Filters.and(schemaFilters: _*)
@@ -69,11 +66,11 @@ final case class AndFilter(filters: Seq[ExpressColumnFilter])
 @ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Sealed
-final case class OrFilter(filters: Seq[ExpressColumnFilter])
-    extends ExpressColumnFilter {
+final case class OrFilterSpec(filters: Seq[ColumnFilterSpec])
+    extends ColumnFilterSpec {
   override def toKijiColumnFilter: KijiColumnFilter = {
     val orParams = filters
-        .map { filter: ExpressColumnFilter => filter.toKijiColumnFilter }
+        .map { filter: ColumnFilterSpec => filter.toKijiColumnFilter }
         .toArray
 
     Filters.or(orParams: _*)
@@ -91,12 +88,12 @@ final case class OrFilter(filters: Seq[ExpressColumnFilter])
 @ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Sealed
-final case class ColumnRangeFilter(
+final case class ColumnRangeFilterSpec(
     minimum: Option[String] = None,
     maximum: Option[String] = None,
     minimumIncluded: Boolean = true,
     maximumIncluded: Boolean = false)
-    extends ExpressColumnFilter {
+    extends ColumnFilterSpec {
   override def toKijiColumnFilter: KijiColumnFilter = {
     new KijiColumnRangeFilter(
         minimum.getOrElse { null },
@@ -114,7 +111,7 @@ final case class ColumnRangeFilter(
 @ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Sealed
-final case class RegexQualifierFilter(regex: String)
-    extends ExpressColumnFilter {
+final case class RegexQualifierFilterSpec(regex: String)
+    extends ColumnFilterSpec {
   override def toKijiColumnFilter: KijiColumnFilter = new RegexQualifierColumnFilter(regex)
 }

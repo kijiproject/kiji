@@ -113,7 +113,7 @@ class KijiJobSuite extends KijiSuite {
         .source(Tsv("inputFile", fields = new Fields("l", "s")), rawInputs)
         .sink(KijiOutput(uri,
             Map('record ->
-                QualifiedColumnRequestOutput("family", "simple", classOf[SimpleRecord]))))(
+                QualifiedColumnOutputSpec("family", "simple", classOf[SimpleRecord]))))(
                     validatePacking)
 
     // Run in local mode.
@@ -132,7 +132,7 @@ class KijiJobSuite extends KijiSuite {
         .arg("input", uri)
         .arg("output", "outputFile")
         .source(KijiInput(uri,
-            Map(QualifiedColumnRequestInput("family", "simple", SimpleRecord.getClassSchema)
+            Map(QualifiedColumnInputSpec("family", "simple", SimpleRecord.getClassSchema)
                 -> 'slice)), input)
         .sink(Tsv("outputFile"))(validateUnpacking)
 
@@ -153,7 +153,7 @@ class KijiJobSuite extends KijiSuite {
         .arg("input", uri)
         .arg("output", "outputFile")
         .source(KijiInput(uri,
-      Map(QualifiedColumnRequestInput("family", "simple", classOf[SimpleRecord])
+      Map(QualifiedColumnInputSpec("family", "simple", classOf[SimpleRecord])
           -> 'slice)), input)
         .sink(Tsv("outputFile"))(validateUnpacking)
 
@@ -256,12 +256,12 @@ class PackSpecificRecordJob(args: Args) extends KijiJob(args) {
       .packTo[SimpleRecord](('l, 's) -> 'record)
       .insert('entityId, EntityId("foo"))
       .write(KijiOutput(args("uri"),
-          Map('record -> QualifiedColumnRequestOutput("family", "simple", classOf[SimpleRecord]))))
+          Map('record -> QualifiedColumnOutputSpec("family", "simple", classOf[SimpleRecord]))))
 }
 
 class UnpackGenericRecordJob(args: Args) extends KijiJob(args) {
   KijiInput(args("input"),
-      Map(QualifiedColumnRequestInput("family", "simple", SimpleRecord.getClassSchema) -> 'slice))
+      Map(QualifiedColumnInputSpec("family", "simple", SimpleRecord.getClassSchema) -> 'slice))
       .mapTo('slice -> 'record) { slice: Seq[Cell[GenericRecord]] => slice.head.datum }
       .unpackTo[GenericRecord]('record -> ('l, 's, 'o))
       .write(Tsv(args("output")))
@@ -269,7 +269,7 @@ class UnpackGenericRecordJob(args: Args) extends KijiJob(args) {
 
 class UnpackSpecificRecordJob(args: Args) extends KijiJob(args) {
   KijiInput(args("input"),
-      Map(QualifiedColumnRequestInput("family", "simple", classOf[SimpleRecord]) -> 'slice))
+      Map(QualifiedColumnInputSpec("family", "simple", classOf[SimpleRecord]) -> 'slice))
       .map('slice -> 'record) { slice: Seq[Cell[SimpleRecord]] => slice.head.datum }
       .unpackTo[SimpleRecord]('record -> ('l, 's, 'o))
       .write(Tsv(args("output")))

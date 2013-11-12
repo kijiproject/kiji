@@ -45,8 +45,8 @@ import org.slf4j.LoggerFactory
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.express.flow.ColumnRequestInput
-import org.kiji.express.flow.ColumnRequestOutput
+import org.kiji.express.flow.ColumnInputSpec
+import org.kiji.express.flow.ColumnOutputSpec
 import org.kiji.express.flow.TimeRange
 import org.kiji.express.util.GenericCellSpecs
 import org.kiji.express.util.SpecificCellSpecs
@@ -131,8 +131,8 @@ private[express] case class OutputContext(
 private[express] class LocalKijiScheme(
     private[express] val timeRange: TimeRange,
     private[express] val timestampField: Option[Symbol],
-    private[express] val icolumns: Map[String, ColumnRequestInput] = Map(),
-    private[express] val ocolumns: Map[String, ColumnRequestOutput] = Map())
+    private[express] val icolumns: Map[String, ColumnInputSpec] = Map(),
+    private[express] val ocolumns: Map[String, ColumnOutputSpec] = Map())
     extends Scheme[Properties, InputStream, OutputStream, InputContext, OutputContext] {
   private val logger: Logger = LoggerFactory.getLogger(classOf[LocalKijiScheme])
 

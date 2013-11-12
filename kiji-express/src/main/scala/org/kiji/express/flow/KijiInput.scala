@@ -43,13 +43,13 @@ import org.kiji.annotations.ApiStability
  *   KijiInput(
  *       tableUri = "kiji://localhost:2181/default/mytable",
  *       columns = Map(
- *           QualifiedColumnRequestInput("info", "column1") -> 'column1,
- *           QualifiedColumnRequestInput("info", "column2") -> 'column2)
+ *           QualifiedColumnInputSpec("info", "column1") -> 'column1,
+ *           QualifiedColumnInputSpec("info", "column2") -> 'column2)
  * }}}
  *
  * The verbose methods allow you to instantiate explicity
- * [[org.kiji.express.flow.QualifiedColumnRequestInput]] and
- * [[org.kiji.express.flow.ColumnRequestInput]] objects.
+ * [[org.kiji.express.flow.QualifiedColumnInputSpec]] and
+ * [[org.kiji.express.flow.ColumnInputSpec]] objects.
  * Use the verbose method to specify options for the input columns, e.g.,
  * {{{
  *   // Create a KijiSource that reads from the table named `mytable` reading the columns
@@ -57,8 +57,8 @@ import org.kiji.annotations.ApiStability
  *   KijiInput(
  *       tableUri = "kiji://localhost:2181/default/mytable",
  *       columns = Map(
- *           QualifiedColumnRequestInput("info", "column1", maxVersions=5) -> 'column1,
- *           QualifiedColumnRequestInput("info", "column2", paging=Cells(10)) -> 'column2)
+ *           QualifiedColumnInputSpec("info", "column1", maxVersions=5) -> 'column1,
+ *           QualifiedColumnInputSpec("info", "column2", paging=Cells(10)) -> 'column2)
  * }}}
  */
 @ApiAudience.Public
@@ -73,9 +73,9 @@ object KijiInput {
    *
    * @param tableUri addressing a table in a Kiji instance.
    * @param timeRange that cells must fall into to be retrieved.
-   * @param columns are a series of pairs mapping column (or map-type column family) requests to
-   *     tuple field names. Columns are specified as "family:qualifier" or, in the case of a
-   *     map-type column family, simply "family".
+   * @param columns are a series of pairs mapping column input specs to tuple field names.
+   *     Columns are specified as "family:qualifier" or, in the case of a column family input spec,
+   *     simply "family".
    * @return a source for data in the Kiji table, whose row tuples will contain fields with cell
    *     data from the requested columns and map-type column families.
    */
@@ -85,7 +85,7 @@ object KijiInput {
       columns: (String, Symbol)*
   ): KijiSource = {
     val columnMap = columns
-        .map { case (col, field) => (field, ColumnRequestInput(col)) }
+        .map { case (col, field) => (field, ColumnInputSpec(col)) }
         .toMap
 
     new KijiSource(
@@ -102,19 +102,19 @@ object KijiInput {
    *
    * @param tableUri addressing a table in a Kiji instance.
    * @param timeRange that cells must fall into to be retrieved.
-   * @param columns are a series of pairs mapping column (or map-type column family) requests to
-   *     tuple field names. Columns are specified as "family:qualifier" or, in the case of a
-   *     map-type column family, simply "family".
+   * @param columns are a series of pairs mapping column input specs to tuple field names.
+   *     Columns are specified as "family:qualifier" or, in the case of a column family input spec,
+   *     simply "family".
    * @return a source for data in the Kiji table, whose row tuples will contain fields with
    *     cell data from the requested columns and map-type column families.
    */
   private def applyAllArgsMap(
       tableUri: String,
       timeRange: TimeRange,
-      columns: Map[_ <: ColumnRequestInput, Symbol]
+      columns: Map[_ <: ColumnInputSpec, Symbol]
   ): KijiSource = {
     val columnMap = columns
-        .map { entry: (ColumnRequestInput, Symbol) => entry.swap }
+        .map { entry: (ColumnInputSpec, Symbol) => entry.swap }
 
     new KijiSource(
         tableUri,
@@ -128,9 +128,9 @@ object KijiInput {
    * A factory method for creating a KijiSource.
    *
    * @param tableUri addressing a table in a Kiji instance.
-   * @param columns are a series of pairs mapping column (or map-type column family) requests to
-   *     tuple field names. Columns are specified as "family:qualifier" or, in the case of a
-   *     map-type column family, simply "family".
+   * @param columns are a series of pairs mapping column input specs to tuple field names.
+   *     Columns are specified as "family:qualifier" or, in the case of a column family input spec,
+   *     simply "family".
    * @return a source for data in the Kiji table, whose row tuples will contain fields with cell
    *     data from the requested columns and map-type column families.
    */
@@ -146,9 +146,9 @@ object KijiInput {
    *
    * @param tableUri addressing a table in a Kiji instance.
    * @param timeRange that cells must fall into to be retrieved.
-   * @param columns are a series of pairs mapping column (or map-type column family) requests to
-   *     tuple field names. Columns are specified as "family:qualifier" or, in the case of a
-   *     map-type column family, simply "family".
+   * @param columns are a series of pairs mapping column input specs to tuple field names.
+   *     Columns are specified as "family:qualifier" or, in the case of a column family input spec,
+   *     simply "family".
    * @return a source for data in the Kiji table, whose row tuples will contain fields with cell
    *     data from the requested columns and map-type column families.
    */
@@ -164,15 +164,15 @@ object KijiInput {
    * A factory method for creating a KijiSource.
    *
    * @param tableUri addressing a table in a Kiji instance.
-   * @param columns are a series of pairs mapping column (or map-type column family) requests to
-   *     tuple field names. Columns are specified as "family:qualifier" or, in the case of a
-   *     map-type column family, simply "family".
+   * @param columns are a series of pairs mapping column input specs to tuple field names.
+   *     Columns are specified as "family:qualifier" or, in the case of a column family input spec,
+   *     simply "family".
    * @return a source for data in the Kiji table, whose row tuples will contain fields with cell
    *     data from the requested columns and map-type column families.
    */
   def apply(
       tableUri: String,
-      columns: Map[_ <: ColumnRequestInput, Symbol]
+      columns: Map[_ <: ColumnInputSpec, Symbol]
   ): KijiSource = {
     applyAllArgsMap(tableUri, defaultTimeRange, columns)
   }
@@ -182,16 +182,16 @@ object KijiInput {
    *
    * @param tableUri addressing a table in a Kiji instance.
    * @param timeRange that cells must fall into to be retrieved.
-   * @param columns are a series of pairs mapping column (or map-type column family) requests to
-   *     tuple field names. Columns are specified as "family:qualifier" or, in the case of a
-   *     map-type column family, simply "family".
+   * @param columns are a series of pairs mapping column input specs to tuple field names.
+   *     Columns are specified as "family:qualifier" or, in the case of a column family input spec,
+   *     simply "family".
    * @return a source for data in the Kiji table, whose row tuples will contain fields with cell
    *     data from the requested columns and map-type column families.
    */
   def apply(
       tableUri: String,
       timeRange: TimeRange,
-      columns: Map[_ <: ColumnRequestInput, Symbol]
+      columns: Map[_ <: ColumnInputSpec, Symbol]
   ): KijiSource = {
     applyAllArgsMap(tableUri, timeRange, columns)
   }

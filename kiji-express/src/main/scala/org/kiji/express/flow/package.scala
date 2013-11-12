@@ -40,99 +40,99 @@ import org.kiji.schema.filter.RegexQualifierColumnFilter
  *   import org.kiji.express.flow._
  * }}}
  *
- * === Requesting columns and map-type column families. ===
+ * === Reading from columns and map-type column families. ===
  * Specify columns to read from a Kiji table using instances of the
- * [[org.kiji.express.flow.QualifiedColumnRequestInput]] and
- * [[org.kiji.express.flow.ColumnFamilyRequestInput]] classes, which contain fields for specifying
+ * [[org.kiji.express.flow.QualifiedColumnInputSpec]] and
+ * [[org.kiji.express.flow.ColumnFamilyInputSpec]] classes, which contain fields for specifying
  * the names of the columns to read, as well as what data to read back (e.g., only the latest
  * version of a cell, or a certain number of recent versions) and how it is read back (e.g., using
  * paging to limit the amount of data in memory).
  *
- * Specify a fully-qualified columns with an instance of `QualifiedColumnRequestInput`.  Below are
- * several examples for requesting the column `info:name`:
+ * Specify a fully-qualified column with an instance of `QualifiedColumnInputSpec`.  Below are
+ * several examples for specifying the column `info:name`:
  * {{{
  *   // Request the latest cell.
- *   val myColumnRequest = QualifiedColumnRequestInput("info", "name")
- *   val myColumnRequest = QualifiedColumnRequestInput("info", "name", maxVersions = latest)
- *   val myColumnRequest = QualifiedColumnRequestInput("info", "name", maxVersions = 1)
+ *   val myInputColumn = QualifiedColumnInputSpec("info", "name")
+ *   val myInputColumn = QualifiedColumnInputSpec("info", "name", maxVersions = latest)
+ *   val myInputColumn = QualifiedColumnInputSpec("info", "name", maxVersions = 1)
  *
  *   // Request every cell.
- *   val myColumnRequest = QualifiedColumnRequestInput("info:name", maxVersions = all)
+ *   val myInputColumn = QualifiedColumnInputSpec("info:name", maxVersions = all)
  *
  *   // Request the 10 most recent cells.
- *   val myColumnRequest = QualifiedColumnRequestInput("info:name", maxVersions = 10)
+ *   val myInputColumn = QualifiedColumnInputSpec("info:name", maxVersions = 10)
  * }}}
  *
- * To request cells from map-type column families, users instantiate the `ColumnFamilyRequestInput`
- * class, which, like `QualifiedColumnRequestInput`, provides optional fields to modify the request
- * by specifying the maximum number of versions of the cell to return, use filters, etc.  A user can
+ * To request cells from all of the columns in a family, use the `ColumnFamilyInputSpec`
+ * class, which, like `QualifiedColumnInputSpec`, provides options on the input spec such as
+ * the maximum number of cell versions to return, filters to use, etc.  A user can
  * specify a filter, for example, to specify a regular expression such that a column in the family
  * will only be retrieved if its qualifier matches the regular expression:
  * {{{
- *   // Gets the most recent cell for all columns in the map-type column family "searches".
- *   var myFamilyRequest = ColumnFamilyRequestInput("searches")
+ *   // Gets the most recent cell for all columns in the column family "searches".
+ *   var myFamilyInput = ColumnFamilyInputSpec("searches")
  *
- *   // Gets all cells for all columns in the map-type column family "searches" whose
+ *   // Gets all cells for all columns in the column family "searches" whose
  *   // qualifiers contain the word "penguin".
- *   myFamilyRequest = ColumnFamilyRequestInput(
+ *   myFamilyInput = ColumnFamilyInputSpec(
  *      "searches",
  *      filter = Some(new RegexQualifierColumnFilter(""".*penguin.*""")),
  *      maxVersions = all)
  *
- *   // Gets all cells for all columns in the map-type column family "searches".
- *   myFamilyRequest = MapFamily("searches", maxVersions = all)
+ *   // Gets all cells for all columns in the column family "searches".
+ *   myFamilyInput = ColumnFamilyInputSpec("searches", maxVersions = all)
  * }}}
  *
- * See [[org.kiji.express.flow.QualifiedColumnRequestInput]] and
- * [[org.kiji.express.flow.ColumnFamilyRequestInput]] for a full list of options for column read
- * requests.
+ * See [[org.kiji.express.flow.QualifiedColumnInputSpec]] and
+ * [[org.kiji.express.flow.ColumnFamilyInputSpec]] for a full list of options for column input
+ * specs.
  *
  * When specifying a column for writing, the user can likewise use the
- * `QualifiedColumnRequestOutput` and `ColumnFamilyRequestOutput` classes to indicate the name of
- * the column and any options.  The following, for example, requests a column to use for writes with
- * the default reader schema:
+ * `QualifiedColumnOutputSpec` and `ColumnFamilyOutputSpec` classes to indicate the name of
+ * the column and any options.  The following, for example, specifies a column to use for writes
+ * with the default reader schema:
  * {{{
- *   // Create a column request for writing to "info:name" using the default reader schema
- *   var myWriteReq = QualifiedColumnRequestOutput("info", "name", useDefaultReaderSchema = true)
+ *   // Create a column output spec for writing to "info:name" using the default reader schema
+ *   var myWriteReq = QualifiedColumnOutputSpec("info", "name", useDefaultReaderSchema = true)
  * }}}
  *
  *
  * When writing to a family, you specify a Scalding field that contains the name of the qualifier to
  * use for your write.  For example, to use the value in the Scalding field ``'terms`` as the name
- * of a column in a map-type family, a user could use the following:
+ * of the column qualifier, use the following:
  * {{{
- *   var myFamilyRequest = ColumnFamilyRequestOutput("searches", "terms")
+ *   var myOutputFamily = ColumnFamilyOutputSpec("searches", 'terms)
  * }}}
  *
- * See [[org.kiji.express.flow.QualifiedColumnRequestOutput]] and
- * [[org.kiji.express.flow.ColumnFamilyRequestOutput]] for a full list of options for column write
- * requests.
+ * See [[org.kiji.express.flow.QualifiedColumnOutputSpec]] and
+ * [[org.kiji.express.flow.ColumnFamilyOutputSpec]] for a full list of options for column output
+ * specs.
  *
  * === Getting input from a Kiji table. ===
  * The factory `KijiInput` can be used to obtain a
  * [[org.kiji.express.flow.KijiSource]] to process rows from the table (represented as tuples)
  * using various operations. When using `KijiInput`, users specify a table (using a Kiji URI) and
- * use column requests and other options to control how data is read from Kiji into tuple fields.
- * ``KijiInput`` contains different factories that allow for abbreviated column request
- * specifications, as illustrated in the examples below:
+ * use column specs and other options to control how data is read from Kiji into tuple fields.
+ * ``KijiInput`` contains different factories that allow for abbreviated column specifications,
+ * as illustrated in the examples below:
  * {{{
  *   // Read the most recent cells from columns "info:id" and "info:name" into tuple fields "id"
- *   // and "name" (don't explicitly instantiate a QualifiedColumnRequestInput).
+ *   // and "name" (don't explicitly instantiate a QualifiedColumnInputSpec).
  *   var myKijiSource =
  *       KijiInput("kiji://.env/default/newsgroup_users", "info:id" -> 'id, "info:name" -> 'name)
  *
  *   // Read only cells from "info:id" that occurred before Unix time 100000.
- *   // (Don't explicitly instantiate a QualifiedColumnRequestInput)
+ *   // (Don't explicitly instantiate a QualifiedColumnInputSpec)
  *   myKijiSource =
  *       KijiInput("kiji://.env/default/newsgroup_users", Before(100000), "info:id" -> 'id)
  *
  *   // Read all versions from "info:posts"
  *   myKijiSource = KijiInput(
  *       "kiji://.env/default/newsgroup_users",
- *       Map(QualifiedColumnRequestOutput("info", "id", maxVersions = all) -> 'id))
+ *       Map(QualifiedColumnOutputSpec("info", "id", maxVersions = all) -> 'id))
  * }}}
  *
- * See [[org.kiji.express.flow.KijiInput]] and [[org.kiji.express.flow.ColumnRequestInput]] for more
+ * See [[org.kiji.express.flow.KijiInput]] and [[org.kiji.express.flow.ColumnInputSpec]] for more
  * information on how to create and use time ranges for requesting data.
  *
  * === Writing to a Kiji table. ===
@@ -146,11 +146,11 @@ import org.kiji.schema.filter.RegexQualifierColumnFilter
  *   // "newsgroup_users".
  *   mySource.write("kiji://.env/default/newsgroup_users", 'average -> "stats:average")
  *
- *   // Create a KijiSource to write the data in tuple field "results" to the map-type family
+ *   // Create a KijiSource to write the data in tuple field "results" to column family
  *   // "searches" with the string in tuple field "terms" as the column qualifier.
  *   myOutput = KijiOutput(
  *       "kiji://.env/default/searchstuff",
- *       'results -> ColumnFamilyRequestOutput("searches", "terms"))
+ *       'results -> ColumnFamilyOutputSpec("searches", "terms"))
  * }}}
  *
  * === Specifying ranges of time. ===
@@ -177,11 +177,11 @@ import org.kiji.schema.filter.RegexQualifierColumnFilter
  */
 package object flow {
 
-  /** Used with a column request to indicate that all cells of a column should be retrieved. */
+  /** Used with a column input spec to indicate that all cells of a column should be retrieved. */
   val all = HConstants.ALL_VERSIONS
 
   /**
-   * Used with a column request to indicate that only the latest cell of a column should be
+   * Used with a column input spec to indicate that only the latest cell of a column should be
    * retrieved.
    */
   val latest = 1

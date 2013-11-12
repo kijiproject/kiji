@@ -19,8 +19,6 @@
 
 package org.kiji.express.flow
 
-import com.google.common.base.Objects
-
 import org.apache.avro.Schema
 import org.apache.avro.specific.SpecificRecord
 
@@ -31,23 +29,23 @@ import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiInvalidNameException
 
 /**
- * Interface for all column input request specification objects. ColumnRequestInput implementations
+ * Interface for all column input specification objects. ColumnInputSpec implementations
  * specify how to read Kiji columns or column families into individual fields in an Express flow.
  *
- * Use the [[org.kiji.express.flow.QualifiedColumnRequestInput]] to retrieve an individual Kiji
+ * Use the [[org.kiji.express.flow.QualifiedColumnInputSpec]] to retrieve an individual Kiji
  * column into a single field in a flow.
  *
- * Use the [[org.kiji.express.flow.ColumnFamilyRequestInput]] to retrieve an entire column family
+ * Use the [[org.kiji.express.flow.ColumnFamilyInputSpec]] to retrieve an entire column family
  * into a field of a flow.  Each row in the KijiTable will be a new tuple, with each field in the
  * tuple containing a stream of [[org.kiji.express.Cell]]s.
  *
- * Note: Subclasses of ColumnRequestInput are case classes that override ColumnRequestInput's
+ * Note: Subclasses of ColumnInputSpec are case classes that override ColumnInputSpec's
  * abstract methods (e.g., `schema`) with `val`s.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Sealed
-sealed trait ColumnRequestInput {
+sealed trait ColumnInputSpec {
   /**
    * Specifies the maximum number of cells (from the most recent) to retrieve from a column.
    *
@@ -58,13 +56,13 @@ sealed trait ColumnRequestInput {
   def maxVersions: Int
 
   /**
-   * Specifies a filter that a cell must pass for this request to retrieve it.
+   * Specifies a filter that a cell must pass in order to be retrieved.
    *
    * If `None`, no filter is used.
    *
    * @return `Some(filter)` or `None`.
    */
-  def filter: Option[ExpressColumnFilter]
+  def filter: Option[ColumnFilterSpec]
 
   /**
    * Specifies the maximum number of cells to maintain in memory when paging through a column.
@@ -76,12 +74,12 @@ sealed trait ColumnRequestInput {
   /**
    * Specifies the schema of data to be read from the column.
    *
-   * @return schema specification for column request.
+   * @return schema specification for reading column.
    */
   def schemaSpec: SchemaSpec
 
   /**
-   * Column family which this [[org.kiji.express.flow.ColumnRequestInput]] belongs to.
+   * Column family which this [[org.kiji.express.flow.ColumnInputSpec]] belongs to.
    *
    * @return family name of column
    */
@@ -96,35 +94,35 @@ sealed trait ColumnRequestInput {
 }
 
 /**
- * Provides factory functions for creating [[org.kiji.express.flow.ColumnRequestInput]] instances.
+ * Provides factory functions for creating [[org.kiji.express.flow.ColumnInputSpec]] instances.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Sealed
-object ColumnRequestInput {
+object ColumnInputSpec {
   /**
-   * Convenience function for creating a [[org.kiji.express.flow.ColumnRequestInput]].  The input
+   * Convenience function for creating a [[org.kiji.express.flow.ColumnInputSpec]].  The input
    * spec will be for a qualified column if the column parameter contains a ':',
    * otherwise the input will assumed to be for a column family.
    *
    * @param column The requested column name.
    * @param maxVersions The maximum number of versions to read back (default is only most recent).
    * @param filter Filter to use when reading back cells (default is `None`).
-   * @param paging Maximum number of cells to request from HBase per page.
+   * @param paging Maximum number of cells to retrieve from HBase per page.
    * @param schemaSpec Reader schema specification.  Defaults to
    *     [[org.kiji.express.flow.SchemaSpec.Writer]].
-   * @return ColumnRequestInput with supplied options.
+   * @return ColumnInputSpec with supplied options.
    */
   def apply(
       column: String,
       maxVersions: Int = latest,
-      filter: Option[ExpressColumnFilter] = None,
+      filter: Option[ColumnFilterSpec] = None,
       paging: PagingSpec = PagingSpec.Off,
       schemaSpec: SchemaSpec = SchemaSpec.Writer
-  ): ColumnRequestInput = {
+  ): ColumnInputSpec = {
     column.split(':') match {
       case Array(family, qualifier) =>
-          QualifiedColumnRequestInput(
+          QualifiedColumnInputSpec(
               family,
               qualifier,
               maxVersions,
@@ -133,7 +131,7 @@ object ColumnRequestInput {
               schemaSpec
           )
       case Array(family) =>
-          ColumnFamilyRequestInput(
+          ColumnFamilyInputSpec(
               family,
               maxVersions,
               filter,
@@ -146,37 +144,37 @@ object ColumnRequestInput {
   }
 
   /**
-   * Convenience function for creating a [[org.kiji.express.flow.ColumnRequestInput]].  The input
+   * Convenience function for creating a [[org.kiji.express.flow.ColumnInputSpec]].  The input
    * spec will be for a qualified column if the column parameter contains a ':',
    * otherwise the input will assumed to be for a column family. The column will be read with the
    * schema of the provided specific Avro record.
    *
    * @param column The requested column name.
    * @param specificRecord class to read from the column.
-   * @return ColumnRequestInput with supplied options.
+   * @return ColumnInputSpec with supplied options.
    */
   def apply(
       column: String,
       specificRecord: Class[_ <: SpecificRecord]
-  ): ColumnRequestInput = {
-    ColumnRequestInput(column, schemaSpec = SchemaSpec.Specific(specificRecord))
+  ): ColumnInputSpec = {
+    ColumnInputSpec(column, schemaSpec = SchemaSpec.Specific(specificRecord))
   }
 
   /**
-   * Convenience function for creating a [[org.kiji.express.flow.ColumnRequestInput]].  The input
+   * Convenience function for creating a [[org.kiji.express.flow.ColumnInputSpec]].  The input
    * spec will be for a qualified column if the column parameter contains a ':',
    * otherwise the input will assumed to be for a column family.  The column will be read with the
    * provided generic Avro schema.
    *
    * @param column The requested column name.
    * @param schema of generic Avro type to read from the column.
-   * @return ColumnRequestInput with supplied options.
+   * @return ColumnInputSpec with supplied options.
    */
   def apply(
       column: String,
       schema: Schema
-  ): ColumnRequestInput = {
-    ColumnRequestInput(column, schemaSpec = SchemaSpec.Generic(schema))
+  ): ColumnInputSpec = {
+    ColumnInputSpec(column, schemaSpec = SchemaSpec.Generic(schema))
   }
 }
 
@@ -187,64 +185,64 @@ object ColumnRequestInput {
  * @param qualifier The requested column qualifier name.
  * @param maxVersions The maximum number of versions to read back (default is only most recent).
  * @param filter Filter to use when reading back cells (default is `None`).
- * @param paging Maximum number of cells to request from HBase per page.
+ * @param paging Maximum number of cells to retrieve from HBase per page.
  * @param schemaSpec Reader schema specification. Defaults to
  *     [[org.kiji.express.flow.SchemaSpec.Writer]].
  */
 @ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Sealed
-final case class QualifiedColumnRequestInput(
+final case class QualifiedColumnInputSpec(
     family: String,
     qualifier: String,
     maxVersions: Int = latest,
-    filter: Option[ExpressColumnFilter] = None,
+    filter: Option[ColumnFilterSpec] = None,
     paging: PagingSpec = PagingSpec.Off,
     schemaSpec: SchemaSpec = SchemaSpec.Writer
-) extends ColumnRequestInput {
+) extends ColumnInputSpec {
   override val columnName: KijiColumnName = new KijiColumnName(family, qualifier)
 }
 
 /**
- * Provides factory functions for creating [[org.kiji.express.flow.QualifiedColumnRequestInput]]
+ * Provides factory functions for creating [[org.kiji.express.flow.QualifiedColumnInputSpec]]
  * instances.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Sealed
-object QualifiedColumnRequestInput {
+object QualifiedColumnInputSpec {
   /**
-   * Convenience function for creating a [[org.kiji.express.flow.QualifiedColumnRequestInput]] with
+   * Convenience function for creating a [[org.kiji.express.flow.QualifiedColumnInputSpec]] with
    * a specific Avro record type.
    *
    * @param family The requested column family name.
    * @param qualifier The requested column qualifier name.
    * @param specificRecord class to read from the column.
-   * @return QualifiedColumnRequestInput with supplied options.
+   * @return QualifiedColumnInputSpec with supplied options.
    */
   def apply(
       family: String,
       qualifier: String,
       specificRecord: Class[_ <: SpecificRecord]
-  ): QualifiedColumnRequestInput = {
-    QualifiedColumnRequestInput(family, qualifier, schemaSpec = SchemaSpec.Specific(specificRecord))
+  ): QualifiedColumnInputSpec = {
+    QualifiedColumnInputSpec(family, qualifier, schemaSpec = SchemaSpec.Specific(specificRecord))
   }
 
   /**
-   * Convenience function for creating a [[org.kiji.express.flow.QualifiedColumnRequestInput]] with
+   * Convenience function for creating a [[org.kiji.express.flow.QualifiedColumnInputSpec]] with
    * a generic Avro type specified by a [[org.apache.avro.Schema]].
    *
    * @param family The requested column family name.
    * @param qualifier The requested column qualifier name.
    * @param schema of generic Avro type to read from the column.
-   * @return QualifiedColumnRequestInput with supplied options.
+   * @return QualifiedColumnInputSpec with supplied options.
    */
   def apply(
       family: String,
       qualifier: String,
       schema: Schema
-  ): QualifiedColumnRequestInput = {
-    QualifiedColumnRequestInput(family, qualifier, schemaSpec = SchemaSpec.Generic(schema))
+  ): QualifiedColumnInputSpec = {
+    QualifiedColumnInputSpec(family, qualifier, schemaSpec = SchemaSpec.Generic(schema))
   }
 }
 
@@ -254,20 +252,20 @@ object QualifiedColumnRequestInput {
  * @param family The requested column family name.
  * @param maxVersions The maximum number of versions to read back (default is only most recent).
  * @param filter Filter to use when reading back cells (default is `None`).
- * @param paging Maximum number of cells to request from HBase per RPC.
+ * @param paging Maximum number of cells to retrieve from HBase per RPC.
  * @param schemaSpec Reader schema specification. Defaults to
  *     [[org.kiji.express.flow.SchemaSpec.Writer]].
  */
 @ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Sealed
-final case class ColumnFamilyRequestInput(
+final case class ColumnFamilyInputSpec(
     family: String,
     maxVersions: Int = latest,
-    filter: Option[ExpressColumnFilter] = None,
+    filter: Option[ColumnFilterSpec] = None,
     paging: PagingSpec = PagingSpec.Off,
     schemaSpec: SchemaSpec = SchemaSpec.Writer
-) extends ColumnRequestInput {
+) extends ColumnInputSpec {
   if (family.contains(':')) {
     throw new KijiInvalidNameException("Cannot have a ':' in family name for column family request")
   }
@@ -275,40 +273,40 @@ final case class ColumnFamilyRequestInput(
 }
 
 /**
- * Provides factory functions for creating [[org.kiji.express.flow.ColumnFamilyRequestInput]]
+ * Provides factory functions for creating [[org.kiji.express.flow.ColumnFamilyInputSpec]]
  * instances.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Sealed
-object ColumnFamilyRequestInput {
+object ColumnFamilyInputSpec {
   /**
-   * Convenience function for creating a [[org.kiji.express.flow.ColumnFamilyRequestInput]] with a
+   * Convenience function for creating a [[org.kiji.express.flow.ColumnFamilyInputSpec]] with a
    * specific Avro record type.
    *
    * @param family The requested column family name.
    * @param specificRecord class to read from the column.
-   * @return ColumnFamilyRequestInput with supplied options.
+   * @return ColumnFamilyInputSpec with supplied options.
    */
   def apply(
       family: String,
       specificRecord: Class[_ <: SpecificRecord]
-  ): ColumnFamilyRequestInput = {
-    ColumnFamilyRequestInput(family, schemaSpec = SchemaSpec.Specific(specificRecord))
+  ): ColumnFamilyInputSpec = {
+    ColumnFamilyInputSpec(family, schemaSpec = SchemaSpec.Specific(specificRecord))
   }
 
   /**
-   * Convenience function for creating a [[org.kiji.express.flow.ColumnFamilyRequestInput]] with a
+   * Convenience function for creating a [[org.kiji.express.flow.ColumnFamilyInputSpec]] with a
    * generic Avro type specified by a [[org.apache.avro.Schema]].
    *
    * @param family The requested column family name.
    * @param schema of Avro type to read from the column.
-   * @return ColumnFamilyRequestInput with supplied options.
+   * @return ColumnFamilyInputSpec with supplied options.
    */
   def apply(
       family: String,
       schema: Schema
-  ): ColumnFamilyRequestInput = {
-    ColumnFamilyRequestInput(family, schemaSpec = SchemaSpec.Generic(schema))
+  ): ColumnFamilyInputSpec = {
+    ColumnFamilyInputSpec(family, schemaSpec = SchemaSpec.Generic(schema))
   }
 }

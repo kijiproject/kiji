@@ -33,36 +33,36 @@ import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiInvalidNameException
 
 /**
- * Interface for all column output request specification objects. ColumnRequestOutput
+ * Interface for all column output specification objects. ColumnOutputSpec
  * implementations specify how to write individual fields in an Express flow to a Kiji column or
  * column family.
  *
- * Use the [[org.kiji.express.flow.QualifiedColumnRequestOutput]] to write a field to an individual
+ * Use the [[org.kiji.express.flow.QualifiedColumnOutputSpec]] to write a field to an individual
  * Kiji column.
  *
- * Use the [[org.kiji.express.flow.ColumnFamilyRequestOutput]] to write a field to a column
+ * Use the [[org.kiji.express.flow.ColumnFamilyOutputSpec]] to write a field to a column
  * family, with a qualifier determined as part of the flow.  The qualifier should be written to a
- * field specified as part of the ColumnFamilyRequestOutput.
+ * field specified as part of the ColumnFamilyOutputSpec.
  *
- * Note that the subclasses of ColumnRequestOutput are case classes, and so they override
- * ColumnRequestOutput's abstract methods (e.g., schema) with vals.
+ * Note that the subclasses of ColumnOutputSpec are case classes, and so they override
+ * ColumnOutputSpec's abstract methods (e.g., schema) with vals.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Sealed
-trait ColumnRequestOutput {
+trait ColumnOutputSpec {
 
   /**
-   * Family which this [[org.kiji.express.flow.ColumnRequestOutput]] belongs to.
+   * Family which this [[org.kiji.express.flow.ColumnOutputSpec]] belongs to.
    *
    * @return family name of output column.
    */
   def family: String
 
   /**
-   * [[org.kiji.schema.KijiColumnName]] of this [[org.kiji.express.flow.ColumnRequestOutput]].
+   * [[org.kiji.schema.KijiColumnName]] of this [[org.kiji.express.flow.ColumnOutputSpec]].
    *
-   *  @return the name of the column this ColumnRequest specifies.
+   *  @return the name of the column to output to.
    */
   def columnName: KijiColumnName
 
@@ -92,24 +92,24 @@ trait ColumnRequestOutput {
 @ApiAudience.Private
 @ApiStability.Experimental
 @Inheritance.Sealed
-final case class QualifiedColumnRequestOutput(
+final case class QualifiedColumnOutputSpec(
     family: String,
     qualifier: String,
     schemaSpec: SchemaSpec = Writer
-) extends ColumnRequestOutput {
+) extends ColumnOutputSpec {
   override val columnName: KijiColumnName = new KijiColumnName(family, qualifier)
 }
 
 /**
- * Provides factory functions for creating [[org.kiji.express.flow.QualifiedColumnRequestOutput]]
+ * Provides factory functions for creating [[org.kiji.express.flow.QualifiedColumnOutputSpec]]
  * instances.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Sealed
-object QualifiedColumnRequestOutput {
+object QualifiedColumnOutputSpec {
   /**
-   * Factory function for creating a [[org.kiji.express.flow.QualifiedColumnRequestOutput]] with a
+   * Factory function for creating a [[org.kiji.express.flow.QualifiedColumnOutputSpec]] with a
    * generic Avro writer schema.
    *
    * @param family of the output column.
@@ -120,12 +120,12 @@ object QualifiedColumnRequestOutput {
     family: String,
     qualifier: String,
     schema: Schema
-  ): QualifiedColumnRequestOutput = {
-    QualifiedColumnRequestOutput(family, qualifier, Generic(schema))
+  ): QualifiedColumnOutputSpec = {
+    QualifiedColumnOutputSpec(family, qualifier, Generic(schema))
   }
 
   /**
-   * Factory function for creating a [[org.kiji.express.flow.QualifiedColumnRequestOutput]] with a
+   * Factory function for creating a [[org.kiji.express.flow.QualifiedColumnOutputSpec]] with a
    * specific Avro record writer schema.
    *
    * @param family of the output column.
@@ -136,12 +136,12 @@ object QualifiedColumnRequestOutput {
     family: String,
     qualifier: String,
     specificClass: Class[_ <: SpecificRecord]
-  ): QualifiedColumnRequestOutput = {
-    QualifiedColumnRequestOutput(family, qualifier, Specific(specificClass))
+  ): QualifiedColumnOutputSpec = {
+    QualifiedColumnOutputSpec(family, qualifier, Specific(specificClass))
   }
 
   /**
-   * Factory function for creating a [[org.kiji.express.flow.QualifiedColumnRequestOutput]].
+   * Factory function for creating a [[org.kiji.express.flow.QualifiedColumnOutputSpec]].
    * This constructor takes a column string which must contain the column family and qualifier
    * in the form 'family:qualifier'.
    *
@@ -151,16 +151,16 @@ object QualifiedColumnRequestOutput {
   def apply(
       column: String,
       schemaSpec: SchemaSpec
-  ): QualifiedColumnRequestOutput = {
+  ): QualifiedColumnOutputSpec = {
     column.split(':').toList match {
-      case family :: qualifier :: Nil => QualifiedColumnRequestOutput(family, qualifier, schemaSpec)
+      case family :: qualifier :: Nil => QualifiedColumnOutputSpec(family, qualifier, schemaSpec)
       case _ => throw new IllegalArgumentException(
           "Must specify column to GroupTypeOutputColumnSpec in the format 'family:qualifier'.")
     }
   }
 
   /**
-   * Factory function for creating a [[org.kiji.express.flow.QualifiedColumnRequestOutput]] with
+   * Factory function for creating a [[org.kiji.express.flow.QualifiedColumnOutputSpec]] with
    * a generic Avro writer schema. This constructor takes a column string which must contain the
    * column family and qualifier in the form 'family:qualifier'.
    *
@@ -170,12 +170,12 @@ object QualifiedColumnRequestOutput {
   def apply(
       column: String,
       schema: Schema
-  ): QualifiedColumnRequestOutput = {
-    QualifiedColumnRequestOutput(column, Generic(schema))
+  ): QualifiedColumnOutputSpec = {
+    QualifiedColumnOutputSpec(column, Generic(schema))
   }
 
   /**
-   * Factory function for creating a [[org.kiji.express.flow.QualifiedColumnRequestOutput]] with
+   * Factory function for creating a [[org.kiji.express.flow.QualifiedColumnOutputSpec]] with
    * a generic Avro writer schema. This constructor takes a column string which must contain the
    * column family and qualifier in the form 'family:qualifier'.
    *
@@ -185,12 +185,12 @@ object QualifiedColumnRequestOutput {
   def apply(
     column: String,
     specificClass: Class[_ <: SpecificRecord]
-  ): QualifiedColumnRequestOutput = {
-    QualifiedColumnRequestOutput(column, Specific(specificClass))
+  ): QualifiedColumnOutputSpec = {
+    QualifiedColumnOutputSpec(column, Specific(specificClass))
   }
 
   /**
-   * Factory function for creating a [[org.kiji.express.flow.QualifiedColumnRequestOutput]] with
+   * Factory function for creating a [[org.kiji.express.flow.QualifiedColumnOutputSpec]] with
    * the [[org.kiji.express.flow.SchemaSpec.Writer]] schema spec. This constructor takes a column
    * string which must contain the column family and qualifier in the form 'family:qualifier'.
    *
@@ -198,8 +198,8 @@ object QualifiedColumnRequestOutput {
    */
   def apply(
     column: String
-  ): QualifiedColumnRequestOutput = {
-    QualifiedColumnRequestOutput(column, Writer)
+  ): QualifiedColumnOutputSpec = {
+    QualifiedColumnOutputSpec(column, Writer)
   }
 }
 
@@ -215,27 +215,28 @@ object QualifiedColumnRequestOutput {
 @ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Sealed
-final case class ColumnFamilyRequestOutput(
+final case class ColumnFamilyOutputSpec(
     family: String,
     qualifierSelector: Symbol,
     schemaSpec: SchemaSpec = Writer
-) extends ColumnRequestOutput {
+) extends ColumnOutputSpec {
   if (family.contains(':')) {
-    throw new KijiInvalidNameException("Cannot have a ':' in family name for column family request")
+    throw new KijiInvalidNameException(
+        "family name in ColumnFamilyOutputSpec may not contain a ':'")
   }
   override def columnName: KijiColumnName = new KijiColumnName(family)
 }
 
 /**
- * Provides factory functions for creating [[org.kiji.express.flow.ColumnFamilyRequestOutput]]
+ * Provides factory functions for creating [[org.kiji.express.flow.ColumnFamilyOutputSpec]]
  * instances.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Sealed
-object ColumnFamilyRequestOutput {
+object ColumnFamilyOutputSpec {
   /**
-   * Factory function for creating a [[org.kiji.express.flow.ColumnFamilyRequestOutput]] with a
+   * Factory function for creating a [[org.kiji.express.flow.ColumnFamilyOutputSpec]] with a
    * generic Avro writer schema.
    *
    * @param family of the output column.
@@ -247,12 +248,12 @@ object ColumnFamilyRequestOutput {
       family: String,
       qualifierSelector: Symbol,
       schema: Schema
-  ): ColumnFamilyRequestOutput = {
-    ColumnFamilyRequestOutput(family, qualifierSelector, Generic(schema))
+  ): ColumnFamilyOutputSpec = {
+    ColumnFamilyOutputSpec(family, qualifierSelector, Generic(schema))
   }
 
   /**
-   * Factory function for creating a [[org.kiji.express.flow.ColumnFamilyRequestOutput]] with a
+   * Factory function for creating a [[org.kiji.express.flow.ColumnFamilyOutputSpec]] with a
    * specific Avro record writer schema.
    *
    * @param family of the output column.
@@ -264,8 +265,8 @@ object ColumnFamilyRequestOutput {
     family: String,
     qualifierSelector: Symbol,
     specificClass: Class[_ <: SpecificRecord]
-  ): ColumnFamilyRequestOutput = {
-    ColumnFamilyRequestOutput(family, qualifierSelector, Specific(specificClass))
+  ): ColumnFamilyOutputSpec = {
+    ColumnFamilyOutputSpec(family, qualifierSelector, Specific(specificClass))
   }
 }
 

@@ -33,9 +33,9 @@ import org.junit.Before
 import org.junit.Test
 
 import org.kiji.express.EntityId
-import org.kiji.express.flow.ColumnFamilyRequestOutput
-import org.kiji.express.flow.ColumnRequestOutput
-import org.kiji.express.flow.QualifiedColumnRequestOutput
+import org.kiji.express.flow.ColumnFamilyOutputSpec
+import org.kiji.express.flow.ColumnOutputSpec
+import org.kiji.express.flow.QualifiedColumnOutputSpec
 import org.kiji.express.util.Resources
 import org.kiji.mapreduce.HFileLoader
 import org.kiji.schema.Kiji
@@ -254,7 +254,7 @@ class SimpleLoaderMapTypeFamilyJob(args: Args) extends HFileKijiJob(args) {
   val hFileOutput = args("hfile-output")
 
   @transient
-  lazy val outputCols = Map('numViews -> ColumnFamilyRequestOutput("searches_dev",
+  lazy val outputCols = Map('numViews -> ColumnFamilyOutputSpec("searches_dev",
       qualifierSelector='numViews))
 
   // Read each line. Generate an entityId and numViews. The entityId here is duplicated

@@ -33,61 +33,60 @@ class FlowModuleSuite extends FunSuite {
   test("Flow module forbids creating an input map-type column with a qualifier in the column "
       + "name.") {
     intercept[KijiInvalidNameException] {
-      new ColumnFamilyRequestInput("info:word")
+      new ColumnFamilyInputSpec("info:word")
     }
   }
 
   test("Flow module forbids creating an output map-type column with a qualifier in the column "
       + "name.") {
     intercept[KijiInvalidNameException] {
-      new ColumnFamilyRequestOutput("info:word", 'foo)
+      new ColumnFamilyOutputSpec("info:word", 'foo)
     }
   }
 
   test("Flow module permits creating an output map-type column specifying the qualifier field") {
-    new ColumnFamilyRequestOutput("searches", 'terms)
+    new ColumnFamilyOutputSpec("searches", 'terms)
   }
 
-  test("Flow module permits specifying a qualifier regex on map-type columns requests.") {
-    val colReq = new ColumnFamilyRequestInput(
+  test("Flow module permits specifying a qualifier regex on ColumnFamilyInputSpec.") {
+    val colReq = new ColumnFamilyInputSpec(
         "search",
-        filter = Some(RegexQualifierFilter(""".*\.com"""))
+        filter = Some(RegexQualifierFilterSpec(""".*\.com"""))
     )
 
     // TODO: Test it filters keyvalues correctly.
-    assert(colReq.filter.get.isInstanceOf[RegexQualifierFilter])
+    assert(colReq.filter.get.isInstanceOf[RegexQualifierFilterSpec])
   }
 
-  test("Flow module permits specifying a qualifier regex (with filter) on map-type column "
-      + "requests.") {
-    val colReq = new ColumnFamilyRequestInput("search",
-      filter=Some(RegexQualifierFilter(""".*\.com""")))
+  test("Flow module permits specifying a qualifier regex (with filter) on ColumnFamilyInputSpec.") {
+    val colReq = new ColumnFamilyInputSpec("search",
+      filter=Some(RegexQualifierFilterSpec(""".*\.com""")))
 
     // TODO: Test it filters keyvalues correctly.
-    assert(colReq.filter.get.isInstanceOf[RegexQualifierFilter])
+    assert(colReq.filter.get.isInstanceOf[RegexQualifierFilterSpec])
   }
 
   test("Flow module permits specifying versions on map-type columns without qualifier regex.") {
-    val colReq = ColumnFamilyRequestInput("search", maxVersions=2)
+    val colReq = ColumnFamilyInputSpec("search", maxVersions=2)
     assert(2 === colReq.maxVersions)
   }
 
   test("Flow module permits specifying versions on a group-type column.") {
-    val colReq = QualifiedColumnRequestInput("info", "word", maxVersions=2)
+    val colReq = QualifiedColumnInputSpec("info", "word", maxVersions=2)
     assert(2 === colReq.maxVersions)
   }
 
-  test("Flow module uses default versions of 1 for map-type and group-type column requests.") {
-    val groupReq = QualifiedColumnRequestInput("info", "word")
-    val mapReq = ColumnFamilyRequestInput("searches")
+  test("Flow module uses default versions of 1 for all ColumnInputSpecs.") {
+    val groupReq = QualifiedColumnInputSpec("info", "word")
+    val mapReq = ColumnFamilyInputSpec("searches")
 
     assert(1 === groupReq.maxVersions)
     assert(1 === mapReq.maxVersions)
   }
 
   test("Flow module permits creating inputs and outputs with no mappings.") {
-    val input: KijiSource = KijiInput(tableURI, columns = Map[ColumnRequestInput, Symbol]())
-    val output: KijiSource = KijiOutput(tableURI, columns = Map[Symbol, ColumnRequestOutput]())
+    val input: KijiSource = KijiInput(tableURI, columns = Map[ColumnInputSpec, Symbol]())
+    val output: KijiSource = KijiOutput(tableURI, columns = Map[Symbol, ColumnOutputSpec]())
 
     assert(input.inputColumns.isEmpty)
     assert(input.outputColumns.isEmpty)
@@ -100,7 +99,7 @@ class FlowModuleSuite extends FunSuite {
     val expectedScheme = new KijiScheme(
         timeRange = All,
         timestampField = None,
-        inputColumns = Map("word" -> QualifiedColumnRequestInput("info", "word")))
+        inputColumns = Map("word" -> QualifiedColumnInputSpec("info", "word")))
 
     assert(expectedScheme === input.hdfsScheme)
   }
@@ -110,7 +109,7 @@ class FlowModuleSuite extends FunSuite {
     val expectedScheme = new KijiScheme(
         Between(0L, 40L),
         None,
-        Map("word" -> QualifiedColumnRequestInput("info", "word")))
+        Map("word" -> QualifiedColumnInputSpec("info", "word")))
 
     assert(expectedScheme === input.hdfsScheme)
   }
@@ -122,8 +121,8 @@ class FlowModuleSuite extends FunSuite {
           All,
           None,
           Map(
-              "word" -> QualifiedColumnRequestInput("info", "word"),
-              "title" -> QualifiedColumnRequestInput("info", "title")))
+              "word" -> QualifiedColumnInputSpec("info", "word"),
+              "title" -> QualifiedColumnInputSpec("info", "title")))
     }
 
     assert(expectedScheme === input.hdfsScheme)
@@ -132,21 +131,21 @@ class FlowModuleSuite extends FunSuite {
   test("Flow module permits specifying options for a column.") {
     KijiInput(
         tableURI,
-        Map(QualifiedColumnRequestInput("info", "word") -> 'word)
+        Map(QualifiedColumnInputSpec("info", "word") -> 'word)
     )
 
     KijiInput(
         tableURI,
-        Map(QualifiedColumnRequestInput("info", "word", maxVersions = 1) -> 'word)
+        Map(QualifiedColumnInputSpec("info", "word", maxVersions = 1) -> 'word)
     )
 
     KijiInput(
         tableURI,
         Map(
-            ColumnFamilyRequestInput(
+            ColumnFamilyInputSpec(
                 "searches",
                 maxVersions = 1,
-                filter = Some(new RegexQualifierFilter(".*"))
+                filter = Some(new RegexQualifierFilterSpec(".*"))
             ) -> 'word
         )
     )
@@ -156,8 +155,8 @@ class FlowModuleSuite extends FunSuite {
     KijiInput(
         tableURI,
         Map(
-            QualifiedColumnRequestInput("info", "word", maxVersions = 1) -> 'word,
-            QualifiedColumnRequestInput("info", "title", maxVersions = 2) -> 'title))
+            QualifiedColumnInputSpec("info", "word", maxVersions = 1) -> 'word,
+            QualifiedColumnInputSpec("info", "title", maxVersions = 2) -> 'title))
   }
 
   test("Flow module permits creating KijiSource with the default timestamp field") {
@@ -165,7 +164,7 @@ class FlowModuleSuite extends FunSuite {
     val expectedScheme: KijiScheme = new KijiScheme(
         timeRange = All,
         timestampField = None,
-        outputColumns = Map("words" -> QualifiedColumnRequestOutput("info", "words")))
+        outputColumns = Map("words" -> QualifiedColumnOutputSpec("info", "words")))
     assert(expectedScheme === output.hdfsScheme)
   }
 
@@ -174,7 +173,7 @@ class FlowModuleSuite extends FunSuite {
     val expectedScheme: KijiScheme = new KijiScheme(
         timeRange = All,
         timestampField = Some('time),
-        outputColumns = Map("words" -> QualifiedColumnRequestOutput("info", "words")))
+        outputColumns = Map("words" -> QualifiedColumnOutputSpec("info", "words")))
     assert(expectedScheme === output.hdfsScheme)
   }
 }

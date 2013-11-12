@@ -48,13 +48,13 @@ import org.kiji.annotations.ApiStability
  *       timestampField = 'timestamps,
  *       columns = Map(
  *           // Enable paging for `info:column1`.
- *           'column1 -> QualifiedColumnRequestOutput("info", "column1"),
- *           'column2 -> QualifiedColumnRequestOutput("info", "column2")))
+ *           'column1 -> QualifiedColumnOutputSpec("info", "column1"),
+ *           'column2 -> QualifiedColumnOutputSpec("info", "column2")))
  * }}}
  *
  * The verbose methods allow you to instantiate explicity
- * [[org.kiji.express.flow.QualifiedColumnRequestOutput]] and
- * [[org.kiji.express.flow.ColumnRequestOutput]] objects.
+ * [[org.kiji.express.flow.QualifiedColumnOutputSpec]] and
+ * [[org.kiji.express.flow.ColumnOutputSpec]] objects.
  * Use the verbose method to specify options for the output columns, e.g.,
  * {{{
  *   // Create a KijiSource that reads from the table named `mytable` reading the columns
@@ -63,8 +63,8 @@ import org.kiji.annotations.ApiStability
  *       tableUri = "kiji://localhost:2181/default/mytable",
  *       timestampField = 'timestamps,
  *       columns = Map(
- *           QualifiedColumnRequestOutput("info", "column1", schemaId=Some(12)) -> 'column1,
- *           QualifiedColumnRequestOutput("info", "column2") -> 'column2)
+ *           QualifiedColumnOutputSpec("info", "column1", schemaId=Some(12)) -> 'column1,
+ *           QualifiedColumnOutputSpec("info", "column2") -> 'column2)
  * }}}
  */
 @ApiAudience.Public
@@ -81,7 +81,7 @@ object KijiOutput {
    */
   def apply(
       tableUri: String,
-      columns: Map[Symbol, _ <: ColumnRequestOutput]
+      columns: Map[Symbol, _ <: ColumnOutputSpec]
   ): KijiSource = {
     new KijiSource(
         tableAddress = tableUri,
@@ -103,7 +103,7 @@ object KijiOutput {
   def apply(
       tableUri: String,
       timestampField: Symbol,
-      columns: Map[Symbol, _ <: ColumnRequestOutput]
+      columns: Map[Symbol, _ <: ColumnOutputSpec]
   ): KijiSource = {
     require(timestampField != null)
 
@@ -129,7 +129,7 @@ object KijiOutput {
   ): KijiSource = {
     val columnMap = columns
         .toMap
-        .mapValues(QualifiedColumnRequestOutput(_))
+        .mapValues(QualifiedColumnOutputSpec(_))
 
     KijiOutput(tableUri, columnMap)
   }
@@ -153,7 +153,7 @@ object KijiOutput {
 
     val columnMap = columns
         .toMap
-        .mapValues(QualifiedColumnRequestOutput(_))
+        .mapValues(QualifiedColumnOutputSpec(_))
 
     KijiOutput(tableUri, timestampField, columnMap)
   }

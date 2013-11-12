@@ -33,7 +33,7 @@ import com.twitter.scalding.Write
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.express.flow.All
-import org.kiji.express.flow.ColumnRequestOutput
+import org.kiji.express.flow.ColumnOutputSpec
 import org.kiji.express.flow.TimeRange
 import org.kiji.express.flow.framework.KijiScheme
 
@@ -76,7 +76,7 @@ class HFileKijiSource private[express] (
     val timeRange: TimeRange,
     val timestampField: Option[Symbol],
     val loggingInterval: Long,
-    val columns: Map[Symbol, ColumnRequestOutput]
+    val columns: Map[Symbol, ColumnOutputSpec]
 ) extends Source {
   import org.kiji.express.flow.KijiSource._
 

@@ -112,8 +112,8 @@ final class KijiSource private[express] (
     val tableAddress: String,
     val timeRange: TimeRange,
     val timestampField: Option[Symbol],
-    val inputColumns: Map[Symbol, ColumnRequestInput] = Map(),
-    val outputColumns: Map[Symbol, ColumnRequestOutput] = Map()
+    val inputColumns: Map[Symbol, ColumnInputSpec] = Map(),
+    val outputColumns: Map[Symbol, ColumnOutputSpec] = Map()
 ) extends Source {
   import KijiSource._
 
@@ -167,12 +167,12 @@ final class KijiSource private[express] (
   override def createTap(readOrWrite: AccessMode)(implicit mode: Mode): Tap[_, _, _] = {
     /** Combination of normal input columns and input versions of the output columns (the latter are
      * needed for reading back written results) */
-    def getInputColumnsForTesting: Map[String, ColumnRequestInput] = {
-      val testingInputColumnsFromReads = inputColumnRequestsAllData(
+    def getInputColumnsForTesting: Map[String, ColumnInputSpec] = {
+      val testingInputColumnsFromReads = inputColumnSpecifyAllData(
           convertKeysToStrings(inputColumns))
-      val testingInputColumnsFromWrites = inputColumnRequestsAllData(
+      val testingInputColumnsFromWrites = inputColumnSpecifyAllData(
           convertKeysToStrings(outputColumns)
-          .mapValues { x: ColumnRequestOutput => ColumnRequestInput(x.columnName.toString) })
+          .mapValues { x: ColumnOutputSpec => ColumnInputSpec(x.columnName.toString) })
       testingInputColumnsFromReads ++ testingInputColumnsFromWrites
     }
 
@@ -337,8 +337,8 @@ object KijiSource {
     }
   }
 
-  private[express] def newGetAllData(col: ColumnRequestInput): ColumnRequestInput = {
-    ColumnRequestInput(
+  private[express] def newGetAllData(col: ColumnInputSpec): ColumnInputSpec = {
+    ColumnInputSpec(
         col.columnName.toString,
         Integer.MAX_VALUE,
         col.filter,
@@ -347,18 +347,17 @@ object KijiSource {
   }
 
   /**
-   * Returns a map from field name to column request where the column request has been
+   * Returns a map from field name to column input spec where the column input spec has been
    * configured as an output column.
    *
    * This is used in tests, when we use KijiScheme to read tuples from a Kiji table, and we want
    * to read all data in all of the columns, so the test can inspect all data in the table.
-   * Therefore, we convert ColumnRequestOutput objects into ColumnRequestInput objects.
    *
    * @param columns to transform.
-   * @return transformed map where the column requests are configured for output.
+   * @return transformed map where the column input specs are configured for output.
    */
-  private def inputColumnRequestsAllData(
-      columns: Map[String, ColumnRequestInput]): Map[String, ColumnRequestInput] = {
+  private def inputColumnSpecifyAllData(
+      columns: Map[String, ColumnInputSpec]): Map[String, ColumnInputSpec] = {
     columns.mapValues(newGetAllData)
         // Need this to make the Map serializable (issue with mapValues)
         .map(identity)
@@ -373,18 +372,19 @@ object KijiSource {
    * @param timestampField is the name of a tuple field that will contain cell timestamp when the
    *     source is used for writing. Specify the empty field name to write all
    *     cells at the current time.
-   * @param columns is a Scalding field name to Kiji column name mapping.
+   * @param inputColumns is a map of Scalding field name to ColumnInputSpec.
+   * @param outputColumns is a map of ColumnOutputSpec to Scalding field name.
    */
   private class TestLocalKijiScheme(
       val buffer: Buffer[Tuple],
       timeRange: TimeRange,
       timestampField: Option[Symbol],
-      inputColumns: Map[String, ColumnRequestInput],
-      outputColumns: Map[String, ColumnRequestOutput])
+      inputColumns: Map[String, ColumnInputSpec],
+      outputColumns: Map[String, ColumnOutputSpec])
       extends LocalKijiScheme(
           timeRange,
           timestampField,
-          inputColumnRequestsAllData(inputColumns),
+          inputColumnSpecifyAllData(inputColumns),
           outputColumns) {
     override def sinkCleanup(
         process: FlowProcess[Properties],
@@ -477,15 +477,15 @@ object KijiSource {
    * @return a merged mapping from field names to input column requests.
    */
   private def mergeColumnMapping(
-      inputs: Map[String, ColumnRequestInput],
-      outputs: Map[String, ColumnRequestOutput]
-  ): Map[String, ColumnRequestInput] = {
+      inputs: Map[String, ColumnInputSpec],
+      outputs: Map[String, ColumnOutputSpec]
+  ): Map[String, ColumnInputSpec] = {
     def mergeEntry(
-        inputs: Map[String, ColumnRequestInput],
-        entry: (String, ColumnRequestOutput)
-    ): Map[String, ColumnRequestInput] = {
+        inputs: Map[String, ColumnInputSpec],
+        entry: (String, ColumnOutputSpec)
+    ): Map[String, ColumnInputSpec] = {
       val (fieldName, columnRequest) = entry
-      val input = ColumnRequestInput(
+      val input = ColumnInputSpec(
           column = columnRequest.columnName.getName,
           maxVersions = Int.MaxValue,
           schemaSpec = columnRequest.schemaSpec
@@ -509,8 +509,8 @@ object KijiSource {
    */
   private class TestKijiScheme(
       timestampField: Option[Symbol],
-      inputColumns: Map[String, ColumnRequestInput],
-      outputColumns: Map[String, ColumnRequestOutput])
+      inputColumns: Map[String, ColumnInputSpec],
+      outputColumns: Map[String, ColumnOutputSpec])
       extends KijiScheme(
           All,
           timestampField,

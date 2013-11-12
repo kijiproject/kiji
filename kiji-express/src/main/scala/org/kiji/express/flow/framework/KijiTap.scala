@@ -249,8 +249,8 @@ object KijiTap {
    */
   private[express] def validate(
       kijiUri: KijiURI,
-      inputColumns: Map[String, ColumnRequestInput],
-      outputColumns: Map[String, ColumnRequestOutput],
+      inputColumns: Map[String, ColumnInputSpec],
+      outputColumns: Map[String, ColumnOutputSpec],
       conf: Configuration) {
     // Try to open the Kiji instance.
     val kiji: Kiji =
