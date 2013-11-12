@@ -19,10 +19,10 @@
 
 package org.kiji.express.flow.framework
 
-import org.kiji.annotations.ApiAudience;
-import org.kiji.annotations.ApiStability;
+import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
-import org.kiji.schema.KijiRowData;
+import org.kiji.schema.KijiRowData
 
 /**
  * A reusable container for [[org.kiji.schema.KijiRowData]].

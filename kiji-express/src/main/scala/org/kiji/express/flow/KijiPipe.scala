@@ -34,10 +34,10 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
 import org.kiji.express.flow.framework.serialization.KijiLocker
+import org.kiji.express.flow.util.AvroGenericTupleConverter
 import org.kiji.express.repl.ExpressShell
 import org.kiji.express.repl.Implicits
 import org.kiji.express.repl.Implicits.pipeToRichPipe
-import org.kiji.express.util.AvroGenericTupleConverter
 
 /**
  * A class that adds Kiji-specific functionality to a Cascading pipe. This includes running pipes

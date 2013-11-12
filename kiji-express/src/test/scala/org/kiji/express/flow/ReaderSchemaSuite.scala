@@ -28,8 +28,6 @@ import org.apache.hadoop.conf.Configuration
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
-import org.kiji.express.Cell
-import org.kiji.express.EntityId
 import org.kiji.express.KijiSuite
 import org.kiji.express.avro.SimpleRecord
 import org.kiji.express.flow.SchemaSpec.Generic
@@ -46,7 +44,7 @@ import org.kiji.schema.layout.KijiTableLayout
 
 @RunWith(classOf[JUnitRunner])
 class ReaderSchemaSuite extends KijiClientTest with KijiSuite {
-  import org.kiji.express.util.AvroTypesComplete._
+  import org.kiji.express.flow.util.AvroTypesComplete._
   setupKijiTest()
   val kiji: Kiji = createTestKiji()
   val layout: KijiTableLayout = layout("layout/avro-types-complete.json")

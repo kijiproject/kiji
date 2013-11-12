@@ -25,7 +25,8 @@ import java.util.concurrent.atomic.AtomicInteger
 import com.twitter.scalding.TupleConversions
 import org.scalatest.FunSuite
 
-import org.kiji.express.util.Resources._
+import org.kiji.express.flow.Cell
+import org.kiji.express.flow.util.Resources._
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiTable

@@ -34,10 +34,9 @@ import org.apache.hadoop.conf.Configuration
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
-import org.kiji.express.EntityId
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow.SchemaSpec.Writer
-import org.kiji.express.util.AvroTypesComplete
+import org.kiji.express.flow.util.AvroTypesComplete
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiClientTest
 import org.kiji.schema.KijiColumnName

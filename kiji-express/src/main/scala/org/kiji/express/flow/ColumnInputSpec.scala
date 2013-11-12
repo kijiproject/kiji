@@ -37,7 +37,7 @@ import org.kiji.schema.KijiInvalidNameException
  *
  * Use the [[org.kiji.express.flow.ColumnFamilyInputSpec]] to retrieve an entire column family
  * into a field of a flow.  Each row in the KijiTable will be a new tuple, with each field in the
- * tuple containing a stream of [[org.kiji.express.Cell]]s.
+ * tuple containing a stream of [[org.kiji.express.flow.Cell]]s.
  *
  * Note: Subclasses of ColumnInputSpec are case classes that override ColumnInputSpec's
  * abstract methods (e.g., `schema`) with `val`s.

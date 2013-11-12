@@ -49,9 +49,9 @@ import org.kiji.annotations.Inheritance
 import org.kiji.express.flow.ColumnInputSpec
 import org.kiji.express.flow.ColumnOutputSpec
 import org.kiji.express.flow.TimeRange
-import org.kiji.express.util.GenericCellSpecs
-import org.kiji.express.util.Resources._
-import org.kiji.express.util.SpecificCellSpecs
+import org.kiji.express.flow.util.GenericCellSpecs
+import org.kiji.express.flow.util.Resources._
+import org.kiji.express.flow.util.SpecificCellSpecs
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiColumnName

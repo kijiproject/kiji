@@ -24,11 +24,9 @@ import java.util.UUID
 import cascading.flow.FlowProcess
 import cascading.scheme.Scheme
 import cascading.tap.Tap
-import cascading.tap.hadoop.Hfs
 import cascading.tap.hadoop.io.HadoopTupleEntrySchemeCollector
 import cascading.tuple.TupleEntryCollector
 import cascading.tuple.TupleEntryIterator
-import cascading.util.Util
 import com.twitter.elephantbird.mapred.output.DeprecatedOutputFormatWrapper
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.mapred.FileOutputFormat
@@ -54,7 +52,7 @@ import org.kiji.mapreduce.output.framework.KijiHFileOutputFormat
  * to perform decoding of cells in a Kiji table. [[org.kiji.express.flow.KijiSource]] handles
  * the creation of both HFileKijiScheme and HFileKijiTap in KijiExpress.
  *
- * @param uri of the Kiji table to read or write from.
+ * @param tableUri of the Kiji table to read or write from.
  * @param scheme that will convert data read from Kiji into Cascading's tuple model.
  * @param hFileOutput is the location where the HFiles will be written to.
  */
@@ -167,7 +165,7 @@ private[express] class HFileKijiTap(
    */
   override def sinkConfInit(flow: FlowProcess[JobConf], conf: JobConf) {
 
-    FileOutputFormat.setOutputPath(conf, new Path(hFileOutput));
+    FileOutputFormat.setOutputPath(conf, new Path(hFileOutput))
     DeprecatedOutputFormatWrapper.setOutputFormat(classOf[KijiHFileOutputFormat], conf)
     val hfContext = classOf[HFileWriterContext].getName()
     conf.set(KijiConfKeys.KIJI_TABLE_CONTEXT_CLASS, hfContext)

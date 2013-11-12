@@ -39,8 +39,8 @@ import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
 import org.kiji.express.flow.framework.KijiTap
 import org.kiji.express.flow.framework.LocalKijiTap
-import org.kiji.express.util.AvroTupleConversions
-import org.kiji.express.util.PipeConversions
+import org.kiji.express.flow.util.AvroTupleConversions
+import org.kiji.express.flow.util.PipeConversions
 
 /**
  * KijiJob is KijiExpress's extension of Scalding's `Job`, and users should extend it when writing

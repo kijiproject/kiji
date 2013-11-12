@@ -19,18 +19,12 @@
 
 package org.kiji.express.flow.framework.hfile
 
-import java.util.concurrent.atomic.AtomicLong
-
 import cascading.flow.FlowProcess
 import cascading.scheme.NullScheme
-import cascading.scheme.Scheme
 import cascading.scheme.SinkCall
-import cascading.scheme.SourceCall
 import cascading.tap.Tap
 import cascading.tuple.TupleEntry
 import com.google.common.base.Objects
-import com.twitter.elephantbird.mapred.output.DeprecatedOutputFormatWrapper
-import org.apache.hadoop.fs.Path
 import org.apache.hadoop.hbase.HConstants
 import org.apache.hadoop.io.NullWritable
 import org.apache.hadoop.mapred.JobConf
@@ -38,24 +32,18 @@ import org.apache.hadoop.mapred.OutputCollector
 import org.apache.hadoop.mapred.RecordReader
 
 import org.kiji.annotations.ApiAudience
-import org.kiji.annotations.ApiAudience.Framework
 import org.kiji.annotations.ApiStability
-import org.kiji.annotations.ApiStability.Experimental
 import org.kiji.annotations.Inheritance
-import org.kiji.express.EntityId
 import org.kiji.express.flow.ColumnFamilyOutputSpec
 import org.kiji.express.flow.ColumnOutputSpec
+import org.kiji.express.flow.EntityId
 import org.kiji.express.flow.QualifiedColumnOutputSpec
 import org.kiji.express.flow.TimeRange
 import org.kiji.express.flow.framework.KijiScheme
 import org.kiji.express.flow.framework.KijiSourceContext
-import org.kiji.express.util.Resources
-import org.kiji.express.util.Resources.doAndRelease
-import org.kiji.mapreduce.HFileLoader
+import org.kiji.express.flow.util.Resources.doAndRelease
 import org.kiji.mapreduce.framework.HFileKeyValue
 import org.kiji.mapreduce.framework.KijiConfKeys
-import org.kiji.mapreduce.impl.HFileWriterContext
-import org.kiji.mapreduce.output.framework.KijiHFileOutputFormat
 import org.kiji.schema.EntityIdFactory
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiColumnName
@@ -76,7 +64,7 @@ import org.kiji.schema.layout.impl.ColumnNameTranslator
  * data from a Cascading flow to an HFile capable of being bulk loaded into HBase
  * (see `sink(cascading.flow.FlowProcess, cascading.scheme.SinkCall)`).
  *
- * HFileKijiScheme must be used with [[org.kiji.express.flow.framework.HFileKijiTap]],
+ * HFileKijiScheme must be used with [[org.kiji.express.flow.framework.hfile.HFileKijiTap]],
  * since it expects the Tap to have access to a Kiji table.
  * [[org.kiji.express.flow.framework.hfile.HFileKijiSource]] handles the creation of both
  * HFileKijiScheme and KijiTap in KijiExpress.
@@ -148,14 +136,14 @@ private[express] class HFileKijiScheme(
 
     outputCells(output, timestampField, columns) { key: HFileCell =>
       // Convert cell to an HFileKeyValue
-      val kijiColumn = new KijiColumnName(key.col_request.family, key.col_request.qualifier);
+      val kijiColumn = new KijiColumnName(key.colRequest.family, key.colRequest.qualifier);
       val hbaseColumn = colTranslator.toHBaseColumnName(kijiColumn);
       val cellSpec = layout.getCellSpec(kijiColumn)
         .setSchemaTable(kiji.getSchemaTable());
 
       val encoder = encoderProvider.getEncoder(kijiColumn.getFamily(), kijiColumn.getQualifier())
       val hFileKeyValue = new HFileKeyValue(
-        key.entity_id.toJavaEntityId(eidFactory).getHBaseRowKey(),
+        key.entityId.toJavaEntityId(eidFactory).getHBaseRowKey(),
         hbaseColumn.getFamily(), hbaseColumn.getQualifier(), key.timestamp,
         encoder.encode(key.datum));
 
@@ -258,18 +246,17 @@ private[express] case class HFileKijiSinkContext (
  * A cell from a Kiji table containing some datum, addressed by a family, qualifier,
  * and version timestamp.
  *
- * @param family of the Kiji table cell.
- * @param qualifier of the Kiji table cell.
- * @param version  of the Kiji table cell.
+ * @param entityId of the Kiji table cell.
+ * @param colRequest of the Kiji table cell.
+ * @param timestamp  of the Kiji table cell.
  * @param datum in the Kiji table cell.
- * @tparam T is the type of the datum in the cell.
  */
 @ApiAudience.Framework
 @ApiStability.Experimental
 @Inheritance.Sealed
 private[express] case class HFileCell private[express] (
-  entity_id: EntityId,
-  col_request: QualifiedColumnOutputSpec,
+  entityId: EntityId,
+  colRequest: QualifiedColumnOutputSpec,
   timestamp: Long,
   datum: AnyRef)
 

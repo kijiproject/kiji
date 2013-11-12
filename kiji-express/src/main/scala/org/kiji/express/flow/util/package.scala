@@ -17,25 +17,9 @@
  * limitations under the License.
  */
 
-package org.kiji.express.flow.framework
+package org.kiji.express.flow
 
-import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
-
-import org.kiji.schema.EntityIdFactory
-import org.kiji.schema.avro.RowKeyEncoding
-import org.kiji.schema.avro.RowKeyFormat
-
-@RunWith(classOf[JUnitRunner])
-class KijiKeySuite extends FunSuite {
-  test("KijiKey should get the same EntityId you put in.") {
-    val entityIdFactory = EntityIdFactory.getFactory(
-      RowKeyFormat.newBuilder().setEncoding(RowKeyEncoding.RAW).build())
-    val testId = entityIdFactory.getEntityId("foob")
-    val testKey = new KijiKey()
-    testKey.set(testId)
-
-    assert(testId == testKey.get())
-  }
-}
+/**
+ * Package containing utility classes for the KijiExpress flow API.
+ */
+package object util

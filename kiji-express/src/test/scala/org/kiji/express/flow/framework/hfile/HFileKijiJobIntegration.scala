@@ -32,11 +32,9 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 
-import org.kiji.express.EntityId
 import org.kiji.express.flow.ColumnFamilyOutputSpec
-import org.kiji.express.flow.ColumnOutputSpec
-import org.kiji.express.flow.QualifiedColumnOutputSpec
-import org.kiji.express.util.Resources
+import org.kiji.express.flow.EntityId
+import org.kiji.express.flow.util.Resources
 import org.kiji.mapreduce.HFileLoader
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiDataRequest

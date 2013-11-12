@@ -28,11 +28,9 @@ import com.twitter.scalding.Tsv
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
-import org.kiji.express.EntityId
-import org.kiji.express.Cell
 import org.kiji.express.KijiSuite
+import org.kiji.express.flow.util.Resources._
 import org.kiji.express.repl.Implicits._
-import org.kiji.express.util.Resources._
 import org.kiji.schema.KijiTable
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts

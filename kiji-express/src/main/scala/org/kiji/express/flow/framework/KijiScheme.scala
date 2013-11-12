@@ -43,20 +43,20 @@ import org.slf4j.LoggerFactory
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.express.Cell
-import org.kiji.express.EntityId
+import org.kiji.express.flow.Cell
 import org.kiji.express.flow.ColumnFamilyInputSpec
 import org.kiji.express.flow.ColumnFamilyOutputSpec
 import org.kiji.express.flow.ColumnInputSpec
 import org.kiji.express.flow.ColumnOutputSpec
+import org.kiji.express.flow.EntityId
 import org.kiji.express.flow.PagingSpec
 import org.kiji.express.flow.QualifiedColumnInputSpec
 import org.kiji.express.flow.QualifiedColumnOutputSpec
 import org.kiji.express.flow.TimeRange
 import org.kiji.express.flow.framework.serialization.KijiLocker
-import org.kiji.express.util.AvroUtil
-import org.kiji.express.util.Resources.doAndRelease
-import org.kiji.express.util.SpecificCellSpecs
+import org.kiji.express.flow.util.AvroUtil
+import org.kiji.express.flow.util.Resources.doAndRelease
+import org.kiji.express.flow.util.SpecificCellSpecs
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.ColumnVersionIterator
 import org.kiji.schema.EntityIdFactory

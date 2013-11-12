@@ -28,9 +28,9 @@ import org.apache.hadoop.mapred.RecordReader
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
-import org.kiji.express.util.GenericCellSpecs
-import org.kiji.express.util.SpecificCellSpecs
-import org.kiji.express.util.Resources.doAndRelease
+import org.kiji.express.flow.util.GenericCellSpecs
+import org.kiji.express.flow.util.SpecificCellSpecs
+import org.kiji.express.flow.util.Resources.doAndRelease
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.HBaseEntityId
 import org.kiji.schema.Kiji

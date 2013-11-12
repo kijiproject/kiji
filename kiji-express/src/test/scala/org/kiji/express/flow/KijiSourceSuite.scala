@@ -32,12 +32,10 @@ import org.apache.avro.generic.GenericRecord
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
-import org.kiji.express.Cell
-import org.kiji.express.EntityId
 import org.kiji.express.KijiSuite
 import org.kiji.express.avro.SimpleRecord
 import org.kiji.express.flow.SchemaSpec.Specific
-import org.kiji.express.util.Resources.doAndRelease
+import org.kiji.express.flow.util.Resources.doAndRelease
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiTable

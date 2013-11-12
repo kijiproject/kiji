@@ -19,41 +19,27 @@
 
 package org.kiji.express.flow.framework.hfile
 
-import scala.collection.JavaConverters.collectionAsScalaIterableConverter
 import scala.transient
-import java.util.Properties
 
 import cascading.flow.Flow
-import cascading.flow.Flow
-import cascading.flow.Flow
-import cascading.flow.FlowListener
-import cascading.tap.hadoop.Hfs
 import cascading.tap.hadoop.Hfs
 import cascading.util.Util
-import cascading.util.Util
-import cascading.util.Util
-import com.twitter.scalding.HadoopMode
+import com.twitter.scalding.Args
+import com.twitter.scalding.HadoopTest
 import com.twitter.scalding.Hdfs
-import com.twitter.scalding.Hdfs
-import com.twitter.scalding._
-import com.twitter.scalding._
+import com.twitter.scalding.Job
+import com.twitter.scalding.Mode
+import com.twitter.scalding.WritableSequenceFile
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.FileSystem
-import org.apache.hadoop.fs.FileSystem
-import org.apache.hadoop.fs.Path
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.io.NullWritable
-import org.apache.hadoop.io.NullWritable
 import org.apache.hadoop.mapred.JobConf
-import org.apache.hadoop.mapred.JobConf
-import org.kiji.mapreduce.framework.HFileKeyValue
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
 import org.kiji.express.flow.KijiJob
-import org.kiji.express.flow.framework.LocalKijiTap
-import org.kiji.express.util.PipeConversions
 import org.kiji.mapreduce.framework.HFileKeyValue
 
 /**

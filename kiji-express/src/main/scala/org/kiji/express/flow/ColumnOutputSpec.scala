@@ -28,7 +28,7 @@ import org.kiji.annotations.Inheritance
 import org.kiji.express.flow.SchemaSpec.Generic
 import org.kiji.express.flow.SchemaSpec.Specific
 import org.kiji.express.flow.SchemaSpec.Writer
-import org.kiji.express.util.AvroUtil
+import org.kiji.express.flow.util.AvroUtil
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiInvalidNameException
 

@@ -21,20 +21,20 @@ package org.kiji.express.flow.framework
 
 import cascading.tuple.Tuple
 import cascading.tuple.TupleEntry
-import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.avro.generic.GenericRecord
 import org.apache.avro.generic.GenericRecordBuilder
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.hbase.HBaseConfiguration
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
-import org.kiji.express.Cell
-import org.kiji.express.EntityId
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow.All
+import org.kiji.express.flow.Cell
 import org.kiji.express.flow.ColumnInputSpec
+import org.kiji.express.flow.EntityId
 import org.kiji.express.flow.QualifiedColumnOutputSpec
-import org.kiji.express.util.GenericCellSpecs
+import org.kiji.express.flow.util.GenericCellSpecs
 import org.kiji.schema.EntityIdFactory
 import org.kiji.schema.avro.HashSpec
 import org.kiji.schema.avro.HashType

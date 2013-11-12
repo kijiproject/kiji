@@ -34,7 +34,6 @@ import cascading.tap.Tap
 import cascading.tuple.Fields
 import cascading.tuple.Tuple
 import cascading.tuple.TupleEntry
-import com.google.common.collect.Maps
 import com.google.common.base.Objects
 import com.twitter.scalding.AccessMode
 import com.twitter.scalding.Test
@@ -53,15 +52,12 @@ import org.apache.hadoop.mapred.RecordReader
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.express.Cell
-import org.kiji.express.EntityId
 import org.kiji.express.flow.framework.KijiScheme
 import org.kiji.express.flow.framework.KijiTap
 import org.kiji.express.flow.framework.LocalKijiScheme
 import org.kiji.express.flow.framework.LocalKijiTap
 import org.kiji.express.flow.framework.OutputContext
-import org.kiji.express.util.GenericCellSpecs
-import org.kiji.express.util.Resources._
+import org.kiji.express.flow.util.Resources._
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.EntityIdFactory
 import org.kiji.schema.Kiji
@@ -70,7 +66,6 @@ import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiRowData
 import org.kiji.schema.KijiRowScanner
 import org.kiji.schema.KijiTable
-import org.kiji.schema.KijiTableReader
 import org.kiji.schema.KijiTableWriter
 import org.kiji.schema.KijiURI
 import org.kiji.schema.layout.CellSpec
@@ -507,7 +502,8 @@ private[express] object KijiSource {
    * @param timestampField is the name of a tuple field that will contain cell timestamp when the
    *                       source is used for writing. Specify the empty field name to write all
    *                       cells at the current time.
-   * @param columns Scalding field name to Kiji column name mapping.
+   * @param inputColumns Scalding field name to column input spec mapping.
+   * @param outputColumns Scalding field name to column output spec mapping.
    */
   private class TestKijiScheme(
       timestampField: Option[Symbol],

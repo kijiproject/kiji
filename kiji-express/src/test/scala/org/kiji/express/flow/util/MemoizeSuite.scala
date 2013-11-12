@@ -17,25 +17,25 @@
  * limitations under the License.
  */
 
-package org.kiji.express.flow.framework
+package org.kiji.express.flow.util
 
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
-import org.kiji.schema.EntityIdFactory
-import org.kiji.schema.avro.RowKeyEncoding
-import org.kiji.schema.avro.RowKeyFormat
-
 @RunWith(classOf[JUnitRunner])
-class KijiKeySuite extends FunSuite {
-  test("KijiKey should get the same EntityId you put in.") {
-    val entityIdFactory = EntityIdFactory.getFactory(
-      RowKeyFormat.newBuilder().setEncoding(RowKeyEncoding.RAW).build())
-    val testId = entityIdFactory.getEntityId("foob")
-    val testKey = new KijiKey()
-    testKey.set(testId)
+class MemoizeSuite extends FunSuite {
+  test("Test for memoization") {
+    // outer class without equals defined
+    class Outer(val data: Int)
 
-    assert(testId == testKey.get())
+    def strSqLen(s: String): Outer = new Outer(s.length * s.length)
+    val strSqLenMemoized = Memoize(strSqLen)
+    val a = strSqLenMemoized("hello Memo")
+    val b = strSqLen("hello Memo")
+    assert(a.data == b.data)
+    // should go to cache for result
+    val c = strSqLenMemoized("hello Memo")
+    assert(a == c)
   }
 }

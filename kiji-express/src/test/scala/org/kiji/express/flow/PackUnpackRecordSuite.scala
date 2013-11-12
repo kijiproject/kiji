@@ -32,7 +32,7 @@ import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.KijiSuite
 import org.kiji.express.avro.SimpleRecord
-import org.kiji.express.util.PipeRunner._
+import org.kiji.express.flow.util.PipeRunner._
 
 @RunWith(classOf[JUnitRunner])
 class PackUnpackRecordSuite extends KijiSuite {
