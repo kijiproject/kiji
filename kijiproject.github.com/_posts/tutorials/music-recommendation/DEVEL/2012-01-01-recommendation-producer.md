@@ -174,12 +174,13 @@ kiji scan ${KIJI}/users/info:next_song_rec --max-rows=3
 These are our recommendations for the next song to play for each user!
 </div>
 
-    entity-id='user-41' [1361564713968] info:next_song_rec
-                                 song-41
+    Scanning kiji table: kiji://localhost:2181/kiji_music/users/info:next_song_rec/
+    entity-id=['user-41'] [1384241228671] info:next_song_rec
+                                     song-40
 
-    entity-id='user-3' [1361564713980] info:next_song_rec
-                                 song-2
+    entity-id=['user-3'] [1384241228671] info:next_song_rec
+                                     song-3
 
-    entity-id='user-13' [1361564713990] info:next_song_rec
-                                 song-27
+    entity-id=['user-13'] [1384241228671] info:next_song_rec
+                                     song-18
 
