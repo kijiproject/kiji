@@ -264,7 +264,7 @@ function extract_classpath() {
 
   # Use parts of the classpath to determine jars to send with jobs through the distributed cache.
   tmpjars_cp="${libjars_cp}:${libjars}"
-  tmpjars=$(java -cp ${express_cp} org.kiji.express.tool.TmpJarsTool ${tmpjars_cp})
+  tmpjars=$(java -cp ${express_cp} org.kiji.express.flow.tool.TmpJarsTool ${tmpjars_cp})
 
   # Determine location of Hadoop native libraries and set java.library.path.
   if [ -d "${HADOOP_HOME}/lib/native" ]; then
