@@ -19,6 +19,7 @@ If you are using an earlier version of Kiji, user guides appropriate
 to the Kiji version you are using are available here:
 
 #### KijiSchema User Guide
+* [KijiSchema 1.3.2]({{site.userguide_url}}/schema/1.3.2/kiji-schema-overview/)
 * [KijiSchema 1.3.1]({{site.userguide_url}}/schema/1.3.1/kiji-schema-overview/)
 * [KijiSchema 1.3.0]({{site.userguide_url}}/schema/1.3.0/kiji-schema-overview/)
 * [KijiSchema 1.2.1]({{site.userguide_url}}/schema/1.2.1/kiji-schema-overview/)
@@ -38,7 +39,7 @@ to the Kiji version you are using are available here:
 * [KijiSchema 1.0.0-rc1]({{site.userguide_url}}/schema/1.0.0-rc1/kiji-schema-overview/)
 
 #### KijiMR User Guide
-
+* [KijiMR 1.2.1]({{site.userguide_url}}/mapreduce/1.2.1/kiji-mr-overview/)
 * [KijiMR 1.2.0]({{site.userguide_url}}/mapreduce/1.2.0/kiji-mr-overview/)
 * [KijiMR 1.1.0]({{site.userguide_url}}/mapreduce/1.1.0/kiji-mr-overview/)
 * [KijiMR 1.0.2]({{site.userguide_url}}/mapreduce/1.0.2/kiji-mr-overview/)
@@ -51,7 +52,7 @@ to the Kiji version you are using are available here:
 * [KijiMR 1.0.0-rc4]({{site.userguide_url}}/mapreduce/1.0.0-rc4/kiji-mr-overview/)
 
 #### KijiREST User Guide
-
+* [KijiREST 1.0.0]({{site.userguide_url}}/rest/1.0.0/rest-overview/)
 * [KijiREST 0.5.0]({{site.userguide_url}}/rest/0.5.0/rest-overview/)
 * [KijiREST 0.4.0]({{site.userguide_url}}/rest/0.4.0/rest-overview/)
 * [KijiREST 0.3.0]({{site.userguide_url}}/rest/0.3.0/rest-overview/)
