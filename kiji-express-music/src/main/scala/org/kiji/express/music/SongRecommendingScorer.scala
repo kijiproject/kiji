@@ -21,9 +21,9 @@ package org.kiji.express.music
 
 import java.util.Random
 
-import org.kiji.express.EntityId
-import org.kiji.modeling.Scorer
+import org.kiji.express.flow.EntityId
 import org.kiji.express.music.avro.TopSongs
+import org.kiji.modeling.Scorer
 
 /**
  * Recommends the song most frequently played after the song a user has most recently

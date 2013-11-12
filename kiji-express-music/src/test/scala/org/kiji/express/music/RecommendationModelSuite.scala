@@ -21,17 +21,16 @@ package org.kiji.express.music
 
 import scala.collection.JavaConverters.seqAsJavaListConverter
 
-import org.kiji.express.util.Resources.doAndClose
-import org.kiji.express.util.Resources.doAndRelease
-
 import com.twitter.scalding.Args
 import com.twitter.scalding.IterableSource
 
-import org.kiji.express.EntityId
 import org.kiji.express.KijiSuite
+import org.kiji.express.flow.EntityId
 import org.kiji.express.flow.KijiJob
 import org.kiji.express.flow.KijiOutput
 import org.kiji.express.flow.QualifiedColumnOutputSpec
+import org.kiji.express.flow.util.Resources.doAndClose
+import org.kiji.express.flow.util.Resources.doAndRelease
 import org.kiji.express.music.avro.SongCount
 import org.kiji.express.music.avro.TopSongs
 import org.kiji.modeling.ScoreProducerJobBuilder

@@ -23,10 +23,10 @@ import scala.collection.mutable.Buffer
 
 import com.twitter.scalding.JobTest
 
-import org.kiji.express.Cell
-import org.kiji.express.EntityId
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow
+import org.kiji.express.flow.Cell
+import org.kiji.express.flow.EntityId
 import org.kiji.express.flow.KijiInput
 import org.kiji.express.flow.KijiOutput
 import org.kiji.express.flow.QualifiedColumnInputSpec

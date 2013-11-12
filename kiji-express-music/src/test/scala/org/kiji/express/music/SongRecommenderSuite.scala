@@ -24,9 +24,9 @@ import scala.collection.JavaConverters.seqAsJavaListConverter
 import com.twitter.scalding.JobTest
 import scala.collection.mutable.Buffer
 
-import org.kiji.express.Cell
-import org.kiji.express.EntityId
 import org.kiji.express.KijiSuite
+import org.kiji.express.flow.Cell
+import org.kiji.express.flow.EntityId
 import org.kiji.express.flow.KijiInput
 import org.kiji.express.flow.KijiOutput
 import org.kiji.express.flow.KijiSource
