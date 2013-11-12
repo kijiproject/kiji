@@ -222,7 +222,7 @@ protocol Modeling {
   }
 
   /** Specification for fetching data from fully-qualified columns. */
-  record AvroQualifiedColumnRequestInput {
+  record AvroQualifiedColumnInputSpec {
     /** The name of the column family */
     string family;
 
@@ -248,7 +248,7 @@ protocol Modeling {
   }
 
   /** Specification for fetching data for a column family. */
-  record AvroColumnFamilyRequestInput {
+  record AvroColumnFamilyInputSpec {
     /** The name of the column family */
     string family;
 
@@ -289,7 +289,7 @@ protocol Modeling {
   /** The mapping from input columns to Scalding fields. */
   record AvroInputFieldBinding {
     /** The input column (fully-qualified or a family).  Required. */
-    union{AvroQualifiedColumnRequestInput, AvroColumnFamilyRequestInput} column;
+    union{AvroQualifiedColumnInputSpec, AvroColumnFamilyInputSpec} column;
 
     /** The Scaling field.  Required. */
     string tuple_field_name;
@@ -308,7 +308,7 @@ protocol Modeling {
   }
 
   /** Specification for fetching data for a column family. */
-  record AvroQualifiedColumnRequestOutput {
+  record AvroQualifiedColumnOutputSpec {
     /** The name of the column family */
     string family;
 
@@ -320,7 +320,7 @@ protocol Modeling {
   }
 
   /** Specification for fetching data for a column family. */
-  record AvroColumnFamilyRequestOutput {
+  record AvroColumnFamilyOutputSpec {
     /** The name of the column family */
     string family;
 
@@ -340,7 +340,7 @@ protocol Modeling {
     string tuple_field_name;
 
     /** The output column (fully-qualified or a family).  Required. */
-    union{AvroQualifiedColumnRequestOutput, AvroColumnFamilyRequestOutput} column;
+    union{AvroQualifiedColumnOutputSpec, AvroColumnFamilyOutputSpec} column;
   }
 
   /** Configuration necessary to use a Kiji table as a data sink. */
@@ -364,7 +364,7 @@ protocol Modeling {
     string table_uri;
 
     /** The Kiji column to write the output of the phase to. Required. */
-    union{AvroQualifiedColumnRequestOutput, AvroColumnFamilyRequestOutput} output_column;
+    union{AvroQualifiedColumnOutputSpec, AvroColumnFamilyOutputSpec} output_column;
   }
 
   /**

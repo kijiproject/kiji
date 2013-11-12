@@ -91,7 +91,7 @@ import org.kiji.schema.util.ToJson
  *              "time_range" : { "min_timestamp" : 0, "max_timestamp" : 38475687 },
  *              "columns_to_fields" : [ {
  *                "tuple_field_name" : "tuplename",
- *                "column" : { "org.kiji.modeling.avro.AvroQualifiedColumnRequestInput" : {
+ *                "column" : { "org.kiji.modeling.avro.AvroQualifiedColumnInputSpec" : {
  *                  "family" : "info",
  *                  "qualifier" : "in",
  *                  "max_versions" : 3,
@@ -117,7 +117,7 @@ import org.kiji.schema.util.ToJson
  *              "table_uri":"kiji://myuri",
  *              "fields_to_columns" : [ {
  *                "tuple_field_name" : "outputtuple",
- *                "column" : { "org.kiji.modeling.avro.AvroQualifiedColumnRequestOutput" : {
+ *                "column" : { "org.kiji.modeling.avro.AvroQualifiedColumnOutputSpec" : {
  *                  "family" : "info",
  *                  "qualifier" : "out"
  *                }}
@@ -369,11 +369,10 @@ object ModelEnvironment {
   }
 
   /**
-   * Verifies that the given collection of bindings between Scalding field names and column requests
-   * is valid with respect to the field names and column names contained therein.
+   * Verifies that the given collection of bindings between Scalding field names and column output
+   * spec is valid with respect to the field names and column names contained therein.
    *
-   * @param columns is a map from field names to [[org.kiji.express.flow.ColumnOutputSpec]]
-   *     objects.
+   * @param columns is a map from field names to [[org.kiji.express.flow.ColumnOutputSpec]] objects.
    * @return an optional ValidationException if there are errors encountered.
    */
   def validateKijiOutputFieldBindings(

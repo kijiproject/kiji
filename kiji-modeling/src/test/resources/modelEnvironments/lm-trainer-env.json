@@ -31,12 +31,12 @@
               "time_range" : { "min_timestamp" : 0, "max_timestamp" : 9223372036854775807},
               "columns_to_fields" : [ {
                 "tuple_field_name" : "attributes",
-                "column" : { "org.kiji.modeling.avro.AvroQualifiedColumnRequestInput" : {
+                "column" : { "org.kiji.modeling.avro.AvroQualifiedColumnInputSpec" : {
                   "family" : "family",
                   "qualifier" : "column1"
                 }}}, {
                 "tuple_field_name" : "target",
-                "column" : { "org.kiji.modeling.avro.AvroQualifiedColumnRequestInput" : {
+                "column" : { "org.kiji.modeling.avro.AvroQualifiedColumnInputSpec" : {
                   "family" : "family",
                   "qualifier" : "column2"
                 }}}

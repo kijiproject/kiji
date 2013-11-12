@@ -37,16 +37,16 @@ import org.kiji.express.flow.QualifiedColumnInputSpec
 import org.kiji.express.flow.QualifiedColumnOutputSpec
 import org.kiji.express.flow.RegexQualifierFilterSpec
 import org.kiji.express.util.Resources.resourceAsString
-import org.kiji.modeling.avro.AvroColumnFamilyRequestInput
-import org.kiji.modeling.avro.AvroColumnFamilyRequestOutput
+import org.kiji.modeling.avro.AvroColumnFamilyInputSpec
+import org.kiji.modeling.avro.AvroColumnFamilyOutputSpec
 import org.kiji.modeling.avro.AvroColumnRangeFilter
 import org.kiji.modeling.avro.AvroFilter
 import org.kiji.modeling.avro.AvroInputFieldBinding
 import org.kiji.modeling.avro.AvroKijiInputSpec
 import org.kiji.modeling.avro.AvroModelEnvironment
 import org.kiji.modeling.avro.AvroOutputFieldBinding
-import org.kiji.modeling.avro.AvroQualifiedColumnRequestInput
-import org.kiji.modeling.avro.AvroQualifiedColumnRequestOutput
+import org.kiji.modeling.avro.AvroQualifiedColumnInputSpec
+import org.kiji.modeling.avro.AvroQualifiedColumnOutputSpec
 import org.kiji.modeling.avro.AvroRegexQualifierFilter
 import org.kiji.modeling.avro.AvroTimeRange
 import org.kiji.modeling.framework.ModelConverters
@@ -305,7 +305,7 @@ class ModelEnvironmentSuite extends FunSuite {
     val myLoggingInterval = 1000L
 
     // Build the column
-    val avroColumn = AvroQualifiedColumnRequestInput
+    val avroColumn = AvroQualifiedColumnInputSpec
         .newBuilder()
         .setFamily(myFamily)
         .setQualifier(myQualifier)

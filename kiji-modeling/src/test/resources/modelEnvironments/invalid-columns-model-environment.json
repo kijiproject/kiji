@@ -30,7 +30,7 @@
               "time_range" : { "min_timestamp" : 0, "max_timestamp" : 38475687 },
               "columns_to_fields" : [ {
                 "tuple_field_name" : "tuplename",
-                "column" : { "org.kiji.modeling.avro.AvroQualifiedColumnRequestInput" : {
+                "column" : { "org.kiji.modeling.avro.AvroQualifiedColumnInputSpec" : {
                   "family" : "*invalid",
                   "qualifier" : "in",
                   "max_versions" : 3,
@@ -56,7 +56,7 @@
               "table_uri":"kiji://myuri",
               "fields_to_columns" : [ {
                 "tuple_field_name" : "outputtuple",
-                "column" : { "org.kiji.modeling.avro.AvroQualifiedColumnRequestOutput" : {
+                "column" : { "org.kiji.modeling.avro.AvroQualifiedColumnOutputSpec" : {
                   "family" : "info",
                   "qualifier" : "out"
                 }}
@@ -85,7 +85,7 @@
               "time_range" : { "min_timestamp" : 0, "max_timestamp" : 38475687 },
               "columns_to_fields" : [ {
                 "tuple_field_name" : "tuplename",
-                "column" : { "org.kiji.modeling.avro.AvroQualifiedColumnRequestInput" : {
+                "column" : { "org.kiji.modeling.avro.AvroQualifiedColumnInputSpec" : {
                   "family" : "info",
                   "qualifier" : "in",
                   "max_versions" : 3,
@@ -111,7 +111,7 @@
               "table_uri":"kiji://myuri",
               "fields_to_columns" : [ {
                 "tuple_field_name" : "outputtuple",
-                "column" : { "org.kiji.modeling.avro.AvroQualifiedColumnRequestOutput" : {
+                "column" : { "org.kiji.modeling.avro.AvroQualifiedColumnOutputSpec" : {
                   "family" : "info",
                   "qualifier" : "out"
                 }}
@@ -137,7 +137,7 @@
               "time_range" : { "min_timestamp" : 0, "max_timestamp" : 38475687 },
               "columns_to_fields" : [ {
                 "tuple_field_name" : "tuplename",
-                "column" : { "org.kiji.modeling.avro.AvroQualifiedColumnRequestInput" : {
+                "column" : { "org.kiji.modeling.avro.AvroQualifiedColumnInputSpec" : {
                   "family" : "info",
                   "qualifier" : "in",
                   "max_versions" : 3,
@@ -163,7 +163,7 @@
       }],
       "output_spec":{
         "table_uri":"kiji://myuri",
-        "output_column" : { "org.kiji.modeling.avro.AvroQualifiedColumnRequestOutput" : {
+        "output_column" : { "org.kiji.modeling.avro.AvroQualifiedColumnOutputSpec" : {
           "family" : "info",
           "qualifier" : "out"
         }}
@@ -177,7 +177,7 @@
               "time_range" : { "min_timestamp" : 0, "max_timestamp" : 38475687 },
               "columns_to_fields" : [ {
                 "tuple_field_name" : "tuplename",
-                "column" : { "org.kiji.modeling.avro.AvroQualifiedColumnRequestInput" : {
+                "column" : { "org.kiji.modeling.avro.AvroQualifiedColumnInputSpec" : {
                   "family" : "info",
                   "qualifier" : "in",
                   "max_versions" : 3,
@@ -199,7 +199,7 @@
             "table_uri":"kiji://myuri",
               "fields_to_columns" : [ {
                 "tuple_field_name" : "outputtuple",
-                "column" : { "org.kiji.modeling.avro.AvroQualifiedColumnRequestOutput" : {
+                "column" : { "org.kiji.modeling.avro.AvroQualifiedColumnOutputSpec" : {
                   "family" : "info",
                   "qualifier" : "out"
                 }}

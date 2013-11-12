@@ -44,8 +44,8 @@ import org.kiji.modeling.Extractor
 import org.kiji.modeling.Preparer
 import org.kiji.modeling.Scorer
 import org.kiji.modeling.Trainer
-import org.kiji.modeling.avro.AvroColumnFamilyRequestInput
-import org.kiji.modeling.avro.AvroColumnFamilyRequestOutput
+import org.kiji.modeling.avro.AvroColumnFamilyInputSpec
+import org.kiji.modeling.avro.AvroColumnFamilyOutputSpec
 import org.kiji.modeling.avro.AvroColumnRangeFilter
 import org.kiji.modeling.avro.AvroEvaluateEnvironment
 import org.kiji.modeling.avro.AvroFilter
@@ -63,8 +63,8 @@ import org.kiji.modeling.avro.AvroOutputSpec
 import org.kiji.modeling.avro.AvroPhaseDefinition
 import org.kiji.modeling.avro.AvroPrepareEnvironment
 import org.kiji.modeling.avro.AvroProperty
-import org.kiji.modeling.avro.AvroQualifiedColumnRequestInput
-import org.kiji.modeling.avro.AvroQualifiedColumnRequestOutput
+import org.kiji.modeling.avro.AvroQualifiedColumnInputSpec
+import org.kiji.modeling.avro.AvroQualifiedColumnOutputSpec
 import org.kiji.modeling.avro.AvroRegexQualifierFilter
 import org.kiji.modeling.avro.AvroSchemaSpec
 import org.kiji.modeling.avro.AvroSpecificSchemaSpec
@@ -822,7 +822,7 @@ object ModelConverters {
    * @return A `ColumnInputSpec` created from the Avro description.
    */
   def columnInputSpecFromAvro(avroColumn: Any): ColumnInputSpec = avroColumn match {
-    case col: AvroQualifiedColumnRequestInput => {
+    case col: AvroQualifiedColumnInputSpec => {
       val filter: Option[ColumnFilterSpec] = Option(col.getFilter).map(filterFromAvro)
       val paging: PagingSpec = if (0 == col.getPageSize) {
         PagingSpec.Off
@@ -839,7 +839,7 @@ object ModelConverters {
           paging = paging,
           schemaSpec = schema)
     }
-    case col: AvroColumnFamilyRequestInput => {
+    case col: AvroColumnFamilyInputSpec => {
       val filter: Option[ColumnFilterSpec] = Option(col.getFilter).map(filterFromAvro)
       val paging: PagingSpec = if (0 == col.getPageSize) {
         PagingSpec.Off
@@ -869,14 +869,14 @@ object ModelConverters {
    * @return A `ColumnOutputSpec` created from the Avro description.
    */
   def columnOutputSpecFromAvro(avroColumn: Any): ColumnOutputSpec = avroColumn match {
-    case col: AvroQualifiedColumnRequestOutput => {
+    case col: AvroQualifiedColumnOutputSpec => {
       val schema: SchemaSpec = schemaSpecFromAvro(col.getSchemaSpec)
       QualifiedColumnOutputSpec(
           family = col.getFamily,
           qualifier = col.getQualifier,
           schemaSpec = schema)
     }
-    case col: AvroColumnFamilyRequestOutput => {
+    case col: AvroColumnFamilyOutputSpec => {
       val schema: SchemaSpec = schemaSpecFromAvro(col.getSchemaSpec)
       ColumnFamilyOutputSpec(
           family = col.getFamily,
@@ -1069,7 +1069,7 @@ object ModelConverters {
    * @return The Avro description of the column.
    */
   def columnInputSpecToAvro(column: ColumnInputSpec): Any = column match {
-    case col: QualifiedColumnInputSpec => AvroQualifiedColumnRequestInput
+    case col: QualifiedColumnInputSpec => AvroQualifiedColumnInputSpec
         .newBuilder()
         .setFamily(col.family)
         .setQualifier(col.qualifier)
@@ -1078,7 +1078,7 @@ object ModelConverters {
         .setPageSize(col.paging.cellsPerPage.getOrElse(0))
         .setSchemaSpec(schemaSpecToAvro(col.schemaSpec))
         .build()
-    case col: ColumnFamilyInputSpec => AvroColumnFamilyRequestInput
+    case col: ColumnFamilyInputSpec => AvroColumnFamilyInputSpec
         .newBuilder()
         .setFamily(col.family)
         .setMaxVersions(col.maxVersions)
@@ -1097,13 +1097,13 @@ object ModelConverters {
    * @return The Avro description of the column.
    */
   def columnOutputSpecToAvro(column: ColumnOutputSpec): Any = column match {
-    case col: QualifiedColumnOutputSpec => AvroQualifiedColumnRequestOutput
+    case col: QualifiedColumnOutputSpec => AvroQualifiedColumnOutputSpec
         .newBuilder()
         .setFamily(col.family)
         .setQualifier(col.qualifier)
         .setSchemaSpec(schemaSpecToAvro(col.schemaSpec))
         .build()
-    case col: ColumnFamilyOutputSpec => AvroColumnFamilyRequestOutput
+    case col: ColumnFamilyOutputSpec => AvroColumnFamilyOutputSpec
         .newBuilder()
         .setFamily(col.family)
         .setQualifierSelector(col.qualifierSelector.name)
