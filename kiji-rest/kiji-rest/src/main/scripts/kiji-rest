@@ -21,66 +21,175 @@
 
 cd $(dirname $0)/../
 BASEDIR=$PWD
+RETVAL=0
+SLEEP_TIME=5
 
-# attempt to find java (stolen from bigtop)
-if [ -z "$JAVA_HOME" ]; then
-  for candidate in \
-    /usr/lib/jvm/java-6-sun \
-    /usr/lib/jvm/java-1.6.0-sun-1.6.0.*/jre/ \
-    /usr/lib/jvm/java-1.6.0-sun-1.6.0.* \
-    /usr/lib/jvm/j2sdk1.6-oracle \
-    /usr/lib/jvm/j2sdk1.6-oracle/jre \
-    /usr/lib/j2sdk1.6-sun \
-    /usr/java/jdk1.6* \
-    /usr/java/jre1.6* \
-    /Library/Java/Home \
-    /usr/java/default \
-    /usr/lib/jvm/default-java \
-    /usr/lib/jvm/java-openjdk \
-    /usr/lib/jvm/jre-openjdk \
-    /usr/lib/jvm/java-1.6.0-openjdk-1.6.* \
-    /usr/lib/jvm/jre-1.6.0-openjdk* ; do
-    if [ -e $candidate/bin/java ]; then
-      export JAVA_HOME=$candidate
+# write logfiles to the /var/run/dir ... if run from initd
+logfile=${BASEDIR}/logs/console.out
+
+DESC="Kiji REST"
+
+initializeDirectories() {
+  # attempt to find java (stolen from bigtop)
+  if [ -z "$JAVA_HOME" ]; then
+    for candidate in \
+      /usr/lib/jvm/java-6-sun \
+      /usr/lib/jvm/java-1.6.0-sun-1.6.0.*/jre/ \
+      /usr/lib/jvm/java-1.6.0-sun-1.6.0.* \
+      /usr/lib/jvm/j2sdk1.6-oracle \
+      /usr/lib/jvm/j2sdk1.6-oracle/jre \
+      /usr/lib/j2sdk1.6-sun \
+      /usr/java/jdk1.6* \
+      /usr/java/jre1.6* \
+      /Library/Java/Home \
+      /usr/java/default \
+      /usr/lib/jvm/default-java \
+      /usr/lib/jvm/java-openjdk \
+      /usr/lib/jvm/jre-openjdk \
+      /usr/lib/jvm/java-1.6.0-openjdk-1.6.* \
+      /usr/lib/jvm/jre-1.6.0-openjdk* ; do
+      if [ -e $candidate/bin/java ]; then
+        export JAVA_HOME=$candidate
+        break
+      fi
+    done
+  fi
+
+  if [ -z "$JAVA_HOME" ]; then
+    echo "$JAVA_HOME not set."
+    exit 1
+  fi
+
+  if [ -z "$PIDFILE" ]; then
+    PIDFILE=${BASEDIR}/kiji-rest.pid
+  fi
+
+  kiji_rest_cp="${BASEDIR}/lib/*:${KIJI_CLASSPATH}"
+
+  if [ -z "${KIJI_REST_CONF_DIR}" ]; then
+    KIJI_REST_CONF_DIR=${BASEDIR}/conf
+  elif [ ! -d "${KIJI_REST_CONF_DIR}" ]; then
+    echo "KIJI_REST_CONF_DIR ($KIJI_REST_CONF_DIR) does not exist."
+    exit 1
+  fi
+
+  if [ -d "${KIJI_REST_CONF_DIR}" ]; then
+    kiji_rest_cp="${kiji_rest_cp}:${KIJI_REST_CONF_DIR}"
+  fi
+}
+
+function checkStatusOfProc(){
+  # Check that the process itself is there.
+  if [ -e ${PIDFILE} ]; then
+    PID=$(cat ${PIDFILE})
+    ps ${PID} > /dev/null 2>&1
+    if [ $? == 0 ]; then
+      echo "${DESC} is running. PID is ${PID}"
+    else
+      echo "${DESC} is not running."
+    fi
+    return 0
+  else
+    echo "${DESC} is not running."
+    return 1
+  fi
+}
+
+start() {
+  echo "Starting ${DESC}"
+
+  mkdir -p ${BASEDIR}/logs/archives
+
+  echo "Archiving old logs"
+  date=$(date +%Y%m%d%S)
+  for log_file in $(find ${BASEDIR}/logs -type f)
+  do
+    base_log=$(basename ${log_file})
+    mv ${log_file} ${BASEDIR}/logs/archives/${base_log}.${date}
+  done
+
+  ${JAVA_HOME}/bin/java -cp ${kiji_rest_cp} org.kiji.rest.KijiRESTService server \
+  ${BASEDIR}/conf/configuration.yml > ${logfile} 2>&1 &
+
+  echo $! > $PIDFILE
+
+  #Check that the server came up properly
+  for second in {0..30}
+  do
+    checkStatusOfProc
+    RETVAL=$?
+    if [ ${RETVAL} == 0 ]; then
       break
     fi
+    sleep 2
   done
-fi
 
-if [ -z "$JAVA_HOME" ]; then
-  echo "$JAVA_HOME not set."
-  exit 1
-fi
+  if [ -e ${PIDFILE} ]; then
+    echo PID saved to ${PIDFILE}
+  fi
 
-if [ -z "$PIDFILE" ]; then
-  PIDFILE=${BASEDIR}/kiji-rest.pid
-fi
+  return 0
+}
 
-kiji_rest_cp="${BASEDIR}/lib/*:${KIJI_CLASSPATH}"
 
-if [ -z "${KIJI_REST_CONF_DIR}" ]; then
-  KIJI_REST_CONF_DIR=${BASEDIR}/conf
-elif [ ! -d "${KIJI_REST_CONF_DIR}" ]; then
-  echo "KIJI_REST_CONF_DIR ($KIJI_REST_CONF_DIR) does not exist."
-  exit 1
-fi
+stop() {
+  echo "Stopping ${DESC}: "
 
-if [ -d "${KIJI_REST_CONF_DIR}" ]; then
-  kiji_rest_cp="${kiji_rest_cp}:${KIJI_REST_CONF_DIR}"
-fi
+  if [ ! -e ${PIDFILE} ]; then
+    echo "${PIDFILE} not found."
+    return 1
+  fi
 
-mkdir -p ${BASEDIR}/logs
-${JAVA_HOME}/bin/java -cp ${kiji_rest_cp} org.kiji.rest.KijiRESTService server \
-${BASEDIR}/conf/configuration.yml > ${BASEDIR}/logs/console.out 2>&1 &
+  pid=$(cat ${PIDFILE})
+  kill $pid
+  for second in {5..0}
+  do
+    retval=checkStatusOfProc
+    if [ ${retval} != 0 ] ; then
+      break
+    fi
+    sleep 2
+  done
 
-rest_server_pid=$!
+  if [ ${retval} == 0 ]; then
+    echo "Force killing ${DESC} PID = ${pid}"
+    kill -9 ${pid}
+  fi
+  rm -f ${PIDFILE}
+  return 0
+}
 
-# check if the backgrounded process truly started
-sleep 5
-ps -p ${rest_server_pid} > /dev/null
-if [ 0 == $? ]; then
-  echo ${rest_server_pid} > $PIDFILE
-else
-  exit 1
-fi
+checkstatus(){
+  checkStatusOfProc
+}
 
+restart() {
+  echo "About to restart ${DESC}"
+  stop
+  start
+}
+
+service() {
+  case "$1" in
+    start)
+      start
+      ;;
+    stop)
+      stop
+      ;;
+    status)
+      checkstatus
+      ;;
+    restart)
+      restart
+      ;;
+    *)
+      echo $"Usage: $0 {start|stop|status|restart}"
+      exit 1
+  esac
+}
+
+initializeDirectories
+service $1
+RETVAL=$?
+exit $RETVAL

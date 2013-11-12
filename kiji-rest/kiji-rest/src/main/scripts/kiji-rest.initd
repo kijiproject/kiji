@@ -39,6 +39,10 @@ KIJI_REST_HOME="/opt/wibi/kiji-rest"
 #Setup some directories
 mkdir -p ${RUNDIR}
 
+# ${LOCKDIR} is not a standard Linux directory, doesn't exist by default in ubuntu
+mkdir -p ${LOCKDIR}
+chown -R ${KIJI_REST_USER} ${RUNDIR}
+
 check_for_app() {
   if [ ! -e ${KIJI_REST_HOME} ]; then
     echo 'Kiji REST not installed!'
@@ -46,132 +50,72 @@ check_for_app() {
   fi
 }
 
-checkstatusofproc(){
-  # Check that the process itself is there.
-  if [ -e ${PIDFILE} ]; then
-    cat ${PIDFILE} | xargs ps -p > /dev/null
-  else
-    return 1
-  fi
-}
-
 start() {
+  execute_command "start"
+  retval=$?
 
-  echo "Starting ${DESC}: "
-  su -s /bin/bash -c "${KIJI_REST_HOME}/bin/kiji-rest" ${KIJI_REST_USER}
-
-  pidfile_orig=${KIJI_REST_HOME}/kiji-rest.pid
-  if [ -e ${pidfile_orig} ]; then
-    mv ${pidfile_orig} ${RUNDIR}
-  else
-    return 1
-  fi
-
-  #Check that the server came up properly.
-  for second in {30..0}
-  do
-    checkstatusofproc
-    RETVAL=$?
-    if [ ${RETVAL} == 0 ] ; then
-      break
-    fi
-    sleep 2
-  done
-
-  if [ ${RETVAL} != 0 ]; then
+  if [ ${retval} != 0 ]; then
     echo "${DESC} failed to start."
     rm -f ${PIDFILE}
   else
     touch $LOCKFILE
+    if [ $? != 0 ]; then
+      echo "Failed to create lockfile at location ${LOCKFILE}"
+    fi
   fi
 
   return $RETVAL
 }
 
 stop() {
-  echo "Stopping ${DESC}: "
-  if [ ! -e ${PIDFILE} ]; then
-    echo "${PIDFILE} not found."
-    return 1
-  fi
-
-  pid=$(cat ${PIDFILE})
-  kill $pid
-  for second in {5..0}
-  do
-    checkstatusofproc
-    RETVAL=$?
-    if [ $RETVAL != 0 ] ; then
-      break
-    fi
-    sleep 2
-  done
-
-  if [ ${RETVAL} == 0 ]; then
-    echo "Force killing ${DESC} PID = ${pid}"
-    kill -9 ${pid}
-  fi
-
-  rm -f $LOCKFILE $PIDFILE
-  return 0
+  execute_command "stop"
+  retval=$?
+  rm -f $LOCKFILE
+  return ${retval}
 }
 
 restart() {
-  stop
-  start
+  execute_command "restart"
   return $?
 }
 
 checkstatus(){
-  checkstatusofproc
-  status=$?
-  if [ $status == 0 ]; then
-    echo "${DESC} is running"
-  else
-    echo "${DESC} is not running."
-  fi
-
-  return $status
+  execute_command "status"
+  return $RETVAL
 }
 
-condrestart(){
-  [ -e $LOCKFILE ] && restart || :
+execute_command() {
+  command_name=$1
+  su -s /bin/bash -c "PIDFILE=${PIDFILE} ${KIJI_REST_HOME}/bin/kiji-rest ${command_name}" ${KIJI_REST_USER}
 }
 
 check_for_root() {
   if [ $(id -ur) -ne 0 ]; then
     echo 'Error: root user required'
-    echo
     exit 1
   fi
 }
 
 service() {
+  check_for_root
+  check_for_app
+
   case "$1" in
     start)
-      check_for_root
-      check_for_app
       start
       ;;
     stop)
-      check_for_root
-      check_for_app
       stop
       ;;
     status)
       checkstatus
       ;;
     restart)
-      check_for_root
-      check_for_app
       restart
       ;;
-    condrestart|try-restart)
-      check_for_root
-      condrestart
-      ;;
+
     *)
-      echo $"Usage: $0 {start|stop|status|restart|try-restart|condrestart}"
+      echo $"Usage: $0 {start|stop|status|restart}"
       exit 1
   esac
 }
