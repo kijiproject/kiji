@@ -49,7 +49,7 @@
     <kiji-modeling.version>0.2.0</kiji-modeling.version>
     <kiji-express.version>0.12.0</kiji-express.version>
     <kiji-express-music.version>0.10.0</kiji-express-music.version>
-    <kiji-express-examples.version>0.8.0</kiji-express-examples.version>
+    <kiji-express-examples.version>0.12.0</kiji-express-examples.version>
     <kiji-rest.version>1.0.0</kiji-rest.version>
     <kiji-scoring.version>0.9.0</kiji-scoring.version>
     <kiji-modelrepo.version>0.3.0</kiji-modelrepo.version>
