@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.express.flow.framework.hfile
+package org.kiji.express.flow.framework
 
 /**
  * Provides the necessary implementation to allow Scalding jobs to write directly to HFiles. To
@@ -32,4 +32,4 @@ package org.kiji.express.flow.framework.hfile
  * TotalOrderPartitioner that relies on the region splits of HBase so that KeyValues are placed
  * in the right region.
  */
-
+package object hfile
