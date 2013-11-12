@@ -33,6 +33,9 @@ import org.junit.Before
 import org.junit.Test
 
 import org.kiji.express.EntityId
+import org.kiji.express.flow.ColumnFamilyRequestOutput
+import org.kiji.express.flow.ColumnRequestOutput
+import org.kiji.express.flow.QualifiedColumnRequestOutput
 import org.kiji.express.util.Resources
 import org.kiji.mapreduce.HFileLoader
 import org.kiji.schema.Kiji
@@ -48,7 +51,7 @@ class HFileKijiJobIntegration extends AbstractKijiIntegrationTest {
 
   @Before
   def setupTest {
-    val desc = KijiTableLayouts.getLayout("layout/avro-types.json");
+    val desc = KijiTableLayouts.getLayout("layout/avro-types-1.3.json");
     mKiji = Kiji.Factory.open(getKijiURI())
     mKiji.createTable(desc)
   }
@@ -70,7 +73,7 @@ class HFileKijiJobIntegration extends AbstractKijiIntegrationTest {
         "src/test/resources/data/input_lines.txt",
         "--output",
         table.getURI().toString(),
-        "--hFileOutput",
+        "--hfile-output",
         tempHFileFolder.toString(),
         "--hdfs")
 
@@ -99,7 +102,7 @@ class HFileKijiJobIntegration extends AbstractKijiIntegrationTest {
         "src/test/resources/data/input_lines.txt",
         "--output",
         table.getURI().toString(),
-        "--hFileOutput",
+        "--hfile-output",
         tempHFileFolder.toString(),
         "--hdfs")
 
@@ -139,7 +142,7 @@ class HFileKijiJobIntegration extends AbstractKijiIntegrationTest {
         table.getURI().toString(),
         "--tsv_output",
         tempTsvFolder.toString(),
-        "--hFileOutput",
+        "--hfile-output",
         tempHFileFolder.toString(),
         "--hdfs")
 
@@ -162,6 +165,43 @@ class HFileKijiJobIntegration extends AbstractKijiIntegrationTest {
     }
   }
 
+  @Test
+  def testShouldBulkLoadIntoMapFamily {
+    Resources.withKijiTable(mKiji, "table") { table =>
+      val tempHFileFolder = mTempDir.newFolder()
+      FileUtils.deleteDirectory(tempHFileFolder)
+
+      val tempTsvFolder = mTempDir.newFolder()
+      FileUtils.deleteDirectory(tempTsvFolder)
+
+      val toolRunnerArgs = Array(
+        classOf[SimpleLoaderMapTypeFamilyJob].getName(),
+        "--input",
+        "src/test/resources/data/input_lines.txt",
+        "--output",
+        table.getURI().toString(),
+        "--hfile-output",
+        tempHFileFolder.toString(),
+        "--hdfs")
+
+      Tool.main(toolRunnerArgs)
+
+      bulkLoad(tempHFileFolder, table)
+
+      Resources.withKijiTableReader(table) { myReader =>
+        val colBuilder = KijiDataRequestBuilder.ColumnsDef
+          .create()
+          .withMaxVersions(10).addFamily("searches_dev")
+
+        val request = KijiDataRequest.builder().addColumns(colBuilder).build()
+        val result = myReader.get(table.getEntityId("key1"), request)
+        val cells = result.getCells("searches_dev")
+
+        Assert.assertEquals(3, cells.size())
+      }
+    }
+  }
+
   private def bulkLoad(hFilePath: File, table: KijiTable) {
     val hFileLoader = HFileLoader.create(super.getConf());
     hFileLoader.load(new Path(hFilePath.toString()), table);
@@ -173,7 +213,7 @@ class SimpleAverageJob(args: Args) extends HFileKijiJob(args) {
   // Parse arguments
   val inputUri: String = args("input")
   val outputUri: String = args("output")
-  val hFileOutput = args("hFileOutput")
+  val hFileOutput = args("hfile-output")
 
   // Read each line. Split on " " which should yield string, value
   // string part eventually is the entity_id, value will be averaged in the end.
@@ -192,7 +232,7 @@ class SimpleLoaderJob(args: Args) extends HFileKijiJob(args) {
   // Parse arguments
   val inputUri: String = args("input")
   val outputUri: String = args("output")
-  val hFileOutput = args("hFileOutput")
+  val hFileOutput = args("hfile-output")
 
   // Read each line. Generate an entityId and numViews. The entityId here is duplicated
   // so there should be multiple versions of each in HBase.
@@ -206,13 +246,36 @@ class SimpleLoaderJob(args: Args) extends HFileKijiJob(args) {
     .write(HFileKijiOutput(outputUri, hFileOutput, 'ts, ('numViews -> "family:double_column")))
 }
 
+class SimpleLoaderMapTypeFamilyJob(args: Args) extends HFileKijiJob(args) {
+
+  // Parse arguments
+  val inputUri: String = args("input")
+  val outputUri: String = args("output")
+  val hFileOutput = args("hfile-output")
+
+  @transient
+  lazy val outputCols = Map('numViews -> ColumnFamilyRequestOutput("searches_dev",
+      qualifierSelector='numViews))
+
+  // Read each line. Generate an entityId and numViews. The entityId here is duplicated
+  // so there should be multiple versions of each in HBase.
+  TextLine(inputUri)
+    .read
+    .mapTo('line -> ('entityId, 'numViews, 'ts)) { line: String =>
+      val parts = line.split(" ")
+      Thread.sleep(2) // Force a sleep so that we get unique timestamps
+      (EntityId(parts(0)), parts(1).toInt, System.currentTimeMillis())
+    }
+    .write(HFileKijiOutput(outputUri, hFileOutput, 'ts, outputCols))
+}
+
 class SimpleLoaderMultiOutputJob(args: Args) extends HFileKijiJob(args) {
 
   // Parse arguments
   val inputUri: String = args("input")
   val outputUri: String = args("output")
   val tsvOutputURI: String = args("tsv_output")
-  val hFileOutput = args("hFileOutput")
+  val hFileOutput = args("hfile-output")
 
   // Read each line. Generate an entityId and numViews. The entityId here is duplicated
   // so there should be multiple versions of each in HBase.

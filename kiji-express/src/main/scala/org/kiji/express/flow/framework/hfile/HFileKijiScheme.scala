@@ -62,6 +62,7 @@ import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiURI
 import org.kiji.schema.impl.DefaultKijiCellEncoderFactory
 import org.kiji.schema.layout.KijiTableLayout
+import org.kiji.schema.layout.impl.CellEncoderProvider
 import org.kiji.schema.layout.impl.ColumnNameTranslator
 
  /**
@@ -141,14 +142,17 @@ private[express] class HFileKijiScheme(
     val HFileKijiSinkContext(kiji, uri, layout, colTranslator) = sinkCall.getContext()
     val eidFactory = EntityIdFactory.getFactory(layout)
 
+    val encoderProvider = new CellEncoderProvider(uri, layout, kiji.getSchemaTable(),
+        DefaultKijiCellEncoderFactory.get())
+
     outputCells(output, timestampField, columns) { key: HFileCell =>
       // Convert cell to an HFileKeyValue
       val kijiColumn = new KijiColumnName(key.col_request.family, key.col_request.qualifier);
       val hbaseColumn = colTranslator.toHBaseColumnName(kijiColumn);
       val cellSpec = layout.getCellSpec(kijiColumn)
         .setSchemaTable(kiji.getSchemaTable());
-      val encoder = DefaultKijiCellEncoderFactory.get().create(cellSpec);
 
+      val encoder = encoderProvider.getEncoder(kijiColumn.getFamily(), kijiColumn.getQualifier())
       val hFileKeyValue = new HFileKeyValue(
         key.entity_id.toJavaEntityId(eidFactory).getHBaseRowKey(),
         hbaseColumn.getFamily(), hbaseColumn.getQualifier(), key.timestamp,
@@ -284,7 +288,7 @@ object HFileKijiScheme {
       val colValue = output.getObject(fieldName)
       val newColRequest = colRequest match {
         case cf @ ColumnFamilyRequestOutput(family, qualField, schemaId) => {
-          val qualifier = output.getString(qualField.toString)
+          val qualifier = output.getString(qualField.name)
           QualifiedColumnRequestOutput(family, qualifier)
         }
         case qc @ QualifiedColumnRequestOutput(_, _, _) => qc

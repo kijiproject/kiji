@@ -577,7 +577,7 @@ object KijiScheme {
    * @return is a collection of fields created from the names.
    */
   private[express] def buildSourceFields(fieldNames: Iterable[String]): Fields = {
-    toField(Seq(entityIdField) ++ fieldNames)
+    toField(Set(entityIdField) ++ fieldNames)
   }
 
   /**
@@ -597,7 +597,7 @@ object KijiScheme {
       columns: Map[String, ColumnRequestOutput],
       timestampField: Option[Symbol]
   ): Fields = {
-    toField(Seq(entityIdField)
+    toField(Set(entityIdField)
         ++ columns.keys
         ++ extractQualifierSelectors(columns)
         ++ timestampField.map { _.name } )

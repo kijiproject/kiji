@@ -66,6 +66,12 @@
           }
         }
       }, {
+        name : "double_column",
+        column_schema : {
+          type : "INLINE",
+          value : '"double"'
+        }
+      }, {
         name : "column_compatibility",
         column_schema : {
           avro_validation_policy : "SCHEMA_1_0",
@@ -79,6 +85,15 @@
       map_schema : {
         type: "INLINE",
         value: '"int"'
+      }
+    }, {
+      name : "searches_dev",
+      description : "A map-type column family in dev mode",
+      map_schema : {
+        avro_validation_policy : "DEVELOPER",
+        type: "AVRO",
+        value: '"int"',
+        writers: [{json: '"int"'}]
       }
     }, {
       name : "animals",

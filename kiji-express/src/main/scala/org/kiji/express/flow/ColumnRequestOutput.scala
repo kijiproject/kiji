@@ -223,7 +223,7 @@ final case class ColumnFamilyRequestOutput(
   if (family.contains(':')) {
     throw new KijiInvalidNameException("Cannot have a ':' in family name for column family request")
   }
-  override val columnName: KijiColumnName = new KijiColumnName(family)
+  override def columnName: KijiColumnName = new KijiColumnName(family)
 }
 
 /**
