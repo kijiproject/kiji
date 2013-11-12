@@ -26,14 +26,14 @@ import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
-import org.kiji.express.flow.AndFilter
+import org.kiji.express.flow.AndFilterSpec
 import org.kiji.express.flow.Between
-import org.kiji.express.flow.ColumnRangeFilter
-import org.kiji.express.flow.ExpressColumnFilter
-import org.kiji.express.flow.OrFilter
-import org.kiji.express.flow.QualifiedColumnRequestInput
-import org.kiji.express.flow.QualifiedColumnRequestOutput
-import org.kiji.express.flow.RegexQualifierFilter
+import org.kiji.express.flow.ColumnRangeFilterSpec
+import org.kiji.express.flow.ColumnFilterSpec
+import org.kiji.express.flow.OrFilterSpec
+import org.kiji.express.flow.QualifiedColumnInputSpec
+import org.kiji.express.flow.QualifiedColumnOutputSpec
+import org.kiji.express.flow.RegexQualifierFilterSpec
 import org.kiji.express.flow.SchemaSpec
 import org.kiji.modeling.ExtractFn
 import org.kiji.modeling.Extractor
@@ -129,19 +129,19 @@ class ModelConvertersSuite extends SerDeSuite {
     ModelConverters.keyValueStoreSpecFromAvro(ModelConverters.keyValueStoreSpecToAvro(input))
   }
 
-  serDeTest[ExpressColumnFilter]("AndFilter", "Avro", testAndFilter) { input =>
+  serDeTest[ColumnFilterSpec]("AndFilter", "Avro", testAndFilter) { input =>
     ModelConverters.filterFromAvro(ModelConverters.filterToAvro(input))
   }
 
-  serDeTest[ExpressColumnFilter]("OrFilter", "Avro", testOrFilter) { input =>
+  serDeTest[ColumnFilterSpec]("OrFilter", "Avro", testOrFilter) { input =>
     ModelConverters.filterFromAvro(ModelConverters.filterToAvro(input))
   }
 
-  serDeTest[ExpressColumnFilter]("RangeFilter", "Avro", testRangeFilter) { input =>
+  serDeTest[ColumnFilterSpec]("RangeFilter", "Avro", testRangeFilter) { input =>
     ModelConverters.filterFromAvro(ModelConverters.filterToAvro(input))
   }
 
-  serDeTest[ExpressColumnFilter]("RegexFilter", "Avro", testRegexFilter) { input =>
+  serDeTest[ColumnFilterSpec]("RegexFilter", "Avro", testRegexFilter) { input =>
     ModelConverters.filterFromAvro(ModelConverters.filterToAvro(input))
   }
 
@@ -189,14 +189,14 @@ object ModelConvertersSuite {
     override def scoreFn: ScoreFn[_, _] = { null }
   }
 
-  val testRangeFilter: ColumnRangeFilter = ColumnRangeFilter(
+  val testRangeFilter: ColumnRangeFilterSpec = ColumnRangeFilterSpec(
       minimum = Some("0min"),
       maximum = Some("9max"),
       minimumIncluded = false,
       maximumIncluded = true)
-  val testRegexFilter: RegexQualifierFilter = RegexQualifierFilter(".*")
-  val testAndFilter: AndFilter = AndFilter(Seq(testRangeFilter, testRegexFilter))
-  val testOrFilter: OrFilter = OrFilter(Seq(testRangeFilter, testRegexFilter))
+  val testRegexFilter: RegexQualifierFilterSpec = RegexQualifierFilterSpec(".*")
+  val testAndFilter: AndFilterSpec = AndFilterSpec(Seq(testRangeFilter, testRegexFilter))
+  val testOrFilter: OrFilterSpec = OrFilterSpec(Seq(testRangeFilter, testRegexFilter))
 
   val testGenericSchemaSpec: SchemaSpec = SchemaSpec.Generic(Schema.create(Schema.Type.LONG))
   val testSpecificSchemaSpec: SchemaSpec = SchemaSpec.Specific(classOf[AvroSimpleRecordTest])
@@ -211,7 +211,7 @@ object ModelConvertersSuite {
   val testKijiInputSpec: KijiInputSpec = KijiInputSpec(
       tableUri = "kiji://.env/default/test",
       timeRange = Between(0L, Long.MaxValue - 1),
-      columnsToFields = Map(QualifiedColumnRequestInput(
+      columnsToFields = Map(QualifiedColumnInputSpec(
           "info",
           "test",
           filter = Some(testAndFilter)) -> 'testField))
@@ -223,10 +223,10 @@ object ModelConvertersSuite {
       valueField = Some("value"))
   val testKijiOutputSpec: KijiOutputSpec = KijiOutputSpec(
       tableUri = "kiji://.env/default/test2",
-      fieldsToColumns = Map('testField -> QualifiedColumnRequestOutput("info:test")))
+      fieldsToColumns = Map('testField -> QualifiedColumnOutputSpec("info:test")))
   val testColumnOutputSpec: KijiSingleColumnOutputSpec = KijiSingleColumnOutputSpec(
       tableUri = "kiji://.env/default/test3",
-      outputColumn = QualifiedColumnRequestOutput("info:test"))
+      outputColumn = QualifiedColumnOutputSpec("info:test"))
   val testPrepareEnvironment: PrepareEnvironment = PrepareEnvironment(
       inputSpec = Map("input" -> testKijiInputSpec),
       outputSpec = Map("output" -> testKijiOutputSpec),

@@ -24,19 +24,19 @@ import scala.collection.JavaConverters._
 import org.apache.avro.Schema
 import org.apache.avro.specific.SpecificRecord
 
-import org.kiji.express.flow.AndFilter
+import org.kiji.express.flow.AndFilterSpec
 import org.kiji.express.flow.Between
-import org.kiji.express.flow.ColumnFamilyRequestInput
-import org.kiji.express.flow.ColumnFamilyRequestOutput
-import org.kiji.express.flow.ColumnRangeFilter
-import org.kiji.express.flow.ColumnRequestInput
-import org.kiji.express.flow.ColumnRequestOutput
-import org.kiji.express.flow.ExpressColumnFilter
-import org.kiji.express.flow.OrFilter
+import org.kiji.express.flow.ColumnFamilyInputSpec
+import org.kiji.express.flow.ColumnFamilyOutputSpec
+import org.kiji.express.flow.ColumnRangeFilterSpec
+import org.kiji.express.flow.ColumnInputSpec
+import org.kiji.express.flow.ColumnOutputSpec
+import org.kiji.express.flow.ColumnFilterSpec
+import org.kiji.express.flow.OrFilterSpec
 import org.kiji.express.flow.PagingSpec
-import org.kiji.express.flow.QualifiedColumnRequestInput
-import org.kiji.express.flow.QualifiedColumnRequestOutput
-import org.kiji.express.flow.RegexQualifierFilter
+import org.kiji.express.flow.QualifiedColumnInputSpec
+import org.kiji.express.flow.QualifiedColumnOutputSpec
+import org.kiji.express.flow.RegexQualifierFilterSpec
 import org.kiji.express.flow.SchemaSpec
 import org.kiji.express.flow.TimeRange
 import org.kiji.modeling.Evaluator
@@ -691,7 +691,7 @@ object ModelConverters {
         val spec = AvroKijiSingleColumnOutputSpec
             .newBuilder()
             .setTableUri(uri)
-            .setOutputColumn(columnRequestOutputToAvro(outputColumn))
+            .setOutputColumn(columnOutputSpecToAvro(outputColumn))
             .build()
 
         AvroOutputSpec
@@ -735,25 +735,25 @@ object ModelConverters {
     * @param filter to build from.
     * @return a populated filter specification.
     */
-  def filterFromAvro(filter: AvroFilter): ExpressColumnFilter = {
+  def filterFromAvro(filter: AvroFilter): ColumnFilterSpec = {
     // Get provided filter specifications (only one should be not null).
-    val andFilter: Option[ExpressColumnFilter] = Option(filter.getAndFilter)
-        .map { components => AndFilter(components.asScala.map { filterFromAvro }) }
-    val orFilter: Option[ExpressColumnFilter] = Option(filter.getOrFilter)
-        .map { components => OrFilter(components.asScala.map { filterFromAvro }) }
-    val rangeFilter: Option[ExpressColumnFilter] = Option(filter.getRangeFilter)
+    val andFilter: Option[ColumnFilterSpec] = Option(filter.getAndFilter)
+        .map { components => AndFilterSpec(components.asScala.map { filterFromAvro }) }
+    val orFilter: Option[ColumnFilterSpec] = Option(filter.getOrFilter)
+        .map { components => OrFilterSpec(components.asScala.map { filterFromAvro }) }
+    val rangeFilter: Option[ColumnFilterSpec] = Option(filter.getRangeFilter)
         .map { rangeFilter =>
-          new ColumnRangeFilter(
+          new ColumnRangeFilterSpec(
               minimum = Option(rangeFilter.getMinQualifier),
               maximum = Option(rangeFilter.getMaxQualifier),
               minimumIncluded = rangeFilter.getMinIncluded,
               maximumIncluded = rangeFilter.getMaxIncluded)
         }
-    val regexFilter: Option[ExpressColumnFilter] = Option(filter.getRegexFilter)
-        .map { regexFilter => new RegexQualifierFilter(regexFilter.getRegex) }
+    val regexFilter: Option[ColumnFilterSpec] = Option(filter.getRegexFilter)
+        .map { regexFilter => new RegexQualifierFilterSpec(regexFilter.getRegex) }
 
     // Ensure that only one filter specification is available.
-    val filters: Seq[ExpressColumnFilter] =
+    val filters: Seq[ColumnFilterSpec] =
         andFilter.toSeq ++ orFilter ++ rangeFilter ++ regexFilter
     if (filters.length > 1) {
       throw new ValidationException("Multiple filter types provided: %s".format(filters))
@@ -766,7 +766,7 @@ object ModelConverters {
   }
 
   /**
-   * Builds a ColumnRequest schema from its avro representation.
+   * Builds a SchemaSpec from its avro representation.
    *
    * @param avroSchema Avro representation of the schema.
    * @return The schema as a proper SchemaSpec.
@@ -819,11 +819,11 @@ object ModelConverters {
    * Note that the avroColumn is of type `Any` because it comes from an avro union.
    *
    * @param avroColumn Avro description of the input-column specification.
-   * @return A `ColumnRequestInput` created from the Avro description.
+   * @return A `ColumnInputSpec` created from the Avro description.
    */
-  def columnRequestInputFromAvro(avroColumn: Any): ColumnRequestInput = avroColumn match {
+  def columnInputSpecFromAvro(avroColumn: Any): ColumnInputSpec = avroColumn match {
     case col: AvroQualifiedColumnRequestInput => {
-      val filter: Option[ExpressColumnFilter] = Option(col.getFilter).map(filterFromAvro)
+      val filter: Option[ColumnFilterSpec] = Option(col.getFilter).map(filterFromAvro)
       val paging: PagingSpec = if (0 == col.getPageSize) {
         PagingSpec.Off
       } else {
@@ -831,7 +831,7 @@ object ModelConverters {
       }
       val schema: SchemaSpec = schemaSpecFromAvro(col.getSchemaSpec)
 
-      QualifiedColumnRequestInput(
+      QualifiedColumnInputSpec(
           family = col.getFamily,
           qualifier = col.getQualifier,
           maxVersions = col.getMaxVersions,
@@ -840,7 +840,7 @@ object ModelConverters {
           schemaSpec = schema)
     }
     case col: AvroColumnFamilyRequestInput => {
-      val filter: Option[ExpressColumnFilter] = Option(col.getFilter).map(filterFromAvro)
+      val filter: Option[ColumnFilterSpec] = Option(col.getFilter).map(filterFromAvro)
       val paging: PagingSpec = if (0 == col.getPageSize) {
         PagingSpec.Off
       } else {
@@ -848,7 +848,7 @@ object ModelConverters {
       }
       val schema: SchemaSpec = schemaSpecFromAvro(col.getSchemaSpec)
 
-      ColumnFamilyRequestInput(
+      ColumnFamilyInputSpec(
           family = col.getFamily,
           maxVersions = col.getMaxVersions,
           filter = filter,
@@ -857,7 +857,7 @@ object ModelConverters {
     }
     // TODO: Real error message
     case col: Any => throw new ValidationException(
-        "Cannot create ColumnRequest from Avro " + col.getClass)
+        "Cannot create ColumnInputSpec from Avro " + col.getClass)
   }
 
   /**
@@ -866,25 +866,25 @@ object ModelConverters {
    * Note that the avroColumn is of type `Any` because it comes from an avro union.
    *
    * @param avroColumn Avro description of the output-column specification.
-   * @return A `ColumnRequestOutput` created from the Avro description.
+   * @return A `ColumnOutputSpec` created from the Avro description.
    */
-  def columnRequestOutputFromAvro(avroColumn: Any): ColumnRequestOutput = avroColumn match {
+  def columnOutputSpecFromAvro(avroColumn: Any): ColumnOutputSpec = avroColumn match {
     case col: AvroQualifiedColumnRequestOutput => {
       val schema: SchemaSpec = schemaSpecFromAvro(col.getSchemaSpec)
-      QualifiedColumnRequestOutput(
+      QualifiedColumnOutputSpec(
           family = col.getFamily,
           qualifier = col.getQualifier,
           schemaSpec = schema)
     }
     case col: AvroColumnFamilyRequestOutput => {
       val schema: SchemaSpec = schemaSpecFromAvro(col.getSchemaSpec)
-      ColumnFamilyRequestOutput(
+      ColumnFamilyOutputSpec(
           family = col.getFamily,
           qualifierSelector = Symbol(col.getQualifierSelector),
           schemaSpec = schema)
     }
     // TODO: Real error message
-    case col: Any => throw new ValidationException("Cannot create ColumnRequest from Avro " +
+    case col: Any => throw new ValidationException("Cannot create ColumnOutputSpec from Avro " +
       col.getClass + " " + col)
   }
 
@@ -901,14 +901,14 @@ object ModelConverters {
         avroSpec.getTimeRange.min_timestamp,
         avroSpec.getTimeRange.max_timestamp)
 
-    val columnsToFields: Map[_ <: ColumnRequestInput, Symbol] = avroSpec
+    val columnsToFields: Map[_ <: ColumnInputSpec, Symbol] = avroSpec
         // Gives us pairs of (Avro column spec, field name)
         .getColumnsToFields
         .asScala
 
-        // Turn field name into a symbol and get a column request object
+        // Turn field name into a symbol and get a column input spec object
         .map { columnAndField => (
-            columnRequestInputFromAvro(columnAndField.getColumn),
+            columnInputSpecFromAvro(columnAndField.getColumn),
             Symbol(columnAndField.getTupleFieldName))
         }
         .toMap
@@ -934,15 +934,15 @@ object ModelConverters {
       case timestampField: String => Some(Symbol(timestampField))
     }
 
-    val fieldsToColumns: Map[Symbol, _ <: ColumnRequestOutput] = avroSpec
+    val fieldsToColumns: Map[Symbol, _ <: ColumnOutputSpec] = avroSpec
         // Gives us pairs of (field name, Avro column spec)
         .getFieldsToColumns
         .asScala
 
-        // Turn field name into a symbol and get a column request object
+        // Turn field name into a symbol and get a column output spec object
         .map { columnAndField => (
             Symbol(columnAndField.getTupleFieldName),
-            columnRequestOutputFromAvro(columnAndField.getColumn))
+            columnOutputSpecFromAvro(columnAndField.getColumn))
         }
         .toMap
 
@@ -961,7 +961,7 @@ object ModelConverters {
   def kijiSingleColumnOutputSpecFromAvro(
       avroSpec: AvroKijiSingleColumnOutputSpec): KijiSingleColumnOutputSpec = {
     val tableUri: String = avroSpec.getTableUri
-    val outputColumn: ColumnRequestOutput = columnRequestOutputFromAvro(avroSpec.getOutputColumn)
+    val outputColumn: ColumnOutputSpec = columnOutputSpecFromAvro(avroSpec.getOutputColumn)
 
     KijiSingleColumnOutputSpec(tableUri = tableUri, outputColumn = outputColumn)
   }
@@ -975,9 +975,9 @@ object ModelConverters {
    * @param filter The filter to convert into an Avro description.
    * @return The Avro description of the filter.
    */
-  def filterToAvro(filter: ExpressColumnFilter): AvroFilter = {
+  def filterToAvro(filter: ColumnFilterSpec): AvroFilter = {
     filter match {
-      case AndFilter(filters) => {
+      case AndFilterSpec(filters) => {
         val avroFilters: java.util.List[AvroFilter] = filters
             .map { filterToAvro }
             .asJava
@@ -987,7 +987,7 @@ object ModelConverters {
             .setAndFilter(avroFilters)
             .build()
       }
-      case OrFilter(filters) => {
+      case OrFilterSpec(filters) => {
         val avroFilters: java.util.List[AvroFilter] = filters
             .map { filterToAvro }
             .asJava
@@ -997,7 +997,7 @@ object ModelConverters {
             .setOrFilter(avroFilters)
             .build()
       }
-      case ColumnRangeFilter(minimum, maximum, minimumIncluded, maximumIncluded) => {
+      case ColumnRangeFilterSpec(minimum, maximum, minimumIncluded, maximumIncluded) => {
         val rangeFilter = AvroColumnRangeFilter
             .newBuilder()
             .setMinQualifier(minimum.getOrElse(null))
@@ -1011,7 +1011,7 @@ object ModelConverters {
             .setRangeFilter(rangeFilter)
             .build()
       }
-      case RegexQualifierFilter(regex) => {
+      case RegexQualifierFilterSpec(regex) => {
         val regexFilter = AvroRegexQualifierFilter
             .newBuilder()
             .setRegex(regex)
@@ -1068,8 +1068,8 @@ object ModelConverters {
    * @param column The column specification to convert into an Avro description.
    * @return The Avro description of the column.
    */
-  def columnRequestInputToAvro(column: ColumnRequestInput): Any = column match {
-    case col: QualifiedColumnRequestInput => AvroQualifiedColumnRequestInput
+  def columnInputSpecToAvro(column: ColumnInputSpec): Any = column match {
+    case col: QualifiedColumnInputSpec => AvroQualifiedColumnRequestInput
         .newBuilder()
         .setFamily(col.family)
         .setQualifier(col.qualifier)
@@ -1078,7 +1078,7 @@ object ModelConverters {
         .setPageSize(col.paging.cellsPerPage.getOrElse(0))
         .setSchemaSpec(schemaSpecToAvro(col.schemaSpec))
         .build()
-    case col: ColumnFamilyRequestInput => AvroColumnFamilyRequestInput
+    case col: ColumnFamilyInputSpec => AvroColumnFamilyRequestInput
         .newBuilder()
         .setFamily(col.family)
         .setMaxVersions(col.maxVersions)
@@ -1087,7 +1087,7 @@ object ModelConverters {
         .setSchemaSpec(schemaSpecToAvro(col.schemaSpec))
         .build()
     case col: Any => throw new ValidationException(
-        "Cannot convert ColumnRequest to Avro " + col.getClass)
+        "Cannot convert ColumnInputSpec to Avro " + col.getClass)
   }
 
   /**
@@ -1096,21 +1096,21 @@ object ModelConverters {
    * @param column The column specification to convert into an Avro description.
    * @return The Avro description of the column.
    */
-  def columnRequestOutputToAvro(column: ColumnRequestOutput): Any = column match {
-    case col: QualifiedColumnRequestOutput => AvroQualifiedColumnRequestOutput
+  def columnOutputSpecToAvro(column: ColumnOutputSpec): Any = column match {
+    case col: QualifiedColumnOutputSpec => AvroQualifiedColumnRequestOutput
         .newBuilder()
         .setFamily(col.family)
         .setQualifier(col.qualifier)
         .setSchemaSpec(schemaSpecToAvro(col.schemaSpec))
         .build()
-    case col: ColumnFamilyRequestOutput => AvroColumnFamilyRequestOutput
+    case col: ColumnFamilyOutputSpec => AvroColumnFamilyRequestOutput
         .newBuilder()
         .setFamily(col.family)
         .setQualifierSelector(col.qualifierSelector.name)
         .setSchemaSpec(schemaSpecToAvro(col.schemaSpec))
         .build()
     case col: Any => throw new ValidationException(
-        "Cannot convert ColumnRequest to Avro " + col.getClass)
+        "Cannot convert ColumnOutputSpec to Avro " + col.getClass)
   }
 
   /**
@@ -1138,10 +1138,10 @@ object ModelConverters {
         .columnsToFields
         .toList
         .map( columnAndField => {
-          val (col: ColumnRequestInput, field: Symbol) = columnAndField
+          val (col: ColumnInputSpec, field: Symbol) = columnAndField
           AvroInputFieldBinding
               .newBuilder()
-              .setColumn(columnRequestInputToAvro(col))
+              .setColumn(columnInputSpecToAvro(col))
               .setTupleFieldName(field.name)
               .build()
         })
@@ -1168,10 +1168,10 @@ object ModelConverters {
         .fieldsToColumns
         .toList
         .map( fieldAndColumn => {
-          val (field: Symbol, col: ColumnRequestOutput) = fieldAndColumn
+          val (field: Symbol, col: ColumnOutputSpec) = fieldAndColumn
           AvroOutputFieldBinding
               .newBuilder()
-              .setColumn(columnRequestOutputToAvro(col))
+              .setColumn(columnOutputSpecToAvro(col))
               .setTupleFieldName(field.name)
               .build()
         })
@@ -1201,7 +1201,7 @@ object ModelConverters {
     AvroKijiSingleColumnOutputSpec
         .newBuilder()
         .setTableUri(outputSpec.tableUri)
-        .setOutputColumn(columnRequestOutputToAvro(outputSpec.outputColumn))
+        .setOutputColumn(columnOutputSpecToAvro(outputSpec.outputColumn))
         .build()
   }
 }

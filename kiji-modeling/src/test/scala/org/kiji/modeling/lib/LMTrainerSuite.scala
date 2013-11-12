@@ -29,10 +29,10 @@ import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow.All
-import org.kiji.express.flow.ColumnFamilyRequestInput
-import org.kiji.express.flow.ColumnRequestInput
-import org.kiji.express.flow.ColumnRequestOutput
-import org.kiji.express.flow.QualifiedColumnRequestInput
+import org.kiji.express.flow.ColumnFamilyInputSpec
+import org.kiji.express.flow.ColumnInputSpec
+import org.kiji.express.flow.ColumnOutputSpec
+import org.kiji.express.flow.QualifiedColumnInputSpec
 import org.kiji.modeling.config.FieldBinding
 import org.kiji.modeling.config.KijiInputSpec
 import org.kiji.modeling.config.ModelDefinition
@@ -97,8 +97,8 @@ class LMTrainerSuite extends KijiSuite {
                       tableUri.toString,
                       timeRange=All,
                       columnsToFields = Map(
-                          QualifiedColumnRequestInput("family", "column1") -> 'attributes,
-                          QualifiedColumnRequestInput("family", "column2") -> 'target)),
+                          QualifiedColumnInputSpec("family", "column1") -> 'attributes,
+                          QualifiedColumnInputSpec("family", "column2") -> 'target)),
                   "parameters" -> TextSourceSpec(
                       path = paramsFile
                   )

@@ -30,7 +30,7 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
 import org.kiji.express.flow.All
-import org.kiji.express.flow.ColumnRequestInput
+import org.kiji.express.flow.ColumnInputSpec
 import org.kiji.modeling.config.FieldBinding
 import org.kiji.modeling.config.KijiInputSpec
 import org.kiji.modeling.config.ModelDefinition
@@ -71,8 +71,8 @@ final class LMTool extends Tool {
                     datasetTableURI,
                     timeRange = All,
                     columnsToFields = Map(
-                      ColumnRequestInput(column = attributesColumn) -> 'attributes,
-                      ColumnRequestInput(column = targetColumn) -> 'target
+                      ColumnInputSpec(column = attributesColumn) -> 'attributes,
+                      ColumnInputSpec(column = targetColumn) -> 'target
                     )),
                 "parameters" -> TextSourceSpec(
                     path = paramsFilePath

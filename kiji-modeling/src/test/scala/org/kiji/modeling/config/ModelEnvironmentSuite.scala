@@ -26,16 +26,16 @@ import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
-import org.kiji.express.flow.AndFilter
+import org.kiji.express.flow.AndFilterSpec
 import org.kiji.express.flow.Between
-import org.kiji.express.flow.ColumnRangeFilter
-import org.kiji.express.flow.ColumnRequestInput
-import org.kiji.express.flow.ExpressColumnFilter
-import org.kiji.express.flow.OrFilter
+import org.kiji.express.flow.ColumnRangeFilterSpec
+import org.kiji.express.flow.ColumnInputSpec
+import org.kiji.express.flow.ColumnFilterSpec
+import org.kiji.express.flow.OrFilterSpec
 import org.kiji.express.flow.PagingSpec
-import org.kiji.express.flow.QualifiedColumnRequestInput
-import org.kiji.express.flow.QualifiedColumnRequestOutput
-import org.kiji.express.flow.RegexQualifierFilter
+import org.kiji.express.flow.QualifiedColumnInputSpec
+import org.kiji.express.flow.QualifiedColumnOutputSpec
+import org.kiji.express.flow.RegexQualifierFilterSpec
 import org.kiji.express.util.Resources.resourceAsString
 import org.kiji.modeling.avro.AvroColumnFamilyRequestInput
 import org.kiji.modeling.avro.AvroColumnFamilyRequestOutput
@@ -140,7 +140,7 @@ class ModelEnvironmentSuite extends FunSuite {
 
   test("Settings on a model environment can be modified.") {
     val timeRange = Between(0, 38475687)
-    val columns = Map(QualifiedColumnRequestInput("info", "in", maxVersions=3) -> 'tuplename)
+    val columns = Map(QualifiedColumnInputSpec("info", "in", maxVersions=3) -> 'tuplename)
 
     // Extract and score environments to use in tests.
     val inputSpec = KijiInputSpec("kiji://myuri", timeRange, columns)
@@ -148,7 +148,7 @@ class ModelEnvironmentSuite extends FunSuite {
 
     val outputSpec = KijiSingleColumnOutputSpec(
         "kiji://myuri",
-        QualifiedColumnRequestOutput("outputFamily:qualifier"))
+        QualifiedColumnOutputSpec("outputFamily:qualifier"))
     val scoreEnv = Some(ScoreEnvironment(inputSpec, outputSpec, Seq()))
     val scoreEnv2 = Some(ScoreEnvironment(
         inputSpec2,
@@ -184,16 +184,16 @@ class ModelEnvironmentSuite extends FunSuite {
 
   test("A ModelEnvironment can be serialized and deserialized again.") {
     val timeRange = Between(0, 38475687)
-    val columns = Map(QualifiedColumnRequestInput("info", "in", maxVersions=3) -> 'tuplename)
+    val columns = Map(QualifiedColumnInputSpec("info", "in", maxVersions=3) -> 'tuplename)
 
     val inputSpec = new KijiInputSpec("kiji://.env/default/table", timeRange, columns)
     val outputSpec = new KijiOutputSpec(
         "kiji://.env/default/table",
-        Map('tuplename -> QualifiedColumnRequestOutput("info:storefieldname"))
+        Map('tuplename -> QualifiedColumnOutputSpec("info:storefieldname"))
     )
     val scoreOutputSpec = new KijiSingleColumnOutputSpec(
       "kiji://.env/default/table",
-      QualifiedColumnRequestOutput("info:scoreoutput")
+      QualifiedColumnOutputSpec("info:scoreoutput")
     )
 
     // Prepare, extract, train and score environments to use in tests.
@@ -291,7 +291,7 @@ class ModelEnvironmentSuite extends FunSuite {
   //     - It should have the correct max versions
   //     - It should have the appropriate filter
   def singleColumnKijiInputSpecToAndFromAvro(
-      avroFilter: Option[AvroFilter] = None): Option[ExpressColumnFilter] = {
+      avroFilter: Option[AvroFilter] = None): Option[ColumnFilterSpec] = {
 
     // Constants to use for building avro and check after converting from avro
     val myFamily = "info"
@@ -352,7 +352,7 @@ class ModelEnvironmentSuite extends FunSuite {
     assert(field.isInstanceOf[Symbol])
     assert(myField === field.name)
 
-    val column = kijiInputSpec.columnsToFields.keys.head.asInstanceOf[QualifiedColumnRequestInput]
+    val column = kijiInputSpec.columnsToFields.keys.head.asInstanceOf[QualifiedColumnInputSpec]
     assert(myFamily === column.family)
     assert(myQualifier === column.qualifier)
     assert(myMaxVersions === column.maxVersions)
@@ -410,35 +410,35 @@ class ModelEnvironmentSuite extends FunSuite {
 
   test("ModelEnvironment can convert from Avro to KijiInputSpec with a range filter.") {
     val filter = singleColumnKijiInputSpecToAndFromAvro(Some(myAvroRangeFilter))
-    assert(filter.get.isInstanceOf[ColumnRangeFilter], "incorrect filter type")
+    assert(filter.get.isInstanceOf[ColumnRangeFilterSpec], "incorrect filter type")
   }
 
   test("ModelEnvironment can convert from Avro to KijiInputSpec with a regex qualifier filter.") {
     val filter = singleColumnKijiInputSpecToAndFromAvro(Some(myAvroRegexQualifierFilter))
-    assert(filter.get.isInstanceOf[RegexQualifierFilter], "incorrect filter type")
+    assert(filter.get.isInstanceOf[RegexQualifierFilterSpec], "incorrect filter type")
   }
 
   test("ModelEnvironment can convert from Avro to KijiInputSpec with a logical AND filter.") {
     val filter = singleColumnKijiInputSpecToAndFromAvro(Some(myAvroAndFilter))
-    assert(filter.get.isInstanceOf[AndFilter], "incorrect filter type")
+    assert(filter.get.isInstanceOf[AndFilterSpec], "incorrect filter type")
   }
 
   test("ModelEnvironment can convert from Avro to KijiInputSpec with a logical OR filter.") {
     val filter = singleColumnKijiInputSpecToAndFromAvro(Some(myAvroOrFilter))
-    assert(filter.get.isInstanceOf[OrFilter], "incorrect filter type")
+    assert(filter.get.isInstanceOf[OrFilterSpec], "incorrect filter type")
   }
 
   test("ModelEnvironment can instantiate Kiji column filters from json.") {
     val modelEnv: ModelEnvironment = ModelEnvironment.fromJson(validFiltersDefinitionLocation)
 
     // Filter definition that should exist in the JSON
-    val expectedRegexFilter: RegexQualifierFilter = new RegexQualifierFilter("foo")
-    val expectedColRangeFilter = new ColumnRangeFilter(
+    val expectedRegexFilter: RegexQualifierFilterSpec = new RegexQualifierFilterSpec("foo")
+    val expectedColRangeFilter = new ColumnRangeFilterSpec(
         minimum = Some("null"),
         maximum = Some("null"),
         minimumIncluded = true,
         maximumIncluded = true)
-    val expectedAndFilter = new AndFilter(List(expectedRegexFilter, expectedColRangeFilter))
+    val expectedAndFilter = new AndFilterSpec(List(expectedRegexFilter, expectedColRangeFilter))
 
     val kijiInputSpec = modelEnv
         .scoreEnvironment

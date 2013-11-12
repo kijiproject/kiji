@@ -28,8 +28,8 @@ import org.scalatest.junit.JUnitRunner
 import org.kiji.express.Cell
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow.All
-import org.kiji.express.flow.QualifiedColumnRequestInput
-import org.kiji.express.flow.QualifiedColumnRequestOutput
+import org.kiji.express.flow.QualifiedColumnInputSpec
+import org.kiji.express.flow.QualifiedColumnOutputSpec
 import org.kiji.express.util.Resources.doAndClose
 import org.kiji.express.util.Resources.withKijiTable
 import org.kiji.modeling.Preparer
@@ -91,18 +91,18 @@ class IterativePreparerSuite extends KijiSuite {
                       tableUri.toString,
                       timeRange=All,
                       columnsToFields =
-                          Map(QualifiedColumnRequestInput("family", "column1") -> 'word)),
+                          Map(QualifiedColumnInputSpec("family", "column1") -> 'word)),
                   "input2" -> KijiInputSpec(
                       tableUri.toString,
                       timeRange=All,
                       columnsToFields =
-                          Map(QualifiedColumnRequestInput("family", "column2") -> 'word))
+                          Map(QualifiedColumnInputSpec("family", "column2") -> 'word))
               ),
               outputSpec = Map(
                   "output" -> KijiOutputSpec(
                       tableUri = tableUri.toString,
                       fieldsToColumns = Map('word ->
-                          QualifiedColumnRequestOutput("family:column2")))
+                          QualifiedColumnOutputSpec("family:column2")))
               ),
               keyValueStoreSpecs = Seq()
           )),

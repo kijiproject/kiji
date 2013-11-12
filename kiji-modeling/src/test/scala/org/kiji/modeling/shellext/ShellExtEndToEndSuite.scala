@@ -28,8 +28,8 @@ import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.Cell
 import org.kiji.express.flow.All
-import org.kiji.express.flow.QualifiedColumnRequestInput
-import org.kiji.express.flow.QualifiedColumnRequestOutput
+import org.kiji.express.flow.QualifiedColumnInputSpec
+import org.kiji.express.flow.QualifiedColumnOutputSpec
 import org.kiji.express.util.Resources.doAndClose
 import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.modeling.Extractor
@@ -89,11 +89,11 @@ class ShellExtEndToEnd extends ShellExtSuite {
               KijiInputSpec(
                   uri.toString,
                   timeRange=All,
-                  columnsToFields = Map(QualifiedColumnRequestInput("family", "column1") -> 'field)
+                  columnsToFields = Map(QualifiedColumnInputSpec("family", "column1") -> 'field)
               ),
               KijiSingleColumnOutputSpec(
                   uri.toString,
-                  QualifiedColumnRequestOutput("family:column2")
+                  QualifiedColumnOutputSpec("family:column2")
               ),
               keyValueStoreSpecs = Seq())))
 

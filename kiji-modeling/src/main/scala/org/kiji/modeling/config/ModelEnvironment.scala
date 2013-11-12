@@ -24,7 +24,7 @@ import scala.io.Source
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
-import org.kiji.express.flow.ColumnRequestOutput
+import org.kiji.express.flow.ColumnOutputSpec
 import org.kiji.express.util.Resources.doAndClose
 import org.kiji.modeling.avro.AvroModelEnvironment
 import org.kiji.modeling.framework.ModelConverters
@@ -55,10 +55,10 @@ import org.kiji.schema.util.ToJson
  *               tableUri = "kiji://.env/default/mytable/",
  *               timeRange = Between(0L, 38475687L),
  *               columnsToFields = Map(
- *                   QualifiedColumnRequestInput("info", "in", maxVersions = 3) -> 'tuplename)),
+ *                   QualifiedColumnInputSpec("info", "in", maxVersions = 3) -> 'tuplename)),
  *           outputSpec = KijiSingleColumnOutputSpec(
  *               tableUri = "kiji://.env/default/mytable/",
- *               outputColumn = ColumnRequestOutput("outputFamily:qualifier")),
+ *               outputColumn = ColumnOutputSpec("outputFamily:qualifier")),
  *           keyValueStoreSpecs = Seq(
  *               KeyValueStore(
  *                   storeType = "KIJI_TABLE",
@@ -372,12 +372,12 @@ object ModelEnvironment {
    * Verifies that the given collection of bindings between Scalding field names and column requests
    * is valid with respect to the field names and column names contained therein.
    *
-   * @param columns is a map from field names to [[org.kiji.express.flow.ColumnRequestOutput]]
+   * @param columns is a map from field names to [[org.kiji.express.flow.ColumnOutputSpec]]
    *     objects.
    * @return an optional ValidationException if there are errors encountered.
    */
   def validateKijiOutputFieldBindings(
-      columns: Map[Symbol, _ <: ColumnRequestOutput]): Seq[ValidationException] = {
+      columns: Map[Symbol, _ <: ColumnOutputSpec]): Seq[ValidationException] = {
     // Validate column names.
     val columnNames: Seq[String] = columns
         .values

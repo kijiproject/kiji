@@ -23,7 +23,7 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
 import org.kiji.express.flow.TimeRange
-import org.kiji.express.flow.ColumnRequestInput
+import org.kiji.express.flow.ColumnInputSpec
 import org.kiji.schema.KijiDataRequestBuilder
 import org.kiji.schema.KijiDataRequest
 
@@ -32,7 +32,7 @@ import org.kiji.schema.KijiDataRequest
  *
  * @param tableUri addressing the Kiji table that this input spec will read from.
  * @param timeRange that cells must fall into to be retrieved
- * @param columnsToFields is a map from [[org.kiji.express.flow.ColumnRequestInput]] objects to
+ * @param columnsToFields is a map from [[org.kiji.express.flow.ColumnInputSpec]] objects to
  *     Scalding field names.  This determines how data that is requested for the extract phase is
  *     mapped onto named input fields.
  */
@@ -42,7 +42,7 @@ import org.kiji.schema.KijiDataRequest
 final case class KijiInputSpec(
     tableUri: String,
     timeRange: TimeRange,
-    columnsToFields: Map[_ <: ColumnRequestInput, Symbol]
+    columnsToFields: Map[_ <: ColumnInputSpec, Symbol]
 ) extends InputSpec {
 
   /**
@@ -55,7 +55,7 @@ final case class KijiInputSpec(
     /** Add another column to the `KijiDataRequest.` */
     def addColumn(
         builder: KijiDataRequestBuilder,
-        column: ColumnRequestInput): KijiDataRequestBuilder.ColumnsDef = {
+        column: ColumnInputSpec): KijiDataRequestBuilder.ColumnsDef = {
       builder.newColumnsDef()
           .withMaxVersions(column.maxVersions)
           .withFilter(column.filter.map{ _.toKijiColumnFilter }.getOrElse(null))
