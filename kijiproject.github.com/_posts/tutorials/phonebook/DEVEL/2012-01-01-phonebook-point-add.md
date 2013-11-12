@@ -155,15 +155,15 @@ $KIJI_HOME/bin/kiji scan kiji://.env/default/phonebook
 </div>
 
     Scanning kiji table: kiji://localhost:2181/default/phonebook/
-    entity-id=hbase=hex:17dce7850f7bb653469ab526a58c815b [1363224175538] info:firstname
+    entity-id=['Renuka,Apte'] [1384235579766] info:firstname
                                      Renuka
-    entity-id=hbase=hex:17dce7850f7bb653469ab526a58c815b [1363224175538] info:lastname
+    entity-id=['Renuka,Apte'] [1384235579766] info:lastname
                                      Apte
-    entity-id=hbase=hex:17dce7850f7bb653469ab526a58c815b [1363224175538] info:email
+    entity-id=['Renuka,Apte'] [1384235579766] info:email
                                      ra@wibidata.com
-    entity-id=hbase=hex:17dce7850f7bb653469ab526a58c815b [1363224175538] info:telephone
+    entity-id=['Renuka,Apte'] [1384235579766] info:telephone
                                      415-111-2222
-    entity-id=hbase=hex:17dce7850f7bb653469ab526a58c815b [1363224175538] info:address
+    entity-id=['Renuka,Apte'] [1384235579766] info:address
                                      {"addr1": "375 Alabama St", "apt": null, "addr2": null, "city": "SF", "state": "CA", "zip": 94110}
 
 ## Reading From a Table

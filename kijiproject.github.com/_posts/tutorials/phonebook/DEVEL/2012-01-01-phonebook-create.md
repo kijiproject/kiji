@@ -60,52 +60,75 @@ schema> describe phonebook;
 
     Table: phonebook (A collection of phone book entries)
     Row key:
-        key: STRING NOT NULL
+      key: STRING NOT NULL
 
     Column family: info
-        Description: basic information
+      Description: basic information
 
-        Column info:firstname (First name)
-            Schema: "string"
+      Column info:firstname (First name)
+        Default reader schema: "string"
+        1 reader schema(s) available.
+        1 writer schema(s) available.
 
-        Column info:lastname (Last name)
-            Schema: "string"
+      Column info:lastname (Last name)
+        Default reader schema: "string"
+        1 reader schema(s) available.
+        1 writer schema(s) available.
 
-        Column info:email (Email address)
-            Schema: "string"
+      Column info:email (Email address)
+        Default reader schema: "string"
+        1 reader schema(s) available.
+        1 writer schema(s) available.
 
-        Column info:telephone (Telephone number)
-            Schema: "string"
+      Column info:telephone (Telephone number)
+        Default reader schema: "string"
+        1 reader schema(s) available.
+        1 writer schema(s) available.
 
-        Column info:address (Street address)
-            Schema: "org.kiji.examples.phonebook.Address"
+      Column info:address (Street address)
+        Default reader schema class name: org.kiji.examples.phonebook.Address
+        1 reader schema(s) available.
+        1 writer schema(s) available.
 
     Column family: derived
-        Description: Information derived from an individual's address.
+      Description: Information derived from an individual's address.
 
-        Column derived:addr1 (Address line one.)
-            Schema: "string"
+      Column derived:addr1 (Address line one.)
+        Default reader schema: "string"
+        1 reader schema(s) available.
+        1 writer schema(s) available.
 
-        Column derived:apt (Address Apartment number.)
-            Schema: ["string","null"]
+      Column derived:apt (Address Apartment number.)
+        Default reader schema: ["string","null"]
+        1 reader schema(s) available.
+        1 writer schema(s) available.
 
-        Column derived:addr2 (Address line two.)
-            Schema: "string"
+      Column derived:addr2 (Address line two.)
+        Default reader schema: "string"
+        1 reader schema(s) available.
+        1 writer schema(s) available.
 
-        Column derived:city (Address city.)
-            Schema: "string"
+      Column derived:city (Address city.)
+        Default reader schema: "string"
+        1 reader schema(s) available.
+        1 writer schema(s) available.
 
-        Column derived:state (Address state.)
-            Schema: "string"
+      Column derived:state (Address state.)
+        Default reader schema: "string"
+        1 reader schema(s) available.
+        1 writer schema(s) available.
 
-        Column derived:zip (Address zip code.)
-            Schema: "int"
+      Column derived:zip (Address zip code.)
+        Default reader schema: "int"
+        1 reader schema(s) available.
+        1 writer schema(s) available.
 
     Column family: stats
-        Description: Statistics about a contact.
+      Description: Statistics about a contact.
 
-        Column stats:talktime (Time spent talking with this person)
-            Schema: (counter)
+      Column stats:talktime (Time spent talking with this person)
+        Schema: (counter)
+
 
 <div class="userinput">
 {% highlight bash %}

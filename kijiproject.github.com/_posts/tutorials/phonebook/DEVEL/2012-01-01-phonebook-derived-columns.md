@@ -88,13 +88,13 @@ $KIJI_HOME/bin/kiji scan kiji://.env/default/phonebook/derived
 </div>
 
     Scanning kiji table: kiji://localhost:2181/default/phonebook/derived/
-    entity-id=hbase=hex:551e50c1f2632437ccbacb16100f11db [1363228186202] derived:addr1
+    entity-id=['John,Doe'] [1384236064962] derived:addr1
                                      1600 Pennsylvania Ave
-    entity-id=hbase=hex:551e50c1f2632437ccbacb16100f11db [1363228186203] derived:city
+    entity-id=['John,Doe'] [1384236064964] derived:city
                                      Washington
-    entity-id=hbase=hex:551e50c1f2632437ccbacb16100f11db [1363228186205] derived:state
+    entity-id=['John,Doe'] [1384236064965] derived:state
                                      DC
-    entity-id=hbase=hex:551e50c1f2632437ccbacb16100f11db [1363228186207] derived:zip
+    entity-id=['John,Doe'] [1384236064967] derived:zip
                                      99999
 
     ...

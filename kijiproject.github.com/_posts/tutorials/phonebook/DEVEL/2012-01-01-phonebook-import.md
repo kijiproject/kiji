@@ -246,13 +246,13 @@ $KIJI_HOME/bin/kiji scan kiji://.env/default/phonebook
 Here's what one of the first entries should look like:
 
     Scanning kiji table: kiji://localhost:2181/default/phonebook/
-    entity-id=hbase=hex:551e50c1f2632437ccbacb16100f11db [1363228117784] info:firstname
+    entity-id=['John,Doe'] [1384235805181] info:firstname
                                      John
-    entity-id=hbase=hex:551e50c1f2632437ccbacb16100f11db [1363228117787] info:lastname
+    entity-id=['John,Doe'] [1384235805181] info:lastname
                                      Doe
-    entity-id=hbase=hex:551e50c1f2632437ccbacb16100f11db [1363228117789] info:email
+    entity-id=['John,Doe'] [1384235805181] info:email
                                      johndoe@gmail.com
-    entity-id=hbase=hex:551e50c1f2632437ccbacb16100f11db [1363228117792] info:telephone
+    entity-id=['John,Doe'] [1384235805181] info:telephone
                                      202-555-9876
-    entity-id=hbase=hex:551e50c1f2632437ccbacb16100f11db [1363228117793] info:address
+    entity-id=['John,Doe'] [1384235805181] info:address
                                      {"addr1": "1600 Pennsylvania Ave", "apt": null, "addr2": null, "city": "Washington", "state": "DC", "zip": 99999}

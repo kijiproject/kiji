@@ -55,16 +55,16 @@ $KIJI_HOME/bin/kiji get kiji://.env/default/phonebook --entity-id="['Renuka,Apte
 {% endhighlight %}
 </div>
 
-    Looking up entity: hbase=hex:17dce7850f7bb653469ab526a58c815b from kiji table: kiji://localhost:2181/default/phonebook/
-    entity-id=hbase=hex:17dce7850f7bb653469ab526a58c815b [1363228510937] info:firstname
+    Looking up entity: ['Renuka,Apte'] from kiji table: kiji://localhost:2181/default/phonebook/
+    entity-id=['Renuka,Apte'] [1384235579766] info:firstname
                                      Renuka
-    entity-id=hbase=hex:17dce7850f7bb653469ab526a58c815b [1363228510937] info:lastname
+    entity-id=['Renuka,Apte'] [1384235579766] info:lastname
                                      Apte
-    entity-id=hbase=hex:17dce7850f7bb653469ab526a58c815b [1363228510937] info:email
+    entity-id=['Renuka,Apte'] [1384235579766] info:email
                                      ra@wibidata.com
-    entity-id=hbase=hex:17dce7850f7bb653469ab526a58c815b [1363228510937] info:telephone
+    entity-id=['Renuka,Apte'] [1384235579766] info:telephone
                                      415-111-2222
-    entity-id=hbase=hex:17dce7850f7bb653469ab526a58c815b [1363228510937] info:address
+    entity-id=['Renuka,Apte'] [1384235579766] info:address
                                      {"addr1": "375 Alabama St", "apt": null, "addr2": null, "city": "SF", "state": "CA", "zip": 94110}
 
 Next, to perform the deletion of this contact using DeleteEntry:
@@ -90,7 +90,8 @@ $KIJI_HOME/bin/kiji get kiji://.env/default/phonebook --entity-id="['Renuka,Apte
 {% endhighlight %}
 </div>
 
-    Looking up entity: hbase=hex:17dce7850f7bb653469ab526a58c815b from kiji table: kiji://localhost:2181/default/phonebook/
+    Looking up entity: ['Renuka,Apte'] from kiji table: kiji://localhost:2181/default/phonebook/
+
 
 ## Deleting from a MapReduce Job
 
@@ -171,8 +172,9 @@ $KIJI_HOME/bin/kiji scan kiji://.env/default/phonebook/derived:state
 </div>
 
     Scanning kiji table: kiji://localhost:2181/default/phonebook/derived:state/
-    entity-id=hbase=hex:551e50c1f2632437ccbacb16100f11db [1363228186205] derived:state
+    entity-id=['John,Doe'] [1384236064965] derived:state
                                      DC
+
 
 ## Wrapping up
 If you started your BentoBox to do this tutorial, now would be a good time to stop it.
