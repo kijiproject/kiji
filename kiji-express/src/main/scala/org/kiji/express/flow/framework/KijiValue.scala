@@ -54,6 +54,6 @@ final class KijiValue {
    * @param value that will be wrapped by this instance.
    */
   def set(value: KijiRowData) {
-    currentValue = value;
+    currentValue = value
   }
 }

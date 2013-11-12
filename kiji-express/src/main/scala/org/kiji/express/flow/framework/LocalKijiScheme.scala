@@ -131,7 +131,10 @@ private[express] case class OutputContext(
  * @param timestampField is the optional name of a field containing the timestamp that all values
  *     in a tuple should be written to.
  *     Use None if all values should be written at the current time.
- * @param columns mapping tuple field names to requests for Kiji columns.
+ * @param icolumns is a one-to-one mapping from field names to Kiji columns. The columns in the
+ *     map will be read into their associated tuple fields.
+ * @param ocolumns is a one-to-one mapping from field names to Kiji columns. Values from the
+ *     tuple fields will be written to their associated column.
  */
 @ApiAudience.Framework
 @ApiStability.Experimental

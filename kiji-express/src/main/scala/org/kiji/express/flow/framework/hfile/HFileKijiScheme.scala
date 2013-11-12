@@ -136,16 +136,16 @@ private[express] class HFileKijiScheme(
 
     outputCells(output, timestampField, columns) { key: HFileCell =>
       // Convert cell to an HFileKeyValue
-      val kijiColumn = new KijiColumnName(key.colRequest.family, key.colRequest.qualifier);
-      val hbaseColumn = colTranslator.toHBaseColumnName(kijiColumn);
+      val kijiColumn = new KijiColumnName(key.colRequest.family, key.colRequest.qualifier)
+      val hbaseColumn = colTranslator.toHBaseColumnName(kijiColumn)
       val cellSpec = layout.getCellSpec(kijiColumn)
-        .setSchemaTable(kiji.getSchemaTable());
+        .setSchemaTable(kiji.getSchemaTable())
 
       val encoder = encoderProvider.getEncoder(kijiColumn.getFamily(), kijiColumn.getQualifier())
       val hFileKeyValue = new HFileKeyValue(
         key.entityId.toJavaEntityId(eidFactory).getHBaseRowKey(),
         hbaseColumn.getFamily(), hbaseColumn.getQualifier(), key.timestamp,
-        encoder.encode(key.datum));
+        encoder.encode(key.datum))
 
       sinkCall.getOutput().collect(hFileKeyValue, NullWritable.get())
     }
@@ -247,7 +247,7 @@ private[express] case class HFileKijiSinkContext (
  * and version timestamp.
  *
  * @param entityId of the Kiji table cell.
- * @param colRequest of the Kiji table cell.
+ * @param colRequest identifying the location of the Kiji table cell.
  * @param timestamp  of the Kiji table cell.
  * @param datum in the Kiji table cell.
  */

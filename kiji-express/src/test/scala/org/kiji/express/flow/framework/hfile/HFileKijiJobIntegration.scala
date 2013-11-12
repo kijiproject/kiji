@@ -49,7 +49,7 @@ class HFileKijiJobIntegration extends AbstractKijiIntegrationTest {
 
   @Before
   def setupTest {
-    val desc = KijiTableLayouts.getLayout("layout/avro-types-1.3.json");
+    val desc = KijiTableLayouts.getLayout("layout/avro-types-1.3.json")
     mKiji = Kiji.Factory.open(getKijiURI())
     mKiji.createTable(desc)
   }
@@ -201,8 +201,8 @@ class HFileKijiJobIntegration extends AbstractKijiIntegrationTest {
   }
 
   private def bulkLoad(hFilePath: File, table: KijiTable) {
-    val hFileLoader = HFileLoader.create(super.getConf());
-    hFileLoader.load(new Path(hFilePath.toString()), table);
+    val hFileLoader = HFileLoader.create(super.getConf())
+    hFileLoader.load(new Path(hFilePath.toString()), table)
   }
 }
 

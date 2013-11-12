@@ -36,7 +36,7 @@ import org.kiji.schema.filter.RegexQualifierColumnFilter
 @Inheritance.Sealed
 sealed trait ColumnFilterSpec {
   /** @return a KijiColumnFilter that corresponds to the Express column filter. */
-  def toKijiColumnFilter: KijiColumnFilter
+  private[kiji] def toKijiColumnFilter: KijiColumnFilter
 }
 
 /**
@@ -49,7 +49,7 @@ sealed trait ColumnFilterSpec {
 @Inheritance.Sealed
 final case class AndFilterSpec(filters: Seq[ColumnFilterSpec])
     extends ColumnFilterSpec {
-  override def toKijiColumnFilter: KijiColumnFilter = {
+  private[kiji] override def toKijiColumnFilter: KijiColumnFilter = {
     val schemaFilters = filters
         .map { filter: ColumnFilterSpec => filter.toKijiColumnFilter }
         .toArray
@@ -68,7 +68,7 @@ final case class AndFilterSpec(filters: Seq[ColumnFilterSpec])
 @Inheritance.Sealed
 final case class OrFilterSpec(filters: Seq[ColumnFilterSpec])
     extends ColumnFilterSpec {
-  override def toKijiColumnFilter: KijiColumnFilter = {
+  private[kiji] override def toKijiColumnFilter: KijiColumnFilter = {
     val orParams = filters
         .map { filter: ColumnFilterSpec => filter.toKijiColumnFilter }
         .toArray
@@ -94,7 +94,7 @@ final case class ColumnRangeFilterSpec(
     minimumIncluded: Boolean = true,
     maximumIncluded: Boolean = false)
     extends ColumnFilterSpec {
-  override def toKijiColumnFilter: KijiColumnFilter = {
+  private[kiji] override def toKijiColumnFilter: KijiColumnFilter = {
     new KijiColumnRangeFilter(
         minimum.getOrElse { null },
         minimumIncluded,
@@ -113,5 +113,6 @@ final case class ColumnRangeFilterSpec(
 @Inheritance.Sealed
 final case class RegexQualifierFilterSpec(regex: String)
     extends ColumnFilterSpec {
-  override def toKijiColumnFilter: KijiColumnFilter = new RegexQualifierColumnFilter(regex)
+  private[kiji] override def toKijiColumnFilter: KijiColumnFilter =
+      new RegexQualifierColumnFilter(regex)
 }

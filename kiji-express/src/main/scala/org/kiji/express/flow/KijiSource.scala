@@ -500,8 +500,8 @@ private[express] object KijiSource {
    * used during tests.
    *
    * @param timestampField is the name of a tuple field that will contain cell timestamp when the
-   *                       source is used for writing. Specify the empty field name to write all
-   *                       cells at the current time.
+   *     source is used for writing. Specify the empty field name to write all cells at the current
+   *     time.
    * @param inputColumns Scalding field name to column input spec mapping.
    * @param outputColumns Scalding field name to column output spec mapping.
    */

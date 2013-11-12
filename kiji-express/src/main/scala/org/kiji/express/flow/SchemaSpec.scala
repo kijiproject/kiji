@@ -37,7 +37,7 @@ sealed trait SchemaSpec extends java.io.Serializable {
    * Retrieve the Avro [[org.apache.avro.Schema]] object associated with this SchemaSpec,
    * if possible.
    */
-  private[express] def schema: Option[Schema]
+  private[kiji] def schema: Option[Schema]
 }
 
 /**

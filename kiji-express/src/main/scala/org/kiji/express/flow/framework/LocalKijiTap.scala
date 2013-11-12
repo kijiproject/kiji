@@ -84,9 +84,9 @@ private[express] class LocalKijiTap(
       flow: FlowProcess[Properties],
       conf: Properties) {
     // Store the input table.
-    conf.setProperty(KijiConfKeys.KIJI_INPUT_TABLE_URI, tableUri);
+    conf.setProperty(KijiConfKeys.KIJI_INPUT_TABLE_URI, tableUri)
 
-    super.sourceConfInit(flow, conf);
+    super.sourceConfInit(flow, conf)
   }
 
   /**
@@ -101,9 +101,9 @@ private[express] class LocalKijiTap(
       flow: FlowProcess[Properties],
       conf: Properties) {
     // Store the output table.
-    conf.setProperty(KijiConfKeys.KIJI_OUTPUT_TABLE_URI, tableUri);
+    conf.setProperty(KijiConfKeys.KIJI_OUTPUT_TABLE_URI, tableUri)
 
-    super.sinkConfInit(flow, conf);
+    super.sinkConfInit(flow, conf)
   }
 
   /**
@@ -129,7 +129,7 @@ private[express] class LocalKijiTap(
         flow,
         getScheme(),
         if (null == input) new ByteArrayInputStream(Array()) else input,
-        getIdentifier());
+        getIdentifier())
   }
 
   /**
@@ -149,7 +149,7 @@ private[express] class LocalKijiTap(
         flow,
         getScheme(),
         if (null == output) new ByteArrayOutputStream() else output,
-        getIdentifier());
+        getIdentifier())
   }
 
   /**
