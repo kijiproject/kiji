@@ -33,7 +33,7 @@ import org.kiji.modelrepo.KijiModelRepository
 import org.kiji.modelrepo.ModelLifeCycle
 import org.kiji.modelrepo.ArtifactName
 import org.kiji.modelrepo.uploader.MavenArtifactName
-import org.kiji.express.util.Resources.doAndClose
+import org.kiji.express.flow.util.Resources.doAndClose
 
 object ModelRepoScannerState extends Enumeration {
   type State = Value

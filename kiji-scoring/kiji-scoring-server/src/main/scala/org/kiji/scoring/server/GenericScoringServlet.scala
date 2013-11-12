@@ -34,15 +34,15 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.HConstants
 
-import org.kiji.express.Cell
-import org.kiji.express.EntityId
+import org.kiji.express.flow.Cell
+import org.kiji.express.flow.EntityId
 import org.kiji.express.flow.ColumnInputSpec
 import org.kiji.express.flow.framework.KijiScheme
-import org.kiji.express.util.GenericRowDataConverter
-import org.kiji.express.util.Tuples
-import org.kiji.express.util.Resources.doAndClose
-import org.kiji.express.util.Resources.withKiji
-import org.kiji.express.util.Resources.withKijiTableReader
+import org.kiji.express.flow.util.GenericRowDataConverter
+import org.kiji.express.flow.util.Tuples
+import org.kiji.express.flow.util.Resources.doAndClose
+import org.kiji.express.flow.util.Resources.withKiji
+import org.kiji.express.flow.util.Resources.withKijiTableReader
 import org.kiji.modeling.ExtractFn
 import org.kiji.modeling.Extractor
 import org.kiji.modeling.KeyValueStore

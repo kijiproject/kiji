@@ -19,7 +19,7 @@
 
 package org.kiji.lifecycle
 
-import org.kiji.express.Cell
+import org.kiji.express.flow.Cell
 import org.kiji.modeling.Extractor
 import org.kiji.modeling.Scorer
 
