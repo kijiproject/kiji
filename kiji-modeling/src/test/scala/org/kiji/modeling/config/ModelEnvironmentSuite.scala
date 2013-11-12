@@ -21,32 +21,26 @@ package org.kiji.modeling.config
 
 import scala.collection.JavaConverters._
 
-
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.flow.AndFilterSpec
 import org.kiji.express.flow.Between
-import org.kiji.express.flow.ColumnRangeFilterSpec
-import org.kiji.express.flow.ColumnInputSpec
 import org.kiji.express.flow.ColumnFilterSpec
+import org.kiji.express.flow.ColumnRangeFilterSpec
 import org.kiji.express.flow.OrFilterSpec
 import org.kiji.express.flow.PagingSpec
 import org.kiji.express.flow.QualifiedColumnInputSpec
 import org.kiji.express.flow.QualifiedColumnOutputSpec
 import org.kiji.express.flow.RegexQualifierFilterSpec
-import org.kiji.express.util.Resources.resourceAsString
-import org.kiji.modeling.avro.AvroColumnFamilyInputSpec
-import org.kiji.modeling.avro.AvroColumnFamilyOutputSpec
+import org.kiji.express.flow.util.Resources.resourceAsString
 import org.kiji.modeling.avro.AvroColumnRangeFilter
 import org.kiji.modeling.avro.AvroFilter
 import org.kiji.modeling.avro.AvroInputFieldBinding
 import org.kiji.modeling.avro.AvroKijiInputSpec
 import org.kiji.modeling.avro.AvroModelEnvironment
-import org.kiji.modeling.avro.AvroOutputFieldBinding
 import org.kiji.modeling.avro.AvroQualifiedColumnInputSpec
-import org.kiji.modeling.avro.AvroQualifiedColumnOutputSpec
 import org.kiji.modeling.avro.AvroRegexQualifierFilter
 import org.kiji.modeling.avro.AvroTimeRange
 import org.kiji.modeling.framework.ModelConverters

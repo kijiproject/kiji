@@ -24,7 +24,7 @@ import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
-import org.kiji.express.Cell
+import org.kiji.express.flow.Cell
 
 @RunWith(classOf[JUnitRunner])
 class SelectorExtractorSuite extends FunSuite {

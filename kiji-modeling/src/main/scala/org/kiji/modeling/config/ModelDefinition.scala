@@ -24,7 +24,7 @@ import scala.io.Source
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
-import org.kiji.express.util.Resources.doAndClose
+import org.kiji.express.flow.util.Resources.doAndClose
 import org.kiji.modeling.Evaluator
 import org.kiji.modeling.Extractor
 import org.kiji.modeling.Preparer

@@ -29,19 +29,15 @@ import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow.All
-import org.kiji.express.flow.ColumnFamilyInputSpec
-import org.kiji.express.flow.ColumnInputSpec
-import org.kiji.express.flow.ColumnOutputSpec
 import org.kiji.express.flow.QualifiedColumnInputSpec
-import org.kiji.modeling.config.FieldBinding
+import org.kiji.express.flow.util.Resources.doAndClose
+import org.kiji.express.flow.util.Resources.doAndRelease
 import org.kiji.modeling.config.KijiInputSpec
 import org.kiji.modeling.config.ModelDefinition
 import org.kiji.modeling.config.ModelEnvironment
 import org.kiji.modeling.config.TextSourceSpec
 import org.kiji.modeling.config.TrainEnvironment
 import org.kiji.modeling.framework.ModelExecutor
-import org.kiji.express.util.Resources.doAndClose
-import org.kiji.express.util.Resources.doAndRelease
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiURI

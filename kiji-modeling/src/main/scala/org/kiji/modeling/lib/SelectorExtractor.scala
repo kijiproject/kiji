@@ -24,8 +24,8 @@ import cascading.tuple.Fields
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
-import org.kiji.express.Cell
-import org.kiji.express.util.Tuples
+import org.kiji.express.flow.Cell
+import org.kiji.express.flow.util.Tuples
 import org.kiji.modeling.ExtractFn
 import org.kiji.modeling.Extractor
 

@@ -25,13 +25,13 @@ import scala.util.control.Breaks.breakable
 
 import com.twitter.scalding.Source
 import com.twitter.scalding.TextLine
-
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
-import org.kiji.express.Cell
+import org.kiji.express.flow.Cell
 import org.kiji.modeling.Trainer
 
 /**

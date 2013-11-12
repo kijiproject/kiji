@@ -19,16 +19,11 @@
 
 package org.kiji.modeling.shellext
 
-import java.io.InputStream
-
 import org.kiji.express.KijiSuite
 import org.kiji.schema.shell.DDLParser
 import org.kiji.schema.shell.Environment
 import org.kiji.schema.shell.MockKijiSystem
 import org.kiji.schema.shell.input.NullInputSource
-import org.kiji.schema.Kiji
-import org.kiji.express.util.Resources._
-import org.kiji.schema.shell.api.Client
 
 /**
  * Provides utility functions for tests that employ the KijiExpress extension to the KijiSchema

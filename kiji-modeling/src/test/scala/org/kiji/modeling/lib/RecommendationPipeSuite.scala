@@ -30,11 +30,11 @@ import org.apache.hadoop.hbase.HBaseConfiguration
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
-import org.kiji.express.Cell
 import org.kiji.express.KijiSuite
+import org.kiji.express.flow.Cell
 import org.kiji.express.flow.KijiInput
-import org.kiji.express.util.Resources.doAndClose
-import org.kiji.express.util.Resources.doAndRelease
+import org.kiji.express.flow.util.Resources.doAndClose
+import org.kiji.express.flow.util.Resources.doAndRelease
 import org.kiji.modeling.framework.KijiModelingJob
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiTable

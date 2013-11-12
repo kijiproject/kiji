@@ -26,12 +26,12 @@ import org.apache.hadoop.conf.Configuration
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
-import org.kiji.express.Cell
-import org.kiji.express.EntityId
+import org.kiji.express.flow.Cell
 import org.kiji.express.flow.ColumnInputSpec
+import org.kiji.express.flow.EntityId
 import org.kiji.express.flow.framework.KijiScheme
-import org.kiji.express.util.GenericRowDataConverter
-import org.kiji.express.util.Tuples
+import org.kiji.express.flow.util.GenericRowDataConverter
+import org.kiji.express.flow.util.Tuples
 import org.kiji.mapreduce.KijiContext
 import org.kiji.mapreduce.kvstore.{ KeyValueStore => JKeyValueStore }
 import org.kiji.mapreduce.produce.KijiProducer

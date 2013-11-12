@@ -26,7 +26,7 @@ import org.apache.avro.generic.IndexedRecord
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
-import org.kiji.express.EntityId
+import org.kiji.express.flow.EntityId
 import org.kiji.mapreduce.kvstore.KeyValueStoreReader
 import org.kiji.mapreduce.kvstore.lib.{AvroKVRecordKeyValueStore => JAvroKVRecordKeyValueStore}
 import org.kiji.mapreduce.kvstore.lib.{AvroRecordKeyValueStore => JAvroRecordKeyValueStore}

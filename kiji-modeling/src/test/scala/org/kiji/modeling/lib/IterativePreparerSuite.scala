@@ -25,13 +25,13 @@ import org.apache.hadoop.hbase.HBaseConfiguration
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
-import org.kiji.express.Cell
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow.All
+import org.kiji.express.flow.Cell
 import org.kiji.express.flow.QualifiedColumnInputSpec
 import org.kiji.express.flow.QualifiedColumnOutputSpec
-import org.kiji.express.util.Resources.doAndClose
-import org.kiji.express.util.Resources.withKijiTable
+import org.kiji.express.flow.util.Resources.doAndClose
+import org.kiji.express.flow.util.Resources.withKijiTable
 import org.kiji.modeling.Preparer
 import org.kiji.modeling.config.FieldBinding
 import org.kiji.modeling.config.KijiInputSpec
