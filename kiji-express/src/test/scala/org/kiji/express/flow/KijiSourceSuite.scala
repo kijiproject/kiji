@@ -133,11 +133,9 @@ class KijiSourceSuite
   def validateMultipleTimestamps(outputBuffer: Buffer[(EntityId, Seq[Cell[CharSequence]])]) {
     assert(outputBuffer.size === 2)
 
-    // There should be two Cells in each of the KijiSlices
+    // There should be two Cells written to each column.
     assert(outputBuffer(0)._2.size === 2)
     assert(outputBuffer(1)._2.size === 2)
-
-    // KijiSlices order the most recent timestamp first.
 
     assert(outputBuffer(0)._2.head.datum.toString === "word2")
     assert(outputBuffer(0)._2.last.datum.toString === "word1")
@@ -960,7 +958,8 @@ object KijiSourceSuite {
   }
 
   /**
-   * A job that tests map-type column families using KijiSlice and outputs the results to a TSV.
+   * A job that tests map-type column families using sequences of cells and outputs the results to
+   * a TSV.
    *
    * @param args to the job. Two arguments are expected: "input", which specifies the URI to a
    *     Kiji table, and "output", which specifies the path to a text file.

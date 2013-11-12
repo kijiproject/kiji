@@ -30,31 +30,12 @@ import org.kiji.express.util.CellMathUtil
 class CellMathUtilSuite
     extends FunSuite
     with ShouldMatchers {
-  val cell0 = Cell[Long]("info", "number", 0L, 0L)
-  val cell1 = Cell[Long]("info", "number", 1L, 1L)
-  val cell2 = Cell[Long]("info", "number", 2L, 2L)
-  val cell3 = Cell[Long]("info", "number", 3L, 3L)
-  val cell4 = Cell[Long]("info", "number", 4L, 4L)
-  val cell5 = Cell[Long]("info", "number", 5L, 4L)
-  val cell6 = Cell[Long]("info", "number", 6L, 6L)
-  val cell7 = Cell[Long]("info", "number", 7L, 7L)
-  val cellSeq : List[Cell[Long]] = List(
-      cell7,
-      cell6,
-      cell5,
-      cell4,
-      cell3,
-      cell2,
-      cell1,
-      cell0
-  )
-
-  val mapCell0 = Cell[Long]("info", "a", 0L, 0L)
-  val mapCell1 = Cell[Long]("info", "a", 1L, 1L)
-  val mapCell2 = Cell[Long]("info", "b", 2L, 0L)
-  val mapCell3 = Cell[Long]("info", "b", 3L, 3L)
-  val mapCell4 = Cell[Long]("info", "c", 4L, 0L)
-  val mapCellSeq : List[Cell[Long]] = List(
+  val mapCell0: Cell[Long] = Cell("info", "a", 0L, 0L)
+  val mapCell1: Cell[Long] = Cell("info", "a", 1L, 1L)
+  val mapCell2: Cell[Long] = Cell("info", "b", 2L, 0L)
+  val mapCell3: Cell[Long] = Cell("info", "b", 3L, 3L)
+  val mapCell4: Cell[Long] = Cell("info", "c", 4L, 0L)
+  val mapCellSeq: List[Cell[Long]] = List(
       mapCell4,
       mapCell3,
       mapCell2,
@@ -62,38 +43,31 @@ class CellMathUtilSuite
       mapCell0
   )
 
-  test("KijiSlice should properly sum simple types") {
-    val slice: Seq[Cell[Long]]  =  mapCellSeq.toStream
-    assert(4 == CellMathUtil.sum(slice))
+  test("CellMathUtils should properly sum simple types") {
+    assert(4 === CellMathUtil.sum(mapCellSeq))
   }
 
-  test("KijiSlice should properly compute the squared sum of simple types") {
-    val slice: Seq[Cell[Long]]  =  mapCellSeq.toStream
-    assert(10.0 == CellMathUtil.sumSquares(slice))
+  test("CellMathUtils should properly compute the squared sum of simple types") {
+    assert(10.0 === CellMathUtil.sumSquares(mapCellSeq))
   }
 
-  test("KijiSlice should properly compute the average of simple types") {
-    val slice:Seq[Cell[Long]] =  mapCellSeq.toStream
-   assert(.8 == CellMathUtil.mean(slice))
+  test("CellMathUtils should properly compute the average of simple types") {
+    assert(0.8 === CellMathUtil.mean(mapCellSeq))
   }
 
-  test("KijiSlice should properly compute the standard deviation of simple types") {
-    val slice: Seq[Cell[Long]] =  mapCellSeq.toStream
-    CellMathUtil.stddev(slice) should be (1.16619 plusOrMinus 0.1)
+  test("CellMathUtils should properly compute the standard deviation of simple types") {
+    CellMathUtil.stddev(mapCellSeq) should be (1.16619 plusOrMinus 0.1)
   }
 
-  test("KijiSlice should properly compute the variance of simple types") {
-    val slice: Seq[Cell[Long]] = mapCellSeq.toStream
-    CellMathUtil.variance(slice) should be (1.36 plusOrMinus 0.1)
+  test("CellMathUtils should properly compute the variance of simple types") {
+    CellMathUtil.variance(mapCellSeq) should be (1.36 plusOrMinus 0.1)
   }
 
-  test("KijiSlice should properly find the minimum of simple types") {
-    val slice: Seq[Cell[Long]] = mapCellSeq.toStream
-    assert(0.0 == CellMathUtil.min(slice))
+  test("CellMathUtils should properly find the minimum of simple types") {
+    assert(0.0 === CellMathUtil.min(mapCellSeq))
   }
 
-  test("KijiSlice should properly find the maximum of simple types") {
-    val slice: Seq[Cell[Long]] = mapCellSeq.toStream
-    assert(3.0 == CellMathUtil.max(slice))
+  test("CellMathUtils should properly find the maximum of simple types") {
+    assert(3.0 === CellMathUtil.max(mapCellSeq))
   }
 }

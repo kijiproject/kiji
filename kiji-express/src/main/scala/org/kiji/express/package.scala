@@ -46,7 +46,7 @@ package org.kiji
  * from a table named `postings` into the tuple field named `text`, you could write the following.
  *
  * {{{
- *   KijiInput("kiji://.env/default/postings")("info:text" -> "text")
+ *   KijiInput("kiji://.env/default/postings", "info:text" -> "text")
  * }}}
  *
  * The result of the above expression is a [[org.kiji.express.flow.KijiSource]] (an implementation
@@ -56,9 +56,8 @@ package org.kiji
  * you could write the following.
  * {{{
  *   KijiInput("kiji://.env/default/postings")("info:text" -> 'text)
- *       .flatMap('text -> 'word) { word: KijiSlice[String] =>
- *         word.getFirstValue()
- *             .split("""\s+""")
+ *       .flatMap('text -> 'word) { word: Seq[Cell[String]] =>
+ *         word.head.datum.split("""\s+""")
  *       }
  * }}}
  */
