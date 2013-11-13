@@ -215,7 +215,7 @@ kiji bulk-import \
 
 #### Verify
 
-Verify that the `user` table records were added properly by executing:
+Verify that the `users` table records were added properly by executing:
 
 <div class="userinput">
 {% highlight bash %}
