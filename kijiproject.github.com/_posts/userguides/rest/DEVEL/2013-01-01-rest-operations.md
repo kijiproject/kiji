@@ -22,8 +22,6 @@ The HTTP operations supported by the KijiREST API are the following:
 
 * /v1/instances/&lt;instance&gt;/tables/&lt;table&gt;	[GET](#table-get)
 
-* /v1/instances/&lt;instance&gt;/tables/&lt;table&gt;/entityId	[GET](#entityID-get)
-
 * /v1/instances/&lt;instance&gt;/tables/&lt;table&gt;/rows	[GET](#rows-get), [POST](#rows-post)
 
 The following sections describe these operations in two groups:
@@ -31,40 +29,22 @@ The following sections describe these operations in two groups:
 * [Operations on rows](#ops-on-rows)
 * [Operations on non-row resources](#ops-on-non-rows)
 
+Note that you can run these commands within your browser by visiting the URL
+[http://localhost:8080](http://localhost:8080), followed by the path of the GET command below.  For
+example, to view the first 100 rows within `kiji://.env/default/user_ratings`, you can visit
+[http://localhost:8080/v1/instances/default/tables/user_ratings/rows](http://localhost:8080/v1/instances/default/tables/user_ratings/rows).
+
 <a id="ops-on-rows"> </a>
 ## Operations on Rows
 
-<a id="entityID-get"> </a>
-### Entity ID: GET
-
-The GET request returns the hexadecimal representation (in ASCII) of the corresponding HBase
-row key given a list of components comprising a row's entity ID:
-
-    GET /v1/instances/<instance>/tables/<table>/entityId
-
-#### Parameters:
-
-*  `eid` (single, required) - JSON array of the the components of the entity ID in order
-of their definition in the layout of the given table. String components must be single quoted
-while numeric components must remain unquoted.
-
-#### Example:
-
-    GET /v1/instances/default/tables/users/entityId?eid=[1298404763]
-
-Returns:
-<pre>
-{
-  rowKey: "9ee9800000004d64159b"
-}
-</pre>
 <a id="rows-get"> </a>
 ### Rows: GET
 
-Returns (streams) multiple Kiji rows. This request has similar results as the kiji `scan` command,
-rows bounded by the constraints. Each row is a JSON clob delimited by the "\r\n" characters and
-all "\r\n" characters within each JSON clob are replaced with "\n" to avoid collision with the
-delimiter characters.
+Returns (streams) multiple Kiji rows. The results of this request are similar
+to those of `kiji scan` -- the command produces a list of rows, bounded by
+constraints.  Each row is a JSON blob, delimited by the "\r\n" characters (and
+with all "\r\n" characters within each JSON blob are replaced with "\n" to
+avoid collision with the delimiter characters).
 
     GET /v1/instances/<instance>/tables/<table>/rows
 
@@ -72,18 +52,18 @@ delimiter characters.
 
 * `eid` (single, optional) - A JSON representation of the list of components (for example:
         `['string1', 2, 'string3']`) of the entity ID to retrieve. When specified, it returns
-        the row represented by the given entity ID. If this is specified, then `start_rk`,
-        `end_rk`, and `limit` parameters are ignored.
+        the row represented by the given entity ID. If this is specified, then `start_eid`,
+        `end_eid`, and `limit` parameters are ignored.
 
-* `start_rk` (single, optional) - If executing a range query, this is the HBase row key (specified as a
-        hexadecimal string) to inclusively start from.
+* `start_eid` (single, optional) - If executing a range query, this is the entity ID (represented
+              with JSON, as described above) from which to start (inclusive)
 
-* `end_rk` (single, optional) - If executing a range query, this is the HBase row key (specified as
-        a hexadecimal string) to exclusively end with.
+* `end_eid` (single, optional) - If executing a range query, this is the entity ID (represented with
+            JSON,as described above) at which to end (exclusive)
 
 * `limit` (single, optional, default=100) - The number of rows to return. Specify -1 to return all rows.
 
-* `cols` (single, optional, default=`*`) - A comma-separated list of column family
+* `cols` (single, optional, default=`*`) - A comma-separated list of column families
         (and qualifiers) to return. Specify `*` to indicate all columns. Specifying just a column
         family will return values for all columns in the family and their qualifiers.
 
@@ -91,10 +71,9 @@ delimiter characters.
         per cell to return for the given row.
 
 * `timerange` (single, optional) - A string denoting the time range
-        to return. Specify the time range `min..max` where `min` and `max` are the ms since UNIX epoch.
-        `min` and `max` are both optional; however, if a value is provided for this parameter,
-        at least one of min/max must be present.)
-
+        to return. Specify the time range `min..max` where `min` and `max` are the milliseconds
+        since UNIX epoch.  The `timerange` parameter requires at least one of `min` and `max` to be
+        set (i.e., you can specify only a `min`, only a `max`, or both).
 
 #### Examples:
 
@@ -106,13 +85,13 @@ Get a single row identified by the entity_id:
 
     GET /v1/instances/default/tables/users/rows?eid=[1298404763]
 
-Retrieve the first 100 rows (the default number of rows) between start and end keys:
+Retrieve the first 100 rows (the default number of rows) between start and end entity IDs:
 
-    GET /v1/instances/default/tables/users/rows?start_rk=9ee9800000004d64159b&end_rk=fca9800000004d64159c
+    GET /v1/instances/default/tables/users/rows?start_eid=[1298404763]&end_eid=[4591230321]
 
-Retrieve the first 100 rows starting from a particular key:
+Retrieve the first 10 rows starting from a particular entity ID:
 
-    GET /v1/instances/default/tables/users/rows?start_rk=9ee9800000004d64159b&limit=10
+    GET /v1/instances/default/tables/users/rows?start_eid=[1298404763]&limit=10
 
 <a id="rows-post"> </a>
 ### Rows: POST
@@ -130,14 +109,15 @@ returned by GETting rows.
 
 #### Notes:
 
-To create or update a record, the entity ID (`entityId`) must be specified in the JSON body.
-Cell timestamps are optional and if not specified, will be specified by the server.
-To avoid a heavy return payload, only a reference to the newly created/updated resource
-will be returned.
+To create or update a record, the entity ID (`entityId`) must be specified in
+the JSON body.  Cell timestamps are optional (if not specified, the server will
+set the cell timestamps to the time at which it creates or updates the record).
+To avoid a heavy return payload, only a reference to the newly created/updated
+resource will be returned.
 
-The writer_schema field was recently introduced in KijiREST 0.5.0. This is required to ensure that data
-returned by the server can be modified and sent back. In Kiji, there are two representations of the
-writer schema:
+The writer_schema field ensures that data returned by the server can be
+modified and sent back. In Kiji, there are two representations of the writer
+schema:
 
 1. __JSON__ - This is standard JSON representation of an Avro schema.
 2. __Integer ID__ - This is the internal Kiji representation of the specified Avro schema. For cells

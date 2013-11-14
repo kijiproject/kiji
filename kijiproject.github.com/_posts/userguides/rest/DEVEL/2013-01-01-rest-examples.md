@@ -30,14 +30,9 @@ and Kiji:
 
     $ curl http://localhost:8080/v1/version
     {
-       "kiji-client-data-version":{
-          "majorVersion":1,
-          "minorVersion":0,
-          "revision":0,
-          "protocolName":"system"
-       },
-       "rest-version":"0.1.0",
-       "kiji-software-version": "{{site.rest_devel_version}}"
+       "kiji-client-data-version": "system-2.0.0",
+       "rest-version":"{{site.rest_devel_version}}",
+       "kiji-software-version": "{{site.schema_devel_version}}"
     }
 
 ### Get Instances

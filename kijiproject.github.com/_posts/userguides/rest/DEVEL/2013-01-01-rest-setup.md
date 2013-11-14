@@ -8,25 +8,30 @@ version: devel
 description: Setup
 ---
 
-KijiREST runs as part of the Kiji environment. A BentoBox cluster includes KijiREST meaning nothing else
+KijiREST runs as part of the Kiji environment. A BentoBox cluster includes KijiREST, meaning nothing else
 needs to be downloaded --  simply start the KijiREST server.
 
 To run KijiREST on hardware independent of the HBase cluster, the KijiREST package includes
 the necessary Kiji libraries required to access the cluster remotely.
 
-## Setting up KijiREST on a local server
+### Setting up KijiREST on a local server
 
 To run KijiREST in a production environment, see [Setup and Run (Production)](#setup-production).
 
-### Download the Package
+### Set up
 
-Skip this step if running from within a Kiji BentoBox.
+If you are using a BentoBox, set the environment variable `${REST}` to point to the `rest` directory
+within your BentoBox installation:
 
-The KijiREST tarball can be found on the Kiji [Downloads](http://www.kiji.org/getstarted/#Downloads)
-page. Unpacked, the KijiREST contents are:
+    export REST=/path/to/bento/box/rest
 
-    $ cd ~/kiji-rest-{{site.rest_devel_version}}
-    $ ls .
+If you are not using a BentoBox, download the KijiREST tarball from the Kiji
+[Downloads](http://www.kiji.org/getstarted/#Downloads) page, untar the archive, and set `${REST}` to
+point to the root directory:
+
+    export REST=/path/to/tarball/kiji-rest-{{site.rest_devel_version}}
+
+Within `${REST}`, you should see the following:
 
 <dl>
 <dt>  bin/ </dt>
@@ -37,30 +42,39 @@ page. Unpacked, the KijiREST contents are:
     <dd>API docs</dd>
 <dt>lib/ </dt>
     <dd>A placeholder directory of additional classpath jars (especially Avro classes)</dd>
-<dt>kiji-rest-{{site.rest_devel_version}}.jar  </dt>
-    <dd>The KijiREST executable.</dd>
 <dt>README.md  </dt>
     <dd> A terse version of this document.</dd>
 </dl>
 
+(Non-BentoBox users will also see `kiji-rest-{{site.rest_devel_version}}.jar`.)
+
+Installing a Kiji instance (see the [Get Started](http://www.kiji.org/getstarted/) page for details)
+is necessary before running KijiREST (KijiREST cannot run on a system without an installed Kiji
+instance).  We also recommend that users running the example commands in this tutorial first run
+through one of the [Kiji tutorials](http://docs.kiji.org/tutorials.html).
+
 ### Startup with Basic Configuration
 
-KijiREST configuration parameters are located in `kiji-rest/conf/configuration.yml`. This
-file is divided into two major sections:
-* The top portion of the file contains configurations relevant to KijiREST
-* The bottom portion configures Dropwizard (including the HTTP and logging configurations).
+The KijiREST configuration parameters are located in
+`${REST}/conf/configuration.yml`
+(`rest/conf/configuration.yml` for BentoBox users). This file is divided into
+two major sections:
+* The top portion of the file configures KijiREST
+* The bottom portion configures [Dropwizard](http://dropwizard.codahale.com/) (including HTTP and logging).
 
 To configure and run KijiREST for your cluster and instance:
 
 1.  Start HBase and Hadoop with a configured Kiji environment. Make sure necessary Avro
-classes are accessible either in `$KIJI_CLASSPATH` or in the `kiji-rest-{{site.rest_devel_version}}/lib/` directory.
+classes are accessible either in `$KIJI_CLASSPATH` or in the `${REST}/lib/` directory.
 
     If you are running a BentoBox, start Hadoop and HBase with `bento start`.
 
-2.  Set the cluster key to the URI of our Kiji environment, e.g. `kiji://.env`.
+2.  Set the cluster key in `configuration.yml` to the URI of our Kiji
+environment, for example `kiji://.env`.
 
-3.  Set the instance key to the list of instances we would like to surface through the REST
-service, for example default, prod_instance, dev_instance:
+3.  Set the instance key to the list of instances we would like to surface
+through the REST service, for example `default`, `prod_instance`,
+`dev_instance`:
 
         cluster: kiji://.env/
         instances:
@@ -70,19 +84,32 @@ service, for example default, prod_instance, dev_instance:
 
 4.  Start KijiREST.
 
-        ~/kiji-rest-{{site.rest_devel_version}}$  ./bin/kiji-rest
+        ~/REST$  ./bin/kiji-rest start
 
-The vanilla `configuration.yml` file sets up the REST service through port 8080 and writes
-all logs to the `kiji-rest/logs` directory. The process will run in the background.
+    The default `configuration.yml` file sets up the REST service through port 8080
+    and writes all logs to the `${REST}/logs`
+    directory. The process will run in the background.
 
-You can find the process ID in the `kiji-rest.pid` file:
+5. Check that KijiREST is running correctly.
 
-    ~/kiji-rest-{{site.rest_devel_version}}$  cat kiji-rest.pid
-    1234
+        ~/REST$  ./bin/kiji-rest status
+        Kiji REST is running. PID is 1234
+
+    (You can also find the process ID in the `${REST}/kiji-rest.pid` file.)
+
+    If KijiREST is not running, consult the logs in `${REST}/logs`.  Often if your KijiREST process
+    stops during this stage in the setup, the reason is that KijiREST cannot find the Kiji instances
+    described in `${REST}/conf/configuration.yml`.  You will then see something similar to the
+    following in `${REST}/logs/console.out`:
+
+            Exception in thread "main" org.kiji.schema.KijiNotInstalledException: Kiji instance
+            kiji://localhost:2181/default/ is not installed.
+
+    If so, run `kiji install` and try again.
 
 ### Get Instance Status
-You can check on the status of Kiji instances using Dropwizard's healthcheck portal
-(default port: 8081).
+You can check on the status of Kiji instances using the Dropwizard healthcheck
+portal (default port: 8081).
 
     $ curl http://localhost:8081/healthcheck
     * deadlocks: OK

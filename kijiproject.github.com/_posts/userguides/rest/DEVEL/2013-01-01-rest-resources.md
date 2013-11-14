@@ -45,11 +45,6 @@ To access a particular table, request it as a child resource of the "tables" col
 
     /v1/instances/<instance>/tables/<table>
 
-#### /v1/instances/&lt;instance&gt;/tables/&lt;table&gt;/entityId
-
-This resource identifies an entity ID in a table. This endpoint is useful to return the hex
-representation of the HBase row key for a given Kiji entity ID.
-
 #### /v1/instances/&lt;instance&gt;/tables/&lt;table&gt;/rows
 
 Every table contains a collection named "rows".
