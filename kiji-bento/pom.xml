@@ -52,6 +52,7 @@
     <kiji-express-examples.version>0.13.0-SNAPSHOT</kiji-express-examples.version>
     <kiji-rest.version>1.0.1-SNAPSHOT</kiji-rest.version>
     <kiji-scoring.version>0.10.0-SNAPSHOT</kiji-scoring.version>
+    <kiji-scoring-server.version>0.9.1-SNAPSHOT</kiji-scoring-server.version>
     <kiji-modelrepo.version>0.3.0</kiji-modelrepo.version>
   </properties>
 
@@ -157,6 +158,11 @@
             <groupId>org.kiji.scoring</groupId>
             <artifactId>kiji-scoring</artifactId>
             <version>${kiji-scoring.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.kiji.scoring</groupId>
+            <artifactId>kiji-scoring-server</artifactId>
+            <version>${kiji-scoring-server.version}</version>
           </dependency>
           <dependency>
             <groupId>org.kiji.modelrepo</groupId>

@@ -219,7 +219,7 @@
     <dependency>
       <groupId>org.kiji.scoring</groupId>
       <artifactId>kiji-scoring-server</artifactId>
-      <version>${kiji-scoring.version}</version>
+      <version>${kiji-scoring-server.version}</version>
       <classifier>release</classifier>
       <type>tar.gz</type>
     </dependency>

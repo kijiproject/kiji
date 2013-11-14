@@ -328,12 +328,12 @@
     <fileSet>
       <!-- kiji-scoring -->
       <useDefaultExcludes>false</useDefaultExcludes>
-      <outputDirectory>scoring</outputDirectory>
+      <outputDirectory>.</outputDirectory>
       <directory>target/prereqs-dir/kiji-scoring-${kiji-scoring.version}</directory>
       <filtered>false</filtered>
       <excludes>
         <exclude>RELEASE_NOTES.txt</exclude>
-        <!-- Leave the apidocs in the subdirectory for now. -->
+        <exclude>docs/**</exclude>
       </excludes>
       <fileMode>0644</fileMode>
     </fileSet>
@@ -351,7 +351,7 @@
     <fileSet>
       <!-- kiji-scoring-server -->
       <useDefaultExcludes>false</useDefaultExcludes>
-      <outputDirectory>scoring/scoring-server</outputDirectory>
+      <outputDirectory>scoring-server</outputDirectory>
       <directory>target/prereqs-dir/kiji-scoring-server-${kiji-scoring.version}</directory>
       <filtered>false</filtered>
       <excludes>
