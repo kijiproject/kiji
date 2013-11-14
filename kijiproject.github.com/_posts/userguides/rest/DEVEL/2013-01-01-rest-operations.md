@@ -41,7 +41,7 @@ example, to view the first 100 rows within `kiji://.env/default/user_ratings`, y
 ### Rows: GET
 
 Returns (streams) multiple Kiji rows. The results of this request are similar
-to those of `kiji scan` -- the command produces a list of rows, bounded by
+to those of `kiji scan` -- the request produces a list of rows, bounded by
 constraints.  Each row is a JSON blob, delimited by the "\r\n" characters (and
 with all "\r\n" characters within each JSON blob are replaced with "\n" to
 avoid collision with the delimiter characters).
