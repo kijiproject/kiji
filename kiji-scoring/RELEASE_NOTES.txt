@@ -1,5 +1,9 @@
 
                               Kiji Scoring Release Notes
+Version 0.10.0
+    * SCORE-135. kiji-scoring-server has been removed from kiji-scoring to avoid a circular
+        dependency. It now lives in its own project at github.com/kijiproject/kiji-scoring-server.
+
 Version 0.9.0
     * SCORE-130. Adds a mutable, per thread kvstore to scoring server.
 
