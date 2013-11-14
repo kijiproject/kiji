@@ -39,7 +39,7 @@ described in your KijiExpress program, or _job_, defines the input, output, and 
 
 ### Jobs
 
-Scala - the language you'll write KijiExpress jobs in - is object-oriented, so while
+Scala - the language in which you'll write KijiExpress jobs - is object-oriented, so while
 functions are called with the familiar syntax `function(object)`, there are sometimes
 _methods_ defined on _objects_, where the syntax of using that method on the object is
 `object.function(parameters)`.
@@ -67,7 +67,7 @@ to map from the input fields to the output fields. The syntax looks like this:
 input.method ('input-field -> 'output-field) {x => function(x) }
 {% endhighlight %}
 
-For example, in the line:
+For example, consider the line:
 
 {% highlight scala %}
 val userDataInput = input.map('line -> ('username, 'stateId, 'totalSpent)) { line: String =>
@@ -94,17 +94,18 @@ spent more than $2, cleans up the data by joining it with side data in "state-na
 the number of spendy users by state, and writes the result of that to an output file.
 
 This script expects two files in the directory you run it from:
-  1. "user-file.txt" which contains user data in the form "username stateID totalSpent" on each
-      line.
-  2. "state-names.txt" which contains a mapping from state IDs to state names in the form
-      "numericalID stateName" on each line, for example "1 California".
+
+1.  "user-file.txt," which contains user data in the form "username stateID totalSpent" on each
+    line.
+2.  "state-names.txt" which contains a mapping from state IDs to state names in the form
+    "numericalID stateName" on each line, for example "1 California".
 
 A detailed description of each part follows the script.
 
 {% highlight scala %}
 
 // Read data from a text file.
-val input = TextLine("user-file.txt")
+val input = TextLine("user-file.txt").read
 
 // Split each line on spaces into the fields username, stateId, and totalSpent.
 val userDataInput = input.map('line -> ('username, 'stateId, 'totalSpent)) { line: String =>
@@ -112,15 +113,15 @@ val userDataInput = input.map('line -> ('username, 'stateId, 'totalSpent)) { lin
     // in the line, in that order.
     (line.split(" ")(0), line.split(" ")(1), line.split(" ")(2)) }
 
-// Only keep the username, stateId, and totalSpent fields.
+// Keep only the username, stateId, and totalSpent fields.
 val userData = userDataInput.project('username, 'stateId, 'totalSpent)
 
 // Keep only the customers who spent more than $2.00.
-val importantCustomerData = userData.filter('totalSpent) { totalSpent: String =>
-    totalSpent.toDouble > 2.0 }
+val importantCustomerData = userData
+    .filter('totalSpent) { totalSpent: String => totalSpent.toDouble > 2.0 }
 
 // Create a new pipeline containing state ID to state name mappings.
-val sideData = TextLine("state-names.txt")
+val sideData = TextLine("state-names.txt").read
     .map('line -> ('numericalStateId, 'stateName)) { line: String =>
         // Split the line up on the spaces, and create a tuple with the first and second words in
         // the line.
@@ -129,13 +130,14 @@ val sideData = TextLine("state-names.txt")
 
 // Join the pipelines on the field stateId from "importantCustomerData" and numericalStateId
 // from "sideData".
-val importantCustomerDataWithStateNames =
-      importantCustomerData.joinWithSmaller('stateId -> 'numericalStateId, sideData)
+val importantCustomerDataWithStateNames = importantCustomerData
+    .joinWithSmaller('stateId -> 'numericalStateId, sideData)
+    // Keepy only the userId and stateId fields
+    .project('userId, 'stateId)
 
 // Group by the states customers are from and compute the size of each group.
-val importantCustomersPerState =
-    importantCustomerDataWithStateNames.groupBy('stateName) { group =>
-        group.size('customersPerState) }
+val importantCustomersPerState = importantCustomerDataWithStateNames
+    .groupBy('stateName) { group => group.size('customersPerState) }
 
 // Output to a file in tab-separated form.
 importantCustomersPerState.write(Tsv("important-customers-by-state.txt"))
@@ -145,18 +147,17 @@ importantCustomersPerState.write(Tsv("important-customers-by-state.txt"))
 
 {% highlight scala %}
 // Read data from a text file.
-val input = TextLine("user-file.txt")
+val input = TextLine("user-file.txt").read
 {% endhighlight %}
 
-First, we read our input with `TextLine`, which is a predefined Scalding "source" that reads lines of
-text from a file.
-`TextLine` views a file (in this case the file `sideData.txt` in HDFS) as a collection of tuples
-with one tuple corresponding to each line of text.  Each tuple has a field named `line` that
-contains a line of text read from the file.  Although unused here, the tuples also contain a field
-named `offset` that holds the byte offset in the file where the line read appears.
+First, we read our input with `TextLine`, which is a predefined Scalding [Source](https://github.com/twitter/scalding/wiki/Scalding-Sources) that reads lines
+of text from a file.  `TextLine` views a file (in this case the file `user-file.txt` in HDFS) as a
+collection of tuples, one per line of text.  Each tuple has a field named `line`, which contains the
+corresponding line of text read from the file, as well as a field named `offset` (not used here),
+which holds the byte offset of the line within the file.
 
 Once we have a view of the data set as a collection of tuples, we can use different operations to
-derive results that can be stored in new tuple fields.
+derive results that we can store in new tuple fields.
 
 #### Map
 
@@ -168,42 +169,40 @@ val userDataInput = input.map('line -> ('username, 'stateId, 'totalSpent)) { lin
     (line.split(" ")(0), line.split(" ")(1), line.split(" ")(2)) }
 {% endhighlight %}
 
-After this line, `userDataInput` contains the fields `line`, `username`, `stateId`, and `totalSpent`.
-Notice that doing a `map` operation on `input` keeps the field `line` around, and adds the
-`username`, `stateId`, and `totalSpent` fields. You can think of `userData` as a collection of named
-tuples, where each has 4 fields.
+This statement creates `userDataInput`, which contains the fields `line`, `offset`, `username`,
+`stateId`, and `totalSpent`.  Notice that doing a `map` operation on `input` keeps the fields `line`
+and `offset` around, and adds the `username`, `stateId`, and `totalSpent` fields.
 
 #### Project
 
 {% highlight scala %}
-// Only keep the username, stateId, and totalSpent fields.
+// Keep only the username, stateId, and totalSpent fields.
 val userData = userDataInput.project('username, 'stateId, 'totalSpent)
 {% endhighlight %}
 
-We no longer need the `line` field.  The `project` method projects the tuples onto the specified fields,
-discarding any unspecified fields. `userData` contains the same tuples as `userDataInput`, but
-without the `line` and `offset` fields that `TextLine` provided.
+We no longer need the `line` or `offset` fields.  The `project` method projects
+the tuples onto the specified fields, discarding any unspecified fields.
+`userData` contains the same tuples as `userDataInput`, but without the `line`
+and `offset` fields that `TextLine` provided.
 
 #### Filter
 
 {% highlight scala %}
 // Keep only the customers who spent more than $2.00.
-val importantCustomerData = userData.filter('totalSpent) { totalSpent: String =>
-    totalSpent.toDouble > 2.0 }
+val importantCustomerData = userData
+    .filter('totalSpent) { totalSpent: String => totalSpent.toDouble > 2.0 }
 {% endhighlight %}
 
-After this line, "importantCustomerData" can be thought of as a collection of named tuples,
-where each has the same 3 fields as "userData" does: `username`, `stateId`, and `totalSpent`.  The
-difference is that not all the tuples from "userData" are included: only the ones for which the
-function we provide to the "filter" operation evaluates to "true" are included.  So,
-"importantCustomerData" includes only the data for the users who have spent more than 2 dollars on
-our service.
+This statement creates `importantCustomerData`, a stream of named tuples, each of which has the same
+three fields as `userData` does: `username`, `stateId`, and `totalSpent`.  `importantCustomerData`,
+however, contains only the tuples from `userData` for which the function we provide to the `filter`
+operation evaluates to `true`, e.g., users who have spent more than two dollars on our service.
 
 #### Join
 
 {% highlight scala %}
 // Create a new pipeline containing state ID to state name mappings.
-val sideData = TextLine("state-names.txt")
+val sideData = TextLine("state-names.txt").read
     .map('line -> ('numericalStateId, 'stateName)) { line: String =>
         // Split the line up on the spaces, and create a tuple with the first and second words in
         // the line.
@@ -212,37 +211,41 @@ val sideData = TextLine("state-names.txt")
 
 // Join the pipelines on the field 'stateId from "importantCustomerData" and 'numericalStateId
 // from "sideData".
-val importantCustomerDataWithStateNames =
-      importantCustomerData.joinWithSmaller('stateId -> 'numericalStateId, sideData)
+val importantCustomerDataWithStateNames = importantCustomerData
+    .joinWithSmaller('stateId -> 'numericalStateId, sideData)
+    // Keepy only the userId and stateId fields
+    .project('userId, 'stateId)
 {% endhighlight %}
 
-First we define the pipeline to join with. "sideData" is a pipe containing tuples with fields
-"line", "numericalStateId", and "stateName". You've seen `TextLine` and `.map` before.
-Notice that instead of defining all the intermediate values as we have been, you can just chain calls
-such as "`.map`" on pipes, so that your pipeline can look like
-`TextLine(inputfile).map(...).filter(...)`.
+In this step, we perform a join operation to add state names to `importantCustomerData.` First we
+define the pipe, `sideData`, with which to join `importantCustomerData.` `sideData` contains tuples
+with fields `line`, `numericalStateId`, and `stateName` (as well as `offset`). You've seen
+`TextLine` and `.map` before.  Notice that we have chained calls such as `.map` on pipes, creating a
+pipeline that looks like `TextLine(inputfile).read.map(...)`.
 
-We now join our main pipeline with the sideData pipe.  When we join two pipelines, we specify which field
-from the main pipeline (in this case, the field "stateId") should be joined with which field from the side
-pipeline (the field "numericalStateId" from the "sideData").  For
-all tuples in the main pipeline, we've added all the fields from "sideData", in this case a single field
-`stateName`.
+We now join our main pipeline with the sideData pipe, specifying the fields (in this case, the field
+`stateId` from `importantCustomerData` and `numericalStateId` from `sideData`.  The join operation
+adds all of the fields (`line`, `offset`, `numericalStateId`, and `stateName`) from `sideData` to
+every tuple in `importantCustomerData` for which `numericalStateId` equals `stateId`.
 
-Since "sideData" is smaller than "importantCustomerData" (sideData contains only 50 tuples, one for each state in the United
-States, while "importantCustomerData" could be very big), we use the "joinWithSmaller"
-operation on "importantCustomerData".  This lets Scalding optimize the MapReduce jobs.
+Since `sideData` is smaller than `importantCustomerData` (sideData contains only 50 tuples, one for
+each state in the United States, while `importantCustomerData` could be very big), we use the
+`joinWithSmaller` operation on `importantCustomerData`.  Specifying which pipe we expect to be
+smaller enables Scalding optimize the MapReduce jobs.
+
+Finally, we apply another projection to our pipe, retaining only the fields `userId` and `stateId`
+(since our goal is to obtain per-state counts of customers who have spent more than two dollars).
 
 #### Group by
 
 {% highlight scala %}
 // Group by the states customers are from and compute the size of each group.
-val importantCustomersPerState =
-    importantCustomerDataWithStateNames.groupBy('stateName) { group =>
-        group.size('customersPerState) }
+val importantCustomersPerState = importantCustomerDataWithStateNames
+    .groupBy('stateName) { group => group.size('customersPerState) }
 {% endhighlight %}
 
-This step groups the tuples from the previous step by their stateName, and for each group,
-puts the size of the group in a new field called "customersPerState".
+This step groups the tuples from the previous step by their `stateName`, and for each group, puts
+the size of the group in a new field called `customersPerState`.
 
 #### Output
 
@@ -251,14 +254,13 @@ puts the size of the group in a new field called "customersPerState".
 importantCustomersPerState.write(Tsv("important-customers-by-state.txt"))
 {% endhighlight %}
 
-`Tsv` is one of the predefined Scalding sources. It writes the tuples out to a
-file in tab-separated form.
-KijiExpress provides sources to read
-from and write to Kiji tables, which you will see later in the tutorial.
+`Tsv` is a predefined Scalding source. It writes the tuples out to a file in tab-separated form.
+KijiExpress provides sources to read from and write to Kiji tables, which you will see later in the
+tutorial.
 
 #### Results
 
-If you run this script where the contents of "user-file.txt" are:
+If you run this script with the file "user-file.txt":
 {% highlight scala %}
 daisy 1 3
 robert 4 0
@@ -267,26 +269,26 @@ juliet 1 4
 renuka 2 2
 {% endhighlight %}
 
-and the contents of "state-names.txt" are:
+and "state-names.txt":
 {% highlight scala %}
 1 California
 2 Washington
 {% endhighlight %}
 
-Then the output in the file `important-customers-by-state.txt` is:
+Then the output in the file `important-customers-by-state.txt` will be:
 {% highlight scala %}
 California  2
 Washington  1
 {% endhighlight %}
 
-Which shows that there are 2 customers in California who spent more than $2.00, and 1 in Washington
-who spent more than $2.00.
+This result show that there are two customers in California and one in Washington who spent more
+than two dollars.
 
 ### Scala Quick Reference<a id="summary"> </a>
 
-To summarize the Scala phrases that were critical to the basic job:
+Below we summarize the Scala commands we used in our example Scalding script.
 
-+ **Indicate Fields**
+#### Indicate Fields
 
 Precede field names with a single quote:
 
@@ -294,73 +296,74 @@ Precede field names with a single quote:
 <object>.map(('<input-field>, '<input-field> ...) -> ('<mapped-field>, '<mapped-field>, ..))
 {% endhighlight %}
 
-+ **Input From File**
+#### Input From File
 
 {% highlight scala %}
 val <variable-name> = TextLine("<filename>")
 {% endhighlight %}
 
-+ **Map**
+#### Map
 
-    Include the input and output fields.
+Include the input and output fields.
 
 {% highlight scala %}
 val <variable-name> = <object>.map('<input-field> -> ('<output-field1>, '<output-field2>, ...)) { <map function> }
 {% endhighlight %}
 
-    Include only the output fields:
+Include only the output fields:
 
 {% highlight scala %}
 val <variable-name> = <object>.mapTo('<input-field> -> ('<output-field1>, '<output-field2>, ...)) { <map function> }
 {% endhighlight %}
 
-+ **Split Tuple at Blanks**
+#### Split Tuple at Blanks
 
 {% highlight scala %}
 { <object>: String => (<object>.split(" ")(0), <object>.split(" ")(1)) }
 {% endhighlight %}
 
-+ **Project**
+#### Project
+
 {% highlight scala %}
 val <variable-name> = <object>.project('<field1>, '<field2>, ...)
 {% endhighlight %}
 
-+ **Filter**
+#### Filter
 
 {% highlight scala %}
 val <variable-name> = <object>.filter('<field>, '<field>, ...) { function }
 {% endhighlight %}
 
-+ **Join**
+#### Join
 
-    In addition, there are methods `joinWithLarger` and `joinWithTiny`. See [Scalding Join
-Operations](https://github.com/twitter/scalding/wiki/Fields-based-API-Reference#wiki-join-functions).
+In addition, there are methods `joinWithLarger` and `joinWithTiny`. See [Scalding Join Operations](https://github.com/twitter/scalding/wiki/Fields-based-API-Reference#wiki-join-functions).
 
 {% highlight scala %}
 val <variable-name> = <object>.joinWithSmaller('<field-from-this-data-set> -> '<field-from-other-data-set>, <other-data-set>)
 {% endhighlight %}
 
-+ **Group By**
+#### Group By
 
 {% highlight scala %}
 val <variable-name> = <object>.groupBy('<field>) { <group function> }
 {% endhighlight %}
 
-+ **Group By Value**
+#### Group By Value
 
 {% highlight scala %}
 val <variable-name> = <object>.groupBy('<field>) { x => x }
 {% endhighlight %}
 
-+ **Calculate Size**
+#### Calculate Size
 
 {% highlight scala %}
 val <variable-name> = <object>.groupBy('<field>) { <group> => <group>.size('<field>) }
 {% endhighlight %}
 
-+ **Output TSV**
+#### Output TSV
 
 For other sources in addition to Tsv, see [Scalding Sources](https://github.com/twitter/scalding/wiki/Scalding-Sources).
+
 {% highlight scala %}
 <object>.write(Tsv("<filename>"))
 {% endhighlight %}
