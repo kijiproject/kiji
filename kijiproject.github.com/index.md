@@ -22,7 +22,7 @@ title: Documentation
         <div class="large-number">2</div>
         <div class="title">Tutorials</div>
         <p class="description">
-          Hands on introductions to using KijiSchema and KijiMR.
+          Hands-on introductions to KijiSchema, KijiMR, KijiExpress, and KijiScoring.
         </p>
       </div>
     </a>
