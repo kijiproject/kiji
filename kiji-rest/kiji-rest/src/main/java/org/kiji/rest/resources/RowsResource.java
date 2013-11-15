@@ -56,6 +56,7 @@ import javax.ws.rs.core.StreamingOutput;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
@@ -363,6 +364,8 @@ public class RowsResource {
     } catch (KijiIOException kioe) {
       mKijiClient.invalidateTable(instance, table);
       throw new WebApplicationException(kioe, Status.BAD_REQUEST);
+    } catch (JsonProcessingException jpe) {
+      throw new WebApplicationException(jpe, Status.BAD_REQUEST);
     } catch (Exception e) {
       throw new WebApplicationException(e, Status.INTERNAL_SERVER_ERROR);
     } finally {
