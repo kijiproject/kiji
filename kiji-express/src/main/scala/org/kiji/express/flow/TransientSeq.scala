@@ -19,11 +19,10 @@
 
 package org.kiji.express.flow
 
-import scala.collection.{mutable, SeqView}
+import scala.collection.SeqView
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import scala.collection.immutable.Stream.StreamBuilder
 
 /**
  * `TransientSeq` is a special case of [[scala.collection.Seq]] meant to be backed by a source which
@@ -86,6 +85,4 @@ class TransientSeq[+T](genItr: () => Iterator[T]) extends SeqView[T, Stream[T]] 
   protected val underlying: Stream[T] = Stream()
 
   override def toString: String = "TransientSeq(...)"
-
-  protected[this] override def newBuilder: mutable.Builder[T, SeqView[T, Stream[T]]] = new StreamBuilder[T].mapResult(x => x.view)
 }
