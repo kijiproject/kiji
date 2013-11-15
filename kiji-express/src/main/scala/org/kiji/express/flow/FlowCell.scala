@@ -30,14 +30,26 @@ import org.kiji.express.flow.util.AvroUtil
 import org.kiji.schema.KijiCell
 
 /**
- * A `FlowCell` from a Kiji table containing some datum, addressed by a family, qualifier,
- * and version timestamp.
+ * A container for data from a Kiji table. Contains some datum tagged with a column family, column
+ * qualifier, and version. Flow cells are provided when requesting a Kiji table column or column
+ * family.
  *
- * @param family of the Kiji table cell.
- * @param qualifier of the Kiji table cell.
- * @param version  of the Kiji table cell.
- * @param datum in the Kiji table cell.
+ * Example of accesssing data stored within a flow cell:
+ * {{{
+ *   // Extracts the data stored within cell.
+ *   val myData: T = cell.datum
+ *
+ *   // Extracts the family, qualifier, and version of the cell.
+ *   val myFamily: String = cell.family
+ *   val myQualifier: String = cell.qualifier
+ *   val myVersion: Long = cell.version
+ * }}}
+ *
  * @tparam T is the type of the datum in the cell.
+ * @param family of columns that this cell comes from.
+ * @param qualifier of the column that this cell comes from.
+ * @param version of the column data that this cell represents. Defaults to the latest timestamp.
+ * @param datum stored in this cell.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
@@ -49,18 +61,19 @@ case class FlowCell[T] (
     datum: T)
 
 /**
- * A factory for creating cells used in KijiExpress from cells used in the Kiji Java API.
+ * Companion object containing factory methods for creating flow cells and orderings for sorting
+ * cells.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
 object FlowCell {
   /**
-   * Creates an object that contains the coordinates (family, qualifier, and version/timestamp) of
-   * data in a Kiji table along with the data itself.
+   * Creates an object that contains the coordinates (family, qualifier, and version) of data in a
+   * Kiji table along with the data itself.
    *
    * @tparam T is the type of the datum that this cell contains.
    * @param cell from a Kiji table produced by the Java API.
-   * @return a FlowCell for use in KijiExpress containing the same family, qualifier, timestamp, and
+   * @return a FlowCell for use in KijiExpress containing the same family, qualifier, version, and
    *     datum as the provided KijiCell.
    */
   private[kiji] def apply[T](cell: KijiCell[T]): FlowCell[T] = {
@@ -86,10 +99,10 @@ object FlowCell {
 
   /**
    * Provides an implementation of the `scala.Ordering` trait that sorts
-   * [[org.kiji.express.flow.FlowCell]]s by timestamp/version.
+   * [[org.kiji.express.flow.FlowCell]]s by version.
    *
    * @tparam T is the type of the datum in the [[org.kiji.express.flow.FlowCell]].
-   * @return an ordering that sorts cells by timestamp.
+   * @return an ordering that sorts cells by version.
    */
   def versionOrder[T]: Ordering[FlowCell[T]] = {
     Ordering.by { cell: FlowCell[T] => cell.version }
