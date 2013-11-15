@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <jmeterTestPlan version="1.2" properties="2.4" jmeter="2.9 r1437961">
   <hashTree>
-    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="gets" enabled="true">
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="freshgets" enabled="true">
       <stringProp name="TestPlan.comments"></stringProp>
       <boolProp name="TestPlan.functional_mode">false</boolProp>
       <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
@@ -77,7 +77,7 @@
               </elementProp>
               <elementProp name="freshen" elementType="Argument">
                 <stringProp name="Argument.name">freshen</stringProp>
-                <stringProp name="Argument.value">false</stringProp>
+                <stringProp name="Argument.value">true</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
               </elementProp>
               <elementProp name="timerange" elementType="Argument">

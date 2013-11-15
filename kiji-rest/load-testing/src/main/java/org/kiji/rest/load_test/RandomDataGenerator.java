@@ -194,10 +194,20 @@ public class RandomDataGenerator {
    * @throws Exception if there is an exception.
    */
   public static void main(String[] args) throws Exception {
-    RandomDataGenerator gen = new RandomDataGenerator();
-    final KijiURI kijiURI = KijiURI.newBuilder("kiji://.env/default").build();
+    final String userTableInstanceURI;
+    final String userTableName;
+    if (args.length == 0) {
+      userTableInstanceURI = "kiji://.env/default";
+      userTableName = "users";
+    } else {
+      final int lastSlash = args[0].lastIndexOf("/");
+      userTableInstanceURI = args[0].substring(0, lastSlash);
+      userTableName = args[0].substring(lastSlash + 1);
+    }
+    final RandomDataGenerator gen = new RandomDataGenerator();
+    final KijiURI kijiURI = KijiURI.newBuilder(userTableInstanceURI).build();
     final Kiji kiji = Kiji.Factory.open(kijiURI);
-    KijiTable userTable = kiji.openTable("users");
+    KijiTable userTable = kiji.openTable(userTableName);
     gen.generateData(USER_ID_MAX, userTable);
     userTable.release();
     kiji.release();

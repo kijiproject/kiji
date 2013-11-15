@@ -56,6 +56,7 @@ public class GetRequestSampler extends AbstractJavaSamplerClient {
       arguments.addArgument("domain", "http://localhost:8080");
       arguments.addArgument("instance", "default");
       arguments.addArgument("table", "users");
+      arguments.addArgument("freshen", "false");
       arguments.addArgument("timerange", "0..");
       arguments.addArgument("versions", "10");
       return arguments;
@@ -71,25 +72,33 @@ public class GetRequestSampler extends AbstractJavaSamplerClient {
         context.getParameter("domain"),
         context.getParameter("instance"),
         context.getParameter("table"));
+    final boolean freshen;
+    if ("true".equals(context.getParameter("freshen"))) {
+      freshen = true;
+    } else {
+      freshen = false;
+    }
     final String timerange = context.getParameter("timerange");
     final String versions = context.getParameter("versions");
     final int userId = RANDOM.nextInt(USER_ID_MAX);
     try {
       mURL = new URL(
           String.format(
-              "%s?eid=%d&timerange=%s&versions=%s",
+              "%s?eid=[%d]&timerange=%s&versions=%s&freshen=%s",
               rowPath,
               userId,
               timerange,
-              versions));
+              versions,
+              freshen));
     } catch (Exception e) {
       throw new RuntimeException(
           String.format(
-              "Bad URL: %s?eid=%d&timerange=%s&versions=%s",
+              "Bad URL: %s?eid=[%d]&timerange=%s&versions=%s&freshen=%s",
               rowPath,
               userId,
               timerange,
-              versions));
+              versions,
+              freshen));
     }
   }
 

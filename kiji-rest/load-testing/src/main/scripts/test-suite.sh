@@ -10,10 +10,13 @@ if [ "$1" = "GET" ]; then
   OPER="gets"
 elif [ "$1" = "POST" ]; then
   OPER="posts"
+elif [ "$1" = "FRESHEN" ]; then
+  OPER="freshgets"
 else
   echo "Usage:"
   echo "  sh test-suite.sh GET http://domain:1234 instance table"
   echo "  sh test-suite.sh POST http://domain:1234 instance table"
+  echo "  sh test-suite.sh FRESHEN http://domain:1234 instance table"
   exit 0
 fi
 
