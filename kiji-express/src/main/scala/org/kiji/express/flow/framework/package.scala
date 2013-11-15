@@ -21,7 +21,7 @@ package org.kiji.express.flow
 
 /**
  * Package containing supporting classes and objects for the KijiExpress flow API. Includes
- * components required to integrate with Hadoop, Cascading, and Scalding. The packages in this class
- * should only be used for developing other kiji platform projects.
+ * components required to integrate with Hadoop, Cascading, and Scalding. The classes in this
+ * package should only be used for developing other Kiji platform projects.
  */
 package object framework

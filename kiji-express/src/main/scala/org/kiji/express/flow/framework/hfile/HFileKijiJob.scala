@@ -43,15 +43,32 @@ import org.kiji.express.flow.KijiJob
 import org.kiji.mapreduce.framework.HFileKeyValue
 
 /**
- * HFileKijiJob is an extension of KijiJob and users should extend it when writing their own
- * their own jobs in KijiExpress whose output will eventually be bulk loaded into HBase.
+ * HFileKijiJob is an extension of KijiJob and users should extend it instead of KijiJob when
+ * writing jobs in KijiExpress that need to output HFiles that can eventually be bulk-loaded into
+ * HBase.
+ *
+ * In your HFileKijiJob, you need to write to a source constructed with
+ * [[org.kiji.express.flow.framework.hfile.HFileKijiOutput]].
+ *
+ * You can extend HFileKijiJob like this:
+ *
+ * {{{
+ * class MyKijiExpressClass(args) extends HFileKijiJob(args) {
+ *   // Your code here.
+ *   .write(HFileKijiOutput(tableUri = "kiji://localhost:2181/default/mytable",
+ *       hFileOutput = "my_hfiles",
+ *       timestampField = 'timestamps,
+ *       'column1 -> "info:column1",
+ *       'column2 -> "info:column2"))
+ * }
+ * }}}
+ *
+ *     NOTE: To properly work with dumping to HFiles, the argument --hfile-output must be provided.
+ *     This argument specifies the location where the HFiles will be written upon job completion.
+ *     Also required is the --output flag. This argument specifies the Kiji table to use to obtain
+ *     layout information to properly format the HFiles for bulk loading.
  *
  * @param args to the job. These get parsed in from the command line by Scalding.
- *
- *     NOTE: To properly work with dumping to HFiles, the argument --hfile-output must be provided
- *     which specifies the location where the HFiles will be written upon job completion. Also
- *     required is the --output flag which is the Kiji table to use to obtain layout information
- *     to properly format the HFiles for bulk loading.
  */
 @ApiAudience.Public
 @ApiStability.Experimental

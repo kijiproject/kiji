@@ -45,18 +45,18 @@ import org.kiji.express.flow.framework.KijiScheme
  * to access it, and a Cascading Scheme [[cascading.scheme.Scheme]], which describes how to read
  * and interpret the data.
  *
- * When reading from a Kiji table, a `KijiSource` will provide a view of a Kiji table as a
- * collection of tuples that correspond to rows from the Kiji table. Which columns will be read
- * and how they are associated with tuple fields can be configured,
- * as well as the time span that cells retrieved must belong to.
+ * An `HFileKijiSource` should never be used for reading.  It is intended to be used only in
+ * [[org.kiji.express.flow.framework.hfile.HFileKijiJob]], for writing out to HFiles formatted for
+ * bulk-loading into Kiji.
  *
- * When writing to a Kiji table, a `KijiSource` views a Kiji table as a collection of tuples that
- * correspond to cells from the Kiji table. Each tuple to be written must provide a cell address
- * by specifying a Kiji `EntityID` in the tuple field `entityId`, a value to be written in a
+ * When writing to a Kiji table, a `HFileKijiSource` views a Kiji table as a collection of tuples
+ * that correspond to cells from the Kiji table. Each tuple to be written must provide a cell
+ * address by specifying a Kiji `EntityID` in the tuple field `entityId`, a value to be written in a
  * configurable field, and (optionally) a timestamp in a configurable field.
  *
  * End-users cannot directly obtain instances of `KijiSource`. Instead,
- * they should use the factory methods provided as part of the [[org.kiji.express.flow]] module.
+ * they should use the factory methods provided as part of the
+ * [[org.kiji.express.flow.framework.hfile]] module.
  *
  * @param tableAddress is a Kiji URI addressing the Kiji table to read or write to.
  * @param timeRange that cells read must belong to. Ignored when the source is used to write.

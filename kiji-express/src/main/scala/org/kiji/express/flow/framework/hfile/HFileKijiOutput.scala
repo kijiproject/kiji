@@ -29,7 +29,7 @@ import org.kiji.express.flow.QualifiedColumnOutputSpec
 /**
  * Factory methods for constructing [[org.kiji.express.flow.framework.hfile.HFileKijiSource]]s that
  * will be used as outputs of a KijiExpress flow. Two basic APIs are provided with differing
- * complexity. These are similar to the [[org.kiji.express.flow.framework.hfile.HFileKijiSource]]
+ * complexity. These are similar to the factory methods in [[org.kiji.express.flow.KijiOutput]]
  * APIs except that an extra parameter for the HFile output location is required.
  *
  * Simple:

@@ -31,24 +31,43 @@ import org.kiji.schema.EntityIdFactory
 import org.kiji.schema.{EntityId => JEntityId}
 
 /**
- * An entity id or row key that can be used to address a row in a Kiji table. This is the
+ * An entity ID, or row key, that can be used to address a row in a Kiji table. This is the
  * Express representation of a [[org.kiji.schema.EntityId]].
  *
- * Users can create EntityIds either by passing in the objects that compose it.
- * For example, if a Kiji table uses formatted row keys composed of a string as
- * their first component and a long as the second, the user can create this as:
+ * When writing to a Kiji table using KijiExpress, the 'entityId field of each tuple must contain a
+ * single [[org.kiji.express.flow.EntityId]].  The rest of the tuple fields will be written to the
+ * table according to the field -> column mapping specified by the user in
+ * [[org.kiji.express.flow.KijiOutput]], for the same row that the 'entityId indicated.
+ *
+ * Users can create EntityIds by passing in the objects that compose it. For example, if a Kiji
+ * table uses formatted row keys composed of a string as their first component and a long as the
+ * second, the user can create this as:
  * {{{
  * EntityId("myString", 1L)
  * }}}
+ *
+ * When reading from a Kiji table using [[org.kiji.express.flow.KijiInput]], each row is read into a
+ * tuple, and the 'entityId field of each tuple is automatically populated with an instance of
+ * [[org.kiji.express.flow.EntityId]] corresponding to the EntityID of that row.
  *
  * Users can retrieve the index'th element of an EntityId (0-based), as follows:
  * {{{
  * MyEntityId(index)
  * }}}
  *
- * EntityIds can either be Materialized (in the case of EntityIds from tables with formatted row
- * keys, and all user-created EntityIds), or Hashed (in the case of EntityIds from tables with
+ * EntityIds can either be [[org.kiji.express.flow.EntityId.MaterializedEntityId]] (in the case of
+ * EntityIds from tables with formatted row keys, and all user-created EntityIds), or
+ * [[org.kiji.express.flow.EntityId.HashedEntityId]] (in the case of EntityIds from tables with
  * hashed or materialization-suppressed row keys).
+ *
+ * Note for joining on EntityIds: MaterializedEntityIds can be compared with each other.
+ * HashedEntityIds can be compared with other HashedEntityIds, but only their hash values are
+ * compared.  You should only attempt to join on HashedEntityIds if they are from the same table.
+ * If you join two pipes on EntityIds, and one of them comes straight from a table and contains
+ * HashedEntityIds, while the other only has the components of the EntityIds, you can't compare an
+ * EntityId constructed directly from the components with the HashedEntityId.  Instead, you need to
+ * construct an EntityId containing the hash of the components according to the table your
+ * HashedEntityId is from.  You can do this using [[org.kiji.schema.KijiTable#getEntityId]].
  */
 @ApiAudience.Public
 @ApiStability.Experimental
@@ -76,11 +95,15 @@ trait EntityId extends Product with Ordered[EntityId] {
   override def canEqual(that: Any): Boolean = that.isInstanceOf[EntityId]
 
   /**
-   * When comparing two EntityIds, if both are Materialized, then their components are compared.
-   * If both are Hashed, their table URIs and encoded values are compared.
-   * If one is Hashed and the other is Materialized, they are compared as if the
-   * MaterializedEntityId belongs to the same table as the HashedEntityId.  It is not possible to
-   * compare a MaterializedEntityId with more than one component with a HashedEntityId.
+   * Returns whether this is equal to `other`.  EntityIds are only comparable to other EntityIds.
+   *
+   * HashedEntityIds can be compared with other HashedEntityIds, but only their hash values are
+   * compared.  You should only attempt to join on HashedEntityIds if they are from the same table.
+   * If you join two pipes on EntityIds, and one of them comes straight from a table and contains
+   * HashedEntityIds, while the other only has the components of the EntityIds, you can't compare an
+   * EntityId constructed directly from the components with the HashedEntityId.  Instead, you need
+   * to construct an EntityId containing the hash of the components according to the table your
+   * HashedEntityId is from.  You can do this using [[org.kiji.schema.KijiTable#getEntityId]].
    *
    * @param other object to compare this to.
    * @return whether the two objects are "equal" according to the definition in this scaladoc.
@@ -113,6 +136,15 @@ trait EntityId extends Product with Ordered[EntityId] {
 
   /**
    * Returns the comparison result ( > 0, 0, < 0).
+   *
+   * MaterializedEntityIds can be compared with each other.
+   * HashedEntityIds can be compared with other HashedEntityIds, but only their hash values are
+   * compared.  You should only attempt to join on HashedEntityIds if they are from the same table.
+   * If you join two pipes on EntityIds, and one of them comes straight from a table and contains
+   * HashedEntityIds, while the other only has the components of the EntityIds, you can't compare an
+   * EntityId constructed directly from the components with the HashedEntityId.  Instead, you need
+   * to construct an EntityId containing the hash of the components according to the table your
+   * HashedEntityId is from.  You can do this using [[org.kiji.schema.KijiTable#getEntityId]].
    *
    * @return the comparison result ( > 0, 0, < 0).
    */
@@ -154,12 +186,13 @@ trait EntityId extends Product with Ordered[EntityId] {
 object EntityId {
   /**
    * Creates a KijiExpress EntityId from a Java EntityId.  This is used internally to convert
-   * between kiji-schema and kiji-express, removing the need for table URIs when creating
-   * materialized EntityIdComponentss.
+   * between kiji-schema and kiji-express.
+   *
+   * Users should not need to use this method.
    *
    * @param entityId is the Java EntityId to convert.
    */
-  def fromJavaEntityId(entityId: JEntityId): EntityId = {
+  private[express] def fromJavaEntityId(entityId: JEntityId): EntityId = {
     val hbaseKey = entityId.getHBaseRowKey()
 
     try {
@@ -202,8 +235,7 @@ object EntityId {
   }
 
   /**
-   * An EntityId that does not provide access to its components.  We keep the table URI and the
-   * encoded representation, with which we can still do comparisons.
+   * An EntityId that does not provide access to its components.  It only contains the encoded hash.
    *
    * These are never user-created.  They are constructed by KijiExpress when reading from a table
    * with row key format HASHED or with suppress-materialization enabled.
@@ -234,8 +266,12 @@ object EntityId {
   }
 
   /**
-   * Represents the components of an EntityId in KijiExpress.  An [[org.kiji.express.flow.EntityId]]
-   * is fully defined by the table URI and its EntityIdComponents.
+   * An EntityId that provides access to its components.  It can be constructed by the user:
+   *
+   * {{{EntityId(component1, component2, component3)}}}
+   *
+   * KijiExpress will return an instance of this class in the 'entityId field of the tuple if the
+   * row key format in the layout of the table supports returning the components of the EntityId.
    *
    * @param components of an EntityId.
    */
