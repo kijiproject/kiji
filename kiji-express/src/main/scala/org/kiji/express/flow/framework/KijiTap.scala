@@ -63,7 +63,7 @@ import org.kiji.schema.layout.KijiTableLayout
  */
 @ApiAudience.Framework
 @ApiStability.Experimental
-private[express] class KijiTap(
+class KijiTap(
     // This is not a val because KijiTap needs to be serializable and KijiURI is not.
     uri: KijiURI,
     private val scheme: KijiScheme)

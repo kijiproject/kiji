@@ -29,15 +29,17 @@ import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiInvalidNameException
 
 /**
- * Interface for all column input specification objects. ColumnInputSpec implementations
- * specify how to read Kiji columns or column families into individual fields in an Express flow.
+ * Trait for all column input specification objects. ColumnInputSpec implementations specify how to
+ * read Kiji columns or column families into individual fields in an Express flow.
  *
- * Use the [[org.kiji.express.flow.QualifiedColumnInputSpec]] to retrieve an individual Kiji
- * column into a single field in a flow.
+ * Use the [[org.kiji.express.flow.QualifiedColumnInputSpec]] to retrieve an individual Kiji column
+ * into a single field in a flow.
  *
- * Use the [[org.kiji.express.flow.ColumnFamilyInputSpec]] to retrieve an entire column family
- * into a field of a flow.  Each row in the KijiTable will be a new tuple, with each field in the
- * tuple containing a stream of [[org.kiji.express.flow.FlowCell]]s.
+ * Use the [[org.kiji.express.flow.ColumnFamilyInputSpec]] to retrieve an entire column family into
+ * a field of a flow.
+ *
+ * Each row in the KijiTable will be a new tuple, with each field in the tuple containing a sequence
+ * of [[org.kiji.express.flow.FlowCell]]s.
  *
  * Note: Subclasses of ColumnInputSpec are case classes that override ColumnInputSpec's
  * abstract methods (e.g., `schema`) with `val`s.

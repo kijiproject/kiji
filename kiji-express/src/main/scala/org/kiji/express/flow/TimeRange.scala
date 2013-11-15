@@ -25,47 +25,81 @@ import org.kiji.annotations.Inheritance
 import org.kiji.schema.KConstants
 
 /**
- * A trait implemented by classes that specify time ranges when reading data from Kiji tables.
+ * A trait implemented by classes that specify time ranges when reading data from Kiji tables. This
+ * class is used to specify the range of cell versions to request from a column in a Kiji table.
+ *
+ * To specify that [[org.kiji.express.flow.All]] versions should be requested:
+ * {{{
+ *   val timeRange: TimeRange = All
+ * }}}
+ * To specify that a specific version should be requested ([[org.kiji.express.flow.At]]):
+ * {{{
+ *   // Gets only cells with the version `123456789`.
+ *   val timeRange: TimeRange = At(123456789L)
+ * }}}
+ * To specify that all versions [[org.kiji.express.flow.After]] the specified version should be
+ * requested:
+ * {{{
+ *   // Gets only cells with versions larger than `123456789`.
+ *   val timeRange: TimeRange = After(123456789L)
+ * }}}
+ * To specify that all versions [[org.kiji.express.flow.Before]] the specified version should be
+ * requested:
+ * {{{
+ *   // Gets only cells with versions smaller than `123456789`.
+ *   val timeRange: TimeRange = Before(123456789L)
+ * }}}
+ * To specify that all versions [[org.kiji.express.flow.Between]] the two specified bounds should be
+ * requested:
+ * {{{
+ *   // Gets only cells with versions between `12345678` and `123456789`.
+ *   val timeRange: TimeRange = Between(12345678, 123456789)
+ * }}}
+ *
+ * See [[org.kiji.express.flow.KijiInput]] for more information.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Sealed
 sealed trait TimeRange extends Serializable {
-  /** Earliest timestamp of the TimeRange, inclusive. */
+  /** Earliest version of the TimeRange, inclusive. */
   def begin: Long
 
-  /** Latest timestamp of the TimeRange, exclusive. */
+  /** Latest version of the TimeRange, exclusive. */
   def end: Long
 }
 
 /**
- * Specifies that all timestamps should be requested.
+ * Implementation of [[org.kiji.express.flow.TimeRange]] for specifying that all versions should be
+ * requested.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Sealed
-final case object All extends TimeRange {
+case object All extends TimeRange {
   override val begin: Long = KConstants.BEGINNING_OF_TIME
   override val end: Long = KConstants.END_OF_TIME
 }
 
 /**
- * Specifies that only the specified timestamp should be requested.
+ * Implementation of [[org.kiji.express.flow.TimeRange]] for specifying that only the provided
+ * version should be requested.
  *
- * @param timestamp to request.
+ * @param version to request.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Sealed
-final case class At(timestamp: Long) extends TimeRange {
-  override val begin: Long = timestamp
-  override val end: Long = timestamp
+final case class At(version: Long) extends TimeRange {
+  override val begin: Long = version
+  override val end: Long = version
 }
 
 /**
- * Specifies that all timestamps after the specified begin timestamp should be requested.
+ * Implementation of [[org.kiji.express.flow.TimeRange]] for specifying that all versions after the
+ * provided version should be requested (exclusive).
  *
- * @param begin is the earliest timestamp that should be requested.
+ * @param begin is the earliest version that should be requested (exclusive).
  */
 @ApiAudience.Public
 @ApiStability.Experimental
@@ -75,9 +109,10 @@ final case class After(override val begin: Long) extends TimeRange {
 }
 
 /**
- * Specifies that all timestamps before the specified end timestamp should be requested.
+ * Implementation of [[org.kiji.express.flow.TimeRange]] for specifying that all versions before the
+ * provided version should be requested (inclusive).
  *
- * @param end is the latest timestamp that should be requested.
+ * @param end is the latest version that should be requested (inclusive).
  */
 @ApiAudience.Public
 @ApiStability.Experimental
@@ -87,11 +122,11 @@ final case class Before(override val end: Long) extends TimeRange {
 }
 
 /**
- * Specifies that all timestamps between the specified begin and end timestamps should be
- * requested.
+ * Implementation of [[org.kiji.express.flow.TimeRange]] for specifying that all versions between
+ * the provided begin and end versions should be requested.
  *
- * @param begin is the earliest timestamp that should be requested.
- * @param end is the latest timestamp that should be requested.
+ * @param begin is the earliest version that should be requested (inclusive).
+ * @param end is the latest version that should be requested (exclusive).
  */
 @ApiAudience.Public
 @ApiStability.Experimental
