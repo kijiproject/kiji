@@ -25,6 +25,26 @@ import org.kiji.annotations.Inheritance
 
 /**
  * A specification of the type of paging to use.
+ *
+ * These can be used in [[org.kiji.express.flow.ColumnInputSpec]].  The default in
+ * [[org.kiji.express.flow.ColumnInputSpec]] is [[org.kiji.express.flow.PagingSpec.Off]], which
+ * disables all paging.  With paging disabled, all cells from the specified column will be loaded
+ * into memory at once.  If the size of all of the loaded cells exceeds the capacity of the
+ * receiving machine's main memory, the Scalding job will fail at runtime.  In these cases you can
+ * specify how many cells should be paged into memory at a time with
+ * [[org.kiji.express.flow.PagingSpec.Cells]]:
+ *
+ * {{{
+ *   paging = PagingSpec.Cells(10)
+ * }}}
+ *
+ * This will load only 10 cells at a time into memory.
+ *
+ * Caution:  See the scaladocs for [[org.kiji.express.flow.KijiSlice]] for usage of paging.
+ *
+ * The appropriate number of cells to be paged in depends on the size of each cell. Users should
+ * try to retrieve as many cells as possible (without causing OOME) in order to increase
+ * performance.
  */
 @ApiAudience.Public
 @ApiStability.Experimental

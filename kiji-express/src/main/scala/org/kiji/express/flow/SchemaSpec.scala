@@ -28,6 +28,33 @@ import org.kiji.annotations.Inheritance
 
 /**
  * A specification of how to read or write values to a Kiji column.
+ *
+ * An instance of one of the subclasses of SchemaSpec, [[org.kiji.express.flow.SchemaSpec.Generic]],
+ * [[org.kiji.express.flow.SchemaSpec.Specific]],
+ * [[org.kiji.express.flow.SchemaSpec.DefaultReader]], or
+ * [[org.kiji.express.flow.SchemaSpec.Writer]], can be used as an optional parameter to
+ * [[org.kiji.express.flow.ColumnFamilyInputSpec]],
+ * [[org.kiji.express.flow.QualifiedColumnInputSpec]],
+ * [[org.kiji.express.flow.ColumnFamilyOutputSpec]], and
+ * [[org.kiji.express.flow.QualifiedColumnOutputSpec]].
+ *
+ * These classes specify the Avro schema to read the data in a column with, or the Avro schema to
+ * write the data to a column with.  Here are the possible subclasses you may use in your
+ * `ColumnInputSpec` or `ColumnOutputSpec`:
+ * <ul>
+ *   <li>`SchemaSpec.Specific(classOf[MySpecificRecordClass])`: This option should be used when you
+ *   have a specific class that has been compiled by Avro.  `MySpecificRecordClass` must extend
+ *   `org.apache.avro.SpecificRecord`</li>
+ *   <li>`SchemaSpec.Generic(myGenericSchema)`: If you don’t have the specific class you want to use
+ *   to read or write on the classpath, you can construct a generic schema and use it as the reader
+ *   schema.</li>
+ *   <li>`SchemaSpec.Writer`: used when you want to read with the same schema that the data
+ *   was written with, or a schema attached to or inferred from the value to write with.  This is
+ *   the default if you don’t specify any `SchemaSpec` for reading or writing.</li>
+ *   <li>`SchemaSpec.DefaultReader`: specifies that the default reader for this column, stored in
+ *   the table layout, should be used for reading or writing this data.  If you use this option,
+ *   first make sure the column in your Kiji table has a default reader specified.</li>
+ * </ul>
  */
 @ApiAudience.Public
 @ApiStability.Experimental
@@ -83,7 +110,9 @@ object SchemaSpec {
   }
 
   /**
-   * Use the default reader schema of the column to read or write the values to the column.
+   * Specifies that the default reader for this column, stored in the table layout, should be used
+   * for reading or writing this data.  If you use this option, first make sure the column in your
+   * Kiji table has a default reader specified.
    */
   @ApiAudience.Public
   @ApiStability.Experimental

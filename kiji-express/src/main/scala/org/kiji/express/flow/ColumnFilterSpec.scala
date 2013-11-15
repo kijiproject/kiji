@@ -28,8 +28,61 @@ import org.kiji.schema.filter.KijiColumnRangeFilter
 import org.kiji.schema.filter.RegexQualifierColumnFilter
 
 /**
- * An extendable trait used for column filters in Express, which correspond to
- * Kiji and HBase column filters.
+ * An extendable trait used for column filters in Express, which correspond to Kiji and HBase column
+ * filters.
+ *
+ * Filters are implemented via HBase filters, not on the client side, so they can cut down on the
+ * amount of data transferred over your network.
+ *
+ * These can be used in [[org.kiji.express.flow.ColumnInputSpec]].  Currently the filters provided
+ * are only useful for [[org.kiji.express.flow.ColumnFamilyInputSpec]], because they are filters for
+ * qualifiers when an entire column family is requested.  In the future, there may be filters
+ * provided that can filter on the data returned from a fully qualified column.
+ *
+ * By default, no filter is applied, but you can specify your own.  Only data that pass these
+ * filters will be requested and populated into the tuple.  Two column filters are currently
+ * provided: [[org.kiji.express.flow.ColumnRangeFilterSpec]] and
+ * [[org.kiji.express.flow.RegexQualifierFilterSpec]].  Both of these filter the data
+ * returned from a ColumnFamilyInputSpec by qualifier in some way.  These filters can be composed
+ * with [[org.kiji.express.flow.AndFilterSpec]] and [[org.kiji.express.flow.OrFilterSpec]].
+ *
+ * To specify a range of qualifiers for the cells that should be returned.
+ * {{{
+ *     ColumnRangeFilterSpec(
+ *         minimum = “c”,
+ *         maximum = “m”,
+ *         minimumIncluded = true,
+ *         maximumIncluded = false)
+ * }}}
+ *
+ * A `ColumnInputSpec` with the above filter specified will return all data from all  columns with
+ * qualifiers “c” and later, up to but not including “m”.  You can omit any of the parameters, for
+ * instance, you can write ``ColumnRangeFilterSpec(minimum = “m”, minimumIncluded = true)` to
+ * specify columns with qualifiers “m” and later.
+ *
+ * To specify a regex for the qualifier names that you want data from:
+ * {{{
+ *     RegexQualifierFilterSpec(“http://.*”)
+ * }}}
+ * In this example, only data from columns whose qualifier names start with “http://” are returned.
+ *
+ * See the Sun Java documentation for regular expressions:
+ * http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html
+ *
+ * To compose filters using `AndFilterSpec`:
+ * {{{
+ *     AndFilterSpec(List(mRegexFilter, mQualifierFilter))
+ * }}}
+ * The `AndFilterSpec` composes a list of `FilterSpec`s, returning only data from columns that
+ * satisfy all the filters in the `AndFilterSpec`.
+ *
+ * Analogously, you can compose them with `OrFilterSpec`:
+ * {{{
+ *     OrFilterSpec(List(mRegexFilter, mQualifierFilter))
+ * }}}
+ * This returns only data from columns that satisfy at least one of the filters.
+ *
+ * `OrFilterSpec` and `AndFilterSpec` can themselves be composed.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
@@ -41,6 +94,9 @@ sealed trait ColumnFilterSpec {
 
 /**
  * An Express column filter which combines a list of column filters using a logical "and" operator.
+ *
+ * See the scaladocs for [[org.kiji.express.flow.ColumnFilterSpec]] for information on other
+ * filters.
  *
  * @param filters to combine with a logical "and" operation.
  */
@@ -61,6 +117,9 @@ final case class AndFilterSpec(filters: Seq[ColumnFilterSpec])
 /**
  * An Express column filter which combines a list of column filters using a logical "or" operator.
  *
+ * See the scaladocs for [[org.kiji.express.flow.ColumnFilterSpec]] for information on other
+ * filters.
+ *
  * @param filters to combine with a logical "or" operation.
  */
 @ApiAudience.Public
@@ -79,6 +138,9 @@ final case class OrFilterSpec(filters: Seq[ColumnFilterSpec])
 
 /**
  * An Express column filter based on the given minimum and maximum qualifier bounds.
+ *
+ * See the scaladocs for [[org.kiji.express.flow.ColumnFilterSpec]] for information on other
+ * filters.
  *
  * @param minimum qualifier bound.
  * @param maximum qualifier bound.
@@ -105,6 +167,9 @@ final case class ColumnRangeFilterSpec(
 
 /**
  * An Express column filter which matches a regular expression against the full qualifier.
+ *
+ * See the scaladocs for [[org.kiji.express.flow.ColumnFilterSpec]] for information on other
+ * filters.
  *
  * @param regex to match on.
  */
