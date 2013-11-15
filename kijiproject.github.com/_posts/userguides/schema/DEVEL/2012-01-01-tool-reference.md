@@ -449,7 +449,7 @@ The following arguments are required:
 
 See [`kiji ls`](#ref.ls) for how to specify entity IDs.
 
-Setting Individual Cells: `put`<a name="ref.put"> </a>
+## Setting Individual Cells: `put`<a name="ref.put"> </a>
 
 
 To aid in the insertion of small data sets, debugging, and testing, the
