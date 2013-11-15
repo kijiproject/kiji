@@ -24,7 +24,7 @@
 
   <properties>
     <scalding.version>0.8.8</scalding.version>
-    <kiji-express.version>0.12.0</kiji-express.version>
+    <kiji-express.version>0.13.0-SNAPSHOT</kiji-express.version>
     <kiji-schema-shell.version>1.3.1</kiji-schema-shell.version>
     <scalatest.version>2.0.M5b</scalatest.version>
     <twitter-util.version>6.5.0</twitter-util.version>

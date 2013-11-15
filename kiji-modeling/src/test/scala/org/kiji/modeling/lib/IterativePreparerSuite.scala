@@ -27,7 +27,7 @@ import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow.All
-import org.kiji.express.flow.Cell
+import org.kiji.express.flow.FlowCell
 import org.kiji.express.flow.QualifiedColumnInputSpec
 import org.kiji.express.flow.QualifiedColumnOutputSpec
 import org.kiji.express.flow.util.Resources.doAndClose
@@ -151,7 +151,7 @@ object IterativePreparerSuite {
     class IterativeJob(input: Source, output: Source) extends PreparerJob {
       input
           .read
-          .map('word -> 'cleanWord) { words: Seq[Cell[CharSequence]] =>
+          .map('word -> 'cleanWord) { words: Seq[FlowCell[CharSequence]] =>
              words
                  .head
                  .datum

@@ -31,7 +31,7 @@ import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.KijiSuite
-import org.kiji.express.flow.Cell
+import org.kiji.express.flow.FlowCell
 import org.kiji.express.flow.KijiInput
 import org.kiji.express.flow.util.Resources.doAndClose
 import org.kiji.express.flow.util.Resources.doAndRelease
@@ -82,7 +82,7 @@ class RecommendationPipeSuite extends KijiSuite {
     class PrepareItemsetsJob(args: Args) extends KijiModelingJob(args) {
       KijiInput(args("input"), "family:column" -> 'slice)
         .map('slice -> 'order) {
-          slice: Seq[Cell[CharSequence]] =>
+          slice: Seq[FlowCell[CharSequence]] =>
               slice.head.datum.toString.split(",").map(_.trim).toList
         }
         .prepareItemSets[String]('order -> 'itemset, 2, 2)
@@ -121,7 +121,7 @@ class RecommendationPipeSuite extends KijiSuite {
     class JoinWithGroupCountJob(args: Args) extends KijiModelingJob(args) {
       KijiInput(args("input"), "family:column" -> 'slice)
         .flatMap('slice -> 'product) {
-          slice: Seq[Cell[CharSequence]] => slice.head.datum.toString.split(",").map(_.trim)
+          slice: Seq[FlowCell[CharSequence]] => slice.head.datum.toString.split(",").map(_.trim)
         }
         .joinWithGroupCount('product -> 'count)
         .write(TextLine(args("output")))
@@ -163,7 +163,7 @@ class RecommendationPipeSuite extends KijiSuite {
     class FrequentItemsetFinderJob(args: Args) extends KijiModelingJob(args) {
       KijiInput(args("input"), "family:column" -> 'slice)
           .map('slice -> 'order) {
-            slice: Seq[Cell[CharSequence]] =>
+            slice: Seq[FlowCell[CharSequence]] =>
                 slice.head.datum.toString.split(",").map(_.trim).toList
           }
           .prepareItemSets[String]('order -> 'itemset, 2, 2)
@@ -193,7 +193,7 @@ class RecommendationPipeSuite extends KijiSuite {
 
       KijiInput(args("input"), "family:column" -> 'slice)
           .map('slice -> 'order) {
-            slice: Seq[Cell[CharSequence]] =>
+            slice: Seq[FlowCell[CharSequence]] =>
                 slice.head.datum.toString.split(",").map(_.trim).toList
           }
         .prepareItemSets[String]('order -> 'itemset, 2, 2)
@@ -217,7 +217,7 @@ class RecommendationPipeSuite extends KijiSuite {
     class JaccardDistanceCalculator(args: Args) extends KijiModelingJob(args) {
       KijiInput(args("input"), "family:column" -> 'slice)
         .map('slice -> 'userPurchases) {
-          slice: Seq[Cell[CharSequence]] =>
+          slice: Seq[FlowCell[CharSequence]] =>
               slice.head.datum.toString.split(",").map(_.trim).toList
         }
         .simpleItemItemJaccardSimilarity[String]('userPurchases -> 'result)

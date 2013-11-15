@@ -28,7 +28,7 @@ import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow.All
-import org.kiji.express.flow.Cell
+import org.kiji.express.flow.FlowCell
 import org.kiji.express.flow.EntityId
 import org.kiji.express.flow.QualifiedColumnInputSpec
 import org.kiji.express.flow.QualifiedColumnOutputSpec
@@ -460,7 +460,7 @@ object ModelExecutorSuite {
     class WordCountJob(input: Map[String, Source], output: Map[String, Source]) extends
         PreparerJob {
       input("input")
-        .flatMapTo('word -> 'countedWord) { slice: Seq[Cell[CharSequence]] =>
+        .flatMapTo('word -> 'countedWord) { slice: Seq[FlowCell[CharSequence]] =>
             slice.map { cell => cell.datum.toString } }
         .groupBy('countedWord) { _.size }
         .map('countedWord -> 'entityId) { countedWord: String => EntityId(countedWord) }
@@ -478,7 +478,7 @@ object ModelExecutorSuite {
     class WordCountJob(input: Map[String, Source], output: Map[String,
         Source]) extends TrainerJob {
       input("input")
-        .flatMapTo('word -> 'countedWord) { slice: Seq[Cell[CharSequence]] =>
+        .flatMapTo('word -> 'countedWord) { slice: Seq[FlowCell[CharSequence]] =>
           slice.map { cell => cell.datum.toString }
         }
         .groupBy('countedWord) { _.size }
@@ -497,7 +497,7 @@ object ModelExecutorSuite {
     class AverageTrainerJob(input: Map[String, Source], output: Map[String, Source]) extends
         TrainerJob {
       input("input")
-        .flatMapTo('word -> 'countedWord) { slice: Seq[Cell[CharSequence]] =>
+        .flatMapTo('word -> 'countedWord) { slice: Seq[FlowCell[CharSequence]] =>
           slice.map { cell => cell.datum.toString }
         }
         .mapTo('countedWord -> 'number) { countedWord: String => countedWord.toLong }

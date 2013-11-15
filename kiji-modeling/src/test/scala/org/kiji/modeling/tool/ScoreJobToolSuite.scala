@@ -28,7 +28,7 @@ import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow.All
-import org.kiji.express.flow.Cell
+import org.kiji.express.flow.FlowCell
 import org.kiji.express.flow.QualifiedColumnInputSpec
 import org.kiji.express.flow.QualifiedColumnOutputSpec
 import org.kiji.express.flow.util.Resources.doAndClose
@@ -151,7 +151,7 @@ class ScoreJobToolSuite extends KijiSuite {
 
 object ScoreJobToolSuite {
   class DoublingExtractor extends Extractor {
-    override val extractFn = extract('field -> 'feature) { field: Seq[Cell[CharSequence]] =>
+    override val extractFn = extract('field -> 'feature) { field: Seq[FlowCell[CharSequence]] =>
       val str: String = field.head.datum.toString
       str + str
     }

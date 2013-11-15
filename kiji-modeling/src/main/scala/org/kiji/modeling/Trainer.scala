@@ -45,7 +45,7 @@ import org.kiji.modeling.framework.KijiModelingJob
  *     override def train(input: Source, output: Source) {
  *       new TrainerJob {
  *         input("inputname")
- *             .map('inputField -> 'intermediateField) { inputColumn: Seq[Cell[String]] =>
+ *             .map('inputField -> 'intermediateField) { inputColumn: Seq[FlowCell[String]] =>
  *               inputColumn.getFirstValue
  *             }
  *             .groupBy('intermediateField) { _.count('count) }

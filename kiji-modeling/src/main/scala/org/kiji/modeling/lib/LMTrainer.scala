@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
-import org.kiji.express.flow.Cell
+import org.kiji.express.flow.FlowCell
 import org.kiji.modeling.Trainer
 
 /**
@@ -90,7 +90,7 @@ final case class LMTrainer() extends Trainer {
    * @param attributes contains the x-values from the input table.
    * @return an ordered sequence of double x-values, with x_0 prepended.
    */
-  def vectorizeDataPoint(attributes: Seq[Cell[Double]]): IndexedSeq[Double] = {
+  def vectorizeDataPoint(attributes: Seq[FlowCell[Double]]): IndexedSeq[Double] = {
     // TODO Decide how the input source will look like for data with more than one attribute.
     val vectorizedAttributes  = new ArrayBuffer[Double]
     vectorizedAttributes.append(1.0, attributes.head.datum)
@@ -139,7 +139,7 @@ final case class LMTrainer() extends Trainer {
       extends TrainerJob {
     input.getOrElse("dataset", null)
         .mapTo(('attributes, 'target) -> 'gradient) {
-          dataPoint: (Seq[Cell[Double]], Seq[Cell[Double]]) => {
+          dataPoint: (Seq[FlowCell[Double]], Seq[FlowCell[Double]]) => {
             // X
             val attributes: IndexedSeq[Double] = vectorizeDataPoint(dataPoint._1)
             // y

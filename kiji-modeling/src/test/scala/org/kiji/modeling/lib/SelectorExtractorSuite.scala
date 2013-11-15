@@ -24,18 +24,18 @@ import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
-import org.kiji.express.flow.Cell
+import org.kiji.express.flow.FlowCell
 
 @RunWith(classOf[JUnitRunner])
 class SelectorExtractorSuite extends FunSuite {
   val slice1 = Seq(
-      new Cell("family", "qualifier", 3L, "bar1"),
-      new Cell("family", "qualifier", 2L, "baz1"),
-      new Cell("family", "qualifier", 1L, "foo1"))
+      new FlowCell("family", "qualifier", 3L, "bar1"),
+      new FlowCell("family", "qualifier", 2L, "baz1"),
+      new FlowCell("family", "qualifier", 1L, "foo1"))
   val slice2 = Seq(
-      new Cell("family", "qualifier", 3L, "bar2"),
-      new Cell("family", "qualifier", 2L, "baz2"),
-      new Cell("family", "qualifier", 1L, "foo2"))
+      new FlowCell("family", "qualifier", 3L, "bar2"),
+      new FlowCell("family", "qualifier", 2L, "baz2"),
+      new FlowCell("family", "qualifier", 1L, "foo2"))
   val firstValueExtractor = new FirstValueExtractor
   val lastValueExtractor = new LastValueExtractor
   val sliceExtractor = new SliceExtractor

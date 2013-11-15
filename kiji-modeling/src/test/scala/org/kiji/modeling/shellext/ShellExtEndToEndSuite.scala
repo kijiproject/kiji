@@ -27,7 +27,7 @@ import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.flow.All
-import org.kiji.express.flow.Cell
+import org.kiji.express.flow.FlowCell
 import org.kiji.express.flow.QualifiedColumnInputSpec
 import org.kiji.express.flow.QualifiedColumnOutputSpec
 import org.kiji.express.flow.util.Resources.doAndClose
@@ -141,7 +141,7 @@ class ShellExtEndToEnd extends ShellExtSuite {
 
 object ShellExtEndToEndSuite {
   class DoublingExtractor extends Extractor {
-    override val extractFn = extract('field -> 'feature) { field: Seq[Cell[String]] =>
+    override val extractFn = extract('field -> 'feature) { field: Seq[FlowCell[String]] =>
       val str: String = field.head.datum
       str + str
     }

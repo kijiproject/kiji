@@ -25,8 +25,8 @@ import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow.All
-import org.kiji.express.flow.Cell
 import org.kiji.express.flow.EntityId
+import org.kiji.express.flow.FlowCell
 import org.kiji.express.flow.QualifiedColumnInputSpec
 import org.kiji.express.flow.QualifiedColumnOutputSpec
 import org.kiji.express.flow.util.Resources.doAndClose
@@ -409,7 +409,7 @@ class ScoreProducerSuite
 
 object ScoreProducerSuite {
   class DoublingExtractor extends Extractor {
-    override val extractFn = extract('field -> 'feature) { field: Seq[Cell[CharSequence]] =>
+    override val extractFn = extract('field -> 'feature) { field: Seq[FlowCell[CharSequence]] =>
       val str: String = field.head.datum.toString
       val sideData: KeyValueStore[Int, String] = keyValueStore("side_data")
 
@@ -424,7 +424,7 @@ object ScoreProducerSuite {
   }
 
   class KijiSliceScorer extends Scorer {
-    override val scoreFn = score('field) { field: Seq[Cell[CharSequence]] =>
+    override val scoreFn = score('field) { field: Seq[FlowCell[CharSequence]] =>
       field.head.datum.toString
     }
   }
@@ -432,7 +432,7 @@ object ScoreProducerSuite {
   class TwoArgDoublingExtractor extends Extractor {
     override val extractFn =
         extract(('i1, 'i2) -> ('x1, 'x2)) {
-          t: (Seq[Cell[CharSequence]], Seq[Cell[CharSequence]]) =>
+          t: (Seq[FlowCell[CharSequence]], Seq[FlowCell[CharSequence]]) =>
 
           val (i1, i2) = t
 

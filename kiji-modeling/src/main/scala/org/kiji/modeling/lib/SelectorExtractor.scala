@@ -24,7 +24,7 @@ import cascading.tuple.Fields
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
-import org.kiji.express.flow.Cell
+import org.kiji.express.flow.FlowCell
 import org.kiji.express.flow.util.Tuples
 import org.kiji.modeling.ExtractFn
 import org.kiji.modeling.Extractor
@@ -48,19 +48,19 @@ import org.kiji.modeling.Extractor
 @ApiStability.Experimental
 @Inheritance.Sealed
 sealed abstract class SelectorExtractor[R](
-    val selectFn: Seq[Cell[Any]] => R)
+    val selectFn: Seq[FlowCell[Any]] => R)
     extends Extractor {
   override val extractFn: ExtractFn[Any, R] = extract(Fields.ALL -> Fields.RESULTS) {
     case tuple: Product => {
       val returnValues: Seq[R] = tuple
           .productIterator
-          .asInstanceOf[Iterator[Seq[Cell[Any]]]]
-          .map { slice: Seq[Cell[Any]] => selectFn(slice) }
+          .asInstanceOf[Iterator[Seq[FlowCell[Any]]]]
+          .map { slice: Seq[FlowCell[Any]] => selectFn(slice) }
           .toSeq
 
       Tuples.seqToTuple(returnValues)
     }
-    case slice: Seq[Cell[_]] => selectFn(slice.asInstanceOf[Seq[Cell[Any]]])
+    case slice: Seq[FlowCell[_]] => selectFn(slice.asInstanceOf[Seq[FlowCell[Any]]])
   }
 }
 
@@ -73,7 +73,7 @@ sealed abstract class SelectorExtractor[R](
 final class FirstValueExtractor
     extends SelectorExtractor[Any](FirstValueExtractor.selectFirstValue)
 private object FirstValueExtractor {
-  def selectFirstValue(slice: Seq[Cell[Any]]): Any = slice.head.datum
+  def selectFirstValue(slice: Seq[FlowCell[Any]]): Any = slice.head.datum
 }
 
 /**
@@ -85,7 +85,7 @@ private object FirstValueExtractor {
 final class LastValueExtractor
     extends SelectorExtractor[Any](LastValueExtractor.selectLastValue)
 private object LastValueExtractor {
-  def selectLastValue(slice: Seq[Cell[Any]]): Any = slice.last.datum
+  def selectLastValue(slice: Seq[FlowCell[Any]]): Any = slice.last.datum
 }
 
 /**
@@ -98,7 +98,7 @@ private object LastValueExtractor {
 final class SliceExtractor
     extends SelectorExtractor[Iterable[Any]](SliceExtractor.selectSlice)
 private object SliceExtractor {
-  def selectSlice(slice: Seq[Cell[Any]]): Iterable[Any] = {
+  def selectSlice(slice: Seq[FlowCell[Any]]): Iterable[Any] = {
     slice
         .map { cell => cell.datum }
   }

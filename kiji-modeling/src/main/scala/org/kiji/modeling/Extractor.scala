@@ -55,7 +55,7 @@ final case class ExtractFn[I, O] (
  * For example:
  * {{{
  * class MyExtractor extends Extractor {
- *   override val extractFn = extract('textLine -> 'count) { textLine: Seq[Cell[String]] =>
+ *   override val extractFn = extract('textLine -> 'count) { textLine: Seq[FlowCell[String]] =>
  *     textLine.getFirstValue.split("""\s+""").size
  *   }
  * }
