@@ -80,7 +80,7 @@
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>versions-maven-plugin</artifactId>
         <configuration>
-          <includeProperties>bento-cluster.version,kiji-checkin.version,kiji-schema.version,kiji-schema-shell.version,kiji-phonebook.version,kiji-mapreduce.version,kiji-mapreduce-lib.version,kiji-hive-adapter.version,kiji-music.version,kiji-express.version,kiji-express-music.version,kiji-express-examples.version,kiji-rest.version,kiji-scoring.version</includeProperties>
+          <includeProperties>bento-cluster.version,kiji-checkin.version,kiji-schema.version,kiji-schema-shell.version,kiji-phonebook.version,kiji-mapreduce.version,kiji-mapreduce-lib.version,kiji-hive-adapter.version,kiji-music.version,kiji-express.version,kiji-express-music.version,kiji-express-examples.version,kiji-rest.version,kiji-scoring.version,kiji-scoring-server.version,kiji-modelrepo.version,kiji-modeling.version</includeProperties>
         </configuration>
         <dependencies>
           <!--
@@ -168,6 +168,11 @@
             <groupId>org.kiji.modelrepo</groupId>
             <artifactId>kiji-model-repository</artifactId>
             <version>${kiji-modelrepo.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.kiji.modeling</groupId>
+            <artifactId>kiji-modeling</artifactId>
+            <version>${kiji-modeling.version}</version>
           </dependency>
         </dependencies>
       </plugin>
