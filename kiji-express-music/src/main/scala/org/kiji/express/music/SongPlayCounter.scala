@@ -21,7 +21,6 @@ package org.kiji.express.music
 
 import com.twitter.scalding._
 
-import org.kiji.express._
 import org.kiji.express.flow._
 
 /**
@@ -44,7 +43,7 @@ class SongPlayCounter(args: Args) extends KijiJob(args) {
    *     listened to.
    * @return the song ids that a user has listened to.
    */
-  def songsListenedTo(slice: Seq[Cell[CharSequence]]): Seq[String] = {
+  def songsListenedTo(slice: Seq[FlowCell[CharSequence]]): Seq[String] = {
     slice.map { cell => cell.datum.toString }
   }
 

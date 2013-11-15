@@ -58,7 +58,7 @@ class SongPlaysImporterSuite extends KijiSuite {
    *
    * @param generatedPlays contains a tuple for each row written to by the importer.
    */
-  def validateTest(generatedPlays: Buffer[(EntityId, Seq[Cell[CharSequence]])]) {
+  def validateTest(generatedPlays: Buffer[(EntityId, Seq[FlowCell[CharSequence]])]) {
     // One row for one user.
     assert(1 === generatedPlays.size)
     // Check contents of playlist.

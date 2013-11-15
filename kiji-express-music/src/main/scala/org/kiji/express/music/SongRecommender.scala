@@ -21,7 +21,6 @@ package org.kiji.express.music
 
 import com.twitter.scalding._
 
-import org.kiji.express._
 import org.kiji.express.flow._
 import org.kiji.express.music.avro._
 
@@ -43,7 +42,7 @@ class SongRecommender(args: Args) extends KijiJob(args) {
    * @param songs from the TopNextSongs record.
    * @return the most popular song.
    */
-  def getMostPopularSong(songs: Seq[Cell[TopSongs]]): String = {
+  def getMostPopularSong(songs: Seq[FlowCell[TopSongs]]): String = {
     songs.head.datum.getTopSongs.get(0).getSongId.toString
   }
 
@@ -73,7 +72,7 @@ class SongRecommender(args: Args) extends KijiJob(args) {
   KijiInput(args("users-table"),
       Map(QualifiedColumnInputSpec("info", "track_plays") -> 'trackPlays))
       .map('trackPlays -> 'lastTrackPlayed) {
-          slice: Seq[Cell[CharSequence]] => slice.head.datum.toString }
+          slice: Seq[FlowCell[CharSequence]] => slice.head.datum.toString }
       .joinWithSmaller('lastTrackPlayed -> 'songId, recommendedSong)
       .write(KijiOutput(args("users-table"),
           Map('nextSong -> QualifiedColumnOutputSpec("info", "next_song_rec"))))

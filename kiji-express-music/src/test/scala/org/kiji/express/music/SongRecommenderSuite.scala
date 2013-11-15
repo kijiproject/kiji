@@ -25,8 +25,8 @@ import com.twitter.scalding.JobTest
 import scala.collection.mutable.Buffer
 
 import org.kiji.express.KijiSuite
-import org.kiji.express.flow.Cell
 import org.kiji.express.flow.EntityId
+import org.kiji.express.flow.FlowCell
 import org.kiji.express.flow.KijiInput
 import org.kiji.express.flow.KijiOutput
 import org.kiji.express.flow.KijiSource
@@ -76,7 +76,7 @@ class SongRecommenderSuite extends KijiSuite {
    * @param recommended contains a tuple where the first field is the user id and the second field
    *     is a sequence of cells containing the recommended song.
    */
-  def validateTest(recommended: Buffer[(EntityId, Seq[Cell[CharSequence]])]) {
+  def validateTest(recommended: Buffer[(EntityId, Seq[FlowCell[CharSequence]])]) {
     val recommendedSongsForEachUser = recommended
       .map { case(entityId, slice) =>
         (entityId(0).toString, slice) }

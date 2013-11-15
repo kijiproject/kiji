@@ -57,7 +57,7 @@ class SongMetadataImporterSuite extends KijiSuite {
    *
    * @param generatedMetadata contains a tuple for each row written to by the importer.
    */
-  def validateTest(generatedMetadata: Buffer[(EntityId, Seq[Cell[GenericRecord]])]) {
+  def validateTest(generatedMetadata: Buffer[(EntityId, Seq[FlowCell[GenericRecord]])]) {
     assert(1 === generatedMetadata.size)
     // Get the first song metadata record written.
     val metadata = generatedMetadata(0)._2.head.datum

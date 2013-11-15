@@ -23,7 +23,6 @@ import scala.util.parsing.json.JSON
 
 import com.twitter.scalding._
 
-import org.kiji.express._
 import org.kiji.express.flow._
 import org.kiji.express.music.avro.SongMetadata
 

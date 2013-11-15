@@ -23,7 +23,6 @@ import scala.collection.JavaConverters.seqAsJavaListConverter
 
 import com.twitter.scalding._
 
-import org.kiji.express._
 import org.kiji.express.flow._
 import org.kiji.express.music.avro._
 
@@ -47,7 +46,7 @@ class TopNextSongs(args: Args) extends KijiJob(args) {
    * @param slice of song ids representing a user's play history.
    * @return a list of song bigrams.
    */
-  def bigrams(slice: Seq[Cell[String]]): List[(String, String)] = {
+  def bigrams(slice: Seq[FlowCell[String]]): List[(String, String)] = {
     slice
         .sortBy { _.version }
         .sliding(2)
