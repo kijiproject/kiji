@@ -85,8 +85,7 @@ public class FreshTool extends BaseTool {
       + "column.\n"
       + "          'remove' to remove the Freshener record(s) from the specified table or column.\n"
       + "          'validate' to run validation on the Freshener record(s) attached to the "
-      + "specified table or column.\n"
-      + "            (optionally --instantiate-classes)")
+      + "specified table or column.")
   private String mDoFlag = null;
 
   @Flag(name="policy-class", usage="fully qualified class name of a KijiFreshnessPolicy "

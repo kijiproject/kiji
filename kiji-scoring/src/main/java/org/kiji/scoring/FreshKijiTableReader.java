@@ -130,6 +130,7 @@ public interface FreshKijiTableReader extends KijiTableReader {
    *       Setting what level of statistics to gather and how often they should be logged (defaults
    *       to gathering no statistics with no logging interval).
    *     </li>
+   *     <li>Setting the ExecutorService which will provide threads for the reader.</li>
    *   </ul>
    * </p>
    *
