@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import com.twitter.scalding.TupleConversions
 import org.scalatest.FunSuite
 
-import org.kiji.express.flow.Cell
+import org.kiji.express.flow.FlowCell
 import org.kiji.express.flow.util.Resources._
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiColumnName
@@ -49,7 +49,7 @@ trait KijiSuite
    * @tparam T type of the values in the returned slice.
    * @return an empty slice.
    */
-  def missing[T](): Seq[Cell[T]] = Seq()
+  def missing[T](): Seq[FlowCell[T]] = Seq()
 
   /**
    * Builds a slice from a group type column name and list of version, value pairs.
@@ -59,7 +59,7 @@ trait KijiSuite
    * @param values pairs of (version, value) to build the slice with.
    * @return a slice containing the specified cells.
    */
-  def slice[T](columnName: String, values: (Long, T)*): Seq[Cell[T]] = {
+  def slice[T](columnName: String, values: (Long, T)*): Seq[FlowCell[T]] = {
     val parsedName = new KijiColumnName(columnName)
     require(
         parsedName.isFullyQualified,
@@ -69,7 +69,7 @@ trait KijiSuite
     values
         .map { entry: (Long, T) =>
           val (version, value) = entry
-          Cell(parsedName.getFamily, parsedName.getQualifier, version, value)
+          FlowCell(parsedName.getFamily, parsedName.getQualifier, version, value)
         }
   }
 
@@ -81,7 +81,7 @@ trait KijiSuite
    * @param values are triples of (qualifier, version, value) to build the slice with.
    * @return a slice containing the specified cells.
    */
-  def mapSlice[T](columnName: String, values: (String, Long, T)*): Seq[Cell[T]] = {
+  def mapSlice[T](columnName: String, values: (String, Long, T)*): Seq[FlowCell[T]] = {
     val parsedName = new KijiColumnName(columnName)
     require(
         !parsedName.isFullyQualified,
@@ -91,7 +91,7 @@ trait KijiSuite
     values
         .map { entry: (String, Long, T) =>
           val (qualifier, version, value) = entry
-          Cell(parsedName.getFamily, qualifier, version, value)
+          FlowCell(parsedName.getFamily, qualifier, version, value)
         }
   }
 

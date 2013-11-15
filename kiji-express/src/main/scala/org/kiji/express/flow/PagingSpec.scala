@@ -27,7 +27,7 @@ import org.kiji.annotations.Inheritance
  * A specification of the type of paging to use.
  */
 @ApiAudience.Public
-@ApiStability.Stable
+@ApiStability.Experimental
 @Inheritance.Sealed
 sealed trait PagingSpec {
   private[kiji] def cellsPerPage: Option[Int]
@@ -37,14 +37,14 @@ sealed trait PagingSpec {
  * Module to provide PagingSpec implementations.
  */
 @ApiAudience.Public
-@ApiStability.Stable
+@ApiStability.Experimental
 object PagingSpec {
   /**
    * Specifies that paging should not be used. Each row requested from Kiji tables will be fully
    * materialized into RAM.
    */
   @ApiAudience.Public
-  @ApiStability.Stable
+  @ApiStability.Experimental
   case object Off extends PagingSpec {
     override val cellsPerPage: Option[Int] = None
   }
@@ -57,7 +57,7 @@ object PagingSpec {
    * @param count of the cells per page.
    */
   @ApiAudience.Public
-  @ApiStability.Stable
+  @ApiStability.Experimental
   @Inheritance.Sealed
   final case class Cells(count: Int) extends PagingSpec {
     override val cellsPerPage: Option[Int] = Some(count)

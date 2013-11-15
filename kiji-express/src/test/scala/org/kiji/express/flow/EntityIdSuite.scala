@@ -184,7 +184,7 @@ class EntityIdSuite extends KijiSuite {
     }
 
     // Create input from Kiji table.
-    val joinKijiInput: List[(EntityId, Seq[Cell[String]])] = List(
+    val joinKijiInput: List[(EntityId, Seq[FlowCell[String]])] = List(
       (EntityId("0row"), mapSlice("animals", ("0column", 0L, "0 dogs"))),
       (EntityId("1row"), mapSlice("animals", ("0column", 0L, "1 cat"))),
       (EntityId("2row"), mapSlice("animals", ("0column", 0L, "2 fish"))))
@@ -221,14 +221,14 @@ class EntityIdSuite extends KijiSuite {
     }
 
     // Create input from hashed Kiji table.
-    val joinInput1: List[(EntityId, Seq[Cell[String]])] = List(
+    val joinInput1: List[(EntityId, Seq[FlowCell[String]])] = List(
       (EntityId("0row"), slice("family:column1", (0L, "0 dogs"))),
       (EntityId("1row"), slice("family:column1", (0L, "1 cat"))),
       (EntityId("2row"), slice("family:column1", (0L, "2 fish"))))
 
 
     // Create input from hashed Kiji table.
-    val joinInput2: List[(EntityId, Seq[Cell[String]])] = List(
+    val joinInput2: List[(EntityId, Seq[FlowCell[String]])] = List(
       (EntityId("0row"), slice("family:column2", (0L, "0 boop"))),
       (EntityId("2row"), slice("family:column2", (1L, "1 cat")))
       )
@@ -258,13 +258,13 @@ class EntityIdSuite extends KijiSuite {
     }
 
     // Create input from hashed Kiji table.
-    val joinInput1: List[(EntityId, Seq[Cell[String]])] = List(
+    val joinInput1: List[(EntityId, Seq[FlowCell[String]])] = List(
       (EntityId("0row"), slice("family:column1", (0L, "0 dogs"))),
       (EntityId("1row"), slice("family:column1", (0L, "1 cat"))),
       (EntityId("2row"), slice("family:column1", (0L, "2 fish"))))
 
     // Create input from hashed Kiji table.
-    val joinInput2: List[(EntityId, Seq[Cell[String]])] = List(
+    val joinInput2: List[(EntityId, Seq[FlowCell[String]])] = List(
       (EntityId("0row"), slice("family:column2", (0L, "0 boop"))),
       (EntityId("2row"), slice("family:column2", (0L, "2 beep"))))
 
@@ -293,12 +293,12 @@ class EntityIdSuite extends KijiSuite {
     }
 
     // Create input from formatted Kiji table.
-    val joinInput1: List[(EntityId, Seq[Cell[Int]])] = List(
+    val joinInput1: List[(EntityId, Seq[FlowCell[Int]])] = List(
       (EntityId("0row"), mapSlice("searches", ("0column", 0L, 0))),
       (EntityId("2row"), mapSlice("searches", ("0column", 0L, 2))))
 
     // Create input from formatted Kiji table.
-    val joinInput2: List[(EntityId, Seq[Cell[String]])] = List(
+    val joinInput2: List[(EntityId, Seq[FlowCell[String]])] = List(
       (EntityId("0row"), mapSlice("animals", ("0column", 0L, "0 dogs"))),
       (EntityId("1row"), mapSlice("animals", ("0column", 0L, "1 cat"))),
       (EntityId("2row"), mapSlice("animals", ("0column", 0L, "2 fish"))))
@@ -328,12 +328,12 @@ class EntityIdSuite extends KijiSuite {
     }
 
     // Create input from formatted Kiji table.
-    val joinInput1: List[(EntityId, Seq[Cell[Int]])] = List(
+    val joinInput1: List[(EntityId, Seq[FlowCell[Int]])] = List(
       (EntityId("0row"), mapSlice("searches", ("0column", 0L, 0))),
       (EntityId("2row"), mapSlice("searches", ("0column", 0L, 2))))
 
     // Create input from formatted Kiji table.
-    val joinInput2: List[(EntityId, Seq[Cell[String]])] = List(
+    val joinInput2: List[(EntityId, Seq[FlowCell[String]])] = List(
       (EntityId("0row"), mapSlice("animals", ("0column", 0L, "0 dogs"))),
       (EntityId("1row"), mapSlice("animals", ("0column", 0L, "1 cat"))),
       (EntityId("2row"), mapSlice("animals", ("0column", 0L, "2 fish"))))
@@ -391,7 +391,7 @@ object EntityIdSuite {
 
     KijiInput(args("input"), ("animals" -> 'animals))
 
-      .map('animals -> 'terms) { animals: Seq[Cell[CharSequence]] => animals.toString }
+      .map('animals -> 'terms) { animals: Seq[FlowCell[CharSequence]] => animals.toString }
       .joinWithSmaller('entityId -> 'entityId, sidePipe)
       .write(Tsv(args("output")))
   }
@@ -410,7 +410,7 @@ object EntityIdSuite {
       .project('entityId)
 
     KijiInput(args("input"), ("family:column1" -> 'slice))
-      .map('slice -> 'terms) { slice: Seq[Cell[CharSequence]] => slice.head.datum.toString }
+      .map('slice -> 'terms) { slice: Seq[FlowCell[CharSequence]] => slice.head.datum.toString }
       .joinWithSmaller('entityId -> 'entityId, sidePipe)
       .write(Tsv(args("output")))
   }
@@ -425,10 +425,10 @@ object EntityIdSuite {
     val pipe1 = KijiInput(args("input1"), ("family:column1" -> 'animals))
 
     KijiInput(args("input2"), ("family:column2" -> 'slice))
-      .map('animals -> 'animal) { slice: Seq[Cell[CharSequence]] => slice.head.datum.toString }
+      .map('animals -> 'animal) { slice: Seq[FlowCell[CharSequence]] => slice.head.datum.toString }
 
     KijiInput(args("input2"), ("family:column2" -> 'slice))
-      .map('slice -> 'terms) { slice:Seq[Cell[CharSequence]] => slice.head.datum.toString }
+      .map('slice -> 'terms) { slice:Seq[FlowCell[CharSequence]] => slice.head.datum.toString }
       .joinWithSmaller('entityId -> 'entityId, pipe1)
       .write(Tsv(args("output")))
   }
@@ -441,10 +441,10 @@ object EntityIdSuite {
    */
   class JoinFormattedEntityIdsJob(args: Args) extends KijiJob(args) {
     val pipe1 = KijiInput(args("input1"), ("searches" -> 'searches))
-      .map('searches -> 'term) { slice:Seq[Cell[Int]] => slice.head.datum }
+      .map('searches -> 'term) { slice:Seq[FlowCell[Int]] => slice.head.datum }
 
     KijiInput(args("input2"), ("animals" -> 'animals))
-      .map('animals -> 'animal) { slice: Seq[Cell[CharSequence]] => slice.head.datum.toString }
+      .map('animals -> 'animal) { slice: Seq[FlowCell[CharSequence]] => slice.head.datum.toString }
       .joinWithSmaller('entityId -> 'entityId, pipe1)
       .write(Tsv(args("output")))
   }

@@ -30,7 +30,7 @@ import org.kiji.express.flow.util.AvroUtil
 import org.kiji.schema.KijiCell
 
 /**
- * A `Cell` from a Kiji table containing some datum, addressed by a family, qualifier,
+ * A `FlowCell` from a Kiji table containing some datum, addressed by a family, qualifier,
  * and version timestamp.
  *
  * @param family of the Kiji table cell.
@@ -42,7 +42,7 @@ import org.kiji.schema.KijiCell
 @ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Sealed
-case class Cell[T] (
+case class FlowCell[T] (
     family: String,
     qualifier: String,
     version: Long = HConstants.LATEST_TIMESTAMP,
@@ -52,19 +52,19 @@ case class Cell[T] (
  * A factory for creating cells used in KijiExpress from cells used in the Kiji Java API.
  */
 @ApiAudience.Public
-@ApiStability.Stable
-object Cell {
+@ApiStability.Experimental
+object FlowCell {
   /**
-   * Creates a new `Cell` (for use in KijiExpress) from the contents of a `Cell` produced by the
-   * Kiji Java API.
+   * Creates an object that contains the coordinates (family, qualifier, and version/timestamp) of
+   * data in a Kiji table along with the data itself.
    *
-   * @param cell from a Kiji table produced by the Java API.
    * @tparam T is the type of the datum that this cell contains.
-   * @return a cell for use in KijiExpress, with the same family, qualifier, timestamp,
-   *     and datum as cell produced by the Java API.
+   * @param cell from a Kiji table produced by the Java API.
+   * @return a FlowCell for use in KijiExpress containing the same family, qualifier, timestamp, and
+   *     datum as the provided KijiCell.
    */
-  private[kiji] def apply[T](cell: KijiCell[T]): Cell[T] = {
-    new Cell[T](
+  private[kiji] def apply[T](cell: KijiCell[T]): FlowCell[T] = {
+    new FlowCell[T](
         cell.getFamily,
         cell.getQualifier,
         cell.getTimestamp.longValue,
@@ -73,45 +73,37 @@ object Cell {
 
   /**
    * Provides an implementation of the `scala.Ordering` trait that sorts
-   * [[org.kiji.express.flow.Cell]]s by value.
+   * [[org.kiji.express.flow.FlowCell]]s by value.
    *
-   * @tparam T is the type of the datum in the [[org.kiji.express.flow.Cell]].
+   * @tparam T is the type of the datum in the [[org.kiji.express.flow.FlowCell]].
    * @return an ordering that sorts cells by their value.
    */
-  @implicitNotFound("type of the datum in the cells is not Orderable.")
-  implicit def valueOrder[T](implicit order: Ordering[T]): Ordering[Cell[T]] = {
-    Ordering.by { cell: Cell[T] => cell.datum }
+  @implicitNotFound("The type of the datum in the cells is not Orderable. You may be trying to " +
+      "order a cell that contains a complex type (such as an avro record).")
+  implicit def valueOrder[T](implicit order: Ordering[T]): Ordering[FlowCell[T]] = {
+    Ordering.by { cell: FlowCell[T] => cell.datum }
   }
 
   /**
    * Provides an implementation of the `scala.Ordering` trait that sorts
-   * [[org.kiji.express.flow.Cell]]s by timestamp/version.
+   * [[org.kiji.express.flow.FlowCell]]s by timestamp/version.
    *
-   * @tparam T is the type of the datum in the [[org.kiji.express.flow.Cell]].
+   * @tparam T is the type of the datum in the [[org.kiji.express.flow.FlowCell]].
    * @return an ordering that sorts cells by timestamp.
    */
-  def versionOrder[T]: Ordering[Cell[T]] = {
-    Ordering.by { cell: Cell[T] => cell.version }
+  def versionOrder[T]: Ordering[FlowCell[T]] = {
+    Ordering.by { cell: FlowCell[T] => cell.version }
   }
 
   /**
    * Provides an implementation of the `scala.Ordering` trait that sorts
-   * [[org.kiji.express.flow.Cell]]s by timestamp/version.
+   * [[org.kiji.express.flow.FlowCell]]s first by the cell's family and then by it's qualifier.
    *
-   * @tparam T is the type of the datum in the [[org.kiji.express.flow.Cell]].
-   * @return an ordering that sorts cells by timestamp.
-   */
-  def timestampOrder[T]: Ordering[Cell[T]] = versionOrder[T]
-
-  /**
-   * Provides an implementation of the `scala.Ordering` trait that sorts
-   * [[org.kiji.express.flow.Cell]]s by qualifier.
-   *
-   * @tparam T is the type of the datum in the [[org.kiji.express.flow.Cell]].
+   * @tparam T is the type of the datum in the [[org.kiji.express.flow.FlowCell]].
    * @return an ordering that sorts cells by qualifier.
    */
-  def qualifierOrder[T]: Ordering[Cell[T]] = {
-    Ordering.by { cell: Cell[T] =>
+  def qualifierOrder[T]: Ordering[FlowCell[T]] = {
+    Ordering.by { cell: FlowCell[T] =>
       (cell.family, cell.qualifier)
     }
   }

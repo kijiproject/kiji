@@ -74,9 +74,9 @@ class KijiJobSuite extends KijiSuite {
   }
 
   test("A KijiJob can pack a generic Avro record.") {
-    def validatePacking(outputs: mutable.Buffer[(EntityId, Seq[Cell[GenericRecord]])]) {
+    def validatePacking(outputs: mutable.Buffer[(EntityId, Seq[FlowCell[GenericRecord]])]) {
       val inputMap = rawInputs.toMap
-      outputs.foreach { case (_: EntityId, slice: Seq[Cell[GenericRecord]]) =>
+      outputs.foreach { case (_: EntityId, slice: Seq[FlowCell[GenericRecord]]) =>
         val record = slice.head.datum
         assert(inputMap(record.get("l").asInstanceOf[Long]) === record.get("s"))
         assert("default-value" === record.get("o"))
@@ -96,9 +96,9 @@ class KijiJobSuite extends KijiSuite {
   }
 
   test("A KijiJob can pack a specific Avro record.") {
-    def validatePacking(outputs: mutable.Buffer[(EntityId, Seq[Cell[SimpleRecord]])]) {
+    def validatePacking(outputs: mutable.Buffer[(EntityId, Seq[FlowCell[SimpleRecord]])]) {
       val inputMap = rawInputs.toMap
-      outputs.foreach { case (_: EntityId, slice: Seq[Cell[SimpleRecord]]) =>
+      outputs.foreach { case (_: EntityId, slice: Seq[FlowCell[SimpleRecord]]) =>
         val record = slice.head.datum
         assert(inputMap(record.getL) === record.getS)
         assert("default-value" === record.getO)
@@ -121,10 +121,10 @@ class KijiJobSuite extends KijiSuite {
   }
 
   test("A KijiJob can unpack a generic record.") {
-    val slices: List[Seq[Cell[GenericRecord]]] = genericInputs.map { record: GenericRecord =>
-      List(Cell("family", "simple", datum = record))
+    val slices: List[Seq[FlowCell[GenericRecord]]] = genericInputs.map { record: GenericRecord =>
+      List(FlowCell("family", "simple", datum = record))
     }
-    val input: List[(EntityId, Seq[Cell[GenericRecord]])] = eids.zip(slices)
+    val input: List[(EntityId, Seq[FlowCell[GenericRecord]])] = eids.zip(slices)
 
     val jobTest = JobTest(new UnpackGenericRecordJob(_))
         .arg("input", uri)
@@ -141,11 +141,11 @@ class KijiJobSuite extends KijiSuite {
   }
 
   test("A KijiJob can unpack a specific record.") {
-    val slices: List[Seq[Cell[SpecificRecord]]] = specificInputs
+    val slices: List[Seq[FlowCell[SpecificRecord]]] = specificInputs
         .map { record: SpecificRecord =>
-          List(Cell("family", "simple", datum = record))
+          List(FlowCell("family", "simple", datum = record))
         }
-    val input: List[(EntityId, Seq[Cell[SpecificRecord]])] = eids.zip(slices)
+    val input: List[(EntityId, Seq[FlowCell[SpecificRecord]])] = eids.zip(slices)
 
     val jobTest = JobTest(new UnpackSpecificRecordJob(_))
         .arg("input", uri)
@@ -260,7 +260,7 @@ class PackSpecificRecordJob(args: Args) extends KijiJob(args) {
 class UnpackGenericRecordJob(args: Args) extends KijiJob(args) {
   KijiInput(args("input"),
       Map(QualifiedColumnInputSpec("family", "simple", SimpleRecord.getClassSchema) -> 'slice))
-      .mapTo('slice -> 'record) { slice: Seq[Cell[GenericRecord]] => slice.head.datum }
+      .mapTo('slice -> 'record) { slice: Seq[FlowCell[GenericRecord]] => slice.head.datum }
       .unpackTo[GenericRecord]('record -> ('l, 's, 'o))
       .write(Tsv(args("output")))
 }
@@ -268,7 +268,7 @@ class UnpackGenericRecordJob(args: Args) extends KijiJob(args) {
 class UnpackSpecificRecordJob(args: Args) extends KijiJob(args) {
   KijiInput(args("input"),
       Map(QualifiedColumnInputSpec("family", "simple", classOf[SimpleRecord]) -> 'slice))
-      .map('slice -> 'record) { slice: Seq[Cell[SimpleRecord]] => slice.head.datum }
+      .map('slice -> 'record) { slice: Seq[FlowCell[SimpleRecord]] => slice.head.datum }
       .unpackTo[SimpleRecord]('record -> ('l, 's, 'o))
       .write(Tsv(args("output")))
 }

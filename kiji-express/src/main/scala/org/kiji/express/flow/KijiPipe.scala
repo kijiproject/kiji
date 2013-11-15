@@ -49,7 +49,7 @@ import org.kiji.express.repl.Implicits.pipeToRichPipe
  * @param pipe enriched with extra functionality.
  */
 @ApiAudience.Public
-@ApiStability.Stable
+@ApiStability.Experimental
 @Inheritance.Sealed
 class KijiPipe(private[express] val pipe: Pipe) extends TupleConversions {
   /**

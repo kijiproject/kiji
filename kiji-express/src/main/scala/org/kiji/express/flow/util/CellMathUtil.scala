@@ -24,141 +24,145 @@ import scala.annotation.implicitNotFound
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
-import org.kiji.express.flow.Cell
+import org.kiji.express.flow.FlowCell
 
 /**
- * Provides aggregator functions for sequences of [[org.kiji.express.flow.Cell]]s.
+ * Provides aggregator functions for sequences of [[org.kiji.express.flow.FlowCell]]s.
  */
 object CellMathUtil {
   private val logger: Logger = LoggerFactory.getLogger(CellMathUtil.getClass)
 
   /**
-   * Computes the sum of the values stored within the [[org.kiji.express.flow.Cell]]s in the
+   * Computes the sum of the values stored within the [[org.kiji.express.flow.FlowCell]]s in the
    * provided `Seq`.
    *
    * <b>Note:</b> This method will not compile unless the cells contained within this collection
    * contain values of a type that has an implicit implementation of the `scala.Numeric` trait.
    *
-   * @tparam T is the type of the [[org.kiji.express.flow.Cell]]s contained in the slice.
-   * @param slice is the collection of [[org.kiji.express.flow.Cell]]s to sum.
-   * @return the sum of the values within the [[org.kiji.express.flow.Cell]]s in the provided slice.
+   * @tparam T is the type of the [[org.kiji.express.flow.FlowCell]]s contained in the slice.
+   * @param slice is the collection of [[org.kiji.express.flow.FlowCell]]s to sum.
+   * @return the sum of the values within the [[org.kiji.express.flow.FlowCell]]s in the provided
+   *     slice.
    */
   @implicitNotFound("The type of data contained within the provided cells does not support" +
       " numeric operations through the scala.Numeric trait.")
-  def sum[T](slice: Seq[Cell[T]])(implicit num: Numeric[T]): T = {
-    slice.foldLeft(num.zero) { (sum: T, cell: Cell[T]) =>
+  def sum[T](slice: Seq[FlowCell[T]])(implicit num: Numeric[T]): T = {
+    slice.foldLeft(num.zero) { (sum: T, cell: FlowCell[T]) =>
       num.plus(sum, cell.datum)
     }
   }
 
   /**
-   * Computes the mean of the values stored within the [[org.kiji.express.flow.Cell]]s in the
+   * Computes the mean of the values stored within the [[org.kiji.express.flow.FlowCell]]s in the
    * provided slice.
    *
    * <b>Note:</b> This method will not compile unless the cells contained within this collection
    * contain values of a type that has an implicit implementation of the `scala.Numeric` trait.
    *
-   * @tparam T is the type of the [[org.kiji.express.flow.Cell]]s contained in the slice.
-   * @param slice is the collection of [[org.kiji.express.flow.Cell]]s to compute the mean of.
-   * @return the mean of the values within the provided [[org.kiji.express.flow.Cell]]s.
+   * @tparam T is the type of the [[org.kiji.express.flow.FlowCell]]s contained in the slice.
+   * @param slice is the collection of [[org.kiji.express.flow.FlowCell]]s to compute the mean of.
+   * @return the mean of the values within the provided [[org.kiji.express.flow.FlowCell]]s.
    */
   @implicitNotFound("The type of data contained within the provided cells does not support" +
       " numeric operations through the scala.Numeric trait.")
-  def mean[T](slice: Seq[Cell[T]])(implicit num: Numeric[T]): Double = {
+  def mean[T](slice: Seq[FlowCell[T]])(implicit num: Numeric[T]): Double = {
     val n = slice.size
-    slice.foldLeft(0.0) { (mean: Double, cell: Cell[T]) =>
+    slice.foldLeft(0.0) { (mean: Double, cell: FlowCell[T]) =>
       mean + (num.toDouble(cell.datum) / n)
     }
   }
 
   /**
-   * Finds the minimum of the values stored within the [[org.kiji.express.flow.Cell]]s in the
+   * Finds the minimum of the values stored within the [[org.kiji.express.flow.FlowCell]]s in the
    * provided slice.
    *
    * <b>Note:</b> This method will not compile unless the cells contained within this collection
    * contain values of a type that has an implicit implementation of the `scala.Ordering` trait.
    *
-   * @tparam T is the type of the [[org.kiji.express.flow.Cell]]s contained in the slice.
-   * @param slice is the collection of [[org.kiji.express.flow.Cell]]s to find the minimum of.
-   * @return the minimum value contained in the `Seq` of [[org.kiji.express.flow.Cell]]s.
+   * @tparam T is the type of the [[org.kiji.express.flow.FlowCell]]s contained in the slice.
+   * @param slice is the collection of [[org.kiji.express.flow.FlowCell]]s to find the minimum of.
+   * @return the minimum value contained in the `Seq` of [[org.kiji.express.flow.FlowCell]]s.
    */
   @implicitNotFound("The type of data contained within the provided cells does not support" +
       " ordering operations through the scala.Ordering trait.")
-  def min[T](slice: Seq[Cell[T]])(implicit cmp: Ordering[T]): T = {
-    slice.min(Ordering.by { cell: Cell[T] => cell.datum }).datum
+  def min[T](slice: Seq[FlowCell[T]])(implicit cmp: Ordering[T]): T = {
+    slice.min(Ordering.by { cell: FlowCell[T] => cell.datum }).datum
   }
 
   /**
-   * Finds the maximum of the values stored within the [[org.kiji.express.flow.Cell]]s in the
+   * Finds the maximum of the values stored within the [[org.kiji.express.flow.FlowCell]]s in the
    * provided slice.
    *
    * <b>Note:</b> This method will not compile unless the cells contained within this collection
    * contain values of a type that has an implicit implementation of the `scala.Ordering` trait.
    *
-   * @tparam T is the type of the [[org.kiji.express.flow.Cell]]s contained in the slice.
-   * @param slice is the collection of [[org.kiji.express.flow.Cell]]s to find the maximum of.
-   * @return the maximum of the value within the provided [[org.kiji.express.flow.Cell]]s.
+   * @tparam T is the type of the [[org.kiji.express.flow.FlowCell]]s contained in the slice.
+   * @param slice is the collection of [[org.kiji.express.flow.FlowCell]]s to find the maximum of.
+   * @return the maximum of the value within the provided [[org.kiji.express.flow.FlowCell]]s.
    */
   @implicitNotFound("The type of data contained within the provided cells does not support" +
       " ordering operations through the scala.Ordering trait.")
-  def max[T](slice: Seq[Cell[T]])(implicit cmp: Ordering[T]): T = {
-    slice.max(Ordering.by { cell: Cell[T] => cell.datum }).datum
+  def max[T](slice: Seq[FlowCell[T]])(implicit cmp: Ordering[T]): T = {
+    slice.max(Ordering.by { cell: FlowCell[T] => cell.datum }).datum
   }
 
   /**
-   * Computes the standard deviation of the values stored within the [[org.kiji.express.flow.Cell]]s
-   * in the provided slice.
+   * Computes the standard deviation of the values stored within the
+   * [[org.kiji.express.flow.FlowCell]]s in the provided slice.
    *
    * <b>Note:</b> This method will not compile unless the cells contained within this collection
    * contain values of a type that has an implicit implementation of the `scala.Numeric` trait.
    *
-   * @tparam T is the type of the [[org.kiji.express.flow.Cell]]s contained in the slice.
-   * @param slice the `Seq` of [[org.kiji.express.flow.Cell]]s to compute the standard deviation of.
-   * @return the standard deviation of the values within the [[org.kiji.express.flow.Cell]]s in the
-   *     provided slice.
+   * @tparam T is the type of the [[org.kiji.express.flow.FlowCell]]s contained in the slice.
+   * @param slice the `Seq` of [[org.kiji.express.flow.FlowCell]]s to compute the standard
+   *     deviation of.
+   * @return the standard deviation of the values within the [[org.kiji.express.flow.FlowCell]]s in
+   *     the provided slice.
    */
   @implicitNotFound("The type of data contained within the provided cells does not support" +
       " numeric operations through the scala.Numeric trait.")
-  def stddev[T](slice:Seq[Cell[T]])(implicit num: Numeric[T]): Double = {
+  def stddev[T](slice:Seq[FlowCell[T]])(implicit num: Numeric[T]): Double = {
     scala.math.sqrt(variance(slice))
   }
 
   /**
-   * Computes the squared sum of the values stored within the [[org.kiji.express.flow.Cell]]s in the
-   * provided slice.
+   * Computes the squared sum of the values stored within the [[org.kiji.express.flow.FlowCell]]s in
+   * the provided slice.
    *
    * <b>Note:</b> This method will not compile unless the cells contained within this collection
    * contain values of a type that has an implicit implementation of the `scala.Numeric` trait.
    *
-   * @tparam T the type of the [[org.kiji.express.flow.Cell]]s contained in the slice.
-   * @param slice the collection of [[org.kiji.express.flow.Cell]]s to compute the squared sum of.
-   * @return the squared sum of the values in the provided [[org.kiji.express.flow.Cell]]s.
+   * @tparam T the type of the [[org.kiji.express.flow.FlowCell]]s contained in the slice.
+   * @param slice the collection of [[org.kiji.express.flow.FlowCell]]s to compute the squared
+   *     sum of.
+   * @return the squared sum of the values in the provided [[org.kiji.express.flow.FlowCell]]s.
    */
   @implicitNotFound("The type of data contained within the provided cells does not support" +
       " numeric operations through the scala.Numeric trait.")
-  def sumSquares[T](slice: Seq[Cell[T]])(implicit num: Numeric[T]): T = {
-    slice.foldLeft(num.zero) { (sumSquares: T, cell: Cell[T]) =>
+  def sumSquares[T](slice: Seq[FlowCell[T]])(implicit num: Numeric[T]): T = {
+    slice.foldLeft(num.zero) { (sumSquares: T, cell: FlowCell[T]) =>
       num.plus(sumSquares, num.times(cell.datum, cell.datum))
     }
   }
 
   /**
-   * Computes the variance of the values stored within the [[org.kiji.express.flow.Cell]]s in the
-   * provided slice.
+   * Computes the variance of the values stored within the [[org.kiji.express.flow.FlowCell]]s in
+   * the provided slice.
    *
    * <b>Note:</b> This method will not compile unless the cells contained within this collection
    * contain values of a type that has an implicit implementation of the `scala.Numeric` trait.
    *
-   * @tparam T is the type of the [[org.kiji.express.flow.Cell]]s contained in the slice.
-   * @param slice is the collection of [[org.kiji.express.flow.Cell]]s to compute the variance of.
-   * @return the variance of the values within the [[org.kiji.express.flow.Cell]]s in the provided
-   * slice.
+   * @tparam T is the type of the [[org.kiji.express.flow.FlowCell]]s contained in the slice.
+   * @param slice is the collection of [[org.kiji.express.flow.FlowCell]]s to compute the
+   *     variance of.
+   * @return the variance of the values within the [[org.kiji.express.flow.FlowCell]]s in the
+   *     provided slice.
    */
   @implicitNotFound("The type of data contained within the provided cells does not support" +
       " numeric operations through the scala.Numeric trait.")
-  def variance[T](slice: Seq[Cell[T]])(implicit num: Numeric[T]): Double = {
+  def variance[T](slice: Seq[FlowCell[T]])(implicit num: Numeric[T]): Double = {
     val (n, _, m2) = slice
-        .foldLeft((0L, 0.0, 0.0)) { (acc: (Long, Double, Double), cell: Cell[T]) =>
+        .foldLeft((0L, 0.0, 0.0)) { (acc: (Long, Double, Double), cell: FlowCell[T]) =>
           val (n, mean, m2) = acc
           logger.debug("cell: %s".format(cell.datum))
           logger.debug("acc: %s".format(acc))

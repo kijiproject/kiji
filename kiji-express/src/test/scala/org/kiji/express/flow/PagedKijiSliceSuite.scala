@@ -47,8 +47,8 @@ class WordConcatJob(args: Args) extends KijiJob(args) {
       args("input"),
       Map(ColumnInputSpec("family:column1", all, paging = PagingSpec.Cells(3)) -> 'word))
     // Sanitize the word.
-    .map('word -> 'cleanword) { words: Seq[Cell[CharSequence]] =>
-      words.foldLeft("")((a: String, b: Cell[CharSequence]) => a + b.datum.toString)
+    .map('word -> 'cleanword) { words: Seq[FlowCell[CharSequence]] =>
+      words.foldLeft("")((a: String, b: FlowCell[CharSequence]) => a + b.datum.toString)
     }
     // Count the occurrences of each word.
     .groupBy('cleanword) { occurences => occurences.size }
@@ -71,9 +71,9 @@ class WordCountFlatMapJob(args: Args) extends KijiJob(args) {
       Map(ColumnInputSpec("family:column1", all, paging = PagingSpec.Cells(3)) -> 'word))
 
       // Sanitize the word.
-      .flatMap('word -> 'word) { words: Seq[Cell[CharSequence]] =>
+      .flatMap('word -> 'word) { words: Seq[FlowCell[CharSequence]] =>
           words
-      }.map('word -> 'cleanword) {word: Cell[CharSequence] => word.datum.toString}
+      }.map('word -> 'cleanword) {word: FlowCell[CharSequence] => word.datum.toString}
       // Count the occurrences of each word.
       .groupBy('cleanword) { occurences => occurences.size }
       // Write the result to a file.
@@ -92,7 +92,7 @@ class PagedKijiSliceSuite extends KijiSuite {
     }
 
     /** Input tuples to use for word count tests. */
-    def wordCountInput(uri: String): List[(EntityId, Seq[Cell[String]])] = {
+    def wordCountInput(uri: String): List[(EntityId, Seq[FlowCell[String]])] = {
       List((EntityId("row01"), slice("family:column1",(1L, "hello"), (2L, "world"),(3L, "hello"),
           (4L, "hello"))))
     }
@@ -129,7 +129,7 @@ class PagedKijiSliceSuite extends KijiSuite {
     }
 
     /** Input tuples to use for word count tests. */
-    def wordCountInput(uri: String): List[(EntityId, Seq[Cell[String]])] = {
+    def wordCountInput(uri: String): List[(EntityId, Seq[FlowCell[String]])] = {
       List((EntityId("row01"), slice("family:column1",(1L, "hello"), (2L, "world"),(3L, "hello"),
         (4L, "hello"))))
     }

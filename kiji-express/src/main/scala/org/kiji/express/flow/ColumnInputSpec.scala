@@ -37,13 +37,13 @@ import org.kiji.schema.KijiInvalidNameException
  *
  * Use the [[org.kiji.express.flow.ColumnFamilyInputSpec]] to retrieve an entire column family
  * into a field of a flow.  Each row in the KijiTable will be a new tuple, with each field in the
- * tuple containing a stream of [[org.kiji.express.flow.Cell]]s.
+ * tuple containing a stream of [[org.kiji.express.flow.FlowCell]]s.
  *
  * Note: Subclasses of ColumnInputSpec are case classes that override ColumnInputSpec's
  * abstract methods (e.g., `schema`) with `val`s.
  */
 @ApiAudience.Public
-@ApiStability.Stable
+@ApiStability.Experimental
 @Inheritance.Sealed
 sealed trait ColumnInputSpec {
   /**
@@ -97,7 +97,7 @@ sealed trait ColumnInputSpec {
  * Provides factory functions for creating [[org.kiji.express.flow.ColumnInputSpec]] instances.
  */
 @ApiAudience.Public
-@ApiStability.Stable
+@ApiStability.Experimental
 @Inheritance.Sealed
 object ColumnInputSpec {
   /**
@@ -190,7 +190,7 @@ object ColumnInputSpec {
  *     [[org.kiji.express.flow.SchemaSpec.Writer]].
  */
 @ApiAudience.Public
-@ApiStability.Stable
+@ApiStability.Experimental
 @Inheritance.Sealed
 final case class QualifiedColumnInputSpec(
     family: String,
@@ -208,7 +208,7 @@ final case class QualifiedColumnInputSpec(
  * instances.
  */
 @ApiAudience.Public
-@ApiStability.Stable
+@ApiStability.Experimental
 @Inheritance.Sealed
 object QualifiedColumnInputSpec {
   /**
@@ -257,7 +257,7 @@ object QualifiedColumnInputSpec {
  *     [[org.kiji.express.flow.SchemaSpec.Writer]].
  */
 @ApiAudience.Public
-@ApiStability.Stable
+@ApiStability.Experimental
 @Inheritance.Sealed
 final case class ColumnFamilyInputSpec(
     family: String,
@@ -277,7 +277,7 @@ final case class ColumnFamilyInputSpec(
  * instances.
  */
 @ApiAudience.Public
-@ApiStability.Stable
+@ApiStability.Experimental
 @Inheritance.Sealed
 object ColumnFamilyInputSpec {
   /**

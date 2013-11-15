@@ -60,7 +60,7 @@ class KijiSourceSuite
   val avroLayout: KijiTableLayout = layout("layout/avro-types.json")
 
   /** Input tuples to use for word count tests. */
-  def wordCountInput(uri: String): List[(EntityId, Seq[Cell[String]])] = {
+  def wordCountInput(uri: String): List[(EntityId, Seq[FlowCell[String]])] = {
     List(
         ( EntityId("row01"), slice("family:column1", (1L, "hello")) ),
         ( EntityId("row02"), slice("family:column1", (2L, "hello")) ),
@@ -128,7 +128,7 @@ class KijiSourceSuite
    * @param outputBuffer containing data that the Kiji table has in it after the job has been run.
    */
 
-  def validateMultipleTimestamps(outputBuffer: Buffer[(EntityId, Seq[Cell[CharSequence]])]) {
+  def validateMultipleTimestamps(outputBuffer: Buffer[(EntityId, Seq[FlowCell[CharSequence]])]) {
     assert(outputBuffer.size === 2)
 
     // There should be two Cells written to each column.
@@ -186,7 +186,7 @@ class KijiSourceSuite
    * @param outputBuffer containing data that the Kiji table has in it after the job has been run.
    */
 
-  def validateImport(outputBuffer: Buffer[(EntityId, Seq[Cell[CharSequence]])]) {
+  def validateImport(outputBuffer: Buffer[(EntityId, Seq[FlowCell[CharSequence]])]) {
     assert(10 === outputBuffer.size)
 
     // Perform a non-distributed word count.
@@ -195,7 +195,7 @@ class KijiSourceSuite
         .flatMap { row =>
           val (_, slice) = row
           slice
-              .map { cell: Cell[CharSequence] =>
+              .map { cell: FlowCell[CharSequence] =>
               cell.datum
               }
         }
@@ -256,7 +256,7 @@ class KijiSourceSuite
    *
    * @param outputBuffer containing data that the Kiji table has in it after the job has been run.
    */
-  def validateImportWithTime(outputBuffer: Buffer[(EntityId, Seq[Cell[CharSequence]])]) {
+  def validateImportWithTime(outputBuffer: Buffer[(EntityId, Seq[FlowCell[CharSequence]])]) {
     // There should be one cell per row in the output.
     val cellsPerRow = outputBuffer.unzip._2.map { m => (m.head.version, m.head.datum) }
     // Sort by timestamp.
@@ -304,7 +304,7 @@ class KijiSourceSuite
   }
 
   // Input tuples to use for version count tests.
-  def versionCountInput(uri: String): List[(EntityId, Seq[Cell[String]])] = {
+  def versionCountInput(uri: String): List[(EntityId, Seq[FlowCell[String]])] = {
     List(
         ( EntityId("row01"), slice("family:column1", (10L, "two"), (20L, "two")) ),
         ( EntityId("row02"), slice("family:column1",
@@ -425,7 +425,7 @@ class KijiSourceSuite
         (EntityId("row03"), inputRecord3)
     )
 
-    def validateSpecificWrite(outputBuffer: Buffer[(EntityId, Seq[Cell[TestRecord]])]) {
+    def validateSpecificWrite(outputBuffer: Buffer[(EntityId, Seq[FlowCell[TestRecord]])]) {
       val outputMap = outputBuffer.toMap
       assert(outputMap(EntityId("row01")).head.datum.getClass === classOf[TestRecord])
       assert(outputMap(EntityId("row02")).head.datum.getClass === classOf[TestRecord])
@@ -478,7 +478,7 @@ class KijiSourceSuite
       table.getURI().toString()
     }
     // Input tuples to use for avro/scala conversion tests.
-    val avroCheckerInput: List[(EntityId, Seq[Cell[String]])] = List(
+    val avroCheckerInput: List[(EntityId, Seq[FlowCell[String]])] = List(
         ( EntityId("row01"), slice("family:column1", (10L,"two"), (20L, "two")) ),
         ( EntityId("row02"), slice("family:column1",
             (10L, "three"),
@@ -509,7 +509,7 @@ class KijiSourceSuite
     specificRecord.setHashType(HashType.MD5)
     specificRecord.setHashSize(13)
     specificRecord.setSuppressKeyMaterialization(true)
-    def genericReadInput(uri: String): List[(EntityId, Seq[Cell[HashSpec]])] = {
+    def genericReadInput(uri: String): List[(EntityId, Seq[FlowCell[HashSpec]])] = {
       List((EntityId("row01"), slice("family:column3", (10L, specificRecord))))
     }
 
@@ -543,7 +543,7 @@ class KijiSourceSuite
     specificRecord.setHashType(HashType.MD5)
     specificRecord.setHashSize(13)
     specificRecord.setSuppressKeyMaterialization(true)
-    def genericReadInput(uri: String): List[(EntityId, Seq[Cell[HashSpec]])] = {
+    def genericReadInput(uri: String): List[(EntityId, Seq[FlowCell[HashSpec]])] = {
       List((EntityId("row01"), slice("family:column3", (10L, specificRecord))))
     }
 
@@ -590,9 +590,9 @@ class KijiSourceSuite
         ( "1", "one" ))
 
     // Validates the output buffer contains the same as the input buffer.
-    def validateGenericWrite(outputBuffer: Buffer[(EntityId, Seq[Cell[GenericRecord]])]) {
+    def validateGenericWrite(outputBuffer: Buffer[(EntityId, Seq[FlowCell[GenericRecord]])]) {
       val inputMap: Map[Long, String] = genericWriteInput.map { t => t._1.toLong -> t._2 }.toMap
-      outputBuffer.foreach { t: (EntityId, Seq[Cell[GenericRecord]]) =>
+      outputBuffer.foreach { t: (EntityId, Seq[FlowCell[GenericRecord]]) =>
         val entityId = t._1
         val record = t._2.head.datum
 
@@ -631,7 +631,7 @@ class KijiSourceSuite
 
     // Validate output.
     def validateMapWrite(
-        outputBuffer: Buffer[(EntityId,Seq[Cell[GenericRecord]])]
+        outputBuffer: Buffer[(EntityId,Seq[FlowCell[GenericRecord]])]
     ): Unit = {
       assert (1 === outputBuffer.size)
       val outputSlice = outputBuffer(0)._2
@@ -662,7 +662,7 @@ class KijiSourceSuite
     }
 
     // Create input using mapSlice.
-    val mapTypeInput: List[(EntityId, Seq[Cell[String]])] = List(
+    val mapTypeInput: List[(EntityId, Seq[FlowCell[String]])] = List(
         ( EntityId("0row"), mapSlice("animals", ("0column", 0L, "0 dogs")) ),
         ( EntityId("1row"), mapSlice("animals", ("0column", 0L, "1 cat")) ),
         ( EntityId("2row"), mapSlice("animals", ("0column", 0L, "2 fish")) ))
@@ -698,7 +698,7 @@ class KijiSourceSuite
     }
 
     // Create input from Kiji table.
-    val joinKijiInput: List[(EntityId, Seq[Cell[String]])] = List(
+    val joinKijiInput: List[(EntityId, Seq[FlowCell[String]])] = List(
         ( EntityId("0row"), mapSlice("animals", ("0column", 0L, "0 dogs")) ),
         ( EntityId("1row"), mapSlice("animals", ("0column", 0L, "1 cat")) ),
         ( EntityId("2row"), mapSlice("animals", ("0column", 0L, "2 fish")) ))
@@ -742,7 +742,7 @@ object KijiSourceSuite {
     // Setup input to bind values from the "family:column1" column to the symbol 'word.
     KijiInput(args("input"), "family:column1" -> 'word)
         // Sanitize the word.
-        .map('word -> 'cleanword) { words:Seq[Cell[CharSequence]] =>
+        .map('word -> 'cleanword) { words:Seq[FlowCell[CharSequence]] =>
           words.head.datum
               .toString()
               .toLowerCase()
@@ -765,7 +765,7 @@ object KijiSourceSuite {
   class TwoColumnJob(args: Args) extends KijiJob(args) {
     // Setup input to bind values from the "family:column1" column to the symbol 'word.
     KijiInput(args("input"), "family:column1" -> 'word1, "family:column2" -> 'word2)
-        .map('word1 -> 'pluralword) { words: Seq[Cell[CharSequence]] =>
+        .map('word1 -> 'pluralword) { words: Seq[FlowCell[CharSequence]] =>
           words.head.datum.toString() + "s"
         }
         .write(Tsv(args("output")))
@@ -784,7 +784,7 @@ object KijiSourceSuite {
   class VersionsJob(source: KijiSource)(args: Args) extends KijiJob(args) {
     source
         // Count the size of words (number of versions).
-        .map('words -> 'versioncount) { words: Seq[Cell[String]]=>
+        .map('words -> 'versioncount) { words: Seq[FlowCell[String]]=>
           words.size
         }
         .groupBy('versioncount) (_.size)
@@ -852,8 +852,8 @@ object KijiSourceSuite {
   class AvroToScalaChecker(source: KijiSource)(args: Args) extends KijiJob(args) {
     source
 
-        .flatMap('word -> 'matches) { word: Seq[Cell[CharSequence]] =>
-          word.map { cell: Cell[CharSequence] =>
+        .flatMap('word -> 'matches) { word: Seq[FlowCell[CharSequence]] =>
+          word.map { cell: FlowCell[CharSequence] =>
             val value = cell.datum
             if (value.isInstanceOf[CharSequence]) {
               "true"
@@ -876,9 +876,13 @@ object KijiSourceSuite {
    */
   class GenericAvroReadJob(args: Args) extends KijiJob(args) {
     KijiInput(args("input"), "family:column3" -> 'records)
-        .map('records -> 'hashSizeField) { slice: Seq[Cell[GenericRecord]] =>
+        .map('records -> 'hashSizeField) { slice: Seq[FlowCell[GenericRecord]] =>
           slice.head match {
-            case Cell(_, _, _, record: GenericRecord) => record.get("hash_size").asInstanceOf[Int]
+            case FlowCell(_, _, _, record: GenericRecord) => {
+              record
+                  .get("hash_size")
+                  .asInstanceOf[Int]
+            }
           }
         }
         .groupBy('hashSizeField)(_.size)
@@ -903,8 +907,8 @@ object KijiSourceSuite {
             "family:column3", schemaSpec = Specific(classOf[HashSpec]))),
         outputColumns = Map('records -> QualifiedColumnOutputSpec("family:column3")))
     ksource
-        .map('records -> 'hashSizeField) { slice: Seq[Cell[HashSpec]] =>
-          val Cell(_, _, _, record) = slice.head
+        .map('records -> 'hashSizeField) { slice: Seq[FlowCell[HashSpec]] =>
+          val FlowCell(_, _, _, record) = slice.head
           record.getHashSize
         }
         .groupBy('hashSizeField)(_.size)
@@ -964,7 +968,7 @@ object KijiSourceSuite {
    */
   class MapSliceJob(args: Args) extends KijiJob(args) {
     KijiInput(args("input"), "animals" -> 'terms)
-        .map('terms -> 'values) { terms: Seq[Cell[CharSequence]] => terms.head.datum }
+        .map('terms -> 'values) { terms: Seq[FlowCell[CharSequence]] => terms.head.datum }
         .project('values)
         .write(Tsv(args("output")))
   }
@@ -981,7 +985,7 @@ object KijiSourceSuite {
         .map('line -> 'entityId) { line: String => EntityId(line) }
 
     KijiInput(args("input"), "animals" -> 'animals)
-        .map('animals -> 'terms) { animals: Seq[Cell[CharSequence]] =>
+        .map('animals -> 'terms) { animals: Seq[FlowCell[CharSequence]] =>
           animals.head.datum.toString.split(" ")(0) + "row" }
         .discard('entityId)
         .joinWithSmaller('terms -> 'line, sidePipe)

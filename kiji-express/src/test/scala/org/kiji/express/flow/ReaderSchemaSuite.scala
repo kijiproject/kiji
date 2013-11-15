@@ -238,7 +238,7 @@ class ReadWriteJob[T](
    * @param slice containing the value to unwrap.
    * @return unwrapped value of type T.
    */
-  private def unwrap(slice: Seq[Cell[T]]): (T, Long) = {
+  private def unwrap(slice: Seq[FlowCell[T]]): (T, Long) = {
     require(slice.size == 1)
     val cell = slice.head
     (cell.datum, cell.version)

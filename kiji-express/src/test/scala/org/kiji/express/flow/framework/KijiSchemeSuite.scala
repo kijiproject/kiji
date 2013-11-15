@@ -30,7 +30,7 @@ import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow.All
-import org.kiji.express.flow.Cell
+import org.kiji.express.flow.FlowCell
 import org.kiji.express.flow.ColumnInputSpec
 import org.kiji.express.flow.EntityId
 import org.kiji.express.flow.QualifiedColumnOutputSpec
@@ -92,7 +92,7 @@ class KijiSchemeSuite extends KijiSuite {
         uri,
         configuration)
 
-    val readRecord = readValue.getObject(1).asInstanceOf[Seq[Cell[_]]].head.datum
+    val readRecord = readValue.getObject(1).asInstanceOf[Seq[FlowCell[_]]].head.datum
     assert(record === readRecord)
 
     reader.close()

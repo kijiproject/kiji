@@ -56,7 +56,7 @@ package org.kiji
  * you could write the following.
  * {{{
  *   KijiInput("kiji://.env/default/postings")("info:text" -> 'text)
- *       .flatMap('text -> 'word) { word: Seq[Cell[String]] =>
+ *       .flatMap('text -> 'word) { word: Seq[FlowCell[String]] =>
  *         word.head.datum.split("""\s+""")
  *       }
  * }}}

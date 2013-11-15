@@ -28,7 +28,7 @@ import org.kiji.schema.KConstants
  * A trait implemented by classes that specify time ranges when reading data from Kiji tables.
  */
 @ApiAudience.Public
-@ApiStability.Stable
+@ApiStability.Experimental
 @Inheritance.Sealed
 sealed trait TimeRange extends Serializable {
   /** Earliest timestamp of the TimeRange, inclusive. */
@@ -42,7 +42,7 @@ sealed trait TimeRange extends Serializable {
  * Specifies that all timestamps should be requested.
  */
 @ApiAudience.Public
-@ApiStability.Stable
+@ApiStability.Experimental
 @Inheritance.Sealed
 final case object All extends TimeRange {
   override val begin: Long = KConstants.BEGINNING_OF_TIME
@@ -55,7 +55,7 @@ final case object All extends TimeRange {
  * @param timestamp to request.
  */
 @ApiAudience.Public
-@ApiStability.Stable
+@ApiStability.Experimental
 @Inheritance.Sealed
 final case class At(timestamp: Long) extends TimeRange {
   override val begin: Long = timestamp
@@ -68,7 +68,7 @@ final case class At(timestamp: Long) extends TimeRange {
  * @param begin is the earliest timestamp that should be requested.
  */
 @ApiAudience.Public
-@ApiStability.Stable
+@ApiStability.Experimental
 @Inheritance.Sealed
 final case class After(override val begin: Long) extends TimeRange {
   override val end: Long = KConstants.END_OF_TIME
@@ -80,7 +80,7 @@ final case class After(override val begin: Long) extends TimeRange {
  * @param end is the latest timestamp that should be requested.
  */
 @ApiAudience.Public
-@ApiStability.Stable
+@ApiStability.Experimental
 @Inheritance.Sealed
 final case class Before(override val end: Long) extends TimeRange {
   override val begin: Long = KConstants.BEGINNING_OF_TIME
@@ -94,7 +94,7 @@ final case class Before(override val end: Long) extends TimeRange {
  * @param end is the latest timestamp that should be requested.
  */
 @ApiAudience.Public
-@ApiStability.Stable
+@ApiStability.Experimental
 @Inheritance.Sealed
 final case class Between(
     override val begin: Long,

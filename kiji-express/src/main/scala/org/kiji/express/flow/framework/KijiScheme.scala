@@ -43,12 +43,12 @@ import org.slf4j.LoggerFactory
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.express.flow.Cell
 import org.kiji.express.flow.ColumnFamilyInputSpec
 import org.kiji.express.flow.ColumnFamilyOutputSpec
 import org.kiji.express.flow.ColumnInputSpec
 import org.kiji.express.flow.ColumnOutputSpec
 import org.kiji.express.flow.EntityId
+import org.kiji.express.flow.FlowCell
 import org.kiji.express.flow.PagingSpec
 import org.kiji.express.flow.QualifiedColumnInputSpec
 import org.kiji.express.flow.QualifiedColumnOutputSpec
@@ -376,11 +376,11 @@ object KijiScheme {
       if (row.containsColumn(cf.family)) {
         cf.paging match {
           case PagingSpec.Off => {
-            val stream: Seq[Cell[_]] = row
+            val stream: Seq[FlowCell[_]] = row
                 .iterator(cf.family)
                 .asScala
                 .toSeq
-                .map({ kijiCell: KijiCell[_] => Cell(kijiCell) })
+                .map({ kijiCell: KijiCell[_] => FlowCell(kijiCell) })
             result.add(stream)
           }
           case PagingSpec.Cells(pageSize) => {
@@ -389,7 +389,7 @@ object KijiScheme {
                     .asScala
                     .toStream
                     .map { entry: MapFamilyVersionIterator.Entry[_] =>
-                      Cell(
+                      FlowCell(
                           cf.family,
                           entry.getQualifier,
                           entry.getTimestamp,
@@ -408,11 +408,11 @@ object KijiScheme {
       if (row.containsColumn(qc.family, qc.qualifier)) {
         qc.paging match {
           case PagingSpec.Off => {
-            val stream: Seq[Cell[_]] = row
+            val stream: Seq[FlowCell[_]] = row
                 .iterator(qc.family, qc.qualifier)
                 .asScala
                 .toSeq
-                .map { kijiCell: KijiCell[_] => Cell(kijiCell) }
+                .map { kijiCell: KijiCell[_] => FlowCell(kijiCell) }
             result.add(stream)
           }
           case PagingSpec.Cells(pageSize) => {
@@ -421,7 +421,7 @@ object KijiScheme {
                     .asScala
                     .toStream
                     .map { entry: java.util.Map.Entry[java.lang.Long,_] =>
-                      Cell(
+                      FlowCell(
                           qc.family,
                           qc.qualifier,
                           entry.getKey,

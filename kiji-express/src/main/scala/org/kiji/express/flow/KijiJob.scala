@@ -51,7 +51,7 @@ import org.kiji.express.flow.util.PipeConversions
  *     argument `--input SomeFile.txt`
  */
 @ApiAudience.Public
-@ApiStability.Stable
+@ApiStability.Experimental
 @Inheritance.Extensible
 class KijiJob(args: Args = Args(Nil))
     extends Job(args)

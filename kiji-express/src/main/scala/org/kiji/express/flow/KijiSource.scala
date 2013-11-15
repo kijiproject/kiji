@@ -102,7 +102,7 @@ import org.kiji.schema.layout.CellSpec
  *     tuple fields will be written to their associated column.
  */
 @ApiAudience.Framework
-@ApiStability.Stable
+@ApiStability.Experimental
 final class KijiSource private[express] (
     val tableAddress: String,
     val timeRange: TimeRange,
@@ -263,7 +263,7 @@ final class KijiSource private[express] (
  * tests.
  */
 @ApiAudience.Framework
-@ApiStability.Stable
+@ApiStability.Experimental
 private[express] object KijiSource {
   /**
    * Convert scala columns definition into its corresponding java variety.
@@ -314,12 +314,12 @@ private[express] object KijiSource {
             val field = iterator.next().toString
 
             // Get the timeline to be written.
-            val cells: Seq[Cell[Any]] = tupleEntry
+            val cells: Seq[FlowCell[Any]] = tupleEntry
                 .getObject(field)
-                .asInstanceOf[Seq[Cell[Any]]]
+                .asInstanceOf[Seq[FlowCell[Any]]]
 
             // Write the timeline to the table.
-            cells.foreach { cell: Cell[Any] =>
+            cells.foreach { cell: FlowCell[Any] =>
               writer.put(
                   entityId.toJavaEntityId(eidFactory),
                   cell.family,

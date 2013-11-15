@@ -62,7 +62,7 @@ import org.kiji.annotations.ApiStability
  * }}}
  */
 @ApiAudience.Public
-@ApiStability.Stable
+@ApiStability.Experimental
 object KijiInput {
   /** Default time range for KijiSource */
   private val defaultTimeRange: TimeRange = All

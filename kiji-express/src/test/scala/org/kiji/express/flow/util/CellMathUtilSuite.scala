@@ -24,18 +24,18 @@ import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.matchers.ShouldMatchers
 
-import org.kiji.express.flow.Cell
+import org.kiji.express.flow.FlowCell
 
 @RunWith(classOf[JUnitRunner])
 class CellMathUtilSuite
     extends FunSuite
     with ShouldMatchers {
-  val mapCell0: Cell[Long] = Cell("info", "a", 0L, 0L)
-  val mapCell1: Cell[Long] = Cell("info", "a", 1L, 1L)
-  val mapCell2: Cell[Long] = Cell("info", "b", 2L, 0L)
-  val mapCell3: Cell[Long] = Cell("info", "b", 3L, 3L)
-  val mapCell4: Cell[Long] = Cell("info", "c", 4L, 0L)
-  val mapCellSeq: List[Cell[Long]] = List(
+  val mapCell0: FlowCell[Long] = FlowCell("info", "a", 0L, 0L)
+  val mapCell1: FlowCell[Long] = FlowCell("info", "a", 1L, 1L)
+  val mapCell2: FlowCell[Long] = FlowCell("info", "b", 2L, 0L)
+  val mapCell3: FlowCell[Long] = FlowCell("info", "b", 3L, 3L)
+  val mapCell4: FlowCell[Long] = FlowCell("info", "c", 4L, 0L)
+  val mapCellSeq: List[FlowCell[Long]] = List(
       mapCell4,
       mapCell3,
       mapCell2,

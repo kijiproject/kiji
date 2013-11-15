@@ -150,7 +150,7 @@ trait EntityId extends Product with Ordered[EntityId] {
  * Companion object for EntityId. Provides factory methods and implementations for EntityIds.
  */
 @ApiAudience.Public
-@ApiStability.Stable
+@ApiStability.Experimental
 object EntityId {
   /**
    * Creates a KijiExpress EntityId from a Java EntityId.  This is used internally to convert
