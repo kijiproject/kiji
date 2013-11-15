@@ -32,9 +32,9 @@ $KIJI\_REST\_HOME/lib folder.
 
 $ cd $KIJI\_REST\_HOME
 
-$ ./bin/kiji-rest
+$ ./bin/kiji-rest start
 
-This will launch the service in the background with the pid of the process is located in
+This will launch the service in the background with the pid of the process located in
 $KIJI\_REST\_HOME/kiji-rest.pid. The application and request logs can be found
 under $KIJI\_REST\_HOME/logs.
 
