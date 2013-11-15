@@ -32,13 +32,13 @@ import org.kiji.scoring.FreshKijiTableReader;
  */
 public interface KijiClient {
   /**
-   * Gets a Kiji object for the specified instance.  Client is responsible for releasing the
+   * Gets a Kiji object for the specified instance. Client is responsible for releasing the
    * Kiji instance when done.
    *
    * @param instance of the Kiji to request.
    * @return Kiji object
    * @throws javax.ws.rs.WebApplicationException if there is an error getting the instance OR
-   *    if the instance requested is unavailable for handling via REST.
+   *         if the instance requested is unavailable for handling via REST.
    */
   Kiji getKiji(String instance);
 
@@ -46,7 +46,8 @@ public interface KijiClient {
   Collection<KijiURI> getInstances();
 
   /**
-   * Gets a Kiji table.  Caller is responsible for releasing the table when done.
+   * Gets a Kiji table. Caller does not have to release the table as it will be released
+   * when the KijiClient is closed.
    *
    * @param instance in which this table resides
    * @param table name of the requested table
@@ -56,7 +57,7 @@ public interface KijiClient {
   KijiTable getKijiTable(String instance, String table);
 
   /**
-   * Returns the Kiji schema table for the given instance.  Caller should not close the schema
+   * Returns the Kiji schema table for the given instance. Caller should not close the schema
    * table.
    *
    * @param instance is the instance for which the schema table should be retrieved.
@@ -65,7 +66,7 @@ public interface KijiClient {
   KijiSchemaTable getKijiSchemaTable(String instance);
 
   /**
-   * Gets a FreshKijiTableReader.  Caller should not close the fresh table reader.
+   * Gets a FreshKijiTableReader. Caller should not close the fresh table reader.
    *
    * @param instance in which this table reader resides
    * @param table name of the table to read
@@ -73,4 +74,13 @@ public interface KijiClient {
    * @throws javax.ws.rs.WebApplicationException if there is an error.
    */
   FreshKijiTableReader getFreshKijiTableReader(String instance, String table);
+
+  /**
+   * Removes the table from the various table reader caches. This happens when trying
+   * to read from a table that may have been deleted after KijiREST opened a reader for it.
+   *
+   * @param instance is the name of the instance.
+   * @param table is the name of the table to remove from the cache.
+   */
+  void invalidateTable(String instance, String table);
 }

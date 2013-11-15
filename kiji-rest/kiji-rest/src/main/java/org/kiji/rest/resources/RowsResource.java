@@ -79,6 +79,7 @@ import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequestBuilder;
 import org.kiji.schema.KijiDataRequestBuilder.ColumnsDef;
+import org.kiji.schema.KijiIOException;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiRowScanner;
 import org.kiji.schema.KijiSchemaTable;
@@ -265,7 +266,7 @@ public class RowsResource {
    *        specified, at least one of min/max must be present.)
    * @param freshen determines whether freshening should be done as part of the request.
    * @param timeout amount of time in ms to wait for freshening to finish before returning the
-   *                old/stale/previous value of the column(s).
+   *        old/stale/previous value of the column(s).
    * @param uriInfo contains all the query parameters.
    * @return the Response object containing the rows requested in JSON
    */
@@ -359,16 +360,16 @@ public class RowsResource {
         reader = kijiTable.openTableReader();
         scanner = reader.getScanner(dataBuilder.build(), scanOptions);
       }
-    } catch (RuntimeException e) {
-      throw new WebApplicationException(e, Status.BAD_REQUEST);
+    } catch (KijiIOException kioe) {
+      mKijiClient.invalidateTable(instance, table);
+      throw new WebApplicationException(kioe, Status.BAD_REQUEST);
     } catch (Exception e) {
-      throw new WebApplicationException(e, Status.BAD_REQUEST);
+      throw new WebApplicationException(e, Status.INTERNAL_SERVER_ERROR);
     } finally {
       // If reader was used, close it.
       if (null != reader) {
         ResourceUtils.closeOrLog(reader);
       }
-      ResourceUtils.releaseOrLog(kijiTable);
     }
     KijiSchemaTable schemaTable = mKijiClient.getKijiSchemaTable(instance);
     return Response.ok(new RowStreamer(scanner, kijiTable, limit, requestedColumns,
@@ -403,9 +404,9 @@ public class RowsResource {
           table.getURI().getTable());
       FreshKijiTableReader.FreshRequestOptions freshOpts =
           FreshKijiTableReader.FreshRequestOptions.Builder.create()
-          .withTimeout(timeout)
-          .withParameters(fresheningParameters)
-          .build();
+              .withTimeout(timeout)
+              .withParameters(fresheningParameters)
+              .build();
       rowData = reader.get(eid, request, freshOpts);
     } else {
       // Don't freshen

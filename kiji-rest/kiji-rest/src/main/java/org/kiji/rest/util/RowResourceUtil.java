@@ -416,8 +416,6 @@ public final class RowResourceUtil {
       }
     } finally {
       ResourceUtils.closeOrLog(writer);
-      ResourceUtils.releaseOrLog(kijiTable);
     }
-
   }
 }

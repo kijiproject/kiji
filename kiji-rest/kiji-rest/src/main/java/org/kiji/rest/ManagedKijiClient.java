@@ -99,7 +99,7 @@ public class ManagedKijiClient implements KijiClient, Managed {
                 }
               }
           );
-      freshReaderCache.getAll(kiji.getTableNames());  // Pre-load cache
+      freshReaderCache.getAll(kiji.getTableNames()); // Pre-load cache
       mFreshKijiTableReaderMap.put(instanceName, freshReaderCache);
     }
     LOG.info("Successfully started ManagedKijiClient!");
@@ -140,22 +140,22 @@ public class ManagedKijiClient implements KijiClient, Managed {
   }
 
   /**
-   * Gets a Kiji object for the specified instance.  Client is responsible for releasing the Kiji
+   * Gets a Kiji object for the specified instance. Client is responsible for releasing the Kiji
    * instance when done.
    *
    * @param instance of the Kiji to request.
    * @return Kiji object for reading instance data.
    * @throws javax.ws.rs.WebApplicationException if there is an error getting the instance OR
-   *    if the instance requested is unavailable for handling via REST.
+   *         if the instance requested is unavailable for handling via REST.
    */
   @Override
-  public Kiji getKiji(String instance)  {
+  public Kiji getKiji(String instance) {
     if (!mKijiMap.containsKey(instance)) {
       throw new WebApplicationException(new IOException("Instance " + instance + " unavailable!"),
           Response.Status.FORBIDDEN);
     }
 
-    return mKijiMap.get(instance).retain();
+    return mKijiMap.get(instance);
   }
 
   /** @return a collection of instances served by this client. */
@@ -172,13 +172,7 @@ public class ManagedKijiClient implements KijiClient, Managed {
           Response.Status.FORBIDDEN);
     }
     try {
-      // Verify that this table still exists in this instance.  If not, invalidate the entry in
-      // the cache (REST-50).
-      if (!mKijiMap.get(instance).getTableNames().contains(table)) {
-        mKijiTableMap.get(instance).invalidate(table);
-        mFreshKijiTableReaderMap.get(instance).invalidate(table);
-      }
-      return mKijiTableMap.get(instance).get(table).retain();
+      return mKijiTableMap.get(instance).get(table);
     } catch (ExecutionException e) {
       Throwable cause = e.getCause();
       Response.Status status;
@@ -217,7 +211,8 @@ public class ManagedKijiClient implements KijiClient, Managed {
   }
 
   /**
-   * Creates a FreshKijiTableReader instance.  Should only be used by the loading cache.
+   * Creates a FreshKijiTableReader instance. Should only be used by the loading cache.
+   *
    * @param instance in which the table resides.
    * @param table to be read.
    * @return FreshKijiTableReader instance.
@@ -233,12 +228,18 @@ public class ManagedKijiClient implements KijiClient, Managed {
           .withPartialFreshening(false)
           .build();
     } catch (ExecutionException e) {
-      // Unwrap (if possible) and rethrow.  Will be caught by getFreshKijiTableReader().
+      // Unwrap (if possible) and rethrow. Will be caught by getFreshKijiTableReader().
       if (e.getCause() instanceof IOException) {
         throw (IOException) e.getCause();
       } else {
         throw new IOException(e.getCause());
       }
     }
+  }
+
+  @Override
+  public void invalidateTable(String instance, String table) {
+    mKijiTableMap.get(instance).invalidate(table);
+    mFreshKijiTableReaderMap.get(instance).invalidate(table);
   }
 }
