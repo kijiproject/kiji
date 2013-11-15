@@ -81,7 +81,7 @@ class WordCountFlatMapJob(args: Args) extends KijiJob(args) {
 }
 
 @RunWith(classOf[JUnitRunner])
-class PagedKijiSliceSuite extends KijiSuite {
+class PagedCellsSuite extends KijiSuite {
   /** Simple table layout to use for tests. The row keys are hashed. */
   val simpleLayout: KijiTableLayout = layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
 
