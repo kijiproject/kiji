@@ -1,6 +1,9 @@
 
                              Kiji Express Release Notes
 
+Version 0.13.0
+  * EXP-316. memory leak when reading from cells with many versions
+
 Version 0.12.0
   * EXP-221. Improve the KijiSlice and PagedKijiSlice APIs.
   * EXP-275. Removed default values option. Columns with missing values
