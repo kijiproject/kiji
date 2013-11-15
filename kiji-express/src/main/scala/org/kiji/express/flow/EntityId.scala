@@ -192,7 +192,8 @@ object EntityId {
    *
    * @param entityId is the Java EntityId to convert.
    */
-  private[express] def fromJavaEntityId(entityId: JEntityId): EntityId = {
+  @ApiAudience.Framework
+  def fromJavaEntityId(entityId: JEntityId): EntityId = {
     val hbaseKey = entityId.getHBaseRowKey()
 
     try {
