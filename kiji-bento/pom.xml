@@ -37,23 +37,23 @@
 
   <properties>
     <codename>chirashi</codename>
-    <bento-cluster.version>1.2.1</bento-cluster.version>
+    <bento-cluster.version>1.2.2-SNAPSHOT</bento-cluster.version>
     <kiji-checkin.version>1.0.4</kiji-checkin.version>
-    <kiji-schema.version>1.3.3</kiji-schema.version>
-    <kiji-schema-shell.version>1.3.1</kiji-schema-shell.version>
-    <kiji-phonebook.version>1.1.1</kiji-phonebook.version>
-    <kiji-mapreduce.version>1.2.2</kiji-mapreduce.version>
-    <kiji-mapreduce-lib.version>1.1.2</kiji-mapreduce-lib.version>
-    <kiji-hive-adapter.version>0.8.0</kiji-hive-adapter.version>
-    <kiji-music.version>1.1.2</kiji-music.version>
-    <kiji-modeling.version>0.3.0</kiji-modeling.version>
-    <kiji-express.version>0.13.0</kiji-express.version>
-    <kiji-express-music.version>0.11.0</kiji-express-music.version>
-    <kiji-express-examples.version>0.13.0</kiji-express-examples.version>
-    <kiji-rest.version>1.0.1</kiji-rest.version>
-    <kiji-scoring.version>0.9.0</kiji-scoring.version>
-    <kiji-scoring-server.version>0.9.1</kiji-scoring-server.version>
-    <kiji-modelrepo.version>0.4.0</kiji-modelrepo.version>
+    <kiji-schema.version>1.3.4-SNAPSHOT</kiji-schema.version>
+    <kiji-schema-shell.version>1.3.2-SNAPSHOT</kiji-schema-shell.version>
+    <kiji-phonebook.version>1.1.2-SNAPSHOT</kiji-phonebook.version>
+    <kiji-mapreduce.version>1.2.3-SNAPSHOT</kiji-mapreduce.version>
+    <kiji-mapreduce-lib.version>1.1.3-SNAPSHOT</kiji-mapreduce-lib.version>
+    <kiji-hive-adapter.version>0.9.0-SNAPSHOT</kiji-hive-adapter.version>
+    <kiji-music.version>1.1.3-SNAPSHOT</kiji-music.version>
+    <kiji-modeling.version>0.4.0-SNAPSHOT</kiji-modeling.version>
+    <kiji-express.version>0.14.0-SNAPSHOT</kiji-express.version>
+    <kiji-express-music.version>0.12.0-SNAPSHOT</kiji-express-music.version>
+    <kiji-express-examples.version>0.14.0-SNAPSHOT</kiji-express-examples.version>
+    <kiji-rest.version>1.0.2-SNAPSHOT</kiji-rest.version>
+    <kiji-scoring.version>0.10.0-SNAPSHOT</kiji-scoring.version>
+    <kiji-scoring-server.version>0.10.0-SNAPSHOT</kiji-scoring-server.version>
+    <kiji-modelrepo.version>0.5.0-SNAPSHOT</kiji-modelrepo.version>
   </properties>
 
   <modules>
