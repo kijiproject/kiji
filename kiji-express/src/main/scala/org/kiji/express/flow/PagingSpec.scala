@@ -72,6 +72,10 @@ object PagingSpec {
    *
    * Note: Cells may not all be the same size (in bytes).
    *
+   * Note: There are known issues with paging in Express.  See https://jira.kiji.org/browse/EXP-326,
+   *    [[org.kiji.express.flow.TransientSeq]] and [[org.kiji.express.flow.TransientSeqSuite]] for
+   *    details and workarounds.
+   *
    * @param count of the cells per page.
    */
   @ApiAudience.Public
