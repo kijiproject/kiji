@@ -44,8 +44,8 @@ MRLIB_FLAT_VER=1_1_2
 MRLIB_VER=1.1.2
 
 # KijiExpress version
-EXPRESS_FLAT_VER=0_12_0
-EXPRESS_VER=0.12.0
+EXPRESS_FLAT_VER=0_13_0
+EXPRESS_VER=0.13.0
 
 # Scoring version
 SCORING_FLAT_VER=0_9_0
@@ -56,16 +56,16 @@ MUSIC_FLAT_VER=1_1_2
 MUSIC_VER=1.1.2
 
 # Express Music Recommendation tutorial version
-EXPRESS_MUSIC_FLAT_VER=0_12_0
-EXPRESS_MUSIC_VER=0.12.0
+EXPRESS_MUSIC_FLAT_VER=0_13_0
+EXPRESS_MUSIC_VER=0.13.0
 
 # Phonebook Tutorial version
 PHONEBOOK_FLAT_VER=1_1_1
 PHONEBOOK_VER=1.1.1
 
 # REST Server version
-REST_FLAT_VER=1_0_0
-REST_VER=1.0.0
+REST_FLAT_VER=1_0_1
+REST_VER=1.0.1
 
 ### Ordinary configuration does not go past this line ###
 
