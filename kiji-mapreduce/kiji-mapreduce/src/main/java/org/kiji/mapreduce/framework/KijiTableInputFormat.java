@@ -66,6 +66,13 @@ import org.kiji.schema.util.ResourceUtils;
 public final class KijiTableInputFormat
     extends InputFormat<EntityId, KijiRowData>
     implements Configurable {
+
+  /**
+   * Number of bytes from the row-key to include when reporting progress.
+   * Use 32 bits precision, ie. 4 billion row keys granularity.
+   */
+  private static final int PROGRESS_PRECISION_NBYTES = 4;
+
   /** Configuration of this input format. */
   private Configuration mConf;
 
@@ -84,7 +91,9 @@ public final class KijiTableInputFormat
   /** {@inheritDoc} */
   @Override
   public RecordReader<EntityId, KijiRowData> createRecordReader(
-      InputSplit split, TaskAttemptContext context) throws IOException {
+      InputSplit split,
+      TaskAttemptContext context
+  ) throws IOException {
     return new KijiTableRecordReader(mConf);
   }
 
@@ -181,8 +190,8 @@ public final class KijiTableInputFormat
       KijiDataRequest dataRequest,
       EntityId startRow,
       EntityId endRow,
-      KijiRowFilter filter)
-      throws IOException {
+      KijiRowFilter filter
+  ) throws IOException {
     Preconditions.checkNotNull(job, "job must not be null");
     Preconditions.checkNotNull(tableURI, "tableURI must not be null");
     Preconditions.checkNotNull(dataRequest, "dataRequest must not be null");
@@ -223,10 +232,11 @@ public final class KijiTableInputFormat
     private KijiTableReader mReader = null;
     private KijiRowScanner mScanner = null;
     private Iterator<KijiRowData> mIterator = null;
-
     private KijiTableSplit mSplit = null;
-
     private HBaseKijiRowData mCurrentRow = null;
+
+    private long mStartPos;
+    private long mStopPos;
 
     /**
      * Creates a new RecordReader for this input format.
@@ -246,7 +256,8 @@ public final class KijiTableInputFormat
     /** {@inheritDoc} */
     @Override
     public void initialize(InputSplit split, TaskAttemptContext context) throws IOException {
-      assert split instanceof KijiTableSplit;
+      Preconditions.checkArgument(split instanceof KijiTableSplit,
+          "InputSplit is not a KijiTableSplit: %s", split);
       mSplit = (KijiTableSplit) split;
 
       final Configuration conf = context.getConfiguration();
@@ -263,7 +274,7 @@ public final class KijiTableInputFormat
           .setHBaseScanOptions(hBaseScanOptions);
       final String filterJson = conf.get(KijiConfKeys.KIJI_ROW_FILTER);
       if (null != filterJson) {
-        KijiRowFilter filter = KijiRowFilter.toFilter(filterJson);
+        final KijiRowFilter filter = KijiRowFilter.toFilter(filterJson);
         scannerOptions.setKijiRowFilter(filter);
       }
       mKiji = Kiji.Factory.open(inputURI, conf);
@@ -272,6 +283,10 @@ public final class KijiTableInputFormat
       mScanner = mReader.getScanner(mDataRequest, scannerOptions);
       mIterator = mScanner.iterator();
       mCurrentRow = null;
+
+      mStartPos = bytesToPosition(mSplit.getStartRow(), PROGRESS_PRECISION_NBYTES);
+      long stopPos = bytesToPosition(mSplit.getStartRow(), PROGRESS_PRECISION_NBYTES);
+      mStopPos = (stopPos > 0) ? stopPos : (1L << (PROGRESS_PRECISION_NBYTES * 8));
     }
 
     /** {@inheritDoc} */
@@ -286,11 +301,33 @@ public final class KijiTableInputFormat
       return mCurrentRow;
     }
 
+    /**
+     * Converts a byte array into an integer position in the row-key space.
+     *
+     * @param bytes Byte array to convert to an approximate position.
+     * @param nbytes Number of bytes to use (must be in the range 1..8).
+     * @return the approximate position in the row-key space.
+     */
+    private static long bytesToPosition(final byte[] bytes, final int nbytes) {
+      long position = 0;
+      if (bytes != null) {
+        for (int i = 0; i < nbytes; ++i) {
+          final int bvalue = (i < bytes.length) ? (0xff & bytes[i]) : 0;
+          position = (position << 8) + bvalue;
+        }
+      }
+      return position;
+    }
+
     /** {@inheritDoc} */
     @Override
     public float getProgress() throws IOException {
-      // TODO: Implement
-      return 0.0f;
+      if (mCurrentRow == null) {
+        return 0.0f;
+      }
+      final byte[] currentRowKey = mCurrentRow.getHBaseResult().getRow();
+      final double currentPos = bytesToPosition(currentRowKey, PROGRESS_PRECISION_NBYTES);
+      return (float) ((currentPos - mStartPos) / (mStopPos - mStartPos));
     }
 
     /** {@inheritDoc} */

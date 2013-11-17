@@ -49,10 +49,6 @@
     <Class name="~org[.]kiji[.]mapreduce[.]tools[.]KijiBulkLoad" />
     <Bug pattern="UWF_NULL_FIELD" />
   </Match>
-
-  <!--
-    Other one-off exclusions.
-  -->
   <Match>
     <!-- For performance, code returning the same array every time is correct. -->
     <Class name="org.kiji.mapreduce.impl.KijiTableSplit" />
@@ -66,5 +62,9 @@
     <!-- Disable the equals check for HFileKeyValue -->
     <Class name="org.kiji.mapreduce.framework.HFileKeyValue" />
     <Bug pattern="EQ_COMPARETO_USE_OBJECT_EQUALS" />
+  </Match>
+  <Match>
+    <Class name="org.kiji.mapreduce.framework.KijiTableInputFormat$KijiTableRecordReader" />
+    <Bug pattern="BC_UNCONFIRMED_CAST" />
   </Match>
 </FindBugsFilter>
