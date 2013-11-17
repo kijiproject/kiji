@@ -282,3 +282,6 @@ userguide_rest_1_0_0 : /userguides/rest/1.0.0
 tutorial_phonebook_1_1_1 : /tutorials/phonebook-tutorial/1.1.1
 api_mrlib_1_1_2 : http://api-docs.kiji.org/kiji-mapreduce-lib/1.1.2/org/kiji/mapreduce/lib
 api_express_0_12_0 : http://api-docs.kiji.org/kiji-express/0.12.0/org/kiji/express
+userguide_rest_1_0_1 : /userguides/rest/1.0.1
+userguide_express_0_13_0 : /userguides/express/0.13.0
+api_express_0_13_0 : http://api-docs.kiji.org/kiji-express/0.13.0/org/kiji/express

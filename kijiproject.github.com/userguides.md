@@ -66,4 +66,5 @@ before release.
 * [KijiSchema User Guide]({{site.userguide_schema_devel}}/kiji-schema-overview/)
 * [KijiMR User Guide]({{site.userguide_mapreduce_devel}}/kiji-mr-overview/)
 * [KijiREST User Guide]({{site.userguide_rest_devel}}/rest-overview/)
+* [KijiExpress User Guide]({{site.userguide_express_devel}}/overview/)
 

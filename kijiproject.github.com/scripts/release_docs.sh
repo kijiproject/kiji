@@ -99,6 +99,8 @@ fix_released_versions() {
       "s/userguide_schema_devel/userguide_schema_$SCHEMA_FLAT_VER/g" {} \;
   find . -name "*.md" -exec sed -i -e \
       "s/userguide_rest_devel/userguide_rest_$REST_FLAT_VER/g" {} \;
+  find . -name "*.md" -exec sed -i -e \
+      "s/userguide_express_devel/userguide_express_$EXPRESS_FLAT_VER/g" {} \;
 
   find . -name "*.md" -exec sed -i -e \
       "s/tutorial_phonebook_devel/tutorial_phonebook_$PHONEBOOK_FLAT_VER/g" {} \;
@@ -217,6 +219,30 @@ if [ ! -d "userguides/rest/$REST_VER" ]; then
   fix_released_versions
 
   echo "userguide_rest_$REST_FLAT_VER : /userguides/rest/$REST_VER" \
+      >> "$top/_config.yml"
+
+  popd
+fi
+
+if [ ! -d "userguides/express/$EXPRESS_VER" ]; then
+  # Create new KijiExpress documentation
+  echo "Creating new KijiExpress user guide: $EXPRESS_VER"
+  cp -ra "userguides/express/DEVEL" "userguides/express/$EXPRESS_VER"
+
+  pushd "userguides/express/$EXPRESS_VER"
+
+  # Replace devel versioning with macros that reflect the release version.
+  find . -name "*.md" -exec sed -i -e "s/version: devel/version: $EXPRESS_VER/" {} \;
+  find . -name "*.md" -exec sed -i -e "s/express, devel]/express, $EXPRESS_VER]/" {} \;
+
+  # Replace links to development userguides and API documentation with the real latest
+  # documentation artifact version macros (defined in /_config.yml).
+  fix_released_versions
+
+  # Define the new KijiExpress release in /_config.yml
+  echo "userguide_express_$EXPRESS_FLAT_VER : /userguides/express/$EXPRESS_VER" \
+      >> "$top/_config.yml"
+  echo "api_express_$EXPRESS_FLAT_VER : $API/kiji-express/$EXPRESS_VER/org/kiji/express" \
       >> "$top/_config.yml"
 
   popd
