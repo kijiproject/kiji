@@ -7,7 +7,6 @@ version: devel
 order : 3
 description: KijiExpress Data Concepts.
 ---
-##DRAFT##
 
 * [Kiji Tables](#kiji_table_layout_and_cells)
 * [Tuples and Pipelines](#tuples_and_pipelines)
@@ -49,7 +48,7 @@ qualifier, and timestamp.
 Here’s an example of a DDL that specifies the structure of a Kiji table:
 
     CREATE TABLE users WITH DESCRIPTION 'A set of users'
-    ROW KEY FORMAT HASH PREFIXED(4)
+    ROW KEY FORMAT (username STRING, userId STRING),
     WITH LOCALITY GROUP default
       WITH DESCRIPTION 'Main locality group' (
       MAXVERSIONS = INFINITY,
@@ -67,8 +66,9 @@ may have hundreds or thousands (or more) columns. Different rows may not necessa
 the same set of columns.
 
 For more information about columns, column families, locality groups, and table layouts,
-see Managing Data in the KijiSchema User Guide. For details on how to turn your layout
-design into a KijiSchema command, see DDL Shell Reference.
+see [Managing Data]({{site.userguide_schema_devel}}/managing-data) in the KijiSchema User Guide. For
+details on how to turn your layout design into KijiSchema DDL Shell statements, see [DDL Shell
+Reference]({{site.userguide_schema_devel}}/schema-shell-ddl-ref).
 
 ### Tuples and Pipelines
 
@@ -89,26 +89,19 @@ to a sink. Again, sinks can be Kiji tables, text files, or SequenceFiles.
 
 Each cell in a Kiji table has a schema associated with it. Schemas in KijiSchema are versioned.
 
-Avro serializes data from a bit stream into a record that has the structure that you define.
+Avro serializes data from a byte stream into a record that has the structure that you define.
 Systems use Avro when exchanging data because it provides a way to identify the structure of
 the data that all clients of the data can understand.
 
-Avro data can be complex, with any number of nesting levels and a long list of predefined
-types. For example, you could design an Avro record to include customer address information.
-The record could contain more than one case where data stretches across multiple levels.
-In this case, the key identifying the customer, such as an email address, would not go in
-the record, but instead would be included as a separate field in the Kiji table row for
-easy access.
+Avro data can be one of the Avro primitive types, which include strings, numbers, booleans, and
+arrays.  You can also define your own complex avro records that are composed of fields of the
+primitive types.  For example, you could design an Avro record to include customer address
+information, with fields for the customer name, street address, state, and zip code.
 
-    ?illustration?
-
-In this example, all of the data are strings (or could be strings); Avro also supports
-typical primitive data types such as boolean, integers, longs.
-
-Later we’ll describe the process of “packing” data into an Avro record using the
-KijiExpress method `packAvro`.
-
-Data written to a Kiji cell is serialized to a byte array according to an Avro schema.
-The writer schema used for the particular write operation is stored alongside the cell data,
-so the input data can be deserialized exactly by subsequent read requests. This schema must
-be compatible with the expected reader schema specified in the layout for the cell.
+Data written to a Kiji cell is serialized to a byte array according to an Avro schema.  The writer
+schema used for the particular write operation is stored alongside the cell data, so the input data
+can be deserialized exactly with the same schema by subsequent read requests. This schema must be
+compatible with the expected reader schema specified in the layout for the cell.  An application
+reading from a Kiji table can also specify a reader schema to use, which must be compatible with the
+writer schema of the data.  For more on schema compatbility and evolution, see [this blog
+post](http://www.kiji.org/2013/10/15/introduction-to-schema-evolution-a-tale-of-two-dbs/).

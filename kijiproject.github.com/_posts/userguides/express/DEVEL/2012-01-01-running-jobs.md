@@ -4,10 +4,9 @@ title: Running KijiExpress Jobs
 categories: [userguides, express, devel]
 tags : [express-ug]
 version: devel
-order : 6
+order : 8
 description: Running KijiExpress Jobs.
 ---
-##DRAFT##
 
 There are two ways to run KijiExpress logic: compiled into Jobs or in the KijiExpress language shell (REPL).
 
@@ -47,13 +46,11 @@ The command to run a compiled KijiExpress job is as follows:
         --output <path/to/target/files-tables>
         --hdfs
 
-Your KijiExpress application can define additional arguments that can be specified on the
-command line. See ?KijiInput. ?Other standard parameters? The standard arguments
-are as follows:
+Your KijiExpress job can access additional arguments that can be specified on the command line. The
+standard arguments are as follows:
 
 jar file
-:Path to the JAR file that includes the class you want to run. This string will be parsed
-by ?TBD?, so if you include ?what?, make sure to enclose it in double quotes.
+:Path to the JAR file that includes the class you want to run.
 
 `--libjars \<path\>`
 :Path to compiled JAR files that include auxiliary jars that need to be included. There
@@ -81,17 +78,13 @@ training procedure in the REPL, and then later use that prototype to author an a
 implementation by wrapping everything up in a new class that implements the training procedure.
 
 Commands specific to the shell which should not be evaluated by the Scala interpreter are
-prefixed with a colon (:). Here’s a sample interactive session. It assumes that you have a
-Kiji instance configured as described in Setup:
+prefixed with a colon (:). Here’s a sample interactive session:
 
     $ cd <path/to/project>
     $ express shell
     express> :paste
     // Entering paste mode (ctrl-D to finish)
     import scala.util.parsing.json.JSON
-    import com.twitter.scalding.
-    import org.kiji.express.
-    import org.kiji.express.flow.
     def parseJson(json: String): (String, String, String, String, String, Long, Long) = {
         val metadata = JSON.parseFull(json).get.asInstanceOf[Map[String, Any]]
         (metadata.get("song_id").get.asInstanceOf[String],
@@ -131,6 +124,11 @@ where you can put breaks. (Long lines work also.)
 
 * More than one blank line in a row in the Scala input (from `:paste` or `:load`) will fail.
 
-* You can also run KijiSchema commands from the KijiExpress shell by using the `:schema-shell` command.
+* You can also run KijiSchema commands from the KijiExpress shell by using the `:schema-shell`
+  command.  From inside the shell, type
 
-See [KijiExpress Shell Command Reference](../shell-commands).
+        :help
+
+   for a list of meta-commands.  These are the same as the regular scala interpreter, with the
+addition of the command `:schema-shell` which will drop you into an instance of the KijiSchema
+shell.
