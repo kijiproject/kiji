@@ -133,8 +133,9 @@ KijiInput request.
 This specifies the Avro schema to read the data in this column with.  For more information about Avro schemas, see the [KijiSchema userguide]({{site.userguide_schema_devel}}/managing-data) section on Schema evolution.
 Here are the options:
 
-* `SchemaSpec.Specific(classOf[MySpecificRecordClass])`: used when you have a specific class that has been compiled by Avro.  `MySpecificRecordClass` must extend
-`org.apache.avro.SpecificRecord`, and must be on the classpath of the running job.
+* `SchemaSpec.Specific(classOf[MySpecificRecordClass])`: used when you have a specific class
+  that has been compiled by Avro.  `MySpecificRecordClass` must extend
+`org.apache.avro.SpecificRecord`
 * `SchemaSpec.Generic(myGenericSchema)`: If you don’t have the specific class you want to use to
   read, you can construct a generic schema and use it as the reader schema.
 * `SchemaSpec.Writer`: used when you want to read with the same schema that the data was written

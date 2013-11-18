@@ -67,4 +67,5 @@ before release.
 * [KijiMR User Guide]({{site.userguide_mapreduce_devel}}/kiji-mr-overview/)
 * [KijiREST User Guide]({{site.userguide_rest_devel}}/rest-overview/)
 * [KijiExpress User Guide]({{site.userguide_express_devel}}/overview/)
+* [KijiScoring User Guide]({{site.userguide_scoring_devel}}/what-is-scoring/)
 

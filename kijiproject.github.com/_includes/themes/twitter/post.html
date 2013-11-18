@@ -27,6 +27,12 @@
     {% elsif page.tags contains 'express-music' %}
       {% assign title = 'KijiExpress Tutorial'  %}
       {% assign pages = site.tags.express-music %}
+    {% elsif page.tags contains 'scoring-tutorial' %}
+      {% assign title = 'KijiScoring Tutorial'  %}
+      {% assign pages = site.tags.scoring-tutorial %}
+    {% elsif page.tags contains 'scoring-ug' %}
+      {% assign title = 'KijiScoring User Guide'  %}
+      {% assign pages = site.tags.scoring-ug %}
     {% endif %}
       {% capture maxpages %}{{ pages | size }}{% endcapture %}
 
@@ -97,6 +103,9 @@
     {% elsif page.tags contains 'scoring-tutorial' %}
       {% assign title = 'KijiScoring Tutorial'  %}
       {% assign pages = site.tags.scoring-tutorial %}
+    {% elsif page.tags contains 'scoring-ug' %}
+      {% assign title = 'KijiScoring User Guide'  %}
+      {% assign pages = site.tags.scoring-ug %}
     {% endif %}
       {% capture maxpages %}{{ pages | size }}{% endcapture %}
 
@@ -165,6 +174,9 @@
     {% elsif page.tags contains 'scoring-tutorial' %}
       {% assign title = 'KijiScoring Tutorial'  %}
       {% assign pages = site.tags.scoring-tutorial %}
+    {% elsif page.tags contains 'scoring-ug' %}
+      {% assign title = 'KijiScoring User Guide'  %}
+      {% assign pages = site.tags.scoring-ug %}
     {% endif %}
     {% include side-toc.html %}
   </div>

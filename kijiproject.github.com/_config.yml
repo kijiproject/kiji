@@ -127,7 +127,7 @@ music_express_devel_branch : master
 rest_devel_version: 1.0.1
 rest_devel_branch : master
 
-scoring_devel_version : 0.9.0
+scoring_devel_version : 0.10.0
 scoring_devel_branch : master
 
 # All Jekyll-Bootstrap specific configurations are namespaced into this hash
