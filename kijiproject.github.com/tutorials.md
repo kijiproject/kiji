@@ -66,4 +66,5 @@ themselves. Documentation in this section may be incorrect or may change before 
 * [Phone Book Tutorial]({{site.tutorial_phonebook_devel}}/phonebook-tutorial)
 * [Music Recommendation Tutorial]({{site.tutorial_music_devel}}/music-overview/)
 * [KijiExpress Music Recommendation Tutorial]({{site.tutorial_express_devel}}/express-overview)
+* [KijiScoring Tutorial]({{site.tutorial_scoring_devel}}/scoring-overview)
 
