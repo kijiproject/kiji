@@ -37,11 +37,23 @@ example, to view the first 100 rows within `kiji://.env/default/user_ratings`, y
 <a id="ops-on-rows"> </a>
 ## Operations on Rows
 
+### Specifying entity IDs
+
+In order to perform row operations, you need to be able to identity rows.
+You can do this by specifying the entity ID of the row in the Kiji table.
+There are three ways to specify the entity ID in KijiREST.
+
+* `["component1", "component2", "component3", 123, 321]` - formatted (i.e. composite) entity IDs are specified as JSON arrays of string and numeric components.
+* `hbase=?\x0Bcomponent1\x00component2\x00component3\x00\x80\x00\x00{\x80\x00\x00\x00\x00\x00\x01A` - the HBase row key encoded as a string. Unprintable characters are represented by \xDD.
+* `hbase_hex=3f0b636f6d706f6e656e743100636f6d706f6e656e743200636f6d706f6e656e7433008000007b8000000000000141` - the ASCII-encoded hexadecimal HBase row key.
+
+Note that if a row is specified in the address bar, it must be further [URL-encoded](http://en.wikipedia.org/wiki/Percent-encoding). If a row is specified in a JSON body (e.g. in a POST request), it must be a properly escaped JSON element.
+
 <a id="rows-get"> </a>
 ### Rows: GET
 
 Returns (streams) multiple Kiji rows. The results of this request are similar
-to those of `kiji scan` -- the request produces a list of rows, bounded by
+to those of `kiji get` and `kiji scan` -- the request produces a list of rows, bounded by
 constraints.  Each row is a JSON blob, delimited by the "\r\n" characters (and
 with all "\r\n" characters within each JSON blob are replaced with "\n" to
 avoid collision with the delimiter characters).
@@ -51,15 +63,19 @@ avoid collision with the delimiter characters).
 #### Parameters:
 
 * `eid` (single, optional) - A JSON representation of the list of components (for example:
-        `['string1', 2, 'string3']`) of the entity ID to retrieve. When specified, it returns
-        the row represented by the given entity ID. If this is specified, then `start_eid`,
-        `end_eid`, and `limit` parameters are ignored.
+        `["string1", 2, "string3"]`) of the entity ID to retrieve. When specified, it returns
+        the row represented by the given entity ID. The values of `start_eid`,
+        `end_eid`, and `limit` parameters are ignored. Advanced users: you may do partially-specified entity ID scans by 
+        replacing components of an entity ID with wildcards (wildcards are empty arrays),
+        e.g. `["string1", 2, []]` will match all values of the terminal component.
 
 * `start_eid` (single, optional) - If executing a range query, this is the entity ID (represented
-              with JSON, as described above) from which to start (inclusive)
+              with JSON or HBase row key, as described above) from which to start (inclusive).
+              Wildcarded start entity IDs are not supported.
 
 * `end_eid` (single, optional) - If executing a range query, this is the entity ID (represented with
-            JSON,as described above) at which to end (exclusive)
+            JSON or HBase row key, as described above) at which to end (exclusive).
+            Wildcarded end entity IDs are not supported.
 
 * `limit` (single, optional, default=100) - The number of rows to return. Specify -1 to return all rows.
 
@@ -93,6 +109,10 @@ Retrieve the first 10 rows starting from a particular entity ID:
 
     GET /v1/instances/default/tables/users/rows?start_eid=[1298404763]&limit=10
 
+In a table with composite entity IDs, perform a partially specified entity ID scan matching all values of the middle component. Return up to 10 rows.
+
+    GET /v1/instances/default/tables/users/rows?eid=["component1",[],"component3"]&limit=10
+
 <a id="rows-post"> </a>
 ### Rows: POST
 
@@ -110,7 +130,8 @@ returned by GETting rows.
 #### Notes:
 
 To create or update a record, the entity ID (`entityId`) must be specified in
-the JSON body.  Cell timestamps are optional (if not specified, the server will
+the JSON body. Note that the entity ID as part of the JSON body must be a properly escaped JSON element.
+Cell timestamps are optional (if not specified, the server will
 set the cell timestamps to the time at which it creates or updates the record).
 To avoid a heavy return payload, only a reference to the newly created/updated
 resource will be returned.
