@@ -14,21 +14,17 @@ and import data about when users have listened to songs into the Kiji table `use
 
 ### KijiExpress Custom Importers
 
-Kiji provides stock bulk importers that work for a number of standard use cases. However,
-if you have to do any customization to these importers, they quickly become complicated.
-We've provided custom importers written in KijiExpress for importing the user data and song metadata.
+Kiji provides stock [bulk importers]({{site.userguide_mapreduce_devel}}/bulk-importers/) that work for a
+number of standard use cases. Because these importers can quickly become complicated once
+you have to customize them, we've provided custom importers written in KijiExpress for importing the
+user data and song metadata from JSON files on HDFS.
 
 The source code for one of the importers is included at the [bottom of this page](#importer-source).
 
 #### Importing Tutorial Data
-
-To run a KijiExpress job, you specify the precompiled job as a jar file and the class you
-want to run. For this example, we also use command-line options to specify the input JSON
-file and the target Kiji table. Additional options indicate that the job is running against
-the Hadoop cluster (`--hdfs`) rather than running in Cascading's local environment and that
-there are additional library jar files to pull from the `/lib` directory.
-
-*  Run the the song metadata importer as a precompiled job contained in a `jar` file:
+For this example, we use command-line options specific to this job to specify the input JSON file
+and the target Kiji table.
+*  Run the the song metadata importer as a precompiled job contained in a JAR file:
 
 <div class="userinput">
 {% highlight bash %}
@@ -82,7 +78,7 @@ You should see something like:
     entity-id=['song-8'] [1365548282382] info:metadata
         {"song_name": "song name-8", "artist_name": "artist-1", "album_name": "album-1", "genre": "genre5.0", "tempo": 140, "duration": 180}
 
-*  Use the `kiji scan` command to verify the users table import was successful:
+*  Use the `kiji scan` command to verify that the import of the `users` table was successful:
 
 <div class="userinput">
 {% highlight bash %}
