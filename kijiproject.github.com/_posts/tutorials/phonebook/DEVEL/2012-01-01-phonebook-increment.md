@@ -122,6 +122,6 @@ $KIJI_HOME/bin/kiji get kiji://.env/default/phonebook/stats \
 {% endhighlight %}
 </div>
 
-    Looking up entity: hbase=hex:551e50c1f2632437ccbacb16100f11db from kiji table: kiji://localhost:2181/default/phonebook/stats/
-    entity-id=hbase=hex:551e50c1f2632437ccbacb16100f11db [1363228284547] stats:talktime
+    Looking up entity: ['John,Doe'] from kiji table: kiji://localhost:2181/default/phonebook/stats/
+    entity-id=['John,Doe'] [1363228284547] stats:talktime
                                      15

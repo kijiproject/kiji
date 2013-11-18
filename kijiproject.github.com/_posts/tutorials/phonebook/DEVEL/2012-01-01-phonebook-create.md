@@ -156,8 +156,8 @@ $KIJI_HOME/bin/kiji delete --target=kiji://.env/default/phonebook
 </div>
 
     Are you sure you want to delete Kiji table 'kiji://localhost:2181/default/phonebook/'?
-    Please answer yes or no.
-    yes
+    Type 'phonebook' without the quotes to confirm(or nothing to cancel):
+    phonebook
     13/03/13 19:19:28 INFO org.apache.hadoop.hbase.client.HBaseAdmin: Started disable of kiji.default.table.phonebook
     13/03/13 19:19:29 INFO org.apache.hadoop.hbase.client.HBaseAdmin: Disabled kiji.default.table.phonebook
     13/03/13 19:19:29 INFO org.apache.hadoop.hbase.client.HBaseAdmin: Deleted kiji.default.table.phonebook
