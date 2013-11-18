@@ -7,7 +7,7 @@ version: devel
 order : 3
 description: Freshness Policy.
 ---
-KijiScoring requires the you to provide a "freshness policy", which indicates
+KijiScoring requires you to provide a "freshness policy", which indicates
 whether or not to run scoring on the requested data. It also requires you to provide
 a "score function", which is the computation that needs to be performed in real-time
 on the data.

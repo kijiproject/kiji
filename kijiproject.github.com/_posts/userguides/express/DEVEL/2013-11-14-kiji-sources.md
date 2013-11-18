@@ -59,11 +59,17 @@ Here are the parameters to QualifiedColumnInputSpec and ColumnFamilyInputSpec:
 
 ### Specifying a Timerange (Optional)
 
-You can specify an optional time range on a **KijiInput**.  (Note that the time range is applied to
-the entire input request and not a single column. You can further control how many versions of an
-individual column are returned by using maxversions described further ahead.).  This time range that
-limits the data returned from all the columns you request to that time range.  The default time
-range is `All`, which imposes no limits on the data from the columns of the table.
+Timestamps in Kiji, like timestamps in HBase, can be used as actual timestamps for the data in a
+table, or to attach version numbers to cells.  You should be careful when attaching
+version semantics to timestamps, as noted [in this blog
+post](http://www.kiji.org/2013/02/13/common-pitfalls-of-timestamps-in-hbase/).
+
+You can specify an optional time range, or range of versions, on a **KijiInput**.  (Note that the
+time range is applied to the entire input request and not a single column. You can further control
+how many versions of an individual column are returned by using `maxVersions` described further
+ahead.).  This time range that limits the data returned from all the columns you request to that
+time range.  The default time range is `All`, which imposes no limits on the data from the columns
+of the table.
 
 Here are the provided constructors for a TimeRange:
 
@@ -82,9 +88,9 @@ what follows:
             ColumnFamilyInputSpec(“purchases”, maxVersions = all) -> ‘purchases))
 
 Note that this means the `’email` field will contain only the data in the `userinfo:email` column
-that has timestamps before 1000L.  Since we only requested a maximum of 2 versions of that column,
-this means we get the most recent 2 versions of the user’s email before time 1000, even if there are
-more after time 1000.  This also means the `’purchases` field contains all the purchases that fall
+that has version numbers before 1000L.  Since we only requested a maximum of 2 versions of that column,
+this means we get the most recent 2 versions of the user’s email before version 1000, even if there are
+more after version 1000.  This also means the `’purchases` field contains all the purchases that fall
 within the specified `timeRange` for this `KijiInput`, not all purchases that are in the users
 table.
 
@@ -246,9 +252,9 @@ Here are the parameters to QualifiedColumnInputSpec and ColumnFamilyInputSpec:
 
 ### Specifying the Timestamp (Optional)
 
-If you wish to control the timestamp of the cell that gets written to the Kiji table, you may
-specify the field which contains this information. Care must be taken while handling timestamps
-manually. You can read more about this
+If you wish to control the timestamp, or version, of the cell that gets written to the Kiji table,
+you may specify the field which contains this information. Again, care must be taken while handling
+timestamps manually. You can read more about this
 [here](http://www.kiji.org/2013/02/13/common-pitfalls-of-timestamps-in-hbase/).
 
 ### Specifying a Field to Column Mapping (Required)
@@ -332,6 +338,7 @@ that only one Scalding pipe can write to an `HFileKijiSource`.
 Please note that unlike other KijiExpress jobs that extend from `KijiJob`, when generating HFiles,
 your job must extend `HFileKijiJob` *and* only one pipe can write to an `HFileKijiOutput`. The
 reasons for these limitations are as follows:
+
 * When writing to HFiles, normally the `IdentityReducer` is used along with the
   `TotalOrderPartitioner` so that keys emitted from the Map phase are shuffled properly to the right
   reducer. There are as many reducers as HBase regions so as to make the bulk load efficient.
