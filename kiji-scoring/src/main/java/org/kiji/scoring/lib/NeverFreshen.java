@@ -49,6 +49,6 @@ public final class NeverFreshen extends KijiFreshnessPolicy {
   /** {@inheritDoc} */
   @Override
   public boolean isFresh(KijiRowData rowData, FreshenerContext context) {
-    return true;
+    return FRESH;
   }
 }

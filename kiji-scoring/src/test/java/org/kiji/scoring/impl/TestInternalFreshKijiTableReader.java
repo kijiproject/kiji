@@ -164,7 +164,7 @@ public class TestInternalFreshKijiTableReader {
     public boolean isFresh(
         final KijiRowData rowData, final FreshenerContext context
     ) {
-      return true;
+      return FRESH;
     }
   }
 
@@ -184,7 +184,7 @@ public class TestInternalFreshKijiTableReader {
     public boolean isFresh(
         final KijiRowData rowData, final FreshenerContext context
     ) {
-      boolean retVal = false;
+      boolean retVal = STALE;
       try {
         retVal = rowData.getMostRecentValue("family", "qual2").equals("new@val.com");
       } catch (IOException ioe) {
@@ -205,7 +205,7 @@ public class TestInternalFreshKijiTableReader {
       } catch (InterruptedException ie) {
         throw new RuntimeException(ie);
       }
-      return false;
+      return STALE;
     }
   }
 

@@ -76,6 +76,12 @@ import org.kiji.schema.KijiRowData;
  *   {@link #getDataRequest(FreshenerContext)}, and {@link #isFresh(org.kiji.schema.KijiRowData,
  *   FreshenerContext)} are per-request methods.
  * </p>
+ *
+ * <p>
+ *   To avoid confusion, static aliases are provided called FRESH and STALE. Returning one of these
+ *   values from {@link #isFresh(org.kiji.schema.KijiRowData, FreshenerContext)} will indicate to
+ *   the framework that requested data is fresh or stale respectively.
+ * </p>
  */
 @ApiAudience.Public
 @ApiStability.Experimental
@@ -88,6 +94,16 @@ public abstract class KijiFreshnessPolicy {
    * from {@link #shouldUseClientDataRequest(FreshenerContext)}.
    */
   protected static final KijiDataRequest EMPTY_REQUEST = KijiDataRequest.builder().build();
+  /**
+   * When returned by {@link #isFresh(KijiRowData, FreshenerContext)}, indicates to the framework
+   * that requested data is fresh and that the associated ScoreFunction should not run.
+   */
+  protected static final boolean FRESH = true;
+  /**
+   * When returned by {@link #isFresh(KijiRowData, FreshenerContext)}, indicates to the framework
+   * that requested data is stale and that the associated ScoreFunction should run to refresh it.
+   */
+  protected static final boolean STALE = false;
 
   // Attachment time methods -----------------------------------------------------------------------
 

@@ -115,7 +115,7 @@ public class TestKVStores extends KijiClientTest {
 
     @Override
     public boolean isFresh(KijiRowData rowData, FreshenerContext context) {
-      return false;
+      return STALE;
     }
 
     @Override
