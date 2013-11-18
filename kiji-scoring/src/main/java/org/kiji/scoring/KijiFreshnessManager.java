@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
+import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReaderFactory;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiColumnName;
@@ -695,30 +696,48 @@ public final class KijiFreshnessManager implements Closeable {
         Maps.newHashMap();
 
     for (Map.Entry<KijiColumnName, KijiFreshenerRecord> recordEntry : records.entrySet()) {
+      final Map<ValidationFailure, Exception> individualFailures = Maps.newHashMap();
       if (instantiateClasses) {
+        final KijiFreshenerRecord record = recordEntry.getValue();
         final KijiFreshnessPolicy policy =
-            ScoringUtils.policyForName(recordEntry.getValue().getFreshnessPolicyClass());
+            ScoringUtils.policyForName(record.getFreshnessPolicyClass());
         final ScoreFunction scoreFunction =
-            ScoringUtils.scoreFunctionForName(recordEntry.getValue().getScoreFunctionClass());
+            ScoringUtils.scoreFunctionForName(record.getScoreFunctionClass());
 
-        registerFreshener(
+        if (setupClasses) {
+          final InternalFreshenerContext context =
+              InternalFreshenerContext.create(recordEntry.getKey(), record.getParameters());
+          final Map<String, KeyValueStore<?, ?>> kvMap = Maps.newHashMap();
+          kvMap.putAll(scoreFunction.getRequiredStores(context));
+          kvMap.putAll(policy.getRequiredStores(context));
+          context.setKeyValueStoreReaderFactory(KeyValueStoreReaderFactory.create(kvMap));
+
+          policy.setup(context);
+          scoreFunction.setup(context);
+        }
+        final Map<String, String> newParameters = scoreFunction.serializeToParameters();
+        newParameters.putAll(policy.serializeToParameters());
+        newParameters.putAll(record.getParameters());
+
+        individualFailures.putAll(validateRecord(
             tableName,
             recordEntry.getKey(),
-            policy,
-            scoreFunction,
-            recordEntry.getValue().getParameters(),
-            overwriteExisting,
-            setupClasses);
+            KijiFreshenerRecord.newBuilder()
+                .setRecordVersion(record.getRecordVersion())
+                .setFreshnessPolicyClass(record.getFreshnessPolicyClass())
+                .setScoreFunctionClass(record.getScoreFunctionClass())
+                .setParameters(newParameters)
+                .build(),
+            overwriteExisting));
       } else {
-        final Map<ValidationFailure, Exception> individualFailures = validateRecord(
+        individualFailures.putAll(validateRecord(
           tableName,
           recordEntry.getKey(),
           recordEntry.getValue(),
-          overwriteExisting);
-
-        if (!individualFailures.isEmpty()) {
-          combinedFailures.put(recordEntry.getKey(), individualFailures);
-        }
+          overwriteExisting));
+      }
+      if (!individualFailures.isEmpty()) {
+        combinedFailures.put(recordEntry.getKey(), individualFailures);
       }
     }
     if (combinedFailures.isEmpty()) {
