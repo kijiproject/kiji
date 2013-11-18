@@ -1,6 +1,10 @@
 
                              Kiji Express Release Notes
 
+Version 0.14.0
+  * EXP-331. Made kiji-express a multi-module project. Existing code
+      moved to the kiji-express-flow module.
+
 Version 0.13.0
   * EXP-316. memory leak when reading from cells with many versions
 
