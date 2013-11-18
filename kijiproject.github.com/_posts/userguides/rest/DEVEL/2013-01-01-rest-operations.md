@@ -127,7 +127,7 @@ the actual JSON schema of the cell.
 
 {% highlight js %}
     {
-      "entityId": "[12345]",
+      "entityId": [12345],
       "cells":
       {
         "info":

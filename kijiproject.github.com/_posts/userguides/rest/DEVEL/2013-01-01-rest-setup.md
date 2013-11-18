@@ -20,18 +20,18 @@ To run KijiREST in a production environment, see [Setup and Run (Production)](#s
 
 ### Set up
 
-If you are using a BentoBox, set the environment variable `${REST}` to point to the `rest` directory
+If you are using a BentoBox, set the environment variable `${KIJI_REST_HOME}` to point to the `rest` directory
 within your BentoBox installation:
 
-    export REST=/path/to/bento/box/rest
+    export KIJI_REST_HOME=/path/to/bento/box/rest
 
 If you are not using a BentoBox, download the KijiREST tarball from the Kiji
-[Downloads](http://www.kiji.org/getstarted/#Downloads) page, untar the archive, and set `${REST}` to
+[Downloads](http://www.kiji.org/getstarted/#Downloads) page, untar the archive, and set `${KIJI_REST_HOME}` to
 point to the root directory:
 
-    export REST=/path/to/tarball/kiji-rest-{{site.rest_devel_version}}
+    export KIJI_REST_HOME=/path/to/tarball/kiji-rest-{{site.rest_devel_version}}
 
-Within `${REST}`, you should see the following:
+Within `${KIJI_REST_HOME}`, you should see the following:
 
 <dl>
 <dt>  bin/ </dt>
@@ -56,7 +56,7 @@ through one of the [Kiji tutorials](http://docs.kiji.org/tutorials.html).
 ### Startup with Basic Configuration
 
 The KijiREST configuration parameters are located in
-`${REST}/conf/configuration.yml`
+`${KIJI_REST_HOME}/conf/configuration.yml`
 (`rest/conf/configuration.yml` for BentoBox users). This file is divided into
 two major sections:
 * The top portion of the file configures KijiREST
@@ -65,7 +65,7 @@ two major sections:
 To configure and run KijiREST for your cluster and instance:
 
 1.  Start HBase and Hadoop with a configured Kiji environment. Make sure necessary Avro
-classes are accessible either in `$KIJI_CLASSPATH` or in the `${REST}/lib/` directory.
+classes are accessible either in `$KIJI_CLASSPATH` or in the `${KIJI_REST_HOME}/lib/` directory.
 
     If you are running a BentoBox, start Hadoop and HBase with `bento start`.
 
@@ -87,7 +87,7 @@ through the REST service, for example `default`, `prod_instance`,
         ~/REST$  ./bin/kiji-rest start
 
     The default `configuration.yml` file sets up the REST service through port 8080
-    and writes all logs to the `${REST}/logs`
+    and writes all logs to the `${KIJI_REST_HOME}/logs`
     directory. The process will run in the background.
 
 5. Check that KijiREST is running correctly.
@@ -95,12 +95,12 @@ through the REST service, for example `default`, `prod_instance`,
         ~/REST$  ./bin/kiji-rest status
         Kiji REST is running. PID is 1234
 
-    (You can also find the process ID in the `${REST}/kiji-rest.pid` file.)
+    (You can also find the process ID in the `${KIJI_REST_HOME}/kiji-rest.pid` file.)
 
-    If KijiREST is not running, consult the logs in `${REST}/logs`.  Often if your KijiREST process
+    If KijiREST is not running, consult the logs in `${KIJI_REST_HOME}/logs`.  Often if your KijiREST process
     stops during this stage in the setup, the reason is that KijiREST cannot find the Kiji instances
-    described in `${REST}/conf/configuration.yml`.  You will then see something similar to the
-    following in `${REST}/logs/console.out`:
+    described in `${KIJI_REST_HOME}/conf/configuration.yml`.  You will then see something similar to the
+    following in `${KIJI_REST_HOME}/logs/console.out`:
 
             Exception in thread "main" org.kiji.schema.KijiNotInstalledException: Kiji instance
             kiji://localhost:2181/default/ is not installed.

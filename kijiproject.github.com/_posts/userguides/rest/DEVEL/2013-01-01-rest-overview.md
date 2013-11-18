@@ -27,7 +27,7 @@ resource. Other optional parameters relevant to the action are specified in the 
 body sections of the request. For example, to retrieve row data from the 'users' table, a
 GET request might look like the following:
 
-    GET /v1/instances/dev_instance/tables/users/rows/c51ce410c124a10e0db5e4b97fc2af39[?...]
+    GET /v1/instances/dev_instance/tables/users/rows/?eid=[12345]&...
 
 All returned data is modeled as JSON. The appropriate MIME types to accept are
 application/json for lists, metadata, and all non-row-data.
@@ -39,14 +39,7 @@ items as well as how to setup and run KijiREST in your development and productio
 ### KijiREST Open Source Development Project
 
 The [kiji-rest](https://github.com/kijiproject/kiji-rest) project will evolve over time to
-ensure maximum user and developer benefit.
-
-#### Development Status
-The Kiji project encourages the use of Java annotations for indicating the stability of
-API components. The levels of stability are as follows:
-
-*  By default, unlabeled classes should be assumed to be Experimental.
-*  __Stable__ APIs are guaranteed to change only in binary-compatible ways within a major version (e.g., all 1.x.x versions)
-*  __Evolving__ APIs may change in binary-incompatible ways between minor versions (e.g., from 1.4.1 to 1.5.0) of the software. In particular, new features may be added in one minor version and altered or removed in the next.
-*  __Experimental__ APIs may change at any time.
-*  __Private__ APIs should all be considered Experimental.
+ensure maximum user and developer benefit. With the release of 1.0, we will provide certain guarantees
+on the compatibility of clients against
+the KijiREST versioned server. For more information, please visit the developer wiki page on
+[KijiREST API Compatibility](https://github.com/kijiproject/wiki/wiki/KijiREST-API-Compatibility).
