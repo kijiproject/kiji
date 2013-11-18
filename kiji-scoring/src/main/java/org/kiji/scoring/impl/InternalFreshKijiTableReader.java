@@ -304,8 +304,10 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
      * @throws IOException in case of an error cleaning up the score function.
      */
     private void close() throws IOException {
-      mScoreFunction.cleanup(InternalFreshenerContext.create(
-          mAttachedColumn, mParameters, mFactory));
+      final InternalFreshenerContext cleanupContext =
+          InternalFreshenerContext.create(mAttachedColumn, mParameters, mFactory);
+      mScoreFunction.cleanup(cleanupContext);
+      mPolicy.cleanup(cleanupContext);
       mFactory.close();
     }
 
