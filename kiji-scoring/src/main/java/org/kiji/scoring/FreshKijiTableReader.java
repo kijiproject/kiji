@@ -19,9 +19,11 @@
 package org.kiji.scoring;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
 import com.google.common.base.Joiner;
@@ -29,7 +31,9 @@ import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
@@ -481,6 +485,12 @@ public interface FreshKijiTableReader extends KijiTableReader {
   @ApiStability.Experimental
   public static final class FreshRequestOptions {
 
+    /**
+     * When provided to {@link Builder#withDisabledColumns(java.util.Set)} will instruct the reader
+     * to skip freshening on all columns in this request.
+     */
+    public static final Set<KijiColumnName> DISABLE_ALL_COLUMNS = Sets.newHashSet();
+
     /** Builder for FreshRequestOptions. Instance of this builder are not thread safe. */
     @ApiStability.Experimental
     public static final class Builder {
@@ -488,9 +498,11 @@ public interface FreshKijiTableReader extends KijiTableReader {
       /** -1 is a code for the FreshKijiTableReader to use its configured default timeout. */
       private static final long DEFAULT_TIMEOUT = -1;
       private static final Map<String, String> DEFAULT_PARAMETERS = Collections.emptyMap();
+      private static final Set<KijiColumnName> DEFAULT_DISABLED_COLUMNS = Sets.newHashSet();
 
       private Long mTimeout = null;
       private Map<String, String> mParameters = null;
+      private Set<KijiColumnName> mDisabledColumns = null;
 
       /** Private constructor. */
       private Builder() { }
@@ -574,6 +586,33 @@ public interface FreshKijiTableReader extends KijiTableReader {
       }
 
       /**
+       * Specify a set of columns to not freshen for this request.
+       *
+       * @param columnsToDisable columns which will not be freshened during this request.
+       * @return this builder configured to exclude the given columns from freshening.
+       */
+      public Builder withDisabledColumns(
+          final Set<KijiColumnName> columnsToDisable
+      ) {
+        Preconditions.checkNotNull(columnsToDisable, "columnsToDisable may not be null.");
+        Preconditions.checkState(
+            null == mDisabledColumns, "columnsToDisable already set to: %s", mDisabledColumns);
+        mDisabledColumns = columnsToDisable;
+        return this;
+      }
+
+      /**
+       * Get the set of columns which will not be freshened by this request, or null if none have
+       * been specified.
+       *
+       * @return the set of columns which will not be freshened by this request, or null if none
+       * have been specified.
+       */
+      public Collection<KijiColumnName> getDisabledColumns() {
+        return ImmutableSet.copyOf(mDisabledColumns);
+      }
+
+      /**
        * Build a FreshRequestOptions from the configured state and default values.
        *
        * @return a new FreshRequestOptions from the configured state and default values.
@@ -585,17 +624,21 @@ public interface FreshKijiTableReader extends KijiTableReader {
         if (null == mParameters) {
           mParameters = DEFAULT_PARAMETERS;
         }
+        if (null == mDisabledColumns) {
+          mDisabledColumns = DEFAULT_DISABLED_COLUMNS;
+        }
 
-        return new FreshRequestOptions(mTimeout, mParameters);
+        return new FreshRequestOptions(mTimeout, mParameters, mDisabledColumns);
       }
     }
 
     /**
      * Convenience method for creating a FreshRequestOptions with the given timeout and default
-     * parameters. Default parameters are empty.
+     * parameters and disabled columns. Default parameters and disabled columns are empty.
      *
      * @param timeout time in milliseconds to wait for this freshening request to finish.
-     * @return a new FreshRequestOptions with the given timeout and default parameters.
+     * @return a new FreshRequestOptions with the given timeout and default parameters and disabled
+     *     columns.
      */
     public static FreshRequestOptions withTimeout(
         final long timeout
@@ -605,11 +648,12 @@ public interface FreshKijiTableReader extends KijiTableReader {
 
     /**
      * Convenience method for creating a FreshRequestOptions with the given parameters and default
-     * timeout.
+     * timeout and disabled columns. Default disabled columns are empty.
      *
      * @param parameters configuration parameters which will be available to all Fresheners run in
      *     response to this request.
-     * @return a new FreshRequestOptions with the given parameters and default timeout.
+     * @return a new FreshRequestOptions with the given parameters and default timeout and disabled
+     *     columns.
      */
     public static FreshRequestOptions withParameters(
         final Map<String, String> parameters
@@ -617,8 +661,23 @@ public interface FreshKijiTableReader extends KijiTableReader {
       return Builder.create().withParameters(parameters).build();
     }
 
+    /**
+     * Convenience method for creating a FreshRequestOptions with the given disabled columns and
+     * default timeout and parameters. Default parameters are empty.
+     *
+     * @param disabledColumns set of columns which will not be freshened by this request.
+     * @return a new FreshRequestOptions with the given disabled columns and default timeout and
+     *     parameters.
+     */
+    public static FreshRequestOptions withDisabledColumns(
+        final Set<KijiColumnName> disabledColumns
+    ) {
+      return Builder.create().withDisabledColumns(disabledColumns).build();
+    }
+
     private final long mTimeout;
     private final Map<String, String> mParameters;
+    private final Set<KijiColumnName> mDisabledColumns;
 
     /**
      * Initialize a new FreshRequestOptions with the given timeout and parameters.
@@ -626,13 +685,16 @@ public interface FreshKijiTableReader extends KijiTableReader {
      * @param timeout time in milliseconds to wait for this freshening request to finish.
      * @param parameters configuration parameters which will be available to all Fresheners run in
      *     response to this request.
+     * @param disabledColumns set of columns which will not be freshened by this request.
      */
     private FreshRequestOptions(
         final long timeout,
-        final Map<String, String> parameters
+        final Map<String, String> parameters,
+        final Set<KijiColumnName> disabledColumns
     ) {
       mTimeout = timeout;
       mParameters = parameters;
+      mDisabledColumns = disabledColumns;
     }
 
     /**
@@ -653,12 +715,22 @@ public interface FreshKijiTableReader extends KijiTableReader {
       return mParameters;
     }
 
+    /**
+     * Get the set of columns which will not be freshened by this request.
+     *
+     * @return the set of columns which will not be freshened by this request.
+     */
+    public Set<KijiColumnName> getDisabledColumns() {
+      return mDisabledColumns;
+    }
+
     /** {@inheritDoc} */
     @Override
     public String toString() {
       return Objects.toStringHelper(FreshRequestOptions.class)
           .add("timeout", mTimeout)
           .add("parameter_overrides", mParameters)
+          .add("disabled_columns", mDisabledColumns)
           .toString();
     }
   }

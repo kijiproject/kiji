@@ -1,6 +1,9 @@
 
                               Kiji Scoring Release Notes
 Version 0.10.0
+    * SCORE-125. FreshRequestOptions now supports disabling individual columns to prevent them from
+        being freshened by this corresponding request. To disable all columns, use the marked value
+        DISABLE_ALL_COLUMNS found in FreshRequestOptions.
     * SCORE-139. KijiFreshnessPolicy now includes static constants named FRESH and STALE which can
         be returned from isFresh() to indicate that the data read was fresh or stale respectively.
     * SCORE-135. kiji-scoring-server has been removed from kiji-scoring to avoid a circular

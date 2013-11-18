@@ -22,6 +22,7 @@ package org.kiji.scoring.impl;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.BlockingQueue;
@@ -1313,6 +1314,31 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   }
 
   /**
+   * Remove any columns from requestColumns which are also included in disabledColumns. Does not
+   * modify the input collections, returns a new list containing only those columns from
+   * requestColumns which are not disabled.
+   *
+   * @param requestColumns all columns from a KijiDataRequest.
+   * @param disabledColumns columns for which freshening is disabled.
+   * @return a new collection containing all requested columns which are not disabled.
+   */
+  private static ImmutableList<KijiColumnName> removeDisabledColumns(
+      final ImmutableList<KijiColumnName> requestColumns,
+      final Set<KijiColumnName> disabledColumns
+  ) {
+    if (disabledColumns == FreshKijiTableReader.FreshRequestOptions.DISABLE_ALL_COLUMNS) {
+      return ImmutableList.of();
+    }
+    final List<KijiColumnName> collectedColumns = Lists.newArrayList();
+    for (KijiColumnName column : requestColumns) {
+      if (!disabledColumns.contains(column)) {
+        collectedColumns.add(column);
+      }
+    }
+    return ImmutableList.copyOf(collectedColumns);
+  }
+
+  /**
    * Get a Future for each Freshener from the request context which returns a boolean indicating
    * whether the Freshener wrote a value to the table necessitating a reread.
    *
@@ -1656,7 +1682,8 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
 
     final KijiTableReader requestReader = getPooledReader(mReaderPool);
     try {
-      final ImmutableList<KijiColumnName> requestColumns = getColumnsFromRequest(dataRequest);
+      final ImmutableList<KijiColumnName> requestColumns =
+          removeDisabledColumns(getColumnsFromRequest(dataRequest), options.getDisabledColumns());
 
       final ImmutableMap<KijiColumnName, Freshener> fresheners;
       final ImmutableMap<KijiColumnName, KijiFreshenerRecord> records;

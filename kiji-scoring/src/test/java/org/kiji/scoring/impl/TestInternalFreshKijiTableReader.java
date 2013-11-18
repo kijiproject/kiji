@@ -31,6 +31,7 @@ import java.util.concurrent.Executors;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.junit.After;
 import org.junit.Before;
@@ -1312,6 +1313,65 @@ public class TestInternalFreshKijiTableReader {
       assertEquals("foo-val", freshenedData.getMostRecentValue("family", "qual0").toString());
       // The older value should have.
       assertEquals("new-val", freshenedData.getValue("family", "qual0", 2).toString());
+    } finally {
+      freshReader.close();
+    }
+  }
+
+  @Test
+  public void testDisabledSingleColumn() throws IOException {
+    final EntityId eid = mTable.getEntityId("foo");
+    final KijiDataRequest request = KijiDataRequest.create("family", "qual0");
+    final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
+    try {
+      manager.registerFreshener(
+          TABLE_NAME, FAMILY_QUAL0, ALWAYS, TEST_SCORE_FN, EMPTY_PARAMS, false, false);
+    } finally {
+      manager.close();
+    }
+
+    final FreshKijiTableReader freshReader = FreshKijiTableReader.Builder.create()
+        .withTable(mTable)
+        .withTimeout(500)
+        .build();
+    try {
+      // This should not freshen anything.
+      final KijiRowData staleData = freshReader.get(
+          eid, request, FreshRequestOptions.withDisabledColumns(Sets.newHashSet(FAMILY_QUAL0)));
+      assertEquals("foo-val", staleData.getMostRecentValue("family", "qual0").toString());
+      // This should freshen just by leaving off the options.
+      final KijiRowData freshData = freshReader.get(eid, request);
+      assertEquals("new-val", freshData.getMostRecentValue("family", "qual0").toString());
+    } finally {
+      freshReader.close();
+    }
+  }
+
+  @Test
+  public void testDisableAllColumns() throws IOException {
+    final EntityId eid = mTable.getEntityId("foo");
+    final KijiDataRequest request = KijiDataRequest.create("family", "qual0");
+    final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
+    try {
+      manager.registerFreshener(
+          TABLE_NAME, FAMILY_QUAL0, ALWAYS, TEST_SCORE_FN, EMPTY_PARAMS, false, false);
+    } finally {
+      manager.close();
+    }
+
+    final FreshKijiTableReader freshReader = FreshKijiTableReader.Builder.create()
+        .withTable(mTable)
+        .withTimeout(500)
+        .build();
+    try {
+      // This should not freshen anything.
+      final KijiRowData staleData = freshReader.get(eid, request,
+          FreshRequestOptions.withDisabledColumns(
+          FreshKijiTableReader.FreshRequestOptions.DISABLE_ALL_COLUMNS));
+      assertEquals("foo-val", staleData.getMostRecentValue("family", "qual0").toString());
+      // This should freshen just by leaving off the options.
+      final KijiRowData freshData = freshReader.get(eid, request);
+      assertEquals("new-val", freshData.getMostRecentValue("family", "qual0").toString());
     } finally {
       freshReader.close();
     }
