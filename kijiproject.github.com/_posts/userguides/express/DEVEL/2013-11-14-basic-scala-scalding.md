@@ -26,9 +26,9 @@ describe the components of managing basic data flow through a pipeline with Kiji
 The next section will contain more examples of Scalding operations that are more complex than maps,
 such as grouping and joining operations.
 
-### Scala Syntax Conventions
+## Scala Syntax Conventions
 
-#### Newlines and Breaking Lines
+### Newlines and Breaking Lines
 
 Scala statements are read as single lines: they are terminated by newlines or by semi-colons.
 A semi-colon in the middle of a line delimits two statements on a single line.
@@ -45,7 +45,7 @@ Scala statements cannot include a newline between square brackets.
 
 >Note that more than one newline in a row is not allowed in the Express REPL.
 
-#### Declaring Types
+### Declaring Types
 
 In Scala, you set types by following an object by a colon and then the type or trait.
 A trait, like a class, lets you define object types, but unlike classes, you can't pass
@@ -77,7 +77,7 @@ Data](#managing_data).
 The return type for the function is also explicitly typed: `getMostPopularSong(…): String`
 tells you that the return value of this function is of String type.
 
-#### Defining Functions
+### Defining Functions
 
 In explicit function definitions in Scala, the syntax of the definition depends on whether
 or not the function has a return value.
@@ -109,7 +109,7 @@ transformation between the map source and target fields:
     .map('entityId -> 'songId) { (eId: EntityId) => eId(0) }
     Need explanation of function literal.
 
-### Tuples and Pipelines
+## Tuples and Pipelines
 
 KijiExpress views a data set as a collection of named tuples. A named tuple can be thought
 of as an ordered list where each element has a name. When using KijiExpress with data
@@ -124,7 +124,7 @@ Data enters a pipe from a source. Sources can be such places as Kiji tables, tex
 files. At the end of the pipe, tuples are written to a sink. Again, sinks can be Kiji tables, text
 files, or SequenceFiles.
 
-#### Operating on Pipe Data
+### Operating on Pipe Data
 
 When data is read in KijiExpress it is implicitly converted into a KijiPipe, which is an
 extension of Scalding RichPipe. The data is in the form of a stream of tuples, where one tuple
@@ -154,7 +154,7 @@ performs
 
 where functionA is the first to executed, then functionB, then functionC.
 
-### Reading Data
+## Reading Data
 
 Most Express operations involve reading data from some data source, whether it's a KijiTable
 or a file. In Scala, reading data can be immediately paired with mapping the data into tuples
@@ -204,7 +204,7 @@ column (and map-type column family) appears as an entry in the tuple. Because th
 is a Kiji table, we know that the first entry in the tuple is the entity ID. We also know
 that each entry in the tuple potentially includes more than one timestamped version.
 
-### Mapping Data
+## Mapping Data
 
 With data streaming in the processing pipeline, the KijiExpress operation can begin to
 manipulate the data. The most common operation to apply to data is to restructure the
@@ -216,7 +216,7 @@ we'll go through the four most common here:
 * [MapTo](#mapto)
 * [FlatMapTo](#flatmapto)
 
-#### Map
+### Map
 
 Map operations in Scala use the following syntax:
 
@@ -240,7 +240,7 @@ fields are specified.
 
 Here are some examples of map functions:
 
-##### Parsing row content into tuple fields
+#### Parsing row content into tuple fields
 
 This example takes the line field (output from `TextLine`) and uses a mapping function
 `parseJson` to transform the JSON record into tuple fields.
@@ -261,7 +261,7 @@ The anonymous map function augments the input data stream with the new material 
 in the target; each "row" of the the output data stream is a tuple that consists of four
 fields: `line`, `userId`, `playTime`, and `songId`.
 
-##### Inserting a value as an Entity ID
+#### Inserting a value as an Entity ID
 
 This example takes the values of one field, transforms them by applying the mapping
 function, then puts the result in another field.
@@ -284,7 +284,7 @@ KijiExpress method that creates an entity ID from the objects passed to it.
 the input stream augmented with the new field entityId. The result is a stream that's
 ready to be written to a Kiji table.
 
-##### Processing Kiji Table Columns
+#### Processing Kiji Table Columns
 
 A map statement can include the transformation in line instead of specifying a function
 defined elsewhere. This example takes a column from a Kiji table and returns only the most recent
@@ -309,7 +309,7 @@ This example has the same basic structure as previous examples:
 * It augments the input stream so that the output stream includes the entire content of
   the input stream (`trackPlays`) augmented with the new field (`lastTrackPlayed`).
 
-#### FlatMap
+### FlatMap
 
 FlatMap operations in Scala use the same syntax as map operations:
 
@@ -324,7 +324,7 @@ the `flatMap` generates a tuple for each value produced by the mapping function.
 tuple includes the entire input tuple plus the additional field value.
 Here are some examples of `flatMap` functions:
 
-##### Document to Words
+#### Document to Words
 
 The quintessential use of `flatMap` makes an index of values such as turning a document
 into a list of words. The `flapMap` statement takes a string, splits it into "words"
@@ -353,7 +353,7 @@ the output is a tuple for each word in `doc_content`. Each output tuple contains
 from the input tuple with an additional field `word` with one of the words from `doc_content`.
 ?Is the list ordered in any way?
 
-##### FlatMap With Multiple Fields in the Output
+#### FlatMap With Multiple Fields in the Output
 
 The Document to Words example is simple in that it pivots on a single field value; what
 happens when there's more payload in the output?
@@ -394,7 +394,7 @@ its ID; the tuple includes the original playlist values: ?how do the song IDs co
 The details of how to define the mapping function to generate bigrams is described in
 ?tutorial_link?
 
-#### MapTo
+### MapTo
 
 MapTo operations perform a map operation followed by a "project" operation; using a
 `mapTo` function is more efficient that performing the two operations separately. The
@@ -406,7 +406,7 @@ in the map operation target field list.
 After this oepration, the only fields of the tuples in the pipe are those in output_field_list.
 
 
-#### FlatMapTo
+### FlatMapTo
 
 FlatMapTo is similar to MapTo: it performs a flatMap, but keeps only the output fields. This snippet
 comes from the PlayCounter in the KijiExpress music tutorial:
@@ -417,13 +417,13 @@ comes from the PlayCounter in the KijiExpress music tutorial:
 
 After this step in the flow, the only field in the pipe is 'song.
 
-#### Other Scalding Operations
+### Other Scalding Operations
 
 In the next section, you will see examples of other Scalding operations that alter the structure of
 data, instead of simply being transformative maps on a pipe.  These include grouping and joining
 operations.
 
-### Building from Examples
+## Building from Examples
 
 There are a number of examples provided in the KijiExpress tutorial. The following list
 indexes some of the functionality shown in the tutorial examples with the specific

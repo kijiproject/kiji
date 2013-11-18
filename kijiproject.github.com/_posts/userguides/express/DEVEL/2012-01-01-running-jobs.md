@@ -10,7 +10,7 @@ description: Running KijiExpress Jobs.
 
 There are two ways to run KijiExpress logic: compiled into Jobs or in the KijiExpress language shell (REPL).
 
-### Running Compiled Jobs
+## Running Compiled Jobs
 
 KijiExpress programs are written in Scala with KijiExpress libraries included as dependencies. The Kiji project includes configuration for Maven that eases building these Scala files into runnable Java JARs. You can choose to compile KijiExpress Scala files with whatever system you are comfortable with; see Build Tools for setting up the Kiji project dependencies.
 
@@ -67,7 +67,7 @@ line would include:
     express script examples/express-music/scripts/SongMetadataImporter.express \
     --libjars “examples/express-music/lib/*” --hdfs
 
-### Running Logic in the KijiExpress Shell
+## Running Logic in the KijiExpress Shell
 
 KijiExpress includes a REPL or command line shell where you can run one or more Scala
 statements and KijiExpress will evaluate the results.

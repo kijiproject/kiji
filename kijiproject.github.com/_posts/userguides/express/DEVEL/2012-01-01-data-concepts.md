@@ -12,7 +12,7 @@ description: KijiExpress Data Concepts.
 * [Tuples and Pipelines](#tuples_and_pipelines)
 * [Avro Data](#avro_and_representing_complex_data)
 
-### Kiji Table Layout and Cells
+## Kiji Table Layout and Cells
 
 KijiExpress relies on KijiSchema’s data model, which in itself is an extension of HBase’s
 columnar storage model.
@@ -70,7 +70,7 @@ see [Managing Data]({{site.userguide_schema_devel}}/managing-data) in the KijiSc
 details on how to turn your layout design into KijiSchema DDL Shell statements, see [DDL Shell
 Reference]({{site.userguide_schema_devel}}/schema-shell-ddl-ref).
 
-### Tuples and Pipelines
+## Tuples and Pipelines
 
 KijiExpress views a data set as a collection of named tuples. A named tuple can be thought
 of as an ordered list where each element has a name. When using KijiExpress with data
@@ -85,7 +85,7 @@ Data enters a pipe from a source. Sources can be such places as Kiji tables, tex
 Sequence files ?what’s a sequence file?. At the end of the pipe, tuples are written
 to a sink. Again, sinks can be Kiji tables, text files, or SequenceFiles.
 
-### Avro and Representing Complex Data
+## Avro and Representing Complex Data
 
 Each cell in a Kiji table has a schema associated with it. Schemas in KijiSchema are versioned.
 
