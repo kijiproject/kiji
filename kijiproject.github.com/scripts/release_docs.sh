@@ -100,7 +100,6 @@ fix_released_versions() {
       "s/userguide_rest_devel/userguide_rest_$REST_FLAT_VER/g" {} \;
   find . -name "*.md" -exec sed -i -e \
       "s/userguide_express_devel/userguide_express_$EXPRESS_FLAT_VER/g" {} \;
-
   find . -name "*.md" -exec sed -i -e \
       "s/tutorial_phonebook_devel/tutorial_phonebook_$PHONEBOOK_FLAT_VER/g" {} \;
 

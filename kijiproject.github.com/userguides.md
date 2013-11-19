@@ -12,7 +12,7 @@ The most recent version of each of the user guides is available here:
 * [KijiSchema User Guide]({{site.userguide_url}}/schema/1.3.2/kiji-schema-overview/)
 * [KijiMR User Guide]({{site.userguide_url}}/mapreduce/1.2.1/kiji-mr-overview/)
 * [KijiREST User Guide]({{site.userguide_url}}/rest/1.0.1/rest-overview/)
-* [KijiExpress User Guide]({{site.userguide_url}}/express/0.13.0/express-overview/)
+* [KijiExpress User Guide]({{site.userguide_url}}/express/0.13.0/overview/)
 * [KijiScoring User Guide]({{site.userguide_url}}/scoring/0.9.0/what-is-scoring/)
 
 ## Previous Versions
