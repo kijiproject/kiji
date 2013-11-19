@@ -46,7 +46,7 @@ to the Kiji version you are using are available here:
 
 #### KijiExpress
 
-* [KijiExpress Tutorial 0.12.0](tutorials/express-recommendation/0.12.0/express-overview)
+* [KijiExpress Tutorial 0.11.0](tutorials/express-recommendation/0.11.0/express-overview)
 * [KijiExpress Tutorial 0.8.0](tutorials/express-recommendation/0.8.0/express-overview)
 * [KijiExpress Tutorial 0.7.0](tutorials/express-recommendation/0.7.0/express-overview)
 * [KijiExpress Tutorial 0.6.0](tutorials/express-recommendation/0.6.0/express-overview)
@@ -56,6 +56,9 @@ to the Kiji version you are using are available here:
 * [KijiExpress Tutorial 0.2.0](tutorials/express-recommendation/0.2.0/express-overview)
 * [KijiExpress Tutorial 0.1.0](tutorials/express-recommendation/0.1.0/express-overview)
 
+#### KijiScoring
+
+* [KijiScoring Tutorial 0.9.0](tutorials/scoring/0.9.0/scoring-overview)
 
 ## Development Versions
 

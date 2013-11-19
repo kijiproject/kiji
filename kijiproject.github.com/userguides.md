@@ -11,7 +11,9 @@ The most recent version of each of the user guides is available here:
 
 * [KijiSchema User Guide]({{site.userguide_url}}/schema/1.3.2/kiji-schema-overview/)
 * [KijiMR User Guide]({{site.userguide_url}}/mapreduce/1.2.1/kiji-mr-overview/)
-* [KijiREST User Guide]({{site.userguide_url}}/rest/0.6.0/rest-overview/)
+* [KijiREST User Guide]({{site.userguide_url}}/rest/1.0.1/rest-overview/)
+* [KijiExpress User Guide]({{site.userguide_url}}/express/0.13.0/express-overview/)
+* [KijiScoring User Guide]({{site.userguide_url}}/scoring/0.9.0/scoring-overview/)
 
 ## Previous Versions
 
@@ -52,10 +54,17 @@ to the Kiji version you are using are available here:
 * [KijiMR 1.0.0-rc4]({{site.userguide_url}}/mapreduce/1.0.0-rc4/kiji-mr-overview/)
 
 #### KijiREST User Guide
+* [KijiREST 1.0.1]({{site.userguide_url}}/rest/1.0.1/rest-overview/)
 * [KijiREST 1.0.0]({{site.userguide_url}}/rest/1.0.0/rest-overview/)
 * [KijiREST 0.5.0]({{site.userguide_url}}/rest/0.5.0/rest-overview/)
 * [KijiREST 0.4.0]({{site.userguide_url}}/rest/0.4.0/rest-overview/)
 * [KijiREST 0.3.0]({{site.userguide_url}}/rest/0.3.0/rest-overview/)
+
+#### KijiExpress User Guide
+* [KijiExpress 0.13.0]({{site.userguide_url}}/express/0.13.0/express-overview/)
+
+#### KijiScoring User Guide
+* [KijiScoring 0.9.0]({{site.userguide_url}}/scoring/0.9.0/scoring-overview/)
 
 ## Development Versions
 

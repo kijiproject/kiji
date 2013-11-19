@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Setting up Kiji and HDFS
-categories: [tutorials, express-recommendation, 0.12.0]
+categories: [tutorials, express-recommendation, 0.11.0]
 tags: [express-music]
 order: 3
 description: Setup for KijiExpress Tutorial
@@ -14,7 +14,8 @@ steps!](http://www.kiji.org/#tryit)
 
 ### Start a Kiji Cluster
 
-*  If you are running a BentoBox, set the environment variables for the shell and start the Bento cluster:
+*  If you plan to use a BentoBox, run the following command to set BentoBox-related environment
+   variables and start the Bento cluster:
 
 <div class="userinput">
 {% highlight bash %}
@@ -24,14 +25,13 @@ bento start
 {% endhighlight %}
 </div>
 
+After BentoBox starts, it displays a list of useful ports for cluster webapps and services.  The
+MapReduce JobTracker webapp ([http://localhost:50030](http://localhost:50030) in particular will be
+useful for this tutorial.
 
-After BentoBox starts, it displays ports you need to complete this tutorial. In addition,
-it will be useful to know the address of the MapReduce JobTracker web app
-([http://localhost:50030](http://localhost:50030) by default) while working through this tutorial.
 
-
-*  If you are running Kiji without a BentoBox, there are a few things you'll need to do to
-make sure your environment will behave the same way as a BentoBox:
+-  If you are running Kiji without a BentoBox, there are a few things you'll need to do to make sure
+   your environment behaves the same way as a BentoBox:
 
 
 <div id="accordion-container">
@@ -92,7 +92,7 @@ The file `music-schema.ddl` defines table layouts that are used in this tutorial
 <div id="accordion-container">
   <h2 class="accordion-header"> music-schema.ddl </h2>
   <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-express-music/raw/kiji-express-music-0.12.0/src/main/resources/org/kiji/express/music/music-schema.ddl"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-express-music/raw/kiji-express-music-0.11.0/src/main/resources/org/kiji/express/music/music-schema.ddl"> </script>
   </div>
 </div>
 
@@ -100,13 +100,13 @@ The file `music-schema.ddl` defines table layouts that are used in this tutorial
 
 <div class="userinput">
 {% highlight bash %}
-kiji-schema-shell --kiji=${KIJI} --file=${MUSIC_EXPRESS_HOME}/music-schema.ddl
+${KIJI_HOME}/schema-schell/bin/kiji-schema-shell --kiji=${KIJI} --file=${MUSIC_EXPRESS_HOME}/music-schema.ddl
 {% endhighlight %}
 </div>
 
 This command uses kiji-schema-shell
 to create the tables using the KijiSchema DDL, which makes specifying table layouts easy.
-See [the KijiSchema DDL Shell reference]({{site.userguide_schema_1_0_2}}/schema-shell-ddl-ref)
+See [the KijiSchema DDL Shell reference]({{site.userguide_schema_1_3_3}}/schema-shell-ddl-ref)
 for more information on the KijiSchema DDL.
 
 *  Verify the Kiji music tables were correctly created:
@@ -117,7 +117,7 @@ kiji ls ${KIJI}
 {% endhighlight %}
 </div>
 
-You should see the newly-created songs and users tables:
+You should see the newly-created `songs` and `users` tables:
 
     kiji://localhost:2181/express_music/songs
     kiji://localhost:2181/express_music/users
@@ -172,3 +172,18 @@ The URI takes the form:
 {% highlight bash %}
 kiji://.env/<instance name>
 {% endhighlight %}
+
++ **Running KijiExpress jobs**
+
+To run a KijiExpress job, you invoke a command of the following form:
+
+{% highlight bash %}
+express job \
+    [--libjars <list of JAR files, separated by colon>] \
+    [--hdfs] \
+    <job JAR file> <job class> [job-specific options]
+{% endhighlight %}
+
+The `--hdfs` option indicates that KijiExpress should run the job against the Hadoop cluster versus
+in Cascading's local environment.  The `--libjars` option indicates additional JAR files needed to
+run the command.

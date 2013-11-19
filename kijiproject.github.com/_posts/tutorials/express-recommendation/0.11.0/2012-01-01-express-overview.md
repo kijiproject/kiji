@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Overview
-categories: [tutorials, express-recommendation, 0.12.0]
+categories: [tutorials, express-recommendation, 0.11.0]
 tags: [express-music]
 order: 1
 description: A tutorial to get you using KijiExpress with Kiji Tables.

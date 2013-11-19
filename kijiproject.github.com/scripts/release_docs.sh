@@ -30,7 +30,6 @@
 #    that corresponds to the true version number as recorded by Maven to git
 #    and our release artifacts.
 
-
 # KijiSchema version
 SCHEMA_FLAT_VER=1_3_3
 SCHEMA_VER=1.3.3
@@ -56,8 +55,8 @@ MUSIC_FLAT_VER=1_1_2
 MUSIC_VER=1.1.2
 
 # Express Music Recommendation tutorial version
-EXPRESS_MUSIC_FLAT_VER=0_13_0
-EXPRESS_MUSIC_VER=0.13.0
+EXPRESS_MUSIC_FLAT_VER=0_11_0
+EXPRESS_MUSIC_VER=0.11.0
 
 # Phonebook Tutorial version
 PHONEBOOK_FLAT_VER=1_1_1
@@ -151,7 +150,6 @@ fix_released_versions() {
   find . -name "*.md" -exec sed -i -e \
       's/{{site.rest_devel_version}}/'"$REST_VER/g" {} \;
 }
-
 
 # In turn, release each individual documentation component.
 cd "$top/_posts"
@@ -248,6 +246,30 @@ if [ ! -d "userguides/express/$EXPRESS_VER" ]; then
   popd
 fi
 
+if [ ! -d "userguides/scoring/$SCORING_VER" ]; then
+  # Create new KijiScoring documentation
+  echo "Creating new KijiScoring user guide: $SCORING_VER"
+  cp -ra "userguides/scoring/DEVEL" "userguides/scoring/$SCORING_VER"
+
+  pushd "userguides/scoring/$SCORING_VER"
+
+  # Replace devel versioning with macros that reflect the release version.
+  find . -name "*.md" -exec sed -i -e "s/version: devel/version: $SCORING_VER/" {} \;
+  find . -name "*.md" -exec sed -i -e "s/scoring, devel]/scoring, $SCORING_VER]/" {} \;
+
+  # Replace links to development userguides and API documentation with the real latest
+  # documentation artifact version macros (defined in /_config.yml).
+  fix_released_versions
+
+  # Define the new KijiScoring release in /_config.yml
+  echo "userguide_scoring_$SCORING_FLAT_VER : /userguides/scoring/$SCORING_VER" \
+      >> "$top/_config.yml"
+  echo "api_scoring_$SCORING_FLAT_VER : $API/kiji-scoring/$SCORING_VER/org/kiji/scoring" \
+      >> "$top/_config.yml"
+
+  popd
+fi
+
 if [ ! -d "tutorials/phonebook/$PHONEBOOK_VER" ]; then
   # Create a new phonebook tutorial
   echo "Creating new Phonebook tutorial: $PHONEBOOK_VER"
@@ -306,6 +328,27 @@ if [ ! -d "tutorials/express-recommendation/$EXPRESS_MUSIC_VER" ]; then
   popd
 fi
 
+if [ ! -d "tutorials/scoring/$SCORING_VER" ]; then
+  echo "Creating a new Scoring tutorial: $SCORING_VER"
+  cp -ra "tutorials/scoring/DEVEL" \
+      "tutorials/scoring/$SCORING_VER"
+
+  pushd "tutorials/scoring/$SCORING_VER"
+
+  # Reify this version number
+  find . -name "*.md" -exec sed -i -e \
+      "s/scoring-tutorial, devel]/scoring, $SCORING_VER]/" {} \;
+
+  fix_released_versions
+
+  # Add a reference to this version to the global config.
+  echo "tutorial_scoring_$SCORING_FLAT_VER : /tutorials/scoring/$SCORING_VER" \
+      >> _config.yml
+
+  popd
+fi
+
+
 # Check: If a new version of KijiMR lib is available than previously declared in
 # _config.yml, add the api_mrlib_$MRLIB_FLAT_VER reference to the _config.yml.
 set +e # It's ok to get a non-zero return value here.
@@ -317,7 +360,7 @@ if [ "$?" != "0" ]; then
       >> "$top/_config.yml"
 fi
 
-grep "api_express_$EXPRESS_FLAT_VER :" "$top/_config.yml" >/dev/null
+grep "api_$EXPRESS_FLAT_VER :" "$top/_config.yml" >/dev/null
 if [ "$?" != "0" ]; then
   # We didn't find the API reference. Add Kiji Express API docs reference to _config.yml.
   echo "Adding Kiji Express API docs to _config.yml: $EXPRESS_VER"
