@@ -33,48 +33,54 @@ import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiInvalidNameException
 
 /**
- * Interface for all column output specification objects. ColumnOutputSpec
- * implementations specify how to write individual fields in an Express flow to a Kiji column or
- * column family.
+ * A specification describing how to write data from a scalding tuple field to a Kiji table.
+ * Provides access to options common to all types of column output specs. There are two types of
+ * column output specs:
+ * <ul>
+ *   <li>
+ *     [[org.kiji.express.flow.QualifiedColumnOutputSpec]] - Describes how to write data from a
+ *     scalding tuple to a column in a Kiji table.
+ *   </li>
+ *   <li>
+ *     [[org.kiji.express.flow.ColumnFamilyOutputSpec]] - Describes how to write data from a
+ *     scalding tuple to a column family in a Kiji table.
+ *   </li>
+ * </ul>
  *
- * Use the [[org.kiji.express.flow.QualifiedColumnOutputSpec]] to write a field to an individual
- * Kiji column.
+ * To see more information about writing data to a Kiji table, see
+ * [[org.kiji.express.flow.KijiOutput]].
  *
- * Use the [[org.kiji.express.flow.ColumnFamilyOutputSpec]] to write a field to a column
- * family, with a qualifier determined as part of the flow.  The qualifier should be written to a
- * field specified as part of the ColumnFamilyOutputSpec.
- *
- * Note that the subclasses of ColumnOutputSpec are case classes, and so they override
- * ColumnOutputSpec's abstract methods (e.g., schema) with vals.
+ * Note: Subclasses of `ColumnOutputSpec` are case classes that override its abstract methods
+ * (e.g., `schemaSpec`) with `val`s.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Sealed
 trait ColumnOutputSpec {
-
   /**
-   * Family which this [[org.kiji.express.flow.ColumnOutputSpec]] belongs to.
+   * Column family to write data to.
    *
-   * @return family name of output column.
+   * @return family of columns to write to.
    */
   def family: String
 
   /**
-   * [[org.kiji.schema.KijiColumnName]] of this [[org.kiji.express.flow.ColumnOutputSpec]].
+   * The [[org.kiji.schema.KijiColumnName]] to write data to.
    *
-   *  @return the name of the column to output to.
+   * @return the name of the column or column family to write data to.
    */
   def columnName: KijiColumnName
 
   /**
-   * Specifies the schema of data to be written to the column.
-   * @return the schema specification of data written to the column.
+   * Specifies the schema that should be used to write data.
+   *
+   * @return the schema specification that should be used for writing.
    */
   def schemaSpec: SchemaSpec
 
   /**
    * Make a best effort attempt to encode a provided value to a type that will be compatible with
-   * the column.  If no such conversion can be made, the original value will be returned.
+   * the column. If no such conversion can be made, the original value will be returned.
    */
   private[express] def encode: Any => Any = {
     schemaSpec.schema.map(AvroUtil.avroEncoder).getOrElse(identity)
@@ -82,10 +88,49 @@ trait ColumnOutputSpec {
 }
 
 /**
- * Specification for writing to a Kiji column.
+ * A specification describing how to write data from a scalding tuple field to a column in a Kiji
+ * table.
  *
- * @param family of the output column.
- * @param qualifier of the output column.
+ * Basic example that infers the schema of data being written to Kiji (this will not work when
+ * writing maps, arrays):
+ * {{{
+ *   // Write tuple fields to the "info:name" column.
+ *   val myColumnSpec: QualifiedColumnOutputSpec =
+ *       QualifiedColumnOutputSpec(
+ *           family = "info",
+ *           qualifier = "name"
+ *       )
+ * }}}
+ *
+ * If generic avro records are being used, an avro schema that data should be written using can be
+ * specified:
+ * {{{
+ *   // Write tuple fields to the "info:user" column using a provided avro schema.
+ *   val myColumnSpec: QualifiedColumnOutputSpec =
+ *       QualifiedColumnOutputSpec(
+ *           family = "info",
+ *           qualifier = "user",
+ *           schemaSpec = SchemaSpec.Generic(myAvroSchema)
+ *       )
+ * }}}
+ *
+ * If compiled avro classes are being used, a compiled record class can be specified. Data written
+ * to this column should be of the specified type:
+ * {{{
+ *   // Write tuple fields to the "info:user" column using a compiled avro class.
+ *   val myColumnSpec: QualifiedColumnOutputSpec =
+ *       QualifiedColumnOutputSpec(
+ *           family = "info",
+ *           qualifier = "user",
+ *           schemaSpec = SchemaSpec.Specific(classOf[User])
+ *       )
+ * }}}
+ *
+ * To see more information about writing data to a Kiji table, see
+ * [[org.kiji.express.flow.KijiOutput]].
+ *
+ * @param family of the column to write to.
+ * @param qualifier of the column to write to.
  * @param schemaSpec The schema specification with which to write values. By default uses
  *     [[org.kiji.express.flow.SchemaSpec.Writer]].
  */
@@ -109,44 +154,49 @@ final case class QualifiedColumnOutputSpec(
 @Inheritance.Sealed
 object QualifiedColumnOutputSpec {
   /**
-   * Factory function for creating a [[org.kiji.express.flow.QualifiedColumnOutputSpec]] with a
-   * generic Avro writer schema.
+   * A specification describing how to write data from a scalding tuple field to a column in a Kiji
+   * table with a generic Avro writer schema. This constructor takes a column string which must
+   * contain the column family and qualifier in the form 'family:qualifier'.
    *
-   * @param family of the output column.
-   * @param qualifier of the output column.
+   * @param family of the column to write to.
+   * @param qualifier of the column to write to.
    * @param schema with which to write data.
+   * @return a new column output spec with supplied options.
    */
   def apply(
-    family: String,
-    qualifier: String,
-    schema: Schema
+      family: String,
+      qualifier: String,
+      schema: Schema
   ): QualifiedColumnOutputSpec = {
     QualifiedColumnOutputSpec(family, qualifier, Generic(schema))
   }
 
   /**
-   * Factory function for creating a [[org.kiji.express.flow.QualifiedColumnOutputSpec]] with a
-   * specific Avro record writer schema.
+   * A specification describing how to write data from a scalding tuple field to a column in a Kiji
+   * table with a specific Avro record class. This constructor takes a column string which must
+   * contain the column family and qualifier in the form 'family:qualifier'.
    *
-   * @param family of the output column.
-   * @param qualifier of the output column.
-   * @param specificClass of Avro record with which to write.
+   * @param family of the column to write to.
+   * @param qualifier of the column to write to.
+   * @param specificRecord class to write to the output column.
+   * @return a new column output spec with supplied options.
    */
   def apply(
-    family: String,
-    qualifier: String,
-    specificClass: Class[_ <: SpecificRecord]
+      family: String,
+      qualifier: String,
+      specificRecord: Class[_ <: SpecificRecord]
   ): QualifiedColumnOutputSpec = {
-    QualifiedColumnOutputSpec(family, qualifier, Specific(specificClass))
+    QualifiedColumnOutputSpec(family, qualifier, Specific(specificRecord))
   }
 
   /**
-   * Factory function for creating a [[org.kiji.express.flow.QualifiedColumnOutputSpec]].
-   * This constructor takes a column string which must contain the column family and qualifier
-   * in the form 'family:qualifier'.
+   * A specification describing how to write data from a scalding tuple field to a column in a Kiji
+   * table with schema options. This constructor takes a column string which must contain the column
+   * family and qualifier in the form 'family:qualifier'.
    *
-   * @param column The output family and column in format 'family:column'.
+   * @param column name of the column to write to in the format 'family:qualifier'.
    * @param schemaSpec specification with which to write data.
+   * @return a new column output spec with supplied options.
    */
   def apply(
       column: String,
@@ -155,17 +205,19 @@ object QualifiedColumnOutputSpec {
     column.split(':').toList match {
       case family :: qualifier :: Nil => QualifiedColumnOutputSpec(family, qualifier, schemaSpec)
       case _ => throw new IllegalArgumentException(
-          "Must specify column to GroupTypeOutputColumnSpec in the format 'family:qualifier'.")
+          "Must specify column to QualifiedColumnOutputSpec in the format 'family:qualifier'.")
     }
   }
 
   /**
-   * Factory function for creating a [[org.kiji.express.flow.QualifiedColumnOutputSpec]] with
-   * a generic Avro writer schema. This constructor takes a column string which must contain the
-   * column family and qualifier in the form 'family:qualifier'.
+   * A specification describing how to write data from a scalding tuple field to a column in a Kiji
+   * table with a [[org.kiji.express.flow.SchemaSpec.Generic]] Avro writer schema. This constructor
+   * takes a column string which must contain the column family and qualifier in the form
+   * 'family:qualifier'.
    *
-   * @param column The output family and column in format 'family:column'.
+   * @param column name of the column to write to in the format 'family:qualifier'.
    * @param schema with which to write data.
+   * @return a new column output spec with supplied options.
    */
   def apply(
       column: String,
@@ -175,41 +227,74 @@ object QualifiedColumnOutputSpec {
   }
 
   /**
-   * Factory function for creating a [[org.kiji.express.flow.QualifiedColumnOutputSpec]] with
-   * a generic Avro writer schema. This constructor takes a column string which must contain the
-   * column family and qualifier in the form 'family:qualifier'.
+   * A specification describing how to write data from a scalding tuple field to a column in a Kiji
+   * table with a [[org.kiji.express.flow.SchemaSpec.Specific]] Avro record class. This constructor
+   * takes a column string which must contain the column family and qualifier in the form
+   * 'family:qualifier'.
    *
-   * @param column The output family and column in format 'family:column'.
-   * @param specificClass of Avro record with which to write.
+   * @param column name of the column to write to in the format 'family:qualifier'.
+   * @param specificRecord class to write to the output column.
+   * @return a new column output spec with supplied options.
    */
   def apply(
-    column: String,
-    specificClass: Class[_ <: SpecificRecord]
+      column: String,
+      specificRecord: Class[_ <: SpecificRecord]
   ): QualifiedColumnOutputSpec = {
-    QualifiedColumnOutputSpec(column, Specific(specificClass))
+    QualifiedColumnOutputSpec(column, Specific(specificRecord))
   }
 
   /**
-   * Factory function for creating a [[org.kiji.express.flow.QualifiedColumnOutputSpec]] with
-   * the [[org.kiji.express.flow.SchemaSpec.Writer]] schema spec. This constructor takes a column
-   * string which must contain the column family and qualifier in the form 'family:qualifier'.
+   * A specification describing how to write data from a scalding tuple field to a column in a Kiji
+   * table with the [[org.kiji.express.flow.SchemaSpec.Writer]] schema spec. This constructor takes
+   * a column string which must contain the column family and qualifier in the form
+   * 'family:qualifier'.
    *
-   * @param column The output family and column in format 'family:column'.
+   * @param column name of the column to write to in the format 'family:qualifier'.
+   * @return a new column output spec with supplied options.
    */
   def apply(
-    column: String
+      column: String
   ): QualifiedColumnOutputSpec = {
     QualifiedColumnOutputSpec(column, Writer)
   }
 }
 
 /**
- * Specification for writing to a Kiji column family.
+ * A specification describing how to write data from a scalding tuple field to a family of columns
+ * in a Kiji table.
  *
- * @param family of the output column.
- * @param qualifierSelector The field in the Express flow indicating the qualifier of the
- *     output column.
- * @param schemaSpec The schema spec to use for writing data. By default uses
+ * Basic column family example:
+ * {{{
+ *   // Write data versioned with the current timestamp to a column in the "matrix" column family.
+ *   // The 'column field will contain the column name each tuple should be written to.
+ *   val myColumnFamilySpec: ColumnFamilyOutputSpec =
+ *       ColumnFamilyOutputSpec(
+ *           family = "matrix",
+ *           qualifierSelector = 'column
+ *       )
+ * }}}
+ *
+ * If compiled avro classes are being used, the class of the data that will be written can be
+ * specified:
+ * {{{
+ *   // Write instances of User records versioned with the current timestamp to a column in the
+ *   // "users" column family.
+ *   val myColumnSpec: ColumnFamilyOutputSpec =
+ *       ColumnFamilyOutputSpec(
+ *           family = "users",
+ *           qualifierSelector = 'name,
+ *           schemaSpec = SchemaSpec.Specific(classOf[User])
+ *       )
+ * }}}
+ *
+ * To see more information about writing data to a Kiji table, see
+ * [[org.kiji.express.flow.KijiOutput]].
+ *
+ * @param family of the column to write to.
+ * @param qualifierSelector is the tuple field used to specify the qualifier of the column to write
+ *     to. If an attempt is made to write a tuple that is missing the qualifierSelector field, an
+ *     error will be thrown.
+ * @param schemaSpec to use when writing data. By default uses
  *     [[org.kiji.express.flow.SchemaSpec.Writer]].
  */
 @ApiAudience.Public
@@ -236,13 +321,15 @@ final case class ColumnFamilyOutputSpec(
 @Inheritance.Sealed
 object ColumnFamilyOutputSpec {
   /**
-   * Factory function for creating a [[org.kiji.express.flow.ColumnFamilyOutputSpec]] with a
-   * generic Avro writer schema.
+   * A specification describing how to write data from a scalding tuple field to a family of columns
+   * in a Kiji table with a [[org.kiji.express.flow.SchemaSpec.Generic]] Avro writer schema.
    *
-   * @param family of the output column.
-   * @param qualifierSelector The field in the Express flow indicating the qualifier of the
-   *     output column.
+   * @param family of the column to write to.
+   * @param qualifierSelector is the tuple field used to specify the qualifier of the column to
+   *     write to. If an attempt is made to write a tuple that is missing the qualifierSelector
+   *     field, an error will be thrown.
    * @param schema The schema to use for writing values.
+   * @return a new column output spec with supplied options.
    */
   def apply(
       family: String,
@@ -253,20 +340,22 @@ object ColumnFamilyOutputSpec {
   }
 
   /**
-   * Factory function for creating a [[org.kiji.express.flow.ColumnFamilyOutputSpec]] with a
-   * specific Avro record writer schema.
+   * A specification describing how to write data from a scalding tuple field to a family of columns
+   * in a Kiji table with a [[org.kiji.express.flow.SchemaSpec.Specific]] Avro record class.
    *
-   * @param family of the output column.
-   * @param qualifierSelector The field in the Express flow indicating the qualifier of the
-   *     output column.
-   * @param specificClass The specific record class to use for writes.
+   * @param family of the column to write to.
+   * @param qualifierSelector is the tuple field used to specify the qualifier of the column to
+   *     write to. If an attempt is made to write a tuple that is missing the qualifierSelector
+   *     field, an error will be thrown.
+   * @param specificRecord class to write to the output column.
+   * @return a new column output spec with supplied options.
    */
   def apply(
-    family: String,
-    qualifierSelector: Symbol,
-    specificClass: Class[_ <: SpecificRecord]
+      family: String,
+      qualifierSelector: Symbol,
+      specificRecord: Class[_ <: SpecificRecord]
   ): ColumnFamilyOutputSpec = {
-    ColumnFamilyOutputSpec(family, qualifierSelector, Specific(specificClass))
+    ColumnFamilyOutputSpec(family, qualifierSelector, Specific(specificRecord))
   }
 }
 

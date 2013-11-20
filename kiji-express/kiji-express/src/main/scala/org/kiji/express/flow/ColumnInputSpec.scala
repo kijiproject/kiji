@@ -44,8 +44,11 @@ import org.kiji.schema.KijiInvalidNameException
  *
  * Requested data will be represented as a sequence of flow cells (`Seq[FlowCell[T] ]`).
  *
- * Note: Subclasses of ColumnInputSpec are case classes that override ColumnInputSpec's abstract
- * methods (e.g., `schema`) with `val`s.
+ * To see more information about reading data from a Kiji table, see
+ * [[org.kiji.express.flow.KijiInput]].
+ *
+ * Note: Subclasses of `ColumnInputSpec` are case classes that override its abstract methods
+ * (e.g., `schemaSpec`) with `val`s.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
@@ -184,7 +187,7 @@ object ColumnInputSpec {
 /**
  * Specifies a request for versions of cells from a fully-qualified column.
  *
- * Basic column example:
+ * Basic example that reads data into generic records using the schema with which they were written:
  * {{{
  *   // Request the latest version of data stored in the "info:name" column.
  *   val myColumnSpec: QualifiedColumnInputSpec =
@@ -208,7 +211,8 @@ object ColumnInputSpec {
  *       )
  * }}}
  *
- * If compiled avro classes are being used, a class that data should be read as can be specified:
+ * If compiled avro classes are being used, a compiled record class can be specified. Data read from
+ * this column will be of the specified type:
  * {{{
  *   // Request cells from the "info:user" column containing User records.
  *   val myColumnSpec: QualifiedColumnInputSpec =
@@ -219,6 +223,9 @@ object ColumnInputSpec {
  *           schemaSpec = SchemaSpec.Specific(classOf[User])
  *       )
  * }}}
+ *
+ * To see more information about reading data from a Kiji table, see
+ * [[org.kiji.express.flow.KijiInput]].
  *
  * @param family of columns the requested data belongs to.
  * @param qualifier of the column the requested data belongs to.
@@ -332,6 +339,9 @@ object QualifiedColumnInputSpec {
  *           schemaSpec = SchemaSpec.Specific(classOf[User])
  *       )
  * }}}
+ *
+ * To see more information about reading data from a Kiji table, see
+ * [[org.kiji.express.flow.KijiInput]].
  *
  * @param family of columns the requested data belongs to.
  * @param maxVersions to read back from the requested column family (default is only most recent).
