@@ -54,6 +54,7 @@ import org.junit.After;
 import org.junit.Test;
 
 import org.kiji.rest.config.FresheningConfiguration;
+import org.kiji.rest.plugins.StandardKijiRestPlugin;
 import org.kiji.rest.representations.KijiRestEntityId;
 import org.kiji.rest.representations.KijiRestRow;
 import org.kiji.rest.representations.SchemaOption;
@@ -227,7 +228,7 @@ public class TestRowsResource extends ResourceTest {
     playersTableWriter.close();
     playersTable.release();
 
-    KijiRESTService.registerSerializers(this.getObjectMapperFactory());
+    StandardKijiRestPlugin.registerSerializers(this.getObjectMapperFactory());
     mKijiClient = new ManagedKijiClient(Sets.newHashSet(mFakeKiji.getURI()));
     mKijiClient.start();
 

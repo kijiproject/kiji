@@ -36,6 +36,7 @@ import org.junit.After;
 import org.junit.Test;
 
 import org.kiji.rest.config.FresheningConfiguration;
+import org.kiji.rest.plugins.StandardKijiRestPlugin;
 import org.kiji.rest.representations.KijiRestRow;
 import org.kiji.rest.resources.RowsResource;
 import org.kiji.schema.EntityId;
@@ -103,7 +104,7 @@ public class TestRowsResourceFreshening extends ResourceTest {
 
     mWriter = mTable.getWriterFactory().openTableWriter();
 
-    KijiRESTService.registerSerializers(this.getObjectMapperFactory());
+    StandardKijiRestPlugin.registerSerializers(this.getObjectMapperFactory());
     mKijiClient = new ManagedKijiClient(ImmutableSet.of(mKiji.getURI()));
     mKijiClient.start();
 

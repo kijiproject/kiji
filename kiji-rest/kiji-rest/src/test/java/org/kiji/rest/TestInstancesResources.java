@@ -36,6 +36,7 @@ import com.yammer.dropwizard.testing.ResourceTest;
 import org.junit.After;
 import org.junit.Test;
 
+import org.kiji.rest.plugins.StandardKijiRestPlugin;
 import org.kiji.rest.resources.InstanceResource;
 import org.kiji.rest.resources.InstancesResource;
 import org.kiji.schema.Kiji;
@@ -92,7 +93,7 @@ public class TestInstancesResources extends ResourceTest {
     mValidInstances.add(mFakeKijis[0].getURI());
     mValidInstances.add(mFakeKijis[1].getURI());
 
-    KijiRESTService.registerSerializers(this.getObjectMapperFactory());
+    StandardKijiRestPlugin.registerSerializers(this.getObjectMapperFactory());
     KijiClient kijiClient = new ManagedKijiClient(mValidInstances);
 
     InstanceResource instanceResource = new InstanceResource(kijiClient);

@@ -26,30 +26,17 @@ import java.util.Set;
 
 import javax.ws.rs.ext.ExceptionMapper;
 
-import com.fasterxml.jackson.core.Version;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.google.common.collect.Sets;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
-import com.yammer.dropwizard.json.ObjectMapperFactory;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.kiji.delegation.Lookups;
 import org.kiji.rest.health.InstanceHealthCheck;
-import org.kiji.rest.representations.KijiRestEntityId;
-import org.kiji.rest.representations.SchemaOption;
-import org.kiji.rest.resources.InstanceResource;
-import org.kiji.rest.resources.InstancesResource;
-import org.kiji.rest.resources.KijiRESTResource;
-import org.kiji.rest.resources.RowsResource;
-import org.kiji.rest.resources.TableResource;
-import org.kiji.rest.resources.TablesResource;
-import org.kiji.rest.serializers.AvroToJsonStringSerializer;
-import org.kiji.rest.serializers.JsonToKijiRestEntityId;
-import org.kiji.rest.serializers.JsonToSchemaOption;
-import org.kiji.rest.serializers.KijiRestEntityIdToJson;
-import org.kiji.rest.serializers.SchemaOptionToJson;
-import org.kiji.rest.serializers.TableLayoutToJsonSerializer;
-import org.kiji.rest.serializers.Utf8ToJsonSerializer;
+import org.kiji.rest.plugins.KijiRestPlugin;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiURI;
 
@@ -59,6 +46,9 @@ import org.kiji.schema.KijiURI;
  * address and the list of instances.
  */
 public class KijiRESTService extends Service<KijiRESTConfiguration> {
+
+  private static final Logger LOG = LoggerFactory.getLogger(KijiRESTService.class);
+
   /**
    * Main method entry point into the KijiREST service.
    *
@@ -73,29 +63,6 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
   @Override
   public final void initialize(final Bootstrap<KijiRESTConfiguration> bootstrap) {
     bootstrap.setName("kiji-rest");
-    registerSerializers(bootstrap.getObjectMapperFactory());
-  }
-
-  /**
-   * Registers custom serializers with the Jackson ObjectMapper via DropWizard's
-   * ObjectMapperFactory. This is used by both the service initialization and the test
-   * setup method to ensure consistency between test and production.
-   *
-   * @param mapperFactory is the ObjectMapperFactory.
-   */
-  public static final void registerSerializers(ObjectMapperFactory mapperFactory) {
-    // TODO: Add a module to convert btw Avro's specific types and JSON. The default
-    // mapping seems to throw an exception.
-    SimpleModule module = new SimpleModule("KijiRestModule", new Version(1, 0, 0, null,
-        "org.kiji.rest", "avroToJson"));
-    module.addSerializer(new AvroToJsonStringSerializer());
-    module.addSerializer(new Utf8ToJsonSerializer());
-    module.addSerializer(new TableLayoutToJsonSerializer());
-    module.addSerializer(new SchemaOptionToJson());
-    module.addDeserializer(SchemaOption.class, new JsonToSchemaOption());
-    module.addSerializer(new KijiRestEntityIdToJson());
-    module.addDeserializer(KijiRestEntityId.class, new JsonToKijiRestEntityId());
-    mapperFactory.registerModule(module);
   }
 
   /**
@@ -124,12 +91,8 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
     ManagedKijiClient kijiClient = new ManagedKijiClient(instances);
     environment.manage(kijiClient);
 
-    // Add exception mappers to print better exception messages to the client than what
-    // Dropwizard does by default.
-    environment.addProvider(new GeneralExceptionMapper());
-
-    // Remove the in built Dropwizard LoggingExceptionHandler and use a custom one that logs
-    // JSON and also ensures that it's logged to the log file.
+    // Remove all built-in Dropwizard ExceptionHandler.
+    // Always depend on custom ones.
     // Inspired by Jeremy Whitlock's suggestion on thoughtspark.org.
     Set<Object> jerseyResources = environment.getJerseyResourceConfig().getSingletons();
     Iterator<Object> jerseyResourcesIterator = jerseyResources.iterator();
@@ -142,13 +105,9 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
     }
 
     // Load resources.
-    environment.addResource(new KijiRESTResource());
-    environment.addResource(new InstancesResource(kijiClient));
-    environment.addResource(new InstanceResource(kijiClient));
-    environment.addResource(new TableResource(kijiClient));
-    environment.addResource(new TablesResource(kijiClient));
-    environment.addResource(new RowsResource(kijiClient,
-        environment.getObjectMapperFactory().build(),
-        configuration.getFresheningConfiguration()));
+    for (KijiRestPlugin plugin : Lookups.get(KijiRestPlugin.class)) {
+      LOG.info("Loading plugin " + plugin.getClass());
+      plugin.install(kijiClient, configuration, environment);
+    }
   }
 }
