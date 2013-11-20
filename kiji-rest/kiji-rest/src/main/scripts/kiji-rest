@@ -109,7 +109,7 @@ start() {
   done
 
   ${JAVA_HOME}/bin/java -cp ${kiji_rest_cp} org.kiji.rest.KijiRESTService server \
-  ${BASEDIR}/conf/configuration.yml > ${logfile} 2>&1 &
+  ${KIJI_REST_CONF_DIR}/configuration.yml > ${logfile} 2>&1 &
 
   echo $! > $PIDFILE
 
