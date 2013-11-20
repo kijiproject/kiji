@@ -21,7 +21,7 @@ The most recent version of each of the tutorials is available here:
 
 	The KijiExpress recommendation tutorial covers how to build and run Express jobs that use Kiji tables as input and/or output. This is the word count of recommendation systems.  This tutorial mirrors the KijiMR music tutorial closely.
 
-* [KijiScoring Tutorial](tutorials/scoring/0.9.0/overview)
+* [KijiScoring Tutorial](tutorials/scoring/0.9.0/scoring-overview)
 
 ## Previous Versions
 

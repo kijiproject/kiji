@@ -1,9 +1,9 @@
 ---
 layout: post
 title: Score Function
-categories: [tutorials, scoring, devel]
+categories: [tutorials, scoring, 0.9.0]
 tags : [scoring-tutorial]
-version: devel
+version: 0.9.0
 order : 4
 description: Score Function.
 ---
@@ -16,7 +16,7 @@ to operate on data from an entity and produce a score from that data.
 <div id="accordion-container">
   <h2 class="accordion-header">org.kiji.scoring.music.NextSongRecommenderScoreFunction</h2>
   <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-scoring-music/raw/{{site.scoring_devel_branch}}/src/main/java/org/kiji/scoring/music/NextSongRecommenderScoreFunction.java"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-scoring-music/raw/kiji-scoring-root-0.9.0/src/main/java/org/kiji/scoring/music/NextSongRecommenderScoreFunction.java"> </script>
   </div>
 </div>
 

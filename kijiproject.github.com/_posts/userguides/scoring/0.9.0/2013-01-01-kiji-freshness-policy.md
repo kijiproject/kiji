@@ -11,7 +11,7 @@ description: Description of KijiFreshnessPolicy SPI.
 <div id="accordion-container">
   <h2 class="accordion-header"> KijiFreshnessPolicy.java </h2>
     <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-scoring/raw/{{site.scoring_devel_branch}}/src/main/java/org/kiji/scoring/KijiFreshnessPolicy.java"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-scoring/raw/kiji-scoring-root-0.9.0/src/main/java/org/kiji/scoring/KijiFreshnessPolicy.java"> </script>
   </div>
 </div>
 

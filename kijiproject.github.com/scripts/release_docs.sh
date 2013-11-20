@@ -102,6 +102,10 @@ fix_released_versions() {
       "s/userguide_express_devel/userguide_express_$EXPRESS_FLAT_VER/g" {} \;
   find . -name "*.md" -exec sed -i -e \
       "s/tutorial_phonebook_devel/tutorial_phonebook_$PHONEBOOK_FLAT_VER/g" {} \;
+  find . -name "*.md" -exec sed -i -e \
+      "s/tutorial_scoring_devel/tutorial_scoring_$SCORING_FLAT_VER/g" {} \;
+  find . -name "*.md" -exec sed -i -e \
+      "s/userguide_scoring_devel/userguide_scoring_$SCORING_FLAT_VER/g" {} \;
 
   # Reify git tags that turn into code snippits and accordions.
   find . -name "*.md" -exec sed -i -e \
@@ -116,6 +120,8 @@ fix_released_versions() {
       's/{{site.music_express_devel_branch}}/'"kiji-express-music-$EXPRESS_MUSIC_VER/g" {} \;
   find . -name "*.md" -exec sed -i -e \
       's/{{site.rest_devel_branch}}/'"kiji-rest-root-$REST_VER/g" {} \;
+  find . -name "*.md" -exec sed -i -e \
+      's/{{site.scoring_devel_branch}}/'"kiji-scoring-root-$SCORING_VER/g" {} \;
 
   # Update HTML links to tutorial elements
   find . -name "*.md" -exec sed -i -e \
@@ -130,6 +136,8 @@ fix_released_versions() {
       "s|express-recommendation/DEVEL|express-recommendation/$EXPRESS_MUSIC_VER|g" {} \;
   find . -name "*.md" -exec sed -i -e \
       "s|rest/DEVEL|rest/$REST_VER|g" {} \;
+  find . -name "*.md" -exec sed -i -e \
+      "s|scoring/DEVEL|scoring/$SCORING_VER|g" {} \;
 
   # Reify release version numbers in the text.
   find . -name "*.md" -exec sed -i -e \
@@ -148,6 +156,8 @@ fix_released_versions() {
       's/{{site.express_devel_version}}/'"$EXPRESS_VER/g" {} \;
   find . -name "*.md" -exec sed -i -e \
       's/{{site.rest_devel_version}}/'"$REST_VER/g" {} \;
+  find . -name "*.md" -exec sed -i -e \
+      's/{{site.scoring_devel_version}}/'"$SCORING_VER/g" {} \;
 }
 
 # In turn, release each individual documentation component.
@@ -302,7 +312,7 @@ if [ ! -d "tutorials/music-recommendation/$MUSIC_VER" ]; then
 
   # Add a reference to this version to the global config.
   echo "tutorial_music_$MUSIC_FLAT_VER : /tutorials/music-recommendation/$MUSIC_VER" \
-      >> _config.yml
+      >> "$top/_config.yml"
 
   popd
 fi
@@ -322,7 +332,7 @@ if [ ! -d "tutorials/express-recommendation/$EXPRESS_MUSIC_VER" ]; then
 
   # Add a reference to this version to the global config.
   echo "tutorial_exp_music_$EXPRESS_MUSIC_FLAT_VER : /tutorials/express-recommendation/$EXPRESS_MUSIC_VER" \
-      >> _config.yml
+      >> "$top/_config.yml"
 
   popd
 fi
@@ -335,14 +345,15 @@ if [ ! -d "tutorials/scoring/$SCORING_VER" ]; then
   pushd "tutorials/scoring/$SCORING_VER"
 
   # Reify this version number
+  find . -name "*.md" -exec sed -i -e "s/version: devel/version: $SCORING_VER/" {} \;
   find . -name "*.md" -exec sed -i -e \
-      "s/scoring-tutorial, devel]/scoring, $SCORING_VER]/" {} \;
+      "s/tutorials, scoring, devel]/tutorials, scoring, $SCORING_VER]/" {} \;
 
   fix_released_versions
 
   # Add a reference to this version to the global config.
   echo "tutorial_scoring_$SCORING_FLAT_VER : /tutorials/scoring/$SCORING_VER" \
-      >> _config.yml
+      >> "$top/_config.yml"
 
   popd
 fi
@@ -359,7 +370,7 @@ if [ "$?" != "0" ]; then
       >> "$top/_config.yml"
 fi
 
-grep "api_$EXPRESS_FLAT_VER :" "$top/_config.yml" >/dev/null
+grep "api_express_$EXPRESS_FLAT_VER :" "$top/_config.yml" >/dev/null
 if [ "$?" != "0" ]; then
   # We didn't find the API reference. Add Kiji Express API docs reference to _config.yml.
   echo "Adding Kiji Express API docs to _config.yml: $EXPRESS_VER"

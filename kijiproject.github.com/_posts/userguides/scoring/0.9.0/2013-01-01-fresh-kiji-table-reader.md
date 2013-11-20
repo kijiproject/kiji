@@ -11,7 +11,7 @@ description: Description of FreshKijiTableReader API.
 <div id="accordion-container">
   <h2 class="accordion-header"> FreshKijiTableReader.java </h2>
     <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-scoring/raw/{{site.scoring_devel_branch}}/src/main/java/org/kiji/scoring/FreshKijiTableReader.java"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-scoring/raw/kiji-scoring-root-0.9.0/src/main/java/org/kiji/scoring/FreshKijiTableReader.java"> </script>
   </div>
 </div>
 

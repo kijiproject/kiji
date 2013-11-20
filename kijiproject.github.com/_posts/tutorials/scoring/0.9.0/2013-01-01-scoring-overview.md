@@ -1,9 +1,9 @@
 ---
 layout: post
 title: Scoring Tutorial Overview
-categories: [tutorials, scoring, devel]
+categories: [tutorials, scoring, 0.9.0]
 tags : [scoring-tutorial]
-version: devel
+version: 0.9.0
 order : 1
 description: KijiScoring Tutorial Overview.
 ---

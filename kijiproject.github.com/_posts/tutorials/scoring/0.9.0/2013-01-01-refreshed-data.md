@@ -1,9 +1,9 @@
 ---
 layout: post
 title: Accessing the Refreshed Data
-categories: [tutorials, scoring, devel]
+categories: [tutorials, scoring, 0.9.0]
 tags : [scoring-tutorial]
-version: devel
+version: 0.9.0
 order : 6
 description: Accessing the Refreshed Data.
 ---

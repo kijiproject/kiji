@@ -1,9 +1,9 @@
 ---
 layout: post
 title: Freshness Policy
-categories: [tutorials, scoring, devel]
+categories: [tutorials, scoring, 0.9.0]
 tags : [scoring-tutorial]
-version: devel
+version: 0.9.0
 order : 3
 description: Freshness Policy.
 ---
@@ -32,7 +32,7 @@ you would implement a new `KijiFreshnessPolicy` instance, as follows.
 <div id="accordion-container">
   <h2 class="accordion-header">org.kiji.scoring.music.NextSongRecommenderFreshnessPolicy</h2>
   <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-scoring-music/raw/{{site.scoring_devel_branch}}/src/main/java/org/kiji/scoring/music/NextSongRecommenderFreshnessPolicy.java"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-scoring-music/raw/kiji-scoring-root-0.9.0/src/main/java/org/kiji/scoring/music/NextSongRecommenderFreshnessPolicy.java"> </script>
   </div>
 </div>
 

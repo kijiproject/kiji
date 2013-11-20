@@ -1,9 +1,9 @@
 ---
 layout: post
 title: KijiScoring Setup
-categories: [tutorials, scoring, devel]
+categories: [tutorials, scoring, 0.9.0]
 tags : [scoring-tutorial]
-version: devel
+version: 0.9.0
 order : 2
 description: KijiScoring Setup.
 ---
