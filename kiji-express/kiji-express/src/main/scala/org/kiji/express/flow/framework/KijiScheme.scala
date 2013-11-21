@@ -53,7 +53,7 @@ import org.kiji.express.flow.PagingSpec
 import org.kiji.express.flow.QualifiedColumnInputSpec
 import org.kiji.express.flow.QualifiedColumnOutputSpec
 import org.kiji.express.flow.TimeRange
-import org.kiji.express.flow.TransientSeq
+import org.kiji.express.flow.TransientStream
 import org.kiji.express.flow.framework.serialization.KijiLocker
 import org.kiji.express.flow.util.AvroUtil
 import org.kiji.express.flow.util.Resources.doAndRelease
@@ -396,7 +396,7 @@ object KijiScheme {
                         AvroUtil.avroToScala(entry.getValue))
               }
             }
-            result.add(new TransientSeq(genItr))
+            result.add(new TransientStream(genItr))
           }
         }
       } else {
@@ -428,7 +428,7 @@ object KijiScheme {
                     )
                   }
             }
-            result.add(new TransientSeq(genItr))
+            result.add(new TransientStream(genItr))
           }
         }
       } else {
