@@ -1,5 +1,5 @@
 /**
- * (c) Copyright 2012 WibiData, Inc.
+ * (c) Copyright 2013 WibiData, Inc.
  *
  * See the NOTICE file distributed with this work for additional
  * information regarding copyright ownership.
@@ -17,19 +17,8 @@
  * limitations under the License.
  */
 
-package org.kiji.mapreduce.framework;
-
-import org.kiji.annotations.ApiAudience;
-import org.kiji.annotations.ApiStability;
-
-/** An enumeration for the various hadoop job counters we collect. */
-@ApiAudience.Framework
-@ApiStability.Evolving
-public enum JobHistoryCounters {
-  PRODUCER_ROWS_PROCESSED,
-  GATHERER_ROWS_PROCESSED,
-  BULKIMPORTER_RECORDS_PROCESSED,
-  BULKIMPORTER_RECORDS_INCOMPLETE,
-  BULKIMPORTER_RECORDS_REJECTED,
-  PIVOTER_ROWS_PROCESSED,
-}
+/**
+ * Implementation classes for {@link KijiPivoter},
+ * intended for private, internal use by KijiMR.
+ */
+package org.kiji.mapreduce.pivot.impl;

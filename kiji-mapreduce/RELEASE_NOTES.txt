@@ -2,6 +2,11 @@
 
                               KijiMR Release Notes
 
+Version 1.2.3
+  * KIJIMR-163. Introduce KijiPivoter map-only jobs that read rows from
+      a KijiTable and write arbitrary cells to a potentially different
+      output KijiTable.
+
 Version 1.2.1
   * KIJIMR-244. Make KeyValueStoreReader's open method threadsafe for
       concurrent opens.

@@ -48,14 +48,17 @@ public final class KijiConfKeys {
   /** Serialized KijiRowFilter. */
   public static final String KIJI_ROW_FILTER = "kiji.input.row.filter";
 
-  /** Fully qualified name of the KijiGatherer class to run. */
+  /** Fully qualified name of the {@link KijiGatherer} class to run. */
   public static final String KIJI_GATHERER_CLASS = "kiji.gatherer.class";
 
-  /** Fully qualified name of the KijiProducer class to run. */
+  /** Fully qualified name of the {@link KijiProducer} class to run. */
   public static final String KIJI_PRODUCER_CLASS = "kiji.producer.class";
 
-  /** Fully qualified name of the KijiBulkImporter class to run. */
+  /** Fully qualified name of the {@link KijiBulkImporter} class to run. */
   public static final String KIJI_BULK_IMPORTER_CLASS = "kiji.bulk.importer.class";
+
+  /** Fully qualified name of the {@link KijiPivoter} class to run. */
+  public static final String KIJI_PIVOTER_CLASS = "kiji.pivoter.class";
 
   /** Kiji Instance Name. */
   public static final String KIJI_INSTANCE_NAME = "kiji.instance.name";
