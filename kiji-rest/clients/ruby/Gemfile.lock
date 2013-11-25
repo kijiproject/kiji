@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    kijirest-client (0.0.2)
+    kijirest-client (1.0.0)
 
 GEM
   remote: https://rubygems.org/
