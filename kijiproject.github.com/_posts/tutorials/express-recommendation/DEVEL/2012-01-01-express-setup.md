@@ -100,7 +100,7 @@ The file `music-schema.ddl` defines table layouts that are used in this tutorial
 
 <div class="userinput">
 {% highlight bash %}
-${KIJI_HOME}/schema-schell/bin/kiji-schema-shell --kiji=${KIJI} --file=${MUSIC_EXPRESS_HOME}/music-schema.ddl
+${KIJI_HOME}/schema-shell/bin/kiji-schema-shell --kiji=${KIJI} --file=${MUSIC_EXPRESS_HOME}/music-schema.ddl
 {% endhighlight %}
 </div>
 
