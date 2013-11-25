@@ -163,7 +163,9 @@ module KijiRest
     #         }
     # param: strip_timestamp will remove any timestamp fields from the cells allowing the server
     #        to set the timestamp automatically (default false).
-    def write_row(instance_name, table_name, row_hash, strip_timestamp= false)
+    # param: timeout_seconds specifies the number of seconds before a Timeout::Error is thrown
+    #        (default nil, which falls back to Net:HTTP default of 60 seconds)
+    def write_row(instance_name, table_name, row_hash, strip_timestamp= false, timeout_seconds = nil)
       if strip_timestamp
         local_row_hash = row_hash.clone
         if local_row_hash.include?("cells")
@@ -185,6 +187,9 @@ module KijiRest
       end
       uri= URI(@base_uri)
       http =  Net::HTTP.new(uri.host, uri.port)
+      if timeout_seconds
+        http.read_timeout = timeout_seconds
+      end
       response =  http.post(rows_endpoint(instance_name, table_name), row_json,
         "Content-Type" => "application/json")
       case response
