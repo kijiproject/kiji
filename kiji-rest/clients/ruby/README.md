@@ -36,34 +36,32 @@ Or install it yourself as:
     # List instances
     instances = c.instances
 
-    # List tables for a known instance ("dota2")
-    tables = c.tables("dota2")
+    # List tables for a known instance ("default")
+    tables = c.tables("default") # Assuming the layout created from http://www.kiji.org/getstarted/#Quick_Start_Guide
 
-    # Fetch the rowKey
-    rowkey = c.rowkey("dota2","matches",8675309)
-
-    # Let's create a new entity with
-    new_eid=KijiRest::Client.format_entity_id(8675310)
-
-    # Fetch the row by the actual rowkey
-    row_hash=c.row("dota2","matches",rowkey)
-
-    # Change the value of the cell whose columnQualifier is "cluster" to 300
-    row_hash["cells"].each {|cell|
-      if cell["columnQualifier"] == "cluster"
-        cell["value"] = 300
-        break
-      end
+    # Create a new user
+    eid = ["my_user"]
+    row_hash={
+      KijiRest::Client::ENTITY_ID => eid,
+      "cells" => {
+        "info" => {
+          "email" => [ {
+            "value" => "name@company.com",
+            "writer_schema" => "string"
+            }
+          ]
+        }
       }
-
-    # Set the entity_id key to the new entity_id we wish to create
-    row_hash[KijiRest::Client::ENTITY_ID] = new_eid
+    }
 
     # Write the new row. The final argument is what dictates whether or not to strip
     # timestamps from an existing row_hash or not. This is handy if you are using the results
     # from the GET of another row to write a new row.
-    puts c.write_row("dota2","matches",row_hash,true)
+    puts c.write_row("default","users",row_hash,true)
 
+    # Verify that what we wrote is what we expected
+    my_written_row = c.row("default","users",["my_user"])
+    puts my_written_row["cells"]["info"]["email"][0]["value"] == "name@company.com"
 ## KijiRest::Server
 
     require 'kijirest/server'

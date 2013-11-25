@@ -62,15 +62,15 @@ module KijiRest
         f.puts(dropwizard_config.to_yaml)
         f.close
         #Now start the service
-        launch_command = qualify_file("/bin/kiji-rest")
+        launch_command = qualify_file("/bin/kiji-rest start")
         %x{#{launch_command}}
         if wait_for_load
           (1..20).each {|i|
-            break if app_running?
+            break if running?
             sleep 2
             }
-          unless app_running?
-            raise "App failed to start!"
+          unless running?
+            raise "KijiREST failed to start!"
           end
         end
       end
@@ -81,22 +81,18 @@ module KijiRest
     #        before returning.
     def stop(wait_for_shutdown = false)
       pid_file = qualify_file("kiji-rest.pid")
+      launch_command = qualify_file("/bin/kiji-rest stop")
       if File.exist?(pid_file)
-        pid_file_obj = File.new(pid_file, "r")
-        pid = pid_file_obj.gets
-        pid_file_obj.close
-        #Kill the pid cleanly first
-        %x{kill #{pid}}
+        %x{#{launch_command}}
         if wait_for_shutdown
           (1..20).each {|i|
-            break unless app_running?
+            break unless running?
             sleep 2
             }
-           if app_running?
-             %x{kill -9 #{pid}}
+           if running?
+             raise "KijiREST failed to stop."
            end
         end
-        File.delete(pid_file)
       else
         raise "KijiREST not running!"
       end
@@ -128,7 +124,7 @@ module KijiRest
     # Checks if the application is running by hitting a known URI
     def app_running?
       begin
-        f = open("http://localhost:#{@http_port}/v1/instances")
+        f = open("http://localhost:#{@http_port}/v1")
         f.close
         true
       rescue
@@ -148,7 +144,7 @@ module KijiRest
     # Checks if the server is running by checking the process file (kiji-rest.pid)
     # or the global/root run /var/run/kiji-rest.pid
     def running?
-      app_running? || pid_exists?
+      app_running? && pid_exists?
     end
 
     # Returns a fully qualified filename prefixed by the location of kiji_rest_server

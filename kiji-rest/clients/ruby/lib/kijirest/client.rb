@@ -17,6 +17,7 @@
 
 require "kijirest/version"
 require 'net/http'
+require 'uri'
 require 'json'
 require 'cgi'
 
@@ -65,12 +66,16 @@ module KijiRest
     # Returns a single row (identified by the specified entity_id) from the given table.
     # param: instance_name is the name of the instance
     # param: table_name is the name of the table
-    # param: entity_id is a string of an array consists of predefined components to fetch
+    # param: entity_id is an array of components comprising the entity_id to fetch.
     # param: filters is a hash containing any filters to apply which will get translated as
     #        query parameters in the REST call.
-    def row_entityid(instance_name, table_name, entity_id, filters= {})
-      eid_filter = {:eid => entity_id}
-      get_json(rows_endpoint(instance_name, table_name), filters.merge(eid_filter))
+    def row(instance_name, table_name, entity_id, filters= {})
+      eid_filter = if(entity_id.is_a? Array)
+        entity_id.to_json
+      else
+        entity_id
+      end
+      get_json(rows_endpoint(instance_name, table_name), filters.merge({:eid => eid_filter}))
     end
 
     # Returns a list of the tables in the given instance.
@@ -134,47 +139,22 @@ module KijiRest
       end
     end
 
-    # Returns a single JSON formatted rowkey of the given components. Any string components
-    # will be surrounded with single quotes. For example:
-    # format_entity_id("hello",1) will yield ['hello',1]
-    def self.format_entity_id(*components)
-      # Take non-strings and quote them
-      json_entity_id =  components.map {|comp|
-        if comp.is_a?(Numeric)
-          comp.to_s
-        else
-          "'#{comp}'"
-        end
-        }.join(",")
-        "[#{json_entity_id}]"
-    end
-
-    # Returns the rowkey for a given list of components. Note: string components do NOT need
-    # to be escaped strings or specially quoted. When the endpoint is invoked, they will be
-    # enclosed in single quotes to satisfy the server-side requirements.
-    # param: components are the individual components that comprise the rowkey
-    def rowkey(instance_name, table_name, *components)
-      return_obj = get_json(entityid_endpoint(instance_name, table_name),
-          "eid" => Client::format_entity_id(*components))
-      if return_obj
-        return_obj["rowKey"]
-      end
-    end
-
     # Creates or updates a new row by POSTing the row_hash to the server. Will create/update
     # the row specified by the entityId key in the row_hash.
     # param: instance_name is the instance
     # param: table_name is the table
     # param: row_hash is a hash containing the data to POST. Must be of the format:
     #        {
-    #            "entityId" : "[//Component Array]",
+    #            "entityId" : [//JSON component Array],
     #            "cells" : {
     #               "family" : {
     #                   "qualifier" : [
     #                                     {
     #                                       "timestamp" : <timestamp>,
     #                                       "value": <JSON representation of object to post>,
-    #                                       "writer_schema": <JSON representation of the writer_schema (Avro) OR the Kiji ID of the schema>
+    #                                       "writer_schema": <JSON representation of the writer
+    #                                                         schema (Avro) OR the Kiji ID of the
+    #                                                         schema>
     #                                     },
     #                                       ...
     #                                   ]
@@ -238,9 +218,6 @@ module KijiRest
       "#{table_endpoint(instance_name, table_name)}/rows"
     end
 
-    def entityid_endpoint(instance_name, table_name)
-      "#{table_endpoint(instance_name, table_name)}/entityId"
-    end
     # END endpoint definitions
 
     # Generic method that will raise a KijiRestClientError that contains a JSON object

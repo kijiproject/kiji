@@ -1,10 +1,22 @@
 require "./lib/kijirest/server.rb"
 #require 'kijirest/server'
 
-s=KijiRest::Server.new("/Users/amit/Documents/workspace/kiji-rest/kiji-rest/target/kiji-rest-0.1.0-SNAPSHOT-release/kiji-rest-0.1.0-SNAPSHOT")
-s.start("(xwing07.ul.wibidata.net,xwing09.ul.wibidata.net,xwing11.ul.wibidata.net):2181",["default","retail"], true)
-c=s.new_client
-puts c.instances.inspect
-puts c.tables("retail").inspect
-s.stop(true)
+    # Construct a new server object passing in the location where the kiji-rest application
+    # resides. Note: The owner of the kiji-rest folder must be the same user who is running
+    # this code else an exception will be raised.
+    s = KijiRest::Server.new("../../kiji-rest/target/kiji-rest-1.0.1-SNAPSHOT-release/kiji-rest-1.0.1-SNAPSHOT/")
 
+    # Launch the KijiREST server setting the cluster to .env and the array of visible instances
+    # to ["default"]. The final argument indicates to wait for the server to finish launching
+    # before returning.
+    s.start(".env",["default"], true)
+
+    # Get a reference to a new client pointing at
+    # http://localhost:<port set in conf/configuration.yml>
+    c = s.new_client
+
+    # Get a list of instances.
+    puts c.instances
+
+    # Let's stop the server and wait for the server to shutdown before returning.
+    s.stop(true)
