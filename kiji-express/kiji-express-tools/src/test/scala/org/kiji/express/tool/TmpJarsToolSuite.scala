@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.express.flow.tool
+package org.kiji.express.tool
 
 import java.io.File
 

@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.express.flow
+package org.kiji.express.repl
 
 import cascading.pipe.Pipe
 import cascading.tuple.Fields
@@ -30,6 +30,7 @@ import org.apache.avro.specific.SpecificRecord
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
+import org.kiji.express.flow.KijiJob
 import org.kiji.express.KijiSuite
 import org.kiji.express.avro.SimpleRecord
 import org.kiji.express.flow.util.PipeRunner._

@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.express.flow
+package org.kiji.express.repl
 
 import scala.collection.mutable.Buffer
 
@@ -28,15 +28,21 @@ import com.twitter.scalding.Tsv
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
+import org.kiji.express.avro.SimpleRecord
+import org.kiji.express.flow.EntityId
+import org.kiji.express.flow.FlowCell
+import org.kiji.express.flow.KijiInput
+import org.kiji.express.flow.KijiOutput
+import org.kiji.express.flow.util.Resources.doAndRelease
 import org.kiji.express.KijiSuite
-import org.kiji.express.flow.util.Resources._
 import org.kiji.express.repl.Implicits._
 import org.kiji.schema.KijiTable
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts
 
+
 @RunWith(classOf[JUnitRunner])
-class KijiPipeSuite extends KijiSuite {
+class KijiPipeToolSuite extends KijiSuite {
   /** Table layout to use for tests. */
   val layout: KijiTableLayout = layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
 
@@ -93,11 +99,21 @@ class KijiPipeSuite extends KijiSuite {
       .source(KijiInput(uri, "family:column1" -> 'word), wordCountInput(uri))
       .sink(Tsv("outputFile"))(validateWordCount)
 
-  test("A KijiPipe can be used to obtain a Scalding job that is run in local mode.") {
+  test("A KijiPipeTool can be used to obtain a Scalding job that is run in local mode.") {
     jobTest.run.finish
   }
 
-  test("A KijiPipe can be used to obtain a Scalding job that is run with Hadoop.") {
+  test("A KijiPipeTool can be used to obtain a Scalding job that is run with Hadoop.") {
     jobTest.runHadoop.finish
+  }
+
+  test("A KijiPipe can be implicitly converted to a KijiPipeTool,") {
+
+    // Implicitly create a KijiPipe, then call KijiPipeTool's run() method on it.
+    Tsv("input-source", fields = ('l, 's)).read
+        .insert('entityId, EntityId("foo"))
+        .write(KijiOutput(uri))
+        .packGenericRecordTo(('l, 's) -> 'record)(SimpleRecord.getClassSchema)
+        .run
   }
 }

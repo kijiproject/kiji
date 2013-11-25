@@ -27,6 +27,7 @@
 
   <modules>
     <module>kiji-express</module>
+    <module>kiji-express-tools</module>
   </modules>
 
   <properties>
@@ -241,7 +242,7 @@
             <failOnWarning>false</failOnWarning>
             <sourceDirectory>${basedir}/src/main/scala</sourceDirectory>
             <testSourceDirectory>${basedir}/src/test/scala</testSourceDirectory>
-            <configLocation>${basedir}/src/main/scalastyle/scalastyle_config.xml</configLocation>
+            <configLocation>${basedir}/../kiji-express/src/main/scalastyle/scalastyle_config.xml</configLocation>
           </configuration>
           <executions>
             <execution>

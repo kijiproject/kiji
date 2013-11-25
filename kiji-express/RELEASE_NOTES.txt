@@ -2,6 +2,8 @@
                              Kiji Express Release Notes
 
 Version 0.14.0
+  * EXP-334 & EXP-257. Pull repl out into a submodule of Express. Move repl-
+      specific functionality out of KijiPipe and into a new KijiPipeTool class.
   * EXP-345. Rename root to kiji-express-root and flow module to kiji-express.
   * EXP-331. Made kiji-express a multi-module project. Existing code
       moved to the kiji-express-flow module.

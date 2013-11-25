@@ -33,6 +33,7 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.express.flow.util.AvroTupleConversions
 import org.kiji.express.flow.util.PipeConversions
+import org.kiji.express.repl.KijiPipeTool
 
 /**
  * Object containing various implicit conversions required to create Scalding flows in the REPL.
@@ -100,6 +101,24 @@ object Implicits
    * @return a Pipe that is the result of reading the specified Source.
    */
   implicit def sourceToPipe(source: Source): Pipe = source.read
+
+  /**
+   * Converts a Pipe to a KijiPipeTool. This method permits implicit conversions from Pipe to
+   * KijiPipeTool.
+   *
+   * @param pipe to convert to a KijiPipeTool.
+   * @return a KijiPipeTool created from the specified Pipe.
+   */
+  implicit def pipeToKijiPipeTool(pipe: Pipe): KijiPipeTool = new KijiPipeTool(pipe)
+
+  /**
+   * Converts a KijiPipeTool to a Pipe. This method permits implicit conversions from
+   * KijiPipeTool to Pipe.
+   *
+   * @param kijiPipeTool to convert to a Pipe.
+   * @return the Pipe wrapped by the specified KijiPipeTool.
+   */
+  implicit def kijiPipeToolToPipe(kijiPipeTool: KijiPipeTool): Pipe = kijiPipeTool.pipe
 
   /**
    * Converts an iterable into a Source with index (int-based) fields.

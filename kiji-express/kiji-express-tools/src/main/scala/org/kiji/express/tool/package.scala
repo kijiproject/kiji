@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.express.flow
+package org.kiji.express
 
 /**
  * Package containing supporting classes for KijiExpress' command-line interface.
