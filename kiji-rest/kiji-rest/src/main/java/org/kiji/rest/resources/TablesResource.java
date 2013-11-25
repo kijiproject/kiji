@@ -26,6 +26,7 @@ import static org.kiji.rest.RoutesConstants.TABLE_PATH;
 
 import java.io.IOException;
 import java.util.List;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -42,7 +43,6 @@ import org.kiji.annotations.ApiStability;
 import org.kiji.rest.KijiClient;
 import org.kiji.rest.representations.GenericResourceRepresentation;
 import org.kiji.schema.Kiji;
-import org.kiji.schema.util.ResourceUtils;
 
 /**
  * This REST resource interacts with Kiji tables.
@@ -87,8 +87,6 @@ public class TablesResource {
       }
     } catch (IOException e) {
       throw new WebApplicationException(e, Status.INTERNAL_SERVER_ERROR);
-    } finally {
-      ResourceUtils.releaseOrLog(kiji);
     }
     return tables;
   }

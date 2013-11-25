@@ -40,7 +40,6 @@ import org.kiji.annotations.ApiStability;
 import org.kiji.rest.KijiClient;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.avro.TableLayoutDesc;
-import org.kiji.schema.util.ResourceUtils;
 
 /**
  * This REST resource interacts with Kiji tables.
@@ -81,8 +80,6 @@ public class TableResource {
       layout = kiji.getMetaTable().getTableLayout(table).getDesc();
     } catch (IOException e) {
       throw new WebApplicationException(e, Status.INTERNAL_SERVER_ERROR);
-    } finally {
-      ResourceUtils.releaseOrLog(kiji);
     }
     return layout;
   }

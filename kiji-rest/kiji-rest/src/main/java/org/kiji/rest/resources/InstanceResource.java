@@ -37,7 +37,6 @@ import org.kiji.annotations.ApiStability;
 import org.kiji.rest.KijiClient;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.avro.MetadataBackup;
-import org.kiji.schema.util.ResourceUtils;
 
 /**
  * This REST resource interacts with Kiji instances.
@@ -79,8 +78,6 @@ public class InstanceResource {
       return backup;
     } catch (Exception e) {
       throw new WebApplicationException(e, Status.INTERNAL_SERVER_ERROR);
-    } finally {
-      ResourceUtils.releaseOrLog(kiji);
     }
   }
 }
