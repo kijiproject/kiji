@@ -24,26 +24,23 @@ import java.io.IOException
 import scala.collection.JavaConversions._
 import scala.collection.mutable.Map
 
-import com.google.common.collect.ImmutableList
 import org.apache.avro.Schema
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.HTableDescriptor
 import org.apache.hadoop.hbase.client.HBaseAdmin
-import org.apache.hadoop.util.StringUtils
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiMetaTable
 import org.kiji.schema.KijiSchemaTable
-import org.kiji.schema.KijiSchemaTable.SchemaEntry
 import org.kiji.schema.KijiURI
+import org.kiji.schema.avro.AvroSchema
 import org.kiji.schema.avro.TableLayoutDesc
 import org.kiji.schema.layout.KijiTableLayout
+import org.kiji.schema.security.KijiSecurityManager
 import org.kiji.schema.util.ProtocolVersion
 import org.kiji.schema.util.ResourceUtils
 import org.kiji.schema.util.VersionInfo
-import org.kiji.schema.avro.AvroSchema
-import org.kiji.schema.security.KijiSecurityManager
 
 /**
  * Instances of this class provide the Kiji schema shell with access to KijiSchema.
@@ -231,14 +228,12 @@ final class KijiSystem extends AbstractKijiSystem {
 
   override def listInstances(): Set[String] = {
     def parseInstanceName(kijiTableName: String): Option[String] = {
-      val parts: List[String] = StringUtils.split(kijiTableName, '.').toList
+      val parts: Seq[String] = kijiTableName.split('.')
       if (parts.length < 3 || !KijiURI.KIJI_SCHEME.equals(parts.head)) {
-        return None;
+        None
+      } else {
+        Some(parts(1))
       }
-
-      // Extract the second component from the list.
-      val instanceName = parts.tail.head
-      return Some(instanceName)
     }
 
     val hTableDescriptors: List[HTableDescriptor] = hBaseAdmin.listTables().toList;
