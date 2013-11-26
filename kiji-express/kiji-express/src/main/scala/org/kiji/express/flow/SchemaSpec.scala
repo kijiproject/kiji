@@ -45,9 +45,9 @@ import org.kiji.annotations.Inheritance
  *   <li>`SchemaSpec.Specific(classOf[MySpecificRecordClass])`: This option should be used when you
  *   have a specific class that has been compiled by Avro.  `MySpecificRecordClass` must extend
  *   `org.apache.avro.SpecificRecord`</li>
- *   <li>`SchemaSpec.Generic(myGenericSchema)`: If you don’t have the specific class you want to use
- *   to read or write on the classpath, you can construct a generic schema and use it as the reader
- *   schema.</li>
+ *   <li>`SchemaSpec.Generic(myGenericSchema)`: If you don't have the specific class you want to
+ *   use to read or write on the classpath, you can construct a generic schema and use it as the
+ *   reader schema.</li>
  *   <li>`SchemaSpec.Writer`: used when you want to read with the same schema that the data
  *   was written with, or a schema attached to or inferred from the value to write with.  This is
  *   the default if you don’t specify any `SchemaSpec` for reading or writing.</li>

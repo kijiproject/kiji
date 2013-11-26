@@ -56,7 +56,7 @@ import org.kiji.schema.filter.RegexQualifierColumnFilter
  * }}}
  *
  * A `ColumnInputSpec` with the above filter specified will return all data from all  columns with
- * qualifiers “c” and later, up to but not including “m”.  You can omit any of the parameters, for
+ * qualifiers "c" and later, up to but not including "m". You can omit any of the parameters, for
  * instance, you can write ``ColumnRangeFilterSpec(minimum = “m”, minimumIncluded = true)` to
  * specify columns with qualifiers “m” and later.
  *
@@ -64,7 +64,7 @@ import org.kiji.schema.filter.RegexQualifierColumnFilter
  * {{{
  *     RegexQualifierFilterSpec(“http://.*”)
  * }}}
- * In this example, only data from columns whose qualifier names start with “http://” are returned.
+ * In this example, only data from columns whose qualifier names start with "http://" are returned.
  *
  * See the Sun Java documentation for regular expressions:
  * http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html
