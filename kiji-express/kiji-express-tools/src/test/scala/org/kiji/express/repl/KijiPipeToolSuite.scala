@@ -24,7 +24,10 @@ import scala.collection.mutable.Buffer
 import com.twitter.scalding.Args
 import com.twitter.scalding.Job
 import com.twitter.scalding.JobTest
+import com.twitter.scalding.Local
+import com.twitter.scalding.Mode
 import com.twitter.scalding.Tsv
+import org.junit.rules.TemporaryFolder
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
@@ -39,7 +42,6 @@ import org.kiji.express.repl.Implicits._
 import org.kiji.schema.KijiTable
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts
-
 
 @RunWith(classOf[JUnitRunner])
 class KijiPipeToolSuite extends KijiSuite {
@@ -109,8 +111,15 @@ class KijiPipeToolSuite extends KijiSuite {
 
   test("A KijiPipe can be implicitly converted to a KijiPipeTool,") {
 
+    // Run test case in local mode so we can specify the input file.
+    Mode.mode = Local(true)
+
+    val tempFolder = new TemporaryFolder()
+    tempFolder.create()
+    val inputFile = tempFolder.newFile("input-source")
+
     // Implicitly create a KijiPipe, then call KijiPipeTool's run() method on it.
-    Tsv("input-source", fields = ('l, 's)).read
+    Tsv(inputFile.getAbsolutePath, fields = ('l, 's)).read
         .insert('entityId, EntityId("foo"))
         .write(KijiOutput(uri))
         .packGenericRecordTo(('l, 's) -> 'record)(SimpleRecord.getClassSchema)
