@@ -28,6 +28,7 @@
   <modules>
     <module>kiji-express</module>
     <module>kiji-express-tools</module>
+    <module>kiji-express-examples</module>
   </modules>
 
   <properties>

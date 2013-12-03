@@ -1,0 +1,23 @@
+
+                             Kiji Express Examples Release Notes
+
+Version 0.12.0
+  * EXP-335. Move kiji-express-examples into kiji-express as a submodule.
+  * EXP-280. Updated to reflect changes to the KijiExpress API. Word count replaced with TFIDF and
+        naive bayes classifier.
+
+Version 0.5.0
+  * EXP-177. Update kiji-express-examples to use KijiJob.
+
+Version 0.4.0
+  * EXP-87. Update examples to agree with recent changes to
+    constructing entity ids.
+  * EXP-154. Update example code to agree with refactoring of DSL and
+    TimeRange into the org.kiji.express.flow module.
+  * EXP-107. Update code to agree with KijiExpress package
+    reorganization.
+
+Version 0.2.0
+  * EXP-26. Updates how EntityIds are handled using KijiExpress 0.2.0.
+  * CHOP-102. Explicit Scalding and Express imports are no longer required in scripts (they are now
+      automatically imported).

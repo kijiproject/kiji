@@ -1,0 +1,123 @@
+// JSON version of postings.ddl
+{
+  "name" : "postings",
+  "description" : "Newsgroup posts in the 20Newsgroups dataset.",
+  "keys_format" : {
+    "org.kiji.schema.avro.RowKeyFormat2" : {
+      "encoding" : "FORMATTED",
+      "salt" : {
+        "hash_size" : 2
+      },
+      "range_scan_start_index" : 2,
+      "components" : [ {
+        "name" : "group",
+        "type" : "STRING"
+      }, {
+        "name" : "post_name",
+        "type" : "STRING"
+      } ]
+    }
+  },
+  "locality_groups" : [ {
+    "id" : 1,
+    "name" : "default",
+    "description" : "Main storage.",
+    "in_memory" : false,
+    "max_versions" : 1,
+    "ttl_seconds" : 2147483647,
+    "bloom_type" : "NONE",
+    "compression_type" : "GZ",
+    "families" : [ {
+      "id" : 1,
+      "name" : "info",
+      "description" : "Basic information",
+      "columns" : [ {
+        "id" : 1,
+        "name" : "post",
+        "description" : "The text of the post.",
+        "column_schema" : {
+          "storage" : "UID",
+          "type" : "AVRO",
+          "avro_validation_policy" : "DEVELOPER",
+          "default_reader" : {
+            "uid" : 0
+          },
+          "readers" : [ {
+            "uid" : 0
+          } ],
+          "written" : [ {
+            "uid" : 0
+          } ],
+          "writers" : [ {
+            "uid" : 0
+          } ]
+        }
+      }, {
+        "id" : 2,
+        "name" : "group",
+        "description" : "The newsgroup that this posting belongs to.",
+        "column_schema" : {
+          "storage" : "UID",
+          "type" : "AVRO",
+          "avro_validation_policy" : "DEVELOPER",
+          "default_reader" : {
+            "uid" : 0
+          },
+          "readers" : [ {
+            "uid" : 0
+          } ],
+          "written" : [ {
+            "uid" : 0
+          } ],
+          "writers" : [ {
+            "uid" : 0
+          } ]
+        }
+      }, {
+        "id" : 3,
+        "name" : "postLength",
+        "description" : "The number of words in this posting.",
+        "column_schema" : {
+          "storage" : "UID",
+          "type" : "AVRO",
+          "avro_validation_policy" : "DEVELOPER",
+          "default_reader" : {
+            "uid" : 2
+          },
+          "readers" : [ {
+            "uid" : 2
+          } ],
+          "written" : [ {
+            "uid" : 2
+          } ],
+          "writers" : [ {
+            "uid" : 2
+          } ]
+        }
+      }, {
+        "id" : 4,
+        "name" : "segment",
+        "description" : "The training or test segment of this post. Training = 1, Test = 0",
+        "column_schema" : {
+          "storage" : "UID",
+          "type" : "AVRO",
+          "avro_validation_policy" : "DEVELOPER",
+          "default_reader" : {
+            "uid" : 2
+          },
+          "readers" : [ {
+            "uid" : 2
+          } ],
+          "written" : [ {
+            "uid" : 2
+          } ],
+          "writers" : [ {
+            "uid" : 2
+          } ]
+        }
+      } ]
+    } ]
+  } ],
+  "version" : "layout-1.3",
+  "layout_id" : "0"
+}
