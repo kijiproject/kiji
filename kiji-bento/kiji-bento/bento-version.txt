@@ -11,6 +11,7 @@ bento-cluster: ${bento-cluster.version}
 kiji-express: ${kiji-express.version}
 kiji-express-examples: ${kiji-express-examples.version}
 kiji-express-music: ${kiji-express-music.version}
+kiji-express-tools: ${kiji-express-tools.version}
 kiji-hive-adapter: ${kiji-hive-adapter.version}
 kiji-mapreduce: ${kiji-mapreduce.version}
 kiji-mapreduce-lib: ${kiji-mapreduce-lib.version}

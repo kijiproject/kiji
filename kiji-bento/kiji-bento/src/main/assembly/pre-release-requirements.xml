@@ -121,6 +121,14 @@
     <dependencySet>
       <outputDirectory>.</outputDirectory>
       <includes>
+        <include>org.kiji.express:kiji-express-tools:tar.gz</include>
+      </includes>
+      <unpack>true</unpack>
+      <useProjectArtifact>false</useProjectArtifact>
+    </dependencySet>
+    <dependencySet>
+      <outputDirectory>.</outputDirectory>
+      <includes>
         <include>org.kiji.express:kiji-express-music:tar.gz</include>
       </includes>
       <unpack>true</unpack>

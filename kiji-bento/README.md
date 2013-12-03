@@ -31,6 +31,8 @@ This kiji-bento release (${project.version}) includes:
 * `kiji-express` ${kiji-express.version}: Included in the `express`
   directory, kiji-express provides a Scala DSL for analyzing and modeling
   data stored in Kiji.
+* `kiji-express-tools` ${kiji-express-tools.version}: included in the `express`
+  directory, kiji-express-tools provides a REPL and related tools for Express.
 * `kiji-modeling` ${kiji-modeling.version}: Included in the `modeling`
   directory, kiji-modeling provides a formalization for training, applying,
   and evaluation machine learning models built on top of kiji-express.
