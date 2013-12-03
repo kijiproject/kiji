@@ -332,6 +332,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
    */
   private static final class RereadableState implements ReferenceCountable<RereadableState> {
 
+    private static final String RETAIN_ERROR_PREFIX = "Cannot retain closed RereadableState:";
     private final ImmutableList<KijiColumnName> mColumnsToFreshen;
     private final ImmutableMap<KijiColumnName, KijiFreshenerRecord> mFreshenerRecords;
     private final ImmutableMap<KijiColumnName, Freshener> mFresheners;
@@ -361,7 +362,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     public RereadableState retain() {
       final int counter = mRetainCounter.getAndIncrement();
       Preconditions.checkState(counter >= 1,
-          "Cannot retain closed RereadableState: %s retain counter was %s.",
+          RETAIN_ERROR_PREFIX + " %s retain counter was %s.",
           toString(), counter);
       return this;
     }
@@ -1640,10 +1641,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
       try {
         state = mRereadableState.retain();
       } catch (IllegalStateException ise) {
-        if (ise.getMessage().contains("Cannot retain closed RereadableState:")) {
-          // Pass and try again.
-          continue;
-        } else {
+        if (!ise.getMessage().startsWith(RereadableState.RETAIN_ERROR_PREFIX)) {
           throw ise;
         }
       }
@@ -1838,6 +1836,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     rereadFreshenerRecords(mRereadableState.mColumnsToFreshen);
   }
 
+  /** {@inheritDoc} */
   @Override
   public void rereadFreshenerRecords(
       final List<KijiColumnName> columnsToFreshen
@@ -1851,30 +1850,30 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
 
     final Map<KijiColumnName, Freshener> oldFresheners = Maps.newHashMap();
 
-    for (Map.Entry<KijiColumnName, Freshener> entry : mRereadableState.mFresheners.entrySet()) {
-      if (!newRecords.containsKey(entry.getKey())) {
-        // If the column no longer has a freshness policy record, release the old capsule.
-        LOG.debug("{} releasing invalid Freshener: {}", mReaderUID, entry.getValue());
-        entry.getValue().release();
-      } else {
-        if (newRecords.get(entry.getKey())
-            != mRereadableState.mFreshenerRecords.get(entry.getKey())) {
-          // If the column still has a freshness policy record and that record has changed, release
-          // the old capsule.
-          LOG.debug("{} releasing invalid Freshener: {}", mReaderUID, entry.getValue());
-          entry.getValue().release();
-        } else {
-          // If the record has not changed, keep the old Freshener.
-          LOG.debug("{} preserving valid Freshener: {}", mReaderUID, entry.getValue());
-          oldFresheners.put(entry.getKey(), entry.getValue());
-        }
+    final RereadableState oldState = mRereadableState;
+    // Retain old Fresheners if they are still valid. Invalid Fresheners will be closed by the old
+    // RereadableState when it is closed.
+    for (Map.Entry<KijiColumnName, Freshener> entry : oldState.mFresheners.entrySet()) {
+      final KijiColumnName column = entry.getKey();
+      final Freshener oldFreshener = entry.getValue();
+      final KijiFreshenerRecord oldRecord = oldState.mFreshenerRecords.get(column);
+      if (newRecords.containsKey(column) && newRecords.get(column).equals(oldRecord)) {
+        // The Freshener record is unchanged, so retain the Freshener to transfer ownership from the
+        // old RereadableState to the new one.
+        LOG.debug("{} retaining still valid Freshener: {}", mReaderUID, oldFreshener);
+        oldFreshener.retain();
+        oldFresheners.put(column, oldFreshener);
       }
     }
 
+    // Swap the new RereadableState into place and release the old one. When the old one closes, it
+    // will release all the Fresheners it held, which will close any that are no longer valid and
+    // not in use.
     mRereadableState = new RereadableState(
         columnsToFreshen,
         newRecords,
         fillFresheners(mReaderUID, newRecords, ImmutableMap.copyOf(oldFresheners)));
+    oldState.release();
   }
 
   /** {@inheritDoc} */
