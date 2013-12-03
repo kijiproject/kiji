@@ -33,7 +33,6 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.express.flow.util.AvroTupleConversions
 import org.kiji.express.flow.util.PipeConversions
-import org.kiji.express.repl.KijiPipeTool
 
 /**
  * Object containing various implicit conversions required to create Scalding flows in the REPL.
