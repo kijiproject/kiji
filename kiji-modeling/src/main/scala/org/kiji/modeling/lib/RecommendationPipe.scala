@@ -19,13 +19,24 @@
 
 package org.kiji.modeling.lib
 
+import scala.math.sqrt
+
 import cascading.pipe.Pipe
+import cascading.pipe.joiner.LeftJoin
 import cascading.tuple.Fields
+import com.twitter.algebird.Ring
 import com.twitter.scalding.FieldConversions
+import com.twitter.scalding.GroupBuilder
+import com.twitter.scalding.RichPipe
 import com.twitter.scalding.TupleConversions
+import com.twitter.scalding.mathematics.Matrix
+import com.twitter.scalding.mathematics.RowVector
 
 import org.kiji.express.repl.Implicits.pipeToRichPipe
 import org.kiji.modeling.framework.ModelPipeConversions
+
+// For implicit conversions
+import Matrix._
 
 /**
  * This class provides extensions to Scalding's RichPipe in order to perform recommendations. There
@@ -39,6 +50,7 @@ class RecommendationPipe(val pipe: Pipe)
     extends FieldConversions
     with TupleConversions
     with ModelPipeConversions {
+
   /**
    * This function takes profile information (e.g. a history of purchases) or order data and outputs
    * smaller subsets of co-occurring items. If the minSetSize and maxSetSize is 2, it will create
@@ -230,57 +242,285 @@ class RecommendationPipe(val pipe: Pipe)
   }
 
   /**
-   * Calculates the Jaccard Similarity between two pairs of items. Assumes the data is stored
-   * in an entity-centric manner.
+   * Create a `Matrix` from a user pipe by projecting on user-specified fields indicated the row
+   * identifiers, column identifiers, and values in the matrix.
    *
-   * @param fieldSpec is the mapping from the field containing items related to one entity
-   *     (e.g. purchases of 1 person) to the field that will hold the result.
-   * @param separator to use between pairs of items. Default = ","
-   * @tparam T is the type of the incoming item IDs.
-   * @return a pipe containing pairs of items with their Jaccard similarity. The result field
-   *     will contain a double.
+   * For item-item collaborative filtering, the rows will presumably be user IDs, the columns will
+   * be item IDs, and the values will be ratings.
+   *
+   * @param fields The name of three fields (row, col, rating) in the user's pipe.
+   * @tparam R The type of the row identifiers in the `Pipe`.
+   * @tparam C The type of the column identifiers in the `Pipe`.
+   * @return A Scalding `Matrix` formed from the input pipe.
    */
-  def simpleItemItemJaccardSimilarity[T](
-      fieldSpec: (Fields, Fields),
-      separator: String = ",")
-      (implicit ordering: Ordering[T]): Pipe = {
-    val (itemsetField, resultField) = fieldSpec
-    // For each item, find the number of entities (orders, customers) this appears in
-    // and keep it around in a pipe to be used for calculating the union
-    val productCounts = pipe.flatMap(itemsetField -> 'itemId) {
-          itemset: Seq[T] => itemset.distinct
-        }
-        .groupBy('itemId) { _.size('itemCount) }
+  private def pipeToUserItemMatrix[R <% Ordered[R], C <% Ordered[C]](
+      fields: Fields): Matrix[R, C, Double] = {
+    if (3 != fields.size()) {
+      throw new Exception("Pipe to convert to matrix should have exactly three input fields " +
+          "(row, column, value).")
+    }
 
-    // first calculate the intersection, i.e. number of rows in which two items occur together
-    pipe.prepareItemSets[T](itemsetField -> 'itemPairs, 2, 2)
-        .groupBy('itemPairs) { _.size('itemPairCount) }
-        // now calculate union, i.e. number of pairs in which either one of the other item appear
-        .map('itemPairs -> ('item1, 'item2)) {
-          itemPair: String => {
-            val items = itemPair.split(separator)
-            (items(0), items(1))
-          }
+    pipe
+        .project(fields)
+        .rename(fields -> ('userId, 'itemId, 'rating))
+        .toMatrix[R, C, Double]('userId, 'itemId, 'rating)
+  }
+
+  /**
+   * Create a `Pipe` from a Scalding `Matrix` of similarities.  In doing so, remove any similarity
+   * tuples in which the two items (or users) are identical.
+   *
+   * @param fields Three user fields (for item-item similarity: first item, second item, similarity)
+   *     to populate with the Matrix elements.
+   * @param similarityMatrix The Scalding `Matrix` containing similarity scores.
+   * @tparam C The type of the column identifiers in the `Pipe`.
+   * @return A pipe containing item pairs and their similarity scores.
+   */
+  private def similarityMatrixToPipe[C <% Ordered[C]](
+      fields: Fields,
+      similarityMatrix: Matrix[C, C, Double]): Pipe = {
+
+    if (3 != fields.size()) {
+      throw new Exception("Pipe to produce from a matrix should have exactly three input fields.")
+    }
+
+    similarityMatrix
+        .pipeAs('itemA, 'itemB, 'score)
+        // Don't report similarity of an item with itself!
+        .filter('itemA, 'itemB, 'score) { fields: (C, C, Double) =>
+          val (itemA, itemB, score) = fields
+          (itemA != itemB)
         }
-        // join with the count for the number of entities in which the first product appears
-        .joinWithSmaller('item1 -> 'itemId, productCounts)
-        .rename('itemCount -> 'item1Count)
-        .project('itemPairCount, 'item1, 'item2, 'item1Count)
-        // join with the count for the number of entities in which the second product appears
-        .joinWithSmaller('item2 -> 'itemId, productCounts)
-        .rename('itemCount -> 'item2Count)
-        .project('item1, 'item2, 'itemPairCount, 'item1Count, 'item2Count)
-        // find the union
-        .map(('itemPairCount, 'item1Count, 'item2Count) -> 'itemUnionCount) {
-          counts: (Long, Long, Long) => {
-            val (itemPairCount, item1Count, item2Count) = counts
-            // |union(A, B)| = |A| + |B| + |Intersection(A, B)|
-            item1Count + item2Count - itemPairCount
-          }
-        }
-        // find the Jaccard similarity
-        .map(('itemPairCount, 'itemUnionCount) -> resultField) {
-          counts: (Long, Long) => counts._1.toDouble / counts._2
-        }
+        .rename(('itemA, 'itemB, 'score) -> fields)
+  }
+
+  /**
+   * Calculates cosine similarity, returning a pipe of tuples of the form (first item, second item,
+   * similarity score).
+   *
+   * This method implements the algorithm described in
+   * <a href=http://files.grouplens.org/papers/www10_sarwar.pdf>
+   * "Item-Based Collaborative Filtering Recommendation Algorithms" by Sarwar, et al</a>, Section
+   * 3.1.1.
+   *
+   * @param fieldSpec contains the (row ID, column ID, rating) fields in the current pipe and the
+   *     (first item, second item, similarity) fields in the output pipe.  For item-item similarity,
+   *     the rows will be user IDs and the columns will be item IDs.
+   * @tparam R The type of the incoming row IDs.
+   * @tparam C The type of the incoming column IDs.
+   * @return A pipe containing tuples of (first item, second item, similarity).
+   */
+  def cosineSimilarity[R <% Ordered[R], C <% Ordered[C]](fieldSpec: (Fields, Fields)): Pipe = {
+
+    // Convert pipe into a matrix with rows for users and columns for items
+    val userRatingsMatrix: Matrix[R, C, Double] =
+        pipeToUserItemMatrix[R, C](fieldSpec._1)
+
+    // Normalize every column (item vector) in the matrix.  Scalding has a row normalization method
+    // but not a column normalization method, so we have to transpose the matrix (tranpose should be
+    // free in Scalding's matrix API - We are just juxtaposing the row and column fields).
+    val preparedMatrix = userRatingsMatrix
+      .transpose
+      .rowL2Normalize
+      .transpose
+
+    val similarityMatrix = (preparedMatrix.transpose * preparedMatrix)
+
+    similarityMatrixToPipe[C](fieldSpec._2, similarityMatrix)
+  }
+
+  /**
+   * Calculates cosine similarity, returning a pipe of tuples of the form (first item, second item,
+   * similarity score).  In adjust cosine similarity, we center the column vectors around the mean
+   * values of the rows before computing cosine similarity.
+   *
+   * This method implements the algorithm described in
+   * <a href=http://files.grouplens.org/papers/www10_sarwar.pdf>
+   * "Item-Based Collaborative Filtering Recommendation Algorithms" by Sarwar, et al</a>, Section
+   * 3.1.3.
+   *
+   * @param fieldSpec contains the (row ID, column ID, rating) fields in the current pipe and the
+   *     (first item, second item, similarity) fields in the output pipe.  For item-item similarity,
+   *     the rows will be user IDs and the columns will be item IDs.
+   * @tparam R is the type of the incoming row IDs.
+   * @tparam C is the type of the incoming column IDs.
+   * @return A pipe containing tuples of (first item, second item, similarity).
+   */
+  def adjustedCosineSimilarity[R <% Ordered[R], C <% Ordered[C]](
+      fieldSpec: (Fields, Fields)): Pipe = {
+
+    // Convert pipe into a matrix with rows for users and columns for items
+    val userRatingsMatrix: Matrix[R, C, Double] =
+        pipeToUserItemMatrix[R, C](fieldSpec._1)
+
+    val preparedMatrix = userRatingsMatrix
+      // Compute the mean of every row in the matrix and recenter the values in each row around the
+      // mean
+      .rowMeanCentering
+      // Normalize every column (item vector) in the matrix.  Scalding has a row normalization
+      // method but not a column normalization method, so we have to transpose the matrix (tranpose
+      // should be free in Scalding's matrix API - We are just juxtaposing the row and column
+      // fields).
+      .transpose
+      .rowL2Normalize
+      .transpose
+
+    val similarityMatrix = (preparedMatrix.transpose * preparedMatrix)
+
+    similarityMatrixToPipe[C](fieldSpec._2, similarityMatrix)
+  }
+
+  /**
+   * Calculates Jaccard correlation-based similarity, returning a pipe of tuples of the form (first
+   * item, second item, similarity score).
+   *
+   * This method implements the standard
+   * <a href=http://en.wikipedia.org/wiki/Jaccard_index>Jaccard index formula</a>.
+   *
+   * @param fieldSpec contains the (row ID, column ID, rating) fields in the current pipe and the
+   *     (first item, second item, similarity) fields in the output pipe.  For item-item similarity,
+   *     the rows will be user IDs and the columns will be item IDs.
+   * @tparam R is the type of the incoming row IDs.
+   * @tparam C is the type of the incoming column IDs.
+   * @return A pipe containing tuples of (first item, second item, similarity).
+   */
+  def jaccardSimilarity[R <% Ordered[R], C <% Ordered[C]]
+      (fieldSpec: (Fields, Fields)): Pipe = {
+
+    // Convert pipe into a matrix with rows for users and columns for items
+    val userRatingsMatrix: Matrix[R, C, Int] = fieldSpec._1.size() match {
+      // If the user has specified ratings, then binarize
+      case 3 => pipeToUserItemMatrix[R, C](fieldSpec._1).binarizeAs[Int]
+
+      // If not, just add 1 for all of the user / item pairs
+      case 2 => pipe
+        .project(fieldSpec._1)
+        .rename(fieldSpec._1 -> ('userId, 'itemId))
+        // Insert a default value of "1" for a rating here, since the subsequent code relies upon
+        // having a numerical rating.
+        .map('userId -> ('userId, 'rating)) { x: R => (x, 1) }
+        .toMatrix[R, C, Int]('userId, 'itemId, 'rating)
+
+      case _ => throw new Exception(
+          "Pipe to convert to matrix should have exactly two or three input fields.")
+    }
+
+    // Compute the number of ratings for each item.
+    // (The "sumRowVectors" method in Scalding creates a row vector containing the sum of each
+    // column vector.  The nomenclature is somewhat confusing, but follows a Matlab naming
+    // convention.)
+    val myNormVector: RowVector[C, Int] = userRatingsMatrix.sumRowVectors
+
+    // Create a matrix in which the the value in row i, col j is the number of users who have rated
+    // both item i and item j.
+    val dotProductMatrix = userRatingsMatrix.transpose * userRatingsMatrix
+
+    // This code is slightly tricky and comes from the Scalding Matrix library example that does
+    // Jaccard similarity.
+
+    // Create a matrix in which entry i,j is:
+    // - if the number of users who have interacted with both i and j > 0, then the number of users
+    //   who have interacted with i (the value for column i in myNormVector).
+    // - if no user has interacted with both i and j, then zero
+    val rowUnionMatrix = dotProductMatrix
+        .zip(myNormVector)
+        .mapValues(pair => pair._2)
+
+    val colUnionMatrix = dotProductMatrix
+        .zip(myNormVector.transpose)
+        .mapValues(pair => pair._2)
+
+    val unionMatrix: Matrix[C, C, Int] = rowUnionMatrix + colUnionMatrix - dotProductMatrix
+    val similarityMatrix: Matrix[C, C, Double] = dotProductMatrix
+        .zip(unionMatrix)
+        .mapValues( pair => pair._1.toDouble / pair._2.toDouble )
+
+    similarityMatrixToPipe[C](fieldSpec._2, similarityMatrix)
+  }
+
+  /**
+   * Calculates Pearson correlation-based similarity, returning a pipe of tuples of the form (first
+   * item, second item, similarity score).
+   *
+   * This method implements the algorithm described in
+   * <a href=http://files.grouplens.org/papers/www10_sarwar.pdf>
+   * "Item-Based Collaborative Filtering Recommendation Algorithms" by Sarwar, et al</a>, Section
+   * 3.1.2.
+   *
+   * @param fieldSpec contains the (row ID, column ID, rating) fields in the current pipe and the
+   *     (first item, second item, similarity) fields in the output pipe.  For item-item similarity,
+   *     the rows will be user IDs and the columns will be item IDs.
+   * @tparam R is the type of the incoming row IDs.
+   * @tparam C is the type of the incoming column IDs.
+   * @return A pipe containing tuples of (first item, second item, similarity).
+   */
+  def pearsonSimilarity[R <% Ordered[R], C <% Ordered[C]](
+      fieldSpec: (Fields, Fields)): Pipe = {
+
+    def createRatingPairs(itemsAndRatings: List[(C, Double)]):
+        Iterable[(C, C, Double, Double)] = {
+      for {
+        (itemA: C, ratingA: Double) <- itemsAndRatings
+        (itemB: C, ratingB: Double) <- itemsAndRatings
+        //if (itemA < itemB)
+        if (itemA != itemB)
+      } yield (itemA, itemB, ratingA, ratingB)
+    }
+
+    def ratingPairListToPearson(ratings: List[(Double, Double)]): Double = {
+      val ratingsA = ratings.map { _._1 }
+      val ratingsB = ratings.map { _._2 }
+
+      // Compute the mean-adjusted, normalized vectors for itemA and itemB
+      val normalizedRatings: List[List[Double]] = { for {
+        ratingsVector <- List(ratingsA, ratingsB)
+      } yield {
+        val mean: Double = ratingsVector.sum / ratingsVector.size
+        val meanAdjustedVector: List[Double] = ratingsVector.map { _ - mean }
+        val norm: Double = sqrt(meanAdjustedVector
+            .foldLeft(0.0) { (currentSum: Double, rating: Double) => currentSum + rating*rating })
+
+        meanAdjustedVector.map { _ / norm }
+      } }.toList
+
+      // The Pearson correlation is now just the dot product of the two vectors
+      val List(normalizedRatingsA, normalizedRatingsB) = normalizedRatings
+
+      val similarity: Double = normalizedRatingsA.zip(normalizedRatingsB)
+          .foldLeft(0.0) { (currentSum: Double, ratings: (Double, Double)) =>
+            currentSum + ratings._1 * ratings._2 }
+
+      similarity
+    }
+
+    def calculatePearson(gb: GroupBuilder): GroupBuilder = {
+      gb.mapList[(Double, Double), (Double)](('ratingA, 'ratingB) -> 'similarity) {
+        ratingPairListToPearson }
+    }
+
+    if (3 != fieldSpec._1.size()) {
+      throw new Exception("Pipe to convert to matrix should have exactly three input fields.")
+    }
+
+    pipe
+        .project(fieldSpec._1)
+        .rename(fieldSpec._1 -> ('userId, 'itemId, 'rating))
+        // Group by user to get all of the items that a given user has rated (store in a list) We
+        // assume that we can fit the item-rating vector for a single user within memory.
+        .groupBy('userId) { _.toList[(C, Double)](('itemId, 'rating) -> 'ratingList) }
+
+        // Emit (itemA, itemB, ratingA, ratingB) tuples for all of the itemA, itemB that a given
+        // user has rated.
+        .flatMapTo('ratingList -> ('itemA, 'itemB, 'ratingA, 'ratingB)) { createRatingPairs }
+
+        // Group by item pair and product a pair of vectors, each of which contains all of the
+        // ratings for the item in question from users that are common with the other item, and
+        // then compute the Pearson correlation.
+        .groupBy('itemA, 'itemB) { calculatePearson }
+        .project('itemA, 'itemB, 'similarity)
+        .rename(('itemA, 'itemB, 'similarity) -> fieldSpec._2)
   }
 }
+
+
+

@@ -20,17 +20,25 @@
 package org.kiji.modeling.lib
 
 import java.io.File
+import scala.collection.mutable
+import scala.math.abs
 
+import cascading.pipe.Pipe
+import cascading.tuple.Fields
 import com.google.common.io.Files
 import com.twitter.scalding.Args
 import com.twitter.scalding.Hdfs
+import com.twitter.scalding.JobTest
 import com.twitter.scalding.TextLine
 import org.apache.commons.io.FileUtils
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 import org.kiji.express.KijiSuite
+import org.kiji.express.flow.EntityId
 import org.kiji.express.flow.FlowCell
 import org.kiji.express.flow.KijiInput
 import org.kiji.express.flow.util.Resources.doAndClose
@@ -45,6 +53,7 @@ import org.kiji.schema.util.InstanceBuilder
 
 @RunWith(classOf[JUnitRunner])
 class RecommendationPipeSuite extends KijiSuite {
+  private val logger: Logger = LoggerFactory.getLogger(classOf[RecommendationPipeSuite])
   val testLayoutDesc: TableLayoutDesc = KijiTableLayouts.getLayout(KijiTableLayouts.SIMPLE)
   testLayoutDesc.setName("OrdersTable")
 
@@ -214,35 +223,6 @@ class RecommendationPipeSuite extends KijiSuite {
     FileUtils.deleteDirectory(outputDir)
   }
 
-  // Assumes every row in the Kiji table above represents a user.
-  test("Jaccard distance works correctly") {
-    class JaccardDistanceCalculator(args: Args) extends KijiModelingJob(args) {
-      KijiInput(args("input"), "family:column" -> 'slice)
-        .map('slice -> 'userPurchases) {
-          slice: Seq[FlowCell[CharSequence]] =>
-              slice.head.datum.toString.split(",").map(_.trim).toList
-        }
-        .simpleItemItemJaccardSimilarity[String]('userPurchases -> 'result)
-        .write(TextLine(args("output")))
-    }
-    val outputDir: File = Files.createTempDir()
-    new JaccardDistanceCalculator(Args("--input " + inputUri.toString + " --output " +
-        outputDir.getAbsolutePath)).run
-    val lines = doAndClose(scala.io.Source.fromFile(outputDir.getAbsolutePath + "/part-00000")) {
-      source: scala.io.Source => source.mkString
-    }
-    val expected = Array("bread\tbutter\t1\t2\t2\t3\t0.3333333333333333",
-        "bread\tcoke\t1\t2\t1\t2\t0.5",
-        "bread\tflour\t1\t2\t2\t3\t0.3333333333333333",
-        "butter\tflour\t2\t2\t2\t2\t1.0",
-        "bread\tmilk\t2\t2\t2\t2\t1.0",
-        "butter\tmilk\t1\t2\t2\t3\t0.3333333333333333",
-        "coke\tmilk\t1\t1\t2\t2\t0.5",
-        "flour\tmilk\t1\t2\t2\t3\t0.3333333333333333")
-    assert(lines.split("\n").sameElements(expected))
-    FileUtils.deleteDirectory(outputDir)
-  }
-
   /**
    * This tests runs a frequent itemset miner with the total number of orders provided.
    * Assumes every row in the table above represents an order.
@@ -293,4 +273,187 @@ class RecommendationPipeSuite extends KijiSuite {
     assert(expected.subsetOf(lines.split("\n").toSet))
     FileUtils.deleteDirectory(outputDir)
   }
+
+  /**
+   * Utility function to test difference item-item similarity metrics.
+   *
+   * @param userRatings List of user ratings (essentially the user-item rating matrix).
+   * @param expectedSimilarities List of correct item-item similarity pairs.
+   * @param similarityCalculator A function that takes a `RecommendationPipe` and returns a
+   *     function from (`Fields`, `Fields`) to a `Pipe`.  Typically this function just calls the
+   *     item-item similarity method for a pipe, e.g., it is of the form:
+   *     `val fn = (pipe: RecommendationPipe) => pipe.itemItemCosineSimilarity[Long, Long] _`
+   */
+  private def testItemItemSimilarity(
+    userRatings: List[(Long, Long, Double)],
+    expectedSimilarities: Map[(Long, Long), Double],
+    similarityCalculator: RecommendationPipe => (((Fields, Fields)) => Pipe)
+  ): Unit = {
+
+    /** Compares two floating point similarities. */
+    def floatEq(a: Double, b: Double, epsilon: Double = 0.00001): Boolean = {
+      abs(a-b) < epsilon
+    }
+
+    /**
+     * Assuming that we have gotten rid of all of the negative similarities, we should see the
+     * following:
+     * - 10,11 have similarity of 1.0
+     */
+    def validateSimilarity(outputBuffer: mutable.Buffer[(Long, Long, Double)]): Unit = {
+      val pairs2scores: Map[(Long,Long), Double] = outputBuffer.map { x: (Long, Long, Double) =>
+        val (itemA, itemB, similarity) = x
+        ((itemA, itemB), similarity)
+      }
+      .filter( pairAndSim => pairAndSim._2 > SimilarityChecker.ratingEpsilon)
+      .toMap
+
+      logger.debug("Got: " + pairs2scores
+          .toList
+          .sortWith((x, y) => if (x._1._1 != y._1._1) x._1._1 < y._1._1 else x._1._2 < y._1._2))
+      logger.debug("Expected: " + expectedSimilarities
+          .toList
+          .sortWith((x, y) => if (x._1._1 != y._1._1) x._1._1 < y._1._1 else x._1._2 < y._1._2))
+
+      // Print out any differences
+      val foundPairs: Set[(Long, Long)] = pairs2scores.keys.toSet
+      val expectedPairs: Set[(Long, Long)] = expectedSimilarities.keys.toSet
+
+      logger.debug("Found but not expected: " + (foundPairs &~ expectedPairs))
+      logger.debug("Found but not expected: " + (expectedPairs &~ foundPairs))
+
+      assert(pairs2scores.size === expectedSimilarities.size)
+      pairs2scores.keys.foreach{ key: (Long, Long) =>
+        val kijiScore = pairs2scores(key)
+        val expectedScore = expectedSimilarities(key)
+        if (!floatEq(kijiScore, expectedScore)) {
+          logger.debug(key.toString)
+        }
+        assert(floatEq(pairs2scores(key), expectedSimilarities(key)))
+      }
+    }
+
+    /** Split up an input text line into `'userId`, `'itemId`, and `'rating`. */
+    def tokenize(line: String): (Long, Long, Double) = {
+      val toks: Array[String] = line.split(",")
+      assert(toks.size === 3, "What is with this line? " + line)
+      (toks(0).toLong, toks(1).toLong, toks(2).toDouble)
+    }
+
+    // Simple job to run a pipeline with user ratings to calculate similarities
+    class SimilarityCalculator(args: Args) extends KijiModelingJob(args) {
+        val pipe = TextLine(args("input"))
+            .read
+            // Put "x" on the end of these field names to test the ability of the item-item
+            // similarity code to handle different field names.
+            .map('line -> ('userIdx, 'itemIdx, 'ratingx)) { x: String => tokenize(x) }
+
+        // This is fairly hideous...
+        val simCalcMethod: ((Fields, Fields)) => Pipe = similarityCalculator(pipe)
+        val simPipe = simCalcMethod(
+            ('userIdx, 'itemIdx, 'ratingx),
+            ('itemAx, 'itemBx, 'similarityx))
+        simPipe.write(TextLine(args("output")))
+    }
+
+    val jobTest = JobTest(new SimilarityCalculator(_))
+        .arg("input", "inputFile")
+        .arg("output", "outputFile")
+        .source(TextLine("inputFile"), userRatings.map { ratingTuple: (Long, Long, Double) =>
+          val (userId, itemId, rating) = ratingTuple
+          "%s,%s,%s".format(userId,itemId,rating)
+        }.zipWithIndex.map { x: (String, Int) =>
+          val (line, index) = x
+          ((index+1).toString, line)
+        })
+        .sink(TextLine("outputFile"))(validateSimilarity)
+
+    // Run in local mode.
+    jobTest.run.finish
+  }
+
+  test("Cosine similarity works correctly.") {
+    val fn = (pipe: RecommendationPipe) => pipe.cosineSimilarity[Long, Long] _
+    val checker = new VerifyCosineSimilarity()
+    testItemItemSimilarity(checker.getRatings, checker.computeSimilarities, fn)
+  }
+
+  test("Adjusted-cosine similarity works correctly.") {
+    val fn = (pipe: RecommendationPipe) => pipe.adjustedCosineSimilarity[Long, Long] _
+    val checker = new VerifyAdjustedCosineSimilarity()
+    testItemItemSimilarity(checker.getRatings, checker.computeSimilarities, fn)
+  }
+
+  test("Pearson similarity works correctly.") {
+    val fn = (pipe: RecommendationPipe) => pipe.pearsonSimilarity[Long, Long] _
+    val checker = new VerifyPearsonSimilarity()
+    testItemItemSimilarity(checker.getRatings, checker.computeSimilarities, fn)
+  }
+
+  test("Jaccard similarity works correctly.") {
+    val fn = (pipe: RecommendationPipe) => pipe.jaccardSimilarity[Long, Long] _
+    val checker = new VerifyJaccardSimilarity()
+    testItemItemSimilarity(checker.getRatings, checker.computeSimilarities, fn)
+  }
+
+  // Assumes every row in the Kiji table above represents a user.
+  // More exciting Jaccard test.
+  test("More abstract Jaccard distance test works.") {
+
+    class JaccardDistanceCalculator(args: Args) extends KijiModelingJob(args) {
+      TextLine(args("input"))
+        .read
+        .flatMap('line -> 'item) { line: String => line.split(",") }
+        .map('offset -> 'entityId) { offset: Int => EntityId(offset) }
+        .jaccardSimilarity[EntityId, String](
+            ('entityId, 'item) -> ('itemA, 'itemB, 'similarity))
+        .mapTo(('itemA, 'itemB, 'similarity) -> 'result) { fields: (String, String, Double) =>
+          val (itemA, itemB, sim) = fields
+          "%s,%s,%g".format(itemA, itemB, sim)
+        }
+        .write(TextLine(args("output")))
+    }
+
+    val input: Seq[(Int, String)] = Seq(
+        "milk,bread,coke",
+        "milk,bread,butter,flour",
+        "butter,flour")
+        .zipWithIndex
+        .map{ x: (String, Int) =>
+          val (msg, linenumber) = x
+          (linenumber + 1, msg)
+        }
+
+    val expected = Set(
+        "bread,butter,0.333333",
+        "bread,coke,0.500000",
+        "bread,flour,0.333333",
+        "bread,milk,1.00000",
+        "butter,bread,0.333333",
+        "butter,flour,1.00000",
+        "butter,milk,0.333333",
+        "coke,bread,0.500000",
+        "coke,milk,0.500000",
+        "flour,bread,0.333333",
+        "flour,butter,1.00000",
+        "flour,milk,0.333333",
+        "milk,bread,1.00000",
+        "milk,butter,0.333333",
+        "milk,coke,0.500000",
+        "milk,flour,0.333333")
+
+    def validateOutput(output: mutable.Buffer[String]): Unit = {
+      val actual: Set[String] = output.toSet
+      assert(actual === expected)
+    }
+
+    val jobTest = JobTest(new JaccardDistanceCalculator(_))
+        .arg("input", "inputFile")
+        .arg("output", "outputFile")
+        .source(TextLine("inputFile"), input)
+        .sink(TextLine("outputFile")) {validateOutput}
+
+    jobTest.run.finish
+  }
+
 }
