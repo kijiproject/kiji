@@ -63,6 +63,12 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
   @Override
   public final void initialize(final Bootstrap<KijiRESTConfiguration> bootstrap) {
     bootstrap.setName("kiji-rest");
+
+    // Initialize plugins.
+    for (KijiRestPlugin plugin : Lookups.get(KijiRestPlugin.class)) {
+      LOG.info("Initializing plugin " + plugin.getClass());
+      plugin.initialize(bootstrap);
+    }
   }
 
   /**

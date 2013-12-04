@@ -21,6 +21,7 @@ package org.kiji.rest.plugins;
 
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
 import com.yammer.dropwizard.json.ObjectMapperFactory;
 
@@ -48,6 +49,11 @@ import org.kiji.rest.serializers.Utf8ToJsonSerializer;
  */
 public class StandardKijiRestPlugin implements KijiRestPlugin {
 
+  /** {@inheritDoc} */
+  @Override
+  public void initialize(Bootstrap<KijiRESTConfiguration> bootstrap) {}
+
+  /** {@inheritDoc} */
   @Override
   public void install(
       final KijiClient kijiClient,

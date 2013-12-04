@@ -19,6 +19,7 @@
 
 package org.kiji.rest.plugins;
 
+import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
 
 import org.kiji.rest.KijiClient;
@@ -28,6 +29,14 @@ import org.kiji.rest.KijiRESTConfiguration;
  * Interface for plugins which will add custom resources to the Dropwizard environment.
  */
 public interface KijiRestPlugin {
+
+  /**
+   * For every accessible plugin, this method is invoked when KijiRESTService initializes.
+   * Bootstraps the plugin.  Often useful for adding asset bundles.
+   *
+   * @param bootstrap the service bootstrap
+   */
+  void initialize(final Bootstrap<KijiRESTConfiguration> bootstrap);
 
   /**
    * For every accessible plugin, this method is invoked when KijiRESTService initializes.
