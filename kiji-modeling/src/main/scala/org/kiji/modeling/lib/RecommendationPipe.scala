@@ -101,8 +101,9 @@ class RecommendationPipe(val pipe: Pipe)
 
   /**
    * Compute support for itemsets (N-grams of entities that occur together in some context, e.g.
-   * products in an order) in a pipe containing sets of orders. This is typically expressed as a fraction,
-   * rather than an absolute value. The denominator for this fraction needs to be provided either
+   * products in an order) in a pipe containing sets of orders.
+   * This is typically expressed as a fraction, rather than an absolute value.
+   * The denominator for this fraction needs to be provided either
    * as a constant or a pipe and a field within it.
    *
    * @param fieldSpec is the mapping of the field in this pipe that contains the co-occurring
