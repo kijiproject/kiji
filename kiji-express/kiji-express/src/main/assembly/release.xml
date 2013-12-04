@@ -46,17 +46,6 @@
     </fileSet>
     <fileSet>
       <useDefaultExcludes>false</useDefaultExcludes>
-      <outputDirectory>bin</outputDirectory>
-      <directory>src/main/scripts</directory>
-      <fileMode>0755</fileMode>
-      <excludes>
-        <exclude>*~</exclude>
-        <exclude>*.swp</exclude>
-      </excludes>
-      <filtered>false</filtered>
-    </fileSet>
-    <fileSet>
-      <useDefaultExcludes>false</useDefaultExcludes>
       <outputDirectory>conf</outputDirectory>
       <directory>src/main/conf</directory>
       <fileMode>0644</fileMode>
