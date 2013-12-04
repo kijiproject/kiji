@@ -19,15 +19,10 @@
 
 # Launches the kiji-rest process
 
-cd $(dirname $0)/../
-BASEDIR=$PWD
 RETVAL=0
 SLEEP_TIME=5
 
-# write logfiles to the /var/run/dir ... if run from initd
-logfile=${BASEDIR}/logs/console.out
-
-DESC="Kiji REST"
+DESC="KijiREST"
 
 initializeDirectories() {
   # attempt to find java (stolen from bigtop)
@@ -60,14 +55,25 @@ initializeDirectories() {
     exit 1
   fi
 
-  if [ -z "$PIDFILE" ]; then
-    PIDFILE=${BASEDIR}/kiji-rest.pid
+  if [ -z "$KIJI_REST_HOME" ]; then
+    # If KIJI_REST_HOME is not set, then infer that it is the working directory.
+    cd $(dirname $0)/../
+    KIJI_REST_HOME=$PWD
   fi
 
-  kiji_rest_cp="${BASEDIR}/lib/*:${KIJI_CLASSPATH}"
+  echo "KIJI_REST_HOME set to $KIJI_REST_HOME"
 
+  if [ -z "$PIDFILE" ]; then
+    PIDFILE=${KIJI_REST_HOME}/kiji-rest.pid
+  fi
+
+  echo "PIDFILE set to $PIDFILE"
+
+  kiji_rest_cp="${KIJI_REST_HOME}/lib/*:${KIJI_CLASSPATH}"
+
+  # Finds conf dir and adds to classpath.
   if [ -z "${KIJI_REST_CONF_DIR}" ]; then
-    KIJI_REST_CONF_DIR=${BASEDIR}/conf
+    KIJI_REST_CONF_DIR=${KIJI_REST_HOME}/conf
   elif [ ! -d "${KIJI_REST_CONF_DIR}" ]; then
     echo "KIJI_REST_CONF_DIR ($KIJI_REST_CONF_DIR) does not exist."
     exit 1
@@ -76,6 +82,27 @@ initializeDirectories() {
   if [ -d "${KIJI_REST_CONF_DIR}" ]; then
     kiji_rest_cp="${kiji_rest_cp}:${KIJI_REST_CONF_DIR}"
   fi
+
+  echo "KIJI_REST_CONF_DIR set to $KIJI_REST_CONF_DIR"
+
+  # Finds logs dir and adds to classpath.
+  if [ -z "${KIJI_REST_LOGS_DIR}" ]; then
+    KIJI_REST_LOGS_DIR=${KIJI_REST_HOME}/logs
+  elif [ ! -d "${KIJI_REST_LOGS_DIR}" ]; then
+    echo "KIJI_REST_LOGS_DIR ($KIJI_REST_LOGS_DIR) does not exist."
+    exit 1
+  else
+    # KIJI_REST_LOGS_DIR was specified and location exists.
+    # Override Dropwizard logging settings.
+    LOGGING_OVERRIDE_OPTS="-Ddw.http.requestLog.file.currentLogFilename=${KIJI_REST_LOGS_DIR}/requests.log \
+      -Ddw.http.requestLog.file.archivedLogFilenamePattern=${KIJI_REST_LOGS_DIR}/requests-%d.log.gz \
+      -Ddw.logging.file.currentLogFilename=${KIJI_REST_LOGS_DIR}/app.log \
+      -Ddw.logging.file.archivedLogFilenamePattern=${KIJI_REST_LOGS_DIR}/app-%d.log.gz"
+  fi
+
+  echo "KIJI_REST_LOGS_DIR set to $KIJI_REST_LOGS_DIR"
+
+  logfile=${KIJI_REST_LOGS_DIR}/console.out
 }
 
 function checkStatusOfProc(){
@@ -98,17 +125,17 @@ function checkStatusOfProc(){
 start() {
   echo "Starting ${DESC}"
 
-  mkdir -p ${BASEDIR}/logs/archives
+  mkdir -p ${KIJI_REST_LOGS_DIR}/archives
 
   echo "Archiving old logs"
   date=$(date +%Y%m%d%S)
-  for log_file in $(find ${BASEDIR}/logs -type f)
+  for log_file in $(find ${KIJI_REST_LOGS_DIR} -type f)
   do
     base_log=$(basename ${log_file})
-    mv ${log_file} ${BASEDIR}/logs/archives/${base_log}.${date}
+    mv ${log_file} ${KIJI_REST_LOGS_DIR}/archives/${base_log}.${date}
   done
 
-  ${JAVA_HOME}/bin/java -cp ${kiji_rest_cp} org.kiji.rest.KijiRESTService server \
+  ${JAVA_HOME}/bin/java -cp ${kiji_rest_cp} ${LOGGING_OVERRIDE_OPTS} org.kiji.rest.KijiRESTService server \
   ${KIJI_REST_CONF_DIR}/configuration.yml > ${logfile} 2>&1 &
 
   echo $! > $PIDFILE

@@ -21,7 +21,7 @@
 # Starts the kiji-rest service
 #
 # chkconfig: 345 90 10
-# description: Kiji Rest Service
+# description: KijiREST Service
 #
 
 RETVAL=0
@@ -35,11 +35,13 @@ DESC="Kiji REST"
 
 KIJI_REST_USER="kiji"
 KIJI_REST_HOME="/opt/wibi/kiji-rest"
+KIJI_REST_CONF_DIR="${KIJI_REST_HOME}/conf"
+KIJI_REST_LOGS_DIR="${RUNDIR}/logs"
 
 #Setup some directories
 mkdir -p ${RUNDIR}
 
-# ${LOCKDIR} is not a standard Linux directory, doesn't exist by default in ubuntu
+# ${LOCKDIR} is not a standard Linux directory, doesn't exist by default in Ubuntu
 mkdir -p ${LOCKDIR}
 chown -R ${KIJI_REST_USER} ${RUNDIR}
 
@@ -86,7 +88,11 @@ checkstatus(){
 
 execute_command() {
   command_name=$1
-  su -s /bin/bash -c "PIDFILE=${PIDFILE} ${KIJI_REST_HOME}/bin/kiji-rest ${command_name}" ${KIJI_REST_USER}
+  su -s /bin/bash -c "PIDFILE=${PIDFILE} \
+      KIJI_REST_HOME=${KIJI_REST_HOME} \
+      KIJI_REST_CONF_DIR=${KIJI_REST_CONF_DIR} \
+      KIJI_REST_LOGS_DIR=${KIJI_REST_LOGS_DIR} \
+      ${KIJI_REST_HOME}/bin/kiji-rest ${command_name}" ${KIJI_REST_USER}
 }
 
 check_for_root() {
