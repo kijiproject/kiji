@@ -167,7 +167,8 @@ class RecommendationPipeSuite extends KijiSuite {
                 slice.head.datum.toString.split(",").map(_.trim).toList
           }
           .prepareItemSets[String]('order -> 'itemset, 2, 2)
-          .filterBySupport('itemset -> 'support, None, Some(3.0), 'norm, 0.5)
+          .support('itemset -> 'support, None, Some(3.0), 'norm)
+          .filter('support) { support: Double => (support >= 0.5) }
           .write(TextLine(args("output")))
     }
     val outputDir: File = Files.createTempDir()
@@ -197,7 +198,8 @@ class RecommendationPipeSuite extends KijiSuite {
                 slice.head.datum.toString.split(",").map(_.trim).toList
           }
         .prepareItemSets[String]('order -> 'itemset, 2, 2)
-        .filterBySupport('itemset -> 'support, Some(totalOrders), None, 'norm, 0.5)
+        .support('itemset -> 'support, Some(totalOrders), None, 'norm)
+        .filter('support) { support: Double => (support >= 0.5) }
         .write(TextLine(args("output")))
     }
     val outputDir: File = Files.createTempDir()
@@ -238,6 +240,57 @@ class RecommendationPipeSuite extends KijiSuite {
         "coke\tmilk\t1\t1\t2\t2\t0.5",
         "flour\tmilk\t1\t2\t2\t3\t0.3333333333333333")
     assert(lines.split("\n").sameElements(expected))
+    FileUtils.deleteDirectory(outputDir)
+  }
+
+  /**
+   * This tests runs a frequent itemset miner with the total number of orders provided.
+   * Assumes every row in the table above represents an order.
+   * Computes lift and confidence.
+   */
+  test("Compute lift and confidence") {
+    class FrequentItemsetFinderJob(args: Args) extends KijiModelingJob(args) {
+      KijiInput(args("input"), "family:column" -> 'slice)
+          .map('slice -> 'order) {
+            slice: Seq[FlowCell[CharSequence]] =>
+                slice.head.datum.toString.split(",").map(_.trim).toList
+          }
+          .prepareItemSets[String]('order -> 'itemset, 1, 3)
+          .support('itemset -> 'support, None, Some(3.0), 'norm)
+          .confidenceAndLift(1, 5, 1, 5)
+          .write(TextLine(args("output")))
+    }
+    val outputDir: File = Files.createTempDir()
+    new FrequentItemsetFinderJob(Args("--input " + inputUri.toString + " --output " +
+        outputDir.getAbsolutePath)).run
+    val lines = doAndClose(scala.io.Source.fromFile(outputDir.getAbsolutePath + "/part-00000")) {
+        source: scala.io.Source => source.mkString
+    }
+    val expected = Array("flour\tbread\t0.5\t0.75\t0.3333333333333333",
+        "milk\tbread\t1.0\t1.5\t0.6666666666666666",
+        "butter\tbread\t0.5\t0.75\t0.3333333333333333",
+        "coke\tbread\t1.0\t1.5\t0.3333333333333333",
+        "flour\tbutter\t1.0\t1.5\t0.6666666666666666",
+        "bread\tbutter\t0.5\t0.75\t0.3333333333333333",
+        "milk\tbutter\t0.5\t0.75\t0.3333333333333333",
+        "bread\tcoke\t0.5\t1.5\t0.3333333333333333",
+        "milk\tcoke\t0.5\t1.5\t0.3333333333333333",
+        "bread\tflour\t0.5\t0.75\t0.3333333333333333",
+        "butter\tflour\t1.0\t1.5\t0.6666666666666666",
+        "milk\tflour\t0.5\t0.75\t0.3333333333333333",
+        "butter\tmilk\t0.5\t0.75\t0.3333333333333333",
+        "bread\tmilk\t1.0\t1.5\t0.6666666666666666",
+        "coke\tmilk\t1.0\t1.5\t0.3333333333333333",
+        "flour\tmilk\t0.5\t0.75\t0.3333333333333333",
+        "bread,flour\tmilk\t1.0\t1.5\t0.3333333333333333",
+        "bread,coke\tmilk\t1.0\t1.5\t0.3333333333333333",
+        "bread,butter\tmilk\t1.0\t1.5\t0.3333333333333333",
+        "butter\tbread,flour\t0.5\t1.5\t0.3333333333333333",
+        "milk\tbread,flour\t0.5\t1.5\t0.3333333333333333",
+        "butter\tbread,milk\t0.5\t0.75\t0.3333333333333333",
+        "coke\tbread,milk\t1.0\t1.5\t0.3333333333333333",
+        "flour\tbread,milk\t0.5\t0.75\t0.3333333333333333").toSet
+    assert(expected.subsetOf(lines.split("\n").toSet))
     FileUtils.deleteDirectory(outputDir)
   }
 }
