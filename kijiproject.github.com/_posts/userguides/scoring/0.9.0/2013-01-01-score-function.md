@@ -11,7 +11,7 @@ description: Description of ScoreFunction SPI.
 <div id="accordion-container">
   <h2 class="accordion-header"> ScoreFunction.java </h2>
     <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-scoring/raw/kiji-scoring-root-0.9.0/src/main/java/org/kiji/scoring/ScoreFunction.java"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-scoring/raw/kiji-scoring-root-0.9.0/kiji-scoring/src/main/java/org/kiji/scoring/ScoreFunction.java"> </script>
   </div>
 </div>
 
