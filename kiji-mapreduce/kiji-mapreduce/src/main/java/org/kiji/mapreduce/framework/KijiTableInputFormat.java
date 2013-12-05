@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.SerializationUtils;
@@ -46,7 +47,9 @@ import org.kiji.mapreduce.impl.KijiTableSplit;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.HBaseEntityId;
 import org.kiji.schema.Kiji;
+import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
+import org.kiji.schema.KijiReaderFactory;
 import org.kiji.schema.KijiRegion;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiRowScanner;
@@ -58,6 +61,7 @@ import org.kiji.schema.filter.KijiRowFilter;
 import org.kiji.schema.hbase.HBaseScanOptions;
 import org.kiji.schema.impl.HBaseKijiRowData;
 import org.kiji.schema.impl.HBaseKijiTable;
+import org.kiji.schema.layout.ColumnReaderSpec;
 import org.kiji.schema.util.ResourceUtils;
 
 /** InputFormat for Hadoop MapReduce jobs reading from a Kiji table. */
@@ -268,6 +272,20 @@ public final class KijiTableInputFormat
       final HBaseScanOptions hBaseScanOptions = new HBaseScanOptions();
       hBaseScanOptions.setCacheBlocks(false);
 
+      // Extract the ColumnReaderSpecs and build a mapping from column to the appropriate overrides.
+      final ImmutableMap.Builder<KijiColumnName, ColumnReaderSpec> overridesBuilder =
+          ImmutableMap.builder();
+      for (KijiDataRequest.Column column : mDataRequest.getColumns()) {
+        if (column.getReaderSpec() != null) {
+          overridesBuilder.put(column.getColumnName(), column.getReaderSpec());
+        }
+      }
+      final KijiReaderFactory.KijiTableReaderOptions readerOptions =
+          KijiReaderFactory.KijiTableReaderOptions.Builder
+              .create()
+              .withColumnReaderSpecOverrides(overridesBuilder.build())
+              .build();
+
       final KijiScannerOptions scannerOptions = new KijiScannerOptions()
           .setStartRow(HBaseEntityId.fromHBaseRowKey(mSplit.getStartRow()))
           .setStopRow(HBaseEntityId.fromHBaseRowKey(mSplit.getEndRow()))
@@ -279,7 +297,7 @@ public final class KijiTableInputFormat
       }
       mKiji = Kiji.Factory.open(inputURI, conf);
       mTable = mKiji.openTable(inputURI.getTable());
-      mReader = mTable.openTableReader();
+      mReader = mTable.getReaderFactory().openTableReader(readerOptions);
       mScanner = mReader.getScanner(mDataRequest, scannerOptions);
       mIterator = mScanner.iterator();
       mCurrentRow = null;
