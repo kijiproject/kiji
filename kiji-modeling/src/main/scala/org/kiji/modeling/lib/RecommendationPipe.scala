@@ -22,12 +22,9 @@ package org.kiji.modeling.lib
 import scala.math.sqrt
 
 import cascading.pipe.Pipe
-import cascading.pipe.joiner.LeftJoin
 import cascading.tuple.Fields
-import com.twitter.algebird.Ring
 import com.twitter.scalding.FieldConversions
 import com.twitter.scalding.GroupBuilder
-import com.twitter.scalding.RichPipe
 import com.twitter.scalding.TupleConversions
 import com.twitter.scalding.mathematics.Matrix
 import com.twitter.scalding.mathematics.RowVector
