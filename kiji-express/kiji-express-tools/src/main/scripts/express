@@ -332,7 +332,6 @@ function print_tool_usage() {
   echo '  help          - Displays this help message. Use --verbose for more information.'
   echo '  shell         - Starts an interactive shell for running KijiExpress code.'
   echo '  schema-shell  - Starts KijiSchema Shell loaded with KijiExpress extensions.'
-    'removed in a future release.'
   echo '  job           - Runs a compiled KijiExpress job.'
   echo '  jar           - Runs an arbitrary Scala or Java program.'
   echo '  classpath     - Prints the classpath used to run KijiExpress.'

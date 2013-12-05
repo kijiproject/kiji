@@ -164,7 +164,6 @@ private[express] class HFileKijiTap(
    * @param conf to which we will add the table uri.
    */
   override def sinkConfInit(flow: FlowProcess[JobConf], conf: JobConf) {
-
     FileOutputFormat.setOutputPath(conf, new Path(hFileOutput))
     DeprecatedOutputFormatWrapper.setOutputFormat(classOf[KijiHFileOutputFormat], conf)
     val hfContext = classOf[HFileWriterContext].getName()
@@ -175,5 +174,3 @@ private[express] class HFileKijiTap(
     super.sinkConfInit(flow, conf)
   }
 }
-
-

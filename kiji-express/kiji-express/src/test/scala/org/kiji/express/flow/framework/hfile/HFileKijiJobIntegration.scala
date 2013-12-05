@@ -25,6 +25,7 @@ import com.twitter.scalding.Args
 import com.twitter.scalding.TextLine
 import com.twitter.scalding.Tool
 import com.twitter.scalding.Tsv
+import org.apache.avro.Schema
 import org.apache.commons.io.FileUtils
 import org.apache.hadoop.fs.Path
 import org.junit.After
@@ -33,6 +34,7 @@ import org.junit.Before
 import org.junit.Test
 
 import org.kiji.express.flow.ColumnFamilyOutputSpec
+import org.kiji.express.flow.QualifiedColumnOutputSpec
 import org.kiji.express.flow.EntityId
 import org.kiji.express.flow.util.Resources
 import org.kiji.mapreduce.HFileLoader

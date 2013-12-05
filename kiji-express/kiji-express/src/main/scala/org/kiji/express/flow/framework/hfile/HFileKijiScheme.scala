@@ -41,6 +41,7 @@ import org.kiji.express.flow.QualifiedColumnOutputSpec
 import org.kiji.express.flow.TimeRange
 import org.kiji.express.flow.framework.KijiScheme
 import org.kiji.express.flow.framework.KijiSourceContext
+import org.kiji.express.flow.framework.serialization.KijiLocker
 import org.kiji.express.flow.util.Resources.doAndRelease
 import org.kiji.mapreduce.framework.HFileKeyValue
 import org.kiji.mapreduce.framework.KijiConfKeys
@@ -54,7 +55,7 @@ import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.impl.CellEncoderProvider
 import org.kiji.schema.layout.impl.ColumnNameTranslator
 
- /**
+/**
  * A Kiji-specific implementation of a Cascading `Scheme` which defines how to write data
  * to HFiles.
  *
@@ -83,13 +84,22 @@ private[express] class HFileKijiScheme(
   private[express] val timeRange: TimeRange,
   private[express] val timestampField: Option[Symbol],
   private[express] val loggingInterval: Long,
-  private[express] val columns: Map[String, ColumnOutputSpec])
+  @transient private[express] val columns: Map[String, ColumnOutputSpec])
     extends HFileKijiScheme.HFileScheme {
 
   import KijiScheme._
   import HFileKijiScheme._
 
-  setSinkFields(buildSinkFields(columns, timestampField))
+  // ColumnInputSpec and ColumnOutputSpec objects cannot be correctly serialized via
+  // java.io.Serializable.  Chiefly, Avro objects including Schema and all of the Generic types
+  // are not Serializable.  By making the inputColumns and outputColumns transient and wrapping
+  // them in KijiLocker objects (which handle serialization correctly),
+  // we can work around this limitation.  Thus, the following line should be the only to `columns`,
+  // because it will be null after serialization. Everything else should instead use
+  // _columns.get.
+  val _columns = KijiLocker(columns)
+
+  setSinkFields(buildSinkFields(_columns.get, timestampField))
 
   /**
    * Sets up any resources required for the MapReduce job. This method is called
@@ -134,7 +144,7 @@ private[express] class HFileKijiScheme(
     val encoderProvider = new CellEncoderProvider(uri, layout, kiji.getSchemaTable(),
         DefaultKijiCellEncoderFactory.get())
 
-    outputCells(output, timestampField, columns) { key: HFileCell =>
+    outputCells(output, timestampField, _columns.get) { key: HFileCell =>
       // Convert cell to an HFileKeyValue
       val kijiColumn = new KijiColumnName(key.colRequest.family, key.colRequest.qualifier)
       val hbaseColumn = colTranslator.toHBaseColumnName(kijiColumn)
@@ -166,7 +176,6 @@ private[express] class HFileKijiScheme(
 
     kiji.release()
     sinkCall.setContext(null)
-
   }
 
   /**
@@ -188,7 +197,7 @@ private[express] class HFileKijiScheme(
   override def equals(other: Any): Boolean = {
     other match {
       case scheme: HFileKijiScheme => {
-        columns == scheme.columns &&
+        _columns.get == scheme._columns.get &&
           timestampField == scheme.timestampField &&
           timeRange == scheme.timeRange
       }
@@ -198,7 +207,7 @@ private[express] class HFileKijiScheme(
 
 
   override def hashCode(): Int =
-    Objects.hashCode(columns, timeRange, timestampField, loggingInterval: java.lang.Long)
+    Objects.hashCode(_columns.get, timeRange, timestampField, loggingInterval: java.lang.Long)
 }
 
 /**

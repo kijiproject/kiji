@@ -142,7 +142,7 @@ final case class QualifiedColumnOutputSpec(
     qualifier: String,
     schemaSpec: SchemaSpec = Writer
 ) extends ColumnOutputSpec {
-  override val columnName: KijiColumnName = new KijiColumnName(family, qualifier)
+  override def columnName: KijiColumnName = new KijiColumnName(family, qualifier)
 }
 
 /**

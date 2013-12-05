@@ -17,30 +17,38 @@
  * limitations under the License.
  */
 
-package org.kiji.express.flow
+package org.kiji.express.flow.framework.hfile
 
 import java.io.InputStream
 
+import com.twitter.scalding.Hdfs
+import com.twitter.scalding.Mode
+import org.apache.commons.io.FileUtils
 import org.apache.commons.io.IOUtils
+import org.apache.avro.Schema
 import org.apache.hadoop.mapred.JobConf
 import org.junit.Test
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import com.twitter.scalding.Args
-import com.twitter.scalding.Hdfs
-import com.twitter.scalding.Mode
-import com.twitter.scalding.NullSource
 import org.junit.Assert
 
+import org.kiji.express.flow.QualifiedColumnOutputSpec
+import org.kiji.express.flow.ColumnInputSpec
+import org.kiji.express.flow.KijiInput
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiURI
 import org.kiji.schema.shell.api.Client
 import org.kiji.schema.testutil.AbstractKijiIntegrationTest
 import org.kiji.schema.util.InstanceBuilder
 
-class IntegrationTestSimpleFlow extends AbstractKijiIntegrationTest {
-  private final val Log: Logger = LoggerFactory.getLogger(classOf[IntegrationTestSimpleFlow])
+/**
+ * Integration tests with schemas specified for column requests, in an HFileKijiJob.
+ */
+class IntegrationTestKijiKryoHFileJob extends AbstractKijiIntegrationTest {
+  private final val Log: Logger = LoggerFactory.getLogger(classOf[IntegrationTestKijiKryoHFileJob])
 
+  // We can use the same layout as IntegrationTestSimpleFlow
   private final val TestLayout: String = "layout/org.kiji.express.flow.ITSimpleFlow.ddl"
   private final val TableName: String = "table"
 
@@ -82,7 +90,10 @@ class IntegrationTestSimpleFlow extends AbstractKijiIntegrationTest {
   }
 
   @Test
-  def testSimpleFlow(): Unit = {
+  def testHFileOutputWithSchemasInColumnSpec(): Unit = {
+    val tempHFileFolder = mTempDir.newFolder()
+    FileUtils.deleteDirectory(tempHFileFolder)
+
     val kijiURI = getKijiURI()
     create(TestLayout, kijiURI)
 
@@ -91,25 +102,40 @@ class IntegrationTestSimpleFlow extends AbstractKijiIntegrationTest {
       val table = kiji.openTable(TableName)
       try {
         new InstanceBuilder()
-            .withTable(table)
-                .withRow("row1")
-                    .withFamily("info")
-                        .withQualifier("name").withValue("name1")
-                        .withQualifier("email").withValue("email1")
-                .withRow("row2")
-                    .withFamily("info")
-                        .withQualifier("name").withValue("name2")
-                        .withQualifier("email").withValue("email2")
-            .build()
+          .withTable(table)
+          .withRow("row1")
+          .withFamily("info")
+          .withQualifier("name").withValue("name1")
+          .withQualifier("email").withValue("email1")
+          .withRow("row2")
+          .withFamily("info")
+          .withQualifier("name").withValue("name2")
+          .withQualifier("email").withValue("email2")
+          .build()
 
-        class Job(args: Args) extends KijiJob(args) {
-          KijiInput(table.getURI.toString, "info:email" -> 'email)
-              .groupAll { group => group.size() }
-              .debug
-              .write(NullSource)
+        class TestHFileOutputJob(args: Args) extends HFileKijiJob(args) {
+          KijiInput(
+            table.getURI.toString,
+            Map(ColumnInputSpec("info:email", schema = Schema.create(Schema.Type.STRING))
+              -> 'email))
+            .debug
+            .write(
+            HFileKijiOutput(
+              table.getURI.toString,
+              tempHFileFolder.getAbsolutePath,
+              Map('email ->
+                QualifiedColumnOutputSpec(
+                  "info:email",
+                  schema = Schema.create(Schema.Type.STRING)))))
         }
-        Mode.mode = Hdfs(false, conf = new JobConf(getConf))
-        Assert.assertTrue(new Job(Args(List())).run)
+        Mode.mode = Hdfs(strict = false, conf = new JobConf(getConf))
+        Assert.assertTrue(
+          new TestHFileOutputJob(
+            Args("--hfile-output %s --output %s".format(
+                table.getURI.toString,
+                tempHFileFolder.getAbsolutePath))
+          ).run)
+
       } finally {
         table.release()
       }

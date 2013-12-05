@@ -123,7 +123,7 @@ class WriterSchemaSuite extends KijiClientTest with KijiSuite {
         new GenericData().createEnum(input.toString, schema))
   }
 
-  /**                                                                         bfffff
+  /**
    * Write provided values with express into an HBase column with options as specified in output,
    * and verify that the values have been persisted correctly.
    * @param values to test

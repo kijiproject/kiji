@@ -33,7 +33,7 @@
 
   <properties>
     <!-- Kiji versions. -->
-    <kiji-schema.version>1.3.3</kiji-schema.version>
+    <kiji-schema.version>1.3.4-SNAPSHOT</kiji-schema.version>
     <kiji-schema-shell.version>1.3.1</kiji-schema-shell.version>
     <kiji-mapreduce.version>1.2.2</kiji-mapreduce.version>
     <fake-hbase.version>0.1.3</fake-hbase.version>
