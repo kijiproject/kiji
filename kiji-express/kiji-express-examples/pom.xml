@@ -43,10 +43,12 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>org.kiji.framework</groupId>
-      <artifactId>kiji-framework</artifactId>
-      <version>${kiji.framework.version}</version>
-      <scope>provided</scope>
+      <groupId>org.kiji.schema</groupId>
+      <artifactId>kiji-schema</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.mapreduce</groupId>
+      <artifactId>kiji-mapreduce</artifactId>
     </dependency>
     <dependency>
       <groupId>log4j</groupId>
@@ -63,7 +65,7 @@
     </dependency>
     <dependency>
       <groupId>org.kiji.express</groupId>
-      <artifactId>kiji-express-flow</artifactId>
+      <artifactId>kiji-express</artifactId>
       <version>${project.version}</version>
       <type>test-jar</type>
       <scope>test</scope>

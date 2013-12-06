@@ -52,14 +52,16 @@ import org.kiji.express.flow.FlowCell
 import org.kiji.express.flow.PagingSpec
 import org.kiji.express.flow.QualifiedColumnInputSpec
 import org.kiji.express.flow.QualifiedColumnOutputSpec
+import org.kiji.express.flow.SchemaSpec
 import org.kiji.express.flow.TimeRange
 import org.kiji.express.flow.TransientStream
 import org.kiji.express.flow.framework.serialization.KijiLocker
 import org.kiji.express.flow.util.AvroUtil
-import org.kiji.express.flow.util.Resources.doAndRelease
-import org.kiji.express.flow.util.SpecificCellSpecs
+import org.kiji.express.flow.util.Resources.withKijiTable
 import org.kiji.mapreduce.framework.KijiConfKeys
+import org.kiji.schema.layout.ColumnReaderSpec
 import org.kiji.schema.ColumnVersionIterator
+import org.kiji.schema.{ EntityId => JEntityId }
 import org.kiji.schema.EntityIdFactory
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiCell
@@ -67,11 +69,11 @@ import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiDataRequestBuilder
 import org.kiji.schema.KijiRowData
 import org.kiji.schema.KijiSchemaTable
-import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiTableWriter
 import org.kiji.schema.KijiURI
 import org.kiji.schema.MapFamilyVersionIterator
 import org.kiji.schema.avro.AvroSchema
+import org.kiji.schema.avro.SchemaType
 import org.kiji.schema.filter.KijiColumnFilter
 import org.kiji.schema.layout.KijiTableLayout
 
@@ -89,6 +91,7 @@ import org.kiji.schema.layout.KijiTableLayout
  * since it expects the Tap to have access to a Kiji table.  [[org.kiji.express.flow.KijiSource]]
  * handles the creation of both KijiScheme and KijiTap in KijiExpress.
  *
+ * @param tableUri of the target Kiji table.
  * @param timeRange to include from the Kiji table.
  * @param timestampField is the optional name of a field containing the timestamp that all values
  *     in a tuple should be written to.
@@ -100,13 +103,25 @@ import org.kiji.schema.layout.KijiTableLayout
 @ApiAudience.Framework
 @ApiStability.Experimental
 class KijiScheme(
+    tableUri: KijiURI,
     private[express] val timeRange: TimeRange,
     private[express] val timestampField: Option[Symbol],
     @transient private[express] val inputColumns: Map[String, ColumnInputSpec] = Map(),
-    @transient private[express] val outputColumns: Map[String, ColumnOutputSpec] = Map())
-    extends Scheme[JobConf, RecordReader[KijiKey, KijiValue], OutputCollector[_, _],
-        KijiSourceContext, KijiSinkContext] {
+    @transient private[express] val outputColumns: Map[String, ColumnOutputSpec] = Map()
+) extends Scheme[
+    JobConf,
+    RecordReader[Container[JEntityId], Container[KijiRowData]],
+    OutputCollector[_, _],
+    KijiSourceContext,
+    KijiSinkContext
+] {
   import KijiScheme._
+
+  /**
+   * Address of the table to read from or write to. This is stored as a string because KijiURIs are
+   * not serializable.
+   */
+  private val uri: String = tableUri.toString
 
   // ColumnInputSpec and ColumnOutputSpec objects cannot be correctly serialized via
   // java.io.Serializable.  Chiefly, Avro objects including Schema and all of the Generic types
@@ -134,18 +149,23 @@ class KijiScheme(
    */
   override def sourceConfInit(
       flow: FlowProcess[JobConf],
-      tap: Tap[JobConf, RecordReader[KijiKey, KijiValue], OutputCollector[_, _]],
-      conf: JobConf) {
+      tap: Tap[
+          JobConf,
+          RecordReader[Container[JEntityId], Container[KijiRowData]],
+          OutputCollector[_, _]
+      ],
+      conf: JobConf
+  ) {
     // Build a data request.
-    val request: KijiDataRequest = buildRequest(timeRange, _inputColumns.get.values)
+    val tableAddress: KijiURI = KijiURI.newBuilder(uri).build()
+    val request: KijiDataRequest = withKijiTable(tableAddress, conf) { table =>
+      buildRequest(table.getLayout, timeRange, _inputColumns.get.values)
+    }
 
     // Write all the required values to the job's configuration object.
-    conf.setInputFormat(classOf[KijiInputFormat])
     conf.set(
         KijiConfKeys.KIJI_INPUT_DATA_REQUEST,
         Base64.encodeBase64String(SerializationUtils.serialize(request)))
-    conf.set(SpecificCellSpecs.CELLSPEC_OVERRIDE_CONF_KEY,
-        SpecificCellSpecs.serializeOverrides(_inputColumns.get))
   }
 
   /**
@@ -157,7 +177,11 @@ class KijiScheme(
    */
   override def sourcePrepare(
       flow: FlowProcess[JobConf],
-      sourceCall: SourceCall[KijiSourceContext, RecordReader[KijiKey, KijiValue]]) {
+      sourceCall: SourceCall[
+          KijiSourceContext,
+          RecordReader[Container[JEntityId], Container[KijiRowData]]
+      ]
+  ) {
     val tableUriProperty = flow.getStringProperty(KijiConfKeys.KIJI_INPUT_TABLE_URI)
     val uri: KijiURI = KijiURI.newBuilder(tableUriProperty).build()
 
@@ -178,13 +202,17 @@ class KijiScheme(
    */
   override def source(
       flow: FlowProcess[JobConf],
-      sourceCall: SourceCall[KijiSourceContext, RecordReader[KijiKey, KijiValue]]): Boolean = {
+      sourceCall: SourceCall[
+          KijiSourceContext,
+          RecordReader[Container[JEntityId], Container[KijiRowData]]
+      ]
+  ): Boolean = {
     // Get the current key/value pair.
     val KijiSourceContext(value, tableUri) = sourceCall.getContext
 
     // Get the next row.
     if (sourceCall.getInput.next(null, value)) {
-      val row: KijiRowData = value.get()
+      val row: KijiRowData = value.getContents()
 
       // Build a tuple from this row.
       val result: Tuple = rowToTuple(
@@ -216,7 +244,11 @@ class KijiScheme(
    */
   override def sourceCleanup(
       flow: FlowProcess[JobConf],
-      sourceCall: SourceCall[KijiSourceContext, RecordReader[KijiKey, KijiValue]]) {
+      sourceCall: SourceCall[
+          KijiSourceContext,
+          RecordReader[Container[JEntityId], Container[KijiRowData]]
+      ]
+  ) {
     sourceCall.setContext(null)
   }
 
@@ -231,8 +263,13 @@ class KijiScheme(
    */
   override def sinkConfInit(
       flow: FlowProcess[JobConf],
-      tap: Tap[JobConf, RecordReader[KijiKey, KijiValue], OutputCollector[_, _]],
-      conf: JobConf) {
+      tap: Tap[
+          JobConf,
+          RecordReader[Container[JEntityId], Container[KijiRowData]],
+          OutputCollector[_, _]
+      ],
+      conf: JobConf
+  ) {
     // No-op since no configuration parameters need to be set to encode data for Kiji.
   }
 
@@ -245,13 +282,14 @@ class KijiScheme(
    */
   override def sinkPrepare(
       flow: FlowProcess[JobConf],
-      sinkCall: SinkCall[KijiSinkContext, OutputCollector[_, _]]) {
+      sinkCall: SinkCall[KijiSinkContext, OutputCollector[_, _]]
+  ) {
     // Open a table writer.
     val uriString: String = flow.getConfigCopy.get(KijiConfKeys.KIJI_OUTPUT_TABLE_URI)
     val uri: KijiURI = KijiURI.newBuilder(uriString).build()
 
     val kiji: Kiji = Kiji.Factory.open(uri, flow.getConfigCopy)
-    doAndRelease(kiji.openTable(uri.getTable)) { table: KijiTable =>
+    withKijiTable(kiji, uri.getTable) { table =>
       // Set the sink context to an opened KijiTableWriter.
       sinkCall.setContext(
           KijiSinkContext(table.openTableWriter(), uri, kiji, table.getLayout))
@@ -267,7 +305,8 @@ class KijiScheme(
    */
   override def sink(
       flow: FlowProcess[JobConf],
-      sinkCall: SinkCall[KijiSinkContext, OutputCollector[_, _]]) {
+      sinkCall: SinkCall[KijiSinkContext, OutputCollector[_, _]]
+  ) {
     // Retrieve writer from the scheme's context.
     val KijiSinkContext(writer, tableUri, kiji, layout) = sinkCall.getContext
 
@@ -293,7 +332,8 @@ class KijiScheme(
    */
   override def sinkCleanup(
       flow: FlowProcess[JobConf],
-      sinkCall: SinkCall[KijiSinkContext, OutputCollector[_, _]]) {
+      sinkCall: SinkCall[KijiSinkContext, OutputCollector[_, _]]
+  ) {
     sinkCall.getContext.kiji.release()
     sinkCall.getContext.kijiTableWriter.close()
     sinkCall.setContext(null)
@@ -373,7 +413,7 @@ object KijiScheme {
     val entityId: EntityId = EntityId.fromJavaEntityId(row.getEntityId)
     result.add(entityId)
 
-    def rowToTupleColumnFamily(cf: ColumnFamilyInputSpec): Unit = {
+    def rowToTupleColumnFamily(cf: ColumnFamilyInputSpec) {
       if (row.containsColumn(cf.family)) {
         cf.paging match {
           case PagingSpec.Off => {
@@ -404,7 +444,7 @@ object KijiScheme {
       }
     }
 
-    def rowToTupleQualifiedColumn(qc: QualifiedColumnInputSpec): Unit = {
+    def rowToTupleQualifiedColumn(qc: QualifiedColumnInputSpec) {
       if (row.containsColumn(qc.family, qc.qualifier)) {
         qc.paging match {
           case PagingSpec.Off => {
@@ -530,6 +570,7 @@ object KijiScheme {
    * @return data request configured with timeRange and columns.
    */
   private[express] def buildRequest(
+      layout: KijiTableLayout,
       timeRange: TimeRange,
       columns: Iterable[ColumnInputSpec]
   ): KijiDataRequest = {
@@ -541,11 +582,47 @@ object KijiScheme {
           .filter
           .map { _.toKijiColumnFilter }
           .getOrElse(null)
+      val columnReaderSpec: ColumnReaderSpec = {
+        // Check and ensure that this column isn't a counter, protobuf, or raw bytes encoded column.
+        // If it is, ignore the provided schema spec.
+        val schemaType = column match {
+          case QualifiedColumnInputSpec(family, qualifier, _, _, _, _) => {
+            layout
+                .getFamilyMap
+                .get(column.columnName.getFamily)
+                .getColumnMap
+                .get(column.columnName.getQualifier)
+                .getDesc
+                .getColumnSchema
+                .getType
+          }
+          case ColumnFamilyInputSpec(family, _, _, _, _) => {
+            layout
+                .getFamilyMap
+                .get(column.columnName.getFamily)
+                .getDesc
+                .getMapSchema
+                .getType
+          }
+        }
+        schemaType match {
+          case SchemaType.COUNTER => ColumnReaderSpec.counter()
+          case SchemaType.PROTOBUF => ColumnReaderSpec.protobuf()
+          case SchemaType.RAW_BYTES => ColumnReaderSpec.bytes()
+          case _ => column.schemaSpec match {
+            case SchemaSpec.DefaultReader => ColumnReaderSpec.avroDefaultReaderSchemaGeneric()
+            case SchemaSpec.Writer => ColumnReaderSpec.avroWriterSchemaGeneric()
+            case SchemaSpec.Generic(schema) => ColumnReaderSpec.avroReaderSchemaGeneric(schema)
+            case SchemaSpec.Specific(record) => ColumnReaderSpec.avroReaderSchemaSpecific(record)
+          }
+        }
+      }
+
       builder.newColumnsDef()
           .withMaxVersions(column.maxVersions)
           .withFilter(kijiFilter)
           .withPageSize(column.paging.cellsPerPage.getOrElse(0))
-          .add(column.columnName)
+          .add(column.columnName, columnReaderSpec)
     }
 
     val requestBuilder: KijiDataRequestBuilder = KijiDataRequest.builder()

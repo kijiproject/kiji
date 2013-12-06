@@ -20,7 +20,6 @@
 package org.kiji.express.flow
 
 import scala.collection.JavaConverters.asScalaIteratorConverter
-import scala.collection.JavaConverters.mapAsJavaMapConverter
 import scala.collection.JavaConverters.mapAsScalaMapConverter
 import scala.collection.mutable.Buffer
 
@@ -62,14 +61,12 @@ import org.kiji.express.flow.util.Resources._
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.EntityIdFactory
 import org.kiji.schema.Kiji
-import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiRowData
 import org.kiji.schema.KijiRowScanner
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiTableWriter
 import org.kiji.schema.KijiURI
-import org.kiji.schema.layout.CellSpec
 
 /**
  * A read or write view of a Kiji table.
@@ -95,8 +92,7 @@ import org.kiji.schema.layout.CellSpec
  * @param tableAddress is a Kiji URI addressing the Kiji table to read or write to.
  * @param timeRange that cells read must belong to. Ignored when the source is used to write.
  * @param timestampField is the name of a tuple field that will contain cell timestamp when the
- *     source is used for writing. Specify `None` to write all
- *     cells at the current time.
+ *     source is used for writing. Specify `None` to write all cells at the current time.
  * @param inputColumns is a one-to-one mapping from field names to Kiji columns. The columns in the
  *     map will be read into their associated tuple fields.
  * @param outputColumns is a one-to-one mapping from field names to Kiji columns. Values from the
@@ -121,6 +117,7 @@ final class KijiSource private[express] (
   /** A Kiji scheme intended to be used with Scalding/Cascading's hdfs mode. */
   private val kijiScheme: KijiScheme =
       new KijiScheme(
+          tableUri,
           timeRange,
           timestampField,
           convertKeysToStrings(inputColumns),
@@ -168,7 +165,9 @@ final class KijiSource private[express] (
           convertKeysToStrings(inputColumns))
       val testingInputColumnsFromWrites = inputColumnSpecifyAllData(
           convertKeysToStrings(outputColumns)
-          .mapValues { x: ColumnOutputSpec => ColumnInputSpec(x.columnName.toString) })
+          .mapValues { x: ColumnOutputSpec =>
+            ColumnInputSpec(x.columnName.toString, schemaSpec = x.schemaSpec)
+          })
       testingInputColumnsFromReads ++ testingInputColumnsFromWrites
     }
 
@@ -188,6 +187,7 @@ final class KijiSource private[express] (
           }
           case Write => {
             val scheme = new TestKijiScheme(
+                tableUri,
                 timestampField,
                 getInputColumnsForTesting,
                 convertKeysToStrings(outputColumns))
@@ -273,17 +273,14 @@ private[express] object KijiSource {
    * This method is meant to be used by kiji-express-cascading's Java TapBuilder.
    * Scala users ought to construct and create their taps via the provided class methods.
    *
-   * @param readOrWrite Specifies if this source is to be used for reading or writing.
    * @param tableAddress is a Kiji URI addressing the Kiji table to read or write to.
    * @param timeRange that cells read must belong to. Ignored when the source is used to write.
    * @param timestampField is the name of a tuple field that will contain cell timestamp when the
-   *     source is used for writing. Specify `None` to write all
-   *     cells at the current time.
+   *     source is used for writing. Specify `None` to write all cells at the current time.
    * @param inputColumns is a one-to-one mapping from field names to Kiji columns.
    *     The columns in the map will be read into their associated tuple fields.
    * @param outputColumns is a one-to-one mapping from field names to Kiji columns. Values from the
    *     tuple fields will be written to their associated column.
-   * @param mode Specifies which job runner/flow planner is being used.
    * @return A tap to use for this data source.
    */
   private[express] def makeTap(
@@ -405,8 +402,7 @@ private[express] object KijiSource {
    * @param buffer to fill with post-job table rows for tests.
    * @param timeRange of timestamps to read from each column.
    * @param timestampField is the name of a tuple field that will contain cell timestamp when the
-   *     source is used for writing. Specify the empty field name to write all
-   *     cells at the current time.
+   *     source is used for writing. Specify `None` to write all cells at the current time.
    * @param inputColumns is a map of Scalding field name to ColumnInputSpec.
    * @param outputColumns is a map of ColumnOutputSpec to Scalding field name.
    */
@@ -433,38 +429,11 @@ private[express] object KijiSource {
 
       // Read table into buffer.
       withKijiTable(uri, conf) { table: KijiTable =>
-        val layout = table.getLayout
+        // We also want the entire timerange, so the test can inspect all data in the table.
+        val request: KijiDataRequest = KijiScheme
+            .buildRequest(table.getLayout, All, inputColumns.values)
 
-        // Determine what type of record to use (generic, specific).
-        val cellSpecOverrides: Map[KijiColumnName, CellSpec] = outputColumns
-            .values
-            .map { column => (column.columnName, column.schemaSpec) }
-            .collect {
-              case (name, SchemaSpec.DefaultReader) => {
-                val cellSpec = layout.getCellSpec(name).setUseDefaultReaderSchema()
-                (name, cellSpec)
-              }
-              case (name, SchemaSpec.Writer) => {
-                val cellSpec = layout.getCellSpec(name).setUseWriterSchema()
-                (name, cellSpec)
-              }
-              case (name, SchemaSpec.Generic(avroSchema)) => {
-                val cellSpec = layout.getCellSpec(name).setReaderSchema(avroSchema)
-                (name, cellSpec)
-              }
-              case (name, SchemaSpec.Specific(avroClass)) => {
-                val cellSpec = layout.getCellSpec(name).setSpecificRecord(avroClass)
-                (name, cellSpec)
-              }
-            }
-            .toMap
-
-        // Open a table reader that reads data using the generic api.
-        val readerFactory = table.getReaderFactory
-        doAndClose(readerFactory.openTableReader(cellSpecOverrides.asJava)) { reader =>
-          // We also want the entire timerange, so the test can inspect all data in the table.
-          val request: KijiDataRequest = KijiScheme.buildRequest(All, inputColumns.values)
-
+        doAndClose(LocalKijiScheme.openReaderWithOverrides(table, request)) { reader =>
           doAndClose(reader.getScanner(request)) { scanner: KijiRowScanner =>
             val rows: Iterator[KijiRowData] = scanner.iterator().asScala
             rows.foreach { row: KijiRowData =>
@@ -538,16 +507,17 @@ private[express] object KijiSource {
    * used during tests.
    *
    * @param timestampField is the name of a tuple field that will contain cell timestamp when the
-   *     source is used for writing. Specify the empty field name to write all cells at the current
-   *     time.
+   *     source is used for writing. Specify `None` to write all cells at the current time.
    * @param inputColumns Scalding field name to column input spec mapping.
    * @param outputColumns Scalding field name to column output spec mapping.
    */
   private class TestKijiScheme(
+      tableUri: KijiURI,
       timestampField: Option[Symbol],
       inputColumns: Map[String, ColumnInputSpec],
       outputColumns: Map[String, ColumnOutputSpec])
       extends KijiScheme(
+          tableUri,
           All,
           timestampField,
           mergeColumnMapping(inputColumns, outputColumns),

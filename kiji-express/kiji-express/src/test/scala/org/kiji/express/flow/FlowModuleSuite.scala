@@ -25,6 +25,7 @@ import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.flow.framework.KijiScheme
 import org.kiji.schema.KijiInvalidNameException
+import org.kiji.schema.KijiURI
 
 @RunWith(classOf[JUnitRunner])
 class FlowModuleSuite extends FunSuite {
@@ -97,6 +98,7 @@ class FlowModuleSuite extends FunSuite {
   test("Flow module permits creating KijiSources as inputs with default options.") {
     val input: KijiSource = KijiInput(tableURI, "info:word" -> 'word)
     val expectedScheme = new KijiScheme(
+        tableUri = KijiURI.newBuilder(tableURI).build(),
         timeRange = All,
         timestampField = None,
         inputColumns = Map("word" -> QualifiedColumnInputSpec("info", "word")))
@@ -107,6 +109,7 @@ class FlowModuleSuite extends FunSuite {
   test("Flow module permits specifying timerange for KijiInput.") {
     val input = KijiInput(tableURI, timeRange=Between(0L,40L), columns="info:word" -> 'word)
     val expectedScheme = new KijiScheme(
+        KijiURI.newBuilder(tableURI).build(),
         Between(0L, 40L),
         None,
         Map("word" -> QualifiedColumnInputSpec("info", "word")))
@@ -118,6 +121,7 @@ class FlowModuleSuite extends FunSuite {
     val input: KijiSource = KijiInput(tableURI, "info:word" -> 'word, "info:title" -> 'title)
     val expectedScheme: KijiScheme = {
       new KijiScheme(
+          KijiURI.newBuilder(tableURI).build(),
           All,
           None,
           Map(
@@ -162,6 +166,7 @@ class FlowModuleSuite extends FunSuite {
   test("Flow module permits creating KijiSource with the default timestamp field") {
     val output: KijiSource = KijiOutput(tableURI, 'words -> "info:words")
     val expectedScheme: KijiScheme = new KijiScheme(
+        tableUri = KijiURI.newBuilder(tableURI).build(),
         timeRange = All,
         timestampField = None,
         outputColumns = Map("words" -> QualifiedColumnOutputSpec("info", "words")))
@@ -171,6 +176,7 @@ class FlowModuleSuite extends FunSuite {
   test("Flow module permits creating KijiSource with a timestamp field") {
     val output: KijiSource = KijiOutput(tableURI, 'time, 'words -> "info:words")
     val expectedScheme: KijiScheme = new KijiScheme(
+        tableUri = KijiURI.newBuilder(tableURI).build(),
         timeRange = All,
         timestampField = Some('time),
         outputColumns = Map("words" -> QualifiedColumnOutputSpec("info", "words")))

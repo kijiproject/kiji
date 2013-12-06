@@ -21,10 +21,9 @@ package org.kiji.express.flow.framework
 
 import java.io.InputStream
 import java.io.OutputStream
-import java.util.HashMap
-import java.util.{Map => JMap}
 import java.util.Properties
 
+import scala.collection.JavaConverters.collectionAsScalaIterableConverter
 import scala.collection.JavaConverters.mapAsJavaMapConverter
 import scala.collection.JavaConverters.asScalaIteratorConverter
 
@@ -49,19 +48,20 @@ import org.kiji.annotations.Inheritance
 import org.kiji.express.flow.ColumnInputSpec
 import org.kiji.express.flow.ColumnOutputSpec
 import org.kiji.express.flow.TimeRange
-import org.kiji.express.flow.util.GenericCellSpecs
 import org.kiji.express.flow.util.Resources._
-import org.kiji.express.flow.util.SpecificCellSpecs
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiColumnName
+import org.kiji.schema.KijiDataRequest
+import org.kiji.schema.KijiDataRequest.Column
+import org.kiji.schema.KijiReaderFactory
 import org.kiji.schema.KijiRowData
 import org.kiji.schema.KijiRowScanner
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiTableReader
 import org.kiji.schema.KijiTableWriter
 import org.kiji.schema.KijiURI
-import org.kiji.schema.layout.CellSpec
+import org.kiji.schema.layout.ColumnReaderSpec
 import org.kiji.schema.layout.KijiTableLayout
 
 /**
@@ -183,13 +183,8 @@ private[express] class LocalKijiScheme(
 
     // Build the input context.
     withKijiTable(kijiUri, conf) { table: KijiTable =>
-      val request = KijiScheme.buildRequest(timeRange, icolumns.values)
-      val reader = {
-        val allCellSpecs: JMap[KijiColumnName, CellSpec] = new HashMap[KijiColumnName, CellSpec]()
-        allCellSpecs.putAll(GenericCellSpecs(table))
-        allCellSpecs.putAll(SpecificCellSpecs.buildCellSpecs(table.getLayout, icolumns).asJava)
-        table.getReaderFactory.openTableReader(allCellSpecs)
-      }
+      val request = KijiScheme.buildRequest(table.getLayout, timeRange, icolumns.values)
+      val reader = LocalKijiScheme.openReaderWithOverrides(table, request)
       val scanner = reader.getScanner(request)
       val tableUri = table.getURI
       val context = InputContext(reader, scanner, scanner.iterator.asScala, tableUri, conf)
@@ -341,4 +336,26 @@ private[express] class LocalKijiScheme(
   }
 
   override def hashCode(): Int = Objects.hashCode(icolumns, ocolumns, timestampField, timeRange)
+}
+
+private[express] object LocalKijiScheme {
+  /**
+   * Opens a Kiji table reader correctly specifying column schema overrides from a KijiDataRequest.
+   *
+   * @param table to use to open a reader.
+   * @param request for data from the target Kiji table.
+   * @return a Kiji table reader. Close this reader when it is no longer needed.
+   */
+  def openReaderWithOverrides(table: KijiTable, request: KijiDataRequest): KijiTableReader = {
+    val overrides: Map[KijiColumnName, ColumnReaderSpec] = request
+        .getColumns
+        .asScala
+        .map { column: Column => (column.getColumnName, column.getReaderSpec) }
+        .toMap
+    val readerOptions = KijiReaderFactory.KijiTableReaderOptions.Builder
+        .create()
+        .withColumnReaderSpecOverrides(overrides.asJava)
+        .build()
+    table.getReaderFactory.openTableReader(readerOptions)
+  }
 }

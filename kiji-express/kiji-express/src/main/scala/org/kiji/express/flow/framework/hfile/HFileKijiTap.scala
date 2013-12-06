@@ -36,9 +36,7 @@ import org.apache.hadoop.mapred.RecordReader
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.express.flow.framework.KijiKey
 import org.kiji.express.flow.framework.KijiScheme
-import org.kiji.express.flow.framework.KijiValue
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.mapreduce.impl.HFileWriterContext
 import org.kiji.mapreduce.output.framework.KijiHFileOutputFormat
@@ -62,8 +60,8 @@ private[express] class HFileKijiTap(
   private val tableUri: String,
   private val scheme: KijiScheme.HadoopScheme,
   private val hFileOutput: String)
-    extends Tap[JobConf, RecordReader[KijiKey, KijiValue], OutputCollector[_, _]](
-        scheme.asInstanceOf[Scheme[JobConf, RecordReader[KijiKey, KijiValue],
+    extends Tap[JobConf, RecordReader[_, _], OutputCollector[_, _]](
+        scheme.asInstanceOf[Scheme[JobConf, RecordReader[_, _],
             OutputCollector[_, _], _, _]]) {
 
   /** Unique identifier for this KijiTap instance. */
@@ -88,7 +86,7 @@ private[express] class HFileKijiTap(
    */
   override def openForRead(
       flow: FlowProcess[JobConf],
-      recordReader: RecordReader[KijiKey, KijiValue]): TupleEntryIterator = {
+      recordReader: RecordReader[_, _]): TupleEntryIterator = {
     null
   }
 

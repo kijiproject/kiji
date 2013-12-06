@@ -30,7 +30,6 @@ import cascading.tap.hadoop.io.HadoopTupleEntrySchemeIterator
 import cascading.tuple.TupleEntryCollector
 import cascading.tuple.TupleEntryIterator
 import com.google.common.base.Objects
-
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.mapred.JobConf
 import org.apache.hadoop.mapred.OutputCollector
@@ -39,11 +38,16 @@ import org.apache.hadoop.mapred.lib.NullOutputFormat
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.express.flow._
+import org.kiji.express.flow.ColumnInputSpec
+import org.kiji.express.flow.ColumnOutputSpec
+import org.kiji.express.flow.InvalidKijiTapException
 import org.kiji.express.flow.util.Resources.doAndRelease
 import org.kiji.mapreduce.framework.KijiConfKeys
+import org.kiji.mapreduce.framework.KijiTableInputFormat
+import org.kiji.schema.{ EntityId => JEntityId }
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiColumnName
+import org.kiji.schema.KijiRowData
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiURI
 import org.kiji.schema.layout.KijiTableLayout
@@ -66,16 +70,27 @@ import org.kiji.schema.layout.KijiTableLayout
 class KijiTap(
     // This is not a val because KijiTap needs to be serializable and KijiURI is not.
     uri: KijiURI,
-    private val scheme: KijiScheme)
-    extends Tap[JobConf, RecordReader[KijiKey, KijiValue], OutputCollector[_, _]](
-        scheme.asInstanceOf[Scheme[JobConf, RecordReader[KijiKey, KijiValue],
-            OutputCollector[_, _], _, _]]) {
-
+    private val scheme: KijiScheme
+) extends Tap[
+    JobConf,
+    RecordReader[Container[JEntityId], Container[KijiRowData]],
+    OutputCollector[_, _]
+](
+    scheme.asInstanceOf[
+        Scheme[
+            JobConf,
+            RecordReader[Container[JEntityId], Container[KijiRowData]],
+            OutputCollector[_, _],
+            _,
+            _
+        ]
+    ]
+) {
   /** Address of the table to read from or write to. */
-  private val tableUri: String = uri.toString()
+  private val tableUri: String = uri.toString
 
   /** Unique identifier for this KijiTap instance. */
-  private val id: String = UUID.randomUUID().toString()
+  private val id: String = UUID.randomUUID().toString
 
   /**
    * Sets any configuration options that are required for running a MapReduce job
@@ -87,7 +102,7 @@ class KijiTap(
    */
   override def sourceConfInit(flow: FlowProcess[JobConf], conf: JobConf) {
     // Configure the job's input format.
-    conf.setInputFormat(classOf[KijiInputFormat])
+    MapredInputFormatWrapper.setInputFormat(classOf[KijiTableInputFormat], conf)
 
     // Store the input table.
     conf.set(KijiConfKeys.KIJI_INPUT_TABLE_URI, tableUri)
@@ -104,7 +119,6 @@ class KijiTap(
    * @param conf to which we will add the table uri.
    */
   override def sinkConfInit(flow: FlowProcess[JobConf], conf: JobConf) {
-    // TODO(CHOP-35): Use an output format that writes to HFiles.
     // Configure the job's output format.
     conf.setOutputFormat(classOf[NullOutputFormat[_, _]])
 
@@ -121,7 +135,7 @@ class KijiTap(
    *     the Kiji table being used by this tap to allow jobs that read from or write to the same
    *     table to have different data request options.
    */
-  override def getIdentifier(): String = id
+  override def getIdentifier: String = id
 
   /**
    * Opens any resources required to read from a Kiji table.
@@ -132,7 +146,8 @@ class KijiTap(
    */
   override def openForRead(
       flow: FlowProcess[JobConf],
-      recordReader: RecordReader[KijiKey, KijiValue]): TupleEntryIterator = {
+      recordReader: RecordReader[Container[JEntityId], Container[KijiRowData]]
+  ): TupleEntryIterator = {
     val modifiedFlow = if (flow.getStringProperty(KijiConfKeys.KIJI_INPUT_TABLE_URI) == null) {
       // TODO CHOP-71 Remove this hack which is introduced by a scalding bug:
       // https://github.com/twitter/scalding/issues/369
@@ -162,7 +177,8 @@ class KijiTap(
    */
   override def openForWrite(
       flow: FlowProcess[JobConf],
-      outputCollector: OutputCollector[_, _]): TupleEntryCollector = {
+      outputCollector: OutputCollector[_, _]
+  ): TupleEntryCollector = {
     new HadoopTupleEntrySchemeCollector(
         flow,
         this.asInstanceOf[Tap[JobConf, RecordReader[_, _], OutputCollector[_, _]]],
@@ -205,7 +221,7 @@ class KijiTap(
     val uri: KijiURI = KijiURI.newBuilder(tableUri).build()
 
     doAndRelease(Kiji.Factory.open(uri, conf)) { kiji: Kiji =>
-      kiji.getTableNames().contains(uri.getTable())
+      kiji.getTableNames.contains(uri.getTable)
     }
   }
 
@@ -253,7 +269,8 @@ object KijiTap {
       kijiUri: KijiURI,
       inputColumns: Map[String, ColumnInputSpec],
       outputColumns: Map[String, ColumnOutputSpec],
-      conf: Configuration) {
+      conf: Configuration
+  ) {
     // Try to open the Kiji instance.
     val kiji: Kiji =
         try {
@@ -267,11 +284,11 @@ object KijiTap {
     // Try to open the table.
     val table: KijiTable =
         try {
-          kiji.openTable(kijiUri.getTable())
+          kiji.openTable(kijiUri.getTable)
         } catch {
           case e: Exception =>
             throw new InvalidKijiTapException(
-                "Error opening Kiji table: %s\n".format(kijiUri.getTable()) + e.getMessage)
+                "Error opening Kiji table: %s\n".format(kijiUri.getTable) + e.getMessage)
         } finally {
           kiji.release() // Release the Kiji instance.
         }
@@ -288,7 +305,7 @@ object KijiTap {
         // Filter for columns that don't exist
         .filter( { case colname => !tableLayout.exists(colname) } )
         .map { column =>
-            "One or more columns does not exist in the table %s: %s\n".format(table.getName, column)
+          "One or more columns does not exist in the table %s: %s\n".format(table.getName, column)
         }
 
     val allErrors = nonExistentColumnErrors

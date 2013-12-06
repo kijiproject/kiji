@@ -17,23 +17,35 @@
  * limitations under the License.
  */
 
-package org.kiji.express.flow.framework
+package org.kiji.express.flow.framework;
 
-import org.junit.runner.RunWith
-import org.scalatest.FunSuite
-import org.scalatest.junit.JUnitRunner
-import org.scalatest.mock.EasyMockSugar
+/**
+ * Contains keys or values for mapreduce input formats that do not reuse objects.
+ *
+ * @param <T> The type of the contained data.
+ */
+public class Container<T> {
+  /**
+   * A reference to the current contained data.
+   */
+  private T contents = null;
 
-import org.kiji.schema.KijiRowData
+  /**
+   * Return the contained data.
+   *
+   * @return the contained data.
+   */
+  public T getContents() {
+    return contents;
+  }
 
-@RunWith(classOf[JUnitRunner])
-class KijiValueSuite extends FunSuite with EasyMockSugar {
-  test("KijiValue should get the same RowData you put in.") {
-    val value = new KijiValue()
-    val row = mock[KijiRowData]
-
-    value.set(row)
-
-    assert(row == value.get())
+  /**
+   * Sets value of the container.
+   *
+   * @param newContents The new value of the container.
+   */
+  public void setContents(T newContents) {
+    contents = newContents;
   }
 }
+

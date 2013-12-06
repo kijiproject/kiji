@@ -42,6 +42,7 @@ class KijiTapSuite extends KijiSuite {
     val kijiURI = testTable.getURI
 
     val testScheme: KijiScheme = new KijiScheme(
+        tableUri = kijiURI,
         timeRange = All,
         timestampField = None,
         inputColumns = Map(
@@ -58,6 +59,7 @@ class KijiTapSuite extends KijiSuite {
     val kijiURI = testTable.getURI
 
     val testScheme: KijiScheme = new KijiScheme(
+        tableUri = kijiURI,
         timeRange = All,
         timestampField = None,
         inputColumns = Map(
@@ -80,6 +82,7 @@ class KijiTapSuite extends KijiSuite {
     val kijiURI = testTable.getURI
 
     val testScheme: KijiScheme = new KijiScheme(
+        tableUri = kijiURI,
         timeRange = All,
         timestampField = None,
         inputColumns = Map(
@@ -102,6 +105,7 @@ class KijiTapSuite extends KijiSuite {
     val kijiURI = testTable.getURI
 
     val testScheme: KijiScheme = new KijiScheme(
+        tableUri = kijiURI,
         timeRange = All,
         timestampField = None,
         inputColumns = Map(
@@ -122,6 +126,7 @@ class KijiTapSuite extends KijiSuite {
     val kijiURI = testTable.getURI
 
     val testScheme: KijiScheme = new KijiScheme(
+        tableUri = kijiURI,
         timeRange = All,
         timestampField = None,
         inputColumns = Map(

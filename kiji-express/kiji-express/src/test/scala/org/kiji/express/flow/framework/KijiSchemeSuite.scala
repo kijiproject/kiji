@@ -34,7 +34,7 @@ import org.kiji.express.flow.FlowCell
 import org.kiji.express.flow.ColumnInputSpec
 import org.kiji.express.flow.EntityId
 import org.kiji.express.flow.QualifiedColumnOutputSpec
-import org.kiji.express.flow.util.GenericCellSpecs
+import org.kiji.express.flow.SchemaSpec
 import org.kiji.schema.EntityIdFactory
 import org.kiji.schema.avro.HashSpec
 import org.kiji.schema.avro.HashType
@@ -49,12 +49,17 @@ class KijiSchemeSuite extends KijiSuite {
     val kiji = table.getKiji
     val uri = table.getURI
     val writer = table.openTableWriter()
-    val reader = table.getReaderFactory.openTableReader(GenericCellSpecs(table))
 
     // Set up the columns and fields.
-    val columnsOutput = Map("columnSymbol" -> QualifiedColumnOutputSpec("family:column3"))
-    val columnsInput = Map("columnSymbol" -> ColumnInputSpec("family:column3"))
+    val columnsOutput = Map(
+        "columnSymbol" -> QualifiedColumnOutputSpec("family:column3")
+    )
+    val columnsInput = Map(
+        "columnSymbol" -> ColumnInputSpec("family:column3", schemaSpec = SchemaSpec.Writer)
+    )
     val sourceFields = KijiScheme.buildSourceFields(columnsOutput.keys)
+    val request = KijiScheme.buildRequest(tableLayout, All, columnsInput.values)
+    val reader = LocalKijiScheme.openReaderWithOverrides(table, request)
 
     // Create a dummy record with an entity ID to put in the table.
     val dummyEid = EntityId("dummy")
@@ -83,7 +88,7 @@ class KijiSchemeSuite extends KijiSuite {
     // Read the tuple back.
     val rowData = reader.get(
         dummyEid.toJavaEntityId(eidFactory),
-        KijiScheme.buildRequest(All, columnsInput.values))
+        KijiScheme.buildRequest(tableLayout, All, columnsInput.values))
     val readValue: Tuple = KijiScheme.rowToTuple(
         columnsInput,
         sourceFields,

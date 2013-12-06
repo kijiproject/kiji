@@ -67,7 +67,6 @@
   </check>
   <check enabled="true" class="org.scalastyle.scalariform.IfBraceChecker" level="error"></check>
   <check enabled="true" class="org.scalastyle.scalariform.NoFinalizeChecker" level="error"></check>
-  <check enabled="true" class="org.scalastyle.scalariform.NoWhitespaceAfterLeftBracketChecker" level="error"></check>
   <check enabled="true" class="org.scalastyle.scalariform.NoWhitespaceBeforeLeftBracketChecker" level="error"></check>
   <check enabled="true" class="org.scalastyle.scalariform.PublicMethodsHaveTypeChecker" level="error"></check>
 </scalastyle>

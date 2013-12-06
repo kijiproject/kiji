@@ -44,5 +44,5 @@ private[express] case class KijiSinkContext (
     kijiTableWriter: KijiTableWriter,
     tableUri: KijiURI,
     kiji: Kiji,
-    kijiLayout: KijiTableLayout) {
-}
+    kijiLayout: KijiTableLayout
+)

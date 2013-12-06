@@ -76,6 +76,7 @@ class NewsgroupClassifier(args: Args) extends KijiJob(args) {
     .flatMap('postText -> 'word) {
       postText: Seq[FlowCell[CharSequence]] => NewsgroupTFIDF.uniquelyTokenize(postText.head.datum)
     }
+    .map('tag -> 'tag) { tag: Seq[FlowCell[CharSequence]] => tag.head.datum.toString }
     // Pull in the precalculated weights for each word, group pair.
     .joinWithTiny(('word, 'maybe) -> ('word, 'group), weights)
     // Take the product of all weights within a group for each post.
@@ -96,9 +97,9 @@ class NewsgroupClassifier(args: Args) extends KijiJob(args) {
     }
     // If the tag is the same as our best guess, emit a 1, otherwise emit a 0.
     .map(('tag, 'bestGuess) -> 'correct) {
-      tuple: (Seq[FlowCell[CharSequence]], String) => {
+      tuple: (String, String) => {
         val (tag, bestGuess) = tuple
-        if (tag.head.datum.toString.equals(bestGuess)) 1 else 0
+        if (tag.equals(bestGuess)) 1 else 0
       }
     }
     // Sum the correct guesses and the total posts classified.

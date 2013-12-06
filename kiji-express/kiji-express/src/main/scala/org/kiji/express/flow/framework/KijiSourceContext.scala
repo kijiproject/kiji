@@ -22,6 +22,7 @@ package org.kiji.express.flow.framework
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
+import org.kiji.schema.KijiRowData
 import org.kiji.schema.KijiURI
 
 /**
@@ -35,6 +36,6 @@ import org.kiji.schema.KijiURI
 @ApiStability.Experimental
 @Inheritance.Sealed
 private[express] case class KijiSourceContext (
-    rowContainer: KijiValue,
-    tableUri: KijiURI) {
-}
+    rowContainer: Container[KijiRowData],
+    tableUri: KijiURI
+)
