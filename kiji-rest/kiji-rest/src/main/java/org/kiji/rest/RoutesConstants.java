@@ -84,28 +84,10 @@ public final class RoutesConstants {
   public static final String TABLE_PATH = TABLES_PATH + "/{" + TABLE_PARAMETER + "}";
 
   /**
-   * GETs a hexadecimal EntityId using the components specified in the query.
-   * <li>Path: /v1/instances/{instance}/tables/{table}/entityId
-   * <li>Handled by:
-   * {@link org.kiji.rest.resources.EntityIdResource#getEntityId}
-   */
-  public static final String ENTITY_ID_PATH = TABLE_PATH + "/entityId";
-
-  /**
    * GETs rows resources.
    * <li>Path: /v1/instances/{instance}/tables/{table}/rows/
    * <li>Handled by:
    * {@link org.kiji.rest.resources.RowsResource#getRows}
    */
   public static final String ROWS_PATH = TABLE_PATH + "/rows";
-  public static final String HEX_ENTITY_ID_PARAMETER = "hexEntityId";
-
-  /**
-   * GETs and PUTs a Kiji row identified by its hex rowkey.
-   * <li>Path: v1/instances/{instance}/tables/{table}/rows/<hexEntityId>
-   * <li>Handled by:
-   * {@link org.kiji.rest.resources.RowResource#getRow}
-   */
-  /** Parameter for the hexEntityId of the row. */
-  public static final String ROW_PATH = ROWS_PATH + "/{" + HEX_ENTITY_ID_PARAMETER + "}";
 }
