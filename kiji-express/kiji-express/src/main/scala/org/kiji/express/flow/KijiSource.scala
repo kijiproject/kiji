@@ -21,6 +21,7 @@ package org.kiji.express.flow
 
 import scala.collection.JavaConverters.asScalaIteratorConverter
 import scala.collection.JavaConverters.mapAsJavaMapConverter
+import scala.collection.JavaConverters.mapAsScalaMapConverter
 import scala.collection.mutable.Buffer
 
 import java.io.OutputStream
@@ -265,6 +266,43 @@ final class KijiSource private[express] (
 @ApiAudience.Framework
 @ApiStability.Experimental
 private[express] object KijiSource {
+
+  /**
+   * Construct a KijiSource and create a connection to the physical data source
+   * (also known as a Tap in Cascading) which, in this case, is a [[org.kiji.schema.KijiTable]].
+   * This method is meant to be used by kiji-express-cascading's Java TapBuilder.
+   * Scala users ought to construct and create their taps via the provided class methods.
+   *
+   * @param readOrWrite Specifies if this source is to be used for reading or writing.
+   * @param tableAddress is a Kiji URI addressing the Kiji table to read or write to.
+   * @param timeRange that cells read must belong to. Ignored when the source is used to write.
+   * @param timestampField is the name of a tuple field that will contain cell timestamp when the
+   *     source is used for writing. Specify `None` to write all
+   *     cells at the current time.
+   * @param inputColumns is a one-to-one mapping from field names to Kiji columns.
+   *     The columns in the map will be read into their associated tuple fields.
+   * @param outputColumns is a one-to-one mapping from field names to Kiji columns. Values from the
+   *     tuple fields will be written to their associated column.
+   * @param mode Specifies which job runner/flow planner is being used.
+   * @return A tap to use for this data source.
+   */
+  private[express] def makeTap(
+      tableAddress: String,
+      timeRange: TimeRange,
+      timestampField: String,
+      inputColumns: java.util.Map[String, ColumnInputSpec],
+      outputColumns: java.util.Map[String, ColumnOutputSpec]
+  ): Tap[_, _, _] = {
+    val kijiSource = new KijiSource(
+        tableAddress,
+        timeRange,
+        Option(Symbol(timestampField)),
+        inputColumns.asScala.toMap.map{ case (symbolName, column) => (Symbol(symbolName), column) },
+        outputColumns.asScala.toMap.map{ case (symbolName, column) => (Symbol(symbolName), column) }
+    )
+    return new KijiTap(kijiSource.tableUri, kijiSource.kijiScheme).asInstanceOf[Tap[_, _, _]]
+  }
+
   /**
    * Convert scala columns definition into its corresponding java variety.
    *

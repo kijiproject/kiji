@@ -96,6 +96,7 @@ sealed trait ColumnInputSpec {
    * @return the column name of the requested data.
    */
   def columnName: KijiColumnName
+
 }
 
 /**
@@ -106,6 +107,12 @@ sealed trait ColumnInputSpec {
 @ApiStability.Experimental
 @Inheritance.Sealed
 object ColumnInputSpec {
+  /** Constants for default parameters. */
+  val DEFAULT_MAX_VERSIONS = latest
+  val DEFAULT_PAGING_SPEC = PagingSpec.Off
+  val DEFAULT_SCHEMA_SPEC = SchemaSpec.Writer
+  val DEFAULT_COLUMN_FILTER = None
+
   /**
    * A request for data from a Kiji table column. The input spec will be for a qualified column if
    * the column parameter contains a ':', otherwise the input will assumed to be for a column family
@@ -121,10 +128,10 @@ object ColumnInputSpec {
    */
   def apply(
       column: String,
-      maxVersions: Int = latest,
-      filter: Option[ColumnFilterSpec] = None,
-      paging: PagingSpec = PagingSpec.Off,
-      schemaSpec: SchemaSpec = SchemaSpec.Writer
+      maxVersions: Int = DEFAULT_MAX_VERSIONS,
+      filter: Option[ColumnFilterSpec] = DEFAULT_COLUMN_FILTER,
+      paging: PagingSpec = DEFAULT_PAGING_SPEC,
+      schemaSpec: SchemaSpec = DEFAULT_SCHEMA_SPEC
   ): ColumnInputSpec = {
     column.split(':') match {
       case Array(family, qualifier) =>
@@ -241,10 +248,10 @@ object ColumnInputSpec {
 final case class QualifiedColumnInputSpec(
     family: String,
     qualifier: String,
-    maxVersions: Int = latest,
-    filter: Option[ColumnFilterSpec] = None,
-    paging: PagingSpec = PagingSpec.Off,
-    schemaSpec: SchemaSpec = SchemaSpec.Writer
+    maxVersions: Int = ColumnInputSpec.DEFAULT_MAX_VERSIONS,
+    filter: Option[ColumnFilterSpec] = ColumnInputSpec.DEFAULT_COLUMN_FILTER,
+    paging: PagingSpec = ColumnInputSpec.DEFAULT_PAGING_SPEC,
+    schemaSpec: SchemaSpec = ColumnInputSpec.DEFAULT_SCHEMA_SPEC
 ) extends ColumnInputSpec {
   override val columnName: KijiColumnName = new KijiColumnName(family, qualifier)
 }
@@ -289,6 +296,40 @@ object QualifiedColumnInputSpec {
       schema: Schema
   ): QualifiedColumnInputSpec = {
     QualifiedColumnInputSpec(family, qualifier, schemaSpec = SchemaSpec.Generic(schema))
+  }
+
+  /**
+   * A request for data from a fully qualified Kiji table column.
+   * This construct method is used by Java builders for ColumnInputSpec.
+   * Scala users ought to use the natural apply method.
+   *
+   * @param column is the fully qualified column name of the requested data.
+   * @param maxVersions to read back from the requested column (default is only most recent).
+   * @param filter to use when reading back cells (default is `None`).
+   * @param paging options specifying the maximum number of cells to retrieve from Kiji per page.
+   * @param schemaSpec specifies the schema to use when reading cells. Defaults to
+   *     [[org.kiji.express.flow.SchemaSpec.Writer]].
+   * @return a new column input spec with supplied options.
+   */
+  private[express] def construct(
+      column: KijiColumnName,
+      maxVersions: java.lang.Integer,
+      filterSpec: ColumnFilterSpec,
+      pagingSpec: PagingSpec,
+      schemaSpec: SchemaSpec
+  ): ColumnInputSpec = {
+    // Construct QualifiedColumnInputSpec
+    QualifiedColumnInputSpec(
+        column.getFamily(),
+        column.getQualifier(),
+        Option(maxVersions) match {
+          case None => ColumnInputSpec.DEFAULT_MAX_VERSIONS
+          case _ => maxVersions
+        },
+        Option(filterSpec),
+        Option(pagingSpec).getOrElse(ColumnInputSpec.DEFAULT_PAGING_SPEC),
+        Option(schemaSpec).getOrElse(ColumnInputSpec.DEFAULT_SCHEMA_SPEC)
+    )
   }
 }
 
@@ -355,10 +396,10 @@ object QualifiedColumnInputSpec {
 @Inheritance.Sealed
 final case class ColumnFamilyInputSpec(
     family: String,
-    maxVersions: Int = latest,
-    filter: Option[ColumnFilterSpec] = None,
-    paging: PagingSpec = PagingSpec.Off,
-    schemaSpec: SchemaSpec = SchemaSpec.Writer
+    maxVersions: Int = ColumnInputSpec.DEFAULT_MAX_VERSIONS,
+    filter: Option[ColumnFilterSpec] = ColumnInputSpec.DEFAULT_COLUMN_FILTER,
+    paging: PagingSpec = ColumnInputSpec.DEFAULT_PAGING_SPEC,
+    schemaSpec: SchemaSpec = ColumnInputSpec.DEFAULT_SCHEMA_SPEC
 ) extends ColumnInputSpec {
   if (family.contains(':')) {
     throw new KijiInvalidNameException("Cannot have a ':' in family name for column family request")
@@ -402,5 +443,38 @@ object ColumnFamilyInputSpec {
       schema: Schema
   ): ColumnFamilyInputSpec = {
     ColumnFamilyInputSpec(family, schemaSpec = SchemaSpec.Generic(schema))
+  }
+
+  /**
+   * A request for data from a Kiji table column family.
+   * This construct method is used by Java builders for ColumnInputSpec.
+   * Scala users ought to use the natural apply method.
+   *
+   * @param column family name of the requested data.
+   * @param maxVersions to read back from the requested column (default is only most recent).
+   * @param filter to use when reading back cells (default is `None`).
+   * @param paging options specifying the maximum number of cells to retrieve from Kiji per page.
+   * @param schemaSpec specifies the schema to use when reading cells. Defaults to
+   *     [[org.kiji.express.flow.SchemaSpec.Writer]].
+   * @return a new column input spec with supplied options.
+   */
+  private[express] def construct(
+      column: KijiColumnName,
+      maxVersions: java.lang.Integer,
+      filterSpec: ColumnFilterSpec,
+      pagingSpec: PagingSpec,
+      schemaSpec: SchemaSpec
+  ): ColumnInputSpec = {
+    // Construct QualifiedColumnInputSpec
+    ColumnFamilyInputSpec(
+        column.getFamily(),
+        Option(maxVersions) match {
+          case None => ColumnInputSpec.DEFAULT_MAX_VERSIONS
+          case _ => maxVersions
+        },
+        Option(filterSpec),
+        Option(pagingSpec).getOrElse(ColumnInputSpec.DEFAULT_PAGING_SPEC),
+        Option(schemaSpec).getOrElse(ColumnInputSpec.DEFAULT_SCHEMA_SPEC)
+    )
   }
 }

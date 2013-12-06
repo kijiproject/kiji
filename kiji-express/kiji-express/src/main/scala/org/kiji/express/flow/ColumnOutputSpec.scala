@@ -87,6 +87,14 @@ trait ColumnOutputSpec {
   }
 }
 
+@ApiAudience.Public
+@ApiStability.Experimental
+@Inheritance.Sealed
+object ColumnOutputSpec {
+    /** Constants for default schema spec parameter. */
+  val DEFAULT_SCHEMA_SPEC = SchemaSpec.Writer
+}
+
 /**
  * A specification describing how to write data from a scalding tuple field to a column in a Kiji
  * table.
@@ -140,7 +148,7 @@ trait ColumnOutputSpec {
 final case class QualifiedColumnOutputSpec(
     family: String,
     qualifier: String,
-    schemaSpec: SchemaSpec = Writer
+    schemaSpec: SchemaSpec = ColumnOutputSpec.DEFAULT_SCHEMA_SPEC
 ) extends ColumnOutputSpec {
   override def columnName: KijiColumnName = new KijiColumnName(family, qualifier)
 }
@@ -255,7 +263,7 @@ object QualifiedColumnOutputSpec {
   def apply(
       column: String
   ): QualifiedColumnOutputSpec = {
-    QualifiedColumnOutputSpec(column, Writer)
+    QualifiedColumnOutputSpec(column, ColumnOutputSpec.DEFAULT_SCHEMA_SPEC)
   }
 }
 
@@ -303,7 +311,7 @@ object QualifiedColumnOutputSpec {
 final case class ColumnFamilyOutputSpec(
     family: String,
     qualifierSelector: Symbol,
-    schemaSpec: SchemaSpec = Writer
+    schemaSpec: SchemaSpec = ColumnOutputSpec.DEFAULT_SCHEMA_SPEC
 ) extends ColumnOutputSpec {
   if (family.contains(':')) {
     throw new KijiInvalidNameException(
@@ -356,6 +364,31 @@ object ColumnFamilyOutputSpec {
       specificRecord: Class[_ <: SpecificRecord]
   ): ColumnFamilyOutputSpec = {
     ColumnFamilyOutputSpec(family, qualifierSelector, Specific(specificRecord))
+  }
+
+  /**
+   * A request for data from a Kiji table column family.
+   * This construct method is used by Java builders for ColumnInputSpec.
+   * Scala users ought to use the natural apply method.
+   *
+   * @param column family name of the requested data.
+   * @param qualifierSelector is the string tuple field name used to specify the
+   *     qualifier of the column to write to.
+   *     If an attempt is made to write a tuple that is missing the qualifierSelector
+   *     field, an error will be thrown.
+   * @return a new column output spec with supplied options.
+   */
+  private[express] def construct(
+      family: String,
+      qualifierSelector: String,
+      schemaSpec: SchemaSpec
+  ): ColumnOutputSpec = {
+    // Construct ColumnFamilyOutputSpec
+    ColumnFamilyOutputSpec(
+        family,
+        Symbol(qualifierSelector),
+        Option(schemaSpec).getOrElse(ColumnOutputSpec.DEFAULT_SCHEMA_SPEC)
+    )
   }
 }
 
