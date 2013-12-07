@@ -173,7 +173,7 @@ The URI takes the form:
 kiji://.env/<instance name>
 {% endhighlight %}
 
-+ **Running KijiExpress jobs**
++ **Running compiled KijiExpress jobs**
 
 To run a KijiExpress job, you invoke a command of the following form:
 
@@ -187,3 +187,27 @@ express job \
 The `--hdfs` option indicates that KijiExpress should run the job against the Hadoop cluster versus
 in Cascading's local environment.  The `--libjars` option indicates additional JAR files needed to
 run the command.
+
++ **Launching the KijiExpress shell**
+
+KijiExpress includes an interactive shell that can be used to execute KijiExpress flows. To launch
+the shell, you invoke a command of the following form:
+
+{% highlight bash %}
+express shell \
+    [--libjars <list of JAR files, separated by colon>] \
+    [--hdfs]
+{% endhighlight %}
+
+If the `--hdfs` option is specified, the shell will run jobs using Scalding's Hadoop mode. For
+normal usage against a hadoop cluster, this option should be used.
+
+If the `--libjars` option is specified, the jar files specified will be placed on the classpath.
+This is helpful if you are using external libraries or have compiled avro classes.
+
+To execute multi-line statements in the shell, use paste mode. This can be used to execute existing
+KijiExpress code. To start paste mode, enter the following command into a running KijiExpress shell:
+
+    :set paste
+
+Type `Ctrl+D` to end paste mode and execute the entered code.
