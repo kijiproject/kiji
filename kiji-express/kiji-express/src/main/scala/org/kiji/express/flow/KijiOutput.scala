@@ -54,17 +54,19 @@ import org.kiji.annotations.ApiStability
  *
  * The verbose methods allow you to instantiate explicity
  * [[org.kiji.express.flow.QualifiedColumnOutputSpec]] and
- * [[org.kiji.express.flow.ColumnOutputSpec]] objects.
+ * [[org.kiji.express.flow.ColumnFamilyOutputSpec]] objects.
  * Use the verbose method to specify options for the output columns, e.g.,
  * {{{
- *   // Create a KijiSource that reads from the table named `mytable` reading the columns
- *   // `info:column1` and `info:column2` to the fields `'column1` and `'column2`.
+ *   // Create a KijiOutput that writes to the table named `mytable`, writing the value in field
+ *   // `'column1` to the column `info:column1`, and writing the value in field `'column2` to a
+ *   // column in family `family` using a qualifier that is the value of field `'qualifier`.
  *   KijiOutput(
  *       tableUri = "kiji://localhost:2181/default/mytable",
  *       timestampField = 'timestamps,
  *       columns = Map(
- *           QualifiedColumnOutputSpec("info", "column1", schemaId=Some(12)) -> 'column1,
- *           QualifiedColumnOutputSpec("info", "column2") -> 'column2)
+ *           'column1 -> QualifiedColumnOutputSpec("info", "column1",
+ *               schemaSpec = SchemaSpec.Generic(myAvroSchema)),
+ *           'column2 -> ColumnFamilyOutputSpec("family", 'qualifier)))
  * }}}
  */
 @ApiAudience.Public
