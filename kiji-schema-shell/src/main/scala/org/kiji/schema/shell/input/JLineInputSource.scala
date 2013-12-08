@@ -28,9 +28,9 @@ import org.kiji.annotations.ApiAudience
 final class JLineInputSource extends InputSource {
   private val consoleReader = new ConsoleReader
 
-  def readLine(prompt: String): Option[String] = {
-    return Some(consoleReader.readLine(prompt))
+  override def readLine(prompt: String): Option[String] = {
+    return Option(consoleReader.readLine(prompt))
   }
 
-  def close(): Unit = { }
+  override def close(): Unit = { }
 }

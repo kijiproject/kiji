@@ -31,6 +31,40 @@ import org.kiji.schema.shell.input.NullInputSource
 /** Tests of the parsing code. What commands do we accept and what objects do they create? */
 class TestDDLParser extends SpecificationWithJUnit {
   "DDLParser" should {
+    "ignore comments" in {
+      val parser = getParser()
+      val res = parser.parseAll(parser.statement, "SHOW /* comment */ TABLES;")
+      res.successful mustEqual true
+      res.get must beAnInstanceOf[ShowTablesCommand]
+    }
+
+    "ignore multi-line comments" in {
+      val parser = getParser()
+      val res = parser.parseAll(parser.statement, """
+          |SHOW /* multi
+          |comment */ TABLES;""".stripMargin)
+      res.successful mustEqual true
+      res.get must beAnInstanceOf[ShowTablesCommand]
+    }
+
+    "ignore shell-style line comment" in {
+      val parser = getParser()
+      val res = parser.parseAll(parser.statement, """
+          |  # shell style line comment
+          |SHOW TABLES;""".stripMargin)
+      res.successful mustEqual true
+      res.get must beAnInstanceOf[ShowTablesCommand]
+    }
+
+    "ignore C-style line comment" in {
+      val parser = getParser()
+      val res = parser.parseAll(parser.statement, """
+          |  // C-style line comment
+          |SHOW TABLES;""".stripMargin)
+      res.successful mustEqual true
+      res.get must beAnInstanceOf[ShowTablesCommand]
+    }
+
     "parse SHOW TABLES;" in {
       val parser = getParser()
       val res = parser.parseAll(parser.statement, "SHOW TABLES;")

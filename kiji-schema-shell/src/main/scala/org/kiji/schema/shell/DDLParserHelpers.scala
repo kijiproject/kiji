@@ -62,12 +62,11 @@ trait DDLParserHelpers extends JavaTokenParsers {
    * Matches a string enclosed by 'single quotes', that may contain escapes.
    *
    * @return a parser that matches the above and returns the string contained within
-   * the quotes, with the enclosing single-quote-marks removed and any escape character
-   * sequences converted to the actual characters they represent.
+   *     the quotes, with the enclosing single-quote-marks removed and any escape character
+   *     sequences converted to the actual characters they represent.
    */
   def singleQuotedString: Parser[String] = (
-    // Regex adapted from http://blog.stevenlevithan.com/archives/match-quoted-string
-    """'(?:\\?+.)*?'""".r
+    """'(?:[^'\\]|\\.)*'""".r
     ^^ (strWithEscapes => unescape(strWithEscapes.substring(1, strWithEscapes.length - 1)))
   )
 
@@ -78,7 +77,7 @@ trait DDLParserHelpers extends JavaTokenParsers {
 
   /**
    * @return a matcher for table, family, etc. names are strings that are optionally
-   * 'single quoted', and must match the Kiji name restrictions.
+   *     'single quoted', and must match the Kiji name restrictions.
    **/
   def validatedNameFromOptionallyQuotedString: Parser[String] = (
     optionallyQuotedString ^^ (name => { KijiNameValidator.validateLayoutName(name); name })
@@ -108,7 +107,7 @@ trait DDLParserHelpers extends JavaTokenParsers {
 
   /**
    * @return a matcher for column names, which take the form info:foo, 'info':foo,
-   * info:'foo', or 'info':'foo' */
+   *     info:'foo', or 'info':'foo' */
   def colName: Parser[ColumnName] = (
       validatedNameFromOptionallyQuotedString~":"~validatedNameFromOptionallyQuotedString
       ^^ ({case ~(~(family, _), qualifier) => new ColumnName(family, qualifier) })
@@ -122,7 +121,7 @@ trait DDLParserHelpers extends JavaTokenParsers {
 
   /**
    * @return a matcher for an integer. The strings INFINITY and FOREVER are both synonyms
-   * for Int.MaxValue.
+   *     for Int.MaxValue.
    */
   def intValue: Parser[Int] = (
       wholeNumber ^^ (x => x.toInt)
@@ -138,7 +137,7 @@ trait DDLParserHelpers extends JavaTokenParsers {
 
   /**
    * @return a matcher for a long-valued integer. The strings INFINITY and FOREVER are
-   * both synonyms for Int.MaxValue.
+   *     both synonyms for Int.MaxValue.
    */
   def longValue: Parser[Long] = (
       wholeNumber ^^ (x => x.toLong)
@@ -171,9 +170,9 @@ trait DDLParserHelpers extends JavaTokenParsers {
    * Given a string that contains \\ and \', convert these sequences to \ and ' respectively.
    *
    * @param s a string that may contain escape sequences to protect characters in
-   * a 'single quoted string' matched by a parser.
+   *     a 'single quoted string' matched by a parser.
    * @return the same string in 's' with the escapes converted to their true character
-   * representations.
+   *     representations.
    */
   def unescape(s: String): String = {
     val sb = new StringBuilder

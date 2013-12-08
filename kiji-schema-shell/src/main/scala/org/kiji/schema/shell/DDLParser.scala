@@ -89,8 +89,32 @@ private[shell] object AddToAllSchemaUsageFlags
  * Parser for a kiji-schema DDL command.
  */
 @ApiAudience.Private
-final class DDLParser(val env: Environment) extends JavaTokenParsers
-    with DDLParserHelpers with JsonStringParser with TableProperties {
+final class DDLParser(val env: Environment)
+    extends JavaTokenParsers
+    with DDLParserHelpers
+    with JsonStringParser
+    with TableProperties {
+
+  /**
+   * White-spaces and comments are ignored.
+   * Support C-style and shell-style comments.
+   *
+   * This regex matches the following 4 patterns:
+   *  <li> Space characters: "\s+" </li>
+   *  <li> Shell-style single-line comments: "#.*" </li>
+   *  <li> C-style single-line comments: "//.*" </li>
+   *  <li> C-style multi-line comments: "/*(.*)*/" </li>
+   *
+   * Note: the regex "(?m)" enables mutli-line support for C-style delimited comments.
+   */
+  protected override val whiteSpace = {
+    """(\s|#.*|//.*|(?m)/\*(\*(?!/)|[^*])*\*/)+""".r
+  }
+
+  /** Ignore white-spaces and comments. */
+  override def skipWhitespace: Boolean = {
+    return true
+  }
 
   /** Matches a legal module name. */
   def moduleName: Parser[String] = validatedNameFromOptionallyQuotedString

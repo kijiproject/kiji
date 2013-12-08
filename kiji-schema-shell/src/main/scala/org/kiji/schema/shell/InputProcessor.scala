@@ -20,9 +20,7 @@
 package org.kiji.schema.shell
 
 import java.io.IOException
-
 import jline.UnixTerminal
-
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.schema.KijiInvalidNameException
@@ -30,6 +28,8 @@ import org.kiji.schema.shell.ddl.DDLCommand
 import org.kiji.schema.shell.ddl.ErrorCommand
 import org.kiji.schema.shell.spi.HelpPlugin
 import org.kiji.schema.shell.spi.ParserPluginFactory
+import org.slf4j.LoggerFactory
+import org.apache.hadoop.hbase.util.Bytes
 
 /**
  * An object that processes user input.
@@ -40,6 +40,7 @@ import org.kiji.schema.shell.spi.ParserPluginFactory
 @ApiAudience.Framework
 @ApiStability.Evolving
 final class InputProcessor(val throwOnSyntaxErr: Boolean = false) {
+  private final val Log = LoggerFactory.getLogger(classOf[InputProcessor])
 
   val PROMPT_STR = "schema> "
   val CONTINUE_PROMPT_STR = "     -> "
@@ -232,25 +233,23 @@ final class InputProcessor(val throwOnSyntaxErr: Boolean = false) {
    */
   def processUserInput(buf: StringBuilder, env: Environment): Environment = {
     val prompt = if (buf.length() > 0) CONTINUE_PROMPT_STR else PROMPT_STR
-    val maybeInput = env.inputSource.readLine(prompt)
-    maybeInput match {
+    env.inputSource.readLine(prompt) match {
       case None => { env /* Out of input. Return success. */ }
-      case Some(input) => {
-        if (input == null || (buf.length == 0
-            && (input.equals("exit") || input.equals("quit") || input.equals("exit;")
-            || input.equals("quit;")))) {
+      case Some(inputLine) => {
+        Log.debug("Processing input line: '{}'", inputLine)
+        buf.append(inputLine).append('\n')  // JLine does not include the end-of-line '\n'
+
+        val inputSoFar: String = buf.toString.trim
+
+        if (Set("exit", "quit", "exit;", "quit;").contains(inputSoFar)) {
           env
-        } else if (buf.length == 0 && !input.trim.isEmpty && input.trim.charAt(0) == '#') {
-          // Comment line; just ignore it.
-          processUserInput(buf, env)
-        } else if (buf.length == 0 && (input.equals("help") || input.equals("help;"))) {
+        } else if (Set("help", "help;").contains(inputSoFar)) {
           printHelp(env)
           processUserInput(new StringBuilder, env)
-        } else if (input.trim().endsWith(";")) {
-          buf.append(input);
+        } else if (inputSoFar.endsWith(";")) {
           val parser = new DDLParser(env)
           try {
-            val parseResult = parser.parseAll(parser.statement, buf.toString())
+            val parseResult = parser.parseAll(parser.statement, inputSoFar)
             val nextEnv = (
               try {
                 parseResult.getOrElse(new ErrorCommand(
@@ -283,9 +282,7 @@ final class InputProcessor(val throwOnSyntaxErr: Boolean = false) {
               processUserInput(new StringBuilder, env)
           }
         } else {
-          // Add the input to the string builder and continue.
-          buf.append(input)
-          buf.append(" ") // Add some whitespace.
+          // More input needed:
           processUserInput(buf, env)
         }
       }
