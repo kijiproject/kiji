@@ -36,7 +36,7 @@ import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
 import org.kiji.mapreduce.output.KijiTableMapReduceJobOutput;
 import org.kiji.mapreduce.pivot.KijiPivotJobBuilder;
 import org.kiji.mapreduce.pivot.impl.KijiPivoters;
-import org.kiji.mapreduce.tools.framework.JobTool;
+import org.kiji.mapreduce.tools.framework.KijiJobTool;
 import org.kiji.mapreduce.tools.framework.MapReduceJobInputFactory;
 import org.kiji.mapreduce.tools.framework.MapReduceJobOutputFactory;
 import org.kiji.schema.Kiji;
@@ -62,7 +62,7 @@ import org.kiji.schema.util.ResourceUtils;
  * </p>
  */
 @ApiAudience.Private
-public final class KijiPivot extends JobTool<KijiPivotJobBuilder> {
+public final class KijiPivot extends KijiJobTool<KijiPivotJobBuilder> {
   private static final Logger LOG = LoggerFactory.getLogger(KijiPivot.class);
 
   @Flag(name="pivoter",
