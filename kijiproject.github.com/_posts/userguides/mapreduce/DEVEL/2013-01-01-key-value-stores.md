@@ -4,7 +4,7 @@ title: Key-Value Stores
 categories: [userguides, mapreduce, devel]
 tags : [mapreduce-ug]
 version: devel
-order : 8
+order : 9
 description: Key-Value Stores.
 ---
 

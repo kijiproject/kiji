@@ -4,7 +4,7 @@ title: Job History
 categories: [userguides, mapreduce, devel]
 tags : [mapreduce-ug]
 version: devel
-order : 9
+order : 10
 description: Job History Table.
 ---
 

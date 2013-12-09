@@ -4,7 +4,7 @@ layout: post
 categories: [userguides, mapreduce, devel]
 tags: [mapreduce-ug]
 version: devel
-order : 10 
+order : 11
 description: Working with Avro
 ---
 
