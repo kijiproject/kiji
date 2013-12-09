@@ -58,7 +58,7 @@ import org.kiji.annotations.ApiStability
  *       tableUri = "kiji://localhost:2181/default/mytable",
  *       columns = Map(
  *           QualifiedColumnInputSpec("info", "column1", maxVersions=5) -> 'column1,
- *           QualifiedColumnInputSpec("info", "column2", paging=Cells(10)) -> 'column2)
+ *           QualifiedColumnInputSpec("info", "column2", pagingSpec=Cells(10)) -> 'column2)
  * }}}
  */
 @ApiAudience.Public

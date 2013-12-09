@@ -63,18 +63,18 @@ sealed trait ColumnInputSpec {
   def maxVersions: Int
 
   /**
-   * Filter that a cell must pass in order to be retrieved. If `None`, no filter is used.
+   * Filter that a cell must pass in order to be retrieved. If NoFilterSpec, no filter is used.
    *
-   * @return `Some(filter)` if specified or `None`.
+   * @return the column filter specification
    */
-  def filter: Option[ColumnFilterSpec]
+  def filterSpec: ColumnFilterSpec
 
   /**
    * Specifies the maximum number of cells to maintain in memory when paging through a column.
    *
    * @return the paging specification for this column.
    */
-  def paging: PagingSpec
+  def pagingSpec: PagingSpec
 
   /**
    * Specifies the schema that should be applied to the requested data.
@@ -111,7 +111,7 @@ object ColumnInputSpec {
   val DEFAULT_MAX_VERSIONS = latest
   val DEFAULT_PAGING_SPEC = PagingSpec.Off
   val DEFAULT_SCHEMA_SPEC = SchemaSpec.Writer
-  val DEFAULT_COLUMN_FILTER = None
+  val DEFAULT_COLUMN_FILTER = ColumnFilterSpec.NoColumnFilterSpec
 
   /**
    * A request for data from a Kiji table column. The input spec will be for a qualified column if
@@ -120,8 +120,9 @@ object ColumnInputSpec {
    *
    * @param column name of the requested data.
    * @param maxVersions to read back from the requested column (default is only most recent).
-   * @param filter to use when reading back cells (default is `None`).
-   * @param paging options specifying the maximum number of cells to retrieve from Kiji per page.
+   * @param filterSpec to use when reading back cells (default is `None`).
+   * @param pagingSpec options specifying the maximum number of cells to retrieve from Kiji
+   *        per page.
    * @param schemaSpec specifies the schema to use when reading cells. Defaults to
    *     [[org.kiji.express.flow.SchemaSpec.Writer]].
    * @return a new column input spec with supplied options.
@@ -129,8 +130,8 @@ object ColumnInputSpec {
   def apply(
       column: String,
       maxVersions: Int = DEFAULT_MAX_VERSIONS,
-      filter: Option[ColumnFilterSpec] = DEFAULT_COLUMN_FILTER,
-      paging: PagingSpec = DEFAULT_PAGING_SPEC,
+      filterSpec: ColumnFilterSpec = DEFAULT_COLUMN_FILTER,
+      pagingSpec: PagingSpec = DEFAULT_PAGING_SPEC,
       schemaSpec: SchemaSpec = DEFAULT_SCHEMA_SPEC
   ): ColumnInputSpec = {
     column.split(':') match {
@@ -139,16 +140,16 @@ object ColumnInputSpec {
               family,
               qualifier,
               maxVersions,
-              filter,
-              paging,
+              filterSpec,
+              pagingSpec,
               schemaSpec
           )
       case Array(family) =>
           ColumnFamilyInputSpec(
               family,
               maxVersions,
-              filter,
-              paging,
+              filterSpec,
+              pagingSpec,
               schemaSpec
           )
       case _ => throw new IllegalArgumentException("column name must contain 'family:qualifier'" +
@@ -214,7 +215,7 @@ object ColumnInputSpec {
  *           family = "info",
  *           qualifier = "status",
  *           maxVersions = Int.MaxValue,
- *           paging = PagingSpec.Cells(1000)
+ *           pagingSpec = PagingSpec.Cells(1000)
  *       )
  * }}}
  *
@@ -237,8 +238,8 @@ object ColumnInputSpec {
  * @param family of columns the requested data belongs to.
  * @param qualifier of the column the requested data belongs to.
  * @param maxVersions to read back from the requested column (default is only most recent).
- * @param filter to use when reading back cells (default is `None`).
- * @param paging options specifying the maximum number of cells to retrieve from Kiji per page.
+ * @param filterSpec to use when reading back cells (default is `None`).
+ * @param pagingSpec options specifying the maximum number of cells to retrieve from Kiji per page.
  * @param schemaSpec specifies the schema to use when reading cells. Defaults to
  *     [[org.kiji.express.flow.SchemaSpec.Writer]].
  */
@@ -249,8 +250,8 @@ final case class QualifiedColumnInputSpec(
     family: String,
     qualifier: String,
     maxVersions: Int = ColumnInputSpec.DEFAULT_MAX_VERSIONS,
-    filter: Option[ColumnFilterSpec] = ColumnInputSpec.DEFAULT_COLUMN_FILTER,
-    paging: PagingSpec = ColumnInputSpec.DEFAULT_PAGING_SPEC,
+    filterSpec: ColumnFilterSpec = ColumnInputSpec.DEFAULT_COLUMN_FILTER,
+    pagingSpec: PagingSpec = ColumnInputSpec.DEFAULT_PAGING_SPEC,
     schemaSpec: SchemaSpec = ColumnInputSpec.DEFAULT_SCHEMA_SPEC
 ) extends ColumnInputSpec {
   override val columnName: KijiColumnName = new KijiColumnName(family, qualifier)
@@ -305,8 +306,9 @@ object QualifiedColumnInputSpec {
    *
    * @param column is the fully qualified column name of the requested data.
    * @param maxVersions to read back from the requested column (default is only most recent).
-   * @param filter to use when reading back cells (default is `None`).
-   * @param paging options specifying the maximum number of cells to retrieve from Kiji per page.
+   * @param filterSpec to use when reading back cells (default is `None`).
+   * @param pagingSpec options specifying the maximum number of cells to retrieve from Kiji
+   *        per page.
    * @param schemaSpec specifies the schema to use when reading cells. Defaults to
    *     [[org.kiji.express.flow.SchemaSpec.Writer]].
    * @return a new column input spec with supplied options.
@@ -326,7 +328,7 @@ object QualifiedColumnInputSpec {
           case None => ColumnInputSpec.DEFAULT_MAX_VERSIONS
           case _ => maxVersions
         },
-        Option(filterSpec),
+        Option(filterSpec).getOrElse(ColumnInputSpec.DEFAULT_COLUMN_FILTER),
         Option(pagingSpec).getOrElse(ColumnInputSpec.DEFAULT_PAGING_SPEC),
         Option(schemaSpec).getOrElse(ColumnInputSpec.DEFAULT_SCHEMA_SPEC)
     )
@@ -354,7 +356,7 @@ object QualifiedColumnInputSpec {
  *       ColumnFamilyInputSpec(
  *           family = "hits",
  *           maxVersions = Int.MaxValue,
- *           filter = RegexQualifierFilterSpec("http://www\.wibidata\.com/.*")
+ *           filterSpec = RegexQualifierFilterSpec("http://www\.wibidata\.com/.*")
  *       )
  * }}}
  *
@@ -366,7 +368,7 @@ object QualifiedColumnInputSpec {
  *       ColumnFamilyInputSpec(
  *           family = "metadata",
  *           maxVersions = Int.MaxValue,
- *           paging = PagingSpec.Cells(1000)
+ *           pagingSpec = PagingSpec.Cells(1000)
  *       )
  * }}}
  *
@@ -386,8 +388,8 @@ object QualifiedColumnInputSpec {
  *
  * @param family of columns the requested data belongs to.
  * @param maxVersions to read back from the requested column family (default is only most recent).
- * @param filter to use when reading back cells (default is `None`).
- * @param paging options specifying the maximum number of cells to retrieve from Kiji per page.
+ * @param filterSpec to use when reading back cells (default is `None`).
+ * @param pagingSpec options specifying the maximum number of cells to retrieve from Kiji per page.
  * @param schemaSpec specifies the schema to use when reading cells. Defaults to
  *     [[org.kiji.express.flow.SchemaSpec.Writer]].
  */
@@ -397,8 +399,8 @@ object QualifiedColumnInputSpec {
 final case class ColumnFamilyInputSpec(
     family: String,
     maxVersions: Int = ColumnInputSpec.DEFAULT_MAX_VERSIONS,
-    filter: Option[ColumnFilterSpec] = ColumnInputSpec.DEFAULT_COLUMN_FILTER,
-    paging: PagingSpec = ColumnInputSpec.DEFAULT_PAGING_SPEC,
+    filterSpec: ColumnFilterSpec = ColumnInputSpec.DEFAULT_COLUMN_FILTER,
+    pagingSpec: PagingSpec = ColumnInputSpec.DEFAULT_PAGING_SPEC,
     schemaSpec: SchemaSpec = ColumnInputSpec.DEFAULT_SCHEMA_SPEC
 ) extends ColumnInputSpec {
   if (family.contains(':')) {
@@ -452,8 +454,9 @@ object ColumnFamilyInputSpec {
    *
    * @param column family name of the requested data.
    * @param maxVersions to read back from the requested column (default is only most recent).
-   * @param filter to use when reading back cells (default is `None`).
-   * @param paging options specifying the maximum number of cells to retrieve from Kiji per page.
+   * @param filterSpec to use when reading back cells (default is `None`).
+   * @param pagingSpec options specifying the maximum number of cells to retrieve from Kiji
+   *        per page.
    * @param schemaSpec specifies the schema to use when reading cells. Defaults to
    *     [[org.kiji.express.flow.SchemaSpec.Writer]].
    * @return a new column input spec with supplied options.
@@ -472,7 +475,7 @@ object ColumnFamilyInputSpec {
           case None => ColumnInputSpec.DEFAULT_MAX_VERSIONS
           case _ => maxVersions
         },
-        Option(filterSpec),
+        Option(filterSpec).getOrElse(ColumnInputSpec.DEFAULT_COLUMN_FILTER),
         Option(pagingSpec).getOrElse(ColumnInputSpec.DEFAULT_PAGING_SPEC),
         Option(schemaSpec).getOrElse(ColumnInputSpec.DEFAULT_SCHEMA_SPEC)
     )

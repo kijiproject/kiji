@@ -26,7 +26,7 @@ import org.scalatest.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class ColumnSpecSuite extends FunSuite {
-  val filter = RegexQualifierFilterSpec(".*")
+  val filterSpec = ColumnFilterSpec.RegexQualifierFilterSpec(".*")
   val colFamily = "myfamily"
   val colQualifier = "myqualifier"
   val qualifierSelector = 'qualifierSym
@@ -35,14 +35,14 @@ class ColumnSpecSuite extends FunSuite {
   // TODO(CHOP-37): Test with different filters once the new method of specifying filters
   // correctly implements the .equals() and hashCode() methods.
   // Should be able to change the following line to:
-  // def filter = new RegexQualifierColumnFilter(".*")
+  // def filterSpec = new RegexQualifierColumnFilter(".*")
   val maxVersions = 2
 
   val colWithOptions: QualifiedColumnInputSpec = QualifiedColumnInputSpec(
       family = colFamily,
       qualifier = colQualifier,
       maxVersions = maxVersions,
-      filter = Some(filter)
+      filterSpec = filterSpec
   )
 
   test("Fields of a ColumnFamilyInputSpec are the same as those it is constructed with.") {
@@ -125,14 +125,14 @@ class ColumnSpecSuite extends FunSuite {
   }
 
   test("Filter is the same as constructed with.") {
-    assert(Some(filter) == colWithOptions.filter)
+    assert(filterSpec == colWithOptions.filterSpec)
   }
 
   test("ColumnInputSpec with the same maxVersions & filter are equal and hash to the same value.") {
 
     val col2: QualifiedColumnInputSpec = new QualifiedColumnInputSpec(
         colFamily, colQualifier,
-        filter = Some(filter),
+        filterSpec = filterSpec,
         maxVersions = maxVersions
     )
     assert(col2 === colWithOptions)

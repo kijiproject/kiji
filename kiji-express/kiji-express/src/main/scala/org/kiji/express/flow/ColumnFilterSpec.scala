@@ -89,95 +89,125 @@ import org.kiji.schema.filter.RegexQualifierColumnFilter
 @Inheritance.Sealed
 sealed trait ColumnFilterSpec {
   /** @return a KijiColumnFilter that corresponds to the Express column filter. */
-  private[kiji] def toKijiColumnFilter: KijiColumnFilter
+  private[kiji] def toKijiColumnFilter: Option[KijiColumnFilter]
 }
 
 /**
- * An Express column filter which combines a list of column filters using a logical "and" operator.
- *
- * See the scaladocs for [[org.kiji.express.flow.ColumnFilterSpec]] for information on other
- * filters.
- *
- * @param filters to combine with a logical "and" operation.
+ * Companion object to provide ColumnFilterSpec implementations.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-@Inheritance.Sealed
-final case class AndFilterSpec(filters: Seq[ColumnFilterSpec])
-    extends ColumnFilterSpec {
-  private[kiji] override def toKijiColumnFilter: KijiColumnFilter = {
-    val schemaFilters = filters
-        .map { filter: ColumnFilterSpec => filter.toKijiColumnFilter }
-        .toArray
-
-    Filters.and(schemaFilters: _*)
+object ColumnFilterSpec {
+  /**
+   * An Express column filter which combines a list of column filters using a
+   * logical "and" operator.
+   *
+   * See the scaladocs for [[org.kiji.express.flow.ColumnFilterSpec]] for information on other
+   * filters.
+   *
+   * @param filters to combine with a logical "and" operation.
+   */
+  @ApiAudience.Public
+  @ApiStability.Experimental
+  final case class AndFilterSpec(filters: Seq[ColumnFilterSpec])
+      extends ColumnFilterSpec {
+    private[kiji] override def toKijiColumnFilter: Option[KijiColumnFilter] = {
+      val schemaFilters = filters
+          .map { filter: ColumnFilterSpec => filter.toKijiColumnFilter.get }
+          .toArray
+      Some(Filters.and(schemaFilters: _*))
+    }
   }
-}
 
-/**
- * An Express column filter which combines a list of column filters using a logical "or" operator.
- *
- * See the scaladocs for [[org.kiji.express.flow.ColumnFilterSpec]] for information on other
- * filters.
- *
- * @param filters to combine with a logical "or" operation.
- */
-@ApiAudience.Public
-@ApiStability.Experimental
-@Inheritance.Sealed
-final case class OrFilterSpec(filters: Seq[ColumnFilterSpec])
-    extends ColumnFilterSpec {
-  private[kiji] override def toKijiColumnFilter: KijiColumnFilter = {
-    val orParams = filters
-        .map { filter: ColumnFilterSpec => filter.toKijiColumnFilter }
-        .toArray
-
-    Filters.or(orParams: _*)
+  /**
+   * An Express column filter which combines a list of column filters using a logical "or" operator.
+   *
+   * See the scaladocs for [[org.kiji.express.flow.ColumnFilterSpec]] for information on other
+   * filters.
+   *
+   * @param filters to combine with a logical "or" operation.
+   */
+  @ApiAudience.Public
+  @ApiStability.Experimental
+  final case class OrFilterSpec(filters: Seq[ColumnFilterSpec])
+      extends ColumnFilterSpec {
+    private[kiji] override def toKijiColumnFilter: Option[KijiColumnFilter] = {
+      val orParams = filters
+          .map { filter: ColumnFilterSpec => filter.toKijiColumnFilter.get }
+          .toArray
+      Some(Filters.or(orParams: _*))
+    }
   }
-}
 
-/**
- * An Express column filter based on the given minimum and maximum qualifier bounds.
- *
- * See the scaladocs for [[org.kiji.express.flow.ColumnFilterSpec]] for information on other
- * filters.
- *
- * @param minimum qualifier bound.
- * @param maximum qualifier bound.
- * @param minimumIncluded determines if the lower bound is inclusive.
- * @param maximumIncluded determines if the upper bound is inclusive.
- */
-@ApiAudience.Public
-@ApiStability.Experimental
-@Inheritance.Sealed
-final case class ColumnRangeFilterSpec(
-    minimum: Option[String] = None,
-    maximum: Option[String] = None,
-    minimumIncluded: Boolean = true,
-    maximumIncluded: Boolean = false)
-    extends ColumnFilterSpec {
-  private[kiji] override def toKijiColumnFilter: KijiColumnFilter = {
-    new KijiColumnRangeFilter(
-        minimum.getOrElse { null },
-        minimumIncluded,
-        maximum.getOrElse { null },
-        maximumIncluded)
+  /**
+   * An Express column filter based on the given minimum and maximum qualifier bounds.
+   *
+   * See the scaladocs for [[org.kiji.express.flow.ColumnFilterSpec]] for information on other
+   * filters.
+   *
+   * @param minimum qualifier bound.
+   * @param maximum qualifier bound.
+   * @param minimumIncluded determines if the lower bound is inclusive.
+   * @param maximumIncluded determines if the upper bound is inclusive.
+   */
+  @ApiAudience.Public
+  @ApiStability.Experimental
+  final case class ColumnRangeFilterSpec(
+      minimum: Option[String] = None,
+      maximum: Option[String] = None,
+      minimumIncluded: Boolean = true,
+      maximumIncluded: Boolean = false)
+      extends ColumnFilterSpec {
+    private[kiji] override def toKijiColumnFilter: Option[KijiColumnFilter] = {
+      Some(new KijiColumnRangeFilter(
+          minimum.getOrElse { null },
+          minimumIncluded,
+          maximum.getOrElse { null },
+          maximumIncluded))
+    }
   }
-}
 
-/**
- * An Express column filter which matches a regular expression against the full qualifier.
- *
- * See the scaladocs for [[org.kiji.express.flow.ColumnFilterSpec]] for information on other
- * filters.
- *
- * @param regex to match on.
- */
-@ApiAudience.Public
-@ApiStability.Experimental
-@Inheritance.Sealed
-final case class RegexQualifierFilterSpec(regex: String)
-    extends ColumnFilterSpec {
-  private[kiji] override def toKijiColumnFilter: KijiColumnFilter =
-      new RegexQualifierColumnFilter(regex)
+  /**
+   * An Express column filter which matches a regular expression against the full qualifier.
+   *
+   * See the scaladocs for [[org.kiji.express.flow.ColumnFilterSpec]] for information on other
+   * filters.
+   *
+   * @param regex to match on.
+   */
+  @ApiAudience.Public
+  @ApiStability.Experimental
+  final case class RegexQualifierFilterSpec(regex: String)
+      extends ColumnFilterSpec {
+    private[kiji] override def toKijiColumnFilter: Option[KijiColumnFilter] =
+        Some(new RegexQualifierColumnFilter(regex))
+  }
+
+  /**
+   * An Express column filter constructed directly from a KijiColumnFilter.
+   *
+   * See the scaladocs for [[org.kiji.express.flow.ColumnFilterSpec]] for information on other
+   * filters.
+   *
+   * @param kijiColumnFilter specifying the filter conditions.
+   */
+  @ApiAudience.Public
+  @ApiStability.Experimental
+  final case class KijiColumnFilterSpec(kijiColumnFilter: KijiColumnFilter)
+      extends ColumnFilterSpec {
+    private[kiji] override def toKijiColumnFilter: Option[KijiColumnFilter] = Some(kijiColumnFilter)
+  }
+
+  /**
+   * An Express column filter specifying no filter.
+   *
+   * See the scaladocs for [[org.kiji.express.flow.ColumnFilterSpec]] for information on other
+   * filters.
+   */
+  @ApiAudience.Public
+  @ApiStability.Experimental
+  final object NoColumnFilterSpec
+      extends ColumnFilterSpec {
+    private[kiji] override def toKijiColumnFilter: Option[KijiColumnFilter] = None
+  }
 }

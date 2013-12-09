@@ -74,7 +74,7 @@ import org.kiji.schema.filter.RegexQualifierColumnFilter
  *   // qualifiers contain the word "penguin".
  *   myFamilyInput = ColumnFamilyInputSpec(
  *      "searches",
- *      filter = Some(new RegexQualifierColumnFilter(""".*penguin.*""")),
+ *      filterSpec = ColumnFilterSpec.RegexQualifierColumnFilter(""".*penguin.*"""),
  *      maxVersions = all)
  *
  *   // Gets all cells for all columns in the column family "searches".

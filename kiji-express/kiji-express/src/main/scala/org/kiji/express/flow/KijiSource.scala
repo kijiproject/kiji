@@ -373,8 +373,8 @@ private[express] object KijiSource {
     ColumnInputSpec(
         col.columnName.toString,
         Integer.MAX_VALUE,
-        col.filter,
-        col.paging,
+        col.filterSpec,
+        col.pagingSpec,
         col.schemaSpec)
   }
 

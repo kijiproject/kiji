@@ -415,7 +415,7 @@ object KijiScheme {
 
     def rowToTupleColumnFamily(cf: ColumnFamilyInputSpec) {
       if (row.containsColumn(cf.family)) {
-        cf.paging match {
+        cf.pagingSpec match {
           case PagingSpec.Off => {
             val stream: Seq[FlowCell[_]] = row
                 .iterator(cf.family)
@@ -446,7 +446,7 @@ object KijiScheme {
 
     def rowToTupleQualifiedColumn(qc: QualifiedColumnInputSpec) {
       if (row.containsColumn(qc.family, qc.qualifier)) {
-        qc.paging match {
+        qc.pagingSpec match {
           case PagingSpec.Off => {
             val stream: Seq[FlowCell[_]] = row
                 .iterator(qc.family, qc.qualifier)
@@ -579,8 +579,8 @@ object KijiScheme {
         column: ColumnInputSpec
     ): KijiDataRequestBuilder.ColumnsDef = {
       val kijiFilter: KijiColumnFilter = column
-          .filter
-          .map { _.toKijiColumnFilter }
+          .filterSpec
+          .toKijiColumnFilter
           .getOrElse(null)
       val columnReaderSpec: ColumnReaderSpec = {
         // Check and ensure that this column isn't a counter, protobuf, or raw bytes encoded column.
@@ -621,7 +621,7 @@ object KijiScheme {
       builder.newColumnsDef()
           .withMaxVersions(column.maxVersions)
           .withFilter(kijiFilter)
-          .withPageSize(column.paging.cellsPerPage.getOrElse(0))
+          .withPageSize(column.pagingSpec.cellsPerPage.getOrElse(0))
           .add(column.columnName, columnReaderSpec)
     }
 

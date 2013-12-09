@@ -52,19 +52,19 @@ class FlowModuleSuite extends FunSuite {
   test("Flow module permits specifying a qualifier regex on ColumnFamilyInputSpec.") {
     val colReq = new ColumnFamilyInputSpec(
         "search",
-        filter = Some(RegexQualifierFilterSpec(""".*\.com"""))
+        filterSpec = ColumnFilterSpec.RegexQualifierFilterSpec(""".*\.com""")
     )
 
     // TODO: Test it filters keyvalues correctly.
-    assert(colReq.filter.get.isInstanceOf[RegexQualifierFilterSpec])
+    assert(colReq.filterSpec.isInstanceOf[ColumnFilterSpec.RegexQualifierFilterSpec])
   }
 
   test("Flow module permits specifying a qualifier regex (with filter) on ColumnFamilyInputSpec.") {
     val colReq = new ColumnFamilyInputSpec("search",
-      filter=Some(RegexQualifierFilterSpec(""".*\.com""")))
+      filterSpec = ColumnFilterSpec.RegexQualifierFilterSpec(""".*\.com"""))
 
     // TODO: Test it filters keyvalues correctly.
-    assert(colReq.filter.get.isInstanceOf[RegexQualifierFilterSpec])
+    assert(colReq.filterSpec.isInstanceOf[ColumnFilterSpec.RegexQualifierFilterSpec])
   }
 
   test("Flow module permits specifying versions on map-type columns without qualifier regex.") {
@@ -149,7 +149,7 @@ class FlowModuleSuite extends FunSuite {
             ColumnFamilyInputSpec(
                 "searches",
                 maxVersions = 1,
-                filter = Some(new RegexQualifierFilterSpec(".*"))
+                filterSpec = ColumnFilterSpec.RegexQualifierFilterSpec(".*")
             ) -> 'word
         )
     )
