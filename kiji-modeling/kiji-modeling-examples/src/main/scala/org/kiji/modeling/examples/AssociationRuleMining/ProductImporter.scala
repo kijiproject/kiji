@@ -37,9 +37,19 @@ class ProductImporter(args: Args) extends KijiJob(args) with FieldConversions {
         }
       }
       .write(KijiOutput(outputUri,
-          Map('product_class_id -> QualifiedColumnOutputSpec("info", "product_class_id"),
-          'brand_name -> QualifiedColumnOutputSpec("info", "brand_name"),
-          'product_name -> QualifiedColumnOutputSpec("info", "product_name"),
-          'SKU -> QualifiedColumnOutputSpec("info", "sku"),
-          'SRP -> QualifiedColumnOutputSpec("info", "srp"))))
+          Map('product_class_id -> QualifiedColumnOutputSpec.builder
+              .withColumn("info", "product_class_id")
+              .build,
+          'brand_name -> QualifiedColumnOutputSpec.builder
+              .withColumn("info", "brand_name")
+              .build,
+          'product_name -> QualifiedColumnOutputSpec.builder
+              .withColumn("info", "product_name")
+              .build,
+          'SKU -> QualifiedColumnOutputSpec.builder
+              .withColumn("info", "sku")
+              .build,
+          'SRP -> QualifiedColumnOutputSpec.builder
+              .withColumn("info", "srp")
+              .build)))
 }

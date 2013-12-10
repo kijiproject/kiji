@@ -875,17 +875,18 @@ object ModelConverters {
   def columnOutputSpecFromAvro(avroColumn: Any): ColumnOutputSpec = avroColumn match {
     case col: AvroQualifiedColumnOutputSpec => {
       val schema: SchemaSpec = schemaSpecFromAvro(col.getSchemaSpec)
-      QualifiedColumnOutputSpec(
-          family = col.getFamily,
-          qualifier = col.getQualifier,
-          schemaSpec = schema)
+      QualifiedColumnOutputSpec.builder
+          .withColumn(col.getFamily, col.getQualifier)
+          .withSchemaSpec(schema)
+          .build
     }
     case col: AvroColumnFamilyOutputSpec => {
       val schema: SchemaSpec = schemaSpecFromAvro(col.getSchemaSpec)
-      ColumnFamilyOutputSpec(
-          family = col.getFamily,
-          qualifierSelector = Symbol(col.getQualifierSelector),
-          schemaSpec = schema)
+      ColumnFamilyOutputSpec.builder
+          .withFamily(col.getFamily)
+          .withQualifierSelector(Symbol(col.getQualifierSelector))
+          .withSchemaSpec(schema)
+          .build
     }
     // TODO: Real error message
     case col: Any => throw new ValidationException("Cannot create ColumnOutputSpec from Avro " +

@@ -223,10 +223,14 @@ object ModelConvertersSuite {
       valueField = Some("value"))
   val testKijiOutputSpec: KijiOutputSpec = KijiOutputSpec(
       tableUri = "kiji://.env/default/test2",
-      fieldsToColumns = Map('testField -> QualifiedColumnOutputSpec("info:test")))
+      fieldsToColumns = Map('testField -> QualifiedColumnOutputSpec.builder
+          .withColumn("info", "test")
+          .build))
   val testColumnOutputSpec: KijiSingleColumnOutputSpec = KijiSingleColumnOutputSpec(
       tableUri = "kiji://.env/default/test3",
-      outputColumn = QualifiedColumnOutputSpec("info:test"))
+      outputColumn = QualifiedColumnOutputSpec.builder
+          .withColumn("info", "test")
+          .build)
   val testPrepareEnvironment: PrepareEnvironment = PrepareEnvironment(
       inputSpec = Map("input" -> testKijiInputSpec),
       outputSpec = Map("output" -> testKijiOutputSpec),

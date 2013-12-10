@@ -143,7 +143,9 @@ class ModelEnvironmentSuite extends FunSuite {
 
     val outputSpec = KijiSingleColumnOutputSpec(
         "kiji://myuri",
-        QualifiedColumnOutputSpec("outputFamily:qualifier"))
+        QualifiedColumnOutputSpec.builder
+            .withColumn("outputFamily", "qualifier")
+            .build)
     val scoreEnv = Some(ScoreEnvironment(inputSpec, outputSpec, Seq()))
     val scoreEnv2 = Some(ScoreEnvironment(
         inputSpec2,
@@ -184,11 +186,15 @@ class ModelEnvironmentSuite extends FunSuite {
     val inputSpec = new KijiInputSpec("kiji://.env/default/table", timeRange, columns)
     val outputSpec = new KijiOutputSpec(
         "kiji://.env/default/table",
-        Map('tuplename -> QualifiedColumnOutputSpec("info:storefieldname"))
+        Map('tuplename -> QualifiedColumnOutputSpec.builder
+            .withColumn("info", "storefieldname")
+            .build)
     )
     val scoreOutputSpec = new KijiSingleColumnOutputSpec(
       "kiji://.env/default/table",
-      QualifiedColumnOutputSpec("info:scoreoutput")
+      QualifiedColumnOutputSpec.builder
+          .withColumn("info", "scoreoutput")
+          .build
     )
 
     // Prepare, extract, train and score environments to use in tests.

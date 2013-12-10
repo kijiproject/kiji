@@ -109,7 +109,9 @@ class ModelExecutorSuite extends KijiSuite {
             uri.toString,
             timeRange=All,
             columnsToFields = Map(QualifiedColumnInputSpec("family", "column1") -> 'field)),
-          KijiSingleColumnOutputSpec(uri.toString, QualifiedColumnOutputSpec("family:column2")),
+          KijiSingleColumnOutputSpec(uri.toString, QualifiedColumnOutputSpec.builder
+              .withColumn("family", "column2")
+              .build),
           keyValueStoreSpecs = Seq(
             KeyValueStoreSpec(
               storeType = "AVRO_KV",
@@ -190,7 +192,9 @@ class ModelExecutorSuite extends KijiSuite {
             outputSpec = Map("output" ->
                 KijiOutputSpec(
                     tableUri = outputUri.toString,
-                    fieldsToColumns = Map('size -> QualifiedColumnOutputSpec("family:column"))
+                    fieldsToColumns = Map('size -> QualifiedColumnOutputSpec.builder
+                        .withColumn("family", "column")
+                        .build)
             )),
             keyValueStoreSpecs = Seq()
         )),
@@ -275,7 +279,9 @@ class ModelExecutorSuite extends KijiSuite {
           outputSpec = Map("output" ->
               KijiOutputSpec(
                   tableUri = outputUri.toString,
-                  fieldsToColumns = Map('size -> QualifiedColumnOutputSpec("family:column"))
+                  fieldsToColumns = Map('size -> QualifiedColumnOutputSpec.builder
+                      .withColumn("family", "column")
+                      .build)
           )),
           keyValueStoreSpecs = Seq()
         )),
@@ -391,7 +397,9 @@ class ModelExecutorSuite extends KijiSuite {
             outputSpec = Map("output" ->
                 KijiOutputSpec(
                     tableUri = prepareOutputUri.toString,
-                    fieldsToColumns = Map('size -> QualifiedColumnOutputSpec("family:column")))),
+                    fieldsToColumns = Map('size -> QualifiedColumnOutputSpec.builder
+                        .withColumn("family", "column")
+                        .build))),
             keyValueStoreSpecs = Seq())),
         trainEnvironment = Some(TrainEnvironment(
             inputSpec = Map("input" ->
@@ -404,7 +412,9 @@ class ModelExecutorSuite extends KijiSuite {
                 KijiOutputSpec(
                     tableUri = trainOutputUri.toString,
                     fieldsToColumns = Map('avgString ->
-                        QualifiedColumnOutputSpec("family:column1")))),
+                        QualifiedColumnOutputSpec.builder
+                            .withColumn("family", "column1")
+                            .build))),
             keyValueStoreSpecs = Seq())),
         scoreEnvironment = Some(ScoreEnvironment(
             inputSpec = KijiInputSpec(
@@ -414,7 +424,9 @@ class ModelExecutorSuite extends KijiSuite {
                     Map(QualifiedColumnInputSpec("family", "column1") -> 'field)),
             outputSpec = KijiSingleColumnOutputSpec(
                 tableUri = trainOutputUri.toString,
-                QualifiedColumnOutputSpec("family:column2")),
+                QualifiedColumnOutputSpec.builder
+                    .withColumn("family", "column2")
+                    .build),
             keyValueStoreSpecs = Seq(
                 KeyValueStoreSpec(
                     storeType = "AVRO_KV",

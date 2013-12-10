@@ -91,7 +91,9 @@ class ScoreProducerSuite
                   columnsToFields =
                       Map(QualifiedColumnInputSpec("family", "column1") -> 'field)),
               KijiSingleColumnOutputSpec(uri.toString,
-                  QualifiedColumnOutputSpec("family:column2")),
+                  QualifiedColumnOutputSpec.builder
+                      .withColumn("family", "column2")
+                      .build),
               keyValueStoreSpecs = Seq(
                   KeyValueStoreSpec(
                       storeType = "AVRO_KV",
@@ -166,7 +168,9 @@ class ScoreProducerSuite
                       QualifiedColumnInputSpec("family", "column1") -> 'i1,
                       QualifiedColumnInputSpec("family", "column2") -> 'i2)),
               KijiSingleColumnOutputSpec(uri.toString,
-                  QualifiedColumnOutputSpec("family:column2")),
+                  QualifiedColumnOutputSpec.builder
+                      .withColumn("family", "column2")
+                      .build),
               keyValueStoreSpecs = Seq())))
 
       // Build the produce job.
@@ -231,7 +235,9 @@ class ScoreProducerSuite
                   timeRange=All,
                   columnsToFields = Map(QualifiedColumnInputSpec("family", "column") -> 'i1)),
               KijiSingleColumnOutputSpec(uri.toString,
-                  QualifiedColumnOutputSpec("family:column")),
+                  QualifiedColumnOutputSpec.builder
+                      .withColumn("family", "column")
+                      .build),
               keyValueStoreSpecs = Seq())))
 
       // Build the produce job.
@@ -308,7 +314,9 @@ class ScoreProducerSuite
                   columnsToFields =
                       Map(QualifiedColumnInputSpec("family", "column1") -> 'feature)),
               KijiSingleColumnOutputSpec(uri.toString,
-                  QualifiedColumnOutputSpec("family:column2")),
+                  QualifiedColumnOutputSpec.builder
+                      .withColumn("family", "column2")
+                      .build),
               keyValueStoreSpecs = Seq())))
 
       // Build the produce job.
@@ -369,7 +377,9 @@ class ScoreProducerSuite
             uri.toString,
             timeRange=All,
             columnsToFields = Map(QualifiedColumnInputSpec("family", "column1") -> 'field)),
-          KijiSingleColumnOutputSpec(uri.toString, QualifiedColumnOutputSpec("family:column2")),
+          KijiSingleColumnOutputSpec(uri.toString, QualifiedColumnOutputSpec.builder
+              .withColumn("family", "column2")
+              .build),
           keyValueStoreSpecs = Seq(
             KeyValueStoreSpec(
               storeType = "AVRO_KV",

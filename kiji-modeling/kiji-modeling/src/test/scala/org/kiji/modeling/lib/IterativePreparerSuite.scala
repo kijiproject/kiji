@@ -102,7 +102,9 @@ class IterativePreparerSuite extends KijiSuite {
                   "output" -> KijiOutputSpec(
                       tableUri = tableUri.toString,
                       fieldsToColumns = Map('word ->
-                          QualifiedColumnOutputSpec("family:column2")))
+                          QualifiedColumnOutputSpec.builder
+                              .withColumn("family", "column2")
+                              .build))
               ),
               keyValueStoreSpecs = Seq()
           )),

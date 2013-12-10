@@ -92,7 +92,9 @@ class ScoreJobToolSuite extends KijiSuite {
                 ),
                 KijiSingleColumnOutputSpec(
                     uri.toString,
-                  QualifiedColumnOutputSpec("family:column2")
+                  QualifiedColumnOutputSpec.builder
+                      .withColumn("family", "column2")
+                      .build
                 ),
                 keyValueStoreSpecs = Seq())))
 
