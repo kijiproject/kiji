@@ -25,6 +25,7 @@ import org.kiji.annotations.Inheritance
 import org.kiji.express.flow.All
 import org.kiji.express.flow.ColumnOutputSpec
 import org.kiji.express.flow.QualifiedColumnOutputSpec
+import org.kiji.schema.KijiColumnName
 
 /**
  * Factory methods for constructing [[org.kiji.express.flow.framework.hfile.HFileKijiSource]]s that
@@ -112,7 +113,9 @@ object HFileKijiOutput {
 
     val columnMap = columns
         .toMap
-        .mapValues(QualifiedColumnOutputSpec(_))
+        .mapValues { column: String =>
+          QualifiedColumnOutputSpec.builder.withColumn(new KijiColumnName(column)).build
+        }
     new HFileKijiSource(
         tableAddress = tableUri,
         hFileOutput = hFileOutput,
@@ -167,7 +170,9 @@ object HFileKijiOutput {
   ): HFileKijiSource = {
     val columnMap = columns
         .toMap
-        .mapValues(QualifiedColumnOutputSpec(_))
+        .mapValues { column: String =>
+          QualifiedColumnOutputSpec.builder.withColumn(new KijiColumnName(column)).build
+        }
 
     HFileKijiOutput(tableUri, hFileOutput, columnMap)
   }

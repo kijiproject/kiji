@@ -307,8 +307,8 @@ object QualifiedColumnInputSpec {
    * @param column is the fully qualified column name of the requested data.
    * @param maxVersions to read back from the requested column (default is only most recent).
    * @param filterSpec to use when reading back cells (default is `None`).
-   * @param pagingSpec options specifying the maximum number of cells to retrieve from Kiji
-   *        per page.
+   * @param pagingSpec options specifying the maximum number of cells to retrieve from Kiji per
+   *     page.
    * @param schemaSpec specifies the schema to use when reading cells. Defaults to
    *     [[org.kiji.express.flow.SchemaSpec.Writer]].
    * @return a new column input spec with supplied options.
@@ -319,7 +319,7 @@ object QualifiedColumnInputSpec {
       filterSpec: ColumnFilterSpec,
       pagingSpec: PagingSpec,
       schemaSpec: SchemaSpec
-  ): ColumnInputSpec = {
+  ): QualifiedColumnInputSpec = {
     // Construct QualifiedColumnInputSpec
     QualifiedColumnInputSpec(
         column.getFamily(),
@@ -455,8 +455,8 @@ object ColumnFamilyInputSpec {
    * @param column family name of the requested data.
    * @param maxVersions to read back from the requested column (default is only most recent).
    * @param filterSpec to use when reading back cells (default is `None`).
-   * @param pagingSpec options specifying the maximum number of cells to retrieve from Kiji
-   *        per page.
+   * @param pagingSpec options specifying the maximum number of cells to retrieve from Kiji per
+   *     page.
    * @param schemaSpec specifies the schema to use when reading cells. Defaults to
    *     [[org.kiji.express.flow.SchemaSpec.Writer]].
    * @return a new column input spec with supplied options.
@@ -467,7 +467,7 @@ object ColumnFamilyInputSpec {
       filterSpec: ColumnFilterSpec,
       pagingSpec: PagingSpec,
       schemaSpec: SchemaSpec
-  ): ColumnInputSpec = {
+  ): ColumnFamilyInputSpec = {
     // Construct QualifiedColumnInputSpec
     ColumnFamilyInputSpec(
         column.getFamily(),

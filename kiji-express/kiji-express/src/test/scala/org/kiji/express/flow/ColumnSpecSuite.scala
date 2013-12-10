@@ -23,6 +23,7 @@ import org.apache.avro.Schema
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
+import org.kiji.express.flow.SchemaSpec.Generic
 
 @RunWith(classOf[JUnitRunner])
 class ColumnSpecSuite extends FunSuite {
@@ -64,7 +65,7 @@ class ColumnSpecSuite extends FunSuite {
   }
 
   test("ColumnFamilyOutputSpec factory method creates ColumnFamilyOutputSpec.") {
-    val col = ColumnFamilyOutputSpec(colFamily, qualifierSelector, schema.get)
+    val col = ColumnFamilyOutputSpec(colFamily, qualifierSelector, Generic(schema.get))
 
     assert(colFamily === col.family)
     assert(qualifierSelector === qualifierSelector)
@@ -94,7 +95,10 @@ class ColumnSpecSuite extends FunSuite {
   }
 
   test("QualifiedColumnOutputSpec factory method creates QualifiedColumnOutputSpec.") {
-    val col = QualifiedColumnOutputSpec(colFamily, colQualifier, schema.get)
+    val col = QualifiedColumnOutputSpec.builder
+        .withColumn(colFamily, colQualifier)
+        .withSchemaSpec(Generic(schema.get))
+        .build
     assert(colQualifier === col.qualifier)
     assert(colFamily === col.family)
     assert(schema === col.schemaSpec.schema)

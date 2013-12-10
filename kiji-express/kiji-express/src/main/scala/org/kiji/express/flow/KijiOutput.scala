@@ -21,6 +21,7 @@ package org.kiji.express.flow
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.schema.KijiColumnName
 
 /**
  * Factory methods for constructing [[org.kiji.express.flow.KijiSource]]s that will be used as
@@ -131,7 +132,9 @@ object KijiOutput {
   ): KijiSource = {
     val columnMap = columns
         .toMap
-        .mapValues(QualifiedColumnOutputSpec(_))
+        .mapValues { column: String =>
+          QualifiedColumnOutputSpec.builder.withColumn(new KijiColumnName(column)).build
+        }
 
     KijiOutput(tableUri, columnMap)
   }
@@ -155,7 +158,9 @@ object KijiOutput {
 
     val columnMap = columns
         .toMap
-        .mapValues(QualifiedColumnOutputSpec(_))
+        .mapValues { column: String =>
+          QualifiedColumnOutputSpec.builder.withColumn(new KijiColumnName(column)).build
+        }
 
     KijiOutput(tableUri, timestampField, columnMap)
   }

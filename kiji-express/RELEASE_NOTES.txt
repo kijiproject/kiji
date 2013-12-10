@@ -2,6 +2,9 @@
                              Kiji Express Release Notes
 
 Version 0.14.0
+  * EXP-360. ColumnOutputSpec factory methods have been replaced with ColumnOutputSpec.Builder.
+      Case class style apply and unapply methods are now hidden to protect binary compatiblity of
+      KijiExpress updates.
   * EXP-335. Move kiji-express-examples repo into kiji-express as a submodule.
   * EXP-334 & EXP-257. Pull repl out into a submodule of Express. Move repl-
       specific functionality out of KijiPipe and into a new KijiPipeTool class.

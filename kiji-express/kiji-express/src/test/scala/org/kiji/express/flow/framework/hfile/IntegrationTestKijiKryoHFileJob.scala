@@ -41,6 +41,7 @@ import org.kiji.schema.KijiURI
 import org.kiji.schema.shell.api.Client
 import org.kiji.schema.testutil.AbstractKijiIntegrationTest
 import org.kiji.schema.util.InstanceBuilder
+import org.kiji.express.flow.SchemaSpec.Generic
 
 /**
  * Integration tests with schemas specified for column requests, in an HFileKijiJob.
@@ -125,8 +126,9 @@ class IntegrationTestKijiKryoHFileJob extends AbstractKijiIntegrationTest {
               tempHFileFolder.getAbsolutePath,
               Map('email ->
                 QualifiedColumnOutputSpec(
-                  "info:email",
-                  schema = Schema.create(Schema.Type.STRING)))))
+                  "info",
+                  "email",
+                  schemaSpec = Generic(Schema.create(Schema.Type.STRING))))))
         }
         Mode.mode = Hdfs(strict = false, conf = new JobConf(getConf))
         Assert.assertTrue(

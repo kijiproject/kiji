@@ -38,6 +38,7 @@ import org.kiji.express.flow.util.Resources.doAndRelease
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiURI
 import org.kiji.schema.layout.KijiTableLayout
+import org.kiji.express.flow.SchemaSpec.Specific
 
 @RunWith(classOf[JUnitRunner])
 class KijiJobSuite extends KijiSuite {
@@ -111,7 +112,10 @@ class KijiJobSuite extends KijiSuite {
         .source(Tsv("inputFile", fields = new Fields("l", "s")), rawInputs)
         .sink(KijiOutput(uri,
             Map('record ->
-                QualifiedColumnOutputSpec("family", "simple", classOf[SimpleRecord]))))(
+                QualifiedColumnOutputSpec.builder
+                    .withColumn("family", "simple")
+                    .withSchemaSpec(Specific(classOf[SimpleRecord]))
+                    .build)))(
                     validatePacking)
 
     // Run in local mode.
@@ -254,7 +258,11 @@ class PackSpecificRecordJob(args: Args) extends KijiJob(args) {
       .packTo[SimpleRecord](('l, 's) -> 'record)
       .insert('entityId, EntityId("foo"))
       .write(KijiOutput(args("uri"),
-          Map('record -> QualifiedColumnOutputSpec("family", "simple", classOf[SimpleRecord]))))
+          Map('record ->
+              QualifiedColumnOutputSpec.builder
+                  .withColumn("family", "simple")
+                  .withSchemaSpec(Specific(classOf[SimpleRecord]))
+                  .build)))
 }
 
 class UnpackGenericRecordJob(args: Args) extends KijiJob(args) {

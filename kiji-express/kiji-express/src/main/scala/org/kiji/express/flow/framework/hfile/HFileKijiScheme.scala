@@ -292,11 +292,14 @@ object HFileKijiScheme {
       val (fieldName, colRequest) = kv
       val colValue = output.getObject(fieldName)
       val newColRequest = colRequest match {
-        case cf @ ColumnFamilyOutputSpec(family, qualField, schemaId) => {
+        case ColumnFamilyOutputSpec(family, qualField, schemaSpec) => {
           val qualifier = output.getString(qualField.name)
-          QualifiedColumnOutputSpec(family, qualifier)
+          QualifiedColumnOutputSpec.builder
+              .withColumn(family, qualifier)
+              .withSchemaSpec(schemaSpec)
+              .build
         }
-        case qc @ QualifiedColumnOutputSpec(_, _, _) => qc
+        case qc: QualifiedColumnOutputSpec => qc
       }
       val cell = HFileCell(entityId, newColRequest, timestamp, colValue)
       cellHandler(cell)

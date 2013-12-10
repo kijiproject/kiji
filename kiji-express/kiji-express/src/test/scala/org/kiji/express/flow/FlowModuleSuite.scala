@@ -34,19 +34,25 @@ class FlowModuleSuite extends FunSuite {
   test("Flow module forbids creating an input map-type column with a qualifier in the column "
       + "name.") {
     intercept[KijiInvalidNameException] {
-      new ColumnFamilyInputSpec("info:word")
+      ColumnFamilyInputSpec("info:word")
     }
   }
 
   test("Flow module forbids creating an output map-type column with a qualifier in the column "
       + "name.") {
-    intercept[KijiInvalidNameException] {
-      new ColumnFamilyOutputSpec("info:word", 'foo)
+    intercept[IllegalArgumentException] {
+      ColumnFamilyOutputSpec.builder
+          .withFamily("info:word")
+          .withQualifierSelector('foo)
+          .build
     }
   }
 
   test("Flow module permits creating an output map-type column specifying the qualifier field") {
-    new ColumnFamilyOutputSpec("searches", 'terms)
+    ColumnFamilyOutputSpec.builder
+        .withFamily("searches")
+        .withQualifierSelector('terms)
+        .build
   }
 
   test("Flow module permits specifying a qualifier regex on ColumnFamilyInputSpec.") {
@@ -169,7 +175,9 @@ class FlowModuleSuite extends FunSuite {
         tableUri = KijiURI.newBuilder(tableURI).build(),
         timeRange = All,
         timestampField = None,
-        outputColumns = Map("words" -> QualifiedColumnOutputSpec("info", "words")))
+        outputColumns = Map("words" -> QualifiedColumnOutputSpec.builder
+            .withColumn("info", "words")
+            .build))
     assert(expectedScheme === output.hdfsScheme)
   }
 
@@ -179,7 +187,9 @@ class FlowModuleSuite extends FunSuite {
         tableUri = KijiURI.newBuilder(tableURI).build(),
         timeRange = All,
         timestampField = Some('time),
-        outputColumns = Map("words" -> QualifiedColumnOutputSpec("info", "words")))
+        outputColumns = Map("words" -> QualifiedColumnOutputSpec.builder
+            .withColumn("info", "words")
+            .build))
     assert(expectedScheme === output.hdfsScheme)
   }
 }

@@ -28,6 +28,7 @@ import org.kiji.express.flow.KijiInput
 import org.kiji.express.flow.KijiJob
 import org.kiji.express.flow.KijiOutput
 import org.kiji.express.flow.QualifiedColumnOutputSpec
+import org.kiji.express.flow.SchemaSpec.Generic
 
 /**
  * NewsgroupSegmenter segments the rows of a table according to a specified ratio.  This is used
@@ -52,5 +53,8 @@ class NewsgroupSegmenter(args: Args) extends KijiJob(args) {
         _: Unit => if (Random.nextInt(ratio + 1) >= 1) 1 else 0
       }
       .write(KijiOutput(tableURIString, Map('segment ->
-          QualifiedColumnOutputSpec("info:segment", Schema.create(Schema.Type.INT)))))
+          QualifiedColumnOutputSpec.builder
+              .withColumn("info", "segment")
+              .withSchemaSpec(Generic(Schema.create(Schema.Type.INT)))
+              .build)))
 }

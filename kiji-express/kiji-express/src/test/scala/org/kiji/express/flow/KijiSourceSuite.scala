@@ -562,7 +562,9 @@ class KijiSourceSuite
         timestampField = None,
         inputColumns = Map('records -> ColumnInputSpec(
           "family:column3", schemaSpec = Specific(classOf[HashSpec]))),
-        outputColumns = Map('records -> QualifiedColumnOutputSpec("family:column3"))
+        outputColumns = Map('records -> QualifiedColumnOutputSpec.builder
+            .withColumn("family", "column3")
+            .build)
     )
 
     val jobTest = JobTest(new SpecificAvroReadJob(_))
@@ -646,8 +648,11 @@ class KijiSourceSuite
         .arg("input", "inputFile")
         .arg("table", uri)
         .source(TextLine("inputFile"), mapTypeInput)
-        .sink(KijiOutput(uri, Map('resultCount ->
-            new ColumnFamilyOutputSpec("searches", 'terms))))(validateMapWrite)
+        .sink(KijiOutput(uri, Map('resultCount -> ColumnFamilyOutputSpec.builder
+            .withFamily("searches")
+            .withQualifierSelector('terms)
+            .build))
+        )(validateMapWrite)
 
     // Run the test.
     jobTest.run.finish
@@ -905,7 +910,9 @@ object KijiSourceSuite {
         timestampField = None,
         inputColumns = Map('records -> ColumnInputSpec(
             "family:column3", schemaSpec = Specific(classOf[HashSpec]))),
-        outputColumns = Map('records -> QualifiedColumnOutputSpec("family:column3")))
+        outputColumns = Map('records -> QualifiedColumnOutputSpec.builder
+            .withColumn("family", "column3")
+            .build))
     ksource
         .map('records -> 'hashSizeField) { slice: Seq[FlowCell[HashSpec]] =>
           val FlowCell(_, _, _, record) = slice.head
@@ -956,7 +963,7 @@ object KijiSourceSuite {
         }
         // Write the results to the "family:column1" column of a Kiji table.
         .write(KijiOutput(args("table"), Map('resultCount ->
-          new ColumnFamilyOutputSpec("searches", 'terms))))
+          ColumnFamilyOutputSpec("searches", 'terms))))
   }
 
   /**

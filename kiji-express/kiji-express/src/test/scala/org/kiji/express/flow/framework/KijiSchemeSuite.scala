@@ -52,7 +52,7 @@ class KijiSchemeSuite extends KijiSuite {
 
     // Set up the columns and fields.
     val columnsOutput = Map(
-        "columnSymbol" -> QualifiedColumnOutputSpec("family:column3")
+        "columnSymbol" -> QualifiedColumnOutputSpec.builder.withColumn("family", "column3").build
     )
     val columnsInput = Map(
         "columnSymbol" -> ColumnInputSpec("family:column3", schemaSpec = SchemaSpec.Writer)
