@@ -126,7 +126,7 @@ public class ScoreFunctionProducer extends KijiProducer {
   }
 
   private ScoreFunctionConf mScoreFunctionConf;
-  private ScoreFunction mScoreFunction;
+  private ScoreFunction<?> mScoreFunction;
   private InternalFreshenerContext mInternalFreshenerContextDelegate;
 
   /**
@@ -135,11 +135,12 @@ public class ScoreFunctionProducer extends KijiProducer {
    * @param scoreFunctionClassName fully qualified name of the ScoreFunction class to instantiate.
    * @return a new instance of the given ScoreFunction implementation.
    */
-  private static ScoreFunction scoreFunctionForName(
+  @SuppressWarnings("unchecked")
+  private static ScoreFunction<?> scoreFunctionForName(
       final String scoreFunctionClassName
   ) {
     try {
-      return ReflectionUtils.newInstance(
+      return (ScoreFunction<?>) ReflectionUtils.newInstance(
           Class.forName(scoreFunctionClassName).asSubclass(ScoreFunction.class), null);
     } catch (ClassNotFoundException cnfe) {
       throw new RuntimeException(cnfe);
@@ -209,9 +210,10 @@ public class ScoreFunctionProducer extends KijiProducer {
   public void produce(
       final KijiRowData input, final ProducerContext context
   ) throws IOException {
-    context.put(mScoreFunction.score(
+    ScoreFunction.TimestampedValue<?> scoringResult = mScoreFunction.score(
         input,
-        new ScoreFunctionProducerFreshenerContext(context, mInternalFreshenerContextDelegate)));
+        new ScoreFunctionProducerFreshenerContext(context, mInternalFreshenerContextDelegate));
+    context.put(scoringResult.getTimestamp(), scoringResult.getValue());
   }
 
   /** {@inheritDoc} */
