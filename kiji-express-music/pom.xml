@@ -26,6 +26,9 @@
     <kiji.framework.version>1.2.7</kiji.framework.version>
     <express.version>0.14.0-SNAPSHOT</express.version>
     <scalatest.version>2.0.M5b</scalatest.version>
+    <kiji-schema.version>1.3.4-SNAPSHOT</kiji-schema.version>
+    <kiji-mapreduce.version>1.2.2</kiji-mapreduce.version>
+    <kiji-schema-shell.version>1.3.1</kiji-schema-shell.version>
   </properties>
 
   <dependencies>
@@ -39,15 +42,25 @@
 
     <!-- Kiji -->
     <dependency>
+      <groupId>org.kiji.schema</groupId>
+      <artifactId>kiji-schema</artifactId>
+      <version>${kiji-schema.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.kiji.schema-shell</groupId>
+      <artifactId>kiji-schema-shell</artifactId>
+      <version>${kiji-schema-shell.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.kiji.express</groupId>
       <artifactId>kiji-express</artifactId>
       <version>${express.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>org.kiji.framework</groupId>
-      <artifactId>kiji-framework</artifactId>
-      <version>${kiji.framework.version}</version>
+      <groupId>org.kiji.mapreduce</groupId>
+      <artifactId>kiji-mapreduce</artifactId>
+      <version>${kiji-mapreduce.version}</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
