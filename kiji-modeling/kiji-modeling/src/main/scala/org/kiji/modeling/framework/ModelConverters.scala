@@ -24,19 +24,21 @@ import scala.collection.JavaConverters._
 import org.apache.avro.Schema
 import org.apache.avro.specific.SpecificRecord
 
-import org.kiji.express.flow.AndFilterSpec
 import org.kiji.express.flow.Between
 import org.kiji.express.flow.ColumnFamilyInputSpec
 import org.kiji.express.flow.ColumnFamilyOutputSpec
-import org.kiji.express.flow.ColumnRangeFilterSpec
 import org.kiji.express.flow.ColumnInputSpec
 import org.kiji.express.flow.ColumnOutputSpec
 import org.kiji.express.flow.ColumnFilterSpec
-import org.kiji.express.flow.OrFilterSpec
+import org.kiji.express.flow.ColumnFilterSpec.AndFilterSpec
+import org.kiji.express.flow.ColumnFilterSpec.ColumnRangeFilterSpec
+import org.kiji.express.flow.ColumnFilterSpec.KijiColumnFilterSpec
+import org.kiji.express.flow.ColumnFilterSpec.NoColumnFilterSpec
+import org.kiji.express.flow.ColumnFilterSpec.OrFilterSpec
+import org.kiji.express.flow.ColumnFilterSpec.RegexQualifierFilterSpec
 import org.kiji.express.flow.PagingSpec
 import org.kiji.express.flow.QualifiedColumnInputSpec
 import org.kiji.express.flow.QualifiedColumnOutputSpec
-import org.kiji.express.flow.RegexQualifierFilterSpec
 import org.kiji.express.flow.SchemaSpec
 import org.kiji.express.flow.TimeRange
 import org.kiji.modeling.Evaluator
@@ -823,7 +825,8 @@ object ModelConverters {
    */
   def columnInputSpecFromAvro(avroColumn: Any): ColumnInputSpec = avroColumn match {
     case col: AvroQualifiedColumnInputSpec => {
-      val filter: Option[ColumnFilterSpec] = Option(col.getFilter).map(filterFromAvro)
+      val filter: ColumnFilterSpec =
+          Option(col.getFilter).map(filterFromAvro).getOrElse(NoColumnFilterSpec)
       val paging: PagingSpec = if (0 == col.getPageSize) {
         PagingSpec.Off
       } else {
@@ -831,16 +834,17 @@ object ModelConverters {
       }
       val schema: SchemaSpec = schemaSpecFromAvro(col.getSchemaSpec)
 
-      QualifiedColumnInputSpec(
+      new QualifiedColumnInputSpec(
           family = col.getFamily,
           qualifier = col.getQualifier,
           maxVersions = col.getMaxVersions,
-          filter = filter,
-          paging = paging,
+          filterSpec = filter,
+          pagingSpec = paging,
           schemaSpec = schema)
     }
     case col: AvroColumnFamilyInputSpec => {
-      val filter: Option[ColumnFilterSpec] = Option(col.getFilter).map(filterFromAvro)
+      val filter: ColumnFilterSpec =
+          Option(col.getFilter).map(filterFromAvro).getOrElse(NoColumnFilterSpec)
       val paging: PagingSpec = if (0 == col.getPageSize) {
         PagingSpec.Off
       } else {
@@ -851,8 +855,8 @@ object ModelConverters {
       ColumnFamilyInputSpec(
           family = col.getFamily,
           maxVersions = col.getMaxVersions,
-          filter = filter,
-          paging = paging,
+          filterSpec = filter,
+          pagingSpec = paging,
           schemaSpec = schema)
     }
     // TODO: Real error message
@@ -973,10 +977,13 @@ object ModelConverters {
    * Converts a KijiExpress column filter specification into an Avro description.
    *
    * @param filter The filter to convert into an Avro description.
-   * @return The Avro description of the filter.
+   * @return The Avro description of the filter, or null if NoColumnFilterSpec.
    */
   def filterToAvro(filter: ColumnFilterSpec): AvroFilter = {
     filter match {
+      case NoColumnFilterSpec => {
+        null
+      }
       case AndFilterSpec(filters) => {
         val avroFilters: java.util.List[AvroFilter] = filters
             .map { filterToAvro }
@@ -1021,6 +1028,12 @@ object ModelConverters {
             .newBuilder()
             .setRegexFilter(regexFilter)
             .build()
+      }
+      case KijiColumnFilterSpec(kijiColumnFilter) => {
+        throw new IllegalArgumentException(
+          ("Cannot convert arbitrary KijiColumnFilter %s to Avro.  Must be one of AndFilterSpec, "
+              + "OrFilterSpec, ColumnRangeFilterSpec, or RegexQualifierFilterSpec.")
+                  .format(kijiColumnFilter))
       }
     }
   }
@@ -1074,16 +1087,16 @@ object ModelConverters {
         .setFamily(col.family)
         .setQualifier(col.qualifier)
         .setMaxVersions(col.maxVersions)
-        .setFilter(col.filter.map(filterToAvro).getOrElse(null))
-        .setPageSize(col.paging.cellsPerPage.getOrElse(0))
+        .setFilter(filterToAvro(col.filterSpec))
+        .setPageSize(col.pagingSpec.cellsPerPage.getOrElse(0))
         .setSchemaSpec(schemaSpecToAvro(col.schemaSpec))
         .build()
     case col: ColumnFamilyInputSpec => AvroColumnFamilyInputSpec
         .newBuilder()
         .setFamily(col.family)
         .setMaxVersions(col.maxVersions)
-        .setFilter(col.filter.map(filterToAvro).getOrElse(null))
-        .setPageSize(col.paging.cellsPerPage.getOrElse(0))
+        .setFilter(filterToAvro(col.filterSpec))
+        .setPageSize(col.pagingSpec.cellsPerPage.getOrElse(0))
         .setSchemaSpec(schemaSpecToAvro(col.schemaSpec))
         .build()
     case col: Any => throw new ValidationException(

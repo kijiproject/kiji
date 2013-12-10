@@ -26,14 +26,14 @@ import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
-import org.kiji.express.flow.AndFilterSpec
 import org.kiji.express.flow.Between
-import org.kiji.express.flow.ColumnRangeFilterSpec
 import org.kiji.express.flow.ColumnFilterSpec
-import org.kiji.express.flow.OrFilterSpec
+import org.kiji.express.flow.ColumnFilterSpec.AndFilterSpec
+import org.kiji.express.flow.ColumnFilterSpec.ColumnRangeFilterSpec
+import org.kiji.express.flow.ColumnFilterSpec.OrFilterSpec
+import org.kiji.express.flow.ColumnFilterSpec.RegexQualifierFilterSpec
 import org.kiji.express.flow.QualifiedColumnInputSpec
 import org.kiji.express.flow.QualifiedColumnOutputSpec
-import org.kiji.express.flow.RegexQualifierFilterSpec
 import org.kiji.express.flow.SchemaSpec
 import org.kiji.modeling.ExtractFn
 import org.kiji.modeling.Extractor
@@ -214,7 +214,7 @@ object ModelConvertersSuite {
       columnsToFields = Map(QualifiedColumnInputSpec(
           "info",
           "test",
-          filter = Some(testAndFilter)) -> 'testField))
+          filterSpec = testAndFilter) -> 'testField))
   val testTextSpec: TextSourceSpec = TextSourceSpec(
       path = "hdfs://test")
   val testSequenceFileSpec: SequenceFileSourceSpec = SequenceFileSourceSpec(

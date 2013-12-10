@@ -58,8 +58,8 @@ final case class KijiInputSpec(
         column: ColumnInputSpec): KijiDataRequestBuilder.ColumnsDef = {
       builder.newColumnsDef()
           .withMaxVersions(column.maxVersions)
-          .withFilter(column.filter.map{ _.toKijiColumnFilter }.getOrElse(null))
-          .withPageSize(column.paging.cellsPerPage.getOrElse(0))
+          .withFilter(column.filterSpec.toKijiColumnFilter.getOrElse(null))
+          .withPageSize(column.pagingSpec.cellsPerPage.getOrElse(0))
           .add(column.columnName)
     }
 

@@ -25,15 +25,16 @@ import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
-import org.kiji.express.flow.AndFilterSpec
 import org.kiji.express.flow.Between
 import org.kiji.express.flow.ColumnFilterSpec
-import org.kiji.express.flow.ColumnRangeFilterSpec
-import org.kiji.express.flow.OrFilterSpec
+import org.kiji.express.flow.ColumnFilterSpec.AndFilterSpec
+import org.kiji.express.flow.ColumnFilterSpec.ColumnRangeFilterSpec
+import org.kiji.express.flow.ColumnFilterSpec.NoColumnFilterSpec
+import org.kiji.express.flow.ColumnFilterSpec.OrFilterSpec
+import org.kiji.express.flow.ColumnFilterSpec.RegexQualifierFilterSpec
 import org.kiji.express.flow.PagingSpec
 import org.kiji.express.flow.QualifiedColumnInputSpec
 import org.kiji.express.flow.QualifiedColumnOutputSpec
-import org.kiji.express.flow.RegexQualifierFilterSpec
 import org.kiji.express.flow.util.Resources.resourceAsString
 import org.kiji.modeling.avro.AvroColumnRangeFilter
 import org.kiji.modeling.avro.AvroFilter
@@ -285,7 +286,7 @@ class ModelEnvironmentSuite extends FunSuite {
   //     - It should have the correct max versions
   //     - It should have the appropriate filter
   def singleColumnKijiInputSpecToAndFromAvro(
-      avroFilter: Option[AvroFilter] = None): Option[ColumnFilterSpec] = {
+      avroFilter: Option[AvroFilter] = None): ColumnFilterSpec = {
 
     // Constants to use for building avro and check after converting from avro
     val myFamily = "info"
@@ -350,10 +351,10 @@ class ModelEnvironmentSuite extends FunSuite {
     assert(myFamily === column.family)
     assert(myQualifier === column.qualifier)
     assert(myMaxVersions === column.maxVersions)
-    assert(PagingSpec.Off === column.paging)
+    assert(PagingSpec.Off === column.pagingSpec)
 
     // Return the filter for further checking
-    column.filter
+    column.filterSpec
   }
 
   // -----------------------------------------------------------------------------------------------
@@ -399,27 +400,27 @@ class ModelEnvironmentSuite extends FunSuite {
 
   test("ModelEnvironment can convert from Avro to KijiInputSpec without a filter.") {
     val filter = singleColumnKijiInputSpecToAndFromAvro()
-    assert(None === filter)
+    assert(NoColumnFilterSpec === filter)
   }
 
   test("ModelEnvironment can convert from Avro to KijiInputSpec with a range filter.") {
     val filter = singleColumnKijiInputSpecToAndFromAvro(Some(myAvroRangeFilter))
-    assert(filter.get.isInstanceOf[ColumnRangeFilterSpec], "incorrect filter type")
+    assert(filter.isInstanceOf[ColumnRangeFilterSpec], "incorrect filter type")
   }
 
   test("ModelEnvironment can convert from Avro to KijiInputSpec with a regex qualifier filter.") {
     val filter = singleColumnKijiInputSpecToAndFromAvro(Some(myAvroRegexQualifierFilter))
-    assert(filter.get.isInstanceOf[RegexQualifierFilterSpec], "incorrect filter type")
+    assert(filter.isInstanceOf[RegexQualifierFilterSpec], "incorrect filter type")
   }
 
   test("ModelEnvironment can convert from Avro to KijiInputSpec with a logical AND filter.") {
     val filter = singleColumnKijiInputSpecToAndFromAvro(Some(myAvroAndFilter))
-    assert(filter.get.isInstanceOf[AndFilterSpec], "incorrect filter type")
+    assert(filter.isInstanceOf[AndFilterSpec], "incorrect filter type")
   }
 
   test("ModelEnvironment can convert from Avro to KijiInputSpec with a logical OR filter.") {
     val filter = singleColumnKijiInputSpecToAndFromAvro(Some(myAvroOrFilter))
-    assert(filter.get.isInstanceOf[OrFilterSpec], "incorrect filter type")
+    assert(filter.isInstanceOf[OrFilterSpec], "incorrect filter type")
   }
 
   test("ModelEnvironment can instantiate Kiji column filters from json.") {
@@ -440,7 +441,7 @@ class ModelEnvironmentSuite extends FunSuite {
         .inputSpec
         .asInstanceOf[KijiInputSpec]
 
-    assert(expectedAndFilter === kijiInputSpec.columnsToFields.keys.toList(0).filter.get)
+    assert(expectedAndFilter === kijiInputSpec.columnsToFields.keys.toList(0).filterSpec)
 
   }
 
