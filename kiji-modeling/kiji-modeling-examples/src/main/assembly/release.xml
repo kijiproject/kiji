@@ -31,46 +31,36 @@
   <includeBaseDirectory>true</includeBaseDirectory>
 
   <fileSets>
+    <!-- source directories -->
+    <fileSet>
+      <useDefaultExcludes>true</useDefaultExcludes>
+      <outputDirectory>/</outputDirectory>
+      <fileMode>0644</fileMode>
+      <includes>
+        <include>src/main/scala/**</include>
+        <include>src/main/layouts/**</include>
+        <include>src/main/datasets/**</include>
+      </includes>
+      <filtered>false</filtered>
+    </fileSet>
+    <!-- text files -->
     <fileSet>
       <useDefaultExcludes>true</useDefaultExcludes>
       <outputDirectory></outputDirectory>
-      <directory>${project.basedir}/../</directory>
+      <directory></directory>
       <fileMode>0644</fileMode>
       <includes>
-        <include>NOTICE.txt</include>
-        <include>LICENSE.txt</include>
         <include>README.md</include>
-        <include>RELEASE_NOTES.txt</include>
       </includes>
       <filtered>true</filtered>
-    </fileSet>
-    <fileSet>
-      <useDefaultExcludes>false</useDefaultExcludes>
-      <outputDirectory>conf</outputDirectory>
-      <directory>src/main/conf</directory>
-      <fileMode>0644</fileMode>
-      <excludes>
-        <exclude>*~</exclude>
-        <exclude>*.swp</exclude>
-      </excludes>
-      <filtered>true</filtered>
-    </fileSet>
-    <!-- the kiji-modeling jar -->
-    <fileSet>
-      <useDefaultExcludes>false</useDefaultExcludes>
-      <outputDirectory>lib</outputDirectory>
-      <directory>target</directory>
-      <includes>
-        <include>/kiji-modeling-${project.version}.jar</include>
-      </includes>
-      <fileMode>0644</fileMode>
-    </fileSet>
-    <fileSet>
-      <!-- scala api documentation -->
-      <useDefaultExcludes>false</useDefaultExcludes>
-      <outputDirectory>docs/apidocs</outputDirectory>
-      <directory>target/apidocs</directory>
-      <fileMode>0644</fileMode>
     </fileSet>
   </fileSets>
+  <files>
+    <file>
+      <source>example-pom.xml</source>
+      <outputDirectory></outputDirectory>
+      <destName>pom.xml</destName>
+      <fileMode>0644</fileMode>
+    </file>
+  </files>
 </assembly>

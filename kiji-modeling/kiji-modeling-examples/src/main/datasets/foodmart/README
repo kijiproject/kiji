@@ -1,0 +1,41 @@
+This directory contains two relevant files from the foodmart dataset (https://sites.google.com/a/dlpage.phi-integration.com/pentaho/mondrian/mysql-foodmart-database/foodmart_mysql.tar.gz). These contain a product catalog and orders.
+
+The files were available in SQL format. The relevant tables are described below. This directory contains a text dump of the tables listed below.
+
+mysql> describe product;
++--------------------+---------------+------+-----+---------+-------+
+| Field              | Type          | Null | Key | Default | Extra |
++--------------------+---------------+------+-----+---------+-------+
+| product_class_id   | int(11)       | NO   | MUL | NULL    |       |
+| product_id         | int(11)       | NO   | PRI | NULL    |       |
+| brand_name         | varchar(60)   | YES  | MUL | NULL    |       |
+| product_name       | varchar(60)   | NO   | MUL | NULL    |       |
+| SKU                | bigint(20)    | NO   | MUL | NULL    |       |
+| SRP                | decimal(10,4) | YES  |     | NULL    |       |
+| gross_weight       | double        | YES  |     | NULL    |       |
+| net_weight         | double        | YES  |     | NULL    |       |
+| recyclable_package | tinyint(1)    | YES  |     | NULL    |       |
+| low_fat            | tinyint(1)    | YES  |     | NULL    |       |
+| units_per_case     | smallint(6)   | YES  |     | NULL    |       |
+| cases_per_pallet   | smallint(6)   | YES  |     | NULL    |       |
+| shelf_width        | double        | YES  |     | NULL    |       |
+| shelf_height       | double        | YES  |     | NULL    |       |
+| shelf_depth        | double        | YES  |     | NULL    |       |
++--------------------+---------------+------+-----+---------+-------+
+15 rows in set (0.03 sec)
+
+mysql> describe sales_fact_1998;
++--------------+---------------+------+-----+---------+-------+
+| Field        | Type          | Null | Key | Default | Extra |
++--------------+---------------+------+-----+---------+-------+
+| product_id   | int(11)       | NO   | MUL | NULL    |       |
+| time_id      | int(11)       | NO   | MUL | NULL    |       |
+| customer_id  | int(11)       | NO   | MUL | NULL    |       |
+| promotion_id | int(11)       | NO   | MUL | NULL    |       |
+| store_id     | int(11)       | NO   | MUL | NULL    |       |
+| store_sales  | decimal(10,4) | NO   |     | NULL    |       |
+| store_cost   | decimal(10,4) | NO   |     | NULL    |       |
+| unit_sales   | decimal(10,4) | NO   |     | NULL    |       |
++--------------+---------------+------+-----+---------+-------+
+8 rows in set (0.00 sec)
+
