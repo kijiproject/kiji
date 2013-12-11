@@ -39,15 +39,17 @@ class ColumnSpecSuite extends FunSuite {
   // def filterSpec = new RegexQualifierColumnFilter(".*")
   val maxVersions = 2
 
-  val colWithOptions: QualifiedColumnInputSpec = QualifiedColumnInputSpec(
-      family = colFamily,
-      qualifier = colQualifier,
-      maxVersions = maxVersions,
-      filterSpec = filterSpec
-  )
+  val colWithOptions: QualifiedColumnInputSpec = QualifiedColumnInputSpec.builder
+      .withFamily(colFamily)
+      .withQualifier(colQualifier)
+      .withMaxVersions(maxVersions)
+      .withFilterSpec(filterSpec)
+      .build
 
   test("Fields of a ColumnFamilyInputSpec are the same as those it is constructed with.") {
-    val col: ColumnFamilyInputSpec = new ColumnFamilyInputSpec(family = colFamily)
+    val col: ColumnFamilyInputSpec = ColumnFamilyInputSpec.builder
+        .withFamily(colFamily)
+        .build
     assert(colFamily === col.family)
   }
 
@@ -105,16 +107,16 @@ class ColumnSpecSuite extends FunSuite {
   }
 
   test("Two ColumnFamilys with the same parameters are equal and hash to the same value.") {
-    val col1 = new ColumnFamilyInputSpec(colFamily)
-    val col2 = new ColumnFamilyInputSpec(colFamily)
+    val col1 = ColumnFamilyInputSpec.builder.withFamily(colFamily).build
+    val col2 = ColumnFamilyInputSpec.builder.withFamily(colFamily).build
 
     assert(col1 === col2)
     assert(col1.hashCode() === col2.hashCode())
   }
 
   test("Two qualified columns with the same parameters are equal and hash to the same value.") {
-    val col1 = new QualifiedColumnInputSpec(colFamily, colQualifier)
-    val col2 = new QualifiedColumnInputSpec(colFamily, colQualifier)
+    val col1 = QualifiedColumnInputSpec.builder.withColumn(colFamily, colQualifier).build
+    val col2 = QualifiedColumnInputSpec.builder.withColumn(colFamily, colQualifier).build
 
     assert(col1 === col2)
     assert(col1.hashCode() === col2.hashCode())
@@ -134,11 +136,11 @@ class ColumnSpecSuite extends FunSuite {
 
   test("ColumnInputSpec with the same maxVersions & filter are equal and hash to the same value.") {
 
-    val col2: QualifiedColumnInputSpec = new QualifiedColumnInputSpec(
-        colFamily, colQualifier,
-        filterSpec = filterSpec,
-        maxVersions = maxVersions
-    )
+    val col2: QualifiedColumnInputSpec = QualifiedColumnInputSpec.builder
+        .withColumn(colFamily, colQualifier)
+        .withFilterSpec(filterSpec)
+        .withMaxVersions(maxVersions)
+        .build
     assert(col2 === colWithOptions)
     assert(col2.hashCode() === colWithOptions.hashCode())
   }

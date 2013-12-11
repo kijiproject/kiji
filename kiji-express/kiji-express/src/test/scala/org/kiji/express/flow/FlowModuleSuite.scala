@@ -56,18 +56,20 @@ class FlowModuleSuite extends FunSuite {
   }
 
   test("Flow module permits specifying a qualifier regex on ColumnFamilyInputSpec.") {
-    val colReq = new ColumnFamilyInputSpec(
-        "search",
-        filterSpec = ColumnFilterSpec.RegexQualifierFilterSpec(""".*\.com""")
-    )
+    val colReq = ColumnFamilyInputSpec.builder
+        .withFamily("search")
+        .withFilterSpec(ColumnFilterSpec.RegexQualifierFilterSpec(""".*\.com"""))
+        .build
 
     // TODO: Test it filters keyvalues correctly.
     assert(colReq.filterSpec.isInstanceOf[ColumnFilterSpec.RegexQualifierFilterSpec])
   }
 
   test("Flow module permits specifying a qualifier regex (with filter) on ColumnFamilyInputSpec.") {
-    val colReq = new ColumnFamilyInputSpec("search",
-      filterSpec = ColumnFilterSpec.RegexQualifierFilterSpec(""".*\.com"""))
+    val colReq = ColumnFamilyInputSpec.builder
+        .withFamily("search")
+        .withFilterSpec(ColumnFilterSpec.RegexQualifierFilterSpec(""".*\.com"""))
+        .build
 
     // TODO: Test it filters keyvalues correctly.
     assert(colReq.filterSpec.isInstanceOf[ColumnFilterSpec.RegexQualifierFilterSpec])
@@ -79,7 +81,10 @@ class FlowModuleSuite extends FunSuite {
   }
 
   test("Flow module permits specifying versions on a group-type column.") {
-    val colReq = QualifiedColumnInputSpec("info", "word", maxVersions=2)
+    val colReq = QualifiedColumnInputSpec.builder
+        .withColumn("info", "word")
+        .withMaxVersions(2)
+        .build
     assert(2 === colReq.maxVersions)
   }
 
@@ -149,7 +154,10 @@ class FlowModuleSuite extends FunSuite {
 
     KijiInput(
         tableURI,
-        Map(QualifiedColumnInputSpec("info", "word", maxVersions = 1) -> 'word)
+        Map(QualifiedColumnInputSpec.builder
+            .withColumn("info", "word")
+            .withMaxVersions(1)
+            .build -> 'word)
     )
 
     KijiInput(
@@ -168,8 +176,14 @@ class FlowModuleSuite extends FunSuite {
     KijiInput(
         tableURI,
         Map(
-            QualifiedColumnInputSpec("info", "word", maxVersions = 1) -> 'word,
-            QualifiedColumnInputSpec("info", "title", maxVersions = 2) -> 'title))
+            QualifiedColumnInputSpec.builder
+                .withColumn("info", "word")
+                .withMaxVersions(1)
+                .build -> 'word,
+            QualifiedColumnInputSpec.builder
+                .withColumn("info", "title")
+                .withMaxVersions(2)
+                .build -> 'title))
   }
 
   test("Flow module permits creating KijiSource with the default timestamp field") {

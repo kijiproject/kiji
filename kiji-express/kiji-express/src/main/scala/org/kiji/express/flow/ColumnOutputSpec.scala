@@ -51,7 +51,6 @@ import org.kiji.schema.KijiInvalidNameException
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-@Inheritance.Sealed
 sealed trait ColumnOutputSpec {
   /**
    * Column family to write data to.
@@ -128,7 +127,6 @@ object ColumnOutputSpec {
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-@Inheritance.Sealed
 final class QualifiedColumnOutputSpec private(
     val family: String,
     val qualifier: String,
@@ -432,7 +430,6 @@ object QualifiedColumnOutputSpec {
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-@Inheritance.Sealed
 final class ColumnFamilyOutputSpec private(
     val family: String,
     val qualifierSelector: Symbol,

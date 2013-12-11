@@ -19,6 +19,8 @@
 
 package org.kiji.express.flow
 
+import com.google.common.base.Objects
+
 import org.apache.avro.Schema
 import org.apache.avro.specific.SpecificRecord
 
@@ -52,7 +54,6 @@ import org.kiji.schema.KijiInvalidNameException
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-@Inheritance.Sealed
 sealed trait ColumnInputSpec {
   /**
    * Maximum number of cells to retrieve starting from the most recent cell. By default, only the
@@ -111,7 +112,7 @@ object ColumnInputSpec {
   val DEFAULT_MAX_VERSIONS = latest
   val DEFAULT_PAGING_SPEC = PagingSpec.Off
   val DEFAULT_SCHEMA_SPEC = SchemaSpec.Writer
-  val DEFAULT_COLUMN_FILTER = ColumnFilterSpec.NoColumnFilterSpec
+  val DEFAULT_COLUMN_FILTER_SPEC = ColumnFilterSpec.NoColumnFilterSpec
 
   /**
    * A request for data from a Kiji table column. The input spec will be for a qualified column if
@@ -120,7 +121,7 @@ object ColumnInputSpec {
    *
    * @param column name of the requested data.
    * @param maxVersions to read back from the requested column (default is only most recent).
-   * @param filterSpec to use when reading back cells (default is `None`).
+   * @param filterSpec to use when reading back cells (default is NoColumnFilterSpec).
    * @param pagingSpec options specifying the maximum number of cells to retrieve from Kiji
    *        per page.
    * @param schemaSpec specifies the schema to use when reading cells. Defaults to
@@ -130,7 +131,7 @@ object ColumnInputSpec {
   def apply(
       column: String,
       maxVersions: Int = DEFAULT_MAX_VERSIONS,
-      filterSpec: ColumnFilterSpec = DEFAULT_COLUMN_FILTER,
+      filterSpec: ColumnFilterSpec = DEFAULT_COLUMN_FILTER_SPEC,
       pagingSpec: PagingSpec = DEFAULT_PAGING_SPEC,
       schemaSpec: SchemaSpec = DEFAULT_SCHEMA_SPEC
   ): ColumnInputSpec = {
@@ -238,23 +239,54 @@ object ColumnInputSpec {
  * @param family of columns the requested data belongs to.
  * @param qualifier of the column the requested data belongs to.
  * @param maxVersions to read back from the requested column (default is only most recent).
- * @param filterSpec to use when reading back cells (default is `None`).
+ * @param filterSpec to use when reading back cells (default is NoColumnFilterSpec).
  * @param pagingSpec options specifying the maximum number of cells to retrieve from Kiji per page.
  * @param schemaSpec specifies the schema to use when reading cells. Defaults to
  *     [[org.kiji.express.flow.SchemaSpec.Writer]].
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-@Inheritance.Sealed
-final case class QualifiedColumnInputSpec(
-    family: String,
-    qualifier: String,
-    maxVersions: Int = ColumnInputSpec.DEFAULT_MAX_VERSIONS,
-    filterSpec: ColumnFilterSpec = ColumnInputSpec.DEFAULT_COLUMN_FILTER,
-    pagingSpec: PagingSpec = ColumnInputSpec.DEFAULT_PAGING_SPEC,
-    schemaSpec: SchemaSpec = ColumnInputSpec.DEFAULT_SCHEMA_SPEC
-) extends ColumnInputSpec {
-  override val columnName: KijiColumnName = new KijiColumnName(family, qualifier)
+final class QualifiedColumnInputSpec private(
+    val family: String,
+    val qualifier: String,
+    val maxVersions: Int = ColumnInputSpec.DEFAULT_MAX_VERSIONS,
+    val filterSpec: ColumnFilterSpec = ColumnInputSpec.DEFAULT_COLUMN_FILTER_SPEC,
+    val pagingSpec: PagingSpec = ColumnInputSpec.DEFAULT_PAGING_SPEC,
+    val schemaSpec: SchemaSpec = ColumnInputSpec.DEFAULT_SCHEMA_SPEC
+) extends ColumnInputSpec with Serializable {
+  override def columnName: KijiColumnName = new KijiColumnName(family, qualifier)
+
+  override def toString: String = Objects.toStringHelper(classOf[QualifiedColumnInputSpec])
+      .add("family", family)
+      .add("qualifier", qualifier)
+      .add("max_versions", maxVersions)
+      .add("filter_spec", filterSpec)
+      .add("paging_spec", pagingSpec)
+      .add("schema_spec", schemaSpec)
+      .toString
+
+  override def hashCode: Int =
+      Objects.hashCode(
+          family,
+          qualifier,
+          maxVersions: java.lang.Integer,
+          filterSpec,
+          pagingSpec,
+          schemaSpec)
+
+  override def equals(obj: Any): Boolean = {
+    if (!obj.isInstanceOf[QualifiedColumnInputSpec]) {
+      false
+    } else {
+      val other = obj.asInstanceOf[QualifiedColumnInputSpec]
+      family == other.family &&
+          qualifier == other.qualifier &&
+          maxVersions == other.maxVersions &&
+          filterSpec == other.filterSpec &&
+          pagingSpec == other.pagingSpec &&
+          schemaSpec == other.schemaSpec
+    }
+  }
 }
 
 /**
@@ -265,22 +297,6 @@ final case class QualifiedColumnInputSpec(
 @ApiStability.Experimental
 @Inheritance.Sealed
 object QualifiedColumnInputSpec {
-  /**
-   * Convenience function for creating a [[org.kiji.express.flow.QualifiedColumnInputSpec]] with
-   * a specific Avro record type.
-   *
-   * @param family of columns the requested data belongs to.
-   * @param qualifier of the column the requested data belongs to.
-   * @param specificRecord class to read from the column.
-   * @return a new column input spec with supplied options.
-   */
-  def apply(
-      family: String,
-      qualifier: String,
-      specificRecord: Class[_ <: SpecificRecord]
-  ): QualifiedColumnInputSpec = {
-    QualifiedColumnInputSpec(family, qualifier, schemaSpec = SchemaSpec.Specific(specificRecord))
-  }
 
   /**
    * Convenience function for creating a [[org.kiji.express.flow.QualifiedColumnInputSpec]] with
@@ -288,15 +304,46 @@ object QualifiedColumnInputSpec {
    *
    * @param family of columns the requested data belongs to.
    * @param qualifier of the column the requested data belongs to.
-   * @param schema of generic Avro type to read from the column.
+   * @param maxVersions to read back from the requested column (default is only most recent).
+   * @param filterSpec to use when reading back cells (default is NoColumnFilterSpec).
+   * @param pagingSpec options specifying the maximum number of cells to retrieve
+   *        from Kiji per page.
+   * @param schemaSpec specification with which to read data.
    * @return a new column input spec with supplied options.
    */
-  def apply(
+  private[express] def apply(
       family: String,
       qualifier: String,
-      schema: Schema
+      maxVersions: Int = ColumnInputSpec.DEFAULT_MAX_VERSIONS,
+      filterSpec: ColumnFilterSpec = ColumnInputSpec.DEFAULT_COLUMN_FILTER_SPEC,
+      pagingSpec: PagingSpec = ColumnInputSpec.DEFAULT_PAGING_SPEC,
+      schemaSpec: SchemaSpec = ColumnInputSpec.DEFAULT_SCHEMA_SPEC
   ): QualifiedColumnInputSpec = {
-    QualifiedColumnInputSpec(family, qualifier, schemaSpec = SchemaSpec.Generic(schema))
+    new QualifiedColumnInputSpec(
+        family,
+        qualifier,
+        maxVersions,
+        filterSpec,
+        pagingSpec,
+        schemaSpec)
+  }
+
+  private[express] def unapply(
+      target: Any
+  ): Option[(
+      String,
+      String,
+      Int,
+      ColumnFilterSpec,
+      PagingSpec,
+      SchemaSpec)] = PartialFunction.condOpt(target) {
+    case qcis: QualifiedColumnInputSpec => (
+        qcis.family,
+        qcis.qualifier,
+        qcis.maxVersions,
+        qcis.filterSpec,
+        qcis.pagingSpec,
+        qcis.schemaSpec)
   }
 
   /**
@@ -306,11 +353,12 @@ object QualifiedColumnInputSpec {
    *
    * @param column is the fully qualified column name of the requested data.
    * @param maxVersions to read back from the requested column (default is only most recent).
-   * @param filterSpec to use when reading back cells (default is `None`).
-   * @param pagingSpec options specifying the maximum number of cells to retrieve from Kiji per
-   *     page.
+   * @param filterSpec to use when reading back cells. Defaults to
+   *        [[org.kiji.express.flow.FilterSpec.NoColumnFilterSpec]].
+   * @param pagingSpec options specifying the maximum number of cells to retrieve from Kiji
+   *        per page. Defaults to [[org.kiji.express.flow.PagingSpec.Off]].
    * @param schemaSpec specifies the schema to use when reading cells. Defaults to
-   *     [[org.kiji.express.flow.SchemaSpec.Writer]].
+   *        [[org.kiji.express.flow.SchemaSpec.Writer]].
    * @return a new column input spec with supplied options.
    */
   private[express] def construct(
@@ -321,17 +369,279 @@ object QualifiedColumnInputSpec {
       schemaSpec: SchemaSpec
   ): QualifiedColumnInputSpec = {
     // Construct QualifiedColumnInputSpec
-    QualifiedColumnInputSpec(
+    new QualifiedColumnInputSpec(
         column.getFamily(),
         column.getQualifier(),
         Option(maxVersions) match {
           case None => ColumnInputSpec.DEFAULT_MAX_VERSIONS
           case _ => maxVersions
         },
-        Option(filterSpec).getOrElse(ColumnInputSpec.DEFAULT_COLUMN_FILTER),
+        Option(filterSpec).getOrElse(ColumnInputSpec.DEFAULT_COLUMN_FILTER_SPEC),
         Option(pagingSpec).getOrElse(ColumnInputSpec.DEFAULT_PAGING_SPEC),
         Option(schemaSpec).getOrElse(ColumnInputSpec.DEFAULT_SCHEMA_SPEC)
     )
+  }
+
+  /**
+   * Create a new QualifiedColumnInputSpec.Builder.
+   *
+   * @return a new QualifiedColumnInputSpec.Builder.
+   */
+  def builder: Builder = Builder()
+
+  /**
+   * Create a new QualifiedColumnInputSpec.Builder as a copy of the given Builder.
+   *
+   * @param other Builder to copy.
+   * @return a new QualifiedColumnInputSpec.Builder as a copy of the given Builder.
+   */
+  def builder(other: Builder): Builder = Builder(other)
+
+  /**
+   * Builder for QualifiedColumnInputSpec.
+   *
+   * @param fam optional family with which to initialize this builder.
+   * @param qual optional qualifier with which to initialize this builder.
+   * @param maxV optional maxVersions with which to initialize this builder.
+   * @param filSpec optional FilterSpec with which to initialize this builder.
+   * @param pagSpec optional PagingSpec with which to initialize this builder.
+   * @param schSpec optional SchemaSpec with which to initialize this builder.
+   */
+  final class Builder(
+      fam: Option[String],
+      qual: Option[String],
+      maxV: Option[Int],
+      filSpec: Option[ColumnFilterSpec],
+      pagSpec: Option[PagingSpec],
+      schSpec: Option[SchemaSpec]
+  ) {
+    private[this] val monitor = new AnyRef
+    private var mFamily: Option[String] = fam
+    private var mQualifier: Option[String] = qual
+    private var mMaxVersions: Option[Int] = maxV
+    private var mFilterSpec: Option[ColumnFilterSpec] = filSpec
+    private var mPagingSpec: Option[PagingSpec] = pagSpec
+    private var mSchemaSpec: Option[SchemaSpec] = schSpec
+
+    /**
+     * Configure the input spec to read the given Kiji column.
+     *
+     * @param column into which to read the values
+     * @param this builder.
+     */
+    def withColumn(column: KijiColumnName): Builder = monitor.synchronized {
+      require(column.isFullyQualified(), "Column must be fully qualified.")
+      require(None == mFamily, "Family already set to: " + mFamily.get)
+      require(None == mQualifier, "Qualifier already set to: " + mQualifier.get)
+      mFamily = Some(column.getFamily)
+      mQualifier = Some(column.getQualifier)
+      this
+    }
+
+    /**
+     * Configure the input spec to read the given Kiji column.
+     *
+     * @param family of the column from which to read.
+     * @param qualifier of the column from which to read.
+     * @param this builder.
+     */
+    def withColumn(family: String, qualifier: String): Builder = monitor.synchronized {
+      require(None == mFamily, "Family already set to: " + mFamily.get)
+      require(None == mQualifier, "Qualifier already set to: " + mQualifier.get)
+      mFamily = Some(family)
+      mQualifier = Some(qualifier)
+      this
+    }
+
+    /**
+     * Configure the input spec to read from the given Kiji column family. Must also call
+     * [[org.kiji.express.flow.QualifiedColumnInputSpec.Builder.withQualifier()]] before calling
+     * [[org.kiji.express.flow.QualifiedColumnInputSpec.Builder.build]].
+     *
+     * @param family of the column from which to read.
+     * @return this builder.
+     */
+    def withFamily(family: String): Builder = monitor.synchronized {
+      require(None == mFamily, "Family already set to: " + mFamily.get)
+      mFamily = Some(family)
+      this
+    }
+
+    /**
+     * Configure the input spec to read from the given Kiji column qualifier. Must also call
+     * [[org.kiji.express.flow.QualifiedColumnInputSpec.Builder.withFamily()]] before calling
+     * [[org.kiji.express.flow.QualifiedColumnInputSpec.Builder.build]].
+     *
+     * @param qualifier of the column from which to read.
+     * @return this builder.
+     */
+    def withQualifier(qualifier: String): Builder = monitor.synchronized {
+      require(None == mQualifier, "Qualifier already set to: " + mQualifier.get)
+      mQualifier = Some(qualifier)
+      this
+    }
+
+    /**
+     * Name of the Kiji column family from which to read.
+     *
+     * @return the name of the Kiji column family from which to read.
+     */
+    def family: Option[String] = mFamily
+
+    /**
+     * Name of the Kiji column qualifier from which to read.
+     *
+     * @return the name of the Kiji column qualifier from which to read.
+     */
+    def qualifier: Option[String] = mQualifier
+
+    /**
+     * Configure the input spec to read the specified maximum versions.
+     *
+     * @param maxVersions to read back from the requested column (default is only most recent).
+     * @return this builder.
+     */
+    def withMaxVersions(maxVersions: Int): Builder = monitor.synchronized {
+      require(None == mMaxVersions, "Max versions already set to: " + mMaxVersions.get)
+      require(0 < maxVersions, "Max versions must be strictly positive, instead got " + maxVersions)
+      mMaxVersions = Some(maxVersions)
+      this
+    }
+
+    /**
+     * The maximum number of versions requested for reading.
+     *
+     * @return the maximum versions to read back from requested column.
+     */
+    def maxVersions: Option[Int] = mMaxVersions
+
+    /**
+     * Configure the input spec to read using the given FilterSpec.
+     *
+     * @param filterSpec defining the filter which will be used to read this column.
+     * @return this builder.
+     */
+    def withFilterSpec(filterSpec: ColumnFilterSpec): Builder = monitor.synchronized {
+      require(None == mFilterSpec, "Filter spec already set to: " + mFilterSpec.get)
+      mFilterSpec = Some(filterSpec)
+      this
+    }
+
+    /**
+     * Specification of the filter to use when reading this column.
+     *
+     * @return a specification of the filter to use when reading this column.
+     */
+    def filterSpec: Option[ColumnFilterSpec] = mFilterSpec
+
+    /**
+     * Configure the input spec to page the read data according to the given specification.
+     *
+     * @param pagingSpec options specifying the maximum number of cells to retrieve from Kiji.
+     * @return this builder.
+     */
+    def withPagingSpec(pagingSpec: PagingSpec): Builder = monitor.synchronized {
+      require(None == mPagingSpec, "Paging spec already set to: " + mPagingSpec.get)
+      mPagingSpec = Some(pagingSpec)
+      this
+    }
+
+    /**
+     * Paging specification containing the maximum number of cells to retrieve from Kiji.
+     *
+     * @return paging specification containing the maximum number of cells to retrieve from Kiji.
+     */
+    def pagingSpec: Option[PagingSpec] = mPagingSpec
+
+    /**
+     * Configure the input spec to read using the given SchemaSpec.
+     *
+     * @param schemaSpec defining the Schema which will be used to read this column.
+     * @return this builder.
+     */
+    def withSchemaSpec(schemaSpec: SchemaSpec): Builder = monitor.synchronized {
+      require(None == mSchemaSpec, "Schema spec already set to: " + mSchemaSpec.get)
+      mSchemaSpec = Some(schemaSpec)
+      this
+    }
+
+    /**
+     * Specification of the Schema to use when reading this column.
+     *
+     * @return a specification of the Schema to use when reading this column.
+     */
+    def schemaSpec: Option[SchemaSpec] = mSchemaSpec
+
+    /**
+     * Build a new QualifiedColumnInputSpec from the values stored in this builder.
+     *
+     * @return a new QualifiedColumnInputSpec from the values stored in this builder.
+     */
+    def build: QualifiedColumnInputSpec = new QualifiedColumnInputSpec(
+      mFamily.getOrElse(throw new IllegalArgumentException("family must be specified.")),
+      mQualifier.getOrElse(throw new IllegalArgumentException("qualifier must be specified.")),
+      mMaxVersions.getOrElse(ColumnInputSpec.DEFAULT_MAX_VERSIONS),
+      mFilterSpec.getOrElse(ColumnInputSpec.DEFAULT_COLUMN_FILTER_SPEC),
+      mPagingSpec.getOrElse(ColumnInputSpec.DEFAULT_PAGING_SPEC),
+      mSchemaSpec.getOrElse(ColumnInputSpec.DEFAULT_SCHEMA_SPEC)
+    )
+
+    override def toString: String = Objects.toStringHelper(classOf[Builder])
+        .add("family", mFamily)
+        .add("qualifier", mQualifier)
+        .add("max_versions", mMaxVersions)
+        .add("filter_spec", mFilterSpec)
+        .add("paging_spec", mPagingSpec)
+        .add("schema_spec", mSchemaSpec)
+        .toString
+
+    override def hashCode: Int =
+        Objects.hashCode(mFamily, mQualifier, mMaxVersions, mFilterSpec, mPagingSpec, mSchemaSpec)
+
+    override def equals(target: Any): Boolean = {
+      if (!target.isInstanceOf[Builder]) {
+        false
+      } else {
+        val other: Builder = target.asInstanceOf[Builder]
+        family == other.family &&
+            qualifier == other.qualifier &&
+            maxVersions == other.maxVersions &&
+            filterSpec == other.filterSpec &&
+            pagingSpec == other.pagingSpec &&
+            schemaSpec == other.schemaSpec
+      }
+    }
+  }
+
+  /**
+   * Companion object providing factory methods for creating new instances of
+   * [[org.kiji.express.flow.QualifiedColumnInputSpec.Builder]].
+   */
+  @ApiAudience.Public
+  @ApiStability.Experimental
+  object Builder {
+
+    /**
+     * Create a new empty QualifiedColumnInputSpec.Builder.
+     *
+     * @return a new empty QualifiedColumnInputSpec.Builder.
+     */
+    private[express] def apply(): Builder = new Builder(None, None, None, None, None, None)
+
+    /**
+     * Create a new QualifiedColumnInputSpec.Builder as a copy of the given Builder.
+     *
+     * @param other Builder to copy.
+     * @return a new QualifiedColumnInputSpec.Builder as a copy of the given Builder.
+     */
+    private[express] def apply(other: Builder): Builder = {
+      new Builder(other.family,
+          other.qualifier,
+          other.maxVersions,
+          other.filterSpec,
+          other.pagingSpec,
+          other.schemaSpec)
+    }
   }
 }
 
@@ -388,25 +698,53 @@ object QualifiedColumnInputSpec {
  *
  * @param family of columns the requested data belongs to.
  * @param maxVersions to read back from the requested column family (default is only most recent).
- * @param filterSpec to use when reading back cells (default is `None`).
+ * @param filterSpec to use when reading back cells (default is NoColumnFilterSpec).
  * @param pagingSpec options specifying the maximum number of cells to retrieve from Kiji per page.
  * @param schemaSpec specifies the schema to use when reading cells. Defaults to
  *     [[org.kiji.express.flow.SchemaSpec.Writer]].
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-@Inheritance.Sealed
-final case class ColumnFamilyInputSpec(
-    family: String,
-    maxVersions: Int = ColumnInputSpec.DEFAULT_MAX_VERSIONS,
-    filterSpec: ColumnFilterSpec = ColumnInputSpec.DEFAULT_COLUMN_FILTER,
-    pagingSpec: PagingSpec = ColumnInputSpec.DEFAULT_PAGING_SPEC,
-    schemaSpec: SchemaSpec = ColumnInputSpec.DEFAULT_SCHEMA_SPEC
-) extends ColumnInputSpec {
+final class ColumnFamilyInputSpec private(
+    val family: String,
+    val maxVersions: Int = ColumnInputSpec.DEFAULT_MAX_VERSIONS,
+    val filterSpec: ColumnFilterSpec = ColumnInputSpec.DEFAULT_COLUMN_FILTER_SPEC,
+    val pagingSpec: PagingSpec = ColumnInputSpec.DEFAULT_PAGING_SPEC,
+    val schemaSpec: SchemaSpec = ColumnInputSpec.DEFAULT_SCHEMA_SPEC
+) extends ColumnInputSpec with Serializable {
   if (family.contains(':')) {
     throw new KijiInvalidNameException("Cannot have a ':' in family name for column family request")
   }
-  override val columnName: KijiColumnName = new KijiColumnName(family)
+  override def columnName: KijiColumnName = new KijiColumnName(family)
+
+  override def toString: String = Objects.toStringHelper(classOf[ColumnFamilyInputSpec])
+      .add("family", family)
+      .add("max_versions", maxVersions)
+      .add("filter_spec", filterSpec)
+      .add("paging_spec", pagingSpec)
+      .add("schema_spec", schemaSpec)
+      .toString
+
+  override def hashCode: Int =
+      Objects.hashCode(
+          family,
+          maxVersions: java.lang.Integer,
+          filterSpec,
+          pagingSpec,
+          schemaSpec)
+
+  override def equals(obj: Any): Boolean = {
+    if (!obj.isInstanceOf[ColumnFamilyInputSpec]) {
+      false
+    } else {
+      val other = obj.asInstanceOf[ColumnFamilyInputSpec]
+      family == other.family &&
+          maxVersions == other.maxVersions &&
+          filterSpec == other.filterSpec &&
+          pagingSpec == other.pagingSpec &&
+          schemaSpec == other.schemaSpec
+    }
+  }
 }
 
 /**
@@ -417,34 +755,48 @@ final case class ColumnFamilyInputSpec(
 @ApiStability.Experimental
 @Inheritance.Sealed
 object ColumnFamilyInputSpec {
-  /**
-   * Convenience function for creating a [[org.kiji.express.flow.ColumnFamilyInputSpec]] with a
-   * specific Avro record type.
-   *
-   * @param family of columns the requested data belongs to.
-   * @param specificRecord class to read from the column.
-   * @return a new column input spec with supplied options.
-   */
-  def apply(
-      family: String,
-      specificRecord: Class[_ <: SpecificRecord]
-  ): ColumnFamilyInputSpec = {
-    ColumnFamilyInputSpec(family, schemaSpec = SchemaSpec.Specific(specificRecord))
-  }
 
   /**
-   * Convenience function for creating a [[org.kiji.express.flow.ColumnFamilyInputSpec]] with a
-   * generic Avro type specified by a [[org.apache.avro.Schema]].
+   * Convenience function for creating a [[org.kiji.express.flow.ColumnFamilyInputSpec]] with
+   * a generic Avro type specified by a [[org.apache.avro.Schema]].
    *
    * @param family of columns the requested data belongs to.
-   * @param schema of Avro type to read from the column.
+   * @param maxVersions to read back from the requested column (default is only most recent).
+   * @param filterSpec to use when reading back cells (default is NoColumnFilterSpec).
+   * @param pagingSpec options specifying the maximum number of cells to retrieve
+   *        from Kiji per page.
+   * @param schemaSpec specification with which to read data.
    * @return a new column input spec with supplied options.
    */
-  def apply(
+  private[express] def apply(
       family: String,
-      schema: Schema
+      maxVersions: Int = ColumnInputSpec.DEFAULT_MAX_VERSIONS,
+      filterSpec: ColumnFilterSpec = ColumnInputSpec.DEFAULT_COLUMN_FILTER_SPEC,
+      pagingSpec: PagingSpec = ColumnInputSpec.DEFAULT_PAGING_SPEC,
+      schemaSpec: SchemaSpec = ColumnInputSpec.DEFAULT_SCHEMA_SPEC
   ): ColumnFamilyInputSpec = {
-    ColumnFamilyInputSpec(family, schemaSpec = SchemaSpec.Generic(schema))
+    new ColumnFamilyInputSpec(
+        family,
+        maxVersions,
+        filterSpec,
+        pagingSpec,
+        schemaSpec)
+  }
+
+  private[express] def unapply(
+      target: Any
+  ): Option[(
+      String,
+      Int,
+      ColumnFilterSpec,
+      PagingSpec,
+      SchemaSpec)] = PartialFunction.condOpt(target) {
+    case qcis: ColumnFamilyInputSpec => (
+        qcis.family,
+        qcis.maxVersions,
+        qcis.filterSpec,
+        qcis.pagingSpec,
+        qcis.schemaSpec)
   }
 
   /**
@@ -454,9 +806,9 @@ object ColumnFamilyInputSpec {
    *
    * @param column family name of the requested data.
    * @param maxVersions to read back from the requested column (default is only most recent).
-   * @param filterSpec to use when reading back cells (default is `None`).
+   * @param filterSpec to use when reading back cells (default is NoColumnFilterSpec).
    * @param pagingSpec options specifying the maximum number of cells to retrieve from Kiji per
-   *     page.
+   *     page. Defaults to [[org.kiji.express.flow.PagingSpec.Off]].
    * @param schemaSpec specifies the schema to use when reading cells. Defaults to
    *     [[org.kiji.express.flow.SchemaSpec.Writer]].
    * @return a new column input spec with supplied options.
@@ -468,16 +820,231 @@ object ColumnFamilyInputSpec {
       pagingSpec: PagingSpec,
       schemaSpec: SchemaSpec
   ): ColumnFamilyInputSpec = {
-    // Construct QualifiedColumnInputSpec
+    // Construct ColumnFamilyInputSpec
     ColumnFamilyInputSpec(
         column.getFamily(),
         Option(maxVersions) match {
           case None => ColumnInputSpec.DEFAULT_MAX_VERSIONS
           case _ => maxVersions
         },
-        Option(filterSpec).getOrElse(ColumnInputSpec.DEFAULT_COLUMN_FILTER),
+        Option(filterSpec).getOrElse(ColumnInputSpec.DEFAULT_COLUMN_FILTER_SPEC),
         Option(pagingSpec).getOrElse(ColumnInputSpec.DEFAULT_PAGING_SPEC),
         Option(schemaSpec).getOrElse(ColumnInputSpec.DEFAULT_SCHEMA_SPEC)
     )
+  }
+
+  /**
+   * Create a new ColumnFamilyInputSpec.Builder.
+   *
+   * @return a new ColumnFamilyInputSpec.Builder.
+   */
+  def builder: Builder = Builder()
+
+  /**
+   * Create a new ColumnFamilyInputSpec.Builder as a copy of the given Builder.
+   *
+   * @param other Builder to copy.
+   * @return a new ColumnFamilyInputSpec.Builder as a copy of the given Builder.
+   */
+  def builder(other: Builder): Builder = Builder(other)
+
+  /**
+   * Builder for ColumnFamilyInputSpec.
+   *
+   * @param fam optional family with which to initialize this builder.
+   * @param maxV optional maxVersions with which to initialize this builder.
+   * @param filSpec optional FilterSpec with which to initialize this builder.
+   * @param pagSpec optional PagingSpec with which to initialize this builder.
+   * @param schSpec optional SchemaSpec with which to initialize this builder.
+   */
+  final class Builder(
+      fam: Option[String],
+      maxV: Option[Int],
+      filSpec: Option[ColumnFilterSpec],
+      pagSpec: Option[PagingSpec],
+      schSpec: Option[SchemaSpec]
+  ) {
+    private[this] val monitor = new AnyRef
+    private var mFamily: Option[String] = fam
+    private var mMaxVersions: Option[Int] = maxV
+    private var mFilterSpec: Option[ColumnFilterSpec] = filSpec
+    private var mPagingSpec: Option[PagingSpec] = pagSpec
+    private var mSchemaSpec: Option[SchemaSpec] = schSpec
+
+    /**
+     * Configure the input spec to read the given Kiji column family.
+     *
+     * @param column family into which to read the values
+     * @param this builder.
+     */
+    def withColumn(column: KijiColumnName): Builder = monitor.synchronized {
+      require(!column.isFullyQualified(), "Column family may not be fully qualified.")
+      require(None == mFamily, "Family already set to: " + mFamily.get)
+      mFamily = Some(column.getFamily)
+      this
+    }
+
+    /**
+     * Configure the input spec to read from the given Kiji column family.
+     *
+     * @param family of the column from which to read.
+     * @return this builder.
+     */
+    def withFamily(family: String): Builder = monitor.synchronized {
+      require(None == mFamily, "Family already set to: " + mFamily.get)
+      mFamily = Some(family)
+      this
+    }
+
+    /**
+     * Name of the Kiji column family from which to read.
+     *
+     * @return the name of the Kiji column family from which to read.
+     */
+    def family: Option[String] = mFamily
+
+    /**
+     * Configure the input spec to read the specified maximum versions.
+     *
+     * @param maxVersions to read back from the requested column (default is only most recent).
+     * @return this builder.
+     */
+    def withMaxVersions(maxVersions: Int): Builder = monitor.synchronized {
+      require(None == mMaxVersions, "Max versions already set to: " + mMaxVersions.get)
+      require(0 < maxVersions, "Max versions must be strictly positive, instead got " + maxVersions)
+      mMaxVersions = Some(maxVersions)
+      this
+    }
+
+    /**
+     * The maximum number of versions requested for reading.
+     *
+     * @return the maximum versions to read back from requested column.
+     */
+    def maxVersions: Option[Int] = mMaxVersions
+
+    /**
+     * Configure the input spec to read using the given FilterSpec.
+     *
+     * @param filterSpec defining the filter which will be used to read this column.
+     * @return this builder.
+     */
+    def withFilterSpec(filterSpec: ColumnFilterSpec): Builder = monitor.synchronized {
+      require(None == mFilterSpec, "Filter spec already set to: " + mFilterSpec.get)
+      mFilterSpec = Some(filterSpec)
+      this
+    }
+
+    /**
+     * Specification of the filter to use when reading this column.
+     *
+     * @return a specification of the filter to use when reading this column.
+     */
+    def filterSpec: Option[ColumnFilterSpec] = mFilterSpec
+
+    /**
+     * Configure the input spec to page the read data according to the given specification.
+     *
+     * @param pagingSpec options specifying the maximum number of cells to retrieve from Kiji.
+     * @return this builder.
+     */
+    def withPagingSpec(pagingSpec: PagingSpec): Builder = monitor.synchronized {
+      require(None == mPagingSpec, "Paging spec already set to: " + mPagingSpec.get)
+      mPagingSpec = Some(pagingSpec)
+      this
+    }
+
+    /**
+     * Paging specification containing the maximum number of cells to retrieve from Kiji.
+     *
+     * @return paging specification containing the maximum number of cells to retrieve from Kiji.
+     */
+    def pagingSpec: Option[PagingSpec] = mPagingSpec
+
+    /**
+     * Configure the input spec to read using the given SchemaSpec.
+     *
+     * @param schemaSpec defining the Schema which will be used to read this column.
+     * @return this builder.
+     */
+    def withSchemaSpec(schemaSpec: SchemaSpec): Builder = monitor.synchronized {
+      require(None == mSchemaSpec, "Schema spec already set to: " + mSchemaSpec.get)
+      mSchemaSpec = Some(schemaSpec)
+      this
+    }
+
+    /**
+     * Specification of the Schema to use when reading this column.
+     *
+     * @return a specification of the Schema to use when reading this column.
+     */
+    def schemaSpec: Option[SchemaSpec] = mSchemaSpec
+
+    /**
+     * Build a new ColumnFamilyInputSpec from the values stored in this builder.
+     *
+     * @return a new ColumnFamilyInputSpec from the values stored in this builder.
+     */
+    def build: ColumnFamilyInputSpec = new ColumnFamilyInputSpec(
+      mFamily.getOrElse(throw new IllegalArgumentException("family must be specified.")),
+      mMaxVersions.getOrElse(ColumnInputSpec.DEFAULT_MAX_VERSIONS),
+      mFilterSpec.getOrElse(ColumnInputSpec.DEFAULT_COLUMN_FILTER_SPEC),
+      mPagingSpec.getOrElse(ColumnInputSpec.DEFAULT_PAGING_SPEC),
+      mSchemaSpec.getOrElse(ColumnInputSpec.DEFAULT_SCHEMA_SPEC)
+    )
+
+    override def toString: String = Objects.toStringHelper(classOf[Builder])
+        .add("family", mFamily)
+        .add("max_versions", mMaxVersions)
+        .add("filter_spec", mFilterSpec)
+        .add("paging_spec", mPagingSpec)
+        .add("schema_spec", mSchemaSpec)
+        .toString
+
+    override def hashCode: Int =
+        Objects.hashCode(mFamily, mMaxVersions, mFilterSpec, mPagingSpec, mSchemaSpec)
+
+    override def equals(target: Any): Boolean = {
+      if (!target.isInstanceOf[Builder]) {
+        false
+      } else {
+        val other: Builder = target.asInstanceOf[Builder]
+        family == other.family &&
+            maxVersions == other.maxVersions &&
+            filterSpec == other.filterSpec &&
+            pagingSpec == other.pagingSpec &&
+            schemaSpec == other.schemaSpec
+      }
+    }
+  }
+
+  /**
+   * Companion object providing factory methods for creating new instances of
+   * [[org.kiji.express.flow.ColumnFamilyInputSpec.Builder]].
+   */
+  @ApiAudience.Public
+  @ApiStability.Experimental
+  object Builder {
+
+    /**
+     * Create a new empty ColumnFamilyInputSpec.Builder.
+     *
+     * @return a new empty ColumnFamilyInputSpec.Builder.
+     */
+    private[express] def apply(): Builder = new Builder(None, None, None, None, None)
+
+    /**
+     * Create a new ColumnFamilyInputSpec.Builder as a copy of the given Builder.
+     *
+     * @param other Builder to copy.
+     * @return a new ColumnFamilyInputSpec.Builder as a copy of the given Builder.
+     */
+    private[express] def apply(other: Builder): Builder = {
+      new Builder(other.family,
+          other.maxVersions,
+          other.filterSpec,
+          other.pagingSpec,
+          other.schemaSpec)
+    }
   }
 }

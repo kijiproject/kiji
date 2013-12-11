@@ -140,7 +140,10 @@ class KijiJobSuite extends KijiSuite {
         .arg("input", uri)
         .arg("output", "outputFile")
         .source(KijiInput(uri,
-            Map(QualifiedColumnInputSpec("family", "simple", SimpleRecord.getClassSchema)
+            Map(QualifiedColumnInputSpec.builder
+                .withColumn("family", "simple")
+                .withSchemaSpec(SchemaSpec.Generic(SimpleRecord.getClassSchema))
+                .build
                 -> 'slice)), input)
         .sink(Tsv("outputFile"))(validateUnpacking)
 
@@ -161,8 +164,11 @@ class KijiJobSuite extends KijiSuite {
         .arg("input", uri)
         .arg("output", "outputFile")
         .source(KijiInput(uri,
-      Map(QualifiedColumnInputSpec("family", "simple", classOf[SimpleRecord])
-          -> 'slice)), input)
+            Map(QualifiedColumnInputSpec.builder
+                .withColumn("family", "simple")
+                .withSchemaSpec(SchemaSpec.Specific(classOf[SimpleRecord]))
+                .build
+                -> 'slice)), input)
         .sink(Tsv("outputFile"))(validateUnpacking)
 
     // Run in local mode.
@@ -299,7 +305,11 @@ class PackSpecificRecordJob(args: Args) extends KijiJob(args) {
 
 class UnpackGenericRecordJob(args: Args) extends KijiJob(args) {
   KijiInput(args("input"),
-      Map(QualifiedColumnInputSpec("family", "simple", SimpleRecord.getClassSchema) -> 'slice))
+      Map(QualifiedColumnInputSpec.builder
+          .withColumn("family", "simple")
+          .withSchemaSpec(SchemaSpec.Generic(SimpleRecord.getClassSchema))
+          .build
+          -> 'slice))
       .mapTo('slice -> 'record) { slice: Seq[FlowCell[GenericRecord]] => slice.head.datum }
       .unpackTo[GenericRecord]('record -> ('l, 's, 'o))
       .write(Tsv(args("output")))
@@ -307,7 +317,11 @@ class UnpackGenericRecordJob(args: Args) extends KijiJob(args) {
 
 class UnpackSpecificRecordJob(args: Args) extends KijiJob(args) {
   KijiInput(args("input"),
-      Map(QualifiedColumnInputSpec("family", "simple", classOf[SimpleRecord]) -> 'slice))
+      Map(QualifiedColumnInputSpec.builder
+          .withColumn("family", "simple")
+          .withSchemaSpec(SchemaSpec.Specific(classOf[SimpleRecord]))
+          .build
+          -> 'slice))
       .map('slice -> 'record) { slice: Seq[FlowCell[SimpleRecord]] => slice.head.datum }
       .unpackTo[SimpleRecord]('record -> ('l, 's, 'o))
       .write(Tsv(args("output")))
