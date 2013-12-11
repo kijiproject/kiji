@@ -1,6 +1,9 @@
 
                               KijiREST Release Notes
 
+Version 1.1.0
+  * REST-85. Add archetype for creating Kiji Rest plugins.
+
 Version 1.0.0
   * REST-66. Incorporates native json formatted entity ids in POST.
       Cleans up row key specification language.

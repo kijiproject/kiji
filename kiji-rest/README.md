@@ -74,6 +74,16 @@ KijiREST is implemented using DropWizard. See
 for additional Dropwizard-specific configuration options such as server settings
 and logging options (console-logging, log files, and syslog).
 
+Creating a KijiRest Plugin
+--------------------------
+
+To create a KijiRest plugin project from the maven archetype, use the following command:
+
+mvn archetype:generate \
+-DarchetypeCatalog=https://repo.wibidata.com/artifactory/kiji-packages/archetype-catalog.xml
+
+From there you can choose the org.kiji.rest:plugin-archetype (A skeleton KijiRest plugin project.)
+option.
 
 Issues and mailing lists
 ------------------------

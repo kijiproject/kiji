@@ -20,15 +20,14 @@
   -->
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.kiji.rest</groupId>
-  <artifactId>kiji-rest</artifactId>
+  <groupId>\${groupId}</groupId>
+  <artifactId>\${artifactId}</artifactId>
+  <version>\${version}</version>
+  <packaging>jar</packaging>
 
-  <parent>
-    <groupId>org.kiji.rest</groupId>
-    <artifactId>kiji-rest-root</artifactId>
-    <version>1.1.0-SNAPSHOT</version>
-    <relativePath>..</relativePath>
-  </parent>
+  <name>Kiji Rest Plugin Skeleton</name>
+  <description>A skeleton Kiji Rest Plugin project.</description>
+  <url>http://www.kiji.org</url>
 
   <dependencies>
     <dependency>
@@ -38,9 +37,9 @@
     </dependency>
 
     <dependency>
-      <groupId>org.kiji.schema</groupId>
-      <artifactId>kiji-schema</artifactId>
-      <version>${kiji-schema.version}</version>
+      <groupId>org.kiji.rest</groupId>
+      <artifactId>kiji-rest</artifactId>
+      <version>${project.version}</version>
       <exclusions>
         <!-- Dropwizard works with the internals of logback which conflict
           with these excluded packages -->
@@ -51,20 +50,6 @@
         <exclusion>
           <artifactId>servlet-api</artifactId>
           <groupId>org.mortbay.jetty</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>org.kiji.scoring</groupId>
-      <artifactId>kiji-scoring</artifactId>
-      <version>${kiji-scoring.version}</version>
-      <exclusions>
-        <!-- Dropwizard works with the internals of logback which conflict
-          with these excluded packages -->
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-log4j12</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -203,25 +188,6 @@
       <scope>test</scope>
     </dependency>
 
-    <dependency>
-      <groupId>org.kiji.schema</groupId>
-      <artifactId>kiji-schema</artifactId>
-      <version>${kiji-schema.version}</version>
-      <type>test-jar</type>
-      <scope>test</scope>
-      <exclusions>
-        <!-- Dropwizard works with the internals of logback which conflict
-          with these excluded packages -->
-        <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>log4j-over-slf4j</artifactId>
-        </exclusion>
-       <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-log4j12</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
   </dependencies>
 
   <build>
@@ -238,30 +204,19 @@
         </configuration>
       </plugin>
 
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-checkstyle-plugin</artifactId>
-      </plugin>
-
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>findbugs-maven-plugin</artifactId>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.avro</groupId>
-        <artifactId>avro-maven-plugin</artifactId>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-assembly-plugin</artifactId>
-      </plugin>
     </plugins>
   </build>
+
+  <repositories>
+    <repository>
+      <id>kiji-repos</id>
+      <name>kiji-repos</name>
+      <url>https://repo.wibidata.com/artifactory/kiji</url>
+    </repository>
+    <repository>
+      <id>kiji-nightly</id>
+      <name>kiji-nightly</name>
+      <url>https://repo.wibidata.com/artifactory/kiji-nightly</url>
+    </repository>
+  </repositories>
 </project>
