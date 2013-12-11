@@ -79,7 +79,10 @@ class TopNextSongs(args: Args) extends KijiJob(args) {
   // 8. Creates an entity id for the songs table for each song.
   // 9. Writes each song's TopSongs record to Kiji.
   KijiInput(args("users-table"),
-      Map(QualifiedColumnInputSpec("info", "track_plays", all) -> 'playlist))
+      Map(QualifiedColumnInputSpec.builder
+          .withColumn("info", "track_plays")
+          .withMaxVersions(all)
+          .build -> 'playlist))
       .flatMap('playlist -> ('first_song, 'song_id)) { bigrams }
       .groupBy(('first_song, 'song_id)) { _.size('count) }
       .pack[SongCount](('song_id, 'count) -> 'song_count)
@@ -87,9 +90,11 @@ class TopNextSongs(args: Args) extends KijiJob(args) {
       .map('top_songs -> 'top_songs) { ts: List[SongCount] => ts.asJava }
       .pack[TopSongs]('top_songs -> 'top_next_songs)
       .map('first_song -> 'entityId) { firstSong: String => EntityId(firstSong) }
-      .write(KijiOutput(args("songs-table"),
-          Map('top_next_songs -> QualifiedColumnOutputSpec(
-              "info",
-              "top_next_songs",
-              schemaSpec = SchemaSpec.Specific(classOf[TopSongs])))))
+      .write(KijiOutput.builder
+          .withTableURI(args("songs-table"))
+          .withColumnSpecs('top_next_songs -> QualifiedColumnOutputSpec.builder
+              .withColumn("info", "top_next_songs")
+              .withSchemaSpec(SchemaSpec.Specific(classOf[TopSongs]))
+              .build)
+          .build)
 }

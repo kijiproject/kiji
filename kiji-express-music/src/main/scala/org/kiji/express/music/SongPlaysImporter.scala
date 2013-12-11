@@ -63,8 +63,9 @@ class SongPlaysImporter(args: Args) extends KijiJob(args) {
   TextLine(args("input"))
       .map('line -> ('userId, 'playTime, 'songId)) { parseJson }
       .map('userId -> 'entityId) { userId: String => EntityId(userId) }
-      .write(KijiOutput(
-          args("table-uri"),
-          'playTime,
-          Map('songId -> QualifiedColumnOutputSpec("info", "track_plays"))))
+      .write(KijiOutput.builder
+          .withTableURI(args("table-uri"))
+          .withTimestampField('playTime)
+          .withColumns('songId -> "info:track_plays")
+          .build)
 }

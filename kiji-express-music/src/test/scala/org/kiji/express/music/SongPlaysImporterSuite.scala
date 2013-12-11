@@ -68,8 +68,11 @@ class SongPlaysImporterSuite extends KijiSuite {
         .foreach { cell => assert("song-" + cell.version === cell.datum.toString) }
   }
 
-  val jobOutput = KijiOutput(tableURI, 'playTime, Map('songId ->
-      QualifiedColumnOutputSpec("info", "track_plays")))
+  val jobOutput = KijiOutput.builder
+      .withTableURI(tableURI)
+      .withTimestampField('playTime)
+      .withColumns('songId -> "info:track_plays")
+      .build
 
   // Run a test of the import job, running in Cascading's local runner.
   test("SongPlaysImporter puts JSON play records into the user table using local mode.") {

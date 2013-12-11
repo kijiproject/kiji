@@ -31,7 +31,7 @@ import org.kiji.express.flow.KijiInput
 import org.kiji.express.flow.KijiOutput
 import org.kiji.express.flow.KijiSource
 import org.kiji.express.flow.QualifiedColumnInputSpec
-import org.kiji.express.flow.QualifiedColumnOutputSpec
+import org.kiji.express.flow.SchemaSpec
 import org.kiji.express.music.avro.SongCount
 import org.kiji.express.music.avro.TopSongs
 
@@ -92,13 +92,17 @@ class SongRecommenderSuite extends KijiSuite {
     }
   }
 
-  val userSource: KijiSource = KijiInput(usersURI,
-      Map(QualifiedColumnInputSpec("info", "track_plays") -> 'trackPlays))
-  val songSource: KijiSource = KijiInput(songsURI,
-      Map(QualifiedColumnInputSpec("info", "top_next_songs", classOf[TopSongs])
-          -> 'topNextSongs))
-  val userSourceOut: KijiSource = KijiOutput(usersURI,
-      Map('nextSong -> QualifiedColumnOutputSpec("info", "next_song_rec")))
+  val userSource: KijiSource = KijiInput(usersURI, Map(QualifiedColumnInputSpec.builder
+      .withColumn("info", "track_plays")
+      .build -> 'trackPlays))
+  val songSource: KijiSource = KijiInput(songsURI, Map(QualifiedColumnInputSpec.builder
+      .withColumn("info", "top_next_songs")
+      .withSchemaSpec(SchemaSpec.Specific(classOf[TopSongs]))
+      .build -> 'topNextSongs))
+  val userSourceOut: KijiSource = KijiOutput.builder
+      .withTableURI(usersURI)
+      .withColumns('nextSong -> "info:next_song_rec")
+      .build
 
   test("songRecommender computes a recommendation for the next song to listen to. (Local)") {
     JobTest(new SongRecommender(_))

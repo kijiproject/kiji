@@ -81,7 +81,8 @@ class SongMetadataImporter(args: Args) extends KijiJob(args) {
       .packGenericRecord(
           ('song_name, 'album_name, 'artist_name, 'genre, 'tempo, 'duration) -> 'metadata)(
               metadataSchema)
-      .write(KijiOutput(
-          args("table-uri"),
-          Map('metadata -> QualifiedColumnOutputSpec("info", "metadata"))))
+      .write(KijiOutput.builder
+          .withTableURI(args("table-uri"))
+          .withColumns('metadata -> "info:metadata")
+          .build)
 }

@@ -106,14 +106,21 @@ class TopNextSongsSuite extends KijiSuite {
     JobTest(new TopNextSongs(_))
         .arg("users-table", usersURI)
         .arg("songs-table", songsURI)
-        .source(KijiInput(usersURI,
-            Map(QualifiedColumnInputSpec("info", "track_plays", flow.all)
-                -> 'playlist)), testInput)
-        .sink(KijiOutput(songsURI, Map('top_next_songs ->
-            QualifiedColumnOutputSpec(
-                "info",
-                "top_next_songs",
-                schemaSpec = SchemaSpec.Specific(classOf[TopSongs])))))(validateTest)
+        .source(KijiInput(
+            usersURI,
+            Map(QualifiedColumnInputSpec.builder
+                .withColumn("info", "track_plays")
+                .withMaxVersions(flow.all)
+                .build -> 'playlist)),
+            testInput)
+        .sink(KijiOutput.builder
+            .withTableURI(songsURI)
+            .withColumnSpecs('top_next_songs -> QualifiedColumnOutputSpec.builder
+                .withColumn("info", "top_next_songs")
+                .withSchemaSpec(SchemaSpec.Specific(classOf[TopSongs]))
+                .build)
+            .build
+        )(validateTest)
         .run
         .finish
   }
@@ -122,15 +129,20 @@ class TopNextSongsSuite extends KijiSuite {
     JobTest(new TopNextSongs(_))
         .arg("users-table", usersURI)
         .arg("songs-table", songsURI)
-        .source(KijiInput(usersURI,
-            Map(QualifiedColumnInputSpec("info", "track_plays", maxVersions = flow.all)
-                -> 'playlist)),
+        .source(KijiInput(
+            usersURI,
+            Map(QualifiedColumnInputSpec.builder
+                .withColumn("info", "track_plays")
+                .withMaxVersions(flow.all)
+                .build -> 'playlist)),
             testInput)
-        .sink(KijiOutput(songsURI, Map('top_next_songs ->
-            QualifiedColumnOutputSpec(
-                "info",
-                "top_next_songs",
-                schemaSpec = SchemaSpec.Specific(classOf[TopSongs]))))) { validateTest }
+        .sink(KijiOutput.builder.withTableURI(songsURI)
+            .withColumnSpecs('top_next_songs -> QualifiedColumnOutputSpec.builder
+                .withColumn("info", "top_next_songs")
+                .withSchemaSpec(SchemaSpec.Specific(classOf[TopSongs]))
+                .build)
+            .build
+        )(validateTest)
         .runHadoop
         .finish
   }
