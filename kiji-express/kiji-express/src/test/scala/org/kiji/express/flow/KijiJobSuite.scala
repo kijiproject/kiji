@@ -88,7 +88,11 @@ class KijiJobSuite extends KijiSuite {
         .arg("input", "inputFile")
         .arg("uri", uri)
         .source(Tsv("inputFile", fields = new Fields("l", "s")), rawInputs)
-        .sink(KijiOutput(uri, 'record -> "family:simple"))(validatePacking)
+        .sink(KijiOutput.builder
+            .withTableURI(uri)
+            .withColumns('record -> "family:simple")
+            .build
+        )(validatePacking)
 
     // Run in local mode.
     jobTest.run.finish
@@ -110,13 +114,15 @@ class KijiJobSuite extends KijiSuite {
         .arg("input", "inputFile")
         .arg("uri", uri)
         .source(Tsv("inputFile", fields = new Fields("l", "s")), rawInputs)
-        .sink(KijiOutput(uri,
-            Map('record ->
-                QualifiedColumnOutputSpec.builder
-                    .withColumn("family", "simple")
-                    .withSchemaSpec(Specific(classOf[SimpleRecord]))
-                    .build)))(
-                    validatePacking)
+        .sink(KijiOutput.builder
+            .withTableURI(uri)
+            .withColumnSpecs('record -> QualifiedColumnOutputSpec.builder
+                .withFamily("family")
+                .withQualifier("simple")
+                .withSchemaSpec(SchemaSpec.Specific(classOf[SimpleRecord]))
+                .build)
+            .build
+        )(validatePacking)
 
     // Run in local mode.
     jobTest.run.finish
@@ -169,7 +175,10 @@ class KijiJobSuite extends KijiSuite {
     class BasicJob(args: Args) extends KijiJob(args) {
       TextLine(args("input"))
         .map ('line -> 'entityId) { line: String => EntityId(line) }
-        .write(KijiOutput(args("output"), 'line -> "family:column1"))
+        .write(KijiOutput.builder
+            .withTableURI(args("output"))
+            .withColumns('line -> "family:column1")
+            .build)
     }
 
     val nonexistentInstanceURI: String = KijiURI.newBuilder(uri)
@@ -185,7 +194,11 @@ class KijiJobSuite extends KijiSuite {
         .arg("input", "inputFile")
         .arg("output", nonexistentInstanceURI)
         .source(TextLine("inputFile"), basicInput)
-        .sink(KijiOutput(nonexistentInstanceURI, 'line -> "family:column1"))(validateBasicJob)
+        .sink(KijiOutput.builder
+            .withTableURI(nonexistentInstanceURI)
+            .withColumns('line -> "family:column1")
+            .build
+        )(validateBasicJob)
 
     val hadoopException = intercept[InvalidKijiTapException] { jobTest.runHadoop.finish }
     val localException = intercept[InvalidKijiTapException] { jobTest.run.finish }
@@ -197,7 +210,10 @@ class KijiJobSuite extends KijiSuite {
   test("A KijiJob is not run if the Kiji table in the output doesn't exist.") {
     class BasicJob(args: Args) extends KijiJob(args) {
       TextLine(args("input"))
-        .write(KijiOutput(args("output"), 'line -> "family:column1"))
+        .write(KijiOutput.builder
+            .withTableURI(args("output"))
+            .withColumns('line -> "family:column1")
+            .build)
     }
 
     val nonexistentTableURI: String = KijiURI.newBuilder(uri)
@@ -213,7 +229,11 @@ class KijiJobSuite extends KijiSuite {
         .arg("input", "inputFile")
         .arg("output", nonexistentTableURI)
         .source(TextLine("inputFile"), basicInput)
-        .sink(KijiOutput(nonexistentTableURI, 'line -> "family:column1"))(validateBasicJob)
+        .sink(KijiOutput.builder
+            .withTableURI(nonexistentTableURI)
+            .withColumns('line -> "family:column1")
+            .build
+        )(validateBasicJob)
 
     val localException = intercept[InvalidKijiTapException] { jobTest.run.finish }
     val hadoopException = intercept[InvalidKijiTapException] { jobTest.runHadoop.finish }
@@ -225,7 +245,10 @@ class KijiJobSuite extends KijiSuite {
   test("A KijiJob is not run if any of the columns don't exist.") {
     class BasicJob(args: Args) extends KijiJob(args) {
       TextLine(args("input"))
-        .write(KijiOutput(args("output"), 'line -> "family:nonexistent_column"))
+        .write(KijiOutput.builder
+            .withTableURI(args("output"))
+            .withColumns('line -> "family:nonexistent_column")
+            .build)
     }
 
     val basicInput: List[(String, String)] = List[(String, String)]()
@@ -236,7 +259,11 @@ class KijiJobSuite extends KijiSuite {
         .arg("input", "inputFile")
         .arg("output", uri)
         .source(TextLine("inputFile"), basicInput)
-        .sink(KijiOutput(uri, 'line -> "family:nonexistent_column"))(validateBasicJob)
+        .sink(KijiOutput.builder
+            .withTableURI(uri)
+            .withColumns('line -> "family:nonexistent_column")
+            .build
+        )(validateBasicJob)
 
     val localException = intercept[InvalidKijiTapException] { jobTest.run.finish }
     val hadoopException = intercept[InvalidKijiTapException] { jobTest.runHadoop.finish }
@@ -250,19 +277,24 @@ class PackGenericRecordJob(args: Args) extends KijiJob(args) {
   Tsv(args("input"), fields = ('l, 's)).read
       .packGenericRecordTo(('l, 's) -> 'record)(SimpleRecord.getClassSchema)
       .insert('entityId, EntityId("foo"))
-      .write(KijiOutput(args("uri"), 'record -> "family:simple"))
+      .write(KijiOutput.builder
+          .withTableURI(args("uri"))
+          .withColumns('record -> "family:simple")
+          .build)
 }
 
 class PackSpecificRecordJob(args: Args) extends KijiJob(args) {
   Tsv(args("input"), fields = ('l, 's)).read
       .packTo[SimpleRecord](('l, 's) -> 'record)
       .insert('entityId, EntityId("foo"))
-      .write(KijiOutput(args("uri"),
-          Map('record ->
-              QualifiedColumnOutputSpec.builder
-                  .withColumn("family", "simple")
-                  .withSchemaSpec(Specific(classOf[SimpleRecord]))
-                  .build)))
+      .write(KijiOutput.builder
+          .withTableURI(args("uri"))
+          .withColumnSpecs('record -> QualifiedColumnOutputSpec.builder
+              .withFamily("family")
+              .withQualifier("simple")
+              .withSchemaSpec(SchemaSpec.Specific(classOf[SimpleRecord]))
+              .build)
+          .build)
 }
 
 class UnpackGenericRecordJob(args: Args) extends KijiJob(args) {

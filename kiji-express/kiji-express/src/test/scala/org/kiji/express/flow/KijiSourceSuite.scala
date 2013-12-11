@@ -152,7 +152,12 @@ class KijiSourceSuite
         .arg("input", "inputFile")
         .arg("output", uri)
         .source(TextLine("inputFile"), importMultipleTimestamps)
-        .sink(KijiOutput(uri, 'timestamp, 'word -> "family:column1"))(validateMultipleTimestamps)
+        .sink(KijiOutput.builder.
+            withTableURI(uri)
+            .withTimestampField('timestamp)
+            .withColumns('word -> "family:column1")
+            .build
+        )(validateMultipleTimestamps)
         // Run the test job.
         .run
         .finish
@@ -169,7 +174,12 @@ class KijiSourceSuite
         .arg("input", "inputFile")
         .arg("output", uri)
         .source(TextLine("inputFile"), importMultipleTimestamps)
-        .sink(KijiOutput(uri, 'timestamp, 'word -> "family:column1"))(validateMultipleTimestamps)
+        .sink(KijiOutput.builder
+            .withTableURI(uri)
+            .withTimestampField('timestamp)
+            .withColumns('word -> "family:column1")
+            .build
+        )(validateMultipleTimestamps)
         // Run the test job.
         .run
         .finish
@@ -226,7 +236,11 @@ class KijiSourceSuite
         .arg("input", "inputFile")
         .arg("output", uri)
         .source(TextLine("inputFile"), importInput)
-        .sink(KijiOutput(uri, 'word -> "family:column1"))(validateImport)
+        .sink(KijiOutput.builder
+            .withTableURI(uri)
+            .withColumns('word -> "family:column1")
+            .build
+        )(validateImport)
         // Run the test job.
         .run
         .finish
@@ -243,7 +257,11 @@ class KijiSourceSuite
         .arg("input", "inputFile")
         .arg("output", uri)
         .source(TextLine("inputFile"), importInput)
-        .sink(KijiOutput(uri, 'word -> "family:column1"))(validateImport)
+        .sink(KijiOutput.builder
+            .withTableURI(uri)
+            .withColumns('word -> "family:column1")
+            .build
+        )(validateImport)
         // Run the test job.
         .runHadoop
         .finish
@@ -280,7 +298,12 @@ class KijiSourceSuite
     .arg("input", "inputFile")
     .arg("output", uri)
     .source(TextLine("inputFile"), importWithTimeInput)
-    .sink(KijiOutput(uri, 'offset, 'line -> "family:column1"))(validateImportWithTime)
+    .sink(KijiOutput.builder
+        .withTableURI(uri)
+        .withTimestampField('offset)
+        .withColumns('line -> "family:column1")
+        .build
+    )(validateImportWithTime)
     // Run the test job.
     .run
     .finish
@@ -297,7 +320,12 @@ class KijiSourceSuite
     .arg("input", "inputFile")
     .arg("output", uri)
     .source(TextLine("inputFile"), importWithTimeInput)
-    .sink(KijiOutput(uri, 'offset, 'line -> "family:column1"))(validateImportWithTime)
+    .sink(KijiOutput.builder
+        .withTableURI(uri)
+        .withTimestampField('offset)
+        .withColumns('line -> "family:column1")
+        .build
+    )(validateImportWithTime)
     // Run the test job.
     .runHadoop
     .finish
@@ -387,17 +415,14 @@ class KijiSourceSuite
     // Build test job.
     class TestSpecificRecordWriteJob(args: Args) extends KijiJob(args) {
       Tsv(args("input"), ('entityId, 'fullname))
-          .write(
-              KijiOutput(
-                  tableUri = args("output"),
-                  columns = Map(
-                      'fullname -> QualifiedColumnOutputSpec(
-                          family = "info",
-                          qualifier = "fullname",
-                          schemaSpec = SchemaSpec.Specific(classOf[TestRecord])
-                      )
-                  )
-              )
+          .write(KijiOutput.builder
+              .withTableURI(args("output"))
+              .withColumnSpecs('fullname -> QualifiedColumnOutputSpec.builder
+                  .withFamily("info")
+                  .withQualifier("fullname")
+                  .withSchemaSpec(SchemaSpec.Specific(classOf[TestRecord]))
+                  .build)
+              .build
           )
     }
 
@@ -440,17 +465,15 @@ class KijiSourceSuite
         .arg("output", uri)
         .source(Tsv("inputFile", new Fields("entityId", "fullname")), inputRecords)
         .sink(
-            KijiOutput(
-                uri,
-                Map(
-                    'fullname -> QualifiedColumnOutputSpec(
-                        family = "info",
-                        qualifier = "fullname",
-                        schemaSpec = SchemaSpec.Specific(classOf[TestRecord])
-                    )
-                )
-            )
-        ) (validateSpecificWrite)
+            KijiOutput.builder
+                .withTableURI(uri)
+                .withColumnSpecs('fullname -> QualifiedColumnOutputSpec.builder
+                    .withFamily("info")
+                    .withQualifier("fullname")
+                    .withSchemaSpec(SchemaSpec.Specific(classOf[TestRecord]))
+                    .build)
+                .build
+        )(validateSpecificWrite)
         .run
         .runHadoop
         .finish
@@ -610,7 +633,11 @@ class KijiSourceSuite
       .arg("input", "inputFile")
       .arg("output", uri)
       .source(TextLine("inputFile"), genericWriteInput)
-      .sink(KijiOutput(uri, 'record -> "family:column4"))(validateGenericWrite)
+      .sink(KijiOutput.builder
+          .withTableURI(uri)
+          .withColumns('record -> "family:column4")
+          .build
+      )(validateGenericWrite)
 
     // Run in local mode.
     jobTest.run.finish
@@ -648,10 +675,14 @@ class KijiSourceSuite
         .arg("input", "inputFile")
         .arg("table", uri)
         .source(TextLine("inputFile"), mapTypeInput)
-        .sink(KijiOutput(uri, Map('resultCount -> ColumnFamilyOutputSpec.builder
-            .withFamily("searches")
-            .withQualifierSelector('terms)
-            .build))
+
+        .sink(KijiOutput.builder
+            .withTableURI(uri)
+            .withColumnSpecs('resultCount -> ColumnFamilyOutputSpec.builder
+                .withFamily("searches")
+                .withQualifierSelector('terms)
+                .build)
+            .build
         )(validateMapWrite)
 
     // Run the test.
@@ -806,7 +837,11 @@ object KijiSourceSuite {
           (timestamp.toLong, EntityId(eid), token)
         }
         // Write the results to the "family:column1" column of a Kiji table.
-        .write(KijiOutput(args("output"), 'timestamp, 'word -> "family:column1"))
+        .write(KijiOutput.builder
+            .withTableURI(args("output"))
+            .withTimestampField('timestamp)
+            .withColumns('word -> "family:column1")
+            .build)
   }
 
   /**
@@ -827,7 +862,10 @@ object KijiSourceSuite {
         .map('word -> 'entityId) { _: String =>
             EntityId(UUID.randomUUID().toString()) }
         // Write the results to the "family:column1" column of a Kiji table.
-        .write(KijiOutput(args("output"), 'word -> "family:column1"))
+        .write(KijiOutput.builder
+            .withTableURI(args("output"))
+            .withColumns('word -> "family:column1")
+            .build)
   }
 
   /**
@@ -845,7 +883,11 @@ object KijiSourceSuite {
         // Generate an entityId for each line.
         .map('line -> 'entityId) { EntityId(_: String) }
         // Write the results to the "family:column1" column of a Kiji table.
-        .write(KijiOutput(args("output"), 'offset, 'line -> "family:column1"))
+        .write(KijiOutput.builder
+            .withTableURI(args("output"))
+            .withTimestampField('offset)
+            .withColumns('line -> "family:column1")
+            .build)
   }
 
   /**
@@ -941,7 +983,10 @@ object KijiSourceSuite {
         .packGenericRecord(('l, 's) -> 'record)(SimpleRecord.getClassSchema)
         // Write the results to the "family:column4" column of a Kiji table.
         .project('entityId, 'record)
-        .write(KijiOutput(args("output"), 'record -> "family:column4"))
+        .write(KijiOutput.builder
+            .withTableURI(args("output"))
+            .withColumns('record -> "family:column4")
+            .build)
   }
 
   /**
@@ -962,8 +1007,13 @@ object KijiSourceSuite {
           (line.split(" ")(0), line.split(" ")(1).toInt)
         }
         // Write the results to the "family:column1" column of a Kiji table.
-        .write(KijiOutput(args("table"), Map('resultCount ->
-          ColumnFamilyOutputSpec("searches", 'terms))))
+        .write(KijiOutput.builder
+            .withTableURI(args("table"))
+            .withColumnSpecs('resultCount -> ColumnFamilyOutputSpec.builder
+                .withFamily("searches")
+                .withQualifierSelector('terms)
+                .build)
+            .build)
   }
 
   /**

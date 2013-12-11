@@ -52,9 +52,11 @@ class NewsgroupSegmenter(args: Args) extends KijiJob(args) {
       .map(() -> 'segment) {
         _: Unit => if (Random.nextInt(ratio + 1) >= 1) 1 else 0
       }
-      .write(KijiOutput(tableURIString, Map('segment ->
-          QualifiedColumnOutputSpec.builder
+      .write(KijiOutput.builder
+          .withTableURI(tableURIString)
+          .withColumnSpecs(Map('segment -> QualifiedColumnOutputSpec.builder
               .withColumn("info", "segment")
               .withSchemaSpec(Generic(Schema.create(Schema.Type.INT)))
-              .build)))
+              .build))
+          .build)
 }

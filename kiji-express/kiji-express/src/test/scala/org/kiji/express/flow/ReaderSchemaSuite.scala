@@ -248,6 +248,10 @@ class ReadWriteJob[T](
       .read
       .mapTo('slice -> ('value, 'time))(unwrap)
       .map('value -> 'entityId) { _: T => EntityId(writeEid)}
-      .write(KijiOutput(uri, 'time, Map('value -> output)))
+      .write(KijiOutput.builder
+          .withTableURI(uri)
+          .withTimestampField('time)
+          .withColumnSpecs(Map('value -> output))
+          .build)
 }
 

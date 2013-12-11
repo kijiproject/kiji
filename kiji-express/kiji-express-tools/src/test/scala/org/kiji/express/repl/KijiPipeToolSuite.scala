@@ -121,7 +121,7 @@ class KijiPipeToolSuite extends KijiSuite {
     // Implicitly create a KijiPipe, then call KijiPipeTool's run() method on it.
     Tsv(inputFile.getAbsolutePath, fields = ('l, 's)).read
         .insert('entityId, EntityId("foo"))
-        .write(KijiOutput(uri))
+        .write(KijiOutput.builder.withTableURI(uri).build)
         .packGenericRecordTo(('l, 's) -> 'record)(SimpleRecord.getClassSchema)
         .run
   }

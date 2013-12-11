@@ -133,8 +133,11 @@ class WriterSchemaSuite extends KijiClientTest with KijiSuite {
    */
   def testWrite[T](values: Iterable[T],
                    output: ColumnOutputSpec,
-                   verifier: (T, T) => Unit =  valueVerifier _) {
-    val outputSource = KijiOutput(uri, Map('value -> output))
+                   verifier: (T, T) => Unit = valueVerifier _) {
+    val outputSource = KijiOutput.builder
+        .withTableURI(uri)
+        .withColumnSpecs(Map('value -> output))
+        .build
     val inputs = eids.zip(values)
     expressWrite(conf, new Fields("entityId", "value"), inputs, outputSource)
     verify(inputs, output.columnName, verifier)
