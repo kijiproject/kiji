@@ -3,6 +3,15 @@
 
 Version 1.1.0
   * REST-85. Add archetype for creating Kiji Rest plugins.
+  * REST-63. KijiREST should have a mode to serve all Kiji instances in a cluster.
+  * REST-84. kiji-rest script should allow specifying JVM arguments.
+  * REST-76. KijiREST logging locations must be fully configurable
+  * REST-79. Don't close the underlying Kiji instance.
+  * REST-80. Correctly use KIJI_REST_CONF_DIR for location of conf directory.
+  * REST-69. Modularizes KijiREST in preparation for custom endpoints.
+
+Version 1.0.1
+  * REST-50. Fix a performance issue that was causing massive slowdowns.
 
 Version 1.0.0
   * REST-66. Incorporates native json formatted entity ids in POST.
