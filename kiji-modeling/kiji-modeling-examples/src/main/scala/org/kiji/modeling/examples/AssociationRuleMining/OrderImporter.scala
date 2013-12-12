@@ -40,9 +40,11 @@ class OrderImporter(args: Args) extends KijiModelingJob(args) {
       }
       .project('entityId, 'product_id)
       .insert('itemCount, 1)
-      .write(KijiOutput(outputUri,
-          Map('itemCount -> ColumnFamilyOutputSpec.builder
+      .write(KijiOutput.builder
+          .withTableURI(outputUri)
+          .withColumnSpecs(Map('itemCount -> ColumnFamilyOutputSpec.builder
               .withFamily("purchased_items")
               .withQualifierSelector('product_id)
-              .build)))
+              .build))
+          .build)
 }

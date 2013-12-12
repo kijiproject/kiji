@@ -93,8 +93,12 @@ class LMTrainerSuite extends KijiSuite {
                       tableUri.toString,
                       timeRange=All,
                       columnsToFields = Map(
-                          QualifiedColumnInputSpec("family", "column1") -> 'attributes,
-                          QualifiedColumnInputSpec("family", "column2") -> 'target)),
+                          QualifiedColumnInputSpec.builder
+                              .withColumn("family", "column1")
+                              .build -> 'attributes,
+                          QualifiedColumnInputSpec.builder
+                              .withColumn("family", "column2")
+                              .build -> 'target)),
                   "parameters" -> TextSourceSpec(
                       path = paramsFile
                   )

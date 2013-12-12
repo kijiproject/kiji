@@ -834,13 +834,13 @@ object ModelConverters {
       }
       val schema: SchemaSpec = schemaSpecFromAvro(col.getSchemaSpec)
 
-      new QualifiedColumnInputSpec(
-          family = col.getFamily,
-          qualifier = col.getQualifier,
-          maxVersions = col.getMaxVersions,
-          filterSpec = filter,
-          pagingSpec = paging,
-          schemaSpec = schema)
+      QualifiedColumnInputSpec.builder
+          .withColumn(col.getFamily, col.getQualifier)
+          .withMaxVersions(col.getMaxVersions)
+          .withFilterSpec(filter)
+          .withPagingSpec(paging)
+          .withSchemaSpec(schema)
+          .build
     }
     case col: AvroColumnFamilyInputSpec => {
       val filter: ColumnFilterSpec =
@@ -852,12 +852,13 @@ object ModelConverters {
       }
       val schema: SchemaSpec = schemaSpecFromAvro(col.getSchemaSpec)
 
-      ColumnFamilyInputSpec(
-          family = col.getFamily,
-          maxVersions = col.getMaxVersions,
-          filterSpec = filter,
-          pagingSpec = paging,
-          schemaSpec = schema)
+      ColumnFamilyInputSpec.builder
+          .withFamily(col.getFamily)
+          .withMaxVersions(col.getMaxVersions)
+          .withFilterSpec(filter)
+          .withPagingSpec(paging)
+          .withSchemaSpec(schema)
+          .build
     }
     // TODO: Real error message
     case col: Any => throw new ValidationException(

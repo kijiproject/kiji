@@ -91,12 +91,16 @@ class IterativePreparerSuite extends KijiSuite {
                       tableUri.toString,
                       timeRange=All,
                       columnsToFields =
-                          Map(QualifiedColumnInputSpec("family", "column1") -> 'word)),
+                          Map(QualifiedColumnInputSpec.builder
+                              .withColumn("family", "column1")
+                              .build -> 'word)),
                   "input2" -> KijiInputSpec(
                       tableUri.toString,
                       timeRange=All,
                       columnsToFields =
-                          Map(QualifiedColumnInputSpec("family", "column2") -> 'word))
+                          Map(QualifiedColumnInputSpec.builder
+                              .withColumn("family", "column2")
+                              .build -> 'word))
               ),
               outputSpec = Map(
                   "output" -> KijiOutputSpec(

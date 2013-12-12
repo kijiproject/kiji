@@ -108,7 +108,9 @@ class ModelExecutorSuite extends KijiSuite {
           KijiInputSpec(
             uri.toString,
             timeRange=All,
-            columnsToFields = Map(QualifiedColumnInputSpec("family", "column1") -> 'field)),
+            columnsToFields = Map(QualifiedColumnInputSpec.builder
+                .withColumn("family", "column1")
+                .build -> 'field)),
           KijiSingleColumnOutputSpec(uri.toString, QualifiedColumnOutputSpec.builder
               .withColumn("family", "column2")
               .build),
@@ -188,7 +190,9 @@ class ModelExecutorSuite extends KijiSuite {
                   inputUri.toString,
                   timeRange=All,
                   columnsToFields =
-                      Map(QualifiedColumnInputSpec("family", "column1") -> 'word))),
+                      Map(QualifiedColumnInputSpec.builder
+                          .withColumn("family", "column1")
+                          .build -> 'word))),
             outputSpec = Map("output" ->
                 KijiOutputSpec(
                     tableUri = outputUri.toString,
@@ -275,7 +279,9 @@ class ModelExecutorSuite extends KijiSuite {
                   inputUri.toString,
                   timeRange=All,
                   columnsToFields =
-                      Map(QualifiedColumnInputSpec("family", "column1") -> 'word))),
+                      Map(QualifiedColumnInputSpec.builder
+                          .withColumn("family", "column1")
+                          .build -> 'word))),
           outputSpec = Map("output" ->
               KijiOutputSpec(
                   tableUri = outputUri.toString,
@@ -393,7 +399,9 @@ class ModelExecutorSuite extends KijiSuite {
                     tableUri = inputUri.toString,
                     timeRange=All,
                     columnsToFields =
-                        Map(QualifiedColumnInputSpec("family", "column1") -> 'word))),
+                        Map(QualifiedColumnInputSpec.builder
+                            .withColumn("family", "column1")
+                            .build -> 'word))),
             outputSpec = Map("output" ->
                 KijiOutputSpec(
                     tableUri = prepareOutputUri.toString,
@@ -407,7 +415,9 @@ class ModelExecutorSuite extends KijiSuite {
                     tableUri = prepareOutputUri.toString,
                     timeRange=All,
                     columnsToFields =
-                        Map(QualifiedColumnInputSpec("family", "column") -> 'word))),
+                        Map(QualifiedColumnInputSpec.builder
+                            .withColumn("family", "column")
+                            .build -> 'word))),
             outputSpec = Map("output" ->
                 KijiOutputSpec(
                     tableUri = trainOutputUri.toString,
@@ -421,7 +431,9 @@ class ModelExecutorSuite extends KijiSuite {
                 tableUri = trainOutputUri.toString,
                 timeRange=All,
                 columnsToFields =
-                    Map(QualifiedColumnInputSpec("family", "column1") -> 'field)),
+                    Map(QualifiedColumnInputSpec.builder
+                        .withColumn("family", "column1")
+                        .build -> 'field)),
             outputSpec = KijiSingleColumnOutputSpec(
                 tableUri = trainOutputUri.toString,
                 QualifiedColumnOutputSpec.builder

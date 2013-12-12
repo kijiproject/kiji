@@ -88,7 +88,9 @@ class ScoreJobToolSuite extends KijiSuite {
                     uri.toString,
                     timeRange=All,
                     columnsToFields =
-                        Map(QualifiedColumnInputSpec("family", "column1") -> 'field)
+                        Map(QualifiedColumnInputSpec.builder
+                            .withColumn("family", "column1")
+                            .build -> 'field)
                 ),
                 KijiSingleColumnOutputSpec(
                     uri.toString,

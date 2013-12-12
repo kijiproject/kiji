@@ -72,9 +72,11 @@ class RuleMiner(args: Args) extends KijiModelingJob(args) with FieldConversions 
         }
       }
       // Write it to the appropriate column in the product table.
-      .write(KijiOutput(outputTableUri, Map('support ->
-          ColumnFamilyOutputSpec.builder
+      .write(KijiOutput.builder
+          .withTableURI(outputTableUri)
+          .withColumnSpecs(Map('support -> ColumnFamilyOutputSpec.builder
               .withFamily(outputColumn)
               .withQualifierSelector('recommendation)
-              .build)))
+              .build))
+          .build)
 }

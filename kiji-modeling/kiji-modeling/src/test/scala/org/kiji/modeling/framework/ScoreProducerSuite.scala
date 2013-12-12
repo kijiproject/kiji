@@ -89,7 +89,9 @@ class ScoreProducerSuite
                   uri.toString,
                   timeRange=All,
                   columnsToFields =
-                      Map(QualifiedColumnInputSpec("family", "column1") -> 'field)),
+                      Map(QualifiedColumnInputSpec.builder
+                          .withColumn("family", "column1")
+                          .build -> 'field)),
               KijiSingleColumnOutputSpec(uri.toString,
                   QualifiedColumnOutputSpec.builder
                       .withColumn("family", "column2")
@@ -165,8 +167,12 @@ class ScoreProducerSuite
                   uri.toString,
                   timeRange=All,
                   columnsToFields = Map(
-                      QualifiedColumnInputSpec("family", "column1") -> 'i1,
-                      QualifiedColumnInputSpec("family", "column2") -> 'i2)),
+                      QualifiedColumnInputSpec.builder
+                          .withColumn("family", "column1")
+                          .build -> 'i1,
+                      QualifiedColumnInputSpec.builder
+                          .withColumn("family", "column2")
+                          .build -> 'i2)),
               KijiSingleColumnOutputSpec(uri.toString,
                   QualifiedColumnOutputSpec.builder
                       .withColumn("family", "column2")
@@ -233,7 +239,9 @@ class ScoreProducerSuite
               KijiInputSpec(
                   uri.toString,
                   timeRange=All,
-                  columnsToFields = Map(QualifiedColumnInputSpec("family", "column") -> 'i1)),
+                  columnsToFields = Map(QualifiedColumnInputSpec.builder
+                      .withColumn("family", "column")
+                      .build -> 'i1)),
               KijiSingleColumnOutputSpec(uri.toString,
                   QualifiedColumnOutputSpec.builder
                       .withColumn("family", "column")
@@ -312,7 +320,9 @@ class ScoreProducerSuite
                   uri.toString,
                   timeRange=All,
                   columnsToFields =
-                      Map(QualifiedColumnInputSpec("family", "column1") -> 'feature)),
+                      Map(QualifiedColumnInputSpec.builder
+                          .withColumn("family", "column1")
+                          .build -> 'feature)),
               KijiSingleColumnOutputSpec(uri.toString,
                   QualifiedColumnOutputSpec.builder
                       .withColumn("family", "column2")
@@ -376,7 +386,9 @@ class ScoreProducerSuite
           KijiInputSpec(
             uri.toString,
             timeRange=All,
-            columnsToFields = Map(QualifiedColumnInputSpec("family", "column1") -> 'field)),
+            columnsToFields = Map(QualifiedColumnInputSpec.builder
+                .withColumn("family", "column1")
+                .build -> 'field)),
           KijiSingleColumnOutputSpec(uri.toString, QualifiedColumnOutputSpec.builder
               .withColumn("family", "column2")
               .build),

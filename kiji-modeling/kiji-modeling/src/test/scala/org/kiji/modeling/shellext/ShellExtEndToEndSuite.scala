@@ -89,7 +89,9 @@ class ShellExtEndToEnd extends ShellExtSuite {
               KijiInputSpec(
                   uri.toString,
                   timeRange=All,
-                  columnsToFields = Map(QualifiedColumnInputSpec("family", "column1") -> 'field)
+                  columnsToFields = Map(QualifiedColumnInputSpec.builder
+                      .withColumn("family", "column1")
+                      .build-> 'field)
               ),
               KijiSingleColumnOutputSpec(
                   uri.toString,

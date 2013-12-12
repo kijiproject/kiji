@@ -211,10 +211,10 @@ object ModelConvertersSuite {
   val testKijiInputSpec: KijiInputSpec = KijiInputSpec(
       tableUri = "kiji://.env/default/test",
       timeRange = Between(0L, Long.MaxValue - 1),
-      columnsToFields = Map(QualifiedColumnInputSpec(
-          "info",
-          "test",
-          filterSpec = testAndFilter) -> 'testField))
+      columnsToFields = Map(QualifiedColumnInputSpec.builder
+          .withColumn("info", "test")
+          .withFilterSpec(testAndFilter)
+          .build -> 'testField))
   val testTextSpec: TextSourceSpec = TextSourceSpec(
       path = "hdfs://test")
   val testSequenceFileSpec: SequenceFileSourceSpec = SequenceFileSourceSpec(

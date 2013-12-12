@@ -297,8 +297,15 @@ object ModelJobUtils {
     outputSpec match {
       case spec: KijiOutputSpec => {
         spec.timestampField match {
-          case Some(field) => KijiOutput(spec.tableUri, field, spec.fieldsToColumns)
-          case None => KijiOutput(spec.tableUri, spec.fieldsToColumns)
+          case Some(field) => KijiOutput.builder
+              .withTableURI(spec.tableUri)
+              .withTimestampField(field)
+              .withColumnSpecs(spec.fieldsToColumns)
+              .build
+          case None => KijiOutput.builder
+              .withTableURI(spec.tableUri)
+              .withColumnSpecs(spec.fieldsToColumns)
+              .build
         }
       }
 

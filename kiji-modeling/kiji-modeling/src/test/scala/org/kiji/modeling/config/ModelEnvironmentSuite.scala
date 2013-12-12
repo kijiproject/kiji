@@ -135,7 +135,10 @@ class ModelEnvironmentSuite extends FunSuite {
 
   test("Settings on a model environment can be modified.") {
     val timeRange = Between(0, 38475687)
-    val columns = Map(QualifiedColumnInputSpec("info", "in", maxVersions=3) -> 'tuplename)
+    val columns = Map(QualifiedColumnInputSpec.builder
+        .withColumn("info", "in")
+        .withMaxVersions(3)
+        .build -> 'tuplename)
 
     // Extract and score environments to use in tests.
     val inputSpec = KijiInputSpec("kiji://myuri", timeRange, columns)
@@ -181,7 +184,10 @@ class ModelEnvironmentSuite extends FunSuite {
 
   test("A ModelEnvironment can be serialized and deserialized again.") {
     val timeRange = Between(0, 38475687)
-    val columns = Map(QualifiedColumnInputSpec("info", "in", maxVersions=3) -> 'tuplename)
+    val columns = Map(QualifiedColumnInputSpec.builder
+        .withColumn("info", "in")
+        .withMaxVersions(3)
+        .build -> 'tuplename)
 
     val inputSpec = new KijiInputSpec("kiji://.env/default/table", timeRange, columns)
     val outputSpec = new KijiOutputSpec(
