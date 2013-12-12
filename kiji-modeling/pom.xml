@@ -151,6 +151,43 @@
     <pluginManagement>
       <plugins>
         <plugin>
+          <!--
+              Modeling depends on the oldest version of KijiSchema, KIJIMR, and KijiExpress that
+              support it.
+              To test whether the latest Kiji dependency SNAPSHOTs have introduced a regression:
+
+              Run the following commands in your shell
+
+              mvn versions:update-properties -N # Update the kiji-*.version properties
+                                                # in the top-level pom file; don't recurse.
+              mvn clean verify                  # Uses the new snapshot versions
+              mvn versions:revert               # Revert the pom file to before update-properties.
+                                      # Do not check in new Kiji SNAPSHOT dependencies in the pom.
+          -->
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>versions-maven-plugin</artifactId>
+          <configuration>
+            <includeProperties>kiji-schema.version,kiji-mapreduce.version,kiji-express.version</includeProperties>
+          </configuration>
+          <dependencies>
+            <dependency>
+              <groupId>org.kiji.schema</groupId>
+              <artifactId>kiji-schema</artifactId>
+              <version>${kiji-schema.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>org.kiji.mapreduce</groupId>
+              <artifactId>kiji-mapreduce</artifactId>
+              <version>${kiji-mapreduce.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>org.kiji.express</groupId>
+              <artifactId>kiji-express</artifactId>
+              <version>${kiji-express.version}</version>
+            </dependency>
+          </dependencies>
+        </plugin>
+        <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-jar-plugin</artifactId>
         </plugin>
