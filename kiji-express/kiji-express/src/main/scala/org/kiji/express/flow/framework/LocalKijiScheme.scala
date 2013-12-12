@@ -54,7 +54,6 @@ import org.kiji.schema.Kiji
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiDataRequest.Column
-import org.kiji.schema.KijiReaderFactory
 import org.kiji.schema.KijiRowData
 import org.kiji.schema.KijiRowScanner
 import org.kiji.schema.KijiTable
@@ -352,10 +351,8 @@ private[express] object LocalKijiScheme {
         .asScala
         .map { column: Column => (column.getColumnName, column.getReaderSpec) }
         .toMap
-    val readerOptions = KijiReaderFactory.KijiTableReaderOptions.Builder
-        .create()
+    table.getReaderFactory.readerBuilder()
         .withColumnReaderSpecOverrides(overrides.asJava)
-        .build()
-    table.getReaderFactory.openTableReader(readerOptions)
+        .buildAndOpen()
   }
 }
