@@ -49,7 +49,6 @@ import org.kiji.schema.HBaseEntityId;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
-import org.kiji.schema.KijiReaderFactory;
 import org.kiji.schema.KijiRegion;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiRowScanner;
@@ -280,11 +279,6 @@ public final class KijiTableInputFormat
           overridesBuilder.put(column.getColumnName(), column.getReaderSpec());
         }
       }
-      final KijiReaderFactory.KijiTableReaderOptions readerOptions =
-          KijiReaderFactory.KijiTableReaderOptions.Builder
-              .create()
-              .withColumnReaderSpecOverrides(overridesBuilder.build())
-              .build();
 
       final KijiScannerOptions scannerOptions = new KijiScannerOptions()
           .setStartRow(HBaseEntityId.fromHBaseRowKey(mSplit.getStartRow()))
@@ -297,7 +291,9 @@ public final class KijiTableInputFormat
       }
       mKiji = Kiji.Factory.open(inputURI, conf);
       mTable = mKiji.openTable(inputURI.getTable());
-      mReader = mTable.getReaderFactory().openTableReader(readerOptions);
+      mReader = mTable.getReaderFactory().readerBuilder()
+          .withColumnReaderSpecOverrides(overridesBuilder.build())
+          .buildAndOpen();
       mScanner = mReader.getScanner(mDataRequest, scannerOptions);
       mIterator = mScanner.iterator();
       mCurrentRow = null;
