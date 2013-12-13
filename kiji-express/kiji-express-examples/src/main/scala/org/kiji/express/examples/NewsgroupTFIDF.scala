@@ -49,7 +49,10 @@ class NewsgroupTFIDF(args: Args) extends KijiJob(args) {
   val outFile: String = args("out-file")
 
   // Calculates the number of posts which contain each word regardless of category.
-  val df = KijiInput(tableURIString, "info:segment" -> 'segment, "info:post" -> 'postText)
+  val df = KijiInput.builder
+      .withTableURI(tableURIString)
+      .withColumns("info:segment" -> 'segment, "info:post" -> 'postText)
+      .build
       // Include only items from the training segment.
       .filter('segment) {
         segment: Seq[FlowCell[Int]] => segment.head.datum == 1
@@ -65,7 +68,10 @@ class NewsgroupTFIDF(args: Args) extends KijiJob(args) {
       }
 
   // Calculates the number of posts within each category which contain each word.
-  val tf = KijiInput(tableURIString, "info:segment" -> 'segment, "info:post" -> 'postText)
+  val tf = KijiInput.builder
+      .withTableURI(tableURIString)
+      .withColumns("info:segment" -> 'segment, "info:post" -> 'postText)
+      .build
       // Include only items from the training segment.
       .filter('segment) {
         segment: Seq[FlowCell[Int]] => segment.head.datum == 1

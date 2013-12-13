@@ -97,7 +97,10 @@ class FlowModuleSuite extends FunSuite {
   }
 
   test("Flow module permits creating inputs and outputs with no mappings.") {
-    val input: KijiSource = KijiInput(tableURI, columns = Map[ColumnInputSpec, Symbol]())
+    val input: KijiSource = KijiInput.builder
+        .withTableURI(tableURI)
+        .withColumns(Map[String, Symbol]())
+        .build
     val output: KijiSource = KijiOutput.builder
         .withTableURI(tableURI)
         .withColumnSpecs(Map[Symbol, ColumnOutputSpec]())
@@ -110,7 +113,10 @@ class FlowModuleSuite extends FunSuite {
   }
 
   test("Flow module permits creating KijiSources as inputs with default options.") {
-    val input: KijiSource = KijiInput(tableURI, "info:word" -> 'word)
+    val input: KijiSource = KijiInput.builder
+        .withTableURI(tableURI)
+        .withColumns("info:word" -> 'word)
+        .build
     val expectedScheme = new KijiScheme(
         tableUri = KijiURI.newBuilder(tableURI).build(),
         timeRange = All,
@@ -121,7 +127,11 @@ class FlowModuleSuite extends FunSuite {
   }
 
   test("Flow module permits specifying timerange for KijiInput.") {
-    val input = KijiInput(tableURI, timeRange=Between(0L,40L), columns="info:word" -> 'word)
+    val input = KijiInput.builder
+        .withTableURI(tableURI)
+        .withTimeRange(Between(0L,40L))
+        .withColumns("info:word" -> 'word)
+        .build
     val expectedScheme = new KijiScheme(
         KijiURI.newBuilder(tableURI).build(),
         Between(0L, 40L),
@@ -132,7 +142,10 @@ class FlowModuleSuite extends FunSuite {
   }
 
   test("Flow module permits creating KijiSources with multiple columns.") {
-    val input: KijiSource = KijiInput(tableURI, "info:word" -> 'word, "info:title" -> 'title)
+    val input: KijiSource = KijiInput.builder
+        .withTableURI(tableURI)
+        .withColumns("info:word" -> 'word, "info:title" -> 'title)
+        .build
     val expectedScheme: KijiScheme = {
       new KijiScheme(
           KijiURI.newBuilder(tableURI).build(),
@@ -147,43 +160,41 @@ class FlowModuleSuite extends FunSuite {
   }
 
   test("Flow module permits specifying options for a column.") {
-    KijiInput(
-        tableURI,
-        Map(QualifiedColumnInputSpec("info", "word") -> 'word)
-    )
+    KijiInput.builder
+        .withTableURI(tableURI)
+        .withColumns("info:word" -> 'word)
+        .build
 
-    KijiInput(
-        tableURI,
-        Map(QualifiedColumnInputSpec.builder
+    KijiInput.builder
+        .withTableURI(tableURI)
+        .withColumnSpecs(QualifiedColumnInputSpec.builder
             .withColumn("info", "word")
             .withMaxVersions(1)
             .build -> 'word)
-    )
+        .build
 
-    KijiInput(
-        tableURI,
-        Map(
-            ColumnFamilyInputSpec(
-                "searches",
-                maxVersions = 1,
-                filterSpec = ColumnFilterSpec.RegexQualifierFilterSpec(".*")
-            ) -> 'word
-        )
-    )
+    KijiInput.builder
+        .withTableURI(tableURI)
+        .withColumnSpecs(ColumnFamilyInputSpec.builder
+            .withFamily("searches")
+            .withMaxVersions(1)
+            .withFilterSpec(ColumnFilterSpec.RegexQualifierFilterSpec(".*"))
+            .build -> 'word)
+        .build
   }
 
   test("Flow module permits specifying different options for different columns.") {
-    KijiInput(
-        tableURI,
-        Map(
-            QualifiedColumnInputSpec.builder
+    KijiInput.builder
+        .withTableURI(tableURI)
+        .withColumnSpecs(QualifiedColumnInputSpec.builder
                 .withColumn("info", "word")
                 .withMaxVersions(1)
                 .build -> 'word,
             QualifiedColumnInputSpec.builder
                 .withColumn("info", "title")
                 .withMaxVersions(2)
-                .build -> 'title))
+                .build -> 'title)
+        .build
   }
 
   test("Flow module permits creating KijiSource with the default timestamp field") {

@@ -82,7 +82,10 @@ class KijiPipeToolSuite extends KijiSuite {
   // a Scalding Job from the pipe.
   def jobToRun(args: Args): Job = {
     // Setup input to bind values from the "family:column1" column to the symbol 'word.
-    KijiInput(uri, "family:column1" -> 'word)
+    KijiInput.builder
+        .withTableURI(uri)
+        .withColumns("family:column1" -> 'word)
+        .build
     // Sanitize the word.
     .map('word -> 'cleanword) { words: Seq[FlowCell[CharSequence]] =>
       words.head.datum
@@ -98,7 +101,10 @@ class KijiPipeToolSuite extends KijiSuite {
 
   /** The job tester we'll use to run the test job in either local or hadoop mode. */
   val jobTest = JobTest(jobToRun(_))
-      .source(KijiInput(uri, "family:column1" -> 'word), wordCountInput(uri))
+      .source(KijiInput.builder
+          .withTableURI(uri)
+          .withColumns("family:column1" -> 'word)
+          .build, wordCountInput(uri))
       .sink(Tsv("outputFile"))(validateWordCount)
 
   test("A KijiPipeTool can be used to obtain a Scalding job that is run in local mode.") {

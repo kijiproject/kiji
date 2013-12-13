@@ -48,7 +48,10 @@ class NewsgroupSegmenter(args: Args) extends KijiJob(args) {
   val tableURIString: String = args("table")
   val ratio: Int = args.getOrElse("trainToTestRatio", "9").toInt
 
-  KijiInput(tableURIString, "info:group" -> 'group)
+  KijiInput.builder
+      .withTableURI(tableURIString)
+      .withColumns("info:group" -> 'group)
+      .build
       .map(() -> 'segment) {
         _: Unit => if (Random.nextInt(ratio + 1) >= 1) 1 else 0
       }

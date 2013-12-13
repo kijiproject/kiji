@@ -354,7 +354,7 @@ object QualifiedColumnInputSpec {
    * @param column is the fully qualified column name of the requested data.
    * @param maxVersions to read back from the requested column (default is only most recent).
    * @param filterSpec to use when reading back cells. Defaults to
-   *        [[org.kiji.express.flow.FilterSpec.NoColumnFilterSpec]].
+   *        [[org.kiji.express.flow.ColumnFilterSpec.NoColumnFilterSpec]].
    * @param pagingSpec options specifying the maximum number of cells to retrieve from Kiji
    *        per page. Defaults to [[org.kiji.express.flow.PagingSpec.Off]].
    * @param schemaSpec specifies the schema to use when reading cells. Defaults to
@@ -400,34 +400,34 @@ object QualifiedColumnInputSpec {
   /**
    * Builder for QualifiedColumnInputSpec.
    *
-   * @param fam optional family with which to initialize this builder.
-   * @param qual optional qualifier with which to initialize this builder.
-   * @param maxV optional maxVersions with which to initialize this builder.
-   * @param filSpec optional FilterSpec with which to initialize this builder.
-   * @param pagSpec optional PagingSpec with which to initialize this builder.
-   * @param schSpec optional SchemaSpec with which to initialize this builder.
+   * @param constructorFamily optional family with which to initialize this builder.
+   * @param constructorQualifier optional qualifier with which to initialize this builder.
+   * @param constructorMaxVersions optional maxVersions with which to initialize this builder.
+   * @param constructorFilterSpec optional FilterSpec with which to initialize this builder.
+   * @param constructorPagingSpec optional PagingSpec with which to initialize this builder.
+   * @param constructorSchemaSpec optional SchemaSpec with which to initialize this builder.
    */
   final class Builder(
-      fam: Option[String],
-      qual: Option[String],
-      maxV: Option[Int],
-      filSpec: Option[ColumnFilterSpec],
-      pagSpec: Option[PagingSpec],
-      schSpec: Option[SchemaSpec]
+      constructorFamily: Option[String],
+      constructorQualifier: Option[String],
+      constructorMaxVersions: Option[Int],
+      constructorFilterSpec: Option[ColumnFilterSpec],
+      constructorPagingSpec: Option[PagingSpec],
+      constructorSchemaSpec: Option[SchemaSpec]
   ) {
     private[this] val monitor = new AnyRef
-    private var mFamily: Option[String] = fam
-    private var mQualifier: Option[String] = qual
-    private var mMaxVersions: Option[Int] = maxV
-    private var mFilterSpec: Option[ColumnFilterSpec] = filSpec
-    private var mPagingSpec: Option[PagingSpec] = pagSpec
-    private var mSchemaSpec: Option[SchemaSpec] = schSpec
+    private var mFamily: Option[String] = constructorFamily
+    private var mQualifier: Option[String] = constructorQualifier
+    private var mMaxVersions: Option[Int] = constructorMaxVersions
+    private var mFilterSpec: Option[ColumnFilterSpec] = constructorFilterSpec
+    private var mPagingSpec: Option[PagingSpec] = constructorPagingSpec
+    private var mSchemaSpec: Option[SchemaSpec] = constructorSchemaSpec
 
     /**
      * Configure the input spec to read the given Kiji column.
      *
      * @param column into which to read the values
-     * @param this builder.
+     * @return this builder.
      */
     def withColumn(column: KijiColumnName): Builder = monitor.synchronized {
       require(column.isFullyQualified(), "Column must be fully qualified.")
@@ -443,7 +443,7 @@ object QualifiedColumnInputSpec {
      *
      * @param family of the column from which to read.
      * @param qualifier of the column from which to read.
-     * @param this builder.
+     * @return this builder.
      */
     def withColumn(family: String, qualifier: String): Builder = monitor.synchronized {
       require(None == mFamily, "Family already set to: " + mFamily.get)
@@ -851,31 +851,31 @@ object ColumnFamilyInputSpec {
   /**
    * Builder for ColumnFamilyInputSpec.
    *
-   * @param fam optional family with which to initialize this builder.
-   * @param maxV optional maxVersions with which to initialize this builder.
-   * @param filSpec optional FilterSpec with which to initialize this builder.
-   * @param pagSpec optional PagingSpec with which to initialize this builder.
-   * @param schSpec optional SchemaSpec with which to initialize this builder.
+   * @param constructorFamily optional family with which to initialize this builder.
+   * @param constructorMaxVersions optional maxVersions with which to initialize this builder.
+   * @param constructorFilterSpec optional FilterSpec with which to initialize this builder.
+   * @param constructorPagingSpec optional PagingSpec with which to initialize this builder.
+   * @param constructorSchemaSpec optional SchemaSpec with which to initialize this builder.
    */
   final class Builder(
-      fam: Option[String],
-      maxV: Option[Int],
-      filSpec: Option[ColumnFilterSpec],
-      pagSpec: Option[PagingSpec],
-      schSpec: Option[SchemaSpec]
+      constructorFamily: Option[String],
+      constructorMaxVersions: Option[Int],
+      constructorFilterSpec: Option[ColumnFilterSpec],
+      constructorPagingSpec: Option[PagingSpec],
+      constructorSchemaSpec: Option[SchemaSpec]
   ) {
     private[this] val monitor = new AnyRef
-    private var mFamily: Option[String] = fam
-    private var mMaxVersions: Option[Int] = maxV
-    private var mFilterSpec: Option[ColumnFilterSpec] = filSpec
-    private var mPagingSpec: Option[PagingSpec] = pagSpec
-    private var mSchemaSpec: Option[SchemaSpec] = schSpec
+    private var mFamily: Option[String] = constructorFamily
+    private var mMaxVersions: Option[Int] = constructorMaxVersions
+    private var mFilterSpec: Option[ColumnFilterSpec] = constructorFilterSpec
+    private var mPagingSpec: Option[PagingSpec] = constructorPagingSpec
+    private var mSchemaSpec: Option[SchemaSpec] = constructorSchemaSpec
 
     /**
      * Configure the input spec to read the given Kiji column family.
      *
      * @param column family into which to read the values
-     * @param this builder.
+     * @return this builder.
      */
     def withColumn(column: KijiColumnName): Builder = monitor.synchronized {
       require(!column.isFullyQualified(), "Column family may not be fully qualified.")

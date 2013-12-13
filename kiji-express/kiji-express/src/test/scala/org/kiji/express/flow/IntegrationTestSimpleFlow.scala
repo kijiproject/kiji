@@ -103,7 +103,10 @@ class IntegrationTestSimpleFlow extends AbstractKijiIntegrationTest {
             .build()
 
         class Job(args: Args) extends KijiJob(args) {
-          KijiInput(table.getURI.toString, "info:email" -> 'email)
+          KijiInput.builder
+              .withTableURI(table.getURI.toString)
+              .withColumns("info:email" -> 'email)
+              .build
               .groupAll { group => group.size() }
               .debug
               .write(NullSource)

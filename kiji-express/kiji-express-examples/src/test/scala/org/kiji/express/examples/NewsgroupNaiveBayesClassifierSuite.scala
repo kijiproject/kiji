@@ -95,12 +95,14 @@ class NewsgroupNaiveBayesClassifierSuite extends KijiSuite {
     JobTest(new NewsgroupClassifier(_))
       .arg("table", uri)
       .source(
-          KijiInput(
-              uri,
-              "info:segment" -> 'segment,
-              "info:post" -> 'postText,
-              "info:group" -> 'tag),
-        testTableRowsInput)
+          KijiInput.builder
+              .withTableURI(uri)
+              .withColumns(
+                  "info:segment" -> 'segment,
+                  "info:post" -> 'postText,
+                  "info:group" -> 'tag)
+              .build,
+          testTableRowsInput)
       .arg("out-file", outFile)
       .arg("data-root", dir.getAbsolutePath)
       .arg("weights-file", weightsFile)
@@ -117,12 +119,14 @@ class NewsgroupNaiveBayesClassifierSuite extends KijiSuite {
     JobTest(new NewsgroupClassifier(_))
       .arg("table", uri)
       .source(
-      KijiInput(
-        uri,
-        "info:segment" -> 'segment,
-        "info:post" -> 'postText,
-        "info:group" -> 'tag),
-      testTableRowsInput)
+      KijiInput.builder
+          .withTableURI(uri)
+          .withColumns(
+              "info:segment" -> 'segment,
+              "info:post" -> 'postText,
+              "info:group" -> 'tag)
+          .build,
+          testTableRowsInput)
       .arg("out-file", outFile)
       .arg("data-root", dir.getAbsolutePath)
       .arg("weights-file", weightsFile)

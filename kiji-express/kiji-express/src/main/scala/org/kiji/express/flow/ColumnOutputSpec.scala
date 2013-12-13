@@ -222,22 +222,22 @@ object QualifiedColumnOutputSpec {
   /**
    * Builder for QualifiedColumnOutputSpec.
    *
-   * @param fam optional family with which to initialize this builder.
-   * @param qual optional qualifier with which to initialize this builder.
-   * @param schSpec optional SchemaSpec with which to intialize this builder.
+   * @param constructorFamily optional family with which to initialize this builder.
+   * @param constructorQualifier optional qualifier with which to initialize this builder.
+   * @param constructorSchemaSpec optional SchemaSpec with which to intialize this builder.
    */
   @ApiAudience.Public
   @ApiStability.Experimental
   final class Builder private(
-      fam: Option[String],
-      qual: Option[String],
-      schSpec: Option[SchemaSpec]
+      constructorFamily: Option[String],
+      constructorQualifier: Option[String],
+      constructorSchemaSpec: Option[SchemaSpec]
   ) {
     private val monitor = new AnyRef
 
-    private var mFamily: Option[String] = fam
-    private var mQualifier: Option[String] = qual
-    private var mSchemaSpec: Option[SchemaSpec] = schSpec
+    private var mFamily: Option[String] = constructorFamily
+    private var mQualifier: Option[String] = constructorQualifier
+    private var mSchemaSpec: Option[SchemaSpec] = constructorSchemaSpec
 
     /**
      * Configure the output spec to write to the given Kiji column.
@@ -545,22 +545,23 @@ object ColumnFamilyOutputSpec {
   /**
    * Builder for ColumnFamilyOutputSpec.
    *
-   * @param fam optional family with which to initialize this builder.
-   * @param qualSel optional qualifier selector with which to initialize this builder.
-   * @param schSpec optional SchemaSpec with which to intialize this builder.
+   * @param constructorFamily optional family with which to initialize this builder.
+   * @param constructorQualifierSelector optional qualifier selector with which to initialize this
+   *     builder.
+   * @param constructorSchemaSpec optional SchemaSpec with which to intialize this builder.
    */
   @ApiAudience.Public
   @ApiStability.Experimental
   final class Builder private(
-      fam: Option[String],
-      qualSel: Option[Symbol],
-      schSpec: Option[SchemaSpec]
+      constructorFamily: Option[String],
+      constructorQualifierSelector: Option[Symbol],
+      constructorSchemaSpec: Option[SchemaSpec]
   ) {
     private val monitor = new AnyRef
 
-    private var mFamily: Option[String] = fam
-    private var mQualifierSelector: Option[Symbol] = qualSel
-    private var mSchemaSpec: Option[SchemaSpec] = schSpec
+    private var mFamily: Option[String] = constructorFamily
+    private var mQualifierSelector: Option[Symbol] = constructorQualifierSelector
+    private var mSchemaSpec: Option[SchemaSpec] = constructorSchemaSpec
 
     /**
      * Configure the output spec to write into the given column family.

@@ -88,20 +88,20 @@ object KijiOutput {
   /**
    * Builder for [[org.kiji.express.flow.KijiSource]]s to be used as outputs.
    *
-   * @param uri string of the table to which to write.
-   * @param timeField flow Field from which to read the timestamp.
-   * @param cols mapping from Field to output specification.
+   * @param constructorTableURI string of the table to which to write.
+   * @param constructorTimestampField flow Field from which to read the timestamp.
+   * @param constructorColumnSpecs mapping from Field to output specification.
    */
   final class Builder private[express](
-      val uri: Option[String],
-      val timeField: Option[Symbol],
-      val cols: Option[Map[Symbol, _ <: ColumnOutputSpec]]
+      val constructorTableURI: Option[String],
+      val constructorTimestampField: Option[Symbol],
+      val constructorColumnSpecs: Option[Map[Symbol, _ <: ColumnOutputSpec]]
   ) {
     private[this] val monitor = new AnyRef
 
-    private var mTableURI: Option[String] = uri
-    private var mTimestampField: Option[Symbol] = timeField
-    private var mColumnSpecs: Option[Map[Symbol, _ <: ColumnOutputSpec]] = cols
+    private var mTableURI: Option[String] = constructorTableURI
+    private var mTimestampField: Option[Symbol] = constructorTimestampField
+    private var mColumnSpecs: Option[Map[Symbol, _ <: ColumnOutputSpec]] = constructorColumnSpecs
 
     /**
      * Configure the KijiSource to write to the table with the given URI.
@@ -328,6 +328,8 @@ object KijiOutput {
    * Companion object providing factory methods for creating new instances of
    * [[org.kiji.express.flow.KijiOutput.Builder]].
    */
+  @ApiAudience.Public
+  @ApiStability.Experimental
   object Builder {
     /**
      * Create a new empty KijiOutput.Builder.

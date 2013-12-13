@@ -202,7 +202,10 @@ class EntityIdSuite extends KijiSuite {
       .arg("input", uri)
       .arg("side-input", "sideInputFile")
       .arg("output", "outputFile")
-      .source(KijiInput(uri, ("animals" -> 'animals)), joinKijiInput)
+      .source(KijiInput.builder
+          .withTableURI(uri)
+          .withColumns("animals" -> 'animals)
+          .build, joinKijiInput)
       .source(TextLine("sideInputFile"), sideInput)
       .sink(Tsv("outputFile"))(validateTest)
 
@@ -243,8 +246,14 @@ class EntityIdSuite extends KijiSuite {
       .arg("input1", uri)
       .arg("input2", uri)
       .arg("output", "outputFile")
-      .source(KijiInput(uri, ("family:column1" -> 'animals)), joinInput1)
-      .source(KijiInput(uri, ("family:column2" -> 'slice)), joinInput2)
+      .source(KijiInput.builder
+          .withTableURI(uri)
+          .withColumns("family:column1" -> 'animals)
+          .build, joinInput1)
+      .source(KijiInput.builder
+          .withTableURI(uri)
+          .withColumns("family:column2" -> 'slice)
+          .build, joinInput2)
       .sink(Tsv("outputFile"))(validateTest)
 
     // Run the test in local mode.
@@ -278,8 +287,14 @@ class EntityIdSuite extends KijiSuite {
       .arg("input1", uri)
       .arg("input2", uri)
       .arg("output", "outputFile")
-      .source(KijiInput(uri, ("family:column1" -> 'animals)), joinInput1)
-      .source(KijiInput(uri, ("family:column2" -> 'slice)), joinInput2)
+      .source(KijiInput.builder
+          .withTableURI(uri)
+          .withColumns("family:column1" -> 'animals)
+          .build, joinInput1)
+      .source(KijiInput.builder
+          .withTableURI(uri)
+          .withColumns("family:column2" -> 'slice)
+          .build, joinInput2)
       .sink(Tsv("outputFile"))(validateTest)
 
     // Run the test in hadoop mode.
@@ -313,8 +328,14 @@ class EntityIdSuite extends KijiSuite {
       .arg("input1", uri)
       .arg("input2", uri)
       .arg("output", "outputFile")
-      .source(KijiInput(uri, ("searches" -> 'searches)), joinInput1)
-      .source(KijiInput(uri, ("animals" -> 'animals)), joinInput2)
+      .source(KijiInput.builder
+          .withTableURI(uri)
+          .withColumns("searches" -> 'searches)
+          .build, joinInput1)
+      .source(KijiInput.builder
+          .withTableURI(uri)
+          .withColumns("animals" -> 'animals)
+          .build, joinInput2)
       .sink(Tsv("outputFile"))(validateTest)
 
     // Run the test in local mode.
@@ -348,8 +369,14 @@ class EntityIdSuite extends KijiSuite {
       .arg("input1", uri)
       .arg("input2", uri)
       .arg("output", "outputFile")
-      .source(KijiInput(uri, ("searches" -> 'searches)), joinInput1)
-      .source(KijiInput(uri, ("animals" -> 'animals)), joinInput2)
+      .source(KijiInput.builder
+          .withTableURI(uri)
+          .withColumns("searches" -> 'searches)
+          .build, joinInput1)
+      .source(KijiInput.builder
+          .withTableURI(uri)
+          .withColumns("animals" -> 'animals)
+          .build, joinInput2)
       .sink(Tsv("outputFile"))(validateTest)
 
     // Run the test in hadoop mode.
@@ -389,7 +416,10 @@ object EntityIdSuite {
       .read
       .map('line -> 'entityId) { line: String => EntityId(line) }
 
-    KijiInput(args("input"), ("animals" -> 'animals))
+    KijiInput.builder
+        .withTableURI(args("input"))
+        .withColumns("animals" -> 'animals)
+        .build
 
       .map('animals -> 'terms) { animals: Seq[FlowCell[CharSequence]] => animals.toString }
       .joinWithSmaller('entityId -> 'entityId, sidePipe)
@@ -409,10 +439,13 @@ object EntityIdSuite {
       .map('line -> 'entityId) { line: String => EntityId(line) }
       .project('entityId)
 
-    KijiInput(args("input"), ("family:column1" -> 'slice))
-      .map('slice -> 'terms) { slice: Seq[FlowCell[CharSequence]] => slice.head.datum.toString }
-      .joinWithSmaller('entityId -> 'entityId, sidePipe)
-      .write(Tsv(args("output")))
+    KijiInput.builder
+        .withTableURI(args("input"))
+        .withColumns("family:column1" -> 'slice)
+        .build
+        .map('slice -> 'terms) { slice: Seq[FlowCell[CharSequence]] => slice.head.datum.toString }
+        .joinWithSmaller('entityId -> 'entityId, sidePipe)
+        .write(Tsv(args("output")))
   }
 
   /**
@@ -422,15 +455,26 @@ object EntityIdSuite {
    *     Kiji table, and "output", which specifies the path to a text file.
    */
   class JoinHashedEntityIdsJob(args: Args) extends KijiJob(args) {
-    val pipe1 = KijiInput(args("input1"), ("family:column1" -> 'animals))
+    val pipe1 = KijiInput.builder
+        .withTableURI(args("input1"))
+        .withColumns("family:column1" -> 'animals)
+        .build
 
-    KijiInput(args("input2"), ("family:column2" -> 'slice))
-      .map('animals -> 'animal) { slice: Seq[FlowCell[CharSequence]] => slice.head.datum.toString }
+    KijiInput.builder
+        .withTableURI(args("input2"))
+        .withColumns("family:column2" -> 'slice)
+        .build
+        .map('animals -> 'animal) {
+          slice: Seq[FlowCell[CharSequence]] => slice.head.datum.toString
+        }
 
-    KijiInput(args("input2"), ("family:column2" -> 'slice))
-      .map('slice -> 'terms) { slice:Seq[FlowCell[CharSequence]] => slice.head.datum.toString }
-      .joinWithSmaller('entityId -> 'entityId, pipe1)
-      .write(Tsv(args("output")))
+    KijiInput.builder
+        .withTableURI(args("input2"))
+        .withColumns("family:column2" -> 'slice)
+        .build
+        .map('slice -> 'terms) { slice:Seq[FlowCell[CharSequence]] => slice.head.datum.toString }
+        .joinWithSmaller('entityId -> 'entityId, pipe1)
+        .write(Tsv(args("output")))
   }
 
   /**
@@ -440,12 +484,20 @@ object EntityIdSuite {
    *     Kiji table, and "output", which specifies the path to a text file.
    */
   class JoinFormattedEntityIdsJob(args: Args) extends KijiJob(args) {
-    val pipe1 = KijiInput(args("input1"), ("searches" -> 'searches))
-      .map('searches -> 'term) { slice:Seq[FlowCell[Int]] => slice.head.datum }
+    val pipe1 = KijiInput.builder
+        .withTableURI(args("input1"))
+        .withColumns("searches" -> 'searches)
+        .build
+        .map('searches -> 'term) { slice:Seq[FlowCell[Int]] => slice.head.datum }
 
-    KijiInput(args("input2"), ("animals" -> 'animals))
-      .map('animals -> 'animal) { slice: Seq[FlowCell[CharSequence]] => slice.head.datum.toString }
-      .joinWithSmaller('entityId -> 'entityId, pipe1)
-      .write(Tsv(args("output")))
+    KijiInput.builder
+        .withTableURI(args("input2"))
+        .withColumns("animals" -> 'animals)
+        .build
+        .map('animals -> 'animal) {
+          slice: Seq[FlowCell[CharSequence]] => slice.head.datum.toString
+        }
+        .joinWithSmaller('entityId -> 'entityId, pipe1)
+        .write(Tsv(args("output")))
   }
 }

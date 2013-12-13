@@ -60,10 +60,13 @@ class NewsgroupClassifier(args: Args) extends KijiJob(args) {
 
   // Classifies the test posts based on weights calculated above and returns the percent of those
   // which matched their tagged group.
-  KijiInput(tableURIString,
-      "info:segment" -> 'segment,
-      "info:post" -> 'postText,
-      "info:group" -> 'tag)
+  KijiInput.builder
+      .withTableURI(tableURIString)
+      .withColumns(
+          "info:segment" -> 'segment,
+          "info:post" -> 'postText,
+          "info:group" -> 'tag)
+      .build
     // Include only items from the test segment.
     .filter('segment) {
       segment: Seq[FlowCell[Int]] => segment.head.datum == 0

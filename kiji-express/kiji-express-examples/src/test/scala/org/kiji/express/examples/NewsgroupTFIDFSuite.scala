@@ -80,7 +80,11 @@ class NewsgroupTFIDFSuite extends KijiSuite {
     JobTest(new NewsgroupTFIDF(_))
       .arg("out-file", outFile)
       .arg("table", uri)
-      .source(KijiInput(uri, "info:segment" -> 'segment, "info:post" -> 'postText), testInput)
+      .source(KijiInput.builder
+          .withTableURI(uri)
+          .withColumns("info:segment" -> 'segment, "info:post" -> 'postText)
+          .build,
+          testInput)
       .sink(Tsv(outFile, writeHeader = true))(validateTestLocal)
       .run
       .finish
@@ -90,7 +94,11 @@ class NewsgroupTFIDFSuite extends KijiSuite {
     JobTest(new NewsgroupTFIDF(_))
       .arg("table", uri)
       .arg("out-file", outFile)
-      .source(KijiInput(uri, "info:segment" -> 'segment, "info:post" -> 'postText), testInput)
+      .source(KijiInput.builder
+          .withTableURI(uri)
+          .withColumns("info:segment" -> 'segment, "info:post" -> 'postText)
+          .build,
+          testInput)
       .sink(Tsv(outFile, writeHeader = true))(validateTestHadoop)
       .runHadoop
       .finish

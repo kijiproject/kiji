@@ -33,8 +33,8 @@ import org.slf4j.LoggerFactory
 import com.twitter.scalding.Args
 import org.junit.Assert
 
+import org.kiji.express.flow.QualifiedColumnInputSpec
 import org.kiji.express.flow.QualifiedColumnOutputSpec
-import org.kiji.express.flow.ColumnInputSpec
 import org.kiji.express.flow.KijiInput
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiURI
@@ -115,20 +115,22 @@ class IntegrationTestKijiKryoHFileJob extends AbstractKijiIntegrationTest {
           .build()
 
         class TestHFileOutputJob(args: Args) extends HFileKijiJob(args) {
-          KijiInput(
-            table.getURI.toString,
-            Map(ColumnInputSpec("info:email", schema = Schema.create(Schema.Type.STRING))
-              -> 'email))
-            .debug
-            .write(
-            HFileKijiOutput(
-              table.getURI.toString,
-              tempHFileFolder.getAbsolutePath,
-              Map('email ->
-                QualifiedColumnOutputSpec(
-                  "info",
-                  "email",
-                  schemaSpec = Generic(Schema.create(Schema.Type.STRING))))))
+          KijiInput.builder
+              .withTableURI(table.getURI.toString)
+              .withColumnSpecs(QualifiedColumnInputSpec.builder
+                  .withColumn("info", "email")
+                  .withSchemaSpec(Generic(Schema.create(Schema.Type.STRING)))
+                  .build -> 'email)
+              .build
+              .debug
+              .write(
+              HFileKijiOutput(
+                table.getURI.toString,
+                tempHFileFolder.getAbsolutePath,
+                Map('email -> QualifiedColumnOutputSpec.builder
+                    .withColumn("info", "email")
+                    .withSchemaSpec(Generic(Schema.create(Schema.Type.STRING)))
+                    .build)))
         }
         Mode.mode = Hdfs(strict = false, conf = new JobConf(getConf))
         Assert.assertTrue(

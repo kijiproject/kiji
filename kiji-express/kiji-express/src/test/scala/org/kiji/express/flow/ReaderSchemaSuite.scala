@@ -244,7 +244,10 @@ class ReadWriteJob[T](
     (cell.datum, cell.version)
   }
 
-  KijiInput(uri, Map(input -> 'slice))
+  KijiInput.builder
+      .withTableURI(uri)
+      .withColumnSpecs(input -> 'slice)
+      .build
       .read
       .mapTo('slice -> ('value, 'time))(unwrap)
       .map('value -> 'entityId) { _: T => EntityId(writeEid)}

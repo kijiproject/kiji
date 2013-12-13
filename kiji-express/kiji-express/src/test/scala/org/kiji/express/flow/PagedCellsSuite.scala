@@ -43,17 +43,22 @@ import org.kiji.schema.layout.KijiTableLayouts
  */
 class WordConcatJob(args: Args) extends KijiJob(args) {
   // Setup input to bind values from the "family:column1" column to the symbol 'word.
-  KijiInput(
-      args("input"),
-      Map(ColumnInputSpec("family:column1", all, pagingSpec = PagingSpec.Cells(3)) -> 'word))
-    // Sanitize the word.
-    .map('word -> 'cleanword) { words: Seq[FlowCell[CharSequence]] =>
-      words.foldLeft("")((a: String, b: FlowCell[CharSequence]) => a + b.datum.toString)
-    }
-    // Count the occurrences of each word.
-    .groupBy('cleanword) { occurences => occurences.size }
-    // Write the result to a file.
-    .write(Tsv(args("output")))
+  KijiInput.builder
+      .withTableURI(args("input"))
+      .withColumnSpecs(QualifiedColumnInputSpec.builder
+          .withColumn("family", "column1")
+          .withMaxVersions(all)
+          .withPagingSpec(PagingSpec.Cells(3))
+          .build-> 'word)
+      .build
+      // Sanitize the word.
+      .map('word -> 'cleanword) { words: Seq[FlowCell[CharSequence]] =>
+        words.foldLeft("")((a: String, b: FlowCell[CharSequence]) => a + b.datum.toString)
+      }
+      // Count the occurrences of each word.
+      .groupBy('cleanword) { occurences => occurences.size }
+      // Write the result to a file.
+      .write(Tsv(args("output")))
 }
 
 /**
@@ -66,9 +71,14 @@ class WordConcatJob(args: Args) extends KijiJob(args) {
  */
 class WordCountFlatMapJob(args: Args) extends KijiJob(args) {
   // Setup input to bind values from the "family:column1" column to the symbol 'word.
-  KijiInput(
-      args("input"),
-      Map(ColumnInputSpec("family:column1", all, pagingSpec = PagingSpec.Cells(3)) -> 'word))
+  KijiInput.builder
+      .withTableURI(args("input"))
+      .withColumnSpecs(QualifiedColumnInputSpec.builder
+          .withColumn("family", "column1")
+          .withMaxVersions(all)
+          .withPagingSpec(PagingSpec.Cells(3))
+          .build -> 'word)
+      .build
 
       // Sanitize the word.
       .flatMap('word -> 'word) { words: Seq[FlowCell[CharSequence]] =>
@@ -112,9 +122,14 @@ class PagedCellsSuite extends KijiSuite {
       .arg("input", uri)
       .arg("output", "outputFile")
       .source(
-          KijiInput(
-            uri,
-            Map(ColumnInputSpec("family:column1", all, pagingSpec = PagingSpec.Cells(3)) -> 'word)),
+          KijiInput.builder
+              .withTableURI(uri)
+              .withColumnSpecs(QualifiedColumnInputSpec.builder
+                  .withColumn("family", "column1")
+                  .withMaxVersions(all)
+                  .withPagingSpec(PagingSpec.Cells(3))
+                  .build -> 'word)
+              .build,
           wordCountInput(uri))
       .sink(Tsv("outputFile"))(validateWordConcat)
       // Run the test job.
@@ -163,9 +178,10 @@ class PagedCellsSuite extends KijiSuite {
         .arg("input", uri)
         .arg("output", "outputFile")
         .source(
-            KijiInput(
-                uri,
-                Map(column1 -> 'word)),
+            KijiInput.builder
+                .withTableURI(uri)
+                .withColumnSpecs(column1 -> 'word)
+                .build,
             wordCountInput(uri))
         .sink(Tsv("outputFile"))(validateWordCount)
         // Run the test job.
