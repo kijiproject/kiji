@@ -52,11 +52,13 @@ class SongPlayCounter(args: Args) extends KijiJob(args) {
   // 2. Breaks each user's track plays history into individual songs.
   // 3. Counts the number of times each song has been played.
   // 4. Writes each song id and play count to a file in HDFS.
-  KijiInput(args("table-uri"),
-      Map(QualifiedColumnInputSpec.builder
+  KijiInput.builder
+      .withTableURI(args("table-uri"))
+      .withColumnSpecs(QualifiedColumnInputSpec.builder
           .withColumn("info", "track_plays")
           .withMaxVersions(all)
-          .build -> 'playlist))
+          .build -> 'playlist)
+      .build
       .flatMapTo('playlist -> 'song) { songsListenedTo }
       .groupBy('song) { _.size('songCount) }
       .write(Tsv(args("output")))

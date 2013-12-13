@@ -106,12 +106,13 @@ class TopNextSongsSuite extends KijiSuite {
     JobTest(new TopNextSongs(_))
         .arg("users-table", usersURI)
         .arg("songs-table", songsURI)
-        .source(KijiInput(
-            usersURI,
-            Map(QualifiedColumnInputSpec.builder
+        .source(KijiInput.builder
+            .withTableURI(usersURI)
+            .withColumnSpecs(QualifiedColumnInputSpec.builder
                 .withColumn("info", "track_plays")
                 .withMaxVersions(flow.all)
-                .build -> 'playlist)),
+                .build -> 'playlist)
+            .build,
             testInput)
         .sink(KijiOutput.builder
             .withTableURI(songsURI)
@@ -129,12 +130,13 @@ class TopNextSongsSuite extends KijiSuite {
     JobTest(new TopNextSongs(_))
         .arg("users-table", usersURI)
         .arg("songs-table", songsURI)
-        .source(KijiInput(
-            usersURI,
-            Map(QualifiedColumnInputSpec.builder
+        .source(KijiInput.builder
+            .withTableURI(usersURI)
+            .withColumnSpecs(QualifiedColumnInputSpec.builder
                 .withColumn("info", "track_plays")
                 .withMaxVersions(flow.all)
-                .build -> 'playlist)),
+                .build -> 'playlist)
+            .build,
             testInput)
         .sink(KijiOutput.builder.withTableURI(songsURI)
             .withColumnSpecs('top_next_songs -> QualifiedColumnOutputSpec.builder

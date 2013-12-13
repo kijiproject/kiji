@@ -70,10 +70,14 @@ class SongPlayCounterSuite extends KijiSuite {
     JobTest(new SongPlayCounter(_))
         .arg("table-uri", tableURI)
         .arg("output", "counts.tsv")
-        .source(KijiInput(tableURI, Map(QualifiedColumnInputSpec.builder
-            .withColumn("info", "track_plays")
-            .withMaxVersions(all)
-            .build -> 'playlist)), testInput)
+        .source(KijiInput.builder
+            .withTableURI(tableURI)
+            .withColumnSpecs(QualifiedColumnInputSpec.builder
+                .withColumn("info", "track_plays")
+                .withMaxVersions(all)
+                .build -> 'playlist)
+            .build,
+            testInput)
         .sink(Tsv("counts.tsv")) { validateTest }
         .run
         .finish
@@ -83,10 +87,14 @@ class SongPlayCounterSuite extends KijiSuite {
     JobTest(new SongPlayCounter(_))
         .arg("table-uri", tableURI)
         .arg("output", "counts.tsv")
-        .source(KijiInput(tableURI, Map(QualifiedColumnInputSpec.builder
-            .withColumn("info", "track_plays")
-            .withMaxVersions(all)
-            .build -> 'playlist)), testInput)
+        .source(KijiInput.builder
+            .withTableURI(tableURI)
+            .withColumnSpecs(QualifiedColumnInputSpec.builder
+                .withColumn("info", "track_plays")
+                .withMaxVersions(all)
+                .build -> 'playlist)
+            .build,
+            testInput)
         .sink(Tsv("counts.tsv")) { validateTest }
         .runHadoop
         .finish

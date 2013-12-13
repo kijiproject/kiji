@@ -92,13 +92,17 @@ class SongRecommenderSuite extends KijiSuite {
     }
   }
 
-  val userSource: KijiSource = KijiInput(usersURI, Map(QualifiedColumnInputSpec.builder
-      .withColumn("info", "track_plays")
-      .build -> 'trackPlays))
-  val songSource: KijiSource = KijiInput(songsURI, Map(QualifiedColumnInputSpec.builder
-      .withColumn("info", "top_next_songs")
-      .withSchemaSpec(SchemaSpec.Specific(classOf[TopSongs]))
-      .build -> 'topNextSongs))
+  val userSource: KijiSource = KijiInput.builder
+      .withTableURI(usersURI)
+      .withColumns("info:track_plays" -> 'trackPlays)
+      .build
+  val songSource: KijiSource = KijiInput.builder
+      .withTableURI(songsURI)
+      .withColumnSpecs(QualifiedColumnInputSpec.builder
+          .withColumn("info", "top_next_songs")
+          .withSchemaSpec(SchemaSpec.Specific(classOf[TopSongs]))
+          .build -> 'topNextSongs)
+      .build
   val userSourceOut: KijiSource = KijiOutput.builder
       .withTableURI(usersURI)
       .withColumns('nextSong -> "info:next_song_rec")
