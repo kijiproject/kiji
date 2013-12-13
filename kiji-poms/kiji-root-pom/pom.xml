@@ -205,6 +205,7 @@
             <skipExec>${skipUnitTests}</skipExec>
             <systemProperties>
               <property>
+                <!-- surefire on OS X will steal GUI focus if not running in headless mode -->
                 <name>java.awt.headless</name>
                 <value>true</value>
               </property>
@@ -328,6 +329,13 @@
             <redirectTestOutputToFile>${redirectTestOutputToFile}</redirectTestOutputToFile>
             <parallel>${it.parallel}</parallel>
             <threadCount>${it.threadCount}</threadCount>
+            <systemProperties>
+              <property>
+                <!-- failsafe on OS X will steal GUI focus if not running in headless mode -->
+                <name>java.awt.headless</name>
+                <value>true</value>
+              </property>
+            </systemProperties>
           </configuration>
           <executions>
             <execution>
