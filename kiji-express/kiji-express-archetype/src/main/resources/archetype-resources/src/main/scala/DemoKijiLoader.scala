@@ -35,8 +35,9 @@ class DemoKijiLoader(args: Args) extends KijiJob(args) {
   TextLine(args("input"))
     .map('line -> ('userId, 'name)) { parseLine }
     .map('userId -> 'entityId) { userId: String => EntityId(userId) }
-    .write(KijiOutput(
-        args("table"),
-        Map('userId -> QualifiedColumnOutputSpec("info", "userId"),
-            'name -> QualifiedColumnOutputSpec("info", "name"))))
+    .write(KijiOutput.builder
+        .withTableURI(args("table"))
+        .withColumns('userId -> "info:userId",
+            'name -> "info:name")
+        .build)
 }

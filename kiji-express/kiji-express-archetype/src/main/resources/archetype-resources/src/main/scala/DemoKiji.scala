@@ -32,11 +32,17 @@ import org.kiji.express.flow._
 class DemoKiji(args: Args) extends KijiJob(args) {
   val tableUri: String = args("table")
 
-  KijiInput(tableUri, "info:name" -> 'name)
+  KijiInput.builder
+      .withTableURI(tableUri)
+      .withColumns("info:name" -> 'name)
+      .build
       // A no-op read/write for example purposes.
       .map('name -> 'nameCopy) { slice: Seq[FlowCell[CharSequence]] =>
         slice.head.datum.toString
       }
       // Write the length of each post to the specified table.
-      .write(KijiOutput(tableUri, 'nameCopy -> "info:nameCopy"))
+      .write(KijiOutput.builder
+          .withTableURI(tableUri)
+          .withColumns('nameCopy -> "info:nameCopy")
+          .build)
 }
