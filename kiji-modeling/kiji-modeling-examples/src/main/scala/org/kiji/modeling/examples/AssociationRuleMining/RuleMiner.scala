@@ -46,10 +46,16 @@ class RuleMiner(args: Args) extends KijiModelingJob(args) with FieldConversions 
   val maxBagSize: Int = args.getOrElse("max-bag-size", "2").toInt
   val supportThreshold: Double = args.getOrElse("support", "0.0001").toDouble
 
-  val totalOrders = KijiInput(inputTableUri, inputColumn -> 'slice)
+  val totalOrders = KijiInput.builder
+      .withTableURI(inputTableUri)
+      .withColumns(inputColumn -> 'slice)
+      .build
       .groupAll { _.size('norm)}
 
-  KijiInput(inputTableUri, inputColumn -> 'order)
+  KijiInput.builder
+      .withTableURI(inputTableUri)
+      .withColumns(inputColumn -> 'order)
+      .build
       // Convert the input data in the Kiji table into a form that is required by prepareItemSets.
       .map('order -> 'order) {
         order: Seq[FlowCell[String]] => order.map { _.qualifier }.toList

@@ -364,7 +364,11 @@ object ModelJobUtils {
     inputSpec match {
       // After refactoring for EXP-232, KijiInputSpec members match up perfectly with KijiInput
       case spec @ KijiInputSpec(tableUri, timeRange, columns) => {
-        KijiInput(tableUri, timeRange, columns)
+        KijiInput.builder
+            .withTableURI(tableUri)
+            .withTimeRange(timeRange)
+            .withColumnSpecs(columns)
+            .build
       }
       case spec @ TextSourceSpec(path) => {
         TextLine(path)

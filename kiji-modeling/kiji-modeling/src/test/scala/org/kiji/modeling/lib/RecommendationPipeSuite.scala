@@ -89,13 +89,16 @@ class RecommendationPipeSuite extends KijiSuite {
    */
   test("Prepare Itemsets Job runs properly") {
     class PrepareItemsetsJob(args: Args) extends KijiModelingJob(args) {
-      KijiInput(args("input"), "family:column" -> 'slice)
-        .map('slice -> 'order) {
-          slice: Seq[FlowCell[CharSequence]] =>
-              slice.head.datum.toString.split(",").map(_.trim).toList
-        }
-        .prepareItemSets[String]('order -> 'itemset, 2, 2)
-        .write(TextLine(args("output")))
+      KijiInput.builder
+          .withTableURI(args("input"))
+          .withColumns("family:column" -> 'slice)
+          .build
+          .map('slice -> 'order) {
+            slice: Seq[FlowCell[CharSequence]] =>
+                slice.head.datum.toString.split(",").map(_.trim).toList
+          }
+          .prepareItemSets[String]('order -> 'itemset, 2, 2)
+          .write(TextLine(args("output")))
     }
     val outputDir: File = Files.createTempDir()
     new PrepareItemsetsJob(Args("--input " + inputUri.toString + " --output " +
@@ -128,12 +131,15 @@ class RecommendationPipeSuite extends KijiSuite {
    */
   test("Joining with Group Count works properly") {
     class JoinWithGroupCountJob(args: Args) extends KijiModelingJob(args) {
-      KijiInput(args("input"), "family:column" -> 'slice)
-        .flatMap('slice -> 'product) {
-          slice: Seq[FlowCell[CharSequence]] => slice.head.datum.toString.split(",").map(_.trim)
-        }
-        .joinWithGroupCount('product -> 'count)
-        .write(TextLine(args("output")))
+      KijiInput.builder
+          .withTableURI(args("input"))
+          .withColumns("family:column" -> 'slice)
+          .build
+          .flatMap('slice -> 'product) {
+            slice: Seq[FlowCell[CharSequence]] => slice.head.datum.toString.split(",").map(_.trim)
+          }
+          .joinWithGroupCount('product -> 'count)
+          .write(TextLine(args("output")))
     }
     val outputDir: File = Files.createTempDir()
     new JoinWithGroupCountJob(Args("--input " + inputUri.toString + " --output " +
@@ -150,7 +156,10 @@ class RecommendationPipeSuite extends KijiSuite {
 
   test("Joining with Count works properly") {
     class JoinWithCountJob(args: Args) extends KijiModelingJob(args) {
-      KijiInput(args("input"), "family:column" -> 'slice)
+      KijiInput.builder
+          .withTableURI(args("input"))
+          .withColumns("family:column" -> 'slice)
+          .build
           .joinWithCount('grpCount)
           .write(TextLine(args("output")))
     }
@@ -170,7 +179,10 @@ class RecommendationPipeSuite extends KijiSuite {
    */
   test("Filter by Support works with Constant Normalizer") {
     class FrequentItemsetFinderJob(args: Args) extends KijiModelingJob(args) {
-      KijiInput(args("input"), "family:column" -> 'slice)
+      KijiInput.builder
+          .withTableURI(args("input"))
+          .withColumns("family:column" -> 'slice)
+          .build
           .map('slice -> 'order) {
             slice: Seq[FlowCell[CharSequence]] =>
                 slice.head.datum.toString.split(",").map(_.trim).toList
@@ -198,10 +210,16 @@ class RecommendationPipeSuite extends KijiSuite {
    */
   test("Filter by Support works with Normalizing Pipe") {
     class FrequentItemsetFinderJob(args: Args) extends KijiModelingJob(args) {
-      val totalOrders = KijiInput(args("input"), "family:column" -> 'slice)
+      val totalOrders = KijiInput.builder
+          .withTableURI(args("input"))
+          .withColumns("family:column" -> 'slice)
+          .build
           .groupAll { _.size('norm)}
 
-      KijiInput(args("input"), "family:column" -> 'slice)
+      KijiInput.builder
+          .withTableURI(args("input"))
+          .withColumns("family:column" -> 'slice)
+          .build
           .map('slice -> 'order) {
             slice: Seq[FlowCell[CharSequence]] =>
                 slice.head.datum.toString.split(",").map(_.trim).toList
@@ -230,7 +248,10 @@ class RecommendationPipeSuite extends KijiSuite {
    */
   test("Compute lift and confidence") {
     class FrequentItemsetFinderJob(args: Args) extends KijiModelingJob(args) {
-      KijiInput(args("input"), "family:column" -> 'slice)
+      KijiInput.builder
+          .withTableURI(args("input"))
+          .withColumns("family:column" -> 'slice)
+          .build
           .map('slice -> 'order) {
             slice: Seq[FlowCell[CharSequence]] =>
                 slice.head.datum.toString.split(",").map(_.trim).toList
