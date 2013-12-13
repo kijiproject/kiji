@@ -185,7 +185,7 @@
           writers: [{json: '{"type": "fixed", "size": 10, "name": "hash"}'}]
         }
       } ]
-    } ]
+    }  ]
   } ],
   version: "layout-1.3.0"
 }

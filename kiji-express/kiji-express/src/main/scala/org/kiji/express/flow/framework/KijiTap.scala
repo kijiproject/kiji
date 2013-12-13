@@ -302,8 +302,24 @@ object KijiTap {
     val outputColumnNames: Seq[KijiColumnName] = outputColumns.values.map(_.columnName).toList
 
     val nonExistentColumnErrors = (inputColumnNames ++ outputColumnNames)
-        // Filter for columns that don't exist
-        .filter( { case colname => !tableLayout.exists(colname) } )
+        // Filter for illegal columns, so we can throw an error.
+        .filter( { case colname => {
+            if (tableLayout.exists(colname)) {
+              // If colname exists in the table layout as a qualified column, then it's legal.
+              false
+            } else if (tableLayout.getFamilyMap.containsKey(colname.getFamily)) {
+              // If colname.getFamily is in the families in the layout,
+              // AND that family is a map-type family, then it's legal.
+              if (tableLayout.getFamilyMap.get(colname.getFamily).isMapType) {
+                false
+              } else {
+                // If colname.getFamily is not a map-type family, then it's illegal anyways.
+                true
+              }
+            } else {
+              // If colname.getFamily is not even in the table layout then it's definitely illegal.
+              true
+            } } } )
         .map { column =>
           "One or more columns does not exist in the table %s: %s\n".format(table.getName, column)
         }

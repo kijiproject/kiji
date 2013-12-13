@@ -587,14 +587,25 @@ object KijiScheme {
         // If it is, ignore the provided schema spec.
         val schemaType = column match {
           case QualifiedColumnInputSpec(family, qualifier, _, _, _, _) => {
-            layout
+            // If this fully qualified column is actually part of a map-type column family,
+            // then get the schema type from the map-type column family instead. Otherwise get it
+            // from the qualified column as usual.
+            val columnFamily = layout
                 .getFamilyMap
                 .get(column.columnName.getFamily)
-                .getColumnMap
-                .get(column.columnName.getQualifier)
-                .getDesc
-                .getColumnSchema
-                .getType
+            if (columnFamily.isMapType()) {
+              columnFamily
+                  .getDesc
+                  .getMapSchema
+                  .getType
+            } else {
+              columnFamily
+                  .getColumnMap
+                  .get(column.columnName.getQualifier)
+                  .getDesc
+                  .getColumnSchema
+                  .getType
+            }
           }
           case ColumnFamilyInputSpec(family, _, _, _, _) => {
             layout
