@@ -99,7 +99,9 @@ public final class KijiPivot extends KijiJobTool<KijiPivotJobBuilder> {
   /** {@inheritDoc} */
   @Override
   protected void validateFlags() throws Exception {
-    // Do NOT call super.validateFlags()
+    // Parse --input and --output flags:
+    //   --input is guaranteed to be a Kiji table, --output is not.
+    super.validateFlags();
 
     if (mInputFlag.isEmpty()) {
       throw new RequiredFlagException("input");
