@@ -40,6 +40,7 @@ import scala.util.control.Breaks.break
 import scala.util.control.Breaks.breakable
 
 import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.HColumnDescriptor
 import org.apache.hadoop.hbase.HConstants
 import org.apache.hadoop.hbase.HRegionInfo
@@ -50,11 +51,13 @@ import org.apache.hadoop.hbase.ServerName
 import org.apache.hadoop.hbase.client.Append
 import org.apache.hadoop.hbase.client.Delete
 import org.apache.hadoop.hbase.client.Get
+import org.apache.hadoop.hbase.client.HConnection
 import org.apache.hadoop.hbase.client.HTableInterface
 import org.apache.hadoop.hbase.client.Increment
 import org.apache.hadoop.hbase.client.Put
 import org.apache.hadoop.hbase.client.Result
 import org.apache.hadoop.hbase.client.ResultScanner
+import org.apache.hadoop.hbase.client.Row
 import org.apache.hadoop.hbase.client.RowLock
 import org.apache.hadoop.hbase.client.RowMutations
 import org.apache.hadoop.hbase.client.Scan
@@ -63,14 +66,9 @@ import org.apache.hadoop.hbase.filter.Filter
 import org.apache.hadoop.hbase.ipc.CoprocessorProtocol
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.hadoop.io.WritableUtils
-import org.kiji.testing.fakehtable.JNavigableMapWithAsScalaIterator.javaNavigableMapAsScalaIterator
 import org.slf4j.LoggerFactory
 
-import org.apache.hadoop.hbase.client.Row
-import org.apache.hadoop.hbase.HBaseConfiguration
-
-// import org.apache.hadoop.hbase.client.Row
-// import org.apache.hadoop.hbase.HBaseConfiguration
+import org.kiji.testing.fakehtable.JNavigableMapWithAsScalaIterator.javaNavigableMapAsScalaIterator
 
 /**
  * Fake in-memory HTable.
@@ -97,6 +95,9 @@ class FakeHTable(
 
   /** Whether the table has been closed. */
   private var closed: Boolean = false
+
+  /** A fake connection. */
+  private val connection: FakeHConnection = new FakeHConnection()
 
   /** Region splits and locations. */
   private var regions: Seq[HRegionLocation] = Seq()
@@ -731,6 +732,8 @@ class FakeHTable(
     return regionList
   }
 
+  /** See HTable.getConnection(). */
+  def getConnection: HConnection = connection
   // -----------------------------------------------------------------------------------------------
 
   def toHex(bytes: Bytes): String = {
