@@ -36,11 +36,6 @@
   </description>
   <url>http://www.kiji.org</url>
 
-  <properties>
-    <!-- Override scala version to 2.9.3 until POM-23 is completed. -->
-    <scala.version>2.9.3</scala.version>
-  </properties>
-
   <build>
     <plugins>
       <plugin>
