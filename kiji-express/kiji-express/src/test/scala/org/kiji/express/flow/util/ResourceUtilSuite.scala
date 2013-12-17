@@ -25,10 +25,10 @@ import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
-import org.kiji.express.flow.util.Resources._
+import org.kiji.express.flow.util.ResourceUtil._
 
 @RunWith(classOf[JUnitRunner])
-class ResourcesSuite extends FunSuite {
+class ResourceUtilSuite extends FunSuite {
   test("doAnd runs an operation") {
     var isClosed = false
     def resource: Closeable = new Closeable {

@@ -40,7 +40,7 @@ import org.kiji.schema.KijiURI
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-object Resources {
+object ResourceUtil {
   /**
    * Exception that contains multiple exceptions. Typically used in the case where
    * the user gets an exception within their function and further gets an exception

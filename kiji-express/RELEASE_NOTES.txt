@@ -1,6 +1,9 @@
 
                              Kiji Express Release Notes
 
+Version 0.15.0
+  * EXP-353. Renamed utility classes to be suffixed with Util.
+
 Version 0.14.0
   * EXP-360. ColumnOutputSpec factory methods have been replaced with ColumnOutputSpec.Builder.
       Case class style apply and unapply methods are now hidden to protect binary compatiblity of

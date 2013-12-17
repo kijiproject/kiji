@@ -35,7 +35,7 @@ import org.scalatest.junit.JUnitRunner
 import org.kiji.express.KijiSuite
 import org.kiji.express.avro.SimpleRecord
 import org.kiji.express.flow.SchemaSpec.Specific
-import org.kiji.express.flow.util.Resources.doAndRelease
+import org.kiji.express.flow.util.ResourceUtil.doAndRelease
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiTable

@@ -42,7 +42,7 @@ import org.kiji.express.flow.TimeRange
 import org.kiji.express.flow.framework.KijiScheme
 import org.kiji.express.flow.framework.KijiSourceContext
 import org.kiji.express.flow.framework.serialization.KijiLocker
-import org.kiji.express.flow.util.Resources.doAndRelease
+import org.kiji.express.flow.util.ResourceUtil.doAndRelease
 import org.kiji.mapreduce.framework.HFileKeyValue
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.EntityIdFactory

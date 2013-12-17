@@ -57,7 +57,7 @@ import org.kiji.express.flow.framework.KijiTap
 import org.kiji.express.flow.framework.LocalKijiScheme
 import org.kiji.express.flow.framework.LocalKijiTap
 import org.kiji.express.flow.framework.OutputContext
-import org.kiji.express.flow.util.Resources._
+import org.kiji.express.flow.util.ResourceUtil._
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.EntityIdFactory
 import org.kiji.schema.Kiji

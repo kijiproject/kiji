@@ -36,7 +36,7 @@ import org.kiji.express.flow.EntityId
 import org.kiji.express.flow.FlowCell
 import org.kiji.express.flow.KijiInput
 import org.kiji.express.flow.KijiOutput
-import org.kiji.express.flow.util.Resources.doAndRelease
+import org.kiji.express.flow.util.ResourceUtil.doAndRelease
 import org.kiji.express.KijiSuite
 import org.kiji.express.repl.Implicits._
 import org.kiji.schema.KijiTable

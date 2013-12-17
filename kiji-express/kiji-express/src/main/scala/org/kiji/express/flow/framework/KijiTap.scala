@@ -48,7 +48,7 @@ import org.kiji.annotations.ApiStability
 import org.kiji.express.flow.ColumnInputSpec
 import org.kiji.express.flow.ColumnOutputSpec
 import org.kiji.express.flow.InvalidKijiTapException
-import org.kiji.express.flow.util.Resources.doAndRelease
+import org.kiji.express.flow.util.ResourceUtil.doAndRelease
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.mapreduce.framework.KijiTableInputFormat
 import org.kiji.schema.{ EntityId => JEntityId }

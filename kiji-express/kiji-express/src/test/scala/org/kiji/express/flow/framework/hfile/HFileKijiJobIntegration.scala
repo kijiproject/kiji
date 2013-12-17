@@ -36,7 +36,7 @@ import org.junit.Test
 import org.kiji.express.flow.ColumnFamilyOutputSpec
 import org.kiji.express.flow.QualifiedColumnOutputSpec
 import org.kiji.express.flow.EntityId
-import org.kiji.express.flow.util.Resources
+import org.kiji.express.flow.util.ResourceUtil
 import org.kiji.mapreduce.HFileLoader
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiDataRequest
@@ -63,7 +63,7 @@ class HFileKijiJobIntegration extends AbstractKijiIntegrationTest {
 
   @Test
   def testShouldBulkLoadMapReduceJob {
-    Resources.withKijiTable(mKiji, "table") { table =>
+    ResourceUtil.withKijiTable(mKiji, "table") { table =>
       val tempHFileFolder = mTempDir.newFolder()
       FileUtils.deleteDirectory(tempHFileFolder)
 
@@ -81,7 +81,7 @@ class HFileKijiJobIntegration extends AbstractKijiIntegrationTest {
 
       bulkLoad(tempHFileFolder, table)
 
-      Resources.withKijiTableReader(table) { myReader =>
+      ResourceUtil.withKijiTableReader(table) { myReader =>
         val request = KijiDataRequest.create("family", "double_column")
         val result = myReader.get(table.getEntityId("key1"), request)
 
@@ -92,7 +92,7 @@ class HFileKijiJobIntegration extends AbstractKijiIntegrationTest {
 
   @Test
   def testShouldBulkLoadMapOnlyJob {
-    Resources.withKijiTable(mKiji, "table") { table =>
+    ResourceUtil.withKijiTable(mKiji, "table") { table =>
       val tempHFileFolder = mTempDir.newFolder()
       FileUtils.deleteDirectory(tempHFileFolder)
 
@@ -110,7 +110,7 @@ class HFileKijiJobIntegration extends AbstractKijiIntegrationTest {
 
       bulkLoad(tempHFileFolder, table)
 
-      Resources.withKijiTableReader(table) { myReader =>
+      ResourceUtil.withKijiTableReader(table) { myReader =>
         val colBuilder = KijiDataRequestBuilder.ColumnsDef
           .create()
           .withMaxVersions(10).add("family", "double_column")
@@ -127,7 +127,7 @@ class HFileKijiJobIntegration extends AbstractKijiIntegrationTest {
 
   @Test
   def testShouldBulkLoadMapOnlyJobWithAnotherOutput {
-    Resources.withKijiTable(mKiji, "table") { table =>
+    ResourceUtil.withKijiTable(mKiji, "table") { table =>
       val tempHFileFolder = mTempDir.newFolder()
       FileUtils.deleteDirectory(tempHFileFolder)
 
@@ -150,7 +150,7 @@ class HFileKijiJobIntegration extends AbstractKijiIntegrationTest {
 
       bulkLoad(tempHFileFolder, table)
 
-      Resources.withKijiTableReader(table) { myReader =>
+      ResourceUtil.withKijiTableReader(table) { myReader =>
         val colBuilder = KijiDataRequestBuilder.ColumnsDef
           .create()
           .withMaxVersions(10).add("family", "double_column")
@@ -167,7 +167,7 @@ class HFileKijiJobIntegration extends AbstractKijiIntegrationTest {
 
   @Test
   def testShouldBulkLoadIntoMapFamily {
-    Resources.withKijiTable(mKiji, "table") { table =>
+    ResourceUtil.withKijiTable(mKiji, "table") { table =>
       val tempHFileFolder = mTempDir.newFolder()
       FileUtils.deleteDirectory(tempHFileFolder)
 
@@ -188,7 +188,7 @@ class HFileKijiJobIntegration extends AbstractKijiIntegrationTest {
 
       bulkLoad(tempHFileFolder, table)
 
-      Resources.withKijiTableReader(table) { myReader =>
+      ResourceUtil.withKijiTableReader(table) { myReader =>
         val colBuilder = KijiDataRequestBuilder.ColumnsDef
           .create()
           .withMaxVersions(10).addFamily("searches_dev")

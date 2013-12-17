@@ -26,7 +26,7 @@ import com.twitter.scalding.TupleConversions
 import org.scalatest.FunSuite
 
 import org.kiji.express.flow.FlowCell
-import org.kiji.express.flow.util.Resources._
+import org.kiji.express.flow.util.ResourceUtil._
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiTable

@@ -28,7 +28,7 @@ import org.kiji.express.KijiSuite
 import org.kiji.express.flow.EntityId
 import org.kiji.express.flow.FlowCell
 import org.kiji.express.flow.KijiInput
-import org.kiji.express.flow.util.Resources.doAndRelease
+import org.kiji.express.flow.util.ResourceUtil.doAndRelease
 import org.kiji.schema.KijiTable
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts

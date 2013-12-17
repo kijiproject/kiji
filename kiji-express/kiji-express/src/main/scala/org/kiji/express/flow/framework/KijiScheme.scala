@@ -57,7 +57,7 @@ import org.kiji.express.flow.TimeRange
 import org.kiji.express.flow.TransientStream
 import org.kiji.express.flow.framework.serialization.KijiLocker
 import org.kiji.express.flow.util.AvroUtil
-import org.kiji.express.flow.util.Resources.withKijiTable
+import org.kiji.express.flow.util.ResourceUtil.withKijiTable
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.layout.ColumnReaderSpec
 import org.kiji.schema.ColumnVersionIterator
