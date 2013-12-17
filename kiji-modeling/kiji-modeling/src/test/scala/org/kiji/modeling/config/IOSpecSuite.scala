@@ -27,7 +27,7 @@ import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
-import org.kiji.express.flow.util.Resources.doAndClose
+import org.kiji.express.flow.util.ResourceUtil.doAndClose
 import org.kiji.modeling.Trainer
 import org.kiji.modeling.framework.ModelExecutor
 

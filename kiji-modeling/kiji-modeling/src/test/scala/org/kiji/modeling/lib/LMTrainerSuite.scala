@@ -30,8 +30,8 @@ import org.scalatest.junit.JUnitRunner
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow.All
 import org.kiji.express.flow.QualifiedColumnInputSpec
-import org.kiji.express.flow.util.Resources.doAndClose
-import org.kiji.express.flow.util.Resources.doAndRelease
+import org.kiji.express.flow.util.ResourceUtil.doAndClose
+import org.kiji.express.flow.util.ResourceUtil.doAndRelease
 import org.kiji.modeling.config.KijiInputSpec
 import org.kiji.modeling.config.ModelDefinition
 import org.kiji.modeling.config.ModelEnvironment

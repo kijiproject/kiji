@@ -337,7 +337,8 @@ object ModelJobUtils {
   def getDataRequest(
       modelEnvironment: ModelEnvironment,
       phase: PhaseType,
-      inputSpecName: String = ""): Option[KijiDataRequest] = {
+      inputSpecName: String = ""
+  ): Option[KijiDataRequest] = {
 
     val inputSpec: Option[InputSpec] = phase match {
       case PhaseType.PREPARE => modelEnvironment.prepareEnvironment.map { environment =>

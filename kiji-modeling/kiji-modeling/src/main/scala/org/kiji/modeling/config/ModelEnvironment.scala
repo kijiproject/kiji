@@ -25,7 +25,7 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
 import org.kiji.express.flow.ColumnOutputSpec
-import org.kiji.express.flow.util.Resources.doAndClose
+import org.kiji.express.flow.util.ResourceUtil.doAndClose
 import org.kiji.modeling.avro.AvroModelEnvironment
 import org.kiji.modeling.framework.ModelConverters
 import org.kiji.schema.KijiColumnName

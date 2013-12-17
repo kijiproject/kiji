@@ -35,7 +35,7 @@ import org.kiji.express.flow.ColumnFilterSpec.RegexQualifierFilterSpec
 import org.kiji.express.flow.PagingSpec
 import org.kiji.express.flow.QualifiedColumnInputSpec
 import org.kiji.express.flow.QualifiedColumnOutputSpec
-import org.kiji.express.flow.util.Resources.resourceAsString
+import org.kiji.express.flow.util.ResourceUtil.resourceAsString
 import org.kiji.modeling.avro.AvroColumnRangeFilter
 import org.kiji.modeling.avro.AvroFilter
 import org.kiji.modeling.avro.AvroInputFieldBinding
@@ -53,6 +53,7 @@ import org.kiji.schema.filter.Filters
 import org.kiji.schema.filter.KijiColumnFilter
 import org.kiji.schema.filter.KijiColumnRangeFilter
 import org.kiji.schema.filter.RegexQualifierColumnFilter
+import org.kiji.schema.layout.ColumnReaderSpec
 import org.kiji.schema.util.FromJson
 import org.kiji.schema.util.ToJson
 
@@ -100,7 +101,9 @@ class ModelEnvironmentSuite extends FunSuite {
   test("ModelEnvironment can be created from a path to a valid JSON file.") {
     val expectedRequest: KijiDataRequest = {
       val builder = KijiDataRequest.builder().withTimeRange(0, 38475687)
-      builder.newColumnsDef().withMaxVersions(3).add("info", "in")
+      builder.newColumnsDef()
+          .withMaxVersions(3)
+          .add("info", "in", ColumnReaderSpec.avroWriterSchemaGeneric())
       builder.build()
     }
 
@@ -483,7 +486,7 @@ class ModelEnvironmentSuite extends FunSuite {
             .create()
             .withMaxVersions(3)
             .withFilter(kijiAndFilter)
-            .add(new KijiColumnName("info:in"))
+            .add(new KijiColumnName("info:in"), ColumnReaderSpec.avroWriterSchemaGeneric())
         )
         .build()
 

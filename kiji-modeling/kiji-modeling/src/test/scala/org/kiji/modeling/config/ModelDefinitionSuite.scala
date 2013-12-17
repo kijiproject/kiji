@@ -24,7 +24,7 @@ import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
-import org.kiji.express.flow.util.Resources.resourceAsString
+import org.kiji.express.flow.util.ResourceUtil.resourceAsString
 import org.kiji.modeling.DistanceFn
 import org.kiji.modeling.Evaluator
 import org.kiji.modeling.ExtractFn

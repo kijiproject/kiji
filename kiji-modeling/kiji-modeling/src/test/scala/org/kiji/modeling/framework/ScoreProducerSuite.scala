@@ -29,8 +29,8 @@ import org.kiji.express.flow.EntityId
 import org.kiji.express.flow.FlowCell
 import org.kiji.express.flow.QualifiedColumnInputSpec
 import org.kiji.express.flow.QualifiedColumnOutputSpec
-import org.kiji.express.flow.util.Resources.doAndClose
-import org.kiji.express.flow.util.Resources.doAndRelease
+import org.kiji.express.flow.util.ResourceUtil.doAndClose
+import org.kiji.express.flow.util.ResourceUtil.doAndRelease
 import org.kiji.modeling.Extractor
 import org.kiji.modeling.KeyValueStore
 import org.kiji.modeling.ScoreProducerJobBuilder

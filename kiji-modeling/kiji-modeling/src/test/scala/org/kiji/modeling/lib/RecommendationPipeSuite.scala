@@ -41,8 +41,8 @@ import org.kiji.express.KijiSuite
 import org.kiji.express.flow.EntityId
 import org.kiji.express.flow.FlowCell
 import org.kiji.express.flow.KijiInput
-import org.kiji.express.flow.util.Resources.doAndClose
-import org.kiji.express.flow.util.Resources.doAndRelease
+import org.kiji.express.flow.util.ResourceUtil.doAndClose
+import org.kiji.express.flow.util.ResourceUtil.doAndRelease
 import org.kiji.modeling.framework.KijiModelingJob
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiTable

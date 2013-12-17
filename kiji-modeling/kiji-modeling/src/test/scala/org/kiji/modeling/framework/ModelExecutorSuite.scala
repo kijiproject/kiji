@@ -32,8 +32,8 @@ import org.kiji.express.flow.FlowCell
 import org.kiji.express.flow.EntityId
 import org.kiji.express.flow.QualifiedColumnInputSpec
 import org.kiji.express.flow.QualifiedColumnOutputSpec
-import org.kiji.express.flow.util.Resources.doAndClose
-import org.kiji.express.flow.util.Resources.doAndRelease
+import org.kiji.express.flow.util.ResourceUtil.doAndClose
+import org.kiji.express.flow.util.ResourceUtil.doAndRelease
 import org.kiji.modeling.Preparer
 import org.kiji.modeling.Trainer
 import org.kiji.modeling.config.KeyValueStoreSpec

@@ -30,8 +30,6 @@ import org.kiji.express.flow.ColumnInputSpec
 import org.kiji.express.flow.EntityId
 import org.kiji.express.flow.FlowCell
 import org.kiji.express.flow.framework.KijiScheme
-import org.kiji.express.flow.util.GenericRowDataConverter
-import org.kiji.express.flow.util.Tuples
 import org.kiji.mapreduce.KijiContext
 import org.kiji.mapreduce.kvstore.{ KeyValueStore => JKeyValueStore }
 import org.kiji.mapreduce.produce.KijiProducer
@@ -97,15 +95,6 @@ final class ScoreProducer
     _scorer.getOrElse {
       throw new IllegalStateException(
           "ScoreProducer is missing its scorer. Did setConf get called?")
-    }
-  }
-
-  /** A converter that configured row data to decode data generically. */
-  private[this] var _rowConverter: Option[GenericRowDataConverter] = None
-  private[this] def rowConverter: GenericRowDataConverter = {
-    _rowConverter.getOrElse {
-      throw new IllegalStateException("ExtractScoreProducer is missing its row data converter. "
-          + "Was setup() called?")
     }
   }
 
@@ -190,9 +179,7 @@ final class ScoreProducer
     scoreStores.asJava
   }
 
-  override def cleanup(context: KijiContext) {
-    rowConverter.close()
-  }
+  override def cleanup(context: KijiContext) { }
 
   override def setup(context: KijiContext) {
     // Setup the score phase's key value stores.
@@ -203,19 +190,9 @@ final class ScoreProducer
     scorer.keyValueStores = ModelJobUtils
         .wrapKvstoreReaders(scoreStoreDefs, context)
     extractor.map { e => e.keyValueStores = scorer.keyValueStores }
-
-    // Setup the row converter.
-    val uriString = modelEnvironment
-        .scoreEnvironment
-        .get
-        .inputSpec
-        .asInstanceOf[KijiInputSpec]
-        .tableUri
-    val uri = KijiURI.newBuilder(uriString).build()
-    _rowConverter = Some(new GenericRowDataConverter(uri, getConf))
   }
 
-  override def produce(input: KijiRowData, context: ProducerContext) {
+  override def produce(row: KijiRowData, context: ProducerContext) {
     val ScoreFn(scoreFields, score) = scorer.scoreFn
 
     // Setup fields.
@@ -233,7 +210,6 @@ final class ScoreProducer
         .toMap
 
     // Configure the row data input to decode its data generically.
-    val row = rowConverter(input)
 
     // Prepare input to the extract phase.
     def getSlices(inputFields: Seq[String]): Seq[Any] = inputFields
@@ -242,7 +218,7 @@ final class ScoreProducer
             val uri = KijiURI
               .newBuilder(modelEnvironment.scoreEnvironment.get.inputSpec.tableUri)
               .build()
-            EntityId.fromJavaEntityId(row.getEntityId())
+            EntityId.fromJavaEntityId(row.getEntityId)
           } else {
             val columnName: KijiColumnName = fieldMapping(field.toString)
 
@@ -279,7 +255,7 @@ final class ScoreProducer
           if (extractFields._1.isAll) {
             fieldMapping.keys.toSeq
           } else {
-            Tuples.fieldsToSeq(extractFields._1)
+            TupleUtil.fieldsToSeq(extractFields._1)
           }
         }
         val extractOutputFields: Seq[String] = {
@@ -288,7 +264,7 @@ final class ScoreProducer
           if (extractFields._2.isResults) {
             extractInputFields
           } else {
-            Tuples.fieldsToSeq(extractFields._2)
+            TupleUtil.fieldsToSeq(extractFields._2)
           }
         }
 
@@ -298,7 +274,7 @@ final class ScoreProducer
           if (scoreFields.isAll) {
             extractOutputFields
           } else {
-            Tuples.fieldsToSeq(scoreFields)
+            TupleUtil.fieldsToSeq(scoreFields)
           }
         }
 
@@ -306,8 +282,8 @@ final class ScoreProducer
         val slices = getSlices(extractInputFields)
 
         // Get output from the extract phase.
-        val featureVector: Product = Tuples.fnResultToTuple(
-          extract(Tuples.tupleToFnArg(Tuples.seqToTuple(slices))))
+        val featureVector: Product = TupleUtil.fnResultToTuple(
+          extract(TupleUtil.tupleToFnArg(TupleUtil.seqToTuple(slices))))
         val featureMapping: Map[String, Any] = extractOutputFields
             .zip(featureVector.productIterator.toIterable)
             .toMap
@@ -320,12 +296,12 @@ final class ScoreProducer
       }
       // If there's no extractor, use default input and output fields
       case None => {
-        val scoreInputFields = Tuples.fieldsToSeq(scoreFields)
+        val scoreInputFields = TupleUtil.fieldsToSeq(scoreFields)
         val inputOutputFields = fieldMapping.keys.toSeq
         val slices = getSlices(inputOutputFields)
 
         // Get output from the extract phase.
-        val featureVector: Product = Tuples.seqToTuple(slices)
+        val featureVector: Product = TupleUtil.seqToTuple(slices)
         val featureMapping: Map[String, Any] = inputOutputFields
           .zip(featureVector.productIterator.toIterable)
           .toMap
@@ -339,7 +315,7 @@ final class ScoreProducer
     }
 
     val scoreValue: Any =
-        score(Tuples.tupleToFnArg(Tuples.seqToTuple(scoreInput)))
+        score(TupleUtil.tupleToFnArg(TupleUtil.seqToTuple(scoreInput)))
 
     // Write the score out using the provided context.
     context.put(scoreValue)

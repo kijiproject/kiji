@@ -24,8 +24,10 @@ import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
 import org.kiji.express.flow.TimeRange
 import org.kiji.express.flow.ColumnInputSpec
+import org.kiji.express.flow.SchemaSpec
 import org.kiji.schema.KijiDataRequestBuilder
 import org.kiji.schema.KijiDataRequest
+import org.kiji.schema.layout.ColumnReaderSpec
 
 /**
  * Configuration necessary to use a Kiji table as a data source.
@@ -55,12 +57,20 @@ final case class KijiInputSpec(
     /** Add another column to the `KijiDataRequest.` */
     def addColumn(
         builder: KijiDataRequestBuilder,
-        column: ColumnInputSpec): KijiDataRequestBuilder.ColumnsDef = {
+        column: ColumnInputSpec
+    ): KijiDataRequestBuilder.ColumnsDef = {
+      val readerSpec = column.schemaSpec match {
+        case SchemaSpec.DefaultReader => ColumnReaderSpec.avroDefaultReaderSchemaGeneric()
+        case SchemaSpec.Writer => ColumnReaderSpec.avroWriterSchemaGeneric()
+        case SchemaSpec.Generic(schema) => ColumnReaderSpec.avroReaderSchemaGeneric(schema)
+        case SchemaSpec.Specific(record) => ColumnReaderSpec.avroReaderSchemaSpecific(record)
+        // TODO: Check for columns that contain counters/protobuf records/bytes.
+      }
       builder.newColumnsDef()
           .withMaxVersions(column.maxVersions)
           .withFilter(column.filterSpec.toKijiColumnFilter.getOrElse(null))
           .withPageSize(column.pagingSpec.cellsPerPage.getOrElse(0))
-          .add(column.columnName)
+          .add(column.columnName, readerSpec)
     }
 
     val requestBuilder: KijiDataRequestBuilder = KijiDataRequest.builder()

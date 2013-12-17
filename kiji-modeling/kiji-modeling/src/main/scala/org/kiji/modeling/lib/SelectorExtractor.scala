@@ -25,7 +25,7 @@ import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
 import org.kiji.express.flow.FlowCell
-import org.kiji.express.flow.util.Tuples
+import org.kiji.modeling.framework.TupleUtil
 import org.kiji.modeling.ExtractFn
 import org.kiji.modeling.Extractor
 
@@ -58,7 +58,7 @@ sealed abstract class SelectorExtractor[R](
           .map { slice: Seq[FlowCell[Any]] => selectFn(slice) }
           .toSeq
 
-      Tuples.seqToTuple(returnValues)
+      TupleUtil.seqToTuple(returnValues)
     }
     case slice: Seq[FlowCell[_]] => selectFn(slice.asInstanceOf[Seq[FlowCell[Any]]])
   }
