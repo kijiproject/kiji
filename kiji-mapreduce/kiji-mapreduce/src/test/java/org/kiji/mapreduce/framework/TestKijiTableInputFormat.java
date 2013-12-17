@@ -21,10 +21,11 @@ package org.kiji.mapreduce.framework;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.kiji.mapreduce.framework.KijiTableInputFormat.KijiTableRecordReader;
-import org.kiji.schema.KijiClientTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.kiji.mapreduce.framework.KijiTableInputFormat.KijiTableRecordReader;
+import org.kiji.schema.KijiClientTest;
 
 /** Runs a producer job in-process against a fake HBase instance. */
 public class TestKijiTableInputFormat extends KijiClientTest {
@@ -63,15 +64,15 @@ public class TestKijiTableInputFormat extends KijiClientTest {
         KijiTableRecordReader.computeProgress(startPos, stopPos, new byte[]{}),
         0.0);
     Assert.assertEquals(
-        0.0/256,
+        0.0 / 256,
         KijiTableRecordReader.computeProgress(startPos, stopPos, new byte[]{0}),
         0.0);
     Assert.assertEquals(
-        1.0/256,
+        1.0 / 256,
         KijiTableRecordReader.computeProgress(startPos, stopPos, new byte[]{1}),
         1e-6);
     Assert.assertEquals(
-        255.0/256,
+        255.0 / 256,
         KijiTableRecordReader.computeProgress(startPos, stopPos, new byte[]{(byte) 0xff}),
         1e-6);
   }

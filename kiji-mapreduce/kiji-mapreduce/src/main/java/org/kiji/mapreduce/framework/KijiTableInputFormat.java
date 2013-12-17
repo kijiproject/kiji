@@ -23,6 +23,9 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.SerializationUtils;
 import org.apache.hadoop.conf.Configurable;
@@ -37,6 +40,9 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.impl.KijiTableSplit;
@@ -58,12 +64,6 @@ import org.kiji.schema.impl.HBaseKijiRowData;
 import org.kiji.schema.impl.HBaseKijiTable;
 import org.kiji.schema.layout.ColumnReaderSpec;
 import org.kiji.schema.util.ResourceUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 
 /** InputFormat for Hadoop MapReduce jobs reading from a Kiji table. */
 @ApiAudience.Framework
@@ -368,14 +368,19 @@ public final class KijiTableInputFormat
      * @return the progress indicator for the given row, start and stop positions.
      */
     public static float computeProgress(long startPos, long stopPos, byte[] currentRowKey) {
-      Preconditions.checkArgument(startPos < stopPos,
+      Preconditions.checkArgument(startPos <= stopPos,
           "Invalid start/stop positions: start=%s stop=%s", startPos, stopPos);
       final long currentPos = bytesToPosition(currentRowKey, PROGRESS_PRECISION_NBYTES);
       Preconditions.checkArgument(startPos <= currentPos,
           "Invalid start/current positions: start=%s current=%s", startPos, currentPos);
       Preconditions.checkArgument(currentPos <= stopPos,
           "Invalid current/stop positions: current=%s stop=%s", currentPos, stopPos);
-      return (float) (((double) currentPos - startPos) / (stopPos - startPos));
+      if (startPos == stopPos) {
+        // Row key range is too small to perceive progress: report 50% completion
+        return 0.5f;
+      } else {
+        return (float) (((double) currentPos - startPos) / (stopPos - startPos));
+      }
     }
 
     /** {@inheritDoc} */

@@ -45,10 +45,12 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.junit.Test;
+import scala.actors.threadpool.Arrays;
 
 import org.kiji.mapreduce.framework.KijiTableInputFormat;
 import org.kiji.schema.DecodedCell;
 import org.kiji.schema.EntityId;
+import org.kiji.schema.HBaseEntityId;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequestBuilder.ColumnsDef;
 import org.kiji.schema.KijiRowData;
@@ -212,15 +214,19 @@ public class IntegrationTestKijiTableInputFormat
   public void testMapJobWithStartAndLimitKeys() throws Exception {
     final Path outputFile = createOutputFile();
     // Set the same entity IDs for start and limit, and we should get just the start row
-    final EntityId startAndLimitKey = getFooTable().getEntityId("jane.doe@gmail.com");
+    final EntityId startEntityId = getFooTable().getEntityId("jane.doe@gmail.com");
+    final byte[] endRowKey = startEntityId.getHBaseRowKey();
+    final EntityId rawLimitEntityId =
+        HBaseEntityId.fromHBaseRowKey(Arrays.copyOf(endRowKey, endRowKey.length + 1));
+
     // Create a test job.
     final Job job = setupJob(
         "testMapJobWithStartAndLimitKeys",
         outputFile,
         TestMapper.class,
         null,  // reducer class
-        startAndLimitKey,
-        startAndLimitKey,
+        startEntityId,
+        rawLimitEntityId,
         null); // filter
 
     // Run the job.
