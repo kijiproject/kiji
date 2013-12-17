@@ -104,30 +104,30 @@ tutorial_music_devel : /tutorials/music-recommendation/devel
 tutorial_express_devel : /tutorials/express-recommendation/devel
 tutorial_scoring_devel : /tutorials/scoring/devel
 
-schema_devel_version : 1.3.4
+schema_devel_version : 1.3.5
 schema_devel_branch : master
 
-mr_devel_version : 1.2.3
+mr_devel_version : 1.2.4
 mr_devel_branch : master
 
-mrlib_devel_version : 1.1.2
+mrlib_devel_version : 1.1.4
 mrlib_devel_branch : master
 
-express_devel_version : 0.13.0
+express_devel_version : 0.15.0
 express_devel_branch : master
 
-phonebook_devel_version : 1.1.2
+phonebook_devel_version : 1.1.3
 
-music_devel_version : 1.1.3
+music_devel_version : 1.1.4
 music_devel_branch : master
 
-music_express_devel_version : 0.12.0
+music_express_devel_version : 0.13.0
 music_express_devel_branch : master
 
-rest_devel_version: 1.0.1
+rest_devel_version: 1.1.1
 rest_devel_branch : master
 
-scoring_devel_version : 0.10.0
+scoring_devel_version : 0.11.0
 scoring_devel_branch : master
 
 # All Jekyll-Bootstrap specific configurations are namespaced into this hash
@@ -302,3 +302,17 @@ tutorial_music_1_1_2 : /tutorials/music-recommendation/1.1.2
 tutorial_music_1_1_0 : /tutorials/music-recommendation/1.1.0
 tutorial_music_1_1_1 : /tutorials/music-recommendation/1.1.1
 api_scoring_0_9_0 : http://api-docs.kiji.org/kiji-scoring/0.9.0/org/kiji/scoring
+userguide_schema_1_3_4 : /userguides/schema/1.3.4
+api_schema_1_3_4 : http://api-docs.kiji.org/kiji-schema/1.3.4/org/kiji/schema
+api_mr_1_2_3 : http://api-docs.kiji.org/kiji-mapreduce/1.2.3/org/kiji/mapreduce
+userguide_mapreduce_1_2_3 : /userguides/mapreduce/1.2.3
+userguide_rest_1_1_0 : /userguides/rest/1.1.0
+userguide_express_0_14_0 : /userguides/express/0.14.0
+api_express_0_14_0 : http://api-docs.kiji.org/kiji-express/0.14.0/org/kiji/express
+userguide_scoring_0_10_0 : /userguides/scoring/0.10.0
+api_scoring_0_10_0 : http://api-docs.kiji.org/kiji-scoring/0.10.0/org/kiji/scoring
+tutorial_phonebook_1_1_2 : /tutorials/phonebook-tutorial/1.1.2
+tutorial_music_1_1_3 : /tutorials/music-recommendation/1.1.3
+tutorial_exp_music_0_12_0 : /tutorials/express-recommendation/0.12.0
+tutorial_scoring_0_10_0 : /tutorials/scoring/0.10.0
+api_mrlib_1_1_3 : http://api-docs.kiji.org/kiji-mapreduce-lib/1.1.3/org/kiji/mapreduce/lib
