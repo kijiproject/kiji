@@ -197,23 +197,23 @@
       <artifactId>easymock</artifactId>
     </dependency>
     <dependency>
-     <groupId>org.apache.hadoop</groupId>
-     <artifactId>hadoop-client</artifactId>
-     <version>${hadoop.version}</version>
-     <scope>provided</scope>
-   </dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-client</artifactId>
+      <version>${hadoop.version}</version>
+      <scope>provided</scope>
+    </dependency>
     <dependency>
-     <groupId>org.apache.hadoop</groupId>
-     <artifactId>hadoop-core</artifactId>
-     <version>${hadoop.version}</version>
-     <scope>provided</scope>
-   </dependency>
-   <dependency>
-     <groupId>org.apache.hbase</groupId>
-     <artifactId>hbase</artifactId>
-     <version>${hbase.version}</version>
-     <scope>provided</scope>
-   </dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-core</artifactId>
+      <version>${hadoop.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hbase</groupId>
+      <artifactId>hbase</artifactId>
+      <version>${hbase.version}</version>
+      <scope>provided</scope>
+    </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-minicluster</artifactId>
@@ -238,6 +238,11 @@
       <groupId>commons-codec</groupId>
       <artifactId>commons-codec</artifactId>
       <version>1.6</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
     </dependency>
 
     <!-- All platform bridge implementations that should be bundled with the redistributable. -->

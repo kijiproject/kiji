@@ -23,9 +23,6 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.SerializationUtils;
 import org.apache.hadoop.conf.Configurable;
@@ -40,7 +37,6 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
-
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.impl.KijiTableSplit;
@@ -62,6 +58,12 @@ import org.kiji.schema.impl.HBaseKijiRowData;
 import org.kiji.schema.impl.HBaseKijiTable;
 import org.kiji.schema.layout.ColumnReaderSpec;
 import org.kiji.schema.util.ResourceUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 
 /** InputFormat for Hadoop MapReduce jobs reading from a Kiji table. */
 @ApiAudience.Framework
@@ -227,6 +229,8 @@ public final class KijiTableInputFormat
   public static final class KijiTableRecordReader
       extends RecordReader<EntityId, KijiRowData> {
 
+    private static final Logger LOG = LoggerFactory.getLogger(KijiTableRecordReader.class);
+
     /** Data request. */
     private final KijiDataRequest mDataRequest;
 
@@ -299,8 +303,9 @@ public final class KijiTableInputFormat
       mCurrentRow = null;
 
       mStartPos = bytesToPosition(mSplit.getStartRow(), PROGRESS_PRECISION_NBYTES);
-      long stopPos = bytesToPosition(mSplit.getStartRow(), PROGRESS_PRECISION_NBYTES);
+      long stopPos = bytesToPosition(mSplit.getEndRow(), PROGRESS_PRECISION_NBYTES);
       mStopPos = (stopPos > 0) ? stopPos : (1L << (PROGRESS_PRECISION_NBYTES * 8));
+      LOG.info("Progress reporting: start={} stop={}", mStartPos, mStopPos);
     }
 
     /** {@inheritDoc} */
@@ -322,7 +327,7 @@ public final class KijiTableInputFormat
      * @param nbytes Number of bytes to use (must be in the range 1..8).
      * @return the approximate position in the row-key space.
      */
-    private static long bytesToPosition(final byte[] bytes, final int nbytes) {
+    public static long bytesToPosition(final byte[] bytes, final int nbytes) {
       long position = 0;
       if (bytes != null) {
         for (int i = 0; i < nbytes; ++i) {
@@ -333,6 +338,46 @@ public final class KijiTableInputFormat
       return position;
     }
 
+    /**
+     * Computes the start position from the start row key, for progress reporting.
+     *
+     * @param startRowKey Start row key to compute the position of.
+     * @return the start position from the start row key.
+     */
+    public static long getStartPos(byte[] startRowKey) {
+      return bytesToPosition(startRowKey, PROGRESS_PRECISION_NBYTES);
+    }
+
+    /**
+     * Computes the stop position from the stop row key, for progress reporting.
+     *
+     * @param stopRowKey Stop row key to compute the position of.
+     * @return the stop position from the start row key.
+     */
+    public static long getStopPos(byte[] stopRowKey) {
+      long stopPos = bytesToPosition(stopRowKey, PROGRESS_PRECISION_NBYTES);
+      return (stopPos > 0) ? stopPos : (1L << (PROGRESS_PRECISION_NBYTES * 8));
+    }
+
+    /**
+     * Compute the progress (between 0.0f and 1.0f) for the current row key.
+     *
+     * @param startPos Computed start position (using getStartPos).
+     * @param stopPos Computed stop position (using getStopPos).
+     * @param currentRowKey Current row to compute a progress for.
+     * @return the progress indicator for the given row, start and stop positions.
+     */
+    public static float computeProgress(long startPos, long stopPos, byte[] currentRowKey) {
+      Preconditions.checkArgument(startPos < stopPos,
+          "Invalid start/stop positions: start=%s stop=%s", startPos, stopPos);
+      final long currentPos = bytesToPosition(currentRowKey, PROGRESS_PRECISION_NBYTES);
+      Preconditions.checkArgument(startPos <= currentPos,
+          "Invalid start/current positions: start=%s current=%s", startPos, currentPos);
+      Preconditions.checkArgument(currentPos <= stopPos,
+          "Invalid current/stop positions: current=%s stop=%s", currentPos, stopPos);
+      return (float) (((double) currentPos - startPos) / (stopPos - startPos));
+    }
+
     /** {@inheritDoc} */
     @Override
     public float getProgress() throws IOException {
@@ -340,8 +385,7 @@ public final class KijiTableInputFormat
         return 0.0f;
       }
       final byte[] currentRowKey = mCurrentRow.getHBaseResult().getRow();
-      final double currentPos = bytesToPosition(currentRowKey, PROGRESS_PRECISION_NBYTES);
-      return (float) ((currentPos - mStartPos) / (mStopPos - mStartPos));
+      return computeProgress(mStartPos, mStopPos, currentRowKey);
     }
 
     /** {@inheritDoc} */
