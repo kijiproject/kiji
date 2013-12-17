@@ -41,7 +41,7 @@
     <kiji-checkin.version>1.0.4</kiji-checkin.version>
     <kiji-schema.version>1.3.4</kiji-schema.version>
     <kiji-schema-shell.version>1.3.2</kiji-schema-shell.version>
-    <kiji-phonebook.version>1.1.2<kiji-phonebook.version>
+    <kiji-phonebook.version>1.1.2</kiji-phonebook.version>
     <kiji-mapreduce.version>1.2.3</kiji-mapreduce.version>
     <kiji-mapreduce-lib.version>1.1.3</kiji-mapreduce-lib.version>
     <kiji-hive-adapter.version>0.8.1</kiji-hive-adapter.version>
