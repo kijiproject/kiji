@@ -19,7 +19,7 @@
   <parent>
     <groupId>org.kiji.pom</groupId>
     <artifactId>root-pom</artifactId>
-    <version>1.1.4-SNAPSHOT</version>
+    <version>1.1.4</version>
   </parent>
 
   <modules>
@@ -29,10 +29,10 @@
 
   <properties>
     <!-- Kiji versions -->
-    <fake-hbase.version>0.1.4-SNAPSHOT</fake-hbase.version>
-    <kiji-express.version>0.14.0-SNAPSHOT</kiji-express.version>
+    <fake-hbase.version>0.1.4</fake-hbase.version>
+    <kiji-express.version>0.14.0</kiji-express.version>
     <kiji-mapreduce.version>1.2.2</kiji-mapreduce.version>
-    <kiji-schema.version>1.3.4-SNAPSHOT</kiji-schema.version>
+    <kiji-schema.version>1.3.4</kiji-schema.version>
     <kiji-schema-shell.version>1.3.1</kiji-schema-shell.version>
 
     <!-- Dependency versions -->
