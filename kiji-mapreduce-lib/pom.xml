@@ -28,7 +28,7 @@
   <parent>
     <groupId>org.kiji.pom</groupId>
     <artifactId>root-pom</artifactId>
-    <version>1.1.4-SNAPSHOT</version>
+    <version>1.1.4</version>
   </parent>
 
   <name>The KijiMR Library top-level project</name>
@@ -42,7 +42,7 @@
     <kiji-schema.version>1.3.3</kiji-schema.version>
     <kiji-schema-shell.version>1.3.1</kiji-schema-shell.version>
     <kiji-mapreduce.version>1.2.2</kiji-mapreduce.version>
-    <fake-hbase.version>0.1.4-SNAPSHOT</fake-hbase.version>
+    <fake-hbase.version>0.1.4</fake-hbase.version>
   </properties>
 
   <modules>
