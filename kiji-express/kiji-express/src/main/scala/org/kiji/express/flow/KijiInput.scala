@@ -248,7 +248,20 @@ object KijiInput {
   @ApiAudience.Public
   @ApiStability.Experimental
   object Builder {
+
+    /**
+     * Create a new empty Builder.
+     *
+     * @return a new empty Builder.
+     */
     def apply(): Builder = new Builder(None, None, None)
+
+    /**
+     * Create a new Builder as a copy of the given Builder.
+     *
+     * @param other Builder to copy.
+     * @return a new Builder as a copy of the given Builder.
+     */
     def apply(other: Builder): Builder =
         new Builder(other.tableURI, other.timeRange, other.columnSpecs)
 

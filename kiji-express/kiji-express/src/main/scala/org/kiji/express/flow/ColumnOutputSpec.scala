@@ -187,6 +187,7 @@ object QualifiedColumnOutputSpec {
    * @param target object to decompose if it is a QualifiedColumnOutputSpec.
    * @return the fields of the decomposed QualifiedColumnOutputSpec or None if target is not a
    *     QualifiedColumnOutputSpec.
+   *     (family, qualifier, schemaSpec)
    */
   private[express] def unapply(
       target: Any
@@ -224,7 +225,7 @@ object QualifiedColumnOutputSpec {
    *
    * @param constructorFamily optional family with which to initialize this builder.
    * @param constructorQualifier optional qualifier with which to initialize this builder.
-   * @param constructorSchemaSpec optional SchemaSpec with which to intialize this builder.
+   * @param constructorSchemaSpec optional SchemaSpec with which to initialize this builder.
    */
   @ApiAudience.Public
   @ApiStability.Experimental
@@ -399,10 +400,10 @@ object QualifiedColumnOutputSpec {
  *   // Write data versioned with the current timestamp to a column in the "matrix" column family.
  *   // The 'column field will contain the column name each tuple should be written to.
  *   val myColumnFamilySpec: ColumnFamilyOutputSpec =
- *       ColumnFamilyOutputSpec(
- *           family = "matrix",
- *           qualifierSelector = 'column
- *       )
+ *       ColumnFamilyOutputSpec.builder
+ *           .withFamily("matrix")
+ *           .withQualifierSelector('column)
+ *           .build
  * }}}
  *
  * If compiled avro classes are being used, the class of the data that will be written can be
@@ -411,11 +412,11 @@ object QualifiedColumnOutputSpec {
  *   // Write instances of User records versioned with the current timestamp to a column in the
  *   // "users" column family.
  *   val myColumnSpec: ColumnFamilyOutputSpec =
- *       ColumnFamilyOutputSpec(
- *           family = "users",
- *           qualifierSelector = 'name,
- *           schemaSpec = SchemaSpec.Specific(classOf[User])
- *       )
+ *       ColumnFamilyOutputSpec.builder
+ *           .withFamily("users")
+ *           .withQualifierSelector('name)
+ *           .withSchemaSpec(SchemaSpec.Specific(classOf[User])
+ *           .build
  * }}}
  *
  * To see more information about writing data to a Kiji table, see
@@ -495,6 +496,7 @@ object ColumnFamilyOutputSpec {
    * @param target object to decompose if it is a ColumnFamilyOutputSpec.
    * @return the fields of the decomposed ColumnFamilyOutputSpec or None if target is not a
    *     ColumnFamilyOutputSpec.
+   *     (family, qualifierSelector, schemaSpec)
    */
   private[express] def unapply(
       target: Any
@@ -505,7 +507,7 @@ object ColumnFamilyOutputSpec {
   /**
    * A request for data from a Kiji table column family.
    * This construct method is used by Java builders for ColumnInputSpec.
-   * Scala users ought to use the natural apply method.
+   * Scala users ought to use the Builder APIs.
    *
    * @param family name of the requested data.
    * @param qualifierSelector is the string tuple field name used to specify the

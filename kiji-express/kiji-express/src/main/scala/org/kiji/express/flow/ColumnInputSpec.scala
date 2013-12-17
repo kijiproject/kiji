@@ -128,7 +128,7 @@ object ColumnInputSpec {
    *     [[org.kiji.express.flow.SchemaSpec.Writer]].
    * @return a new column input spec with supplied options.
    */
-  def apply(
+  private[express] def apply(
       column: String,
       maxVersions: Int = DEFAULT_MAX_VERSIONS,
       filterSpec: ColumnFilterSpec = DEFAULT_COLUMN_FILTER_SPEC,
@@ -157,40 +157,6 @@ object ColumnInputSpec {
         " for a group-type, or 'family' for a map-type column.")
     }
   }
-
-  /**
-   * A request for data from a Kiji table column. The input spec will be for a qualified column if
-   * the column parameter contains a ':', otherwise the input will assumed to be for a column family
-   * (column family names cannot contain ';' characters). Data will be read back as the specified
-   * avro class.
-   *
-   * @param column name of the requested data.
-   * @param specificRecord class to read from the column.
-   * @return a new column input spec with supplied options.
-   */
-  def apply(
-      column: String,
-      specificRecord: Class[_ <: SpecificRecord]
-  ): ColumnInputSpec = {
-    ColumnInputSpec(column, schemaSpec = SchemaSpec.Specific(specificRecord))
-  }
-
-  /**
-   * A request for data from a Kiji table column. The input spec will be for a qualified column if
-   * the column parameter contains a ':', otherwise the input will assumed to be for a column family
-   * (column family names cannot contain ';' characters). Data will be read back applying the
-   * specified avro schema.
-   *
-   * @param column name of the requested data.
-   * @param schema to apply to the data.
-   * @return a new column input spec with supplied options.
-   */
-  def apply(
-      column: String,
-      schema: Schema
-  ): ColumnInputSpec = {
-    ColumnInputSpec(column, schemaSpec = SchemaSpec.Generic(schema))
-  }
 }
 
 /**
@@ -200,11 +166,10 @@ object ColumnInputSpec {
  * {{{
  *   // Request the latest version of data stored in the "info:name" column.
  *   val myColumnSpec: QualifiedColumnInputSpec =
- *       QualifiedColumnInputSpec(
- *           family = "info",
- *           qualifier = "name",
- *           maxVersions = 1
- *       )
+ *       QualifiedColumnInputSpec.builder
+ *           .withColumn("info", "name")
+ *           .withMaxVersions(1)
+ *           .build
  * }}}
  *
  * Paging can be enabled on a column input specification causing blocks of cells to be retrieved
@@ -212,12 +177,11 @@ object ColumnInputSpec {
  * {{{
  *   // Request cells from the "info:status" column retrieving 1000 cells per block.
  *   val myPagedColumn: QualifiedColumnInputSpec =
- *       QualifiedColumnInputSpec(
- *           family = "info",
- *           qualifier = "status",
- *           maxVersions = Int.MaxValue,
- *           pagingSpec = PagingSpec.Cells(1000)
- *       )
+ *       QualifiedColumnInputSpec.builder
+ *           .withColumn("info", "status")
+ *           .withMaxVersions(flow.all)
+ *           .withPagingSpec(PagingSpec.Cells(1000))
+ *           .build
  * }}}
  *
  * If compiled avro classes are being used, a compiled record class can be specified. Data read from
@@ -225,12 +189,11 @@ object ColumnInputSpec {
  * {{{
  *   // Request cells from the "info:user" column containing User records.
  *   val myColumnSpec: QualifiedColumnInputSpec =
- *       QualifiedColumnInputSpec(
- *           family = "info",
- *           qualifier = "user",
- *           maxVersions = 1,
- *           schemaSpec = SchemaSpec.Specific(classOf[User])
- *       )
+ *       QualifiedColumnInputSpec.builder
+ *           .withColumn("info", "user")
+ *           .withMaxVersions(1)
+ *           .withSchemaSpec(SchemaSpec.Specific(classOf[User]))
+ *           .build
  * }}}
  *
  * To see more information about reading data from a Kiji table, see
@@ -328,6 +291,14 @@ object QualifiedColumnInputSpec {
         schemaSpec)
   }
 
+  /**
+   * Decompose the given object into its constituent parts if it is an instance of
+   * QualifiedColumnInputSpec.
+   *
+   * @param target object to decompose if it is a QualifiedColumnInputSpec.
+   * @return the fields used to construct the target.
+   *     (family, qualifier, maxVersions, filterSpec, pagingSpec, schemaSpec)
+   */
   private[express] def unapply(
       target: Any
   ): Option[(
@@ -349,7 +320,7 @@ object QualifiedColumnInputSpec {
   /**
    * A request for data from a fully qualified Kiji table column.
    * This construct method is used by Java builders for ColumnInputSpec.
-   * Scala users ought to use the natural apply method.
+   * Scala users ought to use the Builder APIs.
    *
    * @param column is the fully qualified column name of the requested data.
    * @param maxVersions to read back from the requested column (default is only most recent).
@@ -407,7 +378,7 @@ object QualifiedColumnInputSpec {
    * @param constructorPagingSpec optional PagingSpec with which to initialize this builder.
    * @param constructorSchemaSpec optional SchemaSpec with which to initialize this builder.
    */
-  final class Builder(
+  final class Builder private(
       constructorFamily: Option[String],
       constructorQualifier: Option[String],
       constructorMaxVersions: Option[Int],
@@ -652,10 +623,10 @@ object QualifiedColumnInputSpec {
  * {{{
  *   // Request the latest version of data stored in the "matrix" column family.
  *   val myColumnFamilySpec: ColumnFamilyInputSpec =
- *       ColumnFamilyInputSpec(
- *           family = "matrix",
- *           maxVersions = 1
- *       )
+ *       ColumnFamilyInputSpec.builder
+ *           .withFamily("matrix")
+ *           .withMaxVersions(1)
+ *           .build
  * }}}
  *
  * Filters can be applied to the column qualifier of cells in a column family.
@@ -663,11 +634,11 @@ object QualifiedColumnInputSpec {
  *   // Request cells from the "hits" column that are from columns with qualifiers that begin with
  *   // the string "http://www.wibidata.com/".
  *   val myFilteredColumnSpec: ColumnFamilyInputSpec =
- *       ColumnFamilyInputSpec(
- *           family = "hits",
- *           maxVersions = Int.MaxValue,
- *           filterSpec = RegexQualifierFilterSpec("http://www\.wibidata\.com/.*")
- *       )
+ *       ColumnFamilyInputSpec.builder
+ *           .withFamily("hits")
+ *           .withMaxVersions(flow.all)
+ *           .withFilterSpec(RegexQualifierFilterSpec("http://www\.wibidata\.com/.*")
+ *           .build
  * }}}
  *
  * Paging can be enabled on a column input specification causing blocks of cells to be retrieved
@@ -675,22 +646,22 @@ object QualifiedColumnInputSpec {
  * {{{
  *   // Request cells from the "metadata" column family retrieving 1000 cells per block.
  *   val myPagedColumn: ColumnFamilyInputSpec =
- *       ColumnFamilyInputSpec(
- *           family = "metadata",
- *           maxVersions = Int.MaxValue,
- *           pagingSpec = PagingSpec.Cells(1000)
- *       )
+ *       ColumnFamilyInputSpec.builder
+ *           .withFamily("metadata")
+ *           .withMaxVersions(flow.all)
+ *           .withPagingSpec(PagingSpec.Cells(1000))
+ *           .build
  * }}}
  *
  * If compiled avro classes are being used, a class that data should be read as can be specified:
  * {{{
  *   // Request cells from the "users" column family containing User records.
  *   val myColumnSpec: ColumnFamilyInputSpec =
- *       ColumnFamilyInputSpec(
- *           family = "users",
- *           maxVersions = 1,
- *           schemaSpec = SchemaSpec.Specific(classOf[User])
- *       )
+ *       ColumnFamilyInputSpec.builder
+ *           .withFamily("users")
+ *           .withMaxVersions(1)
+ *           .withSchemaSpec(SchemaSpec.Specific(classOf[User]))
+ *           .build
  * }}}
  *
  * To see more information about reading data from a Kiji table, see
@@ -757,8 +728,7 @@ final class ColumnFamilyInputSpec private(
 object ColumnFamilyInputSpec {
 
   /**
-   * Convenience function for creating a [[org.kiji.express.flow.ColumnFamilyInputSpec]] with
-   * a generic Avro type specified by a [[org.apache.avro.Schema]].
+   * Create a new ColumnFamilyInputSpec from the given parameters.
    *
    * @param family of columns the requested data belongs to.
    * @param maxVersions to read back from the requested column (default is only most recent).
@@ -783,6 +753,14 @@ object ColumnFamilyInputSpec {
         schemaSpec)
   }
 
+  /**
+   * Decompose the given object into its constituent parts if it is an instance of
+   * ColumnFamilyInputSpec.
+   *
+   * @param target object to decompose if it is a ColumnFamilyInputSpec.
+   * @return the fields used to construct the target.
+   *     (family, maxVersions, filterSpec, pagingSpec, schemaSpec)
+   */
   private[express] def unapply(
       target: Any
   ): Option[(
@@ -802,7 +780,7 @@ object ColumnFamilyInputSpec {
   /**
    * A request for data from a Kiji table column family.
    * This construct method is used by Java builders for ColumnInputSpec.
-   * Scala users ought to use the natural apply method.
+   * Scala users ought to use the Builder APIs.
    *
    * @param column family name of the requested data.
    * @param maxVersions to read back from the requested column (default is only most recent).
@@ -857,7 +835,7 @@ object ColumnFamilyInputSpec {
    * @param constructorPagingSpec optional PagingSpec with which to initialize this builder.
    * @param constructorSchemaSpec optional SchemaSpec with which to initialize this builder.
    */
-  final class Builder(
+  final class Builder private(
       constructorFamily: Option[String],
       constructorMaxVersions: Option[Int],
       constructorFilterSpec: Option[ColumnFilterSpec],

@@ -92,7 +92,7 @@ object KijiOutput {
    * @param constructorTimestampField flow Field from which to read the timestamp.
    * @param constructorColumnSpecs mapping from Field to output specification.
    */
-  final class Builder private[express](
+  final class Builder private(
       val constructorTableURI: Option[String],
       val constructorTimestampField: Option[Symbol],
       val constructorColumnSpecs: Option[Map[Symbol, _ <: ColumnOutputSpec]]
