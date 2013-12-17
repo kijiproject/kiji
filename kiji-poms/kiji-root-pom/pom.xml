@@ -5,7 +5,7 @@
 
   <groupId>org.kiji.pom</groupId>
   <artifactId>root-pom</artifactId>
-  <version>1.1.4-SNAPSHOT</version>
+  <version>1.1.5-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Kiji core dependencies pom</name>
@@ -367,7 +367,7 @@
                  file to enable proper suppression.
 
                  <module name="SuppressionFilter">
-                   <property name="file" value="src/main/checkstyle/suppressions.xml"/>
+                   <property name="file" value="src/main/checkstyle/suppressions.xml" />
                  </module>
              -->
             <suppressionsLocation>src/main/checkstyle/suppressions.xml</suppressionsLocation>
