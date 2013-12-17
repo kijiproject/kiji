@@ -19,6 +19,7 @@
 
 package org.kiji.express.flow.framework
 
+import scala.collection.JavaConverters.asScalaIteratorConverter
 import java.util.UUID
 
 import cascading.flow.FlowProcess
@@ -31,10 +32,16 @@ import cascading.tuple.TupleEntryCollector
 import cascading.tuple.TupleEntryIterator
 import com.google.common.base.Objects
 import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.hbase.security.User
 import org.apache.hadoop.mapred.JobConf
 import org.apache.hadoop.mapred.OutputCollector
 import org.apache.hadoop.mapred.RecordReader
 import org.apache.hadoop.mapred.lib.NullOutputFormat
+import org.apache.hadoop.security.token.TokenIdentifier
+import org.apache.hadoop.security.token.Token
+import org.apache.hadoop.security.UserGroupInformation
+import org.slf4j.LoggerFactory
+import org.slf4j.Logger
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
@@ -86,11 +93,35 @@ class KijiTap(
         ]
     ]
 ) {
+  private val logger: Logger = LoggerFactory.getLogger(classOf[KijiTap])
+
   /** Address of the table to read from or write to. */
   private val tableUri: String = uri.toString
 
   /** Unique identifier for this KijiTap instance. */
   private val id: String = UUID.randomUUID().toString
+
+  /**
+   * Get the tokens from the current user, and add them to the credentials in the jobConf.  This
+   * is only necessary for operating on a secure cluster, where the HBase delegation tokens are
+   * needed to communicate with HBase.
+   *
+   * This is safe to run on non-secure clusters, because there will be no tokens for the current
+   * user and the jobConf will not be modified.
+   *
+   * @param jobConf to add the tokens to.
+   */
+  def initializeTokens(jobConf: JobConf): Unit = {
+    if (User.isHBaseSecurityEnabled(jobConf)) {
+      val user = UserGroupInformation.getCurrentUser
+      val tokens = user.getTokens.iterator.asScala.toSeq
+      val credentials = jobConf.getCredentials
+      tokens.foreach { token: Token[_ <: TokenIdentifier] =>
+        logger.debug("Adding token %s for user %s to JobConf credentials.".format(token, user))
+        credentials.addToken(token.getKind, token)
+      }
+    }
+  }
 
   /**
    * Sets any configuration options that are required for running a MapReduce job
@@ -107,6 +138,7 @@ class KijiTap(
     // Store the input table.
     conf.set(KijiConfKeys.KIJI_INPUT_TABLE_URI, tableUri)
 
+    initializeTokens(conf)
     super.sourceConfInit(flow, conf)
   }
 
@@ -125,6 +157,7 @@ class KijiTap(
     // Store the output table.
     conf.set(KijiConfKeys.KIJI_OUTPUT_TABLE_URI, tableUri)
 
+    initializeTokens(conf)
     super.sinkConfInit(flow, conf)
   }
 

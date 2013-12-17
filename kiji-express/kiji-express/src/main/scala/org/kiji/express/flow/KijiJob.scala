@@ -32,7 +32,10 @@ import com.twitter.scalding.Job
 import com.twitter.scalding.Mode
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
+import org.apache.hadoop.hbase.security.User
+import org.apache.hadoop.hbase.security.token.TokenUtil
 import org.apache.hadoop.mapred.JobConf
+import org.apache.hadoop.security.UserGroupInformation
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
@@ -66,7 +69,13 @@ class KijiJob(args: Args = Args(Nil))
     var conf: Configuration = HBaseConfiguration.create()
     implicitly[Mode] match {
       case Hdfs(_, configuration) => {
-        conf = configuration
+        HBaseConfiguration.merge(conf, configuration)
+
+        // Obtain any necessary tokens for the current user if security is enabled.
+        if (User.isHBaseSecurityEnabled(conf)) {
+          val user = UserGroupInformation.getCurrentUser
+          TokenUtil.obtainAndCacheToken(conf, user)
+        }
       }
       case HadoopTest(configuration, _) => {
         conf = configuration
