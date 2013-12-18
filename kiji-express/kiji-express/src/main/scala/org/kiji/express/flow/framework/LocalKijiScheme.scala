@@ -50,7 +50,6 @@ import org.kiji.express.flow.EntityId
 import org.kiji.express.flow.QualifiedColumnOutputSpec
 import org.kiji.express.flow.TimeRange
 import org.kiji.express.flow.util.ResourceUtil._
-import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.EntityIdFactory
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiDataRequest
@@ -252,7 +251,7 @@ private[express] case class LocalKijiScheme(
       sinkCall.setContext(
         DirectKijiSinkContext(
           EntityIdFactory.getFactory(table.getLayout),
-          table.openTableWriter()))
+          table.getWriterFactory.openBufferedWriter()))
     }
   }
 

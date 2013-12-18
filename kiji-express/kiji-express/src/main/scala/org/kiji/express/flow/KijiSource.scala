@@ -406,6 +406,8 @@ private[express] object KijiSource {
     override def sinkCleanup(
         process: FlowProcess[Properties],
         sinkCall: SinkCall[DirectKijiSinkContext, OutputStream]) {
+      // flush table writer
+      sinkCall.getContext.writer.flush()
       // Store the output table.
       val conf: JobConf =
         HadoopUtil.createJobConf(process.getConfigCopy, new JobConf(HBaseConfiguration.create()))

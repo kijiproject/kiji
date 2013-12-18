@@ -60,11 +60,11 @@ import org.kiji.express.flow.util.ResourceUtil.withKijiTable
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.ColumnVersionIterator
 import org.kiji.schema.EntityIdFactory
+import org.kiji.schema.KijiBufferedWriter
 import org.kiji.schema.KijiCell
 import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiDataRequestBuilder
 import org.kiji.schema.KijiRowData
-import org.kiji.schema.KijiTableWriter
 import org.kiji.schema.KijiURI
 import org.kiji.schema.MapFamilyVersionIterator
 import org.kiji.schema.avro.SchemaType
@@ -262,7 +262,7 @@ class KijiScheme(
       sinkCall.setContext(
         DirectKijiSinkContext(
           EntityIdFactory.getFactory(table.getLayout),
-          table.openTableWriter()))
+          table.getWriterFactory.openBufferedWriter()))
     }
   }
 
@@ -623,4 +623,4 @@ private[express] final case class KijiSourceContext(rowContainer: Container[Kiji
 @Inheritance.Sealed
 private[express] final case class DirectKijiSinkContext(
     eidFactory: EntityIdFactory,
-    writer: KijiTableWriter)
+    writer: KijiBufferedWriter)
