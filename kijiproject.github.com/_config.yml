@@ -6,6 +6,8 @@ exclude: ["markdown_styleguide.md", ".rvmrc", "jekyll.gems", ".rbenv-version", "
 auto: true
 pygments: true
 
+markdown: rdiscount
+
 # Themes are encouraged to use these universal variables
 # so be sure to set them if your theme uses them.
 #
