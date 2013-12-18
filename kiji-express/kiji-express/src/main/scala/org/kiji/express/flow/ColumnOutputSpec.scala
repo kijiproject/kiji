@@ -53,13 +53,6 @@ import org.kiji.schema.KijiInvalidNameException
 @ApiStability.Experimental
 sealed trait ColumnOutputSpec {
   /**
-   * Column family to write data to.
-   *
-   * @return family of columns to write to.
-   */
-  def family: String
-
-  /**
    * The [[org.kiji.schema.KijiColumnName]] to write data to.
    *
    * @return the name of the column or column family to write data to.

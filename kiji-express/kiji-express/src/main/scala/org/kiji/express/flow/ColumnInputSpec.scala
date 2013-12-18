@@ -85,13 +85,6 @@ sealed trait ColumnInputSpec {
   def schemaSpec: SchemaSpec
 
   /**
-   * Column family of the requested data.
-   *
-   * @return the column family of the requested data.
-   */
-  def family: String
-
-  /**
    * The [[org.kiji.schema.KijiColumnName]] of the requested data.
    *
    * @return the column name of the requested data.

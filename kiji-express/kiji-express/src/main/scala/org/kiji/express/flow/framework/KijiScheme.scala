@@ -212,7 +212,7 @@ class KijiScheme(
 
     // Get the next row.
     if (sourceCall.getInput.next(null, value)) {
-      val row: KijiRowData = value.getContents()
+      val row: KijiRowData = value.getContents
 
       // Build a tuple from this row.
       val result: Tuple = rowToTuple(
@@ -536,12 +536,13 @@ object KijiScheme {
           val value = output.getObject(field)
           val col: ColumnOutputSpec = columns(field)
 
+          val family = col.columnName.getFamily
           val qualifier = col match {
             case qc: QualifiedColumnOutputSpec => qc.qualifier
             case cf: ColumnFamilyOutputSpec => output.getString(cf.qualifierSelector.name)
           }
 
-          writer.put(entityId, col.family, qualifier, timestamp, col.encode(value))
+          writer.put(entityId, family, qualifier, timestamp, col.encode(value))
       }
   }
 
@@ -593,7 +594,7 @@ object KijiScheme {
             val columnFamily = layout
                 .getFamilyMap
                 .get(column.columnName.getFamily)
-            if (columnFamily.isMapType()) {
+            if (columnFamily.isMapType) {
               columnFamily
                   .getDesc
                   .getMapSchema
