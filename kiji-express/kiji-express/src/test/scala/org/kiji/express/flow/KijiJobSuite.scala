@@ -38,7 +38,6 @@ import org.kiji.express.flow.util.ResourceUtil.doAndRelease
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiURI
 import org.kiji.schema.layout.KijiTableLayout
-import org.kiji.express.flow.SchemaSpec.Specific
 
 @RunWith(classOf[JUnitRunner])
 class KijiJobSuite extends KijiSuite {

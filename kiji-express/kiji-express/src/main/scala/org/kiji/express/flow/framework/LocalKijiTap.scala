@@ -67,10 +67,10 @@ private[express] class LocalKijiTap(
         scheme.asInstanceOf[Scheme[Properties, InputStream, OutputStream, _, _]]) {
 
   /** The URI of the table to be read through this tap. */
-  private val tableUri: String = uri.toString()
+  private val tableAddress: String = uri.toString
 
   /** A unique identifier for this tap instance. */
-  private val id: String = UUID.randomUUID().toString()
+  private val id: String = UUID.randomUUID().toString
 
   /**
    * Sets any configuration options that are required for running a local job
@@ -84,7 +84,7 @@ private[express] class LocalKijiTap(
       flow: FlowProcess[Properties],
       conf: Properties) {
     // Store the input table.
-    conf.setProperty(KijiConfKeys.KIJI_INPUT_TABLE_URI, tableUri)
+    conf.setProperty(KijiConfKeys.KIJI_INPUT_TABLE_URI, tableAddress)
 
     super.sourceConfInit(flow, conf)
   }
@@ -101,7 +101,7 @@ private[express] class LocalKijiTap(
       flow: FlowProcess[Properties],
       conf: Properties) {
     // Store the output table.
-    conf.setProperty(KijiConfKeys.KIJI_OUTPUT_TABLE_URI, tableUri)
+    conf.setProperty(KijiConfKeys.KIJI_OUTPUT_TABLE_URI, tableAddress)
 
     super.sinkConfInit(flow, conf)
   }
@@ -113,7 +113,7 @@ private[express] class LocalKijiTap(
    *     the Kiji table being used by this tap to allow jobs that read from or write to the same
    *     table to have different data request options.
    */
-  override def getIdentifier(): String = id
+  override def getIdentifier: String = id
 
   /**
    * Opens any resources required to read from a Kiji table.
@@ -124,13 +124,12 @@ private[express] class LocalKijiTap(
    */
   override def openForRead(
       flow: FlowProcess[Properties],
-      input: InputStream): TupleEntryIterator = {
-    return new TupleEntrySchemeIterator[Properties, InputStream](
+      input: InputStream): TupleEntryIterator =
+    new TupleEntrySchemeIterator[Properties, InputStream](
         flow,
         getScheme(),
         if (null == input) new ByteArrayInputStream(Array()) else input,
         getIdentifier())
-  }
 
   /**
    * Opens any resources required to write from a Kiji table.
@@ -144,13 +143,12 @@ private[express] class LocalKijiTap(
    */
   override def openForWrite(
       flow: FlowProcess[Properties],
-      output: OutputStream): TupleEntryCollector = {
-    return new TupleEntrySchemeCollector[Properties, OutputStream](
+      output: OutputStream): TupleEntryCollector =
+    new TupleEntrySchemeCollector[Properties, OutputStream](
         flow,
         getScheme(),
         if (null == output) new ByteArrayOutputStream() else output,
         getIdentifier())
-  }
 
   /**
    * Builds any resources required to read from or write to a Kiji table.
@@ -161,9 +159,8 @@ private[express] class LocalKijiTap(
    * @return true if required resources were created successfully.
    * @throws UnsupportedOperationException always.
    */
-  override def createResource(conf: Properties): Boolean = {
+  override def createResource(conf: Properties): Boolean =
     throw new UnsupportedOperationException("KijiTap does not support creating tables for you.")
-  }
 
   /**
    * Deletes any unnecessary resources used to read from or write to a Kiji table.
@@ -174,9 +171,8 @@ private[express] class LocalKijiTap(
    * @return true if superfluous resources were deleted successfully.
    * @throws UnsupportedOperationException always.
    */
-  override def deleteResource(conf: Properties): Boolean = {
+  override def deleteResource(conf: Properties): Boolean =
     throw new UnsupportedOperationException("KijiTap does not support deleting tables for you.")
-  }
 
   /**
    * Determines if the Kiji table this `Tap` instance points to exists.
@@ -185,11 +181,10 @@ private[express] class LocalKijiTap(
    * @return true if the target Kiji table exists.
    */
   override def resourceExists(conf: Properties): Boolean = {
-    val uri: KijiURI = KijiURI.newBuilder(tableUri).build()
     val jobConf: JobConf = HadoopUtil.createJobConf(conf,
         new JobConf(HBaseConfiguration.create()))
     doAndRelease(Kiji.Factory.open(uri, jobConf)) { kiji: Kiji =>
-      kiji.getTableNames().contains(uri.getTable())
+      kiji.getTableNames.contains(uri.getTable)
     }
   }
 
@@ -203,16 +198,14 @@ private[express] class LocalKijiTap(
    */
   override def getModifiedTime(conf: Properties): Long = System.currentTimeMillis()
 
-  override def equals(other: Any): Boolean = {
-    other match {
-      case tap: LocalKijiTap => ((tableUri == tap.tableUri)
-          && (scheme == tap.scheme)
-          && (id == tap.id))
-      case _ => false
-    }
+  override def equals(obj: Any): Boolean = obj match {
+    case other: LocalKijiTap => (tableAddress == other.tableAddress
+        && scheme == other.scheme
+        && id == other.id)
+    case _ => false
   }
 
-  override def hashCode(): Int = Objects.hashCode(tableUri, scheme, id)
+  override def hashCode(): Int = Objects.hashCode(tableAddress, scheme, id)
 
   /**
    * Checks whether the instance, tables, and columns this tap uses can be accessed.
@@ -220,9 +213,10 @@ private[express] class LocalKijiTap(
    * @throws KijiExpressValidationException if the tables and columns are not accessible when this
    *    is called.
    */
-  private[express] def validate(conf: Properties): Unit = {
-    val kijiUri: KijiURI = KijiURI.newBuilder(tableUri).build()
-    KijiTap.validate(kijiUri, scheme.icolumns, scheme.ocolumns, HadoopUtil.createJobConf(conf,
-        new JobConf(HBaseConfiguration.create())))
-  }
+  private[express] def validate(conf: Properties): Unit =
+    KijiTap.validate(
+      uri,
+      scheme.inputColumns,
+      scheme.outputColumns,
+      HadoopUtil.createJobConf(conf, new JobConf(HBaseConfiguration.create())))
 }

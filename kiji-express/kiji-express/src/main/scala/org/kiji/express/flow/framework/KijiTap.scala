@@ -37,11 +37,11 @@ import org.apache.hadoop.mapred.JobConf
 import org.apache.hadoop.mapred.OutputCollector
 import org.apache.hadoop.mapred.RecordReader
 import org.apache.hadoop.mapred.lib.NullOutputFormat
-import org.apache.hadoop.security.token.TokenIdentifier
-import org.apache.hadoop.security.token.Token
 import org.apache.hadoop.security.UserGroupInformation
-import org.slf4j.LoggerFactory
+import org.apache.hadoop.security.token.Token
+import org.apache.hadoop.security.token.TokenIdentifier
 import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
@@ -51,13 +51,13 @@ import org.kiji.express.flow.InvalidKijiTapException
 import org.kiji.express.flow.util.ResourceUtil.doAndRelease
 import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.mapreduce.framework.KijiTableInputFormat
-import org.kiji.schema.{ EntityId => JEntityId }
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiRowData
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiURI
 import org.kiji.schema.layout.KijiTableLayout
+import org.kiji.schema.{EntityId => JEntityId}
 
 /**
  * A Kiji-specific implementation of a Cascading `Tap`, which defines the location of a Kiji table.
@@ -283,7 +283,7 @@ class KijiTap(
    * @throws KijiExpressValidationException if the tables and columns are not accessible when this
    *    is called.
    */
-  private[express] def validate(conf: JobConf): Unit = {
+  private[express] def validate(conf: Configuration): Unit = {
     val kijiUri: KijiURI = KijiURI.newBuilder(tableUri).build()
     KijiTap.validate(kijiUri, scheme.inputColumns, scheme.outputColumns, conf)
   }

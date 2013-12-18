@@ -42,6 +42,8 @@ object AvroTypesComplete {
   val layout = KijiTableLayout.newLayout(
       KijiTableLayouts.getLayout("layout/avro-types-complete.json"))
 
+  val name = layout.getName
+
   val family = "strict"
 
   /** Column names. */

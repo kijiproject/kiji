@@ -21,21 +21,22 @@ package org.kiji.express.flow.framework.hfile
 
 import java.lang.UnsupportedOperationException
 
+import cascading.scheme.Scheme
 import cascading.tap.Tap
-import com.google.common.base.Objects
 import com.twitter.scalding.AccessMode
+import com.twitter.scalding.HadoopSchemeInstance
 import com.twitter.scalding.HadoopTest
 import com.twitter.scalding.Hdfs
 import com.twitter.scalding.Mode
 import com.twitter.scalding.Source
 import com.twitter.scalding.Write
+import org.apache.hadoop.mapred.JobConf
+import org.apache.hadoop.mapred.OutputCollector
+import org.apache.hadoop.mapred.RecordReader
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.express.flow.All
 import org.kiji.express.flow.ColumnOutputSpec
-import org.kiji.express.flow.TimeRange
-import org.kiji.express.flow.framework.KijiScheme
 
 /**
  * A read or write view of a Kiji table.
@@ -45,9 +46,8 @@ import org.kiji.express.flow.framework.KijiScheme
  * to access it, and a Cascading Scheme [[cascading.scheme.Scheme]], which describes how to read
  * and interpret the data.
  *
- * An `HFileKijiSource` should never be used for reading.  It is intended to be used only in
- * [[org.kiji.express.flow.framework.hfile.HFileKijiJob]], for writing out to HFiles formatted for
- * bulk-loading into Kiji.
+ * An `HFileKijiSource` should never be used for reading.  It is intended to be used for writing
+ * to HFiles formatted for bulk-loading into Kiji.
  *
  * When writing to a Kiji table, a `HFileKijiSource` views a Kiji table as a collection of tuples
  * that correspond to cells from the Kiji table. Each tuple to be written must provide a cell
@@ -59,35 +59,30 @@ import org.kiji.express.flow.framework.KijiScheme
  * [[org.kiji.express.flow.framework.hfile]] module.
  *
  * @param tableAddress is a Kiji URI addressing the Kiji table to read or write to.
- * @param timeRange that cells read must belong to. Ignored when the source is used to write.
  * @param timestampField is the name of a tuple field that will contain cell timestamp when the
- *     source is used for writing. Specify `None` to write all
- *     cells at the current time.
- * @param loggingInterval The interval at which to log skipped rows.
+ *     source is used for writing. Specify `None` to write all cells at the current time.
  * @param columns is a one-to-one mapping from field names to Kiji columns. When reading,
  *     the columns in the map will be read into their associated tuple fields. When
  *     writing, values from the tuple fields will be written to their associated column.
  */
 @ApiAudience.Framework
 @ApiStability.Experimental
-class HFileKijiSource private[express] (
-    val tableAddress: String,
-    val hFileOutput: String,
-    val timeRange: TimeRange,
-    val timestampField: Option[Symbol],
-    val loggingInterval: Long,
-    val columns: Map[Symbol, ColumnOutputSpec]
+case class HFileKijiSource private[express] (
+    tableAddress: String,
+    hFileOutput: String,
+    timestampField: Option[Symbol],
+    columns: Map[Symbol, ColumnOutputSpec]
 ) extends Source {
   import org.kiji.express.flow.KijiSource._
+
+  private val hfileScheme = new HFileKijiScheme(timestampField, convertKeysToStrings(columns))
 
   /**
    * Creates a Scheme that writes to/reads from a Kiji table for usage with
    * the hadoop runner.
    */
-  override val hdfsScheme: KijiScheme.HadoopScheme =
-    new HFileKijiScheme(timeRange, timestampField, loggingInterval, convertKeysToStrings(columns))
-      // This cast is required due to Scheme being defined with invariant type parameters.
-      .asInstanceOf[KijiScheme.HadoopScheme]
+  override val hdfsScheme: Scheme[JobConf, RecordReader[_, _], OutputCollector[_, _], _, _] =
+    HadoopSchemeInstance(hfileScheme)
 
   /**
    * Create a connection to the physical data source (also known as a Tap in Cascading)
@@ -98,66 +93,11 @@ class HFileKijiSource private[express] (
    * @return A tap to use for this data source.
    */
   override def createTap(readOrWrite: AccessMode)(implicit mode: Mode): Tap[_, _, _] = {
-    val tap: Tap[_, _, _] = mode match {
-      // Production taps.
-      case Hdfs(_, _) => new HFileKijiTap(tableAddress, hdfsScheme, hFileOutput)
-
-      // Test taps.
-      case HadoopTest(conf, buffers) => {
-        readOrWrite match {
-          case Write => {
-            new HFileKijiTap(tableAddress, hdfsScheme, hFileOutput)
-          }
-          case _ => throw new UnsupportedOperationException("Read unsupported")
-        }
-      }
-      // Delegate any other tap types to Source's default behaviour.
-      case _ => super.createTap(readOrWrite)(mode)
-    }
-
-    return tap
-  }
-
-  override def toString: String = {
-    Objects
-        .toStringHelper(this)
-        .add("tableAddress", tableAddress)
-        .add("timeRange", timeRange)
-        .add("timestampField", timestampField)
-        .add("loggingInterval", loggingInterval)
-        .add("columns", columns)
-        .toString
-  }
-
-  override def equals(other: Any): Boolean = {
-    other match {
-      case source: HFileKijiSource => {
-        Objects.equal(tableAddress, source.tableAddress) &&
-        Objects.equal(hFileOutput, source.hFileOutput) &&
-        Objects.equal(columns, source.columns) &&
-        Objects.equal(timestampField, source.timestampField) &&
-        Objects.equal(timeRange, source.timeRange)
-      }
-      case _ => false
+    (readOrWrite, mode) match {
+      case (Write, Hdfs(_, _)) =>  new HFileKijiTap(tableAddress, hfileScheme, hFileOutput)
+      case (Write, HadoopTest(_, _)) => new HFileKijiTap(tableAddress, hfileScheme, hFileOutput)
+      case (Write, _) => throw new UnsupportedOperationException("Cascading local mode unsupported")
+      case (_, _) => throw new UnsupportedOperationException("Read unsupported")
     }
   }
-
-  override def hashCode(): Int =
-      Objects.hashCode(tableAddress, hFileOutput, columns, timestampField, timeRange)
-}
-
-/**
- * Private Scalding source implementation whose scheme is the SemiNullScheme that
- * simply sinks tuples to an output for later writing to HFiles.
- */
-private final class HFileSource(
-    override val tableAddress: String,
-    override val hFileOutput: String
-) extends HFileKijiSource(tableAddress, hFileOutput, All, None, 0, Map()) {
-  /**
-   * Creates a Scheme that writes to/reads from a Kiji table for usage with
-   * the hadoop runner.
-   */
-  override val hdfsScheme: KijiScheme.HadoopScheme =
-      new SemiNullScheme().asInstanceOf[KijiScheme.HadoopScheme]
 }

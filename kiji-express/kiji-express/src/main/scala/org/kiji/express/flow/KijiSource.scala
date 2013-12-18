@@ -36,13 +36,14 @@ import cascading.tuple.Tuple
 import cascading.tuple.TupleEntry
 import com.google.common.base.Objects
 import com.twitter.scalding.AccessMode
-import com.twitter.scalding.Test
+import com.twitter.scalding.HadoopSchemeInstance
 import com.twitter.scalding.HadoopTest
 import com.twitter.scalding.Hdfs
 import com.twitter.scalding.Local
 import com.twitter.scalding.Mode
 import com.twitter.scalding.Read
 import com.twitter.scalding.Source
+import com.twitter.scalding.Test
 import com.twitter.scalding.Write
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
@@ -52,13 +53,12 @@ import org.apache.hadoop.mapred.RecordReader
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.express.flow.framework.DirectKijiSinkContext
 import org.kiji.express.flow.framework.KijiScheme
 import org.kiji.express.flow.framework.KijiTap
 import org.kiji.express.flow.framework.LocalKijiScheme
 import org.kiji.express.flow.framework.LocalKijiTap
-import org.kiji.express.flow.framework.OutputContext
 import org.kiji.express.flow.util.ResourceUtil._
-import org.kiji.mapreduce.framework.KijiConfKeys
 import org.kiji.schema.EntityIdFactory
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiDataRequest
@@ -109,37 +109,33 @@ final class KijiSource private[express] (
 ) extends Source {
   import KijiSource._
 
-  private type HadoopScheme = Scheme[JobConf, RecordReader[_, _], OutputCollector[_, _], _, _]
-
   /** The URI of the target Kiji table. */
-  private val tableUri: KijiURI = KijiURI.newBuilder(tableAddress).build()
+  private val uri: KijiURI = KijiURI.newBuilder(tableAddress).build()
 
   /** A Kiji scheme intended to be used with Scalding/Cascading's hdfs mode. */
   private val kijiScheme: KijiScheme =
       new KijiScheme(
-          tableUri,
+          tableAddress,
           timeRange,
           timestampField,
           convertKeysToStrings(inputColumns),
-          convertKeysToStrings(outputColumns)
-      )
+          convertKeysToStrings(outputColumns))
 
   /** A Kiji scheme intended to be used with Scalding/Cascading's local mode. */
   private val localKijiScheme: LocalKijiScheme =
       new LocalKijiScheme(
+          uri,
           timeRange,
           timestampField,
           convertKeysToStrings(inputColumns),
-          convertKeysToStrings(outputColumns)
-      )
+          convertKeysToStrings(outputColumns))
 
   /**
    * Creates a Scheme that writes to/reads from a Kiji table for usage with
    * the hadoop runner.
    */
-  override val hdfsScheme: HadoopScheme = kijiScheme
-      // This cast is required due to Scheme being defined with invariant type parameters.
-      .asInstanceOf[HadoopScheme]
+  override val hdfsScheme: Scheme[JobConf, RecordReader[_, _], OutputCollector[_, _], _, _] =
+    HadoopSchemeInstance(kijiScheme)
 
   /**
    * Creates a Scheme that writes to/reads from a Kiji table for usage with
@@ -161,77 +157,71 @@ final class KijiSource private[express] (
     /** Combination of normal input columns and input versions of the output columns (the latter are
      * needed for reading back written results) */
     def getInputColumnsForTesting: Map[String, ColumnInputSpec] = {
-      val testingInputColumnsFromReads = inputColumnSpecifyAllData(
-          convertKeysToStrings(inputColumns))
-      val testingInputColumnsFromWrites = inputColumnSpecifyAllData(
-          convertKeysToStrings(outputColumns)
-          .mapValues { x: ColumnOutputSpec =>
-            ColumnInputSpec(x.columnName.toString, schemaSpec = x.schemaSpec)
+      val columnsFromReads = inputColumnSpecifyAllData(convertKeysToStrings(inputColumns))
+      val columnsFromWrites = inputColumnSpecifyAllData(
+        convertKeysToStrings(outputColumns)
+          .mapValues { colSpec: ColumnOutputSpec =>
+            ColumnInputSpec(colSpec.columnName.toString, schemaSpec = colSpec.schemaSpec)
           })
-      testingInputColumnsFromReads ++ testingInputColumnsFromWrites
+      columnsFromReads ++ columnsFromWrites
     }
 
-    val tap: Tap[_, _, _] = mode match {
+    mode match {
       // Production taps.
-      case Hdfs(_,_) => new KijiTap(tableUri, kijiScheme).asInstanceOf[Tap[_, _, _]]
-      case Local(_) => new LocalKijiTap(tableUri, localKijiScheme).asInstanceOf[Tap[_, _, _]]
+      case Hdfs(_,_) => new KijiTap(uri, kijiScheme).asInstanceOf[Tap[_, _, _]]
+      case Local(_) => new LocalKijiTap(uri, localKijiScheme).asInstanceOf[Tap[_, _, _]]
 
       // Test taps.
-      case HadoopTest(conf, buffers) => {
-        readOrWrite match {
-          case Read => {
-            val scheme = kijiScheme
-            populateTestTable(tableUri, buffers(this), scheme.getSourceFields, conf)
+      case HadoopTest(conf, buffers) => readOrWrite match {
+        case Read => {
+          val scheme = kijiScheme
+          populateTestTable(uri, buffers(this), scheme.getSourceFields, conf)
 
-            new KijiTap(tableUri, scheme).asInstanceOf[Tap[_, _, _]]
-          }
-          case Write => {
-            val scheme = new TestKijiScheme(
-                tableUri,
-                timestampField,
-                getInputColumnsForTesting,
-                convertKeysToStrings(outputColumns))
+          new KijiTap(uri, scheme).asInstanceOf[Tap[_, _, _]]
+        }
+        case Write => {
+          val scheme = new TestKijiScheme(
+              uri,
+              timestampField,
+              getInputColumnsForTesting,
+              convertKeysToStrings(outputColumns))
 
-            new KijiTap(tableUri, scheme).asInstanceOf[Tap[_, _, _]]
-          }
+          new KijiTap(uri, scheme).asInstanceOf[Tap[_, _, _]]
         }
       }
-      case Test(buffers) => {
-        readOrWrite match {
-          // Use Kiji's local tap and scheme when reading.
-          case Read => {
-            val scheme = localKijiScheme
-            populateTestTable(
-                tableUri,
-                buffers(this),
-                scheme.getSourceFields,
-                HBaseConfiguration.create())
+      case Test(buffers) => readOrWrite match {
+        // Use Kiji's local tap and scheme when reading.
+        case Read => {
+          val scheme = localKijiScheme
+          populateTestTable(
+              uri,
+              buffers(this),
+              scheme.getSourceFields,
+              HBaseConfiguration.create())
 
-            new LocalKijiTap(tableUri, scheme).asInstanceOf[Tap[_, _, _]]
-          }
+          new LocalKijiTap(uri, scheme).asInstanceOf[Tap[_, _, _]]
+        }
 
-          // After performing a write, use TestLocalKijiScheme to populate the output buffer.
-          case Write => {
-            val scheme = new TestLocalKijiScheme(
-                buffers(this),
-                timeRange,
-                timestampField,
-                getInputColumnsForTesting,
-                convertKeysToStrings(outputColumns))
+        // After performing a write, use TestLocalKijiScheme to populate the output buffer.
+        case Write => {
+          val scheme = new TestLocalKijiScheme(
+              buffers(this),
+              uri,
+              timeRange,
+              timestampField,
+              getInputColumnsForTesting,
+              convertKeysToStrings(outputColumns))
 
-            new LocalKijiTap(tableUri, scheme).asInstanceOf[Tap[_, _, _]]
-          }
+          new LocalKijiTap(uri, scheme).asInstanceOf[Tap[_, _, _]]
         }
       }
 
       // Delegate any other tap types to Source's default behaviour.
       case _ => super.createTap(readOrWrite)(mode)
     }
-
-    return tap
   }
 
- override def toString: String = {
+ override def toString: String =
    Objects
        .toStringHelper(this)
        .add("tableAddress", tableAddress)
@@ -240,19 +230,15 @@ final class KijiSource private[express] (
        .add("inputColumns", inputColumns)
        .add("outputColumns", outputColumns)
        .toString
-  }
 
-  override def equals(other: Any): Boolean = {
-    other match {
-      case source: KijiSource => {
-        Objects.equal(tableAddress, source.tableAddress) &&
-        Objects.equal(inputColumns, source.inputColumns) &&
-        Objects.equal(outputColumns, source.outputColumns) &&
-        Objects.equal(timestampField, source.timestampField) &&
-        Objects.equal(timeRange, source.timeRange)
-      }
-      case _ => false
-    }
+  override def equals(obj: Any): Boolean = obj match {
+    case other: KijiSource => (
+          tableAddress == other.tableAddress
+          && inputColumns == other.inputColumns
+          && outputColumns == other.outputColumns
+          && timestampField == other.timestampField
+          && timeRange == other.timeRange)
+    case _ => false
   }
 
   override def hashCode(): Int =
@@ -297,7 +283,7 @@ private[express] object KijiSource {
         inputColumns.asScala.toMap.map{ case (symbolName, column) => (Symbol(symbolName), column) },
         outputColumns.asScala.toMap.map{ case (symbolName, column) => (Symbol(symbolName), column) }
     )
-    return new KijiTap(kijiSource.tableUri, kijiSource.kijiScheme).asInstanceOf[Tap[_, _, _]]
+    new KijiTap(kijiSource.uri, kijiSource.kijiScheme)
   }
 
   /**
@@ -306,10 +292,8 @@ private[express] object KijiSource {
    * @param columnMap Mapping from field name to Kiji column name.
    * @return Java map from field name to column definition.
    */
-  private[express] def convertKeysToStrings[T <: Any](columnMap: Map[Symbol, T])
-      : Map[String, T] = {
+  private[express] def convertKeysToStrings[T <: Any](columnMap: Map[Symbol, T]): Map[String, T] =
     columnMap.map { case (symbol, column) => (symbol.name, column) }
-  }
 
   /**
    * Takes a buffer containing rows and writes them to the table at the specified uri.
@@ -408,45 +392,34 @@ private[express] object KijiSource {
    */
   private class TestLocalKijiScheme(
       val buffer: Buffer[Tuple],
+      uri: KijiURI,
       timeRange: TimeRange,
       timestampField: Option[Symbol],
       inputColumns: Map[String, ColumnInputSpec],
       outputColumns: Map[String, ColumnOutputSpec])
       extends LocalKijiScheme(
+          uri,
           timeRange,
           timestampField,
           inputColumnSpecifyAllData(inputColumns),
           outputColumns) {
     override def sinkCleanup(
         process: FlowProcess[Properties],
-        sinkCall: SinkCall[OutputContext, OutputStream]) {
+        sinkCall: SinkCall[DirectKijiSinkContext, OutputStream]) {
       // Store the output table.
-      val conf: JobConf = HadoopUtil
-          .createJobConf(process.getConfigCopy, new JobConf(HBaseConfiguration.create()))
-      val uri: KijiURI = KijiURI
-          .newBuilder(conf.get(KijiConfKeys.KIJI_OUTPUT_TABLE_URI))
-          .build()
+      val conf: JobConf =
+        HadoopUtil.createJobConf(process.getConfigCopy, new JobConf(HBaseConfiguration.create()))
 
       // Read table into buffer.
       withKijiTable(uri, conf) { table: KijiTable =>
         // We also want the entire timerange, so the test can inspect all data in the table.
-        val request: KijiDataRequest = KijiScheme
-            .buildRequest(table.getLayout, All, inputColumns.values)
+        val request: KijiDataRequest =
+          KijiScheme.buildRequest(table.getLayout, All, inputColumns.values)
 
         doAndClose(LocalKijiScheme.openReaderWithOverrides(table, request)) { reader =>
           doAndClose(reader.getScanner(request)) { scanner: KijiRowScanner =>
-            val rows: Iterator[KijiRowData] = scanner.iterator().asScala
-            rows.foreach { row: KijiRowData =>
-              val tuple = KijiScheme
-                  .rowToTuple(
-                      // Use input columns that are based on the output columns
-                      inputColumns,
-                      getSourceFields,
-                      timestampField,
-                      row,
-                      table.getURI,
-                      conf
-                  )
+            scanner.iterator().asScala.foreach { row: KijiRowData =>
+              val tuple = KijiScheme.rowToTuple(inputColumns, getSourceFields, timestampField, row)
 
               val newTupleValues = tuple
                   .iterator()
@@ -498,8 +471,7 @@ private[express] object KijiSource {
       inputs + ((fieldName, input))
     }
 
-    outputs
-        .foldLeft(inputs)(mergeEntry)
+    outputs.foldLeft(inputs)(mergeEntry)
   }
 
   /**
@@ -512,12 +484,12 @@ private[express] object KijiSource {
    * @param outputColumns Scalding field name to column output spec mapping.
    */
   private class TestKijiScheme(
-      tableUri: KijiURI,
+      uri: KijiURI,
       timestampField: Option[Symbol],
       inputColumns: Map[String, ColumnInputSpec],
       outputColumns: Map[String, ColumnOutputSpec])
       extends KijiScheme(
-          tableUri,
+          uri.toString,
           All,
           timestampField,
           mergeColumnMapping(inputColumns, outputColumns),

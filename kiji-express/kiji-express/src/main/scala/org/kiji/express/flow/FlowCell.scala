@@ -34,7 +34,7 @@ import org.kiji.schema.KijiCell
  * qualifier, and version. Flow cells are provided when requesting a Kiji table column or column
  * family.
  *
- * Example of accesssing data stored within a flow cell:
+ * Example of accessing data stored within a flow cell:
  * {{{
  *   // Extracts the data stored within cell.
  *   val myData: T = cell.datum

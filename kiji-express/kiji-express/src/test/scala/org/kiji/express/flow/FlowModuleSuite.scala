@@ -25,7 +25,6 @@ import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.flow.framework.KijiScheme
 import org.kiji.schema.KijiInvalidNameException
-import org.kiji.schema.KijiURI
 
 @RunWith(classOf[JUnitRunner])
 class FlowModuleSuite extends FunSuite {
@@ -118,10 +117,10 @@ class FlowModuleSuite extends FunSuite {
         .withColumns("info:word" -> 'word)
         .build
     val expectedScheme = new KijiScheme(
-        tableUri = KijiURI.newBuilder(tableURI).build(),
+        tableAddress = tableURI,
         timeRange = All,
         timestampField = None,
-        inputColumns = Map("word" -> QualifiedColumnInputSpec("info", "word")))
+        icolumns = Map("word" -> QualifiedColumnInputSpec("info", "word")))
 
     assert(expectedScheme === input.hdfsScheme)
   }
@@ -133,7 +132,7 @@ class FlowModuleSuite extends FunSuite {
         .withColumns("info:word" -> 'word)
         .build
     val expectedScheme = new KijiScheme(
-        KijiURI.newBuilder(tableURI).build(),
+        tableURI,
         Between(0L, 40L),
         None,
         Map("word" -> QualifiedColumnInputSpec("info", "word")))
@@ -148,7 +147,7 @@ class FlowModuleSuite extends FunSuite {
         .build
     val expectedScheme: KijiScheme = {
       new KijiScheme(
-          KijiURI.newBuilder(tableURI).build(),
+          tableURI,
           All,
           None,
           Map(
@@ -203,10 +202,10 @@ class FlowModuleSuite extends FunSuite {
         .withColumns('words -> "info:words")
         .build
     val expectedScheme: KijiScheme = new KijiScheme(
-        tableUri = KijiURI.newBuilder(tableURI).build(),
+        tableAddress = tableURI,
         timeRange = All,
         timestampField = None,
-        outputColumns = Map("words" -> QualifiedColumnOutputSpec.builder
+        ocolumns = Map("words" -> QualifiedColumnOutputSpec.builder
             .withColumn("info", "words")
             .build))
     assert(expectedScheme === output.hdfsScheme)
@@ -219,10 +218,10 @@ class FlowModuleSuite extends FunSuite {
         .withColumns('words -> "info:words")
         .build
     val expectedScheme: KijiScheme = new KijiScheme(
-        tableUri = KijiURI.newBuilder(tableURI).build(),
+        tableAddress = tableURI,
         timeRange = All,
         timestampField = Some('time),
-        outputColumns = Map("words" -> QualifiedColumnOutputSpec.builder
+        ocolumns = Map("words" -> QualifiedColumnOutputSpec.builder
             .withColumn("info", "words")
             .build))
     assert(expectedScheme === output.hdfsScheme)

@@ -22,7 +22,6 @@ package org.kiji.express.flow.framework.hfile
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
-import org.kiji.express.flow.All
 import org.kiji.express.flow.ColumnOutputSpec
 import org.kiji.express.flow.QualifiedColumnOutputSpec
 import org.kiji.schema.KijiColumnName
@@ -88,9 +87,7 @@ object HFileKijiOutput {
     new HFileKijiSource(
         tableAddress = tableUri,
         hFileOutput,
-        timeRange = All,
         timestampField = None,
-        loggingInterval = 1000,
         columns = columns)
   }
 
@@ -119,9 +116,7 @@ object HFileKijiOutput {
     new HFileKijiSource(
         tableAddress = tableUri,
         hFileOutput = hFileOutput,
-        timeRange = All,
         Some(timestampField),
-        loggingInterval = 1000,
         columns = columnMap)
   }
 
@@ -147,9 +142,7 @@ object HFileKijiOutput {
     new HFileKijiSource(
         tableAddress = tableUri,
         hFileOutput,
-        timeRange = All,
         timestampField = Some(timestampField),
-        loggingInterval = 1000,
         columns = columns)
   }
 

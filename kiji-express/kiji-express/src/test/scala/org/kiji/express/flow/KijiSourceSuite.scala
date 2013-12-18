@@ -49,8 +49,7 @@ import org.kiji.schema.layout.KijiTableLayouts
 import org.kiji.schema.layout.TableLayoutBuilder
 
 @RunWith(classOf[JUnitRunner])
-class KijiSourceSuite
-    extends KijiSuite {
+class KijiSourceSuite extends KijiSuite {
   import KijiSourceSuite._
 
   /** Simple table layout to use for tests. The row keys are hashed. */

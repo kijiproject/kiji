@@ -20,10 +20,14 @@
 package org.kiji.express.flow
 
 import scala.collection.JavaConverters.collectionAsScalaIterableConverter
+import scala.collection.JavaConverters.mapAsScalaMapConverter
 
 import java.util.Properties
 
+import cascading.flow.Flow
 import cascading.flow.hadoop.util.HadoopUtil
+import cascading.pipe.Checkpoint
+import cascading.pipe.Pipe
 import cascading.tap.Tap
 import com.twitter.scalding.Args
 import com.twitter.scalding.HadoopTest
@@ -42,6 +46,8 @@ import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
 import org.kiji.express.flow.framework.KijiTap
 import org.kiji.express.flow.framework.LocalKijiTap
+import org.kiji.express.flow.framework.hfile.HFileFlowStepStrategy
+import org.kiji.express.flow.framework.hfile.HFileKijiTap
 import org.kiji.express.flow.util.AvroTupleConversions
 import org.kiji.express.flow.util.PipeConversions
 
@@ -60,14 +66,16 @@ class KijiJob(args: Args = Args(Nil))
     extends Job(args)
     with PipeConversions
     with AvroTupleConversions {
+
   override def validateSources(mode: Mode): Unit = {
-    val taps: List[Tap[_, _, _]] =
-        flowDef.getSources.values.asScala.toList ++
-        flowDef.getSinks.values.asScala.toList
+    val taps: List[Tap[_, _, _]] = (
+        flowDef.getSources.values.asScala.toList
+        ++ flowDef.getSinks.values.asScala.toList
+        ++ flowDef.getCheckpoints.values.asScala.toList)
 
     // Retrieve the configuration
-    var conf: Configuration = HBaseConfiguration.create()
-    implicitly[Mode] match {
+    val conf: Configuration = HBaseConfiguration.create()
+    mode match {
       case Hdfs(_, configuration) => {
         HBaseConfiguration.merge(conf, configuration)
 
@@ -78,24 +86,66 @@ class KijiJob(args: Args = Args(Nil))
         }
       }
       case HadoopTest(configuration, _) => {
-        conf = configuration
+        HBaseConfiguration.merge(conf, configuration)
       }
       case _ =>
     }
 
     // Validate that the Kiji parts of the sources (tables, columns) are valid and exist.
     taps.foreach {
-      case kijiTap: KijiTap => kijiTap.validate(new JobConf(conf))
-      case localKijiTap: LocalKijiTap => {
+      case tap: KijiTap => tap.validate(conf)
+      case tap: HFileKijiTap => tap.validate(conf)
+      case tap: LocalKijiTap => {
         val properties: Properties = new Properties()
         properties.putAll(HadoopUtil.createProperties(conf))
-        localKijiTap.validate(properties)
+        tap.validate(properties)
       }
       case _ => // No Kiji parts to verify.
     }
 
     // Call any validation that scalding's Job class does.
     super.validateSources(mode)
+  }
+
+  override def buildFlow(implicit mode : Mode): Flow[_] = {
+    checkpointHFileSink()
+    val flow = super.buildFlow
+    // Here we set the strategy to change the sink steps since we are dumping to HFiles.
+    flow.setFlowStepStrategy(HFileFlowStepStrategy)
+    flow
+  }
+
+  /**
+   * Modifies the flowDef to include an explicit checkpoint when writing HFiles, if necessary.
+   * Checkpoints are necessary when the final stage of the job writing to an HFile tap includes a
+   * reducer, i.e., if it is not a map-only stage.
+   */
+  private def checkpointHFileSink(): Unit = {
+    val sinks: java.util.Map[String, Tap[_, _, _]] = flowDef.getSinks
+    val tails: java.util.List[Pipe] = flowDef.getTails
+
+    val hfileSinks = sinks.asScala.collect { case (name, _: HFileKijiTap) => name }.toSet
+
+    if (!hfileSinks.isEmpty) {
+      val tailsMap = flowDef.getTails.asScala.map((p: Pipe) => p.getName -> p).toMap
+      val flow: Flow[JobConf] = super.buildFlow.asInstanceOf[Flow[JobConf]]
+
+      for {
+        flowStep <- flow.getFlowSteps.asScala
+        sink <- flowStep.getSinks.asScala
+        name <- flowStep.getSinkName(sink).asScala if hfileSinks(name)
+      } {
+        if (flowStep.getConfig.getNumReduceTasks > 0) {
+          // insert checkpoint to force writing the tuples to a temp file inHDFS. The subsequent
+          // reading of the checkpoint and tuples flowing into the HFileTap will be map-only and
+          // hence allows the IdentityReducer + TotalOrderPartitioner to properly sink the values to
+          // HFiles
+          val tail = tailsMap(name)
+          tails.remove(tail)
+          flowDef.addTail(new Pipe(name, new Checkpoint(tail.getPrevious.head)))
+        }
+      }
+    }
   }
 
   override def config(implicit mode: Mode): Map[AnyRef, AnyRef] = {
@@ -105,9 +155,7 @@ class KijiJob(args: Args = Args(Nil))
     // disable schema validation. This system property is only useful for KijiSchema v1.1. In newer
     // versions of KijiSchema, this property has no effect.
     val disableValidation = " -Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED"
-    val oldJavaOptions = baseConfig
-        .get("mapred.child.java.opts")
-        .getOrElse("")
+    val oldJavaOptions = baseConfig.get("mapred.child.java.opts").getOrElse("")
 
     // Add support for our Kryo Avro serializers (see org.kiji.express.flow.framework.KryoKiji).
     val oldSerializations = baseConfig("io.serializations").toString
