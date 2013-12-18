@@ -348,7 +348,7 @@ public class CreateHiveTableTool extends BaseTool {
       .append(" (\n");
 
     // Hive column name and type information.
-    sb.append("  entity_id STRING");
+    sb.append("  `entity_id` STRING");
 
     for (KijiColumnName kijiColumnName : kijiColumnNames) {
       String hiveType = getHiveType(kijiColumnName, kijiTableLayout, schemaTable);
@@ -357,9 +357,9 @@ public class CreateHiveTableTool extends BaseTool {
       if (!hiveType.isEmpty()) {
         sb.append(",\n");
 
-        sb.append("  ")
+        sb.append("  `") // We wrap all Column names with backticks to avoid Hive reserved words
           .append(getDefaultHiveColumnName(kijiColumnName))
-          .append(" ")
+          .append("` ")
           .append(getHiveType(kijiColumnName, kijiTableLayout, schemaTable));
       } else {
         kijiCounterColumns.add(kijiColumnName);

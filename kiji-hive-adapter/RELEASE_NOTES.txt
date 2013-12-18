@@ -2,6 +2,10 @@
 
                         Kiji Hive Adapter Release Notes
 
+Version 0.9.0
+  * KIJIHIVE-40. Escape all column names to avoid Hive reserved words in DDL
+      statement generation.
+
 Version 0.7.1
   * KIJIHIVE-40. Escape all inferred class names from complex types to avoid
       Hive reserved words in DDL statement generation.
