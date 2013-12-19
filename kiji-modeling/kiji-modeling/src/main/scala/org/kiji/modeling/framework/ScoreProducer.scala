@@ -214,7 +214,7 @@ final class ScoreProducer
     // Prepare input to the extract phase.
     def getSlices(inputFields: Seq[String]): Seq[Any] = inputFields
         .map { (field: String) =>
-          if (field == KijiScheme.entityIdField) {
+          if (field == KijiScheme.EntityIdField) {
             val uri = KijiURI
               .newBuilder(modelEnvironment.scoreEnvironment.get.inputSpec.tableUri)
               .build()
