@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package org.kiji.express.flow.framework
+package org.kiji.express.flow.framework.serialization
 
 import scala.collection.JavaConverters.seqAsJavaListConverter
 
@@ -32,20 +32,19 @@ import org.apache.avro.specific.SpecificRecord
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.scalatest.FunSuite
 
+import org.kiji.express.SerDeSuite
 import org.kiji.express.avro.SimpleRecord
-import org.kiji.express.flow.framework.serialization.AvroSpecificSerializer
-import org.kiji.express.flow.framework.serialization.AvroGenericSerializer
-import org.kiji.express.flow.framework.serialization.AvroSchemaSerializer
 
-class AvroSerializerSuite
-    extends FunSuite {
-  def serDeTest[I](inputName: String, serdeName: String, input: => I)(operation: I => I) {
-    test("Serialization/Deserialization of a %s using %s".format(inputName, serdeName)) {
-      val expected: I = input
-      val actual: I = operation(expected)
+class KryoKijiSuite
+    extends FunSuite
+    with SerDeSuite {
+  def kryoDeepCopy[T](kryo: Kryo, data: T): T = {
+    val output = new Output(1024)
+    kryo.writeObject(output, data)
 
-      assert(expected === actual)
-    }
+    val klazz = data.getClass
+    val input = new Input(output.getBuffer)
+    kryo.readObject(input, klazz)
   }
 
   val recordSchema: Schema = {
@@ -77,7 +76,7 @@ class AvroSerializerSuite
         .build()
   }
 
-  serDeTest("Schema", "Avro", recordSchema) { actual =>
+  serDeTest("Schema", "Kryo", recordSchema) { actual =>
     // Use cascading.kryo to mimic scalding's actual behavior.
     val kryo = new Kryo()
     val kryoFactory = new KryoFactory(HBaseConfiguration.create())
@@ -86,16 +85,11 @@ class AvroSerializerSuite
     kryoFactory.setHierarchyRegistrations(registrations.asJava)
     kryoFactory.populateKryo(kryo)
 
-    // Serialize the schema.
-    val output = new Output(1024)
-    kryo.writeObject(output, actual)
-
-    // Deserialize the schema.
-    val input = new Input(output.getBuffer)
-    kryo.readObject(input, classOf[Schema])
+    // Serialize and deserialize the schema.
+    kryoDeepCopy(kryo, actual)
   }
 
-  serDeTest("GenericRecord", "Avro", genericRecord) { actual =>
+  serDeTest("GenericRecord", "Kryo", genericRecord) { actual =>
     // Use cascading.kryo to mimic scalding's actual behavior.
     val kryo = new Kryo()
     val kryoFactory = new KryoFactory(HBaseConfiguration.create())
@@ -104,16 +98,11 @@ class AvroSerializerSuite
     kryoFactory.setHierarchyRegistrations(registrations.asJava)
     kryoFactory.populateKryo(kryo)
 
-    // Serialize the schema.
-    val output = new Output(1024)
-    kryo.writeObject(output, actual)
-
-    // Deserialize the schema.
-    val input = new Input(output.getBuffer)
-    kryo.readObject(input, classOf[GenericContainer])
+    // Serialize and deserialize the GenericRecord.
+    kryoDeepCopy(kryo, actual)
   }
 
-  serDeTest("SpecificRecord", "Avro", specificRecord) { actual =>
+  serDeTest("SpecificRecord", "Kryo", specificRecord) { actual =>
     // Use cascading.kryo to mimic scalding's actual behavior.
     val kryo = new Kryo()
     val kryoFactory = new KryoFactory(HBaseConfiguration.create())
@@ -122,12 +111,23 @@ class AvroSerializerSuite
     kryoFactory.setHierarchyRegistrations(registrations.asJava)
     kryoFactory.populateKryo(kryo)
 
-    // Serialize the schema.
-    val output = new Output(1024)
-    kryo.writeObject(output, actual)
-
-    // Deserialize the schema.
-    val input = new Input(output.getBuffer)
-    kryo.readObject(input, classOf[SimpleRecord])
+    // Serialize and deserialize the SpecificRecord.
+    kryoDeepCopy(kryo, actual)
   }
+
+  def kryoKijiTest[T](inputName: String, input: => T) {
+    serDeTest(inputName, "KryoKiji", input) { actual =>
+      // Setup a Kryo object using KryoKiji.
+      val kryo = new Kryo()
+      val kryoKiji = new KryoKiji()
+      kryoKiji.decorateKryo(kryo)
+
+      // Serialize and deserialize the input data.
+      kryoDeepCopy(kryo, actual)
+    }
+  }
+
+  kryoKijiTest("Schema", recordSchema)
+  kryoKijiTest("GenericRecord", genericRecord)
+  kryoKijiTest("SpecificRecord", specificRecord)
 }

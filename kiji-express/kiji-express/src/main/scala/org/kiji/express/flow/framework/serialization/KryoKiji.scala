@@ -41,7 +41,11 @@ class KryoKiji extends KryoHadoop {
     super.decorateKryo(kryo)
 
     kryo.addDefaultSerializer(classOf[Schema], classOf[AvroSchemaSerializer])
-    kryo.addDefaultSerializer(classOf[GenericContainer], classOf[AvroGenericSerializer])
+
+    // Note: The order in which these two serializers are added matters. We want SpecificRecords to
+    //     be picked up first before the more generic GenericContainer serializer. SpecificRecord is
+    //     a subclass of GenericContainer.
     kryo.addDefaultSerializer(classOf[SpecificRecord], classOf[AvroSpecificSerializer])
+    kryo.addDefaultSerializer(classOf[GenericContainer], classOf[AvroGenericSerializer])
   }
 }
