@@ -2,6 +2,7 @@
                              Kiji Express Release Notes
 
 Version 0.15.0
+  * EXP-355. Added Express key-value stores.
   * EXP-388. Use buffered writer for direct kiji output.
   * EXP-350. Support multiple HFile output taps in a single flow.
   * EXP-353. Renamed utility classes to be suffixed with Util.
