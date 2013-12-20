@@ -101,7 +101,7 @@ containing tuples with fields `'song_id` and `'count` containing values of the a
 
   val songCounts = pipe.pack[SongCount](('song_id, 'count) -> 'record)
 
-{% endhighlight%}
+{% endhighlight %}
 
 Similarly, `unpack` may be used to extract fields from an Avro record into a tuple.
 
@@ -109,7 +109,7 @@ Similarly, `unpack` may be used to extract fields from an Avro record into a tup
 
   val songCountFields = songCounts.unpack[SongCount]('record -> ('song_id, 'count))
 
-{% endhighlight%}
+{% endhighlight %}
 
 Note, as with Scalding's `pack` and `unpack`, tuple field names must match the Avro record field names.
 
@@ -124,7 +124,7 @@ as the class to be unpacked.
 
   val unpackedFields = pipe.unpack[GenericRecord]('record -> ('some_field, 'other_field))
 
-{% endhighlight%}
+{% endhighlight %}
 
 Avro requires that a [schema specification](http://avro.apache.org/docs/current/spec.html) be
 provided when creating a generic record.  Express provides the `packGenericRecord` and
@@ -138,4 +138,52 @@ argument in place of a type parameter.
   val songCountSchema: Schema = ...
   val genericSongCounts = pipe.packGenericRecord(('song_id, 'count) -> 'record)(songCountSchema)
 
-{% endhighlight%}
+{% endhighlight %}
+
+### Key-Value Stores
+
+Express provides convenience methods for constructing and interacting with Key-Value stores (a
+concept introduced in the kiji-mapreduce project). Key-Value stores provide a simple Map/Dictionary
+like interface to interact with potentially large stores of data containing key-value pairs.
+Key-Value stores do not materialize data for all key-value pairs at once, only as necessary, making
+them valuable for performing point queries on large datasets.
+
+To use a key-value store in Express, Scalding's `using` method on pipes allows us to specify a setup
+& cleanup method that we will use to open and close key-value store instances:
+
+{% highlight scala %}
+  // Create an ExpressKijiTableKeyValueStore for use in a Scalding "using" block
+  def createKeyValueStoreContext: ExpressKeyValueStore[EntityId, String] = {
+    ExpressKijiTableKeyValueStore[String, Utf8](
+        tableUri = args("city"),
+        column = "family:city",
+        // Avro serializes strings as Utf8, so we use a "valueConverter" function here to convert
+        // the values to Strings.
+        valueConverter = (value: Utf8) => value.toString )
+  }
+  ...
+  // Within an Express pipe
+  // Use the key value store to also get the user's city!
+  .using(createCityKeyValueStoreContext)
+    // KVS available for this map command
+    .map('entityId -> 'city) { (kvs: ExpressKeyValueStore[EntityId, String], eid: EntityId) =>
+        kvs.getOrElse(eid, "No city!!!") }
+    //...KVS no longer available, Scalding will automatically call the "close" method
+{% endhighlight %}
+
+The above example uses a key-value store that is backed by a Kiji table. To use other key-value
+stores:
+
+{% highlight scala %}
+  // Create a custom key-value store.
+  def createKeyValueStoreContext: ExpressKeyValueStore[EntityId, String] = {
+    ExpressKeyValueStore[String, Utf8](
+        kvStoreReader = myCustomKeyValueStore,
+        keyConverter = myKeyConversionFunction,
+        valueConverter = myValueConversionFunction
+  }
+  ...
+{% endhighlight %}
+
+More information can be found about key-value stores here:
+[Key-Value Stores]({{site.userguide_mapreduce_devel}}/key-value-stores/)
