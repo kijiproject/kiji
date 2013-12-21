@@ -20,6 +20,7 @@
 package org.kiji.express.flow
 
 import scala.annotation.implicitNotFound
+import scala.collection.mutable.ListBuffer
 
 import org.apache.hadoop.hbase.HConstants
 
@@ -119,5 +120,41 @@ object FlowCell {
     Ordering.by { cell: FlowCell[T] =>
       (cell.family, cell.qualifier)
     }
+  }
+
+  /**
+   * Groups a Seq of flow cells by qualifier. The cells must belong to the same column family, and
+   * must be in lexicographic sorted order by qualifier (otherwise behavior is undefined).  This is
+   * the default order for scan results from a Kiji table.
+   *
+   * This method is functionally equivalent to, but more memory efficient than, calling
+   * `cells.groupBy(_.qualifier).toSeq`.
+   *
+   * This method will realize each group into memory individually, so it is safe to iterate through
+   * the groups as long as no individual group is larger than the heap. It is NOT safe to
+   * hold onto the individual groups while iterating, or call methods that force the seq to fully
+   * realize (such as .toList or .toMap) if the provided sequence of flow cells is larger than
+   * memory.
+   *
+   * @param cells to be grouped by qualifier.
+   * @tparam T type of datum in cells.
+   * @return groups of FlowCells by qualifier.
+   */
+  def groupByQualifier[T](cells: Seq[FlowCell[T]]): Seq[(String, Seq[FlowCell[T]])] = {
+    val itr = cells.iterator.buffered
+
+    new Iterator[(String, Seq[FlowCell[T]])] {
+      def hasNext: Boolean = itr.hasNext
+
+      def next(): (String, Seq[FlowCell[T]]) = {
+        val qualifier = itr.head.qualifier
+        val builder = ListBuffer[FlowCell[T]]()
+        while(itr.hasNext && itr.head.qualifier == qualifier) {
+          builder += itr.head
+          itr.next()
+        }
+        qualifier -> builder.toList
+      }
+    }.toStream
   }
 }

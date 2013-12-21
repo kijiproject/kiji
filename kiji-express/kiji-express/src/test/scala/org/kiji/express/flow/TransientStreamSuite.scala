@@ -280,6 +280,30 @@ class TransientStreamSuite extends KijiSuite {
     assertComplexity(1, N, tstream => tstream.endsWith(List(10)))
   }
 
+  // This should really by (0, 0), but streams seem to always evaluate the first element.  The
+  // amortized complexity will be the same.
+  test("groupByQualifier is C(1, 2)") {
+    assertComplexity(1, 2, tstream =>
+        FlowCell.groupByQualifier(tstream.map(i => FlowCell("family", i.toString, i, i))))
+  }
+
+  test("groupByQualifier with take(n) is C(1, n + 1) assuming 1 qualifier per group") {
+    assertComplexity(1, 43, tstream =>
+      FlowCell
+        .groupByQualifier(tstream.map(i => FlowCell("family", i.toString, i, i)))
+        .take(42)
+        .toList)
+  }
+
+  test("groupByQualifier will not cause OOM error on large streams.") {
+    val N =  2 * 1000 * 1000 // Will blow up with a 1GB heap if realized
+    assertComplexity(1, N, tstream =>
+      FlowCell
+        .groupByQualifier(tstream.map(i => FlowCell("family", i.toString, i, i)))
+        .foreach { x => }, size = N
+    )
+  }
+
   def sum(a: Int, b: Int): Int = a + b
 
   def countingTSeq(size: Int): (AtomicLong, AtomicLong, TransientStream[Int]) = {
@@ -329,12 +353,12 @@ class TransientStreamSuite extends KijiSuite {
     val successes = (0 until runs)
         .toStream
         .map { x: Int =>
-    // System.gc() // Might decrease odds of GC happening later, but way slower
-      val (iActual, nActual, tstream) = countingTSeq(size)
-      op(tstream)
-      if (debug) println(iActual.get -> nActual.get)
-      iActual.get -> nActual.get
-    }.filter { case (iAct: Long, nAct: Long) => iAct == i && nAct == n }
+          // System.gc() // Might decrease odds of GC happening later, but way slower
+          val (iActual, nActual, tstream) = countingTSeq(size)
+          op(tstream)
+          if (debug) println(iActual.get -> nActual.get)
+          iActual.get -> nActual.get
+        }.filter { case (iAct: Long, nAct: Long) => iAct == i && nAct == n }
         .take(threshold)
 
     assert(successes.length >= threshold)
