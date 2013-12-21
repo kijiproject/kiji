@@ -67,7 +67,7 @@ class IntegrationTestHFileOutput extends AbstractKijiIntegrationTest {
     kiji.createTable(ATC.layout.getDesc)
 
     doAndRelease(kiji.openTable(ATC.name)) { table =>
-      runJob(conf, classOf[HFileOutputMapOnly],
+      runJob(classOf[HFileOutputMapOnly],
         "--hdfs", "--table-uri", table.getURI.toString, "--hfile-output", hfileOutput)
 
       bulkLoadHFiles(hfileOutput + "/hfiles", conf, table)
@@ -84,7 +84,7 @@ class IntegrationTestHFileOutput extends AbstractKijiIntegrationTest {
     kiji.createTable(ATC.layout.getDesc)
 
     doAndRelease(kiji.openTable(ATC.name)) { table =>
-      runJob(conf, classOf[HFileOutputWithReducer],
+      runJob(classOf[HFileOutputWithReducer],
         "--hdfs", "--table-uri", table.getURI.toString, "--hfile-output", hfileOutput)
 
       bulkLoadHFiles(hfileOutput + "/hfiles", conf, table)
@@ -111,7 +111,7 @@ class IntegrationTestHFileOutput extends AbstractKijiIntegrationTest {
 
     doAndRelease(kiji.openTable("A")) { a: KijiTable =>
       doAndRelease(kiji.openTable("B")) { b: KijiTable =>
-        runJob(conf, classOf[HFileOutputMultipleTables],
+        runJob(classOf[HFileOutputMultipleTables],
           "--hdfs",
           "--a", a.getURI.toString, "--b", b.getURI.toString,
           "--a-output", aOutput, "--b-output", bOutput)
@@ -142,7 +142,7 @@ class IntegrationTestHFileOutput extends AbstractKijiIntegrationTest {
 
     doAndRelease(kiji.openTable("A")) { a: KijiTable =>
       doAndRelease(kiji.openTable("B")) { b: KijiTable =>
-        runJob(conf, classOf[HFileOutputAndDirectOutput],
+        runJob(classOf[HFileOutputAndDirectOutput],
           "--hdfs",
           "--a", a.getURI.toString, "--b", b.getURI.toString,
           "--a-output", aOutput)
@@ -167,7 +167,7 @@ class IntegrationTestHFileOutput extends AbstractKijiIntegrationTest {
     kiji.createTable(layout)
 
     doAndRelease(kiji.openTable(layout.getName)) { table: KijiTable =>
-      runJob(conf, classOf[HFileOuputMultipleToSameTable],
+      runJob(classOf[HFileOuputMultipleToSameTable],
         "--hdfs",
         "--uri", table.getURI.toString,
         "--a-output", aOutput, "--b-output", bOutput)

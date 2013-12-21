@@ -180,7 +180,7 @@ function extract_hadoop_major_version() {
 }
 
 # Extracts the --libjars value from the command line and appends/prepends this value to any
-# classpath variables.To ensure that --libjars doesn't get passed into the scalding_tool, this
+# classpath variables.To ensure that --libjars doesn't get passed into the express_tool, this
 # function effectively rebuilds the remainder of the command line arguments by removing the
 # --libjars argument and value. The result is stored in a new global variable called ${COMMAND_ARGS}
 # which is used by other parts of the script in lieu of ${@}.
@@ -383,7 +383,7 @@ case ${command} in
       # Default run mode is local.
       run_mode_flag="--local"
     fi
-    scalding_tool="com.twitter.scalding.Tool"
+    express_tool="org.kiji.express.flow.ExpressTool"
     ;;
 
   jar)
@@ -459,7 +459,7 @@ if [ ! -z "${JAVA_LIBRARY_PATH}" ]; then
 fi
 
 # Run it!
-if [ -z "${scalding_tool}" ]; then
+if [ -z "${express_tool}" ]; then
   # In this case the user is running an arbitrary jar with express code on the classpath.
   # TODO EXP-243: Until we add a keyword in the express/modeling projects to run a model
   # lifecycle tool, we use `express jar` to run it. You may need to add the following
@@ -477,9 +477,9 @@ else
 
   # If the user has put any -Dhadoop.arg=value elements in their arguments ($COMMAND_ARGS),
   # then we need to extract these left-justified arguments from COMMAND_ARGS and add them
-  # to HADOOP_ARGS to pass as argments to scalding_tool to be parsed by Hadoop's
+  # to HADOOP_ARGS to pass as argments to express_tool to be parsed by Hadoop's
   # GenericOptionsParser. The remaining arguments must be delivered as the final arguments
-  # to scalding_tool after its other arguments.
+  # to express_tool after its other arguments.
 
   # We define and then execute two methods on $COMMAND_ARGS to do this separation.
 
@@ -557,7 +557,7 @@ else
     exec java \
       -cp "${express_cp}" ${java_opts} ${EXPRESS_JAVA_OPTS} \
       -Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED \
-      ${scalding_tool} \
+      ${express_tool} \
       "-Dtmpjars=${tmpjars}" \
       "-Dmapreduce.task.classpath.user.precedence=true" \
       ${hadoop_argv} \
@@ -569,7 +569,7 @@ else
     exec java \
       -cp "${express_cp}" ${java_opts} ${EXPRESS_JAVA_OPTS} \
       -Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED \
-      ${scalding_tool} \
+      ${express_tool} \
       "-Dtmpjars=file://${canonical_user_target},${tmpjars}" \
       "-Dmapreduce.task.classpath.user.precedence=true" \
       ${hadoop_argv} \
