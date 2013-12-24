@@ -70,7 +70,7 @@ trait TestPipeConversions {
 }
 
 object TestPipe {
-  val logger: Logger = LoggerFactory.getLogger(classOf[KvsJobSuite])
+  val logger: Logger = LoggerFactory.getLogger(classOf[KeyValueStoreSuite])
 }
 class TestPipe(val pipe: Pipe)
     extends FieldConversions
@@ -123,8 +123,8 @@ class TestPipe(val pipe: Pipe)
 }
 
 @RunWith(classOf[JUnitRunner])
-class KvsJobSuite extends KijiSuite {
-  val logger: Logger = LoggerFactory.getLogger(classOf[KvsJobSuite])
+class KeyValueStoreSuite extends KijiSuite {
+  val logger: Logger = LoggerFactory.getLogger(classOf[KeyValueStoreSuite])
 
   /**
    * Utility method to build a Kiji table for testing.  Should eventually go into a KijiExpress

@@ -169,15 +169,17 @@ object ExpressKeyValueStore {
   def apply[K, V](
       kvStoreReader: KeyValueStoreReader[K, V]
   ): ExpressKeyValueStore[K, V] = {
-    new ForwardingKeyValueStore[K, V, K, V](kvStoreReader, identity, identity)
+    new ForwardingKeyValueStore[K, V, K, V](kvStoreReader, identity[K], identity[V])
   }
 
   /**
-   * Creates a new KijiExpress key-value store backed by a KijiMR key-value store reader.  This
-   * KeyValueStore does conversion between keys and values.  The user may wish to use key and value
-   * converters when reading data out of a delimited text file if the data needs to be converted
-   * from `String` to some other format (e.g., `Double`).  It is also useful for casting data coming
-   * out of a `KijiTable`, for example, converting `Utf8` values to `String` values.
+   * Creates a new KijiExpress key-value store backed by a KijiMR key-value store reader. Conversion
+   * functions can be specified for keys and values.
+   *
+   * The user may wish to use key and value converters when reading data out of a delimited text
+   * file if the data needs to be converted from `String` to some other format (e.g., `Double`). It
+   * is also useful for casting data coming out of a `KijiTable`, for example, converting `Utf8`
+   * values to `String` values.
    *
    * @param kvStoreReader of underlying KijiMR key-value store reader.
    * @param keyConverter A function that converters keys supplied by the user to keys suitable for
@@ -186,17 +188,20 @@ object ExpressKeyValueStore {
    *     format desired by the user.
    * @tparam K type of keys
    * @tparam V type of values
+   * @tparam UK is the underlying KijiMR kv-store's key type.
+   * @tparam UV is the underlying KijiMR kv-store's value type.
    * @return ExpressKeyValueStore backed by a KijiMR key-value store.
    */
   def apply[K, V, UK, UV](
       kvStoreReader: KeyValueStoreReader[UK, UV],
-      keyConverter: K => UK = identity _,
-      valueConverter: UV => V = identity _): ExpressKeyValueStore[K, V] = {
+      keyConverter: K => UK,
+      valueConverter: UV => V
+  ): ExpressKeyValueStore[K, V] = {
     new ForwardingKeyValueStore[K, V, UK, UV](kvStoreReader, keyConverter, valueConverter)
   }
 
   /**
-   * Converts an [[org.kiji.express.EntityId]] to a java KV-store compatible
+   * Converts an [[org.kiji.express.flow.EntityId]] to a java KV-store compatible
    * [[org.kiji.schema.KijiRowKeyComponents]].
    *
    * @param eid to convert.
@@ -228,15 +233,31 @@ object ExpressKijiTableKeyValueStore {
   * @param valueConverter A function that converters values read from the `kvStoreReader` into the
   *     format desired by the user.
   * @tparam V is the type of value users will retrieve when accessing the key-value store.
-  * @tparam UV is the underlying KijiMR kv-store's key type.
+  * @tparam UV is the underlying KijiMR kv-store's value type.
   * @return ExpressKeyValueStore backed by a KijiMR key-value store.
   */
   def apply[V, UV](
       kvStoreReader: KeyValueStoreReader[KijiRowKeyComponents, UV],
-      valueConverter: UV => V = identity _
-      ): ExpressKeyValueStore[EntityId, V] = {
+      valueConverter: UV => V
+  ): ExpressKeyValueStore[EntityId, V] = {
     new ForwardingKeyValueStore[EntityId, V, KijiRowKeyComponents, UV](
         kvStoreReader, ExpressKeyValueStore.eidConverter, valueConverter)
+  }
+
+  /**
+   * Creates a new KijiExpess key-value store backed by a KijiMR KijiTable key-value store reader.
+   * This Express key-value store automatically converts user-supplied entity Ids to
+   * `KijiRowKeyComponents` needed to index the underlying `KeyValueStoreReader`.
+   *
+   * @param kvStoreReader of underlying KijiMR KijiTable key-value store reader.
+   * @tparam V is the type of value users will retrieve when accessing the key-value store.
+   * @return ExpressKeyValueStore backed by a KijiMR key-value store.
+   */
+  def apply[V](
+      kvStoreReader: KeyValueStoreReader[KijiRowKeyComponents, V]
+  ): ExpressKeyValueStore[EntityId, V] = {
+    new ForwardingKeyValueStore[EntityId, V, KijiRowKeyComponents, V](
+      kvStoreReader, ExpressKeyValueStore.eidConverter, identity[V])
   }
 
   /**
@@ -252,14 +273,14 @@ object ExpressKijiTableKeyValueStore {
   * @param valueConverter A function that converters values read from the `kvStoreReader` into the
   *     format desired by the user.
   * @tparam V is the type of value users will retrieve when accessing the key-value store.
-  * @tparam UV is the underlying KijiMR kv-store's key type.
+  * @tparam UV is the underlying KijiMR kv-store's value type.
   * @return ExpressKeyValueStore backed by a KijiMR key-value store.
   */
   def apply[V, UV](
       tableUri: String,
       column: String,
       valueConverter: UV => V
-      ): ExpressKeyValueStore[EntityId, V] = {
+  ): ExpressKeyValueStore[EntityId, V] = {
     val kvStoreReader: KeyValueStoreReader[KijiRowKeyComponents, UV] = JKijiTableKeyValueStore
         .builder()
         .withTable(KijiURI.newBuilder(tableUri).build())
@@ -282,14 +303,13 @@ object ExpressKijiTableKeyValueStore {
   * @param tableUri addressing a table in a Kiji instance.
   * @param column A fully-qualified column name in the specified Kiji instance.
   * @tparam V is the type of value users will retrieve when accessing the key-value store.
-  * @tparam UV is the underlying KijiMR kv-store's key type.
   * @return ExpressKeyValueStore backed by a KijiMR key-value store.
   */
-  def apply[V, UV](
+  def apply[V](
       tableUri: String,
       column: String
-      ): ExpressKeyValueStore[EntityId, V] = {
-    apply(tableUri, column, identity)
+  ): ExpressKeyValueStore[EntityId, V] = {
+    apply[V, V](tableUri, column, identity[V] _)
   }
 }
 
@@ -304,7 +324,7 @@ object ExpressKijiTableKeyValueStore {
  * @tparam K is the type of key users will specify when accessing the key-value store.
  * @tparam V is the type of value users will retrieve when accessing the key-value store.
  * @tparam UK is the underlying KijiMR kv-store's key type.
- * @tparam UV is the underlying KijiMR kv-store's key type.
+ * @tparam UV is the underlying KijiMR kv-store's value type.
  * @param kvStoreReader a KijiMR key-value store that will back this KijiExpress key-value store.
  * @param keyConverter A function that converters keys supplied by the user to keys suitable for the
  *     `kvStoreReader`.
@@ -318,7 +338,7 @@ private[kiji] class ForwardingKeyValueStore[K, V, UK, UV](
     kvStoreReader: KeyValueStoreReader[UK, UV],
     keyConverter: K => UK,
     valueConverter: UV => V
-    ) extends ExpressKeyValueStore[K, V] {
+) extends ExpressKeyValueStore[K, V] {
   require(kvStoreReader != null)
 
   override private[kiji] def release(): Unit = kvStoreReader.close()
