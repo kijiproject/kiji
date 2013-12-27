@@ -82,7 +82,9 @@ class KijiJob(args: Args = Args(Nil))
         // Obtain any necessary tokens for the current user if security is enabled.
         if (User.isHBaseSecurityEnabled(conf)) {
           val user = UserGroupInformation.getCurrentUser
-          TokenUtil.obtainAndCacheToken(conf, user)
+          if (user.getTokens == null || user.getTokens.isEmpty) {
+            TokenUtil.obtainAndCacheToken(conf, user)
+          }
         }
       }
       case HadoopTest(configuration, _) => {
