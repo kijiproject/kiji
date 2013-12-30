@@ -28,8 +28,9 @@ deserialized exactly by subsequent read requests. But this schema must be
 compatible with the expected reader schema specified in the layout for the cell.
 
 There are two ways to edit the layout of a Kiji table:
-* Using the KijiSchema DDL shell
-* Editing the JSON layout description directly.
+
+*  Using the KijiSchema DDL shell
+*  Editing the JSON layout description directly.
 
 Most users should use the KijiSchema DDL shell. It has a user-friendly language
 for creating, modifying, and describing tables. To learn more about this
