@@ -21,6 +21,7 @@ package org.kiji.express.flow
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.express.flow.RowFilterSpec.NoRowFilterSpec
 import org.kiji.schema.KijiColumnName
 
 /**
@@ -38,6 +39,8 @@ import org.kiji.schema.KijiColumnName
  *           .withColumn("info", "column3")
  *           .withSchemaSpec(DefaultReader)
  *           .build -> 'column3)
+ *       // Selects a 30% sample of data between startEid and endEid.
+ *       .withRowSpec(startEid, endEid, KijiRandomRowFilterSpec(0.3F))
  *       .build
  * }}}
  */
@@ -74,13 +77,15 @@ object KijiInput {
   final class Builder private(
       private val consturctorTableURI: Option[String],
       private val constructorTimeRange: Option[TimeRange],
-      private val constructorColumnSpecs: Option[Map[_ <: ColumnInputSpec, Symbol]]
+      private val constructorColumnSpecs: Option[Map[_ <: ColumnInputSpec, Symbol]],
+      private val constructorRowSpec: Option[RowSpec]
   ) {
     private[this] val monitor = new AnyRef
 
     private var mTableURI: Option[String] = consturctorTableURI
     private var mTimeRange: Option[TimeRange] = constructorTimeRange
     private var mColumnSpecs: Option[Map[_ <: ColumnInputSpec, Symbol]] = constructorColumnSpecs
+    private var mRowSpec: Option[RowSpec] = constructorRowSpec
 
     /**
      * Get the Kiji URI of the table from which to read from this Builder.
@@ -102,6 +107,13 @@ object KijiInput {
      * @return the input specifications from this Builder.
      */
     def columnSpecs: Option[Map[_ <: ColumnInputSpec, Symbol]] = mColumnSpecs
+
+    /**
+     * Get the input row specification from this Builder.
+     *
+     * @return the input row specification from this Builder.
+     */
+    def rowSpec: Option[RowSpec] = mRowSpec
 
     /**
      * Configure the KijiSource to read values from the table with the given Kiji URI.
@@ -228,6 +240,18 @@ object KijiInput {
     }
 
     /**
+     * Configure the KijiSource to traverse rows which satisfy the request row specification.
+     *
+     * @param rowSpec requested specification for rows.
+     * @return this builder.
+     */
+    def withRowSpec(rowSpec: RowSpec): Builder = monitor.synchronized {
+      require(None == mRowSpec, "Row spec already set to: " + mRowSpec.get)
+      mRowSpec = Some(rowSpec)
+      this
+    }
+
+    /**
      * Build a new KijiSource configured for input from the values stored in this Builder.
      *
      * @return a new KijiSource configured for input from the values stored in this Builder.
@@ -237,7 +261,8 @@ object KijiInput {
           tableURI.getOrElse(throw new IllegalArgumentException("Table URI must be specified.")),
           timeRange.getOrElse(DEFAULT_TIME_RANGE),
           columnSpecs.getOrElse(
-              throw new IllegalArgumentException("Column input specs must be specified.")))
+              throw new IllegalArgumentException("Column input specs must be specified.")),
+          rowSpec)
     }
   }
 
@@ -254,7 +279,7 @@ object KijiInput {
      *
      * @return a new empty Builder.
      */
-    def apply(): Builder = new Builder(None, None, None)
+    def apply(): Builder = new Builder(None, None, None, None)
 
     /**
      * Create a new Builder as a copy of the given Builder.
@@ -263,7 +288,7 @@ object KijiInput {
      * @return a new Builder as a copy of the given Builder.
      */
     def apply(other: Builder): Builder =
-        new Builder(other.tableURI, other.timeRange, other.columnSpecs)
+        new Builder(other.tableURI, other.timeRange, other.columnSpecs, other.rowSpec)
 
     /**
      * Converts a column -> Field mapping to a ColumnInputSpec -> Field mapping.
@@ -290,13 +315,15 @@ object KijiInput {
    * @param columns are a series of pairs mapping column input specs to tuple field names.
    *     Columns are specified as "family:qualifier" or, in the case of a column family input spec,
    *     simply "family".
+   * @param rowSpecOption the specification of which row interval to scan and which filter to apply.
    * @return a source for data in the Kiji table, whose row tuples will contain fields with cell
    *     data from the requested columns and map-type column families.
    */
   private[express] def apply(
       tableUri: String,
       timeRange: TimeRange,
-      columns: Map[_ <: ColumnInputSpec, Symbol]
+      columns: Map[_ <: ColumnInputSpec, Symbol],
+      rowSpecOption: Option[RowSpec]
   ): KijiSource = {
     val columnMap = columns
         .map { entry: (ColumnInputSpec, Symbol) => entry.swap }
@@ -305,7 +332,8 @@ object KijiInput {
       tableUri,
       timeRange,
       None,
-      inputColumns = columnMap
+      inputColumns = columnMap,
+      rowSpec = rowSpecOption
     )
   }
 }

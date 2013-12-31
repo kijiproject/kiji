@@ -47,7 +47,8 @@ class KijiTapSuite extends KijiSuite {
         timestampField = None,
         icolumns = Map(
             "dummy_field1" -> ColumnInputSpec("searches"),
-            "dummy_field2" -> ColumnInputSpec("family:column1")))
+            "dummy_field2" -> ColumnInputSpec("family:column1")),
+        rowSpec = None)
 
     val testTap: KijiTap = new KijiTap(kijiURI, testScheme)
 
@@ -64,7 +65,8 @@ class KijiTapSuite extends KijiSuite {
         timestampField = None,
         icolumns = Map(
             "dummy_field1" -> ColumnInputSpec("searches"),
-            "dummy_field2" -> ColumnInputSpec("family:column1")))
+            "dummy_field2" -> ColumnInputSpec("family:column1")),
+        rowSpec = None)
 
     val testURI: KijiURI = KijiURI.newBuilder(kijiURI)
         .withInstanceName("nonexistent_instance")
@@ -87,7 +89,8 @@ class KijiTapSuite extends KijiSuite {
         timestampField = None,
         icolumns = Map(
             "dummy_field1" -> ColumnInputSpec("searches"),
-            "dummy_field2" -> ColumnInputSpec("family:column1")))
+            "dummy_field2" -> ColumnInputSpec("family:column1")),
+        rowSpec = None)
 
     val testURI: KijiURI = KijiURI.newBuilder(kijiURI)
         .withTableName("nonexistent_table")
@@ -110,7 +113,8 @@ class KijiTapSuite extends KijiSuite {
         timestampField = None,
         icolumns = Map(
             "dummy_field1" -> ColumnInputSpec("searches"),
-            "dummy_field2" -> ColumnInputSpec("family:nonexistent")))
+            "dummy_field2" -> ColumnInputSpec("family:nonexistent")),
+        rowSpec = None)
 
     val testTap: KijiTap = new KijiTap(kijiURI, testScheme)
 
@@ -131,7 +135,8 @@ class KijiTapSuite extends KijiSuite {
         timestampField = None,
         icolumns = Map(
             "dummy_field1" -> ColumnInputSpec("nonexistent1"),
-            "dummy_field2" -> ColumnInputSpec("family:nonexistent2")))
+            "dummy_field2" -> ColumnInputSpec("family:nonexistent2")),
+        rowSpec = None)
 
     val testTap: KijiTap = new KijiTap(kijiURI, testScheme)
 

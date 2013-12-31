@@ -48,6 +48,7 @@ import org.kiji.express.flow.ColumnInputSpec
 import org.kiji.express.flow.ColumnOutputSpec
 import org.kiji.express.flow.EntityId
 import org.kiji.express.flow.QualifiedColumnOutputSpec
+import org.kiji.express.flow.RowSpec
 import org.kiji.express.flow.TimeRange
 import org.kiji.express.flow.util.ResourceUtil._
 import org.kiji.schema.EntityIdFactory
@@ -56,6 +57,7 @@ import org.kiji.schema.KijiDataRequest
 import org.kiji.schema.KijiDataRequest.Column
 import org.kiji.schema.KijiRowData
 import org.kiji.schema.KijiRowScanner
+import org.kiji.schema.KijiTableReader.KijiScannerOptions
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiTableReader
 import org.kiji.schema.KijiURI
@@ -125,7 +127,8 @@ private[express] case class LocalKijiScheme(
     private[express] val timeRange: TimeRange,
     private[express] val timestampField: Option[Symbol],
     private[express] val inputColumns: Map[String, ColumnInputSpec] = Map(),
-    private[express] val outputColumns: Map[String, ColumnOutputSpec] = Map())
+    private[express] val outputColumns: Map[String, ColumnOutputSpec] = Map(),
+    private[express] val rowSpec: Option[RowSpec])
     extends Scheme[Properties, InputStream, OutputStream, InputContext, DirectKijiSinkContext] {
 
   /** Set the fields that should be in a tuple when this source is used for reading and writing. */
@@ -165,7 +168,26 @@ private[express] case class LocalKijiScheme(
     withKijiTable(uri, conf) { table: KijiTable =>
       val request = KijiScheme.buildRequest(table.getLayout, timeRange, inputColumns.values)
       val reader = LocalKijiScheme.openReaderWithOverrides(table, request)
-      val scanner = reader.getScanner(request)
+
+      // Set up scanning options.
+      val concreteRowSpec = rowSpec.getOrElse(RowSpec.builder.build)
+      val eidFactory = EntityIdFactory.getFactory(table.getLayout())
+      val scannerOptions = new KijiScannerOptions()
+      scannerOptions.setKijiRowFilter(
+          concreteRowSpec.rowFilterSpec.toKijiRowFilter.getOrElse(null))
+      scannerOptions.setStartRow(
+        concreteRowSpec.startEntityId match {
+          case Some(entityId) => entityId.toJavaEntityId(eidFactory)
+          case None => null
+        }
+      )
+      scannerOptions.setStopRow(
+        concreteRowSpec.limitEntityId match {
+          case Some(entityId) => entityId.toJavaEntityId(eidFactory)
+          case None => null
+        }
+      )
+      val scanner = reader.getScanner(request, scannerOptions)
       val tableUri = table.getURI
       val context = InputContext(reader, scanner, scanner.iterator.asScala, tableUri, conf)
 

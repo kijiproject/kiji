@@ -120,7 +120,8 @@ class FlowModuleSuite extends FunSuite {
         tableAddress = tableURI,
         timeRange = All,
         timestampField = None,
-        icolumns = Map("word" -> QualifiedColumnInputSpec("info", "word")))
+        icolumns = Map("word" -> QualifiedColumnInputSpec("info", "word")),
+        rowSpec = None)
 
     assert(expectedScheme === input.hdfsScheme)
   }
@@ -135,7 +136,8 @@ class FlowModuleSuite extends FunSuite {
         tableURI,
         Between(0L, 40L),
         None,
-        Map("word" -> QualifiedColumnInputSpec("info", "word")))
+        Map("word" -> QualifiedColumnInputSpec("info", "word")),
+        rowSpec = None)
 
     assert(expectedScheme === input.hdfsScheme)
   }
@@ -152,7 +154,8 @@ class FlowModuleSuite extends FunSuite {
           None,
           Map(
               "word" -> QualifiedColumnInputSpec("info", "word"),
-              "title" -> QualifiedColumnInputSpec("info", "title")))
+              "title" -> QualifiedColumnInputSpec("info", "title")),
+          rowSpec = None)
     }
 
     assert(expectedScheme === input.hdfsScheme)
@@ -207,7 +210,8 @@ class FlowModuleSuite extends FunSuite {
         timestampField = None,
         ocolumns = Map("words" -> QualifiedColumnOutputSpec.builder
             .withColumn("info", "words")
-            .build))
+            .build),
+        rowSpec = None)
     assert(expectedScheme === output.hdfsScheme)
   }
 
@@ -223,7 +227,8 @@ class FlowModuleSuite extends FunSuite {
         timestampField = Some('time),
         ocolumns = Map("words" -> QualifiedColumnOutputSpec.builder
             .withColumn("info", "words")
-            .build))
+            .build),
+       rowSpec = None)
     assert(expectedScheme === output.hdfsScheme)
   }
 }

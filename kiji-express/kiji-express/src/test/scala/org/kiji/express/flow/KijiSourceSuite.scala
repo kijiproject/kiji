@@ -186,7 +186,7 @@ class KijiSourceSuite extends KijiSuite {
             .build
         )(validateMultipleTimestamps)
         // Run the test job.
-        .run
+        .runHadoop
         .finish
   }
 
