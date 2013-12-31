@@ -30,7 +30,6 @@ import org.apache.avro.generic.GenericRecord
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
-import org.kiji.express.flow.framework.serialization.KijiLocker
 import org.kiji.express.flow.util.AvroGenericTupleConverter
 
 /**
@@ -62,7 +61,7 @@ class KijiPipe(private[express] val pipe: Pipe) extends TupleConversions {
     require(fields._2.size == 1, "Cannot pack generic record to more than a single field.")
     require(schema.getType == Schema.Type.RECORD, "Cannot pack non-record Avro type.")
     new RichPipe(pipe).map(fields) { input: GenericRecord => input } (
-      new AvroGenericTupleConverter(KijiLocker(schema)), implicitly[TupleSetter[GenericRecord]])
+      new AvroGenericTupleConverter(fields._1, schema), implicitly[TupleSetter[GenericRecord]])
   }
 
   /**
@@ -80,6 +79,6 @@ class KijiPipe(private[express] val pipe: Pipe) extends TupleConversions {
     require(fields._2.size == 1, "Cannot pack generic record to more than a single field.")
     require(schema.getType == Schema.Type.RECORD, "Cannot pack to non-record Avro type.")
     new RichPipe(pipe).mapTo(fields) { input: GenericRecord => input } (
-      new AvroGenericTupleConverter(KijiLocker(schema)), implicitly[TupleSetter[GenericRecord]])
+      new AvroGenericTupleConverter(fields._1, schema), implicitly[TupleSetter[GenericRecord]])
   }
 }

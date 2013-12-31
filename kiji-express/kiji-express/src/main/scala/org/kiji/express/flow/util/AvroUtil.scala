@@ -22,6 +22,7 @@ package org.kiji.express.flow.util
 import java.nio.ByteBuffer
 
 import scala.collection.JavaConverters.asScalaBufferConverter
+import scala.collection.JavaConverters.mapAsJavaMapConverter
 import scala.collection.JavaConverters.mapAsScalaMapConverter
 import scala.collection.JavaConverters.seqAsJavaListConverter
 
@@ -99,9 +100,23 @@ object AvroUtil {
    */
   private[express] def arrayEncoder(schema: Schema): Any => Any = {
     require(schema.getType == Schema.Type.ARRAY)
+    val elementEncoder = avroEncoder(schema.getElementType)
     return {
       case tr: TraversableOnce[_] =>
-        new GenericData.Array(schema, tr.map(avroEncoder(schema.getElementType)).toList.asJava)
+        new GenericData.Array(schema, tr.map(elementEncoder).toList.asJava)
+      case other => other
+    }
+  }
+
+  /**
+   * Provides an encoder function that will coerce a [[scala.collection.Map]] to a
+   * [[java.util.Map]]. Avro does not provide a generic map type, so this is the closest type.
+   */
+  private[express] def mapEncoder(schema: Schema): Any => Any = {
+    require(schema.getType == Schema.Type.MAP)
+    val valueEncoder = avroEncoder(schema.getValueType)
+    return {
+      case map: Map[_, _] => map.mapValues(valueEncoder).asJava
       case other => other
     }
   }
@@ -184,11 +199,11 @@ object AvroUtil {
   private[express] def avroEncoder(schema: Schema): Any => Any = {
     schema.getType match {
       case Schema.Type.ARRAY => arrayEncoder(schema)
-      case Schema.Type.ENUM => enumEncoder(schema)
+      case Schema.Type.MAP   => mapEncoder(schema)
+      case Schema.Type.ENUM  => enumEncoder(schema)
       case Schema.Type.BYTES => bytesEncoder(schema)
       case Schema.Type.FIXED => fixedEncoder(schema)
       case _ => identity
     }
   }
-
 }

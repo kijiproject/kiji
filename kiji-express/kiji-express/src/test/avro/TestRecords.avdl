@@ -38,4 +38,20 @@ protocol Testing {
     int camelPupCase;
     int SCREAMING_SNAKE_CASE_YAH;
   }
+
+  record ArrayRecord {
+    array<int> int_array;
+  }
+
+  record MapRecord {
+    map<int> int_map;
+  }
+
+  record NestedArrayRecord {
+    array<array<int>> nested_int_array;
+  }
+
+  record NestedMapRecord {
+    map<map<int>> nested_int_map;
+  }
 }

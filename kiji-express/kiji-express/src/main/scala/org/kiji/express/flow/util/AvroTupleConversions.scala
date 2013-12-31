@@ -21,7 +21,9 @@ package org.kiji.express.flow.util
 
 import java.lang.reflect.Method
 
-import scala.collection.JavaConversions.asScalaIterator
+import scala.collection.JavaConverters.asScalaIteratorConverter
+import scala.collection.JavaConverters.collectionAsScalaIterableConverter
+import scala.collection.JavaConverters.iterableAsScalaIterableConverter
 import scala.reflect.Manifest
 
 import cascading.tuple.Fields
@@ -87,7 +89,7 @@ trait AvroTupleConversions {
   private[express] class AvroGenericTupleSetter(fs: Fields) extends TupleSetter[GenericRecord] {
     override def arity: Int = fs.size
 
-    private val fields: List[String] = fs.iterator.map(_.toString).toList
+    private val fields: List[String] = fs.iterator.asScala.map(_.toString).toList
 
     override def apply(arg: GenericRecord): Tuple = {
       new Tuple(fields.map(arg.get): _*)
@@ -133,47 +135,55 @@ trait AvroTupleConversions {
 @ApiStability.Experimental
 @Inheritance.Sealed
 private[express] case class AvroSpecificTupleConverter[T](fs: Fields, m: Manifest[T])
-    extends TupleConverter[T] {
+    extends TupleConverter[T] with TupleConversions {
+
+  import AvroTupleConversions._
 
   override def arity: Int = -1
 
-  /**
-   * Attempts to translate an avro field name (e.g. count, my_count, should_be_snake_case) to an
-   * Avro record setter name (e.g., setCount, setMyCount, setShouldBeSnakeCase).
-   * @param field to translate to setter format.
-   * @return setter of given field.
-   */
-  private def fieldToSetter(field: String): String = {
-    field.split('_').map(_.capitalize).mkString("set", "", "")
-  }
-
-  // Precompute as much of the reflection business as possible.  Method objects do not serialize,
-  // so any val containing a method in it must be lazy.
+  // Precompute as much of the reflection business as possible.  Method and Avro Schema objects do
+  // not serialize, so any val containing one must be lazy (and transient if used during job setup).
   private val avroClass: Class[_] = m.erasure
   private val builderClass: Class[_] =
-      avroClass.getDeclaredClasses.find(_.getSimpleName == "Builder").get
+    avroClass.getDeclaredClasses.find(_.getSimpleName == "Builder").get
   lazy private val newBuilderMethod: Method = avroClass.getMethod("newBuilder")
   lazy private val buildMethod: Method = builderClass.getMethod("build")
+  @transient lazy private val schema: Schema =
+    avroClass.getMethod("getClassSchema").invoke(null).asInstanceOf[Schema]
 
-  /**
-   * Map of field name to setter method.
-   */
-  lazy private val fieldSetters: Map[String, Method] = {
-    val fields: List[String] = fs.iterator.map(_.toString).toList
-    val setters: Map[String, Method] = builderClass
-        .getDeclaredMethods
-        .map { m => (m.getName, m) }
-        .toMap
+  /** Mapping of canonical field name to value converter. */
+  lazy private val converters: Map[String, Any => Any] = fieldConverters(schema)
 
-    fields
-        .zip(fields.map(fieldToSetter))
-        .toMap
-        .mapValues(setters)
+  /** Mapping of method name to Method. */
+  @transient lazy private val setters: Map[String, Method] =
+    builderClass.getDeclaredMethods.map(m => m.getName -> m).toMap
+
+  private def validate: Unit = {
+    // Check that all scalding fields have a corresponding field in the schema
+    val schemaFields: Set[String] = schema.getFields.asScala.map(_.name).map(snakeToCamel).toSet
+    val schemaErrs = fs.asScala.collect {
+      case field if !schemaFields(snakeToCamel(field.toString)) =>
+        "Avro specific record " + avroClass + " does not contain field " + field + "."
+    }
+
+    // Check that all scalding fields have a corresponding setter in the specific record
+    // This should catch the same issues as schemaErrs, but it's included to be thorough
+    val setterErrs = fs.asScala.collect {
+      case field if !setters.contains(fieldToSetter(field.toString)) =>
+        "Avro specific record " + avroClass + " does not contain a setter for field " + field + "."
+    }
+
+    val errs = schemaErrs ++ setterErrs
+    require(errs.isEmpty, errs.mkString("\n"))
   }
+  validate
 
   override def apply(entry: TupleEntry): T = {
     val builder = newBuilderMethod.invoke(avroClass)
-    fieldSetters.foreach { case (field, setter) => setter.invoke(builder, entry.getObject(field)) }
+    toMap(entry).foreach { case (field, value) =>
+      setters(fieldToSetter(field))
+        .invoke(builder, converters(snakeToCamel(field))(value).asInstanceOf[AnyRef])
+    }
     buildMethod.invoke(builder).asInstanceOf[T]
   }
 }
@@ -183,19 +193,91 @@ private[express] case class AvroSpecificTupleConverter[T](fs: Fields, m: Manifes
  * object with the provided schema.  This converter will fill in default values of the schema if
  * they are not specified through fields.
  *
- * @param schemaLocker wrapping the schema of the target record
+ * @param schema of the target record
  */
 @ApiAudience.Private
 @ApiStability.Experimental
 @Inheritance.Sealed
-private[express] class AvroGenericTupleConverter(schemaLocker: KijiLocker[Schema])
+private[express] class AvroGenericTupleConverter(fs: Fields, schema: Schema)
     extends TupleConverter[GenericRecord] with TupleConversions {
+
+  import AvroTupleConversions._
+
+  private val schemaLocker = KijiLocker(schema)
+
+  /** Mapping of canonical field name (CamelCased) to actual field name. */
+  lazy private val fields: Map[String, String] = {
+    val names = schemaLocker.get.getFields.asScala.map(_.name)
+    names.map(snakeToCamel).zip(names).toMap
+  }
+
+  /** Mapping of canonical field name to value converter. */
+  lazy private val converters: Map[String, Any => Any] = fieldConverters(schemaLocker.get)
 
   override def arity: Int = -1
 
+  private def validate: Unit = {
+    // Check that all scalding fields have a corresponding field in the schema
+    val errs = fs.asScala.collect {
+      case field if !fields.contains(snakeToCamel(field.toString)) =>
+        "Avro generic record " + schemaLocker.get.getName + " does not contain field " + field + "."
+    }
+
+    require(errs.isEmpty, errs.mkString("\n"))
+  }
+  validate
+
   override def apply(entry: TupleEntry): GenericRecord = {
     val builder = new GenericRecordBuilder(schemaLocker.get)
-    toMap(entry).foreach { kv => builder.set(kv._1, kv._2) }
+    toMap(entry).foreach { case (field, value) =>
+      val canonical = snakeToCamel(field)
+      builder.set(fields(canonical), converters(canonical)(value))
+    }
     builder.build()
+  }
+}
+
+/**
+ * Provides utility functions for the avro tuple converter implementations.
+ */
+private[this] object AvroTupleConversions {
+  /**
+   * Attempts to translate an Avro field name (e.g. count, my_count, should_be_snake_case) to an
+   * Avro record setter name (e.g., setCount, setMyCount, setShouldBeSnakeCase).
+   *
+   * @param field to translate to setter format.
+   * @return setter of given field.
+   */
+  def fieldToSetter(field: String): String = {
+    "set" + snakeToCamel(field).capitalize
+  }
+
+  /**
+   * Attempts to translate a snake case name (e.g. count, my_count, should_be_snake_case) to a
+   * camel case name (e.g., count, myCount, shouldBeSnakeCase).
+   *
+   * @param name to translate to camel case.
+   * @return camel case version of supplied snake case name.
+   */
+  def snakeToCamel(name: String): String = {
+    val components = name.split('_')
+    (components(0) +: components.drop(1).map(_.capitalize)).mkString("")
+  }
+
+  /**
+   * Creates a map of converter functions for a record's fields given a record schema. The
+   * converter functions handle conversions between Scala types and the corresponding Avro generic
+   * type.  The key of the map is the canonical form of the field name (camelCased).
+   *
+   * @param schema of record.
+   * @return map of converter functions.
+   */
+  def fieldConverters(schema: Schema): Map[String, Any => Any] = {
+    require(schema.getType == Schema.Type.RECORD)
+    schema
+      .getFields
+      .asScala
+      .map(field => snakeToCamel(field.name) -> AvroUtil.avroEncoder(field.schema))
+      .toMap
   }
 }
