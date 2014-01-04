@@ -30,6 +30,7 @@ import com.twitter.scalding.mathematics.Matrix
 import com.twitter.scalding.mathematics.RowVector
 
 import org.kiji.express.repl.Implicits.pipeToRichPipe
+import org.kiji.express.repl.Implicits.richPipeToPipe
 import org.kiji.modeling.framework.ModelPipeConversions
 
 // For implicit conversions
@@ -47,6 +48,20 @@ class RecommendationPipe(val pipe: Pipe)
     extends FieldConversions
     with TupleConversions
     with ModelPipeConversions {
+
+  /**
+   * This is a convenience function on a pipe to count all the tuples (rows). Provided
+   * because users seem to expect something like "count", rather than a
+   * groupBy { _.size }
+   * NOTE: This is an expensive operation.
+   *
+   * @param resultField is the name of the field that stores the count of tuples. If unspecified,
+   *     the result field is called "totalRows".
+   * @return a pipe with a field specified by resultField that contains the number of tuples.
+   */
+  def count(resultField: Fields = 'totalRows): Pipe = {
+    pipe.groupAll { _.size(resultField) }
+  }
 
   /**
    * This function takes profile information (e.g. a history of purchases) or order data and outputs

@@ -477,4 +477,32 @@ class RecommendationPipeSuite extends KijiSuite {
     jobTest.run.finish
   }
 
+  test("Counting tuples on pipe in parallel works correctly") {
+    // Create input with offset = some integer and line = that integer.toString
+    val input = (1 to 20)
+        .zipWithIndex
+        .map { x: (Int, Int) => val (data, line) = x; (line+1, data.toString) }
+
+    class TupleCounter(args: Args) extends KijiModelingJob(args) {
+      TextLine(args("input"))
+          .read
+          .count('total)
+          .write(TextLine(args("output")))
+    }
+
+    val expected: Set[Float] = Set(20.0f)
+
+    def validateOutput(output: mutable.Buffer[String]): Unit = {
+      val actual: Set[Float] = output.toSet.map { x: String => x.toFloat }
+      assert(actual === expected)
+    }
+
+    val jobTest = JobTest(new TupleCounter(_))
+        .arg("input", "inputFile")
+        .arg("output", "outputFile")
+        .source(TextLine("inputFile"), input)
+        .sink(TextLine("outputFile")) { validateOutput }
+
+    jobTest.run.finish
+  }
 }
