@@ -82,7 +82,11 @@ class FlowStepModificationSuite extends KijiSuite {
 class MapOnlyHFile(uri: String, args: Args) extends KijiJob(args) {
   IterableSource(List("x"), ('entityId, 'x))
     .read
-    .write(HFileKijiOutput(uri, "/", 'x -> "strict:string"))
+    .write(HFileKijiOutput.builder
+        .withTableURI(uri)
+        .withHFileOutput("/")
+        .withColumns('x -> "strict:string")
+        .build)
 }
 
 class MapReduceHFile(uri: String, args: Args) extends KijiJob(args) {
@@ -90,7 +94,11 @@ class MapReduceHFile(uri: String, args: Args) extends KijiJob(args) {
     .read
     .groupAll( x => x.size )
     .insert('entityId, "fuzz")
-    .write(HFileKijiOutput(uri, "/", 'size -> "strict:long"))
+    .write(HFileKijiOutput.builder
+      .withTableURI(uri)
+      .withHFileOutput("/")
+      .withColumns('size -> "strict:long")
+      .build)
 }
 
 class MapOnlyDirect(uri: String, args: Args) extends KijiJob(args) {
@@ -110,12 +118,20 @@ class MapReduceDirect(uri: String, args: Args) extends KijiJob(args) {
 class MapOnlyAndMapReduceHFile(uri: String, args: Args) extends KijiJob(args) {
   val pipe = IterableSource(List("x"), ('entityId, 'x)).read
 
-  pipe.write(HFileKijiOutput(uri, "/", 'x -> "strict:string"))
+  pipe.write(HFileKijiOutput.builder
+      .withTableURI(uri)
+      .withHFileOutput("/")
+      .withColumns('x -> "strict:string")
+      .build)
 
   pipe
     .groupAll( x => x.size )
     .insert('entityId, "fuzz")
-    .write(HFileKijiOutput(uri, "/", 'size -> "strict:long"))
+    .write(HFileKijiOutput.builder
+      .withTableURI(uri)
+      .withHFileOutput("/")
+      .withColumns('size -> "strict:long")
+      .build)
 }
 
 class MapOnlyAndMapReduceDirect(uri: String, args: Args) extends KijiJob(args) {

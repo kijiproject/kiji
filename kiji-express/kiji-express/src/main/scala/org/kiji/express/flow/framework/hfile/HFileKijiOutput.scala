@@ -22,44 +22,27 @@ package org.kiji.express.flow.framework.hfile
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
+import org.kiji.express.flow.ColumnFamilyOutputSpec
 import org.kiji.express.flow.ColumnOutputSpec
 import org.kiji.express.flow.QualifiedColumnOutputSpec
+import org.kiji.schema.InternalKijiError
 import org.kiji.schema.KijiColumnName
 
 /**
  * Factory methods for constructing [[org.kiji.express.flow.framework.hfile.HFileKijiSource]]s that
- * will be used as outputs of a KijiExpress flow. Two basic APIs are provided with differing
- * complexity. These are similar to the factory methods in [[org.kiji.express.flow.KijiOutput]]
- * APIs except that an extra parameter for the HFile output location is required.
+ * will be used as outputs of a Kijiexpress flow.
  *
- * Simple:
  * {{{
  *   // Create an HFileKijiOutput that writes to the table named `mytable` putting timestamps in the
  *   // `'timestamps` field and writing the fields `'column1` and `'column2` to the columns
  *   // `info:column1` and `info:column2`. The resulting HFiles will be written to the "my_hfiles"
  *   // folder.
- *   HFileKijiOutput(
- *       tableUri = "kiji://localhost:2181/default/mytable",
- *       hFileOutput = "my_hfiles",
- *       timestampField = 'timestamps,
- *       'column1 -> "info:column1",
- *       'column2 -> "info:column2")
- * }}}
- *
- * Verbose:
- * {{{
- *   // Create a KijiOutput that writes to the table named `mytable` putting timestamps in the
- *   // `'timestamps` field and writing the fields `'column1` and `'column2` to the columns
- *   // `info:column1` and `info:column2`. The resulting HFiles will be written to the "my_hfiles"
- *   // folder.
- *   HFileKijiOutput(
- *       tableUri = "kiji://localhost:2181/default/mytable",
- *       hFileOutput = "my_hfiles",
- *       timestampField = 'timestamps,
- *       columns = Map(
- *           // Enable paging for `info:column1`.
- *           'column1 -> QualifiedColumn("info", "column1").withPaging(cellsPerPage = 100),
- *           'column2 -> QualifiedColumn("info", "column2")))
+ *   HFileKijiOutput.builder
+ *       .withTableURI("kiji://localhost:2181/default/mytable")
+ *       .withHFileOutput("my_hfiles")
+ *       .withTimestampField('timestamps)
+ *       .withColumns('column1 -> "info:column1", 'column2 -> "info:column2")
+ *       .build
  * }}}
  */
 @ApiAudience.Public
@@ -70,103 +53,309 @@ object HFileKijiOutput {
   val TEMP_HFILE_OUTPUT_KEY = "kiji.tempHFileOutput"
 
   /**
-   * A factory method for instantiating [[org.kiji.express.flow.framework.hfile.HFileKijiSource]]s
-   * used as sinks. This method permits specifying the full range of read options for each column.
-   * Values written will be tagged with the current time at write.
+   * Create a new empty HFileKijiOutput.Builder.
    *
-   * @param tableUri that addresses a table in a Kiji instance.
-   * @param hFileOutput is the location where the resulting HFiles will be placed.
-   * @param columns is a mapping specifying what column to write each field value to.
-   * @return a source that can write tuple field values to columns of a Kiji table.
+   * @return a new empty HFileKijiOutput.Builder.
    */
-  def apply(
-      tableUri: String,
-      hFileOutput: String,
-      columns: Map[Symbol, _ <: ColumnOutputSpec]
-  ): HFileKijiSource = {
-    new HFileKijiSource(
-        tableAddress = tableUri,
-        hFileOutput,
-        timestampField = None,
-        columns = columns)
-  }
+  def builder: Builder = Builder()
 
   /**
-   * A factory method for instantiating [[org.kiji.express.flow.framework.hfile.HFileKijiSource]]s
-   * used as sinks. This method permits specifying the full range of read options for each column.
-   * Values written will be tagged with the current time at write.
+   * Create a new HFileKijiOutput.Builder as a copy of the given Builder.
    *
-   * @param tableUri that addresses a table in a Kiji instance.
-   * @param hFileOutput is the location where the resulting HFiles will be placed.
-   * @param columns is a mapping specifying what column to write each field value to.
-   * @return a source that can write tuple field values to columns of a Kiji table.
+   * @param other Builder to copy.
+   * @return a new HFileKijiOutput.Builder as a copy of the given Builder.
    */
-  def apply(
-      tableUri: String,
-      hFileOutput: String,
-      timestampField: Symbol,
-      columns: (Symbol, String)*
-  ): HFileKijiSource = {
+  def builder(other: Builder): Builder = Builder(other)
 
-    val columnMap = columns
-        .toMap
-        .mapValues { column: String =>
-          QualifiedColumnOutputSpec.builder.withColumn(new KijiColumnName(column)).build
+  /**
+   * Builder for [[org.kiji.express.flow.framework.hfile.HFileKijiSource]]s to be used as sinks.
+   *
+   * @param constructorTableURI string address of the table to which to write.
+   * @param constructorHFileOutput path to the output file.
+   * @param constructorTimestampField flow Field from which to read the timestamp.
+   * @param constructorColumnSpecs mapping from Field to output specification.
+   */
+  @ApiAudience.Public
+  @ApiStability.Experimental
+  final class Builder private(
+      constructorTableURI: Option[String],
+      constructorHFileOutput: Option[String],
+      constructorTimestampField: Option[Symbol],
+      constructorColumnSpecs: Option[Map[Symbol, ColumnOutputSpec]]
+  ) {
+    private[this] val monitor = new AnyRef
+
+    private var mTableURI: Option[String] = constructorTableURI
+    private var mHFileOutput: Option[String] = constructorHFileOutput
+    private var mTimestampField: Option[Symbol] = constructorTimestampField
+    private var mColumnSpecs: Option[Map[Symbol, ColumnOutputSpec]] = constructorColumnSpecs
+
+    /**
+     * Get the output table URI from this builder.
+     *
+     * @return the output table URI from this builder.
+     */
+    def tableURI: Option[String] = mTableURI
+
+    /**
+     * Get the output file path where the HFile will be written.
+     *
+     * @return the output file path where the HFile will be written.
+     */
+    def hFileOutput: Option[String] = mHFileOutput
+
+    /**
+     * Get the Field whose value will be used as a timestamp when writing.
+     *
+     * @return the Field whose value will be used as a timestamp when writing.
+     */
+    def timestampField: Option[Symbol] = mTimestampField
+
+    /**
+     * Get the output specifications from this Builder.
+     *
+     * @return the output specifications from this Builder.
+     */
+    def columnSpecs: Option[Map[Symbol, ColumnOutputSpec]] = mColumnSpecs
+
+    /**
+     * Configure the HFileKijiSource to write an HFile compatible with the given table URI.
+     *
+     * @param tableURI string of the table for which to write HFiles.
+     * @return this builder.
+     */
+    def withTableURI(tableURI: String): Builder = monitor.synchronized {
+      require(None == mTableURI, "Output table URI already set to: " + mTableURI.get)
+      mTableURI = Some(tableURI)
+      this
+    }
+
+    /**
+     * Configure the HFileKijiSource to write the HFile to the given file path.
+     *
+     * @param output path where the HFile will be written.
+     * @return this builder.
+     */
+    def withHFileOutput(output: String): Builder = monitor.synchronized {
+      require(None == mHFileOutput, "HFile output file already set to: " + mHFileOutput.get)
+      mHFileOutput = Some(output)
+      this
+    }
+
+    /**
+     * Configure the HFileKijiSource to write values at the timestamp stored in the given tuple
+     * Field.
+     *
+     * @param timestampField at whose value data will be written.
+     * @return this builder.
+     */
+    def withTimestampField(timestampField: Symbol): Builder = monitor.synchronized {
+      require(None == mTimestampField, "Timestamp field already set to: " + mTimestampField)
+      mTimestampField = Some(timestampField)
+      this
+    }
+
+    /**
+     * Configure the HFileKijiSource to write the given tuple Field values to the associated
+     * columns.
+     *
+     * @param columns mapping from tuple Fields to columns into which Field values will be written.
+     * @return this builder.
+     */
+    def withColumns(columns: (Symbol, String)*): Builder = withColumns(columns.toMap)
+
+    /**
+     * Configure the HFileKijiSource to write the given tuple Field values to the associated
+     * columns.
+     *
+     * @param columns mapping from tuple Fields to columns into which Field values will be written.
+     * @return this builder.
+     */
+    def withColumns(columns: Map[Symbol, String]): Builder = withColumnSpecs(columns.mapValues {
+      QualifiedColumnOutputSpec.fromColumnName
+    })
+
+    /**
+     * Configure the HFileKijiSource to write the given tuple Field values to the associated
+     * columns.
+     *
+     * @param columnSpecs mapping from tuple Fields to columns into which Field values will be
+     *     written.
+     * @return this builder.
+     */
+    def withColumnSpecs(columnSpecs: (Symbol, _ <: ColumnOutputSpec)*): Builder =
+        withColumnSpecs(columnSpecs.toMap[Symbol, ColumnOutputSpec])
+
+    /**
+     * Configure the HFileKijiSource to write the given tuple Field values to the associated
+     * columns.
+     *
+     * @param columnSpecs mapping from tuple Fields to columns into which Field values will be
+     *     written.
+     * @return this builder.
+     */
+    def withColumnSpecs(columnSpecs: Map[Symbol, _ <: ColumnOutputSpec]): Builder = {
+      monitor.synchronized {
+        val (qualified, families) = columnSpecs.partition {
+          case (_, spec) => spec match {
+            case qcos: QualifiedColumnOutputSpec => true
+            case cfos: ColumnFamilyOutputSpec => false
+            case unknown => throw new InternalKijiError("Unknown ColumnOutputSpec type: " + unknown)
+          }
         }
-    new HFileKijiSource(
-        tableAddress = tableUri,
-        hFileOutput = hFileOutput,
-        Some(timestampField),
-        columns = columnMap)
+        require(qualified.size == qualified.values.map { _.columnName }.toSet.size,
+            "Column output specifications may not contain duplicate columns, found: " + columnSpecs)
+        require(families.size == families.values.map {
+              case ColumnFamilyOutputSpec(family, qualifierSelector, _) =>
+                  (family, qualifierSelector)
+            }.toSet.size,
+            "Column output specifications may not contain duplicate columns. Column family output "
+            + "specifications are considered duplicate if the family and qualifier selector both "
+            + "match, found: " + columnSpecs)
+        require(None == mColumnSpecs,
+            "Column output specifications already set to: " + mColumnSpecs.get)
+        mColumnSpecs = Some(columnSpecs)
+        this
+      }
+    }
+
+    /**
+     * Configure the HFileKijiSource to write the given tuple Field values to the associated
+     * columns.
+     *
+     * @param columns mapping from tuple Fields to columns into which Field values will be written.
+     * @return this builder.
+     */
+    def addColumns(columns: (Symbol, String)*): Builder = addColumns(columns.toMap)
+
+    /**
+     * Configure the HFileKijiSource to write the given tuple Field values to the associated
+     * columns.
+     *
+     * @param columns mapping from tuple Fields to columns into which Field values will be written.
+     * @return this builder.
+     */
+    def addColumns(columns: Map[Symbol, String]): Builder = addColumnSpecs(columns.mapValues {
+      QualifiedColumnOutputSpec.fromColumnName
+    })
+
+    /**
+     * Configure the HFileKijiSource to write the given tuple Field values to the associated
+     * columns.
+     *
+     * @param columnSpecs mapping from tuple Fields to columns into which Field values will be
+     *     written.
+     * @return this builder.
+     */
+    def addColumnSpecs(columnSpecs: (Symbol, _ <: ColumnOutputSpec)*): Builder =
+        addColumnSpecs(columnSpecs.toMap[Symbol, ColumnOutputSpec])
+
+    /**
+     * Configure the HFileKijiSource to write the given tuple Field values to the associated
+     * columns.
+     *
+     * @param columnSpecs mapping from tuple Fields to columns into which Field values will be
+     *     written.
+     * @return this builder.
+     */
+    def addColumnSpecs(columnSpecs: Map[Symbol, _ <: ColumnOutputSpec]): Builder = {
+      monitor.synchronized {
+        val (qualified, families) = columnSpecs.partition {
+          case (_, spec) => spec match {
+            case qcos: QualifiedColumnOutputSpec => true
+            case cfos: ColumnFamilyOutputSpec => false
+            case unknown => throw new InternalKijiError("Unknown ColumnOutputSpec type: " + unknown)
+          }
+        }
+        require(qualified.size == qualified.values.map { _.columnName }.toSet.size,
+          "Column output specifications may not contain duplicate columns, found: " + columnSpecs)
+        require(families.size == families.values.map {
+          case ColumnFamilyOutputSpec(family, qualifierSelector, _) =>
+            (family, qualifierSelector)
+        }.toSet.size,
+          "Column output specifications may not contain duplicate columns. Column family output "
+              + "specifications are considered duplicate if the family and qualifier selector both "
+              + "match, found: " + columnSpecs)
+        mColumnSpecs match {
+          case Some(cs) => {
+            val colsList: List[KijiColumnName] = columnSpecs.values.toList.map { _.columnName }
+            val duplicateFieldOrColumn = cs.exists { case (field, spec) =>
+              columnSpecs.contains(field) || colsList.contains(spec.columnName)
+            }
+            require(!duplicateFieldOrColumn, ("Column output specifications already set to: %s May "
+                + "not add duplicate Fields or columns.").format(mColumnSpecs.get))
+            mColumnSpecs = Some(cs ++ columnSpecs)
+          }
+          case None => mColumnSpecs = Some(columnSpecs)
+        }
+      }
+      this
+    }
+
+    /**
+     * Build a new HFileKijiSource from the values stored in this Builder.
+     *
+     * @return a new HFileKijiSource from the values stored in this Builder.
+     */
+    def build: HFileKijiSource = {
+      HFileKijiOutput(
+        tableURI.getOrElse(throw new IllegalArgumentException("Table URI must be specified.")),
+        hFileOutput.getOrElse(
+            throw new IllegalArgumentException("HFile output must be specified.")),
+        timestampField,
+        columnSpecs.getOrElse(
+            throw new IllegalArgumentException("Column output specs must be specified.")))
+    }
+  }
+
+  /**
+   * Companion object providing factory methods for creating new
+   * [[org.kiji.express.flow.framework.hfile.HFileKijiOutput.Builder]] instances.
+   */
+  @ApiAudience.Public
+  @ApiStability.Experimental
+  object Builder {
+    /**
+     * Create a new empty Builder instance.
+     *
+     * @return a new empty Builder instance.
+     */
+    private[express] def apply(): Builder = new Builder(None, None, None, None)
+
+    /**
+     * Create a new Builder instance as a copy of the given Builder.
+     *
+     * @param other Builder to copy.
+     * @return a new Builder instance as a copy of the given Builder.
+     */
+    private[express] def apply(other: Builder): Builder = new Builder(
+      other.tableURI,
+      other.hFileOutput,
+      other.timestampField,
+      other.mColumnSpecs)
   }
 
   /**
    * A factory method for instantiating [[org.kiji.express.flow.framework.hfile.HFileKijiSource]]s
-   * used as sinks. This method permits specifying the full range of read options for each column.
+   * used as sinks.
    *
-   * @param tableUri that addresses a table in a Kiji instance.
+   * @param tableURI that addresses a table in a Kiji instance.
    * @param hFileOutput is the location where the resulting HFiles will be placed.
-   * @param columns is a mapping specifying what column to write each field value to.
    * @param timestampField is the name of a tuple field that will contain cell timestamps when the
    *     source is used for writing.
-   * @return a source that can write tuple field values to columns of a Kiji table.
+   * @param columns is a mapping specifying what column to which to write each field value.
+   * @return a new HFileKijiSource that writes tuple field values to an HFile for a Kiji table.
    */
-  def apply(
-      tableUri: String,
+  private[express] def apply(
+      tableURI: String,
       hFileOutput: String,
-      timestampField: Symbol,
+      timestampField: Option[Symbol] = None,
       columns: Map[Symbol, _ <: ColumnOutputSpec]
   ): HFileKijiSource = {
-    require(timestampField != null)
-
     new HFileKijiSource(
-        tableAddress = tableUri,
-        hFileOutput,
-        timestampField = Some(timestampField),
-        columns = columns)
-  }
-
-  /**
-   * A factory method for instantiating [[org.kiji.express.flow.framework.hfile.HFileKijiSource]]s
-   * used as sinks. Values written will be tagged with the current time at write.
-   *
-   * @param tableUri that addresses a table in a Kiji instance.
-   * @param hFileOutput is the location where the resulting HFiles will be placed.
-   * @param columns are a series of pairs mapping tuple field names to Kiji column names. When
-   *     naming columns, use the format `"family:qualifier"`.
-   * @return a source that can write tuple field values to columns of a Kiji table.
-   */
-  def apply(
-      tableUri: String,
-      hFileOutput: String,
-      columns: (Symbol, String)*
-  ): HFileKijiSource = {
-    val columnMap = columns
-        .toMap
-        .mapValues { column: String =>
-          QualifiedColumnOutputSpec.builder.withColumn(new KijiColumnName(column)).build
-        }
-
-    HFileKijiOutput(tableUri, hFileOutput, columnMap)
+      tableAddress = tableURI,
+      hFileOutput = hFileOutput,
+      timestampField = timestampField,
+      columns = columns)
   }
 }

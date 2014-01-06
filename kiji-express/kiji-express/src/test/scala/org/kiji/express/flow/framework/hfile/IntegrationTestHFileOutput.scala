@@ -215,7 +215,11 @@ class HFileOutputMapOnly(args: Args) extends KijiJob(args) {
 
   IterableSource(inputs, (KijiScheme.EntityIdField, 'int))
     .read
-    .write(HFileKijiOutput(uri, hfilePath, 'int -> (ATC.family +":"+ ATC.intColumn)))
+    .write(HFileKijiOutput.builder
+        .withTableURI(uri)
+        .withHFileOutput(hfilePath)
+        .withColumns('int -> (ATC.family +":"+ ATC.intColumn))
+        .build)
 }
 
 class HFileOutputWithReducer(args: Args) extends KijiJob(args) {
@@ -227,7 +231,11 @@ class HFileOutputWithReducer(args: Args) extends KijiJob(args) {
       .read
       .groupAll { _.size }
       .insert('entityId, countEid)
-      .write(HFileKijiOutput(uri, hfilePath, 'size -> (ATC.family +":"+ ATC.longColumn)))
+      .write(HFileKijiOutput.builder
+          .withTableURI(uri)
+          .withHFileOutput(hfilePath)
+          .withColumns('size -> (ATC.family +":"+ ATC.longColumn))
+          .build)
 }
 
 class HFileOutputMultipleTables(args: Args) extends KijiJob(args) {
@@ -239,11 +247,19 @@ class HFileOutputMultipleTables(args: Args) extends KijiJob(args) {
 
   val pipe = IterableSource(inputs, (KijiScheme.EntityIdField, 'int)).read
 
-  pipe.write(HFileKijiOutput(aUri, aOutput, 'int -> (ATC.family +":"+ ATC.intColumn)))
+  pipe.write(HFileKijiOutput.builder
+      .withTableURI(aUri)
+      .withHFileOutput(aOutput)
+      .withColumns('int -> (ATC.family +":"+ ATC.intColumn))
+      .build)
   pipe
     .groupAll { _.size }
     .insert('entityId, countEid)
-    .write(HFileKijiOutput(bUri, bOutput, 'size -> (ATC.family +":"+ ATC.longColumn)))
+    .write(HFileKijiOutput.builder
+        .withTableURI(bUri)
+        .withHFileOutput(bOutput)
+        .withColumns('size -> (ATC.family +":"+ ATC.longColumn))
+        .build)
 }
 
 class HFileOutputAndDirectOutput(args: Args) extends KijiJob(args) {
@@ -254,7 +270,11 @@ class HFileOutputAndDirectOutput(args: Args) extends KijiJob(args) {
 
   val pipe = IterableSource(inputs, (KijiScheme.EntityIdField, 'int)).read
 
-  pipe.write(HFileKijiOutput(aUri, aOutput, 'int -> (ATC.family +":"+ ATC.intColumn)))
+  pipe.write(HFileKijiOutput.builder
+      .withTableURI(aUri)
+      .withHFileOutput(aOutput)
+      .withColumns('int -> (ATC.family +":"+ ATC.intColumn))
+      .build)
   pipe.write(
       KijiOutput
         .builder
@@ -271,9 +291,17 @@ class HFileOuputMultipleToSameTable(args: Args) extends KijiJob(args) {
 
   val pipe = IterableSource(inputs, (KijiScheme.EntityIdField, 'int)).read
 
-  pipe.write(HFileKijiOutput(uri, aOutput, 'int -> (ATC.family +":"+ ATC.intColumn)))
+  pipe.write(HFileKijiOutput.builder
+      .withTableURI(uri)
+      .withHFileOutput(aOutput)
+      .withColumns('int -> (ATC.family +":"+ ATC.intColumn))
+      .build)
   pipe
       .groupAll { _.size }
       .insert('entityId, countEid)
-      .write(HFileKijiOutput(uri, bOutput, 'size -> (ATC.family +":"+ ATC.longColumn)))
+      .write(HFileKijiOutput.builder
+          .withTableURI(uri)
+          .withHFileOutput(bOutput)
+          .withColumns('size -> (ATC.family +":"+ ATC.longColumn))
+          .build)
 }
