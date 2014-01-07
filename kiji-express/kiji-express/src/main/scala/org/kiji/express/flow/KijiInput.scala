@@ -22,6 +22,7 @@ package org.kiji.express.flow
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.express.flow.RowFilterSpec.NoRowFilterSpec
+import org.kiji.express.flow.RowRangeSpec.AllRows
 import org.kiji.schema.KijiColumnName
 
 /**
@@ -40,7 +41,8 @@ import org.kiji.schema.KijiColumnName
  *           .withSchemaSpec(DefaultReader)
  *           .build -> 'column3)
  *       // Selects a 30% sample of data between startEid and endEid.
- *       .withRowSpec(startEid, endEid, KijiRandomRowFilterSpec(0.3F))
+ *       .withRowRangeSpec(BetweenRows(startEid, endEid)
+ *       .withRowFilterSpec(KijiRandomRowFilterSpec(0.3F))
  *       .build
  * }}}
  */
@@ -78,14 +80,16 @@ object KijiInput {
       private val consturctorTableURI: Option[String],
       private val constructorTimeRange: Option[TimeRange],
       private val constructorColumnSpecs: Option[Map[_ <: ColumnInputSpec, Symbol]],
-      private val constructorRowSpec: Option[RowSpec]
+      private val constructorRowRangeSpec: Option[RowRangeSpec],
+      private val constructorRowFilterSpec: Option[RowFilterSpec]
   ) {
     private[this] val monitor = new AnyRef
 
     private var mTableURI: Option[String] = consturctorTableURI
     private var mTimeRange: Option[TimeRange] = constructorTimeRange
     private var mColumnSpecs: Option[Map[_ <: ColumnInputSpec, Symbol]] = constructorColumnSpecs
-    private var mRowSpec: Option[RowSpec] = constructorRowSpec
+    private var mRowRangeSpec: Option[RowRangeSpec] = constructorRowRangeSpec
+    private var mRowFilterSpec: Option[RowFilterSpec] = constructorRowFilterSpec
 
     /**
      * Get the Kiji URI of the table from which to read from this Builder.
@@ -109,11 +113,18 @@ object KijiInput {
     def columnSpecs: Option[Map[_ <: ColumnInputSpec, Symbol]] = mColumnSpecs
 
     /**
-     * Get the input row specification from this Builder.
+     * Get the input row range specification from this Builder.
      *
-     * @return the input row specification from this Builder.
+     * @return the input row range specification from this Builder.
      */
-    def rowSpec: Option[RowSpec] = mRowSpec
+    def rowRangeSpec: Option[RowRangeSpec] = mRowRangeSpec
+
+    /**
+     * Get the input row filter specification from this Builder.
+     *
+     * @return the input row filter specification from this Builder.
+     */
+    def rowFilterSpec: Option[RowFilterSpec] = mRowFilterSpec
 
     /**
      * Configure the KijiSource to read values from the table with the given Kiji URI.
@@ -240,14 +251,26 @@ object KijiInput {
     }
 
     /**
-     * Configure the KijiSource to traverse rows which satisfy the request row specification.
+     * Configure the KijiSource to traverse rows within the requested row range specification.
      *
-     * @param rowSpec requested specification for rows.
+     * @param rowRangeSpec requested range for rows.
      * @return this builder.
      */
-    def withRowSpec(rowSpec: RowSpec): Builder = monitor.synchronized {
-      require(None == mRowSpec, "Row spec already set to: " + mRowSpec.get)
-      mRowSpec = Some(rowSpec)
+    def withRowRangeSpec(rowRangeSpec: RowRangeSpec): Builder = monitor.synchronized {
+      require(None == mRowRangeSpec, "Row spec already set to: " + mRowRangeSpec.get)
+      mRowRangeSpec = Some(rowRangeSpec)
+      this
+    }
+
+    /**
+     * Configure the KijiSource to traverse rows with the requested row filter specification.
+     *
+     * @param rowFilterSpec requested row filter.
+     * @return this builder.
+     */
+    def withRowFilterSpec(rowFilterSpec: RowFilterSpec): Builder = monitor.synchronized {
+      require(None == mRowFilterSpec, "Row spec already set to: " + mRowFilterSpec.get)
+      mRowFilterSpec = Some(rowFilterSpec)
       this
     }
 
@@ -262,7 +285,8 @@ object KijiInput {
           timeRange.getOrElse(DEFAULT_TIME_RANGE),
           columnSpecs.getOrElse(
               throw new IllegalArgumentException("Column input specs must be specified.")),
-          rowSpec)
+          rowRangeSpec.getOrElse(AllRows),
+          rowFilterSpec.getOrElse(NoRowFilterSpec))
     }
   }
 
@@ -279,7 +303,7 @@ object KijiInput {
      *
      * @return a new empty Builder.
      */
-    def apply(): Builder = new Builder(None, None, None, None)
+    def apply(): Builder = new Builder(None, None, None, None, None)
 
     /**
      * Create a new Builder as a copy of the given Builder.
@@ -288,7 +312,12 @@ object KijiInput {
      * @return a new Builder as a copy of the given Builder.
      */
     def apply(other: Builder): Builder =
-        new Builder(other.tableURI, other.timeRange, other.columnSpecs, other.rowSpec)
+        new Builder(
+            other.tableURI,
+            other.timeRange,
+            other.columnSpecs,
+            other.rowRangeSpec,
+            other.rowFilterSpec)
 
     /**
      * Converts a column -> Field mapping to a ColumnInputSpec -> Field mapping.
@@ -315,7 +344,8 @@ object KijiInput {
    * @param columns are a series of pairs mapping column input specs to tuple field names.
    *     Columns are specified as "family:qualifier" or, in the case of a column family input spec,
    *     simply "family".
-   * @param rowSpecOption the specification of which row interval to scan and which filter to apply.
+   * @param rowRangeSpec the specification for which row interval to scan
+   * @param rowFilterSpec the specification for which filter to apply.
    * @return a source for data in the Kiji table, whose row tuples will contain fields with cell
    *     data from the requested columns and map-type column families.
    */
@@ -323,7 +353,8 @@ object KijiInput {
       tableUri: String,
       timeRange: TimeRange,
       columns: Map[_ <: ColumnInputSpec, Symbol],
-      rowSpecOption: Option[RowSpec]
+      rowRangeSpec: RowRangeSpec,
+      rowFilterSpec: RowFilterSpec
   ): KijiSource = {
     val columnMap = columns
         .map { entry: (ColumnInputSpec, Symbol) => entry.swap }
@@ -333,7 +364,8 @@ object KijiInput {
       timeRange,
       None,
       inputColumns = columnMap,
-      rowSpec = rowSpecOption
+      rowRangeSpec = rowRangeSpec,
+      rowFilterSpec = rowFilterSpec
     )
   }
 }

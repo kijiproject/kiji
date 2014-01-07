@@ -48,7 +48,8 @@ import org.kiji.express.flow.ColumnInputSpec
 import org.kiji.express.flow.ColumnOutputSpec
 import org.kiji.express.flow.EntityId
 import org.kiji.express.flow.QualifiedColumnOutputSpec
-import org.kiji.express.flow.RowSpec
+import org.kiji.express.flow.RowFilterSpec
+import org.kiji.express.flow.RowRangeSpec
 import org.kiji.express.flow.TimeRange
 import org.kiji.express.flow.util.ResourceUtil._
 import org.kiji.schema.EntityIdFactory
@@ -128,7 +129,8 @@ private[express] case class LocalKijiScheme(
     private[express] val timestampField: Option[Symbol],
     private[express] val inputColumns: Map[String, ColumnInputSpec] = Map(),
     private[express] val outputColumns: Map[String, ColumnOutputSpec] = Map(),
-    private[express] val rowSpec: Option[RowSpec])
+    private[express] val rowRangeSpec: RowRangeSpec,
+    private[express] val rowFilterSpec: RowFilterSpec)
     extends Scheme[Properties, InputStream, OutputStream, InputContext, DirectKijiSinkContext] {
 
   /** Set the fields that should be in a tuple when this source is used for reading and writing. */
@@ -170,19 +172,18 @@ private[express] case class LocalKijiScheme(
       val reader = LocalKijiScheme.openReaderWithOverrides(table, request)
 
       // Set up scanning options.
-      val concreteRowSpec = rowSpec.getOrElse(RowSpec.builder.build)
       val eidFactory = EntityIdFactory.getFactory(table.getLayout())
       val scannerOptions = new KijiScannerOptions()
       scannerOptions.setKijiRowFilter(
-          concreteRowSpec.rowFilterSpec.toKijiRowFilter.getOrElse(null))
+          rowFilterSpec.toKijiRowFilter.getOrElse(null))
       scannerOptions.setStartRow(
-        concreteRowSpec.startEntityId match {
+        rowRangeSpec.startEntityId match {
           case Some(entityId) => entityId.toJavaEntityId(eidFactory)
           case None => null
         }
       )
       scannerOptions.setStopRow(
-        concreteRowSpec.limitEntityId match {
+        rowRangeSpec.limitEntityId match {
           case Some(entityId) => entityId.toJavaEntityId(eidFactory)
           case None => null
         }

@@ -51,8 +51,9 @@ import org.kiji.express.flow.FlowCell
 import org.kiji.express.flow.PagingSpec
 import org.kiji.express.flow.QualifiedColumnInputSpec
 import org.kiji.express.flow.QualifiedColumnOutputSpec
+import org.kiji.express.flow.RowFilterSpec
 import org.kiji.express.flow.RowFilterSpec.NoRowFilterSpec
-import org.kiji.express.flow.RowSpec
+import org.kiji.express.flow.RowRangeSpec
 import org.kiji.express.flow.SchemaSpec
 import org.kiji.express.flow.TimeRange
 import org.kiji.express.flow.TransientStream
@@ -105,7 +106,8 @@ class KijiScheme(
     private[express] val timestampField: Option[Symbol],
     icolumns: Map[String, ColumnInputSpec] = Map(),
     ocolumns: Map[String, ColumnOutputSpec] = Map(),
-    private[express] val rowSpec: Option[RowSpec]
+    private[express] val rowRangeSpec: RowRangeSpec,
+    private[express] val rowFilterSpec: RowFilterSpec
 ) extends Scheme[
     JobConf,
     RecordReader[Container[JEntityId], Container[KijiRowData]],
@@ -151,12 +153,11 @@ class KijiScheme(
       buildRequest(table.getLayout, timeRange, inputColumns.values)
     }
     // Write all the required values to the job's configuration object.
-    val concreteRowSpec = rowSpec.getOrElse(RowSpec.builder.build)
     val eidFactory = withKijiTable(uri, conf) { table =>
       EntityIdFactory.getFactory(table.getLayout())
     }
     // Set start entity id.
-    concreteRowSpec.startEntityId match {
+    rowRangeSpec.startEntityId match {
       case Some(entityId) => {
         conf.set(
             KijiConfKeys.KIJI_START_ROW_KEY,
@@ -166,7 +167,7 @@ class KijiScheme(
       case None => {}
     }
     // Set limit entity id.
-    concreteRowSpec.limitEntityId match {
+    rowRangeSpec.limitEntityId match {
       case Some(entityId) => {
         conf.set(
             KijiConfKeys.KIJI_LIMIT_ROW_KEY,
@@ -176,7 +177,7 @@ class KijiScheme(
       case None => {}
     }
     // Set row filter.
-    concreteRowSpec.rowFilterSpec.toKijiRowFilter match {
+    rowFilterSpec.toKijiRowFilter match {
       case Some(kijiRowFilter) => {
         conf.set(KijiConfKeys.KIJI_ROW_FILTER, kijiRowFilter.toJson.toString)
       }

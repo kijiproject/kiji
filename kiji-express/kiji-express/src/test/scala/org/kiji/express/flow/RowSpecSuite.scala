@@ -31,6 +31,10 @@ import org.scalatest.junit.JUnitRunner
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow.RowFilterSpec.KijiRandomRowFilterSpec
 import org.kiji.express.flow.RowFilterSpec.NoRowFilterSpec
+import org.kiji.express.flow.RowRangeSpec.AllRows
+import org.kiji.express.flow.RowRangeSpec.BetweenRows
+import org.kiji.express.flow.RowRangeSpec.FromRow
+import org.kiji.express.flow.RowRangeSpec.UntilRow
 import org.kiji.express.flow.util.ResourceUtil.doAndRelease
 import org.kiji.schema.{EntityId => JEntityId}
 import org.kiji.schema.EntityIdFactory
@@ -64,16 +68,18 @@ class RowSpecSuite extends KijiSuite {
   /** Set up the JobTest. */
   def scanJobTest(
       uri: String,
-      rowSpec: RowSpec,
+      rowRangeSpec: RowRangeSpec,
+      rowFilterSpec: RowFilterSpec,
       validateScan: Buffer[Tuple1[String]] => Unit): JobTest = {
-    JobTest(new IntervalScanJob(_, rowSpec))
+    JobTest(new IntervalScanJob(_, rowRangeSpec, rowFilterSpec))
       .arg("input", uri)
       .arg("output", "outputFile")
       .source(
           KijiInput.builder
               .withTableURI(uri)
               .withColumns("family:column1" -> 'word)
-              .withRowSpec(rowSpec)
+              .withRowRangeSpec(rowRangeSpec)
+              .withRowFilterSpec(rowFilterSpec)
               .build,
           sampleInput(uri))
       .sink(Tsv("outputFile"))(validateScan)
@@ -97,12 +103,11 @@ class RowSpecSuite extends KijiSuite {
     }
 
     // Set up row specification.
-    val rowSpec = RowSpec.builder
-        .withStartEntityId(eid3)
-        .build
+    val rowRangeSpec: RowRangeSpec = FromRow(eid3)
+    val rowFilterSpec = NoRowFilterSpec
 
     // Build test job.
-    val jobTest = scanJobTest(uri, rowSpec, validateScan)
+    val jobTest = scanJobTest(uri, rowRangeSpec, rowFilterSpec, validateScan)
 
     // Run in local mode.
     jobTest.run.finish
@@ -128,12 +133,11 @@ class RowSpecSuite extends KijiSuite {
     }
 
     // Set up row specification.
-    val rowSpec = RowSpec.builder
-        .withLimitEntityId(eid4)
-        .build
+    val rowRangeSpec: RowRangeSpec = UntilRow(eid4)
+    val rowFilterSpec = NoRowFilterSpec
 
     // Build test job.
-    val jobTest = scanJobTest(uri, rowSpec, validateScan)
+    val jobTest = scanJobTest(uri, rowRangeSpec, rowFilterSpec, validateScan)
 
     // Run in local mode.
     jobTest.run.finish
@@ -156,12 +160,12 @@ class RowSpecSuite extends KijiSuite {
     }
 
     // Set up row specification.
-    val rowSpec = RowSpec.builder
-        .withRowFilterSpec(KijiRandomRowFilterSpec(0.0F))
-        .build
+    val rowRangeSpec: RowRangeSpec = AllRows
+    val rowFilterSpec = KijiRandomRowFilterSpec(0.0F)
+
 
     // Build test job.
-    val jobTest = scanJobTest(uri, rowSpec, validateScan)
+    val jobTest = scanJobTest(uri, rowRangeSpec, rowFilterSpec, validateScan)
 
     // Run in local mode.
     jobTest.run.finish
@@ -184,12 +188,11 @@ class RowSpecSuite extends KijiSuite {
     }
 
     // Set up row specification.
-    val rowSpec = RowSpec.builder
-        .withRowFilterSpec(KijiRandomRowFilterSpec(1.0F))
-        .build
+    val rowRangeSpec: RowRangeSpec = AllRows
+    val rowFilterSpec = KijiRandomRowFilterSpec(1.0F)
 
     // Build test job.
-    val jobTest = scanJobTest(uri, rowSpec, validateScan)
+    val jobTest = scanJobTest(uri, rowRangeSpec, rowFilterSpec, validateScan)
 
     // Run in local mode.
     jobTest.run.finish
@@ -203,14 +206,18 @@ class RowSpecSuite extends KijiSuite {
    * @param args to the job. Two arguments are expected: "input", which should specify the URI
    *     to the Kiji table the job should be run on, and "output", which specifies the output
    *     Tsv file.
-   * @param rowSpec specification of the rows to select.
+   * @param rowRangeSpec specification of the row range to scan.
+   * @param rowFilterSpec specification of the row filter to scan with.
    */
-  class IntervalScanJob(args: Args, rowSpec: RowSpec) extends KijiJob(args) {
+  class IntervalScanJob(args: Args,
+      rowRangeSpec: RowRangeSpec,
+      rowFilterSpec: RowFilterSpec) extends KijiJob(args) {
     // Setup input to bind values from the "family:column1" column to the symbol 'word.
     KijiInput.builder
         .withTableURI(args("input"))
         .withColumns("family:column1" -> 'word)
-        .withRowSpec(rowSpec)
+        .withRowRangeSpec(rowRangeSpec)
+        .withRowFilterSpec(rowFilterSpec)
         .build
         // Sanitize the word.
         .map('word -> 'cleanword) { words:Seq[FlowCell[CharSequence]] =>

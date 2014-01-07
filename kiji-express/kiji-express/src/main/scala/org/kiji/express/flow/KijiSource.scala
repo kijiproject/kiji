@@ -53,6 +53,8 @@ import org.apache.hadoop.mapred.RecordReader
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
+import org.kiji.express.flow.RowFilterSpec.NoRowFilterSpec
+import org.kiji.express.flow.RowRangeSpec.AllRows
 import org.kiji.express.flow.framework.DirectKijiSinkContext
 import org.kiji.express.flow.framework.KijiScheme
 import org.kiji.express.flow.framework.KijiTap
@@ -98,7 +100,8 @@ import org.kiji.schema.KijiURI
  *     map will be read into their associated tuple fields.
  * @param outputColumns is a one-to-one mapping from field names to Kiji columns. Values from the
  *     tuple fields will be written to their associated column.
- * @param rowSpec is the specification of which interval of rows to scan and row filter to apply.
+ * @param rowRangeSpec is the specification for which interval of rows to scan.
+ * @param rowFilterSpec is the specification for which row filter to apply.
  */
 @ApiAudience.Framework
 @ApiStability.Experimental
@@ -108,7 +111,8 @@ final class KijiSource private[express] (
     val timestampField: Option[Symbol],
     val inputColumns: Map[Symbol, ColumnInputSpec] = Map(),
     val outputColumns: Map[Symbol, ColumnOutputSpec] = Map(),
-    val rowSpec: Option[RowSpec] = None
+    val rowRangeSpec: RowRangeSpec = AllRows,
+    val rowFilterSpec: RowFilterSpec = NoRowFilterSpec
 ) extends Source {
   import KijiSource._
 
@@ -123,7 +127,8 @@ final class KijiSource private[express] (
           timestampField,
           convertKeysToStrings(inputColumns),
           convertKeysToStrings(outputColumns),
-          rowSpec)
+          rowRangeSpec,
+          rowFilterSpec)
 
   /** A Kiji scheme intended to be used with Scalding/Cascading's local mode. */
   private val localKijiScheme: LocalKijiScheme =
@@ -133,7 +138,8 @@ final class KijiSource private[express] (
           timestampField,
           convertKeysToStrings(inputColumns),
           convertKeysToStrings(outputColumns),
-          rowSpec)
+          rowRangeSpec,
+          rowFilterSpec)
 
   /**
    * Creates a Scheme that writes to/reads from a Kiji table for usage with
@@ -190,7 +196,8 @@ final class KijiSource private[express] (
               timestampField,
               getInputColumnsForTesting,
               convertKeysToStrings(outputColumns),
-              rowSpec)
+              rowRangeSpec,
+              rowFilterSpec)
 
           new KijiTap(uri, scheme).asInstanceOf[Tap[_, _, _]]
         }
@@ -217,7 +224,8 @@ final class KijiSource private[express] (
               timestampField,
               getInputColumnsForTesting,
               convertKeysToStrings(outputColumns),
-              rowSpec)
+              rowRangeSpec,
+              rowFilterSpec)
 
           new LocalKijiTap(uri, scheme).asInstanceOf[Tap[_, _, _]]
         }
@@ -236,7 +244,8 @@ final class KijiSource private[express] (
        .add("timestampField", timestampField)
        .add("inputColumns", inputColumns)
        .add("outputColumns", outputColumns)
-       .add("rowSpec", rowSpec)
+       .add("rowRangeSpec", rowRangeSpec)
+       .add("rowFilterSpec", rowFilterSpec)
        .toString
 
   override def equals(obj: Any): Boolean = obj match {
@@ -246,7 +255,8 @@ final class KijiSource private[express] (
           && outputColumns == other.outputColumns
           && timestampField == other.timestampField
           && timeRange == other.timeRange
-          && rowSpec == other.rowSpec)
+          && rowRangeSpec == other.rowRangeSpec
+          && rowFilterSpec == other.rowFilterSpec)
     case _ => false
   }
 
@@ -257,7 +267,8 @@ final class KijiSource private[express] (
           outputColumns,
           timestampField,
           timeRange,
-          rowSpec)
+          rowRangeSpec,
+          rowFilterSpec)
 }
 
 /**
@@ -298,8 +309,7 @@ private[express] object KijiSource {
         inputColumns.asScala.toMap
             .map{ case (symbolName, column) => (Symbol(symbolName), column) },
         outputColumns.asScala.toMap
-            .map{ case (symbolName, column) => (Symbol(symbolName), column) },
-        rowSpec = None
+            .map{ case (symbolName, column) => (Symbol(symbolName), column) }
     )
     new KijiTap(kijiSource.uri, kijiSource.kijiScheme)
   }
@@ -407,7 +417,8 @@ private[express] object KijiSource {
    *     source is used for writing. Specify `None` to write all cells at the current time.
    * @param inputColumns is a map of Scalding field name to ColumnInputSpec.
    * @param outputColumns is a map of ColumnOutputSpec to Scalding field name.
-   * @param rowSpec is the specification of which interval of rows to scan and row filter to apply.
+   * @param rowRangeSpec is the specification for which interval of rows to scan.
+   * @param rowFilterSpec is the specification for which row filter to apply.
    */
   private class TestLocalKijiScheme(
       val buffer: Buffer[Tuple],
@@ -416,14 +427,16 @@ private[express] object KijiSource {
       timestampField: Option[Symbol],
       inputColumns: Map[String, ColumnInputSpec],
       outputColumns: Map[String, ColumnOutputSpec],
-      rowSpec: Option[RowSpec])
+      rowRangeSpec: RowRangeSpec,
+      rowFilterSpec: RowFilterSpec)
       extends LocalKijiScheme(
           uri,
           timeRange,
           timestampField,
           inputColumnSpecifyAllData(inputColumns),
           outputColumns,
-          rowSpec) {
+          rowRangeSpec,
+          rowFilterSpec) {
     override def sinkCleanup(
         process: FlowProcess[Properties],
         sinkCall: SinkCall[DirectKijiSinkContext, OutputStream]) {
@@ -441,19 +454,18 @@ private[express] object KijiSource {
 
         doAndClose(LocalKijiScheme.openReaderWithOverrides(table, request)) { reader =>
           // Set up scanning options.
-          val concreteRowSpec = rowSpec.getOrElse(RowSpec.builder.build)
           val eidFactory = EntityIdFactory.getFactory(table.getLayout())
           val scannerOptions = new KijiScannerOptions()
           scannerOptions.setKijiRowFilter(
-              concreteRowSpec.rowFilterSpec.toKijiRowFilter.getOrElse(null))
+              rowFilterSpec.toKijiRowFilter.getOrElse(null))
           scannerOptions.setStartRow(
-            concreteRowSpec.startEntityId match {
+            rowRangeSpec.startEntityId match {
               case Some(entityId) => entityId.toJavaEntityId(eidFactory)
               case None => null
             }
           )
           scannerOptions.setStopRow(
-            concreteRowSpec.limitEntityId match {
+            rowRangeSpec.limitEntityId match {
               case Some(entityId) => entityId.toJavaEntityId(eidFactory)
               case None => null
             }
@@ -523,20 +535,23 @@ private[express] object KijiSource {
    *     source is used for writing. Specify `None` to write all cells at the current time.
    * @param inputColumns Scalding field name to column input spec mapping.
    * @param outputColumns Scalding field name to column output spec mapping.
-   * @param rowSpec is the specification of which interval of rows to scan and row filter to apply.
+   * @param rowRangeSpec is the specification for which interval of rows to scan.
+   * @param rowFilterSpec is the specification for which filter to apply.
    */
   private class TestKijiScheme(
       uri: KijiURI,
       timestampField: Option[Symbol],
       inputColumns: Map[String, ColumnInputSpec],
       outputColumns: Map[String, ColumnOutputSpec],
-      rowSpec: Option[RowSpec])
+      rowRangeSpec: RowRangeSpec,
+      rowFilterSpec: RowFilterSpec)
       extends KijiScheme(
           uri.toString,
           All,
           timestampField,
           mergeColumnMapping(inputColumns, outputColumns),
           outputColumns,
-          rowSpec) {
+          rowRangeSpec,
+          rowFilterSpec) {
   }
 }

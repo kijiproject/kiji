@@ -25,7 +25,7 @@
     </parameters>
   </check>
   <check enabled="true" class="org.scalastyle.file.FileTabChecker" level="error"></check>
-  <check enabled="true" class="org.scalastyle.file.HeaderMatchesChecker" level="error">
+  <check enabled="true" class="org.scalastyle.file.HeaderMatchesChecker" level="warn">
     <parameters>
       <parameter name="header"><![CDATA[/**
  * (c) Copyright 2013 WibiData, Inc.

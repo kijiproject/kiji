@@ -23,6 +23,7 @@ import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
+import org.kiji.express.flow.RowRangeSpec.AllRows
 import org.kiji.express.flow.framework.KijiScheme
 import org.kiji.schema.KijiInvalidNameException
 
@@ -121,7 +122,8 @@ class FlowModuleSuite extends FunSuite {
         timeRange = All,
         timestampField = None,
         icolumns = Map("word" -> QualifiedColumnInputSpec("info", "word")),
-        rowSpec = None)
+        rowRangeSpec = AllRows,
+        rowFilterSpec = RowFilterSpec.NoRowFilterSpec)
 
     assert(expectedScheme === input.hdfsScheme)
   }
@@ -137,7 +139,8 @@ class FlowModuleSuite extends FunSuite {
         Between(0L, 40L),
         None,
         Map("word" -> QualifiedColumnInputSpec("info", "word")),
-        rowSpec = None)
+        rowRangeSpec = AllRows,
+        rowFilterSpec = RowFilterSpec.NoRowFilterSpec)
 
     assert(expectedScheme === input.hdfsScheme)
   }
@@ -155,7 +158,8 @@ class FlowModuleSuite extends FunSuite {
           Map(
               "word" -> QualifiedColumnInputSpec("info", "word"),
               "title" -> QualifiedColumnInputSpec("info", "title")),
-          rowSpec = None)
+        rowRangeSpec = AllRows,
+        rowFilterSpec = RowFilterSpec.NoRowFilterSpec)
     }
 
     assert(expectedScheme === input.hdfsScheme)
@@ -211,7 +215,8 @@ class FlowModuleSuite extends FunSuite {
         ocolumns = Map("words" -> QualifiedColumnOutputSpec.builder
             .withColumn("info", "words")
             .build),
-        rowSpec = None)
+        rowRangeSpec = AllRows,
+        rowFilterSpec = RowFilterSpec.NoRowFilterSpec)
     assert(expectedScheme === output.hdfsScheme)
   }
 
@@ -228,7 +233,8 @@ class FlowModuleSuite extends FunSuite {
         ocolumns = Map("words" -> QualifiedColumnOutputSpec.builder
             .withColumn("info", "words")
             .build),
-       rowSpec = None)
+        rowRangeSpec = AllRows,
+        rowFilterSpec = RowFilterSpec.NoRowFilterSpec)
     assert(expectedScheme === output.hdfsScheme)
   }
 }
