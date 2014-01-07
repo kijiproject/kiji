@@ -1,5 +1,10 @@
 
                               Kiji Scoring Release Notes
+
+Version 0.11.0
+    * SCORE-147. ScoreFunctionJobBuilder now supports running ScoreFunctions in batch without the
+        need for a KijiProducer wrapper.
+
 Version 0.10.0
     * SCORE-125. FreshRequestOptions now supports disabling individual columns to prevent them from
         being freshened by this corresponding request. To disable all columns, use the marked value
