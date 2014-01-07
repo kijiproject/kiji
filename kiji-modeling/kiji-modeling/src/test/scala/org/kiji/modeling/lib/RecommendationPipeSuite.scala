@@ -261,7 +261,7 @@ class RecommendationPipeSuite extends KijiSuite {
           }
           .prepareItemSets[String]('order -> 'itemset, 1, 3)
           .support('itemset -> ('frequency, 'support), None, Some(3.0), 'norm)
-          .confidenceAndLift(1, 5, 1, 5)
+          .confidenceAndLift(lhsMinSize = 1, lhsMaxSize = 5, rhsMinSize = 1, rhsMaxSize = 5)
           .write(TextLine(args("output")))
     }
     val outputDir: File = Files.createTempDir()
@@ -270,31 +270,32 @@ class RecommendationPipeSuite extends KijiSuite {
     val lines = doAndClose(scala.io.Source.fromFile(outputDir.getAbsolutePath + "/part-00000")) {
         source: scala.io.Source => source.mkString
     }
-    val expected = Array("flour\tbread\t0.5\t0.75\t0.3333333333333333",
-        "milk\tbread\t1.0\t1.5\t0.6666666666666666",
-        "butter\tbread\t0.5\t0.75\t0.3333333333333333",
-        "coke\tbread\t1.0\t1.5\t0.3333333333333333",
-        "flour\tbutter\t1.0\t1.5\t0.6666666666666666",
-        "bread\tbutter\t0.5\t0.75\t0.3333333333333333",
-        "milk\tbutter\t0.5\t0.75\t0.3333333333333333",
-        "bread\tcoke\t0.5\t1.5\t0.3333333333333333",
-        "milk\tcoke\t0.5\t1.5\t0.3333333333333333",
-        "bread\tflour\t0.5\t0.75\t0.3333333333333333",
-        "butter\tflour\t1.0\t1.5\t0.6666666666666666",
-        "milk\tflour\t0.5\t0.75\t0.3333333333333333",
-        "butter\tmilk\t0.5\t0.75\t0.3333333333333333",
-        "bread\tmilk\t1.0\t1.5\t0.6666666666666666",
-        "coke\tmilk\t1.0\t1.5\t0.3333333333333333",
-        "flour\tmilk\t0.5\t0.75\t0.3333333333333333",
-        "bread,flour\tmilk\t1.0\t1.5\t0.3333333333333333",
-        "bread,coke\tmilk\t1.0\t1.5\t0.3333333333333333",
-        "bread,butter\tmilk\t1.0\t1.5\t0.3333333333333333",
-        "butter\tbread,flour\t0.5\t1.5\t0.3333333333333333",
-        "milk\tbread,flour\t0.5\t1.5\t0.3333333333333333",
-        "butter\tbread,milk\t0.5\t0.75\t0.3333333333333333",
-        "coke\tbread,milk\t1.0\t1.5\t0.3333333333333333",
-        "flour\tbread,milk\t0.5\t0.75\t0.3333333333333333").toSet
-    assert(expected.subsetOf(lines.split("\n").toSet))
+    val expected = Set("flour\tbread\t0.5\t0.75\t0.3333333333333333\t1\t3.0",
+        "milk\tbread\t1.0\t1.5\t0.6666666666666666\t2\t3.0",
+        "butter\tbread\t0.5\t0.75\t0.3333333333333333\t1\t3.0",
+        "coke\tbread\t1.0\t1.5\t0.3333333333333333\t1\t3.0",
+        "flour\tbutter\t1.0\t1.5\t0.6666666666666666\t2\t3.0",
+        "bread\tbutter\t0.5\t0.75\t0.3333333333333333\t1\t3.0",
+        "milk\tbutter\t0.5\t0.75\t0.3333333333333333\t1\t3.0",
+        "bread\tcoke\t0.5\t1.5\t0.3333333333333333\t1\t3.0",
+        "milk\tcoke\t0.5\t1.5\t0.3333333333333333\t1\t3.0",
+        "bread\tflour\t0.5\t0.75\t0.3333333333333333\t1\t3.0",
+        "butter\tflour\t1.0\t1.5\t0.6666666666666666\t2\t3.0",
+        "milk\tflour\t0.5\t0.75\t0.3333333333333333\t1\t3.0",
+        "butter\tmilk\t0.5\t0.75\t0.3333333333333333\t1\t3.0",
+        "bread\tmilk\t1.0\t1.5\t0.6666666666666666\t2\t3.0",
+        "coke\tmilk\t1.0\t1.5\t0.3333333333333333\t1\t3.0",
+        "flour\tmilk\t0.5\t0.75\t0.3333333333333333\t1\t3.0",
+        "bread,flour\tmilk\t1.0\t1.5\t0.3333333333333333\t1\t3.0",
+        "bread,coke\tmilk\t1.0\t1.5\t0.3333333333333333\t1\t3.0",
+        "bread,butter\tmilk\t1.0\t1.5\t0.3333333333333333\t1\t3.0",
+        "butter\tbread,flour\t0.5\t1.5\t0.3333333333333333\t1\t3.0",
+        "milk\tbread,flour\t0.5\t1.5\t0.3333333333333333\t1\t3.0",
+        "butter\tbread,milk\t0.5\t0.75\t0.3333333333333333\t1\t3.0",
+        "coke\tbread,milk\t1.0\t1.5\t0.3333333333333333\t1\t3.0",
+        "flour\tbread,milk\t0.5\t0.75\t0.3333333333333333\t1\t3.0")
+        .map { _.split("\t").toSet }
+    assert(expected.subsetOf(lines.split("\n").toSet.map { x:String => x.split("\t").toSet }))
     FileUtils.deleteDirectory(outputDir)
   }
 

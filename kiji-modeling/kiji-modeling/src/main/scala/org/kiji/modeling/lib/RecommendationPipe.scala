@@ -192,6 +192,21 @@ class RecommendationPipe(val pipe: Pipe)
    * Input pipe must contain: itemset (string of comma-separated items) and support.
    * Output pipe will contain: LHS itemset, RHS itemset, confidence, lift, support(LHS union RHS).
    *
+   * NOTE: Calculating itemsets can create an exponentially large number of tuples, depending on
+   * the minimum and maximum size specified. We also do not discard existing fields on the pipe
+   * while doing so. Attention must be paid to keeping only required fields on the pipe before
+   * calling this method.
+   *
+   * Example:
+   * {{{
+   *   pipe.confidenceAndLift(lhsMinSize = 1, lhsMaxSize = 2, rhsMinSize = 1, rhsMaxSize = 2)
+   * }}}
+   *
+   * @param fieldSpec is a mapping from the input field names - the first of which is the name
+   *     for the field containing the itemset, the second is the field holding support - to
+   *     result fields - names for the lhs, rhs, confidence, lift respectively. By default, the
+   *     input fields are called 'itemset and 'support and the output fields are called
+   *     ('lhs, 'rhs, 'confidence, 'lift).
    * @param lhsMinSize minimum size of the LHS
    * @param lhsMaxSize maximum size of the LHS
    * @param rhsMinSize minimum size of the RHS
@@ -199,14 +214,37 @@ class RecommendationPipe(val pipe: Pipe)
    * @param separator for itemset strings
    */
   def confidenceAndLift(
+      fieldSpec: (Fields, Fields) = (('itemset, 'support),
+          ('lhs, 'rhs, 'confidence, 'lift)),
       lhsMinSize: Int = 1,
       lhsMaxSize: Int = 1,
       rhsMinSize: Int = 1,
       rhsMaxSize: Int = 1,
       separator: String = ","): Pipe = {
+    val (inputFields, resultFields) = fieldSpec
+    // unwrap individual input and output fields
+    require(inputFields.size == 2)
+    require(resultFields.size == 4)
+    val itemsetField = new Fields(inputFields.get(0))
+    val supportField = new Fields(inputFields.get(1))
+    val lhsField = new Fields(resultFields.get(0))
+    val rhsField = new Fields(resultFields.get(1))
+    val confidenceField = new Fields(resultFields.get(2))
+    val liftField = new Fields(resultFields.get(3))
+
+    val lhsPipe = pipe
+        .project(itemsetField, supportField)
+        .rename(itemsetField -> 'lhsItemSetField)
+        .rename(supportField -> 'lhsSupportField)
+
+    val rhsPipe = pipe
+      .project(itemsetField, supportField)
+      .rename(itemsetField -> 'rhsItemSetField)
+      .rename(supportField -> 'rhsSupportField)
+
     pipe
         // Filter out itemsets which are too big or too small.
-        .filter('itemset) {
+        .filter(itemsetField) {
           field: String => {
             val itemSetSize = field.split(separator).size
             itemSetSize <= lhsMaxSize + rhsMaxSize &&
@@ -216,7 +254,7 @@ class RecommendationPipe(val pipe: Pipe)
         // Generate all possible LHS itemsets by taking subsets of the itemsets from input pipe.
         // Generate corresponding RHS itemsets.
         // Make sure LHS and RHS are requested sizes.
-        .flatMap('itemset -> ('lhs, 'rhs)) {
+        .flatMap(itemsetField -> (lhsField, rhsField)) {
           itemset: String => {
             val itemsetSplit = itemset.split(separator).map(_.trim).distinct.sorted.toList
             // LHS ought to be strict subset.
@@ -241,18 +279,14 @@ class RecommendationPipe(val pipe: Pipe)
                 .toList
           }
         }
-        .rename(('itemset, 'support) -> ('union, 'supportUnion))
-        .project('union, 'supportUnion, 'lhs, 'rhs)
+        // We need this rename to ensure the join happens correctly
+        .discard(itemsetField)
         // Acquire supports for LHS itemsets if they exist in the original pipe.
-        .joinWithSmaller('lhs -> 'itemset, pipe)
-        .rename('support -> 'supportlhs)
-        .project('union, 'supportUnion, 'lhs, 'supportlhs, 'rhs)
+        .joinWithSmaller(lhsField -> 'lhsItemSetField, lhsPipe)
         // Acquire supports for RHS itemsets if they exist in the original pipe.
-        .joinWithSmaller('rhs -> 'itemset, pipe)
-        .rename('support -> 'supportrhs)
-        .project('union, 'supportUnion, 'lhs, 'supportlhs, 'rhs, 'supportrhs)
+        .joinWithSmaller(rhsField -> 'rhsItemSetField, rhsPipe)
         // Compute confidence and lift.
-        .map(('supportUnion, 'supportlhs, 'supportrhs) -> ('confidence, 'lift)) {
+        .map((supportField, 'lhsSupportField, 'rhsSupportField) -> (confidenceField, liftField)) {
           fields: (Double, Double, Double) => {
             val (supportUnion, supportlhs, supportrhs) = fields
             val confidence = supportUnion/supportlhs
@@ -260,7 +294,7 @@ class RecommendationPipe(val pipe: Pipe)
             (confidence, lift)
           }
         }
-        .project('lhs, 'rhs, 'confidence, 'lift, 'supportUnion)
+        .discard('lhsItemSetField, 'rhsItemSetField, 'lhsSupportField, 'rhsSupportField)
   }
 
   /**
