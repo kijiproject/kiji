@@ -188,8 +188,9 @@ class RecommendationPipeSuite extends KijiSuite {
                 slice.head.datum.toString.split(",").map(_.trim).toList
           }
           .prepareItemSets[String]('order -> 'itemset, 2, 2)
-          .support('itemset -> 'support, None, Some(3.0), 'norm)
+          .support('itemset -> ('frequency, 'support), None, Some(3.0), 'norm)
           .filter('support) { support: Double => (support >= 0.5) }
+          .debug
           .write(TextLine(args("output")))
     }
     val outputDir: File = Files.createTempDir()
@@ -200,7 +201,8 @@ class RecommendationPipeSuite extends KijiSuite {
     }
     val expected = Array("bread,milk\t2\t3.0\t0.6666666666666666",
         "butter,flour\t2\t3.0\t0.6666666666666666")
-    assert(lines.split("\n").sameElements(expected))
+        .map(_.split("\t").toSet)
+    assert(lines.split("\n").map{ x: String => x.split("\t").toSet}.sameElements(expected))
     FileUtils.deleteDirectory(outputDir)
   }
 
@@ -225,7 +227,7 @@ class RecommendationPipeSuite extends KijiSuite {
                 slice.head.datum.toString.split(",").map(_.trim).toList
           }
         .prepareItemSets[String]('order -> 'itemset, 2, 2)
-        .support('itemset -> 'support, Some(totalOrders), None, 'norm)
+        .support('itemset -> ('frequency, 'support), Some(totalOrders), None, 'norm)
         .filter('support) { support: Double => (support >= 0.5) }
         .write(TextLine(args("output")))
     }
@@ -237,7 +239,8 @@ class RecommendationPipeSuite extends KijiSuite {
     }
     val expected = Array("bread,milk\t2\t3\t0.6666666666666666",
         "butter,flour\t2\t3\t0.6666666666666666")
-    assert(lines.split("\n").sameElements(expected))
+        .map(_.split("\t").toSet)
+    assert(lines.split("\n").map{ x: String => x.split("\t").toSet}.sameElements(expected))
     FileUtils.deleteDirectory(outputDir)
   }
 
@@ -257,7 +260,7 @@ class RecommendationPipeSuite extends KijiSuite {
                 slice.head.datum.toString.split(",").map(_.trim).toList
           }
           .prepareItemSets[String]('order -> 'itemset, 1, 3)
-          .support('itemset -> 'support, None, Some(3.0), 'norm)
+          .support('itemset -> ('frequency, 'support), None, Some(3.0), 'norm)
           .confidenceAndLift(1, 5, 1, 5)
           .write(TextLine(args("output")))
     }

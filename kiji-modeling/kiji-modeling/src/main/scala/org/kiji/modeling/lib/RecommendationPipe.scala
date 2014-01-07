@@ -126,26 +126,35 @@ class RecommendationPipe(val pipe: Pipe)
   /**
    * Compute support for itemsets (N-grams of entities that occur together in some context, e.g.
    * products in an order) in a pipe containing sets of orders.
-   * This is typically expressed as a fraction, rather than an absolute value.
+   * Support is typically expressed as a fraction, rather than an absolute value.
    * The denominator for this fraction needs to be provided either
    * as a constant or a pipe and a field within it.
    *
+   * Example:
+   * {{{
+   *   pipe.support('itemset -> ('frequency, 'support), totalsPipe, None, 'norm)
+   * }}}
+   *
    * @param fieldSpec is the mapping of the field in this pipe that contains the co-occurring
-   *     N-grams to the resultant field that will store the support of this N-gram.
+   *     N-grams to two resultant fields: the first that will store the frequency of the N-gram
+   *     and a second that will store the support of this N-gram.
    * @param normalizingPipe is a pipe that may contain the normalizing constant. Optional.
    * @param normalizingConstant is a normalizing constant.
    * @param normalizingField is either the name of the field in the normalizing pipe that contains
    *     the normalizing constant or is the name of the field to insert into the pipe if you have
    *     provided a normalizingConstant.
    * @param numReducers is used if you have more than 1 reducer available to run this function.
-   * @return the pipe containing itemsets and their supports.
+   * @return the pipe containing itemsets, their frequency and support in the specified result
+   *     fields and the normalizing field.
    */
   def support(fieldSpec: (Fields, Fields),
       normalizingPipe: Option[Pipe],
       normalizingConstant: Option[Double],
       normalizingField: Fields,
-      numReducers: Int = 1): Pipe = {
-    val (itemsetField, resultField) = fieldSpec
+      numReducers: Int = 1) : Pipe = {
+    val (itemsetField, resultFields) = fieldSpec
+    require(itemsetField.size == 1)
+    require(resultFields.size == 2)
     // Exactly one of normalizingConstant and normalizingPipe must be supplied to this function
     require (normalizingConstant.isDefined ^ normalizingPipe.isDefined)
     var tempPipe = pipe.groupBy(itemsetField) { _.reducers(numReducers).size('itemSetFrequency) }
@@ -155,12 +164,13 @@ class RecommendationPipe(val pipe: Pipe)
       tempPipe = tempPipe.crossWithTiny(normalizingPipe.get)
     }
     tempPipe
-        .map(('itemSetFrequency, normalizingField) -> resultField) {
+        .map(('itemSetFrequency, normalizingField) -> resultFields) {
           fields: (Long, Double) => {
             val (frequency, normalizer) = fields
-            frequency/normalizer
+            (frequency, frequency/normalizer)
           }
         }
+        .discard('itemSetFrequency)
   }
 
   /**
