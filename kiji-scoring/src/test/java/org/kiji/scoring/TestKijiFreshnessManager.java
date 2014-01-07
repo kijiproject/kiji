@@ -36,7 +36,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import org.kiji.mapreduce.TestProducer;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
@@ -258,19 +257,41 @@ public class TestKijiFreshnessManager {
     }
   }
 
-  public void testOptionalFields() throws IOException {
-    final Map<String, String> params = Maps.newHashMap();
-    params.put("test-key", "test-value");
-
-    final KijiFreshenerRecord parametersRecord = KijiFreshenerRecord.newBuilder()
-        .setRecordVersion(KijiFreshnessManager.CUR_FRESHENER_RECORD_VER.toCanonicalString())
+  @Test
+  public void testVersionTooLow() throws IOException {
+    final KijiFreshenerRecord record = KijiFreshenerRecord.newBuilder()
+        .setRecordVersion("freshenerrecord-0.0")
         .setFreshnessPolicyClass(NeverFreshen.class.getName())
-        .setScoreFunctionClass(TestProducer.class.getName())
+        .setScoreFunctionClass(TestScoreFunction.class.getName())
         .build();
-    assertEquals(EMPTY_PARAMS, parametersRecord.getParameters());
+    try {
+      mFreshManager.registerFreshener("user", INFO_NAME, record, false, false, false);
+      fail("should have thrown FreshenerValidationException.");
+    } catch (FreshenerValidationException fve) {
+      assertTrue(fve.getExceptions().containsKey(ValidationFailure.VERSION_TOO_LOW));
+      assertNull(mFreshManager.retrieveFreshenerRecord("user", INFO_NAME));
+    }
 
-    mFreshManager.registerFreshener(
-        "user", INFO_NAME, POLICY, SCORE_FUNCTION, params, false, false);
-    assertEquals(parametersRecord, mFreshManager.retrieveFreshenerRecord("user", INFO_NAME));
+    mFreshManager.writeRecordToMetaTable("user", INFO_NAME, record);
+    assertNull(mFreshManager.retrieveFreshenerRecord("user", INFO_NAME));
+  }
+
+  @Test
+  public void testVersionTooHigh() throws IOException {
+    final KijiFreshenerRecord record = KijiFreshenerRecord.newBuilder()
+        .setRecordVersion("freshenerrecord-1000000.0")
+        .setFreshnessPolicyClass(NeverFreshen.class.getName())
+        .setScoreFunctionClass(TestScoreFunction.class.getName())
+        .build();
+    try {
+      mFreshManager.registerFreshener("user", INFO_NAME, record, false, false, false);
+      fail("should have thrown FreshenerValidationException.");
+    } catch (FreshenerValidationException fve) {
+      assertTrue(fve.getExceptions().containsKey(ValidationFailure.VERSION_TOO_HIGH));
+      assertNull(mFreshManager.retrieveFreshenerRecord("user", INFO_NAME));
+    }
+
+    mFreshManager.writeRecordToMetaTable("user", INFO_NAME, record);
+    assertNull(mFreshManager.retrieveFreshenerRecord("user", INFO_NAME));
   }
 }

@@ -76,15 +76,19 @@ public final class KijiFreshnessManager implements Closeable {
     BAD_POLICY_NAME,
     BAD_SCORE_FUNCTION_NAME,
     FRESHENER_ALREADY_ATTACHED,
-    NO_COLUMN_IN_TABLE
+    NO_COLUMN_IN_TABLE,
+    VERSION_TOO_LOW,
+    VERSION_TOO_HIGH
   }
   /** The prefix we use for freshness policies stored in a meta table. */
   private static final String METATABLE_KEY_PREFIX = "kiji.scoring.fresh.";
+  /** Protocol name for KijiFreshenerRecords. */
+  private static final String RECORD_PROTOCOL_NAME = "freshenerrecord";
   /** Minimum and maximum KijiFreshenerRecord versions supported by this KijiFreshnessManager. */
   private static final ProtocolVersion MIN_FRESHENER_RECORD_VER =
-      ProtocolVersion.parse("freshenerrecord-0.1");
+      ProtocolVersion.parse(String.format("%s-0.1", RECORD_PROTOCOL_NAME));
   private static final ProtocolVersion MAX_FRESHENER_RECORD_VER =
-      ProtocolVersion.parse("freshenerrecord-0.1");
+      ProtocolVersion.parse(String.format("%s-0.1", RECORD_PROTOCOL_NAME));
   /**
    * The freshener version that will be installed by this version of the KijiFreshnessManager.
    * This value is public for testing purposes.
@@ -195,6 +199,36 @@ public final class KijiFreshnessManager implements Closeable {
   // -----------------------------------------------------------------------------------------------
   // Static methods
   // -----------------------------------------------------------------------------------------------
+
+  /**
+   * Compares the given recordVersion to the minimum supported record version. Returns true if the
+   * recordVersion is lower than is supported. Ensures that the protocol name matches.
+   *
+   * @param recordVersion version of the record to check for support.
+   * @return true if the version is lower than the minimum supported version.
+   */
+  public static boolean isRecordVersionTooLow(
+      final String recordVersion
+  ) {
+    final ProtocolVersion recordVer = ProtocolVersion.parse(recordVersion);
+    Preconditions.checkArgument(RECORD_PROTOCOL_NAME.equals(recordVer.getProtocolName()));
+    return recordVer.compareTo(MIN_FRESHENER_RECORD_VER) < 0;
+  }
+
+  /**
+   * Compares the given recordVersion to the maximum supported record version. Returns true if the
+   * recordVersion is higher than is supported. Ensures that the protocol name matches.
+   *
+   * @param recordVersion version of the record to check for support.
+   * @return true if the version is higher than the maximum supported version.
+   */
+  public static boolean isRecordVersionTooHigh(
+      final String recordVersion
+  ) {
+    final ProtocolVersion recordVer = ProtocolVersion.parse(recordVersion);
+    Preconditions.checkArgument(RECORD_PROTOCOL_NAME.equals(recordVer.getProtocolName()));
+    return recordVer.compareTo(MAX_FRESHENER_RECORD_VER) > 0;
+  }
 
   /**
    * Check if a meta table key is a valid KijiFreshnessManager meta table key.
@@ -325,16 +359,19 @@ public final class KijiFreshnessManager implements Closeable {
   /**
    * Write an already validated KijiFreshenerRecord to the meta table without further checks.
    *
+   * <p>This method is package private for testing purposes only.</p>
+   *
    * @param tableName the table in which the column lives.
    * @param columnName the column to which the record is attached.
    * @param record the record to attach to the column.
    * @throws IOException in case of an error writing to the meta table.
    */
-  private void writeRecordToMetaTable(
+  void writeRecordToMetaTable(
       final String tableName,
       final KijiColumnName columnName,
       final KijiFreshenerRecord record
   ) throws IOException {
+    Preconditions.checkNotNull(record.getRecordVersion(), "Record version may not be null.");
     Preconditions.checkNotNull(
         record.getFreshnessPolicyClass(), "KijiFreshnessPolicy may not be null.");
     Preconditions.checkNotNull(
@@ -470,11 +507,22 @@ public final class KijiFreshnessManager implements Closeable {
     if (null == record) {
       return failures;
     }
+    Preconditions.checkNotNull(record.getRecordVersion(), "Record version may not be null.");
     Preconditions.checkNotNull(
         record.getFreshnessPolicyClass(), "KijiFreshnessPolicy may not be null.");
     Preconditions.checkNotNull(
         record.getScoreFunctionClass(), "ScoreFunction may not be null.");
 
+    if (isRecordVersionTooLow(record.getRecordVersion())) {
+      failures.put(ValidationFailure.VERSION_TOO_LOW, new IllegalArgumentException(String.format(
+          "Record version: %s is below the minimum required version: %s", record.getRecordVersion(),
+          MIN_FRESHENER_RECORD_VER)));
+    }
+    if (isRecordVersionTooHigh(record.getRecordVersion())) {
+      failures.put(ValidationFailure.VERSION_TOO_HIGH, new IllegalArgumentException(String.format(
+          "Record version: %s is above the maximum allowed version: %s", record.getRecordVersion(),
+          MAX_FRESHENER_RECORD_VER)));
+    }
     if (!columnName.isFullyQualified()) {
       failures.put(ValidationFailure.ATTACHMENT_COLUMN_NOT_QUALIFIED, new IllegalArgumentException(
           String.format("Attachment column: '%s' is not fully qualified. Fresheners may only be "
@@ -777,8 +825,19 @@ public final class KijiFreshnessManager implements Closeable {
       }
     }
     final Decoder decoder = DECODER_FACTORY.binaryDecoder(recordBytes, null);
-    return new SpecificDatumReader<KijiFreshenerRecord>(KijiFreshenerRecord.SCHEMA$)
-        .read(null, decoder);
+    final KijiFreshenerRecord record = new SpecificDatumReader<KijiFreshenerRecord>(
+        KijiFreshenerRecord.SCHEMA$).read(null, decoder);
+    if (isRecordVersionTooLow(record.getRecordVersion())) {
+      LOG.warn("Found record {} with version less than minimum {}", record,
+          MIN_FRESHENER_RECORD_VER);
+      return null;
+    } else if (isRecordVersionTooHigh(record.getRecordVersion())) {
+      LOG.warn("Found record {} with version greater than maximum {}", record,
+          MAX_FRESHENER_RECORD_VER);
+      return null;
+    } else {
+      return record;
+    }
   }
 
   /**
