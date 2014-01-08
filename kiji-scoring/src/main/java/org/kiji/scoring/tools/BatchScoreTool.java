@@ -1,3 +1,21 @@
+/**
+ * (c) Copyright 2013 WibiData, Inc.
+ *
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.kiji.scoring.tools;
 
 import java.io.IOException;
@@ -41,7 +59,7 @@ import org.kiji.scoring.batch.ScoreFunctionJobBuilder;
  *   </pre>
  * </p>
  */
-public class KijiBatchScoreTool extends KijiJobTool<ScoreFunctionJobBuilder> {
+public class BatchScoreTool extends KijiJobTool<ScoreFunctionJobBuilder> {
   private static final Gson GSON = new Gson();
 
   @Flag(name="score-function-class",
@@ -161,6 +179,6 @@ public class KijiBatchScoreTool extends KijiJobTool<ScoreFunctionJobBuilder> {
    * @throws Exception if there is an error.
    */
   public static void main(String[] args) throws Exception {
-    System.exit(new KijiToolLauncher().run(new KijiBatchScoreTool(), args));
+    System.exit(new KijiToolLauncher().run(new BatchScoreTool(), args));
   }
 }

@@ -55,6 +55,12 @@
     <Package name="~org[.]kiji[.]scoring[.]server*" />
   </Match>
 
+  <Match>
+    <Class name="org.kiji.scoring.tools.BatchScoreTool" />
+    <Or>
+      <Bug pattern="UWF_NULL_FIELD" />
+    </Or>
+  </Match>
 
   <!--
     Other one-off exclusions should go below.

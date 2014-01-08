@@ -1,3 +1,21 @@
+/**
+ * (c) Copyright 2013 WibiData, Inc.
+ *
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.kiji.scoring.tools;
 
 import static org.junit.Assert.assertEquals;
@@ -25,8 +43,8 @@ import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.tools.BaseTool;
 import org.kiji.schema.util.InstanceBuilder;
 
-public class TestKijiBatchScoreTool extends KijiClientTest {
-  private static final Logger LOG = LoggerFactory.getLogger(TestKijiBatchScoreTool.class);
+public class TestBatchScoreTool extends KijiClientTest {
+  private static final Logger LOG = LoggerFactory.getLogger(TestBatchScoreTool.class);
 
   /** Horizontal ruler to delimit CLI outputs in logs. */
   private static final String RULER =
@@ -96,10 +114,11 @@ public class TestKijiBatchScoreTool extends KijiClientTest {
 
   @Test
   public void testSimpleJob() throws Exception {
-    assertEquals(BaseTool.SUCCESS, runTool(new KijiBatchScoreTool(),
+    assertEquals(BaseTool.SUCCESS, runTool(new BatchScoreTool(),
         String.format("--input=format=kiji table=%s", getTableURI()),
         String.format("--output=format=kiji table=%s nsplits=1", getTableURI()),
-        "--score-function-class=org.kiji.scoring.impl.TestInternalFreshKijiTableReader$TestScoreFunction",
+        "--score-function-class=org.kiji.scoring.impl.TestInternalFreshKijiTableReader$TestScoreFun"
+        + "ction",
         "--attached-column=family:qual0",
         "--interactive=false"
     ));
