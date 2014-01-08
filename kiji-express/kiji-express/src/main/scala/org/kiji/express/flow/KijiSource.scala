@@ -107,7 +107,7 @@ import org.kiji.schema.KijiURI
 @ApiStability.Experimental
 final class KijiSource private[express] (
     val tableAddress: String,
-    val timeRange: TimeRange,
+    val timeRange: TimeRangeSpec,
     val timestampField: Option[Symbol],
     val inputColumns: Map[Symbol, ColumnInputSpec] = Map(),
     val outputColumns: Map[Symbol, ColumnOutputSpec] = Map(),
@@ -240,7 +240,7 @@ final class KijiSource private[express] (
    Objects
        .toStringHelper(this)
        .add("tableAddress", tableAddress)
-       .add("timeRange", timeRange)
+       .add("timeRangeSpec", timeRange)
        .add("timestampField", timestampField)
        .add("inputColumns", inputColumns)
        .add("outputColumns", outputColumns)
@@ -297,7 +297,7 @@ private[express] object KijiSource {
    */
   private[express] def makeTap(
       tableAddress: String,
-      timeRange: TimeRange,
+      timeRange: TimeRangeSpec,
       timestampField: String,
       inputColumns: java.util.Map[String, ColumnInputSpec],
       outputColumns: java.util.Map[String, ColumnOutputSpec]
@@ -423,7 +423,7 @@ private[express] object KijiSource {
   private class TestLocalKijiScheme(
       val buffer: Buffer[Tuple],
       uri: KijiURI,
-      timeRange: TimeRange,
+      timeRange: TimeRangeSpec,
       timestampField: Option[Symbol],
       inputColumns: Map[String, ColumnInputSpec],
       outputColumns: Map[String, ColumnOutputSpec],
@@ -450,7 +450,7 @@ private[express] object KijiSource {
       withKijiTable(uri, conf) { table: KijiTable =>
         // We also want the entire timerange, so the test can inspect all data in the table.
         val request: KijiDataRequest =
-          KijiScheme.buildRequest(table.getLayout, All, inputColumns.values)
+          KijiScheme.buildRequest(table.getLayout, TimeRangeSpec.All, inputColumns.values)
 
         doAndClose(LocalKijiScheme.openReaderWithOverrides(table, request)) { reader =>
           // Set up scanning options.
@@ -547,7 +547,7 @@ private[express] object KijiSource {
       rowFilterSpec: RowFilterSpec)
       extends KijiScheme(
           uri.toString,
-          All,
+          TimeRangeSpec.All,
           timestampField,
           mergeColumnMapping(inputColumns, outputColumns),
           outputColumns,

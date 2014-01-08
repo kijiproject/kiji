@@ -50,7 +50,7 @@ import org.kiji.express.flow.EntityId
 import org.kiji.express.flow.QualifiedColumnOutputSpec
 import org.kiji.express.flow.RowFilterSpec
 import org.kiji.express.flow.RowRangeSpec
-import org.kiji.express.flow.TimeRange
+import org.kiji.express.flow.TimeRangeSpec
 import org.kiji.express.flow.util.ResourceUtil._
 import org.kiji.schema.EntityIdFactory
 import org.kiji.schema.KijiColumnName
@@ -125,7 +125,7 @@ private[express] case class InputContext(
 @ApiStability.Experimental
 private[express] case class LocalKijiScheme(
     private[express] val uri: KijiURI,
-    private[express] val timeRange: TimeRange,
+    private[express] val timeRange: TimeRangeSpec,
     private[express] val timestampField: Option[Symbol],
     private[express] val inputColumns: Map[String, ColumnInputSpec] = Map(),
     private[express] val outputColumns: Map[String, ColumnOutputSpec] = Map(),

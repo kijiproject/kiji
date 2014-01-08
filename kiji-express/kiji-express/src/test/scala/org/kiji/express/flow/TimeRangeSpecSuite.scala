@@ -26,10 +26,10 @@ import org.scalatest.junit.JUnitRunner
 import org.kiji.schema.KConstants
 
 @RunWith(classOf[JUnitRunner])
-class TimeRangeSuite extends FunSuite {
-  test("TimeRange fails fast when invalid time range arguments are specified.") {
+class TimeRangeSpecSuite extends FunSuite {
+  test("TimeRangeSpec fails fast when invalid time range arguments are specified.") {
     val thrown: IllegalArgumentException = intercept[IllegalArgumentException] {
-      Between(10L, 1L)
+      TimeRangeSpec.Between(10L, 1L)
     }
 
     val expectedMessage = "requirement failed: Invalid time range specified: (%d, %d)"
@@ -37,36 +37,36 @@ class TimeRangeSuite extends FunSuite {
     assert(thrown.getMessage == expectedMessage)
   }
 
-  test("All constructs a TimeRange correctly") {
-    val range: TimeRange = All
+  test("TimeRangeSpec.All constructs a TimeRangeSpec correctly") {
+    val range: TimeRangeSpec = TimeRangeSpec.All
 
     assert(range.begin == KConstants.BEGINNING_OF_TIME)
     assert(range.end == KConstants.END_OF_TIME)
   }
 
-  test("At constructs a TimeRange correctly") {
-    val range: TimeRange = At(42L)
+  test("TimeRangeSpec.At constructs a TimeRangeSpec correctly") {
+    val range: TimeRangeSpec = TimeRangeSpec.At(42L)
 
     assert(range.begin == 42L)
     assert(range.end == 42L)
   }
 
-  test("After constructs a TimeRange correctly") {
-    val range: TimeRange = After(42L)
+  test("TimeRangeSpec.After constructs a TimeRangeSpec correctly") {
+    val range: TimeRangeSpec = TimeRangeSpec.From(42L)
 
     assert(range.begin == 42L)
     assert(range.end == KConstants.END_OF_TIME)
   }
 
-  test("Before constructs a TimeRange correctly") {
-    val range: TimeRange = Before(42L)
+  test("TimeRangeSpec.Before constructs a TimeRangeSpec correctly") {
+    val range: TimeRangeSpec = TimeRangeSpec.Before(42L)
 
     assert(range.begin == KConstants.BEGINNING_OF_TIME)
     assert(range.end == 42L)
   }
 
-  test("Between constructs a TimeRange correctly") {
-    val range: TimeRange = Between(10L, 42L)
+  test("TimeRangeSpec.Between constructs a TimeRangeSpec correctly") {
+    val range: TimeRangeSpec = TimeRangeSpec.Between(10L, 42L)
 
     assert(range.begin == 10L)
     assert(range.end == 42L)

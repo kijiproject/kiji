@@ -28,7 +28,7 @@ import org.kiji.schema.filter.KijiColumnRangeFilter
 import org.kiji.schema.filter.RegexQualifierColumnFilter
 
 /**
- * An extendable trait used for column filters in Express, which correspond to Kiji and HBase column
+ * An extensible trait used for column filters in Express, which correspond to Kiji and HBase column
  * filters.
  *
  * Filters are implemented via HBase filters, not on the client side, so they can cut down on the
@@ -41,28 +41,29 @@ import org.kiji.schema.filter.RegexQualifierColumnFilter
  *
  * By default, no filter is applied, but you can specify your own.  Only data that pass these
  * filters will be requested and populated into the tuple.  Two column filters are currently
- * provided: [[org.kiji.express.flow.ColumnRangeFilterSpec]] and
- * [[org.kiji.express.flow.RegexQualifierFilterSpec]].  Both of these filter the data
- * returned from a ColumnFamilyInputSpec by qualifier in some way.  These filters can be composed
- * with [[org.kiji.express.flow.AndFilterSpec]] and [[org.kiji.express.flow.OrFilterSpec]].
+ * provided: [[org.kiji.express.flow.ColumnFilterSpec.ColumnRangeFilterSpec]] and
+ * [[org.kiji.express.flow.ColumnFilterSpec.RegexQualifierFilterSpec]].  Both of these filter the
+ * data returned from a ColumnFamilyInputSpec by qualifier in some way.  These filters can be
+ * composed with [[org.kiji.express.flow.ColumnFilterSpec.AndFilterSpec]] and
+ * [[org.kiji.express.flow.ColumnFilterSpec.OrFilterSpec]].
  *
  * To specify a range of qualifiers for the cells that should be returned.
  * {{{
  *     ColumnRangeFilterSpec(
- *         minimum = “c”,
- *         maximum = “m”,
+ *         minimum = "c",
+ *         maximum = "m",
  *         minimumIncluded = true,
  *         maximumIncluded = false)
  * }}}
  *
  * A `ColumnInputSpec` with the above filter specified will return all data from all  columns with
  * qualifiers "c" and later, up to but not including "m". You can omit any of the parameters, for
- * instance, you can write ``ColumnRangeFilterSpec(minimum = “m”, minimumIncluded = true)` to
- * specify columns with qualifiers “m” and later.
+ * instance, you can write `ColumnRangeFilterSpec(minimum = "m", minimumIncluded = true)` to
+ * specify columns with qualifiers "m" and later.
  *
  * To specify a regex for the qualifier names that you want data from:
  * {{{
- *     RegexQualifierFilterSpec(“http://.*”)
+ *     RegexQualifierFilterSpec("http://.*")
  * }}}
  * In this example, only data from columns whose qualifier names start with "http://" are returned.
  *

@@ -170,7 +170,7 @@ import org.kiji.schema.filter.RegexQualifierColumnFilter
  * you can do the following.
  *
  * @example {{{
- *     KijiInput("kiji://.env/default/words", timeRange=Between(0L, 10L), "info:word" -> 'word)
+ *     KijiInput("kiji://.env/default/words", timeRangeSpec=Between(0L, 10L), "info:word" -> 'word)
  * }}}
  */
 package object flow {

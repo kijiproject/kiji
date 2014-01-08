@@ -59,7 +59,7 @@ import org.kiji.annotations.Inheritance
 @ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Sealed
-sealed trait SchemaSpec extends java.io.Serializable {
+sealed trait SchemaSpec extends Serializable {
   /**
    * Retrieve the Avro [[org.apache.avro.Schema]] object associated with this SchemaSpec,
    * if possible.

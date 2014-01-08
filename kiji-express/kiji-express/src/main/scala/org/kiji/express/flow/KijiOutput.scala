@@ -65,7 +65,7 @@ object KijiOutput {
   ): KijiSource = {
     new KijiSource(
         tableAddress = tableUri,
-        timeRange = All,
+        timeRange = TimeRangeSpec.All,
         timestampField = timestampField,
         outputColumns = columns)
   }

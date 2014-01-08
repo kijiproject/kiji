@@ -21,8 +21,6 @@ package org.kiji.express.flow
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.express.flow.RowFilterSpec.NoRowFilterSpec
-import org.kiji.express.flow.RowRangeSpec.AllRows
 import org.kiji.schema.KijiColumnName
 
 /**
@@ -34,7 +32,7 @@ import org.kiji.schema.KijiColumnName
  * {{{
  *   KijiInput.builder
  *       .withTableURI("kiji://localhost:2181/default/mytable")
- *       .withTimeRange(Between(5, 10))
+ *       .withTimeRangeSpec(Between(5, 10))
  *       .withColumns("info:column1" -> 'column1, "info:column2" -> 'column2)
  *       .addColumnSpecs(QualifiedColumnInputSpec.builder
  *           .withColumn("info", "column3")
@@ -50,7 +48,7 @@ import org.kiji.schema.KijiColumnName
 @ApiStability.Experimental
 object KijiInput {
   /** Default time range for KijiSource */
-  private val DEFAULT_TIME_RANGE: TimeRange = All
+  private val DEFAULT_TIME_RANGE: TimeRangeSpec = TimeRangeSpec.All
 
   /**
    * Create a new empty KijiInput.Builder.
@@ -70,23 +68,23 @@ object KijiInput {
   /**
    * Builder for [[org.kiji.express.flow.KijiSource]]s to be used as inputs.
    *
-   * @param consturctorTableURI string of the table from which to read.
+   * @param constructorTableURI string of the table from which to read.
    * @param constructorTimeRange from which to read values.
    * @param constructorColumnSpecs specification of columns from which to read.
    */
   @ApiAudience.Public
   @ApiStability.Experimental
   final class Builder private(
-      private val consturctorTableURI: Option[String],
-      private val constructorTimeRange: Option[TimeRange],
+      private val constructorTableURI: Option[String],
+      private val constructorTimeRange: Option[TimeRangeSpec],
       private val constructorColumnSpecs: Option[Map[_ <: ColumnInputSpec, Symbol]],
       private val constructorRowRangeSpec: Option[RowRangeSpec],
       private val constructorRowFilterSpec: Option[RowFilterSpec]
   ) {
     private[this] val monitor = new AnyRef
 
-    private var mTableURI: Option[String] = consturctorTableURI
-    private var mTimeRange: Option[TimeRange] = constructorTimeRange
+    private var mTableURI: Option[String] = constructorTableURI
+    private var mTimeRange: Option[TimeRangeSpec] = constructorTimeRange
     private var mColumnSpecs: Option[Map[_ <: ColumnInputSpec, Symbol]] = constructorColumnSpecs
     private var mRowRangeSpec: Option[RowRangeSpec] = constructorRowRangeSpec
     private var mRowFilterSpec: Option[RowFilterSpec] = constructorRowFilterSpec
@@ -103,7 +101,7 @@ object KijiInput {
      *
      * @return the input time range specification from this Builder.
      */
-    def timeRange: Option[TimeRange] = mTimeRange
+    def timeRange: Option[TimeRangeSpec] = mTimeRange
 
     /**
      * Get the input specifications from this Builder.
@@ -141,12 +139,12 @@ object KijiInput {
     /**
      * Configure the KijiSource to read values from the given range of input times.
      *
-     * @param timeRange specification of times from which to read.
+     * @param timeRangeSpec specification of times from which to read.
      * @return this builder.
      */
-    def withTimeRange(timeRange: TimeRange): Builder = monitor.synchronized {
+    def withTimeRangeSpec(timeRangeSpec: TimeRangeSpec): Builder = monitor.synchronized {
       require(None == mTimeRange, "Time range already set to: " + mTimeRange.get)
-      mTimeRange = Some(timeRange)
+      mTimeRange = Some(timeRangeSpec)
       this
     }
 
@@ -285,8 +283,8 @@ object KijiInput {
           timeRange.getOrElse(DEFAULT_TIME_RANGE),
           columnSpecs.getOrElse(
               throw new IllegalArgumentException("Column input specs must be specified.")),
-          rowRangeSpec.getOrElse(AllRows),
-          rowFilterSpec.getOrElse(NoRowFilterSpec))
+          rowRangeSpec.getOrElse(RowRangeSpec.AllRows),
+          rowFilterSpec.getOrElse(RowFilterSpec.NoRowFilterSpec))
     }
   }
 
@@ -351,7 +349,7 @@ object KijiInput {
    */
   private[express] def apply(
       tableUri: String,
-      timeRange: TimeRange,
+      timeRange: TimeRangeSpec,
       columns: Map[_ <: ColumnInputSpec, Symbol],
       rowRangeSpec: RowRangeSpec,
       rowFilterSpec: RowFilterSpec

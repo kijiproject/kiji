@@ -119,7 +119,7 @@ class FlowModuleSuite extends FunSuite {
         .build
     val expectedScheme = new KijiScheme(
         tableAddress = tableURI,
-        timeRange = All,
+        timeRange = TimeRangeSpec.All,
         timestampField = None,
         icolumns = Map("word" -> QualifiedColumnInputSpec("info", "word")),
         rowRangeSpec = AllRows,
@@ -131,12 +131,12 @@ class FlowModuleSuite extends FunSuite {
   test("Flow module permits specifying timerange for KijiInput.") {
     val input = KijiInput.builder
         .withTableURI(tableURI)
-        .withTimeRange(Between(0L,40L))
+        .withTimeRangeSpec(TimeRangeSpec.Between(0L,40L))
         .withColumns("info:word" -> 'word)
         .build
     val expectedScheme = new KijiScheme(
         tableURI,
-        Between(0L, 40L),
+        TimeRangeSpec.Between(0L, 40L),
         None,
         Map("word" -> QualifiedColumnInputSpec("info", "word")),
         rowRangeSpec = AllRows,
@@ -153,7 +153,7 @@ class FlowModuleSuite extends FunSuite {
     val expectedScheme: KijiScheme = {
       new KijiScheme(
           tableURI,
-          All,
+          TimeRangeSpec.All,
           None,
           Map(
               "word" -> QualifiedColumnInputSpec("info", "word"),
@@ -210,7 +210,7 @@ class FlowModuleSuite extends FunSuite {
         .build
     val expectedScheme: KijiScheme = new KijiScheme(
         tableAddress = tableURI,
-        timeRange = All,
+        timeRange = TimeRangeSpec.All,
         timestampField = None,
         ocolumns = Map("words" -> QualifiedColumnOutputSpec.builder
             .withColumn("info", "words")
@@ -228,7 +228,7 @@ class FlowModuleSuite extends FunSuite {
         .build
     val expectedScheme: KijiScheme = new KijiScheme(
         tableAddress = tableURI,
-        timeRange = All,
+        timeRange = TimeRangeSpec.All,
         timestampField = Some('time),
         ocolumns = Map("words" -> QualifiedColumnOutputSpec.builder
             .withColumn("info", "words")

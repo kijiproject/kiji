@@ -55,7 +55,7 @@ import org.kiji.express.flow.RowFilterSpec
 import org.kiji.express.flow.RowFilterSpec.NoRowFilterSpec
 import org.kiji.express.flow.RowRangeSpec
 import org.kiji.express.flow.SchemaSpec
-import org.kiji.express.flow.TimeRange
+import org.kiji.express.flow.TimeRangeSpec
 import org.kiji.express.flow.TransientStream
 import org.kiji.express.flow.framework.serialization.KijiLocker
 import org.kiji.express.flow.util.AvroUtil
@@ -102,7 +102,7 @@ import org.kiji.schema.{EntityId => JEntityId}
 @ApiStability.Experimental
 class KijiScheme(
     private[express] val tableAddress: String,
-    private[express] val timeRange: TimeRange,
+    private[express] val timeRange: TimeRangeSpec,
     private[express] val timestampField: Option[Symbol],
     icolumns: Map[String, ColumnInputSpec] = Map(),
     ocolumns: Map[String, ColumnOutputSpec] = Map(),
@@ -507,7 +507,7 @@ object KijiScheme {
    */
   private[express] def buildRequest(
       layout: KijiTableLayout,
-      timeRange: TimeRange,
+      timeRange: TimeRangeSpec,
       columns: Iterable[ColumnInputSpec]
   ): KijiDataRequest = {
     def addColumn(

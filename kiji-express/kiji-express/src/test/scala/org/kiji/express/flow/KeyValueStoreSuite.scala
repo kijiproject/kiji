@@ -407,7 +407,7 @@ object KeyValueStoreSuite {
     */
     KijiInput.builder
         .withTableURI(args("fruit"))
-        .withTimeRange(All)
+        .withTimeRangeSpec(TimeRangeSpec.All)
         .withColumns("family:column" -> 'slice)
         .build
         .flatMap('slice -> 'fruit) { slice: Seq[FlowCell[CharSequence]] =>

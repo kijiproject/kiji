@@ -397,7 +397,7 @@ class KijiSourceSuite extends KijiSuite {
     // Build test job.
     val source = KijiInput.builder
         .withTableURI(uri)
-        .withTimeRange(Between(15L, 25L))
+        .withTimeRangeSpec(TimeRangeSpec.Between(15L, 25L))
         .withColumns("family:column1" -> 'words)
         .build
     JobTest(new VersionsJob(source)(_))
@@ -603,7 +603,7 @@ class KijiSourceSuite extends KijiSuite {
     // KijiSources are used as keys for a map of buffers for test code).
     val ksource = new KijiSource(
         tableAddress = uri,
-        timeRange = All,
+        timeRange = TimeRangeSpec.All,
         timestampField = None,
         inputColumns = Map('records -> ColumnInputSpec(
           "family:column3", schemaSpec = Specific(classOf[HashSpec]))),
@@ -985,7 +985,7 @@ object KijiSourceSuite {
     // Want to read some data out to 'records and then write it back to a Tsv
     val ksource = new KijiSource(
         tableAddress = args("input"),
-        timeRange = All,
+        timeRange = TimeRangeSpec.All,
         timestampField = None,
         inputColumns = Map('records -> ColumnInputSpec(
             "family:column3", schemaSpec = Specific(classOf[HashSpec]))),
@@ -1028,7 +1028,7 @@ object KijiSourceSuite {
 
   /**
    * A job that writes to a map-type column family.  It takes text from the input and uses it as
-   * search terms and the number of results returned for that term.  All of them belong to the same
+   * search terms and the number of results returned for that term. All of them belong to the same
    * entity, "my_eid".
    *
    * @param args to the job. Two arguments are expected: "input", which specifies the path to a
