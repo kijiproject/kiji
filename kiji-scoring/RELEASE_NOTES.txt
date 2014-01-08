@@ -2,6 +2,7 @@
                               Kiji Scoring Release Notes
 
 Version 0.11.0
+    * SCORE-148. kiji batch-score is a new command line tool for running ScoreFunctions in batch.
     * SCORE-147. ScoreFunctionJobBuilder now supports running ScoreFunctions in batch without the
         need for a KijiProducer wrapper.
 

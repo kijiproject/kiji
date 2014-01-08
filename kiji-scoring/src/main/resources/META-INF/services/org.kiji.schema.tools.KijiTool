@@ -1,1 +1,2 @@
 org.kiji.scoring.tools.FreshTool
+org.kiji.scoring.tools.KijiBatchScoreTool
