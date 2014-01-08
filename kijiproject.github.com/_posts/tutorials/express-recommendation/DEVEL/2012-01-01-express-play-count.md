@@ -44,8 +44,15 @@ For the tutorial, we call `KijiInput` to read all versions of the column "info:t
 provided Kiji table and bind the resulting value to the field named `'playlist`:
 
 {% highlight scala %}
-  KijiInput(args("table-uri"),
-      Map(QualifiedColumnInputSpec("info", "track_plays", maxVersions = all) -> 'playlist))
+  KijiInput.builder
+      .withTableURI(args("table-uri"))
+      .withColumnSpecs(
+          QualifiedColumnInputSpec.builder
+              .withColumn("info", "track_plays")
+              .withMaxVersions(all)
+              .build -> 'playlist
+          )
+      .build
 {% endhighlight %}
 
 Note the reference here to `args("table-uri")`, which evaluates to the value of the job-specific

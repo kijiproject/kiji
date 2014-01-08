@@ -81,9 +81,13 @@ Next, we construct a pipe does the following:
 The code follows:
 
 {% highlight scala %}
-  val recommendedSong = KijiInput(args("songs-table"),
-      Map(QualifiedColumnInputSpec("info", "top_next_songs", classOf[TopSongs])
-          -> 'topNextSongs))
+  val recommendedSong = KijiInput.builder
+      .withTableURI(args("songs-table"))
+      .withColumnSpecs(QualifiedColumnInputSpec.builder
+          .withColumn("info", "top_next_songs")
+          .withSchemaSpec(SchemaSpec.Specific(classOf[TopSongs]))
+          .build -> 'topNextSongs)
+      .build
       .map('entityId -> 'songId) { eId: EntityId => eId(0) }
       .map('topNextSongs -> 'nextSong) { getMostPopularSong }
       .project('songId, 'nextSong)
@@ -100,13 +104,17 @@ Finally we create a flow that does the following:
   `'nextSong` fields for the most popular top songs.
 
 {% highlight scala %}
-  KijiInput(args("users-table"),
-      Map(QualifiedColumnInputSpec("info", "track_plays") -> 'trackPlays))
+  KijiInput.builder
+      .withTableURI(args("users-table"))
+      .withColumns("info:track_plays" -> 'trackPlays)
+      .build
       .map('trackPlays -> 'lastTrackPlayed) {
           slice: Seq[FlowCell[CharSequence]] => slice.head.datum.toString }
       .joinWithSmaller('lastTrackPlayed -> 'songId, recommendedSong)
-      .write(KijiOutput(args("users-table"),
-          Map('nextSong -> QualifiedColumnOutputSpec("info", "next_song_rec"))))
+      .write(KijiOutput.builder
+          .withTableURI(args("users-table"))
+          .withColumns('nextSong -> "info:next_song_rec")
+          .build
 {% endhighlight %}
 
 ### Running the Example

@@ -18,7 +18,6 @@ Contents:
 * [KijiInput](#kijiinput) is for reading from a Kiji table.
 * [KijiOutput](#kijioutput) is for writing to a Kiji table.
 * [HFileKijiOutput](#hfilekijioutput) is for writing to HFiles that will be bulk-loaded into Kiji.
-  It must be used in conjunction with `HFileKijiJob` instead of `KijiJob`.
 
 ## KijiInput
 
@@ -67,7 +66,7 @@ post](http://www.kiji.org/2013/02/13/common-pitfalls-of-timestamps-in-hbase/).
 You can specify an optional time range, or range of versions, on a **KijiInput**.  (Note that the
 time range is applied to the entire input request and not a single column. You can further control
 how many versions of an individual column are returned by using `maxVersions` described further
-ahead.).  This time range that limits the data returned from all the columns you request to that
+ahead.).  This time range limits the data returned from all the columns you request to that
 time range.  The default time range is `All`, which imposes no limits on the data from the columns
 of the table.
 
@@ -81,16 +80,24 @@ Here are the provided constructors for a TimeRange:
 The time range is an optional parameter to KijiInput, so your construction will look something like
 what follows:
 
-    KijiInput(tableUri = “kiji://localhost:2181/default/users”,
-        timeRange =Before(1000L),
-        Map(
-            QualifiedColumnInputSpec(“userinfo:email”, maxVersions = 2) -> ‘email,
-            ColumnFamilyInputSpec(“purchases”, maxVersions = all) -> ‘purchases))
+    KijiInput.builder
+        .withTableURI("kiji://localhost:2181/default/users")
+        .withTimeRange(Before(1000L))
+        .withColumnSpecs(
+            QualifiedColumnInputSpec.builder
+                .withColumn("userinfo", "email")
+                .withMaxVersions(2)
+                .build-> 'email,
+            ColumnFamilyInputSpec.builder
+                .withFamily("purchases")
+                .withMaxVersions(all)
+                .build-> 'purchases)
+        .build
 
 Note that this means the `’email` field will contain only the data in the `userinfo:email` column
 that has version numbers before 1000L.  Since we only requested a maximum of 2 versions of that column,
 this means we get the most recent 2 versions of the user’s email before version 1000, even if there are
-more after version 1000.  This also means the `’purchases` field contains all the purchases that fall
+more after version 1000.  This also means the `'purchases` field contains all the purchases that fall
 within the specified `timeRange` for this `KijiInput`, not all purchases that are in the users
 table.
 
@@ -100,10 +107,12 @@ table.
 constructor function. This map defines the Kiji columns that will be read into specific fields of
 the flow.
 
-The simplest KijiInput syntax looks like this:
+An exmaple KijiInput syntax looks like this:
 
-    KijiInput(tableUri = "kiji://localhost:2181/default/users",
-        "info:name" -> 'name, "purchases" -> 'purchases)
+    KijiInput.builder
+        .withTableURI("kiji://localhost:2181/default/users")
+        .withColumns("info:name" -> 'name, "purchases" -> 'purchases)
+        .build
 
 This constructs a KijiInput that reads from the specified table, the specified columns "info:name"
 and "purchases" and puts the contents of those columns into the fields `'name` and `'purchases`
@@ -112,9 +121,16 @@ respectively.
 However, to specify further options on the columns that you request data from, you must use the
 following syntax:
 
-    KijiInput(tableUri = "kiji://localhost:2181/default/users",
-        Map(QualifiedColumnInputSpec("info", "name") -> 'name,
-            ColumnFamilyInputSpec("purchases") -> 'purchases))
+    KijiInput.builder
+        .withTableURI("kiji://localhost:2181/default/users")
+        .withColumnSpecs(
+            QualifiedColumnInputSpec.builder
+                .withColumn("info", "name")
+                .build -> 'name,
+            ColumnFamilyInputSpec.builder
+                .withFamily("purchases")
+                .build -> 'purchases)
+        .build
 
 `QualifiedColumnInputSpec` is used to specify a single Kiji column should
 be read into a single field in each tuple.  `ColumnFamilyInputSpec` is used to specify an entire
@@ -127,8 +143,8 @@ filters, paging, and schema.
 #### maxVersions
 
     import org.kiji.express.flow
-    maxVersions = 2
-    maxVersions = all
+    builder.withMaxVersions(2)
+    otherBuilder.withMaxVersions(all)
 
 `maxVersions` is an Integer specifying the number of versions of this column to be in the tuple.  By
   default, this is 1, so you will only get the latest version within the time range of the entire
@@ -136,7 +152,7 @@ KijiInput request.
 
 #### schemaSpec
 
-This specifies the Avro schema to read the data in this column with.  For more information about Avro schemas, see the [KijiSchema userguide]({{site.userguide_schema_devel}}/managing-data) section on Schema evolution.
+This specifies the Avro schema with which to read the data in this column.  For more information about Avro schemas, see the [KijiSchema userguide]({{site.userguide_schema_devel}}/managing-data) section on Schema evolution.
 Here are the options:
 
 * `SchemaSpec.Specific(classOf[MySpecificRecordClass])`: used when you have a specific class
@@ -176,7 +192,7 @@ minimumIncluded = true)` to specify columns with qualifiers “m” and later.
 
 ##### paging
 
-    paging = PagingSpec.Cells(10)
+    builder.withPagingSpec(PagingSpec.Cells(10))
 
 Specifies the number of cells per page.  By default, `paging = PagingSpec.Off`, which disables
 paging.  With paging disabled, all cells from the specified column will be loaded into memory at
@@ -263,10 +279,12 @@ In this simplest case, this may be specified as a mapping from the field name in
 fully qualified column name of the table.
 
 {% highlight scala %}
-   KijiOutput(
-       tableUri = "kiji://localhost:2181/default/mytable",
-       'column1 -> "info:column1",
-       'column2 -> "info:column2")
+    KijiOutput.builder
+        .withTableURI("kiji://localhost:2181/default/mytable")
+        .withColumns(
+            'column1 -> "info:column1",
+            'column2 -> "info:column2"
+        ).build
 {% endhighlight %}
 
 As with KijiInput, we have provided syntactic sugar for the most common case of writing a field to a
@@ -310,7 +328,6 @@ The SchemaSpec is specified in much that same way as for KijiInput, which is des
 The `HFileKijiSource` is a special write-only source that allows for the contents of a pipe to be
 written to HFiles for later bulk loading into HBase. From an API perspective, writing a Scalding job
 that writes to HFiles is as simple as:
-* Extending `HFileKijiJob` instead of `KijiJob`.
 * Writing to `HFileKijiOutput` instead of `KijiOutput`.  They are the same except `HFileKijiOutput`
   requires a `hFileOutput` parameter that specifies where the HFiles are output by the job.
 
@@ -319,37 +336,15 @@ that writes to HFiles is as simple as:
          // `'timestamps` field and writing the fields `'column1` and `'column2` to the columns
          // `info:column1` and `info:column2`. The resulting HFiles will be written to the "my_hfiles"
          // folder.
-         HFileKijiOutput(
-            tableUri = "kiji://localhost:2181/default/mytable",
-            hFileOutput = "my_hfiles",
-            timestampField = 'timestamps,
+    HFileKijiOutput.builder
+        .withTableURI("kiji://localhost:2181/default/mytable")
+        .withHFileOutput("my_hfiles")
+        .withTimestampField('timestamps)
+        .withColumns(
             'column1 -> "info:column1",
-            'column2 -> "info:column2")
+            'column2 -> "info:column2"
+        ).build
 {% endhighlight %}
 
-* Specifying `--output` and `--hfile-output` arguments on the command line when running the
-  KijiExpress job. `--output` refers to the Kiji table where the data will eventually be loaded and
-`--hfile-output` refers to the location on HDFS where the HFiles to be loaded are written.
-
-Please note; however, that due to the limitations around this implementation of writing to HFiles,
-that only one Scalding pipe can write to an `HFileKijiSource`.
-
-### Implementation Notes
-Please note that unlike other KijiExpress jobs that extend from `KijiJob`, when generating HFiles,
-your job must extend `HFileKijiJob` *and* only one pipe can write to an `HFileKijiOutput`. The
-reasons for these limitations are as follows:
-
-* When writing to HFiles, normally the `IdentityReducer` is used along with the
-  `TotalOrderPartitioner` so that keys emitted from the Map phase are shuffled properly to the right
-  reducer. There are as many reducers as HBase regions so as to make the bulk load efficient.
-* Since Scalding compiles down to (possibly multple) Map-Reduce jobs, it's possible that the flow
-  contains a reducer operation already (if there is a .groupBy being done for example) *or* the flow
-  is purely map-only. In the latter, it's easy to reconfigure the final Map-Reduce job to use the
-  `TotalOrderPartitioner` and force the reduce phase with the `IdentityReducer` to generate the right
-  set of HFiles. In the former; however, to risk not messing up any optimizations in the existing
-  Cascading partitioner + reducers, the output from the reducers are routed to a temporary location on
-  HDFS and another Map-Reduce job takes those files and properly shuffles the data so that it can be
-  bulk loaded. Due to The possibility of this secondary Map-Reduce job to doing the proper shuffling
-  of the intermediate output is why only one pipe can write to an `HFileKijiOutput` else it becomes
-  ambiguous what data goes where.
+HFiles written this way will be placed in a directory called hfiles under the specified HFileOutput directory.
 

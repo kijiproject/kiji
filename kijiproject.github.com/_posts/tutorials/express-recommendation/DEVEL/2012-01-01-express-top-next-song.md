@@ -31,8 +31,13 @@ into the field `‘playlist`.  Recall that the “info:track_plays” column con
 user row, each track played by that user, at the timestamp it was played.
 
 {% highlight scala %}
- KijiInput(args("users-table"),
-      Map(QualifiedColumnInputSpec("info", "track_plays", all) -> 'playlist))
+  KijiInput.builder
+      .withTableURI(args("user-table"))
+      .withColumnsSpecs(QualifiedColumnInputSpec.builder
+          .withColumn("info", "track_plays")
+          .withMaxVersions(all)
+          .build -> 'play
+      ).build
 {% endhighlight %}
 
 #### Transform songs histories into bigrams of songs
@@ -163,11 +168,13 @@ Finally, we create entity IDs using the `first_song` field and put it in the `en
 
 {% highlight scala %}
     .map('first_song -> 'entityId) { first_song: String => EntityId(first_song) }
-    .write(KijiOutput(args("songs-table"),
-        Map('top_next_songs -> QualifiedColumnOutputSpec(
-            "info",
-            "top_next_songs",
-            schemaSpec = SchemaSpec.Specific(classOf[TopSongs])))))
+    .write(KijiOutput.builder
+        .withTableURI(args("songs-table"))
+        .withColumnSpecs('top_next_songs -> QualifiedColumnOutputSpec.builder
+            .withColumn("info", "top_next_songs")
+            .withSchemaSpec(SchemaSpec.Specific(classOf[TopSongs]))
+            .build)
+        .build
 {% endhighlight %}
 
 ### Running TopNextSongs ###

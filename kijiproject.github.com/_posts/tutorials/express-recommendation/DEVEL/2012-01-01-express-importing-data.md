@@ -112,7 +112,8 @@ Now that you've imported your data, we are ready to start analyzing it!  The sou
 song metadata importer is included below in case you are curious.  We will go over the syntax of
 writing your own jobs in more detail in following sections.
 
-### <a id="importer-source">(Optional) Source Code for Scalding Importer</a>
+<a id="importer-source"></a>
+### (Optional) Source Code for Scalding Importer
 
 The data is formatted with a JSON record on each line. Each record corresponds to a song, and
 provides the following metadata for the song:
