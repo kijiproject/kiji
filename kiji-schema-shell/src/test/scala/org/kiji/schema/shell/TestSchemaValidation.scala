@@ -63,7 +63,7 @@ class TestSchemaValidation extends SpecificationWithJUnit {
           |    email "string",
           |    age "int"),
           |  MAP TYPE FAMILY integers COUNTER
-          |);""".stripMargin('|'))
+          |);""".stripMargin)
 
       // Programmatically test proper table creation.
       // Check that we have created as many locgroups, map families, and group families
@@ -108,7 +108,7 @@ class TestSchemaValidation extends SpecificationWithJUnit {
             |WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
             |  FAMILY info WITH DESCRIPTION 'basic information' (
             |    bar "long")
-            |);""".stripMargin('|'))
+            |);""".stripMargin)
 
         // Try to add an obviously-incompatible schema.
         (client.executeUpdate("ALTER TABLE foo ADD WRITER SCHEMA \"string\" FOR COLUMN info:bar")
@@ -130,7 +130,7 @@ class TestSchemaValidation extends SpecificationWithJUnit {
             |WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
             |  FAMILY info WITH DESCRIPTION 'basic information' (
             |    bar "long")
-            |);""".stripMargin('|'))
+            |);""".stripMargin)
 
         // data written as 'long' cannot necessarily be read as 'int'.
         (client.executeUpdate("ALTER TABLE foo ADD READER SCHEMA \"int\" FOR COLUMN info:bar")
@@ -152,7 +152,7 @@ class TestSchemaValidation extends SpecificationWithJUnit {
             |WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
             |  FAMILY info WITH DESCRIPTION 'basic information' (
             |    bar "int")
-            |);""".stripMargin('|'))
+            |);""".stripMargin)
 
         // Since "int" is a reader schema, can't add "long" as a writer schema directly.
         // Note that a very similar statement worked ok in the "add a reader schema" test
@@ -174,7 +174,7 @@ class TestSchemaValidation extends SpecificationWithJUnit {
           |WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
           |  FAMILY info WITH DESCRIPTION 'basic information' (
           |    bar "int")
-          |);""".stripMargin('|'))
+          |);""".stripMargin)
 
       client.executeUpdate("ALTER TABLE foo ADD READER SCHEMA \"long\" FOR COLUMN info:bar")
 
@@ -219,7 +219,7 @@ class TestSchemaValidation extends SpecificationWithJUnit {
           |WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
           |  FAMILY info WITH DESCRIPTION 'basic information' (
           |    bar "long")
-          |);""".stripMargin('|'))
+          |);""".stripMargin)
 
       client.executeUpdate("ALTER TABLE foo ADD WRITER SCHEMA \"int\" FOR COLUMN info:bar")
 
@@ -264,7 +264,7 @@ class TestSchemaValidation extends SpecificationWithJUnit {
           |WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
           |  FAMILY info WITH DESCRIPTION 'basic information' (
           |    bar "long")
-          |);""".stripMargin('|'))
+          |);""".stripMargin)
 
       client.executeUpdate("ALTER TABLE foo DROP WRITER SCHEMA \"long\" FOR COLUMN info:bar")
 
@@ -303,7 +303,7 @@ class TestSchemaValidation extends SpecificationWithJUnit {
           |WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
           |  FAMILY info WITH DESCRIPTION 'basic information' (
           |    bar "int")
-          |);""".stripMargin('|'))
+          |);""".stripMargin)
 
       // We can't add "long" as a writer schema directly, since its reader schema is int.
       // Change that to long, then add it as the approved writer schema
@@ -356,7 +356,7 @@ class TestSchemaValidation extends SpecificationWithJUnit {
           |WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
           |  FAMILY info WITH DESCRIPTION 'basic information' (
           |    bar "int")
-          |);""".stripMargin('|'))
+          |);""".stripMargin)
 
       // This should also remove it as a default reader schema.
       client.executeUpdate("ALTER TABLE foo DROP READER SCHEMA \"int\" FOR COLUMN info:bar")
@@ -401,7 +401,7 @@ class TestSchemaValidation extends SpecificationWithJUnit {
           |WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
           |  FAMILY info WITH DESCRIPTION 'basic information' (
           |    bar )
-          |);""".stripMargin('|'))
+          |);""".stripMargin)
 
       // Verify intermediate state: no reader, writer, written schemas for info:bar.
 
@@ -462,16 +462,16 @@ class TestSchemaValidation extends SpecificationWithJUnit {
           |WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
           |  FAMILY info WITH DESCRIPTION 'basic information' (
           |    bar )
-          |);""".stripMargin('|'))
+          |);""".stripMargin)
 
       client.executeUpdate("""
           |ALTER TABLE foo ADD SCHEMA CLASS org.kiji.schema.shell.avro.XYRecord
           |FOR COLUMN info:bar
-          |""".stripMargin('|'))
+          |""".stripMargin)
       client.executeUpdate("""
           |ALTER TABLE foo ADD DEFAULT READER SCHEMA CLASS org.kiji.schema.shell.avro.XYRecord
           |FOR COLUMN info:bar
-          |""".stripMargin('|'))
+          |""".stripMargin)
 
       val env = environment(uri, kijiSystem)
       val layout: TableLayoutDesc = env.kijiSystem.getTableLayout(uri, "foo").get.getDesc
@@ -502,6 +502,52 @@ class TestSchemaValidation extends SpecificationWithJUnit {
       env.kijiSystem.shutdown()
     }
 
+    "allow Avro schema via DSL" in {
+      val uri = getNewInstanceURI()
+      val kijiSystem = getKijiSystem()
+      val client = Client.newInstanceWithSystem(uri, kijiSystem)
+      client.executeUpdate("""
+          |CREATE TABLE foo WITH DESCRIPTION 'some data'
+          |ROW KEY FORMAT HASHED
+          |WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
+          |  FAMILY info WITH DESCRIPTION 'basic information' (bar)
+          |);""".stripMargin)
+
+      client.executeUpdate("""
+          |ALTER TABLE foo ADD SCHEMA AVRO array<int> FOR COLUMN info:bar
+          |""".stripMargin)
+      client.executeUpdate("""
+          |ALTER TABLE foo ADD DEFAULT READER SCHEMA AVRO array<int> FOR COLUMN info:bar
+          |""".stripMargin)
+
+      val env = environment(uri, kijiSystem)
+      val layout: TableLayoutDesc = env.kijiSystem.getTableLayout(uri, "foo").get.getDesc
+      val infoFamily: FamilyDesc = layout.getLocalityGroups().head.getFamilies().find({ grp =>
+          grp.getName().toString() == "info" }).get
+      val col: ColumnDesc = infoFamily.getColumns().find({ col =>
+          col.getName().toString() == "bar" }).get
+
+      val cellSchema: CellSchema = col.getColumnSchema()
+
+      cellSchema.getReaders().size mustEqual 1
+      cellSchema.getWriters().size mustEqual 1
+      cellSchema.getWritten().size mustEqual 1
+
+      val reader: AvroSchema = cellSchema.getDefaultReader()
+
+      cellSchema.getReaders().head mustEqual reader
+      cellSchema.getWriters().head mustEqual reader
+      cellSchema.getWritten().head mustEqual reader
+
+      cellSchema.getSpecificReaderSchemaClass mustEqual null
+
+      (env.kijiSystem.getSchemaFor(env.instanceURI, reader).get mustEqual
+          Schema.createArray(Schema.create(Schema.Type.INT)))
+
+      client.close()
+      env.kijiSystem.shutdown()
+    }
+
     "let the user add a schema redundantly" in {
       val uri = getNewInstanceURI()
       val kijiSystem = getKijiSystem()
@@ -512,7 +558,7 @@ class TestSchemaValidation extends SpecificationWithJUnit {
           |WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
           |  FAMILY info WITH DESCRIPTION 'basic information' (
           |    bar "int")
-          |);""".stripMargin('|'))
+          |);""".stripMargin)
 
       // If this schema is already present, it should be benign.
       client.executeUpdate("ALTER TABLE foo ADD SCHEMA \"int\" FOR COLUMN info:bar")
@@ -553,7 +599,7 @@ class TestSchemaValidation extends SpecificationWithJUnit {
           |WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
           |  FAMILY info WITH DESCRIPTION 'basic information' (
           |    bar "int")
-          |);""".stripMargin('|'))
+          |);""".stripMargin)
 
       // If this schema is not present (e.g, redundant drop) it should be benign.
       client.executeUpdate("ALTER TABLE foo DROP SCHEMA \"string\" FOR COLUMN info:bar")

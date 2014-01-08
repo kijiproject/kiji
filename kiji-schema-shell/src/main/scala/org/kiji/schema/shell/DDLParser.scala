@@ -33,6 +33,8 @@ import org.kiji.schema.shell.ddl.key._
 import org.kiji.schema.shell.ddl.key.RowKeyElemType._
 import org.kiji.schema.shell.spi.ParserPlugin
 import org.kiji.schema.shell.spi.ParserPluginFactory
+import org.kiji.avro.dsl.AvroSchemaParsers
+import org.apache.avro.Schema
 
 /**
  * An abstract representation of where a jar library (to add to the environment's
@@ -93,6 +95,7 @@ final class DDLParser(val env: Environment)
     extends JavaTokenParsers
     with DDLParserHelpers
     with JsonStringParser
+    with AvroSchemaParsers
     with TableProperties {
 
   /**
@@ -124,11 +127,11 @@ final class DDLParser(val env: Environment)
    * or the word 'counter'.
    */
   def schema: Parser[SchemaSpec] = (
-      i("CLASS")~>repsep(ident, ".")
-      ^^ (parts => new ClassSchemaSpec(parts))
-    | jsonValue ^^ (json => new JsonSchemaSpec(json))
-    | i("COUNTER") ^^ (_ => new CounterSchemaSpec)
-    | i("ID")~>longValue ^^ (uid => new UidSchemaSpec(uid))
+      i("CLASS")~>repsep(ident, ".") ^^ { parts: List[String] => new ClassSchemaSpec(parts) }
+    | jsonValue ^^ { json: String => new JsonSchemaSpec(json) }
+    | i("COUNTER") ^^ { _ => new CounterSchemaSpec }
+    | i("ID")~>longValue ^^ { uid: Long => new UidSchemaSpec(uid) }
+    | i("AVRO") ~> avroType ^^ { schema: Schema => new InlineSchemaSpec(schema) }
   )
 
   /**
