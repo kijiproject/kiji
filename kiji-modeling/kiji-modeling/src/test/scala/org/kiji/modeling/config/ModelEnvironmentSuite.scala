@@ -25,7 +25,6 @@ import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
-import org.kiji.express.flow.Between
 import org.kiji.express.flow.ColumnFilterSpec
 import org.kiji.express.flow.ColumnFilterSpec.AndFilterSpec
 import org.kiji.express.flow.ColumnFilterSpec.ColumnRangeFilterSpec
@@ -35,6 +34,7 @@ import org.kiji.express.flow.ColumnFilterSpec.RegexQualifierFilterSpec
 import org.kiji.express.flow.PagingSpec
 import org.kiji.express.flow.QualifiedColumnInputSpec
 import org.kiji.express.flow.QualifiedColumnOutputSpec
+import org.kiji.express.flow.TimeRangeSpec
 import org.kiji.express.flow.util.ResourceUtil.resourceAsString
 import org.kiji.modeling.avro.AvroColumnRangeFilter
 import org.kiji.modeling.avro.AvroFilter
@@ -137,7 +137,7 @@ class ModelEnvironmentSuite extends FunSuite {
   }
 
   test("Settings on a model environment can be modified.") {
-    val timeRange = Between(0, 38475687)
+    val timeRange = TimeRangeSpec.Between(0, 38475687)
     val columns = Map(QualifiedColumnInputSpec.builder
         .withColumn("info", "in")
         .withMaxVersions(3)
@@ -186,7 +186,7 @@ class ModelEnvironmentSuite extends FunSuite {
   }
 
   test("A ModelEnvironment can be serialized and deserialized again.") {
-    val timeRange = Between(0, 38475687)
+    val timeRange = TimeRangeSpec.Between(0, 38475687)
     val columns = Map(QualifiedColumnInputSpec.builder
         .withColumn("info", "in")
         .withMaxVersions(3)

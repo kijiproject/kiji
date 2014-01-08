@@ -26,7 +26,6 @@ import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
-import org.kiji.express.flow.Between
 import org.kiji.express.flow.ColumnFilterSpec
 import org.kiji.express.flow.ColumnFilterSpec.AndFilterSpec
 import org.kiji.express.flow.ColumnFilterSpec.ColumnRangeFilterSpec
@@ -35,6 +34,7 @@ import org.kiji.express.flow.ColumnFilterSpec.RegexQualifierFilterSpec
 import org.kiji.express.flow.QualifiedColumnInputSpec
 import org.kiji.express.flow.QualifiedColumnOutputSpec
 import org.kiji.express.flow.SchemaSpec
+import org.kiji.express.flow.TimeRangeSpec
 import org.kiji.modeling.ExtractFn
 import org.kiji.modeling.Extractor
 import org.kiji.modeling.Preparer
@@ -210,7 +210,7 @@ object ModelConvertersSuite {
           "column" -> "info:test"))
   val testKijiInputSpec: KijiInputSpec = KijiInputSpec(
       tableUri = "kiji://.env/default/test",
-      timeRange = Between(0L, Long.MaxValue - 1),
+      timeRange = TimeRangeSpec.Between(0L, Long.MaxValue - 1),
       columnsToFields = Map(QualifiedColumnInputSpec.builder
           .withColumn("info", "test")
           .withFilterSpec(testAndFilter)

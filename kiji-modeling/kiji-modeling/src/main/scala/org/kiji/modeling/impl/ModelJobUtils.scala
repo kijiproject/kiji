@@ -367,7 +367,7 @@ object ModelJobUtils {
       case spec @ KijiInputSpec(tableUri, timeRange, columns) => {
         KijiInput.builder
             .withTableURI(tableUri)
-            .withTimeRange(timeRange)
+            .withTimeRangeSpec(timeRange)
             .withColumnSpecs(columns)
             .build
       }

@@ -22,7 +22,7 @@ package org.kiji.modeling.config
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
-import org.kiji.express.flow.TimeRange
+import org.kiji.express.flow.TimeRangeSpec
 import org.kiji.express.flow.ColumnInputSpec
 import org.kiji.express.flow.SchemaSpec
 import org.kiji.schema.KijiDataRequestBuilder
@@ -43,7 +43,7 @@ import org.kiji.schema.layout.ColumnReaderSpec
 @Inheritance.Sealed
 final case class KijiInputSpec(
     tableUri: String,
-    timeRange: TimeRange,
+    timeRange: TimeRangeSpec,
     columnsToFields: Map[_ <: ColumnInputSpec, Symbol]
 ) extends InputSpec {
 

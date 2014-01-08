@@ -24,7 +24,6 @@ import scala.collection.JavaConverters._
 import org.apache.avro.Schema
 import org.apache.avro.specific.SpecificRecord
 
-import org.kiji.express.flow.Between
 import org.kiji.express.flow.ColumnFamilyInputSpec
 import org.kiji.express.flow.ColumnFamilyOutputSpec
 import org.kiji.express.flow.ColumnInputSpec
@@ -40,7 +39,7 @@ import org.kiji.express.flow.PagingSpec
 import org.kiji.express.flow.QualifiedColumnInputSpec
 import org.kiji.express.flow.QualifiedColumnOutputSpec
 import org.kiji.express.flow.SchemaSpec
-import org.kiji.express.flow.TimeRange
+import org.kiji.express.flow.TimeRangeSpec
 import org.kiji.modeling.Evaluator
 import org.kiji.modeling.Extractor
 import org.kiji.modeling.Preparer
@@ -903,7 +902,7 @@ object ModelConverters {
   def kijiInputSpecFromAvro(avroSpec: AvroKijiInputSpec): KijiInputSpec = {
     val tableUri: String = avroSpec.getTableUri
 
-    val timeRange: TimeRange = Between(
+    val timeRange: TimeRangeSpec = TimeRangeSpec.Between(
         avroSpec.getTimeRange.min_timestamp,
         avroSpec.getTimeRange.max_timestamp)
 
@@ -1134,7 +1133,7 @@ object ModelConverters {
    * @param timeRange The time range specification to convert into an Avro description.
    * @return The Avro description of the time range.
    */
-  def timeRangeToAvro(timeRange: TimeRange): AvroTimeRange = {
+  def timeRangeToAvro(timeRange: TimeRangeSpec): AvroTimeRange = {
     AvroTimeRange
         .newBuilder()
         .setMinTimestamp(timeRange.begin)

@@ -29,8 +29,8 @@ import org.apache.hadoop.util.ToolRunner
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
-import org.kiji.express.flow.All
 import org.kiji.express.flow.QualifiedColumnInputSpec
+import org.kiji.express.flow.TimeRangeSpec.All
 import org.kiji.modeling.config.FieldBinding
 import org.kiji.modeling.config.KijiInputSpec
 import org.kiji.modeling.config.ModelDefinition
