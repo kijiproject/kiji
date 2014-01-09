@@ -66,8 +66,8 @@ import org.kiji.express.flow.ColumnOutputSpec
  *     writing, values from the tuple fields will be written to their associated column.
  */
 @ApiAudience.Framework
-@ApiStability.Experimental
-case class HFileKijiSource private[express] (
+@ApiStability.Stable
+final case class HFileKijiSource private[express] (
     tableAddress: String,
     hFileOutput: String,
     timestampField: Option[Symbol],

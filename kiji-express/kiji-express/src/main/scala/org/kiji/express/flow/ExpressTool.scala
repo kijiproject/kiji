@@ -24,11 +24,16 @@ import com.twitter.scalding.Tool
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.util.ToolRunner
 
+import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
+
 /**
  * The main-method entry point for running an Express job. Functionally the same as Scalding's
  * [[com.twitter.scalding.Tool.main]], but uses HBaseConfiguration to create the configuration,
  * so properties in any `hbase-site.xml` on the classpath will be included.
  */
+@ApiAudience.Public
+@ApiStability.Stable
 object ExpressTool {
   def main(args: Array[String]) {
     try {

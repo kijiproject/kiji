@@ -50,7 +50,7 @@ import org.kiji.express.flow.framework.serialization.KijiLocker
  * these classes, where necessary.
  */
 @ApiAudience.Private
-@ApiStability.Experimental
+@ApiStability.Stable
 @Inheritance.Sealed
 trait AvroTupleConversions {
   /**
@@ -132,7 +132,7 @@ trait AvroTupleConversions {
  * @param m [[scala.reflect.Manifest]] of the target type.  Implicitly provided.
  */
 @ApiAudience.Private
-@ApiStability.Experimental
+@ApiStability.Stable
 @Inheritance.Sealed
 private[express] case class AvroSpecificTupleConverter[T](fs: Fields, m: Manifest[T])
     extends TupleConverter[T] with TupleConversions {
@@ -196,7 +196,7 @@ private[express] case class AvroSpecificTupleConverter[T](fs: Fields, m: Manifes
  * @param schema of the target record
  */
 @ApiAudience.Private
-@ApiStability.Experimental
+@ApiStability.Stable
 @Inheritance.Sealed
 private[express] class AvroGenericTupleConverter(fs: Fields, schema: Schema)
     extends TupleConverter[GenericRecord] with TupleConversions {
@@ -240,6 +240,8 @@ private[express] class AvroGenericTupleConverter(fs: Fields, schema: Schema)
 /**
  * Provides utility functions for the avro tuple converter implementations.
  */
+@ApiAudience.Private
+@ApiStability.Stable
 private[this] object AvroTupleConversions {
   /**
    * Attempts to translate an Avro field name (e.g. count, my_count, should_be_snake_case) to an

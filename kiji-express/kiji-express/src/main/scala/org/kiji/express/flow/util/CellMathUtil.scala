@@ -24,11 +24,15 @@ import scala.annotation.implicitNotFound
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
 import org.kiji.express.flow.FlowCell
 
 /**
  * Provides aggregator functions for sequences of [[org.kiji.express.flow.FlowCell]]s.
  */
+@ApiAudience.Private
+@ApiStability.Stable
 object CellMathUtil {
   private val logger: Logger = LoggerFactory.getLogger(CellMathUtil.getClass)
 

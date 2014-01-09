@@ -70,7 +70,7 @@ import org.kiji.schema.{EntityId => JEntityId}
  * HashedEntityId is from.  You can do this using [[org.kiji.schema.KijiTable#getEntityId]].
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 @Inheritance.Sealed
 trait EntityId extends Product with Ordered[EntityId] {
   /**
@@ -182,7 +182,7 @@ trait EntityId extends Product with Ordered[EntityId] {
  * Companion object for EntityId. Provides factory methods and implementations for EntityIds.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 object EntityId {
   /**
    * Creates a KijiExpress EntityId from a Java EntityId.  This is used internally to convert
@@ -244,9 +244,8 @@ object EntityId {
    * @param encoded byte array representation of this EntityId.
    */
   @ApiAudience.Private
-  @ApiStability.Experimental
-  @Inheritance.Sealed
-  private[express] case class HashedEntityId(encoded: Array[Byte])
+  @ApiStability.Stable
+  final private[express] case class HashedEntityId(encoded: Array[Byte])
       extends EntityId {
 
     /** Lazily create a string encoding of this byte array for hash code purposes. **/
@@ -277,9 +276,8 @@ object EntityId {
    * @param components of an EntityId.
    */
   @ApiAudience.Private
-  @ApiStability.Experimental
-  @Inheritance.Sealed
-  private[express] case class MaterializedEntityId(override val components: Seq[AnyRef])
+  @ApiStability.Stable
+  final private[express] case class MaterializedEntityId(override val components: Seq[AnyRef])
       extends EntityId {
 
     override def toJavaEntityId(eidFactory: EntityIdFactory): JEntityId = {

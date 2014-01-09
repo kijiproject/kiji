@@ -45,7 +45,7 @@ import org.kiji.schema.KijiColumnName
  * }}}
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 object KijiInput {
   /** Default time range for KijiSource */
   private val DEFAULT_TIME_RANGE: TimeRangeSpec = TimeRangeSpec.All
@@ -73,7 +73,7 @@ object KijiInput {
    * @param constructorColumnSpecs specification of columns from which to read.
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
+  @ApiStability.Stable
   final class Builder private(
       private val constructorTableURI: Option[String],
       private val constructorTimeRange: Option[TimeRangeSpec],
@@ -293,7 +293,7 @@ object KijiInput {
    * [[org.kiji.express.flow.KijiInput.Builder]].
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
+  @ApiStability.Stable
   object Builder {
 
     /**

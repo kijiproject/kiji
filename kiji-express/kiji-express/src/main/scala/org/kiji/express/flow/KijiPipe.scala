@@ -37,13 +37,12 @@ import org.kiji.express.flow.util.AvroGenericTupleConverter
  * fields into an Avro record.
  *
  * A `KijiPipe` can be obtained by end-users during the course of authoring a Scalding flow via
- * an implicit conversion available in [[org.kiji.express.repl.Implicits]] or by constructing one
- * directly with an existing pipe.
+ * an implicit conversion or by constructing one directly with an existing pipe.
  *
  * @param pipe enriched with extra functionality.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 @Inheritance.Sealed
 class KijiPipe(private[express] val pipe: Pipe) extends TupleConversions {
 

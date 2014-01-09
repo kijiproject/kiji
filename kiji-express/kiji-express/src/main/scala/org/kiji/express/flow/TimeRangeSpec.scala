@@ -21,14 +21,13 @@ package org.kiji.express.flow
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.annotations.Inheritance
 import org.kiji.schema.KConstants
 
 /**
  * A specification of the range cell versions that should be read from a column in a Kiji table.
  *
  * @note Defaults to [[org.kiji.express.flow.TimeRangeSpec.All TimeRangeSpec.All]].
- * @example
+ * @example TimeRangeSpec usage.
  *      - [[org.kiji.express.flow.TimeRangeSpec.All TimeRangeSpec.All]] - Specify that all versions
  *        should be requested:
  *        {{{
@@ -61,8 +60,7 @@ import org.kiji.schema.KConstants
  * @see [[org.kiji.express.flow.KijiInput]] for more TimeRangeSpec usage information.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
-@Inheritance.Sealed
+@ApiStability.Stable
 sealed trait TimeRangeSpec extends Serializable {
   /** Earliest version of the TimeRange, inclusive. */
   def begin: Long
@@ -75,7 +73,7 @@ sealed trait TimeRangeSpec extends Serializable {
  * Provides [[org.kiji.express.flow.TimeRangeSpec]] implementations.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 object TimeRangeSpec {
   /**
    * Implementation of [[org.kiji.express.flow.TimeRangeSpec]] for specifying that all versions
@@ -84,8 +82,7 @@ object TimeRangeSpec {
    * @see [[org.kiji.express.flow.TimeRangeSpec]] for more usage information.
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
-  @Inheritance.Sealed
+  @ApiStability.Stable
   case object All extends TimeRangeSpec {
     override val begin: Long = KConstants.BEGINNING_OF_TIME
     override val end: Long = KConstants.END_OF_TIME
@@ -100,8 +97,7 @@ object TimeRangeSpec {
    * @param version to request.
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
-  @Inheritance.Sealed
+  @ApiStability.Stable
   final case class At(version: Long) extends TimeRangeSpec {
     override val begin: Long = version
     override val end: Long = version
@@ -115,8 +111,7 @@ object TimeRangeSpec {
    * @param begin is the earliest version that should be requested (inclusive).
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
-  @Inheritance.Sealed
+  @ApiStability.Stable
   final case class From(override val begin: Long) extends TimeRangeSpec {
     override val end: Long = KConstants.END_OF_TIME
   }
@@ -129,8 +124,7 @@ object TimeRangeSpec {
    * @param end is the latest version that should be requested (exclusive).
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
-  @Inheritance.Sealed
+  @ApiStability.Stable
   final case class Before(override val end: Long) extends TimeRangeSpec {
     override val begin: Long = KConstants.BEGINNING_OF_TIME
   }
@@ -144,8 +138,7 @@ object TimeRangeSpec {
    * @param end is the latest version that should be requested (exclusive).
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
-  @Inheritance.Sealed
+  @ApiStability.Stable
   final case class Between(
       override val begin: Long,
       override val end: Long

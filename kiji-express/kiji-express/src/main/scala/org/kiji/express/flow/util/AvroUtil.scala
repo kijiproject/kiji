@@ -63,7 +63,7 @@ import org.kiji.annotations.ApiStability
  * <ul>
  */
 @ApiAudience.Framework
-@ApiStability.Experimental
+@ApiStability.Stable
 object AvroUtil {
 
   /**

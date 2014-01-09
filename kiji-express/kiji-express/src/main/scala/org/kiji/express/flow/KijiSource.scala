@@ -102,7 +102,7 @@ import org.kiji.schema.KijiURI
  * @param rowFilterSpec is the specification for which row filter to apply.
  */
 @ApiAudience.Framework
-@ApiStability.Experimental
+@ApiStability.Stable
 final class KijiSource private[express] (
     val tableAddress: String,
     val timeRange: TimeRangeSpec,
@@ -274,7 +274,7 @@ final class KijiSource private[express] (
  * tests.
  */
 @ApiAudience.Framework
-@ApiStability.Experimental
+@ApiStability.Stable
 private[express] object KijiSource {
 
   /**

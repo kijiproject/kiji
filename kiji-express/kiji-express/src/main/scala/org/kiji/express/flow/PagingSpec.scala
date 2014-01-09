@@ -21,7 +21,6 @@ package org.kiji.express.flow
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.annotations.Inheritance
 
 /**
  * A specification of the type of paging to use.
@@ -31,7 +30,7 @@ import org.kiji.annotations.Inheritance
  * job will fail at runtime with an [[java.lang.OutOfMemoryError]].
  *
  * @note Defaults to [[org.kiji.express.flow.PagingSpec.Off PagingSpec.Off]].
- * @example
+ * @example PagingSpec usage.
  *      - [[org.kiji.express.flow.PagingSpec.Cells PagingSpec.Cells]] - Paging by number of cells:
  *        {{{
  *          // Will read in 10 cells from Kiji at a time. The appropriate number of cells to be
@@ -47,8 +46,7 @@ import org.kiji.annotations.Inheritance
  * @see [[org.kiji.express.flow.ColumnInputSpec]] for more PagingSpec usage information.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
-@Inheritance.Sealed
+@ApiStability.Stable
 sealed trait PagingSpec extends Serializable {
   private[kiji] def cellsPerPage: Option[Int]
 }
@@ -57,7 +55,7 @@ sealed trait PagingSpec extends Serializable {
  * Provides [[org.kiji.express.flow.PagingSpec]] implementations.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 object PagingSpec {
   /**
    * Specifies that paging should not be used. Each row requested from Kiji tables will be fully
@@ -66,7 +64,7 @@ object PagingSpec {
    * @see [[org.kiji.express.flow.PagingSpec]] for more PagingSpec usage information.
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
+  @ApiStability.Stable
   case object Off extends PagingSpec {
     override val cellsPerPage: Option[Int] = None
   }
@@ -80,8 +78,7 @@ object PagingSpec {
    * @param count of the cells per page.
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
-  @Inheritance.Sealed
+  @ApiStability.Stable
   final case class Cells(count: Int) extends PagingSpec {
     override val cellsPerPage: Option[Int] = Some(count)
   }

@@ -75,14 +75,14 @@ import org.kiji.schema.{EntityId => JEntityId}
  * @param tableUri of the kiji table.
  */
 @ApiAudience.Private
-@ApiStability.Experimental
-@Inheritance.Sealed
-private[express] case class InputContext(
+@ApiStability.Stable
+final private[express] case class InputContext(
     reader: KijiTableReader,
     scanner: KijiRowScanner,
     iterator: Iterator[KijiRowData],
     tableUri: KijiURI,
-    configuration: Configuration)
+    configuration: Configuration
+)
 
 /**
  * A local version of [[org.kiji.express.flow.framework.KijiScheme]] that is meant to be used with
@@ -122,7 +122,8 @@ private[express] case class InputContext(
  *     tuple fields will be written to their associated column.
  */
 @ApiAudience.Framework
-@ApiStability.Experimental
+@ApiStability.Stable
+@Inheritance.Sealed
 private[express] case class LocalKijiScheme(
     private[express] val uri: KijiURI,
     private[express] val timeRange: TimeRangeSpec,

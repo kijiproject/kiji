@@ -26,7 +26,6 @@ import org.apache.hadoop.hbase.HConstants
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.annotations.Inheritance
 import org.kiji.express.flow.util.AvroUtil
 import org.kiji.schema.KijiCell
 
@@ -53,9 +52,8 @@ import org.kiji.schema.KijiCell
  * @param datum stored in this cell.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
-@Inheritance.Sealed
-case class FlowCell[T] (
+@ApiStability.Stable
+final case class FlowCell[T] (
     family: String,
     qualifier: String,
     version: Long = HConstants.LATEST_TIMESTAMP,
@@ -66,7 +64,7 @@ case class FlowCell[T] (
  * cells.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 object FlowCell {
   /**
    * Creates an object that contains the coordinates (family, qualifier, and version) of data in a

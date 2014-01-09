@@ -42,7 +42,7 @@ import org.kiji.schema.InternalKijiError
  * }}}
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 object KijiOutput {
 
   val DEFAULT_COLUMN_OUTPUT_SPECS: Map[Symbol, _ <: ColumnOutputSpec] = Map()
@@ -92,6 +92,8 @@ object KijiOutput {
    * @param constructorTimestampField flow Field from which to read the timestamp.
    * @param constructorColumnSpecs mapping from Field to output specification.
    */
+  @ApiAudience.Public
+  @ApiStability.Stable
   final class Builder private(
       val constructorTableURI: Option[String],
       val constructorTimestampField: Option[Symbol],
@@ -329,7 +331,7 @@ object KijiOutput {
    * [[org.kiji.express.flow.KijiOutput.Builder]].
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
+  @ApiStability.Stable
   object Builder {
     /**
      * Create a new empty KijiOutput.Builder.

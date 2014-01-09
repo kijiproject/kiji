@@ -39,7 +39,7 @@ import org.kiji.schema.KijiURI
  * or closing them and handling exceptions.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 object ResourceUtil {
   /**
    * Exception that contains multiple exceptions. Typically used in the case where
@@ -49,12 +49,14 @@ object ResourceUtil {
    * @param msg is the message to include with the exception.
    * @param errors causing this exception.
    */
+  @ApiAudience.Public
+  @ApiStability.Stable
   @Inheritance.Sealed
   final case class CompoundException(msg: String, errors: Seq[Exception]) extends Exception
 
   /**
    * Performs an operation with a resource that requires post processing. This method will throw a
-   * [[org.kiji.express.util.Resources.CompoundException]] when exceptions get thrown
+   * [[org.kiji.express.flow.util.ResourceUtil.CompoundException]] when exceptions get thrown
    * during the operation and while resources are being closed.
    *
    * @tparam T is the return type of the operation.
@@ -246,8 +248,8 @@ object ResourceUtil {
    * @return the contents of the resource as a string.
    */
   def resourceAsString(path: String): String = {
-    val inputStream = getClass()
-        .getClassLoader()
+    val inputStream = getClass
+        .getClassLoader
         .getResourceAsStream(path)
 
     doAndClose(Source.fromInputStream(inputStream)) { source =>

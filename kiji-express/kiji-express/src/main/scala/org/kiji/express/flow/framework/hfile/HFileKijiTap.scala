@@ -57,8 +57,8 @@ import org.kiji.schema.KijiURI
  * @param hFileOutput is the location where the HFiles will be written to.
  */
 @ApiAudience.Framework
-@ApiStability.Experimental
-private[express] class HFileKijiTap(
+@ApiStability.Stable
+final private[express] class HFileKijiTap(
   private[express] val tableUri: String,
   private[express] val scheme: HFileKijiScheme,
   private[express] val hFileOutput: String)

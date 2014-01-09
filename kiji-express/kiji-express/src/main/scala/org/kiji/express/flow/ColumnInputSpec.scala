@@ -53,7 +53,7 @@ import org.kiji.schema.KijiInvalidNameException
  * (e.g., `schemaSpec`) with `val`s.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 sealed trait ColumnInputSpec {
   /**
    * Maximum number of cells to retrieve starting from the most recent cell. By default, only the
@@ -98,7 +98,7 @@ sealed trait ColumnInputSpec {
  * instances.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 @Inheritance.Sealed
 object ColumnInputSpec {
   /** Constants for default parameters. */
@@ -201,7 +201,7 @@ object ColumnInputSpec {
  *     [[org.kiji.express.flow.SchemaSpec.Writer]].
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 final class QualifiedColumnInputSpec private(
     val family: String,
     val qualifier: String,
@@ -250,8 +250,7 @@ final class QualifiedColumnInputSpec private(
  * instances.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
-@Inheritance.Sealed
+@ApiStability.Stable
 object QualifiedColumnInputSpec {
 
   /**
@@ -371,6 +370,8 @@ object QualifiedColumnInputSpec {
    * @param constructorPagingSpec optional PagingSpec with which to initialize this builder.
    * @param constructorSchemaSpec optional SchemaSpec with which to initialize this builder.
    */
+  @ApiAudience.Public
+  @ApiStability.Stable
   final class Builder private(
       constructorFamily: Option[String],
       constructorQualifier: Option[String],
@@ -582,7 +583,7 @@ object QualifiedColumnInputSpec {
    * [[org.kiji.express.flow.QualifiedColumnInputSpec.Builder]].
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
+  @ApiStability.Stable
   object Builder {
 
     /**
@@ -668,7 +669,7 @@ object QualifiedColumnInputSpec {
  *     [[org.kiji.express.flow.SchemaSpec.Writer]].
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 final class ColumnFamilyInputSpec private(
     val family: String,
     val maxVersions: Int = ColumnInputSpec.DEFAULT_MAX_VERSIONS,
@@ -716,8 +717,7 @@ final class ColumnFamilyInputSpec private(
  * instances.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
-@Inheritance.Sealed
+@ApiStability.Stable
 object ColumnFamilyInputSpec {
 
   /**
@@ -828,6 +828,8 @@ object ColumnFamilyInputSpec {
    * @param constructorPagingSpec optional PagingSpec with which to initialize this builder.
    * @param constructorSchemaSpec optional SchemaSpec with which to initialize this builder.
    */
+  @ApiAudience.Public
+  @ApiStability.Stable
   final class Builder private(
       constructorFamily: Option[String],
       constructorMaxVersions: Option[Int],
@@ -994,7 +996,7 @@ object ColumnFamilyInputSpec {
    * [[org.kiji.express.flow.ColumnFamilyInputSpec.Builder]].
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
+  @ApiStability.Stable
   object Builder {
 
     /**

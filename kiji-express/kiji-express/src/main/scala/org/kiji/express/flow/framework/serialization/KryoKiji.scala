@@ -34,7 +34,7 @@ import org.kiji.annotations.Inheritance
  * support. Used with [[org.kiji.express.flow.KijiJob]].
  */
 @ApiAudience.Private
-@ApiStability.Experimental
+@ApiStability.Stable
 @Inheritance.Sealed
 class KryoKiji extends KryoHadoop {
   override def decorateKryo(kryo: Kryo) {

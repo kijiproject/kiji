@@ -21,7 +21,6 @@ package org.kiji.express.flow
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.annotations.Inheritance
 import org.kiji.schema.filter.Filters
 import org.kiji.schema.filter.KijiColumnFilter
 import org.kiji.schema.filter.KijiColumnRangeFilter
@@ -40,7 +39,7 @@ import org.kiji.schema.filter.RegexQualifierColumnFilter
  * which are themselves filters.
  *
  * @note Defaults to [[org.kiji.express.flow.ColumnFilterSpec.NoFilter ColumnFilterSpec.NoFilter]].
- * @example
+ * @example ColumnFilterSpec usage.
  *      - [[org.kiji.express.flow.ColumnFilterSpec.NoFilter ColumnFilterSpec.NoFilter]] - Reading
  *        data using no column filters:
  *        {{{
@@ -101,8 +100,7 @@ import org.kiji.schema.filter.RegexQualifierColumnFilter
  */
 // scalastyle:on line.size.limit
 @ApiAudience.Public
-@ApiStability.Experimental
-@Inheritance.Sealed
+@ApiStability.Stable
 sealed trait ColumnFilterSpec {
   /** @return a KijiColumnFilter that corresponds to the Express column filter. */
   private[kiji] def toKijiColumnFilter: Option[KijiColumnFilter]
@@ -112,7 +110,7 @@ sealed trait ColumnFilterSpec {
  * Provides [[org.kiji.express.flow.ColumnFilterSpec]] implementations.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 object ColumnFilterSpec {
   /**
    * Specifies that columns should be filtered out using a list of column filters combined using a
@@ -123,7 +121,7 @@ object ColumnFilterSpec {
    * @param filters to combine with a logical "AND" operation.
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
+  @ApiStability.Stable
   final case class And(filters: Seq[ColumnFilterSpec])
       extends ColumnFilterSpec {
     private[kiji] override def toKijiColumnFilter: Option[KijiColumnFilter] = {
@@ -143,7 +141,7 @@ object ColumnFilterSpec {
    * @param filters to combine with a logical "OR" operation.
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
+  @ApiStability.Stable
   final case class Or(filters: Seq[ColumnFilterSpec])
       extends ColumnFilterSpec {
     private[kiji] override def toKijiColumnFilter: Option[KijiColumnFilter] = {
@@ -165,7 +163,7 @@ object ColumnFilterSpec {
    * @param maximumIncluded determines if the upper bound is inclusive.
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
+  @ApiStability.Stable
   final case class ColumnRange(
       minimum: Option[String] = None,
       maximum: Option[String] = None,
@@ -189,7 +187,7 @@ object ColumnFilterSpec {
    * @param regex to match on.
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
+  @ApiStability.Stable
   final case class Regex(regex: String)
       extends ColumnFilterSpec {
     private[kiji] override def toKijiColumnFilter: Option[KijiColumnFilter] =
@@ -204,7 +202,7 @@ object ColumnFilterSpec {
    * @param kijiColumnFilter specifying the filter conditions.
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
+  @ApiStability.Stable
   final case class KijiSchemaColumnFilter(kijiColumnFilter: KijiColumnFilter)
       extends ColumnFilterSpec {
     private[kiji] override def toKijiColumnFilter: Option[KijiColumnFilter] = Some(kijiColumnFilter)
@@ -216,7 +214,7 @@ object ColumnFilterSpec {
    * @see [[org.kiji.express.flow.ColumnFilterSpec]] for more usage information.
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
+  @ApiStability.Stable
   case object NoFilter
       extends ColumnFilterSpec {
     private[kiji] override def toKijiColumnFilter: Option[KijiColumnFilter] = None

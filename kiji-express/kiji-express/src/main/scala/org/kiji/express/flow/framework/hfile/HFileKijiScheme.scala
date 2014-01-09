@@ -74,8 +74,8 @@ import org.kiji.schema.{EntityId => JEntityId}
  * @param ocolumns mapping tuple field names to requests for Kiji columns.
  */
 @ApiAudience.Framework
-@ApiStability.Experimental
-private[express] class HFileKijiScheme(
+@ApiStability.Stable
+final private[express] class HFileKijiScheme(
   private[express] val timestampField: Option[Symbol],
   ocolumns: Map[String, ColumnOutputSpec])
     extends Scheme[JobConf, RecordReader[_, _],
@@ -227,8 +227,7 @@ private[express] class HFileKijiScheme(
  * with the Kiji table.
  */
 @ApiAudience.Framework
-@ApiStability.Experimental
-@Inheritance.Sealed
+@ApiStability.Stable
 private[express] final case class HFileKijiSinkContext (
     eidFactory: EntityIdFactory,
     columnTranslator: ColumnNameTranslator,

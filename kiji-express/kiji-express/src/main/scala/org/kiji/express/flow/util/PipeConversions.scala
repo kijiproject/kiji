@@ -35,7 +35,7 @@ import org.kiji.express.flow.KijiSource
  * Scalding's `Job`.
  */
 @ApiAudience.Private
-@ApiStability.Experimental
+@ApiStability.Stable
 @Inheritance.Sealed
 private[express] trait PipeConversions {
   /**

@@ -38,7 +38,7 @@ import org.kiji.annotations.Inheritance
  *
  * @note Defaults to [[org.kiji.express.flow.SchemaSpec.Writer SchemaSpec.Writer]] when reading or
  *     writing data.
- * @example
+ * @example SchemaSpec usage.
  *      - [[org.kiji.express.flow.SchemaSpec.DefaultReader SchemaSpec.DefaultReader]] - Use the
  *        default reader schema defined in your table layout (assuming that your table layout uses a
  *        default reader schema):
@@ -88,8 +88,7 @@ import org.kiji.annotations.Inheritance
  *     when writing data to a Kiji column.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
-@Inheritance.Sealed
+@ApiStability.Stable
 sealed trait SchemaSpec extends Serializable {
   /**
    * Retrieve the Avro [[org.apache.avro.Schema]] object associated with this SchemaSpec,
@@ -102,7 +101,7 @@ sealed trait SchemaSpec extends Serializable {
  * Provides [[org.kiji.express.flow.SchemaSpec]] implementations.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 object SchemaSpec {
   /**
    * Specifies reading or writing with the supplied Avro schema.
@@ -112,8 +111,7 @@ object SchemaSpec {
    * @param genericSchema of data
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
-  @Inheritance.Sealed
+  @ApiStability.Stable
   final case class Generic(genericSchema: Schema) extends SchemaSpec {
     override val schema: Option[Schema] = Some(genericSchema)
   }
@@ -126,8 +124,7 @@ object SchemaSpec {
    * @param klass of the specific record.
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
-  @Inheritance.Sealed
+  @ApiStability.Stable
   final case class Specific(klass: Class[_ <: SpecificRecord]) extends SchemaSpec {
     override val schema: Option[Schema] = Some(klass.newInstance.getSchema)
   }
@@ -141,7 +138,7 @@ object SchemaSpec {
    * @see [[org.kiji.express.flow.SchemaSpec]] for more usage information.
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
+  @ApiStability.Stable
   case object Writer extends SchemaSpec {
     override val schema: Option[Schema] = None
   }
@@ -154,7 +151,7 @@ object SchemaSpec {
    * @see [[org.kiji.express.flow.SchemaSpec]] for more usage information.
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
+  @ApiStability.Stable
   case object DefaultReader extends SchemaSpec {
     override val schema: Option[Schema] = None
   }

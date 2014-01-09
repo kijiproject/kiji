@@ -34,8 +34,7 @@ import org.kiji.annotations.Inheritance
  * [[org.kiji.express.flow.framework.serialization.KijiLocker]].
  */
 @ApiAudience.Private
-@ApiStability.Experimental
-@Inheritance.Sealed
+@ApiStability.Stable
 // TODO (EXP-295): Should these maybe be Framework?
 object KijiLocker {
   def apply[T <: AnyRef](t: T): KijiLocker[T] = new KijiLocker(t)
@@ -46,7 +45,7 @@ object KijiLocker {
  * [[org.kiji.express.flow.framework.serialization.KryoKiji]].
  */
 @ApiAudience.Private
-@ApiStability.Experimental
+@ApiStability.Stable
 @Inheritance.Sealed
 // TODO (EXP-295): Should these maybe be Framework?
 class KijiLocker[T <: AnyRef](@transient private var t: T) extends java.io.Serializable {

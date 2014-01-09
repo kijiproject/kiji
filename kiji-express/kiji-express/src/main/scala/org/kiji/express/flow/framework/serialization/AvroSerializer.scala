@@ -41,10 +41,8 @@ import org.kiji.annotations.Inheritance
  * Provides serialization for Avro schemas while using Kryo serialization.
  */
 @ApiAudience.Private
-@ApiStability.Experimental
-@Inheritance.Sealed
-// TODO (EXP-295): Should these maybe be Framework?
-class AvroSchemaSerializer
+@ApiStability.Stable
+final class AvroSchemaSerializer
     extends Serializer[Schema] {
   setAcceptsNull(false)
 
@@ -72,10 +70,8 @@ class AvroSchemaSerializer
  * are prepended to the encoded generic record data.
  */
 @ApiAudience.Private
-@ApiStability.Experimental
-@Inheritance.Sealed
-// TODO (EXP-295): Should these maybe be Framework?
-class AvroGenericSerializer
+@ApiStability.Stable
+final class AvroGenericSerializer
     extends Serializer[GenericContainer] {
   // TODO(EXP-269): Cache encoders per schema.
 
@@ -120,6 +116,8 @@ class AvroGenericSerializer
  * are not serialized as all clients interacting with this data are assumed to have the correct
  * specific record class on their classpath.
  */
+@ApiAudience.Private
+@ApiStability.Stable
 final class AvroSpecificSerializer
     extends Serializer[SpecificRecord] {
   // TODO(EXP-269) Cache encoders per class/schema.

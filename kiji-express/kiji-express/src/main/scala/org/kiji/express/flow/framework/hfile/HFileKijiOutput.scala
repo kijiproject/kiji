@@ -46,7 +46,7 @@ import org.kiji.schema.KijiColumnName
  * }}}
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 @Inheritance.Sealed
 object HFileKijiOutput {
 
@@ -76,7 +76,7 @@ object HFileKijiOutput {
    * @param constructorColumnSpecs mapping from Field to output specification.
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
+  @ApiStability.Stable
   final class Builder private(
       constructorTableURI: Option[String],
       constructorHFileOutput: Option[String],
@@ -313,7 +313,7 @@ object HFileKijiOutput {
    * [[org.kiji.express.flow.framework.hfile.HFileKijiOutput.Builder]] instances.
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
+  @ApiStability.Stable
   object Builder {
     /**
      * Create a new empty Builder instance.

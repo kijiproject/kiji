@@ -23,14 +23,13 @@ import com.google.common.base.Objects
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.annotations.Inheritance
 import org.kiji.schema.{EntityId => JEntityId}
 
 /**
  * A specification of the range of rows that should be read from a Kiji table.
  *
  * @note Defaults to [[org.kiji.express.flow.RowRangeSpec.All RowRangeSpec.All]].
- * @example
+ * @example RowRangeSpec usage.
  *      - [[org.kiji.express.flow.RowRangeSpec.All RowRangeSpec.All]] - Reading all rows:
  *        {{{
  *          .withRowRangeSpec(RowRangeSpec.All)
@@ -53,8 +52,7 @@ import org.kiji.schema.{EntityId => JEntityId}
  * @see [[org.kiji.express.flow.KijiInput]] for more RowRangeSpec usage information.
  */
 @ApiAudience.Private
-@ApiStability.Experimental
-@Inheritance.Sealed
+@ApiStability.Stable
 sealed trait RowRangeSpec {
   /**
    * The start entity id from which to scan.
@@ -90,7 +88,7 @@ sealed trait RowRangeSpec {
  * Provides [[org.kiji.express.flow.RowRangeSpec]] implementations.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 object RowRangeSpec {
   /** Constants for default parameters. */
   val DEFAULT_START_ENTITY_ID = None
@@ -131,8 +129,7 @@ object RowRangeSpec {
    * @see [[org.kiji.express.flow.RowRangeSpec]] for more usage information.
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
-  @Inheritance.Sealed
+  @ApiStability.Stable
   case object All extends RowRangeSpec {
     override val startEntityId: Option[EntityId] = RowRangeSpec.DEFAULT_START_ENTITY_ID
     override val limitEntityId: Option[EntityId] = RowRangeSpec.DEFAULT_LIMIT_ENTITY_ID
@@ -146,8 +143,7 @@ object RowRangeSpec {
    * @param specifiedStartEntityId the row to start scanning from.
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
-  @Inheritance.Sealed
+  @ApiStability.Stable
   final case class From(specifiedStartEntityId: EntityId) extends RowRangeSpec {
     override val startEntityId: Option[EntityId] = Option(specifiedStartEntityId)
     require(None != startEntityId, "Specified entity id can not be null.")
@@ -162,8 +158,7 @@ object RowRangeSpec {
    * @param specifiedLimitEntityId the row to scanning up to.
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
-  @Inheritance.Sealed
+  @ApiStability.Stable
   final case class Before(specifiedLimitEntityId: EntityId) extends RowRangeSpec {
     override val limitEntityId: Option[EntityId] = Option(specifiedLimitEntityId)
     require(None != limitEntityId, "Specified entity id can not be null.")
@@ -180,8 +175,7 @@ object RowRangeSpec {
    * @param specifiedLimitEntityId the row to scanning up to.
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
-  @Inheritance.Sealed
+  @ApiStability.Stable
   final case class Between(
       specifiedStartEntityId: EntityId,
       specifiedLimitEntityId: EntityId

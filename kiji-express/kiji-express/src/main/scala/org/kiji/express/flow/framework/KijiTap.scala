@@ -73,8 +73,8 @@ import org.kiji.schema.{EntityId => JEntityId}
  * @param scheme that will convert data read from Kiji into Cascading's tuple model.
  */
 @ApiAudience.Framework
-@ApiStability.Experimental
-class KijiTap(
+@ApiStability.Stable
+final class KijiTap(
     // This is not a val because KijiTap needs to be serializable and KijiURI is not.
     uri: KijiURI,
     private val scheme: KijiScheme
@@ -290,7 +290,7 @@ class KijiTap(
 }
 
 @ApiAudience.Framework
-@ApiStability.Experimental
+@ApiStability.Stable
 object KijiTap {
   /**
    * Checks whether the instance, tables, and columns specified can be accessed.

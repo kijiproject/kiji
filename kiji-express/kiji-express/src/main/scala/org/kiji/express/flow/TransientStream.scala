@@ -61,7 +61,7 @@ import org.kiji.annotations.ApiStability
  * @param genItr function produces a new iterator over the underlying collection of elements.
  */
 @ApiAudience.Framework
-@ApiStability.Experimental
+@ApiStability.Stable
 class TransientStream[T](genItr: () => Iterator[T]) extends Stream[T] {
 
   @volatile private var streamCache: WeakReference[Stream[T]] = new WeakReference(null)

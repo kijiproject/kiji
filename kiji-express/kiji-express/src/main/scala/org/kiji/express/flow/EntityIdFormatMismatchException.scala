@@ -30,7 +30,7 @@ import org.kiji.annotations.Inheritance
  * @param thatComponents components of the other of the EntityIds that is mismatched.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 @Inheritance.Sealed
 class EntityIdFormatMismatchException(thisComponents: Seq[Any],thatComponents: Seq[Any])
     extends RuntimeException("Mismatched Formats: %s and  %s do not match.".format(

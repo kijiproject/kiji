@@ -59,8 +59,8 @@ import org.kiji.schema.KijiURI
  * @param scheme that will convert data read from Kiji into Cascading's tuple model.
  */
 @ApiAudience.Framework
-@ApiStability.Experimental
-private[express] class LocalKijiTap(
+@ApiStability.Stable
+final private[express] class LocalKijiTap(
     uri: KijiURI,
     private val scheme: LocalKijiScheme)
     extends Tap[Properties, InputStream, OutputStream](
@@ -127,7 +127,7 @@ private[express] class LocalKijiTap(
       input: InputStream): TupleEntryIterator =
     new TupleEntrySchemeIterator[Properties, InputStream](
         flow,
-        getScheme(),
+        getScheme,
         if (null == input) new ByteArrayInputStream(Array()) else input,
         getIdentifier())
 
@@ -146,7 +146,7 @@ private[express] class LocalKijiTap(
       output: OutputStream): TupleEntryCollector =
     new TupleEntrySchemeCollector[Properties, OutputStream](
         flow,
-        getScheme(),
+        getScheme,
         if (null == output) new ByteArrayOutputStream() else output,
         getIdentifier())
 

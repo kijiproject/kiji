@@ -59,7 +59,7 @@ import org.kiji.schema.KijiURI
  *
  */
 @ApiAudience.Framework
-@ApiStability.Experimental
+@ApiStability.Stable
 @Inheritance.Sealed
 object HFileFlowStepStrategy extends FlowStepStrategy[JobConf] {
 

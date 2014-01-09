@@ -50,7 +50,7 @@ import org.kiji.schema.KijiInvalidNameException
  * (e.g., `schemaSpec`) with `val`s.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 sealed trait ColumnOutputSpec {
   /**
    * The [[org.kiji.schema.KijiColumnName]] to write data to.
@@ -75,9 +75,11 @@ sealed trait ColumnOutputSpec {
   }
 }
 
+/**
+ * Provides factory functions for creating [[org.kiji.express.flow.ColumnOutputSpec]] instances.
+ */
 @ApiAudience.Public
-@ApiStability.Experimental
-@Inheritance.Sealed
+@ApiStability.Stable
 object ColumnOutputSpec {
   /** Constant for default schema spec parameter. */
   val DEFAULT_SCHEMA_SPEC = SchemaSpec.Writer
@@ -119,7 +121,7 @@ object ColumnOutputSpec {
  *     [[org.kiji.express.flow.SchemaSpec.Writer]].
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 final class QualifiedColumnOutputSpec private(
     val family: String,
     val qualifier: String,
@@ -152,8 +154,7 @@ final class QualifiedColumnOutputSpec private(
  * instances.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
-@Inheritance.Sealed
+@ApiStability.Stable
 object QualifiedColumnOutputSpec {
 
   /**
@@ -221,7 +222,7 @@ object QualifiedColumnOutputSpec {
    * @param constructorSchemaSpec optional SchemaSpec with which to initialize this builder.
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
+  @ApiStability.Stable
   final class Builder private(
       constructorFamily: Option[String],
       constructorQualifier: Option[String],
@@ -362,7 +363,7 @@ object QualifiedColumnOutputSpec {
    * [[org.kiji.express.flow.QualifiedColumnOutputSpec.Builder]].
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
+  @ApiStability.Stable
   object Builder {
 
     /**
@@ -423,7 +424,7 @@ object QualifiedColumnOutputSpec {
  *     [[org.kiji.express.flow.SchemaSpec.Writer]].
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 final class ColumnFamilyOutputSpec private(
     val family: String,
     val qualifierSelector: Symbol,
@@ -460,8 +461,7 @@ final class ColumnFamilyOutputSpec private(
  * instances.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
-@Inheritance.Sealed
+@ApiStability.Stable
 object ColumnFamilyOutputSpec {
 
   /**
@@ -546,7 +546,7 @@ object ColumnFamilyOutputSpec {
    * @param constructorSchemaSpec optional SchemaSpec with which to intialize this builder.
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
+  @ApiStability.Stable
   final class Builder private(
       constructorFamily: Option[String],
       constructorQualifierSelector: Option[Symbol],
@@ -637,7 +637,7 @@ object ColumnFamilyOutputSpec {
    * [[org.kiji.express.flow.ColumnFamilyOutputSpec.Builder]].
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
+  @ApiStability.Stable
   object Builder {
 
     /**

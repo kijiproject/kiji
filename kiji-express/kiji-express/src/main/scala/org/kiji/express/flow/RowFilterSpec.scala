@@ -21,7 +21,6 @@ package org.kiji.express.flow
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.annotations.Inheritance
 
 import org.kiji.schema.filter.Filters
 import org.kiji.schema.filter.KijiRandomRowFilter
@@ -37,7 +36,7 @@ import org.kiji.schema.filter.KijiRowFilter
  * which are themselves filters.
  *
  * @note Defaults to [[org.kiji.express.flow.RowFilterSpec.NoFilter RowFilterSpec.NoFilter]].
- * @example
+ * @example RowFilterSpec usage.
  *      - [[org.kiji.express.flow.RowFilterSpec.NoFilter RowFilterSpec.NoFilter]] - Reading rows
  *        without a filter:
  *        {{{
@@ -84,8 +83,7 @@ import org.kiji.schema.filter.KijiRowFilter
  * @see [[org.kiji.express.flow.KijiInput]] for more RowFilterSpec usage information.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
-@Inheritance.Sealed
+@ApiStability.Stable
 sealed trait RowFilterSpec extends Serializable {
   private[kiji] def toKijiRowFilter: Option[KijiRowFilter]
 }
@@ -94,7 +92,7 @@ sealed trait RowFilterSpec extends Serializable {
  * Provides [[org.kiji.express.flow.RowFilterSpec]] implementations.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 object RowFilterSpec {
   /**
    * Specifies that rows should be filtered out using a list of row filters combined using a logical
@@ -105,7 +103,7 @@ object RowFilterSpec {
    * @param filters to combine with a logical "AND" operation.
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
+  @ApiStability.Stable
   final case class And(filters: Seq[RowFilterSpec])
       extends RowFilterSpec {
     private[kiji] override def toKijiRowFilter: Option[KijiRowFilter] = {
@@ -125,7 +123,7 @@ object RowFilterSpec {
    * @param filters to combine with a logical "OR" operation.
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
+  @ApiStability.Stable
   final case class Or(filters: Seq[RowFilterSpec])
       extends RowFilterSpec {
     private[kiji] override def toKijiRowFilter: Option[KijiRowFilter] = {
@@ -145,7 +143,7 @@ object RowFilterSpec {
    * @param chance by which to select a row. Should be between 0.0 and 1.0.
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
+  @ApiStability.Stable
   final case class Random(chance: Float)
       extends RowFilterSpec {
     private[kiji] override def toKijiRowFilter: Option[KijiRowFilter] =
@@ -160,7 +158,7 @@ object RowFilterSpec {
    * @param kijiRowFilter specifying the filter conditions.
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
+  @ApiStability.Stable
   final case class KijiSchemaRowFilter(kijiRowFilter: KijiRowFilter)
       extends RowFilterSpec {
     private[kiji] override def toKijiRowFilter: Option[KijiRowFilter] = Some(kijiRowFilter)
@@ -172,7 +170,7 @@ object RowFilterSpec {
    * @see [[org.kiji.express.flow.RowFilterSpec]] for more usage information.
    */
   @ApiAudience.Public
-  @ApiStability.Experimental
+  @ApiStability.Stable
   case object NoFilter
       extends RowFilterSpec {
     private[kiji] override def toKijiRowFilter: Option[KijiRowFilter] = None

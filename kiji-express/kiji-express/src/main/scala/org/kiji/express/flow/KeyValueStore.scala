@@ -92,7 +92,7 @@ import org.kiji.schema.KijiURI
  *
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 @Inheritance.Sealed
 trait ExpressKeyValueStore[K,V] {
   /**
@@ -153,8 +153,7 @@ trait ExpressKeyValueStore[K,V] {
  * A factory for key-value stores backed by specific KijiMR key-value store implementations.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
-@Inheritance.Sealed
+@ApiStability.Stable
 object ExpressKeyValueStore {
 
   /**
@@ -220,8 +219,7 @@ object ExpressKeyValueStore {
  * Special factory methods for KijiTable key-value stores.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
-@Inheritance.Sealed
+@ApiStability.Stable
 object ExpressKijiTableKeyValueStore {
 
   /**
@@ -332,7 +330,7 @@ object ExpressKijiTableKeyValueStore {
  *     format desired by the user.
  */
 @ApiAudience.Public
-@ApiStability.Experimental
+@ApiStability.Stable
 @Inheritance.Sealed
 private[kiji] class ForwardingKeyValueStore[K, V, UK, UV](
     kvStoreReader: KeyValueStoreReader[UK, UV],

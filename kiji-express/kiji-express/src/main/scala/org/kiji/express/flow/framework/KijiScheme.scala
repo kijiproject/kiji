@@ -98,7 +98,8 @@ import org.kiji.schema.{EntityId => JEntityId}
  * @param ocolumns mapping tuple field names to specifications for Kiji columns to write out to.
  */
 @ApiAudience.Framework
-@ApiStability.Experimental
+@ApiStability.Stable
+@Inheritance.Sealed
 class KijiScheme(
     private[express] val tableAddress: String,
     private[express] val timeRange: TimeRangeSpec,
@@ -374,7 +375,7 @@ class KijiScheme(
  * building Kiji data requests, and some utility methods for handling Cascading fields.
  */
 @ApiAudience.Framework
-@ApiStability.Experimental
+@ApiStability.Stable
 object KijiScheme {
 
   private val logger: Logger = LoggerFactory.getLogger(classOf[KijiScheme])
@@ -643,8 +644,7 @@ object KijiScheme {
  * @param rowContainer is the representation of a Kiji row.
  */
 @ApiAudience.Private
-@ApiStability.Experimental
-@Inheritance.Sealed
+@ApiStability.Stable
 private[express] final case class KijiSourceContext(rowContainer: Container[KijiRowData])
 
 /**
@@ -653,8 +653,7 @@ private[express] final case class KijiSourceContext(rowContainer: Container[Kiji
  * This is configured during the sink prepare operation.
  */
 @ApiAudience.Private
-@ApiStability.Experimental
-@Inheritance.Sealed
+@ApiStability.Stable
 private[express] final case class DirectKijiSinkContext(
     eidFactory: EntityIdFactory,
     writer: KijiBufferedWriter)
