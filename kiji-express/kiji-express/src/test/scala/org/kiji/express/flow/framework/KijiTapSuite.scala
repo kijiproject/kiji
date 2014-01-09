@@ -27,8 +27,8 @@ import org.scalatest.junit.JUnitRunner
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow.ColumnInputSpec
 import org.kiji.express.flow.InvalidKijiTapException
-import org.kiji.express.flow.RowFilterSpec.NoRowFilterSpec
-import org.kiji.express.flow.RowRangeSpec.AllRows
+import org.kiji.express.flow.RowFilterSpec
+import org.kiji.express.flow.RowRangeSpec
 import org.kiji.express.flow.TimeRangeSpec
 import org.kiji.schema.KijiURI
 import org.kiji.schema.layout.KijiTableLayout
@@ -50,8 +50,8 @@ class KijiTapSuite extends KijiSuite {
         icolumns = Map(
             "dummy_field1" -> ColumnInputSpec("searches"),
             "dummy_field2" -> ColumnInputSpec("family:column1")),
-        rowRangeSpec = AllRows,
-        rowFilterSpec = NoRowFilterSpec)
+        rowRangeSpec = RowRangeSpec.All,
+        rowFilterSpec = RowFilterSpec.NoFilter)
 
     val testTap: KijiTap = new KijiTap(kijiURI, testScheme)
 
@@ -69,8 +69,8 @@ class KijiTapSuite extends KijiSuite {
         icolumns = Map(
             "dummy_field1" -> ColumnInputSpec("searches"),
             "dummy_field2" -> ColumnInputSpec("family:column1")),
-        rowRangeSpec = AllRows,
-        rowFilterSpec = NoRowFilterSpec)
+        rowRangeSpec = RowRangeSpec.All,
+        rowFilterSpec = RowFilterSpec.NoFilter)
 
     val testURI: KijiURI = KijiURI.newBuilder(kijiURI)
         .withInstanceName("nonexistent_instance")
@@ -94,8 +94,8 @@ class KijiTapSuite extends KijiSuite {
         icolumns = Map(
             "dummy_field1" -> ColumnInputSpec("searches"),
             "dummy_field2" -> ColumnInputSpec("family:column1")),
-        rowRangeSpec = AllRows,
-        rowFilterSpec = NoRowFilterSpec)
+        rowRangeSpec = RowRangeSpec.All,
+        rowFilterSpec = RowFilterSpec.NoFilter)
 
     val testURI: KijiURI = KijiURI.newBuilder(kijiURI)
         .withTableName("nonexistent_table")
@@ -119,8 +119,8 @@ class KijiTapSuite extends KijiSuite {
         icolumns = Map(
             "dummy_field1" -> ColumnInputSpec("searches"),
             "dummy_field2" -> ColumnInputSpec("family:nonexistent")),
-        rowRangeSpec = AllRows,
-        rowFilterSpec = NoRowFilterSpec)
+        rowRangeSpec = RowRangeSpec.All,
+        rowFilterSpec = RowFilterSpec.NoFilter)
 
     val testTap: KijiTap = new KijiTap(kijiURI, testScheme)
 
@@ -142,8 +142,8 @@ class KijiTapSuite extends KijiSuite {
         icolumns = Map(
             "dummy_field1" -> ColumnInputSpec("nonexistent1"),
             "dummy_field2" -> ColumnInputSpec("family:nonexistent2")),
-        rowRangeSpec = AllRows,
-        rowFilterSpec = NoRowFilterSpec)
+        rowRangeSpec = RowRangeSpec.All,
+        rowFilterSpec = RowFilterSpec.NoFilter)
 
     val testTap: KijiTap = new KijiTap(kijiURI, testScheme)
 

@@ -28,19 +28,60 @@ import org.kiji.schema.filter.KijiRandomRowFilter
 import org.kiji.schema.filter.KijiRowFilter
 
 /**
- * An extensible trait used for row filters in Express, which correspond to Kiji and HBase row
- * filters.
+ * A specification describing a row filter to use when reading data from a Kiji table.
  *
- * Filters are implemented via HBase filters, not on the client side, so they can cut down on the
- * amount of data transferred over your network.
+ * Filters are implemented via HBase filters and execute on a cluster so they can cut down on the
+ * amount of data transferred over the network. Filters can be combined with:
+ *  - [[org.kiji.express.flow.RowFilterSpec.And]]
+ *  - [[org.kiji.express.flow.RowFilterSpec.Or]]
+ * which are themselves filters.
  *
- * These can be used in [[org.kiji.express.flow.RowSpec]].
+ * @note Defaults to [[org.kiji.express.flow.RowFilterSpec.NoFilter RowFilterSpec.NoFilter]].
+ * @example
+ *      - [[org.kiji.express.flow.RowFilterSpec.NoFilter RowFilterSpec.NoFilter]] - Reading rows
+ *        without a filter:
+ *        {{{
+ *          .withRowFilterSpec(RowFilterSpec.NoFilter)
+ *        }}}
+ *      - [[org.kiji.express.flow.RowFilterSpec.Random RowFilterSpec.Random]] - Reading rows that
+ *        pass a random chance filter:
+ *        {{{
+ *          // Select 20% of rows.
+ *          .withRowFilterSpec(RowFilterSpec.Random(0.2))
+ *        }}}
+ *      - [[org.kiji.express.flow.RowFilterSpec.KijiSchemaRowFilter RowFilterSpec.KijiMRRowFilter]]
+ *        - Reading rows that pass an underlying Kiji MR row filter:
+ *        {{{
+ *          val underlyingFilter: KijiRowFilter = // ...
  *
- * By default, no filter is applied, but you can specify your own. Only data that pass these
- * filters will be requested and populated into the tuple.
+ *          // ...
  *
- * Filters can be composed with [[org.kiji.express.flow.RowFilterSpec.AndFilterSpec]] and
- * [[org.kiji.express.flow.RowFilterSpec.OrFilterSpec]], which are themselves filters.
+ *          // Select rows using a Kiji MR row filter.
+ *          .withRowFilterSpec(RowFilterSpec.KijiMRRowFilter(underlyingFilter))
+ *        }}}
+ *      - [[org.kiji.express.flow.RowFilterSpec.And RowFilterSpec.And]] - Reading rows that pass a
+ *        list of filters:
+ *        {{{
+ *          val filters: Seq[RowFilterSpec] = Seq(
+ *              RowFilterSpec.Random(0.2),
+ *              RowFilterSpec.Random(0.2)
+ *          )
+ *
+ *          // Select rows that pass two 20% chance random filters.
+ *          .withRowFilterSpec(RowFilterSpec.And(filters))
+ *        }}}
+ *      - [[org.kiji.express.flow.RowFilterSpec.Or RowFilterSpec.Or]] - Reading rows that any of
+ *        the filters in a list:
+ *        {{{
+ *          val filters: Seq[RowFilterSpec] = Seq(
+ *              RowFilterSpec.Random(0.2),
+ *              RowFilterSpec.Random(0.2)
+ *          )
+ *
+ *          // Select rows pass any of the provided filters.
+ *          .withRowFilterSpec(RowFilterSpec.Or(filters))
+ *        }}}
+ * @see [[org.kiji.express.flow.KijiInput]] for more RowFilterSpec usage information.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
@@ -50,19 +91,22 @@ sealed trait RowFilterSpec extends Serializable {
 }
 
 /**
- * Companion object to provide RowFilterSpec implementations.
+ * Provides [[org.kiji.express.flow.RowFilterSpec]] implementations.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
 object RowFilterSpec {
   /**
-   * An Express row filter which combines a list of row filters using a logical "and" operator.
+   * Specifies that rows should be filtered out using a list of row filters combined using a logical
+   * "AND" operator. Only rows that pass all of the provided filters will be read.
    *
-   * @param filters to combine with a logical "and" operation.
+   * @see [[org.kiji.express.flow.RowFilterSpec]] for more usage information.
+   *
+   * @param filters to combine with a logical "AND" operation.
    */
   @ApiAudience.Public
   @ApiStability.Experimental
-  final case class AndFilterSpec(filters: Seq[RowFilterSpec])
+  final case class And(filters: Seq[RowFilterSpec])
       extends RowFilterSpec {
     private[kiji] override def toKijiRowFilter: Option[KijiRowFilter] = {
       val schemaFilters = filters
@@ -73,13 +117,16 @@ object RowFilterSpec {
   }
 
   /**
-   * An Express row filter which combines a list of row filters using a logical "or" operator.
+   * Specifies that rows should be filtered out using a list of row filters combined using a logical
+   * "OR" operator. Only rows that pass one or more of the provided filters will be read.
    *
-   * @param filters to combine with a logical "or" operation.
+   * @see [[org.kiji.express.flow.RowFilterSpec]] for more usage information.
+   *
+   * @param filters to combine with a logical "OR" operation.
    */
   @ApiAudience.Public
   @ApiStability.Experimental
-  final case class OrFilterSpec(filters: Seq[RowFilterSpec])
+  final case class Or(filters: Seq[RowFilterSpec])
       extends RowFilterSpec {
     private[kiji] override def toKijiRowFilter: Option[KijiRowFilter] = {
       val orParams = filters
@@ -90,36 +137,44 @@ object RowFilterSpec {
   }
 
   /**
-   * An Express row filter which selects a row with the parametrized chance.
+   * Specifies that rows should be filtered out randomly with a user-provided chance. Chance
+   * represents the probability that a row will be selected.
    *
-   * @param chance by which to select a row.
+   * @see [[org.kiji.express.flow.RowFilterSpec]] for more usage information.
+   *
+   * @param chance by which to select a row. Should be between 0.0 and 1.0.
    */
   @ApiAudience.Public
   @ApiStability.Experimental
-  final case class KijiRandomRowFilterSpec(chance: Float)
+  final case class Random(chance: Float)
       extends RowFilterSpec {
     private[kiji] override def toKijiRowFilter: Option[KijiRowFilter] =
         Some(new KijiRandomRowFilter(chance))
   }
 
   /**
-   * An Express row filter constructed directly from a KijiRowFilter.
+   * Specifies that rows should be filtered out using the underlying KijiRowFilter.
+   *
+   * @see [[org.kiji.express.flow.RowFilterSpec]] for more usage information.
    *
    * @param kijiRowFilter specifying the filter conditions.
    */
   @ApiAudience.Public
   @ApiStability.Experimental
-  final case class KijiRowFilterSpec(kijiRowFilter: KijiRowFilter)
+  final case class KijiSchemaRowFilter(kijiRowFilter: KijiRowFilter)
       extends RowFilterSpec {
     private[kiji] override def toKijiRowFilter: Option[KijiRowFilter] = Some(kijiRowFilter)
   }
 
   /**
-   * An Express row filter specifying no filter.
+   * Specifies that no row filters should be used.
+   *
+   * @see [[org.kiji.express.flow.RowFilterSpec]] for more usage information.
    */
   @ApiAudience.Public
   @ApiStability.Experimental
-  final object NoRowFilterSpec extends RowFilterSpec {
+  case object NoFilter
+      extends RowFilterSpec {
     private[kiji] override def toKijiRowFilter: Option[KijiRowFilter] = None
   }
 }

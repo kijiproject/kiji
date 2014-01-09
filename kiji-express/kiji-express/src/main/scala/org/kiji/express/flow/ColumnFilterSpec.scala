@@ -27,64 +27,79 @@ import org.kiji.schema.filter.KijiColumnFilter
 import org.kiji.schema.filter.KijiColumnRangeFilter
 import org.kiji.schema.filter.RegexQualifierColumnFilter
 
+// This override exists to prevent issues with line breaks in scaladoc links.
+// scalastyle:off line.size.limit
 /**
- * An extensible trait used for column filters in Express, which correspond to Kiji and HBase column
- * filters.
+ * A specification describing a column filter to use when reading data from a Kiji table. Column
+ * filters select which columns should be read from the Kiji table.
  *
- * Filters are implemented via HBase filters, not on the client side, so they can cut down on the
- * amount of data transferred over your network.
+ * Filters are implemented via HBase filters and execute on a cluster so they can cut down on the
+ * amount of data transferred over the network. Filters can be combined with:
+ *  - [[org.kiji.express.flow.ColumnFilterSpec.And]]
+ *  - [[org.kiji.express.flow.ColumnFilterSpec.Or]]
+ * which are themselves filters.
  *
- * These can be used in [[org.kiji.express.flow.ColumnInputSpec]].  Currently the filters provided
- * are only useful for [[org.kiji.express.flow.ColumnFamilyInputSpec]], because they are filters for
- * qualifiers when an entire column family is requested.  In the future, there may be filters
- * provided that can filter on the data returned from a fully qualified column.
+ * @note Defaults to [[org.kiji.express.flow.ColumnFilterSpec.NoFilter ColumnFilterSpec.NoFilter]].
+ * @example
+ *      - [[org.kiji.express.flow.ColumnFilterSpec.NoFilter ColumnFilterSpec.NoFilter]] - Reading
+ *        data using no column filters:
+ *        {{{
+ *          .withFilterSpec(ColumnFilterSpec.NoFilter)
+ *        }}}
+ *      - [[org.kiji.express.flow.ColumnFilterSpec.ColumnRange ColumnFilterSpec.ColumnRange]] -
+ *        Reading data from columns within the provided column qualifier range:
+ *        {{{
+ *          // Filters out columns with names not between "c" (inclusive) and "m" (exclusive).
+ *          .withFilterSpec(
+ *              ColumnFilterSpec.ColumnRange(
+ *                  minimum = "c",
+ *                  maximum = "m",
+ *                  minimumIncluded = true,
+ *                  maximumIncluded = false
+ *              )
+ *          )
+ *        }}}
+ *      - [[org.kiji.express.flow.ColumnFilterSpec.Regex ColumnFilterSpec.Regex]] - Reading data
+ *        from columns with names matching the provided regular expression:
+ *        {{{
+ *          // Filters out columns with names that are not alphanumeric.
+ *          .withFilterSpec(ColumnFilterSpec.Regex("[a-zA-Z0-9]*"))
+ *        }}}
+ *      - [[org.kiji.express.flow.ColumnFilterSpec.KijiSchemaColumnFilter ColumnFilterSpec.KijiMRColumnFilter]]
+ *        - Reading data from columns that match the provided Kiji MR column filter:
+ *        {{{
+ *          val filter: KijiColumnFilter = // ...
  *
- * By default, no filter is applied, but you can specify your own.  Only data that pass these
- * filters will be requested and populated into the tuple.  Two column filters are currently
- * provided: [[org.kiji.express.flow.ColumnFilterSpec.ColumnRangeFilterSpec]] and
- * [[org.kiji.express.flow.ColumnFilterSpec.RegexQualifierFilterSpec]].  Both of these filter the
- * data returned from a ColumnFamilyInputSpec by qualifier in some way.  These filters can be
- * composed with [[org.kiji.express.flow.ColumnFilterSpec.AndFilterSpec]] and
- * [[org.kiji.express.flow.ColumnFilterSpec.OrFilterSpec]].
+ *          // ...
  *
- * To specify a range of qualifiers for the cells that should be returned.
- * {{{
- *     ColumnRangeFilterSpec(
- *         minimum = "c",
- *         maximum = "m",
- *         minimumIncluded = true,
- *         maximumIncluded = false)
- * }}}
+ *          // Filters out columns that don't match the provided Kiji MR column filter.
+ *          .withFilterSpec(ColumnFilterSpec.KijiMRColumnFilter(filter))
+ *        }}}
+ *      - [[org.kiji.express.flow.ColumnFilterSpec.And ColumnFilterSpec.And]] - Reading data from
+ *        columns matching the provided list of column filters:
+ *        {{{
+ *          val filters: Seq[ColumnFilterSpec] = Seq(
+ *              ColumnFilterSpec.ColumnRange("California", "Maine"),
+ *              ColumnFilterSpec.Regex("[^ ]*")
+ *          )
  *
- * A `ColumnInputSpec` with the above filter specified will return all data from all  columns with
- * qualifiers "c" and later, up to but not including "m". You can omit any of the parameters, for
- * instance, you can write `ColumnRangeFilterSpec(minimum = "m", minimumIncluded = true)` to
- * specify columns with qualifiers "m" and later.
+ *          // Selects columns with single word names between "California" and "Maine".
+ *          .withFilterSpec(ColumnFilterSpec.And(filters))
+ *        }}}
+ *      - [[org.kiji.express.flow.ColumnFilterSpec.Or ColumnFilterSpec.Or]] - Reading data from
+ *        columns matching the provided list of column filters:
+ *        {{{
+ *          val filters: Seq[ColumnFilterSpec] = Seq(
+ *              ColumnFilterSpec.ColumnRange("California", "Maine"),
+ *              ColumnFilterSpec.Regex("[0-9]*")
+ *          )
  *
- * To specify a regex for the qualifier names that you want data from:
- * {{{
- *     RegexQualifierFilterSpec("http://.*")
- * }}}
- * In this example, only data from columns whose qualifier names start with "http://" are returned.
- *
- * See the Sun Java documentation for regular expressions:
- * http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html
- *
- * To compose filters using `AndFilterSpec`:
- * {{{
- *     AndFilterSpec(List(mRegexFilter, mQualifierFilter))
- * }}}
- * The `AndFilterSpec` composes a list of `FilterSpec`s, returning only data from columns that
- * satisfy all the filters in the `AndFilterSpec`.
- *
- * Analogously, you can compose them with `OrFilterSpec`:
- * {{{
- *     OrFilterSpec(List(mRegexFilter, mQualifierFilter))
- * }}}
- * This returns only data from columns that satisfy at least one of the filters.
- *
- * `OrFilterSpec` and `AndFilterSpec` can themselves be composed.
+ *          // Selects columns with a numeric name or a name between "California" and "Maine".
+ *          .withFilterSpec(ColumnFilterSpec.Or(filters))
+ *        }}}
+ * @see [[org.kiji.express.flow.ColumnInputSpec]] for more ColumnFilterSpec usage information.
  */
+// scalastyle:on line.size.limit
 @ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Sealed
@@ -94,23 +109,22 @@ sealed trait ColumnFilterSpec {
 }
 
 /**
- * Companion object to provide ColumnFilterSpec implementations.
+ * Provides [[org.kiji.express.flow.ColumnFilterSpec]] implementations.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
 object ColumnFilterSpec {
   /**
-   * An Express column filter which combines a list of column filters using a
-   * logical "and" operator.
+   * Specifies that columns should be filtered out using a list of column filters combined using a
+   * logical "AND" operator. Only columns that pass all of the provided filters will be read.
    *
-   * See the scaladocs for [[org.kiji.express.flow.ColumnFilterSpec]] for information on other
-   * filters.
+   * @see [[org.kiji.express.flow.ColumnFilterSpec]] for more usage information.
    *
-   * @param filters to combine with a logical "and" operation.
+   * @param filters to combine with a logical "AND" operation.
    */
   @ApiAudience.Public
   @ApiStability.Experimental
-  final case class AndFilterSpec(filters: Seq[ColumnFilterSpec])
+  final case class And(filters: Seq[ColumnFilterSpec])
       extends ColumnFilterSpec {
     private[kiji] override def toKijiColumnFilter: Option[KijiColumnFilter] = {
       val schemaFilters = filters
@@ -121,16 +135,16 @@ object ColumnFilterSpec {
   }
 
   /**
-   * An Express column filter which combines a list of column filters using a logical "or" operator.
+   * Specifies that columns should be filtered out using a list of column filters combined using a
+   * logical "OR" operator. Only columns that pass one or more of the provided filters will be read.
    *
-   * See the scaladocs for [[org.kiji.express.flow.ColumnFilterSpec]] for information on other
-   * filters.
+   * @see [[org.kiji.express.flow.ColumnFilterSpec]] for more usage information.
    *
-   * @param filters to combine with a logical "or" operation.
+   * @param filters to combine with a logical "OR" operation.
    */
   @ApiAudience.Public
   @ApiStability.Experimental
-  final case class OrFilterSpec(filters: Seq[ColumnFilterSpec])
+  final case class Or(filters: Seq[ColumnFilterSpec])
       extends ColumnFilterSpec {
     private[kiji] override def toKijiColumnFilter: Option[KijiColumnFilter] = {
       val orParams = filters
@@ -141,10 +155,9 @@ object ColumnFilterSpec {
   }
 
   /**
-   * An Express column filter based on the given minimum and maximum qualifier bounds.
+   * Specifies that columns with names in between the specified bounds should be selected.
    *
-   * See the scaladocs for [[org.kiji.express.flow.ColumnFilterSpec]] for information on other
-   * filters.
+   * @see [[org.kiji.express.flow.ColumnFilterSpec]] for more usage information.
    *
    * @param minimum qualifier bound.
    * @param maximum qualifier bound.
@@ -153,12 +166,12 @@ object ColumnFilterSpec {
    */
   @ApiAudience.Public
   @ApiStability.Experimental
-  final case class ColumnRangeFilterSpec(
+  final case class ColumnRange(
       minimum: Option[String] = None,
       maximum: Option[String] = None,
       minimumIncluded: Boolean = true,
-      maximumIncluded: Boolean = false)
-      extends ColumnFilterSpec {
+      maximumIncluded: Boolean = false
+  ) extends ColumnFilterSpec {
     private[kiji] override def toKijiColumnFilter: Option[KijiColumnFilter] = {
       Some(new KijiColumnRangeFilter(
           minimum.getOrElse { null },
@@ -169,45 +182,42 @@ object ColumnFilterSpec {
   }
 
   /**
-   * An Express column filter which matches a regular expression against the full qualifier.
+   * Specifies that columns with names matching the provided regular expression should be selected.
    *
-   * See the scaladocs for [[org.kiji.express.flow.ColumnFilterSpec]] for information on other
-   * filters.
+   * @see [[org.kiji.express.flow.ColumnFilterSpec]] for more usage information.
    *
    * @param regex to match on.
    */
   @ApiAudience.Public
   @ApiStability.Experimental
-  final case class RegexQualifierFilterSpec(regex: String)
+  final case class Regex(regex: String)
       extends ColumnFilterSpec {
     private[kiji] override def toKijiColumnFilter: Option[KijiColumnFilter] =
         Some(new RegexQualifierColumnFilter(regex))
   }
 
   /**
-   * An Express column filter constructed directly from a KijiColumnFilter.
+   * Specifies that columns should be filtered out using the underlying KijiColumnFilter.
    *
-   * See the scaladocs for [[org.kiji.express.flow.ColumnFilterSpec]] for information on other
-   * filters.
+   * @see [[org.kiji.express.flow.ColumnFilterSpec]] for more usage information.
    *
    * @param kijiColumnFilter specifying the filter conditions.
    */
   @ApiAudience.Public
   @ApiStability.Experimental
-  final case class KijiColumnFilterSpec(kijiColumnFilter: KijiColumnFilter)
+  final case class KijiSchemaColumnFilter(kijiColumnFilter: KijiColumnFilter)
       extends ColumnFilterSpec {
     private[kiji] override def toKijiColumnFilter: Option[KijiColumnFilter] = Some(kijiColumnFilter)
   }
 
   /**
-   * An Express column filter specifying no filter.
+   * Specifies that no column filters should be used.
    *
-   * See the scaladocs for [[org.kiji.express.flow.ColumnFilterSpec]] for information on other
-   * filters.
+   * @see [[org.kiji.express.flow.ColumnFilterSpec]] for more usage information.
    */
   @ApiAudience.Public
   @ApiStability.Experimental
-  final object NoColumnFilterSpec
+  case object NoFilter
       extends ColumnFilterSpec {
     private[kiji] override def toKijiColumnFilter: Option[KijiColumnFilter] = None
   }

@@ -23,7 +23,6 @@ import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
-import org.kiji.express.flow.RowRangeSpec.AllRows
 import org.kiji.express.flow.framework.KijiScheme
 import org.kiji.schema.KijiInvalidNameException
 
@@ -58,21 +57,21 @@ class FlowModuleSuite extends FunSuite {
   test("Flow module permits specifying a qualifier regex on ColumnFamilyInputSpec.") {
     val colReq = ColumnFamilyInputSpec.builder
         .withFamily("search")
-        .withFilterSpec(ColumnFilterSpec.RegexQualifierFilterSpec(""".*\.com"""))
+        .withFilterSpec(ColumnFilterSpec.Regex(""".*\.com"""))
         .build
 
     // TODO: Test it filters keyvalues correctly.
-    assert(colReq.filterSpec.isInstanceOf[ColumnFilterSpec.RegexQualifierFilterSpec])
+    assert(colReq.filterSpec.isInstanceOf[ColumnFilterSpec.Regex])
   }
 
   test("Flow module permits specifying a qualifier regex (with filter) on ColumnFamilyInputSpec.") {
     val colReq = ColumnFamilyInputSpec.builder
         .withFamily("search")
-        .withFilterSpec(ColumnFilterSpec.RegexQualifierFilterSpec(""".*\.com"""))
+        .withFilterSpec(ColumnFilterSpec.Regex(""".*\.com"""))
         .build
 
     // TODO: Test it filters keyvalues correctly.
-    assert(colReq.filterSpec.isInstanceOf[ColumnFilterSpec.RegexQualifierFilterSpec])
+    assert(colReq.filterSpec.isInstanceOf[ColumnFilterSpec.Regex])
   }
 
   test("Flow module permits specifying versions on map-type columns without qualifier regex.") {
@@ -122,8 +121,8 @@ class FlowModuleSuite extends FunSuite {
         timeRange = TimeRangeSpec.All,
         timestampField = None,
         icolumns = Map("word" -> QualifiedColumnInputSpec("info", "word")),
-        rowRangeSpec = AllRows,
-        rowFilterSpec = RowFilterSpec.NoRowFilterSpec)
+        rowRangeSpec = RowRangeSpec.All,
+        rowFilterSpec = RowFilterSpec.NoFilter)
 
     assert(expectedScheme === input.hdfsScheme)
   }
@@ -139,8 +138,8 @@ class FlowModuleSuite extends FunSuite {
         TimeRangeSpec.Between(0L, 40L),
         None,
         Map("word" -> QualifiedColumnInputSpec("info", "word")),
-        rowRangeSpec = AllRows,
-        rowFilterSpec = RowFilterSpec.NoRowFilterSpec)
+        rowRangeSpec = RowRangeSpec.All,
+        rowFilterSpec = RowFilterSpec.NoFilter)
 
     assert(expectedScheme === input.hdfsScheme)
   }
@@ -158,8 +157,8 @@ class FlowModuleSuite extends FunSuite {
           Map(
               "word" -> QualifiedColumnInputSpec("info", "word"),
               "title" -> QualifiedColumnInputSpec("info", "title")),
-        rowRangeSpec = AllRows,
-        rowFilterSpec = RowFilterSpec.NoRowFilterSpec)
+        rowRangeSpec = RowRangeSpec.All,
+        rowFilterSpec = RowFilterSpec.NoFilter)
     }
 
     assert(expectedScheme === input.hdfsScheme)
@@ -184,7 +183,7 @@ class FlowModuleSuite extends FunSuite {
         .withColumnSpecs(ColumnFamilyInputSpec.builder
             .withFamily("searches")
             .withMaxVersions(1)
-            .withFilterSpec(ColumnFilterSpec.RegexQualifierFilterSpec(".*"))
+            .withFilterSpec(ColumnFilterSpec.Regex(".*"))
             .build -> 'word)
         .build
   }
@@ -215,8 +214,8 @@ class FlowModuleSuite extends FunSuite {
         ocolumns = Map("words" -> QualifiedColumnOutputSpec.builder
             .withColumn("info", "words")
             .build),
-        rowRangeSpec = AllRows,
-        rowFilterSpec = RowFilterSpec.NoRowFilterSpec)
+        rowRangeSpec = RowRangeSpec.All,
+        rowFilterSpec = RowFilterSpec.NoFilter)
     assert(expectedScheme === output.hdfsScheme)
   }
 
@@ -233,8 +232,8 @@ class FlowModuleSuite extends FunSuite {
         ocolumns = Map("words" -> QualifiedColumnOutputSpec.builder
             .withColumn("info", "words")
             .build),
-        rowRangeSpec = AllRows,
-        rowFilterSpec = RowFilterSpec.NoRowFilterSpec)
+        rowRangeSpec = RowRangeSpec.All,
+        rowFilterSpec = RowFilterSpec.NoFilter)
     assert(expectedScheme === output.hdfsScheme)
   }
 }

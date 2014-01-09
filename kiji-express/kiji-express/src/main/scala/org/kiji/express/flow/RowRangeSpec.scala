@@ -27,32 +27,30 @@ import org.kiji.annotations.Inheritance
 import org.kiji.schema.{EntityId => JEntityId}
 
 /**
- * A trait implemented by classes that specify row ranges when reading data from Kiji tables. This
- * class is used to specify the range of rows to request from a Kiji table.
+ * A specification of the range of rows that should be read from a Kiji table.
  *
- * To specify that [[org.kiji.express.flow.RowRangeSpec.AllRows]] rows should be requested:
- * {{{
- *   val rowRangeSpec: RowRangeSpec = RowRangeSpec.AllRows
- * }}}
- * To specify that all rows starting [[org.kiji.express.flow.RowRangeSpec.FromRow]]
- * the specified row should be requested:
- * {{{
- *   val rowRangeSpec: RowRangeSpec = RowRangeSpec.FromRow(EntityId(startRow))
- * }}}
- * To specify that all rows [[org.kiji.express.flow.RowRangeSpec.UntilRow]] (exclusive)
- * the specified row should be requested:
- * {{{
- *   val rowRangeSpec: RowRangeSpec = RowRangeSpec.UntilRow(EntityId(limitRow))
- * }}}
- * To specify that all rows between [[org.kiji.express.flow.RowRangeSpec.BetweenRows]]
- * the specified start and end row keys should be requested:
- * {{{
- *   val rowRangeSpec: RowRangeSpec =
- *       RowRangeSpec.BetweenRows(EntityId(startRow), EntityId(limitRow))
- * }}}
- *
- * To see more information about reading data from a Kiji table, see
- * [[org.kiji.express.flow.KijiInput]].
+ * @note Defaults to [[org.kiji.express.flow.RowRangeSpec.All RowRangeSpec.All]].
+ * @example
+ *      - [[org.kiji.express.flow.RowRangeSpec.All RowRangeSpec.All]] - Reading all rows:
+ *        {{{
+ *          .withRowRangeSpec(RowRangeSpec.All)
+ *        }}}
+ *      - [[org.kiji.express.flow.RowRangeSpec.From RowRangeSpec.From]] - Reading rows after the
+ *        provided start row key (inclusive):
+ *        {{{
+ *          .withRowRangeSpec(RowRangeSpec.From(EntityId(startRow)))
+ *        }}}
+ *      - [[org.kiji.express.flow.RowRangeSpec.Before RowRangeSpec.Before]] - Reading rows before
+ *        the provided limit row key (exclusive):
+ *        {{{
+ *          .withRowRangeSpec(RowRangeSpec.Before(EntityId(limitRow)))
+ *        }}}
+ *      - [[org.kiji.express.flow.RowRangeSpec.Between RowRangeSpec.Between]] - Reading rows between
+ *        the provided start (inclusive) and end (exclusive) row keys:
+ *        {{{
+ *          .withRowRangeSpec(RowRangeSpec.Between(EntityId(startRow), EntityId(limitRow)))
+ *        }}}
+ * @see [[org.kiji.express.flow.KijiInput]] for more RowRangeSpec usage information.
  */
 @ApiAudience.Private
 @ApiStability.Experimental
@@ -89,12 +87,10 @@ sealed trait RowRangeSpec {
 }
 
 /**
- * Provides factory functions for creating [[org.kiji.express.flow.RowSpec]]
- * instances.
+ * Provides [[org.kiji.express.flow.RowRangeSpec]] implementations.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-@Inheritance.Sealed
 object RowRangeSpec {
   /** Constants for default parameters. */
   val DEFAULT_START_ENTITY_ID = None
@@ -114,14 +110,14 @@ object RowRangeSpec {
     Option(startEntityId) match {
       case None => {
         Option(limitEntityId) match {
-          case None => AllRows
-          case _ => UntilRow(EntityId.fromJavaEntityId(limitEntityId))
+          case None => All
+          case _ => Before(EntityId.fromJavaEntityId(limitEntityId))
         }
       }
       case _ => {
         Option(limitEntityId) match {
-          case None => FromRow(EntityId.fromJavaEntityId(startEntityId))
-          case _ => BetweenRows(
+          case None => From(EntityId.fromJavaEntityId(startEntityId))
+          case _ => Between(
               EntityId.fromJavaEntityId(startEntityId),
               EntityId.fromJavaEntityId(limitEntityId))
         }
@@ -130,58 +126,63 @@ object RowRangeSpec {
   }
 
   /**
-   * Implementation of [[org.kiji.express.flow.RowRangeSpec]]
-   * for specifying that all rows should be scanned.
+   * Specifies that all rows should be read.
+   *
+   * @see [[org.kiji.express.flow.RowRangeSpec]] for more usage information.
    */
   @ApiAudience.Public
   @ApiStability.Experimental
   @Inheritance.Sealed
-  final case object AllRows extends RowRangeSpec {
+  case object All extends RowRangeSpec {
     override val startEntityId: Option[EntityId] = RowRangeSpec.DEFAULT_START_ENTITY_ID
     override val limitEntityId: Option[EntityId] = RowRangeSpec.DEFAULT_LIMIT_ENTITY_ID
   }
 
   /**
-   * Implementation of [[org.kiji.express.flow.RowRangeSpec]]
-   * for specifying start row key.
+   * Specifies that all rows after the provided start row key should be requested (inclusive).
+   *
+   * @see [[org.kiji.express.flow.RowRangeSpec]] for more usage information.
    *
    * @param specifiedStartEntityId the row to start scanning from.
    */
   @ApiAudience.Public
   @ApiStability.Experimental
   @Inheritance.Sealed
-  final case class FromRow(specifiedStartEntityId: EntityId) extends RowRangeSpec {
+  final case class From(specifiedStartEntityId: EntityId) extends RowRangeSpec {
     override val startEntityId: Option[EntityId] = Option(specifiedStartEntityId)
     require(None != startEntityId, "Specified entity id can not be null.")
     override val limitEntityId: Option[EntityId] = RowRangeSpec.DEFAULT_LIMIT_ENTITY_ID
   }
 
   /**
-   * Implementation of [[org.kiji.express.flow.RowRangeSpec]]
-   * for specifying limit row key (exclusive endpoint).
+   * Specifies that all rows before the provided limit row key should be requested (exclusive).
    *
-   * @param specifiedLimitEntityId the row to scanning until.
+   * @see [[org.kiji.express.flow.RowRangeSpec]] for more usage information.
+   *
+   * @param specifiedLimitEntityId the row to scanning up to.
    */
   @ApiAudience.Public
   @ApiStability.Experimental
   @Inheritance.Sealed
-  final case class UntilRow(specifiedLimitEntityId: EntityId) extends RowRangeSpec {
+  final case class Before(specifiedLimitEntityId: EntityId) extends RowRangeSpec {
     override val limitEntityId: Option[EntityId] = Option(specifiedLimitEntityId)
     require(None != limitEntityId, "Specified entity id can not be null.")
     override val startEntityId: Option[EntityId] = RowRangeSpec.DEFAULT_START_ENTITY_ID
   }
 
   /**
-   * Implementation of [[org.kiji.express.flow.RowRangeSpec]]
-   * for specifying start and limit row keys (limit row key is an exclusive endpoint).
+   * Specifies that all rows between the provided start (inclusive) and limit (exclusive) row keys
+   * should be requested.
+   *
+   * @see [[org.kiji.express.flow.RowRangeSpec]] for more usage information.
    *
    * @param specifiedStartEntityId the row to start scanning from.
-   * @param specifiedLimitEntityId the row to scanning until.
+   * @param specifiedLimitEntityId the row to scanning up to.
    */
   @ApiAudience.Public
   @ApiStability.Experimental
   @Inheritance.Sealed
-  final case class BetweenRows (
+  final case class Between(
       specifiedStartEntityId: EntityId,
       specifiedLimitEntityId: EntityId
   ) extends RowRangeSpec {

@@ -283,8 +283,8 @@ object KijiInput {
           timeRange.getOrElse(DEFAULT_TIME_RANGE),
           columnSpecs.getOrElse(
               throw new IllegalArgumentException("Column input specs must be specified.")),
-          rowRangeSpec.getOrElse(RowRangeSpec.AllRows),
-          rowFilterSpec.getOrElse(RowFilterSpec.NoRowFilterSpec))
+          rowRangeSpec.getOrElse(RowRangeSpec.All),
+          rowFilterSpec.getOrElse(RowFilterSpec.NoFilter))
     }
   }
 

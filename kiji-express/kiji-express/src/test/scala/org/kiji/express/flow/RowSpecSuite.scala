@@ -21,22 +21,15 @@ package org.kiji.express.flow
 
 import scala.collection.mutable.Buffer
 
+import com.twitter.scalding.Args
 import com.twitter.scalding.JobTest
 import com.twitter.scalding.Tsv
-import com.twitter.scalding.Args
 import org.apache.hadoop.hbase.util.Bytes
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.KijiSuite
-import org.kiji.express.flow.RowFilterSpec.KijiRandomRowFilterSpec
-import org.kiji.express.flow.RowFilterSpec.NoRowFilterSpec
-import org.kiji.express.flow.RowRangeSpec.AllRows
-import org.kiji.express.flow.RowRangeSpec.BetweenRows
-import org.kiji.express.flow.RowRangeSpec.FromRow
-import org.kiji.express.flow.RowRangeSpec.UntilRow
 import org.kiji.express.flow.util.ResourceUtil.doAndRelease
-import org.kiji.schema.{EntityId => JEntityId}
 import org.kiji.schema.EntityIdFactory
 import org.kiji.schema.KijiTable
 import org.kiji.schema.layout.KijiTableLayout
@@ -88,7 +81,7 @@ class RowSpecSuite extends KijiSuite {
   test("Interval scans start from startEntityId.") {
     // Create test Kiji table.
     val uri: String = doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
-      table.getURI().toString()
+      table.getURI.toString
     }
 
     // Method to validate interval scan.
@@ -103,8 +96,8 @@ class RowSpecSuite extends KijiSuite {
     }
 
     // Set up row specification.
-    val rowRangeSpec: RowRangeSpec = FromRow(eid3)
-    val rowFilterSpec = NoRowFilterSpec
+    val rowRangeSpec = RowRangeSpec.From(eid3)
+    val rowFilterSpec = RowFilterSpec.NoFilter
 
     // Build test job.
     val jobTest = scanJobTest(uri, rowRangeSpec, rowFilterSpec, validateScan)
@@ -118,7 +111,7 @@ class RowSpecSuite extends KijiSuite {
   test("Interval scans until limitEntityId.") {
     // Create test Kiji table.
     val uri: String = doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
-      table.getURI().toString()
+      table.getURI.toString
     }
 
     // Method to validate interval scan.
@@ -133,8 +126,8 @@ class RowSpecSuite extends KijiSuite {
     }
 
     // Set up row specification.
-    val rowRangeSpec: RowRangeSpec = UntilRow(eid4)
-    val rowFilterSpec = NoRowFilterSpec
+    val rowRangeSpec = RowRangeSpec.Before(eid4)
+    val rowFilterSpec = RowFilterSpec.NoFilter
 
     // Build test job.
     val jobTest = scanJobTest(uri, rowRangeSpec, rowFilterSpec, validateScan)
@@ -148,7 +141,7 @@ class RowSpecSuite extends KijiSuite {
   test("Random row filter scans selects no rows when selection chance is 0.") {
     // Create test Kiji table.
     val uri: String = doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
-      table.getURI().toString()
+      table.getURI.toString
     }
 
     // Method to validate interval scan.
@@ -160,9 +153,8 @@ class RowSpecSuite extends KijiSuite {
     }
 
     // Set up row specification.
-    val rowRangeSpec: RowRangeSpec = AllRows
-    val rowFilterSpec = KijiRandomRowFilterSpec(0.0F)
-
+    val rowRangeSpec = RowRangeSpec.All
+    val rowFilterSpec = RowFilterSpec.Random(0.0F)
 
     // Build test job.
     val jobTest = scanJobTest(uri, rowRangeSpec, rowFilterSpec, validateScan)
@@ -176,7 +168,7 @@ class RowSpecSuite extends KijiSuite {
   test("Random row filter scans selects all rows when selection chance is 1.0.") {
     // Create test Kiji table.
     val uri: String = doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
-      table.getURI().toString()
+      table.getURI.toString
     }
 
     // Method to validate interval scan.
@@ -188,8 +180,8 @@ class RowSpecSuite extends KijiSuite {
     }
 
     // Set up row specification.
-    val rowRangeSpec: RowRangeSpec = AllRows
-    val rowFilterSpec = KijiRandomRowFilterSpec(1.0F)
+    val rowRangeSpec = RowRangeSpec.All
+    val rowFilterSpec = RowFilterSpec.Random(1.0F)
 
     // Build test job.
     val jobTest = scanJobTest(uri, rowRangeSpec, rowFilterSpec, validateScan)
@@ -221,7 +213,7 @@ class RowSpecSuite extends KijiSuite {
         .build
         // Sanitize the word.
         .map('word -> 'cleanword) { words:Seq[FlowCell[CharSequence]] =>
-          words.head.datum.toString().toLowerCase()
+          words.head.datum.toString.toLowerCase
         }
         .project('cleanword)
         // Write the result to a file.

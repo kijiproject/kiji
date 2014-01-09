@@ -52,7 +52,6 @@ import org.kiji.express.flow.PagingSpec
 import org.kiji.express.flow.QualifiedColumnInputSpec
 import org.kiji.express.flow.QualifiedColumnOutputSpec
 import org.kiji.express.flow.RowFilterSpec
-import org.kiji.express.flow.RowFilterSpec.NoRowFilterSpec
 import org.kiji.express.flow.RowRangeSpec
 import org.kiji.express.flow.SchemaSpec
 import org.kiji.express.flow.TimeRangeSpec

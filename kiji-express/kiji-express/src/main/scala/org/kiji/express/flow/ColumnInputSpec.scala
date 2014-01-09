@@ -105,7 +105,7 @@ object ColumnInputSpec {
   val DEFAULT_MAX_VERSIONS = latest
   val DEFAULT_PAGING_SPEC = PagingSpec.Off
   val DEFAULT_SCHEMA_SPEC = SchemaSpec.Writer
-  val DEFAULT_COLUMN_FILTER_SPEC = ColumnFilterSpec.NoColumnFilterSpec
+  val DEFAULT_COLUMN_FILTER_SPEC = ColumnFilterSpec.NoFilter
 
   /**
    * A request for data from a Kiji table column. The input spec will be for a qualified column if
@@ -318,7 +318,7 @@ object QualifiedColumnInputSpec {
    * @param column is the fully qualified column name of the requested data.
    * @param maxVersions to read back from the requested column (default is only most recent).
    * @param filterSpec to use when reading back cells. Defaults to
-   *        [[org.kiji.express.flow.ColumnFilterSpec.NoColumnFilterSpec]].
+   *        [[org.kiji.express.flow.ColumnFilterSpec.NoFilter]].
    * @param pagingSpec options specifying the maximum number of cells to retrieve from Kiji
    *        per page. Defaults to [[org.kiji.express.flow.PagingSpec.Off]].
    * @param schemaSpec specifies the schema to use when reading cells. Defaults to

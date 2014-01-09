@@ -80,6 +80,8 @@ object TimeRangeSpec {
   /**
    * Implementation of [[org.kiji.express.flow.TimeRangeSpec]] for specifying that all versions
    * should be requested.
+   *
+   * @see [[org.kiji.express.flow.TimeRangeSpec]] for more usage information.
    */
   @ApiAudience.Public
   @ApiStability.Experimental
@@ -92,6 +94,8 @@ object TimeRangeSpec {
   /**
    * Implementation of [[org.kiji.express.flow.TimeRangeSpec]] for specifying that only the provided
    * version should be requested.
+   *
+   * @see [[org.kiji.express.flow.TimeRangeSpec]] for more usage information.
    *
    * @param version to request.
    */
@@ -106,6 +110,8 @@ object TimeRangeSpec {
   /**
    * Specifies that all cell versions after the provided version should be requested (inclusive).
    *
+   * @see [[org.kiji.express.flow.TimeRangeSpec]] for more usage information.
+   *
    * @param begin is the earliest version that should be requested (inclusive).
    */
   @ApiAudience.Public
@@ -118,6 +124,8 @@ object TimeRangeSpec {
   /**
    * Specifies that all versions before the provided version should be requested (exclusive).
    *
+   * @see [[org.kiji.express.flow.TimeRangeSpec]] for more usage information.
+   *
    * @param end is the latest version that should be requested (exclusive).
    */
   @ApiAudience.Public
@@ -129,6 +137,8 @@ object TimeRangeSpec {
 
   /**
    * Specifies that all versions between the provided begin and end versions should be requested.
+   *
+   * @see [[org.kiji.express.flow.TimeRangeSpec]] for more usage information.
    *
    * @param begin is the earliest version that should be requested (inclusive).
    * @param end is the latest version that should be requested (exclusive).

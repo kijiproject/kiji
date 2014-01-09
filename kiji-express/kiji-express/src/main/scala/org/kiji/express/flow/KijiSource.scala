@@ -53,8 +53,6 @@ import org.apache.hadoop.mapred.RecordReader
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.express.flow.RowFilterSpec.NoRowFilterSpec
-import org.kiji.express.flow.RowRangeSpec.AllRows
 import org.kiji.express.flow.framework.DirectKijiSinkContext
 import org.kiji.express.flow.framework.KijiScheme
 import org.kiji.express.flow.framework.KijiTap
@@ -111,8 +109,8 @@ final class KijiSource private[express] (
     val timestampField: Option[Symbol],
     val inputColumns: Map[Symbol, ColumnInputSpec] = Map(),
     val outputColumns: Map[Symbol, ColumnOutputSpec] = Map(),
-    val rowRangeSpec: RowRangeSpec = AllRows,
-    val rowFilterSpec: RowFilterSpec = NoRowFilterSpec
+    val rowRangeSpec: RowRangeSpec = RowRangeSpec.All,
+    val rowFilterSpec: RowFilterSpec = RowFilterSpec.NoFilter
 ) extends Source {
   import KijiSource._
 
@@ -448,13 +446,13 @@ private[express] object KijiSource {
 
       // Read table into buffer.
       withKijiTable(uri, conf) { table: KijiTable =>
-        // We also want the entire timerange, so the test can inspect all data in the table.
+        // We also want the entire time range, so the test can inspect all data in the table.
         val request: KijiDataRequest =
           KijiScheme.buildRequest(table.getLayout, TimeRangeSpec.All, inputColumns.values)
 
         doAndClose(LocalKijiScheme.openReaderWithOverrides(table, request)) { reader =>
           // Set up scanning options.
-          val eidFactory = EntityIdFactory.getFactory(table.getLayout())
+          val eidFactory = EntityIdFactory.getFactory(table.getLayout)
           val scannerOptions = new KijiScannerOptions()
           scannerOptions.setKijiRowFilter(
               rowFilterSpec.toKijiRowFilter.getOrElse(null))

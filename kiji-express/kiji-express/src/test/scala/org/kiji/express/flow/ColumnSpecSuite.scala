@@ -27,7 +27,7 @@ import org.kiji.express.flow.SchemaSpec.Generic
 
 @RunWith(classOf[JUnitRunner])
 class ColumnSpecSuite extends FunSuite {
-  val filterSpec = ColumnFilterSpec.RegexQualifierFilterSpec(".*")
+  val filterSpec = ColumnFilterSpec.Regex(".*")
   val colFamily = "myfamily"
   val colQualifier = "myqualifier"
   val qualifierSelector = 'qualifierSym

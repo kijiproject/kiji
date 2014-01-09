@@ -27,34 +27,65 @@ import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
 
 /**
- * A specification of how to read or write values to a Kiji column.
+ * A specification describing the schema to use when reading or writing values to a column in a Kiji
+ * table.
  *
- * An instance of one of the subclasses of SchemaSpec, [[org.kiji.express.flow.SchemaSpec.Generic]],
- * [[org.kiji.express.flow.SchemaSpec.Specific]],
- * [[org.kiji.express.flow.SchemaSpec.DefaultReader]], or
- * [[org.kiji.express.flow.SchemaSpec.Writer]], can be used as an optional parameter to
- * [[org.kiji.express.flow.ColumnFamilyInputSpec]],
- * [[org.kiji.express.flow.QualifiedColumnInputSpec]],
- * [[org.kiji.express.flow.ColumnFamilyOutputSpec]], and
- * [[org.kiji.express.flow.QualifiedColumnOutputSpec]].
+ * [[http://avro.apache.org/docs/current/ Avro]] provides us with the ability to read and write
+ * structured data with different schemas. SchemaSpec provides options for explicitly specifying the
+ * schemas that should be used when reading/writing data from/to Kiji tables. SchemaSpec also
+ * provides the ability to use Avro SpecificRecords defined using
+ * [[http://avro.apache.org/docs/current/idl.html Avro's IDL]].
  *
- * These classes specify the Avro schema to read the data in a column with, or the Avro schema to
- * write the data to a column with.  Here are the possible subclasses you may use in your
- * `ColumnInputSpec` or `ColumnOutputSpec`:
- * <ul>
- *   <li>`SchemaSpec.Specific(classOf[MySpecificRecordClass])`: This option should be used when you
- *   have a specific class that has been compiled by Avro.  `MySpecificRecordClass` must extend
- *   `org.apache.avro.SpecificRecord`</li>
- *   <li>`SchemaSpec.Generic(myGenericSchema)`: If you don't have the specific class you want to
- *   use to read or write on the classpath, you can construct a generic schema and use it as the
- *   reader schema.</li>
- *   <li>`SchemaSpec.Writer`: used when you want to read with the same schema that the data
- *   was written with, or a schema attached to or inferred from the value to write with.  This is
- *   the default if you don’t specify any `SchemaSpec` for reading or writing.</li>
- *   <li>`SchemaSpec.DefaultReader`: specifies that the default reader for this column, stored in
- *   the table layout, should be used for reading or writing this data.  If you use this option,
- *   first make sure the column in your Kiji table has a default reader specified.</li>
- * </ul>
+ * @note Defaults to [[org.kiji.express.flow.SchemaSpec.Writer SchemaSpec.Writer]] when reading or
+ *     writing data.
+ * @example
+ *      - [[org.kiji.express.flow.SchemaSpec.DefaultReader SchemaSpec.DefaultReader]] - Use the
+ *        default reader schema defined in your table layout (assuming that your table layout uses a
+ *        default reader schema):
+ *        {{{
+ *          // Data read/written will be decoded/encoded using the default reader schema for the
+ *          // table it belongs to. Expects/produces Avro GenericRecords.
+ *          .withSchemaSpec(SchemaSpec.DefaultReader)
+ *        }}}
+ *      - [[org.kiji.express.flow.SchemaSpec.Writer SchemaSpec.Writer]] - Use the schema that the
+ *        desired cell was written with if reading and attempts to infer the schema from your data
+ *        if writing (will fail on raw maps/lists):
+ *        {{{
+ *          // Data will be read with the schema it was written with. Data will be written with an
+ *          // inferred schema. Expects/produces Avro GenericRecords.
+ *          .withSchemaSpec(SchemaSpec.Writer)
+ *        }}}
+ *      - [[org.kiji.express.flow.SchemaSpec.Generic SchemaSpec.Generic]] - Use the specified Avro
+ *        schema to decode/encode data:
+ *        {{{
+ *          val myAvroSchema: Schema = // ...
+ *
+ *          // ...
+ *
+ *          // Data will be read/written with the provided avro schema. Expects/produces Avro
+ *          // GenericRecords.
+ *          .withSchemaSpec(SchemaSpec.Generic(myAvroSchema))
+ *        }}}
+ *      - [[org.kiji.express.flow.SchemaSpec.Specific SchemaSpec.Specific]] - Use the specified Avro
+ *        specific record to decode/encode data:
+ *        {{{
+ *          val myAvroSpecificRecordClass: Class[MyAvroRecord] = classOf[MyAvroRecord]
+ *
+ *          // ...
+ *
+ *          // Data will be read/written as the provided avro specific record. Expects/produces Avro
+ *          // SpecificRecords. This option should be used when you have a specific record that has
+ *          // been compiled by Avro.
+ *          .withSchemaSpec(SchemaSpec.Specific(myAvroSpecificRecordClass))
+ *        }}}
+ * @see [[org.kiji.express.flow.ColumnFamilyInputSpec]] for information about using SchemaSpec when
+ *     reading data from a Kiji column family.
+ * @see [[org.kiji.express.flow.QualifiedColumnInputSpec]] for information about using SchemaSpec
+ *     when reading data from a Kiji column.
+ * @see [[org.kiji.express.flow.ColumnFamilyOutputSpec]] for information about using SchemaSpec
+ *     when writing data to a Kiji column family.
+ * @see [[org.kiji.express.flow.QualifiedColumnOutputSpec]] for information about using SchemaSpec
+ *     when writing data to a Kiji column.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
@@ -68,13 +99,15 @@ sealed trait SchemaSpec extends Serializable {
 }
 
 /**
- * Module to provide SchemaSpec implementations.
+ * Provides [[org.kiji.express.flow.SchemaSpec]] implementations.
  */
 @ApiAudience.Public
 @ApiStability.Experimental
 object SchemaSpec {
   /**
-   * Specifies reading or writing with the supplied [[org.apache.avro.Schema]].
+   * Specifies reading or writing with the supplied Avro schema.
+   *
+   * @see [[org.kiji.express.flow.SchemaSpec]] for more usage information.
    *
    * @param genericSchema of data
    */
@@ -87,6 +120,8 @@ object SchemaSpec {
 
   /**
    * A specification for reading or writing as an instance of the supplied Avro specific record.
+   *
+   * @see [[org.kiji.express.flow.SchemaSpec]] for more usage information.
    *
    * @param klass of the specific record.
    */
@@ -102,6 +137,8 @@ object SchemaSpec {
    *
    * In the case of reading a value, the writer schema used to serialize the value will be used.
    * In the case of writing a value, the schema attached to or inferred from the value will be used.
+   *
+   * @see [[org.kiji.express.flow.SchemaSpec]] for more usage information.
    */
   @ApiAudience.Public
   @ApiStability.Experimental
@@ -113,6 +150,8 @@ object SchemaSpec {
    * Specifies that the default reader for this column, stored in the table layout, should be used
    * for reading or writing this data.  If you use this option, first make sure the column in your
    * Kiji table has a default reader specified.
+   *
+   * @see [[org.kiji.express.flow.SchemaSpec]] for more usage information.
    */
   @ApiAudience.Public
   @ApiStability.Experimental
