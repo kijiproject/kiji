@@ -4,7 +4,7 @@
 
   <groupId>org.kiji.express</groupId>
   <artifactId>kiji-express-root</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>1.0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
   <inceptionYear>2013</inceptionYear>
 
