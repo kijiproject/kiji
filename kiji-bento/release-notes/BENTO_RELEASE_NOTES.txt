@@ -1,6 +1,10 @@
 
 
                               Kiji BentoBox Release Notes
+
+Version 1.4.0
+  * KijiExpress 1.0.0
+
 Version 1.2.6
   * Include KijiScoringServer.
   * Include KijiModelRepository.
