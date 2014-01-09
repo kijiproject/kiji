@@ -1,7 +1,7 @@
 
                              Kiji Express Release Notes
 
-Version 0.15.0
+Version 1.0.0
   * EXP-340. Adds RowSpec and RowFilterSpec to specify row-level selection criteria in KijiInput.
   * EXP-394. Provide groupByQualifier function for Seq[FlowCell[_]].
   * EXP-355. Added Express key-value stores.
