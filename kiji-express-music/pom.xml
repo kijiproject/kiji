@@ -4,7 +4,7 @@
 
   <groupId>org.kiji.express</groupId>
   <artifactId>kiji-express-music</artifactId>
-  <version>0.13.0-SNAPSHOT</version>
+  <version>1.0.0-SNAPSHOT</version>
   <packaging>jar</packaging>
   <inceptionYear>2013</inceptionYear>
 
@@ -24,7 +24,7 @@
 
   <properties>
     <kiji.framework.version>1.2.7</kiji.framework.version>
-    <express.version>0.15.0-SNAPSHOT</express.version>
+    <express.version>1.0.0-SNAPSHOT</express.version>
     <scalatest.version>2.0.M5b</scalatest.version>
     <kiji-schema.version>1.3.4</kiji-schema.version>
     <kiji-mapreduce.version>1.2.2</kiji-mapreduce.version>
