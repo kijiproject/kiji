@@ -1,6 +1,21 @@
 
                              KijiModeling Release Notes
 
+Version 0.5.0
+  * Updates for Express stable release.
+  * MODELING-16. lift and confidence don't discard existing fields.
+  * MODELING-15. Support accepts field names for frequency.
+  * EXP-350. Support multiple HFile output taps in single flow.
+
+Version 0.4.0
+  * MODELING-5. Add Association Rule Mining to KijiModeling examples.
+  * Modularize KijiModeling to add an examples module.
+  * EXP-336. Add cosine, pearson similarity to modeling.
+  * EXP-349. Add confidence and lift measures to itemset mining.
+
+Version 0.3.0
+  * EXP-311. Rename Cell to FlowCell.
+
 Version 0.2.0
   * EXP-285. Changed access modifiers on framework-level classes from private[modeling]
       to private[kiji] and protected[modeling] to protected[kiji].
