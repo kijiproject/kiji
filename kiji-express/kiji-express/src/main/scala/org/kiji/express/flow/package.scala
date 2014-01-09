@@ -50,15 +50,29 @@ import org.kiji.schema.filter.RegexQualifierColumnFilter
  * several examples for specifying the column `info:name`:
  * {{{
  *   // Request the latest cell.
- *   val myInputColumn = QualifiedColumnInputSpec("info", "name")
- *   val myInputColumn = QualifiedColumnInputSpec("info", "name", maxVersions = latest)
- *   val myInputColumn = QualifiedColumnInputSpec("info", "name", maxVersions = 1)
+ *   val myInputColumn = QualifiedColumnInputSpec.builder
+ *       .withColumn("info", "name")
+ *       .build
+ *   val myInputColumn = QualifiedColumnInputSpec.builder
+ *       .withColumn("info", "name")
+ *       .withMaxVersions(latest)
+ *       .build
+ *   val myInputColumn = QualifiedColumnInputSpec.builder
+ *       .withColumn("info", "name")
+ *       .withMaxVersions(1)
+ *       .build
  *
  *   // Request every cell.
- *   val myInputColumn = QualifiedColumnInputSpec("info:name", maxVersions = all)
+ *   val myInputColumn = QualifiedColumnInputSpec.builder
+ *       .withColumn("info", "name")
+ *       .withMaxVersions(all)
+ *       .build
  *
  *   // Request the 10 most recent cells.
- *   val myInputColumn = QualifiedColumnInputSpec("info:name", maxVersions = 10)
+ *   val myInputColumn = QualifiedColumnInputSpec.builder
+ *       .withColumn("info", "name")
+ *       .withMaxVersions(10)
+ *       .build
  * }}}
  *
  * To request cells from all of the columns in a family, use the `ColumnFamilyInputSpec`
@@ -68,17 +82,21 @@ import org.kiji.schema.filter.RegexQualifierColumnFilter
  * will only be retrieved if its qualifier matches the regular expression:
  * {{{
  *   // Gets the most recent cell for all columns in the column family "searches".
- *   var myFamilyInput = ColumnFamilyInputSpec("searches")
+ *   var myFamilyInput = ColumnFamilyInputSpec.builder.withFamily("searches").build
  *
  *   // Gets all cells for all columns in the column family "searches" whose
  *   // qualifiers contain the word "penguin".
- *   myFamilyInput = ColumnFamilyInputSpec(
- *      "searches",
- *      filterSpec = ColumnFilterSpec.RegexQualifierColumnFilter(""".*penguin.*"""),
- *      maxVersions = all)
+ *   myFamilyInput = ColumnFamilyInputSpec.builder
+ *       .withFamily("searches")
+ *       .withFilterSpec(ColumnFilterSpec.Regex(""".*penguin.*"""))
+ *       .withMaxVersions(all)
+ *       .build
  *
  *   // Gets all cells for all columns in the column family "searches".
- *   myFamilyInput = ColumnFamilyInputSpec("searches", maxVersions = all)
+ *   myFamilyInput = ColumnFamilyInputSpec.builder
+ *       .withFamily("searches")
+ *       .withMaxVersions(all)
+ *       .build
  * }}}
  *
  * See [[org.kiji.express.flow.QualifiedColumnInputSpec]] and
@@ -91,7 +109,10 @@ import org.kiji.schema.filter.RegexQualifierColumnFilter
  * with the default reader schema:
  * {{{
  *   // Create a column output spec for writing to "info:name" using the default reader schema
- *   var myWriteReq = QualifiedColumnOutputSpec("info", "name", useDefaultReaderSchema = true)
+ *   var myWriteReq = QualifiedColumnOutputSpec.builder
+ *       .withColumn("info", "name")
+ *       .withSchemaSpec(SchemaSpec.DefaultReader)
+ *       .build
  * }}}
  *
  *
@@ -99,7 +120,10 @@ import org.kiji.schema.filter.RegexQualifierColumnFilter
  * use for your write.  For example, to use the value in the Scalding field ``'terms`` as the name
  * of the column qualifier, use the following:
  * {{{
- *   var myOutputFamily = ColumnFamilyOutputSpec("searches", 'terms)
+ *   var myOutputFamily = ColumnFamilyOutputSpec.builder
+ *       .withFamily("searches")
+ *       .withQualifierSelector('terms)
+ *       .build
  * }}}
  *
  * See [[org.kiji.express.flow.QualifiedColumnOutputSpec]] and
@@ -116,18 +140,29 @@ import org.kiji.schema.filter.RegexQualifierColumnFilter
  * {{{
  *   // Read the most recent cells from columns "info:id" and "info:name" into tuple fields "id"
  *   // and "name" (don't explicitly instantiate a QualifiedColumnInputSpec).
- *   var myKijiSource =
- *       KijiInput("kiji://.env/default/newsgroup_users", "info:id" -> 'id, "info:name" -> 'name)
+ *   var myKijiSource = KijiInput.builder
+ *       .withTableURI("kiji://.env/default/newsgroup_users")
+ *       .withColumns("info:id" -> 'id, "info:name" -> 'name)
+ *       .build
  *
  *   // Read only cells from "info:id" that occurred before Unix time 100000.
  *   // (Don't explicitly instantiate a QualifiedColumnInputSpec)
- *   myKijiSource =
- *       KijiInput("kiji://.env/default/newsgroup_users", Before(100000), "info:id" -> 'id)
+ *   myKijiSource = KijiInput.builder
+ *       .withTableURI("kiji://.env/default/newsgroup_users")
+ *       .withTimeRangeSpec(Before(100000))
+ *       .withColumns("info:id" -> 'id)
+ *       .build
  *
  *   // Read all versions from "info:posts"
- *   myKijiSource = KijiInput(
- *       "kiji://.env/default/newsgroup_users",
- *       Map(QualifiedColumnOutputSpec("info", "id", maxVersions = all) -> 'id))
+ *   myKijiSource = KijiInput.builder
+ *       .withTableURI("kiji://.env/default/newsgroup_users")
+ *       .withColumnSpecs(
+ *           QualifiedColumnOutputSpec.builder
+ *               .withColumn("info", "id")
+ *               .withMaxVersions(all)
+ *               .build -> 'id
+ *       )
+ *       .build
  * }}}
  *
  * See [[org.kiji.express.flow.KijiInput]] and [[org.kiji.express.flow.ColumnInputSpec]] for more
@@ -142,24 +177,34 @@ import org.kiji.schema.filter.RegexQualifierColumnFilter
  * {{{
  *   // Write from the tuple field "average" to the column "stats:average" of the Kiji table
  *   // "newsgroup_users".
- *   mySource.write("kiji://.env/default/newsgroup_users", 'average -> "stats:average")
+ *   mySource.write(
+ *       KijiOutput.builder
+ *           .withTableURI("kiji://.env/default/newsgroup_users")
+ *           .withColumns('average -> "stats:average")
+ *           .build
+ *   )
  *
  *   // Create a KijiSource to write the data in tuple field "results" to column family
  *   // "searches" with the string in tuple field "terms" as the column qualifier.
- *   myOutput = KijiOutput(
- *       "kiji://.env/default/searchstuff",
- *       'results -> ColumnFamilyOutputSpec("searches", "terms"))
+ *   myOutput = KijiOutput.builder
+ *       .withTableURI("kiji://.env/default/searchstuff")
+ *       .withColumnSpecs('results -> ColumnFamilyOutputSpec.builder
+ *           .withFamily("searches")
+ *           .withQualifierSelector('terms)
+ *           .build
+ *       )
+ *       .build
  * }}}
  *
  * === Specifying ranges of time. ===
- * Instances of [[org.kiji.express.flow.TimeRange]] are used to specify a range of timestamps
+ * Instances of [[org.kiji.express.flow.TimeRangeSpec]] are used to specify a range of timestamps
  * that should be retrieved when reading data from Kiji. There are five implementations of
  * `TimeRange` that can be used when requesting data.
  *
  * <ul>
  *   <li>All</li>
  *   <li>At(timestamp: Long)</li>
- *   <li>After(begin: Long)</li>
+ *   <li>From(begin: Long)</li>
  *   <li>Before(end: Long)</li>
  *   <li>Between(begin: Long, end: Long)</li>
  * </ul>
@@ -169,9 +214,14 @@ import org.kiji.schema.filter.RegexQualifierColumnFilter
  * to read cells from the column `info:word` that have timestamps between `0L` and `10L`,
  * you can do the following.
  *
- * @example {{{
- *     KijiInput("kiji://.env/default/words", timeRangeSpec=Between(0L, 10L), "info:word" -> 'word)
- * }}}
+ * @example
+ *     {{{
+ *       KijiInput.builder
+ *           .withTableURI("kiji://.env/default/words")
+ *           .withTimeRangeSpec(Between(0L, 10L))
+ *           .withColumns("info:word" -> 'word)
+ *           .build
+ *     }}}
  */
 package object flow {
 

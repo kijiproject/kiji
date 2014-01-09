@@ -64,8 +64,8 @@ import org.kiji.schema.filter.RegexQualifierColumnFilter
  *          // Filters out columns with names that are not alphanumeric.
  *          .withFilterSpec(ColumnFilterSpec.Regex("[a-zA-Z0-9]*"))
  *        }}}
- *      - [[org.kiji.express.flow.ColumnFilterSpec.KijiSchemaColumnFilter ColumnFilterSpec.KijiMRColumnFilter]]
- *        - Reading data from columns that match the provided Kiji MR column filter:
+ *      - [[org.kiji.express.flow.ColumnFilterSpec.KijiSchemaColumnFilter ColumnFilterSpec.KijiMRColumnFilter]] -
+ *        Reading data from columns that match the provided Kiji MR column filter:
  *        {{{
  *          val filter: KijiColumnFilter = // ...
  *
