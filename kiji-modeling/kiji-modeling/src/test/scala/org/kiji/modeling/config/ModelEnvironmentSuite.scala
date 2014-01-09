@@ -26,11 +26,11 @@ import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.flow.ColumnFilterSpec
-import org.kiji.express.flow.ColumnFilterSpec.AndFilterSpec
-import org.kiji.express.flow.ColumnFilterSpec.ColumnRangeFilterSpec
-import org.kiji.express.flow.ColumnFilterSpec.NoColumnFilterSpec
-import org.kiji.express.flow.ColumnFilterSpec.OrFilterSpec
-import org.kiji.express.flow.ColumnFilterSpec.RegexQualifierFilterSpec
+import org.kiji.express.flow.ColumnFilterSpec.And
+import org.kiji.express.flow.ColumnFilterSpec.ColumnRange
+import org.kiji.express.flow.ColumnFilterSpec.NoFilter
+import org.kiji.express.flow.ColumnFilterSpec.Or
+import org.kiji.express.flow.ColumnFilterSpec.Regex
 import org.kiji.express.flow.PagingSpec
 import org.kiji.express.flow.QualifiedColumnInputSpec
 import org.kiji.express.flow.QualifiedColumnOutputSpec
@@ -415,40 +415,40 @@ class ModelEnvironmentSuite extends FunSuite {
 
   test("ModelEnvironment can convert from Avro to KijiInputSpec without a filter.") {
     val filter = singleColumnKijiInputSpecToAndFromAvro()
-    assert(NoColumnFilterSpec === filter)
+    assert(NoFilter === filter)
   }
 
   test("ModelEnvironment can convert from Avro to KijiInputSpec with a range filter.") {
     val filter = singleColumnKijiInputSpecToAndFromAvro(Some(myAvroRangeFilter))
-    assert(filter.isInstanceOf[ColumnRangeFilterSpec], "incorrect filter type")
+    assert(filter.isInstanceOf[ColumnRange], "incorrect filter type")
   }
 
   test("ModelEnvironment can convert from Avro to KijiInputSpec with a regex qualifier filter.") {
     val filter = singleColumnKijiInputSpecToAndFromAvro(Some(myAvroRegexQualifierFilter))
-    assert(filter.isInstanceOf[RegexQualifierFilterSpec], "incorrect filter type")
+    assert(filter.isInstanceOf[Regex], "incorrect filter type")
   }
 
   test("ModelEnvironment can convert from Avro to KijiInputSpec with a logical AND filter.") {
     val filter = singleColumnKijiInputSpecToAndFromAvro(Some(myAvroAndFilter))
-    assert(filter.isInstanceOf[AndFilterSpec], "incorrect filter type")
+    assert(filter.isInstanceOf[And], "incorrect filter type")
   }
 
   test("ModelEnvironment can convert from Avro to KijiInputSpec with a logical OR filter.") {
     val filter = singleColumnKijiInputSpecToAndFromAvro(Some(myAvroOrFilter))
-    assert(filter.isInstanceOf[OrFilterSpec], "incorrect filter type")
+    assert(filter.isInstanceOf[Or], "incorrect filter type")
   }
 
   test("ModelEnvironment can instantiate Kiji column filters from json.") {
     val modelEnv: ModelEnvironment = ModelEnvironment.fromJson(validFiltersDefinitionLocation)
 
     // Filter definition that should exist in the JSON
-    val expectedRegexFilter: RegexQualifierFilterSpec = new RegexQualifierFilterSpec("foo")
-    val expectedColRangeFilter = new ColumnRangeFilterSpec(
+    val expectedRegexFilter: Regex = new Regex("foo")
+    val expectedColRangeFilter = new ColumnRange(
         minimum = Some("null"),
         maximum = Some("null"),
         minimumIncluded = true,
         maximumIncluded = true)
-    val expectedAndFilter = new AndFilterSpec(List(expectedRegexFilter, expectedColRangeFilter))
+    val expectedAndFilter = new And(List(expectedRegexFilter, expectedColRangeFilter))
 
     val kijiInputSpec = modelEnv
         .scoreEnvironment

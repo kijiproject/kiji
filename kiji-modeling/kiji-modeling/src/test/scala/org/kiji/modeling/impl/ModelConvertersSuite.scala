@@ -21,16 +21,11 @@ package org.kiji.modeling.impl
 
 import com.twitter.scalding.Source
 import org.apache.avro.Schema
-import org.apache.avro.specific.SpecificRecord
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.flow.ColumnFilterSpec
-import org.kiji.express.flow.ColumnFilterSpec.AndFilterSpec
-import org.kiji.express.flow.ColumnFilterSpec.ColumnRangeFilterSpec
-import org.kiji.express.flow.ColumnFilterSpec.OrFilterSpec
-import org.kiji.express.flow.ColumnFilterSpec.RegexQualifierFilterSpec
 import org.kiji.express.flow.QualifiedColumnInputSpec
 import org.kiji.express.flow.QualifiedColumnOutputSpec
 import org.kiji.express.flow.SchemaSpec
@@ -189,14 +184,15 @@ object ModelConvertersSuite {
     override def scoreFn: ScoreFn[_, _] = { null }
   }
 
-  val testRangeFilter: ColumnRangeFilterSpec = ColumnRangeFilterSpec(
+  val testRangeFilter: ColumnFilterSpec.ColumnRange = ColumnFilterSpec.ColumnRange(
       minimum = Some("0min"),
       maximum = Some("9max"),
       minimumIncluded = false,
       maximumIncluded = true)
-  val testRegexFilter: RegexQualifierFilterSpec = RegexQualifierFilterSpec(".*")
-  val testAndFilter: AndFilterSpec = AndFilterSpec(Seq(testRangeFilter, testRegexFilter))
-  val testOrFilter: OrFilterSpec = OrFilterSpec(Seq(testRangeFilter, testRegexFilter))
+  val testRegexFilter: ColumnFilterSpec.Regex = ColumnFilterSpec.Regex(".*")
+  val testAndFilter: ColumnFilterSpec.And =
+      ColumnFilterSpec.And(Seq(testRangeFilter, testRegexFilter))
+  val testOrFilter: ColumnFilterSpec.Or = ColumnFilterSpec.Or(Seq(testRangeFilter, testRegexFilter))
 
   val testGenericSchemaSpec: SchemaSpec = SchemaSpec.Generic(Schema.create(Schema.Type.LONG))
   val testSpecificSchemaSpec: SchemaSpec = SchemaSpec.Specific(classOf[AvroSimpleRecordTest])

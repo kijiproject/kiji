@@ -29,12 +29,12 @@ import org.kiji.express.flow.ColumnFamilyOutputSpec
 import org.kiji.express.flow.ColumnInputSpec
 import org.kiji.express.flow.ColumnOutputSpec
 import org.kiji.express.flow.ColumnFilterSpec
-import org.kiji.express.flow.ColumnFilterSpec.AndFilterSpec
-import org.kiji.express.flow.ColumnFilterSpec.ColumnRangeFilterSpec
-import org.kiji.express.flow.ColumnFilterSpec.KijiColumnFilterSpec
-import org.kiji.express.flow.ColumnFilterSpec.NoColumnFilterSpec
-import org.kiji.express.flow.ColumnFilterSpec.OrFilterSpec
-import org.kiji.express.flow.ColumnFilterSpec.RegexQualifierFilterSpec
+import org.kiji.express.flow.ColumnFilterSpec.And
+import org.kiji.express.flow.ColumnFilterSpec.ColumnRange
+import org.kiji.express.flow.ColumnFilterSpec.KijiSchemaColumnFilter
+import org.kiji.express.flow.ColumnFilterSpec.NoFilter
+import org.kiji.express.flow.ColumnFilterSpec.Or
+import org.kiji.express.flow.ColumnFilterSpec.Regex
 import org.kiji.express.flow.PagingSpec
 import org.kiji.express.flow.QualifiedColumnInputSpec
 import org.kiji.express.flow.QualifiedColumnOutputSpec
@@ -739,19 +739,19 @@ object ModelConverters {
   def filterFromAvro(filter: AvroFilter): ColumnFilterSpec = {
     // Get provided filter specifications (only one should be not null).
     val andFilter: Option[ColumnFilterSpec] = Option(filter.getAndFilter)
-        .map { components => AndFilterSpec(components.asScala.map { filterFromAvro }) }
+        .map { components => And(components.asScala.map { filterFromAvro }) }
     val orFilter: Option[ColumnFilterSpec] = Option(filter.getOrFilter)
-        .map { components => OrFilterSpec(components.asScala.map { filterFromAvro }) }
+        .map { components => Or(components.asScala.map { filterFromAvro }) }
     val rangeFilter: Option[ColumnFilterSpec] = Option(filter.getRangeFilter)
         .map { rangeFilter =>
-          new ColumnRangeFilterSpec(
+          new ColumnRange(
               minimum = Option(rangeFilter.getMinQualifier),
               maximum = Option(rangeFilter.getMaxQualifier),
               minimumIncluded = rangeFilter.getMinIncluded,
               maximumIncluded = rangeFilter.getMaxIncluded)
         }
     val regexFilter: Option[ColumnFilterSpec] = Option(filter.getRegexFilter)
-        .map { regexFilter => new RegexQualifierFilterSpec(regexFilter.getRegex) }
+        .map { regexFilter => new Regex(regexFilter.getRegex) }
 
     // Ensure that only one filter specification is available.
     val filters: Seq[ColumnFilterSpec] =
@@ -825,7 +825,7 @@ object ModelConverters {
   def columnInputSpecFromAvro(avroColumn: Any): ColumnInputSpec = avroColumn match {
     case col: AvroQualifiedColumnInputSpec => {
       val filter: ColumnFilterSpec =
-          Option(col.getFilter).map(filterFromAvro).getOrElse(NoColumnFilterSpec)
+          Option(col.getFilter).map(filterFromAvro).getOrElse(NoFilter)
       val paging: PagingSpec = if (0 == col.getPageSize) {
         PagingSpec.Off
       } else {
@@ -843,7 +843,7 @@ object ModelConverters {
     }
     case col: AvroColumnFamilyInputSpec => {
       val filter: ColumnFilterSpec =
-          Option(col.getFilter).map(filterFromAvro).getOrElse(NoColumnFilterSpec)
+          Option(col.getFilter).map(filterFromAvro).getOrElse(NoFilter)
       val paging: PagingSpec = if (0 == col.getPageSize) {
         PagingSpec.Off
       } else {
@@ -982,10 +982,10 @@ object ModelConverters {
    */
   def filterToAvro(filter: ColumnFilterSpec): AvroFilter = {
     filter match {
-      case NoColumnFilterSpec => {
+      case NoFilter => {
         null
       }
-      case AndFilterSpec(filters) => {
+      case And(filters) => {
         val avroFilters: java.util.List[AvroFilter] = filters
             .map { filterToAvro }
             .asJava
@@ -995,7 +995,7 @@ object ModelConverters {
             .setAndFilter(avroFilters)
             .build()
       }
-      case OrFilterSpec(filters) => {
+      case Or(filters) => {
         val avroFilters: java.util.List[AvroFilter] = filters
             .map { filterToAvro }
             .asJava
@@ -1005,7 +1005,7 @@ object ModelConverters {
             .setOrFilter(avroFilters)
             .build()
       }
-      case ColumnRangeFilterSpec(minimum, maximum, minimumIncluded, maximumIncluded) => {
+      case ColumnRange(minimum, maximum, minimumIncluded, maximumIncluded) => {
         val rangeFilter = AvroColumnRangeFilter
             .newBuilder()
             .setMinQualifier(minimum.getOrElse(null))
@@ -1019,7 +1019,7 @@ object ModelConverters {
             .setRangeFilter(rangeFilter)
             .build()
       }
-      case RegexQualifierFilterSpec(regex) => {
+      case Regex(regex) => {
         val regexFilter = AvroRegexQualifierFilter
             .newBuilder()
             .setRegex(regex)
@@ -1030,7 +1030,7 @@ object ModelConverters {
             .setRegexFilter(regexFilter)
             .build()
       }
-      case KijiColumnFilterSpec(kijiColumnFilter) => {
+      case KijiSchemaColumnFilter(kijiColumnFilter) => {
         throw new IllegalArgumentException(
           ("Cannot convert arbitrary KijiColumnFilter %s to Avro.  Must be one of AndFilterSpec, "
               + "OrFilterSpec, ColumnRangeFilterSpec, or RegexQualifierFilterSpec.")
