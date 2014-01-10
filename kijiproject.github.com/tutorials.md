@@ -48,6 +48,7 @@ to the Kiji version you are using are available here:
 
 #### KijiExpress
 
+* [KijiExpress Tutorial 1.0.0](tutorials/express-recommendation/1.0.0/express-overview)
 * [KijiExpress Tutorial 0.11.0](tutorials/express-recommendation/0.11.0/express-overview)
 * [KijiExpress Tutorial 0.8.0](tutorials/express-recommendation/0.8.0/express-overview)
 * [KijiExpress Tutorial 0.7.0](tutorials/express-recommendation/0.7.0/express-overview)

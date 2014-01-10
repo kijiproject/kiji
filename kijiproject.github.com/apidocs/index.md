@@ -58,7 +58,8 @@ APIs, but beware that they may change between minor versions.
   \[[1.0.0-rc5](http://api-docs.kiji.org/kiji-mapreduce-lib/1.0.0-rc5/index.html)\]
   \[[1.0.0-rc4](http://api-docs.kiji.org/kiji-mapreduce-lib/1.0.0-rc4/index.html)\]
 
-* [KijiExpress](http://api-docs.kiji.org/kiji-express/0.14.0/index.html) (latest)
+* [KijiExpress](http://api-docs.kiji.org/kiji-express/1.0.0/index.html) (latest)
+  \[[0.14.0](http://api-docs.kiji.org/kiji-express/0.14.0/index.html)\]
   \[[0.13.0](http://api-docs.kiji.org/kiji-express/0.13.0/index.html)\]
   \[[0.12.0](http://api-docs.kiji.org/kiji-express/0.12.0/index.html)\]
   \[[0.10.0](http://api-docs.kiji.org/kiji-express/0.10.0/index.html)\]
