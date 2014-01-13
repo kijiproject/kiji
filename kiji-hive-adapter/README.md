@@ -110,6 +110,20 @@ This functionality is also available in the kiji CLI tool via the command:
 
     kiji generate-hive-table --kiji=kiji://.env/kiji_music/users
 
+#### Column paging
+
+Occasionally a column will be too large to fit into memory, and so the only recourse is to page
+through the column for results.  To do this, add the entries corresponding to your desired column
+and pagesize(in entries) to the SERDEPROPERIES section of the CREATE_EXTERNAL_TABLE STATEMENT:
+
+    'kiji.cell.paging.info:track_plays' = '10'
+
+Note that you'll likely need to comma delimit the entries, so if you wanted to page through both the
+info:track_plays column and the info:next_song_rec column, it'd look like the following:
+
+    'kiji.cell.paging.info:track_plays' = '10',
+    'kiji.cell.paging.info:next_song_rec' = '5'
+
 ### Sample Queries
 
 These SQL statements all rely on the above table being created in Hive.  You can start a Hive

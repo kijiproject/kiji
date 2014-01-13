@@ -24,8 +24,11 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.NavigableSet;
+import java.util.NoSuchElementException;
+import java.util.Set;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
@@ -39,6 +42,9 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.schema.KijiCell;
 import org.kiji.schema.KijiColumnName;
+import org.kiji.schema.KijiColumnPagingNotEnabledException;
+import org.kiji.schema.KijiDataRequest;
+import org.kiji.schema.KijiPager;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.impl.HBaseKijiRowData;
 import org.kiji.schema.layout.KijiTableLayout.LocalityGroupLayout.FamilyLayout;
@@ -51,6 +57,8 @@ import org.kiji.schema.util.TimestampComparator;
 public class KijiRowDataWritable implements Writable {
   private static final Logger LOG = LoggerFactory.getLogger(KijiRowDataWritable.class);
 
+  private static final NavigableMap<Long, KijiCellWritable> EMPTY_DATA = Maps.newTreeMap();
+
   private EntityIdWritable mEntityId;
 
   // Backing store of the cell data contained in this row expressed as Writables.
@@ -62,6 +70,9 @@ public class KijiRowDataWritable implements Writable {
 
   // Schema data required decoding Avro data within cells.
   private Map<KijiColumnName, Schema> mSchemas;
+
+  private KijiRowData mRowData;
+  private Map<KijiColumnName, KijiPager> mKijiPagers;
 
   /** Required so that this can be built by WritableFactories. */
   public KijiRowDataWritable() {
@@ -92,7 +103,11 @@ public class KijiRowDataWritable implements Writable {
     mWritableData = Maps.newHashMap();
     mSchemas = Maps.newHashMap();
 
+    mRowData = rowData;
     HBaseKijiRowData hBaseKijiRowData = (HBaseKijiRowData) rowData;
+
+    mKijiPagers = getKijiPagers(hBaseKijiRowData.getDataRequest());
+
     for (FamilyLayout familyLayout : hBaseKijiRowData.getTableLayout().getFamilies()) {
       String family = familyLayout.getName();
       for (String qualifier : rowData.getQualifiers(family)) {
@@ -107,6 +122,92 @@ public class KijiRowDataWritable implements Writable {
           mSchemas.put(column, schema);
         }
       }
+
+      // Also read the schemas of paged columns
+      for (KijiColumnName column : mKijiPagers.keySet()) {
+        Schema schema = rowData.getReaderSchema(column.getFamily(), column.getQualifier());
+        mSchemas.put(column, schema);
+      }
+    }
+  }
+
+  /**
+   * Checks all of the associated pagers if there is additional paged data.
+   *
+   * @return whether there are more pages associated with this KijiRowDataWritable
+   */
+  public boolean hasMorePages() {
+    for (KijiPager kijiPager : mKijiPagers.values()) {
+      if (kijiPager.hasNext()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Build the Writably compatible KijiRowDataPageWritable with the next page's data.
+   *
+   * @return a KijiRowDataPageWritable with a page of data substituted.
+   * @throws IOException if there was an error.
+   */
+  public KijiRowDataPageWritable nextPage() throws IOException {
+    Map<KijiColumnName, NavigableMap<Long, KijiCellWritable>> pageData = Maps.newHashMap();
+    for (KijiColumnName kijiColumnName : mKijiPagers.keySet()) {
+      final KijiPager kijiPager = mKijiPagers.get(kijiColumnName);
+      try {
+        final KijiRowData pagedKijiRowData = kijiPager.next();
+        final NavigableMap<Long, KijiCell<Object>> pagedData =
+            pagedKijiRowData.getCells(kijiColumnName.getFamily(), kijiColumnName.getQualifier());
+        final NavigableMap<Long, KijiCellWritable> writableData = convertCellsToWritable(pagedData);
+        pageData.put(kijiColumnName, writableData);
+      } catch (NoSuchElementException nsee) {
+        // If we run out of pages, put in a blank entry
+        pageData.put(kijiColumnName, EMPTY_DATA);
+      }
+    }
+    return new KijiRowDataPageWritable(pageData);
+  }
+
+  /**
+   * Nested class for a paged result of this KijiRowDataWritable.  Writes the initial
+   * KijiRowDataWritable, but overlays the specified column in the Writable result.
+   */
+  public class KijiRowDataPageWritable implements Writable {
+    private final Map<KijiColumnName, NavigableMap<Long, KijiCellWritable>> mPageData;
+
+    /**
+     * @param pageData map of columns to the data to substitute for those columns
+     */
+    public KijiRowDataPageWritable(
+        Map<KijiColumnName, NavigableMap<Long, KijiCellWritable>> pageData) {
+      mPageData = pageData;
+    }
+
+    /**
+     * Returns whether this KijiRowDataPageWritable has any paged cells to be substituted.
+     * @return whether this KijiRowDataPageWritable has any paged cells to be substituted.
+     */
+    public boolean isEmpty() {
+      for (NavigableMap<Long, KijiCellWritable> values : mPageData.values()) {
+        if (!values.isEmpty()) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void write(DataOutput out) throws IOException {
+      writeWithPages(out, mPageData);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void readFields(DataInput in) throws IOException {
+      throw new UnsupportedOperationException(
+          "Pages should be read as instances of KijiRowDataWritable.");
     }
   }
 
@@ -166,6 +267,28 @@ public class KijiRowDataWritable implements Writable {
       }
     }
     return mDecodedData;
+  }
+
+  /**
+   * Initializes the list of associated KijiPagers for this KijiRowData.
+   *
+   * @param kijiDataRequest the data request for this KijiRowData.
+   * @return map of KijiColumnNames to their associated pagers.
+   */
+  private Map<KijiColumnName, KijiPager> getKijiPagers(KijiDataRequest kijiDataRequest) {
+    Map<KijiColumnName, KijiPager> kijiPagers = Maps.newHashMap();
+    for (KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
+      if (column.isPagingEnabled()) {
+        try {
+          LOG.info("Paging enabled for column: " + column.getColumnName());
+          KijiPager kijiPager = mRowData.getPager(column.getFamily(), column.getQualifier());
+          kijiPagers.put(column.getColumnName(), kijiPager);
+        } catch (KijiColumnPagingNotEnabledException e) {
+          LOG.warn("Paging not enabled for column: {}", column.getColumnName());
+        }
+      }
+    }
+    return kijiPagers;
   }
 
   /** @return The row key. */
@@ -263,22 +386,43 @@ public class KijiRowDataWritable implements Writable {
     return (NavigableMap<Long, T>) getDecodedData().get(column);
   }
 
-  @Override
-  public void write(DataOutput out) throws IOException {
-    EntityIdWritable entityIdWritable = (EntityIdWritable) mEntityId;
-    entityIdWritable.write(out);
+  /**
+   * Helper method for the {@link org.apache.hadoop.io.Writable} interface that for writing
+   * KijiRowDataWritable objects.  If passed a KijiColumnName, it will replace the data for the
+   * specified column(relevant for paging through results).
+   *
+   * @param out DataOutput for the Hadoop Writable to write to.
+   * @param pageData map of columns to paged data to be substituted(or an empty map if there are
+   *                 no pages to substitute).
+   * @throws IOException if there was an issue.
+   */
+  protected void writeWithPages(DataOutput out,
+                                Map<KijiColumnName, NavigableMap<Long, KijiCellWritable>> pageData)
+      throws IOException {
 
-    WritableUtils.writeVInt(out, mWritableData.size());
-    for (Map.Entry<KijiColumnName, NavigableMap<Long, KijiCellWritable>> entry
+    // Write the EntityId
+    mEntityId.write(out);
+
+    // Count the total number of columns to write.
+    Set<KijiColumnName> columnNames = Sets.newHashSet();
+    columnNames.addAll(mWritableData.keySet());
+    columnNames.addAll(pageData.keySet());
+    WritableUtils.writeVInt(out, columnNames.size());
+
+    // Write the unpaged data.
+    for (Entry<KijiColumnName, NavigableMap<Long, KijiCellWritable>> entry
         : mWritableData.entrySet()) {
-      WritableUtils.writeString(out, entry.getKey().getName());
-
-      NavigableMap<Long, KijiCellWritable> data = entry.getValue();
-      WritableUtils.writeVInt(out, data.size()); // number in the timeseries
-      for (Map.Entry<Long, KijiCellWritable> cellEntry : data.entrySet()) {
-        WritableUtils.writeVLong(out, cellEntry.getKey());
-        cellEntry.getValue().write(out);
+      KijiColumnName kijiColumnName = entry.getKey();
+      if (!pageData.containsKey(kijiColumnName)) {
+        // Only write if it's not part of the paged data.
+        writeColumn(out, kijiColumnName, entry.getValue());
       }
+    }
+
+    // Write paged data if any.
+    for (Entry<KijiColumnName, NavigableMap<Long, KijiCellWritable>> entry
+        : pageData.entrySet()) {
+      writeColumn(out, entry.getKey(), entry.getValue());
     }
 
     WritableUtils.writeVInt(out, mSchemas.size());
@@ -286,6 +430,30 @@ public class KijiRowDataWritable implements Writable {
       WritableUtils.writeString(out, entry.getKey().getName());
       WritableUtils.writeString(out, entry.getValue().toString());
     }
+  }
+
+  /**
+   * Helper function to write a column and its associated data.
+   *
+   * @param out DataOutput for the Hadoop Writable to write to.
+   * @param kijiColumnName to write
+   * @param data to write
+   * @throws IOException if there was an issue.
+   */
+  private void writeColumn(DataOutput out, KijiColumnName kijiColumnName,
+                           NavigableMap<Long, KijiCellWritable> data) throws IOException {
+    WritableUtils.writeString(out, kijiColumnName.getName());
+    WritableUtils.writeVInt(out, data.size()); // number in the timeseries
+    for (Map.Entry<Long, KijiCellWritable> cellEntry : data.entrySet()) {
+      WritableUtils.writeVLong(out, cellEntry.getKey());
+      cellEntry.getValue().write(out);
+    }
+  }
+
+  @Override
+  public void write(DataOutput out) throws IOException {
+    // By default write unsubstituted columns.
+    writeWithPages(out, Collections.EMPTY_MAP);
   }
 
   @Override

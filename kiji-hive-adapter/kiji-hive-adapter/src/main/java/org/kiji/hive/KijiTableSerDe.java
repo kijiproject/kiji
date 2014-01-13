@@ -22,9 +22,11 @@ package org.kiji.hive;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.client.Result;
@@ -62,6 +64,9 @@ public class KijiTableSerDe implements SerDe {
   // Make a ticket and prioritize it accordingly.
   public static final String LIST_ENTITY_ID_COMPONENTS = "kiji.entity.id.columns";
 
+  public static final String KIJI_QUALIFIER_PAGING_PREFIX = "kiji.qualifier.paging.";
+  public static final String KIJI_CELL_PAGING_PREFIX = "kiji.cell.paging.";
+
   /**
    * This contains all the information about a Hive table we need to interact with a Kiji table.
    */
@@ -93,11 +98,19 @@ public class KijiTableSerDe implements SerDe {
     // write back to Kiji with.
     String entityIdShellString = properties.getProperty(ENTITY_ID_SHELL_STRING);
 
+    Map<String, String> cellPagingMap =
+        readPrefixedPropertyMap(properties, KIJI_CELL_PAGING_PREFIX);
+
+    Map<String, String> qualifierPagingMap =
+        readPrefixedPropertyMap(properties, KIJI_QUALIFIER_PAGING_PREFIX);
+
     mHiveTableDescription = HiveTableDescription.newBuilder()
         .withColumnNames(columnNames)
         .withColumnTypes(TypeInfoUtils.getTypeInfosFromTypeString(columnTypes))
         .withColumnExpressions(columnExpressions)
         .withEntityIdShellStringColumn(entityIdShellString)
+        .withCellPagingMap(cellPagingMap)
+        .withQualifierPagingMap(qualifierPagingMap)
         .build();
 
     if (!mHiveTableDescription.isWritable()) {
@@ -169,5 +182,25 @@ public class KijiTableSerDe implements SerDe {
    */
   private static List<String> readPropertyList(Properties properties, String name) {
     return Arrays.asList(properties.getProperty(name).split(","));
+  }
+
+  /**
+   * Reads a map of all properties starting with a prefix.
+   *
+   * @param properties The properties object to read from.
+   * @param prefix The prefix to match the properties on.
+   * @return A map of the suffixes to the corresponding properties.
+   */
+  private static Map<String, String> readPrefixedPropertyMap(Properties properties,
+                                                             String prefix) {
+    Map<String, String> prefixedPropertyMap = Maps.newHashMap();
+    for (String propertyName : properties.stringPropertyNames()) {
+      if (propertyName.startsWith(prefix)) {
+        String suffix = propertyName.replaceFirst(prefix, "");
+        String value = properties.getProperty(propertyName);
+        prefixedPropertyMap.put(suffix, value);
+      }
+    }
+    return prefixedPropertyMap;
   }
 }

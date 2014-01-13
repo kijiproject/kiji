@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NavigableMap;
 
 import com.google.common.base.Preconditions;
@@ -47,8 +48,6 @@ import org.kiji.schema.KijiDataRequest;
  * Manages the description of the Hive table providing the "view" of a KijiTable.
  */
 public final class HiveTableDescription {
-  // TODO: This class could be removed since it no longer persists the TableLayout information
-  // necessary for decoding.
 
   /** Describes the types of the columns in the table (it is a struct type). */
   private final StructTypeInfo mTypeInfo;
@@ -72,6 +71,10 @@ public final class HiveTableDescription {
     private List<String> mColumnExpressions;
 
     private String mEntityIdShellStringColumn;
+
+    /** Maps which contain the paging configuration(in entries) for qualifiers and cells. */
+    private Map<KijiColumnName, Integer> mQualifierPagingMap;
+    private Map<KijiColumnName, Integer> mCellPagingMap;
 
     /** True if we already built an object. */
     private boolean mIsBuilt = false;
@@ -123,6 +126,43 @@ public final class HiveTableDescription {
         String entityIdShellStringColumn) {
       checkNotBuilt();
       mEntityIdShellStringColumn = entityIdShellStringColumn;
+      return this;
+    }
+
+    /**
+     * Sets the configuration for cell level paging.
+     *
+     * @param cellPagingMap map of column names to page sizes.
+     * @return This instance
+     */
+    public HiveTableDescriptionBuilder withCellPagingMap(Map<String, String> cellPagingMap) {
+      checkNotBuilt();
+      Map<KijiColumnName, Integer> convertedCellPagingMap = Maps.newHashMap();
+      for (Entry<String, String> entry : cellPagingMap.entrySet()) {
+        KijiColumnName kijiColumnName = new KijiColumnName(entry.getKey());
+        Integer pageSize = Integer.valueOf(entry.getValue());
+        convertedCellPagingMap.put(kijiColumnName, pageSize);
+      }
+      mCellPagingMap = convertedCellPagingMap;
+      return this;
+    }
+
+    /**
+     * Sets the configuration for qualifier level paging.
+     *
+     * @param qualifierPagingMap map of column families to page sizes.
+     * @return This instance
+     */
+    public HiveTableDescriptionBuilder withQualifierPagingMap(
+        Map<String, String> qualifierPagingMap) {
+      checkNotBuilt();
+      Map<KijiColumnName, Integer> convertedQualifierPagingMap = Maps.newHashMap();
+      for (Entry<String, String> entry : qualifierPagingMap.entrySet()) {
+        KijiColumnName kijiColumnName = new KijiColumnName(entry.getKey());
+        Integer pageSize = Integer.valueOf(entry.getValue());
+        convertedQualifierPagingMap.put(kijiColumnName, pageSize);
+      }
+      mQualifierPagingMap = convertedQualifierPagingMap;
       return this;
     }
 
@@ -191,7 +231,20 @@ public final class HiveTableDescription {
     }
     // TODO(KIJIHIVE-30) Process EntityId component columns here.
 
-    mDataRequest = DataRequestOptimizer.getDataRequest(mExpressions);
+    KijiDataRequest dataRequest = DataRequestOptimizer.getDataRequest(mExpressions);
+    if (builder.mCellPagingMap != null) {
+      KijiDataRequest pagedDataRequest =
+          DataRequestOptimizer.addCellPaging(dataRequest, builder.mCellPagingMap);
+      dataRequest = pagedDataRequest;
+    }
+
+    if (builder.mQualifierPagingMap != null) {
+      KijiDataRequest pagedDataRequest =
+          DataRequestOptimizer.addQualifierPaging(dataRequest, builder.mQualifierPagingMap);
+      dataRequest = pagedDataRequest;
+    }
+
+    mDataRequest = dataRequest;
   }
 
   /**

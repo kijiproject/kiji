@@ -26,13 +26,16 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.hadoop.hbase.HConstants;
 import org.junit.Test;
 
 import org.kiji.hive.KijiRowExpression;
 import org.kiji.hive.TypeInfos;
+import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
 
 public class TestDataRequestOptimizer {
@@ -73,7 +76,6 @@ public class TestDataRequestOptimizer {
 
   @Test
   public void testMergeVersions() throws IOException {
-
     // Test that an arbitrary index summed with all versions results in all versions.
     final KijiRowExpression allEmailsRowExpression =
         new KijiRowExpression("info:email", TypeInfos.COLUMN_ALL_VALUES);
@@ -122,5 +124,117 @@ public class TestDataRequestOptimizer {
       assertEquals(HConstants.ALL_VERSIONS,
           kijiDataRequest.getColumn(column.getFamily(), column.getQualifier()).getMaxVersions());
     }
+  }
+
+  @Test
+  public void testAddCellPaging() throws IOException {
+    final KijiColumnName kijiColumnName = new KijiColumnName("info:name");
+    final KijiRowExpression kijiRowExpression =
+        new KijiRowExpression(kijiColumnName.toString(), TypeInfos.COLUMN_ALL_VALUES);
+    List<KijiRowExpression> rowExpressionList = Lists.newArrayList(kijiRowExpression);
+    final KijiDataRequest baseKijiDataRequest =
+        DataRequestOptimizer.getDataRequest(rowExpressionList);
+    assertEquals(false, baseKijiDataRequest.isPagingEnabled());
+
+    Map<KijiColumnName, Integer> cellPagingMap = Maps.newHashMap();
+    cellPagingMap.put(kijiColumnName, 5);
+    final KijiDataRequest pagedDataRequest =
+        DataRequestOptimizer.addCellPaging(baseKijiDataRequest, cellPagingMap);
+    assertEquals(true, pagedDataRequest.isPagingEnabled());
+    assertEquals(baseKijiDataRequest.getColumns().size(), pagedDataRequest.getColumns().size());
+  }
+
+  @Test
+  public void testNoCellPagingForNonincludedColumns() throws IOException {
+    final KijiColumnName kijiColumnName = new KijiColumnName("info:name");
+    final KijiRowExpression kijiRowExpression =
+        new KijiRowExpression(kijiColumnName.toString(), TypeInfos.COLUMN_ALL_VALUES);
+    List<KijiRowExpression> rowExpressionList = Lists.newArrayList(kijiRowExpression);
+    final KijiDataRequest baseKijiDataRequest =
+        DataRequestOptimizer.getDataRequest(rowExpressionList);
+    assertEquals(false, baseKijiDataRequest.isPagingEnabled());
+
+    Map<KijiColumnName, Integer> cellPagingMap = Maps.newHashMap();
+    KijiColumnName nonIncludedColumn = new KijiColumnName("info:notincluded");
+    cellPagingMap.put(nonIncludedColumn, 5);
+    KijiDataRequest pagedDataRequest =
+        DataRequestOptimizer.addCellPaging(baseKijiDataRequest, cellPagingMap);
+
+    assertEquals(false, pagedDataRequest.isPagingEnabled());
+    assertEquals(baseKijiDataRequest.getColumns().size(), pagedDataRequest.getColumns().size());
+  }
+
+  @Test
+  public void testNoCellPagingWithZeroPageSize() throws IOException {
+    final KijiColumnName kijiColumnName = new KijiColumnName("info:name");
+    final KijiRowExpression kijiRowExpression =
+        new KijiRowExpression(kijiColumnName.toString(), TypeInfos.COLUMN_ALL_VALUES);
+    List<KijiRowExpression> rowExpressionList = Lists.newArrayList(kijiRowExpression);
+    final KijiDataRequest baseKijiDataRequest = DataRequestOptimizer
+        .getDataRequest(rowExpressionList);
+    assertEquals(false, baseKijiDataRequest.isPagingEnabled());
+
+    Map<KijiColumnName, Integer> cellPagingMap = Maps.newHashMap();
+    cellPagingMap.put(kijiColumnName, 0);
+    final KijiDataRequest pagedDataRequest =
+        DataRequestOptimizer.addCellPaging(baseKijiDataRequest, cellPagingMap);
+    assertEquals(baseKijiDataRequest.getColumns().size(), pagedDataRequest.getColumns().size());
+    assertEquals(false, pagedDataRequest.isPagingEnabled());
+  }
+
+  @Test
+  public void testAddQualifierPaging() throws IOException {
+    final KijiColumnName kijiColumnName = new KijiColumnName("info");
+    final KijiRowExpression kijiRowExpression =
+        new KijiRowExpression(kijiColumnName.toString(), TypeInfos.FAMILY_MAP_ALL_VALUES);
+    List<KijiRowExpression> rowExpressionList = Lists.newArrayList(kijiRowExpression);
+    final KijiDataRequest baseKijiDataRequest =
+        DataRequestOptimizer.getDataRequest(rowExpressionList);
+    assertEquals(false, baseKijiDataRequest.isPagingEnabled());
+
+    Map<KijiColumnName, Integer> qualifierPagingMap = Maps.newHashMap();
+    qualifierPagingMap.put(kijiColumnName, 5);
+    final KijiDataRequest pagedDataRequest =
+        DataRequestOptimizer.addCellPaging(baseKijiDataRequest, qualifierPagingMap);
+    assertEquals(true, pagedDataRequest.isPagingEnabled());
+    assertEquals(baseKijiDataRequest.getColumns().size(), pagedDataRequest.getColumns().size());
+  }
+
+  @Test
+  public void testNoQualifierPagingForNonincludedColumns() throws IOException {
+    final KijiColumnName kijiColumnName = new KijiColumnName("info");
+    final KijiRowExpression kijiRowExpression =
+        new KijiRowExpression(kijiColumnName.toString(), TypeInfos.FAMILY_MAP_ALL_VALUES);
+    List<KijiRowExpression> rowExpressionList = Lists.newArrayList(kijiRowExpression);
+    final KijiDataRequest baseKijiDataRequest =
+        DataRequestOptimizer.getDataRequest(rowExpressionList);
+    assertEquals(false, baseKijiDataRequest.isPagingEnabled());
+
+    Map<KijiColumnName, Integer> cellPagingMap = Maps.newHashMap();
+    KijiColumnName nonIncludedColumn = new KijiColumnName("info:notincluded");
+    cellPagingMap.put(nonIncludedColumn, 5);
+    KijiDataRequest pagedDataRequest =
+        DataRequestOptimizer.addCellPaging(baseKijiDataRequest, cellPagingMap);
+
+    assertEquals(false, pagedDataRequest.isPagingEnabled());
+    assertEquals(baseKijiDataRequest.getColumns().size(), pagedDataRequest.getColumns().size());
+  }
+
+  @Test
+  public void testNoQualifierPagingWithZeroPageSize() throws IOException {
+    final KijiColumnName kijiColumnName = new KijiColumnName("info");
+    final KijiRowExpression kijiRowExpression =
+        new KijiRowExpression(kijiColumnName.toString(), TypeInfos.FAMILY_MAP_ALL_VALUES);
+    List<KijiRowExpression> rowExpressionList = Lists.newArrayList(kijiRowExpression);
+    final KijiDataRequest baseKijiDataRequest = DataRequestOptimizer
+        .getDataRequest(rowExpressionList);
+    assertEquals(false, baseKijiDataRequest.isPagingEnabled());
+
+    Map<KijiColumnName, Integer> cellPagingMap = Maps.newHashMap();
+    cellPagingMap.put(kijiColumnName, 0);
+    final KijiDataRequest pagedDataRequest =
+        DataRequestOptimizer.addCellPaging(baseKijiDataRequest, cellPagingMap);
+    assertEquals(baseKijiDataRequest.getColumns().size(), pagedDataRequest.getColumns().size());
+    assertEquals(false, pagedDataRequest.isPagingEnabled());
   }
 }

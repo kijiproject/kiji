@@ -20,12 +20,16 @@
 package org.kiji.hive.utils;
 
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.hive.KijiRowExpression;
+import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
+import org.kiji.schema.KijiDataRequest.Column;
+import org.kiji.schema.KijiDataRequestBuilder;
 
 /**
  * Creates the data request required for the hive query to execute.
@@ -56,6 +60,48 @@ public final class DataRequestOptimizer {
     }
 
     // If this is a * build an expression that includes everything
+    return merged;
+  }
+
+  /**
+   * Constructs a data request with paging enabled for the specified columns.
+   *
+   * @param kijiDataRequest to use as a base.
+   * @param cellPagingMap of kiji columns to page sizes.
+   * @return A new data request with paging enabled for the specified columns.
+   */
+  public static KijiDataRequest addCellPaging(KijiDataRequest kijiDataRequest,
+                                              Map<KijiColumnName, Integer> cellPagingMap) {
+    KijiDataRequestBuilder pagedRequestBuilder = KijiDataRequest.builder();
+    for (Column column : kijiDataRequest.getColumns()) {
+      KijiColumnName kijiColumnName = column.getColumnName();
+      if (cellPagingMap.containsKey(kijiColumnName)) {
+        Integer pageSize = cellPagingMap.get(kijiColumnName);
+        pagedRequestBuilder.newColumnsDef().withPageSize(pageSize).add(kijiColumnName);
+      }
+    }
+    KijiDataRequest merged = kijiDataRequest.merge(pagedRequestBuilder.build());
+    return merged;
+  }
+
+  /**
+   * Constructs a data request with paging enabled for the specified family.
+   *
+   * @param kijiDataRequest to use as a base.
+   * @param qualifierPagingMap of kiji columns to page sizes.
+   * @return A new data request with paging enabled for the specified family.
+   */
+  public static KijiDataRequest addQualifierPaging(KijiDataRequest kijiDataRequest,
+                                              Map<KijiColumnName, Integer> qualifierPagingMap) {
+    KijiDataRequestBuilder pagedRequestBuilder = KijiDataRequest.builder();
+    for (Column column : kijiDataRequest.getColumns()) {
+      KijiColumnName kijiColumnName = column.getColumnName();
+      if (qualifierPagingMap.containsKey(kijiColumnName)) {
+        Integer pageSize = qualifierPagingMap.get(kijiColumnName);
+        pagedRequestBuilder.newColumnsDef().withPageSize(pageSize).add(kijiColumnName);
+      }
+    }
+    KijiDataRequest merged = kijiDataRequest.merge(pagedRequestBuilder.build());
     return merged;
   }
 }

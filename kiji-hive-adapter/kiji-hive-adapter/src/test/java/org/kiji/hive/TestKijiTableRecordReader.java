@@ -31,11 +31,14 @@ import org.junit.Test;
 
 import org.kiji.hive.io.KijiRowDataWritable;
 import org.kiji.hive.utils.KijiDataRequestSerializer;
+import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiDataRequest;
+import org.kiji.schema.KijiDataRequestBuilder.ColumnsDef;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
+import org.kiji.schema.KijiTableWriter;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayouts;
@@ -52,7 +55,7 @@ public class TestKijiTableRecordReader extends KijiClientTest {
   public void setupEnvironment() throws Exception {
     // Get the test table layouts.
     final KijiTableLayout layout = KijiTableLayout.newLayout(
-        KijiTableLayouts.getLayout(KijiTableLayouts.COUNTER_TEST));
+        KijiTableLayouts.getLayout(KijiTableLayouts.PAGING_TEST));
 
     // Populate the environment.
     mKiji = new InstanceBuilder()
@@ -102,5 +105,92 @@ public class TestKijiTableRecordReader extends KijiClientTest {
       hasResult = tableRecordReader.next(key, value);
     }
     assertEquals(2, resultCount);
+  }
+
+  @Test
+  public void testFetchPagedData() throws IOException {
+    // Add some extra versions of the rows so that we can page through the results.
+    KijiTableWriter kijiTableWriter = mTable.openTableWriter();
+    EntityId entityId = mTable.getEntityId("foo");
+    kijiTableWriter.put(entityId, "info", "name", TIMESTAMP + 1, "foo-val-update1");
+    kijiTableWriter.put(entityId, "info", "name", TIMESTAMP + 2, "foo-val-update2");
+
+    ResourceUtils.closeOrLog(kijiTableWriter);
+
+    KijiURI kijiURI = mTable.getURI();
+    byte[] startKey = new byte[0];
+    byte[] endKey = new byte[0];
+    KijiTableInputSplit tableInputSplit =
+        new KijiTableInputSplit(kijiURI, startKey, endKey, null, null);
+
+    Configuration conf = getConf();
+    KijiDataRequest kijiDataRequest = KijiDataRequest.builder()
+        .addColumns(ColumnsDef.create().withMaxVersions(10).withPageSize(1).add("info", "name"))
+        .build();
+
+    conf.set("kiji.data.request", KijiDataRequestSerializer.serialize(kijiDataRequest));
+
+    // Initialize KijiTableRecordReader
+    KijiTableRecordReader tableRecordReader = new KijiTableRecordReader(tableInputSplit, conf);
+
+    // Retrieve result
+    ImmutableBytesWritable key = new ImmutableBytesWritable();
+    KijiRowDataWritable value = new KijiRowDataWritable();
+    int resultCount = 0;
+    boolean hasResult = tableRecordReader.next(key, value);
+    while (hasResult) {
+      resultCount++;
+      hasResult = tableRecordReader.next(key, value);
+    }
+
+    // Should read 4 cells, 3 for foo, 1 for bar.  See testFetchData() for a nonpaged example that
+    // has 2 results.
+    assertEquals(4, resultCount);
+    ResourceUtils.closeOrLog(tableRecordReader);
+  }
+
+  @Test
+  public void testMultiplePagedColumns() throws IOException {
+    // Add some extra versions of the rows so that we can page through the results.
+    KijiTableWriter kijiTableWriter = mTable.openTableWriter();
+    EntityId entityId = mTable.getEntityId("foo");
+    kijiTableWriter.put(entityId, "info", "name", TIMESTAMP + 1, "foo-val-update1");
+    kijiTableWriter.put(entityId, "info", "name", TIMESTAMP + 2, "foo-val-update2");
+    kijiTableWriter.put(entityId, "info", "location", TIMESTAMP, "foo-location");
+    kijiTableWriter.put(entityId, "info", "location", TIMESTAMP + 1, "foo-location-update1");
+    kijiTableWriter.put(entityId, "info", "location", TIMESTAMP + 2, "foo-location-update2");
+    kijiTableWriter.put(entityId, "info", "location", TIMESTAMP + 3, "foo-location-update3");
+    ResourceUtils.closeOrLog(kijiTableWriter);
+
+    KijiURI kijiURI = mTable.getURI();
+    byte[] startKey = new byte[0];
+    byte[] endKey = new byte[0];
+    KijiTableInputSplit tableInputSplit =
+        new KijiTableInputSplit(kijiURI, startKey, endKey, null, null);
+
+    Configuration conf = getConf();
+    KijiDataRequest kijiDataRequest = KijiDataRequest.builder()
+        .addColumns(ColumnsDef.create().withMaxVersions(9).withPageSize(1).add("info", "name"))
+        .addColumns(ColumnsDef.create().withMaxVersions(9).withPageSize(1).add("info", "location"))
+        .build();
+
+    conf.set("kiji.data.request", KijiDataRequestSerializer.serialize(kijiDataRequest));
+
+    // Initialize KijiTableRecordReader
+    KijiTableRecordReader tableRecordReader = new KijiTableRecordReader(tableInputSplit, conf);
+
+    // Retrieve result
+    ImmutableBytesWritable key = new ImmutableBytesWritable();
+    KijiRowDataWritable value = new KijiRowDataWritable();
+    int resultCount = 0;
+    boolean hasResult = tableRecordReader.next(key, value);
+    while (hasResult) {
+      resultCount++;
+      hasResult = tableRecordReader.next(key, value);
+    }
+
+    // Should read 4 cells, 3 for foo, 1 for bar.
+    assertEquals(5, resultCount);
+    ResourceUtils.closeOrLog(tableRecordReader);
   }
 }
