@@ -72,6 +72,10 @@ EXPRESS_HOME="${EXPRESS_HOME:-${bin}/../}"
 # Any arguments you want to pass to KijiExpress's jvm may be done via this env var.
 EXPRESS_JAVA_OPTS=${EXPRESS_JAVA_OPTS:-""}
 
+# Any user code you want to add to the kiji classpath may be done via this env var.
+# Jar files here will also be copied to the distributed cache for mapreduce jobs.
+KIJI_CLASSPATH=${KIJI_CLASSPATH:-""}
+
 # This is a workaround for OS X Lion, where a bug in JRE 1.6
 # creates a lot of 'SCDynamicStore' errors.
 if [ "$(uname)" == "Darwin" ]; then
@@ -196,6 +200,9 @@ function extract_classpath() {
     shift
   done
   COMMAND_ARGS=${return_args}
+
+  # Append KIJI_CLASSPATH to libjars.
+  libjars_cp="${libjars_cp}:${KIJI_CLASSPATH}"
 
   # Gather the express dependency jars.
   if [ -z "${KIJI_HOME}" -o ! -d "${KIJI_HOME}" ]; then
@@ -348,6 +355,13 @@ function print_env_usage() {
   echo
   echo "  EXPRESS_JAVA_OPTS   Should contain extra arguments to pass to the JVM used to run"
   echo "                      KijiExpress. By default, EXPRESS_JAVA_OPTS is empty."
+  echo
+  echo "  KIJI_CLASSPATH      Should contain a colon-separated list of jar files you want to"
+  echo "                      add to the classpath."
+  echo "                      These files will also get copied to the distributed cache for"
+  echo "                      MapReduce tasks that get launched.  Files specified with the"
+  echo "                      --libjars flag take precedence over KIJI_CLASSPATH.  By default"
+  echo "                      KIJI_CLASSPATH is empty."
   echo
   echo "  JAVA_LIBRARY_PATH   Should contain a colon-separated list of paths to additional native"
   echo "                      libraries to pass to the JVM (through the java.library.path"
