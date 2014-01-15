@@ -442,9 +442,10 @@ simultaneously (or may not want to upgrade them).
 
 Before you can use the new schema, you must verify that it's compatible with the old one.
 KijiSchema enforces the following constraints:
-* All active reader schemas must be able to read data written with any active or formerly-active
+
+- All active reader schemas must be able to read data written with any active or formerly-active
   writer schema.
-* All active writer schemas must be compatible with one another.
+- All active writer schemas must be compatible with one another.
 
 After recompiling the jar containing the `LocationPoint` class, you can re-register the
 class (with its new internal schema) in the DDL shell:
@@ -487,6 +488,7 @@ newer applications can't accidentally use an older version of the schema that we
 discourage.
 
 Notes:
+
 * You can use generic schemas as well as SpecificRecord classes in this manner.
 * This can only be used in Kiji instances installed with KijiSchema 1.3.0 or higher. Older
   Kiji instances cannot use schema validation.
