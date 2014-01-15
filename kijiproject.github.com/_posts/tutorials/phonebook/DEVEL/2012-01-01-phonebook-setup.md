@@ -24,9 +24,8 @@ bento start
 
 If you have downloaded the Kiji Standalone BentoBox, the code for this tutorial
 is already compiled and located in the `$KIJI_HOME/examples/phonebook/lib/` directory.
-You can skip to [Create a Table]({{site.tutorial_phonebook_devel}}/phonebook-create)
-if you want to get started playing with the example code.
-
+You can skip to the [Install Kiji Instance](#ref.install_kiji_instance) section to
+continue with the environment setup for playing with the example code.
 
 The source code for this tutorial can be found in `$KIJI_HOME/examples/phonebook`.
 The source is included along with a Maven project. To get started using Maven,
@@ -53,6 +52,9 @@ export KIJI_HOME=/path/to/kiji-schema
 {% endhighlight %}
 </div>
 
+### Install Kiji Instance
+<a name="ref.install_kiji_instance" id="ref.install_kiji_instance"> </a>
+
 Install your Kiji instance. Running `kiji install` with no `--kiji` flag installs the default instance:
 
 <div class="userinput">
@@ -60,6 +62,8 @@ Install your Kiji instance. Running `kiji install` with no `--kiji` flag install
 kiji install
 {% endhighlight %}
 </div>
+
+### Setup Phonebook tutorial Environment
 
 To work through this tutorial, various Kiji tools will require that Avro data
 type definitions particular to the working phonebook example be on the
