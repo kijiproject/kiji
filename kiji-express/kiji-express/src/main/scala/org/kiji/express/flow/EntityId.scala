@@ -20,9 +20,12 @@
 package org.kiji.express.flow
 
 import java.lang.IllegalStateException
+import java.util.Arrays
 
 import scala.collection.JavaConverters.asScalaBufferConverter
 import scala.collection.JavaConverters.seqAsJavaListConverter
+
+import com.google.common.primitives.UnsignedBytes
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
@@ -105,21 +108,24 @@ trait EntityId extends Product with Ordered[EntityId] {
    * to construct an EntityId containing the hash of the components according to the table your
    * HashedEntityId is from.  You can do this using [[org.kiji.schema.KijiTable#getEntityId]].
    *
-   * @param other object to compare this to.
+   * @param obj to compare this entity id to.
    * @return whether the two objects are "equal" according to the definition in this scaladoc.
    */
-  override def equals(other: Any): Boolean = {
-    if(other.isInstanceOf[EntityId]) {
-      compare(other.asInstanceOf[EntityId]) == 0
-    } else {
-      false
-    }
+  override def equals(obj: Any): Boolean = obj match {
+    case other: EntityId =>
+      try {
+        compare(other) == 0
+      }
+      catch {
+        case _: EntityIdFormatMismatchException => false
+      }
+    case _ => false
   }
 
   /**
    * Returns the hashcode of the underlying entityId. For a materialized entity id it returns
    * the hashcode of the underlying list of components. For a hashed entityId it, it returns
-   * the hashcode of the encoded byte array wrapped as a string.
+   * the hashcode of the encoded byte array.
    *
    * @return entityId hashcode.
    */
@@ -152,29 +158,22 @@ trait EntityId extends Product with Ordered[EntityId] {
     val zipped = this.components.zip(rhs.components)
     // Compare each element lexicographically.
     zipped.foreach {
-      case (mine, theirs) => {
+      case (left: Array[Byte], right: Array[Byte]) => {
+        val comparison = UnsignedBytes.lexicographicalComparator().compare(left, right)
+        if (comparison != 0) return comparison
+      }
+      case (left: Comparable[AnyRef], right) =>
         try {
-          val compareResult =
-            if (mine.isInstanceOf[Array[Byte]] && theirs.isInstanceOf[Array[Byte]]) {
-              val myArray = mine.asInstanceOf[Array[Byte]]
-              val rhsArray = theirs.asInstanceOf[Array[Byte]]
-              new String(myArray).compareTo(new String(rhsArray))
-            } else {
-              mine.asInstanceOf[Comparable[Any]].compareTo(theirs)
-            }
-          if (compareResult != 0) {
-            // Return out of the function if these two elements are not equal.
-            return compareResult
-          }
-          // Otherwise, continue.
+          val comparison = left.compareTo(right)
+          if (comparison != 0) return comparison
         } catch {
-          case e: ClassCastException =>
+          case _: ClassCastException =>
             throw new EntityIdFormatMismatchException(components, rhs.components)
         }
-      }
+      case _ => throw new EntityIdFormatMismatchException(components, rhs.components)
     }
     // If all elements in "zipped" were equal, we compare the lengths.
-    this.components.length.compare(rhs.components.length)
+    components.length.compare(rhs.components.length)
   }
 }
 
@@ -248,20 +247,12 @@ object EntityId {
   final private[express] case class HashedEntityId(encoded: Array[Byte])
       extends EntityId {
 
-    /** Lazily create a string encoding of this byte array for hash code purposes. **/
-    @transient
-    private lazy val stringEncoding = new String(encoded)
+    override def components: Seq[AnyRef] = List(encoded)
 
-    /** Lazily create a memoized list of components for the components method. **/
-    @transient
-    override lazy val components: Seq[AnyRef] = List(encoded)
-
-    override def hashCode(): Int = {
-      stringEncoding.hashCode
-    }
+    override def hashCode(): Int = Arrays.hashCode(encoded)
 
     override def toJavaEntityId(eidFactory: EntityIdFactory): JEntityId = {
-      eidFactory.getEntityIdFromHBaseRowKey(components(0).asInstanceOf[Array[Byte]])
+      eidFactory.getEntityIdFromHBaseRowKey(encoded)
     }
   }
 
@@ -284,8 +275,6 @@ object EntityId {
       eidFactory.getEntityId(components.asJava)
     }
 
-    override def hashCode(): Int = {
-      components.hashCode
-    }
+    override def hashCode(): Int = components.hashCode()
   }
 }
