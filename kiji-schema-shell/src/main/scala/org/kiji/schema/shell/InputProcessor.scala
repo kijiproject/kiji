@@ -39,7 +39,7 @@ import org.apache.hadoop.hbase.util.Bytes
  */
 @ApiAudience.Framework
 @ApiStability.Evolving
-final class InputProcessor(val throwOnSyntaxErr: Boolean = false) {
+final class InputProcessor(val throwOnErr: Boolean = false) {
   private final val Log = LoggerFactory.getLogger(classOf[InputProcessor])
 
   val PROMPT_STR = "schema> "
@@ -253,18 +253,18 @@ final class InputProcessor(val throwOnSyntaxErr: Boolean = false) {
             val nextEnv = (
               try {
                 parseResult.getOrElse(new ErrorCommand(
-                    env, parseResult.toString(), throwOnSyntaxErr)).exec()
+                    env, parseResult.toString(), throwOnErr)).exec()
               } catch {
                 case e: DDLException => {
                   println(e.getMessage())
-                  if (throwOnSyntaxErr) {
+                  if (throwOnErr) {
                     throw e
                   }
                   env
                 }
                 case ioe: IOException => {
                   println(ioe.getMessage())
-                  if (throwOnSyntaxErr) {
+                  if (throwOnErr) {
                     throw ioe
                   }
                   env
@@ -276,7 +276,7 @@ final class InputProcessor(val throwOnSyntaxErr: Boolean = false) {
           } catch {
             case e: KijiInvalidNameException =>
               println("Invalid identifier: " + e.getMessage())
-              if (throwOnSyntaxErr) {
+              if (throwOnErr) {
                 throw new DDLException("Invalid identifier: " + e.getMessage())
               }
               processUserInput(new StringBuilder, env)

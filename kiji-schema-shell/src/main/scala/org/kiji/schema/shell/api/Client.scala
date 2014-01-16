@@ -112,7 +112,7 @@ final class Client private(val kijiUri: KijiURI, val kijiSystem: AbstractKijiSys
         case Some(last) => last.withPrinter(output).withInputSource(input)
         case None => new Environment(kijiUri, output, kijiSystem, input, List(), false)
       })
-      mLastEnv = Some(new InputProcessor(throwOnSyntaxErr=true)
+      mLastEnv = Some(new InputProcessor(throwOnErr=true)
           .processUserInput(new StringBuilder(), env))
     } finally {
       ResourceUtils.closeOrLog(output)

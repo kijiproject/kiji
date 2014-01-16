@@ -49,12 +49,19 @@ final class ShellMain {
   var moduleNamesToPreLoad: java.util.List[String] = new java.util.ArrayList()
 
   /**
+   * This is a def instead of a val so that it isn't evaluated before the flags vars above are set.
+   *
+   * @return Whether the shell loop is being run in interactive mode or not.
+   */
+  def interactiveMode: Boolean = expr.equals("") && filename.equals("")
+
+  /**
    * Programmatic entry point.
    * Like main(), but without that pesky sys.exit() call.
    * @return a return status code. 0 is success.
    */
   def run(): Int = {
-    val chatty = expr.equals("") && filename.equals("")
+    val chatty = interactiveMode
     if (chatty) {
       println("Kiji schema shell v" + ShellMain.version())
       println("""Enter 'help' for instructions (without quotes).
@@ -113,7 +120,8 @@ final class ShellMain {
    * @return the final environment
    */
   def processUserInput(): Environment = {
-    new InputProcessor().processUserInput(new StringBuilder, initialEnv())
+    new InputProcessor(throwOnErr = !interactiveMode)
+        .processUserInput(new StringBuilder, initialEnv())
   }
 }
 
