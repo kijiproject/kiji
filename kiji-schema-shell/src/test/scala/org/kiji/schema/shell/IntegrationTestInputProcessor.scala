@@ -25,7 +25,7 @@ import org.kiji.schema.KijiURI
 import org.kiji.schema.shell.input.StringInputSource
 import org.kiji.schema.shell.util.KijiTestHelpers
 
-class TestInputProcessor
+class IntegrationTestInputProcessor
     extends SpecificationWithJUnit
     with KijiTestHelpers {
 
