@@ -36,8 +36,8 @@ final class LocalityGroupProp(val property: LocalityGroupPropName, val value: An
    * Apply this property info to the specified LocalityGroupDesc builder. Returns
    * the input LocalityGroupDesc builder, with updated fields.
    *
-   * @param a builder for the locality group descriptor to modify.
-   * @param context about the table being modified.
+   * @param group a builder for the locality group descriptor to modify.
+   * @param cellSchemaContext context about the table being modified.
    * @return the updated locality group descriptor builder.
    */
   def apply(group: LocalityGroupDesc.Builder, cellSchemaContext: CellSchemaContext):

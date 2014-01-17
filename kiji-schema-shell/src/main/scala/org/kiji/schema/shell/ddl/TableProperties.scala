@@ -120,7 +120,7 @@ trait TableProperties {
         }
         case TableValidationPref => {
           // Save this value for use in subsequent column creation statements.
-          env.kijiSystem.setMeta(env.instanceURI, tableName, RegionCountMetaKey,
+          env.kijiSystem.setMeta(env.instanceURI, tableName, TableValidationMetaKey,
               v.asInstanceOf[TableValidationPolicy].name)
         }
         case _ => throw new DDLException("Unknown table property: " + k)

@@ -19,31 +19,26 @@
 
 package org.kiji.schema.shell
 
-import java.util.concurrent.atomic.AtomicInteger
 import scala.collection.JavaConversions._
 import org.specs2.mutable._
 import org.apache.avro.Schema
-import org.apache.hadoop.hbase.HBaseConfiguration
-import org.kiji.schema.Kiji
-import org.kiji.schema.KijiInstaller
-import org.kiji.schema.KijiURI
 import org.kiji.schema.avro.CellSchema
 import org.kiji.schema.avro.ColumnDesc
 import org.kiji.schema.avro.FamilyDesc
 import org.kiji.schema.avro.TableLayoutDesc
 import org.kiji.schema.layout.InvalidLayoutSchemaException
-import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.shell.api.Client
 import org.kiji.schema.shell.avro.XYRecord
-import org.kiji.schema.shell.input.NullInputSource
-import org.kiji.schema.util.ProtocolVersion
 import org.kiji.schema.avro.AvroSchema
+import org.kiji.schema.shell.util.KijiIntegrationTestHelpers
 
 /**
  * Tests that DDL commands affecting column schemas respect validation requirements and
  * operate correctly on validationg layouts (&gt;= layout-1.3).
  */
-class TestSchemaValidation extends SpecificationWithJUnit {
+class TestSchemaValidation
+    extends SpecificationWithJUnit
+    with KijiIntegrationTestHelpers {
   "With schema validation enabled, clients" should {
 
     "create a table correctly" in {
@@ -629,52 +624,5 @@ class TestSchemaValidation extends SpecificationWithJUnit {
       client.close()
       env.kijiSystem.shutdown()
     }
-  }
-
-  private def getKijiSystem(): AbstractKijiSystem = {
-    return new KijiSystem
-  }
-
-  private val mNextInstanceId = new AtomicInteger(0);
-
-  /**
-   * @return the name of a unique Kiji instance (that doesn't yet exist).
-   */
-  private def getNewInstanceURI(): KijiURI = {
-    val id = mNextInstanceId.incrementAndGet()
-    val uri = KijiURI.newBuilder().withZookeeperQuorum(Array(".fake." +
-        id)).withInstanceName(getClass().getName().replace(".", "_")).build()
-    installKiji(uri)
-    return uri
-  }
-
-  /**
-   * Install a Kiji instance.
-   */
-  private def installKiji(instanceURI: KijiURI): Unit = {
-    KijiInstaller.get().install(instanceURI, HBaseConfiguration.create())
-
-    // This requires a system-2.0-based Kiji. Explicitly set it before we create
-    // any tables, if it's currently on system-1.0.
-    val kiji: Kiji = Kiji.Factory.open(instanceURI)
-    try {
-       val curDataVersion: ProtocolVersion = kiji.getSystemTable().getDataVersion()
-       val system20: ProtocolVersion = ProtocolVersion.parse("system-2.0")
-       if (curDataVersion.compareTo(system20) < 0) {
-         kiji.getSystemTable().setDataVersion(system20)
-       }
-    } finally {
-      kiji.release()
-    }
-  }
-
-  private def environment(uri: KijiURI, kijiSystem: AbstractKijiSystem) = {
-    new Environment(
-        instanceURI=uri,
-        printer=System.out,
-        kijiSystem=kijiSystem,
-        inputSource=new NullInputSource(),
-        modules=List(),
-        isInteractive=false)
   }
 }

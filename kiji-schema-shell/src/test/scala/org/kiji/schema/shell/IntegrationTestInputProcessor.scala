@@ -29,6 +29,8 @@ class IntegrationTestInputProcessor
     extends SpecificationWithJUnit
     with KijiTestHelpers {
 
+  val testKijiSystem = ShellMain.shellKijiSystem
+
   val validExpr = """help;"""
 
   val invalidExpr = "aaa;"
@@ -67,7 +69,7 @@ class IntegrationTestInputProcessor
     new Environment(
       instanceURI = uri,
       printer = Console.out,
-      kijiSystem = ShellMain.shellKijiSystem,
+      kijiSystem = testKijiSystem,
       inputSource = new StringInputSource(input),
       modules = List(),
       isInteractive = isInteractive,
@@ -111,4 +113,6 @@ class IntegrationTestInputProcessor
     }
   }
 
+  // Shut down the test kiji system after all tests have run.
+  step(testKijiSystem.shutdown())
 }

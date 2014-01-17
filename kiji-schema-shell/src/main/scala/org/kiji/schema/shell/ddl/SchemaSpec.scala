@@ -42,7 +42,7 @@ abstract class SchemaSpec {
    * CellSchemaContext), it will create a validating CellSchema object with the specified schema
    * used as both a reader, writer and the default reader schema.
    *
-   * @param the context defining the table we are adding a new cell schema to.
+   * @param cellSchemaContext the context defining the table we are adding a new cell schema to.
    * @return the constructed Avro CellSchema definition.
    */
   def toNewCellSchema(cellSchemaContext: CellSchemaContext): CellSchema

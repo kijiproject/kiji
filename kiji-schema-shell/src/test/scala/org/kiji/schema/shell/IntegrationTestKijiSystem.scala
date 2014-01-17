@@ -358,7 +358,6 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
       val uri = getNewInstanceURI()
       installKiji(uri)
 
-      val instanceName = uri.getInstance()
       val environment = env(uri)
 
       environment.kijiSystem.getMeta(uri, "AnyTable", "AnyKey") must beNone
@@ -366,6 +365,8 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
       val ret: Option[String] = environment.kijiSystem.getMeta(uri, "AnyTable", "AnyKey")
       ret must beSome[String]
       ret.get mustEqual "AWellDefinedValue"
+
+      environment.kijiSystem.shutdown()
     }
   }
 
