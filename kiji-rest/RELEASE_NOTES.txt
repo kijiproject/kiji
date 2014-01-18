@@ -1,5 +1,10 @@
 
                               KijiREST Release Notes
+Version 1.2.0
+  * REST-89. Refresh instances automatically. Removes instance visibility
+      configuration parameter. All instances on target cluster are visible.
+      Manual refreshes can be triggered with a POST to the admin task
+      /tasks/refresh_instances.
 
 Version 1.1.0
   * REST-85. Add archetype for creating Kiji Rest plugins.

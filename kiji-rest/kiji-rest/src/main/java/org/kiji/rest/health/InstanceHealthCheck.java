@@ -19,9 +19,11 @@
 
 package org.kiji.rest.health;
 
+import java.io.IOException;
+
 import com.yammer.metrics.core.HealthCheck;
 
-import org.kiji.schema.Kiji;
+import org.kiji.rest.InstanceUtil;
 import org.kiji.schema.KijiURI;
 
 /**
@@ -50,12 +52,16 @@ public class InstanceHealthCheck extends HealthCheck {
   @Override
   protected final Result check() {
     try {
-      Kiji kiji = Kiji.Factory.open(mKijiURI);
-      kiji.release();
-    } catch (Exception exception) {
+      InstanceUtil.openAndCloseInstance(mKijiURI);
+    } catch (IOException ioe) {
       return Result.unhealthy("Could not open/release instance.");
     }
 
     return Result.healthy();
+  }
+
+  @Override
+  public String toString() {
+    return mKijiURI.toOrderedString();
   }
 }

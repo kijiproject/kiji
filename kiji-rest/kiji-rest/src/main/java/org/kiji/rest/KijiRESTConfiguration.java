@@ -19,8 +19,6 @@
 
 package org.kiji.rest;
 
-import java.util.Set;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.yammer.dropwizard.config.Configuration;
 
@@ -38,10 +36,6 @@ public class KijiRESTConfiguration extends Configuration {
   @JsonProperty("cluster")
   private String mCluster;
 
-  /** List of instance names which are visible to REST clients. */
-  @JsonProperty("instances")
-  private Set<String> mInstances;
-
   /** Subconfiguration for freshening. */
   @JsonProperty("freshening")
   private FresheningConfiguration mFresheningConfiguration = new FresheningConfiguration();
@@ -49,11 +43,6 @@ public class KijiRESTConfiguration extends Configuration {
   /** @return The cluster address. */
   public final String getClusterURI() {
     return mCluster;
-  }
-
-  /** @return The set of instance names. */
-  public final Set<String> getInstances() {
-    return mInstances;
   }
 
   /** @return The freshening configuration. */

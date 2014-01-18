@@ -20,6 +20,7 @@
 package org.kiji.rest;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -53,15 +54,28 @@ public class TestManagedKijiClient {
           "inst2", ImmutableList.of("t_2_1", "t_2_2", "t_2_3"),
           "inst3", ImmutableList.of("t_3_1", "t_3_2", "t_3_3"));
 
-  private ManagedKijiClient mKijiClient;
+  private static final Map<String, ? extends List<String>> ALT_INSTANCE_TABLES = ImmutableMap.of(
+      "inst4", ImmutableList.of("t_4_1", "t_4_2", "t_4_3"),
+      "inst5", ImmutableList.of("t_5_1", "t_5_2", "t_5_3"),
+      "inst6", ImmutableList.of("t_6_1", "t_6_2", "t_6_3"));
 
-  @Before
-  public void setUp() throws Exception {
+  private ManagedKijiClient mKijiClient;
+  private ManagedKijiClient mKijiClientForRefreshes;
+
+  /**
+   * Build fake instances and tables from a given a map of instance names to lists of table names.
+   *
+   * @param instancesSpecMap map of instance names to lists of table names.
+   * @return set of fake instances with tables.
+   * @throws Exception if instances or tables can not be build.
+   */
+  public static Set<KijiURI> buildInstances(
+      final Map<String, ? extends List<String>> instancesSpecMap) throws Exception {
     List<Kiji> kijis = Lists.newArrayList();
     TableLayoutDesc layout = KijiTableLayouts.getLayout("org/kiji/rest/layouts/sample_table.json");
-    for (String instance : INSTANCE_TABLES.keySet()) {
+    for (String instance : instancesSpecMap.keySet()) {
       InstanceBuilder kiji = new InstanceBuilder(instance);
-      for (String table : INSTANCE_TABLES.get(instance)) {
+      for (String table : instancesSpecMap.get(instance)) {
         layout.setName(table);
         kiji.withTable(layout);
       }
@@ -72,9 +86,15 @@ public class TestManagedKijiClient {
     for (Kiji kiji : kijis) {
       uris.add(kiji.getURI());
     }
+    return uris;
+  }
 
-    mKijiClient = new ManagedKijiClient(uris);
+  @Before
+  public void setUp() throws Exception {
+    mKijiClient = new ManagedKijiClient(buildInstances(INSTANCE_TABLES));
     mKijiClient.start();
+    mKijiClientForRefreshes = new ManagedKijiClient(buildInstances(INSTANCE_TABLES));
+    mKijiClientForRefreshes.start();
   }
 
   @After
@@ -84,8 +104,8 @@ public class TestManagedKijiClient {
 
   @Test
   public void testHasAllInstances() throws Exception {
-    for (KijiURI uri : mKijiClient.getInstances()) {
-      assertTrue(INSTANCE_TABLES.keySet().contains(uri.getInstance()));
+    for (String uri : mKijiClient.getInstances()) {
+      assertTrue(INSTANCE_TABLES.keySet().contains(uri));
     }
   }
 
@@ -171,6 +191,48 @@ public class TestManagedKijiClient {
     } catch (WebApplicationException e) {
       assertEquals(Response.Status.NOT_FOUND.getStatusCode(), e.getResponse().getStatus());
       throw e;
+    }
+  }
+
+  @Test
+  public void testShouldRefreshInstances() throws Exception {
+    // Originally contains instances from INSTANCE_TABLES.
+    for (String uri : mKijiClientForRefreshes.getInstances()) {
+      assertTrue(INSTANCE_TABLES.keySet().contains(uri));
+    }
+    // Refresh.
+    mKijiClientForRefreshes.refreshInstances(buildInstances(ALT_INSTANCE_TABLES));
+    // Now contains no instances from INSTANCE_TABLES.
+    for (String uri : mKijiClientForRefreshes.getInstances()) {
+      assertFalse(INSTANCE_TABLES.keySet().contains(uri));
+    }
+    // Contains instances from ALT_INSTANCE_TABLES.
+    for (String uri : mKijiClientForRefreshes.getInstances()) {
+      assertTrue(ALT_INSTANCE_TABLES.keySet().contains(uri));
+    }
+    // Keeps kijis cached.
+    for (String instance : ALT_INSTANCE_TABLES.keySet()) {
+      assertTrue(mKijiClientForRefreshes.getKiji(instance)
+          == mKijiClientForRefreshes.getKiji(instance));
+    }
+    // Keeps schema tables cached.
+    for (String instance : ALT_INSTANCE_TABLES.keySet()) {
+      assertTrue(mKijiClientForRefreshes.getKijiSchemaTable(instance)
+          == mKijiClientForRefreshes.getKijiSchemaTable(instance));
+    }
+    // Keeps tables cached.
+    for (String instance : ALT_INSTANCE_TABLES.keySet()) {
+      for (String table : ALT_INSTANCE_TABLES.get(instance)) {
+        assertTrue(mKijiClientForRefreshes.getKijiTable(instance, table)
+            == mKijiClientForRefreshes.getKijiTable(instance, table));
+      }
+    }
+    // Keeps fresheners cached.
+    for (String instance : ALT_INSTANCE_TABLES.keySet()) {
+      for (String table : ALT_INSTANCE_TABLES.get(instance)) {
+        assertTrue(mKijiClientForRefreshes.getFreshKijiTableReader(instance, table)
+            == mKijiClientForRefreshes.getFreshKijiTableReader(instance, table));
+      }
     }
   }
 }

@@ -1,13 +1,10 @@
 # Basic configuration to get started.
 
 ########## KijiREST Configuration ##########
-# The cluster property defines the URI of the Kiji cluster and the instances array
-# defines the list of instances allowed to be accessed and modified by REST clients.
-# If the instances array is not provided, all instances are surfaced to clients.
+# The cluster property defines the URI of the Kiji cluster.
+# All instances on the cluster are surfaced to clients.
 
 cluster: "kiji://.env/"
-# instances:
-#   - default
 freshening:
   freshen: true  # whether to freshen columns by default
   timeout: 100   # default amount of time in ms to wait for freshening to finish

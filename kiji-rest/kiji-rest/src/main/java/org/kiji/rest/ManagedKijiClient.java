@@ -34,6 +34,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.yammer.dropwizard.lifecycle.Managed;
 
 import org.slf4j.Logger;
@@ -54,7 +55,10 @@ public class ManagedKijiClient implements KijiClient, Managed {
   private static final Logger LOG = LoggerFactory.getLogger(ManagedKijiClient.class);
   private static final long TEN_MINUTES = 10 * 60 * 1000;
 
-  private final Set<KijiURI> mInstances;
+  /**
+   * Keeps track of visible instances. When instances are added/deleted, this set is mutated.
+   */
+  private Set<KijiURI> mInstances;
   private final Map<String, Kiji> mKijiMap;
   private final Map<String, LoadingCache<String, KijiTable>> mKijiTableMap;
   private final Map<String, LoadingCache<String, FreshKijiTableReader>> mFreshKijiTableReaderMap;
@@ -65,7 +69,7 @@ public class ManagedKijiClient implements KijiClient, Managed {
    * @param instances set of available instances available to this client.
    */
   public ManagedKijiClient(Set<KijiURI> instances) {
-    mInstances = ImmutableSet.copyOf(instances);
+    mInstances = Sets.newHashSet(instances);
     mKijiMap = Maps.newConcurrentMap();
     mKijiTableMap = Maps.newConcurrentMap();
     mFreshKijiTableReaderMap = Maps.newConcurrentMap();
@@ -74,33 +78,7 @@ public class ManagedKijiClient implements KijiClient, Managed {
   @Override
   public void start() throws Exception {
     for (KijiURI instance : mInstances) {
-      final String instanceName = instance.getInstance();
-      final Kiji kiji = Kiji.Factory.open(instance);
-      mKijiMap.put(instanceName, kiji);
-
-      final LoadingCache<String, KijiTable> kijiTableCache = CacheBuilder.newBuilder()
-          .build(
-              new CacheLoader<String, KijiTable>() {
-                @Override
-                public KijiTable load(String table) throws IOException {
-                  return kiji.openTable(table);
-                }
-              }
-          );
-      kijiTableCache.getAll(kiji.getTableNames()); // Pre-load cache
-      mKijiTableMap.put(instanceName, kijiTableCache);
-
-      final LoadingCache<String, FreshKijiTableReader> freshReaderCache = CacheBuilder.newBuilder()
-          .build(
-              new CacheLoader<String, FreshKijiTableReader>() {
-                @Override
-                public FreshKijiTableReader load(String table) throws IOException {
-                  return createFreshKijiTableReader(instanceName, table);
-                }
-              }
-          );
-      freshReaderCache.getAll(kiji.getTableNames()); // Pre-load cache
-      mFreshKijiTableReaderMap.put(instanceName, freshReaderCache);
+      addInstance(instance);
     }
     LOG.info("Successfully started ManagedKijiClient!");
   }
@@ -160,8 +138,8 @@ public class ManagedKijiClient implements KijiClient, Managed {
 
   /** @return a collection of instances served by this client. */
   @Override
-  public Collection<KijiURI> getInstances() {
-    return mInstances;
+  public Collection<String> getInstances() {
+    return ImmutableSet.copyOf(mKijiMap.keySet());
   }
 
   /** {@inheritDoc} */
@@ -241,5 +219,87 @@ public class ManagedKijiClient implements KijiClient, Managed {
   public void invalidateTable(String instance, String table) {
     mKijiTableMap.get(instance).invalidate(table);
     mFreshKijiTableReaderMap.get(instance).invalidate(table);
+  }
+
+  /**
+   * Cache a reference to the instance and all its readers.
+   *
+   * @param instance to add to cache.
+   * @throws Exception if instance can not be accessed or if the readers can not be loaded.
+   */
+  private synchronized void addInstance(final KijiURI instance) throws Exception {
+    final String instanceName = instance.getInstance();
+    // If the instance to add is already available, return.
+    if (mKijiMap.containsKey(instanceName)) {
+      return;
+    }
+    final Kiji kiji = Kiji.Factory.open(instance);
+    mKijiMap.put(instanceName, kiji);
+
+    final LoadingCache<String, KijiTable> kijiTableCache = CacheBuilder.newBuilder()
+        .build(
+            new CacheLoader<String, KijiTable>() {
+              @Override
+              public KijiTable load(String table) throws IOException {
+                return kiji.openTable(table);
+              }
+            }
+        );
+    kijiTableCache.getAll(kiji.getTableNames()); // Pre-load cache
+    mKijiTableMap.put(instanceName, kijiTableCache);
+
+    final LoadingCache<String, FreshKijiTableReader> freshReaderCache = CacheBuilder.newBuilder()
+        .build(
+            new CacheLoader<String, FreshKijiTableReader>() {
+              @Override
+              public FreshKijiTableReader load(String table) throws IOException {
+                return createFreshKijiTableReader(instanceName, table);
+              }
+            }
+        );
+    freshReaderCache.getAll(kiji.getTableNames()); // Pre-load cache
+    mFreshKijiTableReaderMap.put(instanceName, freshReaderCache);
+  }
+
+  /**
+   * Remove cached reference to instance and all its readers.
+   *
+   * @param instance to remove from cache.
+   */
+  private synchronized void removeInstance(final KijiURI instance) {
+    final String instanceName = instance.getInstance();
+    mKijiMap.remove(instanceName);
+    if (mKijiTableMap.containsKey(instanceName)) {
+      mKijiTableMap.get(instanceName).invalidateAll();
+      mKijiTableMap.remove(instanceName);
+    }
+    if (mFreshKijiTableReaderMap.containsKey(instanceName)) {
+      mFreshKijiTableReaderMap.get(instanceName).invalidateAll();
+      mFreshKijiTableReaderMap.remove(instanceName);
+    }
+  }
+
+  /**
+   * Given an updated list of instances visible on the cluster, cache newly created instances and
+   * remove from cache the deleted instances.
+   *
+   * @param updatedInstances the latest list of instances.
+   * @throws Exception if an instance can not be added to the cache.
+   */
+  public synchronized void refreshInstances(final Set<KijiURI> updatedInstances) throws Exception {
+    // Remove instances not in updatedInstances.
+    for (KijiURI instance : mInstances) {
+      if (!updatedInstances.contains(instance)) {
+        removeInstance(instance);
+      }
+    }
+    // Add instances not in currentInstances.
+    for (KijiURI instance : updatedInstances) {
+      if (!mInstances.contains(instance)) {
+        addInstance(instance);
+      }
+    }
+    // Update known instance URIs.
+    this.mInstances = ImmutableSet.copyOf(updatedInstances);
   }
 }

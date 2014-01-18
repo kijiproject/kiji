@@ -36,7 +36,6 @@ import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
 import org.kiji.rest.KijiClient;
 import org.kiji.rest.representations.GenericResourceRepresentation;
-import org.kiji.schema.KijiURI;
 
 /**
  * This REST resource interacts with Kiji instances collection resource.
@@ -70,8 +69,7 @@ public class InstancesResource {
   public List<GenericResourceRepresentation> getInstanceList() {
     List<GenericResourceRepresentation> instanceList = Lists.newArrayList();
 
-    for (KijiURI u : mKijiClient.getInstances()) {
-      String instance = u.getInstance();
+    for (String instance : mKijiClient.getInstances()) {
       instanceList.add(new GenericResourceRepresentation(instance,
           INSTANCE_PATH.replace("{" + INSTANCE_PARAMETER + "}", instance)));
     }

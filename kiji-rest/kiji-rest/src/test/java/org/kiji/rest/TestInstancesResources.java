@@ -94,12 +94,13 @@ public class TestInstancesResources extends ResourceTest {
     mValidInstances.add(mFakeKijis[1].getURI());
 
     StandardKijiRestPlugin.registerSerializers(this.getObjectMapperFactory());
-    KijiClient kijiClient = new ManagedKijiClient(mValidInstances);
+    ManagedKijiClient kijiClient = new ManagedKijiClient(mValidInstances);
 
     InstanceResource instanceResource = new InstanceResource(kijiClient);
     InstancesResource instancesResource = new InstancesResource(kijiClient);
     addResource(instanceResource);
     addResource(instancesResource);
+    kijiClient.start();
   }
 
   /**

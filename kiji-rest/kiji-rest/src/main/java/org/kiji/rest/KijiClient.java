@@ -24,7 +24,6 @@ import java.util.Collection;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiSchemaTable;
 import org.kiji.schema.KijiTable;
-import org.kiji.schema.KijiURI;
 import org.kiji.scoring.FreshKijiTableReader;
 
 /**
@@ -43,7 +42,7 @@ public interface KijiClient {
   Kiji getKiji(String instance);
 
   /** @return a collection of instances served by this client. */
-  Collection<KijiURI> getInstances();
+  Collection<String> getInstances();
 
   /**
    * Gets a Kiji table. Caller does not have to release the table as it will be released

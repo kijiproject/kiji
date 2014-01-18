@@ -57,17 +57,13 @@ Setting up configuration.yml
 ----------------------------
 
 The configuration.yml file (located in $KIJI\_REST\_HOME/conf/configuration.yml) is a YAML file used
-to configure the KijiREST server. The following keys are required:
+to configure the KijiREST server. The following key is required:
 
 - "cluster" is the base cluster's kiji URI.
 
-- "instance" is an array of instances which are allowed to be visible to users of this REST service.
-All instances specified here must exist.
+The following is an example of the contents of a proper configuration.yml file:
 
-The following are example contents of a proper configuration.yml file:
-
-"cluster" : "kiji://localhost:2181/" #The base cluster URI <br />
-"instances" : ["default", "prod", "dev", "test"] #Visible instances
+"cluster" : "kiji://localhost:2181/" #The base cluster URI
 
 KijiREST is implemented using DropWizard. See
 [Dropwizard's User Manual](http://dropwizard.codahale.com/manual/core/#configuration-defaults)

@@ -48,7 +48,6 @@ import org.kiji.rest.serializers.Utf8ToJsonSerializer;
  * Installs default KijiREST endpoints into the Dropwizard environment.
  */
 public class StandardKijiRestPlugin implements KijiRestPlugin {
-
   /** {@inheritDoc} */
   @Override
   public void initialize(Bootstrap<KijiRESTConfiguration> bootstrap) {}
@@ -98,5 +97,4 @@ public class StandardKijiRestPlugin implements KijiRestPlugin {
     module.addDeserializer(KijiRestEntityId.class, new JsonToKijiRestEntityId());
     mapperFactory.registerModule(module);
   }
-
 }
