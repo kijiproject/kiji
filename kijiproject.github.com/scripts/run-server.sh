@@ -32,4 +32,4 @@ trap control_c SIGINT
 sed -e's/UA-35866189-1/UA-REMOVED-DONT-COMMIT/' $DIR/../_config.yml > $TMP_FILE
 mv $TMP_FILE $DIR/../_config.yml
 
-jekyll serve --safe
+jekyll serve --safe --watch

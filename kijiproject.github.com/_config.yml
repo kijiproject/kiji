@@ -3,7 +3,6 @@
 permalink: /:categories/:title
 
 exclude: ["markdown_styleguide.md", ".rvmrc", "jekyll.gems", ".rbenv-version", "README.md", "Rakefile", "CNAME"]
-auto: true
 pygments: true
 
 markdown: rdiscount
