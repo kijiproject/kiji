@@ -94,6 +94,24 @@ public final class KijiBulkImport extends JobTool<KijiBulkImportJobBuilder> {
       throw new RequiredFlagException("output");
     }
 
+    // Make sure input flag has necessary components.
+    Preconditions.checkArgument(mInputFlag.contains("format="),
+        "Specify input format with format=... in the --input flag.");
+    Preconditions.checkArgument(mInputFlag.contains("file="),
+        "Specify input file to import data from with file=... in the --input flag.");
+
+    // Make sure output flag has necessary components.
+    Preconditions.checkArgument(mOutputFlag.contains("nsplits="),
+        "Specify splits with nsplits=... in the --output flag.");
+    Preconditions.checkArgument(mOutputFlag.contains("format="),
+        "Specify destination format with format=... in the --output flag.");
+    Preconditions.checkArgument(mOutputFlag.contains("format="),
+        "Specify the table to import data into with table=... in the --output flag.");
+    // Either format is kiji xor format is hfile with the file path specified.
+    Preconditions.checkArgument(mOutputFlag.contains("format=kiji")
+        ^ (mOutputFlag.contains("format=hfile") && mOutputFlag.contains("file=")),
+        "For outputting to HFiles, specify path with file=... in the --output flag.");
+
     final MapReduceJobOutput mrJobOutput =
         MapReduceJobOutputFactory.create().fromSpaceSeparatedMap(mOutputFlag);
     Preconditions.checkArgument(mrJobOutput instanceof KijiTableMapReduceJobOutput,
@@ -102,7 +120,7 @@ public final class KijiBulkImport extends JobTool<KijiBulkImportJobBuilder> {
     mOutput = (KijiTableMapReduceJobOutput) mrJobOutput;
 
     Preconditions.checkArgument(mOutput.getOutputTableURI().getTable() != null,
-        "Specify the table to import data into with --output=...");
+        "Specify the table to import data into with table=... in --output flag.");
   }
 
   /** {@inheritDoc} */
