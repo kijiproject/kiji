@@ -22,6 +22,7 @@ package org.kiji.scoring.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -29,9 +30,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import org.apache.avro.Schema;
 import org.apache.hadoop.hbase.util.Bytes;
 import org.junit.After;
 import org.junit.Before;
@@ -39,16 +44,20 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.schema.DecoderNotFoundException;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequestBuilder;
+import org.kiji.schema.KijiDataRequestBuilder.ColumnsDef;
 import org.kiji.schema.KijiMetaTable;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
+import org.kiji.schema.KijiTableReaderBuilder.OnDecoderCacheMiss;
 import org.kiji.schema.KijiTableWriter;
+import org.kiji.schema.layout.ColumnReaderSpec;
 import org.kiji.schema.layout.KijiTableLayout;
 import org.kiji.schema.layout.KijiTableLayouts;
 import org.kiji.schema.util.InstanceBuilder;
@@ -224,6 +233,27 @@ public class TestInternalFreshKijiTableReader {
         final KijiRowData dataToScore, final FreshenerContext context
     ) throws IOException {
       return TimestampedValue.create(context.getParameter(TEST_PARAMETER_KEY));
+    }
+  }
+
+  public static final class TestColumnReaderSpecOverrideScoreFunction
+      extends ScoreFunction<String> {
+
+    private static final KijiDataRequest REQUEST = KijiDataRequest.builder()
+        .addColumns(ColumnsDef.create().add(FAMILY_QUAL0, ColumnReaderSpec.bytes()))
+        .build();
+
+    public KijiDataRequest getDataRequest(
+        final FreshenerContext context
+    ) throws IOException {
+      return REQUEST;
+    }
+
+    public TimestampedValue<String> score(
+        final KijiRowData dataToScore, final FreshenerContext context
+    ) throws IOException {
+      final byte[] bytes = dataToScore.getMostRecentValue("family", "qual0");
+      return TimestampedValue.create(Bytes.toString(bytes));
     }
   }
 
@@ -1372,6 +1402,163 @@ public class TestInternalFreshKijiTableReader {
       // This should freshen just by leaving off the options.
       final KijiRowData freshData = freshReader.get(eid, request);
       assertEquals("new-val", freshData.getMostRecentValue("family", "qual0").toString());
+    } finally {
+      freshReader.close();
+    }
+  }
+
+  /**
+   * Tests that a ScoreFunction can use a ColumnReaderSpec override in its data request.
+   *
+   * The reader includes a ColumnReaderSpec alternative and OnDecoderCacheMiss.FAIL to ensure that
+   * the test will fail if the override does not work.
+   */
+  @Test
+  public void testColumnReaderSpecOverrideInScoreFunctionDataRequest() throws IOException {
+    final EntityId eid = mTable.getEntityId("foo");
+    final KijiDataRequest request = KijiDataRequest.create("family", "qual0");
+    final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
+    try {
+      manager.registerFreshener(
+          TABLE_NAME,
+          FAMILY_QUAL0,
+          ALWAYS,
+          new TestColumnReaderSpecOverrideScoreFunction(),
+          EMPTY_PARAMS,
+          false,
+          false);
+    } finally {
+      manager.close();
+    }
+
+    final Multimap<KijiColumnName, ColumnReaderSpec> alternatives = HashMultimap.create(1, 1);
+    alternatives.put(FAMILY_QUAL0, ColumnReaderSpec.bytes());
+
+    final FreshKijiTableReader freshReader = FreshKijiTableReader.Builder.create()
+        .withTable(mTable)
+        .withTimeout(500)
+        .withColumnReaderSpecAlternatives(alternatives)
+        .withOnDecoderCacheMiss(OnDecoderCacheMiss.FAIL)
+        .build();
+    try {
+      final String freshened =
+          freshReader.get(eid, request).getMostRecentValue("family", "qual0").toString();
+      assertTrue(freshened.endsWith("foo-val"));
+    } finally {
+      freshReader.close();
+    }
+  }
+
+  /**
+   * Tests that ColumnReaderSpec overrides in the client request work properly.
+   *
+   * The reader includes a ColumnReaderSpec alternative and OnDecoderCacheMiss.FAIL to ensure that
+   * the test will fail if the override does not work.
+   */
+  @Test
+  public void testColumnReaderSpecOverridesInClientDataRequest() throws IOException {
+    final EntityId eid = mTable.getEntityId("foo");
+    final KijiDataRequest simpleRequest = KijiDataRequest.create("family", "qual0");
+    final KijiDataRequest overrideRequest = KijiDataRequest.builder().addColumns(
+        ColumnsDef.create().add(new KijiColumnName("family", "qual0"), ColumnReaderSpec.bytes())
+    ).build();
+    final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
+    try {
+      manager.registerFreshener(
+          TABLE_NAME,
+          FAMILY_QUAL0,
+          ALWAYS,
+          TEST_SCORE_FN,
+          EMPTY_PARAMS,
+          false,
+          false);
+    } finally {
+      manager.close();
+    }
+
+    final Multimap<KijiColumnName, ColumnReaderSpec> alternatives = HashMultimap.create(1, 1);
+    alternatives.put(FAMILY_QUAL0, ColumnReaderSpec.bytes());
+
+    final FreshKijiTableReader freshReader = FreshKijiTableReader.Builder.create()
+        .withTable(mTable)
+        .withTimeout(500)
+        .withColumnReaderSpecAlternatives(alternatives)
+        .withOnDecoderCacheMiss(OnDecoderCacheMiss.FAIL)
+        .build();
+    try {
+      final String simpleFreshened =
+          freshReader.get(eid, simpleRequest).getMostRecentValue("family", "qual0").toString();
+      assertEquals("new-val", simpleFreshened);
+      final byte[] overrideBytes =
+          freshReader.get(eid, overrideRequest).getMostRecentValue("family", "qual0");
+      final String overrideFreshened = Bytes.toString(overrideBytes);
+      // The overridden string should be longer than just "new-val" but should end with "new-val".
+      assertTrue(!"new-val".equals(overrideFreshened));
+      assertTrue(overrideFreshened.endsWith("new-val"));
+    } finally {
+      freshReader.close();
+    }
+  }
+
+  /**
+   * Tests that a reader with ColumnReaderSpec overrides will affect the behavior of
+   * ScoreFunctions, and client read requests.
+   */
+  @Test
+  public void testColumnReaderSpecGlobalOverride() throws IOException {
+    final EntityId eid = mTable.getEntityId("foo");
+    final KijiDataRequest simpleRequest = KijiDataRequest.create("family", "qual0");
+    final KijiDataRequest overrideRequest = KijiDataRequest.builder().addColumns(
+        ColumnsDef.create().add(FAMILY_QUAL0, ColumnReaderSpec.bytes())).build();
+    final KijiDataRequest failRequest = KijiDataRequest.builder().addColumns(ColumnsDef.create()
+        .add(FAMILY_QUAL0,
+        ColumnReaderSpec.avroReaderSchemaGeneric(Schema.create(Schema.Type.BOOLEAN)))).build();
+    final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
+    try {
+      manager.registerFreshener(
+          TABLE_NAME,
+          FAMILY_QUAL0,
+          ALWAYS,
+          TEST_SCORE_FN,
+          EMPTY_PARAMS,
+          false,
+          false);
+    } finally {
+      manager.close();
+    }
+
+    final FreshKijiTableReader freshReader = FreshKijiTableReader.Builder.create()
+        .withTable(mTable)
+        .withTimeout(500)
+        .withColumnReaderSpecOverrides(ImmutableMap.of(FAMILY_QUAL0, ColumnReaderSpec.bytes()))
+        .withOnDecoderCacheMiss(OnDecoderCacheMiss.FAIL)
+        .build();
+    try {
+      // The override changes the return value of this call to a byte[].
+      final byte[] simpleBytes =
+          freshReader.get(eid, simpleRequest).getMostRecentValue("family", "qual0");
+      final String simpleFreshened = Bytes.toString(simpleBytes);
+      assertTrue(!"new-val".equals(simpleFreshened));
+      assertTrue(simpleFreshened.endsWith("new-val"));
+
+      // The overridden request should still work because it overrides to the same thing that the
+      // reader is set to override to, otherwise it would fail.
+      final byte[] overrideBytes =
+          freshReader.get(eid, overrideRequest).getMostRecentValue("family", "qual0");
+      final String overrideFreshened = Bytes.toString(overrideBytes);
+      assertTrue(!"new-val".equals(overrideFreshened));
+      assertTrue(overrideFreshened.endsWith("new-val"));
+
+      // This request should fail because it is outside the set of decoders provided by the reader.
+      try {
+        freshReader.get(eid, failRequest).getMostRecentValue("family", "qual0");
+        fail();
+      } catch (DecoderNotFoundException dnfe) {
+        assertEquals("Could not find cell decoder for BoundColumnReaderSpec: BoundColumnReaderSpec{"
+            + "column=family:qual0, column_reader_spec=ColumnReaderSpec{encoding=AVRO, avro_reader_"
+            + "schema_type=EXPLICIT, avro_decoder_type=GENERIC, avro_reader_schema=\"boolean\", "
+            + "avro_reader_schema_class=null}}", dnfe.getMessage());
+      }
     } finally {
       freshReader.close();
     }

@@ -33,6 +33,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 
 import org.kiji.annotations.ApiAudience;
@@ -44,6 +45,9 @@ import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
+import org.kiji.schema.KijiTableReaderBuilder;
+import org.kiji.schema.KijiTableReaderBuilder.OnDecoderCacheMiss;
+import org.kiji.schema.layout.ColumnReaderSpec;
 import org.kiji.scoring.impl.FreshenerThreadPool;
 import org.kiji.scoring.impl.InternalFreshKijiTableReader;
 import org.kiji.scoring.statistics.FreshKijiTableReaderStatistics;
@@ -167,8 +171,20 @@ public interface FreshKijiTableReader extends KijiTableReader {
         StatisticGatheringMode.NONE;
     /** By default, log statistics every 10 minutes. */
     private static final long DEFAULT_STATISTICS_LOGGING_INTERVAL = 10 * 60 * 1000;
+    /** By default, use the singleton executor service provided by FreshenerThreadPool. */
     private static final ExecutorService DEFAULT_EXECUTOR_SERVICE =
         FreshenerThreadPool.Singleton.GET.getExecutorService();
+    /** Delegate to the default ColumnReaderSpec overrides from {@link KijiTableReaderBuilder}. */
+    private static final Map<KijiColumnName, ColumnReaderSpec> DEFAULT_READER_SPEC_OVERRIDES =
+        KijiTableReaderBuilder.DEFAULT_READER_SPEC_OVERRIDES;
+    /**
+     * Delegate to the default ColumnReaderSpec alternatives from {@link KijiTableReaderBuilder}.
+     */
+    private static final Multimap<KijiColumnName, ColumnReaderSpec>
+        DEFAULT_READER_SPEC_ALTERNATIVES = KijiTableReaderBuilder.DEFAULT_READER_SPEC_ALTERNATIVES;
+    /** Delegate to the default OnDecoderCacheMiss from {@link KijiTableReaderBuilder}. */
+    private static final OnDecoderCacheMiss DEFAULT_CACHE_MISS =
+        KijiTableReaderBuilder.DEFAULT_CACHE_MISS;
     /** Enumeration of possible modes of statistics gathering. */
     public static enum StatisticGatheringMode {
       NONE, ALL
@@ -208,6 +224,27 @@ public interface FreshKijiTableReader extends KijiTableReader {
     private Long mStatisticsLoggingInterval = null;
     /** ExecutorService to use for running threads internal to the fresh reader. */
     private ExecutorService mExecutorService = null;
+    /**
+     * ColumnReaderSpec overrides which will be used to set default read behavior for reads
+     * performed by this reader. These overrides will also affect reads performed internally by the
+     * reader to provide data to Fresheners.
+     */
+    private Map<KijiColumnName, ColumnReaderSpec> mColumnReaderSpecOverrides = null;
+    /**
+     * ColumnReaderSpec alternatives which will be available as cell decoders for this reader. These
+     * alternatives will be available for internal and external reads. If a Freshener which will be
+     * run by this reader requires a custom reader schema, it should be specified here and in the
+     * data request specified by that Freshener.
+     */
+    private Multimap<KijiColumnName, ColumnReaderSpec> mColumnReaderSpecAlternatives = null;
+    /**
+     * Specifies the behavior of this reader of a cell decoder cannot be found to fulfil a request.
+     * This includes requests made to the reader itself as well as requests made by Fresheners
+     * running in the reader.
+     */
+    private OnDecoderCacheMiss mOnDecoderCacheMiss = null;
+
+
 
     /**
      * Configure the FreshKijiTableReader to read from the given KijiTable.
@@ -438,6 +475,100 @@ public interface FreshKijiTableReader extends KijiTableReader {
     }
 
     /**
+     * Configure the reader to override the default read behavior of the given columns with the
+     * behavior specified in the associated ColumnReaderSpecs. These overrides will change the
+     * default read behavior for requests made to the reader itself and for requests made by
+     * Fresheners running in the reader.
+     *
+     * @param overrides ColumnReaderSpec overrides which will change the default read behavior of
+     *     requests made to the reader.
+     * @return this Builder configured to include the given ColumnReaderSpec overrides.
+     */
+    public Builder withColumnReaderSpecOverrides(
+        final Map<KijiColumnName, ColumnReaderSpec> overrides
+    ) {
+      Preconditions.checkNotNull(overrides, "ColumnReaderSpec overrides may not be null.");
+      Preconditions.checkState(null == mColumnReaderSpecOverrides,
+          "ColumnReaderSpec overrides are already set to: %s", mColumnReaderSpecOverrides);
+      mColumnReaderSpecOverrides = overrides;
+      return this;
+    }
+
+    /**
+     * Get the configured ColumnReaderSpec overrides from this Builder or null if none have been
+     * set.
+     *
+     * @return the configured ColumnReaderSpecOverrides from t his Builder or null if none have been
+     *     set.
+     */
+    public Map<KijiColumnName, ColumnReaderSpec> getColumnReaderSpecOverrides() {
+      return mColumnReaderSpecOverrides;
+    }
+
+    /**
+     * Configure the reader to provide cell decoders for the given alternatives. These alternatives
+     * will not change the default behavior of read requests made to this reader, but requests which
+     * specify ColumnReaderSpecs found in these alternatives will not trigger failures if
+     * OnDecoderCacheMiss is set to FAIL. These alternatives will be available to requests made to
+     * the reader itself and to requests made by Fresheners running in the reader.
+     *
+     * @param alternatives ColumnReaderSpec alternatives which will be available to override read
+     *     behavior in requests.
+     * @return this Builder configured to include the given ColumnReaderSpec alternatives.
+     */
+    public Builder withColumnReaderSpecAlternatives(
+        final Multimap<KijiColumnName, ColumnReaderSpec> alternatives
+    ) {
+      Preconditions.checkNotNull(alternatives, "ColumnReaderSpec alternatives may not be null.");
+      Preconditions.checkState(null == mColumnReaderSpecAlternatives,
+          "ColumnReaderSpec alternatives are already set to: %s", mColumnReaderSpecAlternatives);
+      mColumnReaderSpecAlternatives = alternatives;
+      return this;
+    }
+
+    /**
+     * Get the configured ColumnReaderSpec alternatives from this Builder, or null if none have been
+     * set.
+     *
+     * @return the configured ColumnReaderSpec alternatives from this Builder, or null if none have
+     *     been set.
+     */
+    public Multimap<KijiColumnName, ColumnReaderSpec> getColumnReaderSpecAlternatives() {
+      return mColumnReaderSpecAlternatives;
+    }
+
+    /**
+     * Configure the reader to use the given behavior when a cell decoder cannot be found to fulfil
+     * a read request. This behavior applies to read requests made to the reader itself as well as
+     * requests made by Fresheners run in the reader.
+     *
+     * @param onDecoderCacheMiss behavior to use when a cell decoder cannot be found.
+     * @return this Builder configured to use the given behavior when a cell decoder cannot be
+     *     found.
+     */
+    public Builder withOnDecoderCacheMiss(
+        final OnDecoderCacheMiss onDecoderCacheMiss
+    ) {
+      Preconditions.checkNotNull(onDecoderCacheMiss,
+          "OnDecoderCacheMiss behavior may not be null.");
+      Preconditions.checkState(null == mOnDecoderCacheMiss,
+          "OnDecoderCacheMiss behavior is already set to: %s", mOnDecoderCacheMiss);
+      mOnDecoderCacheMiss = onDecoderCacheMiss;
+      return this;
+    }
+
+    /**
+     * Get the configured OnDecoderCacheMiss behavior from this Builder, or null if none has been
+     * set.
+     *
+     * @return the configured OnDecoderCacheMiss behavior from this Builder, or null if none has
+     *     been set.
+     */
+    public OnDecoderCacheMiss getOnDecoderCacheMiss() {
+      return mOnDecoderCacheMiss;
+    }
+
+    /**
      * Builds a FreshKijiTableReader with the configured options.
      *
      * @return a FreshKijiTableReader with the configured options.
@@ -464,6 +595,15 @@ public interface FreshKijiTableReader extends KijiTableReader {
       if (null == mExecutorService) {
         mExecutorService = DEFAULT_EXECUTOR_SERVICE;
       }
+      if (null == mColumnReaderSpecOverrides) {
+        mColumnReaderSpecOverrides = DEFAULT_READER_SPEC_OVERRIDES;
+      }
+      if (null == mColumnReaderSpecAlternatives) {
+        mColumnReaderSpecAlternatives = DEFAULT_READER_SPEC_ALTERNATIVES;
+      }
+      if (null == mOnDecoderCacheMiss) {
+        mOnDecoderCacheMiss = DEFAULT_CACHE_MISS;
+      }
 
       return new InternalFreshKijiTableReader(
           mTable,
@@ -473,7 +613,10 @@ public interface FreshKijiTableReader extends KijiTableReader {
           mColumnsToFreshen,
           mStatisticGatheringMode,
           mStatisticsLoggingInterval,
-          mExecutorService);
+          mExecutorService,
+          mColumnReaderSpecOverrides,
+          mColumnReaderSpecAlternatives,
+          mOnDecoderCacheMiss);
     }
   }
 
