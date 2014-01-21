@@ -21,9 +21,6 @@ package org.kiji.express.flow
 
 import com.google.common.base.Objects
 
-import org.apache.avro.Schema
-import org.apache.avro.specific.SpecificRecord
-
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
@@ -230,11 +227,8 @@ final class QualifiedColumnInputSpec private(
           pagingSpec,
           schemaSpec)
 
-  override def equals(obj: Any): Boolean = {
-    if (!obj.isInstanceOf[QualifiedColumnInputSpec]) {
-      false
-    } else {
-      val other = obj.asInstanceOf[QualifiedColumnInputSpec]
+  override def equals(obj: Any): Boolean = obj match {
+    case other: QualifiedColumnInputSpec => {
       family == other.family &&
           qualifier == other.qualifier &&
           maxVersions == other.maxVersions &&
@@ -242,6 +236,7 @@ final class QualifiedColumnInputSpec private(
           pagingSpec == other.pagingSpec &&
           schemaSpec == other.schemaSpec
     }
+    case _ => false
   }
 }
 
@@ -363,30 +358,25 @@ object QualifiedColumnInputSpec {
   /**
    * Builder for QualifiedColumnInputSpec.
    *
-   * @param constructorFamily optional family with which to initialize this builder.
-   * @param constructorQualifier optional qualifier with which to initialize this builder.
-   * @param constructorMaxVersions optional maxVersions with which to initialize this builder.
-   * @param constructorFilterSpec optional FilterSpec with which to initialize this builder.
-   * @param constructorPagingSpec optional PagingSpec with which to initialize this builder.
-   * @param constructorSchemaSpec optional SchemaSpec with which to initialize this builder.
+   * @param mFamily optional family with which to initialize this builder.
+   * @param mQualifier optional qualifier with which to initialize this builder.
+   * @param mMaxVersions optional maxVersions with which to initialize this builder.
+   * @param mFilterSpec optional FilterSpec with which to initialize this builder.
+   * @param mPagingSpec optional PagingSpec with which to initialize this builder.
+   * @param mSchemaSpec optional SchemaSpec with which to initialize this builder.
    */
   @ApiAudience.Public
   @ApiStability.Stable
   final class Builder private(
-      constructorFamily: Option[String],
-      constructorQualifier: Option[String],
-      constructorMaxVersions: Option[Int],
-      constructorFilterSpec: Option[ColumnFilterSpec],
-      constructorPagingSpec: Option[PagingSpec],
-      constructorSchemaSpec: Option[SchemaSpec]
+      private[this] var mFamily: Option[String],
+      private[this] var mQualifier: Option[String],
+      private[this] var mMaxVersions: Option[Int],
+      private[this] var mFilterSpec: Option[ColumnFilterSpec],
+      private[this] var mPagingSpec: Option[PagingSpec],
+      private[this] var mSchemaSpec: Option[SchemaSpec]
   ) {
-    private[this] val monitor = new AnyRef
-    private var mFamily: Option[String] = constructorFamily
-    private var mQualifier: Option[String] = constructorQualifier
-    private var mMaxVersions: Option[Int] = constructorMaxVersions
-    private var mFilterSpec: Option[ColumnFilterSpec] = constructorFilterSpec
-    private var mPagingSpec: Option[PagingSpec] = constructorPagingSpec
-    private var mSchemaSpec: Option[SchemaSpec] = constructorSchemaSpec
+    /** protects read and write access to private var fields. */
+    private val monitor = new AnyRef
 
     /**
      * Configure the input spec to read the given Kiji column.
@@ -395,9 +385,10 @@ object QualifiedColumnInputSpec {
      * @return this builder.
      */
     def withColumn(column: KijiColumnName): Builder = monitor.synchronized {
-      require(column.isFullyQualified(), "Column must be fully qualified.")
-      require(None == mFamily, "Family already set to: " + mFamily.get)
-      require(None == mQualifier, "Qualifier already set to: " + mQualifier.get)
+      require(column != null, "Input column may not be null.")
+      require(column.isFullyQualified, "Input column must be fully qualified.")
+      require(mFamily.isEmpty, "Input column family already set to: " + mFamily.get)
+      require(mQualifier.isEmpty, "Input column qualifier already set to: " + mQualifier.get)
       mFamily = Some(column.getFamily)
       mQualifier = Some(column.getQualifier)
       this
@@ -411,8 +402,10 @@ object QualifiedColumnInputSpec {
      * @return this builder.
      */
     def withColumn(family: String, qualifier: String): Builder = monitor.synchronized {
-      require(None == mFamily, "Family already set to: " + mFamily.get)
-      require(None == mQualifier, "Qualifier already set to: " + mQualifier.get)
+      require(family != null, "Input column family may not be null.")
+      require(qualifier != null, "Input column qualifier may not be null.")
+      require(mFamily.isEmpty, "Input column family already set to: " + mFamily.get)
+      require(mQualifier.isEmpty, "Input column qualifier already set to: " + mQualifier.get)
       mFamily = Some(family)
       mQualifier = Some(qualifier)
       this
@@ -427,7 +420,8 @@ object QualifiedColumnInputSpec {
      * @return this builder.
      */
     def withFamily(family: String): Builder = monitor.synchronized {
-      require(None == mFamily, "Family already set to: " + mFamily.get)
+      require(family != null, "Input column family may not be null.")
+      require(mFamily.isEmpty, "Input column family already set to: " + mFamily.get)
       mFamily = Some(family)
       this
     }
@@ -441,7 +435,8 @@ object QualifiedColumnInputSpec {
      * @return this builder.
      */
     def withQualifier(qualifier: String): Builder = monitor.synchronized {
-      require(None == mQualifier, "Qualifier already set to: " + mQualifier.get)
+      require(qualifier != null, "Input column qualifier may not be null.")
+      require(mQualifier.isEmpty, "Input column qualifier already set to: " + mQualifier.get)
       mQualifier = Some(qualifier)
       this
     }
@@ -451,14 +446,14 @@ object QualifiedColumnInputSpec {
      *
      * @return the name of the Kiji column family from which to read.
      */
-    def family: Option[String] = mFamily
+    def family: Option[String] = monitor.synchronized(mFamily)
 
     /**
      * Name of the Kiji column qualifier from which to read.
      *
      * @return the name of the Kiji column qualifier from which to read.
      */
-    def qualifier: Option[String] = mQualifier
+    def qualifier: Option[String] = monitor.synchronized(mQualifier)
 
     /**
      * Configure the input spec to read the specified maximum versions.
@@ -467,7 +462,7 @@ object QualifiedColumnInputSpec {
      * @return this builder.
      */
     def withMaxVersions(maxVersions: Int): Builder = monitor.synchronized {
-      require(None == mMaxVersions, "Max versions already set to: " + mMaxVersions.get)
+      require(mMaxVersions.isEmpty, "Max versions already set to: " + mMaxVersions.get)
       require(0 < maxVersions, "Max versions must be strictly positive, instead got " + maxVersions)
       mMaxVersions = Some(maxVersions)
       this
@@ -478,7 +473,7 @@ object QualifiedColumnInputSpec {
      *
      * @return the maximum versions to read back from requested column.
      */
-    def maxVersions: Option[Int] = mMaxVersions
+    def maxVersions: Option[Int] = monitor.synchronized(mMaxVersions)
 
     /**
      * Configure the input spec to read using the given FilterSpec.
@@ -487,7 +482,8 @@ object QualifiedColumnInputSpec {
      * @return this builder.
      */
     def withFilterSpec(filterSpec: ColumnFilterSpec): Builder = monitor.synchronized {
-      require(None == mFilterSpec, "Filter spec already set to: " + mFilterSpec.get)
+      require(filterSpec != null, "Filter spec may not be null.")
+      require(mFilterSpec.isEmpty, "Filter spec already set to: " + mFilterSpec.get)
       mFilterSpec = Some(filterSpec)
       this
     }
@@ -497,7 +493,7 @@ object QualifiedColumnInputSpec {
      *
      * @return a specification of the filter to use when reading this column.
      */
-    def filterSpec: Option[ColumnFilterSpec] = mFilterSpec
+    def filterSpec: Option[ColumnFilterSpec] = monitor.synchronized(mFilterSpec)
 
     /**
      * Configure the input spec to page the read data according to the given specification.
@@ -506,7 +502,8 @@ object QualifiedColumnInputSpec {
      * @return this builder.
      */
     def withPagingSpec(pagingSpec: PagingSpec): Builder = monitor.synchronized {
-      require(None == mPagingSpec, "Paging spec already set to: " + mPagingSpec.get)
+      require(pagingSpec != null, "Paging spec may not be null.")
+      require(mPagingSpec.isEmpty, "Paging spec already set to: " + mPagingSpec.get)
       mPagingSpec = Some(pagingSpec)
       this
     }
@@ -516,7 +513,7 @@ object QualifiedColumnInputSpec {
      *
      * @return paging specification containing the maximum number of cells to retrieve from Kiji.
      */
-    def pagingSpec: Option[PagingSpec] = mPagingSpec
+    def pagingSpec: Option[PagingSpec] = monitor.synchronized(mPagingSpec)
 
     /**
      * Configure the input spec to read using the given SchemaSpec.
@@ -525,7 +522,8 @@ object QualifiedColumnInputSpec {
      * @return this builder.
      */
     def withSchemaSpec(schemaSpec: SchemaSpec): Builder = monitor.synchronized {
-      require(None == mSchemaSpec, "Schema spec already set to: " + mSchemaSpec.get)
+      require(schemaSpec != null, "Schema spec may not be null.")
+      require(mSchemaSpec.isEmpty, "Schema spec already set to: " + mSchemaSpec.get)
       mSchemaSpec = Some(schemaSpec)
       this
     }
@@ -535,46 +533,36 @@ object QualifiedColumnInputSpec {
      *
      * @return a specification of the Schema to use when reading this column.
      */
-    def schemaSpec: Option[SchemaSpec] = mSchemaSpec
+    def schemaSpec: Option[SchemaSpec] = monitor.synchronized(mSchemaSpec)
 
     /**
      * Build a new QualifiedColumnInputSpec from the values stored in this builder.
      *
+     * @throws IllegalStateException if the builder is not in a valid state to be built.
      * @return a new QualifiedColumnInputSpec from the values stored in this builder.
      */
-    def build: QualifiedColumnInputSpec = new QualifiedColumnInputSpec(
-      mFamily.getOrElse(throw new IllegalArgumentException("family must be specified.")),
-      mQualifier.getOrElse(throw new IllegalArgumentException("qualifier must be specified.")),
-      mMaxVersions.getOrElse(ColumnInputSpec.DEFAULT_MAX_VERSIONS),
-      mFilterSpec.getOrElse(ColumnInputSpec.DEFAULT_COLUMN_FILTER_SPEC),
-      mPagingSpec.getOrElse(ColumnInputSpec.DEFAULT_PAGING_SPEC),
-      mSchemaSpec.getOrElse(ColumnInputSpec.DEFAULT_SCHEMA_SPEC)
-    )
+    def build: QualifiedColumnInputSpec = monitor.synchronized {
+      new QualifiedColumnInputSpec(
+          mFamily.getOrElse(
+              throw new IllegalStateException("Input column family must be specified.")),
+          mQualifier.getOrElse(
+              throw new IllegalStateException("Input column qualifier must be specified.")),
+          mMaxVersions.getOrElse(ColumnInputSpec.DEFAULT_MAX_VERSIONS),
+          mFilterSpec.getOrElse(ColumnInputSpec.DEFAULT_COLUMN_FILTER_SPEC),
+          mPagingSpec.getOrElse(ColumnInputSpec.DEFAULT_PAGING_SPEC),
+          mSchemaSpec.getOrElse(ColumnInputSpec.DEFAULT_SCHEMA_SPEC)
+      )
+    }
 
-    override def toString: String = Objects.toStringHelper(classOf[Builder])
-        .add("family", mFamily)
-        .add("qualifier", mQualifier)
-        .add("max_versions", mMaxVersions)
-        .add("filter_spec", mFilterSpec)
-        .add("paging_spec", mPagingSpec)
-        .add("schema_spec", mSchemaSpec)
-        .toString
-
-    override def hashCode: Int =
-        Objects.hashCode(mFamily, mQualifier, mMaxVersions, mFilterSpec, mPagingSpec, mSchemaSpec)
-
-    override def equals(target: Any): Boolean = {
-      if (!target.isInstanceOf[Builder]) {
-        false
-      } else {
-        val other: Builder = target.asInstanceOf[Builder]
-        family == other.family &&
-            qualifier == other.qualifier &&
-            maxVersions == other.maxVersions &&
-            filterSpec == other.filterSpec &&
-            pagingSpec == other.pagingSpec &&
-            schemaSpec == other.schemaSpec
-      }
+    override def toString: String = monitor.synchronized {
+      Objects.toStringHelper(classOf[Builder])
+          .add("family", mFamily)
+          .add("qualifier", mQualifier)
+          .add("max_versions", mMaxVersions)
+          .add("filter_spec", mFilterSpec)
+          .add("paging_spec", mPagingSpec)
+          .add("schema_spec", mSchemaSpec)
+          .toString
     }
   }
 
@@ -599,7 +587,8 @@ object QualifiedColumnInputSpec {
      * @param other Builder to copy.
      * @return a new QualifiedColumnInputSpec.Builder as a copy of the given Builder.
      */
-    private[express] def apply(other: Builder): Builder = {
+    private[express] def apply(other: Builder): Builder = other.monitor.synchronized {
+      // synchronize to get a consistent snapshot of other
       new Builder(other.family,
           other.qualifier,
           other.maxVersions,
@@ -698,17 +687,15 @@ final class ColumnFamilyInputSpec private(
           pagingSpec,
           schemaSpec)
 
-  override def equals(obj: Any): Boolean = {
-    if (!obj.isInstanceOf[ColumnFamilyInputSpec]) {
-      false
-    } else {
-      val other = obj.asInstanceOf[ColumnFamilyInputSpec]
+  override def equals(obj: Any): Boolean = obj match {
+    case other: ColumnFamilyInputSpec => {
       family == other.family &&
           maxVersions == other.maxVersions &&
           filterSpec == other.filterSpec &&
           pagingSpec == other.pagingSpec &&
           schemaSpec == other.schemaSpec
     }
+    case _ => false
   }
 }
 
@@ -822,27 +809,23 @@ object ColumnFamilyInputSpec {
   /**
    * Builder for ColumnFamilyInputSpec.
    *
-   * @param constructorFamily optional family with which to initialize this builder.
-   * @param constructorMaxVersions optional maxVersions with which to initialize this builder.
-   * @param constructorFilterSpec optional FilterSpec with which to initialize this builder.
-   * @param constructorPagingSpec optional PagingSpec with which to initialize this builder.
-   * @param constructorSchemaSpec optional SchemaSpec with which to initialize this builder.
+   * @param mFamily optional family with which to initialize this builder.
+   * @param mMaxVersions optional maxVersions with which to initialize this builder.
+   * @param mFilterSpec optional FilterSpec with which to initialize this builder.
+   * @param mPagingSpec optional PagingSpec with which to initialize this builder.
+   * @param mSchemaSpec optional SchemaSpec with which to initialize this builder.
    */
   @ApiAudience.Public
   @ApiStability.Stable
   final class Builder private(
-      constructorFamily: Option[String],
-      constructorMaxVersions: Option[Int],
-      constructorFilterSpec: Option[ColumnFilterSpec],
-      constructorPagingSpec: Option[PagingSpec],
-      constructorSchemaSpec: Option[SchemaSpec]
+      private[this] var mFamily: Option[String],
+      private[this] var mMaxVersions: Option[Int],
+      private[this] var mFilterSpec: Option[ColumnFilterSpec],
+      private[this] var mPagingSpec: Option[PagingSpec],
+      private[this] var mSchemaSpec: Option[SchemaSpec]
   ) {
-    private[this] val monitor = new AnyRef
-    private var mFamily: Option[String] = constructorFamily
-    private var mMaxVersions: Option[Int] = constructorMaxVersions
-    private var mFilterSpec: Option[ColumnFilterSpec] = constructorFilterSpec
-    private var mPagingSpec: Option[PagingSpec] = constructorPagingSpec
-    private var mSchemaSpec: Option[SchemaSpec] = constructorSchemaSpec
+    /** protects read and write access to private var fields. */
+    private val monitor = new AnyRef
 
     /**
      * Configure the input spec to read the given Kiji column family.
@@ -851,8 +834,9 @@ object ColumnFamilyInputSpec {
      * @return this builder.
      */
     def withColumn(column: KijiColumnName): Builder = monitor.synchronized {
-      require(!column.isFullyQualified(), "Column family may not be fully qualified.")
-      require(None == mFamily, "Family already set to: " + mFamily.get)
+      require(column != null, "Input column may not be null.")
+      require(!column.isFullyQualified, "Input column may not be fully qualified.")
+      require(mFamily.isEmpty, "Input column already set to: " + mFamily.get)
       mFamily = Some(column.getFamily)
       this
     }
@@ -864,7 +848,8 @@ object ColumnFamilyInputSpec {
      * @return this builder.
      */
     def withFamily(family: String): Builder = monitor.synchronized {
-      require(None == mFamily, "Family already set to: " + mFamily.get)
+      require(family != null, "Input column family may not be null.")
+      require(mFamily.isEmpty, "Input column family already set to: " + mFamily.get)
       mFamily = Some(family)
       this
     }
@@ -874,7 +859,7 @@ object ColumnFamilyInputSpec {
      *
      * @return the name of the Kiji column family from which to read.
      */
-    def family: Option[String] = mFamily
+    def family: Option[String] = monitor.synchronized(mFamily)
 
     /**
      * Configure the input spec to read the specified maximum versions.
@@ -883,7 +868,7 @@ object ColumnFamilyInputSpec {
      * @return this builder.
      */
     def withMaxVersions(maxVersions: Int): Builder = monitor.synchronized {
-      require(None == mMaxVersions, "Max versions already set to: " + mMaxVersions.get)
+      require(mMaxVersions.isEmpty, "Max versions already set to: " + mMaxVersions.get)
       require(0 < maxVersions, "Max versions must be strictly positive, instead got " + maxVersions)
       mMaxVersions = Some(maxVersions)
       this
@@ -894,7 +879,7 @@ object ColumnFamilyInputSpec {
      *
      * @return the maximum versions to read back from requested column.
      */
-    def maxVersions: Option[Int] = mMaxVersions
+    def maxVersions: Option[Int] = monitor.synchronized(mMaxVersions)
 
     /**
      * Configure the input spec to read using the given FilterSpec.
@@ -903,7 +888,8 @@ object ColumnFamilyInputSpec {
      * @return this builder.
      */
     def withFilterSpec(filterSpec: ColumnFilterSpec): Builder = monitor.synchronized {
-      require(None == mFilterSpec, "Filter spec already set to: " + mFilterSpec.get)
+      require(filterSpec != null, "Filter spec may not be null.")
+      require(mFilterSpec.isEmpty, "Filter spec already set to: " + mFilterSpec.get)
       mFilterSpec = Some(filterSpec)
       this
     }
@@ -913,7 +899,7 @@ object ColumnFamilyInputSpec {
      *
      * @return a specification of the filter to use when reading this column.
      */
-    def filterSpec: Option[ColumnFilterSpec] = mFilterSpec
+    def filterSpec: Option[ColumnFilterSpec] = monitor.synchronized(mFilterSpec)
 
     /**
      * Configure the input spec to page the read data according to the given specification.
@@ -922,7 +908,8 @@ object ColumnFamilyInputSpec {
      * @return this builder.
      */
     def withPagingSpec(pagingSpec: PagingSpec): Builder = monitor.synchronized {
-      require(None == mPagingSpec, "Paging spec already set to: " + mPagingSpec.get)
+      require(pagingSpec != null, "Paging spec may not be null.")
+      require(mPagingSpec.isEmpty, "Paging spec already set to: " + mPagingSpec.get)
       mPagingSpec = Some(pagingSpec)
       this
     }
@@ -932,7 +919,7 @@ object ColumnFamilyInputSpec {
      *
      * @return paging specification containing the maximum number of cells to retrieve from Kiji.
      */
-    def pagingSpec: Option[PagingSpec] = mPagingSpec
+    def pagingSpec: Option[PagingSpec] = monitor.synchronized(mPagingSpec)
 
     /**
      * Configure the input spec to read using the given SchemaSpec.
@@ -941,7 +928,8 @@ object ColumnFamilyInputSpec {
      * @return this builder.
      */
     def withSchemaSpec(schemaSpec: SchemaSpec): Builder = monitor.synchronized {
-      require(None == mSchemaSpec, "Schema spec already set to: " + mSchemaSpec.get)
+      require(schemaSpec != null, "Schema spec may not be null.")
+      require(mSchemaSpec.isEmpty, "Schema spec already set to: " + mSchemaSpec.get)
       mSchemaSpec = Some(schemaSpec)
       this
     }
@@ -951,43 +939,33 @@ object ColumnFamilyInputSpec {
      *
      * @return a specification of the Schema to use when reading this column.
      */
-    def schemaSpec: Option[SchemaSpec] = mSchemaSpec
+    def schemaSpec: Option[SchemaSpec] = monitor.synchronized(mSchemaSpec)
 
     /**
      * Build a new ColumnFamilyInputSpec from the values stored in this builder.
      *
+     * @throws IllegalStateException if the builder is not in a valid state to be built.
      * @return a new ColumnFamilyInputSpec from the values stored in this builder.
      */
-    def build: ColumnFamilyInputSpec = new ColumnFamilyInputSpec(
-      mFamily.getOrElse(throw new IllegalArgumentException("family must be specified.")),
-      mMaxVersions.getOrElse(ColumnInputSpec.DEFAULT_MAX_VERSIONS),
-      mFilterSpec.getOrElse(ColumnInputSpec.DEFAULT_COLUMN_FILTER_SPEC),
-      mPagingSpec.getOrElse(ColumnInputSpec.DEFAULT_PAGING_SPEC),
-      mSchemaSpec.getOrElse(ColumnInputSpec.DEFAULT_SCHEMA_SPEC)
-    )
+    def build: ColumnFamilyInputSpec = monitor.synchronized {
+      new ColumnFamilyInputSpec(
+          mFamily.getOrElse(
+              throw new IllegalStateException("Input column family must be specified.")),
+          mMaxVersions.getOrElse(ColumnInputSpec.DEFAULT_MAX_VERSIONS),
+          mFilterSpec.getOrElse(ColumnInputSpec.DEFAULT_COLUMN_FILTER_SPEC),
+          mPagingSpec.getOrElse(ColumnInputSpec.DEFAULT_PAGING_SPEC),
+          mSchemaSpec.getOrElse(ColumnInputSpec.DEFAULT_SCHEMA_SPEC)
+      )
+    }
 
-    override def toString: String = Objects.toStringHelper(classOf[Builder])
+    override def toString: String = monitor.synchronized {
+      Objects.toStringHelper(classOf[Builder])
         .add("family", mFamily)
         .add("max_versions", mMaxVersions)
         .add("filter_spec", mFilterSpec)
         .add("paging_spec", mPagingSpec)
         .add("schema_spec", mSchemaSpec)
         .toString
-
-    override def hashCode: Int =
-        Objects.hashCode(mFamily, mMaxVersions, mFilterSpec, mPagingSpec, mSchemaSpec)
-
-    override def equals(target: Any): Boolean = {
-      if (!target.isInstanceOf[Builder]) {
-        false
-      } else {
-        val other: Builder = target.asInstanceOf[Builder]
-        family == other.family &&
-            maxVersions == other.maxVersions &&
-            filterSpec == other.filterSpec &&
-            pagingSpec == other.pagingSpec &&
-            schemaSpec == other.schemaSpec
-      }
     }
   }
 
@@ -1012,7 +990,8 @@ object ColumnFamilyInputSpec {
      * @param other Builder to copy.
      * @return a new ColumnFamilyInputSpec.Builder as a copy of the given Builder.
      */
-    private[express] def apply(other: Builder): Builder = {
+    private[express] def apply(other: Builder): Builder = other.monitor.synchronized {
+      // synchronize to get a consistent snapshot of other
       new Builder(other.family,
           other.maxVersions,
           other.filterSpec,

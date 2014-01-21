@@ -22,7 +22,6 @@ package org.kiji.express.flow
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.schema.KijiColumnName
-import org.kiji.schema.InternalKijiError
 
 /**
  * Factory methods for constructing [[org.kiji.express.flow.KijiSource]]s that will be used as
@@ -88,22 +87,19 @@ object KijiOutput {
   /**
    * Builder for [[org.kiji.express.flow.KijiSource]]s to be used as outputs.
    *
-   * @param constructorTableURI string of the table to which to write.
-   * @param constructorTimestampField flow Field from which to read the timestamp.
-   * @param constructorColumnSpecs mapping from Field to output specification.
+   * @param mTableURI string of the table to which to write.
+   * @param mTimestampField flow Field from which to read the timestamp.
+   * @param mColumnSpecs mapping from Field to output specification.
    */
   @ApiAudience.Public
   @ApiStability.Stable
   final class Builder private(
-      val constructorTableURI: Option[String],
-      val constructorTimestampField: Option[Symbol],
-      val constructorColumnSpecs: Option[Map[Symbol, _ <: ColumnOutputSpec]]
+      private[this] var mTableURI: Option[String],
+      private[this] var mTimestampField: Option[Symbol],
+      private[this] var mColumnSpecs: Option[Map[Symbol, _ <: ColumnOutputSpec]]
   ) {
-    private[this] val monitor = new AnyRef
-
-    private var mTableURI: Option[String] = constructorTableURI
-    private var mTimestampField: Option[Symbol] = constructorTimestampField
-    private var mColumnSpecs: Option[Map[Symbol, _ <: ColumnOutputSpec]] = constructorColumnSpecs
+    /** protects read and write access to private var fields. */
+    private val monitor = new AnyRef
 
     /**
      * Configure the KijiSource to write to the table with the given URI.
@@ -112,7 +108,8 @@ object KijiOutput {
      * @return this builder.
      */
     def withTableURI(tableURI: String): Builder = monitor.synchronized {
-      require(None == mTableURI, "Table URI already set to: " + mTableURI.get)
+      require(tableURI != null, "Table URI may not be null.")
+      require(mTableURI.isEmpty, "Table URI already set to: " + mTableURI.get)
       mTableURI = Some(tableURI)
       this
     }
@@ -122,8 +119,7 @@ object KijiOutput {
      *
      * @return the output table URI from this builder.
      */
-    def tableURI: Option[String] = mTableURI
-
+    def tableURI: Option[String] = monitor.synchronized(mTableURI)
     /**
      * Configure the KijiSource to write with the timestamp found in the given Field.
      *
@@ -131,7 +127,8 @@ object KijiOutput {
      * @return this builder.
      */
     def withTimestampField(timestampField: Symbol): Builder = monitor.synchronized {
-      require(None == mTimestampField, "Timestamp Field already set to: " + mTimestampField)
+      require(timestampField != null, "Timestamp field may not be null.")
+      require(mTimestampField.isEmpty, "Timestamp field already set to: " + mTimestampField)
       mTimestampField = Some(timestampField)
       this
     }
@@ -141,7 +138,7 @@ object KijiOutput {
      *
      * @return the Field whose value will be used as a timestamp when writing.
      */
-    def timestampField: Option[Symbol] = mTimestampField
+    def timestampField: Option[Symbol] = monitor.synchronized(mTimestampField)
 
     /**
      * Configure the KijiSource to write values of the given Fields to the corresponding columns.
@@ -151,10 +148,10 @@ object KijiOutput {
      * @return this builder.
      */
     def withColumns(columns: Map[Symbol, String]): Builder = monitor.synchronized {
+      require(columns != null, "Column output specs may not be null.")
       require(columns.size == columns.values.toSet.size,
-          "Column output specifications may not contain duplicate columns, found: " + columns)
-      require(None == mColumnSpecs,
-          "Column output specifications already set to: " + mColumnSpecs)
+          "Column output specs may not contain duplicate columns, found: " + columns)
+      require(mColumnSpecs.isEmpty, "Column output specs already set to: " + mColumnSpecs)
       mColumnSpecs = Some(columns.mapValues { QualifiedColumnOutputSpec.fromColumnName })
       this
     }
@@ -178,22 +175,21 @@ object KijiOutput {
      * @return this builder.
      */
     def addColumns(columns: Map[Symbol, String]): Builder = monitor.synchronized {
+      require(columns != null, "Column output specs may not be null.")
       require(columns.size == columns.values.toSet.size,
-        "Column output specifications may not contain duplicate columns, found: " + columns)
+        "Column output specs may not contain duplicate columns, found: " + columns)
       mColumnSpecs match {
         case Some(cs) => {
           val colsList: List[String] = columns.values.toList
           val duplicateFieldOrColumn: Boolean = cs.exists {
             case (field, column) => columns.contains(field) || colsList.contains(column)
           }
-          require(!duplicateFieldOrColumn, ("Column output specifications already set to: %s May "
+          require(!duplicateFieldOrColumn, ("Column output specs already set to: %s May "
               + "not add duplicate Fields or columns.").format(mColumnSpecs.get))
-          mColumnSpecs = Some(cs ++ columns.mapValues {
-            QualifiedColumnOutputSpec.fromColumnName
-          })
+          mColumnSpecs = Some(cs ++ columns.mapValues(QualifiedColumnOutputSpec.fromColumnName))
         }
         case None => {
-          mColumnSpecs = Some(columns.mapValues { QualifiedColumnOutputSpec.fromColumnName })
+          mColumnSpecs = Some(columns.mapValues(QualifiedColumnOutputSpec.fromColumnName))
         }
       }
       this
@@ -218,24 +214,23 @@ object KijiOutput {
      * @return this builder.
      */
     def withColumnSpecs(columnSpecs: Map[Symbol, _ <: ColumnOutputSpec]): Builder = {
+      require(columnSpecs != null, "Column output specs may not be null.")
+      val (qualified, families) = columnSpecs.values.partition {
+        case _: QualifiedColumnOutputSpec => true
+        case _: ColumnFamilyOutputSpec => false
+      }
+      require(qualified.size == qualified.map(_.columnName).toSet.size,
+        "Column output specifications may not contain duplicate columns, found: " + columnSpecs)
+      require(families.size == families.map {
+        case ColumnFamilyOutputSpec(family, qualifierSelector, _) => (family, qualifierSelector)
+      }.toSet.size,
+        "Column output specifications may not contain duplicate columns. Column family output "
+          + "specifications are considered duplicate if the family and qualifier selector both "
+          + "match, found: " + columnSpecs)
+
+      // synchronize access to mColumnSpecs
       monitor.synchronized {
-        val (qualified, families) = columnSpecs.partition {
-          case (_, spec) => spec match {
-            case qcos: QualifiedColumnOutputSpec => true
-            case cfos: ColumnFamilyOutputSpec => false
-            case unknown => throw new InternalKijiError("Unknown ColumnOutputSpec type: " + unknown)
-          }
-        }
-        require(qualified.size == qualified.values.map { _.columnName }.toSet.size,
-            "Column output specifications may not contain duplicate columns, found: " + columnSpecs)
-        require(families.size == families.values.map {
-              case ColumnFamilyOutputSpec(family, qualifierSelector, _) =>
-                (family, qualifierSelector)
-            }.toSet.size,
-            "Column output specifications may not contain duplicate columns. Column family output "
-            + "specifications are considered duplicate if the family and qualifier selector both "
-            + "match, found: " + columnSpecs)
-        require(None == mColumnSpecs,
+        require(mColumnSpecs.isEmpty,
           "Column output specifications already set to: " + mColumnSpecs.get)
         mColumnSpecs = Some(columnSpecs)
         this
@@ -261,23 +256,22 @@ object KijiOutput {
      * @return this builder.
      */
     def addColumnSpecs(columnSpecs: Map[Symbol, _ <: ColumnOutputSpec]): Builder = {
+      require(columnSpecs != null, "Column output specs may not be null.")
+      val (qualified, families) = columnSpecs.values.partition {
+        case _: QualifiedColumnOutputSpec => true
+        case _: ColumnFamilyOutputSpec => false
+      }
+      require(qualified.size == qualified.map { _.columnName }.toSet.size,
+        "Column output specifications may not contain duplicate columns, found: " + columnSpecs)
+      require(families.size == families.map {
+        case ColumnFamilyOutputSpec(family, qualifierSelector, _) => (family, qualifierSelector)
+      }.toSet.size,
+        "Column output specifications may not contain duplicate columns. Column family output "
+          + "specifications are considered duplicate if the family and qualifier selector both "
+          + "match, found: " + columnSpecs)
+
+      // synchronize access to mColumnSpecs
       monitor.synchronized {
-        val (qualified, families) = columnSpecs.partition {
-          case (_, spec) => spec match {
-            case qcos: QualifiedColumnOutputSpec => true
-            case cfos: ColumnFamilyOutputSpec => false
-            case unknown => throw new InternalKijiError("Unknown ColumnOutputSpec type: " + unknown)
-          }
-        }
-        require(qualified.size == qualified.values.map { _.columnName }.toSet.size,
-          "Column output specifications may not contain duplicate columns, found: " + columnSpecs)
-        require(families.size == families.values.map {
-          case ColumnFamilyOutputSpec(family, qualifierSelector, _) =>
-            (family, qualifierSelector)
-        }.toSet.size,
-          "Column output specifications may not contain duplicate columns. Column family output "
-              + "specifications are considered duplicate if the family and qualifier selector both "
-              + "match, found: " + columnSpecs)
         mColumnSpecs match {
           case Some(cs) => {
             val colsList: List[KijiColumnName] = columnSpecs.values.toList.map { _.columnName }
@@ -310,18 +304,19 @@ object KijiOutput {
      *
      * @return the output specifications from this Builder.
      */
-    def columnSpecs: Option[Map[Symbol, _ <: ColumnOutputSpec]] = mColumnSpecs
+    def columnSpecs: Option[Map[Symbol, _ <: ColumnOutputSpec]] = monitor.synchronized(mColumnSpecs)
 
     /**
      * Build a new KijiSource configured for output from the values stored in this Builder.
      *
+     * @throws IllegalStateException if the builder is not in a valid state to be built.
      * @return a new KijiSource configured for output from the values stored in this Builder.
      */
     def build: KijiSource = monitor.synchronized {
       KijiOutput(
-        tableURI.getOrElse(throw new IllegalArgumentException("Table URI must be specified.")),
-        timestampField,
-        columnSpecs.getOrElse(DEFAULT_COLUMN_OUTPUT_SPECS)
+          mTableURI.getOrElse(throw new IllegalStateException("Table URI must be specified.")),
+          mTimestampField,
+          mColumnSpecs.getOrElse(DEFAULT_COLUMN_OUTPUT_SPECS)
       )
     }
   }
@@ -346,7 +341,9 @@ object KijiOutput {
      * @param other Builder to copy.
      * @return a new KijiOutputBuilder as a copy of the given Builder.
      */
-    private[express] def apply(other: Builder): Builder =
-        new Builder(other.tableURI, other.timestampField, other.columnSpecs)
+    private[express] def apply(other: Builder): Builder = other.monitor.synchronized {
+      // synchronize to get consistent snapshot of other
+      new Builder(other.tableURI, other.timestampField, other.columnSpecs)
+    }
   }
 }

@@ -68,61 +68,58 @@ object KijiInput {
   /**
    * Builder for [[org.kiji.express.flow.KijiSource]]s to be used as inputs.
    *
-   * @param constructorTableURI string of the table from which to read.
-   * @param constructorTimeRange from which to read values.
-   * @param constructorColumnSpecs specification of columns from which to read.
+   * @param mTableURI string of the table from which to read.
+   * @param mTimeRange from which to read values.
+   * @param mColumnSpecs specification of columns from which to read.
+   * @param mRowRangeSpec rows from which to read.
+   * @param mRowFilterSpec filters used to read.
    */
   @ApiAudience.Public
   @ApiStability.Stable
   final class Builder private(
-      private val constructorTableURI: Option[String],
-      private val constructorTimeRange: Option[TimeRangeSpec],
-      private val constructorColumnSpecs: Option[Map[_ <: ColumnInputSpec, Symbol]],
-      private val constructorRowRangeSpec: Option[RowRangeSpec],
-      private val constructorRowFilterSpec: Option[RowFilterSpec]
+      private[this] var mTableURI: Option[String],
+      private[this] var mTimeRange: Option[TimeRangeSpec],
+      private[this] var mColumnSpecs: Option[Map[_ <: ColumnInputSpec, Symbol]],
+      private[this] var mRowRangeSpec: Option[RowRangeSpec],
+      private[this] var mRowFilterSpec: Option[RowFilterSpec]
   ) {
-    private[this] val monitor = new AnyRef
-
-    private var mTableURI: Option[String] = constructorTableURI
-    private var mTimeRange: Option[TimeRangeSpec] = constructorTimeRange
-    private var mColumnSpecs: Option[Map[_ <: ColumnInputSpec, Symbol]] = constructorColumnSpecs
-    private var mRowRangeSpec: Option[RowRangeSpec] = constructorRowRangeSpec
-    private var mRowFilterSpec: Option[RowFilterSpec] = constructorRowFilterSpec
+    /** protects read and write access to private var fields. */
+    private val monitor = new AnyRef
 
     /**
      * Get the Kiji URI of the table from which to read from this Builder.
      *
      * @return the Kiji URI of the table from which to read from this Builder.
      */
-    def tableURI: Option[String] = mTableURI
+    def tableURI: Option[String] = monitor.synchronized(mTableURI)
 
     /**
      * Get the input time range specification from this Builder.
      *
      * @return the input time range specification from this Builder.
      */
-    def timeRange: Option[TimeRangeSpec] = mTimeRange
+    def timeRange: Option[TimeRangeSpec] = monitor.synchronized(mTimeRange)
 
     /**
      * Get the input specifications from this Builder.
      *
      * @return the input specifications from this Builder.
      */
-    def columnSpecs: Option[Map[_ <: ColumnInputSpec, Symbol]] = mColumnSpecs
+    def columnSpecs: Option[Map[_ <: ColumnInputSpec, Symbol]] = monitor.synchronized(mColumnSpecs)
 
     /**
      * Get the input row range specification from this Builder.
      *
      * @return the input row range specification from this Builder.
      */
-    def rowRangeSpec: Option[RowRangeSpec] = mRowRangeSpec
+    def rowRangeSpec: Option[RowRangeSpec] = monitor.synchronized(mRowRangeSpec)
 
     /**
      * Get the input row filter specification from this Builder.
      *
      * @return the input row filter specification from this Builder.
      */
-    def rowFilterSpec: Option[RowFilterSpec] = mRowFilterSpec
+    def rowFilterSpec: Option[RowFilterSpec] = monitor.synchronized(mRowFilterSpec)
 
     /**
      * Configure the KijiSource to read values from the table with the given Kiji URI.
@@ -131,7 +128,8 @@ object KijiInput {
      * @return this builder.
      */
     def withTableURI(tableURI: String): Builder = monitor.synchronized {
-      require(None == mTableURI, "Table URI already set to: " + mTableURI.get)
+      require(tableURI != null, "Table URI may not be null.")
+      require(mTableURI.isEmpty, "Table URI already set to: " + mTableURI.get)
       mTableURI = Some(tableURI)
       this
     }
@@ -143,7 +141,8 @@ object KijiInput {
      * @return this builder.
      */
     def withTimeRangeSpec(timeRangeSpec: TimeRangeSpec): Builder = monitor.synchronized {
-      require(None == mTimeRange, "Time range already set to: " + mTimeRange.get)
+      require(timeRangeSpec != null, "Time range may not be null.")
+      require(mTimeRange.isEmpty, "Time range already set to: " + mTimeRange.get)
       mTimeRange = Some(timeRangeSpec)
       this
     }
@@ -214,13 +213,14 @@ object KijiInput {
      * @return this builder.
      */
     def withColumnSpecs(columnSpecs: Map[_ <: ColumnInputSpec, Symbol]): Builder = {
+      require(columnSpecs != null, "Column input specs may not be null.")
+      require(columnSpecs.size == columnSpecs.values.toSet.size,
+        "Column input specs may not include duplicate Fields. found: " + columnSpecs)
       monitor.synchronized {
-        require(None == mColumnSpecs, "Column input specs already set to: " + mColumnSpecs.get)
-        require(columnSpecs.size == columnSpecs.values.toSet.size,
-          "Column input specs may not include duplicate Fields. found: " + columnSpecs)
+        require(mColumnSpecs.isEmpty, "Column input specs already set to: " + mColumnSpecs.get)
         mColumnSpecs = Some(columnSpecs)
-        this
       }
+      this
     }
 
     /**
@@ -231,9 +231,10 @@ object KijiInput {
      * @return this builder.
      */
     def addColumnSpecs(columnSpecs: Map[_ <: ColumnInputSpec, Symbol]): Builder = {
+      require(columnSpecs != null, "Column input specs may not be null.")
+      require(columnSpecs.size == columnSpecs.values.toSet.size,
+        "Column input specs may not include duplicate Fields. found: " + columnSpecs)
       monitor.synchronized {
-        require(columnSpecs.size == columnSpecs.values.toSet.size,
-            "Column input specs may not include duplicate Fields. found: " + columnSpecs)
         mColumnSpecs match {
           case Some(cs) => {
             val symbols: List[Symbol] = columnSpecs.values.toList
@@ -244,8 +245,8 @@ object KijiInput {
           }
           case None => mColumnSpecs = Some(columnSpecs)
         }
-        this
       }
+      this
     }
 
     /**
@@ -255,7 +256,8 @@ object KijiInput {
      * @return this builder.
      */
     def withRowRangeSpec(rowRangeSpec: RowRangeSpec): Builder = monitor.synchronized {
-      require(None == mRowRangeSpec, "Row spec already set to: " + mRowRangeSpec.get)
+      require(rowRangeSpec != null, "Row range spec may not be null.")
+      require(mRowRangeSpec.isEmpty, "Row range spec already set to: " + mRowRangeSpec.get)
       mRowRangeSpec = Some(rowRangeSpec)
       this
     }
@@ -267,7 +269,8 @@ object KijiInput {
      * @return this builder.
      */
     def withRowFilterSpec(rowFilterSpec: RowFilterSpec): Builder = monitor.synchronized {
-      require(None == mRowFilterSpec, "Row spec already set to: " + mRowFilterSpec.get)
+      require(rowFilterSpec != null, "Row filter spec may not be null.")
+      require(mRowFilterSpec.isEmpty, "Row filter spec already set to: " + mRowFilterSpec.get)
       mRowFilterSpec = Some(rowFilterSpec)
       this
     }
@@ -275,14 +278,15 @@ object KijiInput {
     /**
      * Build a new KijiSource configured for input from the values stored in this Builder.
      *
+     * @throws IllegalStateException if the builder is not in a valid state to be built.
      * @return a new KijiSource configured for input from the values stored in this Builder.
      */
     def build: KijiSource = monitor.synchronized {
       KijiInput(
-          tableURI.getOrElse(throw new IllegalArgumentException("Table URI must be specified.")),
+          tableURI.getOrElse(throw new IllegalStateException("Table URI must be specified.")),
           timeRange.getOrElse(DEFAULT_TIME_RANGE),
           columnSpecs.getOrElse(
-              throw new IllegalArgumentException("Column input specs must be specified.")),
+              throw new IllegalStateException("Column input specs must be specified.")),
           rowRangeSpec.getOrElse(RowRangeSpec.All),
           rowFilterSpec.getOrElse(RowFilterSpec.NoFilter))
     }
@@ -309,13 +313,15 @@ object KijiInput {
      * @param other Builder to copy.
      * @return a new Builder as a copy of the given Builder.
      */
-    def apply(other: Builder): Builder =
-        new Builder(
-            other.tableURI,
-            other.timeRange,
-            other.columnSpecs,
-            other.rowRangeSpec,
-            other.rowFilterSpec)
+    def apply(other: Builder): Builder = other.monitor.synchronized {
+      // synchronize to get consistent snapshot of other
+      new Builder(
+          other.tableURI,
+          other.timeRange,
+          other.columnSpecs,
+          other.rowRangeSpec,
+          other.rowFilterSpec)
+    }
 
     /**
      * Converts a column -> Field mapping to a ColumnInputSpec -> Field mapping.
@@ -354,14 +360,11 @@ object KijiInput {
       rowRangeSpec: RowRangeSpec,
       rowFilterSpec: RowFilterSpec
   ): KijiSource = {
-    val columnMap = columns
-        .map { entry: (ColumnInputSpec, Symbol) => entry.swap }
-
     new KijiSource(
       tableUri,
       timeRange,
       None,
-      inputColumns = columnMap,
+      inputColumns = columns.map(_.swap),
       rowRangeSpec = rowRangeSpec,
       rowFilterSpec = rowFilterSpec
     )

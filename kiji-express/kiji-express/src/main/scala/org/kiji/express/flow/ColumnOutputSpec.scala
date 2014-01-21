@@ -23,7 +23,6 @@ import com.google.common.base.Objects
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.annotations.Inheritance
 import org.kiji.express.flow.util.AvroUtil
 import org.kiji.schema.KijiColumnName
 import org.kiji.schema.KijiInvalidNameException
@@ -137,15 +136,13 @@ final class QualifiedColumnOutputSpec private(
 
   override def hashCode: Int = Objects.hashCode(family, qualifier, schemaSpec)
 
-  override def equals(obj: Any): Boolean = {
-    if (!obj.isInstanceOf[QualifiedColumnOutputSpec]) {
-      false
-    } else {
-      val other = obj.asInstanceOf[QualifiedColumnOutputSpec]
+  override def equals(obj: Any): Boolean = obj match {
+    case other: QualifiedColumnOutputSpec => {
       family == other.family &&
           qualifier == other.qualifier &&
           schemaSpec == other.schemaSpec
     }
+    case _ => false
   }
 }
 
@@ -217,22 +214,19 @@ object QualifiedColumnOutputSpec {
   /**
    * Builder for QualifiedColumnOutputSpec.
    *
-   * @param constructorFamily optional family with which to initialize this builder.
-   * @param constructorQualifier optional qualifier with which to initialize this builder.
-   * @param constructorSchemaSpec optional SchemaSpec with which to initialize this builder.
+   * @param mFamily optional family with which to initialize this builder.
+   * @param mQualifier optional qualifier with which to initialize this builder.
+   * @param mSchemaSpec optional SchemaSpec with which to initialize this builder.
    */
   @ApiAudience.Public
   @ApiStability.Stable
   final class Builder private(
-      constructorFamily: Option[String],
-      constructorQualifier: Option[String],
-      constructorSchemaSpec: Option[SchemaSpec]
+      private[this] var mFamily: Option[String],
+      private[this] var mQualifier: Option[String],
+      private[this] var mSchemaSpec: Option[SchemaSpec]
   ) {
+    /** protects read and write access to private var fields. */
     private val monitor = new AnyRef
-
-    private var mFamily: Option[String] = constructorFamily
-    private var mQualifier: Option[String] = constructorQualifier
-    private var mSchemaSpec: Option[SchemaSpec] = constructorSchemaSpec
 
     /**
      * Configure the output spec to write to the given Kiji column.
@@ -241,9 +235,10 @@ object QualifiedColumnOutputSpec {
      * @return this builder.
      */
     def withColumn(column: KijiColumnName): Builder = monitor.synchronized {
-      require(column.isFullyQualified, "Column must be fully qualified.")
-      require(None == mFamily, "Family already set to: " + mFamily.get)
-      require(None == mQualifier, "Qualifier already set to: " + mQualifier.get)
+      require(column != null, "Output column may not be null.")
+      require(column.isFullyQualified, "Output column must be fully qualified.")
+      require(mFamily.isEmpty, "Output column family already set to: " + mFamily.get)
+      require(mQualifier.isEmpty, "Output column qualifier already set to: " + mQualifier.get)
       mFamily = Some(column.getFamily)
       mQualifier = Some(column.getQualifier)
       this
@@ -257,8 +252,10 @@ object QualifiedColumnOutputSpec {
      * @return this builder.
      */
     def withColumn(family: String, qualifier: String): Builder = monitor.synchronized {
-      require(None == mFamily, "Family already set to: " + mFamily.get)
-      require(None == mQualifier, "Qualifier already set to: " + mQualifier.get)
+      require(family != null, "Output column family may not be null.")
+      require(qualifier != null, "Output column qualifier may not be null.")
+      require(mFamily.isEmpty, "Output column family already set to: " + mFamily.get)
+      require(mQualifier.isEmpty, "Output column qualifier already set to: " + mQualifier.get)
       mFamily = Some(family)
       mQualifier = Some(qualifier)
       this
@@ -273,7 +270,8 @@ object QualifiedColumnOutputSpec {
      * @return this builder.
      */
     def withFamily(family: String): Builder = monitor.synchronized {
-      require(None == mFamily, "Family already set to: " + mFamily.get)
+      require(family != null, "Output column family may not be null.")
+      require(mFamily.isEmpty, "Output column family already set to: " + mFamily.get)
       mFamily = Some(family)
       this
     }
@@ -287,7 +285,8 @@ object QualifiedColumnOutputSpec {
      * @return this builder.
      */
     def withQualifier(qualifier: String): Builder = monitor.synchronized {
-      require(None == mQualifier, "Qualifier already set to: " + mQualifier.get)
+      require(qualifier != null, "Output column qualifier may not be null.")
+      require(mQualifier.isEmpty, "Output column qualifier already set to: " + mQualifier.get)
       mQualifier = Some(qualifier)
       this
     }
@@ -297,14 +296,14 @@ object QualifiedColumnOutputSpec {
      *
      * @return the name of the Kiji column family into which to write.
      */
-    def family: Option[String] = mFamily
+    def family: Option[String] = monitor.synchronized(mFamily)
 
     /**
      * Name of the Kiji column qualifier into which to write.
      *
      * @return the name of the Kiji column qualifier into which to write.
      */
-    def qualifier: Option[String] = mQualifier
+    def qualifier: Option[String] = monitor.synchronized(mQualifier)
 
     /**
      * Configure the output spec to write using the given SchemaSpec.
@@ -313,8 +312,9 @@ object QualifiedColumnOutputSpec {
      * @return this builder.
      */
     def withSchemaSpec(schemaSpec: SchemaSpec): Builder = monitor.synchronized {
-      require(None == mSchemaSpec, "Schema spec already set to: " + mSchemaSpec.get)
-      mSchemaSpec = Some(schemaSpec)
+      require(schemaSpec != null, "Schema spec may not be null.")
+      require(mSchemaSpec.isEmpty, "Schema spec already set to: " + mSchemaSpec.get)
+      mSchemaSpec = Option(schemaSpec)
       this
     }
 
@@ -323,39 +323,31 @@ object QualifiedColumnOutputSpec {
      *
      * @return a specification of the Schema to use when writing this column.
      */
-    def schemaSpec: Option[SchemaSpec] = mSchemaSpec
+    def schemaSpec: Option[SchemaSpec] = monitor.synchronized(mSchemaSpec)
 
     /**
      * Build a new QualifiedColumnOutputSpec from the values stored in this builder.
      *
+     * @throws IllegalStateException if the builder is not in a valid state to be built.
      * @return a new QualifiedColumnOutputSpec from the values stored in this builder.
      */
     def build: QualifiedColumnOutputSpec = monitor.synchronized {
       QualifiedColumnOutputSpec(
-        mFamily.getOrElse(throw new IllegalArgumentException("family must be specified.")),
-        mQualifier.getOrElse(throw new IllegalArgumentException("qualifier must be specified.")),
-        mSchemaSpec.getOrElse(ColumnOutputSpec.DEFAULT_SCHEMA_SPEC)
+          mFamily.getOrElse(
+              throw new IllegalStateException("Output column family must be specified.")),
+          mQualifier.getOrElse(
+              throw new IllegalStateException("Output column qualifier must be specified.")),
+          mSchemaSpec.getOrElse(ColumnOutputSpec.DEFAULT_SCHEMA_SPEC)
       )
     }
 
-    override def hashCode: Int = Objects.hashCode(mFamily, mQualifier, mSchemaSpec)
-
-    override def equals(target: Any): Boolean = {
-      if (!target.isInstanceOf[Builder]) {
-        false
-      } else {
-        val other: Builder = target.asInstanceOf[Builder]
-        mFamily == other.mFamily &&
-            mQualifier == other.mQualifier &&
-            mSchemaSpec == other.mSchemaSpec
-      }
-    }
-
-    override def toString: String = Objects.toStringHelper(classOf[Builder])
+    override def toString: String = monitor.synchronized {
+      Objects.toStringHelper(classOf[Builder])
         .add("family", mFamily)
         .add("qualifier", mQualifier)
         .add("schema_spec", mSchemaSpec)
         .toString
+    }
   }
 
   /**
@@ -380,7 +372,8 @@ object QualifiedColumnOutputSpec {
      * @return a new QualifiedcolumnOutputSpec.Builder as a copy of the given Builder.
      */
     private[express] def apply(other: Builder): Builder = {
-      new Builder(other.family, other.qualifier, other.schemaSpec)
+      // explicitly synchronize to get a consistent snapshot
+      other.monitor.synchronized(new Builder(other.family, other.qualifier, other.schemaSpec))
     }
   }
 }
@@ -444,15 +437,13 @@ final class ColumnFamilyOutputSpec private(
 
   override def hashCode: Int = Objects.hashCode(family, qualifierSelector, schemaSpec)
 
-  override def equals(obj: Any): Boolean = {
-    if (!obj.isInstanceOf[ColumnFamilyOutputSpec]) {
-      false
-    } else {
-      val other = obj.asInstanceOf[ColumnFamilyOutputSpec]
+  override def equals(obj: Any): Boolean = obj match {
+    case other: ColumnFamilyOutputSpec => {
       family.equals(other.family) &&
           qualifierSelector.equals(other.qualifierSelector) &&
           schemaSpec.equals(other.schemaSpec)
     }
+    case _ => false
   }
 }
 
@@ -540,23 +531,19 @@ object ColumnFamilyOutputSpec {
   /**
    * Builder for ColumnFamilyOutputSpec.
    *
-   * @param constructorFamily optional family with which to initialize this builder.
-   * @param constructorQualifierSelector optional qualifier selector with which to initialize this
-   *     builder.
-   * @param constructorSchemaSpec optional SchemaSpec with which to intialize this builder.
+   * @param mFamily optional family with which to initialize this builder.
+   * @param mQualifierSelector optional qualifier selector with which to initialize this builder.
+   * @param mSchemaSpec optional SchemaSpec with which to intialize this builder.
    */
   @ApiAudience.Public
   @ApiStability.Stable
   final class Builder private(
-      constructorFamily: Option[String],
-      constructorQualifierSelector: Option[Symbol],
-      constructorSchemaSpec: Option[SchemaSpec]
+      private[this] var mFamily: Option[String],
+      private[this] var mQualifierSelector: Option[Symbol],
+      private[this] var mSchemaSpec: Option[SchemaSpec]
   ) {
+    /** protects read and write access to private var fields. */
     private val monitor = new AnyRef
-
-    private var mFamily: Option[String] = constructorFamily
-    private var mQualifierSelector: Option[Symbol] = constructorQualifierSelector
-    private var mSchemaSpec: Option[SchemaSpec] = constructorSchemaSpec
 
     /**
      * Configure the output spec to write into the given column family.
@@ -565,8 +552,9 @@ object ColumnFamilyOutputSpec {
      * @return this builder.
      */
     def withFamily(family: String): Builder = monitor.synchronized {
-      require(None == mFamily, "Family already set to: " + mFamily.get)
-      require(!family.contains(":"), "Family may not contain ':'.")
+      require(family != null, "Output column family may not be null.")
+      require(mFamily.isEmpty, "Output column family already set to: " + mFamily.get)
+      require(!family.contains(":"), "Output column family may not contain ':'.")
       mFamily = Some(family)
       this
     }
@@ -576,7 +564,7 @@ object ColumnFamilyOutputSpec {
      *
      * @return the column family configured in this builder.
      */
-    def family: Option[String] = mFamily
+    def family: Option[String] = monitor.synchronized(mFamily)
 
     /**
      * Configure the output spec to read the column qualifier from the given Field.
@@ -585,8 +573,9 @@ object ColumnFamilyOutputSpec {
      * @return this builder.
      */
     def withQualifierSelector(qualifierSelector: Symbol): Builder = monitor.synchronized {
-      require(None == mQualifierSelector,
-        "Qualifier selector already set to: " + mQualifierSelector.get)
+      require(qualifierSelector != null, "Output column qualifier selector may not be null.")
+      require(mQualifierSelector.isEmpty,
+        "Output column qualifier selector already set to: " + mQualifierSelector.get)
       mQualifierSelector = Some(qualifierSelector)
       this
     }
@@ -596,7 +585,7 @@ object ColumnFamilyOutputSpec {
      *
      * @return the field from which the output column qualifier will be read.
      */
-    def qualifierSelector: Option[Symbol] = mQualifierSelector
+    def qualifierSelector: Option[Symbol] = monitor.synchronized(mQualifierSelector)
 
     /**
      * Configure the output spec to write using the given SchemaSpec.
@@ -605,7 +594,8 @@ object ColumnFamilyOutputSpec {
      * @return this builder.
      */
     def withSchemaSpec(schemaSpec: SchemaSpec): Builder = monitor.synchronized {
-      require(None == mSchemaSpec, "Schema spec already set to: " + mSchemaSpec.get)
+      require(schemaSpec != null, "Schema spec may not be null.")
+      require(mSchemaSpec.isEmpty, "Schema spec already set to: " + mSchemaSpec.get)
       mSchemaSpec = Some(schemaSpec)
       this
     }
@@ -615,20 +605,30 @@ object ColumnFamilyOutputSpec {
      *
      * @return a specification of the Schema to use when writing this column.
      */
-    def schemaSpec: Option[SchemaSpec] = mSchemaSpec
+    def schemaSpec: Option[SchemaSpec] = monitor.synchronized(mSchemaSpec)
 
     /**
      * Create a new ColumnFamilyOutputSpec from the values stored in this builder.
      *
+     * @throws IllegalStateException if the builder is not in a valid state to be built.
      * @return a new ColumnFamilyOutputSpec from the values stored in this builder.
      */
     def build: ColumnFamilyOutputSpec = monitor.synchronized {
       ColumnFamilyOutputSpec(
-        mFamily.getOrElse(throw new IllegalArgumentException("family must be specified.")),
-        mQualifierSelector
-            .getOrElse(throw new IllegalArgumentException("qualifier selector must be specified.")),
-        mSchemaSpec.getOrElse(ColumnOutputSpec.DEFAULT_SCHEMA_SPEC)
+          mFamily.getOrElse(
+            throw new IllegalStateException("Output column family must be specified.")),
+          mQualifierSelector.getOrElse(
+            throw new IllegalStateException("Output column qualifier selector must be specified.")),
+          mSchemaSpec.getOrElse(ColumnOutputSpec.DEFAULT_SCHEMA_SPEC)
       )
+    }
+
+    override def toString: String = monitor.synchronized {
+      Objects.toStringHelper(classOf[Builder])
+        .add("family", mFamily)
+        .add("qualifier_selector", mQualifierSelector)
+        .add("schema_spec", mSchemaSpec)
+        .toString
     }
   }
 
@@ -653,8 +653,9 @@ object ColumnFamilyOutputSpec {
      * @param other Builder to copy.
      * @return a new ColumnFamilyOutputSpec.Builder as a copy of the given Builder.
      */
-    private[express] def apply(other: Builder): Builder =
-        new Builder(other.family, other.qualifierSelector, other.schemaSpec)
+    private[express] def apply(other: Builder): Builder = other.monitor.synchronized {
+      // synchronize to get consistent snapshot of other
+      new Builder(other.family, other.qualifierSelector, other.schemaSpec)
+    }
   }
 }
-
