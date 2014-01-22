@@ -40,6 +40,10 @@ public class KijiRESTConfiguration extends Configuration {
   @JsonProperty("freshening")
   private FresheningConfiguration mFresheningConfiguration = new FresheningConfiguration();
 
+  /** Set global CORS support. */
+  @JsonProperty("cors")
+  private boolean mCORS = false;
+
   /** @return The cluster address. */
   public final String getClusterURI() {
     return mCluster;
@@ -48,5 +52,10 @@ public class KijiRESTConfiguration extends Configuration {
   /** @return The freshening configuration. */
   public FresheningConfiguration getFresheningConfiguration() {
     return mFresheningConfiguration;
+  }
+
+  /** @return Is global CORS turned on or off. */
+  public boolean getCORS() {
+    return mCORS;
   }
 }

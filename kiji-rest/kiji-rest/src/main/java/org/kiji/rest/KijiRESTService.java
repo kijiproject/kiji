@@ -32,6 +32,7 @@ import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.config.Bootstrap;
 import com.yammer.dropwizard.config.Environment;
 
+import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -134,6 +135,14 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
     for (KijiRestPlugin plugin : Lookups.get(KijiRestPlugin.class)) {
       LOG.info("Loading plugin {}", plugin.getClass());
       plugin.install(kijiClient, configuration, environment);
+    }
+
+    // Allow global CORS filter. CORS off by default.
+    if (configuration.getCORS()) {
+      environment.addFilter(
+          CrossOriginFilter.class,
+          configuration.getHttpConfiguration().getRootPath());
+      LOG.info("Global cross-origin resource sharing is allowed.");
     }
   }
 

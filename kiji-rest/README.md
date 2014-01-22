@@ -65,6 +65,10 @@ The following is an example of the contents of a proper configuration.yml file:
 
 "cluster" : "kiji://localhost:2181/" #The base cluster URI
 
+There is optional key to turn on global cross-origin resource sharing (CORS).
+
+"cors" : "true" #If not set, defaults to false
+
 KijiREST is implemented using DropWizard. See
 [Dropwizard's User Manual](http://dropwizard.codahale.com/manual/core/#configuration-defaults)
 for additional Dropwizard-specific configuration options such as server settings
