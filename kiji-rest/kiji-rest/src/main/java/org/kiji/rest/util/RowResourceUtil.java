@@ -74,6 +74,7 @@ import org.kiji.schema.util.ResourceUtils;
 public final class RowResourceUtil {
 
   private static final ObjectMapper BASIC_MAPPER = new ObjectMapper();
+  private static final String COUNTER_INCREMENT_KEY = "incr";
 
   /**
    * Blank constructor.
@@ -297,33 +298,6 @@ public final class RowResourceUtil {
   }
 
   /**
-   * A helper method to perform counter puts.
-   *
-   * @param writer is the table writer which will do the putting.
-   * @param entityId is the entityId of the row to put to.
-   * @param valueString is the value to put; should be convertible to long.
-   * @param column is the column to put the cell to.
-   * @param timestamp is the timestamp to put the cell at (default is cluster-side UNIX time).
-   * @throws IOException if the put fails.
-   */
-  public static void putCounterCell(
-      final KijiTableWriter writer,
-      final EntityId entityId,
-      final String valueString,
-      final KijiColumnName column,
-      final long timestamp)
-      throws IOException {
-    try {
-      long value = Long.parseLong(valueString);
-      writer.put(entityId, column.getFamily(), column.getQualifier(), timestamp, value);
-    } catch (NumberFormatException nfe) {
-      // TODO Make this a more informative exception.
-      // Could not parse parameter to a long.
-      throw new WebApplicationException(nfe, Response.Status.BAD_REQUEST);
-    }
-  }
-
-  /**
    * A helper method to perform individual cell puts.
    *
    * @param writer The table writer which will do the putting.
@@ -394,8 +368,44 @@ public final class RowResourceUtil {
             if (timestamp >= 0) {
               // Put to either a counter or a regular cell.
               if (SchemaType.COUNTER == kijiTable.getLayout().getCellSchema(column).getType()) {
-                // Write the counter cell.
-                putCounterCell(writer, entityId, restCell.getValue().toString(), column, timestamp);
+                JsonNode parsedCounterValue = BASIC_MAPPER.valueToTree(restCell.getValue());
+                if (parsedCounterValue.isIntegralNumber()) {
+                  // Write the counter cell.
+                  writer.put(entityId,
+                      column.getFamily(),
+                      column.getQualifier(),
+                      timestamp,
+                      parsedCounterValue.asLong());
+                } else if (parsedCounterValue.isContainerNode()) {
+                    if (null != parsedCounterValue.get(COUNTER_INCREMENT_KEY)
+                        && parsedCounterValue.get(COUNTER_INCREMENT_KEY).isIntegralNumber()) {
+                      // Counter incrementation does not support timestamp.
+                      if (null != restCell.getTimestamp()) {
+                        throw new WebApplicationException(
+                            new IllegalArgumentException("Counter incrementation does not support "
+                                + "timestamp. Do not specify timestamp in request."));
+                      }
+                      // Increment counter cell.
+                      writer.increment(entityId,
+                          column.getFamily(),
+                          column.getQualifier(),
+                          parsedCounterValue.get(COUNTER_INCREMENT_KEY).asLong());
+                    } else {
+                      throw new WebApplicationException(
+                          new IllegalArgumentException("Counter increment could not be parsed "
+                              + "as long: "
+                              + parsedCounterValue
+                              + ". Provide a json node such as {\"incr\" : 123}."),
+                          Response.Status.BAD_REQUEST);
+                    }
+                } else {
+                  // Could not parse parameter to a long.
+                  throw new WebApplicationException(
+                      new IllegalArgumentException("Counter value could not be parsed as long: "
+                          + parsedCounterValue
+                          + ". Provide a long value to set the counter."),
+                      Response.Status.BAD_REQUEST);
+                }
               } else {
                 // Write the cell.
                 String jsonValue = restCell.getValue().toString();

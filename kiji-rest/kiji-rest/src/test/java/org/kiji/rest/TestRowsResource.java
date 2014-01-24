@@ -704,6 +704,82 @@ public class TestRowsResource extends ResourceTest {
   }
 
   @Test
+  public void testCounterPost() throws Exception {
+    // Set up.
+    KijiCell<Long> postCell = fromInputs("info",
+        "logins",
+        0L,
+        0L,
+        Schema.create(Type.LONG));
+    String eid = "[\"menandros\",\"asia.minor\"]";
+
+    KijiRestRow postRow = new KijiRestRow(KijiRestEntityId.create(stringToJsonNode(eid)));
+
+    addCellToRow(postRow, postCell);
+
+    // Post.
+    Object target = client().resource(PLAYERS_ROWS_RESOURCE).type(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON).post(Object.class, postRow);
+
+    // Retrieve.
+    URI resourceURI = UriBuilder.fromResource(RowsResource.class)
+        .queryParam("eid", eid)
+        .build("default", "players");
+    KijiRestRow returnRow = client().resource(resourceURI).get(KijiRestRow.class);
+
+    // Check.
+    assertTrue(target.toString().contains(
+        "/v1/instances/default/tables/players/rows?eid=" + URLEncoder.encode(eid)));
+    assertEquals(0, returnRow.getCells().get("info").get("logins").get(0).getValue());
+
+    // Increment counter.
+    KijiRestRow postRowIncrement = new KijiRestRow(KijiRestEntityId.create(stringToJsonNode(eid)));
+    postRowIncrement.addCell("info",
+        "logins",
+        null,
+        stringToJsonNode("{\"incr\":123}"),
+        new SchemaOption(3));
+
+    // Post.
+    target = client().resource(PLAYERS_ROWS_RESOURCE).type(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON).post(Object.class, postRowIncrement);
+
+    // Retrieve.
+    resourceURI = UriBuilder.fromResource(RowsResource.class)
+        .queryParam("eid", eid)
+        .build("default", "players");
+    returnRow = client().resource(resourceURI).get(KijiRestRow.class);
+
+    // Check.
+    assertTrue(target.toString().contains(
+        "/v1/instances/default/tables/players/rows?eid=" + URLEncoder.encode(eid)));
+    assertEquals(123, returnRow.getCells().get("info").get("logins").get(0).getValue());
+
+    // Decrement counter.
+    KijiRestRow postRowDecrement = new KijiRestRow(KijiRestEntityId.create(stringToJsonNode(eid)));
+    postRowDecrement.addCell("info",
+        "logins",
+        null,
+        stringToJsonNode("{\"incr\": -122}"),
+        new SchemaOption(3));
+
+    // Post.
+    target = client().resource(PLAYERS_ROWS_RESOURCE).type(MediaType.APPLICATION_JSON)
+        .accept(MediaType.APPLICATION_JSON).post(Object.class, postRowDecrement);
+
+    // Retrieve.
+    resourceURI = UriBuilder.fromResource(RowsResource.class)
+        .queryParam("eid", eid)
+        .build("default", "players");
+    returnRow = client().resource(resourceURI).get(KijiRestRow.class);
+
+    // Check.
+    assertTrue(target.toString().contains(
+        "/v1/instances/default/tables/players/rows?eid=" + URLEncoder.encode(eid)));
+    assertEquals(1, returnRow.getCells().get("info").get("logins").get(0).getValue());
+  }
+
+  @Test
   public void testShouldPostUnionType() throws Exception {
     String stringRowKey = getUrlEncodedEntityIdString("sample_table", 54321L);
 

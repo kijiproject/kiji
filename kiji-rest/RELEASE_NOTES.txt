@@ -1,6 +1,7 @@
 
                               KijiREST Release Notes
 Version 1.2.0
+  * REST-62. Implements counter cell incrementation and decrementation.
   * REST-41. Supports optional cross-origin resource sharing (CORS).
   * REST-89. Refresh instances automatically. Removes instance visibility
       configuration parameter. All instances on target cluster are visible.
