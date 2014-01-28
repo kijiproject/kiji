@@ -51,7 +51,7 @@
     <kiji-express-music.version>1.0.1-SNAPSHOT</kiji-express-music.version>
     <kiji-express-examples.version>1.0.1-SNAPSHOT</kiji-express-examples.version>
     <kiji-express-tools.version>${kiji-express.version}</kiji-express-tools.version>
-    <kiji-rest.version>1.1.1-SNAPSHOT</kiji-rest.version>
+    <kiji-rest.version>1.2.1-SNAPSHOT</kiji-rest.version>
     <kiji-scoring.version>0.11.0-SNAPSHOT</kiji-scoring.version>
     <kiji-scoring-server.version>0.11.0-SNAPSHOT</kiji-scoring-server.version>
     <kiji-modelrepo.version>0.6.0-SNAPSHOT</kiji-modelrepo.version>
