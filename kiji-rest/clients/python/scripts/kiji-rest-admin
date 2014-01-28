@@ -1,0 +1,121 @@
+#!/usr/bin/env python3
+# -*- mode: python -*-
+# -*- coding: utf-8 -*-
+
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""CLI admin interface to the KijiRest server. """
+
+import os
+
+from base import base
+
+from kiji.rest import kiji_rest
+
+
+FLAGS = base.FLAGS
+
+
+def GetKijiRestHome():
+  """Locates the installation directory of KijiREST.
+
+  Returns:
+    The installation directory of KijiREST.
+  Raises:
+    AssertionError: if KijiREST cannot be found.
+  """
+  rest_home = os.environ.get('KIJI_REST_HOME')
+  if rest_home is not None:
+    return os.path.abspath(rest_home)
+  kiji_home = os.environ.get('KIJI_HOME')
+  if kiji_home is not None:
+    return os.path.join(os.path.abspath(kiji_home), 'rest')
+  return '.'
+
+
+_KIJI_REST_HOME = GetKijiRestHome()
+
+
+FLAGS.AddString(
+    name='kiji_rest_home',
+    default=_KIJI_REST_HOME,
+    help='Path of the KijiREST installation directory.',
+)
+
+FLAGS.AddString(
+    name='conf_dir',
+    default=os.path.join(_KIJI_REST_HOME, 'conf'),
+    help='Path of the KijiREST configuration directory.',
+)
+
+FLAGS.AddString(
+    name='logs_dir',
+    default=os.path.join(_KIJI_REST_HOME, 'logs'),
+    help='Directory where KijiREST writes log files.',
+)
+
+FLAGS.AddString(
+    name='pid_file_path',
+    default=os.path.join(_KIJI_REST_HOME, 'kiji-rest.pid'),
+    help='Path of the PID file for the KijiREST process.',
+)
+
+FLAGS.AddString(
+    name='jars',
+    default=None,
+    help='Optional comma-separated list of extra JAR file paths.',
+)
+
+FLAGS.AddString(
+    name='jvm_args',
+    default=None,
+    help='Optional extra JVM arguments.',
+)
+
+
+def Main(args):
+  base.MakeDir(FLAGS.logs_dir)
+
+  jars = []
+  if FLAGS.jars is not None:
+    jars = FLAGS.jars.split(',')
+
+  kiji_rest_path = os.path.join(FLAGS.kiji_rest_home, 'bin', 'kiji-rest')
+  assert os.path.exists(kiji_rest_path), \
+      ('KijiREST binary not found in %s, '
+       'please set --kiji-rest-home=... '
+       'or export KIJI_REST_HOME=... '
+       'or export KIJI_HOME=...' % kiji_rest_path)
+
+  rest_server = kiji_rest.KijiRestServer(
+      kiji_rest_path = kiji_rest_path,
+      logs_dir = FLAGS.logs_dir,
+      pid_file_path = FLAGS.pid_file_path,
+      conf_dir = FLAGS.conf_dir,
+      jar_paths = jars,
+      jvm_args = FLAGS.jvm_args or tuple(),
+  )
+
+  cli_handler = kiji_rest.KijiRestServerCLI(
+      rest_server=rest_server,
+      parent_flags=FLAGS,
+  )
+  return cli_handler(args)
+
+
+if __name__ == '__main__':
+  base.Run(Main)
