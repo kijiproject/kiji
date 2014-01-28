@@ -42,7 +42,7 @@
 #                       are on it.
 #
 #   If HADOOP_HOME and HBASE_HOME are not set, then the environment will additionally
-#   be modified with the following bento-cluster environment variables: 
+#   be modified with the following bento-cluster environment variables:
 
 #   BENTO_CLUSTER_HOME  Set to the $KIJI_HOME/cluster directory, which should contain a
 #                       bento-cluster distribution.
