@@ -153,7 +153,7 @@ public class KijiTableRecordReader
       return false;
     }
     final HBaseKijiRowData rowData = (HBaseKijiRowData) mIterator.next();
-    final KijiRowDataWritable result = new KijiRowDataWritable(rowData);
+    final KijiRowDataWritable result = new KijiRowDataWritable(rowData, mKijiTableReader);
 
     if (result.hasMorePages()) {
       // This is a paged row, so configure this reader to handle the paging, and write it if there

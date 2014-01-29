@@ -103,7 +103,7 @@ public class TestKijiRowEntityIdExpression extends KijiClientTest {
 
     // Test that the data returned from this request is decoded properly
     KijiRowData kijiRowData = mReader.get(mEntityId, kijiDataRequest);
-    KijiRowDataWritable kijiRowDataWritable = new KijiRowDataWritable(kijiRowData);
+    KijiRowDataWritable kijiRowDataWritable = new KijiRowDataWritable(kijiRowData, mReader);
     Object result = kijiRowExpression.evaluate(kijiRowDataWritable);
     assertEquals(expectedResult, result);
   }

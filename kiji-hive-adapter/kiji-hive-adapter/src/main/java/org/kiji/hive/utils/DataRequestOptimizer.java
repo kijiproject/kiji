@@ -19,9 +19,12 @@
 
 package org.kiji.hive.utils;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,7 +67,7 @@ public final class DataRequestOptimizer {
   }
 
   /**
-   * Constructs a data request with paging enabled for the specified columns.
+   * Constructs a data request with cell paging enabled for the specified columns.
    *
    * @param kijiDataRequest to use as a base.
    * @param cellPagingMap of kiji columns to page sizes.
@@ -103,5 +106,47 @@ public final class DataRequestOptimizer {
     }
     KijiDataRequest merged = kijiDataRequest.merge(pagedRequestBuilder.build());
     return merged;
+  }
+
+  /**
+   * This method propogates the configuration of a family in a KijiDataRequest by replacing
+   * it with a page of fully qualified columns with the same configuration.
+   *
+   * @param kijiDataRequest to use as a base.
+   * @param qualifiersPage a page of fully qualified columns to replace families in the original
+   *                        data request with.
+   * @return A new data request with the appropriate families replaced with the page of fully
+   * qualified columns.
+   */
+  public static KijiDataRequest expandFamilyWithPagedQualifiers(
+      KijiDataRequest kijiDataRequest,
+      Collection<KijiColumnName> qualifiersPage) {
+
+    // Organize the page of column names by family.
+    Multimap<String, KijiColumnName> familyToQualifiersMap = ArrayListMultimap.create();
+    for (KijiColumnName kijiColumnName : qualifiersPage) {
+      familyToQualifiersMap.put(kijiColumnName.getFamily(), kijiColumnName);
+    }
+
+    // Build a new data request
+    KijiDataRequestBuilder qualifierRequestBuilder = KijiDataRequest.builder();
+    for (Column column : kijiDataRequest.getColumns()) {
+      KijiColumnName kijiColumnName = column.getColumnName();
+      if (kijiColumnName.isFullyQualified()
+          || !familyToQualifiersMap.containsKey(kijiColumnName.getFamily())) {
+        // If the column is fully qualified or it's not in qualifiersPage add this column as is.
+        qualifierRequestBuilder.newColumnsDef(column);
+      } else {
+        // Iterate through the paged qualifiers and add
+        for (KijiColumnName columnName : familyToQualifiersMap.get(kijiColumnName.getFamily())) {
+          qualifierRequestBuilder.newColumnsDef()
+              .withFilter(column.getFilter())
+              .withPageSize(column.getPageSize())
+              .withMaxVersions(column.getMaxVersions())
+              .add(columnName.getFamily(), columnName.getQualifier());
+        }
+      }
+    }
+    return qualifierRequestBuilder.build();
   }
 }

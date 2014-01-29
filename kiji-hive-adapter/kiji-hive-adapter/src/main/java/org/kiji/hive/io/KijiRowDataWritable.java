@@ -40,12 +40,14 @@ import org.apache.hadoop.io.WritableUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.hive.utils.DataRequestOptimizer;
 import org.kiji.schema.KijiCell;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiColumnPagingNotEnabledException;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiPager;
 import org.kiji.schema.KijiRowData;
+import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.impl.HBaseKijiRowData;
 import org.kiji.schema.layout.KijiTableLayout.LocalityGroupLayout.FamilyLayout;
 import org.kiji.schema.util.TimestampComparator;
@@ -72,7 +74,13 @@ public class KijiRowDataWritable implements Writable {
   private Map<KijiColumnName, Schema> mSchemas;
 
   private KijiRowData mRowData;
-  private Map<KijiColumnName, KijiPager> mKijiPagers;
+
+  private Map<String, KijiPager> mKijiQualifierPagers;
+  private Map<KijiColumnName, KijiPager> mKijiCellPagers;
+
+  // Reference to KijiTableReader necessary for creating qualifier pages
+  private KijiTableReader mReader;
+  private Map<KijiColumnName, NavigableMap<Long, KijiCellWritable>> mQualifierPageData;
 
   /** Required so that this can be built by WritableFactories. */
   public KijiRowDataWritable() {
@@ -92,10 +100,13 @@ public class KijiRowDataWritable implements Writable {
 
   /**
    * Constructs a KijiRowDataWritable from a existing KijiRowData.
+   *
    * @param rowData the source of the fields to copy.
+   * @param kijiTableReader to be used for fetching qualifier pages.
    * @throws IOException if there is an error loading the table layout.
    */
-  public KijiRowDataWritable(KijiRowData rowData) throws IOException {
+  public KijiRowDataWritable(KijiRowData rowData, KijiTableReader kijiTableReader)
+      throws IOException {
     Preconditions.checkArgument(rowData instanceof HBaseKijiRowData,
         "KijiRowData must be an instance of HBaseKijiRowData to read TableLayout information.");
 
@@ -106,13 +117,20 @@ public class KijiRowDataWritable implements Writable {
     mRowData = rowData;
     HBaseKijiRowData hBaseKijiRowData = (HBaseKijiRowData) rowData;
 
-    mKijiPagers = getKijiPagers(hBaseKijiRowData.getDataRequest());
+    mReader = kijiTableReader;
+
+    mKijiQualifierPagers = getKijiQualifierPagers(hBaseKijiRowData.getDataRequest());
+    mQualifierPageData = Maps.newHashMap();
+
+    // While this only contains the fully qualified cell pagers, it will get overwritten when we
+    // are paging through qualifiers.
+    mKijiCellPagers = getKijiCellPagers(hBaseKijiRowData.getDataRequest(), mRowData);
 
     for (FamilyLayout familyLayout : hBaseKijiRowData.getTableLayout().getFamilies()) {
       String family = familyLayout.getName();
       for (String qualifier : rowData.getQualifiers(family)) {
+        KijiColumnName column = new KijiColumnName(family, qualifier);
         if (rowData.getCells(family, qualifier) != null) {
-          KijiColumnName column = new KijiColumnName(family, qualifier);
           NavigableMap<Long, KijiCellWritable> data =
               convertCellsToWritable(rowData.getCells(family, qualifier));
 
@@ -121,24 +139,37 @@ public class KijiRowDataWritable implements Writable {
           Schema schema = rowData.getReaderSchema(family, qualifier);
           mSchemas.put(column, schema);
         }
+
+        // If this column has cell paging, read in its schema
+        if (mKijiCellPagers.containsKey(column)) {
+          Schema schema = rowData.getReaderSchema(column.getFamily(), column.getQualifier());
+          mSchemas.put(column, schema);
+        }
       }
 
-      // Also read the schemas of paged columns
-      for (KijiColumnName column : mKijiPagers.keySet()) {
-        Schema schema = rowData.getReaderSchema(column.getFamily(), column.getQualifier());
-        mSchemas.put(column, schema);
+      // If this family has qualifier paging, read in its schema
+      if (mKijiQualifierPagers.containsKey(family)) {
+        KijiColumnName familyColumnName = new KijiColumnName(family);
+        Schema schema = rowData.getReaderSchema(family, familyColumnName.getQualifier());
+        mSchemas.put(familyColumnName, schema);
       }
     }
   }
 
   /**
-   * Checks all of the associated pagers if there is additional paged data.
+   * Checks the associated qualifier and cell pagers if there is additional paged data.
    *
    * @return whether there are more pages associated with this KijiRowDataWritable
    */
   public boolean hasMorePages() {
-    for (KijiPager kijiPager : mKijiPagers.values()) {
-      if (kijiPager.hasNext()) {
+    for (KijiPager kijiQualifierPager : mKijiQualifierPagers.values()) {
+      if (kijiQualifierPager.hasNext()) {
+        return true;
+      }
+    }
+
+    for (KijiPager kijiCellPager : mKijiCellPagers.values()) {
+      if (kijiCellPager.hasNext()) {
         return true;
       }
     }
@@ -146,17 +177,84 @@ public class KijiRowDataWritable implements Writable {
   }
 
   /**
-   * Build the Writably compatible KijiRowDataPageWritable with the next page's data.
+   * Build the Writably compatible KijiRowDataPageWritable with the next page's data.  Contains
+   * the logic for paging through qualifiers.  {@link #nextCellPage()} is used internally
+   * to retrieve the results of the next page of cells.
    *
    * @return a KijiRowDataPageWritable with a page of data substituted.
    * @throws IOException if there was an error.
    */
   public KijiRowDataPageWritable nextPage() throws IOException {
+    if (!mKijiCellPagers.isEmpty() && !mQualifierPageData.isEmpty()) {
+      // If we are paging through cells and have cached qualifier page data,
+      // return the next page of cells if it's not empty.
+      KijiRowDataPageWritable nextPage = nextCellPage();
+      if (!nextPage.isEmpty()) {
+        return nextPage;
+      }
+    }
+
+    // Start with empty cached qualifier page data.
+    mQualifierPageData = Maps.newHashMap();
+
+    // Build a set of a page worth of qualifiers for each qualifier pager.
+    Set<KijiColumnName> qualifiersPage = Sets.newHashSet();
+    for (Entry<String, KijiPager> pagerEntry : mKijiQualifierPagers.entrySet()) {
+      String family = pagerEntry.getKey();
+      KijiPager pager = pagerEntry.getValue();
+      if (pager.hasNext()) {
+        KijiRowData qualifierRowData = pager.next();
+        NavigableSet<String> qualifiers = qualifierRowData.getQualifiers(family);
+        for (String qualifier : qualifiers) {
+          qualifiersPage.add(new KijiColumnName(family, qualifier));
+        }
+      }
+    }
+
+    // Assemble the cached qualifierPageData that is used to build up any resultant results
+    if (!qualifiersPage.isEmpty()) {
+      // Append paged qualifiers to the original KijiDataRequest
+      HBaseKijiRowData hBaseKijiRowData = (HBaseKijiRowData) mRowData;
+      KijiDataRequest originalDataRequest = hBaseKijiRowData.getDataRequest();
+      KijiDataRequest kijiDataRequest =
+          DataRequestOptimizer.expandFamilyWithPagedQualifiers(originalDataRequest, qualifiersPage);
+      KijiRowData qualifierPage = mReader.get(mRowData.getEntityId(), kijiDataRequest);
+
+      Map<KijiColumnName, NavigableMap<Long, KijiCellWritable>> qualifierPageData =
+          Maps.newHashMap();
+      for (KijiColumnName kijiColumnName : qualifiersPage) {
+        final NavigableMap<Long, KijiCell<Object>> pagedData =
+            qualifierPage.getCells(kijiColumnName.getFamily(), kijiColumnName.getQualifier());
+        final NavigableMap<Long, KijiCellWritable> writableData =
+            convertCellsToWritable(pagedData);
+        qualifierPageData.put(kijiColumnName, writableData);
+      }
+      mQualifierPageData = qualifierPageData;
+      mKijiCellPagers = getKijiCellPagers(kijiDataRequest, qualifierPage);
+    }
+
+    // Return the first result that's built up from a page of cells.
+    return nextCellPage();
+  }
+
+  /**
+   * Build the Writably compatible KijiRowDataPageWritable with the data for the next page of
+   * cells.  If we aren't paging through any cells, then this will just return the data cached
+   * from the qualifiers.
+   *
+   * @return a KijiRowDataPageWritable with a page of data substituted.
+   * @throws IOException if there was an error.
+   */
+  private KijiRowDataPageWritable nextCellPage() throws IOException {
     Map<KijiColumnName, NavigableMap<Long, KijiCellWritable>> pageData = Maps.newHashMap();
-    for (KijiColumnName kijiColumnName : mKijiPagers.keySet()) {
-      final KijiPager kijiPager = mKijiPagers.get(kijiColumnName);
+
+    // Add in all of the data from paged qualifiers
+    pageData.putAll(mQualifierPageData);
+
+    for (KijiColumnName kijiColumnName : mKijiCellPagers.keySet()) {
+      final KijiPager cellPager = mKijiCellPagers.get(kijiColumnName);
       try {
-        final KijiRowData pagedKijiRowData = kijiPager.next();
+        final KijiRowData pagedKijiRowData = cellPager.next();
         final NavigableMap<Long, KijiCell<Object>> pagedData =
             pagedKijiRowData.getCells(kijiColumnName.getFamily(), kijiColumnName.getQualifier());
         final NavigableMap<Long, KijiCellWritable> writableData = convertCellsToWritable(pagedData);
@@ -270,25 +368,52 @@ public class KijiRowDataWritable implements Writable {
   }
 
   /**
-   * Initializes the list of associated KijiPagers for this KijiRowData.
+   * Initializes the list of associated column family KijiPagers for this KijiRowData.
    *
    * @param kijiDataRequest the data request for this KijiRowData.
-   * @return map of KijiColumnNames to their associated pagers.
+   * @return map of families to their associated qualifier pagers.
    */
-  private Map<KijiColumnName, KijiPager> getKijiPagers(KijiDataRequest kijiDataRequest) {
-    Map<KijiColumnName, KijiPager> kijiPagers = Maps.newHashMap();
+  private Map<String, KijiPager> getKijiQualifierPagers(KijiDataRequest kijiDataRequest) {
+    Map<String, KijiPager> kijiQualifierPagers = Maps.newHashMap();
     for (KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
-      if (column.isPagingEnabled()) {
+      if (column.isPagingEnabled() && !column.getColumnName().isFullyQualified()) {
+        // Only include pagers for column families.
         try {
-          LOG.info("Paging enabled for column: " + column.getColumnName());
-          KijiPager kijiPager = mRowData.getPager(column.getFamily(), column.getQualifier());
-          kijiPagers.put(column.getColumnName(), kijiPager);
+          LOG.info("Paging enabled for column family: {}", column.getColumnName());
+          KijiPager kijiPager = mRowData.getPager(column.getFamily());
+          kijiQualifierPagers.put(column.getFamily(), kijiPager);
+        } catch (KijiColumnPagingNotEnabledException e) {
+          LOG.warn("Paging not enabled for column family: {}", column.getColumnName());
+        }
+      }
+    }
+    return kijiQualifierPagers;
+  }
+
+  /**
+   * Initializes the list of associated fully qualified cell KijiPagers for this KijiRowData.  Any
+   * non fully qualified cell paging configuration will be ignored.
+   *
+   * @param kijiDataRequest the data request for this KijiRowData.
+   * @param kijiRowData the kijiRowData to generate the pagers from.
+   * @return map of KijiColumnNames to their associated cell pagers.
+   */
+  private static Map<KijiColumnName, KijiPager> getKijiCellPagers(KijiDataRequest kijiDataRequest,
+                                                                  KijiRowData kijiRowData) {
+    Map<KijiColumnName, KijiPager> kijiCellPagers = Maps.newHashMap();
+    for (KijiDataRequest.Column column : kijiDataRequest.getColumns()) {
+      if (column.isPagingEnabled() && column.getColumnName().isFullyQualified()) {
+        // Only include pagers for fully qualified cells
+        try {
+          LOG.info("Paging enabled for column: {}", column.getColumnName());
+          KijiPager kijiPager = kijiRowData.getPager(column.getFamily(), column.getQualifier());
+          kijiCellPagers.put(column.getColumnName(), kijiPager);
         } catch (KijiColumnPagingNotEnabledException e) {
           LOG.warn("Paging not enabled for column: {}", column.getColumnName());
         }
       }
     }
-    return kijiPagers;
+    return kijiCellPagers;
   }
 
   /** @return The row key. */
@@ -341,7 +466,8 @@ public class KijiRowDataWritable implements Writable {
 
   /**
    * Gets the reader schema for a column as declared in the layout of the table this row
-   * comes from.
+   * comes from.  Opportunistically checks the family as though it's a map type family if the
+   * qualifier isn't found.
    *
    * @param family Column family of the desired column schema.
    * @param qualifier Column qualifier of the desired column schema.
@@ -351,7 +477,11 @@ public class KijiRowDataWritable implements Writable {
    */
   public Schema getReaderSchema(String family, String qualifier) throws IOException {
     KijiColumnName column = new KijiColumnName(family, qualifier);
-    return mSchemas.get(column);
+    if (mSchemas.containsKey(column)) {
+      return mSchemas.get(column);
+    } else {
+      return mSchemas.get(new KijiColumnName(family));
+    }
   }
 
   /**
@@ -405,7 +535,11 @@ public class KijiRowDataWritable implements Writable {
 
     // Count the total number of columns to write.
     Set<KijiColumnName> columnNames = Sets.newHashSet();
-    columnNames.addAll(mWritableData.keySet());
+    for (KijiColumnName columnName : mWritableData.keySet()) {
+      if (!mKijiQualifierPagers.containsKey(columnName.getFamily())) {
+        columnNames.add(columnName);
+      }
+    }
     columnNames.addAll(pageData.keySet());
     WritableUtils.writeVInt(out, columnNames.size());
 
@@ -413,7 +547,8 @@ public class KijiRowDataWritable implements Writable {
     for (Entry<KijiColumnName, NavigableMap<Long, KijiCellWritable>> entry
         : mWritableData.entrySet()) {
       KijiColumnName kijiColumnName = entry.getKey();
-      if (!pageData.containsKey(kijiColumnName)) {
+      if (!pageData.containsKey(kijiColumnName)
+          && !mKijiQualifierPagers.containsKey(kijiColumnName.getFamily())) {
         // Only write if it's not part of the paged data.
         writeColumn(out, kijiColumnName, entry.getValue());
       }

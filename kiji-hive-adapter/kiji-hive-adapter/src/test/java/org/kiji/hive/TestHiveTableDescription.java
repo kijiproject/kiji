@@ -141,7 +141,7 @@ public class TestHiveTableDescription extends KijiClientTest {
     final KijiRowScanner scanner = mReader.getScanner(request);
 
     KijiRowData kijiRowData = scanner.iterator().next();
-    KijiRowDataWritable result = new KijiRowDataWritable(kijiRowData);
+    KijiRowDataWritable result = new KijiRowDataWritable(kijiRowData, mReader);
 
     // array<>
     List<Object> decodedArray = (List) hiveTableDescription.createDataObject(result);

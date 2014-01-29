@@ -42,6 +42,7 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.hive.io.KijiRowDataWritable;
 import org.kiji.hive.utils.KijiDataRequestSerializer;
+import org.kiji.schema.KijiColumnName;
 
 /**
  * A serializer and deserializer for reading from and writing to Kiji tables in Hive.
@@ -98,19 +99,37 @@ public class KijiTableSerDe implements SerDe {
     // write back to Kiji with.
     String entityIdShellString = properties.getProperty(ENTITY_ID_SHELL_STRING);
 
-    Map<String, String> cellPagingMap =
-        readPrefixedPropertyMap(properties, KIJI_CELL_PAGING_PREFIX);
-
     Map<String, String> qualifierPagingMap =
         readPrefixedPropertyMap(properties, KIJI_QUALIFIER_PAGING_PREFIX);
+    // Validate that everything in the qualifier paging map is not fully qualified and is thus a
+    // family.
+    for (String qualifierPagingColumn : qualifierPagingMap.keySet()) {
+      KijiColumnName kijiColumnName = new KijiColumnName(qualifierPagingColumn);
+      Preconditions.checkArgument(!kijiColumnName.isFullyQualified(),
+          "Cannot page over qualifiers for a fully qualified column: %s",
+          qualifierPagingColumn);
+    }
+
+    Map<String, String> cellPagingMap =
+        readPrefixedPropertyMap(properties, KIJI_CELL_PAGING_PREFIX);
+    // Validate that no fully qualified cell paging columns override a family cell paging
+    // configuration.
+    for (String cellPagingColumn : qualifierPagingMap.keySet()) {
+      KijiColumnName kijiColumnName = new KijiColumnName(cellPagingColumn);
+      if (kijiColumnName.isFullyQualified()) {
+        Preconditions.checkArgument(!qualifierPagingMap.containsKey(kijiColumnName.getFamily()),
+            "Cannot override family level cell paging with fully qualified cell paging: %s",
+            kijiColumnName.toString());
+      }
+    }
 
     mHiveTableDescription = HiveTableDescription.newBuilder()
         .withColumnNames(columnNames)
         .withColumnTypes(TypeInfoUtils.getTypeInfosFromTypeString(columnTypes))
         .withColumnExpressions(columnExpressions)
         .withEntityIdShellStringColumn(entityIdShellString)
-        .withCellPagingMap(cellPagingMap)
         .withQualifierPagingMap(qualifierPagingMap)
+        .withCellPagingMap(cellPagingMap)
         .build();
 
     if (!mHiveTableDescription.isWritable()) {

@@ -110,11 +110,11 @@ This functionality is also available in the kiji CLI tool via the command:
 
     kiji generate-hive-table --kiji=kiji://.env/kiji_music/users
 
-#### Column paging
+#### Cell paging
 
 Occasionally a column will be too large to fit into memory, and so the only recourse is to page
 through the column for results.  To do this, add the entries corresponding to your desired column
-and pagesize(in entries) to the SERDEPROPERIES section of the CREATE_EXTERNAL_TABLE STATEMENT:
+and pagesize(in entries) to the SERDEPROPERIES section of the CREATE_EXTERNAL_TABLE statement:
 
     'kiji.cell.paging.info:track_plays' = '10'
 
@@ -123,6 +123,22 @@ info:track_plays column and the info:next_song_rec column, it'd look like the fo
 
     'kiji.cell.paging.info:track_plays' = '10',
     'kiji.cell.paging.info:next_song_rec' = '5'
+
+#### Qualifier paging
+
+When using map type column families, sometimes there will be too many qualifiers to fit into memory.
+To page through these qualifiers, add the entries corresponding to your desired column family and
+page size(in number of qualifiers) to the SERDEPROPERTIES of the CREATE EXTERNAL TABLE statement:
+
+    'kiji.qualifier.paging.infomap' = '5'
+
+Note that you can add cell level paging to all qualifiers of this map type family via:
+
+    'kiji.qualifier.paging.infomap' = '5',
+    'kiji.cell.paging.infomap' = '10'
+
+However, configuring both the cell level paging for a family and a fully qualified column
+simultaneously will result in an error.
 
 ### Sample Queries
 

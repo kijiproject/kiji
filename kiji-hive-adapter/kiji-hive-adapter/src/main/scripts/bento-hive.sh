@@ -94,6 +94,8 @@ function usage() {
   echo
   echo "TOOLS"
   echo "  shell                   Start a Hive shell with the Kiji Hive Adapter jars loaded"
+  echo "  verbose-shell           Start a Hive shell as above with verbose output to console"
+  echo "  exec \"HiveQL statement\" Execute the specified HiveQL statement"
   echo "  generate                Generates a sample CREATE EXTERNAL TABLE statement for"
   echo "                          a given Kiji table URI"
   echo "  import                  Generates statement(as with generate), runs the statement to"
@@ -162,6 +164,16 @@ case $command in
     shell)
         generate_hiverc ${HIVERC}
         exec ${HIVE_BINARY} ${HIVE_OPTIONS} -i ${HIVERC}
+        exit 0
+        ;;
+    verbose-shell)
+        generate_hiverc ${HIVERC}
+        exec ${HIVE_BINARY} ${HIVE_OPTIONS} -i ${HIVERC}  -hiveconf hive.root.logger=INFO,console
+        exit 0
+        ;;
+    exec)
+        generate_hiverc ${HIVERC}
+        exec ${HIVE_BINARY} ${HIVE_OPTIONS} -i ${HIVERC} -e "$2"
         exit 0
         ;;
     generate)

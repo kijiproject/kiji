@@ -20,10 +20,12 @@
 package org.kiji.hive;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.junit.After;
 import org.junit.Before;
@@ -108,7 +110,7 @@ public class TestKijiTableRecordReader extends KijiClientTest {
   }
 
   @Test
-  public void testFetchPagedData() throws IOException {
+  public void testFetchPagedCellData() throws IOException {
     // Add some extra versions of the rows so that we can page through the results.
     KijiTableWriter kijiTableWriter = mTable.openTableWriter();
     EntityId entityId = mTable.getEntityId("foo");
@@ -150,7 +152,7 @@ public class TestKijiTableRecordReader extends KijiClientTest {
   }
 
   @Test
-  public void testMultiplePagedColumns() throws IOException {
+  public void testMultiplePagedCellColumns() throws IOException {
     // Add some extra versions of the rows so that we can page through the results.
     KijiTableWriter kijiTableWriter = mTable.openTableWriter();
     EntityId entityId = mTable.getEntityId("foo");
@@ -190,6 +192,103 @@ public class TestKijiTableRecordReader extends KijiClientTest {
     }
 
     // Should read 4 cells, 3 for foo, 1 for bar.
+    assertEquals(5, resultCount);
+    ResourceUtils.closeOrLog(tableRecordReader);
+  }
+
+  @Test
+  public void testFetchPagedQualifierData() throws IOException {
+    // Add some extra versions of the rows so that we can page through the results.
+    KijiTableWriter kijiTableWriter = mTable.openTableWriter();
+    EntityId entityId = mTable.getEntityId("foo");
+    kijiTableWriter.put(entityId, "jobs", "foo1", TIMESTAMP, "bar1");
+    kijiTableWriter.put(entityId, "jobs", "foo2", TIMESTAMP, "bar2");
+    kijiTableWriter.put(entityId, "jobs", "foo3", TIMESTAMP, "bar3");
+    kijiTableWriter.put(entityId, "jobs", "foo4", TIMESTAMP, "bar4");
+    kijiTableWriter.put(entityId, "jobs", "foo5", TIMESTAMP, "bar5");
+
+    ResourceUtils.closeOrLog(kijiTableWriter);
+
+    KijiURI kijiURI = mTable.getURI();
+    byte[] startKey = new byte[0];
+    byte[] endKey = new byte[0];
+    KijiTableInputSplit tableInputSplit =
+        new KijiTableInputSplit(kijiURI, startKey, endKey, null, null);
+
+    Configuration conf = getConf();
+    KijiDataRequest kijiDataRequest = KijiDataRequest.builder()
+        .addColumns(ColumnsDef.create().withPageSize(2).addFamily("jobs"))
+        .build();
+
+    conf.set("kiji.data.request", KijiDataRequestSerializer.serialize(kijiDataRequest));
+
+    // Initialize KijiTableRecordReader
+    KijiTableRecordReader tableRecordReader = new KijiTableRecordReader(tableInputSplit, conf);
+
+    // Retrieve result
+    ImmutableBytesWritable key = new ImmutableBytesWritable();
+    KijiRowDataWritable value = new KijiRowDataWritable();
+    int resultCount = 0;
+    boolean hasResult = tableRecordReader.next(key, value);
+
+    while (hasResult) {
+      resultCount++;
+      hasResult = tableRecordReader.next(key, value);
+      // Ensure that each page of mapped qualifier results is at most 2.
+      assertTrue(value.getData().size() <= 2);
+    }
+
+    // Should read 3 rows
+    assertEquals(3, resultCount);
+    ResourceUtils.closeOrLog(tableRecordReader);
+  }
+
+
+  @Test
+  public void testFetchPagedQualifierAndCellsData() throws IOException {
+    // Add some extra versions of the rows so that we can page through the results.
+    KijiTableWriter kijiTableWriter = mTable.openTableWriter();
+    EntityId entityId = mTable.getEntityId("foo");
+    kijiTableWriter.put(entityId, "jobs", "foo1", TIMESTAMP, "bar1");
+    kijiTableWriter.put(entityId, "jobs", "foo1", TIMESTAMP + 1, "bar1+1");
+    kijiTableWriter.put(entityId, "jobs", "foo1", TIMESTAMP + 2, "bar1+2");
+    kijiTableWriter.put(entityId, "jobs", "foo2", TIMESTAMP, "bar2");
+    kijiTableWriter.put(entityId, "jobs", "foo3", TIMESTAMP, "bar3");
+
+    ResourceUtils.closeOrLog(kijiTableWriter);
+
+    KijiURI kijiURI = mTable.getURI();
+    byte[] startKey = new byte[0];
+    byte[] endKey = new byte[0];
+    KijiTableInputSplit tableInputSplit =
+        new KijiTableInputSplit(kijiURI, startKey, endKey, null, null);
+
+    Configuration conf = getConf();
+    KijiDataRequest kijiDataRequest = KijiDataRequest.builder()
+        .addColumns(ColumnsDef.create()
+            .withPageSize(1)
+            .withMaxVersions(HConstants.ALL_VERSIONS)
+            .addFamily("jobs"))
+        .build();
+
+    conf.set("kiji.data.request", KijiDataRequestSerializer.serialize(kijiDataRequest));
+
+    // Initialize KijiTableRecordReader
+    KijiTableRecordReader tableRecordReader = new KijiTableRecordReader(tableInputSplit, conf);
+
+    // Retrieve result
+    ImmutableBytesWritable key = new ImmutableBytesWritable();
+    KijiRowDataWritable value = new KijiRowDataWritable();
+    int resultCount = 0;
+    boolean hasResult = tableRecordReader.next(key, value);
+    while (hasResult) {
+      resultCount++;
+      hasResult = tableRecordReader.next(key, value);
+      // Ensure that each page of mapped qualifier results is at most 2.
+      assertTrue(value.getData().size() <= 2);
+    }
+
+    // Should read 3 rows
     assertEquals(5, resultCount);
     ResourceUtils.closeOrLog(tableRecordReader);
   }

@@ -237,4 +237,56 @@ public class TestDataRequestOptimizer {
     assertEquals(baseKijiDataRequest.getColumns().size(), pagedDataRequest.getColumns().size());
     assertEquals(false, pagedDataRequest.isPagingEnabled());
   }
+
+  @Test
+  public void testSpecifyQualifierPaging() throws IOException {
+    final KijiColumnName kijiColumnName = new KijiColumnName("info");
+    final KijiRowExpression kijiRowExpression =
+        new KijiRowExpression(kijiColumnName.toString(), TypeInfos.FAMILY_MAP_ALL_VALUES);
+    List<KijiRowExpression> rowExpressionList = Lists.newArrayList(kijiRowExpression);
+    final KijiDataRequest baseKijiDataRequest =
+        DataRequestOptimizer.getDataRequest(rowExpressionList);
+
+    Map<KijiColumnName, Integer> qualifierPagingMap = Maps.newHashMap();
+    qualifierPagingMap.put(kijiColumnName, 5);
+
+    Map<KijiColumnName, Integer> cellPagingMap = Maps.newHashMap();
+    cellPagingMap.put(kijiColumnName, 2);
+    final KijiDataRequest pagedDataRequest =
+        addQualifierAndCellPaging(baseKijiDataRequest, qualifierPagingMap, cellPagingMap);
+
+    List<KijiColumnName> pagedColumns = Lists.newArrayList();
+    pagedColumns.add(new KijiColumnName("info:foo"));
+    pagedColumns.add(new KijiColumnName("info:bar"));
+    pagedColumns.add(new KijiColumnName("info:baz"));
+
+    final KijiDataRequest specifiedPagedDataRequest =
+        DataRequestOptimizer.expandFamilyWithPagedQualifiers(pagedDataRequest, pagedColumns);
+    assertEquals(true, pagedDataRequest.isPagingEnabled());
+
+    // Should be 3 columns, since we are replacing the info family with the 3 fully qualified ones.
+    assertEquals(3, specifiedPagedDataRequest.getColumns().size());
+  }
+
+  /**
+   * Convenience method that combines the effects of:
+   * {@link org.kiji.hive.utils.DataRequestOptimizer#addQualifierPaging} and
+   * {@link org.kiji.hive.utils.DataRequestOptimizer#addCellPaging} for creating a data request
+   * with both qualifier and cell paging at once.
+   *
+   * @param kijiDataRequest to use as a base.
+   * @param qualifierPagingMap of kiji columns to page sizes.
+   * @param cellPagingMap of kiji columns to page sizes.
+   * @return A new data request with paging enabled for the specified family.
+   */
+  private static KijiDataRequest addQualifierAndCellPaging(
+      KijiDataRequest kijiDataRequest,
+      Map<KijiColumnName, Integer> qualifierPagingMap,
+      Map<KijiColumnName, Integer> cellPagingMap) {
+    final KijiDataRequest qualifierPagedDataRequest =
+        DataRequestOptimizer.addQualifierPaging(kijiDataRequest, qualifierPagingMap);
+    final KijiDataRequest qualifierAndCellPagedDataRequest =
+        DataRequestOptimizer.addCellPaging(qualifierPagedDataRequest, cellPagingMap);
+    return qualifierAndCellPagedDataRequest;
+  }
 }
