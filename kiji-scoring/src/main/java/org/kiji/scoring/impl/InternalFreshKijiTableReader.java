@@ -583,23 +583,23 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   /** Callable which performs a read from a table.  Used in a Future to read asynchronously, */
   private static final class TableReadCallable implements Callable<KijiRowData> {
 
-    private final KijiTableReader mReader;
+    private final KijiTableReaderPool mReaderPool;
     private final EntityId mEntityId;
     private final KijiDataRequest mDataRequest;
 
     /**
      * Initialize a new TableReadCallable.
      *
-     * @param reader the KijiTableReader to use to perform the read.
+     * @param readerPool the KijiTableReaderPool from which to get a reader to perform the read.
      * @param entityId the EntityId of the row from which to read data.
      * @param dataRequest the KijiDataRequest defining the data to read from the row.
      */
     public TableReadCallable(
-        final KijiTableReader reader,
+        final KijiTableReaderPool readerPool,
         final EntityId entityId,
         final KijiDataRequest dataRequest
     ) {
-      mReader = reader;
+      mReaderPool = readerPool;
       mEntityId = entityId;
       mDataRequest = dataRequest;
     }
@@ -607,7 +607,12 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     /** {@inheritDoc} */
     @Override
     public KijiRowData call() throws Exception {
-      return mReader.get(mEntityId, mDataRequest);
+      final KijiTableReader reader = getPooledReader(mReaderPool);
+      try {
+        return reader.get(mEntityId, mDataRequest);
+      } finally {
+        reader.close();
+      }
     }
   }
 
@@ -1365,15 +1370,10 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
       if (entry.getValue().mPolicy.shouldUseClientDataRequest(context)) {
         rowDataToCheckFuture = requestContext.mClientDataFuture;
       } else {
-        final KijiTableReader reader = getPooledReader(requestContext.mReaderPool);
-        try {
-          rowDataToCheckFuture = getFuture(requestContext.mExecutorService, new TableReadCallable(
-              reader,
-              requestContext.mEntityId,
-              entry.getValue().mPolicy.getDataRequest(context)));
-        } finally {
-          reader.close();
-        }
+        rowDataToCheckFuture = getFuture(requestContext.mExecutorService, new TableReadCallable(
+            requestContext.mReaderPool,
+            requestContext.mEntityId,
+            entry.getValue().mPolicy.getDataRequest(context)));
       }
       final Future<Boolean> future = getFuture(requestContext.mExecutorService,
           new FreshenerCallable(requestContext, entry.getKey(), rowDataToCheckFuture));
@@ -1728,7 +1728,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
           createFreshenerContexts(dataRequest, fresheners, options.getParameters());
 
       final Future<KijiRowData> clientDataFuture =
-          getFuture(mExecutorService, new TableReadCallable(requestReader, entityId, dataRequest));
+          getFuture(mExecutorService, new TableReadCallable(mReaderPool, entityId, dataRequest));
 
       final FresheningRequestContext requestContext = new FresheningRequestContext(
           id,
