@@ -21,17 +21,15 @@ package org.kiji.express.repl
 
 import cascading.flow.FlowDef
 import cascading.pipe.Pipe
-import com.twitter.scalding.FieldConversions
 import com.twitter.scalding.IterableSource
 import com.twitter.scalding.RichPipe
 import com.twitter.scalding.Source
-import com.twitter.scalding.TupleConversions
 import com.twitter.scalding.TupleConverter
 import com.twitter.scalding.TupleSetter
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.express.flow.util.AvroTupleConversions
+import org.kiji.express.flow.framework.ExpressConversions
 import org.kiji.express.flow.util.PipeConversions
 
 /**
@@ -41,10 +39,8 @@ import org.kiji.express.flow.util.PipeConversions
 @ApiAudience.Framework
 @ApiStability.Experimental
 object Implicits
-    extends PipeConversions
-    with TupleConversions
-    with FieldConversions
-    with AvroTupleConversions {
+    extends ExpressConversions
+    with PipeConversions {
   /** Implicit flowDef for this KijiExpress shell session. */
   implicit var flowDef: FlowDef = getEmptyFlowDef
 
@@ -67,22 +63,55 @@ object Implicits
   }
 
   /**
-   * Converts a Cascading Pipe to a Scalding RichPipe. This method permits implicit conversions from
-   * Pipe to RichPipe.
+   * Converts an iterable into a Source with index (int-based) fields.
    *
-   * @param pipe to convert to a RichPipe.
-   * @return a RichPipe wrapping the specified Pipe.
+   * @param iterable to convert into a Source.
+   * @param setter implicitly retrieved and used to convert the specified iterable into a Source.
+   * @param converter implicitly retrieved and used to convert the specified iterable into a Source.
+   * @return a Source backed by the specified iterable.
    */
-  implicit def pipeToRichPipe(pipe: Pipe): RichPipe = new RichPipe(pipe)
+  implicit def iterableToSource[T](
+      iterable: Iterable[T]
+  )(implicit
+      setter: TupleSetter[T],
+      converter: TupleConverter[T]
+  ): Source = {
+    IterableSource[T](iterable)(setter, converter)
+  }
 
   /**
-   * Converts a Scalding RichPipe to a Cascading Pipe. This method permits implicit conversions from
-   * RichPipe to Pipe.
+   * Converts an iterable into a Pipe with index (int-based) fields.
    *
-   * @param richPipe to convert to a Pipe.
-   * @return the Pipe wrapped by the specified RichPipe.
+   * @param iterable to convert into a Pipe.
+   * @param setter implicitly retrieved and used to convert the specified iterable into a Pipe.
+   * @param converter implicitly retrieved and used to convert the specified iterable into a Pipe.
+   * @return a Pipe backed by the specified iterable.
    */
-  implicit def richPipeToPipe(richPipe: RichPipe): Pipe = richPipe.pipe
+  implicit def iterableToPipe[T](
+      iterable: Iterable[T]
+  )(implicit
+      setter: TupleSetter[T],
+      converter: TupleConverter[T]
+  ): Pipe = {
+    iterableToSource(iterable)(setter, converter).read
+  }
+
+  /**
+   * Converts an iterable into a RichPipe with index (int-based) fields.
+   *
+   * @param iterable to convert into a RichPipe.
+   * @param setter implicitly retrieved and used to convert the specified iterable into a RichPipe.
+   * @param converter implicitly retrieved and used to convert the specified iterable into a
+   *     RichPipe.
+   * @return a RichPipe backed by the specified iterable.
+   */
+  implicit def iterableToRichPipe[T](
+      iterable: Iterable[T]
+  )(implicit setter: TupleSetter[T],
+      converter: TupleConverter[T]
+  ): RichPipe = {
+    RichPipe(iterableToPipe(iterable)(setter, converter))
+  }
 
   /**
    * Converts a Source to a RichPipe. This method permits implicit conversions from Source to
@@ -118,50 +147,4 @@ object Implicits
    * @return the Pipe wrapped by the specified KijiPipeTool.
    */
   implicit def kijiPipeToolToPipe(kijiPipeTool: KijiPipeTool): Pipe = kijiPipeTool.pipe
-
-  /**
-   * Converts an iterable into a Source with index (int-based) fields.
-   *
-   * @param iterable to convert into a Source.
-   * @param setter implicitly retrieved and used to convert the specified iterable into a Source.
-   * @param converter implicitly retrieved and used to convert the specified iterable into a Source.
-   * @return a Source backed by the specified iterable.
-   */
-  implicit def iterableToSource[T](
-      iterable: Iterable[T])
-      (implicit setter: TupleSetter[T],
-          converter: TupleConverter[T]): Source = {
-    IterableSource[T](iterable)(setter, converter)
-  }
-
-  /**
-   * Converts an iterable into a Pipe with index (int-based) fields.
-   *
-   * @param iterable to convert into a Pipe.
-   * @param setter implicitly retrieved and used to convert the specified iterable into a Pipe.
-   * @param converter implicitly retrieved and used to convert the specified iterable into a Pipe.
-   * @return a Pipe backed by the specified iterable.
-   */
-  implicit def iterableToPipe[T](
-      iterable: Iterable[T])
-      (implicit setter: TupleSetter[T],
-          converter: TupleConverter[T]): Pipe = {
-    iterableToSource(iterable)(setter, converter).read
-  }
-
-  /**
-   * Converts an iterable into a RichPipe with index (int-based) fields.
-   *
-   * @param iterable to convert into a RichPipe.
-   * @param setter implicitly retrieved and used to convert the specified iterable into a RichPipe.
-   * @param converter implicitly retrieved and used to convert the specified iterable into a
-   *     RichPipe.
-   * @return a RichPipe backed by the specified iterable.
-   */
-  implicit def iterableToRichPipe[T](
-      iterable: Iterable[T])
-      (implicit setter: TupleSetter[T],
-          converter: TupleConverter[T]): RichPipe = {
-    RichPipe(iterableToPipe(iterable)(setter, converter))
-  }
 }
