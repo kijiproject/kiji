@@ -29,6 +29,9 @@ If you are using an earlier version of Kiji, tutorials appropriate
 to the Kiji version you are using are available here:
 
 #### KijiSchema
+
+* [Phone Book Tutorial 1.1.3](tutorials/phonebook-tutorial/1.1.3/phonebook-tutorial)
+* [Phone Book Tutorial 1.1.2](tutorials/phonebook-tutorial/1.1.2/phonebook-tutorial)
 * [Phone Book Tutorial 1.1.1](tutorials/phonebook-tutorial/1.1.1/phonebook-tutorial)
 * [Phone Book Tutorial 1.0.0](tutorials/phonebook-tutorial/1.0.0/phonebook-tutorial)
 * [Phone Book Tutorial 1.0.0-rc6](tutorials/phonebook-tutorial/1.0.0-rc6/phonebook-tutorial)
@@ -38,6 +41,8 @@ to the Kiji version you are using are available here:
 
 #### KijiMR
 
+* [Music Recommendation Tutorial 1.1.4](tutorials/music-recommendation/1.1.4/music-overview)
+* [Music Recommendation Tutorial 1.1.3](tutorials/music-recommendation/1.1.3/music-overview)
 * [Music Recommendation Tutorial 1.1.2](tutorials/music-recommendation/1.1.2/music-overview)
 * [Music Recommendation Tutorial 1.1.0](tutorials/music-recommendation/1.1.0/music-overview)
 * [Music Recommendation Tutorial 1.0.0](tutorials/music-recommendation/1.0.0/music-overview)
@@ -48,6 +53,7 @@ to the Kiji version you are using are available here:
 
 #### KijiExpress
 
+* [KijiExpress Tutorial 1.0.1](tutorials/express-recommendation/1.0.1/express-overview)
 * [KijiExpress Tutorial 1.0.0](tutorials/express-recommendation/1.0.0/express-overview)
 * [KijiExpress Tutorial 0.11.0](tutorials/express-recommendation/0.11.0/express-overview)
 * [KijiExpress Tutorial 0.8.0](tutorials/express-recommendation/0.8.0/express-overview)
@@ -61,6 +67,8 @@ to the Kiji version you are using are available here:
 
 #### KijiScoring
 
+* [KijiScoring Tutorial 0.11.0](tutorials/scoring/0.11.0/scoring-overview)
+* [KijiScoring Tutorial 0.10.0](tutorials/scoring/0.10.0/scoring-overview)
 * [KijiScoring Tutorial 0.9.0](tutorials/scoring/0.9.0/scoring-overview)
 
 ## Development Versions
