@@ -29,10 +29,10 @@
 
   <properties>
     <!-- Kiji versions -->
-    <kiji-express.version>1.0.0</kiji-express.version>
-    <kiji-mapreduce.version>1.2.2</kiji-mapreduce.version>
-    <kiji-schema.version>1.3.4</kiji-schema.version>
-    <kiji-schema-shell.version>1.3.1</kiji-schema-shell.version>
+    <kiji-express.version>1.0.1</kiji-express.version>
+    <kiji-mapreduce.version>1.2.4</kiji-mapreduce.version>
+    <kiji-schema.version>1.3.6</kiji-schema.version>
+    <kiji-schema-shell.version>1.3.3</kiji-schema-shell.version>
 
     <!-- Dependency versions -->
     <algebird-core.version>0.1.13</algebird-core.version>
