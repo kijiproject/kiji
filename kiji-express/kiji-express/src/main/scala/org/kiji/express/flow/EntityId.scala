@@ -55,7 +55,7 @@ import org.kiji.schema.{EntityId => JEntityId}
  *
  * Users can retrieve the index'th element of an EntityId (0-based), as follows:
  * {{{
- * MyEntityId(index)
+ * myEntityId(index)
  * }}}
  *
  * EntityIds can either be [[org.kiji.express.flow.EntityId.MaterializedEntityId]] (in the case of
@@ -75,7 +75,7 @@ import org.kiji.schema.{EntityId => JEntityId}
 @ApiAudience.Public
 @ApiStability.Stable
 @Inheritance.Sealed
-trait EntityId extends Product with Ordered[EntityId] {
+trait EntityId extends Product with Ordered[EntityId] with Serializable {
   /**
    * Get the Java [[org.kiji.schema.EntityId]] associated with this Scala EntityId.
    *
@@ -258,8 +258,9 @@ object EntityId {
 
   /**
    * An EntityId that provides access to its components.  It can be constructed by the user:
-   *
-   * {{{EntityId(component1, component2, component3)}}}
+   * {{{
+   * EntityId(component1, component2, component3)
+   * }}}
    *
    * KijiExpress will return an instance of this class in the 'entityId field of the tuple if the
    * row key format in the layout of the table supports returning the components of the EntityId.
