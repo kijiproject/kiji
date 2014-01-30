@@ -19,8 +19,8 @@ if __path not in sys.path:
   sys.path.append(__path)
 
 from base import base
-from base import command
 from kiji import kiji_bento
+from kiji import tutorial_test
 
 
 FLAGS = base.FLAGS
@@ -72,49 +72,6 @@ FLAGS.AddBoolean(
   default=False,
   help='Prints a help message.',
 )
-
-
-# ------------------------------------------------------------------------------
-
-
-class KijiCommand(command.Command):
-  """Shell command assuming a KijiBento environment."""
-
-  def __init__(self, command, **kwargs):
-    """Runs a Kiji command line.
-
-    Requires the current working directory to be the KijiBento installation dir.
-
-    Args:
-      command: Shell command-line, as a single text string.
-      **kwargs: Keyword arguments passed to the underlying Command.
-    """
-    args = [
-        '/bin/bash',
-        '-c',
-        'source ./bin/kiji-env.sh > /dev/null 2>&1 && %s' % command,
-    ]
-    super(KijiCommand, self).__init__(*args, **kwargs)
-
-
-# ------------------------------------------------------------------------------
-
-
-def ExtractArchive(archive, work_dir, strip_components=0):
-  """Extracts a tar archive.
-
-  Args:
-    archive: Path to the tar archive to extract.
-    work_dir: Where to extract the archive.
-    strip_components: How many leading path components to strip.
-  """
-  assert os.path.exists(archive), (
-      'Archive %r does not exist', archive)
-  assert os.path.exists(work_dir), (
-      'Working directory %r does not exist', work_dir)
-  os.system(
-      '/bin/tar xf %s --directory %s --strip-components=%d'
-      % (archive, work_dir, strip_components))
 
 
 # ------------------------------------------------------------------------------
@@ -200,7 +157,7 @@ class Tutorial(object):
     Args:
       command: Kiji command-line to run as a single string.
     """
-    cmd = KijiCommand(
+    cmd = tutorial_test.KijiCommand(
         command=command,
         work_dir=self.kiji_bento.path,
         env=self._env,
@@ -336,13 +293,13 @@ ${HDFS_BASE}/kiji-mr-tutorial/song-plays-import-descriptor.json \
     assert (list_rows.output_lines[0].startswith('Scanning kiji table: kiji://'))
     assert (len(list_rows.output_lines) >= 3 * 3 + 1), len(list_rows.output_lines)
     for row in range(0, 3):
-      ExpectRegexMatch(
+      tutorial_test.ExpectRegexMatch(
           expect=r"^entity-id=\['user-\d+'\] \[\d+\] info:track_plays$",
           actual=list_rows.output_lines[1 + row * 3])
-      ExpectRegexMatch(
+      tutorial_test.ExpectRegexMatch(
           expect=r"^\s*song-\d+$",
           actual=list_rows.output_lines[2 + row * 3])
-      ExpectRegexMatch(
+      tutorial_test.ExpectRegexMatch(
           expect=r"^$",
           actual=list_rows.output_lines[3 + row * 3])
 
@@ -371,11 +328,11 @@ ${HDFS_BASE}/kiji-mr-tutorial/song-plays-import-descriptor.json \
     fs_text = self.Command("""
         hadoop fs -text ${HDFS_BASE}/output.txt_file/part-r-00000 | head -3
     """)
-    Expect(expect=0, actual=fs_text.exit_code)
+    tutorial_test.Expect(expect=0, actual=fs_text.exit_code)
     lines = list(filter(None, fs_text.output_lines))  # filter empty lines
-    Expect(expect=3, actual=len(lines))
+    tutorial_test.Expect(expect=3, actual=len(lines))
     for line in lines:
-      ExpectRegexMatch(expect=r'^song-\d+\t\d+$', actual=line)
+      tutorial_test.ExpectRegexMatch(expect=r'^song-\d+\t\d+$', actual=line)
 
   # ----------------------------------------------------------------------------
   # KijiMusic sequential play-count:
@@ -402,11 +359,11 @@ ${HDFS_BASE}/kiji-mr-tutorial/song-plays-import-descriptor.json \
     fs_text = self.Command("""
         hadoop fs -text ${HDFS_BASE}/output.txt_file/part-r-00000 | head -3
     """)
-    Expect(expect=0, actual=fs_text.exit_code)
+    tutorial_test.Expect(expect=0, actual=fs_text.exit_code)
     lines = list(filter(None, fs_text.output_lines))  # filter empty lines
-    Expect(expect=3, actual=len(lines))
+    tutorial_test.Expect(expect=3, actual=len(lines))
     for line in lines:
-      ExpectRegexMatch(expect=r'^song-\d+\t\d+$', actual=line)
+      tutorial_test.ExpectRegexMatch(expect=r'^song-\d+\t\d+$', actual=line)
 
   # ----------------------------------------------------------------------------
   # Cleanup:
@@ -414,43 +371,6 @@ ${HDFS_BASE}/kiji-mr-tutorial/song-plays-import-descriptor.json \
   def Cleanup(self):
     self.bento_cluster.Stop()
     shutil.rmtree(self.work_dir)
-
-
-# ------------------------------------------------------------------------------
-
-
-def Expect(expect, actual):
-  """Assertion.
-
-  Args:
-    expect: Expected value.
-    actual: Actual value.
-  Raises:
-    AssertionError if the actual value does not match the expected value.
-  """
-  if expect != actual:
-    logging.error('Expected %r, got %r', expect, actual)
-    raise AssertionError('Expected %r, got %r' % (expect, actual))
-
-
-# ------------------------------------------------------------------------------
-
-def ExpectRegexMatch(expect, actual):
-  """Asserts that a text strings matches a given regular expression.
-
-  Args:
-    expect: Regular expression to match.
-    actual: Text string to assert the content of.
-  Raises:
-    AssertionError if the text does not match the regular expression.
-  """
-  if re.match(expect, actual):
-    return True
-  else:
-    logging.error('%r does not match regex %r.', actual, expect)
-    raise AssertionError('%r does not match regex %r.' % (actual, expect))
-
-# ------------------------------------------------------------------------------
 
 
 def Main(args):

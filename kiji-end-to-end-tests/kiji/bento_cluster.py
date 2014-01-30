@@ -182,7 +182,7 @@ class BentoCluster(object):
           'bento start returned %d' % proc.returncode)
       with open(self._pid_file, 'r') as f:
         self._pid = int(f.read())
-        logging.info('Bento cluster created and starter as PID=%d', self._pid)
+        logging.info('Bento cluster created and started as PID=%d', self._pid)
 
     self._ReadConfig()
 
