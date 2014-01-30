@@ -1,6 +1,9 @@
 
                              KijiModeling Release Notes
 
+Version 0.7.0
+  * MODELING-27. Removed the Model Lifecycle.
+
 Version 0.5.0
   * Updates for Express stable release.
   * MODELING-16. lift and confidence don't discard existing fields.
