@@ -288,10 +288,10 @@ class KijiRestClient(object):
           ('Ping failed with reply %r' % text_reply)
       return True
     except urllib.error.URLError as err:
-      logging.error('Error pinging REST server: %r', err)
+      logging.debug('Error pinging REST server: %r', err)
       return False
     except urllib.error.HTTPError as err:
-      logging.error('Error pinging REST server: %r\n%s', err, err.readlines())
+      logging.debug('Error pinging REST server: %r\n%s', err, err.readlines())
       return False
 
 
@@ -387,14 +387,6 @@ class KijiRestServer(object):
         ('Invalid HBase cluster URI: %r' % cluster)
     self._conf['cluster'] = cluster
 
-  def SetKijiInstances(self, instances):
-    """Configures the list of Kiji instances served through this REST server.
-
-    Args:
-      instances: list of Kiji instance names.
-    """
-    self._conf['instances'] = list(map(str, instances))
-
   def WriteConf(self):
     """Writes an updated configuration file."""
     # Note: I dislike to overwrite the existing configuration file.
@@ -429,6 +421,11 @@ class KijiRestServer(object):
     host = socket.getfqdn()
     port = int(self.conf['http']['adminPort'])
     return (host, port)
+
+  @property
+  def hbase_uri(self):
+    """Returns: the HBase cluster URI the REST server connects to."""
+    return self.conf['cluster']
 
   def _ReadConf(self):
     """Reads and parses the YML configuration file.
@@ -468,6 +465,12 @@ class KijiRestServer(object):
       jar_paths = list(self._jar_paths)
       jar_paths.extend(kiji_classpath.split(':'))
 
+    logging.info(
+        'Starting KijiREST server for HBase cluster %s on %s (admin %s).',
+        self.hbase_uri,
+        'http://%s:%d' % self.address,
+        'http://%s:%d' % self.admin_address)
+
     env.update(
         KIJI_CLASSPATH=':'.join(jar_paths),
         KIJI_REST_CONF_DIR=self._conf_dir,
@@ -491,9 +494,30 @@ class KijiRestServer(object):
     if self.pid is None:
       logging.error('KijiREST process not started')
       return False
-    else:
-      logging.info('KijiREST started with PID %d', self.pid)
+
+    pid = self.pid
+    logging.info('KijiREST started with PID %d', pid)
+
+    client = self.GetClient()
+    ping_success = client.Ping()
+    while ((not ping_success)
+           and (self.pid is not None)
+           and (time.time() < deadline)):
+      sys.stdout.write('.')
+      sys.stdout.flush()
+      time.sleep(0.1)
+      ping_success = client.Ping()
+    sys.stdout.write('\n')
+
+    if ping_success:
+      logging.info('KijiREST with PID %d : ping OK', pid)
       return True
+    elif self.pid is None:
+      logging.info('KijiREST with PID %d died', pid)
+      return False
+    else:
+      logging.info('KijiREST with PID %d : ping not OK after %fs', pid, timeout)
+      return False
 
   def Stop(self, sig=signal.SIGTERM, timeout=10.0):
     """Stops this KijiREST server.
@@ -839,12 +863,6 @@ class Start(ServerAction):
         default=None,
         help='Override the HBase cluster to connect to, specified as a Kiji URI.',
     )
-    self.flags.AddString(
-        name='kiji_instances',
-        default=None,
-        help=('Override the Kiji instances accessed by the REST server.\n'
-              'Comma-separated list of Kiji instance names.'),
-    )
     self.flags.AddFloat(
         name='timeout',
         default=10.0,
@@ -862,9 +880,6 @@ class Start(ServerAction):
       dirty = True
     if self.flags.hbase_uri is not None:
       self.server.SetHBaseCluster(self.flags.hbase_uri)
-      dirty = True
-    if self.flags.kiji_instances is not None:
-      self.server.SetKijiInstances(self.flags.kiji_instances.split(','))
       dirty = True
     if dirty:
       self.server.WriteConf()
