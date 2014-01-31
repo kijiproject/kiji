@@ -51,7 +51,7 @@ import org.kiji.scoring.ScoreFunction;
  *   This ScoreFunction uses two parameter keys to store its state.
  *   <ul>
  *     <li>
- *       org.kiji.scoring.lib.server.ScoringServerScoreFunction.base_rul_key stores the base URL of
+ *       org.kiji.scoring.lib.server.ScoringServerScoreFunction.base_url_key stores the base URL of
  *       the ScoringServer.
  *     </li>
  *     <li>

@@ -49,7 +49,7 @@ import org.kiji.scoring.batch.ScoreFunctionJobBuilder;
  * <p>
  *   Example usage:
  *   <pre>
- *     kiji score \
+ *     kiji batch-score \
  *         --input="format=kiji table=kiji://.env/default/table" \
  *         --output="format=kiji table=kiji://.env/default/table" \
  *         --score-function-class=com.mycompany.scoring.ScoreFunction \
