@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-# -*- mode: python -*-
 # -*- coding: utf-8 -*-
+# -*- mode: python -*-
 
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -18,44 +18,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Unit-tests for the KijiREST client."""
+
+import logging
 import os
-import shutil
 import sys
+import unittest
 
-from setuptools import setup
+from base import base
+
+from kiji.rest import kiji_rest
 
 
-def Main():
-  assert (sys.version_info[0] >= 3), \
-      ('Python version >= 3 required, got %r' % sys.version_info)
-  base_dir = os.path.dirname(os.path.abspath(__file__))
+class TestKijiRest(unittest.TestCase):
 
-  setup(
-    name = 'kiji-rest',
-    version = '1.0.3',
-    packages = ['kiji.rest'],
-    package_dir = {
-        'kiji': 'kiji',
-    },
-    script_name = 'setup.py',
-    scripts = [
-        'scripts/kiji-rest-client',
-        'scripts/kiji-rest-admin',
-    ],
-    install_requires = [
-        'python-base>=1.0.2',
-        'pyaml',
-    ],
+  def testRestEntityId(self):
+    """Tests the entity ID normalization."""
+    self.assertEqual([1], kiji_rest._RestEntityId(1))
+    self.assertEqual([1], kiji_rest._RestEntityId([1]))
+    self.assertEqual([1, 2], kiji_rest._RestEntityId([1, 2]))
+    self.assertEqual(['1'], kiji_rest._RestEntityId('1'))
+    self.assertEqual(['1'], kiji_rest._RestEntityId(['1']))
+    self.assertEqual(['1', '2'], kiji_rest._RestEntityId(['1', '2']))
+    self.assertEqual(('1', '2'), kiji_rest._RestEntityId(('1', '2')))
 
-    # metadata for upload to PyPI
-    author = 'The Kiji Project',
-    author_email = 'user@kiji.org',
-    description = 'Python3 client for KijiREST.',
-    license = 'Apache License 2.0',
-    keywords = 'rest kiji hbase python3 avro',
-    url = 'http://www.kiji.org',
-  )
+
+def Main(args):
+  args = list(args)
+  args.insert(0, sys.argv[0])
+  unittest.main(argv=args)
 
 
 if __name__ == '__main__':
-  Main()
+  base.Run(Main)

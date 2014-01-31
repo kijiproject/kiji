@@ -24,6 +24,7 @@ For more documentation on Kiji and KijiREST,
 see http://docs.kiji.org/userguides.html
 """
 
+import collections
 import getpass
 import http
 import logging
@@ -54,6 +55,25 @@ class Error(Exception):
 
 
 # ------------------------------------------------------------------------------
+
+
+def _RestEntityId(eid):
+  """Normalizes an entity ID for a KijiREST call.
+
+  KijiREST expects formatted entity IDs always.
+  This means that non formatted entity IDs must be wrapped in a singleton list.
+
+  Args:
+    eid: Entity ID, as a Python value.
+  Returns:
+    Normalized Python value accepted by the KijiREST server.
+  """
+  if isinstance(eid, str):
+    return [eid]
+  elif isinstance(eid, collections.Iterable):
+    return eid
+  else:
+    return [eid]
 
 
 class KijiRestClient(object):
@@ -195,7 +215,7 @@ class KijiRestClient(object):
     path = os.path.join('instances', instance, 'tables', table, 'rows')
     if query is None:
       query = dict()
-    query['eid'] = base.JsonEncode(entity_id, pretty=False)
+    query['eid'] = base.JsonEncode(_RestEntityId(entity_id), pretty=False)
     if (columns is not None) and (len(columns) > 0):
       query['cols'] = ','.join(columns)
     text_reply = self.Request(
@@ -206,7 +226,7 @@ class KijiRestClient(object):
     )
     return base.JsonDecode(text_reply)
 
-  def RowRange(
+  def Scan(
       self,
       start_eid=None,
       end_eid=None,
@@ -247,10 +267,15 @@ class KijiRestClient(object):
     path = os.path.join('instances', instance, 'tables', table, 'rows')
     if query is None:
       query = dict()
+
     if start_eid is not None:
-      query['start_eid'] = base.JsonEncode(start_eid, pretty=False)
+      query['start_eid'] = \
+          base.JsonEncode(_RestEntityId(start_eid), pretty=False)
+
     if end_eid is not None:
-      query['end_eid'] = base.JsonEncode(end_eid, pretty=False)
+      query['end_eid'] = \
+          base.JsonEncode(_RestEntityId(end_eid), pretty=False)
+
     if max_rows is None:
       query['limit'] = -1
     else:
@@ -684,7 +709,7 @@ class Scan(RestAction):
     if max_rows < 0:
       max_rows = None
 
-    for row in self.client.RowRange(
+    for row in self.client.Scan(
         instance=self.flags.instance,
         table=self.flags.table,
         start_eid=start_eid,
