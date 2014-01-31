@@ -37,10 +37,6 @@
       <artifactId>scalding-args_${scala.version}</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.avro</groupId>
-      <artifactId>avro</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase</artifactId>
     </dependency>
@@ -147,18 +143,6 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.avro</groupId>
-        <artifactId>avro-maven-plugin</artifactId>
-        <configuration>
-          <!-- Avro string compiled to java.lang.String instead of CharSequence -->
-          <stringType>String</stringType>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>com.google.code.maven-replacer-plugin</groupId>
-        <artifactId>maven-replacer-plugin</artifactId>
       </plugin>
       <plugin>
         <groupId>net.alchim31.maven</groupId>

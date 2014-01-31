@@ -406,7 +406,7 @@ class RecommendationPipe(val pipe: Pipe)
           field: String => {
             val itemSetSize = field.split(separator).size
             itemSetSize <= lhsMaxSize + rhsMaxSize &&
-                itemSetSize > Math.min(lhsMinSize, rhsMinSize)
+                itemSetSize > math.min(lhsMinSize, rhsMinSize)
           }
         }
         // Generate all possible LHS itemsets by taking subsets of the itemsets from input pipe.
@@ -416,7 +416,7 @@ class RecommendationPipe(val pipe: Pipe)
           itemset: String => {
             val itemsetSplit = itemset.split(separator).map(_.trim).distinct.sorted.toList
             // LHS ought to be strict subset.
-            (lhsMinSize to Math.min(lhsMaxSize, itemsetSplit.size - 1))
+            (lhsMinSize to math.min(lhsMaxSize, itemsetSplit.size - 1))
                 .flatMap(itemsetSplit.combinations)
                 .map(combination => {
                   val lhs = combination.sorted
