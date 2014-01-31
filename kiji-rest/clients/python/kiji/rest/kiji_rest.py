@@ -904,6 +904,11 @@ class Stop(ServerAction):
         default=10.0,
         help='How many seconds to wait for the process to stop.',
     )
+    self.flags.AddBoolean(
+        name='kill_on_timeout',
+        default=True,
+        help='Whether to force kill on timeout.',
+    )
 
   def Run(self, args):
     assert (len(args) == 0), ('Unexpected arguments: %r' % args)
@@ -914,9 +919,17 @@ class Stop(ServerAction):
     if self.server.Stop(sig=sig, timeout=self.flags.timeout):
       print('OK')
       return ExitCode.SUCCESS
-    else:
-      print('FAILED')
-      return ExitCode.FAILURE
+
+    if self.flags.kill_on_timeout:
+      logging.info(
+          'Forcibly stopping KijiREST server with PID %d',
+          self.server.pid)
+    if self.server.Stop(sig=signal.SIGKILL, timeout=1.0):
+      print('OK')
+      return ExitCode.SUCCESS
+
+    print('FAILED')
+    return ExitCode.FAILURE
 
 
 class ServerPing(ServerAction):

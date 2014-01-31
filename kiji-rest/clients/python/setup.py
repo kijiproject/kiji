@@ -32,7 +32,7 @@ def Main():
 
   setup(
     name = 'kiji-rest',
-    version = '1.0.1',
+    version = '1.0.2',
     packages = ['kiji.rest'],
     package_dir = {
         'kiji': 'kiji',
