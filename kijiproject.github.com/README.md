@@ -47,7 +47,7 @@ articles and userguides.
 
 
 ## Previewing Changes
-### PreReqs
+### Prereqs
 In order to preview what your changes look like, you will need to have
 Ruby and Jekyll installed. It is highly recommended that you control your
 ruby version using rvm. Check out instructions at
