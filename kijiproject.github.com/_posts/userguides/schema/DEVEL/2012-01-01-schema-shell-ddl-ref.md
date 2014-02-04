@@ -651,7 +651,8 @@ The `ALTER TABLE.. ADD SCHEMA` command has the following syntax:
 You may add a schema to the readers list (`ADD READER SCHEMA`) or the writers list (`ADD
 WRITER SCHEMA`). If you do not specify these options, the schema will be added to both the
 approved reader and writer lists. You may also explicitly specify a schema as the default
-reader schema by running `..ADD DEFAULT READER SCHEMA..`.
+reader schema by running `..ADD DEFAULT READER SCHEMA..`. Adding a default reader schema
+will overwrite any existing default reader schema for the specified column.
 
 The schema may be specified as follows:
 
@@ -706,7 +707,7 @@ DEFAULT READER SCHEMA "long"...` to accomplish the same.
 
 The `ALTER TABLE.. DROP SCHEMA` command has the following syntax:
 
-    ALTER TABLE <tablename> DROP [ [DEFAULT] READER | WRITER ] SCHEMA <schema>
+    ALTER TABLE <tablename> DROP [ READER | WRITER ] SCHEMA <schema>
     FOR COLUMN familyName:qualifier;
 
 #### Schema Management Commands for Map-Type Families
