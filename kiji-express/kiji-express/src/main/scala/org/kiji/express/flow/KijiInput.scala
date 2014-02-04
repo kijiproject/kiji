@@ -43,6 +43,9 @@ import org.kiji.schema.KijiColumnName
  *       .withRowFilterSpec(KijiRandomRowFilterSpec(0.3F))
  *       .build
  * }}}
+ *
+ * Note: Columns containing no values will be replaced with an empty sequence unless all requested
+ *     columns are empty in which case the entire row will be skipped.
  */
 @ApiAudience.Public
 @ApiStability.Stable

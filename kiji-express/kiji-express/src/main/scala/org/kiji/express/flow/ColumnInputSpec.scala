@@ -186,6 +186,9 @@ object ColumnInputSpec {
  *           .build
  * }}}
  *
+ * Note: Columns containing no values will be replaced with an empty sequence unless all requested
+ *     columns are empty in which case the entire row will be skipped.
+ *
  * To see more information about reading data from a Kiji table, see
  * [[org.kiji.express.flow.KijiInput]].
  *
