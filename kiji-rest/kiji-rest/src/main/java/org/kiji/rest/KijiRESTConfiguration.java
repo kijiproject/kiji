@@ -19,9 +19,11 @@
 
 package org.kiji.rest;
 
+import java.util.Collections;
+import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.yammer.dropwizard.config.Configuration;
-
 import org.hibernate.validator.constraints.NotEmpty;
 
 import org.kiji.rest.config.FresheningConfiguration;
@@ -44,6 +46,10 @@ public class KijiRESTConfiguration extends Configuration {
   @JsonProperty("cors")
   private boolean mCORS = false;
 
+  /** For plugins to add arbitary properties. */
+  @JsonProperty("plugin-properties")
+  private Map<String, String> mPluginProperties = Collections.emptyMap();
+
   /** @return The cluster address. */
   public final String getClusterURI() {
     return mCluster;
@@ -57,5 +63,12 @@ public class KijiRESTConfiguration extends Configuration {
   /** @return Is global CORS turned on or off. */
   public boolean getCORS() {
     return mCORS;
+  }
+
+  /**
+   * @return A map of arbitrary properties for use by plugins.
+   */
+  public Map<String, String> getPluginProperties() {
+    return mPluginProperties;
   }
 }

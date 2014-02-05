@@ -101,8 +101,8 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
           }
         });
 
-    final ManagedKijiClient kijiClient = new ManagedKijiClient(instances);
-    environment.manage(kijiClient);
+    final ManagedKijiClient managedKijiClient = new ManagedKijiClient(instances);
+    environment.manage(managedKijiClient);
 
     // Remove all built-in Dropwizard ExceptionHandler.
     // Always depend on custom ones.
@@ -119,7 +119,7 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
 
     // Update instances periodically.
     final RefreshInstances instanceRefresher =
-        new RefreshInstances(clusterURI, (ManagedKijiClient) kijiClient);
+        new RefreshInstances(clusterURI, managedKijiClient);
     ScheduledExecutorService scheduler = environment
         .managedScheduledExecutorService("instance_refresh_scheduler", 1);
     scheduler.scheduleAtFixedRate(
@@ -134,7 +134,7 @@ public class KijiRESTService extends Service<KijiRESTConfiguration> {
     // Load resources.
     for (KijiRestPlugin plugin : Lookups.get(KijiRestPlugin.class)) {
       LOG.info("Loading plugin {}", plugin.getClass());
-      plugin.install(kijiClient, configuration, environment);
+      plugin.install(managedKijiClient, configuration, environment);
     }
 
     // Allow global CORS filter. CORS off by default.
