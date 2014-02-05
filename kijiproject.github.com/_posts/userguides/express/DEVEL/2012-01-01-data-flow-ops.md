@@ -25,15 +25,21 @@ Each tuple will also contain the field names specified in the ColumnInputSpec ma
 consider the input below:
 
 {% highlight scala %}
-    KijiInput(tableUri = "kiji://localhost:2181/default/users",
-        Map(QualifiedColumnInputSpec("info", "name") -> 'name,
-            ColumnFamilyInputSpec("purchases") -> 'purchases))
+    KijiInput.builder
+        .withTableURI("kiji://localhost:2181/default/users")
+        .withColumns(
+            "info:name" -> 'name,
+            "purchases" -> 'purchases
+        )
+        .build
 {% endhighlight %}
 
 Irrespective of whether the column is from a Group Type or Map Type family, and whether it contains
 a single value or a time series, the resulting tuple field will be a
 [Seq](http://www.scala-lang.org/api/2.9.2/index.html#scala.collection.Seq) of
-[FlowCell]({{site.api_express_devel}}/flow/org.kiji.express.flow.FlowCell$.html)s.
+[FlowCell]({{site.api_express_devel}}/flow/org.kiji.express.flow.FlowCell$.html)s. Empty columns
+(columns with values that were all filtered out also count) are represented with an empty `Seq`
+unless all of the requested columns are empty. If the requested row is empty, it will be skipped.
 
 A `FlowCell` is a container for data from a Kiji table cell. It contains some datum tagged with a
 column family, column qualifier, and version.
