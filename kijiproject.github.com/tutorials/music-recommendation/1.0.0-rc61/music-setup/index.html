@@ -307,10 +307,14 @@
 
     <p>For this tutorial, we assume you are either using the standalone Kiji BentoBox or have installed the individual components described <a href='http://www.kiji.org/getstarted/'>here</a>. If you don&#39;t have a working environment yet, you can install the standalone Kiji BentoBox in <a href='http://www.kiji.org/#tryit'>three quick steps!</a></p>
 
-<p>If you already installed BentoBox, make sure you have started it:</p>
+<ul>
+<li>If you are running a BentoBox, set the environment variables for the shell and start the Bento cluster:</li>
+</ul>
 <div class='userinput'>
 
-<div class='highlight'><pre><code class='bash'>bento start
+<div class='highlight'><pre><code class='bash'><span class='nb'>cd</span> &lt;path/to/bento&gt;
+<span class='nb'>source </span>bin/kiji-env.sh
+bento start
 </code></pre></div>
 
 </div>
