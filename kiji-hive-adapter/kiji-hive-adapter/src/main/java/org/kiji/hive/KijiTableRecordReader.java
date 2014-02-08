@@ -75,11 +75,15 @@ public class KijiTableRecordReader
     mKijiTable = mKiji.openTable(kijiURI.getTable());
     mKijiTableReader = mKijiTable.openTableReader();
 
+    final String hiveName = conf.get(KijiTableSerDe.HIVE_TABLE_NAME_PROPERTY);
+    final String dataRequestParameter = KijiTableInputFormat.CONF_KIJI_DATA_REQUEST_PREFIX
+        + hiveName;
+
     try {
-      String dataRequestString = conf.get(KijiTableInputFormat.CONF_KIJI_DATA_REQUEST);
+      final String dataRequestString = conf.get(dataRequestParameter);
       if (null == dataRequestString) {
         throw new RuntimeException("KijiTableInputFormat was not configured. "
-            + "Please set " + KijiTableInputFormat.CONF_KIJI_DATA_REQUEST + " in configuration.");
+            + "Please set " + dataRequestParameter + " in configuration.");
       }
       KijiDataRequest dataRequest = KijiDataRequestSerializer.deserialize(
           dataRequestString);

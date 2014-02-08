@@ -75,7 +75,12 @@ public class KijiTableStorageHandler extends DefaultStorageHandler {
    * @param jobProperties receives properties copied or transformed
    */
   private void configureKijiJobProperties(TableDesc tableDesc, Map<String, String> jobProperties) {
-    KijiURI kijiURI = KijiTableInfo.getURIFromProperties(tableDesc.getProperties());
+    final KijiURI kijiURI = KijiTableInfo.getURIFromProperties(tableDesc.getProperties());
     jobProperties.put(KijiTableOutputFormat.CONF_KIJI_TABLE_URI, kijiURI.toString());
+
+    // We need to propagate the table name for the jobs to know which data request to use.
+    final String tableName = tableDesc.getTableName();
+    jobProperties.put(KijiTableSerDe.HIVE_TABLE_NAME_PROPERTY, tableName);
+
   }
 }

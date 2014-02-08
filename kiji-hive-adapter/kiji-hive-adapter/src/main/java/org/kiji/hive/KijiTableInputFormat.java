@@ -65,8 +65,7 @@ public class KijiTableInputFormat
     implements InputFormat<ImmutableBytesWritable, KijiRowDataWritable> {
   private static final Logger LOG = LoggerFactory.getLogger(KijiTableInputFormat.class);
 
-  public static final String CONF_KIJI_DATA_REQUEST = "kiji.data.request";
-  public static final String CONF_KIJI_TABLE_URI = "kiji.table.uri";
+  public static final String CONF_KIJI_DATA_REQUEST_PREFIX = "kiji.data.request.";
 
   /**
    * Returns an object responsible for generating records contained in a

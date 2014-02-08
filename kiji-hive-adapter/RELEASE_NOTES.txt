@@ -2,6 +2,10 @@
 
                         Kiji Hive Adapter Release Notes
 
+Version 0.9.1
+  * KIJIHIVE-43. Fixed an issue where data requests were not being properly
+      serialized when multiple tables were used in one query(joins).
+
 Version 0.9.0
   * KIJIHIVE-40. Escape all column names to avoid Hive reserved words in DDL
       statement generation.

@@ -52,6 +52,9 @@ import org.kiji.schema.KijiColumnName;
 public class KijiTableSerDe implements SerDe {
   private static final Logger LOG = LoggerFactory.getLogger(KijiTableSerDe.class);
 
+  // Hive configuration property for defining the table name
+  public static final String HIVE_TABLE_NAME_PROPERTY = "name";
+
   // Property for specifying which columns are used within a Hive view.
   public static final String LIST_COLUMN_EXPRESSIONS = "kiji.columns";
 
@@ -138,11 +141,14 @@ public class KijiTableSerDe implements SerDe {
           LIST_ENTITY_ID_COMPONENTS);
     }
 
+    final String hiveName = properties.getProperty("name");
+    final String dataRequestParameter = KijiTableInputFormat.CONF_KIJI_DATA_REQUEST_PREFIX
+        + hiveName;
     try {
       if (null == conf) {
         conf = new HBaseConfiguration();
       }
-      conf.set(KijiTableInputFormat.CONF_KIJI_DATA_REQUEST,
+      conf.set(dataRequestParameter,
           KijiDataRequestSerializer.serialize(mHiveTableDescription.getDataRequest()));
     } catch (IOException e) {
       throw new SerDeException("Unable to construct the data request.", e);

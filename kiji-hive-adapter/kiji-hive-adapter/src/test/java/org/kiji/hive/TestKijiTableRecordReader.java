@@ -53,6 +53,8 @@ public class TestKijiTableRecordReader extends KijiClientTest {
   private KijiTable mTable;
   private KijiTableReader mReader;
 
+  private static final String TABLE_NAME = "user";
+
   @Before
   public void setupEnvironment() throws Exception {
     // Get the test table layouts.
@@ -61,7 +63,7 @@ public class TestKijiTableRecordReader extends KijiClientTest {
 
     // Populate the environment.
     mKiji = new InstanceBuilder()
-        .withTable("user", layout)
+        .withTable(TABLE_NAME, layout)
         .withRow("foo")
           .withFamily("info")
             .withQualifier("name").withValue(TIMESTAMP, "foo-val")
@@ -71,7 +73,7 @@ public class TestKijiTableRecordReader extends KijiClientTest {
         .build();
 
     // Fill local variables.
-    mTable = mKiji.openTable("user");
+    mTable = mKiji.openTable(TABLE_NAME);
     mReader = mTable.openTableReader();
   }
 
@@ -92,7 +94,9 @@ public class TestKijiTableRecordReader extends KijiClientTest {
 
     Configuration conf = getConf();
     KijiDataRequest kijiDataRequest = KijiDataRequest.create("info", "name");
-    conf.set("kiji.data.request", KijiDataRequestSerializer.serialize(kijiDataRequest));
+    conf.set(KijiTableSerDe.HIVE_TABLE_NAME_PROPERTY, TABLE_NAME);
+    conf.set(KijiTableInputFormat.CONF_KIJI_DATA_REQUEST_PREFIX + TABLE_NAME,
+        KijiDataRequestSerializer.serialize(kijiDataRequest));
 
     // Initialize KijiTableRecordReader
     KijiTableRecordReader tableRecordReader = new KijiTableRecordReader(tableInputSplit, conf);
@@ -130,7 +134,9 @@ public class TestKijiTableRecordReader extends KijiClientTest {
         .addColumns(ColumnsDef.create().withMaxVersions(10).withPageSize(1).add("info", "name"))
         .build();
 
-    conf.set("kiji.data.request", KijiDataRequestSerializer.serialize(kijiDataRequest));
+    conf.set(KijiTableSerDe.HIVE_TABLE_NAME_PROPERTY, TABLE_NAME);
+    conf.set(KijiTableInputFormat.CONF_KIJI_DATA_REQUEST_PREFIX + TABLE_NAME,
+        KijiDataRequestSerializer.serialize(kijiDataRequest));
 
     // Initialize KijiTableRecordReader
     KijiTableRecordReader tableRecordReader = new KijiTableRecordReader(tableInputSplit, conf);
@@ -176,7 +182,9 @@ public class TestKijiTableRecordReader extends KijiClientTest {
         .addColumns(ColumnsDef.create().withMaxVersions(9).withPageSize(1).add("info", "location"))
         .build();
 
-    conf.set("kiji.data.request", KijiDataRequestSerializer.serialize(kijiDataRequest));
+    conf.set(KijiTableSerDe.HIVE_TABLE_NAME_PROPERTY, TABLE_NAME);
+    conf.set(KijiTableInputFormat.CONF_KIJI_DATA_REQUEST_PREFIX + TABLE_NAME,
+        KijiDataRequestSerializer.serialize(kijiDataRequest));
 
     // Initialize KijiTableRecordReader
     KijiTableRecordReader tableRecordReader = new KijiTableRecordReader(tableInputSplit, conf);
@@ -220,7 +228,9 @@ public class TestKijiTableRecordReader extends KijiClientTest {
         .addColumns(ColumnsDef.create().withPageSize(2).addFamily("jobs"))
         .build();
 
-    conf.set("kiji.data.request", KijiDataRequestSerializer.serialize(kijiDataRequest));
+    conf.set(KijiTableSerDe.HIVE_TABLE_NAME_PROPERTY, TABLE_NAME);
+    conf.set(KijiTableInputFormat.CONF_KIJI_DATA_REQUEST_PREFIX + TABLE_NAME,
+        KijiDataRequestSerializer.serialize(kijiDataRequest));
 
     // Initialize KijiTableRecordReader
     KijiTableRecordReader tableRecordReader = new KijiTableRecordReader(tableInputSplit, conf);
@@ -242,7 +252,6 @@ public class TestKijiTableRecordReader extends KijiClientTest {
     assertEquals(3, resultCount);
     ResourceUtils.closeOrLog(tableRecordReader);
   }
-
 
   @Test
   public void testFetchPagedQualifierAndCellsData() throws IOException {
@@ -271,7 +280,9 @@ public class TestKijiTableRecordReader extends KijiClientTest {
             .addFamily("jobs"))
         .build();
 
-    conf.set("kiji.data.request", KijiDataRequestSerializer.serialize(kijiDataRequest));
+    conf.set(KijiTableSerDe.HIVE_TABLE_NAME_PROPERTY, TABLE_NAME);
+    conf.set(KijiTableInputFormat.CONF_KIJI_DATA_REQUEST_PREFIX + TABLE_NAME,
+        KijiDataRequestSerializer.serialize(kijiDataRequest));
 
     // Initialize KijiTableRecordReader
     KijiTableRecordReader tableRecordReader = new KijiTableRecordReader(tableInputSplit, conf);
