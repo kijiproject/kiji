@@ -28,7 +28,7 @@ import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.KijiSuite
-import org.kiji.express.flow.util.ResourceUtil.doAndRelease
+import org.kiji.express.flow.util.ResourceUtil
 import org.kiji.schema.KijiTable
 import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.layout.KijiTableLayouts
@@ -93,13 +93,14 @@ class WordCountFlatMapJob(args: Args) extends KijiJob(args) {
 @RunWith(classOf[JUnitRunner])
 class PagedCellsSuite extends KijiSuite {
   /** Simple table layout to use for tests. The row keys are hashed. */
-  val simpleLayout: KijiTableLayout = layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
+  val simpleLayout: KijiTableLayout = ResourceUtil.layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
 
   test("a word-concat job that reads from a Kiji table is run using Scalding's local mode") {
     // Create test Kiji table.
-    val uri: String = doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
-      table.getURI().toString()
-    }
+    val uri: String =
+        ResourceUtil.doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
+          table.getURI.toString
+        }
 
     /** Input tuples to use for word count tests. */
     def wordCountInput(uri: String): List[(EntityId, Seq[FlowCell[String]])] = {
@@ -139,9 +140,10 @@ class PagedCellsSuite extends KijiSuite {
 
   test("a word-count job that reads from a Kiji table is run using Scalding's local mode") {
     // Create test Kiji table.
-    val uri: String = doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
-      table.getURI().toString()
-    }
+    val uri: String =
+        ResourceUtil.doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
+          table.getURI.toString
+        }
 
     /** Input tuples to use for word count tests. */
     def wordCountInput(uri: String): List[(EntityId, Seq[FlowCell[String]])] = {

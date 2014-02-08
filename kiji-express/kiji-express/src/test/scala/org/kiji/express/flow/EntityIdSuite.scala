@@ -33,7 +33,7 @@ import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.KijiSuite
 import org.kiji.express.flow.EntityId.HashedEntityId
-import org.kiji.express.flow.util.ResourceUtil.doAndRelease
+import org.kiji.express.flow.util.ResourceUtil
 import org.kiji.schema.EntityIdFactory
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiURI
@@ -49,16 +49,21 @@ class EntityIdSuite extends KijiSuite {
   import org.kiji.express.flow.EntityIdSuite._
 
   /** Table layout with formatted entity IDs to use for tests. */
-  val formattedEntityIdLayout: KijiTableLayout = layout(KijiTableLayouts.FORMATTED_RKF)
+  val formattedEntityIdLayout: KijiTableLayout = ResourceUtil.layout(KijiTableLayouts.FORMATTED_RKF)
   // Create a table to use for testing
   val formattedTableUri: KijiURI =
-      doAndRelease(makeTestKijiTable(formattedEntityIdLayout)) { table: KijiTable => table.getURI }
+      ResourceUtil.doAndRelease(makeTestKijiTable(formattedEntityIdLayout)) { table: KijiTable =>
+        table.getURI
+      }
 
   /** Table layout with hashed entity IDs to use for tests. */
-  val hashedEntityIdLayout: KijiTableLayout = layout(KijiTableLayouts.HASHED_FORMATTED_RKF)
+  val hashedEntityIdLayout: KijiTableLayout =
+      ResourceUtil.layout(KijiTableLayouts.HASHED_FORMATTED_RKF)
   // Create a table to use for testing
   val hashedTableUri: KijiURI =
-      doAndRelease(makeTestKijiTable(hashedEntityIdLayout)) { table: KijiTable => table.getURI }
+      ResourceUtil.doAndRelease(makeTestKijiTable(hashedEntityIdLayout)) { table: KijiTable =>
+        table.getURI
+      }
 
   val configuration: Configuration = HBaseConfiguration.create()
 
@@ -83,11 +88,11 @@ class EntityIdSuite extends KijiSuite {
   test("Create an Express EntityId from a Kiji EntityId and vice versa in a hashed table.") {
     val origKijiEid = hashedEidFactory.getEntityId("test")
 
-    val expressEid = HashedEntityId(origKijiEid.getHBaseRowKey())
+    val expressEid = HashedEntityId(origKijiEid.getHBaseRowKey)
     val expressToKijiEid = expressEid.toJavaEntityId(hashedEidFactory)
 
     val recreate = EntityId.fromJavaEntityId(expressToKijiEid)
-    assert(recreate.components.equals(List(origKijiEid.getHBaseRowKey())))
+    assert(recreate.components.equals(List(origKijiEid.getHBaseRowKey)))
   }
 
   test("Creating an EntityId from a Hashed table fails if there is more than one component.") {
@@ -141,10 +146,10 @@ class EntityIdSuite extends KijiSuite {
 
   // ------- "integration tests" for joins. -------
   /** Simple table layout to use for tests. The row keys are hashed. */
-  val simpleLayout: KijiTableLayout = layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
+  val simpleLayout: KijiTableLayout = ResourceUtil.layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
 
   /** Table layout using Avro schemas to use for tests. The row keys are formatted. */
-  val avroLayout: KijiTableLayout = layout("layout/avro-types.json")
+  val avroLayout: KijiTableLayout = ResourceUtil.layout("layout/avro-types.json")
 
   test("Runs a job that joins two pipes, on user-created EntityIds.") {
     // Create main input.
@@ -179,8 +184,8 @@ class EntityIdSuite extends KijiSuite {
 
   test("Runs a job that joins two pipes, on user-created and from a table (formatted) EntityIds.") {
     // URI of the Kiji table to use.
-    val uri: String = doAndRelease(makeTestKijiTable(avroLayout)) { table: KijiTable =>
-      table.getURI().toString()
+    val uri: String = ResourceUtil.doAndRelease(makeTestKijiTable(avroLayout)) { table: KijiTable =>
+      table.getURI.toString
     }
 
     // Create input from Kiji table.
@@ -219,9 +224,10 @@ class EntityIdSuite extends KijiSuite {
 
   test("Runs a job that joins two pipes, on EntityIds from a table (hashed), in local mode.") {
     // URI of the hashed Kiji table to use.
-    val uri: String = doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
-      table.getURI().toString()
-    }
+    val uri: String =
+        ResourceUtil.doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
+          table.getURI.toString
+        }
 
     // Create input from hashed Kiji table.
     val joinInput1: List[(EntityId, Seq[FlowCell[String]])] = List(
@@ -262,9 +268,10 @@ class EntityIdSuite extends KijiSuite {
 
   test("Runs a job that joins two pipes, on EntityIds from a table (hashed), in hadoop mode.") {
     // URI of the hashed Kiji table to use.
-    val uri: String = doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
-      table.getURI().toString()
-    }
+    val uri: String =
+        ResourceUtil.doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
+          table.getURI.toString
+        }
 
     // Create input from hashed Kiji table.
     val joinInput1: List[(EntityId, Seq[FlowCell[String]])] = List(
@@ -303,8 +310,8 @@ class EntityIdSuite extends KijiSuite {
 
   test("A job that joins two pipes, on EntityIds from a table (formatted) in local mode.") {
     // URI of a formatted Kiji table to use.
-    val uri: String = doAndRelease(makeTestKijiTable(avroLayout)) { table: KijiTable =>
-      table.getURI().toString()
+    val uri: String = ResourceUtil.doAndRelease(makeTestKijiTable(avroLayout)) { table: KijiTable =>
+      table.getURI.toString
     }
 
     // Create input from formatted Kiji table.
@@ -344,8 +351,8 @@ class EntityIdSuite extends KijiSuite {
 
   test("A job that joins two pipes, on EntityIds from a table (formatted) in hadoop mode.") {
     // URI of a formatted Kiji table to use.
-    val uri: String = doAndRelease(makeTestKijiTable(avroLayout)) { table: KijiTable =>
-      table.getURI().toString()
+    val uri: String = ResourceUtil.doAndRelease(makeTestKijiTable(avroLayout)) { table: KijiTable =>
+      table.getURI.toString
     }
 
     // Create input from formatted Kiji table.

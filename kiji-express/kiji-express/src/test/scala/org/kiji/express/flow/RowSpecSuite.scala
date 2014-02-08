@@ -29,7 +29,7 @@ import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.KijiSuite
-import org.kiji.express.flow.util.ResourceUtil.doAndRelease
+import org.kiji.express.flow.util.ResourceUtil
 import org.kiji.schema.EntityIdFactory
 import org.kiji.schema.KijiTable
 import org.kiji.schema.layout.KijiTableLayout
@@ -38,7 +38,7 @@ import org.kiji.schema.layout.KijiTableLayouts
 @RunWith(classOf[JUnitRunner])
 class RowSpecSuite extends KijiSuite {
   /** Simple table layout to use for tests. The row keys are hashed. */
-  val simpleLayout: KijiTableLayout = layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
+  val simpleLayout: KijiTableLayout = ResourceUtil.layout(KijiTableLayouts.SIMPLE_TWO_COLUMNS)
 
   /** Sample row keys. */
   val eidFactory = EntityIdFactory.getFactory(simpleLayout)
@@ -80,9 +80,10 @@ class RowSpecSuite extends KijiSuite {
 
   test("Interval scans start from startEntityId.") {
     // Create test Kiji table.
-    val uri: String = doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
-      table.getURI.toString
-    }
+    val uri: String =
+        ResourceUtil.doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
+          table.getURI.toString
+        }
 
     // Method to validate interval scan.
     def validateScan(outputBuffer: Buffer[Tuple1[String]]) {
@@ -110,9 +111,10 @@ class RowSpecSuite extends KijiSuite {
 
   test("Interval scans until limitEntityId.") {
     // Create test Kiji table.
-    val uri: String = doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
-      table.getURI.toString
-    }
+    val uri: String =
+        ResourceUtil.doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
+          table.getURI.toString
+        }
 
     // Method to validate interval scan.
     def validateScan(outputBuffer: Buffer[Tuple1[String]]) {
@@ -140,9 +142,10 @@ class RowSpecSuite extends KijiSuite {
 
   test("Random row filter scans selects no rows when selection chance is 0.") {
     // Create test Kiji table.
-    val uri: String = doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
-      table.getURI.toString
-    }
+    val uri: String =
+        ResourceUtil.doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
+          table.getURI.toString
+        }
 
     // Method to validate interval scan.
     def validateScan(outputBuffer: Buffer[Tuple1[String]]) {
@@ -167,9 +170,10 @@ class RowSpecSuite extends KijiSuite {
 
   test("Random row filter scans selects all rows when selection chance is 1.0.") {
     // Create test Kiji table.
-    val uri: String = doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
-      table.getURI.toString
-    }
+    val uri: String =
+        ResourceUtil.doAndRelease(makeTestKijiTable(simpleLayout)) { table: KijiTable =>
+          table.getURI.toString
+        }
 
     // Method to validate interval scan.
     def validateScan(outputBuffer: Buffer[Tuple1[String]]) {

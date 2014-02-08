@@ -100,7 +100,7 @@ object TimeRangeSpec {
   @ApiStability.Stable
   final case class At(version: Long) extends TimeRangeSpec {
     override val begin: Long = version
-    override val end: Long = version
+    override val end: Long = version + 1L
   }
 
   /**

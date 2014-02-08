@@ -33,6 +33,7 @@ import org.kiji.express.avro.SimpleRecord
 import org.kiji.express.flow.SchemaSpec.Generic
 import org.kiji.express.flow.SchemaSpec.Specific
 import org.kiji.express.flow.SchemaSpec.Writer
+import org.kiji.express.flow.util.ResourceUtil
 import org.kiji.schema.{ EntityId => JEntityId }
 import org.kiji.schema.Kiji
 import org.kiji.schema.KijiClientTest
@@ -47,7 +48,7 @@ class ReaderSchemaSuite extends KijiClientTest with KijiSuite {
   import org.kiji.express.flow.util.AvroTypesComplete._
   setupKijiTest()
   val kiji: Kiji = createTestKiji()
-  val layout: KijiTableLayout = layout("layout/avro-types-complete.json")
+  val layout: KijiTableLayout = ResourceUtil.layout("layout/avro-types-complete.json")
   val table: KijiTable = {
     kiji.createTable(layout.getDesc)
     kiji.openTable(layout.getName)

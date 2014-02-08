@@ -48,7 +48,7 @@ class TimeRangeSpecSuite extends FunSuite {
     val range: TimeRangeSpec = TimeRangeSpec.At(42L)
 
     assert(range.begin == 42L)
-    assert(range.end == 42L)
+    assert(range.end == 43L)
   }
 
   test("TimeRangeSpec.After constructs a TimeRangeSpec correctly") {

@@ -19,6 +19,8 @@
 
 package org.kiji.express.flow.util
 
+import java.io.InputStream
+
 import scala.io.Source
 
 import org.apache.hadoop.conf.Configuration
@@ -32,6 +34,9 @@ import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiTableReader
 import org.kiji.schema.KijiTableWriter
 import org.kiji.schema.KijiURI
+import org.kiji.schema.layout.KijiTableLayout
+import org.kiji.schema.layout.KijiTableLayouts
+import org.kiji.schema.shell.api.Client
 
 /**
  * The Resources object contains various convenience functions while dealing with
@@ -255,5 +260,53 @@ object ResourceUtil {
     doAndClose(Source.fromInputStream(inputStream)) { source =>
       source.mkString
     }
+  }
+
+  /**
+   * Loads a [[org.kiji.schema.layout.KijiTableLayout]] from the classpath. See
+   * [[org.kiji.schema.layout.KijiTableLayouts]] for some layouts that get put on the classpath
+   * by KijiSchema.
+   *
+   * @param resourcePath Path to the layout definition file.
+   * @return The layout contained within the provided resource.
+   */
+  def layout(resourcePath: String): KijiTableLayout = {
+    val tableLayoutDef = KijiTableLayouts.getLayout(resourcePath)
+    KijiTableLayout.newLayout(tableLayoutDef)
+  }
+
+  /**
+   * Executes a series of KijiSchema Shell DDL commands, separated by `;`.
+   *
+   * @param kiji to execute the commands against.
+   * @param commands to execute against the Kiji instance.
+   */
+  def executeDDLString(kiji: Kiji, commands: String) {
+    doAndClose(Client.newInstance(kiji.getURI)) { ddlClient =>
+      ddlClient.executeUpdate(commands)
+    }
+  }
+
+  /**
+   * Executes a series of KijiSchema Shell DDL commands, separated by `;`.
+   *
+   * @param kiji to execute the commands against.
+   * @param stream to read a series of commands to execute against the Kiji instance.
+   */
+  def executeDDLStream(kiji: Kiji, stream: InputStream) {
+    doAndClose(Client.newInstance(kiji.getURI)) { ddlClient =>
+      ddlClient.executeStream(stream)
+    }
+  }
+
+  /**
+   * Executes a series of KijiSchema Shell DDL commands, separated by `;`.
+   *
+   * @param kiji to execute the commands against.
+   * @param resourcePath to the classpath resource that a series of commands to execute
+   *     against the Kiji instance will be read from.
+   */
+  def executeDDLResource(kiji: Kiji, resourcePath: String) {
+    executeDDLStream(kiji, getClass.getClassLoader.getResourceAsStream(resourcePath))
   }
 }

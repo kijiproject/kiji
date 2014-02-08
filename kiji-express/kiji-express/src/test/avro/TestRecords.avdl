@@ -32,6 +32,20 @@ protocol Testing {
     string o = "default-value";
   }
 
+  @aliases(["org.kiji.express.avro.SimpleRecord"])
+  record SimpleRecordEvolved1 {
+    long l;
+    string s;
+  }
+
+  @aliases(["org.kiji.express.avro.SimpleRecord"])
+  record SimpleRecordEvolved2 {
+    long l;
+    string s;
+    string o = "default-value";
+    int i = 42;
+  }
+
   record NameFormats {
     int snake_case_ugh;
     int CamelCaseEvenWorse;

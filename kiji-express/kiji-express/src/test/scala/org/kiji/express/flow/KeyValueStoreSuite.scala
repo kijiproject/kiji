@@ -19,29 +19,15 @@
 
 package org.kiji.express.flow
 
+import java.io.BufferedWriter
 import java.io.File
 import java.io.FileWriter
 import java.io.FileInputStream
-import java.io.BufferedWriter
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
-import cascading.pipe.Pipe
-import cascading.flow.FlowDef
-import cascading.pipe.Each
-import cascading.tuple.Fields
 import com.google.common.io.Files
-import com.twitter.scalding.FieldConversions
-import com.twitter.scalding.Hdfs
-import com.twitter.scalding.TupleConversions
-import com.twitter.scalding.TupleSetter
-import com.twitter.scalding.TupleConverter
-import com.twitter.scalding.Mode
-import com.twitter.scalding.NullSource
-import com.twitter.scalding.SideEffectMapFunction
-import com.twitter.scalding.Args
-import com.twitter.scalding.RichPipe
-import com.twitter.scalding.IterableSource
+import com.twitter.scalding._
 import org.apache.avro.util.Utf8
 import org.apache.commons.io.FileUtils
 import org.apache.hadoop.conf.Configuration
@@ -53,74 +39,19 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 import org.kiji.express.KijiSuite
-import org.kiji.schema.KijiRowKeyComponents
 import org.kiji.mapreduce.kvstore.KeyValueStore
 import org.kiji.mapreduce.kvstore.KeyValueStoreReader
 import org.kiji.mapreduce.kvstore.impl.XmlKeyValueStoreParser
 import org.kiji.mapreduce.kvstore.lib.InMemoryMapKeyValueStore
 import org.kiji.mapreduce.kvstore.lib.TextFileKeyValueStore
 import org.kiji.schema.Kiji
+import org.kiji.schema.KijiRowKeyComponents
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiURI
 import org.kiji.schema.shell.api.Client
 import org.kiji.schema.util.InstanceBuilder
 
-trait TestPipeConversions {
-  implicit def pipe2TestPipe(pipe: Pipe): TestPipe = new TestPipe(pipe)
-}
-
-object TestPipe {
-  val logger: Logger = LoggerFactory.getLogger(classOf[KeyValueStoreSuite])
-}
-class TestPipe(val pipe: Pipe)
-    extends FieldConversions
-    with TupleConversions
-    with TestPipeConversions
-    with Serializable
-{
-  implicit def pipeToRichPipe(pipe : Pipe): RichPipe = new RichPipe(pipe)
-
-  def assertOutputValues[A](
-      fields: Fields,
-      expected: Set[A]
-  )(
-      implicit conv: TupleConverter[A],
-      set: TupleSetter[Unit],
-      flowDef: FlowDef,
-      mode: Mode
-  ): Unit = {
-    conv.assertArityMatches(fields)
-
-    def bf: mutable.Set[A] = mutable.Set[A]()
-
-    def ef(mySet: mutable.Set[A]): Unit = {
-      val output: Set[A] = mySet.toSet
-
-      if (expected == output) {
-        TestPipe.logger.debug("Confirmed values on pipe!")
-      } else {
-        TestPipe.logger.debug("Mismatch in expected value for pipe and output value")
-
-        val inExpectedNotFound: Set[A] = expected -- output
-        TestPipe.logger
-            .debug("Values in expected output that were not found: " + inExpectedNotFound)
-
-        val foundButNotExpected: Set[A] = output -- expected
-        TestPipe.logger.debug("Values found but not expected: " + foundButNotExpected)
-
-        throw new Exception("MISMATCH!")
-      }
-    }
-
-    def fn(mySet: mutable.Set[A], tup: A): Unit = { mySet += tup }
-
-    val newPipe = new Each(
-        pipe,
-        fields,
-        new SideEffectMapFunction(bf, fn, ef, Fields.NONE, conv, set))
-    NullSource.writeFrom(newPipe)(flowDef, mode)
-  }
-}
+import org.kiji.express.flow.util.TestPipeConversions
 
 @RunWith(classOf[JUnitRunner])
 class KeyValueStoreSuite extends KijiSuite {

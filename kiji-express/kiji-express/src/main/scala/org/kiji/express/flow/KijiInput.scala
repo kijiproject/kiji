@@ -30,17 +30,19 @@ import org.kiji.schema.KijiColumnName
  * Example usage:
  *
  * {{{
+ *   val column3 = QualifiedColumnInputSpec.builder
+ *       .withColumn("info", "column3")
+ *       .withSchemaSpec(DefaultReader)
+ *       .build
+ *
  *   KijiInput.builder
  *       .withTableURI("kiji://localhost:2181/default/mytable")
- *       .withTimeRangeSpec(Between(5, 10))
+ *       .withTimeRangeSpec(TimeRangeSpec.Between(5, 10))
  *       .withColumns("info:column1" -> 'column1, "info:column2" -> 'column2)
- *       .addColumnSpecs(QualifiedColumnInputSpec.builder
- *           .withColumn("info", "column3")
- *           .withSchemaSpec(DefaultReader)
- *           .build -> 'column3)
+ *       .addColumnSpecs(column3 -> 'column3)
  *       // Selects a 30% sample of data between startEid and endEid.
- *       .withRowRangeSpec(BetweenRows(startEid, endEid)
- *       .withRowFilterSpec(KijiRandomRowFilterSpec(0.3F))
+ *       .withRowRangeSpec(RowRangeSpec.Between(startEid, endEid)
+ *       .withRowFilterSpec(RowFilterSpec.Random(0.3F))
  *       .build
  * }}}
  *

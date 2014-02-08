@@ -45,6 +45,11 @@
     <scalatest.version>2.0.M5b</scalatest.version>
 
     <!-- Plugin versions. -->
+    <!--
+      Version 1.7.6 of the avro-maven-plugin includes a fix for stringTypes + alias usage.
+      See AVRO-1433 for more information.
+    -->
+    <avro-maven-plugin.version>1.7.6</avro-maven-plugin.version>
     <scala-maven-plugin.version>3.1.6</scala-maven-plugin.version>
     <scalastyle-maven-plugin.version>0.3.2</scalastyle-maven-plugin.version>
   </properties>
@@ -189,6 +194,18 @@
               <version>${kiji-mapreduce.version}</version>
             </dependency>
           </dependencies>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.avro</groupId>
+          <artifactId>avro-maven-plugin</artifactId>
+          <version>${avro-maven-plugin.version}</version>
+          <configuration>
+            <!-- Record fields are now private : use accessors always. -->
+            <fieldVisibility>private</fieldVisibility>
+
+            <!-- Avro string compiled to java.lang.String instead of CharSequence -->
+            <stringType>String</stringType>
+          </configuration>
         </plugin>
         <plugin>
           <groupId>net.alchim31.maven</groupId>

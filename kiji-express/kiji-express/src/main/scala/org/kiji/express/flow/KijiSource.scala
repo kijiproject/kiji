@@ -321,6 +321,7 @@ private[express] object KijiSource {
   private[express] def convertKeysToStrings[T <: Any](columnMap: Map[Symbol, T]): Map[String, T] =
     columnMap.map { case (symbol, column) => (symbol.name, column) }
 
+  // Test specific code below here.
   /**
    * Takes a buffer containing rows and writes them to the table at the specified uri.
    *

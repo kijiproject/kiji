@@ -34,15 +34,15 @@ import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.KijiSuite
 import org.kiji.express.avro.SimpleRecord
-import org.kiji.express.flow.util.ResourceUtil.doAndRelease
+import org.kiji.express.flow.util.ResourceUtil
 import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiURI
 import org.kiji.schema.layout.KijiTableLayout
 
 @RunWith(classOf[JUnitRunner])
 class KijiJobSuite extends KijiSuite {
-  val avroLayout: KijiTableLayout = layout("layout/avro-types.json")
-  val uri: String = doAndRelease(makeTestKijiTable(avroLayout)) { table: KijiTable =>
+  val avroLayout: KijiTableLayout = ResourceUtil.layout("layout/avro-types.json")
+  val uri: String = ResourceUtil.doAndRelease(makeTestKijiTable(avroLayout)) { table: KijiTable =>
     table.getURI().toString()
   }
 

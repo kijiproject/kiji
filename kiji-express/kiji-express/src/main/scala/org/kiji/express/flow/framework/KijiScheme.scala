@@ -495,7 +495,7 @@ object KijiScheme {
           case qc: QualifiedColumnInputSpec => rowToTupleQualifiedColumn(qc)
         }
 
-    return result
+    result
   }
 
   /**
