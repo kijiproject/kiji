@@ -89,6 +89,7 @@ public class BatchScoreTool extends KijiJobTool<ScoreFunctionJobBuilder> {
 
   /** {@inheritDoc} */
   @Override
+  @SuppressWarnings("unchecked")
   protected void configure(
       final ScoreFunctionJobBuilder builder
   ) throws IOException, ClassNotFoundException {

@@ -109,7 +109,7 @@ public final class ScoreFunctionJobBuilder
 
   private Class<? extends ScoreFunction> mScoreFunctionClass = null;
   private KijiTableMapReduceJobOutput mJobOutput = null;
-  private ScoreFunction mScoreFunction = null;
+  private ScoreFunction<?> mScoreFunction = null;
   private KijiMapper<?, ?, ?, ?> mMapper = null;
   private KijiReducer<?, ?, ?, ?> mReducer = null;
   private KijiDataRequest mScoreFunctionDataRequest = null;

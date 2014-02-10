@@ -1150,7 +1150,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
    */
   public static KeyValueStoreReaderFactory createKVStoreReaderFactory(
       final InternalFreshenerContext context,
-      final ScoreFunction scoreFunction,
+      final ScoreFunction<?> scoreFunction,
       final KijiFreshnessPolicy policy
   ) {
     final Map<String, KeyValueStore<?, ?>> kvMap = Maps.newHashMap();

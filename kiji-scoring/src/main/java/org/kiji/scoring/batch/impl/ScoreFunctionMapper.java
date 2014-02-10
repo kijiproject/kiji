@@ -77,6 +77,7 @@ public final class ScoreFunctionMapper extends KijiTableMapper<HFileKeyValue, Nu
 
   /** {@inheritDoc} */
   @Override
+  @SuppressWarnings("unchecked")
   protected void setup(
       final Context context
   ) throws IOException {

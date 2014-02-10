@@ -155,6 +155,7 @@ public class FreshTool extends BaseTool {
    * @param serializedMap the JSON serialized map.
    * @return the deserialized version of the map.
    */
+  @SuppressWarnings("unchecked")
   private static Map<String, String> mapFromJSON(
       final String serializedMap
   ) {

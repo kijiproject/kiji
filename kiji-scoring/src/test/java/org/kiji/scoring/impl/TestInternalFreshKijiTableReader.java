@@ -96,18 +96,18 @@ public class TestInternalFreshKijiTableReader {
   private static final ScoreFunction TEST_SCORE_FN2 = new TestScoreFunctionTwo();
   private static final ScoreFunction TEST_TIMEOUT_SCORE_FN = new TestTimeoutScoreFunction();
 
-  public static final class TestTimestampScoreFunction extends ScoreFunction {
+  public static final class TestTimestampScoreFunction extends ScoreFunction<String> {
     public KijiDataRequest getDataRequest(final FreshenerContext context) throws IOException {
       return KijiDataRequest.builder().build();
     }
-    public TimestampedValue score(
+    public TimestampedValue<String> score(
         final KijiRowData dataToScore, final FreshenerContext context
     ) throws IOException {
       return TimestampedValue.create(2L, "new-val");
     }
   }
 
-  public static final class TestScoreFunction extends ScoreFunction {
+  public static final class TestScoreFunction extends ScoreFunction<String> {
     public KijiDataRequest getDataRequest(final FreshenerContext context) throws IOException {
       return FAMILY_QUAL0_R;
     }
@@ -118,7 +118,7 @@ public class TestInternalFreshKijiTableReader {
     }
   }
 
-  public static final class TestScoreFunctionTwo extends ScoreFunction {
+  public static final class TestScoreFunctionTwo extends ScoreFunction<String> {
     public KijiDataRequest getDataRequest(final FreshenerContext context) throws IOException {
       return FAMILY_QUAL0_R;
     }
@@ -129,7 +129,7 @@ public class TestInternalFreshKijiTableReader {
     }
   }
 
-  public static final class TestTimeoutScoreFunction extends ScoreFunction {
+  public static final class TestTimeoutScoreFunction extends ScoreFunction<String> {
     public KijiDataRequest getDataRequest(final FreshenerContext context) throws IOException {
       return FAMILY_QUAL0_R;
     }
@@ -145,7 +145,7 @@ public class TestInternalFreshKijiTableReader {
     }
   }
 
-  public static final class TestMapScoreFunction extends ScoreFunction {
+  public static final class TestMapScoreFunction extends ScoreFunction<Integer> {
     public KijiDataRequest getDataRequest(final FreshenerContext context) throws IOException {
       return MAP_QUALIFIER_R;
     }
@@ -221,7 +221,7 @@ public class TestInternalFreshKijiTableReader {
 
   public static final String TEST_PARAMETER_KEY = "test.kiji.parameter.key";
 
-  public static final class TestConfigurableScoreFunction extends ScoreFunction {
+  public static final class TestConfigurableScoreFunction extends ScoreFunction<String> {
 
     @Override
     public KijiDataRequest getDataRequest(final FreshenerContext context) throws IOException {

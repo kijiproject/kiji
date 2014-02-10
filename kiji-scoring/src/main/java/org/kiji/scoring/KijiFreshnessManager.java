@@ -570,7 +570,7 @@ public final class KijiFreshnessManager implements Closeable {
       final String tableName,
       final KijiColumnName columnName,
       final KijiFreshnessPolicy policy,
-      final ScoreFunction scoreFunction,
+      final ScoreFunction<?> scoreFunction,
       final Map<String, String> parameters,
       final boolean overwriteExisting,
       final boolean setupClasses
@@ -749,7 +749,7 @@ public final class KijiFreshnessManager implements Closeable {
         final KijiFreshenerRecord record = recordEntry.getValue();
         final KijiFreshnessPolicy policy =
             ScoringUtils.policyForName(record.getFreshnessPolicyClass());
-        final ScoreFunction scoreFunction =
+        final ScoreFunction<?> scoreFunction =
             ScoringUtils.scoreFunctionForName(record.getScoreFunctionClass());
 
         if (setupClasses) {
