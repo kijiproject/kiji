@@ -5,6 +5,8 @@
 Version 0.9.1
   * KIJIHIVE-43. Fixed an issue where data requests were not being properly
       serialized when multiple tables were used in one query(joins).
+  * KIJIHIVE-44. bento-hive.sh also supports launching a HiveServer for
+      submitting requests to Hive remotely.
 
 Version 0.9.0
   * KIJIHIVE-40. Escape all column names to avoid Hive reserved words in DDL
