@@ -44,7 +44,7 @@
     <kiji-phonebook.version>1.1.4-SNAPSHOT</kiji-phonebook.version>
     <kiji-mapreduce.version>1.2.5-SNAPSHOT</kiji-mapreduce.version>
     <kiji-mapreduce-lib.version>1.1.5-SNAPSHOT</kiji-mapreduce-lib.version>
-    <kiji-hive-adapter.version>0.9.1-SNAPSHOT</kiji-hive-adapter.version>
+    <kiji-hive-adapter.version>0.10.0-SNAPSHOT</kiji-hive-adapter.version>
     <kiji-music.version>1.1.5-SNAPSHOT</kiji-music.version>
     <kiji-modeling.version>0.7.0-SNAPSHOT</kiji-modeling.version>
     <kiji-express.version>1.0.2-SNAPSHOT</kiji-express.version>
