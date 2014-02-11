@@ -1920,6 +1920,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
     }
     mBufferedWriter.close();
     mRereadableState.release();
+    mTable.release();
 
     // finishClosing() must be the last line of close().
     mState.finishClosing();
