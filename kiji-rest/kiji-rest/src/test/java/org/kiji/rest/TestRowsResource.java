@@ -41,6 +41,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -83,6 +84,8 @@ import org.kiji.schema.util.InstanceBuilder;
  */
 public class TestRowsResource extends ResourceTest {
 
+  private static final String UTF_8 = Charsets.UTF_8.name();
+
   private Kiji mFakeKiji = null;
   private KijiSchemaTable mSchemaTable = null;
   private ManagedKijiClient mKijiClient = null;
@@ -98,24 +101,6 @@ public class TestRowsResource extends ResourceTest {
   // Some commonly used schema options.
   private SchemaOption mStringOption = null;
   private SchemaOption mLongOption = null;
-
-  /**
-   * Opens a new unique test Kiji instance, creating it if necessary.
-   *
-   * Each call to this method returns a fresh new Kiji instance.
-   * All generated Kiji instances are automatically cleaned up by KijiClientTest.
-   *
-   * @return a fresh new Kiji instance.
-   * @throws Exception on error.
-   */
-  public Kiji createTestKiji() throws Exception {
-    final String hbaseAddress = String.format(".fake.%s-%d", "kiji_rest", 0);
-    final KijiURI uri = KijiURI.newBuilder(String.format("kiji://%s/%s", hbaseAddress, "default"))
-        .build();
-    final Kiji kiji = Kiji.Factory.open(uri);
-
-    return kiji;
-  }
 
   /**
    * {@inheritDoc}
@@ -698,7 +683,8 @@ public class TestRowsResource extends ResourceTest {
 
     // Check.
     assertTrue(target.toString().contains(
-        "/v1/instances/default/tables/sample_table/rows?eid=" + URLEncoder.encode(stringRowKey)));
+        "/v1/instances/default/tables/sample_table/rows?eid="
+            + URLEncoder.encode(stringRowKey, UTF_8)));
     assertEquals("helloworld", returnRow.getCells().get("group_family").get("string_qualifier")
         .get(0).getValue());
   }
@@ -729,7 +715,8 @@ public class TestRowsResource extends ResourceTest {
 
     // Check.
     assertTrue(target.toString().contains(
-        "/v1/instances/default/tables/players/rows?eid=" + URLEncoder.encode(eid)));
+        "/v1/instances/default/tables/players/rows?eid="
+            + URLEncoder.encode(eid, UTF_8)));
     assertEquals(0, returnRow.getCells().get("info").get("logins").get(0).getValue());
 
     // Increment counter.
@@ -752,7 +739,8 @@ public class TestRowsResource extends ResourceTest {
 
     // Check.
     assertTrue(target.toString().contains(
-        "/v1/instances/default/tables/players/rows?eid=" + URLEncoder.encode(eid)));
+        "/v1/instances/default/tables/players/rows?eid="
+            + URLEncoder.encode(eid, UTF_8)));
     assertEquals(123, returnRow.getCells().get("info").get("logins").get(0).getValue());
 
     // Decrement counter.
@@ -775,7 +763,8 @@ public class TestRowsResource extends ResourceTest {
 
     // Check.
     assertTrue(target.toString().contains(
-        "/v1/instances/default/tables/players/rows?eid=" + URLEncoder.encode(eid)));
+        "/v1/instances/default/tables/players/rows?eid="
+            + URLEncoder.encode(eid, UTF_8)));
     assertEquals(1, returnRow.getCells().get("info").get("logins").get(0).getValue());
   }
 
@@ -845,7 +834,7 @@ public class TestRowsResource extends ResourceTest {
 
     // Check.
     assertEquals(target.get("targets").get(0), "/v1/instances/default/tables/sample_table/rows?eid="
-        + URLEncoder.encode(stringRowKey));
+        + URLEncoder.encode(stringRowKey, UTF_8));
     assertEquals(123, returnRow.getCells().get("group_family").get("long_qualifier").get(0)
         .getValue());
     assertEquals("helloworld", returnRow.getCells().get("group_family").get("string_qualifier")
@@ -891,7 +880,8 @@ public class TestRowsResource extends ResourceTest {
 
     // Check.
     assertTrue(target.toString().contains(
-        "/v1/instances/default/tables/sample_table/rows?eid=" + URLEncoder.encode(stringRowKey)));
+        "/v1/instances/default/tables/sample_table/rows?eid="
+            + URLEncoder.encode(stringRowKey, UTF_8)));
     ObjectMapper mapper = new ObjectMapper();
     JsonNode node = mapper.valueToTree(returnRow.getCells().get("group_family")
         .get("inline_record").get(0).getValue());
@@ -943,7 +933,8 @@ public class TestRowsResource extends ResourceTest {
 
     // Check.
     assertTrue(target.toString().contains(
-        "/v1/instances/default/tables/sample_table/rows?eid=" + URLEncoder.encode(stringRowKey)));
+        "/v1/instances/default/tables/sample_table/rows?eid="
+            + URLEncoder.encode(stringRowKey, UTF_8)));
     assertTrue(returnRow.getCells().get("longs").containsKey(longsColumnDec));
     assertEquals(987654567890L, returnRow.getCells().get("longs").get(longsColumnDec).get(0)
         .getValue());
@@ -1022,7 +1013,8 @@ public class TestRowsResource extends ResourceTest {
 
     // Check.
     assertTrue(target.toString().contains(
-        "/v1/instances/default/tables/sample_table/rows?eid=" + URLEncoder.encode(stringRowKey)));
+        "/v1/instances/default/tables/sample_table/rows?eid="
+            + URLEncoder.encode(stringRowKey, UTF_8)));
     assertTrue(returnRow.getCells().get("group_family").containsKey("string_qualifier"));
     assertTrue(returnRow.getCells().get("group_family").get("string_qualifier").get(0)
         .getTimestamp() > System.currentTimeMillis() - 3000);
@@ -1040,7 +1032,8 @@ public class TestRowsResource extends ResourceTest {
 
     // Check.
     assertTrue(target.toString().contains(
-        "/v1/instances/default/tables/sample_table/rows?eid=" + URLEncoder.encode(stringRowKey)));
+        "/v1/instances/default/tables/sample_table/rows?eid="
+            + URLEncoder.encode(stringRowKey, UTF_8)));
     assertTrue(returnRow.getCells().get("group_family").containsKey("long_qualifier"));
     assertEquals(3141591L, returnRow.getCells().get("group_family").get("long_qualifier").get(0)
         .getTimestamp().longValue());
@@ -1057,7 +1050,8 @@ public class TestRowsResource extends ResourceTest {
 
     // Check.
     assertTrue(target.toString().contains(
-        "/v1/instances/default/tables/sample_table/rows?eid=" + URLEncoder.encode(stringRowKey)));
+        "/v1/instances/default/tables/sample_table/rows?eid="
+            + URLEncoder.encode(stringRowKey, UTF_8)));
     assertTrue(returnRow.getCells().get("strings")
         .containsKey(EXTENSIVE_COLUMN_TEST));
     assertEquals(2L, returnRow.getCells().get("strings").get(EXTENSIVE_COLUMN_TEST)
@@ -1120,7 +1114,8 @@ public class TestRowsResource extends ResourceTest {
 
     // Check.
     assertTrue(target.toString().contains(
-        "/v1/instances/default/tables/sample_table/rows?eid=" + URLEncoder.encode(stringRowKey)));
+        "/v1/instances/default/tables/sample_table/rows?eid="
+            + URLEncoder.encode(stringRowKey, UTF_8)));
     assertTrue(returnRow.getCells().get("group_family").containsKey("string_qualifier"));
     assertTrue(returnRow.getCells().get("group_family").get("string_qualifier").get(0)
         .getTimestamp() > System.currentTimeMillis() - 3000);
@@ -1138,7 +1133,8 @@ public class TestRowsResource extends ResourceTest {
 
     // Check.
     assertTrue(target.toString().contains(
-        "/v1/instances/default/tables/sample_table/rows?eid=" + URLEncoder.encode(stringRowKey)));
+        "/v1/instances/default/tables/sample_table/rows?eid="
+            + URLEncoder.encode(stringRowKey, UTF_8)));
     assertTrue(returnRow.getCells().get("group_family").containsKey("long_qualifier"));
     assertEquals(3141591L, returnRow.getCells().get("group_family").get("long_qualifier").get(0)
         .getTimestamp().longValue());
@@ -1155,7 +1151,8 @@ public class TestRowsResource extends ResourceTest {
 
     // Check.
     assertTrue(target.toString().contains(
-        "/v1/instances/default/tables/sample_table/rows?eid=" + URLEncoder.encode(stringRowKey)));
+        "/v1/instances/default/tables/sample_table/rows?eid="
+            + URLEncoder.encode(stringRowKey, UTF_8)));
     assertTrue(returnRow.getCells().get("strings")
         .containsKey(EXTENSIVE_COLUMN_TEST));
     assertEquals(2L, returnRow.getCells().get("strings").get(EXTENSIVE_COLUMN_TEST)
@@ -1189,7 +1186,7 @@ public class TestRowsResource extends ResourceTest {
 
     // Check.
     assertTrue(target.toString().contains(
-        "/v1/instances/default/tables/players/rows?eid=" + URLEncoder.encode(eid)));
+        "/v1/instances/default/tables/players/rows?eid=" + URLEncoder.encode(eid, UTF_8)));
     assertEquals(1234567890987L, returnRow.getCells().get("info").get("logins").get(0).getValue());
   }
 

@@ -54,24 +54,6 @@ public class TestInstancesResources extends ResourceTest {
   private Kiji[] mFakeKijis = null;
 
   /**
-   * Opens a new unique test Kiji instance, creating it if necessary.
-   *
-   * Each call to this method returns a fresh new Kiji instance.
-   * All generated Kiji instances are automatically cleaned up by KijiClientTest.
-   *
-   * @return a fresh new Kiji instance.
-   * @throws Exception on error.
-   */
-  public Kiji createTestKiji() throws Exception {
-    final String hbaseAddress = String.format(".fake.%s-%d", "kiji_rest", 0);
-    final KijiURI uri = KijiURI.newBuilder(String.format("kiji://%s/%s", hbaseAddress, "default"))
-        .build();
-    final Kiji kiji = Kiji.Factory.open(uri);
-
-    return kiji;
-  }
-
-  /**
    * {@inheritDoc}
    */
   @Override
@@ -133,11 +115,9 @@ public class TestInstancesResources extends ResourceTest {
               return -1;
             } else if (null == name2 && null != name1) {
               return 1;
-            } else if (null == name1 && null == name2) {
+            } else if (null == name1) {
               return 0;
             } else {
-              assert name1 != null;
-              assert name2 != null;
               return name1.compareTo(name2);
             }
           }

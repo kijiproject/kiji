@@ -28,6 +28,7 @@ import java.net.URLEncoder;
 
 import javax.ws.rs.core.UriBuilder;
 
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.yammer.dropwizard.testing.ResourceTest;
@@ -61,6 +62,7 @@ import org.kiji.scoring.lib.AlwaysFreshen;
  * according to the theorem.
  */
 public class TestRowsResourceFreshening extends ResourceTest {
+  private static final String UTF_8 = Charsets.UTF_8.name();
   private static final String INSTANCE = "fresh";
   private static final String TABLE = "py_table";
   private static final String FAMILY = "trifam";
@@ -214,8 +216,8 @@ public class TestRowsResourceFreshening extends ResourceTest {
     // Use URLEncoded strings.
     final String freshPower = "%66%72%65%73%68%2E%70%6F%77%65%72";
     final String twoHundred = "%32%30%30";
-    assertEquals("fresh.power", URLDecoder.decode(freshPower));
-    assertEquals("200", URLDecoder.decode(twoHundred));
+    assertEquals("fresh.power", URLDecoder.decode(freshPower, UTF_8));
+    assertEquals("200", URLDecoder.decode(twoHundred, UTF_8));
 
     URI uri = UriBuilder
         .fromResource(RowsResource.class)
@@ -230,7 +232,7 @@ public class TestRowsResourceFreshening extends ResourceTest {
     assertEquals(4.0, row.getCells().get(FAMILY).get(NORM).get(0).getValue());
   }
 
-  private static final class PythagoreanFunction extends ScoreFunction {
+  private static final class PythagoreanFunction extends ScoreFunction<Long> {
     @Override
     public KijiDataRequest getDataRequest(FreshenerContext context) throws IOException {
       return KijiDataRequest.create(FAMILY);
@@ -246,7 +248,7 @@ public class TestRowsResourceFreshening extends ResourceTest {
     }
   }
 
-  private static final class LPNorm extends ScoreFunction {
+  private static final class LPNorm extends ScoreFunction<Double> {
     @Override
     public KijiDataRequest getDataRequest(FreshenerContext context) throws IOException {
       return KijiDataRequest.create(FAMILY);
