@@ -311,8 +311,12 @@ class RecommendationPipe(val pipe: Pipe)
       normalizingField: Fields,
       numReducers: Int = 1) : Pipe = {
     val (itemsetField, resultFields) = fieldSpec
-    require(itemsetField.size == 1)
-    require(resultFields.size == 2)
+    require(itemsetField.size == 1, "support expects a single input field name for the field " +
+        "which contains the N-grams or itemsets.")
+    require(resultFields.size == 2, "support expects two output field names, one for storing the" +
+        "frequency of the N-gram and a second for the support.")
+    require(numReducers == -1 || numReducers > 0, "numReducers should either be set to a positive" +
+        "number of reducers to use or -1 (default) to use whatever is in job config.")
     // Exactly one of normalizingConstant and normalizingPipe must be supplied to this function
     require (normalizingConstant.isDefined ^ normalizingPipe.isDefined)
     var tempPipe = pipe.groupBy(itemsetField) { _.reducers(numReducers).size('itemSetFrequency) }
