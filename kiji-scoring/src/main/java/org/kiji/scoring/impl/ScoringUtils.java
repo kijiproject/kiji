@@ -19,9 +19,14 @@
 
 package org.kiji.scoring.impl;
 
+import java.util.Map;
+
+import com.google.common.collect.Maps;
 import org.apache.hadoop.util.ReflectionUtils;
 
 import org.kiji.annotations.ApiAudience;
+import org.kiji.mapreduce.kvstore.KeyValueStore;
+import org.kiji.mapreduce.kvstore.KeyValueStoreReaderFactory;
 import org.kiji.scoring.KijiFreshnessPolicy;
 import org.kiji.scoring.ScoreFunction;
 
@@ -66,5 +71,26 @@ public final class ScoringUtils {
     } catch (ClassNotFoundException cnfe) {
       throw new RuntimeException(cnfe);
     }
+  }
+
+  /**
+   * Create a KeyValueStoreReaderFactory from the required stores of a ScoreFunction and
+   * KijiFreshnessPolicy. Stores defined by the policy override those defined by the ScoreFunction.
+   *
+   * @param context FreshenerGetStoresContext with which to call getRequiredStores(context).
+   * @param scoreFunction ScoreFunction from which to get required stores.
+   * @param policy KijiFreshnessPolicy from which to get required stores.
+   * @return a new KeyValueStoreReaderFactory configured to read the required stores of the given
+   *     ScoreFunction and KijiFreshnessPolicy.
+   */
+  public static KeyValueStoreReaderFactory createKVStoreReaderFactory(
+      final InternalFreshenerContext context,
+      final ScoreFunction<?> scoreFunction,
+      final KijiFreshnessPolicy policy
+  ) {
+    final Map<String, KeyValueStore<?, ?>> kvMap = Maps.newHashMap();
+    kvMap.putAll(scoreFunction.getRequiredStores(context));
+    kvMap.putAll(policy.getRequiredStores(context));
+    return KeyValueStoreReaderFactory.create(kvMap);
   }
 }

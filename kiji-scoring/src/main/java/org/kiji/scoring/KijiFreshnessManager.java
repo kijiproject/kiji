@@ -51,7 +51,6 @@ import org.kiji.schema.KijiURI;
 import org.kiji.schema.layout.KijiTableLayout.LocalityGroupLayout.FamilyLayout;
 import org.kiji.schema.util.ProtocolVersion;
 import org.kiji.scoring.avro.KijiFreshenerRecord;
-import org.kiji.scoring.impl.InternalFreshKijiTableReader;
 import org.kiji.scoring.impl.InternalFreshenerContext;
 import org.kiji.scoring.impl.ScoringUtils;
 
@@ -579,7 +578,7 @@ public final class KijiFreshnessManager implements Closeable {
       final InternalFreshenerContext context =
           InternalFreshenerContext.create(columnName, parameters);
       final KeyValueStoreReaderFactory factory =
-          InternalFreshKijiTableReader.createKVStoreReaderFactory(context, scoreFunction, policy);
+          ScoringUtils.createKVStoreReaderFactory(context, scoreFunction, policy);
       context.setKeyValueStoreReaderFactory(factory);
       policy.setup(context);
       scoreFunction.setup(context);

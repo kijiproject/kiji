@@ -49,7 +49,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
-import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReaderFactory;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.InternalKijiError;
@@ -1139,27 +1138,6 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   }
 
   /**
-   * Create a KeyValueStoreReaderFactory from the required stores of a ScoreFunction and
-   * KijiFreshnessPolicy. Stores defined by the policy override those defined by the ScoreFunction.
-   *
-   * @param context context in which to run getRequiredStores(context).
-   * @param scoreFunction ScoreFunction from which to get required stores.
-   * @param policy KijiFreshnessPolicy from which to get required stores.
-   * @return a new KeyValueStoreReaderFactory configured to read the required stores of the given
-   *     ScoreFunction and KijiFreshnessPolicy.
-   */
-  public static KeyValueStoreReaderFactory createKVStoreReaderFactory(
-      final InternalFreshenerContext context,
-      final ScoreFunction<?> scoreFunction,
-      final KijiFreshnessPolicy policy
-  ) {
-    final Map<String, KeyValueStore<?, ?>> kvMap = Maps.newHashMap();
-    kvMap.putAll(scoreFunction.getRequiredStores(context));
-    kvMap.putAll(policy.getRequiredStores(context));
-    return KeyValueStoreReaderFactory.create(kvMap);
-  }
-
-  /**
    * Create a map of Fresheners from a map of KijiFreshenerRecords.  Freshener components
    * are proactively created.
    *
@@ -1211,7 +1189,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
         // Create the KVStoreReaderFactory from the required stores of the score function and
         // policy, and add the factory to the Freshener context.
         final KeyValueStoreReaderFactory factory =
-            createKVStoreReaderFactory(context, scoreFunction, policy);
+            ScoringUtils.createKVStoreReaderFactory(context, scoreFunction, policy);
         context.setKeyValueStoreReaderFactory(factory);
 
         // Setup the policy and score function.
