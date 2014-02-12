@@ -51,7 +51,6 @@ import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiDataRequestBuilder;
 import org.kiji.schema.KijiDataRequestBuilder.ColumnsDef;
-import org.kiji.schema.KijiMetaTable;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
@@ -297,29 +296,21 @@ public class TestInternalFreshKijiTableReader {
   }
 
   @Test
-  public void testMetaTable() throws Exception {
-    final KijiMetaTable metaTable = mKiji.getMetaTable();
-    final byte[] original = Bytes.toBytes("original");
-    metaTable.putValue(TABLE_NAME, "test.kiji.metatable.key", original);
-
-    // Ensure that the InstanceBuilder metatable behaves as expected.
-    assertEquals("original",
-        Bytes.toString(metaTable.getValue(TABLE_NAME, "test.kiji.metatable.key")));
-  }
-
-  @Test
   public void testGetWithNoFreshener() throws Exception {
     final EntityId eid = mTable.getEntityId("foo");
     final KijiDataRequest request = KijiDataRequest.create("family", "qual0");
 
-    final FreshKijiTableReader reader = FreshKijiTableReader.Builder.create()
+    final FreshKijiTableReader freshReader = FreshKijiTableReader.Builder.create()
         .withTable(mTable)
         .build();
-
-    // Getting a column with no Freshener attached should behave the same as a normal get.
-    assertEquals(
-        mReader.get(eid, request).getMostRecentValue("family", "qual0"),
-        reader.get(eid, request).getMostRecentValue("family", "qual0"));
+    try {
+      // Getting a column with no Freshener attached should behave the same as a normal get.
+      assertEquals(
+          mReader.get(eid, request).getMostRecentValue("family", "qual0"),
+          freshReader.get(eid, request).getMostRecentValue("family", "qual0"));
+    } finally {
+      freshReader.close();
+    }
   }
 
   @Test
@@ -485,20 +476,23 @@ public class TestInternalFreshKijiTableReader {
       manager.close();
     }
 
-    final FreshKijiTableReader reader = FreshKijiTableReader.Builder.create()
+    final FreshKijiTableReader freshReader = FreshKijiTableReader.Builder.create()
         .withTable(mTable)
         .withTimeout(500)
         .build();
+    try {
+      // The fresh reader should return stale data after a timeout.
+      assertEquals(
+          mReader.get(eid, request).getMostRecentValue("family", "qual0"),
+          freshReader.get(eid, request).getMostRecentValue("family", "qual0"));
 
-    // The fresh reader should return stale data after a timeout.
-    assertEquals(
-        mReader.get(eid, request).getMostRecentValue("family", "qual0"),
-        reader.get(eid, request).getMostRecentValue("family", "qual0"));
-
-    // Wait for the score function to finish then try again.
-    Thread.sleep(1000L);
-    assertEquals("new-val",
-        mReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
+      // Wait for the score function to finish then try again.
+      Thread.sleep(1000L);
+      assertEquals("new-val",
+          mReader.get(eid, request).getMostRecentValue("family", "qual0").toString());
+    } finally {
+      freshReader.close();
+    }
   }
 
   @Test
@@ -792,15 +786,9 @@ public class TestInternalFreshKijiTableReader {
         .withTimeout(1000)
         .build();
     try {
-      freshReader.get(eid, request);
-      freshReader.get(eid, request);
-      freshReader.get(eid, request);
-      freshReader.get(eid, request);
-      freshReader.get(eid, request);
-      freshReader.get(eid, request);
-      freshReader.get(eid, request);
-      freshReader.get(eid, request);
-      freshReader.get(eid, request);
+      for (int i = 0; i < 10; i++) {
+        freshReader.get(eid, request);
+      }
     } finally {
       freshReader.close();
     }
