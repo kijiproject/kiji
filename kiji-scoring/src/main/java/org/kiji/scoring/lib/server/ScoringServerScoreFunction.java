@@ -32,6 +32,8 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.schema.EntityId;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
@@ -64,6 +66,8 @@ import org.kiji.scoring.ScoreFunction;
  *   parameters.
  * </p>
  */
+@ApiAudience.Framework
+@ApiStability.Experimental
 public final class ScoringServerScoreFunction extends ScoreFunction {
 
   public static final Logger LOG = LoggerFactory.getLogger(ScoringServerScoreFunction.class);
@@ -85,26 +89,10 @@ public final class ScoringServerScoreFunction extends ScoreFunction {
   }
 
   /**
-   * Get the model URL segment from the given modelId.
+   * Build the URL from which to retrieve a score by appending the necessary parameters to the base
+   * model URL.
    *
-   * @param modelId the model name and version from which to get a URL segment.
-   * @return the model URL segment from the given modelId.
-   */
-  private static String getModelURLExtension(
-      final String modelId
-  ) {
-    final String name = modelId.substring(0, modelId.indexOf("-"));
-    // The +1 removes the '-'.
-    final String version = modelId.substring(name.length() + 1);
-    return String.format("%s/%s", name.replace('.', '/'), version);
-  }
-
-  /**
-   * Get the URL of the ScoringServer for producing a score using the given scoring server base URL,
-   * the given model, and the entity to score.
-   *
-   * @param baseURL the use of the ScoringServer to use to produce a score.
-   * @param modelId the modelId to use to score.
+   * @param modelBaseURL URL of the scoring servlet for this model.
    * @param eid the entity to score.
    * @param params an optional map of per-request parameters to be passed to the server.
    *
@@ -112,17 +100,12 @@ public final class ScoringServerScoreFunction extends ScoreFunction {
    * @throws MalformedURLException in case the URL cannot be created.
    */
   private static URL getScoringServerEndpoint(
-      final String baseURL,
-      final String modelId,
+      final String modelBaseURL,
       final EntityId eid,
       final Map<String, String> params
   ) throws MalformedURLException {
-     StringBuilder urlStringBuilder = new StringBuilder(String.format(
-        "%s/%s?eid=%s",
-        baseURL,
-        getModelURLExtension(modelId),
-        eid.toShellString()
-    ));
+    final StringBuilder urlStringBuilder = new StringBuilder(
+        String.format("%s?eid=%s", modelBaseURL, eid.toShellString()));
     for (Map.Entry<String, String> entry : params.entrySet()) {
       try {
         urlStringBuilder.append(String.format(
@@ -134,19 +117,39 @@ public final class ScoringServerScoreFunction extends ScoreFunction {
         LOG.debug("Couldn't URL encode parameter: %s", entry.toString());
       }
     }
+
     return new URL(urlStringBuilder.toString());
   }
 
-  private String mScoringServerBaseURL;
-  private String mModelId;
+  /**
+   * Get the base URL for the scoring servlet for the given model from the given scoring server.
+   *
+   * @param scoringServerBaseURL URL of the scoring server from which to get the location of the
+   *     model.
+   * @param modelId fully qualified model name for which to get the scoring endpoint.
+   * @return the base URL of the scoring servlet for the given model.
+   * @throws IOException in case of an error getting the model URL from the scoring server.
+   */
+  private static String getModelBaseURL(
+      final String scoringServerBaseURL,
+      final String modelId
+  ) throws IOException {
+    final URL getModelURL = new URL(scoringServerBaseURL + "?model=" + modelId);
+    final String response = IOUtils.toString(getModelURL.openStream());
+    final Map<String, String> modelMap = GSON.fromJson(response, Map.class);
+    return modelMap.get(modelId);
+  }
+
+  private String mModelBaseURL;
 
   /** {@inheritDoc} */
   @Override
   public void setup(
       final FreshenerSetupContext context
-  ) {
-    mScoringServerBaseURL = context.getParameter(SCORING_SERVER_BASE_URL_PARAMETER_KEY);
-    mModelId = context.getParameter(SCORING_SERVER_MODEL_ID_PARAMETER_KEY);
+  ) throws IOException {
+    mModelBaseURL = getModelBaseURL(
+        context.getParameter(SCORING_SERVER_BASE_URL_PARAMETER_KEY),
+        context.getParameter(SCORING_SERVER_MODEL_ID_PARAMETER_KEY));
   }
 
   /**
@@ -158,7 +161,7 @@ public final class ScoringServerScoreFunction extends ScoreFunction {
    */
   @Override
   public KijiDataRequest getDataRequest(final FreshenerContext context) throws IOException {
-    return KijiDataRequest.builder().build();
+    return KijiDataRequest.empty();
   }
 
   /** {@inheritDoc} */
@@ -167,8 +170,7 @@ public final class ScoringServerScoreFunction extends ScoreFunction {
       final KijiRowData dataToScore, final FreshenerContext context
   ) throws IOException {
     final URL scoringServerEndpoint = getScoringServerEndpoint(
-        mScoringServerBaseURL,
-        mModelId,
+        mModelBaseURL,
         dataToScore.getEntityId(),
         context.getParameters()
     );
