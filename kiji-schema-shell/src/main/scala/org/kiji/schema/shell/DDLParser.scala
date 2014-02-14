@@ -131,7 +131,7 @@ final class DDLParser(val env: Environment)
     | jsonValue ^^ { json: String => new JsonSchemaSpec(json) }
     | i("COUNTER") ^^ { _ => new CounterSchemaSpec }
     | i("ID")~>longValue ^^ { uid: Long => new UidSchemaSpec(uid) }
-    | i("AVRO") ~> avroType ^^ { schema: Schema => new InlineSchemaSpec(schema) }
+    | i("AVRO") ~> avroType(Context()) ^^ { schema: Schema => new InlineSchemaSpec(schema) }
   )
 
   /**
