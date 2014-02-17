@@ -28,7 +28,9 @@ import java.util.Map;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import org.apache.avro.Schema;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.SerializationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,6 +96,7 @@ public final class ScoringServerScoreFunction extends ScoreFunction {
    *
    * @param modelBaseURL URL of the scoring servlet for this model.
    * @param eid the entity to score.
+   * @param clientRequest client's data request which triggered the run of this ScoreFunction.
    * @param params an optional map of per-request parameters to be passed to the server.
    *
    * @return the URL from which to retrieve a score.
@@ -102,10 +105,13 @@ public final class ScoringServerScoreFunction extends ScoreFunction {
   private static URL getScoringServerEndpoint(
       final String modelBaseURL,
       final EntityId eid,
+      final KijiDataRequest clientRequest,
       final Map<String, String> params
   ) throws MalformedURLException {
+    final String base64Request = Base64.encodeBase64String(
+        SerializationUtils.serialize(clientRequest));
     final StringBuilder urlStringBuilder = new StringBuilder(
-        String.format("%s?eid=%s", modelBaseURL, eid.toShellString()));
+        String.format("%s?eid=%s&request=%s", modelBaseURL, eid.toShellString(), base64Request));
     for (Map.Entry<String, String> entry : params.entrySet()) {
       try {
         urlStringBuilder.append(String.format(
@@ -172,6 +178,7 @@ public final class ScoringServerScoreFunction extends ScoreFunction {
     final URL scoringServerEndpoint = getScoringServerEndpoint(
         mModelBaseURL,
         dataToScore.getEntityId(),
+        context.getClientRequest(),
         context.getParameters()
     );
 
