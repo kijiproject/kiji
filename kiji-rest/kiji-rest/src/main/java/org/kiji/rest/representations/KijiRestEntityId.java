@@ -35,6 +35,7 @@ import org.apache.hadoop.hbase.util.Bytes;
 
 import org.kiji.schema.EntityId;
 import org.kiji.schema.EntityIdFactory;
+import org.kiji.schema.avro.ComponentType;
 import org.kiji.schema.avro.HashSpec;
 import org.kiji.schema.avro.RowKeyEncoding;
 import org.kiji.schema.avro.RowKeyFormat;
@@ -122,11 +123,14 @@ public final class KijiRestEntityId {
    * This method is used for entity ids specified from the URL.
    *
    * @param entityId string of the row.
+   * @param layout of the table in which the entity id belongs.
+   *        If null, then long components may not be recognized.
    * @return a properly constructed KijiRestEntityId.
    * @throws IOException if KijiRestEntityId can not be properly constructed.
    */
   public static KijiRestEntityId createFromUrl(
-      final String entityId) throws IOException {
+      final String entityId,
+      final KijiTableLayout layout) throws IOException {
     if (entityId.startsWith(HBASE_ROW_KEY_PREFIX)
         || entityId.startsWith(HBASE_HEX_ROW_KEY_PREFIX)) {
       return new KijiRestEntityId(entityId);
@@ -136,7 +140,7 @@ public final class KijiRestEntityId {
           .enable(Feature.ALLOW_SINGLE_QUOTES)
           .enable(Feature.ALLOW_UNQUOTED_FIELD_NAMES);
       final JsonNode node = BASIC_MAPPER.readTree(parser);
-      return create(node);
+      return create(node, layout);
     }
   }
 
@@ -198,6 +202,52 @@ public final class KijiRestEntityId {
    * @throws IOException if KijiRestEntityId can not be properly constructed.
    */
   public static KijiRestEntityId create(final JsonNode node) throws IOException {
+    return create(node, (RowKeyFormat2) null);
+  }
+
+  /**
+   * Gets the RowKeyFormat2 of the provided layout, if it exists. Otherwise, null.
+   *
+   * @param layout of the table to find the RowKeyFormat2.
+   * @return the RowKeyFormat2, null if the layout has RowKeyFormat1.
+   * @throws IOException if the keys format can not be ascertained.
+   */
+  private static RowKeyFormat2 getRKF2(final KijiTableLayout layout) throws IOException {
+    if (null != layout
+        && RowKeyEncoding.FORMATTED == getEncoding(layout.getDesc().getKeysFormat())) {
+      return (RowKeyFormat2) layout.getDesc().getKeysFormat();
+    } else {
+      return null;
+    }
+  }
+
+  /**
+   * Create KijiRestEntityId from json node.
+   *
+   * @param node of the RKF2-formatted, materialization unsuppressed row.
+   * @param layout of the table in which the entity id belongs.
+   *        If null, then long components may not be recognized.
+   * @return a properly constructed KijiRestEntityId.
+   * @throws IOException if KijiRestEntityId can not be properly constructed.
+   */
+  public static KijiRestEntityId create(
+      final JsonNode node,
+      final KijiTableLayout layout) throws IOException {
+    return create(node, getRKF2(layout));
+  }
+
+  /**
+   * Create KijiRestEntityId from json node.
+   *
+   * @param node of the RKF2-formatted, materialization unsuppressed row.
+   * @param rowKeyFormat2 of the layout or null if the layout has RowKeyFormat1.
+   *        If null, then long components may not be recognized.
+   * @return a properly constructed KijiRestEntityId.
+   * @throws IOException if KijiRestEntityId can not be properly constructed.
+   */
+  public static KijiRestEntityId create(
+      final JsonNode node,
+      final RowKeyFormat2 rowKeyFormat2) throws IOException {
     Preconditions.checkNotNull(node);
     if (node.isArray()) {
       final Object[] components = new Object[node.size()];
@@ -207,6 +257,9 @@ public final class KijiRestEntityId {
         if (component.equals(WildcardSingleton.INSTANCE)) {
           wildCarded = true;
           components[i] = null;
+        } else if (null != rowKeyFormat2
+            && ComponentType.LONG == rowKeyFormat2.getComponents().get(i).getType()) {
+          components[i] = ((Number) component).longValue();
         } else {
           components[i] = component;
         }

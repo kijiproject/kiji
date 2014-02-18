@@ -85,7 +85,7 @@ public class TestKijiRestEntityId {
     assertEquals(originalEid, restEid3.resolve(layout));
 
     // Component representation of entities should work.
-    final KijiRestEntityId restEid4 = KijiRestEntityId.createFromUrl(SINGLE_COMPONENT_EID);
+    final KijiRestEntityId restEid4 = KijiRestEntityId.createFromUrl(SINGLE_COMPONENT_EID, layout);
     final EntityId resolvedEid = restEid4.resolve(layout);
     final String recoveredComponent = Bytes.toString(
         Bytes.toBytesBinary(
@@ -122,7 +122,7 @@ public class TestKijiRestEntityId {
     assertEquals(originalEid, restEid3.resolve(layout));
 
     // Component representation of entities should work.
-    final KijiRestEntityId restEid4 = KijiRestEntityId.createFromUrl(SINGLE_COMPONENT_EID);
+    final KijiRestEntityId restEid4 = KijiRestEntityId.createFromUrl(SINGLE_COMPONENT_EID, layout);
     final EntityId resolvedEid = restEid4.resolve(layout);
     final String recoveredComponent = Bytes.toString(
         Bytes.toBytesBinary(
@@ -167,7 +167,7 @@ public class TestKijiRestEntityId {
           Long.MAX_VALUE);
       final EntityId originalEid = ToolUtils.createEntityIdFromUserInputs(eidString, layout);
       final KijiRestEntityId restEid1 = KijiRestEntityId.create(originalEid, layout);
-      final KijiRestEntityId restEid2 = KijiRestEntityId.createFromUrl(eidString);
+      final KijiRestEntityId restEid2 = KijiRestEntityId.createFromUrl(eidString, layout);
       final KijiRestEntityId restEid3 = KijiRestEntityId.create(
           String.format("hbase_hex=%s",
               new String(Hex.encodeHex((originalEid.getHBaseRowKey())))));
@@ -196,7 +196,7 @@ public class TestKijiRestEntityId {
           Long.MAX_VALUE);
       final EntityId originalEid = ToolUtils.createEntityIdFromUserInputs(eidString, layout);
       final KijiRestEntityId restEid1 = KijiRestEntityId.create(originalEid, layout);
-      final KijiRestEntityId restEid2 = KijiRestEntityId.createFromUrl(eidString);
+      final KijiRestEntityId restEid2 = KijiRestEntityId.createFromUrl(eidString, layout);
       final KijiRestEntityId restEid3 = KijiRestEntityId.create(
           String.format("hbase_hex=%s",
               new String(Hex.encodeHex((originalEid.getHBaseRowKey())))));
@@ -210,5 +210,39 @@ public class TestKijiRestEntityId {
       assertEquals(originalEid, restEid3.resolve(layout));
       assertEquals(originalEid, restEid4.resolve(layout));
       assertEquals(toolUtilsEid, restEid4.resolve(layout));
+    }
+
+    @Test
+    public void testIntegerComponentsShouldBePromotableToLong() throws Exception {
+      final TableLayoutDesc desc =
+          KijiTableLayouts.getLayout("org/kiji/rest/layouts/rkf2_suppressed.json");
+      final KijiTableLayout layout = KijiTableLayout.newLayout(desc);
+
+      // Construct complex entity id.
+      final String eidString = String.format("[%s,%s,%s,%d,%d]",
+          JSONObject.quote(UNUSUAL_STRING_EID),
+          JSONObject.quote(UNUSUAL_STRING_EID),
+          JSONObject.quote(UNUSUAL_STRING_EID),
+          0,
+          0); // Promote this component.
+      final KijiRestEntityId restEid = KijiRestEntityId.createFromUrl(eidString, layout);
+      assertTrue(restEid.getComponents()[4] instanceof Long);
+    }
+
+    @Test
+    public void testLongComponentsShouldNotComplain() throws Exception {
+      final TableLayoutDesc desc =
+          KijiTableLayouts.getLayout("org/kiji/rest/layouts/rkf2_suppressed.json");
+      final KijiTableLayout layout = KijiTableLayout.newLayout(desc);
+
+      // Construct complex entity id.
+      final String eidString = String.format("[%s,%s,%s,%d,%d]",
+          JSONObject.quote(UNUSUAL_STRING_EID),
+          JSONObject.quote(UNUSUAL_STRING_EID),
+          JSONObject.quote(UNUSUAL_STRING_EID),
+          0,
+          Long.MAX_VALUE); // Long component of interest.
+      final KijiRestEntityId restEid = KijiRestEntityId.createFromUrl(eidString, layout);
+      assertTrue(restEid.getComponents()[4] instanceof Long);
     }
 }

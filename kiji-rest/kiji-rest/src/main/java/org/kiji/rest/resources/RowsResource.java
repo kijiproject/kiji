@@ -320,7 +320,7 @@ public class RowsResource {
     try {
       if (jsonEntityId != null) {
         final KijiRestEntityId kijiRestEntityId =
-            KijiRestEntityId.createFromUrl(jsonEntityId);
+            KijiRestEntityId.createFromUrl(jsonEntityId, layout);
         if (kijiRestEntityId.isWildcarded()) {
           // Wildcards were found, continue with FormattedEntityIdRowFilter.
           final KijiRowFilter entityIdRowFilter =
@@ -350,12 +350,12 @@ public class RowsResource {
         final KijiScannerOptions scanOptions = new KijiScannerOptions();
         if (startEidString != null) {
           final EntityId eid =
-              KijiRestEntityId.createFromUrl(startEidString).resolve(layout);
+              KijiRestEntityId.createFromUrl(startEidString, null).resolve(layout);
           scanOptions.setStartRow(eid);
         }
         if (endEidString != null) {
           final EntityId eid =
-              KijiRestEntityId.createFromUrl(endEidString).resolve(layout);
+              KijiRestEntityId.createFromUrl(endEidString, null).resolve(layout);
           scanOptions.setStopRow(eid);
         }
         reader = kijiTable.openTableReader();
