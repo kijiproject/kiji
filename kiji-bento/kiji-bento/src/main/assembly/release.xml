@@ -364,7 +364,7 @@
       <!-- kiji-scoring-server -->
       <useDefaultExcludes>false</useDefaultExcludes>
       <outputDirectory>scoring-server</outputDirectory>
-      <directory>target/prereqs-dir/kiji-scoring-server-${kiji-scoring.version}</directory>
+      <directory>target/prereqs-dir/kiji-scoring-server-${kiji-scoring-server.version}</directory>
       <filtered>false</filtered>
       <excludes>
         <exclude>RELEASE_NOTES.txt</exclude>
