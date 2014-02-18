@@ -31,15 +31,18 @@ import org.apache.avro.Schema;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.SerializationUtils;
+import org.apache.hadoop.hbase.util.Bytes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
 import org.kiji.schema.EntityId;
+import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
+import org.kiji.schema.KijiURI;
 import org.kiji.schema.util.FromJson;
 import org.kiji.scoring.FreshenerContext;
 import org.kiji.scoring.FreshenerSetupContext;
@@ -51,12 +54,24 @@ import org.kiji.scoring.ScoreFunction;
  *   This ScoreFunction is in KijiScoring to simplify packaging and classpath management for users
  *   of the Kiji ScoringServer.
  * </p>
+ *
  * <p>
- *   This ScoreFunction uses two parameter keys to store its state.
+ *   Operation of this ScoreFunction relies on the existence of a Kiji system table key-value pair
+ *   containing the location of the ScoringServer which will perform remote scoring.
  *   <ul>
  *     <li>
  *       org.kiji.scoring.lib.server.ScoringServerScoreFunction.base_url_key stores the base URL of
- *       the ScoringServer.
+ *       the scoring server. The system table value should be a UTF-8 encoded string.
+ *     </li>
+ *   </ul>
+ * </p>
+ *
+ * <p>
+ *   This ScoreFunction uses two parameter keys to configure its behavior.
+ *   <ul>
+ *     <li>
+ *       org.kiji.scoring.lib.server.ScoringServerScoreFunction.instance_uri stores the KijiURI of
+ *       the instance in which this ScoreFunction is running.
  *     </li>
  *     <li>
  *       org.kiji.scoring.lib.server.ScoringServerSCoreFunction.model_id_key stores the modelId of
@@ -65,7 +80,8 @@ import org.kiji.scoring.ScoreFunction;
  *   </ul>
  *   The values of these parameters are read during setup and stored internally so that the behavior
  *   of this ScoreFunction cannot be modified by modifying the value of these keys with request time
- *   parameters.
+ *   parameters. Both of these values are set by the kiji model-repo fresh-model tool when a Kiji
+ *   model repository model is attached as a Freshener using remote scoring.
  * </p>
  */
 @ApiAudience.Framework
@@ -73,10 +89,12 @@ import org.kiji.scoring.ScoreFunction;
 public final class ScoringServerScoreFunction extends ScoreFunction {
 
   public static final Logger LOG = LoggerFactory.getLogger(ScoringServerScoreFunction.class);
-  public static final String SCORING_SERVER_BASE_URL_PARAMETER_KEY =
+  public static final String SCORING_SERVER_BASE_URL_SYSTEM_KEY =
       "org.kiji.scoring.lib.server.ScoringServerScoreFunction.base_url_key";
   public static final String SCORING_SERVER_MODEL_ID_PARAMETER_KEY =
       "org.kiji.scoring.lib.server.ScoringServerScoreFunction.model_id_key";
+  public static final String SCORING_SERVER_INSTANCE_URI_PARAMETER_KEY =
+      "org.kiji.scoring.lib.server.ScoringServerScoreFunction.instance_uri";
   private static final Gson GSON = new Gson();
 
   /** Container class for deserializing JSON server responses. */
@@ -146,6 +164,29 @@ public final class ScoringServerScoreFunction extends ScoreFunction {
     return modelMap.get(modelId);
   }
 
+  /**
+   * Get the ScoringServer base URL for the given Kiji instance.
+   *
+   * @param instanceUri KijiURI of the instance for which to get the ScoringServer base URL.
+   * @return the ScoringServer base URL for the given Kiji instance.
+   * @throws IOException in case of an error retrieving the base URL.
+   */
+  private static String getScoringServerBaseUrl(
+      final KijiURI instanceUri
+  ) throws IOException {
+    final Kiji kiji = Kiji.Factory.open(instanceUri);
+    try {
+      final byte[] bytes = kiji.getSystemTable().getValue(SCORING_SERVER_BASE_URL_SYSTEM_KEY);
+      if (null == bytes) {
+        throw new RuntimeException("Cannot find ScoringServer base URL in system table.");
+      } else {
+        return Bytes.toString(bytes);
+      }
+    } finally {
+      kiji.release();
+    }
+  }
+
   private String mModelBaseURL;
 
   /** {@inheritDoc} */
@@ -153,8 +194,10 @@ public final class ScoringServerScoreFunction extends ScoreFunction {
   public void setup(
       final FreshenerSetupContext context
   ) throws IOException {
+    final KijiURI uri = KijiURI.newBuilder(
+        context.getParameter(SCORING_SERVER_INSTANCE_URI_PARAMETER_KEY)).build();
     mModelBaseURL = getModelBaseURL(
-        context.getParameter(SCORING_SERVER_BASE_URL_PARAMETER_KEY),
+        getScoringServerBaseUrl(uri),
         context.getParameter(SCORING_SERVER_MODEL_ID_PARAMETER_KEY));
   }
 
