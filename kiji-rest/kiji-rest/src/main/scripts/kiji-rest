@@ -140,9 +140,7 @@ function checkStatusOfProc(){
   fi
 }
 
-start() {
-  echo "Starting ${DESC}"
-
+archivelogs() {
   mkdir -p "${KIJI_REST_LOGS_DIR}/archives"
 
   echo "Archiving old logs"
@@ -151,7 +149,12 @@ start() {
     base_log=$(basename "${log_file}")
     mv "${log_file}" "${KIJI_REST_LOGS_DIR}/archives/${base_log}.${date}"
   done
+}
 
+startBackground() {
+  archivelogs
+
+  echo "Starting ${DESC}"
   # Do not quote LOGGING_OVERRIDE_OPTS and KIJI_REST_JAVA_ARGUMENTS,
   # but instead expand these arguments in the java command-line:
   "${JAVA_HOME}/bin/java" \
@@ -181,6 +184,22 @@ start() {
   return 0
 }
 
+startForeground() {
+  archivelogs
+
+  # Forcibly enable logging to console
+  LOGGING_OVERRIDE_OPTS="${LOGGING_OVERRIDE_OPTS} -Ddw.logging.console.enabled=true"
+
+  echo "Starting ${DESC}"
+  # Do not quote LOGGING_OVERRIDE_OPTS and KIJI_REST_JAVA_ARGUMENTS,
+  # but instead expand these arguments in the java command-line:
+  exec "${JAVA_HOME}/bin/java" \
+      -cp "${kiji_rest_cp}" \
+      ${LOGGING_OVERRIDE_OPTS} \
+      ${KIJI_REST_JAVA_ARGUMENTS} \
+      org.kiji.rest.KijiRESTService server \
+      "${KIJI_REST_CONF_DIR}/configuration.yml"
+}
 
 stop() {
   echo "Stopping ${DESC}: "
@@ -221,7 +240,7 @@ restart() {
 service() {
   case "$1" in
     start)
-      start
+      startBackground
       ;;
     stop)
       stop
@@ -232,8 +251,11 @@ service() {
     restart)
       restart
       ;;
+    foreground)
+      startForeground
+      ;;
     *)
-      echo $"Usage: $0 {start|stop|status|restart}"
+      echo $"Usage: $0 {start|stop|status|restart|foreground}"
       exit 1
   esac
 }
