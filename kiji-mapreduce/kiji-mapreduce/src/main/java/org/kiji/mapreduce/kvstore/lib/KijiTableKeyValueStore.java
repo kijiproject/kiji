@@ -22,6 +22,7 @@ package org.kiji.mapreduce.kvstore.lib;
 import java.io.IOException;
 import java.util.Map;
 
+import com.google.common.collect.ImmutableMap;
 import org.apache.avro.Schema;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
@@ -43,8 +44,11 @@ import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiRowKeyComponents;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
+import org.kiji.schema.KijiTableReaderPool;
+import org.kiji.schema.KijiTableReaderPool.Builder.WhenExhaustedAction;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.KijiURIException;
+import org.kiji.schema.layout.ColumnReaderSpec;
 import org.kiji.schema.util.ResourceUtils;
 
 /**
@@ -482,12 +486,10 @@ public final class KijiTableKeyValueStore<V>
   /** KeyValueStoreReader implementation that reads from a Kiji table. */
   @ApiAudience.Private
   private final class TableKVReader implements KeyValueStoreReader<KijiRowKeyComponents, V> {
-    /** Kiji instance to use. */
-    private Kiji mKiji;
     /** Kiji Table instance to open. */
     private KijiTable mKijiTable;
     /** KijiTableReader to read the table. */
-    private KijiTableReader mTableReader;
+    private KijiTableReaderPool mTableReaderPool;
     /** Data request to use for all lookups. */
     private final KijiDataRequest mDataReq;
     /** If the user has requested result caching, do this here. */
@@ -500,9 +502,23 @@ public final class KijiTableKeyValueStore<V>
      */
     private TableKVReader() throws IOException {
       Configuration conf = getConf();
-      mKiji = Kiji.Factory.open(mTableUri, conf);
-      mKijiTable = mKiji.openTable(mTableUri.getTable());
-      mTableReader = mKijiTable.openTableReader();
+      final Kiji kiji = Kiji.Factory.open(mTableUri, conf);
+      try {
+        mKijiTable = kiji.openTable(mTableUri.getTable());
+      } finally {
+        kiji.release();
+      }
+
+      final KijiTableReaderPool.Builder poolBuilder = KijiTableReaderPool.Builder.create()
+          .withReaderFactory(mKijiTable.getReaderFactory())
+          .withExhaustedAction(WhenExhaustedAction.GROW);
+
+      if (null != mReaderSchema) {
+        poolBuilder.withColumnReaderSpecOverrides(ImmutableMap.of(
+            mColumn, ColumnReaderSpec.avroReaderSchemaGeneric(mReaderSchema)));
+      }
+
+      mTableReaderPool = poolBuilder.build();
 
       KijiDataRequestBuilder dataReqBuilder = KijiDataRequest.builder()
           .withTimeRange(mMinTs, mMaxTs);
@@ -514,6 +530,31 @@ public final class KijiTableKeyValueStore<V>
         mResultCache = LruCache.create(mMaxObjectsToCache);
       } else {
         mResultCache = null;
+      }
+    }
+
+
+    /**
+     * Get the row for the given EntityId.
+     *
+     * @param eid Entity for which to get the row.
+     * @return the row for the given Entity.
+     * @throws IOException in case of an error reading from the table.
+     */
+    private KijiRowData getRow(
+        final EntityId eid
+    ) throws IOException {
+      try {
+        final KijiTableReader reader = mTableReaderPool.borrowObject();
+        try {
+          return reader.get(eid, mDataReq);
+        } finally {
+          reader.close();
+        }
+      } catch (IOException ioe) {
+        throw ioe;
+      } catch (Exception e) {
+        throw new RuntimeException(e);
       }
     }
 
@@ -537,7 +578,7 @@ public final class KijiTableKeyValueStore<V>
 
       // Now do a full lookup.
       final EntityId eid = rowKey.getEntityIdForTable(mKijiTable);
-      KijiRowData rowData = mTableReader.get(eid, mDataReq);
+      final KijiRowData rowData = getRow(eid);
 
       if (null == rowData) {
         return null;
@@ -572,7 +613,7 @@ public final class KijiTableKeyValueStore<V>
       }
 
       final EntityId eid = rowKey.getEntityIdForTable(mKijiTable);
-      KijiRowData rowData = mTableReader.get(eid, mDataReq);
+      final KijiRowData rowData = getRow(eid);
 
       if (null == rowData) {
         return false;
@@ -585,13 +626,13 @@ public final class KijiTableKeyValueStore<V>
     @Override
     public void close() throws IOException {
       try {
-        ResourceUtils.closeOrLog(mTableReader);
-        ResourceUtils.releaseOrLog(mKijiTable);
-        ResourceUtils.releaseOrLog(mKiji);
+        mTableReaderPool.close();
+      } catch (IOException ioe) {
+        throw ioe;
+      } catch (Exception e) {
+        throw new RuntimeException(e);
       } finally {
-        mTableReader = null;
-        mKijiTable = null;
-        mKiji = null;
+        mKijiTable.release();
       }
     }
   }
