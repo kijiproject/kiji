@@ -1,0 +1,54 @@
+/**
+ * (c) Copyright 2014 WibiData, Inc.
+ *
+ * See the NOTICE file distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@namespace("org.kiji.mapreduce.avro.generated")
+protocol CellRewriteSpecRecords {
+
+  /** Specification of a cell rewriting rules. */
+  record CellRewriteSpec {
+    /**
+     * Name of the column to rewrite:
+     *  - either a map-type family: "family"
+     *  - or a fully-qualified column: "family:qualifier".
+     */
+    union {null, string} column = null;
+
+    /**
+     * Reader schema (JSON string) to use when decoding cells from the table.
+     * Specify null to use the writer schema.
+     */
+    union {null, string} reader_schema = null;
+
+    /**
+     * Map: Avro schema (JSON string) -> Avro schema (JSON string)
+     *
+     * Cells currently written using the schema on the left side of a rule
+     * will be rewritten using the schema on the right side of the rule.
+     *
+     * The process is repeated until no rule apply.
+     * In other words, if this map contains the rules: A -> B and B -> C,
+     * a datum using schema A will be converted from A to B,
+     * then immediately from B to C.
+     *
+     * Note: cycles in the conversion rules are illegal and will cause the
+     *     cell rewriter to loop infinitely.
+     */
+    map<string> rules = {};
+  }
+}
