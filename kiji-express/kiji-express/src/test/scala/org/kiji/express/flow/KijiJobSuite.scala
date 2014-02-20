@@ -211,7 +211,7 @@ class KijiJobSuite extends KijiSuite {
     val localException = intercept[InvalidKijiTapException] { jobTest.run.finish }
 
     assert(localException.getMessage === hadoopException.getMessage)
-    assert(localException.getMessage.contains("nonexistent_instance"))
+    assert(localException.getCause.getMessage.contains("nonexistent_instance"))
   }
 
   test("A KijiJob is not run if the Kiji table in the output doesn't exist.") {

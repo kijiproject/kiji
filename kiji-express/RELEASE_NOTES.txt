@@ -1,6 +1,9 @@
 
                              Kiji Express Release Notes
 
+Version 1.0.2
+  * EXP-418. InvalidKijiTapException now optionally takes a cause.
+
 Version 1.0.0
   * EXP-340. Adds RowSpec and RowFilterSpec to specify row-level selection criteria in KijiInput.
   * EXP-394. Provide groupByQualifier function for Seq[FlowCell[_]].

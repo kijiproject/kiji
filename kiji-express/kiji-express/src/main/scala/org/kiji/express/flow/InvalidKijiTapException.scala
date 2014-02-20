@@ -26,8 +26,11 @@ import org.kiji.annotations.Inheritance
 /**
  * This exception is thrown when a KijiTap cannot validate that the Kiji tables or columns it
  * requires exist.
+ *
+ * @param message The exception message.
+ * @param cause An optional parameter for the causing exception.
  */
 @ApiAudience.Public
 @ApiStability.Stable
-final class InvalidKijiTapException(message: String)
-    extends RuntimeException(message)
+final class InvalidKijiTapException(message: String = null, cause: Throwable = null)
+    extends RuntimeException(message, cause)
