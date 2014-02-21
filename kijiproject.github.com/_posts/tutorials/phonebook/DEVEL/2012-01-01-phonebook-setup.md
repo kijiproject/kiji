@@ -12,13 +12,22 @@ have installed the individual components described [here](http://www.kiji.org/ge
 If you don\'t have a working environment yet, you can install the Kiji
 Standalone Bento box in [three quick steps!](http://www.kiji.org/#tryit).
 
-If you already installed the BentoBox, make sure you have started it:
+### Start a Kiji Cluster
+
+*  If you plan to use a BentoBox, run the following command to set BentoBox-related environment
+   variables and start the Bento cluster:
 
 <div class="userinput">
 {% highlight bash %}
+cd <path/to/bento>
+source bin/kiji-env.sh
 bento start
 {% endhighlight %}
 </div>
+
+After BentoBox starts, it displays a list of useful ports for cluster webapps and services.  The
+MapReduce JobTracker webapp ([http://localhost:50030](http://localhost:50030) in particular will be
+useful for this tutorial.
 
 ### Compiling
 
