@@ -638,7 +638,7 @@ public final class KijiFreshnessManager implements Closeable {
     // CSON: ParameterNumber
     if (instantiateClasses) {
       final KijiFreshnessPolicy policy = ScoringUtils.policyForName(policyClass);
-      final ScoreFunction scoreFunction = ScoringUtils.scoreFunctionForName(scoreFunctionClass);
+      final ScoreFunction<?> scoreFunction = ScoringUtils.scoreFunctionForName(scoreFunctionClass);
 
       registerFreshener(
           tableName,
@@ -689,7 +689,7 @@ public final class KijiFreshnessManager implements Closeable {
     if (instantiateClasses) {
       final KijiFreshnessPolicy policy =
           ScoringUtils.policyForName(record.getFreshnessPolicyClass());
-      final ScoreFunction scoreFunction =
+      final ScoreFunction<?> scoreFunction =
           ScoringUtils.scoreFunctionForName(record.getScoreFunctionClass());
 
       registerFreshener(

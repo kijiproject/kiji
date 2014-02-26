@@ -80,7 +80,7 @@ public final class MultiBufferedWriter implements Closeable {
   /** A single buffer view of a MultiBufferedWriter. */
   public final class SingleBuffer {
 
-    private final List<EFQTV> mBuffer;
+    private final List<EFQTV<?>> mBuffer;
 
     /**
      * Initialize a new SingleBuffer which delegates to a MultiBufferedWriter to flush data.
@@ -132,7 +132,7 @@ public final class MultiBufferedWriter implements Closeable {
     public void flush() throws IOException {
       synchronized (mWriter) {
         synchronized (mBuffer) {
-          for (EFQTV efqtv : mBuffer) {
+          for (EFQTV<?> efqtv : mBuffer) {
             mWriter.put(
                 efqtv.mEntityId,
                 efqtv.mFamily,

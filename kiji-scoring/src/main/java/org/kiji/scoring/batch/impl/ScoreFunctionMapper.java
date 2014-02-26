@@ -52,7 +52,7 @@ public final class ScoreFunctionMapper extends KijiTableMapper<HFileKeyValue, Nu
 
   private static final Gson GSON = new Gson();
 
-  private ScoreFunction mScoreFunction = null;
+  private ScoreFunction<?> mScoreFunction = null;
   private KijiColumnName mAttachedColumn = null;
   private Map<String, String> mParameters = null;
   private KijiDataRequest mClientDataRequest = null;
@@ -84,10 +84,8 @@ public final class ScoreFunctionMapper extends KijiTableMapper<HFileKeyValue, Nu
     super.setup(context);
     Preconditions.checkState(null == mFreshenerContext);
     final Configuration conf = context.getConfiguration();
-    final Class<? extends ScoreFunction> scoreFunctionClass = conf.getClass(
-        ScoreFunctionJobBuilder.SCORE_FUNCTION_CLASS_CONF_KEY,
-        null,
-        ScoreFunction.class);
+    final Class<? extends ScoreFunction<?>> scoreFunctionClass = (Class<? extends ScoreFunction<?>>)
+        conf.getClass(ScoreFunctionJobBuilder.SCORE_FUNCTION_CLASS_CONF_KEY, null);
     if (null == scoreFunctionClass) {
       throw new IOException("ScoreFunction class could not be found in configuration.");
     }
@@ -115,7 +113,7 @@ public final class ScoreFunctionMapper extends KijiTableMapper<HFileKeyValue, Nu
       final KijiRowData input,
       final Context context
   ) throws IOException {
-    final TimestampedValue score = mScoreFunction.score(input, mFreshenerContext);
+    final TimestampedValue<?> score = mScoreFunction.score(input, mFreshenerContext);
     mTableContext.put(
         input.getEntityId(),
         mAttachedColumn.getFamily(),

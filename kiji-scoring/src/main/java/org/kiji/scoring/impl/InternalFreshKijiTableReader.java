@@ -248,7 +248,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
   private static final class Freshener implements ReferenceCountable<Freshener> {
 
     private final KijiFreshnessPolicy mPolicy;
-    private final ScoreFunction mScoreFunction;
+    private final ScoreFunction<?> mScoreFunction;
     private final KeyValueStoreReaderFactory mFactory;
     private final KijiColumnName mAttachedColumn;
     private final AtomicInteger mRetainCounter = new AtomicInteger(1);
@@ -267,7 +267,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
      */
     public Freshener(
         final KijiFreshnessPolicy policy,
-        final ScoreFunction scoreFunction,
+        final ScoreFunction<?> scoreFunction,
         final KeyValueStoreReaderFactory factory,
         final KijiColumnName attachedColumn,
         final Map<String, String> parameters
@@ -742,7 +742,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
             buffer = mRequestContext.mRequestBuffer;
           }
           final KijiTableReader reader = getPooledReader(mRequestContext.mReaderPool);
-          final TimestampedValue score;
+          final TimestampedValue<?> score;
           try {
             score = freshener.mScoreFunction.score(
                 reader.get(
@@ -1183,7 +1183,7 @@ public final class InternalFreshKijiTableReader implements FreshKijiTableReader 
         // Instantiate the policy and score function.
         final KijiFreshnessPolicy policy =
             ScoringUtils.policyForName(record.getFreshnessPolicyClass());
-        final ScoreFunction scoreFunction =
+        final ScoreFunction<?> scoreFunction =
             ScoringUtils.scoreFunctionForName(record.getScoreFunctionClass());
 
         // Create the KVStoreReaderFactory from the required stores of the score function and

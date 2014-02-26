@@ -107,7 +107,7 @@ public final class ScoreFunctionJobBuilder
   private static final Map<String, String> DEFAULT_PARAMETERS = Maps.newHashMap();
   private static final int DEFAULT_NUM_THREADS_PER_MAPPER = 1;
 
-  private Class<? extends ScoreFunction> mScoreFunctionClass = null;
+  private Class<? extends ScoreFunction<?>> mScoreFunctionClass = null;
   private KijiTableMapReduceJobOutput mJobOutput = null;
   private ScoreFunction<?> mScoreFunction = null;
   private KijiMapper<?, ?, ?, ?> mMapper = null;
@@ -139,7 +139,7 @@ public final class ScoreFunctionJobBuilder
    * @return this builder.
    */
   public ScoreFunctionJobBuilder withScoreFunctionClass(
-      final Class<? extends ScoreFunction> scoreFunctionClass
+      final Class<? extends ScoreFunction<?>> scoreFunctionClass
   ) {
     mScoreFunctionClass = scoreFunctionClass;
     return this;

@@ -87,7 +87,7 @@ import org.kiji.scoring.ScoreFunction;
  */
 @ApiAudience.Framework
 @ApiStability.Experimental
-public final class ScoringServerScoreFunction extends ScoreFunction {
+public final class ScoringServerScoreFunction extends ScoreFunction<Object> {
 
   public static final Logger LOG = LoggerFactory.getLogger(ScoringServerScoreFunction.class);
   public static final String SCORING_SERVER_BASE_URL_SYSTEM_KEY =
@@ -158,6 +158,7 @@ public final class ScoringServerScoreFunction extends ScoreFunction {
    * @return the base URL of the scoring servlet for the given model.
    * @throws IOException in case of an error getting the model URL from the scoring server.
    */
+  @SuppressWarnings("unchecked")
   private static String getModelBaseURL(
       final String scoringServerBaseURL,
       final String modelId

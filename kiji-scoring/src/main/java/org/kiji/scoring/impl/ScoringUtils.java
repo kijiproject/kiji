@@ -44,7 +44,7 @@ public final class ScoringUtils {
    *     instantiate.
    * @return a new instance of the named ScoreFunction subclass.
    */
-  public static ScoreFunction scoreFunctionForName(
+  public static ScoreFunction<?> scoreFunctionForName(
       final String scoreFunctionClassName
   ) {
     try {
