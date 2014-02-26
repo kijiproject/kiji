@@ -25,6 +25,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Map;
 
+import com.google.common.base.Charsets;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import org.apache.avro.Schema;
@@ -126,22 +127,25 @@ public final class ScoringServerScoreFunction extends ScoreFunction {
       final KijiDataRequest clientRequest,
       final Map<String, String> params
   ) throws MalformedURLException {
-    final String base64Request = Base64.encodeBase64String(
+    final String base64Request = Base64.encodeBase64URLSafeString(
         SerializationUtils.serialize(clientRequest));
-    final StringBuilder urlStringBuilder = new StringBuilder(
-        String.format("%s?eid=%s&request=%s", modelBaseURL, eid.toShellString(), base64Request));
-    for (Map.Entry<String, String> entry : params.entrySet()) {
-      try {
-        urlStringBuilder.append(String.format(
-            "&fresh.%s=%s",
-            URLEncoder.encode(entry.getKey(), "UTF-8"),
-            URLEncoder.encode(entry.getValue(), "UTF-8")
-        ));
-      } catch (UnsupportedEncodingException e) {
-        LOG.debug("Couldn't URL encode parameter: %s", entry.toString());
+    final StringBuilder urlStringBuilder;
+    try {
+      urlStringBuilder = new StringBuilder(
+          String.format("%s?eid=%s&request=%s",
+              modelBaseURL,
+              URLEncoder.encode(eid.toShellString(), Charsets.UTF_8.name()),
+              base64Request));
+      for (Map.Entry<String, String> entry : params.entrySet()) {
+          urlStringBuilder.append(String.format(
+              "&fresh.%s=%s",
+              URLEncoder.encode(entry.getKey(), "UTF-8"),
+              URLEncoder.encode(entry.getValue(), "UTF-8")
+          ));
       }
+    } catch (UnsupportedEncodingException e) {
+      throw new RuntimeException(e);
     }
-
     return new URL(urlStringBuilder.toString());
   }
 
@@ -158,10 +162,10 @@ public final class ScoringServerScoreFunction extends ScoreFunction {
       final String scoringServerBaseURL,
       final String modelId
   ) throws IOException {
-    final URL getModelURL = new URL(scoringServerBaseURL + "?model=" + modelId);
+    final URL getModelURL = new URL(scoringServerBaseURL + "/admin/get?model=" + modelId);
     final String response = IOUtils.toString(getModelURL.openStream());
     final Map<String, String> modelMap = GSON.fromJson(response, Map.class);
-    return modelMap.get(modelId);
+    return scoringServerBaseURL + "/" + modelMap.get(modelId);
   }
 
   /**
