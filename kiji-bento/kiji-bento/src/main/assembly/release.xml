@@ -369,8 +369,21 @@
       <excludes>
         <exclude>RELEASE_NOTES.txt</exclude>
         <exclude>README.md</exclude>
+        <exclude>bin/**</exclude>
       </excludes>
       <fileMode>0644</fileMode>
+    </fileSet>
+    <fileSet>
+      <!-- kiji-scoring-server startup script -->
+      <useDefaultExcludes>false</useDefaultExcludes>
+      <outputDirectory>scoring-server/bin</outputDirectory>
+      <directory>target/prereqs-dir/kiji-scoring-server-${kiji-scoring-server.version}/bin</directory>
+      <filtered>false</filtered>
+      <includes>
+        <include>kiji-scoring-server</include>
+        <include>kiji-scoring-server.initd</include>
+      </includes>
+      <fileMode>0755</fileMode>
     </fileSet>
     <fileSet>
       <!-- bento-checkin -->
