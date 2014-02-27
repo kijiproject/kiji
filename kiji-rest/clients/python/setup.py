@@ -32,7 +32,7 @@ def Main():
 
   setup(
     name = 'kiji-rest',
-    version = '1.0.3',
+    version = '1.0.4',
     packages = ['kiji.rest'],
     package_dir = {
         'kiji': 'kiji',
@@ -43,7 +43,7 @@ def Main():
         'scripts/kiji-rest-admin',
     ],
     install_requires = [
-        'python-base>=1.0.2',
+        'python-base>=1.0.7',
         'pyaml',
     ],
 

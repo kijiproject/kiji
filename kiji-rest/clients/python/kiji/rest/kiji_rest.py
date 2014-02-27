@@ -319,6 +319,29 @@ class KijiRestClient(object):
       logging.debug('Error pinging REST server: %r\n%s', err, err.readlines())
       return False
 
+  def GetMetrics(self):
+    """Retrieves the metrics exposed by this REST server.
+
+    Returns:
+      Python value decoded from the KijiREST JSON metric record.
+    """
+    url =  'http://%s/metrics' % self.admin_address
+    data = None
+    http_req = urllib.request.Request(url=url, data=data)
+    http_req.add_header('Accept', ContentType.JSON)
+    http_req.add_header('Content-Type', ContentType.JSON)
+    method = HttpMethod.GET
+    http_req.get_method = lambda: method
+    logging.debug(
+        'Sending HTTP %s request: %s with headers %s and data %r',
+        method, http_req.full_url, http_req.header_items(), data)
+
+    http_reply = urllib.request.urlopen(http_req)
+    assert (http_reply.getcode() == http.client.OK), \
+        ('HTTP reply with code %d' % http_reply.getcode())
+    text_reply = http_reply.readall().decode()
+    return base.JsonDecode(text_reply)
+
 
 # ------------------------------------------------------------------------------
 
