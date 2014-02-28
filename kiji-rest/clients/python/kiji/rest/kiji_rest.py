@@ -191,7 +191,7 @@ class KijiRestClient(object):
       instance=None,
       table=None,
   ):
-    """Sends a generic rows KijiREST request.
+    """Retrieves a single row of data.
 
     Args:
       entity_id: ID of the row entity to query.
@@ -237,7 +237,7 @@ class KijiRestClient(object):
       table=None,
       max_rows=3,
   ):
-    """Sends a generic rows KijiREST request.
+    """Retrieves a range of rows.
 
     Args:
       start_eid: ID of the entity to scan from (included).
@@ -297,11 +297,66 @@ class KijiRestClient(object):
       else:
         break
 
+  def Put(
+      self,
+      entity_id,
+      family,
+      qualifier,
+      value,
+      schema,
+      timestamp=None,
+      instance=None,
+      table=None,
+  ):
+    """Writes a single cell into a row.
+
+    Args:
+      entity_id: ID of the row entity to query.
+      family: Name of the family to write.
+      qualifier: Name of the column to write.
+      value: Value of the cell to write, represented as a Python value
+          for a JSON object.
+      schema: Avro schema of the value to write, represented as a
+          Python value describing an Avro JSON schema.
+      instance: Optional explicit Kiji instance name.
+      table: Optional explicit Kiji table name.
+    Returns:
+      Row content, as a Python value (decoded from JSON).
+    """
+    if instance is None:
+      instance = self._instance_name
+    assert (instance is not None), 'No Kiji instance specified.'
+
+    if table is None:
+      table = self._table_name
+    assert (table is not None), 'No Kiji table specified.'
+
+    path = os.path.join('instances', instance, 'tables', table, 'rows')
+    data = dict(
+        entityId = _RestEntityId(entity_id),
+        cells = {
+            family: {
+                qualifier: [dict(
+                    timestamp = timestamp,
+                    value = value,
+                    writer_schema = schema,
+                )]
+            }
+        }
+    )
+    text_reply = self.Request(
+        path=path,
+        data=base.JsonEncode(data, pretty=False).encode(),
+        method=HttpMethod.POST,
+    )
+    return base.JsonDecode(text_reply)
+
+
   def Ping(self):
     """Ping the REST server on the admin endpoint."""
     url = 'http://%s/ping' % self._admin_address
     method = HttpMethod.GET
-    http_req = urllib.request.Request(url=url, method=HttpMethod.GET)
+    http_req = urllib.request.Request(url=url, method=method)
     http_req.get_method = lambda: method
     try:
       http_reply = urllib.request.urlopen(http_req)
@@ -663,6 +718,74 @@ class Get(RestAction):
     )
     print(base.JsonEncode(json))
     return ExitCode.SUCCESS
+
+
+class Put(RestAction):
+  """Performs a "put" on a Kiji table row."""
+
+  def RegisterFlags(self):
+    self.flags.AddString(
+        name='instance',
+        default='default',
+        help='Name of the Kiji instance to interact with.',
+    )
+    self.flags.AddString(
+        name='table',
+        default=None,
+        help='Name of the Kiji table to interact with.',
+    )
+    self.flags.AddString(
+        name='eid',
+        default=None,
+        help=('ID of the row to get.\n'
+              'Note: numbers are specified, as in --eid=123, '
+              'but strings must be quoted: --eid=\'"string"\'.'),
+    )
+    self.flags.AddString(
+        name='column',
+        default=None,
+        help='Column (family:qualifier) to write to.',
+    )
+    self.flags.AddString(
+        name='schema',
+        default=None,
+        help='Avro schema of the value to write.',
+    )
+    self.flags.AddString(
+        name='value',
+        default=None,
+        help='Value of the cell to write.',
+    )
+
+  def Run(self, args):
+    assert (len(args) == 0), ('Unexpected arguments: %r' % args)
+    assert (self.flags.table is not None), 'Specify --table=...'
+    assert (self.flags.eid is not None), 'Specify --eid=...'
+    assert (self.flags.column is not None), 'Specify --column=family:qualifier'
+    assert (':' in self.flags.column), 'Specify --column=family:qualifier'
+    assert (self.flags.value is not None), 'Specify --value=...'
+    assert (self.flags.schema is not None), 'Specify --schema=...'
+
+    entity_id = base.JsonDecode(self.flags.eid)
+    logging.debug('Writing cell to row with entity ID: %r', entity_id)
+
+    (family, qualifier) = self.flags.column.split(':', 1)
+
+    value = base.JsonDecode(self.flags.value)
+    schema = base.JsonDecode(self.flags.schema)
+
+    json = self.client.Put(
+        instance=self.flags.instance,
+        table=self.flags.table,
+        entity_id=entity_id,
+        family=family,
+        qualifier=qualifier,
+        value=value,
+        schema=schema,
+    )
+    logging.debug('JSON result for put: %r', json)
+    return ExitCode.SUCCESS
+
 
 
 class Scan(RestAction):
