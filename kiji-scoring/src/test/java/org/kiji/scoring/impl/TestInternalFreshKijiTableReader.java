@@ -1551,4 +1551,58 @@ public class TestInternalFreshKijiTableReader {
       freshReader.close();
     }
   }
+
+  @Test
+  public void testIsolatedGet() throws IOException {
+    final EntityId eid = mTable.getEntityId("foo");
+    final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
+    try {
+      manager.registerFreshener(
+          TABLE_NAME,
+          FAMILY_QUAL0,
+          ALWAYS,
+          TEST_SCORE_FN,
+          EMPTY_PARAMS,
+          false,
+          false);
+    } finally {
+      manager.close();
+    }
+    final InternalFreshKijiTableReader freshReader =
+        (InternalFreshKijiTableReader) FreshKijiTableReader.Builder.create()
+        .withTable(mTable)
+        .withTimeout(500)
+        .build();
+    final String expected = "new-val";
+    final String actual = freshReader.get(
+        eid, "family", "qual0", FreshRequestOptions.Builder.create().build());
+    assertEquals(expected, actual);
+  }
+
+  @Test
+  public void testIsolatedGetTimeout() throws IOException {
+    final EntityId eid = mTable.getEntityId("foo");
+    final KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
+    try {
+      manager.registerFreshener(
+          TABLE_NAME,
+          FAMILY_QUAL0,
+          ALWAYS,
+          TEST_TIMEOUT_SCORE_FN,
+          EMPTY_PARAMS,
+          false,
+          false);
+    } finally {
+      manager.close();
+    }
+    final InternalFreshKijiTableReader freshReader =
+        (InternalFreshKijiTableReader) FreshKijiTableReader.Builder.create()
+            .withTable(mTable)
+            .withTimeout(500)
+            .build();
+    final String expected = "foo-val";
+    final String actual = freshReader.get(
+        eid, "family", "qual0", FreshRequestOptions.Builder.create().build()).toString();
+    assertEquals(expected, actual);
+  }
 }

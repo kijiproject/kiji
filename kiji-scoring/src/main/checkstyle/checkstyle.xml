@@ -62,7 +62,9 @@
   <!-- See http://checkstyle.sf.net/config_misc.html#NewlineAtEndOfFile -->
   <module name="NewlineAtEndOfFile"/>
 
-  <module name="FileLength"/>
+  <module name="FileLength">
+    <property name="max" value="2500"/>
+  </module>
   <module name="FileTabCharacter"/>
 
   <module name="JavadocPackage"/>
