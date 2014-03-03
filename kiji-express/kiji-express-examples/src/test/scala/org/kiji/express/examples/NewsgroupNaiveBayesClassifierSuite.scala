@@ -41,7 +41,7 @@ class NewsgroupNaiveBayesClassifierSuite extends KijiSuite {
   }
 
   val uri: String = doAndRelease(makeTestKijiTable(layout)) { table: KijiTable =>
-    table.getURI().toString()
+    table.getURI.toString
   }
 
   val outFile: String = "out-file"
@@ -93,49 +93,51 @@ class NewsgroupNaiveBayesClassifierSuite extends KijiSuite {
 
   test("NewsgroupNaiveBayesClassifier runs in local mode") {
     JobTest(new NewsgroupClassifier(_))
-      .arg("table", uri)
-      .source(
-          KijiInput.builder
-              .withTableURI(uri)
-              .withColumns(
-                  "info:segment" -> 'segment,
-                  "info:post" -> 'postText,
-                  "info:group" -> 'tag)
-              .build,
-          testTableRowsInput)
-      .arg("out-file", outFile)
-      .arg("data-root", dir.getAbsolutePath)
-      .arg("weights-file", weightsFile)
-      .source(
-          Tsv(weightsFile, new Fields("group", "word", "tf", "df", "weight"), skipHeader = true),
-          // Converted via TupleConversions
-          calculatedWeightsInput)
-      .sink(Tsv(outFile, writeHeader = true))(validateOutputLocal)
-      .run
-      .finish
+        .arg("table", uri)
+        .source(
+            KijiInput.builder
+                .withTableURI(uri)
+                .withColumns(
+                    "info:segment" -> 'segment,
+                    "info:post" -> 'postText,
+                    "info:group" -> 'tag)
+                .build,
+            testTableRowsInput
+        )
+        .arg("out-file", outFile)
+        .arg("data-root", dir.getAbsolutePath)
+        .arg("weights-file", weightsFile)
+        .source(
+            Tsv(weightsFile, new Fields("group", "word", "tf", "df", "weight"), skipHeader = true),
+            calculatedWeightsInput
+        )
+        .sink(Tsv(outFile, writeHeader = true))(validateOutputLocal)
+        .run
+        .finish
   }
 
   test("NewsgroupNaiveBayesClassifier runs in hadoop mode") {
     JobTest(new NewsgroupClassifier(_))
-      .arg("table", uri)
-      .source(
-      KijiInput.builder
-          .withTableURI(uri)
-          .withColumns(
-              "info:segment" -> 'segment,
-              "info:post" -> 'postText,
-              "info:group" -> 'tag)
-          .build,
-          testTableRowsInput)
-      .arg("out-file", outFile)
-      .arg("data-root", dir.getAbsolutePath)
-      .arg("weights-file", weightsFile)
-      .source(
-          Tsv(weightsFile, new Fields("group", "word", "tf", "df", "weight"), skipHeader = true),
-      // Converted via TupleConversions
-      calculatedWeightsInput)
-      .sink(Tsv(outFile, writeHeader = true))(validateOutputHadoop)
-      .runHadoop
-      .finish
+        .arg("table", uri)
+        .source(
+            KijiInput.builder
+                .withTableURI(uri)
+                .withColumns(
+                    "info:segment" -> 'segment,
+                    "info:post" -> 'postText,
+                    "info:group" -> 'tag)
+                .build,
+            testTableRowsInput
+        )
+        .arg("out-file", outFile)
+        .arg("data-root", dir.getAbsolutePath)
+        .arg("weights-file", weightsFile)
+        .source(
+            Tsv(weightsFile, new Fields("group", "word", "tf", "df", "weight"), skipHeader = true),
+            calculatedWeightsInput
+        )
+        .sink(Tsv(outFile, writeHeader = true))(validateOutputHadoop)
+        .runHadoop
+        .finish
   }
 }

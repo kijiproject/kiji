@@ -28,7 +28,6 @@ import java.util.Properties
 
 import cascading.flow.FlowProcess
 import cascading.flow.hadoop.util.HadoopUtil
-import cascading.scheme.Scheme
 import cascading.scheme.SinkCall
 import cascading.tap.Tap
 import cascading.tuple.Fields
@@ -36,7 +35,6 @@ import cascading.tuple.Tuple
 import cascading.tuple.TupleEntry
 import com.google.common.base.Objects
 import com.twitter.scalding.AccessMode
-import com.twitter.scalding.HadoopSchemeInstance
 import com.twitter.scalding.HadoopTest
 import com.twitter.scalding.Hdfs
 import com.twitter.scalding.Local
@@ -48,8 +46,6 @@ import com.twitter.scalding.Write
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.mapred.JobConf
-import org.apache.hadoop.mapred.OutputCollector
-import org.apache.hadoop.mapred.RecordReader
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
@@ -118,7 +114,7 @@ final class KijiSource private[express] (
   private val uri: KijiURI = KijiURI.newBuilder(tableAddress).build()
 
   /** A Kiji scheme intended to be used with Scalding/Cascading's hdfs mode. */
-  private val kijiScheme: KijiScheme =
+  val kijiScheme: KijiScheme =
       new KijiScheme(
           tableAddress,
           timeRange,
@@ -129,7 +125,7 @@ final class KijiSource private[express] (
           rowFilterSpec)
 
   /** A Kiji scheme intended to be used with Scalding/Cascading's local mode. */
-  private val localKijiScheme: LocalKijiScheme =
+  val localKijiScheme: LocalKijiScheme =
       new LocalKijiScheme(
           uri,
           timeRange,
@@ -138,21 +134,6 @@ final class KijiSource private[express] (
           convertKeysToStrings(outputColumns),
           rowRangeSpec,
           rowFilterSpec)
-
-  /**
-   * Creates a Scheme that writes to/reads from a Kiji table for usage with
-   * the hadoop runner.
-   */
-  override val hdfsScheme: Scheme[JobConf, RecordReader[_, _], OutputCollector[_, _], _, _] =
-    HadoopSchemeInstance(kijiScheme)
-
-  /**
-   * Creates a Scheme that writes to/reads from a Kiji table for usage with
-   * the local runner.
-   */
-  override val localScheme: LocalScheme = localKijiScheme
-      // This cast is required due to Scheme being defined with invariant type parameters.
-      .asInstanceOf[LocalScheme]
 
   /**
    * Create a connection to the physical data source (also known as a Tap in Cascading)
@@ -229,8 +210,7 @@ final class KijiSource private[express] (
         }
       }
 
-      // Delegate any other tap types to Source's default behaviour.
-      case _ => super.createTap(readOrWrite)(mode)
+      case _ => throw new RuntimeException("Trying to create invalid tap")
     }
   }
 
@@ -332,7 +312,7 @@ private[express] object KijiSource {
    */
   private def populateTestTable(
       tableUri: KijiURI,
-      rows: Buffer[Tuple],
+      rows: Option[Buffer[Tuple]],
       fields: Fields,
       configuration: Configuration) {
     doAndRelease(Kiji.Factory.open(tableUri)) { kiji: Kiji =>
@@ -345,7 +325,7 @@ private[express] object KijiSource {
 
       // Write the desired rows to the table.
       withKijiTableWriter(tableUri, configuration) { writer: KijiTableWriter =>
-        rows.foreach { row: Tuple =>
+        rows.flatten.foreach { row: Tuple =>
           val tupleEntry = new TupleEntry(fields, row)
           val iterator = fields.iterator()
 
@@ -420,7 +400,7 @@ private[express] object KijiSource {
    * @param rowFilterSpec is the specification for which row filter to apply.
    */
   private class TestLocalKijiScheme(
-      val buffer: Buffer[Tuple],
+      val buffer: Option[Buffer[Tuple]],
       uri: KijiURI,
       timeRange: TimeRangeSpec,
       timestampField: Option[Symbol],
@@ -486,7 +466,7 @@ private[express] object KijiSource {
                   }
                   .toSeq
 
-              buffer += new Tuple(newTupleValues: _*)
+              buffer.foreach { _ += new Tuple(newTupleValues: _*) }
             }
           }
         }

@@ -28,12 +28,15 @@ import cascading.flow.Flow
 import cascading.flow.hadoop.util.HadoopUtil
 import cascading.pipe.Checkpoint
 import cascading.pipe.Pipe
+import cascading.pipe.assembly.AggregateBy
 import cascading.tap.Tap
+import cascading.tuple.collect.SpillableProps
+import com.twitter.chill.config.ConfiguredInstantiator
+import com.twitter.chill.config.ScalaMapConfig
 import com.twitter.scalding.Args
 import com.twitter.scalding.HadoopTest
 import com.twitter.scalding.Hdfs
 import com.twitter.scalding.Job
-import com.twitter.scalding.Mode
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.security.User
@@ -48,6 +51,7 @@ import org.kiji.express.flow.framework.KijiTap
 import org.kiji.express.flow.framework.LocalKijiTap
 import org.kiji.express.flow.framework.hfile.HFileFlowStepStrategy
 import org.kiji.express.flow.framework.hfile.HFileKijiTap
+import org.kiji.express.flow.framework.serialization.KijiKryoInstantiator
 import org.kiji.express.flow.util.AvroTupleConversions
 import org.kiji.express.flow.util.PipeConversions
 
@@ -62,16 +66,15 @@ import org.kiji.express.flow.util.PipeConversions
 @ApiAudience.Public
 @ApiStability.Stable
 @Inheritance.Extensible
-class KijiJob(args: Args = Args(Nil))
+class KijiJob(args: Args)
     extends Job(args)
     with PipeConversions
     with AvroTupleConversions {
-
-  override def validateSources(mode: Mode): Unit = {
+  override def buildFlow: Flow[_] = {
     val taps: List[Tap[_, _, _]] = (
         flowDef.getSources.values.asScala.toList
-        ++ flowDef.getSinks.values.asScala.toList
-        ++ flowDef.getCheckpoints.values.asScala.toList)
+            ++ flowDef.getSinks.values.asScala.toList
+            ++ flowDef.getCheckpoints.values.asScala.toList)
 
     // Retrieve the configuration
     val conf: Configuration = HBaseConfiguration.create()
@@ -105,11 +108,7 @@ class KijiJob(args: Args = Args(Nil))
       case _ => // No Kiji parts to verify.
     }
 
-    // Call any validation that scalding's Job class does.
-    super.validateSources(mode)
-  }
-
-  override def buildFlow(implicit mode : Mode): Flow[_] = {
+    // Handle HFile writes.
     checkpointHFileSink()
     val flow = super.buildFlow
     // Here we set the strategy to change the sink steps since we are dumping to HFiles.
@@ -150,8 +149,8 @@ class KijiJob(args: Args = Args(Nil))
     }
   }
 
-  override def config(implicit mode: Mode): Map[AnyRef, AnyRef] = {
-    val baseConfig = super.config(mode)
+  override def config: Map[AnyRef, AnyRef] = {
+    val baseConfig: Map[AnyRef, AnyRef] = super.config
 
     // We configure as is done in Scalding's Job, but then append to mapred.child.java.opts to
     // disable schema validation. This system property is only useful for KijiSchema v1.1. In newer
@@ -159,16 +158,19 @@ class KijiJob(args: Args = Args(Nil))
     val disableValidation = " -Dorg.kiji.schema.impl.AvroCellEncoder.SCHEMA_VALIDATION=DISABLED"
     val oldJavaOptions = baseConfig.get("mapred.child.java.opts").getOrElse("")
 
-    // Add support for our Kryo Avro serializers (see org.kiji.express.flow.framework.KryoKiji).
-    val oldSerializations = baseConfig("io.serializations").toString
-    require(oldSerializations.contains("com.twitter.scalding.serialization.KryoHadoop"))
-    val newSerializations = oldSerializations.replaceFirst(
-        "com.twitter.scalding.serialization.KryoHadoop",
-        "org.kiji.express.flow.framework.serialization.KryoKiji")
+    // These are ignored if set in mode.config
+    val lowPriorityDefaults = Map(
+        SpillableProps.LIST_THRESHOLD -> defaultSpillThreshold.toString,
+        SpillableProps.MAP_THRESHOLD -> defaultSpillThreshold.toString,
+        AggregateBy.AGGREGATE_BY_THRESHOLD -> defaultSpillThreshold.toString
+    )
+    // Set up the keys for chill
+    val chillConf = ScalaMapConfig(lowPriorityDefaults)
+    ConfiguredInstantiator.setReflect(chillConf, classOf[KijiKryoInstantiator])
 
     // Append all the new keys.
-    baseConfig +
-        ("mapred.child.java.opts" -> (oldJavaOptions + disableValidation)) +
-        ("io.serializations" -> newSerializations)
+    baseConfig
+        .++(chillConf.toMap)
+        .+("mapred.child.java.opts" -> (oldJavaOptions + disableValidation))
   }
 }

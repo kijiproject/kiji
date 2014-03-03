@@ -193,13 +193,15 @@ object EntityId {
    */
   @ApiAudience.Framework
   def fromJavaEntityId(entityId: JEntityId): EntityId = {
-    val hbaseKey = entityId.getHBaseRowKey()
+    val hbaseKey = entityId.getHBaseRowKey
 
     try {
       val components = entityId
-        .getComponents
-        .asScala
-        .toSeq
+          .getComponents
+          .asScala
+          // Converts the unmodifiable list that FormattedEntityIds use to a scala immutable list
+          // which kryo has a configured serializer for.
+          .toList
       MaterializedEntityId(components)
     } catch {
       // This is an exception thrown when we try to access components of an entityId which has

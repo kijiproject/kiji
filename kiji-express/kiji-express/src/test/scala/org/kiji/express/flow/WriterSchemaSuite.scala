@@ -22,11 +22,7 @@ package org.kiji.express.flow
 import scala.collection.JavaConversions
 
 import cascading.tuple.Fields
-import com.twitter.scalding.Args
-import com.twitter.scalding.IterableSource
-import com.twitter.scalding.Mode
-import com.twitter.scalding.TupleConverter
-import com.twitter.scalding.TupleSetter
+import com.twitter.scalding._
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericData
 import org.apache.avro.generic.GenericData.Fixed
@@ -46,6 +42,8 @@ import org.kiji.schema.KijiTable
 import org.kiji.schema.KijiTableReader
 import org.kiji.schema.KijiTableWriter
 import org.kiji.schema.{EntityId => SchemaEntityId}
+import org.kiji.express.flow.SchemaSpec.Generic
+import com.twitter.scalding.IterableSource
 
 @RunWith(classOf[JUnitRunner])
 class WriterSchemaSuite extends KijiClientTest with KijiSuite {
@@ -306,9 +304,9 @@ object WriterSchemaSuite {
                       inputs: Iterable[A],
                       outputSource: KijiSource)
                      (implicit setter: TupleSetter[A]): Boolean = {
-    val args = Args("--hdfs")
-    Mode.mode = Mode(args, conf) // HDFS mode
-    new IdentityJob(fs, inputs, outputSource, args).run
+
+    val argsWithMode = Mode.putMode(Hdfs(strict = true, conf), Args(Nil))
+    new IdentityJob(fs, inputs, outputSource, argsWithMode).run
   }
 }
 

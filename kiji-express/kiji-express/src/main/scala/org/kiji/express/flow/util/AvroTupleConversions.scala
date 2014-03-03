@@ -29,7 +29,6 @@ import scala.reflect.Manifest
 import cascading.tuple.Fields
 import cascading.tuple.Tuple
 import cascading.tuple.TupleEntry
-import com.twitter.scalding.TupleConversions
 import com.twitter.scalding.TupleConverter
 import com.twitter.scalding.TuplePacker
 import com.twitter.scalding.TupleSetter
@@ -42,7 +41,8 @@ import org.apache.avro.specific.SpecificRecord
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.annotations.Inheritance
-import org.kiji.express.flow.framework.serialization.KijiLocker
+import org.kiji.express.flow.framework.serialization.KijiKryoExternalizer
+import com.twitter.scalding.TupleConverter.ToMap
 
 /**
  * Provides implementations of Scalding abstract classes to enable packing and unpacking Avro
@@ -135,7 +135,7 @@ trait AvroTupleConversions {
 @ApiStability.Stable
 @Inheritance.Sealed
 private[express] case class AvroSpecificTupleConverter[T](fs: Fields, m: Manifest[T])
-    extends TupleConverter[T] with TupleConversions {
+    extends TupleConverter[T] {
 
   import AvroTupleConversions._
 
@@ -180,7 +180,7 @@ private[express] case class AvroSpecificTupleConverter[T](fs: Fields, m: Manifes
 
   override def apply(entry: TupleEntry): T = {
     val builder = newBuilderMethod.invoke(avroClass)
-    toMap(entry).foreach { case (field, value) =>
+    ToMap(entry).foreach { case (field, value) =>
       setters(fieldToSetter(field))
         .invoke(builder, converters(snakeToCamel(field))(value).asInstanceOf[AnyRef])
     }
@@ -199,20 +199,20 @@ private[express] case class AvroSpecificTupleConverter[T](fs: Fields, m: Manifes
 @ApiStability.Stable
 @Inheritance.Sealed
 private[express] class AvroGenericTupleConverter(fs: Fields, schema: Schema)
-    extends TupleConverter[GenericRecord] with TupleConversions {
+    extends TupleConverter[GenericRecord] {
 
   import AvroTupleConversions._
 
-  private val schemaLocker = KijiLocker(schema)
+  private val schemaExternalizer = KijiKryoExternalizer(schema)
 
   /** Mapping of canonical field name (CamelCased) to actual field name. */
   lazy private val fields: Map[String, String] = {
-    val names = schemaLocker.get.getFields.asScala.map(_.name)
+    val names = schemaExternalizer.get.getFields.asScala.map(_.name)
     names.map(snakeToCamel).zip(names).toMap
   }
 
   /** Mapping of canonical field name to value converter. */
-  lazy private val converters: Map[String, Any => Any] = fieldConverters(schemaLocker.get)
+  lazy private val converters: Map[String, Any => Any] = fieldConverters(schemaExternalizer.get)
 
   override def arity: Int = -1
 
@@ -220,7 +220,8 @@ private[express] class AvroGenericTupleConverter(fs: Fields, schema: Schema)
     // Check that all scalding fields have a corresponding field in the schema
     val errs = fs.asScala.collect {
       case field if !fields.contains(snakeToCamel(field.toString)) =>
-        "Avro generic record " + schemaLocker.get.getName + " does not contain field " + field + "."
+          "Avro generic record " + schemaExternalizer.get.getName + " does not contain field " +
+              field + "."
     }
 
     require(errs.isEmpty, errs.mkString("\n"))
@@ -228,8 +229,8 @@ private[express] class AvroGenericTupleConverter(fs: Fields, schema: Schema)
   validate
 
   override def apply(entry: TupleEntry): GenericRecord = {
-    val builder = new GenericRecordBuilder(schemaLocker.get)
-    toMap(entry).foreach { case (field, value) =>
+    val builder = new GenericRecordBuilder(schemaExternalizer.get)
+    ToMap(entry).foreach { case (field, value) =>
       val canonical = snakeToCamel(field)
       builder.set(fields(canonical), converters(canonical)(value))
     }

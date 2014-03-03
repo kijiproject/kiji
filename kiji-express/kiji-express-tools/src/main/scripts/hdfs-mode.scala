@@ -16,6 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-com.twitter.scalding.Mode.mode =
+org.kiji.express.repl.Implicits.mode =
     com.twitter.scalding.Hdfs(false, org.apache.hadoop.hbase.HBaseConfiguration.create())
 

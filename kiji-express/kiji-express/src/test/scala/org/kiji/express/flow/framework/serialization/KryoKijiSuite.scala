@@ -34,6 +34,9 @@ import org.scalatest.FunSuite
 
 import org.kiji.express.SerDeSuite
 import org.kiji.express.avro.SimpleRecord
+import cascading.tuple.collect.SpillableProps
+import cascading.pipe.assembly.AggregateBy
+import com.twitter.chill.config.{ConfiguredInstantiator, ScalaMapConfig}
 
 class KryoKijiSuite
     extends FunSuite
@@ -78,6 +81,7 @@ class KryoKijiSuite
 
   serDeTest("Schema", "Kryo", recordSchema) { actual =>
     // Use cascading.kryo to mimic scalding's actual behavior.
+
     val kryo = new Kryo()
     val kryoFactory = new KryoFactory(HBaseConfiguration.create())
     val registrations = Seq(
@@ -118,9 +122,20 @@ class KryoKijiSuite
   def kryoKijiTest[T](inputName: String, input: => T) {
     serDeTest(inputName, "KryoKiji", input) { actual =>
       // Setup a Kryo object using KryoKiji.
-      val kryo = new Kryo()
-      val kryoKiji = new KryoKiji()
-      kryoKiji.decorateKryo(kryo)
+      val defaultSpillThreshold = 100 * 1000
+      val lowPriorityDefaults = Map(
+          SpillableProps.LIST_THRESHOLD -> defaultSpillThreshold.toString,
+          SpillableProps.MAP_THRESHOLD -> defaultSpillThreshold.toString,
+          AggregateBy.AGGREGATE_BY_THRESHOLD -> defaultSpillThreshold.toString
+      )
+      val chillConf = ScalaMapConfig(lowPriorityDefaults)
+
+      assert(!chillConf.contains(ConfiguredInstantiator.KEY))
+      ConfiguredInstantiator.setReflect(chillConf, classOf[KijiKryoInstantiator])
+      assert(chillConf.contains(ConfiguredInstantiator.KEY))
+      assert(chillConf.get(ConfiguredInstantiator.KEY) == classOf[KijiKryoInstantiator].getName)
+
+      val kryo = new ConfiguredInstantiator(chillConf).newKryo()
 
       // Serialize and deserialize the input data.
       kryoDeepCopy(kryo, actual)

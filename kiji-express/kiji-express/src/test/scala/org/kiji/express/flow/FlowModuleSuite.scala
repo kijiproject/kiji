@@ -124,7 +124,7 @@ class FlowModuleSuite extends FunSuite {
         rowRangeSpec = RowRangeSpec.All,
         rowFilterSpec = RowFilterSpec.NoFilter)
 
-    assert(expectedScheme === input.hdfsScheme)
+    assert(expectedScheme === input.kijiScheme)
   }
 
   test("Flow module permits specifying timerange for KijiInput.") {
@@ -141,7 +141,7 @@ class FlowModuleSuite extends FunSuite {
         rowRangeSpec = RowRangeSpec.All,
         rowFilterSpec = RowFilterSpec.NoFilter)
 
-    assert(expectedScheme === input.hdfsScheme)
+    assert(expectedScheme === input.kijiScheme)
   }
 
   test("Flow module permits creating KijiSources with multiple columns.") {
@@ -161,7 +161,7 @@ class FlowModuleSuite extends FunSuite {
         rowFilterSpec = RowFilterSpec.NoFilter)
     }
 
-    assert(expectedScheme === input.hdfsScheme)
+    assert(expectedScheme === input.kijiScheme)
   }
 
   test("Flow module permits specifying options for a column.") {
@@ -216,7 +216,7 @@ class FlowModuleSuite extends FunSuite {
             .build),
         rowRangeSpec = RowRangeSpec.All,
         rowFilterSpec = RowFilterSpec.NoFilter)
-    assert(expectedScheme === output.hdfsScheme)
+    assert(expectedScheme === output.kijiScheme)
   }
 
   test("Flow module permits creating KijiSource with a timestamp field") {
@@ -234,6 +234,6 @@ class FlowModuleSuite extends FunSuite {
             .build),
         rowRangeSpec = RowRangeSpec.All,
         rowFilterSpec = RowFilterSpec.NoFilter)
-    assert(expectedScheme === output.hdfsScheme)
+    assert(expectedScheme === output.kijiScheme)
   }
 }

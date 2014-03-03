@@ -401,14 +401,14 @@ object EntityIdSuite {
    */
   class JoinUserEntityIdsJob(args: Args) extends KijiJob(args) {
     val sidePipe = TextLine(args("side-input"))
-      .read
-      .map('line -> 'entityId) { line: String => EntityId(line) }
-      .project('entityId)
+        .read
+        .map('line -> 'entityId) { line: String => EntityId(line) }
+        .project('entityId)
 
     TextLine(args("input"))
-      .map('line -> 'entityId) { line: String => EntityId(line) }
-      .joinWithSmaller('entityId -> 'entityId, sidePipe)
-      .write(Tsv(args("output")))
+        .map('line -> 'entityId) { line: String => EntityId(line) }
+        .joinWithSmaller('entityId -> 'entityId, sidePipe)
+        .write(Tsv(args("output")))
   }
 
   /**
@@ -420,17 +420,18 @@ object EntityIdSuite {
    */
   class JoinUserAndFormattedFromTableJob(args: Args) extends KijiJob(args) {
     val sidePipe = TextLine(args("side-input"))
-      .read
-      .map('line -> 'entityId) { line: String => EntityId(line) }
+        .read
+        .map('line -> 'entityId) { line: String => EntityId(line) }
+        .project('entityId)
 
     KijiInput.builder
         .withTableURI(args("input"))
         .withColumns("animals" -> 'animals)
         .build
 
-      .map('animals -> 'terms) { animals: Seq[FlowCell[CharSequence]] => animals.toString }
-      .joinWithSmaller('entityId -> 'entityId, sidePipe)
-      .write(Tsv(args("output")))
+        .map('animals -> 'terms) { animals: Seq[FlowCell[CharSequence]] => animals.toString }
+        .joinWithSmaller('entityId -> 'entityId, sidePipe)
+        .write(Tsv(args("output")))
   }
 
   /**
@@ -442,9 +443,9 @@ object EntityIdSuite {
    */
   class JoinUserAndHashedFromTableJob(args: Args) extends KijiJob(args) {
     val sidePipe = TextLine(args("side-input"))
-      .read
-      .map('line -> 'entityId) { line: String => EntityId(line) }
-      .project('entityId)
+        .read
+        .map('line -> 'entityId) { line: String => EntityId(line) }
+        .project('entityId)
 
     KijiInput.builder
         .withTableURI(args("input"))

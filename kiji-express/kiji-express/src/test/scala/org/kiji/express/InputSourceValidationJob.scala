@@ -32,7 +32,7 @@ import com.twitter.scalding.Source
 import com.twitter.scalding.TupleConverter
 import com.twitter.scalding.TupleSetter
 
-import org.kiji.express.flow.framework.serialization.KijiLocker
+import org.kiji.express.flow.framework.serialization.KijiKryoExternalizer
 import org.kiji.express.flow.util.TestPipeConversions
 
 /**
@@ -51,14 +51,15 @@ import org.kiji.express.flow.util.TestPipeConversions
 class InputSourceValidationJob[A](
     @transient inputSource: Source,
     @transient expectedTuples: Set[A],
-    expectedFields: Fields
+    expectedFields: Fields,
+    args: Args
 )(implicit
     converter: TupleConverter[A],
     setter: TupleSetter[Unit]
-) extends Job(Args(Nil)) with TestPipeConversions {
+) extends Job(args) with TestPipeConversions {
   converter.assertArityMatches(expectedFields)
 
-  val _expected: KijiLocker[Set[A]] = KijiLocker(expectedTuples)
+  val _expected: KijiKryoExternalizer[Set[A]] = KijiKryoExternalizer(expectedTuples)
   lazy val expectedTuplesDeserialized: Set[A] = _expected.get
 
   def inputPipe: Pipe = inputSource.read

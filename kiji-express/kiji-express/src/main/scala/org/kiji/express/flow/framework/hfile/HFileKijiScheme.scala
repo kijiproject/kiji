@@ -34,13 +34,12 @@ import org.apache.hadoop.mapred.RecordReader
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
-import org.kiji.annotations.Inheritance
 import org.kiji.express.flow.ColumnFamilyOutputSpec
 import org.kiji.express.flow.ColumnOutputSpec
 import org.kiji.express.flow.EntityId
 import org.kiji.express.flow.QualifiedColumnOutputSpec
 import org.kiji.express.flow.framework.KijiScheme
-import org.kiji.express.flow.framework.serialization.KijiLocker
+import org.kiji.express.flow.framework.serialization.KijiKryoExternalizer
 import org.kiji.express.flow.util.ResourceUtil._
 import org.kiji.mapreduce.framework.HFileKeyValue
 import org.kiji.mapreduce.framework.KijiConfKeys
@@ -84,7 +83,7 @@ final private[express] class HFileKijiScheme(
   import KijiScheme._
 
   /** Serialization workaround.  Do not access directly. */
-  private[this] val _outputColumns = KijiLocker(ocolumns)
+  private[this] val _outputColumns = KijiKryoExternalizer(ocolumns)
 
   def outputColumns: Map[String, ColumnOutputSpec] = _outputColumns.get
 

@@ -56,7 +56,7 @@ import org.kiji.express.flow.RowRangeSpec
 import org.kiji.express.flow.SchemaSpec
 import org.kiji.express.flow.TimeRangeSpec
 import org.kiji.express.flow.TransientStream
-import org.kiji.express.flow.framework.serialization.KijiLocker
+import org.kiji.express.flow.framework.serialization.KijiKryoExternalizer
 import org.kiji.express.flow.util.AvroUtil
 import org.kiji.express.flow.util.ResourceUtil.withKijiTable
 import org.kiji.mapreduce.framework.KijiConfKeys
@@ -118,8 +118,8 @@ class KijiScheme(
   import KijiScheme._
 
   /** Serialization workaround.  Do not access directly. */
-  private[this] val _inputColumns = KijiLocker(icolumns)
-  private[this] val _outputColumns = KijiLocker(ocolumns)
+  private[this] val _inputColumns = KijiKryoExternalizer(icolumns)
+  private[this] val _outputColumns = KijiKryoExternalizer(ocolumns)
 
   def inputColumns: Map[String, ColumnInputSpec] = _inputColumns.get
   def outputColumns: Map[String, ColumnOutputSpec] = _outputColumns.get

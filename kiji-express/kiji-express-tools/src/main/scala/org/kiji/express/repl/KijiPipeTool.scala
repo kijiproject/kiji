@@ -24,7 +24,6 @@ import cascading.pipe.Pipe
 import com.twitter.scalding.Args
 import com.twitter.scalding.Job
 import com.twitter.scalding.Mode
-import com.twitter.scalding.TupleConversions
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
@@ -41,7 +40,7 @@ import org.kiji.express.flow.KijiJob
 @ApiAudience.Public
 @ApiStability.Experimental
 @Inheritance.Sealed
-class KijiPipeTool(private[express] val pipe: Pipe) extends TupleConversions {
+class KijiPipeTool(private[express] val pipe: Pipe) {
   /**
    * Gets a job that can be used to run the data pipeline.
    *
@@ -65,12 +64,11 @@ class KijiPipeTool(private[express] val pipe: Pipe) extends TupleConversions {
      * but adds options specific to KijiExpress, including adding a jar containing compiled REPL
      * code to the distributed cache if the REPL is running.
      *
-     * @param mode used to run the job (either local or hadoop).
      * @return the configuration that should be used to run the job.
      */
-    override def config(implicit mode: Mode): Map[AnyRef, AnyRef] = {
+    override def config: Map[AnyRef, AnyRef] = {
       // Use the configuration from Scalding Job as our base.
-      val configuration = super.config(mode)
+      val configuration = super.config
 
       /** Appends a comma to the end of a string. */
       def appendComma(str: Any): String = str.toString + ","
@@ -111,11 +109,10 @@ class KijiPipeTool(private[express] val pipe: Pipe) extends TupleConversions {
      * after the flow has been built from the flow definition. This allows additional pipelines
      * to be constructed and run after the pipeline encapsulated by this job.
      *
-     * @param mode the mode in which the built flow will be run.
      * @return the flow created from the flow definition.
      */
-    override def buildFlow(implicit mode: Mode): Flow[_] = {
-      val flow = super.buildFlow(mode)
+    override def buildFlow: Flow[_] = {
+      val flow = super.buildFlow
       Implicits.resetFlowDef()
       flow
     }
@@ -125,7 +122,9 @@ class KijiPipeTool(private[express] val pipe: Pipe) extends TupleConversions {
    * Runs this pipe as a Scalding job.
    */
   def run() {
-    getJob(new Args(Map())).run(Mode.mode)
+    // Register a new mode for each job.
+    val jobArgs = Mode.putMode(Implicits.mode, Args(Nil))
+    getJob(jobArgs).run
 
     // Clear the REPL state after running a job.
     Implicits.resetFlowDef()

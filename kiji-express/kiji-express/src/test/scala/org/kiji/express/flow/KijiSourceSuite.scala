@@ -45,11 +45,11 @@ class KijiSourceSuite extends KijiClientTest with KijiSuite with BeforeAndAfter 
 
   /* Undo all changes to hdfs mode. */
   before {
-    Mode.mode = Local(strict = true)
+    val nilArgsWithMode = Mode.putMode(Local(strictSources = true), Args(Nil))
   }
 
   after {
-    Mode.mode = Local(strict = true)
+    val nilArgsWithMode = Mode.putMode(Local(strictSources = true), Args(Nil))
   }
 
   setupKijiTest()
@@ -251,6 +251,19 @@ object KijiSourceSuite {
       .withTableURI(args("output"))
       .withColumns('record -> "family:column4")
       .build)
+
+    override def config: Map[AnyRef, AnyRef] = {
+      val superConfig = super.config
+
+      // make sure that things are configured correctly here.
+      require(superConfig.contains(com.twitter.chill.config.ConfiguredInstantiator.KEY))
+      require(
+          superConfig(com.twitter.chill.config.ConfiguredInstantiator.KEY)
+              == classOf[org.kiji.express.flow.framework.serialization.KijiKryoInstantiator].getName
+      )
+
+      superConfig
+    }
   }
 
 

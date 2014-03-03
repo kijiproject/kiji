@@ -21,11 +21,14 @@ package org.kiji.express.repl
 
 import cascading.flow.FlowDef
 import cascading.pipe.Pipe
+import com.twitter.scalding.Hdfs
 import com.twitter.scalding.IterableSource
+import com.twitter.scalding.Mode
 import com.twitter.scalding.RichPipe
 import com.twitter.scalding.Source
 import com.twitter.scalding.TupleConverter
 import com.twitter.scalding.TupleSetter
+import org.apache.hadoop.hbase.HBaseConfiguration
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
@@ -43,6 +46,9 @@ object Implicits
     with PipeConversions {
   /** Implicit flowDef for this KijiExpress shell session. */
   implicit var flowDef: FlowDef = getEmptyFlowDef
+
+  /** Mode that the current REPL job is setup to use. */
+  implicit var mode: Mode = Hdfs(strict = true, conf = HBaseConfiguration.create())
 
   /**
    * Sets the flow definition in implicit scope to an empty flow definition.
@@ -93,7 +99,7 @@ object Implicits
       setter: TupleSetter[T],
       converter: TupleConverter[T]
   ): Pipe = {
-    iterableToSource(iterable)(setter, converter).read
+    iterableToSource(iterable)(setter, converter).read(flowDef, mode)
   }
 
   /**
@@ -120,7 +126,7 @@ object Implicits
    * @param source to convert to a RichPipe.
    * @return a RichPipe wrapping the result of reading the specified Source.
    */
-  implicit def sourceToRichPipe(source: Source): RichPipe = RichPipe(source.read)
+  implicit def sourceToRichPipe(source: Source): RichPipe = RichPipe(source.read(flowDef, mode))
 
   /**
    * Converts a Source to a Pipe. This method permits implicit conversions from Source to Pipe.
@@ -128,7 +134,7 @@ object Implicits
    * @param source to convert to a Pipe.
    * @return a Pipe that is the result of reading the specified Source.
    */
-  implicit def sourceToPipe(source: Source): Pipe = source.read
+  implicit def sourceToPipe(source: Source): Pipe = source.read(flowDef, mode)
 
   /**
    * Converts a Pipe to a KijiPipeTool. This method permits implicit conversions from Pipe to

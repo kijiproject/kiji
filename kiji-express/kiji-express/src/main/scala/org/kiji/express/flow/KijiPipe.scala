@@ -22,7 +22,6 @@ package org.kiji.express.flow
 import cascading.pipe.Pipe
 import cascading.tuple.Fields
 import com.twitter.scalding.RichPipe
-import com.twitter.scalding.TupleConversions
 import com.twitter.scalding.TupleSetter
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericRecord
@@ -44,7 +43,7 @@ import org.kiji.express.flow.util.AvroGenericTupleConverter
 @ApiAudience.Public
 @ApiStability.Stable
 @Inheritance.Sealed
-class KijiPipe(private[express] val pipe: Pipe) extends TupleConversions {
+class KijiPipe(private[express] val pipe: Pipe) {
 
   /**
    * Packs the specified fields into an Avro [[org.apache.avro.generic.GenericRecord]].  The

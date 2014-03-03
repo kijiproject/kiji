@@ -21,14 +21,24 @@ package org.kiji.express.flow.util
 
 import scala.collection.mutable
 
-import cascading.pipe.{Each, Pipe}
-import cascading.tuple.Fields
 import cascading.flow.FlowDef
-import com.twitter.scalding._
+import cascading.pipe.Pipe
+import cascading.pipe.Each
+import cascading.tuple.Fields
+import com.twitter.scalding.FieldConversions
+import com.twitter.scalding.Mode
+import com.twitter.scalding.NullSource
+import com.twitter.scalding.RichPipe
+import com.twitter.scalding.SideEffectMapFunction
+import com.twitter.scalding.TupleConverter
+import com.twitter.scalding.TupleSetter
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+
+import org.kiji.annotations.ApiAudience
+import org.kiji.annotations.ApiStability
+import org.kiji.annotations.Inheritance
 import org.kiji.express.KijiSuite
-import org.kiji.annotations.{Inheritance, ApiStability, ApiAudience}
 
 @ApiAudience.Private
 @ApiStability.Stable
@@ -43,7 +53,6 @@ object TestPipe {
 
 class TestPipe(val pipe: Pipe)
   extends FieldConversions
-  with TupleConversions
   with TestPipeConversions
   with Serializable
 {

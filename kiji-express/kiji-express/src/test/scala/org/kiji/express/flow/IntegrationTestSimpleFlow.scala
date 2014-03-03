@@ -111,8 +111,8 @@ class IntegrationTestSimpleFlow extends AbstractKijiIntegrationTest {
               .debug
               .write(NullSource)
         }
-        Mode.mode = Hdfs(false, conf = new JobConf(getConf))
-        Assert.assertTrue(new Job(Args(List())).run)
+        val args = Mode.putMode(Hdfs(false, conf = new JobConf(getConf)), Args(List()))
+        Assert.assertTrue(new Job(args).run)
       } finally {
         table.release()
       }

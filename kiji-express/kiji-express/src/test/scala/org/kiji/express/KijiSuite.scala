@@ -21,7 +21,6 @@ package org.kiji.express
 
 import java.util.concurrent.atomic.AtomicInteger
 
-import com.twitter.scalding.TupleConversions
 import org.scalatest.FunSuite
 
 import org.kiji.express.flow.FlowCell
@@ -32,9 +31,7 @@ import org.kiji.schema.layout.KijiTableLayout
 import org.kiji.schema.util.InstanceBuilder
 
 /** Contains convenience methods for writing tests that use Kiji. */
-trait KijiSuite
-    extends FunSuite
-    with TupleConversions {
+trait KijiSuite extends FunSuite {
   // Counter for incrementing instance names by.
   val counter: AtomicInteger = new AtomicInteger(0)
 

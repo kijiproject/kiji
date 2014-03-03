@@ -31,50 +31,60 @@ import org.kiji.express.KijiSuite
 import org.kiji.express.flow.KijiJob
 import org.kiji.express.flow.KijiOutput
 import org.kiji.express.flow.util.ResourceUtil._
-import org.kiji.schema.KijiTable
+import org.kiji.schema.KijiClientTest
+import org.kiji.schema.KijiURI
 import org.kiji.schema.layout.KijiTableLayout
+import org.kiji.schema.util.InstanceBuilder
 
 /**
  * Tests that the modifications we perform on the FlowDef as part of KijiJobs with HFile outputs
  * are functionally correct.
  */
 @RunWith(classOf[JUnitRunner])
-class FlowStepModificationSuite extends KijiSuite {
+class FlowStepModificationSuite extends KijiClientTest with KijiSuite {
+  // Hook into KijiClientTest since methods marked with JUnit's @Before and @After annotations won't
+  // run when using ScalaTest.
+  setupKijiTest()
 
   val avroLayout: KijiTableLayout = layout("layout/avro-types-complete.json")
-  val (uri, conf) =
-    doAndRelease(makeTestKijiTable(avroLayout)) { table: KijiTable =>
-      table.getURI().toString() -> table.getKiji.getConf
-    }
-  Mode.mode = Hdfs(false, conf)
+  val uri = {
+    val instanceUri = new InstanceBuilder(getKiji)
+        .withTable(avroLayout.getName, avroLayout)
+        .build()
+        .getURI
+
+    val tableUri = KijiURI.newBuilder(instanceUri).withTableName(avroLayout.getName).build()
+    tableUri.toString
+  }
+  val args = Mode.putMode(Hdfs(strict = false, getConf), Args(Nil))
 
   test("A map-only hfile output job is compiled to one stage.") {
-    val flow = new MapOnlyHFile(uri, Args("--hdfs")).buildFlow
+    val flow = new MapOnlyHFile(uri, args).buildFlow
     Assert.assertEquals(1, flow.getFlowSteps.size)
   }
 
   test("A map + reduce hfile output job is compiled to two stages.") {
-    val flow = new MapReduceHFile(uri, Args("--hdfs")).buildFlow
+    val flow = new MapReduceHFile(uri, args).buildFlow
     Assert.assertEquals(2, flow.getFlowSteps.size)
   }
 
   test("A map-only direct output job is compiled to one stage.") {
-    val flow = new MapOnlyDirect(uri, Args("--hdfs")).buildFlow
+    val flow = new MapOnlyDirect(uri, args).buildFlow
     Assert.assertEquals(1, flow.getFlowSteps.size)
   }
 
   test("A map + reduce direct output job is compiled to one stage.") {
-    val flow = new MapReduceDirect(uri, Args("--hdfs")).buildFlow
+    val flow = new MapReduceDirect(uri, args).buildFlow
     Assert.assertEquals(1, flow.getFlowSteps.size)
   }
 
   test("A map + reduce and map only hfile output job is compiled to three stages.") {
-    val flow = new MapOnlyAndMapReduceHFile(uri, Args("--hdfs")).buildFlow
+    val flow = new MapOnlyAndMapReduceHFile(uri, args).buildFlow
     Assert.assertEquals(3, flow.getFlowSteps.size)
   }
 
   test("A map + reduce and map only direct output job is compiled to two stages.") {
-    val flow = new MapOnlyAndMapReduceDirect(uri, Args("--hdfs")).buildFlow
+    val flow = new MapOnlyAndMapReduceDirect(uri, args).buildFlow
     Assert.assertEquals(2, flow.getFlowSteps.size)
   }
 }

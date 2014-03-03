@@ -21,18 +21,13 @@ package org.kiji.express.flow.framework.hfile
 
 import java.lang.UnsupportedOperationException
 
-import cascading.scheme.Scheme
 import cascading.tap.Tap
 import com.twitter.scalding.AccessMode
-import com.twitter.scalding.HadoopSchemeInstance
 import com.twitter.scalding.HadoopTest
 import com.twitter.scalding.Hdfs
 import com.twitter.scalding.Mode
 import com.twitter.scalding.Source
 import com.twitter.scalding.Write
-import org.apache.hadoop.mapred.JobConf
-import org.apache.hadoop.mapred.OutputCollector
-import org.apache.hadoop.mapred.RecordReader
 
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
@@ -76,13 +71,6 @@ final case class HFileKijiSource private[express] (
   import org.kiji.express.flow.KijiSource._
 
   private val hfileScheme = new HFileKijiScheme(timestampField, convertKeysToStrings(columns))
-
-  /**
-   * Creates a Scheme that writes to/reads from a Kiji table for usage with
-   * the hadoop runner.
-   */
-  override val hdfsScheme: Scheme[JobConf, RecordReader[_, _], OutputCollector[_, _], _, _] =
-    HadoopSchemeInstance(hfileScheme)
 
   /**
    * Create a connection to the physical data source (also known as a Tap in Cascading)

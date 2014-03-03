@@ -111,8 +111,7 @@ object PipeRunner {
     implicit val converter: TupleConverter[O] = new ProductTupleConverter[O]
 
     class InnerJob(args: Args) extends Job(args) {
-      override def buildFlow(implicit mode : Mode): Flow[_]  = {
-        validateSources(mode)
+      override def buildFlow: Flow[_]  = {
         mode.newFlowConnector(config).connect(
           pipe.getName, source.createTap(Read), sink.createTap(Write), pipe)
       }

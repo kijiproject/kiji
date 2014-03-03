@@ -19,8 +19,7 @@
 
 package org.kiji.express.flow
 
-import com.twitter.scalding.Args
-import com.twitter.scalding.Mode
+import com.twitter.scalding.{Hdfs, Args, Mode}
 import org.apache.avro.generic.GenericEnumSymbol
 import org.apache.avro.generic.GenericFixed
 import org.apache.avro.generic.GenericRecord
@@ -86,9 +85,9 @@ class ReaderSchemaSuite extends KijiClientTest with KijiSuite {
     val inputCol = QualifiedColumnInputSpec(family, column, schemaSpec = schemaSpec)
     val outputCol = QualifiedColumnOutputSpec(family, column, outputSchema)
 
-    val args = Args("--hdfs")
-    Mode.mode = Mode(args, conf)
-    new ReadWriteJob[T](uri, inputCol, outputCol, writeEid, args).run
+    val argsWithMode = Mode.putMode(Hdfs(strict = true, conf), Args(Nil))
+
+    new ReadWriteJob[T](uri, inputCol, outputCol, writeEid, argsWithMode).run
     assert(value === getValue[T](writeEid, column))
   }
 

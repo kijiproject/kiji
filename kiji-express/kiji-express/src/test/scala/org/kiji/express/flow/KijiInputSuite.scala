@@ -24,11 +24,7 @@ import java.util.UUID
 import scala.collection.JavaConverters._
 
 import cascading.tuple.Fields
-import com.twitter.scalding.Hdfs
-import com.twitter.scalding.Local
-import com.twitter.scalding.Mode
-import com.twitter.scalding.TupleConverter
-import com.twitter.scalding.TupleSetter
+import com.twitter.scalding._
 import org.apache.avro.generic.GenericRecord
 import org.apache.avro.generic.GenericRecordBuilder
 import org.apache.avro.specific.SpecificRecord
@@ -48,12 +44,13 @@ import org.kiji.schema.Kiji
 import org.kiji.schema.KijiClientTest
 import org.kiji.schema.KijiURI
 import org.kiji.schema.util.InstanceBuilder
+import com.twitter.scalding.Hdfs
+import com.twitter.scalding.Local
 
 @RunWith(classOf[JUnitRunner])
 class KijiInputSuite
     extends KijiClientTest
-    with KijiSuite
-    with BeforeAndAfter {
+    with KijiSuite {
   import KijiInputSuite._
 
   def kijiInputTest[T](
@@ -69,27 +66,42 @@ class KijiInputSuite
   ) {
     if (testHdfsMode) {
       test("[HDFS] " + testName) {
-        val testMode = Hdfs(strict = true, conf = new JobConf(getConf))
+        val nilArgsWithMode =
+            Mode.putMode(Hdfs(strict = true, conf = new JobConf(getConf)), Args(Nil))
         // Set the global mode variable in case other methods rely on it being injected via an
         // implicit evidence parameter.
-        Mode.mode = testMode
         val uri = setupTestTable(getKiji)
 
         val source = sourceConstructor(uri)
-        new InputSourceValidationJob[T](source, expectedValues, expectedFields)(conv, set).run
+        new InputSourceValidationJob[T](
+            source,
+            expectedValues,
+            expectedFields,
+            nilArgsWithMode
+        )(
+            conv,
+            set
+        ).run
       }
     }
 
     if (testLocalMode) {
       test("[Local] " + testName) {
-        val testMode = Local(strict = true)
+        val nilArgsWithMode = Mode.putMode(Local(strictSources = true), Args(Nil))
         // Set the global mode variable in case other methods rely on it being injected via an
         // implicit evidence parameter.
-        Mode.mode = testMode
         val uri = setupTestTable(getKiji)
 
         val source = sourceConstructor(uri)
-        new InputSourceValidationJob[T](source, expectedValues, expectedFields)(conv, set).run
+        new InputSourceValidationJob[T](
+            source,
+            expectedValues,
+            expectedFields,
+            nilArgsWithMode
+        )(
+            conv,
+            set
+        ).run
       }
     }
   }
@@ -100,15 +112,6 @@ class KijiInputSuite
 
   // Decrease the jobtracker poll time.
   getConf.setInt("mapreduce.client.completion.pollinterval", 250)
-
-  /* Undo all changes to hdfs mode. */
-  before {
-    Mode.mode = Local(strict = true)
-  }
-
-  after {
-    Mode.mode = Local(strict = true)
-  }
 
   kijiInputTest(
       testName = "KijiSource can read cells with default options",
