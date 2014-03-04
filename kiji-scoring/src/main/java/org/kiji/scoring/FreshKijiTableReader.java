@@ -715,7 +715,7 @@ public interface FreshKijiTableReader extends KijiTableReader {
         } else {
           mParameters.putAll(parameters);
         }
-        return null;
+        return this;
       }
 
       /**
