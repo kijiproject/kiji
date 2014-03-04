@@ -1573,10 +1573,14 @@ public class TestInternalFreshKijiTableReader {
         .withTable(mTable)
         .withTimeout(500)
         .build();
-    final String expected = "new-val";
-    final String actual = freshReader.get(
-        eid, "family", "qual0", FreshRequestOptions.Builder.create().build());
-    assertEquals(expected, actual);
+    try {
+      final String expected = "new-val";
+      final String actual = freshReader.get(
+          eid, "family", "qual0", FreshRequestOptions.Builder.create().build());
+      assertEquals(expected, actual);
+    } finally {
+      freshReader.close();
+    }
   }
 
   @Test
@@ -1600,9 +1604,13 @@ public class TestInternalFreshKijiTableReader {
             .withTable(mTable)
             .withTimeout(500)
             .build();
-    final String expected = "foo-val";
-    final String actual = freshReader.get(
-        eid, "family", "qual0", FreshRequestOptions.Builder.create().build()).toString();
-    assertEquals(expected, actual);
+    try {
+      final String expected = "foo-val";
+      final String actual = freshReader.get(
+          eid, "family", "qual0", FreshRequestOptions.Builder.create().build()).toString();
+      assertEquals(expected, actual);
+    } finally {
+      freshReader.close();
+    }
   }
 }
