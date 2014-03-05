@@ -2,6 +2,10 @@
 
                         Kiji Hive Adapter Release Notes
 
+Version 0.9.2
+  * KIJIHIVE-24. bento-hive.sh now will use an existing Hive installation
+      when present(running on an existing cluster).
+
 Version 0.9.1
   * KIJIHIVE-43. Fixed an issue where data requests were not being properly
       serialized when multiple tables were used in one query(joins).

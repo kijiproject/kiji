@@ -18,14 +18,14 @@
 #   limitations under the License.
 
 # Configuration parameters for this script
-CLOUDERA_URL="http://archive.cloudera.com/cdh4/cdh/4/"
-CDH_VERSION="cdh4.3.0"
-HIVE_VERSION="0.10.0-${CDH_VERSION}"
+KIJI_HIVE_ADAPTER_VERSION="${project.version}"
+HIVE_VERSION="${hive.version}"
 HIVE_DIRECTORY="hive-${HIVE_VERSION}"
+
+# Parameters for automatically downloading Hive from Cloudera
+CLOUDERA_URL="http://archive.cloudera.com/cdh4/cdh/4/"
 HIVE_ARCHIVE="hive-${HIVE_VERSION}.tar.gz"
 HIVE_URL="${CLOUDERA_URL}${HIVE_ARCHIVE}"
-HBASE_JAR="hbase-0.94.6-${CDH_VERSION}-security.jar"
-KIJI_HIVE_ADAPTER_VERSION="${project.version}"
 
 # Resolve a symlink to its absolute target, like how 'readlink -f' works on Linux.
 function resolve_symlink() {
@@ -114,10 +114,6 @@ command="$1"
 KIJI_HIVE_ADAPTER_HOME="${bin}/../"
 KIJI_HIVE_ADAPTER_LIB="${KIJI_HIVE_ADAPTER_HOME}lib/"
 
-# Set metastore_db to the Kiji Hive Adapter root so that invocations from different directions
-# use the same metastore
-HIVE_OPTIONS="--hiveconf javax.jdo.option.ConnectionURL=jdbc:derby:;databaseName=$KIJI_HIVE_ADAPTER_HOME/metastore_db;create=true"
-
 # First make sure we have everything we need in the environment.
 if [ -z "${KIJI_HOME}" -o ! -d "${KIJI_HOME}" ]; then
     echo "Please set your KIJI_HOME environment variable."
@@ -128,38 +124,55 @@ if [ -z "${HBASE_HOME}" -o ! -d "${HBASE_HOME}" ]; then
     exit 1
 fi
 
-# If HIVE_HOME isn't set and we find it in our lib directory, use that
-if [ -z "${HIVE_HOME}" -a -d "${KIJI_HIVE_ADAPTER_LIB}${HIVE_DIRECTORY}" ]; then
-    HIVE_HOME="${KIJI_HIVE_ADAPTER_LIB}${HIVE_DIRECTORY}"
+# Ensure that we have the HBase security jar to add to the environment
+HBASE_LIB=$(find ${HBASE_HOME} -name "hbase-*-security.jar")
+if [ ! -e "${HBASE_LIB}" ]; then
+    echo "Could not detect HBase security jar: ${HBASE_LIB}"
+    exit 1
 fi
 
-# If we can't find Hive, offer to download it into our lib directory
-if [ -z "${HIVE_HOME}" -o ! -d "${HIVE_HOME}" ]; then
-    echo HIVE_HOME doesn't exist or doesn't point to a valid location.
-    read -p "Would you like to download Hive from Cloudera(y/n)?" INSTALL_HIVE
+if [ $(which hive) ]; then
+    # If Hive is already on the path then use the system version
+    HIVE_BINARY="$(which hive)"
+else
+    # Running Hive against a BentoBox
 
-    if [[ $INSTALL_HIVE =~ ^[Yy]$ ]]; then
-      wget ${HIVE_URL} -O ${KIJI_HIVE_ADAPTER_LIB}/${HIVE_ARCHIVE}
-      tar -xzf ${KIJI_HIVE_ADAPTER_LIB}/${HIVE_ARCHIVE} -C ${KIJI_HIVE_ADAPTER_LIB}
-      HIVE_HOME="${KIJI_HIVE_ADAPTER_LIB}/${HIVE_DIRECTORY}"
-    else
-      echo "No Hive installation present."
-      exit 1
+    # Set metastore_db to the Kiji Hive Adapter root so that invocations from different directions
+    # use the same metastore
+    HIVE_OPTIONS="--hiveconf javax.jdo.option.ConnectionURL=jdbc:derby:;databaseName=$KIJI_HIVE_ADAPTER_HOME/metastore_db;create=true"
+
+    # If HIVE_HOME isn't set and we find it in our lib directory, use that
+    if [ -z "${HIVE_HOME}" -a -d "${KIJI_HIVE_ADAPTER_LIB}${HIVE_DIRECTORY}" ]; then
+        HIVE_HOME="${KIJI_HIVE_ADAPTER_LIB}${HIVE_DIRECTORY}"
     fi
-fi
 
-HIVE_BINARY="${HIVE_HOME}/bin/hive"
+    # If we can't find Hive, offer to download it into our lib directory
+    if [ -z "${HIVE_HOME}" -o ! -d "${HIVE_HOME}" ]; then
+        echo HIVE_HOME doesn't exist or doesn't point to a valid location.
+        read -p "Would you like to download Hive from Cloudera(y/n)?" INSTALL_HIVE
+
+        if [[ $INSTALL_HIVE =~ ^[Yy]$ ]]; then
+          wget ${HIVE_URL} -O ${KIJI_HIVE_ADAPTER_LIB}/${HIVE_ARCHIVE}
+          tar -xzf ${KIJI_HIVE_ADAPTER_LIB}/${HIVE_ARCHIVE} -C ${KIJI_HIVE_ADAPTER_LIB}
+          HIVE_HOME="${KIJI_HIVE_ADAPTER_LIB}/${HIVE_DIRECTORY}"
+        else
+          echo "No Hive installation present."
+          exit 1
+        fi
+    fi
+    HIVE_BINARY="${HIVE_HOME}/bin/hive"
+
+    # Use user classpath precedence for jobs created in MapReduce mode.
+    export HADOOP_CONF_DIR="${KIJI_HIVE_ADAPTER_HOME}/conf"
+
+fi
 
 KIJI_HIVE_LIB="${KIJI_HIVE_ADAPTER_LIB}/kiji-hive-adapter-${KIJI_HIVE_ADAPTER_VERSION}.jar"
 export HADOOP_CLASSPATH="${KIJI_HIVE_LIB}:${HADOOP_CLASSPATH}"
 
-# Use user classpath precedence for jobs created in MapReduce mode.
-export HADOOP_CONF_DIR="${KIJI_HIVE_ADAPTER_HOME}/conf"
-
 # Force user classpath precedence for jobs created in local mode.
 export HADOOP_USER_CLASSPATH_FIRST=true
 
-HBASE_LIB="${HBASE_HOME}/${HBASE_JAR}"
 HIVERC="${KIJI_HIVE_ADAPTER_HOME}.hiverc"
 
 case $command in
