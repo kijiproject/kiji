@@ -22,7 +22,9 @@
     <maven.compiler.source>1.6</maven.compiler.source>
     <maven.compiler.target>1.6</maven.compiler.target>
 
+    <skipTests>false</skipTests>
     <skipVerify>false</skipVerify>
+    <skipUnitTests>false</skipUnitTests>
     <redirectTestOutputToFile>true</redirectTestOutputToFile>
     <!-- Integration test parallelism mode: {none, methods, classes}. -->
     <it.parallel>classes</it.parallel>
@@ -46,12 +48,12 @@
     <junit.version>4.10</junit.version>
     <kiji-common-flags.version>1.0.7</kiji-common-flags.version>
     <log4j.version>1.2.16</log4j.version>
-    <scala-jline.version>2.9.0-1</scala-jline.version>
-    <scala.version>2.9.2</scala.version>
-    <scalatest.version>1.8</scalatest.version>
+    <scala.version>2.10</scala.version>
+    <scala-library.version>2.10.3</scala-library.version>
+    <scalatest.version>2.0</scalatest.version>
     <slf4j-api.version>1.7.2</slf4j-api.version>
     <slf4j-log4j12.version>1.7.2</slf4j-log4j12.version>
-    <specs2.version>1.12</specs2.version>
+    <specs2.version>2.3.8</specs2.version>
 
     <!-- versions for maven plugins -->
     <cobertura-maven-plugin.version>2.6</cobertura-maven-plugin.version>
@@ -66,10 +68,10 @@
     <maven-javadoc-plugin.version>2.8</maven-javadoc-plugin.version>
     <maven-release-plugin.version>2.2.2</maven-release-plugin.version>
     <maven-replacer-plugin.version>1.3.8</maven-replacer-plugin.version>
-    <maven-scala-plugin.version>2.15.2</maven-scala-plugin.version>
     <maven-site-plugin.version>3.1</maven-site-plugin.version>
-    <maven-surefire-plugin.version>2.12</maven-surefire-plugin.version>
-    <scalastyle-plugin.version>0.1.0</scalastyle-plugin.version>
+    <maven-surefire-plugin.version>2.16</maven-surefire-plugin.version>
+    <scala-maven-plugin.version>3.1.6</scala-maven-plugin.version>
+    <scalastyle-plugin.version>0.3.2</scalastyle-plugin.version>
     <versions-maven-plugin.version>2.1</versions-maven-plugin.version>
   </properties>
 
@@ -169,28 +171,46 @@
         </plugin>
 
         <plugin>
-          <groupId>org.scala-tools</groupId>
-          <artifactId>maven-scala-plugin</artifactId>
-          <version>${maven-scala-plugin.version}</version>
+          <groupId>net.alchim31.maven</groupId>
+          <artifactId>scala-maven-plugin</artifactId>
+          <version>${scala-maven-plugin.version}</version>
           <executions>
             <execution>
+              <id>compilation</id>
               <goals>
                 <goal>compile</goal>
                 <goal>testCompile</goal>
               </goals>
+              <configuration>
+                <args>
+                  <arg>-unchecked</arg>
+                  <arg>-deprecation</arg>
+                </args>
+                <sendJavaToScalac>true</sendJavaToScalac>
+                <jvmArgs>
+                  <!-- Fixes the build on OS X based computers. -->
+                  <jvmArg>-Xmx2G</jvmArg>
+                </jvmArgs>
+                <!-- Fixes warnings from multiple scala version checks against scala 2.10. -->
+                <scalaCompatVersion>2.10</scalaCompatVersion>
+              </configuration>
+            </execution>
+            <execution>
+              <id>scaladocs</id>
+              <phase>prepare-package</phase>
+              <goals>
+                <goal>doc</goal>
+              </goals>
+              <configuration>
+                <outputDirectory>${project.build.directory}/apidocs</outputDirectory>
+                <reportOutputDirectory>${project.build.directory}/apidocs</reportOutputDirectory>
+                <jvmArgs>
+                  <!-- Fixes the build on OS X based computers. -->
+                  <jvmArg>-Xmx2G</jvmArg>
+                </jvmArgs>
+              </configuration>
             </execution>
           </executions>
-          <configuration>
-            <includes>
-              <include>**/*.scala</include>
-            </includes>
-            <displayCmd>true</displayCmd>
-            <args>
-              <arg>-deprecation</arg>
-              <arg>-unchecked</arg>
-              <arg>-explaintypes</arg>
-            </args>
-          </configuration>
         </plugin>
 
         <plugin>
@@ -386,31 +406,6 @@
         </plugin>
 
         <plugin>
-          <!-- projects inheriting from this pom and enabling this plugin
-               must supply an includeFilter.xml and excludeFilter.xml file.
-          -->
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>findbugs-maven-plugin</artifactId>
-          <version>${findbugs-maven-plugin.version}</version>
-          <configuration>
-            <skip>${skipVerify}</skip>
-            <effort>Max</effort>
-            <threshold>Low</threshold>
-            <includeFilterFile>src/main/findbugs/includeFilter.xml</includeFilterFile>
-            <excludeFilterFile>src/main/findbugs/excludeFilter.xml</excludeFilterFile>
-            <xmlOutput>true</xmlOutput>
-          </configuration>
-          <executions>
-            <execution>
-              <phase>verify</phase>
-              <goals>
-                <goal>check</goal>
-              </goals>
-            </execution>
-          </executions>
-        </plugin>
-
-        <plugin>
           <!-- If you include this in your config, you must supply a
                src/main/scalastyle/scalastyle_config.xml file. -->
           <groupId>org.scalastyle</groupId>
@@ -428,6 +423,31 @@
           </configuration>
           <executions>
             <execution>
+              <goals>
+                <goal>check</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+
+        <plugin>
+          <!-- projects inheriting from this pom and enabling this plugin
+               must supply an includeFilter.xml and excludeFilter.xml file.
+          -->
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>findbugs-maven-plugin</artifactId>
+          <version>${findbugs-maven-plugin.version}</version>
+          <configuration>
+            <skip>${skipVerify}</skip>
+            <effort>Max</effort>
+            <threshold>Low</threshold>
+            <includeFilterFile>src/main/findbugs/includeFilter.xml</includeFilterFile>
+            <excludeFilterFile>src/main/findbugs/excludeFilter.xml</excludeFilterFile>
+            <xmlOutput>true</xmlOutput>
+          </configuration>
+          <executions>
+            <execution>
+              <phase>verify</phase>
               <goals>
                 <goal>check</goal>
               </goals>
@@ -505,12 +525,6 @@
         <groupId>commons-io</groupId>
         <artifactId>commons-io</artifactId>
         <version>${commons-io.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>jline</artifactId>
-        <version>${scala-jline.version}</version>
-        <scope>compile</scope>
       </dependency>
       <dependency>
         <groupId>junit</groupId>
@@ -604,6 +618,24 @@
         <scope>test</scope>
       </dependency>
       <dependency>
+        <groupId>org.scala-lang</groupId>
+        <artifactId>scala-library</artifactId>
+        <version>${scala-library.version}</version>
+        <scope>compile</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-lang</groupId>
+        <artifactId>scala-compiler</artifactId>
+        <version>${scala-library.version}</version>
+        <scope>compile</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.scala-lang</groupId>
+        <artifactId>jline</artifactId>
+        <version>${scala-library.version}</version>
+        <scope>compile</scope>
+      </dependency>
+      <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>slf4j-api</artifactId>
         <version>${slf4j-api.version}</version>
@@ -622,18 +654,6 @@
         <scope>test</scope>
       </dependency>
       <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scala-library</artifactId>
-        <version>${scala.version}</version>
-        <scope>compile</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scala-compiler</artifactId>
-        <version>${scala.version}</version>
-        <scope>compile</scope>
-      </dependency>
-      <dependency>
         <groupId>org.scalatest</groupId>
         <artifactId>scalatest_${scala.version}</artifactId>
         <version>${scalatest.version}</version>
@@ -645,7 +665,6 @@
         <version>${specs2.version}</version>
         <scope>test</scope>
       </dependency>
-
     </dependencies>
   </dependencyManagement>
 
