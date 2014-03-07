@@ -87,11 +87,15 @@ class TestFormattedKeySpec extends CommandTestCase {
     "be okay with a short hash prefix" in {
       val spec = new HashPrefixKeySpec(2)
       spec.validate()
+
+      ok("Completed test")
     }
 
     "be okay with a long hash prefix" in {
       val spec = new HashPrefixKeySpec(16)
       spec.validate()
+
+      ok("Completed test")
     }
 
     "require hash prefix <= 16" in {

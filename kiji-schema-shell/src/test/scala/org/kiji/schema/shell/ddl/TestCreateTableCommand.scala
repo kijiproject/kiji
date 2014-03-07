@@ -36,6 +36,8 @@ class TestCreateTableCommand extends CommandTestCase {
       val ctcmd = new CreateTableCommand(env, "foo", Some("desc"), DefaultKeySpec, List(), Map())
       (CreateTableCommand.DDL_LAYOUT_VERSION.compareTo(ctcmd.MAX_LAYOUT_VERSION) must
           beLessThan(1))
+
+      ok("Completed test")
     }
 
     "support a max version less than KijiSchema's max supported version" in {
@@ -45,16 +47,22 @@ class TestCreateTableCommand extends CommandTestCase {
       val ctcmd = new CreateTableCommand(env, "foo", Some("desc"), DefaultKeySpec, List(), Map())
       (ctcmd.MAX_LAYOUT_VERSION.compareTo(KijiTableLayout.getMaxSupportedLayoutVersion())
           must beLessThan(1))
+
+      ok("Completed test")
     }
 
     "require 1+ locality groups" in {
       val ctcmd = new CreateTableCommand(env, "foo", Some("desc"), DefaultKeySpec, List(), Map())
       ctcmd.validateArguments() must throwA[DDLException]
+
+      ok("Completed test")
     }
 
     "require non-empty name" in {
       val ctcmd = new CreateTableCommand(env, "", Some("desc"), RawFormattedKeySpec, List(), Map())
       ctcmd.validateArguments() must throwA[DDLException]
+
+      ok("Completed test")
     }
 
     "create reasonable looking Avro records" in {
@@ -76,6 +84,8 @@ class TestCreateTableCommand extends CommandTestCase {
       // Check that this succeeds. MockKijiSystem will validate that enough
       // default values are populated.
       ctcmd.applyUpdate(layout.build())
+
+      ok("Completed test")
     }
 
     "support hash prefix(2) as default row format" in {
@@ -95,6 +105,8 @@ class TestCreateTableCommand extends CommandTestCase {
       // Check that this succeeds. MockKijiSystem will validate that enough
       // default values are populated.
       ctcmd.applyUpdate(layout.build())
+
+      ok("Completed test")
     }
 
     "support row format raw" in {
@@ -110,6 +122,8 @@ class TestCreateTableCommand extends CommandTestCase {
       // Check that this succeeds. MockKijiSystem will validate that enough
       // default values are populated.
       ctcmd.applyUpdate(layout.build())
+
+      ok("Completed test")
     }
 
     "support row format hash prefix" in {
@@ -128,6 +142,8 @@ class TestCreateTableCommand extends CommandTestCase {
       // Check that this succeeds. MockKijiSystem will validate that enough
       // default values are populated.
       ctcmd.applyUpdate(layout.build())
+
+      ok("Completed test")
     }
 
     "fail if hashprefix size is greater than 16" in {
@@ -136,6 +152,8 @@ class TestCreateTableCommand extends CommandTestCase {
           new HashPrefixKeySpec(20), List(locGroup), Map())
 
       ctcmd.validateArguments() must throwA[DDLException]
+
+      ok("Completed test")
     }
 
     "fail if hashprefix size is less than 1" in {
@@ -149,6 +167,8 @@ class TestCreateTableCommand extends CommandTestCase {
           new HashPrefixKeySpec(-2), List(locGroup), Map())
 
       ctcmd.validateArguments() must throwA[DDLException]
+
+      ok("Completed test")
     }
 
     "refuse to create tables that already exist" in {
@@ -163,6 +183,8 @@ class TestCreateTableCommand extends CommandTestCase {
 
       ctcmd.applyUpdate(layout.build()) // This should succeed.
       ctcmd.validateArguments() must throwA[DDLException] // But now the table exists. This fails.
+
+      ok("Completed test")
     }
   }
 }

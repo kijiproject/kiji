@@ -36,6 +36,8 @@ class TestEnvironmentPlugin extends SpecificationWithJUnit {
   "Environment plugins" should {
     "EnvPlugin test impl should pass the PPTK" in {
       new ParserPluginTestKit(classOf[EnvPluginFactoryImpl]).testAll
+
+      ok("Completed test")
     }
 
     "not respond to commands when not loaded" in {

@@ -78,6 +78,8 @@ class TestClient extends SpecificationWithJUnit {
 
       client.close()
       environment.kijiSystem.shutdown()
+
+      ok("Completed test")
     }
 
     "tolerate statements not terminated with a semicolon" in {
@@ -98,6 +100,8 @@ class TestClient extends SpecificationWithJUnit {
           |  MAP TYPE FAMILY integers COUNTER
           |)""".stripMargin('|'))
       client.close()
+
+      ok("Completed test")
     }
 
     "handle sequential clients" in {
@@ -121,6 +125,8 @@ class TestClient extends SpecificationWithJUnit {
       val client2 = Client.newInstance(uri)
       client2.executeUpdate("DROP TABLE foo")
       client.close()
+
+      ok("Completed test")
     }
 
     "throw on syntax err" in {
@@ -136,6 +142,8 @@ class TestClient extends SpecificationWithJUnit {
       } finally {
         client.close()
       }
+
+      ok("Completed test")
     }
 
     "throw on semantic err" in {
@@ -150,6 +158,8 @@ class TestClient extends SpecificationWithJUnit {
       } finally {
         client.close()
       }
+
+      ok("Completed test")
     }
   }
 

@@ -43,6 +43,8 @@ class TestSecurityModule
   "SecurityModule" should {
     "pass the PPTK" in {
       new ParserPluginTestKit(classOf[SecurityParserPluginFactory]).testAll
+
+      ok("Completed test")
     }
 
     "Take correct actions on a GRANT command" in {
@@ -72,6 +74,8 @@ class TestSecurityModule
         res2.successful mustEqual true
         res2.get.exec()
       }
+
+      ok("Completed test")
     }
 
     "Take correct actions on a REVOKE command" in {
@@ -101,6 +105,8 @@ class TestSecurityModule
         res2.successful mustEqual true
         res2.get.exec()
       }
+
+      ok("Completed test")
     }
 
     "Take correct actions on a GRANT command with multiple actions" in {
@@ -131,6 +137,8 @@ class TestSecurityModule
         res2.successful mustEqual true
         res2.get.exec()
       }
+
+      ok("Completed test")
     }
 
     "Take correct actions on a REVOKE command with multiple actions" in {
@@ -161,6 +169,8 @@ class TestSecurityModule
         res2.successful mustEqual true
         res2.get.exec()
       }
+
+      ok("Completed test")
     }
 
     "Take correct actions on a GRANT command without optional keywords in the command" in {
@@ -191,6 +201,8 @@ class TestSecurityModule
         res2.successful mustEqual true
         res2.get.exec()
       }
+
+      ok("Completed test")
     }
   }
 

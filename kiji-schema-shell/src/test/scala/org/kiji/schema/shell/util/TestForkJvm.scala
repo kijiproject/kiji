@@ -37,6 +37,8 @@ class TestForkJvm extends SpecificationWithJUnit {
   "Environment plugins" should {
     "ForkTestPlugin test impl should pass the PPTK" in {
       new ParserPluginTestKit(classOf[ForkTestPluginFactoryImpl]).testAll
+
+      ok("Completed test")
     }
 
     "fork a child JVM and run the correct main() method" in {

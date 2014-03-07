@@ -71,6 +71,8 @@ class TestValidationModes
         client.close()
         kijiSystem.shutdown()
       }
+
+      ok("Completed test")
     }
   }
 }

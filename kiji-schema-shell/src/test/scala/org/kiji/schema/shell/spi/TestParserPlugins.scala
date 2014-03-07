@@ -36,10 +36,14 @@ class TestParserPlugins extends SpecificationWithJUnit {
   "Parser plugin modules" should {
     "Test impl1 should pass the PPTK" in {
       new ParserPluginTestKit(classOf[PluginFactoryImpl1]).testAll
+
+      ok("Completed test")
     }
 
     "Test impl2 should pass the PPTK" in {
       new ParserPluginTestKit(classOf[PluginFactoryImpl2]).testAll
+
+      ok("Completed test")
     }
 
     "not respond to commands when not loaded" in {

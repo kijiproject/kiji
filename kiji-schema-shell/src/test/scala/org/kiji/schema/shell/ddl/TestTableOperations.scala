@@ -692,6 +692,8 @@ class TestTableOperations extends CommandTestCase {
           getSchemaTextFor(env3, col.getColumnSchema().getDefaultReader()) mustEqual "\"int\""
         }
       }
+
+      ok("Completed test")
     }
 
     "dump table ddl correctly" in {
@@ -982,6 +984,8 @@ class TestTableOperations extends CommandTestCase {
       res.successful mustEqual true
       res.get must beAnInstanceOf[DropInstanceCommand]
       res.get.exec() must throwA[DDLException] // Cannot drop the current instance.
+
+      ok("Completed test")
     }
   }
 

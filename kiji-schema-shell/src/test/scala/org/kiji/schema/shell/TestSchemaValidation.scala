@@ -90,6 +90,8 @@ class TestSchemaValidation
 
       client.close()
       env.kijiSystem.shutdown()
+
+      ok("Test completed")
     }
 
     "refuse an incompatible writer schema" in {
@@ -112,6 +114,8 @@ class TestSchemaValidation
         client.close()
         kijiSystem.shutdown()
       }
+
+      ok("Test completed")
     }
 
     "refuse an incompatible reader schema" in {
@@ -134,6 +138,8 @@ class TestSchemaValidation
         client.close()
         kijiSystem.shutdown()
       }
+
+      ok("Test completed")
     }
 
     "refuse a subtly incompatible writer schema" in {
@@ -157,6 +163,8 @@ class TestSchemaValidation
         client.close()
         kijiSystem.shutdown()
       }
+
+      ok("Test completed")
     }
 
     "add a reader schema" in {
@@ -202,6 +210,8 @@ class TestSchemaValidation
 
       client.close()
       env.kijiSystem.shutdown()
+
+      ok("Test completed")
     }
 
     "add a writer schema" in {
@@ -247,6 +257,8 @@ class TestSchemaValidation
 
       client.close()
       env.kijiSystem.shutdown()
+
+      ok("Test completed")
     }
 
     "drop a writer schema" in {
@@ -286,6 +298,8 @@ class TestSchemaValidation
 
       client.close()
       env.kijiSystem.shutdown()
+
+      ok("Test completed")
     }
 
     "allow a series of changes to reader schemas permitting int-to-long conversion" in {
@@ -339,6 +353,8 @@ class TestSchemaValidation
 
       client.close()
       env.kijiSystem.shutdown()
+
+      ok("Test completed")
     }
 
     "remove the default reader if it is also dropped as a reader schema" in {
@@ -384,6 +400,8 @@ class TestSchemaValidation
 
       client.close()
       env.kijiSystem.shutdown()
+
+      ok("Test completed")
     }
 
     "allow creation of empty schema lists for a column" in {
@@ -445,6 +463,8 @@ class TestSchemaValidation
 
       client.close()
       env.kijiSystem.shutdown()
+
+      ok("Test completed")
     }
 
     "allow setting schema by class" in {
@@ -495,6 +515,8 @@ class TestSchemaValidation
 
       client.close()
       env.kijiSystem.shutdown()
+
+      ok("Test completed")
     }
 
     "allow Avro schema via DSL" in {
@@ -541,6 +563,8 @@ class TestSchemaValidation
 
       client.close()
       env.kijiSystem.shutdown()
+
+      ok("Test completed")
     }
 
     "let the user add a schema redundantly" in {
@@ -582,6 +606,8 @@ class TestSchemaValidation
 
       client.close()
       env.kijiSystem.shutdown()
+
+      ok("Test completed")
     }
 
     "let the user drop a schema that wasn't attached" in {
@@ -623,6 +649,8 @@ class TestSchemaValidation
 
       client.close()
       env.kijiSystem.shutdown()
+
+      ok("Test completed")
     }
   }
 }

@@ -90,6 +90,8 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
       maybeInfo.get.getColumns().size mustEqual 3
 
       environment.kijiSystem.shutdown()
+
+      ok("Completed test")
     }
 
     "create and drop a table" in {
@@ -128,6 +130,8 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
       maybeLayout2 must beNone
 
       environment.kijiSystem.shutdown()
+
+      ok("Completed test")
     }
 
     "create and alter a table" in {
@@ -212,6 +216,8 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
       layout3.getDescription().toString mustEqual "ohai"
 
       environment.kijiSystem.shutdown()
+
+      ok("Completed test")
     }
 
     "create a multi-region table" in {
@@ -255,6 +261,8 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
       regionCount.get mustEqual "10"
 
       environment.kijiSystem.shutdown()
+
+      ok("Completed test")
     }
 
     "refuse to create a multi-region RAW table" in {
@@ -284,6 +292,8 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
       maybeLayout must beNone
 
       environment.kijiSystem.shutdown()
+
+      ok("Completed test")
     }
 
     "create, use, and drop an instance" in {
@@ -349,6 +359,8 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
       val env8 = res7.get.exec()
 
       env8.kijiSystem.shutdown()
+
+      ok("Completed test")
     }
 
     "use metatable entries correctly." in {
@@ -367,6 +379,8 @@ WITH LOCALITY GROUP default WITH DESCRIPTION 'main storage' (
       ret.get mustEqual "AWellDefinedValue"
 
       environment.kijiSystem.shutdown()
+
+      ok("Completed test")
     }
   }
 
