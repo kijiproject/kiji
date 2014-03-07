@@ -105,16 +105,16 @@ tutorial_music_devel : /tutorials/music-recommendation/devel
 tutorial_express_devel : /tutorials/express-recommendation/devel
 tutorial_scoring_devel : /tutorials/scoring/devel
 
-schema_devel_version : 1.3.7
+schema_devel_version : 1.3.8
 schema_devel_branch : master
 
-mr_devel_version : 1.2.5
+mr_devel_version : 1.2.6
 mr_devel_branch : master
 
 mrlib_devel_version : 1.1.5
 mrlib_devel_branch : master
 
-express_devel_version : 1.0.2
+express_devel_version : 1.0.3
 express_devel_branch : master
 
 phonebook_devel_version : 1.1.4
@@ -125,10 +125,10 @@ music_devel_branch : master
 music_express_devel_version : 1.0.2
 music_express_devel_branch : master
 
-rest_devel_version: 1.2.2
+rest_devel_version: 1.2.3
 rest_devel_branch : master
 
-scoring_devel_version : 0.12.0
+scoring_devel_version : 0.13.0
 scoring_devel_branch : master
 
 # All Jekyll-Bootstrap specific configurations are namespaced into this hash
@@ -334,3 +334,13 @@ tutorial_music_1_1_4 : /tutorials/music-recommendation/1.1.4
 tutorial_exp_music_1_0_1 : /tutorials/express-recommendation/1.0.1
 tutorial_scoring_0_11_0 : /tutorials/scoring/0.11.0
 api_mrlib_1_1_4 : http://api-docs.kiji.org/kiji-mapreduce-lib/1.1.4/org/kiji/mapreduce/lib
+userguide_schema_1_3_7 : /userguides/schema/1.3.7
+api_schema_1_3_7 : http://api-docs.kiji.org/kiji-schema/1.3.7/org/kiji/schema
+api_mr_1_2_5 : http://api-docs.kiji.org/kiji-mapreduce/1.2.5/org/kiji/mapreduce
+userguide_mapreduce_1_2_5 : /userguides/mapreduce/1.2.5
+userguide_rest_1_2_2 : /userguides/rest/1.2.2
+userguide_express_1_0_2 : /userguides/express/1.0.2
+api_express_1_0_2 : http://api-docs.kiji.org/kiji-express/1.0.2/org/kiji/express
+userguide_scoring_0_12_0 : /userguides/scoring/0.12.0
+api_scoring_0_12_0 : http://api-docs.kiji.org/kiji-scoring/0.12.0/org/kiji/scoring
+tutorial_scoring_0_12_0 : /tutorials/scoring/0.12.0

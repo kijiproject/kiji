@@ -31,24 +31,24 @@
 #    and our release artifacts.
 
 # KijiSchema version
-SCHEMA_FLAT_VER=1_3_6
-SCHEMA_VER=1.3.6
+SCHEMA_FLAT_VER=1_3_7
+SCHEMA_VER=1.3.7
 
 # KijiMR version
-KIJIMR_FLAT_VER=1_2_4
-KIJIMR_VER=1.2.4
+KIJIMR_FLAT_VER=1_2_5
+KIJIMR_VER=1.2.5
 
 # KijiMR Library version
 MRLIB_FLAT_VER=1_1_4
 MRLIB_VER=1.1.4
 
 # KijiExpress version
-EXPRESS_FLAT_VER=1_0_1
-EXPRESS_VER=1.0.1
+EXPRESS_FLAT_VER=1_0_2
+EXPRESS_VER=1.0.2
 
 # Scoring version
-SCORING_FLAT_VER=0_11_0
-SCORING_VER=0.11.0
+SCORING_FLAT_VER=0_12_0
+SCORING_VER=0.12.0
 
 # Music Recommendation Tutorial version
 MUSIC_FLAT_VER=1_1_4
@@ -63,8 +63,8 @@ PHONEBOOK_FLAT_VER=1_1_3
 PHONEBOOK_VER=1.1.3
 
 # REST Server version
-REST_FLAT_VER=1_2_1
-REST_VER=1.2.1
+REST_FLAT_VER=1_2_2
+REST_VER=1.2.2
 
 ### Ordinary configuration does not go past this line ###
 
