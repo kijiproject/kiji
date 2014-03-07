@@ -29,7 +29,7 @@
   <parent>
     <groupId>org.kiji.pom</groupId>
     <artifactId>root-pom</artifactId>
-    <version>1.1.4</version>
+    <version>1.1.5-SNAPSHOT</version>
   </parent>
 
   <name>Kiji Music Example</name>
@@ -37,11 +37,11 @@
   <url>http://www.kiji.org</url>
 
   <properties>
-    <kiji-schema.version>1.3.6</kiji-schema.version>
-    <kiji-mapreduce.version>1.2.4</kiji-mapreduce.version>
-    <kiji-mapreduce-lib.version>1.1.4</kiji-mapreduce-lib.version>
+    <kiji-schema.version>1.3.8-SNAPSHOT</kiji-schema.version>
+    <kiji-mapreduce.version>1.2.6-SNAPSHOT</kiji-mapreduce.version>
+    <kiji-mapreduce-lib.version>1.1.5-SNAPSHOT</kiji-mapreduce-lib.version>
     <kiji-cdh4-platform.version>1.1.0</kiji-cdh4-platform.version>
-    <fake-hbase.version>0.1.4</fake-hbase.version>
+    <fake-hbase.version>0.1.5-SNAPSHOT</fake-hbase.version>
   </properties>
 
   <build>
