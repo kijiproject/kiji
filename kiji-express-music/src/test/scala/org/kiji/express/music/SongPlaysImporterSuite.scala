@@ -25,6 +25,7 @@ import com.twitter.scalding._
 
 import org.kiji.express._
 import org.kiji.express.flow._
+import org.kiji.express.flow.util.ResourceUtil
 import org.kiji.schema.EntityId
 
 /**
@@ -39,7 +40,7 @@ class SongPlaysImporterSuite extends KijiSuite {
 
   // Execute the DDL shell commands in music-schema.ddl to create the tables for the music
   // tutorial, including the users table.
-  executeDDLResource(kiji, "org/kiji/express/music/music-schema.ddl")
+  ResourceUtil.executeDDLResource(kiji, "org/kiji/express/music/music-schema.ddl")
 
   // Create some fake track-play records for a user.
   val testInput =

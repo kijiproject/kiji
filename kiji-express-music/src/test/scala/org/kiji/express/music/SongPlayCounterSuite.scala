@@ -25,6 +25,7 @@ import com.twitter.scalding._
 
 import org.kiji.express._
 import org.kiji.express.flow._
+import org.kiji.express.flow.util.ResourceUtil
 
 /**
  * A test for counting the number of times songs have been played by users.
@@ -37,7 +38,7 @@ class SongPlayCounterSuite extends KijiSuite {
 
   // Execute the DDL shell commands in music-schema.ddl to create the tables for the music
   // tutorial, including the users table.
-  executeDDLResource(kiji, "org/kiji/express/music/music-schema.ddl")
+  ResourceUtil.executeDDLResource(kiji, "org/kiji/express/music/music-schema.ddl")
 
   // Create some fake track plays for three users.
   val testInput =

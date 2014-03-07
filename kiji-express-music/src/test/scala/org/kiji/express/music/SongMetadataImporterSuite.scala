@@ -26,6 +26,7 @@ import org.apache.avro.generic.GenericRecord
 
 import org.kiji.express._
 import org.kiji.express.flow._
+import org.kiji.express.flow.util.ResourceUtil
 import org.kiji.schema.EntityId
 
 /**
@@ -38,7 +39,7 @@ class SongMetadataImporterSuite extends KijiSuite {
 
   // Execute the DDL shell commands in music-schema.ddl to create the tables for the music
   // tutorial, including the songs table.
-  executeDDLResource(kiji, "org/kiji/express/music/music-schema.ddl")
+  ResourceUtil.executeDDLResource(kiji, "org/kiji/express/music/music-schema.ddl")
 
   // Create a fake record to import, as a tuple. The first tuple element (0) is a dummy file
   // offset, while the second tuple element is a JSON record of song metadata.

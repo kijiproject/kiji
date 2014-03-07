@@ -32,6 +32,7 @@ import org.kiji.express.flow.KijiOutput
 import org.kiji.express.flow.QualifiedColumnInputSpec
 import org.kiji.express.flow.QualifiedColumnOutputSpec
 import org.kiji.express.flow.SchemaSpec
+import org.kiji.express.flow.util.ResourceUtil
 import org.kiji.express.music.avro.TopSongs
 
 /**
@@ -47,7 +48,7 @@ class TopNextSongsSuite extends KijiSuite {
 
   // Execute the DDL shell commands in music-schema.ddl to create the tables for the music
   // tutorial.
-  executeDDLResource(kiji, "org/kiji/express/music/music-schema.ddl")
+  ResourceUtil.executeDDLResource(kiji, "org/kiji/express/music/music-schema.ddl")
 
   // Create some fake track plays for three users.
   val testInput =
