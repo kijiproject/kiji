@@ -22,6 +22,7 @@ package org.kiji.express.flow
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.schema.KijiColumnName
+import org.kiji.schema.KijiURI
 
 /**
  * Factory methods for constructing [[org.kiji.express.flow.KijiSource]]s that will be used as
@@ -113,6 +114,14 @@ object KijiOutput {
       mTableURI = Some(tableURI)
       this
     }
+
+    /**
+     * Configure the KijiSource to write to the table with the given URI.
+     *
+     * @param tableURI string of the table to which to write.
+     * @return this builder.
+     */
+    def withTableURI(tableURI: KijiURI): Builder = withTableURI(tableURI.toString)
 
     /**
      * Get the output table URI from this builder.

@@ -100,36 +100,36 @@ object AvroTypesComplete {
   /** Value generators. */
   val rand = new Random
   val base: Iterable[_] = Range(0, 10) // Determines the number of inputs per test
-  val nulls = base.map { _ => null }
-  def booleans: Iterable[Boolean] = base.map { _ => rand.nextBoolean() }
-  def ints: Iterable[Int] = base.map { _ => rand.nextInt() }
-  def longs: Iterable[Long] = base.map { _ => rand.nextLong() }
-  def floats: Iterable[Float] = base.map { _ => rand.nextFloat() }
-  def doubles: Iterable[Double] = base.map { _ => rand.nextDouble() }
-  def bytes: Iterable[Array[Byte]] = base.map { _ =>
+  val nulls = base.map { _: Any => null }
+  def booleans: Iterable[Boolean] = base.map { _: Any => rand.nextBoolean() }
+  def ints: Iterable[Int] = base.map { _: Any => rand.nextInt() }
+  def longs: Iterable[Long] = base.map { _: Any => rand.nextLong() }
+  def floats: Iterable[Float] = base.map { _: Any => rand.nextFloat() }
+  def doubles: Iterable[Double] = base.map { _: Any => rand.nextDouble() }
+  def bytes: Iterable[Array[Byte]] = base.map { _: Any =>
     val ary = Array.ofDim[Byte](32)
     rand.nextBytes(ary)
     ary
   }
-  def strings: Iterable[String] = base.map { _ => rand.nextString(32) }
+  def strings: Iterable[String] = base.map { _: Any => rand.nextString(32) }
   def specificRecords: Iterable[SimpleRecord] = longs.zip(strings)
       .map { fields => specificBuilder.setL(fields._1).setS(fields._2).build() }
   def genericRecords: Iterable[GenericRecord] = ints.zip(floats)
       .map { fields => genericBuilder.set("length", fields._1).set("angle", fields._2).build() }
   def enumValues: Vector[String] = Vector("NORTH", "EAST", "SOUTH", "WEST")
-  def enums: Iterable[GenericEnumSymbol] = base.map { _ =>
+  def enums: Iterable[GenericEnumSymbol] = base.map { _: Any =>
     genericData.createEnum(enumValues(rand.nextInt(4)), enumSchema).asInstanceOf[GenericEnumSymbol]}
-  def enumStrings: Iterable[String] = base.map { _ => enumValues(rand.nextInt(4))}
-  def arrays: Iterable[Iterable[String]] = base.map { _ => strings }
+  def enumStrings: Iterable[String] = base.map { _: Any => enumValues(rand.nextInt(4))}
+  def arrays: Iterable[Iterable[String]] = base.map { _: Any => strings }
   def avroArrays: Iterable[GenericArray[String]] = arrays.map { strings =>
     new GenericData.Array(arraySchema, strings.toSeq.asJava)
   }
-  def maps: Iterable[Map[String, Int]] = base.map { _ => strings.zip(ints).toMap }
+  def maps: Iterable[Map[String, Int]] = base.map { _: Any => strings.zip(ints).toMap }
   def unions: Iterable[Any] = booleans.zip(strings.zip(ints)).map { t =>
     val (bool, (string, int)) = t
     if (bool) string else int
   }
-  def fixedByteArrays: Iterable[Array[Byte]] = base.map { _ =>
+  def fixedByteArrays: Iterable[Array[Byte]] = base.map { _: Any =>
     val ary = Array.ofDim[Byte](10)
     rand.nextBytes(ary)
     ary

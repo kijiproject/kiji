@@ -21,7 +21,8 @@ package org.kiji.express.examples
 
 import java.io.File
 
-import scala.actors.Futures.future
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.future
 import scala.io.Source
 
 import org.kiji.express.flow.util.ResourceUtil._
@@ -63,9 +64,9 @@ object NewsgroupLoader {
     require(root.isDirectory, "Newsgroup root must be a folder (was: %s)".format(root.getPath))
 
     doAndRelease { Kiji.Factory.open(uri) } { kiji: Kiji =>
-      val tasks = root
+      root
           .listFiles()
-          .map { newsgroup: File =>
+          .foreach { newsgroup: File =>
             // Build of a series of tasks for loading each newsgroup.
             future {
               // Open a KijiTableWriter.
@@ -88,10 +89,6 @@ object NewsgroupLoader {
               }
             }
           }
-
-      // Executes each task using a thread pool. For more information about scala futures see:
-      // http://docs.scala-lang.org/overviews/core/futures.html
-      tasks.foreach { task => task.apply() }
     }
   }
 }

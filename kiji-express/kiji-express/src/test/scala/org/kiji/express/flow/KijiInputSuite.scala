@@ -24,14 +24,18 @@ import java.util.UUID
 import scala.collection.JavaConverters._
 
 import cascading.tuple.Fields
-import com.twitter.scalding._
+import com.twitter.scalding.Args
+import com.twitter.scalding.Hdfs
+import com.twitter.scalding.Local
+import com.twitter.scalding.Mode
+import com.twitter.scalding.TupleConverter
+import com.twitter.scalding.TupleSetter
 import org.apache.avro.generic.GenericRecord
 import org.apache.avro.generic.GenericRecordBuilder
 import org.apache.avro.specific.SpecificRecord
 import org.apache.avro.util.Utf8
 import org.apache.hadoop.mapred.JobConf
 import org.junit.runner.RunWith
-import org.scalatest.BeforeAndAfter
 import org.scalatest.junit.JUnitRunner
 
 import org.kiji.express.InputSourceValidationJob
@@ -44,8 +48,6 @@ import org.kiji.schema.Kiji
 import org.kiji.schema.KijiClientTest
 import org.kiji.schema.KijiURI
 import org.kiji.schema.util.InstanceBuilder
-import com.twitter.scalding.Hdfs
-import com.twitter.scalding.Local
 
 @RunWith(classOf[JUnitRunner])
 class KijiInputSuite

@@ -22,14 +22,14 @@ package org.kiji.express.flow.util
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
 import org.scalatest.junit.JUnitRunner
-import org.scalatest.matchers.ShouldMatchers
+import org.scalatest.Matchers
 
 import org.kiji.express.flow.FlowCell
 
 @RunWith(classOf[JUnitRunner])
 class CellMathUtilSuite
     extends FunSuite
-    with ShouldMatchers {
+    with Matchers {
   val mapCell0: FlowCell[Long] = FlowCell("info", "a", 0L, 0L)
   val mapCell1: FlowCell[Long] = FlowCell("info", "a", 1L, 1L)
   val mapCell2: FlowCell[Long] = FlowCell("info", "b", 2L, 0L)
@@ -56,11 +56,11 @@ class CellMathUtilSuite
   }
 
   test("CellMathUtils should properly compute the standard deviation of simple types") {
-    CellMathUtil.stddev(mapCellSeq) should be (1.16619 plusOrMinus 0.1)
+    CellMathUtil.stddev(mapCellSeq) should be (1.16619 +- 0.1)
   }
 
   test("CellMathUtils should properly compute the variance of simple types") {
-    CellMathUtil.variance(mapCellSeq) should be (1.36 plusOrMinus 0.1)
+    CellMathUtil.variance(mapCellSeq) should be (1.36 +- 0.1)
   }
 
   test("CellMathUtils should properly find the minimum of simple types") {

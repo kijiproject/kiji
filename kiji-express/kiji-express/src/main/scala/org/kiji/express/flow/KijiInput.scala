@@ -22,6 +22,7 @@ package org.kiji.express.flow
 import org.kiji.annotations.ApiAudience
 import org.kiji.annotations.ApiStability
 import org.kiji.schema.KijiColumnName
+import org.kiji.schema.KijiURI
 
 /**
  * Factory methods for constructing [[org.kiji.express.flow.KijiSource]]s that will be used as
@@ -140,6 +141,14 @@ object KijiInput {
     }
 
     /**
+     * Configure the KijiSource to read values from the table with the given Kiji URI.
+     *
+     * @param tableURI of the table from which to read.
+     * @return this builder.
+     */
+    def withTableURI(tableURI: KijiURI): Builder = withTableURI(tableURI.toString)
+
+    /**
      * Configure the KijiSource to read values from the given range of input times.
      *
      * @param timeRangeSpec specification of times from which to read.
@@ -243,7 +252,10 @@ object KijiInput {
         mColumnSpecs match {
           case Some(cs) => {
             val symbols: List[Symbol] = columnSpecs.values.toList
-            val duplicateField: Boolean = cs.exists { case (_, field) => symbols.contains(field) }
+            val duplicateField: Boolean = cs.toIterable.exists { entry: (ColumnInputSpec, Symbol) =>
+              val (_, field) = entry
+              symbols.contains(field)
+            }
             require(!duplicateField, ("Column input specs already set to: %s May not add duplicate "
                 + "Fields.").format(mColumnSpecs.get))
             mColumnSpecs = Some(cs ++ columnSpecs)
@@ -369,7 +381,7 @@ object KijiInput {
       tableUri,
       timeRange,
       None,
-      inputColumns = columns.map(_.swap),
+      inputColumns = columns.map { entry: (ColumnInputSpec, Symbol) => entry.swap },
       rowRangeSpec = rowRangeSpec,
       rowFilterSpec = rowFilterSpec
     )

@@ -325,7 +325,7 @@ private[express] object KijiSource {
 
       // Write the desired rows to the table.
       withKijiTableWriter(tableUri, configuration) { writer: KijiTableWriter =>
-        rows.flatten.foreach { row: Tuple =>
+        rows.toSeq.flatten.foreach { row: Tuple =>
           val tupleEntry = new TupleEntry(fields, row)
           val iterator = fields.iterator()
 

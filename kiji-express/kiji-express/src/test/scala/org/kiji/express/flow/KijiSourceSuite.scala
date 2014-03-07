@@ -40,7 +40,10 @@ import org.kiji.schema.KijiTable
 import org.kiji.schema.layout.KijiTableLayout
 
 @RunWith(classOf[JUnitRunner])
-class KijiSourceSuite extends KijiClientTest with KijiSuite with BeforeAndAfter {
+class KijiSourceSuite
+    extends KijiClientTest
+    with KijiSuite
+    with BeforeAndAfter {
   import KijiSourceSuite._
 
   /* Undo all changes to hdfs mode. */
@@ -116,8 +119,8 @@ class KijiSourceSuite extends KijiClientTest with KijiSuite with BeforeAndAfter 
 
     // Validate output.
     def validateMapWrite(
-        outputBuffer: Buffer[(EntityId,Seq[FlowCell[GenericRecord]])]
-    ): Unit = {
+        outputBuffer: Buffer[(EntityId,Seq[FlowCell[Int]])]
+    ) {
       assert (1 === outputBuffer.size)
       val outputSlice = outputBuffer(0)._2
       val outputSliceMap = outputSlice.groupBy(_.qualifier)
@@ -290,7 +293,8 @@ object KijiSourceSuite {
             .withColumnSpecs('resultCount -> ColumnFamilyOutputSpec.builder
                 .withFamily("searches")
                 .withQualifierSelector('terms)
-                .build)
+                .build
+            )
             .build)
   }
 
