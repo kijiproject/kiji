@@ -29,7 +29,7 @@
   <parent>
     <groupId>org.kiji.pom</groupId>
     <artifactId>root-pom</artifactId>
-    <version>1.1.4</version>
+    <version>1.1.5-SNAPSHOT</version>
   </parent>
 
   <name>Kiji Phonebook Example</name>
@@ -37,11 +37,11 @@
   <url>http://www.kiji.org</url>
 
   <properties>
-    <kiji-schema.version>1.3.4</kiji-schema.version>
-    <kiji-schema-shell.version>1.3.3</kiji-schema-shell.version>
+    <kiji-schema.version>1.3.8-SNAPSHOT</kiji-schema.version>
+    <kiji-schema-shell.version>1.3.5-SNAPSHOT</kiji-schema-shell.version>
     <kiji-cdh4-platform.version>1.1.0</kiji-cdh4-platform.version>
-    <kiji-mapreduce.version>1.2.4</kiji-mapreduce.version>
-    <fake-hbase.version>0.1.3</fake-hbase.version>
+    <kiji-mapreduce.version>1.2.6-SNAPSHOT</kiji-mapreduce.version>
+    <fake-hbase.version>0.1.5-SNAPSHOT</fake-hbase.version>
   </properties>
 
   <build>
