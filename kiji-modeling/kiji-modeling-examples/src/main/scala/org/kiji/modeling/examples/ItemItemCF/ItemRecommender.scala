@@ -19,19 +19,10 @@
 
 package org.kiji.modeling.examples.ItemItemCF
 
-import scala.math.sqrt
-import scala.collection.JavaConverters._
-
-import cascading.pipe.Pipe
-import cascading.pipe.joiner.LeftJoin
-import com.twitter.scalding._
+import com.twitter.scalding.Args
+import com.twitter.scalding.Csv
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-
-import org.kiji.express._
-import org.kiji.express.flow._
-
-import org.kiji.modeling.examples.ItemItemCF.avro._
 
 /**
  * Recommend items based on a collection of items.
@@ -52,7 +43,7 @@ class ItemRecommender(args: Args) extends ItemItemJob(args) {
       // We don't need to know to which item any of these potential recommended items is
       // similar.
       .project('similarItem, 'similarity)
-      .groupBy('similarItem) { _.sum('similarity) }
+      .groupBy('similarItem) { _.sum[Double]('similarity) }
 
   // Attach the actual movie titles
   val formattedPipe = attachMovieTitles(mostSimilarPipe, 'similarItem)

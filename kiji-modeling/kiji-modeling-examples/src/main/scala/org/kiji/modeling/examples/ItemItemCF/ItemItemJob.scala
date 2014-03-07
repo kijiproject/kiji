@@ -19,20 +19,20 @@
 
 package org.kiji.modeling.examples.ItemItemCF
 
-import scala.math.sqrt
 import scala.collection.JavaConverters._
 
 import cascading.pipe.Pipe
-import cascading.pipe.joiner.LeftJoin
-import com.twitter.scalding._
-import org.apache.avro.util.Utf8
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import com.twitter.scalding.Args
 
-import org.kiji.express._
-import org.kiji.express.flow._
-
-import org.kiji.modeling.examples.ItemItemCF.avro._
+import org.kiji.express.flow.ColumnFamilyInputSpec
+import org.kiji.express.flow.EntityId
+import org.kiji.express.flow.FlowCell
+import org.kiji.express.flow.KijiInput
+import org.kiji.express.flow.KijiJob
+import org.kiji.express.flow.QualifiedColumnInputSpec
+import org.kiji.express.flow.SchemaSpec
+import org.kiji.modeling.examples.ItemItemCF.avro.AvroItemSimilarity
+import org.kiji.modeling.examples.ItemItemCF.avro.AvroSortedSimilarItems
 
 /**
  * Contains common functionality for different phases in the item-item CF flow.
@@ -88,12 +88,14 @@ abstract class ItemItemJob(args: Args) extends KijiJob(args) {
    * @return The most-similar items as a `Seq[(itemId, rating)]`.
    */
   def extractItemIdAndSimilarity(
-      slice: Seq[FlowCell[AvroSortedSimilarItems]]): Seq[(Long, Double)] = {
-    slice.flatMap { cell => {
+      slice: Seq[FlowCell[AvroSortedSimilarItems]]
+  ): Seq[(Long, Double)] = {
+    slice.flatMap { cell =>
       // Get a Scala List of the similar items and similarities
       val topItems = cell.datum.getTopItems.asScala
       topItems.map { sim: AvroItemSimilarity => (sim.getItemId.toLong, sim.getSimilarity.toDouble) }
-    }}}
+    }
+  }
 
 
   /**
@@ -141,18 +143,18 @@ abstract class ItemItemJob(args: Args) extends KijiJob(args) {
    * @return The `pipe` with movie titles instead of movie IDs.
    */
   def attachMovieTitles(pipe: Pipe, movieIdField: Symbol): Pipe = {
-      KijiInput.builder
-          .withTableURI(args("titles-table-uri"))
-          .withColumns("info:title" -> 'title)
-          .build
-          // Get the movieIds from the entity IDs
-          .map('entityId -> 'movieId) { eid: EntityId => eid.components(0) }
-          // Extract the actual movie title
-          .map('title -> 'title) { cellseq: Seq[FlowCell[CharSequence]] => {
-            assert(cellseq.size == 1)
-            cellseq.head.datum.toString
-          }}
-          .joinWithLarger('movieId -> movieIdField, pipe)
-          .discard('movieId)
+    KijiInput.builder
+        .withTableURI(args("titles-table-uri"))
+        .withColumns("info:title" -> 'title)
+        .build
+        // Get the movieIds from the entity IDs
+        .map('entityId -> 'movieId) { eid: EntityId => eid.components(0) }
+        // Extract the actual movie title
+        .map('title -> 'title) { cellseq: Seq[FlowCell[CharSequence]] =>
+          assert(cellseq.size == 1)
+          cellseq.head.datum.toString
+        }
+        .joinWithLarger('movieId -> movieIdField, pipe)
+        .discard('movieId)
   }
 }

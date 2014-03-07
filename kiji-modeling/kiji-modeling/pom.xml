@@ -30,7 +30,7 @@
     </dependency>
     <dependency>
       <groupId>com.twitter</groupId>
-      <artifactId>algebird-core_2.9.2</artifactId>
+      <artifactId>algebird-core_${scala.version}</artifactId>
     </dependency>
     <dependency>
       <groupId>com.twitter</groupId>
@@ -69,8 +69,8 @@
       <artifactId>kiji-schema-shell</artifactId>
     </dependency>
     <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scala-library</artifactId>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
     </dependency>
     <dependency>
         <groupId>org.slf4j</groupId>

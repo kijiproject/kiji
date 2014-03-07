@@ -23,15 +23,14 @@ import scala.math.sqrt
 
 import cascading.pipe.Pipe
 import cascading.tuple.Fields
+import com.twitter.algebird.MinHashSignature
 import com.twitter.algebird.MinHasher32
 import com.twitter.scalding.FieldConversions
 import com.twitter.scalding.GroupBuilder
-import com.twitter.scalding.TupleConversions
 import com.twitter.scalding.mathematics.Matrix
 import com.twitter.scalding.mathematics.RowVector
 
 import org.kiji.express.repl.Implicits.pipeToRichPipe
-import org.kiji.express.repl.Implicits.richPipeToPipe
 import org.kiji.modeling.framework.ModelPipeConversions
 
 
@@ -48,7 +47,6 @@ import Matrix._
  */
 class RecommendationPipe(val pipe: Pipe)
     extends FieldConversions
-    with TupleConversions
     with ModelPipeConversions {
 
   /**
@@ -118,28 +116,30 @@ class RecommendationPipe(val pipe: Pipe)
   private def minHashSignatureForSparseVector[T](
       sparseVector : Seq[T],
       minHasher : MinHasher32)
-      (implicit ordering : Ordering[T]) : Array[Byte] = {
-    sparseVector.map {
-      case x : Char => minHasher.init { _(x) }
-      case x : Short => minHasher.init { _(x) }
-      case x : Int => minHasher.init { _(x) }
-      case x : Float => minHasher.init { _(x) }
-      case x : Long => minHasher.init { _(x) }
-      case x : Double => minHasher.init { _(x) }
-      case x : String => minHasher.init { _(x) }
-      case x : Array[Byte] => minHasher.init { _(x) }
-      case x : Array[Char] => minHasher.init { _(x) }
-      case x : Array[Short] => minHasher.init { _(x) }
-      case x : Array[Int] => minHasher.init { _(x) }
-      case x : Array[Float] => minHasher.init { _(x) }
-      case x : Array[Long] => minHasher.init { _(x) }
-      case x : Array[Double] => minHasher.init { _(x) }
-      case _ =>
-        throw new IllegalArgumentException("The allowed types to represent an item's" +
-            "vector are : Char, Short, Int, Float, Long, Double, String, Array[Byte], " +
-            "Array[Char], Array[Short], Array[Int], Array[Float], Array[Long] & " +
-            "Array[Double].")
-    }.reduce(minHasher.plus)
+      (implicit ordering : Ordering[T]): MinHashSignature = {
+    sparseVector
+        .map {
+          case x : Char => minHasher.init { _(x) }
+          case x : Short => minHasher.init { _(x) }
+          case x : Int => minHasher.init { _(x) }
+          case x : Float => minHasher.init { _(x) }
+          case x : Long => minHasher.init { _(x) }
+          case x : Double => minHasher.init { _(x) }
+          case x : String => minHasher.init { _(x) }
+          case x : Array[Byte] => minHasher.init { _(x) }
+          case x : Array[Char] => minHasher.init { _(x) }
+          case x : Array[Short] => minHasher.init { _(x) }
+          case x : Array[Int] => minHasher.init { _(x) }
+          case x : Array[Float] => minHasher.init { _(x) }
+          case x : Array[Long] => minHasher.init { _(x) }
+          case x : Array[Double] => minHasher.init { _(x) }
+          case _ =>
+            throw new IllegalArgumentException("The allowed types to represent an item's" +
+                "vector are : Char, Short, Int, Float, Long, Double, String, Array[Byte], " +
+                "Array[Char], Array[Short], Array[Int], Array[Float], Array[Long] & " +
+                "Array[Double].")
+        }
+        .reduce(minHasher.plus)
   }
 
   /**
@@ -208,8 +208,9 @@ class RecommendationPipe(val pipe: Pipe)
 
             // Emitting 'bucketId' and 'itemId' tuples for each item. The 'bucketId's are obtained
             // by hashing the item's minhash ignature into buckets.
-            minHasher.buckets( minHashSignatureForSparseVector(sparseVector, minHasher))
-                .map((_, itemId))
+            minHasher
+                .buckets(minHashSignatureForSparseVector(sparseVector, minHasher))
+                .map { (_, itemId) }
           }
         }
 
@@ -232,7 +233,7 @@ class RecommendationPipe(val pipe: Pipe)
         }
 
         // Short-circuit the calculation if
-        .then { tempPipe : Pipe =>
+        .thenDo { tempPipe : Pipe =>
           if (numCommonBuckets > 1) {
             tempPipe
                 // Count the # of buckets that each pair of items appears in

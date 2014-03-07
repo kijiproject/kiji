@@ -79,8 +79,8 @@ abstract class SimilarityChecker {
     def createRandomRatingListForSingleUser: Map[Long, Double] = {
       require(numTotalItems >= numItemsPerUser)
       // Get a uniqe set of items
-      val itemIds: IndexedSeq[Int] =
-          Random.shuffle((0 until numTotalItems).toSeq)
+      val itemIds: IndexedSeq[Int] = Random
+          .shuffle(0.until(numTotalItems): Seq[Int])
           .take(numItemsPerUser)
           .toSet
           .toIndexedSeq

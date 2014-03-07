@@ -33,6 +33,7 @@ import com.google.common.io.Files
 import com.twitter.scalding.Args
 import com.twitter.scalding.Hdfs
 import com.twitter.scalding.JobTest
+import com.twitter.scalding.Mode
 import com.twitter.scalding.TextLine
 import org.apache.commons.io.FileUtils
 import org.apache.hadoop.hbase.HBaseConfiguration
@@ -86,11 +87,7 @@ class RecommendationPipeSuite extends KijiSuite {
     table: KijiTable => table.getURI
   }
 
-  // Hack to set the mode correctly. Scalding sets the mode in JobTest
-  // which makes the tests below run in HadoopTest mode instead of Hadoop mode whenever they are
-  // run after another test that uses JobTest.
-  // Remove this after the bug in Scalding is fixed.
-  com.twitter.scalding.Mode.mode = Hdfs(false, HBaseConfiguration.create())
+  val hdfsMode = Hdfs(strict = true, conf = HBaseConfiguration.create())
 
   /**
    * This test goes over the orders in the table and creates itemsets of size 2 from them.
@@ -110,8 +107,12 @@ class RecommendationPipeSuite extends KijiSuite {
           .write(TextLine(args("output")))
     }
     val outputDir: File = Files.createTempDir()
-    new PrepareItemsetsJob(Args("--input " + inputUri.toString + " --output " +
-        outputDir.getAbsolutePath)).run
+    new PrepareItemsetsJob(
+        Mode.putMode(
+            hdfsMode,
+            Args("--input " + inputUri.toString + " --output " + outputDir.getAbsolutePath)
+        )
+    ).run
     val lines = doAndClose(scala.io.Source.fromFile(outputDir.getAbsolutePath + "/part-00000")) {
       source: scala.io.Source => source.mkString
     }
@@ -151,8 +152,12 @@ class RecommendationPipeSuite extends KijiSuite {
           .write(TextLine(args("output")))
     }
     val outputDir: File = Files.createTempDir()
-    new JoinWithGroupCountJob(Args("--input " + inputUri.toString + " --output " +
-        outputDir.getAbsolutePath)).run
+    new JoinWithGroupCountJob(
+        Mode.putMode(
+            hdfsMode,
+            Args("--input " + inputUri.toString + " --output " + outputDir.getAbsolutePath)
+        )
+    ).run
     val lines = doAndClose(scala.io.Source.fromFile(outputDir.getAbsolutePath + "/part-00000")) {
       source: scala.io.Source => source.mkString
     }
@@ -173,8 +178,12 @@ class RecommendationPipeSuite extends KijiSuite {
           .write(TextLine(args("output")))
     }
     val outputDir: File = Files.createTempDir()
-    new JoinWithCountJob(Args("--input " + inputUri.toString + " --output " +
-        outputDir.getAbsolutePath)).run
+    new JoinWithCountJob(
+        Mode.putMode(
+            hdfsMode,
+            Args("--input " + inputUri.toString + " --output " + outputDir.getAbsolutePath)
+        )
+    ).run
     val lines = doAndClose(scala.io.Source.fromFile(outputDir.getAbsolutePath + "/part-00000")) {
       source: scala.io.Source => source.mkString
     }
@@ -203,8 +212,12 @@ class RecommendationPipeSuite extends KijiSuite {
           .write(TextLine(args("output")))
     }
     val outputDir: File = Files.createTempDir()
-    new FrequentItemsetFinderJob(Args("--input " + inputUri.toString + " --output " +
-        outputDir.getAbsolutePath)).run
+    new FrequentItemsetFinderJob(
+        Mode.putMode(
+            hdfsMode,
+            Args("--input " + inputUri.toString + " --output " + outputDir.getAbsolutePath)
+        )
+    ).run
     val lines = doAndClose(scala.io.Source.fromFile(outputDir.getAbsolutePath + "/part-00000")) {
         source: scala.io.Source => source.mkString
     }
@@ -241,8 +254,12 @@ class RecommendationPipeSuite extends KijiSuite {
         .write(TextLine(args("output")))
     }
     val outputDir: File = Files.createTempDir()
-    new FrequentItemsetFinderJob(Args("--input " + inputUri.toString + " --output " +
-        outputDir.getAbsolutePath)).run
+    new FrequentItemsetFinderJob(
+        Mode.putMode(
+            hdfsMode,
+            Args("--input " + inputUri.toString + " --output " + outputDir.getAbsolutePath)
+        )
+    ).run
     val lines = doAndClose(scala.io.Source.fromFile(outputDir.getAbsolutePath + "/part-00000")) {
       source: scala.io.Source => source.mkString
     }
@@ -274,8 +291,12 @@ class RecommendationPipeSuite extends KijiSuite {
           .write(TextLine(args("output")))
     }
     val outputDir: File = Files.createTempDir()
-    new FrequentItemsetFinderJob(Args("--input " + inputUri.toString + " --output " +
-        outputDir.getAbsolutePath)).run
+    new FrequentItemsetFinderJob(
+        Mode.putMode(
+            hdfsMode,
+            Args("--input " + inputUri.toString + " --output " + outputDir.getAbsolutePath)
+        )
+    ).run
     val lines = doAndClose(scala.io.Source.fromFile(outputDir.getAbsolutePath + "/part-00000")) {
         source: scala.io.Source => source.mkString
     }

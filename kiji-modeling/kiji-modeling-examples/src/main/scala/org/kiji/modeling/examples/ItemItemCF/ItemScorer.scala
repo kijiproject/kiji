@@ -19,19 +19,10 @@
 
 package org.kiji.modeling.examples.ItemItemCF
 
-import scala.math.sqrt
-import scala.collection.JavaConverters._
-
-import cascading.pipe.Pipe
-import cascading.pipe.joiner.LeftJoin
-import com.twitter.scalding._
+import com.twitter.scalding.Args
+import com.twitter.scalding.Csv
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-
-import org.kiji.express._
-import org.kiji.express.flow._
-
-import org.kiji.modeling.examples.ItemItemCF.avro._
 
 /**
  * Calculate the score for an item for a user by taking the weighted average of that user's ratings
@@ -80,12 +71,12 @@ class ItemScorer(args: Args) extends ItemItemJob(args) {
 
   // Sum of all of the similarities is the denominator.
   val denom = neighborsPipe
-      .groupBy(('userId, 'itemToScoreId)) { _.sum('similarity -> 'denom) }
+      .groupBy(('userId, 'itemToScoreId)) { _.sum[Double]('similarity -> 'denom) }
       .project('userId, 'itemToScoreId, 'denom)
 
   val numer = neighborsPipe
       .map(('similarity, 'rating) -> ('scoreTerm)) { x: (Double, Double) => x._1 * x._2 }
-      .groupBy(('userId, 'itemToScoreId)) { _.sum('scoreTerm -> 'numer) }
+      .groupBy(('userId, 'itemToScoreId)) { _.sum[Double]('scoreTerm -> 'numer) }
       .project('userId, 'itemToScoreId, 'numer)
       .rename(('userId, 'itemToScoreId) -> ('userIdNumer, 'itemToScoreIdNumer))
 
