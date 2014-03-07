@@ -1,5 +1,10 @@
 
                               KijiREST Release Notes
+
+Version 1.2.2
+  * REST-90. Allow KijiREST to be started in foreground mode, via the
+      'foreground' command line option.
+
 Version 1.2.0
   * REST-62. Implements counter cell incrementation and decrementation.
   * REST-41. Supports optional cross-origin resource sharing (CORS).
