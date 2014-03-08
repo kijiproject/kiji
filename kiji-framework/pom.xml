@@ -21,7 +21,7 @@
 
   <groupId>org.kiji.framework</groupId>
   <artifactId>framework-pom</artifactId>
-  <version>1.4.3-SNAPSHOT</version>
+  <version>1.4.4-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Kiji framework dependency definitions</name>
