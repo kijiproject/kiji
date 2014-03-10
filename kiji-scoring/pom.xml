@@ -41,6 +41,7 @@
     <kiji-schema.version>1.3.8-SNAPSHOT</kiji-schema.version>
     <kiji-mapreduce.version>1.2.6-SNAPSHOT</kiji-mapreduce.version>
     <fake-hbase.version>0.1.5-SNAPSHOT</fake-hbase.version>
+    <pmml-evaluator.version>1.0.22</pmml-evaluator.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
@@ -94,6 +95,10 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <!-- Run tests creating 2 test JVMs per processor core. -->
+          <forkCount>2C</forkCount>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -151,6 +156,12 @@
       <artifactId>kiji-schema</artifactId>
       <version>${kiji-schema.version}</version>
       <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jpmml</groupId>
+      <artifactId>pmml-evaluator</artifactId>
+      <version>${pmml-evaluator.version}</version>
+      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.kiji.schema</groupId>
