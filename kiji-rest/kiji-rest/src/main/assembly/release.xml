@@ -47,7 +47,7 @@ http://maven.apache.org/xsd/assembly-1.1.2.xsd">
       <outputDirectory>bin</outputDirectory>
       <directory>src/main/scripts</directory>
       <fileMode>0755</fileMode>
-      <filtered>true</filtered>
+      <filtered>false</filtered>
     </fileSet>
     <fileSet>
       <useDefaultExcludes>false</useDefaultExcludes>
