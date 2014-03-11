@@ -62,10 +62,15 @@ function resolve_symlink() {
   echo "$RESULT"
 }
 
+
 prgm="$0"
 prgm=`resolve_symlink "$prgm"`
 bin=`dirname "$prgm"`
 bin=`cd "${bin}" && pwd`
+
+echo 'WARNING: This Script is Deprecated. Support will cease in the future. Instead use:'
+echo 'WARNING: bash> $EXPRESS_HOME/bin/express.py'
+
 
 EXPRESS_HOME="${EXPRESS_HOME:-${bin}/../}"
 

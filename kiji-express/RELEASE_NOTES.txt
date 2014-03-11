@@ -1,6 +1,9 @@
 
                              Kiji Express Release Notes
 
+Verion 2.0.0
+  * EXP-417. Bash script is now deprecated, please use the python script instead
+
 Version 1.0.2
   * EXP-418. InvalidKijiTapException now optionally takes a cause.
 

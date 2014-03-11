@@ -18,14 +18,15 @@ and runs the job locally on your machine.  In HDFS mode, the job runs on a clust
 
 ### Running Compiled Jobs ###
 
-If you want, you can run compiled jobs as well.  This requires that you write a Scalding Job and
-compile it yourself into a .jar file.  Then you can run your job with the command:
+If you want, you can run compiled jobs as well.  You must have python3 and the python-base package installed. To install python3 on your machine we recommend using the pyenv project found at: https://github.com/yyuu/pyenv. In order to install the python base package use pip install python-base, if you're on a system whose 'python' is still python2, you may have to: $ sudo apt-get install python3-pip.
 
-    express job path/to/your/jarfile.jar name.of.your.jobclass <any arguments to your job>
+Once python is installed running a job requires that you write a Scalding Job and compile it yourself into a .jar file.  Then you can run your job with the command:
+
+    express.py job path/to/your/jarfile.jar name.of.your.jobclass <any arguments to your job>
 
 or
 
-    express job path/to/your/jarfile.jar name.of.your.jobclass <any arguments to your job> --hdfs
+    express.py job path/to/your/jarfile.jar name.of.your.jobclass <any arguments to your job> --hdfs
 
 You can see some examples of Jobs in the
 [kiji-express-music tutorial](https://github.com/kijiproject/kiji-express-music).
@@ -36,7 +37,7 @@ You can see some examples of Jobs in the
 The `express` tool can also run arbitrary jars, with KijiExpress and its dependencies on the
 classpath, with the command:
 
-    express jar /path/to/your/jarfile.jar name.of.main.class <any arguments to your main class>
+    express.py jar /path/to/your/jarfile.jar name.of.main.class <any arguments to your main class>
 
 This requires you to have a Java or Scala main class.
 
@@ -46,19 +47,19 @@ colon-separated list of paths to your jars and they will be appended to the Kiji
 
 To see the classpath that KijiExpress is running with, you can run:
 
-    express classpath
+    express.py classpath
 
 ### Interactive Shell ###
 You can use the `express` tool to run a Scala REPL. You can use the shell to run and prototype
 queries. The shell can be run in local mode (such that all jobs run in Cascading's local runner) or
 in HDFS mode (such that all jobs run on a Hadoop cluster). Use
 
-    express shell
-    express shell --local
+    express.py shell
+    express.py shell --local
 
 to use local mode, and
 
-    express shell --hdfs
+    express.py shell --hdfs
 
 to use HDFS mode.
 
