@@ -156,6 +156,7 @@ public interface FreshKijiTableReader extends KijiTableReader {
    *
    * <p>Instance of this builder are not thread safe.</p>
    */
+  @ApiAudience.Public
   @ApiStability.Experimental
   public static final class Builder {
     /** By default, do not allow returning partially fresh data. */
@@ -625,6 +626,7 @@ public interface FreshKijiTableReader extends KijiTableReader {
    * {@link #get(org.kiji.schema.EntityId, org.kiji.schema.KijiDataRequest,
    * org.kiji.scoring.FreshKijiTableReader.FreshRequestOptions)}
    */
+  @ApiAudience.Public
   @ApiStability.Experimental
   public static final class FreshRequestOptions {
 
@@ -635,6 +637,7 @@ public interface FreshKijiTableReader extends KijiTableReader {
     public static final Set<KijiColumnName> DISABLE_ALL_COLUMNS = Sets.newHashSet();
 
     /** Builder for FreshRequestOptions. Instance of this builder are not thread safe. */
+    @ApiAudience.Public
     @ApiStability.Experimental
     public static final class Builder {
 

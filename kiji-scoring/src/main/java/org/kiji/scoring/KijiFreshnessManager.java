@@ -104,6 +104,8 @@ public final class KijiFreshnessManager implements Closeable {
   /**
    * An aggregate exception representing one or several validation failures for a single request.
    */
+  @ApiAudience.Public
+  @ApiStability.Experimental
   public static final class FreshenerValidationException extends RuntimeException {
     /** A map of validation failures represented collectively by this excpetion. */
     private final Map<ValidationFailure, Exception> mFailures;
@@ -148,6 +150,8 @@ public final class KijiFreshnessManager implements Closeable {
   }
 
   /** An aggregate exception representing validation failures for multiple columns. */
+  @ApiAudience.Public
+  @ApiStability.Experimental
   public static final class MultiFreshenerValidationException extends RuntimeException {
 
     private final Map<KijiColumnName, Map<ValidationFailure, Exception>> mFailures;

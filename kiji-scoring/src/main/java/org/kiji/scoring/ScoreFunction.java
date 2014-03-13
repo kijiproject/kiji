@@ -85,6 +85,8 @@ public abstract class ScoreFunction<T> {
    *
    * @param <V> the type of the value.
    */
+  @ApiAudience.Public
+  @ApiStability.Experimental
   public static final class TimestampedValue<V> {
 
     private final long mTimestamp;

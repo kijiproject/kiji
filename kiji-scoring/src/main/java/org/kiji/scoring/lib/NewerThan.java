@@ -38,7 +38,7 @@ import org.kiji.scoring.KijiFreshnessPolicy;
  */
 @ApiAudience.Public
 @ApiStability.Experimental
-public class NewerThan extends KijiFreshnessPolicy {
+public final class NewerThan extends KijiFreshnessPolicy {
 
   public static final String NEWER_THAN_KEY = "org.kiji.scoring.lib.NewerThan.newer_than";
 

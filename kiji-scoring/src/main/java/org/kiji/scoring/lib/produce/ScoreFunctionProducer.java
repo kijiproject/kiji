@@ -26,6 +26,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.mortbay.io.RuntimeIOException;
 
+import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.KijiContext;
 import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
@@ -54,7 +56,9 @@ import org.kiji.scoring.impl.InternalFreshenerContext;
  *   command line via the --lib flag of the 'produce' CLI tool.
  * </p>
  */
-public class ScoreFunctionProducer extends KijiProducer {
+@ApiAudience.Public
+@ApiStability.Experimental
+public final class ScoreFunctionProducer extends KijiProducer {
 
   public static final String SCORE_FUNCTION_PRODUCER_CONF_KEY =
       "org.kiji.scoring.lib.produce.ScoreFunctionProducer.conf";

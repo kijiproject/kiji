@@ -30,6 +30,8 @@ import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.common.flags.Flag;
 import org.kiji.schema.InternalKijiError;
 import org.kiji.schema.Kiji;
@@ -69,7 +71,9 @@ import org.kiji.scoring.avro.KijiFreshenerRecord;
  *   </pre>
  * </p>
  */
-public class FreshTool extends BaseTool {
+@ApiAudience.Public
+@ApiStability.Experimental
+public final class FreshTool extends BaseTool {
   private static final Logger LOG = LoggerFactory.getLogger(FreshTool.class);
 
   @Flag(name="target", usage="the KijiURI of the target of your operation. Must include at "

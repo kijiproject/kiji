@@ -44,6 +44,8 @@ import org.jpmml.evaluator.ModelEvaluatorFactory;
 import org.jpmml.manager.PMMLManager;
 import org.xml.sax.SAXException;
 
+import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiRowData;
@@ -77,7 +79,9 @@ import org.kiji.scoring.ScoreFunction;
  *   </li>
  * </ul>
  */
-public class JpmmlScoreFunction extends ScoreFunction<GenericRecord> {
+@ApiAudience.Public
+@ApiStability.Experimental
+public final class JpmmlScoreFunction extends ScoreFunction<GenericRecord> {
   /** Parameter name for specifying the path to the trained model file. */
   public static final String MODEL_FILE_PARAMETER =
       "org.kiji.scoring.lib.JpmmlScoreFunction.model-file";

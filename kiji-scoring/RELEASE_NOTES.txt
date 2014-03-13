@@ -2,6 +2,10 @@
                               Kiji Scoring Release Notes
 
 Version 0.13.0
+    * SCORE-168. All Public classes now have ApiAudience and ApiStability annotations to indicate
+        to which users they are relevant and the contract around their API compatibility. Some
+        erroneously extensible classes have been marked final (NewerThan, ScoreFunctionProducer,
+        RunningLogarithmicBin, BatchScoreTool, FreshTool).
     * SCORE-166. Adds a JpmmlScoreFunction for scoring trained JPMML compliant models.
 
 Version 0.11.0

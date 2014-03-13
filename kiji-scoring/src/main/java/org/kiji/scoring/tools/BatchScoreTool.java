@@ -25,6 +25,8 @@ import java.util.Map;
 import com.google.common.base.Preconditions;
 import com.google.gson.Gson;
 
+import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.common.flags.Flag;
 import org.kiji.mapreduce.output.DirectKijiTableMapReduceJobOutput;
 import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
@@ -59,7 +61,9 @@ import org.kiji.scoring.batch.ScoreFunctionJobBuilder;
  *   </pre>
  * </p>
  */
-public class BatchScoreTool extends KijiJobTool<ScoreFunctionJobBuilder> {
+@ApiAudience.Public
+@ApiStability.Experimental
+public final class BatchScoreTool extends KijiJobTool<ScoreFunctionJobBuilder> {
   private static final Gson GSON = new Gson();
 
   @Flag(name="score-function-class",

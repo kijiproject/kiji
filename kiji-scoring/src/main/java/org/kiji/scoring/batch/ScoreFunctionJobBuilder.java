@@ -32,6 +32,8 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.map.KijiMultithreadedMapper;
 import org.apache.hadoop.util.ReflectionUtils;
 
+import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.JobConfigurationException;
 import org.kiji.mapreduce.KijiMapReduceJob;
 import org.kiji.mapreduce.KijiMapper;
@@ -90,6 +92,8 @@ import org.kiji.scoring.impl.InternalFreshenerContext;
  *   </pre>
  * </p>
  */
+@ApiAudience.Public
+@ApiStability.Experimental
 public final class ScoreFunctionJobBuilder
     extends KijiTableInputJobBuilder<ScoreFunctionJobBuilder> {
 

@@ -32,7 +32,7 @@ import org.kiji.annotations.ApiStability;
 /** Bins positive values by order of magnitude. */
 @ApiAudience.Public
 @ApiStability.Experimental
-public class RunningLogarithmicBin {
+public final class RunningLogarithmicBin {
   private final NavigableMap<Long, AtomicLong> mBins;
 
   /**
