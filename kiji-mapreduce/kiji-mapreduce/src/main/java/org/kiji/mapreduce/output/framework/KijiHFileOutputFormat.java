@@ -33,7 +33,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.KeyValue;
-import org.apache.hadoop.hbase.io.hfile.Compression;
 import org.apache.hadoop.hbase.io.hfile.HFile;
 import org.apache.hadoop.hbase.regionserver.StoreFile;
 import org.apache.hadoop.hbase.regionserver.TimeRangeTracker;
@@ -139,7 +138,7 @@ public final class KijiHFileOutputFormat
       private final int mBlockSizeBytes;
 
       /** The compression algorithm to use for the HFiles. */
-      private final Compression.Algorithm mCompressionType;
+      private final String mCompressionType;
 
       /** The HFile writer we currently have open to write KeyValues to. */
       private HFile.Writer mWriter;
@@ -181,8 +180,7 @@ public final class KijiHFileOutputFormat
         }
 
         mCompressionType =
-            Compression.getCompressionAlgorithmByName(
-                mLGLayout.getDesc().getCompressionType().toString().toLowerCase(Locale.ROOT));
+            mLGLayout.getDesc().getCompressionType().toString().toLowerCase(Locale.ROOT);
 
         mWriter = openNewWriter();
       }
@@ -242,7 +240,7 @@ public final class KijiHFileOutputFormat
         LOG.info("Opening HFile.Writer for family " + mFamily + " at " + hfilePath);
         final HFile.Writer hfileWriter =
             SchemaPlatformBridge.get().createHFileWriter(mConf, mFileSystem, hfilePath,
-                mBlockSizeBytes, mCompressionType, KeyValue.KEY_COMPARATOR);
+                mBlockSizeBytes, mCompressionType);
 
         mTimeRangeTracker = new TimeRangeTracker();
         // Reset the current file size.
