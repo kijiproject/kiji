@@ -513,8 +513,13 @@ class Job(Command):
         hadoop_cp = self.classpath_from_executable(
             env, 'HADOOP_HOME', 'hadoop')
         # Hadoop wants a certain platform version, then we hope to use it
-        cmd = ['java', '-cp', hadoop_cp, '-Xmx32m',
-            'org.apache.hadoop.util.PlatformName']
+        cmd = [
+            'java',
+            '-cp',
+            ':'.join(hadoop_cp),
+            '-Xmx32m',
+            'org.apache.hadoop.util.PlatformName'
+        ]
         output = subprocess.check_output(cmd)
         java_platform = output.decode()
         native_dirs = os.path.join(native_dir_path,
