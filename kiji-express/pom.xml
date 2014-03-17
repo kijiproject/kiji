@@ -275,7 +275,10 @@
               <include>**/*Suite.scala</include>
               <include>%regex[.*/.*Suite.class]</include>
             </includes>
-            <forkCount>2C</forkCount>
+            <!-- parallel tests are temporariliy disabled because of thread-unsafety in LocalJobRunner -->
+            <!-- MAPREDUCE-5367 should address this issue. -->
+            <!-- Run tests creating 2 test JVMs per processor core. -->
+            <!--<forkCount>2C</forkCount>-->
           </configuration>
         </plugin>
       </plugins>
