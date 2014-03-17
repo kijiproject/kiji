@@ -30,7 +30,6 @@ import javax.ws.rs.core.UriBuilder;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.yammer.dropwizard.testing.ResourceTest;
 
 import org.junit.After;
@@ -107,7 +106,7 @@ public class TestRowsResourceFreshening extends ResourceTest {
     mWriter = mTable.getWriterFactory().openTableWriter();
 
     StandardKijiRestPlugin.registerSerializers(this.getObjectMapperFactory());
-    mKijiClient = new ManagedKijiClient(ImmutableSet.of(mKiji.getURI()));
+    mKijiClient = new ManagedKijiClient(mKiji.getURI());
     mKijiClient.start();
 
     RowsResource resource = new RowsResource(mKijiClient,

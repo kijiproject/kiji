@@ -31,4 +31,13 @@
     </Or>
   </Match>
 
+  <!--
+    Other one-off exclusions.
+  -->
+  <Match>
+    <!-- These anonymous classes are compact and not performance sensitive. -->
+    <Class name="~org\.kiji\.rest\.util\.KijiInstanceCache.*" />
+    <Bug pattern="SIC_INNER_SHOULD_BE_STATIC_ANON" />
+  </Match>
+
 </FindBugsFilter>

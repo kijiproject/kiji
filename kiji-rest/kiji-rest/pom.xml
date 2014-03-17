@@ -229,6 +229,12 @@
         </exclusion>
       </exclusions>
     </dependency>
+
+    <dependency>
+      <groupId>org.apache.curator</groupId>
+      <artifactId>curator-recipes</artifactId>
+      <version>2.3.0</version>
+    </dependency>
   </dependencies>
 
   <build>

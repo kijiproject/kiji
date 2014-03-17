@@ -214,7 +214,7 @@ public class TestRowsResource extends ResourceTest {
     playersTable.release();
 
     StandardKijiRestPlugin.registerSerializers(this.getObjectMapperFactory());
-    mKijiClient = new ManagedKijiClient(Sets.newHashSet(mFakeKiji.getURI()));
+    mKijiClient = new ManagedKijiClient(mFakeKiji.getURI());
     mKijiClient.start();
 
     RowsResource resource = new RowsResource(mKijiClient, this.getObjectMapperFactory().build(),

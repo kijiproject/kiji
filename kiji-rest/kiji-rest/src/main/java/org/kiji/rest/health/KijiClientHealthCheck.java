@@ -17,41 +17,32 @@
  * limitations under the License.
  */
 
-package org.kiji.rest.resources;
+package org.kiji.rest.health;
 
-import java.io.PrintWriter;
+import com.yammer.metrics.core.HealthCheck;
 
-import com.google.common.collect.ImmutableMultimap;
-import com.yammer.dropwizard.tasks.Task;
-
-import org.kiji.annotations.ApiAudience;
 import org.kiji.rest.ManagedKijiClient;
 
 /**
- * This REST resource interacts with Kiji instances collection resource.
- *
- * This resource is served for requests using the resource identifier:
- * <li>/v1/instances/
+ * A HealthCheck for checking the health of a ManagedKijiClient.
  */
-@ApiAudience.Public
-public class RefreshInstancesTask extends Task {
+public class KijiClientHealthCheck extends HealthCheck {
+
   private final ManagedKijiClient mKijiClient;
 
   /**
-   * Creates a task which manually refreshes the instances served by the provided ManagedKijiClient.
+   * Create a HealthCheck instance for the supplied ManagedKijiClient.
    *
-   * @param kijiClient to be refreshed.
+   * @param kijiClient to check health of.
    */
-  public RefreshInstancesTask(ManagedKijiClient kijiClient) {
-    super("refresh_instances");
+  public KijiClientHealthCheck(ManagedKijiClient kijiClient) {
+    super("KijiClientHealthCheck");
     this.mKijiClient = kijiClient;
   }
 
+  /** {@inheritDoc} */
   @Override
-  public void execute(ImmutableMultimap<String, String> arg0, PrintWriter arg1)
-      throws Exception {
-    mKijiClient.refreshInstances();
-    arg1.println("Manually refreshed instances...");
-    arg1.flush();
+  protected Result check() throws Exception {
+   return mKijiClient.checkHealth();
   }
 }

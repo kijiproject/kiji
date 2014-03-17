@@ -22,14 +22,13 @@ package org.kiji.rest;
 import static org.junit.Assert.assertEquals;
 
 import java.net.URI;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.ws.rs.core.UriBuilder;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.yammer.dropwizard.testing.ResourceTest;
 
@@ -40,10 +39,8 @@ import org.kiji.rest.plugins.StandardKijiRestPlugin;
 import org.kiji.rest.resources.InstanceResource;
 import org.kiji.rest.resources.InstancesResource;
 import org.kiji.schema.Kiji;
+import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiURI;
-import org.kiji.schema.avro.TableLayoutDesc;
-import org.kiji.schema.layout.KijiTableLayouts;
-import org.kiji.schema.util.InstanceBuilder;
 
 /**
  * Test class for the Row resource.
@@ -51,38 +48,45 @@ import org.kiji.schema.util.InstanceBuilder;
  */
 public class TestInstancesResources extends ResourceTest {
 
-  private Kiji[] mFakeKijis = null;
+  // Pseudo-multiple inheritence delegate
+  private class KijiClientDelegate extends KijiClientTest {
+    private void setup() throws Exception {
+      super.setupKijiTest();
+    }
+
+    private void teardown() throws Exception {
+      super.teardownKijiTest();
+    }
+  }
+  private final KijiClientDelegate mDelegate = new KijiClientDelegate();
+
+  private Set<String> mInstances;
 
   /**
    * {@inheritDoc}
    */
   @Override
   protected void setUpResources() throws Exception {
-    // This list must be constructed in alphabetical order by instance name.
-    mFakeKijis = new Kiji[2];
-    Set<KijiURI> mValidInstances = Sets.newHashSet();
+    mDelegate.setup();
 
-    InstanceBuilder builder = new InstanceBuilder("default");
-    mFakeKijis[0] = builder.build();
+    KijiURI clusterURI = mDelegate.createTestHBaseURI();
 
-    TableLayoutDesc desc = KijiTableLayouts.getLayout("org/kiji/rest/layouts/sample_table.json");
+    Kiji kiji1 = mDelegate.createTestKiji(clusterURI);
+    Kiji kiji2 = mDelegate.createTestKiji(clusterURI);
 
-    mFakeKijis[0].createTable(desc);
-
-    builder = new InstanceBuilder("other");
-    mFakeKijis[1] = builder.build();
-
-    mValidInstances.add(mFakeKijis[0].getURI());
-    mValidInstances.add(mFakeKijis[1].getURI());
+    ImmutableSet.Builder<String> instances = ImmutableSet.builder();
+    instances.add(kiji1.getURI().getInstance());
+    instances.add(kiji2.getURI().getInstance());
+    mInstances = instances.build();
 
     StandardKijiRestPlugin.registerSerializers(this.getObjectMapperFactory());
-    ManagedKijiClient kijiClient = new ManagedKijiClient(mValidInstances);
+    ManagedKijiClient kijiClient = new ManagedKijiClient(clusterURI);
+    kijiClient.start();
 
     InstanceResource instanceResource = new InstanceResource(kijiClient);
     InstancesResource instancesResource = new InstancesResource(kijiClient);
     addResource(instanceResource);
     addResource(instancesResource);
-    kijiClient.start();
   }
 
   /**
@@ -92,9 +96,7 @@ public class TestInstancesResources extends ResourceTest {
    */
   @After
   public void afterTest() throws Exception {
-    for (Kiji fakeKiji : mFakeKijis) {
-      fakeKiji.release();
-    }
+    mDelegate.teardown();
   }
 
   @Test
@@ -103,29 +105,11 @@ public class TestInstancesResources extends ResourceTest {
     @SuppressWarnings("unchecked") final List<Map<String, String>> instances =
         (List<Map<String, String>>) client().resource(resourceURI).get(List.class);
 
-    /** Sort maps of instance metadata components by the "name" element. */
-    final Comparator<Map<String, String>> instanceMapComparator =
-        new Comparator<Map<String, String>>() {
-          @Override
-          public int compare(Map<String, String> instData1, Map<String, String> instData2) {
-            final String name1 = instData1.get("name");
-            final String name2 = instData2.get("name");
+    final Set<String> instanceNames = Sets.newHashSet();
+    for (Map<String, String> instance : instances) {
+      instanceNames.add(instance.get("name"));
+    }
 
-            if (null == name1 && null != name2) {
-              return -1;
-            } else if (null == name2 && null != name1) {
-              return 1;
-            } else if (null == name1) {
-              return 0;
-            } else {
-              return name1.compareTo(name2);
-            }
-          }
-        };
-
-    assertEquals(2, instances.size());
-    Collections.sort(instances, instanceMapComparator); // Sort the instance names for checking.
-    assertEquals(instances.get(0).get("name"), mFakeKijis[0].getURI().getInstance());
-    assertEquals(instances.get(1).get("name"), mFakeKijis[1].getURI().getInstance());
+    assertEquals(mInstances, instanceNames);
   }
 }

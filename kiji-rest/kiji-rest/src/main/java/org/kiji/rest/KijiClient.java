@@ -31,8 +31,7 @@ import org.kiji.scoring.FreshKijiTableReader;
  */
 public interface KijiClient {
   /**
-   * Gets a Kiji object for the specified instance. Client is responsible for releasing the
-   * Kiji instance when done.
+   * Gets a Kiji object for the specified instance. Caller should not release the Kiji instance.
    *
    * @param instance of the Kiji to request.
    * @return Kiji object
@@ -41,7 +40,11 @@ public interface KijiClient {
    */
   Kiji getKiji(String instance);
 
-  /** @return a collection of instances served by this client. */
+  /**
+   * Returns the names of the instances currently being served.
+   *
+   * @return the names of currently served instances.
+   */
   Collection<String> getInstances();
 
   /**

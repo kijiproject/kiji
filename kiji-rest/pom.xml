@@ -22,7 +22,7 @@
 
   <groupId>org.kiji.rest</groupId>
   <artifactId>kiji-rest-root</artifactId>
-  <version>1.3.0-SNAPSHOT</version>
+  <version>1.3.8-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <parent>
