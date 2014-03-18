@@ -67,6 +67,7 @@ to the Kiji version you are using are available here:
 
 #### KijiScoring
 
+* [KijiScoring Tutorial 0.12.0](tutorials/scoring/0.12.0/scoring-overview)
 * [KijiScoring Tutorial 0.11.0](tutorials/scoring/0.11.0/scoring-overview)
 * [KijiScoring Tutorial 0.10.0](tutorials/scoring/0.10.0/scoring-overview)
 * [KijiScoring Tutorial 0.9.0](tutorials/scoring/0.9.0/scoring-overview)
