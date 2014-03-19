@@ -36,6 +36,7 @@ import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiBufferedWriter;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiURI;
+import org.kiji.schema.layout.KijiTableLayout;
 
 /**
  * Generates 1 million random user records. Populates the users table whose
@@ -55,6 +56,9 @@ public class RandomDataGenerator {
   private static final String TOTAL = "total";
   private static final String FIRST_NAME = "org/kiji/rest/load_test/first_names.txt";
   private static final String LAST_NAME = "org/kiji/rest/load_test/last_names.txt";
+  private static final String USER_TABLE_NAME = "users";
+  private static final String USER_TABLE_LAYOUT = "/org/kiji/rest/load_test/load_test_layout.json";
+  private static final String DEFAULT_INSTANCE = "kiji://.env/default";
 
   private static final String COMMENT = "#";
 
@@ -188,26 +192,31 @@ public class RandomDataGenerator {
   }
 
   /**
-   * Main.
+   * Main. Pass in the instance to create the users table in.
    *
-   * @param args arguments to the application.
+   * @param args instance to create user table in.
    * @throws Exception if there is an exception.
    */
   public static void main(String[] args) throws Exception {
     final String userTableInstanceURI;
-    final String userTableName;
     if (args.length == 0) {
-      userTableInstanceURI = "kiji://.env/default";
-      userTableName = "users";
+      userTableInstanceURI = DEFAULT_INSTANCE;
     } else {
-      final int lastSlash = args[0].lastIndexOf("/");
-      userTableInstanceURI = args[0].substring(0, lastSlash);
-      userTableName = args[0].substring(lastSlash + 1);
+      userTableInstanceURI = args[0];
     }
-    final RandomDataGenerator gen = new RandomDataGenerator();
     final KijiURI kijiURI = KijiURI.newBuilder(userTableInstanceURI).build();
     final Kiji kiji = Kiji.Factory.open(kijiURI);
-    KijiTable userTable = kiji.openTable(userTableName);
+
+    // Create table.
+    kiji.createTable(
+        KijiTableLayout
+            .createFromEffectiveJsonResource(USER_TABLE_LAYOUT)
+            .getDesc());
+    final KijiTable userTable = kiji.openTable(USER_TABLE_NAME);
+
+    // Generate data.
+    final RandomDataGenerator gen = new RandomDataGenerator();
+
     gen.generateData(USER_ID_MAX, userTable);
     userTable.release();
     kiji.release();

@@ -62,13 +62,30 @@
           <mainClass>org.kiji.rest.load_test.RandomDataGenerator</mainClass>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+      </plugin>
     </plugins>
   </build>
 
   <dependencies>
     <dependency>
+      <groupId>com.yammer.dropwizard</groupId>
+      <artifactId>dropwizard-core</artifactId>
+      <version>${dropwizard.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>org.kiji.schema</groupId>
       <artifactId>kiji-schema</artifactId>
+      <version>${kiji-schema.version}</version>
+      <scope>compile</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.kiji.schema</groupId>
+      <artifactId>kiji-schema-platform-api</artifactId>
       <version>${kiji-schema.version}</version>
       <scope>compile</scope>
     </dependency>
