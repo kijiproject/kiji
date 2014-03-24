@@ -176,7 +176,6 @@ public class KijiInstanceCache {
     mFreshReaders.invalidate(table);
   }
 
-
   /**
    * Stop creating resources to cache, and cleanup any existing resources.
    *
@@ -184,6 +183,7 @@ public class KijiInstanceCache {
    */
   public void stop() throws IOException {
     mIsOpen = false; // Stop caches from loading more entries
+    mFreshReaders.invalidateAll();
     mTables.invalidateAll();
     mKiji.release();
   }

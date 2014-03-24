@@ -51,6 +51,7 @@ public class TestManagedKijiClient extends KijiClientTest {
 
   private KijiURI mClusterURI;
   private Set<String> mInstances;
+  private Set<String> mInstanceNames;
   private ManagedKijiClient mKijiClient;
 
   /**
@@ -85,7 +86,7 @@ public class TestManagedKijiClient extends KijiClientTest {
       instances.add(kiji.getURI().getInstance());
     }
 
-    mInstances = instances.build();
+    mInstanceNames = instances.build();
     installTables(kijis);
     mKijiClient = new ManagedKijiClient(mClusterURI);
     mKijiClient.start();
@@ -98,19 +99,19 @@ public class TestManagedKijiClient extends KijiClientTest {
 
   @Test
   public void testHasAllInstances() throws Exception {
-    Assert.assertEquals(mInstances, Sets.newHashSet(mKijiClient.getInstances()));
+    Assert.assertEquals(mInstanceNames, Sets.newHashSet(mKijiClient.getInstances()));
   }
 
   @Test
   public void testKeepsKijisCached() throws Exception {
-    for (String instance : mInstances) {
+    for (String instance : mInstanceNames) {
       assertTrue(mKijiClient.getKiji(instance) == mKijiClient.getKiji(instance));
     }
   }
 
   @Test
   public void testKeepsKijiTablesCached() throws Exception {
-    for (String instance : mInstances) {
+    for (String instance : mInstanceNames) {
       for (String table : INSTANCE_TABLES) {
         assertTrue(mKijiClient.getKijiTable(instance, table)
             == mKijiClient.getKijiTable(instance, table));
@@ -120,14 +121,13 @@ public class TestManagedKijiClient extends KijiClientTest {
 
   @Test
   public void testKeepsFreshenersCached() throws Exception {
-    for (String instance : mInstances) {
+    for (String instance : mInstanceNames) {
       for (String table : INSTANCE_TABLES) {
         assertTrue(mKijiClient.getFreshKijiTableReader(instance, table)
             == mKijiClient.getFreshKijiTableReader(instance, table));
       }
     }
   }
-
 
   @Test(expected = WebApplicationException.class)
   public void testGetKijiInvalidInstanceForbidden() throws Exception {
@@ -152,7 +152,7 @@ public class TestManagedKijiClient extends KijiClientTest {
   @Test(expected = WebApplicationException.class)
   public void testGetKijiTableInvalidTableNotFound() throws Exception {
     try {
-      mKijiClient.getKijiTable(mInstances.iterator().next(), "bar");
+      mKijiClient.getKijiTable(mInstanceNames.iterator().next(), "bar");
     } catch (WebApplicationException e) {
       assertEquals(Response.Status.NOT_FOUND.getStatusCode(), e.getResponse().getStatus());
       throw e;
@@ -173,7 +173,7 @@ public class TestManagedKijiClient extends KijiClientTest {
   @Test(expected = WebApplicationException.class)
   public void testGetFreshenerInvalidTableNotFound() throws Exception {
     try {
-      mKijiClient.getFreshKijiTableReader(mInstances.iterator().next(), "bar");
+      mKijiClient.getFreshKijiTableReader(mInstanceNames.iterator().next(), "bar");
     } catch (WebApplicationException e) {
       assertEquals(Response.Status.NOT_FOUND.getStatusCode(), e.getResponse().getStatus());
       throw e;

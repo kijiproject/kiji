@@ -73,6 +73,7 @@ public class TestRowsResourceFreshening extends ResourceTest {
   private Kiji mKiji;
   private KijiTable mTable;
   private KijiTableWriter mWriter;
+  private KijiFreshnessManager mManager;
   private ManagedKijiClient mKijiClient;
 
   /** {@inheritDoc} */
@@ -83,8 +84,8 @@ public class TestRowsResourceFreshening extends ResourceTest {
         .build();
     mTable = mKiji.openTable(TABLE);
 
-    KijiFreshnessManager manager = KijiFreshnessManager.create(mKiji);
-    manager.registerFreshener(
+    mManager = KijiFreshnessManager.create(mKiji);
+    mManager.registerFreshener(
         TABLE,
         new KijiColumnName(FAMILY, C),
         new AlwaysFreshen(),
@@ -93,7 +94,7 @@ public class TestRowsResourceFreshening extends ResourceTest {
         true,
         false
     );
-    manager.registerFreshener(
+    mManager.registerFreshener(
         TABLE,
         new KijiColumnName(FAMILY, NORM),
         new AlwaysFreshen(),
@@ -121,6 +122,7 @@ public class TestRowsResourceFreshening extends ResourceTest {
     mWriter.close();
     mTable.release();
     mKiji.release();
+    mManager.close();
     mKijiClient.stop();
   }
 
