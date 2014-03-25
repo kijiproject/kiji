@@ -19,7 +19,14 @@
 
 package org.kiji.scoring.impl;
 
+import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import com.google.common.collect.Maps;
 import org.apache.hadoop.util.ReflectionUtils;
@@ -27,6 +34,9 @@ import org.apache.hadoop.util.ReflectionUtils;
 import org.kiji.annotations.ApiAudience;
 import org.kiji.mapreduce.kvstore.KeyValueStore;
 import org.kiji.mapreduce.kvstore.KeyValueStoreReaderFactory;
+import org.kiji.schema.KijiTableReader;
+import org.kiji.schema.KijiTableReaderPool;
+import org.kiji.schema.RuntimeInterruptedException;
 import org.kiji.scoring.KijiFreshnessPolicy;
 import org.kiji.scoring.ScoreFunction;
 
@@ -92,5 +102,103 @@ public final class ScoringUtils {
     kvMap.putAll(scoreFunction.getRequiredStores(context));
     kvMap.putAll(policy.getRequiredStores(context));
     return KeyValueStoreReaderFactory.create(kvMap);
+  }
+
+  /**
+   * Get a future from a given callable.  This method uses the singleton FreshenerThreadPool to run
+   * threads responsible for carrying out the operation of the Future.
+   *
+   * @param executorService ExecutorService to use to get the Future.
+   * @param callable the callable to run in the new Future.
+   * @param <RETVAL> the return type of the callable and Future.
+   * @return a new Future representing asynchronous execution of the given callable.
+   */
+  public static <RETVAL> Future<RETVAL> getFuture(
+      ExecutorService executorService,
+      Callable<RETVAL> callable
+  ) {
+    return executorService.submit(callable);
+  }
+
+  /**
+   * Get the value from a given Future.  This blocks until the Future is complete.
+   *
+   * @param future the Future from which to get the resultant value.
+   * @param <RETVAL> the type of the value returned by the Future.
+   * @return the return value of the given Future.
+   */
+  public static <RETVAL> RETVAL getFromFuture(
+      final Future<RETVAL> future
+  ) {
+    try {
+      return future.get();
+    } catch (InterruptedException ie) {
+      throw new RuntimeInterruptedException(ie);
+    } catch (ExecutionException ee) {
+      throw new RuntimeException(ee);
+    }
+  }
+
+  /**
+   * Get the value from a given Future with a timeout.  This blocks until the Future is complete or
+   * the timeout expires.
+   *
+   * @param future the Future from which to get the resultant value.
+   * @param timeout the time to wait (in milliseconds) before a TimeoutException.
+   * @param <RETVAL> the type of the value returned by the Future.
+   * @return the return value of the given Future.
+   * @throws TimeoutException if the Future does not return before the timeout period elapses.
+   */
+  public static <RETVAL> RETVAL getFromFuture(
+      final Future<RETVAL> future,
+      final long timeout
+  ) throws TimeoutException {
+    return getFromFuture(future, timeout, TimeUnit.MILLISECONDS);
+  }
+
+  /**
+   * Get the value from a given Future with a timeout.  This blocks until the Future is complete or
+   * the timeout expires.
+   *
+   * @param future the Future from which to get the resultant value.
+   * @param timeout the time to wait (in units defined by timeUnit) before a TimeoutException.
+   * @param timeUnit the unit of time to use for the timeout.
+   * @param <RETVAL> the type of the value returned by the Future.
+   * @return the return value of the given Future.
+   * @throws TimeoutException if the Future does not return before the timeout period elapses.
+   */
+  public static <RETVAL> RETVAL getFromFuture(
+      final Future<RETVAL> future,
+      final long timeout,
+      final TimeUnit timeUnit
+  ) throws TimeoutException {
+    try {
+      return future.get(timeout, timeUnit);
+    } catch (InterruptedException ie) {
+      throw new RuntimeInterruptedException(ie);
+    } catch (ExecutionException ee) {
+      throw new RuntimeException(ee);
+    }
+  }
+
+  /**
+   * Get a KijiTableReader from the given reader pool.
+   *
+   * @param pool KijiTableReaderPool from which to get a reader.
+   * @return a KijiTableReader from the given pool.
+   * @throws java.io.IOException in case of an error borrowing a reader from the pool.
+   */
+  public static KijiTableReader getPooledReader(
+      final KijiTableReaderPool pool
+  ) throws IOException {
+    try {
+      return pool.borrowObject();
+    } catch (Exception e) {
+      if (e instanceof IOException) {
+        throw (IOException) e;
+      } else {
+        throw new RuntimeException(e);
+      }
+    }
   }
 }
