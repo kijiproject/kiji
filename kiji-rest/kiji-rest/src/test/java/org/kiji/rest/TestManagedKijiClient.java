@@ -50,7 +50,6 @@ public class TestManagedKijiClient extends KijiClientTest {
   private static final Set<String> INSTANCE_TABLES =  ImmutableSet.of("t_1", "t_2", "t_3");
 
   private KijiURI mClusterURI;
-  private Set<String> mInstances;
   private Set<String> mInstanceNames;
   private ManagedKijiClient mKijiClient;
 
@@ -80,6 +79,7 @@ public class TestManagedKijiClient extends KijiClientTest {
     kijis.add(createTestKiji(mClusterURI));
     kijis.add(createTestKiji(mClusterURI));
     kijis.add(createTestKiji(mClusterURI));
+    installTables(kijis);
 
     ImmutableSet.Builder<String> instances = ImmutableSet.builder();
     for (Kiji kiji : kijis) {
@@ -87,7 +87,6 @@ public class TestManagedKijiClient extends KijiClientTest {
     }
 
     mInstanceNames = instances.build();
-    installTables(kijis);
     mKijiClient = new ManagedKijiClient(mClusterURI);
     mKijiClient.start();
   }

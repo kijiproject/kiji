@@ -254,7 +254,7 @@ public class ManagedKijiClient implements KijiClient, Managed {
    * @throws IOException if an instance can not be added to the cache.
    */
   public void refreshInstances() throws IOException {
-    LOG.info("Refereshing instances.");
+    LOG.info("Refreshing instances.");
     Set<KijiURI> instances = zNodesToInstanceURIs(mClusterURI, mZKInstances.getCurrentData());
 
     // Remove instances not in updatedInstances.
