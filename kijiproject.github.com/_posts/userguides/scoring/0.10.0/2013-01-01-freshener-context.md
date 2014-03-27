@@ -11,7 +11,7 @@ description: Description of FreshenerContext API.
 <div id="accordion-container">
   <h2 class="accordion-header"> FreshenerContext.java </h2>
     <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-scoring/raw/kiji-scoring-root-0.10.0/src/main/java/org/kiji/scoring/FreshenerContext.java"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-scoring/raw/kiji-scoring-0.10.0/src/main/java/org/kiji/scoring/FreshenerContext.java"> </script>
   </div>
 </div>
 

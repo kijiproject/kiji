@@ -11,7 +11,7 @@ description: Description of managing metadata in KijiScoring.
 <div id="accordion-container">
   <h2 class="accordion-header"> KijiFreshnessManager.java </h2>
     <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-scoring/raw/kiji-scoring-root-0.12.0/src/main/java/org/kiji/scoring/KijiFreshnessManager.java"> </script>
+    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-scoring/raw/kiji-scoring-0.12.0/src/main/java/org/kiji/scoring/KijiFreshnessManager.java"> </script>
   </div>
 </div>
 
