@@ -41,7 +41,7 @@
     <kiji-schema.version>1.4.0-SNAPSHOT</kiji-schema.version>
     <kiji-mapreduce.version>1.2.6-SNAPSHOT</kiji-mapreduce.version>
     <fake-hbase.version>0.1.5-SNAPSHOT</fake-hbase.version>
-    <pmml-evaluator.version>1.1-SNAPSHOT</pmml-evaluator.version>
+    <pmml-evaluator.version>1.1.1</pmml-evaluator.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
