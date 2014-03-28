@@ -19,9 +19,12 @@
 package org.kiji.scoring.lib;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import javax.xml.bind.JAXBException;
+import javax.xml.transform.Source;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -34,28 +37,25 @@ import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.dmg.pmml.DataDictionary;
-import org.dmg.pmml.DataField;
-import org.dmg.pmml.DataType;
-import org.dmg.pmml.FieldName;
-import org.dmg.pmml.IOUtil;
-import org.dmg.pmml.PMML;
+import org.dmg.pmml.*;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalDateTime;
 import org.joda.time.LocalTime;
 import org.joda.time.Seconds;
-import org.jpmml.evaluator.DaysSinceDate;
-import org.jpmml.evaluator.Evaluator;
-import org.jpmml.evaluator.ModelEvaluatorFactory;
-import org.jpmml.evaluator.SecondsSinceDate;
-import org.jpmml.evaluator.SecondsSinceMidnight;
+import org.jpmml.evaluator.*;
 import org.jpmml.manager.PMMLManager;
+import org.jpmml.model.ImportFilter;
+import org.jpmml.model.JAXBUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import org.kiji.annotations.ApiAudience;
 import org.kiji.annotations.ApiStability;
 import org.kiji.schema.KijiColumnName;
 import org.kiji.schema.KijiDataRequest;
+import org.kiji.schema.KijiIOException;
 import org.kiji.schema.KijiRowData;
 import org.kiji.scoring.FreshenerContext;
 import org.kiji.scoring.FreshenerSetupContext;
@@ -89,6 +89,9 @@ import org.kiji.scoring.ScoreFunction;
 @ApiAudience.Public
 @ApiStability.Experimental
 public final class JpmmlScoreFunction extends ScoreFunction<GenericRecord> {
+
+  private static final Logger LOG = LoggerFactory.getLogger(JpmmlScoreFunction.class);
+
   /** Parameter name for specifying the path to the trained model file. */
   public static final String MODEL_FILE_PARAMETER =
       "org.kiji.scoring.lib.JpmmlScoreFunction.model-file";
@@ -115,8 +118,12 @@ public final class JpmmlScoreFunction extends ScoreFunction<GenericRecord> {
 
   /** Stores the evaluator for the provided model. */
   private Evaluator mEvaluator = null;
+
   /** Stores the schema for the scores calculated by the provided model. */
   private Schema mResultSchema = null;
+
+  /** Stores a mapping from PMML fields (data fields and output fields) to their PMML data types. */
+  private Map<FieldName, DataType> mFieldNamesToPmmlDataTypes;
 
   /**
    * Checks to ensure required parameters have been provided, loads the Jpmml evaluator, and creates
@@ -163,7 +170,8 @@ public final class JpmmlScoreFunction extends ScoreFunction<GenericRecord> {
       try {
         final FSDataInputStream fsDataInputStream = fileSystem.open(modelFilePath);
         try {
-          final PMML pmml = IOUtil.unmarshal(fsDataInputStream);
+          Source source = ImportFilter.apply(new InputSource(fsDataInputStream));
+          final PMML pmml = JAXBUtil.unmarshalPMML(source);
           pmmlManager = new PMMLManager(pmml);
         } finally {
           fsDataInputStream.close();
@@ -177,23 +185,95 @@ public final class JpmmlScoreFunction extends ScoreFunction<GenericRecord> {
       throw new IOException(e);
     }
 
-    // Load the default model
+    // Sanity check that the user-specified model exists in the PMML file.
+    List<Model> modelList = pmmlManager.getModels();
+
+    HashSet<String> modelNames = new HashSet<String>();
+    for (Model model : modelList) {
+      modelNames.add(model.getModelName());
+
+    }
+    if (!modelNames.contains(modelName)) {
+      throw new KijiIOException(String.format(
+          "Specified model '%s' does not exist in PMML file.  Model names are: %s.",
+          modelName,
+          modelNames
+      ));
+    }
+
+    // Load the user-specified model.
     mEvaluator = (Evaluator) pmmlManager.getModelManager(
         modelName,
         ModelEvaluatorFactory.getInstance()
     );
 
-    // Build required schemas.
+    // Create the map of PMML field names to their PMML data types.
+    mFieldNamesToPmmlDataTypes = new HashMap<FieldName, DataType>();
+
+    // TODO (SCORE-174): Need a check that the names don't have dots in them.
+
+    // Create a map from PMML field names to their Avro types.
     final DataDictionary dataDictionary = pmmlManager.getDataDictionary();
-    final Map<FieldName, Schema> fieldSchemas = Maps.newHashMap();
     for (DataField dataField : dataDictionary.getDataFields()) {
-      fieldSchemas.put(dataField.getName(), convertDataTypeToSchema(dataField.getDataType()));
+      Preconditions.checkNotNull(dataField.getDataType());
+      mFieldNamesToPmmlDataTypes.put(dataField.getName(), dataField.getDataType());
     }
 
     final List<FieldName> resultFields = Lists.newArrayList();
-    resultFields.addAll(mEvaluator.getPredictedFields());
-    resultFields.addAll(mEvaluator.getOutputFields());
-    mResultSchema = fieldNamesToSchema(resultRecordName, resultFields, fieldSchemas);
+    resultFields.addAll(mEvaluator.getTargetFields());
+
+    // All of the target fields should already be in the data-type dictionary.
+    for (FieldName fieldName : resultFields) {
+      Preconditions.checkArgument(mFieldNamesToPmmlDataTypes.containsKey(fieldName));
+    }
+
+    // TODO (SCORE-172): Handle output fields correctly (they may not have data types).
+    // Add data types for all of the output fields.
+    for (FieldName outputFieldName : mEvaluator.getOutputFields()) {
+      // See if we can look up the type of this field.
+      OutputField outputField = mEvaluator.getOutputField(outputFieldName);
+      Preconditions.checkNotNull(outputField);
+      DataType dataType = outputField.getDataType();
+
+      // TODO: Decide whether to allow models with duplicate output fields.
+      // (Some of the JPMML-Rattle unit tests actually have this (!).
+      //if (resultFields.contains(outputFieldName)) { continue; }
+      Preconditions.checkArgument(!resultFields.contains(outputFieldName));
+
+      resultFields.add(outputFieldName);
+      Preconditions.checkArgument(!mFieldNamesToPmmlDataTypes.containsKey(outputFieldName));
+
+      // Hopefully, most output fields in the PMML will have an explicit data type.
+      if (dataType != null) {
+        mFieldNamesToPmmlDataTypes.put(outputFieldName, dataType);
+        continue;
+      }
+
+      // Try to guess the data type - probability is always a double.
+      if (outputFieldName.getValue().startsWith("Probability_")) {
+        mFieldNamesToPmmlDataTypes.put(outputFieldName, DataType.DOUBLE);
+        continue;
+      }
+
+      // Try to guess the data type - "Predicted_foo" will always have the same type as "foo."
+      if (outputFieldName.getValue().startsWith("Predicted_")) {
+        final FieldName rootName = new FieldName(outputFieldName.getValue().substring(10));
+        Preconditions.checkArgument(mFieldNamesToPmmlDataTypes.containsKey(rootName));
+        mFieldNamesToPmmlDataTypes.put(
+            outputFieldName,
+            mFieldNamesToPmmlDataTypes.get(rootName)
+        );
+        continue;
+      }
+
+      // Fall back to string.
+      LOG.warn(String.format(
+          "Could not find data type in model for field '%s', falling back to STRING.",
+          outputFieldName));
+      mFieldNamesToPmmlDataTypes.put(outputFieldName, DataType.STRING);
+    }
+
+    mResultSchema = fieldNamesToSchema(resultRecordName, resultFields, mFieldNamesToPmmlDataTypes);
   }
 
   /**
@@ -235,11 +315,28 @@ public final class JpmmlScoreFunction extends ScoreFunction<GenericRecord> {
     // Build the arguments to the pmml model evaluator.
     final Map<FieldName, Object> arguments = Maps.newHashMap();
     for (FieldName field : mEvaluator.getActiveFields()) {
-      final Object avroField = predictors.get(field.getValue());
-      final DataType dataType = mEvaluator.getDataField(field).getDataType();
+      final Object avroField;
+      try {
+        avroField = predictors.get(field.getValue());
+      } catch (NullPointerException e) {
+        throw new KijiIOException(String.format(
+            "Trouble finding field '%s' in input data for scoring.",
+            field));
+      }
+      final DataType dataType = mFieldNamesToPmmlDataTypes.get(field);
+      Preconditions.checkNotNull(dataType);
 
       final Object convertedArgument = convertAvroToFieldValue(avroField, dataType);
-      final Object preparedArgument = mEvaluator.prepare(field, convertedArgument);
+      final Object preparedArgument;
+      try {
+        preparedArgument = mEvaluator.prepare(field, convertedArgument);
+      } catch (Exception e) {
+        throw new KijiIOException(String.format(
+            "Trouble setting field '%s' to value '%s' in JPMML evaluator.",
+            field,
+            convertedArgument
+        ));
+      }
       arguments.put(field, preparedArgument);
     }
 
@@ -250,9 +347,15 @@ public final class JpmmlScoreFunction extends ScoreFunction<GenericRecord> {
     final GenericRecordBuilder resultRecordBuilder = new GenericRecordBuilder(mResultSchema);
     for (Map.Entry<FieldName, ?> entry : results.entrySet()) {
       final FieldName fieldName = entry.getKey();
-      final Object jpmmlField = entry.getValue();
-      final DataType dataType = mEvaluator.getDataField(fieldName).getDataType();
 
+      // This actually happens sometimes!
+      Preconditions.checkNotNull(fieldName);
+
+      final Object jpmmlField = entry.getValue();
+
+      // Look in the output fields and in the data fields for the data type.
+      final DataType dataType = mFieldNamesToPmmlDataTypes.get(fieldName);
+      Preconditions.checkNotNull(dataType);
       final Object convertedField = convertFieldValueToAvro(jpmmlField, dataType);
       resultRecordBuilder.set(entry.getKey().getValue(), convertedField);
     }
@@ -434,23 +537,23 @@ public final class JpmmlScoreFunction extends ScoreFunction<GenericRecord> {
    *
    * @param recordName of the desired record schema.
    * @param fieldNames of the desired record schema.
-   * @param fieldTypes of the desired record schema.
+   * @param fieldTypes of the desired record schema (in PMML types).
    * @return a record schema for the provided PMML fields.
    */
   public static Schema fieldNamesToSchema(
       final String recordName,
       final Iterable<FieldName> fieldNames,
-      final Map<FieldName, Schema> fieldTypes
+      final Map<FieldName, DataType> fieldTypes
   ) {
     final List<Schema.Field> fields = Lists.newArrayList();
-    for (FieldName field : fieldNames) {
+    for (FieldName fieldName : fieldNames) {
       Preconditions.checkArgument(
-          fieldTypes.containsKey(field),
-          String.format("Missing type for field: %s", field.getValue())
+          fieldTypes.containsKey(fieldName),
+          String.format("Missing type for field: %s", fieldName.getValue())
       );
       final Schema.Field schemaField = new Schema.Field(
-          field.getValue(),
-          fieldTypes.get(field),
+          fieldName.getValue(),
+          convertDataTypeToSchema(fieldTypes.get(fieldName)),
           null,
           null
       );
