@@ -114,7 +114,7 @@ mr_devel_branch : master
 mrlib_devel_version : 1.1.5
 mrlib_devel_branch : master
 
-express_devel_version : 1.0.3
+express_devel_version : 2.0.0
 express_devel_branch : master
 
 phonebook_devel_version : 1.1.4

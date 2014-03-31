@@ -28,11 +28,11 @@ and the target Kiji table.
 
 <div class="userinput">
 {% highlight bash %}
-express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
-    ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_devel_version}}.jar \
-    org.kiji.express.music.SongMetadataImporter \
+express.py job -libjars=${MUSIC_EXPRESS_HOME}/lib/* \
+    --user_jar=${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_devel_version}}.jar \
+    --job-name=org.kiji.express.music.SongMetadataImporter --mode=hdfs \
     --input express-tutorial/song-metadata.json \
-    --table-uri ${KIJI}/songs --hdfs
+    --table-uri ${KIJI}/songs
 {% endhighlight %}
 </div>
 
@@ -40,11 +40,11 @@ express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
 
 <div class="userinput">
 {% highlight bash %}
-express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
-    ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_devel_version}}.jar \
-    org.kiji.express.music.SongPlaysImporter \
+express.py job -libjars=${MUSIC_EXPRESS_HOME}/lib/* \
+    --user-jar=${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_devel_version}}.jar \
+    --job-name=org.kiji.express.music.SongPlaysImporter --mode=hdfs \
     --input express-tutorial/song-plays.json \
-    --table-uri ${KIJI}/users --hdfs
+    --table-uri ${KIJI}/users
 {% endhighlight %}
 </div>
 
@@ -134,6 +134,6 @@ The importer looks like this:
 <div id="accordion-container">
   <h2 class="accordion-header"> SongMetadataImporter.scala </h2>
   <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-express-music/raw/{{site.music_express_devel_branch}}/src/main/scala/org/kiji/express/music/SongMetadataImporter.scala"> </script>
+        <script src="http://gist-it.appspot.com/github/kijiproject/kiji-express-music/raw/{{site.music_express_devel_branch}}/src/main/scala/org/kiji/express/music/SongMetadataImporter.scala"> </script>
   </div>
 </div>

@@ -38,13 +38,13 @@ To produce KijiExpress code that can be compiled:
 
 The command to run a compiled KijiExpress job is as follows:
 
-    express job --libjars <path/to/dependencies> \
-        <path/to/jar.jar> \
-        <class to run> \
+    express.py job --libjars=<path/to/dependencies> \
+        --user-jar=<path/to/jar.jar> \
+        --job-name=<class to run> \
+        --mode=hdfs \
         --input <path/to/source/files-tables> \
-        --table-uri <URI of Kiji table>
+        --table-uri <URI of Kiji table> \
         --output <path/to/target/files-tables>
-        --hdfs
 
 Your KijiExpress job can access additional arguments that can be specified on the command line. The
 standard arguments are as follows:
@@ -52,20 +52,20 @@ standard arguments are as follows:
 jar file
 :Path to the JAR file that includes the class you want to run.
 
-`--libjars \<path\>`
+`--libjars=\<path\>`
 :Path to compiled JAR files that include auxiliary jars that need to be included. There
-is a space after the option name, then the path follows in double quotation marks.
+is a no space after the flag name, then the path follows without quotation marks.
 
-`--hdfs`
+`--mode=hdfs`
 :Specifies that the job is to look for input and write output to the HDFS on the running
-cluster. Omit this option to run in “local” mode where input and output files are expected
+cluster. Omit this flag to run in “local” mode where input and output files are expected
 relative to the location where the command is run.
 
 For example, to refer to external jars for the music tutorial project, an express command
 line would include:
 
-    express script examples/express-music/scripts/SongMetadataImporter.express \
-    --libjars “examples/express-music/lib/*” --hdfs
+    express.py job examples/express-music/scripts/SongMetadataImporter.express \
+    --libjars=“examples/express-music/lib/*” --mode=hdfs
 
 ## Running Logic in the KijiExpress Shell
 
@@ -81,7 +81,7 @@ Commands specific to the shell which should not be evaluated by the Scala interp
 prefixed with a colon (:). Here’s a sample interactive session:
 
     $ cd <path/to/project>
-    $ express shell
+    $ express.py shell
     express> :paste
     // Entering paste mode (ctrl-D to finish)
     import scala.util.parsing.json.JSON
@@ -110,7 +110,7 @@ prefixed with a colon (:). Here’s a sample interactive session:
 Alternatively you can simply point to the Scala file:
 
     $ cd <path/to/project>
-    $ express shell
+    $ express.py shell
     express> :load SongMetadataImporter.scala
 
 

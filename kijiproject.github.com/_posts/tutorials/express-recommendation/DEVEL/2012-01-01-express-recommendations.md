@@ -123,8 +123,10 @@ Finally we create a flow that does the following:
 
 <div class="userinput">
 {% highlight bash %}
-express job ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_devel_version}}.jar \
-    org.kiji.express.music.SongRecommender --songs-table ${KIJI}/songs \
+express.py job \
+    --user-jar=${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_devel_version}}.jar \
+    --job-name=org.kiji.express.music.SongRecommender --mode=hdfs \
+    --songs-table ${KIJI}/songs \
     --users-table ${KIJI}/users
 {% endhighlight %}
 </div>
@@ -171,6 +173,6 @@ Here's the entire SongRecommender job:
 <div id="accordion-container">
   <h2 class="accordion-header"> SongPlayCounter.express </h2>
   <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-express-music/raw/{{site.music_express_devel_branch}}/src/main/scala/org/kiji/express/music/SongRecommender.scala"> </script>
+        <script src="http://gist-it.appspot.com/github/kijiproject/kiji-express-music/raw/{{site.music_express_devel_branch}}/src/main/scala/org/kiji/express/music/SongRecommender.scala"> </script>
   </div>
 </div>

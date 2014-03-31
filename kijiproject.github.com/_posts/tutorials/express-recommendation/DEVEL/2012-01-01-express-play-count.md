@@ -139,7 +139,7 @@ This code shows the entire pipeline put together:
 <div id="accordion-container">
   <h2 class="accordion-header"> SongPlayCounter.scala </h2>
   <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-express-music/raw/{{site.music_express_devel_branch}}/src/main/scala/org/kiji/express/music/SongPlayCounter.scala"> </script>
+        <script src="http://gist-it.appspot.com/github/kijiproject/kiji-express-music/raw/{{site.music_express_devel_branch}}/src/main/scala/org/kiji/express/music/SongPlayCounter.scala"> </script>
   </div>
 </div>
 
@@ -149,12 +149,11 @@ This code shows the entire pipeline put together:
 
 <div class="userinput">
 {% highlight bash %}
-express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
-    ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_devel_version}}.jar \
-    org.kiji.express.music.SongPlayCounter \
+express.py job --libjars="${MUSIC_EXPRESS_HOME}/lib/*" \
+    --user-jar=${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_devel_version}}.jar \
+    --job-name=org.kiji.express.music.SongPlayCounter --mode=hdfs \
     --table-uri ${KIJI}/users \
-    --output express-tutorial/songcount-output \
-    --hdfs
+    --output express-tutorial/songcount-output
 {% endhighlight %}
 </div>
 

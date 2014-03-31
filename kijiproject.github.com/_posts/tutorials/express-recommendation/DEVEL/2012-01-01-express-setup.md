@@ -178,15 +178,17 @@ kiji://.env/<instance name>
 To run a KijiExpress job, you invoke a command of the following form:
 
 {% highlight bash %}
-express job \
-    [--libjars <list of JAR files, separated by colon>] \
-    [--hdfs] \
-    <job JAR file> <job class> [job-specific options]
+express.py job \
+    --user-jar=path/to/jar/containing/job \
+    --job-name=org.MyKijiApp.MyJob \
+    [--libjars=<list of JAR files, separated by colon>] \
+    [--mode=local|hdfs] \
+    [job-specific options]
 {% endhighlight %}
 
-The `--hdfs` option indicates that KijiExpress should run the job against the Hadoop cluster versus
-in Cascading's local environment.  The `--libjars` option indicates additional JAR files needed to
-run the command.
+The `mode=hdfs` flag indicates that KijiExpress should run the job against the Hadoop cluster
+versus in Cascading's local environment.  The `-libjars` flag indicates additional JAR files needed
+to run the command.
 
 + **Launching the KijiExpress shell**
 
@@ -194,15 +196,15 @@ KijiExpress includes an interactive shell that can be used to execute KijiExpres
 the shell, you invoke a command of the following form:
 
 {% highlight bash %}
-express shell \
-    [--libjars <list of JAR files, separated by colon>] \
-    [--hdfs]
+express.py shell \
+    [--libjars=<list of JAR files, separated by colon>] \
+    [--mode=local|hdfs]
 {% endhighlight %}
 
-If the `--hdfs` option is specified, the shell will run jobs using Scalding's Hadoop mode. For
-normal usage against a hadoop cluster, this option should be used.
+If the mode flag is set to 'hdfs', `mode=hdfs`, the shell will run jobs using Scalding's Hadoop
+mode. For normal usage against a hadoop cluster, this option should be used.
 
-If the `--libjars` option is specified, the jar files specified will be placed on the classpath.
+If the `-libjars` flag is nonempty, the jar files specified will be placed on the classpath.
 This is helpful if you are using external libraries or have compiled avro classes.
 
 To execute multi-line statements in the shell, use paste mode. This can be used to execute existing

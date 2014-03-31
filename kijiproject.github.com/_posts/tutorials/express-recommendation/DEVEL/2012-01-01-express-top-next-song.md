@@ -183,10 +183,11 @@ Finally, we create entity IDs using the `first_song` field and put it in the `en
 
 <div class="userinput">
 {% highlight bash %}
-express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \
-    ${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_devel_version}}.jar \
-    org.kiji.express.music.TopNextSongs --users-table ${KIJI}/users \
-    --songs-table ${KIJI}/songs --hdfs
+express.py job --libjars="${MUSIC_EXPRESS_HOME}/lib/*" \
+    --user-jar=${MUSIC_EXPRESS_HOME}/lib/kiji-express-music-{{site.music_express_devel_version}}.jar \
+    --job-name=org.kiji.express.music.TopNextSongs --mode=hdfs \
+    --users-table ${KIJI}/users \
+    --songs-table ${KIJI}/songs
 {% endhighlight %}
 </div>
 
@@ -223,6 +224,6 @@ Here's the entire TopNextSongs job:
 <div id="accordion-container">
   <h2 class="accordion-header"> TopNextSongs.scala </h2>
   <div class="accordion-content">
-    <script src="http://gist-it.appspot.com/github/kijiproject/kiji-express-music/raw/{{site.music_express_devel_branch}}/src/main/scala/org/kiji/express/music/TopNextSongs.scala"> </script>
+       <script src="http://gist-it.appspot.com/github/kijiproject/kiji-express-music/raw/{{site.music_express_devel_branch}}/src/main/scala/org/kiji/express/music/TopNextSongs.scala"> </script>
   </div>
 </div>
