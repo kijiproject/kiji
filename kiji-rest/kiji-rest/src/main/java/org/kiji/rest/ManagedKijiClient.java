@@ -31,9 +31,14 @@ import javax.ws.rs.core.Response;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
-import com.google.common.collect.*;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.yammer.dropwizard.lifecycle.Managed;
 import com.yammer.metrics.core.HealthCheck;
+
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.recipes.cache.ChildData;
@@ -46,6 +51,7 @@ import org.slf4j.LoggerFactory;
 
 import org.kiji.rest.util.KijiInstanceCache;
 import org.kiji.schema.Kiji;
+import org.kiji.schema.KijiNotInstalledException;
 import org.kiji.schema.KijiSchemaTable;
 import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableNotFoundException;
@@ -217,7 +223,16 @@ public class ManagedKijiClient implements KijiClient, Managed {
   private synchronized void addInstance(final KijiURI uri) throws IOException {
     if (!mInstanceCaches.containsKey(uri.getInstance())) {
       LOG.info("Adding instance {}.", uri);
-      mInstanceCaches.put(uri.getInstance(), new KijiInstanceCache(uri));
+      try {
+        mInstanceCaches.put(uri.getInstance(), new KijiInstanceCache(uri));
+      } catch (KijiNotInstalledException kine) {
+        // The fix for SCHEMA-651 was to ensure that deleted instances remove their corresponding
+        // information from zookeeper; however, if people are running REST against a cluster
+        // that didn't have this fix, then there is a chance that zookeeper has some crud that
+        // needs removing. Don't prevent KijiREST from starting completely, but simply log the
+        // message and move on.
+        LOG.error("Kiji " + uri + " not installed. Please check zookeeper for any old instances.");
+      }
     }
   }
 

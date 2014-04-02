@@ -32,6 +32,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.yammer.dropwizard.testing.ResourceTest;
 
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.CuratorFrameworkFactory;
+import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.junit.After;
 import org.junit.Test;
 
@@ -41,6 +44,7 @@ import org.kiji.rest.resources.InstancesResource;
 import org.kiji.schema.Kiji;
 import org.kiji.schema.KijiClientTest;
 import org.kiji.schema.KijiURI;
+import org.kiji.schema.layout.impl.ZooKeeperMonitor;
 
 /**
  * Test class for the Row resource.
@@ -48,18 +52,8 @@ import org.kiji.schema.KijiURI;
  */
 public class TestInstancesResources extends ResourceTest {
 
-  // Pseudo-multiple inheritence delegate
-  private class KijiClientDelegate extends KijiClientTest {
-    private void setup() throws Exception {
-      super.setupKijiTest();
-    }
-
-    private void teardown() throws Exception {
-      super.teardownKijiTest();
-    }
-  }
-  private final KijiClientDelegate mDelegate = new KijiClientDelegate();
-
+  private final KijiClientTest mDelegate = new KijiClientTest();
+  private ManagedKijiClient mClient;
   private Set<String> mInstances;
 
   /**
@@ -67,9 +61,18 @@ public class TestInstancesResources extends ResourceTest {
    */
   @Override
   protected void setUpResources() throws Exception {
-    mDelegate.setup();
+    mDelegate.setupKijiTest();
 
     KijiURI clusterURI = mDelegate.createTestHBaseURI();
+
+    CuratorFramework zkClient = CuratorFrameworkFactory.newClient(
+        clusterURI.getZooKeeperEnsemble(), new ExponentialBackoffRetry(1000, 3));
+    zkClient.start();
+    zkClient
+        .create()
+        .creatingParentsIfNeeded()
+        .forPath(ZooKeeperMonitor.INSTANCES_ZOOKEEPER_PATH + "/non_existant_instance");
+    zkClient.close();
 
     Kiji kiji1 = mDelegate.createTestKiji(clusterURI);
     Kiji kiji2 = mDelegate.createTestKiji(clusterURI);
@@ -80,11 +83,11 @@ public class TestInstancesResources extends ResourceTest {
     mInstances = instances.build();
 
     StandardKijiRestPlugin.registerSerializers(this.getObjectMapperFactory());
-    ManagedKijiClient kijiClient = new ManagedKijiClient(clusterURI);
-    kijiClient.start();
+    mClient = new ManagedKijiClient(clusterURI);
+    mClient.start();
 
-    InstanceResource instanceResource = new InstanceResource(kijiClient);
-    InstancesResource instancesResource = new InstancesResource(kijiClient);
+    InstanceResource instanceResource = new InstanceResource(mClient);
+    InstancesResource instancesResource = new InstancesResource(mClient);
     addResource(instanceResource);
     addResource(instancesResource);
   }
@@ -96,7 +99,8 @@ public class TestInstancesResources extends ResourceTest {
    */
   @After
   public void afterTest() throws Exception {
-    mDelegate.teardown();
+    mClient.stop();
+    mDelegate.teardownKijiTest();
   }
 
   @Test

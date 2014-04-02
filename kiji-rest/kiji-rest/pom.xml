@@ -266,9 +266,23 @@
         <artifactId>findbugs-maven-plugin</artifactId>
       </plugin>
 
+      <!-- Generate Java sources from Avro IDL -->
       <plugin>
         <groupId>org.apache.avro</groupId>
         <artifactId>avro-maven-plugin</artifactId>
+        <!-- Don't know why yet but this seems to help get the target/generated-<blah>-sources/ into
+        the Eclipse classpath to make the build work without any manual changes. -->
+        <executions>
+          <execution>
+            <id>compile-avro-idl</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>schema</goal>
+              <goal>protocol</goal>
+              <goal>idl-protocol</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
 
       <plugin>
