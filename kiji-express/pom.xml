@@ -40,8 +40,10 @@
     <fake-hbase.version>0.1.5-SNAPSHOT</fake-hbase.version>
 
     <!-- Dependency versions. -->
+    <hadoop-common.version>2.0.0-cdh4.3.0</hadoop-common.version>
     <elephant-bird.version>4.4</elephant-bird.version>
     <kryo.version>2.21</kryo.version>
+    <scala-reflect.version>2.10.3</scala-reflect.version>
     <scalding.version>0.9.0rc9</scalding.version>
     <cascading.version>2.5.2</cascading.version>
     <cascading-kryo.version>0.4.7</cascading-kryo.version>
@@ -104,7 +106,7 @@
       </dependency>
       <dependency>
         <groupId>com.twitter</groupId>
-        <artifactId>chill-bijection_${scala.version}</artifactId>
+        <artifactId>chill-java</artifactId>
         <version>${chill.version}</version>
         <scope>compile</scope>
       </dependency>
