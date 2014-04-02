@@ -48,9 +48,6 @@ class KijiPipeTool(private[express] val pipe: Pipe) {
    * @return a job that can be used to run the data pipeline.
    */
   private[express] def getJob(args: Args): Job = new KijiJob(args) {
-    // The job's constructor should evaluate to the pipe to run.
-    pipe
-
     /**
      *  The flow definition used by this job, which should be the same as that used by the user
      *  when creating their pipe.

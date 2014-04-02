@@ -40,7 +40,6 @@
     <fake-hbase.version>0.1.5-SNAPSHOT</fake-hbase.version>
 
     <!-- Dependency versions. -->
-    <hadoop-common.version>2.0.0-cdh4.3.0</hadoop-common.version>
     <elephant-bird.version>4.4</elephant-bird.version>
     <kryo.version>2.21</kryo.version>
     <scala-reflect.version>2.10.3</scala-reflect.version>
@@ -100,13 +99,13 @@
       </dependency>
       <dependency>
         <groupId>com.twitter</groupId>
-        <artifactId>chill_${scala.version}</artifactId>
+        <artifactId>chill-java</artifactId>
         <version>${chill.version}</version>
         <scope>compile</scope>
       </dependency>
       <dependency>
         <groupId>com.twitter</groupId>
-        <artifactId>chill-java</artifactId>
+        <artifactId>chill_${scala.version}</artifactId>
         <version>${chill.version}</version>
         <scope>compile</scope>
       </dependency>
@@ -136,12 +135,6 @@
       <dependency>
         <groupId>cascading</groupId>
         <artifactId>cascading-core</artifactId>
-        <version>${cascading.version}</version>
-        <scope>compile</scope>
-      </dependency>
-      <dependency>
-        <groupId>cascading</groupId>
-        <artifactId>cascading-local</artifactId>
         <version>${cascading.version}</version>
         <scope>compile</scope>
       </dependency>
