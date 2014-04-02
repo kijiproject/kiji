@@ -40,7 +40,6 @@
     <!-- Dependency versions -->
     <algebird-core.version>0.4.0</algebird-core.version>
     <cascading.version>2.5.2</cascading.version>
-    <hadoop-common.version>2.0.0-cdh4.3.0</hadoop-common.version>
     <scalding.version>0.9.0rc9</scalding.version>
   </properties>
 
@@ -101,12 +100,6 @@
         <groupId>org.kiji.schema-shell</groupId>
         <artifactId>kiji-schema-shell</artifactId>
         <version>${kiji-schema-shell.version}</version>
-        <scope>provided</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.hadoop</groupId>
-        <artifactId>hadoop-common</artifactId>
-        <version>${hadoop-common.version}</version>
         <scope>provided</scope>
       </dependency>
       <dependency>
