@@ -805,7 +805,7 @@ class Schema_Shell(Command):
         self.env.get('SCHEMA_SHELL_HOME'), 'bin/kiji-schema-shell')
     kiji_cp_str = self.env.get('KIJI_CLASSPATH')
     if kiji_cp_str != None:
-      self.add_to_list(cp, kiji_cp.split(','))
+      self.add_to_list(cp, kiji_cp_str.split(','))
     hadoop_ver = self.hadoop_ver(self.env, self.flags.hadoop_ver)
     express_cp = self.create_classpath(self.env, hadoop_ver)
     cp.extend(express_cp)
