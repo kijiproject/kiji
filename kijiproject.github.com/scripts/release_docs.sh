@@ -31,40 +31,40 @@
 #    and our release artifacts.
 
 # KijiSchema version
-SCHEMA_FLAT_VER=1_3_7
-SCHEMA_VER=1.3.7
+SCHEMA_FLAT_VER=1_4_0
+SCHEMA_VER=1.4.0
 
 # KijiMR version
-KIJIMR_FLAT_VER=1_2_5
-KIJIMR_VER=1.2.5
+KIJIMR_FLAT_VER=1_2_6
+KIJIMR_VER=1.2.6
 
 # KijiMR Library version
-MRLIB_FLAT_VER=1_1_4
-MRLIB_VER=1.1.4
+MRLIB_FLAT_VER=1_1_5
+MRLIB_VER=1.1.5
 
 # KijiExpress version
-EXPRESS_FLAT_VER=1_0_2
-EXPRESS_VER=1.0.2
+EXPRESS_FLAT_VER=2.0.0-rc1
+EXPRESS_VER=2.0.0-rc1
 
 # Scoring version
-SCORING_FLAT_VER=0_12_0
-SCORING_VER=0.12.0
+SCORING_FLAT_VER=0_13_0
+SCORING_VER=0.13.0
 
 # Music Recommendation Tutorial version
-MUSIC_FLAT_VER=1_1_4
-MUSIC_VER=1.1.4
+MUSIC_FLAT_VER=1_1_5
+MUSIC_VER=1.1.5
 
 # Express Music Recommendation tutorial version
-EXPRESS_MUSIC_FLAT_VER=1_0_1
-EXPRESS_MUSIC_VER=1.0.1
+EXPRESS_MUSIC_FLAT_VER=2.0.0
+EXPRESS_MUSIC_VER=2.0.0
 
 # Phonebook Tutorial version
-PHONEBOOK_FLAT_VER=1_1_3
-PHONEBOOK_VER=1.1.3
+PHONEBOOK_FLAT_VER=1_1_4
+PHONEBOOK_VER=1.1.4
 
 # REST Server version
-REST_FLAT_VER=1_2_2
-REST_VER=1.2.2
+REST_FLAT_VER=1_3_0
+REST_VER=1.3.0
 
 ### Ordinary configuration does not go past this line ###
 
@@ -166,7 +166,7 @@ cd "$top/_posts"
 if [ ! -d "userguides/schema/$SCHEMA_VER" ]; then
   # Create new KijiSchema documentation
   echo "Creating new KijiSchema user guide: $SCHEMA_VER"
-  cp -ra "userguides/schema/DEVEL" "userguides/schema/$SCHEMA_VER"
+  cp -a "userguides/schema/DEVEL" "userguides/schema/$SCHEMA_VER"
 
   pushd "userguides/schema/$SCHEMA_VER"
 
@@ -190,7 +190,7 @@ fi
 if [ ! -d "userguides/mapreduce/$KIJIMR_VER" ]; then
   # Create new KijiMR documentation
   echo "Creating new KijiMR user guide: $KIJIMR_VER"
-  cp -ra "userguides/mapreduce/DEVEL" "userguides/mapreduce/$KIJIMR_VER"
+  cp -a "userguides/mapreduce/DEVEL" "userguides/mapreduce/$KIJIMR_VER"
 
   pushd "userguides/mapreduce/$KIJIMR_VER"
 
@@ -213,7 +213,7 @@ fi
 if [ ! -d "userguides/rest/$REST_VER" ]; then
   # Create new REST documentation
   echo "Creating new KijiREST user guide: $REST_VER"
-  cp -ra "userguides/rest/DEVEL" "userguides/rest/$REST_VER"
+  cp -a "userguides/rest/DEVEL" "userguides/rest/$REST_VER"
 
   pushd "userguides/rest/$REST_VER"
 
@@ -234,7 +234,7 @@ fi
 if [ ! -d "userguides/express/$EXPRESS_VER" ]; then
   # Create new KijiExpress documentation
   echo "Creating new KijiExpress user guide: $EXPRESS_VER"
-  cp -ra "userguides/express/DEVEL" "userguides/express/$EXPRESS_VER"
+  cp -a "userguides/express/DEVEL" "userguides/express/$EXPRESS_VER"
 
   pushd "userguides/express/$EXPRESS_VER"
 
@@ -258,7 +258,7 @@ fi
 if [ ! -d "userguides/scoring/$SCORING_VER" ]; then
   # Create new KijiScoring documentation
   echo "Creating new KijiScoring user guide: $SCORING_VER"
-  cp -ra "userguides/scoring/DEVEL" "userguides/scoring/$SCORING_VER"
+  cp -a "userguides/scoring/DEVEL" "userguides/scoring/$SCORING_VER"
 
   pushd "userguides/scoring/$SCORING_VER"
 
@@ -282,7 +282,7 @@ fi
 if [ ! -d "tutorials/phonebook/$PHONEBOOK_VER" ]; then
   # Create a new phonebook tutorial
   echo "Creating new Phonebook tutorial: $PHONEBOOK_VER"
-  cp -ra "tutorials/phonebook/DEVEL" "tutorials/phonebook/$PHONEBOOK_VER"
+  cp -a "tutorials/phonebook/DEVEL" "tutorials/phonebook/$PHONEBOOK_VER"
 
   pushd "tutorials/phonebook/$PHONEBOOK_VER"
 
@@ -300,7 +300,7 @@ fi
 
 if [ ! -d "tutorials/music-recommendation/$MUSIC_VER" ]; then
   echo "Creating a new Music recommendation tutorial: $MUSIC_VER"
-  cp -ra "tutorials/music-recommendation/DEVEL" "tutorials/music-recommendation/$MUSIC_VER"
+  cp -a "tutorials/music-recommendation/DEVEL" "tutorials/music-recommendation/$MUSIC_VER"
 
   pushd "tutorials/music-recommendation/$MUSIC_VER"
 
@@ -319,7 +319,7 @@ fi
 
 if [ ! -d "tutorials/express-recommendation/$EXPRESS_MUSIC_VER" ]; then
   echo "Creating a new Express music recommendation tutorial: $EXPRESS_MUSIC_VER"
-  cp -ra "tutorials/express-recommendation/DEVEL" \
+  cp -a "tutorials/express-recommendation/DEVEL" \
       "tutorials/express-recommendation/$EXPRESS_MUSIC_VER"
 
   pushd "tutorials/express-recommendation/$EXPRESS_MUSIC_VER"
@@ -339,7 +339,7 @@ fi
 
 if [ ! -d "tutorials/scoring/$SCORING_VER" ]; then
   echo "Creating a new Scoring tutorial: $SCORING_VER"
-  cp -ra "tutorials/scoring/DEVEL" \
+  cp -a "tutorials/scoring/DEVEL" \
       "tutorials/scoring/$SCORING_VER"
 
   pushd "tutorials/scoring/$SCORING_VER"
