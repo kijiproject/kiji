@@ -47,7 +47,7 @@
     <kiji-hive-adapter.version>0.11.0-SNAPSHOT</kiji-hive-adapter.version>
     <kiji-music.version>1.1.6-SNAPSHOT</kiji-music.version>
     <kiji-modeling.version>0.9.0-SNAPSHOT</kiji-modeling.version>
-    <kiji-express.version>2.0.1-SNAPSHOT</kiji-express.version>
+    <kiji-express.version>2.0.0-rc2-SNAPSHOT</kiji-express.version>
     <kiji-express-music.version>2.0.1-SNAPSHOT</kiji-express-music.version>
     <kiji-express-examples.version>2.0.1-SNAPSHOT</kiji-express-examples.version>
     <kiji-express-tools.version>${kiji-express.version}</kiji-express-tools.version>
