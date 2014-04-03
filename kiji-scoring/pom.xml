@@ -28,7 +28,7 @@
   <parent>
     <groupId>org.kiji.pom</groupId>
     <artifactId>root-pom</artifactId>
-    <version>1.1.5-SNAPSHOT</version>
+    <version>1.1.5</version>
   </parent>
 
   <name>KijiScoring</name>
@@ -36,11 +36,11 @@
   <inceptionYear>2013</inceptionYear>
 
   <properties>
-    <kiji-delegation.version>1.0.0</kiji-delegation.version>
-    <kiji-platforms.version>1.1.0</kiji-platforms.version>
-    <kiji-schema.version>1.4.0-SNAPSHOT</kiji-schema.version>
-    <kiji-mapreduce.version>1.2.6-SNAPSHOT</kiji-mapreduce.version>
-    <fake-hbase.version>0.1.5-SNAPSHOT</fake-hbase.version>
+    <kiji-delegation.version>1.0.3</kiji-delegation.version>
+    <kiji-platforms.version>1.4.0</kiji-platforms.version>
+    <kiji-schema.version>1.4.0</kiji-schema.version>
+    <kiji-mapreduce.version>1.2.6</kiji-mapreduce.version>
+    <fake-hbase.version>0.1.5</fake-hbase.version>
     <pmml-evaluator.version>1.1.1</pmml-evaluator.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
