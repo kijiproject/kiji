@@ -184,7 +184,9 @@ public class KijiInstanceCache {
   public void stop() throws IOException {
     mIsOpen = false; // Stop caches from loading more entries
     mFreshReaders.invalidateAll();
+    mFreshReaders.cleanUp();
     mTables.invalidateAll();
+    mTables.cleanUp();
     mKiji.release();
   }
 
