@@ -39,7 +39,7 @@
   <properties>
     <kiji-schema.version>1.4.0</kiji-schema.version>
     <kiji-schema-shell.version>1.3.5</kiji-schema-shell.version>
-    <kiji-cdh4-platform.version>1.4.0</kiji-cdh4-platform.version>
+    <kiji-cdh4-platform.version>1.3.0</kiji-cdh4-platform.version>
     <kiji-mapreduce.version>1.2.6</kiji-mapreduce.version>
     <fake-hbase.version>0.1.5</fake-hbase.version>
   </properties>
