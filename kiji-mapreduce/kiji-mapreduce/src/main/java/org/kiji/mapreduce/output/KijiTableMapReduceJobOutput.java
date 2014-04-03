@@ -34,7 +34,7 @@ import org.kiji.mapreduce.tools.framework.JobIOConfKeys;
 import org.kiji.schema.KijiURI;
 
 /** MapReduce job output configuration that outputs to a Kiji table. */
-@ApiAudience.Private
+@ApiAudience.Public
 @ApiStability.Evolving
 public abstract class KijiTableMapReduceJobOutput extends MapReduceJobOutput {
 

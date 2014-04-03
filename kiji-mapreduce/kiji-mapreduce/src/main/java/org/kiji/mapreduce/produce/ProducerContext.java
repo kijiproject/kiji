@@ -28,7 +28,7 @@ import org.kiji.mapreduce.KijiContext;
 
 /** Context for producers to output new cells in the currently processed row. */
 @ApiAudience.Public
-@ApiStability.Evolving
+@ApiStability.Stable
 @Inheritance.Sealed
 public interface ProducerContext extends KijiContext {
   /**

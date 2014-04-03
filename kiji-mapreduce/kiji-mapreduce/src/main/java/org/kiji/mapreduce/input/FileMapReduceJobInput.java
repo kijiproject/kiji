@@ -37,7 +37,7 @@ import org.kiji.mapreduce.tools.framework.JobIOConfKeys;
 
 /** Base class for MapReduce job input that is read from files. */
 @ApiAudience.Public
-@ApiStability.Evolving
+@ApiStability.Stable
 @Inheritance.Sealed
 public abstract class FileMapReduceJobInput extends MapReduceJobInput {
   /** The path to the input files. */

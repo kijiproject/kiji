@@ -45,7 +45,7 @@ import org.kiji.mapreduce.output.HFileMapReduceJobOutput;
  */
 @ApiAudience.Framework
 @ApiStability.Evolving
-public class HFileReducerMapReduceJobOutput extends MapReduceJobOutput {
+public final class HFileReducerMapReduceJobOutput extends MapReduceJobOutput {
   private final HFileMapReduceJobOutput mJobOutput;
 
   /** {@inheritDoc} */

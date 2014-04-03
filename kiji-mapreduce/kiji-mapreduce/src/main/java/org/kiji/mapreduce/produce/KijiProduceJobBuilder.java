@@ -50,7 +50,7 @@ import org.kiji.schema.KijiTable;
 
 /** Builds jobs that run a producer over a Kiji table. */
 @ApiAudience.Public
-@ApiStability.Evolving
+@ApiStability.Stable
 public final class KijiProduceJobBuilder extends KijiTableInputJobBuilder<KijiProduceJobBuilder> {
 
   /** The default number of threads per mapper to use for running producers. */

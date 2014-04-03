@@ -21,6 +21,8 @@ package org.kiji.mapreduce.input;
 
 import org.apache.hadoop.fs.Path;
 
+import org.kiji.annotations.ApiAudience;
+import org.kiji.annotations.ApiStability;
 import org.kiji.mapreduce.input.KijiTableMapReduceJobInput.RowOptions;
 import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiURI;
@@ -28,6 +30,8 @@ import org.kiji.schema.KijiURI;
 /**
  * Utility class for instantiating MapReduceJobInputs.
  */
+@ApiAudience.Public
+@ApiStability.Evolving
 public final class MapReduceJobInputs {
 
   /** Utility classes may not be instantiated. */

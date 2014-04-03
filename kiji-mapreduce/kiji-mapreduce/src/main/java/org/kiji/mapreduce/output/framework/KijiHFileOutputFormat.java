@@ -73,7 +73,7 @@ import org.kiji.schema.util.ResourceUtils;
  * {@link org.kiji.mapreduce.HFileLoader}.
  */
 @ApiAudience.Framework
-@ApiStability.Evolving
+@ApiStability.Stable
 public final class KijiHFileOutputFormat
     extends FileOutputFormat<HFileKeyValue, NullWritable> {
   private static final Logger LOG = LoggerFactory.getLogger(KijiHFileOutputFormat.class);

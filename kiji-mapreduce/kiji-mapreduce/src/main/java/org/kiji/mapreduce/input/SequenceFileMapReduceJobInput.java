@@ -46,7 +46,7 @@ import org.kiji.avro.mapreduce.AvroSequenceFileInputFormat;
  * </pre>
  */
 @ApiAudience.Public
-@ApiStability.Evolving
+@ApiStability.Stable
 public final class SequenceFileMapReduceJobInput extends FileMapReduceJobInput {
   /**
    * Constructs job input from a varargs of paths to sequence files.  Accessible via

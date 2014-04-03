@@ -74,7 +74,7 @@ import org.kiji.schema.Kiji;
  * implementation such as {@link org.kiji.mapreduce.gather.KijiGatherJobBuilder}.
  */
 @ApiAudience.Framework
-@ApiStability.Evolving
+@ApiStability.Stable
 @Inheritance.Sealed
 public abstract class MapReduceJobBuilder<T extends MapReduceJobBuilder<T>> {
   private static final Logger LOG = LoggerFactory.getLogger(MapReduceJobBuilder.class);

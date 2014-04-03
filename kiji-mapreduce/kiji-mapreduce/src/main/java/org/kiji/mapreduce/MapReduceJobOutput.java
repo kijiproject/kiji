@@ -31,7 +31,7 @@ import org.kiji.annotations.Inheritance;
 
 /** Describe class <code>MapReduceJobOutput</code> here. */
 @ApiAudience.Public
-@ApiStability.Evolving
+@ApiStability.Stable
 @Inheritance.Sealed
 public abstract class MapReduceJobOutput {
   /**

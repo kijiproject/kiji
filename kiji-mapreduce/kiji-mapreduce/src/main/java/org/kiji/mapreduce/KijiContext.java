@@ -30,7 +30,7 @@ import org.kiji.mapreduce.kvstore.KeyValueStoreReader;
 
 /** Interface for contexts passed to KijiMR methods. */
 @ApiAudience.Public
-@ApiStability.Evolving
+@ApiStability.Stable
 @Inheritance.Sealed
 public interface KijiContext extends Closeable, Flushable {
   /**

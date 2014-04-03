@@ -34,7 +34,7 @@ import org.kiji.mapreduce.tools.framework.JobIOConfKeys;
 
 /** Base class for MapReduce job output types that write to files. */
 @ApiAudience.Public
-@ApiStability.Evolving
+@ApiStability.Stable
 @Inheritance.Sealed
 public abstract class FileMapReduceJobOutput extends MapReduceJobOutput {
 

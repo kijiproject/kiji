@@ -47,7 +47,7 @@ import org.kiji.avro.mapreduce.AvroSequenceFileOutputFormat;
  * </pre>
  */
 @ApiAudience.Public
-@ApiStability.Evolving
+@ApiStability.Stable
 public final class SequenceFileMapReduceJobOutput extends FileMapReduceJobOutput {
   /** Default constructor. Accessible via {@link MapReduceJobOutputs}. */
   SequenceFileMapReduceJobOutput() {

@@ -47,7 +47,7 @@ import org.kiji.annotations.ApiStability;
  * </pre>
  */
 @ApiAudience.Public
-@ApiStability.Evolving
+@ApiStability.Stable
 public final class MapFileMapReduceJobOutput extends FileMapReduceJobOutput {
   /** Default constructor. Accessible via {@link MapReduceJobOutputs}. */
   MapFileMapReduceJobOutput() {

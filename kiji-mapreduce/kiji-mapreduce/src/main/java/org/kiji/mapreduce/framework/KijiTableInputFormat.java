@@ -67,7 +67,7 @@ import org.kiji.schema.util.ResourceUtils;
 
 /** InputFormat for Hadoop MapReduce jobs reading from a Kiji table. */
 @ApiAudience.Framework
-@ApiStability.Evolving
+@ApiStability.Stable
 public final class KijiTableInputFormat
     extends InputFormat<EntityId, KijiRowData>
     implements Configurable {

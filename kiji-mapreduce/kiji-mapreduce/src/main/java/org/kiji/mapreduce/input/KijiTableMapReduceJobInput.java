@@ -66,7 +66,7 @@ import org.kiji.schema.filter.KijiRowFilter;
  * </pre>
  */
 @ApiAudience.Public
-@ApiStability.Evolving
+@ApiStability.Stable
 public final class KijiTableMapReduceJobInput extends MapReduceJobInput {
   /** URI of the input Kiji table. */
   private KijiURI mInputTableURI;

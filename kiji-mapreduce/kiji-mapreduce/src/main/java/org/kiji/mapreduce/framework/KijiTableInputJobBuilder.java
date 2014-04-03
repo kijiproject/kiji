@@ -47,7 +47,7 @@ import org.kiji.schema.util.ResourceUtils;
  * @param <T> Type of the builder class.
  */
 @ApiAudience.Framework
-@ApiStability.Evolving
+@ApiStability.Stable
 @Inheritance.Sealed
 public abstract class KijiTableInputJobBuilder<T extends KijiTableInputJobBuilder<T>>
     extends MapReduceJobBuilder<T> {

@@ -41,7 +41,7 @@ import org.kiji.mapreduce.kvstore.KeyValueStoreClient;
  * {@link org.kiji.mapreduce.bulkimport.KijiBulkImportJobBuilder}.
  */
 @ApiAudience.Public
-@ApiStability.Evolving
+@ApiStability.Stable
 public final class KijiMapReduceJobBuilder extends MapReduceJobBuilder<KijiMapReduceJobBuilder> {
   private static final Logger LOG = LoggerFactory.getLogger(KijiMapReduceJobBuilder.class);
 

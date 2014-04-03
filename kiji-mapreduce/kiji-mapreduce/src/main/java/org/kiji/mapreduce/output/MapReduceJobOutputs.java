@@ -29,7 +29,7 @@ import org.kiji.schema.KijiURI;
  * Utility class for instantiating MapReduceJobOutputs.
  */
 @ApiAudience.Public
-@ApiStability.Evolving
+@ApiStability.Stable
 public final class MapReduceJobOutputs {
 
   /** Utility classes may not be instantiated. */

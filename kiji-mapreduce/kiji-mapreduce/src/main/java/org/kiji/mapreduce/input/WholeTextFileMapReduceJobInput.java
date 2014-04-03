@@ -55,7 +55,7 @@ import org.kiji.mapreduce.input.impl.WholeFileInputFormat;
  * @see TextMapReduceJobInput
  */
 @ApiAudience.Public
-@ApiStability.Evolving
+@ApiStability.Stable
 public final class WholeTextFileMapReduceJobInput extends FileMapReduceJobInput {
 
   /**

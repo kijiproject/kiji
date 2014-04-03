@@ -42,7 +42,7 @@ import org.kiji.annotations.ApiStability;
  * method.</p>
  */
 @ApiAudience.Framework
-@ApiStability.Evolving
+@ApiStability.Stable
 public final class JobInputSpec {
   /**
    * The Job input formats supported by Kiji.  In the string representation of a

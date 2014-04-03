@@ -61,7 +61,7 @@ import org.kiji.schema.KijiURI;
  * @see HFileMapReduceJobOutput
  */
 @ApiAudience.Public
-@ApiStability.Evolving
+@ApiStability.Stable
 @Inheritance.Sealed
 public class DirectKijiTableMapReduceJobOutput extends KijiTableMapReduceJobOutput {
   /** Default constructor. Accessible via {@link MapReduceJobOutputs}. */

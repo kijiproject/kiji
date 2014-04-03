@@ -47,7 +47,7 @@ import org.kiji.avro.mapreduce.AvroKeyInputFormat;
  * @see AvroKeyValueMapReduceJobInput
  */
 @ApiAudience.Public
-@ApiStability.Evolving
+@ApiStability.Stable
 public final class AvroKeyMapReduceJobInput extends FileMapReduceJobInput {
 
   /**

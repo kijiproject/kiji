@@ -48,7 +48,7 @@ import org.kiji.annotations.ApiStability;
  * @see WholeTextFileMapReduceJobInput
  */
 @ApiAudience.Public
-@ApiStability.Evolving
+@ApiStability.Stable
 public final class TextMapReduceJobInput extends FileMapReduceJobInput {
   /**
    * Constructs job input from a varargs of paths to text files.  Accessible via

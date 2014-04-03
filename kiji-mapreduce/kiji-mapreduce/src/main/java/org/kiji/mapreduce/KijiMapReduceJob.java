@@ -41,7 +41,7 @@ import org.kiji.schema.KijiURI;
 
 /** A runnable MapReduce job that interacts with Kiji tables. */
 @ApiAudience.Public
-@ApiStability.Evolving
+@ApiStability.Stable
 public final class KijiMapReduceJob {
   private static final Logger LOG = LoggerFactory.getLogger(KijiMapReduceJob.class);
 

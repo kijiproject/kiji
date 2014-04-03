@@ -31,7 +31,7 @@ import org.kiji.annotations.Inheritance;
 
 /** Base class for types of input to a MapReduce job. */
 @ApiAudience.Public
-@ApiStability.Evolving
+@ApiStability.Stable
 @Inheritance.Sealed
 public abstract class MapReduceJobInput {
 

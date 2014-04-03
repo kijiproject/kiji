@@ -45,7 +45,7 @@ import org.kiji.mapreduce.reducer.IdentityReducer;
 
 /** Builds a job that runs a KijiBulkImporter to import data into a Kiji table. */
 @ApiAudience.Public
-@ApiStability.Evolving
+@ApiStability.Stable
 public final class KijiBulkImportJobBuilder
     extends MapReduceJobBuilder<KijiBulkImportJobBuilder> {
 

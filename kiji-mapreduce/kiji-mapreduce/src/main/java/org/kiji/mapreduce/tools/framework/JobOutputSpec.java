@@ -41,7 +41,7 @@ import org.kiji.annotations.ApiStability;
  * be equal to the number of reducers, since each reducer writes one shard.</p>
  */
 @ApiAudience.Framework
-@ApiStability.Evolving
+@ApiStability.Stable
 public final class JobOutputSpec {
   /**
    * The job output formats supported by Kiji.  In the string

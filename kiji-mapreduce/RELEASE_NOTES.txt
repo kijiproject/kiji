@@ -1,6 +1,9 @@
 
 
                               KijiMR Release Notes
+Version 1.3.0
+  * KIJIMR-268. Updates many ApiStability annotations. In particular, all
+      job builders and contexts are now 'Stable.'
 
 Version 1.2.3
   * KIJIMR-163. Introduce KijiPivoter map-only jobs that read rows from

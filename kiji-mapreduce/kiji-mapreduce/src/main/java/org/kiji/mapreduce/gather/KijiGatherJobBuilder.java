@@ -65,7 +65,7 @@ import org.kiji.schema.KijiDataRequest;
  */
 @SuppressWarnings("rawtypes")
 @ApiAudience.Public
-@ApiStability.Evolving
+@ApiStability.Stable
 public final class KijiGatherJobBuilder extends KijiTableInputJobBuilder<KijiGatherJobBuilder> {
   private static final Logger LOG = LoggerFactory.getLogger(KijiGatherJobBuilder.class);
 

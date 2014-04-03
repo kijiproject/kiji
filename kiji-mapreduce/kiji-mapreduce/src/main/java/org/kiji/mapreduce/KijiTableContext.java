@@ -28,7 +28,7 @@ import org.kiji.schema.KijiPutter;
 
 /** Context for Kiji bulk-importers or reducers to output to a Kiji table. */
 @ApiAudience.Public
-@ApiStability.Evolving
+@ApiStability.Stable
 @Inheritance.Sealed
 public interface KijiTableContext extends KijiContext, KijiPutter {
   /** @return a factory to create entity IDs to write to the output Kiji table. */

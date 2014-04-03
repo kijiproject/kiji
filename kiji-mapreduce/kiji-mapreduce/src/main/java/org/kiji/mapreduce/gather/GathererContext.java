@@ -33,7 +33,7 @@ import org.kiji.mapreduce.KijiContext;
  * @param <V> Type of the values to emit.
  */
 @ApiAudience.Public
-@ApiStability.Evolving
+@ApiStability.Stable
 @Inheritance.Sealed
 public interface GathererContext<K, V> extends KijiContext {
   /**
