@@ -14,7 +14,7 @@
   <parent>
     <groupId>org.kiji.pom</groupId>
     <artifactId>root-pom</artifactId>
-    <version>1.1.5-SNAPSHOT</version>
+    <version>1.1.5</version>
   </parent>
 
   <licenses>
@@ -27,7 +27,7 @@
 
   <properties>
     <kiji.framework.version>2.0.0</kiji.framework.version>
-    <kiji-express.version>2.0.0</kiji-express.version>
+    <kiji-express.version>2.0.0-rc1</kiji-express.version>
     <kiji-schema.version>1.4.0</kiji-schema.version>
     <kiji-mapreduce.version>1.2.6</kiji-mapreduce.version>
     <kiji-schema-shell.version>1.3.5</kiji-schema-shell.version>
