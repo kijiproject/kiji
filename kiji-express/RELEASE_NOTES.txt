@@ -1,7 +1,7 @@
 
                              Kiji Express Release Notes
 
-Verion 2.0.0
+Verion 2.0.0-rc1
   * EXP-417. Bash script is now deprecated, please use the python script instead.
   * EXP-424. Explicitly added all used, but undeclared dependancies in pom files.
 
