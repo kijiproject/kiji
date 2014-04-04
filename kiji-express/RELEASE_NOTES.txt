@@ -1,9 +1,10 @@
 
                              Kiji Express Release Notes
 
-Verion 2.0.0-rc1
+Verion 2.0.1
   * EXP-417. Bash script is now deprecated, please use the python script instead.
   * EXP-424. Explicitly added all used, but undeclared dependancies in pom files.
+  * EXP-431. Kiji Express now uses Scalding 0.9.1!
 
 Version 1.0.2
   * EXP-418. InvalidKijiTapException now optionally takes a cause.
