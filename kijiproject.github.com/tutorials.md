@@ -17,7 +17,7 @@ The most recent version of each of the tutorials is available here:
 
 	The KijiMR music recommendation tutorial covers how to build and run MapReduce jobs that use Kiji tables as input and/or output. This is the word count of recommendation systems.
 
-* [KijiExpress Tutorial](tutorials/express-recommendation/2.0.0/express-overview)
+* [KijiExpress Tutorial](tutorials/express-recommendation/2.0.1/express-overview)
 
 	The KijiExpress recommendation tutorial covers how to build and run Express jobs that use Kiji tables as input and/or output. This is the word count of recommendation systems.  This tutorial mirrors the KijiMR music tutorial closely.
 
@@ -55,7 +55,7 @@ to the Kiji version you are using are available here:
 
 #### KijiExpress
 
-* [KijiExpress Tutorial 2.0.0](tutorials/express-recommendation/2.0.0/express-overview)
+* [KijiExpress Tutorial 2.0.1](tutorials/express-recommendation/2.0.1/express-overview)
 * [KijiExpress Tutorial 1.0.1](tutorials/express-recommendation/1.0.1/express-overview)
 * [KijiExpress Tutorial 1.0.0](tutorials/express-recommendation/1.0.0/express-overview)
 * [KijiExpress Tutorial 0.11.0](tutorials/express-recommendation/0.11.0/express-overview)
