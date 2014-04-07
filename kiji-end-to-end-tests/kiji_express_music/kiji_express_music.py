@@ -223,7 +223,7 @@ class Tutorial(object):
   # ----------------------------------------------------------------------------
   # KijiExpress Music bulk-importing:
 
-  def Part2(self):
+  def Part2(self, python=False):
     """Runs the importing part of the KijiExpress Music tutorial.
 
     http://docs.kiji.org/tutorials/express-recommendation/DEVEL/express-importing-data/
@@ -231,13 +231,29 @@ class Tutorial(object):
 
     # --------------------------------------------------------------------------
 
-    songMetadataImport = self.Command(base.StripMargin("""
-        |express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \\
-        |    ${EXPRESS_MUSIC_JAR} \\
-        |    org.kiji.express.music.SongMetadataImporter \\
-        |    --input ${HDFS_BASE}/express-tutorial/song-metadata.json \\
-        |    --table-uri ${KIJI}/songs --hdfs
-        """))
+    cmd = ' '
+    if python == False:
+      cmd = base.StripMargin("""
+          |express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \\
+          |    ${EXPRESS_MUSIC_JAR} \\
+          |    org.kiji.express.music.SongMetadataImporter \\
+          |    --input ${HDFS_BASE}/express-tutorial/song-metadata.json \\
+          |    --table-uri ${KIJI}/songs --hdfs
+          """)
+
+    else:
+      cmd = base.StripMargin("""
+          |python3 /home/sea_bass/developer/workspace/kiji-end-to-end-tests/express_script.py \\
+          |    job \\
+          |    --libjars="${MUSIC_EXPRESS_HOME}/lib/*" \\
+          |    --user_jar=${EXPRESS_MUSIC_JAR} \\
+          |    --job_name=org.kiji.express.music.SongMetadataImporter \\
+          |    --mode=hdfs \\
+          |    --input ${HDFS_BASE}/express-tutorial/song-metadata.json \\
+          |    --table-uri ${KIJI}/songs
+          """)
+
+    songMetadataImport = self.Command(cmd)
     assert (songMetadataImport.exit_code == 0)
 
     # --------------------------------------------------------------------------
@@ -259,13 +275,27 @@ class Tutorial(object):
 
     # --------------------------------------------------------------------------
 
-    userDataImport = self.Command(base.StripMargin("""
-        |express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \\
-        |    ${EXPRESS_MUSIC_JAR} \\
-        |    org.kiji.express.music.SongPlaysImporter \\
+    cmd = ' '
+    if python == False:
+      cmd = base.StripMargin("""
+          |express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \\
+          |    ${EXPRESS_MUSIC_JAR} \\
+          |    org.kiji.express.music.SongPlaysImporter \\
+          |    --input ${HDFS_BASE}/express-tutorial/song-plays.json \\
+          |    --table-uri ${KIJI}/users --hdfs
+          """)
+    else:
+      cmd = base.StripMargin("""
+        |python3 /home/sea_bass/developer/workspace/kiji-end-to-end-tests/express_script.py \\
+        |    job \\
+        |    -libjars="${MUSIC_EXPRESS_HOME}/lib/*" \\
+        |    -user_jar=${EXPRESS_MUSIC_JAR} \\
+        |    -job_name=org.kiji.express.music.SongPlaysImporter \\
+        |    -mode=hdfs \\
         |    --input ${HDFS_BASE}/express-tutorial/song-plays.json \\
-        |    --table-uri ${KIJI}/users --hdfs
-        """))
+        |    --table-uri ${KIJI}/users
+        """)
+    userDataImport = self.Command(cmd)
     assert (userDataImport.exit_code == 0)
 
     # --------------------------------------------------------------------------
@@ -288,15 +318,29 @@ class Tutorial(object):
   # --------------------------------------------------------------------------
   # play-count section.
 
-  def Part3(self):
-    play_count = self.Command(base.StripMargin("""
+  def Part3(self, python=False):
+    cmd = ' '
+    if python == False:
+      cmd = base.StripMargin("""
         |express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \\
         |  ${EXPRESS_MUSIC_JAR} \\
         |  org.kiji.express.music.SongPlayCounter \\
         |  --table-uri ${KIJI}/users \\
         |  --output ${HDFS_BASE}/express-tutorial/songcount-output \\
         |  --hdfs
-        """))
+        """)
+    else:
+      cmd = base.StripMargin("""
+        |python3 /home/sea_bass/developer/workspace/kiji-end-to-end-tests/express_script.py \\
+        |    job \\
+        |    -libjars="${MUSIC_EXPRESS_HOME}/lib/*" \\
+        |    -user_jar=${EXPRESS_MUSIC_JAR} \\
+        |    -job_name=org.kiji.express.music.SongPlayCounter \\
+        |    -mode=hdfs \\
+        |    --table-uri ${KIJI}/users \\
+        |    --output ${HDFS_BASE}/express-tutorial/songcount-output \\
+        """)
+    play_count = self.Command(cmd)
     assert (play_count.exit_code == 0)
     fs_text = self.Command("""
         hadoop fs -text ${HDFS_BASE}/express-tutorial/songcount-output/part-00000 | head -3
@@ -309,14 +353,28 @@ class Tutorial(object):
 
   # ----------------------------------------------------------------------------
   # Top Next Songs section.
-  def Part4(self):
-    top_songs = self.Command(base.StripMargin("""
+  def Part4(self, python=False):
+    cmd = ' '
+    if python is False:
+      cmd = base.StripMargin("""
         |express job --libjars "${MUSIC_EXPRESS_HOME}/lib/*" \\
         |    ${EXPRESS_MUSIC_JAR} \\
         |    org.kiji.express.music.TopNextSongs \\
         |    --users-table ${KIJI}/users \\
         |    --songs-table ${KIJI}/songs --hdfs
-        """))
+        """)
+    else:
+      cmd = base.StripMargin("""
+        |python3 /home/sea_bass/developer/workspace/kiji-end-to-end-tests/express_script.py \\
+        |    job \\
+        |    -libjars="${MUSIC_EXPRESS_HOME}/lib/*" \\
+        |    -user_jar=${EXPRESS_MUSIC_JAR} \\
+        |    -job_name=org.kiji.express.music.TopNextSongs \\
+        |    -mode=hdfs \\
+        |    --users-table ${KIJI}/users \\
+        |    --songs-table ${KIJI}/songs --hdfs
+        """)
+    top_songs = self.Command(cmd)
     assert (top_songs.exit_code == 0)
     list_rows = self.Command('kiji scan ${KIJI}/songs --max-rows=2')
     assert (list_rows.exit_code == 0)
@@ -341,13 +399,26 @@ class Tutorial(object):
 
   # ----------------------------------------------------------------------------
   # Song recommender
-  def Part5(self):
-    song_recommend = self.Command(base.StripMargin("""
+  def Part5(self, python=False):
+    cmd = ' '
+    if python == False:
+      cmd = base.StripMargin("""
         |express job ${EXPRESS_MUSIC_JAR} \\
         |    org.kiji.express.music.SongRecommender \\
         |    --songs-table ${KIJI}/songs \\
         |    --users-table ${KIJI}/users
-        """))
+        """)
+    else:
+      cmd = base.StripMargin("""
+        |python3 /home/sea_bass/developer/workspace/kiji-end-to-end-tests/express_script.py \\
+        |    job \\
+        |    -user_jar=${EXPRESS_MUSIC_JAR} \\-b 
+        |    -job_name=org.kiji.express.music.SongRecommender \\
+        |    -mode=hdfs \\
+        |    --songs-table ${KIJI}/songs \\
+        |    --users-table ${KIJI}/users
+        """)
+    song_recommend = self.Command(cmd)
     assert (song_recommend.exit_code == 0)
 
     list_rows = self.Command("kiji scan ${KIJI}/users --max-rows=2")
@@ -418,15 +489,28 @@ def Main(args):
       maven_local_repo=FLAGS.maven_local_repo,
       maven_remote_repo=FLAGS.maven_remote_repo,
   )
-  tutorial.Setup()
-  tutorial.Part1()
-  tutorial.Part2()
-  tutorial.Part3()
-  tutorial.Part4()
-  tutorial.Part5()
-  # todo: rest of parts
-  if FLAGS.cleanup_after_test:
-    tutorial.Cleanup()
+
+  try:
+    tutorial.Setup()
+    tutorial.Part1()
+    tutorial.Part2()
+    tutorial.Part3()
+    tutorial.Part4()
+    tutorial.Part5()
+  finally:
+    if FLAGS.cleanup_after_test:
+      tutorial.Cleanup()
+
+  try:
+    tutorial.Setup()
+    tutorial.Part1()
+    tutorial.Part2(python=True)
+    tutorial.Part3(python=True)
+    tutorial.Part4(python=True)
+    tutorial.Part5(python=True)
+  finally:
+    if FLAGS.cleanup_after_test:
+      tutorial.Cleanup()
 
 
 # ------------------------------------------------------------------------------
