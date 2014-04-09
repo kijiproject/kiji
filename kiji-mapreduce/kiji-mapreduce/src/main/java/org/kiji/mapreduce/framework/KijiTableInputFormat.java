@@ -60,8 +60,8 @@ import org.kiji.schema.KijiTableReader.KijiScannerOptions;
 import org.kiji.schema.KijiURI;
 import org.kiji.schema.filter.KijiRowFilter;
 import org.kiji.schema.hbase.HBaseScanOptions;
-import org.kiji.schema.impl.HBaseKijiRowData;
-import org.kiji.schema.impl.HBaseKijiTable;
+import org.kiji.schema.impl.hbase.HBaseKijiRowData;
+import org.kiji.schema.impl.hbase.HBaseKijiTable;
 import org.kiji.schema.layout.ColumnReaderSpec;
 import org.kiji.schema.util.ResourceUtils;
 
