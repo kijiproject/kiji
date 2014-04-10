@@ -43,7 +43,7 @@ import org.kiji.schema.KijiTable;
 import org.kiji.schema.KijiTableReader;
 import org.kiji.schema.KijiTableReader.KijiScannerOptions;
 import org.kiji.schema.KijiURI;
-import org.kiji.schema.impl.HBaseKijiRowData;
+import org.kiji.schema.impl.hbase.HBaseKijiRowData;
 import org.kiji.schema.util.ResourceUtils;
 
 /**

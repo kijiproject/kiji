@@ -48,7 +48,7 @@ import org.kiji.schema.KijiDataRequest;
 import org.kiji.schema.KijiPager;
 import org.kiji.schema.KijiRowData;
 import org.kiji.schema.KijiTableReader;
-import org.kiji.schema.impl.HBaseKijiRowData;
+import org.kiji.schema.impl.hbase.HBaseKijiRowData;
 import org.kiji.schema.layout.KijiTableLayout.LocalityGroupLayout.FamilyLayout;
 import org.kiji.schema.util.TimestampComparator;
 
