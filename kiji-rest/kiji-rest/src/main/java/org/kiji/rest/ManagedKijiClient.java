@@ -25,11 +25,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
-
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -38,7 +38,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.yammer.dropwizard.lifecycle.Managed;
 import com.yammer.metrics.core.HealthCheck;
-
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.framework.recipes.cache.ChildData;
@@ -80,6 +79,9 @@ public class ManagedKijiClient implements KijiClient, Managed {
    */
   private final PathChildrenCache mZKInstances;
 
+  /** Set to true during {@link #stop()} to prevent further access to this object's methods. */
+  private volatile boolean mIsStopped = false;
+
   /**
    * Constructs a ManagedKijiClient.
    *
@@ -102,6 +104,7 @@ public class ManagedKijiClient implements KijiClient, Managed {
   /** {@inheritDoc} */
   @Override
   public void start() throws Exception {
+    Preconditions.checkState(!mIsStopped, "Can't start a stopped ManagedKijiClient.");
     mZKInstances.getListenable().addListener(new InstanceListener());
     mZKFramework.start();
     mZKInstances.start(PathChildrenCache.StartMode.BUILD_INITIAL_CACHE);
@@ -111,8 +114,10 @@ public class ManagedKijiClient implements KijiClient, Managed {
 
   /** {@inheritDoc} */
   @Override
-  public void stop() throws Exception {
+  public synchronized void stop() throws Exception {
+    Preconditions.checkState(!mIsStopped, "Can't stop an already stopped ManagedKijiClient.");
     LOG.info("Stopping ManagedKijiClient...");
+    mIsStopped = true;
 
     mZKInstances.close();
     mZKFramework.close();
@@ -158,12 +163,15 @@ public class ManagedKijiClient implements KijiClient, Managed {
   /** {@inheritDoc} */
   @Override
   public Kiji getKiji(String instance) {
+    Preconditions.checkState(!mIsStopped, "Can't get Kiji from a stopped ManagedKijiClient.");
     return getInstanceCache(instance).getKiji();
   }
 
   /** {@inheritDoc} */
   @Override
   public KijiSchemaTable getKijiSchemaTable(String instance) {
+    Preconditions.checkState(
+        !mIsStopped, "Can't get a schema table from a stopped ManagedKijiClient.");
     try {
       return getKiji(instance).getSchemaTable();
     } catch (IOException e) {
@@ -175,12 +183,14 @@ public class ManagedKijiClient implements KijiClient, Managed {
   /** {@inheritDoc} */
   @Override
   public Collection<String> getInstances() {
+    Preconditions.checkState(!mIsStopped, "Can't get instances from a stopped ManagedKijiClient.");
     return ImmutableSet.copyOf(mInstanceCaches.keySet());
   }
 
   /** {@inheritDoc} */
   @Override
   public KijiTable getKijiTable(String instance, String table) {
+    Preconditions.checkState(!mIsStopped, "Can't get table from a stopped ManagedKijiClient.");
     try {
       return getInstanceCache(instance).getKijiTable(table);
     } catch (ExecutionException e) {
@@ -196,6 +206,8 @@ public class ManagedKijiClient implements KijiClient, Managed {
   /** {@inheritDoc} */
   @Override
   public FreshKijiTableReader getFreshKijiTableReader(String instance, String table) {
+    Preconditions.checkState(
+        !mIsStopped, "Can't get fresh reader from a stopped ManagedKijiClient.");
     try {
       return getInstanceCache(instance).getFreshKijiTableReader(table);
     } catch (ExecutionException e) {
@@ -268,7 +280,8 @@ public class ManagedKijiClient implements KijiClient, Managed {
    *
    * @throws IOException if an instance can not be added to the cache.
    */
-  public void refreshInstances() throws IOException {
+  public synchronized void refreshInstances() throws IOException {
+    Preconditions.checkState(!mIsStopped, "Can't refreshInstances on a stopped ManagedKijiClient.");
     LOG.info("Refreshing instances.");
     Set<KijiURI> instances = zNodesToInstanceURIs(mClusterURI, mZKInstances.getCurrentData());
 
@@ -291,6 +304,7 @@ public class ManagedKijiClient implements KijiClient, Managed {
    * @return health status of the KijiClient.
    */
   public HealthCheck.Result checkHealth() {
+    Preconditions.checkState(!mIsStopped, "Can't checkHealth on a stopped ManagedKijiClient.");
     List<String> issues = Lists.newArrayList();
     for (KijiInstanceCache instanceCache : mInstanceCaches.values()) {
       issues.addAll(instanceCache.checkHealth());

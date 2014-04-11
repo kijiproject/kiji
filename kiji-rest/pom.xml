@@ -44,7 +44,6 @@
     <kiji-scoring.version>0.13.0</kiji-scoring.version>
     <kiji-mapreduce.version>1.2.6</kiji-mapreduce.version>
     <fake-hbase.version>0.1.5</fake-hbase.version>
-
     <dropwizard.version>0.6.2</dropwizard.version>
     <guava.version>14.0.1</guava.version>
   </properties>
