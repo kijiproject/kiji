@@ -95,11 +95,13 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <!--parallel tests are temporariliy disabled because of thread-unsafety in LocalJobRunner -->
-        <!--<configuration>-->
+        <configuration>
+          <!--parallel tests are temporariliy disabled because of thread-unsafety in LocalJobRunner -->
           <!-- Run tests creating 2 test JVMs per processor core. -->
           <!--<forkCount>2C</forkCount>-->
-        <!--</configuration>-->
+          <!-- Increase memory a bit to help the local job runner in unit tests. -->
+          <argLine>-Xmx2048m</argLine>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
