@@ -41,7 +41,6 @@
     <kiji-schema.version>1.4.0</kiji-schema.version>
     <kiji-mapreduce.version>1.2.6</kiji-mapreduce.version>
     <fake-hbase.version>0.1.5</fake-hbase.version>
-    <pmml-evaluator.version>1.1.1</pmml-evaluator.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
@@ -159,12 +158,6 @@
       <artifactId>kiji-schema</artifactId>
       <version>${kiji-schema.version}</version>
       <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jpmml</groupId>
-      <artifactId>pmml-evaluator</artifactId>
-      <version>${pmml-evaluator.version}</version>
-      <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.kiji.schema</groupId>

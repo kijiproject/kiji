@@ -6,7 +6,6 @@ Version 0.13.0
         to which users they are relevant and the contract around their API compatibility. Some
         erroneously extensible classes have been marked final (NewerThan, ScoreFunctionProducer,
         RunningLogarithmicBin, BatchScoreTool, FreshTool).
-    * SCORE-166. Adds a JpmmlScoreFunction for scoring trained JPMML compliant models.
 
 Version 0.11.0
     * SCORE-148. kiji batch-score is a new command line tool for running ScoreFunctions in batch.
