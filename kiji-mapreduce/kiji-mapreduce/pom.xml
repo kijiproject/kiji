@@ -183,6 +183,12 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.apache.curator</groupId>
+      <artifactId>curator-test</artifactId>
+      <version>${curator.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.kiji.avro</groupId>
       <artifactId>kiji-avro</artifactId>
       <version>${kiji-avro.version}</version>
