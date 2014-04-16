@@ -38,6 +38,7 @@
     <commons-io.version>2.1</commons-io.version>
     <commons-lang.version>2.6</commons-lang.version>
     <commons-lang3.version>3.0</commons-lang3.version>
+    <curator.version>2.4.1</curator.version>
     <easymock.version>3.0</easymock.version>
     <gson.version>2.2.2</gson.version>
     <guava.version>14.0.1</guava.version>
@@ -619,6 +620,24 @@
         <version>${hbase.version}</version>
         <scope>provided</scope>
         <type>test-jar</type>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.curator</groupId>
+        <artifactId>curator-client</artifactId>
+        <version>${curator.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.curator</groupId>
+        <artifactId>curator-x-discovery</artifactId>
+        <version>${curator.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.curator</groupId>
+        <artifactId>curator-test</artifactId>
+        <version>${curator.version}</version>
+        <scope>test</scope>
       </dependency>
       <dependency>
         <groupId>org.hamcrest</groupId>
