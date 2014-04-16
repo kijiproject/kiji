@@ -87,7 +87,7 @@ final class KijiSystem extends AbstractKijiSystem {
 
   override def getSystemVersion(uri: KijiURI): ProtocolVersion = {
     return VersionInfo.getClusterDataVersion(
-        kijiCache(uri).getOrElse(throw new DDLException("Could not open" + uri)))
+        kijiCache(uri).getOrElse(throw new DDLException("Could not open " + uri)))
   }
 
   override def getOrCreateSchemaId(uri: KijiURI, schema: Schema): Long = {
@@ -164,7 +164,7 @@ final class KijiSystem extends AbstractKijiSystem {
         Some(theKiji)
       } catch {
         case exn: Exception => {
-          println(exn)
+          exn.printStackTrace()
           None
         }
       }
