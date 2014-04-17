@@ -58,6 +58,10 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.apache.curator</groupId>
+      <artifactId>curator-test</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.kiji.schema-shell</groupId>
       <artifactId>kiji-schema-shell</artifactId>
       <scope>test</scope>
